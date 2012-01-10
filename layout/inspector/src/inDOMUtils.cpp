@@ -58,7 +58,7 @@
 #include "nsComputedDOMStyle.h"
 #include "nsEventStateManager.h"
 #include "nsIAtom.h"
-#include "nsIRange.h"
+#include "nsRange.h"
 #include "mozilla/dom/Element.h"
 
 
@@ -355,8 +355,5 @@ NS_IMETHODIMP
 inDOMUtils::GetUsedFontFaces(nsIDOMRange* aRange,
                              nsIDOMFontFaceList** aFontFaceList)
 {
-  nsCOMPtr<nsIRange> range = do_QueryInterface(aRange);
-  NS_ENSURE_TRUE(range, NS_ERROR_UNEXPECTED);
-
-  return range->GetUsedFontFaces(aFontFaceList);
+  return static_cast<nsRange*>(aRange)->GetUsedFontFaces(aFontFaceList);
 }

@@ -2656,10 +2656,7 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
     aEndOffset = fragLen;
   }
 
-  nsCOMPtr<nsIDOMRange> docFragRange =
-                          do_CreateInstance("@mozilla.org/content/range;1");
-  NS_ENSURE_TRUE(docFragRange, NS_ERROR_OUT_OF_MEMORY);
-
+  nsRefPtr<nsRange> docFragRange = new nsRange();
   res = docFragRange->SetStart(aStartNode, aStartOffset);
   NS_ENSURE_SUCCESS(res, res);
   res = docFragRange->SetEnd(aEndNode, aEndOffset);

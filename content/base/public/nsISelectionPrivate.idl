@@ -40,10 +40,11 @@
 #include "nsIEnumerator.idl"
 #include "nsISelection.idl"
 
-interface nsIDOMRange;
+interface nsRange;
 interface nsIDOMNode;
 interface nsISelectionListener;
 interface nsIContent;
+interface nsINode;
 
 %{C++
 class nsFrameSelection;
@@ -52,13 +53,13 @@ class nsIPresShell;
 struct nsTextRangeStyle;
 struct nsPoint;
 #include "nsIFrame.h"
-#include "nsCOMArray.h"
+#include "nsTArray.h"
 %}
 
 [ptr] native nsFrameSelection(nsFrameSelection);
 [ptr] native nsIFrame(nsIFrame);
 [ptr] native nsIPresShell(nsIPresShell);
-[ptr] native RangeArray(nsCOMArray<nsIDOMRange>);
+[ptr] native RangeArray(nsTArray<nsRange*>);
 [ref] native constTextRangeStyleRef(const nsTextRangeStyle);
 [ref] native nsPointRef(nsPoint);
 native nsDirection(nsDirection);
@@ -157,9 +158,9 @@ interface nsISelectionPrivate : nsISelection
         out PRUint32 resultCount,
         [retval, array, size_is(resultCount)] out nsIDOMRange results);
 
-    [noscript] void GetRangesForIntervalCOMArray(
-        in nsIDOMNode beginNode, in PRInt32 beginOffset,
-        in nsIDOMNode endNode, in PRInt32 endOffset,
+    [noscript] void GetRangesForIntervalArray(
+        in nsINode beginNode, in PRInt32 beginOffset,
+        in nsINode endNode, in PRInt32 endOffset,
         in boolean allowAdjacent,
         in RangeArray results);
 

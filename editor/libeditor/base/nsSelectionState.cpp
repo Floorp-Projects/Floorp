@@ -38,7 +38,7 @@
 #include "nsSelectionState.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
+#include "nsRange.h"
 #include "nsISelection.h"
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
@@ -122,8 +122,8 @@ nsSelectionState::RestoreSelection(nsISelection *aSel)
   // set the selection ranges anew
   for (i=0; i<arrayCount; i++)
   {
-    nsCOMPtr<nsIDOMRange> range;
-    mArray[i].GetRange(address_of(range));
+    nsRefPtr<nsRange> range;
+    mArray[i].GetRange(getter_AddRefs(range));
     NS_ENSURE_TRUE(range, NS_ERROR_UNEXPECTED);
    
     res = aSel->AddRange(range);
@@ -137,8 +137,8 @@ bool
 nsSelectionState::IsCollapsed()
 {
   if (1 != mArray.Length()) return false;
-  nsCOMPtr<nsIDOMRange> range;
-  mArray[0].GetRange(address_of(range));
+  nsRefPtr<nsRange> range;
+  mArray[0].GetRange(getter_AddRefs(range));
   NS_ENSURE_TRUE(range, false);
   bool bIsCollapsed = false;
   range->GetCollapsed(&bIsCollapsed);
@@ -155,9 +155,9 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
 
   for (i=0; i<myCount; i++)
   {
-    nsCOMPtr<nsIDOMRange> myRange, itsRange;
-    mArray[i].GetRange(address_of(myRange));
-    aSelState->mArray[i].GetRange(address_of(itsRange));
+    nsRefPtr<nsRange> myRange, itsRange;
+    mArray[i].GetRange(getter_AddRefs(myRange));
+    aSelState->mArray[i].GetRange(getter_AddRefs(itsRange));
     NS_ENSURE_TRUE(myRange && itsRange, false);
   
     PRInt16 compResult;
@@ -700,14 +700,13 @@ nsresult nsRangeStore::StoreRange(nsIDOMRange *aRange)
   return NS_OK;
 }
 
-nsresult nsRangeStore::GetRange(nsCOMPtr<nsIDOMRange> *outRange)
+nsresult nsRangeStore::GetRange(nsRange** outRange)
 {
   NS_ENSURE_TRUE(outRange, NS_ERROR_NULL_POINTER);
-  nsresult res;
-  *outRange = do_CreateInstance("@mozilla.org/content/range;1", &res);
-  if(NS_FAILED(res)) return res;
+  *outRange = new nsRange();
+  NS_ADDREF((*outRange));
 
-  res = (*outRange)->SetStart(startNode, startOffset);
+  nsresult res = (*outRange)->SetStart(startNode, startOffset);
   if(NS_FAILED(res)) return res;
 
   res = (*outRange)->SetEnd(endNode, endOffset);

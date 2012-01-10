@@ -256,7 +256,7 @@ mozInlineSpellWordUtil::EnsureWords()
 }
 
 nsresult
-mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord, nsIRange** aRange)
+mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord, nsRange** aRange)
 {
   NodeOffset begin = MapSoftTextOffsetToDOMPosition(aWord.mSoftTextOffset, HINT_BEGIN);
   NodeOffset end = MapSoftTextOffsetToDOMPosition(aWord.EndOffset(), HINT_END);
@@ -268,7 +268,7 @@ mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord, nsIRange** aRang
 nsresult
 mozInlineSpellWordUtil::GetRangeForWord(nsIDOMNode* aWordNode,
                                         PRInt32 aWordOffset,
-                                        nsIRange** aRange)
+                                        nsRange** aRange)
 {
   // Set our soft end and start
   nsCOMPtr<nsINode> wordNode = do_QueryInterface(aWordNode);
@@ -315,7 +315,7 @@ NormalizeWord(const nsSubstring& aInput, PRInt32 aPos, PRInt32 aLen, nsAString& 
 //    range unless the word was misspelled. This may or may not be possible.
 
 nsresult
-mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsIRange** aRange,
+mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsRange** aRange,
                                     bool* aSkipChecking)
 {
 #ifdef DEBUG_SPELLCHECK
@@ -351,7 +351,7 @@ mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsIRange** aRange,
 
 nsresult
 mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
-                                  nsIRange** aRange)
+                                  nsRange** aRange)
 {
   if (!mDOMDocument)
     return NS_ERROR_NOT_INITIALIZED;
