@@ -166,15 +166,6 @@ public class PanZoomController
         GeckoAppShell.registerGeckoEventListener("Gesture:ScrollAck", this);
     }
 
-    protected void finalize() throws Throwable {
-        GeckoAppShell.unregisterGeckoEventListener("Browser:ZoomToRect", this);
-        GeckoAppShell.unregisterGeckoEventListener("Browser:ZoomToPageWidth", this);
-        GeckoAppShell.unregisterGeckoEventListener("Panning:Override", this);
-        GeckoAppShell.unregisterGeckoEventListener("Panning:CancelOverride", this);
-        GeckoAppShell.unregisterGeckoEventListener("Gesture:ScrollAck", this);
-        super.finalize();
-    }
-
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
         try {
