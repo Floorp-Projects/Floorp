@@ -1786,6 +1786,8 @@ function BrowserShutdown() {
 
   gPrivateBrowsingUI.uninit();
 
+  TabsOnTop.uninit();
+
   TabsInTitlebar.uninit();
 
   var enumerator = Services.wm.getEnumerator(null);
@@ -5289,6 +5291,10 @@ var TabsOnTop = {
   init: function TabsOnTop_init() {
     this.syncUI();
     Services.prefs.addObserver(this._prefName, this, false);
+  },
+
+  uninit: function TabsOnTop_uninit() {
+    Services.prefs.removeObserver(this._prefName, this);
   },
 
   toggle: function () {
