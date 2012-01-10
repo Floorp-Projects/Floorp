@@ -74,7 +74,6 @@
 
 class nsIDOMKeyEvent;
 class nsITransferable;
-class nsIDOMNSRange;
 class nsIDocumentEncoder;
 class nsIClipboard;
 class TypeInState;

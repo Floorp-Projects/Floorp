@@ -503,7 +503,6 @@ function run_miscellaneous_tests() {
 
   /*
   // XXX ajvincent if rv == WRONG_DOCUMENT_ERR, return false?
-  do_check_true(baseRange instanceof C_i.nsIDOMNSRange);
   do_check_false(baseRange.isPointInRange(startContainer, startOffset));
   do_check_false(baseRange.isPointInRange(startContainer, startOffset + 1));
   do_check_false(baseRange.isPointInRange(endContainer, endOffset));

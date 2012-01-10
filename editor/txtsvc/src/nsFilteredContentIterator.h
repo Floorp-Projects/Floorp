@@ -42,7 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsITextServicesFilter.h"
-#include "nsIDOMNSRange.h"
+#include "nsIDOMRange.h"
 #include "nsIRangeUtils.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -97,7 +97,7 @@ protected:
   nsCOMPtr<nsIAtom> mMapAtom;
 
   nsCOMPtr<nsITextServicesFilter> mFilter;
-  nsCOMPtr<nsIDOMNSRange>         mRange;
+  nsCOMPtr<nsIDOMRange>           mRange;
   bool                            mDidSkip;
   bool                            mIsOutOfRange;
   eDirectionType                  mDirection;

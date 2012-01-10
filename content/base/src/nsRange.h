@@ -45,7 +45,6 @@
 #include "nsIRange.h"
 #include "nsIDOMRange.h"
 #include "nsIRangeUtils.h"
-#include "nsIDOMNSRange.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
@@ -73,7 +72,6 @@ public:
 // -------------------------------------------------------------------------------
 
 class nsRange : public nsIRange,
-                public nsIDOMNSRange,
                 public nsStubMutationObserver
 {
 public:
@@ -85,9 +83,6 @@ public:
 
   // nsIDOMRange interface
   NS_DECL_NSIDOMRANGE
-
-  // nsIDOMNSRange interface
-  NS_DECL_NSIDOMNSRANGE
   
   // nsIRange interface
   virtual nsINode* GetCommonAncestor() const;
