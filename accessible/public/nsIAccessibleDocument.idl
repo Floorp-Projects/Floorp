@@ -39,7 +39,6 @@
 #include "nsISupports.idl"
 
 interface nsIAccessible;
-interface nsIAccessNode;
 interface nsIDOMDocument;
 interface nsIDOMNode;
 interface nsIDOMWindow;
@@ -50,10 +49,9 @@ interface nsIDOMWindow;
  * When accessibility is turned on in Gecko,
  * there is an nsIAccessibleDocument for each document
  * whether it is XUL, HTML or whatever.
- * You can QueryInterface to nsIAccessibleDocument from
- * the nsIAccessible or nsIAccessNode for the root node
- * of a document. You can also get one from 
- * nsIAccessNode::GetAccessibleDocument() or 
+ * You can QueryInterface to nsIAccessibleDocument from the nsIAccessible for
+ * the root node of a document. You can also get one from 
+ * nsIAccessible::GetAccessibleDocument() or 
  * nsIAccessibleEvent::GetAccessibleDocument()
  */
 [scriptable, uuid(451242bd-8a0c-4198-ae88-c053609a4e5d)]

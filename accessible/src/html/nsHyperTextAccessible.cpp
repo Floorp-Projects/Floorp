@@ -1148,7 +1148,7 @@ nsHyperTextAccessible::GetTextAttributes(bool aIncludeDefAttrs,
   // Compute spelling attributes on text accessible only.
   nsIFrame *offsetFrame = accAtOffset->GetFrame();
   if (offsetFrame && offsetFrame->GetType() == nsGkAtoms::textFrame) {
-    nsCOMPtr<nsIDOMNode> node = accAtOffset->GetDOMNode();
+    nsCOMPtr<nsIDOMNode> node = accAtOffset->DOMNode();
 
     PRInt32 nodeOffset = 0;
     nsresult rv = RenderedToContentOffset(offsetFrame, offsetInAcc,
@@ -2255,10 +2255,8 @@ nsHyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame *aFrame,
   if (!aFrame) {
     // If the given frame is null then set offset after the DOM node of the
     // given accessible.
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-
     nsCOMPtr<nsIDOMNode> DOMNode;
-    accessNode->GetDOMNode(getter_AddRefs(DOMNode));
+    aAccessible->GetDOMNode(getter_AddRefs(DOMNode));
     nsCOMPtr<nsIContent> content(do_QueryInterface(DOMNode));
     NS_ENSURE_STATE(content);
 

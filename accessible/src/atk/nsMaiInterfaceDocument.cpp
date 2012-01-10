@@ -79,7 +79,7 @@ getDocumentLocaleCB(AtkDocument *aDocument)
     return nsnull;
 
   nsAutoString locale;
-  accWrap->GetLanguage(locale);
+  accWrap->Language(locale);
   return locale.IsEmpty() ? nsnull : nsAccessibleWrap::ReturnString(locale);
 }
 

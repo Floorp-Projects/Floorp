@@ -283,8 +283,8 @@ nsLangTextAttr::nsLangTextAttr(nsHyperTextAccessible *aRootAcc,
                                nsIContent *aRootContent, nsIContent *aContent) :
   nsTextAttr<nsAutoString>(aContent == nsnull), mRootContent(aRootContent)
 {
-  nsresult rv = aRootAcc->GetLanguage(mRootNativeValue);
-  mIsRootDefined = NS_SUCCEEDED(rv) && !mRootNativeValue.IsEmpty();
+  aRootAcc->Language(mRootNativeValue);
+  mIsRootDefined =  !mRootNativeValue.IsEmpty();
 
   if (aContent)
     mIsDefined = GetLang(aContent, mNativeValue);
