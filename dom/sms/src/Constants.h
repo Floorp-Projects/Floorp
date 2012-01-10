@@ -43,6 +43,7 @@ namespace dom {
 namespace sms {
 
 extern const char* kSmsReceivedObserverTopic; // Defined in the .cpp.
+extern const char* kSmsSentObserverTopic;     // Defined in the .cpp.
 
 #define DELIVERY_RECEIVED NS_LITERAL_STRING("received")
 #define DELIVERY_SENT     NS_LITERAL_STRING("sent")

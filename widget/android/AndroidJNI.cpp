@@ -301,8 +301,17 @@ Java_org_mozilla_gecko_GeckoAppShell_onSmsSent(JNIEnv* jenv, jclass,
         int id;
         smsDBService->SaveSentMessage(mReceiver, mBody, mTimestamp, &id);
 
-        // TODO: use the ID to build a SmsMessage object and notify about the
-        // sent message.
+        nsCOMPtr<SmsMessage> message =
+          new SmsMessage(id, eDeliveryState_Sent, EmptyString(),
+                         mReceiver, mBody, mTimestamp);
+
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+        if (!obs) {
+            NS_ERROR("Observer Service not available!");
+            return NS_OK;
+        }
+
+        obs->NotifyObservers(message, kSmsSentObserverTopic, nsnull);
 
         return NS_OK;
       }
