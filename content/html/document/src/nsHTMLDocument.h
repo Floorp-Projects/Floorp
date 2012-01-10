@@ -272,9 +272,6 @@ protected:
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset);
 
-  void StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
-                          const char* aCommand);
-
   // Override so we can munge the charset on our wyciwyg channel as needed.
   virtual void SetDocumentCharacterSet(const nsACString& aCharSetID);
 
