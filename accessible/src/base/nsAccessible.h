@@ -116,6 +116,9 @@ public:
   NS_DECL_NSIACCESSIBLEVALUE
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_IID)
 
+  using nsAccessNode::ScrollTo;
+  using nsAccessNode::GetLanguage;
+
   //////////////////////////////////////////////////////////////////////////////
   // nsAccessNode
 
@@ -128,6 +131,17 @@ public:
    * get the description of this accessible
    */
   virtual void Description(nsString& aDescription);
+
+  /**
+   * Return DOM node associated with this accessible.
+   */
+  inline already_AddRefed<nsIDOMNode> DOMNode() const
+  {
+    nsIDOMNode *DOMNode = nsnull;
+    if (GetNode())
+      CallQueryInterface(GetNode(), &DOMNode);
+    return DOMNode;
+  }
 
   /**
    * Returns the accessible name specified by ARIA.
