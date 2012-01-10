@@ -52,36 +52,24 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "mozilla/FileUtils.h"
 
 #include <stdio.h>
 #include <unistd.h>
 
 #include <gtk/gtk.h>
-static PRLibrary *elib = nsnull;
 static PRLibrary *libcanberra = nsnull;
-static PRLibrary* libasound = nsnull;
 
-// the following from esd.h
-
-#define ESD_BITS8  (0x0000)
-#define ESD_BITS16 (0x0001) 
-#define ESD_MONO (0x0010)
-#define ESD_STEREO (0x0020) 
-#define ESD_STREAM (0x0000)
-#define ESD_PLAY (0x1000)
-
-#define WAV_MIN_LENGTH 44
-
-/* used to play the sounds from the find symbol call */
-typedef int  (*EsdPlayStreamType) (int, int, const char *, const char *);
-typedef int  (*EsdAudioOpenType)  (void);
-typedef int  (*EsdAudioWriteType) (const void *, int);
-typedef void (*EsdAudioCloseType) (void);
-
-/* used to find and play common system event sounds.
-   this interfaces with libcanberra.
- */
+/* used to play sounds with libcanberra. */
 typedef struct _ca_context ca_context;
+typedef struct _ca_proplist ca_proplist;
+
+typedef void (*ca_finish_callback_t) (ca_context *c,
+                                      uint32_t id,
+                                      int error_code,
+                                      void *userdata);
 
 typedef int (*ca_context_create_fn) (ca_context **);
 typedef int (*ca_context_destroy_fn) (ca_context *);
@@ -90,30 +78,90 @@ typedef int (*ca_context_play_fn) (ca_context *c,
                                    ...);
 typedef int (*ca_context_change_props_fn) (ca_context *c,
                                            ...);
+typedef int (*ca_proplist_create_fn) (ca_proplist **);
+typedef int (*ca_proplist_destroy_fn) (ca_proplist *);
+typedef int (*ca_proplist_sets_fn) (ca_proplist *c,
+                                    const char *key,
+                                    const char *value);
+typedef int (*ca_context_play_full_fn) (ca_context *c,
+                                        uint32_t id,
+                                        ca_proplist *p,
+                                        ca_finish_callback_t cb,
+                                        void *userdata);
 
 static ca_context_create_fn ca_context_create;
 static ca_context_destroy_fn ca_context_destroy;
 static ca_context_play_fn ca_context_play;
 static ca_context_change_props_fn ca_context_change_props;
+static ca_proplist_create_fn ca_proplist_create;
+static ca_proplist_destroy_fn ca_proplist_destroy;
+static ca_proplist_sets_fn ca_proplist_sets;
+static ca_context_play_full_fn ca_context_play_full;
 
-/* we provide a blank error handler to silence ALSA's stderr
-   messages on computers with no sound devices */
-typedef void (*snd_lib_error_handler_t) (const char* file,
-                                         int         line,
-                                         const char* function,
-                                         int         err,
-                                         const char* format,
-                                         ...);
-typedef int (*snd_lib_error_set_handler_fn) (snd_lib_error_handler_t handler);
+struct ScopedCanberraFile {
+    ScopedCanberraFile(nsILocalFile *file): mFile(file) {};
+
+    ~ScopedCanberraFile() {
+        if (mFile) {
+            mFile->Remove(PR_FALSE);
+        }
+    }
+
+    void forget() {
+        mFile.forget();
+    }
+    nsILocalFile* operator->() { return mFile; }
+    operator nsILocalFile*() { return mFile; }
+
+    nsCOMPtr<nsILocalFile> mFile;
+};
+
+static ca_context*
+ca_context_get_default()
+{
+    // This allows us to avoid race conditions with freeing the context by handing that
+    // responsibility to Glib, and still use one context at a time
+    static GStaticPrivate ctx_static_private = G_STATIC_PRIVATE_INIT;
+
+    ca_context* ctx = (ca_context*) g_static_private_get(&ctx_static_private);
+
+    if (ctx) {
+        return ctx;
+    }
+
+    ca_context_create(&ctx);
+    if (!ctx) {
+        return nsnull;
+    }
+
+    g_static_private_set(&ctx_static_private, ctx, (GDestroyNotify) ca_context_destroy);
+
+    GtkSettings* settings = gtk_settings_get_default();
+    if (g_object_class_find_property(G_OBJECT_GET_CLASS(settings),
+                                     "gtk-sound-theme-name")) {
+        gchar* sound_theme_name = nsnull;
+        g_object_get(settings, "gtk-sound-theme-name", &sound_theme_name, NULL);
+
+        if (sound_theme_name) {
+            ca_context_change_props(ctx, "canberra.xdg-theme.name", sound_theme_name, NULL);
+            g_free(sound_theme_name);
+        }
+    }
+
+    return ctx;
+}
 
 static void
-quiet_error_handler(const char* file,
-                    int         line,
-                    const char* function,
-                    int         err,
-                    const char* format,
-                    ...)
+ca_finish_cb(ca_context *c,
+             uint32_t id,
+             int error_code,
+             void *userdata)
 {
+    nsILocalFile *file = reinterpret_cast<nsILocalFile *>(userdata);
+    if (file) {
+        file->Remove(PR_FALSE);
+        NS_RELEASE(file);
+    }
 }
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
@@ -138,20 +186,6 @@ nsSound::Init()
 
     mInited = true;
 
-    if (!elib) {
-        elib = PR_LoadLibrary("libesd.so.0");
-    }
-
-    if (!libasound) {
-        PRFuncPtr func = PR_FindFunctionSymbolAndLibrary("snd_lib_error_set_handler",
-                                                         &libasound);
-        if (libasound) {
-            snd_lib_error_set_handler_fn snd_lib_error_set_handler =
-                 (snd_lib_error_set_handler_fn) func;
-            snd_lib_error_set_handler(quiet_error_handler);
-        }
-    }
-
     if (!libcanberra) {
         libcanberra = PR_LoadLibrary("libcanberra.so.0");
         if (libcanberra) {
@@ -164,6 +198,10 @@ nsSound::Init()
                 ca_context_destroy = (ca_context_destroy_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_destroy");
                 ca_context_play = (ca_context_play_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_play");
                 ca_context_change_props = (ca_context_change_props_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_change_props");
+                ca_proplist_create = (ca_proplist_create_fn) PR_FindFunctionSymbol(libcanberra, "ca_proplist_create");
+                ca_proplist_destroy = (ca_proplist_destroy_fn) PR_FindFunctionSymbol(libcanberra, "ca_proplist_destroy");
+                ca_proplist_sets = (ca_proplist_sets_fn) PR_FindFunctionSymbol(libcanberra, "ca_proplist_sets");
+                ca_context_play_full = (ca_context_play_full_fn) PR_FindFunctionSymbol(libcanberra, "ca_context_play_full");
             }
         }
     }
@@ -174,22 +212,11 @@ nsSound::Init()
 /* static */ void
 nsSound::Shutdown()
 {
-    if (elib) {
-        PR_UnloadLibrary(elib);
-        elib = nsnull;
-    }
     if (libcanberra) {
         PR_UnloadLibrary(libcanberra);
         libcanberra = nsnull;
     }
-    if (libasound) {
-        PR_UnloadLibrary(libasound);
-        libasound = nsnull;
-    }
 }
-
-#define GET_WORD(s, i) (s[i+1] << 8) | s[i]
-#define GET_DWORD(s, i) (s[i+3] << 24) | (s[i+2] << 16) | (s[i+1] << 8) | s[i]
 
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
@@ -197,7 +224,6 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         PRUint32 dataLen,
                                         const PRUint8 *data)
 {
-
     // print a load error on bad status, and return
     if (NS_FAILED(aStatus)) {
 #ifdef DEBUG
@@ -221,172 +247,62 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         return aStatus;
     }
 
-    int fd, mask = 0;
-    PRUint32 samples_per_sec = 0, avg_bytes_per_sec = 0, chunk_len = 0;
-    PRUint16 format, channels = 1, bits_per_sample = 0;
-    const PRUint8 *audio = nsnull;
-    size_t audio_len = 0;
+    nsCOMPtr<nsILocalFile> tmpFile;
+    nsDirectoryService::gService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsILocalFile),
+                                      getter_AddRefs(tmpFile));
 
-    if (dataLen < 4) {
-        NS_WARNING("Sound stream too short to determine its type");
-        return NS_ERROR_FAILURE;
+    nsresult rv = tmpFile->AppendNative(nsDependentCString("mozilla_audio_sample"));
+    if (NS_FAILED(rv)) {
+        return rv;
     }
 
-    if (memcmp(data, "RIFF", 4)) {
-#ifdef DEBUG
-        printf("We only support WAV files currently.\n");
-#endif
-        return NS_ERROR_FAILURE;
+    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, PR_IRUSR | PR_IWUSR);
+    if (NS_FAILED(rv)) {
+        return rv;
     }
 
-    if (dataLen <= WAV_MIN_LENGTH) {
-        NS_WARNING("WAV files should be longer than 44 bytes.");
-        return NS_ERROR_FAILURE;
+    ScopedCanberraFile canberraFile(tmpFile);
+
+    mozilla::AutoFDClose fd;
+    rv = canberraFile->OpenNSPRFileDesc(PR_WRONLY, PR_IRUSR | PR_IWUSR, &fd);
+    if (NS_FAILED(rv)) {
+        return rv;
     }
 
-    PRUint32 i = 12;
-    while (i + 7 < dataLen) {
-        if (!memcmp(data + i, "fmt ", 4) && !chunk_len) {
-            i += 4;
-
-            /* length of the rest of this subblock (should be 16 for PCM data */
-            chunk_len = GET_DWORD(data, i);
-            i += 4;
-
-            if (chunk_len < 16 || i + chunk_len >= dataLen) {
-                NS_WARNING("Invalid WAV file: bad fmt chunk.");
-                return NS_ERROR_FAILURE;
-            }
-
-            format = GET_WORD(data, i);
-            i += 2;
-
-            channels = GET_WORD(data, i);
-            i += 2;
-
-            samples_per_sec = GET_DWORD(data, i);
-            i += 4;
-
-            avg_bytes_per_sec = GET_DWORD(data, i);
-            i += 4;
-
-            // block align
-            i += 2;
-
-            bits_per_sample = GET_WORD(data, i);
-            i += 2;
-
-            /* we don't support WAVs with odd compression codes */
-            if (chunk_len != 16)
-                NS_WARNING("Extra format bits found in WAV. Ignoring");
-
-            i += chunk_len - 16;
-        } else if (!memcmp(data + i, "data", 4)) {
-            i += 4;
-            if (!chunk_len) {
-                NS_WARNING("Invalid WAV file: no fmt chunk found");
-                return NS_ERROR_FAILURE;
-            }
-
-            audio_len = GET_DWORD(data, i);
-            i += 4;
-
-            /* try to play truncated WAVs */
-            if (i + audio_len > dataLen)
-                audio_len = dataLen - i;
-
-            audio = data + i;
-            break;
-        } else {
-            i += 4;
-            i += GET_DWORD(data, i);
-            i += 4;
+    // XXX: Should we do this on another thread?
+    PRUint32 length = dataLen;
+    while (length > 0) {
+        PRInt32 amount = PR_Write(fd, data, length);
+        if (amount < 0) {
+            return NS_ERROR_FAILURE;
         }
+        length -= amount;
+        data += amount;
     }
 
-    if (!audio) {
-        NS_WARNING("Invalid WAV file: no data chunk found");
-        return NS_ERROR_FAILURE;
+    ca_context* ctx = ca_context_get_default();
+    if (!ctx) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    /* No audio data? well, at least the WAV was valid. */
-    if (!audio_len)
-        return NS_OK;
-
-#if 0
-    printf("f: %d | c: %d | sps: %li | abps: %li | ba: %d | bps: %d | rate: %li\n",
-         format, channels, samples_per_sec, avg_bytes_per_sec, block_align, bits_per_sample, rate);
-#endif
-
-    /* open up connection to esd */  
-    EsdPlayStreamType EsdPlayStream = 
-        (EsdPlayStreamType) PR_FindFunctionSymbol(elib, 
-                                                  "esd_play_stream");
-    if (!EsdPlayStream)
-        return NS_ERROR_FAILURE;
-
-    mask = ESD_PLAY | ESD_STREAM;
-
-    if (bits_per_sample == 8)
-        mask |= ESD_BITS8;
-    else 
-        mask |= ESD_BITS16;
-
-    if (channels == 1)
-        mask |= ESD_MONO;
-    else 
-        mask |= ESD_STEREO;
-
-    nsAutoArrayPtr<PRUint8> buf;
-
-    // ESD only handle little-endian data. 
-    // Swap the byte order if we're on a big-endian architecture.
-#ifdef IS_BIG_ENDIAN
-    if (bits_per_sample != 8) {
-        buf = new PRUint8[audio_len];
-        if (!buf)
-            return NS_ERROR_OUT_OF_MEMORY;
-        for (PRUint32 j = 0; j + 2 < audio_len; j += 2) {
-            buf[j]     = audio[j + 1];
-            buf[j + 1] = audio[j];
-        }
-
-        audio = buf;
+    ca_proplist *p;
+    ca_proplist_create(&p);
+    if (!p) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
-#endif
 
-    fd = (*EsdPlayStream)(mask, samples_per_sec, NULL, "mozillaSound"); 
-  
-    if (fd < 0) {
-      int *esd_audio_format = (int *) PR_FindSymbol(elib, "esd_audio_format");
-      int *esd_audio_rate = (int *) PR_FindSymbol(elib, "esd_audio_rate");
-      EsdAudioOpenType EsdAudioOpen = (EsdAudioOpenType) PR_FindFunctionSymbol(elib, "esd_audio_open");
-      EsdAudioWriteType EsdAudioWrite = (EsdAudioWriteType) PR_FindFunctionSymbol(elib, "esd_audio_write");
-      EsdAudioCloseType EsdAudioClose = (EsdAudioCloseType) PR_FindFunctionSymbol(elib, "esd_audio_close");
-
-      if (!esd_audio_format || !esd_audio_rate ||
-          !EsdAudioOpen || !EsdAudioWrite || !EsdAudioClose)
-          return NS_ERROR_FAILURE;
-
-      *esd_audio_format = mask;
-      *esd_audio_rate = samples_per_sec;
-      fd = (*EsdAudioOpen)();
-
-      if (fd < 0)
-        return NS_ERROR_FAILURE;
-
-      (*EsdAudioWrite)(audio, audio_len);
-      (*EsdAudioClose)();
-    } else {
-      while (audio_len > 0) {
-        ssize_t written = write(fd, audio, audio_len);
-        if (written <= 0)
-          break;
-        audio += written;
-        audio_len -= written;
-      }
-      close(fd);
+    nsCAutoString path;
+    rv = canberraFile->GetNativePath(path);
+    if (NS_FAILED(rv)) {
+        return rv;
     }
+
+    ca_proplist_sets(p, "media.filename", path.get());
+    if (ca_context_play_full(ctx, 0, p, ca_finish_cb, canberraFile) >= 0) {
+        // Don't delete the temporary file here if ca_context_play_full succeeds
+        canberraFile.forget();
+    }
+    ca_proplist_destroy(p);
 
     return NS_OK;
 }
@@ -399,16 +315,31 @@ NS_METHOD nsSound::Beep()
 
 NS_METHOD nsSound::Play(nsIURL *aURL)
 {
-    nsresult rv;
-
     if (!mInited)
         Init();
 
-    if (!elib) 
-	    return NS_ERROR_NOT_AVAILABLE;
+    if (!libcanberra)
+        return NS_ERROR_NOT_AVAILABLE;
 
-    nsCOMPtr<nsIStreamLoader> loader;
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), aURL, this);
+    bool isFile;
+    nsresult rv = aURL->SchemeIs("file", &isFile);
+    if (NS_SUCCEEDED(rv) && isFile) {
+        ca_context* ctx = ca_context_get_default();
+        if (!ctx) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        nsCAutoString path;
+        rv = aURL->GetPath(path);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        ca_context_play(ctx, 0, "media.filename", path.get(), NULL);
+    } else {
+        nsCOMPtr<nsIStreamLoader> loader;
+        rv = NS_NewStreamLoader(getter_AddRefs(loader), aURL, this);
+    }
 
     return rv;
 }
@@ -422,41 +353,21 @@ NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
         return NS_OK;
 
     // Do we even want alert sounds?
-    // If so, what sound theme are we using?
     GtkSettings* settings = gtk_settings_get_default();
-    gchar* sound_theme_name = nsnull;
 
-    if (g_object_class_find_property(G_OBJECT_GET_CLASS(settings), "gtk-sound-theme-name") &&
-        g_object_class_find_property(G_OBJECT_GET_CLASS(settings), "gtk-enable-event-sounds")) {
+    if (g_object_class_find_property(G_OBJECT_GET_CLASS(settings),
+                                     "gtk-enable-event-sounds")) {
         gboolean enable_sounds = TRUE;
-        g_object_get(settings, "gtk-enable-event-sounds", &enable_sounds,
-                               "gtk-sound-theme-name", &sound_theme_name,
-                               NULL);
+        g_object_get(settings, "gtk-enable-event-sounds", &enable_sounds, NULL);
 
         if (!enable_sounds) {
-            g_free(sound_theme_name);
             return NS_OK;
         }
     }
 
-    // This allows us to avoid race conditions with freeing the context by handing that
-    // responsibility to Glib, and still use one context at a time
-    ca_context* ctx = nsnull;
-    static GStaticPrivate ctx_static_private = G_STATIC_PRIVATE_INIT;
-    ctx = (ca_context*) g_static_private_get(&ctx_static_private);
+    ca_context* ctx = ca_context_get_default();
     if (!ctx) {
-        ca_context_create(&ctx);
-        if (!ctx) {
-            g_free(sound_theme_name);
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        g_static_private_set(&ctx_static_private, ctx, (GDestroyNotify) ca_context_destroy);
-    }
-
-    if (sound_theme_name) {
-        ca_context_change_props(ctx, "canberra.xdg-theme.name", sound_theme_name, NULL);
-        g_free(sound_theme_name);
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     switch (aEventId) {
