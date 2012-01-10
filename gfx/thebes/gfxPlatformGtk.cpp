@@ -56,6 +56,8 @@
 #include "gfxFT2Fonts.h"
 #endif
 
+#include "mozilla/gfx/2D.h"
+
 #include "cairo.h"
 #include <gtk/gtk.h>
 
@@ -82,6 +84,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #endif
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
@@ -761,3 +766,23 @@ gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
 
     return NULL;
 }
+
+RefPtr<ScaledFont>
+gfxPlatformGtk::GetScaledFontForFont(gfxFont *aFont)
+{
+  NativeFont nativeFont;
+  nativeFont.mType = NATIVE_FONT_SKIA_FONT_FACE;
+  nativeFont.mFont = aFont;
+  RefPtr<ScaledFont> scaledFont =
+    Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
+
+  return scaledFont;
+}
+
+bool
+gfxPlatformGtk::SupportsAzure(BackendType& aBackend)
+{
+  aBackend = BACKEND_SKIA;
+  return true;
+}
+
