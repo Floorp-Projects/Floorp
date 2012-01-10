@@ -70,6 +70,9 @@ public class PanZoomController
 {
     private static final String LOGTAG = "GeckoPanZoomController";
 
+    private static String MESSAGE_ZOOM_RECT = "Browser:ZoomToRect";
+    private static String MESSAGE_ZOOM_PAGE = "Browser:ZoomToPageWidth";
+
     // Animation stops if the velocity is below this value when overscrolled or panning.
     private static final float STOPPED_THRESHOLD = 4.0f;
     // Animation stops is the velocity is below this threshold when flinging.
@@ -139,14 +142,14 @@ public class PanZoomController
 
         mState = PanZoomState.NOTHING;
 
-        GeckoAppShell.registerGeckoEventListener("Browser:ZoomToRect", this);
-        GeckoAppShell.registerGeckoEventListener("Browser:ZoomToPageWidth", this);
+        GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_RECT, this);
+        GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
     }
 
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
         try {
-            if (event.equals("Browser:ZoomToRect")) {
+            if (MESSAGE_ZOOM_RECT.equals(event)) {
                 float scale = mController.getZoomFactor();
                 float x = (float)message.getDouble("x");
                 float y = (float)message.getDouble("y");
@@ -158,7 +161,7 @@ public class PanZoomController
                         animatedZoomTo(zoomRect);
                     }
                 });
-            } else if (event.equals("Browser:ZoomToPageWidth")) {
+            } else if (MESSAGE_ZOOM_PAGE.equals(event)) {
                 float scale = mController.getZoomFactor();
                 FloatSize pageSize = mController.getPageSize();
 
