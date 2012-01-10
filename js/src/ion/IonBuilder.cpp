@@ -2498,10 +2498,13 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *pc)
     // such as pre-header phi's won't discard specialized type of the
     // predecessor.
     JS_ASSERT(predecessor->stackDepth() == osrBlock->stackDepth());
-    for (uint32 i = 0; i < osrBlock->stackDepth(); i++) {
+    JS_ASSERT(info().scopeChainSlot() == 0);
+    JS_ASSERT(osrBlock->getSlot(info().scopeChainSlot())->type() == MIRType_Object);
+    for (uint32 i = 1; i < osrBlock->stackDepth(); i++) {
         MIRType guessType = predecessor->getSlot(i)->type();
         if (guessType != MIRType_Value) {
             MDefinition *def = osrBlock->getSlot(i);
+            JS_ASSERT(def->type() == MIRType_Value);
             MInstruction *actual = MUnbox::New(def, guessType, MUnbox::Fallible);
             osrBlock->add(actual);
             osrBlock->rewriteSlot(i, actual);
