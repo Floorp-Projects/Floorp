@@ -1555,15 +1555,13 @@ void * JS_FASTCALL
 stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 {
     jsbytecode * const originalPC = origPc;
-    jsbytecode *pc = originalPC;
 
     JSOp op = JSOp(*originalPC);
-    JS_ASSERT(op == JSOP_TABLESWITCH || op == JSOP_TABLESWITCHX);
+    JS_ASSERT(op == JSOP_TABLESWITCH);
 
-    uint32_t jumpOffset = js::analyze::GetJumpOffset(originalPC, pc);
-    unsigned jumpLength = (op == JSOP_TABLESWITCHX) ? JUMPX_OFFSET_LEN : JUMP_OFFSET_LEN;
-    pc += jumpLength;
-
+    uint32_t jumpOffset = GET_JUMP_OFFSET(originalPC);
+    jsbytecode *pc = originalPC + JUMP_OFFSET_LEN;
+    
     /* Note: compiler adjusts the stack beforehand. */
     Value rval = f.regs.sp[-1];
 
@@ -1590,9 +1588,8 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 
         tableIdx -= low;
         if ((jsuint) tableIdx < (jsuint)(high - low + 1)) {
-            pc += jumpLength * tableIdx;
-            uint32_t candidateOffset = js::analyze::GetJumpOffset(originalPC, pc);
-            if (candidateOffset)
+            pc += JUMP_OFFSET_LEN * tableIdx;
+            if (uint32_t candidateOffset = GET_JUMP_OFFSET(pc))
                 jumpOffset = candidateOffset;
         }
     }

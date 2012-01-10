@@ -1799,7 +1799,7 @@ if test "$GNU_CC"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
     fi
-    WARNINGS_AS_ERRORS='-Werror'
+    WARNINGS_AS_ERRORS='-Werror -Wno-error=uninitialized'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
@@ -2947,6 +2947,11 @@ MOZ_SIZE_OF_TYPE(JS_BYTES_PER_DOUBLE, double, 6 8 10 12 14)
 MOZ_CHECK_HEADERS(endian.h)
 if test "$ac_cv_header_endian_h" = yes; then
     AC_DEFINE(JS_HAVE_ENDIAN_H)
+fi
+
+MOZ_CHECK_HEADERS([machine/endian.h],[],[],[#include <sys/types.h>])
+if test "$ac_cv_header_machine_endian_h" = yes; then
+    AC_DEFINE(JS_HAVE_MACHINE_ENDIAN_H)
 fi
 
 MOZ_CHECK_HEADERS(sys/isa_defs.h)

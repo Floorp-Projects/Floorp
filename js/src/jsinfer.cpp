@@ -3207,9 +3207,7 @@ CheckNextTest(jsbytecode *pc)
       case JSOP_IFNE:
       case JSOP_NOT:
       case JSOP_OR:
-      case JSOP_ORX:
       case JSOP_AND:
-      case JSOP_ANDX:
       case JSOP_TYPEOF:
       case JSOP_TYPEOFEXPR:
         return true;
@@ -3402,11 +3400,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_NOP:
       case JSOP_LOOPHEAD:
       case JSOP_GOTO:
-      case JSOP_GOTOX:
       case JSOP_IFEQ:
-      case JSOP_IFEQX:
       case JSOP_IFNE:
-      case JSOP_IFNEX:
       case JSOP_LINENO:
       case JSOP_DEFCONST:
       case JSOP_LEAVEWITH:
@@ -3415,11 +3410,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_ENDITER:
       case JSOP_THROWING:
       case JSOP_GOSUB:
-      case JSOP_GOSUBX:
       case JSOP_RETSUB:
       case JSOP_CONDSWITCH:
       case JSOP_DEFAULT:
-      case JSOP_DEFAULTX:
       case JSOP_POPN:
       case JSOP_STARTXML:
       case JSOP_STARTXMLEXPR:
@@ -3435,12 +3428,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_DEBUGGER:
       case JSOP_SETCALL:
       case JSOP_TABLESWITCH:
-      case JSOP_TABLESWITCHX:
       case JSOP_LOOKUPSWITCH:
-      case JSOP_LOOKUPSWITCHX:
       case JSOP_TRY:
       case JSOP_LABEL:
-      case JSOP_LABELX:
         break;
 
         /* Bytecodes pushing values of known type. */
@@ -3521,9 +3511,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_OR:
-      case JSOP_ORX:
       case JSOP_AND:
-      case JSOP_ANDX:
         /* OR/AND push whichever operand determined the result. */
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
@@ -4053,7 +4041,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_CASE:
-      case JSOP_CASEX:
         poppedTypes(pc, 1)->addSubset(cx, &pushed[0]);
         break;
 
@@ -5440,9 +5427,7 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
 
       /* Value not determining result is not pushed by OR/AND. */
       case JSOP_OR:
-      case JSOP_ORX:
       case JSOP_AND:
-      case JSOP_ANDX:
         return (index == 0);
 
       /* Holes tracked separately. */

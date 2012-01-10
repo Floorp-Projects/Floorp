@@ -110,8 +110,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, uintN lineno)
     atomIndices(parser->context),
     stackDepth(0), maxStackDepth(0),
     ntrynotes(0), lastTryNode(NULL),
-    spanDeps(NULL), jumpTargets(NULL), jtFreeList(NULL),
-    numSpanDeps(0), numJumpTargets(0), spanDepTodo(0),
     arrayCompDepth(0),
     emitLevel(0),
     constMap(parser->context),
@@ -147,10 +145,6 @@ BytecodeEmitter::~BytecodeEmitter()
     cx->free_(prolog.notes);
     cx->free_(main.base);
     cx->free_(main.notes);
-
-    /* NB: non-null only after OOM. */
-    if (spanDeps)
-        cx->free_(spanDeps);
 }
 
 static ptrdiff_t
@@ -316,6 +310,21 @@ frontend::EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra)
     return offset;
 }
 
+static ptrdiff_t
+EmitJump(JSContext *cx, BytecodeEmitter *bce, JSOp op, ptrdiff_t off)
+{
+    ptrdiff_t offset = EmitCheck(cx, bce, 5);
+
+    if (offset >= 0) {
+        jsbytecode *next = bce->next();
+        next[0] = (jsbytecode)op;
+        SET_JUMP_OFFSET(next, off);
+        bce->current->next = next + 5;
+        UpdateDepth(cx, bce, offset);
+    }
+    return offset;
+}
+
 /* XXX too many "... statement" L10N gaffes below -- fix via js.msg! */
 const char js_with_statement_str[] = "with statement";
 const char js_finally_block_str[]  = "finally block";
@@ -354,898 +363,6 @@ ReportStatementTooLarge(JSContext *cx, BytecodeEmitter *bce)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DIET,
                          StatementName(bce));
-}
-
-/**
-  Span-dependent instructions in JS bytecode consist of the jump (JOF_JUMP)
-  and switch (JOF_LOOKUPSWITCH, JOF_TABLESWITCH) format opcodes, subdivided
-  into unconditional (gotos and gosubs), and conditional jumps or branches
-  (which pop a value, test it, and jump depending on its value).  Most jumps
-  have just one immediate operand, a signed offset from the jump opcode's pc
-  to the target bytecode.  The lookup and table switch opcodes may contain
-  many jump offsets.
-
-  Mozilla bug #80981 (http://bugzilla.mozilla.org/show_bug.cgi?id=80981) was
-  fixed by adding extended "X" counterparts to the opcodes/formats (NB: X is
-  suffixed to prefer JSOP_ORX thereby avoiding a JSOP_XOR name collision for
-  the extended form of the JSOP_OR branch opcode).  The unextended or short
-  formats have 16-bit signed immediate offset operands, the extended or long
-  formats have 32-bit signed immediates.  The span-dependency problem consists
-  of selecting as few long instructions as possible, or about as few -- since
-  jumps can span other jumps, extending one jump may cause another to need to
-  be extended.
-
-  Most JS scripts are short, so need no extended jumps.  We optimize for this
-  case by generating short jumps until we know a long jump is needed.  After
-  that point, we keep generating short jumps, but each jump's 16-bit immediate
-  offset operand is actually an unsigned index into bce->spanDeps, an array of
-  js::SpanDep structs.  Each struct tells the top offset in the script of the
-  opcode, the "before" offset of the jump (which will be the same as top for
-  simplex jumps, but which will index further into the bytecode array for a
-  non-initial jump offset in a lookup or table switch), the after "offset"
-  adjusted during span-dependent instruction selection (initially the same
-  value as the "before" offset), and the jump target (more below).
-
-  Since we generate bce->spanDeps lazily, from within SetJumpOffset, we must
-  ensure that all bytecode generated so far can be inspected to discover where
-  the jump offset immediate operands lie within bce->main. But the bonus is
-  that we generate span-dependency records sorted by their offsets, so we can
-  binary-search when trying to find a SpanDep for a given bytecode offset, or
-  the nearest SpanDep at or above a given pc.
-
-  To avoid limiting scripts to 64K jumps, if the bce->spanDeps index overflows
-  65534, we store SPANDEP_INDEX_HUGE in the jump's immediate operand.  This
-  tells us that we need to binary-search for the bce->spanDeps entry by the
-  jump opcode's bytecode offset (sd->before).
-
-  Jump targets need to be maintained in a data structure that lets us look
-  up an already-known target by its address (jumps may have a common target),
-  and that also lets us update the addresses (script-relative, a.k.a. absolute
-  offsets) of targets that come after a jump target (for when a jump below
-  that target needs to be extended).  We use an AVL tree, implemented using
-  recursion, but with some tricky optimizations to its height-balancing code
-  (see http://www.cmcrossroads.com/bradapp/ftp/src/libs/C++/AvlTrees.html).
-
-  A final wrinkle: backpatch chains are linked by jump-to-jump offsets with
-  positive sign, even though they link "backward" (i.e., toward lower bytecode
-  address).  We don't want to waste space and search time in the AVL tree for
-  such temporary backpatch deltas, so we use a single-bit wildcard scheme to
-  tag true JumpTarget pointers and encode untagged, signed (positive) deltas in
-  SpanDep::target pointers, depending on whether the SpanDep has a known
-  target, or is still awaiting backpatching.
-
-  Note that backpatch chains would present a problem for BuildSpanDepTable,
-  which inspects bytecode to build bce->spanDeps on demand, when the first
-  short jump offset overflows.  To solve this temporary problem, we emit a
-  proxy bytecode (JSOP_BACKPATCH; JSOP_BACKPATCH_POP for branch ops) whose
-  nuses/ndefs counts help keep the stack balanced, but whose opcode format
-  distinguishes its backpatch delta immediate operand from a normal jump
-  offset.
- */
-static int
-BalanceJumpTargets(JumpTarget **jtp)
-{
-    JumpTarget *jt = *jtp;
-    JS_ASSERT(jt->balance != 0);
-
-    int dir;
-    JSBool doubleRotate;
-    if (jt->balance < -1) {
-        dir = JT_RIGHT;
-        doubleRotate = (jt->kids[JT_LEFT]->balance > 0);
-    } else if (jt->balance > 1) {
-        dir = JT_LEFT;
-        doubleRotate = (jt->kids[JT_RIGHT]->balance < 0);
-    } else {
-        return 0;
-    }
-
-    int otherDir = JT_OTHER_DIR(dir);
-    JumpTarget *root;
-    int heightChanged;
-    if (doubleRotate) {
-        JumpTarget *jt2 = jt->kids[otherDir];
-        *jtp = root = jt2->kids[dir];
-
-        jt->kids[otherDir] = root->kids[dir];
-        root->kids[dir] = jt;
-
-        jt2->kids[dir] = root->kids[otherDir];
-        root->kids[otherDir] = jt2;
-
-        heightChanged = 1;
-        root->kids[JT_LEFT]->balance = -JS_MAX(root->balance, 0);
-        root->kids[JT_RIGHT]->balance = -JS_MIN(root->balance, 0);
-        root->balance = 0;
-    } else {
-        *jtp = root = jt->kids[otherDir];
-        jt->kids[otherDir] = root->kids[dir];
-        root->kids[dir] = jt;
-
-        heightChanged = (root->balance != 0);
-        jt->balance = -((dir == JT_LEFT) ? --root->balance : ++root->balance);
-    }
-
-    return heightChanged;
-}
-
-struct AddJumpTargetArgs {
-    JSContext           *cx;
-    BytecodeEmitter     *bce;
-    ptrdiff_t           offset;
-    JumpTarget          *node;
-};
-
-static int
-AddJumpTarget(AddJumpTargetArgs *args, JumpTarget **jtp)
-{
-    JumpTarget *jt = *jtp;
-    if (!jt) {
-        BytecodeEmitter *bce = args->bce;
-
-        jt = bce->jtFreeList;
-        if (jt) {
-            bce->jtFreeList = jt->kids[JT_LEFT];
-        } else {
-            jt = args->cx->tempLifoAlloc().new_<JumpTarget>();
-            if (!jt) {
-                js_ReportOutOfMemory(args->cx);
-                return 0;
-            }
-        }
-        jt->offset = args->offset;
-        jt->balance = 0;
-        jt->kids[JT_LEFT] = jt->kids[JT_RIGHT] = NULL;
-        bce->numJumpTargets++;
-        args->node = jt;
-        *jtp = jt;
-        return 1;
-    }
-
-    if (jt->offset == args->offset) {
-        args->node = jt;
-        return 0;
-    }
-
-    int balanceDelta;
-    if (args->offset < jt->offset)
-        balanceDelta = -AddJumpTarget(args, &jt->kids[JT_LEFT]);
-    else
-        balanceDelta = AddJumpTarget(args, &jt->kids[JT_RIGHT]);
-    if (!args->node)
-        return 0;
-
-    jt->balance += balanceDelta;
-    return (balanceDelta && jt->balance)
-           ? 1 - BalanceJumpTargets(jtp)
-           : 0;
-}
-
-#ifdef DEBUG_brendan
-static int
-AVLCheck(JumpTarget *jt)
-{
-    int lh, rh;
-
-    if (!jt) return 0;
-    JS_ASSERT(-1 <= jt->balance && jt->balance <= 1);
-    lh = AVLCheck(jt->kids[JT_LEFT]);
-    rh = AVLCheck(jt->kids[JT_RIGHT]);
-    JS_ASSERT(jt->balance == rh - lh);
-    return 1 + JS_MAX(lh, rh);
-}
-#endif
-
-static JSBool
-SetSpanDepTarget(JSContext *cx, BytecodeEmitter *bce, SpanDep *sd, ptrdiff_t off)
-{
-    AddJumpTargetArgs args;
-
-    if (off < JUMPX_OFFSET_MIN || JUMPX_OFFSET_MAX < off) {
-        ReportStatementTooLarge(cx, bce);
-        return JS_FALSE;
-    }
-
-    args.cx = cx;
-    args.bce = bce;
-    args.offset = sd->top + off;
-    args.node = NULL;
-    AddJumpTarget(&args, &bce->jumpTargets);
-    if (!args.node)
-        return JS_FALSE;
-
-#ifdef DEBUG_brendan
-    AVLCheck(bce->jumpTargets);
-#endif
-
-    SD_SET_TARGET(sd, args.node);
-    return JS_TRUE;
-}
-
-#define SPANDEPS_MIN            256
-#define SPANDEPS_SIZE(n)        ((n) * sizeof(js::SpanDep))
-#define SPANDEPS_SIZE_MIN       SPANDEPS_SIZE(SPANDEPS_MIN)
-
-static JSBool
-AddSpanDep(JSContext *cx, BytecodeEmitter *bce, jsbytecode *pc, jsbytecode *pc2, ptrdiff_t off)
-{
-    uintN index = bce->numSpanDeps;
-    if (index + 1 == 0) {
-        ReportStatementTooLarge(cx, bce);
-        return JS_FALSE;
-    }
-
-    SpanDep *sdbase;
-    if ((index & (index - 1)) == 0 &&
-        (!(sdbase = bce->spanDeps) || index >= SPANDEPS_MIN))
-    {
-        size_t size = sdbase ? SPANDEPS_SIZE(index) : SPANDEPS_SIZE_MIN / 2;
-        sdbase = (SpanDep *) cx->realloc_(sdbase, size + size);
-        if (!sdbase)
-            return JS_FALSE;
-        bce->spanDeps = sdbase;
-    }
-
-    bce->numSpanDeps = index + 1;
-    SpanDep *sd = bce->spanDeps + index;
-    sd->top = pc - bce->base();
-    sd->offset = sd->before = pc2 - bce->base();
-
-    if (js_CodeSpec[*pc].format & JOF_BACKPATCH) {
-        /* Jump offset will be backpatched if off is a non-zero "bpdelta". */
-        if (off != 0) {
-            JS_ASSERT(off >= 1 + JUMP_OFFSET_LEN);
-            if (off > BPDELTA_MAX) {
-                ReportStatementTooLarge(cx, bce);
-                return JS_FALSE;
-            }
-        }
-        SD_SET_BPDELTA(sd, off);
-    } else if (off == 0) {
-        /* Jump offset will be patched directly, without backpatch chaining. */
-        SD_SET_TARGET(sd, 0);
-    } else {
-        /* The jump offset in off is non-zero, therefore it's already known. */
-        if (!SetSpanDepTarget(cx, bce, sd, off))
-            return JS_FALSE;
-    }
-
-    if (index > SPANDEP_INDEX_MAX)
-        index = SPANDEP_INDEX_HUGE;
-    SET_SPANDEP_INDEX(pc2, index);
-    return JS_TRUE;
-}
-
-static jsbytecode *
-AddSwitchSpanDeps(JSContext *cx, BytecodeEmitter *bce, jsbytecode *pc)
-{
-    JSOp op;
-    jsbytecode *pc2;
-    ptrdiff_t off;
-    jsint low, high;
-    uintN njumps, indexlen;
-
-    op = (JSOp) *pc;
-    JS_ASSERT(op == JSOP_TABLESWITCH || op == JSOP_LOOKUPSWITCH);
-    pc2 = pc;
-    off = GET_JUMP_OFFSET(pc2);
-    if (!AddSpanDep(cx, bce, pc, pc2, off))
-        return NULL;
-    pc2 += JUMP_OFFSET_LEN;
-    if (op == JSOP_TABLESWITCH) {
-        low = GET_JUMP_OFFSET(pc2);
-        pc2 += JUMP_OFFSET_LEN;
-        high = GET_JUMP_OFFSET(pc2);
-        pc2 += JUMP_OFFSET_LEN;
-        njumps = (uintN) (high - low + 1);
-        indexlen = 0;
-    } else {
-        njumps = GET_UINT16(pc2);
-        pc2 += UINT16_LEN;
-        indexlen = INDEX_LEN;
-    }
-    while (njumps) {
-        --njumps;
-        pc2 += indexlen;
-        off = GET_JUMP_OFFSET(pc2);
-        if (!AddSpanDep(cx, bce, pc, pc2, off))
-            return NULL;
-        pc2 += JUMP_OFFSET_LEN;
-    }
-    return 1 + pc2;
-}
-
-static JSBool
-BuildSpanDepTable(JSContext *cx, BytecodeEmitter *bce)
-{
-    jsbytecode *pc, *end;
-    JSOp op;
-    const JSCodeSpec *cs;
-    ptrdiff_t off;
-
-    pc = bce->base() + bce->spanDepTodo;
-    end = bce->next();
-    while (pc != end) {
-        JS_ASSERT(pc < end);
-        op = (JSOp)*pc;
-        cs = &js_CodeSpec[op];
-
-        switch (JOF_TYPE(cs->format)) {
-          case JOF_TABLESWITCH:
-          case JOF_LOOKUPSWITCH:
-            pc = AddSwitchSpanDeps(cx, bce, pc);
-            if (!pc)
-                return JS_FALSE;
-            break;
-
-          case JOF_JUMP:
-            off = GET_JUMP_OFFSET(pc);
-            if (!AddSpanDep(cx, bce, pc, pc, off))
-                return JS_FALSE;
-            /* FALL THROUGH */
-          default:
-            pc += cs->length;
-            break;
-        }
-    }
-
-    return JS_TRUE;
-}
-
-static SpanDep *
-GetSpanDep(BytecodeEmitter *bce, jsbytecode *pc)
-{
-    uintN index;
-    ptrdiff_t offset;
-    int lo, hi, mid;
-    SpanDep *sd;
-
-    index = GET_SPANDEP_INDEX(pc);
-    if (index != SPANDEP_INDEX_HUGE)
-        return bce->spanDeps + index;
-
-    offset = pc - bce->base();
-    lo = 0;
-    hi = bce->numSpanDeps - 1;
-    while (lo <= hi) {
-        mid = (lo + hi) / 2;
-        sd = bce->spanDeps + mid;
-        if (sd->before == offset)
-            return sd;
-        if (sd->before < offset)
-            lo = mid + 1;
-        else
-            hi = mid - 1;
-    }
-
-    JS_ASSERT(0);
-    return NULL;
-}
-
-static JSBool
-SetBackPatchDelta(JSContext *cx, BytecodeEmitter *bce, jsbytecode *pc, ptrdiff_t delta)
-{
-    SpanDep *sd;
-
-    JS_ASSERT(delta >= 1 + JUMP_OFFSET_LEN);
-    if (!bce->spanDeps && delta < JUMP_OFFSET_MAX) {
-        SET_JUMP_OFFSET(pc, delta);
-        return JS_TRUE;
-    }
-
-    if (delta > BPDELTA_MAX) {
-        ReportStatementTooLarge(cx, bce);
-        return JS_FALSE;
-    }
-
-    if (!bce->spanDeps && !BuildSpanDepTable(cx, bce))
-        return JS_FALSE;
-
-    sd = GetSpanDep(bce, pc);
-    JS_ASSERT(SD_GET_BPDELTA(sd) == 0);
-    SD_SET_BPDELTA(sd, delta);
-    return JS_TRUE;
-}
-
-static void
-UpdateJumpTargets(JumpTarget *jt, ptrdiff_t pivot, ptrdiff_t delta)
-{
-    if (jt->offset > pivot) {
-        jt->offset += delta;
-        if (jt->kids[JT_LEFT])
-            UpdateJumpTargets(jt->kids[JT_LEFT], pivot, delta);
-    }
-    if (jt->kids[JT_RIGHT])
-        UpdateJumpTargets(jt->kids[JT_RIGHT], pivot, delta);
-}
-
-static SpanDep *
-FindNearestSpanDep(BytecodeEmitter *bce, ptrdiff_t offset, int lo, SpanDep *guard)
-{
-    int num = bce->numSpanDeps;
-    JS_ASSERT(num > 0);
-    int hi = num - 1;
-    SpanDep *sdbase = bce->spanDeps;
-    while (lo <= hi) {
-        int mid = (lo + hi) / 2;
-        SpanDep *sd = sdbase + mid;
-        if (sd->before == offset)
-            return sd;
-        if (sd->before < offset)
-            lo = mid + 1;
-        else
-            hi = mid - 1;
-    }
-    if (lo == num)
-        return guard;
-    SpanDep *sd = sdbase + lo;
-    JS_ASSERT(sd->before >= offset && (lo == 0 || sd[-1].before < offset));
-    return sd;
-}
-
-static void
-FreeJumpTargets(BytecodeEmitter *bce, JumpTarget *jt)
-{
-    if (jt->kids[JT_LEFT])
-        FreeJumpTargets(bce, jt->kids[JT_LEFT]);
-    if (jt->kids[JT_RIGHT])
-        FreeJumpTargets(bce, jt->kids[JT_RIGHT]);
-    jt->kids[JT_LEFT] = bce->jtFreeList;
-    bce->jtFreeList = jt;
-}
-
-static JSBool
-OptimizeSpanDeps(JSContext *cx, BytecodeEmitter *bce)
-{
-    jsbytecode *pc, *oldpc, *base, *limit, *next;
-    SpanDep *sd, *sd2, *sdbase, *sdlimit, *sdtop, guard;
-    ptrdiff_t offset, growth, delta, top, pivot, span, length, target;
-    JSBool done;
-    JSOp op;
-    uint32_t type;
-    jssrcnote *sn, *snlimit;
-    JSSrcNoteSpec *spec;
-    uintN i, n, noteIndex;
-    TryNode *tryNode;
-    DebugOnly<int> passes = 0;
-
-    base = bce->base();
-    sdbase = bce->spanDeps;
-    sdlimit = sdbase + bce->numSpanDeps;
-    offset = bce->offset();
-    growth = 0;
-
-    do {
-        done = JS_TRUE;
-        delta = 0;
-        top = pivot = -1;
-        sdtop = NULL;
-        pc = NULL;
-        op = JSOP_NOP;
-        type = 0;
-#ifdef DEBUG_brendan
-        passes++;
-#endif
-
-        for (sd = sdbase; sd < sdlimit; sd++) {
-            JS_ASSERT(JT_HAS_TAG(sd->target));
-            sd->offset += delta;
-
-            if (sd->top != top) {
-                sdtop = sd;
-                top = sd->top;
-                JS_ASSERT(top == sd->before);
-                pivot = sd->offset;
-                pc = base + top;
-                op = (JSOp) *pc;
-                type = JOF_OPTYPE(op);
-                if (JOF_TYPE_IS_EXTENDED_JUMP(type)) {
-                    /*
-                     * We already extended all the jump offset operands for
-                     * the opcode at sd->top.  Jumps and branches have only
-                     * one jump offset operand, but switches have many, all
-                     * of which are adjacent in bce->spanDeps.
-                     */
-                    continue;
-                }
-
-                JS_ASSERT(type == JOF_JUMP ||
-                          type == JOF_TABLESWITCH ||
-                          type == JOF_LOOKUPSWITCH);
-            }
-
-            if (!JOF_TYPE_IS_EXTENDED_JUMP(type)) {
-                span = SD_SPAN(sd, pivot);
-                if (span < JUMP_OFFSET_MIN || JUMP_OFFSET_MAX < span) {
-                    ptrdiff_t deltaFromTop = 0;
-
-                    done = JS_FALSE;
-
-                    switch (op) {
-                      case JSOP_GOTO:         op = JSOP_GOTOX; break;
-                      case JSOP_IFEQ:         op = JSOP_IFEQX; break;
-                      case JSOP_IFNE:         op = JSOP_IFNEX; break;
-                      case JSOP_OR:           op = JSOP_ORX; break;
-                      case JSOP_AND:          op = JSOP_ANDX; break;
-                      case JSOP_GOSUB:        op = JSOP_GOSUBX; break;
-                      case JSOP_CASE:         op = JSOP_CASEX; break;
-                      case JSOP_DEFAULT:      op = JSOP_DEFAULTX; break;
-                      case JSOP_TABLESWITCH:  op = JSOP_TABLESWITCHX; break;
-                      case JSOP_LOOKUPSWITCH: op = JSOP_LOOKUPSWITCHX; break;
-                      case JSOP_LABEL:        op = JSOP_LABELX; break;
-                      default:
-                        ReportStatementTooLarge(cx, bce);
-                        return JS_FALSE;
-                    }
-                    *pc = (jsbytecode) op;
-
-                    for (sd2 = sdtop; sd2 < sdlimit && sd2->top == top; sd2++) {
-                        if (sd2 <= sd) {
-                            /*
-                             * sd2->offset already includes delta as it stood
-                             * before we entered this loop, but it must also
-                             * include the delta relative to top due to all the
-                             * extended jump offset immediates for the opcode
-                             * starting at top, which we extend in this loop.
-                             *
-                             * If there is only one extended jump offset, then
-                             * sd2->offset won't change and this for loop will
-                             * iterate once only.
-                             */
-                            sd2->offset += deltaFromTop;
-                            deltaFromTop += JUMPX_OFFSET_LEN - JUMP_OFFSET_LEN;
-                        } else {
-                            /*
-                             * sd2 comes after sd, and won't be revisited by
-                             * the outer for loop, so we have to increase its
-                             * offset by delta, not merely by deltaFromTop.
-                             */
-                            sd2->offset += delta;
-                        }
-
-                        delta += JUMPX_OFFSET_LEN - JUMP_OFFSET_LEN;
-                        UpdateJumpTargets(bce->jumpTargets, sd2->offset,
-                                          JUMPX_OFFSET_LEN - JUMP_OFFSET_LEN);
-                    }
-                    sd = sd2 - 1;
-                }
-            }
-        }
-
-        growth += delta;
-    } while (!done);
-
-    if (growth) {
-#ifdef DEBUG_brendan
-        TokenStream *ts = &bce->parser->tokenStream;
-
-        printf("%s:%u: %u/%u jumps extended in %d passes (%d=%d+%d)\n",
-               ts->filename ? ts->filename : "stdin", bce->firstLine,
-               growth / (JUMPX_OFFSET_LEN - JUMP_OFFSET_LEN), bce->numSpanDeps,
-               passes, offset + growth, offset, growth);
-#endif
-
-        /*
-         * Ensure that we have room for the extended jumps, but don't round up
-         * to a power of two -- we're done generating code, so we cut to fit.
-         */
-        limit = bce->limit();
-        length = offset + growth;
-        next = base + length;
-        if (next > limit) {
-            base = (jsbytecode *) cx->realloc_(base, BYTECODE_SIZE(length));
-            if (!base) {
-                js_ReportOutOfMemory(cx);
-                return JS_FALSE;
-            }
-            bce->current->base = base;
-            bce->current->limit = next = base + length;
-        }
-        bce->current->next = next;
-
-        /*
-         * Set up a fake span dependency record to guard the end of the code
-         * being generated.  This guard record is returned as a fencepost by
-         * FindNearestSpanDep if there is no real spandep at or above a given
-         * unextended code offset.
-         */
-        guard.top = -1;
-        guard.offset = offset + growth;
-        guard.before = offset;
-        guard.target = NULL;
-    }
-
-    /*
-     * Now work backwards through the span dependencies, copying chunks of
-     * bytecode between each extended jump toward the end of the grown code
-     * space, and restoring immediate offset operands for all jump bytecodes.
-     * The first chunk of bytecodes, starting at base and ending at the first
-     * extended jump offset (NB: this chunk includes the operation bytecode
-     * just before that immediate jump offset), doesn't need to be copied.
-     */
-    JS_ASSERT(sd == sdlimit);
-    top = -1;
-    while (--sd >= sdbase) {
-        if (sd->top != top) {
-            top = sd->top;
-            op = (JSOp) base[top];
-            type = JOF_OPTYPE(op);
-
-            for (sd2 = sd - 1; sd2 >= sdbase && sd2->top == top; sd2--)
-                continue;
-            sd2++;
-            pivot = sd2->offset;
-            JS_ASSERT(top == sd2->before);
-        }
-
-        oldpc = base + sd->before;
-        span = SD_SPAN(sd, pivot);
-
-        /*
-         * If this jump didn't need to be extended, restore its span immediate
-         * offset operand now, overwriting the index of sd within bce->spanDeps
-         * that was stored temporarily after *pc when BuildSpanDepTable ran.
-         *
-         * Note that span might fit in 16 bits even for an extended jump op,
-         * if the op has multiple span operands, not all of which overflowed
-         * (e.g. JSOP_LOOKUPSWITCH or JSOP_TABLESWITCH where some cases are in
-         * range for a short jump, but others are not).
-         */
-        if (!JOF_TYPE_IS_EXTENDED_JUMP(type)) {
-            JS_ASSERT(JUMP_OFFSET_MIN <= span && span <= JUMP_OFFSET_MAX);
-            SET_JUMP_OFFSET(oldpc, span);
-            continue;
-        }
-
-        /*
-         * Set up parameters needed to copy the next run of bytecode starting
-         * at offset (which is a cursor into the unextended, original bytecode
-         * vector), down to sd->before (a cursor of the same scale as offset,
-         * it's the index of the original jump pc).  Reuse delta to count the
-         * nominal number of bytes to copy.
-         */
-        pc = base + sd->offset;
-        delta = offset - sd->before;
-        JS_ASSERT(delta >= 1 + JUMP_OFFSET_LEN);
-
-        /*
-         * Don't bother copying the jump offset we're about to reset, but do
-         * copy the bytecode at oldpc (which comes just before its immediate
-         * jump offset operand), on the next iteration through the loop, by
-         * including it in offset's new value.
-         */
-        offset = sd->before + 1;
-        size_t size = BYTECODE_SIZE(delta - (1 + JUMP_OFFSET_LEN));
-        if (size) {
-            memmove(pc + 1 + JUMPX_OFFSET_LEN,
-                    oldpc + 1 + JUMP_OFFSET_LEN,
-                    size);
-        }
-
-        SET_JUMPX_OFFSET(pc, span);
-    }
-
-    if (growth) {
-        /*
-         * Fix source note deltas.  Don't hardwire the delta fixup adjustment,
-         * even though currently it must be JUMPX_OFFSET_LEN - JUMP_OFFSET_LEN
-         * at each sd that moved.  The future may bring different offset sizes
-         * for span-dependent instruction operands.  However, we fix only main
-         * notes here, not prolog notes -- we know that prolog opcodes are not
-         * span-dependent, and aren't likely ever to be.
-         */
-        offset = growth = 0;
-        sd = sdbase;
-        for (sn = bce->main.notes, snlimit = sn + bce->main.noteCount;
-             sn < snlimit;
-             sn = SN_NEXT(sn)) {
-            /*
-             * Recall that the offset of a given note includes its delta, and
-             * tells the offset of the annotated bytecode from the main entry
-             * point of the script.
-             */
-            offset += SN_DELTA(sn);
-            while (sd < sdlimit && sd->before < offset) {
-                /*
-                 * To compute the delta to add to sn, we need to look at the
-                 * spandep after sd, whose offset - (before + growth) tells by
-                 * how many bytes sd's instruction grew.
-                 */
-                sd2 = sd + 1;
-                if (sd2 == sdlimit)
-                    sd2 = &guard;
-                delta = sd2->offset - (sd2->before + growth);
-                if (delta > 0) {
-                    JS_ASSERT(delta == JUMPX_OFFSET_LEN - JUMP_OFFSET_LEN);
-                    sn = AddToSrcNoteDelta(cx, bce, sn, delta);
-                    if (!sn)
-                        return JS_FALSE;
-                    snlimit = bce->main.notes + bce->main.noteCount;
-                    growth += delta;
-                }
-                sd++;
-            }
-
-            /*
-             * If sn has span-dependent offset operands, check whether each
-             * covers further span-dependencies, and increase those operands
-             * accordingly.  Some source notes measure offset not from the
-             * annotated pc, but from that pc plus some small bias.  NB: we
-             * assume that spec->offsetBias can't itself span span-dependent
-             * instructions!
-             */
-            spec = &js_SrcNoteSpec[SN_TYPE(sn)];
-            if (spec->isSpanDep) {
-                pivot = offset + spec->offsetBias;
-                n = spec->arity;
-                for (i = 0; i < n; i++) {
-                    span = js_GetSrcNoteOffset(sn, i);
-                    if (span == 0)
-                        continue;
-                    target = pivot + span * spec->isSpanDep;
-                    sd2 = FindNearestSpanDep(bce, target,
-                                             (target >= pivot)
-                                             ? sd - sdbase
-                                             : 0,
-                                             &guard);
-
-                    /*
-                     * Increase target by sd2's before-vs-after offset delta,
-                     * which is absolute (i.e., relative to start of script,
-                     * as is target).  Recompute the span by subtracting its
-                     * adjusted pivot from target.
-                     */
-                    target += sd2->offset - sd2->before;
-                    span = target - (pivot + growth);
-                    span *= spec->isSpanDep;
-                    noteIndex = sn - bce->main.notes;
-                    if (!SetSrcNoteOffset(cx, bce, noteIndex, i, span))
-                        return JS_FALSE;
-                    sn = bce->main.notes + noteIndex;
-                    snlimit = bce->main.notes + bce->main.noteCount;
-                }
-            }
-        }
-        bce->main.lastNoteOffset += growth;
-
-        /*
-         * Fix try/catch notes (O(numTryNotes * log2(numSpanDeps)), but it's
-         * not clear how we can beat that).
-         */
-        for (tryNode = bce->lastTryNode; tryNode; tryNode = tryNode->prev) {
-            /*
-             * First, look for the nearest span dependency at/above tn->start.
-             * There may not be any such spandep, in which case the guard will
-             * be returned.
-             */
-            offset = tryNode->note.start;
-            sd = FindNearestSpanDep(bce, offset, 0, &guard);
-            delta = sd->offset - sd->before;
-            tryNode->note.start = offset + delta;
-
-            /*
-             * Next, find the nearest spandep at/above tn->start + tn->length.
-             * Use its delta minus tn->start's delta to increase tn->length.
-             */
-            length = tryNode->note.length;
-            sd2 = FindNearestSpanDep(bce, offset + length, sd - sdbase, &guard);
-            if (sd2 != sd) {
-                tryNode->note.length =
-                    length + sd2->offset - sd2->before - delta;
-            }
-        }
-    }
-
-#ifdef DEBUG_brendan
-  {
-    uintN bigspans = 0;
-    top = -1;
-    for (sd = sdbase; sd < sdlimit; sd++) {
-        offset = sd->offset;
-
-        /* NB: sd->top cursors into the original, unextended bytecode vector. */
-        if (sd->top != top) {
-            JS_ASSERT(top == -1 ||
-                      !JOF_TYPE_IS_EXTENDED_JUMP(type) ||
-                      bigspans != 0);
-            bigspans = 0;
-            top = sd->top;
-            JS_ASSERT(top == sd->before);
-            op = (JSOp) base[offset];
-            type = JOF_OPTYPE(op);
-            JS_ASSERT(type == JOF_JUMP ||
-                      type == JOF_JUMPX ||
-                      type == JOF_TABLESWITCH ||
-                      type == JOF_TABLESWITCHX ||
-                      type == JOF_LOOKUPSWITCH ||
-                      type == JOF_LOOKUPSWITCHX);
-            pivot = offset;
-        }
-
-        pc = base + offset;
-        if (JOF_TYPE_IS_EXTENDED_JUMP(type)) {
-            span = GET_JUMPX_OFFSET(pc);
-            if (span < JUMP_OFFSET_MIN || JUMP_OFFSET_MAX < span) {
-                bigspans++;
-            } else {
-                JS_ASSERT(type == JOF_TABLESWITCHX ||
-                          type == JOF_LOOKUPSWITCHX);
-            }
-        } else {
-            span = GET_JUMP_OFFSET(pc);
-        }
-        JS_ASSERT(SD_SPAN(sd, pivot) == span);
-    }
-    JS_ASSERT(!JOF_TYPE_IS_EXTENDED_JUMP(type) || bigspans != 0);
-  }
-#endif
-
-    /*
-     * Reset so we optimize at most once -- bce may be used for further code
-     * generation of successive, independent, top-level statements.  No jump
-     * can span top-level statements, because JS lacks goto.
-     */
-    cx->free_(bce->spanDeps);
-    bce->spanDeps = NULL;
-    FreeJumpTargets(bce, bce->jumpTargets);
-    bce->jumpTargets = NULL;
-    bce->numSpanDeps = bce->numJumpTargets = 0;
-    bce->spanDepTodo = bce->offset();
-    return JS_TRUE;
-}
-
-static ptrdiff_t
-EmitJump(JSContext *cx, BytecodeEmitter *bce, JSOp op, ptrdiff_t off)
-{
-    JSBool extend;
-    ptrdiff_t jmp;
-    jsbytecode *pc;
-
-    extend = off < JUMP_OFFSET_MIN || JUMP_OFFSET_MAX < off;
-    if (extend && !bce->spanDeps && !BuildSpanDepTable(cx, bce))
-        return -1;
-
-    jmp = Emit3(cx, bce, op, JUMP_OFFSET_HI(off), JUMP_OFFSET_LO(off));
-    if (jmp >= 0 && (extend || bce->spanDeps)) {
-        pc = bce->code(jmp);
-        if (!AddSpanDep(cx, bce, pc, pc, off))
-            return -1;
-    }
-    return jmp;
-}
-
-static ptrdiff_t
-GetJumpOffset(BytecodeEmitter *bce, jsbytecode *pc)
-{
-    if (!bce->spanDeps)
-        return GET_JUMP_OFFSET(pc);
-
-    SpanDep *sd = GetSpanDep(bce, pc);
-    JumpTarget *jt = sd->target;
-    if (!JT_HAS_TAG(jt))
-        return JT_TO_BPDELTA(jt);
-
-    ptrdiff_t top = sd->top;
-    while (--sd >= bce->spanDeps && sd->top == top)
-        continue;
-    sd++;
-    return JT_CLR_TAG(jt)->offset - sd->offset;
-}
-
-JSBool
-frontend::SetJumpOffset(JSContext *cx, BytecodeEmitter *bce, jsbytecode *pc, ptrdiff_t off)
-{
-    if (!bce->spanDeps) {
-        if (JUMP_OFFSET_MIN <= off && off <= JUMP_OFFSET_MAX) {
-            SET_JUMP_OFFSET(pc, off);
-            return JS_TRUE;
-        }
-
-        if (!BuildSpanDepTable(cx, bce))
-            return JS_FALSE;
-    }
-
-    return SetSpanDepTarget(cx, bce, GetSpanDep(bce, pc), off);
 }
 
 bool
@@ -1626,15 +743,9 @@ BackPatch(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t last, jsbytecode *targe
     pc = bce->code(last);
     stop = bce->code(-1);
     while (pc != stop) {
-        delta = GetJumpOffset(bce, pc);
+        delta = GET_JUMP_OFFSET(pc);
         span = target - pc;
-        CHECK_AND_SET_JUMP_OFFSET(cx, bce, pc, span);
-
-        /*
-         * Set *pc after jump offset in case bpdelta didn't overflow, but span
-         * does (if so, CHECK_AND_SET_JUMP_OFFSET might call BuildSpanDepTable
-         * and need to see the JSOP_BACKPATCH* op at *pc).
-         */
+        SET_JUMP_OFFSET(pc, span);
         *pc = op;
         pc -= delta;
     }
@@ -1659,8 +770,8 @@ frontend::PopStatementBCE(JSContext *cx, BytecodeEmitter *bce)
     StmtInfo *stmt = bce->topStmt;
     if (!STMT_IS_TRYING(stmt) &&
         (!BackPatch(cx, bce, stmt->breaks, bce->next(), JSOP_GOTO) ||
-         !BackPatch(cx, bce, stmt->continues, bce->code(stmt->update),
-                    JSOP_GOTO))) {
+         !BackPatch(cx, bce, stmt->continues, bce->code(stmt->update), JSOP_GOTO)))
+    {
         return JS_FALSE;
     }
     PopStatementTC(bce);
@@ -3246,6 +2357,12 @@ AllocateSwitchConstant(JSContext *cx)
     return cx->tempLifoAlloc().new_<Value>();
 }
 
+static inline void
+SetJumpOffsetAt(BytecodeEmitter *bce, ptrdiff_t off)
+{
+    SET_JUMP_OFFSET(bce->code(off), bce->offset() - off);
+}
+
 static JSBool
 EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
@@ -3501,17 +2618,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                               (INDEX_LEN + JUMP_OFFSET_LEN) * caseCount);
     }
 
-    /*
-     * Emit switchOp followed by switchSize bytes of jump or lookup table.
-     *
-     * If switchOp is JSOP_LOOKUPSWITCH or JSOP_TABLESWITCH, it is crucial
-     * to emit the immediate operand(s) by which bytecode readers such as
-     * BuildSpanDepTable discover the length of the switch opcode *before*
-     * calling SetJumpOffset (which may call BuildSpanDepTable).  It's
-     * also important to zero all unknown jump offset immediate operands,
-     * so they can be converted to span dependencies with null targets to
-     * be computed later (EmitN zeros switchSize bytes after switchOp).
-     */
+    /* Emit switchOp followed by switchSize bytes of jump or lookup table. */
     if (EmitN(cx, bce, switchOp, switchSize) < 0)
         return JS_FALSE;
 
@@ -3616,16 +2723,6 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * simple, all switchOp cases exit that way.
          */
         MUST_FLOW_THROUGH("out");
-        if (bce->spanDeps) {
-            /*
-             * We have already generated at least one big jump so we must
-             * explicitly add span dependencies for the switch jumps. When
-             * called below, SetJumpOffset can only do it when patching the
-             * first big jump or when bce->spanDeps is null.
-             */
-            if (!AddSwitchSpanDeps(cx, bce, bce->code(top)))
-                goto bad;
-        }
 
         if (constPropagated) {
             /*
@@ -3676,7 +2773,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     /* Emit code for each case's statements, copying pn_offset up to pn3. */
     for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
         if (switchOp == JSOP_CONDSWITCH && !pn3->isKind(PNK_DEFAULT))
-            CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx, bce, pn3->pn_offset, goto bad);
+            SetJumpOffsetAt(bce, pn3->pn_offset);
         pn4 = pn3->pn_right;
         ok = EmitTree(cx, bce, pn4);
         if (!ok)
@@ -3698,14 +2795,10 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (switchOp == JSOP_CONDSWITCH) {
         pc = NULL;
         JS_ASSERT(defaultOffset != -1);
-        ok = SetJumpOffset(cx, bce, bce->code(defaultOffset), off - (defaultOffset - top));
-        if (!ok)
-            goto out;
+        SET_JUMP_OFFSET(bce->code(defaultOffset), off - (defaultOffset - top));
     } else {
         pc = bce->code(top);
-        ok = SetJumpOffset(cx, bce, pc, off);
-        if (!ok)
-            goto out;
+        SET_JUMP_OFFSET(pc, off);
         pc += JUMP_OFFSET_LEN;
     }
 
@@ -3723,9 +2816,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         for (i = 0; i < (jsint)tableLength; i++) {
             pn3 = table[i];
             off = pn3 ? pn3->pn_offset - top : 0;
-            ok = SetJumpOffset(cx, bce, pc, off);
-            if (!ok)
-                goto out;
+            SET_JUMP_OFFSET(pc, off);
             pc += JUMP_OFFSET_LEN;
         }
     } else if (switchOp == JSOP_LOOKUPSWITCH) {
@@ -3741,9 +2832,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             pc += INDEX_LEN;
 
             off = pn3->pn_offset - top;
-            ok = SetJumpOffset(cx, bce, pc, off);
-            if (!ok)
-                goto out;
+            SET_JUMP_OFFSET(pc, off);
             pc += JUMP_OFFSET_LEN;
         }
     }
@@ -5128,7 +4217,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             guardJump = GUARDJUMP(stmtInfo);
             if (guardJump != -1) {
                 /* Fix up and clean up previous catch block. */
-                CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, guardJump);
+                SetJumpOffsetAt(bce, guardJump);
 
                 /*
                  * Account for JSOP_ENTERBLOCK (whose block object count
@@ -5206,7 +4295,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * stack unbalanced.
      */
     if (lastCatch && lastCatch->pn_kid2) {
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, GUARDJUMP(stmtInfo));
+        SetJumpOffsetAt(bce, GUARDJUMP(stmtInfo));
 
         /* Sync the stack to take into account pushed exception. */
         JS_ASSERT(bce->stackDepth == depth);
@@ -5338,7 +4427,7 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return JS_FALSE;
 
         /* Ensure the branch-if-false comes here, then emit the else. */
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, beq);
+        SetJumpOffsetAt(bce, beq);
         if (pn3->isKind(PNK_IF)) {
             pn = pn3;
             goto if_again;
@@ -5358,7 +4447,7 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return JS_FALSE;
     } else {
         /* No else part, fixup the branch-if-false to come here. */
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, beq);
+        SetJumpOffsetAt(bce, beq);
     }
     return PopStatementBCE(cx, bce);
 }
@@ -5784,7 +4873,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     /*
      * Fixup the goto that starts the loop to jump down to JSOP_MOREITER.
      */
-    CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, jmp);
+    SetJumpOffsetAt(bce, jmp);
     if (Emit1(cx, bce, JSOP_MOREITER) < 0)
         return false;
     ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
@@ -5869,7 +4958,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     /*
      * NB: the SRC_FOR note has offsetBias 1 (JSOP_{NOP,POP}_LENGTH).
      * Use tmp to hold the biased srcnote "top" offset, which differs
-     * from the top local variable by the length of the JSOP_GOTO{,X}
+     * from the top local variable by the length of the JSOP_GOTO
      * emitted in between tmp and top if this loop has a condition.
      */
     intN noteIndex = NewSrcNote(cx, bce, SRC_FOR);
@@ -5936,7 +5025,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (forHead->pn_kid2) {
         /* Fix up the goto from top to target the loop condition. */
         JS_ASSERT(jmp >= 0);
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, jmp);
+        SetJumpOffsetAt(bce, jmp);
 
         if (!EmitTree(cx, bce, forHead->pn_kid2))
             return false;
@@ -6177,7 +5266,7 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (!EmitTree(cx, bce, pn->pn_right))
         return false;
 
-    CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, jmp);
+    SetJumpOffsetAt(bce, jmp);
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
 
@@ -6622,7 +5711,7 @@ EmitLogical(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         ptrdiff_t off = bce->offset();
         jsbytecode *pc = bce->code(top);
-        CHECK_AND_SET_JUMP_OFFSET(cx, bce, pc, off - top);
+        SET_JUMP_OFFSET(pc, off - top);
         *pc = pn->getOp();
         return true;
     }
@@ -6650,8 +5739,7 @@ EmitLogical(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
-        if (!SetBackPatchDelta(cx, bce, bce->code(jmp), off - jmp))
-            return false;
+        SET_JUMP_OFFSET(bce->code(jmp), off - jmp);
         jmp = off;
     }
     if (!EmitTree(cx, bce, pn2))
@@ -6661,8 +5749,8 @@ EmitLogical(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ptrdiff_t off = bce->offset();
     do {
         jsbytecode *pc = bce->code(top);
-        ptrdiff_t tmp = GetJumpOffset(bce, pc);
-        CHECK_AND_SET_JUMP_OFFSET(cx, bce, pc, off - top);
+        ptrdiff_t tmp = GET_JUMP_OFFSET(pc);
+        SET_JUMP_OFFSET(pc, off - top);
         *pc = pn->getOp();
         top += tmp;
     } while ((pn2 = pn2->pn_next)->pn_next);
@@ -6794,7 +5882,7 @@ EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     /* Patch the JSOP_LABEL offset. */
-    CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, top);
+    SetJumpOffsetAt(bce, top);
 
     /* If the statement was compound, emit a note for the end brace. */
     if (noteType == SRC_LABELBRACE) {
@@ -6835,7 +5923,7 @@ EmitConditionalExpression(JSContext *cx, BytecodeEmitter *bce, ConditionalExpres
     ptrdiff_t jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
     if (jmp < 0)
         return false;
-    CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, beq);
+    SetJumpOffsetAt(bce, beq);
 
     /*
      * Because each branch pushes a single value, but our stack budgeting
@@ -6851,7 +5939,7 @@ EmitConditionalExpression(JSContext *cx, BytecodeEmitter *bce, ConditionalExpres
     bce->stackDepth--;
     if (!EmitTree(cx, bce, &conditional.elseExpression()))
         return false;
-    CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, jmp);
+    SetJumpOffsetAt(bce, jmp);
     return SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq);
 }
 
@@ -7414,7 +6502,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return JS_FALSE;
         if (!EmitTree(cx, bce, pn->pn_right))
             return JS_FALSE;
-        CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, jmp);
+        SetJumpOffsetAt(bce, jmp);
         if (EmitJump(cx, bce, JSOP_ENDFILTER, top - bce->offset()) < 0)
             return JS_FALSE;
         break;
@@ -7660,8 +6748,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     /* bce->emitLevel == 1 means we're last on the stack, so finish up. */
     if (ok && bce->emitLevel == 1) {
-        if (bce->spanDeps)
-            ok = OptimizeSpanDeps(cx, bce);
         if (!UpdateLineNumberNotes(cx, bce, pn->pn_pos.end.lineno))
             return JS_FALSE;
     }
@@ -8096,31 +7182,31 @@ GCConstList::finish(JSConstArray *array)
  * JSOP_{NOP,POP}_LENGTH), which is used only by SRC_FOR and SRC_DECL.
  */
 JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
-    {"null",            0,      0,      0},
-    {"if",              0,      0,      0},
-    {"if-else",         2,      0,      1},
-    {"for",             3,      1,      1},
-    {"while",           1,      0,      1},
-    {"continue",        0,      0,      0},
-    {"decl",            1,      1,      1},
-    {"pcdelta",         1,      0,      1},
-    {"assignop",        0,      0,      0},
-    {"cond",            1,      0,      1},
-    {"brace",           1,      0,      1},
-    {"hidden",          0,      0,      0},
-    {"pcbase",          1,      0,     -1},
-    {"label",           1,      0,      0},
-    {"labelbrace",      1,      0,      0},
-    {"endbrace",        0,      0,      0},
-    {"break2label",     1,      0,      0},
-    {"cont2label",      1,      0,      0},
-    {"switch",          2,      0,      1},
-    {"funcdef",         1,      0,      0},
-    {"catch",           1,      0,      1},
-    {"extended",       -1,      0,      0},
-    {"newline",         0,      0,      0},
-    {"setline",         1,      0,      0},
-    {"xdelta",          0,      0,      0},
+    {"null",            0},
+    {"if",              0},
+    {"if-else",         2},
+    {"for",             3},
+    {"while",           1},
+    {"continue",        0},
+    {"decl",            1},
+    {"pcdelta",         1},
+    {"assignop",        0},
+    {"cond",            1},
+    {"brace",           1},
+    {"hidden",          0},
+    {"pcbase",          1},
+    {"label",           1},
+    {"labelbrace",      1},
+    {"endbrace",        0},
+    {"break2label",     1},
+    {"cont2label",      1},
+    {"switch",          2},
+    {"funcdef",         1},
+    {"catch",           1},
+    {"unused",         -1},
+    {"newline",         0},
+    {"setline",         1},
+    {"xdelta",          0},
 };
 
 JS_FRIEND_API(uintN)

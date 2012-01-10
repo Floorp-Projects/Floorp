@@ -1054,18 +1054,16 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         bool takeBranch = false;
         switch (JSOp(*nextpc)) {
           case JSOP_IFNE:
-          case JSOP_IFNEX:
             takeBranch = returnReg != NULL;
             break;
           case JSOP_IFEQ:
-          case JSOP_IFEQX:
             takeBranch = returnReg == NULL;
             break;
           default:
             JS_NOT_REACHED("Bad branch op");
         }
         if (takeBranch)
-            f.regs.pc = nextpc + analyze::GetJumpOffset(nextpc, nextpc);
+            f.regs.pc = nextpc + GET_JUMP_OFFSET(nextpc);
         else
             f.regs.pc = nextpc + GetBytecodeLength(nextpc);
         break;

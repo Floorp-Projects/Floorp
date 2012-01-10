@@ -341,6 +341,8 @@ class BaseShape : public js::gc::Cell
     /* Not defined: BaseShapes must not be stack allocated. */
     ~BaseShape();
 
+    inline BaseShape &operator=(const BaseShape &other);
+
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
 
     inline bool matchesGetterSetter(PropertyOp rawGetter,

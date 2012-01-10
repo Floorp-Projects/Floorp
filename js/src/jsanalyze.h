@@ -209,9 +209,7 @@ GetDefCount(JSScript *script, unsigned offset)
      */
     switch (JSOp(*pc)) {
       case JSOP_OR:
-      case JSOP_ORX:
       case JSOP_AND:
-      case JSOP_ANDX:
         return 1;
       case JSOP_FILTER:
         return 2;
@@ -288,15 +286,6 @@ ExtendedUse(jsbytecode *pc)
     }
 }
 
-static inline ptrdiff_t
-GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
-{
-    uint32_t type = JOF_OPTYPE(*pc);
-    if (JOF_TYPE_IS_EXTENDED_JUMP(type))
-        return GET_JUMPX_OFFSET(pc2);
-    return GET_JUMP_OFFSET(pc2);
-}
-
 static inline JSOp
 ReverseCompareOp(JSOp op)
 {
@@ -324,12 +313,12 @@ FollowBranch(JSContext *cx, JSScript *script, unsigned offset)
      * inserted by the emitter.
      */
     jsbytecode *pc = script->code + offset;
-    unsigned targetOffset = offset + GetJumpOffset(pc, pc);
+    unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
     if (targetOffset < offset) {
         jsbytecode *target = script->code + targetOffset;
         JSOp nop = JSOp(*target);
-        if (nop == JSOP_GOTO || nop == JSOP_GOTOX)
-            return targetOffset + GetJumpOffset(target, target);
+        if (nop == JSOP_GOTO)
+            return targetOffset + GET_JUMP_OFFSET(target);
     }
     return targetOffset;
 }

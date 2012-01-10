@@ -1,3 +1,5 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,9 +37,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef mozilla_dom_telephony_telephonycommon_h__
+#define mozilla_dom_telephony_telephonycommon_h__
 
-[scriptable, uuid(8f031451-ac25-4816-a09e-a075bb704e63)]
-interface nsIRadioWorker : nsISupports {
-    readonly attribute jsval worker;
-};
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsDebug.h"
+#include "nsDOMEventTargetWrapperCache.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
+
+#define BEGIN_TELEPHONY_NAMESPACE \
+  namespace mozilla { namespace dom { namespace telephony {
+#define END_TELEPHONY_NAMESPACE \
+  } /* namespace telephony */ } /* namespace dom */ } /* namespace mozilla */
+#define USING_TELEPHONY_NAMESPACE \
+  using namespace mozilla::dom::telephony;
+
+class nsIDOMTelephony;
+class nsIDOMTelephonyCall;
+
+BEGIN_TELEPHONY_NAMESPACE
+
+class Telephony;
+class TelephonyCall;
+
+END_TELEPHONY_NAMESPACE
+
+#endif // mozilla_dom_telephony_telephonycommon_h__
