@@ -265,11 +265,11 @@ public class FennecNativeDriver implements Driver {
   //  and returns a string version of the entire file.
   public static String getFile(String filename)
   {
-    File file = new File(filename);
     StringBuilder text = new StringBuilder();
 
+    BufferedReader br = null;
     try {
-      BufferedReader br = new BufferedReader(new FileReader(file));
+      br = new BufferedReader(new FileReader(filename));
       String line;
 
       while ((line = br.readLine()) != null) {
@@ -278,6 +278,11 @@ public class FennecNativeDriver implements Driver {
       }
     } catch(IOException e) {
       e.printStackTrace();
+    } finally {
+      try {
+        br.close();
+      } catch (IOException e) {
+      }
     }
     return text.toString();  
   }
