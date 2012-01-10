@@ -60,7 +60,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMNSRange.h"
 #include "nsIRangeUtils.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"

@@ -50,7 +50,6 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMNSRange.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIEditingSession.h"
 #include "nsIEditor.h"
@@ -2355,11 +2354,10 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
 
   for (PRInt32 index = 0; index < rangeCount; index++) {
     nsCOMPtr<nsIDOMRange> range = ranges[index];
-    nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
-    NS_ENSURE_STATE(nsrange);
+    NS_ENSURE_STATE(range);
 
     PRInt16 result;
-    nsresult rv = nsrange->ComparePoint(aNode, aNodeOffset, &result);
+    nsresult rv = range->ComparePoint(aNode, aNodeOffset, &result);
     NS_ENSURE_SUCCESS(rv, rv);
     // ComparePoint checks boundary points, but we need to check that
     // text at aNodeOffset is inside the range.

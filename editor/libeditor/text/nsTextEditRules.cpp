@@ -51,7 +51,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMNSRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"

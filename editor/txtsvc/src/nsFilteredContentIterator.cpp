@@ -278,13 +278,10 @@ ContentIsInTraversalRange(nsIContent *aContent,   bool aIsPreMode,
 }
 
 static bool
-ContentIsInTraversalRange(nsIDOMNSRange *aRange, nsIDOMNode* aNextNode, bool aIsPreMode)
+ContentIsInTraversalRange(nsIDOMRange *aRange, nsIDOMNode* aNextNode, bool aIsPreMode)
 {
-  nsCOMPtr<nsIContent>  content(do_QueryInterface(aNextNode));
-  nsCOMPtr<nsIDOMRange> range(do_QueryInterface(aRange));
-  NS_ENSURE_TRUE(content && range, false);
-
-
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNextNode));
+  NS_ENSURE_TRUE(content && aRange, false);
 
   nsCOMPtr<nsIDOMNode> sNode;
   nsCOMPtr<nsIDOMNode> eNode;
