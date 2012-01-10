@@ -721,6 +721,14 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DUP2:
         return jsop_dup2();
 
+      case JSOP_SWAP:
+        current->swapAt(-1);
+        return true;
+
+      case JSOP_PICK:
+        current->pick(-GET_INT8(pc));
+        return true;
+
       case JSOP_UINT24:
         return pushConstant(Int32Value(GET_UINT24(pc)));
 
