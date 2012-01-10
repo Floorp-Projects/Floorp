@@ -463,16 +463,23 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
         if (mul->canOverflow() && !bailoutIf(c, ins->snapshot()))
             return false;
 
-        // Bailout on 0 (could be -0.0)
         if (mul->canBeNegativeZero()) {
-            masm.ma_cmp(ToRegister(lhs), Imm32(0));
-            if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+            Label done;
+            masm.ma_cmp(ToRegister(dest), Imm32(0));
+            masm.ma_b(&done, Assembler::NotEqual);
+
+            // Result is -0 if lhs or rhs is negative.
+            masm.ma_cmn(ToRegister(lhs), ToRegister(rhs));
+            if (!bailoutIf(Assembler::Signed, ins->snapshot()))
                 return false;
+
+            masm.bind(&done);
         }
     }
 
     return true;
 }
+
 extern "C" {
     extern int __aeabi_idiv(int,int);
 }

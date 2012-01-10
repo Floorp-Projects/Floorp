@@ -208,6 +208,16 @@ class LRecompileCheck : public LInstructionHelper<0, 0, 1>
     }
 };
 
+class LMulI : public LBinaryMath<0>
+{
+  public:
+    LIR_HEADER(MulI);
+
+    MMul *mir() {
+        return mir_->toMul();
+    }
+};
+
 } // namespace ion
 } // namespace js
 

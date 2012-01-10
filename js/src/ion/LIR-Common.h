@@ -556,8 +556,8 @@ class LReturn : public LInstructionHelper<0, BOX_PIECES, 0>
     LIR_HEADER(Return);
 };
 
-template <size_t Temps>
-class LBinaryMath : public LInstructionHelper<1, 2, Temps>
+template <size_t Temps, size_t ExtraUses = 0>
+class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
 {
   public:
     const LAllocation *lhs() {
@@ -583,17 +583,6 @@ class LSubI : public LBinaryMath<0>
 {
   public:
     LIR_HEADER(SubI);
-};
-
-// Adds two integers, returning an integer value.
-class LMulI : public LBinaryMath<0>
-{
-  public:
-    LIR_HEADER(MulI);
-
-    MMul *mir() {
-        return mir_->toMul();
-    }
 };
 
 // Performs an add, sub, mul, or div on two double values.
