@@ -401,9 +401,11 @@ void
 LinearScanAllocator::addSpillInterval(LInstruction *ins, const Requirement &req)
 {
     LiveInterval *bogus = new LiveInterval(NULL, 0);
+
     bogus->addRange(inputOf(ins), outputOf(ins));
     bogus->setRequirement(req);
-    unhandled.enqueue(bogus); 
+
+    unhandled.enqueueAtHead(bogus);
 }
 
 /*
@@ -499,8 +501,7 @@ LinearScanAllocator::buildLivenessInfo()
                 vregs[temp].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
             }
 
-            for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next())
-            {
+            for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next()) {
                 if (alloc->isUse()) {
                     LUse *use = alloc->toUse();
 
@@ -593,6 +594,35 @@ LinearScanAllocator::buildLivenessInfo()
 }
 
 /*
+ * Merge virtual register intervals into the UnhandledQueue, taking advantage
+ * of their nearly-sorted ordering.
+ */
+void
+LinearScanAllocator::enqueueVirtualRegisterIntervals()
+{
+    // Cursor into the unhandled queue, iterating through start positions.
+    IntervalReverseIterator curr = unhandled.rbegin();
+
+    // Start position is non-monotonically increasing by virtual register number.
+    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
+        LiveInterval *live = vregs[i].getInterval(0);
+        if (live->numRanges() > 0) {
+            setIntervalRequirement(live);
+
+            // Iterate backward until the next highest class of start position.
+            for (; curr != unhandled.rend(); curr++) {
+                if (curr->start() > live->start())
+                    break;
+            }
+
+            // Insert forward from the current position, thereby
+            // sorting by priority within the start class.
+            unhandled.enqueueForward(*curr, live);
+        }
+    }
+}
+
+/*
  * This function performs a preliminary allocation on the already-computed
  * live intervals, storing the result in the allocation field of the intervals
  * themselves.
@@ -615,14 +645,12 @@ LinearScanAllocator::buildLivenessInfo()
 bool
 LinearScanAllocator::allocateRegisters()
 {
-    // Compute priorities and enqueue intervals for allocation
-    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
-        LiveInterval *live = vregs[i].getInterval(0);
-        if (live->numRanges() > 0) {
-            setIntervalRequirement(live);
-            unhandled.enqueue(live);
-        }
-    }
+    // The unhandled queue currently contains only spill intervals, in sorted
+    // order. Intervals for virtual registers exist in sorted order based on
+    // start position by vreg ID, but may have priorities that require them to
+    // be reordered when adding to the unhandled queue.
+    enqueueVirtualRegisterIntervals();
+    unhandled.assertSorted();
 
     // Iterate through all intervals in ascending start order
     while ((current = unhandled.dequeue()) != NULL) {
@@ -837,21 +865,17 @@ LinearScanAllocator::moveBeforeAlloc(CodePosition pos, LAllocation *from, LAlloc
 bool
 LinearScanAllocator::reifyAllocations()
 {
-    // Enqueue all handled intervals for reification
-    unhandled.enqueue(inactive);
-    unhandled.enqueue(active);
-    unhandled.enqueue(handled);
-
-    // Handle each interval in sequence
-    LiveInterval *interval;
-    while ((interval = unhandled.dequeue()) != NULL) {
-        VirtualRegister *reg = interval->reg();
-
-        // Bogus intervals get thrown out, nothing to reify
-        if (!reg)
+    // Iterate over each interval, ensuring that definitions are visited before uses.
+    for (size_t j = 1; j < graph.numVirtualRegisters(); j++) {
+        VirtualRegister *reg = &vregs[j];
+    for (size_t k = 0; k < reg->numIntervals(); k++) {
+        LiveInterval *interval = reg->getInterval(k);
+        JS_ASSERT(reg == interval->reg());
+        if (!interval->numRanges())
             continue;
 
-        for (UsePositionIterator usePos(interval->usesBegin()); usePos != interval->usesEnd(); usePos++) {
+        UsePositionIterator usePos(interval->usesBegin());
+        for (; usePos != interval->usesEnd(); usePos++) {
             JS_ASSERT(UseCompatibleWith(usePos->use, *interval->getAllocation()));
             *static_cast<LAllocation *>(usePos->use) = *interval->getAllocation();
         }
@@ -940,7 +964,7 @@ LinearScanAllocator::reifyAllocations()
                 safepoint->addLiveRegister(a->toRegister());
             }
         }
-    }
+    }} // Iteration over virtual register intervals.
 
     // Set the graph overall stack height
     graph.setLocalSlotCount(stackSlotAllocator.stackHeight());
@@ -1111,10 +1135,10 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
 
     VirtualRegister *reg = interval->reg();
 
-    // "Bogus" intervals can't get split, so we should never try
+    // "Bogus" intervals cannot be split.
     JS_ASSERT(reg);
 
-    // Do the split
+    // Do the split.
     LiveInterval *newInterval = new LiveInterval(reg, interval->index() + 1);
     if (!interval->splitFrom(pos, newInterval))
         return false;
@@ -1134,7 +1158,11 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     // forward, and we never want to handle something forward of our
     // current position.
     setIntervalRequirement(newInterval);
-    unhandled.enqueue(newInterval);
+
+    // splitInterval() is usually called to split the node that has just been
+    // popped from the unhandled queue. Therefore the split will likely be
+    // closer to the lower start positions in the queue.
+    unhandled.enqueueBackward(newInterval);
 
     return true;
 }
@@ -1833,6 +1861,8 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
 }
 
 /*
+ * Enqueue by iteration starting from the node with the lowest start position.
+ *
  * If we assign registers to intervals in order of their start positions
  * without regard to their requirements, we can end up in situations where
  * intervals that do not require registers block intervals that must have
@@ -1841,9 +1871,32 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
  * requirements are handled first.
  */
 void
-LinearScanAllocator::UnhandledQueue::enqueue(LiveInterval *interval)
+LinearScanAllocator::UnhandledQueue::enqueueBackward(LiveInterval *interval)
 {
-    IntervalIterator i(begin());
+    IntervalReverseIterator i(rbegin()); 
+
+    for (; i != rend(); i++) {
+        if (i->start() > interval->start())
+            break;
+        if (i->start() == interval->start() &&
+            i->requirement()->priority() >= interval->requirement()->priority())
+        {
+            break;
+        }
+    }
+    insertAfter(*i, interval);
+}
+
+/*
+ * Enqueue by iteration from high start position to low start position,
+ * after a provided node.
+ */
+void
+LinearScanAllocator::UnhandledQueue::enqueueForward(LiveInterval *after, LiveInterval *interval)
+{
+    IntervalIterator i(begin(after));
+    i++; // Skip the initial node.
+
     for (; i != end(); i++) {
         if (i->start() < interval->start())
             break;
@@ -1854,6 +1907,42 @@ LinearScanAllocator::UnhandledQueue::enqueue(LiveInterval *interval)
         }
     }
     insertBefore(*i, interval);
+}
+
+/*
+ * Append to the queue head in O(1).
+ */
+void
+LinearScanAllocator::UnhandledQueue::enqueueAtHead(LiveInterval *interval)
+{
+#ifdef DEBUG
+    // Assuming that the queue is in sorted order, assert that order is
+    // maintained by inserting at the back.
+    if (!empty()) {
+        LiveInterval *back = peekBack();
+        JS_ASSERT(back->start() >= interval->start());
+        JS_ASSERT_IF(back->start() == interval->start(),
+                     back->requirement()->priority() >= interval->requirement()->priority());
+    }
+#endif
+
+    pushBack(interval);
+}
+
+void
+LinearScanAllocator::UnhandledQueue::assertSorted()
+{
+#ifdef DEBUG
+    LiveInterval *prev = NULL;
+    for (IntervalIterator i(begin()); i != end(); i++) {
+        if (prev) {
+            JS_ASSERT(prev->start() >= i->start());
+            JS_ASSERT_IF(prev->start() == i->start(),
+                         prev->requirement()->priority() >= i->requirement()->priority());
+        }
+        prev = *i;
+    }
+#endif
 }
 
 LiveInterval *
