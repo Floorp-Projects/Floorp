@@ -840,7 +840,6 @@ void nsBaseWidget::CreateCompositor()
     PLayersChild* shadowManager = mCompositorChild->SendPLayersConstructor(                                                LayerManager::LAYERS_OPENGL);
 
     if (shadowManager) {
-      mCompositorChild->SendInit();
       ShadowLayerForwarder* lf = lm->AsShadowForwarder();
       if (!lf) {
         delete lm;

@@ -60,8 +60,10 @@ public:
   CompositorParent(nsIWidget* aWidget);
   virtual ~CompositorParent();
 
-  bool RecvInit();
   bool RecvStop();
+
+  // Workaround for Bug 717027.
+  bool RecvFixMeDoNotCall();
 
   virtual void ShadowLayersUpdated();
   void Destroy();
