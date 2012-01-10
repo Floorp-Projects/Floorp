@@ -305,6 +305,13 @@ IonBuilder::buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
         }
     }
 
+    // The oracle ensures that the inlined script does not use the scope chain, so we
+    // just initialize its slot to |undefined|.
+    JS_ASSERT(!script->analysis()->usesScopeChain());
+    MInstruction *scope = MConstant::New(UndefinedValue());
+    current->add(scope);
+    current->initSlot(info().scopeChainSlot(), scope);
+
     current->initSlot(info().thisSlot(), thisDefn);
 
     IonSpew(IonSpew_Inlining, "Initializing %u arg slots", nargs);
@@ -328,8 +335,8 @@ IonBuilder::buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
     IonSpew(IonSpew_Inlining, "Inline entry block MResumePoint %p, %u operands",
             (void *) current->entryResumePoint(), current->entryResumePoint()->numOperands());
 
-    // Note: +1 for |this|.
-    JS_ASSERT(current->entryResumePoint()->numOperands() == nargs + info().nlocals() + 1);
+    // Note: +2 for the scope chain and |this|.
+    JS_ASSERT(current->entryResumePoint()->numOperands() == nargs + info().nlocals() + 2);
 
     return traverseBytecode();
 }
