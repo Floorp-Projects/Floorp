@@ -48,8 +48,9 @@
  * We have to use macros here because our leak analysis tool things we are
  * leaking strings when we have |static const nsString|. Sad :(
  */
-#define RECEIVED_EVENT_NAME NS_LITERAL_STRING("received")
-#define SENT_EVENT_NAME     NS_LITERAL_STRING("sent")
+#define RECEIVED_EVENT_NAME  NS_LITERAL_STRING("received")
+#define SENT_EVENT_NAME      NS_LITERAL_STRING("sent")
+#define DELIVERED_EVENT_NAME NS_LITERAL_STRING("delivered")
 
 DOMCI_DATA(MozSmsManager, mozilla::dom::sms::SmsManager)
 
@@ -63,12 +64,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsManager,
                                                   nsDOMEventTargetWrapperCache)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(received)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(sent)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(delivered)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsManager,
                                                 nsDOMEventTargetWrapperCache)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(received)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(sent)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(delivered)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SmsManager)
@@ -95,6 +98,7 @@ SmsManager::Init(nsPIDOMWindow *aWindow, nsIScriptContext* aScriptContext)
 
   obs->AddObserver(this, kSmsReceivedObserverTopic, false);
   obs->AddObserver(this, kSmsSentObserverTopic, false);
+  obs->AddObserver(this, kSmsDeliveredObserverTopic, false);
 }
 
 void
@@ -108,6 +112,7 @@ SmsManager::Shutdown()
 
   obs->RemoveObserver(this, kSmsReceivedObserverTopic);
   obs->RemoveObserver(this, kSmsSentObserverTopic);
+  obs->RemoveObserver(this, kSmsDeliveredObserverTopic);
 }
 
 NS_IMETHODIMP
@@ -134,6 +139,7 @@ SmsManager::Send(const nsAString& aNumber, const nsAString& aMessage)
 
 NS_IMPL_EVENT_HANDLER(SmsManager, received)
 NS_IMPL_EVENT_HANDLER(SmsManager, sent)
+NS_IMPL_EVENT_HANDLER(SmsManager, delivered)
 
 nsresult
 SmsManager::DispatchTrustedSmsEventToSelf(const nsAString& aEventName, nsIDOMMozSmsMessage* aMessage)
@@ -176,6 +182,17 @@ SmsManager::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     DispatchTrustedSmsEventToSelf(SENT_EVENT_NAME, message);
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kSmsDeliveredObserverTopic)) {
+    nsCOMPtr<nsIDOMMozSmsMessage> message = do_QueryInterface(aSubject);
+    if (!message) {
+      NS_ERROR("Got a 'sms-delivered' topic without a valid message!");
+      return NS_OK;
+    }
+
+    DispatchTrustedSmsEventToSelf(DELIVERED_EVENT_NAME, message);
     return NS_OK;
   }
 

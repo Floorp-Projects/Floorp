@@ -38,7 +38,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, function, uuid(e5da0085-2113-4f17-9d29-ed6fe98780a8)]
+[scriptable, function, uuid(09a74bd3-466d-4612-926e-672b021fd08f)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short getNumberOfMessagesForText(in DOMString text);
@@ -46,4 +46,5 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
 
   attribute nsIDOMEventListener onreceived;
   attribute nsIDOMEventListener onsent;
+  attribute nsIDOMEventListener ondelivered;
 };
