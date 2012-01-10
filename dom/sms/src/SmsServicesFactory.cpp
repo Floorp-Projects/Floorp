@@ -35,67 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/dom/ContentChild.h"
-#include "SmsIPCService.h"
+#include "SmsServicesFactory.h"
 #include "nsXULAppAPI.h"
-#include "jsapi.h"
-#include "mozilla/dom/sms/SmsChild.h"
-#include "mozilla/dom/sms/SmsMessage.h"
+#include "SmsService.h"
+#include "SmsDatabaseService.h"
+#include "SmsIPCService.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-PSmsChild* SmsIPCService::sSmsChild = nsnull;
-
-NS_IMPL_ISUPPORTS2(SmsIPCService, nsISmsService, nsISmsDatabaseService)
-
-/* static */ PSmsChild*
-SmsIPCService::GetSmsChild()
+/* static */ already_AddRefed<nsISmsService>
+SmsServicesFactory::CreateSmsService()
 {
-  if (!sSmsChild) {
-    sSmsChild = ContentChild::GetSingleton()->SendPSmsConstructor();
+  nsCOMPtr<nsISmsService> smsService;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    smsService = new SmsIPCService();
+  } else {
+    smsService = new SmsService();
   }
 
-  return sSmsChild;
+  return smsService.forget();
 }
 
-NS_IMETHODIMP
-SmsIPCService::HasSupport(bool* aHasSupport)
+/* static */ already_AddRefed<nsISmsDatabaseService>
+SmsServicesFactory::CreateSmsDatabaseService()
 {
-  GetSmsChild()->SendHasSupport(aHasSupport);
+  nsCOMPtr<nsISmsDatabaseService> smsDBService;
 
-  return NS_OK;
-}
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    smsDBService = new SmsIPCService();
+  } else {
+    smsDBService = new SmsDatabaseService();
+  }
 
-NS_IMETHODIMP
-SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
-{
-  GetSmsChild()->SendGetNumberOfMessagesForText(nsString(aText), aResult);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SmsIPCService::Send(const nsAString& aNumber, const nsAString& aMessage)
-{
-  GetSmsChild()->SendSendMessage(nsString(aNumber), nsString(aMessage));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SmsIPCService::CreateSmsMessage(PRInt32 aId,
-                                const nsAString& aDelivery,
-                                const nsAString& aSender,
-                                const nsAString& aReceiver,
-                                const nsAString& aBody,
-                                const jsval& aTimestamp,
-                                JSContext* aCx,
-                                nsIDOMMozSmsMessage** aMessage)
-{
-  return SmsMessage::Create(
-    aId, aDelivery, aSender, aReceiver, aBody, aTimestamp, aCx, aMessage);
+  return smsDBService.forget();
 }
 
 } // namespace sms

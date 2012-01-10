@@ -63,7 +63,7 @@ EXPORTS_NAMESPACES = mozilla/dom/sms
 EXPORTS_mozilla/dom/sms = \
   SmsChild.h \
   SmsParent.h \
-  SmsServiceFactory.h \
+  SmsServicesFactory.h \
   Constants.h \
   Types.h \
   SmsMessage.h \
@@ -73,12 +73,13 @@ CPPSRCS = \
   SmsManager.cpp \
   SmsService.cpp \
   SmsIPCService.cpp \
-  SmsServiceFactory.cpp \
+  SmsServicesFactory.cpp \
   SmsParent.cpp \
   SmsMessage.cpp \
   SmsEvent.cpp \
   Constants.cpp \
   SmsChild.cpp \
+  SmsDatabaseService.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \

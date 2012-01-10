@@ -108,7 +108,7 @@ SmsManager::Shutdown()
 NS_IMETHODIMP
 SmsManager::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
 {
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, NS_OK);
 
   smsService->GetNumberOfMessagesForText(aText, aResult);
@@ -119,7 +119,7 @@ SmsManager::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult
 NS_IMETHODIMP
 SmsManager::Send(const nsAString& aNumber, const nsAString& aMessage)
 {
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, NS_OK);
 
   smsService->Send(aNumber, aMessage);
