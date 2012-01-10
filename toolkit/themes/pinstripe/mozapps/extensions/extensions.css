@@ -787,9 +787,13 @@
   -moz-margin-start: 0;
 }
 
-#detail-icon {
+#detail-icon-container {
+  width: 64px;
   -moz-margin-end: 10px;
   margin-top: 6px;
+}
+
+#detail-icon {
   max-width: 64px;
   max-height: 64px;
 }
