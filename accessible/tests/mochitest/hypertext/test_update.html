@@ -60,7 +60,7 @@
     {
       this.containerNode = getNode(aContainerID);
       this.container = getAccessible(this.containerNode, nsIAccessibleHyperText);
-      this.text = this.container.firstChild.QueryInterface(nsIAccessNode);
+      this.text = this.container.firstChild;
       this.textNode = this.text.DOMNode;
       this.textLen = this.textNode.data.length;
 

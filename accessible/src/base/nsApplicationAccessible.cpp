@@ -421,7 +421,7 @@ nsApplicationAccessible::GetSiblingAtOffset(PRInt32 aOffset,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIAccessNode and nsAccessNode
+// nsIAccessible
 
 NS_IMETHODIMP
 nsApplicationAccessible::GetDOMNode(nsIDOMNode **aDOMNode)
