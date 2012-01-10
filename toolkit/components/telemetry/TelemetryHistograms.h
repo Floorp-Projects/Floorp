@@ -314,7 +314,8 @@ HISTOGRAM_BOOLEAN(FX_CONTEXT_SEARCH_AND_TAB_SELECT, "Firefox: Background tab was
 // #endif
 
 HISTOGRAM_BOOLEAN(INNERWINDOWS_WITH_MUTATION_LISTENERS, "Deleted or to-be-reused innerwindow which has had mutation event listeners.")
-HISTOGRAM(XUL_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "xul reflows")
+HISTOGRAM(XUL_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "XUL reflows (ms)")
+HISTOGRAM(HTML_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "HTML reflows (ms)")
 HISTOGRAM(XUL_INITIAL_FRAME_CONSTRUCTION, 1, 3000, 10, EXPONENTIAL, "initial xul frame construction")
 HISTOGRAM_BOOLEAN(XMLHTTPREQUEST_ASYNC_OR_SYNC, "Type of XMLHttpRequest, async or sync")
 
