@@ -626,7 +626,7 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
     netwerk/system/android/Makefile
     widget/android/Makefile
   "
-  if [ "$MOZ_BUILD_APP" = "mobile/xul" -o "$MOZ_BUILD_APP" = "b2g"]; then
+  if [ "$MOZ_BUILD_APP" = "mobile/xul" -o "$MOZ_BUILD_APP" = "b2g" ]; then
     add_makefiles "
       embedding/android/Makefile
       embedding/android/locales/Makefile
