@@ -45,8 +45,11 @@
 #ifndef mozilla_css_StyleRule_h__
 #define mozilla_css_StyleRule_h__
 
-//#include <stdio.h>
+#include "mozilla/Attributes.h"
+
+#include "mozilla/Attributes.h"
 #include "mozilla/css/Rule.h"
+
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
@@ -72,9 +75,8 @@ public:
 private: 
   nsAtomList* Clone(bool aDeep) const;
 
-  // These are not supported and are not implemented! 
-  nsAtomList(const nsAtomList& aCopy);
-  nsAtomList& operator=(const nsAtomList& aCopy); 
+  nsAtomList(const nsAtomList& aCopy) MOZ_DELETE;
+  nsAtomList& operator=(const nsAtomList& aCopy) MOZ_DELETE;
 };
 
 struct nsPseudoClassList {
@@ -109,9 +111,8 @@ public:
 private: 
   nsPseudoClassList* Clone(bool aDeep) const;
 
-  // These are not supported and are not implemented! 
-  nsPseudoClassList(const nsPseudoClassList& aCopy);
-  nsPseudoClassList& operator=(const nsPseudoClassList& aCopy); 
+  nsPseudoClassList(const nsPseudoClassList& aCopy) MOZ_DELETE;
+  nsPseudoClassList& operator=(const nsPseudoClassList& aCopy) MOZ_DELETE;
 };
 
 #define NS_ATTR_FUNC_SET        0     // [attr]
@@ -146,9 +147,8 @@ public:
 private: 
   nsAttrSelector* Clone(bool aDeep) const;
 
-  // These are not supported and are not implemented! 
-  nsAttrSelector(const nsAttrSelector& aCopy);
-  nsAttrSelector& operator=(const nsAttrSelector& aCopy); 
+  nsAttrSelector(const nsAttrSelector& aCopy) MOZ_DELETE;
+  nsAttrSelector& operator=(const nsAttrSelector& aCopy) MOZ_DELETE;
 };
 
 struct nsCSSSelector {
@@ -235,9 +235,9 @@ public:
 private:
   // PRInt16 to make sure it packs well with mOperator
   PRInt16        mPseudoType;
-  // These are not supported and are not implemented! 
-  nsCSSSelector(const nsCSSSelector& aCopy);
-  nsCSSSelector& operator=(const nsCSSSelector& aCopy); 
+
+  nsCSSSelector(const nsCSSSelector& aCopy) MOZ_DELETE;
+  nsCSSSelector& operator=(const nsCSSSelector& aCopy) MOZ_DELETE;
 };
 
 /**
@@ -277,9 +277,8 @@ struct nsCSSSelectorList {
 private: 
   nsCSSSelectorList* Clone(bool aDeep) const;
 
-  // These are not supported and are not implemented! 
-  nsCSSSelectorList(const nsCSSSelectorList& aCopy);
-  nsCSSSelectorList& operator=(const nsCSSSelectorList& aCopy); 
+  nsCSSSelectorList(const nsCSSSelectorList& aCopy) MOZ_DELETE;
+  nsCSSSelectorList& operator=(const nsCSSSelectorList& aCopy) MOZ_DELETE;
 };
 
 // 464bab7a-2fce-4f30-ab44-b7a5f3aae57d
@@ -318,7 +317,7 @@ protected:
   friend class StyleRule;
 };
 
-class StyleRule : public Rule
+class StyleRule MOZ_FINAL : public Rule
 {
  public:
   StyleRule(nsCSSSelectorList* aSelector,
@@ -382,10 +381,6 @@ public:
 #endif
 
 private:
-  // This is not supported and not implemented!
-  StyleRule& operator=(const StyleRule& aCopy);
-
-private:
   ~StyleRule();
 
 private:
@@ -396,6 +391,9 @@ private:
   // Keep the same type so that MSVC packs them.
   PRUint32                mLineNumber : 31;
   PRUint32                mWasMatched : 1;
+
+private:
+  StyleRule& operator=(const StyleRule& aCopy) MOZ_DELETE;
 };
 
 } // namespace css

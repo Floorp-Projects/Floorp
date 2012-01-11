@@ -78,8 +78,8 @@ using mozilla::MutexAutoUnlock;
 using mozilla::Preferences;
 using namespace mozilla::xpconnect::memory;
 
-// The size of the worker runtime heaps in bytes.
-#define WORKER_RUNTIME_HEAPSIZE 32 * 1024 * 1024
+// The size of the worker runtime heaps in bytes. May be changed via pref.
+#define WORKER_DEFAULT_RUNTIME_HEAPSIZE 32 * 1024 * 1024
 
 // The C stack size. We use the same stack size on all platforms for
 // consistency.
@@ -152,6 +152,9 @@ enum {
   PREF_relimit,
   PREF_methodjit,
   PREF_methodjit_always,
+  PREF_typeinference,
+  PREF_jit_hardening,
+  PREF_mem_max,
 
 #ifdef JS_GC_ZEAL
   PREF_gczeal,
@@ -167,7 +170,10 @@ const char* gPrefsToWatch[] = {
   JS_OPTIONS_DOT_STR "werror",
   JS_OPTIONS_DOT_STR "relimit",
   JS_OPTIONS_DOT_STR "methodjit.content",
-  JS_OPTIONS_DOT_STR "methodjit_always"
+  JS_OPTIONS_DOT_STR "methodjit_always",
+  JS_OPTIONS_DOT_STR "typeinference",
+  JS_OPTIONS_DOT_STR "jit_hardening",
+  JS_OPTIONS_DOT_STR "mem.max"
 
 #ifdef JS_GC_ZEAL
   , PREF_WORKERS_GCZEAL
@@ -186,7 +192,15 @@ PrefCallback(const char* aPrefName, void* aClosure)
 
   NS_NAMED_LITERAL_CSTRING(jsOptionStr, JS_OPTIONS_DOT_STR);
 
-  if(StringBeginsWith(nsDependentCString(aPrefName), jsOptionStr)) {
+  if (!strcmp(aPrefName, gPrefsToWatch[PREF_mem_max])) {
+    PRInt32 pref = Preferences::GetInt(aPrefName, -1);
+    PRUint32 maxBytes = (pref <= 0 || pref >= 0x1000) ?
+                        PRUint32(-1) :
+                        PRUint32(pref) * 1024 * 1024;
+    RuntimeService::SetDefaultJSRuntimeHeapSize(maxBytes);
+    rts->UpdateAllWorkerJSRuntimeHeapSize();
+  }
+  else if (StringBeginsWith(nsDependentCString(aPrefName), jsOptionStr)) {
     PRUint32 newOptions = kRequiredJSContextOptions;
     if (Preferences::GetBool(gPrefsToWatch[PREF_strict])) {
       newOptions |= JSOPTION_STRICT;
@@ -203,6 +217,15 @@ PrefCallback(const char* aPrefName, void* aClosure)
     if (Preferences::GetBool(gPrefsToWatch[PREF_methodjit_always])) {
       newOptions |= JSOPTION_METHODJIT_ALWAYS;
     }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_typeinference])) {
+      newOptions |= JSOPTION_TYPE_INFERENCE;
+    }
+
+    // This one is special, it's enabled by default and only needs to be unset.
+    if (!Preferences::GetBool(gPrefsToWatch[PREF_jit_hardening])) {
+      newOptions |= JSOPTION_SOFTEN;
+    }
+
     RuntimeService::SetDefaultJSContextOptions(newOptions);
     rts->UpdateAllWorkerJSContextOptions();
   }
@@ -236,11 +259,17 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
   aWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(!aWorkerPrivate->GetJSContext(), "Already has a context!");
 
-  JSRuntime* runtime = JS_NewRuntime(WORKER_RUNTIME_HEAPSIZE);
+  // The number passed here doesn't matter, we're about to change it in the call
+  // to JS_SetGCParameter.
+  JSRuntime* runtime = JS_NewRuntime(WORKER_DEFAULT_RUNTIME_HEAPSIZE);
   if (!runtime) {
     NS_WARNING("Could not create new runtime!");
     return nsnull;
   }
+
+  // This is the real place where we set the max memory for the runtime.
+  JS_SetGCParameter(runtime, JSGC_MAX_BYTES,
+                    aWorkerPrivate->GetJSRuntimeHeapSize());
 
   JSContext* workerCx = JS_NewContext(runtime, 0);
   if (!workerCx) {
@@ -503,6 +532,9 @@ WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
 END_WORKERS_NAMESPACE
 
 PRUint32 RuntimeService::sDefaultJSContextOptions = kRequiredJSContextOptions;
+
+PRUint32 RuntimeService::sDefaultJSRuntimeHeapSize =
+  WORKER_DEFAULT_RUNTIME_HEAPSIZE;
 
 PRInt32 RuntimeService::sCloseHandlerTimeoutSeconds = MAX_SCRIPT_RUN_TIME_SEC;
 
@@ -866,12 +898,11 @@ RuntimeService::Init()
   ok = mWindowMap.Init();
   NS_ENSURE_STATE(ok);
 
-  nsresult rv;
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
 
-  rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
+  nsresult rv =
+    obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mObserved = true;
@@ -916,6 +947,16 @@ RuntimeService::Cleanup()
 {
   AssertIsOnMainThread();
 
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_WARN_IF_FALSE(obs, "Failed to get observer service?!");
+
+  // Tell anyone that cares that they're about to lose worker support.
+  if (obs && NS_FAILED(obs->NotifyObservers(nsnull, WORKERS_SHUTDOWN_TOPIC,
+                                            nsnull))) {
+    NS_WARNING("NotifyObservers failed!");
+  }
+
+  // That's it, no more workers.
   mShuttingDown = true;
 
   if (mIdleThreadTimer) {
@@ -995,13 +1036,10 @@ RuntimeService::Cleanup()
       Preferences::UnregisterCallback(PrefCallback, gPrefsToWatch[index], this);
     }
 
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    NS_WARN_IF_FALSE(obs, "Failed to get observer service?!");
-
     if (obs) {
       nsresult rv =
         obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID);
-      mObserved = !NS_SUCCEEDED(rv);
+      mObserved = NS_FAILED(rv);
     }
   }
 }
@@ -1170,6 +1208,27 @@ RuntimeService::UpdateAllWorkerJSContextOptions()
     AutoSafeJSContext cx;
     for (PRUint32 index = 0; index < workers.Length(); index++) {
       workers[index]->UpdateJSContextOptions(cx, GetDefaultJSContextOptions());
+    }
+  }
+}
+
+void
+RuntimeService::UpdateAllWorkerJSRuntimeHeapSize()
+{
+  AssertIsOnMainThread();
+
+  nsAutoTArray<WorkerPrivate*, 100> workers;
+  {
+    MutexAutoLock lock(mMutex);
+
+    mDomainMap.EnumerateRead(AddAllTopLevelWorkersToArray, &workers);
+  }
+
+  if (!workers.IsEmpty()) {
+    AutoSafeJSContext cx;
+    for (PRUint32 index = 0; index < workers.Length(); index++) {
+      workers[index]->UpdateJSRuntimeHeapSize(cx,
+                                              GetDefaultJSRuntimeHeapSize());
     }
   }
 }

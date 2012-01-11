@@ -56,6 +56,7 @@ EXPORTS_NAMESPACES = mozilla/css
 EXPORTS		= \
 		nsCSSAnonBoxList.h \
 		nsCSSAnonBoxes.h \
+		nsCSSFontDescList.h \
 		nsCSSKeywordList.h \
 		nsCSSKeywords.h \
 		nsCSSParser.h \

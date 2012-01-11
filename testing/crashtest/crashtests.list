@@ -55,9 +55,9 @@ include ../../security/manager/ssl/crashtests/crashtests.list
 
 include ../../view/crashtests/crashtests.list
 
-include ../../widget/src/cocoa/crashtests/crashtests.list
-include ../../widget/src/gtk2/crashtests/crashtests.list
-include ../../widget/src/crashtests/crashtests.list
+include ../../widget/cocoa/crashtests/crashtests.list
+include ../../widget/gtk2/crashtests/crashtests.list
+include ../../widget/crashtests/crashtests.list
 
 include ../../media/libpng/crashtests/crashtests.list
 

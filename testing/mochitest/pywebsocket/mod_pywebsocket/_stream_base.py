@@ -111,14 +111,9 @@ class StreamBase(object):
 
         bytes = self._request.connection.read(length)
         if not bytes:
-            # MOZILLA: Patrick McManus found we needed this for Python 2.5 to
-            # work.  Not sure which tests he meant: I found that
-            # content/base/test/test_websocket* all worked fine with 2.5 with
-            # the original Google code. JDuell
-            #raise ConnectionTerminatedException(
-            #    'Receiving %d byte failed. Peer (%r) closed connection' %
-            #    (length, (self._request.connection.remote_addr,)))
-            raise ConnectionTerminatedException('connection terminated: read failed')
+            raise ConnectionTerminatedException(
+                'Receiving %d byte failed. Peer (%r) closed connection' %
+                (length, (self._request.connection.remote_addr,)))
         return bytes
 
     def _write(self, bytes):

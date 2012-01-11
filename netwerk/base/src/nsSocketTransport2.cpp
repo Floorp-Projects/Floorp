@@ -304,6 +304,16 @@ nsSocketInputStream::Available(PRUint32 *avail)
     // mistakenly try to re-enter this code.)
     PRInt32 n = PR_Available(fd);
 
+    // PSM does not implement PR_Available() so do a best approximation of it
+    // with MSG_PEEK
+    if ((n == -1) && (PR_GetError() == PR_NOT_IMPLEMENTED_ERROR)) {
+        char c;
+
+        n = PR_Recv(fd, &c, 1, PR_MSG_PEEK, 0);
+        SOCKET_LOG(("nsSocketInputStream::Available [this=%x] "
+                    "using PEEK backup n=%d]\n", this, n));
+    }
+
     nsresult rv;
     {
         MutexAutoLock lock(mTransport->mLock);

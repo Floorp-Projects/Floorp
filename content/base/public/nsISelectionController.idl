@@ -51,7 +51,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(e0dd9365-470b-4ee8-b644-54add1c4c73f)]
+[scriptable, uuid(cf30315f-b65d-44c3-8c57-557e36d18fd2)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -258,10 +258,11 @@ interface nsISelectionController : nsISelectionDisplay
    */
 	  void scrollLine(in boolean forward);
 
-  /** ScrolHorizontal will scroll left or right dependent on the boolean
-   *  @param aLeft if true will scroll left. if not will scroll right.
+  /** ScrollCharacter will scroll right or left dependent on the boolean
+   *  @param aRight if true will scroll right. if not will scroll left.
    */
-	  void scrollHorizontal(in boolean left);
+    void scrollCharacter(in boolean right);
+
   /** SelectAll will select the whole page
    */
     void selectAll();

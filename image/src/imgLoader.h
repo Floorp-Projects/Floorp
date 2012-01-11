@@ -41,6 +41,8 @@
 #ifndef imgLoader_h__
 #define imgLoader_h__
 
+#include "mozilla/Attributes.h"
+
 #include "imgILoader.h"
 #include "imgICache.h"
 #include "nsWeakReference.h"
@@ -392,9 +394,10 @@ private:
  * nsIInterfaceRequestor and gives out itself for nsIProgressEventSink calls,
  * and forwards everything else to the channel's notification callbacks.
  */
-class nsProgressNotificationProxy : public nsIProgressEventSink
-                                  , public nsIChannelEventSink
-                                  , public nsIInterfaceRequestor
+class nsProgressNotificationProxy MOZ_FINAL
+  : public nsIProgressEventSink
+  , public nsIChannelEventSink
+  , public nsIInterfaceRequestor
 {
   public:
     nsProgressNotificationProxy(nsIChannel* channel,

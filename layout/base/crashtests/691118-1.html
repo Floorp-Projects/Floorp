@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  document.getElementById("x").style.counterIncrement = "a";
+  document.documentElement.offsetHeight;
+}
+
+</script>
+
+<body onload="boom();" style="-moz-column-count: 3">
+  <div style="position: relative;">
+    <div style="position: absolute; height: 3pt;"></div>
+    <div style="position: absolute;" id="x"></div>
+    <div style="position: absolute; height: 8pt;"></div>
+  </div>
+</body>
+
+</html>

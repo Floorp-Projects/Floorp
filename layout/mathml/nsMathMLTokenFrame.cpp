@@ -22,6 +22,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,6 +64,11 @@ nsMathMLTokenFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // let the base class get the default from our parent
   nsMathMLContainerFrame::InheritAutomaticData(aParent);
+
+  if (mContent->Tag() != nsGkAtoms::mspace_) {
+    // see if the directionality attribute is there
+    nsMathMLFrame::FindAttrDirectionality(mContent, mPresentationData);
+  }
 
   ProcessTextData();
 

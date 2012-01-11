@@ -31,3 +31,5 @@ fails-if(cocoaWidget) == themed-widget.html themed-widget-ref.html
 == addrange-1.html addrange-ref.html
 == addrange-2.html addrange-ref.html
 == splitText-normalize.html splitText-normalize-ref.html
+== modify-range.html modify-range-ref.html
+== dom-mutations.html dom-mutations-ref.html

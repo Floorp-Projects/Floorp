@@ -148,10 +148,10 @@ nsTableRowFrame::SetPctHeight(float  aPctValue,
 
 NS_QUERYFRAME_HEAD(nsTableRowFrame)
   NS_QUERYFRAME_ENTRY(nsTableRowFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsTableRowFrame::nsTableRowFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext)
+  : nsContainerFrame(aContext)
 {
   mBits.mRowIndex = mBits.mFirstInserted = 0;
   ResetHeight(0);
@@ -169,7 +169,7 @@ nsTableRowFrame::Init(nsIContent*      aContent,
   nsresult  rv;
 
   // Let the base class do its initialization
-  rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == GetStyleDisplay()->mDisplay,
                "wrong display on table row frame");
@@ -206,20 +206,14 @@ nsTableRowFrame::AppendFrames(ChildListID     aListID,
 {
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
-  // Append the frames
-  // XXXbz why do we append here first, then append to table, while
-  // for InsertFrames we do it in the other order?  Bug 507419 covers this.
   const nsFrameList::Slice& newCells = mFrames.AppendFrames(nsnull, aFrameList);
 
   // Add the new cell frames to the table
   nsTableFrame *tableFrame =  nsTableFrame::GetTableFrame(this);
   for (nsFrameList::Enumerator e(newCells) ; !e.AtEnd(); e.Next()) {
-    nsTableCellFrame *cellFrame = do_QueryFrame(e.get());
-    NS_ASSERTION(cellFrame, "Unexpected frame");
-    if (cellFrame) {
-      // Add the cell to the cell map
-      tableFrame->AppendCell(*cellFrame, GetRowIndex());
-    }
+    nsIFrame *childFrame = e.get();
+    NS_ASSERTION(IS_TABLE_CELL(childFrame->GetType()),"Not a table cell frame/pseudo frame construction failure");
+    tableFrame->AppendCell(static_cast<nsTableCellFrame&>(*childFrame), GetRowIndex());
   }
 
   PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -238,22 +232,19 @@ nsTableRowFrame::InsertFrames(ChildListID     aListID,
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
+  //Insert Frames in the frame list
+  const nsFrameList::Slice& newCells = mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
   // Get the table frame
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   
-  // gather the new frames (only those which are cells) into an array
-  // XXXbz there shouldn't be any other ones here... can we just put
-  // them all in the array and not do all this QI nonsense?
   nsIAtom* cellFrameType = (tableFrame->IsBorderCollapse()) ? nsGkAtoms::bcTableCellFrame : nsGkAtoms::tableCellFrame;
   nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, cellFrameType);
   nsTArray<nsTableCellFrame*> cellChildren;
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    nsTableCellFrame *cellFrame = do_QueryFrame(e.get());
-    NS_ASSERTION(cellFrame, "Unexpected frame");
-    if (cellFrame) {
-      cellChildren.AppendElement(cellFrame);
-    }
+  for (nsFrameList::Enumerator e(newCells); !e.AtEnd(); e.Next()) {
+    nsIFrame *childFrame = e.get();
+    NS_ASSERTION(IS_TABLE_CELL(childFrame->GetType()),"Not a table cell frame/pseudo frame construction failure");
+    cellChildren.AppendElement(static_cast<nsTableCellFrame*>(childFrame));
   }
   // insert the cells into the cell map
   PRInt32 colIndex = -1;
@@ -261,9 +252,6 @@ nsTableRowFrame::InsertFrames(ChildListID     aListID,
     prevCellFrame->GetColIndex(colIndex);
   }
   tableFrame->InsertCells(cellChildren, GetRowIndex(), colIndex);
-
-  // Insert the frames in the frame list
-  mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   
   PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                                                NS_FRAME_HAS_DIRTY_CHILDREN);

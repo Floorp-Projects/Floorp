@@ -72,14 +72,6 @@
 
 #endif /* MOZ_X11 */
 
-#ifdef MOZ_DFB
-#include "gfxDirectFBSurface.h"
-#endif
-
-#ifdef MOZ_DFB
-#include "gfxDirectFBSurface.h"
-#endif
-
 #include <fontconfig/fontconfig.h>
 
 #include "nsMathUtils.h"
@@ -203,13 +195,6 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
         }
     }
 #endif
-
-#ifdef MOZ_DFB
-    if (size.width < GDK_PIXMAP_SIZE_MAX && size.height < GDK_PIXMAP_SIZE_MAX) {
-        newSurface = new gfxDirectFBSurface(size, imageFormat);
-    }
-#endif
-
 
     if (!newSurface) {
         // We couldn't create a native surface for whatever reason;

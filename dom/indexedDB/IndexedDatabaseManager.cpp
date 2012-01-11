@@ -40,6 +40,7 @@
 #include "IndexedDatabaseManager.h"
 #include "DatabaseInfo.h"
 
+#include "nsIDOMScriptObjectFactory.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -48,6 +49,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsITimer.h"
 
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/storage.h"
@@ -56,13 +58,14 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
 #include "test_quota.h"
+#include "xpcpublic.h"
 
 #include "AsyncConnectionHelper.h"
 #include "CheckQuotaHelper.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
-#include "LazyIdleThread.h"
+#include "IDBKeyRange.h"
 #include "OpenDatabaseHelper.h"
 #include "TransactionThreadPool.h"
 
@@ -83,6 +86,8 @@
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::services;
 using mozilla::Preferences;
+
+static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 namespace {
 
@@ -245,13 +250,6 @@ IndexedDatabaseManager::GetOrCreate()
     // We need this callback to know when to shut down all our threads.
     nsresult rv = obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                                    false);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    // We don't really need this callback but we want the observer service to
-    // hold us alive until XPCOM shutdown. That way other consumers can continue
-    // to use this service until shutdown.
-    rv = obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
-                          false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     // Make a lazy thread for any IO we need (like clearing or enumerating the
@@ -604,10 +602,10 @@ IndexedDatabaseManager::SetCurrentWindowInternal(nsPIDOMWindow* aWindow)
     PR_SetThreadPrivate(mCurrentWindowIndex, aWindow);
   }
   else {
-#ifdef DEBUG
-    NS_ASSERTION(PR_GetThreadPrivate(mCurrentWindowIndex),
-               "Somebody forgot to clear the current window!");
-#endif
+    // We cannot assert PR_GetThreadPrivate(mCurrentWindowIndex) here
+    // because we cannot distinguish between the thread private became
+    // null and that it was set to null on the first place, 
+    // because we didn't have a window.
     PR_SetThreadPrivate(mCurrentWindowIndex, nsnull);
   }
 }
@@ -683,12 +681,15 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   // are database files then we need to create file managers for them and also
   // tell SQLite about all of them.
 
-  nsAutoTArray<nsString, 20> subdirectories;
+  nsAutoTArray<nsString, 20> subdirsToProcess;
   nsAutoTArray<nsCOMPtr<nsIFile> , 20> unknownFiles;
 
   nsAutoPtr<nsTArray<nsRefPtr<FileManager> > > fileManagers(
     new nsTArray<nsRefPtr<FileManager> >());
 
+  nsTHashtable<nsStringHashKey> validSubdirs;
+  NS_ENSURE_TRUE(validSubdirs.Init(20), NS_ERROR_OUT_OF_MEMORY);
+  
   nsCOMPtr<nsISimpleEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -711,7 +712,9 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (isDirectory) {
-      subdirectories.AppendElement(leafName);
+      if (!validSubdirs.GetEntry(leafName)) {
+        subdirsToProcess.AppendElement(leafName);
+      }
       continue;
     }
 
@@ -728,12 +731,9 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     rv = fileManagerDirectory->Append(dbBaseFilename);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsString voidString;
-    voidString.SetIsVoid(true);
-
     nsCOMPtr<mozIStorageConnection> connection;
     rv = OpenDatabaseHelper::CreateDatabaseConnection(
-      voidString, file, fileManagerDirectory, getter_AddRefs(connection));
+      NullString(), file, fileManagerDirectory, getter_AddRefs(connection));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageStatement> stmt;
@@ -758,30 +758,24 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
 
     nsRefPtr<FileManager> fileManager = new FileManager(aOrigin, databaseName);
 
-    rv = fileManager->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = fileManager->InitDirectory(fileManagerDirectory, connection);
+    rv = fileManager->Init(fileManagerDirectory, connection);
     NS_ENSURE_SUCCESS(rv, rv);
 
     fileManagers->AppendElement(fileManager);
 
     rv = ss->UpdateQuotaInformationForFile(file);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!validSubdirs.PutEntry(dbBaseFilename)) {
+      NS_WARNING("Out of memory?");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < subdirectories.Length(); i++) {
-    const nsString& subdirectory = subdirectories[i];
-    bool unknown = true;
-    for (PRUint32 j = 0; j < fileManagers->Length(); j++) {
-      nsRefPtr<FileManager>& fileManager = fileManagers->ElementAt(j);
-      if (fileManager->DirectoryName().Equals(subdirectory)) {
-        unknown = false;
-        break;
-      }
-    }
-    if (unknown) {
+  for (PRUint32 i = 0; i < subdirsToProcess.Length(); i++) {
+    const nsString& subdir = subdirsToProcess[i];
+    if (!validSubdirs.GetEntry(subdir)) {
       NS_WARNING("Unknown subdirectory found!");
       return NS_ERROR_UNEXPECTED;
     }
@@ -790,6 +784,8 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   for (PRUint32 i = 0; i < unknownFiles.Length(); i++) {
     nsCOMPtr<nsIFile>& unknownFile = unknownFiles[i];
 
+    // Some temporary SQLite files could disappear, so we have to check if the
+    // unknown file still exists.
     bool exists;
     rv = unknownFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -798,6 +794,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
       nsString leafName;
       unknownFile->GetLeafName(leafName);
 
+      // The journal file may exists even after db has been correctly opened.
       if (!StringEndsWith(leafName, NS_LITERAL_STRING(".sqlite-journal"))) {
         NS_WARNING("Unknown file found!");
         return NS_ERROR_UNEXPECTED;
@@ -890,6 +887,13 @@ IndexedDatabaseManager::GetASCIIOriginFromWindow(nsPIDOMWindow* aWindow,
   NS_ASSERTION(NS_IsMainThread(),
                "We're about to touch a window off the main thread!");
 
+  if (!aWindow) {
+    aASCIIOrigin.AssignLiteral("chrome");
+    NS_ASSERTION(nsContentUtils::IsCallerChrome(), 
+                 "Null window but not chrome!");
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
   NS_ENSURE_TRUE(sop, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -940,15 +944,31 @@ IndexedDatabaseManager::GetOrCreateFileManager(const nsACString& aOrigin,
   if (!fileManager) {
     fileManager = new FileManager(aOrigin, aDatabaseName);
 
-    if (NS_FAILED(fileManager->Init())) {
-      NS_WARNING("Failed to initialize file manager!");
-      return nsnull;
-    }
-
     array->AppendElement(fileManager);
   }
 
   return fileManager.forget();
+}
+
+already_AddRefed<FileManager>
+IndexedDatabaseManager::GetFileManager(const nsACString& aOrigin,
+                                       const nsAString& aDatabaseName)
+{
+  nsTArray<nsRefPtr<FileManager> >* array;
+  if (!mFileManagers.Get(aOrigin, &array)) {
+    return nsnull;
+  }
+
+  for (PRUint32 i = 0; i < array->Length(); i++) {
+    nsRefPtr<FileManager>& fileManager = array->ElementAt(i);
+
+    if (fileManager->DatabaseName().Equals(aDatabaseName)) {
+      nsRefPtr<FileManager> result = fileManager;
+      return result.forget();
+    }
+  }
+  
+  return nsnull;
 }
 
 void
@@ -1197,7 +1217,7 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID)) {
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     // Setting this flag prevents the service from being recreated and prevents
     // further databases from being created.
     if (PR_ATOMIC_SET(&gShutdown, 1)) {
@@ -1249,11 +1269,6 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
       }
     }
 
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    // We're dying now.
     return NS_OK;
   }
 
@@ -1353,7 +1368,8 @@ IncrementUsage(PRUint64* aUsage, PRUint64 aDelta)
   if ((LL_MAXINT - *aUsage) <= aDelta) {
     NS_WARNING("Database sizes exceed max we can report!");
     *aUsage = LL_MAXINT;
-  } else {
+  }
+  else {
     *aUsage += aDelta;
   }
 }
@@ -1438,7 +1454,8 @@ IndexedDatabaseManager::AsyncUsageRunnable::GetUsageForDirectory(
     if (isDirectory) {
       if (aUsage == &mFileUsage) {
         NS_WARNING("Unknown directory found!");
-      } else {
+      }
+      else {
         rv = GetUsageForDirectory(file, &mFileUsage);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -1568,6 +1585,48 @@ IndexedDatabaseManager::SynchronizedOp::DispatchDelayedRunnables()
   }
 
   mDelayedRunnables.Clear();
+}
+
+NS_IMETHODIMP
+IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
+{
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+  
+  // Instantiating this class will register exception providers so even 
+  // in xpcshell we will get typed (dom) exceptions, instead of general exceptions.
+  nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));
+
+  // Defining IDBKeyrange static functions on the global.
+  if (JSVAL_IS_PRIMITIVE(aObj)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIIDBFactory> factory = IDBFactory::Create(nsnull);
+  NS_ASSERTION(factory, "IDBFactory should not be null.");
+
+  JSObject* obj = JSVAL_TO_OBJECT(aObj);
+  jsval mozIndexedDBVal;
+  nsresult rv = nsContentUtils::WrapNative(aCx, obj, factory, &mozIndexedDBVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!JS_DefineProperty(aCx, obj, "mozIndexedDB", mozIndexedDBVal, 
+      nsnull, nsnull, JSPROP_ENUMERATE)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSObject* keyrangeObj = JS_NewObject(aCx, nsnull, nsnull, nsnull);
+  NS_ENSURE_TRUE(keyrangeObj, NS_ERROR_OUT_OF_MEMORY);
+    
+  if (!IDBKeyRange::DefineConstructors(aCx, keyrangeObj)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!JS_DefineProperty(aCx, obj, "IDBKeyRange", OBJECT_TO_JSVAL(keyrangeObj),
+                         nsnull, nsnull, JSPROP_ENUMERATE)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(IndexedDatabaseManager::AsyncDeleteFileRunnable,

@@ -208,14 +208,14 @@ class DeviceManager:
     pieces = appname.split(' ')
     parts = pieces[0].split('/')
     app = parts[-1]
-    procre = re.compile('.*' + app + '.*')
 
     procList = self.getProcessList()
     if (procList == []):
       return None
       
     for proc in procList:
-      if (procre.match(proc[1])):
+      procName = proc[1].split('/')[-1]
+      if (procName == app):
         pid = proc[0]
         break
     return pid
@@ -346,24 +346,7 @@ class DeviceManager:
   #  success: path for app root
   #  failure: None
   def getAppRoot(self):
-    devroot = self.getDeviceRoot()
-    if (devroot == None):
-      return None
-
-    if (self.dirExists(devroot + '/fennec')):
-      return devroot + '/fennec'
-    elif (self.dirExists(devroot + '/firefox')):
-      return devroot + '/firefox'
-    elif (self.dirExsts('/data/data/org.mozilla.fennec')):
-      return 'org.mozilla.fennec'
-    elif (self.dirExists('/data/data/org.mozilla.firefox')):
-      return 'org.mozilla.firefox'
-    elif (self.dirExists('/data/data/org.mozilla.fennec_aurora')):
-      return 'org.mozilla.fennec_aurora'
-    elif (self.dirExists('/data/data/org.mozilla.firefox_beta')):
-      return 'org.mozilla.firefox_beta'
-
-    # Failure (either not installed or not a recognized platform)
+    assert 0 == 1
     return None
 
   # Gets the directory location on the device for a specific test type
@@ -500,7 +483,10 @@ class NetworkTools:
       return None
 
   def getLanIp(self):
-    ip = socket.gethostbyname(socket.gethostname())
+    try:
+      ip = socket.gethostbyname(socket.gethostname())
+    except socket.gaierror:
+      ip = socket.gethostbyname(socket.gethostname() + ".local") # for Mac OS X
     if ip.startswith("127.") and os.name != "nt":
       interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
       for ifname in interfaces:

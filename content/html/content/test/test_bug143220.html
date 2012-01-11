@@ -36,7 +36,7 @@ function initVals() {
 }
 
 function initControl1() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalFileRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   $("i1").value = fullPath;
   is($("i1").value, fullPath, "Should have set full path 1");
 }

@@ -300,7 +300,7 @@ static bool Uncompress(const string& compressed, CompressorType comp,
           reinterpret_cast<const Bytef*>(compressed.data()),
           compressed.size());
       CHECK_EQ(Z_OK, ret);
-      CHECK_EQ(destlen, size);
+      CHECK_EQ(static_cast<uLongf>(size), destlen);
       break;
     }
 #endif  // ZLIB_VERSION
@@ -316,7 +316,7 @@ static bool Uncompress(const string& compressed, CompressorType comp,
           &destlen,
           NULL);
       CHECK_EQ(LZO_E_OK, ret);
-      CHECK_EQ(destlen, size);
+      CHECK_EQ(static_cast<lzo_uint>(size), destlen);
       break;
     }
 #endif  // LZO_VERSION

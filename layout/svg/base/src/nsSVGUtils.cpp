@@ -89,8 +89,11 @@
 #include "gfxUtils.h"
 #include "mozilla/Preferences.h"
 
+#include "mozilla/gfx/2D.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
 // c = n / 255
 // (c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1 / 2.4) - 0.055) * 255 + 0.5
@@ -1214,12 +1217,32 @@ nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
 {
   if (aCTM.IsSingular())
     return;
+  
+  if (aContext->IsCairo()) {
+    aContext->Save();
+    aContext->Multiply(aCTM);
+    aContext->SetSource(aSurface);
+    aContext->Paint(aOpacity);
+    aContext->Restore();
+  } else {
+    DrawTarget *dt = aContext->GetDrawTarget();
+    Matrix oldMat = dt->GetTransform();
+    RefPtr<SourceSurface> surf =
+      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
+    dt->SetTransform(oldMat * ToMatrix(aCTM));
 
-  aContext->Save();
-  aContext->Multiply(aCTM);
-  aContext->SetSource(aSurface);
-  aContext->Paint(aOpacity);
-  aContext->Restore();
+    gfxSize size = aSurface->GetSize();
+    NS_ASSERTION(size.width >= 0 && size.height >= 0, "Failure to get size for aSurface.");
+
+    gfxPoint pt = aSurface->GetDeviceOffset();
+
+    dt->FillRect(Rect(-pt.x, -pt.y, size.width, size.height),
+                 SurfacePattern(surf, EXTEND_CLAMP,
+                                Matrix(1.0f, 0, 0, 1.0f, -pt.x, -pt.y)),
+                 DrawOptions(aOpacity));
+
+    dt->SetTransform(oldMat);
+  }
 }
 
 void

@@ -58,6 +58,11 @@ class nsGeolocation;
 class nsDesktopNotificationCenter;
 class nsPIDOMWindow;
 
+#ifdef MOZ_B2G_RIL
+#include "nsIDOMNavigatorTelephony.h"
+class nsIDOMTelephony;
+#endif
+
 //*****************************************************************************
 // Navigator: Script "navigator" object
 //*****************************************************************************
@@ -79,6 +84,9 @@ class Navigator : public nsIDOMNavigator,
                   public nsIDOMNavigatorDesktopNotification,
                   public nsIDOMMozNavigatorBattery,
                   public nsIDOMMozNavigatorSms
+#ifdef MOZ_B2G_RIL
+                , public nsIDOMNavigatorTelephony
+#endif
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -92,6 +100,10 @@ public:
   NS_DECL_NSIDOMMOZNAVIGATORBATTERY
   NS_DECL_NSIDOMMOZNAVIGATORSMS
 
+#ifdef MOZ_B2G_RIL
+  NS_DECL_NSIDOMNAVIGATORTELEPHONY
+#endif
+
   static void Init();
 
   void Invalidate();
@@ -103,6 +115,11 @@ public:
 
   PRInt64 SizeOf() const;
 
+  /**
+   * For use during document.write where our inner window changes.
+   */
+  void SetWindow(nsPIDOMWindow *aInnerWindow);
+
 private:
   bool IsSmsAllowed() const;
   bool IsSmsSupported() const;
@@ -113,6 +130,9 @@ private:
   nsRefPtr<nsDesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
   nsRefPtr<sms::SmsManager> mSmsManager;
+#ifdef MOZ_B2G_RIL
+  nsCOMPtr<nsIDOMTelephony> mTelephony;
+#endif
   nsWeakPtr mWindow;
 };
 

@@ -115,7 +115,11 @@ CSRCS += md4.c
 
 EXTRA_DEPS = $(NSS_DEP_LIBS)
 
-DEFINES += -DNSS_ENABLE_ECC
+DEFINES += \
+  -DNSS_ENABLE_ECC \
+  -DDLL_PREFIX=\"$(DLL_PREFIX)\" \
+  -DDLL_SUFFIX=\"$(DLL_SUFFIX)\" \
+  $(NULL)
 
 # Use local includes because they are inserted before INCLUDES
 # so that Mozilla's nss.h is used, not glibc's

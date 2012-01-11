@@ -46,6 +46,7 @@
   -moz-user-select: text;
   cursor: text !important;
   white-space: pre-wrap;
+  unicode-bidi: -moz-plaintext;
 }
 
 #loginLabel, #password1Label {

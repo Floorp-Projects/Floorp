@@ -98,8 +98,8 @@ public:
                              JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
@@ -166,8 +166,8 @@ public:
         JS_DHashTableOperate(mTable, wrapper->GetIdentityObject(), JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
@@ -228,8 +228,8 @@ public:
         JS_DHashTableOperate(mTable, &clazz->GetIID(), JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     ~IID2WrappedJSClassMap();
@@ -285,8 +285,8 @@ public:
         JS_DHashTableOperate(mTable, iface->GetIID(), JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
@@ -344,8 +344,8 @@ public:
         JS_DHashTableOperate(mTable, info, JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     // ClassInfo2NativeSetMap holds pointers to *some* XPCNativeSets.
@@ -404,8 +404,8 @@ public:
         JS_DHashTableOperate(mTable, info, JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
@@ -477,8 +477,8 @@ public:
         JS_DHashTableOperate(mTable, &key, JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
@@ -546,8 +546,8 @@ public:
         JS_DHashTableOperate(mTable, &iid, JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     ~IID2ThisTranslatorMap();
@@ -583,8 +583,8 @@ public:
     JSBool GetNewOrUsed(uint32_t flags, char* name, bool isGlobal,
                         PRUint32 interfacesBitmap, XPCNativeScriptableInfo* si);
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     ~XPCNativeScriptableSharedMap();
@@ -621,8 +621,8 @@ public:
         JS_DHashTableOperate(mTable, proto, JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     ~XPCWrappedNativeProtoMap();
@@ -657,8 +657,8 @@ public:
         JS_DHashTableOperate(mTable, nw, JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     ~XPCNativeWrapperMap();
@@ -728,8 +728,8 @@ public:
         JS_DHashTableOperate(mTable, wrapper, JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Count() {return mTable->entryCount;}
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     ~WrappedNative2WrapperMap();
@@ -793,9 +793,9 @@ public:
         JS_DHashTableOperate(mTable, key, JS_DHASH_REMOVE);
     }
 
-    inline uint32 Count() {return mTable->entryCount;}
+    inline uint32_t Count() {return mTable->entryCount;}
 
-    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
     {
         return JS_DHashTableEnumerate(mTable, f, arg);
     }

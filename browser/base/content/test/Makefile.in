@@ -88,13 +88,14 @@ endif
 
 # browser_drag.js is disabled, as it needs to be updated for the new behavior from bug 320638.
 
+# browser_bug321000.js is disabled because newline handling is shaky (bug 592528)
+
 _BROWSER_FILES = \
                  browser_typeAheadFind.js \
                  browser_keywordSearch.js \
                  browser_allTabsPanel.js \
                  browser_alltabslistener.js \
                  browser_bug304198.js \
-                 browser_bug321000.js \
                  title_test.svg \
                  browser_bug329212.js \
                  browser_bug356571.js \

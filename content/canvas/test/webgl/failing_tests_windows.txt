@@ -1,4 +1,3 @@
-conformance/context/context-lost-restored.html
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/functions/glsl-function-atan.html
 conformance/glsl/functions/glsl-function-atan-xy.html

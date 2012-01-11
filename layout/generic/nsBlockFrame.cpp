@@ -410,7 +410,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the rect and state
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    fprintf(out, " [state=%016llx]", mState);
+    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
   }
   nsBlockFrame* f = const_cast<nsBlockFrame*>(this);
   if (f->HasOverflowAreas()) {
@@ -7077,16 +7077,12 @@ nsBlockFrame::VerifyLines(bool aFinalCheckOK)
   // Add up the counts on each line. Also validate that IsFirstLine is
   // set properly.
   PRInt32 count = 0;
-  bool seenBlock = false;
   line_iterator line, line_end;
   for (line = begin_lines(), line_end = end_lines();
        line != line_end;
        ++line) {
     if (aFinalCheckOK) {
       NS_ABORT_IF_FALSE(line->GetChildCount(), "empty line");
-      if (line->IsBlock()) {
-        seenBlock = true;
-      }
       if (line->IsBlock()) {
         NS_ASSERTION(1 == line->GetChildCount(), "bad first line");
       }

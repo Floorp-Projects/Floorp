@@ -1086,8 +1086,10 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
 
     const bool useDrawMSFBO = (samples > 0);
 
-    if (!useDrawMSFBO && !aUseReadFBO)
+    if (!useDrawMSFBO && !aUseReadFBO) {
+        // Early out, as no FBO resize work is necessary.
         return true;
+    }
 
     const bool firstTime = (mOffscreenDrawFBO == 0 && mOffscreenReadFBO == 0);
 
@@ -1401,20 +1403,11 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     }
 #endif
 
-    // We're good, and the framebuffer is already attached, so let's
-    // clear out our new framebuffer; otherwise we'll end up displaying
-    // random memory.  We saved all of these things earlier so that we
-    // can restore them.
-    fViewport(0, 0, aSize.width, aSize.height);
-
     // Make sure we know that the buffers are new and thus dirty:
     ForceDirtyFBOs();
 
-    // Clear the new framebuffer with the full viewport
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, GetOffscreenFBO());
-    ClearSafely();
-
-    // Ok, now restore the GL state back to what it was before the resize took place.
+    // We're good, and the framebuffer is already attached.
+    // Now restore the GL state back to what it was before the resize took place.
     BindDrawFBO(curBoundFramebufferDraw);
     BindReadFBO(curBoundFramebufferRead);
     fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
@@ -1422,7 +1415,9 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
 
     // -don't- restore the viewport the first time through this, since
     // the previous one isn't valid.
-    if (!firstTime)
+    if (firstTime)
+        fViewport(0, 0, aSize.width, aSize.height); // XXX This is coming out in 711642
+    else
         fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
     return true;

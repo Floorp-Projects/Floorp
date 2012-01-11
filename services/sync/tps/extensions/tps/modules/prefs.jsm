@@ -34,9 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- /* This is a JavaScript module (JSM) to be imported via 
+ /* This is a JavaScript module (JSM) to be imported via
    Components.utils.import() and acts as a singleton.
-   Only the following listed symbols will exposed on import, and only when 
+   Only the following listed symbols will exposed on import, and only when
    and where imported. */
 
 var EXPORTED_SYMBOLS = ["Preference"];
@@ -57,9 +57,9 @@ CU.import("resource://tps/logger.jsm");
  * Initializes instance properties.
  */
 function Preference (props) {
-  Logger.AssertTrue("name" in props && "value" in props, 
+  Logger.AssertTrue("name" in props && "value" in props,
     "Preference must have both name and value");
-  
+
   this.name = props.name;
   this.value = props.value;
 }
@@ -71,9 +71,9 @@ Preference.prototype = {
   /**
    * Modify
    *
-   * Sets the value of the preference this.name to this.value. 
+   * Sets the value of the preference this.name to this.value.
    * Throws on error.
-   * 
+   *
    * @return nothing
    */
   Modify: function() {
@@ -87,7 +87,7 @@ Preference.prototype = {
     catch(e) {
       Logger.AssertTrue(false, "Weave doesn't sync pref " + this.name);
     }
-    
+
     // Modify the pref; throw an exception if the pref type is different
     // than the value type specified in the test.
     let prefType = prefs.getPrefType(this.name);
@@ -113,8 +113,8 @@ Preference.prototype = {
   /**
    * Find
    *
-   * Verifies that the preference this.name has the value 
-   * this.value. Throws on error, or if the pref's type or value 
+   * Verifies that the preference this.name has the value
+   * this.value. Throws on error, or if the pref's type or value
    * doesn't match.
    *
    * @return nothing
@@ -139,8 +139,8 @@ Preference.prototype = {
     catch (e) {
       Logger.AssertTrue(false, "Error accessing pref " + this.name);
     }
-    
-    // Throw an exception if the current and expected values aren't of 
+
+    // Throw an exception if the current and expected values aren't of
     // the same type, or don't have the same values.
     Logger.AssertEqual(typeof(value), typeof(this.value),
       "Value types don't match");

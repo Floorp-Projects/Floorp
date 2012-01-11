@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Url Classifier code
+ * The Original Code is Url Classifier code.
  *
  * The Initial Developer of the Original Code is
  * the Mozilla Foundation.
@@ -41,16 +41,25 @@
 
 interface nsIArray;
 
-[scriptable, uuid(7902e243-9b00-4673-9288-1b7fc246a8f8)]
+// Note that the PrefixSet name is historical and we do properly support
+// duplicated values, so it's really a Prefix Trie.
+// All methods are thread-safe.
+
+[scriptable, uuid(519c8519-0f30-426b-bb7b-c400ba0318e2)]
 interface nsIUrlClassifierPrefixSet : nsISupports
 {
+  // Fills the PrefixSet with the given array of prefixes.
+  // Can send an empty Array to clear the tree. A truly "empty tree"
+  // cannot be represented, so put a sentinel value if that is required
+  // Requires array to be sorted.
   void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
                    in unsigned long aLength);
-  void addPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
-                   in unsigned long aLength);
-  boolean contains(in unsigned long aPrefix);
+  // Do a lookup in the PrefixSet, return whether the value is present.
+  // If aReady is set, we will block until there are any entries.
+  // If not set, we will return in aReady whether we were ready or not.
   boolean probe(in unsigned long aPrefix, in unsigned long aKey,
                 inout boolean aReady);
+  // Return the key that is used to randomize the collisions in the prefixes.
   PRUint32 getKey();
   boolean isEmpty();
   void loadFromFile(in nsIFile aFile);

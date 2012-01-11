@@ -105,7 +105,8 @@ public:
              nscoord              em,
              nsBoundingMetrics&   aContainerSize,
              nscoord&             aAscent,
-             nscoord&             aDescent);
+             nscoord&             aDescent,
+             bool                 aRTL);
 
   static void
   PlaceChar(nsMathMLChar*      aMathMLChar,

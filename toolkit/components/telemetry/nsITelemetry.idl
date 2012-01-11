@@ -85,6 +85,14 @@ interface nsITelemetry : nsISupports
   [implicit_jscontext]
   readonly attribute jsval slowSQL;
 
+  /**
+   * An object whose properties are the names of histograms defined in
+   * TelemetryHistograms.h and whose corresponding values are the textual
+   * comments associated with said histograms.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval registeredHistograms;
+
   /** 
    * Create and return a histogram where bucket sizes increase exponentially. Parameters:
    *
@@ -99,6 +107,17 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   jsval newHistogram(in ACString name, in PRUint32 min, in PRUint32 max, in PRUint32 bucket_count, in unsigned long histogram_type);
+
+  /**
+   * Create a histogram using the current state of an existing histogram.  The
+   * existing histogram must be registered in TelemetryHistograms.h.
+   *
+   * @param name Unique histogram name
+   * @param existing_name Existing histogram name
+   * The returned object has the same functions as a histogram returned from newHistogram.
+   */
+  [implicit_jscontext]
+  jsval histogramFrom(in ACString name, in ACString existing_name);
 
   /**
    * Same as newHistogram above, but for histograms registered in TelemetryHistograms.h.

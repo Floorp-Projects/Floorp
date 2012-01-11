@@ -78,7 +78,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     const char* filename = nsnull;
     PRInt32 lineno = 0;
     JSFunction* fun = nsnull;
-    uint32 namedArgCount = 0;
+    uint32_t namedArgCount = 0;
     jsval val;
     JSBool isString;
 
@@ -129,7 +129,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     // print the function arguments
 
     if (showArgs && callObj) {
-        for (uint32 i = 0; i < callProps.length; i++) {
+        for (uint32_t i = 0; i < callProps.length; i++) {
             JSPropertyDesc* desc = &callProps.array[i];
             if (desc->flags & JSPD_ARGUMENT) {
                 JSAutoByteString nameBytes;
@@ -160,7 +160,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
             if (JS_GetProperty(cx, argsObj, "length", &val) &&
                 JS_ValueToECMAUint32(cx, val, &argCount) &&
                 argCount > namedArgCount) {
-                for (uint32 k = namedArgCount; k < argCount; k++) {
+                for (uint32_t k = namedArgCount; k < argCount; k++) {
                     char number[8];
                     JS_snprintf(number, 8, "%d", (int) k);
 
@@ -190,7 +190,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
     // print local variables
 
     if (showLocals && callProps.array) {
-        for (uint32 i = 0; i < callProps.length; i++) {
+        for (uint32_t i = 0; i < callProps.length; i++) {
             JSPropertyDesc* desc = &callProps.array[i];
             if (desc->flags & JSPD_VARIABLE) {
                 JSAutoByteString nameBytes;
@@ -230,7 +230,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
 
     if (showThisProps && thisProps.array) {
 
-        for (uint32 i = 0; i < thisProps.length; i++) {
+        for (uint32_t i = 0; i < thisProps.length; i++) {
             JSPropertyDesc* desc = &thisProps.array[i];
             if (desc->flags & JSPD_ENUMERATE) {
                 JSAutoByteString nameBytes;

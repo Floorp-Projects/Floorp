@@ -41,8 +41,6 @@
 #include "nsISupports.idl"
 #include "nsIXPConnect.idl"
 
-[ptr] native JSTracerPtr(JSTracer);
-
 %{ C++
 #define NS_SUCCESS_I_DID_SOMETHING \
    (NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCONNECT,1))
@@ -73,7 +71,7 @@
  * to *_retval unless they want to return PR_FALSE.
  */
 
-[uuid(a40ce52e-2d8c-400f-9af2-f8784a656070)]
+[uuid(fca22e1e-a2bf-456e-83db-f73e8de0f7c5)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -94,7 +92,6 @@ interface nsIXPCScriptable : nsISupports
     const PRUint32 WANT_CALL                        = 1 << 13;
     const PRUint32 WANT_CONSTRUCT                   = 1 << 14;
     const PRUint32 WANT_HASINSTANCE                 = 1 << 15;
-    const PRUint32 WANT_TRACE                       = 1 << 16;
     const PRUint32 USE_JSSTUB_FOR_ADDPROPERTY       = 1 << 17;
     const PRUint32 USE_JSSTUB_FOR_DELPROPERTY       = 1 << 18;
     const PRUint32 USE_JSSTUB_FOR_SETPROPERTY       = 1 << 19;
@@ -104,7 +101,6 @@ interface nsIXPCScriptable : nsISupports
     const PRUint32 CLASSINFO_INTERFACES_ONLY        = 1 << 23;
     const PRUint32 ALLOW_PROP_MODS_DURING_RESOLVE   = 1 << 24;
     const PRUint32 ALLOW_PROP_MODS_TO_PROTOTYPE     = 1 << 25;
-    const PRUint32 DONT_SHARE_PROTOTYPE             = 1 << 26;
     const PRUint32 DONT_REFLECT_INTERFACE_NAMES     = 1 << 27;
     const PRUint32 WANT_EQUALITY                    = 1 << 28;
     const PRUint32 WANT_OUTER_OBJECT                = 1 << 29;
@@ -180,9 +176,6 @@ interface nsIXPCScriptable : nsISupports
     boolean hasInstance(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj,
                        in jsval val, out boolean bp);
-
-    void trace(in nsIXPConnectWrappedNative wrapper,
-               in JSTracerPtr trc, in JSObjectPtr obj);
 
     boolean equality(in nsIXPConnectWrappedNative wrapper,
                     in JSContextPtr cx, in JSObjectPtr obj, in jsval val);

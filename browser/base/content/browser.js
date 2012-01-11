@@ -1364,7 +1364,7 @@ function BrowserStartup() {
 
   allTabs.readPref();
 
-  TabsOnTop.syncCommand();
+  TabsOnTop.init();
 
   BookmarksMenuButton.init();
 
@@ -1564,23 +1564,27 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     }
     catch (ex) { /* never mind; suppose SessionStore is broken */ }
     if (shouldCheck && !shell.isDefaultBrowser(true) && !willRecoverSession) {
-      var brandBundle = document.getElementById("bundle_brand");
-      var shellBundle = document.getElementById("bundle_shell");
+      // Delay the set-default-browser prompt so it doesn't block
+      // initialisation of the session store service.
+      setTimeout(function () {
+        var brandBundle = document.getElementById("bundle_brand");
+        var shellBundle = document.getElementById("bundle_shell");
 
-      var brandShortName = brandBundle.getString("brandShortName");
-      var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
-      var promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage",
-                                                         [brandShortName]);
-      var checkboxLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
-                                                         [brandShortName]);
-      var checkEveryTime = { value: shouldCheck };
-      var ps = Services.prompt;
-      var rv = ps.confirmEx(window, promptTitle, promptMessage,
-                            ps.STD_YES_NO_BUTTONS,
-                            null, null, null, checkboxLabel, checkEveryTime);
-      if (rv == 0)
-        shell.setDefaultBrowser(true, false);
-      shell.shouldCheckDefaultBrowser = checkEveryTime.value;
+        var brandShortName = brandBundle.getString("brandShortName");
+        var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
+        var promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage",
+                                                           [brandShortName]);
+        var checkboxLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
+                                                           [brandShortName]);
+        var checkEveryTime = { value: shouldCheck };
+        var ps = Services.prompt;
+        var rv = ps.confirmEx(window, promptTitle, promptMessage,
+                              ps.STD_YES_NO_BUTTONS,
+                              null, null, null, checkboxLabel, checkEveryTime);
+        if (rv == 0)
+          shell.setDefaultBrowser(true, false);
+        shell.shouldCheckDefaultBrowser = checkEveryTime.value;
+      }, 0);
     }
   }
 #endif
@@ -1781,6 +1785,8 @@ function BrowserShutdown() {
   PlacesStarButton.uninit();
 
   gPrivateBrowsingUI.uninit();
+
+  TabsOnTop.uninit();
 
   TabsInTitlebar.uninit();
 
@@ -2197,14 +2203,7 @@ function openLocationCallback()
 
 function BrowserOpenTab()
 {
-  if (!gBrowser) {
-    // If there are no open browser windows, open a new one
-    window.openDialog("chrome://browser/content/", "_blank",
-                      "chrome,all,dialog=no", "about:blank");
-    return;
-  }
-  gBrowser.loadOneTab("about:blank", {inBackground: false});
-  focusAndSelectUrlBar();
+  openUILinkIn("about:blank", "tab");
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
@@ -3908,7 +3907,8 @@ var FullScreen = {
     }
     else {
       // The user may quit fullscreen during an animation
-      clearInterval(this._animationInterval);
+      window.mozCancelAnimationFrame(this._animationHandle);
+      this._animationHandle = 0;
       clearTimeout(this._animationTimeout);
       gNavToolbox.style.marginTop = "";
       if (this._isChromeCollapsed)
@@ -4099,33 +4099,40 @@ var FullScreen = {
   // Animate the toolbars disappearing
   _shouldAnimate: true,
   _isAnimating: false,
-  _animationTimeout: null,
-  _animationInterval: null,
-  _animateUp: function()
-  {
+  _animationTimeout: 0,
+  _animationHandle: 0,
+  _animateUp: function() {
     // check again, the user may have done something before the animation was due to start
-    if (!window.fullScreen || !FullScreen._safeToCollapse(false)) {
-      FullScreen._isAnimating = false;
-      FullScreen._shouldAnimate = true;
+    if (!window.fullScreen || !this._safeToCollapse(false)) {
+      this._isAnimating = false;
+      this._shouldAnimate = true;
       return;
     }
 
-    var animateFrameAmount = 2;
-    function animateUpFrame() {
-      animateFrameAmount *= 2;
-      if (animateFrameAmount >= gNavToolbox.boxObject.height) {
-        // We've animated enough
-        clearInterval(FullScreen._animationInterval);
-        gNavToolbox.style.marginTop = "";
-        FullScreen._isAnimating = false;
-        FullScreen._shouldAnimate = false; // Just to make sure
-        FullScreen.mouseoverToggle(false);
-        return;
-      }
-      gNavToolbox.style.marginTop = (animateFrameAmount * -1) + "px";
+    this._animateStartTime = window.mozAnimationStartTime;
+    if (!this._animationHandle)
+      this._animationHandle = window.mozRequestAnimationFrame(this);
+  },
+
+  sample: function (timeStamp) {
+    const duration = 1500;
+    const timePassed = timeStamp - this._animateStartTime;
+    const pos = timePassed >= duration ? 1 :
+                1 - Math.pow(1 - timePassed / duration, 4);
+
+    if (pos >= 1) {
+      // We've animated enough
+      window.mozCancelAnimationFrame(this._animationHandle);
+      gNavToolbox.style.marginTop = "";
+      this._animationHandle = 0;
+      this._isAnimating = false;
+      this._shouldAnimate = false; // Just to make sure
+      this.mouseoverToggle(false);
+      return;
     }
 
-    FullScreen._animationInterval = setInterval(animateUpFrame, 70);
+    gNavToolbox.style.marginTop = (gNavToolbox.boxObject.height * pos * -1) + "px";
+    this._animationHandle = window.mozRequestAnimationFrame(this);
   },
 
   cancelWarning: function(event) {
@@ -4226,7 +4233,7 @@ var FullScreen = {
     if (!aShow && this._shouldAnimate) {
       this._isAnimating = true;
       this._shouldAnimate = false;
-      this._animationTimeout = setTimeout(this._animateUp, 800);
+      this._animationTimeout = setTimeout(this._animateUp.bind(this), 800);
       return;
     }
 
@@ -4710,10 +4717,12 @@ var XULBrowserWindow = {
         document.documentElement.removeAttribute("disablechrome");
 
       // Disable find commands in documents that ask for them to be disabled.
-      let docElt = content.document.documentElement;
-      let disableFind = aLocationURI &&
-        (docElt && docElt.getAttribute("disablefastfind") == "true") &&
-        (aLocationURI.schemeIs("about") || aLocationURI.schemeIs("chrome"));
+      let disableFind = false;
+      if (aLocationURI &&
+          (aLocationURI.schemeIs("about") || aLocationURI.schemeIs("chrome"))) {
+        let docElt = content.document.documentElement;
+        disableFind = docElt && docElt.getAttribute("disablefastfind") == "true";
+      }
       let findCommands = [document.getElementById("cmd_find"),
                           document.getElementById("cmd_findAgain"),
                           document.getElementById("cmd_findPrevious")];
@@ -5279,27 +5288,48 @@ function setToolbarVisibility(toolbar, isVisible) {
 }
 
 var TabsOnTop = {
-  toggle: function () {
-    this.enabled = !this.enabled;
+  init: function TabsOnTop_init() {
+    this.syncUI();
+    Services.prefs.addObserver(this._prefName, this, false);
   },
-  syncCommand: function () {
-    let enabled = this.enabled;
+
+  uninit: function TabsOnTop_uninit() {
+    Services.prefs.removeObserver(this._prefName, this);
+  },
+
+  toggle: function () {
+    this.enabled = !Services.prefs.getBoolPref(this._prefName);
+  },
+
+  syncUI: function () {
+    let userEnabled = Services.prefs.getBoolPref(this._prefName);
+    let enabled = userEnabled && gBrowser.tabContainer.visible;
+
     document.getElementById("cmd_ToggleTabsOnTop")
-            .setAttribute("checked", enabled);
+            .setAttribute("checked", userEnabled);
+
     document.documentElement.setAttribute("tabsontop", enabled);
+    document.getElementById("navigator-toolbox").setAttribute("tabsontop", enabled);
     document.getElementById("TabsToolbar").setAttribute("tabsontop", enabled);
     gBrowser.tabContainer.setAttribute("tabsontop", enabled);
     TabsInTitlebar.allowedBy("tabs-on-top", enabled);
   },
+
   get enabled () {
     return gNavToolbox.getAttribute("tabsontop") == "true";
   },
-  set enabled (val) {
-    gNavToolbox.setAttribute("tabsontop", !!val);
-    this.syncCommand();
 
+  set enabled (val) {
+    Services.prefs.setBoolPref(this._prefName, !!val);
     return val;
-  }
+  },
+
+  observe: function (subject, topic, data) {
+    if (topic == "nsPref:changed")
+      this.syncUI();
+  },
+
+  _prefName: "browser.tabs.onTop"
 }
 
 var TabsInTitlebar = {
@@ -8800,7 +8830,7 @@ function switchToTabHavingURI(aURI, aOpenNew) {
     if (isBrowserWindow && isTabEmpty(gBrowser.selectedTab))
       gBrowser.selectedBrowser.loadURI(aURI.spec);
     else
-      openUILinkIn(aURI.spec, "tab", { inBackground: false });
+      openUILinkIn(aURI.spec, "tab");
   }
 
   return false;
@@ -8910,20 +8940,16 @@ function duplicateTabIn(aTab, where, delta) {
                  .getService(Ci.nsISessionStore)
                  .duplicateTab(window, aTab, delta);
 
-  var loadInBackground =
-    getBoolPref("browser.tabs.loadBookmarksInBackground", false);
-
   switch (where) {
     case "window":
       gBrowser.hideTab(newTab);
       gBrowser.replaceTabWithWindow(newTab);
       break;
     case "tabshifted":
-      loadInBackground = !loadInBackground;
-      // fall through
+      // A background tab has been opened, nothing else to do here.
+      break;
     case "tab":
-      if (!loadInBackground)
-        gBrowser.selectedTab = newTab;
+      gBrowser.selectedTab = newTab;
       break;
   }
 }
@@ -9030,3 +9056,10 @@ XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
 #endif
 });
 
+function focusNextFrame(event) {
+  let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+  let dir = event.shiftKey ? fm.MOVEFOCUS_BACKWARDDOC : fm.MOVEFOCUS_FORWARDDOC;
+  let element = fm.moveFocus(window, null, dir, fm.FLAG_BYKEY);
+  if (element.ownerDocument == document)
+    focusAndSelectUrlBar();
+}

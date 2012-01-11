@@ -24,6 +24,8 @@
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Jonathan Hage <hage.jonathan@gmail.com>
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -529,7 +531,22 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     overDelta2 = 0;
   }
 
-  nscoord dxBase, dxOver = 0, dxUnder = 0;
+  nscoord dxBase = 0, dxOver = 0, dxUnder = 0;
+  nsAutoString valueAlign;
+  enum {
+    center,
+    left,
+    right
+  } alignPosition = center;
+
+  if (GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::align,
+                   valueAlign)) {
+    if (valueAlign.EqualsLiteral("left")) {
+      alignPosition = left;
+    } else if (valueAlign.EqualsLiteral("right")) {
+      alignPosition = right;
+    }
+  }
 
   //////////
   // pass 1, do what <mover> does: attach the overscript on the base
@@ -545,13 +562,24 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
 
   if (NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {
     mBoundingMetrics.width = bmBase.width; 
-    dxOver += correction + (mBoundingMetrics.width - overWidth)/2;
+    if (alignPosition == center) {
+      dxOver += correction;
+    }
   }
   else {
     mBoundingMetrics.width = NS_MAX(bmBase.width, overWidth);
-    dxOver += correction/2 + (mBoundingMetrics.width - overWidth)/2;
+    if (alignPosition == center) {
+      dxOver += correction/2;
+    }
   }
-  dxBase = (mBoundingMetrics.width - bmBase.width)/2;
+  
+  if (alignPosition == center) {
+    dxOver += (mBoundingMetrics.width - overWidth)/2;
+    dxBase = (mBoundingMetrics.width - bmBase.width)/2;
+  } else if (alignPosition == right) {
+    dxOver += mBoundingMetrics.width - overWidth;
+    dxBase = mBoundingMetrics.width - bmBase.width;
+  }
 
   mBoundingMetrics.ascent = 
     bmBase.ascent + overDelta1 + bmOver.ascent + bmOver.descent;
@@ -574,8 +602,6 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
            overSize.ascent + bmOver.descent + overDelta1 + bmBase.ascent);
   ascentAnonymousBase = NS_MAX(ascentAnonymousBase, baseSize.ascent);
 
-  GetItalicCorrection(bmAnonymousBase, correction);
-
   // Width of non-spacing marks is zero so use left and right bearing.
   nscoord underWidth = bmUnder.width;
   if (!underWidth) {
@@ -584,13 +610,19 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   }
 
   nscoord maxWidth = NS_MAX(bmAnonymousBase.width, underWidth);
-  if (NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {
-    dxUnder += (maxWidth - underWidth)/2;;
+  if (alignPosition == center &&
+      !NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {
+    GetItalicCorrection(bmAnonymousBase, correction);
+    dxUnder += -correction/2;
   }
-  else {
-    dxUnder += -correction/2 + (maxWidth - underWidth)/2;
+  nscoord dxAnonymousBase = 0;
+  if (alignPosition == center) {
+    dxUnder += (maxWidth - underWidth)/2;
+    dxAnonymousBase = (maxWidth - bmAnonymousBase.width)/2;
+  } else if (alignPosition == right) {
+    dxUnder += maxWidth - underWidth;
+    dxAnonymousBase = maxWidth - bmAnonymousBase.width;
   }
-  nscoord dxAnonymousBase = (maxWidth - bmAnonymousBase.width)/2;
 
   // adjust the offsets of the real base and overscript since their
   // final offsets should be relative to us...

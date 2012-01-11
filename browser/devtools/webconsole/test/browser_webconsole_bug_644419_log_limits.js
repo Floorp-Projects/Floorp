@@ -12,7 +12,12 @@ const TEST_URI = "http://example.com/browser/browser/devtools/" +
 
 var gOldPref, gHudId;
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab("data:text/html,Web Console test for bug 644419: Console should " +
          "have user-settable log limits for each message category");
   browser.addEventListener("load", onLoad, true);

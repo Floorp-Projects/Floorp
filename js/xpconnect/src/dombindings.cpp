@@ -40,16 +40,21 @@
 #include "mozilla/Util.h"
 
 #include "dombindings.h"
+#include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"
 #include "XPCWrapper.h"
 #include "WrapperFactory.h"
 #include "nsDOMClassInfo.h"
 #include "nsGlobalWindow.h"
-#include "jsiter.h"
 #include "nsWrapperCacheInlines.h"
 
-using namespace js;
+#include "jsapi.h"
+
+#include "jscntxt.h" // js::AutoIdVector
+
+using namespace JS;
+using js::AutoIdVector;
 
 namespace mozilla {
 namespace dom {
@@ -199,7 +204,7 @@ Wrap(JSContext *cx, JSObject *scope, nsISupportsResult &result, jsval *vp)
 static inline bool
 Wrap(JSContext *cx, JSObject *scope, nsString &result, jsval *vp)
 {
-    return xpc_qsStringToJsval(cx, result, vp);
+    return xpc::StringToJsval(cx, result, vp);
 }
 
 template<class T>
@@ -298,14 +303,14 @@ ListBase<LC>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return false;
     PRUint32 length;
     getListObject(obj)->GetLength(&length);
-    JS_ASSERT(int32(length) >= 0);
+    JS_ASSERT(int32_t(length) >= 0);
     *vp = UINT_TO_JSVAL(length);
     return true;
 }
 
 template<class LC>
 bool
-ListBase<LC>::getItemAt(ListType *list, uint32 i, IndexGetterType &item)
+ListBase<LC>::getItemAt(ListType *list, uint32_t i, IndexGetterType &item)
 {
     JS_STATIC_ASSERT(!hasIndexGetter);
     return false;
@@ -313,7 +318,7 @@ ListBase<LC>::getItemAt(ListType *list, uint32 i, IndexGetterType &item)
 
 template<class LC>
 bool
-ListBase<LC>::setItemAt(JSContext *cx, ListType *list, uint32 i, IndexSetterType item)
+ListBase<LC>::setItemAt(JSContext *cx, ListType *list, uint32_t i, IndexSetterType item)
 {
     JS_STATIC_ASSERT(!hasIndexSetter);
     return false;
@@ -351,7 +356,7 @@ ListBase<LC>::namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterTyp
 }
 
 JSBool
-interface_hasInstance(JSContext *cx, JSObject *obj, const js::Value *vp, JSBool *bp)
+interface_hasInstance(JSContext *cx, JSObject *obj, const JS::Value *vp, JSBool *bp)
 {
     if (vp->isObject()) {
         jsval prototype;
@@ -550,7 +555,7 @@ GetArrayIndexFromId(JSContext *cx, jsid id)
 }
 
 static void
-FillPropertyDescriptor(PropertyDescriptor *desc, JSObject *obj, jsval v, bool readonly)
+FillPropertyDescriptor(JSPropertyDescriptor *desc, JSObject *obj, jsval v, bool readonly)
 {
     desc->obj = obj;
     desc->value = v;
@@ -563,7 +568,7 @@ FillPropertyDescriptor(PropertyDescriptor *desc, JSObject *obj, jsval v, bool re
 template<class LC>
 bool
 ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
-                                       PropertyDescriptor *desc)
+                                       JSPropertyDescriptor *desc)
 {
     if (set) {
         if (hasIndexSetter) {
@@ -629,7 +634,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
 template<class LC>
 bool
 ListBase<LC>::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
-                                    PropertyDescriptor *desc)
+                                    JSPropertyDescriptor *desc)
 {
     if (!getOwnPropertyDescriptor(cx, proxy, id, set, desc))
         return false;
@@ -683,7 +688,7 @@ ListBase<LC>::ensureExpandoObject(JSContext *cx, JSObject *obj)
 
 template<class LC>
 bool
-ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
+ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, JSPropertyDescriptor *desc)
 {
     if (hasIndexSetter) {
         int32_t index = GetArrayIndexFromId(cx, id);
@@ -729,8 +734,8 @@ ListBase<LC>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &
 {
     PRUint32 length;
     getListObject(proxy)->GetLength(&length);
-    JS_ASSERT(int32(length) >= 0);
-    for (int32 i = 0; i < int32(length); ++i) {
+    JS_ASSERT(int32_t(length) >= 0);
+    for (int32_t i = 0; i < int32_t(length); ++i) {
         if (!props.append(INT_TO_JSID(i)))
             return false;
     }
@@ -873,7 +878,7 @@ ListBase<LC>::shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *should
 
 template<class LC>
 bool
-ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
+ListBase<LC>::resolveNativeName(JSContext *cx, JSObject *proxy, jsid id, JSPropertyDescriptor *desc)
 {
     JS_ASSERT(xpc::WrapperFactory::IsXrayWrapper(proxy));
 
@@ -950,7 +955,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
 template<class LC>
 bool
 ListBase<LC>::getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bool *found,
-                                     js::Value *vp)
+                                     JS::Value *vp)
 {
     JSObject *proto = js::GetObjectProto(proxy);
     if (!proto)
@@ -971,7 +976,7 @@ ListBase<LC>::getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bo
             if (vp) {
                 PRUint32 length;
                 getListObject(proxy)->GetLength(&length);
-                JS_ASSERT(int32(length) >= 0);
+                JS_ASSERT(int32_t(length) >= 0);
                 vp->setInt32(length);
             }
             *found = true;
@@ -1069,7 +1074,7 @@ ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
 template<class LC>
 bool
 ListBase<LC>::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                                  uint32 index, Value *vp, bool *present)
+                                  uint32_t index, Value *vp, bool *present)
 {
     NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(proxy),
                  "Should not have a XrayWrapper here");

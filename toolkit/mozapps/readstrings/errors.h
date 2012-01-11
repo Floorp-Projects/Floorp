@@ -50,4 +50,12 @@
 #define UNEXPECTED_ERROR 8
 #define ELEVATION_CANCELED 9
 
+// The following error codes are only used by updater.exe
+// when a fallback key exists and XPCShell tests are being run.
+#define FALLBACKKEY_UNKNOWN_ERROR 100
+#define FALLBACKKEY_REGPATH_ERROR 101
+#define FALLBACKKEY_NOKEY_ERROR 102
+#define FALLBACKKEY_SERVICE_NO_STOP_ERROR 103
+#define FALLBACKKEY_LAUNCH_ERROR 104
+
 #endif  // Errors_h__

@@ -1,0 +1,11 @@
+        <activity
+            android:clearTaskOnLaunch="true"
+            android:launchMode="singleTask"
+            android:name="org.mozilla.gecko.sync.setup.activities.AccountActivity"
+            android:windowSoftInputMode="adjustResize"/>
+        <activity
+            android:name="org.mozilla.gecko.sync.setup.activities.SetupFailureActivity" />
+        <activity
+            android:name="org.mozilla.gecko.sync.setup.activities.SetupSuccessActivity" />
+        <activity
+            android:name="org.mozilla.gecko.sync.setup.activities.SetupWaitingActivity" />

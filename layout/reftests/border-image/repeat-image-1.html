@@ -9,17 +9,21 @@
   div.p1 {
     background: red; /* fail if this shows through */
     background-image: url('3x3multicolor.png'); /* fail if this shows through */
-    -moz-border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px repeat;
-    -khtml-border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px repeat;
-    border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px repeat;
+    border-width: 1px 3px;
+    border-style: solid;
+    -moz-border-image: url('4x4multicolor.png') 1 1 1 1 repeat;
+    -khtml-border-image: url('4x4multicolor.png') 1 1 1 1 repeat;
+    border-image: url('4x4multicolor.png') 1 1 1 1 repeat;
   }
 
   div.p2 {
     background: red; /* fail if this shows through */
     background-image: url('3x3multicolor.png'); /* fail if this shows through */
-    -moz-border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px;
-    -khtml-border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px;
-    border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px;
+    border-width: 1px 3px;
+    border-style: solid;
+    -moz-border-image: url('4x4multicolor.png') 1 1 1 1;
+    -khtml-border-image: url('4x4multicolor.png') 1 1 1 1;
+    border-image: url('4x4multicolor.png') 1 1 1 1;
   }
 
   </style>

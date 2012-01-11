@@ -111,7 +111,8 @@ function verifyBlob(blob1, blob2, fileId, blobReadHandler)
         verifyBuffers(buffer1, buffer2);
         if (blobReadHandler) {
           blobReadHandler();
-        } else {
+        }
+        else {
           testGenerator.next();
         }
       }
@@ -126,7 +127,8 @@ function verifyBlob(blob1, blob2, fileId, blobReadHandler)
       verifyBuffers(buffer1, buffer2);
       if (blobReadHandler) {
         blobReadHandler();
-      } else {
+      }
+      else {
         testGenerator.next();
       }
     }
@@ -147,7 +149,8 @@ function verifyBlobArray(blobs1, blobs2, expectedFileIds)
   function blobReadHandler() {
     if (++verifiedCount == blobs1.length) {
       testGenerator.next();
-    } else {
+    }
+    else {
       verifyBlob(blobs1[verifiedCount], blobs2[verifiedCount],
                  expectedFileIds[verifiedCount], blobReadHandler);
     }

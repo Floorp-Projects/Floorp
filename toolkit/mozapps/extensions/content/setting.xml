@@ -50,7 +50,7 @@
 
   <binding id="settings">
     <content orient="vertical">
-      <xul:label class="settings-title" xbl:inherits="value=label" crop="end" flex="1"/>
+      <xul:label class="settings-title" xbl:inherits="xbl:text=label" flex="1"/>
       <children />
     </content>
   </binding>
@@ -170,8 +170,8 @@
   <binding id="setting-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
-        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
-        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+        <xul:label class="preferences-title" xbl:inherits="xbl:text=title" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="xbl:text=desc" flex="1">
           <children/>
         </xul:label>
       </xul:vbox>
@@ -207,8 +207,8 @@
   <binding id="setting-boolint" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
-        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
-        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+        <xul:label class="preferences-title" xbl:inherits="xbl:text=title" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="xbl:text=desc" flex="1">
           <children/>
         </xul:label>
       </xul:vbox>
@@ -270,8 +270,8 @@
   <binding id="setting-integer" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
-        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
-        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+        <xul:label class="preferences-title" xbl:inherits="xbl:text=title" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="xbl:text=desc" flex="1">
           <children/>
         </xul:label>
       </xul:vbox>
@@ -306,8 +306,8 @@
   <binding id="setting-control" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
-        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
-        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+        <xul:label class="preferences-title" xbl:inherits="xbl:text=title" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="xbl:text=desc" flex="1">
           <children/>
         </xul:label>
       </xul:vbox>
@@ -320,8 +320,8 @@
   <binding id="setting-string" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
-        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
-        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+        <xul:label class="preferences-title" xbl:inherits="xbl:text=title" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="xbl:text=desc" flex="1">
           <children/>
         </xul:label>
       </xul:vbox>
@@ -358,8 +358,8 @@
   <binding id="setting-color" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
-        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
-        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+        <xul:label class="preferences-title" xbl:inherits="xbl:text=title" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="xbl:text=desc" flex="1">
           <children/>
         </xul:label>
       </xul:vbox>
@@ -395,8 +395,8 @@
   <binding id="setting-path" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
-        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
-        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+        <xul:label class="preferences-title" xbl:inherits="xbl:text=title" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="xbl:text=desc" flex="1">
           <children/>
         </xul:label>
       </xul:vbox>
@@ -476,8 +476,8 @@
   <binding id="setting-multi" extends="chrome://mozapps/content/extensions/setting.xml#setting-base">
     <content>
       <xul:vbox class="setting-label">
-        <xul:label class="preferences-title" xbl:inherits="value=title" crop="end" flex="1"/>
-        <xul:label class="preferences-description" xbl:inherits="value=desc" crop="end" flex="1">
+        <xul:label class="preferences-title" xbl:inherits="xbl:text=title" flex="1"/>
+        <xul:label class="preferences-description" xbl:inherits="xbl:text=desc" flex="1">
           <children/>
         </xul:label>
       </xul:vbox>

@@ -37,7 +37,6 @@
 
 
 .extern js_InternalThrow
-.extern SetVMFrameRegs
 .extern PushActiveVMFrame
 .extern PopActiveVMFrame
 .extern js_InternalInterpret
@@ -101,8 +100,6 @@ JaegerTrampoline:
     push    r8
     mov     rcx, rsp
     sub     rsp, 0x20
-    call    SetVMFrameRegs
-    lea     rcx, [rsp+0x20]
     call    PushActiveVMFrame
     add     rsp, 0x20
 

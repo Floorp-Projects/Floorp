@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=708620
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 708620</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="start();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=708620">Mozilla Bug 708620</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 708620 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  "file_bug708620.html"
+];
+
+var expectedErrors = [
+  '[JavaScript Warning: "A form was submitted in the windows-1252 encoding which cannot encode all Unicode characters, so user input may get corrupted. To avoid this problem, the page should be changed so that the form is submitted in the UTF-8 encoding either by changing the encoding of the page itself to UTF-8 or by specifying accept-charset=utf-8 on the form element."]'
+];
+
+function consoleError(msg) {
+  var expected = expectedErrors.shift();
+  is(msg, expected, "Not the right error message");
+}
+
+SpecialPowers.addErrorConsoleListener(consoleError);
+
+function start() {
+  var url = tests.shift();
+  document.getElementsByTagName("iframe")[0].src = url;
+}
+
+function finish() {
+    is(expectedErrors.length, 0, "The error supply was not exhausted");
+    SpecialPowers.removeErrorConsoleListener(consoleError);
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

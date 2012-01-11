@@ -184,7 +184,7 @@ nsTableFrame::GetType() const
 
 
 nsTableFrame::nsTableFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext),
+  : nsContainerFrame(aContext),
     mCellMap(nsnull),
     mTableLayoutStrategy(nsnull)
 {
@@ -198,7 +198,7 @@ nsTableFrame::nsTableFrame(nsStyleContext* aContext)
 
 NS_QUERYFRAME_HEAD(nsTableFrame)
   NS_QUERYFRAME_ENTRY(nsITableLayout)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMETHODIMP
 nsTableFrame::Init(nsIContent*      aContent,
@@ -208,7 +208,7 @@ nsTableFrame::Init(nsIContent*      aContent,
   nsresult  rv;
 
   // Let the base class do its processing
-  rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // see if border collapse is on, if so set it
   const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
@@ -260,7 +260,7 @@ void
 nsTableFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mColGroups.DestroyFramesFrom(aDestructRoot);
-  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 // Make sure any views are positioned properly
@@ -1060,13 +1060,13 @@ nsTableFrame::GetChildList(ChildListID aListID) const
   if (aListID == kColGroupList) {
     return mColGroups;
   }
-  return nsHTMLContainerFrame::GetChildList(aListID);
+  return nsContainerFrame::GetChildList(aListID);
 }
 
 void
 nsTableFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 {
-  nsHTMLContainerFrame::GetChildLists(aLists);
+  nsContainerFrame::GetChildLists(aLists);
   mColGroups.AppendIfNonempty(aLists, kColGroupList);
 }
 
@@ -1469,7 +1469,7 @@ nsTableFrame::MarkIntrinsicWidthsDirty()
 
   // XXXldb Call SetBCDamageArea?
 
-  nsHTMLContainerFrame::MarkIntrinsicWidthsDirty();
+  nsContainerFrame::MarkIntrinsicWidthsDirty();
 }
 
 /* virtual */ nscoord
@@ -1498,7 +1498,7 @@ nsTableFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 nsTableFrame::IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext)
 {
   IntrinsicWidthOffsetData result =
-    nsHTMLContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
+    nsContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
 
   result.hMargin = 0;
   result.hPctMargin = 0;
@@ -1521,9 +1521,8 @@ nsTableFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                           bool aShrinkWrap)
 {
   nsSize result =
-    nsHTMLContainerFrame::ComputeSize(aRenderingContext, aCBSize,
-                                      aAvailableWidth,
-                                      aMargin, aBorder, aPadding, aShrinkWrap);
+    nsContainerFrame::ComputeSize(aRenderingContext, aCBSize, aAvailableWidth,
+                                  aMargin, aBorder, aPadding, aShrinkWrap);
 
   // Tables never shrink below their min width.
   nscoord minWidth = GetMinWidth(aRenderingContext);
@@ -2322,7 +2321,7 @@ nsTableFrame::RemoveFrame(ChildListID     aListID,
 nsTableFrame::GetUsedBorder() const
 {
   if (!IsBorderCollapse())
-    return nsHTMLContainerFrame::GetUsedBorder();
+    return nsContainerFrame::GetUsedBorder();
 
   return GetIncludedOuterBCBorder();
 }
@@ -2331,7 +2330,7 @@ nsTableFrame::GetUsedBorder() const
 nsTableFrame::GetUsedPadding() const
 {
   if (!IsBorderCollapse())
-    return nsHTMLContainerFrame::GetUsedPadding();
+    return nsContainerFrame::GetUsedPadding();
 
   return nsMargin(0,0,0,0);
 }
@@ -3667,7 +3666,7 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
                             PRInt32&       aColSpan,
                             PRInt32&       aActualRowSpan,
                             PRInt32&       aActualColSpan,
-                            bool&        aIsSelected)
+                            bool&          aIsSelected)
 {
   // Initialize out params
   aCell = nsnull;
@@ -3700,8 +3699,7 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
   if (aActualRowSpan == 0 || aActualColSpan == 0)
     return NS_ERROR_FAILURE;
 
-  result = cellFrame->GetSelected(&aIsSelected);
-  if (NS_FAILED(result)) return result;
+  aIsSelected = cellFrame->IsSelected();
 
   // do this last, because it addrefs,
   // and we don't want the caller leaking it on error
@@ -5060,7 +5058,7 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
       else if ((dEndY >= rgStartY) && (dEndY <= rgEndY)) {
         // the damage area ends in the row group
         iterStartY = rgStartY;
-        iterEndY   = NS_MIN(dEndY, rgStartY);
+        iterEndY   = dEndY;
       }
       else if ((rgStartY >= dStartY) && (rgEndY <= dEndY)) {
         // the damage area contains the row group
@@ -5545,7 +5543,6 @@ nsTableFrame::CalcBCBorders()
 
   BCMapCellIterator iter(this, damageArea);
   for (iter.First(info); !iter.mAtEnd; iter.Next(info)) {
-    bool bottomRowSpan = false;
     // see if lastTopBorder, lastBottomBorder need to be reset
     if (iter.IsNewRow()) {
       gotRowBorder = false;
@@ -5562,7 +5559,6 @@ nsTableFrame::CalcBCBorders()
       if (lastBottomBorder.rowIndex > (info.GetCellEndRowIndex() + 1)) {
         // the bottom border's left edge butts against the middle of a rowspan
         lastBottomBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
-        bottomRowSpan = true;
       }
     }
 
@@ -7059,8 +7055,9 @@ BCPaintBorderIterator::VerticalSegmentOwnsCorner()
 {
   mozilla::css::Side cornerOwnerSide = NS_SIDE_TOP;
   bool bevel = false;
-  nscoord cornerSubWidth;
-  cornerSubWidth = (mBCData) ? mBCData->GetCorner(cornerOwnerSide, bevel) : 0;
+  if (mBCData) {
+    mBCData->GetCorner(cornerOwnerSide, bevel);
+  }
   // unitialized ownerside, bevel
   return  (NS_SIDE_TOP == cornerOwnerSide) ||
           (NS_SIDE_BOTTOM == cornerOwnerSide);

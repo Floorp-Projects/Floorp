@@ -190,6 +190,11 @@ public:
     return nsnull;
   }
 
+  /**
+   * Returns true if the object has a non-gray wrapper.
+   */
+  bool IsBlack();
+
 private:
   // Only meant to be called by nsContentUtils.
   void SetPreservingWrapper(bool aPreserve)

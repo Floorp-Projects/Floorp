@@ -36,9 +36,9 @@ ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 }
 
 char p1str[] = "principal1";
-JSPrincipals prin1 = { p1str, 0, 0, 0, Destroy, Subsume };
+JSPrincipals prin1 = { p1str, 0, Destroy, Subsume };
 char p2str[] = "principal2";
-JSPrincipals prin2 = { p2str, 0, 0, 0, Destroy, Subsume };
+JSPrincipals prin2 = { p2str, 0, Destroy, Subsume };
 
 BEGIN_TEST(testOriginPrincipals)
 {

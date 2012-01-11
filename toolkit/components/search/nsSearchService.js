@@ -3434,6 +3434,7 @@ SearchService.prototype = {
           this._batchTimer.cancel();
           this._buildCache();
         }
+        engineMetadataService.closeDB();
         break;
     }
   },
@@ -3616,6 +3617,15 @@ var engineMetadataService = {
     pp.name = name;
     this.mDeleteData.executeStep();
     this.mDeleteData.reset();
+  },
+
+  closeDB: function epsCloseDB() {
+    ["mInsertData", "mDeleteData", "mGetData"].forEach(function(aStmt) {
+      if (Object.getOwnPropertyDescriptor(this, aStmt).value !== undefined)
+        this[aStmt].finalize();
+    }, this);
+    if (Object.getOwnPropertyDescriptor(this, "mDB").value !== undefined)
+      this.mDB.close();
   }
 }
 

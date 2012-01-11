@@ -118,6 +118,7 @@ static const TCHAR kPluginIgnoreSubclassProperty[] = TEXT("PluginIgnoreSubclassP
 
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
+#include "nsCocoaFeatures.h"
 #include "PluginUtilsOSX.h"
 #endif // defined(XP_MACOSX)
 
@@ -420,12 +421,12 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     }
 
     case NPNVsupportsCoreAnimationBool: {
-        *((NPBool*)aValue) = true;
+        *((NPBool*)aValue) = nsCocoaFeatures::SupportCoreAnimationPlugins();
         return NPERR_NO_ERROR;
     }
 
     case NPNVsupportsInvalidatingCoreAnimationBool: {
-        *((NPBool*)aValue) = true;
+        *((NPBool*)aValue) = nsCocoaFeatures::SupportCoreAnimationPlugins();
         return NPERR_NO_ERROR;
     }
 
@@ -961,37 +962,6 @@ PluginInstanceChild::RecvWindowPosChanged(const NPRemoteEvent& event)
     return false;
 #endif
 }
-
-
-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
-static bool
-XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
-                Visual** aVisual, unsigned int* aDepth)
-{
-    if (aVisualID == None) {
-        *aVisual = NULL;
-        *aDepth = 0;
-        return true;
-    }
-
-    const Screen* screen = DefaultScreenOfDisplay(aDisplay);
-
-    for (int d = 0; d < screen->ndepths; d++) {
-        Depth *d_info = &screen->depths[d];
-        for (int v = 0; v < d_info->nvisuals; v++) {
-            Visual* visual = &d_info->visuals[v];
-            if (visual->visualid == aVisualID) {
-                *aVisual = visual;
-                *aDepth = d_info->depth;
-                return true;
-            }
-        }
-    }
-
-    NS_ERROR("VisualID not on Screen.");
-    return false;
-}
-#endif
 
 bool
 PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
@@ -3279,8 +3249,7 @@ PluginInstanceChild::ShowPluginFrame()
 #ifdef MOZ_X11
     if (mCurrentSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(mCurrentSurface.get());
-        currSurf = SurfaceDescriptorX11(xsurf->XDrawable(), xsurf->XRenderFormat()->id,
-                                        mCurrentSurface->GetSize());
+        currSurf = SurfaceDescriptorX11(xsurf);
         // Need to sync all pending x-paint requests
         // before giving drawable to another process
         XSync(mWsInfo.display, False);
@@ -3445,14 +3414,7 @@ PluginInstanceChild::RecvUpdateBackground(const SurfaceDescriptor& aBackground,
         switch (aBackground.type()) {
 #ifdef MOZ_X11
         case SurfaceDescriptor::TSurfaceDescriptorX11: {
-            SurfaceDescriptorX11 xdesc = aBackground.get_SurfaceDescriptorX11();
-            XRenderPictFormat pf;
-            pf.id = xdesc.xrenderPictID();
-            XRenderPictFormat *incFormat =
-                XRenderFindFormat(DefaultXDisplay(), PictFormatID, &pf, 0);
-            mBackground =
-                new gfxXlibSurface(DefaultScreenOfDisplay(DefaultXDisplay()),
-                                   xdesc.XID(), incFormat, xdesc.size());
+            mBackground = aBackground.get_SurfaceDescriptorX11().OpenForeign();
             break;
         }
 #endif

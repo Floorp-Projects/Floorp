@@ -43,7 +43,11 @@
         ]
       };
 
-      testAccessibleTree("menulist", accTree);
+      if (!MAC) {
+        testAccessibleTree("menulist", accTree);
+      } else {
+        todo(false, "Make this test pass on OSX (bug 650366)");
+      }
 
       //////////////////////////////////////////////////////////////////////////
       // editable menulist
@@ -81,9 +85,10 @@
         ]
       };
 
-      // XXX Bug 551957
       if (!MAC) {
         testAccessibleTree("menulist2", accTree);
+      } else {
+        todo(false, "Make this test pass on OSX (bug 551957)");
       }
 
       //////////////////////////////////////////////////////////////////////////

@@ -67,12 +67,14 @@ function init(aEvent)
     // Pref is unset
   }
 
-  // Include the build ID if this is an "a#" (nightly or aurora) build
+  // Include the build ID and display warning if this is an "a#" (nightly or aurora) build
   let version = Services.appinfo.version;
   if (/a\d+$/.test(version)) {
     let buildID = Services.appinfo.appBuildID;
     let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) + "-" + buildID.slice(6,8);
     document.getElementById("version").textContent += " (" + buildDate + ")";
+    document.getElementById("experimental").hidden = false;
+    document.getElementById("communityDesc").hidden = true;
   }
 
 #ifdef MOZ_OFFICIAL_BRANDING
@@ -186,9 +188,13 @@ appUpdater.prototype =
 
   // true when there is an update already staged / ready to be applied.
   get isPending() {
-    if (this.update)
-      return this.update.state == "pending";
-    return this.um.activeUpdate && this.um.activeUpdate.state == "pending";
+    if (this.update) {
+      return this.update.state == "pending" || 
+             this.update.state == "pending-service";
+    }
+    return this.um.activeUpdate &&
+           (this.um.activeUpdate.state == "pending" ||
+            this.um.activeUpdate.state == "pending-service");
   },
 
   // true when there is an update download in progress.

@@ -38,7 +38,7 @@
 #define nsTableColGroupFrame_h__
 
 #include "nscore.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTablePainter.h"
 
@@ -56,7 +56,7 @@ enum nsTableColGroupType {
  *
  * @author  sclark
  */
-class nsTableColGroupFrame : public nsHTMLContainerFrame
+class nsTableColGroupFrame : public nsContainerFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -233,7 +233,7 @@ protected:
   void InsertColsReflow(PRInt32                   aColIndex,
                         const nsFrameList::Slice& aCols);
 
-  /** implement abstract method on nsHTMLContainerFrame */
+  /** implement abstract method on nsContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
   // data members
@@ -247,7 +247,7 @@ protected:
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame(nsStyleContext *aContext)
-: nsHTMLContainerFrame(aContext), mColCount(0), mStartColIndex(0)
+: nsContainerFrame(aContext), mColCount(0), mStartColIndex(0)
 { 
   SetColType(eColGroupContent);
 }

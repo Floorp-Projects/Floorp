@@ -70,6 +70,7 @@
 #include "StorageBaseStatementInternal.h"
 #include "SQLCollations.h"
 #include "FileSystemModule.h"
+#include "mozStorageHelper.h"
 
 #include "prlog.h"
 #include "prprf.h"
@@ -550,17 +551,6 @@ Connection::Connection(Service *aService,
 Connection::~Connection()
 {
   (void)Close();
-
-  // The memory reporters should have been already unregistered if the APIs
-  // have been used properly.  But if an async connection hasn't been closed
-  // with asyncClose(), the connection is about to leak and it's too late to do
-  // anything about it.  So we mark the memory reporters accordingly so that
-  // the leak will be obvious in about:memory.
-  for (PRUint32 i = 0; i < mMemoryReporters.Length(); i++) {
-    if (mMemoryReporters[i]) {
-      mMemoryReporters[i]->markAsLeaked();
-    }
-  }
 }
 
 NS_IMPL_THREADSAFE_ADDREF(Connection)
@@ -661,14 +651,17 @@ Connection::initialize(nsIFile *aDatabaseFile,
   // the database has just been created, otherwise, if the database does not
   // use WAL journal mode, a VACUUM operation will updated its page_size.
   PRInt64 pageSize = DEFAULT_PAGE_SIZE;
-  nsCAutoString pageSizeQuery("PRAGMA page_size = ");
+  nsCAutoString pageSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+                              "PRAGMA page_size = ");
   pageSizeQuery.AppendInt(pageSize);
   rv = ExecuteSimpleSQL(pageSizeQuery);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the current page_size, since it may differ from the specified value.
   sqlite3_stmt *stmt;
-  srv = prepareStatement(NS_LITERAL_CSTRING("PRAGMA page_size"), &stmt);
+  NS_NAMED_LITERAL_CSTRING(pragma_page_size,
+                           MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size");
+  srv = prepareStatement(pragma_page_size, &stmt);
   if (srv == SQLITE_OK) {
     if (SQLITE_ROW == stepStatement(stmt)) {
       pageSize = ::sqlite3_column_int64(stmt, 0);
@@ -679,7 +672,8 @@ Connection::initialize(nsIFile *aDatabaseFile,
   // Setting the cache_size forces the database open, verifying if it is valid
   // or corrupt.  So this is executed regardless it being actually needed.
   // The cache_size is calculated from the actual page_size, to save memory.
-  nsCAutoString cacheSizeQuery("PRAGMA cache_size = ");
+  nsCAutoString cacheSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+                               "PRAGMA cache_size = ");
   cacheSizeQuery.AppendInt(NS_MIN(DEFAULT_CACHE_SIZE_PAGES,
                                   PRInt32(MAX_CACHE_SIZE_BYTES / pageSize)));
   srv = ::sqlite3_exec(mDBConn, cacheSizeQuery.get(), NULL, NULL, NULL);
@@ -720,28 +714,6 @@ Connection::initialize(nsIFile *aDatabaseFile,
       (void)ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "PRAGMA synchronous = NORMAL;"));
       break;
-  }
-
-  nsRefPtr<StorageMemoryReporter> reporter;
-  nsCString filename = this->getFilename();
-
-  reporter =
-    new StorageMemoryReporter(this->mDBConn, filename,
-                              StorageMemoryReporter::Cache_Used);
-  mMemoryReporters.AppendElement(reporter);
-
-  reporter =
-    new StorageMemoryReporter(this->mDBConn, filename,
-                              StorageMemoryReporter::Schema_Used);
-  mMemoryReporters.AppendElement(reporter);
-
-  reporter =
-    new StorageMemoryReporter(this->mDBConn, filename,
-                              StorageMemoryReporter::Stmt_Used);
-  mMemoryReporters.AppendElement(reporter);
-
-  for (PRUint32 i = 0; i < mMemoryReporters.Length(); i++) {
-    (void)::NS_RegisterMemoryReporter(mMemoryReporters[i]);
   }
 
   return NS_OK;
@@ -880,11 +852,6 @@ Connection::internalClose()
   }
 #endif
 
-  for (PRUint32 i = 0; i < mMemoryReporters.Length(); i++) {
-    (void)::NS_UnregisterMemoryReporter(mMemoryReporters[i]);
-    mMemoryReporters[i] = nsnull;
-  }
-
   int srv = ::sqlite3_close(mDBConn);
   NS_ASSERTION(srv == SQLITE_OK,
                "sqlite3_close failed. There are probably outstanding statements that are listed above!");
@@ -1013,8 +980,9 @@ Connection::Close()
     return NS_ERROR_NOT_INITIALIZED;
 
   { // Make sure we have not executed any asynchronous statements.
-    // If this fails, the connection will be left open!  See ~Connection() for
-    // more details.
+    // If this fails, the mDBConn will be left open, resulting in a leak.
+    // Ideally we'd schedule some code to destroy the mDBConn once all its
+    // async statements have finished executing;  see bug 704030.
     MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
     bool asyncCloseWasCalled = !mAsyncExecutionThread;
     NS_ENSURE_TRUE(asyncCloseWasCalled, NS_ERROR_UNEXPECTED);

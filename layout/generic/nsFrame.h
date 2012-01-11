@@ -232,7 +232,6 @@ public:
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD  GetSelected(bool *aSelected) const;
   NS_IMETHOD  IsSelectable(bool* aIsSelectable, PRUint8* aSelectStyle) const;
 
   NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon);

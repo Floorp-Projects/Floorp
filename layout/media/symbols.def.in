@@ -20,6 +20,7 @@ nestegg_track_type
 nestegg_track_video_params
 nestegg_tstamp_scale
 #ifndef MOZ_NATIVE_LIBVPX
+vpx_codec_control_
 vpx_codec_dec_init_ver
 vpx_codec_decode
 vpx_codec_destroy

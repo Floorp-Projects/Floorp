@@ -1088,15 +1088,16 @@ nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
 
   float gradientOffset;
   
-  if (mContext->OriginalSurface()->GetType() == gfxASurface::SurfaceTypeD2D ||
-      mContext->OriginalSurface()->GetType() == gfxASurface::SurfaceTypeQuartz)
+  if (mContext->IsCairo() &&
+      (mContext->OriginalSurface()->GetType() == gfxASurface::SurfaceTypeD2D ||
+       mContext->OriginalSurface()->GetType() == gfxASurface::SurfaceTypeQuartz))
   {
     // On quarz this doesn't do exactly the right thing, but it does do what
     // most other browsers do and doing the 'right' thing seems to be
     // hard with the quartz cairo backend.
     gradientOffset = 0;
   } else {
-    // When cairo does the gradient drawing this gives us pretty nice behavior!
+    // When cairo/Azure does the gradient drawing this gives us pretty nice behavior!
     gradientOffset = 0.25 / sqrt(pow(mBorderWidths[cornerHeight[aCorner]], 2) +
                                  pow(mBorderWidths[cornerHeight[aCorner]], 2));
   }

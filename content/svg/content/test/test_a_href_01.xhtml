@@ -42,7 +42,7 @@ function doNavigationIfReady() {
 }
 
 function doNavigation() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserWrite");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   // Test clicking on an unmodified <a>.
   doNavigationTest(1, "a_href_helper_01.svg");

@@ -41,7 +41,7 @@
 #define nsHTMLFrameset_h___
 
 #include "nsGkAtoms.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsColor.h"
 #include "nsIObserver.h"
 #include "nsWeakPtr.h"
@@ -98,7 +98,7 @@ struct nsFramesetDrag {
 /*******************************************************************************
  * nsHTMLFramesetFrame
  ******************************************************************************/
-class nsHTMLFramesetFrame : public nsHTMLContainerFrame
+class nsHTMLFramesetFrame : public nsContainerFrame
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsHTMLFramesetFrame)

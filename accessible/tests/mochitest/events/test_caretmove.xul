@@ -28,6 +28,13 @@
 
     function doTests()
     {
+
+      if (MAC) {
+        todo(false, "Make these tests pass on OSX (bug 650294)");
+        SimpleTest.finish();
+        return;
+      }
+
       gQueue = new eventQueue(EVENT_TEXT_CARET_MOVED);
 
       var id = "textbox";

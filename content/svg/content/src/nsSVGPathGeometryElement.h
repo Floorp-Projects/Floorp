@@ -38,6 +38,7 @@
 #define __NS_SVGPATHGEOMETRYELEMENT_H__
 
 #include "nsSVGGraphicElement.h"
+#include "DOMSVGTests.h"
 #include "nsTArray.h"
 #include "gfxPath.h"
 #include "gfxMatrix.h"
@@ -52,10 +53,14 @@ class gfxContext;
 
 typedef nsSVGGraphicElement nsSVGPathGeometryElementBase;
 
-class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase
+class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase,
+                                 public DOMSVGTests
 {
 public:
   nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
 
   virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
   virtual bool IsMarkable();

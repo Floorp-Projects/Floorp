@@ -160,6 +160,16 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
   hr = aRT->CreateSharedBitmap(IID_IDXGISurface, surf, &props, byRef(mBitmap));
 
   if (FAILED(hr)) {
+    // This seems to happen for FORMAT_A8 sometimes...
+    aRT->CreateBitmap(D2D1::SizeU(desc.Width, desc.Height),
+                      D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(mFormat),
+                                             AlphaMode(mFormat))),
+                      byRef(mBitmap));
+
+    if (mDrawTarget) {
+      mBitmap->CopyFromRenderTarget(NULL, mDrawTarget->mRT, NULL);
+      return mBitmap;
+    }
     gfxWarning() << "Failed to create shared bitmap for DrawTarget snapshot. Code: " << hr;
     return NULL;
   }

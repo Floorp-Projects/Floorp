@@ -117,6 +117,7 @@ IndexInfo::IndexInfo(const IndexInfo& aOther)
 : id(aOther.id),
   name(aOther.name),
   keyPath(aOther.keyPath),
+  keyPathArray(aOther.keyPathArray),
   unique(aOther.unique),
   multiEntry(aOther.multiEntry)
 {

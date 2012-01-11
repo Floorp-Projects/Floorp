@@ -24,6 +24,7 @@ function checkDoc(title, expectedtitle, normalizedtitle) {
   is(doc.doctype.name, "html");
   is(doc.doctype.publicId, "");
   is(doc.doctype.systemId, "");
+  is(doc.doctype.internalSubset, null, "internalSubset should be null!");
   isElement(doc.documentElement, "html");
   isElement(doc.documentElement.firstChild, "head");
   is(doc.documentElement.firstChild.childNodes.length, 1);

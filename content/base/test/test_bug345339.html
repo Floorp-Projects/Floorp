@@ -62,7 +62,7 @@ function afterReload() {
        "password field value forgotten");
     is(iframeDoc.getElementById("hidden").value, "gecko",
        "hidden field value preserved");
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalFileRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     is(iframeDoc.getElementById("file").value, filePath,
        "file field value preserved");
 

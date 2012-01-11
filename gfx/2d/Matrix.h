@@ -73,6 +73,16 @@ public:
     return retPoint;
   }
 
+  Size operator *(const Size &aSize) const
+  {
+    Size retSize;
+
+    retSize.width = aSize.width * _11 + aSize.height * _21;
+    retSize.height = aSize.width * _12 + aSize.height * _22;
+
+    return retSize;
+  }
+
   Rect TransformBounds(const Rect& rect) const;
 
   // Apply a scale to this matrix. This scale will be applied -before- the
@@ -142,6 +152,49 @@ public:
     resultMatrix._32 = this->_31 * aMatrix._12 + this->_32 * aMatrix._22 + aMatrix._32;
 
     return resultMatrix;
+  }
+
+  /* Returns true if the other matrix is fuzzy-equal to this matrix.
+   * Note that this isn't a cheap comparison!
+   */
+  bool operator==(const Matrix& other) const
+  {
+    return FuzzyEqual(_11, other._11) && FuzzyEqual(_12, other._12) &&
+           FuzzyEqual(_21, other._21) && FuzzyEqual(_22, other._22) &&
+           FuzzyEqual(_31, other._31) && FuzzyEqual(_32, other._32);
+  }
+
+  bool operator!=(const Matrix& other) const
+  {
+    return !(*this == other);
+  }
+
+  /* Returns true if the matrix is a rectilinear transformation (i.e.
+   * grid-aligned rectangles are transformed to grid-aligned rectangles)
+   */
+  bool IsRectilinear() {
+    if (FuzzyEqual(_12, 0) && FuzzyEqual(_21, 0)) {
+      return true;
+    } else if (FuzzyEqual(_22, 0) && FuzzyEqual(_11, 0)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /* Returns true if the matrix is an identity matrix.
+   */
+  bool IsIdentity() const
+  {
+    return _11 == 1.0f && _12 == 0.0f &&
+           _21 == 0.0f && _22 == 1.0f &&
+           _31 == 0.0f && _32 == 0.0f;
+  }
+
+private:
+  static bool FuzzyEqual(Float aV1, Float aV2) {
+    // XXX - Check if fabs does the smart thing and just negates the sign bit.
+    return fabs(aV2 - aV1) < 1e-6;
   }
 };
 

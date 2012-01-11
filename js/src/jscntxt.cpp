@@ -104,7 +104,6 @@ ThreadData::ThreadData(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     requestDepth(0),
 #endif
-    waiveGCQuota(false),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc(NULL),
     bumpAlloc(NULL),
@@ -152,17 +151,22 @@ ThreadData::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, 
      * The computedSize is 0 because sizeof(DtoaState) isn't available here and
      * it's not worth making it available.
      */
-    *normal = mallocSizeOf(dtoaState, /* sizeof(DtoaState) */0);
+    if (normal)
+        *normal = mallocSizeOf(dtoaState, /* sizeof(DtoaState) */0);
 
-    *temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
+    if (temporary)
+        *temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
-    size_t method = 0, regexp = 0, unused = 0;
-    if (execAlloc)
-        execAlloc->sizeOfCode(&method, &regexp, &unused);
-    JS_ASSERT(method == 0);     /* this execAlloc is only used for regexp code */
-    *regexpCode = regexp + unused;
+    if (regexpCode) {
+        size_t method = 0, regexp = 0, unused = 0;
+        if (execAlloc)
+            execAlloc->sizeOfCode(&method, &regexp, &unused);
+        JS_ASSERT(method == 0);     /* this execAlloc is only used for regexp code */
+        *regexpCode = regexp + unused;
+    }
 
-    *stackCommitted = stackSpace.sizeOfCommitted();
+    if (stackCommitted)
+        *stackCommitted = stackSpace.sizeOfCommitted();
 }
 #endif
 
@@ -253,7 +257,8 @@ JSThread::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, si
                               size_t *regexpCode, size_t *stackCommitted)
 {
     data.sizeOfExcludingThis(mallocSizeOf, normal, temporary, regexpCode, stackCommitted);
-    *normal += mallocSizeOf(this, sizeof(JSThread));
+    if (normal)
+        *normal += mallocSizeOf(this, sizeof(JSThread));
 }
 
 JSThread *
@@ -777,9 +782,9 @@ js_ReportOutOfMemory(JSContext *cx)
 {
     cx->runtime->hadOutOfMemory = true;
 
-    /* AtomizeInline can cal this indirectly when it creates the string. */
+    /* AtomizeInline can call this indirectly when it creates the string. */
     AutoUnlockAtomsCompartmentWhenLocked unlockAtomsCompartment(cx);
-    
+
     JSErrorReport report;
     JSErrorReporter onError = cx->errorReporter;
 
@@ -1242,13 +1247,6 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
     return NULL;
 }
 
-bool
-checkOutOfMemory(JSRuntime *rt)
-{
-    AutoLockGC lock(rt);
-    return rt->gcBytes > rt->gcMaxBytes;
-}
-
 JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
@@ -1270,33 +1268,8 @@ js_InvokeOperationCallback(JSContext *cx)
 #endif
     JS_UNLOCK_GC(rt);
 
-    if (rt->gcIsNeeded) {
+    if (rt->gcIsNeeded)
         js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL, rt->gcTriggerReason);
-
-        /*
-         * On trace we can exceed the GC quota, see comments in NewGCArena. So
-         * we check the quota and report OOM here when we are off trace.
-         */
-        if (checkOutOfMemory(rt)) {
-#ifdef JS_THREADSAFE
-            /*
-            * We have to wait until the background thread is done in order
-            * to get a correct answer.
-            */
-            {
-                AutoLockGC lock(rt);
-                rt->gcHelperThread.waitBackgroundSweepEnd();
-            }
-            if (checkOutOfMemory(rt)) {
-                js_ReportOutOfMemory(cx);
-                return false;
-            }
-#else
-            js_ReportOutOfMemory(cx);
-            return false;
-#endif
-        }
-    }
 
 #ifdef JS_THREADSAFE
     /*
@@ -1419,7 +1392,7 @@ JSContext::JSContext(JSRuntime *rt)
     resolvingList(NULL),
     generatingError(false),
 #if JS_STACK_GROWTH_DIRECTION > 0
-    stackLimit((jsuword)-1),
+    stackLimit(UINTPTR_MAX),
 #else
     stackLimit(0),
 #endif
@@ -1467,6 +1440,12 @@ JSContext::JSContext(JSRuntime *rt)
     PodZero(&link);
 #ifdef JS_THREADSAFE
     PodZero(&threadLinks);
+#endif
+#ifdef JSGC_ROOT_ANALYSIS
+    PodArrayZero(thingGCRooters);
+#ifdef DEBUG
+    checkGCRooters = NULL;
+#endif
 #endif
 }
 
@@ -1593,13 +1572,13 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
      * Retry when we are done with the background sweeping and have stopped
      * all the allocations and released the empty GC chunks.
      */
-    {
+    ShrinkGCBuffers(this);
 #ifdef JS_THREADSAFE
+    {
         AutoLockGC lock(this);
         gcHelperThread.waitBackgroundSweepOrAllocEnd();
-#endif
-        gcChunkPool.expire(this, true);
     }
+#endif
     if (!p)
         p = OffTheBooks::malloc_(nbytes);
     else if (p == reinterpret_cast<void *>(1))
@@ -1721,15 +1700,25 @@ JSContext::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
            busyArrays.sizeOfExcludingThis(mallocSizeOf);
 }
 
-namespace js {
+namespace JS {
 
-AutoEnumStateRooter::~AutoEnumStateRooter()
+#if defined JS_THREADSAFE && defined DEBUG
+
+AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
+    : cx(cx)
 {
-    if (!stateValue.isNull()) {
-        DebugOnly<JSBool> ok =
-            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
-        JS_ASSERT(ok);
-    }
+    JS_ASSERT(cx->thread());
+    JS_ASSERT(cx->thread()->data.requestDepth || cx->thread() == cx->runtime->gcThread);
+    JS_ASSERT(cx->runtime->onOwnerThread());
+    cx->thread()->checkRequestDepth++;
 }
 
-} /* namespace js */
+AutoCheckRequestDepth::~AutoCheckRequestDepth()
+{
+    JS_ASSERT(cx->thread()->checkRequestDepth != 0);
+    cx->thread()->checkRequestDepth--;
+}
+
+#endif
+
+} // namespace JS

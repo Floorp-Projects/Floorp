@@ -23,7 +23,7 @@ ID
 security/manager/.nss.checkout
 
 # Build directories
-obj/*
+obj*/
 
 # Build directories for js shell
 */_DBG.OBJ/

@@ -311,7 +311,8 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   mSqrChar.Stretch(aPresContext, renderingContext,
                    NS_STRETCH_DIRECTION_VERTICAL, 
                    contSize, radicalSize,
-                   NS_STRETCH_LARGER);
+                   NS_STRETCH_LARGER,
+                   NS_MATHML_IS_RTL(mPresentationData.flags));
   // radicalSize have changed at this point, and should match with
   // the bounding metrics of the char
   mSqrChar.GetBoundingMetrics(bmSqr);
@@ -356,34 +357,40 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nscoord dxIndex, dxSqr;
   GetRadicalXOffsets(bmIndex.width, bmSqr.width, fm, &dxIndex, &dxSqr);
 
-  // place the index
-  nscoord dx = dxIndex;
-  nscoord dy = aDesiredSize.ascent - (indexRaisedAscent + indexSize.ascent - bmIndex.ascent);
-  FinishReflowChild(indexFrame, aPresContext, nsnull, indexSize, dx, dy, 0);
-
-  // place the radical symbol and the radical bar
-  dx = dxSqr;
-  dy = indexClearance + leading; // leave a leading at the top
-  mSqrChar.SetRect(nsRect(dx, dy, bmSqr.width, bmSqr.ascent + bmSqr.descent));
-  dx += bmSqr.width;
-  mBarRect.SetRect(dx, dy, bmBase.width, ruleThickness);
-
-  // place the base
-  dy = aDesiredSize.ascent - baseSize.ascent;
-  FinishReflowChild(baseFrame, aPresContext, nsnull, baseSize, dx, dy, 0);
-
-  mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
-
-  mBoundingMetrics.width = dx + bmBase.width;
+  mBoundingMetrics.width = dxSqr + bmSqr.width + bmBase.width;
   mBoundingMetrics.leftBearing = 
     NS_MIN(dxIndex + bmIndex.leftBearing, dxSqr + bmSqr.leftBearing);
-  mBoundingMetrics.rightBearing = dx +
+  mBoundingMetrics.rightBearing = dxSqr + bmSqr.width +
     NS_MAX(bmBase.width, bmBase.rightBearing);
 
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   GatherAndStoreOverflow(&aDesiredSize);
+
+  // place the index
+  nscoord dx = dxIndex;
+  nscoord dy = aDesiredSize.ascent - (indexRaisedAscent + indexSize.ascent - bmIndex.ascent);
+  FinishReflowChild(indexFrame, aPresContext, nsnull, indexSize,
+                    MirrorIfRTL(aDesiredSize.width, indexSize.width, dx),
+                    dy, 0);
+
+  // place the radical symbol and the radical bar
+  dx = dxSqr;
+  dy = indexClearance + leading; // leave a leading at the top
+  mSqrChar.SetRect(nsRect(MirrorIfRTL(aDesiredSize.width, bmSqr.width, dx),
+                          dy, bmSqr.width, bmSqr.ascent + bmSqr.descent));
+  dx += bmSqr.width;
+  mBarRect.SetRect(MirrorIfRTL(aDesiredSize.width, bmBase.width, dx),
+                   dy, bmBase.width, ruleThickness);
+
+  // place the base
+  dy = aDesiredSize.ascent - baseSize.ascent;
+  FinishReflowChild(baseFrame, aPresContext, nsnull, baseSize,
+                    MirrorIfRTL(aDesiredSize.width, baseSize.width, dx),
+                    dy, 0);
+
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

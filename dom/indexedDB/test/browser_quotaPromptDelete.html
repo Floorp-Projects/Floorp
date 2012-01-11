@@ -1,0 +1,97 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <title>Indexed Database Test</title>
+
+    <script type="text/javascript;version=1.7">
+      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+
+      let db;
+      let name = window.location.pathname;
+
+      function onAddMore() {
+        let transaction = db.transaction("foo", READ_WRITE);
+
+        transaction.oncomplete = function(event) {
+          setTimeout(testFinishedCallback, 0, "complete");
+        }
+        transaction.onabort = function(event) {
+          setTimeout(testFinishedCallback, 0, "abort");
+        }
+
+        let objectStore = transaction.objectStore("foo");
+        let obj = {
+          foo: "                                                              ",
+          bar: "                                                              ",
+          baz: "                                                              "
+        };
+        for (let i = 0; i < 1000; i++) {
+          objectStore.add(obj).onerror = errorHandler;
+        }
+      }
+
+      function onDone() {
+        window.removeEventListener("indexedDB-addMore", onAddMore, true);
+        window.removeEventListener("indexedDB-done", onDone, true);
+        window.removeEventListener("indexedDB-reset", onReset, true);
+
+        testResult = "finished";
+        testException = undefined;
+        finishTest();
+      }
+
+      function onReset() {
+        db.close();
+        // N.B. the spec provides no ordering guarantee w.r.t deleteDatabase.
+        let deleteRequest = mozIndexedDB.deleteDatabase(name);
+
+        deleteRequest.onerror = errorHandler;
+        deleteRequest.onsuccess = function () {
+          // It is imperative that we open a different database this time.
+          let request = mozIndexedDB.open("take2", 1);
+          request.onerror = errorHandler;
+          request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            db.createObjectStore("foo", { autoIncrement: true });
+          }
+          request.onsuccess = function ()
+            { setTimeout(testFinishedCallback, 0, "resetDone"); };
+          request.onblocked = errorHandler;
+        }
+      }
+
+      function testSteps()
+      {
+        window.addEventListener("indexedDB-addMore", onAddMore, true);
+        window.addEventListener("indexedDB-reset", onReset, true);
+        window.addEventListener("indexedDB-done", onDone, true);
+
+        let request = mozIndexedDB.open(name, 1);
+        request.onerror = errorHandler;
+        request.onupgradeneeded = grabEventAndContinueHandler;
+        let event = yield;
+
+        db = event.target.result;
+
+        db.onversionchange = function () { db.close(); };
+
+        db.createObjectStore("foo", { autoIncrement: true });
+
+        request.onsuccess = grabEventAndContinueHandler;
+        yield;
+
+        setTimeout(testFinishedCallback, 0, "ready");
+        yield;
+      }
+    </script>
+
+    <script type="text/javascript;version=1.7" src="browserHelpers.js"></script>
+
+  </head>
+
+  <body onload="runTest();" onunload="finishTestNow();"></body>
+
+</html>

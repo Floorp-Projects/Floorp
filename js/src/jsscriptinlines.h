@@ -48,7 +48,7 @@
 #include "jsscript.h"
 #include "jsscope.h"
 
-#include "vm/CallObject.h"
+#include "vm/ScopeObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 

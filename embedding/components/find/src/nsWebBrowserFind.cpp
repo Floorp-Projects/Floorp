@@ -739,10 +739,7 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
         NS_ENSURE_SUCCESS(rv, rv);
         if (!subsumes) {
             bool hasCap = false;
-            secMan->IsCapabilityEnabled("UniversalBrowserWrite", &hasCap);
-            if (!hasCap) {
-                secMan->IsCapabilityEnabled("UniversalXPConnect", &hasCap);
-            }
+            secMan->IsCapabilityEnabled("UniversalXPConnect", &hasCap);
             if (!hasCap) {
                 return NS_ERROR_DOM_PROP_ACCESS_DENIED;
             }

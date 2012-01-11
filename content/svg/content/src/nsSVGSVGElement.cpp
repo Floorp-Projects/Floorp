@@ -182,8 +182,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGSVGElement,nsSVGSVGElementBase)
 DOMCI_NODE_DATA(SVGSVGElement, nsSVGSVGElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGSVGElement)
-  NS_NODE_INTERFACE_TABLE7(nsSVGSVGElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGSVGElement,
+  NS_NODE_INTERFACE_TABLE8(nsSVGSVGElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGSVGElement,
                            nsIDOMSVGFitToViewBox, nsIDOMSVGLocatable,
                            nsIDOMSVGZoomAndPan)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGSVGElement)
@@ -883,6 +884,20 @@ nsSVGSVGElement::GetTimedDocumentRoot()
 NS_IMETHODIMP_(bool)
 nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 {
+  // We want to map the 'width' and 'height' attributes into style for
+  // outer-<svg>, except when the attributes aren't set (since their default
+  // values of '100%' can cause unexpected and undesirable behaviour for SVG
+  // inline in HTML). We rely on nsSVGElement::UpdateContentStyleRule() to
+  // prevent mapping of the default values into style (it only maps attributes
+  // that are set). We also rely on a check in nsSVGElement::
+  // UpdateContentStyleRule() to prevent us mapping the attributes when they're
+  // given a <length> value that is not currently recognized by the SVG
+  // specification.
+
+  if (!IsInner() && (name == nsGkAtoms::width || name == nsGkAtoms::height)) {
+    return true;
+  }
+
   static const MappedAttributeEntry* const map[] = {
     sColorMap,
     sFEFloodMap,

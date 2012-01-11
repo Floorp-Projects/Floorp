@@ -20,9 +20,9 @@
                             android:persistent="false" />
 
         <ListPreference     android:key="plugin.enable"
-                            android:title="@string/pref_enable_flash"
-                            android:entries="@array/pref_enable_flash_entries"
-                            android:entryValues="@array/pref_enable_flash_values"
+                            android:title="@string/pref_enable_plugins"
+                            android:entries="@array/pref_enable_plugins_entries"
+                            android:entryValues="@array/pref_enable_plugins_values"
                             android:persistent="false" />
 
         <ListPreference     android:key="font.size.inflation.minTwips"
@@ -63,6 +63,11 @@
 
         <CheckBoxPreference android:key="toolkit.telemetry.enabled"
                             android:title="@string/pref_telemetry"
+                            android:persistent="false" />
+
+        <CheckBoxPreference android:key="privacy.masterpassword.enabled"
+                            android:title="@string/pref_use_master_password"
+                            android:defaultValue="false"
                             android:persistent="false" />
 
     </PreferenceCategory>

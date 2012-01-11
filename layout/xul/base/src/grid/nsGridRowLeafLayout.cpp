@@ -262,7 +262,7 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
     // go up the parent chain looking for scrollframes
     nscoord diff = 0;
     nsIBox* parentBox;
-    nsIGridPart* parent = GetParentGridPart(aBox, &parentBox);
+    (void)GetParentGridPart(aBox, &parentBox);
     while (parentBox) {
       nsIBox* scrollbox = nsGrid::GetScrollBox(parentBox);
       nsIScrollableFrame *scrollable = do_QueryFrame(scrollbox);
@@ -280,7 +280,7 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
         }
       }
 
-      parent = GetParentGridPart(parentBox, &parentBox);
+      (void)GetParentGridPart(parentBox, &parentBox);
     }
 
     if (diff > 0) {

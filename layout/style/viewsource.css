@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Blake Ross <BlakeR1234@aol.com>
+ *   Geoff Lankow <geoff@darktrojan.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,6 +48,7 @@
   font-family: -moz-fixed;
   font-weight: normal;
   white-space: pre;
+  counter-reset: line;
 }
 #viewsource.wrap {
   white-space: pre-wrap;
@@ -56,7 +58,20 @@ pre {
   font: inherit;
   color: inherit;
   white-space: inherit; 
-  margin: 0;
+  margin: 0 0 0 5ch;
+}
+pre[id]:before,
+span[id]:before {
+  content: counter(line) " ";
+  counter-increment: line;
+  -moz-user-select: none;
+  display: inline-block;
+  width: 5ch;
+  margin: 0 0 0 -5ch;
+  text-align: right;
+  color: #ccc;
+  font-weight: normal;
+  font-style: normal;
 }
 .start-tag {
  color: purple;

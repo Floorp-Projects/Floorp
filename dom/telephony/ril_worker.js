@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Kyle Machulis <kyle@nonpolynomial.com>
  *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Fernando Jimenez <ferjmoreno@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,7 +64,7 @@
 
 importScripts("ril_consts.js");
 
-const DEBUG = true;
+let DEBUG = false;
 
 const INT32_MAX   = 2147483647;
 const UINT8_SIZE  = 1;
@@ -408,7 +409,7 @@ let Buf = {
       try {
         this.processParcel();
       } catch (ex) {
-        if (DEBUG) debug("Parcel handling threw " + ex);
+        if (DEBUG) debug("Parcel handling threw " + ex + "\n" + ex.stack);
       }
 
       // Ensure that the whole parcel was consumed.
@@ -512,7 +513,7 @@ let Buf = {
 let RIL = {
 
   /**
-   * Retrieve the ICC card's status.
+   * Retrieve the ICC's status.
    *
    * Response will call Phone.onICCStatus().
    */
@@ -526,7 +527,7 @@ let RIL = {
    * @param pin
    *        String containing the PIN.
    *
-   * Response will call Phone.onEnterSIMPIN().
+   * Response will call Phone.onEnterICCPIN().
    */
   enterICCPIN: function enterICCPIN(pin) {
     Buf.newParcel(REQUEST_ENTER_SIM_PIN);
@@ -534,6 +535,42 @@ let RIL = {
     Buf.writeString(pin);
     Buf.sendParcel();
   },
+
+  /**
+   * Change the current ICC PIN number
+   *
+   * @param oldPin
+   *        String containing the old PIN value
+   * @param newPin
+   *        String containing the new PIN value
+   *
+   * Response will call Phone.onChangeICCPIN().
+   */
+  changeICCPIN: function changeICCPIN(oldPin, newPin) {
+    Buf.newParcel(REQUEST_CHANGE_SIM_PIN);
+    Buf.writeUint32(2);
+    Buf.writeString(oldPin);
+    Buf.writeString(newPin);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Supplies SIM PUK and a new PIN to unlock the ICC
+   *
+   * @param puk
+   *        String containing the PUK value.
+   * @param newPin
+   *        String containing the new PIN value.
+   *
+   * Response will call Phone.onEnterICCPUK().
+   */
+   enterICCPUK: function enterICCPUK(puk, newPin) {
+     Buf.newParcel(REQUEST_ENTER_SIM_PUK);
+     Buf.writeUint32(2);
+     Buf.writeString(puk);
+     Buf.writeString(newPin);
+     Buf.sendParcel();
+   },
 
   /**
    * Request the phone's radio power to be switched on or off.
@@ -618,22 +655,22 @@ let RIL = {
     Buf.writeString(address);
     Buf.writeUint32(clirMode || 0);
     Buf.writeUint32(uusInfo || 0);
-	// TODO Why do we need this extra 0? It was put it in to make this
-	// match the format of the binary message.
-	Buf.writeUint32(0);
+    // TODO Why do we need this extra 0? It was put it in to make this
+    // match the format of the binary message.
+    Buf.writeUint32(0);
     Buf.sendParcel();
   },
 
   /**
    * Hang up the phone.
    *
-   * @param index
+   * @param callIndex
    *        Call index (1-based) as reported by REQUEST_GET_CURRENT_CALLS.
    */
-  hangUp: function hangUp(index) {
+  hangUp: function hangUp(callIndex) {
     Buf.newParcel(REQUEST_HANGUP);
     Buf.writeUint32(1);
-    Buf.writeUint32(index);
+    Buf.writeUint32(callIndex);
     Buf.sendParcel();
   },
 
@@ -669,10 +706,17 @@ let RIL = {
    *
    * @param smscPDU
    *        String containing the SMSC PDU in hex format.
-   * @param pdu
-   *        String containing the PDU in hex format.
+   * @param address
+   *        String containing the recipients address.
+   * @param body
+   *        String containing the message body.
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param bodyLengthInOctets
+   *        Byte length of the message body when encoded with the given DCS.
    */
-  sendSMS: function sendSMS(smscPDU, pdu) {
+  sendSMS: function sendSMS(smscPDU, address, body, dcs, bodyLengthInOctets) {
     let token = Buf.newParcel(REQUEST_SEND_SMS);
     //TODO we want to map token to the input values so that on the
     // response from the RIL device we know which SMS request was successful
@@ -680,7 +724,23 @@ let RIL = {
     // handle it within tokenRequestMap[].
     Buf.writeUint32(2);
     Buf.writeString(smscPDU);
-    Buf.writeString(pdu);
+    GsmPDUHelper.writeMessage(address, body, dcs, bodyLengthInOctets);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Acknowledge the receipt and handling of an SMS.
+   *
+   * @param success
+   *        Boolean indicating whether the message was successfuly handled.
+   * @param cause
+   *        SMS_* constant indicating the reason for unsuccessful handling.
+   */
+  acknowledgeSMS: function acknowledgeSMS(success, cause) {
+    let token = Buf.newParcel(REQUEST_SMS_ACKNOWLEDGE);
+    Buf.writeUint32(2);
+    Buf.writeUint32(success ? 1 : 0);
+    Buf.writeUint32(cause);
     Buf.sendParcel();
   },
 
@@ -708,6 +768,25 @@ let RIL = {
   },
 
   /**
+   * Get the Short Message Service Center address.
+   */
+  getSMSCAddress: function getSMSCAddress() {
+    Buf.simpleRequest(REQUEST_GET_SMSC_ADDRESS);
+  },
+
+  /**
+   * Set the Short Message Service Center address.
+   *
+   * @param smsc
+   *        Short Message Service Center address in PDU format.
+   */
+   setSMSCAddress: function setSMSCAddress(smsc) {
+     Buf.newParcel(REQUEST_SET_SMSC_ADDRESS);
+     Buf.writeString(smsc);
+     Buf.sendParcel();
+   },
+
+  /**
    * Handle incoming requests from the RIL. We find the method that
    * corresponds to the request type. Incidentally, the request type
    * _is_ the method name, so that's easy.
@@ -724,7 +803,7 @@ let RIL = {
 
 RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
   let iccStatus = {
-    cardState:                   Buf.readUint32(), // CARDSTATE_*
+    cardState:                   Buf.readUint32(), // CARD_STATE_*
     universalPINState:           Buf.readUint32(), // PINSTATE_*
     gsmUmtsSubscriptionAppIndex: Buf.readUint32(),
     setCdmaSubscriptionAppIndex: Buf.readUint32(),
@@ -739,7 +818,7 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
   for (let i = 0 ; i < apps_length ; i++) {
     iccStatus.apps.push({
       app_type:       Buf.readUint32(), // APPTYPE_*
-      app_state:      Buf.readUint32(), // APPSTATE_*
+      app_state:      Buf.readUint32(), // CARD_APP_STATE_*
       perso_substate: Buf.readUint32(), // PERSOSUBSTATE_*
       aid:            Buf.readString(),
       app_label:      Buf.readString(),
@@ -754,10 +833,15 @@ RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN() {
   let response = Buf.readUint32List();
   Phone.onEnterICCPIN(response);
 };
-RIL[REQUEST_ENTER_SIM_PUK] = null;
+RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK() {
+  let response = Buf.readUint32List();
+  Phone.onEnterICCPUK(response);
+};
 RIL[REQUEST_ENTER_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_SIM_PUK2] = null;
-RIL[REQUEST_CHANGE_SIM_PIN] = null;
+RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN() {
+  Phone.onChangeICCPIN();
+};
 RIL[REQUEST_CHANGE_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
@@ -776,7 +860,7 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
   for (let i = 0; i < calls_length; i++) {
     let call = {
       state:              Buf.readUint32(), // CALL_STATE_*
-      index:              Buf.readUint32(), // GSM index (1-based)
+      callIndex:          Buf.readUint32(), // GSM index (1-based)
       toa:                Buf.readUint32(),
       isMpty:             Boolean(Buf.readUint32()),
       isMT:               Boolean(Buf.readUint32()),
@@ -798,7 +882,7 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
         userData: null //XXX TODO byte array?!?
       };
     }
-    calls[call.index] = call;
+    calls[call.callIndex] = call;
   }
   Phone.onCurrentCalls(calls);
 };
@@ -860,8 +944,8 @@ RIL[REQUEST_DTMF] = function REQUEST_DTMF() {
 };
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS() {
   let messageRef = Buf.readUint32();
-  let ackPDU = p.readString();
-  let errorCode = p.readUint32();
+  let ackPDU = Buf.readString();
+  let errorCode = Buf.readUint32();
   Phone.onSendSMS(messageRef, ackPDU, errorCode);
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
@@ -875,7 +959,9 @@ RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
 RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
 RIL[REQUEST_SET_CALL_WAITING] = null;
-RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
+RIL[REQUEST_SMS_ACKNOWLEDGE] = function REQUEST_SMS_ACKNOWLEDGE() {
+  Phone.onAcknowledgeSMS();
+};
 RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI() {
   let imei = Buf.readString();
   Phone.onIMEI(imei);
@@ -958,8 +1044,13 @@ RIL[REQUEST_CDMA_WRITE_SMS_TO_RUIM] = null;
 RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
 RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
-RIL[REQUEST_GET_SMSC_ADDRESS] = null;
-RIL[REQUEST_SET_SMSC_ADDRESS] = null;
+RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS() {
+  let smsc = Buf.readString();
+  Phone.onGetSMSCAddress(smsc);
+};
+RIL[REQUEST_SET_SMSC_ADDRESS] = function REQUEST_SET_SMSC_ADDRESS() {
+  Phone.onSetSMSCAddress();
+};
 RIL[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
 RIL[REQUEST_REPORT_STK_SERVICE_IS_RUNNING] = null;
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
@@ -972,9 +1063,17 @@ RIL[UNSOLICITED_RESPONSE_CALL_STATE_CHANGED] = function UNSOLICITED_RESPONSE_CAL
 RIL[UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED() {
   Phone.onNetworkStateChanged();
 };
-RIL[UNSOLICITED_RESPONSE_NEW_SMS] = null;
-RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = null;
-RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = null;
+RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
+  Phone.onNewSMS(length);
+};
+RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
+  let info = Buf.readStringList();
+  Phone.onNewSMSStatusReport(info);
+};
+RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
+  let info = Buf.readUint32List();
+  Phone.onNewSMSOnSIM(message);
+};
 RIL[UNSOLICITED_ON_USSD] = null;
 RIL[UNSOLICITED_ON_USSD_REQUEST] = null;
 RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = null;
@@ -1002,7 +1101,9 @@ RIL[UNSOLICITED_CALL_RING] = function UNSOLICITED_CALL_RING() {
   }
   Phone.onCallRing(info);
 };
-RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = null;
+RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = function UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED() {
+  Phone.onICCStatusChanged();
+};
 RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = null;
 RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = null;
 RIL[UNSOLICITED_CDMA_RUIM_SMS_STORAGE_FULL] = null;
@@ -1037,6 +1138,7 @@ let Phone = {
   IMEI: null,
   IMEISV: null,
   IMSI: null,
+  SMSC: null,
 
   /**
    * List of strings identifying the network operator.
@@ -1054,14 +1156,52 @@ let Phone = {
   networkSelectionMode: null,
 
   /**
-   * ICC card status
+   * ICC status. Keeps a reference of the data response to the
+   * getICCStatus request.
    */
   iccStatus: null,
+
+  /**
+   * Card state
+   */
+  cardState: null,
 
   /**
    * Active calls
    */
   currentCalls: {},
+
+  /**
+   * Mute or unmute the radio.
+   */
+  _muted: true,
+
+  get muted() {
+    return this._muted;
+  },
+
+  set muted(val) {
+    val = Boolean(val);
+    if (this._muted != val) {
+      RIL.setMute(val);
+      this._muted = val;
+    }
+  },
+
+  _handleChangedCallState: function _handleChangedCallState(changedCall) {
+    let message = {type: "callStateChange",
+                   call: {callIndex: changedCall.callIndex,
+                          state: changedCall.state,
+                          number: changedCall.number,
+                          name: changedCall.name}};
+    this.sendDOMMessage(message);
+  },
+
+  _handleDisconnectedCall: function _handleDisconnectedCall(disconnectedCall) {
+    let message = {type: "callDisconnected",
+                   call: {callIndex: disconnectedCall.callIndex}};
+    this.sendDOMMessage(message);
+  },
 
   /**
    * Handlers for messages from the RIL. They all begin with on* and are called
@@ -1125,10 +1265,11 @@ let Phone = {
     if (newState == RADIO_STATE_SIM_READY  ||
         newState == RADIO_STATE_RUIM_READY ||
         newState == RADIO_STATE_NV_READY) {
-      // The ICC card has become available. Get all the things.
+      // The ICC has become available. Get all the things.
       RIL.getICCStatus();
       this.requestNetworkInfo();
       RIL.getSignalStrength();
+      RIL.getSMSCAddress();
       this.sendDOMMessage({type: "cardstatechange",
                            cardState: DOM_CARDSTATE_READY});
     }
@@ -1158,53 +1299,46 @@ let Phone = {
     // changed state. Remove them from the newCalls map as we deal with them
     // so that only new calls remain in the map after we're done.
     for each (let currentCall in this.currentCalls) {
-      let callIndex = currentCall.index;
       let newCall;
       if (newCalls) {
-        newCall = newCalls[callIndex];
-        delete newCalls[callIndex];
+        newCall = newCalls[currentCall.callIndex];
+        delete newCalls[currentCall.callIndex];
       }
 
-      if (!newCall) {
-        // Call is no longer reported by the radio. Send disconnected
-        // state change.
-        this.sendDOMMessage({type:      "callstatechange",
-                             callState:  DOM_CALL_READYSTATE_DISCONNECTED,
-                             callIndex:  callIndex,
-                             number:     currentCall.number,
-                             name:       currentCall.name});
-        delete this.currentCalls[callIndex];
-        continue;
+      if (newCall) {
+        // Call is still valid.
+        if (newCall.state != currentCall.state) {
+          // State has changed.
+          currentCall.state = newCall.state;
+          this._handleChangedCallState(currentCall);
+        }
       }
-
-      if (newCall.state == currentCall.state) {
-        continue;
+      else {
+        // Call is no longer reported by the radio. Remove from our map and
+        // send disconnected state change.
+        delete this.currentCalls[currentCall.callIndex];
+        this._handleDisconnectedCall(currentCall);
       }
-
-      this._handleChangedCallState(newCall);
     }
 
     // Go through any remaining calls that are new to us.
     for each (let newCall in newCalls) {
       if (newCall.isVoice) {
+        // Format international numbers appropriately.
+        if (newCall.number &&
+            newCall.toa == TOA_INTERNATIONAL &&
+            newCall.number[0] != "+") {
+          newCall.number = "+" + newCall.number;
+        }
+        // Add to our map.
+        this.currentCalls[newCall.callIndex] = newCall;
         this._handleChangedCallState(newCall);
       }
     }
-  },
 
-  _handleChangedCallState: function handleChangedCallState(newCall) {
-    // Format international numbers appropriately.
-    if (newCall.number &&
-        newCall.toa == TOA_INTERNATIONAL &&
-        newCall.number[0] != "+") {
-      newCall.number = "+" + newCall.number;
-    }
-    this.currentCalls[newCall.index] = newCall;
-    this.sendDOMMessage({type:      "callstatechange",
-                         callState: RIL_TO_DOM_CALL_STATE[newCall.state],
-                         callIndex: newCall.index,
-                         number:    newCall.number,
-                         name:      newCall.name});
+    // Update our mute status. If there is anything in our currentCalls map then
+    // we know it's a voice call and we should leave audio on.
+    this.muted = Object.getOwnPropertyNames(this.currentCalls).length == 0;
   },
 
   onCallStateChanged: function onCallStateChanged() {
@@ -1222,15 +1356,101 @@ let Phone = {
   },
 
   onICCStatus: function onICCStatus(iccStatus) {
-    debug("SIM card state is " + iccStatus.cardState);
-    debug("Universal PIN state is " + iccStatus.universalPINState);
-    debug(iccStatus);
-    //TODO set to simStatus and figure out state transitions.
-    this.iccStatus = iccStatus; //XXX TODO
+    if (DEBUG) {
+        debug("iccStatus: " + JSON.stringify(iccStatus));
+    }
+    this.iccStatus = iccStatus;
+
+    if ((!iccStatus) || (iccStatus.cardState == CARD_STATE_ABSENT)) {
+      if (DEBUG) debug("ICC absent");
+      if (this.cardState == DOM_CARDSTATE_ABSENT) {
+        return;
+      }
+      this.cardState = DOM_CARDSTATE_ABSENT;
+      this.sendDOMMessage({type: "cardstatechange",
+                           cardState: this.cardState});
+      return;
+    }
+
+    if ((this.radioState == RADIO_STATE_OFF) ||
+        (this.radioState == RADIO_STATE_UNAVAILABLE) ||
+        (this.radioState == RADIO_STATE_SIM_NOT_READY) ||
+        (this.radioState == RADIO_STATE_RUIM_NOT_READY) ||
+        (this.radioState == RADIO_STATE_NV_NOT_READY) ||
+        (this.radioState == RADIO_STATE_NV_READY)) {
+      if (DEBUG) debug("ICC not ready");
+      if (this.cardState == DOM_CARDSTATE_NOT_READY) {
+        return;
+      }
+      this.cardState = DOM_CARDSTATE_NOT_READY;
+      this.sendDOMMessage({type: "cardstatechange",
+                           cardState: this.cardState});
+      return;
+    }
+
+    if ((this.radioState == RADIO_STATE_SIM_LOCKED_OR_ABSENT) ||
+        (this.radioState == RADIO_STATE_SIM_READY) ||
+        (this.radioState == RADIO_STATE_RUIM_LOCKED_OR_ABSENT) ||
+        (this.radioState == RADIO_STATE_RUIM_READY)) {
+      let app = iccStatus.apps[iccStatus.gsmUmtsSubscriptionAppIndex];
+      if (!app) {
+        if (DEBUG) {
+          debug("Subscription application is not present in iccStatus.");
+        }
+        if (this.cardState == DOM_CARDSTATE_ABSENT) {
+          return;
+        }
+        this.cardState = DOM_CARDSTATE_ABSENT;
+        this.sendDOMMessage({type: "cardstatechange",
+                             cardState: this.cardState});
+        return;
+      }
+
+      let newCardState;
+      switch (app.app_state) {
+        case CARD_APP_STATE_PIN:
+          newCardState = DOM_CARDSTATE_PIN_REQUIRED;
+          break;
+        case CARD_APP_STATE_PUK:
+          newCardState = DOM_CARDSTATE_PUK_REQUIRED;
+          break;
+        case CARD_APP_STATE_SUBSCRIPTION_PERSO:
+          newCardState = DOM_CARDSTATE_NETWORK_LOCKED;
+          break;
+        case CARD_APP_STATE_READY:
+          newCardState = DOM_CARDSTATE_READY;
+          break;
+        case CARD_APP_STATE_UNKNOWN:
+        case CARD_APP_STATE_DETECTED:
+        default:
+          newCardState = DOM_CARDSTATE_NOT_READY;
+      }
+
+      if (this.cardState == newCardState) {
+        return;
+      }
+      this.cardState = newCardState;
+      this.sendDOMMessage({type: "cardstatechange",
+                           cardState: this.cardState});
+    }
+  },
+
+  onICCStatusChanged: function onICCStatusChanged() {
+    RIL.getICCStatus();
   },
 
   onEnterICCPIN: function onEnterICCPIN(response) {
-    debug("REQUEST_ENTER_SIM_PIN returned " + response);
+    if (DEBUG) debug("REQUEST_ENTER_SIM_PIN returned " + response);
+    //TODO
+  },
+
+  onChangeICCPIN: function onChangeICCPIN() {
+    if (DEBUG) debug("REQUEST_CHANGE_SIM_PIN");
+    //TODO
+  },
+
+  onEnterICCPUK: function onEnterICCPUK(response) {
+    if (DEBUG) debug("REQUEST_ENTER_SIM_PUK returned " + response);
     //TODO
   },
 
@@ -1264,7 +1484,7 @@ let Phone = {
 
   onOperator: function onOperator(operator) {
     if (operator.length < 3) {
-      debug("Expected at least 3 strings for operator.");
+      if (DEBUG) debug("Expected at least 3 strings for operator.");
     }
     if (!this.operator ||
         this.operator.alphaLong  != operator[0] ||
@@ -1308,8 +1528,59 @@ let Phone = {
   onStopTone: function onStopTone() {
   },
 
+  onGetSMSCAddress: function onGetSMSCAddress(smsc) {
+    this.SMSC = smsc;
+  },
+
+  onSetSMSCAddress: function onSetSMSCAddress() {
+  },
+
   onSendSMS: function onSendSMS(messageRef, ackPDU, errorCode) {
     //TODO
+  },
+
+  onNewSMS: function onNewSMS(payloadLength) {
+    if (!payloadLength) {
+      if (DEBUG) debug("Received empty SMS!");
+      //TODO: should we acknowledge the SMS here? maybe only after multiple
+      //failures.
+      return;
+    }
+    // An SMS is a string, but we won't read it as such, so let's read the
+    // string length and then defer to PDU parsing helper.
+    let messageStringLength = Buf.readUint32();
+    if (DEBUG) debug("Got new SMS, length " + messageStringLength);
+    let message = GsmPDUHelper.readMessage();
+    if (DEBUG) debug(message);
+
+    // Read string delimiters. See Buf.readString().
+    let delimiter = Buf.readUint16();
+    if (!(messageStringLength & 1)) {
+      delimiter |= Buf.readUint16();
+    }
+    if (DEBUG) {
+      if (delimiter != 0) {
+        debug("Something's wrong, found string delimiter: " + delimiter);
+      }
+    }
+
+    message.type = "sms-received";
+    this.sendDOMMessage(message);
+
+    //TODO: this might be a lie? do we want to wait for the mainthread to
+    // report back?
+    RIL.acknowledgeSMS(true, SMS_HANDLED);
+  },
+
+  onNewSMSStatusReport: function onNewSMSStatusReport(info) {
+    //TODO
+  },
+
+  onNewSMSOnSIM: function onNewSMSOnSIM(info) {
+    //TODO
+  },
+
+  onAcknowledgeSMS: function onAcknowledgeSMS() {
   },
 
   /**
@@ -1334,6 +1605,18 @@ let Phone = {
     RIL.getGPRSRegistrationState(); //TODO only GSM
     RIL.getOperator();
     RIL.getNetworkSelectionMode();
+  },
+
+  /**
+   * Get a list of current voice calls.
+   */
+  enumerateCalls: function enumerateCalls() {
+    if (DEBUG) debug("Sending all current calls");
+    let calls = [];
+    for each (let call in this.currentCalls) {
+      calls.push(call);
+    }
+    this.sendDOMMessage({type: "enumerateCalls", calls: calls});
   },
 
   /**
@@ -1386,29 +1669,37 @@ let Phone = {
   },
 
   /**
-   * Mute or unmute the radio.
-   *
-   * @param mute
-   *        Boolean to indicate whether to mute or unmute the radio.
-   */
-  setMute: function setMute(options) {
-    //TODO need to check whether call is holding/waiting/background
-    // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
-    RIL.setMute(options.mute);
-  },
-
-  /**
    * Answer an incoming call.
+   *
+   * @param callIndex
+   *        Call index of the call to answer.
    */
-  answerCall: function answerCall() {
-    RIL.answerCall();
+  answerCall: function answerCall(options) {
+    // Check for races. Since we dispatched the incoming call notification the
+    // incoming call may have changed. The main thread thinks that it is
+    // answering the call with the given index, so only answer if that is still
+    // incoming.
+    let call = this.currentCalls[options.callIndex];
+    if (call && call.state == CALL_STATE_INCOMING) {
+      RIL.answerCall();
+    }
   },
 
   /**
    * Reject an incoming call.
+   *
+   * @param callIndex
+   *        Call index of the call to reject.
    */
-  rejectCall: function rejectCall() {
-    RIL.rejectCall();
+  rejectCall: function rejectCall(options) {
+    // Check for races. Since we dispatched the incoming call notification the
+    // incoming call may have changed. The main thread thinks that it is
+    // rejecting the call with the given index, so only reject if that is still
+    // incoming.
+    let call = this.currentCalls[options.callIndex];
+    if (call && call.state == CALL_STATE_INCOMING) {
+      RIL.rejectCall();
+    }
   },
 
   /**
@@ -1416,14 +1707,26 @@ let Phone = {
    *
    * @param number
    *        String containing the recipient number.
-   * @param message
+   * @param body
    *        String containing the message text.
    */
   sendSMS: function sendSMS(options) {
-    //TODO munge options.number and options.message into PDU format
-    let smscPDU = "";
-    let pdu = "";
-    RIL.sendSMS(smscPDU, pdu);
+    // Get the SMS Center address
+    if (!this.SMSC) {
+      //TODO: we shouldn't get here, but if we do, we might want to hold on
+      // to the message and retry once we know the SMSC... or just notify an
+      // error to the mainthread and let them deal with retrying?
+      if (DEBUG) {
+        debug("Cannot send the SMS. Need to get the SMSC address first.");
+      }
+      return;
+    }
+    //TODO: verify values on 'options'
+    //TODO: the data encoding and length in octets should eventually be
+    // computed on the mainthread and passed down to us.
+    RIL.sendSMS(this.SMSC, options.number, options.body,
+                PDU_DCS_MSG_CODING_7BITS_ALPHABET, //TODO: hard-coded for now,
+                Math.ceil(options.body.length * 7 / 8)); //TODO: ditto
   },
 
   /**
@@ -1436,7 +1739,9 @@ let Phone = {
     if (DEBUG) debug("Received DOM message " + JSON.stringify(message));
     let method = this[message.type];
     if (typeof method != "function") {
-      debug("Don't know what to do with message " + JSON.stringify(message));
+      if (DEBUG) {
+        debug("Don't know what to do with message " + JSON.stringify(message));
+      }
       return;
     }
     method.call(this, message);
@@ -1451,6 +1756,530 @@ let Phone = {
 
 };
 
+
+/**
+ * This object exposes the functionality to parse and serialize PDU strings
+ *
+ * A PDU is a string containing a series of hexadecimally encoded octets
+ * or nibble-swapped binary-coded decimals (BCDs). It contains not only the
+ * message text but information about the sender, the SMS service center,
+ * timestamp, etc.
+ */
+let GsmPDUHelper = {
+
+  /**
+   * Read one character (2 bytes) from a RIL string and decode as hex.
+   *
+   * @return the nibble as a number.
+   */
+  readHexNibble: function readHexNibble() {
+    let nibble = Buf.readUint16();
+    if (nibble >= 48 && nibble <= 57) {
+      nibble -= 48; // ASCII '0'..'9'
+    } else if (nibble >= 65 && nibble <= 70) {
+      nibble -= 55; // ASCII 'A'..'F'
+    } else if (nibble >= 97 && nibble <= 102) {
+      nibble -= 87; // ASCII 'a'..'f'
+    } else {
+      throw "Found invalid nibble during PDU parsing: " +
+            String.fromCharCode(nibble);
+    }
+    return nibble;
+  },
+
+  /**
+   * Encode a nibble as one hex character in a RIL string (2 bytes).
+   *
+   * @param nibble
+   *        The nibble to encode (represented as a number)
+   */
+  writeHexNibble: function writeHexNibble(nibble) {
+    nibble &= 0x0f;
+    if (nibble < 10) {
+      nibble += 48; // ASCII '0'
+    } else {
+      nibble += 55; // ASCII 'A'
+    }
+    Buf.writeUint16(nibble);
+  },
+
+  /**
+   * Read a hex-encoded octet (two nibbles).
+   *
+   * @return the octet as a number.
+   */
+  readHexOctet: function readHexOctet() {
+    return (this.readHexNibble() << 4) | this.readHexNibble();
+  },
+
+  /**
+   * Write an octet as two hex-encoded nibbles.
+   *
+   * @param octet
+   *        The octet (represented as a number) to encode.
+   */
+  writeHexOctet: function writeHexOctet(octet) {
+    this.writeHexNibble(octet >> 4);
+    this.writeHexNibble(octet);
+  },
+
+  /**
+   * Convert an octet (number) to a BCD number.
+   *
+   * Any nibbles that are not in the BCD range count as 0.
+   *
+   * @param octet
+   *        The octet (a number, as returned by getOctet())
+   *
+   * @return the corresponding BCD number.
+   */
+  octetToBCD: function octetToBCD(octet) {
+    return ((octet & 0xf0) <= 0x90) * ((octet >> 4) & 0x0f) +
+           ((octet & 0x0f) <= 0x09) * (octet & 0x0f) * 10;
+  },
+
+  /**
+   * Read a *swapped nibble* binary coded decimal (BCD)
+   *
+   * @param length
+   *        Number of nibble *pairs* to read.
+   *
+   * @return the decimal as a number.
+   */
+  readSwappedNibbleBCD: function readSwappedNibbleBCD(length) {
+    let number = 0;
+    for (let i = 0; i < length; i++) {
+      let octet = this.readHexOctet();
+      // If the first nibble is an "F" , only the second nibble is to be taken
+      // into account.
+      if ((octet & 0xf0) == 0xf0) {
+        number *= 10;
+        number += octet & 0x0f;
+        continue;
+      }
+      number *= 100;
+      number += this.octetToBCD(octet);
+    }
+    return number;
+  },
+
+  /**
+   * Write numerical data as swapped nibble BCD.
+   *
+   * @param data
+   *        Data to write (as a string or a number)
+   */
+  writeSwappedNibbleBCD: function writeSwappedNibbleBCD(data) {
+    data = data.toString();
+    if (data.length % 2) {
+      data += "F";
+    }
+    for (let i = 0; i < data.length; i += 2) {
+      Buf.writeUint16(data.charCodeAt(i + 1));
+      Buf.writeUint16(data.charCodeAt(i));
+    }
+  },
+
+  /**
+   * Read user data, convert to septets, look up relevant characters in a
+   * 7-bit alphabet, and construct string.
+   *
+   * @param length
+   *        Number of septets to read (*not* octets)
+   *
+   * @return a string.
+   *
+   * TODO: support other alphabets
+   * TODO: support escape chars
+   */
+  readSeptetsToString: function readSeptetsToString(length) {
+    let ret = "";
+    let byteLength = Math.ceil(length * 7 / 8);
+
+    let leftOver = 0;
+    for (let i = 0; i < byteLength; i++) {
+      let octet = this.readHexOctet();
+      let shift = (i % 7);
+      let leftOver_mask = (0xff << (7 - shift)) & 0xff;
+      let septet_mask = (0xff >> (shift + 1));
+
+      let septet = ((octet & septet_mask) << shift) | leftOver;
+      ret += PDU_ALPHABET_7BIT_DEFAULT[septet];
+      leftOver = (octet & leftOver_mask) >> (7 - shift);
+
+      // Every 7th byte we have a whole septet left over that we can apply.
+      if (shift == 6) {
+        ret += PDU_ALPHABET_7BIT_DEFAULT[leftOver];
+        leftOver = 0;
+      }
+    }
+    if (ret.length != length) {
+      ret = ret.slice(0, length);
+    }
+    return ret;
+  },
+
+  writeStringAsSeptets: function writeStringAsSeptets(message) {
+    let right = 0;
+    for (let i = 0; i < message.length + 1; i++) {
+      let shift = (i % 8);
+      let septet;
+      if (i < message.length) {
+        septet = PDU_ALPHABET_7BIT_DEFAULT.indexOf(message[i]);
+      } else {
+        septet = 0;
+      }
+      if (septet == -1) {
+        if (DEBUG) debug("Fffff, "  + message[i] + " not in 7 bit alphabet!");
+        septet = 0;
+      }
+      if (shift == 0) {
+        // We're at the beginning of a cycle, but we need two septet values
+        // to make an octet. So we're going to have to sit this one out.
+        right = septet;
+        continue;
+      }
+
+      let left_mask = 0xff >> (8 - shift);
+      let right_mask = (0xff << shift) & 0xff;
+      let left = (septet & left_mask) << (8 - shift);
+      let octet = left | right;
+      this.writeHexOctet(left | right);
+      right = (septet & right_mask) >> shift;
+    }
+  },
+
+  /**
+   * Read user data and decode as a UCS2 string.
+   *
+   * @param length
+   *        XXX TODO
+   *
+   * @return a string.
+   */
+  readUCS2String: function readUCS2String(length) {
+    //TODO bug 712804
+  },
+
+  /**
+   * Write user data as a UCS2 string.
+   *
+   * @param message
+   *        Message string to encode as UCS2 in hex-encoded octets.
+   */
+  writeUCS2String: function writeUCS2String(message) {
+    //TODO bug 712804
+  },
+
+  /**
+   * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
+   * (UCS2) data.
+   *
+   * TODO: This function currently supports only the default alphabet.
+   */
+  readUserData: function readUserData(length, codingScheme) {
+    if (DEBUG) {
+      debug("Reading " + length + " bytes of user data.");
+      debug("Coding scheme: " + codingScheme);
+    }
+    // 7 bit is the default fallback encoding.
+    let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+    switch (codingScheme & 0xC0) {
+      case 0x0:
+        // bits 7..4 = 00xx
+        switch (codingScheme & 0x0C) {
+          case 0x4:
+            encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+            break;
+          case 0x8:
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+            break;
+        }
+        break;
+      case 0xC0:
+        // bits 7..4 = 11xx
+        switch (codingScheme & 0x30) {
+          case 0x20:
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+            break;
+          case 0x30:
+            if (!codingScheme & 0x04) {
+              encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+            }
+            break;
+        }
+        break;
+      default:
+        // Falling back to default encoding.
+        break;
+    }
+
+    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
+    switch (encoding) {
+      case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
+        // 7 bit encoding allows 140 octets, which means 160 characters
+        // ((140x8) / 7 = 160 chars)
+        if (length > PDU_MAX_USER_DATA_7BIT) {
+          if (DEBUG) debug("PDU error: user data is too long: " + length);
+          return null;
+        }
+        return this.readSeptetsToString(length);
+      case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
+        // Unsupported.
+        return null;
+      case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
+        return this.readUCS2String(length);
+    }
+    return null;
+  },
+
+  /**
+   * Read and decode a PDU-encoded message from the stream.
+   *
+   * TODO: add some basic sanity checks like:
+   * - do we have the minimum number of chars available
+   */
+  readMessage: function readMessage() {
+    // An empty message object. This gets filled below and then returned.
+    let msg = {
+      SMSC:      null,
+      reference: null,
+      sender:    null,
+      body:      null,
+      validity:  null,
+      timestamp: null
+    };
+
+    // SMSC info
+    let smscLength = this.readHexOctet();
+    if (smscLength > 0) {
+      let smscTypeOfAddress = this.readHexOctet();
+      // Subtract the type-of-address octet we just read from the length.
+      msg.SMSC = this.readSwappedNibbleBCD(smscLength - 1).toString();
+      if ((smscTypeOfAddress >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
+        msg.SMSC = '+' + msg.SMSC;
+      }
+    }
+
+    // First octet of this SMS-DELIVER or SMS-SUBMIT message
+    let firstOctet = this.readHexOctet();
+    // if the sms is of SMS-SUBMIT type it would contain a TP-MR
+    let isSmsSubmit = firstOctet & PDU_MTI_SMS_SUBMIT;
+    if (isSmsSubmit) {
+      msg.reference = this.readHexOctet(); // TP-Message-Reference
+    }
+
+    // - Sender Address info -
+    // Address length
+    let senderAddressLength = this.readHexOctet();
+    if (senderAddressLength <= 0) {
+      if (DEBUG) debug("PDU error: invalid sender address length: " + senderAddressLength);
+      return null;
+    }
+    // Type-of-Address
+    let senderTypeOfAddress = this.readHexOctet();
+    if (senderAddressLength % 2 == 1) {
+      senderAddressLength += 1;
+    }
+    if (DEBUG) debug("PDU: Going to read sender address: " + senderAddressLength);
+    msg.sender = this.readSwappedNibbleBCD(senderAddressLength / 2).toString();
+    if (msg.sender.length <= 0) {
+      if (DEBUG) debug("PDU error: no sender number provided");
+      return null;
+    }
+    if ((senderTypeOfAddress >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
+      msg.sender = '+' + msg.sender;
+    }
+
+    // - TP-Protocolo-Identifier -
+    let protocolIdentifier = this.readHexOctet();
+
+    // - TP-Data-Coding-Scheme -
+    let dataCodingScheme = this.readHexOctet();
+
+    // SMS of SMS-SUBMIT type contains a TP-Service-Center-Time-Stamp field
+    // SMS of SMS-DELIVER type contains a TP-Validity-Period octet
+    if (isSmsSubmit) {
+      //  - TP-Validity-Period -
+      //  The Validity Period octet is optional. Depends on the SMS-SUBMIT
+      //  first octet
+      //  Validity Period Format. Bit4 and Bit3 specify the TP-VP field
+      //  according to this table:
+      //  bit4 bit3
+      //    0   0 : TP-VP field not present
+      //    1   0 : TP-VP field present. Relative format (one octet)
+      //    0   1 : TP-VP field present. Enhanced format (7 octets)
+      //    1   1 : TP-VP field present. Absolute format (7 octets)
+      if (firstOctet & (PDU_VPF_ABSOLUTE | PDU_VPF_RELATIVE | PDU_VPF_ENHANCED)) {
+        msg.validity = this.readHexOctet();
+      }
+      //TODO: check validity period
+    } else {
+      // - TP-Service-Center-Time-Stamp -
+      let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
+      let month  = this.readSwappedNibbleBCD(1) - 1;
+      let day    = this.readSwappedNibbleBCD(1) - 1;
+      let hour   = this.readSwappedNibbleBCD(1) - 1;
+      let minute = this.readSwappedNibbleBCD(1) - 1;
+      let second = this.readSwappedNibbleBCD(1) - 1;
+      msg.timestamp = Date.UTC(year, month, day, hour, minute, second);
+
+      // If the most significant bit of the least significant nibble is 1,
+      // the timezone offset is negative (fourth bit from the right => 0x08).
+      let tzOctet = this.readHexOctet();
+      let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
+      if (tzOctet & 0x08) {
+        msg.timestamp -= tzOffset;
+      } else {
+        msg.timestamp += tzOffset;
+      }
+    }
+
+    // - TP-User-Data-Length -
+    let userDataLength = this.readHexOctet();
+
+    // - TP-User-Data -
+    if (userDataLength > 0) {
+      msg.body = this.readUserData(userDataLength, dataCodingScheme);
+    }
+
+    return msg;
+  },
+
+  /**
+   * Serialize a SMS-SUBMIT PDU message and write it to the output stream.
+   *
+   * This method expects that a data coding scheme has been chosen already
+   * and that the length of the user data payload in that encoding is known,
+   * too. Both go hand in hand together anyway.
+   *
+   * @param address
+   *        String containing the address (number) of the SMS receiver
+   * @param userData
+   *        String containing the message to be sent as user data
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param userDataLengthInOctets
+   *        Byte length of the user data when encoded with the given DCS.
+   */
+  writeMessage: function writeMessage(address,
+                                      userData,
+                                      dcs,
+                                      userDataLengthInOctets) {
+    // SMS-SUBMIT Format:
+    //
+    // PDU Type - 1 octet
+    // Message Reference - 1 octet
+    // DA - Destination Address - 2 to 12 octets
+    // PID - Protocol Identifier - 1 octet
+    // DCS - Data Coding Scheme - 1 octet
+    // VP - Validity Period - 0, 1 or 7 octets
+    // UDL - User Data Length - 1 octet
+    // UD - User Data - 140 octets
+
+    let addressFormat = PDU_TOA_ISDN; // 81
+    if (address[0] == '+') {
+      addressFormat = PDU_TOA_INTERNATIONAL | PDU_TOA_ISDN; // 91
+      address = address.substring(1);
+    }
+    //TODO validity is unsupported for now
+    let validity = 0;
+
+    let pduOctetLength = 4 + // PDU Type, Message Ref, address length + format
+                         Math.ceil(address.length / 2) +
+                         3 + // PID, DCS, UDL
+                         userDataLengthInOctets;
+    if (validity) {
+      //TODO: add more to pduOctetLength
+    }
+
+    // Start the string. Since octets are represented in hex, we will need
+    // twice as many characters as octets.
+    Buf.writeUint32(pduOctetLength * 2);
+
+    // - PDU-TYPE-
+
+    // +--------+----------+---------+---------+--------+---------+
+    // | RP (1) | UDHI (1) | SRR (1) | VPF (2) | RD (1) | MTI (2) |
+    // +--------+----------+---------+---------+--------+---------+
+    // RP:    0   Reply path parameter is not set
+    //        1   Reply path parameter is set
+    // UDHI:  0   The UD Field contains only the short message
+    //        1   The beginning of the UD field contains a header in addition
+    //            of the short message
+    // SRR:   0   A status report is not requested
+    //        1   A status report is requested
+    // VPF:   bit4  bit3
+    //        0     0     VP field is not present
+    //        0     1     Reserved
+    //        1     0     VP field present an integer represented (relative)
+    //        1     1     VP field present a semi-octet represented (absolute)
+    // RD:        Instruct the SMSC to accept(0) or reject(1) an SMS-SUBMIT
+    //            for a short message still held in the SMSC which has the same
+    //            MR and DA as a previously submitted short message from the
+    //            same OA
+    // MTI:   bit1  bit0    Message Type
+    //        0     0       SMS-DELIVER (SMSC ==> MS)
+    //        0     1       SMS-SUBMIT (MS ==> SMSC)
+
+    // PDU type. MTI is set to SMS-SUBMIT
+    let firstOctet = PDU_MTI_SMS_SUBMIT;
+
+    // Validity period
+    if (validity) {
+      //TODO: not supported yet, OR with one of PDU_VPF_*
+    }
+    let udhi = ""; //TODO: for now this is unsupported
+    if (udhi) {
+      firstOctet |= PDU_UDHI;
+    }
+    this.writeHexOctet(firstOctet);
+
+    // Message reference 00
+    this.writeHexOctet(0x00);
+
+    // - Destination Address -
+    this.writeHexOctet(address.length);
+    this.writeHexOctet(addressFormat);
+    this.writeSwappedNibbleBCD(address);
+
+    // - Protocol Identifier -
+    this.writeHexOctet(0x00);
+
+    // - Data coding scheme -
+    // For now it assumes bits 7..4 = 1111 except for the 16 bits use case
+    this.writeHexOctet(dcs);
+
+    // - Validity Period -
+    if (validity) {
+      this.writeHexOctet(validity);
+    }
+
+    // - User Data -
+    let userDataLength = userData.length;
+    if (dcs == PDU_DCS_MSG_CODING_16BITS_ALPHABET) {
+      userDataLength = userData.length * 2;
+    }
+    this.writeHexOctet(userDataLength);
+    switch (dcs) {
+      case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
+        this.writeStringAsSeptets(userData);
+        break;
+      case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
+        // Unsupported.
+        break;
+      case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
+        this.writeUCS2String(userData);
+        break;
+    }
+
+    // End of the string. The string length is always even by definition, so
+    // we write two \0 delimiters.
+    Buf.writeUint16(0);
+    Buf.writeUint16(0);
+  }
+};
 
 /**
  * Global stuff.

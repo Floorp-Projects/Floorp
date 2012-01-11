@@ -96,8 +96,6 @@ static const MimeTypeAssociation appTypes[] = {
   { "application/xhtml+xml", "xhtml xht"      }
 };
 
-static const char kDocumentIconPath[] = "firefox-document.png";
-
 // GConf registry key constants
 #define DG_BACKGROUND "/desktop/gnome/background"
 
@@ -317,11 +315,9 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes,
     rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsString brandShortName, brandFullName;
+    nsString brandShortName;
     brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
                                    getter_Copies(brandShortName));
-    brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
-                                   getter_Copies(brandFullName));
 
     // use brandShortName as the application id.
     NS_ConvertUTF16toUTF8 id(brandShortName);

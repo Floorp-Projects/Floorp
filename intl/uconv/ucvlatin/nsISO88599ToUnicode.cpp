@@ -38,17 +38,10 @@
 #include "nsUCConstructors.h"
 #include "nsISO88599ToUnicode.h"
 
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-static const PRUint16 g_utMappingTable[] = {
-#include "8859-9.ut"
-};
-
 nsresult
 nsISO88599ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult) 
 {
-  return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
-                              aOuter, aIID, aResult);
+  // Just make it an alias to windows-1254 decoder. (bug 712876)
+  return nsCP1254ToUnicodeConstructor(aOuter, aIID, aResult);
 }

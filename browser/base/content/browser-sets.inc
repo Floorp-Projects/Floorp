@@ -116,6 +116,7 @@
     <command id="Browser:PrevTab" oncommand="gBrowser.tabContainer.advanceSelectedTab(-1, true);"/>
     <command id="Browser:ShowAllTabs" oncommand="allTabs.open();"/>
     <command id="Browser:ToggleTabView" oncommand="TabView.toggle();"/>
+    <command id="Browser:FocusNextFrame" oncommand="focusNextFrame(event);"/>
     <command id="cmd_fullZoomReduce"  oncommand="FullZoom.reduce()"/>
     <command id="cmd_fullZoomEnlarge" oncommand="FullZoom.enlarge()"/>
     <command id="cmd_fullZoomReset"   oncommand="FullZoom.reset()"/>
@@ -304,6 +305,7 @@
 #ifndef XP_MACOSX
     <key id="showAllHistoryKb" key="&showAllHistoryCmd.commandkey;" command="Browser:ShowAllHistory" modifiers="accel,shift"/>
     <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
+    <key keycode="VK_F6" command="Browser:FocusNextFrame"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
 #else
     <key id="key_fullScreen" key="&fullScreenCmd.macCommandKey;" command="View:FullScreen" modifiers="accel,shift"/>

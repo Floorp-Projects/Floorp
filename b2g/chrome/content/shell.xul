@@ -40,6 +40,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="shell"
         width="480" height="800"
+        windowtype="navigator:browser"
 #ifdef ANDROID
         sizemode="fullscreen"
 #endif

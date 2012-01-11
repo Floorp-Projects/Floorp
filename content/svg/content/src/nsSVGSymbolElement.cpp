@@ -37,6 +37,7 @@
 #include "mozilla/Util.h"
 
 #include "nsIDOMSVGSymbolElement.h"
+#include "DOMSVGTests.h"
 #include "nsSVGStylableElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -47,8 +48,9 @@ using namespace mozilla;
 typedef nsSVGStylableElement nsSVGSymbolElementBase;
 
 class nsSVGSymbolElement : public nsSVGSymbolElementBase,
-                           public nsIDOMSVGFitToViewBox,
-                           public nsIDOMSVGSymbolElement
+                           public nsIDOMSVGSymbolElement,
+                           public DOMSVGTests,
+                           public nsIDOMSVGFitToViewBox
 {
 protected:
   friend nsresult NS_NewSVGSymbolElement(nsIContent **aResult,

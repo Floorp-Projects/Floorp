@@ -58,9 +58,8 @@ public:
 
   NS_FORWARD_TO_NSDOMEVENT
 
-  virtual const nsIID& EventInitIID() { return NS_GET_IID(nsIHashChangeEventInit); }
-  virtual nsresult InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                                JSContext* aCx, JSObject* aObj);
+  virtual nsresult InitFromCtor(const nsAString& aType,
+                                JSContext* aCx, jsval* aVal);
 protected:
   nsString mOldURL;
   nsString mNewURL;

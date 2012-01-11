@@ -238,7 +238,7 @@ class nsGIOInputStream : public nsIInputStream
 void
 nsGIOInputStream::SetMountResult(MountOperationResult result, gint error_code)
 {
-  mozilla::MonitorAutoEnter mon(mMonitorMountInProgress);
+  mozilla::MonitorAutoLock mon(mMonitorMountInProgress);
   mMountRes = result;
   mMountErrorCode = error_code;
   mon.Notify();
@@ -263,7 +263,7 @@ nsGIOInputStream::MountVolume() {
                                 NULL,
                                 mount_enclosing_volume_finished,
                                 this);
-  mozilla::MonitorAutoEnter mon(mMonitorMountInProgress);
+  mozilla::MonitorAutoLock mon(mMonitorMountInProgress);
   /* Waiting for finish of mount operation thread */  
   while (mMountRes == MOUNT_OPERATION_IN_PROGRESS)
     mon.Wait();

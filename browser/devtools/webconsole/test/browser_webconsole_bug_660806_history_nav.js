@@ -4,7 +4,12 @@
 
 const TEST_URI = "data:text/html,<p>bug 660806 - history navigation must not show the autocomplete popup";
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("load", tabLoaded, true);
 }

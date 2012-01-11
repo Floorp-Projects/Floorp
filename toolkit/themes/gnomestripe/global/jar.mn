@@ -5,7 +5,6 @@ toolkit.jar:
 +  skin/classic/global/colorpicker.css
 +  skin/classic/global/commonDialog.css
 +  skin/classic/global/dropmarker.css
-+  skin/classic/global/filefield.css
 +  skin/classic/global/filepicker.css
 +  skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
 +  skin/classic/global/findBar.css

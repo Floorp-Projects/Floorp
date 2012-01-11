@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -39,6 +39,8 @@
 
 #ifndef jscompartment_h___
 #define jscompartment_h___
+
+#include "mozilla/Attributes.h"
 
 #include "jsclist.h"
 #include "jscntxt.h"
@@ -182,8 +184,8 @@ struct JS_FRIEND_API(JSCompartment) {
         return createBarrierTracer();
     }
 
-    uint32_t                     gcBytes;
-    uint32_t                     gcTriggerBytes;
+    size_t                       gcBytes;
+    size_t                       gcTriggerBytes;
     size_t                       gcLastBytes;
 
     bool                         hold;
@@ -233,7 +235,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool ensureJaegerCompartmentExists(JSContext *cx);
 
-    void sizeOfCode(size_t *method, size_t *regexp, size_t *unused) const;
+    size_t sizeOfMjitCode() const;
 #endif
 
     /*
@@ -308,7 +310,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void purge(JSContext *cx);
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
-    void reduceGCTriggerBytes(uint32_t amount);
+    void reduceGCTriggerBytes(size_t amount);
 
     js::DtoaCache dtoaCache;
 
@@ -469,9 +471,8 @@ class AutoCompartment
     void leave();
 
   private:
-    // Prohibit copying.
-    AutoCompartment(const AutoCompartment &);
-    AutoCompartment & operator=(const AutoCompartment &);
+    AutoCompartment(const AutoCompartment &) MOZ_DELETE;
+    AutoCompartment & operator=(const AutoCompartment &) MOZ_DELETE;
 };
 
 /*

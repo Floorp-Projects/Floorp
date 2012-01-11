@@ -144,7 +144,7 @@ size_t gMaxStackSize = DEFAULT_MAX_STACK_SIZE;
 #ifdef JS_THREADSAFE
 static PRUintn gStackBaseThreadIndex;
 #else
-static jsuword gStackBase;
+static uintptr_t gStackBase;
 #endif
 
 /*
@@ -217,7 +217,6 @@ typedef enum JSShellErrNum {
 #include "jsshell.msg"
 #undef MSG_DEF
     JSShellErr_Limit
-#undef MSGDEF
 } JSShellErrNum;
 
 static JSContext *
@@ -437,6 +436,8 @@ Process(JSContext *cx, JSObject *obj, const char *filename, bool forceTTY)
     int startline;
     FILE *file;
     uint32_t oldopts;
+
+    RootObject root(cx, &obj);
 
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
@@ -1233,7 +1234,6 @@ static const struct ParamPair {
 } paramMap[] = {
     {"maxBytes",            JSGC_MAX_BYTES },
     {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
-    {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN},
     {"gcBytes",             JSGC_BYTES},
     {"gcNumber",            JSGC_NUMBER},
 };
@@ -1254,7 +1254,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
 
     JSFlatString *flatStr = JS_FlattenString(cx, str);
     if (!flatStr)
-        return JS_FALSE;
+        return false;
 
     size_t paramIndex = 0;
     for (;; paramIndex++) {
@@ -1263,7 +1263,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
                            "the first argument argument must be maxBytes, "
                            "maxMallocBytes, gcStackpoolLifespan, gcBytes or "
                            "gcNumber");
-            return JS_FALSE;
+            return false;
         }
         if (JS_FlatStringEqualsAscii(flatStr, paramMap[paramIndex].name))
             break;
@@ -1279,7 +1279,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         param == JSGC_BYTES) {
         JS_ReportError(cx, "Attempt to change read-only parameter %s",
                        paramMap[paramIndex].name);
-        return JS_FALSE;
+        return false;
     }
 
     uint32_t value;
@@ -1287,11 +1287,23 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportError(cx,
                        "the second argument must be convertable to uint32_t "
                        "with non-zero value");
-        return JS_FALSE;
+        return false;
     }
+
+    if (param == JSGC_MAX_BYTES) {
+        uint32_t gcBytes = JS_GetGCParameter(cx->runtime, JSGC_BYTES);
+        if (value < gcBytes) {
+            JS_ReportError(cx,
+                           "attempt to set maxBytes to the value less than the current "
+                           "gcBytes (%u)",
+                           gcBytes);
+            return false;
+        }
+    }
+
     JS_SetGCParameter(cx->runtime, param, value);
     *vp = JSVAL_VOID;
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -1815,12 +1827,8 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
     pc = script->code + offset;
     op = JSOp(*pc);
     switch (op) {
-      case JSOP_TABLESWITCHX:
-        jmplen = JUMPX_OFFSET_LEN;
-        goto jump_table;
       case JSOP_TABLESWITCH:
         jmplen = JUMP_OFFSET_LEN;
-      jump_table:
         pc += jmplen;
         low = GET_JUMP_OFFSET(pc);
         pc += JUMP_OFFSET_LEN;
@@ -1829,12 +1837,8 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
         n = high - low + 1;
         break;
 
-      case JSOP_LOOKUPSWITCHX:
-        jmplen = JUMPX_OFFSET_LEN;
-        goto lookup_table;
       case JSOP_LOOKUPSWITCH:
         jmplen = JUMP_OFFSET_LEN;
-      lookup_table:
         pc += jmplen;
         n = GET_INDEX(pc);
         pc += INDEX_LEN;
@@ -1873,7 +1877,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
                 name = "case";
             } else {
                 JSOp op = JSOp(script->code[offset]);
-                JS_ASSERT(op == JSOP_LABEL || op == JSOP_LABELX);
+                JS_ASSERT(op == JSOP_LABEL);
             }
         }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", uintN(sn - notes), lineno, offset, delta, name);
@@ -1932,7 +1936,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
           }
           case SRC_SWITCH: {
             JSOp op = JSOp(script->code[offset]);
-            if (op == JSOP_GOTO || op == JSOP_GOTOX)
+            if (op == JSOP_GOTO)
                 break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
             uintN caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
@@ -2013,31 +2017,31 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
     if (fun && (fun->flags & ~7U)) {
         uint16_t flags = fun->flags;
         Sprint(sp, "flags:");
-        
+
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) Sprint(sp, " " #flag);
-        
+
         SHOW_FLAG(LAMBDA);
         SHOW_FLAG(HEAVYWEIGHT);
         SHOW_FLAG(EXPR_CLOSURE);
-        
+
 #undef SHOW_FLAG
-        
+
         if (fun->isNullClosure())
             Sprint(sp, " NULL_CLOSURE");
         else if (fun->isFlatClosure())
             Sprint(sp, " FLAT_CLOSURE");
-        
+
         JSScript *script = fun->script();
         if (script->bindings.hasUpvars()) {
             Sprint(sp, "\nupvars: {\n");
-            
+
             Vector<JSAtom *> localNames(cx);
             if (!script->bindings.getLocalNameArray(cx, &localNames))
                 return false;
-            
+
             JSUpvarArray *uva = script->upvars();
             uintN upvar_base = script->bindings.countArgsAndVars();
-            
+
             for (uint32_t i = 0, n = uva->length; i < n; i++) {
                 JSAtom *atom = localNames[upvar_base + i];
                 UpvarCookie cookie = uva->vector[i];
@@ -2047,7 +2051,7 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
                            printable.ptr(), cookie.level(), cookie.slot());
                 }
             }
-            
+
             Sprint(sp, "}");
         }
         Sprint(sp, "\n");
@@ -2190,7 +2194,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     DisassembleOptionParser p(argc, JS_ARGV(cx, vp));
     if (!p.parse(cx))
         return false;
-    
+
     if (!p.argc) {
         JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
@@ -2222,7 +2226,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
         fprintf(stdout, "%s\n", sprinter.base);
     if (!ok)
         return false;
-    
+
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
@@ -2334,16 +2338,9 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
 static JSBool
 DumpStats(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN i;
-    JSString *str;
-    jsid id;
-    JSObject *obj2;
-    JSProperty *prop;
-    Value value;
-
     jsval *argv = JS_ARGV(cx, vp);
-    for (i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
+    for (uintN i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
@@ -2355,24 +2352,10 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
         } else if (JS_FlatStringEqualsAscii(flatStr, "global")) {
             DumpScope(cx, cx->globalObject, stdout);
         } else {
-            if (!JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
-                return JS_FALSE;
-            JSObject *obj;
-            if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
-                return JS_FALSE;
-            if (prop) {
-                if (!obj->getGeneric(cx, id, &value))
-                    return JS_FALSE;
-            }
-            if (!prop || !value.isObjectOrNull()) {
-                fputs("js: invalid stats argument ", gErrFile);
-                JS_FileEscapedString(gErrFile, str, 0);
-                putc('\n', gErrFile);
-                continue;
-            }
-            obj = value.toObjectOrNull();
-            if (obj)
-                DumpScope(cx, obj, stdout);
+            fputs("js: invalid stats argument ", gErrFile);
+            JS_FileEscapedString(gErrFile, str, 0);
+            putc('\n', gErrFile);
+            continue;
         }
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -2651,7 +2634,7 @@ ConvertArgs(JSContext *cx, uintN argc, jsval *vp)
         strBytes.encode(cx, str);
     JSString *tmpstr = JS_DecompileFunction(cx, fun, 4);
     JSAutoByteString func;
-    if (!tmpstr || !func.encode(cx, tmpstr));
+    if (!tmpstr || !func.encode(cx, tmpstr))
         ReportException(cx);
     fprintf(gOutFile,
             "d %g, I %g, S %s, W %s, obj %s, fun %s\n"
@@ -2970,10 +2953,9 @@ NewSandbox(JSContext *cx, bool lazy)
             return NULL;
     }
 
-    AutoObjectRooter objroot(cx, obj);
-    if (!cx->compartment->wrap(cx, objroot.addr()))
+    if (!cx->compartment->wrap(cx, &obj))
         return NULL;
-    return objroot.object();
+    return obj;
 }
 
 static JSBool
@@ -3110,7 +3092,7 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
         *vp = JSVAL_ZERO;
         return JS_TRUE;
     }
-    return JS_NewNumberValue(cx, (double) ((jsuword)obj->lastProperty() >> 3), vp);
+    return JS_NewNumberValue(cx, (double) ((uintptr_t)obj->lastProperty() >> 3), vp);
 }
 
 /*
@@ -3761,7 +3743,7 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JSObject *obj = JSVAL_TO_OBJECT(v);
-    JSObject *wrapped = Wrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
+    JSObject *wrapped = Wrapper::New(cx, obj, obj->getProto(), &obj->global(),
                                      &Wrapper::singleton);
     if (!wrapped)
         return false;
@@ -3825,11 +3807,9 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_METHODJIT
     JSRuntime *rt = cx->runtime;
     AutoLockGC lock(rt);
-    size_t n = 0, method, regexp, unused;
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-    {
-        (*c)->sizeOfCode(&method, &regexp, &unused);
-        n += method + regexp + unused;
+    size_t n = 0;
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        n += (*c)->sizeOfMjitCode();
     }
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
 #else
@@ -4120,7 +4100,7 @@ static const char *const shell_help_messages[] = {
 "  Interface to JS_DumpHeap with output sent to file",
 "dumpObject()             Dump an internal representation of an object",
 "notes([fun])             Show source notes for functions",
-"stats([string ...])      Dump 'arena', 'atom', 'global' stats",
+"stats([string ...])      Dump 'atom' or 'global' stats",
 "findReferences(target)\n"
 "  Walk the entire heap, looking for references to |target|, and return a\n"
 "  \"references object\" describing what we found.\n"
@@ -4570,7 +4550,7 @@ its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
     return JS_TRUE;
 }
 
-JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
+JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count, JSEXN_ERR } ,
 #include "jsshell.msg"
@@ -4580,9 +4560,10 @@ JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 {
-    if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
-        return &jsShell_ErrorFormatString[errorNumber];
-    return NULL;
+    if (errorNumber == 0 || errorNumber >= JSShellErr_Limit)
+        return NULL;
+
+    return &jsShell_ErrorFormatString[errorNumber];
 }
 
 static void
@@ -4992,9 +4973,11 @@ DestroyContext(JSContext *cx, bool withGC)
 static JSObject *
 NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 {
-    JSObject *glob = (compartment == NEW_COMPARTMENT)
-                     ? JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL)
-                     : JS_NewGlobalObject(cx, &global_class);
+    RootedVarObject glob(cx);
+
+    glob = (compartment == NEW_COMPARTMENT)
+           ? JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL)
+           : JS_NewGlobalObject(cx, &global_class);
     if (!glob)
         return NULL;
 
@@ -5037,7 +5020,7 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
             return NULL;
     }
 
-    if (compartment == NEW_COMPARTMENT && !JS_WrapObject(cx, &glob))
+    if (compartment == NEW_COMPARTMENT && !JS_WrapObject(cx, glob.address()))
         return NULL;
 
     return glob;
@@ -5046,12 +5029,15 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 static bool
 BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
 {
+    RootObject root(cx, &obj);
+
     MultiStringRange msr = op->getMultiStringArg("scriptArgs");
-    JSObject *scriptArgs = JS_NewArrayObject(cx, 0, NULL);
+    RootedVarObject scriptArgs(cx);
+    scriptArgs = JS_NewArrayObject(cx, 0, NULL);
     if (!scriptArgs)
         return false;
 
-    /* 
+    /*
      * Script arguments are bound as a normal |arguments| property on the
      * global object. It has no special significance, like |arguments| in
      * function scope does -- this identifier is used de-facto across shell
@@ -5076,8 +5062,13 @@ BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
 {
+    RootObject root(cx, &obj);
+
     if (op->getBoolOption('a'))
         JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);
+
+    if (op->getBoolOption('c'))
+        compileOnly = true;
 
     if (op->getBoolOption('m')) {
         enableMethodJit = true;
@@ -5157,7 +5148,8 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     }
 
-    JSObject *glob = NewGlobalObject(cx, NEW_COMPARTMENT);
+    RootedVarObject glob(cx);
+    glob = NewGlobalObject(cx, NEW_COMPARTMENT);
     if (!glob)
         return 1;
 
@@ -5234,7 +5226,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
 
     if (enableDisassemblyDumps)
         JS_DumpCompartmentPCCounts(cx);
- 
+
     return result;
 }
 
@@ -5257,8 +5249,6 @@ ShellPrincipalsSubsume(JSPrincipals *, JSPrincipals *)
 
 JSPrincipals shellTrustedPrincipals = {
     (char *)"[shell trusted principals]",
-    NULL,
-    NULL,
     1,
     NULL, /* nobody should be destroying this */
     ShellPrincipalsSubsume
@@ -5316,7 +5306,7 @@ main(int argc, char **argv, char **envp)
         return 1;
     }
 #else
-    gStackBase = (jsuword) &stackDummy;
+    gStackBase = (uintptr_t) &stackDummy;
 #endif
 
 #ifdef XP_OS2
@@ -5345,6 +5335,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
         || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
         || !op.addBoolOption('n', "typeinfer", "Enable type inference")
+        || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
         || !op.addBoolOption('a', "always-mjit",
                              "Do not try to run in the interpreter before method jitting.")
@@ -5388,7 +5379,7 @@ main(int argc, char **argv, char **envp)
         return EXIT_SUCCESS;
 
 #ifdef DEBUG
-    /* 
+    /*
      * Process OOM options as early as possible so that we can observe as many
      * allocations as possible.
      */

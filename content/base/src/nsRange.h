@@ -42,10 +42,8 @@
 #ifndef nsRange_h___
 #define nsRange_h___
 
-#include "nsIRange.h"
 #include "nsIDOMRange.h"
 #include "nsIRangeUtils.h"
-#include "nsIDOMNSRange.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
@@ -53,50 +51,105 @@
 #include "prmon.h"
 #include "nsStubMutationObserver.h"
 
-// -------------------------------------------------------------------------------
-
-class nsRangeUtils : public nsIRangeUtils
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  // nsIRangeUtils interface
-  NS_IMETHOD_(PRInt32) ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                                     nsIDOMNode* aParent2, PRInt32 aOffset2);
-                               
-  NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
-                                nsIDOMRange* aRange,
-                                bool *outNodeBefore,
-                                bool *outNodeAfter);
-};
-
-// -------------------------------------------------------------------------------
-
-class nsRange : public nsIRange,
-                public nsIDOMNSRange,
+class nsRange : public nsIDOMRange,
                 public nsStubMutationObserver
 {
 public:
   nsRange()
-  {
-  }
+    : mRoot(nsnull)
+    , mStartOffset(0)
+    , mEndOffset(0)
+    , mIsPositioned(false)
+    , mIsDetached(false)
+    , mMaySpanAnonymousSubtrees(false)
+    , mInSelection(false)
+  {}
   virtual ~nsRange();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsRange, nsIRange)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsRange, nsIDOMRange)
 
   // nsIDOMRange interface
   NS_DECL_NSIDOMRANGE
-
-  // nsIDOMNSRange interface
-  NS_DECL_NSIDOMNSRANGE
   
-  // nsIRange interface
-  virtual nsINode* GetCommonAncestor() const;
-  virtual void Reset();
-  virtual nsresult SetStart(nsINode* aParent, PRInt32 aOffset);
-  virtual nsresult SetEnd(nsINode* aParent, PRInt32 aOffset);
-  virtual nsresult CloneRange(nsIRange** aNewRange) const;
+  nsINode* GetRoot() const
+  {
+    return mRoot;
+  }
+
+  nsINode* GetStartParent() const
+  {
+    return mStartParent;
+  }
+
+  nsINode* GetEndParent() const
+  {
+    return mEndParent;
+  }
+
+  PRInt32 StartOffset() const
+  {
+    return mStartOffset;
+  }
+
+  PRInt32 EndOffset() const
+  {
+    return mEndOffset;
+  }
+  
+  bool IsPositioned() const
+  {
+    return mIsPositioned;
+  }
+
+  bool IsDetached() const
+  {
+    return mIsDetached;
+  }
+  
+  bool Collapsed() const
+  {
+    return mIsPositioned && mStartParent == mEndParent &&
+           mStartOffset == mEndOffset;
+  }
+
+  void SetMaySpanAnonymousSubtrees(bool aMaySpanAnonymousSubtrees)
+  {
+    mMaySpanAnonymousSubtrees = aMaySpanAnonymousSubtrees;
+  }
+  
+  /**
+   * Return true iff this range is part of at least one Selection object
+   * and isn't detached.
+   */
+  bool IsInSelection() const
+  {
+    return mInSelection;
+  }
+
+  /**
+   * Called when the range is added/removed from a Selection.
+   */
+  void SetInSelection(bool aInSelection)
+  {
+    if (mInSelection == aInSelection || mIsDetached) {
+      return;
+    }
+    mInSelection = aInSelection;
+    nsINode* commonAncestor = GetCommonAncestor();
+    NS_ASSERTION(commonAncestor, "unexpected disconnected nodes");
+    if (mInSelection) {
+      RegisterCommonAncestor(commonAncestor);
+    } else {
+      UnregisterCommonAncestor(commonAncestor);
+    }
+  }
+
+  nsINode* GetCommonAncestor() const;
+  void Reset();
+  nsresult SetStart(nsINode* aParent, PRInt32 aOffset);
+  nsresult SetEnd(nsINode* aParent, PRInt32 aOffset);
+  nsresult CloneRange(nsRange** aNewRange) const;
 
   nsresult Set(nsINode* aStartParent, PRInt32 aStartOffset,
                nsINode* aEndParent, PRInt32 aEndOffset)
@@ -116,14 +169,13 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
 
 private:
   // no copy's or assigns
   nsRange(const nsRange&);
   nsRange& operator=(const nsRange&);
 
-  nsINode* IsValidBoundary(nsINode* aNode);
- 
   /**
    * Cut or delete the range's contents.
    *
@@ -131,11 +183,6 @@ private:
    *                  May be null to indicate the caller doesn't want a fragment.
    */
   nsresult CutContents(nsIDOMDocumentFragment** frag);
-
-  /**
-   * Guts of cloning a range.  Addrefs the new range.
-   */
-  nsresult DoCloneRange(nsIRange** aNewRange) const;
 
   static nsresult CloneParentsBetween(nsIDOMNode *aAncestor,
                                       nsIDOMNode *aNode,
@@ -150,27 +197,87 @@ public:
  *  XXX - callers responsibility to ensure node in same doc as range!
  *
  *****************************************************************************/
-  static nsresult CompareNodeToRange(nsINode* aNode, nsIDOMRange* aRange,
-                                     bool *outNodeBefore,
-                                     bool *outNodeAfter);
-  static nsresult CompareNodeToRange(nsINode* aNode, nsIRange* aRange,
+  static nsresult CompareNodeToRange(nsINode* aNode, nsRange* aRange,
                                      bool *outNodeBefore,
                                      bool *outNodeAfter);
 
+  static bool IsNodeSelected(nsINode* aNode, PRUint32 aStartOffset,
+                             PRUint32 aEndOffset);
+
+  typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
 protected:
+  void RegisterCommonAncestor(nsINode* aNode);
+  void UnregisterCommonAncestor(nsINode* aNode);
+  nsINode* IsValidBoundary(nsINode* aNode);
+
+  // CharacterDataChanged set aNotInsertedYet to true to disable an assertion
+  // and suppress re-registering a range common ancestor node since
+  // the new text node of a splitText hasn't been inserted yet.
+  // CharacterDataChanged does the re-registering when needed.
   void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
                   nsINode* aEndN, PRInt32 aEndOffset,
-                  nsINode* aRoot
+                  nsINode* aRoot, bool aNotInsertedYet = false);
+
+  /**
+   * For a range for which IsInSelection() is true, return the common
+   * ancestor for the range.  This method uses the selection bits and
+   * nsGkAtoms::range property on the nodes to quickly find the ancestor.
+   * That is, it's a faster version of GetCommonAncestor that only works
+   * for ranges in a Selection.  The method will assert and the behavior
+   * is undefined if called on a range where IsInSelection() is false.
+   */
+  nsINode* GetRegisteredCommonAncestor();
+
+  struct NS_STACK_CLASS AutoInvalidateSelection
+  {
+    AutoInvalidateSelection(nsRange* aRange) : mRange(aRange)
+    {
 #ifdef DEBUG
-                  // CharacterDataChanged use this to disable an assertion since
-                  // the new text node of a splitText hasn't been inserted yet.
-                  , bool aNotInsertedYet = false
+      mWasInSelection = mRange->IsInSelection();
 #endif
-                  );
+      if (!mRange->IsInSelection() || mIsNested) {
+        return;
+      }
+      mIsNested = true;
+      NS_ASSERTION(!mRange->IsDetached(), "detached range in selection");
+      mCommonAncestor = mRange->GetRegisteredCommonAncestor();
+    }
+    ~AutoInvalidateSelection();
+    nsRange* mRange;
+    nsRefPtr<nsINode> mCommonAncestor;
+#ifdef DEBUG
+    bool mWasInSelection;
+#endif
+    static bool mIsNested;
+  };
+  
+  nsCOMPtr<nsINode> mRoot;
+  nsCOMPtr<nsINode> mStartParent;
+  nsCOMPtr<nsINode> mEndParent;
+  PRInt32 mStartOffset;
+  PRInt32 mEndOffset;
+
+  bool mIsPositioned;
+  bool mIsDetached;
+  bool mMaySpanAnonymousSubtrees;
+  bool mInSelection;
 };
 
-// Make a new nsIDOMRange object
-nsresult NS_NewRange(nsIDOMRange** aInstancePtrResult);
+
+class nsRangeUtils : public nsIRangeUtils
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // nsIRangeUtils interface
+  NS_IMETHOD_(PRInt32) ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                                     nsIDOMNode* aParent2, PRInt32 aOffset2);
+                               
+  NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
+                                nsRange* aRange,
+                                bool *outNodeBefore,
+                                bool *outNodeAfter);
+};
 
 // Make a new nsIRangeUtils object
 nsresult NS_NewRangeUtils(nsIRangeUtils** aInstancePtrResult);

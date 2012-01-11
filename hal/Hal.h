@@ -71,7 +71,7 @@ namespace hal {
 class WindowIdentifier;
 
 extern PRLogModuleInfo *sHalLog;
-#define HAL_LOG(msg) PR_LOG(sHalLog, PR_LOG_DEBUG, msg)
+#define HAL_LOG(msg) PR_LOG(mozilla::hal::sHalLog, PR_LOG_DEBUG, msg)
 
 } // namespace hal
 

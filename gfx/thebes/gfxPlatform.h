@@ -356,6 +356,9 @@ public:
     
     // helper method to add a pref lang to an array, if not already in array
     static void AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPrefLang aAddLang);
+
+    // helper method to indicate if we want to use Azure content drawing
+    static bool UseAzureContentDrawing();
     
     /**
      * Are we going to try color management?
@@ -408,6 +411,8 @@ public:
 
     virtual void FontsPrefsChanged(const char *aPref);
 
+    PRInt32 GetBidiNumeralOption();
+
     /**
      * Returns a 1x1 surface that can be used to create graphics contexts
      * for measuring text etc as if they will be rendered to the screen
@@ -434,6 +439,8 @@ protected:
 #ifdef MOZ_GRAPHITE
     PRInt8  mGraphiteShapingEnabled;
 #endif
+
+    PRInt8  mBidiNumeralOption;
 
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;

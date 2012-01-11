@@ -20,9 +20,10 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   David Hyatt (hyatt@apple.com)
-#   Blake Ross (blaker@netscape.com)
-#   Joe Hewitt (hewitt@netscape.com)
+#   David Hyatt <hyatt@apple.com>
+#   Blake Ross <blaker@netscape.com>
+#   Joe Hewitt <hewitt@netscape.com>
+#   Jared Wein <jwein@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,13 +39,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-const kRowMax = 4;
-
 var gToolboxDocument = null;
 var gToolbox = null;
 var gCurrentDragOverItem = null;
 var gToolboxChanged = false;
 var gToolboxSheet = false;
+var gPaletteBox = null;
 
 function onLoad()
 {
@@ -69,6 +69,7 @@ function InitWithToolbox(aToolbox)
   forEachCustomizableToolbar(function (toolbar) {
     toolbar.setAttribute("customizing", "true");
   });
+  gPaletteBox = document.getElementById("palette-box");
 
   var elts = getRootElements();
   for (let i=0; i < elts.length; i++) {
@@ -278,17 +279,11 @@ function createWrapper(aId, aDocument)
 
 /**
  * Wraps an item that has been cloned from a template and adds
- * it to the end of a row in the palette.
+ * it to the end of the palette.
  */
-function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
+function wrapPaletteItem(aPaletteItem)
 {
   var wrapper = createWrapper(aPaletteItem.id, document);
-
-  wrapper.setAttribute("flex", 1);
-  wrapper.setAttribute("align", "center");
-  wrapper.setAttribute("pack", "center");
-  wrapper.setAttribute("minheight", "0");
-  wrapper.setAttribute("minwidth", "0");
 
   wrapper.appendChild(aPaletteItem);
 
@@ -297,11 +292,7 @@ function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
   // palette due to removal of the command and disabled attributes - JRH
   cleanUpItemForPalette(aPaletteItem, wrapper);
 
-  if (aSpacer)
-    aCurrentRow.insertBefore(wrapper, aSpacer);
-  else
-    aCurrentRow.appendChild(wrapper);
-
+  gPaletteBox.appendChild(wrapper);
 }
 
 /**
@@ -345,35 +336,28 @@ function getCurrentItemIds()
 function buildPalette()
 {
   // Empty the palette first.
-  var paletteBox = document.getElementById("palette-box");
-  while (paletteBox.lastChild)
-    paletteBox.removeChild(paletteBox.lastChild);
-
-  var currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                            "hbox");
-  currentRow.setAttribute("class", "paletteRow");
+  while (gPaletteBox.lastChild)
+    gPaletteBox.removeChild(gPaletteBox.lastChild);
 
   // Add the toolbar separator item.
   var templateNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                               "toolbarseparator");
   templateNode.id = "separator";
-  wrapPaletteItem(templateNode, currentRow, null);
+  wrapPaletteItem(templateNode);
 
   // Add the toolbar spring item.
   templateNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                               "toolbarspring");
   templateNode.id = "spring";
   templateNode.flex = 1;
-  wrapPaletteItem(templateNode, currentRow, null);
+  wrapPaletteItem(templateNode);
 
   // Add the toolbar spacer item.
   templateNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                               "toolbarspacer");
   templateNode.id = "spacer";
   templateNode.flex = 1;
-  wrapPaletteItem(templateNode, currentRow, null);
-
-  var rowSlot = 3;
+  wrapPaletteItem(templateNode);
 
   var currentItems = getCurrentItemIds();
   templateNode = gToolbox.palette.firstChild;
@@ -381,73 +365,10 @@ function buildPalette()
     // Check if the item is already in a toolbar before adding it to the palette.
     if (!(templateNode.id in currentItems)) {
       var paletteItem = document.importNode(templateNode, true);
-
-      if (rowSlot == kRowMax) {
-        // Append the old row.
-        paletteBox.appendChild(currentRow);
-
-        // Make a new row.
-        currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                              "hbox");
-        currentRow.setAttribute("class", "paletteRow");
-        rowSlot = 0;
-      }
-
-      ++rowSlot;
-      wrapPaletteItem(paletteItem, currentRow, null);
+      wrapPaletteItem(paletteItem);
     }
 
     templateNode = templateNode.nextSibling;
-  }
-
-  if (currentRow) {
-    fillRowWithFlex(currentRow);
-    paletteBox.appendChild(currentRow);
-  }
-}
-
-/**
- * Creates a new palette item for a cloned template node and
- * adds it to the last slot in the palette.
- */
-function appendPaletteItem(aItem)
-{
-  var paletteBox = document.getElementById("palette-box");
-  var lastRow = paletteBox.lastChild;
-  var lastSpacer = lastRow.lastChild;
-
-  if (lastSpacer.localName != "spacer") {
-    // The current row is full, so we have to create a new row.
-    lastRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                        "hbox");
-    lastRow.setAttribute("class", "paletteRow");
-    paletteBox.appendChild(lastRow);
-
-    wrapPaletteItem(aItem, lastRow, null);
-
-    fillRowWithFlex(lastRow);
-  } else {
-    // Decrement the flex of the last spacer or remove it entirely.
-    var flex = lastSpacer.getAttribute("flex");
-    if (flex == 1) {
-      lastRow.removeChild(lastSpacer);
-      lastSpacer = null;
-    } else
-      lastSpacer.setAttribute("flex", --flex);
-
-    // Insert the wrapper where the last spacer was.
-    wrapPaletteItem(aItem, lastRow, lastSpacer);
-  }
-}
-
-function fillRowWithFlex(aRow)
-{
-  var remainingFlex = kRowMax - aRow.childNodes.length;
-  if (remainingFlex > 0) {
-    var spacer = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                          "spacer");
-    spacer.setAttribute("flex", remainingFlex);
-    aRow.appendChild(spacer);
   }
 }
 
@@ -471,6 +392,7 @@ function cleanUpItemForPalette(aItem, aWrapper)
     var title = stringBundle.getString(aItem.localName.slice(7) + "Title");
     aWrapper.setAttribute("title", title);
   }
+  aWrapper.setAttribute("tooltiptext", aWrapper.getAttribute("title"));
 
   // Remove attributes that screw up our appearance.
   aItem.removeAttribute("command");
@@ -865,48 +787,10 @@ function onToolbarDrop(aEvent)
     wrapper.flex = newItem.flex;
 
     // Remove the wrapper from the palette.
-    var currentRow = draggedPaletteWrapper.parentNode;
     if (draggedItemId != "separator" &&
         draggedItemId != "spring" &&
         draggedItemId != "spacer")
-    {
-      currentRow.removeChild(draggedPaletteWrapper);
-
-      while (currentRow) {
-        // Pull the first child of the next row up
-        // into this row.
-        var nextRow = currentRow.nextSibling;
-
-        if (!nextRow) {
-          var last = currentRow.lastChild;
-          var first = currentRow.firstChild;
-          if (first == last) {
-            // Kill the row.
-            currentRow.parentNode.removeChild(currentRow);
-             break;
-           }
-
-          if (last.localName == "spacer") {
-            var flex = last.getAttribute("flex");
-            last.setAttribute("flex", ++flex);
-            // Reflow doesn't happen for some reason.  Trigger it with a hide/show. ICK! -dwh
-            last.hidden = true;
-            last.hidden = false;
-            break;
-          } else {
-            // Make a spacer and give it a flex of 1.
-            var spacer = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                  "spacer");
-            spacer.setAttribute("flex", "1");
-            currentRow.appendChild(spacer);
-          }
-          break;
-        }
-
-        currentRow.appendChild(nextRow.firstChild);
-        currentRow = currentRow.nextSibling;
-      }
-    }
+      gPaletteBox.removeChild(draggedPaletteWrapper);
   }
 
   gCurrentDragOverItem = null;
@@ -937,7 +821,7 @@ function onPaletteDrop(aEvent)
         wrapperType != "spacer" &&
         wrapperType != "spring") {
       restoreItemForToolbar(wrapper.firstChild, wrapper);
-      appendPaletteItem(document.importNode(wrapper.firstChild, true));
+      wrapPaletteItem(document.importNode(wrapper.firstChild, true));
       gToolbox.palette.appendChild(wrapper.firstChild);
     }
 

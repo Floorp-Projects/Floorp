@@ -515,6 +515,8 @@
         <xul:menuitem label="&spellNoSuggestions.label;" anonid="spell-no-suggestions" disabled="true"/>
         <xul:menuitem label="&spellAddToDictionary.label;" accesskey="&spellAddToDictionary.accesskey;" anonid="spell-add-to-dictionary"
                       oncommand="this.parentNode.parentNode.spellCheckerUI.addToDictionary();"/>
+        <xul:menuitem label="&spellUndoAddToDictionary.label;" accesskey="&spellUndoAddToDictionary.accesskey;" anonid="spell-undo-add-to-dictionary"
+                      oncommand="this.parentNode.parentNode.spellCheckerUI.undoAddToDictionary();"/>
         <xul:menuseparator anonid="spell-suggestions-separator"/>
         <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
         <xul:menuseparator/>
@@ -580,6 +582,7 @@
               this._setMenuItemVisibility("spell-check-enabled", false);
               this._setMenuItemVisibility("spell-check-separator", false);
               this._setMenuItemVisibility("spell-add-to-dictionary", false);
+              this._setMenuItemVisibility("spell-undo-add-to-dictionary", false);
               this._setMenuItemVisibility("spell-suggestions-separator", false);
               this._setMenuItemVisibility("spell-dictionaries", false);
               return;
@@ -593,6 +596,7 @@
 
             var overMisspelling = spellui.overMisspelling;
             this._setMenuItemVisibility("spell-add-to-dictionary", overMisspelling);
+            this._setMenuItemVisibility("spell-undo-add-to-dictionary", spellui.canUndo());
             this._setMenuItemVisibility("spell-suggestions-separator", overMisspelling);
 
             // suggestion list

@@ -67,6 +67,13 @@ DONT_DROP_OR_WARN;
 #define DOUBLEWORD_ALIGN(p) (p)
 #endif
 
+// Apple's iOS toolchain is lame and does not support .cfi directives.
+#ifdef __APPLE__
+#define CFI(str)
+#else
+#define CFI(str) str
+#endif
+
 static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 {
@@ -164,16 +171,28 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
  *   stack, and undoing the stack (one instruction)!
  *
  */
-__asm__ ("\n\
-        .text							\n\
-        .align 2						\n\
-SharedStub:							\n\
-	stmfd	sp!, {r1, r2, r3}				\n\
-	mov	r2, sp						\n\
-	str	lr, [sp, #-4]!					\n\
-	mov	r1, ip						\n\
-	bl	_PrepareAndDispatch	                        \n\
-	ldr	pc, [sp], #16");
+__asm__ ("\n"
+         ".text\n"
+         ".align 2\n"
+         "SharedStub:\n"
+         ".fnstart\n"
+         CFI(".cfi_startproc\n")
+         "stmfd	sp!, {r1, r2, r3}\n"
+         ".save	{r1, r2, r3}\n"
+         CFI(".cfi_def_cfa_offset 12\n")
+         CFI(".cfi_offset r3, -4\n")
+         CFI(".cfi_offset r2, -8\n")
+         CFI(".cfi_offset r1, -12\n")
+         "mov	r2, sp\n"
+         "str	lr, [sp, #-4]!\n"
+         ".save	{lr}\n"
+         CFI(".cfi_def_cfa_offset 16\n")
+         CFI(".cfi_offset lr, -16\n")
+         "mov	r1, ip\n"
+         "bl	_PrepareAndDispatch\n"
+         "ldr	pc, [sp], #16\n"
+         CFI(".cfi_endproc\n")
+         ".fnend");
 
 /*
  * Create sets of stubs to call the SharedStub.

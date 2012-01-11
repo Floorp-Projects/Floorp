@@ -38,7 +38,7 @@ function setOrRestoreTabFocus(newValue) {
 
 function snapShot(element) {
   var rect = element.getBoundingClientRect();
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserRead');
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
   canvas.setAttribute("width", rect.width + 12);
   canvas.setAttribute("height", rect.height + 12);

@@ -41,6 +41,7 @@
 #include "mozilla/dom/sms/PSms.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsString.h"
+#include "jspubtd.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,6 +55,14 @@ public:
 
   SmsMessage(const SmsMessageData& aData);
 
+  static nsresult Create(PRInt32 aId,
+                         const nsAString& aDelivery,
+                         const nsAString& aSender,
+                         const nsAString& aReceiver,
+                         const nsAString& aBody,
+                         const JS::Value& aTimestamp,
+                         JSContext* aCx,
+                         nsIDOMMozSmsMessage** aMessage);
   const SmsMessageData& GetData() const;
 
 private:

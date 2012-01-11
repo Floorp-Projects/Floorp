@@ -176,6 +176,8 @@ lround-c99-only.patch: Only use lround in C99 programs.
 
 unicode-printing.patch: Print as unicode (bug 454532)
 
+quartz-mark-dirty.patch: Add a quartz implementation of mark_dirty_rectangle (bug 715704)
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
@@ -185,6 +187,8 @@ pixman-rename-and-endian.patch: include cairo-platform.h for renaming of externa
 NOTE: we previously supported ARM assembler on MSVC, this has been removed because of the maintenance burden
 
 pixman-export.patch: use cairo_public for PIXMAN_EXPORT to make sure pixman symbols are not exported in libxul
+
+bad-memset.patch: Fix third argument in memcmp call in pixman-image.c
 
 ==== disable printing patch ====
 

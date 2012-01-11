@@ -38,7 +38,9 @@
 #include "mozilla/dom/ContentChild.h"
 #include "SmsIPCService.h"
 #include "nsXULAppAPI.h"
+#include "jsapi.h"
 #include "mozilla/dom/sms/SmsChild.h"
+#include "mozilla/dom/sms/SmsMessage.h"
 
 namespace mozilla {
 namespace dom {
@@ -80,6 +82,20 @@ SmsIPCService::Send(const nsAString& aNumber, const nsAString& aMessage)
   GetSmsChild()->SendSendMessage(nsString(aNumber), nsString(aMessage));
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsIPCService::CreateSmsMessage(PRInt32 aId,
+                                const nsAString& aDelivery,
+                                const nsAString& aSender,
+                                const nsAString& aReceiver,
+                                const nsAString& aBody,
+                                const jsval& aTimestamp,
+                                JSContext* aCx,
+                                nsIDOMMozSmsMessage** aMessage)
+{
+  return SmsMessage::Create(
+    aId, aDelivery, aSender, aReceiver, aBody, aTimestamp, aCx, aMessage);
 }
 
 } // namespace sms

@@ -38,37 +38,40 @@
 #ifndef nsTextEditUtils_h__
 #define nsTextEditUtils_h__
 
-#include "prtypes.h"  // for bool
 #include "nsError.h"  // for nsresult
-#include "nsString.h" // for nsAString
+
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 class nsIDOMNode;
-class nsIEditor;
 class nsPlaintextEditor;
 
 class nsTextEditUtils
 {
 public:
   // from nsTextEditRules:
-  static bool IsBody(nsIDOMNode *aNode);
-  static bool IsBreak(nsIDOMNode *aNode);
-  static bool IsMozBR(nsIDOMNode *aNode);
-  static bool HasMozAttr(nsIDOMNode *aNode);
+  static bool IsBody(nsIDOMNode* aNode);
+  static bool IsBreak(nsIDOMNode* aNode);
+  static bool IsMozBR(nsIDOMNode* aNode);
+  static bool IsMozBR(mozilla::dom::Element* aNode);
+  static bool HasMozAttr(nsIDOMNode* aNode);
 };
 
 /***************************************************************************
  * stack based helper class for detecting end of editor initialization, in
- * order to triger "end of init" initialization of the edit rules.
+ * order to trigger "end of init" initialization of the edit rules.
  */
 class nsAutoEditInitRulesTrigger
 {
-  private:
-    nsPlaintextEditor *mEd;
-    nsresult &mRes;
-  public:
-  nsAutoEditInitRulesTrigger( nsPlaintextEditor *aEd, nsresult &aRes);
+private:
+  nsPlaintextEditor* mEd;
+  nsresult& mRes;
+public:
+  nsAutoEditInitRulesTrigger(nsPlaintextEditor* aEd, nsresult& aRes);
   ~nsAutoEditInitRulesTrigger();
 };
 
-
 #endif /* nsTextEditUtils_h__ */
-

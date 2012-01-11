@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=622245
+-->
+<head>
+  <title>Test for untrusted keypress events</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=622245">Mozilla Bug 622245</a>
+<p id="display"></p>
+<div id="content">
+<input id="i"><br>
+<textarea id="t"></textarea><br>
+<div id="d" contenteditable style="min-height: 1em;"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 674770 **/
+SimpleTest.waitForExplicitFinish();
+
+var input = document.getElementById("i");
+var textarea = document.getElementById("t");
+var div = document.getElementById("d");
+
+addLoadEvent(function() {
+  input.focus();
+
+  SimpleTest.executeSoon(function() {
+    input.addEventListener("keypress",
+      function(aEvent) {
+        input.removeEventListener("keypress", arguments.callee, false);
+        is(aEvent.target, input,
+           "The keypress event target isn't the input element");
+
+        SimpleTest.executeSoon(function() {
+          is(input.value, "",
+             "Did keypress event cause modifying the input element?");
+          textarea.focus();
+          SimpleTest.executeSoon(runTextareaTest);
+        });
+      }, false);
+    var keypress = document.createEvent("KeyboardEvent");
+    keypress.initKeyEvent("keypress", true, true, document.defaultView,
+                          false, false, false, false, 0, "a".charCodeAt(0));
+    input.dispatchEvent(keypress);
+  });
+});
+
+function runTextareaTest()
+{
+  textarea.addEventListener("keypress",
+    function(aEvent) {
+      textarea.removeEventListener("keypress", arguments.callee, false);
+      is(aEvent.target, textarea,
+         "The keypress event target isn't the textarea element");
+
+      SimpleTest.executeSoon(function() {
+        is(textarea.value, "",
+           "Did keypress event cause modifying the textarea element?");
+        div.focus();
+        SimpleTest.executeSoon(runContentediableTest);
+      });
+    }, false);
+  var keypress = document.createEvent("KeyboardEvent");
+  keypress.initKeyEvent("keypress", true, true, document.defaultView,
+                        false, false, false, false, 0, "b".charCodeAt(0));
+  textarea.dispatchEvent(keypress);
+}
+
+function runContentediableTest()
+{
+  div.addEventListener("keypress",
+    function(aEvent) {
+      div.removeEventListener("keypress", arguments.callee, false);
+      is(aEvent.target, div,
+         "The keypress event target isn't the div element");
+
+      SimpleTest.executeSoon(function() {
+        is(div.innerHTML, "",
+           "Did keypress event cause modifying the div element?");
+
+        SimpleTest.finish();
+      });
+    }, false);
+  var keypress = document.createEvent("KeyboardEvent");
+  keypress.initKeyEvent("keypress", true, true, document.defaultView,
+                        false, false, false, false, 0, "c".charCodeAt(0));
+  div.dispatchEvent(keypress);
+}
+
+</script>
+</pre>
+</body>
+</html>

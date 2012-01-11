@@ -1,0 +1,6 @@
+res/layout/sync_account.xml
+res/layout/sync_setup.xml
+res/layout/sync_setup_failure.xml
+res/layout/sync_setup_jpake_waiting.xml
+res/layout/sync_setup_success.xml
+res/layout/sync_stub.xml

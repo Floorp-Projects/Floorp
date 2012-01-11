@@ -43,6 +43,7 @@
 /* WARNING: This file is intended to be included from C or C++ files. */
 
 #include "nscore.h"
+#include <mozilla/StdInt.h>
 
 PR_BEGIN_EXTERN_C
 
@@ -58,6 +59,10 @@ typedef void
  *                     the first callback will be for the caller of
  *                     NS_StackWalk.
  * @param aClosure     Caller-supplied data passed through to aCallback.
+ * @param aThread      The thread for which the stack is to be retrieved.
+ *                     Passing null causes us to walk the stack of the
+ *                     current thread. On Windows, this is a thread HANDLE.
+ *                     It is currently not supported on any other platform.
  *
  * Returns NS_ERROR_NOT_IMPLEMENTED on platforms where it is
  * unimplemented.
@@ -70,7 +75,7 @@ typedef void
  */
 XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure);
+             void *aClosure, uintptr_t aThread);
 
 typedef struct {
     /*

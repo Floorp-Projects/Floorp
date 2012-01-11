@@ -1,5 +1,5 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mochitest Reusable Mock File Picker.
+ * The Original Code is Reusable Mock File Picker.
  *
  * The Initial Developer of the Original Code is
  * Geoff Lankow <geoff@darktrojan.net>.
@@ -19,6 +19,18 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -30,15 +42,15 @@ const Cm = Components.manager;
 const Cu = Components.utils;
 
 const CONTRACT_ID = "@mozilla.org/filepicker;1";
-const CLASS_ID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-
-var MockFilePickerFactory = {
+var oldClassID, oldFactory;
+var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
+var newFactory = {
   createInstance: function(aOuter, aIID) {
     if (aOuter)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -66,6 +78,16 @@ var MockFilePicker = {
   filterAudio: Ci.nsIFilePicker.filterAudio,
   filterVideo: Ci.nsIFilePicker.filterVideo,
 
+  init: function() {
+    this.reset();
+    if (!registrar.isCIDRegistered(newClassID)) {
+      oldClassID = registrar.contractIDToCID(CONTRACT_ID);
+      oldFactory = Cm.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
+      registrar.unregisterFactory(oldClassID, oldFactory);
+      registrar.registerFactory(newClassID, "", CONTRACT_ID, newFactory);
+    }
+  },
+  
   reset: function() {
     this.appendFilterCallback = null;
     this.appendFiltersCallback = null;
@@ -76,8 +98,14 @@ var MockFilePicker = {
     this.returnValue = null;
     this.showCallback = null;
     this.shown = false;
-    if (!registrar.isCIDRegistered(CLASS_ID))
-      registrar.registerFactory(CLASS_ID, "", CONTRACT_ID, MockFilePickerFactory);
+  },
+  
+  cleanup: function() {
+    this.reset();
+    if (oldFactory) {
+      registrar.unregisterFactory(newClassID, newFactory);
+      registrar.registerFactory(oldClassID, "", CONTRACT_ID, oldFactory);
+    }
   },
 
   useAnyFile: function() {
@@ -131,8 +159,11 @@ MockFilePickerInstance.prototype = {
   show: function() {
     MockFilePicker.displayDirectory = this.displayDirectory;
     MockFilePicker.shown = true;
-    if (typeof MockFilePicker.showCallback == "function")
-      MockFilePicker.showCallback(this);
+    if (typeof MockFilePicker.showCallback == "function") {
+      var returnValue = MockFilePicker.showCallback(this);
+      if (typeof returnValue != "undefined")
+        return returnValue;
+    }
     return MockFilePicker.returnValue;
   }
 };

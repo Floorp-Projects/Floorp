@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Georg Maaﬂ <georg@bioshop.de>
+ * Contributor(s): Georg Maa√ü <georg@bioshop.de>
  *                 Bob Clary <bob@bclary.com>
  *
  * Alternatively, the contents of this file may be used under the terms of

@@ -49,9 +49,13 @@
  * a call to end().  If begin() returns an error none of the other
  * functions will be called.
  */
-[scriptable, uuid(3f3901bb-6a1c-4998-b32e-6f10a51db470)]
+[scriptable, uuid(35a3a9b0-a120-4bf7-9739-46027fe96212)]
 interface nsICycleCollectorListener : nsISupports
 {
+    nsICycleCollectorListener allTraces();
+    // false if allTraces() has not been called.
+    readonly attribute boolean wantAllTraces;
+
     void begin();
     void noteRefCountedObject (in unsigned long long aAddress,
 			       in unsigned long aRefCount,
