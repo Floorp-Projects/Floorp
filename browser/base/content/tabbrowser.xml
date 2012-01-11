@@ -151,9 +151,6 @@
         false
 #endif
       </field>
-      <field name="mAddProgressListenerWasCalled">
-        false
-      </field>
       <field name="_browsers">
         null
       </field>
@@ -1912,11 +1909,6 @@
                                            "608628.");
             }
 
-            if (!this.mAddProgressListenerWasCalled) {
-              this.mAddProgressListenerWasCalled = true;
-              this.tabContainer.updateVisibility();
-            }
-
             this.mProgressListeners.push(aListener);
           ]]>
         </body>
@@ -2770,8 +2762,8 @@
           Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
 
-          if (window.TabsInTitlebar)
-            TabsInTitlebar.allowedBy("tabs-visible", this.visible);
+          this.updateVisibility();
+          this._propagateVisibility();
         ]]>
       </constructor>
 
@@ -2839,16 +2831,29 @@
 
           this._container.collapsed = !val;
 
-          document.getElementById("menu_closeWindow").hidden = !val;
-          document.getElementById("menu_close").setAttribute("label",
-            this.tabbrowser.mStringBundle.getString(val ? "tabs.closeTab" : "tabs.close"));
-
-          if (window.TabsInTitlebar)
-            TabsInTitlebar.allowedBy("tabs-visible", val);
+          this._propagateVisibility();
 
           return val;
         ]]></setter>
       </property>
+
+      <method name="_propagateVisibility">
+        <body><![CDATA[
+          let visible = this.visible;
+
+          document.getElementById("menu_closeWindow").hidden = !visible;
+          document.getElementById("menu_close").setAttribute("label",
+            this.tabbrowser.mStringBundle.getString(visible ? "tabs.closeTab" : "tabs.close"));
+
+          goSetCommandEnabled("cmd_ToggleTabsOnTop", visible);
+
+          if (window.TabsOnTop)
+            TabsOnTop.syncUI();
+
+          if (window.TabsInTitlebar)
+            TabsInTitlebar.allowedBy("tabs-visible", visible);
+        ]]></body>
+      </method>
 
       <method name="updateVisibility">
         <body><![CDATA[

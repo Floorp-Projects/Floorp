@@ -76,10 +76,10 @@ RUN_MOCHITEST_REMOTE = \
 
 RUN_MOCHITEST_ROBOTIUM = \
   rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runtestsremote.py --robocop ../../../build/mobile/robocop \
+  $(PYTHON) _tests/testing/mochitest/runtestsremote.py --robocop-path build/mobile/robocop \
     --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=adb \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+    --robocop build/mobile/robocop/robocop.ini $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR

@@ -73,7 +73,7 @@ ssh -2 ${SYMBOL_SERVER_PORT:+-p $SYMBOL_SERVER_PORT} \
   "set -e;
    umask 0022;
    cd ${SYMBOL_SERVER_PATH};
-   unzip -o '$archive';
+   unzip -n '$archive';
    rm -v '$archive';"
 if test -n "$POST_SYMBOL_UPLOAD_CMD"; then
   echo "${POST_SYMBOL_UPLOAD_CMD} \"${SYMBOL_SERVER_PATH}/${SYMBOL_INDEX_NAME}\""

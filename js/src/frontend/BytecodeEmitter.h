@@ -491,66 +491,6 @@ GenerateBlockId(TreeContext *tc, uint32_t &blockid);
 
 } /* namespace frontend */
 
-struct JumpTarget;
-
-/*
- * Span-dependent instructions are jumps whose span (from the jump bytecode to
- * the jump target) may require 2 or 4 bytes of immediate operand.
- */
-struct SpanDep {
-    ptrdiff_t       top;        /* offset of first bytecode in an opcode */
-    ptrdiff_t       offset;     /* offset - 1 within opcode of jump operand */
-    ptrdiff_t       before;     /* original offset - 1 of jump operand */
-    JumpTarget      *target;    /* tagged target pointer or backpatch delta */
-};
-
-/*
- * Jump targets are stored in an AVL tree, for O(log(n)) lookup with targets
- * sorted by offset from left to right, so that targets after a span-dependent
- * instruction whose jump offset operand must be extended can be found quickly
- * and adjusted upward (toward higher offsets).
- */
-struct JumpTarget {
-    ptrdiff_t       offset;     /* offset of span-dependent jump target */
-    int             balance;    /* AVL tree balance number */
-    JumpTarget      *kids[2];   /* left and right AVL tree child pointers */
-};
-
-#define JT_LEFT                 0
-#define JT_RIGHT                1
-#define JT_OTHER_DIR(dir)       (1 - (dir))
-#define JT_IMBALANCE(dir)       (((dir) << 1) - 1)
-#define JT_DIR(imbalance)       (((imbalance) + 1) >> 1)
-
-/*
- * Backpatch deltas are encoded in js::SpanDep::target if JT_TAG_BIT is clear,
- * so we can maintain backpatch chains when using span dependency records to
- * hold jump offsets that overflow 16 bits.
- */
-#define JT_TAG_BIT              ((jsword) 1)
-#define JT_UNTAG_SHIFT          1
-#define JT_SET_TAG(jt)          ((JumpTarget *)((jsword)(jt) | JT_TAG_BIT))
-#define JT_CLR_TAG(jt)          ((JumpTarget *)((jsword)(jt) & ~JT_TAG_BIT))
-#define JT_HAS_TAG(jt)          ((jsword)(jt) & JT_TAG_BIT)
-
-#define BITS_PER_PTRDIFF        (sizeof(ptrdiff_t) * JS_BITS_PER_BYTE)
-#define BITS_PER_BPDELTA        (BITS_PER_PTRDIFF - 1 - JT_UNTAG_SHIFT)
-#define BPDELTA_MAX             (((ptrdiff_t)1 << BITS_PER_BPDELTA) - 1)
-#define BPDELTA_TO_JT(bp)       ((JumpTarget *)((bp) << JT_UNTAG_SHIFT))
-#define JT_TO_BPDELTA(jt)       ((ptrdiff_t)((jsword)(jt) >> JT_UNTAG_SHIFT))
-
-#define SD_SET_TARGET(sd,jt)    ((sd)->target = JT_SET_TAG(jt))
-#define SD_GET_TARGET(sd)       (JS_ASSERT(JT_HAS_TAG((sd)->target)),         \
-                                 JT_CLR_TAG((sd)->target))
-#define SD_SET_BPDELTA(sd,bp)   ((sd)->target = BPDELTA_TO_JT(bp))
-#define SD_GET_BPDELTA(sd)      (JS_ASSERT(!JT_HAS_TAG((sd)->target)),        \
-                                 JT_TO_BPDELTA((sd)->target))
-
-/* Avoid asserting twice by expanding SD_GET_TARGET in the "then" clause. */
-#define SD_SPAN(sd,pivot)       (SD_GET_TARGET(sd)                            \
-                                 ? JT_CLR_TAG((sd)->target)->offset - (pivot) \
-                                 : 0)
-
 struct TryNode {
     JSTryNote       note;
     TryNode       *prev;
@@ -628,14 +568,6 @@ struct BytecodeEmitter : public TreeContext
 
     uintN           ntrynotes;      /* number of allocated so far try notes */
     TryNode         *lastTryNode;   /* the last allocated try node */
-
-    SpanDep         *spanDeps;      /* span dependent instruction records */
-    JumpTarget      *jumpTargets;   /* AVL tree of jump target offsets */
-    JumpTarget      *jtFreeList;    /* JT_LEFT-linked list of free structs */
-    uintN           numSpanDeps;    /* number of span dependencies */
-    uintN           numJumpTargets; /* number of jump targets */
-    ptrdiff_t       spanDepTodo;    /* offset from main.base of potentially
-                                       unoptimized spandeps */
 
     uintN           arrayCompDepth; /* stack depth of array in comprehension */
 
@@ -745,6 +677,8 @@ struct BytecodeEmitter : public TreeContext
         return true;
     }
 
+    bool needsImplicitThis();
+
     TokenStream *tokenStream() { return &parser->tokenStream; }
 
     jsbytecode *base() const { return current->base; }
@@ -798,29 +732,6 @@ Emit3(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1, jsbytecode o
  */
 ptrdiff_t
 EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
-
-/*
- * Unsafe macro to call SetJumpOffset and return false if it does.
- */
-#define CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx,bce,pc,off,BAD_EXIT)              \
-    JS_BEGIN_MACRO                                                            \
-        if (!SetJumpOffset(cx, bce, pc, off)) {                               \
-            BAD_EXIT;                                                         \
-        }                                                                     \
-    JS_END_MACRO
-
-#define CHECK_AND_SET_JUMP_OFFSET(cx,bce,pc,off)                              \
-    CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx,bce,pc,off,return JS_FALSE)
-
-#define CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx,bce,off,BAD_EXIT)              \
-    CHECK_AND_SET_JUMP_OFFSET_CUSTOM(cx, bce, (bce)->code(off),               \
-                                     bce->offset() - (off), BAD_EXIT)
-
-#define CHECK_AND_SET_JUMP_OFFSET_AT(cx,bce,off)                              \
-    CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx, bce, off, return JS_FALSE)
-
-JSBool
-SetJumpOffset(JSContext *cx, BytecodeEmitter *bce, jsbytecode *pc, ptrdiff_t off);
 
 /*
  * Push the C-stack-allocated struct at stmt onto the stmtInfo stack.
@@ -919,10 +830,8 @@ EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
  * Note on adding new source notes: every pair of bytecodes (A, B) where A and
  * B have disjoint sets of source notes that could apply to each bytecode may
  * reuse the same note type value for two notes (snA, snB) that have the same
- * arity, offsetBias, and isSpanDep initializers in JSSrcNoteSpec. This is
- * why SRC_IF and SRC_INITPROP have the same value below. For bad historical
- * reasons, some bytecodes below that could be overlayed have not been, but
- * before using SRC_EXTENDED, consider compressing the existing note types.
+ * arity in JSSrcNoteSpec. This is why SRC_IF and SRC_INITPROP have the same
+ * value below.
  *
  * Don't forget to update JSXDR_BYTECODE_VERSION in jsxdrapi.h for all such
  * incompatible source note or other bytecode changes.
@@ -974,18 +883,14 @@ enum SrcNoteType {
     SRC_SWITCHBREAK = 18,       /* JSOP_GOTO is a break in a switch */
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
     SRC_CATCH       = 20,       /* catch block has guard */
-    SRC_EXTENDED    = 21,       /* extended source note, 32-159, in next byte */
+                                /* 21 is unused */
     SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
     SRC_SETLINE     = 23,       /* a file-absolute source line number note */
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
 };
 
 /*
- * Constants for the SRC_DECL source note. Note that span-dependent bytecode
- * selection means that any SRC_DECL offset greater than SRC_DECL_LET may need
- * to be adjusted, but these "offsets" are too small to span a span-dependent
- * instruction, so can be used to denote distinct declaration syntaxes to the
- * decompiler.
+ * Constants for the SRC_DECL source note.
  *
  * NB: the var_prefix array in jsopcode.c depends on these dense indexes from
  * SRC_DECL_VAR through SRC_DECL_LET.
@@ -1135,9 +1040,6 @@ inline bool LetDataToGroupAssign(ptrdiff_t w)
 struct JSSrcNoteSpec {
     const char      *name;      /* name for disassembly/debugging output */
     int8_t          arity;      /* number of offset operands */
-    uint8_t         offsetBias; /* bias of offset(s) from annotated pc */
-    int8_t          isSpanDep;  /* 1 or -1 if offsets could span extended ops,
-                                   0 otherwise; sign tells span direction */
 };
 
 extern JS_FRIEND_DATA(JSSrcNoteSpec)  js_SrcNoteSpec[];

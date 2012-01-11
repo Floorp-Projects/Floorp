@@ -106,11 +106,14 @@ template <class Type> class DefaultMarkPolicy;
 // provides default types for WeakMap's TracePolicy template parameter.
 template <class Key, class Value> class DefaultTracePolicy;
 
+// The value for the next pointer for maps not in the map list.
+static WeakMapBase * const WeakMapNotInList = reinterpret_cast<WeakMapBase *>(1);
+
 // Common base class for all WeakMap specializations. The collector uses this to call
 // their markIteratively and sweep methods.
 class WeakMapBase {
   public:
-    WeakMapBase(JSObject *memOf) : memberOf(memOf), next(NULL) { }
+    WeakMapBase(JSObject *memOf) : memberOf(memOf), next(WeakMapNotInList) { }
     virtual ~WeakMapBase() { }
 
     void trace(JSTracer *tracer) {
@@ -120,9 +123,14 @@ class WeakMapBase {
             // known-live WeakMaps to be scanned in the iterative marking phase, by
             // markAllIteratively.
             JS_ASSERT(!tracer->eagerlyTraceWeakMaps);
-            JSRuntime *rt = tracer->context->runtime;
-            next = rt->gcWeakMapList;
-            rt->gcWeakMapList = this;
+
+            // Add ourselves to the list if we are not already in the list. We can already
+            // be in the list if the weak map is marked more than once due delayed marking.
+            if (next == WeakMapNotInList) {
+                JSRuntime *rt = tracer->context->runtime;
+                next = rt->gcWeakMapList;
+                rt->gcWeakMapList = this;
+            }
         } else {
             // If we're not actually doing garbage collection, the keys won't be marked
             // nicely as needed by the true ephemeral marking algorithm --- custom tracers
@@ -148,6 +156,9 @@ class WeakMapBase {
     // Trace all delayed weak map bindings. Used by the cycle collector.
     static void traceAllMappings(WeakMapTracer *tracer);
 
+    // Remove everything from the live weak map list.
+    static void resetWeakMapList(JSRuntime *rt);
+
   protected:
     // Instance member functions called by the above. Instantiations of WeakMap override
     // these with definitions appropriate for their Key and Value types.
@@ -161,7 +172,10 @@ class WeakMapBase {
 
   private:
     // Link in a list of WeakMaps to mark iteratively and sweep in this garbage
-    // collection, headed by JSRuntime::gcWeakMapList.
+    // collection, headed by JSRuntime::gcWeakMapList. The last element of the list
+    // has NULL as its next. Maps not in the list have WeakMapNotInList as their
+    // next.  We must distinguish these cases to avoid creating infinite lists
+    // when a weak map gets traced twice due to delayed marking.
     WeakMapBase *next;
 };
 

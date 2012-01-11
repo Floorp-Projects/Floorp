@@ -2129,22 +2129,16 @@ class FlowGraphSummary : public Vector<size_t> {
 
             if (js_CodeSpec[op].type() == JOF_JUMP) {
                 addEdge(lineno, r.frontOffset() + GET_JUMP_OFFSET(r.frontPC()));
-            } else if (js_CodeSpec[op].type() == JOF_JUMPX) {
-                addEdge(lineno, r.frontOffset() + GET_JUMPX_OFFSET(r.frontPC()));
-            } else if (op == JSOP_TABLESWITCH || op == JSOP_TABLESWITCHX ||
-                       op == JSOP_LOOKUPSWITCH || op == JSOP_LOOKUPSWITCHX) {
-                bool table = op == JSOP_TABLESWITCH || op == JSOP_TABLESWITCHX;
-                bool big = op == JSOP_TABLESWITCHX || op == JSOP_LOOKUPSWITCHX;
-
+            } else if (op == JSOP_TABLESWITCH || op == JSOP_LOOKUPSWITCH) {
                 jsbytecode *pc = r.frontPC();
                 size_t offset = r.frontOffset();
-                ptrdiff_t step = big ? JUMPX_OFFSET_LEN : JUMP_OFFSET_LEN;
-                size_t defaultOffset = offset + (big ? GET_JUMPX_OFFSET(pc) : GET_JUMP_OFFSET(pc));
+                ptrdiff_t step = JUMP_OFFSET_LEN;
+                size_t defaultOffset = offset + GET_JUMP_OFFSET(pc);
                 pc += step;
                 addEdge(lineno, defaultOffset);
 
                 jsint ncases;
-                if (table) {
+                if (op == JSOP_TABLESWITCH) {
                     jsint low = GET_JUMP_OFFSET(pc);
                     pc += JUMP_OFFSET_LEN;
                     ncases = GET_JUMP_OFFSET(pc) - low + 1;
@@ -2156,9 +2150,9 @@ class FlowGraphSummary : public Vector<size_t> {
                 }
 
                 for (jsint i = 0; i < ncases; i++) {
-                    if (!table)
+                    if (op == JSOP_LOOKUPSWITCH)
                         pc += INDEX_LEN;
-                    size_t target = offset + (big ? GET_JUMPX_OFFSET(pc) : GET_JUMP_OFFSET(pc));
+                    size_t target = offset + GET_JUMP_OFFSET(pc);
                     addEdge(lineno, target);
                     pc += step;
                 }
@@ -3364,17 +3358,14 @@ static JSBool
 DebuggerObject_deleteProperty(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "deleteProperty", args, dbg, obj);
-    Value arg = argc > 0 ? args[0] : UndefinedValue();
-    jsid id;
-    if (!ValueToId(cx, arg, &id))
-        return false;
+    Value nameArg = argc > 0 ? args[0] : UndefinedValue();
 
     AutoCompartment ac(cx, obj);
-    if (!ac.enter() || !cx->compartment->wrapId(cx, &id))
+    if (!ac.enter() || !cx->compartment->wrap(cx, &nameArg))
         return false;
 
     ErrorCopier ec(ac, dbg->toJSObject());
-    return obj->deleteGeneric(cx, id, &args.rval(), false);
+    return obj->deleteByValue(cx, nameArg, &args.rval(), false);
 }
 
 enum SealHelperOp { Seal, Freeze, PreventExtensions };

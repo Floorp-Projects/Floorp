@@ -242,6 +242,14 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
     funbox->tcflags = (TCF_IN_FUNCTION | (tc->flags & (TCF_COMPILE_N_GO | TCF_STRICT_MODE_CODE)));
     if (tc->innermostWith)
         funbox->tcflags |= TCF_IN_WITH;
+    if (!tc->inFunction()) {
+        JSObject *scope = tc->scopeChain();
+        while (scope) {
+            if (scope->isWith())
+                funbox->tcflags |= TCF_IN_WITH;
+            scope = scope->enclosingScope();
+        }
+    }
     return funbox;
 }
 
@@ -711,7 +719,7 @@ ForgetUse(ParseNode *pn)
 static ParseNode *
 MakeAssignment(ParseNode *pn, ParseNode *rhs, TreeContext *tc)
 {
-    ParseNode *lhs = tc->parser->new_<ParseNode>(*pn);
+    ParseNode *lhs = tc->parser->cloneNode(*pn);
     if (!lhs)
         return NULL;
 
@@ -6948,9 +6956,20 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                             return NULL;
                     } else if (tt == TOK_STRING) {
                         atom = tokenStream.currentToken().atom();
-                        pn3 = NameNode::create(PNK_STRING, atom, tc);
-                        if (!pn3)
-                            return NULL;
+
+                        uint32_t index;
+                        if (atom->isIndex(&index)) {
+                            pn3 = NullaryNode::create(PNK_NUMBER, tc);
+                            if (!pn3)
+                                return NULL;
+                            pn3->pn_dval = index;
+                            if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                                return NULL;
+                        } else {
+                            pn3 = NameNode::create(PNK_STRING, atom, tc);
+                            if (!pn3)
+                                return NULL;
+                        }
                     } else if (tt == TOK_NUMBER) {
                         pn3 = NullaryNode::create(PNK_NUMBER, tc);
                         if (!pn3)

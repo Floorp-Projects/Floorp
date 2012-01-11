@@ -168,7 +168,7 @@ public class AboutHomeContent extends ScrollView {
                     activity.stopManagingCursor(mCursor);
 
                 ContentResolver resolver = GeckoApp.mAppContext.getContentResolver();
-                mCursor = BrowserDB.filter(resolver, "", NUMBER_OF_TOP_SITES_PORTRAIT);
+                mCursor = BrowserDB.filter(resolver, "", NUMBER_OF_TOP_SITES_PORTRAIT, "about:%");
                 activity.startManagingCursor(mCursor);
 
                 mTopSitesAdapter = new TopSitesCursorAdapter(activity,

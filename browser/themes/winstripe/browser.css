@@ -165,14 +165,14 @@
   margin: 0 0 2px;
 }
 
-@media all and (-moz-windows-classic) {
+@media (-moz-windows-classic) {
   #appmenu-button {
     margin-bottom: 1px;
   }
 }
 
 %ifndef WINSTRIPE_AERO
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   #main-window[sizemode="normal"] #appmenu-button {
     margin-bottom: 5px;
   }
@@ -315,7 +315,7 @@
   -moz-border-end: 1px solid ThreeDShadow;
 }
 
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   #appmenu-popup {
     -moz-appearance: none;
     background: white;
@@ -483,7 +483,7 @@
   -moz-appearance: -moz-window-titlebar-maximized;
 }
 
-@media all and (-moz-windows-classic) {
+@media (-moz-windows-classic) {
   #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
     margin-top: 4px;
   }
@@ -1214,7 +1214,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-padding-end: 2px;
 }
 
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   #urlbar,
   .searchbar-textbox {
     @navbarTextboxCustomBorder@
@@ -1712,7 +1712,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   margin: 16px 0 -2px;
 }
 
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   .panel-promo-box {
     margin: 8px -16px -16px;
     padding: 8px 16px;
@@ -1795,7 +1795,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 %ifndef WINSTRIPE_AERO
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   #main-window[sizemode=normal] #TabsToolbar {
     padding-left: 2px;
     padding-right: 2px;
@@ -1827,7 +1827,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 %ifndef WINSTRIPE_AERO
-@media all and (-moz-windows-theme: luna-blue) {
+@media (-moz-windows-theme: luna-blue) {
   .tabbrowser-tab,
   .tabs-newtab-button {
     background-image: @toolbarShadowOnTab@,
@@ -1956,7 +1956,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* Tab scrollbox arrow, tabstrip new tab and all-tabs buttons */
 
-@media all and (-moz-touch-enabled) {
+@media (-moz-touch-enabled) {
   .tabbrowser-arrowscrollbox > .scrollbutton-up,
   .tabbrowser-arrowscrollbox > .scrollbutton-down,
   #TabsToolbar .toolbarbutton-1 {

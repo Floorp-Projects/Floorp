@@ -83,12 +83,12 @@ DIRS += \
   workers \
   $(NULL)
 
-ifdef MOZ_B2G_RIL #{
+ifdef MOZ_B2G_RIL
 DIRS += \
   telephony \
   wifi \
   $(NULL)
-endif #}
+endif
 
 ifdef ENABLE_TESTS
 DIRS += tests

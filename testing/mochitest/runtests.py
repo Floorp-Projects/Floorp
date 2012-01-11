@@ -798,11 +798,12 @@ toolbar#nav-bar {
       self.automation.log.warning("TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
       return None
 
-    # Support Firefox (browser) and SeaMonkey (navigator).
+    # Support Firefox (browser), B2G (shell) and SeaMonkey (navigator).
     chrome = ""
     if options.browserChrome or options.chrome or options.a11y:
       chrome += """
 overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul
+overlay chrome://browser/content/shell.xul chrome://mochikit/content/browser-test-overlay.xul
 overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/browser-test-overlay.xul
 """
 

@@ -27,9 +27,7 @@
 
 <!ENTITY awesomebar_default_text "Enter Search or Address">
 
-<!ENTITY bookmarks_title "Bookmarks">
-<!ENTITY bookmark_add "Bookmark">
-<!ENTITY bookmark_remove "Remove">
+<!ENTITY bookmark "Bookmark">
 <!ENTITY bookmark_added "Bookmark added">
 <!ENTITY bookmark_removed "Bookmark removed">
 
@@ -72,6 +70,7 @@
 <!ENTITY quit "Quit">
 
 <!ENTITY addons "Add-ons">
+<!ENTITY downloads "Downloads">
 
 <!ENTITY share "Share">
 <!ENTITY save_as_pdf "Save as PDF">

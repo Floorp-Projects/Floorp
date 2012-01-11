@@ -75,6 +75,7 @@
 #include "mozilla/Util.h" // for DebugOnly
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
+#include "nsITimer.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -152,6 +153,7 @@ public:
         , mDiskCacheEnabled(false)
         , mDiskCacheCapacity(0)
         , mDiskCacheMaxEntrySize(-1) // -1 means "no limit"
+        , mSmartSizeEnabled(false)
         , mOfflineCacheEnabled(false)
         , mOfflineCacheCapacity(0)
         , mMemoryCacheEnabled(true)
@@ -175,6 +177,7 @@ public:
     void            SetDiskCacheCapacity(PRInt32);
     PRInt32         DiskCacheMaxEntrySize()     { return mDiskCacheMaxEntrySize; }
     nsILocalFile *  DiskCacheParentDirectory()  { return mDiskCacheParentDirectory; }
+    bool            SmartSizeEnabled()          { return mSmartSizeEnabled; }
 
     bool            OfflineCacheEnabled();
     PRInt32         OfflineCacheCapacity()         { return mOfflineCacheCapacity; }
@@ -199,6 +202,7 @@ private:
     PRInt32                 mDiskCacheCapacity; // in kilobytes
     PRInt32                 mDiskCacheMaxEntrySize; // in kilobytes
     nsCOMPtr<nsILocalFile>  mDiskCacheParentDirectory;
+    bool                    mSmartSizeEnabled;
 
     bool                    mOfflineCacheEnabled;
     PRInt32                 mOfflineCacheCapacity; // in kilobytes
@@ -218,6 +222,23 @@ private:
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheProfilePrefObserver, nsIObserver)
 
+class nsSetDiskSmartSizeCallback : public nsITimerCallback
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Notify(nsITimer* aTimer) {
+        if (nsCacheService::gService) {
+            nsCacheServiceAutoLock autoLock;
+            nsCacheService::gService->SetDiskSmartSize_Locked();
+            nsCacheService::gService->mSmartSizeTimer = nsnull;
+        }
+        return NS_OK;
+    }
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSetDiskSmartSizeCallback, nsITimerCallback)
+
 // Runnable sent to main thread after the cache IO thread calculates available
 // disk space, so that there is no race in setting mDiskCacheCapacity.
 class nsSetSmartSizeEvent: public nsRunnable 
@@ -228,32 +249,27 @@ public:
 
     NS_IMETHOD Run() 
     {
-        nsresult rv;
         NS_ASSERTION(NS_IsMainThread(), 
                      "Setting smart size data off the main thread");
 
         // Main thread may have already called nsCacheService::Shutdown
         if (!nsCacheService::gService || !nsCacheService::gService->mObserver)
             return NS_ERROR_NOT_AVAILABLE;
-    
-        bool smartSizeEnabled;
-        nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (!branch) {
-            NS_WARNING("Failed to get pref service!");
-            return NS_ERROR_NOT_AVAILABLE;
-        }
-        // ensure smart sizing wasn't switched off while event was pending
-        rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
-                                 &smartSizeEnabled);
-        if (NS_FAILED(rv)) 
-            smartSizeEnabled = false;
-        if (smartSizeEnabled) {
-            nsCacheService::SetDiskCacheCapacity(mSmartSize);
-            rv = branch->SetIntPref(DISK_CACHE_SMART_SIZE_PREF, mSmartSize);
-            if (NS_FAILED(rv)) 
-                NS_WARNING("Failed to set smart size pref");
-        }
-        return rv;
+
+        // Ensure smart sizing wasn't switched off while event was pending.
+        // It is safe to access the observer without the lock since we are
+        // on the main thread and the value changes only on the main thread.
+        if (!nsCacheService::gService->mObserver->SmartSizeEnabled())
+            return NS_OK;
+
+        nsCacheService::SetDiskCacheCapacity(mSmartSize);
+
+        nsCOMPtr<nsIPrefBranch2> ps = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (!ps ||
+            NS_FAILED(ps->SetIntPref(DISK_CACHE_SMART_SIZE_PREF, mSmartSize)))
+            NS_WARNING("Failed to set smart size pref");
+
+        return NS_OK;
     }
 
 private:
@@ -445,13 +461,12 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         // Update the cache capacity when smart sizing is turned on/off 
         } else if (!strcmp(DISK_CACHE_SMART_SIZE_ENABLED_PREF, data.get())) {
             // Is the update because smartsizing was turned on, or off?
-            bool smartSizeEnabled;
             rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
-                                     &smartSizeEnabled);
+                                     &mSmartSizeEnabled);
             if (NS_FAILED(rv)) 
                 return rv;
             PRInt32 newCapacity = 0;
-            if (smartSizeEnabled) {
+            if (mSmartSizeEnabled) {
                 nsCacheService::SetDiskSmartSize();
             } else {
                 // Smart sizing switched off: use user specified size
@@ -671,21 +686,22 @@ nsCacheProfilePrefObserver::PermittedToSmartSize(nsIPrefBranch* branch, bool
             // of 50 MB, then keep user's value. Otherwise use smart sizing.
             rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &oldCapacity);
             if (oldCapacity < PRE_GECKO_2_0_DEFAULT_CACHE_SIZE) {
-                branch->SetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF, 
-                                    false);
-                return false;
+                mSmartSizeEnabled = false;
+                branch->SetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
+                                    mSmartSizeEnabled);
+                return mSmartSizeEnabled;
             }
         }
         // Set manual setting to MAX cache size as starting val for any
         // adjustment by user: (bug 559942 comment 65)
         branch->SetIntPref(DISK_CACHE_CAPACITY_PREF, MAX_CACHE_SIZE);
     }
-    bool smartSizeEnabled; 
+
     rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
-                             &smartSizeEnabled);
-    if (NS_FAILED(rv)) 
-        return false;
-    return !!smartSizeEnabled;
+                             &mSmartSizeEnabled);
+    if (NS_FAILED(rv))
+        mSmartSizeEnabled = false;
+    return mSmartSizeEnabled;
 }
 
 
@@ -758,20 +774,12 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
         if (PermittedToSmartSize(branch, firstSmartSizeRun)) {
             // Avoid evictions: use previous cache size until smart size event
             // updates mDiskCacheCapacity
-            if (!firstSmartSizeRun) {
-                PRInt32 oldSmartSize;
-                rv = branch->GetIntPref(DISK_CACHE_SMART_SIZE_PREF,
-                                        &oldSmartSize);
-                mDiskCacheCapacity = oldSmartSize;
-            } else {
-                PRInt32 oldCapacity;
-                rv = branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &oldCapacity);
-                if (NS_SUCCEEDED(rv)) {
-                    mDiskCacheCapacity = oldCapacity;
-                } else {
-                    mDiskCacheCapacity = DEFAULT_CACHE_SIZE;
-                }
-            }
+            rv = branch->GetIntPref(firstSmartSizeRun ?
+                                    DISK_CACHE_CAPACITY_PREF :
+                                    DISK_CACHE_SMART_SIZE_PREF,
+                                    &mDiskCacheCapacity);
+            if (NS_FAILED(rv))
+                mDiskCacheCapacity = DEFAULT_CACHE_SIZE;
         }
 
         if (firstSmartSizeRun) {
@@ -1142,6 +1150,11 @@ nsCacheService::Shutdown()
         ClearDoomList();
         ClearActiveEntries();
 
+        if (mSmartSizeTimer) {
+            mSmartSizeTimer->Cancel();
+            mSmartSizeTimer = nsnull;
+        }
+
         // Make sure to wait for any pending cache-operations before
         // proceeding with destructive actions (bug #620660)
         (void) SyncWithCacheIOThread();
@@ -1447,7 +1460,22 @@ nsCacheService::CreateDiskDevice()
         mDiskDevice = nsnull;
     }
 
-    SetDiskSmartSize_Locked(true);
+    // Disk device is usually created during the startup. Delay smart size
+    // calculation to avoid possible massive IO caused by eviction of entries
+    // in case the new smart size is smaller than current cache usage.
+    if (!mSmartSizeTimer) {
+        mSmartSizeTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+        if (NS_FAILED(rv))
+            return rv;
+
+        rv = mSmartSizeTimer->InitWithCallback(new nsSetDiskSmartSizeCallback(),
+                                               1000*60*3,
+                                               nsITimer::TYPE_ONE_SHOT);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Failed to post smart size timer");
+            mSmartSizeTimer = nsnull;
+        }
+    }
 
     return rv;
 }
@@ -2652,11 +2680,11 @@ nsCacheService::SetDiskSmartSize()
 
     if (!gService) return NS_ERROR_NOT_AVAILABLE;
 
-    return gService->SetDiskSmartSize_Locked(false);
+    return gService->SetDiskSmartSize_Locked();
 }
 
 nsresult
-nsCacheService::SetDiskSmartSize_Locked(bool checkPref)
+nsCacheService::SetDiskSmartSize_Locked()
 {
     nsresult rv;
 
@@ -2666,17 +2694,8 @@ nsCacheService::SetDiskSmartSize_Locked(bool checkPref)
     if (!mDiskDevice)
         return NS_ERROR_NOT_AVAILABLE;
 
-    if (checkPref) {
-        nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (!branch) return NS_ERROR_FAILURE;
-
-        bool smartSizeEnabled;
-        rv = branch->GetBoolPref(DISK_CACHE_SMART_SIZE_ENABLED_PREF,
-                                 &smartSizeEnabled);
-
-        if (NS_FAILED(rv) || !smartSizeEnabled)
-            return NS_ERROR_NOT_AVAILABLE;
-    }
+    if (!mObserver->SmartSizeEnabled())
+        return NS_ERROR_NOT_AVAILABLE;
 
     nsAutoString cachePath;
     rv = mObserver->DiskCacheParentDirectory()->GetPath(cachePath);

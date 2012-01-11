@@ -79,21 +79,21 @@ interface nsIMemoryReporter : nsISupports
    *   mmap/VirtualAlloc/vm_allocate) or a heap-level allocation (eg.
    *   malloc/calloc/operator new).
    *
-   *   Each reporter can be viewed as representing a node in a tree rooted at
-   *   "explicit".  Not all nodes of the tree need have an associated reporter.
-   *   So, for example, the reporters "explicit/a/b", "explicit/a/c",
-   *   "explicit/d", "explicit/d/e", and "explicit/d/f" define this tree:
+   *   Each reporter can be viewed as representing a leaf node in a tree
+   *   rooted at "explicit".  Internal nodes of the tree don't have
+   *   reporters.  So, for example, the reporters "explicit/a/b",
+   *   "explicit/a/c", "explicit/d/e", and "explicit/d/f" define this tree:
    *
    *     explicit
    *     |--a
    *     |  |--b [*]
    *     |  \--c [*]
-   *     \--d [*]
+   *     \--d
    *        |--e [*]
    *        \--f [*]
    *
-   *   Nodes marked with a [*] have a reporter.  Notice that "explicit/a" is
-   *   implicitly defined.
+   *   Nodes marked with a [*] have a reporter.  Notice that the internal
+   *   nodes are implicitly defined by the paths.
    *
    *   A node's children divide their parent's memory into disjoint pieces.
    *   So in the example above, |a| may not count any allocations counted by
@@ -119,7 +119,7 @@ interface nsIMemoryReporter : nsISupports
    *    calloc, realloc, memalign, operator new, or operator new[].  Reporters
    *    in this category must have units UNITS_BYTES and must have a path
    *    starting with "explicit".
-
+   *
    *  - NONHEAP: memory which the program explicitly allocated, but does not
    *    live on the heap.  Such memory is commonly allocated by calling one of
    *    the OS's memory-mapping functions (e.g. mmap, VirtualAlloc, or
@@ -342,16 +342,11 @@ namespace mozilla {
  * Functions generated via this macro should be used by all traversal-based
  * memory reporters.
  *
- * - On platforms where moz_malloc_usable_size() returns 0 it just returns
+ * - On platforms where moz_malloc_usable_size(ptr) returns 0 it just returns
  *   |computedSize|.  This happens on platforms where malloc_usable_size() or
  *   equivalent isn't available.
  *
- * - Otherwise, it returns |moz_malloc_usable_size(p)|, but only after doing
- *   some sanity checking -- it will assert if the usable size is too
- *   dissimilar to |computedSize|.  (However, this checking is skipped if
- *   |computedSize| is zero, which is useful if the computation is not worth
- *   the effort, e.g. because it's tricky and the |computedSize| would be
- *   small.)
+ * - Otherwise, it returns |moz_malloc_usable_size(ptr)|.
  *
  * You might be wondering why we have a macro that creates multiple functions
  * distinguished only by |name|, instead of a single MemoryReporterMallocSizeOf
@@ -368,7 +363,6 @@ namespace mozilla {
           return computedSize;                                                \
       }                                                                       \
       VALGRIND_DMD_REPORT(ptr, usable, name);                                 \
-      NS_MEMORY_REPORTER_CHECK_SIZES(usable, computedSize);                   \
       return usable;                                                          \
   }
 
@@ -384,28 +378,8 @@ namespace mozilla {
           return computedSize;                                                \
       }                                                                       \
       VALGRIND_DMD_UNREPORT(ptr);                                             \
-      NS_MEMORY_REPORTER_CHECK_SIZES(usable, computedSize);                   \
       return usable;                                                          \
   }
-
-/*
- * This is used by the NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN* macros for
- * checking |usable| against |computedSize|.
- */
-#define NS_MEMORY_REPORTER_CHECK_SIZES(usable, computedSize)                  \
-  do {                                                                        \
-    /* The factor of two is because no reasonable heap allocator will    */   \
-    /* return a block more than twice the requested size.  The one       */   \
-    /* exception is that a request less than N bytes may be rounded up   */   \
-    /* by the allocator to N bytes (we use N = 16 in our checking        */   \
-    /* because that's what the default allocator on Mac uses).  Also, if */   \
-    /* computedSize is 0 we don't check it against usable.               */   \
-    NS_ASSERTION(usable >= computedSize,                                      \
-                 "NS_MEMORY_REPORTER_CHECK_SIZES: computedSize is too big");  \
-    NS_ASSERTION(usable < computedSize * 2 || usable <= 16 ||                 \
-                 computedSize == 0,                                           \
-                 "NS_MEMORY_REPORTER_CHECK_SIZES: computedSize is too small");\
-  } while(0)
 
 #ifdef MOZ_DMD
 

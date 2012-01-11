@@ -57,6 +57,7 @@ _TEST_FILES	= \
 		test_manyWatchSerial.html \
 		test_manyWindows.html \
 		test_optional_api_params.html \
+		test_shutdown.html \
 		test_windowClose.html \
 		test_timerRestartWatch.html \
 		test_worseAccuracyDoesNotBlockCallback.html \

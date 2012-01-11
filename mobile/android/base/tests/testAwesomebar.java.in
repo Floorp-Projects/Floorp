@@ -1,115 +1,28 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import com.jayway.android.robotium.solo.Solo;	
 import @ANDROID_PACKAGE_NAME@.*;
 
-import android.app.Activity;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.PerformanceTestCase;
-import android.util.Log;
-import android.widget.Button;
-import android.content.Intent;
-import java.util.HashMap;
+public class testAwesomebar extends BaseTest {
+    private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
 
-@SuppressWarnings("unused")
-public class testAwesomebar extends ActivityInstrumentationTestCase2 {
+    public void testAwesomebar() {
+        loadUrl(URL);
 
-  @SuppressWarnings("unchecked")
-  public testAwesomebar(Class activityClass) {
-    super(activityClass);
-    // TODO Auto-generated constructor stub
-  }
-  private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";	
-  private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
-  private Solo solo;    
-  private Activity activity;
-  private Driver driver;
-  private Assert asserter;
-  private Actions actions;
-  private static Class<?> launcherActivityClass;
+        mDriver.setupScrollHandling();
+        // Calculate where we should be dragging.
+        int midX = mDriver.getGeckoLeft() + mDriver.getGeckoWidth()/2;
+        int midY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/2;
+        int endY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/10;
+        for (int i = 0; i < 10; i++) {
+            mActions.drag(midX, midX, midY, endY);
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
-  static{
-    try{
-      launcherActivityClass = Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);	
-    } catch (ClassNotFoundException e){
-      throw new RuntimeException(e);	
-    }	
-  }	
-
-  @SuppressWarnings("unchecked")	
-  public testAwesomebar() throws ClassNotFoundException {
-    super(TARGET_PACKAGE_ID, launcherActivityClass);	
-  }	
-
-  @Override 
-  protected void setUp() throws Exception
-  {
-    // Load config file from sdcard (setup by python script)
-    String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
-    HashMap config = FennecNativeDriver.convertTextToTable(configFile);
-
-    // Create the intent to be used with all the important arguments.
-    Intent i = new Intent(Intent.ACTION_MAIN);
-    String argsList = "-no-remote -profile " + (String)config.get("profile");
-    i.putExtra("args", argsList);
-
-    //Start the activity
-    setActivityIntent(i);
-    activity = getActivity();
-
-    //Set up Robotium.solo and Driver objects
-    solo = new Solo(getInstrumentation(), getActivity());
-    driver = new FennecNativeDriver(activity, solo);
-    actions = new FennecNativeActions(activity, solo, getInstrumentation());
-    driver.setLogFile((String)config.get("logfile"));
-    
-    asserter = new FennecNativeAssert();
-    asserter.setLogFile((String)config.get("logfile"));
-  }
-
-  public void testAwesomebar() {
-    String url = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
-    actions.waitForGeckoEvent("Gecko:Ready");
-    Element awesomebar = driver.findElement("awesome_bar");
-    awesomebar.click();
-
-    Element urlbar = driver.findElement("awesomebar_text");
-    getInstrumentation().waitForIdleSync();
-    actions.sendKeys(url);
-    asserter.is(urlbar.getText(), url, "Awesomebar URL Typed Properly");
-
-    actions.sendSpecialKey(Actions.SpecialKey.ENTER);
-    //wait for screen to load
-    actions.waitForGeckoEvent("DOMContentLoaded");
-    driver.setupScrollHandling();
-
-    //Calculate where we should be dragging.
-    int midX = driver.getGeckoLeft() + driver.getGeckoWidth()/2;
-    int midY = driver.getGeckoTop() + driver.getGeckoHeight()/2;
-    int endY = driver.getGeckoTop() + driver.getGeckoHeight()/10;
-    for(int i = 0; i < 10; i++) {
-      actions.drag(midX,midX,midY,endY);
-      try {
-        Thread.sleep(200);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+        verifyUrl(URL);
     }
-    //Click the awesomebar again 
-    awesomebar.click();
-    getInstrumentation().waitForIdleSync();
-    asserter.is(urlbar.getText(), url, "Awesomebar URL stayed the same");
-  }	
-  
-  @Override	
-  public void tearDown() throws Exception {	
-    try	{
-      solo.finalize();	
-    }catch (Throwable e){	
-      e.printStackTrace();	
-    }	
-    getActivity().finish();	
-    super.tearDown();	
-  }
 }

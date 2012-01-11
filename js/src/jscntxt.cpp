@@ -782,9 +782,9 @@ js_ReportOutOfMemory(JSContext *cx)
 {
     cx->runtime->hadOutOfMemory = true;
 
-    /* AtomizeInline can cal this indirectly when it creates the string. */
+    /* AtomizeInline can call this indirectly when it creates the string. */
     AutoUnlockAtomsCompartmentWhenLocked unlockAtomsCompartment(cx);
-    
+
     JSErrorReport report;
     JSErrorReporter onError = cx->errorReporter;
 
@@ -1247,13 +1247,6 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
     return NULL;
 }
 
-bool
-checkOutOfMemory(JSRuntime *rt)
-{
-    AutoLockGC lock(rt);
-    return rt->gcBytes > rt->gcMaxBytes;
-}
-
 JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
@@ -1275,33 +1268,8 @@ js_InvokeOperationCallback(JSContext *cx)
 #endif
     JS_UNLOCK_GC(rt);
 
-    if (rt->gcIsNeeded) {
+    if (rt->gcIsNeeded)
         js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL, rt->gcTriggerReason);
-
-        /*
-         * On trace we can exceed the GC quota, see comments in NewGCArena. So
-         * we check the quota and report OOM here when we are off trace.
-         */
-        if (checkOutOfMemory(rt)) {
-#ifdef JS_THREADSAFE
-            /*
-            * We have to wait until the background thread is done in order
-            * to get a correct answer.
-            */
-            {
-                AutoLockGC lock(rt);
-                rt->gcHelperThread.waitBackgroundSweepEnd();
-            }
-            if (checkOutOfMemory(rt)) {
-                js_ReportOutOfMemory(cx);
-                return false;
-            }
-#else
-            js_ReportOutOfMemory(cx);
-            return false;
-#endif
-        }
-    }
 
 #ifdef JS_THREADSAFE
     /*

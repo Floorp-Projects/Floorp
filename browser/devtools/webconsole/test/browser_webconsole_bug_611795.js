@@ -32,12 +32,17 @@ function onContentLoaded()
   finishTest();
 }
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 /**
  * Unit test for bug 611795:
  * Repeated CSS messages get collapsed into one.
  */
 function test()
 {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("load", function() {
     browser.removeEventListener("load", arguments.callee, true);

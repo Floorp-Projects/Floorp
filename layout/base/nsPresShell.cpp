@@ -230,8 +230,6 @@ static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 /* for NS_MEMORY_REPORTER_IMPLEMENT */
 #include "nsIMemoryReporter.h"
 
-#include "gfxTextRunWordCache.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -700,24 +698,7 @@ PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   data.callback = aCb;
   data.closure = aClosure;
 
-  // clear TEXT_RUN_SIZE_ACCOUNTED flag on cached runs
-  gfxTextRunWordCache::ResetSizeOfAccountingFlags();
-
   sLiveShells->EnumerateEntries(SizeEnumerator, &data);
-
-  NS_NAMED_LITERAL_CSTRING(kTextRunWordCachePath,
-                           "explicit/gfx/textrun-word-cache");
-  NS_NAMED_LITERAL_CSTRING(kTextRunWordCacheDesc,
-                           "Memory used by cached text-runs that are "
-                           "not owned by a PresShell's frame tree.");
-
-  // now total up cached runs that aren't otherwise accounted for
-  PRInt64 textRunWordCacheSize =
-    gfxTextRunWordCache::MaybeSizeOfExcludingThis(GfxTextrunWordCacheMallocSizeOf);
-
-  aCb->Callback(EmptyCString(), kTextRunWordCachePath,
-                nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-                textRunWordCacheSize, kTextRunWordCacheDesc, aClosure);
 
   return NS_OK;
 }
@@ -2506,12 +2487,12 @@ PresShell::ScrollLine(bool aForward)
 }
 
 NS_IMETHODIMP
-PresShell::ScrollHorizontal(bool aLeft)
+PresShell::ScrollCharacter(bool aRight)
 {
   nsIScrollableFrame* scrollFrame =
     GetFrameToScrollAsScrollable(nsIPresShell::eHorizontal);
   if (scrollFrame) {
-    scrollFrame->ScrollBy(nsIntPoint(aLeft ? -1 : 1, 0),
+    scrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0),
                           nsIScrollableFrame::LINES,
                           nsIScrollableFrame::SMOOTH);
 //NEW FOR LINES    

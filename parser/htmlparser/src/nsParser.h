@@ -84,7 +84,6 @@
 #include "nsDTDUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIContentSink.h"
-#include "nsIParserFilter.h"
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
@@ -176,9 +175,6 @@ class nsParser : public nsIParser,
          aCharset = mCharset;
          aSource = mCharsetSource;
     }
-
-
-    NS_IMETHOD_(void) SetParserFilter(nsIParserFilter* aFilter);
 
     /**
      * Cause parser to parse input from given URL 
@@ -471,7 +467,6 @@ protected:
     nsIRunnable*                 mContinueEvent;  // weak ref
     nsRefPtr<nsSpeculativeScriptThread> mSpeculativeScriptThread;
    
-    nsCOMPtr<nsIParserFilter> mParserFilter;
     nsTokenAllocator          mTokenAllocator;
     
     eParserCommands     mCommand;
