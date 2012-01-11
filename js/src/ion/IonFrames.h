@@ -401,8 +401,17 @@ GetTopIonFrame(JSContext *cx)
     ++iter;
     JS_ASSERT(iter.type() == IonFrame_JS);
     IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
-    JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
-    return fun->script()->ion;
+    switch (GetCalleeTokenTag(frame->calleeToken())) {
+      case CalleeToken_Function: {
+        JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
+        return fun->script()->ion;
+      }
+      case CalleeToken_Script:
+        return CalleeTokenToScript(frame->calleeToken())->ion;
+      default:
+        JS_NOT_REACHED("unexpected callee token kind");
+        return NULL;
+    }
 }
 
 } /* namespace ion */

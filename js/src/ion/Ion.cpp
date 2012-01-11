@@ -694,34 +694,25 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
 
         types::AutoEnterCompilation enterCompiler(cx, script);
 
-        IonBuilder builder(cx, temp, graph, &oracle, *info);
+        IonBuilder builder(cx, &fp->scopeChain(), temp, graph, &oracle, *info);
         if (!TestCompiler(builder, graph)) {
             IonSpew(IonSpew_Abort, "IM Compilation failed.");
             return false;
         }
     } else {
         DummyOracle oracle;
-        IonBuilder builder(cx, temp, graph, &oracle, *info);
+        IonBuilder builder(cx, &fp->scopeChain(), temp, graph, &oracle, *info);
         if (!TestCompiler(builder, graph)) {
             IonSpew(IonSpew_Abort, "IM Compilation failed.");
             return false;
         }
-   }
-
+    }
     return true;
 }
 
 static bool
 CheckFrame(StackFrame *fp)
 {
-    if (!fp->isFunctionFrame()) {
-        // Support for this is almost there - we would need a new
-        // pushBailoutFrame. For the most part we just don't support
-        // the opcodes in a global script yet.
-        IonSpew(IonSpew_Abort, "global frame");
-        return false;
-    }
-
     if (fp->isEvalFrame()) {
         // Eval frames are not yet supported. Supporting this will require new
         // logic in pushBailoutFrame to deal with linking prev.
@@ -764,12 +755,12 @@ CheckFrame(StackFrame *fp)
 
     // This check is to not overrun the stack. Eventually, we will want to
     // handle this when we support JSOP_ARGUMENTS or function calls.
-    if (fp->numActualArgs() >= SNAPSHOT_MAX_NARGS) {
+    if (fp->isFunctionFrame() && fp->numActualArgs() >= SNAPSHOT_MAX_NARGS) {
         IonSpew(IonSpew_Abort, "too many actual args");
         return false;
     }
 
-    JS_ASSERT_IF(fp->fun(), !fp->fun()->isHeavyweight());
+    JS_ASSERT_IF(fp->maybeFun(), !fp->fun()->isHeavyweight());
     return true;
 }
 

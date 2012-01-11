@@ -102,10 +102,11 @@ FrameRecovery::unpackCalleeToken(CalleeToken token)
 {
     switch (GetCalleeTokenTag(token)) {
       case CalleeToken_Function:
-         callee_ = CalleeTokenToFunction(token);
-         script_ = callee_->script();
-         break;
+        callee_ = CalleeTokenToFunction(token);
+        script_ = callee_->script();
+        break;
       case CalleeToken_Script:
+        callee_ = NULL;
         script_ = CalleeTokenToScript(token);
         break;
       case CalleeToken_InvalidationRecord:
