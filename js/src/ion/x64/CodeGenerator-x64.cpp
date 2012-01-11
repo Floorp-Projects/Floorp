@@ -148,6 +148,9 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
           case MIRType_Int32:
             cond = masm.testInt32(Assembler::NotEqual, value);
             break;
+          case MIRType_Boolean:
+            cond = masm.testBoolean(Assembler::NotEqual, value);
+            break;
           case MIRType_Object:
             cond = masm.testObject(Assembler::NotEqual, value);
             break;
@@ -155,7 +158,7 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
             cond = masm.testString(Assembler::NotEqual, value);
             break;
           default:
-            JS_NOT_REACHED("NYI");
+            JS_NOT_REACHED("Given MIRType cannot be unboxed.");
             return false;
         }
         if (!bailoutIf(cond, unbox->snapshot()))
@@ -166,6 +169,9 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
       case MIRType_Int32:
         masm.unboxInt32(value, ToRegister(result));
         break;
+      case MIRType_Boolean:
+        masm.unboxBoolean(value, ToRegister(result));
+        break;
       case MIRType_Object:
         masm.unboxObject(value, ToRegister(result));
         break;
@@ -173,7 +179,8 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
         masm.unboxString(value, ToRegister(result));
         break;
       default:
-        JS_NOT_REACHED("NYI");
+        JS_NOT_REACHED("Given MIRType cannot be unboxed.");
+        break;
     }
     
     return true;
