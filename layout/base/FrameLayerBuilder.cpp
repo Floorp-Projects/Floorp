@@ -232,12 +232,14 @@ protected:
      * next ThebesLayerData currently in the stack, if any. Note that not
      * all ThebesLayers for the container are in the ThebesLayerData stack.
      * Same coordinate system as mVisibleRegion.
+     * This is a conservative approximation: it contains the true region.
      */
     nsIntRegion  mVisibleAboveRegion;
     /**
      * The region containing the bounds of all display items in the layer,
      * regardless of visbility.
      * Same coordinate system as mVisibleRegion.
+     * This is a conservative approximation: it contains the true region.
      */
     nsIntRegion  mDrawRegion;
     /**
@@ -1105,10 +1107,12 @@ ContainerState::PopThebesLayerData()
                                      data->mVisibleAboveRegion);
     nextData->mVisibleAboveRegion.Or(nextData->mVisibleAboveRegion,
                                      data->mVisibleRegion);
+    nextData->mVisibleAboveRegion.SimplifyOutward(4);
     nextData->mDrawAboveRegion.Or(nextData->mDrawAboveRegion,
                                      data->mDrawAboveRegion);
     nextData->mDrawAboveRegion.Or(nextData->mDrawAboveRegion,
                                      data->mDrawRegion);
+    nextData->mDrawAboveRegion.SimplifyOutward(4);
   }
 
   mThebesLayerDataStack.RemoveElementAt(lastIndex);
@@ -1440,11 +1444,13 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       ThebesLayerData* data = GetTopThebesLayerData();
       if (data) {
         data->mVisibleAboveRegion.Or(data->mVisibleAboveRegion, itemVisibleRect);
+        data->mVisibleAboveRegion.SimplifyOutward(4);
         // Add the entire bounds rect to the mDrawAboveRegion.
         // The visible region may be excluding opaque content above the
         // item, and we need to ensure that that content is not placed
         // in a ThebesLayer below the item!
         data->mDrawAboveRegion.Or(data->mDrawAboveRegion, itemDrawRect);
+        data->mDrawAboveRegion.SimplifyOutward(4);
       }
       RestrictVisibleRegionForLayer(ownLayer, itemVisibleRect);
       ContainerLayer* oldContainer = ownLayer->GetParent();
