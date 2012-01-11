@@ -4,6 +4,7 @@
     <style name="Gecko" parent="@android:style/Theme">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
     
     <style name="Gecko.TitleBar" parent="Gecko">
@@ -15,6 +16,7 @@
     <style name="Gecko.Light" parent="@android:style/Theme.Light">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
     
     <style name="Gecko.Light.TitleBar" parent="Gecko.Light">

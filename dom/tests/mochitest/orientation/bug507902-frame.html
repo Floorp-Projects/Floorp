@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Frame for watchPosition </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+
+var ok = window.parent.ok;
+var SimpleTest = window.parent.SimpleTest;
+
+function boom()
+{
+  window.addEventListener("unload", function(){}, false);
+  window.addEventListener("devicemotion", function(){}, false);
+  location = "data:text/html,2";
+
+  ok(1, "leak will be at the end of mochitests. so pass.");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("load", function() { setTimeout(boom, 0); }, false);
+
+</script>
+</body>
+</html>
+

@@ -44,6 +44,7 @@ mobile/android/app/Makefile
 mobile/android/app/profile/extensions/Makefile
 mobile/android/base/Makefile
 mobile/android/base/locales/Makefile
+mobile/locales/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
 $MOZ_BRANDING_DIRECTORY/locales/Makefile
 mobile/android/chrome/Makefile
@@ -54,7 +55,8 @@ mobile/android/modules/Makefile
 mobile/android/installer/Makefile
 mobile/android/locales/Makefile
 mobile/android/Makefile
-mobile/android/themes/core/Makefile"
+mobile/android/themes/core/Makefile
+"
 
 if test -n "$MOZ_UPDATE_PACKAGING"; then
    add_makefiles "

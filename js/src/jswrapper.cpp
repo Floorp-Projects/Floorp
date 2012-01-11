@@ -424,10 +424,10 @@ ForceFrame::enter()
     JS_ASSERT(context->compartment == target->compartment());
     JSCompartment *destination = context->compartment;
 
-    JSObject *scopeChain = target->getGlobal();
-    JS_ASSERT(scopeChain->isNative());
+    JSObject &scopeChain = target->global();
+    JS_ASSERT(scopeChain.isNative());
 
-    return context->stack.pushDummyFrame(context, destination, *scopeChain, frame);
+    return context->stack.pushDummyFrame(context, destination, scopeChain, frame);
 }
 
 AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
@@ -450,11 +450,11 @@ AutoCompartment::enter()
 {
     JS_ASSERT(!entered);
     if (origin != destination) {
-        JSObject *scopeChain = target->getGlobal();
-        JS_ASSERT(scopeChain->isNative());
+        JSObject &scopeChain = target->global();
+        JS_ASSERT(scopeChain.isNative());
 
         frame.construct();
-        if (!context->stack.pushDummyFrame(context, destination, *scopeChain, &frame.ref()))
+        if (!context->stack.pushDummyFrame(context, destination, scopeChain, &frame.ref()))
             return false;
 
         if (context->isExceptionPending())

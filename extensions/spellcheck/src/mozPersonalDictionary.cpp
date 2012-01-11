@@ -167,7 +167,7 @@ NS_IMETHODIMP mozPersonalDictionary::Load()
 // This is not threadsafe, and only safe if the consumer does not 
 // modify the list.
 static PLDHashOperator
-AddHostToStringArray(nsUniCharEntry *aEntry, void *aArg)
+AddHostToStringArray(nsUnicharPtrHashKey *aEntry, void *aArg)
 {
   static_cast<nsTArray<nsString>*>(aArg)->AppendElement(nsDependentString(aEntry->GetKey()));
   return PL_DHASH_NEXT;

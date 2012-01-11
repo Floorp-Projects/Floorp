@@ -79,6 +79,13 @@ let FormWrapper = {
     return this._stmts[query] = db.createAsyncStatement(query);
   },
 
+  _finalize : function () {
+    for each (let stmt in FormWrapper._stmts) {
+      stmt.finalize();
+    }
+    FormWrapper._stmts = {};
+  },
+
   get _getAllEntriesStmt() {
     const query =
       "SELECT fieldname name, value FROM moz_formhistory " +
@@ -270,6 +277,7 @@ function FormTracker(name) {
   Tracker.call(this, name);
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
+  Svc.Obs.add("profile-change-teardown", this);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -320,6 +328,9 @@ FormTracker.prototype = {
           this.trackEntry(name, value);
         }
         break;
+    case "profile-change-teardown":
+      FormWrapper._finalize();
+      break;
     }
   },
 

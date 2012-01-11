@@ -55,6 +55,7 @@ class DOMSVGLengthList;
 class DOMSVGNumberList;
 class DOMSVGPathSegList;
 class DOMSVGPointList;
+class DOMSVGStringList;
 class DOMSVGTransformList;
 }
 class nsGlobalWindow;
@@ -69,6 +70,8 @@ class nsIDOMSVGPathSeg;
 class nsIDOMSVGPathSegList;
 class nsIDOMSVGPoint;
 class nsIDOMSVGPointList;
+class nsIDOMSVGStringList;
+class nsIDOMSVGTests;
 class nsIDOMSVGTransform;
 class nsIDOMSVGTransformList;
 class nsIDOMWindow;

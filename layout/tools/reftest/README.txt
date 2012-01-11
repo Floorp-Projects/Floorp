@@ -52,7 +52,7 @@ must be one of the following:
 
 2. A test item
 
-   <failure-type>* [<http>] <type> <url> <url_ref>
+   <failure-type>* <preference>* [<http>] <type> <url> <url_ref>
 
    where
 
@@ -146,7 +146,22 @@ must be one of the following:
           fails-if(winWidget) == test reference
           asserts-if(cocoaWidget,2) load crashtest
 
-   b. <http>, if present, is one of the strings (sans quotes) "HTTP" or
+   b. <pref-setting> (optional) is a string of the form
+
+          pref(<name>,<value>)
+
+      where <name> is the name of a preference setting, as seen in
+      about:config, and <value> is the value to which this preference should
+      be set. <value> may be a boolean (true/false), an integer, or a
+      quoted string *without spaces*, according to the type of the preference.
+
+      The preference will be set to the specified value prior to rendering
+      the test and reference canvases, and will be restored afterwards so
+      that following tests are not affected. Note that this feature is only
+      useful for "live" preferences that take effect immediately, without
+      requiring a browser restart.
+
+   c. <http>, if present, is one of the strings (sans quotes) "HTTP" or
       "HTTP(..)" or "HTTP(../..)" or "HTTP(../../..)", etc. , indicating that
       the test should be run over an HTTP server because it requires certain
       HTTP headers or a particular HTTP status.  (Don't use this if your test
@@ -205,7 +220,7 @@ must be one of the following:
       on request/response in handleRequest, see the nsIHttpRe(quest|sponse)
       definitions in <netwerk/test/httpserver/nsIHttpServer.idl>.
 
-   c. <type> is one of the following:
+   d. <type> is one of the following:
 
       ==     The test passes if the images of the two renderings are the
              SAME.
@@ -233,10 +248,10 @@ must be one of the following:
              url_ref must be omitted. The test may be marked as fails or
              random. (Used to test the JavaScript Engine.)
 
-   d. <url> is either a relative file path or an absolute URL for the
+   e. <url> is either a relative file path or an absolute URL for the
       test page
 
-   e. <url_ref> is either a relative file path or an absolute URL for
+   f. <url_ref> is either a relative file path or an absolute URL for
       the reference page
 
    The only difference between <url> and <url_ref> is that results of

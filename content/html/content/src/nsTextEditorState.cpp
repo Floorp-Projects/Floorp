@@ -214,7 +214,7 @@ public:
   NS_IMETHOD CompleteMove(bool aForward, bool aExtend);
   NS_IMETHOD ScrollPage(bool aForward);
   NS_IMETHOD ScrollLine(bool aForward);
-  NS_IMETHOD ScrollHorizontal(bool aLeft);
+  NS_IMETHOD ScrollCharacter(bool aRight);
   NS_IMETHOD SelectAll(void);
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, bool *_retval);
 
@@ -573,12 +573,12 @@ nsTextInputSelectionImpl::ScrollLine(bool aForward)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::ScrollHorizontal(bool aLeft)
+nsTextInputSelectionImpl::ScrollCharacter(bool aRight)
 {
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
-  mScrollFrame->ScrollBy(nsIntPoint(aLeft ? -1 : 1, 0),
+  mScrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0),
                          nsIScrollableFrame::LINES,
                          nsIScrollableFrame::SMOOTH);
   return NS_OK;
@@ -1170,7 +1170,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   bool shouldInitializeEditor = false;
   nsCOMPtr<nsIEditor> newEditor; // the editor that we might create
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!mEditor) {
     shouldInitializeEditor = true;
 

@@ -1381,7 +1381,7 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
                        nsIAtom* aAttribute)
 {
     // For non-chrome documents, persistance is simply broken
-    if (!IsCapabilityEnabled("UniversalBrowserWrite"))
+    if (!IsCapabilityEnabled("UniversalXPConnect"))
         return NS_ERROR_NOT_AVAILABLE;
 
     // First make sure we _have_ a local store to stuff the persisted
@@ -2140,7 +2140,7 @@ nsresult
 nsXULDocument::ApplyPersistentAttributes()
 {
     // For non-chrome documents, persistance is simply broken
-    if (!IsCapabilityEnabled("UniversalBrowserRead"))
+    if (!IsCapabilityEnabled("UniversalXPConnect"))
         return NS_ERROR_NOT_AVAILABLE;
 
     // Add all of the 'persisted' attributes into the content

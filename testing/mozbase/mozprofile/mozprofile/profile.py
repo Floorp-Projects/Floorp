@@ -56,7 +56,15 @@ class Profile(object):
     """Handles all operations regarding profile. Created new profiles, installs extensions,
     sets preferences and handles cleanup."""
 
-    def __init__(self, profile=None, addons=None, addon_manifests=None, preferences=None, locations=None, proxy=False, restore=True):
+    def __init__(self,
+                 profile=None, # Path to the profile
+                 addons=None,  # String of one or list of addons to install
+                 addon_manifests=None,  # Manifest for addons, see http://ahal.ca/blog/2011/bulk-installing-fx-addons/
+                 preferences=None, # Dictionary or class of preferences
+                 locations=None, # locations to proxy
+                 proxy=False, # setup a proxy
+                 restore=True # If true remove all installed addons preferences when cleaning up
+                 ):
 
         # if true, remove installed addons/prefs afterwards
         self.restore = restore
@@ -221,7 +229,7 @@ class Profile(object):
 
 
     def cleanup(self):
-        """Cleanup operations on the profile."""
+        """Cleanup operations for the profile."""
         if self.restore:
             if self.create_new:
                 if os.path.exists(self.profile):

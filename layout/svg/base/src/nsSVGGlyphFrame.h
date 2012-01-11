@@ -135,9 +135,6 @@ public:
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
-  virtual void SetSelected(bool          aSelected,
-                           SelectionType aType);
-  NS_IMETHOD  GetSelected(bool *aSelected) const;
   NS_IMETHOD  IsSelectable(bool* aIsSelectable, PRUint8* aSelectStyle) const;
 
   NS_IMETHOD Init(nsIContent*      aContent,

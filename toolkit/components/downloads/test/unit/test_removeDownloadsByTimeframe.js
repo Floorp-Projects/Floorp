@@ -81,6 +81,7 @@ function add_download_to_db(aStartTimeInRange, aEndTimeInRange, aState)
   stmt.params.endTime = aEndTimeInRange ? END_TIME - 1 : END_TIME + 1;
   stmt.params.state = aState;
   stmt.execute();
+  stmt.finalize();
 
   return id++;
 }
@@ -108,6 +109,7 @@ function check_existence(aIDs, aExpected)
     checkFunc(stmt.executeStep());
     stmt.reset();
   }
+  stmt.finalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

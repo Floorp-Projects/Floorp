@@ -744,6 +744,15 @@ SpdySession::CleanupStream(SpdyStream *aStream, nsresult aResult)
       mUrgentForWrite.Push(stream);
   }
 
+  // Check the streams queued for activation. Because we normally accept a high
+  // level of parallelization this should also be short.
+  size = mQueuedStreams.GetSize();
+  for (PRUint32 count = 0; count < size; ++count) {
+    SpdyStream *stream = static_cast<SpdyStream *>(mQueuedStreams.PopFront());
+    if (stream != aStream)
+      mQueuedStreams.Push(stream);
+  }
+
   // Remove the stream from the ID hash table. (this one isn't short, which is
   // why it is hashed.)
   mStreamIDHash.Remove(aStream->StreamID());

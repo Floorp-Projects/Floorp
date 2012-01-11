@@ -53,11 +53,13 @@ public class BrowserDB {
     private static BrowserDBIface sDb;
 
     public interface BrowserDBIface {
-        public Cursor filter(ContentResolver cr, CharSequence constraint, int limit);
+        public Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter);
 
         public void updateVisitedHistory(ContentResolver cr, String uri);
 
         public void updateHistoryTitle(ContentResolver cr, String uri, String title);
+
+        public void updateHistoryDate(ContentResolver cr, String uri, long date);
 
         public Cursor getAllVisitedHistory(ContentResolver cr);
 
@@ -86,8 +88,12 @@ public class BrowserDB {
         sDb = new AndroidBrowserDB();
     }
 
+    public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter) {
+        return sDb.filter(cr, constraint, limit, urlFilter);
+    }
+
     public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
-        return sDb.filter(cr, constraint, limit);
+        return sDb.filter(cr, constraint, limit, null);
     }
 
     public static void updateVisitedHistory(ContentResolver cr, String uri) {
@@ -96,6 +102,10 @@ public class BrowserDB {
 
     public static void updateHistoryTitle(ContentResolver cr, String uri, String title) {
         sDb.updateHistoryTitle(cr, uri, title);
+    }
+
+    public static void updateHistoryDate(ContentResolver cr, String uri, long date) {
+        sDb.updateHistoryDate(cr, uri, date);
     }
 
     public static Cursor getAllVisitedHistory(ContentResolver cr) {

@@ -217,8 +217,8 @@ public:
   void SetIncludeAllOutOfFlows() { mIncludeAllOutOfFlows = true; }
   bool GetIncludeAllOutOfFlows() const { return mIncludeAllOutOfFlows; }
   /**
-   * Calling this setter makes us exclude all leaf frames that does
-   * not have the NS_FRAME_SELECTED_CONTENT bit.
+   * Calling this setter makes us exclude all leaf frames that aren't
+   * selected.
    */
   void SetSelectedFramesOnly() { mSelectedFramesOnly = true; }
   bool GetSelectedFramesOnly() { return mSelectedFramesOnly; }

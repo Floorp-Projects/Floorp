@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Test dir=rtl</title></head>
+  <body>
+
+    <!-- mmultiscripts. The formulas
+
+         1 3                 3 1
+          X  in dir=ltr  and  X  in dir=rtl
+         2 4                 4 2
+
+         do not match perfectly, so we use an alternative == reftest here
+         which is less strict. -->
+
+    <!-- five vertical bands: red, green, magenta, blue and yellow -->
+    <div style="position: absolute;
+                top: 5px; left: 5px; width: 200px; height: 200px;">
+      <div style="position: absolute; width: 40px; height: 200px;
+                  left: 0px; background: red;"></div>
+      <div style="position: absolute; width: 40px; height: 200px;
+                  left: 40px; background: green;"></div>
+      <div style="position: absolute; width: 40px; height: 200px;
+                  left: 80px; background: magenta;"></div>
+      <div style="position: absolute; width: 40px; height: 200px;
+                  left: 120px; background: blue;"></div>
+      <div style="position: absolute; width: 40px; height: 200px;
+                  left: 160px; background: yellow;"></div>
+    </div>
+
+    <!-- a mmultiscripts element whose children are squares of different
+         colors. In dir=rtl, the color of each square should match the one of
+         the band over which the square is positioned. Hence, this
+         mmultiscripts should not be visible. -->
+    <div style="position: absolute;
+                top: 5px; left: 5px; width: 200px; height: 200px;">
+      <math dir="rtl">
+        <mmultiscripts>
+          <mspace width="40px" height="40px" mathbackground="magenta"/>
+
+          <mspace width="40px" height="40px" mathbackground="green"/>
+          <mspace width="40px" height="40px" mathbackground="green"/>
+
+          <mspace width="40px" height="40px" mathbackground="red"/>
+          <mspace width="40px" height="40px" mathbackground="red"/>
+
+           <mprescripts/>
+
+          <mspace width="40px" height="40px" mathbackground="yellow"/>
+          <mspace width="40px" height="40px" mathbackground="yellow"/>
+
+          <mspace width="40px" height="40px" mathbackground="blue"/>
+          <mspace width="40px" height="40px" mathbackground="blue"/>
+        </mmultiscripts>
+      </math>
+    </div>
+
+    <!-- We add black vertical bands to cover spaces between the children of
+         mmultiscripts. -->
+    <div style="position: absolute;
+                top: 5px; left: 5px; width: 200px; height: 200px;">
+      <div style="position: absolute; width: 10px; height: 200px;
+                  left: -5px; background: black;"></div>
+      <div style="position: absolute; width: 10px; height: 200px;
+                  left: 35px; background: black;"></div>
+      <div style="position: absolute; width: 10px; height: 200px;
+                  left: 75px; background: black;"></div>
+      <div style="position: absolute; width: 10px; height: 200px;
+                  left: 115px; background: black;"></div>
+      <div style="position: absolute; width: 10px; height: 200px;
+                  left: 155px; background: black;"></div>
+      <div style="position: absolute; width: 10px; height: 200px;
+                  left: 195px; background: black;"></div>
+    </div>
+
+  </body>
+</html>

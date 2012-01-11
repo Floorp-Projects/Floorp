@@ -10,6 +10,7 @@
 @DLL_PREFIX@xpistub@DLL_SUFFIX@
 @DLL_PREFIX@zlib@DLL_SUFFIX@
 @DLL_PREFIX@jemalloc@DLL_SUFFIX@
+@DLL_PREFIX@mozutils@DLL_SUFFIX@
 #ifdef MOZ_STATIC_JS
 @DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
@@ -43,6 +44,9 @@ components/@DLL_PREFIX@brwsrdir@DLL_SUFFIX@
 components/@DLL_PREFIX@myspell@DLL_SUFFIX@
 components/@DLL_PREFIX@spellchecker@DLL_SUFFIX@
 components/@DLL_PREFIX@spellchk@DLL_SUFFIX@
+#ifdef XP_MACOSX
+components/libalerts_s.dylib
+#endif
 components/aboutCertError.js
 components/aboutPrivateBrowsing.js
 components/aboutRights.js
@@ -70,6 +74,7 @@ components/pluginGlue.js
 components/sidebar.xpt
 #ifdef MOZ_B2G_RIL
 components/dom_telephony.xpt
+components/dom_wifi.xpt
 components/dom_system_b2g.xpt
 #endif
 components/uconvd.dll
@@ -922,6 +927,8 @@ xpicleanup@BIN_SUFFIX@
   components/nsTelephonyWorker.js
   components/Telephony.manifest
   components/Telephony.js
+  components/nsWifiWorker.js
+  components/nsWifiWorker.manifest
 #endif
   components/txEXSLTRegExFunctions.js
   components/Weave.js
@@ -1143,6 +1150,7 @@ xpicleanup@BIN_SUFFIX@
   components/dom_base.xpt
 #ifdef MOZ_B2G_RIL
   components/dom_telephony.xpt
+  components/dom_wifi.xpt
   components/dom_system_b2g.xpt
 #endif
   components/dom_canvas.xpt
@@ -1448,3 +1456,7 @@ extensions/inspector@mozilla.org/chrome/icons/default/winInspectorMain.ico
 components/nsPlacesTransactionsService.js
 components/browserplaces.xpt
 components/nsPlacesDBFlush.js
+#ifndef MOZ_MAINTENANCE_SERVICE
+maintenanceservice.exe
+maintenanceservice_installer.exe
+#endif

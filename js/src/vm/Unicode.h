@@ -39,7 +39,9 @@
 #ifndef Unicode_h__
 #define Unicode_h__
 
-#include "jsstr.h"
+#include "mozilla/StdInt.h"
+
+#include "jspubtd.h"
 
 #ifdef DEBUG
 #include <stdio.h> /* For EOF */

@@ -21,6 +21,7 @@
 #  Robert Strong <robert.bugzilla@gmail.com>
 #  Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #  Amir Szekely <kichik@gmail.com>
+#  Brian R. Bondy <netzen@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6678,6 +6679,40 @@
   Call UpdateShortcutAppModelIDs
   Pop ${_RESULT}
   !verbose pop
+!macroend
+
+!macro IsUserAdmin
+  ; Copied from: http://nsis.sourceforge.net/IsUserAdmin
+  Function IsUserAdmin
+    Push $R0
+    Push $R1
+    Push $R2
+ 
+    ClearErrors
+    UserInfo::GetName
+    IfErrors Win9x
+    Pop $R1
+    UserInfo::GetAccountType
+    Pop $R2
+ 
+    StrCmp $R2 "Admin" 0 Continue
+    StrCpy $R0 "true"
+    Goto Done
+ 
+    Continue:
+
+    StrCmp $R2 "" Win9x
+    StrCpy $R0 "false"
+    Goto Done
+ 
+    Win9x:
+    StrCpy $R0 "true"
+ 
+    Done:
+    Pop $R2
+    Pop $R1
+    Exch $R0
+  FunctionEnd
 !macroend
 
 /**

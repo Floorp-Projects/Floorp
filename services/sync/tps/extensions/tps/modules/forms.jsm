@@ -34,9 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- /* This is a JavaScript module (JSM) to be imported via 
-   Components.utils.import() and acts as a singleton. Only the following 
-   listed symbols will exposed on import, and only when and where imported. 
+ /* This is a JavaScript module (JSM) to be imported via
+   Components.utils.import() and acts as a singleton. Only the following
+   listed symbols will exposed on import, and only when and where imported.
   */
 
 var EXPORTED_SYMBOLS = ["FormData"];
@@ -138,7 +138,7 @@ let FormDB = {
   /**
    * getDataForValue
    *
-   * Retrieves a set of values for a row in the database that 
+   * Retrieves a set of values for a row in the database that
    * corresponds to the given fieldname and value.
    *
    * @param fieldname The fieldname of the row to query
@@ -195,7 +195,7 @@ let FormDB = {
  * FormData class constructor
  *
  * Initializes instance properties.
- */ 
+ */
 function FormData(props, usSinceEpoch) {
   this.fieldname = null;
   this.value = null;
@@ -264,13 +264,13 @@ FormData.prototype = {
     let formdata = FormDB.getDataForValue(this.fieldname, this.value);
     let status = formdata != null;
     if (status) {
-      /* 
+      /*
       //form history dates currently not synced!  bug 552531
       let us = this.hours_to_us(this.date);
       status = Logger.AssertTrue(
         us >= formdata.firstUsed && us <= formdata.lastUsed,
         "No match for with that date value");
-      
+
       if (status)
       */
         this.id = formdata.id;

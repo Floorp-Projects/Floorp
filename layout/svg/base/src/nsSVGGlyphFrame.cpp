@@ -53,7 +53,6 @@
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxPlatform.h"
-#include "gfxTextRunWordCache.h"
 
 using namespace mozilla;
 
@@ -269,42 +268,6 @@ nsSVGGlyphFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     ClearTextRun();
     NotifyGlyphMetricsChange();
   }
-}
-
-void
-nsSVGGlyphFrame::SetSelected(bool          aSelected,
-                             SelectionType aType)
-{
-#if defined(DEBUG) && defined(SVG_DEBUG_SELECTION)
-  printf("nsSVGGlyphFrame(%p)::SetSelected()\n", this);
-#endif
-
-  if (aType != nsISelectionController::SELECTION_NORMAL)
-    return;
-
-  // check whether style allows selection
-  bool selectable;
-  IsSelectable(&selectable, nsnull);
-  if (!selectable)
-    return;
-
-  if (aSelected) {
-    AddStateBits(NS_FRAME_SELECTED_CONTENT);
-  } else {
-    RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
-  }
-
-  nsSVGUtils::UpdateGraphic(this);
-}
-
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetSelected(bool *aSelected) const
-{
-  nsresult rv = nsSVGGlyphFrameBase::GetSelected(aSelected);
-#if defined(DEBUG) && defined(SVG_DEBUG_SELECTION)
-  printf("nsSVGGlyphFrame(%p)::GetSelected()=%d\n", this, *aSelected);
-#endif
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -984,9 +947,7 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
   *charnum=0;
   *nchars=0;
 
-  bool hasHighlight =
-    (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-
+  bool hasHighlight = IsSelected();
   if (!hasHighlight) {
     NS_ERROR("nsSVGGlyphFrame::GetHighlight() called by renderer when there is no highlight");
     return NS_ERROR_FAILURE;
@@ -1526,9 +1487,6 @@ nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext)
 void
 nsSVGGlyphFrame::ClearTextRun()
 {
-  if (!mTextRun)
-    return;
-  gfxTextRunWordCache::RemoveTextRun(mTextRun);
   delete mTextRun;
   mTextRun = nsnull;
 }
@@ -1641,16 +1599,16 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
     tmpCtx->SetMatrix(m);
 
-    // Use only the word cache here. We don't want to cache the textrun
-    // globally because we'll never hit in that cache, since we create
+    // Use only the fonts' internal word caching here.
+    // We don't cache the textrun globally because we create
     // a new fontgroup every time. Even if we cached fontgroups, we
     // might render at very many different sizes (e.g. during zoom
     // animation) and caching a textrun for each such size would be bad.
     gfxTextRunFactory::Parameters params = {
         tmpCtx, nsnull, nsnull, nsnull, 0, GetTextRunUnitsFactor()
     };
-    mTextRun = gfxTextRunWordCache::MakeTextRun(text.get(), text.Length(),
-      fontGroup, &params, flags);
+    mTextRun =
+      fontGroup->MakeTextRun(text.get(), text.Length(), &params, flags);
     if (!mTextRun)
       return false;
   }

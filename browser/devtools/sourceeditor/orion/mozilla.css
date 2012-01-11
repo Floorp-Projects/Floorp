@@ -2,124 +2,127 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 .viewContainer {
-	background: -moz-Dialog;
-	font-family: monospace;
-	font-size: inherit; /* inherit browser's default monospace font size */
+  background: #cddae5; /* This will be seen as the continuation of the ruler */
+  font-family: monospace;
+  font-size: inherit; /* inherit browser's default monospace font size */
 }
 
 .view {
-	background: #fff;
+  background: #f0f0ff; /* Background of the editor */
+  padding-left: 0;
 }
 
 .readonly > .view {
-	background: #f6f6f6;
+  background: #f0f0ff;
+}
+
+/* One line */
+.viewContent > div {
+  padding-left: 4px; /* Margin between the ruler and the editor */
 }
 
 /* Styles for rulers */
-.ruler {
-	background-color: white;
-}
 .ruler.lines {
-	border-right: 1px solid lightgray;
-	text-align: right;
+  text-align: right;
 }
 
 /* Styles for the line number ruler */
 .rulerLines {
-	background: -moz-Dialog;
-	color: -moz-DialogText;
-	min-width: 1.4em;
-	padding-left: 4px;
-	padding-right: 4px;
-	text-align: end;
+  border-right: 1px solid #b4c4d3;
+  background: #cddae5;
+  color: #7a8a99;
+  min-width: 1.4em;
+  padding-left: 4px;
+  padding-right: 4px;
+  text-align: end;
 }
 
 .token_singleline_comment {
-	color: green;
+  color: #45a946; /* green */
 }
 
 .token_multiline_comment {
-	color: green;
+  color: #45a946; /* green */
 }
 
 .token_doc_comment {
-	color: #00008F;
+  color: #45a946; /* green */
 }
 
 .token_doc_html_markup {
-	color: #7F7F9F;
+  color: #dd0058; /* purple */
 }
 
 .token_doc_tag {
-	color: #7F9FBF;
+  color: #dd0058; /* purple */
 }
 
-.token_task_tag {
-	color: #7F9FBF;
+.token_task_tag { /* "TODO" */
+  color: black;
+  background: yellow;
 }
 
 .token_string {
-	color: blue;
+  color: #1e66b1; /* blue */
+  font-style: italic;
 }
 
 .token_keyword {
-	color: darkred;
-	font-weight: bold;
+  color: #dd0058; /* purple */
 }
 
 .token_space {
-	/* images/white_space.png */
-	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAIAAABv85FHAAAABnRSTlMA/wAAAACkwsAdAAAAIUlEQVR4nGP4z8CAC+GUIEXuABhgkTuABEiRw2cmae4EAH05X7xDolNRAAAAAElFTkSuQmCC");
-	background-repeat: no-repeat;
- 	background-position: center center;
+  /* images/white_space.png */
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAIAAABv85FHAAAABnRSTlMA/wAAAACkwsAdAAAAIUlEQVR4nGP4z8CAC+GUIEXuABhgkTuABEiRw2cmae4EAH05X7xDolNRAAAAAElFTkSuQmCC");
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 .token_tab {
-	/* images/white_tab.png */
-	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAJCAIAAACJ2loDAAAABnRSTlMA/wD/AP83WBt9AAAAMklEQVR4nGP4TwRgoK6i52c3bz5w6zMSA6tJn28d2Lx589nnCAYu63AaSLxJRLoJPwAAeNk0aG4opfMAAAAASUVORK5CYII=");
-	background-repeat: no-repeat;
- 	background-position: left center;
+  /* images/white_tab.png */
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAJCAIAAACJ2loDAAAABnRSTlMA/wD/AP83WBt9AAAAMklEQVR4nGP4TwRgoK6i52c3bz5w6zMSA6tJn28d2Lx589nnCAYu63AaSLxJRLoJPwAAeNk0aG4opfMAAAAASUVORK5CYII=");
+  background-repeat: no-repeat;
+  background-position: left center;
 }
 
-.line_caret {
-	background: #EAF2FE;
+.line_caret { /* Current line */
+  background: #dae2ee; /* lighter than the background */
 }
 
 .readonly .line_caret {
-	background: #fcfcfc;
+  background: #cddae5; /* a bit darker than the background */
 }
 
 /* Styling for html syntax highlighting */
 .entity-name-tag {
-	color: #3f7f7f;
+  color: #dd0058; /* purple */
 }
 
 .entity-other-attribute-name {
-	color: #7f007f;
+  color: #dd0058; /* purple */
 }
 
 .punctuation-definition-comment {
-	color: #3f5fbf;
+  color: #45a946; /* green */
 }
 
 .comment {
-	color: #3f5fbf
+  color: #45a946; /* green */
 }
 
 .string-quoted {
-	color: #2a00ff;
-	font-style: italic;
+  color: #1e66b1; /* blue */
+  font-style: italic;
 }
 
 .invalid {
-	color: red;
-	font-weight: bold;
+  color: red;
+  font-weight: bold;
 }
 
 .annotationRange.currentBracket {
 }
 
 .annotationRange.matchingBracket {
-	outline: 1px solid red;
+  outline: 1px solid grey;
 }
-

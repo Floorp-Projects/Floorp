@@ -199,9 +199,9 @@ ExtendModeToTileMode(ExtendMode aMode)
   {
     case EXTEND_CLAMP:
       return SkShader::kClamp_TileMode;
-    case EXTEND_WRAP:
+    case EXTEND_REPEAT:
       return SkShader::kRepeat_TileMode;
-    case EXTEND_MIRROR:
+    case EXTEND_REFLECT:
       return SkShader::kMirror_TileMode;
   }
   return SkShader::kClamp_TileMode;
@@ -671,7 +671,7 @@ DrawTargetSkia::PopClip()
 }
 
 TemporaryRef<GradientStops>
-DrawTargetSkia::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops) const
+DrawTargetSkia::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode) const
 {
   std::vector<GradientStop> stops;
   stops.resize(aNumStops);

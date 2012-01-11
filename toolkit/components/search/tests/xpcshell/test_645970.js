@@ -35,6 +35,10 @@
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
+let Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 
 var gPrefService = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService)
@@ -58,5 +62,6 @@ function run_test() {
                        .getService(Ci.nsIBrowserSearchService);
   let engine = searchService.getEngineByName("bug645970");
   do_check_neq(engine, null);
+  Services.obs.notifyObservers(null, "quit-application", null);
 }
 

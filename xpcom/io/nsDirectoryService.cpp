@@ -857,6 +857,10 @@ nsDirectoryService::GetFile(const char *prop, bool *persistent, nsIFile **_retva
     {
         rv = GetSpecialSystemDirectory(Win_Common_Desktopdirectory, getter_AddRefs(localFile)); 
     }
+    else if (inAtom == nsDirectoryService::sCommon_AppData)
+    {
+        rv = GetSpecialSystemDirectory(Win_Common_AppData, getter_AddRefs(localFile)); 
+    }
     else if (inAtom == nsDirectoryService::sAppdata)
     {
         rv = GetSpecialSystemDirectory(Win_Appdata, getter_AddRefs(localFile)); 

@@ -131,7 +131,7 @@ panel[type="arrow"] {
 %endif
 
 %ifdef XP_WIN
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   panel[type="arrow"][side="top"],
   panel[type="arrow"][side="bottom"] {
     margin-left: -25px;

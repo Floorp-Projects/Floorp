@@ -463,6 +463,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
             break;
           }
           case eCSSUnit_Null:
+            diffsquared = 0;
             break;
           default:
             NS_ABORT_IF_FALSE(false, "unexpected unit");

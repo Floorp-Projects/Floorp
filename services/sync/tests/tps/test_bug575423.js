@@ -7,6 +7,8 @@
  * testrunner (no single quotes, extra comma's, etc).
  */
 
+EnableEngines(["history"]);
+
 var phases = { "phase1": "profile1",
                "phase2": "profile2"};
 
@@ -73,7 +75,7 @@ Phase('phase1', [
   [History.add, history1],
   [Sync],
   [History.add, history2],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 Phase('phase2', [

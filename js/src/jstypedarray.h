@@ -146,8 +146,6 @@ struct JS_FRIEND_API(ArrayBuffer) {
     obj_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp);
 
     static JSBool
-    obj_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
-    static JSBool
     obj_deleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict);
     static JSBool
     obj_deleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict);
@@ -326,6 +324,12 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
 
 extern int32_t JS_FASTCALL
 js_TypedArray_uint8_clamp_double(const double x);
+
+JS_FRIEND_API(JSBool)
+JS_IsArrayBufferObject(JSObject *obj);
+
+JS_FRIEND_API(JSObject *)
+JS_NewArrayBuffer(JSContext *cx, jsuint nbytes);
 
 JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj);

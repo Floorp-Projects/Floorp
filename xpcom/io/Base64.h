@@ -55,6 +55,16 @@ Base64EncodeInputStream(nsIInputStream *aInputStream,
                         PRUint32 aCount,
                         PRUint32 aOffset = 0);
 
+nsresult
+Base64Encode(const nsACString &aString, nsACString &aBinary);
+nsresult
+Base64Encode(const nsAString &aString, nsAString &aBinaryData);
+
+nsresult
+Base64Decode(const nsACString &aBinaryData, nsACString &aString);
+nsresult
+Base64Decode(const nsAString &aBinaryData, nsAString &aString);
+
 } // namespace mozilla
 
 #endif

@@ -135,19 +135,19 @@ public:
   }
 
   /**
-   * For pointer types, get the value, returning NULL if the entry is not
+   * For pointer types, get the value, returning nsnull if the entry is not
    * present in the table.
    *
    * @param aKey the key to retrieve
-   * @return The found value, or NULL if no entry was found with the given key.
-   * @note If NULL values are stored in the table, it is not possible to
-   *       distinguish between a NULL value and a missing entry.
+   * @return The found value, or nsnull if no entry was found with the given key.
+   * @note If nsnull values are stored in the table, it is not possible to
+   *       distinguish between a nsnull value and a missing entry.
    */
   UserDataType Get(KeyType aKey) const
   {
     EntryType* ent = this->GetEntry(aKey);
     if (!ent)
-      return NULL;
+      return nsnull;
 
     return ent->mData;
   }
@@ -261,7 +261,7 @@ public:
 
   /**
    * Measure the size of the table's entry storage, and if
-   * |sizeOfEntryExcludingThis| is non-NULL, measure the size of things pointed
+   * |sizeOfEntryExcludingThis| is non-nsnull, measure the size of things pointed
    * to by entries.
    * 
    * @param     sizeOfEntryExcludingThis the
@@ -272,7 +272,7 @@ public:
    * @return    the summed size of all the entries
    */
   size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                             nsMallocSizeOfFun mallocSizeOf, void *userArg = NULL)
+                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nsnull)
   {
     if (IsInitialized()) {
       s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };

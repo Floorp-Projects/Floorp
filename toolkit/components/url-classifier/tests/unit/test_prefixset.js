@@ -66,7 +66,7 @@ function doExpectedLookups(pset, prefixes, N) {
 function testBasicPset() {
   let pset = Cc["@mozilla.org/url-classifier/prefixset;1"]
                .createInstance(Ci.nsIUrlClassifierPrefixSet);
-  let prefixes = [2,100,50,2000,78000,1593203];
+  let prefixes = [2,50,100,2000,78000,1593203];
   pset.setPrefixes(prefixes, prefixes.length);
 
   do_check_true(wrappedProbe(pset, 100));
@@ -93,15 +93,6 @@ function testDuplicates() {
 function testSimplePset() {
   let pset = newPset();
   let prefixes = [1,2,100,400,123456789];
-  pset.setPrefixes(prefixes, prefixes.length);
-
-  doRandomLookups(pset, prefixes, 100);
-  doExpectedLookups(pset, prefixes, 1);
-}
-
-function testUnsortedPset() {
-  let pset = newPset();
-  let prefixes = [5,1,20,100,200000,100000];
   pset.setPrefixes(prefixes, prefixes.length);
 
   doRandomLookups(pset, prefixes, 100);
@@ -158,7 +149,6 @@ function testTinySet() {
 
 let tests = [testBasicPset,
              testSimplePset,
-             testUnsortedPset,
              testReSetPrefixes,
              testLargeSet,
              testDuplicates,

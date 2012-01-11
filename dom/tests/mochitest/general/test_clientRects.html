@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html id="d9" style="width:800px; height:1000px">
+<head>
+  <title>Tests for getClientRects/getBoundingClientRect</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body style="margin:0" onload="doTest()">
+
+<script>
+function isWithinEps(v1, v2, eps, msg) {
+  if (eps) {
+    ok(Math.abs(v1 - v2) < eps, msg + " (within " + eps + "); got " + v1 + ", expected " + v2);
+  } else {
+    is(v1, v2, msg);
+  }
+}
+function checkRect(clientRect, r, eps, exprMsg, restMsg) {
+  isWithinEps(clientRect.left, r[0], eps, exprMsg + ".left" + restMsg);
+  isWithinEps(clientRect.top, r[1], eps, exprMsg + ".top" + restMsg);
+  isWithinEps(clientRect.right, r[2], eps, exprMsg + ".right" + restMsg);
+  isWithinEps(clientRect.bottom, r[3], eps, exprMsg + ".bottom" + restMsg);
+  isWithinEps(clientRect.width, r[2] - r[0], eps, exprMsg + ".width" + restMsg);
+  isWithinEps(clientRect.height, r[3] - r[1], eps, exprMsg + ".height" + restMsg);
+}
+function doc(id) {
+  return document.getElementById(id).contentDocument;
+}
+function checkElement(id, list, eps, doc) {
+  var e = (doc || document).getElementById(id);
+  var clientRects = e.getClientRects();
+  is(clientRects.length, list.length, "getClientRects().length for element '" + id + "'");
+  var bounds = list.length > 0 ? list[0] : [0,0,0,0];
+  for (var i = 0; i < clientRects.length && i < list.length; ++i) {
+    var r = list[i];
+    r[2] += r[0];
+    r[3] += r[1];
+    checkRect(clientRects[i], r, eps, "getClientRects()[" + i + "]", " for element '" + id + "'");
+    if (r[2] != r[0] && r[3] != r[1]) {
+      bounds[0] = Math.min(bounds[0], r[0]);
+      bounds[1] = Math.min(bounds[1], r[1]);
+      bounds[2] = Math.max(bounds[2], r[2]);
+      bounds[3] = Math.max(bounds[3], r[3]);
+    }
+  }
+  checkRect(e.getBoundingClientRect(), bounds, eps, "getBoundingClientRect()", " for element '" + id + "'");
+}
+</script>
+
+<!-- Simple case -->
+<div id="d1" style="position:absolute; left:50px; top:50px; width:20px; height:30px; background:pink;"></div>
+<!-- Multiple boxes -->
+<div style="position:absolute; left:50px; top:100px; width:400px; height:100px; -moz-column-count:2; -moz-column-gap:0; column-count:2; column-gap:0">
+  <div id="d2">
+    <div style="width:200px; height:100px; background:yellow"></div>
+    <div style="width:200px; height:100px; background:lime"></div>
+  </div>
+</div>
+<!-- No boxes -->
+<div id="d3" style="display:none"></div>
+<!-- Element in transform -->
+<div style="-moz-transform:translate(50px, 50px); transform:translate(50px,50px); position:absolute; left:0; top:200px">
+  <div id="d4" style="width:50px; height:50px; background:blue;"></div>  
+</div>
+<svg style="position:absolute; left:50px; top:300px; width:100px; height:100px;">
+  <!-- Element in SVG foreignobject -->
+  <foreignObject x="20" y="30" width="40" height="40">
+    <div id="d5" style="width:40px; height:40px; background:pink;"></div>
+  </foreignObject>
+  <!-- SVG Element -->
+  <circle id="s1" cx="60" cy="60" r="10" fill="yellow"/>
+</svg>
+<!-- Element in transform with bounding-box -->
+<div style="-moz-transform:rotate(45deg); transform:rotate(45deg); position:absolute; left:50px; top:450px; width:100px; height:100px;">
+  <div id="d6" style="width:100px; height:100px; background:orange;"></div>  
+</div>
+<!-- Element in two transforms; we should combine transforms instead of taking bounding-box twice -->
+<div style="-moz-transform:rotate(45deg); transform:rotate(45deg); position:absolute; left:50px; top:550px; width:100px; height:100px;">
+  <div style="-moz-transform:rotate(-45deg); transform:rotate(-45deg); width:100px; height:100px;">
+    <div id="d7" style="width:100px; height:100px; background:lime;"></div>
+  </div>
+</div>
+<!-- Fixed-pos element -->
+<div id="d8" style="position:fixed; left:50px; top:700px; width:100px; height:100px; background:gray;"></div>
+<!-- Root element; see d9 -->
+<!-- Element in iframe -->
+<iframe id="f1" style="position:absolute; left:300px; top:0; width:100px; height:200px; border:none"
+        src="data:text/html,<div id='d10' style='position:absolute; left:0; top:25px; width:100px; height:100px; background:cyan'>">
+</iframe>
+<!-- Root element in iframe -->
+<iframe id="f2" style="position:absolute; left:300px; top:250px; width:100px; height:200px; border:none"
+        src="data:text/html,<html id='d11' style='width:100px; height:100px; background:magenta'>">
+</iframe>
+<!-- Fixed-pos element in iframe -->
+<iframe id="f3" style="position:absolute; left:300px; top:400px; border:none"
+        src="data:text/html,<div id='d12' style='position:fixed; left:0; top:0; width:100px; height:100px;'>"></iframe>
+
+<script>
+function doTest() {
+  checkElement("d1", [[50,50,20,30]]);
+  checkElement("d2", [[50,100,200,100],[250,100,200,100]]);
+  checkElement("d3", []);
+  checkElement("d4", [[50,250,50,50]]);
+  checkElement("d5", [[70,330,40,40]]);
+  checkElement("s1", [[100,350,20,20]]);
+  var sqrt2 = Math.sqrt(2);
+  checkElement("d6", [[100 - 50*sqrt2,500 - 50*sqrt2,100*sqrt2,100*sqrt2]], 0.1);
+  checkElement("d7", [[50,550,100,100]]);
+  checkElement("d8", [[50,700,100,100]]);
+  checkElement("d9", [[0,0,800,1000]]);
+  checkElement("d10", [[0,25,100,100]], 0, doc("f1"));
+  checkElement("d11", [[0,0,100,100]], 0, doc("f2"));
+  checkElement("d12", [[0,0,100,100]], 0, doc("f3"));
+  SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+</script>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+</body>
+</html>

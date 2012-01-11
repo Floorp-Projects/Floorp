@@ -11,8 +11,12 @@
 const TEST_URI = "data:text/html,Web Console test for bug 588342";
 let fm, notificationBox, input;
 
-function test()
-{
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
+function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
   addTab(TEST_URI);
   browser.addEventListener("load", tabLoad, true);

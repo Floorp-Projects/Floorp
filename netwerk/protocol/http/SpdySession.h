@@ -192,7 +192,7 @@ private:
                                   void *);
 
   // This is intended to be nsHttpConnectionMgr:nsHttpConnectionHandle taken
-  // from the first transcation on this session. That object contains the
+  // from the first transaction on this session. That object contains the
   // pointer to the real network-level nsHttpConnection object.
   nsRefPtr<nsAHttpConnection> mConnection;
 
@@ -205,7 +205,7 @@ private:
   nsAHttpSegmentReader       *mSegmentReader;
   nsAHttpSegmentWriter       *mSegmentWriter;
 
-  PRUint32          mSendingChunkSize;        /* the transmisison chunk size */
+  PRUint32          mSendingChunkSize;        /* the transmission chunk size */
   PRUint32          mNextStreamID;            /* 24 bits */
   PRUint32          mConcurrentHighWater;     /* max parallelism on session */
 
@@ -215,7 +215,7 @@ private:
   // one list of streams ready to write, one list of streams that are queued
   // due to max parallelism settings, and one list of streams
   // that must be given priority to write for window updates. The objects
-  // are not ref counted - they get destryoed
+  // are not ref counted - they get destroyed
   // by the nsClassHashtable implementation when they are removed from
   // there.
   nsDataHashtable<nsUint32HashKey, SpdyStream *>      mStreamIDHash;

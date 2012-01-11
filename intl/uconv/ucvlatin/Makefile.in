@@ -95,7 +95,6 @@ CPPSRCS		= \
 		nsMacFarsiToUnicode.cpp \
 		nsMacGujaratiToUnicode.cpp \
 		nsMacGurmukhiToUnicode.cpp \
-		nsGEOSTD8ToUnicode.cpp \
 		nsARMSCII8ToUnicode.cpp \
 		nsTCVN5712ToUnicode.cpp \
 		nsVISCIIToUnicode.cpp \
@@ -151,7 +150,6 @@ CPPSRCS		= \
 		nsUnicodeToMacFarsi.cpp \
 		nsUnicodeToMacGujarati.cpp \
 		nsUnicodeToMacGurmukhi.cpp \
-		nsUnicodeToGEOSTD8.cpp \
 		nsUnicodeToARMSCII8.cpp \
 		nsUnicodeToTCVN5712.cpp \
 		nsUnicodeToVISCII.cpp \

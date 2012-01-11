@@ -23,11 +23,9 @@ var rv = { tests: null };
 var testCheckInterval = null;
 
 function startTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var url = window.location.href.replace(/test_feed_discovery\.html/,
                                          'feed_discovery.html');
-  window.openDialog(url, '', 'dialog=no,width=10,height=10', rv);
+  SpecialPowers.openDialog(window, [url, '', 'dialog=no,width=10,height=10', rv]);
   testCheckInterval = window.setInterval(tryIfTestIsFinished, 500);
 }
 

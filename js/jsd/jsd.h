@@ -235,7 +235,7 @@ struct JSDExecHook
 {
     JSCList               links;        /* we are part of a JSCList */
     JSDScript*            jsdscript;
-    jsuword               pc;
+    uintptr_t             pc;
     JSD_ExecutionHookProc hook;
     void*                 callerdata;
 };
@@ -257,7 +257,7 @@ struct JSDStackFrameInfo
     JSCList             links;        /* we are part of a JSCList */
     JSDThreadState*     jsdthreadstate;
     JSDScript*          jsdscript;
-    jsuword             pc;
+    uintptr_t           pc;
     JSStackFrame*       fp;
 };
 
@@ -474,16 +474,16 @@ jsd_SetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc hook, void* callerdata);
 extern JSBool
 jsd_GetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc* hook, void** callerdata);
 
-extern jsuword
+extern uintptr_t
 jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line);
 
 extern uintN
-jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc);
+jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc);
 
 extern JSBool
 jsd_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
                uintN startLine, uintN maxLines,
-               uintN* count, uintN** lines, jsuword** pcs);
+               uintN* count, uintN** lines, uintptr_t** pcs);
 
 extern void
 jsd_NewScriptHookProc(
@@ -505,14 +505,14 @@ jsd_DestroyScriptHookProc(
 extern JSBool
 jsd_SetExecutionHook(JSDContext*           jsdc,
                      JSDScript*            jsdscript,
-                     jsuword               pc,
+                     uintptr_t             pc,
                      JSD_ExecutionHookProc hook,
                      void*                 callerdata);
 
 extern JSBool
 jsd_ClearExecutionHook(JSDContext*           jsdc,
                        JSDScript*            jsdscript,
-                       jsuword               pc);
+                       uintptr_t             pc);
 
 extern JSBool
 jsd_ClearAllExecutionHooksForScript(JSDContext* jsdc, JSDScript* jsdscript);
@@ -703,7 +703,7 @@ jsd_GetScriptForStackFrame(JSDContext* jsdc,
                            JSDThreadState* jsdthreadstate,
                            JSDStackFrameInfo* jsdframe);
 
-extern jsuword
+extern uintptr_t
 jsd_GetPCForStackFrame(JSDContext* jsdc,
                        JSDThreadState* jsdthreadstate,
                        JSDStackFrameInfo* jsdframe);
@@ -1128,7 +1128,7 @@ extern JSDSourceText*
 jsdlw_ForceLoadSource(JSDContext* jsdc, JSDSourceText* jsdsrc);
 
 extern JSBool
-jsdlw_UserCodeAtPC(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc);
+jsdlw_UserCodeAtPC(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc);
 
 extern JSBool
 jsdlw_RawToProcessedLineNumber(JSDContext* jsdc, JSDScript* jsdscript,

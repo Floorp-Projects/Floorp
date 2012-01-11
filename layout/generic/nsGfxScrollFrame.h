@@ -40,7 +40,7 @@
 #ifndef nsGfxScrollFrame_h___
 #define nsGfxScrollFrame_h___
 
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
 #include "nsDisplayList.h"
@@ -98,11 +98,11 @@ public:
                             const nsRect&           aDirtyRect,
                             const nsDisplayListSet& aLists);
 
-  nsresult AppendScrollPartsTo(nsDisplayListBuilder*          aBuilder,
-                               const nsRect&                  aDirtyRect,
-                               const nsDisplayListSet&        aLists,
-                               const nsDisplayListCollection& aDest,
-                               bool&                        aCreateLayer);
+  void AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
+                           const nsRect&           aDirtyRect,
+                           const nsDisplayListSet& aLists,
+                           bool&                   aCreateLayer,
+                           bool                    aPositioned);
 
   bool GetBorderRadii(nscoord aRadii[8]) const;
 
@@ -324,9 +324,6 @@ public:
   // If true, we should be prepared to scroll using this scrollframe
   // by placing descendant content into its own layer(s)
   bool mScrollingActive:1;
-  // If true, scrollbars are stacked on the top of the display list and can
-  // float above the content as a result
-  bool mScrollbarsCanOverlapContent:1;
   // If true, the resizer is collapsed and not displayed
   bool mCollapsedResizer:1;
 
@@ -344,7 +341,7 @@ public:
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsHTMLScrollFrame : public nsHTMLContainerFrame,
+class nsHTMLScrollFrame : public nsContainerFrame,
                           public nsIScrollableFrame,
                           public nsIAnonymousContentCreator,
                           public nsIStatefulFrame {

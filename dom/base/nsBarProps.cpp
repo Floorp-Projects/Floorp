@@ -106,7 +106,7 @@ nsBarProp::SetVisibleByFlag(bool aVisible, PRUint32 aChromeFlag)
   nsCOMPtr<nsIScriptSecurityManager>
            securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   if (securityManager)
-    securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+    securityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
   if (!enabled)
     return NS_OK;
 
@@ -323,7 +323,7 @@ nsScrollbarsProp::SetVisible(bool aVisible)
   nsCOMPtr<nsIScriptSecurityManager>
            securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   if (securityManager)
-    securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+    securityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
   if (!enabled)
     return NS_OK;
 

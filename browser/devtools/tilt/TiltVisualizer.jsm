@@ -65,11 +65,11 @@ const INITIAL_Z_TRANSLATION = 400;
 
 const MOUSE_CLICK_THRESHOLD = 10;
 const ARCBALL_SENSITIVITY = 0.3;
-const ARCBALL_ZOOM_STEP = 0.1;
 const ARCBALL_ROTATION_STEP = 0.15;
 const ARCBALL_TRANSLATION_STEP = 35;
-const ARCBALL_SCROLL_MIN = -3000;
-const ARCBALL_SCROLL_MAX = 500;
+const ARCBALL_ZOOM_STEP = 0.1;
+const ARCBALL_ZOOM_MIN = -3000;
+const ARCBALL_ZOOM_MAX = 500;
 
 const TILT_CRAFTER = "resource:///modules/devtools/TiltWorkerCrafter.js";
 const TILT_PICKER = "resource:///modules/devtools/TiltWorkerPicker.js";
@@ -106,7 +106,7 @@ function TiltVisualizer(aProperties)
     append: true
   });
 
-  /*
+  /**
    * Visualization logic and drawing loop.
    */
   this.presenter = new TiltVisualizer.Presenter(this.canvas,
@@ -185,6 +185,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
   this.canvas = aCanvas;
   this.contentWindow = aContentWindow;
   this.inspectorUI = aInspectorUI;
+  this.tiltUI = aInspectorUI.chromeWin.Tilt;
 
   /**
    * Create the renderer, containing useful functions for easy drawing.
@@ -220,6 +221,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
    * Modified by events in the controller through delegate functions.
    */
   this.transforms = {
+    zoom: TiltUtils.getDocumentZoom(),
     offset: vec3.create(),      // mesh offset, aligned to the viewport center
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create()    // scene rotation, expressed as a quaternion
@@ -336,6 +338,8 @@ TiltVisualizer.Presenter.prototype = {
     // offset the visualization mesh to center
     renderer.translate(transforms.offset[0],
                        transforms.offset[1] + transforms.translation[1], 0);
+
+    renderer.scale(transforms.zoom, transforms.zoom);
 
     // draw the visualization mesh
     renderer.strokeWeight(2);
@@ -491,12 +495,13 @@ TiltVisualizer.Presenter.prototype = {
       this.highlightNode(this.inspectorUI.selection);
     }
 
-    let width = renderer.width;
-    let height = renderer.height;
+    let zoom = TiltUtils.getDocumentZoom();
+    let width = Math.min(aData.meshWidth * zoom, renderer.width);
+    let height = Math.min(aData.meshHeight * zoom, renderer.height);
 
     // set the necessary mesh offsets
-    this.transforms.offset[0] = -Math.min(aData.meshWidth, width) * 0.5;
-    this.transforms.offset[1] = -Math.min(aData.meshHeight, height) * 0.5;
+    this.transforms.offset[0] = -width * 0.5;
+    this.transforms.offset[1] = -height * 0.5;
 
     // make sure the canvas is opaque now that the initialization is finished
     this.canvas.style.background = TiltVisualizerStyle.canvas.background;
@@ -558,8 +563,9 @@ TiltVisualizer.Presenter.prototype = {
    */
   onResize: function TVP_onResize(e)
   {
-    let width = e.target.innerWidth;
-    let height = e.target.innerHeight;
+    let zoom = TiltUtils.getDocumentZoom();
+    let width = e.target.innerWidth * zoom;
+    let height = e.target.innerHeight * zoom;
 
     // handle aspect ratio changes to update the projection matrix
     this.renderer.width = width;
@@ -702,9 +708,12 @@ TiltVisualizer.Presenter.prototype = {
       }
     }, false);
 
-    let width = this.renderer.width;
-    let height = this.renderer.height;
+    let zoom = TiltUtils.getDocumentZoom();
+    let width = this.renderer.width * zoom;
+    let height = this.renderer.height * zoom;
     let mesh = this.meshStacks;
+    x *= zoom;
+    y *= zoom;
 
     // create a ray following the mouse direction from the near clipping plane
     // to the far clipping plane, to check for intersections with the mesh,
@@ -852,6 +861,7 @@ TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
   aCanvas.addEventListener("MozMousePixelScroll", this.onMozScroll, false);
   aCanvas.addEventListener("keydown", this.onKeyDown, false);
   aCanvas.addEventListener("keyup", this.onKeyUp, false);
+  aCanvas.addEventListener("blur", this.onBlur, false);
 
   // handle resize events to change the arcball dimensions
   aPresenter.contentWindow.addEventListener("resize", this.onResize, false);
@@ -972,7 +982,7 @@ TiltVisualizer.Controller.prototype = {
     e.preventDefault();
     e.stopPropagation();
 
-    this.arcball.mouseScroll(e.detail);
+    this.arcball.zoom(e.detail);
   },
 
   /**
@@ -986,7 +996,11 @@ TiltVisualizer.Controller.prototype = {
       e.preventDefault();
       e.stopPropagation();
     }
-    this.arcball.keyDown(code);
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+      this.arcball.cancelKeyEvents();
+    } else {
+      this.arcball.keyDown(code);
+    }
   },
 
   /**
@@ -1000,7 +1014,18 @@ TiltVisualizer.Controller.prototype = {
       e.preventDefault();
       e.stopPropagation();
     }
+    if (code === e.DOM_VK_ESCAPE) {
+      this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId);
+      return;
+    }
     this.arcball.keyUp(code);
+  },
+
+  /**
+   * Called when the canvas looses focus.
+   */
+  onBlur: function TVC_onBlur(e) {
+    this.arcball.cancelKeyEvents();
   },
 
   /**
@@ -1008,8 +1033,9 @@ TiltVisualizer.Controller.prototype = {
    */
   onResize: function TVC_onResize(e)
   {
-    let width = e.target.innerWidth;
-    let height = e.target.innerHeight;
+    let zoom = TiltUtils.getDocumentZoom();
+    let width = e.target.innerWidth * zoom;
+    let height = e.target.innerHeight * zoom;
 
     this.arcball.resize(width, height);
   },
@@ -1044,6 +1070,7 @@ TiltVisualizer.Controller.prototype = {
     canvas.removeEventListener("MozMousePixelScroll", this.onMozScroll, false);
     canvas.removeEventListener("keydown", this.onKeyDown, false);
     canvas.removeEventListener("keyup", this.onKeyUp, false);
+    canvas.removeEventListener("blur", this.onBlur, false);
     presenter.contentWindow.removeEventListener("resize", this.onResize,false);
     presenter.ondraw = null;
   }
@@ -1075,12 +1102,7 @@ TiltVisualizer.Arcball = function TV_Arcball(
   this._mouseRelease = vec3.create();
   this._mouseMove = vec3.create();
   this._mouseLerp = vec3.create();
-
-  /**
-   * Other mouse flags: current pressed mouse button and the scroll amount.
-   */
   this._mouseButton = -1;
-  this._scrollValue = 0;
 
   /**
    * Object retaining the current pressed key codes.
@@ -1109,6 +1131,7 @@ TiltVisualizer.Arcball = function TV_Arcball(
   this._lastTrans = vec3.create();
   this._deltaTrans = vec3.create();
   this._currentTrans = vec3.create(aInitialTrans);
+  this._zoomAmount = 0;
 
   /**
    * Additional rotation and translation vectors.
@@ -1217,11 +1240,11 @@ TiltVisualizer.Arcball.prototype = {
       lastTrans[1] = currentTrans[1];
     }
 
-    let scrollValue = this._scrollValue;
+    let zoomAmount = this._zoomAmount;
     let keyCode = this._keyCode;
 
     // mouse wheel handles zooming
-    deltaTrans[2] = (scrollValue - currentTrans[2]) * ARCBALL_ZOOM_STEP;
+    deltaTrans[2] = (zoomAmount - currentTrans[2]) * ARCBALL_ZOOM_STEP;
     currentTrans[2] += deltaTrans[2];
 
     let addKeyRot = this._addKeyRot;
@@ -1253,6 +1276,19 @@ TiltVisualizer.Arcball.prototype = {
     }
     if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_DOWN]) {
       addKeyTrans[1] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    }
+    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_I] ||
+        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_ADD] ||
+        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_EQUALS]) {
+      this.zoom(-ARCBALL_TRANSLATION_STEP);
+    }
+    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_O] ||
+        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_SUBTRACT]) {
+      this.zoom(ARCBALL_TRANSLATION_STEP);
+    }
+    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_R] ||
+        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_0]) {
+      this._zoomAmount = 0;
     }
 
     // update the delta key rotations and translations
@@ -1364,16 +1400,17 @@ TiltVisualizer.Arcball.prototype = {
   },
 
   /**
-   * Function handling the mouseScroll event.
-   * Call this when the mouse wheel was scrolled.
+   * Function handling the arcball zoom amount.
+   * Call this, for example, when the mouse wheel was scrolled or zoom keys
+   * were pressed.
    *
-   * @param {Number} aScroll
-   *                 the mouse wheel direction and speed
+   * @param {Number} aZoom
+   *                 the zoom direction and speed
    */
-  mouseScroll: function TVA_mouseScroll(aScroll)
+  zoom: function TVA_zoom(aZoom)
   {
-    this._scrollValue = TiltMath.clamp(this._scrollValue - aScroll,
-      ARCBALL_SCROLL_MIN, ARCBALL_SCROLL_MAX);
+    this._zoomAmount = TiltMath.clamp(this._zoomAmount - aZoom,
+      ARCBALL_ZOOM_MIN, ARCBALL_ZOOM_MAX);
   },
 
   /**
@@ -1442,6 +1479,13 @@ TiltVisualizer.Arcball.prototype = {
       aSphereVec[1] = y;
       aSphereVec[2] = Math.sqrt(1 - sqlength);
     }
+  },
+
+  /**
+   * Cancels all pending transformations caused by key events.
+   */
+  cancelKeyEvents: function TVA_cancelKeyEvents() {
+    this._keyCode = {};
   },
 
   /**

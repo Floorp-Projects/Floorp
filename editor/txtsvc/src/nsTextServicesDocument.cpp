@@ -2122,10 +2122,8 @@ nsTextServicesDocument::CreateDocumentContentRange(nsIDOMRange **aRange)
 
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
-  result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
-  NS_ENSURE_SUCCESS(result, result);
-
-  NS_ENSURE_TRUE(*aRange, NS_ERROR_NULL_POINTER);
+  *aRange = new nsRange();
+  NS_ADDREF(*aRange);
 
   result = (*aRange)->SelectNodeContents(node);
 
@@ -2202,8 +2200,8 @@ nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *a
     }
   }
 
-  result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
-  NS_ENSURE_SUCCESS(result, result);
+  *aRange = new nsRange();
+  NS_ADDREF((*aRange));
 
   NS_ENSURE_TRUE(*aRange, NS_ERROR_NULL_POINTER);
 
@@ -3265,11 +3263,11 @@ nsTextServicesDocument::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                                       nsIDOMNode* aParent2, PRInt32 aOffset2,
                                       PRInt32 *aResult)
 {
-  nsresult result;
-  
+  *aResult = 0;
+
   if (!sRangeHelper) {
-    result = CallGetService("@mozilla.org/content/range-utils;1",
-                            &sRangeHelper);
+    nsresult result = CallGetService("@mozilla.org/content/range-utils;1",
+                                     &sRangeHelper);
     NS_ENSURE_TRUE(sRangeHelper, result);
   }
 
@@ -3314,14 +3312,9 @@ nsTextServicesDocument::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffs
                                     nsIDOMNode *aEndParent, PRInt32 aEndOffset,
                                     nsIDOMRange **aRange)
 {
-  nsresult result;
+  NS_ADDREF(*aRange = new nsRange());
 
-  result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
-  NS_ENSURE_SUCCESS(result, result);
-
-  NS_ENSURE_TRUE(*aRange, NS_ERROR_NULL_POINTER);
-
-  result = (*aRange)->SetStart(aStartParent, aStartOffset);
+  nsresult result = (*aRange)->SetStart(aStartParent, aStartOffset);
 
   if (NS_SUCCEEDED(result))
     result = (*aRange)->SetEnd(aEndParent, aEndOffset);

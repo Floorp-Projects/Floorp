@@ -38,9 +38,11 @@
 #ifndef nsByteBuffer_h__
 #define nsByteBuffer_h__
 
+#include "mozilla/Attributes.h"
+
 #include "nsIByteBuffer.h"
 
-class ByteBufferImpl : public nsIByteBuffer {
+class ByteBufferImpl MOZ_FINAL : public nsIByteBuffer {
 public:
   ByteBufferImpl(void);
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -47,17 +47,13 @@
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "jsatom.h"
-#include "jsobj.h"
 #include "jsfriendapi.h"
-#include "jsfun.h"
 #include "jsgc.h"
-#include "jsscript.h"
 #include "nsThreadUtilsInternal.h"
 #include "dom_quickstubs.h"
 #include "nsNullPrincipal.h"
 #include "nsIURI.h"
 #include "nsJSEnvironment.h"
-#include "plbase64.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
@@ -67,7 +63,14 @@
 
 #include "XPCQuickStubs.h"
 #include "dombindings.h"
+
+#include "mozilla/Assertions.h"
+#include "mozilla/Base64.h"
+
 #include "nsWrapperCacheInlines.h"
+
+#include "jscntxt.h" // js::ThreadData, JS_TRACER_INIT, context->stackLimit, cx->outstandingRequests,
+// cx->globalObject, sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -738,7 +741,7 @@ xpc_UnmarkGrayObjectRecursive(JSObject *obj)
     NS_ASSERTION(obj, "Don't pass me null!");
 
     // Unmark.
-    obj->unmark(js::gc::GRAY);
+    js::gc::AsCell(obj)->unmark(js::gc::GRAY);
 
     // Tracing requires a JSContext...
     JSContext *cx;
@@ -765,6 +768,12 @@ struct TraversalTracer : public JSTracer
 static void
 NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
+    TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
+
+    // Don't traverse non-gray objects, unless we want all traces.
+    if (!xpc_IsGrayGCThing(thing) && !tracer->cb.WantAllTraces())
+        return;
+
     /*
      * This function needs to be careful to avoid stack overflow. Normally, when
      * AddToCCKind is true, the recursion terminates immediately as we just add
@@ -774,13 +783,6 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
      * parent pointers iteratively, rather than recursively, to avoid overflow.
      */
     if (AddToCCKind(kind)) {
-        TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
-
-        // There's no point in further traversing a non-gray object here unless
-        // we explicitly want to see all traces.
-        if (!xpc_IsGrayGCThing(thing) && !tracer->cb.WantAllTraces())
-            return;
-
 #if defined(DEBUG)
         if (NS_UNLIKELY(tracer->cb.WantDebugInfo())) {
             // based on DumpNotify in jsapi.c
@@ -801,9 +803,7 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
 #endif
         tracer->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
     } else if (kind == JSTRACE_SHAPE) {
-        do {
-            thing = JS_TraceShapeChildrenAcyclic(trc, thing);
-        } while (thing);
+        JS_TraceShapeCycleCollectorChildren(trc, thing);
     } else if (kind != JSTRACE_STRING) {
         JS_TraceChildren(trc, thing, kind);
     }
@@ -921,9 +921,9 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         }
 
         // Disable printing global for objects while we figure out ObjShrink fallout.
-        cb.DescribeGCedNode(isMarked, sizeof(JSObject), name);
+        cb.DescribeGCedNode(isMarked, sizeof(js::shadow::Object), name);
     } else {
-        cb.DescribeGCedNode(isMarked, sizeof(JSObject), "JS Object");
+        cb.DescribeGCedNode(isMarked, sizeof(js::shadow::Object), "JS Object");
     }
 
     // There's no need to trace objects that have already been marked by the JS
@@ -1117,7 +1117,7 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
         return false;
 
     *global = tempGlobal;
-    *compartment = tempGlobal->compartment();
+    *compartment = js::GetObjectCompartment(tempGlobal);
 
     js::AutoSwitchCompartment sc(cx, *compartment);
     JS_SetCompartmentPrivate(cx, *compartment, priv_holder.forget());
@@ -2063,97 +2063,6 @@ nsXPConnect::ClearAllWrappedNativeSecurityPolicies()
     return XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies(ccx);
 }
 
-/* void restoreWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo, in nsIXPConnectJSObjectHolder aPrototype); */
-NS_IMETHODIMP
-nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
-                                           JSObject * aScope,
-                                           nsIClassInfo * aClassInfo,
-                                           nsIXPConnectJSObjectHolder * aPrototype)
-{
-    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    if (!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    if (!aClassInfo || !aPrototype)
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    JSObject *protoJSObject;
-    nsresult rv = aPrototype->GetJSObject(&protoJSObject);
-    if (NS_FAILED(rv))
-        return UnexpectedFailure(rv);
-
-    if (!IS_PROTO_CLASS(js::GetObjectClass(protoJSObject)))
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aScope);
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    XPCWrappedNativeProto *proto =
-        (XPCWrappedNativeProto*)xpc_GetJSPrivate(protoJSObject);
-    if (!proto)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    if (scope != proto->GetScope()) {
-        NS_ERROR("Attempt to reset prototype to a prototype from a"
-                 "different scope!");
-
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-    }
-
-    XPCNativeScriptableInfo *si = proto->GetScriptableInfo();
-
-    if (si && si->GetFlags().DontSharePrototype())
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    ClassInfo2WrappedNativeProtoMap* map =
-        scope->GetWrappedNativeProtoMap(proto->ClassIsMainThreadOnly());
-    XPCLock* lock = GetRuntime()->GetMapLock();
-
-    {   // scoped lock
-        XPCAutoLock al(lock);
-
-        XPCWrappedNativeProtoMap* detachedMap =
-            GetRuntime()->GetDetachedWrappedNativeProtoMap();
-
-        // If we're replacing an old proto, make sure to put it on the
-        // map of detached wrapped native protos so that the old proto
-        // gets properly cleaned up, especially during shutdown.
-        XPCWrappedNativeProto *oldProto = map->Find(aClassInfo);
-        if (oldProto) {
-            detachedMap->Add(oldProto);
-
-            // ClassInfo2WrappedNativeProtoMap doesn't ever replace
-            // entries in the map, so now since we know there's an
-            // entry for aClassInfo in the map we have to remove it to
-            // be able to add the new one.
-            map->Remove(aClassInfo);
-
-            // This code should do the right thing even if we're
-            // restoring the current proto, but warn in that case
-            // since doing that is pointless.
-            NS_ASSERTION(proto != oldProto,
-                         "Restoring current prototype, fix caller!");
-        }
-
-        map->Add(aClassInfo, proto);
-
-        // Remove the prototype from the map of detached wrapped
-        // native prototypes now that the prototype is part of a scope
-        // again.
-        detachedMap->Remove(proto);
-    }
-
-    // The global in this scope didn't change, but a prototype did
-    // (most likely the global object's prototype), which means the
-    // scope needs to get a chance to update its cached
-    // Object.prototype pointers etc.
-    scope->SetGlobal(ccx, aScope);
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
                            nsIXPConnectJSObjectHolder **_retval)
@@ -2224,8 +2133,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
     proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo,
-                                                &sciProto, false,
-                                                OBJ_IS_NOT_GLOBAL);
+                                                &sciProto, OBJ_IS_NOT_GLOBAL);
     if (!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -2558,8 +2466,7 @@ nsXPConnect::UnregisterGCCallback(JSGCCallback func)
 NS_IMETHODIMP
 nsXPConnect::GetCount(PRInt32 *aCount)
 {
-    if (!aCount)
-        return NS_ERROR_NULL_POINTER;
+    MOZ_ASSERT(aCount);
 
     XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
 
@@ -2568,15 +2475,15 @@ nsXPConnect::GetCount(PRInt32 *aCount)
         return NS_ERROR_FAILURE;
     }
 
-    return data->GetJSContextStack()->GetCount(aCount);
+    *aCount = data->GetJSContextStack()->Count();
+    return NS_OK;
 }
 
 /* JSContext Peek (); */
 NS_IMETHODIMP
 nsXPConnect::Peek(JSContext * *_retval)
 {
-    if (!_retval)
-        return NS_ERROR_NULL_POINTER;
+    MOZ_ASSERT(_retval);
 
     XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
 
@@ -2585,7 +2492,8 @@ nsXPConnect::Peek(JSContext * *_retval)
         return NS_ERROR_FAILURE;
     }
 
-    return data->GetJSContextStack()->Peek(_retval);
+    *_retval = data->GetJSContextStack()->Peek();
+    return NS_OK;
 }
 
 void
@@ -2676,11 +2584,14 @@ nsXPConnect::Pop(JSContext * *_retval)
 
     if (!data) {
         if (_retval)
-            *_retval = nsnull;
+            *_retval = NULL;
         return NS_ERROR_FAILURE;
     }
 
-    return data->GetJSContextStack()->Pop(_retval);
+    JSContext *cx = data->GetJSContextStack()->Pop();
+    if (_retval)
+        *_retval = cx;
+    return NS_OK;
 }
 
 /* void Push (in JSContext cx); */
@@ -2693,7 +2604,7 @@ nsXPConnect::Push(JSContext * cx)
         return NS_ERROR_FAILURE;
 
      if (gDebugMode != gDesiredDebugMode && NS_IsMainThread()) {
-         const nsTArray<XPCJSContextInfo>* stack = data->GetJSContextStack()->GetStack();
+         const InfallibleTArray<XPCJSContextInfo>* stack = data->GetJSContextStack()->GetStack();
          if (!gDesiredDebugMode) {
              /* Turn off debug mode immediately, even if JS code is currently running */
              CheckForDebugMode(mRuntime->GetJSRuntime());
@@ -2711,7 +2622,7 @@ nsXPConnect::Push(JSContext * cx)
          }
      }
 
-     return data->GetJSContextStack()->Push(cx);
+     return data->GetJSContextStack()->Push(cx) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* attribute JSContext SafeJSContext; */
@@ -2727,7 +2638,8 @@ nsXPConnect::GetSafeJSContext(JSContext * *aSafeJSContext)
         return NS_ERROR_FAILURE;
     }
 
-    return data->GetJSContextStack()->GetSafeJSContext(aSafeJSContext);
+    *aSafeJSContext = data->GetJSContextStack()->GetSafeJSContext();
+    return *aSafeJSContext ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsIPrincipal*
@@ -2802,65 +2714,22 @@ nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
     *aObj = ccx->GetFlattenedJSObject();
 }
 
-// static
-nsresult
-nsXPConnect::Base64Encode(const nsACString &aBinaryData, nsACString &aString)
+namespace xpc {
+
+bool
+Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
 {
-  // Check for overflow.
-  if (aBinaryData.Length() > (PR_UINT32_MAX / 4) * 3)
-      return NS_ERROR_FAILURE;
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(out);
 
-  PRUint32 stringLen = ((aBinaryData.Length() + 2) / 3) * 4;
-
-  char *buffer;
-
-  // Add one byte for null termination.
-  if (aString.SetCapacity(stringLen + 1) &&
-      (buffer = aString.BeginWriting()) &&
-      PL_Base64Encode(aBinaryData.BeginReading(), aBinaryData.Length(), buffer)) {
-      // PL_Base64Encode doesn't null terminate the buffer for us when we pass
-      // the buffer in. Do that manually.
-      buffer[stringLen] = '\0';
-
-      aString.SetLength(stringLen);
-      return NS_OK;
-  }
-
-  aString.Truncate();
-  return NS_ERROR_INVALID_ARG;
-}
-
-// static
-nsresult
-nsXPConnect::Base64Encode(const nsAString &aString, nsAString &aBinaryData)
-{
-    NS_LossyConvertUTF16toASCII string(aString);
-    nsCAutoString binaryData;
-
-    nsresult rv = Base64Encode(string, binaryData);
-    if (NS_SUCCEEDED(rv))
-        CopyASCIItoUTF16(binaryData, aBinaryData);
-    else
-        aBinaryData.Truncate();
-
-    return rv;
-}
-
-// static
-JSBool
-nsXPConnect::Base64Encode(JSContext *cx, jsval val, jsval *out)
-{
-    NS_ASSERTION(cx, "Null context!");
-    NS_ASSERTION(out, "Null jsval pointer!");
-
-    jsval root = val;
+    JS::Value root = val;
     xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
                                  xpc_qsACString::eStringify);
     if (!encodedString.IsValid())
         return false;
 
     nsCAutoString result;
-    if (NS_FAILED(nsXPConnect::Base64Encode(encodedString, result))) {
+    if (NS_FAILED(mozilla::Base64Encode(encodedString, result))) {
         JS_ReportError(cx, "Failed to encode base64 data!");
         return false;
     }
@@ -2873,72 +2742,20 @@ nsXPConnect::Base64Encode(JSContext *cx, jsval val, jsval *out)
     return true;
 }
 
-// static
-nsresult
-nsXPConnect::Base64Decode(const nsACString &aString, nsACString &aBinaryData)
+bool
+Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
 {
-  // Check for overflow.
-  if (aString.Length() > PR_UINT32_MAX / 3)
-      return NS_ERROR_FAILURE;
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(out);
 
-  PRUint32 binaryDataLen = ((aString.Length() * 3) / 4);
-
-  char *buffer;
-
-  // Add one byte for null termination.
-  if (aBinaryData.SetCapacity(binaryDataLen + 1) &&
-      (buffer = aBinaryData.BeginWriting()) &&
-      PL_Base64Decode(aString.BeginReading(), aString.Length(), buffer)) {
-      // PL_Base64Decode doesn't null terminate the buffer for us when we pass
-      // the buffer in. Do that manually, taking into account the number of '='
-      // characters we were passed.
-      if (!aString.IsEmpty() && aString[aString.Length() - 1] == '=') {
-          if (aString.Length() > 1 && aString[aString.Length() - 2] == '=')
-              binaryDataLen -= 2;
-          else
-              binaryDataLen -= 1;
-      }
-      buffer[binaryDataLen] = '\0';
-
-      aBinaryData.SetLength(binaryDataLen);
-      return NS_OK;
-  }
-
-  aBinaryData.Truncate();
-  return NS_ERROR_INVALID_ARG;
-}
-
-// static
-nsresult
-nsXPConnect::Base64Decode(const nsAString &aBinaryData, nsAString &aString)
-{
-    NS_LossyConvertUTF16toASCII binaryData(aBinaryData);
-    nsCAutoString string;
-
-    nsresult rv = Base64Decode(binaryData, string);
-    if (NS_SUCCEEDED(rv))
-        CopyASCIItoUTF16(string, aString);
-    else
-        aString.Truncate();
-
-    return rv;
-}
-
-// static
-JSBool
-nsXPConnect::Base64Decode(JSContext *cx, jsval val, jsval *out)
-{
-    NS_ASSERTION(cx, "Null context!");
-    NS_ASSERTION(out, "Null jsval pointer!");
-
-    jsval root = val;
+    JS::Value root = val;
     xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
                                  xpc_qsACString::eNull);
     if (!encodedString.IsValid())
         return false;
 
     nsCAutoString result;
-    if (NS_FAILED(nsXPConnect::Base64Decode(encodedString, result))) {
+    if (NS_FAILED(mozilla::Base64Decode(encodedString, result))) {
         JS_ReportError(cx, "Failed to decode base64 string!");
         return false;
     }
@@ -2950,6 +2767,8 @@ nsXPConnect::Base64Decode(JSContext *cx, jsval val, jsval *out)
     *out = STRING_TO_JSVAL(str);
     return true;
 }
+
+} // namespace xpc
 
 NS_IMETHODIMP
 nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)
@@ -3026,7 +2845,7 @@ JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
 
 JS_EXPORT_API(void) DumpJSValue(jsval val)
 {
-    printf("Dumping 0x%llu.\n", (long long) val.asRawBits());
+    printf("Dumping 0x%llu.\n", (long long) JSVAL_TO_IMPL(val).asBits);
     if (JSVAL_IS_NULL(val)) {
         printf("Value is null\n");
     } else if (JSVAL_IS_OBJECT(val) || JSVAL_IS_NULL(val)) {

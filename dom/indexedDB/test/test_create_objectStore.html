@@ -52,6 +52,14 @@
         ok(true, "createObjectStore with bad options");
       }
 
+      try {
+        db.createObjectStore("foo", { keyPath: ["foo"], autoIncrement: true });
+        ok(false, "createObjectStore with keyPath-array and autoIncrement should throw");
+      }
+      catch(e) {
+        ok(true, "createObjectStore with keyPath-array and autoIncrement should throw");
+      }
+
       ok(db.createObjectStore("foo", { foo: "" }),
          "createObjectStore with unknown options should not throw");
       db.deleteObjectStore("foo");

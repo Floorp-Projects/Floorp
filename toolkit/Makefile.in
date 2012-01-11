@@ -55,11 +55,20 @@ PARALLEL_DIRS = \
   mozapps/preferences \
   mozapps/plugins \
   mozapps/shared \
-  mozapps/update \
   obsolete \
   profile \
   themes \
   $(NULL)
+
+DIRS += \
+  mozapps/update \
+  $(NULL)
+
+ifdef MOZ_MAINTENANCE_SERVICE
+DIRS += \
+  components/maintenanceservice \
+  $(NULL)
+endif
 
 ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 PARALLEL_DIRS += system/unixproxy

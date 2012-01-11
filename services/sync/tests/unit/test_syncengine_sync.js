@@ -13,12 +13,14 @@ function makeRotaryEngine() {
 
 function cleanAndGo(server) {
   Svc.Prefs.resetBranch("");
+  Svc.Prefs.set("log.logger.engine.rotary", "Trace");
   Records.clearCache();
   server.stop(run_next_test);
 }
 
 function run_test() {
   generateNewKeys();
+  Svc.Prefs.set("log.logger.engine.rotary", "Trace");
   run_next_test();
 }
 
@@ -358,8 +360,112 @@ add_test(function test_processIncoming_reconcile() {
   } finally {
     cleanAndGo(server);
   }
+})
+
+add_test(function test_processIncoming_reconcile_deleted_dupe() {
+  _("Ensure that locally deleted duplicate record is handled properly.");
+
+  let engine = new RotaryEngine();
+
+  let contents = {
+    meta: {global: {engines: {rotary: {version: engine.version,
+                                       syncID:  engine.syncID}}}},
+    crypto: {},
+    rotary: {}
+  };
+
+  const USER = "foo";
+
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", USER);
+
+  let now = Date.now() / 1000 - 10;
+  engine.lastSync = now;
+  engine.lastModified = now + 1;
+
+  let server = new SyncServer();
+  server.registerUser(USER, "password");
+  server.createContents(USER, contents);
+  server.start();
+
+  let record = encryptPayload({id: "DUPE_INCOMING", denomination: "value"});
+  let wbo = new ServerWBO("DUPE_INCOMING", record, now + 2);
+  server.insertWBO(USER, "rotary", wbo);
+
+  // Simulate a locally-deleted item.
+  engine._store.items = {};
+  engine._tracker.addChangedID("DUPE_LOCAL", now + 3);
+  do_check_false(engine._store.itemExists("DUPE_LOCAL"));
+  do_check_false(engine._store.itemExists("DUPE_INCOMING"));
+  do_check_eq("DUPE_LOCAL", engine._findDupe({id: "DUPE_INCOMING"}));
+
+  engine._sync();
+
+  // After the sync, nothing should exist since the local record had been
+  // deleted after the incoming record was updated. The server should also have
+  // deleted the incoming record. Since the local record only existed on the
+  // client at the beginning of the sync, it shouldn't exist on the server
+  // after.
+  do_check_empty(engine._store.items);
+
+  let collection = server.getCollection(USER, "rotary");
+  do_check_eq(1, collection.count());
+  do_check_eq(undefined, collection.payload("DUPE_INCOMING"));
+
+  cleanAndGo(server);
 });
 
+add_test(function test_processIncoming_reconcile_changed_dupe() {
+  _("Ensure that locally changed duplicate record is handled properly.");
+
+  let engine = new RotaryEngine();
+  let contents = {
+    meta: {global: {engines: {rotary: {version: engine.version,
+                                       syncID:  engine.syncID}}}},
+    crypto: {},
+    rotary: {}
+  };
+
+  const USER = "foo";
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", USER);
+
+  let now = Date.now() / 1000 - 10;
+  engine.lastSync = now;
+  engine.lastModified = now + 1;
+
+  let server = new SyncServer();
+  server.registerUser(USER, "password");
+  server.createContents(USER, contents);
+  server.start();
+
+  let record = encryptPayload({id: "DUPE_INCOMING", denomination: "incoming"});
+  let wbo = new ServerWBO("DUPE_INCOMING", record, now + 2);
+  server.insertWBO(USER, "rotary", wbo);
+
+  engine._store.create({id: "DUPE_LOCAL", denomination: "local"});
+  engine._tracker.addChangedID("DUPE_LOCAL", now + 3);
+  do_check_true(engine._store.itemExists("DUPE_LOCAL"));
+  do_check_eq("DUPE_LOCAL", engine._findDupe({id: "DUPE_INCOMING"}));
+
+  engine._sync();
+
+  do_check_attribute_count(engine._store.items, 1);
+  do_check_true("DUPE_LOCAL" in engine._store.items);
+
+  let collection = server.getCollection(USER, "rotary");
+  let wbo = collection.wbo("DUPE_INCOMING");
+  do_check_neq(undefined, wbo);
+  do_check_eq(undefined, wbo.payload);
+
+  let wbo = collection.wbo("DUPE_LOCAL");
+  do_check_neq(undefined, wbo);
+  do_check_neq(undefined, wbo.payload);
+  let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  do_check_eq("local", payload.denomination);
+
+  cleanAndGo(server);
+});
 
 add_test(function test_processIncoming_mobile_batchSize() {
   _("SyncEngine._processIncoming doesn't fetch everything at once on mobile clients");

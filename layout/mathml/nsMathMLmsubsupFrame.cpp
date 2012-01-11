@@ -336,16 +336,19 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
   if (aPlaceOrigin) {
     nscoord dx, dy;
     // now place the base ...
-    dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
+    dx = aFrame->MirrorIfRTL(aDesiredSize.width, baseSize.width, 0);
+    dy = aDesiredSize.ascent - baseSize.ascent;
     FinishReflowChild(baseFrame, aPresContext, nsnull,
                       baseSize, dx, dy, 0);
     // ... and subscript
-    dx = bmBase.width;
+    dx = aFrame->MirrorIfRTL(aDesiredSize.width, subScriptSize.width,
+                             bmBase.width);
     dy = aDesiredSize.ascent - (subScriptSize.ascent - subScriptShift);
     FinishReflowChild(subScriptFrame, aPresContext, nsnull,
                       subScriptSize, dx, dy, 0);
     // ... and the superscript
-    dx = bmBase.width + italicCorrection;
+    dx = aFrame->MirrorIfRTL(aDesiredSize.width, supScriptSize.width,
+                             bmBase.width + italicCorrection);
     dy = aDesiredSize.ascent - (supScriptSize.ascent + supScriptShift);
     FinishReflowChild(supScriptFrame, aPresContext, nsnull,
                       supScriptSize, dx, dy, 0);

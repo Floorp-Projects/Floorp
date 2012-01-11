@@ -157,25 +157,6 @@
 # endif
 #endif
 
-#ifdef NS_STATIC_CHECKING
-/*
- * Attributes for static analysis. Functions declared with JS_REQUIRES_STACK
- * always have a valid cx->fp and can access it freely.  Other functions can
- * access cx->fp only after calling a function that "forces" the stack
- * (i.e. lazily instantiates it as needed).
- */
-# define JS_REQUIRES_STACK   __attribute__((user("JS_REQUIRES_STACK")))
-# define JS_FORCES_STACK     __attribute__((user("JS_FORCES_STACK")))
-/*
- * Skip the JS_REQUIRES_STACK analysis within functions with this annotation.
- */
-# define JS_IGNORE_STACK     __attribute__((user("JS_IGNORE_STACK")))
-#else
-# define JS_REQUIRES_STACK
-# define JS_FORCES_STACK
-# define JS_IGNORE_STACK
-#endif
-
 /***********************************************************************
 ** MACROS:      JS_BEGIN_MACRO
 **              JS_END_MACRO
@@ -319,12 +300,6 @@ typedef JSIntn JSBool;
 **      but minimum and consistent overhead matters.
 ************************************************************************/
 typedef uint8_t JSPackedBool;
-
-/*
-** A JSWord is an integer that is the same size as a void*
-*/
-typedef intptr_t JSWord;
-typedef uintptr_t JSUword;
 
 /***********************************************************************
 ** MACROS:      JS_LIKELY

@@ -42,6 +42,7 @@
 
 /* base class of all rendering objects */
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
@@ -91,6 +92,7 @@
 #include "nsFrameTraversal.h"
 #include "nsStyleChangeList.h"
 #include "nsIDOMRange.h"
+#include "nsRange.h"
 #include "nsITableLayout.h"    //selection necessity
 #include "nsITableCellLayout.h"//  "
 #include "nsITextControlFrame.h"
@@ -110,7 +112,7 @@
 #include "nsUnicharUtils.h"
 #include "nsLayoutErrors.h"
 #include "nsContentErrors.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
@@ -444,8 +446,7 @@ nsFrame::Init(nsIContent*      aContent,
     nsFrameState state = aPrevInFlow->GetStateBits();
 
     // Make bits that are currently off (see constructor) the same:
-    mState |= state & (NS_FRAME_SELECTED_CONTENT |
-                       NS_FRAME_INDEPENDENT_SELECTION |
+    mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_IS_SPECIAL |
                        NS_FRAME_MAY_BE_TRANSFORMED);
   }
@@ -568,8 +569,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
   shell->NotifyDestroyingFrame(this);
 
-  if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||
-      (mState & NS_FRAME_SELECTED_CONTENT)) {
+  if (mState & NS_FRAME_EXTERNAL_REFERENCE) {
     shell->ClearFrameRefs(this);
   }
 
@@ -1204,10 +1204,7 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
                                  nsDisplayList*          aList,
                                  PRUint16                aContentType)
 {
-//check frame selection state
-  if ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) != NS_FRAME_SELECTED_CONTENT)
-    return NS_OK;
-  if (!IsVisibleForPainting(aBuilder))
+  if (!IsSelected() || !IsVisibleForPainting(aBuilder))
     return NS_OK;
     
   nsPresContext* presContext = PresContext();
@@ -1922,7 +1919,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   if (childType != nsGkAtoms::placeholderFrame &&
       aBuilder->GetSelectedFramesOnly() &&
       child->IsLeaf() &&
-      !(child->GetStateBits() & NS_FRAME_SELECTED_CONTENT)) {
+      !aChild->IsSelected()) {
     return NS_OK;
   }
 
@@ -2493,9 +2490,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // drag the selected region to some other app.
 
   SelectionDetails *details = 0;
-  bool isSelected = ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
-
-  if (isSelected)
+  if (GetContent()->IsSelectionDescendant())
   {
     bool inSelection = false;
     details = frameselection->LookUpSelection(offsets.content, 0,
@@ -4341,7 +4336,7 @@ public:
   nsChangeHint mChangeHint;
 };
 
-class LayerActivityTracker : public nsExpirationTracker<LayerActivity,4> {
+class LayerActivityTracker MOZ_FINAL : public nsExpirationTracker<LayerActivity,4> {
 public:
   // 75-100ms is a good timeout period. We use 4 generations of 25ms each.
   enum { GENERATION_MS = 100 };
@@ -4546,7 +4541,8 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
 }
 
 gfx3DMatrix
-nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
+nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
+                             nsIFrame** aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
 
@@ -4558,7 +4554,8 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
     /* Compute the delta to the parent, which we need because we are converting
      * coordinates to our parent.
      */
-    NS_ASSERTION(nsLayoutUtils::GetCrossDocParentFrame(this), "Cannot transform the viewport frame!");
+    NS_ASSERTION(nsLayoutUtils::GetCrossDocParentFrame(this),
+	             "Cannot transform the viewport frame!");
     PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     gfx3DMatrix result =
@@ -4587,7 +4584,7 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
     return gfx3DMatrix();
   
   /* Keep iterating while the frame can't possibly be transformed. */
-  while (!(*aOutAncestor)->IsTransformed()) {
+  while (!(*aOutAncestor)->IsTransformed() && *aOutAncestor != aStopAtAncestor) {
     /* If no parent, stop iterating.  Otherwise, update the ancestor. */
     nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(*aOutAncestor);
     if (!parent)
@@ -4753,7 +4750,30 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
       *aAnyOutlineOrEffects = true;
     }
   }
-  
+
+  // border-image-outset.
+  // We need to include border-image-outset because it can cause the
+  // border image to be drawn beyond the border box.
+
+  // (1) It's important we not check whether there's a border-image
+  //     since the style hint for a change in border image doesn't cause
+  //     reflow, and that's probably more important than optimizing the
+  //     overflow areas for the silly case of border-image-outset without
+  //     border-image
+  // (2) It's important that we not check whether the border-image
+  //     is actually loaded, since that would require us to reflow when
+  //     the image loads.
+  const nsStyleBorder* styleBorder = aFrame->GetStyleBorder();
+  nsMargin outsetMargin = styleBorder->GetImageOutset();
+
+  if (outsetMargin != nsMargin(0, 0, 0, 0)) {
+    nsRect outsetRect(nsPoint(0, 0), aNewSize);
+    outsetRect.Inflate(outsetMargin);
+    r.UnionRect(r, outsetRect);
+
+    *aAnyOutlineOrEffects = true;
+  }
+
   // Note that we don't remove the outlineInnerRect if a frame loses outline
   // style. That would require an extra property lookup for every frame,
   // or a new frame state bit to track whether a property had been stored,
@@ -5060,7 +5080,7 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    fprintf(out, " [state=%016llx]", mState);
+    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
   }
   nsIFrame* prevInFlow = GetPrevInFlow();
   nsIFrame* nextInFlow = GetNextInFlow();
@@ -5199,8 +5219,9 @@ nsIFrame::IsVisibleOrCollapsedForPainting(nsDisplayListBuilder* aBuilder) {
 bool
 nsIFrame::IsVisibleInSelection(nsISelection* aSelection)
 {
-  if ((mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT)
-    return true;
+  if (!GetContent() || !GetContent()->IsSelectionDescendant()) {
+    return false;
+  }
   
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
   bool vis;
@@ -5256,11 +5277,11 @@ nsIFrame::GetFrameSelection()
 }
 
 const nsFrameSelection*
-nsIFrame::GetConstFrameSelection()
+nsIFrame::GetConstFrameSelection() const
 {
-  nsIFrame *frame = this;
+  nsIFrame* frame = const_cast<nsIFrame*>(this);
   while (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION)) {
-    nsITextControlFrame *tcf = do_QueryFrame(frame);
+    nsITextControlFrame* tcf = do_QueryFrame(frame);
     if (tcf) {
       return tcf->GetOwnedFrameSelection();
     }
@@ -5281,7 +5302,7 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aInd
   XMLQuote(name);
   fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
   fprintf(out, "\" state=\"%016llx\" parent=\"%ld\">\n",
-          GetDebugStateBits(), PRUptrdiff(mParent));
+          (unsigned long long)GetDebugStateBits(), PRUptrdiff(mParent));
 
   aIndent++;
   DumpBaseRegressionData(aPresContext, out, aIndent);
@@ -5338,39 +5359,13 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
 }
 #endif
 
-void
-nsIFrame::SetSelected(bool aSelected, SelectionType aType)
+bool
+nsIFrame::IsFrameSelected() const
 {
-  NS_ASSERTION(!GetPrevContinuation(),
-               "Should only be called on first in flow");
-  if (aType != nsISelectionController::SELECTION_NORMAL)
-    return;
-
-  // check whether style allows selection
-  bool selectable;
-  IsSelectable(&selectable, nsnull);
-  if (!selectable)
-    return;
-
-  for (nsIFrame* f = this; f; f = f->GetNextContinuation()) {
-    if (aSelected) {
-      AddStateBits(NS_FRAME_SELECTED_CONTENT);
-    } else {
-      RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
-    }
-
-    // Repaint this frame subtree's entire area
-    InvalidateFrameSubtree();
-  }
-}
-
-NS_IMETHODIMP
-nsFrame::GetSelected(bool *aSelected) const
-{
-  if (!aSelected )
-    return NS_ERROR_NULL_POINTER;
-  *aSelected = !!(mState & NS_FRAME_SELECTED_CONTENT);
-  return NS_OK;
+  NS_ASSERTION(!GetContent() || GetContent()->IsSelectionDescendant(),
+               "use the public IsSelected() instead");
+  return nsRange::IsNodeSelected(GetContent(), 0,
+                                 GetContent()->GetChildCount());
 }
 
 NS_IMETHODIMP
@@ -8105,7 +8100,7 @@ struct DR_FrameTypeInfo
   char        mName[32];
   nsTArray<DR_Rule*> mRules;
 private:
-  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&); // NOT USED
+  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&) MOZ_DELETE;
 };
 
 DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType, 

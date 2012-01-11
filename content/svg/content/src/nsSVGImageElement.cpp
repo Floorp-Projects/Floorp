@@ -72,8 +72,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGImageElement,nsSVGImageElementBase)
 DOMCI_NODE_DATA(SVGImageElement, nsSVGImageElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGImageElement)
-  NS_NODE_INTERFACE_TABLE7(nsSVGImageElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGImageElement,
+  NS_NODE_INTERFACE_TABLE8(nsSVGImageElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGImageElement,
                            nsIDOMSVGURIReference, imgIDecoderObserver,
                            nsIImageLoadingContent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGImageElement)

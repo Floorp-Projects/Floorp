@@ -727,10 +727,14 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
 
   NS_ConvertUTF16toUTF8 familyName(aProxy->FamilyName());
   nsCAutoString fontURI;
-  if (aProxy->mSrcList[aProxy->mSrcIndex].mURI) {
-    aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
+  if (aProxy->mSrcIndex == aProxy->mSrcList.Length()) {
+    fontURI.AppendLiteral("(end of source list)");
   } else {
-    fontURI.AppendLiteral("(invalid URI)");
+    if (aProxy->mSrcList[aProxy->mSrcIndex].mURI) {
+      aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
+    } else {
+      fontURI.AppendLiteral("(invalid URI)");
+    }
   }
 
   char weightKeywordBuf[8]; // plenty to sprintf() a PRUint16
@@ -797,7 +801,7 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIScriptError2> scriptError =
+  nsCOMPtr<nsIScriptError> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -809,11 +813,8 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
                                      aFlags,       // flags
                                      "CSS Loader", // category (make separate?)
                                      innerWindowID);
-  if (NS_SUCCEEDED(rv)){
-    nsCOMPtr<nsIScriptError> logError = do_QueryInterface(scriptError);
-    if (logError) {
-      console->LogMessage(logError);
-    }
+  if (NS_SUCCEEDED(rv)) {
+    console->LogMessage(scriptError);
   }
 
   return NS_OK;

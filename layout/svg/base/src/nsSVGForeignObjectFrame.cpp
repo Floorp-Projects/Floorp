@@ -140,7 +140,12 @@ nsSVGForeignObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsSVGForeignObjectFrameBase::DidSetStyleContext(aOldStyleContext);
 
-  UpdateGraphic();
+  // No need to invalidate before first reflow - that will happen elsewhere.
+  // Moreover we haven't been initialised properly yet so we may not have the
+  // right state bits.
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    UpdateGraphic();
+  }
 }
 
 NS_IMETHODIMP
@@ -206,8 +211,6 @@ NS_IMETHODIMP
 nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
                                   const nsIntRect *aDirtyRect)
 {
-  NS_ABORT_IF_FALSE(aDirtyRect, "We expect aDirtyRect to be non-null");
-
   if (IsDisabled())
     return NS_OK;
 
@@ -226,9 +229,11 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   }
 
   /* Check if we need to draw anything. */
-  PRInt32 appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
-  if (!mRect.ToOutsidePixels(appUnitsPerDevPx).Intersects(*aDirtyRect))
-    return NS_OK;
+  if (aDirtyRect) {
+    PRInt32 appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
+    if (!mRect.ToOutsidePixels(appUnitsPerDevPx).Intersects(*aDirtyRect))
+      return NS_OK;
+  }
 
   gfxContext *gfx = aContext->GetGfxContext();
 
@@ -278,7 +283,8 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 }
 
 gfx3DMatrix
-nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
+nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame* aAncestor,
+                                            nsIFrame **aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "We need an ancestor to write to!");
 

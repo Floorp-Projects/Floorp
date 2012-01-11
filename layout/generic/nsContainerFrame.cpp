@@ -40,7 +40,7 @@
 /* base class #1 for rendering objects that have child lists */
 
 #include "nsContainerFrame.h"
-#include "nsHTMLContainerFrame.h"
+
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -50,7 +50,6 @@
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIView.h"
-#include "nsHTMLContainerFrame.h"
 #include "nsFrameManager.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
@@ -485,7 +484,7 @@ nsContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
   aFrame->SetView(view);
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-               ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p view=%p",
+               ("nsContainerFrame::CreateViewForFrame: frame=%p view=%p",
                 aFrame));
   return NS_OK;
 }
@@ -1298,6 +1297,42 @@ nsContainerFrame::DestroyOverflowList(nsPresContext* aPresContext,
   }
 }
 
+/*
+ * Create a next-in-flow for aFrame. Will return the newly created
+ * frame in aNextInFlowResult <b>if and only if</b> a new frame is
+ * created; otherwise nsnull is returned in aNextInFlowResult.
+ */
+nsresult
+nsContainerFrame::CreateNextInFlow(nsPresContext* aPresContext,
+                                   nsIFrame*      aFrame,
+                                   nsIFrame*&     aNextInFlowResult)
+{
+  NS_PRECONDITION(GetType() != nsGkAtoms::blockFrame,
+                  "you should have called nsBlockFrame::CreateContinuationFor instead");
+  NS_PRECONDITION(mFrames.ContainsFrame(aFrame), "expected an in-flow child frame");
+
+  aNextInFlowResult = nsnull;
+
+  nsIFrame* nextInFlow = aFrame->GetNextInFlow();
+  if (nsnull == nextInFlow) {
+    // Create a continuation frame for the child frame and insert it
+    // into our child list.
+    nsresult rv = aPresContext->PresShell()->FrameConstructor()->
+      CreateContinuingFrame(aPresContext, aFrame, this, &nextInFlow);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mFrames.InsertFrame(nsnull, aFrame, nextInFlow);
+
+    NS_FRAME_LOG(NS_FRAME_TRACE_NEW_FRAMES,
+       ("nsContainerFrame::CreateNextInFlow: frame=%p nextInFlow=%p",
+        aFrame, nextInFlow));
+
+    aNextInFlowResult = nextInFlow;
+  }
+  return NS_OK;
+}
+
 /**
  * Remove and delete aNextInFlow and its next-in-flows. Updates the sibling and flow
  * pointers
@@ -1743,7 +1778,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    fprintf(out, " [state=%016llx]", mState);
+    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));
   nsContainerFrame* f = const_cast<nsContainerFrame*>(this);

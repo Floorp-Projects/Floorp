@@ -651,11 +651,24 @@ TiltUtils.getWindowId = function TU_getWindowId(aWindow)
 };
 
 /**
+ * Gets the markup document viewer zoom for the currently selected browser.
+ *
+ * @return {Number} the zoom ammount
+ */
+TiltUtils.getDocumentZoom = function TU_getDocumentZoom() {
+  let browserWindow = Cc["@mozilla.org/appshell/window-mediator;1"]
+    .getService(Ci.nsIWindowMediator)
+    .getMostRecentWindow("navigator:browser");
+
+  return browserWindow.gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
+};
+
+/**
  * Performs a garbage collection.
  */
 TiltUtils.gc = function TU_gc()
 {
-  var browserWindow = Cc["@mozilla.org/appshell/window-mediator;1"]
+  let browserWindow = Cc["@mozilla.org/appshell/window-mediator;1"]
     .getService(Ci.nsIWindowMediator)
     .getMostRecentWindow("navigator:browser");
 

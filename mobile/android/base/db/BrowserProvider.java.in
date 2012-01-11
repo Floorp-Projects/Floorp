@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Lucas Rocha <lucasr@mozilla.com>
  *   Jason Voll <jvoll@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,10 +41,12 @@
 package @ANDROID_PACKAGE_NAME@.db;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
 
-import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoDirProvider;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
@@ -71,6 +74,7 @@ import android.util.Log;
 
 public class BrowserProvider extends ContentProvider {
     private static final String LOGTAG = "GeckoBrowserProvider";
+    private Context mContext;
 
     static final String DATABASE_NAME = "browser.db";
 
@@ -134,8 +138,6 @@ public class BrowserProvider extends ContentProvider {
     static final HashMap<String, String> IMAGES_PROJECTION_MAP = new HashMap<String, String>();
     static final HashMap<String, String> SCHEMA_PROJECTION_MAP = new HashMap<String, String>();
 
-    private HashMap<String, DatabaseHelper> mDatabasePerProfile;
-
     static {
         HashMap<String, String> map;
 
@@ -198,6 +200,8 @@ public class BrowserProvider extends ContentProvider {
         map = SCHEMA_PROJECTION_MAP;
         map.put(Schema.VERSION, Schema.VERSION);
     }
+
+    private HashMap<String, DatabaseHelper> mDatabasePerProfile;
 
     static final String qualifyColumn(String table, String column) {
         return table + "." + column;
@@ -383,29 +387,26 @@ public class BrowserProvider extends ContentProvider {
     }
 
     private DatabaseHelper getDatabaseHelperForProfile(String profile) {
-        Log.d(LOGTAG, "Getting database helper for profile: " + profile);
-
         // Each profile has a separate browser.db database. The target
         // profile is provided using a URI query argument in each request
         // to our content provider.
 
-        // Always fallback to default profile if non has been provided
+        // Always fallback to default profile if none has been provided.
         if (TextUtils.isEmpty(profile)) {
-            Log.d(LOGTAG, "No profile provided, using default");
             profile = BrowserContract.DEFAULT_PROFILE;
         }
 
-        DatabaseHelper dbHelper = mDatabasePerProfile.get(profile);
-
-        if (dbHelper == null) {
-            synchronized (this) {
-                dbHelper = new DatabaseHelper(getContext(), getDatabasePath(profile));
-                mDatabasePerProfile.put(profile, dbHelper);
+        DatabaseHelper dbHelper;
+        synchronized (this) {
+            dbHelper = mDatabasePerProfile.get(profile);
+            if (dbHelper != null) {
+                return dbHelper;
             }
+            dbHelper = new DatabaseHelper(getContext(), getDatabasePath(profile));
+            mDatabasePerProfile.put(profile, dbHelper);
         }
 
-        Log.d(LOGTAG, "Successfully created database helper for profile: " + profile);
-
+        Log.d(LOGTAG, "Created database helper for profile: " + profile);
         return dbHelper;
     }
 
@@ -419,7 +420,13 @@ public class BrowserProvider extends ContentProvider {
             return "browser-" + profile + ".db";
         }
 
-        File profileDir = GeckoApp.mAppContext.getProfileDir(profile);
+        File profileDir = null;
+        try {
+            profileDir = GeckoDirProvider.getProfileDir(mContext, profile);
+        } catch (IOException ex) {
+            Log.e(LOGTAG, "Error getting profile dir", ex);
+        }
+
         if (profileDir == null) {
             Log.d(LOGTAG, "Couldn't find directory for profile: " + profile);
             return null;
@@ -509,7 +516,20 @@ public class BrowserProvider extends ContentProvider {
     public boolean onCreate() {
         Log.d(LOGTAG, "Creating BrowserProvider");
 
-        mDatabasePerProfile = new HashMap<String, DatabaseHelper>();
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                // Kick this off early. It is synchronized so that other callers will wait
+                try {
+                    GeckoDirProvider.getProfileDir(getContext());
+                } catch (Exception ex) {
+                    Log.e(LOGTAG, "Error getting profile dir", ex);
+                }
+            }
+        });
+        synchronized (this) {
+            mContext = getContext();
+            mDatabasePerProfile = new HashMap<String, DatabaseHelper>();
+        }
 
         return true;
     }
@@ -564,6 +584,7 @@ public class BrowserProvider extends ContentProvider {
         return deleted;
     }
 
+    @SuppressWarnings("fallthrough")
     public int deleteInTransaction(Uri uri, String selection, String[] selectionArgs) {
         Log.d(LOGTAG, "Calling delete in transaction on URI: " + uri);
 
@@ -672,7 +693,7 @@ public class BrowserProvider extends ContentProvider {
 
                 String url = values.getAsString(Bookmarks.URL);
                 ContentValues imageValues = extractImageValues(values, url);
-                Boolean isFolder = values.getAsBoolean(Bookmarks.IS_FOLDER);
+                Boolean isFolder = values.getAsInteger(Bookmarks.IS_FOLDER) == 1;
 
                 if ((isFolder == null || !isFolder) && imageValues != null
                         && !TextUtils.isEmpty(url)) {
@@ -768,6 +789,7 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
+    @SuppressWarnings("fallthrough")
     public int updateInTransaction(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         Log.d(LOGTAG, "Calling update in transaction on URI: " + uri);
@@ -828,8 +850,6 @@ public class BrowserProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
             String[] selectionArgs, String sortOrder) {
-        Log.d(LOGTAG, "Querying with URI: " + uri);
-
         SQLiteDatabase db = getReadableDatabase(uri);
         final int match = URI_MATCHER.match(uri);
 
@@ -843,12 +863,10 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on bookmarks: " + uri);
 
                 if (match == BOOKMARKS_ID) {
-                    Log.d(LOGTAG, "Query is BOOKMARKS_ID: " + uri);
                     selection = concatenateWhere(selection, Bookmarks._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 } else if (match == BOOKMARKS_FOLDER_ID) {
-                    Log.d(LOGTAG, "Query is BOOKMARKS_FOLDER_ID: " + uri);
                     selection = concatenateWhere(selection, Bookmarks.PARENT + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
@@ -858,8 +876,9 @@ public class BrowserProvider extends ContentProvider {
                     selection = concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder)) {
-                    Log.d(LOGTAG, "Using default sort order on query: " + uri);
                     sortOrder = DEFAULT_BOOKMARKS_SORT_ORDER;
+                } else {
+                    Log.d(LOGTAG, "Using sort order " + sortOrder + ".");
                 }
 
                 qb.setProjectionMap(BOOKMARKS_PROJECTION_MAP);
@@ -877,7 +896,6 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on history: " + uri);
 
                 if (match == HISTORY_ID) {
-                    Log.d(LOGTAG, "Query is HISTORY_ID: " + uri);
                     selection = concatenateWhere(selection, History._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
@@ -904,7 +922,6 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on images: " + uri);
 
                 if (match == IMAGES_ID) {
-                    Log.d(LOGTAG, "Query is IMAGES_ID: " + uri);
                     selection = concatenateWhere(selection, Images._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
@@ -920,8 +937,7 @@ public class BrowserProvider extends ContentProvider {
             }
 
             case SCHEMA: {
-                Log.d(LOGTAG, "Query is on schema: " + uri);
-
+                Log.d(LOGTAG, "Query is on schema.");
                 MatrixCursor schemaCursor = new MatrixCursor(new String[] { Schema.VERSION });
                 schemaCursor.newRow().add(DATABASE_VERSION);
 
@@ -932,7 +948,7 @@ public class BrowserProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown query URI " + uri);
         }
 
-        Log.d(LOGTAG, "Finally running the built query: " + uri);
+        Log.d(LOGTAG, "Running built query.");
         Cursor cursor = qb.query(db, projection, selection, selectionArgs, null,
                 null, sortOrder, limit);
         cursor.setNotificationUri(getContext().getContentResolver(),

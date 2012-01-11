@@ -78,7 +78,7 @@ StackFrame::initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs
      * script in the context of another frame and the frame type is determined
      * by the context.
      */
-    flags_ = type | HAS_SCOPECHAIN | HAS_PREVPC;
+    flags_ = type | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | HAS_PREVPC;
     if (!(flags_ & GLOBAL))
         flags_ |= (prev->flags_ & (FUNCTION | GLOBAL));
 
@@ -102,6 +102,7 @@ StackFrame::initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs
     prev_ = prev;
     prevpc_ = regs ? regs->pc : (jsbytecode *)0xbad;
     prevInline_ = regs ? regs->inlined() : NULL;
+    blockChain_ = NULL;
 
 #ifdef DEBUG
     ncode_ = (void *)0xbad;
@@ -147,13 +148,12 @@ StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
      * js_LiveFrameToFloating comment in jsiter.h.
      */
     if (hasCallObj()) {
-        JSObject &obj = callObj();
-        obj.setPrivate(this);
+        CallObject &obj = callObj();
+        obj.setStackFrame(this);
         otherfp->flags_ &= ~HAS_CALL_OBJ;
         if (js_IsNamedLambda(fun())) {
-            JSObject *env = obj.internalScopeChain();
-            JS_ASSERT(env->isDeclEnv());
-            env->setPrivate(this);
+            DeclEnvObject &env = obj.enclosingScope().asDeclEnv();
+            env.setStackFrame(this);
         }
     }
     if (hasArgsObj()) {
@@ -757,7 +757,7 @@ ContextStack::pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scope
     uintN nvars = VALUES_PER_STACK_FRAME;
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &dfg->pushedSeg_, dest);
     if (!firstUnused)
-        return NULL;
+        return false;
 
     StackFrame *fp = reinterpret_cast<StackFrame *>(firstUnused);
     fp->initDummyFrame(cx, scopeChain);

@@ -1,6 +1,6 @@
 %include menu.css
 
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   menubar > menu:-moz-lwtheme {
     -moz-appearance: menuitem;
   }

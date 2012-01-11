@@ -76,6 +76,8 @@ class SVGAnimatedPointList;
 class SVGAnimatedPathSegList;
 class SVGAnimatedPreserveAspectRatio;
 class SVGAnimatedTransformList;
+class SVGStringList;
+class DOMSVGStringList;
 }
 
 typedef nsStyledElementNotElementCSSInlineStyle nsSVGElementBase;
@@ -96,6 +98,7 @@ public:
   typedef mozilla::SVGAnimatedPathSegList SVGAnimatedPathSegList;
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
   typedef mozilla::SVGAnimatedTransformList SVGAnimatedTransformList;
+  typedef mozilla::SVGStringList SVGStringList;
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -177,6 +180,8 @@ public:
   virtual void DidChangePathSegList(bool aDoSetAttr);
   virtual void DidChangeTransformList(bool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum) {}
+  void DidChangeStringList(bool aIsConditionalProcessingAttribute,
+                           PRUint8 aAttrEnum);
 
   virtual void DidAnimateLength(PRUint8 aAttrEnum);
   virtual void DidAnimateNumber(PRUint8 aAttrEnum);
@@ -195,6 +200,7 @@ public:
   virtual void DidAnimateTransformList();
   virtual void DidAnimateString(PRUint8 aAttrEnum);
 
+  nsSVGLength2* GetAnimatedLength(const nsIAtom *aAttrName);
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
   void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
@@ -488,6 +494,27 @@ protected:
     void Reset(PRUint8 aAttrEnum);
   };
 
+  friend class mozilla::DOMSVGStringList;
+
+  struct StringListInfo {
+    nsIAtom**    mName;
+  };
+
+  struct StringListAttributesInfo {
+    SVGStringList*    mStringLists;
+    StringListInfo*   mStringListInfo;
+    PRUint32          mStringListCount;
+
+    StringListAttributesInfo(SVGStringList  *aStringLists,
+                             StringListInfo *aStringListInfo,
+                             PRUint32 aStringListCount) :
+      mStringLists(aStringLists), mStringListInfo(aStringListInfo),
+      mStringListCount(aStringListCount)
+      {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
   virtual NumberPairAttributesInfo GetNumberPairInfo();
@@ -503,6 +530,7 @@ protected:
   virtual NumberListAttributesInfo GetNumberListInfo();
   virtual LengthListAttributesInfo GetLengthListInfo();
   virtual StringAttributesInfo GetStringInfo();
+  virtual StringListAttributesInfo GetStringListInfo();
 
   static nsSVGEnumMapping sSVGUnitTypesMap[];
 

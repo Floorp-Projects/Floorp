@@ -25,7 +25,6 @@
 #include <errno.h>
 
 
-#include "v8-support.h"
 #include "platform.h"
 
 // this port is based off of v8 svn revision 9837
@@ -253,6 +252,7 @@ class SamplerThread : public Thread {
       sample->pc = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
       sample->sp = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
       sample->fp = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
+      sample->timestamp = mozilla::TimeStamp::Now();
       sampler->SampleStack(sample);
       sampler->Tick(sample);
     }

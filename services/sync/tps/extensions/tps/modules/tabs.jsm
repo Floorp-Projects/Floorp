@@ -34,9 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- /* This is a JavaScript module (JSM) to be imported via 
+ /* This is a JavaScript module (JSM) to be imported via
    Components.utils.import() and acts as a singleton.
-   Only the following listed symbols will exposed on import, and only when 
+   Only the following listed symbols will exposed on import, and only when
    and where imported. */
 
 var EXPORTED_SYMBOLS = ["BrowserTabs"];

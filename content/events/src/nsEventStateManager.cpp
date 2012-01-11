@@ -1146,6 +1146,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     GenerateDragGesture(aPresContext, (nsMouseEvent*)aEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
     GenerateMouseEnterExit((nsGUIEvent*)aEvent);
+    // Flush pending layout changes, so that later mouse move events
+    // will go to the right nodes.
+    FlushPendingEvents(aPresContext);
     break;
   case NS_DRAGDROP_GESTURE:
     if (mClickHoldContextMenu) {
@@ -4506,6 +4509,31 @@ nsEventStateManager::UpdateAncestorState(nsIContent* aStartNode,
     Element* labelTarget = GetLabelTarget(element);
     if (labelTarget) {
       DoStateChange(labelTarget, aState, aAddState);
+    }
+  }
+
+  if (aAddState) {
+    // We might be in a situation where a node was in hover both
+    // because it was hovered and because the label for it was
+    // hovered, and while we stopped hovering the node the label is
+    // still hovered.  Or we might have had two nested labels for the
+    // same node, and while one is no longer hovered the other still
+    // is.  In that situation, the label that's still hovered will be
+    // aStopBefore or some ancestor of it, and the call we just made
+    // to UpdateAncestorState with aAddState = false would have
+    // removed the hover state from the node.  But the node should
+    // still be in hover state.  To handle this situation we need to
+    // keep walking up the tree and any time we find a label mark its
+    // corresponding node as still in our state.
+    for ( ; aStartNode; aStartNode = aStartNode->GetParent()) {
+      if (!aStartNode->IsElement()) {
+        continue;
+      }
+
+      Element* labelTarget = GetLabelTarget(aStartNode->AsElement());
+      if (labelTarget && !labelTarget->State().HasState(aState)) {
+        DoStateChange(labelTarget, aState, true);
+      }
     }
   }
 }

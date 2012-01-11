@@ -44,6 +44,7 @@ __all__ = ['Runner', 'ThunderbirdRunner', 'FirefoxRunner', 'runners', 'CLI', 'cl
 import mozinfo
 import optparse
 import os
+import platform
 import sys
 import ConfigParser
 
@@ -54,37 +55,29 @@ from mozprocess.processhandler import ProcessHandler
 
 package_metadata = get_metadata_from_egg('mozrunner')
 
-class BinaryLocationException(Exception):
-    """exception for failure to find the binary"""
-
-
 class Runner(object):
     """Handles all running operations. Finds bins, runs and kills the process."""
 
-    ### data to be filled in by subclasses
-    profile = Profile # profile class to use by default
-    names = [] # names of application to look for on PATH
-    app_name = '' # name of application in windows registry
-    program_names = [] # names of application in windows program files
+    profile_class = Profile # profile class to use by default
 
     @classmethod
-    def create(cls, binary=None, cmdargs=None, env=None, kp_kwargs=None, profile_args=None,
+    def create(cls, binary, cmdargs=None, env=None, kp_kwargs=None, profile_args=None,
                                                clean_profile=True, process_class=ProcessHandler):
         profile = cls.profile_class(**(profile_args or {}))
         return cls(profile, binary=binary, cmdargs=cmdargs, env=env, kp_kwargs=kp_kwargs,
                                            clean_profile=clean_profile, process_class=process_class)
 
-    def __init__(self, profile, binary=None, cmdargs=None, env=None,
+    def __init__(self, profile, binary, cmdargs=None, env=None,
                  kp_kwargs=None, clean_profile=True, process_class=ProcessHandler):
         self.process_handler = None
         self.process_class = process_class
         self.profile = profile
         self.clean_profile = clean_profile
 
-        self.firstrun = False
-
         # find the binary
-        self.binary = self.__class__.get_binary(binary)
+        self.binary = binary
+        if not self.binary:
+            raise Exception("Binary not specified")
         if not os.path.exists(self.binary):
             raise OSError("Binary path does not exist: %s" % self.binary)
 
@@ -118,82 +111,6 @@ class Runner(object):
 
         # arguments for ProfessHandler.Process
         self.kp_kwargs = kp_kwargs or {}
-
-    @classmethod
-    def get_binary(cls, binary=None):
-        """determine the binary"""
-        if binary is None:
-            binary = cls.find_binary()
-            if binary is None:
-                raise BinaryLocationException("Your binary could not be located; you will need to set it")
-            return binary
-        elif mozinfo.isMac and binary.find('Contents/MacOS/') == -1:
-            return os.path.join(binary, 'Contents/MacOS/%s-bin' % cls.names[0])
-        else:
-            return binary
-
-    @classmethod
-    def find_binary(cls):
-        """Finds the binary for class names if one was not provided."""
-
-        binary = None
-        if mozinfo.isUnix:
-            for name in cls.names:
-                binary = findInPath(name)
-                if binary:
-                    return binary
-        elif mozinfo.isWin:
-
-            # find the default executable from the windows registry
-            try:
-                # assumes cls.app_name is defined, as it should be for implementors
-                import _winreg
-                app_key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r"Software\Mozilla\Mozilla %s" % cls.app_name)
-                version, _type = _winreg.QueryValueEx(app_key, "CurrentVersion")
-                version_key = _winreg.OpenKey(app_key, version + r"\Main")
-                path, _ = _winreg.QueryValueEx(version_key, "PathToExe")
-                return path
-            except: # XXX not sure what type of exception this should be
-                pass
-
-            # search for the binary in the path
-            for name in cls.names:
-                binary = findInPath(name)
-                if binary:
-                    return binary
-
-            # search for the binary in program files
-            if sys.platform == 'cygwin':
-                program_files = os.environ['PROGRAMFILES']
-            else:
-                program_files = os.environ['ProgramFiles']
-
-            program_files = [program_files]
-            if  "ProgramFiles(x86)" in os.environ:
-                program_files.append(os.environ["ProgramFiles(x86)"])
-            for program_file in program_files:
-                for program_name in cls.program_names:
-                    path = os.path.join(program_name, program_file, 'firefox.exe')
-                    if os.path.isfile(path):
-                        return path
-
-        elif mozinfo.isMac:
-            for name in cls.names:
-                appdir = os.path.join('Applications', name.capitalize()+'.app')
-                if os.path.isdir(os.path.join(os.path.expanduser('~/'), appdir)):
-                    binary = os.path.join(os.path.expanduser('~/'), appdir,
-                                          'Contents/MacOS/'+name+'-bin')
-                elif os.path.isdir('/'+appdir):
-                    binary = os.path.join("/"+appdir, 'Contents/MacOS/'+name+'-bin')
-
-                if binary is not None:
-                    if not os.path.isfile(binary):
-                        binary = binary.replace(name+'-bin', 'firefox-bin')
-                    if not os.path.isfile(binary):
-                        binary = None
-                if binary:
-                    return binary
-        return binary
 
     @property
     def command(self):
@@ -231,21 +148,10 @@ class Runner(object):
         # ensure the profile exists
         if not self.profile.exists():
             self.profile.reset()
-            self.firstrun = False
-
-        # run once to register any extensions
-        # see:
-        # - http://hg.mozilla.org/releases/mozilla-1.9.2/file/915a35e15cde/build/automation.py.in#l702
-        # - http://mozilla-xp.com/mozilla.dev.apps.firefox/Rules-for-when-firefox-bin-restarts-it-s-process
-        # This run just calls through processhandler to popen directly as we
-        # are not particuarly cared in tracking this process
-        if not self.firstrun:
-            firstrun = ProcessHandler.Process(self.command+['-silent', '-foreground'], env=self.env, **self.kp_kwargs)
-            firstrun.wait()
-            self.firstrun = True
-
-        # now run for real, this run uses the managed processhandler
-        self.process_handler = self.process_class(self.command+self.cmdargs, env=self.env, **self.kp_kwargs)
+        
+        cmd = self._wrap_command(self.command+self.cmdargs)
+        # this run uses the managed processhandler
+        self.process_handler = self.process_class(cmd, env=self.env, **self.kp_kwargs)
         self.process_handler.run()
 
     def wait(self, timeout=None, outputTimeout=None):
@@ -274,28 +180,32 @@ class Runner(object):
         if self.clean_profile:
             self.profile.cleanup()
 
+    def _wrap_command(self, cmd):
+        """
+        If running on OS X 10.5 or older, wrap |cmd| so that it will
+        be executed as an i386 binary, in case it's a 32-bit/64-bit universal
+        binary.
+        """
+        if mozinfo.isMac and hasattr(platform, 'mac_ver') and \
+                               platform.mac_ver()[0][:4] < '10.6':
+            return ["arch", "-arch", "i386"] + cmd
+        return cmd 
+
     __del__ = cleanup
 
 
 class FirefoxRunner(Runner):
     """Specialized Runner subclass for running Firefox."""
 
-    app_name = 'Firefox'
     profile_class = FirefoxProfile
-    program_names = ['Mozilla Firefox']
 
-    # (platform-dependent) names of binary
-    if mozinfo.isMac:
-        names = ['firefox', 'minefield', 'shiretoko']
-    elif mozinfo.isUnix:
-        names = ['firefox', 'mozilla-firefox', 'iceweasel']
-    elif mozinfo.isWin:
-        names =['firefox']
-    else:
-        raise AssertionError("I don't know what platform you're on")
+    def __init__(self, profile, binary=None, **kwargs):
 
-    def __init__(self, profile, **kwargs):
-        Runner.__init__(self, profile, **kwargs)
+        # take the binary from BROWSER_PATH environment variable
+        if (not binary) and 'BROWSER_PATH' in os.environ:
+            binary = os.environ['BROWSER_PATH']
+
+        Runner.__init__(self, profile, binary, **kwargs)
 
         # Find application version number
         appdir = os.path.dirname(os.path.realpath(self.binary))
@@ -311,17 +221,10 @@ class FirefoxRunner(Runner):
                       'extensions.checkCompatibility.nightly': False}
         self.profile.set_preferences(preference)
 
-    @classmethod
-    def get_binary(cls, binary=None):
-        if (not binary) and 'BROWSER_PATH' in os.environ:
-            return os.environ['BROWSER_PATH']
-        return Runner.get_binary(binary)
 
 class ThunderbirdRunner(Runner):
     """Specialized Runner subclass for running Thunderbird"""
-    app_name = 'Thunderbird'
     profile_class = ThunderbirdProfile
-    names = ["thunderbird", "shredder"]
 
 runners = {'firefox': FirefoxRunner,
            'thunderbird': ThunderbirdRunner}

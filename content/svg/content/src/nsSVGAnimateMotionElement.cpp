@@ -51,9 +51,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGAnimateMotionElement,nsSVGAnimateMotionElementBas
 DOMCI_NODE_DATA(SVGAnimateMotionElement, nsSVGAnimateMotionElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGAnimateMotionElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGAnimateMotionElement, nsIDOMNode,
+  NS_NODE_INTERFACE_TABLE6(nsSVGAnimateMotionElement, nsIDOMNode,
                            nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGAnimationElement,
+                           nsIDOMSVGAnimationElement, nsIDOMSVGTests,
                            nsIDOMSVGAnimateMotionElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGAnimateMotionElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGAnimateMotionElementBase)

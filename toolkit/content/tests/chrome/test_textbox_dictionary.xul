@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for textbox with placeholder
+  -->
+<window title="Textbox Add and Undo Add Dictionary Test" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <hbox>
+    <textbox id="t1"  value="Hellop" oncontextmenu="runContextMenuTest()" spellcheck="true"/>
+  </hbox>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var textbox;
+var testNum;
+
+function bringUpContextMenu(element)
+{
+  synthesizeMouseAtCenter(element, { type: "contextmenu", button: 2});
+}
+
+function leftClickElement(element)
+{
+  synthesizeMouseAtCenter(element, { button: 0 });
+}
+
+function startTests() 
+{     
+  textbox = document.getElementById("t1");
+  textbox.focus();
+  testNum = 0;
+  
+  SimpleTest.executeSoon( function() {  bringUpContextMenu(textbox); });
+}
+
+function runContextMenuTest()
+{
+  SimpleTest.executeSoon( function() {
+    // The textbox has its children in an hbox XUL element, so get that first
+    var hbox = document.getAnonymousNodes(textbox).item(0);
+    
+    var contextMenu = document.getAnonymousElementByAttribute(hbox, "anonid", "input-box-contextmenu");
+   
+    switch(testNum)
+    {
+      case 0: // "Add to Dictionary" button
+        var addToDict = contextMenu.querySelector("[anonid=spell-add-to-dictionary]");
+        is(!addToDict.hidden, true, "Is Add to Dictionary visible?");
+        
+        addToDict.doCommand();
+        
+        contextMenu.hidePopup();
+        testNum++;
+        
+        SimpleTest.executeSoon( function() {bringUpContextMenu(textbox); }); // Bring up the menu again to invoke the next test
+        break;
+        
+      case 1: // "Undo Add to Dictionary" button
+        var undoAddDict = contextMenu.querySelector("[anonid=spell-undo-add-to-dictionary]");
+        is(!undoAddDict.hidden, true, "Is Undo Add to Dictioanry visible?");
+        
+        undoAddDict.doCommand();
+        
+        contextMenu.hidePopup();
+        SimpleTest.finish();
+        break;
+    }
+  });
+}
+
+SimpleTest.waitForFocus(startTests);
+
+  ]]></script>
+
+</window>

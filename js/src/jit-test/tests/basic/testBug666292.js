@@ -4,7 +4,7 @@ function f(){
   this.zzz.zzz;
   for(let d in []);
 }
-trap(f, 18, '')
+trap(f, 16, '')
 try {
     f()
 } catch(e) {

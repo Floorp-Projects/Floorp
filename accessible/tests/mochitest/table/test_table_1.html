@@ -26,18 +26,24 @@ function doTest()
 
   is(accTable.selectedCellCount, 1, "only one cell selected");
   cell = getNode("col2a");
+  range = document.createRange();
   range.selectNode(cell);
   s.addRange(range);
   cell = getNode("col2c");
+  range = document.createRange();
   range.selectNode(cell);
   s.addRange(range);
   is(accTable.selectedColumnCount, 1, "only one column selected");
+
   cell = getNode("row2a");
+  range = document.createRange();
   range.selectNode(cell);
   s.addRange(range);
   cell = getNode("row2b");
+  range = document.createRange();
   range.selectNode(cell);
   s.addRange(range);
+  range = document.createRange();
   cell = getNode("row2c");
   range.selectNode(cell);
   s.addRange(range);

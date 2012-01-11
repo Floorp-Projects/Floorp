@@ -59,7 +59,7 @@ RemoteCanvas.prototype.reload = function(cb, force) {
 }
 
 RemoteCanvas.prototype.handleEvent = function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
     // Look back up the iframe by id
     var ldrFrame = document.getElementById("test-iframe-" + this.url);

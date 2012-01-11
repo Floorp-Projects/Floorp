@@ -44,6 +44,7 @@
 #include "nsContentUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
+#include "nsWrapperCacheInlines.h"
 
 #include "IDBEvents.h"
 #include "IDBTransaction.h"
@@ -145,11 +146,18 @@ HelperBase::WrapNative(JSContext* aCx,
   NS_ASSERTION(aResult, "Null pointer!");
   NS_ASSERTION(mRequest, "Null request!");
 
-  JSObject* global = mRequest->ScriptContext()->GetNativeGlobal();
-  NS_ENSURE_TRUE(global, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  JSObject* obj;
+  if (mRequest->ScriptContext()) {
+    obj = mRequest->ScriptContext()->GetNativeGlobal();
+  }
+  else {
+    obj = mRequest->GetWrapper();
+  }
+
+  NS_ENSURE_TRUE(obj, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv =
-    nsContentUtils::WrapNative(aCx, global, aNative, aResult);
+    nsContentUtils::WrapNative(aCx, obj, aNative, aResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;

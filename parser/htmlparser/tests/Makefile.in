@@ -43,14 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS = \
-	grabpage \
-	html \
 	mochitest \
 	$(NULL)
-
-# XXX This doesn't work in libxul builds.
-#DIRS += \
-#	outsinks \
-#	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

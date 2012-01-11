@@ -40,12 +40,14 @@
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGClipPathElement.h"
 #include "nsIDOMSVGUnitTypes.h"
+#include "DOMSVGTests.h"
 #include "nsSVGEnum.h"
 
 typedef nsSVGGraphicElement nsSVGClipPathElementBase;
 
 class nsSVGClipPathElement : public nsSVGClipPathElementBase,
                              public nsIDOMSVGClipPathElement,
+                             public DOMSVGTests,
                              public nsIDOMSVGUnitTypes
 {
   friend class nsSVGClipPathFrame;

@@ -538,3 +538,41 @@ add_test(function() {
     });
   });
 });
+
+// Bug 711693 - Send the compatibility mode when loading the Discovery pane
+add_test(function() {
+  info("Test '%COMPATIBILITY_MODE%' in the URL is correctly replaced by 'normal'");
+  Services.prefs.setCharPref(PREF_DISCOVERURL,  MAIN_URL + "?mode=%COMPATIBILITY_MODE%");
+  Services.prefs.setBoolPref(PREF_STRICT_COMPAT, false);
+
+  open_manager("addons://discover/", function(aWindow) {
+    gManagerWindow = aWindow;
+    var browser = gManagerWindow.document.getElementById("discover-browser");
+    is(getURL(browser), MAIN_URL + "?mode=normal", "Should have loaded the right url");
+    close_manager(gManagerWindow, run_next_test);
+  });
+});
+
+add_test(function() {
+  info("Test '%COMPATIBILITY_MODE%' in the URL is correctly replaced by 'strict'");
+  Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
+
+  open_manager("addons://discover/", function(aWindow) {
+    gManagerWindow = aWindow;
+    var browser = gManagerWindow.document.getElementById("discover-browser");
+    is(getURL(browser), MAIN_URL + "?mode=strict", "Should have loaded the right url");
+    close_manager(gManagerWindow, run_next_test);
+  });
+});
+
+add_test(function() {
+  info("Test '%COMPATIBILITY_MODE%' in the URL is correctly replaced by 'ignore'");
+  Services.prefs.setBoolPref(PREF_CHECK_COMPATIBILITY, false);
+
+  open_manager("addons://discover/", function(aWindow) {
+    gManagerWindow = aWindow;
+    var browser = gManagerWindow.document.getElementById("discover-browser");
+    is(getURL(browser), MAIN_URL + "?mode=ignore", "Should have loaded the right url");
+    close_manager(gManagerWindow, run_next_test);
+  });
+});

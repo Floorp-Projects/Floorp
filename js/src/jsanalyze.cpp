@@ -119,11 +119,11 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
 
     JSAtom *atom;
     if (JSOp(*pc) == JSOP_DEFFUN) {
-        JSFunction *fun = script->getFunction(js_GetIndexFromBytecode(cx, script, pc, 0));
+        JSFunction *fun = script->getFunction(js_GetIndexFromBytecode(script, pc, 0));
         atom = fun->atom;
     } else {
         JS_ASSERT(JOF_TYPE(js_CodeSpec[*pc].format) == JOF_ATOM);
-        atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
+        atom = script->getAtom(js_GetIndexFromBytecode(script, pc, 0));
     }
 
     uintN index;
@@ -141,21 +141,16 @@ BytecodeNoFallThrough(JSOp op)
 {
     switch (op) {
       case JSOP_GOTO:
-      case JSOP_GOTOX:
       case JSOP_DEFAULT:
-      case JSOP_DEFAULTX:
       case JSOP_RETURN:
       case JSOP_STOP:
       case JSOP_RETRVAL:
       case JSOP_THROW:
       case JSOP_TABLESWITCH:
-      case JSOP_TABLESWITCHX:
       case JSOP_LOOKUPSWITCH:
-      case JSOP_LOOKUPSWITCHX:
       case JSOP_FILTER:
         return true;
       case JSOP_GOSUB:
-      case JSOP_GOSUBX:
         // these fall through indirectly, after executing a 'finally'.
         return false;
       default:
@@ -389,6 +384,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isInlineable = canTrackVars = false;
             break;
 
+          case JSOP_ENTERLET0:
+          case JSOP_ENTERLET1:
           case JSOP_ENTERBLOCK:
           case JSOP_LEAVEBLOCK:
             addsScopeObjects_ = true;
@@ -405,13 +402,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             hasFunctionCalls_ = true;
             break;
 
-          case JSOP_TABLESWITCH:
-          case JSOP_TABLESWITCHX: {
-            isInlineable = canTrackVars = false;
-            jsbytecode *pc2 = pc;
-            unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
-            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += jmplen;
+          case JSOP_TABLESWITCH: {
+            isInlineable = false;
+            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             jsint low = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
             jsint high = GET_JUMP_OFFSET(pc2);
@@ -423,25 +417,22 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             getCode(defaultOffset).safePoint = true;
 
             for (jsint i = low; i <= high; i++) {
-                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (targetOffset != offset) {
                     if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, stackDepth))
                         return;
                 }
                 getCode(targetOffset).switchTarget = true;
                 getCode(targetOffset).safePoint = true;
-                pc2 += jmplen;
+                pc2 += JUMP_OFFSET_LEN;
             }
             break;
           }
 
-          case JSOP_LOOKUPSWITCH:
-          case JSOP_LOOKUPSWITCHX: {
-            isInlineable = canTrackVars = false;
-            jsbytecode *pc2 = pc;
-            unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
-            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += jmplen;
+          case JSOP_LOOKUPSWITCH: {
+            isInlineable = false;
+            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             unsigned npairs = GET_UINT16(pc2);
             pc2 += UINT16_LEN;
 
@@ -452,12 +443,12 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
             while (npairs) {
                 pc2 += INDEX_LEN;
-                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, stackDepth))
                     return;
                 getCode(targetOffset).switchTarget = true;
                 getCode(targetOffset).safePoint = true;
-                pc2 += jmplen;
+                pc2 += JUMP_OFFSET_LEN;
                 npairs--;
             }
             break;
@@ -470,7 +461,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
              * exception but is not caught by a later handler in the same function:
              * no more code will execute, and it does not matter what is defined.
              */
-            isInlineable = canTrackVars = false;
+            isInlineable = false;
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -556,13 +547,12 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
 
         /* Check basic jump opcodes, which may or may not have a fallthrough. */
-        if (type == JOF_JUMP || type == JOF_JUMPX) {
+        if (type == JOF_JUMP) {
             /* Some opcodes behave differently on their branching path. */
             unsigned newStackDepth = stackDepth;
 
             switch (op) {
               case JSOP_CASE:
-              case JSOP_CASEX:
                 /* Case instructions do not push the lvalue back when branching. */
                 newStackDepth--;
                 break;
@@ -570,7 +560,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
               default:;
             }
 
-            unsigned targetOffset = offset + GetJumpOffset(pc, pc);
+            unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
             if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, newStackDepth))
                 return;
         }
@@ -591,11 +581,11 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             }
             JS_ASSERT(nextcode->stackDepth == stackDepth);
 
-            if (type == JOF_JUMP || type == JOF_JUMPX)
+            if (type == JOF_JUMP)
                 nextcode->jumpFallthrough = true;
 
             /* Treat the fallthrough of a branch instruction as a jump target. */
-            if (type == JOF_JUMP || type == JOF_JUMPX)
+            if (type == JOF_JUMP)
                 nextcode->jumpTarget = true;
             else
                 nextcode->fallthrough = true;
@@ -746,9 +736,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           }
 
           case JSOP_LOOKUPSWITCH:
-          case JSOP_LOOKUPSWITCHX:
           case JSOP_TABLESWITCH:
-          case JSOP_TABLESWITCHX:
             /* Restore all saved variables. :FIXME: maybe do this precisely. */
             for (unsigned i = 0; i < savedCount; i++) {
                 LifetimeVariable &var = *saved[i];
@@ -788,7 +776,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
         }
 
         uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-        if (type == JOF_JUMP || type == JOF_JUMPX) {
+        if (type == JOF_JUMP) {
             /*
              * Forward jumps need to pull in all variables which are live at
              * their target offset --- the variables live before the jump are
@@ -850,8 +838,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
                     jsbytecode *entrypc = script->code + entry;
 
-                    if (JSOp(*entrypc) == JSOP_GOTO || JSOp(*entrypc) == JSOP_GOTOX)
-                        loop->entry = entry + GetJumpOffset(entrypc, entrypc);
+                    if (JSOp(*entrypc) == JSOP_GOTO)
+                        loop->entry = entry + GET_JUMP_OFFSET(entrypc);
                     else
                         loop->entry = targetOffset;
                 } else {
@@ -958,10 +946,8 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
         return;
     }
 
-    if (var.ensured)
-        return;
-
-    JS_ASSERT(offset < var.lifetime->start);
+    JS_ASSERT_IF(!var.ensured, offset < var.lifetime->start);
+    unsigned start = var.lifetime->start;
 
     /*
      * The variable is considered to be live at the bytecode which kills it
@@ -971,11 +957,23 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
     var.lifetime->start = offset;
     var.lifetime->write = true;
 
-    var.saved = var.lifetime;
-    var.savedEnd = 0;
-    var.lifetime = NULL;
+    if (var.ensured) {
+        /*
+         * The variable is live even before the write, due to an enclosing try
+         * block. We need to split the lifetime to indicate there was a write.
+         */
+        var.lifetime = cx->typeLifoAlloc().new_<Lifetime>(start, offset, var.lifetime);
+        if (!var.lifetime) {
+            setOOM(cx);
+            return;
+        }
+    } else {
+        var.saved = var.lifetime;
+        var.savedEnd = 0;
+        var.lifetime = NULL;
 
-    saved[savedCount++] = &var;
+        saved[savedCount++] = &var;
+    }
 }
 
 inline void
@@ -1146,6 +1144,13 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
      */
     Vector<uint32_t> branchTargets(cx);
 
+    /*
+     * Subset of branchTargets which are also exception handlers. Any value of
+     * a variable modified before the target is reached is a potential value
+     * at that target, along with the lazily added original value.
+     */
+    Vector<uint32_t> exceptionTargets(cx);
+
     uint32_t offset = 0;
     while (offset < script->length) {
         jsbytecode *pc = script->code + offset;
@@ -1181,7 +1186,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
              */
             Vector<SlotValue> *&pending = code->pendingValues;
             if (pending) {
-                removeBranchTarget(branchTargets, offset);
+                removeBranchTarget(branchTargets, exceptionTargets, offset);
             } else {
                 pending = cx->new_< Vector<SlotValue> >(cx);
                 if (!pending) {
@@ -1246,13 +1251,19 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
              * If there is fallthrough from the previous instruction, merge
              * with the current state and create phi nodes where necessary,
              * otherwise replace current values with the new values.
+             *
+             * Catch blocks are artifically treated as having fallthrough, so
+             * that values written inside the block but not subsequently
+             * overwritten are picked up.
              */
-            removeBranchTarget(branchTargets, offset);
+            bool exception = removeBranchTarget(branchTargets, exceptionTargets, offset);
             Vector<SlotValue> *pending = code->pendingValues;
             for (unsigned i = 0; i < pending->length(); i++) {
                 SlotValue &v = (*pending)[i];
-                if (code->fallthrough || code->jumpFallthrough)
+                if (code->fallthrough || code->jumpFallthrough ||
+                    (exception && values[v.slot].kind() != SSAValue::EMPTY)) {
                     mergeValue(cx, offset, values[v.slot], &v);
+                }
                 mergeBranchTarget(cx, values[v.slot], v.slot, branchTargets);
                 values[v.slot] = v.value;
             }
@@ -1348,6 +1359,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (trackSlot(slot)) {
                 mergeBranchTarget(cx, values[slot], slot, branchTargets);
+                mergeExceptionTarget(cx, values[slot], slot, exceptionTargets);
                 values[slot].initWritten(slot, offset);
             }
             break;
@@ -1363,14 +1375,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                  */
                 stack[stackDepth - 1] = code->poppedValues[0] = values[slot];
             }
-            break;
-          }
-
-          case JSOP_CALLARG:
-          case JSOP_CALLLOCAL: {
-            uint32_t slot = GetBytecodeSlot(script, pc);
-            if (trackSlot(slot))
-                stack[stackDepth - 2] = code->poppedValues[0] = values[slot];
             break;
           }
 
@@ -1410,19 +1414,12 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
           /*
            * Switch and try blocks preserve the stack between the original op
-           * and all case statements or exception/finally handlers. Even though
-           * we don't track the values of variables in scripts containing such
-           * switch and try blocks, propagate the stack now to all targets as
-           * the values on the stack may be popped by intervening cleanup ops
-           * (e.g. LEAVEBLOCK, ENDITER).
+           * and all case statements or exception/finally handlers.
            */
 
-          case JSOP_TABLESWITCH:
-          case JSOP_TABLESWITCHX: {
-            jsbytecode *pc2 = pc;
-            unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
-            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += jmplen;
+          case JSOP_TABLESWITCH: {
+            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             jsint low = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
             jsint high = GET_JUMP_OFFSET(pc2);
@@ -1431,20 +1428,17 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
 
             for (jsint i = low; i <= high; i++) {
-                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (targetOffset != offset)
                     checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
-                pc2 += jmplen;
+                pc2 += JUMP_OFFSET_LEN;
             }
             break;
           }
 
-          case JSOP_LOOKUPSWITCH:
-          case JSOP_LOOKUPSWITCHX: {
-            jsbytecode *pc2 = pc;
-            unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
-            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += jmplen;
+          case JSOP_LOOKUPSWITCH: {
+            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             unsigned npairs = GET_UINT16(pc2);
             pc2 += UINT16_LEN;
 
@@ -1452,9 +1446,9 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
             while (npairs) {
                 pc2 += INDEX_LEN;
-                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
-                pc2 += jmplen;
+                pc2 += JUMP_OFFSET_LEN;
                 npairs--;
             }
             break;
@@ -1468,8 +1462,10 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 
-                    if (tn->kind != JSTRY_ITER)
+                    if (tn->kind != JSTRY_ITER) {
                         checkBranchTarget(cx, catchOffset, branchTargets, values, stackDepth);
+                        checkExceptionTarget(cx, catchOffset, exceptionTargets);
+                    }
                 }
             }
             break;
@@ -1479,7 +1475,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         }
 
         uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-        if (type == JOF_JUMP || type == JOF_JUMPX) {
+        if (type == JOF_JUMP) {
             unsigned targetOffset = FollowBranch(cx, script, offset);
             checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
 
@@ -1652,6 +1648,22 @@ ScriptAnalysis::checkBranchTarget(JSContext *cx, uint32_t targetOffset,
 }
 
 void
+ScriptAnalysis::checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
+                                     Vector<uint32_t> &exceptionTargets)
+{
+    /*
+     * The catch offset will already be in the branch targets, just check
+     * whether this is already a known exception target.
+     */
+    for (unsigned i = 0; i < exceptionTargets.length(); i++) {
+        if (exceptionTargets[i] == catchOffset)
+            return;
+    }
+    if (!exceptionTargets.append(catchOffset))
+        setOOM(cx);
+}
+
+void
 ScriptAnalysis::mergeBranchTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                                   const Vector<uint32_t> &branchTargets)
 {
@@ -1677,16 +1689,56 @@ ScriptAnalysis::mergeBranchTarget(JSContext *cx, const SSAValue &value, uint32_t
 }
 
 void
-ScriptAnalysis::removeBranchTarget(Vector<uint32_t> &branchTargets, uint32_t offset)
+ScriptAnalysis::mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
+                                     const Vector<uint32_t> &exceptionTargets)
 {
+    JS_ASSERT(trackSlot(slot));
+
+    /*
+     * Update the value at exception targets with the value of a variable
+     * before it is overwritten. Unlike mergeBranchTarget, this is done whether
+     * or not the overwritten value is the value of the variable at the
+     * original branch. Values for a variable which are written after the
+     * try block starts and overwritten before it is finished can still be
+     * seen at exception handlers via exception paths.
+     */
+    for (unsigned i = 0; i < exceptionTargets.length(); i++) {
+        Vector<SlotValue> *pending = getCode(exceptionTargets[i]).pendingValues;
+
+        bool duplicate = false;
+        for (unsigned i = 0; i < pending->length(); i++) {
+            if ((*pending)[i].slot == slot && (*pending)[i].value.equals(value))
+                duplicate = true;
+        }
+
+        if (!duplicate && !pending->append(SlotValue(slot, value)))
+            setOOM(cx);
+    }
+}
+
+bool
+ScriptAnalysis::removeBranchTarget(Vector<uint32_t> &branchTargets,
+                                   Vector<uint32_t> &exceptionTargets,
+                                   uint32_t offset)
+{
+    bool exception = false;
+    for (unsigned i = 0; i < exceptionTargets.length(); i++) {
+        if (exceptionTargets[i] == offset) {
+            exceptionTargets[i] = branchTargets.back();
+            exceptionTargets.popBack();
+            exception = true;
+            break;
+        }
+    }
     for (unsigned i = 0; i < branchTargets.length(); i++) {
         if (branchTargets[i] == offset) {
             branchTargets[i] = branchTargets.back();
             branchTargets.popBack();
-            return;
+            return exception;
         }
     }
     JS_ASSERT(OOM());
+    return exception;
 }
 
 void
@@ -1775,21 +1827,6 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
                         return foldValue(CrossSSAValue(calleeFrame, analysis->poppedValue(pc, 0)));
                     offset += GetBytecodeLength(pc);
                 }
-            }
-            break;
-          }
-
-          case JSOP_CALLPROP: {
-            /*
-             * The second value pushed by CALLPROP is the same as its popped
-             * value. We don't do this folding during the SSA analysis itself
-             * as we still need to distinguish the two values during type
-             * inference --- any popped null or undefined value will throw an
-             * exception, and not actually end up in the pushed set.
-             */
-            if (v.pushedIndex() == 1) {
-                ScriptAnalysis *analysis = frame.script->analysis();
-                return foldValue(CrossSSAValue(cv.frame, analysis->poppedValue(pc, 0)));
             }
             break;
           }

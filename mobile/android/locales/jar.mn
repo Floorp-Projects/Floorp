@@ -6,13 +6,11 @@
   locale/@AB_CD@/browser/aboutAddons.dtd          (%chrome/aboutAddons.dtd)
   locale/@AB_CD@/browser/aboutAddons.properties   (%chrome/aboutAddons.properties)
   locale/@AB_CD@/browser/aboutCertError.dtd       (%chrome/aboutCertError.dtd)
-  locale/@AB_CD@/browser/browser.dtd              (%chrome/browser.dtd)
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
   locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
   locale/@AB_CD@/browser/config.properties        (%chrome/config.properties)
   locale/@AB_CD@/browser/localepicker.properties  (%chrome/localepicker.properties)
-  locale/@AB_CD@/browser/region.properties        (%chrome/region.properties)
-  locale/@AB_CD@/browser/preferences.dtd          (%chrome/preferences.dtd)
+  locale/@AB_CD@/browser/aboutHome.dtd            (%chrome/aboutHome.dtd)
   locale/@AB_CD@/browser/checkbox.dtd             (%chrome/checkbox.dtd)
   locale/@AB_CD@/browser/notification.dtd         (%chrome/notification.dtd)
   locale/@AB_CD@/browser/sync.dtd                 (%chrome/sync.dtd)
@@ -21,13 +19,3 @@
   locale/@AB_CD@/browser/webapps.dtd              (%chrome/webapps.dtd)
   locale/@AB_CD@/browser/feedback.dtd             (%chrome/feedback.dtd)
   locale/@AB_CD@/browser/phishing.dtd             (%chrome/phishing.dtd)
-  locale/@AB_CD@/browser/bookmarks.json           (bookmarks.json)
-  locale/@AB_CD@/browser/searchplugins/list.txt   (%searchplugins/list.txt)
-
-# Fennec-specific overrides of generic strings
-* locale/@AB_CD@/browser/netError.dtd             (%chrome/overrides/netError.dtd)
-% override chrome://global/locale/netError.dtd    chrome://browser/locale/netError.dtd
-* locale/@AB_CD@/browser/appstrings.properties    (%chrome/overrides/appstrings.properties)
-% override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
-* locale/@AB_CD@/browser/passwordmgr.properties    (%chrome/overrides/passwordmgr.properties)
-% override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/passwordmgr.properties

@@ -40,7 +40,7 @@
 #include "nsCanvasFrame.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
@@ -74,7 +74,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
 NS_QUERYFRAME_HEAD(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsCanvasFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
 nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
@@ -86,7 +86,7 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
     sf->RemoveScrollPositionListener(this);
   }
 
-  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 void
@@ -124,7 +124,7 @@ nsCanvasFrame::SetInitialChildList(ChildListID     aListID,
   NS_ASSERTION(aListID != kPrincipalList ||
                aChildList.IsEmpty() || aChildList.OnlyChild(),
                "Primary child list can have at most one frame in it");
-  return nsHTMLContainerFrame::SetInitialChildList(aListID, aChildList);
+  return nsContainerFrame::SetInitialChildList(aListID, aChildList);
 }
 
 NS_IMETHODIMP

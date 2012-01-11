@@ -76,8 +76,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGPolylineElement,nsSVGPolylineElementBase)
 DOMCI_NODE_DATA(SVGPolylineElement, nsSVGPolylineElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGPolylineElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGPolylineElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGPolylineElement)
+  NS_NODE_INTERFACE_TABLE5(nsSVGPolylineElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGPolylineElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPolylineElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGPolylineElementBase)
 

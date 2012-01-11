@@ -29,6 +29,22 @@ const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_SEARCH_MAXRESULTS = "extensions.getAddons.maxResults";
 const PREF_STRICT_COMPAT = "extensions.strictCompatibility";
 
+var PREF_CHECK_COMPATIBILITY;
+(function() {
+  var channel = "default";
+  try {
+    channel = Services.prefs.getCharPref("app.update.channel");
+  } catch (e) { }
+  if (channel != "aurora" &&
+    channel != "beta" &&
+    channel != "release") {
+    var version = "nightly";
+  } else {
+    version = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");
+  }
+  PREF_CHECK_COMPATIBILITY = "extensions.checkCompatibility." + version;
+})();
+
 var gPendingTests = [];
 var gTestsRun = 0;
 var gTestStart = null;
@@ -43,7 +59,8 @@ var gRestorePrefs = [{name: PREF_LOGGING_ENABLED},
                      {name: "extensions.getAddons.search.url"},
                      {name: "extensions.getAddons.cache.enabled"},
                      {name: PREF_SEARCH_MAXRESULTS},
-                     {name: PREF_STRICT_COMPAT}];
+                     {name: PREF_STRICT_COMPAT},
+                     {name: PREF_CHECK_COMPATIBILITY}];
 
 gRestorePrefs.forEach(function(aPref) {
   if (!Services.prefs.prefHasUserValue(aPref.name)) {

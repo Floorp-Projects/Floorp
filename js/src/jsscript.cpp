@@ -68,6 +68,7 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
@@ -89,9 +90,8 @@ Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
     if (!lastBinding)
         return NONE;
 
-    Shape *shape =
-        SHAPE_FETCH(Shape::search(cx, const_cast<HeapPtrShape *>(&lastBinding),
-                                  ATOM_TO_JSID(name)));
+    Shape **spp;
+    Shape *shape = Shape::search(cx, lastBinding, ATOM_TO_JSID(name), &spp);
     if (!shape)
         return NONE;
 
@@ -165,19 +165,21 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         id = ATOM_TO_JSID(name);
     }
 
-    BaseShape base(&CallClass, NULL, BaseShape::VAROBJ, attrs, getter, setter);
+    StackBaseShape base(&CallClass, NULL, BaseShape::VAROBJ);
+    base.updateGetterSetter(attrs, getter, setter);
+
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return NULL;
 
-    Shape child(nbase, id, slot, 0, attrs, Shape::HAS_SHORTID, *indexp);
+    StackShape child(nbase, id, slot, 0, attrs, Shape::HAS_SHORTID, *indexp);
 
     /* Shapes in bindings cannot be dictionaries. */
-    Shape *shape = lastBinding->getChildBinding(cx, child, &lastBinding);
+    Shape *shape = lastBinding->getChildBinding(cx, child);
     if (!shape)
         return false;
 
-    JS_ASSERT(lastBinding == shape);
+    lastBinding = shape;
     ++*indexp;
     return true;
 }
@@ -651,23 +653,24 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         HeapPtr<JSObject> *objp = &script->objects()->vector[i];
         uint32_t isBlock;
         if (xdr->mode == JSXDR_ENCODE) {
-            Class *clasp = (*objp)->getClass();
-            JS_ASSERT(clasp == &FunctionClass ||
-                      clasp == &BlockClass);
-            isBlock = (clasp == &BlockClass) ? 1 : 0;
+            JSObject *obj = *objp;
+            JS_ASSERT(obj->isFunction() || obj->isStaticBlock());
+            isBlock = obj->isBlock() ? 1 : 0;
         }
         if (!JS_XDRUint32(xdr, &isBlock))
             goto error;
-        JSObject *tmp = *objp;
         if (isBlock == 0) {
+            JSObject *tmp = *objp;
             if (!js_XDRFunctionObject(xdr, &tmp))
                 goto error;
+            *objp = tmp;
         } else {
             JS_ASSERT(isBlock == 1);
-            if (!js_XDRBlockObject(xdr, &tmp))
+            StaticBlockObject *tmp = static_cast<StaticBlockObject *>(objp->get());
+            if (!js_XDRStaticBlockObject(xdr, &tmp))
                 goto error;
+            *objp = tmp;
         }
-        *objp = tmp;
     }
     for (i = 0; i != nupvars; ++i) {
         if (!JS_XDRUint32(xdr, reinterpret_cast<uint32_t *>(&script->upvars()->vector[i])))
@@ -1029,7 +1032,7 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
 
 
     if (nconsts != 0) {
-        JS_ASSERT(reinterpret_cast<jsuword>(cursor) % sizeof(jsval) == 0);
+        JS_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(jsval) == 0);
         script->consts()->length = nconsts;
         script->consts()->vector = (HeapValue *)cursor;
         cursor += nconsts * sizeof(script->consts()->vector[0]);
@@ -1259,7 +1262,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
             return NULL;
 
         fun->setScript(script);
-        script->globalObject = fun->getParent() ? fun->getParent()->getGlobal() : NULL;
+        script->globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
     } else {
         /*
          * Initialize script->object, if necessary, so that the debugger has a
@@ -1276,7 +1279,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         if (script->compileAndGo) {
             compileAndGoGlobal = script->globalObject;
             if (!compileAndGoGlobal)
-                compileAndGoGlobal = bce->scopeChain()->getGlobal();
+                compileAndGoGlobal = &bce->scopeChain()->global();
         }
         Debugger::onNewScript(cx, script, compileAndGoGlobal);
     }

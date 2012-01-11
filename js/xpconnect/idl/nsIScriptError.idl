@@ -43,7 +43,7 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(537ff844-c325-4047-92f5-e1c292d108bc)]
+[scriptable, uuid(c6dd877a-87b6-47cc-968d-90f4514ec65f)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -90,23 +90,6 @@ interface nsIScriptError : nsIConsoleMessage
      */
     readonly attribute long long timeStamp;
 
-    void init(in wstring message,
-              in wstring sourceName,
-              in wstring sourceLine,
-              in PRUint32 lineNumber,
-              in PRUint32 columnNumber,
-              in PRUint32 flags,
-              in string category);
-
-    AUTF8String toString();
-};
-
-/**
- * An interface that nsIScriptError objects can implement to allow
- * them to be initialized with a window id.
- */
-[scriptable, uuid(444c5e66-a85d-4a3b-83ce-4c71882b09a3)]
-interface nsIScriptError2 : nsISupports {
     /* Get the window id this was initialized with.  Zero will be
        returned if init() was used instead of initWithWindowID(). */
     readonly attribute unsigned long long outerWindowID;
@@ -114,6 +97,14 @@ interface nsIScriptError2 : nsISupports {
     /* Get the inner window id this was initialized with.  Zero will be
        returned if init() was used instead of initWithWindowID(). */
     readonly attribute unsigned long long innerWindowID;
+
+    void init(in wstring message,
+              in wstring sourceName,
+              in wstring sourceLine,
+              in PRUint32 lineNumber,
+              in PRUint32 columnNumber,
+              in PRUint32 flags,
+              in string category);
 
     /* This should be called instead of nsIScriptError.init to
        initialize with a window id.  The window id should be for the
@@ -126,6 +117,8 @@ interface nsIScriptError2 : nsISupports {
                           in PRUint32 flags,
                           in string category,
                           in unsigned long long innerWindowID);
+
+    AUTF8String toString();
 };
 
 %{ C++

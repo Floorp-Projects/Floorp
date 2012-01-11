@@ -58,6 +58,9 @@ _TEST_FILES = \
   test_blobWorkers.html \
   test_close.html \
   close_worker.js \
+  test_closeOnGC.html \
+  closeOnGC_worker.js \
+  closeOnGC_server.sjs \
   test_dataURLWorker.html \
   test_errorPropagation.html \
   errorPropagation_iframe.html \
@@ -157,14 +160,6 @@ _CHROME_TEST_FILES = \
   workersDisabled_worker.js \
   dom_worker_helper.js \
   $(NULL)
-
-ifneq ($(OS_ARCH),WINNT)
-_TEST_FILES += \
-  test_closeOnGC.html \
-  closeOnGC_worker.js \
-  closeOnGC_server.sjs \
-  $(NULL)
-endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

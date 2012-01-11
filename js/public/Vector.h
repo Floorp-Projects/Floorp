@@ -41,6 +41,8 @@
 #ifndef jsvector_h_
 #define jsvector_h_
 
+#include "mozilla/Attributes.h"
+
 #include "TemplateLib.h"
 #include "Utility.h"
 
@@ -52,7 +54,11 @@
 
 namespace js {
 
-template <class T, size_t N, class AllocPolicy>
+class TempAllocPolicy;
+
+template <class T,
+          size_t MinInlineCapacity = 0,
+          class AllocPolicy = TempAllocPolicy>
 class Vector;
 
 /*
@@ -274,8 +280,8 @@ class Vector : private AllocPolicy
     bool entered;
 #endif
 
-    Vector(const Vector &);
-    Vector &operator=(const Vector &);
+    Vector(const Vector &) MOZ_DELETE;
+    Vector &operator=(const Vector &) MOZ_DELETE;
 
     /* private accessors */
 
@@ -376,6 +382,23 @@ class Vector : private AllocPolicy
     const T &back() const {
         JS_ASSERT(!entered && !empty());
         return *(end() - 1);
+    }
+
+    class Range {
+        friend class Vector;
+        T *cur, *end;
+        Range(T *cur, T *end) : cur(cur), end(end) {}
+      public:
+        Range() {}
+        bool empty() const { return cur == end; }
+        size_t remain() const { return end - cur; }
+        T &front() const { return *cur; }
+        void popFront() { JS_ASSERT(!empty()); ++cur; }
+        T popCopyFront() { JS_ASSERT(!empty()); return *cur++; }
+    };
+
+    Range all() {
+        return Range(begin(), end());
     }
 
     /* mutators */

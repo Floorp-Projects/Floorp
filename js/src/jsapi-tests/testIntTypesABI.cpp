@@ -18,6 +18,7 @@
 #include "jsxdrapi.h"
 
 #include "js/HashTable.h"
+#include "js/MemoryMetrics.h"
 #include "js/TemplateLib.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
@@ -56,6 +57,11 @@ typedef ConflictingType JSInt8;
 typedef ConflictingType JSInt16;
 typedef ConflictingType JSInt32;
 typedef ConflictingType JSInt64;
+
+typedef ConflictingType jsword;
+typedef ConflictingType jsuword;
+typedef ConflictingType JSWord;
+typedef ConflictingType JSUword;
 
 BEGIN_TEST(testIntTypesABI)
 {

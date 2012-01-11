@@ -615,6 +615,17 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (void)appendChild:(nsAccessible*)aAccessible
+{
+  // if mChildren is nil, then we don't even need to bother
+  if (!mChildren)
+    return;
+    
+  mozAccessible *curNative = GetNativeFromGeckoAccessible(aAccessible);
+  if (curNative)
+    [mChildren addObject:GetObjectOrRepresentedView(curNative)];
+}
+
 - (void)invalidateParent
 {
   mParent = nil;

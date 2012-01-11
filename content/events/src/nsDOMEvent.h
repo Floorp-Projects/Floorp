@@ -227,9 +227,8 @@ public:
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
                         PRUint32 aArgc, jsval* aArgv);
 
-  virtual const nsIID& EventInitIID() { return NS_GET_IID(nsIEventInit); }
-  virtual nsresult InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                                JSContext* aCx, JSObject* aObj);
+  virtual nsresult InitFromCtor(const nsAString& aType,
+                                JSContext* aCx, jsval* aVal);
 
   void InitPresContextData(nsPresContext* aPresContext);
 

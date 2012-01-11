@@ -72,6 +72,13 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
                                 gfxASurface *currentTarget,
                                 const gfxPattern::GraphicsFilter aDefaultFilter)
 {
+    if (!currentTarget) {
+        // This happens if we're dealing with an Azure target.
+        aPattern->SetExtend(gfxPattern::EXTEND_PAD);
+        aPattern->SetFilter(aDefaultFilter);
+        return;
+    }
+
     // In theory we can handle this using cairo's EXTEND_PAD,
     // but implementation limitations mean we have to consult
     // the surface type.

@@ -89,6 +89,8 @@
 #include "nsGlobalWindow.h"
 #include "nsScriptNameSpaceManager.h"
 
+#include "nsJSPrincipals.h"
+
 #ifdef XP_MACOSX
 // AssertMacros.h defines 'check' and conflicts with AccessCheck.h
 #undef check
@@ -127,6 +129,8 @@ static PRLogModuleInfo* gJSDiagnostics;
 // a page) and doing the actual GC.
 #define NS_GC_DELAY                 4000 // ms
 
+#define NS_SHRINK_GC_BUFFERS_DELAY  4000 // ms
+
 // The amount of time we wait from the first request to GC to actually
 // doing the first GC.
 #define NS_FIRST_GC_DELAY           10000 // ms
@@ -140,6 +144,7 @@ static PRLogModuleInfo* gJSDiagnostics;
 // if you add statics here, add them to the list in nsJSRuntime::Startup
 
 static nsITimer *sGCTimer;
+static nsITimer *sShrinkGCBuffersTimer;
 static nsITimer *sCCTimer;
 
 static bool sGCHasRun;
@@ -226,7 +231,7 @@ private:
   }
 
   nsAutoTArray<jsval, 16> vals;
-  js::AutoArrayRooter avr;
+  JS::AutoArrayRooter avr;
 };
 
 /****************************************************************
@@ -283,13 +288,15 @@ class ScriptErrorEvent : public nsRunnable
 {
 public:
   ScriptErrorEvent(nsIScriptGlobalObject* aScriptGlobal,
+                   nsIPrincipal* aScriptOriginPrincipal,
                    PRUint32 aLineNr, PRUint32 aColumn, PRUint32 aFlags,
                    const nsAString& aErrorMsg,
                    const nsAString& aFileName,
                    const nsAString& aSourceLine,
                    bool aDispatchEvent,
                    PRUint64 aInnerWindowID)
-  : mScriptGlobal(aScriptGlobal), mLineNr(aLineNr), mColumn(aColumn),
+    : mScriptGlobal(aScriptGlobal), mOriginPrincipal(aScriptOriginPrincipal),
+      mLineNr(aLineNr), mColumn(aColumn),
     mFlags(aFlags), mErrorMsg(aErrorMsg), mFileName(aFileName),
     mSourceLine(aSourceLine), mDispatchEvent(aDispatchEvent),
     mInnerWindowID(aInnerWindowID)
@@ -320,17 +327,11 @@ public:
           nsIPrincipal* p = sop->GetPrincipal();
           NS_ENSURE_STATE(p);
 
-          bool sameOrigin = mFileName.IsVoid();
+          bool sameOrigin = !mOriginPrincipal;
 
           if (p && !sameOrigin) {
-            nsCOMPtr<nsIURI> errorURI;
-            NS_NewURI(getter_AddRefs(errorURI), mFileName);
-            if (errorURI) {
-              // FIXME: Once error reports contain the origin of the
-              // error (principals) we should change this to do the
-              // security check based on the principals and not
-              // URIs. See bug 387476.
-              sameOrigin = NS_SUCCEEDED(p->CheckMayLoad(errorURI, false));
+            if (NS_FAILED(p->Subsumes(mOriginPrincipal, &sameOrigin))) {
+              sameOrigin = false;
             }
           }
 
@@ -342,13 +343,6 @@ public:
             NS_WARNING("Not same origin error!");
             errorevent.errorMsg = xoriginMsg.get();
             errorevent.lineNr = 0;
-            // FIXME: once the principal of the script is not tied to
-            // the filename, we can stop using the post-redirect
-            // filename if we want and remove this line.  Note that
-            // apparently we can't handle null filenames in the error
-            // event dispatching code.
-            static PRUnichar nullFilename[] = { PRUnichar(0) };
-            errorevent.fileName = nullFilename;
           }
 
           nsEventDispatcher::Dispatch(win, presContext, &errorevent, nsnull,
@@ -380,18 +374,10 @@ public:
           ? "chrome javascript"
           : "content javascript";
 
-        nsCOMPtr<nsIScriptError2> error2(do_QueryInterface(errorObject));
-        if (error2) {
-          rv = error2->InitWithWindowID(mErrorMsg.get(), mFileName.get(),
-                                        mSourceLine.get(),
-                                        mLineNr, mColumn, mFlags,
-                                        category, mInnerWindowID);
-        } else {
-          rv = errorObject->Init(mErrorMsg.get(), mFileName.get(),
-                                 mSourceLine.get(),
-                                 mLineNr, mColumn, mFlags,
-                                 category);
-        }
+        rv = errorObject->InitWithWindowID(mErrorMsg.get(), mFileName.get(),
+                                           mSourceLine.get(),
+                                           mLineNr, mColumn, mFlags,
+                                           category, mInnerWindowID);
 
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsIConsoleService> consoleService =
@@ -407,6 +393,7 @@ public:
 
 
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
+  nsCOMPtr<nsIPrincipal>          mOriginPrincipal;
   PRUint32                        mLineNr;
   PRUint32                        mColumn;
   PRUint32                        mFlags;
@@ -502,8 +489,11 @@ NS_ScriptErrorReporter(JSContext *cx,
           innerWindowID = innerWin->WindowID();
         }
       }
+      JSPrincipals *prin = report->originPrincipals;
+      nsIPrincipal *principal =
+        prin ? static_cast<nsJSPrincipals*>(prin)->nsIPrincipalPtr : nsnull;
       nsContentUtils::AddScriptRunner(
-        new ScriptErrorEvent(globalObject, report->lineno,
+        new ScriptErrorEvent(globalObject, principal, report->lineno,
                              report->uctokenptr - report->uclinebuf,
                              report->flags, msg, fileName, sourceLine,
                              report->errorNumber != JSMSG_OUT_OF_MEMORY,
@@ -1111,8 +1101,9 @@ nsJSContext::~nsJSContext()
 void
 nsJSContext::DestroyJSContext()
 {
-  if (!mContext)
+  if (!mContext) {
     return;
+  }
 
   // Clear our entry in the JSContext, bugzilla bug 66413
   ::JS_SetContextPrivate(mContext, nsnull);
@@ -1121,14 +1112,14 @@ nsJSContext::DestroyJSContext()
   Preferences::UnregisterCallback(JSOptionChangedCallback,
                                   js_options_dot_str, this);
 
-  bool do_gc = mGCOnDestruction && !sGCTimer;
-
+  if (mGCOnDestruction) {
+    PokeGC();
+  }
+        
   // Let xpconnect destroy the JSContext when it thinks the time is right.
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   if (xpc) {
-    xpc->ReleaseJSContext(mContext, !do_gc);
-  } else if (do_gc) {
-    ::JS_DestroyContext(mContext);
+    xpc->ReleaseJSContext(mContext, true);
   } else {
     ::JS_DestroyContextNoGC(mContext);
   }
@@ -1389,6 +1380,7 @@ nsresult
 nsJSContext::EvaluateString(const nsAString& aScript,
                             JSObject* aScopeObject,
                             nsIPrincipal *aPrincipal,
+                            nsIPrincipal *aOriginPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
                             PRUint32 aVersion,
@@ -1436,6 +1428,13 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     principal->GetJSPrincipals(mContext, &jsprin);
   }
 
+  JSPrincipals *originJSprin;
+  if (aOriginPrincipal) {
+    aOriginPrincipal->GetJSPrincipals(mContext, &originJSprin);
+  } else {
+    originJSprin = nsnull;
+  }
+
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
   bool ok = false;
@@ -1443,6 +1442,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   nsresult rv = sSecurityManager->CanExecuteScripts(mContext, principal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
+    if (originJSprin) {
+      JSPRINCIPALS_DROP(mContext, originJSprin);
+    }
     return NS_ERROR_FAILURE;
   }
 
@@ -1454,6 +1456,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
            do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     JSPRINCIPALS_DROP(mContext, jsprin);
+    if (originJSprin) {
+      JSPRINCIPALS_DROP(mContext, originJSprin);
+    }
     return NS_ERROR_FAILURE;
   }
 
@@ -1479,11 +1484,14 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     if (!ac.enter(mContext, aScopeObject)) {
       stack->Pop(nsnull);
       JSPRINCIPALS_DROP(mContext, jsprin);
+      if (originJSprin) {
+        JSPRINCIPALS_DROP(mContext, originJSprin);
+      }
       return NS_ERROR_FAILURE;
     }
 
-    ok = JS_EvaluateUCScriptForPrincipalsVersion(
-      mContext, aScopeObject, jsprin,
+    ok = JS_EvaluateUCScriptForPrincipalsVersionOrigin(
+      mContext, aScopeObject, jsprin, originJSprin,
       static_cast<const jschar*>(PromiseFlatString(aScript).get()),
       aScript.Length(), aURL, aLineNo, vp, JSVersion(aVersion));
 
@@ -1498,6 +1506,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   // Whew!  Finally done with these manually ref-counted things.
   JSPRINCIPALS_DROP(mContext, jsprin);
+  if (originJSprin) {
+    JSPRINCIPALS_DROP(mContext, originJSprin);
+  }
 
   // If all went well, convert val to a string if one is wanted.
   if (ok) {
@@ -1892,7 +1903,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  js::AutoObjectRooter targetVal(mContext, target);
+  JS::AutoObjectRooter targetVal(mContext, target);
   jsval rval = JSVAL_VOID;
 
   // This one's a lot easier than EvaluateString because we don't have to
@@ -3217,6 +3228,7 @@ nsJSContext::GarbageCollectNow(bool shrinkingGC)
   SAMPLE_LABEL("GC", "GarbageCollectNow");
 
   KillGCTimer();
+  KillShrinkGCBuffersTimer();
 
   // Reset sPendingLoadCount in case the timer that fired was a
   // timer we scheduled due to a normal GC timer firing while
@@ -3230,6 +3242,18 @@ nsJSContext::GarbageCollectNow(bool shrinkingGC)
   if (nsContentUtils::XPConnect()) {
     nsContentUtils::XPConnect()->GarbageCollect(shrinkingGC);
   }
+}
+
+//static
+void
+nsJSContext::ShrinkGCBuffersNow()
+{
+  NS_TIME_FUNCTION_MIN(1.0);
+  SAMPLE_LABEL("GC", "ShrinkGCBuffersNow");
+
+  KillShrinkGCBuffersTimer();
+
+  JS_ShrinkGCBuffers(nsJSRuntime::sRuntime);
 }
 
 //Static
@@ -3287,6 +3311,14 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
   NS_RELEASE(sGCTimer);
 
   nsJSContext::GarbageCollectNow();
+}
+
+void
+ShrinkGCBuffersTimerFired(nsITimer *aTimer, void *aClosure)
+{
+  NS_RELEASE(sShrinkGCBuffersTimer);
+
+  nsJSContext::ShrinkGCBuffersNow();
 }
 
 // static
@@ -3354,6 +3386,26 @@ nsJSContext::PokeGC()
 
 // static
 void
+nsJSContext::PokeShrinkGCBuffers()
+{
+  if (sShrinkGCBuffersTimer) {
+    return;
+  }
+
+  CallCreateInstance("@mozilla.org/timer;1", &sShrinkGCBuffersTimer);
+
+  if (!sShrinkGCBuffersTimer) {
+    // Failed to create timer (probably because we're in XPCOM shutdown)
+    return;
+  }
+
+  sShrinkGCBuffersTimer->InitWithFuncCallback(ShrinkGCBuffersTimerFired, nsnull,
+                                              NS_SHRINK_GC_BUFFERS_DELAY,
+                                              nsITimer::TYPE_ONE_SHOT);
+}
+
+// static
+void
 nsJSContext::MaybePokeCC()
 {
   if (nsCycleCollector_suspectedCount() > 1000) {
@@ -3390,6 +3442,17 @@ nsJSContext::KillGCTimer()
     sGCTimer->Cancel();
 
     NS_RELEASE(sGCTimer);
+  }
+}
+
+//static
+void
+nsJSContext::KillShrinkGCBuffersTimer()
+{
+  if (sShrinkGCBuffersTimer) {
+    sShrinkGCBuffersTimer->Cancel();
+
+    NS_RELEASE(sShrinkGCBuffersTimer);
   }
 }
 
@@ -3458,10 +3521,11 @@ DOMGCFinishedCallback(JSRuntime *rt, JSCompartment *comp, const char *status)
     }
   }
 
-  // If we didn't end up scheduling a GC, and there are unused
-  // chunks waiting to expire, make sure we will GC again soon.
-  if (!sGCTimer && JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS) > 0) {
-    nsJSContext::PokeGC();
+  // If we didn't end up scheduling a GC, make sure that we release GC buffers
+  // soon after canceling previous shrinking attempt 
+  nsJSContext::KillShrinkGCBuffersTimer();
+  if (!sGCTimer) {
+    nsJSContext::PokeShrinkGCBuffers();
   }
 }
 
@@ -3801,6 +3865,7 @@ void
 nsJSRuntime::Shutdown()
 {
   nsJSContext::KillGCTimer();
+  nsJSContext::KillShrinkGCBuffersTimer();
   nsJSContext::KillCCTimer();
 
   NS_IF_RELEASE(gNameSpaceManager);

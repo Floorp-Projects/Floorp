@@ -69,7 +69,7 @@ menuitem[_moz-menuactive="true"][disabled="true"],
   text-shadow: none;
 }
 
-@media all and (-moz-windows-classic) {
+@media (-moz-windows-classic) {
   menu[disabled="true"],
   menubar > menu[disabled="true"][_moz-menuactive="true"],
   menuitem[disabled="true"],

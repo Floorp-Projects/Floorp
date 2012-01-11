@@ -52,7 +52,7 @@
 #include <typeinfo>
 #include <ctype.h>
 
-extern "C" const char* nsGetTypeName(void* ptr);
+#include "nsTypeInfo.h"
 
 extern "C" void NS_TraceMallocShutdown();
 

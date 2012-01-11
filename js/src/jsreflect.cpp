@@ -619,8 +619,6 @@ class NodeBuilder
 
     bool xmlComment(Value text, TokenPos *pos, Value *dst);
 
-    bool xmlPI(Value target, TokenPos *pos, Value *dst);
-
     bool xmlPI(Value target, Value content, TokenPos *pos, Value *dst);
 };
 
@@ -1571,12 +1569,6 @@ NodeBuilder::xmlComment(Value text, TokenPos *pos, Value *dst)
 }
 
 bool
-NodeBuilder::xmlPI(Value target, TokenPos *pos, Value *dst)
-{
-    return xmlPI(target, NullValue(), pos, dst);
-}
-
-bool
 NodeBuilder::xmlPI(Value target, Value contents, TokenPos *pos, Value *dst)
 {
     Value cb = callbacks[AST_XMLPI];
@@ -1623,7 +1615,7 @@ class ASTSerializer
     bool declaration(ParseNode *pn, Value *dst);
     bool variableDeclaration(ParseNode *pn, bool let, Value *dst);
     bool variableDeclarator(ParseNode *pn, VarDeclKind *pkind, Value *dst);
-    bool letHead(ParseNode *pn, NodeVector &dtors);
+    bool let(ParseNode *pn, bool expr, Value *dst);
 
     bool optStatement(ParseNode *pn, Value *dst) {
         if (!pn) {
@@ -1963,14 +1955,21 @@ ASTSerializer::variableDeclarator(ParseNode *pn, VarDeclKind *pkind, Value *dst)
 }
 
 bool
-ASTSerializer::letHead(ParseNode *pn, NodeVector &dtors)
+ASTSerializer::let(ParseNode *pn, bool expr, Value *dst)
 {
-    if (!dtors.reserve(pn->pn_count))
+    ParseNode *letHead = pn->pn_left;
+    LOCAL_ASSERT(letHead->isArity(PN_LIST));
+
+    ParseNode *letBody = pn->pn_right;
+    LOCAL_ASSERT(letBody->isKind(PNK_LEXICALSCOPE));
+
+    NodeVector dtors(cx);
+    if (!dtors.reserve(letHead->pn_count))
         return false;
 
     VarDeclKind kind = VARDECL_LET_HEAD;
 
-    for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
+    for (ParseNode *next = letHead->pn_head; next; next = next->pn_next) {
         Value child;
         /*
          * Unlike in |variableDeclaration|, this does not update |kind|; since let-heads do
@@ -1981,7 +1980,12 @@ ASTSerializer::letHead(ParseNode *pn, NodeVector &dtors)
         dtors.infallibleAppend(child);
     }
 
-    return true;
+    Value v;
+    return expr
+           ? expression(letBody->pn_expr, &v) &&
+             builder.letExpression(dtors, v, &pn->pn_pos, dst)
+           : statement(letBody->pn_expr, &v) &&
+             builder.letStatement(dtors, v, &pn->pn_pos, dst);
 }
 
 bool
@@ -2078,8 +2082,6 @@ ASTSerializer::forInit(ParseNode *pn, Value *dst)
 
     return (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST))
            ? variableDeclaration(pn, false, dst)
-           : pn->isKind(PNK_LET)
-           ? variableDeclaration(pn, true, dst)
            : expression(pn, dst);
 }
 
@@ -2091,8 +2093,12 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
       case PNK_FUNCTION:
       case PNK_VAR:
       case PNK_CONST:
-      case PNK_LET:
         return declaration(pn, dst);
+
+      case PNK_LET:
+        return pn->isArity(PN_BINARY)
+               ? let(pn, false, dst)
+               : declaration(pn, dst);
 
       case PNK_NAME:
         LOCAL_ASSERT(pn->isUsed());
@@ -2108,15 +2114,6 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
       case PNK_LEXICALSCOPE:
         pn = pn->pn_expr;
-        if (pn->isKind(PNK_LET)) {
-            NodeVector dtors(cx);
-            Value stmt;
-
-            return letHead(pn->pn_left, dtors) &&
-                   statement(pn->pn_right, &stmt) &&
-                   builder.letStatement(dtors, stmt, &pn->pn_pos, dst);
-        }
-
         if (!pn->isKind(PNK_STATEMENTLIST))
             return statement(pn, dst);
         /* FALL THROUGH */
@@ -2176,9 +2173,9 @@ ASTSerializer::statement(ParseNode *pn, Value *dst)
 
             return (!head->pn_kid1
                     ? pattern(head->pn_kid2, NULL, &var)
-                    : variableDeclaration(head->pn_kid1,
-                                          head->pn_kid1->isKind(PNK_LET),
-                                          &var)) &&
+                    : head->pn_kid1->isKind(PNK_LEXICALSCOPE)
+                      ? variableDeclaration(head->pn_kid1->pn_expr, true, &var)
+                      : variableDeclaration(head->pn_kid1, false, &var)) &&
                    expression(head->pn_kid3, &expr) &&
                    builder.forInStatement(var, expr, stmt, isForEach, &pn->pn_pos, dst);
         }
@@ -2405,7 +2402,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.sequenceExpression(exprs, &pn->pn_pos, dst);
       }
 
-      case PNK_HOOK:
+      case PNK_CONDITIONAL:
       {
         Value test, cons, alt;
 
@@ -2427,15 +2424,22 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         return leftAssociate(pn, dst);
       }
 
-      case PNK_INC:
-      case PNK_DEC:
+      case PNK_PREINCREMENT:
+      case PNK_PREDECREMENT:
       {
-        bool incr = pn->isKind(PNK_INC);
-        bool prefix = pn->getOp() >= JSOP_INCNAME && pn->getOp() <= JSOP_DECELEM;
-
+        bool inc = pn->isKind(PNK_PREINCREMENT);
         Value expr;
         return expression(pn->pn_kid, &expr) &&
-               builder.updateExpression(expr, incr, prefix, &pn->pn_pos, dst);
+               builder.updateExpression(expr, inc, true, &pn->pn_pos, dst);
+      }
+
+      case PNK_POSTINCREMENT:
+      case PNK_POSTDECREMENT:
+      {
+        bool inc = pn->isKind(PNK_POSTINCREMENT);
+        Value expr;
+        return expression(pn->pn_kid, &expr) &&
+               builder.updateExpression(expr, inc, false, &pn->pn_pos, dst);
       }
 
       case PNK_ASSIGN:
@@ -2618,13 +2622,16 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_DEFSHARP:
       {
+        DefSharpExpression &defsharp = pn->asDefSharpExpression();
         Value expr;
-        return expression(pn->pn_kid, &expr) &&
-               builder.graphExpression(pn->pn_num, expr, &pn->pn_pos, dst);
+        return expression(&defsharp.expression(), &expr) &&
+               builder.graphExpression(defsharp.number(), expr, &defsharp.pn_pos, dst);
       }
 
-      case PNK_USESHARP:
-        return builder.graphIndexExpression(pn->pn_num, &pn->pn_pos, dst);
+      case PNK_USESHARP: {
+        UseSharpExpression &expr = pn->asUseSharpExpression();
+        return builder.graphIndexExpression(expr.number(), &expr.pn_pos, dst);
+      }
 
       case PNK_ARRAYCOMP:
         /* NB: it's no longer the case that pn_count could be 2. */
@@ -2633,17 +2640,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
         return comprehension(pn->pn_head->pn_expr, dst);
 
-      case PNK_LEXICALSCOPE:
-      {
-        pn = pn->pn_expr;
-
-        NodeVector dtors(cx);
-        Value expr;
-
-        return letHead(pn->pn_left, dtors) &&
-               expression(pn->pn_right, &expr) &&
-               builder.letExpression(dtors, expr, &pn->pn_pos, dst);
-      }
+      case PNK_LET:
+        return let(pn, true, dst);
 
 #ifdef JS_HAS_XML_SUPPORT
       case PNK_XMLUNARY:
@@ -2792,14 +2790,13 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
       case PNK_XMLCOMMENT:
         return builder.xmlComment(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
-      case PNK_XMLPI:
-        if (!pn->pn_pidata)
-            return builder.xmlPI(atomContents(pn->pn_pitarget), &pn->pn_pos, dst);
-        else
-            return builder.xmlPI(atomContents(pn->pn_pitarget),
-                                 atomContents(pn->pn_pidata),
-                                 &pn->pn_pos,
-                                 dst);
+      case PNK_XMLPI: {
+        XMLProcessingInstruction &pi = pn->asXMLProcessingInstruction();
+        return builder.xmlPI(atomContents(pi.target()),
+                             atomContents(pi.data()),
+                             &pi.pn_pos,
+                             dst);
+      }
 #endif
 
       default:
@@ -3264,7 +3261,10 @@ JS_BEGIN_EXTERN_C
 JS_PUBLIC_API(JSObject *)
 JS_InitReflect(JSContext *cx, JSObject *obj)
 {
-    JSObject *Reflect = NewObjectWithClassProto(cx, &ObjectClass, NULL, obj);
+    RootObject root(cx, &obj);
+    RootedVarObject Reflect(cx);
+
+    Reflect = NewObjectWithClassProto(cx, &ObjectClass, NULL, obj);
     if (!Reflect || !Reflect->setSingletonType(cx))
         return NULL;
 

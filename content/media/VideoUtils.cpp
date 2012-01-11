@@ -39,6 +39,8 @@
 #include "nsMathUtils.h"
 #include "prtypes.h"
 
+#include "mozilla/StdInt.h"
+
 // Adds two 32bit unsigned numbers, retuns true if addition succeeded,
 // or false the if addition would result in an overflow.
 bool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
@@ -68,11 +70,11 @@ bool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult)
 // if addition would result in an overflow.
 bool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
   if (b < 1) {
-    if (PR_INT64_MIN - b <= a) {
+    if (INT64_MIN - b <= a) {
       aResult = a + b;
       return true;
     }
-  } else if (PR_INT64_MAX - b >= a) {
+  } else if (INT64_MAX - b >= a) {
     aResult = a + b;
     return true;
   }
@@ -99,7 +101,7 @@ bool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
   // So to check if a*b overflows, we must check each sub part of the above
   // sum.
   //
-  // Note: -1 * PR_INT64_MIN == PR_INT64_MIN ; we can't negate PR_INT64_MIN!
+  // Note: -1 * INT64_MIN == INT64_MIN ; we can't negate INT64_MIN!
   // Note: Shift of negative numbers is undefined.
   //
   // Figure out the sign after multiplication. Then we can just work with
@@ -110,7 +112,7 @@ bool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
   PRInt64 abs_b = (b < 0) ? -b : b;
 
   if (abs_a < 0) {
-    NS_ASSERTION(a == PR_INT64_MIN, "How else can this happen?");
+    NS_ASSERTION(a == INT64_MIN, "How else can this happen?");
     if (b == 0 || b == 1) {
       aResult = a * b;
       return true;
@@ -120,7 +122,7 @@ bool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
   }
 
   if (abs_b < 0) {
-    NS_ASSERTION(b == PR_INT64_MIN, "How else can this happen?");
+    NS_ASSERTION(b == INT64_MIN, "How else can this happen?");
     if (a == 0 || a == 1) {
       aResult = a * b;
       return true;
@@ -162,7 +164,7 @@ bool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
 
   // Both a_lo and b_lo are less than INT32_MAX, so can't overflow.
   PRUint64 lo = a_lo * b_lo;
-  if (lo > PR_INT64_MAX) {
+  if (lo > INT64_MAX) {
     return false;
   }
 

@@ -151,9 +151,6 @@
         false
 #endif
       </field>
-      <field name="mAddProgressListenerWasCalled">
-        false
-      </field>
       <field name="_browsers">
         null
       </field>
@@ -1912,11 +1909,6 @@
                                            "608628.");
             }
 
-            if (!this.mAddProgressListenerWasCalled) {
-              this.mAddProgressListenerWasCalled = true;
-              this.tabContainer.updateVisibility();
-            }
-
             this.mProgressListeners.push(aListener);
           ]]>
         </body>
@@ -2770,8 +2762,8 @@
           Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
 
-          if (window.TabsInTitlebar)
-            TabsInTitlebar.allowedBy("tabs-visible", this.visible);
+          this.updateVisibility();
+          this._propagateVisibility();
         ]]>
       </constructor>
 
@@ -2839,16 +2831,29 @@
 
           this._container.collapsed = !val;
 
-          document.getElementById("menu_closeWindow").hidden = !val;
-          document.getElementById("menu_close").setAttribute("label",
-            this.tabbrowser.mStringBundle.getString(val ? "tabs.closeTab" : "tabs.close"));
-
-          if (window.TabsInTitlebar)
-            TabsInTitlebar.allowedBy("tabs-visible", val);
+          this._propagateVisibility();
 
           return val;
         ]]></setter>
       </property>
+
+      <method name="_propagateVisibility">
+        <body><![CDATA[
+          let visible = this.visible;
+
+          document.getElementById("menu_closeWindow").hidden = !visible;
+          document.getElementById("menu_close").setAttribute("label",
+            this.tabbrowser.mStringBundle.getString(visible ? "tabs.closeTab" : "tabs.close"));
+
+          goSetCommandEnabled("cmd_ToggleTabsOnTop", visible);
+
+          if (window.TabsOnTop)
+            TabsOnTop.syncUI();
+
+          if (window.TabsInTitlebar)
+            TabsInTitlebar.allowedBy("tabs-visible", visible);
+        ]]></body>
+      </method>
 
       <method name="updateVisibility">
         <body><![CDATA[
@@ -2927,7 +2932,6 @@
       <field name="_tabDefaultMaxWidth">NaN</field>
       <field name="_lastTabClosedByMouse">false</field>
       <field name="_hasTabTempMaxWidth">false</field>
-      <field name="_usingClosingTabsSpacer">false</field>
 
       <!-- Try to keep the active tab's close button under the mouse cursor -->
       <method name="_lockTabSizing">
@@ -2995,7 +2999,7 @@
         <body><![CDATA[
           let spacer = this._closingTabsSpacer;
           spacer.style.width = parseFloat(spacer.style.width) + pixels + "px";
-          this._usingClosingTabsSpacer = true;
+          this.setAttribute("using-closing-tabs-spacer", "true");
           this.tabbrowser.addEventListener("mousemove", this, false);
           window.addEventListener("mouseout", this, false);
         ]]></body>
@@ -3005,14 +3009,16 @@
         <body><![CDATA[
           this.tabbrowser.removeEventListener("mousemove", this, false);
           window.removeEventListener("mouseout", this, false);
+
           if (this._hasTabTempMaxWidth) {
             this._hasTabTempMaxWidth = false;
             let tabs = this.tabbrowser.visibleTabs;
             for (let i = 0; i < tabs.length; i++)
               tabs[i].style.maxWidth = "";
           }
-          if (this._usingClosingTabsSpacer) {
-            this._usingClosingTabsSpacer = false;
+
+          if (this.hasAttribute("using-closing-tabs-spacer")) {
+            this.removeAttribute("using-closing-tabs-spacer");
             this._closingTabsSpacer.style.width = 0;
           }
         ]]></body>

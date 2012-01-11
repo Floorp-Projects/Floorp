@@ -34,11 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
 do_get_profile();
+
+do_register_cleanup(function() {
+  Services.obs.notifyObservers(null, "quit-application", null);
+});
 
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties);

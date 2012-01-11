@@ -49,10 +49,12 @@
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
 
+#include "jscntxt.h" // mJSContext->errorReporter, js::AutoValueVector
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
 // the value of this variable is never used - we use its address as a sentinel
-static uint32 zero_methods_descriptor;
+static uint32_t zero_methods_descriptor;
 
 bool AutoScriptEvaluate::StartEvaluating(JSObject *scope, JSErrorReporter errorReporter)
 {
@@ -190,11 +192,11 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
         mRuntime->GetWrappedJSClassMap()->Add(this);
     }
 
-    uint16 methodCount;
+    uint16_t methodCount;
     if (NS_SUCCEEDED(mInfo->GetMethodCount(&methodCount))) {
         if (methodCount) {
             int wordCount = (methodCount/32)+1;
-            if (nsnull != (mDescriptors = new uint32[wordCount])) {
+            if (nsnull != (mDescriptors = new uint32_t[wordCount])) {
                 int i;
                 // init flags to 0;
                 for (i = wordCount-1; i >= 0; i--)
@@ -292,7 +294,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
         // is not an exception that is ever worth reporting, but we don't want
         // to eat all exceptions either.
 
-        uint32 oldOpts =
+        uint32_t oldOpts =
           JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
 
         jsval args[1] = {OBJECT_TO_JSVAL(id)};
@@ -361,7 +363,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
                              nsIVariant** aResult,
                              nsresult* pErr)
 {
-    nsXPTType type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));
+    nsXPTType type = nsXPTType((uint8_t)TD_INTERFACE_TYPE);
     jsval val;
 
     return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
@@ -403,60 +405,49 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
                                              nsISimpleEnumerator** aEnumerate)
 {
     JSContext* cx = ccx.GetJSContext();
-    nsresult retval = NS_ERROR_FAILURE;
-    JSIdArray* idArray = nsnull;
-    int i;
 
-    // Saved state must be restored, all exits through 'out'...
     AutoScriptEvaluate scriptEval(cx);
     if (!scriptEval.StartEvaluating(aJSObj))
         return NS_ERROR_FAILURE;
 
-    idArray = JS_Enumerate(cx, aJSObj);
+    JS::AutoIdArray idArray(cx, JS_Enumerate(cx, aJSObj));
     if (!idArray)
-        return retval;
+        return NS_ERROR_FAILURE;
 
-    nsCOMArray<nsIProperty> propertyArray(idArray->length);
-    for (i = 0; i < idArray->length; i++) {
+    nsCOMArray<nsIProperty> propertyArray(idArray.length());
+    for (size_t i = 0; i < idArray.length(); i++) {
+        jsid idName = idArray[i];
+
         nsCOMPtr<nsIVariant> value;
-        jsid idName = idArray->vector[i];
         nsresult rv;
-
         if (!GetNamedPropertyAsVariantRaw(ccx, aJSObj, idName,
                                           getter_AddRefs(value), &rv)) {
             if (NS_FAILED(rv))
-                retval = rv;
-            goto out;
+                return rv;
+            return NS_ERROR_FAILURE;
         }
 
         jsval jsvalName;
         if (!JS_IdToValue(cx, idName, &jsvalName))
-            goto out;
+            return NS_ERROR_FAILURE;
 
         JSString* name = JS_ValueToString(cx, jsvalName);
         if (!name)
-            goto out;
+            return NS_ERROR_FAILURE;
 
         size_t length;
         const jschar *chars = JS_GetStringCharsAndLength(cx, name, &length);
         if (!chars)
-            goto out;
+            return NS_ERROR_FAILURE;
 
         nsCOMPtr<nsIProperty> property =
             new xpcProperty(chars, (PRUint32) length, value);
-        if (!property)
-            goto out;
 
         if (!propertyArray.AppendObject(property))
-            goto out;
+            return NS_ERROR_FAILURE;
     }
 
-    retval = NS_NewArrayEnumerator(aEnumerate, propertyArray);
-
-out:
-    JS_DestroyIdArray(cx, idArray);
-
-    return retval;
+    return NS_NewArrayEnumerator(aEnumerate, propertyArray);
 }
 
 /***************************************************************************/
@@ -534,9 +525,8 @@ GetContextFromObject(JSObject *obj)
     // Don't stomp over a running context.
     XPCJSContextStack* stack =
         XPCPerThreadData::GetData(nsnull)->GetJSContextStack();
-    JSContext* topJSContext;
 
-    if (stack && NS_SUCCEEDED(stack->Peek(&topJSContext)) && topJSContext)
+    if (stack && stack->Peek())
         return nsnull;
 
     // In order to get a context, we need a context.
@@ -553,7 +543,7 @@ GetContextFromObject(JSObject *obj)
 
     if (xpcc) {
         JSContext *cx = xpcc->GetJSContext();
-        if (cx->thread()->id == js_CurrentThreadId())
+        if (JS_GetContextThread(cx) == JS_GetCurrentThread())
             return cx;
     }
 
@@ -868,12 +858,12 @@ JSBool
 nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
                                            const XPTMethodDescriptor* method,
                                            const nsXPTParamInfo& param,
-                                           uint16 methodIndex,
-                                           uint8 paramIndex,
+                                           uint16_t methodIndex,
+                                           uint8_t paramIndex,
                                            nsXPTCMiniVariant* nativeParams,
                                            uint32_t* result)
 {
-    uint8 argnum;
+    uint8_t argnum;
     nsresult rv;
 
     rv = mInfo->GetSizeIsArgNumberForParam(methodIndex, &param, 0, &argnum);
@@ -900,12 +890,12 @@ JSBool
 nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
                                                const XPTMethodDescriptor* method,
                                                const nsXPTParamInfo& param,
-                                               uint16 methodIndex,
+                                               uint16_t methodIndex,
                                                const nsXPTType& type,
                                                nsXPTCMiniVariant* nativeParams,
                                                nsID* result)
 {
-    uint8 type_tag = type.TagPart();
+    uint8_t type_tag = type.TagPart();
 
     if (type_tag == nsXPTType::T_INTERFACE) {
         if (NS_SUCCEEDED(GetInterfaceInfo()->
@@ -913,7 +903,7 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
             return true;
         }
     } else if (type_tag == nsXPTType::T_INTERFACE_IS) {
-        uint8 argnum;
+        uint8_t argnum;
         nsresult rv;
         rv = mInfo->GetInterfaceIsArgNumberForParam(methodIndex,
                                                     &param, &argnum);
@@ -1133,14 +1123,12 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                     rv = location->GetFilename(getter_Copies(sourceName));
                                 }
 
-                                nsCOMPtr<nsIScriptError2> scriptError2 =
-                                    do_QueryInterface(scriptError);
-                                rv = scriptError2->InitWithWindowID(newMessage.get(),
-                                                                    NS_ConvertASCIItoUTF16(sourceName).get(),
-                                                                    nsnull,
-                                                                    lineNumber, 0, 0,
-                                                                    "XPConnect JavaScript",
-                                                                    nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
+                                rv = scriptError->InitWithWindowID(newMessage.get(),
+                                                                   NS_ConvertASCIItoUTF16(sourceName).get(),
+                                                                   nsnull,
+                                                                   lineNumber, 0, 0,
+                                                                   "XPConnect JavaScript",
+                                                                   nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
                                 if (NS_FAILED(rv))
                                     scriptError = nsnull;
                             }
@@ -1178,15 +1166,15 @@ class ContextPrincipalGuard
 };
 
 NS_IMETHODIMP
-nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
+nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                 const XPTMethodDescriptor* info,
                                 nsXPTCMiniVariant* nativeParams)
 {
     jsval* sp = nsnull;
     jsval* argv = nsnull;
-    uint8 i;
-    uint8 argc=0;
-    uint8 paramCount=0;
+    uint8_t i;
+    uint8_t argc=0;
+    uint8_t paramCount=0;
     nsresult retval = NS_ERROR_FAILURE;
     nsresult pending_result = NS_OK;
     JSBool success;
@@ -1524,7 +1512,7 @@ pre_call_clean_up:
         rval = *argv;
     } else {
         if (!JSVAL_IS_PRIMITIVE(fval)) {
-            uint32 oldOpts = JS_GetOptions(cx);
+            uint32_t oldOpts = JS_GetOptions(cx);
             JS_SetOptions(cx, oldOpts | JSOPTION_DONT_REPORT_UNCAUGHT);
 
             success = JS_CallFunctionValue(cx, thisObj, fval, argc, argv, &rval);
@@ -1588,7 +1576,7 @@ pre_call_clean_up:
         }
 
         jsval val;
-        uint8 type_tag = type.TagPart();
+        uint8_t type_tag = type.TagPart();
         nsXPTCMiniVariant* pv;
 
         if (param.IsDipper())
@@ -1695,7 +1683,7 @@ pre_call_clean_up:
         // We didn't manage all the result conversions!
         // We have to cleanup any junk that *did* get converted.
 
-        for (uint8 k = 0; k < i; k++) {
+        for (uint8_t k = 0; k < i; k++) {
             const nsXPTParamInfo& param = info->params[k];
             if (!param.IsOut())
                 continue;
@@ -1768,9 +1756,9 @@ nsXPCWrappedJSClass::DebugDump(PRInt16 depth)
         if (iid)
             NS_Free(iid);
         XPC_LOG_ALWAYS(("InterfaceInfo @ %x", mInfo));
-        uint16 methodCount = 0;
+        uint16_t methodCount = 0;
         if (depth) {
-            uint16 i;
+            uint16_t i;
             nsCOMPtr<nsIInterfaceInfo> parent;
             XPC_LOG_INDENT();
             mInfo->GetParent(getter_AddRefs(parent));
@@ -1786,7 +1774,7 @@ nsXPCWrappedJSClass::DebugDump(PRInt16 depth)
         if (depth && mDescriptors && methodCount) {
             depth--;
             XPC_LOG_INDENT();
-            for (uint16 i = 0; i < methodCount; i++) {
+            for (uint16_t i = 0; i < methodCount; i++) {
                 XPC_LOG_ALWAYS(("Method %d is %s%s", \
                                 i, IsReflectable(i) ? "":" NOT ","reflectable"));
             }

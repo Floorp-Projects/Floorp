@@ -46,7 +46,7 @@
 #include "nsFrameManager.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
 #include "nsIDOMHTMLTableCellElement.h"
@@ -330,7 +330,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
         // which detaches the placeholder from the float.
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
         aState.mOverflowTracker->Finish(mFrame);
-        static_cast<nsHTMLContainerFrame*>(kidNextInFlow->GetParent())
+        static_cast<nsContainerFrame*>(kidNextInFlow->GetParent())
           ->DeleteNextInFlowChild(mPresContext, kidNextInFlow, true);
       }
     }

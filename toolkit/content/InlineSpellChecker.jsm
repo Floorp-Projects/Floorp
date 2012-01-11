@@ -38,9 +38,11 @@
 var EXPORTED_SYMBOLS = [ "InlineSpellChecker" ];
 var gLanguageBundle;
 var gRegionBundle;
+const MAX_UNDO_STACK_DEPTH = 1;
 
 function InlineSpellChecker(aEditor) {
   this.init(aEditor);
+  this.mAddedWordStack = []; // We init this here to preserve it between init/uninit calls
 }
 
 InlineSpellChecker.prototype = {
@@ -284,7 +286,26 @@ InlineSpellChecker.prototype = {
   // callback for adding the current misspelling to the user-defined dictionary
   addToDictionary: function()
   {
+    // Prevent the undo stack from growing over the max depth
+    if (this.mAddedWordStack.length == MAX_UNDO_STACK_DEPTH)
+      this.mAddedWordStack.shift();
+      
+    this.mAddedWordStack.push(this.mMisspelling);
     this.mInlineSpellChecker.addWordToDictionary(this.mMisspelling);
+  },
+  // callback for removing the last added word to the dictionary LIFO fashion
+  undoAddToDictionary: function()
+  {
+    if (this.mAddedWordStack.length > 0)
+    {
+      var word = this.mAddedWordStack.pop();
+      this.mInlineSpellChecker.removeWordFromDictionary(word);
+    }
+  },
+  canUndo : function()
+  {
+    // Return true if we have words on the stack
+    return (this.mAddedWordStack.length > 0);
   },
   ignoreWord: function()
   {

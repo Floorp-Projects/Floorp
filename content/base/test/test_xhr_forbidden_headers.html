@@ -55,7 +55,7 @@ for (i = 0; i < headers.length; i++)
   request.setRequestHeader(headers[i], "test" + i);
 
 // Read out headers
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect UniversalBrowserWrite");
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 var channel = request.channel.QueryInterface(Components.interfaces.nsIHttpChannel);
 for (i = 0; i < headers.length; i++) {
   // Retrieving Content-Length will throw an exception

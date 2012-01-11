@@ -1715,7 +1715,7 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
     if (objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY))
         return false;
 
-    if (cc.arrayPrototypeHasIndexedProperty())
+    if (ArrayPrototypeHasIndexedProperty(cx, outerScript))
         return false;
 
     uint32_t objSlot;
@@ -1869,7 +1869,7 @@ LoopState::analyzeLoopBody(unsigned frame)
 
           case JSOP_SETPROP:
           case JSOP_SETMETHOD: {
-            JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
+            JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(script, pc, 0));
             jsid id = MakeTypeId(cx, ATOM_TO_JSID(atom));
 
             TypeSet *objTypes = analysis->poppedTypes(pc, 1);
@@ -1921,15 +1921,10 @@ LoopState::analyzeLoopBody(unsigned frame)
           case JSOP_LOCALINC:
           case JSOP_LOCALDEC:
           case JSOP_IFEQ:
-          case JSOP_IFEQX:
           case JSOP_IFNE:
-          case JSOP_IFNEX:
           case JSOP_AND:
-          case JSOP_ANDX:
           case JSOP_OR:
-          case JSOP_ORX:
           case JSOP_GOTO:
-          case JSOP_GOTOX:
             break;
 
           case JSOP_ADD:
@@ -2185,7 +2180,7 @@ LoopState::getEntryValue(const CrossSSAValue &iv, uint32_t *pslot, int32_t *pcon
       }
 
       case JSOP_GETPROP: {
-        JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
+        JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(script, pc, 0));
         jsid id = ATOM_TO_JSID(atom);
         CrossSSAValue objcv(cv.frame, analysis->poppedValue(v.pushedOffset(), 0));
         FrameEntry *tmp = invariantProperty(objcv, id);

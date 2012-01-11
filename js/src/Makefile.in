@@ -157,7 +157,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
-		CallObject.cpp \
+		ScopeObject.cpp \
 		Debugger.cpp \
 		GlobalObject.cpp \
 		Stack.cpp \
@@ -171,6 +171,7 @@ CPPSRCS		= \
 		SemanticAnalysis.cpp \
 		TokenStream.cpp \
 		LifoAlloc.cpp \
+		MemoryMetrics.cpp \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
@@ -269,6 +270,7 @@ EXPORTS_NAMESPACES += js
 EXPORTS_js = \
 		HashTable.h \
 		LegacyIntTypes.h \
+		MemoryMetrics.h \
 		TemplateLib.h \
 		Utility.h \
 		Vector.h \

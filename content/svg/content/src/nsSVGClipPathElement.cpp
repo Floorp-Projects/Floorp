@@ -60,8 +60,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGClipPathElement,nsSVGClipPathElementBase)
 DOMCI_NODE_DATA(SVGClipPathElement, nsSVGClipPathElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGClipPathElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGClipPathElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGClipPathElement,
+  NS_NODE_INTERFACE_TABLE6(nsSVGClipPathElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGClipPathElement,
                            nsIDOMSVGUnitTypes)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGClipPathElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGClipPathElementBase)

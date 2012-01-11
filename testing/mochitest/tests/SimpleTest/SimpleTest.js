@@ -16,7 +16,11 @@
 
 var SimpleTest = { };
 var parentRunner = null;
-var isPrimaryTestWindow = !!parent.TestRunner;
+
+// In normal test runs, the window that has a TestRunner in its parent is
+// the primary window.  In single test runs, if there is no parent and there
+// is no opener then it is the primary window.
+var isPrimaryTestWindow = !!parent.TestRunner || (parent == window && !opener);
 
 // Finds the TestRunner for this test run and the SpecialPowers object (in
 // case it is not defined) from a parent/opener window.

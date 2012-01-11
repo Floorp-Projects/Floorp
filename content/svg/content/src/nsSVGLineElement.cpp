@@ -106,8 +106,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGLineElement,nsSVGLineElementBase)
 DOMCI_NODE_DATA(SVGLineElement, nsSVGLineElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGLineElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGLineElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGLineElement)
+  NS_NODE_INTERFACE_TABLE5(nsSVGLineElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGLineElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGLineElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGLineElementBase)
 

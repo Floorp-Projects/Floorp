@@ -514,7 +514,7 @@ TiltGL.Renderer.prototype = {
    */
   scale: function TGLR_scale(x, y, z)
   {
-    mat4.scale(this.mvMatrix, [x, y, z || 0]);
+    mat4.scale(this.mvMatrix, [x, y, z || 1]);
   },
 
   /**

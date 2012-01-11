@@ -1,6 +1,6 @@
 function postMsg(message)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var l = parent.window.location;
   parent.postMessage(message, l.protocol + "//" + l.host);
 }

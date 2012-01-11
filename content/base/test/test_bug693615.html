@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=693615
+-->
+<head>
+  <title>Test for Bug 693615</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=693615">Mozilla Bug 693615</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 693615 **/
+/*
+The following code tests if calling the DOM method Node::lookupNamespaceURI
+directly (with quickstubs) and through XPCOM leads to the same result.
+*/
+
+var content = document.getElementById("content");
+
+// called directly (quickstubs)
+var defaultNS = content.lookupNamespaceURI(null);
+is(defaultNS, null, "direct access working");
+
+// called via XPCOM
+// deleting the method from the prototype forces the engine to go through XPCOM
+var proto = Object.getPrototypeOf(content);
+delete(proto.lookupNamespaceURI);
+var wrapperNS = content.lookupNamespaceURI(null);
+is(wrapperNS, null, "access through XPCOM working");
+
+</script>
+</pre>
+</body>
+</html>

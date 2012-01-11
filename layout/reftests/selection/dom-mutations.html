@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=619273
+-->
+<head>
+  <title>Test for Bug 619273</title>
+<script type="application/javascript;version=1.7">
+/** Test DOM mutations inside selection **/
+function createDOM(doc) {
+  let s = doc.createElement('span');
+  s.appendChild(doc.createTextNode('|'))
+  let s2 = doc.createElement('span');
+  s2.appendChild(doc.createTextNode('z'))
+  s.appendChild(s2)
+  return s;
+}
+
+var tests_done = 0;
+var tests = [
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(a, 1);
+    sel.addRange(r);
+    doc.body.insertBefore(doc.createTextNode('.'), a);
+    doc.body.appendChild(createDOM(doc));
+  },
+   function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let r = doc.createRange();
+    r.setStart(doc.firstChild, 0);
+    r.setEnd(a, 1);
+    sel.addRange(r);
+    doc.body.insertBefore(doc.createTextNode('.'), a);
+    doc.body.appendChild(createDOM(doc));
+  },
+ function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let b = doc.body.childNodes[2];
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    doc.body.insertBefore(doc.createTextNode('.'), b);
+    doc.body.appendChild(createDOM(doc));
+  },
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let b = doc.body.childNodes[2];
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(doc.body, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    doc.body.insertBefore(doc.createTextNode('.'), b);
+    doc.body.appendChild(createDOM(doc));
+  },
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let b = doc.body.childNodes[2];
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(doc, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    doc.body.insertBefore(doc.createTextNode('.'), b);
+    doc.body.appendChild(createDOM(doc));
+  },
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    doc.body.insertBefore(doc.createTextNode('.'), c);
+    doc.body.appendChild(createDOM(doc));
+  },
+
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(a, 1);
+    sel.addRange(r);
+    let span = createDOM(doc);
+    doc.body.insertBefore(span, a);
+    span.appendChild(createDOM(doc));
+  },
+   function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let r = doc.createRange();
+    r.setStart(doc.firstChild, 0);
+    r.setEnd(a, 1);
+    sel.addRange(r);
+    let span = createDOM(doc);
+    doc.body.insertBefore(span, a);
+    span.appendChild(createDOM(doc));
+  },
+ function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let b = doc.body.childNodes[2];
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    let span = createDOM(doc);
+    doc.body.insertBefore(span, b);
+    span.appendChild(createDOM(doc));
+  },
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let b = doc.body.childNodes[2];
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(doc.body, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    let span = createDOM(doc);
+    doc.body.insertBefore(span, b);
+    span.appendChild(createDOM(doc));
+  },
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let b = doc.body.childNodes[2];
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(doc, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    let span = createDOM(doc);
+    doc.body.insertBefore(span, b);
+    span.appendChild(createDOM(doc));
+  },
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    let span = createDOM(doc);
+    doc.body.insertBefore(span, c);
+    span.appendChild(createDOM(doc));
+  },
+
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(a, 1);
+    sel.addRange(r);
+    doc.body.appendChild(a);
+  },
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(a, 1);
+    sel.addRange(r);
+    document.adoptNode(a);
+    document.body.appendChild(a);
+    document.body.appendChild(document.createTextNode(' '));
+  },
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I<br>B<br>C'
+    let a = doc.body.firstChild;
+    let c = doc.body.childNodes[4];
+    let r = doc.createRange();
+    r.setStart(a, 0);
+    r.setEnd(c, 1);
+    sel.addRange(r);
+    let span = createDOM(doc);
+    doc.body.insertBefore(span, c);
+    document.adoptNode(span);
+    document.body.appendChild(span);
+  },
+
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I'
+    let a = doc.body.firstChild;
+    let span = createDOM(doc);
+    let r = doc.createRange();
+    r.setStart(span, 0);
+    r.setEnd(span, 1);
+    sel.addRange(r);
+    doc.body.appendChild(span);
+  },
+
+  function(win,doc,sel) {
+    doc.body.innerHTML = 'I'
+    let a = doc.body.firstChild;
+    let span = createDOM(doc);
+    let r = doc.createRange();
+    r.setStart(span.firstChild, 0);
+    r.setEnd(span.firstChild, 1);
+    sel.addRange(r);
+    doc.body.appendChild(span);
+    doc.body.appendChild(span.firstChild);
+    r.setEnd(span.firstChild, 1);
+  },
+]
+
+function runTestInIframe(run,t) {
+  let f = document.createElement('iframe');
+  f.setAttribute('frameborder','0');
+  f.setAttribute('height','100');
+  f.setAttribute('width','200');
+  f.src = 'data:text/html,<body style="margin:0;padding:0;font-family:monospace">';
+  f.onload = function () {
+    try {
+      run(f.contentWindow, f.contentDocument, f.contentWindow.getSelection());
+    } finally { ++tests_done; }
+  }
+  return f;
+}
+
+var id;
+function checkFinished() {
+  if (window.frames.length == tests_done) {
+    clearInterval(id);
+    document.documentElement.className = "";
+  }
+}
+
+function runTest() {
+  for (let i=0; i < tests.length; ++i) {
+    let t = tests[i];
+    document.body.appendChild(runTestInIframe(t));
+  }
+  id = setInterval(checkFinished,500);
+}
+</script>
+</head>
+<body onload="runTest()"></body>
+</html>

@@ -104,10 +104,12 @@ test_asyncNULLFallback()
     "SELECT NULL"
   ), getter_AddRefs(stmt));
 
-  nsRefPtr<Spinner> asyncSpin(new Spinner());
   nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
-  do_check_true(NS_SUCCEEDED(stmt->ExecuteAsync(asyncSpin, getter_AddRefs(pendingStmt))));
+  do_check_true(NS_SUCCEEDED(stmt->ExecuteAsync(nsnull, getter_AddRefs(pendingStmt))));
   do_check_true(pendingStmt);
+  stmt->Finalize();
+  nsRefPtr<Spinner> asyncSpin(new Spinner());
+  db->AsyncClose(asyncSpin);
   asyncSpin->SpinUntilCompleted();
 
 }

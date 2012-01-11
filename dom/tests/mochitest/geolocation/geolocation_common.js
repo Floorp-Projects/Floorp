@@ -64,6 +64,13 @@ function resume_geolocationProvider()
   prefs.setCharPref("geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 }
 
+function delay_geolocationProvider(delay)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  prefs.setCharPref("geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?delay=" + delay);
+}
+
 function check_geolocation(location) {
 
   ok(location, "Check to see if this location is non-null");

@@ -60,7 +60,8 @@ public:
   NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
                              const nsIntRect *aRect);
   // imgIContainerObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer,
+  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
+                          imgIContainer *aContainer,
                           const nsIntRect *aDirtyRect);
 
   NS_IMETHOD ClearFrame();

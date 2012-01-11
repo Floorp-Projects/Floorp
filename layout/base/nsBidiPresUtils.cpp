@@ -49,7 +49,7 @@
 #include "nsFrameManager.h"
 #include "nsBidiUtils.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsInlineFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsContainerFrame.h"

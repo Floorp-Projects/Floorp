@@ -38,6 +38,8 @@
 #ifndef nsDirectoryIndexStream_h__
 #define nsDirectoryIndexStream_h__
 
+#include "mozilla/Attributes.h"
+
 #include "nsIFile.h"
 #include "nsString.h"
 #include "nsIInputStream.h"
@@ -45,7 +47,7 @@
 #include "nsCOMArray.h"
 #include "nsITextToSubURI.h"
 
-class nsDirectoryIndexStream : public nsIInputStream
+class nsDirectoryIndexStream MOZ_FINAL : public nsIInputStream
 {
 private:
     nsCString mBuf;

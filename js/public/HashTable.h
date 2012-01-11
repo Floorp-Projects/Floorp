@@ -48,6 +48,8 @@
 
 namespace js {
 
+class TempAllocPolicy;
+
 /* Integral types for all hash functions. */
 typedef uint32_t HashNumber;
 
@@ -181,7 +183,7 @@ class HashTable : private AllocPolicy
         friend class HashTable;
 
         Range(Entry *c, Entry *e) : cur(c), end(e) {
-            while (cur != end && !cur->isLive())
+            while (cur < end && !cur->isLive())
                 ++cur;
         }
 
@@ -201,7 +203,8 @@ class HashTable : private AllocPolicy
 
         void popFront() {
             JS_ASSERT(!empty());
-            while (++cur != end && !cur->isLive());
+            while (++cur < end && !cur->isLive())
+                continue;
         }
     };
 
@@ -342,14 +345,14 @@ class HashTable : private AllocPolicy
         Entry *newTable = (Entry *)alloc.malloc_(capacity * sizeof(Entry));
         if (!newTable)
             return NULL;
-        for (Entry *e = newTable, *end = e + capacity; e != end; ++e)
+        for (Entry *e = newTable, *end = e + capacity; e < end; ++e)
             new(e) Entry();
         return newTable;
     }
 
     static void destroyTable(AllocPolicy &alloc, Entry *oldTable, uint32_t capacity)
     {
-        for (Entry *e = oldTable, *end = e + capacity; e != end; ++e)
+        for (Entry *e = oldTable, *end = e + capacity; e < end; ++e)
             e->~Entry();
         alloc.free_(oldTable);
     }
@@ -565,7 +568,7 @@ class HashTable : private AllocPolicy
         table = newTable;
 
         /* Copy only live entries, leaving removed ones behind. */
-        for (Entry *src = oldTable, *end = src + oldCap; src != end; ++src) {
+        for (Entry *src = oldTable, *end = src + oldCap; src < end; ++src) {
             if (src->isLive()) {
                 src->unsetCollision();
                 findFreeEntry(src->getKeyHash()) = Move(*src);
@@ -607,7 +610,7 @@ class HashTable : private AllocPolicy
             memset(table, 0, sizeof(*table) * capacity());
         } else {
             uint32_t tableCapacity = capacity();
-            for (Entry *e = table, *end = table + tableCapacity; e != end; ++e)
+            for (Entry *e = table, *end = table + tableCapacity; e < end; ++e)
                 *e = Move(Entry());
         }
         removedCount = 0;
@@ -957,7 +960,10 @@ struct IsPodType<HashMapEntry<K, V> >
  *      called by HashMap must not call back into the same HashMap object.
  * N.B: Due to the lack of exception handling, the user must call |init()|.
  */
-template <class Key, class Value, class HashPolicy, class AllocPolicy>
+template <class Key,
+          class Value,
+          class HashPolicy = DefaultHasher<Key>,
+          class AllocPolicy = TempAllocPolicy>
 class HashMap
 {
   public:
@@ -1199,7 +1205,7 @@ class HashMap
  *      HashSet must not call back into the same HashSet object.
  * N.B: Due to the lack of exception handling, the user must call |init()|.
  */
-template <class T, class HashPolicy, class AllocPolicy>
+template <class T, class HashPolicy = DefaultHasher<T>, class AllocPolicy = TempAllocPolicy>
 class HashSet
 {
     typedef typename HashPolicy::Lookup Lookup;
@@ -1368,6 +1374,12 @@ class HashSet
     /* Like put, but assert that the given key is not already present. */
     bool putNew(const T &t) {
         AddPtr p = lookupForAdd(t);
+        JS_ASSERT(!p);
+        return add(p, t);
+    }
+
+    bool putNew(const Lookup &l, const T &t) {
+        AddPtr p = lookupForAdd(l);
         JS_ASSERT(!p);
         return add(p, t);
     }

@@ -54,6 +54,10 @@
 
 #include "js/Utility.h"
 
+#ifdef __cplusplus
+#include "mozilla/Attributes.h"
+#endif
+
 /************************************************************************/
 
 /* JS::Value can store a full int32_t. */
@@ -205,6 +209,36 @@ inline Anchor<T>::~Anchor()
 #endif  /* defined(__GNUC__) */
 
 /*
+ * Methods for poisoning GC heap pointer words and checking for poisoned words.
+ * These are in this file for use in Value methods and so forth.
+ *
+ * If the moving GC hazard analysis is in use and detects a non-rooted stack
+ * pointer to a GC thing, one byte of that pointer is poisoned to refer to an
+ * invalid location. For both 32 bit and 64 bit systems, the fourth byte of the
+ * pointer is overwritten, to reduce the likelihood of accidentally changing
+ * a live integer value.
+ */
+
+inline void PoisonPtr(uintptr_t *v)
+{
+#if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG)
+    uint8_t *ptr = (uint8_t *) v + 3;
+    *ptr = JS_FREE_PATTERN;
+#endif
+}
+
+template <typename T>
+inline bool IsPoisonedPtr(T *v)
+{
+#if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG)
+    uint32_t mask = uintptr_t(v) & 0xff000000;
+    return mask == uint32_t(JS_FREE_PATTERN << 24);
+#else
+    return false;
+#endif
+}
+
+/*
  * JS::Value is the C++ interface for a single JavaScript Engine value.
  * A few general notes on JS::Value:
  *
@@ -221,8 +255,8 @@ inline Anchor<T>::~Anchor()
  *   example, if cx->exception has a magic value, the reason must be
  *   JS_GENERATOR_CLOSING.
  *
- * - A key difference between jsval and JS::Value is that JS::Value gives null
- *   a separate type. Thus
+ * - A key difference between JSVAL_* and JS::Value operations is that
+ *   JS::Value gives null a separate type. Thus
  *
  *           JSVAL_IS_OBJECT(v) === v.isObjectOrNull()
  *       !JSVAL_IS_PRIMITIVE(v) === v.isObject()
@@ -281,6 +315,7 @@ class Value
 
     JS_ALWAYS_INLINE
     void setString(JSString *str) {
+        JS_ASSERT(!IsPoisonedPtr(str));
         data = STRING_TO_JSVAL_IMPL(str);
     }
 
@@ -291,12 +326,8 @@ class Value
 
     JS_ALWAYS_INLINE
     void setObject(JSObject &obj) {
+        JS_ASSERT(!IsPoisonedPtr(&obj));
         data = OBJECT_TO_JSVAL_IMPL(&obj);
-    }
-
-    JS_ALWAYS_INLINE
-    void setObject(const JS::Anchor<JSObject *> &obj) {
-        setObject(*obj.get());
     }
 
     JS_ALWAYS_INLINE
@@ -307,16 +338,6 @@ class Value
     JS_ALWAYS_INLINE
     void setMagic(JSWhyMagic why) {
         data = MAGIC_TO_JSVAL_IMPL(why);
-    }
-
-    JS_ALWAYS_INLINE
-    void setMagicWithObjectOrNullPayload(JSObject *obj) {
-        data = MAGIC_OBJ_TO_JSVAL_IMPL(obj);
-    }
-
-    JS_ALWAYS_INLINE
-    JSObject *getMagicObjectOrNullPayload() const {
-        return MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(data);
     }
 
     JS_ALWAYS_INLINE
@@ -445,17 +466,15 @@ class Value
         return JSVAL_IS_MAGIC_IMPL(data);
     }
 
+    /*
+     * Although the Value class comment says 'magic' is a singleton type, it is
+     * technically possible to use the payload. This should be avoided to
+     * preserve the ability for the strong assertions in isMagic().
+     */
     JS_ALWAYS_INLINE
-    bool isMagicCheck(JSWhyMagic why) const {
+    bool isParticularMagic(JSWhyMagic why) const {
         return isMagic() && data.s.payload.why == why;
     }
-
-#if JS_BITS_PER_WORD == 64
-    JS_ALWAYS_INLINE
-    bool hasPtrPayload() const {
-        return data.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_PTR_PAYLOAD_SET;
-    }
-#endif
 
     JS_ALWAYS_INLINE
     bool isMarkable() const {
@@ -545,56 +564,8 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    uint64_t asRawBits() const {
-        return data.asBits;
-    }
-
-    JS_ALWAYS_INLINE
-    void setRawBits(uint64_t bits) {
-        data.asBits = bits;
-    }
-
-    /*
-     * In the extract/box/unbox functions below, "NonDouble" means this
-     * functions must not be called on a value that is a double. This allows
-     * these operations to be implemented more efficiently, since doubles
-     * generally already require special handling by the caller.
-     */
-    JS_ALWAYS_INLINE
     JSValueType extractNonDoubleType() const {
         return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
-    }
-
-    JS_ALWAYS_INLINE
-    JSValueTag extractNonDoubleTag() const {
-        return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
-    }
-
-    JS_ALWAYS_INLINE
-    void unboxNonDoubleTo(uint64_t *out) const {
-        UNBOX_NON_DOUBLE_JSVAL(data, out);
-    }
-
-    JS_ALWAYS_INLINE
-    void boxNonDoubleFrom(JSValueType type, uint64_t *out) {
-        data = BOX_NON_DOUBLE_JSVAL(type, out);
-    }
-
-    /*
-     * The trace-jit specializes JSVAL_TYPE_OBJECT into JSVAL_TYPE_FUNOBJ and
-     * JSVAL_TYPE_NONFUNOBJ. Since these two operations just return the type of
-     * a value, the caller must handle JSVAL_TYPE_OBJECT separately.
-     */
-    JS_ALWAYS_INLINE
-    JSValueType extractNonDoubleObjectTraceType() const {
-        JS_ASSERT(!isObject());
-        return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
-    }
-
-    JS_ALWAYS_INLINE
-    JSValueTag extractNonDoubleObjectTraceTag() const {
-        JS_ASSERT(!isObject());
-        return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
     }
 
     /*
@@ -680,6 +651,16 @@ class Value
     friend jsval_layout (::JSVAL_TO_IMPL)(Value);
     friend Value (::IMPL_TO_JSVAL)(jsval_layout l);
 } JSVAL_ALIGNMENT;
+
+inline bool
+IsPoisonedValue(const Value &v)
+{
+    if (v.isString())
+        return IsPoisonedPtr(v.toString());
+    if (v.isObject())
+        return IsPoisonedPtr(&v.toObject());
+    return false;
+}
 
 /************************************************************************/
 
@@ -804,10 +785,252 @@ template<>
 inline Anchor<Value>::~Anchor()
 {
     volatile uint64_t bits;
-    bits = hold.asRawBits();
+    bits = JSVAL_TO_IMPL(hold).asBits;
 }
 
 #endif
+
+#if defined JS_THREADSAFE && defined DEBUG
+
+class JS_PUBLIC_API(AutoCheckRequestDepth)
+{
+    JSContext *cx;
+  public:
+    AutoCheckRequestDepth(JSContext *cx);
+    ~AutoCheckRequestDepth();
+};
+
+# define CHECK_REQUEST(cx) \
+    JS::AutoCheckRequestDepth _autoCheckRequestDepth(cx)
+
+#else
+
+# define CHECK_REQUEST(cx) \
+    ((void) 0)
+
+#endif
+
+extern void
+MarkRuntime(JSTracer *trc);
+
+
+class JS_PUBLIC_API(AutoGCRooter) {
+  public:
+    AutoGCRooter(JSContext *cx, ptrdiff_t tag);
+    ~AutoGCRooter();
+
+    /* Implemented in jsgc.cpp. */
+    inline void trace(JSTracer *trc);
+    void traceAll(JSTracer *trc);
+
+  protected:
+    AutoGCRooter * const down;
+
+    /*
+     * Discriminates actual subclass of this being used.  If non-negative, the
+     * subclass roots an array of values of the length stored in this field.
+     * If negative, meaning is indicated by the corresponding value in the enum
+     * below.  Any other negative value indicates some deeper problem such as
+     * memory corruption.
+     */
+    ptrdiff_t tag;
+
+    JSContext * const context;
+
+    enum {
+        JSVAL =        -1, /* js::AutoValueRooter */
+        VALARRAY =     -2, /* js::AutoValueArrayRooter */
+        PARSER =       -3, /* js::Parser */
+        SHAPEVECTOR =  -4, /* js::AutoShapeVector */
+        ENUMERATOR =   -5, /* js::AutoEnumStateRooter */
+        IDARRAY =      -6, /* js::AutoIdArray */
+        DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
+        NAMESPACES =   -8, /* js::AutoNamespaceArray */
+        XML =          -9, /* js::AutoXMLRooter */
+        OBJECT =      -10, /* js::AutoObjectRooter */
+        ID =          -11, /* js::AutoIdRooter */
+        VALVECTOR =   -12, /* js::AutoValueVector */
+        DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
+        STRING =      -14, /* js::AutoStringRooter */
+        IDVECTOR =    -15, /* js::AutoIdVector */
+        OBJVECTOR =   -16  /* js::AutoObjectVector */
+    };
+
+  private:
+    /* No copy or assignment semantics. */
+    AutoGCRooter(AutoGCRooter &ida) MOZ_DELETE;
+    void operator=(AutoGCRooter &ida) MOZ_DELETE;
+};
+
+class AutoValueRooter : private AutoGCRooter
+{
+  public:
+    explicit AutoValueRooter(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, JSVAL), val(NullValue())
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    AutoValueRooter(JSContext *cx, const Value &v
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, JSVAL), val(v)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    /*
+     * If you are looking for Object* overloads, use AutoObjectRooter instead;
+     * rooting Object*s as a js::Value requires discerning whether or not it is
+     * a function object. Also, AutoObjectRooter is smaller.
+     */
+
+    void set(Value v) {
+        JS_ASSERT(tag == JSVAL);
+        val = v;
+    }
+
+    const Value &value() const {
+        JS_ASSERT(tag == JSVAL);
+        return val;
+    }
+
+    Value *addr() {
+        JS_ASSERT(tag == JSVAL);
+        return &val;
+    }
+
+    const Value &jsval_value() const {
+        JS_ASSERT(tag == JSVAL);
+        return val;
+    }
+
+    Value *jsval_addr() {
+        JS_ASSERT(tag == JSVAL);
+        return &val;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
+
+  private:
+    Value val;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoObjectRooter : private AutoGCRooter {
+  public:
+    AutoObjectRooter(JSContext *cx, JSObject *obj = NULL
+                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, OBJECT), obj(obj)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    void setObject(JSObject *obj) {
+        this->obj = obj;
+    }
+
+    JSObject * object() const {
+        return obj;
+    }
+
+    JSObject ** addr() {
+        return &obj;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
+
+  private:
+    JSObject *obj;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoStringRooter : private AutoGCRooter {
+  public:
+    AutoStringRooter(JSContext *cx, JSString *str = NULL
+                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, STRING), str(str)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    void setString(JSString *str) {
+        this->str = str;
+    }
+
+    JSString * string() const {
+        return str;
+    }
+
+    JSString ** addr() {
+        return &str;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    JSString *str;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoArrayRooter : private AutoGCRooter {
+  public:
+    AutoArrayRooter(JSContext *cx, size_t len, Value *vec
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, len), array(vec)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(tag >= 0);
+    }
+
+    void changeLength(size_t newLength) {
+        tag = ptrdiff_t(newLength);
+        JS_ASSERT(tag >= 0);
+    }
+
+    void changeArray(Value *newArray, size_t newLength) {
+        changeLength(newLength);
+        array = newArray;
+    }
+
+    Value *array;
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/* The auto-root for enumeration object and its state. */
+class AutoEnumStateRooter : private AutoGCRooter
+{
+  public:
+    AutoEnumStateRooter(JSContext *cx, JSObject *obj
+                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue()
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(obj);
+    }
+
+    ~AutoEnumStateRooter();
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+    const Value &state() const { return stateValue; }
+    Value *addr() { return &stateValue; }
+
+  protected:
+    void trace(JSTracer *trc);
+
+    JSObject * const obj;
+
+  private:
+    Value stateValue;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 }  /* namespace JS */
 
@@ -1660,6 +1883,40 @@ JSVAL_IS_UNIVERSAL(jsval v)
     return !JSVAL_IS_GCTHING(v);
 }
 
+#ifdef __cplusplus
+
+namespace JS {
+
+class AutoIdRooter : private AutoGCRooter
+{
+  public:
+    explicit AutoIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, ID), id_(id)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    jsid id() {
+        return id_;
+    }
+
+    jsid * addr() {
+        return &id_;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
+
+  private:
+    jsid id_;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+} /* namespace JS */
+
+#endif /* __cplusplus */
+
 /************************************************************************/
 
 /* Lock and unlock the GC thing held by a jsval. */
@@ -1982,6 +2239,16 @@ JS_IsInRequest(JSContext *cx);
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
+inline bool
+IsPoisonedId(jsid iden)
+{
+    if (JSID_IS_STRING(iden))
+        return JS::IsPoisonedPtr(JSID_TO_STRING(iden));
+    if (JSID_IS_OBJECT(iden))
+        return JS::IsPoisonedPtr(JSID_TO_OBJECT(iden));
+    return false;
+}
+
 class JSAutoRequest {
   public:
     JSAutoRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
@@ -2097,6 +2364,12 @@ JS_GetContextPrivate(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
 JS_SetContextPrivate(JSContext *cx, void *data);
+
+extern JS_PUBLIC_API(void *)
+JS_GetSecondContextPrivate(JSContext *cx);
+
+extern JS_PUBLIC_API(void)
+JS_SetSecondContextPrivate(JSContext *cx, void *data);
 
 extern JS_PUBLIC_API(JSRuntime *)
 JS_GetRuntime(JSContext *cx);
@@ -2982,9 +3255,6 @@ typedef enum JSGCParamKey {
     /* Number of JS_malloc bytes before last ditch GC. */
     JSGC_MAX_MALLOC_BYTES   = 1,
 
-    /* Hoard stackPools for this long, in ms, default is 30 seconds. */
-    JSGC_STACKPOOL_LIFESPAN = 2,
-
     /* Amount of bytes allocated by the GC. */
     JSGC_BYTES = 3,
 
@@ -3102,7 +3372,7 @@ JS_GetExternalStringClosure(JSContext *cx, JSString *str);
  * Deprecated. Use JS_SetNativeStackQuoata instead.
  */
 extern JS_PUBLIC_API(void)
-JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr);
+JS_SetThreadStackLimit(JSContext *cx, uintptr_t limitAddr);
 
 /*
  * Set the size of the native stack that should not be exceed. To disable
@@ -3229,6 +3499,57 @@ JS_IdArrayGet(JSContext *cx, JSIdArray *ida, jsint index);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida);
+
+#ifdef __cplusplus
+
+namespace JS {
+
+class AutoIdArray : private AutoGCRooter {
+  public:
+    AutoIdArray(JSContext *cx, JSIdArray *ida JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, IDARRAY), idArray(ida)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoIdArray() {
+        if (idArray)
+            JS_DestroyIdArray(context, idArray);
+    }
+    bool operator!() {
+        return !idArray;
+    }
+    jsid operator[](size_t i) const {
+        JS_ASSERT(idArray);
+        JS_ASSERT(i < length());
+        return JS_IdArrayGet(context, idArray, i);
+    }
+    size_t length() const {
+        return JS_IdArrayLength(context, idArray);
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+    JSIdArray *steal() {
+        JSIdArray *copy = idArray;
+        idArray = NULL;
+        return copy;
+    }
+
+  protected:
+    inline void trace(JSTracer *trc);
+
+  private:
+    JSIdArray *idArray;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    /* No copy or assignment semantics. */
+    AutoIdArray(AutoIdArray &ida) MOZ_DELETE;
+    void operator=(AutoIdArray &ida) MOZ_DELETE;
+};
+
+} /* namespace JS */
+
+#endif /* __cplusplus */
 
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp);
@@ -3412,12 +3733,11 @@ extern JS_PUBLIC_API(JSBool)
 JS_FreezeObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent);
+JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *parent);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
-                                JSObject *parent, uintN argc, jsval *argv);
+JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *parent,
+                                uintN argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv);
@@ -3745,10 +4065,6 @@ JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval v);
  */
 struct JSPrincipals {
     char *codebase;
-
-    /* XXX unspecified and unused by Mozilla code -- can we remove these? */
-    void * (* getPrincipalArray)(JSContext *cx, JSPrincipals *);
-    JSBool (* globalPrivilegesEnabled)(JSContext *cx, JSPrincipals *);
 
     /* Don't call "destroy"; use reference counting macros below. */
     jsrefcount refcount;
@@ -4944,6 +5260,9 @@ JS_ThrowReportedError(JSContext *cx, const char *message,
 extern JS_PUBLIC_API(JSBool)
 JS_ThrowStopIteration(JSContext *cx);
 
+extern JS_PUBLIC_API(intptr_t)
+JS_GetCurrentThread();
+
 /*
  * Associate the current thread with the given context.  This is done
  * implicitly by JS_NewContext.
@@ -4953,13 +5272,13 @@ JS_ThrowStopIteration(JSContext *cx);
  * indicates that ClearContextThread has been called on this context
  * since the last SetContextThread, or non-0, which indicates the opposite.
  */
-extern JS_PUBLIC_API(jsword)
+extern JS_PUBLIC_API(intptr_t)
 JS_GetContextThread(JSContext *cx);
 
-extern JS_PUBLIC_API(jsword)
+extern JS_PUBLIC_API(intptr_t)
 JS_SetContextThread(JSContext *cx);
 
-extern JS_PUBLIC_API(jsword)
+extern JS_PUBLIC_API(intptr_t)
 JS_ClearContextThread(JSContext *cx);
 
 /*
