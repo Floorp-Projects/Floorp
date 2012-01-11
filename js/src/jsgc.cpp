@@ -1950,7 +1950,7 @@ AutoGCRooter::trace(JSTracer *trc)
 {
     switch (tag) {
       case JSVAL:
-        MarkRoot(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
+        MarkRoot(trc, static_cast<AutoValueRooter *>(this)->val, "JS::AutoValueRooter.val");
         return;
 
       case PARSER:
@@ -2094,6 +2094,10 @@ MarkWeakReferences(GCMarker *gcmarker)
     JS_ASSERT(gcmarker->isMarkStackEmpty());
 }
 
+} // namespace js
+
+namespace JS {
+
 void
 MarkRuntime(JSTracer *trc)
 {
@@ -2148,6 +2152,10 @@ MarkRuntime(JSTracer *trc)
             (*op)(trc, rt->gcGrayRootsData);
     }
 }
+
+} // namespace JS
+
+namespace js {
 
 void
 TriggerGC(JSRuntime *rt, gcstats::Reason reason)
