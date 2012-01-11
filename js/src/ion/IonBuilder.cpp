@@ -55,10 +55,11 @@
 using namespace js;
 using namespace js::ion;
 
-IonBuilder::IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
-                       CompileInfo &info, size_t inliningDepth)
+IonBuilder::IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp, MIRGraph &graph,
+                       TypeOracle *oracle, CompileInfo &info, size_t inliningDepth)
   : MIRGenerator(cx, temp, graph, info),
     script(info.script()),
+    initialScopeChain_(scopeChain),
     lastResumePoint_(NULL),
     callerResumePoint_(NULL),
     oracle(oracle),
@@ -70,8 +71,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, Type
 static inline int32
 GetJumpOffset(jsbytecode *pc)
 {
-    JSOp op = JSOp(*pc);
-    JS_ASSERT(js_CodeSpec[op].type() == JOF_JUMP);
+    JS_ASSERT(js_CodeSpec[JSOp(*pc)].type() == JOF_JUMP);
     return GET_JUMP_OFFSET(pc);
 }
 
@@ -224,7 +224,8 @@ IonBuilder::build()
     IonSpew(IonSpew_MIR, "Analyzing script %s:%d (%p)",
             script->filename, script->lineno, (void *) script);
 
-    initParameters();
+    if (!initParameters())
+        return false;
 
     // Initialize local variables.
     for (uint32 i = 0; i < info().nlocals(); i++) {
@@ -386,11 +387,35 @@ IonBuilder::rewriteParameters()
     }
 }
 
-void
+bool
 IonBuilder::initParameters()
 {
+    // The scope chain is only tracked in scripts that have NAME opcodes which
+    // will try to access the scope. For other scripts, the scope instructions
+    // will be held live by resume points and code will still be generated for
+    // them, so just use a constant undefined value.
+    MInstruction *scope;
+    if (script->analysis()->usesScopeChain()) {
+        if (info().fun()) {
+            MCallee *callee = MCallee::New();
+            current->add(callee);
+
+            scope = MFunctionEnvironment::New(callee);
+        } else {
+            if (!script->compileAndGo)
+                return abort("non-CNG global scripts are not supported");
+
+            scope = MConstant::New(ObjectValue(*initialScopeChain_));
+        }
+    } else {
+        scope = MConstant::New(UndefinedValue());
+    }
+
+    current->add(scope);
+    current->initSlot(info().scopeChainSlot(), scope);
+
     if (!info().fun())
-        return;
+        return true;
 
     MParameter *param = MParameter::New(MParameter::THIS_SLOT,
                                         oracle->thisTypeSet(script));
@@ -403,22 +428,7 @@ IonBuilder::initParameters()
         current->initSlot(info().argSlot(i), param);
     }
 
-    // The scope chain is only tracked in scripts that have NAME opcodes which
-    // will try to access the scope. For other scripts, the scope instructions
-    // will be held live by resume points and code will still be generated for
-    // them, so just use a constant undefined value.
-    MInstruction *scope;
-    if (script->analysis()->usesScopeChain()) {
-        MCallee *callee = MCallee::New();
-        current->add(callee);
-
-        scope = MFunctionEnvironment::New(callee);
-    } else {
-        scope = MConstant::New(UndefinedValue());
-    }
-
-    current->add(scope);
-    current->initSlot(info().scopeChainSlot(), scope);
+    return true;
 }
 
 // We try to build a control-flow graph in the order that it would be built as
@@ -2246,14 +2256,14 @@ IonBuilder::maybeInline(uint32 argc)
         TypeInferenceOracle oracle;
         if (!oracle.init(cx, data.callee->script()))
             return InliningStatus_Error;
-        IonBuilder inlineBuilder(cx, temp(), graph(), &oracle, *info, inliningDepth + 1);
+        IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle, *info, inliningDepth + 1);
         return jsop_call_inline(argc, inlineBuilder, &data)
              ? InliningStatus_Inlined
              : InliningStatus_Error;
     }
 
     DummyOracle oracle;
-    IonBuilder inlineBuilder(cx, temp(), graph(), &oracle, *info, inliningDepth + 1);
+    IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle, *info, inliningDepth + 1);
     return jsop_call_inline(argc, inlineBuilder, &data)
          ? InliningStatus_Inlined
          : InliningStatus_Error;
@@ -2436,24 +2446,24 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *pc)
         osrBlock->initSlot(slot, scopev);
     }
 
-    // Initialize |this| parameter.
-    {
+    if (info().fun()) {
+        // Initialize |this| parameter.
         uint32 slot = info().thisSlot();
         ptrdiff_t offset = StackFrame::offsetOfThis(info().fun());
 
         MOsrValue *thisv = MOsrValue::New(entry, offset);
         osrBlock->add(thisv);
         osrBlock->initSlot(slot, thisv);
-    }
 
-    // Initialize arguments.
-    for (uint32 i = 0; i < info().nargs(); i++) {
-        uint32 slot = info().argSlot(i);
-        ptrdiff_t offset = StackFrame::offsetOfFormalArg(info().fun(), i);
+        // Initialize arguments.
+        for (uint32 i = 0; i < info().nargs(); i++) {
+            uint32 slot = info().argSlot(i);
+            ptrdiff_t offset = StackFrame::offsetOfFormalArg(info().fun(), i);
 
-        MOsrValue *osrv = MOsrValue::New(entry, offset);
-        osrBlock->add(osrv);
-        osrBlock->initSlot(slot, osrv);
+            MOsrValue *osrv = MOsrValue::New(entry, offset);
+            osrBlock->add(osrv);
+            osrBlock->initSlot(slot, osrv);
+        }
     }
 
     // Initialize locals.

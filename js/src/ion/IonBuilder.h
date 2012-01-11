@@ -184,8 +184,8 @@ class IonBuilder : public MIRGenerator
     };
 
   public:
-    IonBuilder(JSContext *cx, TempAllocator &temp, MIRGraph &graph, TypeOracle *oracle,
-               CompileInfo &info, size_t inliningDepth = 0);
+    IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp, MIRGraph &graph,
+               TypeOracle *oracle, CompileInfo &info, size_t inliningDepth = 0);
 
     bool build();
     bool buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
@@ -269,7 +269,7 @@ class IonBuilder : public MIRGenerator
 
     void insertRecompileCheck();
 
-    void initParameters();
+    bool initParameters();
     void rewriteParameters();
     bool pushConstant(const Value &v);
     bool pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::TypeSet *observed);
@@ -321,6 +321,7 @@ class IonBuilder : public MIRGenerator
 
   private:
     jsbytecode *pc;
+    JSObject *initialScopeChain_;
     MBasicBlock *current;
     MResumePoint *lastResumePoint_;
 
