@@ -49,6 +49,7 @@
 #include "nsAutoPtr.h"
 #include "nsAppShell.h"
 #include "nsTArray.h"
+#include "nsIdleService.h"
 #include "nsWindow.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
@@ -141,6 +142,7 @@ nsWindow::DispatchInputEvent(nsGUIEvent &aEvent)
     if (!gFocusedWindow)
         return nsEventStatus_eIgnore;
 
+    gFocusedWindow->UserActivity();
     aEvent.widget = gFocusedWindow;
     return gFocusedWindow->mEventCallback(&aEvent);
 }
@@ -443,3 +445,14 @@ nsWindow::BringToTop()
     Update();
 }
 
+void
+nsWindow::UserActivity()
+{
+    if (!mIdleService) {
+        mIdleService = do_GetService("@mozilla.org/widget/idleservice;1");
+    }
+
+    if (mIdleService) {
+        mIdleService->ResetIdleTimeOut();
+    }
+}
