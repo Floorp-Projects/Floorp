@@ -26,6 +26,7 @@
   <string name="sync_subtitle_fail">&sync.subtitle.fail.label;</string>
   <string name="sync_button_tryagain">&sync.button.tryagain.label;</string>
   <string name="sync_button_manual">&sync.button.manual.label;</string>
+  <string name="sync_subtitle_nointernet">&sync.subtitle.nointernet.label;</string>
   
   <!-- Setup Success -->
   <string name="sync_title_success">&sync.title.success.label;</string>
@@ -39,6 +40,7 @@
   <!-- Common text -->
   <string name="sync_button_cancel">&sync.button.cancel.label;</string>
   <string name="sync_button_connect">&sync.button.connect.label;</string>
+  <string name="sync_button_ok">&sync.button.ok.label;</string>
   
   <!-- Account strings -->
   <string name="sync_account_label">&sync.account.label.label;</string>
