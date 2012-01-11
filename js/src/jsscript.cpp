@@ -1314,12 +1314,6 @@ JSScript::dataSize(JSMallocSizeOfFun mallocSizeOf)
     return mallocSizeOf(data, dataSize());
 }
 
-JS_PUBLIC_API(size_t)
-JS::SizeOfScriptData(JSScript *script, JSMallocSizeOfFun mallocSizeOf)
-{
-    return script->dataSize(mallocSizeOf);
-}
-
 /*
  * Nb: srcnotes are variable-length.  This function computes the number of
  * srcnote *slots*, which may be greater than the number of srcnotes.
