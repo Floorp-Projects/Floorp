@@ -2085,6 +2085,12 @@ JS_GetContextPrivate(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_SetContextPrivate(JSContext *cx, void *data);
 
+extern JS_PUBLIC_API(void *)
+JS_GetSecondContextPrivate(JSContext *cx);
+
+extern JS_PUBLIC_API(void)
+JS_SetSecondContextPrivate(JSContext *cx, void *data);
+
 extern JS_PUBLIC_API(JSRuntime *)
 JS_GetRuntime(JSContext *cx);
 
