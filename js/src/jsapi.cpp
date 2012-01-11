@@ -87,6 +87,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "js/MemoryMetrics.h"
+#include "mozilla/Util.h" // DebugOnly
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -6871,6 +6872,15 @@ AutoGCRooter::~AutoGCRooter()
     JS_ASSERT(this == context->autoGCRooters);
     CHECK_REQUEST(context);
     context->autoGCRooters = down;
+}
+
+AutoEnumStateRooter::~AutoEnumStateRooter()
+{
+    if (!stateValue.isNull()) {
+        DebugOnly<JSBool> ok =
+            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
+        JS_ASSERT(ok);
+    }
 }
 
 } // namespace JS

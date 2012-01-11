@@ -1003,6 +1003,35 @@ class AutoArrayRooter : private AutoGCRooter {
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+/* The auto-root for enumeration object and its state. */
+class AutoEnumStateRooter : private AutoGCRooter
+{
+  public:
+    AutoEnumStateRooter(JSContext *cx, JSObject *obj
+                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue()
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(obj);
+    }
+
+    ~AutoEnumStateRooter();
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+    const Value &state() const { return stateValue; }
+    Value *addr() { return &stateValue; }
+
+  protected:
+    void trace(JSTracer *trc);
+
+    JSObject * const obj;
+
+  private:
+    Value stateValue;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 }  /* namespace JS */
 
 /************************************************************************/

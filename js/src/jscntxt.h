@@ -1597,36 +1597,6 @@ typedef RootedVar<JSAtom*>            RootedVarAtom;
 typedef RootedVar<jsid>               RootedVarId;
 typedef RootedVar<Value>              RootedVarValue;
 
-/* FIXME(bug 332648): Move this into a public header. */
-/* The auto-root for enumeration object and its state. */
-class AutoEnumStateRooter : private AutoGCRooter
-{
-  public:
-    AutoEnumStateRooter(JSContext *cx, JSObject *obj
-                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue()
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_ASSERT(obj);
-    }
-
-    ~AutoEnumStateRooter();
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-    const Value &state() const { return stateValue; }
-    Value *addr() { return &stateValue; }
-
-  protected:
-    void trace(JSTracer *trc);
-
-    JSObject * const obj;
-
-  private:
-    Value stateValue;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 #ifdef JS_HAS_XML_SUPPORT
 class AutoXMLRooter : private AutoGCRooter {
   public:

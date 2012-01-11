@@ -1700,19 +1700,6 @@ JSContext::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
            busyArrays.sizeOfExcludingThis(mallocSizeOf);
 }
 
-namespace js {
-
-AutoEnumStateRooter::~AutoEnumStateRooter()
-{
-    if (!stateValue.isNull()) {
-        DebugOnly<JSBool> ok =
-            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
-        JS_ASSERT(ok);
-    }
-}
-
-} /* namespace js */
-
 namespace JS {
 
 #if defined JS_THREADSAFE && defined DEBUG
