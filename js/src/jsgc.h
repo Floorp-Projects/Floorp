@@ -1375,9 +1375,6 @@ js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, js::gc::AllocKind *thingKind
 namespace js {
 
 extern void
-MarkRuntime(JSTracer *trc);
-
-extern void
 TraceRuntime(JSTracer *trc);
 
 extern JS_FRIEND_API(void)

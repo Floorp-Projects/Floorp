@@ -810,6 +810,10 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 
 #endif
 
+extern void
+MarkRuntime(JSTracer *trc);
+
+
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
     AutoGCRooter(JSContext *cx, ptrdiff_t tag);
@@ -856,6 +860,62 @@ class JS_PUBLIC_API(AutoGCRooter) {
     /* No copy or assignment semantics. */
     AutoGCRooter(AutoGCRooter &ida) MOZ_DELETE;
     void operator=(AutoGCRooter &ida) MOZ_DELETE;
+};
+
+class AutoValueRooter : private AutoGCRooter
+{
+  public:
+    explicit AutoValueRooter(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, JSVAL), val(NullValue())
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    AutoValueRooter(JSContext *cx, const Value &v
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, JSVAL), val(v)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    /*
+     * If you are looking for Object* overloads, use AutoObjectRooter instead;
+     * rooting Object*s as a js::Value requires discerning whether or not it is
+     * a function object. Also, AutoObjectRooter is smaller.
+     */
+
+    void set(Value v) {
+        JS_ASSERT(tag == JSVAL);
+        val = v;
+    }
+
+    const Value &value() const {
+        JS_ASSERT(tag == JSVAL);
+        return val;
+    }
+
+    Value *addr() {
+        JS_ASSERT(tag == JSVAL);
+        return &val;
+    }
+
+    const Value &jsval_value() const {
+        JS_ASSERT(tag == JSVAL);
+        return val;
+    }
+
+    Value *jsval_addr() {
+        JS_ASSERT(tag == JSVAL);
+        return &val;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
+
+  private:
+    Value val;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 }  /* namespace JS */

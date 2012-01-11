@@ -40,6 +40,7 @@
  * Intended to be #included in dom_quickstubs.cpp via qsconf!
  */
 
+#include "jsapi.h"
 #include "jstypedarray.h"
 
 #define GET_INT32_ARG(var, index) \
@@ -91,7 +92,7 @@ nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, uintN argc, jsval *vp)
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -164,7 +165,7 @@ nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -238,7 +239,7 @@ nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -298,7 +299,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -419,7 +420,7 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -530,7 +531,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(JSContext *cx, uintN argc, jsval
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -554,7 +555,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(JSContext *cx, uintN argc, jsval
 
     JSObject *arg1 = JSVAL_TO_OBJECT(argv[1]);
 
-    js::AutoValueRooter obj_tvr(cx);
+    JS::AutoValueRooter obj_tvr(cx);
 
     JSObject *wa = 0;
 
@@ -604,7 +605,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(JSContext *cx, uintN argc, jsval
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -628,7 +629,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(JSContext *cx, uintN argc, jsval
 
     JSObject *arg1 = JSVAL_TO_OBJECT(argv[1]);
 
-    js::AutoValueRooter obj_tvr(cx);
+    JS::AutoValueRooter obj_tvr(cx);
 
     JSObject *wa = 0;
 
@@ -676,7 +677,7 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, uintN argc,
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -704,7 +705,7 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, uintN argc,
 
     JSObject *arg2 = JSVAL_TO_OBJECT(argv[2]);
 
-    js::AutoValueRooter obj_tvr(cx);
+    JS::AutoValueRooter obj_tvr(cx);
 
     JSObject *wa = 0;
 
@@ -749,7 +750,7 @@ helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(JSContext *cx, uintN argc, 
 
     nsIDOMWebGLRenderingContext *self;
     xpc_qsSelfRef selfref;
-    js::AutoValueRooter tvr(cx);
+    JS::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
@@ -769,7 +770,7 @@ helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(JSContext *cx, uintN argc, 
 
     JSObject *arg1 = JSVAL_TO_OBJECT(argv[1]);
 
-    js::AutoValueRooter obj_tvr(cx);
+    JS::AutoValueRooter obj_tvr(cx);
 
     JSObject *wa = 0;
 
