@@ -42,6 +42,8 @@
 
 /* The "Components" xpcom objects for JavaScript. */
 
+#include "mozilla/unused.h"
+
 #include "xpcprivate.h"
 #include "nsReadableUtils.h"
 #include "xpcIJSModuleLoader.h"
@@ -59,6 +61,7 @@
 #include "jsgc.h"
 #include "jsfriendapi.h"
 
+using namespace mozilla;
 using namespace js;
 /***************************************************************************/
 // stuff used by all
@@ -3444,7 +3447,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     XPCPerThreadData *data = XPCPerThreadData::GetData(cx);
     XPCJSContextStack *stack = nsnull;
     if (data && (stack = data->GetJSContextStack())) {
-        if (NS_FAILED(stack->Push(sandcx->GetJSContext()))) {
+        if (!stack->Push(sandcx->GetJSContext())) {
             JS_ReportError(cx,
                            "Unable to initialize XPConnect with the sandbox context");
             JSPRINCIPALS_DROP(cx, jsPrincipals);
@@ -3467,9 +3470,8 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         JSString *str = nsnull;
 
         if (!ac.enter(sandcx->GetJSContext(), sandbox)) {
-            if (stack) {
-                stack->Pop(nsnull);
-            }
+            if (stack)
+                unused << stack->Pop();
             return NS_ERROR_FAILURE;
         }
 
@@ -3545,9 +3547,8 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         }
     }
 
-    if (stack) {
-        stack->Pop(nsnull);
-    }
+    if (stack)
+        unused << stack->Pop();
 
     JSPRINCIPALS_DROP(cx, jsPrincipals);
 

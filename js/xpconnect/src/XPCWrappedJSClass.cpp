@@ -534,9 +534,8 @@ GetContextFromObject(JSObject *obj)
     // Don't stomp over a running context.
     XPCJSContextStack* stack =
         XPCPerThreadData::GetData(nsnull)->GetJSContextStack();
-    JSContext* topJSContext;
 
-    if (stack && NS_SUCCEEDED(stack->Peek(&topJSContext)) && topJSContext)
+    if (stack && stack->Peek())
         return nsnull;
 
     // In order to get a context, we need a context.
