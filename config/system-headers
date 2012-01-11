@@ -268,11 +268,6 @@ freetype/ftoutln.h
 freetype/ttnameid.h
 freetype/tttables.h
 freetype/t1tables.h
-freetype/ftlcdfil.h
-freetype/ftsizes.h
-freetype/ftadvanc.h
-freetype/ftbitmap.h
-freetype/ftxf86.h
 fribidi/fribidi.h
 FSp_fopen.h
 fstream
