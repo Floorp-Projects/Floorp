@@ -5346,6 +5346,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 CopyDecompiledTextForDecomposedOp(jp, pc);
         }
 
+        if (op == JSOP_CALLXMLNAME) {
+            todo = Sprint(&ss->sprinter, "");
+            if (todo < 0 || !PushOff(ss, todo, saveop))
+                return NULL;
+        }
+
         pc += len;
     }
 
