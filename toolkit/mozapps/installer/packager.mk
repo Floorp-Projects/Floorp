@@ -265,17 +265,14 @@ include $(topsrcdir)/config/android-common.mk
 
 JARSIGNER ?= echo
 
-DIST_FILES = \
-  resources.arsc \
-  AndroidManifest.xml \
-  chrome \
-  components \
-  defaults \
-  modules \
-  hyphenation \
-  res \
-  lib \
-  lib.id \
+DIST_FILES =
+
+# Place the files in the order they are going to be opened by the linker
+ifdef MOZ_CRASHREPORTER
+DIST_FILES += lib.id
+endif
+
+DIST_FILES += \
   libmozalloc.so \
   libnspr4.so \
   libplc4.so \
@@ -290,6 +287,15 @@ DIST_FILES = \
   libnssckbi.so \
   libfreebl3.so \
   libsoftokn3.so \
+  resources.arsc \
+  AndroidManifest.xml \
+  chrome \
+  components \
+  defaults \
+  modules \
+  hyphenation \
+  res \
+  lib \
   extensions \
   application.ini \
   package-name.txt \

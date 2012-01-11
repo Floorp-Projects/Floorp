@@ -51,6 +51,7 @@
 
 #include "nscore.h"
 #include <windows.h>
+#include <shobjidl.h>
 
 class nsWindow;
 
@@ -198,6 +199,28 @@ public:
    * mouse message handling.
    */
   static PRUint16 GetMouseInputSource();
+
+  /**
+   * VistaCreateItemFromParsingNameInit() initializes the static pointer for
+   * SHCreateItemFromParsingName() API which is usable only on Vista and later.
+   * This returns TRUE if the API is available.  Otherwise, FALSE.
+   */
+  static bool VistaCreateItemFromParsingNameInit();
+
+  /**
+   * SHCreateItemFromParsingName() calls native SHCreateItemFromParsingName()
+   * API.  Note that you must call VistaCreateItemFromParsingNameInit() before
+   * calling this.  And the result must be TRUE.  Otherwise, returns E_FAIL.
+   */
+  static HRESULT SHCreateItemFromParsingName(PCWSTR pszPath, IBindCtx *pbc,
+                                             REFIID riid, void **ppv);
+
+private:
+  typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
+                                                            IBindCtx *pbc,
+                                                            REFIID riid,
+                                                            void **ppv);
+  static SHCreateItemFromParsingNamePtr sCreateItemFromParsingName;
 };
 
 } // namespace widget
