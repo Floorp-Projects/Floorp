@@ -424,9 +424,9 @@ class ObjectElements
         : capacity(capacity), initializedLength(0), length(length)
     {}
 
-    HeapValue * elements() { return (HeapValue *)(jsuword(this) + sizeof(ObjectElements)); }
+    HeapValue * elements() { return (HeapValue *)(uintptr_t(this) + sizeof(ObjectElements)); }
     static ObjectElements * fromElements(HeapValue *elems) {
-        return (ObjectElements *)(jsuword(elems) - sizeof(ObjectElements));
+        return (ObjectElements *)(uintptr_t(elems) - sizeof(ObjectElements));
     }
 
     static int offsetOfCapacity() {
@@ -1492,7 +1492,7 @@ operator!=(const JSObject &lhs, const JSObject &rhs)
 inline js::HeapValue*
 JSObject::fixedSlots() const
 {
-    return (js::HeapValue *) (jsuword(this) + sizeof(JSObject));
+    return (js::HeapValue *) (uintptr_t(this) + sizeof(JSObject));
 }
 
 inline size_t
