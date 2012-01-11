@@ -765,6 +765,12 @@ struct TraversalTracer : public JSTracer
 static void
 NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
+    TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
+
+    // Don't traverse non-gray objects, unless we want all traces.
+    if (!xpc_IsGrayGCThing(thing) && !tracer->cb.WantAllTraces())
+        return;
+
     /*
      * This function needs to be careful to avoid stack overflow. Normally, when
      * AddToCCKind is true, the recursion terminates immediately as we just add
@@ -774,13 +780,6 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
      * parent pointers iteratively, rather than recursively, to avoid overflow.
      */
     if (AddToCCKind(kind)) {
-        TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
-
-        // There's no point in further traversing a non-gray object here unless
-        // we explicitly want to see all traces.
-        if (!xpc_IsGrayGCThing(thing) && !tracer->cb.WantAllTraces())
-            return;
-
 #if defined(DEBUG)
         if (NS_UNLIKELY(tracer->cb.WantDebugInfo())) {
             // based on DumpNotify in jsapi.c

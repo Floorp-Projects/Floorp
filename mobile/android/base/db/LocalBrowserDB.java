@@ -88,7 +88,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                            History.TITLE,
                                            History.FAVICON,
                                            History.THUMBNAIL },
-                            (urlFilter != null ? "(" + History.URL + " NOT LIKE ? )" : "" )+ 
+                            (urlFilter != null ? "(" + History.URL + " NOT LIKE ? ) AND " : "" ) + 
                             "(" + History.URL + " LIKE ? OR " + History.TITLE + " LIKE ?)",
                             urlFilter == null ? new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%"} :
                             new String[] {urlFilter.toString(), "%" + constraint.toString() + "%", "%" + constraint.toString() + "%"},

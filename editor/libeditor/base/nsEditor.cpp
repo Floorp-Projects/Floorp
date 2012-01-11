@@ -4980,13 +4980,9 @@ nsEditor::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset,
                       nsIDOMNode *aEndParent, PRInt32 aEndOffset,
                       nsIDOMRange **aRange)
 {
-  nsresult result;
-  result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
-  NS_ENSURE_SUCCESS(result, result);
+  NS_ADDREF(*aRange = new nsRange());
 
-  NS_ENSURE_TRUE(*aRange, NS_ERROR_NULL_POINTER);
-
-  result = (*aRange)->SetStart(aStartParent, aStartOffset);
+  nsresult result = (*aRange)->SetStart(aStartParent, aStartOffset);
 
   if (NS_SUCCEEDED(result))
     result = (*aRange)->SetEnd(aEndParent, aEndOffset);

@@ -64,7 +64,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMNSRange.h"
 #include "nsCOMArray.h"
 #include "nsIFile.h"
 #include "nsIURL.h"
@@ -212,13 +211,11 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
     res = selection->GetRangeAt(0, getter_AddRefs(range));
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
-    nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
-    NS_ENSURE_TRUE(nsrange, NS_ERROR_NO_INTERFACE);
 
     // create fragment for pasted html
     nsCOMPtr<nsIDOMDocumentFragment> docfrag;
     {
-      res = nsrange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
+      res = range->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
       NS_ENSURE_SUCCESS(res, res);
     }
     // put the fragment into the document
@@ -1564,11 +1561,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
           if (NS_FAILED(rv) || !range) 
             continue;//don't bail yet, iterate through them all
 
-          nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
-          if (NS_FAILED(rv) || !nsrange) 
-            continue;//don't bail yet, iterate through them all
-
-          rv = nsrange->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
+          rv = range->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
           if(cursorIsInSelection)
             break;
         }
@@ -2663,10 +2656,7 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
     aEndOffset = fragLen;
   }
 
-  nsCOMPtr<nsIDOMRange> docFragRange =
-                          do_CreateInstance("@mozilla.org/content/range;1");
-  NS_ENSURE_TRUE(docFragRange, NS_ERROR_OUT_OF_MEMORY);
-
+  nsRefPtr<nsRange> docFragRange = new nsRange();
   res = docFragRange->SetStart(aStartNode, aStartOffset);
   NS_ENSURE_SUCCESS(res, res);
   res = docFragRange->SetEnd(aEndNode, aEndOffset);

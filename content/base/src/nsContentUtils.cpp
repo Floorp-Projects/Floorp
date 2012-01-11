@@ -211,6 +211,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "mozilla/Preferences.h"
 
 #include "nsWrapperCacheInlines.h"
+#include "nsCharSeparatedTokenizer.h"
+#include "nsUnicharUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -672,6 +674,40 @@ nsContentUtils::IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput)
   }
 
   return autocomplete.EqualsLiteral("on");
+}
+
+bool
+nsContentUtils::URIIsChromeOrInPref(nsIURI *aURI, const char *aPref)
+{
+  if (!aURI) {
+    return false;
+  }
+
+  nsCAutoString scheme;
+  aURI->GetScheme(scheme);
+  if (scheme.EqualsLiteral("chrome")) {
+    return true;
+  }
+
+  nsCAutoString prePathUTF8;
+  aURI->GetPrePath(prePathUTF8);
+  NS_ConvertUTF8toUTF16 prePath(prePathUTF8);
+
+  const nsAdoptingString& whitelist = Preferences::GetString(aPref);
+
+  // This tokenizer also strips off whitespace around tokens, as desired.
+  nsCharSeparatedTokenizer tokenizer(whitelist, ',',
+    nsCharSeparatedTokenizerTemplate<>::SEPARATOR_OPTIONAL);
+
+  while (tokenizer.hasMoreTokens()) {
+    const nsSubstring& whitelistItem = tokenizer.nextToken();
+
+    if (whitelistItem.Equals(prePath, nsCaseInsensitiveStringComparator())) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
