@@ -2063,6 +2063,9 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce,
     if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_SWAP) < 0)
         return false;
 
+    if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_NOTEARG) < 0)
+        return false;
+
     return true;
 }
 
