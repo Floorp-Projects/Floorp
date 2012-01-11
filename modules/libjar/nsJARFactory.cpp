@@ -51,12 +51,9 @@
 #include "nsCOMPtr.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIJARFactory.h"
-#include "nsRecyclingAllocator.h"
 #include "nsJARProtocolHandler.h"
 #include "nsJARURI.h"
 #include "nsJAR.h"
-
-extern nsRecyclingAllocator *gZlibAllocator;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAR)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsZipReaderCache)
@@ -87,8 +84,6 @@ static const mozilla::Module::ContractIDEntry kJARContracts[] = {
 // Jar module shutdown hook
 static void nsJarShutdown()
 {
-    // Release cached buffers from zlib allocator
-    delete gZlibAllocator;
     NS_IF_RELEASE(gJarHandler);
 }
 
