@@ -458,3 +458,15 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
 }
 
 #endif
+
+namespace js {
+
+#ifdef JS_THREADSAFE
+JSThread *
+GetContextThread(const JSContext *cx)
+{
+    return cx->thread();
+}
+#endif
+
+} // namespace js
