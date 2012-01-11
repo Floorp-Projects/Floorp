@@ -61,8 +61,6 @@
 #include "jsgc.h"
 #include "jsfriendapi.h"
 
-#include "jscntxt.h" // AutoIdArray
-
 using namespace mozilla;
 using namespace js;
 /***************************************************************************/
@@ -3758,7 +3756,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const jsval &vobj, JSContext *cx)
     if (!ac.enter(cx, obj))
         return NS_ERROR_FAILURE;
 
-    js::AutoIdArray ida(cx, JS_Enumerate(cx, obj));
+    JS::AutoIdArray ida(cx, JS_Enumerate(cx, obj));
     if (!ida)
         return NS_ERROR_FAILURE;
 

@@ -966,25 +966,21 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
   if (!ac.enter(cx, npjsobj->mJSObj))
     return false;
 
-  JSIdArray *ida = ::JS_Enumerate(cx, npjsobj->mJSObj);
+  JS::AutoIdArray ida(cx, JS_Enumerate(cx, npjsobj->mJSObj));
   if (!ida) {
     return false;
   }
 
-  *count = ida->length;
+  *count = ida.length();
   *idarray = (NPIdentifier *)PR_Malloc(*count * sizeof(NPIdentifier));
   if (!*idarray) {
     ThrowJSException(cx, "Memory allocation failed for NPIdentifier!");
-
-    ::JS_DestroyIdArray(cx, ida);
-
     return false;
   }
 
   for (PRUint32 i = 0; i < *count; i++) {
     jsval v;
-    if (!::JS_IdToValue(cx, ida->vector[i], &v)) {
-      ::JS_DestroyIdArray(cx, ida);
+    if (!JS_IdToValue(cx, ida[i], &v)) {
       PR_Free(*idarray);
       return false;
     }
@@ -993,10 +989,8 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
     if (JSVAL_IS_STRING(v)) {
       JSString *str = JS_InternJSString(cx, JSVAL_TO_STRING(v));
       if (!str) {
-          ::JS_DestroyIdArray(cx, ida);
-          PR_Free(*idarray);
-
-          return false;
+        PR_Free(*idarray);
+        return false;
       }
       id = StringToNPIdentifier(cx, str);
     } else {
@@ -1007,8 +1001,6 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
 
     (*idarray)[i] = id;
   }
-
-  ::JS_DestroyIdArray(cx, ida);
 
   return true;
 }

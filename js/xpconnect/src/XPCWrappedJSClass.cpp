@@ -49,7 +49,7 @@
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
 
-#include "jscntxt.h" // mJSContext->errorReporter, JSIdArray, js::AutoValueVector
+#include "jscntxt.h" // mJSContext->errorReporter, js::AutoValueVector
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
@@ -405,60 +405,49 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
                                              nsISimpleEnumerator** aEnumerate)
 {
     JSContext* cx = ccx.GetJSContext();
-    nsresult retval = NS_ERROR_FAILURE;
-    JSIdArray* idArray = nsnull;
-    int i;
 
-    // Saved state must be restored, all exits through 'out'...
     AutoScriptEvaluate scriptEval(cx);
     if (!scriptEval.StartEvaluating(aJSObj))
         return NS_ERROR_FAILURE;
 
-    idArray = JS_Enumerate(cx, aJSObj);
+    JS::AutoIdArray idArray(cx, JS_Enumerate(cx, aJSObj));
     if (!idArray)
-        return retval;
+        return NS_ERROR_FAILURE;
 
-    nsCOMArray<nsIProperty> propertyArray(idArray->length);
-    for (i = 0; i < idArray->length; i++) {
+    nsCOMArray<nsIProperty> propertyArray(idArray.length());
+    for (size_t i = 0; i < idArray.length(); i++) {
+        jsid idName = idArray[i];
+
         nsCOMPtr<nsIVariant> value;
-        jsid idName = idArray->vector[i];
         nsresult rv;
-
         if (!GetNamedPropertyAsVariantRaw(ccx, aJSObj, idName,
                                           getter_AddRefs(value), &rv)) {
             if (NS_FAILED(rv))
-                retval = rv;
-            goto out;
+                return rv;
+            return NS_ERROR_FAILURE;
         }
 
         jsval jsvalName;
         if (!JS_IdToValue(cx, idName, &jsvalName))
-            goto out;
+            return NS_ERROR_FAILURE;
 
         JSString* name = JS_ValueToString(cx, jsvalName);
         if (!name)
-            goto out;
+            return NS_ERROR_FAILURE;
 
         size_t length;
         const jschar *chars = JS_GetStringCharsAndLength(cx, name, &length);
         if (!chars)
-            goto out;
+            return NS_ERROR_FAILURE;
 
         nsCOMPtr<nsIProperty> property =
             new xpcProperty(chars, (PRUint32) length, value);
-        if (!property)
-            goto out;
 
         if (!propertyArray.AppendObject(property))
-            goto out;
+            return NS_ERROR_FAILURE;
     }
 
-    retval = NS_NewArrayEnumerator(aEnumerate, propertyArray);
-
-out:
-    JS_DestroyIdArray(cx, idArray);
-
-    return retval;
+    return NS_NewArrayEnumerator(aEnumerate, propertyArray);
 }
 
 /***************************************************************************/
