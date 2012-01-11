@@ -65,7 +65,7 @@
 #include "nsIDragSession.h"
 #include "nsIContent.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIDOMNSRange.h"
+#include "nsIDOMRange.h"
 #include "nsEditorUtils.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMDragEvent.h"
@@ -886,12 +886,11 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
       {
         nsCOMPtr<nsIDOMRange> range;
         rv = selection->GetRangeAt(i, getter_AddRefs(range));
-        nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
-        if (NS_FAILED(rv) || !nsrange) 
+        if (NS_FAILED(rv) || !range) 
           continue; //don't bail yet, iterate through them all
 
         bool inRange = true;
-        (void)nsrange->IsPointInRange(parent, offset, &inRange);
+        (void)range->IsPointInRange(parent, offset, &inRange);
         if (inRange)
           return false;  //okay, now you can bail, we are over the orginal selection
       }

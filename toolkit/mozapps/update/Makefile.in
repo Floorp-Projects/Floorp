@@ -63,6 +63,18 @@ EXTRA_PP_COMPONENTS += \
   nsUpdateServiceStub.js \
   nsUpdateService.manifest \
   $(NULL)
+else
+
+# If only the maintenance service is installed and not
+# the updater, then the maintenance service may still be
+# used for other things.  We need to build update/common
+# which the maintenance service uses.
+ifdef MOZ_MAINTENANCE_SERVICE
+DIRS = ../readstrings
+ifneq ($(OS_TARGET),Android)
+DIRS += common
+endif
+endif
 endif
 
 ifdef ENABLE_TESTS

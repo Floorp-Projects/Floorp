@@ -333,13 +333,17 @@ mHashMutex("Telemetry::mHashMutex")
   for (int i = 0; i < sizeof(trackedDBs)/sizeof(const char*); i++)
     mTrackedDBs.PutEntry(nsDependentCString(trackedDBs[i]));
 
+#ifdef DEBUG
+  // Mark immutable to prevent asserts on simultaneous access from multiple threads
+  mTrackedDBs.MarkImmutable();
+#endif
+
   mSlowSQLOnMainThread.Init();
   mSlowSQLOnOtherThread.Init();
   mHistogramMap.Init(Telemetry::HistogramCount);
 }
 
 TelemetryImpl::~TelemetryImpl() {
-  mTrackedDBs.Clear();
   mSlowSQLOnMainThread.Clear();
   mSlowSQLOnOtherThread.Clear();
   mHistogramMap.Clear();
@@ -581,14 +585,7 @@ TelemetryImpl::RecordSlowStatement(const nsACString &statement,
                                    const nsACString &dbName,
                                    PRUint32 delay)
 {
-  if (!sTelemetry) {
-    // Make the service manager hold a long-lived reference to the service
-    nsCOMPtr<nsITelemetry> telemetryService =
-      do_GetService("@mozilla.org/base/telemetry;1");
-    if (!telemetryService || !sTelemetry)
-      return;
-  }
-
+  MOZ_ASSERT(sTelemetry);
   if (!sTelemetry->mCanRecord || !sTelemetry->mTrackedDBs.GetEntry(dbName))
     return;
 
@@ -676,6 +673,14 @@ RecordSlowSQLStatement(const nsACString &statement,
                        PRUint32 delay)
 {
   TelemetryImpl::RecordSlowStatement(statement, dbName, delay);
+}
+
+void Init()
+{
+  // Make the service manager hold a long-lived reference to the service
+  nsCOMPtr<nsITelemetry> telemetryService =
+    do_GetService("@mozilla.org/base/telemetry;1");
+  MOZ_ASSERT(telemetryService);
 }
 
 } // namespace Telemetry

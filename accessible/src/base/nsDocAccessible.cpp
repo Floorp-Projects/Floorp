@@ -1278,13 +1278,18 @@ void*
 nsDocAccessible::GetNativeWindow() const
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+  if (!shell)
+    return nsnull;
+
   nsIViewManager* vm = shell->GetViewManager();
-  if (vm) {
-    nsCOMPtr<nsIWidget> widget;
-    vm->GetRootWidget(getter_AddRefs(widget));
-    if (widget)
-      return widget->GetNativeData(NS_NATIVE_WINDOW);
-  }
+  if (!vm)
+    return nsnull;
+
+  nsCOMPtr<nsIWidget> widget;
+  vm->GetRootWidget(getter_AddRefs(widget));
+  if (widget)
+    return widget->GetNativeData(NS_NATIVE_WINDOW);
+
   return nsnull;
 }
 
