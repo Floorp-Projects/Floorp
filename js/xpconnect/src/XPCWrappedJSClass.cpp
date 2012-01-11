@@ -49,6 +49,8 @@
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
 
+#include "jscntxt.h" // mJSContext->errorReporter, JSIdArray, js::AutoValueVector
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
 // the value of this variable is never used - we use its address as a sentinel

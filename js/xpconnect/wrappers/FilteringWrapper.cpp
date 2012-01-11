@@ -45,6 +45,8 @@
 
 #include "XPCWrapper.h"
 
+#include "jscntxt.h" // js::AutoIdVector
+
 using namespace js;
 
 namespace xpc {

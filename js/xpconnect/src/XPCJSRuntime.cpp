@@ -63,6 +63,26 @@
 #include "nsExceptionHandler.h"
 #endif
 
+#include "jscntxt.h"
+#if 0
+        JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
+        if (acx->globalObject)
+            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "XPC global object");
+
+            while ((acx = JS_ContextIterator(cx->runtime, &iter))) {
+                if (!acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+                    JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+
+JS_LOCK_GC, JS_UNLOCK_GC
+
+js_NextActiveContext, js::TriggerOperationCallback
+JSString::charsHeapSize
+c == cx->runtime->atomsCompartment
+CollectCompartmentStatsForRuntime
+        mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
+        mJSRuntime->setActivityCallback(ActivityCallback, this);
+#endif
+
 using namespace mozilla;
 using namespace mozilla::xpconnect::memory;
 
