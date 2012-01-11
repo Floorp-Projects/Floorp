@@ -6587,6 +6587,12 @@ JS_ThrowStopIteration(JSContext *cx)
     return js_ThrowStopIteration(cx);
 }
 
+JS_PUBLIC_API(intptr_t)
+JS_GetCurrentThread()
+{
+    return reinterpret_cast<intptr_t>(js_CurrentThreadId());
+}
+
 /*
  * Get the owning thread id of a context. Returns 0 if the context is not
  * owned by any thread.
@@ -6595,7 +6601,7 @@ JS_PUBLIC_API(intptr_t)
 JS_GetContextThread(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    return reinterpret_cast<intptr_t>(JS_THREAD_ID(cx));
+    return cx->thread() ? reinterpret_cast<intptr_t>(cx->thread()->id) : 0;
 #else
     return 0;
 #endif
