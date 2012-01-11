@@ -1836,6 +1836,18 @@ public:
    */
   static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
 
+  /**
+   * If the URI is chrome, return true unconditionarlly.
+   *
+   * Otherwise, get the contents of the given pref, and treat it as a
+   * comma-separated list of URIs.  Return true if the given URI's prepath is
+   * in the list, and false otherwise.
+   *
+   * Comparisons are case-insensitive, and whitespace between elements of the
+   * comma-separated list is ignored.
+   */
+  static bool URIIsChromeOrInPref(nsIURI *aURI, const char *aPref);
+
 private:
   static bool InitializeEventTable();
 
@@ -1989,15 +2001,15 @@ private:
 
 class NS_STACK_CLASS nsAutoScriptBlocker {
 public:
-  nsAutoScriptBlocker(MOZILLA_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+  nsAutoScriptBlocker(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     nsContentUtils::AddScriptBlocker();
   }
   ~nsAutoScriptBlocker() {
     nsContentUtils::RemoveScriptBlocker();
   }
 private:
-  MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class NS_STACK_CLASS nsAutoScriptBlockerSuppressNodeRemoved :

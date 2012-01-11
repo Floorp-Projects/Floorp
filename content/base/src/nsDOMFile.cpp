@@ -659,8 +659,8 @@ nsDOMFileError::GetCode(PRUint16* aCode)
 
 nsDOMFileInternalUrlHolder::nsDOMFileInternalUrlHolder(nsIDOMBlob* aFile,
                                                        nsIPrincipal* aPrincipal
-                                                       MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
-  MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+                                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   aFile->GetInternalUrl(aPrincipal, mUrl);
 }
  

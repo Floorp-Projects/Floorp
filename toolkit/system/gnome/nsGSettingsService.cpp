@@ -62,6 +62,8 @@ typedef struct _GVariant GVariant;
 # define G_VARIANT_TYPE_STRING       ((const GVariantType *) "s")
 # define G_VARIANT_TYPE_OBJECT_PATH  ((const GVariantType *) "o")
 # define G_VARIANT_TYPE_SIGNATURE    ((const GVariantType *) "g")
+#endif
+#ifndef G_VARIANT_TYPE_STRING_ARRAY
 # define G_VARIANT_TYPE_STRING_ARRAY ((const GVariantType *) "as")
 #endif
 

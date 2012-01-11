@@ -92,6 +92,7 @@ IsStatusApplying(LPCWSTR updateDirPath, BOOL &isApplying)
   WCHAR updateStatusFilePath[MAX_PATH + 1];
   wcscpy(updateStatusFilePath, updateDirPath);
   if (!PathAppendSafe(updateStatusFilePath, L"update.status")) {
+    LOG(("Warning: Could not append path for update.status file\n"));
     return FALSE;
   }
 
@@ -100,11 +101,20 @@ IsStatusApplying(LPCWSTR updateDirPath, BOOL &isApplying)
                                       FILE_SHARE_WRITE | 
                                       FILE_SHARE_DELETE,
                                       NULL, OPEN_EXISTING, 0, NULL));
+
+  if (INVALID_HANDLE_VALUE == statusFile) {
+    LOG(("Warning: Could not open update.status file\n"));
+    return FALSE;
+  }
+
   char buf[32] = { 0 };
   DWORD read;
   if (!ReadFile(statusFile, buf, sizeof(buf), &read, NULL)) {
+    LOG(("Warning: Could not read from update.status file\n"));
     return FALSE;
   }
+
+  LOG(("updater.exe returned status: %s\n", buf));
 
   const char kApplying[] = "applying";
   isApplying = strncmp(buf, kApplying, 
