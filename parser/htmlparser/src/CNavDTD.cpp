@@ -1086,10 +1086,6 @@ CNavDTD::WillHandleStartTag(CToken* aToken, eHTMLTags aTag,
     }
   }
 
-  if (aTag <= NS_HTML_TAG_MAX) {
-    result = mSink->NotifyTagObservers(&aNode);
-  }
-
   return result;
 }
 
