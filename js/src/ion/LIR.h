@@ -708,10 +708,12 @@ class LBlock : public TempObject
     Vector<LPhi *, 4, IonAllocPolicy> phis_;
     InlineList<LInstruction> instructions_;
     LMoveGroup *entryMoveGroup_;
+    LMoveGroup *exitMoveGroup_;
 
     LBlock(MBasicBlock *block)
       : block_(block),
-        entryMoveGroup_(NULL)
+        entryMoveGroup_(NULL),
+        exitMoveGroup_(NULL)
     { }
 
   public:
@@ -762,6 +764,7 @@ class LBlock : public TempObject
     uint32 lastId();
     Label *label();
     LMoveGroup *getEntryMoveGroup();
+    LMoveGroup *getExitMoveGroup();
 };
 
 template <size_t Defs, size_t Operands, size_t Temps>

@@ -372,9 +372,8 @@ class VirtualRegister
     LInstruction *ins_;
     LDefinition *def_;
     Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
-    LMoveGroup *inputMoves_;
-    LMoveGroup *outputMoves_;
-    LMoveGroup *afterMoves_;
+    LMoveGroup *movesBefore_;
+    LMoveGroup *movesAfter_;
     LAllocation *canonicalSpill_;
     CodePosition spillPosition_ ;
 
@@ -439,23 +438,17 @@ class VirtualRegister
             found = intervals_.end();
         return intervals_.insert(found, interval);
     }
-    void setInputMoves(LMoveGroup *moves) {
-        inputMoves_ = moves;
+    void setMovesBefore(LMoveGroup *moves) {
+        movesBefore_ = moves;
     }
-    LMoveGroup *inputMoves() const {
-        return inputMoves_;
+    LMoveGroup *movesBefore() const {
+        return movesBefore_;
     }
-    void setOutputMoves(LMoveGroup *moves) {
-        outputMoves_ = moves;
+    void setMovesAfter(LMoveGroup *moves) {
+        movesAfter_ = moves;
     }
-    LMoveGroup *outputMoves() const {
-        return outputMoves_;
-    }
-    void setAfterMoves(LMoveGroup *moves) {
-        afterMoves_ = moves;
-    }
-    LMoveGroup *afterMoves() {
-        return afterMoves_;
+    LMoveGroup *movesAfter() const {
+        return movesAfter_;
     }
     void setCanonicalSpill(LAllocation *alloc) {
         canonicalSpill_ = alloc;
