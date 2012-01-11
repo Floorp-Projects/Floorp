@@ -955,7 +955,9 @@ abstract public class GeckoApp
                     final double zoom = message.getDouble("zoom");
                     mMainHandler.post(new Runnable() {
                         public void run() {
-                            mAutoCompletePopup.show(suggestions, rect, zoom);
+                            // Don't show autocomplete popup when using fullscreen VKB
+                            if (!GeckoInputConnection.mIMELandscapeFS)
+                                mAutoCompletePopup.show(suggestions, rect, zoom);
                         }
                     });
                 }
