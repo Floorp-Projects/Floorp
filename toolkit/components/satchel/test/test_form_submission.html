@@ -165,6 +165,12 @@
     <button type='submit'>Submit</button>
   </form>
 
+  <!-- Don't save values if the input name is 'searchbar-history' -->
+  <form id="form24" onsubmit="return checkSubmit(24);">
+    <input type='text' name='searchbar-history'>
+    <button type='submit'>Submit</button>
+  </form>
+
   <!-- ===== Things that should be saved ===== -->
 
   <!-- Form 100 is submitted into an iframe, not declared here. -->
@@ -328,6 +334,7 @@ function startTest() {
   $_(20, "test1").value = "dontSaveThis";
   $_(22, "test1").value = "dontSaveThis";
   $_(23, "test1").value = "dontSaveThis";
+  $_(24, "searchbar-history").value = "dontSaveThis";
 
   $_(101, "test1").value = "savedValue";
   $_(102, "test2").value = "savedValue";
@@ -365,7 +372,7 @@ function checkSubmit(formNum) {
 
   // Check for expected storage state.
   switch (formNum) {
-    // Test 1-23 should not save anything.
+    // Test 1-24 should not save anything.
     case 1:
     case 2:
     case 3:
@@ -389,6 +396,7 @@ function checkSubmit(formNum) {
     case 21:
     case 22:
     case 23:
+    case 24:
         ok(!fh.hasEntries, "checking for empty storage");
         break;
     case 100:
@@ -470,7 +478,7 @@ function checkSubmit(formNum) {
 
   // End the test at the last form.
   if (formNum == 110) {
-    is(numSubmittedForms, 34, "Ensuring all forms were submitted.");
+    is(numSubmittedForms, 35, "Ensuring all forms were submitted.");
     Services.obs.removeObserver(checkObserver, "satchel-storage-changed");
     SimpleTest.finish();
     return false; // return false to cancel current form submission
@@ -488,7 +496,7 @@ function checkSubmit(formNum) {
     checkObserver.waitForChecks(function() {
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-      var nextFormNum = formNum == 23 ? 100 : (formNum + 1);
+      var nextFormNum = formNum == 24 ? 100 : (formNum + 1);
 
       // Submit the next form. Special cases are Forms 21 and 100, which happen
       // from an HTTPS domain in an iframe.

@@ -8,6 +8,7 @@ this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/Chr
 function test() {
   waitForExplicitFinish();
 
+  var searchEntries = ["test", "More Text", "Some Text"];
   var searchBar = BrowserSearch.searchBar;
   var searchButton = document.getAnonymousElementByAttribute(searchBar,
                      "anonid", "search-go-button");
@@ -166,7 +167,7 @@ function test() {
     is(searchBar.value, "More Text", "drop text/uri-list on searchbar");
     SimpleTest.executeSoon(testRightClick);
   }
-  
+
   function testRightClick() {
     init();
     searchBar.removeEventListener("popupshowing", stopPopup, true);
@@ -177,8 +178,27 @@ function test() {
       is(gBrowser.tabs.length, preTabNo, "RightClick did not open new tab");
       is(gBrowser.currentURI.spec, "about:blank", "RightClick did nothing");
 
-      finalize();
+      testSearchHistory();
     }, 5000);
+  }
+
+  function testSearchHistory() {
+    var textbox = searchBar._textbox;
+    for (var i = 0; i < searchEntries.length; i++) {
+      let exists = textbox._formHistSvc.entryExists(textbox.searchParam, searchEntries[i]);
+      ok(exists, "form history entry '" + searchEntries[i] + "' should exist");
+    }
+    testAutocomplete();
+  }
+
+  function testAutocomplete() {
+    var popup = searchBar.textbox.popup;
+    popup.addEventListener("popupshowing", function() {
+      checkMenuEntries(searchEntries);
+      finalize();
+      popup.removeEventListener("popupshowing", this, false);
+    }, false);
+    searchBar.textbox.showHistoryPopup();
   }
 
   function finalize() {
@@ -210,6 +230,27 @@ function test() {
                           ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
                           buttonArg, null); 
     aTarget.dispatchEvent(event);
+  }
+
+  // modified from toolkit/components/satchel/test/test_form_autocomplete.html
+  function checkMenuEntries(expectedValues) {
+    var actualValues = getMenuEntries();
+    is(actualValues.length, expectedValues.length, "Checking length of expected menu");
+    for (var i = 0; i < expectedValues.length; i++)
+      is(actualValues[i], expectedValues[i], "Checking menu entry #"+i);
+  }
+
+  function getMenuEntries() {
+    var entries = [];
+    var autocompleteMenu = searchBar.textbox.popup;
+    // Could perhaps pull values directly from the controller, but it seems
+    // more reliable to test the values that are actually in the tree?
+    var column = autocompleteMenu.tree.columns[0];
+    var numRows = autocompleteMenu.tree.view.rowCount;
+    for (var i = 0; i < numRows; i++) {
+      entries.push(autocompleteMenu.tree.view.getValueAt(i, column));
+    }
+    return entries;
   }
 }
 

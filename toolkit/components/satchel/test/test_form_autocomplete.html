@@ -80,6 +80,12 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- normal, basic form (with fieldname='searchbar-history') -->
+  <form id="form12" onsubmit="return false;">
+    <input  type="text" name="searchbar-history">
+    <button type="submit">Submit</button>
+  </form>
+
 </div>
 
 <pre id="test">
@@ -121,6 +127,7 @@ fh.addEntry("field6", "value");
 fh.addEntry("field7", "value");
 fh.addEntry("field8", "value");
 fh.addEntry("field9", "value");
+fh.addEntry("searchbar-history", "blacklist test");
 
 // All these non-implemeted types might need autocomplete tests in the future.
 var todoTypes = [ "datetime", "date", "month", "week", "time", "datetime-local",
@@ -720,14 +727,29 @@ function runTest(testNum) {
         ok(true, "oninput should have been received");
         ok(event.bubbles, "input event should bubble");
         ok(event.cancelable, "input event should be cancelable");
-        SimpleTest.finish();
       }, false);
 
       doKey("down");
       checkForm("");
       doKey("return");
       checkForm("value1");
-      return;
+      testNum = 599;
+      break;
+
+    case 600:
+        // check we don't show autocomplete for searchbar-history
+        input = $_(12, "searchbar-history");
+
+        // Trigger autocomplete popup
+        checkForm("");
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 601:
+        checkMenuEntries([]);
+        SimpleTest.finish();
+        return;
 
     default:
         ok(false, "Unexpected invocation of test #" + testNum);
