@@ -146,19 +146,29 @@ class BailoutStack
 
 class InvalidationBailoutStack
 {
+    double fpregs_[FloatRegisters::Total];
+    uintptr_t regs_[Registers::Total];
+    uintptr_t pad[2];
+    uintptr_t frameDescriptor_;
+
+    size_t frameSize() const {
+        return frameDescriptor_ >> FRAMETYPE_BITS;
+    }
+    size_t frameDescriptorOffset() const {
+        return offsetof(InvalidationBailoutStack, frameDescriptor_);
+    }
+
   public:
     uint8 *sp() const {
-        JS_NOT_REACHED("NYI");
-        return NULL;
+        return (uint8 *) this + frameDescriptorOffset() + sizeof(size_t) + sizeof(size_t);
     }
     uint8 *fp() const {
-        JS_NOT_REACHED("NYI");
-        return NULL;
+        return sp() + frameSize();
     }
     MachineState machine() {
-        JS_NOT_REACHED("NYI");
-        return MachineState(NULL, NULL);
+        return MachineState(regs_, fpregs_);
     }
+  public:
 };
 
 } // namespace ion
@@ -199,4 +209,3 @@ ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack
     return FrameRecovery::FromSnapshot(bailout->fp(), bailout->sp(), bailout->machine(),
                                        snapshotOffset);
 }
-
