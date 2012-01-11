@@ -2568,8 +2568,7 @@ var FormAssistant = {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
     Services.obs.addObserver(this, "FormAssist:Closed", false);
 
-    BrowserApp.deck.addEventListener("compositionstart", this, false);
-    BrowserApp.deck.addEventListener("compositionupdate", this, false);
+    BrowserApp.deck.addEventListener("input", this, false);
   },
 
   uninit: function() {
@@ -2595,9 +2594,8 @@ var FormAssistant = {
   },
 
   handleEvent: function(aEvent) {
-   switch (aEvent.type) {
-      case "compositionstart":
-      case "compositionupdate":
+    switch (aEvent.type) {
+      case "input":
         let currentElement = aEvent.target;
         if (!this._isAutocomplete(currentElement))
           break;
@@ -2605,7 +2603,7 @@ var FormAssistant = {
         // Keep track of input element so we can fill it in if the user
         // selects an autocomplete suggestion
         this._currentInputElement = currentElement;
-        let suggestions = this._getAutocompleteSuggestions(aEvent.data, currentElement);
+        let suggestions = this._getAutocompleteSuggestions(currentElement.value, currentElement);
 
         let rect = currentElement.getBoundingClientRect();
         let zoom = BrowserApp.selectedTab.viewport.zoom;
