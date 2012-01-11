@@ -61,16 +61,12 @@
 #include "APKOpen.h"
 #include <sys/time.h>
 #include <sys/resource.h>
+#include "Zip.h"
 
 /* Android headers don't define RUSAGE_THREAD */
 #ifndef RUSAGE_THREAD
 #define RUSAGE_THREAD 1
 #endif
-
-/* compression methods */
-#define STORE    0
-#define DEFLATE  8
-#define LZMA    14
 
 enum StartupEvent {
 #define mozilla_StartupTimeline_Event(ev, z) ev,
@@ -85,58 +81,6 @@ void StartupTimeline_Record(StartupEvent ev, struct timeval *tm)
   sStartupTimeline[ev] = (((uint64_t)tm->tv_sec * 1000000LL) + (uint64_t)tm->tv_usec);
 }
 
-struct local_file_header {
-  uint32_t signature;
-  uint16_t min_version;
-  uint16_t general_flag;
-  uint16_t compression;
-  uint16_t lastmod_time;
-  uint16_t lastmod_date;
-  uint32_t crc32;
-  uint32_t compressed_size;
-  uint32_t uncompressed_size;
-  uint16_t filename_size;
-  uint16_t extra_field_size;
-  char     data[0];
-} __attribute__((__packed__));
-
-struct cdir_entry {
-  uint32_t signature;
-  uint16_t creator_version;
-  uint16_t min_version;
-  uint16_t general_flag;
-  uint16_t compression;
-  uint16_t lastmod_time;
-  uint16_t lastmod_date;
-  uint32_t crc32;
-  uint32_t compressed_size;
-  uint32_t uncompressed_size;
-  uint16_t filename_size;
-  uint16_t extra_field_size;
-  uint16_t file_comment_size;
-  uint16_t disk_num;
-  uint16_t internal_attr;
-  uint32_t external_attr;
-  uint32_t offset;
-  char     data[0];
-} __attribute__((__packed__));
-
-#define CDIR_END_SIG 0x06054b50
-
-struct cdir_end {
-  uint32_t signature;
-  uint16_t disk_num;
-  uint16_t cdir_disk;
-  uint16_t disk_entries;
-  uint16_t cdir_entries;
-  uint32_t cdir_size;
-  uint32_t cdir_offset;
-  uint16_t comment_size;
-  char     comment[0];
-} __attribute__((__packed__));
-
-static size_t zip_size;
-static int zip_fd;
 static struct mapping_info * lib_mapping = NULL;
 
 NS_EXPORT const struct mapping_info *
@@ -162,52 +106,6 @@ createAshmem(size_t bytes, const char *name)
 
   close(fd);
   return -1;
-}
-
-static void * map_file (const char *file)
-{
-  int fd = open(file, O_RDONLY);
-  if (fd == -1) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoMapFile", "map_file open %s", strerror(errno));
-    return NULL;
-  }
-
-  zip_fd = fd;
-  struct stat s;
-  if (fstat(fd, &s) == -1) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoMapFile", "map_file fstat %s", strerror(errno));
-    return NULL;
-  }
-
-  zip_size = s.st_size;
-  void *addr = mmap(NULL, zip_size, PROT_READ, MAP_SHARED, fd, 0);
-  if (addr == MAP_FAILED) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoMapFile", "map_file mmap %s", strerror(errno));
-    return NULL;
-  }
-
-  return addr;
-}
-
-static uint32_t cdir_entry_size (struct cdir_entry *entry)
-{
-  return sizeof(*entry) +
-         letoh16(entry->filename_size) +
-         letoh16(entry->extra_field_size) +
-         letoh16(entry->file_comment_size);
-}
-
-static struct cdir_entry *
-find_cdir_entry (struct cdir_entry *entry, int count, const char *name)
-{
-  size_t name_size = strlen(name);
-  while (count--) {
-    if (letoh16(entry->filename_size) == name_size &&
-        !memcmp(entry->data, name, name_size))
-      return entry;
-    entry = (struct cdir_entry *)((char *)entry + cdir_entry_size(entry));
-  }
-  return NULL;
 }
 
 #define SHELL_WRAPPER0(name) \
@@ -296,7 +194,6 @@ SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
 SHELL_WRAPPER0(executeNextRunnable)
 SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
-SHELL_WRAPPER1(notifyUriVisited, jstring)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
 SHELL_WRAPPER0(bindWidgetTexture);
@@ -311,9 +208,9 @@ extern "C" int extractLibs = 0;
 #endif
 
 static void
-extractFile(const char * path, const struct cdir_entry *entry, void * data)
+extractFile(const char * path, Zip::Stream &s)
 {
-  uint32_t size = letoh32(entry->uncompressed_size);
+  uint32_t size = s.GetUncompressedSize();
 
   struct stat status;
   if (!stat(path, &status) &&
@@ -342,8 +239,8 @@ extractFile(const char * path, const struct cdir_entry *entry, void * data)
   }
 
   z_stream strm = {
-    next_in: (Bytef *)data,
-    avail_in: letoh32(entry->compressed_size),
+    next_in: (Bytef *)s.GetBuffer(),
+    avail_in: s.GetSize(),
     total_in: 0,
 
     next_out: (Bytef *)buf,
@@ -376,15 +273,15 @@ extractFile(const char * path, const struct cdir_entry *entry, void * data)
 }
 
 static void
-extractLib(const struct cdir_entry *entry, void * data, void * dest)
+extractLib(Zip::Stream &s, void * dest)
 {
   z_stream strm = {
-    next_in: (Bytef *)data,
-    avail_in: letoh32(entry->compressed_size),
+    next_in: (Bytef *)s.GetBuffer(),
+    avail_in: s.GetSize(),
     total_in: 0,
 
     next_out: (Bytef *)dest,
-    avail_out: letoh32(entry->uncompressed_size),
+    avail_out: s.GetUncompressedSize(),
     total_out: 0
   };
 
@@ -401,8 +298,8 @@ extractLib(const struct cdir_entry *entry, void * data, void * dest)
   if (ret != Z_OK)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflateEnd failed: %s", strm.msg);
 
-  if (strm.total_out != letoh32(entry->uncompressed_size))
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "File not fully uncompressed! %d / %d", strm.total_out, letoh32(entry->uncompressed_size));
+  if (strm.total_out != s.GetUncompressedSize())
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "File not fully uncompressed! %d / %d", strm.total_out, s.GetUncompressedSize());
 }
 
 static int cache_count = 0;
@@ -481,24 +378,23 @@ addLibCacheFd(const char *libName, int fd, uint32_t lib_size = 0, void* buffer =
   info->buffer = buffer;
 }
 
-static void * mozload(const char * path, void *zip,
-                      struct cdir_entry *cdir_start, uint16_t cdir_entries)
+static void * mozload(const char * path, Zip *zip)
 {
 #ifdef DEBUG
   struct timeval t0, t1;
   gettimeofday(&t0, 0);
 #endif
 
-  struct cdir_entry *entry = find_cdir_entry(cdir_start, cdir_entries, path);
-  struct local_file_header *file = (struct local_file_header *)((char *)zip + letoh32(entry->offset));
-  void * data = ((char *)&file->data) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
-  void * handle;
+  void *handle;
+  Zip::Stream s;
+  if (!zip->GetStream(path, &s))
+    return NULL;
 
   if (extractLibs) {
     char fullpath[PATH_MAX];
     snprintf(fullpath, PATH_MAX, "%s/%s", getenv("CACHE_PATH"), path);
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "resolved %s to %s", path, fullpath);
-    extractFile(fullpath, entry, data);
+    extractFile(fullpath, s);
     handle = __wrap_dlopen(fullpath, RTLD_LAZY);
     if (!handle)
       __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't load %s because %s", fullpath, __wrap_dlerror());
@@ -513,13 +409,12 @@ static void * mozload(const char * path, void *zip,
     return handle;
   }
 
-  size_t offset = letoh32(entry->offset) + sizeof(*file) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
   bool skipLibCache = false;
-  int fd = zip_fd;
+  int fd;
   void * buf = NULL;
-  uint32_t lib_size = letoh32(entry->uncompressed_size);
+  uint32_t lib_size = s.GetUncompressedSize();
   int cache_fd = 0;
-  if (letoh16(file->compression) == DEFLATE) {
+  if (s.GetType() == Zip::Stream::DEFLATE) {
     cache_fd = lookupLibCacheFd(path);
     fd = cache_fd;
     if (fd < 0)
@@ -541,30 +436,27 @@ static void * mozload(const char * path, void *zip,
       return NULL;
     }
 
-    offset = 0;
-
     if (cache_fd < 0) {
-      extractLib(entry, data, buf);
+      extractLib(s, buf);
 #ifdef ANDROID_ARM_LINKER
       /* We just extracted data that is going to be executed in the future.
        * We thus need to ensure Instruction and Data cache coherency. */
-      cacheflush((unsigned) buf, (unsigned) buf + entry->uncompressed_size, 0);
+      cacheflush((unsigned) buf, (unsigned) buf + s.GetUncompressedSize(), 0);
 #endif
       addLibCacheFd(path, fd, lib_size, buf);
     }
 
     // preload libxul, to avoid slowly demand-paging it
     if (!strcmp(path, "libxul.so"))
-      madvise(buf, entry->uncompressed_size, MADV_WILLNEED);
-    data = buf;
+      madvise(buf, s.GetUncompressedSize(), MADV_WILLNEED);
   }
 
 #ifdef DEBUG
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s with len %d (0x%08x) and offset %d (0x%08x)", path, lib_size, lib_size, offset, offset);
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s with len %d (0x%08x)", path, lib_size, lib_size);
 #endif
 
-  handle = moz_mapped_dlopen(path, RTLD_LAZY, fd, data,
-                             lib_size, offset);
+  handle = moz_mapped_dlopen(path, RTLD_LAZY, fd, buf,
+                             lib_size, 0);
   if (!handle)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't load %s because %s", path, __wrap_dlerror());
 
@@ -581,22 +473,21 @@ static void * mozload(const char * path, void *zip,
 }
 
 static void *
-extractBuf(const char * path, void *zip,
-           struct cdir_entry *cdir_start, uint16_t cdir_entries)
+extractBuf(const char * path, Zip *zip)
 {
-  struct cdir_entry *entry = find_cdir_entry(cdir_start, cdir_entries, path);
-  struct local_file_header *file = (struct local_file_header *)((char *)zip + letoh32(entry->offset));
-  void * data = ((char *)&file->data) + letoh16(file->filename_size) + letoh16(file->extra_field_size);
+  Zip::Stream s;
+  if (!zip->GetStream(path, &s))
+    return NULL;
 
-  void * buf = malloc(letoh32(entry->uncompressed_size));
+  void * buf = malloc(s.GetUncompressedSize());
   if (buf == (void *)-1) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't alloc decompression buffer for %s", path);
     return NULL;
   }
-  if (letoh16(file->compression) == DEFLATE)
-    extractLib(entry, data, buf);
+  if (s.GetType() == Zip::Stream::DEFLATE)
+    extractLib(s, buf);
   else
-    memcpy(buf, data, letoh32(entry->uncompressed_size));
+    memcpy(buf, s.GetBuffer(), s.GetUncompressedSize());
 
   return buf;
 }
@@ -641,27 +532,14 @@ loadLibs(const char *apkName)
   struct rusage usage1;
   getrusage(RUSAGE_THREAD, &usage1);
   
-  void *zip = map_file(apkName);
-  struct cdir_end *dirend = (struct cdir_end *)((char *)zip + zip_size - sizeof(*dirend));
-  while ((void *)dirend > zip &&
-         letoh32(dirend->signature) != CDIR_END_SIG)
-    dirend = (struct cdir_end *)((char *)dirend - 1);
-  if (letoh32(dirend->signature) != CDIR_END_SIG) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't find end of central directory record");
-    return;
-  }
-
-  uint32_t cdir_offset = letoh32(dirend->cdir_offset);
-  uint16_t cdir_entries = letoh16(dirend->cdir_entries);
-
-  struct cdir_entry *cdir_start = (struct cdir_entry *)((char *)zip + cdir_offset);
+  Zip *zip = new Zip(apkName);
 
   lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
 #ifdef MOZ_CRASHREPORTER
-  file_ids = (char *)extractBuf("lib.id", zip, cdir_start, cdir_entries);
+  file_ids = (char *)extractBuf("lib.id", zip);
 #endif
 
-#define MOZLOAD(name) mozload("lib" name ".so", zip, cdir_start, cdir_entries)
+#define MOZLOAD(name) mozload("lib" name ".so", zip)
   MOZLOAD("mozalloc");
   MOZLOAD("nspr4");
   MOZLOAD("plc4");
@@ -678,7 +556,7 @@ loadLibs(const char *apkName)
   MOZLOAD("softokn3");
 #undef MOZLOAD
 
-  close(zip_fd);
+  delete zip;
 
 #ifdef MOZ_CRASHREPORTER
   free(file_ids);
@@ -703,7 +581,6 @@ loadLibs(const char *apkName)
   GETFUNC(reportJavaCrash);
   GETFUNC(executeNextRunnable);
   GETFUNC(cameraCallbackBridge);
-  GETFUNC(notifyUriVisited);
   GETFUNC(notifyBatteryChange);
   GETFUNC(notifySmsReceived);
   GETFUNC(bindWidgetTexture);

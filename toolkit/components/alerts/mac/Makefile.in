@@ -42,7 +42,7 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = alerts
-LIBRARY_NAME = alerts_s
+LIBRARY_NAME = alerts
 IS_COMPONENT = 1
 FORCE_SHARED_LIB = 1
 
@@ -70,11 +70,17 @@ SHARED_LIBRARY_LIBS = \
   growl/$(LIB_PREFIX)growl_s.$(LIB_SUFFIX) \
   $(NULL)
 
+ifdef JS_SHARED_LIBRARY
+js_ldopts = $(MOZ_JS_LIBS)
+else
+js_ldopts = $(LIBXUL_LIBS)
+endif
+
 EXTRA_DSO_LDOPTS += \
   -framework Carbon \
   $(XPCOM_GLUE_LDOPTS) \
+  $(js_ldopts) \
   $(NSPR_LIBS) \
-  $(MOZ_JS_LIBS) \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

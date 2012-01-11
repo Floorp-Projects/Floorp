@@ -502,12 +502,10 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
   // If the client pass cancelled the event, defaultPrevented will be true
   // below.
 
-  if (NSEvent) {
-    bool defaultPrevented;
-    NSEvent->GetPreventDefault(&defaultPrevented);
-    if (defaultPrevented) {
-      return NS_OK;
-    }
+  bool defaultPrevented;
+  aKeyEvent->GetDefaultPrevented(&defaultPrevented);
+  if (defaultPrevented) {
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
@@ -548,10 +546,8 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aMouseEvent);
-  NS_ASSERTION(nsevent, "nsevent must not be NULL here");
   bool preventDefault;
-  nsresult rv = nsevent->GetPreventDefault(&preventDefault);
+  nsresult rv = aMouseEvent->GetDefaultPrevented(&preventDefault);
   if (NS_FAILED(rv) || preventDefault) {
     // We're done if 'preventdefault' is true (see for example bug 70698).
     return rv;
@@ -691,12 +687,10 @@ nsresult
 nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
 {
   nsCOMPtr<nsIDOMNode> parent;
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aDragEvent);
-  if (domNSEvent) {
-    bool defaultPrevented;
-    domNSEvent->GetPreventDefault(&defaultPrevented);
-    if (defaultPrevented)
-      return NS_OK;
+  bool defaultPrevented;
+  aDragEvent->GetDefaultPrevented(&defaultPrevented);
+  if (defaultPrevented) {
+    return NS_OK;
   }
 
   aDragEvent->GetRangeParent(getter_AddRefs(parent));
@@ -766,12 +760,10 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
 {
   CleanupDragDropCaret();
 
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aMouseEvent);
-  if (domNSEvent) {
-    bool defaultPrevented;
-    domNSEvent->GetPreventDefault(&defaultPrevented);
-    if (defaultPrevented)
-      return NS_OK;
+  bool defaultPrevented;
+  aMouseEvent->GetDefaultPrevented(&defaultPrevented);
+  if (defaultPrevented) {
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDOMNode> parent;

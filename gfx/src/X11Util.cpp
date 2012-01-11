@@ -41,6 +41,34 @@
 
 namespace mozilla {
 
+bool
+XVisualIDToInfo(Display* aDisplay, VisualID aVisualID,
+                Visual** aVisual, unsigned int* aDepth)
+{
+    if (aVisualID == None) {
+        *aVisual = NULL;
+        *aDepth = 0;
+        return true;
+    }
+
+    const Screen* screen = DefaultScreenOfDisplay(aDisplay);
+
+    for (int d = 0; d < screen->ndepths; d++) {
+        Depth *d_info = &screen->depths[d];
+        for (int v = 0; v < d_info->nvisuals; v++) {
+            Visual* visual = &d_info->visuals[v];
+            if (visual->visualid == aVisualID) {
+                *aVisual = visual;
+                *aDepth = d_info->depth;
+                return true;
+            }
+        }
+    }
+
+    NS_ERROR("VisualID not on Screen.");
+    return false;
+}
+
 ScopedXErrorHandler::ErrorEvent* ScopedXErrorHandler::sXErrorPtr;
 
 int

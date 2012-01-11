@@ -4950,7 +4950,7 @@ nsHTMLEditor::IsEmptyNodeImpl( nsIDOMNode *aNode,
             }
           }
           // is it a form widget?
-          else if (nsHTMLEditUtils::IsFormWidget(aNode))
+          else if (nsHTMLEditUtils::IsFormWidget(node))
           { // break out if we find we aren't empty
             *outIsEmptyNode = false;
             return NS_OK;
@@ -5740,16 +5740,21 @@ nsHTMLEditor::ResetRootElementAndEventTarget()
   RemoveEventListeners();
   mRootElement = nsnull;
   nsresult rv = InstallEventListeners();
-  NS_ENSURE_SUCCESS(rv, );
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   // We must have mRootElement now.
   nsCOMPtr<nsIDOMElement> root;
   rv = GetRootElement(getter_AddRefs(root));
-  NS_ENSURE_SUCCESS(rv, );
-  NS_ENSURE_TRUE(mRootElement, );
+  if (NS_FAILED(rv) || !mRootElement) {
+    return;
+  }
 
   rv = BeginningOfDocument();
-  NS_ENSURE_SUCCESS(rv, );
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   // When this editor has focus, we need to reset the selection limiter to
   // new root.  Otherwise, that is going to be done when this gets focus.

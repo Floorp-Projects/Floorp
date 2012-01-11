@@ -21,9 +21,11 @@ function runTests() {
 
 var path = "/tests/content/base/test/";
 
-var passFiles = [['file_XHR_pass1.xml', 'GET'],
-                 ['file_XHR_pass2.txt', 'GET'],
-                 ['file_XHR_pass3.txt', 'GET'],
+var passFiles = [['file_XHR_pass1.xml', 'GET', 200],
+                 ['file_XHR_pass2.txt', 'GET', 200],
+                 ['file_XHR_pass3.txt', 'GET', 200],
+                 ['data:text/xml,%3Cres%3Ehello%3C/res%3E%0A', 'GET', 0],
+                 ['data:text/plain,hello%20pass%0A', 'GET', 0],
                  ];
 
 var failFiles = [['//example.com' + path + 'file_XHR_pass1.xml', 'GET'],
@@ -36,7 +38,7 @@ for (i = 0; i < passFiles.length; ++i) {
   is(xhr.responseType, "", "wrong initial responseType");
   xhr.open(passFiles[i][1], passFiles[i][0], false); 
   xhr.send(null);
-  is(xhr.status, 200, "wrong status");
+  is(xhr.status, passFiles[i][2], "wrong status");
   if (xhr.responseXML) {
     is((new XMLSerializer()).serializeToString(xhr.responseXML.documentElement),
        "<res>hello</res>",

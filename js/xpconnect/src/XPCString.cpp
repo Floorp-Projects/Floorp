@@ -55,6 +55,8 @@
 #include "xpcprivate.h"
 #include "nsStringBuffer.h"
 
+#include "jscntxt.h" // emptyAtom
+
 static int sDOMStringFinalizerIndex = -1;
 
 static void
