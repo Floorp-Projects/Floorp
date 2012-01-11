@@ -552,7 +552,7 @@ GetContextFromObject(JSObject *obj)
 
     if (xpcc) {
         JSContext *cx = xpcc->GetJSContext();
-        if (cx->thread()->id == js_CurrentThreadId())
+        if (JS_GetContextThread(cx) == JS_GetCurrentThread())
             return cx;
     }
 

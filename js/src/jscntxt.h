@@ -1310,10 +1310,6 @@ struct JSContext
 
 namespace js {
 
-#ifdef JS_THREADSAFE
-# define JS_THREAD_ID(cx)       ((cx)->thread() ? (cx)->thread()->id : 0)
-#endif
-
 #if defined JS_THREADSAFE && defined DEBUG
 
 class AutoCheckRequestDepth {
