@@ -2020,7 +2020,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case STRING:
         if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
-            MarkRoot(trc, str, "js::AutoStringRooter.str");
+            MarkRoot(trc, str, "JS::AutoStringRooter.str");
         return;
 
       case IDVECTOR: {
