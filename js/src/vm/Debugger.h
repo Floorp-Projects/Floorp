@@ -42,6 +42,8 @@
 #ifndef Debugger_h__
 #define Debugger_h__
 
+#include "mozilla/Attributes.h"
+
 #include "jsapi.h"
 #include "jsclist.h"
 #include "jscntxt.h"
@@ -348,9 +350,8 @@ class Debugger {
     JSObject *wrapScript(JSContext *cx, JSScript *script);
 
   private:
-    /* Prohibit copying. */
-    Debugger(const Debugger &);
-    Debugger & operator=(const Debugger &);
+    Debugger(const Debugger &) MOZ_DELETE;
+    Debugger & operator=(const Debugger &) MOZ_DELETE;
 };
 
 class BreakpointSite {
@@ -482,7 +483,7 @@ Debugger::observesGlobal(GlobalObject *global) const
 bool
 Debugger::observesFrame(StackFrame *fp) const
 {
-    return observesGlobal(fp->scopeChain().getGlobal());
+    return observesGlobal(&fp->scopeChain().global());
 }
 
 JSTrapStatus

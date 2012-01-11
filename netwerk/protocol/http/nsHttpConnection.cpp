@@ -293,6 +293,9 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps, PRInt32 pri)
     // Clear the per activation counter
     mCurrentBytesRead = 0;
 
+    // The overflow state is not needed between activations
+    mInputOverflow = nsnull;
+
     rv = OnOutputStreamReady(mSocketOut);
     
 failed_activation:
@@ -458,11 +461,10 @@ nsHttpConnection::CanReuse()
     // An idle persistent connection should not have data waiting to be read
     // before a request is sent. Data here is likely a 408 timeout response
     // which we would deal with later on through the restart logic, but that
-    // path is more expensive than just closing the socket now. SSL check can
-    // be removed with fixing of 631801
+    // path is more expensive than just closing the socket now.
 
     PRUint32 dataSize;
-    if (canReuse && mSocketIn && !mConnInfo->UsingSSL() && !mUsingSpdy &&
+    if (canReuse && mSocketIn && !mUsingSpdy &&
         NS_SUCCEEDED(mSocketIn->Available(&dataSize)) && dataSize) {
         LOG(("nsHttpConnection::CanReuse %p %s"
              "Socket not reusable because read data pending (%d) on it.\n",

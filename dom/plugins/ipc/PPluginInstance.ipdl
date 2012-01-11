@@ -59,18 +59,13 @@ using mozilla::gfxSurfaceType;
 using gfxIntSize;
 using mozilla::null_t;
 using mozilla::plugins::WindowsSharedMemoryHandle;
+using SurfaceDescriptorX11;
 using nsIntRect;
 using nsTextEvent;
 using nsKeyEvent;
 
 namespace mozilla {
 namespace plugins {
-
-struct SurfaceDescriptorX11 {
-  int XID;
-  int xrenderPictID;
-  gfxIntSize size;
-};
 
 struct IOSurfaceDescriptor {
   uint32_t surfaceId;

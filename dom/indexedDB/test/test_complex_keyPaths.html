@@ -48,6 +48,26 @@
         { keyPath: "foo.2.bar", exception: true },
         { keyPath: "foo. .bar", exception: true },
         { keyPath: ".bar",    exception: true },
+
+        { keyPath: ["foo", "bar"],        value: { foo: 1, bar: 2 },              key: [1, 2] },
+        { keyPath: ["foo"],               value: { foo: 1, bar: 2 },              key: [1] },
+        { keyPath: ["foo", "bar", "bar"], value: { foo: 1, bar: "x" },            key: [1, "x", "x"] },
+        { keyPath: ["x", "y"],            value: { x: [],  y: "x" },              key: [[], "x"] },
+        { keyPath: ["x", "y"],            value: { x: [[1]],  y: "x" },           key: [[[1]], "x"] },
+        { keyPath: ["x", "y"],            value: { x: [[1]],  y: new Date(1) },   key: [[[1]], new Date(1)] },
+        { keyPath: ["x", "y"],            value: { x: [[1]],  y: [new Date(3)] }, key: [[[1]], [new Date(3)]] },
+        { keyPath: ["x", "y.bar"],        value: { x: "hi", y: { bar: "x"} },     key: ["hi", "x"] },
+        { keyPath: ["x.y", "y.bar"],      value: { x: { y: "hello" }, y: { bar: "nurse"} }, key: ["hello", "nurse"] },
+        { keyPath: ["", ""],              value: 5,                               key: [5, 5] },
+        { keyPath: ["x", "y"],            value: { x: 1 } },
+        { keyPath: ["x", "y"],            value: { y: 1 } },
+        { keyPath: ["x", "y"],            value: { x: 1, y: undefined } },
+        { keyPath: ["x", "y"],            value: { x: null, y: 1 } },
+        { keyPath: ["x", "y.bar"],        value: { x: null, y: { bar: "x"} } },
+        { keyPath: ["x", "y"],            value: { x: 1, y: false } },
+        { keyPath: ["x", "y", "z"],       value: { x: 1, y: false, z: "a" } },
+        { keyPath: [".x", "y", "z"],      exception: true },
+        { keyPath: ["x", "y ", "z"],      exception: true },
       ];
 
       let openRequest = mozIndexedDB.open(name, 1);
@@ -62,13 +82,16 @@
       // Test creating object stores and inserting data
       for (let i = 0; i < keyPaths.length; i++) {
         let info = keyPaths[i];
+
         let test = " for objectStore test " + JSON.stringify(info);
-        if (!stores[info.keyPath]) {
+        let indexName = JSON.stringify(info.keyPath);
+        if (!stores[indexName]) {
           try {
-            let objectStore = db.createObjectStore(info.keyPath, { keyPath: info.keyPath });
+            let objectStore = db.createObjectStore(indexName, { keyPath: info.keyPath });
             ok(!("exception" in info), "shouldn't throw" + test);
-            is(objectStore.keyPath, info.keyPath, "correct keyPath property" + test);
-            stores[info.keyPath] = objectStore;
+            is(JSON.stringify(objectStore.keyPath), JSON.stringify(info.keyPath),
+               "correct keyPath property" + test);
+            stores[indexName] = objectStore;
           } catch (e) {
             ok("exception" in info, "should throw" + test);
             ok(e instanceof DOMException, "Got a DOM Exception" + test);
@@ -77,7 +100,7 @@
           }
         }
 
-        let store = stores[info.keyPath];
+        let store = stores[indexName];
 
         try {
           request = store.add(info.value);
@@ -95,7 +118,12 @@
         let e = yield;
         is(e.type, "success", "inserted successfully" + test);
         is(e.target, request, "expected target" + test);
-        is(request.result, info.key, "found correct key" + test);
+        ok(compareKeys(request.result, info.key), "found correct key" + test);
+        is(mozIndexedDB.cmp(request.result, info.key), 0, "returned key compares correctly" + test);
+
+        store.get(info.key).onsuccess = grabEventAndContinueHandler;
+        e = yield;
+        isnot(e.target.result, undefined, "Did find entry");
 
         store.clear().onsuccess = grabEventAndContinueHandler;
         yield;
@@ -107,12 +135,14 @@
       for (let i = 0; i < keyPaths.length; i++) {
         let test = " for index test " + JSON.stringify(info);
         let info = keyPaths[i];
-        if (!indexes[info.keyPath]) {
+        let indexName = JSON.stringify(info.keyPath);
+        if (!indexes[indexName]) {
           try {
-            let index = store.createIndex(info.keyPath, info.keyPath);
+            let index = store.createIndex(indexName, info.keyPath);
             ok(!("exception" in info), "shouldn't throw" + test);
-            is(index.keyPath, info.keyPath, "index has correct keyPath property" + test);
-            indexes[info.keyPath] = index;
+            is(JSON.stringify(index.keyPath), JSON.stringify(info.keyPath),
+               "index has correct keyPath property" + test);
+            indexes[indexName] = index;
           } catch (e) {
             ok("exception" in info, "should throw" + test);
             ok(e instanceof DOMException, "Got a DOM Exception" + test);
@@ -121,7 +151,7 @@
           }
         }
         
-        let index = indexes[info.keyPath];
+        let index = indexes[indexName];
 
         request = store.add(info.value, 1);
         if ("key" in info) {

@@ -494,7 +494,7 @@ toStringTemplate = (
 indexGetterTemplate = (
 "template<>\n"
 "bool\n"
-"${name}Wrapper::getItemAt(${nativeClass} *list, uint32 index, ${indexGetterType} &item)\n"
+"${name}Wrapper::getItemAt(${nativeClass} *list, uint32_t index, ${indexGetterType} &item)\n"
 "{\n"
 "${indexGet}"
 "}\n"
@@ -503,7 +503,7 @@ indexGetterTemplate = (
 indexSetterTemplate = (
 "template<>\n"
 "bool\n"
-"${name}Wrapper::setItemAt(JSContext *cx, ${nativeClass} *list, uint32 index, ${indexSetterType} item)\n"
+"${name}Wrapper::setItemAt(JSContext *cx, ${nativeClass} *list, uint32_t index, ${indexSetterType} item)\n"
 "{\n"
 "${indexSet}"
 "}\n"

@@ -882,8 +882,11 @@ FrameState::discardForJoin(RegisterAllocation *&alloc, uint32_t stackDepth)
         }
 
         regstate(reg).associate(fe, RematInfo::DATA);
-        if (!alloc->synced(reg))
+        if (!alloc->synced(reg)) {
             fe->data.unsync();
+            if (!reg.isReg())
+                fe->type.unsync();
+        }
     }
 
     a->sp = a->spBase + stackDepth;
@@ -1339,15 +1342,13 @@ FrameState::sync(Assembler &masm, Uses uses) const
             continue;
         }
 
-        FrameEntry *backing = fe;
-
         if (!fe->isCopy()) {
             if (fe->data.inRegister() && !regstate(fe->data.reg()).isPinned())
                 avail.putReg(fe->data.reg());
             if (fe->type.inRegister() && !regstate(fe->type.reg()).isPinned())
                 avail.putReg(fe->type.reg());
         } else {
-            backing = fe->copyOf();
+            FrameEntry *backing = fe->copyOf();
             JS_ASSERT(!backing->isConstant() && !fe->isConstant());
 
 #if defined JS_PUNBOX64

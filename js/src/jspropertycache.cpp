@@ -46,14 +46,10 @@
 
 using namespace js;
 
-JS_REQUIRES_STACK PropertyCacheEntry *
+PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *pobj,
                     const Shape *shape)
 {
-    JSOp op;
-    const JSCodeSpec *cs;
-    PropertyCacheEntry *entry;
-
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(!cx->runtime->gcRunning);
 
@@ -80,12 +76,11 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
     JS_ASSERT_IF(obj == pobj, scopeIndex == 0);
 
     JSObject *tmp = obj;
-    for (uintN i = 0; i != scopeIndex; i++)
-        tmp = tmp->internalScopeChain();
+    for (uintN i = 0; i < scopeIndex; i++)
+        tmp = &tmp->asScope().enclosingScope();
 
     uintN protoIndex = 0;
     while (tmp != pobj) {
-
         /*
          * Don't cache entries across prototype lookups which can mutate in
          * arbitrary ways without a shape change.
@@ -109,7 +104,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
         ++protoIndex;
     }
 
-    if (scopeIndex > PCINDEX_SCOPEMASK || protoIndex > PCINDEX_PROTOMASK) {
+    typedef PropertyCacheEntry Entry;
+    if (scopeIndex > Entry::MaxScopeIndex || protoIndex > Entry::MaxProtoIndex) {
         PCMETER(longchains++);
         return JS_NO_PROP_CACHE_FILL;
     }
@@ -120,8 +116,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
      */
     jsbytecode *pc;
     (void) cx->stack.currentScript(&pc);
-    op = JSOp(*pc);
-    cs = &js_CodeSpec[op];
+    JSOp op = JSOp(*pc);
+    const JSCodeSpec *cs = &js_CodeSpec[op];
 
     if ((cs->format & JOF_SET) && obj->watched())
         return JS_NO_PROP_CACHE_FILL;
@@ -146,7 +142,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
         }
     }
 
-    entry = &table[hash(pc, obj->lastProperty())];
+    PropertyCacheEntry *entry = &table[hash(pc, obj->lastProperty())];
     PCMETER(entry->vword.isNull() || recycles++);
     entry->assign(pc, obj->lastProperty(), pobj->lastProperty(), shape, scopeIndex, protoIndex);
 
@@ -162,8 +158,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
     return entry;
 }
 
-static inline JSAtom *
-GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs)
+static inline PropertyName *
+GetNameFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs)
 {
     if (op == JSOP_LENGTH)
         return cx->runtime->atomState.lengthAtom;
@@ -175,12 +171,12 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
 
     JSScript *script = cx->stack.currentScript();
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
-    JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom);
-    return atom;
+    PropertyName *name;
+    GET_NAME_FROM_BYTECODE(script, pc, pcoff, name);
+    return name;
 }
 
-JS_REQUIRES_STACK JSAtom *
+PropertyName *
 PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject **pobjp,
                         PropertyCacheEntry *entry)
 {
@@ -196,18 +192,17 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;
-    uint32_t vindex = entry->vindex;
 
     if (entry->kpc != pc) {
         PCMETER(kpcmisses++);
 
-        JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
+        PropertyName *name = GetNameFromBytecode(cx, pc, op, cs);
 #ifdef DEBUG_notme
         JSAutoByteString printable;
         fprintf(stderr,
                 "id miss for %s from %s:%u"
                 " (pc %u, kpc %u, kshape %p, shape %p)\n",
-                js_AtomToPrintableString(cx, atom, &printable),
+                js_AtomToPrintableString(cx, name, &printable),
                 script->filename,
                 js_PCToLineNumber(cx, script, pc),
                 pc - script->code,
@@ -219,12 +214,12 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
                                 JS_FALSE, stderr);
 #endif
 
-        return atom;
+        return name;
     }
 
     if (entry->kshape != obj->lastProperty()) {
         PCMETER(kshapemisses++);
-        return GetAtomFromBytecode(cx, pc, op, cs);
+        return GetNameFromBytecode(cx, pc, op, cs);
     }
 
     /*
@@ -234,39 +229,38 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     pobj = obj;
 
     if (JOF_MODE(cs.format) == JOF_NAME) {
-        while (vindex & (PCINDEX_SCOPEMASK << PCINDEX_PROTOBITS)) {
-            tmp = pobj->scopeChain();
+        uint8_t scopeIndex = entry->scopeIndex;
+        while (scopeIndex > 0) {
+            tmp = pobj->enclosingScope();
             if (!tmp || !tmp->isNative())
                 break;
             pobj = tmp;
-            vindex -= PCINDEX_PROTOSIZE;
+            scopeIndex--;
         }
 
         *objp = pobj;
     }
 
-    while (vindex & PCINDEX_PROTOMASK) {
+    uint8_t protoIndex = entry->protoIndex;
+    while (protoIndex > 0) {
         tmp = pobj->getProto();
         if (!tmp || !tmp->isNative())
             break;
         pobj = tmp;
-        --vindex;
+        protoIndex--;
     }
 
     if (pobj->lastProperty() == entry->pshape) {
 #ifdef DEBUG
-        JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
-        jsid id = ATOM_TO_JSID(atom);
-
-        id = js_CheckForStringIndex(id);
-        JS_ASSERT(pobj->nativeContains(cx, id));
+        PropertyName *name = GetNameFromBytecode(cx, pc, op, cs);
+        JS_ASSERT(pobj->nativeContains(cx, js_CheckForStringIndex(ATOM_TO_JSID(name))));
 #endif
         *pobjp = pobj;
         return NULL;
     }
 
     PCMETER(vcapmisses++);
-    return GetAtomFromBytecode(cx, pc, op, cs);
+    return GetNameFromBytecode(cx, pc, op, cs);
 }
 
 #ifdef DEBUG
@@ -279,7 +273,8 @@ PropertyCache::assertEmpty()
         JS_ASSERT(!table[i].kshape);
         JS_ASSERT(!table[i].pshape);
         JS_ASSERT(!table[i].prop);
-        JS_ASSERT(!table[i].vindex);
+        JS_ASSERT(!table[i].scopeIndex);
+        JS_ASSERT(!table[i].protoIndex);
     }
 }
 #endif

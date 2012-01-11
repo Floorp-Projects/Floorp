@@ -313,7 +313,7 @@ if test -n "$gonkdir" ; then
     STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/"
     STLPORT_LIBS="-lstlport"
 
-    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS"
+    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
     LIBS="$LIBS $STLPORT_LIBS"
@@ -336,6 +336,7 @@ if test -n "$gonkdir" ; then
     fi
 
     AC_DEFINE(ANDROID)
+    AC_DEFINE(HAVE_SYS_UIO_H)
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
     ZLIB_DIR=yes
@@ -549,36 +550,12 @@ if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
 
-    case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
-        dnl The Darwin cross compiler doesn't necessarily point itself at a
-        dnl root that has libraries for the proper architecture, it defaults
-        dnl to the system root.  The libraries in the system root on current
-        dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
-        dnl checks will fail.  Fake a working SDK in that case.
-        _SAVE_CFLAGS=$CFLAGS
-        _SAVE_CXXFLAGS=$CXXLAGS
-        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk $CFLAGS"
-        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk $CXXFLAGS"
-        ;;
-    esac
-
     AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", :)
     unset ac_cv_prog_CC
     AC_PROG_CC
     AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", :)
     unset ac_cv_prog_CXX
     AC_PROG_CXX
-
-    case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
-        dnl Revert the changes made above.  From this point on, the target
-        dnl compiler will never be used without applying the SDK to CFLAGS
-        dnl (see --with-macos-sdk below).
-        CFLAGS=$_SAVE_CFLAGS
-        CXXFLAGS=$_SAVE_CXXFLAGS
-        ;;
-    esac
 
     AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", :)
     AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", :)
@@ -1165,9 +1142,6 @@ case "$target" in
         dnl No value specified on the command line or in the environment,
         dnl use architecture minimum.
         case "${target_cpu}" in
-          ppc*)
-            export MACOSX_DEPLOYMENT_TARGET=10.5
-            ;;
           i*86)
             export MACOSX_DEPLOYMENT_TARGET=10.5
             ;;
@@ -1857,7 +1831,7 @@ if test "$GNU_CC"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
     fi
-    WARNINGS_AS_ERRORS='-Werror'
+    WARNINGS_AS_ERRORS='-Werror -Wno-error=uninitialized'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
@@ -2491,6 +2465,7 @@ ia64*-hpux*)
         _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
     else
         _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+        MOZ_LINKER=1
     fi
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
@@ -2924,6 +2899,8 @@ ia64*-hpux*)
     ;;
 
 esac
+
+AC_SUBST(MOZ_LINKER)
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
@@ -4085,7 +4062,8 @@ AC_CACHE_CHECK(for __thread keyword for TLS variables,
                             ac_cv_thread_keyword=yes,
                             ac_cv_thread_keyword=no)])
 LDFLAGS=$_SAVE_LDFLAGS
-if test "$ac_cv_thread_keyword" = yes; then
+# The custom dynamic linker doesn't support TLS variables
+if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
   # mips builds fail with TLS variables because of a binutils bug.
   # See bug 528687
   case "${target}" in
@@ -4251,7 +4229,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.8.8, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.9.0, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4259,10 +4237,16 @@ if test -n "$MOZ_NATIVE_NSPR"; then
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
     AC_TRY_COMPILE([#include "prtypes.h"],
                 [#ifndef PR_STATIC_ASSERT
-                 #error PR_STATIC_ASSERT not defined or requires including prlog.h
+                 #error PR_STATIC_ASSERT not defined or requires including prtypes.h
                  #endif],
                 [MOZ_NATIVE_NSPR=1],
                 AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT or including prtypes.h does not provide it]))
+    AC_TRY_COMPILE([#include "prtypes.h"],
+                [#ifndef PR_UINT64
+                 #error PR_UINT64 not defined or requires including prtypes.h
+                 #endif],
+                [MOZ_NATIVE_NSPR=1],
+                AC_MSG_ERROR([system NSPR does not support PR_UINT64 or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
     if test "$OS_ARCH" = "WINNT"; then
@@ -4450,6 +4434,10 @@ LIBS=$_SAVE_LIBS
 if test "${ZLIB_DIR}" -a -d "${ZLIB_DIR}" -a "$SYSTEM_ZLIB" = 1; then
     ZLIB_CFLAGS="-I${ZLIB_DIR}/include"
     ZLIB_LIBS="-L${ZLIB_DIR}/lib ${ZLIB_LIBS}"
+fi
+
+if test "$MOZ_LINKER" = 1 -a "$SYSTEM_ZLIB" != 1; then
+    AC_MSG_ERROR([Custom dynamic linker requires --with-system-zlib])
 fi
 
 dnl system BZIP2 Support
@@ -4641,7 +4629,7 @@ USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
-MOZ_GRAPHITE=
+MOZ_GRAPHITE=1
 
 case "${target}" in
 *darwin*)
@@ -4798,7 +4786,6 @@ MOZ_ARG_HEADER(Toolkit Options)
                             Mac OS X - cairo-cocoa
                             OS/2 - cairo-os2
                             Win32 - cairo-windows
-                            Gtk2 with DirectFB - cairo-gtk2-dfb
                             * - cairo-gtk2
                             * - cairo-qt],
     [ _DEFAULT_TOOLKIT=$enableval ],
@@ -4806,7 +4793,6 @@ MOZ_ARG_HEADER(Toolkit Options)
 
     if test "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-dfb" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
@@ -4851,24 +4837,6 @@ cairo-gtk2|cairo-gtk2-x11)
     AC_DEFINE(MOZ_WIDGET_GTK2)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
-cairo-gtk2-dfb)
-    MOZ_WIDGET_TOOLKIT=gtk2
-    MOZ_ENABLE_GTK2=1
-    MOZ_WEBGL=
-
-    AC_DEFINE(MOZ_DFB)
-    MOZ_DFB=1
-
-    TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
-    TK_LIBS='$(MOZ_GTK2_LIBS)'
-    AC_DEFINE(MOZ_WIDGET_GTK2)
-    if test "$no_x" != "yes"; then
-        AC_MSG_WARN([Disabling X when DirectFB is specified.])
-        no_x=yes
-    fi
-    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-qt)
@@ -4934,6 +4902,7 @@ cairo-android)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
+    MOZ_OLD_LINKER=1
     ;;
 
 cairo-gonk)
@@ -4948,6 +4917,7 @@ cairo-gonk)
 
 esac
 
+AC_SUBST(MOZ_OLD_LINKER)
 AC_SUBST(MOZ_PDF_PRINTING)
 if test "$MOZ_PDF_PRINTING"; then
    PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
@@ -4966,9 +4936,6 @@ if test "$COMPILE_ENVIRONMENT"; then
   if test "$MOZ_ENABLE_GTK2"; then
     if test "$MOZ_X11"; then
       GDK_PACKAGES=gdk-x11-2.0
-    elif test "$MOZ_DFB"; then
-      PKG_CHECK_MODULES(MOZ_DFB, directfb >= 1.1.0)
-      GDK_PACKAGES=directfb
     fi
 
     PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
@@ -5037,6 +5004,7 @@ then
     if test -z "$QTDIR"; then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
         AC_CHECK_PROGS(HOST_MOC, $MOC moc, "")
+        AC_CHECK_PROGS(HOST_RCC, $RCC rcc, "")
     else
         MOZ_QT_LIBS="-L$QTDIR/lib/ -lQtGui -lQtNetwork -lQtCore -lQtXml -lQtOpenGL"
 
@@ -5048,12 +5016,19 @@ then
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtNetwork"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
         HOST_MOC="$QTDIR/bin/moc"
+        HOST_RCC="$QTDIR/bin/rcc"
     fi
     if test -z "$HOST_MOC"; then
         AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
 incorrect])
     fi
+    if test -z "$HOST_RCC"; then
+        AC_MSG_ERROR([No acceptable rcc preprocessor found. Qt SDK is not installed or --with-qt is
+incorrect])
+    fi
+
     MOC=$HOST_MOC
+    RCC=$HOST_RCC
 
     MOZ_ENABLE_QMSYSTEM2=
     PKG_CHECK_MODULES(_QMSYSTEM2, qmsystem2,
@@ -5116,8 +5091,8 @@ AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LIBS)
 
 AC_SUBST(MOC)
+AC_SUBST(RCC)
 
-AC_SUBST(MOZ_DFB)
 AC_SUBST(MOZ_X11)
 
 dnl ========================================================
@@ -5327,7 +5302,7 @@ then
     if test "$MOZ_ENABLE_GCONF"
     then
         PKG_CHECK_MODULES(MOZ_GCONF, gconf-2.0 >= $GCONF_VERSION gobject-2.0 ,[
-            MOZ_GCONF_LIBS=`echo $MOZ_GCONF_LIBS | sed 's/-llinc\>//'`
+            MOZ_GCONF_LIBS=`$PKG_CONFIG --libs gobject-2.0`
             MOZ_ENABLE_GCONF=1
         ],[
             if test "$MOZ_ENABLE_GCONF" = "force"
@@ -6348,6 +6323,23 @@ AC_MSG_RESULT([$WGET])
 AC_SUBST(WGET)
 
 dnl ========================================================
+dnl Maintenance Service
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(maintenance-service,
+[  --enable-maintenance-service       Enable building of maintenanceservice],
+    MOZ_MAINTENANCE_SERVICE=1,
+    MOZ_MAINTENANCE_SERVICE= )
+
+if test -n "$MOZ_MAINTENANCE_SERVICE"; then
+  if test "$OS_ARCH" = "WINNT"; then
+    AC_DEFINE(MOZ_MAINTENANCE_SERVICE)
+  else
+    AC_MSG_ERROR([Can only build with --enable-maintenance-service with a Windows target])
+  fi
+fi
+
+dnl ========================================================
 dnl Updater
 dnl ========================================================
 
@@ -7050,14 +7042,14 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -n "$MOZ_DEBUG_FLAGS"; then
 fi
 
 dnl ========================================================
-dnl = Disable any treating of compile warnings as errors
+dnl = Enable any treating of compile warnings as errors
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
-[  --disable-warnings-as-errors
-                          Disable treating of warnings as errors],
-    MOZ_DISABLE_WARNINGS_AS_ERRORS=1,
-    MOZ_DISABLE_WARNINGS_AS_ERRORS= )
-if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
+MOZ_ARG_ENABLE_BOOL(warnings-as-errors,
+[  --enable-warnings-as-errors
+                          Enable treating of warnings as errors],
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=1,
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=)
+if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
 fi
 
@@ -7135,17 +7127,17 @@ if test "$MOZ_DMD"; then
 fi
 
 if test "${OS_TARGET}" = "Android"; then
-  dnl On Android, we use WRAP_LDFLAGS to link everything to mozutils
+  dnl On Android, we use WRAP_LDFLAGS to link everything to mozglue
   :
 elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "OS2"; then
-  dnl On Windows, OSX and OS2, we want to link all our binaries against mozutils
-  MOZ_UTILS_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozutils,$(LIBXUL_DIST)/lib)'
+  dnl On Windows, OSX and OS2, we want to link all our binaries against mozglue
+  MOZ_GLUE_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
 else
-  dnl On other Unix systems, we only want to link executables against mozutils
-  MOZ_UTILS_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozutils,$(LIBXUL_DIST)/lib) $(MKSHLIB_UNFORCE_ALL)'
+  dnl On other Unix systems, we only want to link executables against mozglue
+  MOZ_GLUE_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib) $(MKSHLIB_UNFORCE_ALL)'
   if test -n "$GNU_CC"; then
-    dnl And we need mozutils symbols to be exported.
-    MOZ_UTILS_PROGRAM_LDFLAGS="$MOZ_UTILS_PROGRAM_LDFLAGS -rdynamic"
+    dnl And we need mozglue symbols to be exported.
+    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS -rdynamic"
   fi
 fi
 
@@ -7198,7 +7190,7 @@ else
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
     _WRAP_MALLOC=1
-    MOZ_UTILS_LDFLAGS=
+    MOZ_GLUE_LDFLAGS=
     ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -7220,11 +7212,11 @@ else
     WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_UTILS_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      MOZ_GLUE_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
       dnl Also pass this to NSPR/NSS
-      DLLFLAGS="$DLLFLAGS $MOZ_UTILS_LDFLAGS"
+      DLLFLAGS="$DLLFLAGS $MOZ_GLUE_LDFLAGS"
     else
-      DLLFLAGS="$DLLFLAGS -LIBPATH:\$(DIST)/lib -DEFAULTLIB:mozutils"
+      DLLFLAGS="$DLLFLAGS -LIBPATH:\$(DIST)/lib -DEFAULTLIB:mozglue"
     fi
     rm crtdll.obj
 
@@ -7243,8 +7235,8 @@ else
   AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_UTILS_LDFLAGS)
-AC_SUBST(MOZ_UTILS_PROGRAM_LDFLAGS)
+AC_SUBST(MOZ_GLUE_LDFLAGS)
+AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
 AC_SUBST(WIN32_CRT_LIBS)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
@@ -7252,9 +7244,12 @@ AC_SUBST(DLLFLAGS)
 dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
 if test "$OS_TARGET" = Android; then
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozutils"
+    WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozglue"
     if test "$MOZ_WIDGET_TOOLKIT" = android; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
+        if test -n "$MOZ_OLD_LINKER"; then
+            WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+        fi
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} --wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
     fi
 fi
 
@@ -7490,7 +7485,7 @@ MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 AC_SUBST(STDCXX_COMPAT)
 
 if test -n "$STDCXX_COMPAT"; then
-   eval $(CXX="$CXX" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
+   eval $(CXX="$CXX" MACOS_SDK_DIR="$MACOS_SDK_DIR" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
    AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
    AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
 fi
@@ -8021,7 +8016,7 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
-if test "${OS_ARCH}" = "Darwin" -o "${OS_TARGET}" = "Android"; then
+if test "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android"; then
 MOZ_ENABLE_SKIA=1
 else
 MOZ_ENABLE_SKIA=
@@ -8438,6 +8433,7 @@ AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_JAVA_COMPOSITOR)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
+AC_SUBST(MOZ_MAINTENANCE_SERVICE)
 AC_SUBST(MOZ_UPDATER)
 AC_SUBST(MOZ_ANGLE)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)
@@ -9084,11 +9080,11 @@ ac_configure_args="$ac_configure_args --prefix=$dist"
 ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
-   if test -n "$MOZ_UTILS_LDFLAGS"; then
-     export MOZ_UTILS_LDFLAGS
+   if test -n "$MOZ_GLUE_LDFLAGS"; then
+     export MOZ_GLUE_LDFLAGS
    fi
-   if test -n "$MOZ_UTILS_PROGRAM_LDFLAGS"; then
-     export MOZ_UTILS_PROGRAM_LDFLAGS
+   if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
+     export MOZ_GLUE_PROGRAM_LDFLAGS
    fi
 fi
 export MOZ_APP_NAME

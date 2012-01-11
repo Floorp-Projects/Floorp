@@ -61,6 +61,7 @@ public class Tab {
     private static final int kThumbnailSize = 96;
 
     static int sMinDim = 0;
+    static float sDensity = 1;
     private int mId;
     private String mUrl;
     private String mTitle;
@@ -70,6 +71,8 @@ public class Tab {
     private Drawable mThumbnail;
     private List<HistoryEntry> mHistory;
     private int mHistoryIndex;
+    private int mParentId;
+    private boolean mExternal;
     private boolean mLoading;
     private boolean mBookmark;
     private HashMap<String, DoorHanger> mDoorHangers;
@@ -89,13 +92,15 @@ public class Tab {
     }
 
     public Tab() {
-        this(-1, "");
+        this(-1, "", false, -1, "");
     }
 
-    public Tab(int id, String url) {
+    public Tab(int id, String url, boolean external, int parentId, String title) {
         mId = id;
         mUrl = url;
-        mTitle = "";
+        mExternal = external;
+        mParentId = parentId;
+        mTitle = title;
         mFavicon = null;
         mFaviconUrl = null;
         mSecurityMode = "unknown";
@@ -111,6 +116,10 @@ public class Tab {
 
     public int getId() {
         return mId;
+    }
+
+    public int getParentId() {
+        return mParentId;
     }
 
     public String getURL() {
@@ -144,13 +153,18 @@ public class Tab {
                     DisplayMetrics metrics = new DisplayMetrics();
                     GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
                     sMinDim = Math.min(metrics.widthPixels, metrics.heightPixels);
+                    sDensity = metrics.density;
                 }
                 if (b != null) {
                     try {
                         Bitmap cropped = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
                         Bitmap bitmap = Bitmap.createScaledBitmap(cropped, kThumbnailSize, kThumbnailSize, false);
+                        saveThumbnailToDB(new BitmapDrawable(bitmap));
+                        b.recycle();
+
+                        bitmap = Bitmap.createBitmap(cropped, 0, 0, (int) (138 * sDensity), (int) (78 * sDensity));
                         mThumbnail = new BitmapDrawable(bitmap);
-                        saveThumbnailToDB((BitmapDrawable) mThumbnail);
+                        cropped.recycle();
                     } catch (OutOfMemoryError oom) {
                         Log.e(LOGTAG, "Unable to create/scale bitmap", oom);
                         mThumbnail = null;
@@ -176,6 +190,10 @@ public class Tab {
 
     public boolean isBookmark() {
         return mBookmark;
+    }
+
+    public boolean isExternal() {
+        return mExternal;
     }
 
     public void updateURL(String url) {

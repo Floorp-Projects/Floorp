@@ -50,6 +50,7 @@ _BROWSER_TEST_FILES = \
   browser_bug683672.js \
   browser_styleinspector_bug_672746_default_styles.js \
   browser_styleinspector_bug_672744_search_filter.js \
+  browser_bug589375_keybindings.js \
   browser_styleinspector_bug_689759_no_results_placeholder.js \
   browser_bug_692400_element_style.js \
   browser_csslogic_inherited.js \

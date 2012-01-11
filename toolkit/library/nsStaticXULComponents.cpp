@@ -118,13 +118,6 @@
 #define LAYOUT_DEBUG_MODULE
 #endif
 
-#if defined(ENABLE_JETPACK_SERVICE)
-#define JETPACK_MODULES \
-    MODULE(jetpack)
-#else
-#define JETPACK_MODULES
-#endif
-
 #ifdef MOZ_JSDEBUGGER
 #define JSDEBUGGER_MODULES \
     MODULE(JavaScript_Debugger)
@@ -225,7 +218,6 @@
     WIDGET_MODULES                           \
     MODULE(nsImageLib2Module)                \
     ICON_MODULE                              \
-    JETPACK_MODULES                          \
     MODULE(nsPluginModule)                   \
     MODULE(nsLayoutModule)                   \
     MODULE(docshell_provider)                \

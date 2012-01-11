@@ -56,28 +56,102 @@
 #include "gfxPlatform.h"
 #include "gfxTeeSurface.h"
 
-gfxContext::gfxContext(gfxASurface *surface) :
-    mSurface(surface)
-{
-    MOZ_COUNT_CTOR(gfxContext);
+using namespace mozilla;
+using namespace mozilla::gfx;
 
-    mCairo = cairo_create(surface->CairoSurface());
-    mFlags = surface->GetDefaultContextFlags();
-    if (mSurface->GetRotateForLandscape()) {
-        // Rotate page 90 degrees to draw landscape page on portrait paper
-        gfxIntSize size = mSurface->GetSize();
-        Translate(gfxPoint(0, size.width));
-        gfxMatrix matrix(0, -1,
-                         1,  0,
-                         0,  0);
-        Multiply(matrix);
+/* This class lives on the stack and allows gfxContext users to easily, and
+ * performantly get a gfx::Pattern to use for drawing in their current context.
+ */
+class GeneralPattern
+{
+public:    
+  GeneralPattern(gfxContext *aContext) : mContext(aContext), mPattern(NULL) {}
+  ~GeneralPattern() { if (mPattern) { mPattern->~Pattern(); } }
+
+  operator mozilla::gfx::Pattern&()
+  {
+    gfxContext::AzureState &state = mContext->CurrentState();
+
+    if (state.pattern) {
+      return *state.pattern->GetPattern(mContext->mDT);
+    } else if (state.sourceSurface) {
+      mPattern = new (mSurfacePattern.addr())
+        SurfacePattern(state.sourceSurface, EXTEND_CLAMP, state.surfTransform);
+      return *mPattern;
+    } else {
+      mPattern = new (mColorPattern.addr())
+        ColorPattern(state.color);
+      return *mPattern;
     }
+  }
+
+private:
+  union {
+    mozilla::AlignedStorage2<mozilla::gfx::ColorPattern> mColorPattern;
+    mozilla::AlignedStorage2<mozilla::gfx::SurfacePattern> mSurfacePattern;
+  };
+
+  gfxContext *mContext;
+  Pattern *mPattern;
+};
+
+gfxContext::gfxContext(gfxASurface *surface)
+  : mSurface(surface)
+  , mRefCairo(NULL)
+{
+  MOZ_COUNT_CTOR(gfxContext);
+
+  mCairo = cairo_create(surface->CairoSurface());
+  mFlags = surface->GetDefaultContextFlags();
+  if (mSurface->GetRotateForLandscape()) {
+    // Rotate page 90 degrees to draw landscape page on portrait paper
+    gfxIntSize size = mSurface->GetSize();
+    Translate(gfxPoint(0, size.width));
+    gfxMatrix matrix(0, -1,
+                      1,  0,
+                      0,  0);
+    Multiply(matrix);
+  }
 }
+
+gfxContext::gfxContext(DrawTarget *aTarget)
+  : mPathIsRect(false)
+  , mTransformChanged(false)
+  , mCairo(NULL)
+  , mRefCairo(NULL)
+  , mSurface(NULL)
+  , mFlags(0)
+  , mDT(aTarget)
+  , mOriginalDT(aTarget)
+{
+  MOZ_COUNT_CTOR(gfxContext);
+
+  mStateStack.SetLength(1);
+  CurrentState().drawTarget = mDT;
+  mDT->SetTransform(Matrix());
+}
+
 gfxContext::~gfxContext()
 {
+  if (mCairo) {
     cairo_destroy(mCairo);
+  }
+  if (mRefCairo) {
+    cairo_destroy(mRefCairo);
+  }
+  if (mDT) {
+    for (int i = mStateStack.Length() - 1; i >= 0; i--) {
+      for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+        mDT->PopClip();
+      }
 
-    MOZ_COUNT_DTOR(gfxContext);
+      if (mStateStack[i].clipWasReset) {
+        break;
+      }
+    }
+    mDT->Flush();
+  }
+  MOZ_COUNT_DTOR(gfxContext);
 }
 
 gfxASurface *
@@ -89,6 +163,7 @@ gfxContext::OriginalSurface()
 already_AddRefed<gfxASurface>
 gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
 {
+  if (mCairo) {
     cairo_surface_t *s = cairo_get_group_target(mCairo);
     if (s == mSurface->CairoSurface()) {
         if (dx && dy)
@@ -101,107 +176,229 @@ gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
     if (dx && dy)
         cairo_surface_get_device_offset(s, dx, dy);
     return gfxASurface::Wrap(s);
+  } else {
+    if (dx && dy) {
+      *dx = *dy = 0;
+    }
+    // An Azure context doesn't have a surface backing it.
+    return NULL;
+  }
+}
+
+cairo_t *
+gfxContext::GetCairo()
+{
+  if (mCairo) {
+    return mCairo;
+  }
+
+  if (mRefCairo) {
+    // Set transform!
+    return mRefCairo;
+  }
+
+  mRefCairo = cairo_create(gfxPlatform::GetPlatform()->ScreenReferenceSurface()->CairoSurface()); 
+
+  return mRefCairo;
 }
 
 void
 gfxContext::Save()
 {
+  if (mCairo) {
     cairo_save(mCairo);
+  } else {
+    CurrentState().transform = mDT->GetTransform();
+    mStateStack.AppendElement(AzureState(CurrentState()));
+    CurrentState().clipWasReset = false;
+    CurrentState().pushedClips.Clear();
+  }
 }
 
 void
 gfxContext::Restore()
 {
+  if (mCairo) {
     cairo_restore(mCairo);
+  } else {
+    for (unsigned int c = 0; c < CurrentState().pushedClips.Length(); c++) {
+      mDT->PopClip();
+    }
+
+    if (CurrentState().clipWasReset &&
+        CurrentState().drawTarget == mStateStack[mStateStack.Length() - 2].drawTarget) {
+      PushClipsToDT(mDT);
+    }
+
+    mStateStack.RemoveElementAt(mStateStack.Length() - 1);
+
+    if (mPathBuilder || mPath || mPathIsRect) {
+      mTransformChanged = true;
+      mPathTransform = mDT->GetTransform();
+    }
+
+    mDT = CurrentState().drawTarget;
+    mDT->SetTransform(CurrentState().transform);
+  }
 }
 
 // drawing
 void
 gfxContext::NewPath()
 {
+  if (mCairo) {
     cairo_new_path(mCairo);
+  } else {
+    mPath = NULL;
+    mPathBuilder = NULL;
+    mPathIsRect = false;
+    mTransformChanged = false;
+  }
 }
 
 void
 gfxContext::ClosePath()
 {
+  if (mCairo) {
     cairo_close_path(mCairo);
+  } else {
+    EnsurePathBuilder();
+    mPathBuilder->Close();
+  }
 }
 
 already_AddRefed<gfxPath> gfxContext::CopyPath() const
 {
+  if (mCairo) {
     nsRefPtr<gfxPath> path = new gfxPath(cairo_copy_path(mCairo));
     return path.forget();
+  } else {
+    // XXX - This is not yet supported for Azure.
+    return NULL;
+  }
 }
 
 void gfxContext::AppendPath(gfxPath* path)
 {
+  if (mCairo) {
     if (path->mPath->status == CAIRO_STATUS_SUCCESS && path->mPath->num_data != 0)
         cairo_append_path(mCairo, path->mPath);
+  } else {
+    // XXX - This is not yet supported for Azure.
+    return;
+  }
 }
 
 gfxPoint
-gfxContext::CurrentPoint() const
+gfxContext::CurrentPoint()
 {
+  if (mCairo) {
     double x, y;
     cairo_get_current_point(mCairo, &x, &y);
     return gfxPoint(x, y);
+  } else {
+    EnsurePathBuilder();
+    return ThebesPoint(mPathBuilder->CurrentPoint());
+  }
 }
 
 void
 gfxContext::Stroke()
 {
+  if (mCairo) {
     cairo_stroke_preserve(mCairo);
+  } else {
+    AzureState &state = CurrentState();
+    if (mPathIsRect) {
+      mDT->StrokeRect(mRect, GeneralPattern(this),
+                      state.strokeOptions,
+                      DrawOptions(1.0f, GetOp(), state.aaMode));
+    } else {
+      EnsurePath();
+
+      mDT->Stroke(mPath, GeneralPattern(this), state.strokeOptions,
+                  DrawOptions(1.0f, GetOp(), state.aaMode));
+    }
+  }
 }
 
 void
 gfxContext::Fill()
 {
+  if (mCairo) {
     cairo_fill_preserve(mCairo);
+  } else {
+    FillAzure(1.0f);
+  }
 }
 
 void
 gfxContext::FillWithOpacity(gfxFloat aOpacity)
 {
-  // This method exists in the hope that one day cairo gets a direct
-  // API for this, and then we would change this method to use that
-  // API instead.
-  if (aOpacity != 1.0) {
-    gfxContextAutoSaveRestore saveRestore(this);
-    Clip();
-    Paint(aOpacity);
+  if (mCairo) {
+    // This method exists in the hope that one day cairo gets a direct
+    // API for this, and then we would change this method to use that
+    // API instead.
+    if (aOpacity != 1.0) {
+      gfxContextAutoSaveRestore saveRestore(this);
+      Clip();
+      Paint(aOpacity);
+    } else {
+      Fill();
+    }
   } else {
-    Fill();
+    FillAzure(Float(aOpacity));
   }
 }
 
 void
 gfxContext::MoveTo(const gfxPoint& pt)
 {
+  if (mCairo) {
     cairo_move_to(mCairo, pt.x, pt.y);
+  } else {
+    EnsurePathBuilder();
+    mPathBuilder->MoveTo(ToPoint(pt));
+  }
 }
 
 void
 gfxContext::NewSubPath()
 {
+  if (mCairo) {
     cairo_new_sub_path(mCairo);
+  } else {
+    // XXX - This has no users, we should kill it, it should be equivelant to a
+    // MoveTo to the path's current point.
+  }
 }
 
 void
 gfxContext::LineTo(const gfxPoint& pt)
 {
+  if (mCairo) {
     cairo_line_to(mCairo, pt.x, pt.y);
+  } else {
+    EnsurePathBuilder();
+    mPathBuilder->LineTo(ToPoint(pt));
+  }
 }
 
 void
 gfxContext::CurveTo(const gfxPoint& pt1, const gfxPoint& pt2, const gfxPoint& pt3)
 {
+  if (mCairo) {
     cairo_curve_to(mCairo, pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y);
+  } else {
+    EnsurePathBuilder();
+    mPathBuilder->BezierTo(ToPoint(pt1), ToPoint(pt2), ToPoint(pt3));
+  }
 }
 
 void
 gfxContext::QuadraticCurveTo(const gfxPoint& pt1, const gfxPoint& pt2)
 {
+  if (mCairo) {
     double cx, cy;
     cairo_get_current_point(mCairo, &cx, &cy);
     cairo_curve_to(mCairo,
@@ -211,27 +408,47 @@ gfxContext::QuadraticCurveTo(const gfxPoint& pt1, const gfxPoint& pt2)
                    (pt1.y * 2.0 + pt2.y) / 3.0,
                    pt2.x,
                    pt2.y);
+  } else {
+    EnsurePathBuilder();
+    mPathBuilder->QuadraticBezierTo(ToPoint(pt1), ToPoint(pt2));
+  }
 }
 
 void
 gfxContext::Arc(const gfxPoint& center, gfxFloat radius,
                 gfxFloat angle1, gfxFloat angle2)
 {
+  if (mCairo) {
     cairo_arc(mCairo, center.x, center.y, radius, angle1, angle2);
+  } else {
+    EnsurePathBuilder();
+    mPathBuilder->Arc(ToPoint(center), Float(radius), Float(angle1), Float(angle2));
+  }
 }
 
 void
 gfxContext::NegativeArc(const gfxPoint& center, gfxFloat radius,
                         gfxFloat angle1, gfxFloat angle2)
 {
+  if (mCairo) {
     cairo_arc_negative(mCairo, center.x, center.y, radius, angle1, angle2);
+  } else {
+    EnsurePathBuilder();
+    mPathBuilder->Arc(ToPoint(center), Float(radius), Float(angle2), Float(angle1));
+  }
 }
 
 void
 gfxContext::Line(const gfxPoint& start, const gfxPoint& end)
 {
+  if (mCairo) {
     MoveTo(start);
     LineTo(end);
+  } else {
+    EnsurePathBuilder();
+    mPathBuilder->MoveTo(ToPoint(start));
+    mPathBuilder->LineTo(ToPoint(end));
+  }
 }
 
 // XXX snapToPixels is only valid when snapping for filled
@@ -241,6 +458,7 @@ gfxContext::Line(const gfxPoint& start, const gfxPoint& end)
 void
 gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels)
 {
+  if (mCairo) {
     if (snapToPixels) {
         gfxRect snappedRect(rect);
 
@@ -257,21 +475,50 @@ gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels)
     }
 
     cairo_rectangle(mCairo, rect.X(), rect.Y(), rect.Width(), rect.Height());
+  } else {
+    Rect rec = ToRect(rect);
+
+    if (snapToPixels) {
+      gfxRect newRect(rect);
+      if (UserToDevicePixelSnapped(newRect, PR_TRUE)) {
+        gfxMatrix mat = ThebesMatrix(mDT->GetTransform());
+        mat.Invert();
+
+        // We need the user space rect.
+        rec = ToRect(mat.TransformBounds(newRect));
+      }
+    }
+
+    if (!mPathBuilder && !mPathIsRect) {
+      mPathIsRect = true;
+      mRect = rec;
+      return;
+    } else if (!mPathBuilder) {
+      EnsurePathBuilder();
+    }
+    
+    mPathBuilder->MoveTo(rec.TopLeft());
+    mPathBuilder->LineTo(rec.TopRight());
+    mPathBuilder->LineTo(rec.BottomRight());
+    mPathBuilder->LineTo(rec.BottomLeft());
+    mPathBuilder->Close();
+  }
 }
 
 void
 gfxContext::Ellipse(const gfxPoint& center, const gfxSize& dimensions)
 {
-    gfxSize halfDim = dimensions / 2.0;
-    gfxRect r(center - gfxPoint(halfDim.width, halfDim.height), dimensions);
-    gfxCornerSizes c(halfDim, halfDim, halfDim, halfDim);
+  gfxSize halfDim = dimensions / 2.0;
+  gfxRect r(center - gfxPoint(halfDim.width, halfDim.height), dimensions);
+  gfxCornerSizes c(halfDim, halfDim, halfDim, halfDim);
 
-    RoundedRectangle (r, c);
+  RoundedRectangle (r, c);
 }
 
 void
 gfxContext::Polygon(const gfxPoint *points, PRUint32 numPoints)
 {
+  if (mCairo) {
     if (numPoints == 0)
         return;
 
@@ -279,11 +526,24 @@ gfxContext::Polygon(const gfxPoint *points, PRUint32 numPoints)
     for (PRUint32 i = 1; i < numPoints; ++i) {
         cairo_line_to(mCairo, points[i].x, points[i].y);
     }
+  } else {
+    if (numPoints == 0) {
+      return;
+    }
+
+    EnsurePathBuilder();
+
+    mPathBuilder->MoveTo(ToPoint(points[0]));
+    for (PRUint32 i = 1; i < numPoints; i++) {
+      mPathBuilder->LineTo(ToPoint(points[i]));
+    }
+  }
 }
 
 void
 gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
 {
+  if (mCairo) {
     cairo_save(mCairo);
     cairo_set_source_surface(mCairo, surface->CairoSurface(), 0, 0);
     cairo_new_path(mCairo);
@@ -293,108 +553,205 @@ gfxContext::DrawSurface(gfxASurface *surface, const gfxSize& size)
 
     cairo_fill(mCairo);
     cairo_restore(mCairo);
+  } else {
+    RefPtr<SourceSurface> surf =
+      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
+
+    Rect rect(0, 0, Float(size.width), Float(size.height));
+    rect.Intersect(Rect(0, 0, Float(surf->GetSize().width), Float(surf->GetSize().height)));
+
+    // XXX - Should fix pixel snapping.
+    mDT->DrawSurface(surf, rect, rect);
+  }
 }
 
 // transform stuff
 void
 gfxContext::Translate(const gfxPoint& pt)
 {
+  if (mCairo) {
     cairo_translate(mCairo, pt.x, pt.y);
+  } else {
+    MOZ_ASSERT(!mPathBuilder);
+
+    Matrix newMatrix = mDT->GetTransform();
+    mDT->SetTransform(newMatrix.Translate(Float(pt.x), Float(pt.y)));
+  }
 }
 
 void
 gfxContext::Scale(gfxFloat x, gfxFloat y)
 {
+  if (mCairo) {
     cairo_scale(mCairo, x, y);
+  } else {
+    MOZ_ASSERT(!mPathBuilder);
+
+    Matrix newMatrix = mDT->GetTransform();
+    mDT->SetTransform(newMatrix.Scale(Float(x), Float(y)));
+  }
 }
 
 void
 gfxContext::Rotate(gfxFloat angle)
 {
+  if (mCairo) {
     cairo_rotate(mCairo, angle);
+  } else {
+    MOZ_ASSERT(!mPathBuilder);
+
+    Matrix rotation = Matrix::Rotation(Float(angle));
+    mDT->SetTransform(rotation * mDT->GetTransform());
+  }
 }
 
 void
 gfxContext::Multiply(const gfxMatrix& matrix)
 {
+  if (mCairo) {
     const cairo_matrix_t& mat = reinterpret_cast<const cairo_matrix_t&>(matrix);
     cairo_transform(mCairo, &mat);
+  } else {
+    MOZ_ASSERT(!mPathBuilder);
+
+    mDT->SetTransform(ToMatrix(matrix) * mDT->GetTransform());
+  }
 }
 
 void
 gfxContext::SetMatrix(const gfxMatrix& matrix)
 {
+  if (mCairo) {
     const cairo_matrix_t& mat = reinterpret_cast<const cairo_matrix_t&>(matrix);
     cairo_set_matrix(mCairo, &mat);
+  } else {
+    MOZ_ASSERT(!mPathBuilder);
+
+    mDT->SetTransform(ToMatrix(matrix));
+  }
 }
 
 void
 gfxContext::IdentityMatrix()
 {
+  if (mCairo) {
     cairo_identity_matrix(mCairo);
+  } else {
+    MOZ_ASSERT(!mPathBuilder);
+
+    mDT->SetTransform(Matrix());
+  }
 }
 
 gfxMatrix
 gfxContext::CurrentMatrix() const
 {
+  if (mCairo) {
     cairo_matrix_t mat;
     cairo_get_matrix(mCairo, &mat);
     return gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat));
+  } else {
+    return ThebesMatrix(mDT->GetTransform());
+  }
 }
 
 void
 gfxContext::NudgeCurrentMatrixToIntegers()
 {
+  if (mCairo) {
     cairo_matrix_t mat;
     cairo_get_matrix(mCairo, &mat);
     gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat)).NudgeToIntegers();
     cairo_set_matrix(mCairo, &mat);
+  } else {
+    gfxMatrix matrix = ThebesMatrix(mTransform);
+    matrix.NudgeToIntegers();
+    mTransform = ToMatrix(matrix);
+  }
 }
 
 gfxPoint
 gfxContext::DeviceToUser(const gfxPoint& point) const
 {
+  if (mCairo) {
     gfxPoint ret = point;
     cairo_device_to_user(mCairo, &ret.x, &ret.y);
     return ret;
+  } else {
+    Matrix matrix = mDT->GetTransform();
+
+    matrix.Invert();
+
+    return ThebesPoint(matrix * ToPoint(point));
+  }
 }
 
 gfxSize
 gfxContext::DeviceToUser(const gfxSize& size) const
 {
+  if (mCairo) {
     gfxSize ret = size;
     cairo_device_to_user_distance(mCairo, &ret.width, &ret.height);
     return ret;
+  } else {
+    Matrix matrix = mDT->GetTransform();
+
+    matrix.Invert();
+
+    return ThebesSize(matrix * ToSize(size));
+  }
 }
 
 gfxRect
 gfxContext::DeviceToUser(const gfxRect& rect) const
 {
+  if (mCairo) {
     gfxRect ret = rect;
     cairo_device_to_user(mCairo, &ret.x, &ret.y);
     cairo_device_to_user_distance(mCairo, &ret.width, &ret.height);
     return ret;
+  } else {
+    Matrix matrix = mDT->GetTransform();
+
+    matrix.Invert();
+
+    return ThebesRect(matrix.TransformBounds(ToRect(rect)));
+  }
 }
 
 gfxPoint
 gfxContext::UserToDevice(const gfxPoint& point) const
 {
+  if (mCairo) {
     gfxPoint ret = point;
     cairo_user_to_device(mCairo, &ret.x, &ret.y);
     return ret;
+  } else {
+    return ThebesPoint(mDT->GetTransform() * ToPoint(point));
+  }
 }
 
 gfxSize
 gfxContext::UserToDevice(const gfxSize& size) const
 {
+  if (mCairo) {
     gfxSize ret = size;
     cairo_user_to_device_distance(mCairo, &ret.width, &ret.height);
     return ret;
+  } else {
+    const Matrix &matrix = mDT->GetTransform();
+
+    gfxSize newSize = size;
+    newSize.width = newSize.width * matrix._11 + newSize.height * matrix._12;
+    newSize.height = newSize.width * matrix._21 + newSize.height * matrix._22;
+    return newSize;
+  }
 }
 
 gfxRect
 gfxContext::UserToDevice(const gfxRect& rect) const
 {
+  if (mCairo) {
     double xmin = rect.X(), ymin = rect.Y(), xmax = rect.XMost(), ymax = rect.YMost();
 
     double x[3], y[3];
@@ -414,184 +771,255 @@ gfxContext::UserToDevice(const gfxRect& rect) const
     }
 
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
+  } else {
+    const Matrix &matrix = mDT->GetTransform();
+    return ThebesRect(matrix.TransformBounds(ToRect(rect)));
+  }
 }
 
 bool
 gfxContext::UserToDevicePixelSnapped(gfxRect& rect, bool ignoreScale) const
 {
-    if (GetFlags() & FLAG_DISABLE_SNAPPING)
-        return false;
+  if (GetFlags() & FLAG_DISABLE_SNAPPING)
+      return false;
 
-    // if we're not at 1.0 scale, don't snap, unless we're
-    // ignoring the scale.  If we're not -just- a scale,
-    // never snap.
-    const gfxFloat epsilon = 0.0000001;
+  // if we're not at 1.0 scale, don't snap, unless we're
+  // ignoring the scale.  If we're not -just- a scale,
+  // never snap.
+  const gfxFloat epsilon = 0.0000001;
 #define WITHIN_E(a,b) (fabs((a)-(b)) < epsilon)
+  if (mCairo) {
     cairo_matrix_t mat;
     cairo_get_matrix(mCairo, &mat);
     if (!ignoreScale &&
         (!WITHIN_E(mat.xx,1.0) || !WITHIN_E(mat.yy,1.0) ||
-         !WITHIN_E(mat.xy,0.0) || !WITHIN_E(mat.yx,0.0)))
+          !WITHIN_E(mat.xy,0.0) || !WITHIN_E(mat.yx,0.0)))
         return false;
+  } else {
+    Matrix mat = mDT->GetTransform();
+    if (!ignoreScale &&
+        (!WITHIN_E(mat._11,1.0) || !WITHIN_E(mat._22,1.0) ||
+          !WITHIN_E(mat._12,0.0) || !WITHIN_E(mat._21,0.0)))
+        return false;
+  }
 #undef WITHIN_E
 
-    gfxPoint p1 = UserToDevice(rect.TopLeft());
-    gfxPoint p2 = UserToDevice(rect.TopRight());
-    gfxPoint p3 = UserToDevice(rect.BottomRight());
+  gfxPoint p1 = UserToDevice(rect.TopLeft());
+  gfxPoint p2 = UserToDevice(rect.TopRight());
+  gfxPoint p3 = UserToDevice(rect.BottomRight());
 
-    // Check that the rectangle is axis-aligned. For an axis-aligned rectangle,
-    // two opposite corners define the entire rectangle. So check if
-    // the axis-aligned rectangle with opposite corners p1 and p3
-    // define an axis-aligned rectangle whose other corners are p2 and p4.
-    // We actually only need to check one of p2 and p4, since an affine
-    // transform maps parallelograms to parallelograms.
-    if (p2 == gfxPoint(p1.x, p3.y) || p2 == gfxPoint(p3.x, p1.y)) {
-        p1.Round();
-        p3.Round();
+  // Check that the rectangle is axis-aligned. For an axis-aligned rectangle,
+  // two opposite corners define the entire rectangle. So check if
+  // the axis-aligned rectangle with opposite corners p1 and p3
+  // define an axis-aligned rectangle whose other corners are p2 and p4.
+  // We actually only need to check one of p2 and p4, since an affine
+  // transform maps parallelograms to parallelograms.
+  if (p2 == gfxPoint(p1.x, p3.y) || p2 == gfxPoint(p3.x, p1.y)) {
+      p1.Round();
+      p3.Round();
 
-        rect.MoveTo(gfxPoint(NS_MIN(p1.x, p3.x), NS_MIN(p1.y, p3.y)));
-        rect.SizeTo(gfxSize(NS_MAX(p1.x, p3.x) - rect.X(),
-                            NS_MAX(p1.y, p3.y) - rect.Y()));
-        return true;
-    }
+      rect.MoveTo(gfxPoint(NS_MIN(p1.x, p3.x), NS_MIN(p1.y, p3.y)));
+      rect.SizeTo(gfxSize(NS_MAX(p1.x, p3.x) - rect.X(),
+                          NS_MAX(p1.y, p3.y) - rect.Y()));
+      return true;
+  }
 
-    return false;
+  return false;
 }
 
 bool
 gfxContext::UserToDevicePixelSnapped(gfxPoint& pt, bool ignoreScale) const
 {
-    if (GetFlags() & FLAG_DISABLE_SNAPPING)
-        return false;
+  if (GetFlags() & FLAG_DISABLE_SNAPPING)
+      return false;
 
-    // if we're not at 1.0 scale, don't snap, unless we're
-    // ignoring the scale.  If we're not -just- a scale,
-    // never snap.
+  // if we're not at 1.0 scale, don't snap, unless we're
+  // ignoring the scale.  If we're not -just- a scale,
+  // never snap.
+  const gfxFloat epsilon = 0.0000001;
+#define WITHIN_E(a,b) (fabs((a)-(b)) < epsilon)
+  if (mCairo) {
     cairo_matrix_t mat;
     cairo_get_matrix(mCairo, &mat);
-    if ((!ignoreScale && (mat.xx != 1.0 || mat.yy != 1.0)) ||
-        (mat.xy != 0.0 || mat.yx != 0.0))
+    if (!ignoreScale &&
+        (!WITHIN_E(mat.xx,1.0) || !WITHIN_E(mat.yy,1.0) ||
+          !WITHIN_E(mat.xy,0.0) || !WITHIN_E(mat.yx,0.0)))
         return false;
+  } else {
+    Matrix mat = mDT->GetTransform();
+    if (!ignoreScale &&
+        (!WITHIN_E(mat._11,1.0) || !WITHIN_E(mat._22,1.0) ||
+          !WITHIN_E(mat._12,0.0) || !WITHIN_E(mat._21,0.0)))
+        return false;
+  }
+#undef WITHIN_E
 
-    pt = UserToDevice(pt);
-    pt.Round();
-    return true;
+  pt = UserToDevice(pt);
+  pt.Round();
+  return true;
 }
 
 void
 gfxContext::PixelSnappedRectangleAndSetPattern(const gfxRect& rect,
                                                gfxPattern *pattern)
 {
-    gfxRect r(rect);
+  gfxRect r(rect);
 
-    // Bob attempts to pixel-snap the rectangle, and returns true if
-    // the snapping succeeds.  If it does, we need to set up an
-    // identity matrix, because the rectangle given back is in device
-    // coordinates.
-    //
-    // We then have to call a translate to dr.pos afterwards, to make
-    // sure the image lines up in the right place with our pixel
-    // snapped rectangle.
-    //
-    // If snapping wasn't successful, we just translate to where the
-    // pattern would normally start (in app coordinates) and do the
-    // same thing.
-
-    gfxMatrix mat = CurrentMatrix();
-    if (UserToDevicePixelSnapped(r)) {
-        IdentityMatrix();
-    }
-
-    Translate(r.TopLeft());
-    r.MoveTo(gfxPoint(0, 0));
-    Rectangle(r);
-    SetPattern(pattern);
-
-    SetMatrix(mat);
+  // Bob attempts to pixel-snap the rectangle, and returns true if
+  // the snapping succeeds.  If it does, we need to set up an
+  // identity matrix, because the rectangle given back is in device
+  // coordinates.
+  //
+  // We then have to call a translate to dr.pos afterwards, to make
+  // sure the image lines up in the right place with our pixel
+  // snapped rectangle.
+  //
+  // If snapping wasn't successful, we just translate to where the
+  // pattern would normally start (in app coordinates) and do the
+  // same thing.
+  Rectangle(r, true);
+  SetPattern(pattern);
 }
 
 void
 gfxContext::SetAntialiasMode(AntialiasMode mode)
 {
+  if (mCairo) {
     if (mode == MODE_ALIASED) {
         cairo_set_antialias(mCairo, CAIRO_ANTIALIAS_NONE);
     } else if (mode == MODE_COVERAGE) {
         cairo_set_antialias(mCairo, CAIRO_ANTIALIAS_DEFAULT);
     }
+  } else {
+    if (mode == MODE_ALIASED) {
+      CurrentState().aaMode = AA_NONE;
+    } else if (mode == MODE_COVERAGE) {
+      CurrentState().aaMode = AA_SUBPIXEL;
+    }
+  }
 }
 
 gfxContext::AntialiasMode
 gfxContext::CurrentAntialiasMode() const
 {
+  if (mCairo) {
     cairo_antialias_t aa = cairo_get_antialias(mCairo);
     if (aa == CAIRO_ANTIALIAS_NONE)
         return MODE_ALIASED;
     return MODE_COVERAGE;
+  } else {
+    if (CurrentState().aaMode == AA_NONE) {
+      return MODE_ALIASED;
+    }
+    return MODE_COVERAGE;
+  }
 }
 
 void
 gfxContext::SetDash(gfxLineType ltype)
 {
-    static double dash[] = {5.0, 5.0};
-    static double dot[] = {1.0, 1.0};
+  static double dash[] = {5.0, 5.0};
+  static double dot[] = {1.0, 1.0};
 
-    switch (ltype) {
-        case gfxLineDashed:
-            SetDash(dash, 2, 0.0);
-            break;
-        case gfxLineDotted:
-            SetDash(dot, 2, 0.0);
-            break;
-        case gfxLineSolid:
-        default:
-            SetDash(nsnull, 0, 0.0);
-            break;
-    }
+  switch (ltype) {
+      case gfxLineDashed:
+          SetDash(dash, 2, 0.0);
+          break;
+      case gfxLineDotted:
+          SetDash(dot, 2, 0.0);
+          break;
+      case gfxLineSolid:
+      default:
+          SetDash(nsnull, 0, 0.0);
+          break;
+  }
 }
 
 void
 gfxContext::SetDash(gfxFloat *dashes, int ndash, gfxFloat offset)
 {
+  if (mCairo) {
     cairo_set_dash(mCairo, dashes, ndash, offset);
+  } else {
+    AzureState &state = CurrentState();
+
+    state.dashPattern.SetLength(ndash);
+    for (int i = 0; i < ndash; i++) {
+      state.dashPattern[i] = Float(dashes[i]);
+    }
+    state.strokeOptions.mDashLength = ndash;
+    state.strokeOptions.mDashOffset = Float(offset);
+    state.strokeOptions.mDashPattern = ndash ? state.dashPattern.Elements() : NULL;
+  }
 }
 
 bool
 gfxContext::CurrentDash(FallibleTArray<gfxFloat>& dashes, gfxFloat* offset) const
 {
+  if (mCairo) {
     int count = cairo_get_dash_count(mCairo);
     if (count <= 0 || !dashes.SetLength(count)) {
         return false;
     }
     cairo_get_dash(mCairo, dashes.Elements(), offset);
     return true;
+  } else {
+    const AzureState &state = CurrentState();
+    int count = state.strokeOptions.mDashLength;
+
+    if (count <= 0 || !dashes.SetLength(count)) {
+      return false;
+    }
+
+    for (int i = 0; i < count; i++) {
+      dashes[i] = state.dashPattern[i];
+    }
+
+    *offset = state.strokeOptions.mDashOffset;
+
+    return true;
+  }
 }
 
 gfxFloat
 gfxContext::CurrentDashOffset() const
 {
+  if (mCairo) {
     if (cairo_get_dash_count(mCairo) <= 0) {
         return 0.0;
     }
     gfxFloat offset;
     cairo_get_dash(mCairo, NULL, &offset);
     return offset;
+  } else {
+    return CurrentState().strokeOptions.mDashOffset;
+  }
 }
 
 void
 gfxContext::SetLineWidth(gfxFloat width)
 {
+  if (mCairo) {
     cairo_set_line_width(mCairo, width);
+  } else {
+    CurrentState().strokeOptions.mLineWidth = Float(width);
+  }
 }
 
 gfxFloat
 gfxContext::CurrentLineWidth() const
 {
+  if (mCairo) {
     return cairo_get_line_width(mCairo);
+  } else {
+    return CurrentState().strokeOptions.mLineWidth;
+  }
 }
 
 void
 gfxContext::SetOperator(GraphicsOperator op)
 {
+  if (mCairo) {
     if (mFlags & FLAG_SIMPLIFY_OPERATORS) {
         if (op != OPERATOR_SOURCE &&
             op != OPERATOR_CLEAR &&
@@ -600,105 +1028,218 @@ gfxContext::SetOperator(GraphicsOperator op)
     }
 
     cairo_set_operator(mCairo, (cairo_operator_t)op);
+  } else {
+    if (op == OPERATOR_CLEAR) {
+      CurrentState().opIsClear = true;
+      return;
+    }
+    CurrentState().opIsClear = false;
+    CurrentState().op = CompositionOpForOp(op);
+  }
 }
 
 gfxContext::GraphicsOperator
 gfxContext::CurrentOperator() const
 {
+  if (mCairo) {
     return (GraphicsOperator)cairo_get_operator(mCairo);
+  } else {
+    return ThebesOp(CurrentState().op);
+  }
 }
 
 void
 gfxContext::SetLineCap(GraphicsLineCap cap)
 {
+  if (mCairo) {
     cairo_set_line_cap(mCairo, (cairo_line_cap_t)cap);
+  } else {
+    CurrentState().strokeOptions.mLineCap = ToCapStyle(cap);
+  }
 }
 
 gfxContext::GraphicsLineCap
 gfxContext::CurrentLineCap() const
 {
+  if (mCairo) {
     return (GraphicsLineCap)cairo_get_line_cap(mCairo);
+  } else {
+    return ThebesLineCap(CurrentState().strokeOptions.mLineCap);
+  }
 }
 
 void
 gfxContext::SetLineJoin(GraphicsLineJoin join)
 {
+  if (mCairo) {
     cairo_set_line_join(mCairo, (cairo_line_join_t)join);
+  } else {
+    CurrentState().strokeOptions.mLineJoin = ToJoinStyle(join);
+  }
 }
 
 gfxContext::GraphicsLineJoin
 gfxContext::CurrentLineJoin() const
 {
+  if (mCairo) {
     return (GraphicsLineJoin)cairo_get_line_join(mCairo);
+  } else {
+    return ThebesLineJoin(CurrentState().strokeOptions.mLineJoin);
+  }
 }
 
 void
 gfxContext::SetMiterLimit(gfxFloat limit)
 {
+  if (mCairo) {
     cairo_set_miter_limit(mCairo, limit);
+  } else {
+    CurrentState().strokeOptions.mMiterLimit = Float(limit);
+  }
 }
 
 gfxFloat
 gfxContext::CurrentMiterLimit() const
 {
+  if (mCairo) {
     return cairo_get_miter_limit(mCairo);
+  } else {
+    return CurrentState().strokeOptions.mMiterLimit;
+  }
 }
 
 void
 gfxContext::SetFillRule(FillRule rule)
 {
+  if (mCairo) {
     cairo_set_fill_rule(mCairo, (cairo_fill_rule_t)rule);
+  } else {
+    CurrentState().fillRule = rule == FILL_RULE_WINDING ? FILL_WINDING : FILL_EVEN_ODD;
+  }
 }
 
 gfxContext::FillRule
 gfxContext::CurrentFillRule() const
 {
+  if (mCairo) {
     return (FillRule)cairo_get_fill_rule(mCairo);
+  } else {
+    return FILL_RULE_WINDING;
+  }
 }
 
 // clipping
 void
 gfxContext::Clip(const gfxRect& rect)
 {
+  if (mCairo) {
     cairo_new_path(mCairo);
     cairo_rectangle(mCairo, rect.X(), rect.Y(), rect.Width(), rect.Height());
     cairo_clip(mCairo);
+  } else {
+    AzureState::PushedClip clip = { NULL, ToRect(rect), mDT->GetTransform() };
+    CurrentState().pushedClips.AppendElement(clip);
+    mDT->PushClipRect(ToRect(rect));
+    NewPath();
+  }
 }
 
 void
 gfxContext::Clip()
 {
+  if (mCairo) {
     cairo_clip_preserve(mCairo);
+  } else {
+    if (mPathIsRect && !mTransformChanged) {
+      AzureState::PushedClip clip = { NULL, mRect, mDT->GetTransform() };
+      CurrentState().pushedClips.AppendElement(clip);
+      mDT->PushClipRect(mRect);
+    } else {
+      EnsurePath();
+      mDT->PushClip(mPath);
+      AzureState::PushedClip clip = { mPath, Rect(), mDT->GetTransform() };
+      CurrentState().pushedClips.AppendElement(clip);
+    }
+  }
 }
 
 void
 gfxContext::ResetClip()
 {
+  if (mCairo) {
     cairo_reset_clip(mCairo);
+  } else {
+    for (int i = mStateStack.Length() - 1; i >= 0; i--) {
+      for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+        mDT->PopClip();
+      }
+
+      if (mStateStack[i].clipWasReset) {
+        break;
+      }
+    }
+    CurrentState().pushedClips.Clear();
+    CurrentState().clipWasReset = true;
+  }
 }
 
 void
 gfxContext::UpdateSurfaceClip()
 {
+  if (mCairo) {
     NewPath();
     // we paint an empty rectangle to ensure the clip is propagated to
     // the destination surface
     SetDeviceColor(gfxRGBA(0,0,0,0));
     Rectangle(gfxRect(0,1,1,0));
     Fill();
+  }
 }
 
 gfxRect
 gfxContext::GetClipExtents()
 {
+  if (mCairo) {
     double xmin, ymin, xmax, ymax;
     cairo_clip_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
+  } else {
+    unsigned int lastReset = 0;
+    for (int i = mStateStack.Length() - 1; i > 0; i--) {
+      if (mStateStack[i].clipWasReset) {
+        lastReset = i;
+      }
+    }
+
+    Rect rect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
+    for (unsigned int i = lastReset; i < mStateStack.Length(); i++) {
+      for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+        AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
+        if (clip.path) {
+          Rect bounds = clip.path->GetBounds(clip.transform);
+          rect.IntersectRect(rect, bounds);
+        } else {
+          rect.IntersectRect(rect, clip.transform.TransformBounds(clip.rect));
+        }
+      }
+    }
+
+    if (rect.width == 0 || rect.height == 0) {
+      return gfxRect(0, 0, 0, 0);
+    }
+
+    Matrix mat = mDT->GetTransform();
+    mat.Invert();
+    rect = mat.TransformBounds(rect);
+
+    return ThebesRect(rect);
+  }
 }
 
 bool
 gfxContext::ClipContainsRect(const gfxRect& aRect)
 {
+  if (mCairo) {
     cairo_rectangle_list_t *clip =
         cairo_copy_clip_rectangle_list(mCairo);
 
@@ -715,8 +1256,40 @@ gfxContext::ClipContainsRect(const gfxRect& aRect)
         }
     }
 
-   cairo_rectangle_list_destroy(clip);
-   return result;
+    cairo_rectangle_list_destroy(clip);
+    return result;
+  } else {
+    unsigned int lastReset = 0;
+    for (int i = mStateStack.Length() - 2; i > 0; i--) {
+      if (mStateStack[i].clipWasReset) {
+        lastReset = i;
+      }
+    }
+
+    bool result = true;
+
+    // Since we always return false when the clip list contains a
+    // non-rectangular clip or a non-rectilinear transform, our 'total' clip
+    // is always a rectangle if we hit the end of this function.
+    Rect clipBounds(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
+
+    for (unsigned int i = lastReset; i < mStateStack.Length(); i++) {
+      for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+        AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
+        if (clip.path || !clip.transform.IsRectilinear()) {
+          // Cairo behavior is we return false if the clip contains a non-
+          // rectangle.
+          return false;
+        } else {
+          Rect clipRect = mTransform.TransformBounds(clip.rect);
+
+          clipBounds.IntersectRect(clipBounds, clipRect);
+        }
+      }
+    }
+
+    return clipBounds.Contains(ToRect(aRect));
+  }
 }
 
 // rendering sources
@@ -724,6 +1297,7 @@ gfxContext::ClipContainsRect(const gfxRect& aRect)
 void
 gfxContext::SetColor(const gfxRGBA& c)
 {
+  if (mCairo) {
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
 
         gfxRGBA cms;
@@ -735,40 +1309,88 @@ gfxContext::SetColor(const gfxRGBA& c)
     }
     else
         cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
+  } else {
+    CurrentState().pattern = NULL;
+    CurrentState().sourceSurface = NULL;
+
+    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+
+        gfxRGBA cms;
+        gfxPlatform::TransformPixel(c, cms, gfxPlatform::GetCMSRGBTransform());
+
+        // Use the original alpha to avoid unnecessary float->byte->float
+        // conversion errors
+        CurrentState().color = ToColor(cms);
+    }
+    else
+        CurrentState().color = ToColor(c);
+  }
 }
 
 void
 gfxContext::SetDeviceColor(const gfxRGBA& c)
 {
+  if (mCairo) {
     cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
+  } else {
+    CurrentState().pattern = NULL;
+    CurrentState().sourceSurface = NULL;
+    CurrentState().color = ToColor(c);
+  }
 }
 
 bool
 gfxContext::GetDeviceColor(gfxRGBA& c)
 {
+  if (mCairo) {
     return cairo_pattern_get_rgba(cairo_get_source(mCairo),
                                   &c.r,
                                   &c.g,
                                   &c.b,
                                   &c.a) == CAIRO_STATUS_SUCCESS;
+  } else {
+    if (CurrentState().sourceSurface) {
+      return false;
+    }
+    if (CurrentState().pattern) {
+      gfxRGBA color;
+      return CurrentState().pattern->GetSolidColor(c);
+    }
+
+    c = ThebesRGBA(CurrentState().color);
+    return true;
+  }
 }
 
 void
 gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
 {
+  if (mCairo) {
     NS_ASSERTION(surface->GetAllowUseAsSource(), "Surface not allowed to be used as source!");
     cairo_set_source_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
+  } else {
+    CurrentState().surfTransform = Matrix(1.0f, 0, 0, 1.0f, Float(offset.x), Float(offset.y));
+    CurrentState().pattern = NULL;
+    CurrentState().sourceSurface =
+      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
+  }
 }
 
 void
 gfxContext::SetPattern(gfxPattern *pattern)
 {
+  if (mCairo) {
     cairo_set_source(mCairo, pattern->CairoPattern());
+  } else {
+    CurrentState().sourceSurface = NULL;
+    CurrentState().pattern = pattern;
+  }
 }
 
 already_AddRefed<gfxPattern>
 gfxContext::GetPattern()
 {
+  if (mCairo) {
     cairo_pattern_t *pat = cairo_get_source(mCairo);
     NS_ASSERTION(pat, "I was told this couldn't be null");
 
@@ -780,6 +1402,19 @@ gfxContext::GetPattern()
 
     NS_IF_ADDREF(wrapper);
     return wrapper;
+  } else {
+    nsRefPtr<gfxPattern> pat;
+    
+    AzureState &state = CurrentState();
+    if (state.pattern) {
+      pat = state.pattern;
+    } else if (state.sourceSurface) {
+      NS_ASSERTION(false, "Ugh, this isn't good.");
+    } else {
+      pat = new gfxPattern(ThebesRGBA(state.color));
+    }
+    return pat.forget();
+  }
 }
 
 
@@ -788,19 +1423,49 @@ gfxContext::GetPattern()
 void
 gfxContext::Mask(gfxPattern *pattern)
 {
+  if (mCairo) {
     cairo_mask(mCairo, pattern->CairoPattern());
+  } else {
+    mDT->Mask(GeneralPattern(this), *pattern->GetPattern(mDT), DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+  }
 }
 
 void
 gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
 {
+  if (mCairo) {
     cairo_mask_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
+  } else {
+    RefPtr<SourceSurface> sourceSurf =
+      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
+
+    gfxPoint pt = surface->GetDeviceOffset();
+    mDT->Mask(GeneralPattern(this), 
+              SurfacePattern(sourceSurf, EXTEND_CLAMP,
+                             Matrix(1.0f, 0, 0, 1.0f, Float(offset.x - pt.x), Float(offset.y - pt.y))),
+                             DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+  }
 }
 
 void
 gfxContext::Paint(gfxFloat alpha)
 {
+  if (mCairo) {
     cairo_paint_with_alpha(mCairo, alpha);
+  } else {
+    AzureState &state = CurrentState();
+
+    Matrix mat = mDT->GetTransform();
+    mat.Invert();
+    Rect paintRect = mat.TransformBounds(Rect(Point(0, 0), Size(mDT->GetSize())));
+
+    if (state.opIsClear) {
+      mDT->ClearRect(paintRect);
+    } else {
+      mDT->FillRect(paintRect, GeneralPattern(this),
+                    DrawOptions(Float(alpha), GetOp()));
+    }
+  }
 }
 
 // groups
@@ -808,17 +1473,30 @@ gfxContext::Paint(gfxFloat alpha)
 void
 gfxContext::PushGroup(gfxASurface::gfxContentType content)
 {
+  if (mCairo) {
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
+  } else {
+    RefPtr<DrawTarget> newDT =
+      mDT->CreateSimilarDrawTarget(mDT->GetSize(), FormatForContent(content));
+
+    Save();
+
+    CurrentState().drawTarget = newDT;
+
+    PushClipsToDT(newDT);
+    newDT->SetTransform(mDT->GetTransform());
+    mDT = newDT;
+  }
 }
 
 static gfxRect
 GetRoundOutDeviceClipExtents(gfxContext* aCtx)
 {
-    gfxContextMatrixAutoSaveRestore save(aCtx);
-    aCtx->IdentityMatrix();
-    gfxRect r = aCtx->GetClipExtents();
-    r.RoundOut();
-    return r;
+  gfxContextMatrixAutoSaveRestore save(aCtx);
+  aCtx->IdentityMatrix();
+  gfxRect r = aCtx->GetClipExtents();
+  r.RoundOut();
+  return r;
 }
 
 /**
@@ -837,6 +1515,7 @@ CopySurface(gfxASurface* aSrc, gfxASurface* aDest, const gfxPoint& aTranslation)
 void
 gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
 {
+  if (mCairo) {
     if (content == gfxASurface::CONTENT_COLOR_ALPHA &&
         !(GetFlags() & FLAG_DISABLE_COPY_BACKGROUND)) {
         nsRefPtr<gfxASurface> s = CurrentSurface();
@@ -865,73 +1544,133 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
         }
     }
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
+  } else {
+    RefPtr<SourceSurface> source = mDT->Snapshot();
+    PushGroup(content);
+    Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
+    mDT->DrawSurface(source, surfRect, surfRect); 
+  }
 }
 
 already_AddRefed<gfxPattern>
 gfxContext::PopGroup()
 {
+  if (mCairo) {
     cairo_pattern_t *pat = cairo_pop_group(mCairo);
     gfxPattern *wrapper = new gfxPattern(pat);
     cairo_pattern_destroy(pat);
     NS_IF_ADDREF(wrapper);
     return wrapper;
+  } else {
+    RefPtr<SourceSurface> src = mDT->Snapshot();
+
+    Restore();
+
+    Matrix mat = mDT->GetTransform();
+    mat.Invert();
+    nsRefPtr<gfxPattern> pat = new gfxPattern(src, mat);
+
+    return pat.forget();
+  }
 }
 
 void
 gfxContext::PopGroupToSource()
 {
+  if (mCairo) {
     cairo_pop_group_to_source(mCairo);
+  } else {
+    RefPtr<SourceSurface> src = mDT->Snapshot();
+    Restore();
+    CurrentState().sourceSurface = src;
+    CurrentState().pattern = NULL;
+
+    Matrix mat = mDT->GetTransform();
+    mat.Invert();
+    CurrentState().surfTransform = mat;
+  }
 }
 
 bool
 gfxContext::PointInFill(const gfxPoint& pt)
 {
+  if (mCairo) {
     return cairo_in_fill(mCairo, pt.x, pt.y);
+  } else {
+    return mPath->ContainsPoint(ToPoint(pt), mTransform);
+  }
 }
 
 bool
 gfxContext::PointInStroke(const gfxPoint& pt)
 {
+  if (mCairo) {
     return cairo_in_stroke(mCairo, pt.x, pt.y);
+  } else {
+    // XXX - Used by SVG, needs fixing.
+    return PR_FALSE;
+  }
 }
 
 gfxRect
 gfxContext::GetUserPathExtent()
 {
+  if (mCairo) {
     double xmin, ymin, xmax, ymax;
     cairo_path_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
+  } else {
+    return ThebesRect(mPath->GetBounds());
+  }
 }
 
 gfxRect
 gfxContext::GetUserFillExtent()
 {
+  if (mCairo) {
     double xmin, ymin, xmax, ymax;
     cairo_fill_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
+  } else {
+    return ThebesRect(mPath->GetBounds());
+  }
 }
 
 gfxRect
 gfxContext::GetUserStrokeExtent()
 {
+  if (mCairo) {
     double xmin, ymin, xmax, ymax;
     cairo_stroke_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
+  } else {
+    return ThebesRect(mPath->GetStrokedBounds(CurrentState().strokeOptions, mTransform));
+  }
 }
 
 already_AddRefed<gfxFlattenedPath>
 gfxContext::GetFlattenedPath()
 {
+  if (mCairo) {
     gfxFlattenedPath *path =
         new gfxFlattenedPath(cairo_copy_path_flat(mCairo));
     NS_IF_ADDREF(path);
     return path;
+  } else {
+    // XXX - Used by SVG, needs fixing.
+    return NULL;
+  }
 }
 
 bool
 gfxContext::HasError()
 {
-     return cairo_status(mCairo) != CAIRO_STATUS_SUCCESS;
+  if (mCairo) {
+    return cairo_status(mCairo) != CAIRO_STATUS_SUCCESS;
+  } else {
+    // As far as this is concerned, an Azure context is never in error.
+    return PR_FALSE;
+  }
 }
 
 void
@@ -1008,6 +1747,8 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
     // For the various corners and for each axis, the sign of this
     // constant changes, or it might be 0 -- it's multiplied by the
     // appropriate multiplier from the list before using.
+
+  if (mCairo) {
     const gfxFloat alpha = 0.55191497064665766025;
 
     typedef struct { gfxFloat a, b; } twoFloats;
@@ -1066,6 +1807,65 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
     }
 
     cairo_close_path (mCairo);
+  } else {
+    EnsurePathBuilder();
+
+    const gfxFloat alpha = 0.55191497064665766025;
+
+    typedef struct { gfxFloat a, b; } twoFloats;
+
+    twoFloats cwCornerMults[4] = { { -1,  0 },
+                                   {  0, -1 },
+                                   { +1,  0 },
+                                   {  0, +1 } };
+    twoFloats ccwCornerMults[4] = { { +1,  0 },
+                                    {  0, -1 },
+                                    { -1,  0 },
+                                    {  0, +1 } };
+
+    twoFloats *cornerMults = draw_clockwise ? cwCornerMults : ccwCornerMults;
+
+    gfxPoint pc, p0, p1, p2, p3;
+
+    if (draw_clockwise)
+        mPathBuilder->MoveTo(Point(Float(rect.X() + corners[NS_CORNER_TOP_LEFT].width), Float(rect.Y())));
+    else
+        mPathBuilder->MoveTo(Point(Float(rect.X() + rect.Width() - corners[NS_CORNER_TOP_RIGHT].width), Float(rect.Y())));
+
+    NS_FOR_CSS_CORNERS(i) {
+        // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)
+        mozilla::css::Corner c = mozilla::css::Corner(draw_clockwise ? ((i+1) % 4) : ((4-i) % 4));
+
+        // i+2 and i+3 respectively.  These are used to index into the corner
+        // multiplier table, and were deduced by calculating out the long form
+        // of each corner and finding a pattern in the signs and values.
+        int i2 = (i+2) % 4;
+        int i3 = (i+3) % 4;
+
+        pc = rect.AtCorner(c);
+
+        if (corners[c].width > 0.0 && corners[c].height > 0.0) {
+            p0.x = pc.x + cornerMults[i].a * corners[c].width;
+            p0.y = pc.y + cornerMults[i].b * corners[c].height;
+
+            p3.x = pc.x + cornerMults[i3].a * corners[c].width;
+            p3.y = pc.y + cornerMults[i3].b * corners[c].height;
+
+            p1.x = p0.x + alpha * cornerMults[i2].a * corners[c].width;
+            p1.y = p0.y + alpha * cornerMults[i2].b * corners[c].height;
+
+            p2.x = p3.x - alpha * cornerMults[i3].a * corners[c].width;
+            p2.y = p3.y - alpha * cornerMults[i3].b * corners[c].height;
+
+            mPathBuilder->LineTo(ToPoint(p0));
+            mPathBuilder->BezierTo(ToPoint(p1), ToPoint(p2), ToPoint(p3));
+        } else {
+            mPathBuilder->LineTo(ToPoint(pc));
+        }
+    }
+
+    mPathBuilder->Close();
+  }
 }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -1102,3 +1902,158 @@ gfxContext::CopyAsDataURL()
   }
 }
 #endif
+
+void
+gfxContext::EnsurePath()
+{
+  if (mPathBuilder) {
+    mPath = mPathBuilder->Finish();
+    mPathBuilder = NULL;
+  }
+
+  if (mPath) {
+    if (mTransformChanged) {
+      Matrix mat = mDT->GetTransform();
+      mat.Invert();
+      mat = mPathTransform * mat;
+      mPathBuilder = mPath->TransformedCopyToBuilder(mat, CurrentState().fillRule);
+      mPath = mPathBuilder->Finish();
+      mPathBuilder = NULL;
+
+      mTransformChanged = false;
+    }
+
+    if (CurrentState().fillRule == mPath->GetFillRule()) {
+      return;
+    }
+
+    mPathBuilder = mPath->CopyToBuilder(CurrentState().fillRule);
+
+    mPath = mPathBuilder->Finish();
+    mPathBuilder = NULL;
+    return;
+  }
+
+  EnsurePathBuilder();
+  mPath = mPathBuilder->Finish();
+  mPathBuilder = NULL;
+}
+
+void
+gfxContext::EnsurePathBuilder()
+{
+  if (mPathBuilder) {
+    return;
+  }
+
+  if (mPath) {
+    mPathBuilder = mPath->CopyToBuilder(CurrentState().fillRule);
+    mPath = NULL;
+  }
+
+  mPathBuilder = mDT->CreatePathBuilder(CurrentState().fillRule);
+
+  if (mPathIsRect && !mTransformChanged) {
+    mPathBuilder->MoveTo(mRect.TopLeft());
+    mPathBuilder->LineTo(mRect.TopRight());
+    mPathBuilder->LineTo(mRect.BottomRight());
+    mPathBuilder->LineTo(mRect.BottomLeft());
+    mPathBuilder->Close();
+  } else if (mPathIsRect) {
+    mTransformChanged = false;
+    Matrix mat = mDT->GetTransform();
+    mat.Invert();
+    mat = mPathTransform * mat;
+    mPathBuilder->MoveTo(mat * mRect.TopLeft());
+    mPathBuilder->LineTo(mat * mRect.TopRight());
+    mPathBuilder->LineTo(mat * mRect.BottomRight());
+    mPathBuilder->LineTo(mat * mRect.BottomLeft());
+    mPathBuilder->Close();
+  }
+
+  mPathIsRect = false;
+}
+
+void
+gfxContext::FillAzure(Float aOpacity)
+{
+  AzureState &state = CurrentState();
+
+  CompositionOp op = GetOp();
+
+  if (mPathIsRect && !mTransformChanged) {
+    if (state.opIsClear) {
+      mDT->ClearRect(mRect);
+    } else if (op == OP_SOURCE) {
+      // Emulate cairo operator source which is bound by mask!
+      mDT->ClearRect(mRect);
+      mDT->FillRect(mRect, GeneralPattern(this), DrawOptions(aOpacity));
+    } else {
+      mDT->FillRect(mRect, GeneralPattern(this), DrawOptions(aOpacity, op, state.aaMode));
+    }
+  } else {
+    EnsurePath();
+
+    NS_ASSERTION(!state.opIsClear, "We shouldn't be clearing complex paths!");
+
+    mDT->Fill(mPath, GeneralPattern(this), DrawOptions(aOpacity, op, state.aaMode));
+  }
+}
+
+void
+gfxContext::PushClipsToDT(DrawTarget *aDT)
+{
+  // Tricky, we have to restore all clips -since the last time- the clip
+  // was reset. If we didn't reset the clip, just popping the clips we
+  // added was fine.
+  unsigned int lastReset = 0;
+  for (int i = mStateStack.Length() - 2; i > 0; i--) {
+    if (mStateStack[i].clipWasReset) {
+      lastReset = i;
+    }
+  }
+
+  // Don't need to save the old transform, we'll be setting a new one soon!
+
+  // Push all clips from the last state on the stack where the clip was
+  // reset to the clip before ours.
+  for (unsigned int i = lastReset; i < mStateStack.Length() - 1; i++) {
+    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+      aDT->SetTransform(mStateStack[i].pushedClips[c].transform);
+      if (mStateStack[i].pushedClips[c].path) {
+        aDT->PushClip(mStateStack[i].pushedClips[c].path);
+      } else {
+        aDT->PushClipRect(mStateStack[i].pushedClips[c].rect);
+      }
+    }
+  }
+}
+
+CompositionOp
+gfxContext::GetOp()
+{
+  if (CurrentState().op != OP_SOURCE) {
+    return CurrentState().op;
+  }
+
+  AzureState &state = CurrentState();
+  if (state.pattern) {
+    if (state.pattern->IsOpaque()) {
+      return OP_OVER;
+    } else {
+      return OP_SOURCE;
+    }
+  } else if (state.sourceSurface) {
+    if (state.sourceSurface->GetFormat() == FORMAT_B8G8R8X8) {
+      return OP_OVER;
+    } else {
+      return OP_SOURCE;
+    }
+  } else {
+    if (state.color.a > 0.999) {
+      return OP_OVER;
+    } else {
+      return OP_SOURCE;
+    }
+  }
+}

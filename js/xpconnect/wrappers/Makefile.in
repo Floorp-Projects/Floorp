@@ -56,4 +56,8 @@ CPPSRCS		= AccessCheck.cpp \
 LOCAL_INCLUDES = \
                 -I$(srcdir)/../src \
 
+DEFINES += \
+  -DNO_NSPR_10_SUPPORT \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk

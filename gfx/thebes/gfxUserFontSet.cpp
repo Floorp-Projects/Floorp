@@ -74,7 +74,8 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
              PRUint32 aLanguageOverride,
              gfxSparseBitSet *aUnicodeRanges)
     : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily),
-      mLoadingState(NOT_LOADING)
+      mLoadingState(NOT_LOADING),
+      mUnsupportedFormat(false)
 {
     mIsProxy = true;
     mSrcList = aFontFaceSrcList;
@@ -605,6 +606,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
 
     if (aProxyEntry->mLoadingState == gfxProxyFontEntry::NOT_LOADING) {
         aProxyEntry->mLoadingState = gfxProxyFontEntry::LOADING_STARTED;
+        aProxyEntry->mUnsupportedFormat = false;
     } else {
         // we were already loading; move to the next source,
         // but don't reset state - if we've already timed out,
@@ -664,12 +666,18 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                                nsIScriptError::errorFlag, rv);
                 }
             } else {
-                LogMessage(aProxyEntry, "format not supported",
-                           nsIScriptError::warningFlag);
+                // We don't log a warning to the web console yet,
+                // as another source may load successfully
+                aProxyEntry->mUnsupportedFormat = true;
             }
         }
 
         aProxyEntry->mSrcIndex++;
+    }
+
+    if (aProxyEntry->mUnsupportedFormat) {
+        LogMessage(aProxyEntry, "no supported format found",
+                   nsIScriptError::warningFlag);
     }
 
     // all src's failed; mark this entry as unusable (so fallback will occur)

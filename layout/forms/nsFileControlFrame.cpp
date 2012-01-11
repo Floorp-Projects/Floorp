@@ -84,7 +84,6 @@
 #include "nsIVariant.h"
 #include "mozilla/Services.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsHTMLInputElement.h"
 #include "nsICapturePicker.h"
 #include "nsIFileURL.h"
@@ -759,8 +758,7 @@ nsFileControlFrame::ParseAcceptAttribute(AcceptAttrCallback aCallback,
   nsAutoString accept;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept);
 
-  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
-    tokenizer(accept, ',');
+  HTMLSplitOnSpacesTokenizer tokenizer(accept, ',');
   // Empty loop body because aCallback is doing the work
   while (tokenizer.hasMoreTokens() &&
          (*aCallback)(tokenizer.nextToken(), aClosure));

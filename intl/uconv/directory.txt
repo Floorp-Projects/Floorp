@@ -17,7 +17,7 @@ ucvibm   - IBM charsets - CP850, 852, 855, 857, 862, 864, 869, 1125, 1131
 ucvja    - Japanese charsets - Shift-JIS, ISO-2022-JP, EUC-JP
 ucvko    - Korean charsets - ISO-2022-KR, EUC-KR, CP949
 ucvlatin - Latin charsets and others - ISO-8859-x, CP1250-1258
-                            CP866, 874, GEOSTD8, ARMSCII, ISO-IR-111, KOI8,
+                            CP866, 874, ARMSCII, ISO-IR-111, KOI8,
                             Mac charsets, T61, TIS620, TCVN, VISCII, VPS
                             UTF7, UTF16
 ucvtw    - Traditional Chinese charsets Set 1 - Big5

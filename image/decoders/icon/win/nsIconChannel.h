@@ -40,6 +40,8 @@
 #ifndef nsIconChannel_h___
 #define nsIconChannel_h___
 
+#include "mozilla/Attributes.h"
+
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIChannel.h"
@@ -55,7 +57,7 @@
 
 class nsIFile;
 
-class nsIconChannel : public nsIChannel, public nsIStreamListener
+class nsIconChannel MOZ_FINAL : public nsIChannel, public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS

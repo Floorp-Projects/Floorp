@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 ci et: */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -15,13 +15,25 @@
  *
  * The Original Code is Mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * 
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Justin Lebar <justin.lebar@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -34,10 +46,13 @@
 #include "prinrval.h"
 #include "pratom.h"
 #include "prenv.h"
+#include "nsIMemoryReporter.h"
+#include "nsPrintfCString.h"
 #include <windows.h>
 
-namespace mozilla {
-namespace AvailableMemoryTracker {
+using namespace mozilla;
+
+namespace {
 
 // We don't want our diagnostic functions to call malloc, because that could
 // call VirtualAlloc, and we'd end up back in here!  So here are a few simple
@@ -129,8 +144,14 @@ PRUint32 sLowVirtualMemoryThreshold = 0;
 PRUint32 sLowPhysicalMemoryThreshold = 0;
 PRUint32 sLowPhysicalMemoryNotificationIntervalMS = 0;
 
+PRUint32 sNumLowVirtualMemEvents = 0;
+PRUint32 sNumLowPhysicalMemEvents = 0;
+
 WindowsDllInterceptor sKernel32Intercept;
 WindowsDllInterceptor sGdi32Intercept;
+
+// Have we installed the kernel intercepts above?
+bool sHooksInstalled = false;
 
 // Alas, we'd like to use mozilla::TimeStamp, but we can't, because it acquires
 // a lock!
@@ -168,6 +189,7 @@ void CheckMemAvailable()
       // We'll probably crash if we run out of virtual memory, so don't worry
       // about firing this notification too often.
       LOG("Detected low virtual memory.");
+      PR_ATOMIC_INCREMENT(&sNumLowVirtualMemEvents);
       ScheduleMemoryPressureEvent();
     }
     else if (stat.ullAvailPhys < sLowPhysicalMemoryThreshold * 1024 * 1024) {
@@ -193,6 +215,7 @@ void CheckMemAvailable()
         sLastLowMemoryNotificationTime = PR_IntervalNow();
 
         LOG("Scheduling memory pressure notification.");
+        PR_ATOMIC_INCREMENT(&sNumLowPhysicalMemEvents);
         ScheduleMemoryPressureEvent();
       }
       else {
@@ -280,8 +303,8 @@ CreateDIBSectionHook(HDC aDC,
     if (size < 0)
       size *= -1;
 
-    // If we're allocating more than 1MB, check how much virtual memory is left
-    // after the allocation.
+    // If we're allocating more than 1MB, check how much memory is left after
+    // the allocation.
     if (size > 1024 * 1024 * 8) {
       LOG3("CreateDIBSectionHook: Large allocation (size=", size, ")");
       doCheck = PR_TRUE;
@@ -297,6 +320,123 @@ CreateDIBSectionHook(HDC aDC,
 
   return result;
 }
+
+class NumLowMemoryEventsReporter : public nsIMemoryReporter
+{
+  NS_IMETHOD GetProcess(nsACString &aProcess)
+  {
+    aProcess.Truncate();
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetKind(int *aKind)
+  {
+    *aKind = KIND_OTHER;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetUnits(int *aUnits)
+  {
+    *aUnits = UNITS_COUNT_CUMULATIVE;
+    return NS_OK;
+  }
+};
+
+class NumLowVirtualMemoryEventsMemoryReporter : public NumLowMemoryEventsReporter
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetPath(nsACString &aPath)
+  {
+    aPath.AssignLiteral("low-memory-events-virtual");
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetAmount(PRInt64 *aAmount)
+  {
+    // This memory reporter shouldn't be installed on 64-bit machines, since we
+    // force-disable virtual-memory tracking there.
+    MOZ_ASSERT(sizeof(void*) == 4);
+
+    *aAmount = sNumLowVirtualMemEvents;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetDescription(nsACString &aDescription)
+  {
+    aDescription.AssignLiteral(
+      "Number of low-virtual-memory events fired since startup. ");
+
+    if (sLowVirtualMemoryThreshold == 0 || !sHooksInstalled) {
+      aDescription.Append(nsPrintfCString(1024,
+        "Tracking low-virtual-memory events is disabled, but you can enable it "
+        "by giving the memory.low_virtual_mem_threshold_mb pref a non-zero "
+        "value%s.",
+        sHooksInstalled ? "" : " and restarting"));
+    }
+    else {
+      aDescription.Append(nsPrintfCString(1024,
+        "We fire such an event if we notice there is less than %d MB of virtual "
+        "address space available (controlled by the "
+        "'memory.low_virtual_mem_threshold_mb' pref).  We'll likely crash if "
+        "we run out of virtual address space, so this event is somewhat dire.",
+        sLowVirtualMemoryThreshold));
+    }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(NumLowVirtualMemoryEventsMemoryReporter, nsIMemoryReporter)
+
+class NumLowPhysicalMemoryEventsMemoryReporter : public NumLowMemoryEventsReporter
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetPath(nsACString &aPath)
+  {
+    aPath.AssignLiteral("low-memory-events-physical");
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetAmount(PRInt64 *aAmount)
+  {
+    *aAmount = sNumLowPhysicalMemEvents;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetDescription(nsACString &aDescription)
+  {
+    aDescription.AssignLiteral(
+      "Number of low-physical-memory events fired since startup. ");
+
+    if (sLowPhysicalMemoryThreshold == 0 || !sHooksInstalled) {
+      aDescription.Append(nsPrintfCString(1024,
+        "Tracking low-physical-memory events is disabled, but you can enable it "
+        "by giving the memory.low_physical_mem_threshold_mb pref a non-zero "
+        "value%s.",
+        sHooksInstalled ? "" : " and restarting"));
+    }
+    else {
+      aDescription.Append(nsPrintfCString(1024,
+        "We fire such an event if we notice there is less than %d MB of "
+        "available physical memory (controlled by the "
+        "'memory.low_physical_mem_threshold_mb' pref).  The machine will start "
+        "to page if it runs out of physical memory; this may cause it to run "
+        "slowly, but it shouldn't cause us to crash.",
+        sLowPhysicalMemoryThreshold));
+    }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(NumLowPhysicalMemoryEventsMemoryReporter, nsIMemoryReporter)
+
+} // anonymous namespace
+
+namespace mozilla {
+namespace AvailableMemoryTracker {
 
 void Init()
 {
@@ -322,6 +462,7 @@ void Init()
 
   if (!PR_GetEnv("MOZ_PGO_INSTRUMENTED") &&
       (sLowVirtualMemoryThreshold != 0 || sLowPhysicalMemoryThreshold != 0)) {
+    sHooksInstalled = true;
     sKernel32Intercept.Init("Kernel32.dll");
     sKernel32Intercept.AddHook("VirtualAlloc",
       reinterpret_cast<intptr_t>(VirtualAllocHook),
@@ -334,6 +475,14 @@ void Init()
     sGdi32Intercept.AddHook("CreateDIBSection",
       reinterpret_cast<intptr_t>(CreateDIBSectionHook),
       (void**) &sCreateDIBSectionOrig);
+  }
+  else {
+    sHooksInstalled = false;
+  }
+
+  NS_RegisterMemoryReporter(new NumLowPhysicalMemoryEventsMemoryReporter());
+  if (sizeof(void*) == 4) {
+    NS_RegisterMemoryReporter(new NumLowVirtualMemoryEventsMemoryReporter());
   }
 }
 

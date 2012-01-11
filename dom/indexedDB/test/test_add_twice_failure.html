@@ -9,40 +9,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript;version=1.7">
-    function testSteps()
-    {
-      const name = window.location.pathname;
-      const description = "My Test Database";
-
-      let request = mozIndexedDB.open(name, 1, description);
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
-      let event = yield;
-
-      let db = request.result;
-
-      ok(event.target === request, "Good event target");
-
-      let objectStore = db.createObjectStore("foo", { keyPath: null });
-      let key = 10;
-
-      request = objectStore.add({}, key);
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
-      is(request.result, key, "Correct key");
-
-      request = objectStore.add({}, key);
-      request.onerror = new ExpectError(IDBDatabaseException.CONSTRAINT_ERR);
-      request.onsuccess = unexpectedSuccessHandler;
-      yield;
-
-      finishTest();
-      yield;
-    }
-  </script>
+  <script type="text/javascript;version=1.7" src="unit/test_add_twice_failure.js"></script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
 </head>

@@ -550,7 +550,7 @@ typedef JSObject * (JS_FASTCALL *JSObjStubUInt32)(VMFrame &, uint32_t);
 typedef JSObject * (JS_FASTCALL *JSObjStubFun)(VMFrame &, JSFunction *);
 typedef void (JS_FASTCALL *VoidStubFun)(VMFrame &, JSFunction *);
 typedef JSObject * (JS_FASTCALL *JSObjStubJSObj)(VMFrame &, JSObject *);
-typedef void (JS_FASTCALL *VoidStubAtom)(VMFrame &, JSAtom *);
+typedef void (JS_FASTCALL *VoidStubName)(VMFrame &, PropertyName *);
 typedef JSString * (JS_FASTCALL *JSStrStub)(VMFrame &);
 typedef JSString * (JS_FASTCALL *JSStrStubUInt32)(VMFrame &, uint32_t);
 typedef void (JS_FASTCALL *VoidStubJSObj)(VMFrame &, JSObject *);

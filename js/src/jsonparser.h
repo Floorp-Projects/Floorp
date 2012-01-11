@@ -41,6 +41,7 @@
 #ifndef jsonparser_h___
 #define jsonparser_h___
 
+#include "mozilla/Attributes.h"
 #include "mozilla/RangedPtr.h"
 
 #include "jscntxt.h"
@@ -51,6 +52,9 @@
  */
 class JSONParser
 {
+    JSONParser(const JSONParser &other) MOZ_DELETE;
+    void operator=(const JSONParser &other) MOZ_DELETE;
+
   public:
     enum ErrorHandling { RaiseError, NoError };
     enum ParsingMode { StrictJSON, LegacyJSON };

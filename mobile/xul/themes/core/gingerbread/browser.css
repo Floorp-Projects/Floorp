@@ -144,12 +144,12 @@ toolbarbutton.urlbar-button {
   -moz-box-flex: 1;
   -moz-box-align: center;
   -moz-box-pack: center;
-  background: @color_background_inverse@ url("chrome://browser/skin/images/endcap-default-bg.png") bottom center;
+  background: @color_background_inverse@ url("chrome://browser/skin/images/endcap-default-bg.png") bottom center repeat-x;
 }
 
 .urlbar-cap-button[open="true"],
 .urlbar-cap-button:not([disabled="true"]):hover:active {
-  background: #a5aab2 url("chrome://browser/skin/images/endcap-active-bg.png") bottom center;
+  background: #ddd url("chrome://browser/skin/images/endcap-active-bg.png") top center repeat-x;
 }
 
 /* left cap button --------------------------------------------------------- */
@@ -164,22 +164,24 @@ toolbarbutton.urlbar-button {
 
 /* add special color */
 #identity-box[mode="verifiedIdentity"] {
-  background-color: #89d715;
+  background-color: #c9ea80;
   background-image: url("chrome://browser/skin/images/endcap-ev-default-bg.png");
 }
 
 #identity-box[mode="verifiedIdentity"][open="true"],
 #identity-box[mode="verifiedIdentity"]:hover:active {
+  background-color: #b9d880;
   background-image: url("chrome://browser/skin/images/endcap-ev-active-bg.png");
 }
 
 #identity-box[mode="verifiedDomain"] {
-  background-color: #6579e3;
+  background-color: #b2bcf1;
   background-image: url("chrome://browser/skin/images/endcap-ssl-default-bg.png");
 }
 
 #identity-box[mode="verifiedDomain"][open="true"],
 #identity-box[mode="verifiedDomain"]:hover:active {
+  background-color: #a7b2ef;
   background-image: url("chrome://browser/skin/images/endcap-ssl-active-bg.png");
 }
 

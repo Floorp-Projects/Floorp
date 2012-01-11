@@ -1,3 +1,15 @@
+== dir-1.html dir-1-ref.html
+== dir-2.html dir-2-ref.html
+== dir-3.html dir-3-ref.html
+== dir-4.html dir-4-ref.html
+== dir-5.html dir-5-ref.html
+fails == dir-6.html dir-6-ref.html
+== dir-7.html dir-7-ref.html
+fails == dir-8.html dir-8-ref.html
+== mirror-op-1.html mirror-op-1-ref.html
+!= mirror-op-2.html mirror-op-2-ref.html
+!= mirror-op-3.html mirror-op-3-ref.html
+!= mirror-op-4.html mirror-op-4-ref.html
 == dynamic-mi.xhtml dynamic-mi-ref.xhtml
 == mfenced-1.xhtml mfenced-1-ref.xhtml
 == mfenced-2a.xhtml mfenced-2-ref.xhtml
@@ -75,6 +87,10 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 == mpadded-6.html mpadded-6-ref.html
 == math-display.html math-display-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
+== munderover-align-accent-false.html munderover-align-accent-false-ref.html
+== munderover-align-accent-true.html munderover-align-accent-true-ref.html
+== munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
+== munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
 == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
 != link-1.xhtml link-ref.xhtml

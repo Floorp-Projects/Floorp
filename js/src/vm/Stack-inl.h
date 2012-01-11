@@ -44,13 +44,14 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "Stack.h"
+#include "methodjit/MethodJIT.h"
+#include "vm/Stack.h"
 
 #include "jsscriptinlines.h"
-#include "ArgumentsObject-inl.h"
-#include "CallObject-inl.h"
 
-#include "methodjit/MethodJIT.h"
+#include "ArgumentsObject-inl.h"
+#include "ScopeObject-inl.h"
+
 
 namespace js {
 
@@ -84,7 +85,7 @@ StackFrame::varObj()
 {
     JSObject *obj = &scopeChain();
     while (!obj->isVarObj())
-        obj = obj->scopeChain();
+        obj = obj->enclosingScope();
     return *obj;
 }
 
@@ -151,15 +152,17 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
                             LOWERED_CALL_APPLY |
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
-    JS_ASSERT(script == callee.toFunction()->script());
+    JS_ASSERT(script == callee.script());
 
     /* Initialize stack frame members. */
-    flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | flagsArg;
+    flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | flagsArg;
     exec.fun = &callee;
     args.nactual = nactual;
-    scopeChain_ = callee.toFunction()->environment();
+    scopeChain_ = callee.environment();
     ncode_ = NULL;
     initPrev(cx);
+    blockChain_= NULL;
+    JS_ASSERT(!hasBlockChain());
     JS_ASSERT(!hasHookData());
     JS_ASSERT(annotation() == NULL);
     JS_ASSERT(!hasCallObj());
@@ -375,10 +378,10 @@ StackFrame::setScopeChainNoCallObj(JSObject &obj)
         if (hasCallObj()) {
             JSObject *pobj = &obj;
             while (pobj && pobj->getPrivate() != this)
-                pobj = pobj->scopeChain();
+                pobj = pobj->enclosingScope();
             JS_ASSERT(pobj);
         } else {
-            for (JSObject *pobj = &obj; pobj->isInternalScope(); pobj = pobj->scopeChain())
+            for (JSObject *pobj = &obj; pobj->isScope(); pobj = pobj->enclosingScope())
                 JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
         }
     }
@@ -403,7 +406,7 @@ StackFrame::callObj() const
 
     JSObject *pobj = &scopeChain();
     while (JS_UNLIKELY(!pobj->isCall()))
-        pobj = pobj->scopeChain();
+        pobj = pobj->enclosingScope();
     return pobj->asCall();
 }
 
@@ -458,7 +461,7 @@ StackFrame::functionEpilogue()
 }
 
 inline void
-StackFrame::markFunctionEpilogueDone()
+StackFrame::updateEpilogueFlags()
 {
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
         if (hasArgsObj() && !argsObj().maybeStackFrame()) {
@@ -475,7 +478,7 @@ StackFrame::markFunctionEpilogueDone()
              */
             scopeChain_ = isFunctionFrame()
                           ? callee().toFunction()->environment()
-                          : scopeChain_->internalScopeChain();
+                          : &scopeChain_->asScope().enclosingScope();
             flags_ &= ~HAS_CALL_OBJ;
         }
     }
@@ -566,7 +569,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
-    JS_ASSERT(script == callee.toFunction()->script());
+    JS_ASSERT(script == callee.script());
 
     /*StackFrame::Flags*/ uint32_t flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, &callee, script, &flags);

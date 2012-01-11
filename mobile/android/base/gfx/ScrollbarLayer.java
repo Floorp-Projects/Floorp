@@ -152,7 +152,7 @@ public class ScrollbarLayer extends TileLayer {
         foregroundPaint.setAntiAlias(true);
         foregroundPaint.setStyle(Paint.Style.FILL);
         // use a (a,r,g,b) color of (127,0,0,0), and multiply the alpha by mOpacity for fading
-        foregroundPaint.setColor(Color.argb((int)Math.round(mOpacity * 127), 0, 0, 0));
+        foregroundPaint.setColor(Color.argb(Math.round(mOpacity * 127), 0, 0, 0));
 
         mCanvas.drawColor(Color.argb(0, 0, 0, 0), PorterDuff.Mode.CLEAR);
         mCanvas.drawCircle(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS, foregroundPaint);
@@ -167,6 +167,7 @@ public class ScrollbarLayer extends TileLayer {
 
         try {
             GLES11.glEnable(GL10.GL_BLEND);
+            GLES11.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 
             Rect rect = RectUtils.round(mVertical ? getVerticalRect(context) : getHorizontalRect(context));
             GLES11.glBindTexture(GL10.GL_TEXTURE_2D, getTextureID());

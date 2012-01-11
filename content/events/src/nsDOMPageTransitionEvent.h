@@ -56,9 +56,8 @@ public:
   // Forward to base class
   NS_FORWARD_TO_NSDOMEVENT
 
-  virtual const nsIID& EventInitIID() { return NS_GET_IID(nsIPageTransitionEventInit); }
-  virtual nsresult InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                                JSContext* aCx, JSObject* aObj);
+  virtual nsresult InitFromCtor(const nsAString& aType,
+                                JSContext* aCx, jsval* aVal);
 protected:
   bool mPersisted;
 };

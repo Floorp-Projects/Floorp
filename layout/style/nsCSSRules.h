@@ -72,8 +72,8 @@ class nsMediaList;
 namespace mozilla {
 namespace css {
 
-class MediaRule : public GroupRule,
-                  public nsIDOMCSSMediaRule
+class MediaRule MOZ_FINAL : public GroupRule,
+                            public nsIDOMCSSMediaRule
 {
 public:
   MediaRule();
@@ -115,8 +115,8 @@ protected:
   nsRefPtr<nsMediaList> mMedia;
 };
 
-class DocumentRule : public GroupRule,
-                     public nsIDOMCSSMozDocumentRule
+class DocumentRule MOZ_FINAL : public GroupRule,
+                               public nsIDOMCSSMozDocumentRule
 {
 public:
   DocumentRule();
@@ -194,14 +194,9 @@ public:
 
 protected:
   friend class nsCSSFontFaceRule;
-  nsCSSValue mFamily;
-  nsCSSValue mStyle;
-  nsCSSValue mWeight;
-  nsCSSValue mStretch;
-  nsCSSValue mSrc;
-  nsCSSValue mUnicodeRange;
-  nsCSSValue mFontFeatureSettings;
-  nsCSSValue mFontLanguageOverride;
+#define CSS_FONT_DESC(name_, method_) nsCSSValue m##method_;
+#include "nsCSSFontDescList.h"
+#undef CSS_FONT_DESC
 
   static nsCSSValue nsCSSFontFaceStyleDecl::* const Fields[];  
   inline nsCSSFontFaceRule* ContainingRule();
@@ -315,7 +310,7 @@ private:
 
 class nsCSSKeyframeRule;
 
-class nsCSSKeyframeStyleDeclaration : public nsDOMCSSDeclaration
+class nsCSSKeyframeStyleDeclaration MOZ_FINAL : public nsDOMCSSDeclaration
 {
 public:
   nsCSSKeyframeStyleDeclaration(nsCSSKeyframeRule *aRule);
@@ -390,8 +385,8 @@ private:
   nsRefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
 };
 
-class nsCSSKeyframesRule : public mozilla::css::GroupRule,
-                           public nsIDOMMozCSSKeyframesRule
+class nsCSSKeyframesRule MOZ_FINAL : public mozilla::css::GroupRule,
+                                     public nsIDOMMozCSSKeyframesRule
 {
 public:
   nsCSSKeyframesRule(const nsSubstring& aName)

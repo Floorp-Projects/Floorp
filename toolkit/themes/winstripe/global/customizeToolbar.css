@@ -46,3 +46,13 @@ dialog {
   font-weight: bold;
   font-size: larger;
 }
+
+#palette-box {
+  -moz-appearance: listbox;
+  margin: 0 0 10px;
+}
+
+#palette-box > toolbarpaletteitem {
+  padding: 8px 2px;
+  margin: 0 8px;
+}

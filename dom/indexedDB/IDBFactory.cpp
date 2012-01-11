@@ -49,6 +49,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfoID.h"
@@ -68,7 +69,6 @@
 #include "IDBKeyRange.h"
 #include "IndexedDatabaseManager.h"
 #include "Key.h"
-#include "LazyIdleThread.h"
 #include "nsIScriptSecurityManager.h"
 
 using namespace mozilla;
@@ -100,17 +100,18 @@ already_AddRefed<nsIIDBFactory>
 IDBFactory::Create(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aWindow, "Must have a window!");
 
-  if (aWindow->IsOuterWindow()) {
+  if (aWindow && aWindow->IsOuterWindow()) {
     aWindow = aWindow->GetCurrentInnerWindow();
+    NS_ENSURE_TRUE(aWindow, nsnull);
   }
-  NS_ENSURE_TRUE(aWindow, nsnull);
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
 
-  factory->mWindow = do_GetWeakReference(aWindow);
-  NS_ENSURE_TRUE(factory->mWindow, nsnull);
+  if (aWindow) {
+    factory->mWindow = do_GetWeakReference(aWindow);
+    NS_ENSURE_TRUE(factory->mWindow, nsnull);
+  }
 
   return factory.forget();
 }
@@ -202,6 +203,13 @@ IDBFactory::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
   return NS_OK;
 }
 
+inline
+bool
+IgnoreWhitespace(PRUnichar c)
+{
+  return false;
+}
+
 // static
 nsresult
 IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
@@ -245,8 +253,27 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     else {
       NS_ASSERTION(columnType == mozIStorageStatement::VALUE_TYPE_TEXT,
                    "Should be a string");
-      rv = stmt->GetString(2, info->keyPath);
+      nsString keyPath;
+      rv = stmt->GetString(2, keyPath);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!keyPath.IsEmpty() && keyPath.First() == ',') {
+        // We use a comma in the beginning to indicate that it's an array of
+        // key paths. This is to be able to tell a string-keypath from an
+        // array-keypath which contains only one item.
+        nsCharSeparatedTokenizerTemplate<IgnoreWhitespace>
+          tokenizer(keyPath, ',');
+        tokenizer.nextToken();
+        while (tokenizer.hasMoreTokens()) {
+          info->keyPathArray.AppendElement(tokenizer.nextToken());
+        }
+        NS_ASSERTION(!info->keyPathArray.IsEmpty(),
+                     "Should have at least one keypath");
+      }
+      else {
+        info->keyPath = keyPath;
+      }
+
     }
 
     info->nextAutoIncrementId = stmt->AsInt64(3);
@@ -291,8 +318,25 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     rv = stmt->GetString(2, indexInfo->name);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmt->GetString(3, indexInfo->keyPath);
+    nsString keyPath;
+    rv = stmt->GetString(3, keyPath);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (!keyPath.IsEmpty() && keyPath.First() == ',') {
+      // We use a comma in the beginning to indicate that it's an array of
+      // key paths. This is to be able to tell a string-keypath from an
+      // array-keypath which contains only one item.
+      nsCharSeparatedTokenizerTemplate<IgnoreWhitespace>
+        tokenizer(keyPath, ',');
+      tokenizer.nextToken();
+      while (tokenizer.hasMoreTokens()) {
+        indexInfo->keyPathArray.AppendElement(tokenizer.nextToken());
+      }
+      NS_ASSERTION(!indexInfo->keyPathArray.IsEmpty(),
+                   "Should have at least one keypath");
+    }
+    else {
+      indexInfo->keyPath = keyPath;
+    }
 
     indexInfo->unique = !!stmt->AsInt32(4);
     indexInfo->multiEntry = !!stmt->AsInt32(5);
@@ -383,14 +427,20 @@ IDBFactory::OpenCommon(const nsAString& aName,
     ContentChild::GetSingleton()->GetIndexedDBPath();
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  nsCOMPtr<nsPIDOMWindow> window;
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  nsIScriptContext* context = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
-  NS_ENSURE_TRUE(sgo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  nsIScriptContext* context = sgo->GetContext();
-  NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  if (mWindow) {
+    window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    
+    sgo = do_QueryInterface(window);
+    NS_ENSURE_TRUE(sgo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    
+    context = sgo->GetContext();
+    NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
 
   nsCString origin;
   nsresult rv =
@@ -457,6 +507,6 @@ IDBFactory::Cmp(const jsval& aFirst,
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
-  *_retval = first == second ? 0 : first < second ? -1 : 1;
+  *_retval = Key::CompareKeys(first, second);
   return NS_OK;
 }

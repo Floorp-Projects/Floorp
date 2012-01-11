@@ -80,8 +80,8 @@ public class SingleTileLayer extends TileLayer {
 
         if (repeats()) {
             bounds = new RectF(0.0f, 0.0f, viewport.width(), viewport.height());
-            int width = (int)Math.round(viewport.width());
-            int height = (int)Math.round(-viewport.height());
+            int width = Math.round(viewport.width());
+            int height = Math.round(-viewport.height());
             cropRect = new int[] { 0, size.height, width, height };
         } else {
             bounds = getBounds(context, new FloatSize(size));

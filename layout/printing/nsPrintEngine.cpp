@@ -2195,10 +2195,7 @@ static nsresult CloneRangeToSelection(nsIDOMRange* aRange,
   nsCOMPtr<nsIDOMNode> newEnd = GetEqualNodeInCloneTree(endContainer, aDoc);
   NS_ENSURE_STATE(newStart && newEnd);
 
-  nsCOMPtr<nsIDOMRange> range;
-  NS_NewRange(getter_AddRefs(range));
-  NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
-
+  nsRefPtr<nsRange> range = new nsRange();
   nsresult rv = range->SetStart(newStart, startOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = range->SetEnd(newEnd, endOffset);
@@ -2546,15 +2543,7 @@ nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
   aRect += aParentFrame->GetPosition();
   for (; !aChildFrames.AtEnd(); aChildFrames.Next()) {
     nsIFrame* child = aChildFrames.get();
-    // only leaf frames have this bit flipped
-    // then check the hard way
-    bool isSelected = (child->GetStateBits() & NS_FRAME_SELECTED_CONTENT)
-      == NS_FRAME_SELECTED_CONTENT;
-    if (isSelected) {
-      isSelected = child->IsVisibleForPainting();
-    }
-
-    if (isSelected) {
+    if (child->IsSelected() && child->IsVisibleForPainting()) {
       nsRect r = child->GetRect();
       if (aStartFrame == nsnull) {
         aStartFrame = child;

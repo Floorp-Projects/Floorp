@@ -40,7 +40,7 @@
 #define nsWrapperCacheInline_h___
 
 #include "nsWrapperCache.h"
-#include "xpcprivate.h"
+#include "xpcpublic.h"
 
 inline JSObject*
 nsWrapperCache::GetWrapperPreserveColor() const
@@ -137,6 +137,13 @@ nsWrapperCache::ClearWrapperIfProxy()
     RemoveExpandoObject();
 
     SetWrapperBits(NULL);
+}
+
+inline bool
+nsWrapperCache::IsBlack()
+{
+  JSObject* o = GetWrapperPreserveColor();
+  return o && !xpc_IsGrayGCThing(o);
 }
 
 #endif /* nsWrapperCache_h___ */

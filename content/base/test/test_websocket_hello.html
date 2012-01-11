@@ -18,7 +18,7 @@
 var ws;
 
 function testWebSocket () {
-  ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_hello");
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_hello");
   ws.onopen = function(e) {
     ws.send("data");
   }

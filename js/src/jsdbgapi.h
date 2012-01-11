@@ -206,11 +206,11 @@ JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun);
  * to call JS_ReleaseFunctionLocalNameArray in a LIFO manner (wrt to any other
  * call that may use the temp pool.
  */
-extern JS_PUBLIC_API(jsuword *)
+extern JS_PUBLIC_API(uintptr_t *)
 JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp);
 
 extern JS_PUBLIC_API(JSAtom *)
-JS_LocalNameToAtom(jsuword w);
+JS_LocalNameToAtom(uintptr_t w);
 
 extern JS_PUBLIC_API(JSString *)
 JS_AtomKey(JSAtom *atom);
@@ -257,9 +257,6 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(void)
 JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation);
-
-extern JS_PUBLIC_API(void *)
-JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsScriptFrame(JSContext *cx, JSStackFrame *fp);

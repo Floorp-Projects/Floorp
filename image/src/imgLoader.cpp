@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Attributes.h"
+#include "mozilla/FunctionTimer.h"
+#include "mozilla/Preferences.h"
+
 #include "ImageLogging.h"
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
@@ -89,9 +93,6 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannelPolicy.h"
 
-#include "mozilla/FunctionTimer.h"
-#include "mozilla/Preferences.h"
-
 #include "nsContentUtils.h"
 
 using namespace mozilla;
@@ -136,7 +137,7 @@ static void PrintImageDecoders()
 #endif
 
 
-class imgMemoryReporter :
+class imgMemoryReporter MOZ_FINAL :
   public nsIMemoryReporter
 {
 public:
@@ -759,7 +760,7 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
   return NS_OK;
 }
 
-class imgCacheObserver : public nsIObserver
+class imgCacheObserver MOZ_FINAL : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -783,7 +784,8 @@ imgCacheObserver::Observe(nsISupports* aSubject, const char* aTopic, const PRUni
   return NS_OK;
 }
 
-class imgCacheExpirationTracker : public nsExpirationTracker<imgCacheEntry, 3>
+class imgCacheExpirationTracker MOZ_FINAL
+  : public nsExpirationTracker<imgCacheEntry, 3>
 {
   enum { TIMEOUT_SECONDS = 10 };
 public:

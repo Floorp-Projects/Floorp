@@ -69,8 +69,9 @@
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIVariant.h"
-#include "xpcprivate.h"
-#include "XPCQuickStubs.h"
+#include "nsVariant.h"
+#include "nsIScriptError.h"
+#include "xpcpublic.h"
 #include "nsStringStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsICachingChannel.h"
@@ -448,14 +449,6 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
 
   NS_ABORT_IF_FALSE(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
-
-  // This can happen if the XHR was only used by C++ (and so never created a JS
-  // wrapper) that also made an ArrayBuffer.
-  if (PreservingWrapper()) {
-    nsContentUtils::ReleaseWrapper(
-      static_cast<nsIDOMEventTarget*>(
-        static_cast<nsDOMEventTargetHelper*>(this)), this);
-  }
 
   nsLayoutStatics::Release();
 }
@@ -1036,7 +1029,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
       nsString str;
       rv = GetResponseText(str);
       if (NS_FAILED(rv)) return rv;
-      NS_ENSURE_TRUE(xpc_qsStringToJsval(aCx, str, aResult),
+      NS_ENSURE_TRUE(xpc::StringToJsval(aCx, str, aResult),
                      NS_ERROR_OUT_OF_MEMORY);
     }
     break;
@@ -1466,13 +1459,23 @@ nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
     return NS_OK;
   }
 
+  // exempt data URIs from the same origin check.
+  nsCOMPtr<nsIURI> channelURI;
+  bool dataScheme = false;
+  if (NS_SUCCEEDED(NS_GetFinalChannelURI(aChannel,
+                                         getter_AddRefs(channelURI))) &&
+      NS_SUCCEEDED(channelURI->SchemeIs("data", &dataScheme)) &&
+      dataScheme) {
+    return NS_OK;
+  }
+
   // This is a cross-site request
   mState |= XML_HTTP_REQUEST_USE_XSITE_AC;
 
   // Check if we need to do a preflight request.
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   NS_ENSURE_TRUE(httpChannel, NS_ERROR_DOM_BAD_URI);
-    
+
   nsCAutoString method;
   httpChannel->GetRequestMethod(method);
   if (!mCORSUnsafeHeaders.IsEmpty() ||
@@ -2594,7 +2597,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     // Always create a nsCORSListenerProxy here even if it's
     // a same-origin request right now, since it could be redirected.
     listener = new nsCORSListenerProxy(listener, mPrincipal, mChannel,
-                                       withCredentials, &rv);
+                                       withCredentials, true, &rv);
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2748,10 +2751,10 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   }
 
   // Prevent modification to certain HTTP headers (see bug 302263), unless
-  // the executing script has UniversalBrowserWrite permission.
+  // the executing script has UniversalXPConnect.
 
   bool privileged;
-  rv = IsCapabilityEnabled("UniversalBrowserWrite", &privileged);
+  rv = IsCapabilityEnabled("UniversalXPConnect", &privileged);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 

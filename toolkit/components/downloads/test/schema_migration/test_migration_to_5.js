@@ -71,7 +71,7 @@ function run_test()
   do_check_eq("http://www.mozilla.com/en-US/products/download.html?product=firefox-2.0.0.6&os=osx&lang=en-US",stmt.getUTF8String(6));
   do_check_true(stmt.getIsNull(7));
   do_check_true(stmt.getIsNull(8));
-  stmt.reset();
+  stmt.finalize();
 
   cleanup();
 }

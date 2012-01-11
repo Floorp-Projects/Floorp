@@ -52,6 +52,11 @@ ifdef XPI_NAME
 NO_JS_MANIFEST = 1
 DIST_FILES = install.rdf
 
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+DEFINES += -DBOOTSTRAP
+DIST_FILES += bootstrap.js
+endif
+
 # Used in install.rdf
 USE_EXTENSION_MANIFEST=1
 else

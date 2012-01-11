@@ -230,3 +230,12 @@ nsDOMMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMMemoryMultiReporter::GetExplicitNonHeap(PRInt64* aAmount)
+{
+  // This reporter only measures heap memory.
+  *aAmount = 0;
+  return NS_OK;
+}
+
+

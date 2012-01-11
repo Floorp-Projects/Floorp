@@ -169,9 +169,9 @@ is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists 
 // Check that the 'border' shorthand resets 'border-image' and
 // '-moz-border-*-colors', but that other 'border-*' shorthands don't
 // (bug 482692).
-e.setAttribute("style", '-moz-border-image: url("foo.png") 5 5 5 5; border-left: medium solid green');
+e.setAttribute("style", '-moz-border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green');
 is(e.style.cssText,
-   '-moz-border-image: url("foo.png") 5 5 5 5; border-left: medium solid green;',
+   '-moz-border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green;',
    "border-left does NOT reset -moz-border-image");
 e.setAttribute("style", '-moz-border-image: url("foo.png") 5 5 5 5; border: medium solid green');
 is(e.style.cssText,

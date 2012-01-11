@@ -255,13 +255,15 @@ namespace JS {
 JSObject*
 RegisterPerfMeasurement(JSContext *cx, JSObject *global)
 {
-    JSObject *prototype = JS_InitClass(cx, global, 0 /* parent */,
-                                       &pm_class, pm_construct, 1,
-                                       pm_props, pm_fns, 0, 0);
+    js::RootedVarObject prototype(cx);
+    prototype = JS_InitClass(cx, global, 0 /* parent */,
+                             &pm_class, pm_construct, 1,
+                             pm_props, pm_fns, 0, 0);
     if (!prototype)
         return 0;
 
-    JSObject *ctor = JS_GetConstructor(cx, prototype);
+    js::RootedVarObject ctor(cx);
+    ctor = JS_GetConstructor(cx, prototype);
     if (!ctor)
         return 0;
 

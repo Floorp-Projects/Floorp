@@ -45,17 +45,25 @@ interface nsIIDBRequest;
 interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
 
+[scriptable, uuid(450e02fd-a87a-47d4-beaf-321417dad781)]
+interface nsIIDBIndexParameters : nsISupports
+{
+  attribute boolean unique;
+  attribute boolean multiEntry;
+};
+
 /**
  * nsIIDBObjectStore interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, builtinclass, uuid(e93c5ca4-89da-4eb4-b839-271ba4f65a27)]
+[scriptable, builtinclass, uuid(e0d308ea-b804-4962-918a-28ec0aa4e42b)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
 
-  readonly attribute DOMString keyPath;
+  [implicit_jscontext]
+  readonly attribute jsval keyPath;
 
   readonly attribute nsIDOMDOMStringList indexNames;
 
@@ -102,16 +110,11 @@ interface nsIIDBObjectStore : nsISupports
   openCursor([optional /* null */] in jsval range,
              [optional /* NEXT */] in unsigned short direction);
 
-  /**
-   * Optional arguments:
-   *   - unique (boolean):
-   *       Specifies whether values in the index must be unique. Defaults to
-   *       false.
-   */
   [implicit_jscontext]
   nsIIDBIndex
   createIndex([Null(Stringify)] in DOMString name,
-              [Null(Stringify)] in DOMString keyPath,
+              in jsval keyPath,
+              /* nsIIDBIndexParameters */
               [optional /* none */] in jsval options);
 
   // Returns object immediately

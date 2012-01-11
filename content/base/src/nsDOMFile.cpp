@@ -70,6 +70,7 @@
 #include "prmem.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // XXXkhuey the input stream that we pass out of a DOMFile
 // can outlive the actual DOMFile object.  Thus, we must
@@ -165,12 +166,12 @@ nsDOMFileBase::GetMozFullPath(nsAString &aFileName)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
 
-  // It is unsafe to call IsCallerTrustedForCapability on a non-main thread. If
+  // It is unsafe to call CallerHasUniversalXPConnect on a non-main thread. If
   // you hit the following assertion you need to figure out some other way to
   // determine privileges and call GetMozFullPathInternal.
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
+  if (nsContentUtils::CallerHasUniversalXPConnect()) {
     return GetMozFullPathInternal(aFileName);
   }
   aFileName.Truncate();
@@ -658,8 +659,8 @@ nsDOMFileError::GetCode(PRUint16* aCode)
 
 nsDOMFileInternalUrlHolder::nsDOMFileInternalUrlHolder(nsIDOMBlob* aFile,
                                                        nsIPrincipal* aPrincipal
-                                                       MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
-  MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+                                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   aFile->GetInternalUrl(aPrincipal, mUrl);
 }
  

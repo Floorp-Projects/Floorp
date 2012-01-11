@@ -86,14 +86,14 @@ ExhaustiveTest(const char funcode[])
     EVAL(funcode, &v);
 
     EVAL(CALL_CODES[ArgCount], &v);
-    ArgumentsObject *argsobj = JSVAL_TO_OBJECT(v)->asArguments();
+    ArgumentsObject &argsobj = JSVAL_TO_OBJECT(v)->asArguments();
 
     Value elems[MAX_ELEMS];
 
     for (size_t i = 0; i <= ArgCount; i++) {
         for (size_t j = 0; j <= ArgCount - i; j++) {
             ClearElements(elems);
-            CHECK(argsobj->getElements(i, j, elems));
+            CHECK(argsobj.getElements(i, j, elems));
             for (size_t k = 0; k < j; k++)
                 CHECK_SAME(elems[k], INT_TO_JSVAL(i + k));
             for (size_t k = j; k < MAX_ELEMS - 1; k++)

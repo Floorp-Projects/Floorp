@@ -724,6 +724,17 @@ nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset,
     charset.AssignLiteral("UTF-8");
   }
 
+  if (!(charset.EqualsLiteral("UTF-8") || charset.EqualsLiteral("gb18030"))) {
+    nsAutoString charsetUtf16;
+    CopyUTF8toUTF16(charset, charsetUtf16);
+    const PRUnichar* charsetPtr = charsetUtf16.get();
+    SendJSWarning(aOriginatingElement ? aOriginatingElement->GetOwnerDocument()
+                                      : nsnull,
+                  "CannotEncodeAllUnicode",
+                  &charsetPtr,
+                  1);
+  }
+
   mEncoder = do_CreateInstance(NS_SAVEASCHARSET_CONTRACTID);
   if (mEncoder) {
     nsresult rv =

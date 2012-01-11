@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsLeafFrame.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
 

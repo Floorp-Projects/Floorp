@@ -19,6 +19,7 @@
 #
 # Contributor(s):
 #  Robert Strong <robert.bugzilla@gmail.com>
+#  Brian R. Bondy <netzen@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,11 +36,12 @@
 # ***** END LICENSE BLOCK *****
 
 # Required Plugins:
-# AppAssocReg   http://nsis.sourceforge.net/Application_Association_Registration_plug-in
-# ApplicationID http://nsis.sourceforge.net/ApplicationID_plug-in
-# CityHash      http://mxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
-# ShellLink     http://nsis.sourceforge.net/ShellLink_plug-in
-# UAC           http://nsis.sourceforge.net/UAC_plug-in
+# AppAssocReg    http://nsis.sourceforge.net/Application_Association_Registration_plug-in
+# ApplicationID  http://nsis.sourceforge.net/ApplicationID_plug-in
+# CityHash       http://mxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
+# ShellLink      http://nsis.sourceforge.net/ShellLink_plug-in
+# UAC            http://nsis.sourceforge.net/UAC_plug-in
+# ServicesHelper Mozilla specific plugin that is located in /other-licenses/nsis
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
@@ -59,6 +61,7 @@ Var InstallType
 Var AddStartMenuSC
 Var AddQuickLaunchSC
 Var AddDesktopSC
+Var InstallMaintenanceService
 Var PageName
 
 ; By defining NO_STARTMENU_DIR an installer that doesn't provide an option for
@@ -111,6 +114,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro InitHashAppModelId
 !insertmacro IsHandlerForInstallDir
 !insertmacro IsPinnedToTaskBar
+!insertmacro IsUserAdmin
 !insertmacro LogDesktopShortcut
 !insertmacro LogQuickLaunchShortcut
 !insertmacro LogStartMenuShortcut
@@ -182,6 +186,11 @@ Page custom preOptions leaveOptions
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE leaveDirectory
 !define MUI_DIRECTORYPAGE_VERIFYONLEAVE
 !insertmacro MUI_PAGE_DIRECTORY
+
+; Custom Components Page
+!ifdef MOZ_MAINTENANCE_SERVICE
+Page custom preComponents leaveComponents
+!endif
 
 ; Custom Shortcuts Page
 Page custom preShortcuts leaveShortcuts
@@ -373,6 +382,37 @@ Section "-Application" APP_IDX
     ${EndIf}
   ${EndIf}
 
+!ifdef MOZ_MAINTENANCE_SERVICE
+  ; If the maintenance service page was displayed then a value was already 
+  ; explicitly selected for installing the maintenance service and 
+  ; and so InstallMaintenanceService will already be 0 or 1.
+  ; If the maintenance service page was not displayed then 
+  ; InstallMaintenanceService will be equal to "".
+  ${If} $InstallMaintenanceService == ""
+    Call IsUserAdmin
+    Pop $R0
+    ${If} $R0 == "true"
+    ; Only proceed if we have HKLM write access
+    ${AndIf} $TmpVal == "HKLM"
+    ; On Windows 2000 we do not install the maintenance service.
+    ${AndIf} ${AtLeastWinXP}
+      ; The user is an admin so we should default to install service yes
+      StrCpy $InstallMaintenanceService "1"
+    ${Else}
+      ; The user is not admin so we should default to install service no
+      StrCpy $InstallMaintenanceService "0"
+    ${EndIf}
+  ${EndIf}
+
+  ${If} $InstallMaintenanceService == "1"
+    ; The user wants to install the maintenance service, so execute
+    ; the pre-packaged maintenance service installer. 
+    ; This option can only be turned on if the user is an admin so there
+    ; is no need to use ExecShell w/ verb runas to enforce elevated.
+    nsExec::Exec "$INSTDIR\maintenanceservice_installer.exe" 
+  ${EndIf}
+!endif
+
   ; These need special handling on uninstall since they may be overwritten by
   ; an install into a different location.
   StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\App Paths\${FileMainEXE}"
@@ -426,7 +466,7 @@ Section "-Application" APP_IDX
   ${Unless} ${Errors}
     GetFunctionAddress $0 FixShortcutAppModelIDs
     UAC::ExecCodeSegment $0
-  ${EndIf}
+  ${EndUnless}
 
   ; UAC only allows elevating to an Admin account so there is no need to add
   ; the Start Menu or Desktop shortcuts from the original unelevated process
@@ -482,6 +522,13 @@ Section "-Application" APP_IDX
       ${EndIf}
     ${EndUnless}
   ${EndIf}
+
+!ifdef MOZ_MAINTENANCE_SERVICE
+  ${If} $TmpVal == "HKLM"
+    ; Add the registry keys for allowed certificates.
+    ${AddMaintCertKeys}
+  ${EndIf}
+!endif
 SectionEnd
 
 ; Cleanup operations to perform at the end of the installation.
@@ -799,6 +846,58 @@ Function leaveShortcuts
   ${EndIf}
 FunctionEnd
 
+!ifdef MOZ_MAINTENANCE_SERVICE
+Function preComponents
+  ; If the service already exists, don't show this page
+  ServicesHelper::IsInstalled "MozillaMaintenance"
+  Pop $R9
+  ${If} $R9 == 1
+    ; The service already exists so don't show this page.
+    Abort
+  ${EndIf}
+
+  ; On Windows 2000 we do not install the maintenance service.
+  ${Unless} ${AtLeastWinXP}
+    Abort
+  ${EndUnless}
+
+  ; Don't show the custom components page if the
+  ; user is not an admin
+  Call IsUserAdmin
+  Pop $R9
+  ${If} $R9 != "true"
+    Abort
+  ${EndIf}
+
+  ; Only show the maintenance service page if we have write access to HKLM
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla" \
+              "${BrandShortName}InstallerTest" "Write Test"
+  ${If} ${Errors}
+    ClearErrors
+    Abort
+  ${Else}
+    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+  ${EndIf}
+
+  StrCpy $PageName "Components"
+  ${CheckCustomCommon}
+  !insertmacro MUI_HEADER_TEXT "$(COMPONENTS_PAGE_TITLE)" "$(COMPONENTS_PAGE_SUBTITLE)"
+  !insertmacro MUI_INSTALLOPTIONS_DISPLAY "components.ini"
+FunctionEnd
+
+Function leaveComponents
+  ${MUI_INSTALLOPTIONS_READ} $0 "components.ini" "Settings" "State"
+  ${If} $0 != 0
+    Abort
+  ${EndIf}
+  ${MUI_INSTALLOPTIONS_READ} $InstallMaintenanceService "components.ini" "Field 2" "State"
+  ${If} $InstallType == ${INSTALLTYPE_CUSTOM}
+    Call CheckExistingInstall
+  ${EndIf}
+FunctionEnd
+!endif
+
 Function preSummary
   StrCpy $PageName "Summary"
   ; Setup the summary.ini file for the Custom Summary Page
@@ -934,6 +1033,7 @@ Function .onInit
 
   !insertmacro InitInstallOptionsFile "options.ini"
   !insertmacro InitInstallOptionsFile "shortcuts.ini"
+  !insertmacro InitInstallOptionsFile "components.ini"
   !insertmacro InitInstallOptionsFile "summary.ini"
 
   WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "5"
@@ -947,7 +1047,7 @@ Function .onInit
 
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Type   "RadioButton"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Text   "$(OPTION_STANDARD_RADIO)"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Left   "0"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Right  "-1"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Top    "25"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 2" Bottom "35"
@@ -956,7 +1056,7 @@ Function .onInit
 
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Type   "RadioButton"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Text   "$(OPTION_CUSTOM_RADIO)"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Left   "15"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Left   "0"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Right  "-1"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Top    "55"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 3" Bottom "65"
@@ -964,14 +1064,14 @@ Function .onInit
 
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Type   "label"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Text   "$(OPTION_STANDARD_DESC)"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Left   "15"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Right  "-1"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Top    "37"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 4" Bottom "57"
 
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Type   "label"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Text   "$(OPTION_CUSTOM_DESC)"
-  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Left   "30"
+  WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Left   "15"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Right  "-1"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Top    "67"
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 5" Bottom "87"
@@ -993,7 +1093,7 @@ Function .onInit
 
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Type   "checkbox"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Text   "$(ICONS_DESKTOP)"
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Left   "15"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Left   "0"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Right  "-1"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Top    "20"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Bottom "30"
@@ -1002,7 +1102,7 @@ Function .onInit
 
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Type   "checkbox"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Text   "$(ICONS_STARTMENU)"
-  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Left   "15"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Left   "0"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Right  "-1"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Top    "40"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Bottom "50"
@@ -1012,12 +1112,31 @@ Function .onInit
   ${Unless} ${AtLeastWin7}
     WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Type   "checkbox"
     WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Text   "$(ICONS_QUICKLAUNCH)"
-    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Left   "15"
+    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Left   "0"
     WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Right  "-1"
     WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Top    "60"
     WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" Bottom "70"
     WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 4" State  "1"
   ${EndUnless}
+
+  ; Setup the components.ini file for the Components Page
+  WriteINIStr "$PLUGINSDIR\components.ini" "Settings" NumFields "2"
+
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Type   "label"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Text   "$(OPTIONAL_COMPONENTS_DESC)"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Top    "5"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Bottom "15"
+
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Type   "checkbox"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Text   "$(MAINTENANCE_SERVICE_CHECKBOX_DESC)"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Left   "0"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Top    "20"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Bottom "30"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" State  "1"
+  WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Flags  "GROUP"
 
   ; There must always be a core directory.
   ${GetSize} "$EXEDIR\core\" "/S=0K" $R5 $R7 $R8

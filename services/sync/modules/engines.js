@@ -1056,7 +1056,7 @@ SyncEngine.prototype = {
 
   // Reconcile incoming and existing records.  Return true if server
   // data should be applied.
-  _reconcile: function SyncEngine__reconcile(item) {
+  _reconcile: function SyncEngine__reconcile(item, dupePerformed) {
     if (this._log.level <= Log4Moz.Level.Trace)
       this._log.trace("Incoming: " + item);
 
@@ -1085,12 +1085,28 @@ SyncEngine.prototype = {
     if (item.deleted)
       return true;
 
+    // This shouldn't happen, but we protect ourself from infinite recursion.
+    if (dupePerformed) {
+      this._log.warn("Duplicate record not reconciled on second pass: " +
+                     item);
+      // We go ahead and apply it.
+      return true;
+    }
+
+    // When a dupe is detected, we feed the record (with a possibly changed ID)
+    // back through reconciling. If there are changes in both the local and
+    // incoming records, this should ensure that the proper record is used.
     this._log.trace("Reconcile step 3: Find dupes");
     let dupeId = this._findDupe(item);
-    if (dupeId)
+    if (dupeId) {
+      // _handleDupe() doesn't really handle anything. Instead, it just
+      // determines which GUID to use.
       this._handleDupe(item, dupeId);
+      this._log.debug("Reconciling de-duped record: " + item.id);
+      return this._reconcile(item, true);
+    }
 
-    // Apply the incoming item (now that the dupe is the right id)
+    // Apply the incoming item.
     return true;
   },
 

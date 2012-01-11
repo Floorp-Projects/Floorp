@@ -38,6 +38,7 @@
 
 #include "nsDOMPageTransitionEvent.h"
 #include "nsContentUtils.h"
+#include "DictionaryHelpers.h"
 
 DOMCI_DATA(PageTransitionEvent, nsDOMPageTransitionEvent)
 
@@ -70,22 +71,13 @@ nsDOMPageTransitionEvent::InitPageTransitionEvent(const nsAString &aTypeArg,
 }
 
 nsresult
-nsDOMPageTransitionEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                                       JSContext* aCx, JSObject* aObj)
+nsDOMPageTransitionEvent::InitFromCtor(const nsAString& aType,
+                                       JSContext* aCx, jsval* aVal)
 {
-  nsCOMPtr<nsIPageTransitionEventInit> eventInit = do_QueryInterface(aDict);
-  bool bubbles = false;
-  bool cancelable = false;
-  bool persisted = false;
-  if (eventInit) {
-    nsresult rv = eventInit->GetBubbles(&bubbles);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetCancelable(&cancelable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetPersisted(&persisted);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return InitPageTransitionEvent(aType, bubbles, cancelable, persisted);
+  mozilla::dom::PageTransitionEventInit d;
+  nsresult rv = d.Init(aCx, aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return InitPageTransitionEvent(aType, d.bubbles, d.cancelable, d.persisted);
 }
 
 nsresult NS_NewDOMPageTransitionEvent(nsIDOMEvent** aInstancePtrResult,

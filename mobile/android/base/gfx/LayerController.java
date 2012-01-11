@@ -167,21 +167,22 @@ public class LayerController {
      */
     public void setViewportSize(FloatSize size) {
         mViewportMetrics.setSize(size);
+        Log.d(LOGTAG, "setViewportSize: " + mViewportMetrics);
         setForceRedraw();
 
         if (mLayerClient != null)
             mLayerClient.viewportSizeChanged();
 
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(true);
+        mPanZoomController.abortAnimation();
         mView.requestRender();
     }
 
     /** Scrolls the viewport to the given point. You must hold the monitor while calling this. */
     public void scrollTo(PointF point) {
         mViewportMetrics.setOrigin(point);
+        Log.d(LOGTAG, "scrollTo: " + mViewportMetrics);
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(false);
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
     }
@@ -191,9 +192,9 @@ public class LayerController {
         PointF origin = mViewportMetrics.getOrigin();
         origin.offset(point.x, point.y);
         mViewportMetrics.setOrigin(origin);
+        Log.d(LOGTAG, "scrollBy: " + mViewportMetrics);
 
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(false);
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
     }
@@ -201,8 +202,8 @@ public class LayerController {
     /** Sets the current viewport. You must hold the monitor while calling this. */
     public void setViewport(RectF viewport) {
         mViewportMetrics.setViewport(viewport);
+        Log.d(LOGTAG, "setViewport: " + mViewportMetrics);
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(false);
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
     }
@@ -213,10 +214,10 @@ public class LayerController {
             return;
 
         mViewportMetrics.setPageSize(size);
+        Log.d(LOGTAG, "setPageSize: " + mViewportMetrics);
 
         // Page size is owned by the LayerClient, so no need to notify it of
         // this change.
-        mPanZoomController.geometryChanged(false);
         mView.requestRender();
     }
 
@@ -228,6 +229,7 @@ public class LayerController {
      */
     public void setViewportMetrics(ViewportMetrics viewport) {
         mViewportMetrics = new ViewportMetrics(viewport);
+        Log.d(LOGTAG, "setViewportMetrics: " + mViewportMetrics);
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
     }
@@ -243,6 +245,7 @@ public class LayerController {
      */
     public void scaleWithFocus(float zoomFactor, PointF focus) {
         mViewportMetrics.scaleTo(zoomFactor, focus);
+        Log.d(LOGTAG, "scaleWithFocus: " + mViewportMetrics + "; zf=" + zoomFactor);
 
         // We assume the zoom level will only be modified by the
         // PanZoomController, so no need to notify it of this change.
@@ -257,6 +260,7 @@ public class LayerController {
      */
     public void scaleWithOrigin(float zoomFactor, PointF origin) {
         mViewportMetrics.setOrigin(origin);
+        Log.d(LOGTAG, "scaleWithOrigin: " + mViewportMetrics + "; zf=" + zoomFactor);
         scaleTo(zoomFactor);
     }
 
@@ -275,10 +279,15 @@ public class LayerController {
             mLayerClient.geometryChanged();
     }
 
-    /** Informs the pan/zoom controller that the viewport metrics changed. */
-    public void notifyPanZoomControllerOfGeometryChange(boolean abortAnimation) {
-        if (mPanZoomController != null)
-            mPanZoomController.geometryChanged(abortAnimation);
+    /** Aborts any pan/zoom animation that is currently in progress. */
+    public void abortPanZoomAnimation() {
+        if (mPanZoomController != null) {
+            mView.post(new Runnable() {
+                public void run() {
+                    mPanZoomController.abortAnimation();
+                }
+            });
+        }
     }
 
     /**

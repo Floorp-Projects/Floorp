@@ -65,6 +65,10 @@ endif
 
 LIBS +=	$(NSPR_LIBS)
 
+DEFINES += \
+  -DNO_NSPR_10_SUPPORT \
+  $(NULL)
+
 NSDISTMODE = copy
 
 ifdef _MSC_VER

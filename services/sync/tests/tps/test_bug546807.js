@@ -7,6 +7,8 @@
  * testrunner (no single quotes, extra comma's, etc).
  */
 
+EnableEngines(["tabs"]);
+
 var phases = { "phase1": "profile1",
                "phase2": "profile2"};
 
@@ -42,7 +44,7 @@ var tabs_absent = [
 
 Phase('phase1', [
   [Tabs.add, tabs1],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 Phase('phase2', [

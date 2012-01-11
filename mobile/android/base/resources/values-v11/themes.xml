@@ -3,6 +3,7 @@
 
     <style name="Gecko" parent="@android:style/Theme.Holo">
         <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
     
     <style name="Gecko.TitleBar" parent="Gecko"/>
@@ -15,6 +16,7 @@
     
     <style name="Gecko.Light" parent="@android:style/Theme.Holo.Light">
         <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
     
     <style name="Gecko.Light.TitleBar" parent="Gecko.Light"/>
@@ -26,8 +28,8 @@
     </style>
     
     <style name="Gecko.Translucent" parent="@android:style/Theme.Translucent">
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowNoTitle">false</item>
     </style>
     
 </resources>

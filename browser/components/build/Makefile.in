@@ -12,12 +12,11 @@ IS_COMPONENT = 1
 MODULE_NAME = nsBrowserCompsModule
 FORCE_SHARED_LIB = 1
 
-# Because we are an application component, link against the CRT statically
-# (on Windows, but only if we're not building our own CRT for jemalloc)
-ifndef MOZ_MEMORY
+# Statically link the CRT on Windows if building against
+# a XULRunner SDK.
+ifdef LIBXUL_SDK
 USE_STATIC_LIBS = 1
 endif
-
 
 EXPORTS = nsBrowserCompsCID.h
 
@@ -70,3 +69,6 @@ EXTRA_DSO_LDOPTS += \
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+# Ensure that we don't embed a manifest referencing the CRT.
+EMBED_MANIFEST_AT =

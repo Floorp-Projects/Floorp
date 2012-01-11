@@ -6,6 +6,7 @@
  * here must be in strict JSON format, as it will get parsed by the Python
  * testrunner (no single quotes, extra comma's, etc).
  */
+EnableEngines(["bookmarks"]);
 
 var phases = { "phase1": "profile1",
                "phase2": "profile2",
@@ -65,7 +66,7 @@ var bookmarks_after_move = {
 Phase('phase1', [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 // Sync to profile2 and verify that all four bookmarks are present.

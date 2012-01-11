@@ -45,11 +45,11 @@
 
 #include "vm/BooleanObject.h"
 
-inline js::BooleanObject *
+inline js::BooleanObject &
 JSObject::asBoolean()
 {
     JS_ASSERT(isBoolean());
-    return static_cast<js::BooleanObject *>(const_cast<JSObject *>(this));
+    return *static_cast<js::BooleanObject *>(this);
 }
 
 namespace js {
@@ -60,9 +60,9 @@ BooleanObject::create(JSContext *cx, bool b)
     JSObject *obj = NewBuiltinClassInstance(cx, &BooleanClass);
     if (!obj)
         return NULL;
-    BooleanObject *boolobj = obj->asBoolean();
-    boolobj->setPrimitiveValue(b);
-    return boolobj;
+    BooleanObject &boolobj = obj->asBoolean();
+    boolobj.setPrimitiveValue(b);
+    return &boolobj;
 }
 
 inline BooleanObject *
@@ -72,9 +72,9 @@ BooleanObject::createWithProto(JSContext *cx, bool b, JSObject &proto)
                                             gc::GetGCObjectKind(RESERVED_SLOTS));
     if (!obj)
         return NULL;
-    BooleanObject *boolobj = obj->asBoolean();
-    boolobj->setPrimitiveValue(b);
-    return boolobj;
+    BooleanObject &boolobj = obj->asBoolean();
+    boolobj.setPrimitiveValue(b);
+    return &boolobj;
 }
 
 } // namespace js

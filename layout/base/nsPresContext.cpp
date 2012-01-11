@@ -119,6 +119,31 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+namespace {
+
+class CharSetChangingRunnable : public nsRunnable
+{
+public:
+  CharSetChangingRunnable(nsPresContext* aPresContext,
+                          const nsCString& aCharSet)
+    : mPresContext(aPresContext),
+      mCharSet(aCharSet)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    mPresContext->DoChangeCharSet(mCharSet);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsPresContext> mPresContext;
+  nsCString mCharSet;
+};
+
+} // anonymous namespace
+
 static nscolor
 MakeColorPref(const nsString& aColor)
 {
@@ -491,22 +516,24 @@ nsPresContext::GetFontPreferences()
     mMinimumFontSizePref = CSSPointsToAppUnits(size);
   }
 
+  nsFont* fontTypes[] = {
+    &mDefaultVariableFont,
+    &mDefaultFixedFont,
+    &mDefaultSerifFont,
+    &mDefaultSansSerifFont,
+    &mDefaultMonospaceFont,
+    &mDefaultCursiveFont,
+    &mDefaultFantasyFont
+  };
+  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT);
+
   // get attributes specific to each generic font
   nsCAutoString generic_dot_langGroup;
-  for (PRInt32 eType = eDefaultFont_Variable; eType < eDefaultFont_COUNT; ++eType) {
+  for (PRUint32 eType = 0; eType < ArrayLength(fontTypes); ++eType) {
     generic_dot_langGroup.Assign(kGenericFont[eType]);
     generic_dot_langGroup.Append(langGroup);
 
-    nsFont* font;
-    switch (eType) {
-      case eDefaultFont_Variable:  font = &mDefaultVariableFont;  break;
-      case eDefaultFont_Fixed:     font = &mDefaultFixedFont;     break;
-      case eDefaultFont_Serif:     font = &mDefaultSerifFont;     break;
-      case eDefaultFont_SansSerif: font = &mDefaultSansSerifFont; break;
-      case eDefaultFont_Monospace: font = &mDefaultMonospaceFont; break;
-      case eDefaultFont_Cursive:   font = &mDefaultCursiveFont;   break;
-      case eDefaultFont_Fantasy:   font = &mDefaultFantasyFont;   break;
-    }
+    nsFont* font = fontTypes[eType];
 
     // set the default variable font (the other fonts are seen as 'generic' fonts
     // in GFX and will be queried there when hunting for alternative fonts)
@@ -1070,7 +1097,15 @@ nsPresContext::DestroyImageLoaders()
 }
 
 void
-nsPresContext::UpdateCharSet(const nsAFlatCString& aCharSet)
+nsPresContext::DoChangeCharSet(const nsCString& aCharSet)
+{
+  UpdateCharSet(aCharSet);
+  mDeviceContext->FlushFontCache();
+  RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+}
+
+void
+nsPresContext::UpdateCharSet(const nsCString& aCharSet)
 {
   if (mLangService) {
     NS_IF_RELEASE(mLanguage);
@@ -1110,10 +1145,9 @@ nsPresContext::Observe(nsISupports* aSubject,
                         const PRUnichar* aData)
 {
   if (!nsCRT::strcmp(aTopic, "charset")) {
-    UpdateCharSet(NS_LossyConvertUTF16toASCII(aData));
-    mDeviceContext->FlushFontCache();
-    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
-    return NS_OK;
+    nsRefPtr<CharSetChangingRunnable> runnable =
+      new CharSetChangingRunnable(this, NS_LossyConvertUTF16toASCII(aData));
+    return NS_DispatchToCurrentThread(runnable);
   }
 
   NS_WARNING("unrecognized topic in nsPresContext::Observe");
@@ -1380,8 +1414,6 @@ nsPresContext::SetupBorderImageLoaders(nsIFrame* aFrame,
   }
 
   PRUint32 actions = nsImageLoader::ACTION_REDRAW_ON_LOAD;
-  if (aStyleBorder->ImageBorderDiffers())
-    actions |= nsImageLoader::ACTION_REFLOW_ON_LOAD;
   nsRefPtr<nsImageLoader> loader =
     nsImageLoader::Create(aFrame, borderImage, actions, nsnull);
   SetImageLoaders(aFrame, BORDER_IMAGE, loader);

@@ -62,8 +62,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGForeignObjectElement,nsSVGForeignObjectElementBas
 DOMCI_NODE_DATA(SVGForeignObjectElement, nsSVGForeignObjectElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGForeignObjectElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGForeignObjectElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGForeignObjectElement)
+  NS_NODE_INTERFACE_TABLE5(nsSVGForeignObjectElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGForeignObjectElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGForeignObjectElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectElementBase)
 

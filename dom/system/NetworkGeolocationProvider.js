@@ -218,17 +218,19 @@ WifiGeoPositionProvider.prototype = {
 
     if (accessPoints) {
         providerUrl = providerUrl + accessPoints.sort(sort).map(encode).join("");
-        // max length is 2k.  make sure we are under that
-        let x = providerUrl.length - 2000;
-        if (x >= 0) {
-            // we need to trim
-            let doomed = providerUrl.lastIndexOf("&", 2000);
-            LOG("Doomed:"+doomed);
-            providerUrl = providerUrl.substring(0, doomed);
-        }
     }
 
     providerUrl = encodeURI(providerUrl);
+
+    // max length is 2k.  make sure we are under that
+    let x = providerUrl.length - 2000;
+    if (x >= 0) {
+	// we need to trim
+	let doomed = providerUrl.lastIndexOf("&", 2000);
+	LOG("Doomed:"+doomed);
+	providerUrl = providerUrl.substring(0, doomed);
+    }
+    
     LOG("************************************* Sending request:\n" + providerUrl + "\n");
 
     // send our request to a wifi geolocation network provider:

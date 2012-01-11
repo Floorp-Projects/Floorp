@@ -62,7 +62,6 @@ nsINameSpaceManager.h \
 nsINode.h \
 nsINodeInfo.h \
 nsINodeList.h \
-nsIRange.h \
 nsIRangeUtils.h \
 nsIScriptElement.h \
 nsIStyleSheetLinkingElement.h \
@@ -117,7 +116,7 @@ XPIDLSRCS	= \
 		nsIXMLHttpRequest.idl \
 		nsIContentSecurityPolicy.idl \
 		nsIFrameMessageManager.idl \
-		nsIMozWebSocket.idl \
+		nsIWebSocket.idl \
 		nsIEventSource.idl \
 		$(NULL)
 

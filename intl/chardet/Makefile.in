@@ -44,11 +44,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public src
 
-ifeq ($(OS_ARCH),WINNT)
-ifdef ENABLE_TESTS
-TOOL_DIRS	+= tests
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 

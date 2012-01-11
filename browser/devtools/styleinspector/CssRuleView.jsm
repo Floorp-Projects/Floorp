@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla Inspector Module.
+ * The Original Code is the Mozilla CSS Rule View.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation.
@@ -21,7 +21,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Dave Camp (dcamp@mozilla.com) (Original Author)
+ *   Dave Camp <dcamp@mozilla.com> (Original Author)
+ *   Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -778,7 +779,16 @@ RuleEditor.prototype = {
       class: "ruleview-selector",
       textContent: this.rule.selectorText
     });
-    appendText(header, " {");
+
+    this.openBrace = createChild(header, "span", {
+      class: "ruleview-ruleopen",
+      tabindex: "0",
+      textContent: " {"
+    });
+
+    this.openBrace.addEventListener("click", function() {
+      this.newProperty();
+    }.bind(this), true);
 
     this.propertyList = createChild(code, "ul", {
       class: "ruleview-propertylist"

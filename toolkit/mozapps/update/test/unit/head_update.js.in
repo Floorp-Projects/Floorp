@@ -88,6 +88,8 @@ const HELPER_BIN_FILE = "TestAUSHelper" + BIN_SUFFIX;
 const MAR_COMPLETE_FILE = "data/complete.mar";
 const MAR_PARTIAL_FILE = "data/partial.mar";
 const UPDATER_BIN_FILE = "updater" + BIN_SUFFIX;
+const MAINTENANCE_SERVICE_BIN_FILE = "maintenanceservice.exe";
+const MAINTENANCE_SERVICE_INSTALLER_BIN_FILE = "maintenanceservice_installer.exe";
 const UPDATES_DIR_SUFFIX = "_mar";
 const CHANNEL_CHANGE_FILE = "channelchange";
 
@@ -104,12 +106,18 @@ const ERR_RENAME_FILE = "rename_file: failed to rename file";
 const ERR_UNABLE_OPEN_DEST = "unable to open destination file";
 const ERR_BACKUP_DISCARD = "backup_discard: unable to remove";
 
+const LOG_SVC_SUCCESSFUL_LAUNCH = "updater.exe was launched and run successfully!";
+
 // variables are used instead of contants so tests can override these values
 var gCallbackBinFile = "callback_app" + BIN_SUFFIX;
 var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
 
 // Time to wait for the test helper process before continuing the test
 const TEST_HELPER_TIMEOUT = 100;
+
+// Use a copy of the main application executable for the test to avoid main
+// executable in use errors.
+const FILE_WIN_TEST_EXE = "_aus_test_app.exe";
 
 var gTestserver;
 
@@ -445,6 +453,343 @@ function runUpdate() {
   return process.exitValue;
 }
 
+let gServiceLaunchedCallbackLog = null;
+let gServiceLaunchedCallbackArgs = null;
+
+/**
+ * Helper function to check whether the maintenance service updater tests should
+ * run. See bug 711660 for more details.
+ *
+ * @return true if the test should run and false if it shouldn't.
+ */
+function shouldRunServiceTest(aFirstTest) {
+  // In case the machine is running an old maintenance service or if it
+  // is not installed, and permissions exist to install it.  Then install
+  // the newer bin that we have.
+  attemptServiceInstall();
+
+  const REG_PATH = "SOFTWARE\\Mozilla\\MaintenanceService\\" +
+                   "3932ecacee736d366d6436db0f55bce4";
+
+  let key = AUS_Cc["@mozilla.org/windows-registry-key;1"].
+            createInstance(AUS_Ci.nsIWindowsRegKey);
+  try {
+    key.open(AUS_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE, REG_PATH,
+             AUS_Ci.nsIWindowsRegKey.ACCESS_READ | key.WOW64_64);
+  }
+  catch (e) {
+    logTestInfo("this test can only run on the buildbot build system at this " +
+                "time.");
+    return false;
+  }
+
+  let binDir = getGREDir();
+  let updaterBin = binDir.clone();
+  updaterBin.append(UPDATER_BIN_FILE);
+  if (!updaterBin.exists()) {
+    do_throw("Unable to find updater binary!");
+  }
+
+  let updaterBinPath = updaterBin.path;
+  if (/ /.test(updaterBinPath)) {
+    updaterBinPath = '"' + updaterBinPath + '"';
+  }
+
+  // Check to make sure the service is installed
+  let helperBin = do_get_file(HELPER_BIN_FILE);
+  let args = ["wait-for-service-stop", "MozillaMaintenance", "10"];
+  let process = AUS_Cc["@mozilla.org/process/util;1"].
+                createInstance(AUS_Ci.nsIProcess);
+  process.init(helperBin);
+  logTestInfo("Checking if the service exists on this machine.");
+  process.run(true, args, args.length);
+  if (process.exitValue == 0xEE) {
+    logTestInfo("this test can only run when the service is installed.");
+    return false;
+  } else {
+    logTestInfo("Service exists, return value: " + process.exitValue);
+  }
+
+  // If this is the first test in the series, then there is no reason the
+  // service should be anything but stopped, so be strict here and throw
+  // an error.
+  if (aFirstTest && process.exitValue != 0) {
+    do_throw("First test, check for service stopped state returned error " + 
+             process.exitValue);
+  }
+
+  // Make sure the binaries are signed
+  args = ["check-signature", updaterBinPath];
+  process = AUS_Cc["@mozilla.org/process/util;1"].
+            createInstance(AUS_Ci.nsIProcess);
+  process.init(helperBin);
+  process.run(true, args, args.length);
+  if (process.exitValue == 0) {
+    return true;
+  }
+  logTestInfo("this test can only run on builds with signed binaries. " +
+              HELPER_BIN_FILE + " returned " + process.exitValue)
+  return false;
+}
+
+/**
+ * Copies the specified filename from the dist/bin
+ * directory into the apply-to directory.
+ *
+ * @param filename The name of the file to copy
+*/
+function copyBinToApplyToDir(filename) {
+  let binDir = getGREDir();
+  let fileToCopy = binDir.clone();
+  fileToCopy.append(filename);
+  if (!fileToCopy.exists()) {
+    do_throw("Unable to copy binary: " + filename);
+  }
+  let applyToUpdater = getApplyDirFile(null, true);
+  if (applyToUpdater.path != binDir.path) {
+    do_print("copying " + fileToCopy.path + " to: " + applyToUpdater.path);
+    fileToCopy.copyTo(applyToUpdater, filename);
+  }
+}
+
+/**
+ * Attempts to upgrade the maintenance service if permissions are allowed.
+ * This is useful for XP where we have permission to upgrade in case an
+ * older service installer exists.  Also if the user manually installed into
+ * a unprivileged location.
+*/
+function attemptServiceInstall() {
+  var version = AUS_Cc["@mozilla.org/system-info;1"]
+                .getService(AUS_Ci.nsIPropertyBag2)
+                .getProperty("version");
+  var isVistaOrHigher = (parseFloat(version) >= 6.0);
+  if (isVistaOrHigher) {
+    return;
+  }
+  
+  let binDir = getGREDir();
+  let installerFile = binDir.clone();
+  installerFile.append(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE);
+  if (!installerFile.exists()) {
+    do_throw(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE + " not found.");
+  }
+  let installerProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                         createInstance(AUS_Ci.nsIProcess);
+  installerProcess.init(installerFile);
+  logTestInfo("Starting installer process...");
+  installerProcess.run(true, [], 0);
+}
+
+/**
+ * Helper function for updater tests for launching the updater using the
+ * maintenance service to apply a mar file.
+ *
+ * @param aInitialStatus  the initial value of update.status
+ * @param aExpectedStatus the expected value of update.status when the test finishes
+ * @param aCallback       the function to be called when the update is finished
+ * @param aUpdatesDir     the updates root directory to use (optional)
+ * @param aCheckSvcLog    whether the service log should be checked (optional)
+ */
+function runUpdateUsingService(aInitialStatus, aExpectedStatus,
+                               aCallback, aUpdatesDir, aCheckSvcLog) {
+  // Check the service logs for a successful update
+  function checkServiceLogs(aOriginalContents) {
+    let contents = readServiceLogFile();
+    logTestInfo("The contents of maintenanceservice.log:\n" + contents + "\n");
+    do_check_neq(contents, aOriginalContents);
+    do_check_neq(contents.indexOf(LOG_SVC_SUCCESSFUL_LAUNCH), -1);
+  }
+  function readServiceLogFile() {
+    let file = AUS_Cc["@mozilla.org/file/directory_service;1"].
+               getService(AUS_Ci.nsIProperties).
+               get("CmAppData", AUS_Ci.nsIFile);
+    file.append("Mozilla");
+    file.append("logs");
+    file.append("maintenanceservice.log");
+    return readFile(file);
+  }
+  function waitServiceApps() {
+    // maintenanceservice_installer.exe is started async during updates.
+    waitForApplicationStop("maintenanceservice_installer.exe");
+    // maintenanceservice_tmp.exe is started async from the service installer.
+    waitForApplicationStop("maintenanceservice_tmp.exe");
+    // In case the SCM thinks the service is stopped, but process still exists.
+    waitForApplicationStop("maintenanceservice.exe");
+  }
+  function waitForServiceStop(aFailTest) {
+    waitServiceApps(); 
+    logTestInfo("Waiting for service to stop if necessary...");
+    // Use the helper bin to ensure the service is stopped. If not
+    // stopped then wait for the service to be stopped (at most 120 seconds)
+    let helperBin = do_get_file(HELPER_BIN_FILE);
+    let helperBinArgs = ["wait-for-service-stop", 
+                         "MozillaMaintenance", 
+                         "120"];
+    let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                           createInstance(AUS_Ci.nsIProcess);
+    helperBinProcess.init(helperBin);
+    logTestInfo("Stopping service...");
+    helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
+    if (helperBinProcess.exitValue == 0xEE) {
+      do_throw("The service does not exist on this machine.  Return value: " +
+               helperBinProcess.exitValue);
+    } else if (helperBinProcess.exitValue != 0) {
+      if (aFailTest) {
+        do_throw("maintenance service did not stop, last state: " +
+                 helperBinProcess.exitValue + ". Forcing test failure.");
+      } else {
+        logTestInfo("maintenance service did not stop, last state: " + 
+                    helperBinProcess.exitValue + ".  May cause failures.");
+      }
+    } else {
+      logTestInfo("Service stopped.");
+    }
+    waitServiceApps(); 
+  }
+  function waitForApplicationStop(application) {
+    logTestInfo("Waiting for " + application + " to stop if " + 
+                "necessary...");
+    // Use the helper bin to ensure the application is stopped. 
+    // If not, then wait for it to be stopped (at most 120 seconds)
+    let helperBin = do_get_file(HELPER_BIN_FILE);
+    let helperBinArgs = ["wait-for-application-exit", 
+                         application, 
+                         "120"];
+    let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                           createInstance(AUS_Ci.nsIProcess);
+    helperBinProcess.init(helperBin);
+    helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
+    if (helperBinProcess.exitValue != 0) {
+      do_throw(application + " did not stop, last state: " +
+               helperBinProcess.exitValue + ". Forcing test failure.");
+    }
+  }
+
+  // Make sure the service from the previous test is already stopped.
+  waitForServiceStop(true);
+
+  // Prevent the cleanup function from begin run more than once
+  if (typeof(gRegisteredServiceCleanup) === "undefined") {
+    gRegisteredServiceCleanup = true;
+
+    do_register_cleanup(function serviceCleanup() {
+      resetEnvironment();
+
+      // This will delete the app console log file if it exists.
+      try {
+        getAppConsoleLogPath();
+      }
+      catch (e) {
+        logTestInfo("unable to remove file during cleanup. Exception: " + e);
+      }
+
+      // This will delete the app arguments log file if it exists.
+      try {
+        getAppArgsLogPath();
+      }
+      catch (e) {
+        logTestInfo("unable to remove file during cleanup. Exception: " + e);
+      }
+    });
+  }
+
+  if (aCheckSvcLog === undefined) {
+    aCheckSvcLog = true; // default to true
+  }
+
+  let svcOriginalLog;
+  if (aCheckSvcLog) {
+    svcOriginalLog = readServiceLogFile();
+  }
+
+  let appArgsLogPath = getAppArgsLogPath();
+  gServiceLaunchedCallbackLog = appArgsLogPath.replace(/^"|"$/g, "");
+
+  let updatesDir = aUpdatesDir || do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
+  let file = updatesDir.clone();
+  file.append(FILE_UPDATE_STATUS);
+  writeFile(file, aInitialStatus + "\n");
+
+  // sanity check
+  do_check_eq(readStatusFile(updatesDir), aInitialStatus);
+
+  gServiceLaunchedCallbackArgs = [
+    "-no-remote",
+    "-process-updates",
+    "-dump-args",
+    appArgsLogPath
+  ];
+
+  let launchBin = getLaunchBin();
+  let args = getProcessArgs(["-dump-args", appArgsLogPath]);
+  logTestInfo("launching " + launchBin.path + " " + args.join(" "));
+
+  let process = AUS_Cc["@mozilla.org/process/util;1"].
+                   createInstance(AUS_Ci.nsIProcess);
+  process.init(launchBin);
+
+  // Override the update root directory
+  gEnvUpdateRootOverride = updatesDir.path;
+  gEnvAppDirOverride = getApplyDirFile(null).path;
+
+  setEnvironment();
+
+  // There is a security check done by the service to make sure the updater 
+  // we are executing is the same as the one in the apply-to dir. 
+  // To make sure they match from tests we copy updater.exe to the apply-to dir.
+  copyBinToApplyToDir(UPDATER_BIN_FILE);
+
+  // The service will execute maintenanceservice_installer.exe and
+  // will copy maintenanceservice.exe out of the same directory from
+  // the installation directory.  So we need to make sure both of those
+  // bins always exist in the installation directory.
+  copyBinToApplyToDir(MAINTENANCE_SERVICE_BIN_FILE);
+  copyBinToApplyToDir(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE);
+
+  // Firefox does not wait for the service command to finish, but
+  // we still launch the process sync to avoid intermittent failures with
+  // the log file not being written out yet.
+  // We will rely on watching the update.status file and waiting for the service
+  // to stop to know the service command is done.
+  process.run(true, args, args.length);
+
+  resetEnvironment();
+
+  function timerCallback(timer) {
+    // Wait for the expected status
+    let status = readStatusFile(updatesDir);
+    // For failed status, we don't care what the failure code is
+    if (aExpectedStatus == STATE_FAILED) {
+      status = status.split(": ")[0];
+    }
+    // status will probably always be equal to STATE_APPLYING but there is a
+    // race condition where it would be possible on slower machines where status
+    // could be equal to STATE_PENDING_SVC.
+    if (status == STATE_APPLYING || 
+        status == STATE_PENDING_SVC) {
+      logTestInfo("Still waiting to see the " + aExpectedStatus +
+                  " status, got " + status + " for now...");
+      return;
+    }
+    
+    // Make sure all of the logs are written out.
+    waitForServiceStop(false);
+
+    do_check_eq(status, aExpectedStatus);
+
+    timer.cancel();
+    timer = null;
+
+    if (aCheckSvcLog) {
+      checkServiceLogs(svcOriginalLog);
+    } 
+    aCallback();
+  }
+
+  let timer = AUS_Cc["@mozilla.org/timer;1"].createInstance(AUS_Ci.nsITimer);
+  timer.initWithCallback(timerCallback, 1000, timer.TYPE_REPEATING_SLACK);
+}
+
 /**
  * Gets the platform specific shell binary that is launched using nsIProcess and
  * in turn launches the updater.
@@ -700,6 +1045,7 @@ function checkUpdateLogContains(aCheckString) {
   let updateLog = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX, true);
   updateLog.append(FILE_UPDATE_LOG);
   let updateLogContents = readFileBytes(updateLog);
+  logTestInfo("log file contents:\n" + updateLogContents + "\n");
   do_check_true(updateLogContents.indexOf(aCheckString) != -1);
 }
 
@@ -907,6 +1253,59 @@ function checkCallbackAppLog() {
 
   // Use a timeout to give any files that were in use additional time to close.
   do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+}
+
+/**
+ * Helper function for updater service tests for verifying the contents of the
+ * updater callback application log which should contain the arguments passed to
+ * the callback application.
+ */
+function checkCallbackServiceLog() {
+  do_check_neq(gServiceLaunchedCallbackLog, null);
+
+  let expectedLogContents = gServiceLaunchedCallbackArgs.join("\n") + "\n";
+  let logFile = AUS_Cc["@mozilla.org/file/local;1"].createInstance(AUS_Ci.nsILocalFile);
+  logFile.initWithPath(gServiceLaunchedCallbackLog);
+  let logContents = readFile(logFile);
+ 
+  // It is possible for the log file contents check to occur before the log file
+  // contents are completely written so wait until the contents are the expected
+  // value. If the contents are never the expected value then the test will
+  // fail by timing out.
+  if (logContents != expectedLogContents) {
+    logTestInfo("callback service log not expected value, waiting longer");
+    do_timeout(TEST_HELPER_TIMEOUT, checkCallbackServiceLog);
+    return;
+  }
+
+  logTestInfo("testing that the callback application successfully launched " +
+              "and the expected command line arguments passed to it");
+  do_check_eq(logContents, expectedLogContents);
+
+
+  (function removeCallbackCopy() {
+    // Remove the copy of the application executable used for the test on
+    // Windows if it exists.
+    let appBinCopy = getCurrentProcessDir();
+    appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
+    if (appBinCopy.exists()) {
+      try {
+        appBinCopy.remove(false);
+        // Use a timeout to give any files that were in use additional 
+        // time to close.  Same as updater.exe without service tests.
+        do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+      }
+      catch (e) {
+        logTestInfo("unable to remove file during cleanup. Exception: " + e);
+        do_timeout(TEST_HELPER_TIMEOUT, removeCallbackCopy);
+      }
+    } else {
+      do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+    }
+  })();
+
+
+
 }
 
 /**
@@ -1168,3 +1567,419 @@ var gDirProvider = {
   }
 };
 Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService).registerProvider(gDirProvider);
+
+/**
+ * Returns the platform specific arguments used by nsIProcess when launching
+ * the application.
+ *
+ * @param aExtraArgs optional array of extra arguments
+ * @return  an array of arguments to be passed to nsIProcess.
+ *
+ * Notes:
+ * 1. Mozilla universal binaries that contain both i386 and x86_64 on Mac OS X
+ *    10.5.x must be launched using the i386 architecture.
+ * 2. A shell is necessary to pipe the application's console output which
+ *    would otherwise pollute the xpcshell log.
+ *
+ * Command line arguments used when launching the application:
+ * -no-remote prevents shell integration from being affected by an existing
+ * application process.
+ * -process-updates makes the application exits after being relaunched by the
+ * updater.
+ * 1> pipes stdout to a file.
+ * appConsoleLogPath is the file path to pipe the output from the shell.
+ * Otherwise the output from the application will end up in the xpchsell log.
+ * 2>&1 pipes stderr to sdout.
+ */
+function getProcessArgs(aExtraArgs) {
+  if (!aExtraArgs) {
+    aExtraArgs = [];
+  }
+
+  // Pipe the output from the launched application to a file so the output from
+  // its console isn't present in the xpcshell log.
+  let appConsoleLogPath = getAppConsoleLogPath();
+
+  let args;
+  if (IS_UNIX) {
+    let launchScript = getLaunchScript();
+    // Precreate the script with executable permissions
+    launchScript.create(AUS_Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_DIRECTORY);
+
+    let scriptContents = "#! /bin/sh\n";
+    // On Mac OS X versions prior to 10.6 the i386 acrhitecture must be used.
+    if (gIsLessThanMacOSX_10_6) {
+      scriptContents += "arch -arch i386 ";
+    }
+    scriptContents += gAppBinPath + " -no-remote -process-updates " +
+                      aExtraArgs.join(" ") + " 1> " +
+                      appConsoleLogPath + " 2>&1";
+    writeFile(launchScript, scriptContents);
+    logTestInfo("created " + launchScript.path + " containing:\n" +
+                scriptContents);
+    args = [launchScript.path];
+  }
+  else {
+    args = ["/D", "/Q", "/C", gAppBinPath, "-no-remote", "-process-updates"].
+           concat(aExtraArgs).
+           concat(["1>", appConsoleLogPath, "2>&1"]);
+  }
+  return args;
+}
+
+/**
+ * Gets a file path for piping the console output from the application so it
+ * doesn't appear in the xpcshell log file.
+ *
+ * @return  path to the file for piping the console output from the application.
+ */
+function getAppConsoleLogPath() {
+  let appConsoleLog = do_get_file("/", true);
+  appConsoleLog.append(TEST_ID + "_app_console_log");
+  if (appConsoleLog.exists()) {
+    appConsoleLog.remove(false);
+  }
+  let appConsoleLogPath = appConsoleLog.path;
+  if (/ /.test(appConsoleLogPath)) {
+    appConsoleLogPath = '"' + appConsoleLogPath + '"';
+  }
+  return appConsoleLogPath;
+}
+
+/**
+ * Gets a file path for the application to dump its arguments into.  This is used
+ * to verify that a callback application is launched.
+ *
+ * @return  the file for the application to dump its arguments into.
+ */
+function getAppArgsLogPath() {
+  let appArgsLog = do_get_file("/", true);
+  appArgsLog.append("app_args_log");
+  if (appArgsLog.exists()) {
+    appArgsLog.remove(false);
+  }
+  let appArgsLogPath = appArgsLog.path;
+  if (/ /.test(appArgsLogPath)) {
+    appArgsLogPath = '"' + appArgsLogPath + '"';
+  }
+  return appArgsLogPath;
+}
+
+/**
+ * Gets the nsIFile reference for the shell script to launch the application. If
+ * the file exists it will be removed by this function.
+ *
+ * @return  the nsIFile for the shell script to launch the application.
+ */
+function getLaunchScript() {
+  let launchScript = do_get_file("/", true);
+  launchScript.append("launch.sh");
+  if (launchScript.exists()) {
+    launchScript.remove(false);
+  }
+  return launchScript;
+}
+
+// A shell script is used to get the OS version due to nsSystemInfo not
+// returning the actual OS version. It is possible to get the actual OS version
+// using ctypes but it would be more complicated than using a shell script.
+XPCOMUtils.defineLazyGetter(this, "gIsLessThanMacOSX_10_6", function test_gMacVer() {
+  if (!IS_MACOSX) {
+    return false;
+  }
+
+  let [versionScript, versionFile] = getVersionScriptAndFile();
+  // Precreate the script with executable permissions
+  versionScript.create(AUS_Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_DIRECTORY);
+  let scriptContents = "#! /bin/sh\nsw_vers -productVersion >> " + versionFile.path;
+  writeFile(versionScript, scriptContents);
+  logTestInfo("created " + versionScript.path + " shell script containing:\n" +
+              scriptContents);
+
+  let versionScriptPath = versionScript.path;
+  if (/ /.test(versionScriptPath)) {
+    versionScriptPath = '"' + versionScriptPath + '"';
+  }
+
+
+  let launchBin = getLaunchBin();
+  let args = [versionScriptPath];
+  let process = AUS_Cc["@mozilla.org/process/util;1"].
+                createInstance(AUS_Ci.nsIProcess);
+  process.init(launchBin);
+  process.run(true, args, args.length);
+  if (process.exitValue != 0) {
+    do_throw("Version script exited with " + process.exitValue + "... unable " +
+             "to get Mac OS X version!");
+  }
+
+  let version = readFile(versionFile).split("\n")[0];
+  logTestInfo("executing on Mac OS X verssion " + version);
+
+  return (Services.vc.compare(version, "10.6") < 0)
+});
+
+/**
+ * Checks for the existence of a platform specific application binary that can
+ * be used for the test and gets its path if it is found.
+ *
+ * Note: The application shell scripts for launching the application work on all
+ * platforms that provide a launch shell script except for Mac OS X 10.5 which
+ * is why this test uses the binaries to launch the application.
+ */
+XPCOMUtils.defineLazyGetter(this, "gAppBinPath", function test_gAppBinPath() {
+  let processDir = getAppDir();
+  let appBin = processDir.clone();
+  appBin.append(APP_BIN_NAME + APP_BIN_SUFFIX);
+  if (appBin.exists()) {
+    if (IS_WIN) {
+      let appBinCopy = processDir.clone();
+      appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
+      if (appBinCopy.exists()) {
+        appBinCopy.remove(false);
+      }
+      appBin.copyTo(processDir, TEST_ID + FILE_WIN_TEST_EXE);
+      appBin = processDir.clone();
+      appBin.append(TEST_ID + FILE_WIN_TEST_EXE);
+    }
+    let appBinPath = appBin.path;
+    if (/ /.test(appBinPath)) {
+      appBinPath = '"' + appBinPath + '"';
+    }
+    return appBinPath;
+  }
+  return null;
+});
+
+let gWindowsBinDir = null;
+
+/**
+ * This dummy function just returns false.  Tests which wish to adjust the app
+ * directory on Mac OS X should define a real version of this function.
+ */
+function shouldAdjustPathsOnMac() {
+  return false;
+}
+
+/**
+ * This function returns the current process directory on Windows and Linux, and
+ * the application bundle directory on Mac.
+ */
+function getAppDir() {
+  let dir = getCurrentProcessDir();
+  if (shouldAdjustPathsOnMac()) {
+    // objdir/dist/bin/../NightlyDebug.app/Contents/MacOS
+    dir = dir.parent;
+    dir.append(BUNDLE_NAME);
+    dir.append("Contents");
+    dir.append("MacOS");
+  } else if (IS_WIN && gWindowsBinDir) {
+    dir = gWindowsBinDir.clone();
+  }
+  return dir;
+}
+
+/**
+ * Gets the nsIFile references for the shell script to retrieve the Mac OS X
+ * version and the nsIFile to pipe the output of the shell script. If either of
+ * these files exist they will be removed by this function.
+ *
+ * @return  array containing two nsIFile references. The first array member is
+ *          the nsIFile for the shell script to launch to get the Mac OS X
+ *          version and the second array member is the nsIFile for the piped
+ *          output from the shell script.
+ */
+function getVersionScriptAndFile() {
+  let versionScript = do_get_file("/", true);
+  let versionFile = versionScript.clone();
+  versionScript.append("get_version.sh");
+  if (versionScript.exists()) {
+    versionScript.remove(false);
+  }
+  versionFile.append("version.out");
+  if (versionFile.exists()) {
+    versionFile.remove(false);
+  }
+  return [versionScript, versionFile];
+}
+
+// Environment related globals
+let gShouldResetEnv = undefined;
+let gAddedEnvXRENoWindowsCrashDialog = false;
+let gEnvXPCOMDebugBreak;
+let gEnvXPCOMMemLeakLog;
+let gEnvDyldLibraryPath;
+let gEnvLdLibraryPath;
+let gEnvUpdateRootOverride = null;
+let gEnvAppDirOverride = null;
+
+/**
+ * Sets the environment that will be used by the application process when it is
+ * launched.
+ */
+function setEnvironment() {
+  // Prevent setting the environment more than once.
+  if (gShouldResetEnv !== undefined)
+    return;
+
+  gShouldResetEnv = true;
+
+  let env = AUS_Cc["@mozilla.org/process/environment;1"].
+            getService(AUS_Ci.nsIEnvironment);
+  if (IS_WIN && !env.exists("XRE_NO_WINDOWS_CRASH_DIALOG")) {
+    gAddedEnvXRENoWindowsCrashDialog = true;
+    logTestInfo("setting the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
+                "variable to 1... previously it didn't exist");
+    env.set("XRE_NO_WINDOWS_CRASH_DIALOG", "1");
+  }
+
+  if (IS_UNIX) {
+    let appGreDir = Services.dirsvc.get("GreD", AUS_Ci.nsIFile);
+    let envGreDir = AUS_Cc["@mozilla.org/file/local;1"].
+                    createInstance(AUS_Ci.nsILocalFile);
+    let shouldSetEnv = true;
+    if (IS_MACOSX) {
+      if (env.exists("DYLD_LIBRARY_PATH")) {
+        gEnvDyldLibraryPath = env.get("DYLD_LIBRARY_PATH");
+        envGreDir.initWithPath(gEnvDyldLibraryPath);
+        if (envGreDir.path == appGreDir.path) {
+          gEnvDyldLibraryPath = null;
+          shouldSetEnv = false;
+        }
+      }
+
+      if (shouldSetEnv) {
+        logTestInfo("setting DYLD_LIBRARY_PATH environment variable value to " +
+                    appGreDir.path);
+        env.set("DYLD_LIBRARY_PATH", appGreDir.path);
+      }
+    }
+    else {
+      if (env.exists("LD_LIBRARY_PATH")) {
+        gEnvLdLibraryPath = env.get("LD_LIBRARY_PATH");
+        envGreDir.initWithPath(gEnvLdLibraryPath);
+        if (envGreDir.path == appGreDir.path) {
+          gEnvLdLibraryPath = null;
+          shouldSetEnv = false;
+        }
+      }
+
+      if (shouldSetEnv) {
+        logTestInfo("setting LD_LIBRARY_PATH environment variable value to " +
+                    appGreDir.path);
+        env.set("LD_LIBRARY_PATH", appGreDir.path);
+      }
+    }
+  }
+
+  if (env.exists("XPCOM_MEM_LEAK_LOG")) {
+    gEnvXPCOMMemLeakLog = env.get("XPCOM_MEM_LEAK_LOG");
+    logTestInfo("removing the XPCOM_MEM_LEAK_LOG environment variable... " +
+                "previous value " + gEnvXPCOMMemLeakLog);
+    env.set("XPCOM_MEM_LEAK_LOG", "");
+  }
+
+  if (env.exists("XPCOM_DEBUG_BREAK")) {
+    gEnvXPCOMDebugBreak = env.get("XPCOM_DEBUG_BREAK");
+    logTestInfo("setting the XPCOM_DEBUG_BREAK environment variable to " +
+                "warn... previous value " + gEnvXPCOMDebugBreak);
+  }
+  else {
+    logTestInfo("setting the XPCOM_DEBUG_BREAK environment variable to " +
+                "warn... previously it didn't exist");
+  }
+
+  env.set("XPCOM_DEBUG_BREAK", "warn");
+
+  if (gEnvUpdateRootOverride) {
+    logTestInfo("setting the MOZ_UPDATE_ROOT_OVERRIDE environment variable to " +
+                gEnvUpdateRootOverride + "\n");
+    env.set("MOZ_UPDATE_ROOT_OVERRIDE", gEnvUpdateRootOverride);
+  }
+
+  if (gEnvAppDirOverride) {
+    logTestInfo("setting the MOZ_UPDATE_APPDIR_OVERRIDE environment variable to " +
+                gEnvAppDirOverride + "\n");
+    env.set("MOZ_UPDATE_APPDIR_OVERRIDE", gEnvAppDirOverride);
+  }
+
+  logTestInfo("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
+  env.set("MOZ_NO_SERVICE_FALLBACK", "1");
+}
+
+/**
+ * Sets the environment back to the original values after launching the
+ * application.
+ */
+function resetEnvironment() {
+  // Prevent resetting the environment more than once.
+  if (gShouldResetEnv !== true)
+    return;
+
+  gShouldResetEnv = false;
+
+  let env = AUS_Cc["@mozilla.org/process/environment;1"].
+            getService(AUS_Ci.nsIEnvironment);
+
+  if (gEnvXPCOMMemLeakLog) {
+    logTestInfo("setting the XPCOM_MEM_LEAK_LOG environment variable back to " +
+                gEnvXPCOMMemLeakLog);
+    env.set("XPCOM_MEM_LEAK_LOG", gEnvXPCOMMemLeakLog);
+  }
+
+  if (gEnvXPCOMDebugBreak) {
+    logTestInfo("setting the XPCOM_DEBUG_BREAK environment variable back to " +
+                gEnvXPCOMDebugBreak);
+    env.set("XPCOM_DEBUG_BREAK", gEnvXPCOMDebugBreak);
+  }
+  else {
+    logTestInfo("clearing the XPCOM_DEBUG_BREAK environment variable");
+    env.set("XPCOM_DEBUG_BREAK", "");
+  }
+
+  if (IS_UNIX) {
+    if (IS_MACOSX) {
+      if (gEnvDyldLibraryPath) {
+        logTestInfo("setting DYLD_LIBRARY_PATH environment variable value " +
+                    "back to " + gEnvDyldLibraryPath);
+        env.set("DYLD_LIBRARY_PATH", gEnvDyldLibraryPath);
+      }
+      else {
+        logTestInfo("removing DYLD_LIBRARY_PATH environment variable");
+        env.set("DYLD_LIBRARY_PATH", "");
+      }
+    }
+    else {
+      if (gEnvLdLibraryPath) {
+        logTestInfo("setting LD_LIBRARY_PATH environment variable value back " +
+                    "to " + gEnvLdLibraryPath);
+        env.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
+      }
+      else {
+        logTestInfo("removing LD_LIBRARY_PATH environment variable");
+        env.set("LD_LIBRARY_PATH", "");
+      }
+    }
+  }
+
+  if (IS_WIN && gAddedEnvXRENoWindowsCrashDialog) {
+    logTestInfo("removing the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
+                "variable");
+    env.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
+  }
+
+  if (gEnvUpdateRootOverride) {
+    logTestInfo("removing the MOZ_UPDATE_ROOT_OVERRIDE environment variable\n");
+    env.set("MOZ_UPDATE_ROOT_OVERRIDE", "");
+    gEnvUpdateRootOverride = null;
+  }
+
+  if (gEnvAppDirOverride) {
+    logTestInfo("removing the MOZ_UPDATE_APPDIR_OVERRIDE environment variable\n");
+    env.set("MOZ_UPDATE_APPDIR_OVERRIDE", "");
+    gEnvAppDirOverride = null;
+  }
+
+  logTestInfo("removing MOZ_NO_SERVICE_FALLBACK environment variable");
+  env.set("MOZ_NO_SERVICE_FALLBACK", "");
+}

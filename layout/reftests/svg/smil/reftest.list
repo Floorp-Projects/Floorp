@@ -111,6 +111,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 
 # animate some <angle> attributes:
 == anim-marker-orient-01.svg lime.svg
+== anim-marker-orient-02.svg lime.svg
 
 #animate points list:
 == anim-polygon-points-01.svg anim-polygon-points-01-ref.svg

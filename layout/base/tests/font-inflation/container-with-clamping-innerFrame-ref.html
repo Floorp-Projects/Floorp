@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<style>
+	div { background: yellow }
+	div { font-size: 20px; line-height: 1.0; width: 450px }
+</style>
+<!--
+Without the patch for bug 707855, we have a 450px container, and the minimum font size
+at 15em per line is 30px. This means we map 0px-45px into 30px-45px, so 12px gets mapped
+to 34px.
+
+With the patch, then we have a 240px container, so the minimum font size
+at 15 em per line is 16px. So, we map 0px-24px into 16px-24px, so 12px gets
+mapped to 20px.
+-->
+<div>Test to see if too large of a container causes a giant escalation of the font size when font inflation is enabled.</div>

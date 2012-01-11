@@ -1,0 +1,12 @@
+
+Welcome to iniParser -- version 3.0
+released 02 Mar 2011
+
+This modules offers parsing of ini files from the C level.
+See a complete documentation in HTML format, from this directory
+open the file html/index.html with any HTML-capable browser.
+
+Enjoy!
+
+N.Devillard
+Wed Mar  2 21:46:14 CET 2011

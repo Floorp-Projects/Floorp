@@ -61,14 +61,13 @@
 #include "nsIDOMElement.h"
 #include "nsIWordBreaker.h"
 #include "nsCRT.h"
-#include "nsIRange.h"
+#include "nsRange.h"
 
 // Yikes!  Casting a char to unichar can fill with ones!
 #define CHAR_TO_UNICHAR(c) ((PRUnichar)(const unsigned char)c)
 
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 #define CH_SHY ((PRUnichar) 0xAD)
 
@@ -129,11 +128,6 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult Init(nsIDOMRange* aRange)
-  {
-    NS_NOTREACHED("internal error");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  virtual nsresult Init(nsIRange* aRange)
   {
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1320,14 +1314,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 already_AddRefed<nsIDOMRange>
 nsFind::CreateRange()
 {
-  nsCOMPtr<nsIRange> range = do_CreateInstance(kRangeCID);
-  if (!range) {
-    return nsnull;
-  }
-
+  nsRefPtr<nsRange> range = new nsRange();
   range->SetMaySpanAnonymousSubtrees(true);
-
-  nsIDOMRange* result;
-  CallQueryInterface(range.get(), &result);
-  return result;
+  return range.forget();
 }

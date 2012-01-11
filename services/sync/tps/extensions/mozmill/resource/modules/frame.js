@@ -1,26 +1,26 @@
 // ***** BEGIN LICENSE BLOCK *****// ***** BEGIN LICENSE BLOCK *****
 // Version: MPL 1.1/GPL 2.0/LGPL 2.1
-// 
+//
 // The contents of this file are subject to the Mozilla Public License Version
 // 1.1 (the "License"); you may not use this file except in compliance with
 // the License. You may obtain a copy of the License at
 // http://www.mozilla.org/MPL/
-// 
+//
 // Software distributed under the License is distributed on an "AS IS" basis,
 // WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 // for the specific language governing rights and limitations under the
 // License.
-// 
+//
 // The Original Code is Mozilla Corporation Code.
-// 
+//
 // The Initial Developer of the Original Code is
 // Mikeal Rogers.
 // Portions created by the Initial Developer are Copyright (C) 2008
 // the Initial Developer. All Rights Reserved.
-// 
+//
 // Contributor(s):
 //  Mikeal Rogers <mikeal.rogers@gmail.com>
-// 
+//
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
 // the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -32,10 +32,10 @@
 // and other provisions required by the GPL or the LGPL. If you do not delete
 // the provisions above, a recipient may use your version of this file under
 // the terms of any one of the MPL, the GPL or the LGPL.
-// 
+//
 // ***** END LICENSE BLOCK *****
 
-var EXPORTED_SYMBOLS = ['loadFile','Collector','Runner','events', 
+var EXPORTED_SYMBOLS = ['loadFile','Collector','Runner','events',
                         'jsbridge', 'runTestFile', 'log', 'getThread',
                         'timers', 'persisted'];
 
@@ -96,7 +96,7 @@ var loadFile = function(path, collector) {
 
   loadTestResources();
   var assertions = moduleLoader.require("./assertions");
-  var module = {  
+  var module = {
     collector:  collector,
     mozmill: mozmill,
     elementslib: mozelement,
@@ -158,7 +158,7 @@ function stateChangeBase (possibilties, restrictions, target, cmeta, v) {
     if (!arrays.inArray(possibilties, v)) {
       // TODO Error value not in this.poss
       return;
-    } 
+    }
   }
   if (restrictions) {
     for (var i in restrictions) {
@@ -185,8 +185,8 @@ var events = {
   'listeners'    : {},
 }
 events.setState = function (v) {
-   return stateChangeBase(['dependencies', 'setupModule', 'teardownModule', 
-                           'setupTest', 'teardownTest', 'test', 'collection'], 
+   return stateChangeBase(['dependencies', 'setupModule', 'teardownModule',
+                           'setupTest', 'teardownTest', 'test', 'collection'],
                            null, 'currentState', 'setState', v);
 }
 events.toggleUserShutdown = function (obj){
@@ -212,16 +212,16 @@ events.setTest = function (test, invokedFromIDE) {
 events.endTest = function (test) {
   // report the end of a test
   test.status = 'done';
-  events.currentTest = null; 
+  events.currentTest = null;
   test.__end__ = Date.now();
-  var obj = {'filename':events.currentModule.__file__, 
+  var obj = {'filename':events.currentModule.__file__,
          'passed':test.__passes__.length,
          'failed':test.__fails__.length,
          'passes':test.__passes__,
          'fails' :test.__fails__,
          'name'  :test.__name__,
          'time_start':test.__start__,
-         'time_end':test.__end__    
+         'time_end':test.__end__
          }
   if (test.skipped) {
     obj['skipped'] = true;
@@ -230,25 +230,25 @@ events.endTest = function (test) {
   if (test.meta) {
     obj.meta = test.meta;
   }
-  
+
   // Report the test result only if the test is a true test or if it is a
   // failing setup/teardown
   var shouldSkipReporting = false;
-  if (test.__passes__ && 
+  if (test.__passes__ &&
       (test.__name__ == 'setupModule' ||
        test.__name__ == 'setupTest' ||
        test.__name__ == 'teardownTest' ||
        test.__name__ == 'teardownModule')) {
     shouldSkipReporting = true;
   }
-  
+
   if (!shouldSkipReporting) {
     events.fireEvent('endTest', obj);
   }
 }
 
 events.setModule = function (v) {
-  return stateChangeBase( null, [function (v) {return (v.__file__ != undefined)}], 
+  return stateChangeBase( null, [function (v) {return (v.__file__ != undefined)}],
                           'currentModule', 'setModule', v);
 }
 
@@ -371,7 +371,7 @@ Collector.prototype.startHttpd = function () {
     } catch(e) { // Failure most likely due to port conflict
       this.http_port++;
       this.http_server = httpd.getServer(this.http_port);
-    }; 
+    };
   }
 }
 Collector.prototype.stopHttpd = function () {
@@ -422,7 +422,7 @@ Collector.prototype.initTestModule = function (filename, name) {
       }
     }
   }
-  
+
   test_module.collector = this;
   test_module.status = 'loaded';
   this.test_modules_by_filename[filename] = test_module;
@@ -503,8 +503,8 @@ Runner.prototype.wrapper = function (func, arg) {
     if (events.isUserShutdown()) {
       utils.sleep(500);  // Prevents race condition between mozrunner hard process kill and normal FFx shutdown
       if (events.userShutdown['user'] && !events.appQuit) {
-          events.fail({'function':'Runner.wrapper', 
-                       'message':'Shutdown expected but none detected before end of test', 
+          events.fail({'function':'Runner.wrapper',
+                       'message':'Shutdown expected but none detected before end of test',
                        'userShutdown': events.userShutdown});
       }
     }
@@ -520,10 +520,10 @@ Runner.prototype.wrapper = function (func, arg) {
 Runner.prototype.runTestModule = function (module) {
   events.setModule(module);
   module.__status__ = 'running';
-  if (module.__setupModule__) { 
+  if (module.__setupModule__) {
     events.setState('setupModule');
     events.setTest(module.__setupModule__);
-    this.wrapper(module.__setupModule__, module); 
+    this.wrapper(module.__setupModule__, module);
     var setupModulePassed = (events.currentTest.__fails__.length == 0 && !events.currentTest.skipped);
     events.endTest(module.__setupModule__);
   } else {
@@ -534,20 +534,20 @@ Runner.prototype.runTestModule = function (module) {
     for (var i in module.__tests__) {
       events.appQuit = false;
       var test = module.__tests__[i];
-      
+
       // TODO: introduce per-test timeout:
       // https://bugzilla.mozilla.org/show_bug.cgi?id=574871
 
-      if (module.__setupTest__) { 
+      if (module.__setupTest__) {
         events.setState('setupTest');
         events.setTest(module.__setupTest__);
-        this.wrapper(module.__setupTest__, test); 
+        this.wrapper(module.__setupTest__, test);
         var setupTestPassed = (events.currentTest.__fails__.length == 0 && !events.currentTest.skipped);
         events.endTest(module.__setupTest__);
       } else {
         var setupTestPassed = true;
-      }  
-      events.setState('test'); 
+      }
+      events.setState('test');
       events.setTest(test, this.invokedFromIDE);
       if (setupTestPassed) {
         this.wrapper(test);
@@ -559,9 +559,9 @@ Runner.prototype.runTestModule = function (module) {
         events.skip("setupTest failed.");
       }
       if (module.__teardownTest__) {
-        events.setState('teardownTest'); 
+        events.setState('teardownTest');
         events.setTest(module.__teardownTest__);
-        this.wrapper(module.__teardownTest__, test); 
+        this.wrapper(module.__teardownTest__, test);
         events.endTest(module.__teardownTest__);
       }
       events.endTest(test)

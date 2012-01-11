@@ -112,13 +112,15 @@ WBORecord.prototype = {
     return obj;
   },
 
-  toString: function WBORec_toString() "{ " + [
-      "id: " + this.id,
-      "index: " + this.sortindex,
-      "modified: " + this.modified,
-      "ttl: " + this.ttl,
-      "payload: " + JSON.stringify(this.payload)
-    ].join("\n  ") + " }",
+  toString: function toString() {
+    return "{ " +
+      "id: "       + this.id        + "  " +
+      "index: "    + this.sortindex + "  " +
+      "modified: " + this.modified  + "  " +
+      "ttl: "      + this.ttl       + "  " +
+      "payload: "  + JSON.stringify(this.payload) +
+      " }";
+  }
 };
 
 Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"]);
@@ -259,14 +261,18 @@ CryptoWrapper.prototype = {
     return this.cleartext;
   },
 
-  toString: function CryptoWrap_toString() "{ " + [
-      "id: " + this.id,
-      "index: " + this.sortindex,
-      "modified: " + this.modified,
-      "ttl: " + this.ttl,
-      "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.cleartext)),
-      "collection: " + (this.collection || "undefined")
-    ].join("\n  ") + " }",
+  toString: function toString() {
+    let payload = this.deleted ? "DELETED" : JSON.stringify(this.cleartext);
+
+    return "{ " +
+      "id: "         + this.id          + "  " +
+      "index: "      + this.sortindex   + "  " +
+      "modified: "   + this.modified    + "  " +
+      "ttl: "        + this.ttl         + "  " +
+      "payload: "    + payload          + "  " +
+      "collection: " + (this.collection || "undefined") +
+      " }";
+  },
 
   // The custom setter below masks the parent's getter, so explicitly call it :(
   get id() WBORecord.prototype.__lookupGetter__("id").call(this),

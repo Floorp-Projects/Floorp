@@ -121,7 +121,4 @@ js_math_ceil_impl(jsdouble x);
 extern jsdouble
 js_math_floor_impl(jsdouble x);
 
-extern jsdouble
-js_math_round_impl(jsdouble x);
-
 #endif /* jsmath_h___ */

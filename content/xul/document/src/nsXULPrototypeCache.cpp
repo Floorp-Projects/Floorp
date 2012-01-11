@@ -696,3 +696,28 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     gStartupCache = startupCache;
     return NS_OK;
 }
+
+static PLDHashOperator
+MarkXBLInCCGeneration(nsIURI* aKey, nsRefPtr<nsXBLDocumentInfo> &aDocInfo,
+                      void* aClosure)
+{
+    PRUint32* gen = static_cast<PRUint32*>(aClosure);
+    aDocInfo->MarkInCCGeneration(*gen);
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+MarkXULInCCGeneration(nsIURI* aKey, nsRefPtr<nsXULPrototypeDocument> &aDoc,
+                      void* aClosure)
+{
+    PRUint32* gen = static_cast<PRUint32*>(aClosure);
+    aDoc->MarkInCCGeneration(*gen);
+    return PL_DHASH_NEXT;
+}
+
+void
+nsXULPrototypeCache::MarkInCCGeneration(PRUint32 aGeneration)
+{
+    mXBLDocTable.Enumerate(MarkXBLInCCGeneration, &aGeneration);
+    mPrototypeTable.Enumerate(MarkXULInCCGeneration, &aGeneration);
+}

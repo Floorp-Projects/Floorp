@@ -51,8 +51,6 @@ JaegerTrampoline:
     st      %i1, [%fp - 24]        ! entryFp
     st      %i1, [%fp - 20]        ! entryncode
     st      %g0, [%fp - 16]        ! stubRejoin
-    call    SetVMFrameRegs
-    mov     %sp, %o0
     call    PushActiveVMFrame
     mov     %sp, %o0
     ld      [%fp - 36], %l0         ! fp

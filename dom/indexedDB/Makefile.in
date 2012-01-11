@@ -68,9 +68,9 @@ CPPSRCS = \
   IDBTransaction.cpp \
   IDBFactory.cpp \
   IndexedDatabaseManager.cpp \
-  LazyIdleThread.cpp \
   OpenDatabaseHelper.cpp \
   TransactionThreadPool.cpp \
+  Key.cpp \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
@@ -86,7 +86,6 @@ EXPORTS_mozilla/dom/indexedDB = \
   IndexedDatabaseManager.h \
   IDBFactory.h \
   Key.h \
-  LazyIdleThread.h \
   FileManager.h \
   FileInfo.h \
   $(NULL)
@@ -98,7 +97,6 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/src/storage \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/events/src \
-  -I$(topsrcdir)/js/xpconnect/src \
   $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

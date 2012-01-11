@@ -688,29 +688,26 @@ ScanShape(GCMarker *gcmarker, const Shape *shape)
 static inline void
 ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
 {
-    for (;;) {
-        if (base->hasGetterObject())
-            PushMarkStack(gcmarker, base->getterObject());
+    base->assertConsistency();
 
-        if (base->hasSetterObject())
-            PushMarkStack(gcmarker, base->setterObject());
+    if (base->hasGetterObject())
+        PushMarkStack(gcmarker, base->getterObject());
 
-        if (JSObject *parent = base->getObjectParent())
-            PushMarkStack(gcmarker, parent);
+    if (base->hasSetterObject())
+        PushMarkStack(gcmarker, base->setterObject());
 
-        if (base->isOwned()) {
-            /*
-             * Make sure that ScanBaseShape is not recursive so its inlining
-             * is possible.
-             */
-            UnownedBaseShape *unowned = base->baseUnowned();
-            JS_SAME_COMPARTMENT_ASSERT(base, unowned);
-            if (unowned->markIfUnmarked(gcmarker->getMarkColor())) {
-                base = unowned;
-                continue;
-            }
-        }
-        break;
+    if (JSObject *parent = base->getObjectParent())
+        PushMarkStack(gcmarker, parent);
+
+    /*
+     * All children of the owned base shape are consistent with its
+     * unowned one, thus we do not need to trace through children of the
+     * unowned base shape.
+     */
+    if (base->isOwned()) {
+        UnownedBaseShape *unowned = base->baseUnowned();
+        JS_SAME_COMPARTMENT_ASSERT(base, unowned);
+        unowned->markIfUnmarked(gcmarker->getMarkColor());
     }
 }
 
@@ -910,51 +907,81 @@ MarkChildren(JSTracer *trc, JSScript *script)
         script->markTrapClosures(trc);
 }
 
-const Shape *
-MarkShapeChildrenAcyclic(JSTracer *trc, const Shape *shape)
-{
-    /*
-     * This function is used by the cycle collector to ensure that we use O(1)
-     * stack space when building the CC graph. It must avoid traversing through
-     * an unbounded number of shapes before reaching an object. (Objects are
-     * added to the CC graph, so reaching one terminates the recursion.)
-     *
-     * Traversing through shape->base() will use bounded space. All but one of
-     * the fields of BaseShape is an object, and objects terminate the
-     * recursion. An owned BaseShape may point to an unowned BaseShape, but
-     * unowned BaseShapes will not point to any other shapes. So the recursion
-     * is bounded.
-     */
-    MarkBaseShapeUnbarriered(trc, shape->base(), "base");
-    MarkIdUnbarriered(trc, shape->maybePropid(), "propid");
-    return shape->previous();
-}
-
 void
 MarkChildren(JSTracer *trc, const Shape *shape)
 {
-    /*
-     * We ignore the return value of MarkShapeChildrenAcyclic and use
-     * shape->previous() instead so that the return value has MarkablePtr type.
-     */
-    MarkShapeChildrenAcyclic(trc, shape);
+    MarkBaseShapeUnbarriered(trc, shape->base(), "base");
+    MarkIdUnbarriered(trc, shape->maybePropid(), "propid");
     if (shape->previous())
         MarkShape(trc, shape->previous(), "parent");
 }
 
-void
-MarkChildren(JSTracer *trc, BaseShape *base)
+inline void
+MarkBaseShapeGetterSetter(JSTracer *trc, BaseShape *base)
 {
     if (base->hasGetterObject())
         MarkObjectUnbarriered(trc, base->getterObject(), "getter");
     if (base->hasSetterObject())
         MarkObjectUnbarriered(trc, base->setterObject(), "setter");
+}
 
+void
+MarkChildren(JSTracer *trc, BaseShape *base)
+{
+    MarkBaseShapeGetterSetter(trc, base);
     if (base->isOwned())
         MarkBaseShapeUnbarriered(trc, base->baseUnowned(), "base");
 
     if (JSObject *parent = base->getObjectParent())
         MarkObjectUnbarriered(trc, parent, "parent");
+}
+
+/*
+ * This function is used by the cycle collector to trace through the
+ * children of a BaseShape (and its baseUnowned(), if any). The cycle
+ * collector does not directly care about BaseShapes, so only the
+ * getter, setter, and parent are marked. Furthermore, the parent is
+ * marked only if it isn't the same as prevParent, which will be
+ * updated to the current shape's parent.
+ */
+inline void
+MarkCycleCollectorChildren(JSTracer *trc, BaseShape *base, JSObject **prevParent)
+{
+    JS_ASSERT(base);
+
+    /*
+     * The cycle collector does not need to trace unowned base shapes,
+     * as they have the same getter, setter and parent as the original
+     * base shape.
+     */
+    base->assertConsistency();
+
+    MarkBaseShapeGetterSetter(trc, base);
+
+    JSObject *parent = base->getObjectParent();
+    if (parent && parent != *prevParent) {
+        MarkObjectUnbarriered(trc, parent, "parent");
+        *prevParent = parent;
+    }
+}
+
+/*
+ * This function is used by the cycle collector to trace through a
+ * shape. The cycle collector does not care about shapes or base
+ * shapes, so those are not marked. Instead, any shapes or base shapes
+ * that are encountered have their children marked. Stack space is
+ * bounded. If two shapes in a row have the same parent pointer, the
+ * parent pointer will only be marked once.
+ */
+void
+MarkCycleCollectorChildren(JSTracer *trc, const Shape *shape)
+{
+    JSObject *prevParent = NULL;
+    do {
+        MarkCycleCollectorChildren(trc, shape->base(), &prevParent);
+        MarkIdUnbarriered(trc, shape->maybePropid(), "propid");
+        shape = shape->previous();
+    } while (shape);
 }
 
 static void

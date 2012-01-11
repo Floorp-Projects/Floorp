@@ -135,7 +135,7 @@ namespace File {
     while (!feof(fp)) {
       char buf[4096];
       size_t ret = fread(buf, 1, 4096, fp);
-      if (ret == -1) {
+      if (ret == 0 && ferror(fp)) {
         perror("fread");
         exit(1);
       }

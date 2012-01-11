@@ -192,4 +192,9 @@ protected:
   nsCOMPtr<mozIStorageStatement> mStatement;
 };
 
+// Use this to make queries uniquely identifiable in telemetry
+// statistics, especially PRAGMAs.  We don't include __LINE__ so that
+// queries are stable in the face of source code changes.
+#define MOZ_STORAGE_UNIQUIFY_QUERY_STR "/* " __FILE__ " */ "
+
 #endif /* MOZSTORAGEHELPER_H */

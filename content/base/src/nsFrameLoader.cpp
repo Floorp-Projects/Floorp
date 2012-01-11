@@ -742,12 +742,12 @@ AllDescendantsOfType(nsIDocShellTreeItem* aParentItem, PRInt32 aType)
 class NS_STACK_CLASS AutoResetInShow {
   private:
     nsFrameLoader* mFrameLoader;
-    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   public:
-    AutoResetInShow(nsFrameLoader* aFrameLoader MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
+    AutoResetInShow(nsFrameLoader* aFrameLoader MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mFrameLoader(aFrameLoader)
     {
-      MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
     ~AutoResetInShow() { mFrameLoader->mInShow = false; }
 };
@@ -1203,13 +1203,19 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     mMessageManager->GetParentManager() : nsnull;
   nsFrameMessageManager* otherParentManager = aOther->mMessageManager ?
     aOther->mMessageManager->GetParentManager() : nsnull;
+  JSContext* thisCx =
+    mMessageManager ? mMessageManager->GetJSContext() : nsnull;
+  JSContext* otherCx = 
+    aOther->mMessageManager ? aOther->mMessageManager->GetJSContext() : nsnull;
   if (mMessageManager) {
-    mMessageManager->Disconnect();
+    mMessageManager->RemoveFromParent();
+    mMessageManager->SetJSContext(otherCx);
     mMessageManager->SetParentManager(otherParentManager);
     mMessageManager->SetCallbackData(aOther, false);
   }
   if (aOther->mMessageManager) {
-    aOther->mMessageManager->Disconnect();
+    aOther->mMessageManager->RemoveFromParent();
+    aOther->mMessageManager->SetJSContext(thisCx);
     aOther->mMessageManager->SetParentManager(ourParentManager);
     aOther->mMessageManager->SetCallbackData(this, false);
   }

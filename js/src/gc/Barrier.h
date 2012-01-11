@@ -52,7 +52,7 @@
  * traced through by the GC to change. This includes:
  *   - writes to object properties
  *   - writes to array slots
- *   - writes to fields like JSObject::lastProp that we trace through
+ *   - writes to fields like JSObject::shape_ that we trace through
  *   - writes to fields in private data, like JSGenerator::obj
  *   - writes to non-markable fields like JSObject::private that point to
  *     markable data
@@ -186,6 +186,7 @@ class HeapPtr
 
     /* Use this to install a ptr into a newly allocated object. */
     void init(T *v) {
+        JS_ASSERT(!IsPoisonedPtr<T>(v));
         value = v;
         post();
     }
@@ -210,6 +211,7 @@ class HeapPtr
 
     HeapPtr<T, Unioned> &operator=(T *v) {
         pre();
+        JS_ASSERT(!IsPoisonedPtr<T>(v));
         value = v;
         post();
         return *this;
@@ -217,6 +219,7 @@ class HeapPtr
 
     HeapPtr<T, Unioned> &operator=(const HeapPtr<T> &v) {
         pre();
+        JS_ASSERT(!IsPoisonedPtr<T>(v.value));
         value = v.value;
         post();
         return *this;
@@ -302,6 +305,7 @@ class HeapValue
     inline ~HeapValue();
 
     inline void init(const Value &v);
+    inline void init(JSCompartment *comp, const Value &v);
 
     inline HeapValue &operator=(const Value &v);
     inline HeapValue &operator=(const HeapValue &v);
@@ -337,10 +341,6 @@ class HeapValue
     double toNumber() const { return value.toNumber(); }
 
     JSGCTraceKind gcKind() const { return value.gcKind(); }
-
-    inline void boxNonDoubleFrom(JSValueType type, uint64_t *out);
-
-    uint64_t asRawBits() const { return value.asRawBits(); }
 
 #ifdef DEBUG
     JSWhyMagic whyMagic() const { return value.whyMagic(); }
@@ -425,6 +425,7 @@ class ReadBarriered
     T *value;
 
   public:
+    ReadBarriered() : value(NULL) {}
     ReadBarriered(T *value) : value(value) {}
 
     T *get() const {
@@ -435,6 +436,9 @@ class ReadBarriered
     }
 
     operator T*() const { return get(); }
+
+    T &operator*() const { return *get(); }
+    T *operator->() const { return get(); }
 
     T *unsafeGet() { return value; }
 

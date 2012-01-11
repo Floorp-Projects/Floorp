@@ -133,14 +133,7 @@ RES_LAYOUT = \
 
 RES_VALUES = res/values/colors.xml res/values/themes.xml
 
-AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
-
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
-
-DEFAULT_BRANDPATH = $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
-DEFAULT_STRINGSPATH = locales/en-US/android_strings.dtd
-LOCALIZED_BRANDPATH = $(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd
-LOCALIZED_STRINGSPATH = $(DEPTH)/dist/bin/chrome/android-res/res/values-$(AB_CD)/android_strings.dtd
 
 ifdef MOZ_CRASHREPORTER
 PROCESSEDJAVAFILES += CrashReporter.java
@@ -152,11 +145,14 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notificati
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-include $(topsrcdir)/config/rules.mk
+RESOURCES=$(RES_LAYOUT) $(RES_VALUES)
 
-ifneq ($(AB_CD),en-US)
-LOCALIZED_STRINGS_XML = res/values-$(AB_rCD)/strings.xml
-endif
+RES_DIRS= \
+	res/layout   \
+	res/values   \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
@@ -180,43 +176,26 @@ res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable-hdpi
 	cp $(ICON_PATH_HDPI) $@
 
+$(RES_DIRS):
+	rm -rf $@
+	$(NSINSTALL) -D $@
+
 RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
 
 $(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
 	$(NSINSTALL) -D res/drawable
 	$(NSINSTALL) $^ res/drawable/
 
-$(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
-	$(NSINSTALL) -D res/layout
-	$(NSINSTALL) $(srcdir)/resources/layout/* res/layout/
+$(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
+	@echo "creating $@"
+	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
-$(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
-	$(NSINSTALL) -D res/values
-	$(NSINSTALL) $(srcdir)/resources/values/* res/values/
 
 R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
 gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
-
-res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH)
-	mkdir -p res/values
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
-	  -DBRANDPATH="$(DEFAULT_BRANDPATH)" \
-	  -DSTRINGSPATH="$(DEFAULT_STRINGSPATH)" \
-	  $(srcdir)/strings.xml.in \
-	  > $@
-
-res/values-$(AB_rCD)/strings.xml: $(LOCALIZED_BRANDPATH) $(LOCALIZED_STRINGSPATH)
-	mkdir -p res/values-$(AB_rCD)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
-	  -DBRANDPATH="$(call core_abspath,$(LOCALIZED_BRANDPATH))" \
-	  -DSTRINGSPATH="$(call core_abspath,$(LOCALIZED_STRINGSPATH))" \
-	  $(srcdir)/strings.xml.in \
-	  > $@
-
-chrome:: $(LOCALIZED_STRINGS_XML)
 
 libs:: classes.dex
 	$(INSTALL) classes.dex $(FINAL_TARGET)

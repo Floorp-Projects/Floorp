@@ -51,6 +51,7 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
+#include "DictionaryHelpers.h"
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ?
@@ -206,25 +207,13 @@ nsDOMUIEvent::InitUIEvent(const nsAString& typeArg,
 }
 
 nsresult
-nsDOMUIEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                           JSContext* aCx, JSObject* aObj)
+nsDOMUIEvent::InitFromCtor(const nsAString& aType,
+                           JSContext* aCx, jsval* aVal)
 {
-  nsCOMPtr<nsIUIEventInit> eventInit = do_QueryInterface(aDict);
-  bool bubbles = false;
-  bool cancelable = false;
-  nsCOMPtr<nsIDOMWindow> view;
-  PRInt32 detail = 0;
-  if (eventInit) {
-    nsresult rv = eventInit->GetBubbles(&bubbles);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetCancelable(&cancelable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetView(getter_AddRefs(view));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetDetail(&detail);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return InitUIEvent(aType, bubbles, cancelable, view, detail);
+  mozilla::dom::UIEventInit d;
+  nsresult rv = d.Init(aCx, aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return InitUIEvent(aType, d.bubbles, d.cancelable, d.view, d.detail);
 }
 
 // ---- nsDOMNSUIEvent implementation -------------------

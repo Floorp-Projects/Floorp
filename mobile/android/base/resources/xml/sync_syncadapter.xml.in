@@ -1,0 +1,8 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
+    android:contentAuthority="@ANDROID_PACKAGE_NAME@.db.browser"
+    android:accountType="org.mozilla.firefox.sync"
+    android:supportsUploading="true"
+    android:userVisible="true"
+/>

@@ -155,8 +155,8 @@ struct DefaultHasher<jsid>
 #if JS_BYTES_PER_WORD == 4
 # define ATOM_HASH(atom)          ((JSHashNumber)(atom) >> 2)
 #elif JS_BYTES_PER_WORD == 8
-# define ATOM_HASH(atom)          (((JSHashNumber)(jsuword)(atom) >> 3) ^     \
-                                   (JSHashNumber)((jsuword)(atom) >> 32))
+# define ATOM_HASH(atom)          (((JSHashNumber)(uintptr_t)(atom) >> 3) ^   \
+                                   (JSHashNumber)((uintptr_t)(atom) >> 32))
 #else
 # error "Unsupported configuration"
 #endif

@@ -23,7 +23,7 @@ var inputChange = 0;
 var textareaChange = 0;
 
 function testUserInput() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserWrite');
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var input = document.getElementById("input");
   var textarea = document.getElementById("textarea");
 

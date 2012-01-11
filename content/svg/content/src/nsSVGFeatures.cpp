@@ -47,20 +47,13 @@
  */
 
 #include "nsSVGFeatures.h"
-#include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsContentUtils.h"
-#include "nsWhitespaceTokenizer.h"
-#include "nsCharSeparatedTokenizer.h"
-#include "nsStyleUtil.h"
-#include "nsSVGUtils.h"
-#include "nsServiceManagerUtils.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
 /*static*/ bool
-nsSVGFeatures::HaveFeature(nsISupports* aObject, const nsAString& aFeature)
+nsSVGFeatures::HasFeature(nsISupports* aObject, const nsAString& aFeature)
 {
   if (aFeature.EqualsLiteral("http://www.w3.org/TR/SVG11/feature#Script")) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aObject));
@@ -82,19 +75,7 @@ nsSVGFeatures::HaveFeature(nsISupports* aObject, const nsAString& aFeature)
 }
 
 /*static*/ bool
-nsSVGFeatures::HaveFeatures(nsISupports* aObject, const nsSubstring& aFeatures)
-{
-  nsWhitespaceTokenizer tokenizer(aFeatures);
-  while (tokenizer.hasMoreTokens()) {
-    if (!HaveFeature(aObject, tokenizer.nextToken())) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/*static*/ bool
-nsSVGFeatures::HaveExtension(const nsAString& aExtension)
+nsSVGFeatures::HasExtension(const nsAString& aExtension)
 {
 #define SVG_SUPPORTED_EXTENSION(str) if (aExtension.EqualsLiteral(str)) return true;
   SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
@@ -102,148 +83,4 @@ nsSVGFeatures::HaveExtension(const nsAString& aExtension)
 #undef SVG_SUPPORTED_EXTENSION
 
   return false;
-}
-
-/*static*/ bool
-nsSVGFeatures::HaveExtensions(const nsSubstring& aExtensions)
-{
-  nsWhitespaceTokenizer tokenizer(aExtensions);
-  while (tokenizer.hasMoreTokens()) {
-    if (!HaveExtension(tokenizer.nextToken())) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/*static*/ bool
-nsSVGFeatures::MatchesLanguagePreferences(const nsSubstring& aAttribute,
-                                          const nsSubstring& aAcceptLangs) 
-{
-  const nsDefaultStringComparator defaultComparator;
-
-  nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
-    attributeTokenizer(aAttribute, ',');
-
-  while (attributeTokenizer.hasMoreTokens()) {
-    const nsSubstring &attributeToken = attributeTokenizer.nextToken();
-    nsCharSeparatedTokenizer languageTokenizer(aAcceptLangs, ',');
-    while (languageTokenizer.hasMoreTokens()) {
-      if (nsStyleUtil::DashMatchCompare(attributeToken,
-                                        languageTokenizer.nextToken(),
-                                        defaultComparator)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/*static*/ PRInt32
-nsSVGFeatures::GetBestLanguagePreferenceRank(const nsSubstring& aAttribute,
-                                             const nsSubstring& aAcceptLangs) 
-{
-  const nsDefaultStringComparator defaultComparator;
-
-  nsCharSeparatedTokenizer attributeTokenizer(aAttribute, ',');
-  PRInt32 lowestRank = -1;
-
-  while (attributeTokenizer.hasMoreTokens()) {
-    const nsSubstring &attributeToken = attributeTokenizer.nextToken();
-    nsCharSeparatedTokenizer languageTokenizer(aAcceptLangs, ',');
-    PRInt32 index = 0;
-    while (languageTokenizer.hasMoreTokens()) {
-      const nsSubstring &languageToken = languageTokenizer.nextToken();
-      bool exactMatch = (languageToken == attributeToken);
-      bool prefixOnlyMatch =
-        !exactMatch &&
-        nsStyleUtil::DashMatchCompare(attributeToken,
-                                      languageTokenizer.nextToken(),
-                                      defaultComparator);
-      if (index == 0 && exactMatch) {
-        // best possible match
-        return 0;
-      }
-      if ((exactMatch || prefixOnlyMatch) &&
-          (lowestRank == -1 || 2 * index + prefixOnlyMatch < lowestRank)) {
-        lowestRank = 2 * index + prefixOnlyMatch;
-      }
-      ++index;
-    }
-  }
-  return lowestRank;
-}
-
-/*static*/ bool
-nsSVGFeatures::ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr)
-{
-#define SVG_ELEMENT(_atom, _supports) if (aTagName == nsGkAtoms::_atom) return (_supports & aAttr) != 0;
-#include "nsSVGElementList.h"
-#undef SVG_ELEMENT
-  return false;
-}
-
-const nsString * const nsSVGFeatures::kIgnoreSystemLanguage = (nsString *) 0x01;
-
-/*static*/ bool
-nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
-                                                const nsString *aAcceptLangs)
-{
-  if (!aContent->IsElement()) {
-    return false;
-  }
-
-  if (!ElementSupportsAttributes(aContent->Tag(), ATTRS_CONDITIONAL)) {
-    return true;
-  }
-
-  // Required Features
-  nsAutoString value;
-  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::requiredFeatures, value)) {
-    if (value.IsEmpty() || !HaveFeatures(aContent, value)) {
-      return false;
-    }
-  }
-
-  // Required Extensions
-  //
-  // The requiredExtensions  attribute defines a list of required language
-  // extensions. Language extensions are capabilities within a user agent that
-  // go beyond the feature set defined in the SVG specification.
-  // Each extension is identified by a URI reference.
-  // For now, claim that mozilla's SVG implementation supports XHTML and MathML.
-  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::requiredExtensions, value)) {
-    if (value.IsEmpty() || !HaveExtensions(value)) {
-      return false;
-    }
-  }
-
-  if (aAcceptLangs == kIgnoreSystemLanguage) {
-    return true;
-  }
-
-  // systemLanguage
-  //
-  // Evaluates to "true" if one of the languages indicated by user preferences
-  // exactly equals one of the languages given in the value of this parameter,
-  // or if one of the languages indicated by user preferences exactly equals a
-  // prefix of one of the languages given in the value of this parameter such
-  // that the first tag character following the prefix is "-".
-  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::systemLanguage,
-                        value)) {
-
-    const nsAutoString acceptLangs(aAcceptLangs ? *aAcceptLangs :
-      Preferences::GetLocalizedString("intl.accept_languages"));
-
-    // Get our language preferences
-    if (!acceptLangs.IsEmpty()) {
-      return MatchesLanguagePreferences(value, acceptLangs);
-    } else {
-      // For now, evaluate to true.
-      NS_WARNING("no default language specified for systemLanguage conditional test");
-      return !value.IsEmpty();
-    }
-  }
-
-  return true;
 }

@@ -72,7 +72,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMNSRange.h"
 #include "nsIRangeUtils.h"
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
@@ -1603,11 +1602,9 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
   res = selection->GetRangeAt(0, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
-  NS_ENSURE_TRUE(nsrange, NS_ERROR_NO_INTERFACE);
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  res = nsrange->CreateContextualFragment(inputString,
-                                          getter_AddRefs(docfrag));
+  res = range->CreateContextualFragment(inputString,
+                                        getter_AddRefs(docfrag));
 
   //XXXX BUG 50965: This is not returning the text between <title> ... </title>
   // Special code is needed in JS to handle title anyway, so it really doesn't matter!
@@ -1769,11 +1766,8 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   res = selection->GetRangeAt(0, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
-  NS_ENSURE_TRUE(nsrange, NS_ERROR_NO_INTERFACE);
-
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  res = nsrange->CreateContextualFragment(bodyTag, getter_AddRefs(docfrag));
+  res = range->CreateContextualFragment(bodyTag, getter_AddRefs(docfrag));
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
@@ -4956,7 +4950,7 @@ nsHTMLEditor::IsEmptyNodeImpl( nsIDOMNode *aNode,
             }
           }
           // is it a form widget?
-          else if (nsHTMLEditUtils::IsFormWidget(aNode))
+          else if (nsHTMLEditUtils::IsFormWidget(node))
           { // break out if we find we aren't empty
             *outIsEmptyNode = false;
             return NS_OK;
@@ -5746,16 +5740,21 @@ nsHTMLEditor::ResetRootElementAndEventTarget()
   RemoveEventListeners();
   mRootElement = nsnull;
   nsresult rv = InstallEventListeners();
-  NS_ENSURE_SUCCESS(rv, );
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   // We must have mRootElement now.
   nsCOMPtr<nsIDOMElement> root;
   rv = GetRootElement(getter_AddRefs(root));
-  NS_ENSURE_SUCCESS(rv, );
-  NS_ENSURE_TRUE(mRootElement, );
+  if (NS_FAILED(rv) || !mRootElement) {
+    return;
+  }
 
   rv = BeginningOfDocument();
-  NS_ENSURE_SUCCESS(rv, );
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   // When this editor has focus, we need to reset the selection limiter to
   // new root.  Otherwise, that is going to be done when this gets focus.

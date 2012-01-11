@@ -40,7 +40,7 @@
 
 #import "mozView.h"
 
-/* This protocol's primary use is so widget/src/cocoa can talk back to us
+/* This protocol's primary use is so widget/cocoa can talk back to us
    properly.
    
    ChildView owns the topmost mozRootAccessible, and needs to take care of setting up 

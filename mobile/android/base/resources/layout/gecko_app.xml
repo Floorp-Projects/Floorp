@@ -3,12 +3,7 @@
               android:id="@+id/main_layout"
               style="@style/Screen">
 
-    <org.mozilla.gecko.BrowserToolbar android:id="@+id/browser_toolbar"
-                                      style="@style/BrowserToolbar">
-
-        <include layout="@layout/browser_toolbar"/>
-
-    </org.mozilla.gecko.BrowserToolbar>
+    <include layout="@layout/browser_toolbar"/>
 
     <RelativeLayout android:id="@+id/gecko_layout"
                     android:layout_width="fill_parent"
@@ -19,18 +14,6 @@
                         android:background="@android:color/transparent"
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"/>
-
-        <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
-                                            android:orientation="vertical"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="fill_parent"
-                                            android:background="#ffffff"
-                                            android:isScrollContainer="true"
-                                            android:visibility="gone">
-
-            <include layout="@layout/abouthome_content"/>
-
-        </org.mozilla.gecko.AboutHomeContent>
 
         <org.mozilla.gecko.AutoCompletePopup android:id="@+id/autocomplete_popup"
                                              style="@android:style/Widget.ListView.White"

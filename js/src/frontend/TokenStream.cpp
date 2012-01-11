@@ -1841,7 +1841,6 @@ TokenStream::getTokenInternal()
       case '\\':
         hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc);
         if (hadUnicodeEscape) {
-            c = qc;
             identStart = userbuf.addressOfNextRawChar() - 6;
             goto identifier;
         }
@@ -2284,7 +2283,6 @@ TokenKindToString(TokenKind tt)
       case TOK_XMLPI:           return "TOK_XMLPI";
       case TOK_AT:              return "TOK_AT";
       case TOK_DBLCOLON:        return "TOK_DBLCOLON";
-      case TOK_ANYNAME:         return "TOK_ANYNAME";
       case TOK_DBLDOT:          return "TOK_DBLDOT";
       case TOK_FILTER:          return "TOK_FILTER";
       case TOK_XMLELEM:         return "TOK_XMLELEM";

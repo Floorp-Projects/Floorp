@@ -276,54 +276,6 @@ var tests = [
       }
     }
   },
-/*
-  {
-    // SVGPathSegList test:
-    target_element_id: 'path',
-    attr_name: 'd',
-    prop_name: null, // SVGAnimatedPathData is an inherited interface!
-    bv_name: 'normalizedPathSegList',
-    av_name: 'animatedNormalizedPathSegList',
-    el_type: 'SVGPathElement',
-    prop_type: null,
-    list_type: 'SVGPathSegList',
-    item_type: 'SVGPathSeg',
-    attr_val_3a: '',
-    attr_val_3b: '',
-    attr_val_4 : '',
-    attr_val_5a: '',
-    attr_val_5b: '',
-    item_constructor: function() {
-      // XXX return different values each time
-      return SVGPathElement.createSVGPathSegLinetoAbs(1, 1);
-    },
-    item_is: function(itemA, itemB, message) {
-      ok(typeof(itemA.pathSegTypeAsLetter) != 'undefined' &&
-         typeof(itemB.pathSegTypeAsLetter) != 'undefined',
-         'expecting pathSegTypeAsLetter property');
-
-      // First: are we dealing  with the same type of segment?
-      is(itemA.pathSegTypeAsLetter, itemB.pathSegTypeAsLetter, message);
-      if (itemA.pathSegTypeAsLetter != itemB.pathSegTypeAsLetter)
-        return;  // The rest of this function is nonsense if types don't match.
-
-      // Make sure property-counts match (so we can iterate across itemA's
-      // properties and not worry about itemB having extra properties that
-      // we might be skipping over).
-      is(keys(itemA).length, keys(itemB).length,
-        'expecting same property-count when comparing path segs of same type.');
-
-      // Compare the properties, skipping the constant properties inherited
-      // from 'SVGPathSeg', and skipping the pathSegTypeAsLetter field since we
-      // already checked that above. 
-      for (var prop in itemA) {
-        if (!SVGPathSeg.hasOwnProperty(prop) &&
-            prop != 'pathSegTypeAsLetter') {
-          is(itemA[prop], itemB[prop], message);
-        }
-      }
-    }
-  },
   {
     // SVGStringList test:
     target_element_id: 'g',
@@ -335,17 +287,22 @@ var tests = [
     prop_type: null,
     list_type: 'SVGStringList',
     item_type: 'DOMString',
-    attr_val_3a: '',
-    attr_val_3b: '',
-    attr_val_4 : '',
-    attr_val_5a: '',
-    attr_val_5b: '',
+    attr_val_3a: 'http://www.w3.org/TR/SVG11/feature#Shape http://www.w3.org/TR/SVG11/feature#Image ' +
+                 'http://www.w3.org/TR/SVG11/feature#Style',
+    attr_val_3b: 'http://www.w3.org/TR/SVG11/feature#CoreAttribute http://www.w3.org/TR/SVG11/feature#Structure ' +
+                 'http://www.w3.org/TR/SVG11/feature#Gradient',
+    attr_val_4 : 'http://www.w3.org/TR/SVG11/feature#Pattern http://www.w3.org/TR/SVG11/feature#Clip ' +
+                 'http://www.w3.org/TR/SVG11/feature#Mask http://www.w3.org/TR/SVG11/feature#Extensibility',
+    attr_val_5a: 'http://www.w3.org/TR/SVG11/feature#BasicStructure http://www.w3.org/TR/SVG11/feature#BasicText ' +
+                 'http://www.w3.org/TR/SVG11/feature#BasicPaintAttribute http://www.w3.org/TR/SVG11/feature#BasicGraphicsAttribute ' +
+                 'http://www.w3.org/TR/SVG11/feature#BasicClip',
+    attr_val_5b: 'http://www.w3.org/TR/SVG11/feature#DocumentEventsAttribute http://www.w3.org/TR/SVG11/feature#GraphicalEventsAttribute ' +
+                 'http://www.w3.org/TR/SVG11/feature#AnimationEventsAttribute http://www.w3.org/TR/SVG11/feature#Hyperlinking ' +
+                 'http://www.w3.org/TR/SVG11/feature#XlinkAttribute',
     item_constructor: function() {
-      // XXX return a meaningful string
-      return ;
+      return 'http://www.w3.org/TR/SVG11/feature#XlinkAttribute';
     }
   },
-  */
   {
     // SVGTransformList test:
     target_element_id: 'g',
@@ -535,36 +492,39 @@ function run_baseVal_API_tests()
 
     t.element.setAttribute(t.attr_name, t.attr_val_4);
 
-    var old_items = get_array_of_list_items(t.baseVal);
-    item = t.baseVal.getItem(3);
-    res = t.baseVal.initialize(item);
+    if (t.item_type != "DOMString") {
+      var old_items = get_array_of_list_items(t.baseVal);
+      item = t.baseVal.getItem(3);
+      res = t.baseVal.initialize(item);
 
-    ok(res !== item &&
-       t.baseVal.getItem(0) !== item &&
-       t.baseVal.getItem(0) !== old_items[0] &&
-       res === t.baseVal.getItem(0),
-       'The method '+t.list_type+'.initialize() should clone the object that '+
-       'is passed in if that object is already in a list.');
-    // [SVGWG issue] not what the spec currently says
+      ok(res !== item &&
+         t.baseVal.getItem(0) !== item &&
+         t.baseVal.getItem(0) !== old_items[0] &&
+         res === t.baseVal.getItem(0),
+         'The method '+t.list_type+'.initialize() should clone the object that '+
+         'is passed in if that object is already in a list.');
+      // [SVGWG issue] not what the spec currently says
 
-    item = t.baseVal.getItem(0);
-    res = t.baseVal.initialize(item);
 
-    ok(res !== item &&
-       t.baseVal.getItem(0) !== item,
-       'The method '+t.list_type+'.initialize() should clone the object that '+
-       'is passed in, even if that object is the only item in that list.');
-    // [SVGWG issue] not what the spec currently says
+      item = t.baseVal.getItem(0);
+      res = t.baseVal.initialize(item);
 
-    threw = false;
-    try {
-      t.baseVal.initialize({});
-    } catch(e) {
-      threw = true;
+      ok(res !== item &&
+         t.baseVal.getItem(0) !== item,
+         'The method '+t.list_type+'.initialize() should clone the object that '+
+         'is passed in, even if that object is the only item in that list.');
+      // [SVGWG issue] not what the spec currently says
+
+      threw = false;
+      try {
+        t.baseVal.initialize({});
+      } catch(e) {
+        threw = true;
+      }
+      ok(threw,
+         'The method '+t.list_type+'.initialize() should throw if passed an '+
+         'object of the wrong type.');
     }
-    ok(threw,
-       'The method '+t.list_type+'.initialize() should throw if passed an '+
-       'object of the wrong type.');
 
     // Test .insertItemBefore():
 
@@ -604,35 +564,39 @@ function run_baseVal_API_tests()
 
     is(t.baseVal.numberOfItems, 7,
        'The '+t.list_type+' object should contain seven list items.');
-    ok(res !== item &&
-       t.baseVal.getItem(2) !== item &&
-       t.baseVal.getItem(2) !== old_items[2] &&
-       res === t.baseVal.getItem(2),
-       'The method '+t.list_type+'.insertItemBefore() should clone the '+
-       'object that is passed in if that object is already in a list.');
-    // [SVGWG issue] not what the spec currently says
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(2) !== item &&
+         t.baseVal.getItem(2) !== old_items[2] &&
+         res === t.baseVal.getItem(2),
+         'The method '+t.list_type+'.insertItemBefore() should clone the '+
+         'object that is passed in if that object is already in a list.');
+      // [SVGWG issue] not what the spec currently says
+    }
 
     item = t.baseVal.getItem(2);
     res = t.baseVal.insertItemBefore(item, 2);
 
     is(t.baseVal.numberOfItems, 8,
        'The '+t.list_type+' object should contain eight list items.');
-    ok(res !== item &&
-       t.baseVal.getItem(2) !== item,
-       'The method '+t.list_type+'.insertItemBefore() should clone the '+
-       'object that is passed in, even if that object is the item in '+
-       'the list at the index specified.');
-    // [SVGWG issue] not what the spec currently says
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(2) !== item,
+         'The method '+t.list_type+'.insertItemBefore() should clone the '+
+         'object that is passed in, even if that object is the item in '+
+         'the list at the index specified.');
+      // [SVGWG issue] not what the spec currently says
 
-    threw = false;
-    try {
-      t.baseVal.insertItemBefore({}, 2);
-    } catch(e) {
-      threw = true;
+      threw = false;
+      try {
+        t.baseVal.insertItemBefore({}, 2);
+      } catch(e) {
+        threw = true;
+      }
+      ok(threw,
+         'The method '+t.list_type+'.insertItemBefore() should throw if passed '+
+         'an object of the wrong type.');
     }
-    ok(threw,
-       'The method '+t.list_type+'.insertItemBefore() should throw if passed '+
-       'an object of the wrong type.');
 
     // Test .replaceItem():
 
@@ -644,11 +608,13 @@ function run_baseVal_API_tests()
 
     is(t.baseVal.numberOfItems, 4,
        'The '+t.list_type+' object should contain four list items.');
-    ok(res === item,
-       'The list item returned by '+t.list_type+'.replaceItem() should be '+
-       'the exact same object as the item that was passed to that method, '+
-       'since the item that was passed to that method did not already belong '+
-       'to a list.');
+    if (t.item_type != "DOMString") {
+      ok(res === item,
+         'The list item returned by '+t.list_type+'.replaceItem() should be '+
+         'the exact same object as the item that was passed to that method, '+
+         'since the item that was passed to that method did not already belong '+
+         'to a list.');
+    }
     ok(t.baseVal.getItem(2) === item,
        'The list item at index 2 should be the exact same object as the '+
        'object that was passed to the '+t.list_type+'.replaceItem() method, '+
@@ -677,35 +643,39 @@ function run_baseVal_API_tests()
 
     is(t.baseVal.numberOfItems, 4,
        'The '+t.list_type+' object should contain four list items.');
-    ok(res !== item &&
-       t.baseVal.getItem(1) !== item &&
-       t.baseVal.getItem(1) !== old_items[1] &&
-       res === t.baseVal.getItem(1),
-       'The method '+t.list_type+'.replaceItem() should clone the object '+
-       'that is passed in if that object is already in a list.');
-    // [SVGWG issue] not what the spec currently says
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(1) !== item &&
+         t.baseVal.getItem(1) !== old_items[1] &&
+         res === t.baseVal.getItem(1),
+         'The method '+t.list_type+'.replaceItem() should clone the object '+
+         'that is passed in if that object is already in a list.');
+      // [SVGWG issue] not what the spec currently says
+    }
 
     item = t.baseVal.getItem(1);
     res = t.baseVal.replaceItem(item, 1);
 
     is(t.baseVal.numberOfItems, 4,
        'The '+t.list_type+' object should contain four list items.');
-    ok(res !== item &&
-       t.baseVal.getItem(1) !== item,
-       'The method '+t.list_type+'.replaceItem() should clone the object '+
-       'that is passed in, even if the object that object and the object '+
-       'that is being replaced are the exact same objects.');
-    // [SVGWG issue] not what the spec currently says
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(1) !== item,
+         'The method '+t.list_type+'.replaceItem() should clone the object '+
+         'that is passed in, even if the object that object and the object '+
+         'that is being replaced are the exact same objects.');
+      // [SVGWG issue] not what the spec currently says
 
-    threw = false;
-    try {
-      t.baseVal.replaceItem({}, 2);
-    } catch(e) {
-      threw = true;
+      threw = false;
+      try {
+        t.baseVal.replaceItem({}, 2);
+      } catch(e) {
+        threw = true;
+      }
+      ok(threw,
+         'The method '+t.list_type+'.replaceItem() should throw if passed '+
+         'an object of the wrong type.');
     }
-    ok(threw,
-       'The method '+t.list_type+'.replaceItem() should throw if passed '+
-       'an object of the wrong type.');
 
     // Test .removeItem():
 
@@ -717,9 +687,11 @@ function run_baseVal_API_tests()
 
     is(t.baseVal.numberOfItems, 3,
        'The '+t.list_type+' object should contain three list items.');
-    ok(res === item,
-       'The list item returned by '+t.list_type+'.removeItem() should be the '+
-       'exact same object as the item that was at the specified index.');
+    if (t.item_type != "DOMString") {
+      ok(res === item,
+         'The list item returned by '+t.list_type+'.removeItem() should be the '+
+         'exact same object as the item that was at the specified index.');
+    }
     ok(t.baseVal.getItem(1) === old_items[1],
        'The list item that was at index 1 should still be at index 1 after '+
        'the item at index 2 was removed using the '+t.list_type+
@@ -769,36 +741,38 @@ function run_baseVal_API_tests()
 
     is(t.baseVal.numberOfItems, 6,
        'The '+t.list_type+' object should contain six list items.');
-    ok(res !== item &&
-       t.baseVal.getItem(5) !== item &&
-       res === t.baseVal.getItem(5),
-       'The method '+t.list_type+'.appendItem() should clone the object '+
-       'that is passed in if that object is already in a list.');
-    // [SVGWG issue] not what the spec currently says
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(5) !== item &&
+         res === t.baseVal.getItem(5),
+         'The method '+t.list_type+'.appendItem() should clone the object '+
+         'that is passed in if that object is already in a list.');
+      // [SVGWG issue] not what the spec currently says
+    }
 
     item = t.baseVal.getItem(5);
     res = t.baseVal.appendItem(item);
 
     is(t.baseVal.numberOfItems, 7,
        'The '+t.list_type+' object should contain seven list items.');
-    ok(res !== item &&
-       t.baseVal.getItem(6) !== item,
-       'The method '+t.list_type+'.appendItem() should clone the object '+
-       'that is passed in, if that object is already the last item in '+
-       'that list.');
-    // [SVGWG issue] not what the spec currently says
+    if (t.item_type != "DOMString") {
+      ok(res !== item &&
+         t.baseVal.getItem(6) !== item,
+         'The method '+t.list_type+'.appendItem() should clone the object '+
+         'that is passed in, if that object is already the last item in '+
+         'that list.');
+      // [SVGWG issue] not what the spec currently says
 
-
-
-    threw = false;
-    try {
-      t.baseVal.appendItem({});
-    } catch(e) {
-      threw = true;
+      threw = false;
+      try {
+        t.baseVal.appendItem({});
+      } catch(e) {
+        threw = true;
+      }
+      ok(threw,
+         'The method '+t.list_type+'.appendItem() should throw if passed '+
+         'an object of the wrong type.');
     }
-    ok(threw,
-       'The method '+t.list_type+'.appendItem() should throw if passed '+
-       'an object of the wrong type.');
   }
 }
 
@@ -953,7 +927,9 @@ function run_basic_setAttribute_tests()
     // Test the effect of setting the attribute to new values:
 
     t.old_baseVal_items = get_array_of_list_items(t.baseVal);
-    t.old_animVal_items = get_array_of_list_items(t.animVal);
+    if (t.animVal) {
+      t.old_animVal_items = get_array_of_list_items(t.animVal);
+    }
 
     t.element.setAttribute(t.attr_name, t.attr_val_3a);
     t.element.setAttribute(t.attr_name, t.attr_val_5a);
@@ -969,17 +945,19 @@ function run_basic_setAttribute_tests()
          '(5).');
     }
 
-    ok(t.baseVal.getItem(2) === t.old_baseVal_items[2],
-       'After its attribute changes, list items in the '+t.list_type+' for '+
-       t.bv_path+' that are at indexes that existed prior to the attribute '+
-       'change should be the exact same objects as the objects that were '+
-       'at those indexes prior to the attribute change.');
+    if (t.item_type != "DOMString") {
+      ok(t.baseVal.getItem(2) === t.old_baseVal_items[2],
+         'After its attribute changes, list items in the '+t.list_type+' for '+
+         t.bv_path+' that are at indexes that existed prior to the attribute '+
+         'change should be the exact same objects as the objects that were '+
+         'at those indexes prior to the attribute change.');
 
-    ok(t.baseVal.getItem(3) !== t.old_baseVal_items[3],
-       'After its attribute changes, list items in the '+t.list_type+' for '+
-       t.bv_path+' that are at indexes that did not exist prior to the '+
-       'attribute change should not be the same objects as any objects that '+
-       'were at those indexes at some earlier time.');
+      ok(t.baseVal.getItem(3) !== t.old_baseVal_items[3],
+         'After its attribute changes, list items in the '+t.list_type+' for '+
+         t.bv_path+' that are at indexes that did not exist prior to the '+
+         'attribute change should not be the same objects as any objects that '+
+         'were at those indexes at some earlier time.');
+    }
 
     if (t.animVal) {
       ok(t.animVal.getItem(2) === t.old_animVal_items[2],
@@ -1350,7 +1328,9 @@ function run_tests()
       };
     }
 
-    t.element.appendChild(create_animate_elements(t));
+    if (t.animVal) {
+      t.element.appendChild(create_animate_elements(t));
+    }
   }
 
   // Run the major test groups:

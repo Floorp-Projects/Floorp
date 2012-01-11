@@ -283,6 +283,7 @@ moz_gtk_icon_size(const char *name)
   return GTK_ICON_SIZE_MENU;
 }
 
+#if defined(MOZ_ENABLE_GNOMEUI) || defined(MOZ_ENABLE_GIO)
 static PRInt32
 GetIconSize(nsIMozIconURI *aIconURI)
 {
@@ -320,6 +321,7 @@ ScaleIconBuf(GdkPixbuf **aBuf, PRInt32 iconSize)
   }
   return NS_OK;
 }
+#endif
 
 #ifdef MOZ_ENABLE_GNOMEUI
 nsresult

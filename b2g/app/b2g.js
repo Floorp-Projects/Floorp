@@ -46,11 +46,11 @@ pref("browser.homescreenURL", "file:///system/home/homescreen.html");
 pref("browser.homescreenURL", "file:///data/local/homescreen.html,file:///system/home/homescreen.html");
 #endif
 
+// URL for the dialer application.
+pref("dom.telephony.app.phone.url", "http://localhost:6666/apps/dialer/dialer.html");
+
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
-
-/* allow scrollbars to float above chrome ui */
-pref("ui.scrollbarsCanOverlapContent", 1);
 
 /* disable text selection */
 pref("browser.ignoreNativeFrameTextSelection", true);
@@ -387,9 +387,15 @@ pref("security.fileuri.strict_origin_policy", false);
 
 // Temporarily force-enable GL compositing.  This is default-disabled
 // deep within the bowels of the widgetry system.  Remove me when GL
-// compositing isn't default disabled in widget/src/android.
+// compositing isn't default disabled in widget/android.
 pref("layers.acceleration.force-enabled", true);
 
 // screen.enabled and screen.brightness properties.
 pref("dom.screenEnabledProperty.enabled", true);
 pref("dom.screenBrightnessProperty.enabled", true);
+
+// Temporary permission hack for WebSMS
+pref("dom.sms.enabled", true);
+pref("dom.sms.whitelist", "file://,http://localhost:6666");
+// Ignore X-Frame-Options headers.
+pref("b2g.ignoreXFrameOptions", true);

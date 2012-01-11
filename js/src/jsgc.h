@@ -71,9 +71,9 @@ extern "C" void
 js_TraceXML(JSTracer *trc, JSXML* thing);
 
 #if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((jsuword)(lval) < limit)
+# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) < limit)
 #else
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((jsuword)(lval) > limit)
+# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) > limit)
 #endif
 
 namespace js {
@@ -99,7 +99,7 @@ const size_t ArenaMask = ArenaSize - 1;
  * This is the maximum number of arenas we allow in the FreeCommitted state
  * before we trigger a GC_SHRINK to release free arenas to the OS.
  */
-const static uint32_t MaxFreeCommittedArenas = (32 << 20) / ArenaSize;
+const static uint32_t FreeCommittedArenasThreshold = (32 << 20) / ArenaSize;
 
 /*
  * The mark bitmap has one bit per each GC cell. For multi-cell GC things this
@@ -598,23 +598,23 @@ struct ChunkInfo {
  *
  * For the mark bitmap, we know that each arena will use a fixed number of full
  * bytes: ArenaBitmapBytes. The full size of the header data is this number
- * multiplied by the eventual number of arenas we have in the header. We, 
+ * multiplied by the eventual number of arenas we have in the header. We,
  * conceptually, distribute this header data among the individual arenas and do
- * not include it in the header. This way we do not have to worry about its 
+ * not include it in the header. This way we do not have to worry about its
  * variable size: it gets attached to the variable number we are computing.
  *
  * For the decommitted arena bitmap, we only have 1 bit per arena, so this
  * technique will not work. Instead, we observe that we do not have enough
- * header info to fill 8 full arenas: it is currently 4 on 64bit, less on 
+ * header info to fill 8 full arenas: it is currently 4 on 64bit, less on
  * 32bit. Thus, with current numbers, we need 64 bytes for decommittedArenas.
- * This will not become 63 bytes unless we double the data required in the 
- * header. Therefore, we just compute the number of bytes required to track 
+ * This will not become 63 bytes unless we double the data required in the
+ * header. Therefore, we just compute the number of bytes required to track
  * every possible arena and do not worry about slop bits, since there are too
  * few to usefully allocate.
  *
  * To actually compute the number of arenas we can allocate in a chunk, we
  * divide the amount of available space less the header info (not including
- * the mark bitmap which is distributed into the arena size) by the size of 
+ * the mark bitmap which is distributed into the arena size) by the size of
  * the arena (with the mark bitmap bytes it uses).
  */
 const size_t BytesPerArenaWithHeader = ArenaSize + ArenaBitmapBytes;
@@ -734,11 +734,12 @@ struct Chunk {
         return info.numArenasFree == ArenasPerChunk;
     }
 
-    bool noAvailableArenas() const {
-        return info.numArenasFree == 0;
+    bool hasAvailableArenas() const {
+        return info.numArenasFree != 0;
     }
 
     inline void addToAvailableList(JSCompartment *compartment);
+    inline void insertToAvailableList(Chunk **insertPoint);
     inline void removeFromAvailableList();
 
     ArenaHeader *allocateArena(JSCompartment *comp, AllocKind kind);
@@ -746,17 +747,42 @@ struct Chunk {
     void releaseArena(ArenaHeader *aheader);
 
     static Chunk *allocate(JSRuntime *rt);
+
+    /* Must be called with the GC lock taken. */
     static inline void release(JSRuntime *rt, Chunk *chunk);
+    static inline void releaseList(JSRuntime *rt, Chunk *chunkListHead);
+
+    /* Must be called with the GC lock taken. */
+    inline void prepareToBeFreed(JSRuntime *rt);
+
+    /*
+     * Assuming that the info.prevp points to the next field of the previous
+     * chunk in a doubly-linked list, get that chunk.
+     */
+    Chunk *getPrevious() {
+        JS_ASSERT(info.prevp);
+        return fromPointerToNext(info.prevp);
+    }
+
+    /* Get the chunk from a pointer to its info.next field. */
+    static Chunk *fromPointerToNext(Chunk **nextFieldPtr) {
+        uintptr_t addr = reinterpret_cast<uintptr_t>(nextFieldPtr);
+        JS_ASSERT((addr & ChunkMask) == offsetof(Chunk, info.next));
+        return reinterpret_cast<Chunk *>(addr - offsetof(Chunk, info.next));
+    }
 
   private:
-    inline void init(JSRuntime *rt);
+    inline void init();
 
     /* Search for a decommitted arena to allocate. */
     jsuint findDecommittedArenaOffset();
     ArenaHeader* fetchNextDecommittedArena();
 
+  public:
     /* Unlink and return the freeArenasHead. */
     inline ArenaHeader* fetchNextFreeArena(JSRuntime *rt);
+
+    inline void addArenaToFreeList(JSRuntime *rt, ArenaHeader *aheader);
 };
 
 JS_STATIC_ASSERT(sizeof(Chunk) == ChunkSize);
@@ -780,10 +806,16 @@ class ChunkPool {
     inline Chunk *get(JSRuntime *rt);
 
     /* Must be called either during the GC or with the GC lock taken. */
-    inline void put(JSRuntime *rt, Chunk *chunk);
+    inline void put(Chunk *chunk);
 
-    /* Must be called either during the GC or with the GC lock taken. */
-    void expire(JSRuntime *rt, bool releaseAll);
+    /*
+     * Return the list of chunks that can be released outside the GC lock.
+     * Must be called either during the GC or with the GC lock taken.
+     */
+    Chunk *expire(JSRuntime *rt, bool releaseAll);
+
+    /* Must be called with the GC lock taken. */
+    void expireAndFree(JSRuntime *rt, bool releaseAll);
 
     /* Must be called either during the GC or with the GC lock taken. */
     JS_FRIEND_API(int64_t) countCleanDecommittedArenas(JSRuntime *rt);
@@ -1228,6 +1260,12 @@ const size_t INITIAL_CHUNK_CAPACITY = 16 * 1024 * 1024 / ChunkSize;
 /* The number of GC cycles an empty chunk can survive before been released. */
 const size_t MAX_EMPTY_CHUNK_AGE = 4;
 
+inline Cell *
+AsCell(JSObject *obj)
+{
+    return reinterpret_cast<Cell *>(obj);
+}
+
 } /* namespace gc */
 
 struct GCPtrHasher
@@ -1263,7 +1301,7 @@ struct WrapperHasher
     typedef Value Lookup;
 
     static HashNumber hash(Value key) {
-        uint64_t bits = key.asRawBits();
+        uint64_t bits = JSVAL_TO_IMPL(key).asBits;
         return uint32_t(bits) ^ uint32_t(bits >> 32);
     }
 
@@ -1331,15 +1369,15 @@ js_GCThingIsMarked(void *thing, uintN color);
 extern void
 js_TraceStackFrame(JSTracer *trc, js::StackFrame *fp);
 
-namespace js {
+extern bool
+js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, js::gc::AllocKind *thingKind, void **thing);
 
-extern JS_REQUIRES_STACK void
-MarkRuntime(JSTracer *trc);
+namespace js {
 
 extern void
 TraceRuntime(JSTracer *trc);
 
-extern JS_REQUIRES_STACK JS_FRIEND_API(void)
+extern JS_FRIEND_API(void)
 MarkContext(JSTracer *trc, JSContext *acx);
 
 /* Must be called with GC lock taken. */
@@ -1352,6 +1390,9 @@ TriggerCompartmentGC(JSCompartment *comp, js::gcstats::Reason reason);
 
 extern void
 MaybeGC(JSContext *cx);
+
+extern void
+ShrinkGCBuffers(JSRuntime *rt);
 
 } /* namespace js */
 
@@ -1424,7 +1465,7 @@ class GCHelperThread {
     PRCondVar         *done;
     volatile State    state;
 
-    JSContext         *context;
+    JSContext         *finalizationContext;
     bool              shrinkFlag;
 
     Vector<void **, 16, js::SystemAllocPolicy> freeVector;
@@ -1460,6 +1501,8 @@ class GCHelperThread {
         wakeup(NULL),
         done(NULL),
         state(IDLE),
+        finalizationContext(NULL),
+        shrinkFlag(false),
         freeCursor(NULL),
         freeCursorEnd(NULL),
         backgroundAllocation(true)
@@ -1469,7 +1512,10 @@ class GCHelperThread {
     void finish();
 
     /* Must be called with the GC lock taken. */
-    inline void startBackgroundSweep(bool shouldShrink);
+    void startBackgroundSweep(JSContext *cx, bool shouldShrink);
+
+    /* Must be called with the GC lock taken. */
+    void startBackgroundShrink();
 
     /* Must be called with the GC lock taken. */
     void waitBackgroundSweepEnd();
@@ -1514,7 +1560,7 @@ class GCHelperThread {
     }
 
     /* Must be called with the GC lock taken. */
-    bool prepareForBackgroundSweep(JSContext *cx);
+    bool prepareForBackgroundSweep();
 };
 
 #endif /* JS_THREADSAFE */
@@ -1527,13 +1573,13 @@ struct GCChunkHasher {
      * ratio.
      */
     static HashNumber hash(gc::Chunk *chunk) {
-        JS_ASSERT(!(jsuword(chunk) & gc::ChunkMask));
-        return HashNumber(jsuword(chunk) >> gc::ChunkShift);
+        JS_ASSERT(!(uintptr_t(chunk) & gc::ChunkMask));
+        return HashNumber(uintptr_t(chunk) >> gc::ChunkShift);
     }
 
     static bool match(gc::Chunk *k, gc::Chunk *l) {
-        JS_ASSERT(!(jsuword(k) & gc::ChunkMask));
-        JS_ASSERT(!(jsuword(l) & gc::ChunkMask));
+        JS_ASSERT(!(uintptr_t(k) & gc::ChunkMask));
+        JS_ASSERT(!(uintptr_t(l) & gc::ChunkMask));
         return k == l;
     }
 };
@@ -1546,11 +1592,11 @@ struct ConservativeGCThreadData {
      * The GC scans conservatively between ThreadData::nativeStackBase and
      * nativeStackTop unless the latter is NULL.
      */
-    jsuword             *nativeStackTop;
+    uintptr_t           *nativeStackTop;
 
     union {
         jmp_buf         jmpbuf;
-        jsuword         words[JS_HOWMANY(sizeof(jmp_buf), sizeof(jsuword))];
+        uintptr_t       words[JS_HOWMANY(sizeof(jmp_buf), sizeof(uintptr_t))];
     } registerSnapshot;
 
     /*
@@ -1712,7 +1758,7 @@ struct GCMarker : public JSTracer {
     void drainMarkStack();
 
     inline void processMarkStackTop();
-    
+
     void pushObject(JSObject *obj) {
         pushTaggedPtr(ObjectTag, obj);
     }
@@ -1743,6 +1789,12 @@ typedef void (*IterateArenaCallback)(JSContext *cx, void *data, gc::Arena *arena
 typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing,
                                     JSGCTraceKind traceKind, size_t thingSize);
 
+/*
+ * This function calls |compartmentCallback| on every compartment.
+ */
+extern JS_FRIEND_API(void)
+IterateCompartments(JSContext *cx, void *data,
+                    IterateCompartmentCallback compartmentCallback);
 /*
  * This function calls |compartmentCallback| on every compartment,
  * |arenaCallback| on every in-use arena, and |cellCallback| on every in-use
@@ -1787,6 +1839,15 @@ NewCompartment(JSContext *cx, JSPrincipals *principals);
 /* Tries to run a GC no matter what (used for GC zeal). */
 void
 RunDebugGC(JSContext *cx);
+
+#if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG) && !defined(JS_THREADSAFE)
+/* Overwrites stack references to GC things which have not been rooted. */
+void CheckStackRoots(JSContext *cx);
+
+inline void MaybeCheckStackRoots(JSContext *cx) { CheckStackRoots(cx); }
+#else
+inline void MaybeCheckStackRoots(JSContext *cx) {}
+#endif
 
 const int ZealPokeThreshold = 1;
 const int ZealAllocThreshold = 2;

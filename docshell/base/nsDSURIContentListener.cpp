@@ -48,6 +48,11 @@
 #include "nsIHttpChannel.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetError.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
+static bool sIgnoreXFrameOptions = false;
 
 //*****************************************************************************
 //***    nsDSURIContentListener: Object Management
@@ -57,6 +62,17 @@ nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
     : mDocShell(aDocShell), 
       mParentContentListener(nsnull)
 {
+  static bool initializedPrefCache = false;
+
+  // Set up a pref cache for sIgnoreXFrameOptions, if we haven't already.
+  if (NS_UNLIKELY(!initializedPrefCache)) {
+    // Lock the pref so that the user's changes to it, if any, are ignored.
+    nsIPrefBranch2 *root = Preferences::GetRootBranch();
+    root->LockPref("b2g.ignoreXFrameOptions");
+
+    Preferences::AddBoolVarCache(&sIgnoreXFrameOptions, "b2g.ignoreXFrameOptions");
+    initializedPrefCache = true;
+  }
 }
 
 nsDSURIContentListener::~nsDSURIContentListener()
@@ -121,7 +137,8 @@ nsDSURIContentListener::DoContent(const char* aContentType,
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
     // Check whether X-Frame-Options permits us to load this content in an
-    // iframe
+    // iframe and abort the load (unless we've disabled x-frame-options
+    // checking).
     if (!CheckFrameOptions(request)) {
         *aAbortProcess = true;
         return NS_OK;
@@ -287,6 +304,11 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
 // Check if X-Frame-Options permits this document to be loaded as a subdocument.
 bool nsDSURIContentListener::CheckFrameOptions(nsIRequest* request)
 {
+    // If X-Frame-Options checking is disabled, return true unconditionally.
+    if (sIgnoreXFrameOptions) {
+        return true;
+    }
+
     nsCAutoString xfoHeaderValue;
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);

@@ -79,23 +79,22 @@ static void
 PatchGetFallback(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
     Repatcher repatch(f.jit());
-    JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stubs::GetGlobalName));
+    JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stubs::Name));
     repatch.relink(ic->slowPathCall, fptr);
 }
 
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
-    JSObject *obj = f.fp()->scopeChain().getGlobal();
-    JSAtom *atom = f.script()->getAtom(GET_INDEX(f.pc()));
-    jsid id = ATOM_TO_JSID(atom);
+    JSObject &obj = f.fp()->scopeChain().global();
+    PropertyName *name = f.script()->getName(GET_INDEX(f.pc()));
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj->nativeLookup(f.cx, id);
+    const Shape *shape = obj.nativeLookup(f.cx, js_CheckForStringIndex(ATOM_TO_JSID(name)));
 
     if (monitor.recompiled()) {
-        stubs::GetGlobalName(f);
+        stubs::Name(f);
         return;
     }
 
@@ -105,56 +104,40 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
     {
         if (shape)
             PatchGetFallback(f, ic);
-        stubs::GetGlobalName(f);
+        stubs::Name(f);
         return;
     }
     uint32_t slot = shape->slot();
 
     /* Patch shape guard. */
     Repatcher repatcher(f.jit());
-    repatcher.repatch(ic->fastPathStart.dataLabelPtrAtOffset(ic->shapeOffset), obj->lastProperty());
+    repatcher.repatch(ic->fastPathStart.dataLabelPtrAtOffset(ic->shapeOffset), obj.lastProperty());
 
     /* Patch loads. */
-    uint32_t index = obj->dynamicSlotIndex(slot);
+    uint32_t index = obj.dynamicSlotIndex(slot);
     JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
     repatcher.patchAddressOffsetForValueLoad(label, index * sizeof(Value));
 
     /* Do load anyway... this time. */
-    stubs::GetGlobalName(f);
+    stubs::Name(f);
 }
 
 template <JSBool strict>
 static void JS_FASTCALL
 DisabledSetGlobal(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    JSScript *script = f.script();
-    JSAtom *atom = script->getAtom(GET_INDEX(f.pc()));
-    stubs::SetGlobalName<strict>(f, atom);
+    stubs::SetGlobalName<strict>(f, f.script()->getName(GET_INDEX(f.pc())));
 }
 
 template void JS_FASTCALL DisabledSetGlobal<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
 template void JS_FASTCALL DisabledSetGlobal<false>(VMFrame &f, ic::SetGlobalNameIC *ic);
-
-template <JSBool strict>
-static void JS_FASTCALL
-DisabledSetGlobalNoCache(VMFrame &f, ic::SetGlobalNameIC *ic)
-{
-    JSScript *script = f.script();
-    JSAtom *atom = script->getAtom(GET_INDEX(f.pc()));
-    stubs::SetGlobalNameNoCache<strict>(f, atom);
-}
-
-template void JS_FASTCALL DisabledSetGlobalNoCache<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
-template void JS_FASTCALL DisabledSetGlobalNoCache<false>(VMFrame &f, ic::SetGlobalNameIC *ic);
 
 static void
 PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
     JSScript *script = f.script();
     Repatcher repatch(f.jit());
-    VoidStubSetGlobal stub = ic->usePropertyCache
-                             ? STRICT_VARIANT(DisabledSetGlobal)
-                             : STRICT_VARIANT(DisabledSetGlobalNoCache);
+    VoidStubSetGlobal stub = STRICT_VARIANT(DisabledSetGlobal);
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stub));
     repatch.relink(ic->slowPathCall, fptr);
 }
@@ -208,24 +191,21 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Sh
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    JSObject *obj = f.fp()->scopeChain().getGlobal();
+    JSObject &obj = f.fp()->scopeChain().global();
     JSScript *script = f.script();
-    JSAtom *atom = script->getAtom(GET_INDEX(f.pc()));
+    PropertyName *name = script->getName(GET_INDEX(f.pc()));
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj->nativeLookup(f.cx, ATOM_TO_JSID(atom));
+    const Shape *shape = obj.nativeLookup(f.cx, ATOM_TO_JSID(name));
 
     if (!monitor.recompiled()) {
-        LookupStatus status = UpdateSetGlobalName(f, ic, obj, shape);
+        LookupStatus status = UpdateSetGlobalName(f, ic, &obj, shape);
         if (status == Lookup_Error)
             THROW();
     }
 
-    if (ic->usePropertyCache)
-        STRICT_VARIANT(stubs::SetGlobalName)(f, atom);
-    else
-        STRICT_VARIANT(stubs::SetGlobalNameNoCache)(f, atom);
+    STRICT_VARIANT(stubs::SetGlobalName)(f, name);
 }
 
 class EqualityICLinker : public LinkerHelper
@@ -818,11 +798,11 @@ class CallCompiler : public BaseCompiler
         if (!IsFunctionObject(args.calleev(), &fun))
             return false;
 
-        if ((!callingNew && !fun->isNative()) || (callingNew && !fun->isConstructor()))
+        if ((!callingNew && !fun->isNative()) || (callingNew && !fun->isNativeConstructor()))
             return false;
 
         if (callingNew)
-            args.thisv().setMagicWithObjectOrNullPayload(NULL);
+            args.thisv().setMagic(JS_IS_CONSTRUCTING);
 
         RecompilationMonitor monitor(cx);
 
@@ -917,11 +897,8 @@ class CallCompiler : public BaseCompiler
         }
 
         /* Mark vp[1] as magic for |new|. */
-        if (callingNew) {
-            Value v;
-            v.setMagicWithObjectOrNullPayload(NULL);
-            masm.storeValue(v, Address(vpReg, sizeof(Value)));
-        }
+        if (callingNew)
+            masm.storeValue(MagicValue(JS_IS_CONSTRUCTING), Address(vpReg, sizeof(Value)));
 
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 3);

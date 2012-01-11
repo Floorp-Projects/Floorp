@@ -62,7 +62,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsFirstLetterFrame)
 
 NS_QUERYFRAME_HEAD(nsFirstLetterFrame)
   NS_QUERYFRAME_ENTRY(nsFirstLetterFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFirstLetterFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
@@ -85,6 +85,14 @@ nsFirstLetterFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
+nsFirstLetterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
+{
+  return BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+}
+
+NS_IMETHODIMP
 nsFirstLetterFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIFrame*        aPrevInFlow)
@@ -103,7 +111,7 @@ nsFirstLetterFrame::Init(nsIContent*      aContent,
     }
   }
 
-  return nsFirstLetterFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 NS_IMETHODIMP
@@ -179,7 +187,7 @@ nsFirstLetterFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     // inline frame.
     return nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
-  return nsFirstLetterFrameSuper::ComputeSize(aRenderingContext,
+  return nsContainerFrame::ComputeSize(aRenderingContext,
       aCBSize, aAvailableWidth, aMargin, aBorder, aPadding, aShrinkWrap);
 }
 

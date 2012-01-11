@@ -138,6 +138,12 @@ SDK_HEADERS     = \
 		nsCycleCollector.h \
 		nsObjCExceptions.h \
 
+ifeq ($(OS_ARCH),WINNT)
+SDK_HEADERS += \
+		nsWindowsHelpers.h \
+		$(NULL)
+endif
+
 XPIDLSRCS	= \
 		nsIConsoleListener.idl \
 		nsIConsoleMessage.idl \
@@ -171,4 +177,7 @@ ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
 endif
 
-LOCAL_INCLUDES += -I$(srcdir)/../build
+LOCAL_INCLUDES += \
+		-I$(srcdir)/../build \
+		-I$(topsrcdir)/xpcom/ds \
+		$(NULL)

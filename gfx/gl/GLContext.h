@@ -742,13 +742,13 @@ public:
           return false;
         }
 
-        if (!aOffscreen->mOffscreenDrawFBO && !aOffscreen->mOffscreenReadFBO) {
-            return false;
-        }
-
         if (!aOffscreen->mSharedContext ||
             aOffscreen->mSharedContext != mSharedContext)
         {
+            return false;
+        }
+
+        if (!aOffscreen->mOffscreenTexture) {
             return false;
         }
 
@@ -770,7 +770,8 @@ public:
     void SetFlushGuaranteesResolve(bool aFlushGuaranteesResolve) {
         mFlushGuaranteesResolve = aFlushGuaranteesResolve;
     }
-
+    
+    // Before reads from offscreen texture
     void GuaranteeResolve() {
         if (mFlushGuaranteesResolve) {
             BlitDirtyFBOs();
@@ -1053,7 +1054,6 @@ public:
         BindReadFBO(read);
     }
 
-    // Before reads from offscreen texture
     void fFinish() {
         BeforeGLReadCall();
         raw_fFinish();
@@ -1423,8 +1423,9 @@ protected:
     void UseBlitProgram();
     void SetBlitFramebufferForDestTexture(GLuint aTexture);
 
-    // helper to create/resize an offscreen FBO,
+    // Helper to create/resize an offscreen FBO,
     // for offscreen implementations that use FBOs.
+    // Note that it does -not- clear the resized buffers.
     bool ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, const bool aDisableAA);
     bool ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO) {
         if (ResizeOffscreenFBO(aSize, aUseReadFBO, false))
@@ -1451,7 +1452,10 @@ protected:
     // Clear to transparent black, with 0 depth and stencil,
     // while preserving current ClearColor etc. values.
     // Useful for resizing offscreen buffers.
+public:
     void ClearSafely();
+
+protected:
 
     nsDataHashtable<nsVoidPtrHashKey, void*> mUserData;
 

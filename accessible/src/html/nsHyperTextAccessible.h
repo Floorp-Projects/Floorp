@@ -360,7 +360,7 @@ protected:
   /**
    * Return selection ranges within the accessible subtree.
    */
-  void GetSelectionDOMRanges(PRInt16 aType, nsCOMArray<nsIDOMRange>* aRanges);
+  void GetSelectionDOMRanges(PRInt16 aType, nsTArray<nsRange*>* aRanges);
 
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
 
@@ -390,10 +390,10 @@ protected:
    *                        outside of hyper text
    * @param aHTOffset       [out] the result offset
    */
-  nsresult DOMRangeBoundToHypertextOffset(nsIDOMRange *aRange,
-                                          bool aIsStartBound,
-                                          bool aIsStartOffset,
-                                          PRInt32 *aHTOffset);
+  nsresult RangeBoundToHypertextOffset(nsRange *aRange,
+                                       bool aIsStartBound,
+                                       bool aIsStartOffset,
+                                       PRInt32 *aHTOffset);
 
   /**
    * Set 'misspelled' text attribute and return range offsets where the

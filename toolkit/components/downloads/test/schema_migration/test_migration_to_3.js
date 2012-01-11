@@ -54,6 +54,7 @@ function run_test()
 
   // Check that the column exists (statement should not throw)
   stmt = dbConn.createStatement("SELECT referrer FROM moz_downloads");
+  stmt.finalize();
 
   // now we check the entries
   stmt = dbConn.createStatement(
@@ -70,7 +71,7 @@ function run_test()
   do_check_eq(1180493839859230, stmt.getInt64(4));
   do_check_eq(1, stmt.getInt32(5));
   do_check_true(stmt.getIsNull(6));
-  stmt.reset();
+  stmt.finalize();
 
   cleanup();
 }

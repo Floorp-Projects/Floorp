@@ -146,17 +146,30 @@ function _parseModifiers(aEvent)
  */
 function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 {
+  var rect = aTarget.getBoundingClientRect();
+  synthesizeMouseAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
+			 aEvent, aWindow);
+}
+
+/*
+ * Synthesize a mouse event at a particular point in aWindow.
+ *
+ * aEvent is an object which may contain the properties:
+ *   shiftKey, ctrlKey, altKey, metaKey, accessKey, clickCount, button, type
+ *
+ * If the type is specified, an mouse event of that type is fired. Otherwise,
+ * a mousedown followed by a mouse up is performed.
+ *
+ * aWindow is optional, and defaults to the current window object.
+ */
+function synthesizeMouseAtPoint(left, top, aEvent, aWindow)
+{
   var utils = _getDOMWindowUtils(aWindow);
 
   if (utils) {
     var button = aEvent.button || 0;
     var clickCount = aEvent.clickCount || 1;
     var modifiers = _parseModifiers(aEvent);
-
-    var rect = aTarget.getBoundingClientRect();
-
-    var left = rect.left + aOffsetX;
-    var top = rect.top + aOffsetY;
 
     if (aEvent.type) {
       utils.sendMouseEvent(aEvent.type, left, top, button, clickCount, modifiers);
@@ -308,6 +321,40 @@ function _computeKeyCodeFromChar(aChar)
 }
 
 /**
+ * isKeypressFiredKey() returns TRUE if the given key should cause keypress
+ * event when widget handles the native key event.  Otherwise, FALSE.
+ *
+ * aDOMKeyCode should be one of consts of nsIDOMKeyEvent::DOM_VK_*, or a key
+ * name begins with "VK_", or a character.
+ */
+function isKeypressFiredKey(aDOMKeyCode)
+{
+  if (typeof(aDOMKeyCode) == "string") {
+    if (aDOMKeyCode.indexOf("VK_") == 0) {
+      aDOMKeyCode = KeyEvent["DOM_" + aDOMKeyCode];
+      if (!aDOMKeyCode) {
+        throw "Unknown key: " + aDOMKeyCode;
+      }
+    } else {
+      // If the key generates a character, it must cause a keypress event.
+      return true;
+    }
+  }
+  switch (aDOMKeyCode) {
+    case KeyEvent.DOM_VK_SHIFT:
+    case KeyEvent.DOM_VK_CONTROL:
+    case KeyEvent.DOM_VK_ALT:
+    case KeyEvent.DOM_VK_CAPS_LOCK:
+    case KeyEvent.DOM_VK_NUM_LOCK:
+    case KeyEvent.DOM_VK_SCROLL_LOCK:
+    case KeyEvent.DOM_VK_META:
+      return false;
+    default:
+      return true;
+  }
+}
+
+/**
  * Synthesize a key event. It is targeted at whatever would be targeted by an
  * actual keypress by the user, typically the focused element.
  *
@@ -347,9 +394,10 @@ function synthesizeKey(aKey, aEvent, aWindow)
     } else {
       var keyDownDefaultHappened =
           utils.sendKeyEvent("keydown", keyCode, 0, modifiers);
-      // XXX Shouldn't dispatch keypress event if the key is a modifier key.
-      utils.sendKeyEvent("keypress", charCode ? 0 : keyCode, charCode,
-                         modifiers, !keyDownDefaultHappened);
+      if (isKeypressFiredKey(keyCode)) {
+        utils.sendKeyEvent("keypress", charCode ? 0 : keyCode, charCode,
+                           modifiers, !keyDownDefaultHappened);
+      }
       utils.sendKeyEvent("keyup", keyCode, 0, modifiers);
     }
   }

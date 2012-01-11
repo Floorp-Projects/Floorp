@@ -1,3 +1,7 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
@@ -68,6 +72,107 @@ function initTestLogging(level) {
   log.updateAppenders();
 
   return logStats;
+}
+
+// This is needed for loadAddonTestFunctions().
+let gGlobalScope = this;
+
+function ExtensionsTestPath(path) {
+  if (path[0] != "/") {
+    throw Error("Path must begin with '/': " + path);
+  }
+
+  return "../../../../toolkit/mozapps/extensions/test/xpcshell" + path;
+}
+
+/**
+ * Loads the AddonManager test functions by importing its test file.
+ *
+ * This should be called in the global scope of any test file needing to
+ * interface with the AddonManager. It should only be called once, or the
+ * universe will end.
+ */
+function loadAddonTestFunctions() {
+  const path = ExtensionsTestPath("/head_addons.js");
+  let file = do_get_file(path);
+  let uri = Services.io.newFileURI(file);
+  Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+}
+
+function getAddonInstall(name) {
+  let f = do_get_file(ExtensionsTestPath("/addons/" + name + ".xpi"));
+  let cb = Async.makeSyncCallback();
+  AddonManager.getInstallForFile(f, cb);
+
+  return Async.waitForSyncCallback(cb);
+}
+
+/**
+ * Obtains an addon from the add-on manager by id.
+ *
+ * This is merely a synchronous wrapper.
+ *
+ * @param  id
+ *         ID of add-on to fetch
+ * @return addon object on success or undefined or null on failure
+ */
+function getAddonFromAddonManagerByID(id) {
+   let cb = Async.makeSyncCallback();
+   AddonManager.getAddonByID(id, cb);
+   return Async.waitForSyncCallback(cb);
+}
+
+/**
+ * Installs an add-on synchronously from an addonInstall
+ *
+ * @param  install addonInstall instance to install
+ */
+function installAddonFromInstall(install) {
+  let cb = Async.makeSyncCallback();
+  let listener = {onInstallEnded: cb};
+  AddonManager.addInstallListener(listener);
+  install.install();
+  Async.waitForSyncCallback(cb);
+  AddonManager.removeAddonListener(listener);
+
+  do_check_neq(null, install.addon);
+  do_check_neq(null, install.addon.syncGUID);
+
+  return install.addon;
+}
+
+/**
+ * Convenience function to install an add-on from the extensions unit tests.
+ *
+ * @param  name
+ *         String name of add-on to install. e.g. test_install1
+ * @return addon object that was installed
+ */
+function installAddon(name) {
+  let install = getAddonInstall(name);
+  do_check_neq(null, install);
+  return installAddonFromInstall(install);
+}
+
+/**
+ * Convenience function to uninstall an add-on synchronously.
+ *
+ * @param addon
+ *        Addon instance to uninstall
+ */
+function uninstallAddon(addon) {
+  let cb = Async.makeSyncCallback();
+  let listener = {onUninstalled: function(uninstalled) {
+    if (uninstalled.id == addon.id) {
+      AddonManager.removeAddonListener(listener);
+      cb(uninstalled);
+    }
+  }};
+
+  AddonManager.addAddonListener(listener);
+  addon.uninstall();
+  Async.waitForSyncCallback(cb);
 }
 
 function FakeFilesystemService(contents) {
@@ -247,7 +352,7 @@ function do_check_throws(aFunc, aResult, aStack)
 /*
  * A fake engine implementation.
  * This is used all over the place.
- * 
+ *
  * Complete with record, store, and tracker implementations.
  */
 
@@ -284,6 +389,12 @@ RotaryStore.prototype = {
 
   createRecord: function(id, collection) {
     let record = new RotaryRecord(collection, id);
+
+    if (!(id in this.items)) {
+      record.deleted = true;
+      return record;
+    }
+
     record.denomination = this.items[id] || "Data for new record: " + id;
     return record;
   },
@@ -327,6 +438,12 @@ RotaryEngine.prototype = {
   _recordObj: RotaryRecord,
 
   _findDupe: function(item) {
+    // This is a semaphore used for testing proper reconciling on dupe
+    // detection.
+    if (item.id == "DUPE_INCOMING") {
+      return "DUPE_LOCAL";
+    }
+
     for (let [id, value] in Iterator(this._store.items)) {
       if (item.denomination == value) {
         return id;

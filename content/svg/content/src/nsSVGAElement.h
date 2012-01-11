@@ -43,6 +43,7 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"
 #include "nsSVGString.h"
+#include "DOMSVGTests.h"
 
 #include "Link.h"
 
@@ -50,6 +51,7 @@ typedef nsSVGGraphicElement nsSVGAElementBase;
 
 class nsSVGAElement : public nsSVGAElementBase,
                       public nsIDOMSVGAElement,
+                      public DOMSVGTests,
                       public nsIDOMSVGURIReference,
                       public nsILink,
                       public mozilla::dom::Link

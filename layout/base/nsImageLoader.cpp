@@ -179,9 +179,6 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
   }
 
   // Take requested actions
-  if (mActions & ACTION_REFLOW_ON_DECODE) {
-    DoReflow();
-  }
   if (mActions & ACTION_REDRAW_ON_DECODE) {
     DoRedraw(nsnull);
   }
@@ -209,16 +206,14 @@ NS_IMETHODIMP nsImageLoader::OnStopRequest(imgIRequest *aRequest,
   }
 
   // Take requested actions
-  if (mActions & ACTION_REFLOW_ON_LOAD) {
-    DoReflow();
-  }
   if (mActions & ACTION_REDRAW_ON_LOAD) {
     DoRedraw(nsnull);
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
+NS_IMETHODIMP nsImageLoader::FrameChanged(imgIRequest *aRequest,
+                                          imgIContainer *aContainer,
                                           const nsIntRect *aDirtyRect)
 {
   if (!mFrame)
@@ -229,6 +224,8 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
     return NS_OK;
   }
 
+  NS_ASSERTION(aRequest == mRequest, "This is a neat trick.");
+
   nsRect r = aDirtyRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect()) ?
     nsRect(nsPoint(0, 0), mFrame->GetSize()) :
     aDirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
@@ -236,13 +233,6 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
   DoRedraw(&r);
 
   return NS_OK;
-}
-
-void
-nsImageLoader::DoReflow()
-{
-  nsIPresShell *shell = mFrame->PresContext()->GetPresShell();
-  shell->FrameNeedsReflow(mFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
 }
 
 void

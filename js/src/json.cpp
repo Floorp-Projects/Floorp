@@ -193,7 +193,6 @@ Quote(JSContext *cx, StringBuffer &sb, JSString *str)
                          : 't';
            if (!sb.append('\\') || !sb.append(abbrev))
                return false;
-           mark = i + 1;
         } else {
             JS_ASSERT(c < ' ');
             if (!sb.append("\\u00"))
@@ -840,7 +839,7 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
 
                 if (newElement.isUndefined()) {
                     /* Step 2b(ii)(2). */
-                    if (!js_DeleteProperty(cx, obj, id, &newElement, false))
+                    if (!obj->deleteByValue(cx, IdToValue(id), &newElement, false))
                         return false;
                 } else {
                     /* Step 2b(ii)(3). */

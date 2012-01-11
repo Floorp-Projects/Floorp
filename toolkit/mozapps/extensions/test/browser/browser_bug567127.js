@@ -5,7 +5,7 @@
 // Tests bug 567127 - Add install button to the add-ons manager
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.reset();
+MockFilePicker.init();
 
 var gManagerWindow;
 var gSawInstallNotification = false;
@@ -112,7 +112,7 @@ function test() {
 function end_test() {
   is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
 
-  MockFilePicker.reset();
+  MockFilePicker.cleanup();
   close_manager(gManagerWindow, function() {
     finish();
   });

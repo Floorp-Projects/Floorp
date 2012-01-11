@@ -40,9 +40,14 @@ topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 relativesrcdir = dom/indexedDB/test
+DIRS += unit
 
 include $(DEPTH)/config/autoconf.mk
+
+XPCSHELL_TESTS = unit
+
 include $(topsrcdir)/config/rules.mk
+
 
 TEST_FILES = \
   bfcache_iframe1.html \
@@ -60,7 +65,6 @@ TEST_FILES = \
   test_autoIncrement.html \
   test_bfcache.html \
   test_clear.html \
-  test_cmp.html \
   test_complex_keyPaths.html \
   test_count.html \
   test_create_index.html \
@@ -79,6 +83,7 @@ TEST_FILES = \
   test_file_cross_database_copying.html \
   test_file_delete.html \
   test_file_os_delete.html \
+  test_file_put_get_object.html \
   test_file_put_get_values.html \
   test_file_resurrection_delete.html \
   test_file_resurrection_transaction_abort.html \
@@ -94,6 +99,7 @@ TEST_FILES = \
   test_indexes.html \
   test_indexes_bad_values.html \
   test_key_requirements.html \
+  test_keys.html \
   test_leaving_page.html \
   test_multientry.html \
   test_objectCursors.html \
@@ -123,10 +129,11 @@ TEST_FILES = \
   test_setVersion_events.html \
   test_setVersion_exclusion.html \
   test_unique_index_update.html \
-  test_writer_starvation.html \
   third_party_iframe1.html \
   third_party_iframe2.html \
   $(NULL)
+
+#   test_writer_starvation.html  disabled for infinite loops, bug 595368
 
 ifeq (browser,$(MOZ_BUILD_APP))
 BROWSER_TEST_FILES = \
@@ -143,6 +150,8 @@ BROWSER_TEST_FILES = \
   browser_quotaPromptDeny.js \
   browser_quotaPromptDatabases.html \
   browser_quotaPromptDatabases.js \
+  browser_quotaPromptDelete.html \
+  browser_quotaPromptDelete.js \
   head.js \
   $(NULL)
 

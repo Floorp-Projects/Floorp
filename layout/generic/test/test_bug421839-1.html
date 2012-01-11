@@ -32,7 +32,7 @@ if (document.getElementById('iframe'))
   doc = document.getElementById('iframe').contentDocument;
 
 function toggleIframe(){
- netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect UniversalBrowserRead");
+ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var x=document.getElementById('iframe');
   x.style.display = x.style.display == 'none' ? x.style.display = '' : x.style.display = 'none';
   setTimeout(toggleIframe,100);

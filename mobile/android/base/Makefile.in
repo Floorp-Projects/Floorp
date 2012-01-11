@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir@pobox.com>
+#   Richard Newman <rnewman@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,7 +48,16 @@ DIRS = locales
 
 DIST_FILES = package-name.txt
 
-JAVAFILES = \
+SYNC_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-sources.mn | tr '\n' ' ';)
+SYNC_PP_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/preprocess-sources.mn | tr '\n' ' ';)
+SYNC_THIRDPARTY_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-third-party-sources.mn | tr '\n' ' ';)
+SYNC_RES_DRAWABLE=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-resources.mn | tr '\n' ' ';)
+SYNC_RES_LAYOUT=$(shell cat $(topsrcdir)/mobile/android/sync/android-layout-resources.mn | tr '\n' ' ';)
+SYNC_RES_VALUES=$(shell cat $(topsrcdir)/mobile/android/sync/android-values-resources.mn | tr '\n' ' ';)
+SYNC_RES_XML=res/xml/sync_authenticator.xml
+SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml
+
+FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
   AlertNotification.java \
   AutoCompletePopup.java \
@@ -68,6 +78,7 @@ JAVAFILES = \
   GeckoAsyncTask.java \
   GeckoBatteryManager.java \
   GeckoConnectivityReceiver.java \
+  GeckoDirProvider.java \
   GeckoEvent.java \
   GeckoEventListener.java \
   GeckoInputConnection.java \
@@ -77,11 +88,13 @@ JAVAFILES = \
   GeckoThread.java \
   GlobalHistory.java \
   LinkPreference.java \
+  ProfileMigrator.java \
   PromptService.java \
   SurfaceLockInfo.java \
   Tab.java \
   Tabs.java \
   TabsTray.java \
+  gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
   gfx/CairoImage.java \
@@ -95,6 +108,7 @@ JAVAFILES = \
   gfx/LayerController.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
+  gfx/MultiTileLayer.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
   gfx/PlaceholderLayerClient.java \
@@ -106,10 +120,13 @@ JAVAFILES = \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
   gfx/ViewportMetrics.java \
+  gfx/WidgetTileLayer.java \
+  ui/Axis.java \
   ui/PanZoomController.java \
+  ui/SubdocumentScrollHelper.java \
   $(NULL)
 
-PROCESSEDJAVAFILES = \
+FENNEC_PP_JAVA_FILES = \
   App.java \
   LauncherShortcuts.java \
   NotificationHandler.java \
@@ -144,13 +161,17 @@ DEFINES += \
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
-  $(PROCESSEDJAVAFILES) \
+  $(FENNEC_PP_JAVA_FILES) \
+  $(SYNC_PP_JAVA_FILES) \
   gecko.ap_  \
   res/values/strings.xml \
   R.java \
+  $(SYNC_PP_RES_XML) \
+  package-name.txt \
+  Manifest.java \
   $(NULL)
 
-GARBAGE_DIRS += classes res
+GARBAGE_DIRS += classes res sync db
 
 # Bug 567884 - Need a way to find appropriate icons during packaging
 ifeq ($(MOZ_APP_NAME),fennec)
@@ -175,7 +196,9 @@ DEFINES += -DMOZ_ANDROID_SHARED_ID="$(ANDROID_PACKAGE_NAME).sharedID"
 endif
 
 RES_LAYOUT = \
+  $(SYNC_RES_LAYOUT) \
   res/layout/autocomplete_list_item.xml \
+  res/layout/awesomebar.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
@@ -202,13 +225,12 @@ RES_LAYOUT = \
   $(NULL)
 
 RES_LAYOUT_V11 = \
-  res/layout-v11/awesomebar_search.xml \
+  res/layout-v11/awesomebar.xml \
   res/layout-v11/gecko_app.xml \
-  res/layout-v11/gecko_app_actionbar.xml \
   $(NULL)
 
 RES_VALUES = \
-  res/values/defaults.xml \
+  $(SYNC_RES_VALUES) \
   res/values/arrays.xml \
   res/values/colors.xml \
   res/values/styles.xml \
@@ -220,11 +242,21 @@ RES_VALUES_V11 = \
   res/values-v11/themes.xml \
   $(NULL)
 
-RES_XML = res/xml/preferences.xml
+RES_XML = \
+	res/xml/preferences.xml \
+	$(SYNC_RES_XML) \
+	$(NULL)
 
 RES_ANIM = \
   res/anim/grow_fade_in.xml \
   res/anim/shrink_fade_out.xml \
+  $(NULL)
+
+RES_DRAWABLE_NODPI = \
+  res/drawable-nodpi/abouthome_bg.png \
+  res/drawable-nodpi/abouthome_topsites_bg.png \
+  res/drawable-nodpi/tabs_tray_bg.png \
+  res/drawable-nodpi/tabs_tray_pressed_bg.png \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V8 = \
@@ -233,6 +265,8 @@ RES_DRAWABLE_MDPI_V8 = \
   res/drawable-mdpi-v8/abouthome_separator.9.png \
   res/drawable-mdpi-v8/abouthome_topsite_placeholder.png \
   res/drawable-mdpi-v8/abouthome_topsite_shadow.9.png \
+  res/drawable-mdpi-v8/awesomebar_tab.9.png \
+  res/drawable-mdpi-v8/awesomebar_tab_pressed.9.png \
   res/drawable-mdpi-v8/ic_awesomebar_go.png \
   res/drawable-mdpi-v8/ic_awesomebar_search.png \
   res/drawable-mdpi-v8/ic_menu_bookmark_add.png \
@@ -241,25 +275,38 @@ RES_DRAWABLE_MDPI_V8 = \
   res/drawable-mdpi-v8/ic_menu_reload.png \
   res/drawable-mdpi-v8/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v8/ic_menu_share.png \
+  res/drawable-mdpi-v8/ic_menu_forward.png \
+  res/drawable-mdpi-v8/tab_new.png \
+  res/drawable-mdpi-v8/tab_close.png \
+  res/drawable-mdpi-v8/tab_thumbnail_default.png \
+  res/drawable-mdpi-v8/tab_thumbnail_shadow.png \
+  res/drawable-mdpi-v8/tab_selected.png \
   res/drawable-mdpi-v8/tabs_normal.png \
   res/drawable-mdpi-v8/tabs_pressed.png \
   res/drawable-mdpi-v8/tabs_more.png \
   res/drawable-mdpi-v8/tabs_plus.png \
+  res/drawable-mdpi-v8/address_bar_texture.png \
   res/drawable-mdpi-v8/address_bar_url_bg.9.png \
+  res/drawable-mdpi-v8/address_bar_url_outline.9.png \
   res/drawable-mdpi-v8/doorhanger_arrow.png \
   res/drawable-mdpi-v8/doorhanger_bg.9.png \
   res/drawable-mdpi-v8/doorhanger_shadow_bg.9.png \
   res/drawable-mdpi-v8/doorhanger_popup_bg.9.png \
-  res/drawable-mdpi-v8/site_security_lock.png \
+  res/drawable-mdpi-v8/site_security_identified.png \
+  res/drawable-mdpi-v8/site_security_verified.png \
   res/drawable-mdpi-v8/urlbar_stop.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V8 = \
+  res/drawable-hdpi-v8/home_bg.png \
+  res/drawable-hdpi-v8/home_star.png \
   res/drawable-hdpi-v8/abouthome_icon.png \
   res/drawable-hdpi-v8/abouthome_logo.png \
   res/drawable-hdpi-v8/abouthome_separator.9.png \
   res/drawable-hdpi-v8/abouthome_topsite_placeholder.png \
   res/drawable-hdpi-v8/abouthome_topsite_shadow.9.png \
+  res/drawable-hdpi-v8/awesomebar_tab.9.png \
+  res/drawable-hdpi-v8/awesomebar_tab_pressed.9.png \
   res/drawable-hdpi-v8/ic_awesomebar_go.png \
   res/drawable-hdpi-v8/ic_awesomebar_search.png \
   res/drawable-hdpi-v8/ic_menu_bookmark_add.png \
@@ -268,16 +315,25 @@ RES_DRAWABLE_HDPI_V8 = \
   res/drawable-hdpi-v8/ic_menu_reload.png \
   res/drawable-hdpi-v8/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v8/ic_menu_share.png \
+  res/drawable-hdpi-v8/ic_menu_forward.png \
+  res/drawable-hdpi-v8/tab_new.png \
+  res/drawable-hdpi-v8/tab_close.png \
+  res/drawable-hdpi-v8/tab_thumbnail_default.png \
+  res/drawable-hdpi-v8/tab_thumbnail_shadow.png \
+  res/drawable-hdpi-v8/tab_selected.png \
   res/drawable-hdpi-v8/tabs_normal.png \
   res/drawable-hdpi-v8/tabs_pressed.png \
   res/drawable-hdpi-v8/tabs_more.png \
   res/drawable-hdpi-v8/tabs_plus.png \
+  res/drawable-hdpi-v8/address_bar_texture.png \
   res/drawable-hdpi-v8/address_bar_url_bg.9.png \
+  res/drawable-hdpi-v8/address_bar_url_outline.9.png \
   res/drawable-hdpi-v8/doorhanger_arrow.png \
   res/drawable-hdpi-v8/doorhanger_bg.9.png \
   res/drawable-hdpi-v8/doorhanger_shadow_bg.9.png \
   res/drawable-hdpi-v8/doorhanger_popup_bg.9.png \
-  res/drawable-hdpi-v8/site_security_lock.png \
+  res/drawable-hdpi-v8/site_security_identified.png \
+  res/drawable-hdpi-v8/site_security_verified.png \
   res/drawable-hdpi-v8/urlbar_stop.png \
   $(NULL)
 
@@ -288,6 +344,7 @@ RES_DRAWABLE_MDPI_V9 = \
   res/drawable-mdpi-v9/ic_menu_reload.png \
   res/drawable-mdpi-v9/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v9/ic_menu_share.png \
+  res/drawable-mdpi-v9/ic_menu_forward.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V9 = \
@@ -297,6 +354,7 @@ RES_DRAWABLE_HDPI_V9 = \
   res/drawable-hdpi-v9/ic_menu_reload.png \
   res/drawable-hdpi-v9/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v9/ic_menu_share.png \
+  res/drawable-hdpi-v9/ic_menu_forward.png \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V11 = \
@@ -308,11 +366,7 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_reload.png \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
-  res/drawable-mdpi-v11/tabs_normal.png \
-  res/drawable-mdpi-v11/tabs_pressed.png \
-  res/drawable-mdpi-v11/tabs_more.png \
-  res/drawable-mdpi-v11/tabs_plus.png \
-  res/drawable-mdpi-v11/address_bar_url_bg.9.png \
+  res/drawable-mdpi-v11/ic_menu_forward.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V11 = \
@@ -324,11 +378,7 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_reload.png \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
-  res/drawable-hdpi-v11/tabs_normal.png \
-  res/drawable-hdpi-v11/tabs_pressed.png \
-  res/drawable-hdpi-v11/tabs_more.png \
-  res/drawable-hdpi-v11/tabs_plus.png \
-  res/drawable-hdpi-v11/address_bar_url_bg.9.png \
+  res/drawable-hdpi-v11/ic_menu_forward.png \
   $(NULL)
 
 RES_DRAWABLE_XHDPI_V11 = \
@@ -337,6 +387,8 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/abouthome_separator.9.png \
   res/drawable-xhdpi-v11/abouthome_topsite_placeholder.png \
   res/drawable-xhdpi-v11/abouthome_topsite_shadow.9.png \
+  res/drawable-xhdpi-v11/awesomebar_tab.9.png \
+  res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
   res/drawable-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-xhdpi-v11/ic_awesomebar_search.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
@@ -345,76 +397,158 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_reload.png \
   res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi-v11/ic_menu_share.png \
+  res/drawable-xhdpi-v11/tab_new.png \
+  res/drawable-xhdpi-v11/tab_close.png \
+  res/drawable-xhdpi-v11/tab_thumbnail_default.png \
+  res/drawable-xhdpi-v11/tab_thumbnail_shadow.png \
+  res/drawable-xhdpi-v11/tab_selected.png \
   res/drawable-xhdpi-v11/tabs_normal.png \
   res/drawable-xhdpi-v11/tabs_pressed.png \
   res/drawable-xhdpi-v11/tabs_more.png \
   res/drawable-xhdpi-v11/tabs_plus.png \
+  res/drawable-xhdpi-v11/address_bar_texture.png \
   res/drawable-xhdpi-v11/address_bar_url_bg.9.png \
+  res/drawable-xhdpi-v11/address_bar_url_outline.9.png \
+  res/drawable-xhdpi-v11/urlbar_stop.png \
+  res/drawable-xhdpi-v11/site_security_identified.png \
+  res/drawable-xhdpi-v11/site_security_verified.png \
+  $(NULL)
+
+RES_DRAWABLE_LAND_MDPI_V14 = \
+  res/drawable-land-mdpi-v14/ic_awesomebar_go.png \
+  res/drawable-land-mdpi-v14/ic_awesomebar_search.png \
+  res/drawable-land-mdpi-v14/address_bar_texture.png \
+  res/drawable-land-mdpi-v14/address_bar_url_bg.9.png \
+  res/drawable-land-mdpi-v14/address_bar_url_outline.9.png \
+  res/drawable-land-mdpi-v14/tabs_normal.png \
+  res/drawable-land-mdpi-v14/tabs_pressed.png \
+  res/drawable-land-mdpi-v14/tabs_more.png \
+  res/drawable-land-mdpi-v14/tabs_plus.png \
+  res/drawable-land-mdpi-v14/urlbar_stop.png \
+  res/drawable-land-mdpi-v14/site_security_identified.png \
+  res/drawable-land-mdpi-v14/site_security_verified.png \
+  $(NULL)
+
+RES_DRAWABLE_LAND_HDPI_V14 = \
+  res/drawable-land-hdpi-v14/ic_awesomebar_go.png \
+  res/drawable-land-hdpi-v14/ic_awesomebar_search.png \
+  res/drawable-land-hdpi-v14/address_bar_texture.png \
+  res/drawable-land-hdpi-v14/address_bar_url_bg.9.png \
+  res/drawable-land-hdpi-v14/address_bar_url_outline.9.png \
+  res/drawable-land-hdpi-v14/tabs_normal.png \
+  res/drawable-land-hdpi-v14/tabs_pressed.png \
+  res/drawable-land-hdpi-v14/tabs_more.png \
+  res/drawable-land-hdpi-v14/tabs_plus.png \
+  res/drawable-land-hdpi-v14/urlbar_stop.png \
+  res/drawable-land-hdpi-v14/site_security_identified.png \
+  res/drawable-land-hdpi-v14/site_security_verified.png \
+  $(NULL)
+
+RES_DRAWABLE_LAND_XHDPI_V14 = \
+  res/drawable-land-xhdpi-v14/ic_awesomebar_go.png \
+  res/drawable-land-xhdpi-v14/ic_awesomebar_search.png \
+  res/drawable-land-xhdpi-v14/address_bar_texture.png \
+  res/drawable-land-xhdpi-v14/address_bar_url_bg.9.png \
+  res/drawable-land-xhdpi-v14/address_bar_url_outline.9.png \
+  res/drawable-land-xhdpi-v14/tabs_normal.png \
+  res/drawable-land-xhdpi-v14/tabs_pressed.png \
+  res/drawable-land-xhdpi-v14/tabs_more.png \
+  res/drawable-land-xhdpi-v14/tabs_plus.png \
+  res/drawable-land-xhdpi-v14/urlbar_stop.png \
+  res/drawable-land-xhdpi-v14/site_security_identified.png \
+  res/drawable-land-xhdpi-v14/site_security_verified.png \
   $(NULL)
 
 RES_COLOR = \
   res/color/awesomebar_tab_text.xml
 
-AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
+RES_MENU = \
+  res/menu/awesomebar_contextmenu.xml \
+  $(NULL)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 ifdef MOZ_CRASHREPORTER
-PROCESSEDJAVAFILES += CrashReporter.java
+FENNEC_PP_JAVA_FILES += CrashReporter.java
 MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/crash_reporter.png
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
-MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/abouthome_bg.png                \
-                         mobile/android/base/resources/drawable/abouthome_bg_repeat.xml         \
-                         mobile/android/base/resources/drawable/abouthome_topsites_bg.png       \
-                         mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml \
-                         mobile/android/base/resources/drawable/address_bar_bg.xml              \
-                         mobile/android/base/resources/drawable/address_bar_url_default.xml     \
-                         mobile/android/base/resources/drawable/address_bar_url_pressed.xml     \
-                         mobile/android/base/resources/drawable/autocomplete_list_bg.9.png      \
-                         mobile/android/base/resources/drawable/awesomebar_tab_focus.xml        \
-                         mobile/android/base/resources/drawable/awesomebar_tab_focus_selected.xml \
-                         mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml    \
-                         mobile/android/base/resources/drawable/awesomebar_tab_press.xml        \
-                         mobile/android/base/resources/drawable/awesomebar_tab_press_selected.xml \
-                         mobile/android/base/resources/drawable/awesomebar_tab_selected.xml     \
-                         mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml   \
-                         mobile/android/base/resources/drawable/desktop_notification.png        \
-                         mobile/android/base/resources/drawable/favicon.png                     \
-                         mobile/android/base/resources/drawable/gecko_actionbar_bg.xml          \
-                         mobile/android/base/resources/drawable/progress_spinner.xml            \
-                         mobile/android/base/resources/drawable/progress_spinner_1.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_2.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_3.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_4.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_5.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_6.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_7.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_8.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_9.png          \
-                         mobile/android/base/resources/drawable/progress_spinner_10.png         \
-                         mobile/android/base/resources/drawable/progress_spinner_11.png         \
-                         mobile/android/base/resources/drawable/progress_spinner_12.png         \
-                         mobile/android/base/resources/drawable/progress_spinner_13.png         \
-                         mobile/android/base/resources/drawable/progress_spinner_14.png         \
-                         mobile/android/base/resources/drawable/progress_spinner_15.png         \
-                         mobile/android/base/resources/drawable/progress_spinner_16.png         \
-                         mobile/android/base/resources/drawable/progress_spinner_17.png         \
-                         mobile/android/base/resources/drawable/progress_spinner_18.png         \
-                         mobile/android/base/resources/drawable/start.png                       \
-                         mobile/android/base/resources/drawable/site_security_level.xml         \
-                         mobile/android/base/resources/drawable/tab_new.png                     \
-                         mobile/android/base/resources/drawable/tab_close.png                   \
-                         mobile/android/base/resources/drawable/tabs_button.xml                 \
-                         mobile/android/base/resources/drawable/tabs_level.xml                  \
-                         mobile/android/base/resources/drawable/tabs_tray_bg.9.png              \
-                         mobile/android/base/resources/drawable/checkerboard.png                \
-                         mobile/android/base/resources/drawable/shadow.png                      \
-                         $(NULL)
-
+MOZ_ANDROID_DRAWABLES += \
+  $(SYNC_RES_DRAWABLE)                                                          \
+  mobile/android/base/resources/drawable/abouthome_bg_repeat.xml                \
+  mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml       \
+  mobile/android/base/resources/drawable/address_bar_bg.xml                     \
+  mobile/android/base/resources/drawable/address_bar_bg_shadow.xml              \
+  mobile/android/base/resources/drawable/address_bar_url_default.xml            \
+  mobile/android/base/resources/drawable/address_bar_url_pressed.xml            \
+  mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
+  mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
+  mobile/android/base/resources/drawable/awesomebar_tab_press.xml               \
+  mobile/android/base/resources/drawable/awesomebar_tab_press_selected.xml      \
+  mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
+  mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
+  mobile/android/base/resources/drawable/desktop_notification.png               \
+  mobile/android/base/resources/drawable/favicon.png                            \
+  mobile/android/base/resources/drawable/gecko_actionbar_bg.xml                 \
+  mobile/android/base/resources/drawable/progress_spinner.xml                   \
+  mobile/android/base/resources/drawable/progress_spinner_1.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_2.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_3.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_4.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_5.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_6.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_7.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_8.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_9.png                 \
+  mobile/android/base/resources/drawable/progress_spinner_10.png                \
+  mobile/android/base/resources/drawable/progress_spinner_11.png                \
+  mobile/android/base/resources/drawable/progress_spinner_12.png                \
+  mobile/android/base/resources/drawable/progress_spinner_13.png                \
+  mobile/android/base/resources/drawable/progress_spinner_14.png                \
+  mobile/android/base/resources/drawable/progress_spinner_15.png                \
+  mobile/android/base/resources/drawable/progress_spinner_16.png                \
+  mobile/android/base/resources/drawable/progress_spinner_17.png                \
+  mobile/android/base/resources/drawable/progress_spinner_18.png                \
+  mobile/android/base/resources/drawable/start.png                              \
+  mobile/android/base/resources/drawable/site_security_level.xml                \
+  mobile/android/base/resources/drawable/tabs_button.xml                        \
+  mobile/android/base/resources/drawable/tabs_level.xml                         \
+  mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
+  mobile/android/base/resources/drawable/tabs_tray_pressed_bg_repeat.xml        \
+  mobile/android/base/resources/drawable/tabs_tray_close_button.xml             \
+  mobile/android/base/resources/drawable/tabs_tray_list_divider.xml             \
+  mobile/android/base/resources/drawable/tabs_tray_list_selector.xml            \
+  mobile/android/base/resources/drawable/checkerboard.png                       \
+  mobile/android/base/resources/drawable/shadow.png                             \
+  $(NULL)
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
+
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
+
+RES_DIRS= \
+  res/layout              \
+  res/layout-v11          \
+  res/values              \
+  res/values-v11          \
+  res/xml                 \
+  res/anim                \
+  res/drawable-nodpi      \
+  res/drawable-mdpi-v8    \
+  res/drawable-hdpi-v8    \
+  res/drawable-mdpi-v9    \
+  res/drawable-hdpi-v9    \
+  res/drawable-mdpi-v11   \
+  res/drawable-hdpi-v11   \
+  res/drawable-xhdpi-v11  \
+  res/drawable-land-mdpi-v14  \
+  res/drawable-land-hdpi-v14  \
+  res/drawable-land-xhdpi-v14 \
+  res/color                   \
+  res/menu                    \
+  $(NULL)
+
 
 include $(topsrcdir)/config/rules.mk
 
@@ -423,13 +557,23 @@ include $(topsrcdir)/config/android-common.mk
 
 # Note that we're going to set up a dependency directly between embed_android.dex and the java files
 # Instead of on the .class files, since more than one .class file might be produced per .java file
-classes.dex: $(JAVAFILES) $(PROCESSEDJAVAFILES) R.java
+# Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
+# because Android resource classes must be compiled together in order to avoid overlapping resource
+# indices.
+classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(SYNC_PP_JAVA_FILES) $(SYNC_THIRDPARTY_JAVA_FILES) R.java
 	$(NSINSTALL) -D classes
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:unchecked -Xlint:deprecation -d classes  $(addprefix $(srcdir)/,$(JAVAFILES)) $(PROCESSEDJAVAFILES) R.java
+	$(JAVAC) $(JAVAC_FLAGS) -d classes $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes -classpath classes $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	$(DX) --dex --output=$@ classes
 
-AndroidManifest.xml $(PROCESSEDJAVAFILES) package-name.txt: % : %.in
-	mkdir -p db
+PP_RES_XML=$(SYNC_PP_RES_XML)
+
+$(PP_RES_XML): $(subst res/,$(srcdir)/resources/, $(PP_RES_XML).in)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
+
+AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in
+	mkdir -p db sync/repositories/android
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
@@ -442,76 +586,27 @@ res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
 	cp $(ICON_PATH_HDPI) $@
 
 RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
-
 $(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
 	$(NSINSTALL) -D res/drawable
 	$(NSINSTALL) $^ res/drawable/
 
-$(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
-	$(NSINSTALL) -D res/layout
-	$(NSINSTALL) $^  res/layout
-
-$(RES_LAYOUT_V11): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT_V11))
-	$(NSINSTALL) -D res/layout-v11
-	$(NSINSTALL) $(srcdir)/resources/layout-v11/* res/layout-v11/
-
-$(RES_VALUES): \
-		$(srcdir)/resources/values/colors.xml \
-		$(srcdir)/resources/values/styles.xml \
-		$(srcdir)/resources/values/themes.xml \
-		$(srcdir)/resources/values/arrays.xml \
-		$(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defaults.xml
+res/values/defaults.xml: $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defaults.xml
 	$(NSINSTALL) -D res/values
 	$(NSINSTALL) $^  res/values
 
-$(RES_VALUES_V11): $(subst res/,$(srcdir)/resources/,$(RES_VALUES_V11))
-	$(NSINSTALL) -D res/values-v11
-	$(NSINSTALL) $(srcdir)/resources/values-v11/*  res/values-v11
+$(RES_DIRS):
+	rm -rf $@
+	$(NSINSTALL) -D $@
 
-$(RES_XML): $(subst res/,$(srcdir)/resources/,$(RES_XML))
-	$(NSINSTALL) -D res/xml
-	$(NSINSTALL) $(srcdir)/resources/xml/* res/xml/
+$(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
+	@echo "creating $@"
+	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
-$(RES_ANIM): $(subst res/,$(srcdir)/resources/,$(RES_ANIM))
-	$(NSINSTALL) -D res/anim
-	$(NSINSTALL) $(srcdir)/resources/anim/* res/anim/
 
-$(RES_DRAWABLE_MDPI_V8): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_MDPI_V8))
-	$(NSINSTALL) -D res/drawable-mdpi-v8
-	$(NSINSTALL) $(srcdir)/resources/drawable-mdpi-v8/* res/drawable-mdpi-v8/
-
-$(RES_DRAWABLE_HDPI_V8): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_HDPI_V8))
-	$(NSINSTALL) -D res/drawable-hdpi-v8
-	$(NSINSTALL) $(srcdir)/resources/drawable-hdpi-v8/* res/drawable-hdpi-v8/
-
-$(RES_DRAWABLE_MDPI_V9): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_MDPI_V9))
-	$(NSINSTALL) -D res/drawable-mdpi-v9
-	$(NSINSTALL) $(srcdir)/resources/drawable-mdpi-v9/* res/drawable-mdpi-v9/
-
-$(RES_DRAWABLE_HDPI_V9): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_HDPI_V9))
-	$(NSINSTALL) -D res/drawable-hdpi-v9
-	$(NSINSTALL) $(srcdir)/resources/drawable-hdpi-v9/* res/drawable-hdpi-v9/
-
-$(RES_DRAWABLE_MDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_MDPI_V11))
-	$(NSINSTALL) -D res/drawable-mdpi-v11
-	$(NSINSTALL) $(srcdir)/resources/drawable-mdpi-v11/* res/drawable-mdpi-v11/
-
-$(RES_DRAWABLE_HDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_HDPI_V11))
-	$(NSINSTALL) -D res/drawable-hdpi-v11
-	$(NSINSTALL) $(srcdir)/resources/drawable-hdpi-v11/* res/drawable-hdpi-v11/
-
-$(RES_DRAWABLE_XHDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_XHDPI_V11))
-	$(NSINSTALL) -D res/drawable-xhdpi-v11
-	$(NSINSTALL) $(srcdir)/resources/drawable-xhdpi-v11/* res/drawable-xhdpi-v11/
-
-$(RES_COLOR): $(subst res/,$(srcdir)/resources/,$(RES_COLOR))
-	$(NSINSTALL) -D res/color
-	$(NSINSTALL) $^  res/color
-
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_COLOR) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(PP_RES_XML) res/values/defaults.xml res/drawable/sync_icon.png res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_COLOR) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/sync_icon.png res/drawable/icon.png res/drawable-hdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(PP_RES_XML) res/values/defaults.xml res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 libs:: classes.dex package-name.txt

@@ -217,27 +217,52 @@ function evalAndLog(_a)
   return _av;
 }
 
-function shouldBe(_a, _b)
+function shouldBe(_a, _b, quiet)
 {
-  if (typeof _a != "string" || typeof _b != "string")
-    debug("WARN: shouldBe() expects string arguments");
-  var exception;
-  var _av;
-  try {
-     _av = eval(_a);
-  } catch (e) {
-     exception = e;
-  }
-  var _bv = eval(_b);
+    if (typeof _a != "string" || typeof _b != "string")
+        debug("WARN: shouldBe() expects string arguments");
+    var exception;
+    var _av;
+    try {
+        _av = eval(_a);
+    } catch (e) {
+        exception = e;
+    }
+    var _bv = eval(_b);
 
-  if (exception)
-    testFailed(_a + " should be " + _bv + ". Threw exception " + exception);
-  else if (isResultCorrect(_av, _bv))
-    testPassed(_a + " is " + _b);
-  else if (typeof(_av) == typeof(_bv))
-    testFailed(_a + " should be " + _bv + ". Was " + stringify(_av) + ".");
-  else
-    testFailed(_a + " should be " + _bv + " (of type " + typeof _bv + "). Was " + _av + " (of type " + typeof _av + ").");
+    if (exception)
+        testFailed(_a + " should be " + _bv + ". Threw exception " + exception);
+    else if (isResultCorrect(_av, _bv)) {
+        if (!quiet) {
+            testPassed(_a + " is " + _b);
+        }
+    } else if (typeof(_av) == typeof(_bv))
+        testFailed(_a + " should be " + _bv + ". Was " + stringify(_av) + ".");
+    else
+        testFailed(_a + " should be " + _bv + " (of type " + typeof _bv + "). Was " + _av + " (of type " + typeof _av + ").");
+}
+
+function shouldNotBe(_a, _b, quiet)
+{
+    if (typeof _a != "string" || typeof _b != "string")
+        debug("WARN: shouldNotBe() expects string arguments");
+    var exception;
+    var _av;
+    try {
+        _av = eval(_a);
+    } catch (e) {
+        exception = e;
+    }
+    var _bv = eval(_b);
+
+    if (exception)
+        testFailed(_a + " should not be " + _bv + ". Threw exception " + exception);
+    else if (!isResultCorrect(_av, _bv)) {
+        if (!quiet) {
+            testPassed(_a + " is not " + _b);
+        }
+    } else
+        testFailed(_a + " should not be " + _bv + ".");
 }
 
 function shouldBeTrue(_a) { shouldBe(_a, "true"); }

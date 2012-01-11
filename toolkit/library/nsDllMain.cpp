@@ -13,7 +13,7 @@
  * License.
  *
  * The Original Code is mozilla.org code. This file was copied in part from
- * mozilla/widget/src/windows/nsToolkit.cpp
+ * mozilla/widget/windows/nsToolkit.cpp
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.

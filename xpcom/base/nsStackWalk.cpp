@@ -58,7 +58,20 @@ static CriticalAddress gCriticalAddress;
 #include <dlfcn.h>
 #endif
 
-#if defined(XP_MACOSX) && (defined(__i386) || defined(__ppc__) || defined(HAVE__UNWIND_BACKTRACE))
+#define NSSTACKWALK_SUPPORTS_MACOSX \
+    (defined(XP_MACOSX) && \
+     (defined(__i386) || defined(__ppc__) || defined(HAVE__UNWIND_BACKTRACE)))
+
+#define NSSTACKWALK_SUPPORTS_LINUX \
+    (defined(linux) && \
+     ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
+      defined(HAVE__UNWIND_BACKTRACE)))
+
+#define NSSTACKWALK_SUPPORTS_SOLARIS \
+    (defined(__sun) && \
+     (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
+
+#if NSSTACKWALK_SUPPORTS_MACOSX
 #include <pthread.h>
 #include <errno.h>
 #include <CoreServices/CoreServices.h>
@@ -120,7 +133,7 @@ my_malloc_logger(uint32_t type, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
   // stack shows up as having two pthread_cond_wait$UNIX2003 frames.
   const char *name = OnSnowLeopardOrLater() ? "new_sem_from_pool" :
     "pthread_cond_wait$UNIX2003";
-  NS_StackWalk(stack_callback, 0, const_cast<char*>(name));
+  NS_StackWalk(stack_callback, 0, const_cast<char*>(name), 0);
 }
 
 void
@@ -789,7 +802,7 @@ WalkStackThread(void* aData)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
     HANDLE myProcess, myThread;
@@ -798,6 +811,13 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
 
     if (!EnsureImageHlpInitialized())
         return false;
+
+    HANDLE targetThread;
+    if (aThread) {
+        targetThread = reinterpret_cast<HANDLE> (aThread);
+    } else {
+        targetThread = ::GetCurrentThread();
+    }
 
     // Have to duplicate handle to get a real handle.
     if (!::DuplicateHandle(::GetCurrentProcess(),
@@ -809,7 +829,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
         return NS_ERROR_FAILURE;
     }
     if (!::DuplicateHandle(::GetCurrentProcess(),
-                           ::GetCurrentThread(),
+                           targetThread,
                            ::GetCurrentProcess(),
                            &myThread,
                            THREAD_ALL_ACCESS, FALSE, 0)) {
@@ -1251,7 +1271,7 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 // WIN32 x86 stack walking code
 // i386 or PPC Linux stackwalking code or Solaris
-#elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))) || (defined(XP_MACOSX) && (defined(__ppc__) || defined(__i386))))
+#elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || NSSTACKWALK_SUPPORTS_LINUX || NSSTACKWALK_SUPPORTS_SOLARIS || NSSTACKWALK_SUPPORTS_MACOSX)
 
 #include <stdlib.h>
 #include <string.h>
@@ -1294,7 +1314,7 @@ void DemangleSymbol(const char * aSymbol,
 }
 
 
-#if defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))
+#if NSSTACKWALK_SUPPORTS_SOLARIS
 
 /*
  * Stack walking code for Solaris courtesy of Bart Smaalder's "memtrak".
@@ -1468,9 +1488,10 @@ cs_operate(int (*operate_func)(void *, void *), void * usrarg)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
+    MOZ_ASSERT(!aThread);
     struct my_user_args args;
 
     if (!initialized)
@@ -1533,7 +1554,8 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 #else // not __sun-specific
 
-#if (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC))) || (defined(XP_MACOSX) && (defined(__i386) || defined(__ppc__))) // i386 or PPC Linux or Mac stackwalking code
+#define X86_OR_PPC (defined(__i386) || defined(PPC) || defined(__ppc__))
+#if X86_OR_PPC && (NSSTACKWALK_SUPPORTS_MACOSX || NSSTACKWALK_SUPPORTS_LINUX) // i386 or PPC Linux or Mac stackwalking code
 
 #if __GLIBC__ > 2 || __GLIBC_MINOR > 1
 #define HAVE___LIBC_STACK_END 1
@@ -1547,9 +1569,10 @@ extern void *__libc_stack_end; // from ld-linux.so
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
   MOZ_ASSERT(gCriticalAddress.mInit);
+  MOZ_ASSERT(!aThread);
   // Stack walking code courtesy Kipp's "leaky".
 
   // Get the frame pointer
@@ -1625,9 +1648,10 @@ unwind_callback (struct _Unwind_Context *context, void *closure)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
+    MOZ_ASSERT(!aThread);
     unwind_info info;
     info.callback = aCallback;
     info.skip = aSkipFrames + 1;
@@ -1703,9 +1727,10 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
+    MOZ_ASSERT(!aThread);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

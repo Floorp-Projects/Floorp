@@ -31,4 +31,23 @@
     <compatible_os>ALL</compatible_os>
     <install size="2">http://example.com/browser/toolkit/mozapps/extensions/test/browser/addons/browser_install1_2.xpi</install>
   </addon>
+
+  <addon_compatibility hosted="false">
+    <guid>addon6@tests.mozilla.org</guid>
+    <name>Addon Test 6</name>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>1.0</min_version>
+        <max_version>1.0</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <min_version>1.0</min_version>
+            <max_version>1.0</max_version>
+            <appID>xpcshell@tests.mozilla.org</appID>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
 </searchresults>

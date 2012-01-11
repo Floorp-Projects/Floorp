@@ -42,6 +42,8 @@
 
 #include "xpcprivate.h"
 
+#include "jsapi.h"
+
 /***************************************************************************/
 
 XPCContext::XPCContext(XPCJSRuntime* aRuntime,
@@ -59,15 +61,15 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
 
     PR_INIT_CLIST(&mScopes);
 
-    NS_ASSERTION(!mJSContext->data2, "Must be null");
-    mJSContext->data2 = this;
+    NS_ASSERTION(!JS_GetSecondContextPrivate(mJSContext), "Must be null");
+    JS_SetSecondContextPrivate(mJSContext, this);
 }
 
 XPCContext::~XPCContext()
 {
     MOZ_COUNT_DTOR(XPCContext);
-    NS_ASSERTION(mJSContext->data2 == this, "Must match this");
-    mJSContext->data2 = nsnull;
+    NS_ASSERTION(JS_GetSecondContextPrivate(mJSContext) == this, "Must match this");
+    JS_SetSecondContextPrivate(mJSContext, nsnull);
     NS_IF_RELEASE(mException);
     NS_IF_RELEASE(mSecurityManager);
 

@@ -44,6 +44,8 @@
 #ifndef nsAttrAndChildArray_h___
 #define nsAttrAndChildArray_h___
 
+#include "mozilla/Attributes.h"
+
 #include "nscore.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
@@ -136,8 +138,8 @@ public:
   PRInt64 SizeOf() const;
 
 private:
-  nsAttrAndChildArray(const nsAttrAndChildArray& aOther); // Not to be implemented
-  nsAttrAndChildArray& operator=(const nsAttrAndChildArray& aOther); // Not to be implemented
+  nsAttrAndChildArray(const nsAttrAndChildArray& aOther) MOZ_DELETE;
+  nsAttrAndChildArray& operator=(const nsAttrAndChildArray& aOther) MOZ_DELETE;
 
   void Clear();
 

@@ -628,7 +628,12 @@ XPC_WN_NoHelper_Finalize(JSContext *cx, JSObject *obj)
         nsWrapperCache* cache;
         CallQueryInterface(p, &cache);
         cache->ClearWrapper();
-        NS_RELEASE(p);
+
+        XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
+        if(rt)
+            rt->DeferredRelease(p);
+        else
+            NS_RELEASE(p);
         return;
     }
 
@@ -650,12 +655,6 @@ TraceScopeJSObjects(JSTracer *trc, XPCWrappedNativeScope* scope)
     if (obj) {
         JS_CALL_OBJECT_TRACER(trc, obj,
                               "XPCWrappedNativeScope::mPrototypeJSObject");
-    }
-
-    obj = scope->GetPrototypeJSFunction();
-    if (obj) {
-        JS_CALL_OBJECT_TRACER(trc, obj,
-                              "XPCWrappedNativeScope::mPrototypeJSFunction");
     }
 }
 
@@ -689,7 +688,7 @@ TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper)
 }
 
 static void
-MarkWrappedNative(JSTracer *trc, JSObject *obj, bool helper)
+MarkWrappedNative(JSTracer *trc, JSObject *obj)
 {
     JSObject *obj2;
 
@@ -699,20 +698,17 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj, bool helper)
         XPCWrappedNative::GetWrappedNativeOfJSObject(nsnull, obj, nsnull, &obj2);
 
     if (wrapper) {
-        if (wrapper->IsValid()) {
-            if (helper)
-                wrapper->GetScriptableCallback()->Trace(wrapper, trc, obj);
+        if (wrapper->IsValid())
              TraceForValidWrapper(trc, wrapper);
-        }
     } else if (obj2) {
         GetSlimWrapperProto(obj2)->TraceJS(trc);
     }
 }
 
 static void
-XPC_WN_Shared_Trace(JSTracer *trc, JSObject *obj)
+XPC_WN_NoHelper_Trace(JSTracer *trc, JSObject *obj)
 {
-    MarkWrappedNative(trc, obj, false);
+    MarkWrappedNative(trc, obj);
 }
 
 static JSBool
@@ -841,7 +837,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
     nsnull,                         // construct
     nsnull,                         // xdrObject;
     nsnull,                         // hasInstance
-    XPC_WN_Shared_Trace,            // trace
+    XPC_WN_NoHelper_Trace,          // trace
 
     // ClassExtension
     {
@@ -880,7 +876,6 @@ js::Class XPC_WN_NoHelper_JSClass = {
         nsnull, // setAttributes
         nsnull, // setElementAttributes
         nsnull, // setSpecialAttributes
-        nsnull, // deleteGeneric
         nsnull, // deleteProperty
         nsnull, // deleteElement
         nsnull, // deleteSpecial
@@ -1064,12 +1059,6 @@ XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
         return;
     wrapper->GetScriptableCallback()->Finalize(wrapper, cx, obj);
     wrapper->FlatJSObjectFinalized(cx);
-}
-
-static void
-XPC_WN_Helper_Trace(JSTracer *trc, JSObject *obj)
-{
-    MarkWrappedNative(trc, obj, true);
 }
 
 static JSBool
@@ -1322,7 +1311,7 @@ public:
   ~AutoPopJSContext()
   {
       if (mCx)
-          mStack->Pop(nsnull);
+          mStack->Pop();
   }
 
   void PushIfNotTop(JSContext *cx)
@@ -1330,10 +1319,9 @@ public:
       NS_ASSERTION(cx, "Null context!");
       NS_ASSERTION(!mCx, "This class is only meant to be used once!");
 
-      JSContext *cxTop = nsnull;
-      mStack->Peek(&cxTop);
+      JSContext *cxTop = mStack->Peek();
 
-      if (cxTop != cx && NS_SUCCEEDED(mStack->Push(cx)))
+      if (cxTop != cx && mStack->Push(cx))
           mCx = cx;
   }
 
@@ -1502,10 +1490,7 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
     if (mFlags.WantHasInstance())
         mJSClass.base.hasInstance = XPC_WN_Helper_HasInstance;
 
-    if (mFlags.WantTrace())
-        mJSClass.base.trace = XPC_WN_Helper_Trace;
-    else
-        mJSClass.base.trace = XPC_WN_Shared_Trace;
+    mJSClass.base.trace = XPC_WN_NoHelper_Trace;
 
     if (mFlags.WantOuterObject())
         mJSClass.base.ext.outerObject = XPC_WN_OuterObject;

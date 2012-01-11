@@ -90,6 +90,7 @@ EXPORTS_NAMESPACES = mozilla
 EXPORTS_mozilla = \
   CharTokenizer.h \
   TimeStamp.h \
+  StringBuilder.h \
   $(NULL)
 
 EXPORTS		= \

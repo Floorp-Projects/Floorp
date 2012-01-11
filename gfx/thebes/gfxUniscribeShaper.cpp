@@ -254,23 +254,23 @@ public:
         }
     }
 
-    void SaveGlyphs(gfxTextRun *aRun, PRUint32 aRunStart) {
-        PRUint32 offsetInRun = aRunStart + mScriptItem->iCharPos;
+    void SaveGlyphs(gfxShapedWord *aShapedWord) {
+        PRUint32 offsetInRun = mScriptItem->iCharPos;
 
         // XXX We should store this in the item and only fetch it once
         SCRIPT_FONTPROPERTIES sfp;
         ScriptFontProperties(&sfp);
 
         PRUint32 offset = 0;
-        nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
-        gfxTextRun::CompressedGlyph g;
-        const PRUint32 appUnitsPerDevUnit = aRun->GetAppUnitsPerDevUnit();
+        nsAutoTArray<gfxShapedWord::DetailedGlyph,1> detailedGlyphs;
+        gfxShapedWord::CompressedGlyph g;
+        const PRUint32 appUnitsPerDevUnit = aShapedWord->AppUnitsPerDevUnit();
         while (offset < mItemLength) {
             PRUint32 runOffset = offsetInRun + offset;
-            bool atClusterStart = aRun->IsClusterStart(runOffset);
+            bool atClusterStart = aShapedWord->IsClusterStart(runOffset);
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
                 g.SetComplex(atClusterStart, false, 0);
-                aRun->SetGlyphs(runOffset, g, nsnull);
+                aShapedWord->SetGlyphs(runOffset, g, nsnull);
             } else {
                 // Count glyphs for this character
                 PRUint32 k = mClusters[offset];
@@ -297,19 +297,21 @@ public:
                     if (NS_IS_HIGH_SURROGATE(mItemString[offset]) &&
                         offset + 1 < mItemLength &&
                         NS_IS_LOW_SURROGATE(mItemString[offset + 1])) {
-                        aRun->SetMissingGlyph(runOffset,
-                                              SURROGATE_TO_UCS4(mItemString[offset],
-                                                                mItemString[offset + 1]));
+                        aShapedWord->SetMissingGlyph(runOffset,
+                                                     SURROGATE_TO_UCS4(mItemString[offset],
+                                                                       mItemString[offset + 1]),
+                                                     mShaper->GetFont());
                     } else {
-                        aRun->SetMissingGlyph(runOffset, mItemString[offset]);
+                        aShapedWord->SetMissingGlyph(runOffset, mItemString[offset],
+                                                     mShaper->GetFont());
                     }
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
-                    gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-                    gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph) &&
+                    gfxShapedWord::CompressedGlyph::IsSimpleAdvance(advance) &&
+                    gfxShapedWord::CompressedGlyph::IsSimpleGlyphID(glyph) &&
                     atClusterStart)
                 {
-                    aRun->SetSimpleGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
+                    aShapedWord->SetSimpleGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
                 } else {
                     if (detailedGlyphs.Length() < glyphCount) {
                         if (!detailedGlyphs.AppendElements(glyphCount - detailedGlyphs.Length()))
@@ -319,14 +321,15 @@ public:
                     for (i = 0; i < glyphCount; ++i) {
                         gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
                         details->mGlyphID = mGlyphs[k + i];
-                        details->mAdvance = mAdvances[k + i]*appUnitsPerDevUnit;
-                        details->mXOffset = float(mOffsets[k + i].du)*appUnitsPerDevUnit*aRun->GetDirection();
-                        details->mYOffset = - float(mOffsets[k + i].dv)*appUnitsPerDevUnit;
+                        details->mAdvance = mAdvances[k + i] * appUnitsPerDevUnit;
+                        details->mXOffset = float(mOffsets[k + i].du) * appUnitsPerDevUnit *
+                            aShapedWord->GetDirection();
+                        details->mYOffset = - float(mOffsets[k + i].dv) * appUnitsPerDevUnit;
                     }
-                    aRun->SetGlyphs(runOffset,
-                                    g.SetComplex(atClusterStart, true,
-                                                 glyphCount),
-                                    detailedGlyphs.Elements());
+                    aShapedWord->SetGlyphs(runOffset,
+                                           g.SetComplex(atClusterStart, true,
+                                                        glyphCount),
+                                           detailedGlyphs.Elements());
                 }
             }
             ++offset;
@@ -401,9 +404,8 @@ class Uniscribe
 {
 public:
     Uniscribe(const PRUnichar *aString,
-              PRUint32 aLength,
-              gfxTextRun *aTextRun):
-        mString(aString), mLength(aLength), mTextRun(aTextRun)
+              gfxShapedWord *aShapedWord):
+        mString(aString), mShapedWord(aShapedWord)
     {
     }
 
@@ -412,7 +414,7 @@ public:
         memset(&mState, 0, sizeof(SCRIPT_STATE));
         // Lock the direction. Don't allow the itemizer to change directions
         // based on character type.
-        mState.uBidiLevel = mTextRun->IsRightToLeft() ? 1 : 0;
+        mState.uBidiLevel = mShapedWord->IsRightToLeft() ? 1 : 0;
         mState.fOverrideDirection = true;
     }
 
@@ -429,7 +431,8 @@ public:
         if (!mItems.SetLength(maxItems + 1)) {
             return 0;
         }
-        while ((rv = ScriptItemize(mString, mLength, maxItems, &mControl, &mState,
+        while ((rv = ScriptItemize(mString, mShapedWord->Length(),
+                                   maxItems, &mControl, &mState,
                                    mItems.Elements(), &mNumItems)) == E_OUTOFMEMORY) {
             maxItems *= 2;
             if (!mItems.SetLength(maxItems + 1)) {
@@ -448,8 +451,7 @@ public:
 
 private:
     const PRUnichar *mString;
-    const PRUint32 mLength;
-    gfxTextRun *mTextRun;
+    gfxShapedWord   *mShapedWord;
 
     SCRIPT_CONTROL mControl;
     SCRIPT_STATE   mState;
@@ -459,23 +461,21 @@ private:
 
 
 bool
-gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
-                                gfxTextRun *aTextRun,
-                                const PRUnichar *aString,
-                                PRUint32 aRunStart,
-                                PRUint32 aRunLength,
-                                PRInt32 aRunScript)
+gfxUniscribeShaper::ShapeWord(gfxContext *aContext,
+                              gfxShapedWord *aShapedWord,
+                              const PRUnichar *aString)
 {
     DCFromContext aDC(aContext);
  
     bool result = true;
     HRESULT rv;
 
-    Uniscribe us(aString + aRunStart, aRunLength, aTextRun);
+    Uniscribe us(aString, aShapedWord);
 
     /* itemize the string */
     int numItems = us.Itemize();
 
+    PRUint32 length = aShapedWord->Length();
     SaveDC(aDC);
     PRUint32 ivs = 0;
     for (int i = 0; i < numItems; ++i) {
@@ -490,19 +490,19 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
             }
         }
 
-        if (i+1 < numItems && aRunStart + iCharPosNext <= aRunLength - 2
-            && aString[aRunStart + iCharPosNext] == H_SURROGATE(kUnicodeVS17)
-            && PRUint32(aString[aRunStart + iCharPosNext + 1]) - L_SURROGATE(kUnicodeVS17)
+        if (i+1 < numItems && iCharPosNext <= length - 2
+            && aString[iCharPosNext] == H_SURROGATE(kUnicodeVS17)
+            && PRUint32(aString[iCharPosNext + 1]) - L_SURROGATE(kUnicodeVS17)
             <= L_SURROGATE(kUnicodeVS256) - L_SURROGATE(kUnicodeVS17)) {
 
-            ivs = SURROGATE_TO_UCS4(aString[aRunStart + iCharPosNext],
-                                    aString[aRunStart + iCharPosNext + 1]);
+            ivs = SURROGATE_TO_UCS4(aString[iCharPosNext],
+                                    aString[iCharPosNext + 1]);
         } else {
             ivs = 0;
         }
 
         UniscribeItem item(aContext, aDC, this,
-                           aString + aRunStart + iCharPos,
+                           aString + iCharPos,
                            iCharPosNext - iCharPos,
                            us.ScriptItem(i), ivs);
         if (!item.AllocateBuffers()) {
@@ -546,7 +546,7 @@ gfxUniscribeShaper::InitTextRun(gfxContext *aContext,
             break;
         }
 
-        item.SaveGlyphs(aTextRun, aRunStart);
+        item.SaveGlyphs(aShapedWord);
     }
 
     RestoreDC(aDC, -1);

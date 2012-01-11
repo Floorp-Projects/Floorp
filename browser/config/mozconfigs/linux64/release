@@ -15,3 +15,6 @@ mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profilese
 export MOZILLA_OFFICIAL=1
 
 export MOZ_TELEMETRY_REPORTING=1
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors

@@ -97,6 +97,7 @@ skip-if(!browserIsRemote) == test-displayport-bg.html test-displayport-ref.html 
 # Fixed layers are temporarily disabled (bug 656167).
 #== test-pos-fixed.html test-pos-fixed-ref.html
 == test-bg-attachment-fixed.html test-bg-attachment-fixed-ref.html
+== test-pos-fixed-transform.html test-pos-fixed-transform-ref.html
 
 # reftest syntax: require-or
 require-or(unrecognizedCondition,skip) script scripttest-fail.html
@@ -105,3 +106,26 @@ require-or(unrecognizedCondition&&true,skip) script scripttest-fail.html
 require-or(unrecognizedCondition,fails) script scripttest-fail.html
 require-or(true,fails) script scripttest-pass.html
 require-or(true&&true,fails) script scripttest-pass.html
+
+# tests for pref(...) syntax in manifest, including "fails" examples with incorrect prefs
+# a boolean pref
+pref(gfx.downloadable_fonts.enabled,true) HTTP(..) != font-download.html font-default.html
+pref(gfx.downloadable_fonts.enabled,false) HTTP(..) == font-download.html font-default.html
+fails pref(gfx.downloadable_fonts.enabled,0) HTTP(..) == font-download.html font-default.html
+fails pref(gfx.downloadable_fonts.enabled,"foo") HTTP(..) == font-download.html font-default.html
+# a non-existent pref
+fails pref(not.a.real.pref.name,1) == font-download.html font-default.html
+# an integer pref
+pref(font.size.variable.x-western,16) == font-size-16.html font-default.html
+pref(font.size.variable.x-western,16) != font-size-24.html font-default.html
+pref(font.size.variable.x-western,24) == font-size-24.html font-default.html
+pref(font.size.variable.x-western,24) != font-size-16.html font-default.html
+fails pref(font.size.variable.x-western,false) == font-size-16.html font-default.html
+fails pref(font.size.variable.x-western,"foo") == font-size-16.html font-default.html
+# a string pref
+pref(font.default.x-western,"serif") == font-serif.html font-default.html
+pref(font.default.x-western,"serif") != font-sans-serif.html font-default.html
+pref(font.default.x-western,"sans-serif") == font-sans-serif.html font-default.html
+pref(font.default.x-western,"sans-serif") != font-serif.html font-default.html
+fails pref(font.default.x-western,true) == font-serif.html font-default.html
+fails pref(font.default.x-western,0) == font-serif.html font-default.html

@@ -1,0 +1,71 @@
+<html>
+<head>
+  <title>visibility state testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      testStates("div", 0, 0, STATE_INVISIBLE);
+      testStates("div_off", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
+      testStates("div_abschild", 0, 0, STATE_INVISIBLE);
+
+      // Confirm destruction of accessibles.
+      document.getElementById("div").style.visibility = "hidden";
+      document.getElementById("div_off").style.visibility="hidden";
+      document.getElementById("div_abschild").style.visibility="hidden";
+      document.body.clientWidth; // flush layout
+      testAccessibleTree("outer_div", {children:[]});
+
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=591363"
+     title="(in)visible state is not always correct?">
+    Mozilla Bug 591363
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="outer_div">
+
+    <!-- trivial cases -->
+    <div id="div">div</div>
+    <div id="div_off" style="position: absolute; left:-999px; top:-999px">
+      offscreen!
+    </div>
+
+    <!-- edge case: no rect but has out of flow child -->
+    <div id="div_abschild">
+      <p style="position: absolute; left: 120px; top:120px;">absolute</p>
+    </div>
+
+  </div>
+</body>
+</html>

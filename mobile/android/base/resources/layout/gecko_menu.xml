@@ -11,7 +11,7 @@
 
     <item android:id="@+id/bookmark"
           android:icon="@drawable/ic_menu_bookmark_add"
-          android:title="@string/bookmark_add"/>
+          android:title="@string/bookmark"/>
 
     <item android:id="@+id/share"
           android:icon="@drawable/ic_menu_share"
@@ -24,14 +24,17 @@
     <item android:id="@+id/agent_mode"
           android:title="@string/agent_request_desktop" />
 
-    <item android:id="@+id/preferences"
-          android:title="@string/preferences" />
+    <item android:id="@+id/settings"
+          android:title="@string/settings" />
 
     <item android:id="@+id/site_settings"
           android:title="@string/site_settings_title" />
 
     <item android:id="@+id/addons"
           android:title="@string/addons"/>
+
+    <item android:id="@+id/downloads"
+          android:title="@string/downloads"/>
 
     <item android:id="@+id/quit"
           android:title="@string/quit" />
