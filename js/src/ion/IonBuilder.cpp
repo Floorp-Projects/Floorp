@@ -675,6 +675,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_GETLOCAL:
+      case JSOP_CALLLOCAL:
         current->pushLocal(GET_SLOTNO(pc));
         return true;
 
