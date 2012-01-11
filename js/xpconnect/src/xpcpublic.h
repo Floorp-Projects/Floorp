@@ -215,40 +215,6 @@ namespace mozilla {
 namespace xpconnect {
 namespace memory {
 
-struct CompartmentStats
-{
-    CompartmentStats(JSContext *cx, JSCompartment *c);
-
-    nsCString name;
-    PRInt64 gcHeapArenaHeaders;
-    PRInt64 gcHeapArenaPadding;
-    PRInt64 gcHeapArenaUnused;
-
-    PRInt64 gcHeapObjectsNonFunction;
-    PRInt64 gcHeapObjectsFunction;
-    PRInt64 gcHeapStrings;
-    PRInt64 gcHeapShapesTree;
-    PRInt64 gcHeapShapesDict;
-    PRInt64 gcHeapShapesBase;
-    PRInt64 gcHeapScripts;
-    PRInt64 gcHeapTypeObjects;
-    PRInt64 gcHeapXML;
-
-    PRInt64 objectSlots;
-    PRInt64 stringChars;
-    PRInt64 shapesExtraTreeTables;
-    PRInt64 shapesExtraDictTables;
-    PRInt64 shapesExtraTreeShapeKids;
-    PRInt64 shapesCompartmentTables;
-    PRInt64 scriptData;
-
-#ifdef JS_METHODJIT
-    PRInt64 mjitCode;
-    PRInt64 mjitData;
-#endif
-    JS::TypeInferenceMemoryStats typeInferenceMemory;
-};
-
 struct IterateData
 {
     IterateData()
@@ -306,8 +272,8 @@ struct IterateData
     PRInt64 totalTypeInference;
     PRInt64 totalAnalysisTemp;
 
-    nsTArray<CompartmentStats> compartmentStatsVector;
-    CompartmentStats *currCompartmentStats;
+    nsTArray<JS::CompartmentStats> compartmentStatsVector;
+    JS::CompartmentStats *currCompartmentStats;
 };
 
 JSBool
