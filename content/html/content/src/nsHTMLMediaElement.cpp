@@ -302,6 +302,11 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* 
 {
   nsContentUtils::UnregisterShutdownObserver(this);
 
+  if (!mElement) {
+    // We've been notified by the shutdown observer, and are shutting down.
+    return NS_BINDING_ABORTED;
+  }
+
   // The element is only needed until we've had a chance to call
   // InitializeDecoderForChannel. So make sure mElement is cleared here.
   nsRefPtr<nsHTMLMediaElement> element;

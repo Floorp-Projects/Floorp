@@ -35,9 +35,7 @@
   <string name="awesomebar_default_text">&awesomebar_default_text;</string>
 
   <string name="quit">&quit;</string>
-  <string name="bookmarks_title">&bookmarks_title;</string>
-  <string name="bookmark_add">&bookmark_add;</string>
-  <string name="bookmark_remove">&bookmark_remove;</string>
+  <string name="bookmark">&bookmark;</string>
   <string name="bookmark_added">&bookmark_added;</string>
   <string name="bookmark_removed">&bookmark_removed;</string>
 
@@ -80,6 +78,7 @@
   <string name="forward">&forward;</string>
   <string name="new_tab">&new_tab;</string>
   <string name="addons">&addons;</string>
+  <string name="downloads">&downloads;</string>
 
   <string name="site_settings_title">&site_settings_title;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>

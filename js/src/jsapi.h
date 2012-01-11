@@ -2969,9 +2969,6 @@ typedef enum JSGCParamKey {
     /* Number of JS_malloc bytes before last ditch GC. */
     JSGC_MAX_MALLOC_BYTES   = 1,
 
-    /* Hoard stackPools for this long, in ms, default is 30 seconds. */
-    JSGC_STACKPOOL_LIFESPAN = 2,
-
     /* Amount of bytes allocated by the GC. */
     JSGC_BYTES = 3,
 
@@ -3731,10 +3728,6 @@ JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval v);
  */
 struct JSPrincipals {
     char *codebase;
-
-    /* XXX unspecified and unused by Mozilla code -- can we remove these? */
-    void * (* getPrincipalArray)(JSContext *cx, JSPrincipals *);
-    JSBool (* globalPrivilegesEnabled)(JSContext *cx, JSPrincipals *);
 
     /* Don't call "destroy"; use reference counting macros below. */
     jsrefcount refcount;

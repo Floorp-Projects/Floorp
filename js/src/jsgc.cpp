@@ -721,6 +721,9 @@ Chunk::allocateArena(JSCompartment *comp, AllocKind thingKind)
     JS_ASSERT(hasAvailableArenas());
 
     JSRuntime *rt = comp->rt;
+    JS_ASSERT(rt->gcBytes <= rt->gcMaxBytes);
+    if (rt->gcMaxBytes - rt->gcBytes < ArenaSize)
+        return NULL;
 
     ArenaHeader *aheader = JS_LIKELY(info.numArenasFreeCommitted > 0)
                            ? fetchNextFreeArena(rt)
@@ -730,8 +733,8 @@ Chunk::allocateArena(JSCompartment *comp, AllocKind thingKind)
         removeFromAvailableList();
 
     Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes + ArenaSize);
-    JS_ATOMIC_ADD(&rt->gcBytes, ArenaSize);
-    JS_ATOMIC_ADD(&comp->gcBytes, ArenaSize);
+    rt->gcBytes += ArenaSize;
+    comp->gcBytes += ArenaSize;
     if (comp->gcBytes >= comp->gcTriggerBytes)
         TriggerCompartmentGC(comp, gcstats::ALLOCTRIGGER);
 
@@ -763,16 +766,16 @@ Chunk::releaseArena(ArenaHeader *aheader)
 #endif
 
     Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes - ArenaSize);
-    JS_ASSERT(size_t(rt->gcBytes) >= ArenaSize);
-    JS_ASSERT(size_t(comp->gcBytes) >= ArenaSize);
+    JS_ASSERT(rt->gcBytes >= ArenaSize);
+    JS_ASSERT(comp->gcBytes >= ArenaSize);
 #ifdef JS_THREADSAFE
     if (rt->gcHelperThread.sweeping()) {
         rt->reduceGCTriggerBytes(GC_HEAP_GROWTH_FACTOR * ArenaSize);
         comp->reduceGCTriggerBytes(GC_HEAP_GROWTH_FACTOR * ArenaSize);
     }
 #endif
-    JS_ATOMIC_ADD(&rt->gcBytes, -int32_t(ArenaSize));
-    JS_ATOMIC_ADD(&comp->gcBytes, -int32_t(ArenaSize));
+    rt->gcBytes -= ArenaSize;
+    comp->gcBytes -= ArenaSize;
 
     aheader->setAsNotAllocated();
     addArenaToFreeList(rt, aheader);
@@ -891,7 +894,6 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes)
      */
     rt->gcMaxBytes = maxbytes;
     rt->setGCMaxMallocBytes(maxbytes);
-    rt->gcEmptyArenaPoolLifespan = 30000;
 
     /*
      * The assigned value prevents GC from running when GC memory is too low
@@ -1033,9 +1035,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
         return CGCT_NOTLIVE;
 
 #ifdef DEBUG
-    const char pattern[] = "machine_stack %lx";
-    char nameBuf[sizeof(pattern) - 3 + sizeof(thing) * 2];
-    JS_snprintf(nameBuf, sizeof(nameBuf), "machine_stack %lx", (unsigned long) thing);
+    const char pattern[] = "machine_stack %p";
+    char nameBuf[sizeof(pattern) - 2 + sizeof(thing) * 2];
+    JS_snprintf(nameBuf, sizeof(nameBuf), pattern, thing);
     JS_SET_TRACING_NAME(trc, nameBuf);
 #endif
     MarkKind(trc, thing, MapAllocToTraceKind(thingKind));
@@ -1381,7 +1383,7 @@ JSRuntime::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
 }
 
 void
-JSRuntime::reduceGCTriggerBytes(uint32_t amount) {
+JSRuntime::reduceGCTriggerBytes(size_t amount) {
     JS_ASSERT(amount > 0);
     JS_ASSERT(gcTriggerBytes - amount >= 0);
     if (gcTriggerBytes - amount < GC_ALLOCATION_THRESHOLD * GC_HEAP_GROWTH_FACTOR)
@@ -1400,7 +1402,7 @@ JSCompartment::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
 }
 
 void
-JSCompartment::reduceGCTriggerBytes(uint32_t amount) {
+JSCompartment::reduceGCTriggerBytes(size_t amount) {
     JS_ASSERT(amount > 0);
     JS_ASSERT(gcTriggerBytes - amount >= 0);
     if (gcTriggerBytes - amount < GC_ALLOCATION_THRESHOLD * GC_HEAP_GROWTH_FACTOR)
@@ -1428,33 +1430,21 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
          * moment. So we always allocate a new arena in that case.
          */
         maybeLock.lock(comp->rt);
-        for (;;) {
-            if (*bfs == BFS_DONE)
-                break;
-
-            if (*bfs == BFS_JUST_FINISHED) {
-                /*
-                 * Before we took the GC lock or while waiting for the
-                 * background finalization to finish the latter added new
-                 * arenas to the list.
-                 */
-                *bfs = BFS_DONE;
-                break;
-            }
-
+        if (*bfs == BFS_RUN) {
             JS_ASSERT(!*al->cursor);
             chunk = PickChunk(comp);
-            if (chunk)
-                break;
-
-            /*
-             * If the background finalization still runs, wait for it to
-             * finish and retry to check if it populated the arena list or
-             * added new empty arenas.
-             */
-            JS_ASSERT(*bfs == BFS_RUN);
-            comp->rt->gcHelperThread.waitBackgroundSweepEnd();
-            JS_ASSERT(*bfs == BFS_JUST_FINISHED || *bfs == BFS_DONE);
+            if (!chunk) {
+                /*
+                 * Let the caller to wait for the background allocation to
+                 * finish and restart the allocation attempt.
+                 */
+                return NULL;
+            }
+        } else if (*bfs == BFS_JUST_FINISHED) {
+            /* See comments before BackgroundFinalizeState definition. */
+            *bfs = BFS_DONE;
+        } else {
+            JS_ASSERT(*bfs == BFS_DONE);
         }
     }
 #endif /* JS_THREADSAFE */
@@ -1498,6 +1488,9 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
      */
     JS_ASSERT(!*al->cursor);
     ArenaHeader *aheader = chunk->allocateArena(comp, thingKind);
+    if (!aheader)
+        return NULL;
+
     aheader->next = al->head;
     if (!al->head) {
         JS_ASSERT(al->cursor == &al->head);
@@ -1673,13 +1666,6 @@ RunLastDitchGC(JSContext *cx)
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
     js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL, gcstats::LASTDITCH);
-
-#ifdef JS_THREADSAFE
-    if (rt->gcBytes >= rt->gcMaxBytes) {
-        AutoLockGC lock(rt);
-        cx->runtime->gcHelperThread.waitBackgroundSweepEnd();
-    }
-#endif
 }
 
 /* static */ void *
@@ -1696,10 +1682,6 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
         if (JS_UNLIKELY(runGC)) {
             RunLastDitchGC(cx);
 
-            /* Report OOM of the GC failed to free enough memory. */
-            if (rt->gcBytes > rt->gcMaxBytes)
-                break;
-
             /*
              * The JSGC_END callback can legitimately allocate new GC
              * things and populate the free list. If that happens, just
@@ -1709,9 +1691,27 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
             if (void *thing = comp->arenas.allocateFromFreeList(thingKind, thingSize))
                 return thing;
         }
-        void *thing = comp->arenas.allocateFromArena(comp, thingKind);
-        if (JS_LIKELY(!!thing))
-            return thing;
+
+        /*
+         * allocateFromArena may fail while the background finalization still
+         * run. In that case we want to wait for it to finish and restart.
+         * However, checking for that is racy as the background finalization
+         * could free some things after allocateFromArena decided to fail but
+         * at this point it may have already stopped. To avoid this race we
+         * always try to allocate twice.
+         */
+        for (bool secondAttempt = false; ; secondAttempt = true) {
+            void *thing = comp->arenas.allocateFromArena(comp, thingKind);
+            if (JS_LIKELY(!!thing))
+                return thing;
+            if (secondAttempt)
+                break;
+
+            AutoLockGC lock(rt);
+#ifdef JS_THREADSAFE
+            rt->gcHelperThread.waitBackgroundSweepEnd();
+#endif
+        }
 
         /*
          * We failed to allocate. Run the GC if we haven't done it already.
@@ -1919,7 +1919,14 @@ js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
         return;
     if (fp->hasArgsObj())
         MarkRoot(trc, &fp->argsObj(), "arguments");
-    MarkRoot(trc, fp->script(), "script");
+    if (fp->isFunctionFrame()) {
+        MarkRoot(trc, fp->fun(), "fun");
+        if (fp->isEvalFrame()) {
+            MarkRoot(trc, fp->script(), "eval script");
+        }
+    } else {
+        MarkRoot(trc, fp->script(), "script");
+    }
     fp->script()->compartment()->active = true;
     MarkRoot(trc, fp->returnValue(), "rval");
 }
@@ -2849,7 +2856,7 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind)
     rt->gcTriggerCompartment = NULL;
 
     /* Reset weak map list. */
-    rt->gcWeakMapList = NULL;
+    WeakMapBase::resetWeakMapList(rt);
 
     /* Reset malloc counter. */
     rt->resetGCMallocBytes();

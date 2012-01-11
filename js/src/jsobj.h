@@ -327,10 +327,16 @@ extern JSBool
 js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp);
 
 extern JSBool
-js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *rval, JSBool strict);
+js_DeleteProperty(JSContext *cx, JSObject *obj, js::PropertyName *name, js::Value *rval, JSBool strict);
 
 extern JSBool
 js_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index, js::Value *rval, JSBool strict);
+
+extern JSBool
+js_DeleteSpecial(JSContext *cx, JSObject *obj, js::SpecialId sid, js::Value *rval, JSBool strict);
+
+extern JSBool
+js_DeleteGeneric(JSContext *cx, JSObject *obj, jsid id, js::Value *rval, JSBool strict);
 
 extern JSType
 js_TypeOf(JSContext *cx, JSObject *obj);
@@ -617,9 +623,14 @@ struct JSObject : js::gc::Cell
     inline bool hasUncacheableProto() const;
     inline bool setUncacheableProto(JSContext *cx);
 
-    bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL);
+    bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL) {
+        return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
+    }
 
   private:
+    js::Shape *replaceWithNewEquivalentShape(JSContext *cx, js::Shape *existingShape,
+                                             js::Shape *newShape = NULL);
+
     enum GenerateShape {
         GENERATE_NONE,
         GENERATE_SHAPE
@@ -962,6 +973,8 @@ struct JSObject : js::gc::Cell
     bool sealOrFreeze(JSContext *cx, ImmutabilityType it);
 
     bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
+
+    static inline uintN getSealedOrFrozenAttributes(uintN attrs, ImmutabilityType it);
 
     inline void *&privateRef(uint32_t nfixed) const;
 
@@ -1329,10 +1342,10 @@ struct JSObject : js::gc::Cell
     inline JSBool setElementAttributes(JSContext *cx, uint32_t index, uintN *attrsp);
     inline JSBool setSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp);
 
-    inline JSBool deleteGeneric(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
-    inline JSBool deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, JSBool strict);
-    inline JSBool deleteElement(JSContext *cx, uint32_t index, js::Value *rval, JSBool strict);
-    inline JSBool deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, JSBool strict);
+    inline bool deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, bool strict);
+    inline bool deleteElement(JSContext *cx, uint32_t index, js::Value *rval, bool strict);
+    inline bool deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, bool strict);
+    bool deleteByValue(JSContext *cx, const js::Value &property, js::Value *rval, bool strict);
 
     inline bool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp);
     inline bool defaultValue(JSContext *cx, JSType hint, js::Value *vp);
@@ -1815,7 +1828,7 @@ static const uintN RESOLVE_INFER = 0xffff;
 /*
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
  */
-extern PropertyCacheEntry *
+extern bool
 FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool global,
                    JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
@@ -1848,9 +1861,9 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp);
  * barrier, which is not needed when invoking a lambda that otherwise does not
  * leak its callee reference (via arguments.callee or its name).
  */
-const uintN JSGET_CACHE_RESULT      = 1; // from a caching interpreter opcode
 const uintN JSGET_METHOD_BARRIER    = 0; // get can leak joined function object
-const uintN JSGET_NO_METHOD_BARRIER = 2; // call to joined function can't leak
+const uintN JSGET_NO_METHOD_BARRIER = 1; // call to joined function can't leak
+const uintN JSGET_CACHE_RESULT      = 2; // from a caching interpreter opcode
 
 /*
  * NB: js_NativeGet and js_NativeSet are called with the scope containing shape
@@ -1934,12 +1947,12 @@ js_IsDelegate(JSContext *cx, JSObject *obj, const js::Value &v);
 extern JSBool
 js_PrimitiveToObject(JSContext *cx, js::Value *vp);
 
-/*
- * v and vp may alias. On successful return, vp->isObjectOrNull(). If vp is not
- * rooted, the caller must root vp before the next possible GC.
- */
 extern JSBool
 js_ValueToObjectOrNull(JSContext *cx, const js::Value &v, JSObject **objp);
+
+/* Throws if v could not be converted to an object. */
+extern JSObject *
+js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
 
 namespace js {
 
@@ -1958,14 +1971,16 @@ ToObject(JSContext *cx, Value *vp)
     return ToObjectSlow(cx, vp);
 }
 
-} /* namespace js */
+/* As for ToObject, but preserves the original value. */
+inline JSObject *
+ValueToObject(JSContext *cx, const Value &v)
+{
+    if (v.isObject())
+        return &v.toObject();
+    return js_ValueToNonNullObject(cx, v);
+}
 
-/*
- * v and vp may alias. On successful return, vp->isObject(). If vp is not
- * rooted, the caller must root vp before the next possible GC.
- */
-extern JSObject *
-js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
+} /* namespace js */
 
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);

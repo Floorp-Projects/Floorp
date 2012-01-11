@@ -4,7 +4,7 @@ static void
 Destroy(JSContext *cx, JSPrincipals *prin);
 
 JSPrincipals system_principals = {
-    (char *)"", NULL, NULL, 1, Destroy, NULL
+    (char *)"", 1, Destroy, NULL
 };
 
 static void

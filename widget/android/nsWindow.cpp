@@ -87,6 +87,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 // The dimensions of the current android view
 static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
+static gfxIntSize gAndroidTileSize = gfxIntSize(0, 0);
 static gfxIntSize gAndroidScreenBounds;
 
 #ifdef ACCESSIBILITY
@@ -981,6 +982,12 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             win->OnDraw(ae);
             break;
 
+        case AndroidGeckoEvent::TILE_SIZE: {
+            gAndroidTileSize.width = ae->P0().x;
+            gAndroidTileSize.height = ae->P0().y;
+            break;
+        }
+
         case AndroidGeckoEvent::IME_EVENT:
             win->UserActivity();
             if (win->mFocus) {
@@ -1196,42 +1203,56 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         sDirectTexture->Reallocate(gAndroidBounds.width, gAndroidBounds.height);
       }
 
-      sDirectTexture->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, &bits);
+      sDirectTexture->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, ae->Rect(), &bits);
     } else {
       bits = client.LockBufferBits();
     }
     if (!bits) {
         ALOG("### Failed to lock buffer");
-
-        if (sHasDirectTexture) {
-          sDirectTexture->Unlock();
-        } else {
-          client.UnlockBuffer();
-        }
     } else {
-        nsRefPtr<gfxImageSurface> targetSurface =
-            new gfxImageSurface(bits, gfxIntSize(gAndroidBounds.width, gAndroidBounds.height), gAndroidBounds.width * 2,
-                                gfxASurface::ImageFormatRGB16_565);
-        if (targetSurface->CairoStatus()) {
-            ALOG("### Failed to create a valid surface from the bitmap");
-        } else {
-            if (sHasDirectTexture) {
-              // XXX: lock only the dirty rect above and pass it in here
-              DrawTo(targetSurface);
-            } else {
-              DrawTo(targetSurface, ae->Rect());
-            }
+        // If tile size is 0,0, we assume we only have a single tile
+        int tileWidth = (gAndroidTileSize.width > 0) ? gAndroidTileSize.width : gAndroidBounds.width;
+        int tileHeight = (gAndroidTileSize.height > 0) ? gAndroidTileSize.height : gAndroidBounds.height;
 
-            if (metadataProvider) {
-                metadataProvider->GetDrawMetadata(metadata);
+        bool drawSuccess = true;
+        int offset = 0;
+
+        for (int y = 0; y < gAndroidBounds.height; y += tileHeight) {
+            for (int x = 0; x < gAndroidBounds.width; x += tileWidth) {
+                int width = NS_MIN(tileWidth, gAndroidBounds.width - x);
+                int height = NS_MIN(tileHeight, gAndroidBounds.height - y);
+
+                nsRefPtr<gfxImageSurface> targetSurface =
+                    new gfxImageSurface(bits + offset,
+                                        gfxIntSize(width, height),
+                                        width * 2,
+                                        gfxASurface::ImageFormatRGB16_565);
+
+                offset += width * height * 2;
+
+                if (targetSurface->CairoStatus()) {
+                    ALOG("### Failed to create a valid surface from the bitmap");
+                    drawSuccess = false;
+                    break;
+                } else {
+                    targetSurface->SetDeviceOffset(gfxPoint(-x, -y));
+                    DrawTo(targetSurface, ae->Rect());
+                }
             }
         }
-        if (sHasDirectTexture) {
-          sDirectTexture->Unlock();
-        } else {
-          client.UnlockBuffer();
+
+        // Don't fill in the draw metadata on an unsuccessful draw
+        if (drawSuccess && metadataProvider) {
+            metadataProvider->GetDrawMetadata(metadata);
         }
     }
+
+    if (sHasDirectTexture) {
+        sDirectTexture->Unlock();
+    } else {
+        client.UnlockBuffer();
+    }
+
     client.EndDrawing(ae->Rect(), metadata);
     return;
 #endif

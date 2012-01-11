@@ -48,6 +48,7 @@ include $(topsrcdir)/config/config.mk
 SUBMAKEFILES += \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
+        $(DEPTH)/mobile/locales/Makefile \
         $(NULL)
 
 PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js) \

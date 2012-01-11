@@ -823,9 +823,10 @@ var gViewController = {
       isEnabled: function(aAddon) {
         return !!aAddon && (gViewController.currentViewObj != gDetailView);
       },
-      doCommand: function(aAddon) {
+      doCommand: function(aAddon, aScrollToPreferences) {
         gViewController.loadView("addons://detail/" +
-                                 encodeURIComponent(aAddon.id));
+                                 encodeURIComponent(aAddon.id) +
+                                 (aScrollToPreferences ? "/preferences" : ""));
       }
     },
 
@@ -964,7 +965,7 @@ var gViewController = {
       },
       doCommand: function(aAddon) {
         if (aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
-          gViewController.commands.cmd_showItemDetails.doCommand(aAddon);
+          gViewController.commands.cmd_showItemDetails.doCommand(aAddon, true);
           return;
         }
         var optionsURL = aAddon.optionsURL;
@@ -2565,7 +2566,7 @@ var gDetailView = {
     }
   },
 
-  _updateView: function(aAddon, aIsRemote) {
+  _updateView: function(aAddon, aIsRemote, aScrollToPreferences) {
     this._updatePrefs.addObserver("", this, false);
     this.clearLoading();
 
@@ -2738,7 +2739,7 @@ var gDetailView = {
       }
     }
 
-    this.fillSettingsRows();
+    this.fillSettingsRows(aScrollToPreferences);
 
     this.updateState();
 
@@ -2747,6 +2748,13 @@ var gDetailView = {
   },
 
   show: function(aAddonId, aRequest) {
+    let index = aAddonId.indexOf("/preferences");
+    let scrollToPreferences = false;
+    if (index >= 0) {
+      aAddonId = aAddonId.substring(0, index);
+      scrollToPreferences = true;
+    }
+
     var self = this;
     this._loadingTimer = setTimeout(function() {
       self.node.setAttribute("loading-extended", true);
@@ -2759,7 +2767,7 @@ var gDetailView = {
         return;
 
       if (aAddon) {
-        self._updateView(aAddon, false);
+        self._updateView(aAddon, false, scrollToPreferences);
         return;
       }
 
@@ -2878,7 +2886,7 @@ var gDetailView = {
       rows.removeChild(rows.lastChild);
   },
 
-  fillSettingsRows: function () {
+  fillSettingsRows: function (aScrollToPreferences) {
     this.emptySettingsRows();
     if (this._addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE)
       return;
@@ -2952,11 +2960,31 @@ var gDetailView = {
         if (firstSetting)
           firstSetting.clientTop;
         Services.obs.notifyObservers(document, "addon-options-displayed", gDetailView._addon.id);
+        if (aScrollToPreferences)
+          gDetailView.scrollToPreferencesRows();
       }, false);
     } else {
       if (firstSetting)
         firstSetting.clientTop;
       Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
+      if (aScrollToPreferences)
+        gDetailView.scrollToPreferencesRows();
+    }
+  },
+
+  scrollToPreferencesRows: function() {
+    // We find this row, rather than remembering it from above,
+    // in case it has been changed by the observers.
+    let firstRow = gDetailView.node.querySelector('setting[first-row="true"]');
+    if (firstRow) {
+      let top = firstRow.boxObject.y;
+      top -= parseInt(window.getComputedStyle(firstRow, null).getPropertyValue("margin-top"));
+      
+      let detailViewBoxObject = gDetailView.node.boxObject;
+      top -= detailViewBoxObject.y;
+
+      detailViewBoxObject.QueryInterface(Ci.nsIScrollBoxObject);
+      detailViewBoxObject.scrollTo(0, top);
     }
   },
 

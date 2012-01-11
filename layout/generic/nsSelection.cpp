@@ -66,7 +66,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsTArray.h"
 #include "nsIScrollableFrame.h"
-
+#include "nsCCUncollectableMarker.h"
 #include "nsISelectionListener.h"
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
@@ -760,7 +760,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMaintainRange)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
-  if (tmp->mShell) {
+  if (tmp->mShell && tmp->mShell->GetDocument() &&
+      nsCCUncollectableMarker::InGeneration(cb,
+                                            tmp->mShell->GetDocument()->
+                                              GetMarkedCCGeneration())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
   PRInt32 i;

@@ -41,10 +41,12 @@
 package @ANDROID_PACKAGE_NAME@.db;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
 
-import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoDirProvider;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
@@ -72,6 +74,7 @@ import android.util.Log;
 
 public class BrowserProvider extends ContentProvider {
     private static final String LOGTAG = "GeckoBrowserProvider";
+    private Context mContext;
 
     static final String DATABASE_NAME = "browser.db";
 
@@ -417,7 +420,13 @@ public class BrowserProvider extends ContentProvider {
             return "browser-" + profile + ".db";
         }
 
-        File profileDir = GeckoApp.mAppContext.getProfileDir(profile);
+        File profileDir = null;
+        try {
+            profileDir = GeckoDirProvider.getProfileDir(mContext, profile);
+        } catch (IOException ex) {
+            Log.e(LOGTAG, "Error getting profile dir", ex);
+        }
+
         if (profileDir == null) {
             Log.d(LOGTAG, "Couldn't find directory for profile: " + profile);
             return null;
@@ -507,7 +516,18 @@ public class BrowserProvider extends ContentProvider {
     public boolean onCreate() {
         Log.d(LOGTAG, "Creating BrowserProvider");
 
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                // Kick this off early. It is synchronized so that other callers will wait
+                try {
+                    GeckoDirProvider.getProfileDir(getContext());
+                } catch (Exception ex) {
+                    Log.e(LOGTAG, "Error getting profile dir", ex);
+                }
+            }
+        });
         synchronized (this) {
+            mContext = getContext();
             mDatabasePerProfile = new HashMap<String, DatabaseHelper>();
         }
 
@@ -564,6 +584,7 @@ public class BrowserProvider extends ContentProvider {
         return deleted;
     }
 
+    @SuppressWarnings("fallthrough")
     public int deleteInTransaction(Uri uri, String selection, String[] selectionArgs) {
         Log.d(LOGTAG, "Calling delete in transaction on URI: " + uri);
 
@@ -672,7 +693,7 @@ public class BrowserProvider extends ContentProvider {
 
                 String url = values.getAsString(Bookmarks.URL);
                 ContentValues imageValues = extractImageValues(values, url);
-                Boolean isFolder = values.getAsBoolean(Bookmarks.IS_FOLDER);
+                Boolean isFolder = values.getAsInteger(Bookmarks.IS_FOLDER) == 1;
 
                 if ((isFolder == null || !isFolder) && imageValues != null
                         && !TextUtils.isEmpty(url)) {
@@ -768,6 +789,7 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
+    @SuppressWarnings("fallthrough")
     public int updateInTransaction(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         Log.d(LOGTAG, "Calling update in transaction on URI: " + uri);

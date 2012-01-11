@@ -112,17 +112,21 @@ class DeviceManagerADB(DeviceManager):
     # files; we either zip/unzip or push file-by-file to get around this 
     # limitation
     try:
+      if (not self.dirExists(remoteDir)):
+        self.mkDirs(remoteDir+"/x")
       if (self.useZip):
         localZip = tempfile.mktemp()+".zip"
         remoteZip = remoteDir + "/adbdmtmp.zip"
         subprocess.check_output(["zip", "-r", localZip, '.'], cwd=localDir)
         self.pushFile(localZip, remoteZip)
         os.remove(localZip)
-        self.checkCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir])
+        data = self.runCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir]).stdout.read()
         self.checkCmdAs(["shell", "rm", remoteZip])
+        if (re.search("unzip: exiting", data) or re.search("Operation not permitted", data)):
+          print "zip/unzip failure: falling back to normal push"
+          self.useZip = False
+          self.pushDir(localDir, remoteDir)
       else:
-        if (not self.dirExists(remoteDir)):
-          self.mkDirs(remoteDir+"/x")
         for root, dirs, files in os.walk(localDir, followlinks='true'):
           relRoot = os.path.relpath(root, localDir)
           for file in files:
@@ -254,6 +258,10 @@ class DeviceManagerADB(DeviceManager):
   #  success: output filename
   #  failure: None
   def launchProcess(self, cmd, outputFile = "process.txt", cwd = '', env = '', failIfRunning=False):
+    if cmd[0] == "am":
+      self.checkCmd(["shell"] + cmd)
+      return outputFile
+
     acmd = ["shell", "am","start"]
     cmd = ' '.join(cmd).strip()
     i = cmd.find(" ")
@@ -278,7 +286,7 @@ class DeviceManagerADB(DeviceManager):
       acmd.append(''.join(['\'',uri, '\'']));
     print acmd
     self.checkCmd(acmd)
-    return outputFile;
+    return outputFile
 
   # external function
   # returns:
@@ -418,15 +426,14 @@ class DeviceManagerADB(DeviceManager):
   # returns:
   #  success: path for app root
   #  failure: None
-  def getAppRoot(self):
+  def getAppRoot(self, packageName):
     devroot = self.getDeviceRoot()
     if (devroot == None):
       return None
 
-    if (self.dirExists(devroot + '/fennec')):
-      return devroot + '/fennec'
-    elif (self.dirExists(devroot + '/firefox')):
-      return devroot + '/firefox'
+    if (packageName and self.dirExists('/data/data/' + packageName)):
+      self.packageName = packageName
+      return '/data/data/' + packageName
     elif (self.packageName and self.dirExists('/data/data/' + self.packageName)):
       return '/data/data/' + self.packageName
 
@@ -609,7 +616,7 @@ class DeviceManagerADB(DeviceManager):
       self.checkCmd(["shell", "run-as", packageName, "rm", "-r", devroot + "/sanity"])
       
   def isUnzipAvailable(self):
-    data = self.runCmd(["shell", "unzip"]).stdout.read()
+    data = self.runCmdAs(["shell", "unzip"]).stdout.read()
     if (re.search('Usage', data)):
       return True
     else:

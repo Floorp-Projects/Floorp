@@ -86,6 +86,20 @@ WeakMapBase::traceAllMappings(WeakMapTracer *tracer)
         m->traceMappings(tracer);
 }
 
+void
+WeakMapBase::resetWeakMapList(JSRuntime *rt)
+{
+    JS_ASSERT(WeakMapNotInList != NULL);
+
+    WeakMapBase *m = rt->gcWeakMapList;
+    rt->gcWeakMapList = NULL;
+    while (m) {
+        WeakMapBase *n = m->next;
+        m->next = WeakMapNotInList;
+        m = n;
+    }
+}
+
 } /* namespace js */
 
 typedef WeakMap<HeapPtr<JSObject>, HeapValue> ObjectValueMap;

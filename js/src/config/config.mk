@@ -243,13 +243,13 @@ endif # MOZ_DEBUG
 # the Makefile wants static CRT linking.
 ifeq ($(MOZ_MEMORY)_$(USE_STATIC_LIBS),1_1)
 # Disable default CRT libs and add the right lib path for the linker
-MOZ_UTILS_LDFLAGS=
+MOZ_GLUE_LDFLAGS=
 endif
 
 endif # WINNT && !GNU_CC
 
-ifndef MOZ_UTILS_PROGRAM_LDFLAGS
-MOZ_UTILS_PROGRAM_LDFLAGS=$(MOZ_UTILS_LDFLAGS)
+ifndef MOZ_GLUE_PROGRAM_LDFLAGS
+MOZ_GLUE_PROGRAM_LDFLAGS=$(MOZ_GLUE_LDFLAGS)
 endif
 
 #
@@ -474,13 +474,6 @@ ifeq (WINNT_1,$(OS_ARCH)_$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
 FAIL_ON_WARNINGS_DEBUG=
 FAIL_ON_WARNINGS=
 endif # WINNT && (MOS_PROFILE_GENERATE ^ MOZ_PROFILE_USE)
-
-# Also clear FAIL_ON_WARNINGS[_DEBUG] for Android builds, since
-# they have some platform-specific warnings we haven't fixed yet.
-ifeq ($(OS_TARGET),Android)
-FAIL_ON_WARNINGS_DEBUG=
-FAIL_ON_WARNINGS=
-endif # Android
 
 # Now, check for debug version of flag; it turns on normal flag in debug builds.
 ifdef FAIL_ON_WARNINGS_DEBUG

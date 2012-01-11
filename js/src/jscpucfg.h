@@ -92,6 +92,23 @@
 #  error "endian.h does not define __BYTE_ORDER. Cannot determine endianness."
 # endif
 
+/* BSDs */
+#elif defined(JS_HAVE_MACHINE_ENDIAN_H)
+# include <sys/types.h>
+# include <machine/endian.h>
+
+# if defined(_BYTE_ORDER)
+#  if _BYTE_ORDER == _LITTLE_ENDIAN
+#   define IS_LITTLE_ENDIAN 1
+#   undef  IS_BIG_ENDIAN
+#  elif _BYTE_ORDER == _BIG_ENDIAN
+#   undef  IS_LITTLE_ENDIAN
+#   define IS_BIG_ENDIAN 1
+#  endif
+# else /* !defined(_BYTE_ORDER) */
+#  error "machine/endian.h does not define _BYTE_ORDER. Cannot determine endianness."
+# endif
+
 #elif defined(JS_HAVE_SYS_ISA_DEFS_H)
 # include <sys/isa_defs.h>
 

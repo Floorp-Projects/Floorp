@@ -820,10 +820,10 @@ nsWifiWorker.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: WIFIWORKER_CID,
                                     contractID: WIFIWORKER_CONTRACTID,
                                     classDescription: "WifiWorker",
-                                    interfaces: [Ci.nsIRadioWorker,
+                                    interfaces: [Ci.nsIWorkerHolder,
                                                  Ci.nsIWifi]}),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioWorker,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
                                          Ci.nsIWifi]),
 
   setWifiEnabled: function(enable) {

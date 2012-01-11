@@ -882,8 +882,11 @@ FrameState::discardForJoin(RegisterAllocation *&alloc, uint32_t stackDepth)
         }
 
         regstate(reg).associate(fe, RematInfo::DATA);
-        if (!alloc->synced(reg))
+        if (!alloc->synced(reg)) {
             fe->data.unsync();
+            if (!reg.isReg())
+                fe->type.unsync();
+        }
     }
 
     a->sp = a->spBase + stackDepth;

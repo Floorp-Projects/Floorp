@@ -152,13 +152,13 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
                             LOWERED_CALL_APPLY |
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
-    JS_ASSERT(script == callee.toFunction()->script());
+    JS_ASSERT(script == callee.script());
 
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | flagsArg;
     exec.fun = &callee;
     args.nactual = nactual;
-    scopeChain_ = callee.toFunction()->environment();
+    scopeChain_ = callee.environment();
     ncode_ = NULL;
     initPrev(cx);
     blockChain_= NULL;
@@ -461,7 +461,7 @@ StackFrame::functionEpilogue()
 }
 
 inline void
-StackFrame::markFunctionEpilogueDone()
+StackFrame::updateEpilogueFlags()
 {
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
         if (hasArgsObj() && !argsObj().maybeStackFrame()) {
@@ -569,7 +569,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
-    JS_ASSERT(script == callee.toFunction()->script());
+    JS_ASSERT(script == callee.script());
 
     /*StackFrame::Flags*/ uint32_t flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, &callee, script, &flags);
