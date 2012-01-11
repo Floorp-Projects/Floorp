@@ -38,7 +38,7 @@
 
 #include "IMETextTxn.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMRange.h"
+#include "nsRange.h"
 #include "nsIPrivateTextRange.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
@@ -338,12 +338,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
              if(NS_FAILED(result))
                 break;
 
-             nsCOMPtr<nsIDOMRange> newRange = do_CreateInstance(
-                                      "@mozilla.org/content/range;1", &result);
-             NS_ASSERTION(NS_SUCCEEDED(result), "Cannot create new nsIDOMRange");
-             if(NS_FAILED(result))
-                break;
-
+             nsRefPtr<nsRange> newRange = new nsRange();
              result = newRange->SetStart(mElement,mOffset+selectionStart);
              NS_ASSERTION(NS_SUCCEEDED(result), "Cannot SetStart");
              if(NS_FAILED(result))

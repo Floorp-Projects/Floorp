@@ -6,7 +6,12 @@
 
 // Tests that the Console API implements the time() and timeEnd() methods.
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab("http://example.com/browser/browser/devtools/webconsole/" +
          "test/test-bug-658368-time-methods.html");
   openConsole();

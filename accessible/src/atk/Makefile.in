@@ -92,6 +92,10 @@ include $(topsrcdir)/config/rules.mk
 CFLAGS		+= $(MOZ_GTK2_CFLAGS)
 CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 
+ifdef MOZ_ENABLE_DBUS
+CXXFLAGS += $(MOZ_DBUS_CFLAGS)
+endif
+
 LOCAL_INCLUDES += \
   -I$(srcdir) \
   -I$(srcdir)/../base \
