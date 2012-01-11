@@ -1522,21 +1522,3 @@ JSCompartment::sweepInitialShapeTable(JSContext *cx)
         }
     }
 }
-
-JS_PUBLIC_API(bool)
-JS::IsShapeInDictionary(const void *shape)
-{
-    return static_cast<const Shape*>(shape)->inDictionary();
-}
-
-JS_PUBLIC_API(size_t)
-JS::SizeOfShapePropertyTable(const void *shape, JSMallocSizeOfFun mallocSizeOf)
-{
-    return static_cast<const Shape*>(shape)->sizeOfPropertyTable(mallocSizeOf);
-}
-
-JS_PUBLIC_API(size_t)
-JS::SizeOfShapeKids(const void *shape, JSMallocSizeOfFun mallocSizeOf)
-{
-    return static_cast<const Shape*>(shape)->sizeOfKids(mallocSizeOf);
-}
