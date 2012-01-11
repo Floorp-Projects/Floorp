@@ -1598,34 +1598,6 @@ typedef RootedVar<jsid>               RootedVarId;
 typedef RootedVar<Value>              RootedVarValue;
 
 /* FIXME(bug 332648): Move this into a public header. */
-class AutoStringRooter : private AutoGCRooter {
-  public:
-    AutoStringRooter(JSContext *cx, JSString *str = NULL
-                     JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, STRING), str(str)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    void setString(JSString *str) {
-        this->str = str;
-    }
-
-    JSString * string() const {
-        return str;
-    }
-
-    JSString ** addr() {
-        return &str;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-
-  private:
-    JSString *str;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class AutoArrayRooter : private AutoGCRooter {
   public:
     AutoArrayRooter(JSContext *cx, size_t len, Value *vec
