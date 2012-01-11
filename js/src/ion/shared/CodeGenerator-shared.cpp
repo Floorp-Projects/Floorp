@@ -302,7 +302,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
         // We add an extra padding after the pushed arguments if we pushed an
         // odd number of arguments. This padding is removed by the wrapper when
         // it returns.
-        uint32 argumentPadding = (fun.explicitStackSlots() * sizeof(void *)) % StackAlignment;
+        argumentPadding = (fun.explicitStackSlots() * sizeof(void *)) % StackAlignment;
         masm.reserveStack(argumentPadding);
     }
 
