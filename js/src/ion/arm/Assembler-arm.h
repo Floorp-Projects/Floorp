@@ -113,6 +113,7 @@ static const FloatRegister d15 = {FloatRegisters::d15};
 // Also, the ARM abi wants the stack to be 8 byte aligned at
 // function boundaries.  I'm trying to make sure this is always true.
 static const uint32 StackAlignment = 8;
+static const bool StackKeptAligned = true;
 
 class Instruction;
 class InstBranchImm;

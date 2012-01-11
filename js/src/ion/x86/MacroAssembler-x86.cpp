@@ -58,8 +58,6 @@ MacroAssemblerX86::setupABICall(uint32 args)
     return stackForArgs;
 }
 
-static const uint32 StackAlignment = 16;
-
 void
 MacroAssemblerX86::setupAlignedABICall(uint32 args)
 {

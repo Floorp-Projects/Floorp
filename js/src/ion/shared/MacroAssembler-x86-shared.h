@@ -146,7 +146,8 @@ class MacroAssemblerX86Shared : public Assembler
         framePushed_ -= STACK_SLOT_SIZE;
     }
     void implicitPop(uint32 args) {
-        framePushed_ -= args * STACK_SLOT_SIZE;
+        JS_ASSERT(args % STACK_SLOT_SIZE == 0);
+        framePushed_ -= args;
     }
     uint32 framePushed() const {
         return framePushed_;
@@ -172,7 +173,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void callWithExitFrame(IonCode *target) {
         uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
-        push(Imm32(descriptor));
+        Push(Imm32(descriptor));
         call(target);
     }
     void callIon(const Register &callee) {
