@@ -44,7 +44,7 @@
 
 //#define DEBUG_SPELLCHECK
 
-class nsIRange;
+class nsRange;
 class nsINode;
 
 /**
@@ -101,13 +101,13 @@ public:
   // before you actually generate the range you are interested in and iterate
   // the words in it.
   nsresult GetRangeForWord(nsIDOMNode* aWordNode, PRInt32 aWordOffset,
-                           nsIRange** aRange);
+                           nsRange** aRange);
 
   // Moves to the the next word in the range, and retrieves it's text and range.
   // An empty word and a NULL range are returned when we are done checking.
   // aSkipChecking will be set if the word is "special" and shouldn't be
   // checked (e.g., an email address).
-  nsresult GetNextWord(nsAString& aText, nsIRange** aRange,
+  nsresult GetNextWord(nsAString& aText, nsRange** aRange,
                        bool* aSkipChecking);
 
   // Call to normalize some punctuation. This function takes an autostring
@@ -191,6 +191,6 @@ private:
   void SplitDOMWord(PRInt32 aStart, PRInt32 aEnd);
 
   // Convenience functions, object must be initialized
-  nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd, nsIRange** aRange);
-  nsresult MakeRangeForWord(const RealWord& aWord, nsIRange** aRange);
+  nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd, nsRange** aRange);
+  nsresult MakeRangeForWord(const RealWord& aWord, nsRange** aRange);
 };

@@ -57,6 +57,9 @@ namespace std {
     template ostream& ostream::_M_insert(double);
     template ostream& ostream::_M_insert(long);
     template ostream& ostream::_M_insert(unsigned long);
+#ifdef DEBUG
+    template ostream& ostream::_M_insert(const void*);
+#endif
     template ostream& __ostream_insert(ostream&, const char*, streamsize);
     template istream& istream::_M_extract(double&);
 #endif

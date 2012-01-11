@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var div = document.querySelector("div");
+  div.contentEditable = "true";
+  div.focus();
+
+  var r = document.documentElement;
+  document["removeChild"](r);
+  document["appendChild"](r);
+
+  setTimeout(function() {
+    document.execCommand("inserthtml", false, "a");
+    setTimeout(function() {
+      document.documentElement.removeAttribute("class");
+    }, 0);
+  }, 0);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div></div></body>
+</html>

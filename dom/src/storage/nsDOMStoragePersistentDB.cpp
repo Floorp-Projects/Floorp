@@ -198,12 +198,12 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
 
   service = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = service->OpenDatabase(storageFile, getter_AddRefs(mConnection));
+  rv = service->OpenUnsharedDatabase(storageFile, getter_AddRefs(mConnection));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // delete the db and try opening again
     rv = storageFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = service->OpenDatabase(storageFile, getter_AddRefs(mConnection));
+    rv = service->OpenUnsharedDatabase(storageFile, getter_AddRefs(mConnection));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

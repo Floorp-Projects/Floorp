@@ -43,8 +43,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=675884
   ok(!e.cancelable, "Event shouldn't be cancelable!");
   document.dispatchEvent(e);
   is(receivedEvent, e, "Wrong event!");
-  
-  SimpleTest.finish();
 
   ]]>
   </script>

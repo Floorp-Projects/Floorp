@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
+ *   Justin Lebar <justin.lebar@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,25 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsISupports.idl"
 
-[scriptable, uuid(fed93d11-f24d-41d8-ae55-4197927999bb)]
-interface nsIDOMNSRange : nsISupports
+[scriptable, function, uuid(37687881-1801-489f-ad03-7af651a93448)]
+interface nsIDOMMozGetContentStateCallback : nsISupports
 {
-  nsIDOMDocumentFragment    createContextualFragment(in DOMString fragment);
+  void callback(in DOMString value);
+};
 
-  // This returns true if parent+offset equals either
-  // of the boundary points or is between them.
-  boolean                   isPointInRange(in nsIDOMNode parent,
-                                           in long offset);
+[scriptable, uuid(2ff0f421-64e4-4186-b0dd-619629f46048)]
+interface nsIDOMMozBrowserFrameElement : nsISupports
+{
+  /**
+   * If true, a privileged page can call mozGetContentState on this element.
+   * If false, mozGetContentState will fail.
+   */
+  attribute boolean mozBrowser;
 
-  // comparePoint returns
-  //   -1 if point is before the start boundary point,
-  //    0 if point is either of the boundary points or between them,
-  //    1 if point is after the end boundary point.
-  // Sort of a strcmp for ranges.
-  short                     comparePoint(in nsIDOMNode parent, in long offset);
-
-  nsIDOMClientRectList getClientRects();
-  nsIDOMClientRect getBoundingClientRect();
+  /**
+   * Get a piece of state from this element's content window, returning its
+   * value via |callback|.
+   *
+   * At the moment, the only valid property is "location", which returns the
+   * content window's location.  Passing any other property causes an error.
+   *
+   * If the iframe's mozBrowser is false, or if the calling window is not
+   * privileged, this function fails.
+   */
+  void mozGetContentState(in DOMString property,
+                          in nsIDOMMozGetContentStateCallback callback);
 };

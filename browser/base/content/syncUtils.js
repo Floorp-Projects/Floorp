@@ -197,7 +197,7 @@ let gSyncUtils = {
           || rv == Ci.nsIFilePicker.returnReplace) {
         let stream = Cc["@mozilla.org/network/file-output-stream;1"]
                        .createInstance(Ci.nsIFileOutputStream);
-        stream.init(filepicker.file, -1, -1, 0);
+        stream.init(filepicker.file, -1, 0600, 0);
 
         let serializer = new XMLSerializer();
         let output = serializer.serializeToString(iframe.contentDocument);
