@@ -60,6 +60,18 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLESERVICE
 
+    void SetIsDelivering() {
+        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(!mDeliveringMessage);
+        mDeliveringMessage = true;
+    }
+
+    void SetDoneDelivering() {
+        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(mDeliveringMessage);
+        mDeliveringMessage = false;
+    }
+
 private:
     ~nsConsoleService();
 
@@ -74,6 +86,11 @@ private:
 
     // Is the buffer full? (Has mCurrent wrapped around at least once?)
     bool mFull;
+
+    // Are we currently delivering a console message on the main thread? If
+    // so, we suppress incoming messages on the main thread only, to avoid
+    // infinite repitition.
+    bool mDeliveringMessage;
 
     // Listeners to notify whenever a new message is logged.
     nsInterfaceHashtable<nsISupportsHashKey, nsIConsoleListener> mListeners;

@@ -68,6 +68,7 @@ nsConsoleService::nsConsoleService()
     : mMessages(nsnull)
     , mCurrent(0)
     , mFull(false)
+    , mDeliveringMessage(false)
     , mLock("nsConsoleService.mLock")
 {
     // XXX grab this from a pref!
@@ -109,8 +110,9 @@ namespace {
 class LogMessageRunnable : public nsRunnable
 {
 public:
-    LogMessageRunnable(nsIConsoleMessage* message) :
-        mMessage(message)
+    LogMessageRunnable(nsIConsoleMessage* message, nsConsoleService* service)
+        : mMessage(message)
+        , mService(service)
     { }
 
     void AddListener(nsIConsoleListener* listener) {
@@ -121,14 +123,21 @@ public:
 
 private:
     nsCOMPtr<nsIConsoleMessage> mMessage;
+    nsRefPtr<nsConsoleService> mService;
     nsCOMArray<nsIConsoleListener> mListeners;
 };
 
 NS_IMETHODIMP
 LogMessageRunnable::Run()
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mService->SetIsDelivering();
+
     for (PRInt32 i = 0; i < mListeners.Count(); ++i)
         mListeners[i]->Observe(mMessage);
+
+    mService->SetDoneDelivering();
 
     return NS_OK;
 }
@@ -151,7 +160,12 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
     if (message == nsnull)
         return NS_ERROR_INVALID_ARG;
 
-    nsRefPtr<LogMessageRunnable> r = new LogMessageRunnable(message);
+    if (NS_IsMainThread() && mDeliveringMessage) {
+        NS_WARNING("Some console listener threw an error while inside itself. Discarding this message");
+        return NS_ERROR_FAILURE;
+    }
+
+    nsRefPtr<LogMessageRunnable> r = new LogMessageRunnable(message, this);
     nsIConsoleMessage *retiredMessage;
 
     NS_ADDREF(message); // early, in case it's same as replaced below.
