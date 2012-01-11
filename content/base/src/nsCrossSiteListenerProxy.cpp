@@ -413,6 +413,30 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
                                          nsIPrincipal* aRequestingPrincipal,
                                          nsIChannel* aChannel,
                                          bool aWithCredentials,
+                                         bool aAllowDataURI,
+                                         nsresult* aResult)
+  : mOuterListener(aOuter),
+    mRequestingPrincipal(aRequestingPrincipal),
+    mWithCredentials(aWithCredentials && !gDisableCORSPrivateData),
+    mRequestApproved(false),
+    mHasBeenCrossSite(false),
+    mIsPreflight(false)
+{
+  aChannel->GetNotificationCallbacks(getter_AddRefs(mOuterNotificationCallbacks));
+  aChannel->SetNotificationCallbacks(this);
+
+  *aResult = UpdateChannel(aChannel, aAllowDataURI);
+  if (NS_FAILED(*aResult)) {
+    mOuterListener = nsnull;
+    mRequestingPrincipal = nsnull;
+    mOuterNotificationCallbacks = nsnull;
+  }
+}
+
+nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
+                                         nsIPrincipal* aRequestingPrincipal,
+                                         nsIChannel* aChannel,
+                                         bool aWithCredentials,
                                          const nsCString& aPreflightMethod,
                                          const nsTArray<nsCString>& aPreflightHeaders,
                                          nsresult* aResult)
@@ -723,13 +747,23 @@ nsCORSListenerProxy::OnRedirectVerifyCallback(nsresult result)
 }
 
 nsresult
-nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel)
+nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI)
 {
   nsCOMPtr<nsIURI> uri, originalURI;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aChannel->GetOriginalURI(getter_AddRefs(originalURI));
-  NS_ENSURE_SUCCESS(rv, rv);  
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // exempt data URIs from the same origin check.
+  if (aAllowDataURI && originalURI == uri) {
+    bool dataScheme = false;
+    rv = uri->SchemeIs("data", &dataScheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (dataScheme) {
+      return NS_OK;
+    }
+  }
 
   // Check that the uri is ok to load
   rv = nsContentUtils::GetSecurityManager()->
