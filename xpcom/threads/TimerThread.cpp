@@ -46,7 +46,6 @@
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
-#include "nsIProxyObjectManager.h"
 #include "mozilla/Services.h"
 
 #include <math.h>
@@ -80,6 +79,35 @@ TimerThread::InitLocks()
   return NS_OK;
 }
 
+namespace {
+
+class TimerObserverRunnable : public nsRunnable
+{
+public:
+  TimerObserverRunnable(nsIObserver* observer)
+    : mObserver(observer)
+  { }
+
+  NS_DECL_NSIRUNNABLE
+
+private:
+  nsCOMPtr<nsIObserver> mObserver;
+};
+
+NS_IMETHODIMP
+TimerObserverRunnable::Run()
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(mObserver, "sleep_notification", PR_FALSE);
+    observerService->AddObserver(mObserver, "wake_notification", PR_FALSE);
+  }
+  return NS_OK;
+}
+
+} // anonymous namespace
+
 nsresult TimerThread::Init()
 {
   PR_LOG(gTimerLog, PR_LOG_DEBUG, ("TimerThread::Init [%d]\n", mInitialized));
@@ -98,21 +126,12 @@ nsresult TimerThread::Init()
       mThread = nsnull;
     }
     else {
-      nsCOMPtr<nsIObserverService> observerService =
-          mozilla::services::GetObserverService();
-      // We must not use the observer service from a background thread!
-      if (observerService && !NS_IsMainThread()) {
-        nsCOMPtr<nsIObserverService> result = nsnull;
-        NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                             NS_GET_IID(nsIObserverService),
-                             observerService, NS_PROXY_ASYNC,
-                             getter_AddRefs(result));
-        observerService.swap(result);
+      nsRefPtr<TimerObserverRunnable> r = new TimerObserverRunnable(this);
+      if (NS_IsMainThread()) {
+        r->Run();
       }
-      // We'll be released at xpcom shutdown
-      if (observerService) {
-        observerService->AddObserver(this, "sleep_notification", false);
-        observerService->AddObserver(this, "wake_notification", false);
+      else {
+        NS_DispatchToMainThread(r);
       }
     }
 
