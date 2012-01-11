@@ -2529,12 +2529,16 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nsnull)
   NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nsnull)
+  NS_DECLARE_FRAME_PROPERTY(ParagraphDepthProperty, nsnull)
 
 #define NS_GET_BASE_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::BaseLevelProperty()))
 
 #define NS_GET_EMBEDDING_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
+
+#define NS_GET_PARAGRAPH_DEPTH(frame) \
+NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
 
   /**
    * Return true if and only if this frame obeys visibility:hidden.
