@@ -278,7 +278,7 @@ public class GeckoAppShell
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
-        System.loadLibrary("mozutils");
+        System.loadLibrary("mozglue");
         GeckoApp geckoApp = GeckoApp.mAppContext;
         String homeDir;
         if (Build.VERSION.SDK_INT < 8 ||

@@ -1547,7 +1547,8 @@ NS_IMETHODIMP nsBulletFrame::OnImageIsAnimated(imgIRequest* aRequest)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer,
+NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIRequest *aRequest,
+                                          imgIContainer *aContainer,
                                           const nsIntRect *aDirtyRect)
 {
   // Invalidate the entire content area. Maybe it's not optimal but it's simple and
@@ -1700,11 +1701,12 @@ NS_IMETHODIMP nsBulletListener::OnImageIsAnimated(imgIRequest *aRequest)
   return mFrame->OnImageIsAnimated(aRequest);
 }
 
-NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer,
+NS_IMETHODIMP nsBulletListener::FrameChanged(imgIRequest *aRequest,
+                                             imgIContainer *aContainer,
                                              const nsIntRect *aDirtyRect)
 {
   if (!mFrame)
     return NS_OK;
 
-  return mFrame->FrameChanged(aContainer, aDirtyRect);
+  return mFrame->FrameChanged(aRequest, aContainer, aDirtyRect);
 }

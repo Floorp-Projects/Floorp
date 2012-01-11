@@ -112,6 +112,28 @@ BaseShape::BaseShape(const StackBaseShape &base)
     }
 }
 
+inline BaseShape &
+BaseShape::operator=(const BaseShape &other)
+{
+    clasp = other.clasp;
+    parent = other.parent;
+    flags = other.flags;
+    slotSpan_ = other.slotSpan_;
+    if (flags & HAS_GETTER_OBJECT) {
+        getterObj = other.getterObj;
+        JSObject::writeBarrierPost(getterObj, &getterObj);
+    } else {
+        rawGetter = other.rawGetter;
+    }
+    if (flags & HAS_SETTER_OBJECT) {
+        setterObj = other.setterObj;
+        JSObject::writeBarrierPost(setterObj, &setterObj);
+    } else {
+        rawSetter = other.rawSetter;
+    }
+    return *this;
+}
+
 inline bool
 BaseShape::matchesGetterSetter(PropertyOp rawGetter, StrictPropertyOp rawSetter) const
 {

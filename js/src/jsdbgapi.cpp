@@ -532,7 +532,7 @@ JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fpArg)
     if (fp->annotation() && fp->isScriptFrame()) {
         JSPrincipals *principals = fp->scopeChain().principals(cx);
 
-        if (principals && principals->globalPrivilegesEnabled(cx, principals)) {
+        if (principals) {
             /*
              * Give out an annotation only if privileges have not been revoked
              * or disabled globally.
@@ -548,17 +548,6 @@ JS_PUBLIC_API(void)
 JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation)
 {
     Valueify(fp)->setAnnotation(annotation);
-}
-
-JS_PUBLIC_API(void *)
-JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp)
-{
-    JSPrincipals *principals;
-
-    principals = Valueify(fp)->scopeChain().principals(cx);
-    if (!principals)
-        return NULL;
-    return principals->getPrincipalArray(cx, principals);
 }
 
 JS_PUBLIC_API(JSBool)

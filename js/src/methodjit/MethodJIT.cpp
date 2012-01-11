@@ -1090,7 +1090,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
 
     /* See comment in mjit::Compiler::emitReturn. */
     if (fp->isFunctionFrame())
-        fp->markFunctionEpilogueDone();
+        fp->updateEpilogueFlags();
 
     return ok ? Jaeger_Returned : Jaeger_Throwing;
 }
@@ -1362,9 +1362,6 @@ PICPCComparator(const void *key, const void *entry)
 {
     const jsbytecode *pc = (const jsbytecode *)key;
     const ic::PICInfo *pic = (const ic::PICInfo *)entry;
-
-    if (ic::PICInfo::CALL != pic->kind)
-        return ic::PICInfo::CALL - pic->kind;
 
     /*
      * We can't just return |pc - pic->pc| because the pointers may be

@@ -542,36 +542,12 @@ if test "$target" != "$host"; then
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
 
-    case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
-        dnl The Darwin cross compiler doesn't necessarily point itself at a
-        dnl root that has libraries for the proper architecture, it defaults
-        dnl to the system root.  The libraries in the system root on current
-        dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
-        dnl checks will fail.  Fake a working SDK in that case.
-        _SAVE_CFLAGS=$CFLAGS
-        _SAVE_CXXFLAGS=$CXXLAGS
-        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk $CFLAGS"
-        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk $CXXFLAGS"
-        ;;
-    esac
-
     AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", :)
     unset ac_cv_prog_CC
     AC_PROG_CC
     AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", :)
     unset ac_cv_prog_CXX
     AC_PROG_CXX
-
-    case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
-        dnl Revert the changes made above.  From this point on, the target
-        dnl compiler will never be used without applying the SDK to CFLAGS
-        dnl (see --with-macos-sdk below).
-        CFLAGS=$_SAVE_CFLAGS
-        CXXFLAGS=$_SAVE_CXXFLAGS
-        ;;
-    esac
 
     AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", :)
     AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", :)
@@ -1142,9 +1118,6 @@ case "$target" in
         dnl No value specified on the command line or in the environment,
         dnl use architecture minimum.
         case "${target_cpu}" in
-          ppc*)
-            export MACOSX_DEPLOYMENT_TARGET=10.5
-            ;;
           i*86)
             export MACOSX_DEPLOYMENT_TARGET=10.5
             ;;
@@ -1799,7 +1772,7 @@ if test "$GNU_CC"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
     fi
-    WARNINGS_AS_ERRORS='-Werror'
+    WARNINGS_AS_ERRORS='-Werror -Wno-error=uninitialized'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
@@ -2947,6 +2920,11 @@ MOZ_SIZE_OF_TYPE(JS_BYTES_PER_DOUBLE, double, 6 8 10 12 14)
 MOZ_CHECK_HEADERS(endian.h)
 if test "$ac_cv_header_endian_h" = yes; then
     AC_DEFINE(JS_HAVE_ENDIAN_H)
+fi
+
+MOZ_CHECK_HEADERS([machine/endian.h],[],[],[#include <sys/types.h>])
+if test "$ac_cv_header_machine_endian_h" = yes; then
+    AC_DEFINE(JS_HAVE_MACHINE_ENDIAN_H)
 fi
 
 MOZ_CHECK_HEADERS(sys/isa_defs.h)
@@ -4192,14 +4170,14 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
-dnl = Disable any treating of compile warnings as errors
+dnl = Enable any treating of compile warnings as errors
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
-[  --disable-warnings-as-errors
-                          Disable treating of warnings as errors],
-    MOZ_DISABLE_WARNINGS_AS_ERRORS=1,
-    MOZ_DISABLE_WARNINGS_AS_ERRORS= )
-if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
+[  --enable-warnings-as-errors
+                          Enable treating of warnings as errors],
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=1,
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=)
+if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
 fi
 
@@ -4293,7 +4271,7 @@ if test "$MOZ_MEMORY"; then
     ;;
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    # the interesting bits will get passed down in MOZ_UTILS_LDFLAGS
+    # the interesting bits will get passed down in MOZ_GLUE_LDFLAGS
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -4308,8 +4286,8 @@ if test "$MOZ_MEMORY"; then
   fi
 fi
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_UTILS_LDFLAGS)
-AC_SUBST(MOZ_UTILS_PROGRAM_LDFLAGS)
+AC_SUBST(MOZ_GLUE_LDFLAGS)
+AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
 
 dnl ========================================================
 dnl = Use malloc wrapper lib
@@ -5325,12 +5303,6 @@ if test "$ENABLE_TESTS"; then
   MAKEFILES="$MAKEFILES
     jsapi-tests/Makefile
     tests/Makefile
-  "
-fi
-
-if test "$DEHYDRA_PATH"; then
-  MAKEFILES="$MAKEFILES
-    analysis-tests/Makefile
   "
 fi
 

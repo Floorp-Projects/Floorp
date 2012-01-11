@@ -96,7 +96,7 @@ toolbarbutton[disabled="true"] {
   text-shadow: none;
 }
 
-@media all and (-moz-windows-classic) {
+@media (-moz-windows-classic) {
   toolbarbutton[disabled="true"] {
     color: ThreeDShadow;
     text-shadow: 1px 1px ThreeDHighlight;
@@ -113,7 +113,7 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
   color: ButtonText;
 }
 
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   toolbarbutton:-moz-lwtheme {
     text-shadow: none;
   }

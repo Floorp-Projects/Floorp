@@ -908,11 +908,11 @@ let PlacesDBUtils = {
         }
       },
 
-      PLACES_DATABASE_PAGESIZE_B: "PRAGMA page_size",
+      PLACES_DATABASE_PAGESIZE_B: "PRAGMA page_size /* PlacesDBUtils.jsm PAGESIZE_B */",
 
       PLACES_DATABASE_SIZE_PER_PAGE_B: function() {
         // Cannot use the filesize here, due to chunked growth.
-        let stmt = DBConn.createStatement("PRAGMA page_size");
+        let stmt = DBConn.createStatement("PRAGMA page_size /* PlacesDBUtils.jsm SIZE_PER_PAGE_B */");
         stmt.executeStep();
         let pageSize = stmt.row.page_size;
         stmt.finalize();

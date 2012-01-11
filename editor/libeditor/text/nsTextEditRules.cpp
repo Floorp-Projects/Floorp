@@ -944,17 +944,13 @@ nsTextEditRules::DidUndo(nsISelection *aSelection, nsresult aResult)
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   if (NS_SUCCEEDED(res)) 
   {
-    if (mBogusNode) {
-      mBogusNode = nsnull;
-    }
+    nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
+    NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMNode> node = mEditor->GetLeftmostChild(theRoot);
+    if (node && mEditor->IsMozEditorBogusNode(node))
+      mBogusNode = node;
     else
-    {
-      nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
-      NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
-      nsCOMPtr<nsIDOMNode> node = mEditor->GetLeftmostChild(theRoot);
-      if (node && mEditor->IsMozEditorBogusNode(node))
-        mBogusNode = node;
-    }
+      mBogusNode = nsnull;
   }
   return res;
 }
@@ -977,30 +973,31 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   if (NS_SUCCEEDED(res)) 
   {
-    if (mBogusNode) {
-      mBogusNode = nsnull;
-    }
-    else
+    nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
+    NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
+    
+    nsCOMPtr<nsIDOMNodeList> nodeList;
+    res = theRoot->GetElementsByTagName(NS_LITERAL_STRING("br"),
+                                        getter_AddRefs(nodeList));
+    NS_ENSURE_SUCCESS(res, res);
+    if (nodeList)
     {
-      nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
-      NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
+      PRUint32 len;
+      nodeList->GetLength(&len);
       
-      nsCOMPtr<nsIDOMNodeList> nodeList;
-      res = theRoot->GetElementsByTagName(NS_LITERAL_STRING("br"),
-                                          getter_AddRefs(nodeList));
-      NS_ENSURE_SUCCESS(res, res);
-      if (nodeList)
-      {
-        PRUint32 len;
-        nodeList->GetLength(&len);
-        
-        if (len != 1) return NS_OK;  // only in the case of one br could there be the bogus node
-        nsCOMPtr<nsIDOMNode> node;
-        nodeList->Item(0, getter_AddRefs(node));
-        NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-        if (mEditor->IsMozEditorBogusNode(node))
-          mBogusNode = node;
+      if (len != 1) {
+        // only in the case of one br could there be the bogus node
+        mBogusNode = nsnull;
+        return NS_OK;  
       }
+
+      nsCOMPtr<nsIDOMNode> node;
+      nodeList->Item(0, getter_AddRefs(node));
+      NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+      if (mEditor->IsMozEditorBogusNode(node))
+        mBogusNode = node;
+      else
+        mBogusNode = nsnull;
     }
   }
   return res;

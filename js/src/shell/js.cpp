@@ -1234,7 +1234,6 @@ static const struct ParamPair {
 } paramMap[] = {
     {"maxBytes",            JSGC_MAX_BYTES },
     {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
-    {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN},
     {"gcBytes",             JSGC_BYTES},
     {"gcNumber",            JSGC_NUMBER},
 };
@@ -1255,7 +1254,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
 
     JSFlatString *flatStr = JS_FlattenString(cx, str);
     if (!flatStr)
-        return JS_FALSE;
+        return false;
 
     size_t paramIndex = 0;
     for (;; paramIndex++) {
@@ -1264,7 +1263,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
                            "the first argument argument must be maxBytes, "
                            "maxMallocBytes, gcStackpoolLifespan, gcBytes or "
                            "gcNumber");
-            return JS_FALSE;
+            return false;
         }
         if (JS_FlatStringEqualsAscii(flatStr, paramMap[paramIndex].name))
             break;
@@ -1280,7 +1279,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         param == JSGC_BYTES) {
         JS_ReportError(cx, "Attempt to change read-only parameter %s",
                        paramMap[paramIndex].name);
-        return JS_FALSE;
+        return false;
     }
 
     uint32_t value;
@@ -1288,11 +1287,23 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportError(cx,
                        "the second argument must be convertable to uint32_t "
                        "with non-zero value");
-        return JS_FALSE;
+        return false;
     }
+
+    if (param == JSGC_MAX_BYTES) {
+        uint32_t gcBytes = JS_GetGCParameter(cx->runtime, JSGC_BYTES);
+        if (value < gcBytes) {
+            JS_ReportError(cx,
+                           "attempt to set maxBytes to the value less than the current "
+                           "gcBytes (%u)",
+                           gcBytes);
+            return false;
+        }
+    }
+
     JS_SetGCParameter(cx->runtime, param, value);
     *vp = JSVAL_VOID;
-    return JS_TRUE;
+    return true;
 }
 
 static JSBool
@@ -1816,12 +1827,8 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
     pc = script->code + offset;
     op = JSOp(*pc);
     switch (op) {
-      case JSOP_TABLESWITCHX:
-        jmplen = JUMPX_OFFSET_LEN;
-        goto jump_table;
       case JSOP_TABLESWITCH:
         jmplen = JUMP_OFFSET_LEN;
-      jump_table:
         pc += jmplen;
         low = GET_JUMP_OFFSET(pc);
         pc += JUMP_OFFSET_LEN;
@@ -1830,12 +1837,8 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
         n = high - low + 1;
         break;
 
-      case JSOP_LOOKUPSWITCHX:
-        jmplen = JUMPX_OFFSET_LEN;
-        goto lookup_table;
       case JSOP_LOOKUPSWITCH:
         jmplen = JUMP_OFFSET_LEN;
-      lookup_table:
         pc += jmplen;
         n = GET_INDEX(pc);
         pc += INDEX_LEN;
@@ -1874,7 +1877,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
                 name = "case";
             } else {
                 JSOp op = JSOp(script->code[offset]);
-                JS_ASSERT(op == JSOP_LABEL || op == JSOP_LABELX);
+                JS_ASSERT(op == JSOP_LABEL);
             }
         }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", uintN(sn - notes), lineno, offset, delta, name);
@@ -1933,7 +1936,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
           }
           case SRC_SWITCH: {
             JSOp op = JSOp(script->code[offset]);
-            if (op == JSOP_GOTO || op == JSOP_GOTOX)
+            if (op == JSOP_GOTO)
                 break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
             uintN caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
@@ -2014,31 +2017,31 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
     if (fun && (fun->flags & ~7U)) {
         uint16_t flags = fun->flags;
         Sprint(sp, "flags:");
-        
+
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) Sprint(sp, " " #flag);
-        
+
         SHOW_FLAG(LAMBDA);
         SHOW_FLAG(HEAVYWEIGHT);
         SHOW_FLAG(EXPR_CLOSURE);
-        
+
 #undef SHOW_FLAG
-        
+
         if (fun->isNullClosure())
             Sprint(sp, " NULL_CLOSURE");
         else if (fun->isFlatClosure())
             Sprint(sp, " FLAT_CLOSURE");
-        
+
         JSScript *script = fun->script();
         if (script->bindings.hasUpvars()) {
             Sprint(sp, "\nupvars: {\n");
-            
+
             Vector<JSAtom *> localNames(cx);
             if (!script->bindings.getLocalNameArray(cx, &localNames))
                 return false;
-            
+
             JSUpvarArray *uva = script->upvars();
             uintN upvar_base = script->bindings.countArgsAndVars();
-            
+
             for (uint32_t i = 0, n = uva->length; i < n; i++) {
                 JSAtom *atom = localNames[upvar_base + i];
                 UpvarCookie cookie = uva->vector[i];
@@ -2048,7 +2051,7 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
                            printable.ptr(), cookie.level(), cookie.slot());
                 }
             }
-            
+
             Sprint(sp, "}");
         }
         Sprint(sp, "\n");
@@ -2191,7 +2194,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
     DisassembleOptionParser p(argc, JS_ARGV(cx, vp));
     if (!p.parse(cx))
         return false;
-    
+
     if (!p.argc) {
         JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
@@ -2223,7 +2226,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
         fprintf(stdout, "%s\n", sprinter.base);
     if (!ok)
         return false;
-    
+
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
@@ -5034,7 +5037,7 @@ BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     if (!scriptArgs)
         return false;
 
-    /* 
+    /*
      * Script arguments are bound as a normal |arguments| property on the
      * global object. It has no special significance, like |arguments| in
      * function scope does -- this identifier is used de-facto across shell
@@ -5063,6 +5066,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
 
     if (op->getBoolOption('a'))
         JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);
+
+    if (op->getBoolOption('c'))
+        compileOnly = true;
 
     if (op->getBoolOption('m')) {
         enableMethodJit = true;
@@ -5220,7 +5226,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
 
     if (enableDisassemblyDumps)
         JS_DumpCompartmentPCCounts(cx);
- 
+
     return result;
 }
 
@@ -5243,8 +5249,6 @@ ShellPrincipalsSubsume(JSPrincipals *, JSPrincipals *)
 
 JSPrincipals shellTrustedPrincipals = {
     (char *)"[shell trusted principals]",
-    NULL,
-    NULL,
     1,
     NULL, /* nobody should be destroying this */
     ShellPrincipalsSubsume
@@ -5331,6 +5335,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
         || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
         || !op.addBoolOption('n', "typeinfer", "Enable type inference")
+        || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
         || !op.addBoolOption('a', "always-mjit",
                              "Do not try to run in the interpreter before method jitting.")
@@ -5374,7 +5379,7 @@ main(int argc, char **argv, char **envp)
         return EXIT_SUCCESS;
 
 #ifdef DEBUG
-    /* 
+    /*
      * Process OOM options as early as possible so that we can observe as many
      * allocations as possible.
      */

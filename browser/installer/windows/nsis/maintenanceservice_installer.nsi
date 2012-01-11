@@ -208,8 +208,9 @@ Section "MaintenanceService"
   WriteRegStr HKLM "${MaintUninstallKey}" "Publisher" "Mozilla"
   WriteRegStr HKLM "${MaintUninstallKey}" "Comments" \
                    "${BrandFullName} ${AppVersion} (${ARCH} ${AB_CD})"
+  WriteRegDWORD HKLM "${MaintUninstallKey}" "NoModify" 1
   ${GetSize} "$INSTDIR" "/S=0K" $R2 $R3 $R4
-  WriteRegDWORD HKLM "${MaintUninstallKey}" "EstimatedSize" $R2 
+  WriteRegDWORD HKLM "${MaintUninstallKey}" "EstimatedSize" $R2
 
   ; Write out that a maintenance service was attempted.
   ; We do this because on upgrades we will check this value and we only

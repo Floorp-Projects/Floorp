@@ -4990,14 +4990,12 @@ xml_setSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *att
 static JSBool
 xml_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
-    JSXML *xml;
-    jsval idval;
     uint32_t index;
     JSObject *nameqn;
     jsid funid;
 
-    idval = IdToJsval(id);
-    xml = (JSXML *) obj->getPrivate();
+    Value idval = IdToValue(id);
+    JSXML *xml = (JSXML *) obj->getPrivate();
     if (js_IdIsIndex(id, &index)) {
         if (xml->xml_class != JSXML_CLASS_LIST) {
             /* See NOTE in spec: this variation is reserved for future use. */
@@ -5012,7 +5010,7 @@ xml_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
         if (!nameqn)
             return false;
         if (!JSID_IS_VOID(funid))
-            return js_DeleteProperty(cx, obj, funid, rval, false);
+            return js_DeleteGeneric(cx, obj, funid, rval, false);
 
         DeleteNamedProperty(cx, xml, nameqn,
                             nameqn->getClass() == &AttributeNameClass);
@@ -5025,7 +5023,7 @@ xml_deleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
      * property's getter or setter. But now it's time to remove any such
      * property, to purge the property cache and remove the scope entry.
      */
-    if (!obj->nativeEmpty() && !js_DeleteProperty(cx, obj, id, rval, false))
+    if (!obj->nativeEmpty() && !js_DeleteGeneric(cx, obj, id, rval, false))
         return false;
 
     rval->setBoolean(true);
@@ -5398,7 +5396,6 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
         xml_setPropertyAttributes,
         xml_setElementAttributes,
         xml_setSpecialAttributes,
-        xml_deleteGeneric,
         xml_deleteProperty,
         xml_deleteElement,
         xml_deleteSpecial,

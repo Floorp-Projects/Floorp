@@ -331,7 +331,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
      * that has a setter for this id.
      */
     AutoValueRooter tvr(cx);
-    return js_DeleteProperty(cx, &argsobj, id, tvr.addr(), false) &&
+    return js_DeleteGeneric(cx, &argsobj, id, tvr.addr(), false) &&
            js_DefineProperty(cx, &argsobj, id, vp, NULL, NULL, JSPROP_ENUMERATE);
 }
 
@@ -446,7 +446,7 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
      * collect its value.
      */
     AutoValueRooter tvr(cx);
-    return js_DeleteProperty(cx, &argsobj, id, tvr.addr(), strict) &&
+    return js_DeleteGeneric(cx, &argsobj, id, tvr.addr(), strict) &&
            js_SetPropertyHelper(cx, &argsobj, id, 0, vp, strict);
 }
 
@@ -1036,7 +1036,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
          * barrier, so we must clone fun and store it in fp's callee to
          * avoid re-cloning upon repeated foo.caller access.
          *
-         * This must mean the code in js_DeleteProperty could not find this
+         * This must mean the code in js_DeleteGeneric could not find this
          * stack frame on the stack when the method was deleted. We've lost
          * track of the method, so we associate it with the first barriered
          * object found starting from thisp on the prototype chain.

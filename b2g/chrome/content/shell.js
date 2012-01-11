@@ -1,3 +1,5 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- /
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,8 +62,8 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
 
 // In order to use http:// scheme instead of file:// scheme
 // (that is much more restricted) the following code kick-off
-// a local http server listening on http://127.0.0.1:8888 and
-// http://localhost:8888.
+// a local http server listening on http://127.0.0.1:7777 and
+// http://localhost:7777.
 function startupHttpd(baseDir, port) {
   const httpdURL = 'chrome://browser/content/httpd.js';
   let httpd = {};
@@ -91,6 +93,9 @@ function addPermissions(urls) {
 
 
 var shell = {
+  // FIXME/bug 678695: this should be a system setting
+  preferredScreenBrightness: 1.0,
+
   get home() {
     delete this.home;
     return this.home = document.getElementById('homescreen');
@@ -139,7 +144,7 @@ var shell = {
         baseDir.pop();
         baseDir = baseDir.join('/');
 
-        const SERVER_PORT = 8888;
+        const SERVER_PORT = 6666;
         startupHttpd(baseDir, SERVER_PORT);
 
         let baseHost = 'http://localhost';
@@ -195,7 +200,7 @@ var shell = {
             this.sendEvent(this.home.contentWindow, 'home');
             break;
           case evt.DOM_VK_SLEEP:
-            screen.mozEnabled = !screen.mozEnabled;
+            this.toggleScreen();
             break;
           case evt.DOM_VK_ESCAPE:
             if (evt.defaultPrevented)
@@ -206,6 +211,7 @@ var shell = {
         break;
       case 'load':
         this.home.removeEventListener('load', this, true);
+        this.turnScreenOn();
         this.sendEvent(window, 'ContentStart');
         break;
       case 'MozApplicationManifest':
@@ -248,7 +254,21 @@ var shell = {
     let event = content.document.createEvent('CustomEvent');
     event.initCustomEvent(type, true, true, details ? details : {});
     content.dispatchEvent(event);
-  }
+  },
+  toggleScreen: function shell_toggleScreen() {
+    if (screen.mozEnabled)
+      this.turnScreenOff();
+    else
+      this.turnScreenOn();
+  },
+  turnScreenOff: function shell_turnScreenOff() {
+    screen.mozEnabled = false;
+    screen.mozBrightness = 0.0;
+  },
+  turnScreenOn: function shell_turnScreenOn() {
+    screen.mozEnabled = true;
+    screen.mozBrightness = this.preferredScreenBrightness;
+  },
 };
 
 (function VirtualKeyboardManager() {

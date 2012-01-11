@@ -233,7 +233,8 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
   }
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsCAutoString query("PRAGMA journal_mode = ");
+  nsCAutoString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+		      "PRAGMA journal_mode = ");
   query.Append(journalMode);
   aDBConn->CreateStatement(query, getter_AddRefs(statement));
   NS_ENSURE_TRUE(statement, JOURNAL_DELETE);
@@ -551,7 +552,7 @@ Database::InitSchema(bool* aDatabaseMigrated)
     // database file already existed with a different page size.
     nsCOMPtr<mozIStorageStatement> statement;
     nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-      "PRAGMA page_size"
+      MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size"
     ), getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
     bool hasResult = false;
@@ -563,7 +564,7 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
   // Ensure that temp tables are held in memory, not on disk.
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "PRAGMA temp_store = MEMORY"));
+      MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the current database size. Due to chunked growth we have to use
@@ -593,7 +594,8 @@ Database::InitSchema(bool* aDatabaseMigrated)
   // Set the number of cached pages.
   // We don't use PRAGMA default_cache_size, since the database could be moved
   // among different devices and the value would adapt accordingly.
-  nsCAutoString cacheSizePragma("PRAGMA cache_size = ");
+  nsCAutoString cacheSizePragma(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+				"PRAGMA cache_size = ");
   cacheSizePragma.AppendInt(cacheSize / mDBPageSize);
   rv = mMainConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);

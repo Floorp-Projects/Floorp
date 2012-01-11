@@ -810,7 +810,7 @@ nsContentEventHandler::OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent)
     NS_PRECONDITION(aEvent->widget, "The event must have the widget");
     nsIView* view = nsIView::GetViewFor(aEvent->widget);
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
-    rootFrame = nsLayoutUtils::GetFrameFor(view);
+    rootFrame = view->GetFrame();
     NS_ENSURE_TRUE(rootFrame, NS_ERROR_FAILURE);
     rootWidget = rootFrame->GetNearestWidget();
     NS_ENSURE_TRUE(rootWidget, NS_ERROR_FAILURE);

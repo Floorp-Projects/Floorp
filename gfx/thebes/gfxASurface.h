@@ -57,8 +57,23 @@ struct nsIntRect;
  */
 class THEBES_API gfxASurface {
 public:
+#ifdef MOZILLA_INTERNAL_API
     nsrefcnt AddRef(void);
     nsrefcnt Release(void);
+
+    // These functions exist so that browsercomps can refcount a gfxASurface
+    virtual nsresult AddRefExternal(void)
+    {
+      return AddRef();
+    }
+    virtual nsresult ReleaseExternal(void)
+    {
+      return Release();
+    }
+#else
+    virtual nsresult AddRef(void);
+    virtual nsresult Release(void);
+#endif
 
 public:
     /**

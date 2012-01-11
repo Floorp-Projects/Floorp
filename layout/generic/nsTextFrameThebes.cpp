@@ -112,7 +112,6 @@
 
 #include "gfxFont.h"
 #include "gfxContext.h"
-#include "gfxTextRunWordCache.h"
 #include "gfxImageSurface.h"
 
 #include "mozilla/dom/Element.h"
@@ -539,9 +538,6 @@ public:
     if (aTextRun->GetExpirationState()->IsTracked()) {
       RemoveObject(aTextRun);
     }
-    if (aTextRun->GetFlags() & gfxTextRunWordCache::TEXT_IN_CACHE) {
-      gfxTextRunWordCache::RemoveTextRun(aTextRun);
-    }
   }
 
   // This gets called when the timeout has expired on a gfxTextRun
@@ -552,49 +548,19 @@ public:
   }
 };
 
-static gfxTextRun *
-MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
+// Helper to create a textrun and remember it in the textframe cache,
+// for either 8-bit or 16-bit text strings
+template<typename T>
+gfxTextRun *
+MakeTextRun(const T *aText, PRUint32 aLength,
             gfxFontGroup *aFontGroup, const gfxFontGroup::Parameters* aParams,
             PRUint32 aFlags)
 {
-    nsAutoPtr<gfxTextRun> textRun;
-    if (aLength == 0) {
-        textRun = aFontGroup->MakeEmptyTextRun(aParams, aFlags);
-    } else if (aLength == 1 && aText[0] == ' ') {
-        textRun = aFontGroup->MakeSpaceTextRun(aParams, aFlags);
-    } else {
-        textRun = gfxTextRunWordCache::MakeTextRun(aText, aLength, aFontGroup,
-            aParams, aFlags);
-    }
-    if (!textRun)
-        return nsnull;
-    nsresult rv = gTextRuns->AddObject(textRun);
-    if (NS_FAILED(rv)) {
-        gTextRuns->RemoveFromCache(textRun);
+    nsAutoPtr<gfxTextRun> textRun(aFontGroup->MakeTextRun(aText, aLength,
+                                                          aParams, aFlags));
+    if (!textRun) {
         return nsnull;
     }
-#ifdef NOISY_BIDI
-    printf("Created textrun\n");
-#endif
-    return textRun.forget();
-}
-
-static gfxTextRun *
-MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
-            gfxFontGroup *aFontGroup, const gfxFontGroup::Parameters* aParams,
-            PRUint32 aFlags)
-{
-    nsAutoPtr<gfxTextRun> textRun;
-    if (aLength == 0) {
-        textRun = aFontGroup->MakeEmptyTextRun(aParams, aFlags);
-    } else if (aLength == 1 && aText[0] == ' ') {
-        textRun = aFontGroup->MakeSpaceTextRun(aParams, aFlags);
-    } else {
-        textRun = gfxTextRunWordCache::MakeTextRun(aText, aLength, aFontGroup,
-            aParams, aFlags);
-    }
-    if (!textRun)
-        return nsnull;
     nsresult rv = gTextRuns->AddObject(textRun);
     if (NS_FAILED(rv)) {
         gTextRuns->RemoveFromCache(textRun);
@@ -873,10 +839,17 @@ public:
    * state for following textruns.
    */
   gfxTextRun* BuildTextRunForFrames(void* aTextBuffer);
+  bool SetupLineBreakerContext(gfxTextRun *aTextRun);
   void AssignTextRun(gfxTextRun* aTextRun);
   nsTextFrame* GetNextBreakBeforeFrame(PRUint32* aIndex);
-  void SetupBreakSinksForTextRun(gfxTextRun* aTextRun, bool aIsExistingTextRun,
-                                 bool aSuppressSink);
+  enum SetupBreakSinksFlags {
+    SBS_DOUBLE_BYTE =      (1 << 0),
+    SBS_EXISTING_TEXTRUN = (1 << 1),
+    SBS_SUPPRESS_SINK    = (1 << 2)
+  };
+  void SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
+                                 const void* aTextPtr,
+                                 PRUint32    aFlags);
   struct FindBoundaryState {
     nsIFrame*    mStopAtFrame;
     nsTextFrame* mFirstTextFrame;
@@ -943,7 +916,7 @@ public:
 
     void Finish() {
       NS_ASSERTION(!(mTextRun->GetFlags() &
-                     (gfxTextRunWordCache::TEXT_UNUSED_FLAGS |
+                     (gfxTextRunFactory::TEXT_UNUSED_FLAGS |
                       nsTextFrameUtils::TEXT_UNUSED_FLAG)),
                    "Flag set that should never be set! (memory safety error?)");
       if (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_TRANSFORMED) {
@@ -1390,20 +1363,23 @@ void BuildTextRunsScanner::FlushFrames(bool aFlushLineBreaks, bool aSuppressTrai
     if (!mSkipIncompleteTextRuns && mCurrentFramesAllSameTextRun &&
         ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_WHITESPACE) != 0) ==
         ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) != 0) &&
-        ((mCurrentFramesAllSameTextRun->GetFlags() & gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR) != 0) ==
+        ((mCurrentFramesAllSameTextRun->GetFlags() & gfxTextRunFactory::TEXT_INCOMING_ARABICCHAR) != 0) ==
         ((mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) != 0) &&
         IsTextRunValidForMappedFlows(mCurrentFramesAllSameTextRun)) {
       // Optimization: We do not need to (re)build the textrun.
       textRun = mCurrentFramesAllSameTextRun;
 
-      // Feed this run's text into the linebreaker to provide context. This also
-      // updates mNextRunContextInfo appropriately.
-      SetupBreakSinksForTextRun(textRun, true, false);
+      // Feed this run's text into the linebreaker to provide context.
+      if (!SetupLineBreakerContext(textRun)) {
+        return;
+      }
+ 
+      // Update mNextRunContextInfo appropriately
       mNextRunContextInfo = nsTextFrameUtils::INCOMING_NONE;
       if (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_WHITESPACE) {
         mNextRunContextInfo |= nsTextFrameUtils::INCOMING_WHITESPACE;
       }
-      if (textRun->GetFlags() & gfxTextRunWordCache::TEXT_TRAILING_ARABICCHAR) {
+      if (textRun->GetFlags() & gfxTextRunFactory::TEXT_TRAILING_ARABICCHAR) {
         mNextRunContextInfo |= nsTextFrameUtils::INCOMING_ARABICCHAR;
       }
     } else {
@@ -1689,8 +1665,7 @@ GetReferenceRenderingContext(nsTextFrame* aTextFrame, nsRenderingContext* aRC)
 }
 
 /**
- * The returned textrun must be released via gfxTextRunCache::ReleaseTextRun
- * or gfxTextRunCache::AutoTextRun.
+ * The returned textrun must be deleted when no longer needed.
  */
 static gfxTextRun*
 GetHyphenTextRun(gfxTextRun* aTextRun, gfxContext* aContext, nsTextFrame* aTextFrame)
@@ -1711,14 +1686,13 @@ GetHyphenTextRun(gfxTextRun* aTextRun, gfxContext* aContext, nsTextFrame* aTextF
   static const PRUnichar unicodeHyphen = 0x2010;
   gfxFont *font = fontGroup->GetFontAt(0);
   if (font && font->HasCharacter(unicodeHyphen)) {
-    return gfxTextRunCache::MakeTextRun(&unicodeHyphen, 1, fontGroup, ctx,
-                                        aTextRun->GetAppUnitsPerDevUnit(), flags);
+    return fontGroup->MakeTextRun(&unicodeHyphen, 1, ctx,
+                                  aTextRun->GetAppUnitsPerDevUnit(), flags);
   }
 
   static const PRUint8 dash = '-';
-  return gfxTextRunCache::MakeTextRun(&dash, 1, fontGroup, ctx,
-                                      aTextRun->GetAppUnitsPerDevUnit(),
-                                      flags);
+  return fontGroup->MakeTextRun(&dash, 1, ctx,
+                                aTextRun->GetAppUnitsPerDevUnit(), flags);
 }
 
 static gfxFont::Metrics
@@ -1761,7 +1735,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= nsTextFrameUtils::TEXT_INCOMING_WHITESPACE;
   }
   if (mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) {
-    textFlags |= gfxTextRunWordCache::TEXT_INCOMING_ARABICCHAR;
+    textFlags |= gfxTextRunFactory::TEXT_INCOMING_ARABICCHAR;
   }
 
   nsAutoTArray<PRInt32,50> textBreakPoints;
@@ -1913,7 +1887,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= nsTextFrameUtils::TEXT_TRAILING_WHITESPACE;
   }
   if (mNextRunContextInfo & nsTextFrameUtils::INCOMING_ARABICCHAR) {
-    textFlags |= gfxTextRunWordCache::TEXT_TRAILING_ARABICCHAR;
+    textFlags |= gfxTextRunFactory::TEXT_TRAILING_ARABICCHAR;
   }
   // ContinueTextRunAcrossFrames guarantees that it doesn't matter which
   // frame's style is used, so use the last frame's
@@ -2014,7 +1988,14 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // the breaks may be stored in the textrun during this very call.
   // This is a bit annoying because it requires another loop over the frames
   // making up the textrun, but I don't see a way to avoid this.
-  SetupBreakSinksForTextRun(textRun, false, mSkipIncompleteTextRuns);
+  PRUint32 flags = 0;
+  if (mDoubleByteText) {
+    flags |= SBS_DOUBLE_BYTE;
+  }
+  if (mSkipIncompleteTextRuns) {
+    flags |= SBS_SUPPRESS_SINK;
+  }
+  SetupBreakSinksForTextRun(textRun, textPtr, flags);
 
   if (mSkipIncompleteTextRuns) {
     mSkipIncompleteTextRuns = !TextContainsLineBreakerWhiteSpace(textPtr,
@@ -2036,6 +2017,130 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // those frames with this text run.
   AssignTextRun(textRun);
   return textRun;
+}
+
+// This is a cut-down version of BuildTextRunForFrames used to set up
+// context for the line-breaker, when the textrun has already been created.
+// So it does the same walk over the mMappedFlows, but doesn't actually
+// build a new textrun.
+bool
+BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
+{
+  AutoFallibleTArray<PRUint8,BIG_TEXT_NODE_SIZE> buffer;
+  PRUint32 bufferSize = mMaxTextLength*(mDoubleByteText ? 2 : 1);
+  if (bufferSize < mMaxTextLength || bufferSize == PR_UINT32_MAX ||
+      !buffer.AppendElements(bufferSize)) {
+    return false;
+  }
+  void *textPtr = buffer.Elements();
+
+  gfxSkipCharsBuilder builder;
+
+  nsAutoTArray<PRInt32,50> textBreakPoints;
+  TextRunUserData dummyData;
+  TextRunMappedFlow dummyMappedFlow;
+
+  TextRunUserData* userData;
+  TextRunUserData* userDataToDestroy;
+  // If the situation is particularly simple (and common) we don't need to
+  // allocate userData.
+  if (mMappedFlows.Length() == 1 && !mMappedFlows[0].mEndFrame &&
+      mMappedFlows[0].mStartFrame->GetContentOffset() == 0) {
+    userData = &dummyData;
+    userDataToDestroy = nsnull;
+    dummyData.mMappedFlows = &dummyMappedFlow;
+  } else {
+    userData = static_cast<TextRunUserData*>
+      (nsMemory::Alloc(sizeof(TextRunUserData) + mMappedFlows.Length()*sizeof(TextRunMappedFlow)));
+    userDataToDestroy = userData;
+    userData->mMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
+  }
+  userData->mMappedFlowCount = mMappedFlows.Length();
+  userData->mLastFlowIndex = 0;
+
+  PRUint32 nextBreakIndex = 0;
+  nsTextFrame* nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
+
+  PRUint32 i;
+  const nsStyleText* textStyle = nsnull;
+  nsStyleContext* lastStyleContext = nsnull;
+  for (i = 0; i < mMappedFlows.Length(); ++i) {
+    MappedFlow* mappedFlow = &mMappedFlows[i];
+    nsTextFrame* f = mappedFlow->mStartFrame;
+
+    lastStyleContext = f->GetStyleContext();
+    textStyle = f->GetStyleText();
+    nsTextFrameUtils::CompressionMode compression =
+      CSSWhitespaceToCompressionMode[textStyle->mWhiteSpace];
+
+    // Figure out what content is included in this flow.
+    nsIContent* content = f->GetContent();
+    const nsTextFragment* frag = content->GetText();
+    PRInt32 contentStart = mappedFlow->mStartFrame->GetContentOffset();
+    PRInt32 contentEnd = mappedFlow->GetContentEnd();
+    PRInt32 contentLength = contentEnd - contentStart;
+
+    TextRunMappedFlow* newFlow = &userData->mMappedFlows[i];
+    newFlow->mStartFrame = mappedFlow->mStartFrame;
+    newFlow->mDOMOffsetToBeforeTransformOffset = builder.GetCharCount() -
+      mappedFlow->mStartFrame->GetContentOffset();
+    newFlow->mContentLength = contentLength;
+
+    while (nextBreakBeforeFrame && nextBreakBeforeFrame->GetContent() == content) {
+      textBreakPoints.AppendElement(
+          nextBreakBeforeFrame->GetContentOffset() + newFlow->mDOMOffsetToBeforeTransformOffset);
+      nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
+    }
+
+    PRUint32 analysisFlags;
+    if (frag->Is2b()) {
+      NS_ASSERTION(mDoubleByteText, "Wrong buffer char size!");
+      PRUnichar* bufStart = static_cast<PRUnichar*>(textPtr);
+      PRUnichar* bufEnd = nsTextFrameUtils::TransformText(
+          frag->Get2b() + contentStart, contentLength, bufStart,
+          compression, &mNextRunContextInfo, &builder, &analysisFlags);
+      textPtr = bufEnd;
+    } else {
+      if (mDoubleByteText) {
+        // Need to expand the text. First transform it into a temporary buffer,
+        // then expand.
+        AutoFallibleTArray<PRUint8,BIG_TEXT_NODE_SIZE> tempBuf;
+        if (!tempBuf.AppendElements(contentLength)) {
+          DestroyUserData(userDataToDestroy);
+          return false;
+        }
+        PRUint8* bufStart = tempBuf.Elements();
+        PRUint8* end = nsTextFrameUtils::TransformText(
+            reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
+            bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
+        textPtr = ExpandBuffer(static_cast<PRUnichar*>(textPtr),
+                               tempBuf.Elements(), end - tempBuf.Elements());
+      } else {
+        PRUint8* bufStart = static_cast<PRUint8*>(textPtr);
+        PRUint8* end = nsTextFrameUtils::TransformText(
+            reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
+            bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
+        textPtr = end;
+      }
+    }
+  }
+
+  // We have to set these up after we've created the textrun, because
+  // the breaks may be stored in the textrun during this very call.
+  // This is a bit annoying because it requires another loop over the frames
+  // making up the textrun, but I don't see a way to avoid this.
+  PRUint32 flags = 0;
+  if (mDoubleByteText) {
+    flags |= SBS_DOUBLE_BYTE;
+  }
+  if (mSkipIncompleteTextRuns) {
+    flags |= SBS_SUPPRESS_SINK;
+  }
+  SetupBreakSinksForTextRun(aTextRun, buffer.Elements(), flags);
+
+  DestroyUserData(userDataToDestroy);
+
+  return true;
 }
 
 static bool
@@ -2060,8 +2165,8 @@ HasCompressedLeadingWhitespace(nsTextFrame* aFrame, const nsStyleText* aStyleTex
 
 void
 BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
-                                                bool aIsExistingTextRun,
-                                                bool aSuppressSink)
+                                                const void* aTextPtr,
+                                                PRUint32    aFlags)
 {
   // textruns have uniform language
   nsIAtom* language = mMappedFlows[0].mStartFrame->GetStyleVisibility()->mLanguage;
@@ -2079,7 +2184,8 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
             mappedFlow->mStartFrame->GetContentOffset());
 
     nsAutoPtr<BreakSink>* breakSink = mBreakSinks.AppendElement(
-      new BreakSink(aTextRun, mContext, offset, aIsExistingTextRun));
+      new BreakSink(aTextRun, mContext, offset,
+                    (aFlags & SBS_EXISTING_TEXTRUN) != 0));
     if (!breakSink || !*breakSink)
       return;
 
@@ -2113,12 +2219,15 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     }
 
     if (length > 0) {
-      BreakSink* sink = aSuppressSink ? nsnull : (*breakSink).get();
-      if (aTextRun->GetFlags() & gfxFontGroup::TEXT_IS_8BIT) {
-        mLineBreaker.AppendText(language, aTextRun->GetText8Bit() + offset,
+      BreakSink* sink =
+        (aFlags & SBS_SUPPRESS_SINK) ? nsnull : (*breakSink).get();
+      if (aFlags & SBS_DOUBLE_BYTE) {
+        const PRUnichar* text = reinterpret_cast<const PRUnichar*>(aTextPtr);
+        mLineBreaker.AppendText(language, text + offset,
                                 length, flags, sink);
       } else {
-        mLineBreaker.AppendText(language, aTextRun->GetTextUnicode() + offset,
+        const PRUint8* text = reinterpret_cast<const PRUint8*>(aTextPtr);
+        mLineBreaker.AppendText(language, text + offset,
                                 length, flags, sink);
       }
     }
@@ -2829,7 +2938,7 @@ PropertyProvider::CalcTabWidths(PRUint32 aStart, PRUint32 aLength)
       // tab widths; check that they're available as far as the last
       // tab character present (if any)
       for (PRUint32 i = aStart + aLength; i > aStart; --i) {
-        if (mTextRun->GetChar(i - 1) == '\t') {
+        if (mTextRun->CharIsTab(i - 1)) {
           NS_ASSERTION(mTabWidths && mTabWidths->mLimit >= i,
                        "Precomputed tab widths are missing!");
           break;
@@ -2854,7 +2963,7 @@ PropertyProvider::CalcTabWidths(PRUint32 aStart, PRUint32 aLength)
       GetSpacingInternal(i, 1, &spacing, true);
       mOffsetFromBlockOriginForTabs += spacing.mBefore;
 
-      if (mTextRun->GetChar(i) != '\t') {
+      if (!mTextRun->CharIsTab(i)) {
         if (mTextRun->IsClusterStart(i)) {
           PRUint32 clusterEnd = i + 1;
           while (clusterEnd < mTextRun->GetLength() &&
@@ -2896,7 +3005,7 @@ gfxFloat
 PropertyProvider::GetHyphenWidth()
 {
   if (mHyphenWidth < 0) {
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, mFrame));
+    nsAutoPtr<gfxTextRun> hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, mFrame));
     mHyphenWidth = mLetterSpacing;
     if (hyphenTextRun.get()) {
       mHyphenWidth += hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
@@ -3038,7 +3147,7 @@ PropertyProvider::SetupJustificationSpacing()
     mTextRun->GetAdvanceWidth(mStart.GetSkippedOffset(),
                               GetSkippedDistance(mStart, realEnd), this);
   if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, mFrame));
+    nsAutoPtr<gfxTextRun> hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, mFrame));
     if (hyphenTextRun.get()) {
       naturalWidth +=
         hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
@@ -4136,8 +4245,7 @@ nsTextFrame::ClearTextRun(nsTextFrame* aStartContinuation,
 //    return;
 //  }
 
-  if (!(textRun->GetFlags() & gfxTextRunWordCache::TEXT_IN_CACHE) &&
-      !textRun->GetUserData()) {
+  if (!textRun->GetUserData()) {
     // Remove it now because it's not doing anything useful
     gTextRuns->RemoveFromCache(textRun);
     delete textRun;
@@ -4900,7 +5008,7 @@ AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
                    gfxContext* aContext)
 {
   // Fix up metrics to include hyphen
-  gfxTextRunCache::AutoTextRun hyphenTextRun(
+  nsAutoPtr<gfxTextRun> hyphenTextRun(
     GetHyphenTextRun(aBaseTextRun, aContext, aTextFrame));
   if (!hyphenTextRun.get())
     return;
@@ -5452,7 +5560,7 @@ nsTextFrame::DrawTextRun(gfxContext* const aCtx,
   if (aDrawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
+    nsAutoPtr<gfxTextRun> hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
     if (hyphenTextRun.get()) {
       // For right-to-left text runs, the soft-hyphen is positioned at the left
       // of the text, minus its own width
@@ -6054,12 +6162,9 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
     // (In the case where we are respecting clusters, we won't actually get
     // this far because the low surrogate is also marked as non-clusterStart
     // so we'll return FALSE above.)
-    // If the textrun is 8-bit it can't have any surrogates, so we only need
-    // to check the actual characters if GetTextUnicode() returns non-null.
-    const PRUnichar *txt = aTextRun->GetTextUnicode();
-    if (txt && NS_IS_LOW_SURROGATE(txt[index]) &&
-               NS_IS_HIGH_SURROGATE(txt[index-1]))
+    if (aTextRun->CharIsLowSurrogate(index)) {
       return false;
+    }
   }
   return true;
 }
@@ -6104,7 +6209,7 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, PRInt32* aOffset,
         !(startOffset < trimmed.GetEnd() &&
           GetStyleText()->NewlineIsSignificant() &&
           iter.GetSkippedOffset() < mTextRun->GetLength() &&
-          mTextRun->GetChar(iter.GetSkippedOffset()) == '\n')) {
+          mTextRun->CharIsNewline(iter.GetSkippedOffset()))) {
       for (PRInt32 i = startOffset + 1; i <= trimmed.GetEnd(); ++i) {
         iter.SetOriginalOffset(i);
         if (i == trimmed.GetEnd() ||
@@ -6520,8 +6625,8 @@ nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
       // XXXldb Shouldn't we be including the newline as part of the
       // segment that it ends rather than part of the segment that it
       // starts?
-      preformattedNewline = preformatNewlines && textRun->GetChar(i) == '\n';
-      preformattedTab = preformatTabs && textRun->GetChar(i) == '\t';
+      preformattedNewline = preformatNewlines && textRun->CharIsNewline(i);
+      preformattedTab = preformatTabs && textRun->CharIsTab(i);
       if (!textRun->CanBreakLineBefore(i) &&
           !preformattedNewline &&
           !preformattedTab &&
@@ -6663,8 +6768,8 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsRenderingContext *aRenderingContext,
       // segment that it ends rather than part of the segment that it
       // starts?
       NS_ASSERTION(preformatNewlines, "We can't be here unless newlines are hard breaks");
-      preformattedNewline = preformatNewlines && textRun->GetChar(i) == '\n';
-      preformattedTab = preformatTabs && textRun->GetChar(i) == '\t';
+      preformattedNewline = preformatNewlines && textRun->CharIsNewline(i);
+      preformattedTab = preformatTabs && textRun->CharIsTab(i);
       if (!preformattedNewline && !preformattedTab) {
         // we needn't break here (and it's not the end of the flow)
         continue;

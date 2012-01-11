@@ -86,7 +86,6 @@
 
           this.target = evt.target;
           this.timestamp = evt.timeStamp;
-          evt.target.setCapture(false);
 
           preventMouseEvents = false;
           canPreventMouseEvents = true;
@@ -126,7 +125,6 @@
           debug('mouseup:');
 
           window.clearTimeout(contextMenuTimeout);
-          eventTarget.ownerDocument.releaseCapture();
           this.target = null;
           type = 'touchend';
           break;
@@ -136,7 +134,6 @@
             return;
 
           window.clearTimeout(contextMenuTimeout);
-          eventTarget.ownerDocument.releaseCapture();
           this.target = null;
           TouchEventHandler.stop();
           return;
