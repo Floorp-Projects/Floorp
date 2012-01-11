@@ -809,7 +809,8 @@ LinearScanAllocator::resolveControlFlow()
                 LiveInterval *from = vregs[input].intervalFor(outputOf(predecessor->lastId()));
                 JS_ASSERT(from);
 
-                if (!moveBefore(outputOf(predecessor->lastId()), from, to))
+                LMoveGroup *moves = predecessor->getExitMoveGroup();
+                if (!addMove(moves, from, to))
                     return false;
             }
 
@@ -835,7 +836,8 @@ LinearScanAllocator::resolveControlFlow()
 
                 if (mSuccessor->numPredecessors() > 1) {
                     JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
-                    if (!moveBefore(outputOf(predecessor->lastId()), from, to))
+                    LMoveGroup *moves = predecessor->getExitMoveGroup();
+                    if (!addMove(moves, from, to))
                         return false;
                 } else {
                     if (!moveAfter(outputOf(successor->firstId()), from, to))
@@ -927,9 +929,13 @@ LinearScanAllocator::reifyAllocations()
             VirtualRegister *vreg = &vregs[start];
 
             if (start.subpos() == CodePosition::INPUT || start <= inputOf(vreg->ins())) {
+                // Instructions can have multiple VirtualRegister's, but we want to use the
+                // same movegroup.
+                start = inputOf(vreg->ins());
                 if (!moveBefore(start, reg->getInterval(interval->index() - 1), interval))
                     return false;
             } else {
+                start = outputOf(vreg->ins());
                 if (!moveAfter(start, reg->getInterval(interval->index() - 1), interval))
                     return false;
             }
@@ -1586,34 +1592,16 @@ LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
     JS_ASSERT(vreg->ins());
     JS_ASSERT(!vreg->ins()->isPhi());
     JS_ASSERT(!vreg->ins()->isLabel());;
+    JS_ASSERT(pos.subpos() == CodePosition::INPUT);
 
-    LMoveGroup *moves;
-    switch (pos.subpos()) {
-      case CodePosition::INPUT:
-        if (vreg->inputMoves())
-            return vreg->inputMoves();
+    if (vreg->movesBefore())
+        return vreg->movesBefore();
 
-        moves = new LMoveGroup;
-        vreg->setInputMoves(moves);
-        if (vreg->outputMoves())
-            vreg->block()->insertBefore(vreg->outputMoves(), moves);
-        else
-            vreg->block()->insertBefore(vreg->ins(), moves);
-        return moves;
+    LMoveGroup *moves = new LMoveGroup;
+    vreg->setMovesBefore(moves);
+    vreg->block()->insertBefore(vreg->ins(), moves);
 
-      case CodePosition::OUTPUT:
-        if (vreg->outputMoves())
-            return vreg->outputMoves();
-
-        moves = new LMoveGroup;
-        vreg->setOutputMoves(moves);
-        vreg->block()->insertBefore(vreg->ins(), moves);
-        return moves;
-
-      default:
-        JS_NOT_REACHED("Unknown subposition");
-        return NULL;
-    }
+    return moves;
 }
 
 LMoveGroup *
@@ -1622,12 +1610,13 @@ LinearScanAllocator::getMoveGroupAfter(CodePosition pos)
     VirtualRegister *vreg = &vregs[pos];
     JS_ASSERT(vreg->ins());
     JS_ASSERT(!vreg->ins()->isPhi());
+    JS_ASSERT(pos.subpos() == CodePosition::OUTPUT);
 
-    if (vreg->afterMoves())
-        return vreg->afterMoves();
+    if (vreg->movesAfter())
+        return vreg->movesAfter();
 
     LMoveGroup *moves = new LMoveGroup;
-    vreg->setAfterMoves(moves);
+    vreg->setMovesAfter(moves);
     vreg->block()->insertAfter(vreg->ins(), moves);
 
     return moves;
@@ -1651,7 +1640,6 @@ LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterv
 bool
 LinearScanAllocator::moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to)
 {
-    JS_ASSERT(pos.subpos() == CodePosition::OUTPUT);
     LMoveGroup *moves = getMoveGroupAfter(pos);
     return addMove(moves, from, to);
 }

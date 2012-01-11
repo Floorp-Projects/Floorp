@@ -122,6 +122,16 @@ LBlock::getEntryMoveGroup()
     return entryMoveGroup_;
 }
 
+LMoveGroup *
+LBlock::getExitMoveGroup()
+{
+    if (exitMoveGroup_)
+        return exitMoveGroup_;
+    exitMoveGroup_ = new LMoveGroup;
+    insertBefore(*rbegin(), exitMoveGroup_);
+    return exitMoveGroup_;
+}
+
 static size_t
 TotalOperandCount(MResumePoint *mir)
 {
