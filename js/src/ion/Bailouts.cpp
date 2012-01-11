@@ -161,31 +161,31 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
 
     IonSpew(IonSpew_Bailouts, "expr stack slots %u, is function frame %u",
             exprStackSlots, fp->isFunctionFrame());
+
+    // The scope chain value will be undefined if the function never
+    // accesses its scope chain (via a NAME opcode) or modifies the
+    // scope chain via BLOCK opcodes. In such cases keep the default
+    // environment-of-callee scope.
+    Value scopeChainv = iter.read();
+    if (scopeChainv.isObject())
+        fp->setScopeChainNoCallObj(scopeChainv.toObject());
+    else
+        JS_ASSERT(scopeChainv.isUndefined());
+
     if (fp->isFunctionFrame()) {
+        Value thisv = iter.read();
+        fp->formalArgs()[-1] = thisv;
+
         JS_ASSERT(iter.slots() >= CountArgSlots(fp->fun()));
         IonSpew(IonSpew_Bailouts, "frame slots %u, nargs %u, nfixed %u",
                 iter.slots(), fp->fun()->nargs, fp->script()->nfixed);
-
-        // The scope chain value will be undefined if the function never
-        // accesses its scope chain (via a NAME opcode) or modifies the
-        // scope chain via BLOCK opcodes. In such cases keep the default
-        // environment-of-callee scope.
-        Value scopeChainv = iter.read();
-        if (scopeChainv.isObject())
-            fp->setScopeChainNoCallObj(scopeChainv.toObject());
-        else
-            JS_ASSERT(scopeChainv.isUndefined());
-
-        Value thisv = iter.read();
-        fp->formalArgs()[-1] = thisv;
 
         for (uint32 i = 0; i < fp->fun()->nargs; i++) {
             Value arg = iter.read();
             fp->formalArgs()[i] = arg;
         }
-
-        exprStackSlots -= CountArgSlots(fp->fun());
     }
+    exprStackSlots -= CountArgSlots(fp->maybeFun());
 
     for (uint32 i = 0; i < fp->script()->nfixed; i++) {
         Value slot = iter.read();
@@ -259,11 +259,20 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
         return BAILOUT_RETURN_FATAL_ERROR;
     activation->setBailout(br);
 
-    // Non-function frames are not supported yet. We don't compile or enter
-    // global scripts so this assert should not fire yet.
-    JS_ASSERT(in.callee());
+    StackFrame *fp;
+    if (in.callee()) {
+        // This is a normal function frame.
+        fp = cx->stack.pushBailoutFrame(cx, *in.callee(), in.script(), br->frameGuard());
+    } else {
+        // The scope chain will be updated, if necessary, in RestoreOneFrame().
+        // The |this| value for global scripts is always an object, and is
+        // precomputed in the original frame, so it's safe to re-use that
+        // value (it is not included in snapshots or resume points).
+        JSObject *prevScopeChain = &cx->fp()->scopeChain();
+        Value thisv = cx->fp()->thisValue();
+        fp = cx->stack.pushBailoutFrame(cx, in.script(), *prevScopeChain, thisv, br->frameGuard());
+    }
 
-    StackFrame *fp = cx->stack.pushBailoutFrame(cx, *in.callee(), in.script(), br->frameGuard());
     if (!fp)
         return BAILOUT_RETURN_FATAL_ERROR;
 
