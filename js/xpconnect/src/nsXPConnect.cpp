@@ -69,6 +69,9 @@
 
 #include "nsWrapperCacheInlines.h"
 
+#include "jscntxt.h" // js::ThreadData, JS_TRACER_INIT, context->stackLimit, cx->outstandingRequests,
+// cx->globalObject, sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
+
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
                               nsISupportsWeakReference,
