@@ -46,7 +46,8 @@
 #include "mozilla/Mutex.h"
 
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
+#include "nsInterfaceHashtable.h"
+#include "nsHashKeys.h"
 
 #include "nsIConsoleService.h"
 
@@ -62,10 +63,6 @@ public:
 private:
     ~nsConsoleService();
 
-    // build (or find) a proxy for the listener
-    nsresult GetProxyForListener(nsIConsoleListener* aListener,
-                                 nsIConsoleListener** aProxy);
-
     // Circular buffer of saved messages
     nsIConsoleMessage **mMessages;
 
@@ -79,11 +76,7 @@ private:
     bool mFull;
 
     // Listeners to notify whenever a new message is logged.
-    nsSupportsHashtable mListeners;
-
-    // Current listener being notified of a logged error - to prevent
-    // stack overflows.
-    bool mListening;
+    nsInterfaceHashtable<nsISupportsHashKey, nsIConsoleListener> mListeners;
 
     // To serialize interesting methods.
     mozilla::Mutex mLock;

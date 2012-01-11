@@ -157,7 +157,7 @@ private:
 
   CategoryNode* get_category(const char* aName);
   void NotifyObservers(const char* aTopic,
-                       const char* aCategoryName,
+                       const char* aCategoryName, // must be a static string
                        const char* aEntryName);
 
   PLArenaPool mArena;
