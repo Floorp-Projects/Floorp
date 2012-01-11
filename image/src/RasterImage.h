@@ -83,12 +83,6 @@ class nsIInputStream;
 }
 
 /**
- * It would be nice if we had a macro for this in prtypes.h.
- * TODO: Place this macro in prtypes.h as PR_UINT64_MAX.
- */
-#define UINT64_MAX_VAL PRUint64(-1)
-
-/**
  * Handles static and animated image containers.
  *
  *

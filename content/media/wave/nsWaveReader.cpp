@@ -43,6 +43,8 @@
 #include "nsTimeRanges.h"
 #include "VideoUtils.h"
 
+#include "mozilla/StdInt.h"
+
 using namespace mozilla;
 
 // Un-comment to enable logging of seek bisections.
@@ -225,8 +227,8 @@ bool nsWaveReader::DecodeAudioData()
 
   double posTime = BytesToTime(pos);
   double readSizeTime = BytesToTime(readSize);
-  NS_ASSERTION(posTime <= PR_INT64_MAX / USECS_PER_S, "posTime overflow");
-  NS_ASSERTION(readSizeTime <= PR_INT64_MAX / USECS_PER_S, "readSizeTime overflow");
+  NS_ASSERTION(posTime <= INT64_MAX / USECS_PER_S, "posTime overflow");
+  NS_ASSERTION(readSizeTime <= INT64_MAX / USECS_PER_S, "readSizeTime overflow");
   NS_ASSERTION(frames < PR_INT32_MAX, "frames overflow");
 
   mAudioQueue.Push(new AudioData(pos,
@@ -255,11 +257,11 @@ nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
     return NS_ERROR_FAILURE;
   }
   double d = BytesToTime(GetDataLength());
-  NS_ASSERTION(d < PR_INT64_MAX / USECS_PER_S, "Duration overflow"); 
+  NS_ASSERTION(d < INT64_MAX / USECS_PER_S, "Duration overflow"); 
   PRInt64 duration = static_cast<PRInt64>(d * USECS_PER_S);
   double seekTime = NS_MIN(aTarget, duration) / static_cast<double>(USECS_PER_S);
   PRInt64 position = RoundDownToFrame(static_cast<PRInt64>(TimeToBytes(seekTime)));
-  NS_ASSERTION(PR_INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
+  NS_ASSERTION(INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
   return mDecoder->GetStream()->Seek(nsISeekableStream::NS_SEEK_SET, position);
 }
