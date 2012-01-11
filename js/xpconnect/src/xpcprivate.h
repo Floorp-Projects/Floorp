@@ -57,7 +57,6 @@
 #include "jsdhash.h"
 #include "jsprf.h"
 #include "prprf.h"
-#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"

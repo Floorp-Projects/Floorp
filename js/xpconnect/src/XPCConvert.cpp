@@ -60,6 +60,8 @@
 
 #include "jstypedarray.h"
 
+#include "jscntxt.h" // AutoValueRooter, cx->compartment
+
 using namespace mozilla;
 
 //#define STRICT_CHECK_OF_UNICODE
