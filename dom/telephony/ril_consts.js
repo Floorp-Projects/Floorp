@@ -189,6 +189,19 @@ const RADIO_STATE_RUIM_LOCKED_OR_ABSENT = 7;
 const RADIO_STATE_NV_NOT_READY = 8;
 const RADIO_STATE_NV_READY = 9;
 
+const CARD_STATE_ABSENT = 0;
+const CARD_STATE_PRESENT = 1;
+const CARD_STATE_ERROR = 2;
+
+const CARD_APP_STATE_UNKNOWN = 0;
+const CARD_APP_STATE_DETECTED = 1;
+const CARD_APP_STATE_PIN = 2; // If PIN1 or UPin is required.
+const CARD_APP_STATE_PUK = 3; // If PUK1 or Puk for UPin is required.
+const CARD_APP_STATE_SUBSCRIPTION_PERSO = 4; // perso_substate should be looked
+                                             // at when app_state is assigned
+                                             // to this value.
+const CARD_APP_STATE_READY = 5;
+
 const CARD_MAX_APPS = 8;
 
 const CALL_STATE_ACTIVE = 0;

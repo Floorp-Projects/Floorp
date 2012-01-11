@@ -1641,7 +1641,7 @@ fails-if(Android) == 634232-1.html 634232-1-ref.html
 fails-if(Android) == 635302-1.html 635302-1-ref.html
 == 635373-1.html 635373-1-ref.html
 == 635373-2.html 635373-2-ref.html
-fails-if(http.platform=="X11"&&!layersGPUAccelerated) == 635373-3.html 635373-3-ref.html
+== 635373-3.html 635373-3-ref.html
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!

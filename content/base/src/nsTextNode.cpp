@@ -47,7 +47,7 @@
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
 #ifdef DEBUG
-#include "nsIRange.h"
+#include "nsRange.h"
 #endif
 
 using namespace mozilla::dom;
@@ -228,7 +228,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, "Text@%p", static_cast<const void*>(this));
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   if (IsCommonAncestorForRangeInSelection()) {
-    typedef nsTHashtable<nsPtrHashKey<nsIRange> > RangeHashTable;
+    typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
     RangeHashTable* ranges =
       static_cast<RangeHashTable*>(GetProperty(nsGkAtoms::range));
     fprintf(out, " ranges:%d", ranges ? ranges->Count() : 0);

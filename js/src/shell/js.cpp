@@ -145,7 +145,7 @@ size_t gMaxStackSize = DEFAULT_MAX_STACK_SIZE;
 #ifdef JS_THREADSAFE
 static PRUintn gStackBaseThreadIndex;
 #else
-static jsuword gStackBase;
+static uintptr_t gStackBase;
 #endif
 
 /*
@@ -3093,7 +3093,7 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
         *vp = JSVAL_ZERO;
         return JS_TRUE;
     }
-    return JS_NewNumberValue(cx, (double) ((jsuword)obj->lastProperty() >> 3), vp);
+    return JS_NewNumberValue(cx, (double) ((uintptr_t)obj->lastProperty() >> 3), vp);
 }
 
 /*
@@ -5371,7 +5371,7 @@ main(int argc, char **argv, char **envp)
         return 1;
     }
 #else
-    gStackBase = (jsuword) &stackDummy;
+    gStackBase = (uintptr_t) &stackDummy;
 #endif
 
 #ifdef XP_OS2

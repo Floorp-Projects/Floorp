@@ -75,16 +75,17 @@ using namespace js;
 /* Implement NativeCompareAndSwap. */
 
 #if defined(_MSC_VER) && defined(_M_IX86)
+// TODO: Bug 716204 - undo this pragma.
 #pragma warning( disable : 4035 )
 JS_BEGIN_EXTERN_C
 extern long __cdecl
 _InterlockedCompareExchange(long *volatile dest, long exchange, long comp);
 JS_END_EXTERN_C
 #pragma intrinsic(_InterlockedCompareExchange)
-JS_STATIC_ASSERT(sizeof(jsword) == sizeof(long));
+JS_STATIC_ASSERT(sizeof(intptr_t) == sizeof(long));
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwapHelper(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwapHelper(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     _InterlockedCompareExchange((long*) w, nv, ov);
     __asm {
@@ -93,7 +94,7 @@ NativeCompareAndSwapHelper(volatile jsword *w, jsword ov, jsword nv)
 }
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     return (NativeCompareAndSwapHelper(w, ov, nv) & 1);
 }
@@ -104,10 +105,10 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
  * declares _InterlockedCompareExchange64 through <windows.h>.
  */
 #pragma intrinsic(_InterlockedCompareExchange64)
-JS_STATIC_ASSERT(sizeof(jsword) == sizeof(long long));
+JS_STATIC_ASSERT(sizeof(intptr_t) == sizeof(long long));
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     return _InterlockedCompareExchange64((long long *volatile)w, nv, ov) == ov;
 }
@@ -117,7 +118,7 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 #include <libkern/OSAtomic.h>
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     /* Details on these functions available in the manpage for atomic */
     return OSAtomicCompareAndSwapPtrBarrier(reinterpret_cast<void *>(ov),
@@ -129,7 +130,7 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 
 /* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     unsigned int res;
 
@@ -151,7 +152,7 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 #elif defined(__x86_64) && (defined(__GNUC__) || defined(__SUNPRO_CC))
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     unsigned int res;
 
@@ -170,7 +171,7 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 #if defined(__GNUC__)
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     unsigned int res;
 
@@ -196,7 +197,7 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 
 /* Implementation in lock_sparc*.il */
 extern "C" int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv);
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv);
 
 #endif
 
@@ -205,10 +206,10 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv);
 #include <sys/atomic_op.h>
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     int res;
-    JS_STATIC_ASSERT(sizeof(jsword) == sizeof(long));
+    JS_STATIC_ASSERT(sizeof(intptr_t) == sizeof(long));
 
     res = compare_and_swaplp((atomic_l)w, &ov, nv);
     if (res)
@@ -218,10 +219,10 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 
 #elif defined(__arm__) && defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
 
-JS_STATIC_ASSERT(sizeof(jsword) == sizeof(int));
+JS_STATIC_ASSERT(sizeof(intptr_t) == sizeof(int));
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
   return __sync_bool_compare_and_swap(w, ov, nv);
 }
@@ -235,10 +236,10 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 typedef int (__kernel_cmpxchg_t)(int oldval, int newval, volatile int *ptr);
 #define __kernel_cmpxchg (*(__kernel_cmpxchg_t *)0xffff0fc0)
 
-JS_STATIC_ASSERT(sizeof(jsword) == sizeof(int));
+JS_STATIC_ASSERT(sizeof(intptr_t) == sizeof(int));
 
 static JS_ALWAYS_INLINE int
-NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+NativeCompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     volatile int *vp = (volatile int *) w;
     PRInt32 failed = 1;
@@ -259,7 +260,7 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 #if JS_HAS_NATIVE_COMPARE_AND_SWAP
 
 JSBool
-js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+js_CompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     return !!NativeCompareAndSwap(w, ov, nv);
 }
@@ -271,7 +272,7 @@ js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 # endif
 
 JSBool
-js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+js_CompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv)
 {
     int result;
     static PRLock *CompareAndSwapLock = JS_NEW_LOCK();
@@ -291,9 +292,9 @@ js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 #endif
 
 void
-js_AtomicSetMask(volatile jsword *w, jsword mask)
+js_AtomicSetMask(volatile intptr_t *w, intptr_t mask)
 {
-    jsword ov, nv;
+    intptr_t ov, nv;
 
     do {
         ov = *w;
@@ -302,9 +303,9 @@ js_AtomicSetMask(volatile jsword *w, jsword mask)
 }
 
 void
-js_AtomicClearMask(volatile jsword *w, jsword mask)
+js_AtomicClearMask(volatile intptr_t *w, intptr_t mask)
 {
-    jsword ov, nv;
+    intptr_t ov, nv;
 
     do {
         ov = *w;
@@ -344,7 +345,7 @@ typedef struct JSFatLockTable {
     JSFatLock   *taken;
 } JSFatLockTable;
 
-#define GLOBAL_LOCK_INDEX(id)   (((uint32_t)(jsuword)(id)>>2) & global_locks_mask)
+#define GLOBAL_LOCK_INDEX(id)   (((uint32_t)(uintptr_t)(id)>>2) & global_locks_mask)
 
 static void
 js_Dequeue(JSThinLock *);
@@ -564,14 +565,14 @@ js_CleanupLocks()
 #ifdef NSPR_LOCK
 
 static JS_ALWAYS_INLINE void
-ThinLock(JSThinLock *tl, jsword me)
+ThinLock(JSThinLock *tl, intptr_t me)
 {
     JS_ACQUIRE_LOCK((JSLock *) tl->fat);
     tl->owner = me;
 }
 
 static JS_ALWAYS_INLINE void
-ThinUnlock(JSThinLock *tl, jsword /*me*/)
+ThinUnlock(JSThinLock *tl, intptr_t /*me*/)
 {
     tl->owner = 0;
     JS_RELEASE_LOCK((JSLock *) tl->fat);
@@ -655,9 +656,9 @@ js_ResumeThread(JSThinLock *tl)
 }
 
 static void
-js_Enqueue(JSThinLock *tl, jsword me)
+js_Enqueue(JSThinLock *tl, intptr_t me)
 {
-    jsword o, n;
+    intptr_t o, n;
 
     js_LockGlobal(tl);
     for (;;) {
@@ -679,7 +680,7 @@ js_Enqueue(JSThinLock *tl, jsword me)
 static void
 js_Dequeue(JSThinLock *tl)
 {
-    jsword o;
+    intptr_t o;
 
     js_LockGlobal(tl);
     o = ReadWord(tl->owner);
@@ -691,7 +692,7 @@ js_Dequeue(JSThinLock *tl)
 }
 
 static JS_ALWAYS_INLINE void
-ThinLock(JSThinLock *tl, jsword me)
+ThinLock(JSThinLock *tl, intptr_t me)
 {
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (NativeCompareAndSwap(&tl->owner, 0, me))
@@ -705,7 +706,7 @@ ThinLock(JSThinLock *tl, jsword me)
 }
 
 static JS_ALWAYS_INLINE void
-ThinUnlock(JSThinLock *tl, jsword me)
+ThinUnlock(JSThinLock *tl, intptr_t me)
 {
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
 

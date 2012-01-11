@@ -38,7 +38,6 @@
 
 #include "ContentChild.h"
 #include "ContentParent.h"
-#include "jscntxt.h"
 #include "nsFrameMessageManager.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
@@ -425,7 +424,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           }
         }
 
-        js::AutoValueRooter objectsv(ctx);
+        JS::AutoValueRooter objectsv(ctx);
         objectsv.set(OBJECT_TO_JSVAL(aObjectsArray));
         if (!JS_WrapValue(ctx, objectsv.jsval_addr()))
             return NS_ERROR_UNEXPECTED;
@@ -481,7 +480,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
         jsval rval = JSVAL_VOID;
 
-        js::AutoValueRooter argv(ctx);
+        JS::AutoValueRooter argv(ctx);
         argv.set(OBJECT_TO_JSVAL(param));
 
         {

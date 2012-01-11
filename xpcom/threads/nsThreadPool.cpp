@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIProxyObjectManager.h"
 #include "nsIClassInfoImpl.h"
 #include "nsThreadPool.h"
 #include "nsThreadManager.h"
@@ -144,14 +143,8 @@ nsThreadPool::ShutdownThread(nsIThread *thread)
 
   NS_ASSERTION(!NS_IsMainThread(), "wrong thread");
 
-  nsCOMPtr<nsIThread> doomed;
-  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD, NS_GET_IID(nsIThread), thread,
-                       NS_PROXY_ASYNC, getter_AddRefs(doomed));
-  if (doomed) {
-    doomed->Shutdown();
-  } else {
-    NS_WARNING("failed to construct proxy to main thread");
-  }
+  nsRefPtr<nsIRunnable> r = NS_NewRunnableMethod(thread, &nsIThread::Shutdown);
+  NS_DispatchToMainThread(r);
 }
 
 NS_IMETHODIMP

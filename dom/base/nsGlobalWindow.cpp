@@ -257,6 +257,8 @@
 #include <android/log.h>
 #endif
 
+#include "jscntxt.h" // cx->runtime->structuredCloneCallbacks
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif

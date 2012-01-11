@@ -45,8 +45,6 @@
 #include "nsTextServicesDocument.h"
 
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
-#include "nsIRange.h"
 
 //------------------------------------------------------------
 nsFilteredContentIterator::nsFilteredContentIterator(nsITextServicesFilter* aFilter) :
@@ -91,18 +89,15 @@ nsFilteredContentIterator::Init(nsINode* aRoot)
   mDirection       = eForward;
   mCurrentIterator = mPreIterator;
 
-  nsresult rv;
-  mRange = do_CreateInstance("@mozilla.org/content/range;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDOMRange> domRange(do_QueryInterface(mRange));
+  mRange = new nsRange();
   nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aRoot));
-  if (domRange && domNode) {
-    domRange->SelectNode(domNode);
+  if (domNode) {
+    mRange->SelectNode(domNode);
   }
 
-  rv = mPreIterator->Init(domRange);
+  nsresult rv = mPreIterator->Init(mRange);
   NS_ENSURE_SUCCESS(rv, rv);
-  return mIterator->Init(domRange);
+  return mIterator->Init(mRange);
 }
 
 //------------------------------------------------------------
@@ -124,13 +119,6 @@ nsFilteredContentIterator::Init(nsIDOMRange* aRange)
   rv = mPreIterator->Init(domRange);
   NS_ENSURE_SUCCESS(rv, rv);
   return mIterator->Init(domRange);
-}
-
-nsresult
-nsFilteredContentIterator::Init(nsIRange* aRange)
-{
-  nsCOMPtr<nsIDOMRange> domRange = do_QueryInterface(aRange);
-  return Init(domRange);
 }
 
 //------------------------------------------------------------
@@ -278,22 +266,19 @@ ContentIsInTraversalRange(nsIContent *aContent,   bool aIsPreMode,
 }
 
 static bool
-ContentIsInTraversalRange(nsIDOMNSRange *aRange, nsIDOMNode* aNextNode, bool aIsPreMode)
+ContentIsInTraversalRange(nsIDOMRange *aRange, nsIDOMNode* aNextNode, bool aIsPreMode)
 {
-  nsCOMPtr<nsIContent>  content(do_QueryInterface(aNextNode));
-  nsCOMPtr<nsIDOMRange> range(do_QueryInterface(aRange));
-  NS_ENSURE_TRUE(content && range, false);
-
-
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNextNode));
+  NS_ENSURE_TRUE(content && aRange, false);
 
   nsCOMPtr<nsIDOMNode> sNode;
   nsCOMPtr<nsIDOMNode> eNode;
   PRInt32 sOffset;
   PRInt32 eOffset;
-  range->GetStartContainer(getter_AddRefs(sNode));
-  range->GetStartOffset(&sOffset);
-  range->GetEndContainer(getter_AddRefs(eNode));
-  range->GetEndOffset(&eOffset);
+  aRange->GetStartContainer(getter_AddRefs(sNode));
+  aRange->GetStartOffset(&sOffset);
+  aRange->GetEndContainer(getter_AddRefs(eNode));
+  aRange->GetEndOffset(&eOffset);
   return ContentIsInTraversalRange(content, aIsPreMode, sNode, sOffset, eNode, eOffset);
 }
 

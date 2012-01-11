@@ -57,7 +57,6 @@
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIDOMDOMImplementation.h"
-#include "nsIDOMRange.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIFactory.h"
@@ -424,7 +423,6 @@ nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
 nsresult NS_NewDomSelection(nsISelection** aResult);
 nsresult NS_NewContentViewer(nsIContentViewer** aResult);
-nsresult NS_NewRange(nsIDOMRange** aResult);
 nsresult NS_NewRangeUtils(nsIRangeUtils** aResult);
 nsresult NS_NewContentIterator(nsIContentIterator** aResult);
 nsresult NS_NewPreContentIterator(nsIContentIterator** aResult);
@@ -493,7 +491,6 @@ MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXML
 MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
-MAKE_CTOR(CreateRange,                    nsIDOMRange,                 NS_NewRange)
 MAKE_CTOR(CreateRangeUtils,               nsIRangeUtils,               NS_NewRangeUtils)
 MAKE_CTOR(CreateContentIterator,          nsIContentIterator,          NS_NewContentIterator)
 MAKE_CTOR(CreatePreContentIterator,       nsIContentIterator,          NS_NewPreContentIterator)
@@ -687,7 +684,6 @@ NS_DEFINE_NAMED_CID(NS_XMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_SVGDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_IMAGEDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_DOMSELECTION_CID);
-NS_DEFINE_NAMED_CID(NS_RANGE_CID);
 NS_DEFINE_NAMED_CID(NS_RANGEUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_PRECONTENTITERATOR_CID);
@@ -959,7 +955,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SVGDOCUMENT_CID, false, NULL, CreateSVGDocument },
   { &kNS_IMAGEDOCUMENT_CID, false, NULL, CreateImageDocument },
   { &kNS_DOMSELECTION_CID, false, NULL, CreateDOMSelection },
-  { &kNS_RANGE_CID, false, NULL, CreateRange },
   { &kNS_RANGEUTILS_CID, false, NULL, CreateRangeUtils },
   { &kNS_CONTENTITERATOR_CID, false, NULL, CreateContentIterator },
   { &kNS_PRECONTENTITERATOR_CID, false, NULL, CreatePreContentIterator },
@@ -1094,7 +1089,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
   { "@mozilla.org/svg/svg-document;1", &kNS_SVGDOCUMENT_CID },
   { "@mozilla.org/content/dom-selection;1", &kNS_DOMSELECTION_CID },
-  { "@mozilla.org/content/range;1", &kNS_RANGE_CID },
   { "@mozilla.org/content/range-utils;1", &kNS_RANGEUTILS_CID },
   { "@mozilla.org/content/post-content-iterator;1", &kNS_CONTENTITERATOR_CID },
   { "@mozilla.org/content/pre-content-iterator;1", &kNS_PRECONTENTITERATOR_CID },
