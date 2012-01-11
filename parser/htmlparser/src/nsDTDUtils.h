@@ -421,35 +421,7 @@ inline bool FindTagInSet(PRInt32 aTag,const eHTMLTags *aTagSet,PRInt32 aCount)  
   return bool(-1<IndexOfTagInSet(aTag,aTagSet,aCount));
 }
 
-/**************************************************************
-  This defines the topic object used by the observer service.
-  The observerService uses a list of these, 1 per topic when
-  registering tags.
- **************************************************************/
-
-class nsObserverEntry : public nsIObserverEntry {
-public:
-  NS_DECL_ISUPPORTS
-            nsObserverEntry(const nsAString& aString);
-  virtual   ~nsObserverEntry();
-
-  NS_IMETHOD Notify(nsIParserNode* aNode,
-                    nsIParser* aParser,
-                    nsISupports* aDocShell,
-                    const PRUint32 aFlags);
-
-  nsresult   AddObserver(nsIElementObserver* aObserver,eHTMLTags aTag);
-  void       RemoveObserver(nsIElementObserver* aObserver);
-  bool       Matches(const nsAString& aTopic);
-
-protected:
-  nsString mTopic;
-  nsCOMArray<nsIElementObserver>* mObservers[NS_HTML_TAG_MAX + 1];
-  friend class nsMatchesTopic;
-};
-
 /*********************************************************************************************/
-
 
 struct TagList {
   size_t mCount;
