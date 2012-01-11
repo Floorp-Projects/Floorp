@@ -234,10 +234,6 @@ PRTimeToSeconds(PRTime t_usec)
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
 
-// ripped from glib.h
-#undef  CLAMP
-#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-
 // round q-value to one decimal place; return most significant digit as uint.
 #define QVAL_TO_UINT(q) ((unsigned int) ((q + 0.05) * 10.0))
 
