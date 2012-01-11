@@ -58,7 +58,8 @@ import org.mozilla.gecko.db.BrowserDB;
 public class Tab {
     public static enum AgentMode { MOBILE, DESKTOP };
     private static final String LOGTAG = "GeckoTab";
-    private static final int kThumbnailSize = 96;
+    private static final int kThumbnailWidth = 120;
+    private static final int kThumbnailHeight = 80;
 
     static int sMinDim = 0;
     static float sDensity = 1;
@@ -152,13 +153,13 @@ public class Tab {
                 if (sMinDim == 0) {
                     DisplayMetrics metrics = new DisplayMetrics();
                     GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    sMinDim = Math.min(metrics.widthPixels, metrics.heightPixels);
+                    sMinDim = Math.min(metrics.widthPixels / 3, metrics.heightPixels / 2);
                     sDensity = metrics.density;
                 }
                 if (b != null) {
                     try {
-                        Bitmap cropped = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
-                        Bitmap bitmap = Bitmap.createScaledBitmap(cropped, kThumbnailSize, kThumbnailSize, false);
+                        Bitmap cropped = Bitmap.createBitmap(b, 0, 0, sMinDim * 3, sMinDim * 2);
+                        Bitmap bitmap = Bitmap.createScaledBitmap(cropped, (int) (kThumbnailWidth * sDensity), (int) (kThumbnailHeight * sDensity), false);
                         saveThumbnailToDB(new BitmapDrawable(bitmap));
                         b.recycle();
 
