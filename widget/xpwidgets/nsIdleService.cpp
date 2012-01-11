@@ -413,7 +413,9 @@ nsIdleService::CheckAwayState(bool aNoTimeReset)
 
   // In order to find when the next idle event should time out, we need to
   // subtract the time we should wait, from the time that has already passed.
-  nextWaitTime -= idleTime;
+  if (PR_UINT32_MAX != nextWaitTime) {
+    nextWaitTime -= idleTime;
+  }
 
   // Notify all listeners that just timed out.
   for (PRInt32 i = 0; i < notifyList.Count(); i++) {
