@@ -157,9 +157,7 @@ code {
 .twisty {
   position: absolute;
   left: 0px;
-  top: 0px;
-  width: 14px;
-  height: 14px;
+  padding: 8px;
 }
 
 .nodeChildBox {
