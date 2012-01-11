@@ -6599,12 +6599,6 @@ js::HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Native nat
     return false;
 }
 
-JS_PUBLIC_API(size_t)
-JS::SizeOfObjectDynamicSlots(JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
-{
-    return obj->dynamicSlotSize(mallocSizeOf);
-}
-
 #ifdef DEBUG
 
 /*
