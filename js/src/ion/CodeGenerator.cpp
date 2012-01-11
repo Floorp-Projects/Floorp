@@ -957,7 +957,7 @@ CodeGenerator::visitOutOfLineGetPropertyCache(OutOfLineGetPropertyCache *ool)
     cache.setScriptedLocation(mir->script(), mir->pc());
     size_t cacheIndex = allocateCache(cache);
 
-    masm.PushVolatileRegsInMask(liveRegs);
+    masm.PushRegsInMask(liveRegs);
 
     typedef bool (*pf)(JSContext *, size_t, JSObject *, Value *);
     static const VMFunction GetPropertyCacheInfo = FunctionInfo<pf>(GetPropertyCache);
@@ -968,7 +968,7 @@ CodeGenerator::visitOutOfLineGetPropertyCache(OutOfLineGetPropertyCache *ool)
         return false;
 
     masm.storeCallResult(output);
-    masm.PopVolatileRegsInMask(liveRegs);
+    masm.PopRegsInMask(liveRegs);
 
     masm.jump(ool->rejoin());
 

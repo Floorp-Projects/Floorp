@@ -102,13 +102,11 @@ template void MacroAssembler::guardTypeSet(const ValueOperand &value, types::Typ
                                            Register scratch, Label *mismatched);
 
 void
-MacroAssembler::PushVolatileRegsInMask(RegisterSet set)
+MacroAssembler::PushRegsInMask(RegisterSet set)
 {
     size_t diff = 0;
     for (AnyRegisterIterator iter(set); iter.more(); iter++) {
         AnyRegister reg = *iter;
-        if (!reg.volatile_())
-            continue;
         if (reg.isFloat())
             diff += sizeof(double);
         else
@@ -122,8 +120,6 @@ MacroAssembler::PushVolatileRegsInMask(RegisterSet set)
     diff = new_diff - diff;
     for (AnyRegisterIterator iter(set); iter.more(); iter++) {
         AnyRegister reg = *iter;
-        if (!reg.volatile_())
-            continue;
         if (reg.isFloat()) {
             storeDouble(reg.fpu(), Address(StackPointer, diff));
             diff += sizeof(double);
@@ -135,14 +131,12 @@ MacroAssembler::PushVolatileRegsInMask(RegisterSet set)
 }
 
 void
-MacroAssembler::PopVolatileRegsInMask(RegisterSet set)
+MacroAssembler::PopRegsInMask(RegisterSet set)
 {
     size_t diff = 0;
-    // Undo the alignment that was done in PushVolatileRegsInMask.
+    // Undo the alignment that was done in PushRegsInMask.
     for (AnyRegisterIterator iter(set); iter.more(); iter++) {
         AnyRegister reg = *iter;
-        if (!reg.volatile_())
-            continue;
         if (reg.isFloat())
             diff += sizeof(double);
         else
@@ -153,8 +147,6 @@ MacroAssembler::PopVolatileRegsInMask(RegisterSet set)
     diff = new_diff - diff;
     for (AnyRegisterIterator iter(set); iter.more(); iter++) {
         AnyRegister reg = *iter;
-        if (!reg.volatile_())
-            continue;
         if (reg.isFloat()) {
             loadDouble(Address(StackPointer, diff), reg.fpu());
             diff += sizeof(double);
