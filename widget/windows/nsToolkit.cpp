@@ -57,11 +57,6 @@ nsToolkit* nsToolkit::gToolkit = nsnull;
 HINSTANCE nsToolkit::mDllInstance = 0;
 static const unsigned long kD3DUsageDelay = 5000;
 
-// SHCreateItemFromParsingName is only available on vista and up.
-nsToolkit::SHCreateItemFromParsingNamePtr nsToolkit::createItemFromParsingName = nsnull;
-const PRUnichar nsToolkit::kSehllLibraryName[] =  L"shell32.dll";
-HMODULE nsToolkit::sShellDll = nsnull;
-
 static void
 StartAllowingD3D9(nsITimer *aTimer, void *aClosure)
 {
@@ -123,24 +118,6 @@ nsToolkit::StartAllowingD3D9()
 {
   nsToolkit::GetToolkit()->mD3D9Timer->Cancel();
   nsWindow::StartAllowingD3D9(false);
-}
-
-// Load and store Vista+ SHCreateItemFromParsingName
-bool
-nsToolkit::VistaCreateItemFromParsingNameInit()
-{
-  if (createItemFromParsingName)
-    return true;
-  if (sShellDll)
-    return false;
-  sShellDll = LoadLibraryW(kSehllLibraryName);
-  if (!sShellDll)
-    return false;
-  createItemFromParsingName = (SHCreateItemFromParsingNamePtr)
-    GetProcAddress(sShellDll, "SHCreateItemFromParsingName");
-  if (createItemFromParsingName == nsnull)
-    return false;
-  return true;
 }
 
 //-------------------------------------------------------------------------

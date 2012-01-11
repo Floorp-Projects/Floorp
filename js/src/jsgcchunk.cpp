@@ -103,7 +103,7 @@ UnmapPages(void *addr, size_t size)
     if (DosQueryMem(addr, &cb, &flags) || cb < size)
         return;
 
-    jsuword base = reinterpret_cast<jsuword>(addr) - ((2 * size) - cb);
+    uintptr_t base = reinterpret_cast<uintptr_t>(addr) - ((2 * size) - cb);
     DosFreeMem(reinterpret_cast<void*>(base));
 
     return;
@@ -121,7 +121,7 @@ MapAlignedPagesRecursively(size_t size, size_t alignment, int& recursions)
         JS_ALWAYS_TRUE(DosAllocMem(&tmp, size,
                                    PAG_COMMIT | PAG_READ | PAG_WRITE) == 0);
     }
-    size_t offset = reinterpret_cast<jsuword>(tmp) & (alignment - 1);
+    size_t offset = reinterpret_cast<uintptr_t>(tmp) & (alignment - 1);
     if (!offset)
         return tmp;
 
@@ -172,7 +172,7 @@ MapAlignedPages(size_t size, size_t alignment)
                                    PAG_COMMIT | PAG_READ | PAG_WRITE) == 0);
     }
 
-    jsuword addr = reinterpret_cast<jsuword>(p);
+    uintptr_t addr = reinterpret_cast<uintptr_t>(p);
     addr = (addr + (alignment - 1)) & ~(alignment - 1);
 
     return reinterpret_cast<void *>(addr);
@@ -277,7 +277,7 @@ namespace gc {
 static inline void *
 FindChunkStart(void *p)
 {
-    jsuword addr = reinterpret_cast<jsuword>(p);
+    uintptr_t addr = reinterpret_cast<uintptr_t>(p);
     addr = (addr + ChunkMask) & ~ChunkMask;
     return reinterpret_cast<void *>(addr);
 }
@@ -302,7 +302,7 @@ AllocChunk()
     if (!p)
         return NULL;
 
-    if (reinterpret_cast<jsuword>(p) & ChunkMask) {
+    if (reinterpret_cast<uintptr_t>(p) & ChunkMask) {
         UnmapPages(p, ChunkSize);
         p = MapPages(FindChunkStart(p), ChunkSize);
         while (!p) {
@@ -325,7 +325,7 @@ AllocChunk()
     }
 #endif /* !JS_GC_HAS_MAP_ALIGN */
 
-    JS_ASSERT(!(reinterpret_cast<jsuword>(p) & ChunkMask));
+    JS_ASSERT(!(reinterpret_cast<uintptr_t>(p) & ChunkMask));
     return p;
 }
 
@@ -333,7 +333,7 @@ void
 FreeChunk(void *p)
 {
     JS_ASSERT(p);
-    JS_ASSERT(!(reinterpret_cast<jsuword>(p) & ChunkMask));
+    JS_ASSERT(!(reinterpret_cast<uintptr_t>(p) & ChunkMask));
     UnmapPages(p, ChunkSize);
 }
 

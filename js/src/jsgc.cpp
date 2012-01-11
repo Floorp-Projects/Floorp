@@ -941,7 +941,7 @@ InFreeList(ArenaHeader *aheader, uintptr_t addr)
  * details about the thing if so. On failure, returns the reason for rejection.
  */
 inline ConservativeGCTest
-IsAddressableGCThing(JSRuntime *rt, jsuword w,
+IsAddressableGCThing(JSRuntime *rt, uintptr_t w,
                      gc::AllocKind *thingKindPtr, ArenaHeader **arenaHeader, void **thing)
 {
     /*
@@ -959,11 +959,11 @@ IsAddressableGCThing(JSRuntime *rt, jsuword w,
      * An object jsid has its low bits tagged. In the value representation on
      * 64-bit, the high bits are tagged.
      */
-    const jsuword JSID_PAYLOAD_MASK = ~jsuword(JSID_TYPE_MASK);
+    const uintptr_t JSID_PAYLOAD_MASK = ~uintptr_t(JSID_TYPE_MASK);
 #if JS_BITS_PER_WORD == 32
-    jsuword addr = w & JSID_PAYLOAD_MASK;
+    uintptr_t addr = w & JSID_PAYLOAD_MASK;
 #elif JS_BITS_PER_WORD == 64
-    jsuword addr = w & JSID_PAYLOAD_MASK & JSVAL_PAYLOAD_MASK;
+    uintptr_t addr = w & JSID_PAYLOAD_MASK & JSVAL_PAYLOAD_MASK;
 #endif
 
     Chunk *chunk = Chunk::fromAddress(addr);
@@ -1017,7 +1017,7 @@ IsAddressableGCThing(JSRuntime *rt, jsuword w,
  * thingKind accordingly. Otherwise returns the reason for rejection.
  */
 inline ConservativeGCTest
-MarkIfGCThingWord(JSTracer *trc, jsuword w)
+MarkIfGCThingWord(JSTracer *trc, uintptr_t w)
 {
     void *thing;
     ArenaHeader *aheader;
@@ -1047,7 +1047,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
         GCMarker *marker = static_cast<GCMarker *>(trc);
         if (marker->conservativeDumpFileName)
             marker->conservativeRoots.append(thing);
-        if (jsuword(thing) != w)
+        if (uintptr_t(thing) != w)
             marker->conservativeStats.unaligned++;
     }
 #endif
@@ -1056,7 +1056,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
 }
 
 static void
-MarkWordConservatively(JSTracer *trc, jsuword w)
+MarkWordConservatively(JSTracer *trc, uintptr_t w)
 {
     /*
      * The conservative scanner may access words that valgrind considers as
@@ -1072,10 +1072,10 @@ MarkWordConservatively(JSTracer *trc, jsuword w)
 }
 
 static void
-MarkRangeConservatively(JSTracer *trc, const jsuword *begin, const jsuword *end)
+MarkRangeConservatively(JSTracer *trc, const uintptr_t *begin, const uintptr_t *end)
 {
     JS_ASSERT(begin <= end);
-    for (const jsuword *i = begin; i != end; ++i)
+    for (const uintptr_t *i = begin; i < end; ++i)
         MarkWordConservatively(trc, *i);
 }
 
@@ -1084,7 +1084,7 @@ MarkThreadDataConservatively(JSTracer *trc, ThreadData *td)
 {
     ConservativeGCThreadData *ctd = &td->conservativeGC;
     JS_ASSERT(ctd->hasStackToScan());
-    jsuword *stackMin, *stackEnd;
+    uintptr_t *stackMin, *stackEnd;
 #if JS_STACK_GROWTH_DIRECTION > 0
     stackMin = td->nativeStackBase;
     stackEnd = ctd->nativeStackTop;
@@ -1119,15 +1119,15 @@ MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
         ~AutoSkipChecking() { runtime->gcCheckCompartment = savedCompartment; }
     } as(trc->runtime);
 
-    const jsuword *begin = beginv->payloadWord();
-    const jsuword *end = endv->payloadWord();
+    const uintptr_t *begin = beginv->payloadWord();
+    const uintptr_t *end = endv->payloadWord();
 #ifdef JS_NUNBOX32
     /*
      * With 64-bit jsvals on 32-bit systems, we can optimize a bit by
      * scanning only the payloads.
      */
     JS_ASSERT(begin <= end);
-    for (const jsuword *i = begin; i != end; i += sizeof(Value)/sizeof(jsuword))
+    for (const uintptr_t *i = begin; i < end; i += sizeof(Value) / sizeof(uintptr_t))
         MarkWordConservatively(trc, *i);
 #else
     MarkRangeConservatively(trc, begin, end);
@@ -1158,7 +1158,7 @@ JS_NEVER_INLINE void
 ConservativeGCThreadData::recordStackTop()
 {
     /* Update the native stack pointer if it points to a bigger stack. */
-    jsuword dummy;
+    uintptr_t dummy;
     nativeStackTop = &dummy;
 
     /*
@@ -1192,7 +1192,7 @@ RecordNativeStackTopForGC(JSContext *cx)
 } /* namespace js */
 
 bool
-js_IsAddressableGCThing(JSRuntime *rt, jsuword w, gc::AllocKind *thingKind, void **thing)
+js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, gc::AllocKind *thingKind, void **thing)
 {
     return js::IsAddressableGCThing(rt, w, thingKind, NULL, thing) == CGCT_VALID;
 }
@@ -1886,7 +1886,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
          */
         JSTracer checker;
         JS_TRACER_INIT(&checker, trc->context, EmptyMarkCallback);
-        ConservativeGCTest test = MarkIfGCThingWord(&checker, reinterpret_cast<jsuword>(ptr));
+        ConservativeGCTest test = MarkIfGCThingWord(&checker, reinterpret_cast<uintptr_t>(ptr));
         if (test != CGCT_VALID && entry.value.name) {
             fprintf(stderr,
 "JS API usage error: the address passed to JS_AddNamedRoot currently holds an\n"
@@ -1942,7 +1942,7 @@ AutoIdArray::trace(JSTracer *trc)
 void
 AutoEnumStateRooter::trace(JSTracer *trc)
 {
-    gc::MarkRoot(trc, obj, "js::AutoEnumStateRooter.obj");
+    gc::MarkRoot(trc, obj, "JS::AutoEnumStateRooter.obj");
 }
 
 inline void
@@ -1950,7 +1950,7 @@ AutoGCRooter::trace(JSTracer *trc)
 {
     switch (tag) {
       case JSVAL:
-        MarkRoot(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
+        MarkRoot(trc, static_cast<AutoValueRooter *>(this)->val, "JS::AutoValueRooter.val");
         return;
 
       case PARSER:
@@ -1963,7 +1963,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDARRAY: {
         JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        MarkIdRange(trc, ida->vector, ida->vector + ida->length, "js::AutoIdArray.idArray");
+        MarkIdRange(trc, ida->vector, ida->vector + ida->length, "JS::AutoIdArray.idArray");
         return;
       }
 
@@ -2005,11 +2005,11 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case OBJECT:
         if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
-            MarkRoot(trc, obj, "js::AutoObjectRooter.obj");
+            MarkRoot(trc, obj, "JS::AutoObjectRooter.obj");
         return;
 
       case ID:
-        MarkRoot(trc, static_cast<AutoIdRooter *>(this)->id_, "js::AutoIdRooter.val");
+        MarkRoot(trc, static_cast<AutoIdRooter *>(this)->id_, "JS::AutoIdRooter.id_");
         return;
 
       case VALVECTOR: {
@@ -2020,7 +2020,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case STRING:
         if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
-            MarkRoot(trc, str, "js::AutoStringRooter.str");
+            MarkRoot(trc, str, "JS::AutoStringRooter.str");
         return;
 
       case IDVECTOR: {
@@ -2050,7 +2050,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
     JS_ASSERT(tag >= 0);
     MarkRootRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array,
-                  "js::AutoArrayRooter.array");
+                  "JS::AutoArrayRooter.array");
 }
 
 void
@@ -2093,6 +2093,10 @@ MarkWeakReferences(GCMarker *gcmarker)
     }
     JS_ASSERT(gcmarker->isMarkStackEmpty());
 }
+
+} // namespace js
+
+namespace JS {
 
 void
 MarkRuntime(JSTracer *trc)
@@ -2148,6 +2152,10 @@ MarkRuntime(JSTracer *trc)
             (*op)(trc, rt->gcGrayRootsData);
     }
 }
+
+} // namespace JS
+
+namespace js {
 
 void
 TriggerGC(JSRuntime *rt, gcstats::Reason reason)
@@ -3441,7 +3449,7 @@ RunDebugGC(JSContext *cx)
 #if defined(DEBUG) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 
 static void
-CheckStackRoot(JSTracer *trc, jsuword *w)
+CheckStackRoot(JSTracer *trc, uintptr_t *w)
 {
     /* Mark memory as defined for valgrind, as in MarkWordConservatively. */
 #ifdef JS_VALGRIND
@@ -3483,10 +3491,10 @@ CheckStackRoot(JSTracer *trc, jsuword *w)
 }
 
 static void
-CheckStackRootsRange(JSTracer *trc, jsuword *begin, jsuword *end)
+CheckStackRootsRange(JSTracer *trc, uintptr_t *begin, uintptr_t *end)
 {
     JS_ASSERT(begin <= end);
-    for (jsuword *i = begin; i != end; ++i)
+    for (uintptr_t *i = begin; i != end; ++i)
         CheckStackRoot(trc, i);
 }
 
@@ -3504,7 +3512,7 @@ CheckStackRoots(JSContext *cx)
     ctd->recordStackTop();
 
     JS_ASSERT(ctd->hasStackToScan());
-    jsuword *stackMin, *stackEnd;
+    uintptr_t *stackMin, *stackEnd;
 #if JS_STACK_GROWTH_DIRECTION > 0
     stackMin = td->nativeStackBase;
     stackEnd = ctd->nativeStackTop;

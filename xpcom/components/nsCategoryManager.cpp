@@ -59,7 +59,6 @@
 #include "nsCRT.h"
 #include "nsQuickSort.h"
 #include "nsEnumeratorUtils.h"
-#include "nsIProxyObjectManager.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
 
@@ -497,6 +496,41 @@ nsCategoryManager::get_category(const char* aName) {
   return node;
 }
 
+namespace {
+
+class CategoryNotificationRunnable : public nsRunnable
+{
+public:
+  CategoryNotificationRunnable(nsISupports* aSubject,
+                               const char* aTopic,
+                               const char* aData)
+    : mSubject(aSubject)
+    , mTopic(aTopic)
+    , mData(aData)
+  { }
+
+  NS_DECL_NSIRUNNABLE
+
+private:
+  nsCOMPtr<nsISupports> mSubject;
+  const char* mTopic;
+  NS_ConvertUTF8toUTF16 mData;
+};
+
+NS_IMETHODIMP
+CategoryNotificationRunnable::Run()
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService)
+    observerService->NotifyObservers(mSubject, mTopic, mData.get());
+
+  return NS_OK;
+}
+  
+} // anonymous namespace
+
+
 void
 nsCategoryManager::NotifyObservers( const char *aTopic,
                                     const char *aCategoryName,
@@ -505,19 +539,7 @@ nsCategoryManager::NotifyObservers( const char *aTopic,
   if (mSuppressNotifications)
     return;
 
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  if (!observerService)
-    return;
-
-  nsCOMPtr<nsIObserverService> obsProxy;
-  NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                       NS_GET_IID(nsIObserverService),
-                       observerService,
-                       NS_PROXY_ASYNC,
-                       getter_AddRefs(obsProxy));
-  if (!obsProxy)
-    return;
+  nsRefPtr<CategoryNotificationRunnable> r;
 
   if (aEntryName) {
     nsCOMPtr<nsISupportsCString> entry
@@ -529,11 +551,16 @@ nsCategoryManager::NotifyObservers( const char *aTopic,
     if (NS_FAILED(rv))
       return;
 
-    obsProxy->NotifyObservers(entry, aTopic,
-                              NS_ConvertUTF8toUTF16(aCategoryName).get());
+    r = new CategoryNotificationRunnable(entry, aTopic, aCategoryName);
   } else {
-    obsProxy->NotifyObservers(this, aTopic,
-                              NS_ConvertUTF8toUTF16(aCategoryName).get());
+    r = new CategoryNotificationRunnable(this, aTopic, aCategoryName);
+  }
+
+  if (NS_IsMainThread()) {
+    r->Run();
+  }
+  else {
+    NS_DispatchToMainThread(r);
   }
 }
 

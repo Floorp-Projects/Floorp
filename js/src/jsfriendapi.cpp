@@ -197,6 +197,12 @@ js::IsSystemCompartment(const JSCompartment *c)
 }
 
 JS_FRIEND_API(bool)
+js::IsAtomsCompartmentFor(const JSContext *cx, const JSCompartment *c)
+{
+    return c == cx->runtime->atomsCompartment;
+}
+
+JS_FRIEND_API(bool)
 js::IsScopeObject(JSObject *obj)
 {
     return obj->isScope();
@@ -458,3 +464,15 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
 }
 
 #endif
+
+namespace js {
+
+#ifdef JS_THREADSAFE
+JSThread *
+GetContextThread(const JSContext *cx)
+{
+    return cx->thread();
+}
+#endif
+
+} // namespace js
