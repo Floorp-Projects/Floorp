@@ -215,7 +215,7 @@ inline Anchor<T>::~Anchor()
  * a live integer value.
  */
 
-inline void PoisonPtr(jsuword *v)
+inline void PoisonPtr(uintptr_t *v)
 {
 #if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG)
     uint8_t *ptr = (uint8_t *) v + 3;
@@ -227,7 +227,7 @@ template <typename T>
 inline bool IsPoisonedPtr(T *v)
 {
 #if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG)
-    uint32_t mask = jsuword(v) & 0xff000000;
+    uint32_t mask = uintptr_t(v) & 0xff000000;
     return mask == uint32_t(JS_FREE_PATTERN << 24);
 #else
     return false;
@@ -3086,7 +3086,7 @@ JS_GetExternalStringClosure(JSContext *cx, JSString *str);
  * Deprecated. Use JS_SetNativeStackQuoata instead.
  */
 extern JS_PUBLIC_API(void)
-JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr);
+JS_SetThreadStackLimit(JSContext *cx, uintptr_t limitAddr);
 
 /*
  * Set the size of the native stack that should not be exceed. To disable
@@ -4932,13 +4932,13 @@ JS_ThrowStopIteration(JSContext *cx);
  * indicates that ClearContextThread has been called on this context
  * since the last SetContextThread, or non-0, which indicates the opposite.
  */
-extern JS_PUBLIC_API(jsword)
+extern JS_PUBLIC_API(intptr_t)
 JS_GetContextThread(JSContext *cx);
 
-extern JS_PUBLIC_API(jsword)
+extern JS_PUBLIC_API(intptr_t)
 JS_SetContextThread(JSContext *cx);
 
-extern JS_PUBLIC_API(jsword)
+extern JS_PUBLIC_API(intptr_t)
 JS_ClearContextThread(JSContext *cx);
 
 /*

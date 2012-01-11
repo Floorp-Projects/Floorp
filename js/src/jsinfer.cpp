@@ -5017,7 +5017,7 @@ static inline bool
 IsAboutToBeFinalized(JSContext *cx, TypeObjectKey *key)
 {
     /* Mask out the low bit indicating whether this is a type or JS object. */
-    return !reinterpret_cast<const gc::Cell *>((jsuword) key & ~1)->isMarked();
+    return !reinterpret_cast<const gc::Cell *>(uintptr_t(key) & ~1)->isMarked();
 }
 
 void
