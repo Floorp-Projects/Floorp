@@ -64,7 +64,6 @@
 #include "nsTraceRefcntImpl.h"
 
 #include "nsILocalFile.h"
-#include "nsIProxyObjectManager.h"
 
 #ifdef XP_WIN
 #include <windows.h>
