@@ -231,7 +231,7 @@ private:
   }
 
   nsAutoTArray<jsval, 16> vals;
-  js::AutoArrayRooter avr;
+  JS::AutoArrayRooter avr;
 };
 
 /****************************************************************
