@@ -191,7 +191,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc, Op pop)
 
     JSObject *funobj = JS_GetFunctionObject(fun);
 
-    js::AutoObjectRooter tvr(cx, funobj);
+    JS::AutoObjectRooter tvr(cx, funobj);
 
     // Unfortunately, we cannot guarantee that Op is aligned. Use a
     // second object to work around this.
@@ -216,7 +216,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, uintN orig_attrs,
 {
     // Generate both getter and setter and stash them in the prototype.
     jsval roots[2] = { JSVAL_NULL, JSVAL_NULL };
-    js::AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
+    JS::AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
 
     uintN attrs = JSPROP_SHARED | (orig_attrs & JSPROP_ENUMERATE);
     JSObject *getterobj;
@@ -1125,9 +1125,7 @@ xpc_qsAssertContextOK(JSContext *cx)
     XPCPerThreadData *thread = XPCPerThreadData::GetData(cx);
     XPCJSContextStack* stack = thread->GetJSContextStack();
 
-    JSContext* topJSContext = nsnull;
-    nsresult rv = stack->Peek(&topJSContext);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "XPCJSContextStack::Peek failed");
+    JSContext *topJSContext = stack->Peek();
 
     // This is what we're actually trying to assert here.
     NS_ASSERTION(cx == topJSContext, "wrong context on XPCJSContextStack!");

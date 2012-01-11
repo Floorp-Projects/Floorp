@@ -88,6 +88,7 @@
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"
 #include "mozilla/dom/Element.h"
+#include "nsRange.h"
 
 #include "nsTypeAheadFind.h"
 
@@ -101,7 +102,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsTypeAheadFind)
 NS_IMPL_RELEASE(nsTypeAheadFind)
 
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
@@ -127,11 +127,11 @@ nsresult
 nsTypeAheadFind::Init(nsIDocShell* aDocShell)
 {
   nsCOMPtr<nsIPrefBranch2> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  mSearchRange = do_CreateInstance(kRangeCID);
-  mStartPointRange = do_CreateInstance(kRangeCID);
-  mEndPointRange = do_CreateInstance(kRangeCID);
+  mSearchRange = new nsRange();
+  mStartPointRange = new nsRange();
+  mEndPointRange = new nsRange();
   mFind = do_CreateInstance(NS_FIND_CONTRACTID);
-  if (!prefInternal || !mSearchRange || !mStartPointRange || !mEndPointRange || !mFind)
+  if (!prefInternal || !mFind)
     return NS_ERROR_FAILURE;
 
   SetDocShell(aDocShell);
@@ -201,8 +201,8 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell)
   mPresShell = do_GetWeakReference(presShell);      
 
   mStartFindRange = nsnull;
-  mStartPointRange = do_CreateInstance(kRangeCID);
-  mSearchRange = do_CreateInstance(kRangeCID);
+  mStartPointRange = new nsRange();
+  mSearchRange = new nsRange();
 
   mFoundLink = nsnull;
   mFoundEditable = nsnull;

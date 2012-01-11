@@ -51,7 +51,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMNSRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -940,19 +939,19 @@ nsTextEditRules::WillUndo(nsISelection *aSelection, bool *aCancel, bool *aHandle
 nsresult
 nsTextEditRules::DidUndo(nsISelection *aSelection, nsresult aResult)
 {
-  nsresult res = aResult;  // if aResult is an error, we return it.
-  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
-  if (NS_SUCCEEDED(res)) 
-  {
-    nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
-    NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMNode> node = mEditor->GetLeftmostChild(theRoot);
-    if (node && mEditor->IsMozEditorBogusNode(node))
-      mBogusNode = node;
-    else
-      mBogusNode = nsnull;
+  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
+  // If aResult is an error, we return it.
+  NS_ENSURE_SUCCESS(aResult, aResult);
+
+  dom::Element* theRoot = mEditor->GetRoot();
+  NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
+  nsIContent* node = mEditor->GetLeftmostChild(theRoot);
+  if (node && mEditor->IsMozEditorBogusNode(node)) {
+    mBogusNode = do_QueryInterface(node);
+  } else {
+    mBogusNode = nsnull;
   }
-  return res;
+  return aResult;
 }
 
 nsresult
@@ -1053,52 +1052,36 @@ nsTextEditRules::RemoveRedundantTrailingBR()
   if (IsSingleLineEditor())
     return NS_OK;
 
-  nsCOMPtr<nsIDOMNode> body = do_QueryInterface(mEditor->GetRoot());
+  nsRefPtr<dom::Element> body = mEditor->GetRoot();
   if (!body)
     return NS_ERROR_NULL_POINTER;
 
-  bool hasChildren;
-  nsresult res = body->HasChildNodes(&hasChildren);
-  NS_ENSURE_SUCCESS(res, res);
-
-  if (hasChildren) {
-    nsCOMPtr<nsIDOMNodeList> childList;
-    res = body->GetChildNodes(getter_AddRefs(childList));
-    NS_ENSURE_SUCCESS(res, res);
-
-    if (!childList)
-      return NS_ERROR_NULL_POINTER;
-
-    PRUint32 childCount;
-    res = childList->GetLength(&childCount);
-    NS_ENSURE_SUCCESS(res, res);
-
+  PRUint32 childCount = body->GetChildCount();
+  if (childCount > 1) {
     // The trailing br is redundant if it is the only remaining child node
-    if (childCount != 1)
-      return NS_OK;
-
-    nsCOMPtr<nsIDOMNode> child;
-    res = body->GetFirstChild(getter_AddRefs(child));
-    NS_ENSURE_SUCCESS(res, res);
-
-    if (nsTextEditUtils::IsMozBR(child)) {
-      // Rather than deleting this node from the DOM tree we should instead
-      // morph this br into the bogus node
-      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(child);
-      if (elem) {
-        elem->RemoveAttribute(NS_LITERAL_STRING("type"));
-        NS_ENSURE_SUCCESS(res, res);
-
-        // set mBogusNode to be this <br>
-        mBogusNode = elem;
- 
-        // give it the bogus node attribute
-        nsCOMPtr<nsIContent> content = do_QueryInterface(elem);
-        content->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
-                         kMOZEditorBogusNodeValue, false);
-      }
-    }
+    return NS_OK;
   }
+
+  nsRefPtr<nsIContent> child = body->GetFirstChild();
+  if (!child || !child->IsElement()) {
+    return NS_OK;
+  }
+
+  dom::Element* elem = child->AsElement();
+  if (!nsTextEditUtils::IsMozBR(elem)) {
+    return NS_OK;
+  }
+
+  // Rather than deleting this node from the DOM tree we should instead
+  // morph this br into the bogus node
+  elem->UnsetAttr(kNameSpaceID_None, nsGkAtoms::type, true);
+
+  // set mBogusNode to be this <br>
+  mBogusNode = do_QueryInterface(elem);
+
+  // give it the bogus node attribute
+  elem->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
+                kMOZEditorBogusNodeValue, false);
   return NS_OK;
 }
 

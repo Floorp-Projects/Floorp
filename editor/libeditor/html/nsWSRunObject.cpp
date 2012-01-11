@@ -44,6 +44,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsCRT.h"
 #include "nsIRangeUtils.h"
+#include "nsRange.h"
 
 const PRUnichar nbsp = 160;
 
@@ -1550,7 +1551,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
                         // then just go through them from the beginning.
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIDOMCharacterData> textnode;
-  nsCOMPtr<nsIDOMRange> range;
+  nsRefPtr<nsRange> range;
 
   if (aStartNode == aEndNode)
   {
@@ -1593,8 +1594,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
     {
       if (!range)
       {
-        range = do_CreateInstance("@mozilla.org/content/range;1");
-        NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
+        range = new nsRange();
         res = range->SetStart(aStartNode, aStartOffset);
         NS_ENSURE_SUCCESS(res, res);
         res = range->SetEnd(aEndNode, aEndOffset);
@@ -1853,6 +1853,7 @@ nsWSRunObject::GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset
 nsresult
 nsWSRunObject::FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, bool after)
 {
+  *outRun = nsnull;
   // given a dompoint, find the ws run that is before or after it, as caller needs
   NS_ENSURE_TRUE(aNode && outRun, NS_ERROR_NULL_POINTER);
     

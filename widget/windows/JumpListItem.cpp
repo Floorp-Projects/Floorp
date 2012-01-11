@@ -55,7 +55,7 @@
 #include "mozIAsyncFavicons.h"
 #include "mozilla/Preferences.h"
 #include "JumpListBuilder.h"
-#include "nsToolkit.h"
+#include "WinUtils.h"
 
 namespace mozilla {
 namespace widget {
@@ -738,13 +738,15 @@ nsresult JumpListLink::GetShellItem(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IS
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Load vista+ SHCreateItemFromParsingName
-  if (!nsToolkit::VistaCreateItemFromParsingNameInit())
+  if (!WinUtils::VistaCreateItemFromParsingNameInit()) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   // Create the IShellItem
-  if (FAILED(nsToolkit::createItemFromParsingName(NS_ConvertASCIItoUTF16(spec).get(),
-             NULL, IID_PPV_ARGS(&psi))))
+  if (FAILED(WinUtils::SHCreateItemFromParsingName(
+               NS_ConvertASCIItoUTF16(spec).get(), NULL, IID_PPV_ARGS(&psi)))) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   // Set the title
   nsAutoString linkTitle;

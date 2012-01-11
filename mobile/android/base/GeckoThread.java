@@ -54,12 +54,12 @@ public class GeckoThread extends Thread {
 
     Intent mIntent;
     String mUri;
-    String mTitle;
+    boolean mRestoreSession;
 
-    GeckoThread (Intent intent, String uri, String title) {
+    GeckoThread (Intent intent, String uri, boolean restoreSession) {
         mIntent = intent;
         mUri = uri;
-        mTitle = title;
+        mRestoreSession = restoreSession;
     }
 
     public void run() {
@@ -95,18 +95,13 @@ public class GeckoThread extends Thread {
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - runGecko");
 
         // and then fire us up
-
-        app.mMainHandler.post(new Runnable() {
-            public void run() {
-                app.mBrowserToolbar.setTitle(mTitle);
-            }
-        });
         try {
             Log.w(LOGTAG, "RunGecko - URI = " + mUri);
 
             GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
                                    mIntent.getStringExtra("args"),
-                                   mUri);
+                                   mUri,
+                                   mRestoreSession);
         } catch (Exception e) {
             Log.e(LOGTAG, "top level exception", e);
             StringWriter sw = new StringWriter();

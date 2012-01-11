@@ -57,7 +57,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jstypedarray.h"
 #include "nsJSUtils.h"
@@ -197,7 +196,7 @@ nsHTMLAudioElement::MozWriteAudio(const jsval &aData, JSContext *aCx, PRUint32 *
   }
 
   JSObject *darray = JSVAL_TO_OBJECT(aData);
-  js::AutoValueRooter tsrc_tvr(aCx);
+  JS::AutoValueRooter tsrc_tvr(aCx);
   JSObject *tsrc = NULL;
 
   // Allow either Float32Array or plain JS Array

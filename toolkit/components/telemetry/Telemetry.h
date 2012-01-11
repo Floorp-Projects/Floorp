@@ -60,6 +60,11 @@ HistogramCount
 };
 
 /**
+ * Initialize the Telemetry service on the main thread at startup.
+ */
+void Init();
+
+/**
  * Adds sample to a histogram defined in TelemetryHistograms.h
  *
  * @param id - histogram id

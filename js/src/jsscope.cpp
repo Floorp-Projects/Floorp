@@ -207,7 +207,7 @@ PropertyTable::search(jsid id, bool adding)
     sizeMask = JS_BITMASK(sizeLog2);
 
 #ifdef DEBUG
-    jsuword collision_flag = SHAPE_COLLISION;
+    uintptr_t collision_flag = SHAPE_COLLISION;
 #endif
 
     /* Save the first removed entry pointer so we can recycle it if adding. */
@@ -218,7 +218,7 @@ PropertyTable::search(jsid id, bool adding)
         if (adding && !SHAPE_HAD_COLLISION(stored))
             SHAPE_FLAG_COLLISION(spp, shape);
 #ifdef DEBUG
-        collision_flag &= jsuword(*spp) & SHAPE_COLLISION;
+        collision_flag &= uintptr_t(*spp) & SHAPE_COLLISION;
 #endif
     }
 
@@ -244,7 +244,7 @@ PropertyTable::search(jsid id, bool adding)
             if (adding && !SHAPE_HAD_COLLISION(stored))
                 SHAPE_FLAG_COLLISION(spp, shape);
 #ifdef DEBUG
-            collision_flag &= jsuword(*spp) & SHAPE_COLLISION;
+            collision_flag &= uintptr_t(*spp) & SHAPE_COLLISION;
 #endif
         }
     }
@@ -1266,10 +1266,10 @@ Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, Shape
 StackBaseShape::hash(const StackBaseShape *base)
 {
     JSDHashNumber hash = base->flags;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->clasp) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->parent) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->rawGetter);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->rawSetter);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->clasp) >> 3);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->parent) >> 3);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ uintptr_t(base->rawGetter);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ uintptr_t(base->rawSetter);
     return hash;
 }
 
@@ -1402,9 +1402,9 @@ Bindings::setParent(JSContext *cx, JSObject *obj)
 /* static */ inline HashNumber
 InitialShapeEntry::hash(const Lookup &lookup)
 {
-    JSDHashNumber hash = jsuword(lookup.clasp) >> 3;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(lookup.proto) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(lookup.parent) >> 3);
+    JSDHashNumber hash = uintptr_t(lookup.clasp) >> 3;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(lookup.proto) >> 3);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(lookup.parent) >> 3);
     return hash + lookup.nfixed;
 }
 
@@ -1521,22 +1521,4 @@ JSCompartment::sweepInitialShapeTable(JSContext *cx)
                 e.removeFront();
         }
     }
-}
-
-JS_PUBLIC_API(bool)
-JS::IsShapeInDictionary(const void *shape)
-{
-    return static_cast<const Shape*>(shape)->inDictionary();
-}
-
-JS_PUBLIC_API(size_t)
-JS::SizeOfShapePropertyTable(const void *shape, JSMallocSizeOfFun mallocSizeOf)
-{
-    return static_cast<const Shape*>(shape)->sizeOfPropertyTable(mallocSizeOf);
-}
-
-JS_PUBLIC_API(size_t)
-JS::SizeOfShapeKids(const void *shape, JSMallocSizeOfFun mallocSizeOf)
-{
-    return static_cast<const Shape*>(shape)->sizeOfKids(mallocSizeOf);
 }

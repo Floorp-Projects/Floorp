@@ -72,18 +72,18 @@
 # undef NSPR_LOCK
 #endif
 
-#define Thin_GetWait(W) ((jsword)(W) & 0x1)
-#define Thin_SetWait(W) ((jsword)(W) | 0x1)
-#define Thin_RemoveWait(W) ((jsword)(W) & ~0x1)
+#define Thin_GetWait(W) ((intptr_t)(W) & 0x1)
+#define Thin_SetWait(W) ((intptr_t)(W) | 0x1)
+#define Thin_RemoveWait(W) ((intptr_t)(W) & ~0x1)
 
 typedef struct JSFatLock JSFatLock;
 
 typedef struct JSThinLock {
-    jsword      owner;
+    intptr_t    owner;
     JSFatLock   *fat;
 } JSThinLock;
 
-#define CX_THINLOCK_ID(cx)       ((jsword)(cx)->thread())
+#define CX_THINLOCK_ID(cx)       ((intptr_t)(cx)->thread())
 #define CURRENT_THREAD_IS_ME(me) (((JSThread *)me)->id == js_CurrentThreadId())
 
 typedef PRLock JSLock;
@@ -144,7 +144,7 @@ extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
 #define JS_ATOMIC_ADD(p,v)          (*(p) += (v))
 #define JS_ATOMIC_SET(p,v)          (*(p) = (v))
 
-#define js_CurrentThreadId()        0
+#define js_CurrentThreadId()        (void*)NULL
 #define JS_NEW_LOCK()               NULL
 #define JS_DESTROY_LOCK(l)          ((void)0)
 #define JS_ACQUIRE_LOCK(l)          ((void)0)
@@ -183,18 +183,18 @@ extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
 #ifdef JS_THREADSAFE
 
 extern JSBool
-js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv);
+js_CompareAndSwap(volatile intptr_t *w, intptr_t ov, intptr_t nv);
 
 /* Atomically bitwise-or the mask into the word *w using compare and swap. */
 extern void
-js_AtomicSetMask(volatile jsword *w, jsword mask);
+js_AtomicSetMask(volatile intptr_t *w, intptr_t mask);
 
 /*
  * Atomically bitwise-and the complement of the mask into the word *w using
  * compare and swap.
  */
 extern void
-js_AtomicClearMask(volatile jsword *w, jsword mask);
+js_AtomicClearMask(volatile intptr_t *w, intptr_t mask);
 
 #define JS_ATOMIC_SET_MASK(w, mask) js_AtomicSetMask(w, mask)
 #define JS_ATOMIC_CLEAR_MASK(w, mask) js_AtomicClearMask(w, mask)
@@ -205,7 +205,7 @@ js_GetCPUCount();
 #else
 
 static inline JSBool
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+js_CompareAndSwap(intptr_t *w, intptr_t ov, intptr_t nv)
 {
     return (*w == ov) ? *w = nv, JS_TRUE : JS_FALSE;
 }

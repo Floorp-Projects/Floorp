@@ -43,7 +43,7 @@
         .CODE
 
 ;;;---------------------------------------------------------------------
-;;; int _Optlink js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+;;; int _Optlink js_CompareAndSwap(intptr_t *w, intptr_t ov, intptr_t nv)
 ;;;---------------------------------------------------------------------
 js_CompareAndSwap     PROC OPTLINK EXPORT
         push ebx

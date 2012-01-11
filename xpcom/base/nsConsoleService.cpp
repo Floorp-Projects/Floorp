@@ -45,7 +45,6 @@
 
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
-#include "nsIProxyObjectManager.h"
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 
@@ -66,7 +65,11 @@ NS_IMPL_QUERY_INTERFACE1_CI(nsConsoleService, nsIConsoleService)
 NS_IMPL_CI_INTERFACE_GETTER1(nsConsoleService, nsIConsoleService)
 
 nsConsoleService::nsConsoleService()
-    : mMessages(nsnull), mCurrent(0), mFull(false), mListening(false), mLock("nsConsoleService.mLock")
+    : mMessages(nsnull)
+    , mCurrent(0)
+    , mFull(false)
+    , mDeliveringMessage(false)
+    , mLock("nsConsoleService.mLock")
 {
     // XXX grab this from a pref!
     // hm, but worry about circularity, bc we want to be able to report
@@ -81,16 +84,6 @@ nsConsoleService::~nsConsoleService()
         NS_RELEASE(mMessages[i]);
         i++;
     }
-
-#ifdef DEBUG_mccabe
-    if (mListeners.Count() != 0) {
-        fprintf(stderr, 
-            "WARNING - %d console error listeners still registered!\n"
-            "More calls to nsIConsoleService::UnregisterListener needed.\n",
-            mListeners.Count());
-    }
-    
-#endif
 
     if (mMessages)
         nsMemory::Free(mMessages);
@@ -107,18 +100,58 @@ nsConsoleService::Init()
     // Array elements should be 0 initially for circular buffer algorithm.
     memset(mMessages, 0, mBufferSize * sizeof(nsIConsoleMessage *));
 
+    mListeners.Init();
+
     return NS_OK;
 }
 
-static bool snapshot_enum_func(nsHashKey *key, void *data, void* closure)
-{
-    nsCOMArray<nsIConsoleListener> *array =
-      reinterpret_cast<nsCOMArray<nsIConsoleListener> *>(closure);
+namespace {
 
-    // Copy each element into the temporary nsCOMArray...
-    array->AppendObject((nsIConsoleListener*)data);
-    return true;
+class LogMessageRunnable : public nsRunnable
+{
+public:
+    LogMessageRunnable(nsIConsoleMessage* message, nsConsoleService* service)
+        : mMessage(message)
+        , mService(service)
+    { }
+
+    void AddListener(nsIConsoleListener* listener) {
+        mListeners.AppendObject(listener);
+    }
+
+    NS_DECL_NSIRUNNABLE
+
+private:
+    nsCOMPtr<nsIConsoleMessage> mMessage;
+    nsRefPtr<nsConsoleService> mService;
+    nsCOMArray<nsIConsoleListener> mListeners;
+};
+
+NS_IMETHODIMP
+LogMessageRunnable::Run()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mService->SetIsDelivering();
+
+    for (PRInt32 i = 0; i < mListeners.Count(); ++i)
+        mListeners[i]->Observe(mMessage);
+
+    mService->SetDoneDelivering();
+
+    return NS_OK;
 }
+
+PLDHashOperator
+CollectCurrentListeners(nsISupports* aKey, nsIConsoleListener* aValue,
+                        void* closure)
+{
+    LogMessageRunnable* r = static_cast<LogMessageRunnable*>(closure);
+    r->AddListener(aValue);
+    return PL_DHASH_NEXT;
+}
+
+} // anonymous namespace
 
 // nsIConsoleService methods
 NS_IMETHODIMP
@@ -127,7 +160,12 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
     if (message == nsnull)
         return NS_ERROR_INVALID_ARG;
 
-    nsCOMArray<nsIConsoleListener> listenersSnapshot;
+    if (NS_IsMainThread() && mDeliveringMessage) {
+        NS_WARNING("Some console listener threw an error while inside itself. Discarding this message");
+        return NS_ERROR_FAILURE;
+    }
+
+    nsRefPtr<LogMessageRunnable> r = new LogMessageRunnable(message, this);
     nsIConsoleMessage *retiredMessage;
 
     NS_ADDREF(message); // early, in case it's same as replaced below.
@@ -166,36 +204,12 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
          * Copy the listeners into the snapshot array - in case a listener
          * is removed during an Observe(...) notification...
          */
-        mListeners.Enumerate(snapshot_enum_func, &listenersSnapshot);
+        mListeners.EnumerateRead(CollectCurrentListeners, r);
     }
     if (retiredMessage != nsnull)
         NS_RELEASE(retiredMessage);
 
-    /*
-     * Iterate through any registered listeners and tell them about
-     * the message.  We use the mListening flag to guard against
-     * recursive message logs.  This could sometimes result in
-     * listeners being skipped because of activity on other threads,
-     * when we only care about the recursive case.
-     */
-    nsCOMPtr<nsIConsoleListener> listener;
-    PRInt32 snapshotCount = listenersSnapshot.Count();
-
-    {
-        MutexAutoLock lock(mLock);
-        if (mListening)
-            return NS_OK;
-        mListening = true;
-    }
-
-    for (PRInt32 i = 0; i < snapshotCount; i++) {
-        listenersSnapshot[i]->Observe(message);
-    }
-    
-    {
-        MutexAutoLock lock(mLock);
-        mListening = false;
-    }
+    NS_DispatchToMainThread(r);
 
     return NS_OK;
 }
@@ -265,61 +279,42 @@ nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, PRUint32 *count
 }
 
 NS_IMETHODIMP
-nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
-    nsresult rv;
-
-    /*
-     * Store a threadsafe proxy to the listener rather than the
-     * listener itself; we want the console service to be callable
-     * from any thread, but listeners can be implemented in
-     * thread-specific ways, and we always want to call them on their
-     * originating thread.  JavaScript is the motivating example.
-     */
-    nsCOMPtr<nsIConsoleListener> proxiedListener;
-
-    rv = GetProxyForListener(listener, getter_AddRefs(proxiedListener));
-    if (NS_FAILED(rv))
-        return rv;
-
-    {
-        MutexAutoLock lock(mLock);
-        nsISupportsKey key(listener);
-
-        /*
-         * Put the proxy event listener into a hashtable using the *real* 
-         * listener as the key.
-         *
-         * This is necessary because proxy objects do *not* maintain
-         * nsISupports identity.  Therefore, since GetProxyForListener(...)
-         * can return different proxies for the same object (see bug #85831)
-         * we need to use the real object as the unique key...
-         */
-        mListeners.Put(&key, proxiedListener);
+nsConsoleService::RegisterListener(nsIConsoleListener *listener)
+{
+    if (!NS_IsMainThread()) {
+        NS_ERROR("nsConsoleService::RegisterListener is main thread only.");
+        return NS_ERROR_NOT_SAME_THREAD;
     }
+
+    nsCOMPtr<nsISupports> canonical = do_QueryInterface(listener);
+
+    MutexAutoLock lock(mLock);
+    if (mListeners.GetWeak(canonical)) {
+        // Reregistering a listener isn't good
+        return NS_ERROR_FAILURE;
+    }
+    mListeners.Put(canonical, listener);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsConsoleService::UnregisterListener(nsIConsoleListener *listener) {
+nsConsoleService::UnregisterListener(nsIConsoleListener *listener)
+{
+    if (!NS_IsMainThread()) {
+        NS_ERROR("nsConsoleService::UnregisterListener is main thread only.");
+        return NS_ERROR_NOT_SAME_THREAD;
+    }
+
+    nsCOMPtr<nsISupports> canonical = do_QueryInterface(listener);
+
     MutexAutoLock lock(mLock);
 
-    nsISupportsKey key(listener);
-    mListeners.Remove(&key);
+    if (!mListeners.GetWeak(canonical)) {
+        // Unregistering a listener that was never registered?
+        return NS_ERROR_FAILURE;
+    }
+    mListeners.Remove(canonical);
     return NS_OK;
-}
-
-nsresult 
-nsConsoleService::GetProxyForListener(nsIConsoleListener* aListener,
-                                      nsIConsoleListener** aProxy)
-{
-    /*
-     * Would it be better to catch that case and leave the listener unproxied?
-     */
-    return NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
-                                NS_GET_IID(nsIConsoleListener),
-                                aListener,
-                                NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
-                                (void**) aProxy);
 }
 
 NS_IMETHODIMP

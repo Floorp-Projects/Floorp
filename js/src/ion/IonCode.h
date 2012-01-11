@@ -104,6 +104,9 @@ class IonCode : public gc::Cell
     size_t instructionsSize() const {
         return insnSize_;
     }
+    size_t bufferSize() const {
+        return bufferSize_;
+    }
     void trace(JSTracer *trc);
     void finalize(JSContext *cx, bool background);
 
@@ -263,6 +266,9 @@ struct IonScript
     }
     size_t safepointsSize() const {
         return safepointsSize_;
+    }
+    size_t size() const {
+        return safepointsStart_ + safepointsSize_;
     }
     Value &getConstant(size_t index) {
         JS_ASSERT(index < numConstants());

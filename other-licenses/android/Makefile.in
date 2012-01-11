@@ -46,6 +46,9 @@ MODULE           = android
 LIBRARY_NAME     = android
 FORCE_STATIC_LIB = 1
 
+CSRCS =
+
+ifdef MOZ_OLD_LINKER
 DEFINES += \
   -DLINKER_DEBUG=0 \
   -DMOZ_LINKER \
@@ -61,15 +64,20 @@ DEFINES += -DANDROID_X86_LINKER
 endif
 endif
 
-CSRCS = \
+CSRCS += \
   ba.c \
   debugger.c \
   dlfcn.c \
+  linker.c \
+  linker_format.c \
+  rt.c \
+  $(NULL)
+endif
+
+CSRCS += \
   ev_streams.c \
   ev_timers.c \
   getaddrinfo.c \
-  linker.c \
-  linker_format.c \
   ns_name.c \
   ns_netint.c \
   ns_parse.c \
@@ -83,7 +91,6 @@ CSRCS = \
   res_mkquery.c \
   res_send.c \
   res_state.c \
-  rt.c \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

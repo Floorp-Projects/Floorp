@@ -72,7 +72,7 @@ jsd_InterruptHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rva
         return JSTRAP_CONTINUE;
 
 #ifdef LIVEWIRE
-    if( ! jsdlw_UserCodeAtPC(jsdc, jsdscript, (jsuword)pc) )
+    if( ! jsdlw_UserCodeAtPC(jsdc, jsdscript, (uintptr_t)pc) )
         return JSTRAP_CONTINUE;
 #endif
 

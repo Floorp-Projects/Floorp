@@ -262,8 +262,13 @@ var BrowserApp = {
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let url = "about:home";
-    if ("arguments" in window && window.arguments[0])
-      url = window.arguments[0];
+    let restoreSession = false;
+    if ("arguments" in window) {
+      if (window.arguments[0])
+        url = window.arguments[0];
+      if (window.arguments[1])
+        restoreSession = window.arguments[1];
+    }
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
@@ -275,7 +280,7 @@ var BrowserApp = {
 
     // restore the previous session
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (ss.shouldRestore()) {
+    if (restoreSession || ss.shouldRestore()) {
       // A restored tab should not be active if we are loading a URL
       let restoreToFront = false;
 
@@ -301,6 +306,9 @@ var BrowserApp = {
       ss.restoreLastSession(restoreToFront);
     } else {
       this.addTab(url);
+
+      // show telemetry door hanger if we aren't restoring a session
+      this._showTelemetryPrompt();
     }
 
     // notify java that gecko has loaded
@@ -309,35 +317,35 @@ var BrowserApp = {
         type: "Gecko:Ready"
       }
     });
+  },
 
+  _showTelemetryPrompt: function _showTelemetryPrompt() {
     let telemetryPrompted = false;
     try {
       telemetryPrompted = Services.prefs.getBoolPref("toolkit.telemetry.prompted");
-    } catch (e) {
-      // optional
-    }
+    } catch (e) { /* Optional */ }
+    if (telemetryPrompted)
+      return;
 
-    if (!telemetryPrompted) {
-      let buttons = [
-        {
-          label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
-          callback: function () {
-            Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
-            Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
-          }
-        },
-        {
-          label: Strings.browser.GetStringFromName("telemetry.optin.no"),
-          callback: function () {
-            Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
-            Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
-          }
+    let buttons = [
+      {
+        label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
+        callback: function () {
+          Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
+          Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
         }
-      ];
-      let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-      let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
-      NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
-    }
+      },
+      {
+        label: Strings.browser.GetStringFromName("telemetry.optin.no"),
+        callback: function () {
+          Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
+          Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
+        }
+      }
+    ];
+    let brandShortName = Strings.brand.GetStringFromName("brandShortName");
+    let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
+    NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
   },
 
   shutdown: function shutdown() {
@@ -486,8 +494,27 @@ var BrowserApp = {
   },
 
   quit: function quit() {
-      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
-      window.close();
+    // Figure out if there's at least one other browser window around.
+    let lastBrowser = true;
+    let e = Services.wm.getEnumerator("navigator:browser");
+    while (e.hasMoreElements() && lastBrowser) {
+      let win = e.getNext();
+      if (win != window)
+        lastBrowser = false;
+    }
+
+    if (lastBrowser) {
+      // Let everyone know we are closing the last browser window
+      let closingCanceled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+      Services.obs.notifyObservers(closingCanceled, "browser-lastwindow-close-requested", null);
+      if (closingCanceled.data)
+        return;
+
+      Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
+    }
+
+    window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
+    window.close();
   },
 
   saveAsPDF: function saveAsPDF(aBrowser) {
@@ -2546,8 +2573,7 @@ var FormAssistant = {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
     Services.obs.addObserver(this, "FormAssist:Closed", false);
 
-    BrowserApp.deck.addEventListener("compositionstart", this, false);
-    BrowserApp.deck.addEventListener("compositionupdate", this, false);
+    BrowserApp.deck.addEventListener("input", this, false);
   },
 
   uninit: function() {
@@ -2573,9 +2599,8 @@ var FormAssistant = {
   },
 
   handleEvent: function(aEvent) {
-   switch (aEvent.type) {
-      case "compositionstart":
-      case "compositionupdate":
+    switch (aEvent.type) {
+      case "input":
         let currentElement = aEvent.target;
         if (!this._isAutocomplete(currentElement))
           break;
@@ -2583,7 +2608,7 @@ var FormAssistant = {
         // Keep track of input element so we can fill it in if the user
         // selects an autocomplete suggestion
         this._currentInputElement = currentElement;
-        let suggestions = this._getAutocompleteSuggestions(aEvent.data, currentElement);
+        let suggestions = this._getAutocompleteSuggestions(currentElement.value, currentElement);
 
         let rect = currentElement.getBoundingClientRect();
         let zoom = BrowserApp.selectedTab.viewport.zoom;
