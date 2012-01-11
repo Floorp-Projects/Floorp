@@ -55,12 +55,12 @@ VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL &sameContent)
   sameContent = FALSE;
   nsAutoHandle file1(CreateFileW(file1Path, GENERIC_READ, FILE_SHARE_READ, 
                                  NULL, OPEN_EXISTING, 0, NULL));
-  if (!file1) {
+  if (INVALID_HANDLE_VALUE == file1) {
     return FALSE;
   }
   nsAutoHandle file2(CreateFileW(file2Path, GENERIC_READ, FILE_SHARE_READ, 
                                  NULL, OPEN_EXISTING, 0, NULL));
-  if (!file2) {
+  if (INVALID_HANDLE_VALUE == file2) {
     return FALSE;
   }
 

@@ -46,7 +46,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Traversal-Range/
  */
 
-[scriptable, uuid(a6cf90ce-15b3-11d2-932e-00805f8add32)]
+[scriptable, builtinclass, uuid(a059eea8-fece-4c14-93d3-7f50a944ae43)]
 interface nsIDOMRange : nsISupports
 {
   readonly attribute nsIDOMNode       startContainer;
@@ -110,4 +110,25 @@ interface nsIDOMRange : nsISupports
   DOMString          toString()
                                         raises(DOMException);
   void               detach();
+  
+  // This method comes from
+  // http://html5.org/specs/dom-parsing.html#extensions-to-the-range-interface
+  nsIDOMDocumentFragment    createContextualFragment(in DOMString fragment);
+
+  // This returns true if parent+offset equals either
+  // of the boundary points or is between them.
+  boolean                   isPointInRange(in nsIDOMNode parent,
+                                           in long offset);
+
+  // comparePoint returns
+  //   -1 if point is before the start boundary point,
+  //    0 if point is either of the boundary points or between them,
+  //    1 if point is after the end boundary point.
+  // Sort of a strcmp for ranges.
+  short                     comparePoint(in nsIDOMNode parent, in long offset);
+
+  // These methods come from 
+  // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-range-interface
+  nsIDOMClientRectList getClientRects();
+  nsIDOMClientRect getBoundingClientRect();
 };

@@ -78,8 +78,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMNSRange.h"
-#include "nsIDOMRange.h"
+#include "nsRange.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -169,10 +168,8 @@ mozInlineSpellStatus::InitForEditorChange(
   mRange = new nsRange();
 
   // ...we need to put the start and end in the correct order
-  nsCOMPtr<nsIDOMNSRange> nsrange = do_QueryInterface(mAnchorRange, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
   PRInt16 cmpResult;
-  rv = nsrange->ComparePoint(aPreviousNode, aPreviousOffset, &cmpResult);
+  rv = mAnchorRange->ComparePoint(aPreviousNode, aPreviousOffset, &cmpResult);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cmpResult < 0) {
     // previous anchor node is before the current anchor
@@ -194,17 +191,14 @@ mozInlineSpellStatus::InitForEditorChange(
 
   // if we were given a range, we need to expand our range to encompass it
   if (aStartNode && aEndNode) {
-    nsrange = do_QueryInterface(mRange, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = nsrange->ComparePoint(aStartNode, aStartOffset, &cmpResult);
+    rv = mRange->ComparePoint(aStartNode, aStartOffset, &cmpResult);
     NS_ENSURE_SUCCESS(rv, rv);
     if (cmpResult < 0) { // given range starts before
       rv = mRange->SetStart(aStartNode, aStartOffset);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = nsrange->ComparePoint(aEndNode, aEndOffset, &cmpResult);
+    rv = mRange->ComparePoint(aEndNode, aEndOffset, &cmpResult);
     NS_ENSURE_SUCCESS(rv, rv);
     if (cmpResult > 0) { // given range ends after
       rv = mRange->SetEnd(aEndNode, aEndOffset);
@@ -285,7 +279,7 @@ mozInlineSpellStatus::InitForSelection()
 //    a change operation over the given range.
 
 nsresult
-mozInlineSpellStatus::InitForRange(nsIRange* aRange)
+mozInlineSpellStatus::InitForRange(nsRange* aRange)
 {
   mOp = eOpChange;
   mRange = aRange;
@@ -375,7 +369,7 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
 
   // find the word on the old caret position, this is the one that we MAY need
   // to check
-  nsCOMPtr<nsIRange> oldWord;
+  nsRefPtr<nsRange> oldWord;
   rv = aWordUtil.GetRangeForWord(oldAnchorNode, oldAnchorOffset,
                                  getter_AddRefs(oldWord));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -384,9 +378,6 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
   editor = do_QueryReferent(mSpellChecker->mEditor);
   if (! editor)
     return NS_ERROR_FAILURE; // editor is gone
-
-  nsCOMPtr<nsIDOMNSRange> oldWordNS = do_QueryInterface(oldWord, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // get the DOM position of the new caret, the range should be collapsed
   rv = mAnchorRange->GetStartContainer(getter_AddRefs(newAnchorNode));
@@ -397,9 +388,9 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
   // see if the new cursor position is in the word of the old cursor position
   bool isInRange = false;
   if (! mForceNavigationWordCheck) {
-    rv = oldWordNS->IsPointInRange(newAnchorNode,
-                                   newAnchorOffset + mNewNavigationPositionOffset,
-                                   &isInRange);
+    rv = oldWord->IsPointInRange(newAnchorNode,
+                                 newAnchorOffset + mNewNavigationPositionOffset,
+                                 &isInRange);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -798,7 +789,7 @@ mozInlineSpellChecker::SpellCheckRange(nsIDOMRange* aRange)
   NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
 
   mozInlineSpellStatus status(this);
-  nsCOMPtr<nsIRange> range = do_QueryInterface(aRange);
+  nsRange* range = static_cast<nsRange*>(aRange);
   nsresult rv = status.InitForRange(range);
   NS_ENSURE_SUCCESS(rv, rv);
   return ScheduleSpellCheck(status);
@@ -881,8 +872,7 @@ mozInlineSpellChecker::RemoveWordFromDictionary(const nsAString &word)
   NS_ENSURE_SUCCESS(rv, rv); 
   
   mozInlineSpellStatus status(this);
-  nsCOMPtr<nsIRange> range = do_QueryInterface(NULL); // Check everything
-  rv = status.InitForRange(range);
+  rv = status.InitForRange(nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
   return ScheduleSpellCheck(status);
 }
@@ -1023,7 +1013,7 @@ nsresult
 mozInlineSpellChecker::MakeSpellCheckRange(
     nsIDOMNode* aStartNode, PRInt32 aStartOffset,
     nsIDOMNode* aEndNode, PRInt32 aEndOffset,
-    nsIRange** aRange)
+    nsRange** aRange)
 {
   nsresult rv;
   *aRange = nsnull;
@@ -1078,7 +1068,7 @@ mozInlineSpellChecker::MakeSpellCheckRange(
     rv = range->SetEndAfter(aEndNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CallQueryInterface(range, aRange);
+  *aRange = static_cast<nsRange*>(range.forget().get());
   return NS_OK;
 }
 
@@ -1088,7 +1078,7 @@ mozInlineSpellChecker::SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
                                               nsIDOMNode *aEndNode,
                                               PRInt32 aEndOffset)
 {
-  nsCOMPtr<nsIRange> range;
+  nsRefPtr<nsRange> range;
   nsresult rv = MakeSpellCheckRange(aStartNode, aStartOffset,
                                     aEndNode, aEndOffset,
                                     getter_AddRefs(range));
@@ -1253,7 +1243,7 @@ mozInlineSpellChecker::DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
       // check range over it that needs to be deleted. All the old ranges
       // were cleared above. We also need to clear the word count so that we
       // check all words instead of stopping early.
-      status.mRange = do_QueryInterface(checkRange);
+      status.mRange = static_cast<nsRange*>(checkRange.get());
       rv = DoSpellCheck(aWordUtil, aSpellCheckSelection, &status,
                         &doneChecking);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1351,19 +1341,12 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
   editor = do_QueryReferent(mEditor);
   if (! editor)
     return NS_ERROR_FAILURE;
-  
-  // we need to use IsPointInRange which is on a more specific interface
-  nsCOMPtr<nsIDOMNSRange> noCheckRange, createdRange;
-  if (aStatus->mNoCheckRange)
-    noCheckRange = do_QueryInterface(aStatus->mNoCheckRange);
-  if (aStatus->mCreatedRange)
-    createdRange = do_QueryInterface(aStatus->mCreatedRange);
 
   PRInt32 wordsSinceTimeCheck = 0;
   PRTime beginTime = PR_Now();
 
   nsAutoString wordText;
-  nsCOMPtr<nsIRange> wordRange;
+  nsRefPtr<nsRange> wordRange;
   bool dontCheckWord;
   while (NS_SUCCEEDED(aWordUtil.GetNextWord(wordText,
                                             getter_AddRefs(wordRange),
@@ -1394,15 +1377,17 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     if (originalRangeCount > 0) {
       // likewise, if this word is inside new text, we won't bother testing
       bool inCreatedRange = false;
-      if (createdRange)
-        createdRange->IsPointInRange(beginNode, beginOffset, &inCreatedRange);
+      if (aStatus->mCreatedRange)
+        aStatus->mCreatedRange->IsPointInRange(beginNode, beginOffset, &inCreatedRange);
       if (! inCreatedRange) {
-        nsCOMArray<nsIDOMRange> ranges;
-        rv = privSel->GetRangesForIntervalCOMArray(beginNode, beginOffset,
-                                                   endNode, endOffset,
-                                                   true, &ranges);
+        nsTArray<nsRange*> ranges;
+        nsCOMPtr<nsINode> firstNode = do_QueryInterface(beginNode);
+        nsCOMPtr<nsINode> lastNode = do_QueryInterface(endNode);
+        rv = privSel->GetRangesForIntervalArray(firstNode, beginOffset,
+                                                lastNode, endOffset,
+                                                true, &ranges);
         NS_ENSURE_SUCCESS(rv, rv);
-        for (PRInt32 i = 0; i < ranges.Count(); i ++)
+        for (PRUint32 i = 0; i < ranges.Length(); i++)
           RemoveRange(aSpellCheckSelection, ranges[i]);
       }
     }
@@ -1425,9 +1410,10 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     // We do a simple check to see if the beginning of our word is in the
     // exclusion range. Because the exclusion range is a multiple of a word,
     // this is sufficient.
-    if (noCheckRange) {
+    if (aStatus->mNoCheckRange) {
       bool inExclusion = false;
-      noCheckRange->IsPointInRange(beginNode, beginOffset, &inExclusion);
+      aStatus->mNoCheckRange->IsPointInRange(beginNode, beginOffset,
+                                             &inExclusion);
       if (inExclusion)
         continue;
     }
@@ -1560,12 +1546,13 @@ mozInlineSpellChecker::IsPointInSelection(nsISelection *aSelection,
 
   nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
 
-  nsCOMArray<nsIDOMRange> ranges;
-  nsresult rv = privSel->GetRangesForIntervalCOMArray(aNode, aOffset, aNode, aOffset,
-                                                      true, &ranges);
+  nsTArray<nsRange*> ranges;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  nsresult rv = privSel->GetRangesForIntervalArray(node, aOffset, node, aOffset,
+                                                   true, &ranges);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (ranges.Count() == 0)
+  if (ranges.Length() == 0)
     return NS_OK; // no matches
 
   // there may be more than one range returned, and we don't know what do

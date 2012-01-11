@@ -68,6 +68,14 @@ nsCocoaFeatures::OSXVersion()
 }
 
 /* static */ bool
+nsCocoaFeatures::SupportCoreAnimationPlugins()
+{
+    // Disallow Core Animation on 10.5 because of crashes.
+    // See Bug 711564.
+    return (OSXVersion() >= MAC_OS_X_VERSION_10_6_HEX);
+}
+
+/* static */ bool
 nsCocoaFeatures::OnSnowLeopardOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_6_HEX);

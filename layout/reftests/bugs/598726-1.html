@@ -20,25 +20,30 @@
           i.removeEventListener("transitionend", arguments.callee, true);
           setTimeout(function() {
             i.value = "test";
+            i.getClientRects();
             setTimeout(function() {
               i.value = "";
+              i.getClientRects();
               setTimeout(function() {
                 i.addEventListener("transitionend", function() {
                   i.removeEventListener("transisionend", arguments.callee, true);
                   setTimeout(function() {
+                    i.getClientRects();
                     document.documentElement.removeAttribute("class");
                   }, 0);
                 }, true);
                 i.blur();
+                i.getClientRects();
               }, 0);
             }, 0);
           }, 0);
         }, true);
         i.focus();
+        i.getClientRects();
       }
     </script>
   </head>
-  <body onload="boom()">
+  <body onload="document.querySelector('input').getClientRects(); setTimeout(boom,0)">
     <input type="text" placeholder="foo">
   </body>
 </html>
