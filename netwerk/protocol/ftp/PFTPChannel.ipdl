@@ -69,7 +69,7 @@ child:
                  PRTime aLastModified, nsCString aEntityID, URI aURI);
   OnDataAvailable(nsCString data, PRUint32 offset, PRUint32 count);
   OnStopRequest(nsresult statusCode);
-  CancelEarly(nsresult statusCode);
+  FailedAsyncOpen(nsresult statusCode);
   DeleteSelf();
 };
 

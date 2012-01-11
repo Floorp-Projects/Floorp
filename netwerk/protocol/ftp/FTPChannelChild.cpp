@@ -393,44 +393,42 @@ FTPChannelChild::DoOnStopRequest(const nsresult& statusCode)
   Send__delete__(this);
 }
 
-class FTPCancelEarlyEvent : public ChannelEvent
+class FTPFailedAsyncOpenEvent : public ChannelEvent
 {
  public:
-  FTPCancelEarlyEvent(FTPChannelChild* aChild, nsresult aStatus)
+  FTPFailedAsyncOpenEvent(FTPChannelChild* aChild, nsresult aStatus)
   : mChild(aChild), mStatus(aStatus) {}
-  void Run() { mChild->DoCancelEarly(mStatus); }
+  void Run() { mChild->DoFailedAsyncOpen(mStatus); }
  private:
   FTPChannelChild* mChild;
   nsresult mStatus;
 };
 
 bool
-FTPChannelChild::RecvCancelEarly(const nsresult& statusCode)
+FTPChannelChild::RecvFailedAsyncOpen(const nsresult& statusCode)
 {
   if (mEventQ.ShouldEnqueue()) {
-    mEventQ.Enqueue(new FTPCancelEarlyEvent(this, statusCode));
+    mEventQ.Enqueue(new FTPFailedAsyncOpenEvent(this, statusCode));
   } else {
-    DoCancelEarly(statusCode);
+    DoFailedAsyncOpen(statusCode);
   }
   return true;
 }
 
 void
-FTPChannelChild::DoCancelEarly(const nsresult& statusCode)
+FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode)
 {
-  if (mCanceled)
-    return;
-
-  mCanceled = true;
   mStatus = statusCode;
-  mIsPending = false;
-  
+
   if (mLoadGroup)
     mLoadGroup->RemoveRequest(this, nsnull, statusCode);
 
   if (mListener) {
     mListener->OnStartRequest(this, mListenerContext);
+    mIsPending = false;
     mListener->OnStopRequest(this, mListenerContext, statusCode);
+  } else {
+    mIsPending = false;
   }
 
   mListener = nsnull;
@@ -492,6 +490,27 @@ FTPChannelChild::Suspend()
   return NS_OK;
 }
 
+nsresult
+FTPChannelChild::AsyncCall(void (FTPChannelChild::*funcPtr)(),
+                           nsRunnableMethod<FTPChannelChild> **retval)
+{
+  nsresult rv;
+
+  nsRefPtr<nsRunnableMethod<FTPChannelChild> > event = NS_NewRunnableMethod(this, funcPtr);
+  rv = NS_DispatchToCurrentThread(event);
+  if (NS_SUCCEEDED(rv) && retval) {
+    *retval = event;
+  }
+
+  return rv;
+}
+
+void
+FTPChannelChild::CompleteResume()
+{
+  mEventQ.Resume();
+}
+
 NS_IMETHODIMP
 FTPChannelChild::Resume()
 {
@@ -499,7 +518,7 @@ FTPChannelChild::Resume()
 
   if (!--mSuspendCount) {
     SendResume();
-    mEventQ.Resume();    // TODO: make this async: see HttpChannelChild::Resume
+    AsyncCall(&FTPChannelChild::CompleteResume);
   }
   return NS_OK;
 }

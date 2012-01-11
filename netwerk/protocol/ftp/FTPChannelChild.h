@@ -111,7 +111,7 @@ protected:
                                        const PRUint32& offset,
                                        const PRUint32& count);
   NS_OVERRIDE bool RecvOnStopRequest(const nsresult& statusCode);
-  NS_OVERRIDE bool RecvCancelEarly(const nsresult& statusCode);
+  NS_OVERRIDE bool RecvFailedAsyncOpen(const nsresult& statusCode);
   NS_OVERRIDE bool RecvDeleteSelf();
 
   void DoOnStartRequest(const PRInt32& aContentLength,
@@ -123,16 +123,21 @@ protected:
                          const PRUint32& offset,
                          const PRUint32& count);
   void DoOnStopRequest(const nsresult& statusCode);
-  void DoCancelEarly(const nsresult& statusCode);
+  void DoFailedAsyncOpen(const nsresult& statusCode);
   void DoDeleteSelf();
 
   friend class FTPStartRequestEvent;
   friend class FTPDataAvailableEvent;
   friend class FTPStopRequestEvent;
-  friend class FTPCancelEarlyEvent;
+  friend class FTPFailedAsyncOpenEvent;
   friend class FTPDeleteSelfEvent;
 
 private:
+  // Called asynchronously from Resume: continues any pending calls into client.
+  void CompleteResume();
+  nsresult AsyncCall(void (FTPChannelChild::*funcPtr)(),
+                     nsRunnableMethod<FTPChannelChild> **retval = nsnull);
+
   nsCOMPtr<nsIInputStream> mUploadStream;
 
   bool mIPCOpen;
