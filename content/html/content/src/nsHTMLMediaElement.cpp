@@ -1317,21 +1317,51 @@ typedef nsTHashtable<MediaElementSetForURI> MediaElementURITable;
 // same mLoadingSrc.
 static MediaElementURITable* gElementTable;
 
+#ifdef DEBUG
+// Returns the number of times aElement appears in the media element table
+// for aURI. If this returns other than 0 or 1, there's a bug somewhere!
+static unsigned
+MediaElementTableCount(nsHTMLMediaElement* aElement, nsIURI* aURI)
+{
+  if (!gElementTable || !aElement || !aURI) {
+    return 0;
+  }
+  MediaElementSetForURI* entry = gElementTable->GetEntry(aURI);
+  if (!entry) {
+    return 0;
+  }
+  PRUint32 count = 0;
+  for (PRUint32 i = 0; i < entry->mElements.Length(); ++i) {
+    nsHTMLMediaElement* elem = entry->mElements[i];
+    if (elem == aElement) {
+      count++;
+    }
+  }
+  return count;
+}
+#endif
+
 void
 nsHTMLMediaElement::AddMediaElementToURITable()
 {
   NS_ASSERTION(mDecoder && mDecoder->GetStream(), "Call this only with decoder Load called");
+  NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
+    "Should not have entry for element in element table before addition");
   if (!gElementTable) {
     gElementTable = new MediaElementURITable();
     gElementTable->Init();
   }
   MediaElementSetForURI* entry = gElementTable->PutEntry(mLoadingSrc);
   entry->mElements.AppendElement(this);
+  NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
+    "Should have a single entry for element in element table after addition");
 }
 
 void
 nsHTMLMediaElement::RemoveMediaElementFromURITable()
 {
+  NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
+    "Before remove, should have a single entry for element in element table");
   NS_ASSERTION(mDecoder, "Don't call this without decoder!");
   NS_ASSERTION(mLoadingSrc, "Can't have decoder without source!");
   if (!gElementTable)
@@ -1347,6 +1377,8 @@ nsHTMLMediaElement::RemoveMediaElementFromURITable()
       gElementTable = nsnull;
     }
   }
+  NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
+    "After remove, should no longer have an entry in element table");
 }
 
 nsHTMLMediaElement*
@@ -1431,6 +1463,10 @@ nsHTMLMediaElement::~nsHTMLMediaElement()
     RemoveMediaElementFromURITable();
     mDecoder->Shutdown();
   }
+
+  NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
+    "Destroyed media element should no longer be in element table");
+
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
   }
@@ -1951,6 +1987,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
+  NS_ASSERTION(mDecoder == nsnull, "Shouldn't have a decoder");
 
   nsMediaStream* originalStream = aOriginal->GetStream();
   if (!originalStream)
@@ -1990,6 +2027,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
                                                          nsIStreamListener **aListener)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
+  NS_ASSERTION(mDecoder == nsnull, "Shouldn't have a decoder");
 
   nsCAutoString mimeType;
   aChannel->GetContentType(mimeType);
@@ -2058,6 +2096,15 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder)
   if (OwnerDoc()->HasAudioAvailableListeners()) {
     NotifyAudioAvailableListener();
   }
+
+  if (NS_FAILED(rv)) {
+    RemoveMediaElementFromURITable();
+    mDecoder->Shutdown();
+    mDecoder = nsnull;
+  }
+
+  NS_ASSERTION(NS_SUCCEEDED(rv) == (MediaElementTableCount(this, mLoadingSrc) == 1),
+    "Media element should have single table entry if decode initialized");
 
   mBegun = true;
   return rv;

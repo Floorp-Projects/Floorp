@@ -2412,6 +2412,12 @@ js_IsArrayBuffer(JSObject *obj)
     return obj->isArrayBuffer();
 }
 
+JS_FRIEND_API(JSBool)
+JS_IsArrayBufferObject(JSObject *obj)
+{
+    return js_IsArrayBuffer(obj);
+}
+
 namespace js {
 
 bool
@@ -2447,6 +2453,12 @@ JS_FRIEND_API(JSObject *)
 js_CreateArrayBuffer(JSContext *cx, jsuint nbytes)
 {
     return ArrayBuffer::create(cx, nbytes);
+}
+
+JS_FRIEND_API(JSObject *)
+JS_NewArrayBuffer(JSContext *cx, jsuint nbytes)
+{
+    return js_CreateArrayBuffer(cx, nbytes);
 }
 
 static inline JSObject *

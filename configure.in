@@ -2465,6 +2465,7 @@ ia64*-hpux*)
         _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
     else
         _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+        MOZ_LINKER=1
     fi
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
@@ -2898,6 +2899,8 @@ ia64*-hpux*)
     ;;
 
 esac
+
+AC_SUBST(MOZ_LINKER)
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
@@ -4059,7 +4062,8 @@ AC_CACHE_CHECK(for __thread keyword for TLS variables,
                             ac_cv_thread_keyword=yes,
                             ac_cv_thread_keyword=no)])
 LDFLAGS=$_SAVE_LDFLAGS
-if test "$ac_cv_thread_keyword" = yes; then
+# The custom dynamic linker doesn't support TLS variables
+if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
   # mips builds fail with TLS variables because of a binutils bug.
   # See bug 528687
   case "${target}" in
@@ -4225,7 +4229,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.8.8, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.9.0, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4233,10 +4237,16 @@ if test -n "$MOZ_NATIVE_NSPR"; then
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
     AC_TRY_COMPILE([#include "prtypes.h"],
                 [#ifndef PR_STATIC_ASSERT
-                 #error PR_STATIC_ASSERT not defined or requires including prlog.h
+                 #error PR_STATIC_ASSERT not defined or requires including prtypes.h
                  #endif],
                 [MOZ_NATIVE_NSPR=1],
                 AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT or including prtypes.h does not provide it]))
+    AC_TRY_COMPILE([#include "prtypes.h"],
+                [#ifndef PR_UINT64
+                 #error PR_UINT64 not defined or requires including prtypes.h
+                 #endif],
+                [MOZ_NATIVE_NSPR=1],
+                AC_MSG_ERROR([system NSPR does not support PR_UINT64 or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
     if test "$OS_ARCH" = "WINNT"; then
@@ -4424,6 +4434,10 @@ LIBS=$_SAVE_LIBS
 if test "${ZLIB_DIR}" -a -d "${ZLIB_DIR}" -a "$SYSTEM_ZLIB" = 1; then
     ZLIB_CFLAGS="-I${ZLIB_DIR}/include"
     ZLIB_LIBS="-L${ZLIB_DIR}/lib ${ZLIB_LIBS}"
+fi
+
+if test "$MOZ_LINKER" = 1 -a "$SYSTEM_ZLIB" != 1; then
+    AC_MSG_ERROR([Custom dynamic linker requires --with-system-zlib])
 fi
 
 dnl system BZIP2 Support
@@ -4888,6 +4902,7 @@ cairo-android)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
+    MOZ_OLD_LINKER=1
     ;;
 
 cairo-gonk)
@@ -4902,6 +4917,7 @@ cairo-gonk)
 
 esac
 
+AC_SUBST(MOZ_OLD_LINKER)
 AC_SUBST(MOZ_PDF_PRINTING)
 if test "$MOZ_PDF_PRINTING"; then
    PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
@@ -7230,7 +7246,10 @@ dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozglue"
     if test "$MOZ_WIDGET_TOOLKIT" = android; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
+        if test -n "$MOZ_OLD_LINKER"; then
+            WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+        fi
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} --wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
     fi
 fi
 
