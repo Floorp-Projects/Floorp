@@ -81,10 +81,15 @@ endif
 endif
 
 ifeq (android, $(MOZ_WIDGET_TOOLKIT))
-# Add Android linker
+# Add Android specific code
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
+endif
+
+ifdef MOZ_LINKER
+# Add custom dynamic linker
+SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,linker,../linker)
 endif
 
 ifeq (Android, $(OS_TARGET))

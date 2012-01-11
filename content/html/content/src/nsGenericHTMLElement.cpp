@@ -1624,16 +1624,16 @@ nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
 {
   nsCOMPtr<nsILayoutHistoryState> history;
   nsCAutoString key;
-  nsresult rv = GetLayoutHistoryAndKey(aContent, true,
-                                       getter_AddRefs(history), key);
+  GetLayoutHistoryAndKey(aContent, true,
+                         getter_AddRefs(history), key);
   if (!history) {
     return false;
   }
 
   nsPresState *state;
   // Get the pres state for this key
-  rv = history->GetState(key, &state);
-  if (state) {
+  nsresult rv = history->GetState(key, &state);
+  if (NS_SUCCEEDED(rv) && state) {
     bool result = aControl->RestoreState(state);
     history->RemoveState(key);
     return result;
