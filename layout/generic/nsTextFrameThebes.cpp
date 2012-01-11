@@ -1492,7 +1492,8 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   // already guaranteed to be the same as each other (and for the line
   // container).
   if (mBidiEnabled &&
-      NS_GET_EMBEDDING_LEVEL(aFrame1) != NS_GET_EMBEDDING_LEVEL(aFrame2))
+      (NS_GET_EMBEDDING_LEVEL(aFrame1) != NS_GET_EMBEDDING_LEVEL(aFrame2) ||
+       NS_GET_PARAGRAPH_DEPTH(aFrame1) != NS_GET_PARAGRAPH_DEPTH(aFrame2)))
     return false;
 
   nsStyleContext* sc1 = aFrame1->GetStyleContext();
@@ -3943,8 +3944,10 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
     // advantage of the propTable's cache and simplify the assertion below
     void* embeddingLevel = propTable->Get(aPrevInFlow, EmbeddingLevelProperty());
     void* baseLevel = propTable->Get(aPrevInFlow, BaseLevelProperty());
+    void* paragraphDepth = propTable->Get(aPrevInFlow, ParagraphDepthProperty());
     propTable->Set(this, EmbeddingLevelProperty(), embeddingLevel);
     propTable->Set(this, BaseLevelProperty(), baseLevel);
+    propTable->Set(this, ParagraphDepthProperty(), paragraphDepth);
 
     if (nextContinuation) {
       SetNextContinuation(nextContinuation);
@@ -3954,7 +3957,8 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
              nextContinuation->GetContentOffset() < mContentOffset) {
         NS_ASSERTION(
           embeddingLevel == propTable->Get(nextContinuation, EmbeddingLevelProperty()) &&
-          baseLevel == propTable->Get(nextContinuation, BaseLevelProperty()),
+          baseLevel == propTable->Get(nextContinuation, BaseLevelProperty()) &&
+          paragraphDepth == propTable->Get(nextContinuation, ParagraphDepthProperty()),
           "stealing text from different type of BIDI continuation");
         nextContinuation->mContentOffset = mContentOffset;
         nextContinuation = static_cast<nsTextFrame*>(nextContinuation->GetNextContinuation());
