@@ -30,7 +30,7 @@ var listener = {
 
     is(message.QueryInterface(Ci.nsIScriptError).errorMessage,
        "uncaught exception: Got click");
-    nextTest();
+    SimpleTest.executeSoon(nextTest);
   },
 
   QueryInterface: function(iid) {
