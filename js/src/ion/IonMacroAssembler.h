@@ -170,8 +170,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         return CodeOffsetLabel(size());
     }
 
-    void PushVolatileRegsInMask(RegisterSet set);
-    void PopVolatileRegsInMask(RegisterSet set);
+    void PushRegsInMask(RegisterSet set);
+    void PopRegsInMask(RegisterSet set);
 };
 
 } // namespace ion
