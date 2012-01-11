@@ -939,19 +939,19 @@ nsTextEditRules::WillUndo(nsISelection *aSelection, bool *aCancel, bool *aHandle
 nsresult
 nsTextEditRules::DidUndo(nsISelection *aSelection, nsresult aResult)
 {
-  nsresult res = aResult;  // if aResult is an error, we return it.
-  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
-  if (NS_SUCCEEDED(res)) 
-  {
-    nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
-    NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMNode> node = mEditor->GetLeftmostChild(theRoot);
-    if (node && mEditor->IsMozEditorBogusNode(node))
-      mBogusNode = node;
-    else
-      mBogusNode = nsnull;
+  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
+  // If aResult is an error, we return it.
+  NS_ENSURE_SUCCESS(aResult, aResult);
+
+  dom::Element* theRoot = mEditor->GetRoot();
+  NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
+  nsIContent* node = mEditor->GetLeftmostChild(theRoot);
+  if (node && mEditor->IsMozEditorBogusNode(node)) {
+    mBogusNode = do_QueryInterface(node);
+  } else {
+    mBogusNode = nsnull;
   }
-  return res;
+  return aResult;
 }
 
 nsresult
