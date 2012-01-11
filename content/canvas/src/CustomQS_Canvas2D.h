@@ -180,7 +180,7 @@ CreateImageData(JSContext* cx,
     // Create the fast typed array; it's initialized to 0 by default.
     JSObject* darray =
       js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len.value());
-    js::AutoObjectRooter rd(cx, darray);
+    JS::AutoObjectRooter rd(cx, darray);
     if (!darray) {
         return false;
     }
@@ -201,7 +201,7 @@ CreateImageData(JSContext* cx,
     // Do JS_NewObject after CreateTypedArray, so that gc will get
     // triggered here if necessary
     JSObject* result = JS_NewObject(cx, NULL, NULL, NULL);
-    js::AutoObjectRooter rr(cx, result);
+    JS::AutoObjectRooter rr(cx, result);
     if (!result) {
         return false;
     }

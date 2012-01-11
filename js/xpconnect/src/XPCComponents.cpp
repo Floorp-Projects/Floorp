@@ -61,7 +61,7 @@
 #include "jsgc.h"
 #include "jsfriendapi.h"
 
-#include "jscntxt.h" // AutoObjectRooter, AutoIdArray
+#include "jscntxt.h" // AutoIdArray
 
 using namespace mozilla;
 using namespace js;
@@ -3011,7 +3011,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
                                 wantXrays, &sandbox, &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    js::AutoObjectRooter tvr(cx, sandbox);
+    JS::AutoObjectRooter tvr(cx, sandbox);
 
     {
         JSAutoEnterCompartment ac;

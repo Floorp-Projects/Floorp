@@ -191,7 +191,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc, Op pop)
 
     JSObject *funobj = JS_GetFunctionObject(fun);
 
-    js::AutoObjectRooter tvr(cx, funobj);
+    JS::AutoObjectRooter tvr(cx, funobj);
 
     // Unfortunately, we cannot guarantee that Op is aligned. Use a
     // second object to work around this.
