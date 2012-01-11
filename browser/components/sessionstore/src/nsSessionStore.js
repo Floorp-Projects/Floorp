@@ -130,6 +130,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 // debug.js adds NS_ASSERT. cf. bug 669196
 Cu.import("resource://gre/modules/debug.js");
 
+Cu.import("resource:///modules/TelemetryTimestamps.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
   return NetUtil;
@@ -294,6 +296,7 @@ SessionStoreService.prototype = {
    * Initialize the component
    */
   initService: function() {
+    TelemetryTimestamps.add("sessionRestoreInitialized");
     OBSERVING.forEach(function(aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
@@ -833,7 +836,7 @@ SessionStoreService.prototype = {
       this._windows[aWindow.__SSi]._restoring = true;
     if (!aWindow.toolbar.visible)
       this._windows[aWindow.__SSi].isPopup = true;
-    
+
     // perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
       this._loadState = STATE_RUNNING;
@@ -841,6 +844,7 @@ SessionStoreService.prototype = {
       
       // restore a crashed session resp. resume the last session if requested
       if (this._initialState) {
+        TelemetryTimestamps.add("sessionRestoreRestoring");
         // make sure that the restored tabs are first in the window
         this._initialState._firstTabs = true;
         this._restoreCount = this._initialState.windows ? this._initialState.windows.length : 0;
