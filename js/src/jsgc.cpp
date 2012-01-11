@@ -2009,7 +2009,7 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case ID:
-        MarkRoot(trc, static_cast<AutoIdRooter *>(this)->id_, "js::AutoIdRooter.val");
+        MarkRoot(trc, static_cast<AutoIdRooter *>(this)->id_, "JS::AutoIdRooter.id_");
         return;
 
       case VALVECTOR: {

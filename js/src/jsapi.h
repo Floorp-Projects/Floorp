@@ -1854,6 +1854,40 @@ JSVAL_IS_UNIVERSAL(jsval v)
     return !JSVAL_IS_GCTHING(v);
 }
 
+#ifdef __cplusplus
+
+namespace JS {
+
+class AutoIdRooter : private AutoGCRooter
+{
+  public:
+    explicit AutoIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, ID), id_(id)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    jsid id() {
+        return id_;
+    }
+
+    jsid * addr() {
+        return &id_;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
+
+  private:
+    jsid id_;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+} /* namespace JS */
+
+#endif /* __cplusplus */
+
 /************************************************************************/
 
 /* Lock and unlock the GC thing held by a jsval. */
