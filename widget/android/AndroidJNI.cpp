@@ -54,10 +54,6 @@
 #include "mozilla/Services.h"
 #include "nsINetworkLinkService.h"
 
-#ifdef MOZ_ANDROID_HISTORY
-#include "nsAndroidHistory.h"
-#endif
-
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
 #include "nsExceptionHandler.h"
@@ -212,14 +208,6 @@ Java_org_mozilla_gecko_GeckoAppShell_executeNextRunnable(JNIEnv *, jclass)
     }
     AndroidBridge::Bridge()->ExecuteNextRunnable();
     __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", "leaving %s", __PRETTY_FUNCTION__);
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv *jenv, jclass, jstring uri)
-{
-#ifdef MOZ_ANDROID_HISTORY
-    nsAndroidHistory::NotifyURIVisited(nsJNIString(uri, jenv));
-#endif
 }
 
 NS_EXPORT void JNICALL
