@@ -523,10 +523,10 @@ jsd_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript)
     return jsdscript->lineExtent;
 }
 
-jsuword
+uintptr_t
 jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line)
 {
-    jsuword pc;
+    uintptr_t pc;
     JSCrossCompartmentCall *call;
 
     if( !jsdscript )
@@ -544,13 +544,13 @@ jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line)
     call = JS_EnterCrossCompartmentCallScript(jsdc->dumbContext, jsdscript->script);
     if(!call)
         return 0;
-    pc = (jsuword) JS_LineNumberToPC(jsdc->dumbContext, jsdscript->script, line );
+    pc = (uintptr_t) JS_LineNumberToPC(jsdc->dumbContext, jsdscript->script, line );
     JS_LeaveCrossCompartmentCall(call);
     return pc;
 }
 
 uintN
-jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc)
+jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc)
 {
     JSCrossCompartmentCall *call;
     uintN first = jsdscript->lineBase;
@@ -584,7 +584,7 @@ jsd_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc)
 JSBool
 jsd_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
                uintN startLine, uintN maxLines,
-               uintN* count, uintN** retLines, jsuword** retPCs)
+               uintN* count, uintN** retLines, uintptr_t** retPCs)
 {
     JSCrossCompartmentCall *call;
     uintN first = jsdscript->lineBase;
@@ -754,7 +754,7 @@ jsd_DestroyScriptHookProc(
 /***************************************************************************/
 
 static JSDExecHook*
-_findHook(JSDContext* jsdc, JSDScript* jsdscript, jsuword pc)
+_findHook(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc)
 {
     JSDExecHook* jsdhook;
     JSCList* list = &jsdscript->hooks;
@@ -821,7 +821,7 @@ jsd_TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
     }
 
     JSD_ASSERT_VALID_EXEC_HOOK(jsdhook);
-    JS_ASSERT(!jsdhook->pc || jsdhook->pc == (jsuword)pc);
+    JS_ASSERT(!jsdhook->pc || jsdhook->pc == (uintptr_t)pc);
     JS_ASSERT(jsdhook->jsdscript->script == script);
     JS_ASSERT(jsdhook->jsdscript->jsdc == jsdc);
 
@@ -839,7 +839,7 @@ jsd_TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
         return JSTRAP_CONTINUE;
 
 #ifdef LIVEWIRE
-    if( ! jsdlw_UserCodeAtPC(jsdc, jsdscript, (jsuword)pc) )
+    if( ! jsdlw_UserCodeAtPC(jsdc, jsdscript, (uintptr_t)pc) )
         return JSTRAP_CONTINUE;
 #endif
 
@@ -852,7 +852,7 @@ jsd_TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
 JSBool
 jsd_SetExecutionHook(JSDContext*           jsdc, 
                      JSDScript*            jsdscript,
-                     jsuword               pc,
+                     uintptr_t             pc,
                      JSD_ExecutionHookProc hook,
                      void*                 callerdata)
 {
@@ -916,7 +916,7 @@ jsd_SetExecutionHook(JSDContext*           jsdc,
 JSBool
 jsd_ClearExecutionHook(JSDContext*           jsdc, 
                        JSDScript*            jsdscript,
-                       jsuword               pc)
+                       uintptr_t             pc)
 {
     JSCrossCompartmentCall *call;
     JSDExecHook* jsdhook;

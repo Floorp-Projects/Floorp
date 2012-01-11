@@ -2395,13 +2395,13 @@ public:
     inline void TraceJS(JSTracer* trc) {}
     inline void AutoTrace(JSTracer* trc) {}
 
-    void Mark()       {mJSObject = (JSObject*)(((jsword)mJSObject) | 1);}
-    void Unmark()     {mJSObject = (JSObject*)(((jsword)mJSObject) & ~1);}
-    JSBool IsMarked() const {return (JSBool)(((jsword)mJSObject) & 1);}
+    void Mark()       {mJSObject = (JSObject*)(intptr_t(mJSObject) | 1);}
+    void Unmark()     {mJSObject = (JSObject*)(intptr_t(mJSObject) & ~1);}
+    bool IsMarked() const {return !!(intptr_t(mJSObject) & 1);}
 
 private:
-    XPCWrappedNativeTearOff(const XPCWrappedNativeTearOff& r); // not implemented
-    XPCWrappedNativeTearOff& operator= (const XPCWrappedNativeTearOff& r); // not implemented
+    XPCWrappedNativeTearOff(const XPCWrappedNativeTearOff& r) MOZ_DELETE;
+    XPCWrappedNativeTearOff& operator= (const XPCWrappedNativeTearOff& r) MOZ_DELETE;
 
 private:
     XPCNativeInterface* mInterface;
@@ -2470,10 +2470,10 @@ public:
     JSBool
     IsValid() const {return nsnull != mFlatJSObject;}
 
-#define XPC_SCOPE_WORD(s)   ((jsword)(s))
-#define XPC_SCOPE_MASK      ((jsword)0x3)
-#define XPC_SCOPE_TAG       ((jsword)0x1)
-#define XPC_WRAPPER_EXPIRED ((jsword)0x2)
+#define XPC_SCOPE_WORD(s)   (intptr_t(s))
+#define XPC_SCOPE_MASK      (intptr_t(0x3))
+#define XPC_SCOPE_TAG       (intptr_t(0x1))
+#define XPC_WRAPPER_EXPIRED (intptr_t(0x2))
 
     static inline JSBool
     IsTaggedScope(XPCWrappedNativeScope* s)
@@ -3959,7 +3959,7 @@ private:
     JSExceptionState* mState;
     bool mErrorReporterSet;
     bool mEvaluated;
-    jsword mContextHasThread;
+    intptr_t mContextHasThread;
     JSAutoEnterCompartment mEnterCompartment;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 

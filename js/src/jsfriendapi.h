@@ -262,7 +262,7 @@ struct Object {
 
     size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
     Value *fixedSlots() const {
-        return (Value *)((jsuword) this + sizeof(shadow::Object));
+        return (Value *)(uintptr_t(this) + sizeof(shadow::Object));
     }
 
     js::Value &slotRef(size_t slot) const {

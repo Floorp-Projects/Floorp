@@ -6539,7 +6539,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t slot, const Value &v)
 
 static ObjectElements emptyObjectHeader(0, 0);
 HeapValue *js::emptyObjectElements =
-    (HeapValue *) (jsuword(&emptyObjectHeader) + sizeof(ObjectElements));
+    (HeapValue *) (uintptr_t(&emptyObjectHeader) + sizeof(ObjectElements));
 
 JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx)
