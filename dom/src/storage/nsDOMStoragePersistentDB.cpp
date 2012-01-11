@@ -136,53 +136,6 @@ nsIsOfflineSQLFunction::OnFunctionCall(
   return NS_OK;
 }
 
-class Binder 
-{
-public:
-  Binder(mozIStorageStatement* statement, nsresult *rv);
-
-  mozIStorageBindingParams* operator->();
-  nsresult Add();
-
-private:
-  mozIStorageStatement* mStmt;
-  nsCOMPtr<mozIStorageBindingParamsArray> mArray;
-  nsCOMPtr<mozIStorageBindingParams> mParams;
-};
-
-Binder::Binder(mozIStorageStatement* statement, nsresult *rv)
- : mStmt(statement) 
-{
-  *rv = mStmt->NewBindingParamsArray(getter_AddRefs(mArray));
-  if (NS_FAILED(*rv))
-    return;
-
-  *rv = mArray->NewBindingParams(getter_AddRefs(mParams));
-  if (NS_FAILED(*rv))
-    return;
-
-  *rv = NS_OK;
-}
-
-mozIStorageBindingParams*
-Binder::operator->()
-{
-  return mParams;
-}
-
-nsresult
-Binder::Add()
-{
-  nsresult rv;
-
-  rv = mArray->AddParams(mParams);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mStmt->BindParameters(mArray);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return rv;
-}
-
 nsresult
 nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
 {
@@ -360,14 +313,8 @@ nsDOMStoragePersistentDB::EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aSt
     NS_ENSURE_STATE(stmt);
     mozStorageStatementScoper scope(stmt);
 
-    Binder binder(stmt, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), 
-                                      aStorage->GetScopeDBKey());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = binder.Add();
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), 
+                                    aStorage->GetScopeDBKey());
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stmt->Execute();
@@ -403,13 +350,7 @@ nsDOMStoragePersistentDB::FlushTemporaryTable(nsCStringHashKey::KeyType aKey,
     NS_ENSURE_TRUE(stmt, PL_DHASH_STOP);
     mozStorageStatementScoper scope(stmt);
 
-    Binder binder(stmt, &data->mRV);
-    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
-
-    data->mRV = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), aKey);
-    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
-
-    data->mRV = binder.Add();
+    data->mRV = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), aKey);
     NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
 
     data->mRV = stmt->Execute();
@@ -425,13 +366,7 @@ nsDOMStoragePersistentDB::FlushTemporaryTable(nsCStringHashKey::KeyType aKey,
     NS_ENSURE_TRUE(stmt, PL_DHASH_STOP);
     mozStorageStatementScoper scope(stmt);
 
-    Binder binder(stmt, &data->mRV);
-    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
-
-    data->mRV = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), aKey);
-    NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
-
-    data->mRV = binder.Add();
+    data->mRV = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), aKey);
     NS_ENSURE_SUCCESS(data->mRV, PL_DHASH_STOP);
 
     data->mRV = stmt->Execute();
@@ -484,14 +419,8 @@ nsDOMStoragePersistentDB::GetAllKeys(DOMStorageImpl* aStorage,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scope(stmt);
 
-  Binder binder(stmt, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                    aStorage->GetScopeDBKey());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder.Add();
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  aStorage->GetScopeDBKey());
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
@@ -543,17 +472,11 @@ nsDOMStoragePersistentDB::GetKeyValue(DOMStorageImpl* aStorage,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scope(stmt);
 
-  Binder binder(stmt, &rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  aStorage->GetScopeDBKey());
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                    aStorage->GetScopeDBKey());
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = binder->BindStringByName(NS_LITERAL_CSTRING("key"),
-                                aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder.Add();
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"),
+                              aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
@@ -624,23 +547,17 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scopeinsert(stmt);
 
-  Binder binder(stmt, &rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  aStorage->GetScopeDBKey());
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                    aStorage->GetScopeDBKey());
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"),
+                              aKey);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = binder->BindStringByName(NS_LITERAL_CSTRING("key"),
-                                aKey);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"),
+                              aValue);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = binder->BindStringByName(NS_LITERAL_CSTRING("value"),
-                                aValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = binder->BindInt32ByName(NS_LITERAL_CSTRING("secure"),
-                               aSecure ? 1 : 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder.Add();
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("secure"),
+                             aSecure ? 1 : 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -680,20 +597,14 @@ nsDOMStoragePersistentDB::SetSecure(DOMStorageImpl* aStorage,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scope(stmt);
 
-  Binder binder(stmt, &rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  aStorage->GetScopeDBKey());
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                    aStorage->GetScopeDBKey());
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"),
+                              aKey);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = binder->BindStringByName(NS_LITERAL_CSTRING("key"),
-                                aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = binder->BindInt32ByName(NS_LITERAL_CSTRING("secure"),
-                               aSecure ? 1 : 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder.Add();
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("secure"),
+                             aSecure ? 1 : 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -729,17 +640,11 @@ nsDOMStoragePersistentDB::RemoveKey(DOMStorageImpl* aStorage,
     mCachedOwner.Truncate();
   }
 
-  Binder binder(stmt, &rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  aStorage->GetScopeDBKey());
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                    aStorage->GetScopeDBKey());
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = binder->BindStringByName(NS_LITERAL_CSTRING("key"),
-                                aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder.Add();
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"),
+                              aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -768,14 +673,8 @@ nsDOMStoragePersistentDB::ClearStorage(DOMStorageImpl* aStorage)
   mCachedUsage = 0;
   mCachedOwner.Truncate();
 
-  Binder binder(stmt, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                    aStorage->GetScopeDBKey());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder.Add();
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  aStorage->GetScopeDBKey());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -814,14 +713,8 @@ nsDOMStoragePersistentDB::RemoveOwner(const nsACString& aOwner,
     subdomainsDBKey.AppendLiteral(":");
   subdomainsDBKey.AppendLiteral("*");
 
-  Binder binder(stmt, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
-                                    subdomainsDBKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder.Add();
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"),
+                                  subdomainsDBKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
@@ -880,9 +773,6 @@ nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
                                     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Binder binder(statement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   for (PRUint32 i = 0; i < aOwners.Length(); i++) {
     nsCAutoString quotaKey;
     rv = nsDOMStorageDBWrapper::CreateDomainScopeDBKey(
@@ -901,12 +791,9 @@ nsDOMStoragePersistentDB::RemoveOwners(const nsTArray<nsString> &aOwners,
     paramName.Assign("scope");
     paramName.AppendInt(i);
 
-    rv = binder->BindUTF8StringByName(paramName, quotaKey);
+    rv = statement->BindUTF8StringByName(paramName, quotaKey);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  rv = binder.Add();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1024,13 +911,7 @@ nsDOMStoragePersistentDB::GetUsageInternal(const nsACString& aQuotaDomainDBKey,
   nsCAutoString scopeValue(aQuotaDomainDBKey);
   scopeValue += NS_LITERAL_CSTRING("*");
 
-  Binder binder(stmt, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), scopeValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = binder.Add();
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("scope"), scopeValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
