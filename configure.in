@@ -4225,7 +4225,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.8.8, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.9.0, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4233,10 +4233,16 @@ if test -n "$MOZ_NATIVE_NSPR"; then
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
     AC_TRY_COMPILE([#include "prtypes.h"],
                 [#ifndef PR_STATIC_ASSERT
-                 #error PR_STATIC_ASSERT not defined or requires including prlog.h
+                 #error PR_STATIC_ASSERT not defined or requires including prtypes.h
                  #endif],
                 [MOZ_NATIVE_NSPR=1],
                 AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT or including prtypes.h does not provide it]))
+    AC_TRY_COMPILE([#include "prtypes.h"],
+                [#ifndef PR_UINT64
+                 #error PR_UINT64 not defined or requires including prtypes.h
+                 #endif],
+                [MOZ_NATIVE_NSPR=1],
+                AC_MSG_ERROR([system NSPR does not support PR_UINT64 or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
     if test "$OS_ARCH" = "WINNT"; then
