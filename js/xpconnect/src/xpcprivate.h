@@ -3583,21 +3583,36 @@ struct XPCJSContextInfo {
 class XPCJSContextStack
 {
 public:
-    NS_DECL_NSIJSCONTEXTSTACK
-    NS_DECL_NSITHREADJSCONTEXTSTACK
+    XPCJSContextStack()
+      : mSafeJSContext(NULL)
+      , mOwnSafeJSContext(NULL)
+    { }
 
-    XPCJSContextStack();
     virtual ~XPCJSContextStack();
 
+    uint32_t Count()
+    {
+        return mStack.Length();
+    }
+
+    JSContext *Peek()
+    {
+        return mStack.IsEmpty() ? NULL : mStack[mStack.Length() - 1].cx;
+    }
+
+    JSContext *Pop();
+    bool Push(JSContext *cx);
+    JSContext *GetSafeJSContext();
+
 #ifdef DEBUG
-    JSBool DEBUG_StackHasJSContext(JSContext*  aJSContext);
+    bool DEBUG_StackHasJSContext(JSContext *cx);
 #endif
 
-    const nsTArray<XPCJSContextInfo>* GetStack()
+    const InfallibleTArray<XPCJSContextInfo>* GetStack()
     { return &mStack; }
 
 private:
-    nsAutoTArray<XPCJSContextInfo, 16> mStack;
+    AutoInfallibleTArray<XPCJSContextInfo, 16> mStack;
     JSContext*  mSafeJSContext;
     JSContext*  mOwnSafeJSContext;
 };
@@ -3615,7 +3630,7 @@ public:
     NS_DECL_NSIJSCONTEXTSTACKITERATOR
 
 private:
-    const nsTArray<XPCJSContextInfo> *mStack;
+    const InfallibleTArray<XPCJSContextInfo> *mStack;
     PRUint32 mPosition;
 };
 
