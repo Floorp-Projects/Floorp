@@ -43,13 +43,13 @@
 #include "CrossOriginWrapper.h"
 #include "WrapperFactory.h"
 
-#include "jscntxt.h"
-
 #include "nsINode.h"
 #include "nsIDocument.h"
 
 #include "XPCWrapper.h"
 #include "xpcprivate.h"
+
+#include "jscntxt.h" // JSID_IS_ATOM, js::AutoIdVector
 
 namespace xpc {
 

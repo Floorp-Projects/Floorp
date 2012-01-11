@@ -114,9 +114,6 @@
 
 #define DEFAULT_COLUMN_WIDTH 20
 
-#include "nsContentCID.h"
-static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
-
 nsIFrame*
 NS_NewTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -855,9 +852,7 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   // Note that we use a new range to avoid having to do
   // isIncreasing checks to avoid possible errors.
 
-  nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kRangeCID);
-  NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
-
+  nsRefPtr<nsRange> range = new nsRange();
   nsresult rv = range->SetStart(aStartNode, aStartOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 

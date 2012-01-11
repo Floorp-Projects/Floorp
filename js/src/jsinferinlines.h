@@ -63,22 +63,22 @@ namespace types {
 Type::ObjectType(JSObject *obj)
 {
     if (obj->hasSingletonType())
-        return Type((jsuword) obj | 1);
-    return Type((jsuword) obj->type());
+        return Type(uintptr_t(obj) | 1);
+    return Type(uintptr_t(obj->type()));
 }
 
 /* static */ inline Type
 Type::ObjectType(TypeObject *obj)
 {
     if (obj->singleton)
-        return Type((jsuword) obj->singleton.get() | 1);
-    return Type((jsuword) obj);
+        return Type(uintptr_t(obj->singleton.get()) | 1);
+    return Type(uintptr_t(obj));
 }
 
 /* static */ inline Type
 Type::ObjectType(TypeObjectKey *obj)
 {
-    return Type((jsuword) obj);
+    return Type(uintptr_t(obj));
 }
 
 inline Type
@@ -1081,14 +1081,14 @@ inline JSObject *
 TypeSet::getSingleObject(unsigned i)
 {
     TypeObjectKey *key = getObject(i);
-    return ((jsuword) key & 1) ? (JSObject *)((jsuword) key ^ 1) : NULL;
+    return (uintptr_t(key) & 1) ? (JSObject *)(uintptr_t(key) ^ 1) : NULL;
 }
 
 inline TypeObject *
 TypeSet::getTypeObject(unsigned i)
 {
     TypeObjectKey *key = getObject(i);
-    return (key && !((jsuword) key & 1)) ? (TypeObject *) key : NULL;
+    return (key && !(uintptr_t(key) & 1)) ? (TypeObject *) key : NULL;
 }
 
 /////////////////////////////////////////////////////////////////////

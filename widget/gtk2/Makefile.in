@@ -131,7 +131,7 @@ CXXFLAGS += $(MOZ_GCONF_CFLAGS)
 endif
 endif
 
-DEFINES		+= -DCAIRO_GFX
+DEFINES		+= -DCAIRO_GFX -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
 
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \

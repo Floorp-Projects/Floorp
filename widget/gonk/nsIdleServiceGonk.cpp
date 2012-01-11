@@ -1,4 +1,6 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,17 +17,17 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Gijs Kruitbosch <gijskruitbosch@gmail.com>.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
+ *   Michael Wu <mwu@mozilla.com>
+ *   Kan-Ru Chen <kchen@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,25 +39,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIdleServiceGonk.h"
+#include "nsIServiceManager.h"
 
-[scriptable, uuid(fed93d11-f24d-41d8-ae55-4197927999bb)]
-interface nsIDOMNSRange : nsISupports
+NS_IMPL_ISUPPORTS2(nsIdleServiceGonk, nsIIdleService, nsIdleService)
+
+bool
+nsIdleServiceGonk::PollIdleTime(PRUint32 *aIdleTime)
 {
-  nsIDOMDocumentFragment    createContextualFragment(in DOMString fragment);
+    return false;
+}
 
-  // This returns true if parent+offset equals either
-  // of the boundary points or is between them.
-  boolean                   isPointInRange(in nsIDOMNode parent,
-                                           in long offset);
-
-  // comparePoint returns
-  //   -1 if point is before the start boundary point,
-  //    0 if point is either of the boundary points or between them,
-  //    1 if point is after the end boundary point.
-  // Sort of a strcmp for ranges.
-  short                     comparePoint(in nsIDOMNode parent, in long offset);
-
-  nsIDOMClientRectList getClientRects();
-  nsIDOMClientRect getBoundingClientRect();
-};
+bool
+nsIdleServiceGonk::UsePollMode()
+{
+    return false;
+}

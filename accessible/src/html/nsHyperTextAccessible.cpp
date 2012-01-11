@@ -45,12 +45,10 @@
 #include "nsTextAttrs.h"
 
 #include "nsIClipboard.h"
-#include "nsContentCID.h"
 #include "nsFocusManager.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMNSRange.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIEditingSession.h"
 #include "nsIEditor.h"
@@ -66,8 +64,6 @@
 #include "gfxSkipChars.h"
 
 using namespace mozilla::a11y;
-
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHyperTextAccessible
@@ -1739,7 +1735,7 @@ nsHyperTextAccessible::FrameSelection()
 
 void
 nsHyperTextAccessible::GetSelectionDOMRanges(PRInt16 aType,
-                                             nsCOMArray<nsIDOMRange>* aRanges)
+                                             nsTArray<nsRange*>* aRanges)
 {
   nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
   if (!frameSelection)
@@ -1763,20 +1759,18 @@ nsHyperTextAccessible::GetSelectionDOMRanges(PRInt16 aType,
     return;
 
   PRUint32 childCount = startNode->GetChildCount();
-  nsCOMPtr<nsIDOMNode> startDOMNode(do_QueryInterface(startNode));
   nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(domSel));
   nsresult rv = privSel->
-    GetRangesForIntervalCOMArray(startDOMNode, 0, startDOMNode, childCount,
-                                 true, aRanges);
+    GetRangesForIntervalArray(startNode, 0, startNode, childCount, true, aRanges);
   NS_ENSURE_SUCCESS(rv,);
 
   // Remove collapsed ranges
-  PRInt32 numRanges = aRanges->Count();
-  for (PRInt32 count = 0; count < numRanges; count ++) {
+  PRUint32 numRanges = aRanges->Length();
+  for (PRUint32 count = 0; count < numRanges; count ++) {
     bool isCollapsed = false;
     (*aRanges)[count]->GetCollapsed(&isCollapsed);
     if (isCollapsed) {
-      aRanges->RemoveObjectAt(count);
+      aRanges->RemoveElementAt(count);
       --numRanges;
       --count;
     }
@@ -1792,9 +1786,9 @@ nsHyperTextAccessible::GetSelectionCount(PRInt32* aSelectionCount)
   NS_ENSURE_ARG_POINTER(aSelectionCount);
   *aSelectionCount = 0;
 
-  nsCOMArray<nsIDOMRange> ranges;
+  nsTArray<nsRange*> ranges;
   GetSelectionDOMRanges(nsISelectionController::SELECTION_NORMAL, &ranges);
-  *aSelectionCount = ranges.Count();
+  *aSelectionCount = PRInt32(ranges.Length());
 
   return NS_OK;
 }
@@ -1811,14 +1805,14 @@ nsHyperTextAccessible::GetSelectionBounds(PRInt32 aSelectionNum,
   NS_ENSURE_ARG_POINTER(aEndOffset);
   *aStartOffset = *aEndOffset = 0;
 
-  nsCOMArray<nsIDOMRange> ranges;
+  nsTArray<nsRange*> ranges;
   GetSelectionDOMRanges(nsISelectionController::SELECTION_NORMAL, &ranges);
 
-  PRInt32 rangeCount = ranges.Count();
+  PRUint32 rangeCount = ranges.Length();
   if (aSelectionNum < 0 || aSelectionNum >= rangeCount)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIDOMRange> range = ranges[aSelectionNum];
+  nsRange* range = ranges[aSelectionNum];
 
   // Get start point
   nsCOMPtr<nsIDOMNode> startDOMNode;
@@ -1880,8 +1874,7 @@ nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum,
   domSel->GetRangeCount(&rangeCount);
   nsCOMPtr<nsIDOMRange> range;
   if (aSelectionNum == rangeCount) { // Add a range
-    range = do_CreateInstance(kRangeCID);
-    NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
+    range = new nsRange();
   }
   else if (aSelectionNum < 0 || aSelectionNum > rangeCount) {
     return NS_ERROR_INVALID_ARG;
@@ -2305,10 +2298,10 @@ nsHyperTextAccessible::GetDOMPointByFrameOffset(nsIFrame *aFrame,
 
 // nsHyperTextAccessible
 nsresult
-nsHyperTextAccessible::DOMRangeBoundToHypertextOffset(nsIDOMRange *aRange,
-                                                      bool aIsStartBound,
-                                                      bool aIsStartHTOffset,
-                                                      PRInt32 *aHTOffset)
+nsHyperTextAccessible::RangeBoundToHypertextOffset(nsRange *aRange,
+                                                   bool aIsStartBound,
+                                                   bool aIsStartHTOffset,
+                                                   PRInt32 *aHTOffset)
 {
   nsCOMPtr<nsIDOMNode> DOMNode;
   PRInt32 nodeOffset = 0;
@@ -2346,20 +2339,18 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
                                              PRInt32 *aHTEndOffset,
                                              nsIPersistentProperties *aAttributes)
 {
-  nsCOMArray<nsIDOMRange> ranges;
+  nsTArray<nsRange*> ranges;
   GetSelectionDOMRanges(nsISelectionController::SELECTION_SPELLCHECK, &ranges);
 
-  PRInt32 rangeCount = ranges.Count();
+  PRUint32 rangeCount = ranges.Length();
   if (!rangeCount)
     return NS_OK;
 
-  for (PRInt32 index = 0; index < rangeCount; index++) {
-    nsCOMPtr<nsIDOMRange> range = ranges[index];
-    nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
-    NS_ENSURE_STATE(nsrange);
+  for (PRUint32 index = 0; index < rangeCount; index++) {
+    nsRange* range = ranges[index];
 
     PRInt16 result;
-    nsresult rv = nsrange->ComparePoint(aNode, aNodeOffset, &result);
+    nsresult rv = range->ComparePoint(aNode, aNodeOffset, &result);
     NS_ENSURE_SUCCESS(rv, rv);
     // ComparePoint checks boundary points, but we need to check that
     // text at aNodeOffset is inside the range.
@@ -2378,8 +2369,8 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
 
     if (result == 1) { // range is before point
       PRInt32 startHTOffset = 0;
-      nsresult rv = DOMRangeBoundToHypertextOffset(range, false, true,
-                                                   &startHTOffset);
+      nsresult rv = RangeBoundToHypertextOffset(range, false, true,
+                                                &startHTOffset);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (startHTOffset > *aHTStartOffset)
@@ -2387,8 +2378,8 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
 
     } else if (result == -1) { // range is after point
       PRInt32 endHTOffset = 0;
-      nsresult rv = DOMRangeBoundToHypertextOffset(range, true, false,
-                                                   &endHTOffset);
+      nsresult rv = RangeBoundToHypertextOffset(range, true, false,
+                                                &endHTOffset);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (endHTOffset < *aHTEndOffset)
@@ -2396,13 +2387,13 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
 
     } else { // point is in range
       PRInt32 startHTOffset = 0;
-      nsresult rv = DOMRangeBoundToHypertextOffset(range, true, true,
-                                                   &startHTOffset);
+      nsresult rv = RangeBoundToHypertextOffset(range, true, true,
+                                                &startHTOffset);
       NS_ENSURE_SUCCESS(rv, rv);
 
       PRInt32 endHTOffset = 0;
-      rv = DOMRangeBoundToHypertextOffset(range, false, false,
-                                          &endHTOffset);
+      rv = RangeBoundToHypertextOffset(range, false, false,
+                                       &endHTOffset);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (startHTOffset > *aHTStartOffset)

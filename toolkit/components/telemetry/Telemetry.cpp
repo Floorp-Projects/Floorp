@@ -105,7 +105,6 @@ StatisticsRecorder gStatisticsRecorder;
 
 // Hardcoded probes
 struct TelemetryHistogram {
-  Histogram *histogram;
   const char *id;
   PRUint32 min;
   PRUint32 max;
@@ -127,7 +126,7 @@ struct TelemetryHistogram {
 
 const TelemetryHistogram gHistograms[] = {
 #define HISTOGRAM(id, min, max, bucket_count, histogram_type, comment) \
-  { NULL, NS_STRINGIFY(id), min, max, bucket_count, \
+  { NS_STRINGIFY(id), min, max, bucket_count, \
     nsITelemetry::HISTOGRAM_ ## histogram_type, comment },
 
 #include "TelemetryHistograms.h"
@@ -223,7 +222,6 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
   h->SnapshotSample(&ss);
   JSObject *counts_array;
   JSObject *rarray;
-  jsval static_histogram = h->flags() && Histogram::kUmaTargetedHistogramFlag ? JSVAL_TRUE : JSVAL_FALSE;
   const size_t count = h->bucket_count();
   if (!(JS_DefineProperty(cx, obj, "min", INT_TO_JSVAL(h->declared_min()), NULL, NULL, JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "max", INT_TO_JSVAL(h->declared_max()), NULL, NULL, JSPROP_ENUMERATE)
@@ -330,8 +328,13 @@ mHashMutex("Telemetry::mHashMutex")
   };
 
   mTrackedDBs.Init();
-  for (int i = 0; i < sizeof(trackedDBs)/sizeof(const char*); i++)
+  for (size_t i = 0; i < ArrayLength(trackedDBs); i++)
     mTrackedDBs.PutEntry(nsDependentCString(trackedDBs[i]));
+
+#ifdef DEBUG
+  // Mark immutable to prevent asserts on simultaneous access from multiple threads
+  mTrackedDBs.MarkImmutable();
+#endif
 
   mSlowSQLOnMainThread.Init();
   mSlowSQLOnOtherThread.Init();
@@ -339,7 +342,6 @@ mHashMutex("Telemetry::mHashMutex")
 }
 
 TelemetryImpl::~TelemetryImpl() {
-  mTrackedDBs.Clear();
   mSlowSQLOnMainThread.Clear();
   mSlowSQLOnOtherThread.Clear();
   mHistogramMap.Clear();
@@ -581,14 +583,7 @@ TelemetryImpl::RecordSlowStatement(const nsACString &statement,
                                    const nsACString &dbName,
                                    PRUint32 delay)
 {
-  if (!sTelemetry) {
-    // Make the service manager hold a long-lived reference to the service
-    nsCOMPtr<nsITelemetry> telemetryService =
-      do_GetService("@mozilla.org/base/telemetry;1");
-    if (!telemetryService || !sTelemetry)
-      return;
-  }
-
+  MOZ_ASSERT(sTelemetry);
   if (!sTelemetry->mCanRecord || !sTelemetry->mTrackedDBs.GetEntry(dbName))
     return;
 
@@ -676,6 +671,14 @@ RecordSlowSQLStatement(const nsACString &statement,
                        PRUint32 delay)
 {
   TelemetryImpl::RecordSlowStatement(statement, dbName, delay);
+}
+
+void Init()
+{
+  // Make the service manager hold a long-lived reference to the service
+  nsCOMPtr<nsITelemetry> telemetryService =
+    do_GetService("@mozilla.org/base/telemetry;1");
+  MOZ_ASSERT(telemetryService);
 }
 
 } // namespace Telemetry

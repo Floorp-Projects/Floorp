@@ -621,7 +621,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
 
     // Since Ion frames exist on the C stack, the stack limit may be
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
-    jsuword *limitAddr = &threadData->ionStackLimit;
+    uintptr_t *limitAddr = &threadData->ionStackLimit;
     masm.loadPtr(ImmWord(limitAddr), limitReg);
 
     CheckOverRecursedFailure *ool = new CheckOverRecursedFailure(lir);

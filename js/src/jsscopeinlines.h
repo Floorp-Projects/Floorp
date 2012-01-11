@@ -239,7 +239,7 @@ Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
 inline JSDHashNumber
 StackShape::hash() const
 {
-    JSDHashNumber hash = jsuword(base);
+    JSDHashNumber hash = uintptr_t(base);
 
     /* Accumulate from least to most random so the low bits are most random. */
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & Shape::PUBLIC_FLAGS);

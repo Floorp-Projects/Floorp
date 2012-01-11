@@ -4702,7 +4702,7 @@ aggregation_batch_stress_test()
   //
   // 500 iterations sends 2,630,250 transactions through the system!!
   //
-  iterations = 500
+  500
 #endif
   ;
   return stress_test(&factory, iterations);

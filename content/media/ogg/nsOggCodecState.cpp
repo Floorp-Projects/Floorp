@@ -44,6 +44,8 @@
 #include "VideoUtils.h"
 #include "nsBuiltinDecoderReader.h"
 
+#include "mozilla/StdInt.h"
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(type, msg) PR_LOG(gBuiltinDecoderLog, type, msg)
@@ -1045,8 +1047,8 @@ nsresult nsSkeletonState::GetDuration(const nsTArray<PRUint32>& aTracks,
   {
     return NS_ERROR_FAILURE;
   }
-  PRInt64 endTime = PR_INT64_MIN;
-  PRInt64 startTime = PR_INT64_MAX;
+  PRInt64 endTime = INT64_MIN;
+  PRInt64 startTime = INT64_MAX;
   for (PRUint32 i=0; i<aTracks.Length(); i++) {
     nsKeyFrameIndex* index = nsnull;
     mIndex.Get(aTracks[i], &index);

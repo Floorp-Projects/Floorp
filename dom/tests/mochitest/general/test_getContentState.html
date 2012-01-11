@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=708963
+-->
+<head>
+  <title>Test for Bug 708963</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=708963">Mozilla Bug 708963</a>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+function getEnabledPref() {
+  try {
+    return SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
+  }
+  catch(e) {
+    return undefined;
+  }
+}
+
+function getWhitelistPref() {
+  try {
+    return SpecialPowers.getCharPref('dom.mozBrowserFramesWhitelist');
+  }
+  catch(e) {
+    return undefined;
+  }
+}
+
+function setPrefs(enabled, whitelist) {
+  if (enabled !== undefined) {
+    SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', enabled);
+  }
+  else {
+    SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled');
+  }
+
+  if (whitelist !== undefined) {
+    SpecialPowers.setCharPref('dom.mozBrowserFramesWhitelist', whitelist);
+  }
+  else {
+    SpecialPowers.clearUserPref('dom.mozBrowserFramesWhitelist');
+  }
+}
+
+function getPrePath() {
+  return 'http://' + window.location.host;
+}
+
+function checkCannotQueryIframe(id) {
+  let iframe = document.getElementById(id);
+  try {
+    iframe.mozGetContentState('location', function() {
+      ok(false, 'Got callback, but should have failed.');
+    });
+    ok(false, 'Should have thrown exception.');
+  }
+  catch(e) {
+    ok(true, 'Got expected exception.');
+  }
+}
+
+function checkCannotQuery() {
+  checkCannotQueryIframe('queryable');
+  checkCannotQueryIframe('not-queryable');
+}
+
+let numCallbacksExpected = 0;
+let numCallbacksSeen = 0;
+function checkCanQuery() {
+  checkCannotQueryIframe('not-queryable');
+
+  let iframe = document.getElementById('queryable');
+  iframe.mozGetContentState('location', function(href) {
+    ok(true, 'Got callback, as expected.');
+    is(href, 'http://example.com/', "Callback value.");
+    numCallbacksSeen++;
+  });
+  numCallbacksExpected++;
+}
+
+const oldEnabled = getEnabledPref();
+const oldWhitelist = getWhitelistPref();
+
+function runTest() {
+  setPrefs(false, getPrePath());
+  checkCannotQuery();
+
+  setPrefs(true, '');
+  checkCannotQuery();
+
+  setPrefs(true, getPrePath());
+  checkCanQuery();
+
+  setPrefs(true, 'http://example.com  , ' +
+                 getPrePath().toUpperCase() + ',  ');
+  checkCanQuery();
+
+  // Spin if we haven't seen all the expected callbacks.
+  waitForAllExpectedCallbacks();
+}
+
+function waitForAllExpectedCallbacks() {
+  if (numCallbacksSeen < numCallbacksExpected) {
+    SimpleTest.executeSoon(waitForAllExpectedCallbacks);
+    return;
+  }
+
+  // Spin the event loop a few times to let any remaining pending callbacks
+  // fire.  (If we get any callbacks here, the test should fail.)
+  SimpleTest.executeSoon(function() {
+    SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+        setPrefs(oldEnabled, oldWhitelist);
+        SimpleTest.finish();
+      });
+    });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var numLoaded = 0;
+function iframeLoaded() {
+  numLoaded++;
+  if (numLoaded == 2) {
+    runTest();
+  }
+}
+
+</script>
+
+<iframe onload='iframeLoaded()' id='not-queryable' src='http://example.org'></iframe>
+<iframe onload='iframeLoaded()' mozbrowser id='queryable' src='http://example.com'></iframe>
+
+</body>
+</html>
+
+

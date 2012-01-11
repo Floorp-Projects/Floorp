@@ -64,7 +64,7 @@ class KidsPointer {
         TAG   = 1
     };
 
-    jsuword w;
+    uintptr_t w;
 
   public:
     bool isNull() const { return !w; }
@@ -73,23 +73,23 @@ class KidsPointer {
     bool isShape() const { return (w & TAG) == SHAPE && !isNull(); }
     js::Shape *toShape() const {
         JS_ASSERT(isShape());
-        return reinterpret_cast<js::Shape *>(w & ~jsuword(TAG));
+        return reinterpret_cast<js::Shape *>(w & ~uintptr_t(TAG));
     }
     void setShape(js::Shape *shape) {
         JS_ASSERT(shape);
-        JS_ASSERT((reinterpret_cast<jsuword>(shape) & TAG) == 0);
-        w = reinterpret_cast<jsuword>(shape) | SHAPE;
+        JS_ASSERT((reinterpret_cast<uintptr_t>(shape) & TAG) == 0);
+        w = reinterpret_cast<uintptr_t>(shape) | SHAPE;
     }
 
     bool isHash() const { return (w & TAG) == HASH; }
     KidsHash *toHash() const {
         JS_ASSERT(isHash());
-        return reinterpret_cast<KidsHash *>(w & ~jsuword(TAG));
+        return reinterpret_cast<KidsHash *>(w & ~uintptr_t(TAG));
     }
     void setHash(KidsHash *hash) {
         JS_ASSERT(hash);
-        JS_ASSERT((reinterpret_cast<jsuword>(hash) & TAG) == 0);
-        w = reinterpret_cast<jsuword>(hash) | HASH;
+        JS_ASSERT((reinterpret_cast<uintptr_t>(hash) & TAG) == 0);
+        w = reinterpret_cast<uintptr_t>(hash) | HASH;
     }
 
 #ifdef DEBUG

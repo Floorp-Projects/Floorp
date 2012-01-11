@@ -40,7 +40,11 @@
 
 /* Call context. */
 
+#include "mozilla/Util.h"
+
 #include "xpcprivate.h"
+
+using namespace mozilla;
 
 XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSContext* cx    /* = nsnull    */,
@@ -107,14 +111,14 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
         return;
 
     XPCJSContextStack* stack = mThreadData->GetJSContextStack();
-    JSContext* topJSContext;
 
-    if (!stack || NS_FAILED(stack->Peek(&topJSContext))) {
+    if (!stack) {
         // If we don't have a stack we're probably in shutdown.
-        NS_ASSERTION(!stack, "Bad, Peek failed!");
         mJSContext = nsnull;
         return;
     }
+
+    JSContext *topJSContext = stack->Peek();
 
     if (!mJSContext) {
         // This is slightly questionable. If called without an explicit
@@ -125,14 +129,17 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
         // have JS stack 'continuity' for purposes of stack traces etc.
         // Note: this *is* what the pre-XPCCallContext xpconnect did too.
 
-        if (topJSContext)
+        if (topJSContext) {
             mJSContext = topJSContext;
-        else if (NS_FAILED(stack->GetSafeJSContext(&mJSContext)) || !mJSContext)
-            return;
+        } else {
+            mJSContext = stack->GetSafeJSContext();
+            if (!mJSContext)
+                return;
+        }
     }
 
     if (topJSContext != mJSContext) {
-        if (NS_FAILED(stack->Push(mJSContext))) {
+        if (!stack->Push(mJSContext)) {
             NS_ERROR("bad!");
             return;
         }
@@ -346,13 +353,8 @@ XPCCallContext::~XPCCallContext()
         XPCJSContextStack* stack = mThreadData->GetJSContextStack();
         NS_ASSERTION(stack, "bad!");
         if (stack) {
-#ifdef DEBUG
-            JSContext* poppedCX;
-            nsresult rv = stack->Pop(&poppedCX);
-            NS_ASSERTION(NS_SUCCEEDED(rv) && poppedCX == mJSContext, "bad pop");
-#else
-            (void) stack->Pop(nsnull);
-#endif
+            DebugOnly<JSContext*> poppedCX = stack->Pop();
+            NS_ASSERTION(poppedCX == mJSContext, "bad pop");
         }
     }
 
@@ -519,10 +521,7 @@ XPCLazyCallContext::AssertContextIsTopOfStack(JSContext* cx)
     XPCPerThreadData* tls = XPCPerThreadData::GetData(cx);
     XPCJSContextStack* stack = tls->GetJSContextStack();
 
-    JSContext* topJSContext;
-    nsresult rv = stack->Peek(&topJSContext);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "XPCJSContextStack::Peek failed");
-
+    JSContext *topJSContext = stack->Peek();
     NS_ASSERTION(cx == topJSContext, "wrong context on XPCJSContextStack!");
 }
 #endif

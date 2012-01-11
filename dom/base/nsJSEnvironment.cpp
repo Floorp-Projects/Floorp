@@ -231,7 +231,7 @@ private:
   }
 
   nsAutoTArray<jsval, 16> vals;
-  js::AutoArrayRooter avr;
+  JS::AutoArrayRooter avr;
 };
 
 /****************************************************************
@@ -1903,7 +1903,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  js::AutoObjectRooter targetVal(mContext, target);
+  JS::AutoObjectRooter targetVal(mContext, target);
   jsval rval = JSVAL_VOID;
 
   // This one's a lot easier than EvaluateString because we don't have to
