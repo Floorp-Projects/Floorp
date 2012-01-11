@@ -58,7 +58,6 @@ CPPSRCS	= \
 	nsWindow.cpp \
 	nsLookAndFeel.cpp \
 	nsScreenManagerGonk.cpp \
-	nsIdleServiceGonk.cpp \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
