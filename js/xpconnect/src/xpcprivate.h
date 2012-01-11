@@ -859,8 +859,8 @@ class XPCContext
 public:
     static XPCContext* GetXPCContext(JSContext* aJSContext)
         {
-            NS_ASSERTION(aJSContext->data2, "should already have XPCContext");
-            return static_cast<XPCContext *>(aJSContext->data2);
+            NS_ASSERTION(JS_GetSecondContextPrivate(aJSContext), "should already have XPCContext");
+            return static_cast<XPCContext *>(JS_GetSecondContextPrivate(aJSContext));
         }
 
     XPCJSRuntime* GetRuntime() const {return mRuntime;}
