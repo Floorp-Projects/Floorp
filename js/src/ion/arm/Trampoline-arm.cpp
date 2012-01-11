@@ -296,8 +296,16 @@ IonCode *
 IonCompartment::generateInvalidator(JSContext *cx)
 {
     // See large comment in x86's IonCompartment::generateInvalidator.
-
+    AutoIonContextAlloc aica(cx);
     MacroAssembler masm(cx);
+    //masm.as_bkpt();
+    // At this point, one of two things has happened.
+    // 1) Execution has just returned from C code, which left the stack aligned
+    // 2) Execution has just returned from Ion code, which left the stack unaligned.
+    // The old return address should not matter, but we still want the
+    // stack to be aligned, and there is no good reason to automatically align it with
+    // a call to setupUnalignedABICall.
+    masm.ma_and(Imm32(~7), sp, sp);
     masm.startDataTransferM(IsStore, sp, DB, WriteBack);
     // We don't have to push everything, but this is likely easier.
     // setting regs_
@@ -311,18 +319,23 @@ IonCompartment::generateInvalidator(JSContext *cx)
     masm.finishFloatTransfer();
 
     masm.ma_mov(sp, r0);
-    masm.reserveStack(sizeof(size_t));
+    masm.reserveStack(sizeof(size_t)*2);
     masm.mov(sp, r1);
-    masm.setupAlignedABICall(3);
+    masm.setupAlignedABICall(2);
     masm.setABIArg(0, r0);
     masm.setABIArg(1, r1);
+    //masm.as_bkpt();
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InvalidationBailout));
 
     const uint32 BailoutDataSize = sizeof(double) * FloatRegisters::Total +
                                    sizeof(void *) * Registers::Total;
 
-    masm.ma_add(sp, r0, sp);
-    masm.ma_add(sp, Imm32(BailoutDataSize), sp);
+    masm.ma_ldr(Address(sp, 0), r1);
+    // Add 8 to make up for the 8 bytes of padding that were added to align the stack after
+    // the return-val was allocated.
+    // Add an additional 16 to make up the difference between the bottom and top of the frame.
+    masm.ma_add(sp, Imm32(BailoutDataSize + 16 + 8), sp);
+    masm.ma_add(sp, r1, sp);
     generateBailoutTail(masm);
     Linker linker(masm);
     IonCode *code = linker.newCode(cx);

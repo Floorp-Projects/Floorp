@@ -327,7 +327,7 @@ IonCompartment::generateInvalidator(JSContext *cx)
     masm.reserveStack(sizeof(size_t));
     masm.movl(esp, ecx);
 
-    masm.setupUnalignedABICall(3, edx);
+    masm.setupUnalignedABICall(2, edx);
     masm.setABIArg(0, ebx);
     masm.setABIArg(1, ecx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InvalidationBailout));
