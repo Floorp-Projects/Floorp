@@ -65,6 +65,9 @@
 namespace mozilla {
 namespace widget {
 
+// SHCreateItemFromParsingName is only available on vista and up.
+WinUtils::SHCreateItemFromParsingNamePtr WinUtils::sCreateItemFromParsingName = nsnull;
+
 /* static */ 
 WinUtils::WinVersion
 WinUtils::GetWindowsVersion()
@@ -362,6 +365,38 @@ WinUtils::InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam)
   msg.lParam  = lParam;
   return msg;
 }
+
+/* static */
+bool
+WinUtils::VistaCreateItemFromParsingNameInit()
+{
+  // Load and store Vista+ SHCreateItemFromParsingName
+  if (sCreateItemFromParsingName) {
+    return true;
+  }
+  static HMODULE sShellDll = nsnull;
+  if (sShellDll) {
+    return false;
+  }
+  static const PRUnichar kSehllLibraryName[] =  L"shell32.dll";
+  sShellDll = ::LoadLibraryW(kSehllLibraryName);
+  if (!sShellDll) {
+    return false;
+  }
+  sCreateItemFromParsingName = (SHCreateItemFromParsingNamePtr)
+    GetProcAddress(sShellDll, "SHCreateItemFromParsingName");
+  return sCreateItemFromParsingName != nsnull;
+}
+
+/* static */
+HRESULT
+WinUtils::SHCreateItemFromParsingName(PCWSTR pszPath, IBindCtx *pbc,
+                                      REFIID riid, void **ppv)
+{
+  NS_ENSURE_TRUE(sCreateItemFromParsingName, E_FAIL);
+  return sCreateItemFromParsingName(pszPath, pbc, riid, ppv);
+}
+
 
 } // namespace widget
 } // namespace mozilla
