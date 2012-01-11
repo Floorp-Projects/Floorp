@@ -48,6 +48,8 @@
 
 #include "jsobjinlines.h"
 
+#ifdef JS_THREADSAFE
+
 namespace JS {
 
 using namespace js;
@@ -223,10 +225,6 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
             rt->atomState.atoms.sizeOfExcludingThis(data->mallocSizeOf);
 
         {
-#ifndef JS_THREADSAFE
-#error "This code assumes JS_THREADSAFE is defined"
-#endif
-
             // Need the GC lock to call JS_ContextIteratorUnlocked() and to
             // access rt->threads.
             AutoLockGC lock(rt);
@@ -349,10 +347,6 @@ GetExplicitNonHeapForRuntime(JSRuntime *rt, int64_t *amount,
         *amount += n;
 
         {
-#ifndef JS_THREADSAFE
-#error "This code assumes JS_THREADSAFE is defined"
-#endif
-
             // Need the GC lock to call JS_ContextIteratorUnlocked() and to
             // access rt->threads.
             AutoLockGC lock(rt);
@@ -380,3 +374,5 @@ GetExplicitNonHeapForRuntime(JSRuntime *rt, int64_t *amount,
 }
 
 } // namespace JS
+
+#endif // JS_THREADSAFE
