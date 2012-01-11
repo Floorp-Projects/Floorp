@@ -384,36 +384,6 @@ GreedyAllocator::allocateRegisterOperand(LAllocation *a, VirtualRegister *vr)
     return true;
 }
 
-bool
-GreedyAllocator::allocateWritableOperand(LAllocation *a, VirtualRegister *vr)
-{
-    AnyRegister reg;
-    if (!vr->hasRegister()) {
-        // If the vr has no register assigned, then we can assign a register and
-        // steal it knowing that it will be that register's last use.
-        if (!allocateReg(vr))
-            return false;
-        reg = vr->reg();
-    } else {
-        if (allocatableRegs().empty(vr->isDouble())) {
-            // If there are registers free, get one.
-            if (!allocate(vr->type(), DISALLOW, &reg))
-                return false;
-            align(vr->reg(), reg);
-        } else {
-            // Otherwise, clobber the register, and restore it on the way out.
-            reg = vr->reg();
-
-            allocateStack(vr);
-            if (!restore(vr->backingStack(), reg))
-                return false;
-        }
-    }
-
-    *a = LAllocation(reg);
-    return true;
-}
-
 static inline bool
 DeservesRegister(LDefinition::Type type)
 {
