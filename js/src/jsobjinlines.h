@@ -43,6 +43,7 @@
 
 #include <new>
 
+#include "jsapi.h"
 #include "jsarray.h"
 #include "jsbool.h"
 #include "jscntxt.h"
