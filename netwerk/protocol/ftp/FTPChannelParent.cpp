@@ -105,12 +105,12 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
   nsresult rv;
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   if (NS_FAILED(rv))
-    return SendCancelEarly(rv);
+    return SendFailedAsyncOpen(rv);
 
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannel(getter_AddRefs(chan), uri, ios);
   if (NS_FAILED(rv))
-    return SendCancelEarly(rv);
+    return SendFailedAsyncOpen(rv);
 
   mChannel = static_cast<nsFtpChannel*>(chan.get());
   
@@ -119,16 +119,16 @@ FTPChannelParent::RecvAsyncOpen(const IPC::URI& aURI,
     // contentType and contentLength are ignored
     rv = mChannel->SetUploadStream(upload, EmptyCString(), 0);
     if (NS_FAILED(rv))
-      return SendCancelEarly(rv);
+      return SendFailedAsyncOpen(rv);
   }
 
   rv = mChannel->ResumeAt(aStartPos, aEntityID);
   if (NS_FAILED(rv))
-    return SendCancelEarly(rv);
+    return SendFailedAsyncOpen(rv);
 
   rv = mChannel->AsyncOpen(this, nsnull);
   if (NS_FAILED(rv))
-    return SendCancelEarly(rv);
+    return SendFailedAsyncOpen(rv);
   
   return true;
 }
@@ -153,21 +153,24 @@ FTPChannelParent::RecvConnectChannel(const PRUint32& channelId)
 bool
 FTPChannelParent::RecvCancel(const nsresult& status)
 {
-  mChannel->Cancel(status);
+  if (mChannel)
+    mChannel->Cancel(status);
   return true;
 }
 
 bool
 FTPChannelParent::RecvSuspend()
 {
-  mChannel->Suspend();
+  if (mChannel)
+    mChannel->Suspend();
   return true;
 }
 
 bool
 FTPChannelParent::RecvResume()
 {
-  mChannel->Resume();
+  if (mChannel)
+    mChannel->Resume();
   return true;
 }
 
