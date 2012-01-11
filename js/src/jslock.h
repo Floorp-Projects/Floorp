@@ -144,7 +144,7 @@ extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
 #define JS_ATOMIC_ADD(p,v)          (*(p) += (v))
 #define JS_ATOMIC_SET(p,v)          (*(p) = (v))
 
-#define js_CurrentThreadId()        0
+#define js_CurrentThreadId()        (void*)NULL
 #define JS_NEW_LOCK()               NULL
 #define JS_DESTROY_LOCK(l)          ((void)0)
 #define JS_ACQUIRE_LOCK(l)          ((void)0)
