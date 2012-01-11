@@ -503,8 +503,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             unboxDouble(src, dest.fpu());
             bind(&end);
         } else {
-            if (src.valueReg() != dest.gpr())
-                unboxNonDouble(src, dest.gpr());
+            unboxNonDouble(src, dest.gpr());
         }
     }
 
