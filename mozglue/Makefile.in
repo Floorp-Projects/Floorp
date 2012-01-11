@@ -43,6 +43,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS =
+
+ifdef MOZ_LINKER
+DIRS += linker
+endif
+
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 DIRS += android
 endif
