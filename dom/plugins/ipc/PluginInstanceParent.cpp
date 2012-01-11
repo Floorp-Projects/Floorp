@@ -535,14 +535,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
 #endif
 #ifdef MOZ_X11
     else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorX11) {
-        SurfaceDescriptorX11 xdesc = newSurface.get_SurfaceDescriptorX11();
-        XRenderPictFormat pf;
-        pf.id = xdesc.xrenderPictID();
-        XRenderPictFormat *incFormat =
-            XRenderFindFormat(DefaultXDisplay(), PictFormatID, &pf, 0);
-        surface =
-            new gfxXlibSurface(DefaultScreenOfDisplay(DefaultXDisplay()),
-                               xdesc.XID(), incFormat, xdesc.size());
+        surface = newSurface.get_SurfaceDescriptorX11().OpenForeign();
     }
 #endif
 #ifdef XP_WIN
@@ -847,8 +840,7 @@ PluginInstanceParent::BackgroundDescriptor()
 
 #ifdef MOZ_X11
     gfxXlibSurface* xsurf = static_cast<gfxXlibSurface*>(mBackground.get());
-    return SurfaceDescriptorX11(xsurf->XDrawable(), xsurf->XRenderFormat()->id,
-                                xsurf->GetSize());
+    return SurfaceDescriptorX11(xsurf);
 #endif
 
 #ifdef XP_WIN
