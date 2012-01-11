@@ -3471,6 +3471,57 @@ JS_IdArrayGet(JSContext *cx, JSIdArray *ida, jsint index);
 extern JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida);
 
+#ifdef __cplusplus
+
+namespace JS {
+
+class AutoIdArray : private AutoGCRooter {
+  public:
+    AutoIdArray(JSContext *cx, JSIdArray *ida JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, IDARRAY), idArray(ida)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoIdArray() {
+        if (idArray)
+            JS_DestroyIdArray(context, idArray);
+    }
+    bool operator!() {
+        return !idArray;
+    }
+    jsid operator[](size_t i) const {
+        JS_ASSERT(idArray);
+        JS_ASSERT(i < length());
+        return JS_IdArrayGet(context, idArray, i);
+    }
+    size_t length() const {
+        return JS_IdArrayLength(context, idArray);
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+    JSIdArray *steal() {
+        JSIdArray *copy = idArray;
+        idArray = NULL;
+        return copy;
+    }
+
+  protected:
+    inline void trace(JSTracer *trc);
+
+  private:
+    JSIdArray *idArray;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    /* No copy or assignment semantics. */
+    AutoIdArray(AutoIdArray &ida) MOZ_DELETE;
+    void operator=(AutoIdArray &ida) MOZ_DELETE;
+};
+
+} /* namespace JS */
+
+#endif /* __cplusplus */
+
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp);
 
