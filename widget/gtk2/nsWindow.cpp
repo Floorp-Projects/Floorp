@@ -1830,8 +1830,11 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     nsCOMPtr<nsILocalFile> iconFile;
     nsCAutoString path;
 
-    bool foundIcon = gtk_icon_theme_has_icon(gtk_icon_theme_get_default(),
-                                             iconName.get());
+    gint *iconSizes =
+        gtk_icon_theme_get_icon_sizes(gtk_icon_theme_get_default(),
+                                      iconName.get());
+    bool foundIcon = (iconSizes[0] != 0);
+    g_free(iconSizes);
 
     if (!foundIcon) {
         // Look for icons with the following suffixes appended to the base name
