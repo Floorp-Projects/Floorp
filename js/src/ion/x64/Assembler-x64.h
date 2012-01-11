@@ -113,6 +113,11 @@ static const Register OsrFrameReg = r10;
 static const Register OsrFrameReg = ArgReg5;
 #endif
 
+// GCC stack is aligned on 16 bytes, but we don't maintain the invariant in
+// jitted code.
+static const uint32 StackAlignment = 16;
+static const bool StackKeptAligned = false;
+
 enum Scale {
     TimesOne,
     TimesTwo,

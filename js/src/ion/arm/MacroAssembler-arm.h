@@ -616,7 +616,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         adjustFrame(-STACK_SLOT_SIZE);
     }
     void implicitPop(uint32 args) {
-        adjustFrame(-args * STACK_SLOT_SIZE);
+        JS_ASSERT(args % STACK_SLOT_SIZE == 0);
+        adjustFrame(-args);
     }
     uint32 framePushed() const {
         return framePushed_;

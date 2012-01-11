@@ -297,15 +297,14 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     if (!wrapper)
         return false;
 
-#if defined(JS_CPU_ARM)
-    // As opposed of x86 and x64 implementation, ARM keep it's stack aligned all
-    // the time. Thus we add an extra padding if we pushed an odd number of
-    // arguments. This padding is removed by the wrapper wen it returns.
-    uint32 argumentPadding = (fun.explicitArgs % (StackAlignment / sizeof(void *))) * sizeof(void *);
-    masm.reserveStack(argumentPadding);
-#else
     uint32 argumentPadding = 0;
-#endif
+    if (StackKeptAligned) {
+        // We add an extra padding after the pushed arguments if we pushed an
+        // odd number of arguments. This padding is removed by the wrapper when
+        // it returns.
+        uint32 argumentPadding = (fun.explicitStackSlots() * sizeof(void *)) % StackAlignment;
+        masm.reserveStack(argumentPadding);
+    }
 
     // Call the wrapper function.  The wrapper is in charge to unwind the stack
     // when returning from the call.  Failures are handled with exceptions based
@@ -315,18 +314,12 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     if (!createSafepoint(ins))
         return false;
 
-#if defined(JS_CPU_ARM)
-    // Technically, we're need to remove IonExitFrameLayout from the stack, including
-    // the return addres.  However, we make the call into the VM via callIon, which adjusts the
-    // stack as if we'd return via the ION mechanism, which pops the return address.
-    // Thus we need to lie here in order to do the right thing.
-    int framePop = (sizeof(IonExitFrameLayout) - sizeof(void*)) / sizeof(void*);
-#else
-    int framePop = 0;
-#endif
+    // Remove rest of the frame left on the stack. We remove the return address
+    // which is implicitly poped when returning.
+    int framePop = sizeof(IonExitFrameLayout) - sizeof(void*);
 
     // Pop arguments from framePushed.
-    masm.implicitPop(fun.explicitStackSlots() + argumentPadding / sizeof(void *) + framePop);
+    masm.implicitPop(fun.explicitStackSlots() * sizeof(void *) + argumentPadding + framePop);
 
     // Stack is:
     //    ... frame ...
