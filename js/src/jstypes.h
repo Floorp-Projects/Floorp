@@ -301,12 +301,6 @@ typedef JSIntn JSBool;
 ************************************************************************/
 typedef uint8_t JSPackedBool;
 
-/*
-** A JSWord is an integer that is the same size as a void*
-*/
-typedef intptr_t JSWord;
-typedef uintptr_t JSUword;
-
 /***********************************************************************
 ** MACROS:      JS_LIKELY
 **              JS_UNLIKELY

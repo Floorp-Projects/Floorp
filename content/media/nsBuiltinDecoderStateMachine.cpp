@@ -45,7 +45,9 @@
 #include "mozilla/mozalloc.h"
 #include "VideoUtils.h"
 #include "nsTimeRanges.h"
+
 #include "mozilla/Preferences.h"
+#include "mozilla/StdInt.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -1162,7 +1164,7 @@ void nsBuiltinDecoderStateMachine::Seek(double aTime)
   NS_ASSERTION(mState >= DECODER_STATE_DECODING,
                "We should have loaded metadata");
   double t = aTime * static_cast<double>(USECS_PER_S);
-  if (t > PR_INT64_MAX) {
+  if (t > INT64_MAX) {
     // Prevent integer overflow.
     return;
   }

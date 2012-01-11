@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -57,10 +57,28 @@
 
 #include "nsContentUtils.h"
 
+#include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
+
+#include "jscntxt.h"
+#if 0
+        JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
+        if (acx->globalObject)
+            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "XPC global object");
+
+            while ((acx = JS_ContextIterator(cx->runtime, &iter))) {
+                if (!acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+                    JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+
+JS_LOCK_GC, JS_UNLOCK_GC
+
+js_NextActiveContext, js::TriggerOperationCallback
+        mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
+        mJSRuntime->setActivityCallback(ActivityCallback, this);
 #endif
 
 using namespace mozilla;
@@ -1234,141 +1252,60 @@ XPCJSRuntime::~XPCJSRuntime()
     XPCPerThreadData::ShutDown();
 }
 
-namespace {
+namespace xpc {
+
+void*
+GetCompartmentName(JSContext *cx, JSCompartment *c)
+{
+    nsCString* name = new nsCString();
+    if (js::IsAtomsCompartmentFor(cx, c)) {
+        name->AssignLiteral("atoms");
+    } else if (JSPrincipals *principals = JS_GetCompartmentPrincipals(c)) {
+        if (principals->codebase) {
+            name->Assign(principals->codebase);
+
+            // If it's the system compartment, append the address.
+            // This means that multiple system compartments (and there
+            // can be many) can be distinguished.
+            if (js::IsSystemCompartment(c)) {
+                xpc::CompartmentPrivate *compartmentPrivate =
+                    static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, c));
+                if (compartmentPrivate &&
+                    !compartmentPrivate->location.IsEmpty()) {
+                    name->AppendLiteral(", ");
+                    name->Append(compartmentPrivate->location);
+                }
+
+                // ample; 64-bit address max is 18 chars
+                static const int maxLength = 31;
+                nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
+                name->Append(address);
+            }
+
+            // A hack: replace forward slashes with '\\' so they aren't
+            // treated as path separators.  Users of the reporters
+            // (such as about:memory) have to undo this change.
+            name->ReplaceChar('/', '\\');
+        } else {
+            name->AssignLiteral("null-codebase");
+        }
+    } else {
+        name->AssignLiteral("null-principal");
+    }
+    return name;
+}
+
+void
+DestroyCompartmentName(void *string)
+{
+    delete static_cast<nsCString*>(string);
+}
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
 
-void
-CompartmentMemoryCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
-{
-    // Append a new CompartmentStats to the vector.
-    IterateData *data = static_cast<IterateData *>(vdata);
-    CompartmentStats compartmentStats(cx, compartment);
-    CompartmentStats *curr =
-        data->compartmentStatsVector.AppendElement(compartmentStats);
-    data->currCompartmentStats = curr;
+} // namespace xpc
 
-    // Get the compartment-level numbers.
-#ifdef JS_METHODJIT
-    curr->mjitCode = JS::SizeOfCompartmentMjitCode(compartment);
-#endif
-    JS::SizeOfCompartmentTypeInferenceData(cx, compartment,
-                                           &curr->typeInferenceMemory,
-                                           JsMallocSizeOf);
-    curr->shapesCompartmentTables =
-        JS::SizeOfCompartmentShapeTable(compartment, JsMallocSizeOf);
-}
-
-void
-ExplicitNonHeapCompartmentCallback(JSContext *cx, void *data, JSCompartment *compartment)
-{
-    size_t *n = static_cast<size_t *>(data);
-#ifdef JS_METHODJIT
-    *n += JS::SizeOfCompartmentMjitCode(compartment);
-#endif
-}
-
-void
-ChunkCallback(JSContext *cx, void *vdata, js::gc::Chunk *chunk)
-{
-    // Nb: This function is only called for dirty chunks, which is why we
-    // increment gcHeapChunkDirtyDecommitted.
-    IterateData *data = static_cast<IterateData *>(vdata);
-    for (uint32_t i = 0; i < js::gc::ArenasPerChunk; i++)
-        if (chunk->decommittedArenas.get(i))
-            data->gcHeapChunkDirtyDecommitted += js::gc::ArenaSize;
-}
-
-void
-ArenaCallback(JSContext *cx, void *vdata, js::gc::Arena *arena,
-              JSGCTraceKind traceKind, size_t thingSize)
-{
-    IterateData *data = static_cast<IterateData *>(vdata);
-
-    data->currCompartmentStats->gcHeapArenaHeaders +=
-        sizeof(js::gc::ArenaHeader);
-    size_t allocationSpace = arena->thingsSpan(thingSize);
-    data->currCompartmentStats->gcHeapArenaPadding +=
-        js::gc::ArenaSize - allocationSpace - sizeof(js::gc::ArenaHeader);
-    // We don't call the callback on unused things.  So we compute the
-    // unused space like this:  arenaUnused = maxArenaUnused - arenaUsed.
-    // We do this by setting arenaUnused to maxArenaUnused here, and then
-    // subtracting thingSize for every used cell, in CellCallback().
-    data->currCompartmentStats->gcHeapArenaUnused += allocationSpace;
-}
-
-void
-CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
-             size_t thingSize)
-{
-    IterateData *data = static_cast<IterateData *>(vdata);
-    CompartmentStats *curr = data->currCompartmentStats;
-    switch (traceKind) {
-        case JSTRACE_OBJECT:
-        {
-            JSObject *obj = static_cast<JSObject *>(thing);
-            if (JS_ObjectIsFunction(cx, obj)) {
-                curr->gcHeapObjectsFunction += thingSize;
-            } else {
-                curr->gcHeapObjectsNonFunction += thingSize;
-            }
-            curr->objectSlots += JS::SizeOfObjectDynamicSlots(obj, JsMallocSizeOf);
-            break;
-        }
-        case JSTRACE_STRING:
-        {
-            JSString *str = static_cast<JSString *>(thing);
-            curr->gcHeapStrings += thingSize;
-            curr->stringChars += str->charsHeapSize(JsMallocSizeOf);
-            break;
-        }
-        case JSTRACE_SHAPE:
-        {
-            if (JS::IsShapeInDictionary(thing)) {
-                curr->gcHeapShapesDict += thingSize;
-                curr->shapesExtraDictTables +=
-                    JS::SizeOfShapePropertyTable(thing, JsMallocSizeOf);
-            } else {
-                curr->gcHeapShapesTree += thingSize;
-                curr->shapesExtraTreeTables +=
-                    JS::SizeOfShapePropertyTable(thing, JsMallocSizeOf);
-                curr->shapesExtraTreeShapeKids +=
-                    JS::SizeOfShapeKids(thing, JsMallocSizeOf);
-            }
-            break;
-        }
-        case JSTRACE_BASE_SHAPE:
-        {
-            curr->gcHeapShapesBase += thingSize;
-            break;
-        }
-        case JSTRACE_SCRIPT:
-        {
-            JSScript *script = static_cast<JSScript *>(thing);
-            curr->gcHeapScripts += thingSize;
-            curr->scriptData += JS::SizeOfScriptData(script, JsMallocSizeOf);
-#ifdef JS_METHODJIT
-            curr->mjitData += JS::SizeOfScriptJitData(script, JsMallocSizeOf);
-#endif
-            break;
-        }
-        case JSTRACE_TYPE_OBJECT:
-        {
-            js::types::TypeObject *obj = static_cast<js::types::TypeObject *>(thing);
-            curr->gcHeapTypeObjects += thingSize;
-            JS::SizeOfObjectTypeInferenceData(obj, &curr->typeInferenceMemory,
-                                              JsMallocSizeOf);
-            break;
-        }
-        case JSTRACE_XML:
-        {
-            curr->gcHeapXML += thingSize;
-            break;
-        }
-    }
-    // Yes, this is a subtraction:  see ArenaCallback() for details.
-    curr->gcHeapArenaUnused -= thingSize;
-}
+namespace {
 
 template <int N>
 inline void
@@ -1439,10 +1376,11 @@ ReportMemoryPercentage(const nsACString &path, PRInt32 kind, PRInt64 amount,
 template <int N>
 inline const nsCString
 MakeMemoryReporterPath(const nsACString &pathPrefix,
-                       const nsACString &compartmentName,
+                       const JS::CompartmentStats &compartmentStats,
                        const char (&reporterName)[N])
 {
-  return pathPrefix + NS_LITERAL_CSTRING("compartment(") + compartmentName +
+  return pathPrefix + NS_LITERAL_CSTRING("compartment(") +
+         *static_cast<nsCString*>(compartmentStats.name) +
          NS_LITERAL_CSTRING(")/") + nsDependentCString(reporterName);
 }
 
@@ -1509,268 +1447,25 @@ namespace mozilla {
 namespace xpconnect {
 namespace memory {
 
-CompartmentStats::CompartmentStats(JSContext *cx, JSCompartment *c)
-{
-    memset(this, 0, sizeof(*this));
-
-    if (c == cx->runtime->atomsCompartment) {
-        name.AssignLiteral("atoms");
-    } else if (JSPrincipals *principals = JS_GetCompartmentPrincipals(c)) {
-        if (principals->codebase) {
-            name.Assign(principals->codebase);
-
-            // If it's the system compartment, append the address.
-            // This means that multiple system compartments (and there
-            // can be many) can be distinguished.
-            if (js::IsSystemCompartment(c)) {
-                xpc::CompartmentPrivate *compartmentPrivate =
-                        static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, c));
-                if (compartmentPrivate &&
-                    !compartmentPrivate->location.IsEmpty()) {
-                    name.AppendLiteral(", ");
-                    name.Append(compartmentPrivate->location);
-                }
-
-                // ample; 64-bit address max is 18 chars
-                static const int maxLength = 31;
-                nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
-                name.Append(address);
-            }
-
-            // A hack: replace forward slashes with '\\' so they aren't
-            // treated as path separators.  Users of the reporters
-            // (such as about:memory) have to undo this change.
-            name.ReplaceChar('/', '\\');
-        } else {
-            name.AssignLiteral("null-codebase");
-        }
-    } else {
-        name.AssignLiteral("null-principal");
-    }
-}
-
-JSBool
-CollectCompartmentStatsForRuntime(JSRuntime *rt, void *vdata)
-{
-    IterateData *data = (IterateData *)vdata;
-    JSContext *cx = JS_NewContext(rt, 0);
-    if (!cx) {
-        NS_ERROR("couldn't create context for memory tracing");
-        return false;
-    }
-
-    {
-        JSAutoRequest ar(cx);
-
-        data->compartmentStatsVector.SetCapacity(rt->compartments.length());
-
-        data->gcHeapChunkCleanDecommitted =
-            rt->gcChunkPool.countCleanDecommittedArenas(rt) *
-            js::gc::ArenaSize;
-        data->gcHeapChunkCleanUnused =
-            PRInt64(JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS)) *
-            js::gc::ChunkSize -
-            data->gcHeapChunkCleanDecommitted;
-        data->gcHeapChunkTotal =
-            PRInt64(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
-            js::gc::ChunkSize;
-
-        js::IterateCompartmentsArenasCells(cx, data, CompartmentMemoryCallback,
-                                           ArenaCallback, CellCallback);
-        js::IterateChunks(cx, data, ChunkCallback);
-
-        data->runtimeObject = JsMallocSizeOf(rt, sizeof(JSRuntime));
-
-        // Nb: we use sizeOfExcludingThis() because atomState.atoms is within
-        // JSRuntime, and so counted when JSRuntime is counted.
-        data->runtimeAtomsTable =
-            rt->atomState.atoms.sizeOfExcludingThis(JsMallocSizeOf);
-
-        {
-            #ifndef JS_THREADSAFE
-            #error "This code assumes JS_THREADSAFE is defined"
-            #endif
-
-            // Need the GC lock to call JS_ContextIteratorUnlocked() and to
-            // access rt->threads.
-            js::AutoLockGC lock(rt);
-
-            JSContext *acx, *iter = NULL;
-            while ((acx = JS_ContextIteratorUnlocked(rt, &iter)) != NULL) {
-                data->runtimeContexts +=
-                    acx->sizeOfIncludingThis(JsMallocSizeOf);
-            }
-
-            for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
-                JSThread *thread = r.front().value;
-                size_t normal, temporary, regexpCode, stackCommitted;
-                thread->sizeOfIncludingThis(JsMallocSizeOf,
-                                            &normal,
-                                            &temporary,
-                                            &regexpCode,
-                                            &stackCommitted);
-
-                data->runtimeThreadsNormal         += normal;
-                data->runtimeThreadsTemporary      += temporary;
-                data->runtimeThreadsRegexpCode     += regexpCode;
-                data->runtimeThreadsStackCommitted += stackCommitted;
-            }
-        }
-
-        XPCJSRuntime *xpcrt = nsXPConnect::GetRuntimeInstance();
-        data->xpconnect +=
-            xpcrt->SizeOfIncludingThis(JsMallocSizeOf);
-        data->xpconnect +=
-            XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JsMallocSizeOf);
-    }
-
-    JS_DestroyContextNoGC(cx);
-
-    // This is initialized to all bytes stored in used chunks, and then we
-    // subtract used space from it each time around the loop.
-    data->gcHeapChunkDirtyUnused = data->gcHeapChunkTotal -
-                                   data->gcHeapChunkCleanUnused -
-                                   data->gcHeapChunkCleanDecommitted -
-                                   data->gcHeapChunkDirtyDecommitted;
-
-    for (PRUint32 index = 0;
-         index < data->compartmentStatsVector.Length();
-         index++) {
-        CompartmentStats &stats = data->compartmentStatsVector[index];
-
-        PRInt64 used = stats.gcHeapArenaHeaders +
-                       stats.gcHeapArenaPadding +
-                       stats.gcHeapArenaUnused +
-                       stats.gcHeapObjectsNonFunction +
-                       stats.gcHeapObjectsFunction +
-                       stats.gcHeapStrings +
-                       stats.gcHeapShapesTree +
-                       stats.gcHeapShapesDict +
-                       stats.gcHeapShapesBase +
-                       stats.gcHeapScripts +
-                       stats.gcHeapTypeObjects +
-                       stats.gcHeapXML;
-
-        data->gcHeapChunkDirtyUnused -= used;
-        data->gcHeapArenaUnused += stats.gcHeapArenaUnused;
-        data->totalObjects += stats.gcHeapObjectsNonFunction + 
-                              stats.gcHeapObjectsFunction +
-                              stats.objectSlots;
-        data->totalShapes  += stats.gcHeapShapesTree + 
-                              stats.gcHeapShapesDict +
-                              stats.gcHeapShapesBase +
-                              stats.shapesExtraTreeTables +
-                              stats.shapesExtraDictTables +
-                              stats.shapesCompartmentTables;
-        data->totalScripts += stats.gcHeapScripts + 
-                              stats.scriptData;
-        data->totalStrings += stats.gcHeapStrings + 
-                              stats.stringChars;
-#ifdef JS_METHODJIT
-        data->totalMjit    += stats.mjitCode + 
-                              stats.mjitData;
-#endif
-        data->totalTypeInference += stats.gcHeapTypeObjects +
-                                    stats.typeInferenceMemory.objects +
-                                    stats.typeInferenceMemory.scripts + 
-                                    stats.typeInferenceMemory.tables;
-        data->totalAnalysisTemp  += stats.typeInferenceMemory.temporary;
-    }
-
-    size_t numDirtyChunks = (data->gcHeapChunkTotal -
-                             data->gcHeapChunkCleanUnused) /
-                            js::gc::ChunkSize;
-    PRInt64 perChunkAdmin =
-        sizeof(js::gc::Chunk) - (sizeof(js::gc::Arena) * js::gc::ArenasPerChunk);
-    data->gcHeapChunkAdmin = numDirtyChunks * perChunkAdmin;
-    data->gcHeapChunkDirtyUnused -= data->gcHeapChunkAdmin;
-
-    // Why 10000x?  100x because it's a percentage, and another 100x
-    // because nsIMemoryReporter requires that for percentage amounts so
-    // they can be fractional.
-    data->gcHeapUnusedPercentage = (data->gcHeapChunkCleanUnused +
-                                    data->gcHeapChunkDirtyUnused +
-                                    data->gcHeapChunkCleanDecommitted +
-                                    data->gcHeapChunkDirtyDecommitted +
-                                    data->gcHeapArenaUnused) * 10000 /
-                                   data->gcHeapChunkTotal;
-
-    return true;
-}
-
-JSBool
-GetExplicitNonHeapForRuntime(JSRuntime *rt, void *data)
-{
-    PRInt64 *amount = (PRInt64 *)data;
-
-    JSContext *cx = JS_NewContext(rt, 0);
-    if (!cx) {
-        NS_ERROR("couldn't create context for memory tracing");
-        return NS_ERROR_ABORT;
-    }
-
-    // explicit/<compartment>/gc-heap/*
-    *amount = PRInt64(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
-              js::gc::ChunkSize;
-
-    {
-        JSAutoRequest ar(cx);
-
-        // explicit/<compartment>/mjit-code
-        size_t n = 0;
-        js::IterateCompartments(cx, &n, ExplicitNonHeapCompartmentCallback);
-        *amount += n;
-
-        {
-            #ifndef JS_THREADSAFE
-            #error "This code assumes JS_THREADSAFE is defined"
-            #endif
-
-            // Need the GC lock to call JS_ContextIteratorUnlocked() and to
-            // access rt->threads.
-            js::AutoLockGC lock(rt);
-
-            // explicit/runtime/threads/regexp-code
-            // explicit/runtime/threads/stack-committed
-            for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
-                JSThread *thread = r.front().value;
-                size_t regexpCode, stackCommitted;
-                thread->sizeOfIncludingThis(JsMallocSizeOf,
-                                            NULL,
-                                            NULL,
-                                            &regexpCode,
-                                            &stackCommitted);
-
-                *amount += regexpCode;
-                *amount += stackCommitted;
-            }
-        }
-    }
-
-    JS_DestroyContextNoGC(cx);
-
-    return true;
-}
-
 #define SLOP_BYTES_STRING \
     " The measurement includes slop bytes caused by the heap allocator rounding up request sizes."
 
 static PRInt64
-ReportCompartmentStats(const CompartmentStats &stats,
+ReportCompartmentStats(const JS::CompartmentStats &stats,
                        const nsACString &pathPrefix,
                        nsIMemoryMultiReporterCallback *callback,
                        nsISupports *closure)
 {
     PRInt64 gcTotal = 0;
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/arena/headers"),
                        &gcTotal, stats.gcHeapArenaHeaders,
                        "Memory on the compartment's garbage-collected JavaScript heap, within "
                        "arenas, that is used to hold internal book-keeping information.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/arena/padding"),
                        &gcTotal, stats.gcHeapArenaPadding,
                        "Memory on the compartment's garbage-collected JavaScript heap, within "
@@ -1778,28 +1473,28 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        "This constitutes internal fragmentation.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/arena/unused"),
                        &gcTotal, stats.gcHeapArenaUnused,
                        "Memory on the compartment's garbage-collected JavaScript heap, within "
                        "arenas, that could be holding useful data but currently isn't.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/objects/non-function"),
                        &gcTotal, stats.gcHeapObjectsNonFunction,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
                        "non-function objects.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/objects/function"),
                        &gcTotal, stats.gcHeapObjectsFunction,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
                        "function objects.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/strings"),
                        &gcTotal, stats.gcHeapStrings,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
@@ -1809,7 +1504,7 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        "under 'gc-heap/string-chars' instead.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/scripts"),
                        &gcTotal, stats.gcHeapScripts,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
@@ -1817,42 +1512,42 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        "in a script. One is also created for the top-level code in a script.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/shapes/tree"),
                        &gcTotal, stats.gcHeapShapesTree,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
                        "shapes that are in a property tree.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/shapes/dict"),
                        &gcTotal, stats.gcHeapShapesDict,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
                        "shapes that are in dictionary mode.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/shapes/base"),
                        &gcTotal, stats.gcHeapShapesBase,
                        "Memory on the compartment's garbage-collected JavaScript heap that collates "
                        "data common to many shapes.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/type-objects"),
                        &gcTotal, stats.gcHeapTypeObjects,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
                        "type inference information.",
                        callback, closure);
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "gc-heap/xml"),
                        &gcTotal, stats.gcHeapXML,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
                        "E4X XML objects.",
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "object-slots"),
                        nsIMemoryReporter::KIND_HEAP, stats.objectSlots,
                        "Memory allocated for the compartment's non-fixed object slot arrays, "
@@ -1862,7 +1557,7 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        "'gc-heap/objects' instead." SLOP_BYTES_STRING,
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "string-chars"),
                        nsIMemoryReporter::KIND_HEAP, stats.stringChars,
                        "Memory allocated to hold the compartment's string characters.  Sometimes "
@@ -1872,35 +1567,35 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        "'gc-heap/strings' instead.",
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "shapes-extra/tree-tables"),
                        nsIMemoryReporter::KIND_HEAP, stats.shapesExtraTreeTables,
                        "Memory allocated for the compartment's property tables that belong to "
                        "shapes that are in a property tree." SLOP_BYTES_STRING,
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "shapes-extra/dict-tables"),
                        nsIMemoryReporter::KIND_HEAP, stats.shapesExtraDictTables,
                        "Memory allocated for the compartment's property tables that belong to "
                        "shapes that are in dictionary mode." SLOP_BYTES_STRING,
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "shapes-extra/tree-shape-kids"),
                        nsIMemoryReporter::KIND_HEAP, stats.shapesExtraTreeShapeKids,
                        "Memory allocated for the compartment's kid hashes that belong to shapes "
                        "that are in a property tree.",
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "shapes-extra/compartment-tables"),
                        nsIMemoryReporter::KIND_HEAP, stats.shapesCompartmentTables,
                        "Memory used by compartment wide tables storing shape information "
                        "for use during object construction.",
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "script-data"),
                        nsIMemoryReporter::KIND_HEAP, stats.scriptData,
                        "Memory allocated for JSScript bytecode and various variable-length "
@@ -1908,13 +1603,13 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
 #ifdef JS_METHODJIT
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "mjit-code"),
                        nsIMemoryReporter::KIND_NONHEAP, stats.mjitCode,
                        "Memory used by the method JIT to hold the compartment's generated code.",
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "mjit-data"),
                        nsIMemoryReporter::KIND_HEAP, stats.mjitData,
                        "Memory used by the method JIT for the compartment's compilation data: "
@@ -1922,7 +1617,7 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 #endif
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "type-inference/script-main"),
                        nsIMemoryReporter::KIND_HEAP,
                        stats.typeInferenceMemory.scripts,
@@ -1930,7 +1625,7 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        "and dynamically observed types.",
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "type-inference/object-main"),
                        nsIMemoryReporter::KIND_HEAP,
                        stats.typeInferenceMemory.objects,
@@ -1938,14 +1633,14 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        "property types of JS objects.",
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "type-inference/tables"),
                        nsIMemoryReporter::KIND_HEAP,
                        stats.typeInferenceMemory.tables,
                        "Memory used during type inference for compartment-wide tables.",
                        callback, closure);
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "analysis-temporary"),
                        nsIMemoryReporter::KIND_HEAP,
                        stats.typeInferenceMemory.temporary,
@@ -1957,13 +1652,13 @@ ReportCompartmentStats(const CompartmentStats &stats,
 }
 
 void
-ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
+ReportJSRuntimeStats(const JS::IterateData &data, const nsACString &pathPrefix,
                      nsIMemoryMultiReporterCallback *callback,
                      nsISupports *closure)
 {
     PRInt64 gcTotal = 0;
-    for (PRUint32 index = 0;
-         index < data.compartmentStatsVector.Length();
+    for (size_t index = 0;
+         index < data.compartmentStatsVector.length();
          index++) {
         gcTotal += ReportCompartmentStats(data.compartmentStatsVector[index], pathPrefix,
                                     callback, closure);
@@ -2009,11 +1704,6 @@ ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
                       "Memory used for the thread stacks.  This is the committed portions "
                       "of the stacks; any uncommitted portions are not measured because they "
                       "hardly cost anything.",
-                      callback, closure);
-
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("xpconnect"),
-                      nsIMemoryReporter::KIND_HEAP, data.xpconnect,
-                      "Memory used by XPConnect." SLOP_BYTES_STRING,
                       callback, closure);
 
     ReportGCHeapBytes(pathPrefix +
@@ -2066,21 +1756,34 @@ public:
     NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
                               nsISupports *closure)
     {
-        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+        XPCJSRuntime *xpcrt = nsXPConnect::GetRuntimeInstance();
 
         // In the first step we get all the stats and stash them in a local
         // data structure.  In the second step we pass all the stashed stats to
         // the callback.  Separating these steps is important because the
         // callback may be a JS function, and executing JS while getting these
         // stats seems like a bad idea.
-        IterateData data;
-        if (!CollectCompartmentStatsForRuntime(rt, &data))
+        JS::IterateData data(xpc::JsMallocSizeOf, xpc::GetCompartmentName,
+                             xpc::DestroyCompartmentName);
+        if (!JS::CollectCompartmentStatsForRuntime(xpcrt->GetJSRuntime(), &data))
             return NS_ERROR_FAILURE;
+
+        uint64_t xpconnect;
+        {
+            xpconnect =
+                xpcrt->SizeOfIncludingThis(xpc::JsMallocSizeOf) +
+                XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(xpc::JsMallocSizeOf);
+        }
 
         NS_NAMED_LITERAL_CSTRING(pathPrefix, "explicit/js/");
 
         // This is the second step (see above).
         ReportJSRuntimeStats(data, pathPrefix, callback, closure);
+
+        ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("xpconnect"),
+                          nsIMemoryReporter::KIND_HEAP, xpconnect,
+                          "Memory used by XPConnect." SLOP_BYTES_STRING,
+                          callback, closure);
 
         ReportMemoryBytes(NS_LITERAL_CSTRING("js-gc-heap-chunk-dirty-unused"),
                           nsIMemoryReporter::KIND_OTHER,
@@ -2175,7 +1878,7 @@ public:
     {
         JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
 
-        if (!GetExplicitNonHeapForRuntime(rt, n))
+        if (!JS::GetExplicitNonHeapForRuntime(rt, n, xpc::JsMallocSizeOf))
             return NS_ERROR_FAILURE;
 
         return NS_OK;

@@ -49,19 +49,6 @@
 // remove this file in the near future.
 
 
-// This belongs in prtypes.h
-/************************************************************************
- * MACROS:      PR_INT64_MAX
- *              PR_INT64_MIN
- *              PR_UINT64_MAX
- * DESCRIPTION:
- *  The maximum and minimum values of a PRInt64 or PRUint64.
-************************************************************************/
-
-#define PR_INT64_MAX (~((PRInt64)(1) << 63))
-#define PR_INT64_MIN (-PR_INT64_MAX - 1)
-#define PR_UINT64_MAX (~(PRUint64)(0))
-
 // This belongs in xpcom/monitor/Monitor.h, once we've made
 // mozilla::Monitor non-reentrant.
 namespace mozilla {

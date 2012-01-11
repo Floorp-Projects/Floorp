@@ -37,9 +37,13 @@
 
 #include "nsTextEditUtils.h"
 
+#include "mozilla/dom/Element.h"
+
 #include "nsEditor.h"
 #include "nsPlaintextEditor.h"
 #include "nsEditProperty.h"
+
+using namespace mozilla;
 
 ///////////////////////////////////////////////////////////////////////////
 // IsBody: true if node an html body node
@@ -72,10 +76,18 @@ bool
 nsTextEditUtils::IsMozBR(nsIDOMNode *node)
 {
   NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsMozBR");
-  if (IsBreak(node) && HasMozAttr(node)) return true;
-  return false;
+  return IsBreak(node) && HasMozAttr(node);
 }
 
+
+bool
+nsTextEditUtils::IsMozBR(dom::Element* aNode)
+{
+  MOZ_ASSERT(aNode);
+  return aNode->IsHTML(nsGkAtoms::br) &&
+         aNode->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            NS_LITERAL_STRING("_moz"), eIgnoreCase);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // HasMozAttr: true if node has type attribute = _moz

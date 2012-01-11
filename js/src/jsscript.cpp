@@ -1032,7 +1032,7 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
 
 
     if (nconsts != 0) {
-        JS_ASSERT(reinterpret_cast<jsuword>(cursor) % sizeof(jsval) == 0);
+        JS_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(jsval) == 0);
         script->consts()->length = nconsts;
         script->consts()->vector = (HeapValue *)cursor;
         cursor += nconsts * sizeof(script->consts()->vector[0]);
@@ -1312,12 +1312,6 @@ JSScript::dataSize(JSMallocSizeOfFun mallocSizeOf)
 #endif
 
     return mallocSizeOf(data, dataSize());
-}
-
-JS_PUBLIC_API(size_t)
-JS::SizeOfScriptData(JSScript *script, JSMallocSizeOfFun mallocSizeOf)
-{
-    return script->dataSize(mallocSizeOf);
 }
 
 /*

@@ -43,6 +43,8 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 
+#include "jscntxt.h" // JS_CHECK_RECURSION
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCVariant)
 
 NS_IMPL_CLASSINFO(XPCVariant, NULL, 0, XPCVARIANT_CID)

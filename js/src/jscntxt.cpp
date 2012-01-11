@@ -1392,7 +1392,7 @@ JSContext::JSContext(JSRuntime *rt)
     resolvingList(NULL),
     generatingError(false),
 #if JS_STACK_GROWTH_DIRECTION > 0
-    stackLimit((jsuword)-1),
+    stackLimit(UINTPTR_MAX),
 #else
     stackLimit(0),
 #endif
@@ -1700,15 +1700,25 @@ JSContext::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
            busyArrays.sizeOfExcludingThis(mallocSizeOf);
 }
 
-namespace js {
+namespace JS {
 
-AutoEnumStateRooter::~AutoEnumStateRooter()
+#if defined JS_THREADSAFE && defined DEBUG
+
+AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
+    : cx(cx)
 {
-    if (!stateValue.isNull()) {
-        DebugOnly<JSBool> ok =
-            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
-        JS_ASSERT(ok);
-    }
+    JS_ASSERT(cx->thread());
+    JS_ASSERT(cx->thread()->data.requestDepth || cx->thread() == cx->runtime->gcThread);
+    JS_ASSERT(cx->runtime->onOwnerThread());
+    cx->thread()->checkRequestDepth++;
 }
 
-} /* namespace js */
+AutoCheckRequestDepth::~AutoCheckRequestDepth()
+{
+    JS_ASSERT(cx->thread()->checkRequestDepth != 0);
+    cx->thread()->checkRequestDepth--;
+}
+
+#endif
+
+} // namespace JS

@@ -1853,6 +1853,7 @@ nsWSRunObject::GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset
 nsresult
 nsWSRunObject::FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, bool after)
 {
+  *outRun = nsnull;
   // given a dompoint, find the ws run that is before or after it, as caller needs
   NS_ENSURE_TRUE(aNode && outRun, NS_ERROR_NULL_POINTER);
     

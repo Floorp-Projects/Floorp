@@ -55,10 +55,13 @@ CPPSRCS = \
   APKOpen.cpp \
   $(NULL)
 
+LOCAL_INCLUDES += -I$(srcdir)/../linker
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/startup
+ifdef MOZ_OLD_LINKER
 LOCAL_INCLUDES += -I$(topsrcdir)/other-licenses/android
 ifeq ($(CPU_ARCH),arm)
 DEFINES += -DANDROID_ARM_LINKER
+endif
 endif
 
 EXPORTS = APKOpen.h

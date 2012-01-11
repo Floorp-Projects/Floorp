@@ -701,7 +701,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                     goto miss;
                 }
                 const Shape *shape = pobj->lastProperty();
-                key = (key + (key << 16)) ^ ((jsuword)shape >> 3);
+                key = (key + (key << 16)) ^ (uintptr_t(shape) >> 3);
                 if (!shapes.append((Shape *) shape))
                     return false;
                 pobj = pobj->getProto();
