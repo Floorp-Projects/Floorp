@@ -6855,3 +6855,22 @@ JS_CallOnce(JSCallOnceType *once, JSInitCallback func)
     }
 #endif
 }
+
+namespace JS {
+
+AutoGCRooter::AutoGCRooter(JSContext *cx, ptrdiff_t tag)
+  : down(cx->autoGCRooters), tag(tag), context(cx)
+{
+    JS_ASSERT(this != cx->autoGCRooters);
+    CHECK_REQUEST(cx);
+    cx->autoGCRooters = this;
+}
+
+AutoGCRooter::~AutoGCRooter()
+{
+    JS_ASSERT(this == context->autoGCRooters);
+    CHECK_REQUEST(context);
+    context->autoGCRooters = down;
+}
+
+} // namespace JS

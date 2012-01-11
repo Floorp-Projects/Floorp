@@ -1712,3 +1712,26 @@ AutoEnumStateRooter::~AutoEnumStateRooter()
 }
 
 } /* namespace js */
+
+namespace JS {
+
+#if defined JS_THREADSAFE && defined DEBUG
+
+AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
+    : cx(cx)
+{
+    JS_ASSERT(cx->thread());
+    JS_ASSERT(cx->thread()->data.requestDepth || cx->thread() == cx->runtime->gcThread);
+    JS_ASSERT(cx->runtime->onOwnerThread());
+    cx->thread()->checkRequestDepth++;
+}
+
+AutoCheckRequestDepth::~AutoCheckRequestDepth()
+{
+    JS_ASSERT(cx->thread()->checkRequestDepth != 0);
+    cx->thread()->checkRequestDepth--;
+}
+
+#endif
+
+} // namespace JS

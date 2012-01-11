@@ -54,6 +54,10 @@
 
 #include "js/Utility.h"
 
+#ifdef __cplusplus
+#include "mozilla/Attributes.h"
+#endif
+
 /************************************************************************/
 
 /* JS::Value can store a full int32_t. */
@@ -785,6 +789,74 @@ inline Anchor<Value>::~Anchor()
 }
 
 #endif
+
+#if defined JS_THREADSAFE && defined DEBUG
+
+class JS_PUBLIC_API(AutoCheckRequestDepth)
+{
+    JSContext *cx;
+  public:
+    AutoCheckRequestDepth(JSContext *cx);
+    ~AutoCheckRequestDepth();
+};
+
+# define CHECK_REQUEST(cx) \
+    JS::AutoCheckRequestDepth _autoCheckRequestDepth(cx)
+
+#else
+
+# define CHECK_REQUEST(cx) \
+    ((void) 0)
+
+#endif
+
+class JS_PUBLIC_API(AutoGCRooter) {
+  public:
+    AutoGCRooter(JSContext *cx, ptrdiff_t tag);
+    ~AutoGCRooter();
+
+    /* Implemented in jsgc.cpp. */
+    inline void trace(JSTracer *trc);
+    void traceAll(JSTracer *trc);
+
+  protected:
+    AutoGCRooter * const down;
+
+    /*
+     * Discriminates actual subclass of this being used.  If non-negative, the
+     * subclass roots an array of values of the length stored in this field.
+     * If negative, meaning is indicated by the corresponding value in the enum
+     * below.  Any other negative value indicates some deeper problem such as
+     * memory corruption.
+     */
+    ptrdiff_t tag;
+
+    JSContext * const context;
+
+    enum {
+        JSVAL =        -1, /* js::AutoValueRooter */
+        VALARRAY =     -2, /* js::AutoValueArrayRooter */
+        PARSER =       -3, /* js::Parser */
+        SHAPEVECTOR =  -4, /* js::AutoShapeVector */
+        ENUMERATOR =   -5, /* js::AutoEnumStateRooter */
+        IDARRAY =      -6, /* js::AutoIdArray */
+        DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
+        NAMESPACES =   -8, /* js::AutoNamespaceArray */
+        XML =          -9, /* js::AutoXMLRooter */
+        OBJECT =      -10, /* js::AutoObjectRooter */
+        ID =          -11, /* js::AutoIdRooter */
+        VALVECTOR =   -12, /* js::AutoValueVector */
+        DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
+        STRING =      -14, /* js::AutoStringRooter */
+        IDVECTOR =    -15, /* js::AutoIdVector */
+        OBJVECTOR =   -16  /* js::AutoObjectVector */
+    };
+
+  private:
+    /* No copy or assignment semantics. */
+    AutoGCRooter(AutoGCRooter &ida) MOZ_DELETE;
+    void operator=(AutoGCRooter &ida) MOZ_DELETE;
+};
 
 }  /* namespace JS */
 
