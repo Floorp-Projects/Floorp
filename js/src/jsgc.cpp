@@ -1942,7 +1942,7 @@ AutoIdArray::trace(JSTracer *trc)
 void
 AutoEnumStateRooter::trace(JSTracer *trc)
 {
-    gc::MarkRoot(trc, obj, "js::AutoEnumStateRooter.obj");
+    gc::MarkRoot(trc, obj, "JS::AutoEnumStateRooter.obj");
 }
 
 inline void
