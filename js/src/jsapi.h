@@ -975,6 +975,34 @@ class AutoStringRooter : private AutoGCRooter {
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+class AutoArrayRooter : private AutoGCRooter {
+  public:
+    AutoArrayRooter(JSContext *cx, size_t len, Value *vec
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, len), array(vec)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(tag >= 0);
+    }
+
+    void changeLength(size_t newLength) {
+        tag = ptrdiff_t(newLength);
+        JS_ASSERT(tag >= 0);
+    }
+
+    void changeArray(Value *newArray, size_t newLength) {
+        changeLength(newLength);
+        array = newArray;
+    }
+
+    Value *array;
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 }  /* namespace JS */
 
 /************************************************************************/

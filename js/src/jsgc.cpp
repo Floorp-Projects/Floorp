@@ -2050,7 +2050,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
     JS_ASSERT(tag >= 0);
     MarkRootRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array,
-                  "js::AutoArrayRooter.array");
+                  "JS::AutoArrayRooter.array");
 }
 
 void
