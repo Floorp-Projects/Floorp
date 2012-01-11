@@ -216,7 +216,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, uintN orig_attrs,
 {
     // Generate both getter and setter and stash them in the prototype.
     jsval roots[2] = { JSVAL_NULL, JSVAL_NULL };
-    js::AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
+    JS::AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
 
     uintN attrs = JSPROP_SHARED | (orig_attrs & JSPROP_ENUMERATE);
     JSObject *getterobj;

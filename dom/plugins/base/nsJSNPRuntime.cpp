@@ -713,7 +713,7 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
   JSBool ok;
 
   {
-    js::AutoArrayRooter tvr(cx, 0, jsargs);
+    JS::AutoArrayRooter tvr(cx, 0, jsargs);
 
     // Convert args
     for (PRUint32 i = 0; i < argCount; ++i) {
