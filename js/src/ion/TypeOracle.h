@@ -76,6 +76,12 @@ class TypeOracle
         types::TypeSet *outTypes;
     };
 
+    struct BinaryTypes {
+        types::TypeSet *lhsTypes;
+        types::TypeSet *rhsTypes;
+        types::TypeSet *outTypes;
+    };
+
     struct Unary {
         MIRType ival;
         MIRType rval;
@@ -88,6 +94,7 @@ class TypeOracle
 
   public:
     virtual UnaryTypes unaryTypes(JSScript *script, jsbytecode *pc) = 0;
+    virtual BinaryTypes binaryTypes(JSScript *script, jsbytecode *pc) = 0;
     virtual Unary unaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual Binary binaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual types::TypeSet *thisTypeSet(JSScript *script) { return NULL; }
@@ -158,6 +165,13 @@ class DummyOracle : public TypeOracle
         u.outTypes = NULL;
         return u;
     }
+    BinaryTypes binaryTypes(JSScript *script, jsbytecode *pc) {
+        BinaryTypes b;
+        b.lhsTypes = NULL;
+        b.rhsTypes = NULL;
+        b.outTypes = NULL;
+        return b;
+    }
     Unary unaryOp(JSScript *script, jsbytecode *pc) {
         Unary u;
         u.ival = MIRType_Int32;
@@ -186,6 +200,7 @@ class TypeInferenceOracle : public TypeOracle
     bool init(JSContext *cx, JSScript *script);
 
     UnaryTypes unaryTypes(JSScript *script, jsbytecode *pc);
+    BinaryTypes binaryTypes(JSScript *script, jsbytecode *pc);
     Unary unaryOp(JSScript *script, jsbytecode *pc);
     Binary binaryOp(JSScript *script, jsbytecode *pc);
     types::TypeSet *thisTypeSet(JSScript *script);

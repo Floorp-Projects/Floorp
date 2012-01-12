@@ -58,7 +58,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     // Adds a box input to an instruction, setting operand |n| to the type and
     // |n+1| to the payload.
     bool useBox(LInstruction *lir, size_t n, MDefinition *mir,
-                LUse::Policy policy = LUse::REGISTER);
+                LUse::Policy policy = LUse::REGISTER, bool useAtStart = false);
 
     void lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);

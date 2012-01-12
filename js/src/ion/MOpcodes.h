@@ -74,6 +74,8 @@ namespace ion {
     _(Mul)                                                                  \
     _(Div)                                                                  \
     _(Mod)                                                                  \
+    _(AddGeneric)                                                           \
+    _(Concat)                                                               \
     _(Return)                                                               \
     _(Copy)                                                                 \
     _(Box)                                                                  \
@@ -81,6 +83,7 @@ namespace ion {
     _(ToDouble)                                                             \
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
+    _(ToString)                                                             \
     _(NewArray)                                                             \
     _(Start)                                                                \
     _(OsrEntry)                                                             \

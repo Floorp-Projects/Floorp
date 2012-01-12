@@ -536,7 +536,7 @@ ToCStringBuf::~ToCStringBuf()
         UnwantedForeground::free_(dbuf);
 }
 
-JSString * JS_FASTCALL
+JSString *
 js_IntToString(JSContext *cx, int32_t si)
 {
     uint32_t ui;
@@ -1159,7 +1159,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
     return s;
 }
 
-JSString * JS_FASTCALL
+JSString *
 js_NumberToString(JSContext *cx, jsdouble d)
 {
     return js_NumberToStringWithBase(cx, d, 10);

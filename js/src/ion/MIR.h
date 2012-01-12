@@ -1043,6 +1043,15 @@ class MBinaryInstruction : public MAryInstruction<2>
         initOperand(1, right);
     }
 
+  public:
+    MDefinition *lhs() const {
+        return getOperand(0);
+    }
+    MDefinition *rhs() const {
+        return getOperand(1);
+    }
+
+  protected:
     HashNumber valueHash() const
     {
         MDefinition *lhs = getOperand(0);
@@ -1348,6 +1357,35 @@ class MTruncateToInt32 : public MUnaryInstruction
     }
 };
 
+// Converts any type to a string
+class MToString : public MUnaryInstruction
+{
+    MToString(MDefinition *def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_String);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(ToString);
+    static MToString *New(MDefinition *def)
+    {
+        return new MToString(def);
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+
+    MDefinition *foldsTo(bool useValueNumbers);
+
+    virtual AliasSet getAliasSet() const {
+        JS_ASSERT(input()->type() < MIRType_Object);
+        return AliasSet::None();
+    }
+};
+
 class MBitNot
   : public MUnaryInstruction,
     public BitwisePolicy
@@ -1568,12 +1606,6 @@ class MBinaryArithInstruction
     MIRType specialization() const {
         return specialization_;
     }
-    MDefinition *lhs() const {
-        return getOperand(0);
-    }
-    MDefinition *rhs() const {
-        return getOperand(1);
-    }
 
     MDefinition *foldsTo(bool useValueNumbers);
 
@@ -1703,6 +1735,60 @@ class MMod : public MBinaryArithInstruction
     double getIdentity() {
         JS_NOT_REACHED("not used");
         return 1;
+    }
+};
+
+class MAddGeneric :
+    public MBinaryInstruction,
+    public BoxInputsPolicy
+{
+    MAddGeneric(MDefinition *left, MDefinition *right)
+      : MBinaryInstruction(left, right)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(AddGeneric);
+    static MAddGeneric *New(MDefinition *left, MDefinition *right) {
+        return new MAddGeneric(left, right);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    bool congruentTo(MDefinition * const &ins) const {
+        return false;
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Any);
+    }
+};
+
+class MConcat
+  : public MBinaryInstruction,
+    public BinaryStringPolicy
+{
+    MConcat(MDefinition *left, MDefinition *right)
+      : MBinaryInstruction(left, right)
+    {
+        setMovable();
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Concat);
+    static MConcat *New(MDefinition *left, MDefinition *right) {
+        return new MConcat(left, right);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
