@@ -358,8 +358,6 @@ RES_DRAWABLE_HDPI_V9 = \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V11 = \
-  res/drawable-mdpi-v11/ic_awesomebar_go.png \
-  res/drawable-mdpi-v11/ic_awesomebar_search.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-mdpi-v11/ic_menu_find_in_page.png \
@@ -370,8 +368,6 @@ RES_DRAWABLE_MDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V11 = \
-  res/drawable-hdpi-v11/ic_awesomebar_go.png \
-  res/drawable-hdpi-v11/ic_awesomebar_search.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-hdpi-v11/ic_menu_find_in_page.png \
