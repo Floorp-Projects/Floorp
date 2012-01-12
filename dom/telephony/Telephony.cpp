@@ -434,36 +434,51 @@ NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
                                aWindow->GetCurrentInnerWindow();
   NS_ENSURE_TRUE(innerWindow, NS_ERROR_FAILURE);
 
+  // Make sure we're being called from a window that we have permission to
+  // access.
   if (!nsContentUtils::CanCallerAccess(innerWindow)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  // Need the document in order to make security decisions.
   nsCOMPtr<nsIDocument> document =
     do_QueryInterface(innerWindow->GetExtantDocument());
   NS_ENSURE_TRUE(document, NS_NOINTERFACE);
 
-  nsCOMPtr<nsIURI> documentURI;
-  nsresult rv = document->NodePrincipal()->GetURI(getter_AddRefs(documentURI));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Do security checks. We assume that chrome is always allowed and we also
+  // allow a single page specified by preferences.
+  if (!nsContentUtils::IsSystemPrincipal(document->NodePrincipal())) {
+    nsCOMPtr<nsIURI> documentURI;
+    nsresult rv =
+      document->NodePrincipal()->GetURI(getter_AddRefs(documentURI));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString documentURL;
-  rv = documentURI->GetSpec(documentURL);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCString documentURL;
+    rv = documentURI->GetSpec(documentURL);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString phoneAppURL;
-  rv = Preferences::GetCString(DOM_TELEPHONY_APP_PHONE_URL_PREF, &phoneAppURL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<Telephony> telephony;
-  if (phoneAppURL.Equals(documentURL, nsCaseInsensitiveCStringComparator())) {
-    nsIInterfaceRequestor* ireq = SystemWorkerManager::GetInterfaceRequestor();
-    NS_ENSURE_TRUE(ireq, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsITelephone> telephone = do_GetInterface(ireq);
-    NS_ENSURE_TRUE(telephone, NS_ERROR_UNEXPECTED);
-
-    telephony = Telephony::Create(innerWindow, telephone);
+    // The pref may not exist but in that case we deny access just as we do if
+    // the url doesn't match.
+    nsCString phoneAppURL;
+    if (NS_FAILED(Preferences::GetCString(DOM_TELEPHONY_APP_PHONE_URL_PREF,
+                                          &phoneAppURL)) ||
+        !phoneAppURL.Equals(documentURL,
+                            nsCaseInsensitiveCStringComparator())) {
+      *aTelephony = nsnull;
+      return NS_OK;
+    }
   }
+
+  // Security checks passed, make a telephony object.
+  nsIInterfaceRequestor* ireq = SystemWorkerManager::GetInterfaceRequestor();
+  NS_ENSURE_TRUE(ireq, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsITelephone> telephone = do_GetInterface(ireq);
+  NS_ENSURE_TRUE(telephone, NS_ERROR_UNEXPECTED);
+
+  nsRefPtr<Telephony> telephony = Telephony::Create(innerWindow, telephone);
+  NS_ENSURE_TRUE(telephony, NS_ERROR_UNEXPECTED);
+
   telephony.forget(aTelephony);
   return NS_OK;
 }
