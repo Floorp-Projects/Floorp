@@ -57,7 +57,6 @@
 #include "gfxPlatform.h"
 #include "nsIAtom.h"
 #include "nsISupportsImpl.h"
-#include "nsIObserver.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
@@ -684,14 +683,8 @@ struct gfxTextRange {
  * completely, with all its words, and avoid the cost of aging the words
  * individually. That only happens with longer-lived fonts.
  */
-class THEBES_API gfxFontCache
-    : public nsExpirationTracker<gfxFont,3>
-    , public nsIObserver
-{
+class THEBES_API gfxFontCache : public nsExpirationTracker<gfxFont,3> {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
     enum {
         FONT_TIMEOUT_SECONDS = 10,
         SHAPED_WORD_TIMEOUT_SECONDS = 60
@@ -773,8 +766,6 @@ protected:
     };
 
     nsTHashtable<HashEntry> mFonts;
-
-    static PLDHashOperator ClearCachedWordsForFont(HashEntry* aHashEntry, void*);
 
     static PLDHashOperator AgeCachedWordsForFont(HashEntry* aHashEntry, void*);
     static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
@@ -1411,13 +1402,6 @@ public:
     void AgeCachedWords() {
         if (mWordCache.IsInitialized()) {
             (void)mWordCache.EnumerateEntries(AgeCacheEntry, this);
-        }
-    }
-
-    // Discard all cached word records; called on memory-pressure notification.
-    void ClearCachedWords() {
-        if (mWordCache.IsInitialized()) {
-            mWordCache.Clear();
         }
     }
 

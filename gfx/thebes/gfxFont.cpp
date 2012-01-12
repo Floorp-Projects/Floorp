@@ -69,7 +69,6 @@
 #include "nsCompressedCharMap.h"
 #include "nsStyleConsts.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -82,7 +81,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using mozilla::services::GetObserverService;
 
 gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 
@@ -956,15 +954,6 @@ gfxFontFamily::FindFont(const nsAString& aPostscriptName)
     return nsnull;
 }
 
-/*
- * gfxFontCache - global cache of gfxFont instances.
- * Expires unused fonts after a short interval;
- * notifies fonts to age their cached shaped-word records;
- * observes memory-pressure notification and tells fonts to clear their
- * shaped-word caches to free up memory.
- */
-
-NS_IMPL_ISUPPORTS1(gfxFontCache, nsIObserver)
 
 nsresult
 gfxFontCache::Init()
@@ -997,12 +986,6 @@ gfxFontCache::gfxFontCache()
     : nsExpirationTracker<gfxFont,3>(FONT_TIMEOUT_SECONDS * 1000)
 {
     mFonts.Init();
-
-    nsCOMPtr<nsIObserverService> obs = GetObserverService();
-    if (obs) {
-        obs->AddObserver(this, "memory-pressure", false);
-    }
-
     mWordCacheExpirationTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mWordCacheExpirationTimer) {
         mWordCacheExpirationTimer->
@@ -1017,11 +1000,6 @@ gfxFontCache::~gfxFontCache()
     if (mWordCacheExpirationTimer) {
         mWordCacheExpirationTimer->Cancel();
         mWordCacheExpirationTimer = nsnull;
-    }
-
-    nsCOMPtr<nsIObserverService> obs = GetObserverService();
-    if (obs) {
-        obs->RemoveObserver(this, "memory-pressure");
     }
 
     // Expire everything that has a zero refcount, so we don't leak them.
@@ -1122,23 +1100,6 @@ gfxFontCache::WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache)
 {
     gfxFontCache* cache = static_cast<gfxFontCache*>(aCache);
     cache->mFonts.EnumerateEntries(AgeCachedWordsForFont, nsnull);
-}
-
-NS_IMETHODIMP
-gfxFontCache::Observe(nsISupports*, const char* aTopic, const PRUnichar*)
-{
-    if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
-        mFonts.EnumerateEntries(ClearCachedWordsForFont, nsnull);
-    }
-    return NS_OK;
-}
-
-/*static*/
-PLDHashOperator
-gfxFontCache::ClearCachedWordsForFont(HashEntry* aHashEntry, void* aUserData)
-{
-    aHashEntry->mFont->ClearCachedWords();
-    return PL_DHASH_NEXT;
 }
 
 void
