@@ -83,7 +83,7 @@ public class Tab {
     private String mContentType;
 
     static class HistoryEntry {
-        public final String mUri;   // must never be null
+        public String mUri;         // must never be null
         public String mTitle;       // must never be null
 
         public HistoryEntry(String uri, String title) {
@@ -202,6 +202,7 @@ public class Tab {
             mUrl = url;
             Log.i(LOGTAG, "Updated url: " + url + " for tab with id: " + mId);
             updateBookmark();
+            updateHistoryEntry(mUrl, mTitle);
         }
     }
 
@@ -225,13 +226,17 @@ public class Tab {
         mTitle = (title == null ? "" : title);
 
         Log.i(LOGTAG, "Updated title: " + mTitle + " for tab with id: " + mId);
+        updateHistoryEntry(mUrl, mTitle);
+    }
 
+    private void updateHistoryEntry(final String uri, final String title) {
         final HistoryEntry he = getLastHistoryEntry();
         if (he != null) {
-            he.mTitle = mTitle;
+            he.mUri = uri;
+            he.mTitle = title;
             GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
-                    GlobalHistory.getInstance().update(he.mUri, he.mTitle);
+                    GlobalHistory.getInstance().update(uri, title);
                 }
             });
         } else {
