@@ -2402,16 +2402,6 @@ nsComputedDOMStyle::DoGetTextAlign()
 }
 
 nsIDOMCSSValue*
-nsComputedDOMStyle::DoGetTextAlignLast()
-{
-  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(GetStyleText()->mTextAlignLast,
-                                   nsCSSProps::kTextAlignLastKTable));
-  return val;
-}
-
-nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetMozTextBlink()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4585,7 +4575,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     //// COMPUTED_STYLE_MAP_ENTRY(size,                     Size),
     COMPUTED_STYLE_MAP_ENTRY(table_layout,                  TableLayout),
     COMPUTED_STYLE_MAP_ENTRY(text_align,                    TextAlign),
-    COMPUTED_STYLE_MAP_ENTRY(text_align_last,               TextAlignLast),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration,               TextDecoration),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(text_indent,            TextIndent),
     COMPUTED_STYLE_MAP_ENTRY(text_overflow,                 TextOverflow),

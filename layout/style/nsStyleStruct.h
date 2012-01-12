@@ -1277,7 +1277,6 @@ struct nsStyleText {
   static bool ForceCompare() { return false; }
 
   PRUint8 mTextAlign;                   // [inherited] see nsStyleConsts.h
-  PRUint8 mTextAlignLast;               // [inherited] see nsStyleConsts.h
   PRUint8 mTextTransform;               // [inherited] see nsStyleConsts.h
   PRUint8 mWhiteSpace;                  // [inherited] see nsStyleConsts.h
   PRUint8 mWordWrap;                    // [inherited] see nsStyleConsts.h
