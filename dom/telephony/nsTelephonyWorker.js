@@ -189,30 +189,26 @@ nsTelephonyWorker.prototype = {
    * XXX Needs some more work to support hold/resume.
    */
   _activeCall: null,
-  get activeCall() {
-    return this._activeCall;
-  },
-  set activeCall(val) {
-    if (val && !this._activeCall) {
-      // Enable audio.
-      switch (val.state) {
-        case nsITelephone.CALL_STATE_INCOMING:
-          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
-          break;
-        case nsITelephone.CALL_STATE_DIALING: // Fall through...
-        case nsITelephone.CALL_STATE_CONNECTED:
-          gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
-          gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
-                                       nsIAudioManager.FORCE_NONE);
-          break;
-        default:
-          throw new Error("Invalid call state for active call: " + val.state);
-      }
-    } else if (!val && this._activeCall) {
+  updateCallAudioState: function updateCallAudioState() {
+    if (!this._activeCall) {
       // Disable audio.
       gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+      debug("No active call, put audio system into PHONE_STATE_NORMAL.");
+      return;
     }
-    this._activeCall = val;
+    switch (this._activeCall.state) {
+      case nsITelephone.CALL_STATE_INCOMING:
+        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
+        debug("Incoming call, put audio system into PHONE_STATE_RINGTONE.");
+        break;
+      case nsITelephone.CALL_STATE_DIALING: // Fall through...
+      case nsITelephone.CALL_STATE_CONNECTED:
+        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
+        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
+                                     nsIAudioManager.FORCE_NONE);
+        debug("Active call, put audio system into PHONE_STATE_IN_CALL.");
+        break;
+    }
   },
 
   /**
@@ -222,12 +218,11 @@ nsTelephonyWorker.prototype = {
   handleCallStateChange: function handleCallStateChange(call) {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
-    if (call.state == nsITelephone.CALL_STATE_INCOMING ||
-        call.state == nsITelephone.CALL_STATE_DIALING ||
-        call.state == nsITelephone.CALL_STATE_CONNECTED) {
+    if (call.state == nsITelephone.CALL_STATE_CONNECTED) {
       // This is now the active call.
-      this.activeCall = call;
+      this._activeCall = call;
     }
+    this.updateCallAudioState();
     this._deliverCallback("callStateChanged",
                           [call.callIndex, call.state, call.number]);
   },
@@ -235,12 +230,12 @@ nsTelephonyWorker.prototype = {
   /**
    * Handle call disconnects by updating our current state and the audio system.
    */
-  handleCallDisconnected: function handleCallStateChange(call) {
+  handleCallDisconnected: function handleCallDisconnected(call) {
     debug("handleCallDisconnected: " + JSON.stringify(call));
-    if (this.activeCall == call) {
-      // No loner active.
-      this.activeCall = null;
+    if (this._activeCall.callIndex == call.callIndex) {
+      this._activeCall = null;
     }
+    this.updateCallAudioState();
     this._deliverCallback("callStateChanged",
                           [call.callIndex, nsITelephone.CALL_STATE_DISCONNECTED,
                            call.number]);
@@ -252,7 +247,7 @@ nsTelephonyWorker.prototype = {
   handleEnumerateCalls: function handleEnumerateCalls(calls) {
     debug("handleEnumerateCalls: " + JSON.stringify(calls));
     let callback = this._enumerationCallbacks.shift();
-    let activeCallIndex = this.activeCall ? this.activeCall.callIndex : -1;
+    let activeCallIndex = this._activeCall ? this._activeCall.callIndex : -1;
     for (let i in calls) {
       let call = calls[i];
       let state = convertRILCallState(call.state);
@@ -363,7 +358,6 @@ nsTelephonyWorker.prototype = {
   _enumerationCallbacks: null,
 
   registerCallback: function registerCallback(callback) {
-    debug("Registering callback: " + callback);
     if (this._callbacks) {
       if (this._callbacks.indexOf(callback) != -1) {
         throw new Error("Already registered this callback!");
@@ -372,13 +366,17 @@ nsTelephonyWorker.prototype = {
       this._callbacks = [];
     }
     this._callbacks.push(callback);
+    debug("Registered callback: " + callback);
   },
 
   unregisterCallback: function unregisterCallback(callback) {
-    debug("Unregistering callback: " + callback);
-    let index;
-    if (this._callbacks && (index = this._callbacks.indexOf(callback) != -1)) {
+    if (!this._callbacks) {
+      return;
+    }
+    let index = this._callbacks.indexOf(callback);
+    if (index != -1) {
       this._callbacks.splice(index, 1);
+      debug("Unregistered callback: " + callback);
     }
   },
 

@@ -165,9 +165,7 @@ private:
 
     bool                                 mAutoDialEnabled;
 public:
-    // Necko buffer cache. Used for all default buffer sizes that necko
-    // allocates.
-    static nsIMemory *gBufferCache;
+    // Used for all default buffer sizes that necko allocates.
     static PRUint32   gDefaultSegmentSize;
     static PRUint32   gDefaultSegmentCount;
 };

@@ -64,6 +64,7 @@ _MOCHITEST_FILES = \
   test_painting.html \
   test_pluginstream_err.html \
   test_pluginstream_src.html \
+  test_pluginstream_src_dynamic.html \
   test_pluginstream_geturl.html \
   test_pluginstream_geturlnotify.html \
   test_pluginstream_asfile.html \

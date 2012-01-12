@@ -82,10 +82,9 @@
 #include "nsIContentSink.h"
 #include "nsHTMLTags.h"
 
-// d19e6730-5e2f-4131-89db-8a918515097d
 #define NS_IHTML_CONTENT_SINK_IID \
-{ 0xd19e6730, 0x5e2f, 0x4131, \
-  { 0x89, 0xdb, 0x8a, 0x91, 0x85, 0x15, 0x09, 0x7d } }
+{ 0x44b5a4f4, 0x01f7, 0x4116, \
+  { 0xb5, 0xa5, 0x56, 0x4d, 0x64, 0x0b, 0x68, 0x1f } }
 
 #define MAX_REFLOW_DEPTH  200
 
@@ -215,14 +214,6 @@ public:
    * @param  nsIParserNode reference to parser node interface
    */
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This gets called by the parser to notify observers of
-   * the tag
-   *
-   * @param aErrorResult the error code
-   */
-  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) = 0;
 
   /**
    * Call this method to determnine if a FORM is on the sink's stack

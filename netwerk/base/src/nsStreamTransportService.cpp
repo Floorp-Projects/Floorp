@@ -129,13 +129,12 @@ nsInputStreamTransport::OpenInputStream(PRUint32 flags,
     bool nonblocking = !(flags & OPEN_BLOCKING);
 
     net_ResolveSegmentParams(segsize, segcount);
-    nsIMemory *segalloc = net_GetSegmentAlloc(segsize);
 
     nsCOMPtr<nsIAsyncOutputStream> pipeOut;
     rv = NS_NewPipe2(getter_AddRefs(mPipeIn),
                      getter_AddRefs(pipeOut),
                      nonblocking, true,
-                     segsize, segcount, segalloc);
+                     segsize, segcount);
     if (NS_FAILED(rv)) return rv;
 
     mInProgress = true;
@@ -340,13 +339,12 @@ nsOutputStreamTransport::OpenOutputStream(PRUint32 flags,
     bool nonblocking = !(flags & OPEN_BLOCKING);
 
     net_ResolveSegmentParams(segsize, segcount);
-    nsIMemory *segalloc = net_GetSegmentAlloc(segsize);
 
     nsCOMPtr<nsIAsyncInputStream> pipeIn;
     rv = NS_NewPipe2(getter_AddRefs(pipeIn),
                      getter_AddRefs(mPipeOut),
                      true, nonblocking,
-                     segsize, segcount, segalloc);
+                     segsize, segcount);
     if (NS_FAILED(rv)) return rv;
 
     mInProgress = true;
