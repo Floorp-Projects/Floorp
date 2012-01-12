@@ -609,7 +609,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void Push(const ValueOperand &val) {
         pushValue(val);
-        framePushed_ += sizeof(Value);
+        adjustFrame(sizeof(Value));
     }
     void Pop(const Register &reg) {
         ma_pop(reg);

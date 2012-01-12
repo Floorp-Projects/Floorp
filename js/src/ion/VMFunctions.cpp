@@ -70,16 +70,6 @@ bool ReportOverRecursed(JSContext *cx)
     return false;
 }
 
-bool AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
-{
-    FrameRecovery fr = FrameRecovery::FromFrameIterator(
-        IonFrameIterator(JS_THREAD_DATA(cx)->ionTop));
-    SnapshotIterator si(fr);
-    jsbytecode *pc = fr.script()->code + si.pcOffset();
-
-    return js::AddValues(cx, fr.script(), pc, lhs, rhs, res);
-}
-
 } // namespace ion
 } // namespace js
 

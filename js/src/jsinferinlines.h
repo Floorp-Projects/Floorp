@@ -46,6 +46,7 @@
 #include "jsinfer.h"
 #include "jsprf.h"
 #include "vm/GlobalObject.h"
+#include "ion/IonFrames.h"
 
 #include "vm/Stack-inl.h"
 
@@ -590,6 +591,44 @@ TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     if (cx->typeInferenceEnabled())
         TypeDynamicResult(cx, script, pc, Type::UnknownType());
+}
+
+/* static */ inline void
+TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
+{
+    if (cx->fp()->runningInIon()) {
+        ion::GetPcScript(cx, script, pc);
+    } else {
+        *script = cx->fp()->script();
+        *pc = cx->regs().pc;
+    }
+}
+
+/* static */ inline void
+TypeScript::MonitorOverflow(JSContext *cx)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    GetPcScript(cx, &script, &pc);
+    MonitorOverflow(cx, script, pc);
+}
+
+/* static */ inline void
+TypeScript::MonitorString(JSContext *cx)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    GetPcScript(cx, &script, &pc);
+    MonitorString(cx, script, pc);
+}
+
+/* static */ inline void
+TypeScript::MonitorUnknown(JSContext *cx)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    GetPcScript(cx, &script, &pc);
+    MonitorUnknown(cx, script, pc);
 }
 
 /* static */ inline void

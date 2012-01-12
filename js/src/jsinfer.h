@@ -1094,6 +1094,11 @@ class TypeScript
     static inline void MonitorString(JSContext *cx, JSScript *script, jsbytecode *pc);
     static inline void MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc);
 
+    static inline void GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc);
+    static inline void MonitorOverflow(JSContext *cx);
+    static inline void MonitorString(JSContext *cx);
+    static inline void MonitorUnknown(JSContext *cx);
+
     /*
      * Monitor a bytecode pushing any value. This must be called for any opcode
      * which is JOF_TYPESET, and where either the script has not been analyzed
