@@ -156,11 +156,14 @@ StyleEditorChrome.prototype = {
     aContentWindow.addEventListener("unload", onContentUnload, false);
 
     if (aContentWindow.document.readyState == "complete") {
+      this._root.classList.remove("loading");
       this._populateChrome();
       return;
     } else {
+      this._root.classList.add("loading");
       let onContentReady = function () {
         aContentWindow.removeEventListener("load", onContentReady, false);
+        this._root.classList.remove("loading");
         this._populateChrome();
       }.bind(this);
       aContentWindow.addEventListener("load", onContentReady, false);
@@ -299,7 +302,7 @@ StyleEditorChrome.prototype = {
   },
 
   /**
-   * Reset the chrome UI to an empty state.
+   * Reset the chrome UI to an empty and ready state.
    */
   _resetChrome: function SEC__resetChrome()
   {
@@ -309,6 +312,12 @@ StyleEditorChrome.prototype = {
     this._editors = [];
 
     this._view.removeAll();
+
+    // (re)enable UI
+    let matches = this._root.querySelectorAll("toolbarbutton,input,select");
+    for (let i = 0; i < matches.length; ++i) {
+      matches[i].removeAttribute("disabled");
+    }
   },
 
   /**
