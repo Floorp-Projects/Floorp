@@ -83,6 +83,7 @@
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
+#include "jsopcodeinlines.h"
 #include "jsprobes.h"
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
@@ -1265,21 +1266,20 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
                                 JSObject *start, JSObject *found,
                                 PropertyCacheEntry *entry)
 {
-    JSScript *script = cx->fp()->script();
-    FrameRegs& regs = cx->regs();
+    jsbytecode *pc;
+    cx->stack.currentScript(&pc);
 
     uint32_t sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
-    PropertyName *name;
-    GET_NAME_FROM_BYTECODE(script, regs.pc, 0, name);
+    PropertyName *name = GetNameFromBytecode(cx, pc, JSOp(*pc), js_CodeSpec[*pc]);
 
     JSObject *obj, *pobj;
     JSProperty *prop;
     JSBool ok;
 
-    if (JOF_OPMODE(*regs.pc) == JOF_NAME) {
-        bool global = js_CodeSpec[*regs.pc].format & JOF_GNAME;
+    if (JOF_OPMODE(*pc) == JOF_NAME) {
+        bool global = js_CodeSpec[*pc].format & JOF_GNAME;
         ok = FindProperty(cx, name, global, &obj, &pobj, &prop);
     } else {
         obj = start;
