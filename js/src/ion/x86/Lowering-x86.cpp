@@ -247,7 +247,7 @@ bool
 LIRGeneratorX86::lowerDivI(MDiv *div)
 {
     LDivI *lir = new LDivI(useFixedAtStart(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
-    return defineReuseInput(lir, div, 0) && assignSnapshot(lir);
+    return defineFixed(lir, div, LAllocation(AnyRegister(eax))) && assignSnapshot(lir);
 }
 
 bool
