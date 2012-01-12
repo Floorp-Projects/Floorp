@@ -473,6 +473,12 @@ private:
    * This is used to speed up repeated requests to the same item id.
    */
   nsTHashtable<BookmarkKeyClass> mRecentBookmarksCache;
+
+  /**
+   * Tracks bookmarks in the cache critical path.  Items should not be
+   * added to the cache till they are removed from this hash.
+   */
+  nsTHashtable<nsTrimInt64HashKey> mUncachableBookmarks;
 };
 
 #endif // nsNavBookmarks_h_
