@@ -385,7 +385,7 @@ void TableTicker::Tick(TickSample* sample)
   doSampleStackTrace(mStack, mProfile, sample);
 #endif
 
-  if (!sLastTracerEvent.IsNull()) {
+  if (!sLastTracerEvent.IsNull() && sample) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
     mProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
