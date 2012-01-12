@@ -5923,15 +5923,6 @@ nsTextFrame::SetSelectedRange(PRUint32 aStart, PRUint32 aEnd, bool aSelected,
   if (aStart == aEnd)
     return;
 
-  if (aType == nsISelectionController::SELECTION_NORMAL) {
-    // check whether style allows selection
-    bool selectable;
-    IsSelectable(&selectable, nsnull);
-    if (!selectable) {
-      return;
-    }
-  }
-
   nsTextFrame* f = this;
   while (f && f->GetContentEnd() <= PRInt32(aStart)) {
     f = static_cast<nsTextFrame*>(f->GetNextContinuation());
