@@ -263,7 +263,7 @@ class Message : public Pickle {
     UNBLOCK_BIT     = 0x0020,
     PUMPING_MSGS_BIT= 0x0040,
     HAS_SENT_TIME_BIT = 0x0080,
-    RPC_BIT        = 0x0100,
+    RPC_BIT        = 0x0100
   };
 
 #pragma pack(push, 2)
@@ -328,7 +328,7 @@ enum SpecialRoutingIDs {
   MSG_ROUTING_NONE = kint32min,
 
   // indicates a general message not sent to a particular tab.
-  MSG_ROUTING_CONTROL = kint32max,
+  MSG_ROUTING_CONTROL = kint32max
 };
 
 #define IPC_REPLY_ID 0xFFF0  // Special message id for replies
