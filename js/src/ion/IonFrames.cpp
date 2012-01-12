@@ -327,22 +327,20 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     
     MarkCalleeToken(trc, layout->calleeToken());
 
-    if (!CalleeTokenIsFunction(layout->calleeToken())) {
-        // On-stack invalidation may replace the calleetoken with something
-        // else. In this case we still have to mark a portion of the frame, but
-        // not all of it.
-        JS_NOT_REACHED("NYI");
-        return;
+    IonScript *ionScript;
+    if (CalleeTokenIsFunction(layout->calleeToken())) {
+        JSFunction *fun = CalleeTokenToFunction(layout->calleeToken());
+
+        // Trace function arguments.
+        Value *argv = layout->argv();
+        for (size_t i = 0; i < fun->nargs; i++)
+            gc::MarkRoot(trc, argv[i], "ion-argv");
+
+        ionScript = fun->script()->ion;
+    } else {
+        ionScript = CalleeTokenToScript(layout->calleeToken())->ion;
     }
 
-    JSFunction *fun = CalleeTokenToFunction(layout->calleeToken());
-
-    // Trace function arguments.
-    Value *argv = layout->argv();
-    for (size_t i = 0; i < fun->nargs; i++)
-        gc::MarkRoot(trc, argv[i], "ion-argv");
-
-    IonScript *ionScript = fun->script()->ion;
     const IonFrameInfo *fi = ionScript->getFrameInfo(frame.returnAddressToFp());
 
     SafepointReader safepoint(ionScript, fi);
