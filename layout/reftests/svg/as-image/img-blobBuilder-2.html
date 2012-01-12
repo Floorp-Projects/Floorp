@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <!-- This test checks to be sure we allow MozBlobBuilder-generated
-     'moz-filedata' URIs *inside of* SVG-as-an-image. -->
+     'blob' URIs *inside of* SVG-as-an-image. -->
 <html class="reftest-wait">
 <head>
   <script>
     function go() {
-      // Generate a moz-filedata URL encoding of an SVG document
+      // Generate a blob URL encoding of an SVG document
       var filedataURL = generateMozFiledataURL();
 
-      // Now generate a data URI, containing our moz-filedata URI
+      // Now generate a data URI, containing our blob URI
       var outerSVG =
         '<svg xmlns="http://www.w3.org/2000/svg" ' +
              'xmlns:xlink="http://www.w3.org/1999/xlink" ' +
@@ -27,7 +27,7 @@
       });
     }
 
-    // Helper function -- returns a moz-filedata URL representing a
+    // Helper function -- returns a blob URL representing a
     // 100x100 fully-lime SVG document.
     function generateMozFiledataURL() {
       var blobBuilder = new self.MozBlobBuilder;

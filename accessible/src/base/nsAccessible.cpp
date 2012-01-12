@@ -54,6 +54,7 @@
 #include "nsIAccessibleRelation.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
+#include "Role.h"
 #include "States.h"
 
 #include "nsIDOMElement.h"
@@ -600,11 +601,9 @@ nsAccessible::VisibilityState()
   do {
     // We don't want background tab page content to be aggressively invisible.
     // Otherwise this foils screen reader virtual buffer caches.
-	  PRUint32 role = accessible->Role();
-    if (role == nsIAccessibleRole::ROLE_PROPERTYPAGE ||
-        role == nsIAccessibleRole::ROLE_PANE) {
+    roles::Role role = accessible->Role();
+    if (role == roles::PROPERTYPAGE || role == roles::PANE)
       break;
-    }
 
     nsIFrame* frame = accessible->GetFrame();
     if (!frame)
@@ -1475,7 +1474,7 @@ nsAccessible::State()
   // Apply ARIA states to be sure accessible states will be overridden.
   ApplyARIAState(&state);
 
-  if (mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_PAGETAB &&
+  if (mRoleMapEntry && mRoleMapEntry->role == roles::PAGETAB &&
       !(state & states::SELECTED) &&
       !mContent->AttrValueIs(kNameSpaceID_None,
                              nsGkAtoms::aria_selected,
@@ -1489,7 +1488,7 @@ nsAccessible::State()
       Relation rel = RelationByType(nsIAccessibleRelation::RELATION_LABEL_FOR);
       nsAccessible* relTarget = nsnull;
       while ((relTarget = rel.Next())) {
-        if (relTarget->Role() == nsIAccessibleRole::ROLE_PROPERTYPAGE &&
+        if (relTarget->Role() == roles::PROPERTYPAGE &&
             FocusMgr()->IsFocusWithin(relTarget))
           state |= states::SELECTED;
       }
@@ -1562,7 +1561,7 @@ nsAccessible::ApplyARIAState(PRUint64* aState)
     // We only force the readonly bit off if we have a real mapping for the aria
     // role. This preserves the ability for screen readers to use readonly
     // (primarily on the document) as the hint for creating a virtual buffer.
-    if (mRoleMapEntry->role != nsIAccessibleRole::ROLE_NOTHING)
+    if (mRoleMapEntry->role != roles::NOTHING)
       *aState &= ~states::READONLY;
 
     if (mContent->HasAttr(kNameSpaceID_None, mContent->GetIDAttributeName())) {
@@ -1739,7 +1738,7 @@ nsAccessible::GetKeyBindings(PRUint8 aActionIndex,
   return NS_OK;
 }
 
-PRUint32
+role
 nsAccessible::ARIARoleInternal()
 {
   NS_PRECONDITION(mRoleMapEntry && mRoleMapEntry->roleRule == kUseMapRole,
@@ -1747,11 +1746,11 @@ nsAccessible::ARIARoleInternal()
 
   // XXX: these unfortunate exceptions don't fit into the ARIA table. This is
   // where the accessible role depends on both the role and ARIA state.
-  if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+  if (mRoleMapEntry->role == roles::PUSHBUTTON) {
     if (nsAccUtils::HasDefinedARIAToken(mContent, nsGkAtoms::aria_pressed)) {
       // For simplicity, any existing pressed attribute except "" or "undefined"
       // indicates a toggle.
-      return nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
+      return roles::TOGGLE_BUTTON;
     }
 
     if (mContent->AttrValueIs(kNameSpaceID_None,
@@ -1759,35 +1758,34 @@ nsAccessible::ARIARoleInternal()
                               nsGkAtoms::_true,
                               eCaseMatters)) {
       // For button with aria-haspopup="true".
-      return nsIAccessibleRole::ROLE_BUTTONMENU;
+      return roles::BUTTONMENU;
     }
 
-  } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_LISTBOX) {
+  } else if (mRoleMapEntry->role == roles::LISTBOX) {
     // A listbox inside of a combobox needs a special role because of ATK
     // mapping to menu.
-    if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX) {
-      return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+    if (mParent && mParent->Role() == roles::COMBOBOX) {
+      return roles::COMBOBOX_LIST;
 
       Relation rel = RelationByType(nsIAccessibleRelation::RELATION_NODE_CHILD_OF);
       nsAccessible* targetAcc = nsnull;
       while ((targetAcc = rel.Next()))
-        if (targetAcc->Role() == nsIAccessibleRole::ROLE_COMBOBOX)
-          return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+        if (targetAcc->Role() == roles::COMBOBOX)
+          return roles::COMBOBOX_LIST;
     }
 
-  } else if (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OPTION) {
-    if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
-      return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
+  } else if (mRoleMapEntry->role == roles::OPTION) {
+    if (mParent && mParent->Role() == roles::COMBOBOX_LIST)
+      return roles::COMBOBOX_OPTION;
   }
 
   return mRoleMapEntry->role;
 }
 
-PRUint32
+role
 nsAccessible::NativeRole()
 {
-  return nsCoreUtils::IsXLink(mContent) ?
-    nsIAccessibleRole::ROLE_LINK : nsIAccessibleRole::ROLE_NOTHING;
+  return nsCoreUtils::IsXLink(mContent) ? roles::LINK : roles::NOTHING;
 }
 
 // readonly attribute PRUint8 numActions
@@ -1993,9 +1991,8 @@ nsAccessible::RelationByType(PRUint32 aType)
       
       // This is an ARIA tree or treegrid that doesn't use owns, so we need to
       // get the parent the hard way.
-      if (mRoleMapEntry &&
-          (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM ||
-           mRoleMapEntry->role == nsIAccessibleRole::ROLE_ROW)) {
+      if (mRoleMapEntry && (mRoleMapEntry->role == roles::OUTLINEITEM || 
+	  mRoleMapEntry->role == roles::ROW)) {
         AccGroupInfo* groupInfo = GetGroupInfo();
         if (!groupInfo)
           return rel;
@@ -3138,8 +3135,8 @@ nsAccessible::GetLevelInternal()
   if (!IsBoundToParent())
     return level;
 
-  PRUint32 role = Role();
-  if (role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+  roles::Role role = Role();
+  if (role == roles::OUTLINEITEM) {
     // Always expose 'level' attribute for 'outlineitem' accessible. The number
     // of nested 'grouping' accessibles containing 'outlineitem' accessible is
     // its level.
@@ -3147,16 +3144,16 @@ nsAccessible::GetLevelInternal()
 
     nsAccessible* parent = this;
     while ((parent = parent->Parent())) {
-      PRUint32 parentRole = parent->Role();
+      roles::Role parentRole = parent->Role();
 
-      if (parentRole == nsIAccessibleRole::ROLE_OUTLINE)
+      if (parentRole == roles::OUTLINE)
         break;
-      if (parentRole == nsIAccessibleRole::ROLE_GROUPING)
+      if (parentRole == roles::GROUPING)
         ++ level;
 
     }
 
-  } else if (role == nsIAccessibleRole::ROLE_LISTITEM) {
+  } else if (role == roles::LISTITEM) {
     // Expose 'level' attribute on nested lists. We assume nested list is a last
     // child of listitem of parent list. We don't handle the case when nested
     // lists have more complex structure, for example when there are accessibles
@@ -3166,11 +3163,11 @@ nsAccessible::GetLevelInternal()
     level = 0;
     nsAccessible* parent = this;
     while ((parent = parent->Parent())) {
-      PRUint32 parentRole = parent->Role();
+      roles::Role parentRole = parent->Role();
 
-      if (parentRole == nsIAccessibleRole::ROLE_LISTITEM)
+      if (parentRole == roles::LISTITEM)
         ++ level;
-      else if (parentRole != nsIAccessibleRole::ROLE_LIST)
+      else if (parentRole != roles::LIST)
         break;
 
     }
@@ -3184,8 +3181,7 @@ nsAccessible::GetLevelInternal()
         nsAccessible* sibling = parent->GetChildAt(siblingIdx);
 
         nsAccessible* siblingChild = sibling->LastChild();
-        if (siblingChild &&
-            siblingChild->Role() == nsIAccessibleRole::ROLE_LIST)
+        if (siblingChild && siblingChild->Role() == roles::LIST)
           return 1;
       }
     } else {

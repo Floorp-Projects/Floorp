@@ -235,7 +235,7 @@ CPPSRCS = \
 	SkMaskFilter.cpp \
 	SkMath.cpp \
 	SkMatrix.cpp \
-	SkMemory_stdlib.cpp \
+	SkMemory_malloc.cpp \
 	SkMetaData.cpp \
 	SkPackBits.cpp \
 	SkPaint.cpp \
