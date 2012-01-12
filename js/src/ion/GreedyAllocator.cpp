@@ -311,9 +311,13 @@ void
 GreedyAllocator::killStack(VirtualRegister *vr)
 {
 #if JS_NUNBOX32
-    if (IsNunbox(vr->type()) && vr->ownsStackSlot()) {
-        uint32 stackSlot = BaseOfNunboxSlot(vr->type(), vr->stackSlot());
-        stackSlotAllocator.freeValueSlot(stackSlot);
+    if (IsNunbox(vr->type())) {
+        if (vr->ownsStackSlot()) {
+            uint32 stackSlot = BaseOfNunboxSlot(vr->type(), vr->stackSlot());
+            stackSlotAllocator.freeValueSlot(stackSlot);
+            IonSpew(IonSpew_RegAlloc, "    kill vr%d (stack:%d)",
+                    vr->def->virtualRegister(), vr->stackSlot_);
+        }
     } else
 #endif
     if (vr->hasStackSlot()) {
@@ -742,16 +746,24 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
 }
 
 void
+GreedyAllocator::findLoopCarriedUses(LAllocation *a, uint32 lowerBound, uint32 upperBound)
+{
+    if (!a->isUse())
+        return;
+    VirtualRegister *vr = getVirtualRegister(a->toUse());
+    if (vr->def->virtualRegister() < lowerBound || vr->def->virtualRegister() > upperBound)
+        allocateStack(vr);
+}
+
+void
 GreedyAllocator::findLoopCarriedUses(LInstruction *ins, uint32 lowerBound, uint32 upperBound)
 {
-    for (size_t i = 0; i < ins->numOperands(); i++) {
-        LAllocation *a = ins->getOperand(i);
-        if (!a->isUse())
-            continue;
-        LUse *use = a->toUse();
-        VirtualRegister *vr = getVirtualRegister(use);
-        if (vr->def->virtualRegister() < lowerBound || vr->def->virtualRegister() > upperBound)
-            allocateStack(vr);
+    for (size_t i = 0; i < ins->numOperands(); i++)
+        findLoopCarriedUses(ins->getOperand(i), lowerBound, upperBound);
+
+    if (LSnapshot *snapshot = ins->snapshot()) {
+        for (size_t i = 0; i < snapshot->numEntries(); i++)
+            findLoopCarriedUses(snapshot->getEntry(i), lowerBound, upperBound);
     }
 }
 
