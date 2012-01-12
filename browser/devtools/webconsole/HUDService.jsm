@@ -119,6 +119,17 @@ XPCOMUtils.defineLazyGetter(this, "AutocompletePopup", function () {
   return obj.AutocompletePopup;
 });
 
+XPCOMUtils.defineLazyGetter(this, "ScratchpadManager", function () {
+  var obj = {};
+  try {
+    Cu.import("resource:///modules/devtools/scratchpad-manager.jsm", obj);
+  }
+  catch (err) {
+    Cu.reportError(err);
+  }
+  return obj.ScratchpadManager;
+});
+
 XPCOMUtils.defineLazyGetter(this, "namesAndValuesOf", function () {
   var obj = {};
   Cu.import("resource:///modules/PropertyPanel.jsm", obj);
@@ -6815,6 +6826,20 @@ function GcliTerm(aContentWindow, aHudId, aDocument, aConsole, aHintNode, aConso
   this.show = this.show.bind(this);
   this.hide = this.hide.bind(this);
 
+  // Allow GCLI:Inputter to decide how and when to open a scratchpad window
+  let scratchpad = {
+    shouldActivate: function Scratchpad_shouldActivate(aEvent) {
+      return aEvent.shiftKey &&
+          aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
+    },
+    activate: function Scratchpad_activate(aValue) {
+      aValue = aValue.replace(/^\s*{\s*/, '');
+      ScratchpadManager.openScratchpad({ text: aValue });
+      return true;
+    },
+    linkText: stringBundle.GetStringFromName('scratchpad.linkText')
+  };
+
   this.opts = {
     environment: { hudId: this.hudId },
     chromeDocument: this.document,
@@ -6828,6 +6853,7 @@ function GcliTerm(aContentWindow, aHudId, aDocument, aConsole, aHintNode, aConso
     inputBackgroundElement: this.inputStack,
     hintElement: this.hintNode,
     consoleWrap: aConsoleWrap,
+    scratchpad: scratchpad,
     gcliTerm: this
   };
 

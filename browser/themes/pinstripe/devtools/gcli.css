@@ -309,6 +309,13 @@
   font-weight: bold;
 }
 
+.gcli-in-scratchlink {
+  float: right;
+  font-size: 85%;
+  color: #888;
+  padding-right: 10px;
+}
+
 /* From: $GCLI/lib/gcli/commands/help.css */
 
 .gcli-help-name {
