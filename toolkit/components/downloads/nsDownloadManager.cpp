@@ -1943,9 +1943,8 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     if (dl2)
       return CancelDownload(id);
   } else if (strcmp(aTopic, "profile-before-change") == 0) {
-    // Null statements to finalize them.
-    mGetIdsForURIStatement = nsnull;
-    mUpdateDownloadStatement = nsnull;
+    mGetIdsForURIStatement->Finalize();
+    mUpdateDownloadStatement->Finalize();
     mozilla::DebugOnly<nsresult> rv = mDBConn->Close();
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   } else if (strcmp(aTopic, "quit-application") == 0) {

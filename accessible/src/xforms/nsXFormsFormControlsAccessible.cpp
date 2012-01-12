@@ -38,8 +38,9 @@
 
 #include "nsXFormsFormControlsAccessible.h"
 
-#include "States.h"
 #include "nsTextEquivUtils.h"
+#include "Role.h"
+#include "States.h"
 
 using namespace mozilla::a11y;
 
@@ -53,10 +54,10 @@ nsXFormsLabelAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsLabelAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_LABEL;
+  return roles::LABEL;
 }
 
 nsresult
@@ -85,10 +86,10 @@ nsXFormsOutputAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsOutputAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_STATICTEXT;
+  return roles::STATICTEXT;
 }
 
 
@@ -102,10 +103,10 @@ nsXFormsTriggerAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsTriggerAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_PUSHBUTTON;
+  return roles::PUSHBUTTON;
 }
 
 NS_IMETHODIMP
@@ -154,10 +155,10 @@ nsXFormsInputAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputAccessible, nsAccessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
 
-PRUint32
+role
 nsXFormsInputAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_ENTRY;
+  return roles::ENTRY;
 }
 
 PRUint8
@@ -197,10 +198,10 @@ nsXFormsInputBooleanAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsInputBooleanAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_CHECKBUTTON;
+  return roles::CHECKBUTTON;
 }
 
 PRUint64
@@ -265,10 +266,10 @@ nsXFormsInputDateAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsInputDateAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_DROPLIST;
+  return roles::DROPLIST;
 }
 
 
@@ -282,10 +283,10 @@ nsXFormsSecretAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsSecretAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_PASSWORD_TEXT;
+  return roles::PASSWORD_TEXT;
 }
 
 PRUint64
@@ -311,10 +312,10 @@ nsXFormsRangeAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsRangeAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_SLIDER;
+  return roles::SLIDER;
 }
 
 PRUint64
@@ -431,10 +432,10 @@ nsXFormsChoicesAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsChoicesAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_GROUPING;
+  return roles::GROUPING;
 }
 
 NS_IMETHODIMP
@@ -461,10 +462,10 @@ nsXFormsSelectFullAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsSelectFullAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_GROUPING;
+  return roles::GROUPING;
 }
 
 void
@@ -484,10 +485,10 @@ nsXFormsItemCheckgroupAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsItemCheckgroupAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_CHECKBUTTON;
+  return roles::CHECKBUTTON;
 }
 
 PRUint64
@@ -526,10 +527,10 @@ nsXFormsItemRadiogroupAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsItemRadiogroupAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_RADIOBUTTON;
+  return roles::RADIOBUTTON;
 }
 
 PRUint64
@@ -564,10 +565,10 @@ nsXFormsSelectComboboxAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsSelectComboboxAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_COMBOBOX;
+  return roles::COMBOBOX;
 }
 
 PRUint64
@@ -605,10 +606,10 @@ nsXFormsItemComboboxAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsItemComboboxAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_LISTITEM;
+  return roles::LISTITEM;
 }
 
 PRUint64

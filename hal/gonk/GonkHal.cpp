@@ -313,7 +313,7 @@ namespace {
  * RAII class to help us remember to close file descriptors.
  */
 const char *screenEnabledFilename = "/sys/power/state";
-const char *screenBrightnessFilename = "/sys/class/backlight/pwm-backlight/brightness";
+const char *screenBrightnessFilename = "/sys/class/leds/lcd-backlight/brightness";
 
 template<ssize_t n>
 bool ReadFromFile(const char *filename, char (&buf)[n])

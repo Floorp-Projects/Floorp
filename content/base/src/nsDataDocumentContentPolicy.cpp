@@ -102,7 +102,7 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
     // also satisfy one of the following conditions:
     //  - URI inherits security context, e.g. data URIs
     //   OR
-    //  - URI loadable by subsumers, e.g. moz-filedata URIs
+    //  - URI loadable by subsumers, e.g. blob URIs
     // Any URI that doesn't meet these requirements will be rejected below.
     if (!HasFlags(aContentLocation,
                   nsIProtocolHandler::URI_IS_LOCAL_RESOURCE) ||
