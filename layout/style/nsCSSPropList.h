@@ -2208,6 +2208,15 @@ CSS_PROP_TEXT(
     kTextAlignKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_TEXT(
+    -moz-text-align-last,
+    text_align_last,
+    CSS_PROP_DOMPROP_PREFIXED(TextAlignLast),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kTextAlignLastKTable,
+    offsetof(nsStyleText, mTextAlignLast),
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     text-decoration,
     text_decoration,
