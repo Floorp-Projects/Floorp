@@ -21,9 +21,6 @@
           android:icon="@drawable/ic_menu_save_as_pdf"
           android:title="@string/save_as_pdf" />
 
-    <item android:id="@+id/agent_mode"
-          android:title="@string/agent_request_desktop" />
-
     <item android:id="@+id/settings"
           android:title="@string/settings" />
 
