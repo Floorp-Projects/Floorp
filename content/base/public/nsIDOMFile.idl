@@ -68,7 +68,7 @@ interface nsIDOMBlob : nsISupports
 
   [noscript] readonly attribute nsIInputStream internalStream;
   // The caller is responsible for releasing the internalUrl from the
-  // moz-filedata: protocol handler
+  // blob: protocol handler
   [noscript] DOMString getInternalUrl(in nsIPrincipal principal);
 
   [optional_argc] nsIDOMBlob mozSlice([optional] in long long start,

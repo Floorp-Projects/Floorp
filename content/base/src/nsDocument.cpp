@@ -144,7 +144,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
 #include "nsILink.h"
-#include "nsFileDataProtocolHandler.h"
+#include "nsBlobProtocolHandler.h"
 
 #include "nsICharsetAlias.h"
 #include "nsIParser.h"
@@ -1669,7 +1669,7 @@ nsDocument::~nsDocument()
   mPendingTitleChangeEvent.Revoke();
 
   for (PRUint32 i = 0; i < mFileDataUris.Length(); ++i) {
-    nsFileDataProtocolHandler::RemoveFileDataEntry(mFileDataUris[i]);
+    nsBlobProtocolHandler::RemoveFileDataEntry(mFileDataUris[i]);
   }
 
   // We don't want to leave residual locks on images. Make sure we're in an

@@ -68,8 +68,7 @@ protected:
       mStartIndex(0),
       mCompressWhitespace(true),
       mTrimLeadingWhitespace(false),
-      mTrimTrailingWhitespace(false),
-      mPropagateTransform(true)
+      mTrimTrailingWhitespace(false)
       {}
   ~nsSVGGlyphFrame()
   {
@@ -232,7 +231,6 @@ protected:
                       gfxContext *aContext);
 
   void NotifyGlyphMetricsChange();
-  bool GetGlobalTransform(gfxMatrix *aMatrix);
   void SetupGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
                         nscolor *foreground, nscolor *background);
@@ -255,7 +253,6 @@ protected:
   bool mCompressWhitespace;
   bool mTrimLeadingWhitespace;
   bool mTrimTrailingWhitespace;
-  bool mPropagateTransform;
 };
 
 #endif
