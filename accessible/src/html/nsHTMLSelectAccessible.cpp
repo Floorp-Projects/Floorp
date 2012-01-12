@@ -44,6 +44,7 @@
 #include "nsEventShell.h"
 #include "nsIAccessibleEvent.h"
 #include "nsTextEquivUtils.h"
+#include "Role.h"
 #include "States.h"
 
 #include "nsCOMPtr.h"
@@ -83,13 +84,13 @@ nsHTMLSelectListAccessible::NativeState()
   return state;
 }
 
-PRUint32
+role
 nsHTMLSelectListAccessible::NativeRole()
 {
-  if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX)
-    return nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+  if (mParent && mParent->Role() == roles::COMBOBOX)
+    return roles::COMBOBOX_LIST;
 
-  return nsIAccessibleRole::ROLE_LISTBOX;
+  return roles::LISTBOX;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,13 +218,13 @@ nsHTMLSelectOptionAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLSelectOptionAccessible: nsAccessible public
 
-PRUint32
+role
 nsHTMLSelectOptionAccessible::NativeRole()
 {
-  if (mParent && mParent->Role() == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
-    return nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
+  if (mParent && mParent->Role() == roles::COMBOBOX_LIST)
+    return roles::COMBOBOX_OPTION;
 
-  return nsIAccessibleRole::ROLE_OPTION;
+  return roles::OPTION;
 }
 
 nsresult
@@ -342,7 +343,7 @@ nsHTMLSelectOptionAccessible::GetLevelInternal()
   PRInt32 level =
     parentContent->NodeInfo()->Equals(nsGkAtoms::optgroup) ? 2 : 1;
 
-  if (level == 1 && Role() != nsIAccessibleRole::ROLE_HEADING)
+  if (level == 1 && Role() != roles::HEADING)
     level = 0; // In a single level list, the level is irrelevant
 
   return level;
@@ -459,10 +460,10 @@ nsHTMLSelectOptGroupAccessible::
 {
 }
 
-PRUint32
+role
 nsHTMLSelectOptGroupAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_HEADING;
+  return roles::HEADING;
 }
 
 PRUint64
@@ -519,10 +520,10 @@ nsHTMLComboboxAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLComboboxAccessible: nsAccessible
 
-PRUint32
+role
 nsHTMLComboboxAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_COMBOBOX;
+  return roles::COMBOBOX;
 }
 
 void

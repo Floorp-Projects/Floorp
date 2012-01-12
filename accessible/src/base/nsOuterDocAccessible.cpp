@@ -38,9 +38,10 @@
 
 #include "nsOuterDocAccessible.h"
 
-#include "States.h"
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"
+#include "Role.h"
+#include "States.h"
 
 using namespace mozilla::a11y;
 
@@ -63,10 +64,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsOuterDocAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible public (DON'T add methods here)
 
-PRUint32
+role
 nsOuterDocAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_INTERNAL_FRAME;
+  return roles::INTERNAL_FRAME;
 }
 
 nsAccessible*

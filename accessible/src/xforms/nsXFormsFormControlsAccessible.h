@@ -53,7 +53,7 @@ public:
   // nsAccessible
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 };
 
 /**
@@ -66,7 +66,7 @@ public:
   nsXFormsOutputAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 };
 
 /**
@@ -85,7 +85,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
@@ -107,7 +107,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
@@ -127,7 +127,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
   // ActionAccessible
@@ -144,7 +144,7 @@ public:
   nsXFormsInputDateAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 };
 
 /**
@@ -160,7 +160,7 @@ public:
   NS_IMETHOD GetValue(nsAString& aValue);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 };
 
@@ -181,7 +181,7 @@ public:
   NS_IMETHOD GetCurrentValue(double *aCurrentValue);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 };
 
@@ -214,7 +214,7 @@ public:
   NS_IMETHOD GetValue(nsAString& aValue);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 
 protected:
   // nsAccessible
@@ -233,7 +233,7 @@ public:
   nsXFormsSelectFullAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 
 protected:
   // nsAccessible
@@ -257,7 +257,7 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 };
 
@@ -278,7 +278,7 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 };
 
@@ -295,7 +295,7 @@ public:
                                    nsIWeakReference *aShell);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual bool GetAllowsAnonChildAccessibles();
 };
@@ -317,7 +317,7 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 };
 
