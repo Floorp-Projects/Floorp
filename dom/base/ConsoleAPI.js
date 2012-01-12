@@ -202,7 +202,8 @@ ConsoleAPI.prototype = {
       filename: frame.filename,
       lineNumber: frame.lineNumber,
       functionName: frame.functionName,
-      arguments: aArguments
+      arguments: aArguments,
+      timeStamp: Date.now(),
     };
 
     consoleEvent.wrappedJSObject = consoleEvent;

@@ -36,68 +36,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "data:text/html,<p>Web Console test for notifications";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-webconsole-error-observer.html";
 
-function test() {
-  observer.init();
-  addTab(TEST_URI);
-  browser.addEventListener("load", onLoad, true);
-}
-
-function webConsoleCreated(aID)
+function test()
 {
-  Services.obs.removeObserver(observer, "web-console-created");
-  ok(HUDService.hudReferences[aID], "We have a hud reference");
-  content.wrappedJSObject.console.log("adding a log message");
+  waitForExplicitFinish();
+
+  expectUncaughtException();
+
+  gBrowser.selectedTab = gBrowser.addTab(TEST_URI);
+
+  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
+    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+    testOpenUI(true);
+  }, true);
 }
 
-function webConsoleDestroyed(aID)
+function testOpenUI(aTestReopen)
 {
-  Services.obs.removeObserver(observer, "web-console-destroyed");
-  ok(!HUDService.hudReferences[aID], "We do not have a hud reference");
-  executeSoon(finishTest);
-}
+  // test to see if the messages are
+  // displayed when the console UI is opened
 
-function webConsoleMessage(aID, aNodeID)
-{
-  Services.obs.removeObserver(observer, "web-console-message-created");
-  ok(aID, "we have a console ID");
-  is(typeof aNodeID, "string", "message node id is a string");
-  executeSoon(closeConsole);
-}
+  HUDService.activateHUDForContext(gBrowser.selectedTab);
+  let hudId = HUDService.getHudIdByWindow(content);
+  let hud = HUDService.getHudReferenceById(hudId);
 
-let observer = {
+  testLogEntry(hud.outputNode, "log Bazzle",
+               "Find a console log entry from before console UI is opened",
+               false, null);
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  testLogEntry(hud.outputNode, "error Bazzle",
+               "Find a console error entry from before console UI is opened",
+               false, null);
 
-  observe: function observe(aSubject, aTopic, aData)
-  {
-    aSubject = aSubject.QueryInterface(Ci.nsISupportsString);
+  testLogEntry(hud.outputNode, "bazBug611032", "Found the JavaScript error");
+  testLogEntry(hud.outputNode, "cssColorBug611032", "Found the CSS error");
 
-    switch(aTopic) {
-      case "web-console-created":
-        webConsoleCreated(aSubject);
-        break;
-      case "web-console-destroyed":
-        webConsoleDestroyed(aSubject);
-        break;
-      case "web-console-message-created":
-        webConsoleMessage(aSubject, aData);
-        break;
-      default:
-        break;
-    }
-  },
+  HUDService.deactivateHUDForContext(gBrowser.selectedTab);
 
-  init: function init()
-  {
-    Services.obs.addObserver(this, "web-console-created", false);
-    Services.obs.addObserver(this, "web-console-destroyed", false);
-    Services.obs.addObserver(this, "web-console-message-created", false);
+  if (aTestReopen) {
+    HUDService.deactivateHUDForContext(gBrowser.selectedTab);
+    executeSoon(testOpenUI);
+  } else {
+    executeSoon(finish);
   }
-};
-
-function onLoad() {
-  browser.removeEventListener("load", onLoad, true);
-  openConsole();
 }
