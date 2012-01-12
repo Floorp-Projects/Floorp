@@ -267,13 +267,13 @@ if (typeof reportCompare === "function")
     data_file.write('\n')
 
     def dump(data, name, file):
-        file.write('const uint16_t ' + name + '[] = {\n')
+        file.write('const uint8_t ' + name + '[] = {\n')
 
         line = pad = ' ' * 4
         lines = []
         for entry in data:
+            assert entry < 256
             s = str(entry)
-            assert len(s) <= 3
             s = s.rjust(3)
 
             if len(line + s) + 5 > 99:
