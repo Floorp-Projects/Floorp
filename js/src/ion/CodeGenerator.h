@@ -85,6 +85,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitInt32ToDouble(LInt32ToDouble *lir);
     bool visitTestVAndBranch(LTestVAndBranch *lir);
     bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
+    bool visitIntToString(LIntToString *lir);
     bool visitInteger(LInteger *lir);
     bool visitPointer(LPointer *lir);
     bool visitSlots(LSlots *lir);
@@ -97,6 +98,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitArrayLength(LArrayLength *lir);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
+    bool visitAddV(LAddV *lir);
+    bool visitConcat(LConcat *lir);
     bool visitFunctionEnvironment(LFunctionEnvironment *lir);
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetName(LCallGetName *lir);

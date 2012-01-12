@@ -86,6 +86,12 @@ class BinaryArithPolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
+class BinaryStringPolicy : public BoxInputsPolicy
+{
+  public:
+    bool adjustInputs(MInstruction *def);
+};
+
 class BitwisePolicy : public BoxInputsPolicy
 {
   protected:

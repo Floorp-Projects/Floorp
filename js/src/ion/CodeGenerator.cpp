@@ -242,6 +242,19 @@ CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32 *lir)
 }
 
 bool
+CodeGenerator::visitIntToString(LIntToString *lir)
+{
+    typedef JSString *(*pf)(JSContext *, jsint);
+    static const VMFunction js_IntToStringInfo =
+        FunctionInfo<pf>(js_IntToString);
+
+    pushArg(ToRegister(lir->input()));
+    if (!callVM(js_IntToStringInfo, lir))
+        return false;
+    return true;
+}
+
+bool
 CodeGenerator::visitLabel(LLabel *lir)
 {
     masm.bind(lir->label());
@@ -706,6 +719,31 @@ CodeGenerator::visitStringLength(LStringLength *lir)
     return true;
 }
 
+bool
+CodeGenerator::visitAddV(LAddV *lir)
+{
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    static const VMFunction AddValuesInfo = FunctionInfo<pf>(js::ion::AddValues);
+
+    pushArg(ToValue(lir, LAddV::RhsInput));
+    pushArg(ToValue(lir, LAddV::LhsInput));
+    if (!callVM(AddValuesInfo, lir))
+        return false;
+    return true;
+}
+
+bool
+CodeGenerator::visitConcat(LConcat *lir)
+{
+    typedef JSString *(*pf)(JSContext *, JSString *, JSString *);
+    static const VMFunction js_ConcatStringsInfo = FunctionInfo<pf>(js_ConcatStrings);
+
+    pushArg(ToRegister(lir->rhs()));
+    pushArg(ToRegister(lir->lhs()));
+    if (!callVM(js_ConcatStringsInfo, lir))
+        return false;
+    return true;
+}
 
 bool
 CodeGenerator::visitInitializedLength(LInitializedLength *lir)

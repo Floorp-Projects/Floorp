@@ -49,13 +49,13 @@ using namespace js::ion;
 
 bool
 LIRGeneratorARM::useBox(LInstruction *lir, size_t n, MDefinition *mir,
-                        LUse::Policy policy)
+                        LUse::Policy policy, bool useAtStart)
 {
     JS_ASSERT(mir->type() == MIRType_Value);
     if (!ensureDefined(mir))
         return false;
-    lir->setOperand(n, LUse(mir->id(), policy));
-    lir->setOperand(n + 1, LUse(VirtualRegisterOfPayload(mir), policy));
+    lir->setOperand(n, LUse(mir->id(), policy, useAtStart));
+    lir->setOperand(n + 1, LUse(VirtualRegisterOfPayload(mir), policy, useAtStart));
     return true;
 }
 

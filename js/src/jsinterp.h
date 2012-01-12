@@ -376,6 +376,10 @@ GetScopeName(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
 bool
 GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
 
+bool
+AddValues(JSContext *cx, JSScript *script, jsbytecode *pc,
+          const Value &lhs, const Value &rhs, Value *res);
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */

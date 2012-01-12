@@ -387,13 +387,10 @@ LIRGenerator::visitAdd(MAdd *ins)
             return false;
         return lowerForALU(lir, ins, lhs, rhs);
     }
-    if (ins->specialization() == MIRType_Double) {
-        JS_ASSERT(lhs->type() == MIRType_Double);
-        return lowerForFPU(new LMathD(JSOP_ADD), ins, lhs, rhs);
-    }
 
-    JS_NOT_REACHED("NYI");
-    return false;
+    JS_ASSERT(ins->specialization() == MIRType_Double);
+    JS_ASSERT(lhs->type() == MIRType_Double);
+    return lowerForFPU(new LMathD(JSOP_ADD), ins, lhs, rhs);
 }
 
 bool
@@ -476,6 +473,40 @@ LIRGenerator::visitMod(MMod *ins)
 
     JS_NOT_REACHED("NYI");
     return false;
+}
+
+bool
+LIRGenerator::visitAddGeneric(MAddGeneric *ins)
+{
+    MDefinition *lhs = ins->getOperand(0);
+    MDefinition *rhs = ins->getOperand(1);
+
+    JS_ASSERT(lhs->type() == MIRType_Value);
+    JS_ASSERT(rhs->type() == MIRType_Value);
+
+    LAddV *lir = new LAddV;
+    if (!useBoxAtStart(lir, LAddV::LhsInput, lhs))
+        return false;
+    if (!useBoxAtStart(lir, LAddV::RhsInput, rhs))
+        return false;
+    if (!defineVMReturn(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitConcat(MConcat *ins)
+{
+    MDefinition *lhs = ins->getOperand(0);
+    MDefinition *rhs = ins->getOperand(1);
+
+    JS_ASSERT(lhs->type() == MIRType_String);
+    JS_ASSERT(rhs->type() == MIRType_String);
+
+    LConcat *lir = new LConcat(useRegisterAtStart(lhs), useRegisterAtStart(rhs));
+    if (!defineVMReturn(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
 }
 
 bool
@@ -621,6 +652,35 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
         JS_NOT_REACHED("unexpected type");
     }
 
+    return false;
+}
+
+bool
+LIRGenerator::visitToString(MToString *ins)
+{
+    MDefinition *opd = ins->input();
+
+    switch (opd->type()) {
+      case MIRType_Double:
+      case MIRType_Null:
+      case MIRType_Undefined:
+      case MIRType_Boolean:
+        JS_NOT_REACHED("NYI: Lower MToString");
+        break;
+
+      case MIRType_Int32: {
+        LIntToString *lir = new LIntToString(useRegisterAtStart(opd));
+
+        if (!defineVMReturn(lir, ins))
+            return false;
+        return assignSafepoint(lir, ins);
+      }
+
+      default:
+        // Objects might be effectful. (see ToPrimitive)
+        JS_NOT_REACHED("unexpected type");
+        break;
+    }
     return false;
 }
 

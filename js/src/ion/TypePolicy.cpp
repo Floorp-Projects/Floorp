@@ -103,6 +103,30 @@ BinaryArithPolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
+BinaryStringPolicy::adjustInputs(MInstruction *ins)
+{
+    for (size_t i = 0; i < 2; i++) {
+        MDefinition *in = ins->getOperand(i);
+        if (in->type() == MIRType_String)
+            continue;
+
+        MInstruction *replace = NULL;
+        if (in->type() == MIRType_Int32) {
+            replace = MToString::New(in);
+        } else {
+            if (in->type() != MIRType_Value)
+                in = boxAt(ins, in);
+            replace = MUnbox::New(in, MIRType_String, MUnbox::Fallible);
+        }
+
+        ins->block()->insertBefore(ins, replace);
+        ins->replaceOperand(i, replace);
+    }
+
+    return true;
+}
+
+bool
 ComparePolicy::adjustInputs(MInstruction *def)
 {
     if (specialization_ == MIRType_None)
