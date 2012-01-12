@@ -1,0 +1,39 @@
+<html>
+<head>
+  <title>NPAPI src="" NPStream Test</title>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" 
+          src="pluginstream.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+
+  <iframe id="testframe" name="testframe" onload="frameLoaded()"></iframe>
+
+  <!--
+   - A stream is sent to the browser via NPP_NewStream, NP_NORMAL.
+   - The plugin reports that data can only be sent to it in 100-byte
+   - chunks.  When NPP_DestroyStream is called, the plugin sends the stream
+   - content back to the browser by passing it as a data: url to
+   - NPN_GetURL, using a frame, so that the stream content should 
+   - be displayed in the frame in the browser.
+   -
+   - We create the object element dynamically, which in some cases has caused us to deliver the data=""
+   - stream twice. This verifies that we only deliver the data="" stream once.
+   -->
+
+  <script type="text/javascript">
+    var e = document.createElement('object');
+    e.setAttribute('data', 'loremipsum.xtest');
+    e.setAttribute('type', 'application/x-test');
+    e.setAttribute('streammode', 'normal');
+    e.setAttribute('streamchunksize', '100');
+    e.setAttribute('frame', 'testframe');
+    e.setAttribute('style', 'width: 400px; height: 100px;');
+    document.body.appendChild(e);
+  </script>
+</body>
+</html>

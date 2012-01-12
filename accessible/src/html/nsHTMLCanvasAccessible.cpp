@@ -37,6 +37,8 @@
 
 #include "nsHTMLCanvasAccessible.h"
 
+#include "Role.h"
+
 using namespace mozilla::a11y;
 
 nsHTMLCanvasAccessible::
@@ -45,8 +47,8 @@ nsHTMLCanvasAccessible::
 {
 }
 
-PRUint32
+role
 nsHTMLCanvasAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_CANVAS;
+  return roles::CANVAS;
 }

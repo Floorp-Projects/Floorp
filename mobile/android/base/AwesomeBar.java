@@ -399,6 +399,10 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         String title = "";
 
         if (view == (ListView)findViewById(R.id.history_list)) {
+            if (! (menuInfo instanceof ExpandableListView.ExpandableListContextMenuInfo)) {
+                Log.e(LOGTAG, "menuInfo is not ExpandableListContextMenuInfo");
+                return;
+            }
             ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) menuInfo;
             ExpandableListView exList = (ExpandableListView)list;
             int childPosition = exList.getPackedPositionChild(info.packedPosition);
@@ -408,9 +412,12 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             Map map = (Map)selectedItem;
             title = (String)map.get(URLColumns.TITLE);
         } else {
+            if (! (menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
+                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
+                return;
+            }
             AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
             selectedItem = list.getItemAtPosition(info.position);
-
             Cursor cursor = (Cursor)selectedItem;
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         }

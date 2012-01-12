@@ -200,7 +200,7 @@ nsIdleService::AddIdleObserver(nsIObserver* aObserver, PRUint32 aIdleTime)
   }
 
   // Make sure our observer goes into 'idle' immediately if applicable.
-  CheckAwayState(false);
+  CheckAwayState(true);
 
   return NS_OK;
 }
@@ -228,18 +228,11 @@ nsIdleService::RemoveIdleObserver(nsIObserver* aObserver, PRUint32 aTime)
 void
 nsIdleService::ResetIdleTimeOut()
 {
-  // A zero in mLastIdleReset indicates that this function has never been
-  // called.
-  bool calledBefore = mLastIdleReset != 0;
   mLastIdleReset = PR_IntervalToSeconds(PR_IntervalNow());
   if (!mLastIdleReset) mLastIdleReset = 1;
 
   // Now check if this changes anything
-  // Note that if we have never been called before, we cannot do the
-  // optimization of passing true to CheckAwayState, which avoids
-  // calculating the timer (because if we have never been called before,
-  // we need to recalculate the timer and start it there).
-  CheckAwayState(calledBefore);
+  CheckAwayState(false);
 }
 
 NS_IMETHODIMP
@@ -306,7 +299,7 @@ nsIdleService::IdleTimerCallback(nsITimer* aTimer, void* aClosure)
 }
 
 void
-nsIdleService::CheckAwayState(bool aNoTimeReset)
+nsIdleService::CheckAwayState(bool aNewObserver)
 {
   /**
    * Find our last detected idle time (it's important this happens before the
@@ -315,6 +308,15 @@ nsIdleService::CheckAwayState(bool aNoTimeReset)
    */
   PRUint32 curTime = static_cast<PRUint32>(PR_Now() / PR_USEC_PER_SEC);
   PRUint32 lastTime = curTime - mLastHandledActivity;
+  bool bootstrapTimer =  mLastHandledActivity == 0;
+
+  /**
+   * Too short since last check.
+   * Bail out
+   */
+  if (!lastTime && !aNewObserver) {
+    return;
+  }
 
   // Get the idle time (in seconds).
   PRUint32 idleTime;
@@ -330,10 +332,6 @@ nsIdleService::CheckAwayState(bool aNoTimeReset)
   // GetIdleTime returns the time in ms, internally we only calculate in s.
   idleTime /= 1000;
 
-  // We need a text string to send with any state change events.
-  nsAutoString timeStr;
-  timeStr.AppendInt(idleTime);
-
   // Set the time for last user activity.
   mLastHandledActivity = curTime - idleTime;
 
@@ -341,38 +339,108 @@ nsIdleService::CheckAwayState(bool aNoTimeReset)
    * Now, if the idle time, is less than what we expect, it means the
    * user was active since last time that we checked.
    */
-  nsCOMArray<nsIObserver> notifyList;
+  bool userActivity = lastTime > idleTime;
 
-  if (lastTime > idleTime) {
-    // Loop trough all listeners, and find any that have detected idle.
-    for (PRUint32 i = 0; i < mArrayListeners.Length(); i++) {
-      IdleListener& curListener = mArrayListeners.ElementAt(i);
-
-      if (curListener.isIdle) {
-        notifyList.AppendObject(curListener.observer);
-        curListener.isIdle = false;
-      }
-    }
-
-    // Send the "non-idle" events.
-    for (PRInt32 i = 0; i < notifyList.Count(); i++) {
-      notifyList[i]->Observe(this, OBSERVER_TOPIC_BACK, timeStr.get());
+  if (userActivity) {
+    if (TryNotifyBackState(idleTime) || idleTime) {
+      RescheduleIdleTimer(idleTime);
     }
   }
 
+  if (!userActivity || aNewObserver || bootstrapTimer) {
+    TryNotifyIdleState(idleTime);
+    RescheduleIdleTimer(idleTime);
+  }
+}
+
+bool
+nsIdleService::TryNotifyBackState(PRUint32 aIdleTime)
+{
+  nsCOMArray<nsIObserver> notifyList;
+
+  // Loop trough all listeners, and find any that have detected idle.
+  for (PRUint32 i = 0; i < mArrayListeners.Length(); i++) {
+    IdleListener& curListener = mArrayListeners.ElementAt(i);
+
+    if (curListener.isIdle) {
+      notifyList.AppendObject(curListener.observer);
+      curListener.isIdle = false;
+    }
+  }
+
+  PRInt32 numberOfPendingNotifications = notifyList.Count();
+
+  // Bail id nothing to do
+  if(!numberOfPendingNotifications) {
+    return false;
+  }
+
+  // We need a text string to send with any state change events.
+  nsAutoString timeStr;
+  timeStr.AppendInt(aIdleTime);
+
+  // Send the "non-idle" events.
+  while(numberOfPendingNotifications--) {
+    notifyList[numberOfPendingNotifications]->Observe(this,
+                                                      OBSERVER_TOPIC_BACK,
+                                                      timeStr.get());
+  }
+
+  // We found something so return true
+  return true;
+}
+
+bool
+nsIdleService::TryNotifyIdleState(PRUint32 aIdleTime)
+{
   /**
    * Now we need to check for listeners that have expired, and while we are
    * looping through all the elements, we will also calculate when, if ever
    * the next one will need to be notified.
    */
 
-  // Clean up the list, so it's ready for the next iteration.
-  notifyList.Clear();
+  nsCOMArray<nsIObserver> notifyList;
 
-  // Bail out if we don't need to calculate new times.
-  if (aNoTimeReset) {
-    return;
+  for (PRUint32 i = 0; i < mArrayListeners.Length(); i++) {
+    IdleListener& curListener = mArrayListeners.ElementAt(i);
+
+    // We are only interested in items, that are not in the idle state.
+    if (!curListener.isIdle) {
+      // If they have an idle time smaller than the actual idle time.
+      if (curListener.reqIdleTime <= aIdleTime) {
+        // then add the listener to the list of listeners that should be
+        // notified.
+        notifyList.AppendObject(curListener.observer);
+        // This listener is now idle.
+        curListener.isIdle = true;
+      }
+    }
   }
+
+  PRInt32 numberOfPendingNotifications = notifyList.Count();
+
+  // Bail if nothing to do
+  if(!numberOfPendingNotifications) {
+    return false;
+  }
+
+  // We need a text string to send with any state change events.
+  nsAutoString timeStr;
+  timeStr.AppendInt(aIdleTime);
+
+  // Notify all listeners that just timed out.
+  while(numberOfPendingNotifications--) {
+    notifyList[numberOfPendingNotifications]->Observe(this,
+                                                      OBSERVER_TOPIC_IDLE,
+                                                      timeStr.get());
+  }
+
+  return true;
+}
+
+void
+nsIdleService::RescheduleIdleTimer(PRUint32 aIdleTime)
+{
   /**
    * Placet to store the wait time to the next notification, note that
    * PR_UINT32_MAX means no-one are listening (or that they have such a big
@@ -392,18 +460,9 @@ nsIdleService::CheckAwayState(bool aNoTimeReset)
 
     // We are only interested in items, that are not in the idle state.
     if (!curListener.isIdle) {
-      // If they have an idle time smaller than the actual idle time.
-      if (curListener.reqIdleTime <= idleTime) {
-        // then add the listener to the list of listeners that should be
-        // notified.
-        notifyList.AppendObject(curListener.observer);
-        // This listener is now idle.
-        curListener.isIdle = true;
-      } else {
         // If it hasn't expired yet, then we should note the time when it should
         // expire.
         nextWaitTime = NS_MIN(nextWaitTime, curListener.reqIdleTime);
-      }
     }
 
     // Remember if anyone becomes idle (it's safe to do this as a binary compare
@@ -413,11 +472,8 @@ nsIdleService::CheckAwayState(bool aNoTimeReset)
 
   // In order to find when the next idle event should time out, we need to
   // subtract the time we should wait, from the time that has already passed.
-  nextWaitTime -= idleTime;
-
-  // Notify all listeners that just timed out.
-  for (PRInt32 i = 0; i < notifyList.Count(); i++) {
-    notifyList[i]->Observe(this, OBSERVER_TOPIC_IDLE, timeStr.get());
+  if (PR_UINT32_MAX != nextWaitTime) {
+    nextWaitTime -= aIdleTime;
   }
 
   // If we are in poll mode, we need to poll for activity if anyone are idle,

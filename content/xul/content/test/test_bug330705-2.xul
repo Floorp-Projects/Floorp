@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=330705
             ok(isFocused,
                "The first box element is still focused after blur() has been called on the second box element");
             SimpleTest.finish();
-          }, 100);
+          }, 0);
         }
 
         function onLoad() {
@@ -34,6 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=330705
           box.addEventListener('focus', function() {
             isFocused = true;
             setTimeout(doTest, 0);
+            box.removeEventListener('focus', arguments.callee, true);
           }, true);
           box.addEventListener('blur', function() { isFocused = false;}, true);
           box.focus();

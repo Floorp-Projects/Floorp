@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsFileDataProtocolHandler.h"
+#include "nsBlobProtocolHandler.h"
 #include "nsSimpleURI.h"
 #include "nsDOMError.h"
 #include "nsCOMPtr.h"
@@ -60,7 +60,7 @@ struct FileDataInfo
 static nsClassHashtable<nsCStringHashKey, FileDataInfo>* gFileDataTable;
 
 void
-nsFileDataProtocolHandler::AddFileDataEntry(nsACString& aUri,
+nsBlobProtocolHandler::AddFileDataEntry(nsACString& aUri,
 					    nsIDOMBlob* aFile,
                                             nsIPrincipal* aPrincipal)
 {
@@ -78,7 +78,7 @@ nsFileDataProtocolHandler::AddFileDataEntry(nsACString& aUri,
 }
 
 void
-nsFileDataProtocolHandler::RemoveFileDataEntry(nsACString& aUri)
+nsBlobProtocolHandler::RemoveFileDataEntry(nsACString& aUri)
 {
   if (gFileDataTable) {
     gFileDataTable->Remove(aUri);
@@ -90,7 +90,7 @@ nsFileDataProtocolHandler::RemoveFileDataEntry(nsACString& aUri)
 }
 
 nsIPrincipal*
-nsFileDataProtocolHandler::GetFileDataEntryPrincipal(nsACString& aUri)
+nsBlobProtocolHandler::GetFileDataEntryPrincipal(nsACString& aUri)
 {
   if (!gFileDataTable) {
     return nsnull;
@@ -109,7 +109,7 @@ static FileDataInfo*
 GetFileDataInfo(const nsACString& aUri)
 {
   NS_ASSERTION(StringBeginsWith(aUri,
-                                NS_LITERAL_CSTRING(FILEDATA_SCHEME ":")),
+                                NS_LITERAL_CSTRING(BLOBURI_SCHEME ":")),
                "Bad URI");
   
   if (!gFileDataTable) {
@@ -124,23 +124,23 @@ GetFileDataInfo(const nsACString& aUri)
 // -----------------------------------------------------------------------
 // Uri
 
-#define NS_FILEDATAURI_CID \
+#define NS_BLOBURI_CID \
 { 0xf5475c51, 0x59a7, 0x4757, \
   { 0xb3, 0xd9, 0xe2, 0x11, 0xa9, 0x41, 0x08, 0x72 } }
 
-static NS_DEFINE_CID(kFILEDATAURICID, NS_FILEDATAURI_CID);
+static NS_DEFINE_CID(kBLOBURICID, NS_BLOBURI_CID);
 
-class nsFileDataURI : public nsSimpleURI,
+class nsBlobURI : public nsSimpleURI,
                       public nsIURIWithPrincipal
 {
 public:
-  nsFileDataURI(nsIPrincipal* aPrincipal) :
+  nsBlobURI(nsIPrincipal* aPrincipal) :
       nsSimpleURI(), mPrincipal(aPrincipal)
   {}
-  virtual ~nsFileDataURI() {}
+  virtual ~nsBlobURI() {}
 
   // For use only from deserialization
-  nsFileDataURI() : nsSimpleURI() {}
+  nsBlobURI() : nsSimpleURI() {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIURIWITHPRINCIPAL
@@ -154,9 +154,9 @@ public:
                                   RefHandlingEnum aRefHandlingMode,
                                   bool* aResult);
 
-  // Override StartClone to hand back a nsFileDataURI
+  // Override StartClone to hand back a nsBlobURI
   virtual nsSimpleURI* StartClone(RefHandlingEnum /* unused */)
-  { return new nsFileDataURI(); }
+  { return new nsBlobURI(); }
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
@@ -164,12 +164,12 @@ public:
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 
-NS_IMPL_ADDREF_INHERITED(nsFileDataURI, nsSimpleURI)
-NS_IMPL_RELEASE_INHERITED(nsFileDataURI, nsSimpleURI)
+NS_IMPL_ADDREF_INHERITED(nsBlobURI, nsSimpleURI)
+NS_IMPL_RELEASE_INHERITED(nsBlobURI, nsSimpleURI)
 
-NS_INTERFACE_MAP_BEGIN(nsFileDataURI)
+NS_INTERFACE_MAP_BEGIN(nsBlobURI)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithPrincipal)
-  if (aIID.Equals(kFILEDATAURICID))
+  if (aIID.Equals(kBLOBURICID))
     foundInterface = static_cast<nsIURI*>(this);
   else if (aIID.Equals(kThisSimpleURIImplementationCID)) {
     // Need to return explicitly here, because if we just set foundInterface
@@ -184,7 +184,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSimpleURI)
 // nsIURIWithPrincipal methods:
 
 NS_IMETHODIMP
-nsFileDataURI::GetPrincipal(nsIPrincipal** aPrincipal)
+nsBlobURI::GetPrincipal(nsIPrincipal** aPrincipal)
 {
   NS_IF_ADDREF(*aPrincipal = mPrincipal);
 
@@ -192,7 +192,7 @@ nsFileDataURI::GetPrincipal(nsIPrincipal** aPrincipal)
 }
 
 NS_IMETHODIMP
-nsFileDataURI::GetPrincipalUri(nsIURI** aUri)
+nsBlobURI::GetPrincipalUri(nsIURI** aUri)
 {
   if (mPrincipal) {
     mPrincipal->GetURI(aUri);
@@ -207,7 +207,7 @@ nsFileDataURI::GetPrincipalUri(nsIURI** aUri)
 // nsISerializable methods:
 
 NS_IMETHODIMP
-nsFileDataURI::Read(nsIObjectInputStream* aStream)
+nsBlobURI::Read(nsIObjectInputStream* aStream)
 {
   nsresult rv = nsSimpleURI::Read(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -216,7 +216,7 @@ nsFileDataURI::Read(nsIObjectInputStream* aStream)
 }
 
 NS_IMETHODIMP
-nsFileDataURI::Write(nsIObjectOutputStream* aStream)
+nsBlobURI::Write(nsIObjectOutputStream* aStream)
 {
   nsresult rv = nsSimpleURI::Write(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -228,7 +228,7 @@ nsFileDataURI::Write(nsIObjectOutputStream* aStream)
 
 // nsIURI methods:
 nsresult
-nsFileDataURI::CloneInternal(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
+nsBlobURI::CloneInternal(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
                              nsIURI** aClone)
 {
   nsCOMPtr<nsIURI> simpleClone;
@@ -237,22 +237,22 @@ nsFileDataURI::CloneInternal(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
-  nsRefPtr<nsFileDataURI> uriCheck;
-  rv = simpleClone->QueryInterface(kFILEDATAURICID, getter_AddRefs(uriCheck));
+  nsRefPtr<nsBlobURI> uriCheck;
+  rv = simpleClone->QueryInterface(kBLOBURICID, getter_AddRefs(uriCheck));
   NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) && uriCheck,
 		    "Unexpected!");
 #endif
 
-  nsFileDataURI* fileDataURI = static_cast<nsFileDataURI*>(simpleClone.get());
+  nsBlobURI* blobURI = static_cast<nsBlobURI*>(simpleClone.get());
 
-  fileDataURI->mPrincipal = mPrincipal;
+  blobURI->mPrincipal = mPrincipal;
 
   simpleClone.forget(aClone);
   return NS_OK;
 }
 
 /* virtual */ nsresult
-nsFileDataURI::EqualsInternal(nsIURI* aOther,
+nsBlobURI::EqualsInternal(nsIURI* aOther,
                               nsSimpleURI::RefHandlingEnum aRefHandlingMode,
                               bool* aResult)
 {
@@ -261,32 +261,32 @@ nsFileDataURI::EqualsInternal(nsIURI* aOther,
     return NS_OK;
   }
   
-  nsRefPtr<nsFileDataURI> otherFileDataUri;
-  aOther->QueryInterface(kFILEDATAURICID, getter_AddRefs(otherFileDataUri));
-  if (!otherFileDataUri) {
+  nsRefPtr<nsBlobURI> otherBlobUri;
+  aOther->QueryInterface(kBLOBURICID, getter_AddRefs(otherBlobUri));
+  if (!otherBlobUri) {
     *aResult = false;
     return NS_OK;
   }
 
   // Compare the member data that our base class knows about.
-  if (!nsSimpleURI::EqualsInternal(otherFileDataUri, aRefHandlingMode)) {
+  if (!nsSimpleURI::EqualsInternal(otherBlobUri, aRefHandlingMode)) {
     *aResult = false;
     return NS_OK;
    }
 
   // Compare the piece of additional member data that we add to base class.
-  if (mPrincipal && otherFileDataUri->mPrincipal) {
+  if (mPrincipal && otherBlobUri->mPrincipal) {
     // Both of us have mPrincipals. Compare them.
-    return mPrincipal->Equals(otherFileDataUri->mPrincipal, aResult);
+    return mPrincipal->Equals(otherBlobUri->mPrincipal, aResult);
   }
   // else, at least one of us lacks a principal; only equal if *both* lack it.
-  *aResult = (!mPrincipal && !otherFileDataUri->mPrincipal);
+  *aResult = (!mPrincipal && !otherBlobUri->mPrincipal);
   return NS_OK;
 }
 
 // nsIClassInfo methods:
 NS_IMETHODIMP 
-nsFileDataURI::GetInterfaces(PRUint32 *count, nsIID * **array)
+nsBlobURI::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
   *count = 0;
   *array = nsnull;
@@ -294,14 +294,14 @@ nsFileDataURI::GetInterfaces(PRUint32 *count, nsIID * **array)
 }
 
 NS_IMETHODIMP 
-nsFileDataURI::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+nsBlobURI::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsFileDataURI::GetContractID(char * *aContractID)
+nsBlobURI::GetContractID(char * *aContractID)
 {
   // Make sure to modify any subclasses as needed if this ever
   // changes.
@@ -310,14 +310,14 @@ nsFileDataURI::GetContractID(char * *aContractID)
 }
 
 NS_IMETHODIMP 
-nsFileDataURI::GetClassDescription(char * *aClassDescription)
+nsBlobURI::GetClassDescription(char * *aClassDescription)
 {
   *aClassDescription = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsFileDataURI::GetClassID(nsCID * *aClassID)
+nsBlobURI::GetClassID(nsCID * *aClassID)
 {
   // Make sure to modify any subclasses as needed if this ever
   // changes to not call the virtual GetClassIDNoAlloc.
@@ -328,47 +328,47 @@ nsFileDataURI::GetClassID(nsCID * *aClassID)
 }
 
 NS_IMETHODIMP 
-nsFileDataURI::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+nsBlobURI::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
   *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsFileDataURI::GetFlags(PRUint32 *aFlags)
+nsBlobURI::GetFlags(PRUint32 *aFlags)
 {
   *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsFileDataURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+nsBlobURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
-  *aClassIDNoAlloc = kFILEDATAURICID;
+  *aClassIDNoAlloc = kBLOBURICID;
   return NS_OK;
 }
 
 // -----------------------------------------------------------------------
 // Protocol handler
 
-NS_IMPL_ISUPPORTS1(nsFileDataProtocolHandler, nsIProtocolHandler)
+NS_IMPL_ISUPPORTS1(nsBlobProtocolHandler, nsIProtocolHandler)
 
 NS_IMETHODIMP
-nsFileDataProtocolHandler::GetScheme(nsACString &result)
+nsBlobProtocolHandler::GetScheme(nsACString &result)
 {
-  result.AssignLiteral(FILEDATA_SCHEME);
+  result.AssignLiteral(BLOBURI_SCHEME);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileDataProtocolHandler::GetDefaultPort(PRInt32 *result)
+nsBlobProtocolHandler::GetDefaultPort(PRInt32 *result)
 {
   *result = -1;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileDataProtocolHandler::GetProtocolFlags(PRUint32 *result)
+nsBlobProtocolHandler::GetProtocolFlags(PRUint32 *result)
 {
   *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_SUBSUMERS |
             URI_IS_LOCAL_RESOURCE | URI_NON_PERSISTABLE;
@@ -376,7 +376,7 @@ nsFileDataProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsFileDataProtocolHandler::NewURI(const nsACString& aSpec,
+nsBlobProtocolHandler::NewURI(const nsACString& aSpec,
                                   const char *aCharset,
                                   nsIURI *aBaseURI,
                                   nsIURI **aResult)
@@ -387,8 +387,8 @@ nsFileDataProtocolHandler::NewURI(const nsACString& aSpec,
   FileDataInfo* info =
     GetFileDataInfo(aSpec);
 
-  nsRefPtr<nsFileDataURI> uri =
-    new nsFileDataURI(info ? info->mPrincipal.get() : nsnull);
+  nsRefPtr<nsBlobURI> uri =
+    new nsBlobURI(info ? info->mPrincipal.get() : nsnull);
 
   rv = uri->SetSpec(aSpec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -400,7 +400,7 @@ nsFileDataProtocolHandler::NewURI(const nsACString& aSpec,
 }
 
 NS_IMETHODIMP
-nsFileDataProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+nsBlobProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
   *result = nsnull;
 
@@ -448,7 +448,7 @@ nsFileDataProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsFileDataProtocolHandler::AllowPort(PRInt32 port, const char *scheme,
+nsBlobProtocolHandler::AllowPort(PRInt32 port, const char *scheme,
                                      bool *_retval)
 {
     // don't override anything.  

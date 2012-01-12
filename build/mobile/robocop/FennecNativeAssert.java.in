@@ -39,36 +39,17 @@
 
 package @ANDROID_PACKAGE_NAME@;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Date;
 
-import java.lang.Class;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.InvocationHandler;
-import java.lang.Long;
-
-import android.app.Activity;
 import android.util.Log;
-import android.view.View;
-
-import org.json.*;
-
-import com.jayway.android.robotium.solo.Solo;
 
 public class FennecNativeAssert implements Assert {
-  // Map of IDs to element names.
-  private HashMap locators = null;
   private String logFile = null;
   
   // Objects for reflexive access of fennec classes.
@@ -203,6 +184,9 @@ public class FennecNativeAssert implements Assert {
       failed++;
     } else {
       passed++;
+    }
+    if (isError) {
+      junit.framework.Assert.fail(message);
     }
   }
 
