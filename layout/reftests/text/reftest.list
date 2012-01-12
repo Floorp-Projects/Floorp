@@ -50,50 +50,6 @@ skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixe
 == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
 HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
-# Tests for text-align-last
-== text-align-last-start.html text-align-last-start-ref.html
-== text-align-last-end.html text-align-last-end-ref.html
-== text-align-last-center.html text-align-last-center-ref.html
-== text-align-last-justify.html text-align-last-justify-ref.html
-== text-align-last-justify-rtl.html text-align-last-justify-rtl-ref.html
-#
-# Default values:
-# text-align defaults to start. text-align-last defaults to auto, which is
-# equivalent to the value of the ‘text-align’ property except when ‘text-align’
-# is set to ‘justify’, in which case it is currently equivalent to ‘start’
-# This will need to change when we implement text-justify
-== text-align-default-last-default.html text-align-start-last-start.html
-== text-align-start-last-default.html text-align-start-last-start.html
-== text-align-end-last-default.html text-align-end-last-end.html
-== text-align-center-last-default.html text-align-center-last-center.html
-== text-align-justify-last-default.html text-align-justify-last-start.html
-# All combinations of text-align and text-align-last should give different results
-# This only tests the combinations with the same value for text-align and
-# different values for text-align-last
-!= text-align-start-last-start.html text-align-start-last-end.html
-!= text-align-start-last-start.html text-align-start-last-center.html
-!= text-align-start-last-start.html text-align-start-last-justify.html
-!= text-align-start-last-end.html text-align-start-last-center.html
-!= text-align-start-last-end.html text-align-start-last-justify.html
-!= text-align-start-last-center.html text-align-start-last-justify.html
-!= text-align-end-last-start.html text-align-end-last-end.html
-!= text-align-end-last-start.html text-align-end-last-center.html
-!= text-align-end-last-start.html text-align-end-last-justify.html
-!= text-align-end-last-end.html text-align-end-last-center.html
-!= text-align-end-last-end.html text-align-end-last-justify.html
-!= text-align-end-last-center.html text-align-end-last-justify.html
-!= text-align-center-last-start.html text-align-center-last-end.html
-!= text-align-center-last-start.html text-align-center-last-center.html
-!= text-align-center-last-start.html text-align-center-last-justify.html
-!= text-align-center-last-end.html text-align-center-last-center.html
-!= text-align-center-last-end.html text-align-center-last-justify.html
-!= text-align-center-last-center.html text-align-center-last-justify.html
-!= text-align-justify-last-start.html text-align-justify-last-end.html
-!= text-align-justify-last-start.html text-align-justify-last-center.html
-!= text-align-justify-last-start.html text-align-justify-last-justify.html
-!= text-align-justify-last-end.html text-align-justify-last-center.html
-!= text-align-justify-last-end.html text-align-justify-last-justify.html
-!= text-align-justify-last-center.html text-align-justify-last-justify.html
 == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
