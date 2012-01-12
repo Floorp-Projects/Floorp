@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!-- This test checks to be sure we can render SVG-as-an-image
-     from a MozBlobBuilder-generated 'moz-filedata' URI. -->
+     from a MozBlobBuilder-generated 'blob' URI. -->
 <html class="reftest-wait">
 <head>
   <script>
     function go() {
-      // Generate a moz-filedata URL encoding of an SVG document
+      // Generate a blob URL encoding of an SVG document
       var filedataURL = generateMozFiledataURL();
 
       // Tell our img element to render the URL
@@ -18,7 +18,7 @@
       });
     }
 
-    // Helper function -- returns a moz-filedata URL representing a
+    // Helper function -- returns a blob URL representing a
     // 100x100 fully-lime SVG document.
     function generateMozFiledataURL() {
       var blobBuilder = new self.MozBlobBuilder;
