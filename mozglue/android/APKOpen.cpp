@@ -452,7 +452,7 @@ static void * mozload(const char * path, Zip *zip)
   }
 
 #ifdef DEBUG
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s with len %d (0x%08x) and offset %d (0x%08x)", path, lib_size, lib_size, offset, offset);
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loading %s with len %d (0x%08x)", path, lib_size, lib_size);
 #endif
 
   handle = moz_mapped_dlopen(path, RTLD_LAZY, fd, buf,
