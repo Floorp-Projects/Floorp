@@ -202,6 +202,17 @@ Telephony::Dial(const nsAString& aNumber, nsIDOMTelephonyCall** aResult)
 {
   NS_ENSURE_ARG(!aNumber.IsEmpty());
 
+  for (PRUint32 index = 0; index < mCalls.Length(); index++) {
+    const nsRefPtr<TelephonyCall>& tempCall = mCalls[index];
+    if (tempCall->IsOutgoing() &&
+        tempCall->CallState() < nsITelephone::CALL_STATE_CONNECTED) {
+      // One call has been dialed already and we only support one outgoing call
+      // at a time.
+      NS_WARNING("Only permitted to dial one call at a time!");
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
   nsresult rv = mTelephone->Dial(aNumber);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -357,22 +368,49 @@ NS_IMETHODIMP
 Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
                             const nsAString& aNumber)
 {
-  // If we already know about this call then just update its state.
+  NS_ASSERTION(aCallIndex != kOutgoingPlaceholderCallIndex,
+               "This should never happen!");
+
+  nsRefPtr<TelephonyCall> modifiedCall;
+  nsRefPtr<TelephonyCall> outgoingCall;
+
   for (PRUint32 index = 0; index < mCalls.Length(); index++) {
     nsRefPtr<TelephonyCall>& tempCall = mCalls[index];
-    if (tempCall->CallIndex() == aCallIndex) {
-      // This can call back and modify the array... Grab a real ref here.
-      nsRefPtr<TelephonyCall> call = tempCall;
-
-      // See if this should replace our current active call.
-      if (aCallState == nsITelephone::CALL_STATE_CONNECTED) {
-        SwitchActiveCall(call);
-      }
-
-      // Change state.
-      call->ChangeState(aCallState);
-      return NS_OK;
+    if (tempCall->CallIndex() == kOutgoingPlaceholderCallIndex) {
+      NS_ASSERTION(!outgoingCall, "More than one outgoing call not supported!");
+      NS_ASSERTION(tempCall->CallState() == nsITelephone::CALL_STATE_DIALING,
+                   "Something really wrong here!");
+      // Stash this for later, we may need it if aCallIndex doesn't match one of
+      // our other calls.
+      outgoingCall = tempCall;
+    } else if (tempCall->CallIndex() == aCallIndex) {
+      // We already know about this call so just update its state.
+      modifiedCall = tempCall;
+      outgoingCall = nsnull;
+      break;
     }
+  }
+
+  // If nothing matched above and the call state isn't incoming but we do have
+  // an outgoing call then we must be seeing a status update for our outgoing
+  // call.
+  if (!modifiedCall &&
+      aCallState != nsITelephone::CALL_STATE_INCOMING &&
+      outgoingCall) {
+    outgoingCall->UpdateCallIndex(aCallIndex);
+    modifiedCall.swap(outgoingCall);
+  }
+
+  if (modifiedCall) {
+    // Change state.
+    modifiedCall->ChangeState(aCallState);
+
+    // See if this should replace our current active call.
+    if (aCallState == nsITelephone::CALL_STATE_CONNECTED) {
+      SwitchActiveCall(modifiedCall);
+    }
+
+    return NS_OK;
   }
 
   // Didn't know anything about this call before now, must be incoming.
