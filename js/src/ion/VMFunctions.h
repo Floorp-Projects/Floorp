@@ -290,9 +290,6 @@ struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4)> : public VMFunction {
 bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
 bool ReportOverRecursed(JSContext *cx);
 
-// Wrapper on top of the interpreter function.
-bool AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
-
 } // namespace ion
 } // namespace js
 

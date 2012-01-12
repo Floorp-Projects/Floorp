@@ -414,6 +414,9 @@ GetTopIonFrame(JSContext *cx)
     }
 }
 
+void
+GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes);
+
 } /* namespace ion */
 } /* namespace js */
 

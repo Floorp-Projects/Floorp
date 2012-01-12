@@ -392,3 +392,60 @@ ion::MarkIonActivations(ThreadData *td, JSTracer *trc)
         MarkIonActivation(trc, activations.top());
 }
 
+static inline jsbytecode *
+GetNextPc(jsbytecode *pc)
+{
+    return pc + js_CodeSpec[JSOp(*pc)].length;
+}
+
+void
+ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
+{
+    JS_ASSERT(cx->fp()->runningInIon());
+    FrameRecovery fr = FrameRecovery::FromFrameIterator(
+        IonFrameIterator(JS_THREAD_DATA(cx)->ionTop));
+
+    // This function assume that the MIR which has generated the indirect-call
+    // to this function is effectful. Which implies that the assignSafepoint
+    // will produce a post-snapshot.
+    SnapshotIterator si(fr);
+
+    // Read outer-most frame informations.
+    JSFunction *fun = fr.callee();
+    JSScript *script = fr.script();
+    jsbytecode *pc = script->code + si.pcOffset();
+
+    // Step over inline frames.
+    while (si.moreFrames()) {
+        JS_ASSERT(JSOp(*pc) == JSOP_CALL);
+
+        // Note: -1 for the start index, -1 for skipping |this|
+        int callerArgc = GET_ARGC(pc);
+        uint32 funSlot = (si.slots() - 1) - callerArgc - 1;
+
+        // Read snapshot, and read JSFunction Value from the stack.
+        while (funSlot--) {
+            JS_ASSERT(si.more());
+            si.skip(si.readSlot());
+        }
+        Value funValue = si.read();
+        while (si.more())
+            si.skip(si.readSlot());
+
+        // Update script and pc, and continue in the next inlined frame.
+        fun = funValue.toObject().toFunction();
+        script = fun->script();
+        si.readFrame();
+        pc = script->code + si.pcOffset();
+    }
+
+    // The post-snapshot contains the pc of the next instruction.
+    // Recover the previous pc.
+    do {
+        pc--;
+    } while (!script->analysis()->maybeCode(pc));
+
+    // Set the result.
+    *scriptRes = script;
+    *pcRes = pc;
+}
