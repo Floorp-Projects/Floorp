@@ -620,6 +620,9 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        outlineOffset;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        MozTextAlignLast;
+                                        // raises(DOMException) on setting
+
            /* Mozilla extensions */
            attribute DOMString        overflowX;
                                         // raises(DOMException) on setting
