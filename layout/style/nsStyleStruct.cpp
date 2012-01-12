@@ -2814,6 +2814,7 @@ nsStyleText::nsStyleText(void)
 { 
   MOZ_COUNT_CTOR(nsStyleText);
   mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
+  mTextAlignLast = NS_STYLE_TEXT_ALIGN_AUTO;
   mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
   mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
   mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
@@ -2831,6 +2832,7 @@ nsStyleText::nsStyleText(void)
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
   : mTextAlign(aSource.mTextAlign),
+    mTextAlignLast(aSource.mTextAlignLast),
     mTextTransform(aSource.mTextTransform),
     mWhiteSpace(aSource.mWhiteSpace),
     mWordWrap(aSource.mWordWrap),
@@ -2859,6 +2861,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
   }
 
   if ((mTextAlign != aOther.mTextAlign) ||
+      (mTextAlignLast != aOther.mTextAlignLast) ||
       (mTextTransform != aOther.mTextTransform) ||
       (mWhiteSpace != aOther.mWhiteSpace) ||
       (mWordWrap != aOther.mWordWrap) ||
