@@ -5324,7 +5324,8 @@ define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(requir
   exports.template = obj.template;
 
 });
-define("text!gcli/commands/help.css", [], void 0);
+define("text!gcli/commands/help.css", [], "");
+
 define("text!gcli/commands/help_intro.html", [], "\n" +
   "<h2>${l10n.introHeader}</h2>\n" +
   "\n" +
@@ -6286,7 +6287,8 @@ History.prototype.backward = function() {
 
 exports.History = History;
 
-});define("text!gcli/ui/inputter.css", [], void 0);
+});define("text!gcli/ui/inputter.css", [], "");
+
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -7419,7 +7421,8 @@ exports.CommandMenu = CommandMenu;
 
 
 });
-define("text!gcli/ui/menu.css", [], void 0);
+define("text!gcli/ui/menu.css", [], "");
+
 define("text!gcli/ui/menu.html", [], "\n" +
   "<table class=\"gcli-menu-template\" aria-live=\"polite\">\n" +
   "  <tr class=\"gcli-menu-option\" foreach=\"item in ${items}\"\n" +
@@ -7433,7 +7436,8 @@ define("text!gcli/ui/menu.html", [], "\n" +
   "</table>\n" +
   "");
 
-define("text!gcli/ui/arg_fetch.css", [], void 0);
+define("text!gcli/ui/arg_fetch.css", [], "");
+
 define("text!gcli/ui/arg_fetch.html", [], "\n" +
   "<!--\n" +
   "Template for an Assignment.\n" +
