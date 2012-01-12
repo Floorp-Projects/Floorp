@@ -131,22 +131,14 @@ class LDivI : public LBinaryMath<3>
     LIR_HEADER(DivI);
 
     LDivI(const LAllocation &lhs, const LAllocation &rhs,
-          const LDefinition &temp1, const LDefinition &temp2
-#if 0
-          , const LDefinition &temp3
-#endif
-) {
+          const LDefinition &temp1, const LDefinition &temp2,
+          const LDefinition &temp3)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp1);
         setTemp(1, temp2);
-#if 0
         setTemp(2, temp3);
-#endif
-    }
-
-    const LDefinition *remainder() {
-        return getTemp(0);
     }
 };
 // Takes a tableswitch with an integer to decide

@@ -336,18 +336,12 @@ class LiveInterval
     bool isSpillInterval() const {
         return !reg_;
     }
-    bool requireSpill(const LiveInterval *other) const {
-        // Spill intervals at call instructions force spills of everything
-        // except temps and defs of this call.
-        JS_ASSERT(isSpillInterval());
-        JS_ASSERT(!other->isSpillInterval());
-        return (other->index() > 0 || start() != other->start());
-    }
-
+    bool requireSpill(const LiveInterval *other) const;
     bool splitFrom(CodePosition pos, LiveInterval *after);
 
     void addUse(UsePosition *use);
     UsePosition *nextUseAfter(CodePosition pos);
+    UsePosition *fixedUseAt(CodePosition pos);
     CodePosition nextUsePosAfter(CodePosition pos);
     CodePosition firstIncompatibleUse(LAllocation alloc);
 
@@ -612,7 +606,8 @@ class LinearScanAllocator
     bool moveBeforeAlloc(CodePosition pos, LAllocation *from, LAllocation *to);
     bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to);
     void setIntervalRequirement(LiveInterval *interval);
-    void addSpillInterval(LInstruction *ins, const Requirement &req);
+    void addSpillInterval(CodePosition pos, const Requirement &req);
+    bool copyFixedRegister(LInstruction *ins, CodePosition pos, LUse *src, LUse *dest);
     size_t findFirstSafepoint(LiveInterval *interval, size_t firstSafepoint);
 
 #ifdef DEBUG
