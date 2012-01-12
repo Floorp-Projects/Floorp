@@ -161,10 +161,10 @@ protected:
   /**
    * Send expired events and start timers.
    *
-   * @param aNoTimeReset
-   *        If true new times will not be calculated.
+   * @param aNewObserver
+   *        Whether there are new observers to check.
    */
-  void CheckAwayState(bool aNoTimeReset);
+  void CheckAwayState(bool aNewObserver);
 
 private:
   /**
@@ -225,6 +225,36 @@ private:
    * actually valid (see nsIdleService.idl - we return 0 when it isn't).
    */
   bool mPolledIdleTimeIsValid;
+
+  /**
+   * Check if any listeners were in idle state, notify them that user
+   * is back and change them to non-idle state.
+   *
+   * @param aIdleTime
+   *        The idle time in seconds.
+   *
+   * @return true if any listeners were notified.
+   */
+  bool TryNotifyBackState(PRUint32 aIdleTime);
+
+  /**
+   * Check if any listeners were in non-idle state, notify them that user
+   * is idle and change them to idle state.
+   *
+   * @param aIdleTime
+   *        The idle time in seconds.
+   *
+   * @return true if any listeners were notified.
+   */
+  bool TryNotifyIdleState(PRUint32 aIdleTime);
+
+  /**
+   * Reschedule the idle timer to fire on next checkpoint.
+   *
+   * @param aIdleTime
+   *        The idle time has passed in seconds.
+   */
+  void RescheduleIdleTimer(PRUint32 aIdleTime);
 };
 
 #endif // nsIdleService_h__
