@@ -2402,6 +2402,16 @@ nsComputedDOMStyle::DoGetTextAlign()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetTextAlignLast()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleText()->mTextAlignLast,
+                                   nsCSSProps::kTextAlignLastKTable));
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetMozTextBlink()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4647,6 +4657,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(perspective_origin,     MozPerspectiveOrigin),
     COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
     COMPUTED_STYLE_MAP_ENTRY(_moz_tab_size,                 MozTabSize),
+    COMPUTED_STYLE_MAP_ENTRY(text_align_last,               TextAlignLast),
     COMPUTED_STYLE_MAP_ENTRY(text_blink,                    MozTextBlink),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_color,         MozTextDecorationColor),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_line,          MozTextDecorationLine),
