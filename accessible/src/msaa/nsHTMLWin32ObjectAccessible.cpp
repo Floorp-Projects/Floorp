@@ -38,6 +38,7 @@
 
 #include "nsHTMLWin32ObjectAccessible.h"
 
+#include "Role.h"
 #include "States.h"
 
 using namespace mozilla::a11y;
@@ -68,10 +69,10 @@ nsHTMLWin32ObjectOwnerAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLWin32ObjectOwnerAccessible: nsAccessible implementation
 
-PRUint32
+role
 nsHTMLWin32ObjectOwnerAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_EMBEDDED_OBJECT;
+  return roles::EMBEDDED_OBJECT;
 }
 
 PRUint64

@@ -62,7 +62,7 @@ public:
   NS_IMETHOD GetValue(nsAString &aValue);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 
   // Widgets
   virtual bool IsWidget() const;
@@ -82,7 +82,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 
   // ActionAccessible
   virtual PRUint8 ActionCount();

@@ -52,6 +52,7 @@
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleEditableText.h"
 #include "Relation.h"
+#include "Role.h"
 
 #include "nsAccessNode.h"
 #include "nsRootAccessible.h"
@@ -159,7 +160,7 @@ GetLocalizedString(const nsString& aString)
     
     // Check for OS X "role skew"; the role constants in nsIAccessible.idl need to match the ones
     // in nsRoleMap.h.
-    NS_ASSERTION([AXRoles[nsIAccessibleRole::ROLE_LAST_ENTRY] isEqualToString:@"ROLE_LAST_ENTRY"], "Role skew in the role map!");
+    NS_ASSERTION([AXRoles[roles::LAST_ENTRY] isEqualToString:@"ROLE_LAST_ENTRY"], "Role skew in the role map!");
   }
    
   return self;

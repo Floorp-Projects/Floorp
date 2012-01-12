@@ -45,6 +45,7 @@
 #include "nsEventShell.h"
 #include "nsTextAccessible.h"
 #include "FocusManager.h"
+#include "Role.h"
 #include "TextUpdater.h"
 
 #include "mozilla/dom/Element.h"
@@ -679,7 +680,7 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
     return;
 
   // Don't fire event for the first html:br in an editor.
-  if (aEvent->mAccessible->Role() == nsIAccessibleRole::ROLE_WHITESPACE) {
+  if (aEvent->mAccessible->Role() == roles::WHITESPACE) {
     nsCOMPtr<nsIEditor> editor;
     textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
     if (editor) {
