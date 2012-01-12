@@ -1511,8 +1511,8 @@ HUD_SERVICE.prototype =
     this.wakeup();
 
     let window = aContext.linkedBrowser.contentWindow;
-    let nBox = aContext.ownerDocument.defaultView.
-      getNotificationBox(window);
+    let chromeDocument = aContext.ownerDocument;
+    let nBox = chromeDocument.defaultView.getNotificationBox(window);
     this.registerActiveContext(nBox.id);
     this.windowInitializer(window);
 
@@ -1522,6 +1522,8 @@ HUD_SERVICE.prototype =
     if (!aAnimated || hudRef.consolePanel) {
       this.disableAnimation(hudId);
     }
+
+    chromeDocument.getElementById("Tools:WebConsole").setAttribute("checked", "true");
 
     // Create a processing instruction for GCLIs CSS stylesheet, but only if
     // we don't have one for this document. Also record the context we're
@@ -1571,6 +1573,8 @@ HUD_SERVICE.prototype =
 
       window.focus();
     }
+
+    chromeDocument.getElementById("Tools:WebConsole").setAttribute("checked", "false");
 
     // Remove this context from the list of contexts that need the GCLI CSS
     // processing instruction and then remove the processing instruction if it

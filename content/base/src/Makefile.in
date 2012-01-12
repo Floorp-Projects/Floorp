@@ -151,7 +151,7 @@ CPPSRCS		= \
 		nsXMLHttpRequest.cpp \
 		nsXMLNameSpaceMap.cpp \
 		Link.cpp \
-		nsFileDataProtocolHandler.cpp \
+		nsBlobProtocolHandler.cpp \
 		nsFrameMessageManager.cpp \
 		nsInProcessTabChildGlobal.cpp \
 		ThirdPartyUtil.cpp \

@@ -44,6 +44,7 @@
 #include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
 #include "Relation.h"
+#include "Role.h"
 #include "States.h"
 
 #include "nsComponentManagerUtils.h"
@@ -192,7 +193,7 @@ nsXULTreeAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible: nsAccessible implementation (put methods here)
 
-PRUint32
+role
 nsXULTreeAccessible::NativeRole()
 {
   // No primary column means we're in a list. In fact, history and mail turn off
@@ -204,9 +205,7 @@ nsXULTreeAccessible::NativeRole()
   if (cols)
     cols->GetPrimaryColumn(getter_AddRefs(primaryCol));
 
-  return primaryCol ?
-    static_cast<PRUint32>(nsIAccessibleRole::ROLE_OUTLINE) :
-    static_cast<PRUint32>(nsIAccessibleRole::ROLE_LIST);
+  return primaryCol ? roles::OUTLINE : roles::LIST;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1186,22 +1185,20 @@ nsXULTreeItemAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessible: nsAccessible implementation
 
-PRUint32
+role
 nsXULTreeItemAccessible::NativeRole()
 {
   nsCOMPtr<nsITreeColumns> columns;
   mTree->GetColumns(getter_AddRefs(columns));
   if (!columns) {
     NS_ERROR("No tree columns object in the tree!");
-    return nsIAccessibleRole::ROLE_NOTHING;
+    return roles::NOTHING;
   }
 
   nsCOMPtr<nsITreeColumn> primaryColumn;
   columns->GetPrimaryColumn(getter_AddRefs(primaryColumn));
 
-  return primaryColumn ?
-    static_cast<PRUint32>(nsIAccessibleRole::ROLE_OUTLINEITEM) :
-    static_cast<PRUint32>(nsIAccessibleRole::ROLE_LISTITEM);
+  return primaryColumn ? roles::OUTLINEITEM : roles::LISTITEM;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

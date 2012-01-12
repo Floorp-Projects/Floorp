@@ -38,11 +38,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
+
+#include "Role.h"
+
 #include "nsFormControlAccessible.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULControlElement.h"
+
+using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ProgressMeterAccessible
@@ -69,10 +74,10 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(ProgressMeterAccessible<Max>,
 // nsAccessible
 
 template<int Max>
-PRUint32
+role
 ProgressMeterAccessible<Max>::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_PROGRESSBAR;
+  return roles::PROGRESSBAR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,10 +231,10 @@ nsRadioButtonAccessible::DoAction(PRUint8 aIndex)
   return NS_OK;
 }
 
-PRUint32
+role
 nsRadioButtonAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_RADIOBUTTON;
+  return roles::RADIOBUTTON;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

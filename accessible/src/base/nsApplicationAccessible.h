@@ -114,7 +114,7 @@ public:
   // nsAccessible
   virtual void ApplyARIAState(PRUint64* aState);
   virtual void Description(nsString& aDescription);
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 State();
   virtual PRUint64 NativeState();
   virtual Relation RelationByType(PRUint32 aRelType);
