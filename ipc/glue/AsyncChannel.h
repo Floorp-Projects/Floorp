@@ -61,7 +61,7 @@ struct HasResultCodes
         MsgPayloadError,
         MsgProcessingError,
         MsgRouteError,
-        MsgValueError,
+        MsgValueError
     };
 };
 

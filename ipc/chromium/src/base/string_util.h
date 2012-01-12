@@ -146,7 +146,7 @@ enum TrimPositions {
   TRIM_NONE     = 0,
   TRIM_LEADING  = 1 << 0,
   TRIM_TRAILING = 1 << 1,
-  TRIM_ALL      = TRIM_LEADING | TRIM_TRAILING,
+  TRIM_ALL      = TRIM_LEADING | TRIM_TRAILING
 };
 TrimPositions TrimWhitespace(const std::wstring& input,
                              TrimPositions positions,
@@ -224,7 +224,7 @@ class OnStringUtilConversionError {
 
     // The offending characters are skipped and the conversion will proceed as
     // if they did not exist.
-    SKIP,
+    SKIP
   };
 
  private:
@@ -353,7 +353,7 @@ enum DataUnits {
   DATA_UNITS_BYTE = 0,
   DATA_UNITS_KILOBYTE,
   DATA_UNITS_MEGABYTE,
-  DATA_UNITS_GIGABYTE,
+  DATA_UNITS_GIGABYTE
 };
 
 // Return the unit type that is appropriate for displaying the amount of bytes
