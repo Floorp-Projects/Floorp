@@ -74,7 +74,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsLayoutStatics.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsFileDataProtocolHandler.h"
+#include "nsBlobProtocolHandler.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
 #include "nsIScriptSecurityManager.h"
