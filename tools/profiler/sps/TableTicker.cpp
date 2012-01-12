@@ -116,7 +116,7 @@ public:
     , mTagName(aTagName)
   { }
 
-  ProfileEntry(char aTagName, float aTagFloat)
+  ProfileEntry(char aTagName, double aTagFloat)
     : mTagFloat(aTagFloat)
     , mLeafAddress(0)
     , mTagName(aTagName)
@@ -127,7 +127,7 @@ public:
 private:
   union {
     const char* mTagData;
-    float mTagFloat;
+    double mTagFloat;
     Address mTagAddress;
   };
   Address mLeafAddress;
@@ -538,8 +538,8 @@ bool mozilla_sampler_is_active()
   return t->IsActive();
 }
 
-float sResponsivenessTimes[100];
-float sCurrResponsiveness = 0.f;
+double sResponsivenessTimes[100];
+double sCurrResponsiveness = 0.f;
 unsigned int sResponsivenessLoc = 0;
 void mozilla_sampler_responsiveness(TimeStamp aTime)
 {
@@ -561,7 +561,7 @@ void mozilla_sampler_responsiveness(TimeStamp aTime)
   sLastTracerEvent = aTime;
 }
 
-const float* mozilla_sampler_get_responsiveness()
+const double* mozilla_sampler_get_responsiveness()
 {
   return sResponsivenessTimes;
 }
