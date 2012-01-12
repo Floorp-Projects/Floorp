@@ -114,7 +114,7 @@ public:
   // nsAccessible
   virtual void Description(nsString& aDescription);
   virtual nsAccessible* FocusedChild();
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual void ApplyARIAState(PRUint64* aState);
 
