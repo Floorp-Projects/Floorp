@@ -92,18 +92,18 @@ nsProfiler::IsActive(bool *aIsActive)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetResponsivenessTimes(PRUint32 *aCount, float **aResult)
+nsProfiler::GetResponsivenessTimes(PRUint32 *aCount, double **aResult)
 {
   unsigned int len = 100;
-  const float* times = SAMPLER_GET_RESPONSIVENESS();
+  const double* times = SAMPLER_GET_RESPONSIVENESS();
   if (!times) {
     *aCount = 0;
     *aResult = nsnull;
     return NS_OK;
   }
 
-  float *fs = static_cast<float *>
-                       (nsMemory::Clone(times, len * sizeof(float)));
+  double *fs = static_cast<double *>
+                       (nsMemory::Clone(times, len * sizeof(double)));
 
   *aCount = len;
   *aResult = fs;
