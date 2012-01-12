@@ -17,7 +17,7 @@ class ChildProcessInfo {
     RENDER_PROCESS,
     PLUGIN_PROCESS,
     WORKER_PROCESS,
-    UNKNOWN_PROCESS,
+    UNKNOWN_PROCESS
   };
 
   // Returns the type of the process.

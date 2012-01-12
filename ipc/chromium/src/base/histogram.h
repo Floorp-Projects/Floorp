@@ -297,7 +297,7 @@ class Histogram {
     // histogram!).
     kIPCSerializationSourceFlag = 0x10,
 
-    kHexRangePrintingFlag = 0x8000,  // Fancy bucket-naming supported.
+    kHexRangePrintingFlag = 0x8000  // Fancy bucket-naming supported.
   };
 
   enum Inconsistencies {

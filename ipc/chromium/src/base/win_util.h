@@ -24,7 +24,7 @@ enum WinVersion {
   WINVERSION_SERVER_2003 = 3,
   WINVERSION_VISTA = 4,
   WINVERSION_2008 = 5,
-  WINVERSION_WIN7 = 6,
+  WINVERSION_WIN7 = 6
 };
 
 void GetNonClientMetrics(NONCLIENTMETRICS* metrics);
