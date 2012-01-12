@@ -111,7 +111,6 @@ $(_JAVA_TESTS): % : $(TESTPATH)/%.in
 
 $(_ROBOCOP_TOOLS):
 	cp $(TESTPATH)/robocop.ini robocop.ini
-	cp $(srcdir)/parse_ids.txt parse_ids.txt
 
 libs:: $(_TEST_FILES)
 	$(NSINSTALL) -D $(DEPTH)/_tests/testing/mochitest/tests/robocop

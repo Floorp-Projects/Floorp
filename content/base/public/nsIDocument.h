@@ -1495,7 +1495,7 @@ public:
    * Register/Unregister a filedata uri as being "owned" by this document. 
    * I.e. that its lifetime is connected with this document. When the document
    * goes away it should "kill" the uri by calling
-   * nsFileDataProtocolHandler::RemoveFileDataEntry
+   * nsBlobProtocolHandler::RemoveFileDataEntry
    */
   virtual void RegisterFileDataUri(const nsACString& aUri) = 0;
   virtual void UnregisterFileDataUri(const nsACString& aUri) = 0;

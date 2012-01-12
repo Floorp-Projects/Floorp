@@ -626,7 +626,7 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
       bool xpcNativeWrappers = true; // Dummy for CheckFlag.
       if (CheckFlag(kXPCNativeWrappers, wtoken, xpcNativeWrappers)) {
         LogMessageWithContext(file, line,
-                              "Warning: Ignoring obsolete chrome registration modifier '%s'.",
+                              "Ignoring obsolete chrome registration modifier '%s'.",
                               token);
         continue;
       }

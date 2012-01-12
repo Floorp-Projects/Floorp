@@ -162,503 +162,8 @@ public:
 
 //-------------- End ParseContinue Event Definition ------------------------
 
-template <class Type>
-class Holder {
-public:
-  typedef void (*Reaper)(Type *);
-
-  Holder(Reaper aReaper)
-    : mHoldee(nsnull), mReaper(aReaper)
-  {
-  }
-
-  ~Holder() {
-    if (mHoldee) {
-      mReaper(mHoldee);
-    }
-  }
-
-  Type *get() {
-    return mHoldee;
-  }
-  const Holder &operator =(Type *aHoldee) {
-    if (mHoldee && aHoldee != mHoldee) {
-      mReaper(mHoldee);
-    }
-    mHoldee = aHoldee;
-    return *this;
-  }
-
-private:
-  Type *mHoldee;
-  Reaper mReaper;
-};
-
-class nsSpeculativeScriptThread : public nsIRunnable {
-public:
-  nsSpeculativeScriptThread()
-    : mLock("nsSpeculativeScriptThread.mLock"),
-      mCVar(mLock, "nsSpeculativeScriptThread.mCVar"),
-      mKeepParsing(false),
-      mCurrentlyParsing(false),
-      mNumConsumed(0),
-      mContext(nsnull),
-      mTerminated(false) {
-  }
-
-  ~nsSpeculativeScriptThread() {
-    NS_ASSERTION(NS_IsMainThread() || !mDocument,
-                 "Destroying the document on the wrong thread");
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  nsresult StartParsing(nsParser *aParser);
-  void StopParsing(bool aFromDocWrite);
-
-  enum PrefetchType { NONE, SCRIPT, STYLESHEET, IMAGE };
-  struct PrefetchEntry {
-    PrefetchType type;
-    nsString uri;
-    nsString charset;
-    nsString elementType;
-  };
-
-  nsIDocument *GetDocument() {
-    NS_ASSERTION(NS_IsMainThread(), "Potential threadsafety hazard");
-    return mDocument;
-  }
-
-  bool Parsing() {
-    return mCurrentlyParsing;
-  }
-
-  CParserContext *Context() {
-    return mContext;
-  }
-
-  typedef nsDataHashtable<nsCStringHashKey, bool> PreloadedType;
-  PreloadedType& GetPreloadedURIs() {
-    return mPreloadedURIs;
-  }
-
-  void Terminate() {
-    mTerminated = true;
-    StopParsing(false);
-  }
-  bool Terminated() {
-    return mTerminated;
-  }
-
-private:
-
-  void ProcessToken(CToken *aToken);
-
-  void AddToPrefetchList(const nsAString &src,
-                         const nsAString &charset,
-                         const nsAString &elementType,
-                         PrefetchType type);
-
-  void FlushURIs();
-
-  // These members are only accessed on the speculatively parsing thread.
-  nsTokenAllocator mTokenAllocator;
-
-  // The following members are shared across the main thread and the
-  // speculatively parsing thread.
-  Mutex mLock;
-  CondVar mCVar;
-
-  volatile bool mKeepParsing;
-  volatile bool mCurrentlyParsing;
-  nsRefPtr<nsHTMLTokenizer> mTokenizer;
-  nsAutoPtr<nsScanner> mScanner;
-
-  enum { kBatchPrefetchURIs = 5 };
-  nsAutoTArray<PrefetchEntry, kBatchPrefetchURIs> mURIs;
-
-  // Number of characters consumed by the last speculative parse.
-  PRUint32 mNumConsumed;
-
-  // These members are only accessed on the main thread.
-  nsCOMPtr<nsIDocument> mDocument;
-  CParserContext *mContext;
-  PreloadedType mPreloadedURIs;
-  bool mTerminated;
-};
-
-class nsPreloadURIs : public nsIRunnable {
-public:
-  nsPreloadURIs(nsAutoTArray<nsSpeculativeScriptThread::PrefetchEntry, 5> &aURIs,
-                nsSpeculativeScriptThread *aScriptThread)
-    : mURIs(aURIs),
-      mScriptThread(aScriptThread) {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  static void PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::PrefetchEntry, 5> &aURIs,
-                          nsSpeculativeScriptThread *aScriptThread);
-
-private:
-  nsAutoTArray<nsSpeculativeScriptThread::PrefetchEntry, 5> mURIs;
-  nsRefPtr<nsSpeculativeScriptThread> mScriptThread;
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsPreloadURIs, nsIRunnable)
-
-NS_IMETHODIMP
-nsPreloadURIs::Run()
-{
-  PreloadURIs(mURIs, mScriptThread);
-  return NS_OK;
-}
-
-void
-nsPreloadURIs::PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::PrefetchEntry, 5> &aURIs,
-                           nsSpeculativeScriptThread *aScriptThread)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Touching non-threadsafe objects off thread");
-
-  if (aScriptThread->Terminated()) {
-    return;
-  }
-
-  nsIDocument *doc = aScriptThread->GetDocument();
-  NS_ASSERTION(doc, "We shouldn't have started preloading without a document");
-
-  // Note: Per the code in the HTML content sink, we should be keeping track
-  // of each <base href> as it comes. However, because we do our speculative
-  // parsing off the main thread, this is hard to emulate. For now, just load
-  // the URIs using the document's base URI at the potential cost of being
-  // wrong and having to re-load a given relative URI later.
-  nsIURI *base = doc->GetDocBaseURI();
-  const nsCString &charset = doc->GetDocumentCharacterSet();
-  nsSpeculativeScriptThread::PreloadedType &alreadyPreloaded =
-    aScriptThread->GetPreloadedURIs();
-  for (PRUint32 i = 0, e = aURIs.Length(); i < e; ++i) {
-    const nsSpeculativeScriptThread::PrefetchEntry &pe = aURIs[i];
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), pe.uri, charset.get(), base);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to create a URI");
-      continue;
-    }
-
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-    bool answer;
-    if (alreadyPreloaded.Get(spec, &answer)) {
-      // Already preloaded. Don't preload again.
-      continue;
-    }
-
-    alreadyPreloaded.Put(spec, true);
-
-    switch (pe.type) {
-      case nsSpeculativeScriptThread::SCRIPT:
-        doc->ScriptLoader()->PreloadURI(uri, pe.charset, pe.elementType);
-        break;
-      case nsSpeculativeScriptThread::IMAGE:
-        doc->MaybePreLoadImage(uri, EmptyString());
-        break;
-      case nsSpeculativeScriptThread::STYLESHEET:
-        doc->PreloadStyle(uri, pe.charset);
-        break;
-      case nsSpeculativeScriptThread::NONE:
-        NS_NOTREACHED("Uninitialized preload entry?");
-        break;
-    }
-  }
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSpeculativeScriptThread, nsIRunnable)
-
-NS_IMETHODIMP
-nsSpeculativeScriptThread::Run()
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Speculative parsing on the main thread?");
-
-  mNumConsumed = 0;
-
-  mTokenizer->WillTokenize(false, &mTokenAllocator);
-  while (mKeepParsing) {
-    bool flushTokens = false;
-    nsresult rv = mTokenizer->ConsumeToken(*mScanner, flushTokens);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-
-    mNumConsumed += mScanner->Mark();
-
-    // TODO Don't pop the tokens.
-    CToken *token;
-    while (mKeepParsing && (token = mTokenizer->PopToken())) {
-      ProcessToken(token);
-    }
-  }
-  mTokenizer->DidTokenize(false);
-
-  if (mKeepParsing) {
-    // Ran out of room in this part of the document -- flush out the URIs we
-    // gathered so far so we don't end up waiting for the parser's current
-    // load to finish.
-    if (!mURIs.IsEmpty()) {
-      FlushURIs();
-    }
-  }
-
-  {
-    MutexAutoLock al(mLock);
-
-    mCurrentlyParsing = false;
-    mCVar.Notify();
-  }
-  return NS_OK;
-}
-
-nsresult
-nsSpeculativeScriptThread::StartParsing(nsParser *aParser)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Called on the wrong thread");
-  NS_ASSERTION(!mCurrentlyParsing, "Bad race happening");
-
-  if (!aParser->ThreadPool()) {
-    return NS_OK;
-  }
-
-  nsIContentSink *sink = aParser->GetContentSink();
-  if (!sink) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(sink->GetTarget());
-  if (!doc) {
-    return NS_OK;
-  }
-
-  nsAutoString toScan;
-  CParserContext *context = aParser->PeekContext();
-  if (!mTokenizer) {
-    if (!mPreloadedURIs.Init(15)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mTokenizer = new nsHTMLTokenizer(context->mDTDMode, context->mDocType,
-                                     context->mParserCommand, 0);
-    if (!mTokenizer) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mTokenizer->CopyState(context->mTokenizer);
-    context->mScanner->CopyUnusedData(toScan);
-    if (toScan.IsEmpty()) {
-      return NS_OK;
-    }
-  } else if (context == mContext) {
-    // Don't parse the same part of the document twice.
-    nsScannerIterator end;
-    context->mScanner->EndReading(end);
-
-    nsScannerIterator start;
-    context->mScanner->CurrentPosition(start);
-
-    if (mNumConsumed > context->mNumConsumed) {
-      // We consumed more the last time we tried speculatively parsing than we
-      // did the last time we actually parsed.
-      PRUint32 distance = Distance(start, end);
-      start.advance(NS_MIN(mNumConsumed - context->mNumConsumed, distance));
-    }
-
-    if (start == end) {
-      // We're at the end of this context's buffer, nothing else to do.
-      return NS_OK;
-    }
-
-    CopyUnicodeTo(start, end, toScan);
-  } else {
-    // Grab all of the context.
-    context->mScanner->CopyUnusedData(toScan);
-    if (toScan.IsEmpty()) {
-      // Nothing to parse, don't do anything.
-      return NS_OK;
-    }
-  }
-
-  nsCAutoString charset;
-  PRInt32 source;
-  aParser->GetDocumentCharset(charset, source);
-
-  mScanner = new nsScanner(toScan, charset, source);
-  if (!mScanner) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  mScanner->SetIncremental(true);
-
-  mDocument.swap(doc);
-  mKeepParsing = true;
-  mCurrentlyParsing = true;
-  mContext = context;
-  return aParser->ThreadPool()->Dispatch(this, NS_DISPATCH_NORMAL);
-}
-
-void
-nsSpeculativeScriptThread::StopParsing(bool /*aFromDocWrite*/)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Can't stop parsing from another thread");
-
-  {
-    MutexAutoLock al(mLock);
-
-    mKeepParsing = false;
-    if (mCurrentlyParsing) {
-      mCVar.Wait();
-      NS_ASSERTION(!mCurrentlyParsing, "Didn't actually stop parsing?");
-    }
-  }
-
-  // The thread is now idle.
-  if (mTerminated) {
-    // If we're terminated, then we need to ensure that we release our document
-    // and tokenizer here on the main thread so that our last reference to them
-    // isn't our alter-ego rescheduled on another thread.
-    mDocument = nsnull;
-    mTokenizer = nsnull;
-    mScanner = nsnull;
-  } else if (mURIs.Length()) {
-    // Note: Don't do this if we're terminated.
-    nsPreloadURIs::PreloadURIs(mURIs, this);
-    mURIs.Clear();
-  }
-
-  // Note: Currently, we pop the tokens off (see the comment in Run) so this
-  // isn't a problem. If and when we actually use the tokens created
-  // off-thread, we'll need to use aFromDocWrite for real.
-}
-
-void
-nsSpeculativeScriptThread::ProcessToken(CToken *aToken)
-{
-  // Only called on the speculative script thread.
-
-  CHTMLToken *token = static_cast<CHTMLToken *>(aToken);
-  switch (static_cast<eHTMLTokenTypes>(token->GetTokenType())) {
-    case eToken_start: {
-        CStartToken *start = static_cast<CStartToken *>(aToken);
-        nsHTMLTag tag = static_cast<nsHTMLTag>(start->GetTypeID());
-        PRInt16 attrs = start->GetAttributeCount();
-        PRInt16 i = 0;
-        nsAutoString src;
-        nsAutoString elementType;
-        nsAutoString charset;
-        nsAutoString href;
-        nsAutoString rel;
-        PrefetchType ptype = NONE;
-
-        switch (tag) {
-          case eHTMLTag_link:
-              ptype = STYLESHEET;
-              break;
-
-          case eHTMLTag_img:
-              ptype = IMAGE;
-              break;
-
-          case eHTMLTag_script:
-              ptype = SCRIPT;
-              break;
-
-          default:
-              break;
-        }
-
-        // We currently handle the following element/attribute combos :
-        //     <link rel="stylesheet" href= charset= type>
-        //     <script src= charset= type=>
-        if (ptype != NONE) {
-            // loop over all attributes to extract relevant info
-            for (; i < attrs ; ++i) {
-              CAttributeToken *attr = static_cast<CAttributeToken *>(mTokenizer->PopToken());
-              NS_ASSERTION(attr->GetTokenType() == eToken_attribute, "Weird token");
-
-              if (attr->GetKey().EqualsLiteral("src")) {
-                src.Assign(attr->GetValue());
-              } else if (attr->GetKey().EqualsLiteral("href")) {
-                href.Assign(attr->GetValue());
-              } else if (attr->GetKey().EqualsLiteral("rel")) {
-                rel.Assign(attr->GetValue());
-              } else if (attr->GetKey().EqualsLiteral("charset")) {
-                charset.Assign(attr->GetValue());
-              } else if (attr->GetKey().EqualsLiteral("type")) {
-                elementType.Assign(attr->GetValue());
-              }
-
-              IF_FREE(attr, &mTokenAllocator);
-            }
-
-            // ensure we have the right kind if it's a link-element
-            if (ptype == STYLESHEET) {
-              if (rel.EqualsLiteral("stylesheet")) {
-                src = href; // src is the important variable below
-              } else {
-                src.Truncate(); // clear src if wrong kind of link
-              }
-            }
-
-            // add to list if we have a valid src
-            if (!src.IsEmpty()) {
-              AddToPrefetchList(src, charset, elementType, ptype);
-            }
-        } else {
-            // Irrelevant tag, but pop and free all its attributes in any case
-            for (; i < attrs ; ++i) {
-              CToken *attr = mTokenizer->PopToken();
-              IF_FREE(attr, &mTokenAllocator);
-            }
-        }
-        break;
-      }
-
-    default:
-      break;
-  }
-
-  IF_FREE(aToken, &mTokenAllocator);
-}
-
-void
-nsSpeculativeScriptThread::AddToPrefetchList(const nsAString &src,
-                                             const nsAString &charset,
-                                             const nsAString &elementType,
-                                             PrefetchType type)
-{
-  PrefetchEntry *pe = mURIs.AppendElement();
-  pe->type = type;
-  pe->uri = src;
-  pe->charset = charset;
-  pe->elementType = elementType;
-
-  if (mURIs.Length() == kBatchPrefetchURIs) {
-    FlushURIs();
-  }
-}
-
-void
-nsSpeculativeScriptThread::FlushURIs()
-{
-  nsCOMPtr<nsIRunnable> r = new nsPreloadURIs(mURIs, this);
-  if (!r) {
-    return;
-  }
-
-  mURIs.Clear();
-  NS_DispatchToMainThread(r, NS_DISPATCH_NORMAL);
-}
-
 nsICharsetAlias* nsParser::sCharsetAliasService = nsnull;
 nsICharsetConverterManager* nsParser::sCharsetConverterManager = nsnull;
-nsIThreadPool* nsParser::sSpeculativeThreadPool = nsnull;
 
 /**
  *  This gets called when the htmlparser module is initialized.
@@ -680,21 +185,6 @@ nsParser::Init()
   charsetAlias.swap(sCharsetAliasService);
   charsetConverter.swap(sCharsetConverterManager);
 
-  nsCOMPtr<nsIThreadPool> threadPool =
-    do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = threadPool->SetThreadLimit(kSpeculativeThreadLimit);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = threadPool->SetIdleThreadLimit(kIdleThreadLimit);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = threadPool->SetIdleThreadTimeout(kIdleThreadTimeout);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  threadPool.swap(sSpeculativeThreadPool);
-
   return NS_OK;
 }
 
@@ -707,10 +197,6 @@ void nsParser::Shutdown()
 {
   NS_IF_RELEASE(sCharsetAliasService);
   NS_IF_RELEASE(sCharsetConverterManager);
-  if (sSpeculativeThreadPool) {
-    sSpeculativeThreadPool->Shutdown();
-    NS_RELEASE(sSpeculativeThreadPool);
-  }
 }
 
 #ifdef DEBUG
@@ -795,10 +281,6 @@ nsParser::Cleanup()
   // destroyed since this flag implies a pending nsParserContinueEvent, which
   // has an owning reference to |this|.
   NS_ASSERTION(!(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT), "bad");
-  if (mSpeculativeScriptThread) {
-    mSpeculativeScriptThread->Terminate();
-    mSpeculativeScriptThread = nsnull;
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsParser)
@@ -1527,36 +1009,10 @@ nsParser::DidBuildModel(nsresult anErrorCode)
 
       //Ref. to bug 61462.
       mParserContext->mRequest = 0;
-
-      if (mSpeculativeScriptThread) {
-        mSpeculativeScriptThread->Terminate();
-        mSpeculativeScriptThread = nsnull;
-      }
     }
   }
 
   return result;
-}
-
-void
-nsParser::SpeculativelyParse()
-{
-  if (mParserContext->mParserCommand == eViewNormal &&
-      !mParserContext->mMimeType.EqualsLiteral("text/html")) {
-    return;
-  }
-
-  if (!mSpeculativeScriptThread) {
-    mSpeculativeScriptThread = new nsSpeculativeScriptThread();
-    if (!mSpeculativeScriptThread) {
-      return;
-    }
-  }
-
-  nsresult rv = mSpeculativeScriptThread->StartParsing(this);
-  if (NS_FAILED(rv)) {
-    mSpeculativeScriptThread = nsnull;
-  }
 }
 
 /**
@@ -1660,10 +1116,6 @@ nsParser::Terminate(void)
   // will reset it so DidBuildModel will call DidBuildModel on the DTD. Note:
   // The IsComplete() call inside of DidBuildModel looks at the pendingContinueEvents flag.
   CancelParsingEvents();
-  if (mSpeculativeScriptThread) {
-    mSpeculativeScriptThread->Terminate();
-    mSpeculativeScriptThread = nsnull;
-  }
 
   // If we got interrupted in the middle of a document.write, then we might
   // have more than one parser context on our parsercontext stack. This has
@@ -1711,10 +1163,6 @@ nsParser::ContinueInterruptedParsing()
     NS_WARNING("Don't call ContinueInterruptedParsing on a blocked parser.");
   }
 #endif
-
-  if (mSpeculativeScriptThread) {
-    mSpeculativeScriptThread->StopParsing(false);
-  }
 
   bool isFinalChunk = mParserContext &&
                         mParserContext->mStreamListenerState == eOnStop;
@@ -1850,7 +1298,6 @@ nsParser::Parse(nsIURI* aURL,
 {
 
   NS_PRECONDITION(aURL, "Error: Null URL given");
-  NS_ASSERTION(!mSpeculativeScriptThread, "Can't reuse a parser like this");
 
   nsresult result=kBadURL;
   mObserver = aListener;
@@ -1910,10 +1357,6 @@ nsParser::Parse(const nsAString& aSourceBuffer,
     // But if this is the last call, make sure to finish up
     // stuff correctly.
     return result;
-  }
-
-  if (mSpeculativeScriptThread) {
-    mSpeculativeScriptThread->StopParsing(true);
   }
 
   // Hack to pass on to the dtd the caller's desire to
@@ -2026,8 +1469,6 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
   // Disable observers for fragments
   mFlags &= ~NS_PARSER_FLAG_OBSERVERS_ENABLED;
-
-  NS_ASSERTION(!mSpeculativeScriptThread, "Can't reuse a parser like this");
 
   for (theIndex = 0; theIndex < theCount; theIndex++) {
     theContext.AppendLiteral("<");
@@ -2146,8 +1587,6 @@ nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
 
   if ((mFlags & NS_PARSER_FLAG_PARSER_ENABLED) &&
       mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
-    NS_ASSERTION(!mSpeculativeScriptThread || !mSpeculativeScriptThread->Parsing(),
-                 "Bad races happening, expect to crash!");
 
     result = WillBuildModel(mParserContext->mScanner->GetFilename());
     if (NS_FAILED(result)) {
@@ -2197,7 +1636,6 @@ nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
           if (mFlags & NS_PARSER_FLAG_PARSER_ENABLED) {
             // If we were blocked by a recursive invocation, don't re-block.
             BlockParser();
-            SpeculativelyParse();
           }
           return NS_OK;
         }
@@ -2718,11 +2156,6 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
   if (theContext) {
     theContext->mStreamListenerState = eOnDataAvail;
 
-    if ((mFlags & NS_PARSER_FLAG_PARSER_ENABLED) &&
-        mSpeculativeScriptThread) {
-      mSpeculativeScriptThread->StopParsing(false);
-    }
-
     if (eInvalidDetect == theContext->mAutoDetectStatus) {
       if (theContext->mScanner) {
         nsScannerIterator iter;
@@ -2771,11 +2204,6 @@ nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
                         nsresult status)
 {
   nsresult rv = NS_OK;
-
-  if ((mFlags & NS_PARSER_FLAG_PARSER_ENABLED) &&
-      mSpeculativeScriptThread) {
-    mSpeculativeScriptThread->StopParsing(false);
-  }
 
   CParserContext *pc = mParserContext;
   while (pc) {

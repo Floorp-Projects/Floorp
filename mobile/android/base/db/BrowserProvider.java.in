@@ -693,9 +693,9 @@ public class BrowserProvider extends ContentProvider {
 
                 String url = values.getAsString(Bookmarks.URL);
                 ContentValues imageValues = extractImageValues(values, url);
-                Boolean isFolder = values.getAsInteger(Bookmarks.IS_FOLDER) == 1;
+                Integer isFolder = values.getAsInteger(Bookmarks.IS_FOLDER);
 
-                if ((isFolder == null || !isFolder) && imageValues != null
+                if ((isFolder == null || isFolder != 1) && imageValues != null
                         && !TextUtils.isEmpty(url)) {
                     Log.d(LOGTAG, "Inserting bookmark image for URL: " + url);
                     updateOrInsertImage(uri, imageValues, Images.URL + " = ?",

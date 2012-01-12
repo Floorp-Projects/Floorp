@@ -70,16 +70,6 @@ public:
   NS_IMETHOD IsContainer(PRInt32 aId, bool& aIsContainer) const;
   NS_IMETHOD IsBlock(PRInt32 aId, bool& aIsBlock) const;
 
-   // Observer mechanism
-  NS_IMETHOD RegisterObserver(nsIElementObserver* aObserver,
-                              const nsAString& aTopic,
-                              const eHTMLTags* aTags = nsnull);
-
-  NS_IMETHOD UnregisterObserver(nsIElementObserver* aObserver,
-                                const nsAString& aTopic);
-  NS_IMETHOD GetTopicObservers(const nsAString& aTopic,
-                               nsIObserverEntry** aEntry);
-
   nsresult CheckQName(const nsAString& aQName,
                       bool aNamespaceAware, const PRUnichar** aColon);
 
@@ -100,14 +90,6 @@ public:
                                   reinterpret_cast<const char**>(aNext),
                                   aResult);
   }
-
-protected:
-  nsObserverEntry* GetEntry(const nsAString& aTopic);
-  nsresult CreateEntry(const nsAString& aTopic,
-                       nsObserverEntry** aEntry);
-
-  nsDeque  mEntries;  //each topic holds a list of observers per tag.
-  bool     mHaveNotifiedCategoryObservers;
 };
 
 #endif
