@@ -2450,7 +2450,7 @@ BEGIN_CASE(JSOP_ADD)
 {
     Value &lval = regs.sp[-2];
     Value &rval = regs.sp[-1];
-    if (!AddValues(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
+    if (!AddValues(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -4951,8 +4951,7 @@ js::GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Valu
 }
 
 bool
-js::AddValues(JSContext *cx, JSScript *script, jsbytecode *pc,
-              const Value &lhs, const Value &rhs, Value *res)
+js::AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
 {
     Value rval = rhs;
     Value lval = lhs;
@@ -4962,7 +4961,7 @@ js::AddValues(JSContext *cx, JSScript *script, jsbytecode *pc,
         int32_t sum = l + r;
         if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
             res->setDouble(double(l) + double(r));
-            TypeScript::MonitorOverflow(cx, script, pc);
+            TypeScript::MonitorOverflow(cx);
         } else {
             res->setInt32(sum);
         }
@@ -4971,7 +4970,7 @@ js::AddValues(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (IsXML(lval) && IsXML(rval)) {
         if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), res))
             return false;
-        TypeScript::MonitorUnknown(cx, script, pc);
+        TypeScript::MonitorUnknown(cx);
     } else
 #endif
     {
@@ -5006,7 +5005,7 @@ js::AddValues(JSContext *cx, JSScript *script, jsbytecode *pc,
             if (!str)
                 return false;
             if (lIsObject || rIsObject)
-                TypeScript::MonitorString(cx, script, pc);
+                TypeScript::MonitorString(cx);
             res->setString(str);
         } else {
             double l, r;
@@ -5015,7 +5014,7 @@ js::AddValues(JSContext *cx, JSScript *script, jsbytecode *pc,
             l += r;
             if (!res->setNumber(l) &&
                 (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble()))) {
-                TypeScript::MonitorOverflow(cx, script, pc);
+                TypeScript::MonitorOverflow(cx);
             }
         }
     }

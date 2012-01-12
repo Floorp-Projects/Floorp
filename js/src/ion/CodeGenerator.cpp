@@ -723,7 +723,7 @@ bool
 CodeGenerator::visitAddV(LAddV *lir)
 {
     typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
-    static const VMFunction AddValuesInfo = FunctionInfo<pf>(js::ion::AddValues);
+    static const VMFunction AddValuesInfo = FunctionInfo<pf>(js::AddValues);
 
     pushArg(ToValue(lir, LAddV::RhsInput));
     pushArg(ToValue(lir, LAddV::LhsInput));
