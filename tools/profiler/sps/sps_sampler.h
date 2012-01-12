@@ -118,7 +118,7 @@ void mozilla_sampler_start(int aEntries, int aInterval);
 void mozilla_sampler_stop();
 bool mozilla_sampler_is_active();
 void mozilla_sampler_responsiveness(TimeStamp time);
-const float* mozilla_sampler_get_responsiveness();
+const double* mozilla_sampler_get_responsiveness();
 void mozilla_sampler_save();
 char* mozilla_sampler_get_profile();
 void mozilla_sampler_init();
