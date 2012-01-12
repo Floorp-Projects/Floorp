@@ -547,6 +547,10 @@ var BrowserApp = {
     printSettings.headerStrLeft   = "";
     printSettings.headerStrRight  = "";
 
+    // Create a valid mimeInfo for the PDF
+    let ms = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+    let mimeInfo = ms.getFromTypeAndExtension("application/pdf", "pdf");
+
     let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
 
     let cancelable = {
@@ -556,7 +560,7 @@ var BrowserApp = {
     }
     let download = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                                   aBrowser.currentURI,
-                                  Services.io.newFileURI(file), "", null,
+                                  Services.io.newFileURI(file), "", mimeInfo,
                                   Date.now() * 1000, null, cancelable);
 
     webBrowserPrint.print(printSettings, download);
