@@ -53,9 +53,10 @@ nsProfiler::nsProfiler()
 
 
 NS_IMETHODIMP
-nsProfiler::StartProfiler(PRUint32 aInterval, PRUint32 aEntries)
+nsProfiler::StartProfiler(PRUint32 aInterval, PRUint32 aEntries,
+                          const char** aFeatures, PRUint32 aFeatureCount)
 {
-  SAMPLER_START(aInterval, aEntries);
+  SAMPLER_START(aInterval, aEntries, aFeatures, aFeatureCount);
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
   mozilla::InitEventTracing();
 #endif
@@ -111,3 +112,30 @@ nsProfiler::GetResponsivenessTimes(PRUint32 *aCount, double **aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsProfiler::GetFeatures(PRUint32 *aCount, char ***aFeatures)
+{
+  PRUint32 len = 0;
+
+  const char **features = SAMPLER_GET_FEATURES();
+  if (!features) {
+    *aCount = 0;
+    *aFeatures = nsnull;
+    return NS_OK;
+  }
+
+  while (features[++len]);
+
+  char **featureList = static_cast<char **>
+                       (nsMemory::Alloc(len * sizeof(char*)));
+
+  for (size_t i = 0; i < len; i++) {
+    PRUint32 strLen = strlen(features[i]);
+    featureList[i] = static_cast<char *>
+                         (nsMemory::Clone(features[i], (strLen + 1) * sizeof(char)));
+  }
+
+  *aFeatures = featureList;
+  *aCount = len;
+  return NS_OK;
+}

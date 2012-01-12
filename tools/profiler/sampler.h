@@ -96,7 +96,7 @@
 // before the sampler has been initialized (i.e. early start-up code)
 #define SAMPLER_INIT()
 #define SAMPLER_DEINIT()
-#define SAMPLER_START(entries, interval)
+#define SAMPLER_START(entries, interval, features, featureCount)
 #define SAMPLER_STOP()
 #define SAMPLER_IS_ACTIVE() false
 #define SAMPLER_SAVE()
@@ -104,6 +104,7 @@
 #define SAMPLER_GET_PROFILE() NULL
 #define SAMPLER_RESPONSIVENESS(time) NULL
 #define SAMPLER_GET_RESPONSIVENESS() NULL
+#define SAMPLER_GET_FEATURES() NULL
 #define SAMPLE_LABEL(name_space, info)
 #define SAMPLE_MARKER(info)
 

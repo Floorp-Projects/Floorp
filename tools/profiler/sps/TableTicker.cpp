@@ -217,9 +217,19 @@ private:
 
 class SaveProfileTask;
 
+static bool
+hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature) {
+  for(size_t i = 0; i < aFeatureCount; i++) {
+    if (strcmp(aFeatures[i], aFeature) == 0)
+      return true;
+  }
+  return false;
+}
+
 class TableTicker: public Sampler {
  public:
-  explicit TableTicker(int aInterval, int aEntrySize, Stack *aStack)
+  TableTicker(int aInterval, int aEntrySize, Stack *aStack,
+              const char** aFeatures, uint32_t aFeatureCount)
     : Sampler(aInterval, true)
     , mProfile(aEntrySize)
     , mStack(aStack)
@@ -442,6 +452,8 @@ string ProfileEntry::TagToString(Profile *profile)
 
 #define PROFILE_DEFAULT_ENTRY 100000
 #define PROFILE_DEFAULT_INTERVAL 10
+#define PROFILE_DEFAULT_FEATURES NULL
+#define PROFILE_DEFAULT_FEATURE_COUNT 0
 
 void mozilla_sampler_init()
 {
@@ -464,7 +476,8 @@ void mozilla_sampler_init()
     return;
   }
 
-  mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL);
+  mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
+                        PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT);
 }
 
 void mozilla_sampler_deinit()
@@ -475,7 +488,8 @@ void mozilla_sampler_deinit()
   // TODO Need to find a safe time to delete Stack
 }
 
-void mozilla_sampler_save() {
+void mozilla_sampler_save()
+{
   TableTicker *t = mozilla::tls::get<TableTicker>(pkey_ticker);
   if (!t) {
     return;
@@ -487,7 +501,8 @@ void mozilla_sampler_save() {
   t->HandleSaveRequest();
 }
 
-char* mozilla_sampler_get_profile() {
+char* mozilla_sampler_get_profile()
+{
   TableTicker *t = mozilla::tls::get<TableTicker>(pkey_ticker);
   if (!t) {
     return NULL;
@@ -501,8 +516,16 @@ char* mozilla_sampler_get_profile() {
   return rtn;
 }
 
+const char** mozilla_sampler_get_features()
+{
+  static const char* features[] = {""};
+
+  return features;
+}
+
 // Values are only honored on the first start
-void mozilla_sampler_start(int aProfileEntries, int aInterval)
+void mozilla_sampler_start(int aProfileEntries, int aInterval,
+                           const char** aFeatures, uint32_t aFeatureCount)
 {
   Stack *stack = mozilla::tls::get<Stack>(pkey_stack);
   if (!stack) {
@@ -512,7 +535,8 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval)
 
   mozilla_sampler_stop();
 
-  TableTicker *t = new TableTicker(aInterval, aProfileEntries, stack);
+  TableTicker *t = new TableTicker(aInterval, aProfileEntries, stack,
+                                   aFeatures, aFeatureCount);
   mozilla::tls::set(pkey_ticker, t);
   t->Start();
 }
