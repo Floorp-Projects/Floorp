@@ -254,8 +254,7 @@ GetLocalizedString(const nsString& aString)
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self value];
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) {
-    if ((mRole == nsIAccessibleRole::ROLE_INTERNAL_FRAME) 
-        || (mRole == nsIAccessibleRole::ROLE_DOCUMENT_FRAME))
+    if (mRole == roles::INTERNAL_FRAME || mRole == roles::DOCUMENT_FRAME)
       return GetLocalizedString(NS_LITERAL_STRING("htmlContent")) ? : @"HTML Content";
 
     return NSAccessibilityRoleDescription([self role], nil);
