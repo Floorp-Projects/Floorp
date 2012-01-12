@@ -5416,7 +5416,8 @@ function Console(options) {
     completeElement: options.completeElement,
     completionPrompt: '',
     backgroundElement: options.backgroundElement,
-    focusManager: this.focusManager
+    focusManager: this.focusManager,
+    scratchpad: options.scratchpad
   });
 
   this.menu = new CommandMenu({
@@ -5567,12 +5568,13 @@ exports.Console = Console;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/ui/inputter', ['require', 'exports', 'module' , 'gcli/util', 'gcli/types', 'gcli/history', 'text!gcli/ui/inputter.css'], function(require, exports, module) {
+define('gcli/ui/inputter', ['require', 'exports', 'module' , 'gcli/util', 'gcli/l10n', 'gcli/types', 'gcli/history', 'text!gcli/ui/inputter.css'], function(require, exports, module) {
 var cliView = exports;
 
 
 var KeyEvent = require('gcli/util').event.KeyEvent;
 var dom = require('gcli/util').dom;
+var l10n = require('gcli/l10n');
 
 var Status = require('gcli/types').Status;
 var History = require('gcli/history').History;
@@ -5585,6 +5587,7 @@ var inputterCss = require('text!gcli/ui/inputter.css');
  */
 function Inputter(options) {
   this.requisition = options.requisition;
+  this.scratchpad = options.scratchpad;
 
   // Suss out where the input element is
   this.element = options.inputElement || 'gcli-input';
@@ -5866,6 +5869,14 @@ Inputter.prototype.onKeyDown = function(ev) {
  * The main keyboard processing loop
  */
 Inputter.prototype.onKeyUp = function(ev) {
+  // Give the scratchpad (if enabled) a chance to activate
+  if (this.scratchpad && this.scratchpad.shouldActivate(ev)) {
+    if (this.scratchpad.activate(this.element.value)) {
+      this._setInputInternal('', true);
+    }
+    return;
+  }
+
   // RETURN does a special exec/highlight thing
   if (ev.keyCode === KeyEvent.DOM_VK_RETURN) {
     var worst = this.requisition.getStatus();
@@ -5964,6 +5975,11 @@ Inputter.prototype.getInputState = function() {
     console.log('fixing input.typed=""', input);
   }
 
+  // Workaround for a Bug 717268 (which is really a jsdom bug)
+  if (input.cursor.start == null) {
+    input.cursor.start = 0;
+  }
+
   return input;
 };
 
@@ -5987,6 +6003,7 @@ function Completer(options) {
   this.document = options.document || document;
   this.requisition = options.requisition;
   this.elementCreated = false;
+  this.scratchpad = options.scratchpad;
 
   this.element = options.completeElement || 'gcli-row-complete';
   if (typeof this.element === 'string') {
@@ -6080,6 +6097,11 @@ Completer.prototype.decorate = function(inputter) {
  * Ensure that the completion element is the same size and the inputter element
  */
 Completer.prototype.resizer = function() {
+  // Remove this when jsdom does getBoundingClientRect(). See Bug 717269
+  if (!this.inputter.element.getBoundingClientRect) {
+    return;
+  }
+
   var rect = this.inputter.element.getBoundingClientRect();
   // -4 to line up with 1px of padding and border, top and bottom
   var height = rect.bottom - rect.top - 4;
@@ -6124,6 +6146,7 @@ Completer.prototype.update = function(input) {
   // ${prefix}
   // <span class="gcli-in-ontab">${contents}</span>
   // <span class="gcli-in-closebrace" if="${unclosedJs}">}<span>
+  // <div class="gcli-in-scratchlink">${scratchLink}</div>
 
   var document = this.element.ownerDocument;
   var prompt = dom.createElement(document, 'span');
@@ -6167,13 +6190,23 @@ Completer.prototype.update = function(input) {
   // Add a grey '}' to the end of the command line when we've opened
   // with a { but haven't closed it
   var command = this.requisition.commandAssignment.getValue();
-  var unclosedJs = command && command.name === '{' &&
+  var isJsCommand = (command && command.name === '{');
+  var isUnclosedJs = isJsCommand &&
           this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1;
-  if (unclosedJs) {
+  if (isUnclosedJs) {
     var close = dom.createElement(document, 'span');
     close.classList.add('gcli-in-closebrace');
     close.appendChild(document.createTextNode(' }'));
     this.element.appendChild(close);
+  }
+
+  // Create a scratchpad link if it's a JS command and we have a function to
+  // actually perform the request
+  if (isJsCommand && this.scratchpad) {
+    var hint = dom.createElement(document, 'div');
+    hint.classList.add('gcli-in-scratchlink');
+    hint.appendChild(document.createTextNode(this.scratchpad.linkText));
+    this.element.appendChild(hint);
   }
 };
 
