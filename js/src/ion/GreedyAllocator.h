@@ -313,6 +313,7 @@ class GreedyAllocator
     bool buildPhiMoves(LBlock *block);
     bool findLoopCarriedUses(LBlock *block);
     void findLoopCarriedUses(LInstruction *ins, uint32 lowerBound, uint32 upperBound);
+    void findLoopCarriedUses(LAllocation *a, uint32 lowerBound, uint32 upperBound);
 
     VirtualRegister *otherHalfOfNunbox(VirtualRegister *vreg);
     VirtualRegister *getVirtualRegister(LDefinition *def) {
