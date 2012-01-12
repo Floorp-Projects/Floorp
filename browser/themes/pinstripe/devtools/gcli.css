@@ -177,7 +177,6 @@
 
 .gcli-argfetch {
   width: 100%;
-  box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
 
@@ -191,7 +190,6 @@
 .gcli-af-params {
   padding: 0 10px;
   width: 100%;
-  box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
 
