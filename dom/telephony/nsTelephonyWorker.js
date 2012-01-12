@@ -363,7 +363,6 @@ nsTelephonyWorker.prototype = {
   _enumerationCallbacks: null,
 
   registerCallback: function registerCallback(callback) {
-    debug("Registering callback: " + callback);
     if (this._callbacks) {
       if (this._callbacks.indexOf(callback) != -1) {
         throw new Error("Already registered this callback!");
@@ -372,13 +371,17 @@ nsTelephonyWorker.prototype = {
       this._callbacks = [];
     }
     this._callbacks.push(callback);
+    debug("Registered callback: " + callback);
   },
 
   unregisterCallback: function unregisterCallback(callback) {
-    debug("Unregistering callback: " + callback);
-    let index;
-    if (this._callbacks && (index = this._callbacks.indexOf(callback) != -1)) {
+    if (!this._callbacks) {
+      return;
+    }
+    let index = this._callbacks.indexOf(callback);
+    if (index != -1) {
       this._callbacks.splice(index, 1);
+      debug("Unregistered callback: " + callback);
     }
   },
 
