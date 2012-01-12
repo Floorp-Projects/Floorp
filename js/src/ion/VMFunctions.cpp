@@ -40,6 +40,8 @@
 
 #include "Ion.h"
 #include "jsinterp.h"
+#include "ion/Snapshots.h"
+#include "ion/IonFrames.h"
 
 using namespace js;
 using namespace js::ion;
@@ -66,6 +68,16 @@ bool ReportOverRecursed(JSContext *cx)
 
     // Cause an InternalError.
     return false;
+}
+
+bool AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    FrameRecovery fr = FrameRecovery::FromFrameIterator(
+        IonFrameIterator(JS_THREAD_DATA(cx)->ionTop));
+    SnapshotIterator si(fr);
+    jsbytecode *pc = fr.script()->code + si.pcOffset();
+
+    return js::AddValues(cx, fr.script(), pc, lhs, rhs, res);
 }
 
 } // namespace ion

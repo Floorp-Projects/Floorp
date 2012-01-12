@@ -2448,78 +2448,11 @@ END_CASE(JSOP_URSH)
 
 BEGIN_CASE(JSOP_ADD)
 {
-    Value rval = regs.sp[-1];
-    Value lval = regs.sp[-2];
-
-    if (lval.isInt32() && rval.isInt32()) {
-        int32_t l = lval.toInt32(), r = rval.toInt32();
-        int32_t sum = l + r;
-        if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
-            regs.sp[-2].setDouble(double(l) + double(r));
-            TypeScript::MonitorOverflow(cx, script, regs.pc);
-        } else {
-            regs.sp[-2].setInt32(sum);
-        }
-        regs.sp--;
-    } else
-#if JS_HAS_XML_SUPPORT
-    if (IsXML(lval) && IsXML(rval)) {
-        if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), &rval))
-            goto error;
-        regs.sp[-2] = rval;
-        regs.sp--;
-        TypeScript::MonitorUnknown(cx, script, regs.pc);
-    } else
-#endif
-    {
-        /*
-         * If either operand is an object, any non-integer result must be
-         * reported to inference.
-         */
-        bool lIsObject = lval.isObject(), rIsObject = rval.isObject();
-
-        if (!ToPrimitive(cx, &lval))
-            goto error;
-        if (!ToPrimitive(cx, &rval))
-            goto error;
-        bool lIsString, rIsString;
-        if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
-            JSString *lstr, *rstr;
-            if (lIsString) {
-                lstr = lval.toString();
-            } else {
-                lstr = ToString(cx, lval);
-                if (!lstr)
-                    goto error;
-                regs.sp[-2].setString(lstr);
-            }
-            if (rIsString) {
-                rstr = rval.toString();
-            } else {
-                rstr = ToString(cx, rval);
-                if (!rstr)
-                    goto error;
-                regs.sp[-1].setString(rstr);
-            }
-            JSString *str = js_ConcatStrings(cx, lstr, rstr);
-            if (!str)
-                goto error;
-            if (lIsObject || rIsObject)
-                TypeScript::MonitorString(cx, script, regs.pc);
-            regs.sp[-2].setString(str);
-            regs.sp--;
-        } else {
-            double l, r;
-            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
-                goto error;
-            l += r;
-            if (!regs.sp[-2].setNumber(l) &&
-                (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble()))) {
-                TypeScript::MonitorOverflow(cx, script, regs.pc);
-            }
-            regs.sp--;
-        }
-    }
+    Value &lval = regs.sp[-2];
+    Value &rval = regs.sp[-1];
+    if (!AddValues(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
+        goto error;
+    regs.sp--;
 }
 END_CASE(JSOP_ADD)
 
@@ -5015,4 +4948,76 @@ js::GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Valu
     }
 
     return obj->getProperty(cx, name, vp);
+}
+
+bool
+js::AddValues(JSContext *cx, JSScript *script, jsbytecode *pc,
+              const Value &lhs, const Value &rhs, Value *res)
+{
+    Value rval = rhs;
+    Value lval = lhs;
+
+    if (lval.isInt32() && rval.isInt32()) {
+        int32_t l = lval.toInt32(), r = rval.toInt32();
+        int32_t sum = l + r;
+        if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
+            res->setDouble(double(l) + double(r));
+            TypeScript::MonitorOverflow(cx, script, pc);
+        } else {
+            res->setInt32(sum);
+        }
+    } else
+#if JS_HAS_XML_SUPPORT
+    if (IsXML(lval) && IsXML(rval)) {
+        if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), res))
+            return false;
+        TypeScript::MonitorUnknown(cx, script, pc);
+    } else
+#endif
+    {
+        /*
+         * If either operand is an object, any non-integer result must be
+         * reported to inference.
+         */
+        bool lIsObject = lval.isObject(), rIsObject = rval.isObject();
+
+        if (!ToPrimitive(cx, &lval))
+            return false;
+        if (!ToPrimitive(cx, &rval))
+            return false;
+        bool lIsString, rIsString;
+        if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
+            js::AutoStringRooter lstr(cx), rstr(cx);
+            if (lIsString) {
+                lstr.setString(lval.toString());
+            } else {
+                lstr.setString(ToString(cx, lval));
+                if (!lstr.string())
+                    return false;
+            }
+            if (rIsString) {
+                rstr.setString(rval.toString());
+            } else {
+                rstr.setString(ToString(cx, rval));
+                if (!rstr.string())
+                    return false;
+            }
+            JSString *str = js_ConcatStrings(cx, lstr.string(), rstr.string());
+            if (!str)
+                return false;
+            if (lIsObject || rIsObject)
+                TypeScript::MonitorString(cx, script, pc);
+            res->setString(str);
+        } else {
+            double l, r;
+            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
+                return false;
+            l += r;
+            if (!res->setNumber(l) &&
+                (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble()))) {
+                TypeScript::MonitorOverflow(cx, script, pc);
+            }
+        }
+    }
+    return true;
 }

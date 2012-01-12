@@ -779,3 +779,9 @@ MToDouble::foldsTo(bool useValueNumbers)
 
     return this;
 }
+
+MDefinition *
+MToString::foldsTo(bool useValueNumbers)
+{
+    return this;
+}

@@ -75,11 +75,14 @@
     _(SubI)                         \
     _(MulI)                         \
     _(MathD)                        \
+    _(AddV)                         \
+    _(Concat)                       \
     _(Int32ToDouble)                \
     _(ValueToDouble)                \
     _(ValueToInt32)                 \
     _(DoubleToInt32)                \
     _(TruncateDToInt32)             \
+    _(IntToString)                  \
     _(Start)                        \
     _(OsrEntry)                     \
     _(OsrValue)                     \

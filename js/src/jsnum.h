@@ -168,7 +168,7 @@ extern const char js_parseInt_str[];
 class JSString;
 class JSFixedString;
 
-extern JSString * JS_FASTCALL
+extern JSString *
 js_IntToString(JSContext *cx, jsint i);
 
 /*
@@ -176,7 +176,7 @@ js_IntToString(JSContext *cx, jsint i);
  * ECMA-262-5 section 9.8.1; but note that it handles integers specially for
  * performance.  See also js::NumberToCString().
  */
-extern JSString * JS_FASTCALL
+extern JSString *
 js_NumberToString(JSContext *cx, jsdouble d);
 
 namespace js {

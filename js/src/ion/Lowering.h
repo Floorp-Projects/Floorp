@@ -81,6 +81,12 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool generate();
 
   private:
+
+    bool useBoxAtStart(LInstruction *lir, size_t n, MDefinition *mir,
+                       LUse::Policy policy = LUse::REGISTER) {
+        return useBox(lir, n, mir, policy, true);
+    }
+
     bool lowerBitOp(JSOp op, MInstruction *ins);
     bool lowerShiftOp(JSOp op, MInstruction *ins);
     bool precreatePhi(LBlock *block, MPhi *phi);
@@ -126,6 +132,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitMul(MMul *ins);
     bool visitDiv(MDiv *ins);
     bool visitMod(MMod *ins);
+    bool visitAddGeneric(MAddGeneric *ins);
+    bool visitConcat(MConcat *ins);
     bool visitStart(MStart *start);
     bool visitOsrEntry(MOsrEntry *entry);
     bool visitOsrValue(MOsrValue *value);
@@ -133,6 +141,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitToDouble(MToDouble *convert);
     bool visitToInt32(MToInt32 *convert);
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
+    bool visitToString(MToString *convert);
     bool visitCopy(MCopy *ins);
     bool visitImplicitThis(MImplicitThis *ins);
     bool visitSlots(MSlots *ins);
