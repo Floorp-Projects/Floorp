@@ -160,14 +160,14 @@ class CharacterInfo {
     }
 };
 
-extern const uint16_t index1[];
-extern const uint16_t index2[];
+extern const uint8_t index1[];
+extern const uint8_t index2[];
 extern const CharacterInfo js_charinfo[];
 
 inline const CharacterInfo&
 CharInfo(jschar code)
 {
-    uint16_t index = index1[code >> 6];
+    size_t index = index1[code >> 6];
     index = index2[(index << 6) + (code & 0x3f)];
 
     return js_charinfo[index];
