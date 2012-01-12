@@ -1160,8 +1160,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
                           anchorFocusRange->StartOffset());
           }
           mHint = HINTRIGHT;
-          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                              false, false);
+          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
           return NS_OK;
         }
 
@@ -1174,8 +1173,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
                           anchorFocusRange->EndOffset());
           }
           mHint = HINTLEFT;
-          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                              false, false);
+          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
           return NS_OK;
         }
     }
@@ -1301,8 +1299,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
   if (NS_SUCCEEDED(result))
   {
     result = mDomSelections[index]->
-      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                     false, false);
+      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
   }
 
   return result;
@@ -4847,8 +4844,7 @@ nsTypedSelection::RemoveRange(nsIDOMRange* aDOMRange)
     // in the background. We don't want to scroll in this case or the view
     // might appear to be moving randomly (bug 337871).
     if (mType != nsISelectionController::SELECTION_SPELLCHECK && cnt > 0)
-      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION, false,
-                     false);
+      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
   }
 
   if (!mFrameSelection)
