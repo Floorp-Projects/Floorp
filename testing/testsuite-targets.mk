@@ -76,10 +76,10 @@ RUN_MOCHITEST_REMOTE = \
 
 RUN_MOCHITEST_ROBOTIUM = \
   rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runtestsremote.py --robocop-path build/mobile/robocop \
+  $(PYTHON) _tests/testing/mochitest/runtestsremote.py --robocop-path=$(DEPTH)/build/mobile/robocop \
     --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=adb \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
-    --robocop build/mobile/robocop/robocop.ini $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+    --robocop=$(DEPTH)/build/mobile/robocop/robocop.ini $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR
@@ -102,6 +102,7 @@ mochitest-remote:
           echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
         fi
 
+mochitest-robotium: robotium-id-map
 mochitest-robotium: DM_TRANS?=adb
 mochitest-robotium:
 	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "usb" -o "$(DM_TRANS)" = "adb" ]; \
@@ -284,8 +285,18 @@ endif
 make-stage-dir:
 	rm -rf $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE)/bin && $(NSINSTALL) -D $(PKG_STAGE)/bin/components && $(NSINSTALL) -D $(PKG_STAGE)/certs && $(NSINSTALL) -D $(PKG_STAGE)/jetpack && $(NSINSTALL) -D $(PKG_STAGE)/firebug && $(NSINSTALL) -D $(PKG_STAGE)/peptest && $(NSINSTALL) -D $(PKG_STAGE)/mozbase
 
+robotium-id-map:
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+	$(PYTHON) $(DEPTH)/build/mobile/robocop/parse_ids.py -i $(DEPTH)/mobile/android/base/R.java -o $(DEPTH)/build/mobile/robocop/fennec_ids.txt
+endif
+
+stage-mochitest: robotium-id-map
 stage-mochitest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mochitest stage-package
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+	$(NSINSTALL) $(DEPTH)/build/mobile/robocop/robocop.apk $(PKG_STAGE)/bin
+	$(NSINSTALL) $(DEPTH)/build/mobile/robocop/fennec_ids.txt $(PKG_STAGE)/mochitest
+endif
 
 stage-reftest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/layout/tools/reftest stage-package
@@ -301,11 +312,6 @@ stage-android: make-stage-dir
 	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/watcher/Watcher.apk $(PKG_STAGE)/bin
 	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/fencp/FenCP.apk $(PKG_STAGE)/bin
 	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/ffxcp/FfxCP.apk $(PKG_STAGE)/bin
-ifeq ($(MOZ_BUILD_APP),mobile/android)
-	$(NSINSTALL) $(DEPTH)/build/mobile/robocop/robocop.apk $(PKG_STAGE)/bin
-	$(PYTHON) $(DIST)/../build/mobile/robocop/parse_ids.py -i $(DEPTH)/mobile/android/base/R.java -o $(DEPTH)/build/mobile/robocop/fennec_ids.txt
-	$(NSINSTALL) $(DEPTH)/build/mobile/robocop/fennec_ids.txt $(PKG_STAGE)/bin
-endif
 
 stage-jetpack: make-stage-dir
 	$(NSINSTALL) $(topsrcdir)/testing/jetpack/jetpack-location.txt $(PKG_STAGE)/jetpack

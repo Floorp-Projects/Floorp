@@ -969,12 +969,9 @@ var NativeWindow = {
   },
   contextmenus: {
     items: {}, //  a list of context menu items that we may show
-    textContext: null, // saved selector for text input areas
-
     _contextId: 0, // id to assign to new context menu items if they are added
 
     init: function() {
-      this.textContext = this.SelectorContext("input[type='text'],input[type='password'],textarea");
       this.imageContext = this.SelectorContext("img");
 
       Services.obs.addObserver(this, "Gesture:LongPress", false);
@@ -1077,6 +1074,13 @@ var NativeWindow = {
           return (scheme && !dontOpen.test(scheme));
         }
         return false;
+      }
+    },
+
+    textContext: {
+      matches: function textContext(aElement) {
+        return ((aElement instanceof Ci.nsIDOMHTMLInputElement && aElement.mozIsTextField(false))
+                || aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
       }
     },
 
@@ -3435,7 +3439,7 @@ var ClipboardHelper = {
   init: function() {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyAll"), ClipboardHelper.getCopyContext(true), ClipboardHelper.copy.bind(ClipboardHelper));
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), NativeWindow.contextmenus.textContext, ClipboardHelper.select.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), ClipboardHelper.selectAllContext, ClipboardHelper.select.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.paste"), ClipboardHelper.pasteContext, ClipboardHelper.paste.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"), NativeWindow.contextmenus.textContext, ClipboardHelper.inputMethod.bind(ClipboardHelper));
   },
@@ -3485,15 +3489,32 @@ var ClipboardHelper = {
     return {
       matches: function(aElement) {
         if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          // Don't include "copy" for password fields.
+          // mozIsTextField(true) tests for only non-password fields.
+          if (aElement instanceof Ci.nsIDOMHTMLInputElement && !aElement.mozIsTextField(true))
+            return false;
+
           let selectionStart = aElement.selectionStart;
           let selectionEnd = aElement.selectionEnd;
           if (selectionStart != selectionEnd)
             return true;
-          else if (isCopyAll)
+
+          if (isCopyAll && aElement.textLength > 0)
             return true;
         }
         return false;
       }
+    }
+  },
+
+  selectAllContext: {
+    matches: function selectAllContextMatches(aElement) {
+      if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          let selectionStart = aElement.selectionStart;
+          let selectionEnd = aElement.selectionEnd;
+          return (selectionStart > 0 || selectionEnd < aElement.textLength);
+      }
+      return false;
     }
   },
 

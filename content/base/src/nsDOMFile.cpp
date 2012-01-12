@@ -60,7 +60,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIUUIDGenerator.h"
-#include "nsFileDataProtocolHandler.h"
+#include "nsBlobProtocolHandler.h"
 #include "nsStringStream.h"
 #include "CheckedInt.h"
 #include "nsJSUtils.h"
@@ -288,10 +288,10 @@ nsDOMFileBase::GetInternalUrl(nsIPrincipal* aPrincipal, nsAString& aURL)
   char chars[NSID_LENGTH];
   id.ToProvidedString(chars);
     
-  nsCString url = NS_LITERAL_CSTRING(FILEDATA_SCHEME ":") +
+  nsCString url = NS_LITERAL_CSTRING(BLOBURI_SCHEME ":") +
     Substring(chars + 1, chars + NSID_LENGTH - 2);
 
-  nsFileDataProtocolHandler::AddFileDataEntry(url, this,
+  nsBlobProtocolHandler::AddFileDataEntry(url, this,
                                               aPrincipal);
 
   CopyASCIItoUTF16(url, aURL);
@@ -668,6 +668,6 @@ nsDOMFileInternalUrlHolder::~nsDOMFileInternalUrlHolder() {
   if (!mUrl.IsEmpty()) {
     nsCAutoString narrowUrl;
     CopyUTF16toUTF8(mUrl, narrowUrl);
-    nsFileDataProtocolHandler::RemoveFileDataEntry(narrowUrl);
+    nsBlobProtocolHandler::RemoveFileDataEntry(narrowUrl);
   }
 }
