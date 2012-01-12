@@ -46,6 +46,10 @@ box,
   -moz-box-pack: center;
 }
 
+.loading .splitview-nav-container > .placeholder {
+  display: none !important;
+}
+
 .splitview-controller,
 .splitview-main {
   -moz-box-flex: 0;
