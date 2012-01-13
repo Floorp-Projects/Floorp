@@ -414,7 +414,7 @@ public:
     if (sLowPhysicalMemoryThreshold == 0 || !sHooksInstalled) {
       aDescription.Append(nsPrintfCString(1024,
         "Tracking low-physical-memory events is disabled, but you can enable it "
-        "by giving the memory.low_physical_mem_threshold_mb pref a non-zero "
+        "by giving the memory.low_physical_memory_threshold_mb pref a non-zero "
         "value%s.",
         sHooksInstalled ? "" : " and restarting"));
     }
@@ -422,7 +422,7 @@ public:
       aDescription.Append(nsPrintfCString(1024,
         "We fire such an event if we notice there is less than %d MB of "
         "available physical memory (controlled by the "
-        "'memory.low_physical_mem_threshold_mb' pref).  The machine will start "
+        "'memory.low_physical_memory_threshold_mb' pref).  The machine will start "
         "to page if it runs out of physical memory; this may cause it to run "
         "slowly, but it shouldn't cause us to crash.",
         sLowPhysicalMemoryThreshold));
@@ -451,7 +451,7 @@ void Init()
   }
 
   Preferences::AddUintVarCache(&sLowPhysicalMemoryThreshold,
-      "memory.low_physical_mem_threshold_mb", 0);
+      "memory.low_physical_memory_threshold_mb", 0);
   Preferences::AddUintVarCache(&sLowPhysicalMemoryNotificationIntervalMS,
       "memory.low_physical_memory_notification_interval_ms", 10000);
 

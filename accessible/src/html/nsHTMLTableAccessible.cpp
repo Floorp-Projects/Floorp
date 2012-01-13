@@ -39,13 +39,14 @@
 
 #include "nsHTMLTableAccessible.h"
 
-#include "Relation.h"
-#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"
 #include "nsTextEquivUtils.h"
+#include "Relation.h"
+#include "Role.h"
+#include "States.h"
 
 #include "nsIAccessibleRelation.h"
 #include "nsIDOMElement.h"
@@ -90,10 +91,10 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableCellAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLTableCellAccessible: nsAccessible implementation
 
-PRUint32
+role
 nsHTMLTableCellAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_CELL;
+  return roles::CELL;
 }
 
 PRUint64
@@ -295,9 +296,8 @@ nsHTMLTableCellAccessible::GetTableAccessible()
 {
   nsAccessible* parent = this;
   while ((parent = parent->Parent())) {
-    PRUint32 role = parent->Role();
-    if (role == nsIAccessibleRole::ROLE_TABLE ||
-        role == nsIAccessibleRole::ROLE_TREE_TABLE) {
+    roles::Role role = parent->Role();
+    if (role == roles::TABLE || role == roles::TREE_TABLE) {
       nsIAccessibleTable* tableAcc = nsnull;
       CallQueryInterface(parent, &tableAcc);
       return tableAcc;
@@ -341,11 +341,11 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
     nsCOMPtr<nsIMutableArray> headerCells =
       do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRUint32 desiredRole = -1;
+    roles::Role desiredRole = static_cast<roles::Role>(-1) ;
     if (aRowOrColumnHeaderCell == nsAccUtils::eRowHeaderCells)
-      desiredRole = nsIAccessibleRole::ROLE_ROWHEADER;
+      desiredRole = roles::ROWHEADER;
     else if (aRowOrColumnHeaderCell == nsAccUtils::eColumnHeaderCells)
-      desiredRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
+      desiredRole = roles::COLUMNHEADER;
 
     do {
       nsAccessible* headerCell =
@@ -385,7 +385,7 @@ nsHTMLTableHeaderCellAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLTableHeaderAccessible: nsAccessible implementation
 
-PRUint32
+role
 nsHTMLTableHeaderCellAccessible::NativeRole()
 {
   // Check value of @scope attribute.
@@ -397,9 +397,9 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
 
   switch (valueIdx) {
     case 0:
-      return nsIAccessibleRole::ROLE_COLUMNHEADER;
+      return roles::COLUMNHEADER;
     case 1:
-      return nsIAccessibleRole::ROLE_ROWHEADER;
+      return roles::ROWHEADER;
   }
 
   // Assume it's columnheader if there are headers in siblings, oterwise
@@ -407,30 +407,28 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
   nsIContent* parentContent = mContent->GetParent();
   if (!parentContent) {
     NS_ERROR("Deattached content on alive accessible?");
-    return nsIAccessibleRole::ROLE_NOTHING;
+    return roles::NOTHING;
   }
 
   for (nsIContent* siblingContent = mContent->GetPreviousSibling(); siblingContent;
        siblingContent = siblingContent->GetPreviousSibling()) {
     if (siblingContent->IsElement()) {
-      if (nsCoreUtils::IsHTMLTableHeader(siblingContent))
-        return nsIAccessibleRole::ROLE_COLUMNHEADER;
-      return nsIAccessibleRole::ROLE_ROWHEADER;
+      return nsCoreUtils::IsHTMLTableHeader(siblingContent) ? 
+	     roles::COLUMNHEADER : roles::ROWHEADER;
     }
   }
 
   for (nsIContent* siblingContent = mContent->GetNextSibling(); siblingContent;
        siblingContent = siblingContent->GetNextSibling()) {
     if (siblingContent->IsElement()) {
-      if (nsCoreUtils::IsHTMLTableHeader(siblingContent))
-        return nsIAccessibleRole::ROLE_COLUMNHEADER;
-      return nsIAccessibleRole::ROLE_ROWHEADER;
+      return nsCoreUtils::IsHTMLTableHeader(siblingContent) ? 
+	     roles::COLUMNHEADER : roles::ROWHEADER;
     }
   }
 
   // No elements in siblings what means the table has one column only. Therefore
   // it should be column header.
-  return nsIAccessibleRole::ROLE_COLUMNHEADER;
+  return roles::COLUMNHEADER;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -464,7 +462,7 @@ nsHTMLTableAccessible::CacheChildren()
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {
-    if (child->Role() == nsIAccessibleRole::ROLE_CAPTION) {
+    if (child->Role() == roles::CAPTION) {
       InsertChildAt(0, child);
       while ((child = walker.NextChild()) && AppendChild(child));
       break;
@@ -473,10 +471,10 @@ nsHTMLTableAccessible::CacheChildren()
   }
 }
 
-PRUint32
+role
 nsHTMLTableAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_TABLE;
+  return roles::TABLE;
 }
 
 PRUint64
@@ -1397,10 +1395,8 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
 
   // Check to see if an ARIA role overrides the role from native markup,
   // but for which we still expose table semantics (treegrid, for example).
-  bool hasNonTableRole = (Role() != nsIAccessibleRole::ROLE_TABLE);
-  if (hasNonTableRole) {
+  if (Role() != roles::TABLE) 
     RETURN_LAYOUT_ANSWER(false, "Has role attribute");
-  }
 
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::role)) {
     // Role attribute is present, but overridden roles have already been dealt with.
@@ -1426,11 +1422,8 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
 
   // Check for legitimate data table elements.
   nsAccessible* caption = FirstChild();
-  if (caption && caption->Role() == nsIAccessibleRole::ROLE_CAPTION &&
-      caption->HasChildren()) {
-    RETURN_LAYOUT_ANSWER(false,
-                               "Not empty caption -- legitimate table structures");
-  }
+  if (caption && caption->Role() == roles::CAPTION && caption->HasChildren()) 
+    RETURN_LAYOUT_ANSWER(false, "Not empty caption -- legitimate table structures");
 
   for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
        childElm = childElm->GetNextSibling()) {
@@ -1464,7 +1457,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
   if (HasDescendant(NS_LITERAL_STRING("table"))) {
     RETURN_LAYOUT_ANSWER(true, "Has a nested table within it");
   }
-  
+
   // If only 1 column or only 1 row, it's for layout
   PRInt32 columns, rows;
   GetColumnCount(&columns);
@@ -1480,7 +1473,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
   if (columns >= 5) {
     RETURN_LAYOUT_ANSWER(false, ">=5 columns");
   }
-  
+
   // Now we know there are 2-4 columns and 2 or more rows
   // Check to see if there are visible borders on the cells
   // XXX currently, we just check the first cell -- do we really need to do more?
@@ -1592,8 +1585,8 @@ nsHTMLCaptionAccessible::RelationByType(PRUint32 aType)
   return rel;
 }
 
-PRUint32
+role
 nsHTMLCaptionAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_CAPTION;
+  return roles::CAPTION;
 }

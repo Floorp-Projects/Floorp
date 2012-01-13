@@ -655,9 +655,6 @@ static void nsNetShutdown()
     // Release the url parser that the stdurl is holding.
     nsStandardURL::ShutdownGlobalObjects();
 
-    // Release buffer cache
-    NS_IF_RELEASE(nsIOService::gBufferCache);
-
     // Release global state used by the URL helper module.
     net_ShutdownURLHelper();
 #ifdef XP_MACOSX

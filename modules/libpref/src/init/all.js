@@ -259,6 +259,8 @@ pref("ui.scrollToClick", 0);
 pref("accessibility.tabfocus_applies_to_xul", true);
 #endif
 
+pref("focusmanager.testmode", false);
+
 pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
 pref("accessibility.accesskeycausesactivation", true);
@@ -3414,7 +3416,7 @@ pref("memory.low_virtual_memory_threshold_mb", 128);
 
 // On Windows 32- or 64-bit, fire a low-memory notification if we have less
 // than this many mb of physical memory available on the whole machine.
-pref("memory.low_physical_mem_threshold_mb", 0);
+pref("memory.low_physical_memory_threshold_mb", 0);
 
 // On Windows 32- or 64-bit, don't fire a low-memory notification because of
 // low available physical memory more than once every

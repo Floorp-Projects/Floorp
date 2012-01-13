@@ -47,9 +47,13 @@
 #include "mozilla/StringBuilder.h"
 
 // we eventually want to make this runtime switchable
-//#define USE_BACKTRACE
+#if defined(XP_MACOSX) || defined(XP_UNIX)
+ #ifndef ANDROID
+  #define USE_BACKTRACE
+ #endif
+#endif
 #ifdef USE_BACKTRACE
-#include <execinfo.h>
+ #include <execinfo.h>
 #endif
 
 using std::string;
@@ -116,8 +120,14 @@ public:
     , mTagName(aTagName)
   { }
 
-  ProfileEntry(char aTagName, float aTagFloat)
+  ProfileEntry(char aTagName, double aTagFloat)
     : mTagFloat(aTagFloat)
+    , mLeafAddress(0)
+    , mTagName(aTagName)
+  { }
+
+  ProfileEntry(char aTagName, uintptr_t aTagOffset)
+    : mTagOffset(aTagOffset)
     , mLeafAddress(0)
     , mTagName(aTagName)
   { }
@@ -127,8 +137,9 @@ public:
 private:
   union {
     const char* mTagData;
-    float mTagFloat;
+    double mTagFloat;
     Address mTagAddress;
+    uintptr_t mTagOffset;
   };
   Address mLeafAddress;
   char mTagName;
@@ -144,10 +155,7 @@ public:
     , mEntrySize(aEntrySize)
   {
     mEntries = new ProfileEntry[mEntrySize];
-    mNeedsSharedLibraryInfo = false;
-#if defined(ENABLE_SPS_LEAF_DATA) || defined(USE_BACKTRACE)
     mNeedsSharedLibraryInfo = true;
-#endif
   }
 
   ~Profile()
@@ -217,14 +225,25 @@ private:
 
 class SaveProfileTask;
 
+static bool
+hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature) {
+  for(size_t i = 0; i < aFeatureCount; i++) {
+    if (strcmp(aFeatures[i], aFeature) == 0)
+      return true;
+  }
+  return false;
+}
+
 class TableTicker: public Sampler {
  public:
-  explicit TableTicker(int aInterval, int aEntrySize, Stack *aStack)
+  TableTicker(int aInterval, int aEntrySize, Stack *aStack,
+              const char** aFeatures, uint32_t aFeatureCount)
     : Sampler(aInterval, true)
     , mProfile(aEntrySize)
     , mStack(aStack)
     , mSaveRequested(false)
   {
+    mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
     mProfile.addTag(ProfileEntry('m', "Start"));
   }
 
@@ -256,6 +275,7 @@ class TableTicker: public Sampler {
   Profile mProfile;
   Stack *mStack;
   bool mSaveRequested;
+  bool mUseStackWalk;
 };
 
 /**
@@ -321,21 +341,12 @@ void doBacktrace(Profile &aProfile)
   void *array[100];
   int count = backtrace (array, 100);
 
-  bool isSignal = true;
-#ifndef __i386__
-  // the test doesn't work for 64bit
-  isSignal = false;
-#endif
-  for (int i = count-1; i >= 0; i--) {
-    if( isSignal ) {
-      if( (intptr_t)array[i] == -1 ) { // signal frames have addresses of -1?
-        isSignal = false;
-      }
-      continue;
-    }
+  aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
+
+  for (int i = 0; i < count; i++) {
+    if( (intptr_t)array[i] == -1 ) break;
     aProfile.addTag(ProfileEntry('l', (const char*)array[i]));
   }
-  aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
 }
 #endif
 
@@ -370,12 +381,16 @@ void TableTicker::Tick(TickSample* sample)
   mStack->mQueueClearMarker = true;
 
 #ifdef USE_BACKTRACE
-  doBacktrace(mProfile);
+  if (mUseStackWalk) {
+    doBacktrace(mProfile);
+  } else {
+    doSampleStackTrace(mStack, mProfile, sample);
+  }
 #else
   doSampleStackTrace(mStack, mProfile, sample);
 #endif
 
-  if (!sLastTracerEvent.IsNull()) {
+  if (!sLastTracerEvent.IsNull() && sample) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
     mProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
@@ -399,8 +414,10 @@ string ProfileEntry::TagToString(Profile *profile)
       if (pc > (Address)e.GetStart() && pc < (Address)e.GetEnd()) {
         if (e.GetName()) {
           found = true;
+
           snprintf(tagBuff, 1024, "l-%s@%p\n", e.GetName(), pc - e.GetStart());
           tag += string(tagBuff);
+
           break;
         }
       }
@@ -442,6 +459,8 @@ string ProfileEntry::TagToString(Profile *profile)
 
 #define PROFILE_DEFAULT_ENTRY 100000
 #define PROFILE_DEFAULT_INTERVAL 10
+#define PROFILE_DEFAULT_FEATURES NULL
+#define PROFILE_DEFAULT_FEATURE_COUNT 0
 
 void mozilla_sampler_init()
 {
@@ -464,7 +483,8 @@ void mozilla_sampler_init()
     return;
   }
 
-  mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL);
+  mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
+                        PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT);
 }
 
 void mozilla_sampler_deinit()
@@ -475,7 +495,8 @@ void mozilla_sampler_deinit()
   // TODO Need to find a safe time to delete Stack
 }
 
-void mozilla_sampler_save() {
+void mozilla_sampler_save()
+{
   TableTicker *t = mozilla::tls::get<TableTicker>(pkey_ticker);
   if (!t) {
     return;
@@ -487,7 +508,8 @@ void mozilla_sampler_save() {
   t->HandleSaveRequest();
 }
 
-char* mozilla_sampler_get_profile() {
+char* mozilla_sampler_get_profile()
+{
   TableTicker *t = mozilla::tls::get<TableTicker>(pkey_ticker);
   if (!t) {
     return NULL;
@@ -501,8 +523,21 @@ char* mozilla_sampler_get_profile() {
   return rtn;
 }
 
+const char** mozilla_sampler_get_features()
+{
+  static const char* features[] = {
+#ifdef MOZ_PROFILING && USE_BACKTRACE
+    "stackwalk",
+#endif
+    NULL
+  };
+
+  return features;
+}
+
 // Values are only honored on the first start
-void mozilla_sampler_start(int aProfileEntries, int aInterval)
+void mozilla_sampler_start(int aProfileEntries, int aInterval,
+                           const char** aFeatures, uint32_t aFeatureCount)
 {
   Stack *stack = mozilla::tls::get<Stack>(pkey_stack);
   if (!stack) {
@@ -512,7 +547,8 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval)
 
   mozilla_sampler_stop();
 
-  TableTicker *t = new TableTicker(aInterval, aProfileEntries, stack);
+  TableTicker *t = new TableTicker(aInterval, aProfileEntries, stack,
+                                   aFeatures, aFeatureCount);
   mozilla::tls::set(pkey_ticker, t);
   t->Start();
 }
@@ -538,8 +574,8 @@ bool mozilla_sampler_is_active()
   return t->IsActive();
 }
 
-float sResponsivenessTimes[100];
-float sCurrResponsiveness = 0.f;
+double sResponsivenessTimes[100];
+double sCurrResponsiveness = 0.f;
 unsigned int sResponsivenessLoc = 0;
 void mozilla_sampler_responsiveness(TimeStamp aTime)
 {
@@ -561,7 +597,7 @@ void mozilla_sampler_responsiveness(TimeStamp aTime)
   sLastTracerEvent = aTime;
 }
 
-const float* mozilla_sampler_get_responsiveness()
+const double* mozilla_sampler_get_responsiveness()
 {
   return sResponsivenessTimes;
 }

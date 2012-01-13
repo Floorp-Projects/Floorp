@@ -2,7 +2,7 @@
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 const Ci = Components.interfaces;
 const SIMPLEURI_SPEC = "data:text/plain,hello world";
-const FILEDATA_SPEC = "moz-filedata:123456";
+const BLOBURI_SPEC = "blob:123456";
 
 function do_info(text, stack) {
   if (!stack)
@@ -27,13 +27,13 @@ function do_check_uri_neq(uri1, uri2)
 function run_test()
 {
   var simpleURI = NetUtil.newURI(SIMPLEURI_SPEC);
-  var fileDataURI = NetUtil.newURI(FILEDATA_SPEC);
+  var fileDataURI = NetUtil.newURI(BLOBURI_SPEC);
 
-  do_info("Checking that " + SIMPLEURI_SPEC + " != " + FILEDATA_SPEC);
+  do_info("Checking that " + SIMPLEURI_SPEC + " != " + BLOBURI_SPEC);
   do_check_uri_neq(simpleURI, fileDataURI);
 
   do_info("Changing the nsSimpleURI spec to match the nsFileDataURI");
-  simpleURI.spec = FILEDATA_SPEC;
+  simpleURI.spec = BLOBURI_SPEC;
 
   do_info("Verifying that .spec matches");
   do_check_eq(simpleURI.spec, fileDataURI.spec);

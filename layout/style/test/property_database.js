@@ -2646,6 +2646,14 @@ var gCSSProperties = {
 		other_values: [ "center", "justify", "end" ],
 		invalid_values: []
 	},
+	"-moz-text-align-last": {
+		domProp: "MozTextAlignLast",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "center", "justify", "start", "end", "left", "right" ],
+		invalid_values: []
+	},
 	"-moz-text-blink": {
 		domProp: "MozTextBlink",
 		inherited: false,

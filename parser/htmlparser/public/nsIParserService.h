@@ -52,25 +52,6 @@ class nsIParserNode;
 #define NS_IPARSERSERVICE_IID \
 { 0x90a92e37, 0xabd6, 0x441b, { 0x9b, 0x39, 0x40, 0x64, 0xd9, 0x8e, 0x1e, 0xde } }
 
-// {78081E70-AD53-11d5-8498-0010A4E0C706}
-#define NS_IOBSERVERENTRY_IID \
-{ 0x78081e70, 0xad53, 0x11d5, { 0x84, 0x98, 0x00, 0x10, 0xa4, 0xe0, 0xc7, 0x06 } }
-
-
-class nsIObserverEntry : public nsISupports {
- public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOBSERVERENTRY_IID)
-
-  NS_IMETHOD Notify(nsIParserNode* aNode,
-                    nsIParser* aParser,
-                    nsISupports* aDocShell,
-                    const PRUint32 aFlags) = 0;
-
-};
-
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIObserverEntry, NS_IOBSERVERENTRY_IID)
-
 class nsIParserService : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPARSERSERVICE_IID)
@@ -144,16 +125,6 @@ class nsIParserService : public nsISupports {
 
   NS_IMETHOD IsContainer(PRInt32 aId, bool& aIsContainer) const = 0;
   NS_IMETHOD IsBlock(PRInt32 aId, bool& aIsBlock) const = 0;
-
-  // Observer mechanism
-  NS_IMETHOD RegisterObserver(nsIElementObserver* aObserver,
-                              const nsAString& aTopic,
-                              const eHTMLTags* aTags = nsnull) = 0;
-
-  NS_IMETHOD UnregisterObserver(nsIElementObserver* aObserver,
-                                const nsAString& aTopic) = 0;
-  NS_IMETHOD GetTopicObservers(const nsAString& aTopic,
-                               nsIObserverEntry** aEntry) = 0;
 
   virtual nsresult CheckQName(const nsAString& aQName,
                               bool aNamespaceAware,

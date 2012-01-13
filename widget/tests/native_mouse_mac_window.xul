@@ -135,9 +135,15 @@
 
     function testMouse(x, y, msg, elem, win, exp, flags, callback) {
       clearExpectedEvents();
+      var syntheticEvent = null;
       exp.forEach(function (expEv) {
         expEv.screenX = x;
         expEv.screenY = y;
+        if (expEv.synthetic) {
+          is(syntheticEvent, null,
+             "Can't handle two synthetic events in a single testMouse call");
+          syntheticEvent = expEv;
+        }
         gExpectedEvents.push(expEv);
       });
       printDebug("sending event: " + x + ", " + y + " (" + msg + ")\n");
@@ -146,11 +152,23 @@
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                      getInterface(Components.interfaces.nsIDOMWindowUtils);
-      utils.sendNativeMouseEvent(x, y, msg, flags || 0, elem);
-      gAfterLoopExecution = setTimeout(function () {
+      var callbackFunc = function() {
         clearExpectedEvents();
         callback();
-      }, 0);
+      }
+      if (syntheticEvent) {
+        // Set up this listener before we sendNativeMouseEvent, just
+        // in case that synchronously calls us.
+        eventListenOnce(syntheticEvent.target, syntheticEvent.type,
+                        // Trigger callbackFunc async, so we're not assuming
+                        // anything about how our listener gets ordered with
+                        // others.
+                        function () { SimpleTest.executeSoon(callbackFunc) });
+      }
+      utils.sendNativeMouseEvent(x, y, msg, flags || 0, elem);
+      if (!syntheticEvent) {
+        gAfterLoopExecution = setTimeout(callbackFunc, 0);
+      }
     }
 
     function eventListenOnce(elem, name, callback) {
@@ -300,7 +318,7 @@
         // Clicking an inactive window should make it active and fire a mouseover
         // event.
         [400, 150, NSLeftMouseDown, null, right, [
-          { type: "mouseover", target: rightElem },
+          { type: "mouseover", target: rightElem, synthetic: true },
         ]],
         [400, 150, NSLeftMouseUp, null, right, [
         ]],
@@ -343,7 +361,15 @@
         function raiseLeftWindow(callback) {
           clearExpectedEvents();
           gExpectedEvents.push({ screenX: 150, screenY: 170, type: "mouseover", target: leftElem });
-          focusAndThen(left, function () { SimpleTest.executeSoon(callback); });
+          // We have to be a bit careful here.  The synthetic mouse event may
+          // not fire for a bit after we focus the left window.
+          eventListenOnce(leftElem, "mouseover", function() {
+            // Trigger callback async, so we're not assuming
+            // anything about how our listener gets ordered with others.
+            SimpleTest.executeSoon(callback);
+          });
+          printDebug("focusing left window");
+          left.focus();
         },
         // It's active, so it should respond to mousemove events now.
         [150, 170, NSMouseMoved, null, left, [
@@ -384,7 +410,7 @@
         // Activate the right window with a click.
         // This will close the popup and make the mouse enter the right window.
         [400, 180, NSLeftMouseDown, null, right, [
-          { type: "mouseover", target: rightElem },
+          { type: "mouseover", target: rightElem, synthetic: true },
         ]],
         [400, 180, NSLeftMouseUp, null, right, [
         ]],

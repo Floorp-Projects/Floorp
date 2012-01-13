@@ -208,7 +208,10 @@ public:
   // The 'position' is a zero-width rectangle.
   nsIFrame*     GetSelectionEndPointGeometry(SelectionRegion aRegion, nsRect *aRect);
 
-  nsresult      PostScrollSelectionIntoViewEvent(SelectionRegion aRegion, bool aFirstAncestorOnly);
+  nsresult      PostScrollSelectionIntoViewEvent(SelectionRegion aRegion,
+                                                 bool aFirstAncestorOnly,
+                                                 PRInt16 aVPercent,
+                                                 PRInt16 aHPercent);
   enum {
     SCROLL_SYNCHRONOUS = 1<<1,
     SCROLL_FIRST_ANCESTOR_ONLY = 1<<2,
@@ -285,9 +288,13 @@ private:
     NS_DECL_NSIRUNNABLE
     ScrollSelectionIntoViewEvent(nsTypedSelection *aTypedSelection,
                                  SelectionRegion aRegion,
+                                 PRInt16 aVScroll,
+                                 PRInt16 aHScroll,
                                  bool aFirstAncestorOnly)
       : mTypedSelection(aTypedSelection),
         mRegion(aRegion),
+        mVerticalScroll(aVScroll),
+        mHorizontalScroll(aHScroll),
         mFirstAncestorOnly(aFirstAncestorOnly) {
       NS_ASSERTION(aTypedSelection, "null parameter");
     }
@@ -295,6 +302,8 @@ private:
   private:
     nsTypedSelection *mTypedSelection;
     SelectionRegion   mRegion;
+    PRInt16           mVerticalScroll;
+    PRInt16           mHorizontalScroll;
     bool              mFirstAncestorOnly;
   };
 
@@ -1151,8 +1160,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
                           anchorFocusRange->StartOffset());
           }
           mHint = HINTRIGHT;
-          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                              false, false);
+          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
           return NS_OK;
         }
 
@@ -1165,8 +1173,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
                           anchorFocusRange->EndOffset());
           }
           mHint = HINTLEFT;
-          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                              false, false);
+          sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
           return NS_OK;
         }
     }
@@ -1292,8 +1299,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
   if (NS_SUCCEEDED(result))
   {
     result = mDomSelections[index]->
-      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                     false, false);
+      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
   }
 
   return result;
@@ -1966,17 +1972,21 @@ nsFrameSelection::ScrollSelectionIntoView(SelectionType   aType,
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
+  PRInt16 verticalScroll = PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE);
   PRInt32 flags = nsTypedSelection::SCROLL_DO_FLUSH;
   if (aFlags & nsISelectionController::SCROLL_SYNCHRONOUS) {
     flags |= nsTypedSelection::SCROLL_SYNCHRONOUS;
   } else if (aFlags & nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY) {
     flags |= nsTypedSelection::SCROLL_FIRST_ANCESTOR_ONLY;
   }
+  if (aFlags & nsISelectionController::SCROLL_CENTER_VERTICALLY) {
+    verticalScroll = PRInt16(NS_PRESSHELL_SCROLL_CENTER);
+  }
 
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return mDomSelections[index]->ScrollIntoView(aRegion,
-                                               PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE),
+                                               verticalScroll,
                                                PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE),
                                                flags);
 }
@@ -4834,8 +4844,7 @@ nsTypedSelection::RemoveRange(nsIDOMRange* aDOMRange)
     // in the background. We don't want to scroll in this case or the view
     // might appear to be moving randomly (bug 337871).
     if (mType != nsISelectionController::SELECTION_SPELLCHECK && cnt > 0)
-      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION, false,
-                     false);
+      ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
   }
 
   if (!mFrameSelection)
@@ -5569,15 +5578,16 @@ nsTypedSelection::ScrollSelectionIntoViewEvent::Run()
   }
 
   mTypedSelection->mScrollEvent.Forget();
-  mTypedSelection->ScrollIntoView(mRegion,
-                                  PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE),
-                                  PRInt16(NS_PRESSHELL_SCROLL_ANYWHERE),
-                                  flags);
+  mTypedSelection->ScrollIntoView(mRegion, mVerticalScroll,
+                                  mHorizontalScroll, flags);
   return NS_OK;
 }
 
 nsresult
-nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion, bool aFirstAncestorOnly)
+nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion,
+                                                   bool aFirstAncestorOnly,
+                                                   PRInt16 aVPercent,
+                                                   PRInt16 aHPercent)
 {
   // If we've already posted an event, revoke it and place a new one at the
   // end of the queue to make sure that any new pending reflow events are
@@ -5586,7 +5596,8 @@ nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion, bool
   mScrollEvent.Revoke();
 
   nsRefPtr<ScrollSelectionIntoViewEvent> ev =
-      new ScrollSelectionIntoViewEvent(this, aRegion, aFirstAncestorOnly);
+      new ScrollSelectionIntoViewEvent(this, aRegion, aVPercent, aHPercent,
+                                       aFirstAncestorOnly);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5616,7 +5627,8 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
 
   if (!(aFlags & nsTypedSelection::SCROLL_SYNCHRONOUS))
     return PostScrollSelectionIntoViewEvent(aRegion,
-      !!(aFlags & nsTypedSelection::SCROLL_FIRST_ANCESTOR_ONLY));
+      !!(aFlags & nsTypedSelection::SCROLL_FIRST_ANCESTOR_ONLY),
+      aVPercent, aHPercent);
 
   //
   // Shut the caret off before scrolling to avoid

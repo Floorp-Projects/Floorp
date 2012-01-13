@@ -47,17 +47,12 @@
 extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
                                  int ns_aware, const char** colon);
 
-nsParserService::nsParserService() : mEntries(0)
+nsParserService::nsParserService()
 {
-  mHaveNotifiedCategoryObservers = false;
 }
 
 nsParserService::~nsParserService()
 {
-  nsObserverEntry *entry = nsnull;
-  while( (entry = static_cast<nsObserverEntry*>(mEntries.Pop())) ) {
-    NS_RELEASE(entry);
-  }
 }
 
 NS_IMPL_ISUPPORTS1(nsParserService, nsIParserService)
@@ -138,60 +133,6 @@ nsParserService::IsBlock(PRInt32 aId, bool& aIsBlock) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsParserService::RegisterObserver(nsIElementObserver* aObserver,
-                                  const nsAString& aTopic,
-                                  const eHTMLTags* aTags)
-{
-  nsresult result = NS_OK;
-  nsObserverEntry* entry = GetEntry(aTopic);
-
-  if(!entry) {
-    result = CreateEntry(aTopic,&entry);
-    NS_ENSURE_SUCCESS(result,result);
-  }
-
-  while (*aTags) {
-    if (*aTags <= NS_HTML_TAG_MAX) {
-      entry->AddObserver(aObserver,*aTags);
-    }
-    ++aTags;
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsParserService::UnregisterObserver(nsIElementObserver* aObserver,
-                                    const nsAString& aTopic)
-{
-  PRInt32 count = mEntries.GetSize();
-
-  for (PRInt32 i=0; i < count; ++i) {
-    nsObserverEntry* entry = static_cast<nsObserverEntry*>(mEntries.ObjectAt(i));
-    if (entry && entry->Matches(aTopic)) {
-      entry->RemoveObserver(aObserver);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsParserService::GetTopicObservers(const nsAString& aTopic,
-                                   nsIObserverEntry** aEntry) {
-  nsresult result = NS_OK;
-  nsObserverEntry* entry = GetEntry(aTopic);
-
-  if (!entry) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  NS_ADDREF(*aEntry = entry);
-
-  return result;
-}
-
 nsresult
 nsParserService::CheckQName(const nsAString& aQName,
                             bool aNamespaceAware,
@@ -216,48 +157,4 @@ nsParserService::CheckQName(const nsAString& aQName,
   }
 
   return NS_ERROR_DOM_NAMESPACE_ERR;
-}
-
-class nsMatchesTopic : public nsDequeFunctor{
-  const nsAString& mString;
-public:
-  bool matched;
-  nsObserverEntry* entry;
-  nsMatchesTopic(const nsAString& aString):mString(aString),matched(false){}
-  virtual void* operator()(void* anObject){
-    entry=static_cast<nsObserverEntry*>(anObject);
-    matched=mString.Equals(entry->mTopic);
-    return matched ? nsnull : anObject;
-  }
-};
-
-// XXX This may be more efficient as a HashTable instead of linear search
-nsObserverEntry*
-nsParserService::GetEntry(const nsAString& aTopic)
-{
-  if (!mHaveNotifiedCategoryObservers) {
-    mHaveNotifiedCategoryObservers = true;
-    NS_CreateServicesFromCategory("parser-service-category",
-                                  static_cast<nsISupports*>(static_cast<void*>(this)),
-                                  "parser-service-start"); 
-  }
-
-  nsMatchesTopic matchesTopic(aTopic);
-  mEntries.FirstThat(*&matchesTopic);
-  return matchesTopic.matched?matchesTopic.entry:nsnull;
-}
-
-nsresult
-nsParserService::CreateEntry(const nsAString& aTopic, nsObserverEntry** aEntry)
-{
-  *aEntry = new nsObserverEntry(aTopic);
-
-  if (!*aEntry) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aEntry);
-  mEntries.Push(*aEntry);
-
-  return NS_OK;
 }

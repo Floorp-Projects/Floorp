@@ -59,7 +59,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
   // ActionAccessible
@@ -77,7 +77,7 @@ public:
                                    nsIWeakReference *aShell);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 };
 
 
@@ -97,7 +97,7 @@ public:
   // nsAccessible
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
 protected:

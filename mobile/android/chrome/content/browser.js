@@ -105,9 +105,6 @@ const kElementsReceivingInput = {
     video: true
 };
 
-const UA_MODE_MOBILE = "mobile";
-const UA_MODE_DESKTOP = "desktop";
-
 function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
 }
@@ -224,7 +221,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
-    Services.obs.addObserver(this, "AgentMode:Change", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
 
     function showFullScreenWarning() {
@@ -547,6 +543,10 @@ var BrowserApp = {
     printSettings.headerStrLeft   = "";
     printSettings.headerStrRight  = "";
 
+    // Create a valid mimeInfo for the PDF
+    let ms = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+    let mimeInfo = ms.getFromTypeAndExtension("application/pdf", "pdf");
+
     let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
 
     let cancelable = {
@@ -556,7 +556,7 @@ var BrowserApp = {
     }
     let download = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                                   aBrowser.currentURI,
-                                  Services.io.newFileURI(file), "", null,
+                                  Services.io.newFileURI(file), "", mimeInfo,
                                   Date.now() * 1000, null, cancelable);
 
     webBrowserPrint.print(printSettings, download);
@@ -831,11 +831,6 @@ var BrowserApp = {
       this.getPreferences(aData);
     } else if (aTopic == "Preferences:Set") {
       this.setPreferences(aData);
-    } else if (aTopic == "AgentMode:Change") {
-      let args = JSON.parse(aData);
-      let tab = this.getTabForId(args.tabId);
-      tab.setAgentMode(args.agent);
-      tab.browser.reload();
     } else if (aTopic == "ScrollTo:FocusedInput") {
       this.scrollToFocusedInput(browser);
     } else if (aTopic == "Sanitize:ClearAll") {
@@ -969,12 +964,9 @@ var NativeWindow = {
   },
   contextmenus: {
     items: {}, //  a list of context menu items that we may show
-    textContext: null, // saved selector for text input areas
-
     _contextId: 0, // id to assign to new context menu items if they are added
 
     init: function() {
-      this.textContext = this.SelectorContext("input[type='text'],input[type='password'],textarea");
       this.imageContext = this.SelectorContext("img");
 
       Services.obs.addObserver(this, "Gesture:LongPress", false);
@@ -1077,6 +1069,13 @@ var NativeWindow = {
           return (scheme && !dontOpen.test(scheme));
         }
         return false;
+      }
+    },
+
+    textContext: {
+      matches: function textContext(aElement) {
+        return ((aElement instanceof Ci.nsIDOMHTMLInputElement && aElement.mozIsTextField(false))
+                || aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
       }
     },
 
@@ -1286,8 +1285,6 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.vbox = null;
   this.id = 0;
-  this.agentMode = UA_MODE_MOBILE;
-  this.lastHost = null;
   this.create(aURL, aParams);
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
                      pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
@@ -1351,7 +1348,6 @@ Tab.prototype = {
     this.browser.addEventListener("pagehide", this, true);
     this.browser.addEventListener("pageshow", this, true);
 
-    Services.obs.addObserver(this, "http-on-modify-request", false);
     Services.obs.addObserver(this, "document-shown", false);
 
     if (!aParams.delayLoad) {
@@ -1377,29 +1373,6 @@ Tab.prototype = {
     }
   },
 
-  setAgentMode: function(aMode) {
-    if (this.agentMode != aMode) {
-      this.agentMode = aMode;
-      sendMessageToJava({
-        gecko: {
-          type: "AgentMode:Changed",
-          agentMode: aMode,
-          tabId: this.id
-        }
-      });
-    }
-  },
-
-  setHostFromURL: function(aURL) {
-    let uri = Services.io.newURI(aURL, null, null);
-    let host = uri.asciiHost;
-    if (this.lastHost != host) {
-      this.lastHost = host;
-      // TODO: remember mobile/desktop selection for each host (bug 705840)
-      this.setAgentMode(UA_MODE_MOBILE);
-    }
-  },
-
   destroy: function() {
     if (!this.browser)
       return;
@@ -1420,7 +1393,6 @@ Tab.prototype = {
     BrowserApp.deck.removeChild(this.vbox);
     BrowserApp.deck.selectedPanel = selectedPanel;
 
-    Services.obs.removeObserver(this, "http-on-modify-request", false);
     this.browser = null;
     this.vbox = null;
     this.documentIdForCurrentViewport = null;
@@ -1974,22 +1946,6 @@ Tab.prototype = {
 
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "http-on-modify-request":
-        if (!(aSubject instanceof Ci.nsIHttpChannel))
-          return;
-
-        let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
-        if (!(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI))
-          return;
-
-        let channelWindow = this.getWindowForRequest(channel);
-        if (channelWindow == this.browser.contentWindow) {
-          this.setHostFromURL(channel.URI.spec);
-          if (this.agentMode == UA_MODE_DESKTOP)
-            channel.setRequestHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1", false);
-        }
-        break;
-
       case "document-shown":
         // Is it on the top level?
         let contentDocument = aSubject;
@@ -3435,7 +3391,7 @@ var ClipboardHelper = {
   init: function() {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyAll"), ClipboardHelper.getCopyContext(true), ClipboardHelper.copy.bind(ClipboardHelper));
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), NativeWindow.contextmenus.textContext, ClipboardHelper.select.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), ClipboardHelper.selectAllContext, ClipboardHelper.select.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.paste"), ClipboardHelper.pasteContext, ClipboardHelper.paste.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"), NativeWindow.contextmenus.textContext, ClipboardHelper.inputMethod.bind(ClipboardHelper));
   },
@@ -3485,15 +3441,32 @@ var ClipboardHelper = {
     return {
       matches: function(aElement) {
         if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          // Don't include "copy" for password fields.
+          // mozIsTextField(true) tests for only non-password fields.
+          if (aElement instanceof Ci.nsIDOMHTMLInputElement && !aElement.mozIsTextField(true))
+            return false;
+
           let selectionStart = aElement.selectionStart;
           let selectionEnd = aElement.selectionEnd;
           if (selectionStart != selectionEnd)
             return true;
-          else if (isCopyAll)
+
+          if (isCopyAll && aElement.textLength > 0)
             return true;
         }
         return false;
       }
+    }
+  },
+
+  selectAllContext: {
+    matches: function selectAllContextMatches(aElement) {
+      if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          let selectionStart = aElement.selectionStart;
+          let selectionEnd = aElement.selectionEnd;
+          return (selectionStart > 0 || selectionEnd < aElement.textLength);
+      }
+      return false;
     }
   },
 

@@ -649,13 +649,12 @@ AddonsStore.prototype = {
    *        Function to be called with result of operation.
    */
   getInstallFromSearchResult: function getInstallFromSearchResult(addon, cb) {
-    // If we have an install, use it.
-    if (addon.install) {
-      cb(null, addon.install);
-      return;
-    }
-
-    this._log.debug("Manually obtaining install for " + addon.id);
+    // We should theoretically be able to obtain (and use) addon.install if
+    // it is available. However, the addon.sourceURI rewriting won't be
+    // reflected in the AddonInstall, so we can't use it. If we ever get rid
+    // of sourceURI rewriting, we can avoid having to reconstruct the
+    // AddonInstall.
+    this._log.debug("Obtaining install for " + addon.id);
 
     // Verify that the source URI uses TLS. We don't allow installs from
     // insecure sources for security reasons. The Addon Manager ensures that
@@ -956,6 +955,36 @@ AddonsStore.prototype = {
             }
           }
         }.bind(this);
+
+        // Rewrite the "src" query string parameter of the source URI to note
+        // that the add-on was installed by Sync and not something else so
+        // server-side metrics aren't skewed (bug 708134). The server should
+        // ideally send proper URLs, but this solution was deemed too
+        // complicated at the time the functionality was implemented.
+        for each (let addon in addons) {
+          // We should always be able to QI the nsIURI to nsIURL. If not, we
+          // still try to install the add-on, but we don't rewrite the URL,
+          // potentially skewing metrics.
+          try {
+            addon.sourceURI.QueryInterface(Ci.nsIURL);
+          } catch (ex) {
+            this._log.warn("Unable to QI sourceURI to nsIURL: " +
+                           addon.sourceURI.spec);
+            continue;
+          }
+
+          let params = addon.sourceURI.query.split("&").map(
+            function rewrite(param) {
+
+            if (param.indexOf("src=") == 0) {
+              return "src=sync";
+            } else {
+              return param;
+            }
+          });
+
+          addon.sourceURI.query = params.join("&");
+        }
 
         // Start all the installs asynchronously. They will report back to us
         // as they finish, eventually triggering the global callback.

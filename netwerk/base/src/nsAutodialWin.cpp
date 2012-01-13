@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsAutodialWin.h"
 #include "prlog.h"
+#include "nsWindowsHelpers.h"
 
 #define AUTODIAL_DEFAULT AUTODIAL_NEVER
 
@@ -515,8 +516,9 @@ nsresult nsAutodial::GetDefaultEntryName(PRUnichar* entryName, int bufferSize)
 // Determine if the autodial service is running on this PC.
 bool nsAutodial::IsAutodialServiceRunning()
 {
-    SC_HANDLE hSCManager = 
-      OpenSCManager(nsnull, SERVICES_ACTIVE_DATABASE, SERVICE_QUERY_STATUS);
+    nsAutoServiceHandle hSCManager(OpenSCManager(nsnull, 
+                                                 SERVICES_ACTIVE_DATABASE, 
+                                                 SERVICE_QUERY_STATUS));
 
     if (hSCManager == nsnull)
     {
@@ -526,8 +528,9 @@ bool nsAutodial::IsAutodialServiceRunning()
         return false;
     }
 
-    SC_HANDLE hService = 
-      OpenServiceW(hSCManager, L"RasAuto", SERVICE_QUERY_STATUS);
+    nsAutoServiceHandle hService(OpenServiceW(hSCManager, 
+                                              L"RasAuto", 
+                                              SERVICE_QUERY_STATUS));
 
     if (hSCManager == nsnull)
     {

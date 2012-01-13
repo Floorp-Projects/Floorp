@@ -53,6 +53,9 @@ function createAndStartHTTPServer(port) {
     server.registerFile("/search/guid:missing-xpi%40tests.mozilla.org",
                         do_get_file("missing-xpi-search.xml"));
 
+    server.registerFile("/search/guid:rewrite%40tests.mozilla.org",
+                        do_get_file("rewrite-search.xml"));
+
     server.start(port);
 
     return server;
@@ -433,4 +436,45 @@ add_test(function test_wipe() {
   Svc.Prefs.reset("addons.ignoreRepositoryChecking");
 
   run_next_test();
+});
+
+add_test(function test_source_uri_rewrite() {
+  _("Ensure that a 'src=api' query string is rewritten to 'src=sync'");
+
+  // This tests for conformance with bug 708134 so server-side metrics aren't
+  // skewed.
+
+  Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
+
+  // We resort to monkeypatching because of the API design.
+  let oldFunction = store.__proto__.installAddonFromSearchResult;
+
+  let installCalled = false;
+  store.__proto__.installAddonFromSearchResult =
+    function testInstallAddon(addon, cb) {
+
+    do_check_eq("http://127.0.0.1:8888/require.xpi?src=sync",
+                addon.sourceURI.spec);
+
+    installCalled = true;
+
+    store.getInstallFromSearchResult(addon, function (error, install) {
+      do_check_eq("http://127.0.0.1:8888/require.xpi?src=sync",
+                  install.sourceURI.spec);
+
+      cb(null, {id: addon.id, addon: addon, install: install});
+    });
+  };
+
+  let server = createAndStartHTTPServer(HTTP_PORT);
+
+  let installCallback = Async.makeSpinningCallback();
+  store.installAddonsFromIDs(["rewrite@tests.mozilla.org"], installCallback);
+
+  installCallback.wait();
+  do_check_true(installCalled);
+  store.__proto__.installAddonFromSearchResult = oldFunction;
+
+  Svc.Prefs.reset("addons.ignoreRepositoryChecking");
+  server.stop(run_next_test);
 });

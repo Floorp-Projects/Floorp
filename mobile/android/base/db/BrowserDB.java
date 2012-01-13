@@ -83,9 +83,8 @@ public class BrowserDB {
     }
 
     static {
-        // FIXME: Still need to figure out how to use local or android
-        // database here.
-        sDb = new AndroidBrowserDB();
+        // Forcing local DB no option to switch to Android DB for now
+        sDb = new LocalBrowserDB(BrowserContract.DEFAULT_PROFILE);
     }
 
     public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter) {
