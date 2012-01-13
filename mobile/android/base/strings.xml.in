@@ -62,10 +62,10 @@
   <string name="pref_clear_history_confirm">&pref_clear_history_confirm;</string>
   <string name="pref_clear_private_data">&pref_clear_private_data;</string>
   <string name="pref_clear_private_data_confirm">&pref_clear_private_data_confirm;</string>
-  <string name="pref_enable_plugins">&pref_enable_plugins;</string>
-  <string name="pref_enable_plugins_yes">&pref_enable_plugins_yes;</string>
-  <string name="pref_enable_plugins_tap_to_play">&pref_enable_plugins_tap_to_play;</string>
-  <string name="pref_enable_plugins_no">&pref_enable_plugins_no;</string>
+  <string name="pref_plugins">&pref_plugins;</string>
+  <string name="pref_plugins_enabled">&pref_plugins_enabled;</string>
+  <string name="pref_plugins_tap_to_play">&pref_plugins_tap_to_play;</string>
+  <string name="pref_plugins_disabled">&pref_plugins_disabled;</string>
   <string name="pref_font_size">&pref_font_size;</string>
   <string name="pref_font_size_small">&pref_font_size_small;</string>
   <string name="pref_font_size_medium">&pref_font_size_medium;</string>
