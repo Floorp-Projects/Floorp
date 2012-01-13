@@ -1432,13 +1432,24 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
         stubcc.leave();
         OOL_STUBCALL(stub, REJOIN_BRANCH);
 
+        if (!allocateLeft)
+            frame.pinReg(fpLeft);
+        if (!allocateRight)
+            frame.pinReg(fpRight);
+
         frame.syncAndKillEverything();
+
         Jump j = masm.branchDouble(dblCond, fpLeft, fpRight);
 
         if (allocateLeft)
             frame.freeReg(fpLeft);
+        else
+            frame.unpinKilledReg(fpLeft);
+
         if (allocateRight)
             frame.freeReg(fpRight);
+        else
+            frame.unpinKilledReg(fpRight);
 
         frame.popn(2);
 
