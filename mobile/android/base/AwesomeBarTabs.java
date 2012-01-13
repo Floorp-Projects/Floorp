@@ -353,9 +353,13 @@ public class AwesomeBarTabs extends TabHost {
 
             if (delta < 0) {
                 return HistorySection.TODAY;
-            } else if (delta > 0 && delta < MS_PER_DAY) {
+            }
+
+            if (delta < MS_PER_DAY) {
                 return HistorySection.YESTERDAY;
-            } else if (delta > MS_PER_DAY && delta < MS_PER_WEEK) {
+            }
+
+            if (delta < MS_PER_WEEK) {
                 return HistorySection.WEEK;
             }
 
