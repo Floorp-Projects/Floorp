@@ -2233,15 +2233,12 @@ JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s)
 {
-    size_t n;
-    void *p;
-
     AssertNoGC(cx);
-    n = strlen(s) + 1;
-    p = cx->malloc_(n);
+    size_t n = strlen(s) + 1;
+    void *p = cx->malloc_(n);
     if (!p)
         return NULL;
-    return (char *)memcpy(p, s, n);
+    return (char *)js_memcpy(p, s, n);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2517,7 +2514,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     n = strlen(name);
     if (n > bufsize - 1)
         n = bufsize - 1;
-    memcpy(buf, name, n + 1);
+    js_memcpy(buf, name, n + 1);
     buf += n;
     bufsize -= n;
 
@@ -2631,9 +2628,6 @@ DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
     JSDumpingTracer *dtrc;
     JSContext *cx;
     JSDHashEntryStub *entry;
-    JSHeapDumpNode *node;
-    const char *edgeName;
-    size_t edgeNameSize;
 
     JS_ASSERT(trc->callback == DumpNotify);
     dtrc = (JSDumpingTracer *)trc;
@@ -2672,10 +2666,10 @@ DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
         entry->key = thing;
     }
 
-    edgeName = JS_GetTraceEdgeName(&dtrc->base, dtrc->buffer, sizeof(dtrc->buffer));
-    edgeNameSize = strlen(edgeName) + 1;
+    const char *edgeName = JS_GetTraceEdgeName(&dtrc->base, dtrc->buffer, sizeof(dtrc->buffer));
+    size_t edgeNameSize = strlen(edgeName) + 1;
     size_t bytes = offsetof(JSHeapDumpNode, edgeName) + edgeNameSize;
-    node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
+    JSHeapDumpNode *node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
     if (!node) {
         dtrc->ok = JS_FALSE;
         return;
@@ -2685,7 +2679,7 @@ DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
     node->kind = kind;
     node->next = NULL;
     node->parent = dtrc->parentNode;
-    memcpy(node->edgeName, edgeName, edgeNameSize);
+    js_memcpy(node->edgeName, edgeName, edgeNameSize);
 
     JS_ASSERT(!*dtrc->lastNodep);
     *dtrc->lastNodep = node;
@@ -5501,7 +5495,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
 
     args.calleev().setObject(*ctor);
     args.thisv().setNull();
-    memcpy(args.array(), argv, argc * sizeof(jsval));
+    PodCopy(args.array(), argv, argc);
 
     if (!InvokeConstructor(cx, args))
         return NULL;
@@ -6066,7 +6060,7 @@ JSAutoStructuredCloneBuffer::copy(const uint64_t *srcData, size_t nbytes, uint32
     if (!newData)
         return false;
 
-    memcpy(newData, srcData, nbytes);
+    js_memcpy(newData, srcData, nbytes);
 
     clear();
     data_ = newData;

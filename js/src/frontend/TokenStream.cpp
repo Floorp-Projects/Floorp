@@ -485,7 +485,7 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorN
             warning = false;
             goto out;
         }
-        memcpy(linechars, linebase, linelength * sizeof(jschar));
+        PodCopy(linechars, linebase, linelength);
         linechars[linelength] = 0;
         linebytes = DeflateString(cx, linechars, linelength);
         if (!linebytes) {
