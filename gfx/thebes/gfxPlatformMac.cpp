@@ -303,16 +303,26 @@ already_AddRefed<gfxASurface>
 gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
   if (aTarget->GetType() == BACKEND_COREGRAPHICS) {
-    CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT));
+    void *surface = aTarget->GetUserData(&ThebesSurfaceKey);
+    if (surface) {
+      nsRefPtr<gfxASurface> surf = static_cast<gfxQuartzSurface*>(surface);
+      return surf.forget();
+    } else {
+      CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT));
 
-    //XXX: it would be nice to have an implicit conversion from IntSize to gfxIntSize
-    IntSize intSize = aTarget->GetSize();
-    gfxIntSize size(intSize.width, intSize.height);
+      //XXX: it would be nice to have an implicit conversion from IntSize to gfxIntSize
+      IntSize intSize = aTarget->GetSize();
+      gfxIntSize size(intSize.width, intSize.height);
 
-    nsRefPtr<gfxASurface> surf =
-      new gfxQuartzSurface(cg, size);
+      nsRefPtr<gfxASurface> surf =
+        new gfxQuartzSurface(cg, size);
 
-    return surf.forget();
+      // add a reference to be held by the drawTarget
+      surf->AddRef();
+      aTarget->AddUserData(&ThebesSurfaceKey, surf.get(), DestroyThebesSurface);
+
+      return surf.forget();
+    }
   }
 
   return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
