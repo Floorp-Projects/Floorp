@@ -593,24 +593,33 @@ abstract public class GeckoApp
                 mLastUri = lastHistoryEntry.mUri;
                 mLastTitle = lastHistoryEntry.mTitle;
                 Bitmap bitmap = mSoftwareLayerClient.getBitmap();
+
                 if (bitmap != null) {
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-                    mLastScreen = bos.toByteArray();
-
-                    // Make a thumbnail for the given tab, if it's still selected
-                    // NOTE: bitmap is recycled in updateThumbnail
-                    if (tab == mThumbnailTab) {
-                        if (mThumbnailTab.getURL().equals("about:home"))
-                            mThumbnailTab.updateThumbnail(null);
-                        else
-                            mThumbnailTab.updateThumbnail(bitmap);
-                    }
+                    processThumbnail(tab, bitmap, bos.toByteArray());
                 } else {
                     mLastScreen = null;
+                    GeckoAppShell.sendEventToGecko(
+                        new GeckoEvent("Tab:Screenshot", 
+                                       "{\"width\": \"" + mSoftwareLayerClient.getWidth() + "\", " +
+                                       "\"height\": \"" + mSoftwareLayerClient.getHeight() + "\", " +
+                                       "\"tabID\": \"" + tab.getId() + "\" }"));
                 }
             }
         }
+    }
+    
+    void processThumbnail(Tab thumbnailTab, Bitmap bitmap, byte[] compressed) {
+        if (Tabs.getInstance().isSelectedTab(tab))
+            mLastScreen = compressed;
+        if (thumbnailTab.getURL().equals("about:home")) {
+            thumbnailTab.updateThumbnail(null);
+            return;
+        }
+        if (bitmap == null)
+            bitmap = BitmapFactory.decodeByteArray(compressed, 0, compressed.length);
+        thumbnailTab.updateThumbnail(bitmap);
     }
 
     private void maybeCancelFaviconLoad(Tab tab) {
@@ -898,6 +907,10 @@ abstract public class GeckoApp
                 Log.i(LOGTAG, "Destroyed a tab");
                 int tabId = message.getInt("tabID");
                 handleCloseTab(tabId);
+            } else if (event.equals("Tab:ScreenshotData")) {
+                int tabId = message.getInt("tabID");
+                Tab tab = Tabs.getInstance().getTab(tabId);
+                processThumbnail(tab, null, Base64.decode(message.getString("data").substring(22), Base64.DEFAULT));
             } else if (event.equals("Tab:Selected")) {
                 int tabId = message.getInt("tabID");
                 Log.i(LOGTAG, "Switched to tab: " + tabId);
@@ -1534,6 +1547,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Tab:ScreenshotData", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
@@ -1770,6 +1784,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Tab:ScreenshotData", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
