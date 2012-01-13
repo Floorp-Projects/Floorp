@@ -48,10 +48,12 @@
 
 // we eventually want to make this runtime switchable
 #if defined(XP_MACOSX) || defined(XP_UNIX)
-#define USE_BACKTRACE
+ #ifndef ANDROID
+  #define USE_BACKTRACE
+ #endif
 #endif
 #ifdef USE_BACKTRACE
-#include <execinfo.h>
+ #include <execinfo.h>
 #endif
 
 using std::string;
