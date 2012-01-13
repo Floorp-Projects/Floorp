@@ -39,11 +39,12 @@
 
 #include "nsBaseWidgetAccessible.h"
 
-#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsHyperTextAccessibleWrap.h"
+#include "Role.h"
+#include "States.h"
 
 #include "nsGUIEvent.h"
 #include "nsILink.h"
@@ -232,11 +233,11 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
   // is traversed.
   nsAccessible* walkUpAcc = this;
   while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
-    if (walkUpAcc->Role() == nsIAccessibleRole::ROLE_LINK &&
+    if (walkUpAcc->Role() == roles::LINK &&
         walkUpAcc->State() & states::LINKED) {
-      mIsLink = true;
-      mActionAcc = walkUpAcc;
-      return;
+        mIsLink = true;
+        mActionAcc = walkUpAcc;
+        return;
     }
 
     if (nsCoreUtils::HasClickListener(walkUpAcc->GetContent())) {
@@ -253,14 +254,14 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
 
 nsEnumRoleAccessible::
   nsEnumRoleAccessible(nsIContent *aNode, nsIWeakReference *aShell,
-                       PRUint32 aRole) :
+                       roles::Role aRole) :
   nsAccessibleWrap(aNode, aShell), mRole(aRole)
 {
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsEnumRoleAccessible, nsAccessible)
 
-PRUint32
+role
 nsEnumRoleAccessible::NativeRole()
 {
   return mRole;

@@ -4641,26 +4641,6 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
 
     PICGenInfo pic(ic::PICInfo::GET, JSOp(*PC));
 
-    /* Guard that the type is an object. */
-    Label typeCheck;
-    if (doTypeCheck && !top->isTypeKnown()) {
-        RegisterID reg = frame.tempRegForType(top);
-        pic.typeReg = reg;
-
-        /* Start the hot path where it's easy to patch it. */
-        pic.fastPathStart = masm.label();
-        Jump j = masm.testObject(Assembler::NotEqual, reg);
-        typeCheck = masm.label();
-        RETURN_IF_OOM(false);
-
-        pic.typeCheck = stubcc.linkExit(j, Uses(1));
-        pic.hasTypeCheck = true;
-    } else {
-        pic.fastPathStart = masm.label();
-        pic.hasTypeCheck = false;
-        pic.typeReg = Registers::ReturnReg;
-    }
-
     /*
      * If this access has been on a shape with a getter hook, make preparations
      * so that we can generate a stub to call the hook directly (rather than be
@@ -4672,10 +4652,35 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
     pic.canCallHook = pic.forcedTypeBarrier =
         !forPrototype &&
         JSOp(*PC) == JSOP_GETPROP &&
-        name != cx->runtime->atomState.lengthAtom &&
         analysis->getCode(PC).accessGetter;
-    if (pic.canCallHook)
-        frame.syncAndKillEverything();
+
+    /* Guard that the type is an object. */
+    Label typeCheck;
+    if (doTypeCheck && !top->isTypeKnown()) {
+        RegisterID reg = frame.tempRegForType(top);
+        pic.typeReg = reg;
+
+        if (pic.canCallHook) {
+            PinRegAcrossSyncAndKill p1(frame, reg);
+            frame.syncAndKillEverything();
+        }
+
+        /* Start the hot path where it's easy to patch it. */
+        pic.fastPathStart = masm.label();
+        Jump j = masm.testObject(Assembler::NotEqual, reg);
+        typeCheck = masm.label();
+        RETURN_IF_OOM(false);
+
+        pic.typeCheck = stubcc.linkExit(j, Uses(1));
+        pic.hasTypeCheck = true;
+    } else {
+        if (pic.canCallHook)
+            frame.syncAndKillEverything();
+
+        pic.fastPathStart = masm.label();
+        pic.hasTypeCheck = false;
+        pic.typeReg = Registers::ReturnReg;
+    }
 
     pic.shapeReg = shapeReg;
     pic.name = name;

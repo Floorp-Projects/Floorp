@@ -229,7 +229,7 @@ class Comparator {
     BIRTH_LINE = 16,
     COUNT = 32,
     AVERAGE_DURATION = 64,
-    TOTAL_DURATION = 128,
+    TOTAL_DURATION = 128
   };
 
   explicit Comparator();
@@ -389,7 +389,7 @@ class ThreadData {
   enum Status {
     UNINITIALIZED,
     ACTIVE,
-    SHUTDOWN,
+    SHUTDOWN
   };
 
   // A class used to count down which is accessed by several threads.  This is

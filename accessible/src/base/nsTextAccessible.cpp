@@ -40,6 +40,10 @@
 
 #include "nsTextAccessible.h"
 
+#include "Role.h"
+
+using namespace mozilla::a11y;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,10 +55,10 @@ nsTextAccessible::
   mFlags |= eTextLeafAccessible;
 }
 
-PRUint32
+role
 nsTextAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_TEXT_LEAF;
+  return roles::TEXT_LEAF;
 }
 
 void

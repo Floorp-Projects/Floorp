@@ -124,6 +124,8 @@ public class PanZoomController
     private final Axis mX;
     private final Axis mY;
 
+    private Thread mMainThread;
+
     /* The timer that handles flings or bounces. */
     private Timer mAnimationTimer;
     /* The runnable being scheduled by the animation timer. */
@@ -141,10 +143,21 @@ public class PanZoomController
         mX = new AxisX(mSubscroller);
         mY = new AxisY(mSubscroller);
 
+        mMainThread = GeckoApp.mAppContext.getMainLooper().getThread();
+        checkMainThread();
+
         mState = PanZoomState.NOTHING;
 
         GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_RECT, this);
         GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
+    }
+
+    // for debugging bug 713011; it can be taken out once that is resolved.
+    private void checkMainThread() {
+        if (mMainThread != Thread.currentThread()) {
+            // log with full stack trace
+            Log.e(LOGTAG, "Uh-oh, we're running on the wrong thread!", new Exception());
+        }
     }
 
     public void handleMessage(String event, JSONObject message) {
@@ -198,6 +211,7 @@ public class PanZoomController
     /** This function must be called from the UI thread. */
     @SuppressWarnings("fallthrough")
     public void abortAnimation() {
+        checkMainThread();
         // this happens when gecko changes the viewport on us or if the device is rotated.
         // if that's the case, abort any animation in progress and re-zoom so that the page
         // snaps to edges. for other cases (where the user's finger(s) are down) don't do
@@ -631,6 +645,8 @@ public class PanZoomController
     }
 
     private void finishAnimation() {
+        checkMainThread();
+
         Log.d(LOGTAG, "Finishing animation at " + mController.getViewportMetrics());
         stopAnimationTimer();
 

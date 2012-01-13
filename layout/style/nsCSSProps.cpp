@@ -1200,6 +1200,17 @@ const PRInt32 nsCSSProps::kTextAlignKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kTextAlignLastKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_TEXT_ALIGN_AUTO,
+  eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT,
+  eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT,
+  eCSSKeyword_center, NS_STYLE_TEXT_ALIGN_CENTER,
+  eCSSKeyword_justify, NS_STYLE_TEXT_ALIGN_JUSTIFY,
+  eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_DEFAULT,
+  eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kTextBlinkKTable[] = {
   eCSSKeyword_none, NS_STYLE_TEXT_BLINK_NONE,
   eCSSKeyword_blink, NS_STYLE_TEXT_BLINK_BLINK,

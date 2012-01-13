@@ -1,3 +1,5 @@
+var otherGlobal = newGlobal('new-compartment');
+
 function test(str, arg, result)
 {
     arg = arg || 'ponies';
@@ -13,7 +15,13 @@ function test(str, arg, result)
         assertEq(got, expect);
     }
 
+    // test reflection logic
     Reflect.parse(got);
+
+    // test xdr by cloning a cross-compartment function
+    otherGlobal.str = str;
+    var c = clone(otherGlobal.eval("new Function('x', str)"));
+    assertEq(c.toSource(), fun.toSource());
 
     var got = fun(arg);
     var expect = result;

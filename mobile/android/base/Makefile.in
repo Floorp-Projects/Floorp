@@ -337,29 +337,7 @@ RES_DRAWABLE_HDPI_V8 = \
   res/drawable-hdpi-v8/urlbar_stop.png \
   $(NULL)
 
-RES_DRAWABLE_MDPI_V9 = \
-  res/drawable-mdpi-v9/ic_menu_bookmark_add.png \
-  res/drawable-mdpi-v9/ic_menu_bookmark_remove.png \
-  res/drawable-mdpi-v9/ic_menu_find_in_page.png \
-  res/drawable-mdpi-v9/ic_menu_reload.png \
-  res/drawable-mdpi-v9/ic_menu_save_as_pdf.png \
-  res/drawable-mdpi-v9/ic_menu_share.png \
-  res/drawable-mdpi-v9/ic_menu_forward.png \
-  $(NULL)
-
-RES_DRAWABLE_HDPI_V9 = \
-  res/drawable-hdpi-v9/ic_menu_bookmark_add.png \
-  res/drawable-hdpi-v9/ic_menu_bookmark_remove.png \
-  res/drawable-hdpi-v9/ic_menu_find_in_page.png \
-  res/drawable-hdpi-v9/ic_menu_reload.png \
-  res/drawable-hdpi-v9/ic_menu_save_as_pdf.png \
-  res/drawable-hdpi-v9/ic_menu_share.png \
-  res/drawable-hdpi-v9/ic_menu_forward.png \
-  $(NULL)
-
 RES_DRAWABLE_MDPI_V11 = \
-  res/drawable-mdpi-v11/ic_awesomebar_go.png \
-  res/drawable-mdpi-v11/ic_awesomebar_search.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-mdpi-v11/ic_menu_find_in_page.png \
@@ -370,8 +348,6 @@ RES_DRAWABLE_MDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V11 = \
-  res/drawable-hdpi-v11/ic_awesomebar_go.png \
-  res/drawable-hdpi-v11/ic_awesomebar_search.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-hdpi-v11/ic_menu_find_in_page.png \
@@ -525,7 +501,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \

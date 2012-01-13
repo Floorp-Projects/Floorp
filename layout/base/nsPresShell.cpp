@@ -5246,7 +5246,8 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll)
     nsRefPtr<nsSynthMouseMoveEvent> ev =
         new nsSynthMouseMoveEvent(this, aFromScroll);
 
-    if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
+    if (!GetPresContext()->RefreshDriver()->AddRefreshObserver(ev,
+                                                               Flush_Display)) {
       NS_WARNING("failed to dispatch nsSynthMouseMoveEvent");
       return;
     }
@@ -7506,9 +7507,10 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
     UnsuppressAndInvalidate();
   }
 
-  if (mDocument->GetRootElement() && mDocument->GetRootElement()->IsXUL()) {
-    mozilla::Telemetry::AccumulateTimeDelta(Telemetry::XUL_REFLOW_MS,
-                                            timerStart);
+  if (mDocument->GetRootElement()) {
+    Telemetry::ID id = (mDocument->GetRootElement()->IsXUL()
+                        ? Telemetry::XUL_REFLOW_MS : Telemetry::HTML_REFLOW_MS);
+    Telemetry::AccumulateTimeDelta(id, timerStart);
   }
 
   return !interrupted;

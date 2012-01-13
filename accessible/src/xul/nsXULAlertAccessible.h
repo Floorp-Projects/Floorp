@@ -55,7 +55,7 @@ public:
   NS_IMETHOD GetName(nsAString& aName);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
   // Widgets

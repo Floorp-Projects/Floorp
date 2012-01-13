@@ -4,7 +4,7 @@
     <item android:right="44dp">
         <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
             android:src="@drawable/address_bar_texture"
-            android:tileMode="repeat"
+            android:tileMode="mirror"
             android:dither="false"/>
      </item>
 
