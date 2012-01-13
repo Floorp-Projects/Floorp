@@ -180,6 +180,24 @@ Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one
   return f_ ## name(jenv, jc, one, two, three); \
 }
 
+#define SHELL_WRAPPER4(name,type1,type2,type3,type4) \
+typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT void JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four) \
+{ \
+  f_ ## name(jenv, jc, one, two, three, four); \
+}
+
+#define SHELL_WRAPPER4_WITH_RETURN(name, return_type, type1, type2, type3, type4) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four) \
+{ \
+  return f_ ## name(jenv, jc, one, two, three, four); \
+}
+
 SHELL_WRAPPER0(nativeInit)
 SHELL_WRAPPER1(nativeRun, jstring)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
@@ -198,7 +216,9 @@ SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
 SHELL_WRAPPER0(bindWidgetTexture);
 SHELL_WRAPPER0_WITH_RETURN(testDirectTexture, bool);
-SHELL_WRAPPER3(onSmsSent, jstring, jstring, jlong);
+SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong);
+SHELL_WRAPPER4(notifySmsSent, jint, jstring, jstring, jlong);
+SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong);
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
@@ -586,7 +606,9 @@ loadLibs(const char *apkName)
   GETFUNC(notifySmsReceived);
   GETFUNC(bindWidgetTexture);
   GETFUNC(testDirectTexture);
-  GETFUNC(onSmsSent);
+  GETFUNC(saveMessageInSentbox);
+  GETFUNC(notifySmsSent);
+  GETFUNC(notifySmsDelivered);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);

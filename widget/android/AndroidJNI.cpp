@@ -86,7 +86,9 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv *, jclass, jstring uri);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jdouble, jboolean, jdouble);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass, jstring, jstring, jlong);
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onSmsSent(JNIEnv* jenv, jclass, jstring, jstring, jlong);
+    NS_EXPORT PRInt32 JNICALL Java_org_mozilla_gecko_GeckoAppShell_saveMessageInSentbox(JNIEnv* jenv, jclass, jstring, jstring, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsDelivered(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
@@ -275,56 +277,98 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass,
     NS_DispatchToMainThread(runnable);
 }
 
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onSmsSent(JNIEnv* jenv, jclass,
-                                               jstring aReceiver,
-                                               jstring aBody,
-                                               jlong aTimestamp)
+NS_EXPORT PRInt32 JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_saveMessageInSentbox(JNIEnv* jenv, jclass,
+                                                          jstring aReceiver,
+                                                          jstring aBody,
+                                                          jlong aTimestamp)
 {
-    class OnSmsSentRunnable : public nsRunnable {
+    nsCOMPtr<nsISmsDatabaseService> smsDBService =
+      do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+
+    if (!smsDBService) {
+      NS_ERROR("Sms Database Service not available!");
+      return -1;
+    }
+
+    PRInt32 id;
+    smsDBService->SaveSentMessage(nsJNIString(aReceiver, jenv),
+                                  nsJNIString(aBody, jenv), aTimestamp, &id);
+
+    return id;
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass,
+                                                   jint aId,
+                                                   jstring aReceiver,
+                                                   jstring aBody,
+                                                   jlong aTimestamp)
+{
+    class NotifySmsSentRunnable : public nsRunnable {
     public:
-      OnSmsSentRunnable(const nsAString& aReceiver, const nsAString& aBody, PRUint64 aTimestamp)
-        : mReceiver(aReceiver)
-        , mBody(aBody)
-        , mTimestamp(aTimestamp)
+      NotifySmsSentRunnable(const SmsMessageData& aMessageData)
+        : mMessageData(aMessageData)
       {}
 
       NS_IMETHODIMP Run() {
-        nsCOMPtr<nsISmsDatabaseService> smsDBService =
-          do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
-
-        if (!smsDBService) {
-          NS_ERROR("Sms Database Service not available!");
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+        if (!obs) {
           return NS_OK;
         }
 
-        int id;
-        smsDBService->SaveSentMessage(mReceiver, mBody, mTimestamp, &id);
-
-        nsCOMPtr<SmsMessage> message =
-          new SmsMessage(id, eDeliveryState_Sent, EmptyString(),
-                         mReceiver, mBody, mTimestamp);
-
-        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        if (!obs) {
-            NS_ERROR("Observer Service not available!");
-            return NS_OK;
-        }
-
+        nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessageData);
         obs->NotifyObservers(message, kSmsSentObserverTopic, nsnull);
 
         return NS_OK;
       }
 
     private:
-      nsString mReceiver;
-      nsString mBody;
-      PRUint64 mTimestamp;
+      SmsMessageData mMessageData;
     };
 
-    nsCOMPtr<nsIRunnable> runnable =
-      new OnSmsSentRunnable(nsJNIString(aReceiver, jenv),
-                            nsJNIString(aBody, jenv), aTimestamp);
+    SmsMessageData message(aId, eDeliveryState_Sent, EmptyString(),
+                           nsJNIString(aReceiver, jenv),
+                           nsJNIString(aBody, jenv), aTimestamp);
+
+    nsCOMPtr<nsIRunnable> runnable = new NotifySmsSentRunnable(message);
+    NS_DispatchToMainThread(runnable);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifySmsDelivered(JNIEnv* jenv, jclass,
+                                                        jint aId,
+                                                        jstring aReceiver,
+                                                        jstring aBody,
+                                                        jlong aTimestamp)
+{
+    class NotifySmsDeliveredRunnable : public nsRunnable {
+    public:
+      NotifySmsDeliveredRunnable(const SmsMessageData& aMessageData)
+        : mMessageData(aMessageData)
+      {}
+
+      NS_IMETHODIMP Run() {
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+        if (!obs) {
+          return NS_OK;
+        }
+
+        nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessageData);
+        obs->NotifyObservers(message, kSmsDeliveredObserverTopic, nsnull);
+
+        return NS_OK;
+      }
+
+    private:
+      SmsMessageData mMessageData;
+    };
+
+    SmsMessageData message(aId, eDeliveryState_Sent, EmptyString(),
+                           nsJNIString(aReceiver, jenv),
+                           nsJNIString(aBody, jenv), aTimestamp);
+
+    nsCOMPtr<nsIRunnable> runnable = new NotifySmsDeliveredRunnable(message);
     NS_DispatchToMainThread(runnable);
 }
 
