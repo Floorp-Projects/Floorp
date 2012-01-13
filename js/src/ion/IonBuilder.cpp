@@ -704,10 +704,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_CALL:
-        return jsop_call(GET_ARGC(pc), false);
-
-      case JSOP_NEW:
-        return jsop_call(GET_ARGC(pc), true);
+        return jsop_call(GET_ARGC(pc));
 
       case JSOP_INT8:
         return pushConstant(Int32Value(GET_INT8(pc)));
@@ -2348,9 +2345,9 @@ IonBuilder::maybeInline(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_call(uint32 argc, bool construct)
+IonBuilder::jsop_call(uint32 argc)
 {
-    if (inliningEnabled() && !construct) {
+    if (inliningEnabled()) {
         InliningStatus status = maybeInline(argc);
         switch (status) {
           case InliningStatus_Error:
@@ -2364,7 +2361,7 @@ IonBuilder::jsop_call(uint32 argc, bool construct)
 
     }
 
-    MCall *ins = MCall::New(argc + 1, construct); // +1 for implicit this.
+    MCall *ins = MCall::New(argc + 1); // +1 for implicit this.
     if (!ins)
         return false;
 
