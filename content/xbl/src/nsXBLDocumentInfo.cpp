@@ -58,6 +58,7 @@
 #include "xpcpublic.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
+#include "nsCCUncollectableMarker.h"
 
 using namespace mozilla::scache;
 
@@ -466,6 +467,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObject)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
+  if (tmp->mDocument &&
+      nsCCUncollectableMarker::InGeneration(cb, tmp->mDocument->GetMarkedCCGeneration())) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
   if (tmp->mBindingTable) {
     tmp->mBindingTable->Enumerate(TraverseProtos, &cb);
