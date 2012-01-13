@@ -168,6 +168,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     jNumberOfMessages = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNumberOfMessagesForText", "(Ljava/lang/String;)I");
     jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jSaveSentMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "saveSentMessage", "(Ljava/lang/String;Ljava/lang/String;J)I");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1351,6 +1352,18 @@ AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage)
     jstring jMessage = GetJNIForThread()->NewString(PromiseFlatString(aMessage).get(), aMessage.Length());
 
     GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSendMessage, jNumber, jMessage);
+}
+
+PRInt32
+AndroidBridge::SaveSentMessage(const nsAString& aRecipient,
+                                const nsAString& aBody, PRUint64 aDate)
+{
+    ALOG_BRIDGE("AndroidBridge::SaveSentMessage");
+
+    AutoLocalJNIFrame jniFrame;
+    jstring jRecipient = GetJNIForThread()->NewString(PromiseFlatString(aRecipient).get(), aRecipient.Length());
+    jstring jBody = GetJNIForThread()->NewString(PromiseFlatString(aBody).get(), aBody.Length());
+    return GetJNIForThread()->CallStaticIntMethod(mGeckoAppShellClass, jSaveSentMessage, jRecipient, jBody, aDate);
 }
 
 void *

@@ -60,6 +60,7 @@
 // #define DEBUG_ANDROID_WIDGET
 
 class nsWindow;
+class nsIDOMMozSmsMessage;
 
 namespace mozilla {
 
@@ -335,6 +336,7 @@ public:
 
     PRUint16 GetNumberOfMessagesForText(const nsAString& aText);
     void SendMessage(const nsAString& aNumber, const nsAString& aText);
+    PRInt32 SaveSentMessage(const nsAString& aRecipient, const nsAString& aBody, PRUint64 aDate);
 
     bool IsTablet();
 
@@ -425,6 +427,7 @@ protected:
 
     jmethodID jNumberOfMessages;
     jmethodID jSendMessage;
+    jmethodID jSaveSentMessage;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;
