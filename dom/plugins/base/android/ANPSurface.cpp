@@ -166,7 +166,7 @@ static bool init() {
   if (gSurfaceFunctions.initialized)
     return true;
 
-  void* handle = dlopen("/system/lib/libsurfaceflinger_client.so", RTLD_LAZY);
+  void* handle = dlopen("libsurfaceflinger_client.so", RTLD_LAZY);
 
   if (!handle) {
     LOG("Failed to open libsurfaceflinger_client.so");
@@ -176,7 +176,7 @@ static bool init() {
   gSurfaceFunctions.lock = (int (*)(void*, SurfaceInfo*, void*))dlsym(handle, "_ZN7android7Surface4lockEPNS0_11SurfaceInfoEPNS_6RegionEb");
   gSurfaceFunctions.unlockAndPost = (int (*)(void*))dlsym(handle, "_ZN7android7Surface13unlockAndPostEv");
 
-  handle = dlopen("/system/lib/libui.so", RTLD_LAZY);
+  handle = dlopen("libui.so", RTLD_LAZY);
   if (!handle) {
     LOG("Failed to open libui.so");
     return false;
