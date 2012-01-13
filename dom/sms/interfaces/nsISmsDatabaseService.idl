@@ -38,14 +38,14 @@
 
 %{C++
 #define SMS_DATABASE_SERVICE_CID \
-{ 0xb5bd6b55, 0x2e56, 0x4f1d,    \
- { 0xa4, 0x38, 0x1d, 0x10, 0xd6, 0xf3, 0x4d, 0xe5 } }
+{ 0x1cb004a0, 0xe003, 0x48b9,    \
+{ 0x9f, 0xd6, 0xe9, 0x1f, 0xbb, 0xb1, 0x97, 0x89 } }
 #define SMS_DATABASE_SERVICE_CONTRACTID "@mozilla.org/sms/smsdatabaseservice;1"
 %}
 
-interface nsIDOMMozSmsMessage;
-
-[scriptable, function, uuid(ff6128fd-8caf-4b2b-898e-fb4051996767)]
+[scriptable, function, uuid(ab23f736-f545-4fcd-a298-3d6e2b380042)]
 interface nsISmsDatabaseService : nsISupports
 {
+  // Takes some information required to save the message and returns its id.
+  long saveSentMessage(in DOMString aReceiver, in DOMString aBody, in unsigned long long aDate);
 };

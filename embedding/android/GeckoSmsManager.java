@@ -48,6 +48,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.ContentUris;
+
+import android.net.Uri;
 
 import android.os.Bundle;
 
@@ -224,7 +229,9 @@ public class GeckoSmsManager
         // TODO: inform about the send failure.
         Log.i("GeckoSmsManager", "SMS sending failed!");
       } else {
-        // TODO: inform about the send success.
+        GeckoAppShell.onSmsSent(bundle.getString("number"),
+                                bundle.getString("message"),
+                                System.currentTimeMillis());
         Log.i("GeckoSmsManager", "SMS sending was successfull!");
       }
 
@@ -303,6 +310,36 @@ public class GeckoSmsManager
       if (envelopeId != Postman.kUnknownEnvelopeId) {
         Postman.getInstance().destroyEnvelope(envelopeId);
       }
+    }
+  }
+
+  public static int saveSentMessage(String aRecipient, String aBody, long aDate) {
+    class IdTooHighException extends Exception { }
+
+    try {
+      ContentValues values = new ContentValues();
+      values.put("address", aRecipient);
+      values.put("body", aBody);
+      values.put("date", aDate);
+
+      ContentResolver cr = GeckoApp.surfaceView.getContext().getContentResolver();
+      Uri uri = cr.insert(Uri.parse("content://sms/sent"), values);
+
+      long id = ContentUris.parseId(uri);
+
+      // The DOM API takes a 32bits unsigned int for the id. It's unlikely that
+      // we happen to need more than that but it doesn't cost to check.
+      if (id > Integer.MAX_VALUE) {
+        throw new IdTooHighException();
+      }
+
+      return (int)id;
+    } catch (IdTooHighException e) {
+      Log.e("GeckoSmsManager", "The id we received is higher than the higher allowed value.");
+      return -1;
+    } catch (Exception e) {
+      Log.e("GeckoSmsManager", "Something went wrong when trying to write a sent message: " + e);
+      return -1;
     }
   }
 }

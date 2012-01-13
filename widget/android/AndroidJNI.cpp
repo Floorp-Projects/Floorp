@@ -63,6 +63,7 @@
 #include "mozilla/dom/sms/Constants.h"
 #include "mozilla/dom/sms/Types.h"
 #include "mozilla/dom/sms/PSms.h"
+#include "nsISmsDatabaseService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom::sms;
@@ -85,6 +86,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv *, jclass, jstring uri);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jdouble, jboolean, jdouble);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass, jstring, jstring, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onSmsSent(JNIEnv* jenv, jclass, jstring, jstring, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
@@ -270,6 +272,50 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass,
                            nsJNIString(aBody, jenv), aTimestamp);
 
     nsCOMPtr<nsIRunnable> runnable = new NotifySmsReceivedRunnable(message);
+    NS_DispatchToMainThread(runnable);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_onSmsSent(JNIEnv* jenv, jclass,
+                                               jstring aReceiver,
+                                               jstring aBody,
+                                               jlong aTimestamp)
+{
+    class OnSmsSentRunnable : public nsRunnable {
+    public:
+      OnSmsSentRunnable(const nsAString& aReceiver, const nsAString& aBody, PRUint64 aTimestamp)
+        : mReceiver(aReceiver)
+        , mBody(aBody)
+        , mTimestamp(aTimestamp)
+      {}
+
+      NS_IMETHODIMP Run() {
+        nsCOMPtr<nsISmsDatabaseService> smsDBService =
+          do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+
+        if (!smsDBService) {
+          NS_ERROR("Sms Database Service not available!");
+          return NS_OK;
+        }
+
+        int id;
+        smsDBService->SaveSentMessage(mReceiver, mBody, mTimestamp, &id);
+
+        // TODO: use the ID to build a SmsMessage object and notify about the
+        // sent message.
+
+        return NS_OK;
+      }
+
+    private:
+      nsString mReceiver;
+      nsString mBody;
+      PRUint64 mTimestamp;
+    };
+
+    nsCOMPtr<nsIRunnable> runnable =
+      new OnSmsSentRunnable(nsJNIString(aReceiver, jenv),
+                            nsJNIString(aBody, jenv), aTimestamp);
     NS_DispatchToMainThread(runnable);
 }
 
