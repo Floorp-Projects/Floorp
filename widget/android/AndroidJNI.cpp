@@ -59,10 +59,14 @@
 #include "nsExceptionHandler.h"
 #endif
 
+#include "mozilla/unused.h"
+
 #include "mozilla/dom/sms/SmsMessage.h"
 #include "mozilla/dom/sms/Constants.h"
 #include "mozilla/dom/sms/Types.h"
 #include "mozilla/dom/sms/PSms.h"
+#include "mozilla/dom/sms/SmsRequestManager.h"
+#include "mozilla/dom/sms/SmsParent.h"
 #include "nsISmsDatabaseService.h"
 
 using namespace mozilla;
@@ -87,7 +91,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jdouble, jboolean, jdouble);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass, jstring, jstring, jlong);
     NS_EXPORT PRInt32 JNICALL Java_org_mozilla_gecko_GeckoAppShell_saveMessageInSentbox(JNIEnv* jenv, jclass, jstring, jstring, jlong);
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsDelivered(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
@@ -303,15 +307,24 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass,
                                                    jint aId,
                                                    jstring aReceiver,
                                                    jstring aBody,
-                                                   jlong aTimestamp)
+                                                   jlong aTimestamp,
+                                                   jint aRequestId,
+                                                   jlong aProcessId)
 {
     class NotifySmsSentRunnable : public nsRunnable {
     public:
-      NotifySmsSentRunnable(const SmsMessageData& aMessageData)
+      NotifySmsSentRunnable(const SmsMessageData& aMessageData,
+                            PRInt32 aRequestId, PRUint64 aProcessId)
         : mMessageData(aMessageData)
+        , mRequestId(aRequestId)
+        , mProcessId(aProcessId)
       {}
 
       NS_IMETHODIMP Run() {
+        /*
+         * First, we are going to notify all SmsManager that a message has
+         * been sent. Then, we will notify the SmsRequest object about it.
+         */
         nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
         if (!obs) {
           return NS_OK;
@@ -320,18 +333,33 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass,
         nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessageData);
         obs->NotifyObservers(message, kSmsSentObserverTopic, nsnull);
 
+        if (mProcessId == 0) { // Parent process.
+          SmsRequestManager::GetInstance()->NotifySmsSent(mRequestId, message);
+        } else { // Content process.
+          nsTArray<SmsParent*> spList;
+          SmsParent::GetAll(spList);
+
+          for (PRUint32 i=0; i<spList.Length(); ++i) {
+            unused << spList[i]->SendNotifyRequestSmsSent(mMessageData,
+                                                          mRequestId,
+                                                          mProcessId);
+          }
+        }
+
         return NS_OK;
       }
 
     private:
       SmsMessageData mMessageData;
+      PRInt32        mRequestId;
+      PRUint64       mProcessId;
     };
 
     SmsMessageData message(aId, eDeliveryState_Sent, EmptyString(),
                            nsJNIString(aReceiver, jenv),
                            nsJNIString(aBody, jenv), aTimestamp);
 
-    nsCOMPtr<nsIRunnable> runnable = new NotifySmsSentRunnable(message);
+    nsCOMPtr<nsIRunnable> runnable = new NotifySmsSentRunnable(message, aRequestId, aProcessId);
     NS_DispatchToMainThread(runnable);
 }
 

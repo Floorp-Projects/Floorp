@@ -65,6 +65,9 @@ child:
 
     NotifyDeliveredMessage(SmsMessageData aMessageData);
 
+    NotifyRequestSmsSent(SmsMessageData aMessageData, PRInt32 aRequestId,
+                         PRUint64 aProcessId);
+
 parent:
     sync HasSupport()
         returns (bool aHasSupport);
@@ -72,7 +75,8 @@ parent:
     sync GetNumberOfMessagesForText(nsString aText)
         returns (PRUint16 aNumber);
 
-    SendMessage(nsString aNumber, nsString aMessage);
+    SendMessage(nsString aNumber, nsString aMessage, PRInt32 aRequestId,
+                PRUint64 aProcessId);
 
     sync SaveSentMessage(nsString aReceiver, nsString aBody, PRUint64 aDate)
         returns (PRInt32 aId);

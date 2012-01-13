@@ -43,6 +43,8 @@
 #include "Constants.h"
 #include "SmsEvent.h"
 #include "nsIDOMSmsMessage.h"
+#include "nsIDOMSmsRequest.h"
+#include "SmsRequestManager.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -127,12 +129,18 @@ SmsManager::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult
 }
 
 NS_IMETHODIMP
-SmsManager::Send(const nsAString& aNumber, const nsAString& aMessage)
+SmsManager::Send(const nsAString& aNumber, const nsAString& aMessage, nsIDOMMozSmsRequest** aRequest)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, NS_OK);
 
-  smsService->Send(aNumber, aMessage);
+  int requestId =
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext, aRequest);
+  NS_ASSERTION(*aRequest, "The request object must have been created!");
+
+  NS_ADDREF(*aRequest);
+
+  smsService->Send(aNumber, aMessage, requestId, 0);
 
   return NS_OK;
 }
