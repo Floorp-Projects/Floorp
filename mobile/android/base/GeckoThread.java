@@ -40,8 +40,10 @@ package org.mozilla.gecko;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.content.res.Configuration;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.AbsoluteLayout;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.PrintWriter;
@@ -92,7 +94,7 @@ public class GeckoThread extends Thread {
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
 
-        Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - runGecko");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
         // and then fire us up
         try {
