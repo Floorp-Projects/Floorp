@@ -80,9 +80,11 @@ SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aRes
 }
 
 NS_IMETHODIMP
-SmsIPCService::Send(const nsAString& aNumber, const nsAString& aMessage)
+SmsIPCService::Send(const nsAString& aNumber, const nsAString& aMessage,
+                    PRInt32 aRequestId, PRUint64 aProcessId)
 {
-  GetSmsChild()->SendSendMessage(nsString(aNumber), nsString(aMessage));
+  GetSmsChild()->SendSendMessage(nsString(aNumber), nsString(aMessage),
+                                 aRequestId, ContentChild::GetSingleton()->GetID());
 
   return NS_OK;
 }

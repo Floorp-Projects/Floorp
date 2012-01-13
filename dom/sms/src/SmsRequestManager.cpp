@@ -37,6 +37,15 @@
 
 #include "SmsRequestManager.h"
 #include "SmsRequest.h"
+#include "nsIDOMSmsMessage.h"
+#include "nsDOMEvent.h"
+
+/**
+ * We have to use macros here because our leak analysis tool things we are
+ * leaking strings when we have |static const nsString|. Sad :(
+ */
+#define SUCCESS_EVENT_NAME NS_LITERAL_STRING("success")
+#define ERROR_EVENT_NAME   NS_LITERAL_STRING("error")
 
 namespace mozilla {
 namespace dom {
@@ -92,6 +101,37 @@ SmsRequestManager::CreateRequest(nsPIDOMWindow* aWindow,
   mRequests.AppendObject(request);
   NS_ADDREF(*aRequest = request);
   return size;
+}
+
+nsresult
+SmsRequestManager::DispatchTrustedEventToRequest(const nsAString& aEventName,
+                                                 nsIDOMMozSmsRequest* aRequest)
+{
+  nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nsnull, nsnull);
+  nsresult rv = event->InitEvent(aEventName, false, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = event->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool dummy;
+  return aRequest->DispatchEvent(event, &dummy);
+}
+
+void
+SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+{
+  NS_ASSERTION(mRequests.Count() > aRequestId && mRequests[aRequestId],
+               "Got an invalid request id or it has been already deleted!");
+
+  // It's safe to use the static_cast here given that we did call
+  // |new SmsRequest()|.
+  SmsRequest* request = static_cast<SmsRequest*>(mRequests[aRequestId]);
+  request->SetSuccess(aMessage);
+
+  DispatchTrustedEventToRequest(SUCCESS_EVENT_NAME, request);
+
+  mRequests.ReplaceObjectAt(nsnull, aRequestId);
 }
 
 } // namespace sms

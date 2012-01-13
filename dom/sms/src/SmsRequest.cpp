@@ -59,7 +59,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsRequest,
                                                 nsDOMEventTargetWrapperCache)
   if (tmp->mResultRooted) {
-    tmp->mResult = JSVAL_NULL;
+    tmp->mResult = JSVAL_VOID;
     tmp->UnrootResult();
   }
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(success)
@@ -87,7 +87,7 @@ NS_IMPL_EVENT_HANDLER(SmsRequest, success)
 NS_IMPL_EVENT_HANDLER(SmsRequest, error)
 
 SmsRequest::SmsRequest(nsPIDOMWindow* aWindow, nsIScriptContext* aScriptContext)
-  : mResult(JSVAL_NULL)
+  : mResult(JSVAL_VOID)
   , mResultRooted(false)
   , mError(eNoError)
   , mDone(false)
@@ -125,7 +125,7 @@ SmsRequest::SetSuccess(nsIDOMMozSmsMessage* aMessage)
 {
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
   NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
-  NS_PRECONDITION(mResult == JSVAL_NULL, "mResult shouldn't have been set!");
+  NS_PRECONDITION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
 
   JSContext* cx = mScriptContext->GetNativeContext();
   NS_ASSERTION(cx, "Failed to get a context!");
@@ -144,7 +144,7 @@ SmsRequest::SetSuccess(nsIDOMMozSmsMessage* aMessage)
 
   if (NS_FAILED(nsContentUtils::WrapNative(cx, global, aMessage, &mResult))) {
     UnrootResult();
-    mResult = JSVAL_NULL;
+    mResult = JSVAL_VOID;
     SetError(eInternalError);
   }
 
@@ -156,7 +156,7 @@ SmsRequest::SetError(ErrorType aError)
 {
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
   NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
-  NS_PRECONDITION(mResult == JSVAL_NULL, "mResult shouldn't have been set!");
+  NS_PRECONDITION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
 
   mDone = true;
   mError = aError;
@@ -185,7 +185,7 @@ SmsRequest::GetError(nsAString& aError)
     return NS_OK;
   }
 
-  NS_ASSERTION(mError == eNoError || mResult == JSVAL_NULL,
+  NS_ASSERTION(mError == eNoError || mResult == JSVAL_VOID,
                "mResult should be void when there is an error!");
 
   switch (mError) {
@@ -204,10 +204,10 @@ NS_IMETHODIMP
 SmsRequest::GetResult(jsval* aResult)
 {
   if (!mDone) {
-    NS_ASSERTION(mResult == JSVAL_NULL,
+    NS_ASSERTION(mResult == JSVAL_VOID,
                  "When not done, result should be null!");
 
-    *aResult = JSVAL_NULL;
+    *aResult = JSVAL_VOID;
     return NS_OK;
   }
 

@@ -198,6 +198,42 @@ Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one
   return f_ ## name(jenv, jc, one, two, three, four); \
 }
 
+#define SHELL_WRAPPER5(name,type1,type2,type3,type4,type5) \
+typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT void JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five) \
+{ \
+  f_ ## name(jenv, jc, one, two, three, four, five); \
+}
+
+#define SHELL_WRAPPER5_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five) \
+{ \
+  return f_ ## name(jenv, jc, one, two, three, four, five); \
+}
+
+#define SHELL_WRAPPER6(name,type1,type2,type3,type4,type5,type6) \
+typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT void JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six) \
+{ \
+  f_ ## name(jenv, jc, one, two, three, four, five, six); \
+}
+
+#define SHELL_WRAPPER6_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5, type6) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six) \
+{ \
+  return f_ ## name(jenv, jc, one, two, three, four, five, six); \
+}
+
 SHELL_WRAPPER0(nativeInit)
 SHELL_WRAPPER1(nativeRun, jstring)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
@@ -217,7 +253,7 @@ SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
 SHELL_WRAPPER0(bindWidgetTexture);
 SHELL_WRAPPER0_WITH_RETURN(testDirectTexture, bool);
 SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong);
-SHELL_WRAPPER4(notifySmsSent, jint, jstring, jstring, jlong);
+SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong);
 SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong);
 
 static void * xul_handle = NULL;
