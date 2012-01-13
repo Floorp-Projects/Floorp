@@ -1595,6 +1595,16 @@ NewObjectCache::fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *
     return fill(entry, clasp, type, kind, obj);
 }
 
+inline void
+NewObjectCache::copyCachedToObject(JSObject *dst, JSObject *src)
+{
+    js_memcpy(dst, src, dst->sizeOfThis());
+#ifdef JSGC_GENERATIONAL
+    Shape::writeBarrierPost(dst->shape_, &dst->shape_);
+    types::TypeObject::writeBarrierPost(dst->type_, &dst->type_);
+#endif
+}
+
 inline JSObject *
 NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
 {
@@ -1603,7 +1613,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
 
     JSObject *obj = js_TryNewGCObject(cx, entry->kind);
     if (obj) {
-        js_memcpy(obj, &entry->templateObject, entry->nbytes);
+        copyCachedToObject(obj, &entry->templateObject);
         Probes::createObject(cx, obj);
         return obj;
     }
@@ -1620,7 +1630,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
 
     obj = js_NewGCObject(cx, entry->kind);
     if (obj) {
-        js_memcpy(obj, baseobj, nbytes);
+        copyCachedToObject(obj, baseobj);
         Probes::createObject(cx, obj);
         return obj;
     }
