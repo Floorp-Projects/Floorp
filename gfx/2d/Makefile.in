@@ -62,6 +62,7 @@ EXPORTS_mozilla/gfx	= \
         Matrix.h \
         Rect.h \
         Types.h \
+        UserData.h \
 	$(NULL)
 
 CPPSRCS	= \
