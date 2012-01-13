@@ -333,6 +333,9 @@ endif
 ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
 ASFILES +=	TrampolineSparc.s
 endif
+ifeq (mips, $(findstring mips,$(TARGET_CPU)))
+CPPSRCS +=	TrampolineMIPS.cpp
+endif
 #
 # END enclude sources for the method JIT
 #############################################
@@ -361,7 +364,7 @@ CPPSRCS += 	checks.cc \
 # For architectures without YARR JIT, PCRE is faster than the YARR
 # interpreter (bug 684559).
 
-ifeq (,$(filter arm% sparc %86 x86_64,$(TARGET_CPU)))
+ifeq (,$(filter arm% sparc %86 x86_64 mips%,$(TARGET_CPU)))
 
 VPATH +=        $(srcdir)/yarr/pcre \
 		$(NULL)
