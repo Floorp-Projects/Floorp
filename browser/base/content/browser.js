@@ -2617,7 +2617,7 @@ function UpdateUrlbarSearchSplitterState()
 }
 
 function setUrlAndSearchBarWidthForConditionalForwardButton() {
-  // Woraround for bug 694084: Showing/hiding the conditional forward button resizes
+  // Workaround for bug 694084: Showing/hiding the conditional forward button resizes
   // the search bar when the url/search bar splitter hasn't been used.
   var urlbarContainer = document.getElementById("urlbar-container");
   var searchbarContainer = document.getElementById("search-container");
