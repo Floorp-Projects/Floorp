@@ -177,7 +177,6 @@
 
 .gcli-argfetch {
   width: 100%;
-  box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
 
@@ -191,7 +190,6 @@
 .gcli-af-params {
   padding: 0 10px;
   width: 100%;
-  box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
 
@@ -309,6 +307,13 @@
 .gcli-prompt {
   color: #66F;
   font-weight: bold;
+}
+
+.gcli-in-scratchlink {
+  float: right;
+  font-size: 85%;
+  color: #888;
+  padding-right: 10px;
 }
 
 /* From: $GCLI/lib/gcli/commands/help.css */
