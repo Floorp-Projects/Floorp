@@ -282,7 +282,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_pos();
     bool jsop_neg();
     bool jsop_notearg();
-    bool jsop_call(uint32 argc);
+    bool jsop_call(uint32 argc, bool construct);
     bool jsop_ifeq(JSOp op);
     bool jsop_andor(JSOp op);
     bool jsop_dup2();
