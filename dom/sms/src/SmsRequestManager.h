@@ -44,6 +44,7 @@
 class nsIDOMMozSmsRequest;
 class nsPIDOMWindow;
 class nsIScriptContext;
+class nsIDOMMozSmsMessage;
 
 namespace mozilla {
 namespace dom {
@@ -60,8 +61,13 @@ public:
                         nsIScriptContext* aScriptContext,
                         nsIDOMMozSmsRequest** aRequest);
 
+  void NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
+
 private:
   static SmsRequestManager* sInstance;
+
+  nsresult DispatchTrustedEventToRequest(const nsAString& aEventName,
+                                         nsIDOMMozSmsRequest* aRequest);
 
   nsCOMArray<nsIDOMMozSmsRequest> mRequests;
 };

@@ -49,10 +49,29 @@ namespace mozilla {
 namespace dom {
 namespace sms {
 
+nsTArray<SmsParent*>* SmsParent::gSmsParents = nsnull;
+
 NS_IMPL_ISUPPORTS1(SmsParent, nsIObserver)
+
+/* static */ void
+SmsParent::GetAll(nsTArray<SmsParent*>& aArray)
+{
+  if (!gSmsParents) {
+    aArray.Clear();
+    return;
+  }
+
+  aArray = *gSmsParents;
+}
 
 SmsParent::SmsParent()
 {
+  if (!gSmsParents) {
+    gSmsParents = new nsTArray<SmsParent*>();
+  }
+
+  gSmsParents->AppendElement(this);
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (!obs) {
     return;
@@ -74,6 +93,13 @@ SmsParent::ActorDestroy(ActorDestroyReason why)
   obs->RemoveObserver(this, kSmsReceivedObserverTopic);
   obs->RemoveObserver(this, kSmsSentObserverTopic);
   obs->RemoveObserver(this, kSmsDeliveredObserverTopic);
+
+  NS_ASSERTION(gSmsParents, "gSmsParents can't be null at that point!");
+  gSmsParents->RemoveElement(this);
+  if (gSmsParents->Length() == 0) {
+    delete gSmsParents;
+    gSmsParents = nsnull;
+  }
 }
 
 NS_IMETHODIMP
@@ -141,12 +167,13 @@ SmsParent::RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResu
 }
 
 bool
-SmsParent::RecvSendMessage(const nsString& aNumber, const nsString& aMessage)
+SmsParent::RecvSendMessage(const nsString& aNumber, const nsString& aMessage,
+                           const PRInt32& aRequestId, const PRUint64& aProcessId)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, true);
 
-  smsService->Send(aNumber, aMessage);
+  smsService->Send(aNumber, aMessage, aRequestId, aProcessId);
   return true;
 }
 

@@ -40,6 +40,8 @@
 #include "Constants.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/ContentChild.h"
+#include "SmsRequestManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -83,6 +85,21 @@ SmsChild::RecvNotifyDeliveredMessage(const SmsMessageData& aMessageData)
 
   nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
   obs->NotifyObservers(message, kSmsDeliveredObserverTopic, nsnull);
+
+  return true;
+}
+
+bool
+SmsChild::RecvNotifyRequestSmsSent(const SmsMessageData& aMessage,
+                                   const PRInt32& aRequestId,
+                                   const PRUint64& aProcessId)
+{
+  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessage);
+  SmsRequestManager::GetInstance()->NotifySmsSent(aRequestId, message);
 
   return true;
 }

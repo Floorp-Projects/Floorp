@@ -254,8 +254,9 @@ public class GeckoSmsManager
       Bundle bundle = intent.getExtras();
 
       if (bundle == null || !bundle.containsKey("envelopeId") ||
-          !bundle.containsKey("number") || !bundle.containsKey("message")) {
-        Log.e("GeckoSmsManager", "Got an invalid ACTION_SMS_SENT!");
+          !bundle.containsKey("number") || !bundle.containsKey("message") ||
+          !bundle.containsKey("requestId") || !bundle.containsKey("processId")) {
+        Log.e("GeckoSmsManager", "Got an invalid ACTION_SMS_SENT/ACTION_SMS_DELIVERED!");
         return;
       }
 
@@ -301,7 +302,9 @@ public class GeckoSmsManager
 
           int id = GeckoAppShell.saveMessageInSentbox(number, message, timestamp);
 
-          GeckoAppShell.notifySmsSent(id, number, message, timestamp);
+          GeckoAppShell.notifySmsSent(id, number, message, timestamp,
+                                      bundle.getInt("requestId"),
+                                      bundle.getLong("processId"));
 
           envelope.setMessageId(id);
           envelope.setMessageTimestamp(timestamp);
@@ -330,7 +333,7 @@ public class GeckoSmsManager
     return SmsManager.getDefault().divideMessage(aText).size();
   }
 
-  public static void send(String aNumber, String aMessage) {
+  public static void send(String aNumber, String aMessage, int aRequestId, long aProcessId) {
     /*
      * TODO:
      * This is a basic send method that doesn't handle errors and doesn't listen to
@@ -347,6 +350,8 @@ public class GeckoSmsManager
       Bundle bundle = new Bundle();
       bundle.putString("number", aNumber);
       bundle.putString("message", aMessage);
+      bundle.putInt("requestId", aRequestId);
+      bundle.putLong("processId", aProcessId);
 
       if (aMessage.length() <= kMaxMessageSize) {
         envelopeId = Postman.getInstance().createEnvelope(1);

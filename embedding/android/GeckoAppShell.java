@@ -123,7 +123,7 @@ public class GeckoAppShell
 
     public static native void notifySmsReceived(String aSender, String aBody, long aTimestamp);
     public static native int  saveMessageInSentbox(String aReceiver, String aBody, long aTimestamp);
-    public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp);
+    public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifySmsDelivered(int aId, String aReceiver, String aBody, long aTimestamp);
 
     // A looper thread, accessed by GeckoAppShell.getHandler
@@ -1695,8 +1695,8 @@ public class GeckoAppShell
         return GeckoSmsManager.getNumberOfMessagesForText(aText);
     }
 
-    public static void sendMessage(String aNumber, String aMessage) {
-        GeckoSmsManager.send(aNumber, aMessage);
+    public static void sendMessage(String aNumber, String aMessage, int aRequestId, long aProcessId) {
+        GeckoSmsManager.send(aNumber, aMessage, aRequestId, aProcessId);
     }
 
     public static int saveSentMessage(String aRecipient, String aBody, long aDate) {
