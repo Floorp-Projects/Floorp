@@ -73,6 +73,15 @@ sa_stream_pause
 sa_stream_resume
 sa_stream_write
 #endif
+#ifdef MOZ_CUBEB
+cubeb_destroy
+cubeb_init
+cubeb_stream_destroy
+cubeb_stream_get_position
+cubeb_stream_init
+cubeb_stream_start
+cubeb_stream_stop
+#endif
 #ifdef MOZ_OGG
 th_comment_clear
 th_comment_init
