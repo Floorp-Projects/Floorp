@@ -70,7 +70,7 @@ HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding)
   , mHeadersToSyncToChild(nsnull)
   , mSentRedirect1Begin(false)
   , mSentRedirect1BeginFailed(false)
-  , mReceviedRedirect2Verify(false)
+  , mReceivedRedirect2Verify(false)
 {
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
   nsIHttpProtocolHandler* handler;
@@ -357,7 +357,7 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
 
   if (!mRedirectCallback) {
     // Bug 621446 investigation (optimization turned off above)
-    if (mReceviedRedirect2Verify)
+    if (mReceivedRedirect2Verify)
       ::PR_Abort();
     if (mSentRedirect1BeginFailed)
       ::PR_Abort();
@@ -369,7 +369,7 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
       ::PR_Abort();
   }
 
-  mReceviedRedirect2Verify = true;
+  mReceivedRedirect2Verify = true;
 
   mRedirectCallback->OnRedirectVerifyCallback(result);
   mRedirectCallback = nsnull;
