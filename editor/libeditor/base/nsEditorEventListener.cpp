@@ -647,6 +647,10 @@ nsEditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
     return NS_OK;
   }
 
+  // Transfer the event's trusted-ness to our editor
+  nsCOMPtr<nsIDOMNSEvent> NSEvent = do_QueryInterface(aTextEvent);
+  nsAutoEditorKeypressOperation operation(mEditor, NSEvent);
+
   return mEditor->UpdateIMEComposition(composedText, textRangeList);
 }
 

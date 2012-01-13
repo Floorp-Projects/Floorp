@@ -171,7 +171,7 @@ function startTests()
         },
         "caret": { "start": 1, "length": 0 }
       });
-    checkCompositionEvents(false, false, true, false, "composing");
+    checkCompositionEvents(false, false, true, true, "composing");
     var queryText = synthesizeQueryTextContent(0, 100);
     ok(queryText, "query text event result is null");
     if (!queryText) {
