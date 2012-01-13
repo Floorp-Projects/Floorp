@@ -319,6 +319,12 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext)
       return false;
   }
 
+  // If we're double-buffered, we don't need this fbo anymore.
+  if (mGLContext->IsDoubleBuffered()) {
+    mGLContext->fDeleteFramebuffers(1, &mBackBufferFBO);
+    mBackBufferFBO = 0;
+  }
+
   // back to default framebuffer, to avoid confusion
   mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
