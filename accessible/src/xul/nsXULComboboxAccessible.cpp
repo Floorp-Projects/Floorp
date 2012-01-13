@@ -40,9 +40,10 @@
 
 #include "nsXULComboboxAccessible.h"
 
-#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
+#include "Role.h"
+#include "States.h"
 
 #include "nsIAutoCompleteInput.h"
 #include "nsIDOMXULMenuListElement.h"
@@ -65,12 +66,10 @@ nsXULComboboxAccessible::
     mFlags |= eComboboxAccessible;
 }
 
-PRUint32
+role
 nsXULComboboxAccessible::NativeRole()
 {
-  if (IsAutoComplete())
-    return nsIAccessibleRole::ROLE_AUTOCOMPLETE;
-  return nsIAccessibleRole::ROLE_COMBOBOX;
+  return IsAutoComplete() ? roles::AUTOCOMPLETE : roles::COMBOBOX;
 }
 
 PRUint64
@@ -224,7 +223,7 @@ nsXULComboboxAccessible::IsActiveWidget() const
     PRInt32 childCount = mChildren.Length();
     for (PRInt32 idx = 0; idx < childCount; idx++) {
       nsAccessible* child = mChildren[idx];
-      if (child->Role() == nsIAccessibleRole::ROLE_ENTRY)
+      if (child->Role() == roles::ENTRY)
         return FocusMgr()->HasDOMFocus(child->GetContent());
     }
     return false;

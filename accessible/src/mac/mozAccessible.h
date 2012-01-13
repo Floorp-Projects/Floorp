@@ -72,7 +72,7 @@
   /**
    * The nsIAccessible role of our gecko accessible.
    */
-  PRUint32        mRole;
+  mozilla::a11y::role        mRole;
 }
 
 // inits with the gecko owner.

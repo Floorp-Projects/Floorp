@@ -39,6 +39,7 @@
 #include "nsXULSliderAccessible.h"
 
 #include "nsAccessibilityService.h"
+#include "Role.h"
 #include "States.h"
 
 #include "nsIDOMDocument.h"
@@ -65,10 +66,10 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULSliderAccessible,
 
 // nsAccessible
 
-PRUint32
+role
 nsXULSliderAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_SLIDER;
+  return roles::SLIDER;
 }
 
 PRUint64
@@ -296,9 +297,9 @@ nsXULThumbAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULThumbAccessible: nsAccessible
 
-PRUint32
+role
 nsXULThumbAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_INDICATOR;
+  return roles::INDICATOR;
 }
 

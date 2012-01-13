@@ -37,6 +37,7 @@
 
 #include "nsXULAlertAccessible.h"
 
+#include "Role.h"
 #include "States.h"
 
 using namespace mozilla::a11y;
@@ -53,10 +54,10 @@ nsXULAlertAccessible::
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsXULAlertAccessible, nsAccessible)
 
-PRUint32
+role
 nsXULAlertAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_ALERT;
+  return roles::ALERT;
 }
 
 PRUint64
