@@ -944,8 +944,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %lu, Slow code (stubcc) size = %lu.\n",
                (unsigned long) masm.size(), (unsigned long) stubcc.size());
 
+    /* To make inlineDoubles and oolDoubles aligned to sizeof(double) bytes,
+       MIPS adds extra sizeof(double) bytes to codeSize.  */
     size_t codeSize = masm.size() +
+#if defined(JS_CPU_MIPS) 
+                      stubcc.size() + sizeof(double) +
+#else
                       stubcc.size() +
+#endif
                       (masm.numDoubles() * sizeof(double)) +
                       (stubcc.masm.numDoubles() * sizeof(double)) +
                       jumpTableOffsets.length() * sizeof(void *);
@@ -1367,7 +1373,16 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
 
+#if defined(JS_CPU_MIPS)
+    /* Make sure doubleOffset is aligned to sizeof(double) bytes.  */ 
+    size_t doubleOffset = (((size_t)result + masm.size() + stubcc.size() +
+                            sizeof(double) - 1) & (~(sizeof(double) - 1))) -
+                          (size_t)result;
+    JS_ASSERT((((size_t)result + doubleOffset) & 7) == 0);
+#else
     size_t doubleOffset = masm.size() + stubcc.size();
+#endif
+
     double *inlineDoubles = (double *) (result + doubleOffset);
     double *oolDoubles = (double*) (result + doubleOffset +
                                     masm.numDoubles() * sizeof(double));
@@ -3398,7 +3413,7 @@ mjit::Compiler::interruptCheckHelper()
         void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
 #endif
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM) || defined(JS_CPU_MIPS)
         jump = masm.branch32(Assembler::NotEqual, AbsoluteAddress(interrupt), Imm32(0));
 #else
         /* Handle processors that can't load from absolute addresses. */
