@@ -62,9 +62,9 @@ typedef gfxASurface::gfxImageFormat gfxImageFormat;
 #define EGL_NO_CONTEXT (EGLContext)0
 #define EGL_DEFAULT_DISPLAY  (void*)0
 
-#define ANDROID_LIBUI_PATH "/system/lib/libui.so"
-#define ANDROID_GLES_PATH "/system/lib/libGLESv2.so"
-#define ANDROID_EGL_PATH "/system/lib/libEGL.so"
+#define ANDROID_LIBUI_PATH "libui.so"
+#define ANDROID_GLES_PATH "libGLESv2.so"
+#define ANDROID_EGL_PATH "libEGL.so"
 
 // Really I have no idea, but this should be big enough
 #define GRAPHIC_BUFFER_SIZE 1024
