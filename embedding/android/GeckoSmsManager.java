@@ -77,30 +77,77 @@ class PendingIntentUID
  */
 class Envelope
 {
-  protected int     mId;
-  protected int     mRemainingParts;
-  protected boolean mFailing;
+  enum SubParts {
+    SENT_PART,
+    DELIVERED_PART
+  }
+
+  protected int       mId;
+  protected int       mMessageId;
+  protected long      mMessageTimestamp;
+
+  /**
+   * Number of sent/delivered remaining parts.
+   * @note The array has much slots as SubParts items.
+   */
+  protected int[]     mRemainingParts;
+
+  /**
+   * Whether sending/delivering is currently failing.
+   * @note The array has much slots as SubParts items.
+   */
+  protected boolean[] mFailing;
 
   public Envelope(int aId, int aParts) {
     mId = aId;
-    mRemainingParts = aParts;
-    mFailing = false;
+    mMessageId = -1;
+    mMessageTimestamp = 0;
+
+    int size = Envelope.SubParts.values().length;
+    mRemainingParts = new int[size];
+    mFailing = new boolean[size];
+
+    for (int i=0; i<size; ++i) {
+      mRemainingParts[i] = aParts;
+      mFailing[i] = false;
+    }
   }
 
-  public void decreaseRemainingParts() {
-    --mRemainingParts;
+  public void decreaseRemainingParts(Envelope.SubParts aType) {
+    --mRemainingParts[aType.ordinal()];
+
+    if (mRemainingParts[SubParts.SENT_PART.ordinal()] >
+        mRemainingParts[SubParts.DELIVERED_PART.ordinal()]) {
+      Log.e("GeckoSmsManager", "Delivered more parts than we sent!?");
+    }
   }
 
-  public boolean arePartsRemaining() {
-    return mRemainingParts != 0;
+  public boolean arePartsRemaining(Envelope.SubParts aType) {
+    return mRemainingParts[aType.ordinal()] != 0;
   }
 
-  public void markAsFailed() {
-    mFailing = true;
+  public void markAsFailed(Envelope.SubParts aType) {
+    mFailing[aType.ordinal()] = true;
   }
 
-  public boolean isFailing() {
-    return mFailing;
+  public boolean isFailing(Envelope.SubParts aType) {
+    return mFailing[aType.ordinal()];
+  }
+
+  public int getMessageId() {
+    return mMessageId;
+  }
+
+  public void setMessageId(int aMessageId) {
+    mMessageId = aMessageId;
+  }
+
+  public long getMessageTimestamp() {
+    return mMessageTimestamp;
+  }
+
+  public void setMessageTimestamp(long aMessageTimestamp) {
+    mMessageTimestamp = aMessageTimestamp;
   }
 }
 
@@ -168,8 +215,10 @@ class Postman
 public class GeckoSmsManager
   extends BroadcastReceiver
 {
-  public final static String ACTION_SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
-  public final static String ACTION_SMS_SENT     = "org.mozilla.gecko.SMS_SENT";
+  public final static String ACTION_SMS_RECEIVED  = "android.provider.Telephony.SMS_RECEIVED";
+  public final static String ACTION_SMS_SENT      = "org.mozilla.gecko.SMS_SENT";
+  public final static String ACTION_SMS_DELIVERED = "org.mozilla.gecko.SMS_DELIVERED";
+
   private final static int kMaxMessageSize = 160;
 
   @Override
@@ -200,7 +249,8 @@ public class GeckoSmsManager
       return;
     }
 
-    if (intent.getAction().equals(ACTION_SMS_SENT)) {
+    if (intent.getAction().equals(ACTION_SMS_SENT) ||
+        intent.getAction().equals(ACTION_SMS_DELIVERED)) {
       Bundle bundle = intent.getExtras();
 
       if (bundle == null || !bundle.containsKey("envelopeId") ||
@@ -211,31 +261,66 @@ public class GeckoSmsManager
 
       int envelopeId = bundle.getInt("envelopeId");
       Postman postman = Postman.getInstance();
-      Envelope envelope = postman.getEnvelope(envelopeId);
 
-      envelope.decreaseRemainingParts();
+      Envelope envelope = postman.getEnvelope(envelopeId);
+      if (envelope == null) {
+        Log.e("GeckoSmsManager", "Got an invalid envelope id (or Envelope has been destroyed)!");
+        return;
+      }
+
+      Envelope.SubParts part = intent.getAction().equals(ACTION_SMS_SENT)
+                                 ? Envelope.SubParts.SENT_PART
+                                 : Envelope.SubParts.DELIVERED_PART;
+      envelope.decreaseRemainingParts(part);
+ 
 
       if (getResultCode() != Activity.RESULT_OK) {
         // TODO: manage error types.
         Log.i("GeckoSmsManager", "SMS part sending failed!");
-        envelope.markAsFailed();
+        envelope.markAsFailed(part);
       }
 
-      if (envelope.arePartsRemaining()) {
+      if (envelope.arePartsRemaining(part)) {
         return;
       }
 
-      if (envelope.isFailing()) {
-        // TODO: inform about the send failure.
-        Log.i("GeckoSmsManager", "SMS sending failed!");
+      if (envelope.isFailing(part)) {
+        if (part == Envelope.SubParts.SENT_PART) {
+          // TODO: inform about the send failure.
+          Log.i("GeckoSmsManager", "SMS sending failed!");
+        } else {
+          // It seems unlikely to get a result code for a failure to deliver.
+          // Even if, we don't want to do anything with this.
+          Log.e("GeckoSmsManager", "SMS failed to be delivered... is that even possible?");
+        }
       } else {
-        GeckoAppShell.onSmsSent(bundle.getString("number"),
-                                bundle.getString("message"),
-                                System.currentTimeMillis());
-        Log.i("GeckoSmsManager", "SMS sending was successfull!");
+        if (part == Envelope.SubParts.SENT_PART) {
+          String number = bundle.getString("number");
+          String message = bundle.getString("message");
+          long timestamp = System.currentTimeMillis();
+
+          int id = GeckoAppShell.saveMessageInSentbox(number, message, timestamp);
+
+          GeckoAppShell.notifySmsSent(id, number, message, timestamp);
+
+          envelope.setMessageId(id);
+          envelope.setMessageTimestamp(timestamp);
+
+          Log.i("GeckoSmsManager", "SMS sending was successfull!");
+        } else {
+          GeckoAppShell.notifySmsDelivered(envelope.getMessageId(),
+                                           bundle.getString("number"),
+                                           bundle.getString("message"),
+                                           envelope.getMessageTimestamp());
+          Log.i("GeckoSmsManager", "SMS succesfully delivered!");
+        }
       }
 
-      postman.destroyEnvelope(envelopeId);
+      // Destroy the envelope object only if the SMS has been sent and delivered.
+      if (!envelope.arePartsRemaining(Envelope.SubParts.SENT_PART) &&
+          !envelope.arePartsRemaining(Envelope.SubParts.DELIVERED_PART)) {
+        postman.destroyEnvelope(envelopeId);
+      }
 
       return;
     }
@@ -257,15 +342,18 @@ public class GeckoSmsManager
       SmsManager sm = SmsManager.getDefault();
 
       Intent sentIntent = new Intent(ACTION_SMS_SENT);
+      Intent deliveredIntent = new Intent(ACTION_SMS_DELIVERED);
+
       Bundle bundle = new Bundle();
       bundle.putString("number", aNumber);
       bundle.putString("message", aMessage);
 
       if (aMessage.length() <= kMaxMessageSize) {
         envelopeId = Postman.getInstance().createEnvelope(1);
-
         bundle.putInt("envelopeId", envelopeId);
+
         sentIntent.putExtras(bundle);
+        deliveredIntent.putExtras(bundle);
 
         /*
          * There are a few things to know about getBroadcast and pending intents:
@@ -283,15 +371,24 @@ public class GeckoSmsManager
                                      PendingIntentUID.generate(), sentIntent,
                                      PendingIntent.FLAG_CANCEL_CURRENT);
 
-        sm.sendTextMessage(aNumber, "", aMessage, sentPendingIntent, null);
+        PendingIntent deliveredPendingIntent =
+          PendingIntent.getBroadcast(GeckoApp.surfaceView.getContext(),
+                                     PendingIntentUID.generate(), deliveredIntent,
+                                     PendingIntent.FLAG_CANCEL_CURRENT);
+
+        sm.sendTextMessage(aNumber, "", aMessage,
+                           sentPendingIntent, deliveredPendingIntent);
       } else {
         ArrayList<String> parts = sm.divideMessage(aMessage);
         envelopeId = Postman.getInstance().createEnvelope(parts.size());
-
         bundle.putInt("envelopeId", envelopeId);
+
         sentIntent.putExtras(bundle);
+        deliveredIntent.putExtras(bundle);
 
         ArrayList<PendingIntent> sentPendingIntents =
+          new ArrayList<PendingIntent>(parts.size());
+        ArrayList<PendingIntent> deliveredPendingIntents =
           new ArrayList<PendingIntent>(parts.size());
 
         for (int i=0; i<parts.size(); ++i) {
@@ -300,9 +397,16 @@ public class GeckoSmsManager
                                        PendingIntentUID.generate(), sentIntent,
                                        PendingIntent.FLAG_CANCEL_CURRENT)
           );
+
+          deliveredPendingIntents.add(
+            PendingIntent.getBroadcast(GeckoApp.surfaceView.getContext(),
+                                       PendingIntentUID.generate(), deliveredIntent,
+                                       PendingIntent.FLAG_CANCEL_CURRENT)
+          );
         }
 
-        sm.sendMultipartTextMessage(aNumber, "", parts, sentPendingIntents, null);
+        sm.sendMultipartTextMessage(aNumber, "", parts, sentPendingIntents,
+                                    deliveredPendingIntents);
       }
     } catch (Exception e) {
       Log.e("GeckoSmsManager", "Failed to send an SMS: ", e);
