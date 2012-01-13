@@ -116,7 +116,6 @@ _TEST_FILES1 = \
 		test_bug364413.xhtml \
 		test_bug366946.html \
 		test_bug367164.html \
-		test_bug371576-1.html \
 		test_bug371576-2.html \
 		test_bug371576-3.html \
 		test_bug371576-4.html \
