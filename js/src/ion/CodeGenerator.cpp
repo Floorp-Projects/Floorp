@@ -442,6 +442,30 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
         return false;
 
+    // As a temporary hack for JSOP_NEW support, always call out to InvokeConstructor.
+    // TODO: Bug 701692: performant support for JSOP_NEW.
+    if (call->mir()->isConstruct()) {
+        typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
+        static const VMFunction InvokeConstructorFunctionInfo =
+            FunctionInfo<pf>(InvokeConstructorFunction);
+
+        // Nestle %esp up to the argument vector.
+        // Each path must account for framePushed_ separately, for callVM to be valid.
+        masm.freeStack(unusedStack);
+
+        pushArg(StackPointer);          // argv.
+        pushArg(Imm32(call->nargs()));  // argc.
+        pushArg(calleereg);             // JSFunction *.
+
+        if (!callVM(InvokeConstructorFunctionInfo, call))
+            return false;
+
+        // Un-nestle %esp from the argument vector. No prefix was pushed.
+        masm.reserveStack(unusedStack);
+
+        return true;
+    }
+
     Label end, invoke;
 
     // Guard that calleereg is a non-native function:

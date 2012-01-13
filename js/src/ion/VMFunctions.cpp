@@ -49,7 +49,8 @@ using namespace js::ion;
 namespace js {
 namespace ion {
 
-bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval)
+bool
+InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval)
 {
     Value fval = ObjectValue(*fun);
 
@@ -62,7 +63,21 @@ bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Va
     return ok;
 }
 
-bool ReportOverRecursed(JSContext *cx)
+bool
+InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval)
+{
+    Value fval = ObjectValue(*fun);
+
+    // Data in the argument vector is arranged for a JIT -> JIT call.
+    Value *argvWithoutThis = argv + 1;
+
+    // Run the function in the interpreter.
+    bool ok = InvokeConstructor(cx, fval, argc, argvWithoutThis, rval);
+    return ok;
+}
+
+bool
+ReportOverRecursed(JSContext *cx)
 {
     js_ReportOverRecursed(cx);
 
