@@ -1878,7 +1878,7 @@ public:
     {
         JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
 
-        if (!JS::GetExplicitNonHeapForRuntime(rt, n, xpc::JsMallocSizeOf))
+        if (!JS::GetExplicitNonHeapForRuntime(rt, reinterpret_cast<int64_t*>(n), xpc::JsMallocSizeOf))
             return NS_ERROR_FAILURE;
 
         return NS_OK;

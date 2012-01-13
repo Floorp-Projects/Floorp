@@ -1725,12 +1725,11 @@ nsSocketTransport::OpenInputStream(PRUint32 flags,
         bool openBlocking =  (flags & OPEN_BLOCKING);
 
         net_ResolveSegmentParams(segsize, segcount);
-        nsIMemory *segalloc = net_GetSegmentAlloc(segsize);
 
         // create a pipe
         nsCOMPtr<nsIAsyncOutputStream> pipeOut;
         rv = NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut),
-                         !openBlocking, true, segsize, segcount, segalloc);
+                         !openBlocking, true, segsize, segcount);
         if (NS_FAILED(rv)) return rv;
 
         // async copy from socket to pipe
@@ -1772,12 +1771,11 @@ nsSocketTransport::OpenOutputStream(PRUint32 flags,
         bool openBlocking =  (flags & OPEN_BLOCKING);
 
         net_ResolveSegmentParams(segsize, segcount);
-        nsIMemory *segalloc = net_GetSegmentAlloc(segsize);
 
         // create a pipe
         nsCOMPtr<nsIAsyncInputStream> pipeIn;
         rv = NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut),
-                         true, !openBlocking, segsize, segcount, segalloc);
+                         true, !openBlocking, segsize, segcount);
         if (NS_FAILED(rv)) return rv;
 
         // async copy from socket to pipe

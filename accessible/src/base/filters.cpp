@@ -39,6 +39,7 @@
 
 #include "nsAccessible.h"
 #include "nsAccUtils.h"
+#include "Role.h"
 #include "States.h"
 
 using namespace mozilla::a11y;
@@ -58,16 +59,15 @@ filters::GetSelectable(nsAccessible* aAccessible)
 bool
 filters::GetRow(nsAccessible* aAccessible)
 {
-  return aAccessible->Role() == nsIAccessibleRole::ROLE_ROW;
+  return aAccessible->Role() == roles::ROW;
 }
 
 bool
 filters::GetCell(nsAccessible* aAccessible)
 {
-  PRUint32 role = aAccessible->Role();
-  return role == nsIAccessibleRole::ROLE_GRID_CELL ||
-      role == nsIAccessibleRole::ROLE_ROWHEADER ||
-      role == nsIAccessibleRole::ROLE_COLUMNHEADER;
+  roles::Role role = aAccessible->Role();
+  return role == roles::GRID_CELL || role == roles::ROWHEADER ||
+      role == roles::COLUMNHEADER;
 }
 
 bool

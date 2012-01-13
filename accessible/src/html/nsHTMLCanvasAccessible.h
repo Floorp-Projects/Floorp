@@ -50,7 +50,7 @@ public:
   virtual ~nsHTMLCanvasAccessible() { }
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 };
 
 #endif

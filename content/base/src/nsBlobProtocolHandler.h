@@ -34,17 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsFileDataProtocolHandler_h___
-#define nsFileDataProtocolHandler_h___
+#ifndef nsBlobProtocolHandler_h
+#define nsBlobProtocolHandler_h
 
 #include "nsIProtocolHandler.h"
 
-#define FILEDATA_SCHEME "moz-filedata"
+#define BLOBURI_SCHEME "blob"
 
 class nsIDOMBlob;
 class nsIPrincipal;
 
-class nsFileDataProtocolHandler : public nsIProtocolHandler
+class nsBlobProtocolHandler : public nsIProtocolHandler
 {
 public:
   NS_DECL_ISUPPORTS
@@ -52,9 +52,9 @@ public:
   // nsIProtocolHandler methods:
   NS_DECL_NSIPROTOCOLHANDLER
 
-  // nsFileDataProtocolHandler methods:
-  nsFileDataProtocolHandler() {}
-  virtual ~nsFileDataProtocolHandler() {}
+  // nsBlobProtocolHandler methods:
+  nsBlobProtocolHandler() {}
+  virtual ~nsBlobProtocolHandler() {}
 
   // Methods for managing uri->file mapping
   static void AddFileDataEntry(nsACString& aUri,
@@ -65,8 +65,8 @@ public:
   
 };
 
-#define NS_FILEDATAPROTOCOLHANDLER_CID \
+#define NS_BLOBPROTOCOLHANDLER_CID \
 { 0xb43964aa, 0xa078, 0x44b2, \
   { 0xb0, 0x6b, 0xfd, 0x4d, 0x1b, 0x17, 0x2e, 0x66 } }
 
-#endif /* nsFileDataProtocolHandler_h___ */
+#endif /* nsBlobProtocolHandler_h */

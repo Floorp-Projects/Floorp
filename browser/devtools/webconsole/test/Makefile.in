@@ -150,6 +150,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_658368_time_methods.js \
 	browser_webconsole_bug_622303_persistent_filters.js \
 	browser_webconsole_window_zombie.js \
+	browser_cached_messages.js \
 	head.js \
 	$(NULL)
 
@@ -222,6 +223,7 @@ _BROWSER_TEST_PAGES = \
 	test-file-location.js \
 	browser_gcli_inspect.html \
 	test-bug-658368-time-methods.html \
+	test-webconsole-error-observer.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

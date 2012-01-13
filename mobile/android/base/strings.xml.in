@@ -46,8 +46,6 @@
 
   <string name="share">&share;</string>
   <string name="save_as_pdf">&save_as_pdf;</string>
-  <string name="agent_request_desktop">&agent_request_desktop;</string>
-  <string name="agent_request_mobile">&agent_request_mobile;</string>
 
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
