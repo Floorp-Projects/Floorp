@@ -838,7 +838,7 @@ public:
    * we constructed just a partial textrun to set up linebreaker and other
    * state for following textruns.
    */
-  gfxTextRun* BuildTextRunForFrames();
+  gfxTextRun* BuildTextRunForFrames(void* aTextBuffer);
   bool SetupLineBreakerContext(gfxTextRun *aTextRun);
   void AssignTextRun(gfxTextRun* aTextRun);
   nsTextFrame* GetNextBreakBeforeFrame(PRUint32* aIndex);
@@ -1383,10 +1383,13 @@ void BuildTextRunsScanner::FlushFrames(bool aFlushLineBreaks, bool aSuppressTrai
         mNextRunContextInfo |= nsTextFrameUtils::INCOMING_ARABICCHAR;
       }
     } else {
-      textRun = BuildTextRunForFrames();
-      if (!textRun) {
+      nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> buffer;
+      PRUint32 bufferSize = mMaxTextLength*(mDoubleByteText ? 2 : 1);
+      if (bufferSize < mMaxTextLength || bufferSize == PR_UINT32_MAX ||
+          !buffer.AppendElements(bufferSize)) {
         return;
       }
+      textRun = BuildTextRunForFrames(buffer.Elements());
     }
   }
 
@@ -1719,20 +1722,11 @@ static const nsTextFrameUtils::CompressionMode CSSWhitespaceToCompressionMode[] 
 };
 
 gfxTextRun*
-BuildTextRunsScanner::BuildTextRunForFrames()
+BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 {
   gfxSkipCharsBuilder builder;
 
-  AutoFallibleTArray<PRUint8,BIG_TEXT_NODE_SIZE> buffer;
-  PRUint32 bufferSize = mMaxTextLength * (mDoubleByteText ? 2 : 1);
-  if (bufferSize < mMaxTextLength || bufferSize == PR_UINT32_MAX) {
-    return nsnull;
-  }
-  void* textPtr = buffer.AppendElements(bufferSize);
-  if (!textPtr) {
-    return nsnull;
-  }
-
+  const void* textPtr = aTextBuffer;
   bool anySmallcapsStyle = false;
   bool anyTextTransformStyle = false;
   PRUint32 textFlags = nsTextFrameUtils::TEXT_NO_BREAKS;
@@ -1822,38 +1816,38 @@ BuildTextRunsScanner::BuildTextRunForFrames()
     PRUint32 analysisFlags;
     if (frag->Is2b()) {
       NS_ASSERTION(mDoubleByteText, "Wrong buffer char size!");
-      PRUnichar* bufStart = static_cast<PRUnichar*>(textPtr);
+      PRUnichar* bufStart = static_cast<PRUnichar*>(aTextBuffer);
       PRUnichar* bufEnd = nsTextFrameUtils::TransformText(
           frag->Get2b() + contentStart, contentLength, bufStart,
           compression, &mNextRunContextInfo, &builder, &analysisFlags);
-      textPtr = bufEnd;
+      aTextBuffer = bufEnd;
     } else {
       if (mDoubleByteText) {
         // Need to expand the text. First transform it into a temporary buffer,
         // then expand.
-        AutoFallibleTArray<PRUint8,BIG_TEXT_NODE_SIZE> tempBuf;
-        PRUint8* bufStart = tempBuf.AppendElements(contentLength);
-        if (!bufStart) {
+        nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> tempBuf;
+        if (!tempBuf.AppendElements(contentLength)) {
           DestroyUserData(userDataToDestroy);
           return nsnull;
         }
+        PRUint8* bufStart = tempBuf.Elements();
         PRUint8* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
             bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
-        textPtr = ExpandBuffer(static_cast<PRUnichar*>(textPtr),
+        aTextBuffer = ExpandBuffer(static_cast<PRUnichar*>(aTextBuffer),
                                    tempBuf.Elements(), end - tempBuf.Elements());
       } else {
-        PRUint8* bufStart = static_cast<PRUint8*>(textPtr);
+        PRUint8* bufStart = static_cast<PRUint8*>(aTextBuffer);
         PRUint8* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
             bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
-        textPtr = end;
+        aTextBuffer = end;
       }
     }
     textFlags |= analysisFlags;
 
     currentTransformedTextOffset =
-      (static_cast<PRUint8*>(textPtr) - buffer.Elements()) >> mDoubleByteText;
+      (static_cast<const PRUint8*>(aTextBuffer) - static_cast<const PRUint8*>(textPtr)) >> mDoubleByteText;
   }
 
   // Check for out-of-memory in gfxSkipCharsBuilder
@@ -2035,13 +2029,11 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
 {
   AutoFallibleTArray<PRUint8,BIG_TEXT_NODE_SIZE> buffer;
   PRUint32 bufferSize = mMaxTextLength*(mDoubleByteText ? 2 : 1);
-  if (bufferSize < mMaxTextLength || bufferSize == PR_UINT32_MAX) {
+  if (bufferSize < mMaxTextLength || bufferSize == PR_UINT32_MAX ||
+      !buffer.AppendElements(bufferSize)) {
     return false;
   }
-  void *textPtr = buffer.AppendElements(bufferSize);
-  if (!textPtr) {
-    return false;
-  }
+  void *textPtr = buffer.Elements();
 
   gfxSkipCharsBuilder builder;
 
@@ -2114,11 +2106,11 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
         // Need to expand the text. First transform it into a temporary buffer,
         // then expand.
         AutoFallibleTArray<PRUint8,BIG_TEXT_NODE_SIZE> tempBuf;
-        PRUint8* bufStart = tempBuf.AppendElements(contentLength);
-        if (!bufStart) {
+        if (!tempBuf.AppendElements(contentLength)) {
           DestroyUserData(userDataToDestroy);
           return false;
         }
+        PRUint8* bufStart = tempBuf.Elements();
         PRUint8* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
             bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
@@ -5106,12 +5098,10 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     const nsCharClipDisplayItem::ClipEdges& aClipEdges)
 {
   // Figure out which selections control the colors to use for each character.
-  AutoFallibleTArray<SelectionDetails*,BIG_TEXT_NODE_SIZE> prevailingSelectionsBuffer;
-  SelectionDetails** prevailingSelections =
-    prevailingSelectionsBuffer.AppendElements(aContentLength);
-  if (!prevailingSelections) {
+  nsAutoTArray<SelectionDetails*,BIG_TEXT_NODE_SIZE> prevailingSelectionsBuffer;
+  if (!prevailingSelectionsBuffer.AppendElements(aContentLength))
     return false;
-  }
+  SelectionDetails** prevailingSelections = prevailingSelectionsBuffer.Elements();
 
   SelectionType allTypes = 0;
   for (PRUint32 i = 0; i < aContentLength; ++i) {
@@ -5231,12 +5221,10 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     return;
 
   // Figure out which characters will be decorated for this selection.
-  AutoFallibleTArray<SelectionDetails*, BIG_TEXT_NODE_SIZE> selectedCharsBuffer;
-  SelectionDetails** selectedChars =
-    selectedCharsBuffer.AppendElements(aContentLength);
-  if (!selectedChars) {
+  nsAutoTArray<SelectionDetails*, BIG_TEXT_NODE_SIZE> selectedCharsBuffer;
+  if (!selectedCharsBuffer.AppendElements(aContentLength))
     return;
-  }
+  SelectionDetails** selectedChars = selectedCharsBuffer.Elements();
   for (PRUint32 i = 0; i < aContentLength; ++i) {
     selectedChars[i] = nsnull;
   }
@@ -6612,7 +6600,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
 
-  AutoFallibleTArray<bool,BIG_TEXT_NODE_SIZE> hyphBuffer;
+  nsAutoTArray<bool,BIG_TEXT_NODE_SIZE> hyphBuffer;
   bool *hyphBreakBefore = nsnull;
   if (hyphenating) {
     hyphBreakBefore = hyphBuffer.AppendElements(flowEndInTextRun - start);
