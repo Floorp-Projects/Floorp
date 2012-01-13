@@ -341,10 +341,16 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 // General purpose user32.dll hook object
 static WindowsDllInterceptor sUser32Intercept;
 
-// 2 pixel offset for eTransparencyBorderlessGlass which equals
-// the size of the default window border Windows paints.
+// 2 pixel offset for eTransparencyBorderlessGlass which equals the size of
+// the default window border Windows paints. Glass will be extended inward
+// this distance to remove the border.
 static const PRInt32 kGlassMarginAdjustment = 2;
 
+// When the client area is extended out into the default window frame area,
+// this is the minimum amount of space along the edge of resizable windows
+// we will always display a resize cursor in, regardless of the underlying
+// content.
+static const PRInt32 kResizableBorderMinSize = 3;
 
 // We should never really try to accelerate windows bigger than this. In some
 // cases this might lead to no D3D9 acceleration where we could have had it
@@ -2031,49 +2037,91 @@ nsWindow::UpdateNonClientMargins(PRInt32 aSizeMode, bool aReflowWindow)
 
   mNonClientOffset.top = mNonClientOffset.bottom =
     mNonClientOffset.left = mNonClientOffset.right = 0;
+  mCaptionHeight = mVertResizeMargin = mHorResizeMargin = 0;
 
   if (aSizeMode == -1)
     aSizeMode = mSizeMode;
 
   if (aSizeMode == nsSizeMode_Minimized ||
       aSizeMode == nsSizeMode_Fullscreen) {
-    mCaptionHeight = mVertResizeMargin = mHorResizeMargin = 0;
     return true;
   }
 
-  // Note, for maximized windows, we need to continue to offset the client by
-  // thick frame margins of a normal window, since windows expects this
-  // in it's DwmDefWndProc hit testing.
-  mCaptionHeight = GetSystemMetrics(SM_CYCAPTION);
+  bool hasCaption = (mBorderStyle & (eBorderStyle_all |
+                                     eBorderStyle_title |
+                                     eBorderStyle_menu |
+                                     eBorderStyle_default)) > 0 ? true : false;
+
+  if (hasCaption)
+    mCaptionHeight = GetSystemMetrics(SM_CYCAPTION);
   mHorResizeMargin = GetSystemMetrics(SM_CXFRAME);
   mVertResizeMargin = GetSystemMetrics(SM_CYFRAME);
-
   mCaptionHeight += mVertResizeMargin;
 
-  // If a margin value is 0, set the offset to the default size of the frame.
-  // If a margin is -1, leave as default, and if a margin > 0, set the offset
-  // so that the frame size is equal to the margin value.
+  // Custom margin offset calculations for the chrome margin attribute on a
+  // window. The offsets calculated here are added to the client area in the
+  // WM_NCCALCSIZE event:
+  // -1 - leave the default frame in place
+  //  0 - remove the frame, our frame offset equals the default frame size
+  // >0 - frame size equals (default frame size - margin value) with the
+  //      restriction that the offset <= default frame size.
   if (!mNonClientMargins.top)
     mNonClientOffset.top = mCaptionHeight;
   else if (mNonClientMargins.top > 0)
-    mNonClientOffset.top = mCaptionHeight - mNonClientMargins.top;
+    mNonClientOffset.top = NS_MIN(mCaptionHeight, mNonClientMargins.top);
 
   if (!mNonClientMargins.left)
     mNonClientOffset.left = mHorResizeMargin;
   else if (mNonClientMargins.left > 0)
-    mNonClientOffset.left = mHorResizeMargin - mNonClientMargins.left;
+    mNonClientOffset.left = NS_MIN(mHorResizeMargin, mNonClientMargins.left);
  
   if (!mNonClientMargins.right)
     mNonClientOffset.right = mHorResizeMargin;
   else if (mNonClientMargins.right > 0)
-    mNonClientOffset.right = mHorResizeMargin - mNonClientMargins.right;
+    mNonClientOffset.right = NS_MIN(mHorResizeMargin, mNonClientMargins.right);
 
   if (!mNonClientMargins.bottom)
     mNonClientOffset.bottom = mVertResizeMargin;
   else if (mNonClientMargins.bottom > 0)
-    mNonClientOffset.bottom = mVertResizeMargin - mNonClientMargins.bottom;
+    mNonClientOffset.bottom = NS_MIN(mVertResizeMargin, mNonClientMargins.bottom);
+
+  // Disable chrome margins > 0 in two cases:
+  // - For non-glass desktops: The window frame is painted with textures that
+  //   require the entire space of the default frame. We allow a full frame or
+  //   no frame at all.
+  // - For maximized windows: Windows positions maximized windows such that the
+  //   outer bounds sit off screen a distance equal to the standard frame size.
+  if(!nsUXThemeData::CheckForCompositor() || aSizeMode == nsSizeMode_Maximized) {
+    if (mNonClientMargins.top > 0)
+      mNonClientOffset.top = 0;
+    if (mNonClientMargins.bottom > 0)
+      mNonClientOffset.bottom = 0;
+    if (mNonClientMargins.left > 0)
+      mNonClientOffset.left = 0;
+    if (mNonClientMargins.right > 0)
+      mNonClientOffset.right = 0;
+  }
 
   if (aSizeMode == nsSizeMode_Maximized) {
+    // For chrome margins = 0 on maximized windows, Windows places the bounds
+    // off screen a distance equal to the standard frame size. Remove this
+    // area from our expanded client area.
+    if (!mNonClientMargins.bottom)
+      mNonClientOffset.bottom = 0;
+    if (!mNonClientMargins.left)
+      mNonClientOffset.left = 0;
+    if (!mNonClientMargins.right)
+      mNonClientOffset.right = 0;
+
+    // This should be (mCaptionHeight - mVertResizeMargin). But if we offset
+    // the client area by just SM_CYCAPTION (placing the top of the client
+    // area level with the visible screen) Windows dwm def proc fails to pick
+    // up mouse hover and clicks on the glass control buttons. To compensate,
+    // we position the client area off screen by mVertResizeMargin, and add
+    // widget padding in nsNativeThemeWin::GetWidgetPadding().
+    if (!mNonClientMargins.top)
+      mNonClientOffset.top = mCaptionHeight;
+
     // Address an issue with auto-hide taskbars which fall behind the window.
     // Ensure a 1 pixel margin at the bottom of the monitor so that unhiding
     // the taskbar works properly.
@@ -5543,6 +5591,11 @@ BOOL CALLBACK nsWindow::BroadcastMsg(HWND aTopWindow, LPARAM aMsg)
 PRInt32
 nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
 {
+  if (mSizeMode == nsSizeMode_Minimized ||
+      mSizeMode == nsSizeMode_Fullscreen) {
+    return HTCLIENT;
+  }
+
   // Calculations are done in screen coords
   RECT winRect;
   GetWindowRect(mWnd, &winRect);
@@ -5560,72 +5613,90 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
 
   PRInt32 testResult = HTCLIENT;
 
+  bool isResizable = (mBorderStyle & (eBorderStyle_all |
+                                      eBorderStyle_resizeh |
+                                      eBorderStyle_default)) > 0 ? true : false;
+  if (mSizeMode == nsSizeMode_Maximized)
+    isResizable = false;
+
   bool top    = false;
   bool bottom = false;
   bool left   = false;
   bool right  = false;
 
-  if (my >= winRect.top && my <
-      (winRect.top + mVertResizeMargin + (mCaptionHeight - mNonClientOffset.top)))
+  int topOffset = NS_MAX(mCaptionHeight - mNonClientOffset.top,
+                         kResizableBorderMinSize);
+  int bottomOffset = NS_MAX(mVertResizeMargin - mNonClientOffset.bottom,
+                            kResizableBorderMinSize);
+  int topBounds = winRect.top + topOffset;
+  int bottomBounds = winRect.bottom - bottomOffset;
+
+  if (my >= winRect.top && my < topBounds)
     top = true;
-  else if (my < winRect.bottom && my >= (winRect.bottom - mVertResizeMargin))
+  else if (my <= winRect.bottom && my > bottomBounds)
     bottom = true;
 
-  if (mx >= winRect.left && mx < (winRect.left +
-                                  (bottom ? (2*mHorResizeMargin) : mHorResizeMargin)))
+  int leftOffset = NS_MAX(mHorResizeMargin - mNonClientOffset.left,
+                          kResizableBorderMinSize);
+  int rightOffset = NS_MAX(mHorResizeMargin - mNonClientOffset.right,
+                           kResizableBorderMinSize);
+  // (the 2x case here doubles the resize area for corners)
+  int leftBounds = winRect.left +
+                   (bottom ? (2*leftOffset) : leftOffset);
+  int rightBounds = winRect.right -
+                    (bottom ? (2*rightOffset) : rightOffset);
+
+  if (mx >= winRect.left && mx < leftBounds)
     left = true;
-  else if (mx < winRect.right && mx >= (winRect.right -
-                                        (bottom ? (2*mHorResizeMargin) : mHorResizeMargin)))
+  else if (mx <= winRect.right && mx > rightBounds)
     right = true;
 
-  if (top) {
-    testResult = HTTOP;
-    if (left)
-      testResult = HTTOPLEFT;
-    else if (right)
-      testResult = HTTOPRIGHT;
-  } else if (bottom) {
-    testResult = HTBOTTOM;
-    if (left)
-      testResult = HTBOTTOMLEFT;
-    else if (right)
-      testResult = HTBOTTOMRIGHT;
+  if (isResizable) {
+    if (top) {
+      testResult = HTTOP;
+      if (left)
+        testResult = HTTOPLEFT;
+      else if (right)
+        testResult = HTTOPRIGHT;
+    } else if (bottom) {
+      testResult = HTBOTTOM;
+      if (left)
+        testResult = HTBOTTOMLEFT;
+      else if (right)
+        testResult = HTBOTTOMRIGHT;
+    } else {
+      if (left)
+        testResult = HTLEFT;
+      if (right)
+        testResult = HTRIGHT;
+    }
   } else {
-    if (left)
-      testResult = HTLEFT;
-    if (right)
-      testResult = HTRIGHT;
+    if (top)
+      testResult = HTCAPTION;
+    else if (bottom || left || right)
+      testResult = HTBORDER;
   }
 
   bool contentOverlap = true;
 
-  if (mSizeMode == nsSizeMode_Maximized) {
-    // There's no HTTOP in maximized state (bug 575493)
-    if (testResult == HTTOP) {
-      testResult = HTCAPTION;
-    }
-  } else {
-    PRInt32 leftMargin   = mNonClientMargins.left   == -1 ? mHorResizeMargin  : mNonClientMargins.left;
-    PRInt32 rightMargin  = mNonClientMargins.right  == -1 ? mHorResizeMargin  : mNonClientMargins.right;
-    PRInt32 topMargin    = mNonClientMargins.top    == -1 ? mVertResizeMargin : mNonClientMargins.top;
-    PRInt32 bottomMargin = mNonClientMargins.bottom == -1 ? mVertResizeMargin : mNonClientMargins.bottom;
-
-    contentOverlap = mx >= winRect.left + leftMargin &&
-                     mx <= winRect.right - rightMargin &&
-                     my >= winRect.top + topMargin &&
-                     my <= winRect.bottom - bottomMargin;
+  if (mSizeMode != nsSizeMode_Maximized) {
+    contentOverlap = mx >= winRect.left + leftOffset &&
+                     mx <= winRect.right - rightOffset &&
+                     my >= winRect.top + topOffset &&
+                     my <= winRect.bottom - bottomOffset;
   }
 
   if (!sIsInMouseCapture &&
       contentOverlap &&
       (testResult == HTCLIENT ||
        testResult == HTTOP ||
+       testResult == HTBORDER ||
        testResult == HTTOPLEFT ||
        testResult == HTCAPTION)) {
     LPARAM lParam = MAKELPARAM(mx, my);
     LPARAM lParamClient = lParamToClient(lParam);
     bool result = DispatchMouseEvent(NS_MOUSE_MOZHITTEST, 0, lParamClient,
-                                       false, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+                                     false, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
     if (result) {
       // The mouse is over a blank area
       testResult = testResult == HTCLIENT ? HTCAPTION : testResult;
