@@ -231,7 +231,7 @@ abstract public class GeckoApp
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             return new String[0];
 
-        Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - start of getPluginDirectories");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
 
         ArrayList<String> directories = new ArrayList<String>();
         PackageManager pm = this.mAppContext.getPackageManager();
@@ -357,7 +357,7 @@ abstract public class GeckoApp
         }
 
         String [] result = directories.toArray(new String[directories.size()]);
-        Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - end of getPluginDirectories");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - end of getPluginDirectories");
         return result;
     }
 
@@ -1396,7 +1396,7 @@ abstract public class GeckoApp
 
         System.loadLibrary("mozglue");
         mMainHandler = new Handler();
-        Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onCreate");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
         if (savedInstanceState != null) {
             mLastUri = savedInstanceState.getString(SAVED_STATE_URI);
             mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
@@ -1512,7 +1512,7 @@ abstract public class GeckoApp
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
 
-        Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - UI almost up");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
 
         if (!sTryCatchAttached) {
             sTryCatchAttached = true;
@@ -1580,8 +1580,7 @@ abstract public class GeckoApp
  
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
-                
-                Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - pre checkLaunchState");
+                Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - pre checkLaunchState");
 
                 /*
                   XXXX see bug 635342
@@ -1596,10 +1595,10 @@ abstract public class GeckoApp
                     return;
                 }
 
-                // it would be good only to do this if MOZ_UPDATER was defined 
-                long startTime = new Date().getTime();
+                // it would be good only to do this if MOZ_UPDATER was defined
+                long startTime = SystemClock.uptimeMillis();
                 checkAndLaunchUpdate();
-                Log.w(LOGTAG, "checking for an update took " + (new Date().getTime() - startTime) + "ms");
+                Log.w(LOGTAG, "checking for an update took " + (SystemClock.uptimeMillis() - startTime) + "ms");
                 checkMigrateProfile();
             }
         }, 50);
@@ -1639,7 +1638,7 @@ abstract public class GeckoApp
 
     @Override
     protected void onNewIntent(Intent intent) {
-        Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onNewIntent");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onNewIntent");
 
         if (checkLaunchState(LaunchState.GeckoExiting)) {
             // We're exiting and shouldn't try to do anything else just incase
@@ -1759,7 +1758,7 @@ abstract public class GeckoApp
     @Override
     public void onStart()
     {
-        Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onStart");
+        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onStart");
 
         Log.i(LOGTAG, "start");
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_START));

@@ -38,7 +38,6 @@
 package org.mozilla.gecko.db;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Date;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.History;
@@ -96,7 +95,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                             // was accessed with a site accessed today getting 120 and a site accessed 119 or more
                             // days ago getting 1
                             History.VISITS + " * MAX(1, (" +
-                            History.DATE_LAST_VISITED + " - " + new Date().getTime() + ") / 86400000 + 120) DESC");
+                            History.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000 + 120) DESC");
 
         return new LocalDBCursor(c);
     }
