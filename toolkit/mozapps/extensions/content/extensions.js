@@ -2801,6 +2801,10 @@ var gDetailView = {
       gEventManager.unregisterAddonListener(this, this._addon.id);
       gEventManager.unregisterInstallListener(this);
       this._addon = null;
+
+      // Flush the preferences to disk so they survive any crash
+      if (this.node.getElementsByTagName("setting").length)
+        Services.prefs.savePrefFile(null);
     }
   },
 
