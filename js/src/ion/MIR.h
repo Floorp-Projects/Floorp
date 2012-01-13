@@ -981,18 +981,14 @@ class MCall
     static const size_t NumNonArgumentOperands = 2;
 
   protected:
-    // True if the call is for JSOP_NEW.
-    bool construct_;
-
-    MCall(bool construct)
-      : construct_(construct)
+    MCall()
     {
         setResultType(MIRType_Value);
     }
 
   public:
     INSTRUCTION_HEADER(Call);
-    static MCall *New(size_t argc, bool construct);
+    static MCall *New(size_t argc);
 
     void initPrepareCall(MDefinition *start) {
         JS_ASSERT(start->isPrepareCall());
@@ -1014,10 +1010,6 @@ class MCall
 
     MDefinition *getArg(uint32 index) const {
         return getOperand(NumNonArgumentOperands + index);
-    }
-
-    bool isConstruct() const {
-        return construct_;
     }
 
     // Includes |this|.
