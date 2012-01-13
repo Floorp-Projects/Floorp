@@ -41,7 +41,7 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Matrix.h"
-
+#include "UserData.h"
 // This RefPtr class isn't ideal for usage in Azure, as it doesn't allow T**
 // outparams using the &-operator. But it will have to do as there's no easy
 // solution.
@@ -744,7 +744,14 @@ public:
    */
   virtual void *GetNativeSurface(NativeSurfaceType aType) { return NULL; }
 
+  void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
+    mUserData.Add(key, userData, destroy);
+  }
+  void *GetUserData(UserDataKey *key) {
+    return mUserData.Get(key);
+  }
 protected:
+  UserData mUserData;
   Matrix mTransform;
   bool mTransformDirty : 1;
 
