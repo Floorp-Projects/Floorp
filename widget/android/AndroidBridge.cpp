@@ -1360,7 +1360,7 @@ AndroidBridge::SaveSentMessage(const nsAString& aRecipient,
 {
     ALOG_BRIDGE("AndroidBridge::SaveSentMessage");
 
-    AutoLocalJNIFrame jniFrame;
+    AutoLocalJNIFrame jniFrame(GetJNIForThread());
     jstring jRecipient = GetJNIForThread()->NewString(PromiseFlatString(aRecipient).get(), aRecipient.Length());
     jstring jBody = GetJNIForThread()->NewString(PromiseFlatString(aBody).get(), aBody.Length());
     return GetJNIForThread()->CallStaticIntMethod(mGeckoAppShellClass, jSaveSentMessage, jRecipient, jBody, aDate);
