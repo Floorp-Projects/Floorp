@@ -4,7 +4,7 @@
 "use strict";
 
 let libhardware_legacy = (function () {
-  let library = ctypes.open("/system/lib/libhardware_legacy.so");
+  let library = ctypes.open("libhardware_legacy.so");
 
   return {
     // Load wifi driver, 0 on success, < 0 on failure.

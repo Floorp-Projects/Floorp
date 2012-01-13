@@ -69,11 +69,11 @@
 #include "AndroidBridge.h"
 #endif
 #include <android/log.h>
-#define EGL_LIB "/system/lib/libEGL.so"
-#define GLES2_LIB "/system/lib/libGLESv2.so"
+#define EGL_LIB "libEGL.so"
+#define GLES2_LIB "libGLESv2.so"
 #else
-#define EGL_LIB "/usr/lib/libEGL.so"
-#define GLES2_LIB "/usr/lib/libGLESv2.so"
+#define EGL_LIB "libEGL.so.1"
+#define GLES2_LIB "libGLESv2.so.2"
 #endif
 
 typedef void *EGLNativeDisplayType;

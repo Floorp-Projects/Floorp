@@ -4,7 +4,7 @@
 "use strict";
 
 let libnetutils = (function () {
-  let library = ctypes.open("/system/lib/libnetutils.so");
+  let library = ctypes.open("libnetutils.so");
 
   return {
     ifc_enable: library.declare("ifc_enable", ctypes.default_abi, ctypes.int, ctypes.char.ptr),
