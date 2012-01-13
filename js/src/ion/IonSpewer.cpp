@@ -43,6 +43,14 @@
 
 #include "IonSpewer.h"
 
+#ifndef ION_SPEW_DIR
+# if defined(_WIN32)
+#  define ION_SPEW_DIR ""
+# else
+#  define ION_SPEW_DIR "/tmp/"
+# endif
+#endif
+
 using namespace js;
 using namespace js::ion;
 
@@ -102,9 +110,9 @@ IonSpewer::init()
     if (inited_)
         return true;
 
-    if (!c1Spewer.init("/tmp/ion.cfg"))
+    if (!c1Spewer.init(ION_SPEW_DIR "ion.cfg"))
         return false;
-    if (!jsonSpewer.init("/tmp/ion.json"))
+    if (!jsonSpewer.init(ION_SPEW_DIR "ion.json"))
         return false;
 
     inited_ = true;
