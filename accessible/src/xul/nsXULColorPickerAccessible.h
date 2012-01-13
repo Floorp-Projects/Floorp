@@ -54,7 +54,7 @@ public:
   NS_IMETHOD GetValue(nsAString& _retval);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
   // Widgets
@@ -71,7 +71,7 @@ public:
   nsXULColorPickerAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
   // Widgets

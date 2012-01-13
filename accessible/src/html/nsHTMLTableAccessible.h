@@ -61,7 +61,7 @@ public:
   NS_DECL_NSIACCESSIBLETABLECELL
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
@@ -99,7 +99,7 @@ public:
                                   nsIWeakReference *aShell);
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 };
 
 
@@ -133,7 +133,7 @@ public:
   // nsAccessible
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual Relation RelationByType(PRUint32 aRelationType);
@@ -142,8 +142,7 @@ public:
   inline nsAccessible* Caption() const
   {
     nsAccessible* child = mChildren.SafeElementAt(0, nsnull);
-    return child && child->Role() == nsIAccessibleRole::ROLE_CAPTION ?
-      child : nsnull;
+    return child && child->Role() == mozilla::a11y::roles::CAPTION ? child : nsnull;
   }
 
   // nsHTMLTableAccessible
@@ -218,7 +217,7 @@ public:
   // nsIAccessible
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
   virtual Relation RelationByType(PRUint32 aRelationType);
 };
 

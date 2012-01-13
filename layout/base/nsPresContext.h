@@ -1009,8 +1009,12 @@ protected:
   NS_HIDDEN_(void) GetUserPreferences();
   NS_HIDDEN_(void) GetFontPreferences();
 
-  NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
+  NS_HIDDEN_(void) UpdateCharSet(const nsCString& aCharSet);
 
+public:
+  void DoChangeCharSet(const nsCString& aCharSet);
+
+protected:
   void InvalidateThebesLayers();
   void AppUnitsPerDevPixelChanged();
 
