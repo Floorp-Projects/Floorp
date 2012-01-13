@@ -223,5 +223,5 @@ LifoAlloc::reallocUnaligned(void *origPtr, size_t origSize, size_t incr)
     /* Otherwise, memcpy. */
     size_t newSize = origSize + incr;
     void *newPtr = allocUnaligned(newSize);
-    return newPtr ? memcpy(newPtr, origPtr, origSize) : NULL;
+    return newPtr ? js_memcpy(newPtr, origPtr, origSize) : NULL;
 }

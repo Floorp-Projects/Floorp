@@ -28,7 +28,7 @@ BEGIN_TEST(testXDR_bug506491)
     CHECK(p);
     void *frozen = JS_malloc(cx, nbytes);
     CHECK(frozen);
-    memcpy(frozen, p, nbytes);
+    js_memcpy(frozen, p, nbytes);
     JS_XDRDestroy(w);
 
     // thaw
@@ -68,7 +68,7 @@ BEGIN_TEST(testXDR_bug516827)
     CHECK(p);
     void *frozen = JS_malloc(cx, nbytes);
     CHECK(frozen);
-    memcpy(frozen, p, nbytes);
+    js_memcpy(frozen, p, nbytes);
     JS_XDRDestroy(w);
 
     // thaw
