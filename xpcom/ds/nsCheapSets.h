@@ -39,6 +39,7 @@
 #define __nsCheapSets_h__
 
 #include "nsHashSets.h"
+#include "mozilla/StdInt.h"
 
 /**
  * A string set that takes up minimal size when there are 0 or 1 strings in the
@@ -175,16 +176,7 @@ private:
   /** Set the single integer */
   void SetInt(PRInt32 aInt)
   {
-    /**
-     * NOTE: on 64-bit GCC, we do an intermediate cast to (intptr_t) to fix
-     * build warning about converting 32-bit value to 64-bit pointer.
-     * This is GCC-only since some platforms/compilers lack "intptr_t".
-     */
-    mValOrHash = (void*)
-#if (defined(__GNUC__) && defined(__x86_64__))
-                 (intptr_t)
-#endif
-                 ((aInt << 1) | 0x1);
+    mValOrHash = (void*)(intptr_t)((aInt << 1) | 0x1);
   }
   /** Create the hash and initialize */
   nsresult InitHash(nsInt32HashSet** aSet);
