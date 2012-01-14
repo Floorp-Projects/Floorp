@@ -118,13 +118,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         mTileLayer = new MultiTileLayer(mCairoImage, TILE_SIZE);
     }
 
-    public int getWidth() {
-        return mBufferSize.width;
-    }
-
-    public int getHeight() {
-        return mBufferSize.height;
-    }
 
     protected void finalize() throws Throwable {
         try {
@@ -281,19 +274,13 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             if (mBuffer == null || mBufferSize.width <= 0 || mBufferSize.height <= 0)
                 return null;
             try {
-                Bitmap b = null;
+                Bitmap b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
+                                               CairoUtils.cairoFormatTobitmapConfig(mFormat));
 
-                if (mTileLayer instanceof MultiTileLayer) {
-                    b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
-                                               CairoUtils.cairoFormatTobitmapConfig(mFormat));
+                if (mTileLayer instanceof MultiTileLayer)
                     copyPixelsFromMultiTileLayer(b);
-                } else if (mTileLayer instanceof SingleTileLayer) {
-                    b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
-                                               CairoUtils.cairoFormatTobitmapConfig(mFormat));
+                else
                     b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
-                } else {
-                    Log.w(LOGTAG, "getBitmap() called on a layer (" + mTileLayer + ") we don't know how to get a bitmap from");
-                }
 
                 return b;
             } catch (OutOfMemoryError oom) {
