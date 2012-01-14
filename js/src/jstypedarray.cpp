@@ -1799,7 +1799,7 @@ class TypedArrayTemplate
         NativeType *dest = static_cast<NativeType*>((void*)getDataOffset(thisTypedArrayObj)) + offset;
 
         if (getType(tarray) == getType(thisTypedArrayObj)) {
-            js_memcpy(dest, getDataOffset(tarray), getByteLength(tarray));
+            memcpy(dest, getDataOffset(tarray), getByteLength(tarray));
             return true;
         }
 
@@ -1879,7 +1879,7 @@ class TypedArrayTemplate
         void *srcbuf = cx->malloc_(getLength(tarray));
         if (!srcbuf)
             return false;
-        js_memcpy(srcbuf, getDataOffset(tarray), getByteLength(tarray));
+        memcpy(srcbuf, getDataOffset(tarray), getByteLength(tarray));
 
         switch (getType(tarray)) {
           case TypedArray::TYPE_INT8: {

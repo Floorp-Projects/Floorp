@@ -1565,7 +1565,7 @@ NewObjectCache::fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKi
     entry->kind = kind;
 
     entry->nbytes = obj->structSize();
-    js_memcpy(&entry->templateObject, obj, entry->nbytes);
+    memcpy(&entry->templateObject, obj, entry->nbytes);
 }
 
 inline void
@@ -1598,7 +1598,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
 
     JSObject *obj = js_TryNewGCObject(cx, entry->kind);
     if (obj) {
-        js_memcpy(obj, &entry->templateObject, entry->nbytes);
+        memcpy(obj, &entry->templateObject, entry->nbytes);
         Probes::createObject(cx, obj);
         return obj;
     }
@@ -1607,7 +1607,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
     size_t nbytes = entry->nbytes;
     char stackObject[sizeof(JSObject_Slots16)];
     JS_ASSERT(nbytes <= sizeof(stackObject));
-    js_memcpy(&stackObject, &entry->templateObject, nbytes);
+    memcpy(&stackObject, &entry->templateObject, nbytes);
 
     JSObject *baseobj = (JSObject *) stackObject;
     RootShape shapeRoot(cx, (Shape **) baseobj->addressOfShape());
@@ -1615,7 +1615,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
 
     obj = js_NewGCObject(cx, entry->kind);
     if (obj) {
-        js_memcpy(obj, baseobj, nbytes);
+        memcpy(obj, baseobj, nbytes);
         Probes::createObject(cx, obj);
         return obj;
     }

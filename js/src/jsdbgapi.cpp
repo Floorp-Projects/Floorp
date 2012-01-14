@@ -448,8 +448,7 @@ JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp)
         return NULL;
     }
 
-    JS_ASSERT(sizeof(*names) == sizeof(*localNames.begin()));
-    js_memcpy(names, localNames.begin(), localNames.length() * sizeof(*names));
+    memcpy(names, localNames.begin(), localNames.length() * sizeof(uintptr_t));
     return names;
 }
 
