@@ -49,6 +49,8 @@ This is bad during printing, it means tall image frames won't know
 the size of the paper and cannot break into continuations along
 multiple pages. */
 img {
+  color: #eee;
+  text-align: center;
   display: block;
   position: absolute;
   margin: auto;
