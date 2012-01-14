@@ -208,7 +208,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Select", false);
     Services.obs.addObserver(this, "Tab:Close", false);
-    Services.obs.addObserver(this, "Tab:Screenshot", false);
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
@@ -469,14 +468,6 @@ var BrowserApp = {
 
     aTab.destroy();
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
-  },
-
-  screenshotTab: function screenshotTab(aData) {
-      let json = JSON.parse(aData);
-      let tab = this.getTabForId(parseInt(json.tabID));
-      let width = parseInt(json.width);
-      let height =  parseInt(json.height);
-      tab.screenshot(width, height);
   },
 
   selectTab: function selectTab(aTab) {
@@ -832,8 +823,6 @@ var BrowserApp = {
       this.selectTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Close") {
       this.closeTab(this.getTabForId(parseInt(aData)));
-    } else if (aTopic == "Tab:Screenshot") {
-      this.screenshotTab(aData);
     } else if (aTopic == "Browser:Quit") {
       this.quit();
     } else if (aTopic == "SaveAs:PDF") {
@@ -1476,26 +1465,6 @@ Tab.prototype = {
 
     if (transformChanged)
       this.updateTransform();
-  },
-
-  screenshot: function(aWidth, aHeight) {
-      if (!this.browser || !this.browser.contentWindow)
-          return;
-      let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      canvas.setAttribute("width", aWidth);  
-      canvas.setAttribute("height", aHeight);
-      let ctx = canvas.getContext("2d");
-      ctx.drawWindow(this.browser.contentWindow, 0, 0, aWidth, aHeight, "rgb(255, 255, 255)");
-      let message = {
-        gecko: {
-          type: "Tab:ScreenshotData",
-          tabID: this.id,
-          width: aWidth,
-          height: aHeight,
-          data: canvas.toDataURL()
-        }
-      };
-      sendMessageToJava(message);
   },
 
   updateTransform: function() {
