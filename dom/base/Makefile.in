@@ -52,14 +52,18 @@ EXTRA_PP_COMPONENTS = \
 		ConsoleAPI.manifest \
 		$(NULL)
 
+EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
+		$(NULL)
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_COMPONENTS = \
 	        Webapps.js \
 	        Webapps.manifest \
 		$(NULL)
 
-EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
-                Webapps.jsm \
+EXTRA_JS_MODULES += Webapps.jsm \
 		$(NULL)
+endif
 
 XPIDLSRCS = \
   nsIEntropyCollector.idl \
