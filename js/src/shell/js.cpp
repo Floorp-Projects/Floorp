@@ -921,10 +921,10 @@ FileAsTypedArray(JSContext *cx, const char *pathname)
         if (fseek(file, 0, SEEK_SET) != 0) {
             JS_ReportError(cx, "can't seek start of %s", pathname);
         } else {
-            obj = js_CreateTypedArray(cx, TypedArray::TYPE_UINT8, len);
+            obj = JS_NewUint8Array(cx, len);
             if (!obj)
                 return NULL;
-            char *buf = (char *) TypedArray::getDataOffset(TypedArray::getTypedArray(obj));
+            char *buf = (char *) TypedArray::getDataOffset(obj);
             size_t cc = fread(buf, 1, len, file);
             if (cc != len) {
                 JS_ReportError(cx, "can't read %s: %s", pathname,
@@ -3395,16 +3395,15 @@ Serialize(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_WriteStructuredClone(cx, v, &datap, &nbytes, NULL, NULL))
         return false;
 
-    JSObject *arrayobj = js_CreateTypedArray(cx, TypedArray::TYPE_UINT8, nbytes);
-    if (!arrayobj) {
+    JSObject *array = JS_NewUint8Array(cx, nbytes);
+    if (!array) {
         JS_free(cx, datap);
         return false;
     }
-    JSObject *array = TypedArray::getTypedArray(arrayobj);
     JS_ASSERT((uintptr_t(TypedArray::getDataOffset(array)) & 7) == 0);
     js_memcpy(TypedArray::getDataOffset(array), datap, nbytes);
     JS_free(cx, datap);
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(arrayobj));
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(array));
     return true;
 }
 
@@ -3413,7 +3412,7 @@ Deserialize(JSContext *cx, unsigned argc, jsval *vp)
 {
     jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     JSObject *obj;
-    if (JSVAL_IS_PRIMITIVE(v) || !js_IsTypedArray((obj = JSVAL_TO_OBJECT(v)))) {
+    if (JSVAL_IS_PRIMITIVE(v) || !(obj = JSVAL_TO_OBJECT(v))->isTypedArray()) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "deserialize");
         return false;
     }

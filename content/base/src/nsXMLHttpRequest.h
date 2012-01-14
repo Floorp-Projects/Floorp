@@ -370,61 +370,62 @@ private:
   };
 
   static nsresult GetRequestBody(nsIVariant* aVariant,
+                                 JSContext* aCx,
                                  const Nullable<RequestBody>& aBody,
                                  nsIInputStream** aResult,
                                  nsACString& aContentType,
                                  nsACString& aCharset);
 
-  nsresult Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody);
-  nsresult Send(const Nullable<RequestBody>& aBody)
+  nsresult Send(JSContext *aCx, nsIVariant* aVariant, const Nullable<RequestBody>& aBody);
+  nsresult Send(JSContext *aCx, const Nullable<RequestBody>& aBody)
   {
-    return Send(nsnull, aBody);
+    return Send(aCx, nsnull, aBody);
   }
-  nsresult Send(const RequestBody& aBody)
+  nsresult Send(JSContext *aCx, const RequestBody& aBody)
   {
-    return Send(Nullable<RequestBody>(aBody));
+    return Send(aCx, Nullable<RequestBody>(aBody));
   }
 
 public:
-  void Send(nsresult& aRv)
+  void Send(JSContext *aCx, nsresult& aRv)
   {
-    aRv = Send(Nullable<RequestBody>());
+    aRv = Send(aCx, Nullable<RequestBody>());
   }
-  void Send(JSObject* aArrayBuffer, nsresult& aRv)
+  void Send(JSContext *aCx, JSObject* aArrayBuffer, nsresult& aRv)
   {
     NS_ASSERTION(aArrayBuffer, "Null should go to string version");
-    aRv = Send(RequestBody(aArrayBuffer));
+    aRv = Send(aCx, RequestBody(aArrayBuffer));
   }
-  void Send(nsIDOMBlob* aBlob, nsresult& aRv)
+  void Send(JSContext *aCx, nsIDOMBlob* aBlob, nsresult& aRv)
   {
     NS_ASSERTION(aBlob, "Null should go to string version");
-    aRv = Send(RequestBody(aBlob));
+    aRv = Send(aCx, RequestBody(aBlob));
   }
-  void Send(nsIDocument* aDoc, nsresult& aRv)
+  void Send(JSContext *aCx, nsIDocument* aDoc, nsresult& aRv)
   {
     NS_ASSERTION(aDoc, "Null should go to string version");
-    aRv = Send(RequestBody(aDoc));
+    aRv = Send(aCx, RequestBody(aDoc));
   }
-  void Send(const nsAString& aString, nsresult& aRv)
+  void Send(JSContext *aCx, const nsAString& aString, nsresult& aRv)
   {
     if (DOMStringIsNull(aString)) {
-      Send(aRv);
+      Send(aCx, aRv);
     }
     else {
-      aRv = Send(RequestBody(aString));
+      aRv = Send(aCx, RequestBody(aString));
     }
   }
-  void Send(nsIDOMFormData* aFormData, nsresult& aRv)
+  void Send(JSContext *aCx, nsIDOMFormData* aFormData, nsresult& aRv)
   {
     NS_ASSERTION(aFormData, "Null should go to string version");
-    aRv = Send(RequestBody(aFormData));
+    aRv = Send(aCx, RequestBody(aFormData));
   }
-  void Send(nsIInputStream* aStream, nsresult& aRv)
+  void Send(JSContext *aCx, nsIInputStream* aStream, nsresult& aRv)
   {
     NS_ASSERTION(aStream, "Null should go to string version");
-    aRv = Send(RequestBody(aStream));
+    aRv = Send(aCx, RequestBody(aStream));
   }
-  void SendAsBinary(const nsAString& aBody, nsresult& aRv);
+  void SendAsBinary(JSContext *aCx, const nsAString& aBody, nsresult& aRv);
 
   void Abort();
 
@@ -475,7 +476,7 @@ public:
   }
 
   // We need a GetInterface callable from JS for chrome JS
-  JS::Value GetInterface(JSContext*aCx, nsIJSIID* aIID, nsresult& aRv);
+  JS::Value GetInterface(JSContext* aCx, nsIJSIID* aIID, nsresult& aRv);
 
   // This creates a trusted readystatechange event, which is not cancelable and
   // doesn't bubble.
