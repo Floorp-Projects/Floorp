@@ -49,11 +49,11 @@
 #include "jsatom.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
-#include "nsThreadUtilsInternal.h"
 #include "dom_quickstubs.h"
 #include "nsNullPrincipal.h"
 #include "nsIURI.h"
 #include "nsJSEnvironment.h"
+#include "nsThreadUtils.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
@@ -66,6 +66,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Util.h"
 
 #include "nsWrapperCacheInlines.h"
 
@@ -108,6 +109,7 @@ nsXPConnect::nsXPConnect()
         mDefaultSecurityManagerFlags(0),
         mShuttingDown(false),
         mNeedGCBeforeCC(true),
+        mEventDepth(0),
         mCycleCollectionContext(nsnull)
 {
     mRuntime = XPCJSRuntime::newXPCJSRuntime(this);
@@ -184,7 +186,14 @@ nsXPConnect::GetXPConnect()
         // Initial extra ref to keep the singleton alive
         // balanced by explicit call to ReleaseXPConnectSingleton()
         NS_ADDREF(gSelf);
-        if (NS_FAILED(NS_SetGlobalThreadObserver(gSelf))) {
+
+        // Add XPConnect as an thread observer.
+        //
+        // The cycle collector sometimes calls GetXPConnect, but it should never
+        // be the one that initializes gSelf.
+        MOZ_ASSERT(NS_IsMainThread());
+        nsCOMPtr<nsIThreadInternal> thread = do_QueryInterface(NS_GetCurrentThread());
+        if (NS_FAILED(thread->AddObserver(gSelf))) {
             NS_RELEASE(gSelf);
             // Fall through to returning null
         }
@@ -207,7 +216,14 @@ nsXPConnect::ReleaseXPConnectSingleton()
 {
     nsXPConnect* xpc = gSelf;
     if (xpc) {
-        NS_SetGlobalThreadObserver(nsnull);
+
+        // The thread subsystem may have been shut down already, so make sure
+        // to check for null here.
+        nsCOMPtr<nsIThreadInternal> thread = do_QueryInterface(NS_GetCurrentThread());
+        if (thread) {
+            MOZ_ASSERT(NS_IsMainThread());
+            thread->RemoveObserver(xpc);
+        }
 
 #ifdef DEBUG
         // force a dump of the JavaScript gc heap if JS is still alive
@@ -2354,8 +2370,12 @@ NS_IMETHODIMP
 nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
                                 PRUint32 aRecursionDepth)
 {
+    // Record this event.
+    mEventDepth++;
+
     // Push a null JSContext so that we don't see any script during
     // event processing.
+    MOZ_ASSERT(NS_IsMainThread());
     return Push(nsnull);
 }
 
@@ -2363,10 +2383,14 @@ NS_IMETHODIMP
 nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                    PRUint32 aRecursionDepth)
 {
+    // Watch out for unpaired events during observer registration.
+    if (NS_UNLIKELY(mEventDepth == 0))
+        return NS_OK;
+    mEventDepth--;
+
     // Call cycle collector occasionally.
-    if (NS_IsMainThread()) {
-        nsJSContext::MaybePokeCC();
-    }
+    MOZ_ASSERT(NS_IsMainThread());
+    nsJSContext::MaybePokeCC();
 
     return Pop(nsnull);
 }
