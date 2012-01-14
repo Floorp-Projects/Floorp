@@ -45,7 +45,7 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 
 #include "nsJSUtils.h"
 #include "nsCOMPtr.h"
@@ -5872,15 +5872,14 @@ nsContentUtils::CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
   }
 
   PRInt32 dataLen = aData.Length();
-  *aResult = js_CreateArrayBuffer(aCx, dataLen);
+  *aResult = JS_NewArrayBuffer(aCx, dataLen);
   if (!*aResult) {
     return NS_ERROR_FAILURE;
   }
 
   if (dataLen > 0) {
-    JSObject *abuf = js::ArrayBuffer::getArrayBuffer(*aResult);
-    NS_ASSERTION(abuf, "What happened?");
-    memcpy(JS_GetArrayBufferData(abuf), aData.BeginReading(), dataLen);
+    NS_ASSERTION(JS_IsArrayBufferObject(*aResult, aCx), "What happened?");
+    memcpy(JS_GetArrayBufferData(*aResult, aCx), aData.BeginReading(), dataLen);
   }
 
   return NS_OK;

@@ -59,7 +59,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jstypedarray.h"
 
 #include "mozilla/dom/bindings/Utils.h"
 
@@ -1606,7 +1605,8 @@ failure:
 // of the output does not exceed PR_UINT32_MAX bytes. Allocate
 // the memory and copy the elements by memcpy.
 static JSBool
-CheckTargetAndPopulate(const nsXPTType& type,
+CheckTargetAndPopulate(JSContext *cx,
+                       const nsXPTType& type,
                        PRUint8 requiredType,
                        size_t typeSize,
                        uint32_t count,
@@ -1637,7 +1637,7 @@ CheckTargetAndPopulate(const nsXPTType& type,
         return false;
     }
 
-    memcpy(*output, JS_GetTypedArrayData(tArr), byteSize);
+    memcpy(*output, JS_GetArrayBufferViewData(tArr, cx), byteSize);
     return true;
 }
 
@@ -1660,11 +1660,12 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 {
     NS_ABORT_IF_FALSE(jsArray, "bad param");
     NS_ABORT_IF_FALSE(d, "bad param");
-    NS_ABORT_IF_FALSE(js_IsTypedArray(jsArray), "not a typed array");
+    JSContext* cx = ccx.GetJSContext();
+    NS_ABORT_IF_FALSE(JS_IsTypedArrayObject(jsArray, cx), "not a typed array");
 
     // Check the actual length of the input array against the
     // given size_is.
-    uint32_t len = JS_GetTypedArrayLength(jsArray);
+    uint32_t len = JS_GetTypedArrayLength(jsArray, cx);
     if (len < count) {
         if (pErr)
             *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
@@ -1674,66 +1675,66 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 
     void* output = nsnull;
 
-    switch (JS_GetTypedArrayType(jsArray)) {
-    case js::TypedArray::TYPE_INT8:
-        if (!CheckTargetAndPopulate(nsXPTType::T_I8, type,
+    switch (JS_GetTypedArrayType(jsArray, cx)) {
+    case js::ArrayBufferView::TYPE_INT8:
+        if (!CheckTargetAndPopulate(cx, nsXPTType::T_I8, type,
                                     sizeof(int8_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
         break;
 
-    case js::TypedArray::TYPE_UINT8:
-    case js::TypedArray::TYPE_UINT8_CLAMPED:
-        if (!CheckTargetAndPopulate(nsXPTType::T_U8, type,
+    case js::ArrayBufferView::TYPE_UINT8:
+    case js::ArrayBufferView::TYPE_UINT8_CLAMPED:
+        if (!CheckTargetAndPopulate(cx, nsXPTType::T_U8, type,
                                     sizeof(uint8_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
         break;
 
-    case js::TypedArray::TYPE_INT16:
-        if (!CheckTargetAndPopulate(nsXPTType::T_I16, type,
+    case js::ArrayBufferView::TYPE_INT16:
+        if (!CheckTargetAndPopulate(cx, nsXPTType::T_I16, type,
                                     sizeof(int16_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
         break;
 
-    case js::TypedArray::TYPE_UINT16:
-        if (!CheckTargetAndPopulate(nsXPTType::T_U16, type,
+    case js::ArrayBufferView::TYPE_UINT16:
+        if (!CheckTargetAndPopulate(cx, nsXPTType::T_U16, type,
                                     sizeof(uint16_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
         break;
 
-    case js::TypedArray::TYPE_INT32:
-        if (!CheckTargetAndPopulate(nsXPTType::T_I32, type,
+    case js::ArrayBufferView::TYPE_INT32:
+        if (!CheckTargetAndPopulate(cx, nsXPTType::T_I32, type,
                                     sizeof(int32_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
         break;
 
-    case js::TypedArray::TYPE_UINT32:
-        if (!CheckTargetAndPopulate(nsXPTType::T_U32, type,
+    case js::ArrayBufferView::TYPE_UINT32:
+        if (!CheckTargetAndPopulate(cx, nsXPTType::T_U32, type,
                                     sizeof(uint32_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
         break;
 
-    case js::TypedArray::TYPE_FLOAT32:
-        if (!CheckTargetAndPopulate(nsXPTType::T_FLOAT, type,
+    case js::ArrayBufferView::TYPE_FLOAT32:
+        if (!CheckTargetAndPopulate(cx, nsXPTType::T_FLOAT, type,
                                     sizeof(float), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
         break;
 
-    case js::TypedArray::TYPE_FLOAT64:
-        if (!CheckTargetAndPopulate(nsXPTType::T_DOUBLE, type,
+    case js::ArrayBufferView::TYPE_FLOAT64:
+        if (!CheckTargetAndPopulate(cx, nsXPTType::T_DOUBLE, type,
                                     sizeof(double), count,
                                     jsArray, &output, pErr)) {
             return false;
@@ -1798,8 +1799,8 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
 
     jsarray = JSVAL_TO_OBJECT(s);
 
-    // If this is a typed array, then do a fast conversion with memcpy.
-    if (js_IsTypedArray(jsarray)) {
+    // If this is a typed array, then try a fast conversion with memcpy.
+    if (JS_IsTypedArrayObject(jsarray, cx)) {
         return JSTypedArray2Native(ccx, d, jsarray, count, type, pErr);
     }
 
