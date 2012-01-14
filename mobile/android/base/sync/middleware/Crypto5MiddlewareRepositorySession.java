@@ -38,10 +38,12 @@
 package org.mozilla.gecko.sync.middleware;
 
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.ExecutorService;
 
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
@@ -159,6 +161,13 @@ public class Crypto5MiddlewareRepositorySession extends RepositorySession {
     public void onFetchCompleted(long end) {
       next.onFetchCompleted(end);
     }
+
+    @Override
+    public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
+      // Synchronously perform *our* work, passing through appropriately.
+      RepositorySessionFetchRecordsDelegate deferredNext = next.deferredFetchDelegate(executor);
+      return new DecryptingTransformingFetchDelegate(deferredNext, keyBundle, recordFactory);
+    }
   }
 
   private DecryptingTransformingFetchDelegate makeUnwrappingDelegate(RepositorySessionFetchRecordsDelegate inner) {
@@ -193,24 +202,39 @@ public class Crypto5MiddlewareRepositorySession extends RepositorySession {
   }
 
   @Override
-  public void store(Record record, RepositorySessionStoreDelegate delegate) {
+  public void setStoreDelegate(RepositorySessionStoreDelegate delegate) {
+    // TODO: it remains to be seen how this will work.
+    inner.setStoreDelegate(delegate);
+    this.delegate = delegate;             // So we can handle errors without involving inner.
+  }
+
+  @Override
+  public void store(Record record) throws NoStoreDelegateException {
+    if (delegate == null) {
+      throw new NoStoreDelegateException();
+    }
     CryptoRecord rec = record.getPayload();
     rec.keyBundle = this.keyBundle;
     try {
       rec.encrypt();
     } catch (UnsupportedEncodingException e) {
-      delegate.onStoreFailed(e);
+      delegate.onRecordStoreFailed(e);
       return;
     } catch (CryptoException e) {
-      delegate.onStoreFailed(e);
+      delegate.onRecordStoreFailed(e);
       return;
     }
-    // TODO: it remains to be seen how this will work.
-    inner.store(rec, delegate);
+    // Allow the inner session to do delegate handling.
+    inner.store(rec);
   }
 
   @Override
   public void wipe(RepositorySessionWipeDelegate delegate) {
     inner.wipe(delegate);
+  }
+
+  @Override
+  public void storeDone() {
+    inner.storeDone();
   }
 }

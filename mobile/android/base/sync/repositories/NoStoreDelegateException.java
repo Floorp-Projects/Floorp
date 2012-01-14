@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,22 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko.sync.repositories.delegates;
+package org.mozilla.gecko.sync.repositories;
 
-import java.util.concurrent.ExecutorService;
+import org.mozilla.gecko.sync.SyncException;
 
-import org.mozilla.gecko.sync.repositories.RepositorySession;
-
-/**
- * One of these two methods is guaranteed to be called after session.begin() is
- * invoked (possibly during the invocation). The callback will be invoked prior
- * to any other RepositorySession callbacks.
- *
- * @author rnewman
- *
- */
-public interface RepositorySessionBeginDelegate {
-  public void onBeginFailed(Exception ex);
-  public void onBeginSucceeded(RepositorySession session);
-  public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor);
+public class NoStoreDelegateException extends SyncException {
+  private static final long serialVersionUID = 6631689468978422074L;
 }

@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,22 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko.sync.repositories.delegates;
+package org.mozilla.gecko.sync;
 
-import java.util.concurrent.ExecutorService;
+public class NonArrayJSONException extends UnexpectedJSONException {
+  private static final long serialVersionUID = 5582918057432365749L;
 
-import org.mozilla.gecko.sync.repositories.RepositorySession;
-
-/**
- * One of these two methods is guaranteed to be called after session.begin() is
- * invoked (possibly during the invocation). The callback will be invoked prior
- * to any other RepositorySession callbacks.
- *
- * @author rnewman
- *
- */
-public interface RepositorySessionBeginDelegate {
-  public void onBeginFailed(Exception ex);
-  public void onBeginSucceeded(RepositorySession session);
-  public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor);
+  public NonArrayJSONException(Object object) {
+    super(object);
+  }
 }

@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chenxia Liu <liuche@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,29 +35,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko.sync.setup.activities;
+package org.mozilla.gecko.sync.repositories.delegates;
 
-import org.mozilla.gecko.R;
+import java.util.concurrent.ExecutorService;
 
-import android.app.Activity;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.View;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 
-public class SetupWaitingActivity extends Activity {
-  private Context mContext;
+public class DeferredRepositorySessionFinishDelegate implements
+    RepositorySessionFinishDelegate {
+  protected final ExecutorService executor;
+  protected final RepositorySessionFinishDelegate inner;
+
+  public DeferredRepositorySessionFinishDelegate(RepositorySessionFinishDelegate inner,
+                                                 ExecutorService executor) {
+    this.executor = executor;
+    this.inner = inner;
+  }
 
   @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.sync_setup_jpake_waiting);
-    mContext = this.getApplicationContext();
+  public void onFinishSucceeded(final RepositorySession session,
+                                final RepositorySessionBundle bundle) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onFinishSucceeded(session, bundle);
+      }
+    });
   }
 
-  public void cancelClickHandler(View target) {
-    setResult(RESULT_CANCELED, null);
-    finish();
+  @Override
+  public void onFinishFailed(final Exception ex) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onFinishFailed(ex);
+      }
+    });
   }
 
-
+  @Override
+  public RepositorySessionFinishDelegate deferredFinishDelegate(ExecutorService newExecutor) {
+    if (newExecutor == executor) {
+      return this;
+    }
+    throw new IllegalArgumentException("Can't re-defer this delegate.");
+  }
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/SyncTextFrame" >
+    <TextView
+        style="@style/SyncTextTitle"
+        android:text="@string/sync_title_fail" />
+    <View
+        style="@style/SyncViewLine"/>
+    <TextView
+        style="@style/SyncTextItem"
+        android:text="@string/sync_subtitle_nointernet" />
+    <Button
+        style="@style/SyncButtonCommon"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:onClick="cancelClickHandler"
+        android:text="@string/sync_button_ok" />
+</TableLayout>
