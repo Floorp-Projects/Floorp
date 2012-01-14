@@ -5915,11 +5915,10 @@ js_ValueToNonNullObject(JSContext *cx, const Value &v)
     return obj;
 }
 
-#ifdef DEBUG
 void
-js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
+js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 {
-    JS_ASSERT(trc->debugPrinter == js_PrintObjectSlotName);
+    JS_ASSERT(trc->debugPrinter == js_GetObjectSlotName);
 
     JSObject *obj = (JSObject *)trc->debugPrintArg;
     uint32_t slot = uint32_t(trc->debugPrintIndex);
@@ -5957,7 +5956,6 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
         }
     }
 }
-#endif
 
 static const Shape *
 LastConfigurableShape(JSObject *obj)

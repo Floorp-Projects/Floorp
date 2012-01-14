@@ -1362,7 +1362,7 @@ ValueToObject(JSContext *cx, const Value &v)
 } /* namespace js */
 
 extern void
-js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
+js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
 extern bool
 js_ClearNative(JSContext *cx, JSObject *obj);
