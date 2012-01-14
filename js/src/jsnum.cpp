@@ -736,7 +736,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
         strcpy(tmpDest, rt->thousandsSeparator);
         tmpDest += thousandsLength;
         JS_ASSERT(tmpDest - buf + *tmpGroup <= buflen);
-        js_memcpy(tmpDest, tmpSrc, *tmpGroup);
+        memcpy(tmpDest, tmpSrc, *tmpGroup);
         tmpDest += *tmpGroup;
         tmpSrc += *tmpGroup;
         if (--nrepeat < 0)
@@ -978,15 +978,15 @@ InitRuntimeNumberState(JSRuntime *rt)
     if (!storage)
         return false;
 
-    js_memcpy(storage, thousandsSeparator, thousandsSeparatorSize);
+    memcpy(storage, thousandsSeparator, thousandsSeparatorSize);
     rt->thousandsSeparator = storage;
     storage += thousandsSeparatorSize;
 
-    js_memcpy(storage, decimalPoint, decimalPointSize);
+    memcpy(storage, decimalPoint, decimalPointSize);
     rt->decimalSeparator = storage;
     storage += decimalPointSize;
 
-    js_memcpy(storage, grouping, groupingSize);
+    memcpy(storage, grouping, groupingSize);
     rt->numGrouping = grouping;
     return true;
 }
