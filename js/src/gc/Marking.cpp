@@ -114,10 +114,8 @@ MarkInternal(JSTracer *trc, T **thingp)
         JS_SET_TRACING_LOCATION(trc, NULL);
     }
 
-#ifdef DEBUG
     trc->debugPrinter = NULL;
     trc->debugPrintArg = NULL;
-#endif
 }
 
 #define JS_ROOT_MARKING_ASSERT(trc)                                     \
@@ -393,7 +391,7 @@ MarkObjectSlots(JSTracer *trc, JSObject *obj, uint32_t start, uint32_t nslots)
 {
     JS_ASSERT(obj->isNative());
     for (uint32_t i = start; i < (start + nslots); ++i) {
-        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+        JS_SET_TRACING_DETAILS(trc, js_GetObjectSlotName, obj, i);
         MarkValueInternal(trc, obj->nativeGetSlotRef(i).unsafeGet());
     }
 }
