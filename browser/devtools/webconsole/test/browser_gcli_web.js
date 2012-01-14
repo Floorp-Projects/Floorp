@@ -54,7 +54,53 @@ var Node = Components.interfaces.nsIDOMNode;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testTokenize', 'gclitest/testSplit', 'gclitest/testCli', 'gclitest/testExec', 'gclitest/testKeyboard', 'gclitest/testHistory', 'gclitest/testRequire', 'gclitest/testJs'], function(require, exports, module) {
+define('gclitest/index', ['require', 'exports', 'module' , 'gclitest/suite', 'gcli/types/javascript'], function(require, exports, module) {
+
+  var examiner = require('gclitest/suite').examiner;
+  var javascript = require('gcli/types/javascript');
+
+  /**
+   * Run the tests defined in the test suite
+   * @param options How the tests are run. Properties include:
+   * - window: The browser window object to run the tests against
+   * - useFakeWindow: Use a test subset and a fake DOM to avoid a real document
+   * - detailedResultLog: console.log test passes and failures in more detail
+   */
+  exports.run = function(options) {
+    options = options || {};
+
+    if (options.useFakeWindow) {
+      // A minimum fake dom to get us through the JS tests
+      var doc = { title: 'Fake DOM' };
+      var fakeWindow = {
+        window: { document: doc },
+        document: doc
+      };
+
+      options.window = fakeWindow;
+    }
+
+    if (options.window) {
+      javascript.setGlobalObject(options.window);
+    }
+
+    examiner.run(options);
+
+    if (options.detailedResultLog) {
+      examiner.log();
+    }
+    else {
+      console.log('Completed test suite');
+    }
+  };
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testTokenize', 'gclitest/testSplit', 'gclitest/testCli', 'gclitest/testExec', 'gclitest/testKeyboard', 'gclitest/testScratchpad', 'gclitest/testHistory', 'gclitest/testRequire', 'gclitest/testJs'], function(require, exports, module) {
 
   // We need to make sure GCLI is initialized before we begin testing it
   require('gcli/index');
@@ -69,14 +115,12 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
   examiner.addSuite('gclitest/testCli', require('gclitest/testCli'));
   examiner.addSuite('gclitest/testExec', require('gclitest/testExec'));
   examiner.addSuite('gclitest/testKeyboard', require('gclitest/testKeyboard'));
+  examiner.addSuite('gclitest/testScratchpad', require('gclitest/testScratchpad'));
   examiner.addSuite('gclitest/testHistory', require('gclitest/testHistory'));
   examiner.addSuite('gclitest/testRequire', require('gclitest/testRequire'));
   examiner.addSuite('gclitest/testJs', require('gclitest/testJs'));
 
-  examiner.run();
-  console.log('Completed test suite');
-  // examiner.log();
-
+  exports.examiner = examiner;
 });
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
@@ -119,10 +163,10 @@ examiner.addSuite = function(name, suite) {
 /**
  * Run all the tests synchronously
  */
-examiner.run = function() {
+examiner.run = function(options) {
   Object.keys(examiner.suites).forEach(function(suiteName) {
     var suite = examiner.suites[suiteName];
-    suite.run();
+    suite.run(options);
   }.bind(this));
   return examiner.suites;
 };
@@ -130,14 +174,14 @@ examiner.run = function() {
 /**
  * Run all the tests asynchronously
  */
-examiner.runAsync = function(callback) {
-  this.runAsyncInternal(0, callback);
+examiner.runAsync = function(options, callback) {
+  this.runAsyncInternal(0, options, callback);
 };
 
 /**
  * Run all the test suits asynchronously
  */
-examiner.runAsyncInternal = function(i, callback) {
+examiner.runAsyncInternal = function(i, options, callback) {
   if (i >= Object.keys(examiner.suites).length) {
     if (typeof callback === 'function') {
       callback();
@@ -146,9 +190,9 @@ examiner.runAsyncInternal = function(i, callback) {
   }
 
   var suiteName = Object.keys(examiner.suites)[i];
-  examiner.suites[suiteName].runAsync(function() {
+  examiner.suites[suiteName].runAsync(options, function() {
     setTimeout(function() {
-      examiner.runAsyncInternal(i + 1, callback);
+      examiner.runAsyncInternal(i + 1, options, callback);
     }.bind(this), delay);
   }.bind(this));
 };
@@ -222,30 +266,30 @@ function Suite(suiteName, suite) {
 /**
  * Run all the tests in this suite synchronously
  */
-Suite.prototype.run = function() {
+Suite.prototype.run = function(options) {
   if (typeof this.suite.setup == "function") {
-    this.suite.setup();
+    this.suite.setup(options);
   }
 
   Object.keys(this.tests).forEach(function(testName) {
     var test = this.tests[testName];
-    test.run();
+    test.run(options);
   }.bind(this));
 
   if (typeof this.suite.shutdown == "function") {
-    this.suite.shutdown();
+    this.suite.shutdown(options);
   }
 };
 
 /**
  * Run all the tests in this suite asynchronously
  */
-Suite.prototype.runAsync = function(callback) {
+Suite.prototype.runAsync = function(options, callback) {
   if (typeof this.suite.setup == "function") {
     this.suite.setup();
   }
 
-  this.runAsyncInternal(0, function() {
+  this.runAsyncInternal(0, options, function() {
     if (typeof this.suite.shutdown == "function") {
       this.suite.shutdown();
     }
@@ -259,7 +303,7 @@ Suite.prototype.runAsync = function(callback) {
 /**
  * Function used by the async runners that can handle async recursion.
  */
-Suite.prototype.runAsyncInternal = function(i, callback) {
+Suite.prototype.runAsyncInternal = function(i, options, callback) {
   if (i >= Object.keys(this.tests).length) {
     if (typeof callback === 'function') {
       callback();
@@ -268,9 +312,9 @@ Suite.prototype.runAsyncInternal = function(i, callback) {
   }
 
   var testName = Object.keys(this.tests)[i];
-  this.tests[testName].runAsync(function() {
+  this.tests[testName].runAsync(options, function() {
     setTimeout(function() {
-      this.runAsyncInternal(i + 1, callback);
+      this.runAsyncInternal(i + 1, options, callback);
     }.bind(this), delay);
   }.bind(this));
 };
@@ -304,13 +348,13 @@ function Test(suite, name, func) {
 /**
  * Run just a single test
  */
-Test.prototype.run = function() {
+Test.prototype.run = function(options) {
   currentTest = this;
   this.status = stati.executing;
   this.messages = [];
 
   try {
-    this.func.apply(this.suite);
+    this.func.apply(this.suite, [ options ]);
   }
   catch (ex) {
     this.status = stati.fail;
@@ -331,7 +375,7 @@ Test.prototype.run = function() {
 /**
  * Run all the tests in this suite asynchronously
  */
-Test.prototype.runAsync = function(callback) {
+Test.prototype.runAsync = function(options, callback) {
   setTimeout(function() {
     this.run();
     if (typeof callback === 'function') {
@@ -1510,14 +1554,18 @@ function check(initial, action, after) {
   test.is(after, requisition.toString(), initial + ' + ' + action + ' -> ' + after);
 }
 
-exports.testComplete = function() {
+exports.testComplete = function(options) {
   check('tsela', COMPLETES_TO, 'tselarr ');
   check('tsn di', COMPLETES_TO, 'tsn dif ');
   check('tsg a', COMPLETES_TO, 'tsg aaa ');
 
   check('{ wind', COMPLETES_TO, '{ window');
   check('{ window.docum', COMPLETES_TO, '{ window.document');
-  check('{ window.document.titl', COMPLETES_TO, '{ window.document.title ');
+
+  // Bug 717228: This fails under node
+  if (!options.isNode) {
+    check('{ window.document.titl', COMPLETES_TO, '{ window.document.title ');
+  }
 };
 
 exports.testIncrDecr = function() {
@@ -1571,6 +1619,59 @@ exports.testIncrDecr = function() {
 
   check('tselarr 3', KEY_UPS_TO, 'tselarr 2');
 };
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testScratchpad', ['require', 'exports', 'module' , 'test/assert'], function(require, exports, module) {
+
+
+var test = require('test/assert');
+
+var origScratchpad;
+
+exports.setup = function(options) {
+  if (options.inputter) {
+    origScratchpad = options.inputter.scratchpad;
+    options.inputter.scratchpad = stubScratchpad;
+  }
+};
+
+exports.shutdown = function(options) {
+  if (options.inputter) {
+    options.inputter.scratchpad = origScratchpad;
+  }
+};
+
+var stubScratchpad = {
+  shouldActivate: function(ev) {
+    return true;
+  },
+  activatedCount: 0,
+  linkText: 'scratchpad.linkText'
+};
+stubScratchpad.activate = function(value) {
+  stubScratchpad.activatedCount++;
+  return true;
+};
+
+
+exports.testActivate = function(options) {
+  if (options.inputter) {
+    var ev = {};
+    stubScratchpad.activatedCount = 0;
+    options.inputter.onKeyUp(ev);
+    test.is(1, stubScratchpad.activatedCount, 'scratchpad is activated');
+  }
+  else {
+    console.log('Skipping scratchpad tests');
+  }
+};
+
 
 });
 /*
@@ -1828,6 +1929,11 @@ function check(expStatuses, expStatus, expAssign, expPredict) {
     else if (typeof expPredict === 'number') {
       contains = true;
       test.is(assign.getPredictions().length, expPredict, 'prediction count');
+      if (assign.getPredictions().length !== expPredict) {
+        assign.getPredictions().forEach(function(prediction) {
+          console.log('actual prediction: ', prediction);
+        });
+      }
     }
     else {
       contains = predictionsHas(expPredict);
@@ -1856,7 +1962,7 @@ exports.testBasic = function() {
   check('VVIIIII', Status.ERROR, 'windo', 'window');
 
   input('{ window');
-  check('VVVVVVVV', Status.VALID, 'window', 0);
+  check('VVVVVVVV', Status.VALID, 'window');
 
   input('{ window.d');
   check('VVIIIIIIII', Status.ERROR, 'window.d', 'window.document');
@@ -1898,6 +2004,7 @@ exports.testBasic = function() {
 });
 
 function undefine() {
+  delete define.modules['gclitest/index'];
   delete define.modules['gclitest/suite'];
   delete define.modules['test/examiner'];
   delete define.modules['gclitest/testTokenize'];
@@ -1907,11 +2014,13 @@ function undefine() {
   delete define.modules['gclitest/testCli'];
   delete define.modules['gclitest/testExec'];
   delete define.modules['gclitest/testKeyboard'];
+  delete define.modules['gclitest/testScratchpad'];
   delete define.modules['gclitest/testHistory'];
   delete define.modules['gclitest/testRequire'];
   delete define.modules['gclitest/requirable'];
   delete define.modules['gclitest/testJs'];
 
+  delete define.globalDomain.modules['gclitest/index'];
   delete define.globalDomain.modules['gclitest/suite'];
   delete define.globalDomain.modules['test/examiner'];
   delete define.globalDomain.modules['gclitest/testTokenize'];
@@ -1921,6 +2030,7 @@ function undefine() {
   delete define.globalDomain.modules['gclitest/testCli'];
   delete define.globalDomain.modules['gclitest/testExec'];
   delete define.globalDomain.modules['gclitest/testKeyboard'];
+  delete define.globalDomain.modules['gclitest/testScratchpad'];
   delete define.globalDomain.modules['gclitest/testHistory'];
   delete define.globalDomain.modules['gclitest/testRequire'];
   delete define.globalDomain.modules['gclitest/requirable'];
@@ -1948,12 +2058,20 @@ function onLoad() {
 
   try {
     openConsole();
-    define.globalDomain.require("gclitest/index");
+
+    var gcliterm = HUDService.getHudByWindow(content).gcliterm;
+
+    var gclitest = define.globalDomain.require("gclitest/index");
+    gclitest.run({
+      window: gcliterm.document.defaultView,
+      inputter: gcliterm.opts.console.inputter,
+      requisition: gcliterm.opts.requistion
+    });
   }
   catch (ex) {
     failed = ex;
-    console.error('Test Failure', ex);
-    ok(false, '' + ex);
+    console.error("Test Failure", ex);
+    ok(false, "" + ex);
   }
   finally {
     closeConsole();

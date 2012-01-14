@@ -48,6 +48,9 @@ function test()
     browser.removeEventListener("load", arguments.callee, true);
 
     openConsole();
+    // Clear cached messages that are shown once the Web Console opens.
+    HUDService.getHudByWindow(content).jsterm.clearOutput(true);
+
     browser.addEventListener("load", onContentLoaded, true);
     content.location.reload();
   }, true);
