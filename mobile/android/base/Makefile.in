@@ -54,7 +54,7 @@ SYNC_THIRDPARTY_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-thi
 SYNC_RES_DRAWABLE=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-resources.mn | tr '\n' ' ';)
 SYNC_RES_LAYOUT=$(shell cat $(topsrcdir)/mobile/android/sync/android-layout-resources.mn | tr '\n' ' ';)
 SYNC_RES_VALUES=$(shell cat $(topsrcdir)/mobile/android/sync/android-values-resources.mn | tr '\n' ' ';)
-SYNC_RES_XML=res/xml/sync_authenticator.xml
+SYNC_RES_XML=res/xml/sync_authenticator.xml res/xml/sync_options.xml
 SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml
 
 FENNEC_JAVA_FILES = \
