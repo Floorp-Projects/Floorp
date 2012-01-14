@@ -121,10 +121,16 @@ public:
     return mContent->GetText()->GetLength() == 0;
   }
   void SetTrimLeadingWhitespace(bool aTrimLeadingWhitespace) {
-    mTrimLeadingWhitespace = aTrimLeadingWhitespace;
+    if (mTrimLeadingWhitespace != aTrimLeadingWhitespace) {
+      mTrimLeadingWhitespace = aTrimLeadingWhitespace;
+      ClearTextRun();
+    }
   }
   void SetTrimTrailingWhitespace(bool aTrimTrailingWhitespace) {
-    mTrimTrailingWhitespace = aTrimTrailingWhitespace;
+    if (mTrimTrailingWhitespace != aTrimTrailingWhitespace) {
+      mTrimTrailingWhitespace = aTrimTrailingWhitespace;
+      ClearTextRun();
+    }
   }
   bool EndsWithWhitespace() const;
   bool IsAllWhitespace() const;
@@ -193,7 +199,10 @@ public:
   NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame();
   NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame();
   NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace) {
-    mCompressWhitespace = aCompressWhitespace;
+    if (mCompressWhitespace != aCompressWhitespace) {
+      mCompressWhitespace = aCompressWhitespace;
+      ClearTextRun();
+    }
   }
 
 protected:
