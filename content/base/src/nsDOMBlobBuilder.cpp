@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDOMBlobBuilder.h"
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 #include "nsAutoPtr.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIMultiplexInputStream.h"
@@ -249,11 +249,8 @@ nsDOMMultipartFile::InitInternal(JSContext* aCx,
           } else {
             blobSet.AppendBlob(blob);
           }
-        } else if (js_IsArrayBuffer(&obj)) {
-          JSObject* buffer = js::ArrayBuffer::getArrayBuffer(&obj);
-          if (!buffer)
-            return NS_ERROR_DOM_INVALID_STATE_ERR;
-          blobSet.AppendArrayBuffer(buffer);
+        } else if (JS_IsArrayBufferObject(&obj, aCx)) {
+          blobSet.AppendArrayBuffer(&obj, aCx);
         } else {
           // neither arraybuffer nor blob
           return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -331,9 +328,10 @@ BlobSet::AppendBlobs(const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlob)
 }
 
 nsresult
-BlobSet::AppendArrayBuffer(JSObject* aBuffer)
+BlobSet::AppendArrayBuffer(JSObject* aBuffer, JSContext *aCx)
 {
-  return AppendVoidPtr(JS_GetArrayBufferData(aBuffer), JS_GetArrayBufferByteLength(aBuffer));
+  return AppendVoidPtr(JS_GetArrayBufferData(aBuffer, aCx),
+                       JS_GetArrayBufferByteLength(aBuffer, aCx));
 }
 
 DOMCI_DATA(MozBlobBuilder, nsDOMBlobBuilder)
@@ -436,10 +434,8 @@ nsDOMBlobBuilder::Append(const jsval& aData,
     }
 
     // Is it an array buffer?
-    if (js_IsArrayBuffer(obj)) {
-      JSObject* buffer = js::ArrayBuffer::getArrayBuffer(obj);
-      if (buffer)
-        return mBlobSet.AppendArrayBuffer(buffer);
+    if (JS_IsArrayBufferObject(obj, aCx)) {
+      return mBlobSet.AppendArrayBuffer(obj, aCx);
     }
   }
 

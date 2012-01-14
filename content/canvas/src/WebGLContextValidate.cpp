@@ -43,7 +43,7 @@
 
 #include "CheckedInt.h"
 
-#include "jstypedarray.h"
+#include "jsfriendapi.h"
 
 #if defined(USE_ANGLE)
 #include "angle/ShaderLang.h"
@@ -406,10 +406,10 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
         (IsExtensionEnabled(WebGL_OES_texture_float) && type == LOCAL_GL_FLOAT))
     {
         if (jsArrayType != -1) {
-            if ((type == LOCAL_GL_UNSIGNED_BYTE && jsArrayType != js::TypedArray::TYPE_UINT8) ||
-                (type == LOCAL_GL_FLOAT && jsArrayType != js::TypedArray::TYPE_FLOAT32))
+            if ((type == LOCAL_GL_UNSIGNED_BYTE && jsArrayType != js::ArrayBufferView::TYPE_UINT8) ||
+                (type == LOCAL_GL_FLOAT && jsArrayType != js::ArrayBufferView::TYPE_FLOAT32))
             {
-                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+                ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
                 return false;
             }
         }
@@ -440,8 +440,8 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
     switch (type) {
         case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-            if (jsArrayType != -1 && jsArrayType != js::TypedArray::TYPE_UINT16) {
-                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+            if (jsArrayType != -1 && jsArrayType != js::ArrayBufferView::TYPE_UINT16) {
+                ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
                 return false;
             }
 
@@ -453,8 +453,8 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
             return false;
 
         case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-            if (jsArrayType != -1 && jsArrayType != js::TypedArray::TYPE_UINT16) {
-                ErrorInvalidOperation("%s: invalid typed array type for given format", info);
+            if (jsArrayType != -1 && jsArrayType != js::ArrayBufferView::TYPE_UINT16) {
+                ErrorInvalidOperation("%s: invalid typed array type for given texture data type", info);
                 return false;
             }
 

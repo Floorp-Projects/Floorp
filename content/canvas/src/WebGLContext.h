@@ -691,11 +691,11 @@ protected:
     }
 
     nsresult BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage);
-    nsresult BufferData_buf(WebGLenum target, JSObject* data, WebGLenum usage);
-    nsresult BufferData_array(WebGLenum target, JSObject* data, WebGLenum usage);
+    nsresult BufferData_buf(WebGLenum target, JSObject* data, WebGLenum usage, JSContext *cx);
+    nsresult BufferData_array(WebGLenum target, JSObject* data, WebGLenum usage, JSContext *cx);
 
-    nsresult BufferSubData_buf(WebGLenum target, PRInt32 offset, JSObject* data);
-    nsresult BufferSubData_array(WebGLenum target, PRInt32 offset, JSObject* data);
+    nsresult BufferSubData_buf(WebGLenum target, PRInt32 offset, JSObject* data, JSContext *cx);
+    nsresult BufferSubData_array(WebGLenum target, PRInt32 offset, JSObject* data, JSContext *cx);
 
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
 
