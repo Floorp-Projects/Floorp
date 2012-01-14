@@ -174,6 +174,7 @@ private:
     bool visitStoreElementV(LStoreElementV *store);
     bool visitStoreElementT(LStoreElementT *store);
 
+    bool visitBoundsCheck(LBoundsCheck *lir);
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardClass(LGuardClass *guard);
     bool visitImplicitThis(LImplicitThis *lir);
