@@ -86,7 +86,7 @@
 #endif
 
 // Redefine the macros for platforms where SPS is supported.
-#if defined(ANDROID) || defined(XP_UNIX) || defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(ANDROID) || defined(__linux__) || defined(XP_MACOSX) || defined(XP_WIN)
 
 #include "sps_sampler.h"
 
