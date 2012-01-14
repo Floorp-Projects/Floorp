@@ -9,6 +9,10 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch);
+prefs.setBoolPref("general.smoothScroll", false);
+
 function runTest() {
   var tests = execTests();
   function execNext() {
@@ -182,16 +186,14 @@ function execTests() {
     is(testPageSelectCommand("cmd_selectPageUp", 0), 22 - lineNum, "cmd_selectPageUp");
   }
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
-  var origPrefValue = prefs.getBoolPref("layout.word_select.eat_space_to_next_word");
   try {
     prefs.setBoolPref("layout.word_select.eat_space_to_next_word", false);
     runSelectionTests(body, 1);
     prefs.setBoolPref("layout.word_select.eat_space_to_next_word", true);
     runSelectionTests(node(2), 0);
   } finally {
-    prefs.setBoolPref("layout.word_select.eat_space_to_next_word", origPrefValue);
+    prefs.clearUserPref("general.smoothScroll");
+    prefs.clearUserPref("layout.word_select.eat_space_to_next_word");
   }
 
   SimpleTest.finish();
