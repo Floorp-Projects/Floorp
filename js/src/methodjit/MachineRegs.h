@@ -122,6 +122,8 @@ struct Registers {
     static const RegisterID JSFrameReg = JSC::ARMRegisters::r10;
 #elif defined(JS_CPU_SPARC)
     static const RegisterID JSFrameReg = JSC::SparcRegisters::l0;
+#elif defined(JS_CPU_MIPS)
+    static const RegisterID JSFrameReg = JSC::MIPSRegisters::s0;
 #endif
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
@@ -152,6 +154,12 @@ struct Registers {
     static const RegisterID ArgReg3 = JSC::SparcRegisters::o3;
     static const RegisterID ArgReg4 = JSC::SparcRegisters::o4;
     static const RegisterID ArgReg5 = JSC::SparcRegisters::o5;
+#elif JS_CPU_MIPS
+    static const RegisterID ReturnReg = JSC::MIPSRegisters::v0;
+    static const RegisterID ArgReg0 = JSC::MIPSRegisters::a0;
+    static const RegisterID ArgReg1 = JSC::MIPSRegisters::a1;
+    static const RegisterID ArgReg2 = JSC::MIPSRegisters::a2;
+    static const RegisterID ArgReg3 = JSC::MIPSRegisters::a3;
 #endif
 
     static const RegisterID StackPointer = JSC::MacroAssembler::stackPointerRegister;
@@ -253,6 +261,33 @@ struct Registers {
         | (1 << JSC::SparcRegisters::l7);
 
     static const uint32_t SingleByteRegs = TempRegs | SavedRegs;
+#elif defined(JS_CPU_MIPS)
+    static const uint32_t TempRegs =
+          (1 << JSC::MIPSRegisters::at)
+        | (1 << JSC::MIPSRegisters::v0)
+        | (1 << JSC::MIPSRegisters::v1)
+        | (1 << JSC::MIPSRegisters::a0)
+        | (1 << JSC::MIPSRegisters::a1)
+        | (1 << JSC::MIPSRegisters::a2)
+        | (1 << JSC::MIPSRegisters::a3)
+        | (1 << JSC::MIPSRegisters::t5)
+        | (1 << JSC::MIPSRegisters::t6)
+        | (1 << JSC::MIPSRegisters::t7);
+    /* t0-t4,t9 is reserved as a scratch register for the assembler.
+       We don't use t8 ($24), as we limit ourselves within $0 to $23 to
+       leave the bitmask for 8 FP registers. */
+
+    static const uint32_t SavedRegs =
+          (1 << JSC::MIPSRegisters::s1)
+        | (1 << JSC::MIPSRegisters::s2)
+        | (1 << JSC::MIPSRegisters::s3)
+        | (1 << JSC::MIPSRegisters::s4)
+        | (1 << JSC::MIPSRegisters::s5)
+        | (1 << JSC::MIPSRegisters::s6)
+        | (1 << JSC::MIPSRegisters::s7);
+    // s0 is reserved for JSFrameReg.
+
+    static const uint32_t SingleByteRegs = TempRegs | SavedRegs;
 #else
 # error "Unsupported platform"
 #endif
@@ -287,6 +322,8 @@ struct Registers {
         return 4;
 #elif defined(JS_CPU_SPARC)
         return 6;
+#elif defined(JS_CPU_MIPS)
+        return 4;
 #endif
     }
 
@@ -337,6 +374,13 @@ struct Registers {
             JSC::SparcRegisters::o4,
             JSC::SparcRegisters::o5
         };
+#elif defined(JS_CPU_MIPS)
+        static const RegisterID regs[] = {
+            JSC::MIPSRegisters::a0,
+            JSC::MIPSRegisters::a1,
+            JSC::MIPSRegisters::a2,
+            JSC::MIPSRegisters::a3,
+        };
 #endif
         JS_ASSERT(numArgRegs(conv) == mozilla::ArrayLength(regs));
         if (i > mozilla::ArrayLength(regs))
@@ -386,6 +430,19 @@ struct Registers {
         | (1 << JSC::SparcRegisters::f6)
         ) << TotalRegisters;
     static const FPRegisterID FPConversionTemp = JSC::SparcRegisters::f8;
+#elif defined(JS_CPU_MIPS)
+    /* TotalRegisters is 24, so TotalFPRegisters can be 8 to have a 32-bit
+       bit mask.
+       Note that the O32 ABI can access only even FP registers. */
+    static const uint32_t TotalFPRegisters = 8;
+    static const uint32_t TempFPRegs = (uint32_t)(
+          (1 << JSC::MIPSRegisters::f0)
+        | (1 << JSC::MIPSRegisters::f2)
+        | (1 << JSC::MIPSRegisters::f4)
+        | (1 << JSC::MIPSRegisters::f6)
+        ) << TotalRegisters;
+    // f16 is reserved as a scratch register for the assembler.
+    static const FPRegisterID FPConversionTemp = JSC::MIPSRegisters::f18;
 #else
 # error "Unsupported platform"
 #endif
@@ -397,6 +454,8 @@ struct Registers {
     static const RegisterID ClobberInCall = JSC::ARMRegisters::r2;
 #elif defined(JS_CPU_SPARC)
     static const RegisterID ClobberInCall = JSC::SparcRegisters::l1;
+#elif defined(JS_CPU_MIPS)
+    static const RegisterID ClobberInCall = JSC::MIPSRegisters::at;
 #endif
 
     static const uint32_t AvailFPRegs = TempFPRegs;

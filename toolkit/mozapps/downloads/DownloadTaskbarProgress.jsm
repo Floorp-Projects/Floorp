@@ -220,8 +220,9 @@ var DownloadTaskbarProgressUpdater =
    * 1. If the active window is the download window, then we always update
    *    the taskbar indicator.
    * 2. If the active window isn't the download window, then we update only if
-   *    the status is Normal, i.e. one or more downloads are currently
-   *    progressing. If we aren't, then we clear the indicator.
+   *    the status is normal or indeterminate. i.e. one or more downloads are
+   *    currently progressing or in scan mode. If we aren't, then we clear the
+   *    indicator.
    */
   _updateTaskbar: function DTPU_updateTaskbar()
   {
@@ -230,9 +231,10 @@ var DownloadTaskbarProgressUpdater =
     }
 
     // If the active window is not the download manager window, set the state
-    // only if it is Normal
+    // only if it is normal or indeterminate.
     if (this._activeWindowIsDownloadWindow ||
-        (this._taskbarState == Ci.nsITaskbarProgress.STATE_NORMAL)) {
+        (this._taskbarState == Ci.nsITaskbarProgress.STATE_NORMAL ||
+         this._taskbarState == Ci.nsITaskbarProgress.STATE_INDETERMINATE)) {
       this._activeTaskbarProgress.setProgressState(this._taskbarState,
                                                    this._totalTransferred,
                                                    this._totalSize);
