@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,18 +39,62 @@ package org.mozilla.gecko.sync.repositories.delegates;
 
 import java.util.concurrent.ExecutorService;
 
-import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
+import org.mozilla.gecko.sync.repositories.domain.Record;
 
-/**
- * One of these two methods is guaranteed to be called after session.begin() is
- * invoked (possibly during the invocation). The callback will be invoked prior
- * to any other RepositorySession callbacks.
- *
- * @author rnewman
- *
- */
-public interface RepositorySessionBeginDelegate {
-  public void onBeginFailed(Exception ex);
-  public void onBeginSucceeded(RepositorySession session);
-  public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor);
+public class DeferredRepositorySessionFetchRecordsDelegate implements RepositorySessionFetchRecordsDelegate {
+  private RepositorySessionFetchRecordsDelegate inner;
+  private ExecutorService executor;
+  public DeferredRepositorySessionFetchRecordsDelegate(final RepositorySessionFetchRecordsDelegate inner, final ExecutorService executor) {
+    this.inner = inner;
+    this.executor = executor;
+  }
+
+  @Override
+  public void onFetchedRecord(final Record record) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+         inner.onFetchedRecord(record);
+      }
+    });
+  }
+
+  @Override
+  public void onFetchSucceeded(final Record[] records, final long end) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onFetchSucceeded(records, end);  
+      }
+    });       
+  }
+
+  @Override
+  public void onFetchFailed(final Exception ex, final Record record) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onFetchFailed(ex, record);
+      }
+    });       
+  }
+
+  @Override
+  public void onFetchCompleted(final long end) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onFetchCompleted(end);
+      }
+    });        
+  }
+
+  @Override
+  public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService newExecutor) {
+    if (newExecutor == executor) {
+      return this;
+    }
+    throw new IllegalArgumentException("Can't re-defer this delegate.");
+  }
 }

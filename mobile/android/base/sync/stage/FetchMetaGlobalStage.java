@@ -54,7 +54,7 @@ public class FetchMetaGlobalStage implements GlobalSyncStage {
     }
 
     @Override
-    public void handleSuccess(MetaGlobal global) {
+    public void handleSuccess(MetaGlobal global, SyncStorageResponse response) {
       session.processMetaGlobal(global);
     }
 
@@ -69,7 +69,7 @@ public class FetchMetaGlobalStage implements GlobalSyncStage {
     }
 
     @Override
-    public void handleMissing(MetaGlobal global) {
+    public void handleMissing(MetaGlobal global, SyncStorageResponse response) {
       session.processMissingMetaGlobal(global);
     }
 

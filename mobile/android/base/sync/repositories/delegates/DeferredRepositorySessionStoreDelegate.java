@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,18 +39,54 @@ package org.mozilla.gecko.sync.repositories.delegates;
 
 import java.util.concurrent.ExecutorService;
 
-import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.domain.Record;
 
-/**
- * One of these two methods is guaranteed to be called after session.begin() is
- * invoked (possibly during the invocation). The callback will be invoked prior
- * to any other RepositorySession callbacks.
- *
- * @author rnewman
- *
- */
-public interface RepositorySessionBeginDelegate {
-  public void onBeginFailed(Exception ex);
-  public void onBeginSucceeded(RepositorySession session);
-  public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor);
+public class DeferredRepositorySessionStoreDelegate implements
+    RepositorySessionStoreDelegate {
+  protected final RepositorySessionStoreDelegate inner;
+  protected final ExecutorService                executor;
+
+  public DeferredRepositorySessionStoreDelegate(
+      RepositorySessionStoreDelegate inner, ExecutorService executor) {
+    this.inner = inner;
+    this.executor = executor;
+  }
+
+  @Override
+  public void onRecordStoreSucceeded(final Record record) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onRecordStoreSucceeded(record);
+      }
+    });
+  }
+
+  @Override
+  public void onRecordStoreFailed(final Exception ex) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onRecordStoreFailed(ex);
+      }
+    });
+  }
+
+  @Override
+  public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService newExecutor) {
+    if (newExecutor == executor) {
+      return this;
+    }
+    throw new IllegalArgumentException("Can't re-defer this delegate.");
+  }
+
+  @Override
+  public void onStoreCompleted() {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onStoreCompleted();
+      }
+    });
+  }
 }

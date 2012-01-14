@@ -45,6 +45,7 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -59,13 +60,21 @@ public class ExtendedJSONObject {
 
   public JSONObject object;
 
-  public static Object parse(InputStreamReader reader) throws IOException, ParseException {
-    Object parseOutput = new JSONParser().parse(reader);
+  private static Object processParseOutput(Object parseOutput) {
     if (parseOutput instanceof JSONObject) {
       return new ExtendedJSONObject((JSONObject) parseOutput);
     } else {
       return parseOutput;
     }
+  }
+
+  public static Object parse(String string) throws IOException, ParseException {
+    return processParseOutput(new JSONParser().parse(string));
+  }
+
+  public static Object parse(InputStreamReader reader) throws IOException, ParseException {
+    return processParseOutput(new JSONParser().parse(reader));
+
   }
 
   public static Object parse(InputStream stream) throws IOException, ParseException {
@@ -119,6 +128,31 @@ public class ExtendedJSONObject {
     return (Long) this.get(key);
   }
 
+  /**
+   * Return a server timestamp value as milliseconds since epoch.
+   * @param string
+   * @return A Long, or null if the value is non-numeric or doesn't exist.
+   */
+  public Long getTimestamp(String key) {
+    Object val = this.object.get(key);
+
+    // This is absurd.
+    if (val instanceof Double) {
+      double millis = ((Double) val).doubleValue() * 1000;
+      return new Double(millis).longValue();
+    }
+    if (val instanceof Float) {
+      double millis = ((Float) val).doubleValue() * 1000;
+      return new Double(millis).longValue();
+    }
+    if (val instanceof Number) {
+      // Must be an integral number.
+      return ((Number) val).longValue() * 1000;
+    }
+
+    return null;
+  }
+
   public boolean containsKey(String key) {
     return this.object.containsKey(key);
   }
@@ -139,6 +173,9 @@ public class ExtendedJSONObject {
 
   public ExtendedJSONObject getObject(String key) throws NonObjectJSONException {
     Object o = this.object.get(key);
+    if (o == null) {
+      return null;
+    }
     if (o instanceof ExtendedJSONObject) {
       return (ExtendedJSONObject) o;
     }
@@ -173,5 +210,16 @@ public class ExtendedJSONObject {
   @SuppressWarnings("unchecked")
   public Iterable<Entry<String, Object>> entryIterable() {
     return this.object.entrySet();
+  }
+
+  public org.json.simple.JSONArray getArray(String key) throws NonArrayJSONException {
+    Object o = this.object.get(key);
+    if (o == null) {
+      return null;
+    }
+    if (o instanceof JSONArray) {
+      return (JSONArray) o;
+    }
+    throw new NonArrayJSONException(o);
   }
 }

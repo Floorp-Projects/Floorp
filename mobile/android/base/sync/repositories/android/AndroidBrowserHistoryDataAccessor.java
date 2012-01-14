@@ -45,6 +45,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 
 public class AndroidBrowserHistoryDataAccessor extends AndroidBrowserRepositoryDataAccessor {
 
@@ -68,12 +69,12 @@ public class AndroidBrowserHistoryDataAccessor extends AndroidBrowserRepositoryD
   protected ContentValues getContentValues(Record record) {
     ContentValues cv = new ContentValues();
     HistoryRecord rec = (HistoryRecord) record;
-    cv.put(BrowserContract.History.GUID,            rec.guid);
-    cv.put(BrowserContract.History.DATE_MODIFIED,        rec.lastModified);
-    cv.put(BrowserContract.History.TITLE,           rec.title);
-    cv.put(BrowserContract.History.URL,        rec.histURI);
+    cv.put(BrowserContract.History.GUID,          rec.guid);
+    cv.put(BrowserContract.History.DATE_MODIFIED, rec.lastModified);
+    cv.put(BrowserContract.History.TITLE,         rec.title);
+    cv.put(BrowserContract.History.URL,           rec.histURI);
     if (rec.visits != null) {
-      JSONArray visits = (JSONArray) rec.visits;
+      JSONArray visits = rec.visits;
       long mostRecent = 0;
       for (int i = 0; i < visits.size(); i++) {
         JSONObject visit = (JSONObject) visits.get(i);
@@ -82,7 +83,9 @@ public class AndroidBrowserHistoryDataAccessor extends AndroidBrowserRepositoryD
           mostRecent = visitDate;
         }
       }
-      cv.put(BrowserContract.History.DATE_LAST_VISITED,    mostRecent);
+      // Fennec stores milliseconds. The rest of Sync works in microseconds.
+      cv.put(BrowserContract.History.DATE_LAST_VISITED, mostRecent / 1000);
+      cv.put(BrowserContract.History.VISITS, Long.toString(visits.size()));
     }
     return cv;
   }
@@ -95,13 +98,16 @@ public class AndroidBrowserHistoryDataAccessor extends AndroidBrowserRepositoryD
   @Override
   public Uri insert(Record record) {
     HistoryRecord rec = (HistoryRecord) record;
+    Log.d(LOG_TAG, "Storing visits for " + record.guid);
     dataExtender.store(record.guid, rec.visits);
+    Log.d(LOG_TAG, "Storing record " + record.guid);
     return super.insert(record);
   }  
   
   @Override
   protected void delete(String guid) {
-    context.getContentResolver().delete(getUri(), BrowserContract.SyncColumns.GUID + " = '" + guid + "'", null);
+    Log.d(LOG_TAG, "Deleting record " + guid);
+    super.delete(guid);
     dataExtender.delete(guid);
   }
 

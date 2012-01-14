@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,16 +41,39 @@ import java.util.concurrent.ExecutorService;
 
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 
-/**
- * One of these two methods is guaranteed to be called after session.begin() is
- * invoked (possibly during the invocation). The callback will be invoked prior
- * to any other RepositorySession callbacks.
- *
- * @author rnewman
- *
- */
-public interface RepositorySessionBeginDelegate {
-  public void onBeginFailed(Exception ex);
-  public void onBeginSucceeded(RepositorySession session);
-  public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor);
+public class DeferredRepositorySessionBeginDelegate implements RepositorySessionBeginDelegate {
+  private RepositorySessionBeginDelegate inner;
+  private ExecutorService executor;
+  public DeferredRepositorySessionBeginDelegate(final RepositorySessionBeginDelegate inner, final ExecutorService executor) {
+    this.inner = inner;
+    this.executor = executor;
+  }
+
+  @Override
+  public void onBeginSucceeded(final RepositorySession session) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onBeginSucceeded(session);
+      }
+    });
+  }
+
+  @Override
+  public void onBeginFailed(final Exception ex) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onBeginFailed(ex);
+      }
+    });
+  }
+  
+  @Override
+  public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService newExecutor) {
+    if (newExecutor == executor) {
+      return this;
+    }
+    throw new IllegalArgumentException("Can't re-defer this delegate.");
+  }
 }
