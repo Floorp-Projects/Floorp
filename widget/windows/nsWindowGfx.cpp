@@ -605,6 +605,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
   }
 
   mPaintDC = nsnull;
+  mLastPaintEndTime = TimeStamp::Now();
 
 #if defined(WIDGET_DEBUG_OUTPUT)
   if (debug_WantPaintFlashing())
