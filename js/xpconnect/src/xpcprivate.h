@@ -597,6 +597,13 @@ private:
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
     JSBool                   mNeedGCBeforeCC;
+
+    // nsIThreadInternal doesn't remember which observers it called
+    // OnProcessNextEvent on when it gets around to calling AfterProcessNextEvent.
+    // So if XPConnect gets initialized mid-event (which can happen), we'll get
+    // an 'after' notification without getting an 'on' notification. If we don't
+    // watch out for this, we'll do an unmatched |pop| on the context stack.
+    PRUint16                   mEventDepth;
 #ifdef DEBUG_CC
     PLDHashTable             mJSRoots;
 #endif
