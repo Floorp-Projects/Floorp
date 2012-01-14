@@ -506,6 +506,11 @@ nsThread::Shutdown()
   PR_JoinThread(mThread);
   mThread = nsnull;
 
+  // We hold strong references to our event observers, and once the thread is
+  // shut down the observers can't easily unregister themselves. Do it here
+  // to avoid leaking.
+  ClearObservers();
+
 #ifdef DEBUG
   {
     MutexAutoLock lock(mLock);
