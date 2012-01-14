@@ -341,6 +341,13 @@
                       key="key_sanitize"
                       command="Tools:Sanitize"/>
             <menuseparator class="hide-if-empty-places-result"/>
+#ifdef MOZ_SERVICES_SYNC
+            <menuitem id="appmenu_sync-tabs"
+                      class="syncTabsMenuItem"
+                      label="&syncTabsMenu.label;"
+                      oncommand="BrowserOpenSyncTabs();"
+                      disabled="true"/>
+#endif
             <menuitem id="appmenu_restoreLastSession"
                       class="restoreLastSession"
                       label="&historyRestoreLastSession.label;"
