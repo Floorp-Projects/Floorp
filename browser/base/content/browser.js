@@ -3935,13 +3935,10 @@ var FullScreen = {
     }
     else {
       // The user may quit fullscreen during an animation
-      window.mozCancelAnimationFrame(this._animationHandle);
-      this._animationHandle = 0;
-      clearTimeout(this._animationTimeout);
+      this._cancelAnimation();
       gNavToolbox.style.marginTop = "";
       if (this._isChromeCollapsed)
         this.mouseoverToggle(true);
-      this._isAnimating = false;
       // This is needed if they use the context menu to quit fullscreen
       this._isPopupOpen = false;
 
@@ -4002,10 +3999,7 @@ var FullScreen = {
 
     // Cancel any "hide the toolbar" animation which is in progress, and make
     // the toolbar hide immediately.
-    clearInterval(this._animationInterval);
-    clearTimeout(this._animationTimeout);
-    this._isAnimating = false;
-    this._shouldAnimate = false;
+    this._cancelAnimation();
     this.mouseoverToggle(false);
 
     // If there's a full-screen toggler, remove its listeners, so that mouseover
@@ -4150,17 +4144,22 @@ var FullScreen = {
 
     if (pos >= 1) {
       // We've animated enough
-      window.mozCancelAnimationFrame(this._animationHandle);
+      this._cancelAnimation();
       gNavToolbox.style.marginTop = "";
-      this._animationHandle = 0;
-      this._isAnimating = false;
-      this._shouldAnimate = false; // Just to make sure
       this.mouseoverToggle(false);
       return;
     }
 
     gNavToolbox.style.marginTop = (gNavToolbox.boxObject.height * pos * -1) + "px";
     this._animationHandle = window.mozRequestAnimationFrame(this);
+  },
+
+  _cancelAnimation: function() {
+    window.mozCancelAnimationFrame(this._animationHandle);
+    this._animationHandle = 0;
+    clearTimeout(this._animationTimeout);
+    this._isAnimating = false;
+    this._shouldAnimate = false;
   },
 
   cancelWarning: function(event) {

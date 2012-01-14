@@ -527,6 +527,8 @@ private:
   // can access the document node, the caller should succeed in moving focus.
   nsCOMPtr<nsIDocument> mMouseDownEventHandlingDocument;
 
+  static bool sTestMode;
+
   // the single focus manager
   static nsFocusManager* sInstance;
 };

@@ -14,6 +14,8 @@
   </style>
 <script type="text/javascript">
 
+SimpleTest.waitForExplicitFinish();
+
 var canvases = [];
 function callbackTestCanvas(canvas)
 {
@@ -63,7 +65,7 @@ function createIframe(url,next) {
     if (docEl.className.indexOf("reftest-wait") >= 0) {
       if (currentIteration++ > MAX_ITERATIONS) {
         ok(false, "iframe load for " + url + " timed out");
-        SimpleTest.finish();
+        endTest();
       } else {
         setTimeout(iframeLoadCompleted, 10);
       }
@@ -82,7 +84,6 @@ function refTest(test,ref) {
 
 var caretBlinkTime = null;
 function endTest() {
-  SimpleTest.finish();
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
@@ -91,6 +92,9 @@ function endTest() {
   } else {
     prefs.clearUserPref("ui.caretBlinkTime");
   }
+
+  // finish(), yet let the test actually end first, to be safe.
+  SimpleTest.executeSoon(SimpleTest.finish);
 }
 
 var isWindows = /WINNT/.test(SpecialPowers.OS);
@@ -158,8 +162,6 @@ function nextTest() {
 }
 function runTests() {
   try {
-    SimpleTest.waitForExplicitFinish();
-
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch);
