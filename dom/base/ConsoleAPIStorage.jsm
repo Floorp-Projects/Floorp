@@ -121,7 +121,7 @@ var ConsoleAPIStorage = {
    */
   getEvents: function CS_getEvents(aId)
   {
-    return _consoleStorage[aId] || [];
+    return (_consoleStorage[aId] || []).slice(0);
   },
 
   /**
