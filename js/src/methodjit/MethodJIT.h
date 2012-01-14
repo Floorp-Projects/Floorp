@@ -52,7 +52,8 @@
 #if !defined JS_CPU_X64 && \
     !defined JS_CPU_X86 && \
     !defined JS_CPU_SPARC && \
-    !defined JS_CPU_ARM
+    !defined JS_CPU_ARM && \
+    !defined JS_CPU_MIPS
 # error "Oh no, you should define a platform so this compiles."
 #endif
 
@@ -97,6 +98,13 @@ struct VMFrame
 
     void *reserve_0;
     void *reserve_1;
+
+#elif defined(JS_CPU_MIPS)
+    /* Reserved 16 bytes for a0-a3 space in MIPS O32 ABI */
+    void         *unused0;
+    void         *unused1;
+    void         *unused2;
+    void         *unused3;
 #endif
 
     union Arguments {
@@ -204,6 +212,22 @@ struct VMFrame
     inline void** returnAddressLocation() {
         return reinterpret_cast<void**>(&this->veneerReturn);
     }
+#elif defined(JS_CPU_MIPS)
+    void *savedS0;
+    void *savedS1;
+    void *savedS2;
+    void *savedS3;
+    void *savedS4;
+    void *savedS5;
+    void *savedS6;
+    void *savedS7;
+    void *savedGP;
+    void *savedRA;
+    void *unused4;  // For alignment.
+
+    inline void** returnAddressLocation() {
+        return reinterpret_cast<void**>(this) - 1;
+    }
 #else
 # error "The VMFrame layout isn't defined for your processor architecture!"
 #endif
@@ -226,6 +250,9 @@ struct VMFrame
 #if defined(JS_CPU_SPARC)
     static const size_t offsetOfFp = 30 * sizeof(void *) + FrameRegs::offsetOfFp;
     static const size_t offsetOfInlined = 30 * sizeof(void *) + FrameRegs::offsetOfInlined;
+#elif defined(JS_CPU_MIPS)
+    static const size_t offsetOfFp = 8 * sizeof(void *) + FrameRegs::offsetOfFp;
+    static const size_t offsetOfInlined = 8 * sizeof(void *) + FrameRegs::offsetOfInlined;
 #else
     static const size_t offsetOfFp = 4 * sizeof(void *) + FrameRegs::offsetOfFp;
     static const size_t offsetOfInlined = 4 * sizeof(void *) + FrameRegs::offsetOfInlined;
@@ -237,7 +264,7 @@ struct VMFrame
     }
 };
 
-#if defined(JS_CPU_ARM) || defined(JS_CPU_SPARC)
+#if defined(JS_CPU_ARM) || defined(JS_CPU_SPARC) || defined(JS_CPU_MIPS)
 // WARNING: Do not call this function directly from C(++) code because it is not ABI-compliant.
 extern "C" void JaegerStubVeneer(void);
 #endif
