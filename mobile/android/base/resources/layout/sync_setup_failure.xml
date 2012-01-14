@@ -5,9 +5,8 @@
       style="@style/SyncTextTitle"
       android:text="@string/sync_title_fail" />
     <View 
-      android:layout_width="fill_parent"
-      android:layout_height="2dp"
-      android:background="#FFFFFF"/>
+      style="@style/SyncViewLine" />
+
     <TextView
       style="@style/SyncTextItem"
       android:text="@string/sync_subtitle_fail" />
@@ -24,8 +23,8 @@
 
             <Button
                 style="@style/SyncButtonCommon"
-                android:text="@string/sync_button_tryagain"
-                android:onClick="tryAgainClickHandler" />
+                android:onClick="tryAgainClickHandler"
+                android:text="@string/sync_button_tryagain" />
 
             <Button
                 style="@style/SyncButtonCommon"

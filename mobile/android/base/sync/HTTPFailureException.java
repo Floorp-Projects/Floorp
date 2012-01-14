@@ -50,6 +50,18 @@ public class HTTPFailureException extends SyncException {
   }
 
   @Override
+  public String toString() {
+    String errorMessage = "[unknown error message]";
+    try {
+      errorMessage = this.response.getErrorMessage();
+    } catch (Exception e) {
+      // Oh well.
+    }
+    return "<HTTPFailureException " + this.response.getStatusCode() +
+           " :: (" + errorMessage + ")>";
+  }
+
+  @Override
   public void updateStats(GlobalSession globalSession, SyncResult syncResult) {
     switch (response.getStatusCode()) {
     case 401:

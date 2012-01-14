@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,22 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko.sync.repositories.delegates;
+package org.mozilla.gecko.sync;
 
-import java.util.concurrent.ExecutorService;
-
-import org.mozilla.gecko.sync.repositories.RepositorySession;
+import android.content.Context;
+import android.content.SharedPreferences;
 
 /**
- * One of these two methods is guaranteed to be called after session.begin() is
- * invoked (possibly during the invocation). The callback will be invoked prior
- * to any other RepositorySession callbacks.
+ * Implement PrefsSource to allow other components to fetch a SharedPreferences
+ * instance via a Context that you provide.
+ *
+ * This allows components to use SharedPreferences without being tightly
+ * coupled to an Activity.
  *
  * @author rnewman
  *
  */
-public interface RepositorySessionBeginDelegate {
-  public void onBeginFailed(Exception ex);
-  public void onBeginSucceeded(RepositorySession session);
-  public RepositorySessionBeginDelegate deferredBeginDelegate(ExecutorService executor);
+public interface PrefsSource {
+  public Context getContext();
+
+  /**
+   * Return a SharedPreferences instance.
+   * @param name
+   *        A String, used to identify a preferences 'branch'. Must not be null.
+   * @param mode
+   *        A bitmask mode, as described in http://developer.android.com/reference/android/content/Context.html#getSharedPreferences%28java.lang.String,%20int%29.
+   * @return
+   *        A new or existing SharedPreferences instance.
+   */
+  public SharedPreferences getPrefs(String name, int mode);
 }
