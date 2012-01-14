@@ -573,9 +573,8 @@ public class GeckoAppShell
                         GeckoApp.mAppContext.getSystemService(Context.LOCATION_SERVICE);
 
                     if (enable) {
-                        Criteria crit = new Criteria();
-                        crit.setAccuracy(Criteria.ACCURACY_FINE);
-                        String provider = lm.getBestProvider(crit, true);
+                        Criteria criteria = new Criteria();
+                        String provider = lm.getBestProvider(criteria, true);
                         if (provider == null)
                             return;
 
