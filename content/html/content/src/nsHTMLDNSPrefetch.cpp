@@ -140,17 +140,6 @@ nsHTMLDNSPrefetch::IsAllowed (nsIDocument *aDocument)
 nsresult
 nsHTMLDNSPrefetch::Prefetch(Link *aElement, PRUint16 flags)
 {
-  if (IsNeckoChild()) {
-    // Instead of transporting the Link object to the other process
-    // we are using the hostname based function here, too. Compared to the 
-    // IPC the performance hit should be negligible.
-    nsAutoString hostname;
-    nsresult rv = aElement->GetHostname(hostname);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    return Prefetch(hostname, flags);
-  }
-
   if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -299,11 +288,16 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
         hrefURI->GetAsciiHost(hostName);
 
       if (!hostName.IsEmpty()) {
-        nsCOMPtr<nsICancelable> tmpOutstanding;
+        if (IsNeckoChild()) {
+          gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName),
+                                           mEntries[mTail].mFlags);
+        } else {
+          nsCOMPtr<nsICancelable> tmpOutstanding;
 
-        sDNSService->AsyncResolve(hostName, 
+          sDNSService->AsyncResolve(hostName, 
                                   mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE,
                                   sDNSListener, nsnull, getter_AddRefs(tmpOutstanding));
+        }
       }
     }
     
