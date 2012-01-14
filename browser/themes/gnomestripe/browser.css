@@ -2106,6 +2106,11 @@ panel[dimmed="true"] {
   margin-bottom: -1px;
 }
 
+#inspector-breadcrumbs > .scrollbutton-up,
+#inspector-breadcrumbs > .scrollbutton-down {
+  -moz-appearance: none;
+}
+
 .inspector-breadcrumbs-button {
   -moz-appearance: none;
   background-color: transparent;
