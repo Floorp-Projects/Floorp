@@ -806,7 +806,7 @@ class FrameState
     /*
      * Same as unpinReg(), but does not restore the FrameEntry.
      */
-    inline void unpinKilledReg(RegisterID reg);
+    inline void unpinKilledReg(AnyRegisterID reg);
 
     /* Pins a data or type register if one exists. */
     MaybeRegisterID maybePinData(FrameEntry *fe);

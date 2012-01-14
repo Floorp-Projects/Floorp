@@ -969,6 +969,7 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
   //   list are empty when listing the Chinese characters. In this case,
   //   we don't need to process composition string too. See bug 271815.
 
+  bool notifyEditorObservers = false;
   if (!aCompositionString.IsEmpty() || (mIMETextNode && aTextRangeList)) {
     mIMETextRangeList = aTextRangeList;
 
@@ -992,9 +993,12 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
     // If still composing, we should fire input event via observer.
     // Note that if committed, we don't need to notify it since it will be
     // notified at followed compositionend event.
-    if (mIsIMEComposing) {
-      NotifyEditorObservers();
-    }
+    // NOTE: We must notify after the auto batch will be gone.
+    notifyEditorObservers = mIsIMEComposing;
+  }
+
+  if (notifyEditorObservers) {
+    NotifyEditorObservers();
   }
 
   return rv;

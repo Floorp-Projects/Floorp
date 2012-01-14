@@ -118,6 +118,9 @@
       testNormalFind();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testNormalFind");
+      testNormalFindWithComposition();
+      gFindBar.close();
+      ok(gFindBar.hidden, "findbar should be hidden after testNormalFindWithComposition");
       testAutoCaseSensitivityUI();
       testQuickFindText();
       gFindBar.close();
@@ -222,6 +225,60 @@
         enterStringIntoFindField("t");
         ok(gBrowser.contentWindow.getSelection() != searchStr,
            "testNormalFind: Case-sensitivy is broken '" + searchStr + "'");
+        matchCaseCheckbox.click();
+      }
+    }
+
+    function testNormalFindWithComposition() {
+      document.getElementById("cmd_find").doCommand();
+
+      ok(!gFindBar.hidden, "testNormalFindWithComposition: findbar should be open");
+      ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
+         "testNormalFindWithComposition: find field should be focused");
+
+      var matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
+      var clicked = false;
+      if (!matchCaseCheckbox.hidden & matchCaseCheckbox.checked) {
+        matchCaseCheckbox.click();
+        clicked = true;
+      }
+
+      gFindBar._findField.inputField.focus();
+
+      var searchStr = "text";
+
+      synthesizeComposition({ type: "compositionstart" });
+      synthesizeComposition({ type: "compositionupdate", data: searchStr });
+      synthesizeText(
+        { "composition":
+          { "string": searchStr,
+            "clauses":
+            [
+              { "length": searchStr.length, "attr": COMPOSITION_ATTR_RAWINPUT }
+            ]
+          },
+          "caret": { "start": searchStr.length, "length": 0 }
+        });
+
+      ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() != searchStr,
+         "testNormalFindWithComposition: text shouldn't be found during composition");
+
+      synthesizeText(
+        { "composition":
+          { "string": searchStr,
+            "clauses":
+            [
+              { "length": 0, "attr": 0 }
+            ]
+          },
+          "caret": { "start": searchStr.length, "length": 0 }
+        });
+      synthesizeComposition({ type: "compositionend", data: searchStr });
+
+      ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() == searchStr,
+         "testNormalFindWithComposition: text should be found after committing composition");
+
+      if (clicked) {
         matchCaseCheckbox.click();
       }
     }
