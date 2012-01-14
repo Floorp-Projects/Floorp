@@ -2324,6 +2324,12 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             masm.or32(result1, result);
         }
         frame.freeReg(result1);
+#elif defined(JS_CPU_MIPS)
+        /* On MIPS the result 0.0/0.0 is 0x7FF7FFFF.
+           We need to manually set it to 0x7FF80000. */
+        static const int ShiftedCanonicalNaNType = 0x7FF80000 << 1;
+        masm.setShiftedCanonicalNaN(treg, treg);
+        masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType), result);
 #elif !defined(JS_CPU_X64)
         static const int ShiftedCanonicalNaNType = 0x7FF80000 << 1;
         masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType), result);
