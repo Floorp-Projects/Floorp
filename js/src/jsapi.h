@@ -1106,6 +1106,19 @@ class AutoVectorRooter : protected AutoGCRooter
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+class AutoValueVector : public AutoVectorRooter<Value>
+{
+  public:
+    explicit AutoValueVector(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<Value>(cx, VALVECTOR)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 }  /* namespace JS */
 
 /************************************************************************/
