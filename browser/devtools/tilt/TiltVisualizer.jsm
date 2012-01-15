@@ -38,7 +38,7 @@
  ***** END LICENSE BLOCK *****/
 
 /*global Components, ChromeWorker */
-/*global TiltGL, TiltMath, vec3, mat4, quat4, TiltUtils, TiltVisualizerStyle */
+/*global TiltGL, TiltMath, EPSILON, vec3, mat4, quat4, TiltUtils */
 "use strict";
 
 const Cu = Components.utils;
@@ -64,12 +64,14 @@ const INITIAL_TRANSITION_DURATION = 100;
 const INITIAL_Z_TRANSLATION = 400;
 
 const MOUSE_CLICK_THRESHOLD = 10;
-const ARCBALL_SENSITIVITY = 0.3;
+const ARCBALL_SENSITIVITY = 0.5;
 const ARCBALL_ROTATION_STEP = 0.15;
 const ARCBALL_TRANSLATION_STEP = 35;
 const ARCBALL_ZOOM_STEP = 0.1;
 const ARCBALL_ZOOM_MIN = -3000;
 const ARCBALL_ZOOM_MAX = 500;
+const ARCBALL_RESET_FACTOR = 0.9;
+const ARCBALL_RESET_INTERVAL = 1000 / 60;
 
 const TILT_CRAFTER = "resource:///modules/devtools/TiltWorkerCrafter.js";
 const TILT_PICKER = "resource:///modules/devtools/TiltWorkerPicker.js";
@@ -460,7 +462,7 @@ TiltVisualizer.Presenter.prototype = {
    * @param {Object} aData
    *                 object containing the necessary mesh verts, texcoord etc.
    */
-  setupMesh: function TVP_setupMesh(aData)
+  setupMesh: function TVP_setupMesh(aData) /*global TiltVisualizerStyle */
   {
     let renderer = this.renderer;
 
@@ -1123,23 +1125,26 @@ TiltVisualizer.Arcball = function TV_Arcball(
    */
   this._lastRot = quat4.create();
   this._deltaRot = quat4.create();
-  this._currentRot = quat4.create(aInitialRot);
+  this._currentRot = quat4.create();
 
   /**
    * The current camera translation coordinates.
    */
   this._lastTrans = vec3.create();
   this._deltaTrans = vec3.create();
-  this._currentTrans = vec3.create(aInitialTrans);
+  this._currentTrans = vec3.create();
   this._zoomAmount = 0;
 
   /**
    * Additional rotation and translation vectors.
    */
-  this._addKeyRot = vec3.create();
-  this._addKeyTrans = vec3.create();
-  this._deltaKeyRot = quat4.create();
-  this._deltaKeyTrans = vec3.create();
+  this._additionalRot = vec3.create(aInitialRot);
+  this._additionalTrans = vec3.create(aInitialTrans);
+  this._deltaAdditionalRot = quat4.create();
+  this._deltaAdditionalTrans = vec3.create();
+
+  // load the keys controlling the arcball
+  this._loadKeys();
 
   // set the current dimensions of the arcball
   this.resize(aWidth, aHeight, aRadius);
@@ -1247,68 +1252,75 @@ TiltVisualizer.Arcball.prototype = {
     deltaTrans[2] = (zoomAmount - currentTrans[2]) * ARCBALL_ZOOM_STEP;
     currentTrans[2] += deltaTrans[2];
 
-    let addKeyRot = this._addKeyRot;
-    let addKeyTrans = this._addKeyTrans;
-    let deltaKeyRot = this._deltaKeyRot;
-    let deltaKeyTrans = this._deltaKeyTrans;
+    let additionalRot = this._additionalRot;
+    let additionalTrans = this._additionalTrans;
+    let deltaAdditionalRot = this._deltaAdditionalRot;
+    let deltaAdditionalTrans = this._deltaAdditionalTrans;
+
+    let rotateKeys = this.rotateKeys;
+    let panKeys = this.panKeys;
+    let zoomKeys = this.zoomKeys;
+    let resetKey = this.resetKey;
 
     // handle additional rotation and translation by the keyboard
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_A]) {
-      addKeyRot[0] -= ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
+    if (keyCode[rotateKeys.left]) {
+      additionalRot[0] -= ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_D]) {
-      addKeyRot[0] += ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
+    if (keyCode[rotateKeys.right]) {
+      additionalRot[0] += ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_W]) {
-      addKeyRot[1] += ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
+    if (keyCode[rotateKeys.up]) {
+      additionalRot[1] += ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_S]) {
-      addKeyRot[1] -= ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
+    if (keyCode[rotateKeys.down]) {
+      additionalRot[1] -= ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_LEFT]) {
-      addKeyTrans[0] -= ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    if (keyCode[panKeys.left]) {
+      additionalTrans[0] -= ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_RIGHT]) {
-      addKeyTrans[0] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    if (keyCode[panKeys.right]) {
+      additionalTrans[0] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_UP]) {
-      addKeyTrans[1] -= ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    if (keyCode[panKeys.up]) {
+      additionalTrans[1] -= ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_DOWN]) {
-      addKeyTrans[1] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    if (keyCode[panKeys.down]) {
+      additionalTrans[1] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_I] ||
-        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_ADD] ||
-        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_EQUALS]) {
+    if (keyCode[zoomKeys["in"][0]] ||
+        keyCode[zoomKeys["in"][1]] ||
+        keyCode[zoomKeys["in"][2]]) {
       this.zoom(-ARCBALL_TRANSLATION_STEP);
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_O] ||
-        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_SUBTRACT]) {
+    if (keyCode[zoomKeys["out"][0]] ||
+        keyCode[zoomKeys["out"][1]]) {
       this.zoom(ARCBALL_TRANSLATION_STEP);
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_R] ||
-        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_0]) {
+    if (keyCode[zoomKeys["unzoom"]]) {
       this._zoomAmount = 0;
+    }
+    if (keyCode[resetKey]) {
+      this.reset();
     }
 
     // update the delta key rotations and translations
-    deltaKeyRot[0] +=
-      (addKeyRot[0] - deltaKeyRot[0]) * ARCBALL_SENSITIVITY;
-    deltaKeyRot[1] +=
-      (addKeyRot[1] - deltaKeyRot[1]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalRot[0] +=
+      (additionalRot[0] - deltaAdditionalRot[0]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalRot[1] +=
+      (additionalRot[1] - deltaAdditionalRot[1]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalRot[2] +=
+      (additionalRot[2] - deltaAdditionalRot[2]) * ARCBALL_SENSITIVITY;
 
-    deltaKeyTrans[0] +=
-      (addKeyTrans[0] - deltaKeyTrans[0]) * ARCBALL_SENSITIVITY;
-    deltaKeyTrans[1] +=
-      (addKeyTrans[1] - deltaKeyTrans[1]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalTrans[0] +=
+      (additionalTrans[0] - deltaAdditionalTrans[0]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalTrans[1] +=
+      (additionalTrans[1] - deltaAdditionalTrans[1]) * ARCBALL_SENSITIVITY;
 
     // create an additional rotation based on the key events
-    quat4.fromEuler(deltaKeyRot[0], deltaKeyRot[1], 0, deltaRot);
+    quat4.fromEuler(deltaAdditionalRot[0], deltaAdditionalRot[1], 0, deltaRot);
 
     // create an additional translation based on the key events
-    deltaTrans[0] = deltaKeyTrans[0];
-    deltaTrans[1] = deltaKeyTrans[1];
-    deltaTrans[2] = 0;
+    vec3.set([deltaAdditionalTrans[0], deltaAdditionalTrans[1], 0], deltaTrans);
 
     // return the current rotation and translation
     return {
@@ -1334,6 +1346,7 @@ TiltVisualizer.Arcball.prototype = {
     this._mousePress[0] = x;
     this._mousePress[1] = y;
     this._mouseButton = aButton;
+    this._cancelResetInterval();
     this._save();
 
     // find the sphere coordinates of the mouse positions
@@ -1409,6 +1422,7 @@ TiltVisualizer.Arcball.prototype = {
    */
   zoom: function TVA_zoom(aZoom)
   {
+    this._cancelResetInterval();
     this._zoomAmount = TiltMath.clamp(this._zoomAmount - aZoom,
       ARCBALL_ZOOM_MIN, ARCBALL_ZOOM_MAX);
   },
@@ -1422,6 +1436,7 @@ TiltVisualizer.Arcball.prototype = {
    */
   keyDown: function TVA_keyDown(aCode)
   {
+    this._cancelResetInterval();
     this._keyCode[aCode] = true;
   },
 
@@ -1484,8 +1499,18 @@ TiltVisualizer.Arcball.prototype = {
   /**
    * Cancels all pending transformations caused by key events.
    */
-  cancelKeyEvents: function TVA_cancelKeyEvents() {
+  cancelKeyEvents: function TVA_cancelKeyEvents()
+  {
     this._keyCode = {};
+  },
+
+  /**
+   * Cancels all pending transformations caused by mouse events.
+   */
+  cancelMouseEvents: function TVA_cancelMouseEvents()
+  {
+    this._rotating = false;
+    this._mouseButton = -1;
   },
 
   /**
@@ -1513,19 +1538,138 @@ TiltVisualizer.Arcball.prototype = {
   },
 
   /**
+   * Starts an animation resetting the arcball transformations to identity.
+   *
+   * @param {Array} aFinalTranslation
+   *                optional, final vector translation
+   * @param {Array} aFinalRotation
+   *                optional, final quaternion rotation
+   */
+  reset: function TVA_reset(aFinalTranslation, aFinalRotation)
+  {
+    this.cancelMouseEvents();
+    this.cancelKeyEvents();
+
+    if (!this._resetInterval) {
+      let window = TiltUtils.getBrowserWindow();
+      let func = this._nextResetIntervalStep.bind(this);
+
+      vec3.zero(this._additionalTrans);
+      vec3.zero(this._additionalRot);
+
+      this._save();
+      this._resetFinalTranslation = vec3.create(aFinalTranslation);
+      this._resetFinalRotation = quat4.create(aFinalRotation);
+      this._resetInterval = window.setInterval(func, ARCBALL_RESET_INTERVAL);
+    }
+  },
+
+  /**
+   * Cancels the current arcball reset animation if there is one.
+   */
+  _cancelResetInterval: function TVA__cancelResetInterval()
+  {
+    if (this._resetInterval) {
+      let window = TiltUtils.getBrowserWindow();
+
+      window.clearInterval(this._resetInterval);
+      this._resetInterval = null;
+      this._save();
+
+      if ("function" === typeof this.onResetFinish) {
+        this.onResetFinish();
+        this.onResetFinish = null;
+      }
+    }
+  },
+
+  /**
+   * Executes the next step in the arcball reset animation.
+   */
+  _nextResetIntervalStep: function TVA__nextResetIntervalStep()
+  {
+    let fDelta = EPSILON * EPSILON;
+    let fTran = this._resetFinalTranslation;
+    let fRot = this._resetFinalRotation;
+
+    let t = vec3.create(fTran);
+    let r = quat4.multiply(quat4.inverse(quat4.create(this._currentRot)), fRot);
+
+    // reset the rotation quaternion and translation vector
+    vec3.lerp(this._currentTrans, t, ARCBALL_RESET_FACTOR);
+    quat4.slerp(this._currentRot, r, 1 - ARCBALL_RESET_FACTOR);
+
+    // also reset any additional transforms by the keyboard or mouse
+    this._zoomAmount *= ARCBALL_RESET_FACTOR;
+
+    // clear the loop if the all values are very close to zero
+    if (vec3.length(vec3.subtract(this._lastRot, fRot, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._deltaRot, fRot, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._currentRot, fRot, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._lastTrans, fTran, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._deltaTrans, fTran, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._currentTrans, fTran, [])) < fDelta) {
+
+      this._cancelResetInterval();
+    }
+  },
+
+  /**
+   * Loads the keys to control this arcball.
+   */
+  _loadKeys: function TVA__loadKeys() {
+
+    this.rotateKeys = {
+      "up": Ci.nsIDOMKeyEvent["DOM_VK_W"],
+      "down": Ci.nsIDOMKeyEvent["DOM_VK_S"],
+      "left": Ci.nsIDOMKeyEvent["DOM_VK_A"],
+      "right": Ci.nsIDOMKeyEvent["DOM_VK_D"],
+    };
+    this.panKeys = {
+      "up": Ci.nsIDOMKeyEvent["DOM_VK_UP"],
+      "down": Ci.nsIDOMKeyEvent["DOM_VK_DOWN"],
+      "left": Ci.nsIDOMKeyEvent["DOM_VK_LEFT"],
+      "right": Ci.nsIDOMKeyEvent["DOM_VK_RIGHT"],
+    };
+    this.zoomKeys = {
+      "in": [
+        Ci.nsIDOMKeyEvent["DOM_VK_I"],
+        Ci.nsIDOMKeyEvent["DOM_VK_ADD"],
+        Ci.nsIDOMKeyEvent["DOM_VK_EQUALS"],
+      ],
+      "out": [
+        Ci.nsIDOMKeyEvent["DOM_VK_O"],
+        Ci.nsIDOMKeyEvent["DOM_VK_SUBTRACT"],
+      ],
+      "unzoom": Ci.nsIDOMKeyEvent["DOM_VK_0"]
+    };
+    this.resetKey = Ci.nsIDOMKeyEvent["DOM_VK_R"];
+  },
+
+  /**
    * Saves the current arcball state, typically after resize or mouse events.
    */
   _save: function TVA__save()
   {
-    let x = this._mousePress[0];
-    let y = this._mousePress[1];
+    if (this._mousePress) {
+      let x = this._mousePress[0];
+      let y = this._mousePress[1];
 
-    this._mouseMove[0] = x;
-    this._mouseMove[1] = y;
-    this._mouseRelease[0] = x;
-    this._mouseRelease[1] = y;
-    this._mouseLerp[0] = x;
-    this._mouseLerp[1] = y;
+      this._mouseMove[0] = x;
+      this._mouseMove[1] = y;
+      this._mouseRelease[0] = x;
+      this._mouseRelease[1] = y;
+      this._mouseLerp[0] = x;
+      this._mouseLerp[1] = y;
+    }
+  },
+
+  /**
+   * Function called when this object is destroyed.
+   */
+  finalize: function TVA_finalize()
+  {
+    this._cancelResetInterval();
   }
 };
 
