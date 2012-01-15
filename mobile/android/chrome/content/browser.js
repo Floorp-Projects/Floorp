@@ -2846,7 +2846,7 @@ var XPInstallObserver = {
       needsRestart = true;
 
     if (needsRestart) {
-      buttons = [{
+      let buttons = [{
         label: Strings.browser.GetStringFromName("notificationRestart.button"),
         callback: function() {
           // Notify all windows that an application quit has been requested
