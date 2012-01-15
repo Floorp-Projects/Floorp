@@ -505,6 +505,22 @@ VersionSetXML(JSVersion version, bool enable)
                   : JSVersion(uint32_t(version) & ~VersionFlags::HAS_XML);
 }
 
+JS_FRIEND_API(bool)
+CanCallContextDebugHandler(JSContext *cx)
+{
+    return cx->debugHooks && cx->debugHooks->debuggerHandler;
+}
+
+JS_FRIEND_API(JSTrapStatus)
+CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
+{
+    if (!CanCallContextDebugHandler(cx))
+        return JSTRAP_RETURN;
+
+    return cx->debugHooks->debuggerHandler(cx, script, bc, rval,
+                                           cx->debugHooks->debuggerHandlerData);
+}
+
 #ifdef JS_THREADSAFE
 JSThread *
 GetContextThread(const JSContext *cx)

@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jscntxt.h"
+#include "jscntxt.h" // outstandingRequests
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -712,8 +712,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   // Check if we should offer the option to debug
   JSStackFrame* fp = ::JS_GetScriptedCaller(cx, NULL);
-  bool debugPossible = (fp != nsnull && cx->debugHooks &&
-                          cx->debugHooks->debuggerHandler != nsnull);
+  bool debugPossible = fp && js::CanCallContextDebugHandler(cx);
 #ifdef MOZ_JSDEBUGGER
   // Get the debugger service if necessary.
   if (debugPossible) {
@@ -842,10 +841,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   else if ((buttonPressed == 2) && debugPossible) {
     // Debug the script
     jsval rval;
-    switch(cx->debugHooks->debuggerHandler(cx, script, ::JS_GetFramePC(cx, fp),
-                                           &rval,
-                                           cx->debugHooks->
-                                           debuggerHandlerData)) {
+    switch (js::CallContextDebugHandler(cx, script, JS_GetFramePC(cx, fp), &rval)) {
       case JSTRAP_RETURN:
         JS_SetFrameReturnValue(cx, fp, rval);
         return JS_TRUE;

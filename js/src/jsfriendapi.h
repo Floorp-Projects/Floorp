@@ -492,6 +492,12 @@ GetContextStructuredCloneCallbacks(JSContext *cx);
 extern JS_FRIEND_API(JSVersion)
 VersionSetXML(JSVersion version, bool enable);
 
+extern JS_FRIEND_API(bool)
+CanCallContextDebugHandler(JSContext *cx);
+
+extern JS_FRIEND_API(JSTrapStatus)
+CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval);
+
 } /* namespace js */
 
 /*
