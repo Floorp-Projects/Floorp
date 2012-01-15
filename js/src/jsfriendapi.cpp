@@ -498,6 +498,13 @@ GetContextStructuredCloneCallbacks(JSContext *cx)
     return cx->runtime->structuredCloneCallbacks;
 }
 
+JS_FRIEND_API(JSVersion)
+VersionSetXML(JSVersion version, bool enable)
+{
+    return enable ? JSVersion(uint32_t(version) | VersionFlags::HAS_XML)
+                  : JSVersion(uint32_t(version) & ~VersionFlags::HAS_XML);
+}
+
 #ifdef JS_THREADSAFE
 JSThread *
 GetContextThread(const JSContext *cx)
