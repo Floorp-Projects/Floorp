@@ -579,4 +579,11 @@ SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg)
     rt->activityCallback = cb;
     rt->activityCallbackArg = arg;
 }
+
+JS_FRIEND_API(bool)
+IsContextRunningJS(JSContext *cx)
+{
+    return !cx->stack.empty();
+}
+
 } // namespace js
