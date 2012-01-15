@@ -41,7 +41,8 @@
 
 #include "nsIJSContextStack.h"
 
-#include "jsclone.h"
+#include "jscntxt.h" // structuredCloneCallbacks
+#include "jsfriendapi.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/storage.h"
 #include "nsCharSeparatedTokenizer.h"
