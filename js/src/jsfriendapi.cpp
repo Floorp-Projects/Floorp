@@ -547,4 +547,10 @@ HasUnrootedGlobal(const JSContext *cx)
     return cx->hasRunOption(JSOPTION_UNROOTED_GLOBAL);
 }
 
+JS_FRIEND_API(void)
+SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg)
+{
+    rt->activityCallback = cb;
+    rt->activityCallbackArg = arg;
+}
 } // namespace js

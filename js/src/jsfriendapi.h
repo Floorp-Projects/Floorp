@@ -464,6 +464,18 @@ GetContextCompartment(const JSContext *cx);
 JS_FRIEND_API(bool)
 HasUnrootedGlobal(const JSContext *cx);
 
+typedef void
+(* ActivityCallback)(void *arg, JSBool active);
+
+/*
+ * Sets a callback that is run whenever the runtime goes idle - the
+ * last active request ceases - and begins activity - when it was
+ * idle and a request begins. Note: The callback is called under the
+ * GC lock.
+ */
+JS_FRIEND_API(void)
+SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg);
+
 class JS_FRIEND_API(AutoLockGC)
 {
   public:
