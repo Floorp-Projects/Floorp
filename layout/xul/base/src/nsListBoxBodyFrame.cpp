@@ -559,15 +559,6 @@ nsListBoxBodyFrame::ScrollByLines(PRInt32 aNumLines)
   
   ScrollToIndex(scrollIndex);
 
-  // we have to do a sync update for mac because if we scroll too quickly
-  // w/out going back to the main event loop we can easily scroll the wrong
-  // bits and it looks like garbage (bug 63465).
-  // XXXbz is this seriously still needed?
-    
-  // I'd use Composite here, but it doesn't always work.
-  // vm->Composite();
-  PresContext()->GetPresShell()->GetViewManager()->ForceUpdate();
-
   return NS_OK;
 }
 

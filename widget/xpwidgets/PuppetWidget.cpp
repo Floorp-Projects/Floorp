@@ -56,7 +56,7 @@ InvalidateRegion(nsIWidget* aWidget, const nsIntRegion& aRegion)
 {
   nsIntRegionRectIterator it(aRegion);
   while(const nsIntRect* r = it.Next()) {
-    aWidget->Invalidate(*r, false/*async*/);
+    aWidget->Invalidate(*r);
   }
 }
 
@@ -228,43 +228,25 @@ PuppetWidget::SetFocus(bool aRaise)
 }
 
 NS_IMETHODIMP
-PuppetWidget::Invalidate(const nsIntRect& aRect, bool aIsSynchronous)
+PuppetWidget::Invalidate(const nsIntRect& aRect)
 {
 #ifdef DEBUG
-  debug_DumpInvalidate(stderr, this, &aRect, aIsSynchronous,
+  debug_DumpInvalidate(stderr, this, &aRect,
                        nsCAutoString("PuppetWidget"), nsnull);
 #endif
 
   if (mChild) {
-    return mChild->Invalidate(aRect, aIsSynchronous);
+    return mChild->Invalidate(aRect);
   }
 
   mDirtyRegion.Or(mDirtyRegion, aRect);
 
-  if (mDirtyRegion.IsEmpty()) {
-    return NS_OK;
-  } else if (aIsSynchronous) {
-    DispatchPaintEvent();
-    return NS_OK;
-  } else if (!mPaintTask.IsPending()) {
+  if (!mDirtyRegion.IsEmpty() && !mPaintTask.IsPending()) {
     mPaintTask = new PaintTask(this);
     return NS_DispatchToCurrentThread(mPaintTask.get());
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-PuppetWidget::Update()
-{
-  if (mChild) {
-    return mChild->Update();
-  }
-
-  if (mDirtyRegion.IsEmpty()) {
-    return NS_OK;
-  }
-  return DispatchPaintEvent();
 }
 
 void

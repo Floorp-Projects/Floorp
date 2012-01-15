@@ -3377,8 +3377,12 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
     }
 
     PRUint32 prevCh = 0;
-    gfxFont *prevFont = nsnull;
     PRUint8 matchType = 0;
+
+    // initialize prevFont to the group's primary font, so that this will be
+    // used for string-initial control chars, etc rather than risk hitting font
+    // fallback for these (bug 716229)
+    gfxFont *prevFont = GetFontAt(0);
 
     for (PRUint32 i = 0; i < aLength; i++) {
 
