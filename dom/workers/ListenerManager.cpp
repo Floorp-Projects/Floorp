@@ -42,6 +42,7 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsfriendapi.h"
 #include "js/Vector.h"
 
 #include "Events.h"
