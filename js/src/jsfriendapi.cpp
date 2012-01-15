@@ -533,6 +533,12 @@ GetContextOutstandingRequests(const JSContext *cx)
 {
     return cx->outstandingRequests;
 }
+
+JS_FRIEND_API(PRLock *)
+GetRuntimeGCLock(const JSRuntime *rt)
+{
+    return rt->gcLock;
+}
 #endif
 
 JS_FRIEND_API(JSCompartment *)
