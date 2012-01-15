@@ -3,6 +3,10 @@
 	style="overflow: -moz-hidden-unscrollable;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<html:input  value="lime"/>
-        <button  label="Credits" accesskey="C"/>
+        <!--
+        pointer-events: none so that our look doesn't depend on
+        mouse position
+        -->
+        <button  label="Credits" accesskey="C" style="pointer-events: none"/>
 </somenode>
 

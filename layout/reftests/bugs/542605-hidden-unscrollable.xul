@@ -10,5 +10,9 @@
 	input element. Not using -moz-hidden-unscrollable
 	causes this problem to show up for reasons unknown.
 	-->
-        <button  label="Credits" accesskey="C"/>
+        <!--
+        pointer-events: none so that our look doesn't depend on
+        mouse position
+        -->
+        <button  label="Credits" accesskey="C" style="pointer-events: none"/>
 </somenode>

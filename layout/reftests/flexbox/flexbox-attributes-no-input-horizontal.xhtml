@@ -9,6 +9,8 @@ html, body {
   display: -moz-box;
   margin: 0; padding: 0;
   width: 100%; height: 100%;
+  /* Disable pointer-events so we don't get weird hover artifacts */
+  pointer-events: none;
 }
 
 body > div {
