@@ -69,7 +69,7 @@
 
 #include "nsWrapperCacheInlines.h"
 
-#include "jscntxt.h" // context->stackLimit, sizeof(JSContext)
+#include "jscntxt.h" // sizeof(JSContext)
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -707,7 +707,7 @@ static void
 UnmarkGrayChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     int stackDummy;
-    if (!JS_CHECK_STACK_SIZE(trc->context->stackLimit, &stackDummy)) {
+    if (!JS_CHECK_STACK_SIZE(js::GetContextStackLimit(trc->context), &stackDummy)) {
         /*
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
