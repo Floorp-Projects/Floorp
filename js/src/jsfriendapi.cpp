@@ -527,6 +527,12 @@ GetContextThread(const JSContext *cx)
 {
     return cx->thread();
 }
+
+JS_FRIEND_API(unsigned)
+GetContextOutstandingRequests(const JSContext *cx)
+{
+    return cx->outstandingRequests;
+}
 #endif
 
 } // namespace js
