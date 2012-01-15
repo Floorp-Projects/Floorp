@@ -1617,38 +1617,6 @@ class AutoXMLRooter : private AutoGCRooter {
 };
 #endif /* JS_HAS_XML_SUPPORT */
 
-class AutoLockGC {
-  public:
-    explicit AutoLockGC(JSRuntime *rt = NULL
-                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : runtime(rt)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        if (rt)
-            JS_LOCK_GC(rt);
-    }
-
-    bool locked() const {
-        return !!runtime;
-    }
-
-    void lock(JSRuntime *rt) {
-        JS_ASSERT(rt);
-        JS_ASSERT(!runtime);
-        runtime = rt;
-        JS_LOCK_GC(rt);
-    }
-
-    ~AutoLockGC() {
-        if (runtime)
-            JS_UNLOCK_GC(runtime);
-    }
-
-  private:
-    JSRuntime *runtime;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class AutoUnlockGC {
   private:
     JSRuntime *rt;
