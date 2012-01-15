@@ -43,6 +43,8 @@
 #include "jswrapper.h"
 #include "jsweakmap.h"
 
+#include "mozilla/GuardObjects.h"
+
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -466,6 +468,29 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
 #endif
 
 namespace js {
+
+/* static */ void
+AutoLockGC::LockGC(JSRuntime *rt)
+{
+    JS_ASSERT(rt);
+    JS_LOCK_GC(rt);
+}
+
+/* static */ void
+AutoLockGC::UnlockGC(JSRuntime *rt)
+{
+    JS_ASSERT(rt);
+    JS_UNLOCK_GC(rt);
+}
+
+void
+AutoLockGC::lock(JSRuntime *rt)
+{
+    JS_ASSERT(rt);
+    JS_ASSERT(!runtime);
+    runtime = rt;
+    JS_LOCK_GC(rt);
+}
 
 #ifdef JS_THREADSAFE
 JSThread *
