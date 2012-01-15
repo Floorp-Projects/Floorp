@@ -196,7 +196,6 @@ INSTALLED_HEADERS = \
 		jscntxt.h \
 		jscompat.h \
 		jscrashreport.h \
-		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
 		jsfriendapi.h \

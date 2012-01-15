@@ -41,7 +41,7 @@
 #include "sqlite3.h"
 
 #include "jsapi.h"
-#include "jsdate.h"
+#include "jsfriendapi.h"
 
 #include "nsPrintfCString.h"
 #include "nsString.h"
