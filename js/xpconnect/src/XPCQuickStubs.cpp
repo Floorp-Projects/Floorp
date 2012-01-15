@@ -778,58 +778,22 @@ getNativeFromWrapper(JSContext *cx,
 nsresult
 getWrapper(JSContext *cx,
            JSObject *obj,
+           JSObject *callee,
            XPCWrappedNative **wrapper,
            JSObject **cur,
            XPCWrappedNativeTearOff **tearoff)
 {
-
-    // We can have at most three layers in need of unwrapping here:
-    // * A (possible) security wrapper
-    // * A (possible) Xray waiver
-    // * A (possible) outer window
-    //
-    // The underlying call to js::Unwrap recursively unwraps, but stops if it
-    // hits an outer object. Thus, we need to make at most two unwrapping
-    // calls: one to handle security wrappers and waivers, and one to handle
-    // outer objects.
-    if (js::IsWrapper(obj)) {
-        obj = XPCWrapper::Unwrap(cx, obj);
-        if (obj && js::IsWrapper(obj)) {
-            MOZ_ASSERT(js::Wrapper::wrapperHandler(obj)->isOuterWindow());
-            obj = XPCWrapper::Unwrap(cx, obj);
-        }
-
-        // The safe unwrap might have failed for SCRIPT_ACCESS_ONLY objects. If it
-        // didn't fail though, we should be done with wrappers.
-        if (!obj)
-            return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-        MOZ_ASSERT(!js::IsWrapper(obj));
+    if (XPCWrapper::IsSecurityWrapper(obj) &&
+        !(obj = XPCWrapper::Unwrap(cx, obj))) {
+        return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
     }
 
-    // Start with sane values.
-    *wrapper = nsnull;
-    *cur = nsnull;
+    *cur = obj;
     *tearoff = nsnull;
 
-    // Handle tearoffs.
-    //
-    // If |obj| is of the tearoff class, that means we're dealing with a JS
-    // object reflection of a particular interface (ie, |foo.nsIBar|). These
-    // JS objects are parented to their wrapper, so we snag the tearoff object
-    // along the way (if desired), and then set |obj| to its parent.
-    if (js::GetObjectClass(obj) == &XPC_WN_Tearoff_JSClass) {
-        *tearoff = (XPCWrappedNativeTearOff*) js::GetObjectPrivate(obj);
-        obj = js::GetObjectParent(obj);
-    }
-
-    // If we've got a WN or slim wrapper, store things the way callers expect.
-    // Otherwise, leave things null and return.
-    if (IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
-        if (IS_WN_WRAPPER_OBJECT(obj))
-            *wrapper = (XPCWrappedNative*) js::GetObjectPrivate(obj);
-        else
-            *cur = obj;
-    }
+    *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, callee, cur,
+                                                     tearoff);
 
     return NS_OK;
 }
@@ -947,7 +911,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
         wrapper = nsnull;
         obj2 = src;
     } else {
-        rv = getWrapper(cx, src, &wrapper, &obj2, &tearoff);
+        rv = getWrapper(cx, src, nsnull, &wrapper, &obj2, &tearoff);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
