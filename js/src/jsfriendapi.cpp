@@ -607,4 +607,10 @@ GetContextStackLimit(const JSContext *cx)
     return cx->stackLimit;
 }
 
+JS_FRIEND_API(size_t)
+SizeOfJSContext()
+{
+    return sizeof(JSContext);
+}
+
 } // namespace js
