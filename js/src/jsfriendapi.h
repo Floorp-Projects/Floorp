@@ -453,6 +453,9 @@ GetPCCountScriptContents(JSContext *cx, size_t script);
 #ifdef JS_THREADSAFE
 JS_FRIEND_API(JSThread *)
 GetContextThread(const JSContext *cx);
+
+JS_FRIEND_API(unsigned)
+GetContextOutstandingRequests(const JSContext *cx);
 #endif
 
 class JS_FRIEND_API(AutoLockGC)
