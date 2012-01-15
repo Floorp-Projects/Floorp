@@ -70,7 +70,7 @@
 #include "nsWrapperCacheInlines.h"
 
 #include "jscntxt.h" // js::ThreadData, JS_TRACER_INIT, context->stackLimit,
-// cx->globalObject, sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
+// sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -991,8 +991,9 @@ public:
     NS_IMETHOD Unlink(void *n)
     {
         JSContext *cx = static_cast<JSContext*>(n);
-        NS_ASSERTION(cx->globalObject, "global object NULL before unlinking");
-        cx->globalObject = nsnull;
+        JSAutoRequest ar(cx);
+        NS_ASSERTION(JS_GetGlobalObject(cx), "global object NULL before unlinking");
+        JS_SetGlobalObject(cx, NULL);
         return NS_OK;
     }
     NS_IMETHOD Unroot(void *n)
@@ -1010,9 +1011,8 @@ public:
         unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
         NS_IMPL_CYCLE_COLLECTION_DESCRIBE(JSContext, refCount)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
-        if (cx->globalObject) {
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                               cx->globalObject);
+        if (JSObject *global = JS_GetGlobalObject(cx)) {
+            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, global);
         }
 
         return NS_OK;
