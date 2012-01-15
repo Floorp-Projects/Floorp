@@ -69,8 +69,6 @@
 
 #include "nsWrapperCacheInlines.h"
 
-#include "jscntxt.h" // sizeof(JSContext)
-
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
                               nsISupportsWeakReference,
@@ -1002,7 +1000,7 @@ public:
         // edges will ensure that any cycles this context is in won't be
         // collected.
         unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
-        NS_IMPL_CYCLE_COLLECTION_DESCRIBE(JSContext, refCount)
+        cb.DescribeRefCountedNode(refCount, js::SizeOfJSContext(), "JSContext");
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
         if (JSObject *global = JS_GetGlobalObject(cx)) {
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, global);
