@@ -64,11 +64,6 @@
 #include "nsExceptionHandler.h"
 #endif
 
-#include "jscntxt.h"
-#if 0
-js_NextActiveContext, js::TriggerOperationCallback
-#endif
-
 using namespace mozilla;
 using namespace mozilla::xpconnect::memory;
 
@@ -957,10 +952,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
 #endif
             PR_WaitCondVar(self->mWatchdogWakeup, sleepInterval);
         JS_ASSERT(status == PR_SUCCESS);
-        JSContext* cx = nsnull;
-        while ((cx = js_NextActiveContext(self->mJSRuntime, cx))) {
-            js::TriggerOperationCallback(cx);
-        }
+        js::TriggerOperationCallbacksForActiveContexts(self->mJSRuntime);
     }
 
     /* Wake up the main thread waiting for the watchdog to terminate. */

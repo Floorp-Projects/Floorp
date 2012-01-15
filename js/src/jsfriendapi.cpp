@@ -586,4 +586,13 @@ IsContextRunningJS(JSContext *cx)
     return !cx->stack.empty();
 }
 
+JS_FRIEND_API(void)
+TriggerOperationCallbacksForActiveContexts(JSRuntime *rt)
+{
+    JSContext* cx = NULL;
+    while ((cx = js_NextActiveContext(rt, cx))) {
+        TriggerOperationCallback(cx);
+    }
+}
+
 } // namespace js
