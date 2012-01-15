@@ -376,9 +376,9 @@ struct Ligature
     c->buffer->info[c->buffer->i].lig_comp() = 0;
     c->buffer->info[c->buffer->i].lig_id() = lig_id;
 
-    if (j == c->buffer->i + i) /* No input glyphs skipped */
+    if (j < c->buffer->i + count) /* No input glyphs skipped */
     {
-      c->replace_glyphs_be16 (i, 1, (const uint16_t *) &ligGlyph);
+      c->replace_glyphs_be16 (count, 1, (const uint16_t *) &ligGlyph);
     }
     else
     {
