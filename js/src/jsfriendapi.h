@@ -527,4 +527,9 @@ typedef enum JSErrNum {
 extern JS_FRIEND_API(const JSErrorFormatString *)
 js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
+/* Implemented in jsclone.cpp. */
+
+extern JS_FRIEND_API(uint64_t)
+js_GetSCOffset(JSStructuredCloneWriter* writer);
+
 #endif /* jsfriendapi_h___ */
