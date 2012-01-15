@@ -503,7 +503,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   nsIFrame* parent = frame->GetParent();
   nsPoint origin(0, 0);
 
-  if (parent && parent->GetType() == nsGkAtoms::tableOuterFrame) {
+  if (parent && parent->GetType() == nsGkAtoms::tableOuterFrame &&
+      frame->GetType() == nsGkAtoms::tableFrame) {
     origin = parent->GetPositionIgnoringScrolling();
     parent = parent->GetParent();
   }

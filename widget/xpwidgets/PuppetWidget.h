@@ -123,9 +123,7 @@ public:
   virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
   { return NS_OK; }
 
-  NS_IMETHOD Invalidate(const nsIntRect& aRect, bool aIsSynchronous);
-
-  NS_IMETHOD Update();
+  NS_IMETHOD Invalidate(const nsIntRect& aRect);
 
   // This API is going away, steer clear.
   virtual void Scroll(const nsIntPoint& aDelta,
