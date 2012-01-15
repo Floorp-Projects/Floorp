@@ -41,7 +41,6 @@
 
 #include "nsIJSContextStack.h"
 
-#include "jscntxt.h" // structuredCloneCallbacks
 #include "jsfriendapi.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/storage.h"
@@ -1024,7 +1023,7 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    aCx->runtime->structuredCloneCallbacks;
+    js::GetContextStructuredCloneCallbacks(aCx);
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->read(aCx, aReader, aTag, aData, nsnull);
@@ -1105,7 +1104,7 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
 
   // try using the runtime callbacks
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    aCx->runtime->structuredCloneCallbacks;
+    js::GetContextStructuredCloneCallbacks(aCx);
   if (runtimeCallbacks) {
     return runtimeCallbacks->write(aCx, aWriter, aObj, nsnull);
   }

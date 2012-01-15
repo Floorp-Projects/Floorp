@@ -492,6 +492,12 @@ AutoLockGC::lock(JSRuntime *rt)
     JS_LOCK_GC(rt);
 }
 
+JS_FRIEND_API(const JSStructuredCloneCallbacks *)
+GetContextStructuredCloneCallbacks(JSContext *cx)
+{
+    return cx->runtime->structuredCloneCallbacks;
+}
+
 #ifdef JS_THREADSAFE
 JSThread *
 GetContextThread(const JSContext *cx)

@@ -486,6 +486,9 @@ class JS_FRIEND_API(AutoLockGC)
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+extern JS_FRIEND_API(const JSStructuredCloneCallbacks *)
+GetContextStructuredCloneCallbacks(JSContext *cx);
+
 } /* namespace js */
 
 /*
