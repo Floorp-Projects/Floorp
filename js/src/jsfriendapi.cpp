@@ -441,7 +441,7 @@ void
 js::DumpHeapComplete(JSContext *cx, FILE *fp)
 {
     JSDumpHeapTracer dtrc(cx, fp);
-    JS_TRACER_INIT(&dtrc, cx, DumpHeapPushIfNew);
+    JS_TracerInit(&dtrc, cx, DumpHeapPushIfNew);
     if (!dtrc.visited.init(10000))
         return;
 
