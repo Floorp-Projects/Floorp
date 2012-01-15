@@ -146,12 +146,10 @@ public:
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
   NS_IMETHOD              MakeFullScreen(bool aFullScreen);
   NS_IMETHOD              HideWindowChrome(bool aShouldHide);
-  NS_IMETHOD              Invalidate(bool aIsSynchronous, 
-                                     bool aEraseBackground = false,
+  NS_IMETHOD              Invalidate(bool aEraseBackground = false,
                                      bool aUpdateNCArea = false,
                                      bool aIncludeChildren = false);
-  NS_IMETHOD              Invalidate(const nsIntRect & aRect, bool aIsSynchronous);
-  NS_IMETHOD              Update();
+  NS_IMETHOD              Invalidate(const nsIntRect & aRect);
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual void            FreeNativeData(void * data, PRUint32 aDataType);
   NS_IMETHOD              SetTitle(const nsAString& aTitle);
