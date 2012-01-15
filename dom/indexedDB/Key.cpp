@@ -39,7 +39,7 @@
 
 #include "Key.h"
 #include "nsIStreamBufferAccess.h"
-#include "jsdate.h"
+#include "jsfriendapi.h"
 #include "nsAlgorithm.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
