@@ -4206,15 +4206,6 @@ nsresult nsEditor::BeginUpdateViewBatch()
       nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
       selPrivate->StartBatchChanges();
     }
-
-    // Turn off view updating.
-    nsCOMPtr<nsIPresShell> ps = GetPresShell();
-    if (ps) {
-      nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
-      if (viewManager) {
-        mBatch.BeginUpdateViewBatch(viewManager);
-      }
-    }
   }
 
   mUpdateCount++;
@@ -4249,20 +4240,6 @@ nsresult nsEditor::EndUpdateViewBatch()
       caret = presShell->GetCaret();
 
     StCaretHider caretHider(caret);
-
-    PRUint32 flags = 0;
-
-    GetFlags(&flags);
-
-    // Turn view updating back on.
-    PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
-
-    // If we're doing async updates, use NS_VMREFRESH_DEFERRED here, so that
-    // the reflows we caused will get processed before the invalidates.
-    if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
-      updateFlag = NS_VMREFRESH_DEFERRED;
-    }
-    mBatch.EndUpdateViewBatch(updateFlag);
 
     // Turn selection updating and notifications back on.
 
