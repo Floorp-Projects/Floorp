@@ -49,7 +49,7 @@
 #include "XPCWrapper.h"
 #include "xpcprivate.h"
 
-#include "jscntxt.h" // JSID_IS_ATOM, js::AutoIdVector
+#include "jscntxt.h" // js::AutoIdVector
 
 namespace xpc {
 
@@ -261,7 +261,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid i
 
     // There are no native numeric properties, so we can shortcut here. We will not
     // find the property.
-    if (!JSID_IS_ATOM(id)) {
+    if (!JSID_IS_STRING(id)) {
         /* Not found */
         return true;
     }
