@@ -69,8 +69,7 @@
 
 #include "nsWrapperCacheInlines.h"
 
-#include "jscntxt.h" // js::ThreadData, JS_TRACER_INIT, context->stackLimit,
-// sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
+#include "jscntxt.h" // JS_TRACER_INIT, context->stackLimit, sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -404,17 +403,11 @@ nsXPConnect::Collect(bool shrinkingGC)
     // cycle collection. So to compensate for JS_BeginRequest in
     // XPCCallContext::Init we disable the conservative scanner if that call
     // has started the request on this thread.
-    js::ThreadData &threadData = cx->thread()->data;
-    JS_ASSERT(threadData.requestDepth >= 1);
-    JS_ASSERT(!threadData.conservativeGC.requestThreshold);
-    if (threadData.requestDepth == 1)
-        threadData.conservativeGC.requestThreshold = 1;
+    js::AutoSkipConservativeScan ascs(cx);
     if (shrinkingGC)
         JS_ShrinkingGC(cx);
     else
         JS_GC(cx);
-    if (threadData.requestDepth == 1)
-        threadData.conservativeGC.requestThreshold = 0;
 }
 
 NS_IMETHODIMP
