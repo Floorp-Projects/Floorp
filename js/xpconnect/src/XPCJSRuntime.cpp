@@ -66,11 +66,6 @@
 
 #include "jscntxt.h"
 #if 0
-        JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
-            while ((acx = JS_ContextIterator(cx->runtime, &iter))) {
-                if (!acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
-                    JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
-
 JS_LOCK_GC, JS_UNLOCK_GC
 
 js_NextActiveContext, js::TriggerOperationCallback
@@ -451,7 +446,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
     JSContext *iter = nsnull;
     while (JSContext *acx = JS_ContextIterator(GetJSRuntime(), &iter)) {
-        JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
+        JS_ASSERT(js::HasUnrootedGlobal(acx));
         if (JSObject *global = JS_GetGlobalObject(acx))
             JS_CALL_OBJECT_TRACER(trc, global, "XPC global object");
     }
@@ -684,7 +679,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             // here. FIXME: bug 584495.
             JSContext *iter = nsnull;
             while (JSContext *acx = JS_ContextIterator(JS_GetRuntime(cx), &iter)) {
-                if (!acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+                if (!js::HasUnrootedGlobal(acx))
                     JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
             }
             break;
