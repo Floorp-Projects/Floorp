@@ -136,6 +136,9 @@ JS_CloneObject(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent);
 extern JS_FRIEND_API(JSBool)
 js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
+JS_FRIEND_API(void)
+js_ReportOverRecursed(JSContext *maybecx);
+
 #ifdef __cplusplus
 
 extern JS_FRIEND_API(bool)
@@ -433,6 +436,18 @@ IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx);
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
+
+JS_FRIEND_API(uintptr_t)
+GetContextStackLimit(const JSContext *cx);
+
+#define JS_CHECK_RECURSION(cx, onerror)                                         \
+    JS_BEGIN_MACRO                                                              \
+        int stackDummy_;                                                        \
+        if (!JS_CHECK_STACK_SIZE(js::GetContextStackLimit(cx), &stackDummy_)) { \
+            js_ReportOverRecursed(cx);                                          \
+            onerror;                                                            \
+        }                                                                       \
+    JS_END_MACRO
 
 JS_FRIEND_API(void)
 StartPCCountProfiling(JSContext *cx);

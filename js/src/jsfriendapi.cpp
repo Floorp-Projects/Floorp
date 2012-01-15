@@ -601,4 +601,10 @@ GetRuntimeCompartments(JSRuntime *rt)
     return rt->compartments;
 }
 
+JS_FRIEND_API(uintptr_t)
+GetContextStackLimit(const JSContext *cx)
+{
+    return cx->stackLimit;
+}
+
 } // namespace js

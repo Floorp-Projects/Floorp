@@ -1877,22 +1877,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 extern void
 js_ReportOutOfMemory(JSContext *cx);
 
-/* JS_CHECK_RECURSION is used outside JS, so JS_FRIEND_API. */
-JS_FRIEND_API(void)
-js_ReportOverRecursed(JSContext *maybecx);
-
 extern JS_FRIEND_API(void)
 js_ReportAllocationOverflow(JSContext *cx);
-
-#define JS_CHECK_RECURSION(cx, onerror)                                       \
-    JS_BEGIN_MACRO                                                            \
-        int stackDummy_;                                                      \
-                                                                              \
-        if (!JS_CHECK_STACK_SIZE(cx->stackLimit, &stackDummy_)) {             \
-            js_ReportOverRecursed(cx);                                        \
-            onerror;                                                          \
-        }                                                                     \
-    JS_END_MACRO
 
 /*
  * Report an exception using a previously composed JSErrorReport.
