@@ -257,8 +257,6 @@
 #include <android/log.h>
 #endif
 
-#include "jscntxt.h" // cx->runtime->structuredCloneCallbacks
-
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
@@ -6031,7 +6029,7 @@ PostMessageReadStructuredClone(JSContext* cx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    cx->runtime->structuredCloneCallbacks;
+    js::GetContextStructuredCloneCallbacks(cx);
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->read(cx, reader, tag, data, nsnull);
@@ -6071,7 +6069,7 @@ PostMessageWriteStructuredClone(JSContext* cx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    cx->runtime->structuredCloneCallbacks;
+    js::GetContextStructuredCloneCallbacks(cx);
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->write(cx, writer, obj, nsnull);
