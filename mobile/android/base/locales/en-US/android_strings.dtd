@@ -76,6 +76,7 @@
 <!ENTITY save_as_pdf "Save as PDF">
 
 <!ENTITY contextmenu_open_new_tab "Open in New Tab">
+<!ENTITY contextmenu_remove_bookmark "Remove">
 <!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
 <!ENTITY contextmenu_share "Share">
 

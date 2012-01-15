@@ -72,6 +72,7 @@ import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.Map;
 
@@ -431,6 +432,11 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.awesomebar_contextmenu, menu);
+        
+        if (view != (ListView)findViewById(R.id.bookmarks_list)) {
+            MenuItem removeBookmarkItem = menu.findItem(R.id.remove_bookmark);
+            removeBookmarkItem.setVisible(false);
+        }
 
         menu.setHeaderTitle(title);
     }
@@ -462,6 +468,12 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         switch (item.getItemId()) {
             case R.id.open_new_tab: {
                 GeckoApp.mAppContext.loadUrl(url, AwesomeBar.Type.ADD);
+                break;
+            }
+            case R.id.remove_bookmark: {
+                ContentResolver resolver = Tabs.getInstance().getContentResolver();
+                BrowserDB.removeBookmark(resolver, url);
+                Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
                 break;
             }
             case R.id.add_to_launcher: {
