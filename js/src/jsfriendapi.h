@@ -498,4 +498,16 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
 
 #endif
 
+/* Implemented in jsdate.cpp. */
+
+/*
+ * Detect whether the internal date value is NaN.  (Because failure is
+ * out-of-band for js_DateGet*)
+ */
+extern JS_FRIEND_API(JSBool)
+js_DateIsValid(JSContext *cx, JSObject* obj);
+
+extern JS_FRIEND_API(double)
+js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj);
+
 #endif /* jsfriendapi_h___ */
