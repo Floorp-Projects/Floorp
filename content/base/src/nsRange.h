@@ -66,6 +66,13 @@ public:
   {}
   virtual ~nsRange();
 
+  static nsresult CreateRange(nsIDOMNode* aStartParent, PRInt32 aStartOffset,
+                              nsIDOMNode* aEndParent, PRInt32 aEndOffset,
+                              nsRange** aRange);
+  static nsresult CreateRange(nsIDOMNode* aStartParent, PRInt32 aStartOffset,
+                              nsIDOMNode* aEndParent, PRInt32 aEndOffset,
+                              nsIDOMRange** aRange);
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsRange, nsIDOMRange)
 
