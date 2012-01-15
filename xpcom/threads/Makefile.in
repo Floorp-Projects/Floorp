@@ -68,7 +68,6 @@ EXPORTS		= \
 		nsThread.h \
 		nsProcess.h \
 		nsEventQueue.h \
-		nsThreadUtilsInternal.h \
 		$(NULL)
 
 EXPORTS_mozilla = \
