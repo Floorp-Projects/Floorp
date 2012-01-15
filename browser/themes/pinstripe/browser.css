@@ -2720,11 +2720,24 @@ panel[dimmed="true"] {
 
 #inspector-toolbar {
   border-top: 1px solid hsla(210, 8%, 5%, .65);
-  padding: 4px 16px 4px 0; /* use -moz-padding-end: 16px when/if bug 631729 gets fixed */
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#inspector-toolbar:-moz-locale-dir(ltr) {
+  padding-left: 2px;
+  padding-right: 16px; /* use -moz-padding-end when/if bug 631729 gets fixed */
+}
+
+#inspector-toolbar:-moz-locale-dir(rtl) {
+  padding-left: 4px;
+  padding-right: 18px; /* use -moz-padding-end when/if bug 631729 gets fixed */
 }
 
 #inspector-toolbar[treepanel-open] {
-  padding: 0 0 4px;
+  padding-top: 0;
+  padding-right: 0;
+  -moz-padding-end: 4px;
 }
 
 #devtools-side-splitter {
@@ -2742,29 +2755,13 @@ panel[dimmed="true"] {
   background-color: -moz-Field;
 }
 
-/* Highlighter - toolbar resizers */
-
-.inspector-resizer {
-  -moz-appearance: none;
-  cursor: n-resize;
-}
+/* Highlighter - toolbar resizer */
 
 #inspector-top-resizer {
+  -moz-appearance: none;
+  cursor: n-resize;
   background: none;
   height: 4px;
-}
-
-#inspector-end-resizer {
-  width: 12px;
-  height: 8px;
-  background-image: -moz-linear-gradient(top, black 1px, rgba(255,255,255,0.2) 1px);
-  background-size: 10px 2px;
-  background-clip: padding-box;
-  background-repeat: repeat-y;
-  border-width: 1px 1px 0;
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 0.05);
-  margin: 7px 7px 8px;
 }
 
 /* Highlighter - Node Infobar */
