@@ -66,8 +66,6 @@
 
 #include "jscntxt.h"
 #if 0
-JS_LOCK_GC, JS_UNLOCK_GC
-
 js_NextActiveContext, js::TriggerOperationCallback
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
 #endif
@@ -937,20 +935,6 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
     return true;
 }
 
-// Auto JS GC lock helper.
-class AutoLockJSGC
-{
-public:
-    AutoLockJSGC(JSRuntime* rt) : mJSRuntime(rt) { JS_LOCK_GC(mJSRuntime); }
-    ~AutoLockJSGC() { JS_UNLOCK_GC(mJSRuntime); }
-private:
-    JSRuntime* mJSRuntime;
-
-    // Disable copy or assignment semantics.
-    AutoLockJSGC(const AutoLockJSGC&);
-    void operator=(const AutoLockJSGC&);
-};
-
 //static
 void
 XPCJSRuntime::WatchdogMain(void *arg)
@@ -958,7 +942,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
 
     // Lock lasts until we return
-    AutoLockJSGC lock(self->mJSRuntime);
+    js::AutoLockGC lock(self->mJSRuntime);
 
     PRIntervalTime sleepInterval;
     while (self->mWatchdogThread) {
@@ -1087,7 +1071,7 @@ XPCJSRuntime::~XPCJSRuntime()
         // must release the lock before calling PR_DestroyCondVar, we use an
         // extra block here.
         {
-            AutoLockJSGC lock(mJSRuntime);
+            js::AutoLockGC lock(mJSRuntime);
             if (mWatchdogThread) {
                 mWatchdogThread = nsnull;
                 PR_NotifyCondVar(mWatchdogWakeup);
@@ -2022,7 +2006,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 #endif
 
     if (mWatchdogWakeup) {
-        AutoLockJSGC lock(mJSRuntime);
+        js::AutoLockGC lock(mJSRuntime);
 
         mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
                                           PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
