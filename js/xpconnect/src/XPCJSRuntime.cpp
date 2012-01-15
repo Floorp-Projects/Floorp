@@ -67,9 +67,6 @@
 #include "jscntxt.h"
 #if 0
         JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
-        if (acx->globalObject)
-            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "XPC global object");
-
             while ((acx = JS_ContextIterator(cx->runtime, &iter))) {
                 if (!acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
                     JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
@@ -452,11 +449,11 @@ TraceCompartment(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compartment, 
 
 void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
-    JSContext *iter = nsnull, *acx;
-    while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
+    JSContext *iter = nsnull;
+    while (JSContext *acx = JS_ContextIterator(GetJSRuntime(), &iter)) {
         JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
-        if (acx->globalObject)
-            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "XPC global object");
+        if (JSObject *global = JS_GetGlobalObject(acx))
+            JS_CALL_OBJECT_TRACER(trc, global, "XPC global object");
     }
 
     XPCAutoLock lock(mMapLock);
