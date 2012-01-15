@@ -539,6 +539,26 @@ GetRuntimeGCLock(const JSRuntime *rt)
 {
     return rt->gcLock;
 }
+
+AutoSkipConservativeScan::AutoSkipConservativeScan(JSContext *cx
+                                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : context(cx)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+    ThreadData &threadData = context->thread()->data;
+    JS_ASSERT(threadData.requestDepth >= 1);
+    JS_ASSERT(!threadData.conservativeGC.requestThreshold);
+    if (threadData.requestDepth == 1)
+        threadData.conservativeGC.requestThreshold = 1;
+}
+
+AutoSkipConservativeScan::~AutoSkipConservativeScan()
+{
+    ThreadData &threadData = context->thread()->data;
+    if (threadData.requestDepth == 1)
+        threadData.conservativeGC.requestThreshold = 0;
+}
 #endif
 
 JS_FRIEND_API(JSCompartment *)

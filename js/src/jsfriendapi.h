@@ -461,6 +461,17 @@ GetContextOutstandingRequests(const JSContext *cx);
 
 JS_FRIEND_API(PRLock *)
 GetRuntimeGCLock(const JSRuntime *rt);
+
+class JS_FRIEND_API(AutoSkipConservativeScan)
+{
+  public:
+    AutoSkipConservativeScan(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoSkipConservativeScan();
+
+  private:
+    JSContext *context;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 #endif
 
 JS_FRIEND_API(JSCompartment *)
