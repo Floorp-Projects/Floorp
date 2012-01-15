@@ -70,7 +70,6 @@ JS_LOCK_GC, JS_UNLOCK_GC
 
 js_NextActiveContext, js::TriggerOperationCallback
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
-        mJSRuntime->setActivityCallback(ActivityCallback, this);
 #endif
 
 using namespace mozilla;
@@ -2001,7 +2000,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         if (!mWatchdogWakeup)
             NS_RUNTIMEABORT("JS_NEW_CONDVAR failed.");
 
-        mJSRuntime->setActivityCallback(ActivityCallback, this);
+        js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
