@@ -595,4 +595,10 @@ TriggerOperationCallbacksForActiveContexts(JSRuntime *rt)
     }
 }
 
+JS_FRIEND_API(const CompartmentVector&)
+GetRuntimeCompartments(JSRuntime *rt)
+{
+    return rt->compartments;
+}
+
 } // namespace js

@@ -542,6 +542,11 @@ IsContextRunningJS(JSContext *cx);
 extern JS_FRIEND_API(void)
 TriggerOperationCallbacksForActiveContexts(JSRuntime *rt);
 
+class SystemAllocPolicy;
+typedef Vector<JSCompartment*, 0, SystemAllocPolicy> CompartmentVector;
+extern JS_FRIEND_API(const CompartmentVector&)
+GetRuntimeCompartments(JSRuntime *rt);
+
 } /* namespace js */
 
 /*
