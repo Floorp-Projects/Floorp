@@ -535,4 +535,10 @@ GetContextOutstandingRequests(const JSContext *cx)
 }
 #endif
 
+JS_FRIEND_API(JSCompartment *)
+GetContextCompartment(const JSContext *cx)
+{
+    return cx->compartment;
+}
+
 } // namespace js

@@ -458,6 +458,9 @@ JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx);
 #endif
 
+JS_FRIEND_API(JSCompartment *)
+GetContextCompartment(const JSContext *cx);
+
 class JS_FRIEND_API(AutoLockGC)
 {
   public:
