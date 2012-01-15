@@ -56,6 +56,7 @@
 #include "js/Utility.h"
 
 #ifdef __cplusplus
+#include "jsalloc.h"
 #include "js/Vector.h"
 #include "mozilla/Attributes.h"
 #endif
@@ -1112,6 +1113,19 @@ class AutoValueVector : public AutoVectorRooter<Value>
     explicit AutoValueVector(JSContext *cx
                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : AutoVectorRooter<Value>(cx, VALVECTOR)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoIdVector : public AutoVectorRooter<jsid>
+{
+  public:
+    explicit AutoIdVector(JSContext *cx
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<jsid>(cx, IDVECTOR)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }

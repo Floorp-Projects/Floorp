@@ -2086,19 +2086,6 @@ class AutoObjectVector : public AutoVectorRooter<JSObject *>
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoIdVector : public AutoVectorRooter<jsid>
-{
-  public:
-    explicit AutoIdVector(JSContext *cx
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<jsid>(cx, IDVECTOR)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class AutoShapeVector : public AutoVectorRooter<const Shape *>
 {
   public:
