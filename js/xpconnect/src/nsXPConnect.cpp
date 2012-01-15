@@ -69,7 +69,7 @@
 
 #include "nsWrapperCacheInlines.h"
 
-#include "jscntxt.h" // js::ThreadData, JS_TRACER_INIT, context->stackLimit, cx->outstandingRequests,
+#include "jscntxt.h" // js::ThreadData, JS_TRACER_INIT, context->stackLimit,
 // cx->globalObject, sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
@@ -970,7 +970,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 unsigned
 nsXPConnect::GetOutstandingRequests(JSContext* cx)
 {
-    unsigned n = cx->outstandingRequests;
+    unsigned n = js::GetContextOutstandingRequests(cx);
     XPCCallContext* context = mCycleCollectionContext;
     // Ignore the contribution from the XPCCallContext we created for cycle
     // collection.
