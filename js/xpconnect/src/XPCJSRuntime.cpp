@@ -67,7 +67,6 @@
 #include "jscntxt.h"
 #if 0
 js_NextActiveContext, js::TriggerOperationCallback
-        mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
 #endif
 
 using namespace mozilla;
@@ -1980,7 +1979,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
         JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
-        mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
+        mWatchdogWakeup = JS_NEW_CONDVAR(js::GetRuntimeGCLock(mJSRuntime));
         if (!mWatchdogWakeup)
             NS_RUNTIMEABORT("JS_NEW_CONDVAR failed.");
 

@@ -153,6 +153,8 @@ JS_END_EXTERN_C
 
 #ifdef __cplusplus
 
+struct PRLock;
+
 namespace js {
 
 typedef bool
@@ -456,6 +458,9 @@ GetContextThread(const JSContext *cx);
 
 JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx);
+
+JS_FRIEND_API(PRLock *)
+GetRuntimeGCLock(const JSRuntime *rt);
 #endif
 
 JS_FRIEND_API(JSCompartment *)
