@@ -489,6 +489,9 @@ class JS_FRIEND_API(AutoLockGC)
 extern JS_FRIEND_API(const JSStructuredCloneCallbacks *)
 GetContextStructuredCloneCallbacks(JSContext *cx);
 
+extern JS_FRIEND_API(JSVersion)
+VersionSetXML(JSVersion version, bool enable);
+
 } /* namespace js */
 
 /*

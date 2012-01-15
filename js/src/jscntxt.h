@@ -846,15 +846,6 @@ VersionShouldParseXML(JSVersion version)
     return VersionHasXML(version) || VersionNumber(version) >= JSVERSION_1_6;
 }
 
-static inline void
-VersionSetXML(JSVersion *version, bool enable)
-{
-    if (enable)
-        *version = JSVersion(uint32_t(*version) | VersionFlags::HAS_XML);
-    else
-        *version = JSVersion(uint32_t(*version) & ~VersionFlags::HAS_XML);
-}
-
 static inline JSVersion
 VersionExtractFlags(JSVersion version)
 {
@@ -884,8 +875,7 @@ VersionFlagsToOptions(JSVersion version)
 static inline JSVersion
 OptionFlagsToVersion(uintN options, JSVersion version)
 {
-    VersionSetXML(&version, OptionsHasXML(options));
-    return version;
+    return VersionSetXML(version, OptionsHasXML(options));
 }
 
 static inline bool
