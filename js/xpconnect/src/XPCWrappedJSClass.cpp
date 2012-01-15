@@ -49,7 +49,7 @@
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
 
-#include "jscntxt.h" // mJSContext->errorReporter, js::AutoValueVector
+#include "jscntxt.h" // js::AutoValueVector
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
@@ -64,7 +64,7 @@ bool AutoScriptEvaluate::StartEvaluating(JSObject *scope, JSErrorReporter errorR
         return true;
 
     mEvaluated = true;
-    if (!mJSContext->errorReporter) {
+    if (!JS_GetErrorReporter(mJSContext)) {
         JS_SetErrorReporter(mJSContext, errorReporter);
         mErrorReporterSet = true;
     }
@@ -1057,7 +1057,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Try to use the error reporter set on the context to handle this
             // error if it came from a JS exception.
             if (reportable && is_js_exception &&
-                cx->errorReporter != xpcWrappedJSErrorReporter) {
+                JS_GetErrorReporter(cx) != xpcWrappedJSErrorReporter) {
                 reportable = !JS_ReportPendingException(cx);
             }
 
