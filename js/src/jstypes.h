@@ -287,11 +287,6 @@ typedef uintptr_t JSUptrdiff;
 typedef JSIntn JSBool;
 #define JS_TRUE (JSIntn)1
 #define JS_FALSE (JSIntn)0
-/*
-** Special: JS_NEITHER is used by the tracer to have tri-state booleans.
-** This should not be used in new code.
-*/
-#define JS_NEITHER (JSIntn)2
 
 /************************************************************************
 ** TYPES:       JSPackedBool
