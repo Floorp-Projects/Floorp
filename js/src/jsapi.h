@@ -50,11 +50,13 @@
 #include <stdio.h>
 #include "js-config.h"
 #include "jspubtd.h"
+#include "jsutil.h"
 #include "jsval.h"
 
 #include "js/Utility.h"
 
 #ifdef __cplusplus
+#include "js/Vector.h"
 #include "mozilla/Attributes.h"
 #endif
 
@@ -1029,6 +1031,78 @@ class AutoEnumStateRooter : private AutoGCRooter
 
   private:
     Value stateValue;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+template<class T>
+class AutoVectorRooter : protected AutoGCRooter
+{
+  public:
+    explicit AutoVectorRooter(JSContext *cx, ptrdiff_t tag
+                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoGCRooter(cx, tag), vector(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    size_t length() const { return vector.length(); }
+
+    bool append(const T &v) { return vector.append(v); }
+
+    /* For use when space has already been reserved. */
+    void infallibleAppend(const T &v) { vector.infallibleAppend(v); }
+
+    void popBack() { vector.popBack(); }
+    T popCopy() { return vector.popCopy(); }
+
+    bool growBy(size_t inc) {
+        size_t oldLength = vector.length();
+        if (!vector.growByUninitialized(inc))
+            return false;
+        makeRangeGCSafe(oldLength);
+        return true;
+    }
+
+    bool resize(size_t newLength) {
+        size_t oldLength = vector.length();
+        if (newLength <= oldLength) {
+            vector.shrinkBy(oldLength - newLength);
+            return true;
+        }
+        if (!vector.growByUninitialized(newLength - oldLength))
+            return false;
+        makeRangeGCSafe(oldLength);
+        return true;
+    }
+
+    void clear() { vector.clear(); }
+
+    bool reserve(size_t newLength) {
+        return vector.reserve(newLength);
+    }
+
+    T &operator[](size_t i) { return vector[i]; }
+    const T &operator[](size_t i) const { return vector[i]; }
+
+    const T *begin() const { return vector.begin(); }
+    T *begin() { return vector.begin(); }
+
+    const T *end() const { return vector.end(); }
+    T *end() { return vector.end(); }
+
+    const T &back() const { return vector.back(); }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    void makeRangeGCSafe(size_t oldLength) {
+        T *t = vector.begin() + oldLength;
+        for (size_t i = oldLength; i < vector.length(); ++i, ++t)
+            memset(t, 0, sizeof(T));
+    }
+
+    typedef js::Vector<T, 8> VectorImpl;
+    VectorImpl vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
