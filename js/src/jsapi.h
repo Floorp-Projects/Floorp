@@ -3078,16 +3078,8 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
 /*
  * API for JSTraceCallback implementations.
  */
-# define JS_TRACER_INIT(trc, cx_, callback_)                                  \
-    JS_BEGIN_MACRO                                                            \
-        (trc)->runtime = (cx_)->runtime;                                      \
-        (trc)->context = (cx_);                                               \
-        (trc)->callback = (callback_);                                        \
-        (trc)->debugPrinter = NULL;                                           \
-        (trc)->debugPrintArg = NULL;                                          \
-        (trc)->debugPrintIndex = (size_t)-1;                                  \
-        (trc)->eagerlyTraceWeakMaps = JS_TRUE;                                \
-    JS_END_MACRO
+extern JS_PUBLIC_API(void)
+JS_TracerInit(JSTracer *trc, JSContext *cx, JSTraceCallback callback);
 
 extern JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);

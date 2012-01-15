@@ -69,7 +69,7 @@
 
 #include "nsWrapperCacheInlines.h"
 
-#include "jscntxt.h" // JS_TRACER_INIT, context->stackLimit, sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
+#include "jscntxt.h" // context->stackLimit, sizeof(JSContext), js::CompartmentVector, cx->stack.empty()
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -482,7 +482,7 @@ struct NoteWeakMapsTracer : public js::WeakMapTracer
                        nsCycleCollectionTraversalCallback &cccb)
         : js::WeakMapTracer(cx, cb), mCb(cccb), mChildTracer(cccb)
     {
-        JS_TRACER_INIT(&mChildTracer, cx, TraceWeakMappingChild);
+        JS_TracerInit(&mChildTracer, cx, TraceWeakMappingChild);
     }
     nsCycleCollectionTraversalCallback &mCb;
     NoteWeakMapChildrenTracer mChildTracer;
@@ -574,7 +574,7 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
         }
 
         NoteJSRootTracer trc(&mJSRoots, cb);
-        JS_TRACER_INIT(&trc, mCycleCollectionContext->GetJSContext(), NoteJSRoot);
+        JS_TracerInit(&trc, mCycleCollectionContext->GetJSContext(), NoteJSRoot);
         JS_TraceRuntime(&trc);
     }
 #else
@@ -746,7 +746,7 @@ xpc_UnmarkGrayObjectRecursive(JSObject *obj)
 
     // Trace children.
     JSTracer trc;
-    JS_TRACER_INIT(&trc, cx, UnmarkGrayChildren);
+    JS_TracerInit(&trc, cx, UnmarkGrayChildren);
     JS_TraceChildren(&trc, obj, JSTRACE_OBJECT);
 }
 
@@ -928,7 +928,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
     TraversalTracer trc(cb);
 
-    JS_TRACER_INIT(&trc, cx, NoteJSChild);
+    JS_TracerInit(&trc, cx, NoteJSChild);
     trc.eagerlyTraceWeakMaps = false;
     JS_TraceChildren(&trc, p, traceKind);
 
@@ -1184,7 +1184,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 #ifdef DEBUG
     if (clasp->flags & JSCLASS_XPCONNECT_GLOBAL) {
         VerifyTraceXPCGlobalCalledTracer trc;
-        JS_TRACER_INIT(&trc.base, cx, VerifyTraceXPCGlobalCalled);
+        JS_TracerInit(&trc.base, cx, VerifyTraceXPCGlobalCalled);
         trc.ok = false;
         JS_TraceChildren(&trc.base, *global, JSTRACE_OBJECT);
         NS_ABORT_IF_FALSE(trc.ok, "Trace hook needs to call TraceXPCGlobal if JSCLASS_XPCONNECT_GLOBAL is set.");

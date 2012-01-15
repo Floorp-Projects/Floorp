@@ -2431,6 +2431,18 @@ JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 }
 
 JS_PUBLIC_API(void)
+JS_TracerInit(JSTracer *trc, JSContext *cx, JSTraceCallback callback)
+{
+    trc->runtime = cx->runtime;
+    trc->context = cx;
+    trc->callback = callback;
+    trc->debugPrinter = NULL;
+    trc->debugPrintArg = NULL;
+    trc->debugPrintIndex = size_t(-1);
+    trc->eagerlyTraceWeakMaps = true;
+}
+
+JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc)
 {
     AssertNoGC(trc->runtime);
@@ -2770,7 +2782,7 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind startKind,
     if (maxDepth == 0)
         return JS_TRUE;
 
-    JS_TRACER_INIT(&dtrc.base, cx, DumpNotify);
+    JS_TracerInit(&dtrc.base, cx, DumpNotify);
     if (!JS_DHashTableInit(&dtrc.visited, JS_DHashGetStubOps(),
                            NULL, sizeof(JSDHashEntryStub),
                            JS_DHASH_DEFAULT_CAPACITY(100))) {
