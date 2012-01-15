@@ -298,9 +298,13 @@ nsSVGTextFrame::SetWhitespaceHandling(nsSVGGlyphFrame *aFrame)
 {
   SetWhitespaceCompression();
 
+  nsSVGGlyphFrame* firstFrame = aFrame;
   bool trimLeadingWhitespace = true;
   nsSVGGlyphFrame* lastNonWhitespaceFrame = aFrame;
 
+  // If the previous frame ended with whitespace
+  // then display of leading whitespace should be suppressed
+  // when we are compressing whitespace.
   while (aFrame) {
     if (!aFrame->IsAllWhitespace()) {
       lastNonWhitespaceFrame = aFrame;
@@ -309,6 +313,16 @@ nsSVGTextFrame::SetWhitespaceHandling(nsSVGGlyphFrame *aFrame)
     aFrame->SetTrimLeadingWhitespace(trimLeadingWhitespace);
     trimLeadingWhitespace = aFrame->EndsWithWhitespace();
 
+    aFrame = aFrame->GetNextGlyphFrame();
+  }
+
+  // When there is only whitespace left we need to trim off
+  // the end of the last frame that isn't entirely whitespace.
+  // Making sure that we reset earlier frames as they may once
+  // have been the last non-whitespace frame.
+  aFrame = firstFrame;
+  while (aFrame != lastNonWhitespaceFrame) {
+    aFrame->SetTrimTrailingWhitespace(false);
     aFrame = aFrame->GetNextGlyphFrame();
   }
 

@@ -32,12 +32,16 @@ function execTests() {
   body.style.height='400px';
   body.style.padding='0px';
   body.style.margin='0px';
-  body.style.borderSize='0px';
+  body.style.borderWidth='0px';
 
   var sel = win.getSelection();
   doc.designMode='on';
   body.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>";
   win.focus();
+  // Flush out layout to make sure that the subdocument will be the size we
+  // expect by the time we try to scroll it.
+  is(body.getBoundingClientRect().height, 400,
+     "Body height should be what we set it to");
   yield;
 
   function doCommand(cmd) {
