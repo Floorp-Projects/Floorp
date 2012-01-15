@@ -461,6 +461,9 @@ GetContextOutstandingRequests(const JSContext *cx);
 JS_FRIEND_API(JSCompartment *)
 GetContextCompartment(const JSContext *cx);
 
+JS_FRIEND_API(bool)
+HasUnrootedGlobal(const JSContext *cx);
+
 class JS_FRIEND_API(AutoLockGC)
 {
   public:

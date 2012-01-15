@@ -541,4 +541,10 @@ GetContextCompartment(const JSContext *cx)
     return cx->compartment;
 }
 
+JS_FRIEND_API(bool)
+HasUnrootedGlobal(const JSContext *cx)
+{
+    return cx->hasRunOption(JSOPTION_UNROOTED_GLOBAL);
+}
+
 } // namespace js
