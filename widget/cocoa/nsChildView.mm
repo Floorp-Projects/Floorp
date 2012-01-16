@@ -41,9 +41,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/Util.h"
-
-#include "mozilla/layers/Compositor.h"
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
@@ -1778,7 +1777,7 @@ nsChildView::CreateCompositor()
   nsBaseWidget::CreateCompositor();
   if (mCompositorChild) {
     LayerManagerOGL *manager =
-      static_cast<LayerManagerOGL*>(compositor::GetLayerManager(mCompositorParent));
+      static_cast<LayerManagerOGL*>(mCompositorParent->GetLayerManager());
 
     NSOpenGLContext *glContext =
       (NSOpenGLContext *) manager->gl()->GetNativeData(GLContext::NativeGLContext);

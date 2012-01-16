@@ -60,12 +60,9 @@ public:
   CompositorParent(nsIWidget* aWidget);
   virtual ~CompositorParent();
 
-  bool RecvStop();
+  virtual bool RecvStop() MOZ_OVERRIDE;
 
-  // Workaround for Bug 717027.
-  bool RecvFixMeDoNotCall();
-
-  virtual void ShadowLayersUpdated();
+  virtual void ShadowLayersUpdated() MOZ_OVERRIDE;
   void Destroy();
 
   LayerManager* GetLayerManager() { return mLayerManager; }

@@ -837,7 +837,8 @@ void nsBaseWidget::CreateCompositor()
     AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();
     AsyncChannel::Side childSide = mozilla::ipc::AsyncChannel::Child;
     mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
-    PLayersChild* shadowManager = mCompositorChild->SendPLayersConstructor(                                                LayerManager::LAYERS_OPENGL);
+    PLayersChild* shadowManager =
+      mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL);
 
     if (shadowManager) {
       ShadowLayerForwarder* lf = lm->AsShadowForwarder();
@@ -882,7 +883,7 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
         nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
         /**
          * XXX - On several OSes initialization is expected to fail for now.
-         * If we'd get a none-basic layer manager they'd crash. This is ok though
+         * If we'd get a non-basic layer manager they'd crash. This is ok though
          * since on those platforms it will fail. Anyone implementing new
          * platforms on LayerManagerOGL should ensure their widget is able to
          * deal with it though!
