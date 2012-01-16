@@ -200,22 +200,23 @@ nsTableFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv;
+  NS_PRECONDITION(!mCellMap, "Init called twice");
+  NS_PRECONDITION(!aPrevInFlow ||
+                  aPrevInFlow->GetType() == nsGkAtoms::tableFrame,
+                  "prev-in-flow must be of same type");
 
   // Let the base class do its processing
-  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  nsresult rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // see if border collapse is on, if so set it
   const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
   bool borderCollapse = (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse);
   SetBorderCollapse(borderCollapse);
-  // Create the cell map
+  // Create the cell map if this frame is the first-in-flow.
   if (!aPrevInFlow) {
     mCellMap = new nsTableCellMap(*this, borderCollapse);
     if (!mCellMap)
       return NS_ERROR_OUT_OF_MEMORY;
-  } else {
-    mCellMap = nsnull;
   }
 
   if (aPrevInFlow) {
@@ -236,7 +237,6 @@ nsTableFrame::Init(nsIContent*      aContent,
 
   return rv;
 }
-
 
 nsTableFrame::~nsTableFrame()
 {
