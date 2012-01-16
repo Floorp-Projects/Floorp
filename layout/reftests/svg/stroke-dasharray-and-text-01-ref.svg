@@ -1,0 +1,10 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Test stroke-dasharray with text and zooming</title>
+  <g fill="none" stroke-width="2" stroke="black" stroke-dasharray="20">
+    <text font-size="100" x="100" y="100">|</text>
+  </g>
+</svg>
