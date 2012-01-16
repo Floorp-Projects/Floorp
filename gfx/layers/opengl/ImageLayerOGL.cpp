@@ -934,7 +934,7 @@ ShadowImageLayerOGL::Destroy()
 {
   if (!mDestroyed) {
     mDestroyed = true;
-    mTexImage = nsnull;
+    CleanupResources();
   }
 }
 
@@ -995,6 +995,11 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
  }
 }
 
+void
+ShadowImageLayerOGL::CleanupResources()
+{
+  mTexImage = nsnull;
+}
 
 } /* layers */
 } /* mozilla */

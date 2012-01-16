@@ -133,6 +133,16 @@ ContainerDestroy(Container* aContainer)
   }
 }
 
+template<class Container>
+static void
+ContainerCleanupResources(Container* aContainer)
+{
+  for (Layer* l = aContainer->GetFirstChild(); l; l = l->GetNextSibling()) {
+    LayerOGL* layerToRender = static_cast<LayerOGL*>(l->ImplData());
+    layerToRender->CleanupResources();
+  }
+}
+
 static inline LayerOGL*
 GetNextSibling(LayerOGL* aLayer)
 {
@@ -334,6 +344,11 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   ContainerRender(this, aPreviousFrameBuffer, aOffset, mOGLManager);
 }
 
+void
+ContainerLayerOGL::CleanupResources()
+{
+  ContainerCleanupResources(this);
+}
 
 ShadowContainerLayerOGL::ShadowContainerLayerOGL(LayerManagerOGL *aManager)
   : ShadowContainerLayer(aManager, NULL)
@@ -381,6 +396,11 @@ ShadowContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   ContainerRender(this, aPreviousFrameBuffer, aOffset, mOGLManager);
 }
 
+void
+ShadowContainerLayerOGL::CleanupResources()
+{
+  ContainerCleanupResources(this);
+}
 
 } /* layers */
 } /* mozilla */
