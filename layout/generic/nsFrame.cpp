@@ -6605,9 +6605,9 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       nsRect marginBounds(bounds);
       nsMargin margin = GetUsedMargin();
       ApplySkipSides(margin);
-      marginBounds.Inflate(margin);
+      marginBounds.SaturatingInflate(margin);
       nsRect& so = aOverflowAreas.ScrollableOverflow();
-      so.UnionRectEdges(so, marginBounds);
+      so.SaturatingUnionRectEdges(so, marginBounds);
     }
   }
 
