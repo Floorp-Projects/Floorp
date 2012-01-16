@@ -3801,22 +3801,28 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   return eTransparencyOpaque;
 }
 
+static bool IsPopupFrame(nsIFrame* aFrame)
+{
+  // aFrame is a popup it's the list control frame dropdown for a combobox.
+  nsIAtom* frameType = aFrame->GetType();
+  if (frameType == nsGkAtoms::listControlFrame) {
+    nsListControlFrame* lcf = static_cast<nsListControlFrame*>(aFrame);
+    return lcf->IsInDropDownMode();
+  }
+
+  // ... or if it's a XUL menupopup frame.
+  return frameType == nsGkAtoms::menuPopupFrame;
+}
+
 /* static */ bool
 nsLayoutUtils::IsPopup(nsIFrame* aFrame)
 {
-  nsIAtom* frameType = aFrame->GetType();
-
-  // We're a popup if we're the list control frame dropdown for a combobox.
-  if (frameType == nsGkAtoms::listControlFrame) {
-    nsListControlFrame* listControlFrame = static_cast<nsListControlFrame*>(aFrame);
-
-    if (listControlFrame) {
-      return listControlFrame->IsInDropDownMode();
-    }
+  // Optimization: the frame can't possibly be a popup if it has no view.
+  if (!aFrame->HasView()) {
+    NS_ASSERTION(!IsPopupFrame(aFrame), "popup frame must have a view");
+    return false;
   }
-
-  // ... or if we're a XUL menupopup frame.
-  return (frameType == nsGkAtoms::menuPopupFrame);
+  return IsPopupFrame(aFrame);
 }
 
 /* static */ nsIFrame*
