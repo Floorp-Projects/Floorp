@@ -247,12 +247,17 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->BindTex2DOffscreen(mCanvasGLContext);
     program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(), true);
   } else if (mDelayedUpdates) {
-    NS_ABORT_IF_FALSE(mCanvasSurface, "WebGL canvases should always be using full texture upload");
+    NS_ABORT_IF_FALSE(mCanvasSurface || mDrawTarget, "WebGL canvases should always be using full texture upload");
     
     drawRect.IntersectRect(drawRect, GetEffectiveVisibleRegion().GetBounds());
 
+    nsRefPtr<gfxASurface> surf = mCanvasSurface;
+    if (mDrawTarget) {
+      surf = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
+    }
+
     mLayerProgram =
-      gl()->UploadSurfaceToTexture(mCanvasSurface,
+      gl()->UploadSurfaceToTexture(surf,
                                    nsIntRect(0, 0, drawRect.width, drawRect.height),
                                    mTexture,
                                    true,
