@@ -6602,7 +6602,9 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     // Include margin in scrollable overflow.
     // XXX In theory this should consider margin collapsing
     nsRect marginBounds(bounds);
-    marginBounds.Inflate(GetUsedMargin());
+    nsMargin margin = GetUsedMargin();
+    ApplySkipSides(margin);
+    marginBounds.Inflate(margin);
     nsRect &so = aOverflowAreas.ScrollableOverflow();
     so.UnionRectEdges(so, marginBounds);
   }
