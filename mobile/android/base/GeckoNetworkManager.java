@@ -44,6 +44,7 @@ import android.util.Log;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -96,6 +97,8 @@ import android.telephony.TelephonyManager;
 public class GeckoNetworkManager
   extends BroadcastReceiver
 {
+  static private final GeckoNetworkManager sInstance = new GeckoNetworkManager();
+
   static private final double  kDefaultBandwidth    = -1.0;
   static private final boolean kDefaultCanBeMetered = false;
 
@@ -127,36 +130,49 @@ public class GeckoNetworkManager
     NETWORK_UNKNOWN
   }
 
-  static private NetworkType sNetworkType = NetworkType.NETWORK_NONE;
+  private NetworkType  mNetworkType = NetworkType.NETWORK_NONE;
+  private IntentFilter mNetworkFilter = new IntentFilter();
+
+  public static GeckoNetworkManager getInstance() {
+    return sInstance;
+  }
 
   @Override
   public void onReceive(Context aContext, Intent aIntent) {
     updateNetworkType();
   }
 
-  public static void initialize() {
-    sNetworkType = getNetworkType();
+  public void init() {
+    mNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+
+    mNetworkType = getNetworkType();
   }
 
-  public static void resume() {
+  public void start() {
     updateNetworkType();
+
+    GeckoApp.mAppContext.registerReceiver(sInstance, mNetworkFilter);
   }
 
-  private static void updateNetworkType() {
-    NetworkType previousNetworkType = sNetworkType;
-    sNetworkType = getNetworkType();
+  public void stop() {
+    GeckoApp.mAppContext.unregisterReceiver(sInstance);
+  }
 
-    if (sNetworkType == previousNetworkType) {
+  private void updateNetworkType() {
+    NetworkType previousNetworkType = mNetworkType;
+    mNetworkType = getNetworkType();
+
+    if (mNetworkType == previousNetworkType) {
       return;
     }
 
-    GeckoAppShell.sendEventToGecko(new GeckoEvent(getNetworkSpeed(sNetworkType),
-                                                  isNetworkUsuallyMetered(sNetworkType)));
+    GeckoAppShell.sendEventToGecko(new GeckoEvent(getNetworkSpeed(mNetworkType),
+                                                  isNetworkUsuallyMetered(mNetworkType)));
   }
 
-  public static double[] getCurrentInformation() {
-    return new double[] { getNetworkSpeed(sNetworkType),
-                          isNetworkUsuallyMetered(sNetworkType) ? 1.0 : 0.0 };
+  public double[] getCurrentInformation() {
+    return new double[] { getNetworkSpeed(mNetworkType),
+                          isNetworkUsuallyMetered(mNetworkType) ? 1.0 : 0.0 };
   }
 
   private static NetworkType getNetworkType() {
