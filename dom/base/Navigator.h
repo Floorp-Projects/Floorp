@@ -58,6 +58,7 @@ class nsMimeTypeArray;
 class nsGeolocation;
 class nsDesktopNotificationCenter;
 class nsPIDOMWindow;
+class nsIDOMMozConnection;
 
 #ifdef MOZ_B2G_RIL
 #include "nsIDOMNavigatorTelephony.h"
@@ -135,6 +136,7 @@ private:
 #ifdef MOZ_B2G_RIL
   nsCOMPtr<nsIDOMTelephony> mTelephony;
 #endif
+  nsCOMPtr<nsIDOMMozConnection> mConnection;
   nsWeakPtr mWindow;
 };
 

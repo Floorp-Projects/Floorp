@@ -74,6 +74,7 @@
 #include "mozilla/Hal.h"
 #include "nsIWebNavigation.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "Connection.h"
 
 #ifdef MOZ_B2G_RIL
 #include "TelephonyFactory.h"
@@ -173,6 +174,8 @@ Navigator::Invalidate()
     mTelephony = nsnull;
   }
 #endif
+
+  mConnection = nsnull;
 }
 
 nsPIDOMWindow *
@@ -1071,7 +1074,11 @@ Navigator::GetMozTelephony(nsIDOMTelephony** aTelephony)
 NS_IMETHODIMP
 Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
 {
-  *aConnection = nsnull;
+  if (!mConnection) {
+    mConnection = new network::Connection();
+  }
+
+  NS_ADDREF(*aConnection = mConnection);
   return NS_OK;
 }
 

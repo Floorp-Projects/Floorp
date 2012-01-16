@@ -14,7 +14,19 @@
 
 /** Test for Network API **/
 
+function checkInterface(aInterface) {
+  ok(!(aInterface in window), aInterface + " should be prefixed");
+  ok(("Moz" + aInterface) in window, aInterface + " should be prefixed");
+}
+
 ok('mozConnection' in navigator, "navigator.mozConnection should exist");
+
+ok(navigator.mozConnection, "navigator.mozConnection returns an object");
+
+ok(navigator.mozConnection instanceof MozConnection,
+   "navigator.mozConnection is a MozConnection object");
+
+checkInterface("Connection");
 
 </script>
 </pre>
