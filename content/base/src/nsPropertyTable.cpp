@@ -161,6 +161,33 @@ nsPropertyTable::Enumerate(nsPropertyOwner aObject,
   }
 }
 
+struct PropertyEnumeratorData
+{
+  nsIAtom* mName;
+  NSPropertyFunc mCallBack;
+  void* mData;
+};
+
+static PLDHashOperator
+PropertyEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
+                   PRUint32 aNumber, void* aArg)
+{
+  PropertyListMapEntry* entry = static_cast<PropertyListMapEntry*>(aHdr);
+  PropertyEnumeratorData* data = static_cast<PropertyEnumeratorData*>(aArg);
+  data->mCallBack(const_cast<void*>(entry->key), data->mName, entry->value,
+                  data->mData);
+  return PL_DHASH_NEXT;
+}
+
+void
+nsPropertyTable::EnumerateAll(NSPropertyFunc aCallBack, void* aData)
+{
+  for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
+    PropertyEnumeratorData data = { prop->mName, aCallBack, aData };
+    PL_DHashTableEnumerate(&prop->mObjectValueMap, PropertyEnumerator, &data);
+  }
+}
+
 void*
 nsPropertyTable::GetPropertyInternal(nsPropertyOwner aObject,
                                      nsIAtom    *aPropertyName,
