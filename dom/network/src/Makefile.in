@@ -47,13 +47,15 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-#EXPORTS_NAMESPACES = mozilla/dom/sms
+EXPORTS_NAMESPACES = mozilla/dom/network
 
 EXPORTS_mozilla/dom/network = \
+  Utils.h \
   $(NULL)
 
 CPPSRCS = \
   Connection.cpp \
+  Utils.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
