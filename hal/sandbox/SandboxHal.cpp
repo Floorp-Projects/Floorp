@@ -133,8 +133,21 @@ SetScreenBrightness(double brightness)
   Hal()->SendSetScreenBrightness(brightness);
 }
 
+
+void
+EnableSensorNotifications(SensorType aSensor) {
+  Hal()->SendEnableSensorNotifications(aSensor);
+}
+
+void
+DisableSensorNotifications(SensorType aSensor) {
+  Hal()->SendDisableSensorNotifications(aSensor);
+}
+
+
 class HalParent : public PHalParent
-                , public BatteryObserver {
+                , public BatteryObserver
+                , public ISensorObserver {
 public:
   NS_OVERRIDE virtual bool
   RecvVibrate(const InfallibleTArray<unsigned int>& pattern,
@@ -224,6 +237,23 @@ public:
     hal::SetScreenBrightness(brightness);
     return true;
   }
+
+  NS_OVERRIDE virtual bool
+  RecvEnableSensorNotifications(const SensorType &aSensor) {
+    hal::RegisterSensorObserver(aSensor, this);
+    return true;
+  }
+   
+  NS_OVERRIDE virtual bool
+  RecvDisableSensorNotifications(const SensorType &aSensor) {
+    hal::UnregisterSensorObserver(aSensor, this);
+    return true;
+  }
+  
+  void Notify(const SensorData& aSensorData) {
+    unused << SendNotifySensorChange(aSensorData);
+  }
+
 };
 
 class HalChild : public PHalChild {
@@ -233,7 +263,18 @@ public:
     hal::NotifyBatteryChange(aBatteryInfo);
     return true;
   }
+  
+  NS_OVERRIDE virtual bool
+  RecvNotifySensorChange(const hal::SensorData &aSensorData);
 };
+
+bool
+HalChild::RecvNotifySensorChange(const hal::SensorData &aSensorData) {
+  hal::NotifySensorChange(aSensorData);
+  
+  return true;
+}
+
 
 PHalChild* CreateHalChild() {
   return new HalChild();
