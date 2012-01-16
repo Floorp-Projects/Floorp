@@ -83,6 +83,10 @@
   -->
 <!ENTITY findPreviousCmd.key          "G">
 
+<!ENTITY gotoLineCmd.label            "Jump to line…">
+<!ENTITY gotoLineCmd.key              "J">
+<!ENTITY gotoLineCmd.accesskey        "J">
+
 <!ENTITY run.label                    "Run">
 <!ENTITY run.accesskey                "R">
 <!ENTITY run.key                      "r">
