@@ -40,12 +40,10 @@
 
 #include "CompositorChild.h"
 #include "CompositorParent.h"
-#include "Compositor.h"
 #include "LayerManagerOGL.h"
 #include "mozilla/layers/ShadowLayersChild.h"
 
 using mozilla::layers::ShadowLayersChild;
-using namespace mozilla::layers::compositor;
 
 namespace mozilla {
 namespace layers {

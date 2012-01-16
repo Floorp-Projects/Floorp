@@ -64,9 +64,6 @@ parent:
   // Clean up in preparation for destruction.
   sync Stop();
 
-  // Workaround for Bug 717027.
-  async FixMeDoNotCall();
-
   sync PLayers(LayersBackend backend);
 };
 

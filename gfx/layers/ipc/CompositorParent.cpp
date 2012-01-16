@@ -57,13 +57,6 @@ CompositorParent::~CompositorParent()
   MOZ_COUNT_DTOR(CompositorParent);
 }
 
-bool
-CompositorParent::RecvFixMeDoNotCall()
-{
-  NS_RUNTIMEABORT("not reached");
-  return NULL;
-}
-
 void
 CompositorParent::Destroy()
 {
@@ -104,6 +97,7 @@ CompositorParent::Composite()
 static void
 SetShadowProperties(Layer* aLayer)
 {
+  // FIXME: Bug 717688 -- Do these updates in ShadowLayersParent::RecvUpdate.
   ShadowLayer* shadow = aLayer->AsShadowLayer();
   shadow->SetShadowTransform(aLayer->GetTransform());
   shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
@@ -134,6 +128,7 @@ CompositorParent::AllocPLayers(const LayersBackend &backendType)
 {
   if (backendType == LayerManager::LAYERS_OPENGL) {
     nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(mWidget);
+    mWidget = NULL;
     mLayerManager = layerManager;
 
     if (!layerManager->Initialize()) {
