@@ -38,9 +38,6 @@ function run_test() {
   var ps = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefService);
 
-  var pb2= Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefBranch2);
-
   var pb = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefBranch);
 

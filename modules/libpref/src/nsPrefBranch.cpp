@@ -561,11 +561,6 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
   return NS_OK;
 }
 
-
-/*
- *  nsIPrefBranch2 methods
- */
-
 NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver, bool aHoldWeak)
 {
   PrefCallback *pCallback;

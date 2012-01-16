@@ -67,7 +67,7 @@ nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
   // Set up a pref cache for sIgnoreXFrameOptions, if we haven't already.
   if (NS_UNLIKELY(!initializedPrefCache)) {
     // Lock the pref so that the user's changes to it, if any, are ignored.
-    nsIPrefBranch2 *root = Preferences::GetRootBranch();
+    nsIPrefBranch *root = Preferences::GetRootBranch();
     root->LockPref("b2g.ignoreXFrameOptions");
 
     Preferences::AddBoolVarCache(&sIgnoreXFrameOptions, "b2g.ignoreXFrameOptions");
