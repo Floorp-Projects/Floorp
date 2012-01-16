@@ -68,12 +68,7 @@ void
 CanvasLayerOGL::Destroy()
 {
   if (!mDestroyed) {
-    if (mTexture) {
-      GLContext *cx = mOGLManager->glForResources();
-      cx->MakeCurrent();
-      cx->fDeleteTextures(1, &mTexture);
-    }
-
+    CleanupResources();
     mDestroyed = true;
   }
 }
@@ -296,6 +291,16 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   }
 }
 
+void
+CanvasLayerOGL::CleanupResources()
+{
+  if (mTexture) {
+    GLContext* cx = mOGLManager->glForResources();
+    cx->MakeCurrent();
+    cx->fDeleteTextures(1, &mTexture);
+  }
+}
+
 
 ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
   : ShadowCanvasLayer(aManager, nsnull)
@@ -410,4 +415,10 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     program->SetLayerQuadRect(mTexImage->GetTileRect());
     mOGLManager->BindAndDrawQuad(program, mNeedsYFlip); // FIXME flip order of tiles?
   } while (mTexImage->NextTile());
+}
+
+void
+ShadowCanvasLayerOGL::CleanupResources()
+{
+  DestroyFrontBuffer();
 }
