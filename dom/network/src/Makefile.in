@@ -51,6 +51,8 @@ EXPORTS_NAMESPACES = mozilla/dom/network
 
 EXPORTS_mozilla/dom/network = \
   Utils.h \
+  Types.h \
+  Constants.h \
   $(NULL)
 
 CPPSRCS = \

@@ -14,12 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * The Initial Developer of the Original Code is Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Makoto Kato <m_kato@ga2.so-net.ne.jp> (Original Author)
+ *   Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,54 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "Hal.h"
-#include "mozilla/dom/network/Constants.h"
+#ifndef mozilla_dom_network_Types_h
+#define mozilla_dom_network_Types_h
 
 namespace mozilla {
-namespace hal_impl {
+namespace hal {
+class NetworkInformation;
+} // namespace hal
 
-void
-Vibrate(const nsTArray<uint32>& pattern, const hal::WindowIdentifier &)
-{}
+template <class T>
+class Observer;
 
-void
-CancelVibrate(const hal::WindowIdentifier &)
-{}
+typedef Observer<hal::NetworkInformation> NetworkObserver;
 
-bool
-GetScreenEnabled()
-{
-  return true;
-}
+} // namespace mozilla
 
-void
-SetScreenEnabled(bool enabled)
-{}
-
-double
-GetScreenBrightness()
-{
-  return 1;
-}
-
-void
-SetScreenBrightness(double brightness)
-{}
-
-void
-EnableNetworkNotifications()
-{}
-
-void
-DisableNetworkNotifications()
-{}
-
-void
-GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
-{
-  aNetworkInfo->bandwidth() = dom::network::kDefaultBandwidth;
-  aNetworkInfo->canBeMetered() = dom::network::kDefaultCanBeMetered;
-}
-
-} // hal_impl
-} // mozilla
+#endif // mozilla_dom_network_Types_h
