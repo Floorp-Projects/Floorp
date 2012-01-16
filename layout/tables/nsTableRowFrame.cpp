@@ -196,7 +196,6 @@ nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     nsRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
     tableFrame->AddBCDamageArea(damageArea);
   }
-  return;
 }
 
 NS_IMETHODIMP
@@ -208,7 +207,7 @@ nsTableRowFrame::AppendFrames(ChildListID     aListID,
   const nsFrameList::Slice& newCells = mFrames.AppendFrames(nsnull, aFrameList);
 
   // Add the new cell frames to the table
-  nsTableFrame *tableFrame =  nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   for (nsFrameList::Enumerator e(newCells) ; !e.AtEnd(); e.Next()) {
     nsIFrame *childFrame = e.get();
     NS_ASSERTION(IS_TABLE_CELL(childFrame->GetType()),"Not a table cell frame/pseudo frame construction failure");
@@ -265,26 +264,24 @@ nsTableRowFrame::RemoveFrame(ChildListID     aListID,
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (tableFrame) {
-    nsTableCellFrame *cellFrame = do_QueryFrame(aOldFrame);
-    if (cellFrame) {
-      PRInt32 colIndex;
-      cellFrame->GetColIndex(colIndex);
-      // remove the cell from the cell map
-      tableFrame->RemoveCell(cellFrame, GetRowIndex());
+  nsTableCellFrame *cellFrame = do_QueryFrame(aOldFrame);
+  if (cellFrame) {
+    PRInt32 colIndex;
+    cellFrame->GetColIndex(colIndex);
+    // remove the cell from the cell map
+    tableFrame->RemoveCell(cellFrame, GetRowIndex());
 
-      // Remove the frame and destroy it
-      mFrames.DestroyFrame(aOldFrame);
+    // Remove the frame and destroy it
+    mFrames.DestroyFrame(aOldFrame);
 
-      PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                         NS_FRAME_HAS_DIRTY_CHILDREN);
-      tableFrame->SetGeometryDirty();
-    }
-    else {
-      NS_ERROR("unexpected frame type");
-      return NS_ERROR_INVALID_ARG;
-    }
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN);
+    tableFrame->SetGeometryDirty();
+  }
+  else {
+    NS_ERROR("unexpected frame type");
+    return NS_ERROR_INVALID_ARG;
   }
 
   return NS_OK;
@@ -350,9 +347,6 @@ nsTableRowFrame::DidResize()
 {
   // Resize and re-align the cell frames based on our row height
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return;
-  
   nsTableIterator iter(*this);
   nsIFrame* childFrame = iter.First();
   
@@ -519,9 +513,6 @@ nscoord
 nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
 {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return 0;
-
   nscoord computedHeight = (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight())
                             ? 0 : aReflowState.ComputedHeight();
   ResetHeight(computedHeight);
@@ -582,9 +573,9 @@ public:
 
 void
 nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                   nsRenderingContext* aCtx) {
+                                   nsRenderingContext* aCtx)
+{
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
-
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRow,
                                  mFrame->PresContext(), *aCtx,
@@ -644,9 +635,6 @@ nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
   const nsStylePosition* position = aCellFrame->GetStylePosition();
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return NS_ERROR_NULL_POINTER;
-  
   PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(*aCellFrame);
   
   switch (position->mHeight.GetUnit()) {
@@ -1027,9 +1015,6 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   nsresult rv = NS_OK;
 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    return NS_ERROR_NULL_POINTER;
-
   const nsStyleVisibility* rowVis = GetStyleVisibility();
   bool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
   if (collapseRow) {
@@ -1071,15 +1056,12 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
                                  nscoord                  aAvailableHeight,
                                  nsReflowStatus&          aStatus)
 {
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  if (!tableFrame)
-    ABORT1(NS_ERROR_NULL_POINTER);
-
   // Reflow the cell frame with the specified height. Use the existing width
   nsRect cellRect = aCellFrame->GetRect();
   nsRect cellVisualOverflow = aCellFrame->GetVisualOverflowRect();
   
   nsSize availSize(cellRect.width, aAvailableHeight);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   bool borderCollapse = tableFrame->IsBorderCollapse();
   nsTableCellReflowState cellReflowState(aPresContext, aReflowState,
                                          aCellFrame, availSize, false);
