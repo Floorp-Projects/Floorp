@@ -83,6 +83,7 @@ public class PasswordRecord extends Record {
   @Override
   public CryptoRecord getPayload() {
     // TODO Auto-generated method stub
+    // TODO: don't forget to set "id" to our GUID.
     return null;
   }
   

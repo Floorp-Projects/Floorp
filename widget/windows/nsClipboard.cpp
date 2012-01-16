@@ -715,11 +715,11 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
     return false;
   }
 
-  float vers = 0.0;
+  char version[8] = { 0 };
   PRInt32 startOfData = 0;
   PRInt32 endOfData = 0;
-  int numFound = sscanf((char*)*outData, "Version:%f\nStartHTML:%d\nEndHTML:%d", 
-                        &vers, &startOfData, &endOfData);
+  int numFound = sscanf((char*)*outData, "Version:%7s\nStartHTML:%d\nEndHTML:%d", 
+                        version, &startOfData, &endOfData);
 
   if (numFound != 3 || startOfData < -1 || endOfData < -1) {
     return false;

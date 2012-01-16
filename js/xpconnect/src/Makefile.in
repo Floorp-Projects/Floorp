@@ -51,6 +51,7 @@ FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 EXPORTS = \
 		xpcpublic.h \
+		dombindings.h \
 		dombindings_gen.h
 
 CPPSRCS		= \

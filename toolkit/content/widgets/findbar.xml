@@ -113,6 +113,14 @@
 
     <handlers>
       <handler event="input"><![CDATA[
+        // We should do nothing during composition.  E.g., composing string
+        // before converting may matches a forward word of expected word.
+        // After that, even if user converts the composition string to the
+        // expected word, it may find second or later searching word in the
+        // document.
+        if (this.findbar._isIMEComposing) {
+          return;
+        }
         this.findbar._find(this.value);
       ]]></handler>
 

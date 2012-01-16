@@ -116,7 +116,7 @@ nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame)
   if (!vm)
     return;
  
-  vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+  vm->InvalidateAllViews();
 }
 
 static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, PRUint32 aNamespace)

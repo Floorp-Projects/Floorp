@@ -40,6 +40,7 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsRootAccessible.h"
+#include "Role.h"
 
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
@@ -296,10 +297,10 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   }
 
   // Fire menu start/end events for ARIA menus.
-  if (target->ARIARole() == nsIAccessibleRole::ROLE_MENUITEM) {
+  if (target->ARIARole() == roles::MENUITEM) {
     // The focus was moved into menu.
     nsAccessible* ARIAMenubar =
-      nsAccUtils::GetAncestorWithRole(target, nsIAccessibleRole::ROLE_MENUBAR);
+      nsAccUtils::GetAncestorWithRole(target, roles::MENUBAR);
 
     if (ARIAMenubar != mActiveARIAMenubar) {
       // Leaving ARIA menu. Fire menu_end event on current menubar.

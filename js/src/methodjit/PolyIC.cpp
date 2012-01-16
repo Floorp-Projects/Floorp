@@ -1835,9 +1835,23 @@ class BindNameCompiler : public PICStubCompiler
     }
 };
 
-static inline void
-GetPropWithStub(VMFrame &f, ic::PICInfo *pic, VoidStubPIC stub)
+static void JS_FASTCALL
+DisabledGetPropIC(VMFrame &f, ic::PICInfo *pic)
 {
+    stubs::GetProp(f, pic->name);
+}
+
+static void JS_FASTCALL
+DisabledGetPropNoCacheIC(VMFrame &f, ic::PICInfo *pic)
+{
+    stubs::GetPropNoCache(f, pic->name);
+}
+
+static inline void
+GetPropMaybeCached(VMFrame &f, ic::PICInfo *pic, bool cached)
+{
+    VoidStubPIC stub = cached ? DisabledGetPropIC : DisabledGetPropNoCacheIC;
+
     JSScript *script = f.fp()->script();
 
     PropertyName *name = pic->name;
@@ -1907,34 +1921,27 @@ GetPropWithStub(VMFrame &f, ic::PICInfo *pic, VoidStubPIC stub)
     }
 
     Value v;
-    if (!GetPropertyGenericMaybeCallXML(f.cx, JSOp(*f.pc()), obj, ATOM_TO_JSID(name), &v))
-        THROW();
+    if (cached) {
+        if (!GetPropertyOperation(f.cx, f.pc(), ObjectValue(*obj), &v))
+            THROW();
+    } else {
+        if (!obj->getProperty(f.cx, name, &v))
+            THROW();
+    }
 
     f.regs.sp[-1] = v;
-}
-
-static void JS_FASTCALL
-DisabledGetPropIC(VMFrame &f, ic::PICInfo *pic)
-{
-    stubs::GetProp(f, pic->name);
-}
-
-static void JS_FASTCALL
-DisabledGetPropNoCacheIC(VMFrame &f, ic::PICInfo *pic)
-{
-    stubs::GetPropNoCache(f, pic->name);
 }
 
 void JS_FASTCALL
 ic::GetProp(VMFrame &f, ic::PICInfo *pic)
 {
-    GetPropWithStub(f, pic, DisabledGetPropIC);
+    GetPropMaybeCached(f, pic, /* cache = */ true);
 }
 
 void JS_FASTCALL
 ic::GetPropNoCache(VMFrame &f, ic::PICInfo *pic)
 {
-    GetPropWithStub(f, pic, DisabledGetPropNoCacheIC);
+    GetPropMaybeCached(f, pic, /* cache = */ false);
 }
 
 template <JSBool strict>

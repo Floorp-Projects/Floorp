@@ -1695,8 +1695,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect,
-                     bool             aIsSynchronous)
+nsWindow::Invalidate(const nsIntRect &aRect)
 {
     if (!mGdkWindow)
         return NS_OK;
@@ -1707,27 +1706,11 @@ nsWindow::Invalidate(const nsIntRect &aRect,
     rect.width = aRect.width;
     rect.height = aRect.height;
 
-    LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d (sync: %d)\n", (void *)this,
-             rect.x, rect.y, rect.width, rect.height, aIsSynchronous));
+    LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d\n", (void *)this,
+             rect.x, rect.y, rect.width, rect.height));
 
     gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
-    if (aIsSynchronous)
-        gdk_window_process_updates(mGdkWindow, FALSE);
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::Update()
-{
-    if (!mGdkWindow)
-        return NS_OK;
-
-    LOGDRAW(("Update [%p] %p\n", this, mGdkWindow));
-
-    gdk_window_process_updates(mGdkWindow, FALSE);
-    // Send the updates to the server.
-    gdk_display_flush(gdk_window_get_display(mGdkWindow));
     return NS_OK;
 }
 

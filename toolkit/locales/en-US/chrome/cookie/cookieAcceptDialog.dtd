@@ -4,7 +4,6 @@
 <!ENTITY     props.path.label               "Path:">
 <!ENTITY     props.secure.label             "Send For:">
 <!ENTITY     props.expires.label            "Expires:">
-<!ENTITY     props.policy.label             "Policy:"> 
 
 <!ENTITY     button.allow.label             "Allow">
 <!ENTITY     button.allow.accesskey         "A">

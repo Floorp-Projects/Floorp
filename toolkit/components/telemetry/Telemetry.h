@@ -104,6 +104,34 @@ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+template<ID id>
+class AutoCounter {
+public:
+  AutoCounter(PRUint32 counterStart = 0 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : counter(counterStart)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+
+  ~AutoCounter() {
+    Accumulate(id, counter);
+  }
+
+  // Prefix increment only, to encourage good habits.
+  void operator++() {
+    ++counter;
+  }
+
+  // Chaining doesn't make any sense, don't return anything.
+  void operator+=(int increment) {
+    counter += increment;
+  }
+
+private:
+  PRUint32 counter;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 /**
  * Records slow SQL statements for Telemetry reporting.
  * For privacy reasons, only prepared statements are reported.
