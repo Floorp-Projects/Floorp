@@ -27,6 +27,7 @@
     locale/browser/devtools/styleinspector.properties (%chrome/browser/devtools/styleinspector.properties)
     locale/browser/devtools/styleinspector.dtd        (%chrome/browser/devtools/styleinspector.dtd)
     locale/browser/devtools/webConsole.dtd            (%chrome/browser/devtools/webConsole.dtd)
+    locale/browser/devtools/sourceeditor.properties   (%chrome/browser/devtools/sourceeditor.properties)
     locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)
     locale/browser/openLocation.properties         (%chrome/browser/openLocation.properties)
 *   locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
