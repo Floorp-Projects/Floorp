@@ -896,6 +896,8 @@ PreInit()
 
   dbus_connection_set_exit_on_disconnect(bus, FALSE);
 
+  static const char* iface = "org.a11y.Status";
+  static const char* member = "IsEnabled";
   DBusMessage *message;
   message = dbus_message_new_method_call("org.a11y.Bus", "/org/a11y/bus",
                                          "org.freedesktop.DBus.Properties",
@@ -903,8 +905,6 @@ PreInit()
   if (!message)
     goto dbus_done;
 
-  static const char* iface = "org.a11y.Status";
-  static const char* member = "IsEnabled";
   dbus_message_append_args(message, DBUS_TYPE_STRING, &iface,
                            DBUS_TYPE_STRING, &member, DBUS_TYPE_INVALID);
   dbus_connection_send_with_reply(bus, message, &sPendingCall, 1000);
