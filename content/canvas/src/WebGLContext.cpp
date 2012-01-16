@@ -1024,10 +1024,12 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntR
     bool initializeDepthBuffer = 0 != (mask & LOCAL_GL_DEPTH_BUFFER_BIT);
     bool initializeStencilBuffer = 0 != (mask & LOCAL_GL_STENCIL_BUFFER_BIT);
 
+    // fun GL fact: no need to worry about the viewport here, glViewport is just setting up a coordinates transformation,
+    // it doesn't affect glClear at all
+
     // prepare GL state for clearing
     gl->fDisable(LOCAL_GL_SCISSOR_TEST);
     gl->fDisable(LOCAL_GL_DITHER);
-    gl->PushViewportRect(viewportRect);
 
     if (initializeColorBuffer) {
         gl->fColorMask(1, 1, 1, 1);
@@ -1069,8 +1071,6 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(PRUint32 mask, const nsIntR
         gl->fStencilMaskSeparate(LOCAL_GL_BACK, mStencilWriteMaskBack);
         gl->fClearStencil(mStencilClearValue);
     }
-
-    gl->PopViewportRect();
 
     if (mDitherEnabled)
         gl->fEnable(LOCAL_GL_DITHER);
