@@ -3081,8 +3081,6 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
                       DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
       } else if (mOp == nsCanvasRenderingContext2DAzure::TEXT_DRAW_OPERATION_STROKE) {
         RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
-            
-        Matrix oldTransform = mCtx->mTarget->GetTransform();
 
         const ContextState& state = *mState;
         nsCanvasRenderingContext2DAzure::AdjustedTarget(mCtx)->
