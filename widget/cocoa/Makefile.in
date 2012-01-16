@@ -145,3 +145,5 @@ LDFLAGS	+= \
 	-framework IOKit \
 	-F/System/Library/PrivateFrameworks -framework CoreUI \
 	$(NULL)
+
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
