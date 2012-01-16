@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et ft=cpp : */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: sw=4 ts=8 et ft=cpp : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
+ *   Sinker Li <thinker@codemud.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,55 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PContent;
-include protocol PBrowser;
-include "nspr/prtime.h";
-include "mozilla/HalSensor.h";
+#include "mozilla/Hal.h"
 
-using PRTime;
-using mozilla::hal::SensorType;
+using namespace mozilla::hal;
 
 namespace mozilla {
+namespace hal_impl {
 
-namespace hal {
-  struct BatteryInformation {
-    double level;
-    bool   charging;
-    double remainingTime;
-  };
-  
-  struct SensorData {
-    SensorType sensor;
-    PRTime timestamp;
-    float[] values;
-  };
+void
+EnableSensorNotifications(SensorType aSensor) {
 }
 
-namespace hal_sandbox {
+void
+DisableSensorNotifications(SensorType aSensor) {
+}
 
-sync protocol PHal {
-    manager PContent;
-
-child:
-    NotifyBatteryChange(BatteryInformation aBatteryInfo);
-
-parent:
-    Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
-    CancelVibrate(uint64[] id, PBrowser browser);
-
-    EnableBatteryNotifications();
-    DisableBatteryNotifications();
-    sync GetCurrentBatteryInformation()
-      returns (BatteryInformation aBatteryInfo);
-
-    sync GetScreenEnabled() returns (bool enabled);
-    SetScreenEnabled(bool enabled);
-
-    sync GetScreenBrightness() returns (double brightness);
-    SetScreenBrightness(double brightness);
-
-    __delete__();
-};
-
-} // namespace hal
-} // namespace mozilla
+}
+}
