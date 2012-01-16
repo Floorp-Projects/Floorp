@@ -90,7 +90,7 @@ static nsresult pref_LoadPrefsInDirList(const char *listId);
 static nsresult ReadExtensionPrefs(nsIFile *aFile);
 
 Preferences* Preferences::sPreferences = nsnull;
-nsIPrefBranch2* Preferences::sRootBranch = nsnull;
+nsIPrefBranch* Preferences::sRootBranch = nsnull;
 nsIPrefBranch* Preferences::sDefaultRootBranch = nsnull;
 bool Preferences::sShutdown = false;
 

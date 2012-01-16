@@ -9,7 +9,7 @@ function run_test() {
   const PREF_NAME = "testPref";
 
   var prefs = Cc["@mozilla.org/preferences-service;1"]
-              .getService(Ci.nsIPrefBranch2);
+              .getService(Ci.nsIPrefBranch);
   var observer = {
     QueryInterface: function QueryInterface(aIID) {
       if (aIID.equals(Ci.nsIObserver) ||
