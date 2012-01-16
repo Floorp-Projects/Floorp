@@ -63,6 +63,19 @@ struct nsCycleCollectionLanguageRuntime
 };
 
 nsresult nsCycleCollector_startup();
+
+typedef void (*CC_BeforeUnlinkCallback)(void);
+void nsCycleCollector_setBeforeUnlinkCallback(CC_BeforeUnlinkCallback aCB);
+
+typedef void (*CC_ForgetSkippableCallback)(void);
+void nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB);
+
+void nsCycleCollector_forgetSkippable();
+
+#ifdef DEBUG_CC
+void nsCycleCollector_logPurpleRemoval(void* aObject);
+#endif
+
 // Returns the number of collected nodes.
 PRUint32 nsCycleCollector_collect(nsICycleCollectorListener *aListener);
 PRUint32 nsCycleCollector_suspectedCount();

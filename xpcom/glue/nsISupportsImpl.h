@@ -226,6 +226,18 @@ public:
     mTagged = NS_CCAR_REFCNT_TO_TAGGED(refcount);
   }
 
+  void RemovePurple()
+  {
+    NS_ASSERTION(IsPurple(), "must be purple");
+#ifdef DEBUG_CC
+    nsCycleCollector_logPurpleRemoval(
+      NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject);
+#endif
+    // The entry will be added to the free list later. 
+    NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject = nsnull;
+    unmarkPurple();
+  }
+
   bool IsPurple() const
   {
     NS_ASSERTION(mTagged != NS_CCAR_TAGGED_STABILIZED_REFCNT,
