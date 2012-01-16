@@ -53,6 +53,7 @@ EXPORTS_mozilla/dom/network = \
   $(NULL)
 
 CPPSRCS = \
+  Connection.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
