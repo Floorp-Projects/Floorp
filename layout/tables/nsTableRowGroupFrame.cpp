@@ -951,8 +951,7 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
   aFirstTruncatedRow = nsnull;
   aDesiredHeight     = 0;
 
-  bool borderCollapse =
-    static_cast<nsTableFrame*>(aTable.GetFirstInFlow())->IsBorderCollapse();
+  const bool borderCollapse = aTable.IsBorderCollapse();
   PRInt32 lastRowIndex = aLastRow.GetRowIndex();
   bool wasLast = false;
   bool haveRowSpan = false;
@@ -1086,8 +1085,8 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
   nscoord availWidth  = aReflowState.availableWidth;
   nscoord availHeight = aReflowState.availableHeight;
   
-  bool    borderCollapse = ((nsTableFrame*)aTableFrame->GetFirstInFlow())->IsBorderCollapse();
-  nscoord cellSpacingY   = aTableFrame->GetCellSpacingY();
+  const bool borderCollapse = aTableFrame->IsBorderCollapse();
+  nscoord cellSpacingY = aTableFrame->GetCellSpacingY();
   
   // get the page height
   nscoord pageHeight = aPresContext->GetPageSize().height;
