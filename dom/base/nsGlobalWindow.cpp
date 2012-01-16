@@ -1404,9 +1404,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGlobalWindow)
 
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
-  if ((tmp->mDoc && nsCCUncollectableMarker::InGeneration(
-                      cb, tmp->mDoc->GetMarkedCCGeneration())) ||
-      (nsCCUncollectableMarker::sGeneration && tmp->IsBlack())) {
+  if (tmp->mDoc && nsCCUncollectableMarker::InGeneration(
+                     cb, tmp->mDoc->GetMarkedCCGeneration())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
