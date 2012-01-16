@@ -1747,4 +1747,8 @@ public class GeckoAppShell
             sendEventToGecko(new GeckoEvent("ScrollTo:FocusedInput", ""));
         }
     }
+
+    public static double[] getCurrentNetworkInformation() {
+        return GeckoNetworkManager.getCurrentInformation();
+    }
 }

@@ -151,8 +151,12 @@ DisableNetworkNotifications()
 void
 GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
 {
-  aNetworkInfo->bandwidth() = dom::network::kDefaultBandwidth;
-  aNetworkInfo->canBeMetered() = dom::network::kDefaultCanBeMetered;
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->GetCurrentNetworkInformation(aNetworkInfo);
 }
 
 } // hal_impl

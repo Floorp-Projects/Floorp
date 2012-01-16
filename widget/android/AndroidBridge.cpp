@@ -176,6 +176,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetNextMessageinList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNextMessageInList", "(IIJ)V");
     jClearMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "clearMessageList", "(I)V");
 
+    jGetCurrentNetworkInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentNetworkInformation", "()[D");
+
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
     jEGLSurfaceImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLSurfaceImpl"));
@@ -1427,6 +1429,29 @@ AndroidBridge::ClearMessageList(PRInt32 aListId)
     ALOG_BRIDGE("AndroidBridge::ClearMessageList");
 
     JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jClearMessageList, aListId);
+}
+
+void
+AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
+{
+    ALOG_BRIDGE("AndroidBridge::GetCurrentNetworkInformation");
+
+    AutoLocalJNIFrame jniFrame;
+
+    // To prevent calling too many methods through JNI, the Java method returns
+    // an array of double even if we actually want a double and a boolean.
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jGetCurrentNetworkInformation);
+    jdoubleArray arr = static_cast<jdoubleArray>(obj);
+    if (!arr || mJNIEnv->GetArrayLength(arr) != 2) {
+        return;
+    }
+
+    jdouble* info = mJNIEnv->GetDoubleArrayElements(arr, 0);
+
+    aNetworkInfo->bandwidth() = info[0];
+    aNetworkInfo->canBeMetered() = info[1] == 1.0f;
+
+    mJNIEnv->ReleaseDoubleArrayElements(arr, info, 0);
 }
 
 void *
