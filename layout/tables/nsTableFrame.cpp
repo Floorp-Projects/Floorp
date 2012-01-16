@@ -3307,20 +3307,12 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
 
 PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
 {
-  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  NS_ASSERTION(firstInFlow, "illegal state -- no first in flow");
-  PRInt32 result = 0;
+  nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(GetFirstInFlow());
   if (this == firstInFlow) {
     nsTableColFrame* colFrame = GetColFrame(aColIndex);
-    if (colFrame) {
-      result = colFrame->GetFinalWidth();
-    }
+    return colFrame ? colFrame->GetFinalWidth() : 0;
   }
-  else {
-    result = firstInFlow->GetColumnWidth(aColIndex);
-  }
-
-  return result;
+  return firstInFlow->GetColumnWidth(aColIndex);
 }
 
 // XXX: could cache this.  But be sure to check style changes if you do!
@@ -6233,8 +6225,7 @@ BCPaintBorderIterator::SetDamageArea(nsRect aDirtyRect)
       if (haveIntersect) {
         if (aDirtyRect.YMost() >= (rowY - topBorderHalf)) {
           nsTableRowFrame* fifRow =
-            (nsTableRowFrame*)rowFrame->GetFirstInFlow();
-          if (!fifRow) ABORT1(false);
+            static_cast<nsTableRowFrame*>(rowFrame->GetFirstInFlow());
           endRowIndex = fifRow->GetRowIndex();
         }
         else done = true;
@@ -6244,8 +6235,7 @@ BCPaintBorderIterator::SetDamageArea(nsRect aDirtyRect)
           mStartRg  = rgFrame;
           mStartRow = rowFrame;
           nsTableRowFrame* fifRow =
-            (nsTableRowFrame*)rowFrame->GetFirstInFlow();
-          if (!fifRow) ABORT1(false);
+            static_cast<nsTableRowFrame*>(rowFrame->GetFirstInFlow());
           startRowIndex = endRowIndex = fifRow->GetRowIndex();
           haveIntersect = true;
         }
