@@ -501,9 +501,9 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     bool forceOSMesa =
         Preferences::GetBool("webgl.force_osmesa", false);
+#ifdef XP_WIN
     bool preferEGL =
         Preferences::GetBool("webgl.prefer-egl", false);
-#ifdef XP_WIN
     bool preferOpenGL =
         Preferences::GetBool("webgl.prefer-native-gl", false);
 #endif
@@ -566,13 +566,18 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
     }
 
+#ifdef XP_WIN
     if (PR_GetEnv("MOZ_WEBGL_PREFER_EGL")) {
         preferEGL = true;
     }
+#endif
 
     // Ask GfxInfo about what we should use
     bool useOpenGL = true;
+
+#ifdef XP_WIN
     bool useANGLE = true;
+#endif
 
     if (gfxInfo && !forceEnabled) {
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_OPENGL, &status))) {
@@ -580,19 +585,23 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
                 useOpenGL = false;
             }
         }
+#ifdef XP_WIN
         if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &status))) {
             if (status != nsIGfxInfo::FEATURE_NO_INFO) {
                 useANGLE = false;
             }
         }
+#endif
     }
 
+#ifdef XP_WIN
     // allow forcing GL and not EGL/ANGLE
     if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
         preferEGL = false;
         useANGLE = false;
         useOpenGL = true;
     }
+#endif
 
     // if we're forcing osmesa, do it first
     if (forceOSMesa) {
