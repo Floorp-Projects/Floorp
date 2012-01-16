@@ -298,6 +298,14 @@ TiltVisualizer.Presenter = function TV_Presenter(
     if ("function" === typeof this.ondraw) {
       this.ondraw();
     }
+
+    if (!TiltVisualizer.Prefs.introTransition && !this.isExecutingDestruction) {
+      this.frames = INTRO_TRANSITION_DURATION;
+    }
+    if (!TiltVisualizer.Prefs.outroTransition && this.isExecutingDestruction) {
+      this.frames = OUTRO_TRANSITION_DURATION;
+    }
+
     if ("function" === typeof this.onInitializationFinished &&
         this.frames === INTRO_TRANSITION_DURATION &&
        !this.isExecutingDestruction) {
@@ -1754,14 +1762,39 @@ TiltVisualizer.Prefs = {
     this._enabled = value;
   },
 
+  get introTransition()
+  {
+    return this._introTransition;
+  },
+
+  set introTransition(value)
+  {
+    TiltUtils.Preferences.set("intro_transition", "boolean", value);
+    this._introTransition = value;
+  },
+
+  get outroTransition()
+  {
+    return this._outroTransition;
+  },
+
+  set outroTransition(value)
+  {
+    TiltUtils.Preferences.set("outro_transition", "boolean", value);
+    this._outroTransition = value;
+  },
+
   /**
    * Loads the preferences.
    */
   load: function TVC_load()
   {
-    let prefs = TiltUtils.Preferences;
+    let prefs = TiltVisualizer.Prefs;
+    let get = TiltUtils.Preferences.get;
 
-    TiltVisualizer.Prefs._enabled = prefs.get("enabled", "boolean");
+    prefs._enabled = get("enabled", "boolean");
+    prefs._introTransition = get("intro_transition", "boolean");
+    prefs._outroTransition = get("outro_transition", "boolean");
   }
 };
 
