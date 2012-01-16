@@ -28,6 +28,16 @@ ok(navigator.mozConnection instanceof MozConnection,
 
 checkInterface("Connection");
 
+ok('bandwidth' in navigator.mozConnection,
+   "bandwidth should be a Connection attribute");
+is(navigator.mozConnection.bandwidth, Infinity,
+   "By default connection.bandwidth is equals to Infinity");
+
+ok('metered' in navigator.mozConnection,
+   "metered should be a Connection attribute");
+is(navigator.mozConnection.metered, false,
+   "By default the connection is not metered");
+
 </script>
 </pre>
 </body>

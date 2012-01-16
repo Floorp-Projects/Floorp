@@ -39,18 +39,65 @@
 #define mozilla_dom_network_Connection_h
 
 #include "nsIDOMConnection.h"
+#include "nsDOMEventTargetWrapperCache.h"
+#include "nsCycleCollectionParticipant.h"
+#include "mozilla/Observer.h"
+#include "Types.h"
 
 namespace mozilla {
+
+namespace hal {
+class NetworkInformation;
+} // namespace hal
+
 namespace dom {
 namespace network {
 
-class Connection : public nsIDOMMozConnection
+class Connection : public nsDOMEventTargetWrapperCache
+                 , public nsIDOMMozConnection
+                 , public NetworkObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZCONNECTION
 
+  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
+
+  Connection();
+
+  void Init(nsPIDOMWindow *aWindow, nsIScriptContext* aScriptContext);
+  void Shutdown();
+
+  // For IObserver
+  void Notify(const hal::NetworkInformation& aNetworkInfo);
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Connection,
+                                           nsDOMEventTargetWrapperCache)
+
 private:
+  /**
+   * Dispatch a trusted non-cancellable and non-bubbling event to itself.
+   */
+  nsresult DispatchTrustedEventToSelf(const nsAString& aEventName);
+
+  /**
+   * Update the connection information stored in the object using a
+   * NetworkInformation object.
+   */
+  void UpdateFromNetworkInfo(const hal::NetworkInformation& aNetworkInfo);
+
+  /**
+   * If the connection is of a type that can be metered.
+   */
+  bool mCanBeMetered;
+
+  /**
+   * The connection bandwidth.
+   */
+  double mBandwidth;
+
+  NS_DECL_EVENT_HANDLER(change)
+
   static const char* sMeteredPrefName;
   static const bool  sMeteredDefaultValue;
 };

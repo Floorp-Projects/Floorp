@@ -36,8 +36,13 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0bd0bcc8-ca92-43fa-97bd-aec8d79edb24)]
+interface nsIDOMEventListener;
+
+[scriptable, uuid(8c6b574d-1135-4387-a6e3-6d8ba38d79a1)]
 interface nsIDOMMozConnection : nsISupports
 {
+  readonly attribute double  bandwidth;
   readonly attribute boolean metered;
+
+           attribute nsIDOMEventListener onchange;
 };

@@ -175,7 +175,10 @@ Navigator::Invalidate()
   }
 #endif
 
-  mConnection = nsnull;
+  if (mConnection) {
+    mConnection->Shutdown();
+    mConnection = nsnull;
+  }
 }
 
 nsPIDOMWindow *
@@ -1074,8 +1077,20 @@ Navigator::GetMozTelephony(nsIDOMTelephony** aTelephony)
 NS_IMETHODIMP
 Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
 {
+  *aConnection = nsnull;
+
   if (!mConnection) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
+
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
+    NS_ENSURE_TRUE(sgo, NS_OK);
+
+    nsIScriptContext* scx = sgo->GetContext();
+    NS_ENSURE_TRUE(scx, NS_OK);
+
     mConnection = new network::Connection();
+    mConnection->Init(window, scx);
   }
 
   NS_ADDREF(*aConnection = mConnection);
