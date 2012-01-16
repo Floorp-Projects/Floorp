@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsStreamListenerTee.h"
+#include "nsProxyRelease.h"
 
 NS_IMPL_ISUPPORTS3(nsStreamListenerTee,
                    nsIStreamListener,
@@ -67,7 +68,17 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request,
         mInputTee->SetSink(nsnull);
         mInputTee = 0;
     }
-    mSink = 0;
+
+    // release sink on the same thread where the data was written (bug 716293)
+    if (mEventTarget) {
+        nsIOutputStream *sink = nsnull;
+        mSink.swap(sink);
+        NS_ProxyRelease(mEventTarget, sink);
+    }
+    else {
+        mSink = 0;
+    }
+
     nsresult rv = mListener->OnStopRequest(request, context, status);
     if (mObserver)
         mObserver->OnStopRequest(request, context, status);

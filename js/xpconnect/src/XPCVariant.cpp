@@ -43,7 +43,7 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 
-#include "jscntxt.h" // JS_CHECK_RECURSION
+#include "jsfriendapi.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCVariant)
 

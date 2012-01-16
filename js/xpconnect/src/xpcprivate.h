@@ -597,6 +597,13 @@ private:
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
     JSBool                   mNeedGCBeforeCC;
+
+    // nsIThreadInternal doesn't remember which observers it called
+    // OnProcessNextEvent on when it gets around to calling AfterProcessNextEvent.
+    // So if XPConnect gets initialized mid-event (which can happen), we'll get
+    // an 'after' notification without getting an 'on' notification. If we don't
+    // watch out for this, we'll do an unmatched |pop| on the context stack.
+    PRUint16                   mEventDepth;
 #ifdef DEBUG_CC
     PLDHashTable             mJSRoots;
 #endif
@@ -3644,6 +3651,12 @@ public:
     // Get the instance of this object for the current thread
     static inline XPCPerThreadData* GetData(JSContext *cx)
     {
+        // Do a release-mode assert that we're not doing anything significant in
+        // XPConnect off the main thread. If you're an extension developer hitting
+        // this, you need to change your code. See bug 716167.
+        if (!NS_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
+            JS_Assert("NS_IsMainThread()", __FILE__, __LINE__);
+
         if (cx) {
             NS_ASSERTION(js::GetContextThread(cx), "Uh, JS context w/o a thread?");
 

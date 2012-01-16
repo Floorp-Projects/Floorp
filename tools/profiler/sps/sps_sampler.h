@@ -51,13 +51,14 @@ extern bool stack_key_initialized;
 
 #define SAMPLER_INIT() mozilla_sampler_init()
 #define SAMPLER_DEINIT() mozilla_sampler_deinit()
-#define SAMPLER_START(entries, interval) mozilla_sampler_start(entries, interval)
+#define SAMPLER_START(entries, interval, features, featureCount) mozilla_sampler_start(entries, interval, features, featureCount)
 #define SAMPLER_STOP() mozilla_sampler_stop()
 #define SAMPLER_IS_ACTIVE() mozilla_sampler_is_active()
 #define SAMPLER_RESPONSIVENESS(time) mozilla_sampler_responsiveness(time)
 #define SAMPLER_GET_RESPONSIVENESS() mozilla_sampler_get_responsiveness()
 #define SAMPLER_SAVE() mozilla_sampler_save()
 #define SAMPLER_GET_PROFILE() mozilla_sampler_get_profile()
+#define SAMPLER_GET_FEATURES() mozilla_sampler_get_features()
 #define SAMPLE_LABEL(name_space, info) mozilla::SamplerStackFrameRAII only_one_sampleraii_per_scope(FULLFUNCTION, name_space "::" info)
 #define SAMPLE_MARKER(info) mozilla_sampler_add_marker(info)
 
@@ -114,13 +115,14 @@ inline void* mozilla_sampler_call_enter(const char *aInfo);
 inline void  mozilla_sampler_call_exit(void* handle);
 inline void  mozilla_sampler_add_marker(const char *aInfo);
 
-void mozilla_sampler_start(int aEntries, int aInterval);
+void mozilla_sampler_start(int aEntries, int aInterval, const char** aFeatures, uint32_t aFeatureCount);
 void mozilla_sampler_stop();
 bool mozilla_sampler_is_active();
 void mozilla_sampler_responsiveness(TimeStamp time);
-const float* mozilla_sampler_get_responsiveness();
+const double* mozilla_sampler_get_responsiveness();
 void mozilla_sampler_save();
 char* mozilla_sampler_get_profile();
+const char** mozilla_sampler_get_features();
 void mozilla_sampler_init();
 
 namespace mozilla {

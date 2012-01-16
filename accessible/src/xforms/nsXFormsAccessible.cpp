@@ -38,10 +38,11 @@
 
 #include "nsXFormsAccessible.h"
 
-#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
+#include "Role.h"
+#include "States.h"
 
 #include "nscore.h"
 #include "nsServiceManagerUtils.h"
@@ -228,10 +229,10 @@ nsXFormsContainerAccessible::
 {
 }
 
-PRUint32
+role
 nsXFormsContainerAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_GROUPING;
+  return roles::GROUPING;
 }
 
 bool

@@ -54,6 +54,7 @@
 #ifndef jstypes_h___
 #define jstypes_h___
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Util.h"
 
 #include "js-config.h"
@@ -116,37 +117,15 @@
 #endif
 
 #ifndef JS_INLINE
-# if defined __cplusplus
-#  define JS_INLINE          inline
-# elif defined _MSC_VER
-#  define JS_INLINE          __inline
-# elif defined __GNUC__
-#  define JS_INLINE          __inline__
-# else
-#  define JS_INLINE          inline
-# endif
+#define JS_INLINE MOZ_INLINE
 #endif
 
 #ifndef JS_ALWAYS_INLINE
-# if defined DEBUG
-#  define JS_ALWAYS_INLINE   JS_INLINE
-# elif defined _MSC_VER
-#  define JS_ALWAYS_INLINE   __forceinline
-# elif defined __GNUC__
-#  define JS_ALWAYS_INLINE   __attribute__((always_inline)) JS_INLINE
-# else
-#  define JS_ALWAYS_INLINE   JS_INLINE
-# endif
+#define JS_ALWAYS_INLINE MOZ_ALWAYS_INLINE
 #endif
 
 #ifndef JS_NEVER_INLINE
-# if defined _MSC_VER
-#  define JS_NEVER_INLINE __declspec(noinline)
-# elif defined __GNUC__
-#  define JS_NEVER_INLINE __attribute__((noinline))
-# else
-#  define JS_NEVER_INLINE
-# endif
+#define JS_NEVER_INLINE MOZ_NEVER_INLINE
 #endif
 
 #ifndef JS_WARN_UNUSED_RESULT
@@ -254,29 +233,6 @@ typedef int JSIntn;
 typedef unsigned int JSUintn;
 
 /************************************************************************
-** TYPES:       JSSize
-** DESCRIPTION:
-**  A type for representing the size of objects.
-************************************************************************/
-typedef size_t JSSize;
-
-/************************************************************************
-** TYPES:       JSPtrDiff
-** DESCRIPTION:
-**  A type for pointer difference. Variables of this type are suitable
-**      for storing a pointer or pointer sutraction.
-************************************************************************/
-typedef ptrdiff_t JSPtrdiff;
-
-/************************************************************************
-** TYPES:       JSUptrdiff
-** DESCRIPTION:
-**  A type for pointer difference. Variables of this type are suitable
-**      for storing a pointer or pointer sutraction.
-************************************************************************/
-typedef uintptr_t JSUptrdiff;
-
-/************************************************************************
 ** TYPES:       JSBool
 ** DESCRIPTION:
 **  Use JSBool for variables and parameter types. Use JS_FALSE and JS_TRUE
@@ -287,11 +243,6 @@ typedef uintptr_t JSUptrdiff;
 typedef JSIntn JSBool;
 #define JS_TRUE (JSIntn)1
 #define JS_FALSE (JSIntn)0
-/*
-** Special: JS_NEITHER is used by the tracer to have tri-state booleans.
-** This should not be used in new code.
-*/
-#define JS_NEITHER (JSIntn)2
 
 /************************************************************************
 ** TYPES:       JSPackedBool

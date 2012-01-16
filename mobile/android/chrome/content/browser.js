@@ -105,9 +105,6 @@ const kElementsReceivingInput = {
     video: true
 };
 
-const UA_MODE_MOBILE = "mobile";
-const UA_MODE_DESKTOP = "desktop";
-
 function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
 }
@@ -211,6 +208,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Select", false);
     Services.obs.addObserver(this, "Tab:Close", false);
+    Services.obs.addObserver(this, "Tab:Screenshot", false);
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
@@ -224,7 +222,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
-    Services.obs.addObserver(this, "AgentMode:Change", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
 
     function showFullScreenWarning() {
@@ -474,6 +471,14 @@ var BrowserApp = {
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
   },
 
+  screenshotTab: function screenshotTab(aData) {
+      let json = JSON.parse(aData);
+      let tab = this.getTabForId(parseInt(json.tabID));
+      let width = parseInt(json.width);
+      let height =  parseInt(json.height);
+      tab.screenshot(width, height);
+  },
+
   selectTab: function selectTab(aTab) {
     if (aTab != null) {
       this.selectedTab = aTab;
@@ -547,6 +552,10 @@ var BrowserApp = {
     printSettings.headerStrLeft   = "";
     printSettings.headerStrRight  = "";
 
+    // Create a valid mimeInfo for the PDF
+    let ms = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+    let mimeInfo = ms.getFromTypeAndExtension("application/pdf", "pdf");
+
     let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
 
     let cancelable = {
@@ -556,7 +565,7 @@ var BrowserApp = {
     }
     let download = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                                   aBrowser.currentURI,
-                                  Services.io.newFileURI(file), "", null,
+                                  Services.io.newFileURI(file), "", mimeInfo,
                                   Date.now() * 1000, null, cancelable);
 
     webBrowserPrint.print(printSettings, download);
@@ -823,6 +832,8 @@ var BrowserApp = {
       this.selectTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Close") {
       this.closeTab(this.getTabForId(parseInt(aData)));
+    } else if (aTopic == "Tab:Screenshot") {
+      this.screenshotTab(aData);
     } else if (aTopic == "Browser:Quit") {
       this.quit();
     } else if (aTopic == "SaveAs:PDF") {
@@ -831,11 +842,6 @@ var BrowserApp = {
       this.getPreferences(aData);
     } else if (aTopic == "Preferences:Set") {
       this.setPreferences(aData);
-    } else if (aTopic == "AgentMode:Change") {
-      let args = JSON.parse(aData);
-      let tab = this.getTabForId(args.tabId);
-      tab.setAgentMode(args.agent);
-      tab.browser.reload();
     } else if (aTopic == "ScrollTo:FocusedInput") {
       this.scrollToFocusedInput(browser);
     } else if (aTopic == "Sanitize:ClearAll") {
@@ -969,12 +975,9 @@ var NativeWindow = {
   },
   contextmenus: {
     items: {}, //  a list of context menu items that we may show
-    textContext: null, // saved selector for text input areas
-
     _contextId: 0, // id to assign to new context menu items if they are added
 
     init: function() {
-      this.textContext = this.SelectorContext("input[type='text'],input[type='password'],textarea");
       this.imageContext = this.SelectorContext("img");
 
       Services.obs.addObserver(this, "Gesture:LongPress", false);
@@ -1077,6 +1080,13 @@ var NativeWindow = {
           return (scheme && !dontOpen.test(scheme));
         }
         return false;
+      }
+    },
+
+    textContext: {
+      matches: function textContext(aElement) {
+        return ((aElement instanceof Ci.nsIDOMHTMLInputElement && aElement.mozIsTextField(false))
+                || aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
       }
     },
 
@@ -1286,8 +1296,6 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.vbox = null;
   this.id = 0;
-  this.agentMode = UA_MODE_MOBILE;
-  this.lastHost = null;
   this.create(aURL, aParams);
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
                      pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
@@ -1351,7 +1359,6 @@ Tab.prototype = {
     this.browser.addEventListener("pagehide", this, true);
     this.browser.addEventListener("pageshow", this, true);
 
-    Services.obs.addObserver(this, "http-on-modify-request", false);
     Services.obs.addObserver(this, "document-shown", false);
 
     if (!aParams.delayLoad) {
@@ -1377,29 +1384,6 @@ Tab.prototype = {
     }
   },
 
-  setAgentMode: function(aMode) {
-    if (this.agentMode != aMode) {
-      this.agentMode = aMode;
-      sendMessageToJava({
-        gecko: {
-          type: "AgentMode:Changed",
-          agentMode: aMode,
-          tabId: this.id
-        }
-      });
-    }
-  },
-
-  setHostFromURL: function(aURL) {
-    let uri = Services.io.newURI(aURL, null, null);
-    let host = uri.asciiHost;
-    if (this.lastHost != host) {
-      this.lastHost = host;
-      // TODO: remember mobile/desktop selection for each host (bug 705840)
-      this.setAgentMode(UA_MODE_MOBILE);
-    }
-  },
-
   destroy: function() {
     if (!this.browser)
       return;
@@ -1420,7 +1404,6 @@ Tab.prototype = {
     BrowserApp.deck.removeChild(this.vbox);
     BrowserApp.deck.selectedPanel = selectedPanel;
 
-    Services.obs.removeObserver(this, "http-on-modify-request", false);
     this.browser = null;
     this.vbox = null;
     this.documentIdForCurrentViewport = null;
@@ -1495,6 +1478,26 @@ Tab.prototype = {
       this.updateTransform();
   },
 
+  screenshot: function(aWidth, aHeight) {
+      if (!this.browser || !this.browser.contentWindow)
+          return;
+      let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      canvas.setAttribute("width", aWidth);  
+      canvas.setAttribute("height", aHeight);
+      let ctx = canvas.getContext("2d");
+      ctx.drawWindow(this.browser.contentWindow, 0, 0, aWidth, aHeight, "rgb(255, 255, 255)");
+      let message = {
+        gecko: {
+          type: "Tab:ScreenshotData",
+          tabID: this.id,
+          width: aWidth,
+          height: aHeight,
+          data: canvas.toDataURL()
+        }
+      };
+      sendMessageToJava(message);
+  },
+
   updateTransform: function() {
     let hasZoom = (Math.abs(this._viewport.zoom - 1.0) >= 1e-6);
     let x = this._viewport.offsetX + Math.round(-this.viewportExcess.x * this._viewport.zoom);
@@ -1529,8 +1532,8 @@ Tab.prototype = {
       pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
 
       /* Transform the page width and height based on the zoom factor. */
-      pageWidth = Math.round(pageWidth * this._viewport.zoom);
-      pageHeight = Math.round(pageHeight * this._viewport.zoom);
+      pageWidth *= this._viewport.zoom;
+      pageHeight *= this._viewport.zoom;
 
       /*
        * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
@@ -1974,22 +1977,6 @@ Tab.prototype = {
 
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "http-on-modify-request":
-        if (!(aSubject instanceof Ci.nsIHttpChannel))
-          return;
-
-        let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
-        if (!(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI))
-          return;
-
-        let channelWindow = this.getWindowForRequest(channel);
-        if (channelWindow == this.browser.contentWindow) {
-          this.setHostFromURL(channel.URI.spec);
-          if (this.agentMode == UA_MODE_DESKTOP)
-            channel.setRequestHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1", false);
-        }
-        break;
-
       case "document-shown":
         // Is it on the top level?
         let contentDocument = aSubject;
@@ -2073,15 +2060,19 @@ var BrowserEventHandler = {
     } else if (aTopic == "Gesture:SingleTap") {
       let element = this._highlightElement;
       if (element && !FormAssistant.handleClick(element)) {
-        let data = JSON.parse(aData);
-        [data.x, data.y] = ElementTouchHelper.toScreenCoords(element.ownerDocument.defaultView, data.x, data.y);
-
-        this._sendMouseEvent("mousemove", element, data.x, data.y);
-        this._sendMouseEvent("mousedown", element, data.x, data.y);
-        this._sendMouseEvent("mouseup",   element, data.x, data.y);
-
-        if (ElementTouchHelper.isElementClickable(element))
-          Haptic.performSimpleAction(Haptic.LongPress);
+        try {
+          let data = JSON.parse(aData);
+          [data.x, data.y] = ElementTouchHelper.toScreenCoords(element.ownerDocument.defaultView, data.x, data.y);
+  
+          this._sendMouseEvent("mousemove", element, data.x, data.y);
+          this._sendMouseEvent("mousedown", element, data.x, data.y);
+          this._sendMouseEvent("mouseup",   element, data.x, data.y);
+  
+          if (ElementTouchHelper.isElementClickable(element))
+            Haptic.performSimpleAction(Haptic.LongPress);
+        } catch(e) {
+          Cu.reportError(e);
+        }
       }
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:DoubleTap") {
@@ -2190,10 +2181,15 @@ var BrowserEventHandler = {
       }
     }
 
-    [aX, aY] = ElementTouchHelper.toBrowserCoords(aElement.ownerDocument.defaultView, aX, aY);
-    let cwu = aElement.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    aButton = aButton || 0;
-    cwu.sendMouseEventToWindow(aName, Math.round(aX), Math.round(aY), aButton, 1, 0, true);
+    let window = aElement.ownerDocument.defaultView;
+    try {
+      [aX, aY] = ElementTouchHelper.toBrowserCoords(window, aX, aY);
+      let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      aButton = aButton || 0;
+      cwu.sendMouseEventToWindow(aName, Math.round(aX), Math.round(aY), aButton, 1, 0, true);
+    } catch(e) {
+      Cu.reportError(e);
+    }
   },
 
   _hasScrollableOverflow: function(elem) {
@@ -2295,24 +2291,36 @@ const kReferenceDpi = 240; // standard "pixel" size used in some preferences
 
 const ElementTouchHelper = {
   toBrowserCoords: function(aWindow, aX, aY) {
-    let tab = BrowserApp.selectedTab;
-    if (aWindow) {
-      let browser = BrowserApp.getBrowserForWindow(aWindow);
-      tab = BrowserApp.getTabForBrowser(browser);
-    }
+    if (!aWindow)
+      throw "Must provide a window";
+  
+    let browser = BrowserApp.getBrowserForWindow(aWindow.top);
+    if (!browser)
+      throw "Unable to find a browser";
+
+    let tab = BrowserApp.getTabForBrowser(browser);
+    if (!tab)
+      throw "Unable to find a tab";
+
     let viewport = tab.viewport;
     return [
-        ((aX-tab.viewportExcess.x)*viewport.zoom + viewport.offsetX),
-        ((aY-tab.viewportExcess.y)*viewport.zoom + viewport.offsetY)
+        ((aX - tab.viewportExcess.x) * viewport.zoom + viewport.offsetX),
+        ((aY - tab.viewportExcess.y) * viewport.zoom + viewport.offsetY)
     ];
   },
 
   toScreenCoords: function(aWindow, aX, aY) {
-    let tab = BrowserApp.selectedTab;
-    if (aWindow) {
-      let browser = BrowserApp.getBrowserForWindow(aWindow);
-      tab = BrowserApp.getTabForBrowser(browser);
-    }
+    if (!aWindow)
+      throw "Must provide a window";
+  
+    let browser = BrowserApp.getBrowserForWindow(aWindow.top);
+    if (!browser)
+      throw "Unable to find a browser";
+
+    let tab = BrowserApp.getTabForBrowser(browser);
+    if (!tab)
+      throw "Unable to find a tab";
+
     let viewport = tab.viewport;
     return [
         (aX - viewport.offsetX)/viewport.zoom + tab.viewportExcess.x,
@@ -3435,7 +3443,7 @@ var ClipboardHelper = {
   init: function() {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyAll"), ClipboardHelper.getCopyContext(true), ClipboardHelper.copy.bind(ClipboardHelper));
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), NativeWindow.contextmenus.textContext, ClipboardHelper.select.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), ClipboardHelper.selectAllContext, ClipboardHelper.select.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.paste"), ClipboardHelper.pasteContext, ClipboardHelper.paste.bind(ClipboardHelper));
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"), NativeWindow.contextmenus.textContext, ClipboardHelper.inputMethod.bind(ClipboardHelper));
   },
@@ -3485,15 +3493,32 @@ var ClipboardHelper = {
     return {
       matches: function(aElement) {
         if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          // Don't include "copy" for password fields.
+          // mozIsTextField(true) tests for only non-password fields.
+          if (aElement instanceof Ci.nsIDOMHTMLInputElement && !aElement.mozIsTextField(true))
+            return false;
+
           let selectionStart = aElement.selectionStart;
           let selectionEnd = aElement.selectionEnd;
           if (selectionStart != selectionEnd)
             return true;
-          else if (isCopyAll)
+
+          if (isCopyAll && aElement.textLength > 0)
             return true;
         }
         return false;
       }
+    }
+  },
+
+  selectAllContext: {
+    matches: function selectAllContextMatches(aElement) {
+      if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          let selectionStart = aElement.selectionStart;
+          let selectionEnd = aElement.selectionEnd;
+          return (selectionStart > 0 || selectionEnd < aElement.textLength);
+      }
+      return false;
     }
   },
 
@@ -3664,10 +3689,16 @@ var PermissionsHelper = {
         // Keep track of permissions, so we know which ones to clear
         this._currentPermissions = permissions; 
 
+        let host;
+        try {
+          host = uri.host;
+        } catch(e) {
+          host = uri.spec;
+        }
         sendMessageToJava({
           gecko: {
             type: "Permissions:Data",
-            host: uri.host,
+            host: host,
             permissions: permissions
           }
         });

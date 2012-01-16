@@ -115,6 +115,10 @@ TelephonyCall::ChangeStateInternal(PRUint16 aCallState, bool aFireEvents)
   mState = stateString;
   mCallState = aCallState;
 
+  if (aCallState == nsITelephone::CALL_STATE_DIALING) {
+    mOutgoing = true;
+  }
+
   if (aCallState == nsITelephone::CALL_STATE_DISCONNECTED) {
     NS_ASSERTION(mLive, "Should be live!");
     mTelephony->RemoveCall(this);

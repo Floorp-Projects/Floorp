@@ -38,11 +38,12 @@
 
 #include "nsXULColorPickerAccessible.h"
 
-#include "States.h"
 #include "nsAccUtils.h"
 #include "nsAccTreeWalker.h"
 #include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
+#include "Role.h"
+#include "States.h"
 
 #include "nsIDOMElement.h"
 #include "nsMenuPopupFrame.h"
@@ -77,10 +78,10 @@ nsXULColorPickerTileAccessible::GetValue(nsAString& aValue)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULColorPickerTileAccessible: nsAccessible
 
-PRUint32
+role
 nsXULColorPickerTileAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_PUSHBUTTON;
+  return roles::PUSHBUTTON;
 }
 
 PRUint64
@@ -138,10 +139,10 @@ nsXULColorPickerAccessible::NativeState()
   return states;
 }
 
-PRUint32
+role
 nsXULColorPickerAccessible::NativeRole()
 {
-  return nsIAccessibleRole::ROLE_BUTTONDROPDOWNGRID;
+  return roles::BUTTONDROPDOWNGRID;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +184,7 @@ nsXULColorPickerAccessible::CacheChildren()
     PRUint32 role = child->Role();
 
     // Get an accessible for menupopup or panel elements.
-    if (role == nsIAccessibleRole::ROLE_ALERT) {
+    if (role == roles::ALERT) {
       AppendChild(child);
       return;
     }

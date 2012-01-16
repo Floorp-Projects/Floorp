@@ -124,6 +124,8 @@ public class PanZoomController
     private final Axis mX;
     private final Axis mY;
 
+    private Thread mMainThread;
+
     /* The timer that handles flings or bounces. */
     private Timer mAnimationTimer;
     /* The runnable being scheduled by the animation timer. */
@@ -141,10 +143,21 @@ public class PanZoomController
         mX = new AxisX(mSubscroller);
         mY = new AxisY(mSubscroller);
 
+        mMainThread = GeckoApp.mAppContext.getMainLooper().getThread();
+        checkMainThread();
+
         mState = PanZoomState.NOTHING;
 
         GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_RECT, this);
         GeckoAppShell.registerGeckoEventListener(MESSAGE_ZOOM_PAGE, this);
+    }
+
+    // for debugging bug 713011; it can be taken out once that is resolved.
+    private void checkMainThread() {
+        if (mMainThread != Thread.currentThread()) {
+            // log with full stack trace
+            Log.e(LOGTAG, "Uh-oh, we're running on the wrong thread!", new Exception());
+        }
     }
 
     public void handleMessage(String event, JSONObject message) {
@@ -198,6 +211,7 @@ public class PanZoomController
     /** This function must be called from the UI thread. */
     @SuppressWarnings("fallthrough")
     public void abortAnimation() {
+        checkMainThread();
         // this happens when gecko changes the viewport on us or if the device is rotated.
         // if that's the case, abort any animation in progress and re-zoom so that the page
         // snaps to edges. for other cases (where the user's finger(s) are down) don't do
@@ -631,6 +645,8 @@ public class PanZoomController
     }
 
     private void finishAnimation() {
+        checkMainThread();
+
         Log.d(LOGTAG, "Finishing animation at " + mController.getViewportMetrics());
         stopAnimationTimer();
 
@@ -649,18 +665,27 @@ public class PanZoomController
         FloatSize pageSize = viewportMetrics.getPageSize();
         RectF viewport = viewportMetrics.getViewport();
 
+        float focusX = viewport.width() / 2.0f;
+        float focusY = viewport.height() / 2.0f;
         float minZoomFactor = 0.0f;
         if (viewport.width() > pageSize.width && pageSize.width > 0) {
             float scaleFactor = viewport.width() / pageSize.width;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
+            focusX = 0.0f;
         }
         if (viewport.height() > pageSize.height && pageSize.height > 0) {
             float scaleFactor = viewport.height() / pageSize.height;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
+            focusY = 0.0f;
         }
 
         if (!FloatUtils.fuzzyEquals(minZoomFactor, 0.0f)) {
-            PointF center = new PointF(viewport.width() / 2.0f, viewport.height() / 2.0f);
+            // if one (or both) of the page dimensions is smaller than the viewport,
+            // zoom using the top/left as the focus on that axis. this prevents the
+            // scenario where, if both dimensions are smaller than the viewport, but
+            // by different scale factors, we end up scrolled to the end on one axis
+            // after applying the scale
+            PointF center = new PointF(focusX, focusY);
             viewportMetrics.scaleTo(minZoomFactor, center);
         } else if (zoomFactor > MAX_ZOOM) {
             PointF center = new PointF(viewport.width() / 2.0f, viewport.height() / 2.0f);

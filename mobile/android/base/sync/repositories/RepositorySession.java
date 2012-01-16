@@ -38,6 +38,9 @@
 
 package org.mozilla.gecko.sync.repositories;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -73,6 +76,19 @@ public abstract class RepositorySession {
   private static final String LOG_TAG = "RepositorySession";
   protected SessionStatus status = SessionStatus.UNSTARTED;
   protected Repository repository;
+  protected RepositorySessionStoreDelegate delegate;
+
+  /**
+   * A queue of Runnables which call out into delegates.
+   */
+  protected ExecutorService delegateQueue  = Executors.newSingleThreadExecutor();
+
+  /**
+   * A queue of Runnables which effect storing.
+   * This includes actual store work, and also the consequences of storeDone.
+   * This provides strict ordering.
+   */
+  protected ExecutorService storeWorkQueue = Executors.newSingleThreadExecutor();
 
   // The time that the last sync on this collection completed, in milliseconds since epoch.
   public long lastSyncTimestamp;
@@ -89,7 +105,48 @@ public abstract class RepositorySession {
   public abstract void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate);
   public abstract void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate);
   public abstract void fetchAll(RepositorySessionFetchRecordsDelegate delegate);
-  public abstract void store(Record record, RepositorySessionStoreDelegate delegate);
+
+  /**
+   * Override this if you wish to short-circuit a sync when you know --
+   * e.g., by inspecting the database or info/collections -- that no new
+   * data are available.
+   *
+   * @return true if a sync should proceed.
+   */
+  public boolean dataAvailable() {
+    return true;
+  }
+
+  /*
+   * Store operations proceed thusly:
+   *
+   * * Set a delegate
+   * * Store an arbitrary number of records. At any time the delegate can be
+   *   notified of an error.
+   * * Call storeDone to notify the session that no more items are forthcoming.
+   * * The store delegate will be notified of error or completion.
+   *
+   * This arrangement of calls allows for batching at the session level.
+   *
+   * Store success calls are not guaranteed.
+   */
+  public void setStoreDelegate(RepositorySessionStoreDelegate delegate) {
+    Log.d(LOG_TAG, "Setting store delegate to " + delegate);
+    this.delegate = delegate;
+  }
+  public abstract void store(Record record) throws NoStoreDelegateException;
+
+  public void storeDone() {
+    Log.d(LOG_TAG, "Scheduling onStoreCompleted for after storing is done.");
+    Runnable command = new Runnable() {
+      @Override
+      public void run() {
+        delegate.onStoreCompleted();
+      }
+    };
+    storeWorkQueue.execute(command);
+  }
+
   public abstract void wipe(RepositorySessionWipeDelegate delegate);
 
   public void unbundle(RepositorySessionBundle bundle) {
@@ -128,10 +185,9 @@ public abstract class RepositorySession {
   public void begin(RepositorySessionBeginDelegate delegate) {
     try {
       sharedBegin();
-      delegate.deferredBeginDelegate().onBeginSucceeded(this);
-
+      delegate.deferredBeginDelegate(delegateQueue).onBeginSucceeded(this);
     } catch (Exception e) {
-      delegate.deferredBeginDelegate().onBeginFailed(e);
+      delegate.deferredBeginDelegate(delegateQueue).onBeginFailed(e);
     }
   }
 
@@ -168,17 +224,21 @@ public abstract class RepositorySession {
    */
   public void abort(RepositorySessionFinishDelegate delegate) {
     this.status = SessionStatus.DONE;    // TODO: ABORTED?
-    delegate.deferredFinishDelegate().onFinishSucceeded(this, this.getBundle(null));
+    delegate.deferredFinishDelegate(delegateQueue).onFinishSucceeded(this, this.getBundle(null));
   }
 
-  public void finish(RepositorySessionFinishDelegate delegate) {
+  public void finish(final RepositorySessionFinishDelegate delegate) {
     if (this.status == SessionStatus.ACTIVE) {
       this.status = SessionStatus.DONE;
-      delegate.deferredFinishDelegate().onFinishSucceeded(this, this.getBundle(null));
+      delegate.deferredFinishDelegate(delegateQueue).onFinishSucceeded(this, this.getBundle(null));
     } else {
       Log.e(LOG_TAG, "Tried to finish() an unstarted or already finished session");
-      delegate.deferredFinishDelegate().onFinishFailed(new InvalidSessionTransitionException(null));
+      Exception e = new InvalidSessionTransitionException(null);
+      delegate.deferredFinishDelegate(delegateQueue).onFinishFailed(e);
     }
+    Log.i(LOG_TAG, "Shutting down work queues.");
+ //   storeWorkQueue.shutdown();
+ //   delegateQueue.shutdown();
   }
 
   public boolean isActive() {
@@ -188,5 +248,7 @@ public abstract class RepositorySession {
   public void abort() {
     // TODO: do something here.
     status = SessionStatus.ABORTED;
+    storeWorkQueue.shutdown();
+    delegateQueue.shutdown();
   }
 }

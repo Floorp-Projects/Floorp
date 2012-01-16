@@ -40,17 +40,16 @@ package org.mozilla.gecko.sync;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
-import org.mozilla.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.CryptoInfo;
 import org.mozilla.gecko.sync.crypto.Cryptographer;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.crypto.MissingCryptoInputException;
 import org.mozilla.gecko.sync.crypto.NoKeyBundleException;
-import org.mozilla.gecko.sync.crypto.Utils;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 /**
@@ -75,6 +74,8 @@ public class CryptoRecord extends Record {
   private static final String KEY_ID         = "id";
   private static final String KEY_COLLECTION = "collection";
   private static final String KEY_PAYLOAD    = "payload";
+  private static final String KEY_MODIFIED   = "modified";
+  private static final String KEY_SORTINDEX  = "sortindex";
   private static final String KEY_CIPHERTEXT = "ciphertext";
   private static final String KEY_HMAC       = "hmac";
   private static final String KEY_IV         = "IV";
@@ -142,20 +143,29 @@ public class CryptoRecord extends Record {
    * @throws ParseException
    * @throws IOException
    */
-  public static CryptoRecord fromJSONRecord(String jsonRecord) throws ParseException, NonObjectJSONException, IOException {
-    return CryptoRecord.fromJSONRecord(CryptoRecord.parseUTF8AsJSONObject(jsonRecord.getBytes("UTF-8")));
+  public static CryptoRecord fromJSONRecord(String jsonRecord)
+      throws ParseException, NonObjectJSONException, IOException {
+    byte[] bytes = jsonRecord.getBytes("UTF-8");
+    ExtendedJSONObject object = CryptoRecord.parseUTF8AsJSONObject(bytes);
+
+    return CryptoRecord.fromJSONRecord(object);
   }
 
   // TODO: defensive programming.
-  public static CryptoRecord fromJSONRecord(ExtendedJSONObject jsonRecord) throws IOException, ParseException, NonObjectJSONException {
-    String id = (String) jsonRecord.get(KEY_ID);
-    String collection = (String) jsonRecord.get(KEY_COLLECTION);
+  public static CryptoRecord fromJSONRecord(ExtendedJSONObject jsonRecord)
+      throws IOException, ParseException, NonObjectJSONException {
+    String id                  = (String) jsonRecord.get(KEY_ID);
+    String collection          = (String) jsonRecord.get(KEY_COLLECTION);
     ExtendedJSONObject payload = jsonRecord.getJSONObject(KEY_PAYLOAD);
     CryptoRecord record = new CryptoRecord(payload);
-    record.guid = id;
-    record.collection = collection;
-
-    // TODO: lastModified?
+    record.guid         = id;
+    record.collection   = collection;
+    if (jsonRecord.containsKey(KEY_MODIFIED)) {
+      record.lastModified = jsonRecord.getTimestamp(KEY_MODIFIED);
+    }
+    if (jsonRecord.containsKey(KEY_SORTINDEX )) {
+      record.sortIndex = jsonRecord.getLong(KEY_SORTINDEX);
+    }
     // TODO: deleted?
     return record;
   }
@@ -229,5 +239,10 @@ public class CryptoRecord extends Record {
     o.put(KEY_PAYLOAD, payload.toJSONString());
     o.put(KEY_ID,      this.guid);
     return o.object;
+  }
+
+  @Override
+  public String toJSONString() {
+    return toJSONObject().toJSONString();
   }
 }

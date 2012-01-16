@@ -113,7 +113,6 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
 
   // Stash away some style data that we need
   mStyleText = aOuterReflowState->frame->GetStyleText();
-  mTextAlign = mStyleText->mTextAlign;
   mLineNumber = 0;
   mFlags = 0; // default all flags to false except those that follow here...
   mTotalPlacedFrames = 0;
@@ -2493,8 +2492,12 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
 
 void
 nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
-                                    bool aAllowJustify)
+                                    bool aIsLastLine)
 {
+  /**
+   * NOTE: aIsLastLine ain't necessarily so: it is correctly set by caller
+   * only in cases where the last line needs special handling.
+   */
   PerSpanData* psd = mRootSpan;
   NS_WARN_IF_FALSE(psd->mRightEdge != NS_UNCONSTRAINEDSIZE,
                    "have unconstrained width; this should only result from "
@@ -2510,29 +2513,44 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
   nscoord dx = 0;
 
   if (remainingWidth > 0) {
-    switch (mTextAlign) {
-      case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-        // If this is not the last line then go ahead and justify the
-        // frames in the line.
-        if (aAllowJustify) {
-          PRInt32 numSpaces;
-          PRInt32 numLetters;
-            
-          ComputeJustificationWeights(psd, &numSpaces, &numLetters);
+    PRUint8 textAlign = mStyleText->mTextAlign;
 
-          if (numSpaces > 0) {
-            FrameJustificationState state =
-              { numSpaces, numLetters, remainingWidth, 0, 0, 0, 0, 0 };
-
-            // Apply the justification, and make sure to update our linebox
-            // width to account for it.
-            aLineBounds.width += ApplyFrameJustification(psd, &state);
-            remainingWidth = availWidth - aLineBounds.width;
-            break;
-          }
+    /* 
+     * 'text-align-last: auto' is equivalent to the value of the 'text-align'
+     * property except when 'text-align' is set to 'justify', in which case it
+     * is 'justify' when 'text-justify' is 'distribute' and 'start' otherwise.
+     *
+     * XXX: the code below will have to change when we implement text-justify
+     */
+    if (aIsLastLine) {
+      if (mStyleText->mTextAlignLast == NS_STYLE_TEXT_ALIGN_AUTO) {
+        if (textAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY) {
+          textAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
         }
-        // Fall through to the default case if we were told not to
-        // justify anything or could not justify to fill the space.
+      } else {
+        textAlign = mStyleText->mTextAlignLast;
+      }
+    }
+
+    switch (textAlign) {
+      case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+        PRInt32 numSpaces;
+        PRInt32 numLetters;
+            
+        ComputeJustificationWeights(psd, &numSpaces, &numLetters);
+
+        if (numSpaces > 0) {
+          FrameJustificationState state =
+            { numSpaces, numLetters, remainingWidth, 0, 0, 0, 0, 0 };
+
+          // Apply the justification, and make sure to update our linebox
+          // width to account for it.
+          aLineBounds.width += ApplyFrameJustification(psd, &state);
+          remainingWidth = availWidth - aLineBounds.width;
+          break;
+        }
+        // Fall through to the default case if we could not justify to fill
+        // the space.
 
       case NS_STYLE_TEXT_ALIGN_DEFAULT:
         if (NS_STYLE_DIRECTION_LTR == psd->mDirection) {

@@ -58,7 +58,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsAccessible
-  virtual PRUint32 NativeRole();
+  virtual mozilla::a11y::role NativeRole();
 
   // HyperLinkAccessible
   virtual PRUint32 AnchorCount();

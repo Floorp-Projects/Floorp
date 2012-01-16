@@ -55,6 +55,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.sync.Utils;
 
 /*
  * Implements the basic required cryptography options.

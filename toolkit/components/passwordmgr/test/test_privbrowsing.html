@@ -230,7 +230,6 @@ function handleLoad(aEvent) {
 var pb = get_PBSvc();
 if (!pb) { // Private Browsing might not be available
   ok(true, "Private browsing service is not available");
-  SimpleTest.finish();
 } else {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 

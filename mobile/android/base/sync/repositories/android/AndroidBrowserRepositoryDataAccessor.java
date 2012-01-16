@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
+ *   Jason Voll <jvoll@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,19 +49,24 @@ import android.util.Log;
 
 public abstract class AndroidBrowserRepositoryDataAccessor {
 
+  private static final String[] GUID_COLUMNS = new String[] { BrowserContract.SyncColumns.GUID };
   protected Context context;
   protected String LOG_TAG = "AndroidBrowserRepositoryDataAccessor";
+  private final RepoUtils.QueryHelper queryHelper;
 
   public AndroidBrowserRepositoryDataAccessor(Context context) {
     this.context = context;
+    this.queryHelper = new RepoUtils.QueryHelper(context, getUri(), LOG_TAG);
   }
 
   protected abstract String[] getAllColumns();
   protected abstract ContentValues getContentValues(Record record);
   protected abstract Uri getUri();
-  protected long queryStart = 0;
-  protected long queryEnd = 0;
-  
+
+  public String dateModifiedWhere(long timestamp) {
+    return BrowserContract.SyncColumns.DATE_MODIFIED + " >= " + Long.toString(timestamp);
+  }
+
   public void wipe() {
     Log.i(LOG_TAG, "wiping: " + getUri());
     String where = BrowserContract.SyncColumns.GUID + " NOT IN ('mobile')";
@@ -68,101 +74,125 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
   }
   
   public void purgeDeleted() throws NullCursorException {
-    queryStart = System.currentTimeMillis();
-    Cursor cur = context.getContentResolver().query(getUri(),
-        new String[] { BrowserContract.SyncColumns.GUID },
-        BrowserContract.SyncColumns.IS_DELETED + "= 1", null, null);
-    queryEnd = System.currentTimeMillis();
-    RepoUtils.queryTimeLogger(LOG_TAG + ".purgeDeleted", queryStart, queryEnd);
-    if (cur == null) {
-      Log.e(LOG_TAG, "Got back a null cursor in AndroidBrowserRepositoryDataAccessor.purgeDeleted");
-      throw new NullCursorException(null);
+    String where = BrowserContract.SyncColumns.IS_DELETED + "= 1";
+    Cursor cur = queryHelper.safeQuery(".purgeDeleted", GUID_COLUMNS, where, null, null);
+
+    try {
+      if (!cur.moveToFirst()) {
+        return;
+      }
+      while (!cur.isAfterLast()) {
+        delete(RepoUtils.getStringFromCursor(cur, BrowserContract.SyncColumns.GUID));
+        cur.moveToNext();
+      }
+    } finally {
+      cur.close();
     }
-    cur.moveToFirst();
-    while (!cur.isAfterLast()) {
-      delete(RepoUtils.getStringFromCursor(cur, BrowserContract.SyncColumns.GUID));
-      cur.moveToNext();
-    }
-    cur.close();
   }
   
   protected void delete(String guid) {
-    context.getContentResolver().delete(getUri(), BrowserContract.SyncColumns.GUID + " = '" + guid + "'", null);
+    String where  = BrowserContract.SyncColumns.GUID + " = ?";
+    String[] args = new String[] { guid };
+
+    int deleted = context.getContentResolver().delete(getUri(), where, args);
+    if (deleted == 1) {
+      return;
+    }
+    Log.w(LOG_TAG, "Unexpectedly deleted " + deleted + " rows for guid " + guid);
   }
 
   public Uri insert(Record record) {
     ContentValues cv = getContentValues(record);
     return context.getContentResolver().insert(getUri(), cv);
   }
-  
+
+  /**
+   * Fetch all records.
+   * The caller is responsible for closing the cursor.
+   *
+   * @return A cursor. You *must* close this when you're done with it.
+   * @throws NullCursorException
+   */
   public Cursor fetchAll() throws NullCursorException {
-    queryStart = System.currentTimeMillis();
-    Cursor cur = context.getContentResolver().query(getUri(),
-        getAllColumns(), null, null, null);
-    queryEnd = System.currentTimeMillis();
-    
-    RepoUtils.queryTimeLogger(LOG_TAG + ".fetchAll", queryStart, queryEnd);
-    if (cur == null) {
-      Log.e(LOG_TAG, "Got null cursor exception in AndroidBrowserRepositoryDataAccessor.fetchAll");
-      throw new NullCursorException(null);
-    }
-    return cur;
+    return queryHelper.safeQuery(".fetchAll", getAllColumns(), null, null, null);
   }
   
+  /**
+   * Fetch GUIDs for records modified since the provided timestamp.
+   * The caller is responsible for closing the cursor.
+   *
+   * @param timestamp
+   * @return A cursor. You *must* close this when you're done with it.
+   * @throws NullCursorException
+   */
   public Cursor getGUIDsSince(long timestamp) throws NullCursorException {
-    queryStart = System.currentTimeMillis();
-    Cursor cur = context.getContentResolver().query(getUri(),
-        new String[] { BrowserContract.SyncColumns.GUID },
-        BrowserContract.SyncColumns.DATE_MODIFIED + " >= " +
-        Long.toString(timestamp), null, null);
-    queryEnd = System.currentTimeMillis();
-    RepoUtils.queryTimeLogger(LOG_TAG + ".getGUIDsSince", queryStart, queryEnd);
-    if (cur == null) {
-      Log.e(LOG_TAG, "Got null cursor exception in AndroidBrowserRepositoryDataAccessor.getGUIDsSince");
-      throw new NullCursorException(null);
-    }
-    return cur;
+    return queryHelper.safeQuery(".getGUIDsSince",
+        GUID_COLUMNS,
+        dateModifiedWhere(timestamp),
+        null, null);
   }
 
+  /**
+   * Fetch records modified since the provided timestamp.
+   * The caller is responsible for closing the cursor.
+   *
+   * @param timestamp
+   * @return A cursor. You *must* close this when you're done with it.
+   * @throws NullCursorException
+   */
   public Cursor fetchSince(long timestamp) throws NullCursorException {
-    queryStart = System.currentTimeMillis();
-    Cursor cur = context.getContentResolver().query(getUri(),
+    return queryHelper.safeQuery(".fetchSince",
         getAllColumns(),
-        BrowserContract.SyncColumns.DATE_MODIFIED + " >= " +
-        Long.toString(timestamp), null, null);
-    queryEnd = System.currentTimeMillis();
-    RepoUtils.queryTimeLogger(LOG_TAG + ".fetchSince", queryStart, queryEnd);
-    if (cur == null) {
-      Log.e(LOG_TAG, "Got null cursor exception in AndroidBrowserRepositoryDataAccessor.fetchSince");
-      throw new NullCursorException(null);
-    }
-    return cur;
+        dateModifiedWhere(timestamp),
+        null, null);
   }
 
+  /**
+   * Fetch records for the provided GUIDs.
+   * The caller is responsible for closing the cursor.
+   *
+   * @param guids
+   * @return A cursor. You *must* close this when you're done with it.
+   * @throws NullCursorException
+   */
   public Cursor fetch(String guids[]) throws NullCursorException {
-    String where = "guid" + " in (";
-    for (String guid : guids) {
-      where = where + "'" + guid + "', ";
+    String where = computeSQLInClause(guids.length, "guid");
+    return queryHelper.safeQuery(".fetch", getAllColumns(), where, guids, null);
+  }
+
+  protected String computeSQLInClause(int items, String field) {
+    StringBuilder builder = new StringBuilder(field);
+    builder.append(" IN (");
+    int i = 0;
+    for (; i < items - 1; ++i) {
+      builder.append("?, ");
     }
-    where = (where.substring(0, where.length() -2) + ")");
-    queryStart = System.currentTimeMillis();
-    Cursor cur = context.getContentResolver().query(getUri(), getAllColumns(), where, null, null);
-    queryEnd = System.currentTimeMillis();
-    RepoUtils.queryTimeLogger(LOG_TAG + ".fetch", queryStart, queryEnd);
-    if (cur == null) {
-      Log.e(LOG_TAG, "Got null cursor exception in AndroidBrowserRepositoryDataAccessor.fetch");
-      throw new NullCursorException(null);
+    if (i < items) {
+      builder.append("?");
     }
-    return cur;
+    builder.append(")");
+    return builder.toString();
   }
 
   public void delete(Record record) {
-    context.getContentResolver().delete(getUri(),
-         BrowserContract.SyncColumns.GUID + " = '" + record.guid +"'", null);
+    String where  = BrowserContract.SyncColumns.GUID + " = ?";
+    String[] args = new String[] { record.guid };
+
+    int deleted = context.getContentResolver().delete(getUri(), where, args);
+    if (deleted == 1) {
+      return;
+    }
+    Log.w(LOG_TAG, "Unexpectedly deleted " + deleted + " rows for guid " + record.guid);
   }
 
   public void updateByGuid(String guid, ContentValues cv) {
-    context.getContentResolver().update(getUri(), cv,
-        BrowserContract.SyncColumns.GUID + " = '" + guid +"'", null);
+    String where  = BrowserContract.SyncColumns.GUID + " = ?";
+    String[] args = new String[] { guid };
+
+    int updated = context.getContentResolver().update(getUri(), cv, where, args);
+    if (updated == 1) {
+      return;
+    }
+    Log.w(LOG_TAG, "Unexpectedly updated " + updated + " rows for guid " + guid);
   }
 }
