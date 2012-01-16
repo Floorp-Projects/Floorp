@@ -75,6 +75,7 @@ public:
   virtual bool IsEmpty();
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
+  virtual void CleanupResources();
 
 private:
   friend class BasicBufferOGL;
@@ -105,6 +106,7 @@ public:
   virtual bool IsEmpty();
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
+  virtual void CleanupResources();
 
 private:
   nsRefPtr<ShadowBufferOGL> mBuffer;

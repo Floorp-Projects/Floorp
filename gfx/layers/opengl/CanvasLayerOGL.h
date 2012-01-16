@@ -75,6 +75,7 @@ public:
   virtual Layer* GetLayer() { return this; }
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
+  virtual void CleanupResources();
 
 protected:
   void UpdateSurface();
@@ -128,6 +129,7 @@ public:
   Layer* GetLayer();
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
+  virtual void CleanupResources();
 
 private:
   nsRefPtr<TextureImage> mTexImage;
