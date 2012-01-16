@@ -130,6 +130,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
 #ifdef MOZ_B2G_RIL
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorTelephony)
 #endif
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorNetwork)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -1062,6 +1063,17 @@ Navigator::GetMozTelephony(nsIDOMTelephony** aTelephony)
 }
 
 #endif // MOZ_B2G_RIL
+
+//*****************************************************************************
+//    Navigator::nsIDOMNavigatorNetwork
+//*****************************************************************************
+
+NS_IMETHODIMP
+Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
+{
+  *aConnection = nsnull;
+  return NS_OK;
+}
 
 PRInt64
 Navigator::SizeOf() const
