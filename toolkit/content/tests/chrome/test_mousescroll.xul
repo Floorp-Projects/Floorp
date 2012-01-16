@@ -73,6 +73,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
 
 /** Test for Bug 378028 **/
 /*   and for Bug 350471 **/
+var smoothScrollPref = "general.smoothScroll";
+SpecialPowers.setBoolPref(smoothScrollPref, false);
 SimpleTest.waitForExplicitFinish();
 
 /* There are three kinds of scroll events:
@@ -230,6 +232,7 @@ function runTests()
     testListbox("listbox");
     testArrowScrollbox("hscrollbox");
     testArrowScrollbox("vscrollbox");
+    SpecialPowers.clearUserPref(smoothScrollPref);
     SimpleTest.finish();
   });
 }
