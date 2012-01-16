@@ -142,11 +142,25 @@ SetScreenBrightness(double brightness)
 
 void
 EnableNetworkNotifications()
-{}
+{
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->EnableNetworkNotifications();
+}
 
 void
 DisableNetworkNotifications()
-{}
+{
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->DisableNetworkNotifications();
+}
 
 void
 GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)

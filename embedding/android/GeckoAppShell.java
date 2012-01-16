@@ -1780,4 +1780,12 @@ public class GeckoAppShell
     public static double[] getCurrentNetworkInformation() {
         return GeckoNetworkManager.getInstance().getCurrentInformation();
     }
+
+    public static void enableNetworkNotifications() {
+        GeckoNetworkManager.getInstance().enableNotifications();
+    }
+
+    public static void disableNetworkNotifications() {
+        GeckoNetworkManager.getInstance().disableNotifications();
+    }
 }
