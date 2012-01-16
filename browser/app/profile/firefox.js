@@ -1032,6 +1032,8 @@ pref("devtools.styleinspector.enabled", true);
 
 // Enable the Tilt inspector
 pref("devtools.tilt.enabled", true);
+pref("devtools.tilt.intro_transition", true);
+pref("devtools.tilt.outro_transition", true);
 
 // Enable the rules view
 pref("devtools.ruleview.enabled", true);
