@@ -191,7 +191,6 @@ nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     return;
      
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-    
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
     nsRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
@@ -237,8 +236,7 @@ nsTableRowFrame::InsertFrames(ChildListID     aListID,
 
   // Get the table frame
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  
-  nsIAtom* cellFrameType = (tableFrame->IsBorderCollapse()) ? nsGkAtoms::bcTableCellFrame : nsGkAtoms::tableCellFrame;
+  nsIAtom* cellFrameType = tableFrame->IsBorderCollapse() ? nsGkAtoms::bcTableCellFrame : nsGkAtoms::tableCellFrame;
   nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, cellFrameType);
   nsTArray<nsTableCellFrame*> cellChildren;
   for (nsFrameList::Enumerator e(newCells); !e.AtEnd(); e.Next()) {
@@ -786,13 +784,10 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 {
   aStatus = NS_FRAME_COMPLETE;
 
-  bool borderCollapse = (((nsTableFrame*)aTableFrame.GetFirstInFlow())->IsBorderCollapse());
-
   // XXXldb Should we be checking constrained height instead?
-  bool isPaginated = aPresContext->IsPaginated();
-
+  const bool isPaginated = aPresContext->IsPaginated();
+  const bool borderCollapse = aTableFrame.IsBorderCollapse();
   nsresult rv = NS_OK;
-
   nscoord cellSpacingX = aTableFrame.GetCellSpacingX();
   PRInt32 cellColSpan = 1;  // must be defined here so it's set properly for non-cell kids
   
@@ -1084,8 +1079,8 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   nsRect cellRect = aCellFrame->GetRect();
   nsRect cellVisualOverflow = aCellFrame->GetVisualOverflowRect();
   
-  nsSize  availSize(cellRect.width, aAvailableHeight);
-  bool borderCollapse = ((nsTableFrame*)tableFrame->GetFirstInFlow())->IsBorderCollapse();
+  nsSize availSize(cellRect.width, aAvailableHeight);
+  bool borderCollapse = tableFrame->IsBorderCollapse();
   nsTableCellReflowState cellReflowState(aPresContext, aReflowState,
                                          aCellFrame, availSize, false);
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
