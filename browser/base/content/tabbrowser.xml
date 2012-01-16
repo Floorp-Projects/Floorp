@@ -2847,11 +2847,9 @@
 
           goSetCommandEnabled("cmd_ToggleTabsOnTop", visible);
 
-          if (window.TabsOnTop)
-            TabsOnTop.syncUI();
+          TabsOnTop.syncUI();
 
-          if (window.TabsInTitlebar)
-            TabsInTitlebar.allowedBy("tabs-visible", visible);
+          TabsInTitlebar.allowedBy("tabs-visible", visible);
         ]]></body>
       </method>
 
