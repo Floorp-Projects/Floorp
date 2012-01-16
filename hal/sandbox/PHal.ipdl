@@ -84,6 +84,13 @@ parent:
     sync GetScreenBrightness() returns (double brightness);
     SetScreenBrightness(double brightness);
 
+child:
+    NotifySensorChange(SensorData aSensorData);
+
+parent:    
+    EnableSensorNotifications(SensorType aSensor);
+    DisableSensorNotifications(SensorType aSensor);
+
     __delete__();
 };
 
