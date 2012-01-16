@@ -353,6 +353,8 @@ public:
     bool IsTablet();
 
     void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
+    void EnableNetworkNotifications();
+    void DisableNetworkNotifications();
 
 protected:
     static AndroidBridge *sBridge;
@@ -449,6 +451,8 @@ protected:
     jmethodID jClearMessageList;
 
     jmethodID jGetCurrentNetworkInformation;
+    jmethodID jEnableNetworkNotifications;
+    jmethodID jDisableNetworkNotifications;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

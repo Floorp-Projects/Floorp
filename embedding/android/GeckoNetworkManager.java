@@ -132,6 +132,11 @@ public class GeckoNetworkManager
 
   private NetworkType  mNetworkType = NetworkType.NETWORK_NONE;
   private IntentFilter mNetworkFilter = new IntentFilter();
+  // Whether the manager should be listening to Network Information changes.
+  private boolean mShouldBeListening = false;
+  // Whether the manager should notify Gecko that a change in Network
+  // Information happened.
+  private boolean mShouldNotify      = false;
 
   public static GeckoNetworkManager getInstance() {
     return sInstance;
@@ -149,12 +154,27 @@ public class GeckoNetworkManager
   }
 
   public void start() {
+    mShouldBeListening = true;
     updateNetworkType();
 
+    if (mShouldNotify) {
+      startListening();
+    }
+  }
+
+  private void startListening() {
     GeckoApp.mAppContext.registerReceiver(sInstance, mNetworkFilter);
   }
 
   public void stop() {
+    mShouldBeListening = false;
+
+    if (mShouldNotify) {
+      stopListening();
+    }
+  }
+
+  private void stopListening() {
     GeckoApp.mAppContext.unregisterReceiver(sInstance);
   }
 
@@ -162,7 +182,7 @@ public class GeckoNetworkManager
     NetworkType previousNetworkType = mNetworkType;
     mNetworkType = getNetworkType();
 
-    if (mNetworkType == previousNetworkType) {
+    if (mNetworkType == previousNetworkType || !mShouldNotify) {
       return;
     }
 
@@ -173,6 +193,25 @@ public class GeckoNetworkManager
   public double[] getCurrentInformation() {
     return new double[] { getNetworkSpeed(mNetworkType),
                           isNetworkUsuallyMetered(mNetworkType) ? 1.0 : 0.0 };
+  }
+
+  public void enableNotifications() {
+    // We set mShouldNotify *after* calling updateNetworkType() to make sure we
+    // don't notify an eventual change in mNetworkType.
+    updateNetworkType();
+    mShouldNotify = true;
+
+    if (mShouldBeListening) {
+      startListening();
+    }
+  }
+
+  public void disableNotifications() {
+    mShouldNotify = false;
+
+    if (mShouldBeListening) {
+      stopListening();
+    }
   }
 
   private static NetworkType getNetworkType() {

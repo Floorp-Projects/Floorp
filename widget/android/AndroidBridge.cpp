@@ -177,6 +177,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jClearMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "clearMessageList", "(I)V");
 
     jGetCurrentNetworkInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentNetworkInformation", "()[D");
+    jEnableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableNetworkNotifications", "()V");
+    jDisableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableNetworkNotifications", "()V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1452,6 +1454,20 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
     aNetworkInfo->canBeMetered() = info[1] == 1.0f;
 
     mJNIEnv->ReleaseDoubleArrayElements(arr, info, 0);
+}
+
+void
+AndroidBridge::EnableNetworkNotifications()
+{
+    ALOG_BRIDGE("AndroidBridge::EnableNetworkNotifications");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableNetworkNotifications);
+}
+
+void
+AndroidBridge::DisableNetworkNotifications()
+{
+    ALOG_BRIDGE("AndroidBridge::DisableNetworkNotifications");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jDisableNetworkNotifications);
 }
 
 void *
