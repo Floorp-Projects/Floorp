@@ -240,15 +240,8 @@ nsTableFrame::Init(nsIContent*      aContent,
 
 nsTableFrame::~nsTableFrame()
 {
-  if (nsnull!=mCellMap) {
-    delete mCellMap;
-    mCellMap = nsnull;
-  }
-
-  if (nsnull!=mTableLayoutStrategy) {
-    delete mTableLayoutStrategy;
-    mTableLayoutStrategy = nsnull;
-  }
+  delete mCellMap;
+  delete mTableLayoutStrategy;
 }
 
 void
