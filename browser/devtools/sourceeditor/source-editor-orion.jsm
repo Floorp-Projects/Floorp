@@ -292,6 +292,7 @@ SourceEditor.prototype = {
       "Find...": [this.ui.find, this.ui],
       "Find Next Occurrence": [this.ui.findNext, this.ui],
       "Find Previous Occurrence": [this.ui.findPrevious, this.ui],
+      "Goto Line...": [this.ui.gotoLine, this.ui],
     };
 
     for (let name in actions) {

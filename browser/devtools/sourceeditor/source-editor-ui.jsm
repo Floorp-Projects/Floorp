@@ -76,6 +76,34 @@ SourceEditorUI.prototype = {
   },
 
   /**
+   * The "go to line" command UI. This displays a prompt that allows the user to
+   * input the line number to jump to.
+   */
+  gotoLine: function SEU_gotoLine()
+  {
+    let oldLine = this.editor.getCaretPosition ?
+                  this.editor.getCaretPosition().line : null;
+    let newLine = {value: oldLine !== null ? oldLine + 1 : ""};
+
+    let result = Services.prompt.prompt(this._ownerWindow,
+      SourceEditorUI.strings.GetStringFromName("gotoLineCmd.promptTitle"),
+      SourceEditorUI.strings.GetStringFromName("gotoLineCmd.promptMessage"),
+      newLine, null, {});
+
+    newLine.value = parseInt(newLine.value);
+    if (result && !isNaN(newLine.value) && --newLine.value != oldLine) {
+      if (this.editor.getLineCount) {
+        let lines = this.editor.getLineCount() - 1;
+        this.editor.setCaretPosition(Math.max(0, Math.min(lines, newLine.value)));
+      } else {
+        this.editor.setCaretPosition(Math.max(0, newLine.value));
+      }
+    }
+
+    return true;
+  },
+
+  /**
    * The "find" command UI. This displays a prompt that allows the user to input
    * the string to search for in the code. By default the current selection is
    * used as a search string, or the last search string.
@@ -191,6 +219,7 @@ SourceEditorController.prototype = {
       case "cmd_find":
       case "cmd_findAgain":
       case "cmd_findPrevious":
+      case "cmd_gotoLine":
         result = true;
         break;
       default:
@@ -215,6 +244,7 @@ SourceEditorController.prototype = {
 
     switch (aCommand) {
       case "cmd_find":
+      case "cmd_gotoLine":
         result = true;
         break;
       case "cmd_findAgain":
@@ -247,6 +277,9 @@ SourceEditorController.prototype = {
         break;
       case "cmd_findPrevious":
         this._editor.ui.findPrevious();
+        break;
+      case "cmd_gotoLine":
+        this._editor.ui.gotoLine();
         break;
     }
   },

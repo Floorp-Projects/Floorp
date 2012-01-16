@@ -166,6 +166,10 @@
        command="cmd_findPrevious"
        modifiers="shift"/>
 #endif
+  <key id="key_gotoLine"
+       key="&gotoLineCmd.key;"
+       command="cmd_gotoLine"
+       modifiers="accel"/>
 </keyset>
 
 
@@ -258,6 +262,12 @@
                 accesskey="&findAgainCmd.accesskey;"
                 key="key_findAgain"
                 command="cmd_findAgain"/>
+      <menuseparator/>
+      <menuitem id="sp-menu-gotoLine"
+                label="&gotoLineCmd.label;"
+                accesskey="&gotoLineCmd.accesskey;"
+                key="key_gotoLine"
+                command="cmd_gotoLine"/>
     </menupopup>
   </menu>
 
