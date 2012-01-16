@@ -80,6 +80,10 @@ namespace sms {
 class SmsManager;
 } // namespace sms
 
+namespace network {
+class Connection;
+} // namespace Connection;
+
 class Navigator : public nsIDOMNavigator
                 , public nsIDOMClientInformation
                 , public nsIDOMNavigatorGeolocation
@@ -136,7 +140,7 @@ private:
 #ifdef MOZ_B2G_RIL
   nsCOMPtr<nsIDOMTelephony> mTelephony;
 #endif
-  nsCOMPtr<nsIDOMMozConnection> mConnection;
+  nsRefPtr<network::Connection> mConnection;
   nsWeakPtr mWindow;
 };
 
