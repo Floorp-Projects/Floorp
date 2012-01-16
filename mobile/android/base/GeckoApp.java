@@ -119,11 +119,9 @@ abstract public class GeckoApp
 
     private IntentFilter mConnectivityFilter;
     private IntentFilter mBatteryFilter;
-    private IntentFilter mNetworkFilter;
 
     private BroadcastReceiver mConnectivityReceiver;
     private BroadcastReceiver mBatteryReceiver;
-    private GeckoNetworkManager mNetworkReceiver;
 
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
@@ -1576,10 +1574,7 @@ abstract public class GeckoApp
           SmsManager.getInstance().init();
         }
 
-        mNetworkFilter = new IntentFilter();
-        mNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        mNetworkReceiver = new GeckoNetworkManager();
-        mNetworkReceiver.initialize();
+        GeckoNetworkManager.getInstance().init();
 
         final GeckoApp self = this;
  
@@ -1711,7 +1706,7 @@ abstract public class GeckoApp
         super.onPause();
 
         unregisterReceiver(mConnectivityReceiver);
-        unregisterReceiver(mNetworkReceiver);
+        GeckoNetworkManager.getInstance().stop();
     }
 
     @Override
@@ -1729,8 +1724,7 @@ abstract public class GeckoApp
             onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-        mNetworkReceiver.resume();
-        registerReceiver(mNetworkReceiver, mNetworkFilter);
+        GeckoNetworkManager.getInstance().start();
 
         if (mOwnActivityDepth > 0)
             mOwnActivityDepth--;
@@ -1813,10 +1807,11 @@ abstract public class GeckoApp
           SmsManager.getInstance().shutdown();
         }
 
+        GeckoNetworkManager.getInstance().stop();
+
         super.onDestroy();
 
         unregisterReceiver(mBatteryReceiver);
-        unregisterReceiver(mNetworkReceiver);
     }
 
     @Override
