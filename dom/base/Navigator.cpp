@@ -994,6 +994,7 @@ Navigator::IsSmsAllowed() const
 bool
 Navigator::IsSmsSupported() const
 {
+#ifdef MOZ_WEBSMS_BACKEND
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, false);
 
@@ -1001,6 +1002,9 @@ Navigator::IsSmsSupported() const
   smsService->HasSupport(&result);
 
   return result;
+#else
+  return false;
+#endif
 }
 
 NS_IMETHODIMP
