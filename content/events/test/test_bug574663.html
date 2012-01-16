@@ -20,8 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=574663
 
 /** Test for Bug 574663 **/
 
-// This test depends on general.smoothScroll being off.
-
 function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum) {
   var win = scrollbox.ownerDocument.defaultView;
   let event = {
@@ -107,6 +105,7 @@ function initPrefs()
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
                   getService(Components.interfaces.nsIPrefBranch2);
+  prefSvc.setBoolPref("general.smoothScroll", false);
   // Disables the app level scroll acceleration
   prefSvc.setIntPref("mousewheel.acceleration.start", -1);
   prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
@@ -120,12 +119,10 @@ function clearPrefs()
   var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
                   getService(Components.interfaces.nsIPrefBranch2);
 
-  if (prefSvc.prefHasUserValue("mousewheel.acceleration.start"))
-    prefSvc.clearUserPref("mousewheel.acceleration.start");
-  if (prefSvc.prefHasUserValue("mousewheel.system_scroll_override_on_root_content.enabled"))
-    prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
-  if (prefSvc.prefHasUserValue("mousewheel.withcontrolkey.action"))
-    prefSvc.clearUserPref("mousewheel.withcontrolkey.action");
+  prefSvc.clearUserPref("general.smoothScroll");
+  prefSvc.clearUserPref("mousewheel.acceleration.start");
+  prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
+  prefSvc.clearUserPref("mousewheel.withcontrolkey.action");
 }
 
 window.onload = function () {

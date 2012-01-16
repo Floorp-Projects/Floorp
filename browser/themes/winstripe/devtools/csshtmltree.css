@@ -234,10 +234,6 @@
   -moz-margin-end: 5px;
 }
 
-.ruleview-expander:-moz-locale-dir(rtl) {
-  background-position: 16px 0;
-}
-
 .ruleview-expander.styleinspector-open {
   background-position: 8px 0;
 }
