@@ -188,12 +188,7 @@ nsTableFrame::nsTableFrame(nsStyleContext* aContext)
     mCellMap(nsnull),
     mTableLayoutStrategy(nsnull)
 {
-  mBits.mHaveReflowedColGroups  = false;
-  mBits.mCellSpansPctCol        = false;
-  mBits.mNeedToCalcBCBorders    = false;
-  mBits.mIsBorderCollapse       = false;
-  mBits.mResizedColumns         = false; // only really matters if splitting
-  mBits.mGeometryDirty          = false;
+  memset(&mBits, 0, sizeof(mBits));
 }
 
 NS_QUERYFRAME_HEAD(nsTableFrame)
