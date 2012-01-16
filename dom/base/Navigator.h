@@ -49,6 +49,7 @@
 #include "nsIDOMClientInformation.h"
 #include "nsIDOMNavigatorBattery.h"
 #include "nsIDOMNavigatorSms.h"
+#include "nsIDOMNavigatorNetwork.h"
 #include "nsAutoPtr.h"
 #include "nsWeakReference.h"
 
@@ -78,15 +79,16 @@ namespace sms {
 class SmsManager;
 } // namespace sms
 
-class Navigator : public nsIDOMNavigator,
-                  public nsIDOMClientInformation,
-                  public nsIDOMNavigatorGeolocation,
-                  public nsIDOMNavigatorDesktopNotification,
-                  public nsIDOMMozNavigatorBattery,
-                  public nsIDOMMozNavigatorSms
+class Navigator : public nsIDOMNavigator
+                , public nsIDOMClientInformation
+                , public nsIDOMNavigatorGeolocation
+                , public nsIDOMNavigatorDesktopNotification
+                , public nsIDOMMozNavigatorBattery
+                , public nsIDOMMozNavigatorSms
 #ifdef MOZ_B2G_RIL
                 , public nsIDOMNavigatorTelephony
 #endif
+                , public nsIDOMMozNavigatorNetwork
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -99,10 +101,10 @@ public:
   NS_DECL_NSIDOMNAVIGATORDESKTOPNOTIFICATION
   NS_DECL_NSIDOMMOZNAVIGATORBATTERY
   NS_DECL_NSIDOMMOZNAVIGATORSMS
-
 #ifdef MOZ_B2G_RIL
   NS_DECL_NSIDOMNAVIGATORTELEPHONY
 #endif
+  NS_DECL_NSIDOMMOZNAVIGATORNETWORK
 
   static void Init();
 
