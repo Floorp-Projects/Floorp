@@ -440,7 +440,6 @@ public:
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
-    double Distance() { return mDistance; }
     const nsIntRect& Rect() { return mRect; }
     nsAString& Characters() { return mCharacters; }
     nsAString& CharactersExtra() { return mCharactersExtra; }
@@ -471,7 +470,6 @@ protected:
     int mRangeForeColor, mRangeBackColor;
     double mAlpha, mBeta, mGamma;
     double mX, mY, mZ;
-    double mDistance;
     nsString mCharacters, mCharactersExtra;
     nsRefPtr<nsGeoPosition> mGeoPosition;
     nsRefPtr<nsGeoPositionAddress> mGeoAddress;
@@ -494,7 +492,6 @@ protected:
     static jfieldID jXField;
     static jfieldID jYField;
     static jfieldID jZField;
-    static jfieldID jDistanceField;
     static jfieldID jRectField;
     static jfieldID jNativeWindowField;
 
@@ -537,7 +534,6 @@ public:
         VIEWPORT = 20,
         TILE_SIZE = 21,
         VISITED = 22,
-        PROXIMITY_EVENT = 23,
         dummy_java_enum_list_end
     };
 
