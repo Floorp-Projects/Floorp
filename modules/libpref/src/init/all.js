@@ -3416,6 +3416,7 @@ pref("profiler.entries", 100000);
 
 // Network API
 pref("dom.network.enabled", true);
+pref("dom.network.metered", false);
 #ifdef XP_WIN
 // On 32-bit Windows, fire a low-memory notification if we have less than this
 // many mb of virtual address space available.

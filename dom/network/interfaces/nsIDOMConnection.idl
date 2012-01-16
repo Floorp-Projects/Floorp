@@ -39,4 +39,5 @@
 [scriptable, uuid(0bd0bcc8-ca92-43fa-97bd-aec8d79edb24)]
 interface nsIDOMMozConnection : nsISupports
 {
+  readonly attribute boolean metered;
 };
