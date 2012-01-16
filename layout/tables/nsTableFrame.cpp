@@ -3364,18 +3364,15 @@ NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsTableFrame)
 
 nsTableFrame*
-nsTableFrame::GetTableFrame(nsIFrame* aSourceFrame)
+nsTableFrame::GetTableFrame(nsIFrame* aFrame)
 {
-  if (aSourceFrame) {
-    // "result" is the result of intermediate calls, not the result we return from this method
-    for (nsIFrame* parentFrame = aSourceFrame->GetParent(); parentFrame;
-         parentFrame = parentFrame->GetParent()) {
-      if (nsGkAtoms::tableFrame == parentFrame->GetType()) {
-        return (nsTableFrame*)parentFrame;
-      }
+  for (nsIFrame* ancestor = aFrame->GetParent(); ancestor;
+       ancestor = ancestor->GetParent()) {
+    if (nsGkAtoms::tableFrame == ancestor->GetType()) {
+      return static_cast<nsTableFrame*>(ancestor);
     }
   }
-  NS_NOTREACHED("unable to find table parent");
+  NS_RUNTIMEABORT("unable to find table parent");
   return nsnull;
 }
 
@@ -3581,14 +3578,8 @@ void nsTableIterator::Init(nsIFrame* aFirstChild)
   }
 
   nsTableFrame* table = nsTableFrame::GetTableFrame(mFirstChild);
-  if (table) {
-    mLeftToRight = (NS_STYLE_DIRECTION_LTR ==
-                    table->GetStyleVisibility()->mDirection);
-  }
-  else {
-    NS_NOTREACHED("source of table iterator is not part of a table");
-    return;
-  }
+  mLeftToRight = (NS_STYLE_DIRECTION_LTR ==
+                  table->GetStyleVisibility()->mDirection);
 
   if (!mLeftToRight) {
     mCount = 0;
