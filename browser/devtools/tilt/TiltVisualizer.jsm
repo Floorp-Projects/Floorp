@@ -60,7 +60,8 @@ const INVISIBLE_ELEMENTS = {
 
 const STACK_THICKNESS = 15;
 const WIREFRAME_COLOR = [0, 0, 0, 0.25];
-const INITIAL_TRANSITION_DURATION = 100;
+const INTRO_TRANSITION_DURATION = 80;
+const OUTRO_TRANSITION_DURATION = 50;
 const INITIAL_Z_TRANSLATION = 400;
 
 const MOUSE_CLICK_THRESHOLD = 10;
@@ -297,6 +298,16 @@ TiltVisualizer.Presenter = function TV_Presenter(
     if ("function" === typeof this.ondraw) {
       this.ondraw();
     }
+    if ("function" === typeof this.onInitializationFinished &&
+        this.frames === INTRO_TRANSITION_DURATION &&
+       !this.isExecutingDestruction) {
+      this.onInitializationFinished();
+    }
+    if ("function" === typeof this.onDestructionFinished &&
+        this.frames === OUTRO_TRANSITION_DURATION &&
+        this.isExecutingDestruction) {
+      this.onDestructionFinished();
+    }
   }.bind(this);
 
   setup();
@@ -312,6 +323,8 @@ TiltVisualizer.Presenter.prototype = {
   {
     let renderer = this.renderer;
     let transforms = this.transforms;
+    let w = renderer.width;
+    let h = renderer.height;
 
     // if the mesh wasn't created yet, don't continue rendering
     if (!this.meshStacks || !this.meshWireframe) {
@@ -323,10 +336,15 @@ TiltVisualizer.Presenter.prototype = {
     renderer.perspective();
 
     // apply a transition transformation using an ortho and perspective matrix
-    let f = this.frames / INITIAL_TRANSITION_DURATION;
-    let w = renderer.width;
-    let h = renderer.height;
-    renderer.lerp(renderer.projMatrix, mat4.ortho(0, w, h, 0, -1, 1000), f, 8);
+    let ortho = mat4.ortho(0, w, h, 0, -1000, 1000);
+
+    if (!this.isExecutingDestruction) {
+      let f = this.frames / INTRO_TRANSITION_DURATION;
+      renderer.lerp(renderer.projMatrix, ortho, f, 8);
+    } else {
+      let f = this.frames / OUTRO_TRANSITION_DURATION;
+      renderer.lerp(renderer.projMatrix, ortho, 1 - f, 8);
+    }
 
     // apply the preliminary transformations to the model view
     renderer.translate(w * 0.5, h * 0.5, -INITIAL_Z_TRANSLATION);
@@ -351,7 +369,8 @@ TiltVisualizer.Presenter.prototype = {
     this.drawHighlight();
 
     // make sure the initial transition is drawn until finished
-    if (this.frames < INITIAL_TRANSITION_DURATION) {
+    if (this.frames < INTRO_TRANSITION_DURATION ||
+        this.frames < OUTRO_TRANSITION_DURATION) {
       this.redraw = true;
     }
     this.frames++;
@@ -670,7 +689,8 @@ TiltVisualizer.Presenter.prototype = {
     vec3.set([x,     y + h, z * STACK_THICKNESS], highlight.v3);
 
     this._currentSelection = aNodeIndex;
-    this.inspectorUI.inspectNode(node);
+    this.inspectorUI.inspectNode(node, this.contentWindow.innerHeight < y ||
+                                       this.contentWindow.pageYOffset > 0);
   },
 
   /**
@@ -790,6 +810,28 @@ TiltVisualizer.Presenter.prototype = {
   },
 
   /**
+   * Starts executing a destruction animation and executes a callback function
+   * when finished.
+   *
+   * @param {Function} aCallback
+   *                   the destruction finished callback
+   */
+  executeDestruction: function TV_executeDestruction(aCallback)
+  {
+    if (!this.isExecutingDestruction) {
+      this.isExecutingDestruction = true;
+      this.onDestructionFinished = aCallback;
+
+      if (this.frames > OUTRO_TRANSITION_DURATION) {
+        this.frames = 0;
+        this.redraw = true;
+      } else {
+        aCallback();
+      }
+    }
+  },
+
+  /**
    * Function called when this object is destroyed.
    */
   finalize: function TVP_finalize()
@@ -853,26 +895,60 @@ TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
   TiltUtils.bindObjectFunc(this, "update");
   TiltUtils.bindObjectFunc(this, "^on");
 
-  // bind commonly used mouse and keyboard events with the controller
-  aCanvas.addEventListener("mousedown", this.onMouseDown, false);
-  aCanvas.addEventListener("mouseup", this.onMouseUp, false);
-  aCanvas.addEventListener("click", this.onMouseClick, false);
-  aCanvas.addEventListener("mousemove", this.onMouseMove, false);
-  aCanvas.addEventListener("mouseover", this.onMouseOver, false);
-  aCanvas.addEventListener("mouseout", this.onMouseOut, false);
-  aCanvas.addEventListener("MozMousePixelScroll", this.onMozScroll, false);
-  aCanvas.addEventListener("keydown", this.onKeyDown, false);
-  aCanvas.addEventListener("keyup", this.onKeyUp, false);
-  aCanvas.addEventListener("blur", this.onBlur, false);
-
-  // handle resize events to change the arcball dimensions
-  aPresenter.contentWindow.addEventListener("resize", this.onResize, false);
+  // add the necessary event listeners
+  this.addEventListeners();
 
   // attach this controller's update function to the presenter ondraw event
   aPresenter.ondraw = this.update;
 };
 
 TiltVisualizer.Controller.prototype = {
+
+  /**
+   * Adds all added events listeners required by this controller.
+   */
+  addEventListeners: function TVC_addEventListeners()
+  {
+    let canvas = this.canvas;
+    let presenter = this.presenter;
+
+    // bind commonly used mouse and keyboard events with the controller
+    canvas.addEventListener("mousedown", this.onMouseDown, false);
+    canvas.addEventListener("mouseup", this.onMouseUp, false);
+    canvas.addEventListener("click", this.onMouseClick, false);
+    canvas.addEventListener("mousemove", this.onMouseMove, false);
+    canvas.addEventListener("mouseover", this.onMouseOver, false);
+    canvas.addEventListener("mouseout", this.onMouseOut, false);
+    canvas.addEventListener("MozMousePixelScroll", this.onMozScroll, false);
+    canvas.addEventListener("keydown", this.onKeyDown, false);
+    canvas.addEventListener("keyup", this.onKeyUp, false);
+    canvas.addEventListener("blur", this.onBlur, false);
+
+    // handle resize events to change the arcball dimensions
+    presenter.contentWindow.addEventListener("resize", this.onResize, false);
+  },
+
+  /**
+   * Removes all added events listeners required by this controller.
+   */
+  removeEventListeners: function TVC_removeEventListeners()
+  {
+    let canvas = this.canvas;
+    let presenter = this.presenter;
+
+    canvas.removeEventListener("mousedown", this.onMouseDown, false);
+    canvas.removeEventListener("mouseup", this.onMouseUp, false);
+    canvas.removeEventListener("click", this.onMouseClick, false);
+    canvas.removeEventListener("mousemove", this.onMouseMove, false);
+    canvas.removeEventListener("mouseover", this.onMouseOver, false);
+    canvas.removeEventListener("mouseout", this.onMouseOut, false);
+    canvas.removeEventListener("MozMousePixelScroll", this.onMozScroll, false);
+    canvas.removeEventListener("keydown", this.onKeyDown, false);
+    canvas.removeEventListener("keyup", this.onKeyUp, false);
+    canvas.removeEventListener("blur", this.onBlur, false);
+
+    presenter.contentWindow.removeEventListener("resize", this.onResize,false);
+  },
 
   /**
    * Function called each frame, updating the visualization camera transforms.
@@ -1011,7 +1087,7 @@ TiltVisualizer.Controller.prototype = {
     let code = e.keyCode || e.which;
 
     if (code === e.DOM_VK_ESCAPE) {
-      this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId);
+      this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId, 1);
       return;
     }
 
@@ -1056,24 +1132,11 @@ TiltVisualizer.Controller.prototype = {
    */
   finalize: function TVC_finalize()
   {
-    let canvas = this.canvas;
-    let presenter = this.presenter;
-
     TiltUtils.destroyObject(this.arcball);
     TiltUtils.destroyObject(this.coordinates);
 
-    canvas.removeEventListener("mousedown", this.onMouseDown, false);
-    canvas.removeEventListener("mouseup", this.onMouseUp, false);
-    canvas.removeEventListener("click", this.onMouseClick, false);
-    canvas.removeEventListener("mousemove", this.onMouseMove, false);
-    canvas.removeEventListener("mouseover", this.onMouseOver, false);
-    canvas.removeEventListener("mouseout", this.onMouseOut, false);
-    canvas.removeEventListener("MozMousePixelScroll", this.onMozScroll, false);
-    canvas.removeEventListener("keydown", this.onKeyDown, false);
-    canvas.removeEventListener("keyup", this.onKeyUp, false);
-    canvas.removeEventListener("blur", this.onBlur, false);
-    presenter.contentWindow.removeEventListener("resize", this.onResize,false);
-    presenter.ondraw = null;
+    this.removeEventListeners();
+    this.presenter.ondraw = null;
   }
 };
 
