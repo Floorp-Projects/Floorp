@@ -91,7 +91,7 @@ static gfxIntSize gAndroidTileSize = gfxIntSize(0, 0);
 static gfxIntSize gAndroidScreenBounds;
 
 #ifdef ACCESSIBILITY
-bool nsWindow::sAccessibilityEnabled = false;
+bool nsWindow::sAccessibilityEnabled = true;
 #endif
 
 #ifdef MOZ_JAVA_COMPOSITOR
@@ -103,7 +103,7 @@ static AndroidDirectTexture* sDirectTexture = new AndroidDirectTexture(2048, 204
         AndroidGraphicBuffer::UsageSoftwareWrite | AndroidGraphicBuffer::UsageTexture,
         gfxASurface::ImageFormatRGB16_565);
 
-static bool sHasDirectTexture = true;
+static bool sHasDirectTexture = false;
 
 #endif
 
