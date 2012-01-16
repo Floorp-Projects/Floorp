@@ -39,11 +39,6 @@
 
 include protocol PContent;
 include protocol PBrowser;
-include "nspr/prtime.h";
-include "mozilla/HalSensor.h";
-
-using PRTime;
-using mozilla::hal::SensorType;
 
 namespace mozilla {
 
@@ -52,12 +47,6 @@ namespace hal {
     double level;
     bool   charging;
     double remainingTime;
-  };
-  
-  struct SensorData {
-    SensorType sensor;
-    PRTime timestamp;
-    float[] values;
   };
 }
 
@@ -83,13 +72,6 @@ parent:
 
     sync GetScreenBrightness() returns (double brightness);
     SetScreenBrightness(double brightness);
-
-child:
-    NotifySensorChange(SensorData aSensorData);
-
-parent:    
-    EnableSensorNotifications(SensorType aSensor);
-    DisableSensorNotifications(SensorType aSensor);
 
     __delete__();
 };

@@ -75,7 +75,6 @@ public class GeckoEvent {
     public static final int ACTIVITY_START = 17;
     public static final int SAVE_STATE = 18;
     public static final int BROADCAST = 19;
-    public static final int PROXIMITY_EVENT = 20;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -103,7 +102,6 @@ public class GeckoEvent {
     public Rect mRect;
     public double mX, mY, mZ;
     public double mAlpha, mBeta, mGamma;
-    public double mDistance;
 
     public int mMetaState, mFlags;
     public int mKeyCode, mUnicodeChar;
@@ -147,30 +145,19 @@ public class GeckoEvent {
     }
 
     public GeckoEvent(SensorEvent s) {
-        int sensor_type = s.sensor.getType();
- 
-        switch(sensor_type) {
-        case Sensor.TYPE_ACCELEROMETER:
+
+        if (s.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             mType = ACCELERATION_EVENT;
             mX = s.values[0];
             mY = s.values[1];
             mZ = s.values[2];
-            break;
-            
-        case Sensor.TYPE_ORIENTATION:
+        }
+        else {
             mType = ORIENTATION_EVENT;
             mAlpha = -s.values[0];
             mBeta = -s.values[1];
             mGamma = -s.values[2];
             Log.i("GeckoEvent", "SensorEvent type = " + s.sensor.getType() + " " + s.sensor.getName() + " " + mAlpha + " " + mBeta + " " + mGamma );
-            break;
-
-        case Sensor.TYPE_PROXIMITY:
-            mType = PROXIMITY_EVENT;
-            mDistance = s.values[0];
-            Log.i("GeckoEvent", "SensorEvent type = " + s.sensor.getType() + 
-                  " " + s.sensor.getName() + " " + mDistance);
-            break;
         }
     }
 
