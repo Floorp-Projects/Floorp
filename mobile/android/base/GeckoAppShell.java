@@ -1749,6 +1749,6 @@ public class GeckoAppShell
     }
 
     public static double[] getCurrentNetworkInformation() {
-        return GeckoNetworkManager.getCurrentInformation();
+        return GeckoNetworkManager.getInstance().getCurrentInformation();
     }
 }

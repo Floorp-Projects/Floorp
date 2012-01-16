@@ -88,8 +88,6 @@ abstract public class GeckoApp
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
     private BroadcastReceiver mBatteryReceiver;
-    private IntentFilter mNetworkFilter;
-    private GeckoNetworkManager mNetworkReceiver;
 
     enum LaunchState {PreLaunch, Launching, WaitForDebugger,
                       Launched, GeckoRunning, GeckoExiting};
@@ -419,10 +417,7 @@ abstract public class GeckoApp
             SmsManager.getInstance().init();
         }
 
-        mNetworkFilter = new IntentFilter();
-        mNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        mNetworkReceiver = new GeckoNetworkManager();
-        mNetworkReceiver.initialize();
+        GeckoNetworkManager.getInstance().init();
 
         if (!checkAndSetLaunchState(LaunchState.PreLaunch,
                                     LaunchState.Launching))
@@ -516,7 +511,7 @@ abstract public class GeckoApp
         super.onPause();
 
         unregisterReceiver(mConnectivityReceiver);
-        unregisterReceiver(mNetworkReceiver);
+        GeckoNetworkManager.getInstance().stop();
     }
 
     @Override
@@ -535,8 +530,7 @@ abstract public class GeckoApp
             onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
-        mNetworkReceiver.resume();
-        registerReceiver(mNetworkReceiver, mNetworkFilter);
+        GeckoNetworkManager.getInstance().start();
     }
 
     @Override
@@ -589,10 +583,11 @@ abstract public class GeckoApp
             SmsManager.getInstance().shutdown();
         }
 
+        GeckoNetworkManager.getInstance().stop();
+
         super.onDestroy();
 
         unregisterReceiver(mBatteryReceiver);
-        unregisterReceiver(mNetworkReceiver);
     }
 
     @Override
