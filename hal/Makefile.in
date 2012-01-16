@@ -61,7 +61,6 @@ EXPORTS_mozilla = \
   Hal.h \
   HalImpl.h \
   HalSandbox.h \
-  HalSensor.h \
   $(NULL)
 
 CPPSRCS = \
@@ -71,27 +70,18 @@ CPPSRCS = \
   $(NULL)
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += \
-  AndroidHal.cpp \
-  AndroidSensor.cpp \
-  $(NULL)
+CPPSRCS += AndroidHal.cpp
 else ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += GonkHal.cpp
 else ifeq (Linux,$(OS_TARGET))
-CPPSRCS += \
-  LinuxHal.cpp \
-  FallbackSensor.cpp \
-  $(NULL)
+CPPSRCS += LinuxHal.cpp
 ifdef MOZ_ENABLE_DBUS
 CPPSRCS += UPowerClient.cpp
 endif
 else ifeq (WINNT,$(OS_TARGET))
 CPPSRCS += WindowsHal.cpp WindowsBattery.cpp
 else
-CPPSRCS += \
-  FallbackHal.cpp \
-  FallbackSensor.cpp \
-  $(NULL)
+CPPSRCS += FallbackHal.cpp
 endif
 
 include $(topsrcdir)/config/config.mk

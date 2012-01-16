@@ -142,10 +142,6 @@ public:
 
     void EnableLocation(bool aEnable);
 
-    void EnableSensor(int aSensorType);
-
-    void DisableSensor(int aSensorType);
-
     void ReturnIMEQueryResult(const PRUnichar *aResult, PRUint32 aLen, int aSelStart, int aSelLen);
 
     void NotifyXreExit();
@@ -379,8 +375,6 @@ protected:
     jmethodID jAcknowledgeEventSync;
     jmethodID jEnableDeviceMotion;
     jmethodID jEnableLocation;
-    jmethodID jEnableSensor;
-    jmethodID jDisableSensor;
     jmethodID jReturnIMEQueryResult;
     jmethodID jNotifyAppShellReady;
     jmethodID jNotifyXreExit;

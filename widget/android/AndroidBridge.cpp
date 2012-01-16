@@ -120,12 +120,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     jEnableDeviceMotion = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableDeviceMotion", "(Z)V");
     jEnableLocation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocation", "(Z)V");
-    jEnableSensor =
-        (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass,
-                                            "enableSensor", "(I)V");
-    jDisableSensor =
-        (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass,
-                                            "disableSensor", "(I)V");
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
@@ -352,20 +346,6 @@ AndroidBridge::EnableLocation(bool aEnable)
 {
     ALOG_BRIDGE("AndroidBridge::EnableLocation");
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableLocation, aEnable);
-}
-
-void
-AndroidBridge::EnableSensor(int aSensorType) {
-    ALOG_BRIDGE("AndroidBridge::EnableSensor");
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableSensor,
-                                  aSensorType);
-}
-
-void
-AndroidBridge::DisableSensor(int aSensorType) {
-    ALOG_BRIDGE("AndroidBridge::DisableSensor");
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jDisableSensor,
-                                  aSensorType);
 }
 
 void
