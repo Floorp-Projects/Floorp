@@ -994,14 +994,12 @@ TiltVisualizer.Controller.prototype = {
   {
     let code = e.keyCode || e.which;
 
-    if (code >= e.DOM_VK_LEFT && code <= e.DOM_VK_DOWN) {
+    if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
       e.preventDefault();
       e.stopPropagation();
-    }
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-      this.arcball.cancelKeyEvents();
-    } else {
       this.arcball.keyDown(code);
+    } else {
+      this.arcball.cancelKeyEvents();
     }
   },
 
@@ -1012,15 +1010,16 @@ TiltVisualizer.Controller.prototype = {
   {
     let code = e.keyCode || e.which;
 
-    if (code >= e.DOM_VK_LEFT && code <= e.DOM_VK_DOWN) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
     if (code === e.DOM_VK_ESCAPE) {
       this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId);
       return;
     }
-    this.arcball.keyUp(code);
+
+    if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.arcball.keyUp(code);
+    }
   },
 
   /**
