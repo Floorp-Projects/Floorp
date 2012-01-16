@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Make sure the order of included headers
+#include "base/basictypes.h"
+#include "nspr/prtypes.h"
+
 #include "nsAppShell.h"
 #include "nsWindow.h"
 #include "nsThreadUtils.h"
@@ -47,6 +51,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Hal.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
@@ -351,6 +356,15 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         }
         else
             NS_WARNING("Received location event without geoposition!");
+        break;
+    }
+
+    case AndroidGeckoEvent::PROXIMITY_EVENT: {
+        InfallibleTArray<float> values;
+        values.AppendElement(curEvent->Distance());
+        
+        hal::SensorData sdata(hal::SENSOR_PROXIMITY, PR_Now(), values);
+        hal::NotifySensorChange(sdata);
         break;
     }
 
