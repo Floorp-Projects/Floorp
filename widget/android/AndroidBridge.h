@@ -66,6 +66,7 @@ namespace mozilla {
 
 namespace hal {
 class BatteryInformation;
+class NetworkInformation;
 } // namespace hal
 
 namespace dom {
@@ -351,6 +352,8 @@ public:
 
     bool IsTablet();
 
+    void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -444,6 +447,8 @@ protected:
     jmethodID jCreateMessageList;
     jmethodID jGetNextMessageinList;
     jmethodID jClearMessageList;
+
+    jmethodID jGetCurrentNetworkInformation;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

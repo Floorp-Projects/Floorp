@@ -56,6 +56,7 @@ JAVAFILES = \
   SurfaceInfo.java \
   GeckoBatteryManager.java \
   VideoPlayer.java \
+  GeckoNetworkManager.java \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
