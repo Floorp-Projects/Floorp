@@ -173,9 +173,7 @@ public:
     NS_IMETHOD         GetHasTransparentBackground(bool& aTransparent);
     NS_IMETHOD         HideWindowChrome(bool aShouldHide);
     NS_IMETHOD         MakeFullScreen(bool aFullScreen);
-    NS_IMETHOD         Invalidate(const nsIntRect &aRect,
-                                  bool          aIsSynchronous);
-    NS_IMETHOD         Update();
+    NS_IMETHOD         Invalidate(const nsIntRect &aRect);
 
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);

@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko.sync.synchronizer;
 
+import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 
@@ -77,10 +78,17 @@ public class Synchronizer {
     }
 
     @Override
-    public void onSynchronized(SynchronizerSession session) {
+    public void onSynchronized(SynchronizerSession synchronizerSession) {
       Log.d(LOG_TAG, "Got onSynchronized.");
       Log.d(LOG_TAG, "Notifying SynchronizerDelegate.");
-      this.synchronizerDelegate.onSynchronized(session.getSynchronizer());
+      this.synchronizerDelegate.onSynchronized(synchronizerSession.getSynchronizer());
+    }
+
+    @Override
+    public void onSynchronizeSkipped(SynchronizerSession synchronizerSession) {
+      Log.d(LOG_TAG, "Got onSynchronizeSkipped.");
+      Log.d(LOG_TAG, "Notifying SynchronizerDelegate as if on success.");
+      this.synchronizerDelegate.onSynchronized(synchronizerSession.getSynchronizer());
     }
 
     @Override
@@ -122,5 +130,17 @@ public class Synchronizer {
     SynchronizerDelegateSessionDelegate sessionDelegate = new SynchronizerDelegateSessionDelegate(delegate);
     SynchronizerSession session = new SynchronizerSession(this, sessionDelegate);
     session.init(context, bundleA, bundleB);
+  }
+
+  public SynchronizerConfiguration save() {
+    String syncID = null;      // TODO: syncID.
+    return new SynchronizerConfiguration(syncID, bundleA, bundleB);
+  }
+
+  // Not thread-safe.
+  public void load(SynchronizerConfiguration config) {
+    bundleA = config.remoteBundle;
+    bundleB = config.localBundle;
+    // TODO: syncID.
   }
 }

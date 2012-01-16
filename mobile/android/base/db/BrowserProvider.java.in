@@ -207,8 +207,10 @@ public class BrowserProvider extends ContentProvider {
         return table + "." + column;
     }
 
+    private static final int GUID_ENCODE_FLAGS = Base64.URL_SAFE | Base64.NO_WRAP;
+
     public static String generateGuid() {
-        byte[] encodedBytes = Base64.encode(generateRandomBytes(9), Base64.URL_SAFE);
+        byte[] encodedBytes = Base64.encode(generateRandomBytes(9), GUID_ENCODE_FLAGS);
         return new String(encodedBytes);
     }
 
@@ -693,9 +695,9 @@ public class BrowserProvider extends ContentProvider {
 
                 String url = values.getAsString(Bookmarks.URL);
                 ContentValues imageValues = extractImageValues(values, url);
-                Boolean isFolder = values.getAsInteger(Bookmarks.IS_FOLDER) == 1;
+                Integer isFolder = values.getAsInteger(Bookmarks.IS_FOLDER);
 
-                if ((isFolder == null || !isFolder) && imageValues != null
+                if ((isFolder == null || isFolder != 1) && imageValues != null
                         && !TextUtils.isEmpty(url)) {
                     Log.d(LOGTAG, "Inserting bookmark image for URL: " + url);
                     updateOrInsertImage(uri, imageValues, Images.URL + " = ?",

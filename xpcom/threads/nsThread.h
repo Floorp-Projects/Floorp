@@ -77,8 +77,8 @@ public:
   // nsIThreadManager::NewThread.
   bool ShutdownRequired() { return mShutdownRequired; }
 
-  // The global thread observer
-  static nsIThreadObserver* sGlobalObserver;
+  // Clear the observer list.
+  void ClearObservers() { mEventObservers.Clear(); }
 
 private:
   friend class nsThreadShutdownEvent;

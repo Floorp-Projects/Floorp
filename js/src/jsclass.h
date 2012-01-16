@@ -52,7 +52,6 @@
 
 namespace js {
 
-class AutoIdVector;
 class PropertyName;
 class SpecialId;
 

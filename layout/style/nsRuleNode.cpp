@@ -3365,6 +3365,11 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                 NS_STYLE_TEXT_ALIGN_DEFAULT,
                 0, 0, 0, 0);
 
+  // text-align-last: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTextAlignLast(), text->mTextAlignLast,
+              canStoreInRuleTree, SETDSC_ENUMERATED, parentText->mTextAlignLast,
+              NS_STYLE_TEXT_ALIGN_AUTO, 0, 0, 0, 0);
+
   // text-indent: length, percent, calc, inherit, initial
   SetCoord(*aRuleData->ValueForTextIndent(), text->mTextIndent, parentText->mTextIndent,
            SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC,

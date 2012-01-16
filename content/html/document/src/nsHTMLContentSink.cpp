@@ -208,7 +208,6 @@ public:
   NS_IMETHOD DidProcessTokens(void);
   NS_IMETHOD WillProcessAToken(void);
   NS_IMETHOD DidProcessAToken(void);
-  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode);
   NS_IMETHOD BeginContext(PRInt32 aID);
   NS_IMETHOD EndContext(PRInt32 aID);
   NS_IMETHOD OpenHead();
@@ -269,8 +268,6 @@ protected:
   PRUint8 mFramesEnabled : 1;
   PRUint8 mFormOnStack : 1;
   PRUint8 unused : 5;  // bits available if someone needs one
-
-  nsCOMPtr<nsIObserverEntry> mObservers;
 
   nsINodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
 
@@ -1574,15 +1571,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mIsDocumentObserver = true;
   mHTMLDocument = do_QueryInterface(aDoc);
 
-  mObservers = nsnull;
-  nsIParserService* service = nsContentUtils::GetParserService();
-  if (!service) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  service->GetTopicObservers(NS_LITERAL_STRING("text/html"),
-                             getter_AddRefs(mObservers));
-
   NS_ASSERTION(mDocShell, "oops no docshell!");
 
   // Find out if subframes are enabled
@@ -2504,27 +2492,6 @@ NS_IMETHODIMP
 HTMLContentSink::WillResume()
 {
   return WillResumeImpl();
-}
-
-NS_IMETHODIMP
-HTMLContentSink::NotifyTagObservers(nsIParserNode* aNode)
-{
-  // Bug 125317
-  // Inform observers that we're handling a document.write().
-  // This information is necessary for the charset observer, atleast,
-  // to make a decision whether a new charset loading is required or not.
-
-  if (!mObservers) {
-    return NS_OK;
-  }
-
-  PRUint32 flag = 0;
-
-  if (mHTMLDocument && mHTMLDocument->IsWriting()) {
-    flag = nsIElementObserver::IS_DOCUMENT_WRITE;
-  }
-
-  return mObservers->Notify(aNode, mParser, mDocShell, flag);
 }
 
 void

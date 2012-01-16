@@ -109,19 +109,44 @@ function test2() {
 
   ok(!box.mozMatchesSelector(":hover"), "Box shouldn't be hovered (since the mouse isn't over it and since it's in a non-clickthrough iframe in a background window)");
 
+  // A function to waitForFocus and then wait for synthetic mouse
+  // events to happen.  Note that those happen off the refresh driver,
+  // and happen after animation frame requests.
+  function changeFocusAndAwaitSyntheticMouse(callback, winToFocus,
+                                             elementToWatchForMouseEventOn) {
+     function mouseWatcher() {
+       elementToWatchForMouseEventOn.removeEventListener("mouseover",
+                                                         mouseWatcher,
+                                                         false);
+       elementToWatchForMouseEventOn.removeEventListener("mouseout",
+                                                         mouseWatcher,
+                                                         false);
+       SimpleTest.executeSoon(callback);
+     }
+     elementToWatchForMouseEventOn.addEventListener("mouseover",
+                                                    mouseWatcher,
+                                                    false);
+     elementToWatchForMouseEventOn.addEventListener("mouseout",
+                                                    mouseWatcher,
+                                                    false);
+     // Just pass a dummy function to waitForFocus; the mouseout/over listener
+     // will actually handle things for us.
+     SimpleTest.waitForFocus(function() {}, winToFocus);
+  }
+
   // Move the mouse over the box.
   moveMouseTo(100, 150, function () {
     ok(!box.mozMatchesSelector(":hover"), "Box shouldn't be hovered (since it's in a non-clickthrough iframe in a background window)");
     // Activate the left window.
-    SimpleTest.waitForFocus(function () {
+    changeFocusAndAwaitSyntheticMouse(function () {
       ok(gIFrame.mozMatchesSelector(":hover"), "iframe should be hovered");
       ok(box.mozMatchesSelector(":hover"), "Box should be hovered");
       // De-activate the window (by activating the right window).
-      SimpleTest.waitForFocus(function () {
+      changeFocusAndAwaitSyntheticMouse(function () {
         ok(!gIFrame.mozMatchesSelector(":hover"), "iframe shouldn't be hovered");
         ok(!box.mozMatchesSelector(":hover"), "Box shouldn't be hovered");
         // Re-activate it.
-        SimpleTest.waitForFocus(function () {
+        changeFocusAndAwaitSyntheticMouse(function () {
           ok(gIFrame.mozMatchesSelector(":hover"), "iframe should be hovered");
           ok(box.mozMatchesSelector(":hover"), "Box should be hovered");
           // Unhover box and iframe by moving the mouse outside the window.
@@ -130,9 +155,9 @@ function test2() {
             ok(!box.mozMatchesSelector(":hover"), "box shouldn't be hovered");
             finalize();
           });
-        }, gLeftWindow);
-      }, gRightWindow);
-    }, gLeftWindow);
+        }, gLeftWindow, box);
+      }, gRightWindow, box);
+    }, gLeftWindow, box);
   });
 }
 

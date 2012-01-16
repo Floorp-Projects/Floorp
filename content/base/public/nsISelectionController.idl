@@ -98,6 +98,7 @@ interface nsISelectionController : nsISelectionDisplay
 
    const short SCROLL_SYNCHRONOUS = 1<<1;
    const short SCROLL_FIRST_ANCESTOR_ONLY = 1<<2;
+   const short SCROLL_CENTER_VERTICALLY = 1<<4;
 
    /**
    * ScrollSelectionIntoView scrolls a region of the selection,

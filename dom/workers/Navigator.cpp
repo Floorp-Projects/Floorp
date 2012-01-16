@@ -39,7 +39,6 @@
 #include "Navigator.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 
 #include "nsTraceRefcnt.h"

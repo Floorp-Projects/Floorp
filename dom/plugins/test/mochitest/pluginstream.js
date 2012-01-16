@@ -3,6 +3,8 @@
   function frameLoaded() {
     var testframe = document.getElementById('testframe');
     var embed = document.getElementsByTagName('embed')[0];
+    if (undefined === embed)
+      embed = document.getElementsByTagName('object')[0];
     try {
       var content = testframe.contentDocument.body.innerHTML;
       if (!content.length)
@@ -10,7 +12,8 @@
 
       var filename = embed.getAttribute("src") ||
           embed.getAttribute("geturl") ||
-          embed.getAttribute("geturlnotify");
+          embed.getAttribute("geturlnotify") ||
+          embed.getAttribute("data");
       
       var req = new XMLHttpRequest();
       req.open('GET', filename, false);

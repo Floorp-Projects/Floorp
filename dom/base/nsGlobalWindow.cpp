@@ -180,7 +180,7 @@
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
-#include "nsFileDataProtocolHandler.h"
+#include "nsBlobProtocolHandler.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
 #include "nsIURIFixup.h"
@@ -256,8 +256,6 @@
 #ifdef ANDROID
 #include <android/log.h>
 #endif
-
-#include "jscntxt.h" // cx->runtime->structuredCloneCallbacks
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
@@ -689,7 +687,7 @@ nsDOMMozURLProperty::RevokeObjectURL(const nsAString& aURL)
   }
 
   nsIPrincipal* principal =
-    nsFileDataProtocolHandler::GetFileDataEntryPrincipal(asciiurl);
+    nsBlobProtocolHandler::GetFileDataEntryPrincipal(asciiurl);
   bool subsumes;
   if (principal && winPrincipal &&
       NS_SUCCEEDED(winPrincipal->Subsumes(principal, &subsumes)) &&
@@ -697,7 +695,7 @@ nsDOMMozURLProperty::RevokeObjectURL(const nsAString& aURL)
     if (mWindow->mDoc) {
       mWindow->mDoc->UnregisterFileDataUri(asciiurl);
     }
-    nsFileDataProtocolHandler::RemoveFileDataEntry(asciiurl);
+    nsBlobProtocolHandler::RemoveFileDataEntry(asciiurl);
   }
 
   return NS_OK;
@@ -1406,8 +1404,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGlobalWindow)
 
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
-  if (tmp->mDoc && nsCCUncollectableMarker::InGeneration(
-                     cb, tmp->mDoc->GetMarkedCCGeneration())) {
+  if ((tmp->mDoc && nsCCUncollectableMarker::InGeneration(
+                      cb, tmp->mDoc->GetMarkedCCGeneration())) ||
+      (nsCCUncollectableMarker::sGeneration && tmp->IsBlack())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -6031,7 +6030,7 @@ PostMessageReadStructuredClone(JSContext* cx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    cx->runtime->structuredCloneCallbacks;
+    js::GetContextStructuredCloneCallbacks(cx);
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->read(cx, reader, tag, data, nsnull);
@@ -6071,7 +6070,7 @@ PostMessageWriteStructuredClone(JSContext* cx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    cx->runtime->structuredCloneCallbacks;
+    js::GetContextStructuredCloneCallbacks(cx);
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->write(cx, writer, obj, nsnull);
@@ -9181,6 +9180,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // the logic in ResetTimersForNonBackgroundWindow will need to change.
   mTimeoutInsertionPoint = &dummy_timeout;
 
+  Telemetry::AutoCounter<Telemetry::DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT> timeoutsRan;
+
   for (timeout = FirstTimeout();
        timeout != &dummy_timeout && !IsFrozen();
        timeout = nextTimeout) {
@@ -9232,6 +9233,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     nsTimeout *last_running_timeout = mRunningTimeout;
     mRunningTimeout = timeout;
     timeout->mRunning = true;
+    ++timeoutsRan;
 
     // Push this timeout's popup control state, which should only be
     // eabled the first time a timeout fires that was created while

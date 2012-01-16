@@ -479,6 +479,7 @@ statuspanel {
   margin-top: -3em;
   left: 0;
   max-width: 50%;
+  pointer-events: none;
 }
 
 statuspanel:-moz-locale-dir(ltr)[mirror],
@@ -505,7 +506,6 @@ statuspanel[type=overLink] {
 statuspanel[inactive] {
   -moz-transition: none;
   opacity: 0;
-  pointer-events: none;
 }
 
 statuspanel[inactive][previoustype=overLink] {

@@ -41,7 +41,8 @@
  * A class that handles loading and evaluation of <script> elements.
  */
 
-#include "jscntxt.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
 #include "nsScriptLoader.h"
 #include "nsParserUtils.h"
 #include "nsICharsetConverterManager.h"
@@ -498,7 +499,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
           // We re-use our knowledge of the implementation to reuse
           // JSVERSION_HAS_XML as a safe version flag.
           // If version has JSVERSION_UNKNOWN (-1), then this is still OK.
-          version |= js::VersionFlags::HAS_XML;
+          version = js::VersionSetXML(JSVersion(version), true);
       }
     }
   } else {

@@ -36,6 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+from __future__ import with_statement
+
 from optparse import OptionParser
 import logging
 import os
@@ -57,14 +59,13 @@ def digest_file(filename, digest, chunk_size=1024):
     if hashlib is not None:
         logger.debug('Creating new %s object' % digest)
         h = hashlib.new(digest)
-        f = open(filename, "rb")
-        while True:
-            data = f.read(chunk_size)
-            if not data:
-                logger.debug('Finished reading in file')
-                break
-            h.update(data)
-        f.close()
+        with open(filename, 'rb') as f:
+            while True:
+                data = f.read(chunk_size)
+                if not data:
+                    logger.debug('Finished reading in file')
+                    break
+                h.update(data)
         hash = h.hexdigest()
         logger.debug('Hash for %s is %s' % (filename, hash))
         return hash
@@ -75,15 +76,15 @@ def digest_file(filename, digest, chunk_size=1024):
         return None
 
 
-def process_files(files, output_filename, digest, strip):
+def process_files(files, output_filename, digests, strip):
     '''This function takes a list of file names, 'files'.  It will then
     compute the checksum for each of the files by opening the files.
     Once each file is read and its checksum is computed, this function
     will write the information to the file specified by 'output_filename'.
     The path written in the output file will have anything specified by 'strip'
     removed from the path.  The output file is closed before returning nothing
-    The algorithm to compute checksums with can be specified by 'digest' 
-    and needs to be a valid OpenSSL algorithm.
+    The algorithm to compute checksums with can be specified by 'digests' 
+    and needs to be a list of valid OpenSSL algorithms.
 
     The output file is written in the format:
         <hash> <algorithm> <filesize> <filepath>
@@ -97,25 +98,25 @@ def process_files(files, output_filename, digest, strip):
                      output_filename)
     else:
         logger.debug('Creating a new checksums file "%s"' % output_filename)
-    output = open(output_filename, 'w+')
-    for file in files:
-        if os.path.isdir(file):
-            logger.warn('%s is a directory, skipping' % file)
-        else:
-            hash = digest_file(file, digest)
-            if hash is None:
-                logger.warn('Unable to generate a hash for %s. ' +
-                            'Using NOHASH as fallback' % file)
-                hash = 'NOHASH'
-            if file.startswith(strip):
-                short_file = file[len(strip):]
-                short_file = short_file.lstrip('/')
+    with open(output_filename, 'w+') as output:
+        for file in files:
+            if os.path.isdir(file):
+                logger.warn('%s is a directory, skipping' % file)
             else:
-                short_file = file
-            print >>output, '%s %s %s %s' % (hash, digest,
-                                             os.path.getsize(file),
-                                             short_file)
-    output.close()
+                for digest in digests:
+                    hash = digest_file(file, digest)
+                    if hash is None:
+                        logger.warn('Unable to generate a hash for %s. ' +
+                                    'Skipping.' % file)
+                        continue
+                    if file.startswith(strip):
+                        short_file = file[len(strip):]
+                        short_file = short_file.lstrip('/')
+                    else:
+                        short_file = file
+                    print >>output, '%s %s %s %s' % (hash, digest,
+                                                     os.path.getsize(file),
+                                                     short_file)
 
 def setup_logging(level=logging.DEBUG):
     '''This function sets up the logging module using a speficiable logging
@@ -141,7 +142,7 @@ def main():
     # Parse command line arguments
     parser = OptionParser()
     parser.add_option('-d', '--digest', help='checksum algorithm to use',
-                      action='store', dest='digest', default='sha1')
+                      action='append', dest='digests')
     parser.add_option('-o', '--output', help='output file to use',
                       action='store', dest='outfile', default='checksums')
     parser.add_option('-v', '--verbose',
@@ -167,11 +168,14 @@ def main():
     logger = logging.getLogger('checksums.py')
 
     # Validate the digest type to use
+    if not options.digests:
+        options.digests = ['sha1']
     try:
-        hashlib.new(options.digest)
+        for digest in options.digests:
+            hashlib.new(digest)
     except ValueError, ve:
         logger.error('Could not create a "%s" hash object (%s)' %
-                     (options.digest, ve.args[0]))
+                     (digest, ve.args[0]))
         exit(1)
 
     # Validate the files to checksum
@@ -181,7 +185,7 @@ def main():
             files.append(i)
         else:
             logger.info('File "%s" was not found on the filesystem' % i)
-    process_files(files, options.outfile, options.digest, options.strip)
+    process_files(files, options.outfile, options.digests, options.strip)
 
 if __name__ == '__main__':
     main()

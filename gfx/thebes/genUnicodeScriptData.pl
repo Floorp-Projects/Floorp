@@ -332,7 +332,7 @@ sub sprintCatEAW
   my $usv = shift;
   return sprintf("{%d,%d},", $eaw[$usv], $category[$usv]);
 }
-&genTables("CatEAW", "struct {\n  unsigned int mEAW:3;\n  unsigned int mCategory:5;\n}",
+&genTables("CatEAW", "struct {\n  unsigned char mEAW:3;\n  unsigned char mCategory:5;\n}",
            9, 7, \&sprintCatEAW, 1);
 
 sub sprintHangulType

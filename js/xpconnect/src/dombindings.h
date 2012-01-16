@@ -218,9 +218,9 @@ public:
                                   JSPropertyDescriptor *desc);
     bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                         JSPropertyDescriptor *desc);
-    bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);
+    bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    bool enumerate(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);
+    bool enumerate(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props);
     bool fix(JSContext *cx, JSObject *proxy, JS::Value *vp);
 
     bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
@@ -230,7 +230,7 @@ public:
                              uint32_t index, JS::Value *vp, bool *present);
     bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
              JS::Value *vp);
-    bool keys(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);
+    bool keys(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props);
     bool iterate(JSContext *cx, JSObject *proxy, uintN flags, JS::Value *vp);
 
     /* Spidermonkey extensions. */

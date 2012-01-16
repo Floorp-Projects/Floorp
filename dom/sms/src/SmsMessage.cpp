@@ -39,7 +39,7 @@
 #include "SmsMessage.h"
 #include "nsIDOMClassInfo.h"
 #include "jsapi.h" // For OBJECT_TO_JSVAL and JS_NewDateObjectMsec
-#include "jsdate.h" // For js_DateGetMsecSinceEpoch
+#include "jsfriendapi.h" // For js_DateGetMsecSinceEpoch
 #include "Constants.h"
 
 DOMCI_DATA(MozSmsMessage, mozilla::dom::sms::SmsMessage)
