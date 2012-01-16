@@ -182,6 +182,13 @@ class nsPropertyTable
                              NSPropertyFunc aCallback, void *aData);
 
   /**
+   * Enumerate all the properties.
+   * For every property |aCallback| will be called with arguments the owner,
+   * the property name, the property value and |aData|.
+   */
+  NS_HIDDEN_(void) EnumerateAll(NSPropertyFunc aCallback, void *aData);
+
+  /**
    * Deletes all of the properties for all objects in the property
    * table, calling the destructor function for each property.
    */
