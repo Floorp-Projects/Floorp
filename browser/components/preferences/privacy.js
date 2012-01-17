@@ -236,7 +236,7 @@ var gPrivacyPane = {
   {
     let prefService = document.getElementById("privacyPreferences")
                               .service
-                              .QueryInterface(Components.interfaces.nsIPrefBranch2);
+                              .QueryInterface(Components.interfaces.nsIPrefBranch);
     prefService.addObserver("browser.privatebrowsing.autostart",
                             this.autoStartPrivateBrowsingObserver,
                             false);
@@ -249,7 +249,7 @@ var gPrivacyPane = {
   {
     let prefService = document.getElementById("privacyPreferences")
                               .service
-                              .QueryInterface(Components.interfaces.nsIPrefBranch2);
+                              .QueryInterface(Components.interfaces.nsIPrefBranch);
     prefService.removeObserver("browser.privatebrowsing.autostart",
                                this.autoStartPrivateBrowsingObserver);
   },
