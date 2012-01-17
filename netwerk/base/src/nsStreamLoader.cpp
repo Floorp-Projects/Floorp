@@ -39,7 +39,6 @@
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
 #include "nsNetError.h"
-#include "sampler.h"
 
 nsStreamLoader::nsStreamLoader()
   : mData(nsnull),
@@ -119,7 +118,6 @@ NS_IMETHODIMP
 nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                               nsresult aStatus)
 {
-  SAMPLE_LABEL("network", "nsStreamLoader::OnStopRequest");
   if (mObserver) {
     // provide nsIStreamLoader::request during call to OnStreamComplete
     mRequest = request;

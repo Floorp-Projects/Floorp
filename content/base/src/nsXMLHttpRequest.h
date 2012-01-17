@@ -65,7 +65,6 @@
 #include "nsDOMProgressEvent.h"
 #include "nsDOMEventTargetWrapperCache.h"
 #include "nsContentUtils.h"
-#include "sampler.h"
 
 class nsILoadGroup;
 class AsyncVerifyRedirectCallbackForwarder;

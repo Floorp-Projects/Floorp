@@ -116,8 +116,6 @@
 #include "nsXULPopupManager.h"
 #endif
 
-#include "sampler.h"
-
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -3632,7 +3630,6 @@ nsLayoutUtils::DrawBackgroundImage(nsRenderingContext* aRenderingContext,
                                    const nsRect&       aDirty,
                                    PRUint32            aImageFlags)
 {
-  SAMPLE_LABEL("layout", "nsLayoutUtils::DrawBackgroundImage");
   return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter,
                            aDest, aFill, aAnchor, aDirty,
                            aImageSize, aImageFlags);
