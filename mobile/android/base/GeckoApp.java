@@ -1572,9 +1572,13 @@ abstract public class GeckoApp
         registerReceiver(mBatteryReceiver, batteryFilter);
 
         IntentFilter smsFilter = new IntentFilter();
-        smsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_RECEIVED);
+        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_SENT);
+        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_DELIVERED);
         mSmsReceiver = new GeckoSmsManager();
         registerReceiver(mSmsReceiver, smsFilter);
+
+        GeckoSmsManager.init();
 
         final GeckoApp self = this;
  
@@ -1799,6 +1803,8 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
 
         mFavicons.close();
+
+        GeckoSmsManager.shutdown();
 
         super.onDestroy();
 
