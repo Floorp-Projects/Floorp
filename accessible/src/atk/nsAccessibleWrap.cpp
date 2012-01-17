@@ -441,13 +441,9 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
        interfacesBits |= 1 << MAI_INTERFACE_VALUE; 
     }
 
-    //nsIAccessibleDocument
-    nsCOMPtr<nsIAccessibleDocument> accessInterfaceDocument;
-    QueryInterface(NS_GET_IID(nsIAccessibleDocument),
-                              getter_AddRefs(accessInterfaceDocument));
-    if (accessInterfaceDocument) {
+    // document accessible
+    if (IsDoc())
         interfacesBits |= 1 << MAI_INTERFACE_DOCUMENT;
-    }
 
     if (IsImageAccessible())
         interfacesBits |= 1 << MAI_INTERFACE_IMAGE;

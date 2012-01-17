@@ -3,7 +3,7 @@ load 25888-2.html
 load 37757-1.html
 load 225868-1.html
 load 264937-1.html
-asserts(9) load 265867-1.html # Bug 575011
+asserts(13) load 265867-1.html # Bug 575011
 load 265867-2.html
 load 289864-1.html
 load 295292-1.html
@@ -14,7 +14,7 @@ load 310556-1.xhtml
 load 322780-1.xul
 load 323381-1.html
 load 323381-2.html
-asserts(2) asserts-if(gtk2Widget,8) load 323386-1.html # Bug 575011
+asserts(2) asserts-if(gtk2Widget,25) load 323386-1.html # Bug 575011
 load 323389-1.html
 load 323389-2.html
 load 323493-1.html
@@ -217,7 +217,7 @@ load 431260-2.html
 load 435529.html
 load 436194-1.html
 load 436602-1.html
-load 436822-1.html
+asserts(1-2) load 436822-1.html
 load 436823.html
 load 436969-1.html
 load 437156-1.html
@@ -259,8 +259,8 @@ load 465651-1.html
 load 467137-1.html
 load 467213-1.html
 load 467487-1.html
-load 467493-1.html
-load 467493-2.html
+asserts(11-12) load 467493-1.html
+asserts(10-11) load 467493-2.html
 load 467875-1.xhtml
 load 467914-1.html
 load 468207-1.html
@@ -278,7 +278,7 @@ load 476241-1.html
 load 477731-1.html
 load 477928.html
 load 478131-1.html
-load 478170-1.html
+asserts(4) load 478170-1.html
 load 478185-1.html
 asserts-if(!Android,1) load 479938-1.html # Bug 575011
 load 480345-1.html
@@ -309,7 +309,7 @@ load 512749-1.html
 load 513394-1.html
 load 514098-1.xhtml
 load 514800-1.html
-load 515811-1.html
+asserts(1) load 515811-1.html
 load 517968.html
 load 519031.xhtml
 load 520340.html
@@ -321,8 +321,8 @@ load 534366-2.html
 load 536692-1.xhtml
 load 541277-1.html
 load 541277-2.html
-load 541714-1.html
-load 541714-2.html
+asserts(4) load 541714-1.html
+asserts(5-6) load 541714-2.html
 load 542136-1.html
 load 545571-1.html
 load 547338.xul
@@ -332,7 +332,7 @@ asserts(5) load 553504-1.xhtml # nscoord_MAX assertions (bug 575011)
 load 564368-1.xhtml
 load 564968.xhtml
 load 570160.html
-load 570289-1.html
+asserts(2) load 570289-1.html
 load 571618-1.svg
 asserts(1) load 571975-1.html # bug 574889
 load 574958.xhtml
@@ -372,7 +372,7 @@ load text-overflow-form-elements.html
 load text-overflow-iframe.html
 load text-overflow-bug666751-1.html
 load text-overflow-bug666751-2.html
-asserts(2) load text-overflow-bug670564.xhtml # asserts(2) for bug 436470
+asserts(0-1) load text-overflow-bug670564.xhtml
 load text-overflow-bug671796.xhtml
 load 667025.html
 asserts-if(Android,8) load 673770.html

@@ -820,11 +820,11 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
                                      frameIndex, newIndex, lineOffset);
             }
           } else if (runLength == fragmentLength &&
-                     numRun + 1 < runCount) {
+                     frame->GetNextSibling()) {
             /*
              * If the directional run ends at the end of the frame, and this is
-             * not the end of our paragraph, make sure that the next frame is a
-             * non-fluid continuation
+             * not the containing frame's last child, make sure that the next
+             * frame is a non-fluid continuation
              */
             nsIFrame* next = frame->GetNextInFlow();
             if (next) {

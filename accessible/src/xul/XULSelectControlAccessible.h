@@ -16,16 +16,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Evan Yan (evan.yan@sun.com)
+ *   Jignesh Kakadiya (jigneshhk1992@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,16 +37,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __MAI_INTERFACE_DOCUMENT_H__
-#define __MAI_INTERFACE_DOCUMENT_H__
+#ifndef _XULSelectControlAccessible_H_
+#define _XULSelectControlAccessible_H_
 
-#include "nsMai.h"
+#include "nsAccessibleWrap.h"
+#include "nsIDOMXULSelectCntrlEl.h"
 
-G_BEGIN_DECLS
+/**
+ * The basic implementation of accessible selection for XUL select controls.
+ */
+class XULSelectControlAccessible : public nsAccessibleWrap
+{
+public:
+  XULSelectControlAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  virtual ~XULSelectControlAccessible() {}
 
-/* document interface callbacks */
-void documentInterfaceInitCB(AtkDocumentIface *aIface);
+  // nsAccessNode
+  virtual void Shutdown();
 
-G_END_DECLS
+  // SelectAccessible
+  virtual bool IsSelect();
+  virtual already_AddRefed<nsIArray> SelectedItems();
+  virtual PRUint32 SelectedItemCount();
+  virtual nsAccessible* GetSelectedItem(PRUint32 aIndex);
+  virtual bool IsItemSelected(PRUint32 aIndex);
+  virtual bool AddItemToSelection(PRUint32 aIndex);
+  virtual bool RemoveItemFromSelection(PRUint32 aIndex);
+  virtual bool SelectAll();
+  virtual bool UnselectAll();
 
-#endif /* __MAI_INTERFACE_DOCUMENT_H__ */
+  // Widgets
+  virtual nsAccessible* CurrentItem();
+  virtual void SetCurrentItem(nsAccessible* aItem);
+
+protected:
+  // nsIDOMXULMultiSelectControlElement inherits from this, so we'll always have
+  // one of these if the widget is valid and not defunct
+  nsCOMPtr<nsIDOMXULSelectControlElement> mSelectControl;
+};
+
+#endif
+
