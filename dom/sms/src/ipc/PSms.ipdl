@@ -107,6 +107,8 @@ parent:
 
     DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId);
 
+    CreateMessageList(SmsFilterData aFilter, bool aReverse, PRInt32 aRequestId, PRUint64 aProcessId);
+
     __delete__();
 };
 

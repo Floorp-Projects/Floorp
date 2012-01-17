@@ -38,8 +38,9 @@
 
 interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
+interface nsIDOMMozSmsFilter;
 
-[scriptable, function, uuid(4e628d96-abc9-45e1-b158-8970885a2552)]
+[scriptable, function, uuid(c9916dce-2947-41bb-95c2-818f792a020c)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short      getNumberOfMessagesForText(in DOMString text);
@@ -54,6 +55,8 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
 
   // The parameter can be either a message id or a SmsMessage.
   nsIDOMMozSmsRequest delete(in jsval param);
+
+  nsIDOMMozSmsRequest getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
 
   attribute nsIDOMEventListener onreceived;
   attribute nsIDOMEventListener onsent;

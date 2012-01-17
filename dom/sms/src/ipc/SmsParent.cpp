@@ -44,6 +44,7 @@
 #include "mozilla/unused.h"
 #include "SmsMessage.h"
 #include "nsISmsDatabaseService.h"
+#include "SmsFilter.h"
 
 namespace mozilla {
 namespace dom {
@@ -213,6 +214,22 @@ SmsParent::RecvDeleteMessage(const PRInt32& aMessageId, const PRInt32& aRequestI
   NS_ENSURE_TRUE(smsDBService, true);
 
   smsDBService->DeleteMessage(aMessageId, aRequestId, aProcessId);
+  return true;
+}
+
+bool
+SmsParent::RecvCreateMessageList(const SmsFilterData& aFilter,
+                                 const bool& aReverse,
+                                 const PRInt32& aRequestId,
+                                 const PRUint64& aProcessId)
+{
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, true);
+
+  nsCOMPtr<nsIDOMMozSmsFilter> filter = new SmsFilter(aFilter);
+  smsDBService->CreateMessageList(filter, aReverse, aRequestId, aProcessId);
+
   return true;
 }
 
