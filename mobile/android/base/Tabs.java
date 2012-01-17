@@ -216,4 +216,10 @@ public class Tabs implements GeckoEventListener {
             Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
         }
     }
+
+    public void refreshThumbnails() {
+        Iterator<Tab> iterator = tabs.values().iterator();
+        while (iterator.hasNext())
+            GeckoApp.mAppContext.getAndProcessThumbnailForTab(iterator.next());
+    }
 }
