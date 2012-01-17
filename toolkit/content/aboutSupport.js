@@ -386,13 +386,13 @@ function getPrefValue(aName) {
   let value = "";
   let type = Services.prefs.getPrefType(aName);
   switch (type) {
-    case Ci.nsIPrefBranch2.PREF_STRING:
+    case Ci.nsIPrefBranch.PREF_STRING:
       value = Services.prefs.getComplexValue(aName, Ci.nsISupportsString).data;
       break;
-    case Ci.nsIPrefBranch2.PREF_BOOL:
+    case Ci.nsIPrefBranch.PREF_BOOL:
       value = Services.prefs.getBoolPref(aName);
       break;
-    case Ci.nsIPrefBranch2.PREF_INT:
+    case Ci.nsIPrefBranch.PREF_INT:
       value = Services.prefs.getIntPref(aName);
       break;
   }

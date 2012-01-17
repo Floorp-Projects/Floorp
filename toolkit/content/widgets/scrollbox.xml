@@ -59,7 +59,7 @@
         <getter><![CDATA[
           if (this.__prefBranch === null) {
             this.__prefBranch = Components.classes['@mozilla.org/preferences-service;1']
-                                          .getService(Components.interfaces.nsIPrefBranch2);
+                                          .getService(Components.interfaces.nsIPrefBranch);
           }
           return this.__prefBranch;
         ]]></getter>
