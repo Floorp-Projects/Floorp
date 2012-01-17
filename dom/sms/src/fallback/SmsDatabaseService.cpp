@@ -69,6 +69,15 @@ SmsDatabaseService::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
+                                      bool aReverse, PRInt32 aRequestId,
+                                      PRUint64 aProcessId)
+{
+  NS_ERROR("We should not be here!");
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

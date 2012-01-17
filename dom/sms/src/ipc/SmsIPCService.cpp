@@ -41,6 +41,7 @@
 #include "jsapi.h"
 #include "mozilla/dom/sms/SmsChild.h"
 #include "mozilla/dom/sms/SmsMessage.h"
+#include "SmsFilter.h"
 
 namespace mozilla {
 namespace dom {
@@ -132,6 +133,17 @@ SmsIPCService::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId,
 {
   GetSmsChild()->SendDeleteMessage(aMessageId, aRequestId,
                                    ContentChild::GetSingleton()->GetID());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsIPCService::CreateMessageList(nsIDOMMozSmsFilter* aFilter, bool aReverse,
+                                 PRInt32 aRequestId, PRUint64 aProcessId)
+{
+  SmsFilter* filter = static_cast<SmsFilter*>(aFilter);
+  GetSmsChild()->SendCreateMessageList(filter->GetData(), aReverse, aRequestId,
+                                       ContentChild::GetSingleton()->GetID());
+
   return NS_OK;
 }
 

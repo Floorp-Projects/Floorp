@@ -38,12 +38,14 @@
 
 %{C++
 #define SMS_DATABASE_SERVICE_CID \
-{ 0xcc939280, 0x36ba, 0x4a03,    \
-{ 0xbe, 0x20, 0xd1, 0xfa, 0x7e, 0xb0, 0x44, 0x1e } }
+{ 0xcb971459, 0xe85a, 0x49b3,    \
+{ 0xbc, 0x1c, 0x10, 0x40, 0x27, 0x1e, 0x04, 0x6c } }
 #define SMS_DATABASE_SERVICE_CONTRACTID "@mozilla.org/sms/smsdatabaseservice;1"
 %}
 
-[scriptable, function, uuid(8f217fbf-88d9-4e72-8399-8c4d5e5cf7d0)]
+interface nsIDOMMozSmsFilter;
+
+[scriptable, function, uuid(33358749-d1b3-4bd6-835c-ef3869f0e966)]
 interface nsISmsDatabaseService : nsISupports
 {
   // Takes some information required to save the message and returns its id.
@@ -51,4 +53,6 @@ interface nsISmsDatabaseService : nsISupports
 
   [binaryname(GetMessageMoz)] void getMessage(in long messageId, in long requestId, [optional] in unsigned long long processId);
   void deleteMessage(in long messageId, in long requestId, [optional] in unsigned long long processId);
+
+  void createMessageList(in nsIDOMMozSmsFilter filter, in boolean reverse, in long requestId, [optional] in unsigned long long processId);
 };

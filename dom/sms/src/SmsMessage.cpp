@@ -144,8 +144,9 @@ SmsMessage::GetDelivery(nsAString& aDelivery)
       aDelivery = DELIVERY_SENT;
       break;
     case eDeliveryState_Unknown:
+    case eDeliveryState_EndGuard:
     default:
-      NS_ASSERTION(true, "We shouldn't get an unknown delivery state!");
+      NS_ASSERTION(true, "We shouldn't get any other delivery state!");
       return NS_ERROR_UNEXPECTED;
   }
 
