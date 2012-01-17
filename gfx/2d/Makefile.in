@@ -62,7 +62,6 @@ EXPORTS_mozilla/gfx	= \
         Matrix.h \
         Rect.h \
         Types.h \
-        UserData.h \
 	$(NULL)
 
 CPPSRCS	= \
@@ -73,16 +72,8 @@ CPPSRCS	= \
         SourceSurfaceCairo.cpp \
         PathCairo.cpp \
         Blur.cpp \
-        ScaledFontBase.cpp \
         $(NULL)
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS	+= \
-	   SourceSurfaceCG.cpp \
-	   DrawTargetCG.cpp \
-	   PathCG.cpp \
-	   $(NULL)
-endif
 
 DEFINES += -DMOZ_GFX -DUSE_CAIRO
 
@@ -91,6 +82,7 @@ CPPSRCS	+= \
         SourceSurfaceSkia.cpp \
         DrawTargetSkia.cpp \
         PathSkia.cpp \
+        ScaledFontSkia.cpp \
         $(NULL)
 
 DEFINES += -DUSE_SKIA
