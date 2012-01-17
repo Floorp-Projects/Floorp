@@ -237,7 +237,7 @@ pref("keyword.URL", "");
 pref("general.useragent.locale", "@AB_CD@");
 pref("general.skins.selectedSkin", "classic/1.0");
 
-pref("general.smoothScroll", false);
+pref("general.smoothScroll", true);
 #ifdef UNIX_BUT_NOT_MAC
 pref("general.autoScroll", false);
 #else
@@ -1032,9 +1032,6 @@ pref("devtools.styleinspector.enabled", true);
 
 // Enable the Tilt inspector
 pref("devtools.tilt.enabled", true);
-
-// Enable the Tilt inspector even if WebGL capabilities are not detected
-pref("devtools.tilt.force-enabled", false);
 
 // Enable the rules view
 pref("devtools.ruleview.enabled", true);

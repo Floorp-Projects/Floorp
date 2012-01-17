@@ -43,7 +43,9 @@ window.onload = runTest;
 var testWindow;
 var testNum = 0;
 
+var smoothScrollPref = "general.smoothScroll";
 function runTest() {
+  SpecialPowers.setBoolPref(smoothScrollPref, false);
   testWindow = window.open(gTallRedBoxURI, "testWindow", "width=300,height=300,location=yes,scrollbars=yes");
 }
 
@@ -122,6 +124,7 @@ var step3 =function() {
           "Page2Again: Ensure we can still scroll.");  
 
     testWindow.close();
+    SpecialPowers.clearUserPref(smoothScrollPref);
     window.SimpleTest.finish();
   }, true);
   sendKey('DOWN', testWindow);

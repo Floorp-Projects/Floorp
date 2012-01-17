@@ -751,70 +751,28 @@ StyleEditor.prototype = {
    */
   _loadSourceFromCache: function SE__loadSourceFromCache(aHref)
   {
-    try {
-      let cacheService = Cc["@mozilla.org/network/cache-service;1"]
-                           .getService(Ci.nsICacheService);
-      let session = cacheService.createSession("HTTP", Ci.nsICache.STORE_ANYWHERE, true);
-      session.doomEntriesIfExpired = false;
-      session.asyncOpenCacheEntry(aHref, Ci.nsICache.ACCESS_READ, {
-        onCacheEntryAvailable: this._onCacheEntryAvailable.bind(this)
-      });
-    } catch (ex) {
-      this._signalError(LOAD_ERROR);
-    }
-  },
-
-   /**
-    * The nsICacheListener.onCacheEntryAvailable method implementation used when
-    * the style sheet source is loaded from the browser cache.
-    *
-    * @param nsICacheEntryDescriptor aEntry
-    * @param nsCacheAccessMode aMode
-    * @param integer aStatus
-    */
-  _onCacheEntryAvailable: function SE__onCacheEntryAvailable(aEntry, aMode, aStatus)
-  {
-    if (!Components.isSuccessCode(aStatus)) {
-      return this._signalError(LOAD_ERROR);
-    }
-
-    let stream = aEntry.openInputStream(0);
+    let channel = Services.io.newChannel(aHref, null, null);
     let chunks = [];
     let streamListener = { // nsIStreamListener inherits nsIRequestObserver
       onStartRequest: function (aRequest, aContext, aStatusCode) {
-      },
+        if (!Components.isSuccessCode(aStatusCode)) {
+          return this._signalError(LOAD_ERROR);
+        }
+      }.bind(this),
       onDataAvailable: function (aRequest, aContext, aStream, aOffset, aCount) {
         chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
       },
       onStopRequest: function (aRequest, aContext, aStatusCode) {
+        if (!Components.isSuccessCode(aStatusCode)) {
+          return this._signalError(LOAD_ERROR);
+        }
+
         this._onSourceLoad(chunks.join(""));
-      }.bind(this),
+      }.bind(this)
     };
 
-    let head = aEntry.getMetaDataElement("response-head");
-    if (/^Content-Encoding:\s*gzip/mi.test(head)) {
-      let converter = Cc["@mozilla.org/streamconv;1?from=gzip&to=uncompressed"]
-                        .createInstance(Ci.nsIStreamConverter);
-      converter.asyncConvertData("gzip", "uncompressed", streamListener, null);
-      streamListener = converter; // proxy original listener via converter
-    }
-
-    try {
-      streamListener.onStartRequest(null, null);
-      while (stream.available()) {
-        streamListener.onDataAvailable(null, null, stream, 0, stream.available());
-      }
-      streamListener.onStopRequest(null, null, 0);
-    } catch (ex) {
-      this._signalError(LOAD_ERROR);
-    } finally {
-      try {
-        stream.close();
-      } catch (ex) {
-        // swallow (some stream implementations can auto-close at eos)
-      }
-      aEntry.close();
-    }
+    channel.loadFlags = channel.LOAD_FROM_CACHE;
+    channel.asyncOpen(streamListener, null);
   },
 
   /**

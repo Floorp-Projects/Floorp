@@ -22,8 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=350471
 
 /** Test for Bug 350471 **/
 
-// This test depends on general.smoothScroll being off.
-
 const minLineHeight = 10, maxLineHeight = 20;
 
 function between(x, min, max) (min <= max) ? (min <= x && x <= max) : (max <= x && x <= min);
@@ -228,6 +226,7 @@ function initPrefs()
   // Disables the app level scroll acceleration
   prefSvc.setIntPref("mousewheel.acceleration.start", -1);
   prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
+  prefSvc.setBoolPref("general.smoothScroll", false);
 }
 
 function clearPrefs()
@@ -236,10 +235,9 @@ function clearPrefs()
   var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
                   getService(Components.interfaces.nsIPrefBranch2);
 
-  if (prefSvc.prefHasUserValue("mousewheel.acceleration.start"))
-    prefSvc.clearUserPref("mousewheel.acceleration.start");
-  if (prefSvc.prefHasUserValue("mousewheel.system_scroll_override_on_root_content.enabled"))
-    prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
+  prefSvc.clearUserPref("mousewheel.acceleration.start");
+  prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");
+  prefSvc.clearUserPref("general.smoothScroll");
 }
 
 window.onload = function () {
