@@ -565,12 +565,6 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
 
     JSContext *iter = nsnull, *acx;
     while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
-        // Only skip JSContexts with outstanding requests if the
-        // callback does not want all traces (a debug feature).
-        // Otherwise, we do want to know about all JSContexts to get
-        // better graphs and explanations.
-        if (!cb.WantAllTraces() && nsXPConnect::GetXPConnect()->GetOutstandingRequests(acx))
-            continue;
         cb.NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, acx,
                     nsXPConnect::JSContextParticipant());
     }
