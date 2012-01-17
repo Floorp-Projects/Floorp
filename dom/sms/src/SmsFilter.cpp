@@ -41,7 +41,7 @@
 #include "nsError.h"
 #include "Constants.h"
 #include "jsapi.h"
-#include "jsdate.h" // For js_DateGetMsecSinceEpoch.
+#include "jsfriendapi.h" // For js_DateGetMsecSinceEpoch.
 #include "js/Utility.h"
 #include "nsJSUtils.h"
 #include "nsDOMString.h"
