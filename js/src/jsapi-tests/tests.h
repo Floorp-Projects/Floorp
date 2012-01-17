@@ -384,9 +384,9 @@ class JSAPITest
         return basicGlobalClass();
     }
 
-    virtual JSObject * createGlobal() {
+    virtual JSObject * createGlobal(JSPrincipals *principals = NULL) {
         /* Create the global object. */
-        JSObject *global = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
+        JSObject *global = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), principals);
         if (!global)
             return NULL;
 
