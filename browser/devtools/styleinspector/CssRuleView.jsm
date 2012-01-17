@@ -1142,7 +1142,8 @@ TextPropertyEditor.prototype = {
  *    {function} done:
  *       Called when input is committed or blurred.  Called with
  *       current value and a boolean telling the caller whether to
- *       commit the change.
+ *       commit the change.  This function is called after the editor
+ *       has been torn down.
  *    {string} advanceChars:
  *       If any characters in advanceChars are typed, focus will advance
  *       to the next element.
@@ -1286,11 +1287,11 @@ InplaceEditor.prototype = {
    */
   _onBlur: function InplaceEditor_onBlur(aEvent)
   {
-    if (this.done) {
-      this.done(this.cancelled ? this.initial : this.input.value.trim(),
-                !this.cancelled);
-    }
+    let val = this.input.value.trim();
     this._clear();
+    if (this.done) {
+      this.done(this.cancelled ? this.initial : val, !this.cancelled);
+    }
   },
 
   _onKeyPress: function InplaceEditor_onKeyPress(aEvent)
