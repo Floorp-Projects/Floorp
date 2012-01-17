@@ -385,7 +385,7 @@ public:
 
   scoped_refptr<base::MessagePump> pump_;
 
-  ObserverList<DestructionObserver> destruction_observers_;
+  base::ObserverList<DestructionObserver> destruction_observers_;
 
   // A recursion block that prevents accidentally running additonal tasks when
   // insider a (accidentally induced?) nested message pump.
