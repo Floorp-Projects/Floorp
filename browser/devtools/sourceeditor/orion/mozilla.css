@@ -8,6 +8,7 @@
 }
 
 .view {
+  color: black; /* Default text color */
   background: #f0f0ff; /* Background of the editor */
   padding-left: 0;
 }

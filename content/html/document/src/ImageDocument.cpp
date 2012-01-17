@@ -613,31 +613,6 @@ ImageDocument::HandleEvent(nsIDOMEvent* aEvent)
       ShrinkToFit();
     }
   }
-  else if (eventType.EqualsLiteral("keypress")) {
-    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-    PRUint32 charCode;
-    bool ctrlKey, metaKey, altKey;
-    keyEvent->GetCharCode(&charCode);
-    keyEvent->GetCtrlKey(&ctrlKey);
-    keyEvent->GetMetaKey(&metaKey);
-    keyEvent->GetAltKey(&altKey);
-    // plus key
-    if (charCode == 0x2B && !ctrlKey && !metaKey && !altKey) {
-      mShouldResize = false;
-      if (mImageIsResized) {
-        ResetZoomLevel();
-        RestoreImage();
-      }
-    }
-    // minus key
-    else if (charCode == 0x2D && !ctrlKey && !metaKey && !altKey) {
-      mShouldResize = true;
-      if (mImageIsOverflowing) {
-        ResetZoomLevel();
-        ShrinkToFit();
-      }
-    }
-  }
 
   return NS_OK;
 }

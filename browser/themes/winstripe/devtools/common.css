@@ -74,7 +74,7 @@
   color: hsl(200,100%,60%) !important;
 }
 
-.devtools-toolbarbutton:[checked]:hover:active {
+.devtools-toolbarbutton[checked]:hover:active {
   background-color: hsla(211,68%,6%,.2);
 }
 
