@@ -591,21 +591,27 @@ abstract public class GeckoApp
 
                 mLastUri = lastHistoryEntry.mUri;
                 mLastTitle = lastHistoryEntry.mTitle;
-                Bitmap bitmap = mSoftwareLayerClient.getBitmap();
-
-                if (bitmap != null) {
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-                    processThumbnail(tab, bitmap, bos.toByteArray());
-                } else {
-                    mLastScreen = null;
-                    GeckoAppShell.sendEventToGecko(
-                        new GeckoEvent("Tab:Screenshot", 
-                                       "{\"width\": \"" + mSoftwareLayerClient.getWidth() + "\", " +
-                                       "\"height\": \"" + mSoftwareLayerClient.getHeight() + "\", " +
-                                       "\"tabID\": \"" + tab.getId() + "\" }"));
-                }
+                getAndProcessThumbnailForTab(tab);
             }
+        }
+    }
+
+    void getAndProcessThumbnailForTab(Tab tab) {
+        Bitmap bitmap = null;
+        if (Tabs.getInstance().isSelectedTab(tab))
+            bitmap = mSoftwareLayerClient.getBitmap();
+
+        if (bitmap != null) {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+            processThumbnail(tab, bitmap, bos.toByteArray());
+        } else {
+            mLastScreen = null;
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent("Tab:Screenshot", 
+                               "{\"width\": \"" + mSoftwareLayerClient.getWidth() + "\", " +
+                               "\"height\": \"" + mSoftwareLayerClient.getHeight() + "\", " +
+                               "\"tabID\": \"" + tab.getId() + "\" }"));
         }
     }
     
@@ -616,9 +622,13 @@ abstract public class GeckoApp
             thumbnailTab.updateThumbnail(null);
             return;
         }
-        if (bitmap == null)
-            bitmap = BitmapFactory.decodeByteArray(compressed, 0, compressed.length);
-        thumbnailTab.updateThumbnail(bitmap);
+        try {
+            if (bitmap == null)
+                bitmap = BitmapFactory.decodeByteArray(compressed, 0, compressed.length);
+            thumbnailTab.updateThumbnail(bitmap);
+        } catch (OutOfMemoryError ome) {
+            Log.w(LOGTAG, "decoding byte array ran out of memory", ome);
+        }
     }
 
     private void maybeCancelFaviconLoad(Tab tab) {
