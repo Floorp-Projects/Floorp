@@ -156,6 +156,13 @@ SmsIPCService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsIPCService::ClearMessageList(PRInt32 aListId)
+{
+  GetSmsChild()->SendClearMessageList(aListId);
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

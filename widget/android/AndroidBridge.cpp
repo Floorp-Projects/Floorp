@@ -174,6 +174,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jDeleteMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "deleteMessage", "(IIJ)V");
     jCreateMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createMessageList", "(JJ[Ljava/lang/String;IIZIJ)V");
     jGetNextMessageinList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNextMessageInList", "(IIJ)V");
+    jClearMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "clearMessageList", "(I)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1418,6 +1419,14 @@ AndroidBridge::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint6
     ALOG_BRIDGE("AndroidBridge::GetNextMessageInList");
 
     JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jGetNextMessageinList, aListId, aRequestId, aProcessId);
+}
+
+void
+AndroidBridge::ClearMessageList(PRInt32 aListId)
+{
+    ALOG_BRIDGE("AndroidBridge::ClearMessageList");
+
+    JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jClearMessageList, aListId);
 }
 
 void *

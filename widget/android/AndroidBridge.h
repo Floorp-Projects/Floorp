@@ -347,6 +347,7 @@ public:
     void DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId);
     void CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse, PRInt32 aRequestId, PRUint64 aProcessId);
     void GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint64 aProcessId);
+    void ClearMessageList(PRInt32 aListId);
 
     bool IsTablet();
 
@@ -442,6 +443,7 @@ protected:
     jmethodID jDeleteMessage;
     jmethodID jCreateMessageList;
     jmethodID jGetNextMessageinList;
+    jmethodID jClearMessageList;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

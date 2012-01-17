@@ -111,6 +111,17 @@ SmsDatabaseService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsDatabaseService::ClearMessageList(PRInt32 aListId)
+{
+  if (!AndroidBridge::Bridge()) {
+    return NS_OK;
+  }
+
+  AndroidBridge::Bridge()->ClearMessageList(aListId);
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
