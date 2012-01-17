@@ -47,7 +47,7 @@
 #include "mozilla/StringBuilder.h"
 
 // we eventually want to make this runtime switchable
-#if defined(XP_MACOSX) || defined(XP_UNIX)
+#if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_UNIX))
  #ifndef ANDROID
   #define USE_BACKTRACE
  #endif
@@ -56,7 +56,7 @@
  #include <execinfo.h>
 #endif
 
-#ifdef XP_WIN
+#if defined(MOZ_PROFILING) && defined(XP_WIN)
  #define USE_NS_STACKWALK
 #endif
 #ifdef USE_NS_STACKWALK
