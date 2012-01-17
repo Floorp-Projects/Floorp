@@ -41,7 +41,9 @@ import java.lang.Math;
 
 import android.util.Log;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -92,21 +94,29 @@ import android.telephony.TelephonyManager;
  */
 
 public class GeckoNetworkManager
+  extends BroadcastReceiver
 {
   static private final double  kDefaultBandwidth    = -1.0;
   static private final boolean kDefaultCanBeMetered = false;
 
   static private final double  kMaxBandwidth = 20.0;
 
-  static private final double  kNetworkSpeed_2_G    = 15.0 / 1024.0;  // 15 kb/s
-  static private final double  kNetworkSpeed_2_5_G  = 60.0 / 1024.0;  // 60 kb/s
-  static private final double  kNetworkSpeed_2_75_G = 200.0 / 1024.0; // 200 kb/s
-  static private final double  kNetworkSpeed_3_G    = 300.0 / 1024.0; // 300 kb/s
-  static private final double  kNetworkSpeed_3_5_G  = 7.0;            // 7 Mb/s
-  static private final double  kNetworkSpeed_3_75_G = 20.0;           // 20 Mb/s
-  static private final double  kNetworkSpeed_3_9_G  = 50.0;           // 50 Mb/s
+  static private final double  kNetworkSpeedEthernet = 20.0;           // 20 Mb/s
+  static private final double  kNetworkSpeedWifi     = 20.0;           // 20 Mb/s
+  static private final double  kNetworkSpeedWiMax    = 40.0;           // 40 Mb/s
+  static private final double  kNetworkSpeed_2_G     = 15.0 / 1024.0;  // 15 kb/s
+  static private final double  kNetworkSpeed_2_5_G   = 60.0 / 1024.0;  // 60 kb/s
+  static private final double  kNetworkSpeed_2_75_G  = 200.0 / 1024.0; // 200 kb/s
+  static private final double  kNetworkSpeed_3_G     = 300.0 / 1024.0; // 300 kb/s
+  static private final double  kNetworkSpeed_3_5_G   = 7.0;            // 7 Mb/s
+  static private final double  kNetworkSpeed_3_75_G  = 20.0;           // 20 Mb/s
+  static private final double  kNetworkSpeed_3_9_G   = 50.0;           // 50 Mb/s
 
-  private enum MobileNetworkType {
+  private enum NetworkType {
+    NETWORK_NONE,
+    NETWORK_ETHERNET,
+    NETWORK_WIFI,
+    NETWORK_WIMAX,
     NETWORK_2_G,    // 2G
     NETWORK_2_5_G,  // 2.5G
     NETWORK_2_75_G, // 2.75G
@@ -117,42 +127,103 @@ public class GeckoNetworkManager
     NETWORK_UNKNOWN
   }
 
-  private static MobileNetworkType getMobileNetworkType() {
+  static private NetworkType sNetworkType = NetworkType.NETWORK_NONE;
+
+  @Override
+  public void onReceive(Context aContext, Intent aIntent) {
+    updateNetworkType();
+  }
+
+  public static void initialize() {
+    sNetworkType = getNetworkType();
+  }
+
+  public static void resume() {
+    updateNetworkType();
+  }
+
+  private static void updateNetworkType() {
+    NetworkType previousNetworkType = sNetworkType;
+    sNetworkType = getNetworkType();
+
+    if (sNetworkType == previousNetworkType) {
+      return;
+    }
+
+    GeckoAppShell.sendEventToGecko(new GeckoEvent(getNetworkSpeed(sNetworkType),
+                                                  isNetworkUsuallyMetered(sNetworkType)));
+  }
+
+  public static double[] getCurrentInformation() {
+    return new double[] { getNetworkSpeed(sNetworkType),
+                          isNetworkUsuallyMetered(sNetworkType) ? 1.0 : 0.0 };
+  }
+
+  private static NetworkType getNetworkType() {
+    ConnectivityManager cm =
+      (ConnectivityManager)GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+    if (cm.getActiveNetworkInfo() == null) {
+      return NetworkType.NETWORK_NONE;
+    }
+
+    switch (cm.getActiveNetworkInfo().getType()) {
+      case ConnectivityManager.TYPE_ETHERNET:
+        return NetworkType.NETWORK_ETHERNET;
+      case ConnectivityManager.TYPE_WIFI:
+        return NetworkType.NETWORK_WIFI;
+      case ConnectivityManager.TYPE_WIMAX:
+        return NetworkType.NETWORK_WIMAX;
+      case ConnectivityManager.TYPE_MOBILE:
+        break; // We will handle sub-types after the switch.
+      default:
+        Log.w("GeckoNetworkManager", "Ignoring the current network type.");
+        return NetworkType.NETWORK_UNKNOWN;
+    }
+
     TelephonyManager tm =
       (TelephonyManager)GeckoApp.mAppContext.getSystemService(Context.TELEPHONY_SERVICE);
 
     switch (tm.getNetworkType()) {
       case TelephonyManager.NETWORK_TYPE_IDEN:
       case TelephonyManager.NETWORK_TYPE_CDMA:
-        return MobileNetworkType.NETWORK_2_G;
+        return NetworkType.NETWORK_2_G;
       case TelephonyManager.NETWORK_TYPE_GPRS:
       case TelephonyManager.NETWORK_TYPE_1xRTT:
-        return MobileNetworkType.NETWORK_2_5_G;
+        return NetworkType.NETWORK_2_5_G;
       case TelephonyManager.NETWORK_TYPE_EDGE:
-        return MobileNetworkType.NETWORK_2_75_G;
+        return NetworkType.NETWORK_2_75_G;
       case TelephonyManager.NETWORK_TYPE_UMTS:
       case TelephonyManager.NETWORK_TYPE_EVDO_0:
-        return MobileNetworkType.NETWORK_3_G;
+        return NetworkType.NETWORK_3_G;
       case TelephonyManager.NETWORK_TYPE_HSPA:
       case TelephonyManager.NETWORK_TYPE_HSDPA:
       case TelephonyManager.NETWORK_TYPE_HSUPA:
       case TelephonyManager.NETWORK_TYPE_EVDO_A:
       case TelephonyManager.NETWORK_TYPE_EVDO_B:
       case TelephonyManager.NETWORK_TYPE_EHRPD:
-        return MobileNetworkType.NETWORK_3_5_G;
+        return NetworkType.NETWORK_3_5_G;
       case TelephonyManager.NETWORK_TYPE_HSPAP:
-        return MobileNetworkType.NETWORK_3_75_G;
+        return NetworkType.NETWORK_3_75_G;
       case TelephonyManager.NETWORK_TYPE_LTE:
-        return MobileNetworkType.NETWORK_3_9_G;
+        return NetworkType.NETWORK_3_9_G;
       case TelephonyManager.NETWORK_TYPE_UNKNOWN:
       default:
         Log.w("GeckoNetworkManager", "Connected to an unknown mobile network!");
-        return MobileNetworkType.NETWORK_UNKNOWN;
+        return NetworkType.NETWORK_UNKNOWN;
     }
   }
 
-  public static double getMobileNetworkSpeed(MobileNetworkType aType) {
+  private static double getNetworkSpeed(NetworkType aType) {
     switch (aType) {
+      case NETWORK_NONE:
+        return 0.0;
+      case NETWORK_ETHERNET:
+        return kNetworkSpeedEthernet;
+      case NETWORK_WIFI:
+        return kNetworkSpeedWifi;
+      case NETWORK_WIMAX:
+        return kNetworkSpeedWiMax;
       case NETWORK_2_G:
         return kNetworkSpeed_2_G;
       case NETWORK_2_5_G:
@@ -173,34 +244,25 @@ public class GeckoNetworkManager
     }
   }
 
-  public static double[] getCurrentInformation() {
-    ConnectivityManager cm =
-      (ConnectivityManager)GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-    if (cm.getActiveNetworkInfo() == null) {
-      return new double[] { 0.0, 1.0 };
-    }
-
-    int type = cm.getActiveNetworkInfo().getType();
-    double bandwidth = kDefaultBandwidth;
-    boolean canBeMetered = kDefaultCanBeMetered;
-
-    switch (type) {
-      case ConnectivityManager.TYPE_ETHERNET:
-      case ConnectivityManager.TYPE_WIFI:
-      case ConnectivityManager.TYPE_WIMAX:
-        bandwidth = kMaxBandwidth;
-        canBeMetered = false;
-        break;
-      case ConnectivityManager.TYPE_MOBILE:
-        bandwidth = Math.min(getMobileNetworkSpeed(getMobileNetworkType()), kMaxBandwidth);
-        canBeMetered = true;
-        break;
+  private static boolean isNetworkUsuallyMetered(NetworkType aType) {
+    switch (aType) {
+      case NETWORK_NONE:
+      case NETWORK_UNKNOWN:
+      case NETWORK_ETHERNET:
+      case NETWORK_WIFI:
+      case NETWORK_WIMAX:
+        return false;
+      case NETWORK_2_G:
+      case NETWORK_2_5_G:
+      case NETWORK_2_75_G:
+      case NETWORK_3_G:
+      case NETWORK_3_5_G:
+      case NETWORK_3_75_G:
+      case NETWORK_3_9_G:
+        return true;
       default:
-        Log.w("GeckoNetworkManager", "Ignoring the current network type.");
-        break;
+        Log.e("GeckoNetworkManager", "Got an unexpected network type!");
+        return false;
     }
-
-    return new double[] { bandwidth, canBeMetered ? 1.0 : 0.0 };
   }
 }
