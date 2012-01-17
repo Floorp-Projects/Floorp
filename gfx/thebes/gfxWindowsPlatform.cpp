@@ -507,21 +507,35 @@ gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
 #ifdef XP_WIN
   if (aTarget->GetType() == BACKEND_DIRECT2D) {
-    RefPtr<ID3D10Texture2D> texture =
-      static_cast<ID3D10Texture2D*>(aTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE));
+    void *surface = aTarget->GetUserData(&ThebesSurfaceKey);
+    if (surface) {
+      nsRefPtr<gfxASurface> surf = static_cast<gfxASurface*>(surface);
+      return surf.forget();
+    } else {
+      RefPtr<ID3D10Texture2D> texture =
+        static_cast<ID3D10Texture2D*>(aTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE));
 
-    if (!texture) {
-      return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
+      if (!texture) {
+        return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);
+      }
+
+      aTarget->Flush();
+
+      nsRefPtr<gfxASurface> surf =
+        new gfxD2DSurface(texture, ContentForFormat(aTarget->GetFormat()));
+
+      // add a reference to be held by the drawTarget
+      surf->AddRef();
+      aTarget->AddUserData(&ThebesSurfaceKey, surf.get(), DestroyThebesSurface);
+      /* "It might be worth it to clear cairo surfaces associated with a drawtarget.
+	  The strong reference means for example for D2D that cairo's scratch surface
+	  will be kept alive (well after a user being done) and consume extra VRAM.
+	  We can deal with this in a follow-up though." */
+
+      // shouldn't this hold a reference?
+      surf->SetData(&kDrawTarget, aTarget, NULL);
+      return surf.forget();
     }
-
-    aTarget->Flush();
-
-    nsRefPtr<gfxASurface> surf =
-      new gfxD2DSurface(texture, ContentForFormat(aTarget->GetFormat()));
-
-    surf->SetData(&kDrawTarget, aTarget, NULL);
-
-    return surf.forget();
   }
 #endif
 

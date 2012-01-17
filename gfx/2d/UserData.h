@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,11 @@
  * The Original Code is Mozilla Corporation code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (Sub) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matt Woodrow <mwoodrow@mozilla.com>
+ *   Jeff Muizelaar <jmuizelaar@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,34 +35,74 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_GFX_SCALEDFONTMAC_H_
-#define MOZILLA_GFX_SCALEDFONTMAC_H_
 
-#import <ApplicationServices/ApplicationServices.h>
-#include "2D.h"
-
-#include "ScaledFontBase.h"
+#include <stdlib.h>
+#include "mozilla/mozalloc.h"
 
 namespace mozilla {
 namespace gfx {
 
-class ScaledFontMac : public ScaledFontBase
-{
-public:
-  ScaledFontMac(CGFontRef aFont, Float aSize);
-  virtual ~ScaledFontMac();
+struct UserDataKey {
+  int unused;
+};
 
-  virtual FontType GetType() const { return FONT_MAC; }
-#ifdef USE_SKIA
-  virtual SkTypeface* GetSkTypeface();
-#endif
-  virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
+/* this class is basically a clone of the user data concept from cairo */
+class UserData
+{
+  typedef void (*destroyFunc)(void *data);
+public:
+  UserData() : count(0), entries(NULL) {}
+
+  /* Attaches untyped userData associated with key. destroy is called on destruction */
+  void Add(UserDataKey *key, void *userData, destroyFunc destroy)
+  {
+    // We could keep entries in a std::vector instead of managing it by hand
+    // but that would propagate an stl dependency out which we'd rather not
+    // do (see bug 666609). Plus, the entries array is expect to stay small
+    // so doing a realloc everytime we add a new entry shouldn't be too costly
+    entries = static_cast<Entry*>(moz_xrealloc(entries, sizeof(Entry)*(count+1)));
+
+    entries[count].key      = key;
+    entries[count].userData = userData;
+    entries[count].destroy  = destroy;
+
+    count++;
+  }
+
+  //XXX: we probably want to add a way to remove Keys
+
+  /* Retrives the userData for the associated key */
+  void *Get(UserDataKey *key)
+  {
+    for (int i=0; i<count; i++) {
+      if (key == entries[i].key) {
+        return entries[i].userData;
+      }
+    }
+    return NULL;
+  }
+
+  ~UserData()
+  {
+    for (int i=0; i<count; i++) {
+      entries[i].destroy(entries[i].userData);
+    }
+    free(entries);
+  }
+
 private:
-  friend class DrawTargetCG;
-  CGFontRef mFont;
+  struct Entry {
+    const UserDataKey *key;
+    void *userData;
+    destroyFunc destroy;
+  };
+
+  int count;
+  Entry *entries;
+
 };
 
 }
 }
 
-#endif /* MOZILLA_GFX_SCALEDFONTMAC_H_ */
+

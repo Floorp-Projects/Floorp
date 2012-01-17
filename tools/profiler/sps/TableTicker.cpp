@@ -47,13 +47,20 @@
 #include "mozilla/StringBuilder.h"
 
 // we eventually want to make this runtime switchable
-#if defined(XP_MACOSX) || defined(XP_UNIX)
+#if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_UNIX))
  #ifndef ANDROID
   #define USE_BACKTRACE
  #endif
 #endif
 #ifdef USE_BACKTRACE
  #include <execinfo.h>
+#endif
+
+#if defined(MOZ_PROFILING) && defined(XP_WIN)
+ #define USE_NS_STACKWALK
+#endif
+#ifdef USE_NS_STACKWALK
+ #include "nsStackWalk.h"
 #endif
 
 using std::string;
@@ -272,7 +279,12 @@ class TableTicker: public Sampler {
   {
     return &mProfile;
   }
- private:
+
+private:
+  // Not implemented on platforms which do not support backtracing
+  void doBacktrace(Profile &aProfile);
+
+private:
   Profile mProfile;
   Stack *mStack;
   bool mSaveRequested;
@@ -337,8 +349,7 @@ void TableTicker::HandleSaveRequest()
 }
 
 #ifdef USE_BACKTRACE
-static
-void doBacktrace(Profile &aProfile)
+void TableTicker::doBacktrace(Profile &aProfile)
 {
   void *array[100];
   int count = backtrace (array, 100);
@@ -348,6 +359,45 @@ void doBacktrace(Profile &aProfile)
   for (int i = 0; i < count; i++) {
     if( (intptr_t)array[i] == -1 ) break;
     aProfile.addTag(ProfileEntry('l', (const char*)array[i]));
+  }
+}
+#endif
+
+#ifdef USE_NS_STACKWALK
+typedef struct {
+  void** array;
+  size_t size;
+  size_t count;
+} PCArray;
+
+static
+void StackWalkCallback(void* aPC, void* aClosure)
+{
+  PCArray* array = static_cast<PCArray*>(aClosure);
+  if (array->count >= array->size) {
+    // too many frames, ignore
+    return;
+  }
+  array->array[array->count++] = aPC;
+}
+
+void TableTicker::doBacktrace(Profile &aProfile)
+{
+  uintptr_t thread = GetThreadHandle(platform_data());
+  MOZ_ASSERT(thread);
+  void* pc_array[1000];
+  PCArray array = {
+    pc_array,
+    mozilla::ArrayLength(pc_array),
+    0
+  };
+  nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
+  if (NS_SUCCEEDED(rv)) {
+    aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
+
+    for (size_t i = array.count; i > 0; --i) {
+      aProfile.addTag(ProfileEntry('l', (const char*)array.array[i - 1]));
+    }
   }
 }
 #endif
@@ -395,7 +445,7 @@ void TableTicker::Tick(TickSample* sample)
   }
 
   if (recordSample) {
-#ifdef USE_BACKTRACE
+#if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
     if (mUseStackWalk) {
       doBacktrace(mProfile);
     } else {
@@ -542,7 +592,7 @@ char* mozilla_sampler_get_profile()
 const char** mozilla_sampler_get_features()
 {
   static const char* features[] = {
-#ifdef MOZ_PROFILING && USE_BACKTRACE
+#if defined(MOZ_PROFILING) && defined(USE_BACKTRACE)
     "stackwalk",
 #endif
     NULL

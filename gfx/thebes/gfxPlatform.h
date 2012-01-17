@@ -71,6 +71,9 @@ class gfxTextRun;
 class nsIURI;
 class nsIAtom;
 
+extern mozilla::gfx::UserDataKey ThebesSurfaceKey;
+void DestroyThebesSurface(void *data);
+
 extern cairo_user_data_key_t kDrawTarget;
 
 // pref lang id's for font prefs
