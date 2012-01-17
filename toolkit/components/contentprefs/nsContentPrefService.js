@@ -229,7 +229,7 @@ ContentPrefService.prototype = {
   get _prefSvc() {
     if (!this.__prefSvc)
       this.__prefSvc = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch2);
+                       getService(Ci.nsIPrefBranch);
     return this.__prefSvc;
   },
 

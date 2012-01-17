@@ -132,7 +132,7 @@ var gNextFunc;
 
 XPCOMUtils.defineLazyServiceGetter(this, "gPref",
                                    "@mozilla.org/preferences-service;1",
-                                   "nsIPrefBranch2");
+                                   "nsIPrefBranch");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gCatMan",
                                    "@mozilla.org/categorymanager;1",

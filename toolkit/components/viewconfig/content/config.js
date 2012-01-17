@@ -54,7 +54,7 @@ const nsAtomService_CONTRACTID = "@mozilla.org/atom-service;1";
 
 const gPromptService = Components.classes[nsPrompt_CONTRACTID].getService(nsIPromptService);
 const gPrefService = Components.classes[nsPrefService_CONTRACTID].getService(nsIPrefService);
-const gPrefBranch = gPrefService.getBranch(null).QueryInterface(Components.interfaces.nsIPrefBranch2);
+const gPrefBranch = gPrefService.getBranch(null);
 const gClipboardHelper = Components.classes[nsClipboardHelper_CONTRACTID].getService(nsIClipboardHelper);
 const gAtomService = Components.classes[nsAtomService_CONTRACTID].getService(nsIAtomService);
 
