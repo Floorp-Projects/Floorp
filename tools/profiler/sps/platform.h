@@ -203,11 +203,6 @@ class Sampler {
 
   PlatformData* platform_data() { return data_; }
 
-#ifdef XP_WIN
-  // xxxehsan sucky hack :(
-  static uintptr_t GetThreadHandle(PlatformData*);
-#endif
-
  private:
   void SetActive(bool value) { NoBarrier_Store(&active_, value); }
 

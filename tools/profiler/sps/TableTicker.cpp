@@ -56,13 +56,6 @@
  #include <execinfo.h>
 #endif
 
-#ifdef XP_WIN
- #define USE_NS_STACKWALK
-#endif
-#ifdef USE_NS_STACKWALK
- #include "nsStackWalk.h"
-#endif
-
 using std::string;
 using namespace mozilla;
 
@@ -279,12 +272,7 @@ class TableTicker: public Sampler {
   {
     return &mProfile;
   }
-
-private:
-  // Not implemented on platforms which do not support backtracing
-  void doBacktrace(Profile &aProfile);
-
-private:
+ private:
   Profile mProfile;
   Stack *mStack;
   bool mSaveRequested;
@@ -349,7 +337,8 @@ void TableTicker::HandleSaveRequest()
 }
 
 #ifdef USE_BACKTRACE
-void TableTicker::doBacktrace(Profile &aProfile)
+static
+void doBacktrace(Profile &aProfile)
 {
   void *array[100];
   int count = backtrace (array, 100);
@@ -359,45 +348,6 @@ void TableTicker::doBacktrace(Profile &aProfile)
   for (int i = 0; i < count; i++) {
     if( (intptr_t)array[i] == -1 ) break;
     aProfile.addTag(ProfileEntry('l', (const char*)array[i]));
-  }
-}
-#endif
-
-#ifdef USE_NS_STACKWALK
-typedef struct {
-  void* array[];
-  size_t size;
-  size_t count;
-} PCArray;
-
-static
-void StackWalkCallback(void* aPC, void* aClosure)
-{
-  PCArray* array = static_cast<PCArray*>(aClosure);
-  if (array->count >= array->size) {
-    // too many frames, ignore
-    return;
-  }
-  array->array[array->count++] = aPC;
-}
-
-void TableTicker::doBacktrace(Profile &aProfile)
-{
-  uintptr_t thread = GetThreadHandle(platform_data());
-  MOZ_ASSERT(thread);
-  void* pc_array[1000];
-  PCArray array = {
-    pc_array,
-    mozilla::ArrayLength(array),
-    0
-  };
-  nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
-  if (NS_SUCCEEDED(rv)) {
-    aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
-
-    for (size_t i = array.count; i > 0; --i) {
-      aProfile.addTag(ProfileEntry('l', (const char*)array.array[i - 1]));
-    }
   }
 }
 #endif
@@ -445,7 +395,7 @@ void TableTicker::Tick(TickSample* sample)
   }
 
   if (recordSample) {
-#if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
+#ifdef USE_BACKTRACE
     if (mUseStackWalk) {
       doBacktrace(mProfile);
     } else {
