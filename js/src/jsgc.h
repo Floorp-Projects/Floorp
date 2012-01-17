@@ -1408,14 +1408,8 @@ typedef enum JSGCInvocationKind {
     /* Normal invocation. */
     GC_NORMAL           = 0,
 
-    /*
-     * Called from js_DestroyContext for last JSContext in a JSRuntime, when
-     * it is imperative that rt->gcPoke gets cleared early in js_GC.
-     */
-    GC_LAST_CONTEXT     = 1,
-
     /* Minimize GC triggers and release empty GC chunks right away. */
-    GC_SHRINK             = 2
+    GC_SHRINK             = 1
 } JSGCInvocationKind;
 
 /* Pass NULL for |comp| to get a full GC. */
