@@ -2581,19 +2581,6 @@ CanOptimizeForDenseStorage(JSObject *arr, uint32_t startingIndex, uint32_t count
            startingIndex + count <= arr->getDenseArrayInitializedLength();
 }
 
-static inline bool
-CopyArrayElement(JSContext *cx, JSObject *source, uint32_t sourceIndex,
-                 JSObject *target, uint32_t targetIndex)
-{
-    if (!JS_CHECK_OPERATION_LIMIT(cx))
-        return false;
-
-    JSBool hole;
-    Value fromValue;
-    return GetElement(cx, source, sourceIndex, &hole, &fromValue) &&
-           SetOrDeleteArrayElement(cx, target, targetIndex, hole, fromValue);
-}
-
 /* ES5 15.4.4.12. */
 static JSBool
 array_splice(JSContext *cx, uintN argc, Value *vp)
