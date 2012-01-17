@@ -2507,7 +2507,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 #ifdef MOZ_WIDGET_ANDROID
   case kRequestDrawingModel_ANPSetValue:
     if (inst)
-      inst->SetDrawingModel(NS_PTR_TO_INT32(result));
+      inst->SetANPDrawingModel(NS_PTR_TO_INT32(result));
     return NPERR_NO_ERROR;
   case kAcceptEvents_ANPSetValue:
     return NPERR_NO_ERROR;
