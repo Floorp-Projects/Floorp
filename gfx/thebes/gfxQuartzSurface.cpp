@@ -81,6 +81,26 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
     unsigned int width = static_cast<unsigned int>(mSize.width);
     unsigned int height = static_cast<unsigned int>(mSize.height);
 
+    cairo_surface_t *surf =
+        cairo_quartz_surface_create_for_cg_context(context,
+                                                   width, height);
+
+    CGContextRetain(mCGContext);
+
+    Init(surf);
+}
+
+gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
+                                   const gfxIntSize& size,
+                                   bool aForPrinting)
+    : mCGContext(context), mSize(size), mForPrinting(aForPrinting)
+{
+    if (!CheckSurfaceSize(size))
+        MakeInvalid();
+
+    unsigned int width = static_cast<unsigned int>(mSize.width);
+    unsigned int height = static_cast<unsigned int>(mSize.height);
+
     cairo_surface_t *surf = 
         cairo_quartz_surface_create_for_cg_context(context,
                                                    width, height);
