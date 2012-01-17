@@ -592,7 +592,7 @@ char* mozilla_sampler_get_profile()
 const char** mozilla_sampler_get_features()
 {
   static const char* features[] = {
-#ifdef MOZ_PROFILING && USE_BACKTRACE
+#if defined(MOZ_PROFILING) && defined(USE_BACKTRACE)
     "stackwalk",
 #endif
     NULL
