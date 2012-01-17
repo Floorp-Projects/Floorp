@@ -31,6 +31,7 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("A", {accelKey: true});
 
   SimpleTest.executeSoon(function() {
+    t.getBoundingClientRect(); // flush layout
     var afterSetValue = snapshotWindow(window);
 
     t.value = t.defaultValue;
