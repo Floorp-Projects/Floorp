@@ -532,26 +532,9 @@ DataSourceSurfaceDestroy(void *dataSourceSurface)
       static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
 }
 
-void DestroyThebesSurface(void *data)
-{
-  gfxASurface *surface = static_cast<gfxASurface*>(data);
-  surface->Release();
-}
-
-UserDataKey ThebesSurfaceKey;
-
-// The semantics of this function are sort of weird. We snapshot the first
-// time and then return the snapshotted surface for the lifetime of the
-// draw target
 already_AddRefed<gfxASurface>
 gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  void *surface = aTarget->GetUserData(&ThebesSurfaceKey);
-  if (surface) {
-    nsRefPtr<gfxASurface> surf = static_cast<gfxASurface*>(surface);
-    return surf.forget();
-  }
-
   RefPtr<SourceSurface> source = aTarget->Snapshot();
   RefPtr<DataSourceSurface> data = source->GetDataSurface();
 
@@ -562,18 +545,12 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
   IntSize size = data->GetSize();
   gfxASurface::gfxImageFormat format = gfxASurface::FormatFromContent(ContentForFormat(data->GetFormat()));
   
-  nsRefPtr<gfxImageSurface> surf =
+  nsRefPtr<gfxImageSurface> image =
     new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
                         data->Stride(), format);
 
-  surf->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
-
-  // add a reference to be held by the drawTarget
-  // careful, the reference graph is getting complicated here
-  surf->AddRef();
-  aTarget->AddUserData(&ThebesSurfaceKey, surf.get(), DestroyThebesSurface);
-
-  return surf.forget();
+  image->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
+  return image.forget();
 }
 
 RefPtr<DrawTarget>
