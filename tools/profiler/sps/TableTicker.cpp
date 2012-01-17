@@ -245,6 +245,7 @@ class TableTicker: public Sampler {
   {
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
     mProfile.addTag(ProfileEntry('m', "Start"));
+    mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
   }
 
   ~TableTicker() { if (IsActive()) Stop(); }
@@ -276,6 +277,7 @@ class TableTicker: public Sampler {
   Stack *mStack;
   bool mSaveRequested;
   bool mUseStackWalk;
+  bool mJankOnly;
 };
 
 /**
@@ -380,17 +382,31 @@ void TableTicker::Tick(TickSample* sample)
   }
   mStack->mQueueClearMarker = true;
 
-#ifdef USE_BACKTRACE
-  if (mUseStackWalk) {
-    doBacktrace(mProfile);
-  } else {
-    doSampleStackTrace(mStack, mProfile, sample);
+  bool recordSample = true;
+  if (mJankOnly) {
+    recordSample = false;
+    // only record the events when we have a we haven't seen a tracer event for 100ms
+    if (!sLastTracerEvent.IsNull()) {
+      TimeDuration delta = sample->timestamp - sLastTracerEvent;
+      if (delta.ToMilliseconds() > 100.0) {
+          recordSample = true;
+      }
+    }
   }
-#else
-  doSampleStackTrace(mStack, mProfile, sample);
-#endif
 
-  if (!sLastTracerEvent.IsNull() && sample) {
+  if (recordSample) {
+#ifdef USE_BACKTRACE
+    if (mUseStackWalk) {
+      doBacktrace(mProfile);
+    } else {
+      doSampleStackTrace(mStack, mProfile, sample);
+    }
+#else
+    doSampleStackTrace(mStack, mProfile, sample);
+#endif
+  }
+
+  if (!mJankOnly && !sLastTracerEvent.IsNull() && sample) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
     mProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }

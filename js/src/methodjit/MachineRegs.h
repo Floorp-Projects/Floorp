@@ -573,6 +573,10 @@ struct Registers {
         return freeMask == other.freeMask;
     }
 
+    Registers operator &(const Registers &other) {
+        return Registers(freeMask & other.freeMask);
+    }
+
     uint32_t freeMask;
 };
 

@@ -39,3 +39,9 @@ _OPT\.OBJ/
 
 # SVN directories
 \.svn/
+
+# Ignore the files and directory that Eclipse IDE creates
+^\.project$
+^\.cproject$
+^\.settings$
+
