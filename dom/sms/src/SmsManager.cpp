@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "SmsFilter.h"
 #include "SmsManager.h"
 #include "nsIDOMClassInfo.h"
 #include "nsISmsService.h"
@@ -264,6 +265,29 @@ SmsManager::Delete(const jsval& aParam, nsIDOMMozSmsRequest** aRequest)
   message->GetId(&id);
 
   return Delete(id, aRequest);
+}
+
+NS_IMETHODIMP
+SmsManager::GetMessages(nsIDOMMozSmsFilter* aFilter, bool aReverse,
+                        nsIDOMMozSmsRequest** aRequest)
+{
+  nsCOMPtr<nsIDOMMozSmsFilter> filter = aFilter;
+
+  if (!filter) {
+    filter = new SmsFilter();
+  }
+
+  int requestId =
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext, aRequest);
+  NS_ASSERTION(*aRequest, "The request object must have been created!");
+
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, NS_ERROR_FAILURE);
+
+  smsDBService->CreateMessageList(filter, aReverse, requestId, 0);
+
+  return NS_OK;
 }
 
 NS_IMPL_EVENT_HANDLER(SmsManager, received)
