@@ -16,6 +16,8 @@
 using _STLP_STD_NAME::find;
 #endif
 
+namespace base {
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // OVERVIEW:
@@ -169,12 +171,14 @@ class ObserverList {
   DISALLOW_EVIL_CONSTRUCTORS(ObserverList);
 };
 
-#define FOR_EACH_OBSERVER(ObserverType, observer_list, func)  \
-  do {                                                        \
-    ObserverList<ObserverType>::Iterator it(observer_list);   \
-    ObserverType* obs;                                        \
-    while ((obs = it.GetNext()) != NULL)                      \
-      obs->func;                                              \
+} // namespace base
+
+#define FOR_EACH_OBSERVER(ObserverType, observer_list, func)		\
+  do {									\
+    base::ObserverList<ObserverType>::Iterator it(observer_list);	\
+    ObserverType* obs;							\
+    while ((obs = it.GetNext()) != NULL)				\
+      obs->func;							\
   } while (0)
 
 #endif  // BASE_OBSERVER_LIST_H__

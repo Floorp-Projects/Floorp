@@ -223,7 +223,7 @@ class PrefService : public NonThreadSafe {
 
   // A map from pref names to a list of observers.  Observers get fired in the
   // order they are added.
-  typedef ObserverList<NotificationObserver> NotificationObserverList;
+  typedef base::ObserverList<NotificationObserver> NotificationObserverList;
   typedef base::hash_map<std::wstring, NotificationObserverList*>
       PrefObserverMap;
   PrefObserverMap pref_observers_;

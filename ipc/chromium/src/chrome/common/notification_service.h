@@ -75,7 +75,7 @@ class NotificationService {
   static Details<void> NoDetails() { return Details<void>(NULL); }
 
  private:
-  typedef ObserverList<NotificationObserver> NotificationObserverList;
+  typedef base::ObserverList<NotificationObserver> NotificationObserverList;
   typedef std::map<uintptr_t, NotificationObserverList*> NotificationSourceMap;
 
   // Convenience function to determine whether a source has a
