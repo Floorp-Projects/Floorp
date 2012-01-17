@@ -75,6 +75,10 @@ public class GeckoEvent {
     public static final int ACTIVITY_START = 17;
     public static final int SAVE_STATE = 18;
     public static final int BROADCAST = 19;
+    public static final int VIEWPORT = 20;
+    public static final int TILE_SIZE = 21;
+    public static final int VISTITED = 22;
+    public static final int NETWORK_CHANGED = 23;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -111,6 +115,9 @@ public class GeckoEvent {
     public int mRangeForeColor, mRangeBackColor;
     public Location mLocation;
     public Address  mAddress;
+
+    public double mBandwidth;
+    public boolean mCanBeMetered;
 
     public int mNativeWindow;
 
@@ -234,5 +241,11 @@ public class GeckoEvent {
     public GeckoEvent(String uri) {
         mType = LOAD_URI;
         mCharacters = uri;
+    }
+
+    public GeckoEvent(double bandwidth, boolean canBeMetered) {
+        mType = NETWORK_CHANGED;
+        mBandwidth = bandwidth;
+        mCanBeMetered = canBeMetered;
     }
 }
