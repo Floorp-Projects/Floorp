@@ -43,7 +43,6 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "punycode.h"
@@ -87,7 +86,7 @@ nsresult nsIDNService::Init()
   if (prefs)
     prefs->GetBranch(NS_NET_PREF_IDNWHITELIST, getter_AddRefs(mIDNWhitelistPrefBranch));
 
-  nsCOMPtr<nsIPrefBranch2> prefInternal(do_QueryInterface(prefs));
+  nsCOMPtr<nsIPrefBranch> prefInternal(do_QueryInterface(prefs));
   if (prefInternal) {
     prefInternal->AddObserver(NS_NET_PREF_IDNTESTBED, this, true); 
     prefInternal->AddObserver(NS_NET_PREF_IDNPREFIX, this, true); 
