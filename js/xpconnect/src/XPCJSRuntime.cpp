@@ -64,23 +64,6 @@
 #include "nsExceptionHandler.h"
 #endif
 
-#include "jscntxt.h"
-#if 0
-        JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
-        if (acx->globalObject)
-            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "XPC global object");
-
-            while ((acx = JS_ContextIterator(cx->runtime, &iter))) {
-                if (!acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
-                    JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
-
-JS_LOCK_GC, JS_UNLOCK_GC
-
-js_NextActiveContext, js::TriggerOperationCallback
-        mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
-        mJSRuntime->setActivityCallback(ActivityCallback, this);
-#endif
-
 using namespace mozilla;
 using namespace mozilla::xpconnect::memory;
 
@@ -452,11 +435,11 @@ TraceCompartment(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compartment, 
 
 void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
-    JSContext *iter = nsnull, *acx;
-    while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
-        JS_ASSERT(acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL));
-        if (acx->globalObject)
-            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "XPC global object");
+    JSContext *iter = nsnull;
+    while (JSContext *acx = JS_ContextIterator(GetJSRuntime(), &iter)) {
+        JS_ASSERT(js::HasUnrootedGlobal(acx));
+        if (JSObject *global = JS_GetGlobalObject(acx))
+            JS_CALL_OBJECT_TRACER(trc, global, "XPC global object");
     }
 
     XPCAutoLock lock(mMapLock);
@@ -685,10 +668,9 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 
             // We seem to sometime lose the unrooted global flag. Restore it
             // here. FIXME: bug 584495.
-            JSContext *iter = nsnull, *acx;
-
-            while ((acx = JS_ContextIterator(cx->runtime, &iter))) {
-                if (!acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
+            JSContext *iter = nsnull;
+            while (JSContext *acx = JS_ContextIterator(JS_GetRuntime(cx), &iter)) {
+                if (!js::HasUnrootedGlobal(acx))
                     JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
             }
             break;
@@ -947,20 +929,6 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
     return true;
 }
 
-// Auto JS GC lock helper.
-class AutoLockJSGC
-{
-public:
-    AutoLockJSGC(JSRuntime* rt) : mJSRuntime(rt) { JS_LOCK_GC(mJSRuntime); }
-    ~AutoLockJSGC() { JS_UNLOCK_GC(mJSRuntime); }
-private:
-    JSRuntime* mJSRuntime;
-
-    // Disable copy or assignment semantics.
-    AutoLockJSGC(const AutoLockJSGC&);
-    void operator=(const AutoLockJSGC&);
-};
-
 //static
 void
 XPCJSRuntime::WatchdogMain(void *arg)
@@ -968,7 +936,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
 
     // Lock lasts until we return
-    AutoLockJSGC lock(self->mJSRuntime);
+    js::AutoLockGC lock(self->mJSRuntime);
 
     PRIntervalTime sleepInterval;
     while (self->mWatchdogThread) {
@@ -984,10 +952,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
 #endif
             PR_WaitCondVar(self->mWatchdogWakeup, sleepInterval);
         JS_ASSERT(status == PR_SUCCESS);
-        JSContext* cx = nsnull;
-        while ((cx = js_NextActiveContext(self->mJSRuntime, cx))) {
-            js::TriggerOperationCallback(cx);
-        }
+        js::TriggerOperationCallbacksForActiveContexts(self->mJSRuntime);
     }
 
     /* Wake up the main thread waiting for the watchdog to terminate. */
@@ -1097,7 +1062,7 @@ XPCJSRuntime::~XPCJSRuntime()
         // must release the lock before calling PR_DestroyCondVar, we use an
         // extra block here.
         {
-            AutoLockJSGC lock(mJSRuntime);
+            js::AutoLockGC lock(mJSRuntime);
             if (mWatchdogThread) {
                 mWatchdogThread = nsnull;
                 PR_NotifyCondVar(mWatchdogWakeup);
@@ -2006,11 +1971,11 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
         JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
-        mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
+        mWatchdogWakeup = JS_NEW_CONDVAR(js::GetRuntimeGCLock(mJSRuntime));
         if (!mWatchdogWakeup)
             NS_RUNTIMEABORT("JS_NEW_CONDVAR failed.");
 
-        mJSRuntime->setActivityCallback(ActivityCallback, this);
+        js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
@@ -2032,7 +1997,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 #endif
 
     if (mWatchdogWakeup) {
-        AutoLockJSGC lock(mJSRuntime);
+        js::AutoLockGC lock(mJSRuntime);
 
         mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
                                           PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,

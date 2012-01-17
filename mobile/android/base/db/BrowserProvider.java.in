@@ -207,8 +207,10 @@ public class BrowserProvider extends ContentProvider {
         return table + "." + column;
     }
 
+    private static final int GUID_ENCODE_FLAGS = Base64.URL_SAFE | Base64.NO_WRAP;
+
     public static String generateGuid() {
-        byte[] encodedBytes = Base64.encode(generateRandomBytes(9), Base64.URL_SAFE);
+        byte[] encodedBytes = Base64.encode(generateRandomBytes(9), GUID_ENCODE_FLAGS);
         return new String(encodedBytes);
     }
 

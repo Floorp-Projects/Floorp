@@ -529,15 +529,15 @@ SpdyStream::TransmitFrame(const char *buf,
     LOG3(("SpdyStream::TransmitFrame for regular session=%p "
           "stream=%p result %x len=%d",
           mSession, this, rv, transmittedCount));
-    SpdySession::LogIO(mSession, this, "Writing from Transaction Buffer",
-                       buf + offset, transmittedCount);
-
     if (rv == NS_BASE_STREAM_WOULD_BLOCK)
       mBlockedOnWrite = 1;
 
     if (NS_FAILED(rv))     // this will include WOULD_BLOCK
       return rv;
     
+    SpdySession::LogIO(mSession, this, "Writing from Transaction Buffer",
+                       buf + offset, transmittedCount);
+
     if (mUpstreamState == SENDING_REQUEST_BODY) {
       mTransaction->OnTransportStatus(mSocketTransport,
                                       nsISocketTransport::STATUS_SENDING_TO,

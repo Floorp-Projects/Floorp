@@ -328,9 +328,6 @@ nsHttpChannel::Connect(bool firstTime)
         return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
 
-    // check to see if authorization headers should be included
-    mAuthProvider->AddAuthorizationHeaders();
-
     if (mLoadFlags & LOAD_NO_NETWORK_IO) {
         return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
@@ -3742,6 +3739,9 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     }
 
     AddCookiesToRequest();
+ 
+    // check to see if authorization headers should be included
+    mAuthProvider->AddAuthorizationHeaders();
 
     // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);

@@ -39,7 +39,8 @@
 #include "mozilla/Util.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"  /* for error messages */
+#include "jsatom.h"
+#include "jsfriendapi.h"
 #include "nsCOMPtr.h"
 #include "xpcprivate.h"
 #include "XPCInlines.h"
@@ -388,7 +389,10 @@ SharedDefineSetter(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                        PRUint32 ifacec, const nsIID **interfaces,
-                       PRUint32 tableSize, const xpc_qsHashEntry *table)
+                       PRUint32 tableSize, const xpc_qsHashEntry *table,
+                       const xpc_qsPropertySpec *propspecs,
+                       const xpc_qsFunctionSpec *funcspecs,
+                       const char *stringTable)
 {
     /*
      * Walk interfaces in reverse order to behave like XPConnect when a
@@ -407,26 +411,26 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
         if (entry) {
             for (;;) {
                 // Define quick stubs for attributes.
-                const xpc_qsPropertySpec *ps = entry->properties;
-                if (ps) {
-                    for (; ps->name; ps++) {
-                        definedProperty = true;
-                        if (!JS_DefineProperty(cx, proto, ps->name, JSVAL_VOID,
-                                               ps->getter, ps->setter,
-                                               flags | JSPROP_SHARED))
-                            return false;
-                    }
+                const xpc_qsPropertySpec *ps = propspecs + entry->prop_index;
+                const xpc_qsPropertySpec *ps_end = ps + entry->n_props;
+                for ( ; ps < ps_end; ++ps) {
+                    definedProperty = true;
+                    if (!JS_DefineProperty(cx, proto,
+                                           stringTable + ps->name_index,
+                                           JSVAL_VOID, ps->getter, ps->setter,
+                                           flags | JSPROP_SHARED)) 
+                        return false;
                 }
 
                 // Define quick stubs for methods.
-                const xpc_qsFunctionSpec *fs = entry->functions;
-                if (fs) {
-                    for (; fs->name; fs++) {
-                        if (!JS_DefineFunction(cx, proto, fs->name,
-                                               reinterpret_cast<JSNative>(fs->native),
-                                               fs->arity, flags))
-                            return false;
-                    }
+                const xpc_qsFunctionSpec *fs = funcspecs + entry->func_index;
+                const xpc_qsFunctionSpec *fs_end = fs + entry->n_funcs;
+                for ( ; fs < fs_end; ++fs) {
+                    if (!JS_DefineFunction(cx, proto,
+                                           stringTable + fs->name_index,
+                                           reinterpret_cast<JSNative>(fs->native),
+                                           fs->arity, flags))
+                        return false;
                 }
 
                 // Next.

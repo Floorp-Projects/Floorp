@@ -305,7 +305,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
   if (mScriptContext)
     return NS_OK; // already initialized for this lang
   nsCOMPtr<nsIDOMScriptObjectFactory> factory = do_GetService(kDOMScriptObjectFactoryCID);
-  NS_ENSURE_TRUE(factory, nsnull);
+  NS_ENSURE_TRUE(factory, NS_OK);
 
   nsresult rv;
 
@@ -328,7 +328,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
 
   rv = xpc_CreateGlobalObject(cx, &gSharedGlobalClass, principal, nsnull,
                               false, &mJSObject, &compartment);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
   ::JS_SetGlobalObject(cx, mJSObject);
 

@@ -49,35 +49,31 @@
 
 class XPCCallContext;
 
-#define XPC_QS_NULL_INDEX  ((size_t) -1)
+#define XPC_QS_NULL_INDEX  ((uint16_t) -1)
 
 struct xpc_qsPropertySpec {
-    const char *name;
+    uint16_t name_index;
     JSPropertyOp getter;
     JSStrictPropertyOp setter;
 };
 
 struct xpc_qsFunctionSpec {
-    const char *name;
+    uint16_t name_index;
+    uint16_t arity;
     JSNative native;
-    uintN arity;
-};
-
-struct xpc_qsTraceableSpec {
-    const char *name;
-    JSNative native;
-    uintN arity;
 };
 
 /** A table mapping interfaces to quick stubs. */
 struct xpc_qsHashEntry {
     nsID iid;
-    const xpc_qsPropertySpec *properties;
-    const xpc_qsFunctionSpec *functions;
+    uint16_t prop_index;
+    uint16_t n_props;
+    uint16_t func_index;
+    uint16_t n_funcs;
     // These last two fields index to other entries in the same table.
     // XPC_QS_NULL_ENTRY indicates there are no more entries in the chain.
-    size_t parentInterface;
-    size_t chain;
+    uint16_t parentInterface;
+    uint16_t chain;
 };
 
 inline nsISupports*
@@ -164,7 +160,10 @@ public:
 JSBool
 xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN extraFlags,
                        PRUint32 ifacec, const nsIID **interfaces,
-                       PRUint32 tableSize, const xpc_qsHashEntry *table);
+                       PRUint32 tableSize, const xpc_qsHashEntry *table,
+                       const xpc_qsPropertySpec *propspecs,
+                       const xpc_qsFunctionSpec *funcspecs,
+                       const char *stringTable);
 
 /** Raise an exception on @a cx and return false. */
 JSBool

@@ -175,9 +175,7 @@ public:
   NS_IMETHOD            Show(bool aState);
   NS_IMETHOD            IsVisible(bool& aState);
   NS_IMETHOD            SetFocus(bool aRaise);
-  NS_IMETHOD            Invalidate(const nsIntRect& aRect,
-                                   bool aIsSynchronous);
-  NS_IMETHOD            Update();
+  NS_IMETHOD            Invalidate(const nsIntRect& aRect);
   gfxASurface*          GetThebesSurface();
   virtual void*         GetNativeData(PRUint32 aDataType);
   virtual void          FreeNativeData(void* aDatum, PRUint32 aDataType);

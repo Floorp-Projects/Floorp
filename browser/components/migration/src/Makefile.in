@@ -49,8 +49,7 @@ USE_STATIC_LIBS = 1
 endif
 
 
-CPPSRCS  = nsProfileMigrator.cpp \
-           nsBrowserProfileMigratorUtils.cpp \
+CPPSRCS  = nsBrowserProfileMigratorUtils.cpp \
            $(NULL)
 
 ifeq ($(OS_ARCH)_$(GNU_CXX),WINNT_)
@@ -64,6 +63,7 @@ CPPSRCS += nsSafariProfileMigrator.cpp \
 endif            
 
 EXTRA_PP_COMPONENTS = \
+  ProfileMigrator.js \
   ChromeProfileMigrator.js \
   FirefoxProfileMigrator.js \
   $(NULL)

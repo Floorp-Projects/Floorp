@@ -42,8 +42,8 @@
 
 // JavaScript includes
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "jsprvtd.h"    // we are using private JS typedefs...
-#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
@@ -5385,7 +5385,7 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (id == sWrappedJSObject_id &&
-      xpc::AccessCheck::isChrome(cx->compartment)) {
+      xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
     obj = JS_ObjectToOuterObject(cx, obj);
     *vp = OBJECT_TO_JSVAL(obj);
     return NS_SUCCESS_I_DID_SOMETHING;

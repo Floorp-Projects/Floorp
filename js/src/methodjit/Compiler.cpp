@@ -944,8 +944,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %lu, Slow code (stubcc) size = %lu.\n",
                (unsigned long) masm.size(), (unsigned long) stubcc.size());
 
+    /* To make inlineDoubles and oolDoubles aligned to sizeof(double) bytes,
+       MIPS adds extra sizeof(double) bytes to codeSize.  */
     size_t codeSize = masm.size() +
+#if defined(JS_CPU_MIPS) 
+                      stubcc.size() + sizeof(double) +
+#else
                       stubcc.size() +
+#endif
                       (masm.numDoubles() * sizeof(double)) +
                       (stubcc.masm.numDoubles() * sizeof(double)) +
                       jumpTableOffsets.length() * sizeof(void *);
@@ -1367,7 +1373,16 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
 
+#if defined(JS_CPU_MIPS)
+    /* Make sure doubleOffset is aligned to sizeof(double) bytes.  */ 
+    size_t doubleOffset = (((size_t)result + masm.size() + stubcc.size() +
+                            sizeof(double) - 1) & (~(sizeof(double) - 1))) -
+                          (size_t)result;
+    JS_ASSERT((((size_t)result + doubleOffset) & 7) == 0);
+#else
     size_t doubleOffset = masm.size() + stubcc.size();
+#endif
+
     double *inlineDoubles = (double *) (result + doubleOffset);
     double *oolDoubles = (double*) (result + doubleOffset +
                                     masm.numDoubles() * sizeof(double));
@@ -3398,7 +3413,7 @@ mjit::Compiler::interruptCheckHelper()
         void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
 #endif
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM) || defined(JS_CPU_MIPS)
         jump = masm.branch32(Assembler::NotEqual, AbsoluteAddress(interrupt), Imm32(0));
 #else
         /* Handle processors that can't load from absolute addresses. */
@@ -5015,7 +5030,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
         ScriptAnalysis::NameAccess access =
             analysis->resolveNameAccess(cx, ATOM_TO_JSID(name), true);
         if (access.nesting) {
-            /* Use a SavedReg so it isn't clobbered by the stub call. */
+            /* Use a SavedReg so it isn't clobbered by sync or the stub call. */
             RegisterID nameReg = frame.allocReg(Registers::SavedRegs).reg();
             Address address = frame.loadNameAddress(access, nameReg);
 
@@ -5062,9 +5077,9 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
             if (!isObject)
                 notObject = frame.testObject(Assembler::NotEqual, lhs);
 #ifdef JSGC_INCREMENTAL_MJ
-            frame.pinReg(reg);
             if (cx->compartment->needsBarrier() && propertyTypes->needsBarrier(cx)) {
                 /* Write barrier. */
+                frame.pinReg(reg);
                 Jump j = masm.testGCThing(Address(reg, JSObject::getFixedSlotOffset(slot)));
                 stubcc.linkExit(j, Uses(0));
                 stubcc.leave();
@@ -5072,8 +5087,8 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
                                    reg, Registers::ArgReg1);
                 OOL_STUBCALL(stubs::GCThingWriteBarrier, REJOIN_NONE);
                 stubcc.rejoin(Changes(0));
+                frame.unpinReg(reg);
             }
-            frame.unpinReg(reg);
 #endif
             if (!isObject) {
                 stubcc.linkExit(notObject.get(), Uses(2));
