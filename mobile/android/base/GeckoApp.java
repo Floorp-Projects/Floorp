@@ -121,7 +121,6 @@ abstract public class GeckoApp
     private IntentFilter mBatteryFilter;
 
     private BroadcastReceiver mConnectivityReceiver;
-    private BroadcastReceiver mSmsReceiver;
     private BroadcastReceiver mBatteryReceiver;
 
     public static BrowserToolbar mBrowserToolbar;
@@ -1571,14 +1570,9 @@ abstract public class GeckoApp
         mBatteryReceiver = new GeckoBatteryManager();
         registerReceiver(mBatteryReceiver, batteryFilter);
 
-        IntentFilter smsFilter = new IntentFilter();
-        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_RECEIVED);
-        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_SENT);
-        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_DELIVERED);
-        mSmsReceiver = new GeckoSmsManager();
-        registerReceiver(mSmsReceiver, smsFilter);
-
-        GeckoSmsManager.init();
+        if (SmsManager.getInstance() != null) {
+          SmsManager.getInstance().init();
+        }
 
         final GeckoApp self = this;
  
@@ -1804,11 +1798,12 @@ abstract public class GeckoApp
 
         mFavicons.close();
 
-        GeckoSmsManager.shutdown();
+        if (SmsManager.getInstance() != null) {
+          SmsManager.getInstance().shutdown();
+        }
 
         super.onDestroy();
 
-        unregisterReceiver(mSmsReceiver);
         unregisterReceiver(mBatteryReceiver);
     }
 
