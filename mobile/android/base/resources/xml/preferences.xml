@@ -20,9 +20,9 @@
                             android:persistent="false" />
 
         <ListPreference     android:key="plugin.enable"
-                            android:title="@string/pref_enable_plugins"
-                            android:entries="@array/pref_enable_plugins_entries"
-                            android:entryValues="@array/pref_enable_plugins_values"
+                            android:title="@string/pref_plugins"
+                            android:entries="@array/pref_plugins_entries"
+                            android:entryValues="@array/pref_plugins_values"
                             android:persistent="false" />
 
         <ListPreference     android:key="font.size.inflation.minTwips"

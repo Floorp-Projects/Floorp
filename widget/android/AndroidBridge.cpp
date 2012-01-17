@@ -1055,7 +1055,7 @@ AndroidBridge::OpenGraphicsLibraries()
         mHasNativeWindowAccess = false;
         mHasNativeBitmapAccess = false;
 
-        void *handle = dlopen("/system/lib/libjnigraphics.so", RTLD_LAZY | RTLD_LOCAL);
+        void *handle = dlopen("libjnigraphics.so", RTLD_LAZY | RTLD_LOCAL);
         if (handle) {
             AndroidBitmap_getInfo = (int (*)(JNIEnv *, jobject, void *))dlsym(handle, "AndroidBitmap_getInfo");
             AndroidBitmap_lockPixels = (int (*)(JNIEnv *, jobject, void **))dlsym(handle, "AndroidBitmap_lockPixels");
@@ -1068,7 +1068,7 @@ AndroidBridge::OpenGraphicsLibraries()
 
         // Try to dlopen libandroid.so for and native window access on
         // Android 2.3+ (API level 9)
-        handle = dlopen("/system/lib/libandroid.so", RTLD_LAZY | RTLD_LOCAL);
+        handle = dlopen("libandroid.so", RTLD_LAZY | RTLD_LOCAL);
         if (handle) {
             ANativeWindow_fromSurface = (void* (*)(JNIEnv*, jobject))dlsym(handle, "ANativeWindow_fromSurface");
             ANativeWindow_release = (void (*)(void*))dlsym(handle, "ANativeWindow_release");

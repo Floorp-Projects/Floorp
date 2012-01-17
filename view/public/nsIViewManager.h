@@ -48,8 +48,8 @@ class nsRegion;
 class nsDeviceContext;
 
 #define NS_IVIEWMANAGER_IID \
-{ 0x1262a33f, 0xc19f, 0x4e5b, \
-  { 0x85, 0x00, 0xab, 0xf3, 0x7d, 0xcf, 0x30, 0x1d } }
+{ 0x540610a6, 0x4fdd, 0x4ae3, \
+  { 0x9b, 0xdb, 0xa6, 0x4d, 0x8b, 0xca, 0x02, 0x0f } }
 
 class nsIViewManager : public nsISupports
 {
@@ -117,22 +117,11 @@ public:
   NS_IMETHOD  FlushDelayedResize(bool aDoReflow) = 0;
 
   /**
-   * Called to force a redrawing of any dirty areas.
-   */
-  // XXXbz why is this exposed?  Shouldn't update view batches handle this?
-  // It's not like Composite() does what's expected inside a view update batch
-  // anyway, since dirty areas may not have been invalidated on the widget yet
-  // and widget changes may not have been propagated yet.  Maybe this should
-  // call FlushPendingInvalidates()?
-  NS_IMETHOD  Composite(void) = 0;
-
-  /**
    * Called to inform the view manager that the entire area of a view
    * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  InvalidateView(nsIView *aView) = 0;
 
   /**
    * Called to inform the view manager that some portion of a view is dirty and
@@ -140,17 +129,13 @@ public:
    * space. Does not check for paint suppression.
    * @param aView view to paint. should be root view
    * @param rect rect to mark as damaged
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect,
-                                      PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  InvalidateViewNoSuppression(nsIView *aView, const nsRect &aRect) = 0;
 
   /**
-   * Called to inform the view manager that it should redraw all views.
-   * @param aView view to paint. should be root view
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
+   * Called to inform the view manager that it should invalidate all views.
    */
-  NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  InvalidateAllViews() = 0;
 
   /**
    * Called to dispatch an event to the appropriate view. Often called
@@ -273,76 +258,42 @@ public:
    */
   NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext) = 0;
 
-  class UpdateViewBatch {
+  /**
+   * A stack class for disallowing changes that would enter painting. For
+   * example, popup widgets shouldn't be resized during reflow, since doing so
+   * might cause synchronous painting inside reflow which is forbidden.
+   * While refresh is disabled, widget geometry changes are deferred and will
+   * be handled later, either from the refresh driver or from an NS_WILL_PAINT
+   * event.
+   * We don't want to defer widget geometry changes all the time. Resizing a
+   * popup from script doesn't need to be deferred, for example, especially
+   * since popup widget geometry is observable from script and expected to
+   * update synchronously.
+   */
+  class NS_STACK_CLASS AutoDisableRefresh {
   public:
-    UpdateViewBatch() {}
-  /**
-   * prevents the view manager from refreshing. allows UpdateView()
-   * to notify widgets of damaged regions that should be repainted
-   * when the batch is ended. Call EndUpdateViewBatch on this object
-   * before it is destroyed
-   * @return error status
-   */
-    UpdateViewBatch(nsIViewManager* aVM) {
+    AutoDisableRefresh(nsIViewManager* aVM) {
       if (aVM) {
-        mRootVM = aVM->BeginUpdateViewBatch();
+        mRootVM = aVM->IncrementDisableRefreshCount();
       }
     }
-    ~UpdateViewBatch() {
-      NS_ASSERTION(!mRootVM, "Someone forgot to call EndUpdateViewBatch!");
-    }
-    
-    /**
-     * See the constructor, this lets you "fill in" a blank UpdateViewBatch.
-     */
-    void BeginUpdateViewBatch(nsIViewManager* aVM) {
-      NS_ASSERTION(!mRootVM, "already started a batch!");
-      if (aVM) {
-        mRootVM = aVM->BeginUpdateViewBatch();
+    ~AutoDisableRefresh() {
+      if (mRootVM) {
+        mRootVM->DecrementDisableRefreshCount();
       }
     }
-
-  /**
-   * allow the view manager to refresh any damaged areas accumulated
-   * after the BeginUpdateViewBatch() call.  this may cause a
-   * synchronous paint to occur inside the call if aUpdateFlags
-   * NS_VMREFRESH_IMMEDIATE is set.
-   *
-   * If this is not the outermost view batch command, then this does
-   * nothing except that the specified flags are remembered. When the
-   * outermost batch finally ends, we merge together all the flags for the
-   * inner batches in the following way:
-   * -- If any batch specified NS_VMREFRESH_IMMEDIATE, then we use that flag
-   * (i.e. there is a synchronous paint under the last EndUpdateViewBatch)
-   * -- Otherwise if any batch specified NS_VMREFERSH_DEFERRED, then we use
-   * that flag (i.e. invalidation is deferred until the processing of an
-   * Invalidate PLEvent)
-   * -- Otherwise all batches specified NS_VMREFRESH_NO_SYNC and we honor
-   * that; all widgets are invalidated normally and will be painted the next
-   * time the toolkit chooses to update them.
-   *
-   * @param aUpdateFlags see bottom of nsIViewManager.h for
-   * description @return error status
-   */
-    void EndUpdateViewBatch(PRUint32 aUpdateFlags) {
-      if (!mRootVM)
-        return;
-      mRootVM->EndUpdateViewBatch(aUpdateFlags);
-      mRootVM = nsnull;
-    }
-
   private:
-    UpdateViewBatch(const UpdateViewBatch& aOther);
-    const UpdateViewBatch& operator=(const UpdateViewBatch& aOther);
+    AutoDisableRefresh(const AutoDisableRefresh& aOther);
+    const AutoDisableRefresh& operator=(const AutoDisableRefresh& aOther);
 
     nsCOMPtr<nsIViewManager> mRootVM;
   };
-  
-private:
-  friend class UpdateViewBatch;
 
-  virtual nsIViewManager* BeginUpdateViewBatch(void) = 0;
-  NS_IMETHOD EndUpdateViewBatch(PRUint32 aUpdateFlags) = 0;
+private:
+  friend class AutoDisableRefresh;
+
+  virtual nsIViewManager* IncrementDisableRefreshCount() = 0;
+  virtual void DecrementDisableRefreshCount() = 0;
 
 public:
   /**
@@ -350,16 +301,6 @@ public:
    * view manager whose root view has a widget.
    */
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget) = 0;
-
-  /**
-   * Force update of view manager widget
-   * Callers should use UpdateView(view, NS_VMREFRESH_IMMEDIATE) in most cases instead
-   * @result error status
-   */
-  // XXXbz Callers seem to be confused about this one... and it doesn't play
-  // right with view update batching at all (will miss updates).  Maybe this
-  // should call FlushPendingInvalidates()?
-  NS_IMETHOD ForceUpdate() = 0;
 
   /**
    * Indicate whether the viewmanager is currently painting
@@ -383,25 +324,19 @@ public:
    * the nearest enclosing popup or the root view for the root document.
    */
   static nsIView* GetDisplayRootFor(nsIView* aView);
+
+  /**
+   * Flush the accumulated dirty region to the widget and update widget
+   * geometry.
+   */
+  virtual void ProcessPendingUpdates()=0;
+
+  /**
+   * Just update widget geometry without flushing the dirty region
+   */
+  virtual void UpdateWidgetGeometry() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
-
-// Paint timing mode flags
-
-// intermediate: do no special timing processing; repaint when the
-// toolkit issues an expose event (which will happen *before* PLEvent
-// processing). This is essentially the default.
-#define NS_VMREFRESH_NO_SYNC            0
-
-// least immediate: we suppress invalidation, storing dirty areas in
-// views, and post an Invalidate PLEvent. The Invalidate event gets
-// processed after toolkit events such as window resize events!
-// This is only usable with EndUpdateViewBatch and EnableRefresh.
-#define NS_VMREFRESH_DEFERRED           0x0001
-
-// most immediate: force a call to nsViewManager::Composite, which
-// synchronously updates the window(s) right away before returning
-#define NS_VMREFRESH_IMMEDIATE          0x0002
 
 #endif  // nsIViewManager_h___

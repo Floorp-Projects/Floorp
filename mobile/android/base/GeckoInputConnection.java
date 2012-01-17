@@ -178,6 +178,9 @@ public class GeckoInputConnection
         if (content == null)
             return null;
 
+        if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0)
+            mUpdateRequest = req;
+
         ExtractedText extract = new ExtractedText();
         extract.flags = 0;
         extract.partialStartOffset = -1;
@@ -198,6 +201,14 @@ public class GeckoInputConnection
         extract.text = content.toString();
 
         return extract;
+    }
+
+    @Override
+    public boolean setSelection(int start, int end) {
+        GeckoAppShell.sendEventToGecko(
+            new GeckoEvent(GeckoEvent.IME_SET_SELECTION, start, end - start));
+
+        return super.setSelection(start, end);
     }
 
     @Override
@@ -337,33 +348,64 @@ public class GeckoInputConnection
 
     public void notifyTextChange(InputMethodManager imm, String text,
                                  int start, int oldEnd, int newEnd) {
-        if (mBatchMode)
+        if (!mBatchMode) {
+            if (!text.contentEquals(mEditable)) {
+                if (DEBUG) Log.d(LOGTAG, String.format(". . . notifyTextChange: current mEditable=\"%s\"",
+                                                       mEditable.toString()));
+                setEditable(text);
+            }
+        }
+
+        if (mUpdateRequest == null)
             return;
 
-        if (!text.contentEquals(mEditable)) {
-            if (DEBUG) Log.d(LOGTAG, String.format(". . . notifyTextChange: current mEditable=\"%s\"",
-                                                   mEditable.toString()));
-            setEditable(text);
+        View v = GeckoApp.mAppContext.getLayerController().getView();
+
+        if (imm == null) {
+            imm = (InputMethodManager)v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm == null)
+                return;
         }
+
+        mUpdateExtract.flags = 0;
+
+        // We update from (0, oldEnd) to (0, newEnd) because some Android IMEs
+        // assume that updates start at zero, according to jchen.
+        mUpdateExtract.partialStartOffset = 0;
+        mUpdateExtract.partialEndOffset = oldEnd;
+
+        // Faster to not query for selection
+        mUpdateExtract.selectionStart = newEnd;
+        mUpdateExtract.selectionEnd = newEnd;
+
+        mUpdateExtract.text = text.substring(0, newEnd);
+        mUpdateExtract.startOffset = 0;
+
+        imm.updateExtractedText(v, mUpdateRequest.token, mUpdateExtract);
     }
 
     public void notifySelectionChange(InputMethodManager imm,
                                       int start, int end) {
-        if (mBatchMode)
-            return;
+        if (!mBatchMode) {
+            final Editable content = getEditable();
+            int a = Selection.getSelectionStart(content);
+            int b = Selection.getSelectionEnd(content);
+            if (start != a || end != b) {
+                if (DEBUG) Log.d(LOGTAG, String.format(". . . notifySelectionChange: current editable selection: [%d, %d]", a, b));
+                super.setSelection(start, end);
+            }
+        }
 
-        final Editable content = getEditable();
-        int a = Selection.getSelectionStart(content);
-        int b = Selection.getSelectionEnd(content);
-        if (start != a || end != b) {
-            if (DEBUG) Log.d(LOGTAG, String.format(". . . notifySelectionChange: current editable selection: [%d, %d]", a, b));
-            setSelection(start, end);
+        if (imm != null && imm.isFullscreenMode()) {
+            View v = GeckoApp.mAppContext.getLayerController().getView();
+            imm.updateSelection(v, start, end, -1, -1);
         }
     }
 
     public void reset() {
         mComposing = false;
         mBatchMode = false;
+        mUpdateRequest = null;
     }
 
     // TextWatcher
@@ -504,12 +546,20 @@ public class GeckoInputConnection
 
         // KeyListener returns true if it handled the event for us.
         if (mIMEState == IME_STATE_DISABLED ||
-            keyCode == KeyEvent.KEYCODE_ENTER ||
-            keyCode == KeyEvent.KEYCODE_DEL ||
-            keyCode == KeyEvent.KEYCODE_TAB ||
-            (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
-            !mKeyListener.onKeyDown(v, mEditable, keyCode, event))
+                keyCode == KeyEvent.KEYCODE_ENTER ||
+                keyCode == KeyEvent.KEYCODE_DEL ||
+                keyCode == KeyEvent.KEYCODE_TAB ||
+                (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
+                !mKeyListener.onKeyDown(v, mEditable, keyCode, event)) {
+            // Make sure selection in Gecko is up-to-date
+            final Editable content = getEditable();
+            int a = Selection.getSelectionStart(content);
+            int b = Selection.getSelectionEnd(content);
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent(GeckoEvent.IME_SET_SELECTION, a, b - a));
+
             GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+        }
         return true;
     }
 
@@ -576,11 +626,9 @@ public class GeckoInputConnection
         if (v == null)
             return;
 
-        if (DEBUG) Log.d(LOGTAG, "notifyIME v!= null");
-
         switch (type) {
         case NOTIFY_IME_RESETINPUTSTATE:
-            if (DEBUG) Log.d(LOGTAG, "notifyIME = reset");
+            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: reset");
 
             // Composition event is already fired from widget.
             // So reset IME flags.
@@ -603,12 +651,12 @@ public class GeckoInputConnection
             break;
 
         case NOTIFY_IME_CANCELCOMPOSITION:
-            if (DEBUG) Log.d(LOGTAG, "notifyIME = cancel");
+            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: cancel");
             IMEStateUpdater.resetIME();
             break;
 
         case NOTIFY_IME_FOCUSCHANGE:
-            if (DEBUG) Log.d(LOGTAG, "notifyIME = focus");
+            if (DEBUG) Log.d(LOGTAG, ". . . notifyIME: focus");
             IMEStateUpdater.resetIME();
             break;
         }
@@ -747,6 +795,9 @@ public class GeckoInputConnection
 
     private boolean mBatchMode;
 
+    ExtractedTextRequest mUpdateRequest;
+    final ExtractedText mUpdateExtract = new ExtractedText();
+
     int mSelectionStart, mSelectionLength;
     SynchronousQueue<String> mQueryResult;
 }
@@ -867,15 +918,15 @@ class DebugGeckoInputConnection
     @Override
     public void notifyTextChange(InputMethodManager imm, String text,
                                  int start, int oldEnd, int newEnd) {
-        Log.d(LOGTAG, String.format("IME: notifyTextChange: text=\"%s\" s=%d ne=%d oe=%d",
-                                               text, start, newEnd, oldEnd));
+        Log.d(LOGTAG, String.format("IME: >notifyTextChange(\"%s\", start=%d, oldEnd=%d, newEnd=%d)",
+                                    text, start, oldEnd, newEnd));
         super.notifyTextChange(imm, text, start, oldEnd, newEnd);
     }
 
     @Override
     public void notifySelectionChange(InputMethodManager imm,
                                       int start, int end) {
-        Log.d(LOGTAG, String.format("IME: notifySelectionChange: s=%d e=%d", start, end));
+        Log.d(LOGTAG, String.format("IME: >notifySelectionChange(start=%d, end=%d)", start, end));
         super.notifySelectionChange(imm, start, end);
     }
 
@@ -888,7 +939,7 @@ class DebugGeckoInputConnection
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count)
     {
-        Log.d(LOGTAG, String.format("IME: onTextChanged: t=\"%s\" s=%d b=%d l=%d", s, start, before, count));
+        Log.d(LOGTAG, String.format("IME: onTextChanged(\"%s\" start=%d, before=%d, count=%d)", s, start, before, count));
         super.onTextChanged(s, start, before, count);
     }
 
@@ -945,14 +996,14 @@ class DebugGeckoInputConnection
 
     @Override
     public void notifyIME(int type, int state) {
-        Log.d(LOGTAG, String.format("IME: notifyIME(%d, %d)", type, state));
+        Log.d(LOGTAG, String.format("IME: >notifyIME(type=%d, state=%d)", type, state));
         super.notifyIME(type, state);
     }
 
     @Override
     public void notifyIMEChange(String text, int start, int end, int newEnd) {
-        Log.d(LOGTAG, String.format("IME: notifyIMEChange: t=\"%s\" s=%d ne=%d oe=%d",
-                                    text, start, newEnd, end));
+        Log.d(LOGTAG, String.format("IME: >notifyIMEChange(\"%s\", start=%d, end=%d, newEnd=%d)",
+                                    text, start, end, newEnd));
         super.notifyIMEChange(text, start, end, newEnd);
     }
 }

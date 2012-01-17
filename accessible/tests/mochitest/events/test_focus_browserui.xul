@@ -22,6 +22,8 @@
 
   <script type="application/javascript">
   <![CDATA[
+    Components.utils.import("resource://gre/modules/Services.jsm");
+
     ////////////////////////////////////////////////////////////////////////////
     // Helpers
 
@@ -97,8 +99,8 @@
     var gBrowserWnd = null;
     function loadBrowser()
     {
-      gBrowserWnd = window.openDialog("chrome://browser/content/", "_blank",
-                                      "chrome,all,dialog=no", gInputDocURI);
+      gBrowserWnd = window.openDialog(Services.prefs.getCharPref("browser.chromeURL"),
+                                      "_blank", "chrome,all,dialog=no", gInputDocURI);
 
       addA11yLoadEvent(startTests, gBrowserWnd);
     }

@@ -621,8 +621,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   if (mWidget) {
     mWidget->Invalidate(nsIntRect(invalidRect->left, invalidRect->top,
                                   invalidRect->right - invalidRect->left,
-                                  invalidRect->bottom - invalidRect->top),
-                        false);
+                                  invalidRect->bottom - invalidRect->top));
     return NS_OK;
   }
 #endif
@@ -654,12 +653,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
 
 NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
 {
-  NS_ENSURE_TRUE(mObjectFrame, NS_ERROR_NULL_POINTER);
-  nsIView* view = mObjectFrame->GetView();
-  if (view) {
-    return view->GetViewManager()->Composite();
-  }
-
   return NS_OK;
 }
 

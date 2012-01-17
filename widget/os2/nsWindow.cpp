@@ -617,28 +617,12 @@ NS_METHOD nsWindow::SetFocus(bool aRaise)
 
 //-----------------------------------------------------------------------------
 
-NS_METHOD nsWindow::Invalidate(const nsIntRect& aRect, bool aIsSynchronous)
+NS_METHOD nsWindow::Invalidate(const nsIntRect& aRect)
 {
   if (mWnd) {
     RECTL rcl = {aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height};
     NS2PM(rcl);
     WinInvalidateRect(mWnd, &rcl, false);
-#if 0
-    if (aIsSynchronous) {
-      Update();
-    }
-#endif
-  }
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// Force a synchronous repaint of the window.
-
-NS_IMETHODIMP nsWindow::Update()
-{
-  if (mWnd) {
-    WinUpdateWindow(mWnd);
   }
   return NS_OK;
 }

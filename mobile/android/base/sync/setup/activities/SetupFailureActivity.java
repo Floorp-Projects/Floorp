@@ -67,7 +67,7 @@ public class SetupFailureActivity extends Activity {
   }
 
   public void cancelClickHandler(View target) {
-    moveTaskToBack(true);
+    setResult(RESULT_CANCELED);
+    finish();
   }
-
 }

@@ -134,7 +134,6 @@
 @BINPATH@/components/directory.xpt
 @BINPATH@/components/docshell.xpt
 @BINPATH@/components/dom.xpt
-@BINPATH@/components/dom_apps.xpt
 @BINPATH@/components/dom_base.xpt
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_telephony.xpt
@@ -389,8 +388,6 @@
 #endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
-@BINPATH@/components/Webapps.js
-@BINPATH@/components/Webapps.manifest
 
 ; Modules
 @BINPATH@/modules/*

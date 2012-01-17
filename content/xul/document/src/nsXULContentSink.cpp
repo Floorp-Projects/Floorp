@@ -47,7 +47,8 @@
  * see http://developer.mozilla.org/en/docs/XUL
  */
 
-#include "jscntxt.h"  // for JSVERSION_HAS_XML
+#include "jsapi.h"
+#include "jsfriendapi.h"
 #include "nsXULContentSink.h"
 #include "nsCOMPtr.h"
 #include "nsForwardReference.h"
@@ -1060,7 +1061,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               // our implementation knowledge to reuse JSVERSION_HAS_XML as a
               // safe version flag. This is still OK if version is
               // JSVERSION_UNKNOWN (-1),
-              version |= js::VersionFlags::HAS_XML;
+              version = js::VersionSetXML(JSVersion(version), true);
 
               nsAutoString value;
               rv = parser.GetParameter("e4x", value);
@@ -1069,7 +1070,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
                       return rv;
               } else {
                   if (value.Length() == 1 && value[0] == '0')
-                    version &= ~js::VersionFlags::HAS_XML;
+                    version = js::VersionSetXML(JSVersion(version), false);
               }
           }
       }
@@ -1083,7 +1084,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
 
               // Even when JS version < 1.6 is specified, E4X is
               // turned on in XUL.
-              version |= js::VersionFlags::HAS_XML;
+              version = js::VersionSetXML(JSVersion(version), true);
           }
       }
       aAttributes += 2;

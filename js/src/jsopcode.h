@@ -581,7 +581,7 @@ class OpcodeCounts
     };
 
     static bool elementOp(JSOp op) {
-        return accessOp(op) && !!(js_CodeSpec[op].format & JOF_ELEM);
+        return accessOp(op) && (JOF_MODE(js_CodeSpec[op].format) == JOF_ELEM);
     }
 
     enum PropertyCounts {
@@ -593,7 +593,7 @@ class OpcodeCounts
     };
 
     static bool propertyOp(JSOp op) {
-        return accessOp(op) && !!(js_CodeSpec[op].format & JOF_PROP);
+        return accessOp(op) && (JOF_MODE(js_CodeSpec[op].format) == JOF_PROP);
     }
 
     enum ArithCounts {

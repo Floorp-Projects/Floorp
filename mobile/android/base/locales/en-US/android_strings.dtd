@@ -56,10 +56,10 @@
 <!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
 <!ENTITY pref_clear_private_data "Clear private data">
 <!ENTITY pref_clear_private_data_confirm "Browsing settings, including passwords and cookies, will be deleted">
-<!ENTITY pref_enable_plugins "Enable plugins">
-<!ENTITY pref_enable_plugins_yes "Yes">
-<!ENTITY pref_enable_plugins_tap_to_play "Tap to play">
-<!ENTITY pref_enable_plugins_no "No">
+<!ENTITY pref_plugins "Plugins">
+<!ENTITY pref_plugins_enabled "Enabled">
+<!ENTITY pref_plugins_tap_to_play "Tap to play">
+<!ENTITY pref_plugins_disabled "Disabled">
 <!ENTITY pref_font_size "Font size">
 <!ENTITY pref_font_size_small "Small">
 <!ENTITY pref_font_size_medium "Medium">
@@ -76,6 +76,7 @@
 <!ENTITY save_as_pdf "Save as PDF">
 
 <!ENTITY contextmenu_open_new_tab "Open in New Tab">
+<!ENTITY contextmenu_remove_bookmark "Remove">
 <!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
 <!ENTITY contextmenu_share "Share">
 

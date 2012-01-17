@@ -53,35 +53,26 @@
 /**
    Invalidation model:
 
-   1) Callers call into the view manager and ask it to update a view.
+   1) Callers call into the view manager and ask it to invalidate a view.
    
    2) The view manager finds the "right" widget for the view, henceforth called
       the root widget.
 
    3) The view manager traverses descendants of the root widget and for each
-      one that needs invalidation either
+      one that needs invalidation stores the rect to invalidate on the widget's
+      view (batching).
 
-      a)  Calls Invalidate() on the widget (no batching)
-    or
-      b)  Stores the rect to invalidate on the widget's view (batching)
-
-   // XXXbz we want to change this a bit.  See bug 243726
-
-   4) When batching, the call to end the batch either processes the pending
-      Invalidate() calls on the widgets or posts an event to do so.
+   4) The dirty region is flushed to the right widget when
+      ProcessPendingUpdates is called from the RefreshDriver.
 
    It's important to note that widgets associated to views outside this view
    manager can end up being invalidated during step 3.  Therefore, the end of a
    view update batch really needs to traverse the entire view tree, to ensure
    that those invalidates happen.
 
-   To cope with this, invalidate event processing and view update batch
-   handling should only happen on the root viewmanager.  This means the root
-   view manager is the only thing keeping track of mUpdateCnt.  As a result,
-   Composite() calls should also be forwarded to the root view manager.
+   To cope with this, invalidation processing and should only happen on the
+   root viewmanager.
 */
-
-class nsInvalidateEvent;
 
 class nsViewManager : public nsIViewManager {
 public:
@@ -104,12 +95,9 @@ public:
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
   NS_IMETHOD  FlushDelayedResize(bool aDoReflow);
 
-  NS_IMETHOD  Composite(void);
-
-  NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags);
-  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect,
-                                      PRUint32 aUpdateFlags);
-  NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
+  NS_IMETHOD  InvalidateView(nsIView *aView);
+  NS_IMETHOD  InvalidateViewNoSuppression(nsIView *aView, const nsRect &aRect);
+  NS_IMETHOD  InvalidateAllViews();
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
       nsIView* aTargetView, nsEventStatus* aStatus);
@@ -137,19 +125,20 @@ public:
 
   NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext);
 
-  virtual nsIViewManager* BeginUpdateViewBatch(void);
-  NS_IMETHOD  EndUpdateViewBatch(PRUint32 aUpdateFlags);
+  virtual nsIViewManager* IncrementDisableRefreshCount();
+  virtual void DecrementDisableRefreshCount();
 
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
-  NS_IMETHOD ForceUpdate();
  
   NS_IMETHOD IsPainting(bool& aIsPainting);
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
-  void ProcessInvalidateEvent();
   static PRUint32 gLastUserEventTime;
 
   /* Update the cached RootViewManager pointer on this view manager. */
   void InvalidateHierarchy();
+
+  virtual void ProcessPendingUpdates();
+  virtual void UpdateWidgetGeometry();
 
 protected:
   virtual ~nsViewManager();
@@ -157,7 +146,9 @@ protected:
 private:
 
   void FlushPendingInvalidates();
-  void ProcessPendingUpdates(nsView *aView, bool aDoInvalidate);
+  void ProcessPendingUpdatesForView(nsView *aView,
+                                    bool aFlushDirtyRegion = true);
+  void FlushDirtyRegionToWidget(nsView* aView);
   /**
    * Call WillPaint() on all view observers under this vm root.
    */
@@ -165,13 +156,9 @@ private:
   void CallDidPaintOnObservers();
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
-  void UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
-                        const nsRegion &aDamagedRegion,
-                        nsView* aIgnoreWidgetView);
+  void InvalidateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
 
-  void UpdateViews(nsView *aView, PRUint32 aUpdateFlags);
-
-  void TriggerRefresh(PRUint32 aUpdateFlags);
+  void InvalidateViews(nsView *aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
   void Refresh(nsView *aView, nsIWidget *aWidget, const nsIntRegion& aRegion);
@@ -181,19 +168,13 @@ private:
                    const nsRegion& aRegion, const nsIntRegion& aIntRegion,
                    bool aPaintDefaultBackground, bool aWillSendDidPaint);
 
-  void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
+  void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
-                                          PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, bool aInCutOut);
+                                          nscoord aY1, nscoord aY2, bool aInCutOut);
 
   // Utilities
 
   bool IsViewInserted(nsView *aView);
-
-  /**
-   * Function to recursively call Update() on all widgets belonging to
-   * a view or its kids.
-   */
-  void UpdateWidgetsForView(nsView* aView);
 
   /**
    * Intersects aRect with aView's bounds and then transforms it from aView's
@@ -204,31 +185,6 @@ private:
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
 
-  // Safety helpers
-  void IncrementUpdateCount() {
-    NS_ASSERTION(IsRootVM(),
-                 "IncrementUpdateCount called on non-root viewmanager");
-    ++mUpdateCnt;
-  }
-
-  void DecrementUpdateCount() {
-    NS_ASSERTION(IsRootVM(),
-                 "DecrementUpdateCount called on non-root viewmanager");
-    --mUpdateCnt;
-  }
-
-  PRInt32 UpdateCount() const {
-    NS_ASSERTION(IsRootVM(),
-                 "DecrementUpdateCount called on non-root viewmanager");
-    return mUpdateCnt;
-  }
-
-  void ClearUpdateCount() {
-    NS_ASSERTION(IsRootVM(),
-                 "DecrementUpdateCount called on non-root viewmanager");
-    mUpdateCnt = 0;
-  }
-
   bool IsPainting() const {
     return RootViewManager()->mPainting;
   }
@@ -237,18 +193,21 @@ private:
     RootViewManager()->mPainting = aPainting;
   }
 
-  nsresult UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
+  nsresult InvalidateView(nsIView *aView, const nsRect &aRect);
 
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootViewImpl() const { return mRootView; }
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   bool IsRootVM() const { return this == RootViewManager(); }
 
-  bool IsRefreshEnabled() { return RootViewManager()->mUpdateBatchCnt == 0; }
+  // Whether synchronous painting is allowed at the moment. For example,
+  // widget geometry changes can cause synchronous painting, so they need to
+  // be deferred while refresh is disabled.
+  bool IsPaintingAllowed() { return RootViewManager()->mRefreshDisableCount == 0; }
 
   // Call this when you need to let the viewmanager know that it now has
   // pending updates.
-  void PostPendingUpdate() { RootViewManager()->mHasPendingUpdates = true; }
+  void PostPendingUpdate();
 
   PRUint32 AppUnitsPerDevPixel() const
   {
@@ -268,21 +227,16 @@ private:
   // never null (if we have no ancestors, it will be |this|).
   nsViewManager     *mRootViewManager;
 
-  nsRevocableEventPtr<nsInvalidateEvent> mInvalidateEvent;
-
   // The following members should not be accessed directly except by
   // the root view manager.  Some have accessor functions to enforce
   // this, as noted.
   
-  // Use IncrementUpdateCount(), DecrementUpdateCount(), UpdateCount(),
-  // ClearUpdateCount() on the root viewmanager to access mUpdateCnt.
-  PRInt32           mUpdateCnt;
-  PRInt32           mUpdateBatchCnt;
-  PRUint32          mUpdateBatchFlags;
+  PRInt32           mRefreshDisableCount;
   // Use IsPainting() and SetPainting() to access mPainting.
   bool              mPainting;
   bool              mRecursiveRefreshPending;
   bool              mHasPendingUpdates;
+  bool              mHasPendingWidgetGeometryChanges;
   bool              mInScroll;
 
   //from here to public should be static and locked... MMP
@@ -290,24 +244,6 @@ private:
 
   //list of view managers
   static nsVoidArray       *gViewManagers;
-
-  void PostInvalidateEvent();
-};
-
-class nsInvalidateEvent : public nsRunnable {
-public:
-  nsInvalidateEvent(class nsViewManager *vm) : mViewManager(vm) {
-    NS_ASSERTION(mViewManager, "null parameter");
-  }
-  void Revoke() { mViewManager = nsnull; }
-
-  NS_IMETHOD Run() {
-    if (mViewManager)
-      mViewManager->ProcessInvalidateEvent();
-    return NS_OK;
-  }
-protected:
-  class nsViewManager *mViewManager;
 };
 
 #endif /* nsViewManager_h___ */

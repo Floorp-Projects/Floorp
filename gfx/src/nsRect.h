@@ -81,6 +81,92 @@ struct NS_GFX nsRect :
   }
 #endif
 
+  // A version of Inflate that caps the values to the nscoord range.
+  // x & y is capped at the minimum value nscoord_MIN and
+  // width & height is capped at the maximum value nscoord_MAX.
+  void SaturatingInflate(const nsMargin& aMargin)
+  {
+#ifdef NS_COORD_IS_FLOAT
+    Inflate(aMargin);
+#else
+    PRInt64 nx = PRInt64(x) - aMargin.left;
+    if (nx < nscoord_MIN) {
+      NS_WARNING("Underflowed nscoord_MIN in conversion to nscoord x");
+      nx = nscoord_MIN;
+    }
+    x = nscoord(nx);
+
+    PRInt64 ny = PRInt64(y) - aMargin.top;
+    if (ny < nscoord_MIN) {
+      NS_WARNING("Underflowed nscoord_MIN in conversion to nscoord y");
+      ny = nscoord_MIN;
+    }
+    y = nscoord(ny);
+
+    PRInt64 w = PRInt64(width) + PRInt64(aMargin.left) + aMargin.right;
+    if (w > nscoord_MAX) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
+      w = nscoord_MAX;
+    }
+    width = nscoord(w);
+
+    PRInt64 h = PRInt64(height) + PRInt64(aMargin.top) + aMargin.bottom;
+    if (h > nscoord_MAX) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
+      h = nscoord_MAX;
+    }
+    height = nscoord(h);
+#endif
+  }
+
+  // We have saturating versions of all the Union methods. These avoid
+  // overflowing nscoord values in the 'width' and 'height' fields by
+  // clamping the width and height values to nscoord_MAX if necessary.
+
+  nsRect SaturatingUnion(const nsRect& aRect) const
+  {
+    if (IsEmpty()) {
+      return aRect;
+    } else if (aRect.IsEmpty()) {
+      return *static_cast<const nsRect*>(this);
+    } else {
+      return SaturatingUnionEdges(aRect);
+    }
+  }
+
+  nsRect SaturatingUnionEdges(const nsRect& aRect) const
+  {
+#ifdef NS_COORD_IS_FLOAT
+    return UnionEdges(aRect);
+#else
+    nsRect result;
+    result.x = NS_MIN(aRect.x, x);
+    result.y = NS_MIN(aRect.y, y);
+    PRInt64 w = NS_MAX(PRInt64(aRect.x) + aRect.width, PRInt64(x) + width) - result.x;
+    PRInt64 h = NS_MAX(PRInt64(aRect.y) + aRect.height, PRInt64(y) + height) - result.y;
+    if (w > nscoord_MAX) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
+      w = nscoord_MAX;
+    }
+    if (h > nscoord_MAX) {
+      NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
+      h = nscoord_MAX;
+    }
+    result.width = nscoord(w);
+    result.height = nscoord(h);
+    return result;
+#endif
+  }
+
+  void SaturatingUnionRect(const nsRect& aRect1, const nsRect& aRect2)
+  {
+    *this = aRect1.SaturatingUnion(aRect2);
+  }
+  void SaturatingUnionRectEdges(const nsRect& aRect1, const nsRect& aRect2)
+  {
+    *this = aRect1.SaturatingUnionEdges(aRect2);
+  }
+
   // Converts this rect from aFromAPP, an appunits per pixel ratio, to aToAPP.
   // In the RoundOut version we make the rect the smallest rect containing the
   // unrounded result. In the RoundIn version we make the rect the largest rect

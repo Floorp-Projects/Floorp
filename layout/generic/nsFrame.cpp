@@ -4644,22 +4644,15 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
     }
   }
 
-  PRUint32 flags =
-    (aFlags & INVALIDATE_IMMEDIATE) ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
-
   nsRect rect = aDamageRect;
   nsRegion* excludeRegion = static_cast<nsRegion*>
     (Properties().Get(DeferInvalidatesProperty()));
-  if (excludeRegion) {
-    flags = NS_VMREFRESH_DEFERRED;
-
-    if (aFlags & INVALIDATE_EXCLUDE_CURRENT_PAINT) {
-      nsRegion r;
-      r.Sub(rect, *excludeRegion);
-      if (r.IsEmpty())
-        return;
-      rect = r.GetBounds();
-    }
+  if (excludeRegion && (aFlags & INVALIDATE_EXCLUDE_CURRENT_PAINT)) {
+    nsRegion r;
+    r.Sub(rect, *excludeRegion);
+    if (r.IsEmpty())
+      return;
+    rect = r.GetBounds();
   }
 
   if (!(aFlags & INVALIDATE_NO_UPDATE_LAYER_TREE)) {
@@ -4668,7 +4661,7 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
 
   nsIView* view = GetView();
   NS_ASSERTION(view, "This can only be called on frames with views");
-  view->GetViewManager()->UpdateViewNoSuppression(view, rect, flags);
+  view->GetViewManager()->InvalidateViewNoSuppression(view, rect);
 }
 
 void
@@ -6571,9 +6564,14 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // This is now called FinishAndStoreOverflow() instead of 
   // StoreOverflow() because frame-generic ways of adding overflow
   // can happen here, e.g. CSS2 outline and native theme.
+  // If the overflow area width or height is nscoord_MAX, then a
+  // saturating union may have encounted an overflow, so the overflow may not
+  // contain the frame border-box. Don't warn in that case.
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+    DebugOnly<nsRect*> r = &aOverflowAreas.Overflow(otype);
     NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
-                 aOverflowAreas.Overflow(otype).Contains(nsRect(nsPoint(0,0), aNewSize)),
+                 r->width == nscoord_MAX || r->height == nscoord_MAX ||
+                 r->Contains(nsRect(nsPoint(0,0), aNewSize)),
                  "Computed overflow area must contain frame bounds");
   }
 
@@ -6599,6 +6597,17 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
       nsRect& o = aOverflowAreas.Overflow(otype);
       o.UnionRectEdges(o, bounds);
+    }
+
+    if (!nsLayoutUtils::IsPopup(this)) {
+      // Include margin in scrollable overflow.
+      // XXX In theory this should consider margin collapsing
+      nsRect marginBounds(bounds);
+      nsMargin margin = GetUsedMargin();
+      ApplySkipSides(margin);
+      marginBounds.SaturatingInflate(margin);
+      nsRect& so = aOverflowAreas.ScrollableOverflow();
+      so.SaturatingUnionRectEdges(so, marginBounds);
     }
   }
 

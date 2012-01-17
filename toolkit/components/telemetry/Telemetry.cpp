@@ -75,6 +75,7 @@ public:
   static void RecordSlowStatement(const nsACString &statement,
                                   const nsACString &dbName,
                                   PRUint32 delay);
+  static nsresult GetHistogramEnumId(const char *name, Telemetry::ID *id);
   struct StmtStats {
     PRUint32 hitCount;
     PRUint32 totalTime;
@@ -86,7 +87,10 @@ private:
 
   // Like GetHistogramById, but returns the underlying C++ object, not the JS one.
   nsresult GetHistogramByName(const nsACString &name, Histogram **ret);
-  // This is used for speedy JS string->Telemetry::ID conversions
+  bool ShouldReflectHistogram(Histogram *h);
+  void IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs);
+  typedef StatisticsRecorder::Histograms::iterator HistogramIterator;
+  // This is used for speedy string->Telemetry::ID conversions
   typedef nsBaseHashtableET<nsCharPtrHashKey, Telemetry::ID> CharPtrEntryType;
   typedef nsTHashtable<CharPtrEntryType> HistogramMapType;
   HistogramMapType mHistogramMap;
@@ -133,6 +137,7 @@ const TelemetryHistogram gHistograms[] = {
 
 #undef HISTOGRAM
 };
+bool gCorruptHistograms[Telemetry::HistogramCount];
 
 bool
 TelemetryHistogramType(Histogram *h, PRUint32 *result)
@@ -215,11 +220,23 @@ FillRanges(JSContext *cx, JSObject *array, Histogram *h)
   return true;
 }
 
-JSBool
+enum reflectStatus {
+  REFLECT_OK,
+  REFLECT_CORRUPT,
+  REFLECT_FAILURE
+};
+
+enum reflectStatus
 ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
 {
   Histogram::SampleSet ss;
   h->SnapshotSample(&ss);
+
+  // We don't want to reflect corrupt histograms.
+  if (h->FindCorruption(ss) != Histogram::NO_INCONSISTENCIES) {
+    return REFLECT_CORRUPT;
+  }
+
   JSObject *counts_array;
   JSObject *rarray;
   const size_t count = h->bucket_count();
@@ -233,14 +250,14 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
         && (counts_array = JS_NewArrayObject(cx, count, NULL))
         && JS_DefineProperty(cx, obj, "counts", OBJECT_TO_JSVAL(counts_array), NULL, NULL, JSPROP_ENUMERATE)
         )) {
-    return JS_FALSE;
+    return REFLECT_FAILURE;
   }
   for (size_t i = 0; i < count; i++) {
     if (!JS_DefineElement(cx, counts_array, i, INT_TO_JSVAL(ss.counts(i)), NULL, NULL, JSPROP_ENUMERATE)) {
-      return JS_FALSE;
+      return REFLECT_FAILURE;
     }
   }
-  return JS_TRUE;
+  return REFLECT_OK;
 }
 
 JSBool
@@ -290,8 +307,20 @@ JSHistogram_Snapshot(JSContext *cx, uintN argc, jsval *vp)
   JSObject *snapshot = JS_NewObject(cx, NULL, NULL, NULL);
   if (!snapshot)
     return JS_FALSE;
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(snapshot));
-  return ReflectHistogramSnapshot(cx, snapshot, h);
+
+  switch (ReflectHistogramSnapshot(cx, snapshot, h)) {
+  case REFLECT_FAILURE:
+    return JS_FALSE;
+  case REFLECT_CORRUPT:
+    JS_ReportError(cx, "Histogram is corrupt");
+    return JS_FALSE;
+  case REFLECT_OK:
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(snapshot));
+    return JS_TRUE;
+  default:
+    MOZ_NOT_REACHED("unhandled reflection status");
+    return JS_FALSE;
+  }
 }
 
 nsresult 
@@ -412,28 +441,45 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread)
   return true;
 }
 
-
 nsresult
-TelemetryImpl::GetHistogramByName(const nsACString &name, Histogram **ret)
+TelemetryImpl::GetHistogramEnumId(const char *name, Telemetry::ID *id)
 {
+  if (!sTelemetry) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Cache names
   // Note the histogram names are statically allocated
-  if (!mHistogramMap.Count()) {
+  TelemetryImpl::HistogramMapType *map = &sTelemetry->mHistogramMap;
+  if (!map->Count()) {
     for (PRUint32 i = 0; i < Telemetry::HistogramCount; i++) {
-      CharPtrEntryType *entry = mHistogramMap.PutEntry(gHistograms[i].id);
+      CharPtrEntryType *entry = map->PutEntry(gHistograms[i].id);
       if (NS_UNLIKELY(!entry)) {
-        mHistogramMap.Clear();
+        map->Clear();
         return NS_ERROR_OUT_OF_MEMORY;
       }
       entry->mData = (Telemetry::ID) i;
     }
   }
 
-  CharPtrEntryType *entry = mHistogramMap.GetEntry(PromiseFlatCString(name).get());
-  if (!entry)
-    return NS_ERROR_FAILURE;
+  CharPtrEntryType *entry = map->GetEntry(name);
+  if (!entry) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *id = entry->mData;
+  return NS_OK;
+}
 
-  nsresult rv = GetHistogramByEnumId(entry->mData, ret);
+nsresult
+TelemetryImpl::GetHistogramByName(const nsACString &name, Histogram **ret)
+{
+  Telemetry::ID id;
+  nsresult rv = GetHistogramEnumId(PromiseFlatCString(name).get(), &id);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = GetHistogramByEnumId(id, ret);
   if (NS_FAILED(rv))
     return rv;
 
@@ -467,6 +513,69 @@ TelemetryImpl::HistogramFrom(const nsACString &name, const nsACString &existing_
   return WrapAndReturnHistogram(clone, cx, ret);
 }
 
+void
+TelemetryImpl::IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs)
+{
+  for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
+    Histogram *h = *it;
+
+    Telemetry::ID id;
+    nsresult rv = GetHistogramEnumId(h->histogram_name().c_str(), &id);
+    // This histogram isn't a static histogram, just ignore it.
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    if (gCorruptHistograms[id]) {
+      continue;
+    }
+
+    Histogram::SampleSet ss;
+    h->SnapshotSample(&ss);
+    Histogram::Inconsistencies check = h->FindCorruption(ss);
+    bool corrupt = (check != Histogram::NO_INCONSISTENCIES);
+
+    if (corrupt) {
+      Telemetry::ID corruptID = Telemetry::HistogramCount;
+      if (check & Histogram::RANGE_CHECKSUM_ERROR) {
+        corruptID = Telemetry::RANGE_CHECKSUM_ERRORS;
+      } else if (check & Histogram::BUCKET_ORDER_ERROR) {
+        corruptID = Telemetry::BUCKET_ORDER_ERRORS;
+      } else if (check & Histogram::COUNT_HIGH_ERROR) {
+        corruptID = Telemetry::TOTAL_COUNT_HIGH_ERRORS;
+      } else if (check & Histogram::COUNT_LOW_ERROR) {
+        corruptID = Telemetry::TOTAL_COUNT_LOW_ERRORS;
+      }
+      Telemetry::Accumulate(corruptID, 1);
+    }
+
+    gCorruptHistograms[id] = corrupt;
+  }
+}
+
+bool
+TelemetryImpl::ShouldReflectHistogram(Histogram *h)
+{
+  const char *name = h->histogram_name().c_str();
+  Telemetry::ID id;
+  nsresult rv = GetHistogramEnumId(name, &id);
+  if (NS_FAILED(rv)) {
+    // GetHistogramEnumId generally should not fail.  But a lookup
+    // failure shouldn't prevent us from reflecting histograms into JS.
+    //
+    // However, these two histograms are created by Histogram itself for
+    // tracking corruption.  We have our own histograms for that, so
+    // ignore these two.
+    if (strcmp(name, "Histogram.InconsistentCountHigh") == 0
+        || strcmp(name, "Histogram.InconsistentCountLow") == 0) {
+      return false;
+    }
+    return true;
+  } else {
+    return !gCorruptHistograms[id];
+  }
+}
+
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
 {
@@ -475,16 +584,41 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
     return NS_ERROR_FAILURE;
   *ret = OBJECT_TO_JSVAL(root_obj);
 
-  StatisticsRecorder::Histograms h;
-  StatisticsRecorder::GetHistograms(&h);
-  for (StatisticsRecorder::Histograms::iterator it = h.begin(); it != h.end();++it) {
+  StatisticsRecorder::Histograms hs;
+  StatisticsRecorder::GetHistograms(&hs);
+
+  // We identify corrupt histograms first, rather than interspersing it
+  // in the loop below, to ensure that our corruption statistics don't
+  // depend on histogram enumeration order.
+  //
+  // Of course, we hope that all of these corruption-statistics
+  // histograms are not themselves corrupt...
+  IdentifyCorruptHistograms(hs);
+
+  // OK, now we can actually reflect things.
+  for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
     Histogram *h = *it;
+    if (!ShouldReflectHistogram(h)) {
+      continue;
+    }
+
     JSObject *hobj = JS_NewObject(cx, NULL, NULL, NULL);
-    if (!(hobj
-          && JS_DefineProperty(cx, root_obj, h->histogram_name().c_str(),
-                               OBJECT_TO_JSVAL(hobj), NULL, NULL, JSPROP_ENUMERATE)
-          && ReflectHistogramSnapshot(cx, hobj, h))) {
+    if (!hobj) {
       return NS_ERROR_FAILURE;
+    }
+    switch (ReflectHistogramSnapshot(cx, hobj, h)) {
+    case REFLECT_CORRUPT:
+      // We can still hit this case even if ShouldReflectHistograms
+      // returns true.  The histogram lies outside of our control
+      // somehow; just skip it.
+      continue;
+    case REFLECT_FAILURE:
+      return NS_ERROR_FAILURE;
+    case REFLECT_OK:
+      if (!JS_DefineProperty(cx, root_obj, h->histogram_name().c_str(),
+                             OBJECT_TO_JSVAL(hobj), NULL, NULL, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
   return NS_OK;
