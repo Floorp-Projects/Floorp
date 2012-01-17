@@ -1160,10 +1160,6 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   // All nsTextControlFrames are widgets
   editorFlags |= nsIPlaintextEditor::eEditorWidgetMask;
 
-  // Use async reflow and painting for text widgets to improve
-  // performance.
-  editorFlags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
-  
   // Spell check is diabled at creation time. It is enabled once
   // the editor comes into focus.
   editorFlags |= nsIPlaintextEditor::eEditorSkipSpellCheck;
@@ -1314,12 +1310,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   // editor for us.
 
   if (!defaultValue.IsEmpty()) {
-    // Avoid causing reentrant painting and reflowing by telling the editor
-    // that we don't want it to force immediate view refreshes or force
-    // immediate reflows during any editor calls.
-
-    rv = newEditor->SetFlags(editorFlags |
-                             nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
+    rv = newEditor->SetFlags(editorFlags);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now call SetValue() which will make the necessary editor calls to set
@@ -1837,7 +1828,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput)
         flags = savedFlags;
         flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
         flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
-        flags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
         flags |= nsIPlaintextEditor::eEditorDontEchoPassword;
         mEditor->SetFlags(flags);
 

@@ -44,6 +44,8 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 
+#include "mozilla/GuardObjects.h"
+
 JS_BEGIN_EXTERN_C
 
 extern JS_FRIEND_API(void)
@@ -134,6 +136,9 @@ JS_CloneObject(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent);
 extern JS_FRIEND_API(JSBool)
 js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp);
 
+JS_FRIEND_API(void)
+js_ReportOverRecursed(JSContext *maybecx);
+
 #ifdef __cplusplus
 
 extern JS_FRIEND_API(bool)
@@ -150,6 +155,8 @@ JS_EnumerateState(JSContext *cx, JSObject *obj, JSIterateOp enum_op, js::Value *
 JS_END_EXTERN_C
 
 #ifdef __cplusplus
+
+struct PRLock;
 
 namespace js {
 
@@ -430,6 +437,18 @@ IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx);
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
+JS_FRIEND_API(uintptr_t)
+GetContextStackLimit(const JSContext *cx);
+
+#define JS_CHECK_RECURSION(cx, onerror)                                         \
+    JS_BEGIN_MACRO                                                              \
+        int stackDummy_;                                                        \
+        if (!JS_CHECK_STACK_SIZE(js::GetContextStackLimit(cx), &stackDummy_)) { \
+            js_ReportOverRecursed(cx);                                          \
+            onerror;                                                            \
+        }                                                                       \
+    JS_END_MACRO
+
 JS_FRIEND_API(void)
 StartPCCountProfiling(JSContext *cx);
 
@@ -451,7 +470,100 @@ GetPCCountScriptContents(JSContext *cx, size_t script);
 #ifdef JS_THREADSAFE
 JS_FRIEND_API(JSThread *)
 GetContextThread(const JSContext *cx);
+
+JS_FRIEND_API(unsigned)
+GetContextOutstandingRequests(const JSContext *cx);
+
+JS_FRIEND_API(PRLock *)
+GetRuntimeGCLock(const JSRuntime *rt);
+
+class JS_FRIEND_API(AutoSkipConservativeScan)
+{
+  public:
+    AutoSkipConservativeScan(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoSkipConservativeScan();
+
+  private:
+    JSContext *context;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 #endif
+
+JS_FRIEND_API(JSCompartment *)
+GetContextCompartment(const JSContext *cx);
+
+JS_FRIEND_API(bool)
+HasUnrootedGlobal(const JSContext *cx);
+
+typedef void
+(* ActivityCallback)(void *arg, JSBool active);
+
+/*
+ * Sets a callback that is run whenever the runtime goes idle - the
+ * last active request ceases - and begins activity - when it was
+ * idle and a request begins. Note: The callback is called under the
+ * GC lock.
+ */
+JS_FRIEND_API(void)
+SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg);
+
+class JS_FRIEND_API(AutoLockGC)
+{
+  public:
+    explicit AutoLockGC(JSRuntime *rt = NULL
+                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : runtime(rt)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        if (rt)
+            LockGC(rt);
+    }
+
+    ~AutoLockGC()
+    {
+        if (runtime)
+            UnlockGC(runtime);
+    }
+
+    bool locked() const {
+        return !!runtime;
+    }
+    void lock(JSRuntime *rt);
+
+  private:
+    static void LockGC(JSRuntime *rt);
+    static void UnlockGC(JSRuntime *rt);
+
+    JSRuntime *runtime;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+extern JS_FRIEND_API(const JSStructuredCloneCallbacks *)
+GetContextStructuredCloneCallbacks(JSContext *cx);
+
+extern JS_FRIEND_API(JSVersion)
+VersionSetXML(JSVersion version, bool enable);
+
+extern JS_FRIEND_API(bool)
+CanCallContextDebugHandler(JSContext *cx);
+
+extern JS_FRIEND_API(JSTrapStatus)
+CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval);
+
+extern JS_FRIEND_API(bool)
+IsContextRunningJS(JSContext *cx);
+
+/* Must be called with GC lock taken. */
+extern JS_FRIEND_API(void)
+TriggerOperationCallbacksForActiveContexts(JSRuntime *rt);
+
+class SystemAllocPolicy;
+typedef Vector<JSCompartment*, 0, SystemAllocPolicy> CompartmentVector;
+extern JS_FRIEND_API(const CompartmentVector&)
+GetRuntimeCompartments(JSRuntime *rt);
+
+extern JS_FRIEND_API(size_t)
+SizeOfJSContext();
 
 } /* namespace js */
 
@@ -464,5 +576,39 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
                      JSObject **protop, js::Class *clasp = NULL);
 
 #endif
+
+/* Implemented in jsdate.cpp. */
+
+/*
+ * Detect whether the internal date value is NaN.  (Because failure is
+ * out-of-band for js_DateGet*)
+ */
+extern JS_FRIEND_API(JSBool)
+js_DateIsValid(JSContext *cx, JSObject* obj);
+
+extern JS_FRIEND_API(double)
+js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj);
+
+/* Implemented in jscntxt.cpp. */
+
+/*
+ * Report an exception, which is currently realized as a printf-style format
+ * string and its arguments.
+ */
+typedef enum JSErrNum {
+#define MSG_DEF(name, number, count, exception, format) \
+    name = number,
+#include "js.msg"
+#undef MSG_DEF
+    JSErr_Limit
+} JSErrNum;
+
+extern JS_FRIEND_API(const JSErrorFormatString *)
+js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
+
+/* Implemented in jsclone.cpp. */
+
+extern JS_FRIEND_API(uint64_t)
+js_GetSCOffset(JSStructuredCloneWriter* writer);
 
 #endif /* jsfriendapi_h___ */

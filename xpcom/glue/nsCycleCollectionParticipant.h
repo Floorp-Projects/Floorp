@@ -134,6 +134,9 @@ protected:
 class NS_NO_VTABLE nsCycleCollectionParticipant
 {
 public:
+    nsCycleCollectionParticipant() : mMightSkip(false) {}
+    nsCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {} 
+    
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONPARTICIPANT_IID)
 
     NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb) = 0;
@@ -141,6 +144,49 @@ public:
     NS_IMETHOD Root(void *p) = 0;
     NS_IMETHOD Unlink(void *p) = 0;
     NS_IMETHOD Unroot(void *p) = 0;
+
+    // If CanSkip returns true, p is removed from the purple buffer during
+    // a call to nsCycleCollector_forgetSkippable().
+    // Note, calling CanSkip may remove objects from the purple buffer!
+    bool CanSkip(void *p)
+    {
+        return mMightSkip ? CanSkipReal(p) : false;
+    }
+
+    // If CanSkipInCC returns true, p is skipped when selecting roots for the
+    // cycle collector graph.
+    // Note, calling CanSkipInCC may remove other objects from the purple buffer!
+    bool CanSkipInCC(void *p)
+    {
+        return mMightSkip ? CanSkipInCCReal(p) : false;
+    }
+
+    // If CanSkipThis returns true, p is not added to the graph.
+    // This method is called during cycle collection, so don't
+    // change the state of any objects!
+    bool CanSkipThis(void *p)
+    {
+        return mMightSkip ? CanSkipThisReal(p) : false;
+    }
+protected:
+    NS_IMETHOD_(bool) CanSkipReal(void *p)
+    {
+        NS_ASSERTION(false, "Forgot to implement CanSkipReal?");
+        return false;
+    }
+    NS_IMETHOD_(bool) CanSkipInCCReal(void *p)
+    {
+        NS_ASSERTION(false, "Forgot to implement CanSkipInCCReal?");
+        return false;
+    }
+    NS_IMETHOD_(bool) CanSkipThisReal(void *p)
+    {
+        NS_ASSERTION(false, "Forgot to implement CanSkipThisReal?");
+        return false;
+    }
+
+private:
+    bool mMightSkip;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant, 
@@ -155,6 +201,9 @@ typedef void
 class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
 {
 public:
+    nsScriptObjectTracer() : nsCycleCollectionParticipant(false) {}
+    nsScriptObjectTracer(bool aSkip) : nsCycleCollectionParticipant(aSkip) {}
+
     NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure) = 0;
     void NS_COM_GLUE TraverseScriptObjects(void *p,
                                         nsCycleCollectionTraversalCallback &cb);
@@ -164,6 +213,11 @@ class NS_COM_GLUE nsXPCOMCycleCollectionParticipant
     : public nsScriptObjectTracer
 {
 public:
+    nsXPCOMCycleCollectionParticipant()
+    : nsScriptObjectTracer(false) {}
+    nsXPCOMCycleCollectionParticipant(bool aSkip)
+    : nsScriptObjectTracer(aSkip) {}
+
     NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
 
     NS_IMETHOD Root(void *p);
@@ -244,6 +298,45 @@ public:
 
 #define NS_CYCLE_COLLECTION_UPCAST(obj, clazz)                                 \
   NS_CYCLE_COLLECTION_CLASSNAME(clazz)::Upcast(obj)
+
+#define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(_class)                        \
+  NS_IMETHODIMP_(bool)                                                         \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::CanSkipReal(void *p)                  \
+  {                                                                            \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
+    NS_ASSERTION(CheckForRightISupports(s),                                    \
+                 "not the nsISupports pointer we expect");                     \
+    _class *tmp = Downcast(s);
+
+#define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END                                  \
+    return false;                                                              \
+  }
+
+#define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(_class)                  \
+  NS_IMETHODIMP_(bool)                                                         \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::CanSkipInCCReal(void *p)              \
+  {                                                                            \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
+    NS_ASSERTION(CheckForRightISupports(s),                                    \
+                 "not the nsISupports pointer we expect");                     \
+    _class *tmp = Downcast(s);
+
+#define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END                            \
+    return false;                                                              \
+  }
+
+#define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(_class)                   \
+  NS_IMETHODIMP_(bool)                                                         \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::CanSkipThisReal(void *p)              \
+  {                                                                            \
+    nsISupports *s = static_cast<nsISupports*>(p);                             \
+    NS_ASSERTION(CheckForRightISupports(s),                                    \
+                 "not the nsISupports pointer we expect");                     \
+    _class *tmp = Downcast(s);
+
+#define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END                             \
+    return false;                                                              \
+  }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers for implementing nsCycleCollectionParticipant::Unlink
@@ -551,6 +644,24 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
   NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);           \
 };                                                                             \
 NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
+
+#define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _base)   \
+class NS_CYCLE_COLLECTION_INNERCLASS                                                      \
+ : public nsXPCOMCycleCollectionParticipant                                               \
+{                                                                                         \
+public:                                                                                   \
+  NS_CYCLE_COLLECTION_INNERCLASS () : nsXPCOMCycleCollectionParticipant(true) {}          \
+  NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                                      \
+  NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);                      \
+protected:                                                                                \
+  NS_IMETHOD_(bool) CanSkipReal(void *p);                                                 \
+  NS_IMETHOD_(bool) CanSkipInCCReal(void *p);                                             \
+  NS_IMETHOD_(bool) CanSkipThisReal(void *p);                                             \
+};                                                                                        \
+NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
+
+#define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(_class)  \
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _class)
 
 #define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(_class)  \
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _class)

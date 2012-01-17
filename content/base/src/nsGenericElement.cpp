@@ -4273,15 +4273,21 @@ static const char* kNSURIs[] = {
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
-    char name[72];
+    char name[512];
     PRUint32 nsid = tmp->GetNameSpaceID();
     nsAtomCString localName(tmp->NodeInfo()->NameAtom());
+    nsCAutoString uri;
+    if (tmp->OwnerDoc()->GetDocumentURI()) {
+      tmp->OwnerDoc()->GetDocumentURI()->GetSpec(uri);
+    }
+
     if (nsid < ArrayLength(kNSURIs)) {
-      PR_snprintf(name, sizeof(name), "nsGenericElement%s %s", kNSURIs[nsid],
-                  localName.get());
+      PR_snprintf(name, sizeof(name), "nsGenericElement%s %s %s", kNSURIs[nsid],
+                  localName.get(), uri.get());
     }
     else {
-      PR_snprintf(name, sizeof(name), "nsGenericElement %s", localName.get());
+      PR_snprintf(name, sizeof(name), "nsGenericElement %s %s",
+                  localName.get(), uri.get());
     }
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsGenericElement),
                               name);

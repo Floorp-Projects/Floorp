@@ -58,6 +58,7 @@
 #include "xpcpublic.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
+#include "nsCCUncollectableMarker.h"
 
 using namespace mozilla::scache;
 
@@ -304,7 +305,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
   if (mScriptContext)
     return NS_OK; // already initialized for this lang
   nsCOMPtr<nsIDOMScriptObjectFactory> factory = do_GetService(kDOMScriptObjectFactoryCID);
-  NS_ENSURE_TRUE(factory, nsnull);
+  NS_ENSURE_TRUE(factory, NS_OK);
 
   nsresult rv;
 
@@ -327,7 +328,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
 
   rv = xpc_CreateGlobalObject(cx, &gSharedGlobalClass, principal, nsnull,
                               false, &mJSObject, &compartment);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
   ::JS_SetGlobalObject(cx, mJSObject);
 
@@ -466,6 +467,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObject)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
+  if (tmp->mDocument &&
+      nsCCUncollectableMarker::InGeneration(cb, tmp->mDocument->GetMarkedCCGeneration())) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
   if (tmp->mBindingTable) {
     tmp->mBindingTable->Enumerate(TraverseProtos, &cb);

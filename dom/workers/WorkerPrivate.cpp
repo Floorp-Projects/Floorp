@@ -56,7 +56,7 @@
 #include "nsIURL.h"
 #include "nsIXPConnect.h"
 
-#include "jscntxt.h"
+#include "jsfriendapi.h"
 #include "jsdbgapi.h"
 #include "jsprf.h"
 #include "js/MemoryMetrics.h"
@@ -1528,7 +1528,7 @@ WorkerRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   }
 #endif
 
-  if (mBusyBehavior == ModifyBusyCount) {
+  if (mBusyBehavior == ModifyBusyCount && aCx) {
     return aWorkerPrivate->ModifyBusyCount(aCx, true);
   }
 
@@ -1616,7 +1616,7 @@ WorkerRunnable::PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   }
 #endif
 
-  if (!aDispatchResult) {
+  if (!aDispatchResult && aCx) {
     if (mBusyBehavior == ModifyBusyCount) {
       aWorkerPrivate->ModifyBusyCount(aCx, false);
     }

@@ -257,8 +257,6 @@
 #include <android/log.h>
 #endif
 
-#include "jscntxt.h" // cx->runtime->structuredCloneCallbacks
-
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
@@ -1406,8 +1404,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGlobalWindow)
 
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
-  if (tmp->mDoc && nsCCUncollectableMarker::InGeneration(
-                     cb, tmp->mDoc->GetMarkedCCGeneration())) {
+  if ((tmp->mDoc && nsCCUncollectableMarker::InGeneration(
+                      cb, tmp->mDoc->GetMarkedCCGeneration())) ||
+      (nsCCUncollectableMarker::sGeneration && tmp->IsBlack())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -6031,7 +6030,7 @@ PostMessageReadStructuredClone(JSContext* cx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    cx->runtime->structuredCloneCallbacks;
+    js::GetContextStructuredCloneCallbacks(cx);
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->read(cx, reader, tag, data, nsnull);
@@ -6071,7 +6070,7 @@ PostMessageWriteStructuredClone(JSContext* cx,
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
-    cx->runtime->structuredCloneCallbacks;
+    js::GetContextStructuredCloneCallbacks(cx);
 
   if (runtimeCallbacks) {
     return runtimeCallbacks->write(cx, writer, obj, nsnull);
@@ -9181,6 +9180,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // the logic in ResetTimersForNonBackgroundWindow will need to change.
   mTimeoutInsertionPoint = &dummy_timeout;
 
+  Telemetry::AutoCounter<Telemetry::DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT> timeoutsRan;
+
   for (timeout = FirstTimeout();
        timeout != &dummy_timeout && !IsFrozen();
        timeout = nextTimeout) {
@@ -9232,6 +9233,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     nsTimeout *last_running_timeout = mRunningTimeout;
     mRunningTimeout = timeout;
     timeout->mRunning = true;
+    ++timeoutsRan;
 
     // Push this timeout's popup control state, which should only be
     // eabled the first time a timeout fires that was created while

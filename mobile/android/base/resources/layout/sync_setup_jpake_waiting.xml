@@ -5,14 +5,14 @@
         style="@style/SyncTextTitle"
         android:text="@string/sync_title_connect" />
     <View
-        android:layout_width="fill_parent"
-        android:layout_height="2dp"
-        android:background="#FFFFFF" />
+        style="@style/SyncViewLine" />
     <ProgressBar
+        style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@android:style/Widget.ProgressBar.Horizontal"
-        android:indeterminateOnly="true" />
+        android:indeterminateOnly="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp" />
     <TextView
         style="@style/SyncTextItem"
         android:text="@string/sync_jpake_subtitle_waiting" />

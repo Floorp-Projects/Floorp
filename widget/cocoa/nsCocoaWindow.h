@@ -252,8 +252,7 @@ public:
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
-    NS_IMETHOD Invalidate(const nsIntRect &aRect, bool aIsSynchronous);
-    NS_IMETHOD Update();
+    NS_IMETHOD Invalidate(const nsIntRect &aRect);
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
     virtual LayerManager* GetLayerManager(PLayersChild* aShadowManager = nsnull,
                                           LayersBackend aBackendHint = LayerManager::LAYERS_NONE,

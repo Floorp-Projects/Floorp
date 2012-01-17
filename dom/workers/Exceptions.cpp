@@ -42,7 +42,6 @@
 #include "Exceptions.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
 

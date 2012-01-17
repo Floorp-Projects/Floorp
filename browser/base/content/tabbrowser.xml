@@ -2847,11 +2847,9 @@
 
           goSetCommandEnabled("cmd_ToggleTabsOnTop", visible);
 
-          if (window.TabsOnTop)
-            TabsOnTop.syncUI();
+          TabsOnTop.syncUI();
 
-          if (window.TabsInTitlebar)
-            TabsInTitlebar.allowedBy("tabs-visible", visible);
+          TabsInTitlebar.allowedBy("tabs-visible", visible);
         ]]></body>
       </method>
 
@@ -4007,10 +4005,13 @@
     <implementation implements="nsIDOMEventListener">
       <constructor><![CDATA[
         window.addEventListener("findbaropen", this, false);
+        window.addEventListener("resize", this, false);
       ]]></constructor>
 
       <destructor><![CDATA[
         window.removeEventListener("findbaropen", this, false);
+        window.removeEventListener("resize", this, false);
+        MousePosTracker.removeListener(this);
       ]]></destructor>
 
       <property name="label">
@@ -4029,8 +4030,11 @@
           if (val) {
             this.setAttribute("label", val);
             this.removeAttribute("inactive");
+            this._calcMouseTargetRect();
+            MousePosTracker.addListener(this);
           } else {
             this.setAttribute("inactive", "true");
+            MousePosTracker.removeListener(this);
           }
 
           return val;
@@ -4040,12 +4044,56 @@
         </getter>
       </property>
 
+      <method name="getMouseTargetRect">
+        <body><![CDATA[
+          return this._mouseTargetRect;
+        ]]></body>
+      </method>
+
+      <method name="onMouseEnter">
+        <body>
+          this._mirror();
+        </body>
+      </method>
+
+      <method name="onMouseLeave">
+        <body>
+          this._mirror();
+        </body>
+      </method>
+
       <method name="handleEvent">
         <parameter name="event"/>
         <body><![CDATA[
-          if (event.type == "findbaropen" &&
-              this.label)
-            this.setAttribute("mirror", "true");
+          if (!this.label)
+            return;
+
+          switch (event.type) {
+            case "findbaropen":
+              this.setAttribute("mirror", "true");
+              this._calcMouseTargetRect();
+              break;
+            case "resize":
+              this._calcMouseTargetRect();
+              break;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_calcMouseTargetRect">
+        <body><![CDATA[
+          let alignRight = (window.gFindBarInitialized && !window.gFindBar.hidden);
+
+          if (getComputedStyle(document.documentElement).direction == "rtl")
+            alighRight = !alignRight;
+
+          let rect = this.getBoundingClientRect();
+          this._mouseTargetRect = {
+            top:    rect.top,
+            bottom: rect.bottom,
+            left:   alignRight ? window.innerWidth - rect.width : 0,
+            right:  alignRight ? window.innerWidth : rect.width
+          };
         ]]></body>
       </method>
 
@@ -4058,11 +4106,6 @@
         </body>
       </method>
     </implementation>
-
-    <handlers>
-      <handler event="mouseover" action="this._mirror();"/>
-      <handler event="dragover" action="this._mirror();"/>
-    </handlers>
   </binding>
 
 </bindings>

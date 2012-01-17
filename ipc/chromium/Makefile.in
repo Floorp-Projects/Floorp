@@ -319,8 +319,10 @@ endif # }
 
 ifneq (86,$(findstring 86,$(OS_TEST))) # {
 ifneq (arm,$(findstring arm,$(OS_TEST))) # {
+ifneq (mips,$(findstring mips,$(OS_TEST))) # {
 # Use mutex-backed atomics
 CPPSRCS += atomicops_internals_mutex.cc
+endif # }
 endif # }
 endif # }
 
