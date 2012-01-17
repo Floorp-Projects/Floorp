@@ -35,27 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ScaledFontMac.h"
-#include "PathSkia.h"
-#include "skia/SkPaint.h"
-#include "skia/SkPath.h"
-#include "skia/SkTypeface_mac.h"
-#include <vector>
+#ifndef MOZILLA_GFX_SCALEDFONTSKIA_H_
+#define MOZILLA_GFX_SCALEDFONTSKIA_H_
+
+#include "2D.h"
+#include "skia/SkTypeface.h"
+
+class gfxFont;
 
 namespace mozilla {
 namespace gfx {
 
-ScaledFontMac::ScaledFontMac(CGFontRef aFont, Float aSize)
-  : ScaledFontSkia(aSize)
+class ScaledFontSkia : public ScaledFont
 {
-  mFontFace = CTFontCreateWithGraphicsFont(aFont, aSize, NULL, NULL);
-  mTypeface = SkCreateTypefaceFromCTFont(mFontFace);
+public:
+  ScaledFontSkia(gfxFont* aFont, Float aSize);
+  ScaledFontSkia(Float aSize);
+  virtual ~ScaledFontSkia();
+
+  virtual FontType GetType() const { return FONT_SKIA; }
+
+  virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
+
+protected:
+  friend class DrawTargetSkia;
+
+  SkTypeface* mTypeface;
+  Float mSize;
+};
+
+}
 }
 
-ScaledFontMac::~ScaledFontMac()
-{
-  CFRelease(mFontFace);
-}
-
-}
-}
+#endif /* MOZILLA_GFX_SCALEDFONTSKIA_H_ */
