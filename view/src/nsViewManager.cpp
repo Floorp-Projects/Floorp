@@ -664,7 +664,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
   NS_ASSERTION(!aView || static_cast<nsView*>(aView)->GetViewManager() == this,
                "wrong view manager");
 
-  SAMPLE_LABEL("event", "nsViewManager::DispatchEvent");
+  SAMPLE_LABEL("event", "DispatchEvent");
 
   *aStatus = nsEventStatus_eIgnore;
 
