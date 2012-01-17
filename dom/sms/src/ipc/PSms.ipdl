@@ -113,6 +113,8 @@ parent:
 
     CreateMessageList(SmsFilterData aFilter, bool aReverse, PRInt32 aRequestId, PRUint64 aProcessId);
 
+    GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint64 aProcessId);
+
     __delete__();
 };
 

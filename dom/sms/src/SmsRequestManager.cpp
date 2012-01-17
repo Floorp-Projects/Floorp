@@ -77,6 +77,26 @@ SmsRequestManager::GetInstance()
 }
 
 PRInt32
+SmsRequestManager::AddRequest(nsIDOMMozSmsRequest* aRequest)
+{
+  // TODO: merge with CreateRequest
+  PRInt32 size = mRequests.Count();
+
+  // Look for empty slots.
+  for (PRInt32 i=0; i<size; ++i) {
+    if (mRequests[i]) {
+      continue;
+    }
+
+    mRequests.ReplaceObjectAt(aRequest, i);
+    return i;
+  }
+
+  mRequests.AppendObject(aRequest);
+  return size;
+}
+
+PRInt32
 SmsRequestManager::CreateRequest(nsPIDOMWindow* aWindow,
                                  nsIScriptContext* aScriptContext,
                                  nsIDOMMozSmsRequest** aRequest)
@@ -204,7 +224,7 @@ SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
   // TODO: use Filter!
   SmsRequest* request = GetRequest(aRequestId);
 
-  nsCOMPtr<SmsCursor> cursor = new SmsCursor(nsnull, request);
+  nsCOMPtr<SmsCursor> cursor = new SmsCursor(aListId, nsnull, request);
   cursor->SetMessage(aMessage);
 
   NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);

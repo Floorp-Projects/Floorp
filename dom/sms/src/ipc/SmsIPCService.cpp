@@ -147,6 +147,15 @@ SmsIPCService::CreateMessageList(nsIDOMMozSmsFilter* aFilter, bool aReverse,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsIPCService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
+                                    PRUint64 aProcessId)
+{
+  GetSmsChild()->SendGetNextMessageInList(aListId, aRequestId,
+                                          ContentChild::GetSingleton()->GetID());
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
