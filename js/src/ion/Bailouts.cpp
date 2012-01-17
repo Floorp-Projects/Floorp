@@ -457,7 +457,7 @@ ion::RecompileForInlining()
     if (!scripts.append(script))
         return BAILOUT_RETURN_FATAL_ERROR;
 
-    Invalidate(cx, scripts);
+    Invalidate(cx, scripts, /* resetUses */ false);
 
     // Invalidation should not reset the use count.
     JS_ASSERT(script->getUseCount() >= js_IonOptions.usesBeforeInlining);
