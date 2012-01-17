@@ -49,7 +49,7 @@
 #include "nsNetUtil.h"
 #include "nsDeque.h"
 #include "nsIFileURL.h"
-#include "nsIPrefBranch2.h"
+#include "nsIPrefBranch.h"
 #include "nsXPCOMCIDInternal.h"
 
 /**

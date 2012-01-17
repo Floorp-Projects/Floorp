@@ -291,7 +291,7 @@
       ok(matchCaseLabel.hidden, "match case label is visible in manual mode");
 
       var prefsvc = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch2);
+                    getService(Components.interfaces.nsIPrefBranch);
       prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 2);
 
       ok(matchCaseCheckbox.hidden,

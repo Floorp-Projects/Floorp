@@ -73,8 +73,7 @@ const PERSIST_FILES = {
 
 __defineGetter__("_prefs", function () {
   delete this._prefs;
-  return this._prefs = Services.prefs.getBranch("lightweightThemes.")
-                                     .QueryInterface(Ci.nsIPrefBranch2);
+  return this._prefs = Services.prefs.getBranch("lightweightThemes.");
 });
 
 __defineGetter__("_maxUsedThemes", function() {

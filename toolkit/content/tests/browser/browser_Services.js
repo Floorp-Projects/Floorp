@@ -46,7 +46,7 @@ function checkService(service, interface) {
 }
 
 function checkServices() {
-  checkService("prefs", Ci.nsIPrefBranch2);
+  checkService("prefs", Ci.nsIPrefBranch);
   checkService("prefs", Ci.nsIPrefService);
   checkService("contentPrefs", Ci.nsIContentPrefService);
   checkService("wm", Ci.nsIWindowMediator);
