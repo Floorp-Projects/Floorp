@@ -216,7 +216,7 @@ JS_GetEmptyStringValue(JSContext *cx)
 JS_PUBLIC_API(JSString *)
 JS_GetEmptyString(JSRuntime *rt)
 {
-    JS_ASSERT(rt->state == JSRTS_UP);
+    JS_ASSERT(rt->hasContexts());
     return rt->emptyString;
 }
 
@@ -680,7 +680,6 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
 JSRuntime::JSRuntime()
   : atomsCompartment(NULL),
-    state(),
     cxCallback(NULL),
     compartmentCallback(NULL),
     activityCallback(NULL),
@@ -739,11 +738,6 @@ JSRuntime::JSRuntime()
     requestCount(0),
     gcThread(NULL),
     gcHelperThread(thisFromCtor()),
-    rtLock(NULL),
-# ifdef DEBUG
-    rtLockOwner(0),
-# endif
-    stateChange(NULL),
 #endif
     debuggerMutations(0),
     securityCallbacks(NULL),
@@ -811,12 +805,6 @@ JSRuntime::init(uint32_t maxbytes)
     /* this is asymmetric with JS_ShutDown: */
     if (!js_SetupLocks(8, 16))
         return false;
-    rtLock = JS_NEW_LOCK();
-    if (!rtLock)
-        return false;
-    stateChange = JS_NEW_CONDVAR(gcLock);
-    if (!stateChange)
-        return false;
 #endif
 
     debugMode = false;
@@ -859,10 +847,6 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_CONDVAR(gcDone);
     if (requestDone)
         JS_DESTROY_CONDVAR(requestDone);
-    if (rtLock)
-        JS_DESTROY_LOCK(rtLock);
-    if (stateChange)
-        JS_DESTROY_CONDVAR(stateChange);
 #endif
 }
 
@@ -1135,18 +1119,6 @@ JS_IsInRequest(JSContext *cx)
 #else
     return false;
 #endif
-}
-
-JS_PUBLIC_API(void)
-JS_Lock(JSRuntime *rt)
-{
-    JS_LOCK_RUNTIME(rt);
-}
-
-JS_PUBLIC_API(void)
-JS_Unlock(JSRuntime *rt)
-{
-    JS_UNLOCK_RUNTIME(rt);
 }
 
 JS_PUBLIC_API(JSContextCallback)
@@ -1927,8 +1899,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
     *resolved = JS_FALSE;
 
     rt = cx->runtime;
-    JS_ASSERT(rt->state != JSRTS_DOWN);
-    if (rt->state == JSRTS_LANDING || !JSID_IS_ATOM(id))
+    if (!rt->hasContexts() || !JSID_IS_ATOM(id))
         return JS_TRUE;
 
     idstr = JSID_TO_STRING(id);
