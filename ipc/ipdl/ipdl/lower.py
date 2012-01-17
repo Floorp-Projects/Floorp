@@ -2848,6 +2848,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             if toplevel.talksRpc():
                 self.rpcSwitch.addcase(DefaultLabel(), default)
 
+        # FIXME/bug 535053: only manager protocols and non-manager
+        # protocols with union types need Lookup().  we'll give it to
+        # all for the time being (simpler)
+        if 1 or ptype.isManager():
+            self.cls.addstmts(self.implementManagerIface())
 
         def makeHandlerMethod(name, switch, hasReply, dispatches=0):
             params = [ Decl(Type('Message', const=1, ref=1), msgvar.name) ]
@@ -3010,11 +3015,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _runtimeAbort("'OnConnected' called on non-toplevel actor"))
 
         self.cls.addstmts([ onconnected, Whitespace.NL ])
-        # FIXME/bug 535053: only manager protocols and non-manager
-        # protocols with union types need Lookup().  we'll give it to
-        # all for the time being (simpler)
-        if 1 or ptype.isManager():
-            self.cls.addstmts(self.implementManagerIface())
 
         # User-facing shmem methods
         self.cls.addstmts(self.makeShmemIface())

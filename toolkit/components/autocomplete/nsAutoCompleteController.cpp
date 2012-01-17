@@ -190,6 +190,11 @@ nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
 NS_IMETHODIMP
 nsAutoCompleteController::HandleText()
 {
+  // We should do nothing during composition.
+  if (mIsIMEComposing) {
+    return NS_OK;
+  }
+
   if (!mInput) {
     // Stop all searches in case they are async.
     StopSearch();

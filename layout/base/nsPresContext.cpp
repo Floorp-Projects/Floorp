@@ -1081,6 +1081,12 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       mAnimationManager->Disconnect();
       mAnimationManager = nsnull;
     }
+
+    if (IsRoot()) {
+      // Have to cancel our plugin geometry timer, because the
+      // callback for that depends on a non-null presshell.
+      static_cast<nsRootPresContext*>(this)->CancelUpdatePluginGeometryTimer();
+    }
   }
 }
 
@@ -2354,6 +2360,7 @@ nsRootPresContext::~nsRootPresContext()
   NS_ASSERTION(mRegisteredPlugins.Count() == 0,
                "All plugins should have been unregistered");
   CancelDidPaintTimer();
+  CancelUpdatePluginGeometryTimer();
 }
 
 void
@@ -2594,6 +2601,9 @@ nsRootPresContext::UpdatePluginGeometry()
   if (!mNeedsToUpdatePluginGeometry)
     return;
   mNeedsToUpdatePluginGeometry = false;
+  // Cancel out mUpdatePluginGeometryTimer so it doesn't do a random
+  // update when we don't actually want one.
+  CancelUpdatePluginGeometryTimer();
 
   nsIFrame* f = mUpdatePluginGeometryForFrame;
   if (f) {
@@ -2615,33 +2625,10 @@ nsRootPresContext::UpdatePluginGeometry()
   DidApplyPluginGeometryUpdates();
 }
 
-void
-nsRootPresContext::SynchronousPluginGeometryUpdate()
+static void
+UpdatePluginGeometryCallback(nsITimer *aTimer, void *aClosure)
 {
-  if (!mNeedsToUpdatePluginGeometry) {
-    // Nothing to do
-    return;
-  }
-
-  // Force synchronous paint
-  nsIPresShell* shell = GetPresShell();
-  if (!shell)
-    return;
-  nsIFrame* rootFrame = shell->GetRootFrame();
-  if (!rootFrame)
-    return;
-  nsCOMPtr<nsIWidget> widget = rootFrame->GetNearestWidget();
-  if (!widget)
-    return;
-  // Force synchronous paint of a single pixel, just to force plugin
-  // updates to be flushed. Doing plugin updates during paint is the best
-  // way to ensure that plugin updates are in sync with our content.
-  widget->Invalidate(nsIntRect(0,0,1,1), true);
-
-  // Update plugin geometry just in case that invalidate didn't work
-  // (e.g. if none of the widget is visible, it might not have processed
-  // a paint event). Normally this won't need to do anything.
-  UpdatePluginGeometry();
+  static_cast<nsRootPresContext*>(aClosure)->UpdatePluginGeometry();
 }
 
 void
@@ -2651,15 +2638,23 @@ nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
     return;
 
   if (!mNeedsToUpdatePluginGeometry) {
+    // We'll update the plugin geometry during the next paint in this
+    // presContext (either from nsPresShell::WillPaint or from
+    // nsPresShell::DidPaint, depending on the platform) or on the next
+    // layout flush, whichever comes first.  But we may not have anyone
+    // flush layout, and paints might get optimized away if the old
+    // plugin geometry covers the whole canvas, so set a backup timer to
+    // do this too.  We want to make sure this won't fire before our
+    // normal paint notifications, if those would update the geometry,
+    // so set it for double the refresh driver interval.
+    mUpdatePluginGeometryTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mUpdatePluginGeometryTimer) {
+      mUpdatePluginGeometryTimer->
+        InitWithFuncCallback(UpdatePluginGeometryCallback, this,
+                             nsRefreshDriver::DefaultInterval() * 2,
+                             nsITimer::TYPE_ONE_SHOT);
+    }
     mNeedsToUpdatePluginGeometry = true;
-
-    // Dispatch a Gecko event to ensure plugin geometry gets updated
-    // XXX this really should be done through the refresh driver, once
-    // all painting happens in the refresh driver
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &nsRootPresContext::SynchronousPluginGeometryUpdate);
-    NS_DispatchToMainThread(event);
-
     mUpdatePluginGeometryForFrame = aFrame;
     mUpdatePluginGeometryForFrame->PresContext()->
       SetContainsUpdatePluginGeometryFrame(true);

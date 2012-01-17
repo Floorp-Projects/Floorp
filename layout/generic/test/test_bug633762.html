@@ -42,9 +42,12 @@ function runTests() {
 function finish() {
   // assert that scroll top is now less than before
   ok(scrollTopBefore > doc.body.scrollTop, "pressing up arrow should scroll up");
+  SpecialPowers.clearUserPref(smoothScrollPref);
   SimpleTest.finish();
 }
 
+var smoothScrollPref = "general.smoothScroll";
+SpecialPowers.setBoolPref(smoothScrollPref, false);
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 </script>

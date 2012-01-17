@@ -40,6 +40,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+FAIL_ON_WARNINGS = 1
+
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
@@ -59,8 +61,6 @@ CPPSRCS	= \
 	DocumentRendererParent.cpp \
 	DocumentRendererChild.cpp \
 	$(NULL)
-
-# Canvas 3D Pieces
 
 ifdef MOZ_WEBGL
 

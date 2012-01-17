@@ -90,16 +90,8 @@ let gSyncUI = {
       Services.obs.addObserver(this, topic, true);
     }, this);
 
-    // Find the alltabs-popup, only if there is a gBrowser
-    if (gBrowser) {
-      let popup = document.getElementById("alltabs-popup");
-      if (popup) {
-        popup.addEventListener(
-          "popupshowing", this.alltabsPopupShowing.bind(this), true);
-      }
-
-      if (Weave.Notifications.notifications.length)
-        this.initNotifications();
+    if (gBrowser && Weave.Notifications.notifications.length) {
+      this.initNotifications();
     }
     this.updateUI();
   },
@@ -147,34 +139,6 @@ let gSyncUI = {
     this._updateLastSyncTime();
     if (needsSetup)
       button.removeAttribute("tooltiptext");
-  },
-
-  alltabsPopupShowing: function(event) {
-    // Should we show the menu item?
-    //XXXphilikon We should remove the check for isLoggedIn here and have
-    //            about:sync-tabs auto-login (bug 583344)
-    if (!Weave.Service.isLoggedIn || !Weave.Engines.get("tabs").enabled)
-      return;
-
-    let label = this._stringBundle.GetStringFromName("tabs.fromOtherComputers.label");
-
-    let popup = document.getElementById("alltabs-popup");
-    if (!popup)
-      return;
-
-    let menuitem = document.createElement("menuitem");
-    menuitem.setAttribute("id", "sync-tabs-menuitem");
-    menuitem.setAttribute("label", label);
-    menuitem.setAttribute("class", "alltabs-item");
-    menuitem.setAttribute("oncommand", "BrowserOpenSyncTabs();");
-
-    // Fake the tab object on the menu entries, so that we don't have to worry
-    // about removing them ourselves. They will just get cleaned up by popup
-    // binding.
-    menuitem.tab = { "linkedBrowser": { "currentURI": { "spec": label } } };
-
-    let sep = document.getElementById("alltabs-popup-separator");
-    popup.insertBefore(menuitem, sep);
   },
 
 

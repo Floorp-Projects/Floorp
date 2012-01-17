@@ -1831,7 +1831,7 @@ GCMarker::GCMarker(JSContext *cx)
     unmarkedArenaStackTop(NULL),
     stack(cx->runtime->gcMarkStackArray)
 {
-    JS_TRACER_INIT(this, cx, NULL);
+    JS_TracerInit(this, cx, NULL);
     markLaterArenas = 0;
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     conservativeDumpFileName = getenv("JS_DUMP_CONSERVATIVE_GC_ROOTS");
@@ -1929,7 +1929,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
          * that mark callbacks are not in place during compartment GCs.
          */
         JSTracer checker;
-        JS_TRACER_INIT(&checker, trc->context, EmptyMarkCallback);
+        JS_TracerInit(&checker, trc->context, EmptyMarkCallback);
         ConservativeGCTest test = MarkIfGCThingWord(&checker, reinterpret_cast<uintptr_t>(ptr));
         if (test != CGCT_VALID && entry.value.name) {
             fprintf(stderr,
@@ -3767,7 +3767,7 @@ StartVerifyBarriers(JSContext *cx)
     trc->number = rt->gcNumber;
     trc->count = 0;
 
-    JS_TRACER_INIT(trc, cx, AccumulateEdge);
+    JS_TracerInit(trc, cx, AccumulateEdge);
 
     const size_t size = 64 * 1024 * 1024;
     trc->root = (VerifyNode *)js_malloc(size);
@@ -3881,7 +3881,7 @@ EndVerifyBarriers(JSContext *cx)
     rt->gcVerifyData = NULL;
     rt->gcIncrementalTracer = NULL;
 
-    JS_TRACER_INIT(trc, cx, CheckAutorooter);
+    JS_TracerInit(trc, cx, CheckAutorooter);
 
     JSContext *iter = NULL;
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter)) {
@@ -3889,7 +3889,7 @@ EndVerifyBarriers(JSContext *cx)
             acx->autoGCRooters->traceAll(trc);
     }
 
-    JS_TRACER_INIT(trc, cx, CheckEdge);
+    JS_TracerInit(trc, cx, CheckEdge);
 
     /* Start after the roots. */
     VerifyNode *node = NextNode(trc->root);

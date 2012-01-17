@@ -50,6 +50,7 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS = \
+  XULSelectControlAccessible.cpp \
   nsXULAlertAccessible.cpp \
   nsXULColorPickerAccessible.cpp \
   nsXULComboboxAccessible.cpp \

@@ -2264,10 +2264,13 @@ BasicShadowableThebesLayer::SetBackBufferAndAttrs(const OptionalThebesBuffer& aB
 {
   if (OptionalThebesBuffer::Tnull_t == aBuffer.type()) {
     mBackBuffer = SurfaceDescriptor();
-  } else {
+  } else if (!IsSurfaceDescriptorValid(mBackBuffer)) {
     mBackBuffer = aBuffer.get_ThebesBuffer().buffer();
     mBackBufferRect = aBuffer.get_ThebesBuffer().rect();
     mBackBufferRectRotation = aBuffer.get_ThebesBuffer().rotation();
+  } else {
+    SurfaceDescriptor obsoleteBuffer = aBuffer.get_ThebesBuffer().buffer();
+    BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&obsoleteBuffer);
   }
   mFrontAndBackBufferDiffer = true;
   mROFrontBuffer = aReadOnlyFrontBuffer;
@@ -2370,6 +2373,8 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                                       mBuffer.BufferRect(),
                                       mBuffer.BufferRotation(),
                                       mBackBuffer);
+  mROFrontBuffer = ThebesBuffer(mBackBuffer, mBuffer.BufferRect(), mBuffer.BufferRotation());
+  mBackBuffer = SurfaceDescriptor();
 }
 
 already_AddRefed<gfxASurface>
@@ -2980,14 +2985,14 @@ BasicShadowImageLayer::Swap(const SharedImage& aNewFront,
 {
   nsRefPtr<gfxASurface> surface =
     BasicManager()->OpenDescriptor(aNewFront);
-  // Destroy mFrontBuffer if size different
-  bool needDrop = false;
+  // Destroy mFrontBuffer if size different or image type is different
+  bool surfaceConfigChanged = surface->GetSize() != mSize;
   if (IsSurfaceDescriptorValid(mFrontBuffer)) {
     nsRefPtr<gfxASurface> front = BasicManager()->OpenDescriptor(mFrontBuffer);
-    needDrop = surface->GetSize() != mSize ||
-               surface->GetContentType() != front->GetContentType();
+    surfaceConfigChanged = surfaceConfigChanged ||
+                           surface->GetContentType() != front->GetContentType();
   }
-  if (needDrop) {
+  if (surfaceConfigChanged) {
     DestroyFrontBuffer();
     mSize = surface->GetSize();
   }
@@ -3102,13 +3107,13 @@ BasicShadowCanvasLayer::Swap(const CanvasSurface& aNewFront, bool needYFlip,
     BasicManager()->OpenDescriptor(aNewFront);
   // Destroy mFrontBuffer if size different
   gfxIntSize sz = surface->GetSize();
-  bool needDrop = false;
+  bool surfaceConfigChanged = sz != gfxIntSize(mBounds.width, mBounds.height);
   if (IsSurfaceDescriptorValid(mFrontSurface)) {
     nsRefPtr<gfxASurface> front = BasicManager()->OpenDescriptor(mFrontSurface);
-    needDrop = sz != gfxIntSize(mBounds.width, mBounds.height) ||
-               surface->GetContentType() != front->GetContentType();
+    surfaceConfigChanged = surfaceConfigChanged ||
+                           surface->GetContentType() != front->GetContentType();
   }
-  if (needDrop) {
+  if (surfaceConfigChanged) {
     DestroyFrontBuffer();
     mBounds.SetRect(0, 0, sz.width, sz.height);
   }
