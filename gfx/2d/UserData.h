@@ -37,6 +37,7 @@
 
 
 #include <stdlib.h>
+#include "mozilla/mozalloc.h"
 
 namespace mozilla {
 namespace gfx {
