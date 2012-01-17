@@ -333,6 +333,10 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32 offset, nsIOutputStream ** res
     if ((compressionLevel > 0) && val) {
         cacheOutput = new nsCompressOutputStreamWrapper(this, offset);
     } else {
+        // clear compression flag when compression disabled - see bug #715198
+        if (val) {
+            mCacheEntry->SetMetaDataElement("uncompressed-len", nsnull);
+        }
         cacheOutput = new nsOutputStreamWrapper(this, offset);
     }
     if (!cacheOutput) return NS_ERROR_OUT_OF_MEMORY;

@@ -96,7 +96,8 @@ pref("offline-apps.quota.warn",        51200);
 // 0 => disable compression
 // 1 => best speed
 // 9 => best compression
-pref("browser.cache.compression_level", 5);
+// cache compression turned off for now - see bug #715198
+pref("browser.cache.compression_level", 0);
 
 // Whether or not indexedDB is enabled.
 pref("dom.indexedDB.enabled", true);
