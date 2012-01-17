@@ -183,7 +183,7 @@ JS_BasicStatsAccum(JSBasicStats *bs, uint32_t val)
                     newbin = ValToBin(newscale, BinToVal(oldscale, bin));
                     newhist[newbin] += bs->hist[bin];
                 }
-                memcpy(bs->hist, newhist, sizeof bs->hist);
+                js_memcpy(bs->hist, newhist, sizeof bs->hist);
                 bs->logscale = newscale;
             }
         }

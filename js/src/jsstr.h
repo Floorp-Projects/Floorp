@@ -46,6 +46,7 @@
 #include "jsprvtd.h"
 #include "jslock.h"
 #include "jscell.h"
+#include "jsutil.h"
 
 #include "js/HashTable.h"
 #include "vm/Unicode.h"
@@ -215,7 +216,11 @@ js_strchr(const jschar *s, jschar c);
 extern jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 
-#define js_strncpy(t, s, n)     memcpy((t), (s), (n) * sizeof(jschar))
+static JS_ALWAYS_INLINE void
+js_strncpy(jschar *dst, const jschar *src, size_t nelem)
+{
+    return js::PodCopy(dst, src, nelem);
+}
 
 namespace js {
 

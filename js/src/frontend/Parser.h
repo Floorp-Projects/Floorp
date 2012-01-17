@@ -164,7 +164,7 @@ struct Parser : private AutoGCRooter
         ParseNode *node = allocParseNode(sizeof(ParseNode));
         if (!node)
             return NULL;
-        memcpy(node, &other, sizeof(*node));
+        PodAssign(node, &other);
         return node;
     }
 

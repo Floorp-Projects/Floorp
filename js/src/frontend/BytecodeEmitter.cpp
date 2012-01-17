@@ -7053,8 +7053,8 @@ frontend::FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *n
     mainCount = bce->main.noteCount;
     totalCount = prologCount + mainCount;
     if (prologCount)
-        memcpy(notes, bce->prolog.notes, SRCNOTE_SIZE(prologCount));
-    memcpy(notes + prologCount, bce->main.notes, SRCNOTE_SIZE(mainCount));
+        PodCopy(notes, bce->prolog.notes, prologCount);
+    PodCopy(notes + prologCount, bce->main.notes, mainCount);
     SN_MAKE_TERMINATOR(&notes[totalCount]);
 
     return true;

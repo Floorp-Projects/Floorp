@@ -3624,9 +3624,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         char tmp[tl::Max<sizeof(JSFunction), sizeof(JSObject_Slots16)>::result];
         JS_ASSERT(size <= sizeof(tmp));
 
-        memcpy(tmp, a, size);
-        memcpy(a, b, size);
-        memcpy(b, tmp, size);
+        js_memcpy(tmp, a, size);
+        js_memcpy(a, b, size);
+        js_memcpy(b, tmp, size);
     } else {
         /*
          * If the objects are of differing sizes, use the space we reserved
@@ -3653,9 +3653,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         void *bpriv = b->hasPrivate() ? b->getPrivate() : NULL;
 
         char tmp[sizeof(JSObject)];
-        memcpy(&tmp, a, sizeof tmp);
-        memcpy(a, b, sizeof tmp);
-        memcpy(b, &tmp, sizeof tmp);
+        js_memcpy(&tmp, a, sizeof tmp);
+        js_memcpy(a, b, sizeof tmp);
+        js_memcpy(b, &tmp, sizeof tmp);
 
         if (a->isNative())
             a->shape_->setNumFixedSlots(reserved.newafixed);
@@ -4318,8 +4318,8 @@ JSObject::growElements(JSContext *cx, uintN newcap)
         newheader = (ObjectElements *) cx->malloc_(newAllocated * sizeof(Value));
         if (!newheader)
             return false;  /* Ditto. */
-        memcpy(newheader, getElementsHeader(),
-               (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
+        js_memcpy(newheader, getElementsHeader(),
+                  (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
     }
 
     newheader->capacity = actualCapacity;

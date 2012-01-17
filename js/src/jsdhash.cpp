@@ -169,7 +169,7 @@ JS_DHashMoveEntryStub(JSDHashTable *table,
                       const JSDHashEntryHdr *from,
                       JSDHashEntryHdr *to)
 {
-    memcpy(to, from, table->entrySize);
+    js_memcpy(to, from, table->entrySize);
 }
 
 JS_PUBLIC_API(void)
