@@ -53,6 +53,7 @@ XPIDLSRCS = \
   nsIDOMSmsEvent.idl \
   nsISmsDatabaseService.idl \
   nsIDOMSmsRequest.idl \
+  nsIDOMSmsFilter.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

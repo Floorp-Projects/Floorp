@@ -55,6 +55,13 @@ struct SmsMessageData {
   PRUint64      timestamp; // ms since epoch.
 };
 
+struct SmsFilterData {
+  PRUint64      startDate;
+  PRUint64      endDate;
+  nsString[]    numbers;
+  DeliveryState delivery;
+};
+
 sync protocol PSms {
     manager PContent;
 

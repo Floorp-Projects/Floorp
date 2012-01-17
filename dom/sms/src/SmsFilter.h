@@ -35,39 +35,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_Types_h
-#define mozilla_dom_sms_Types_h
+#ifndef mozilla_dom_sms_SmsFilter_h
+#define mozilla_dom_sms_SmsFilter_h
 
-#include "IPCMessageUtils.h"
+#include "mozilla/dom/sms/PSms.h"
+#include "nsIDOMSmsFilter.h"
+#include "Types.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-// For SmsMessageDate.delivery.
-enum DeliveryState {
-  eDeliveryState_Sent,
-  eDeliveryState_Received,
-  // This state should stay at the end.
-  eDeliveryState_Unknown
+class SmsFilter : public nsIDOMMozSmsFilter
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMMOZSMSFILTER
+
+  SmsFilter();
+  SmsFilter(const SmsFilterData& aData);
+
+  const SmsFilterData& GetData() const;
+
+  static nsresult NewSmsFilter(nsISupports** aSmsFilter);
+
+private:
+  SmsFilterData mData;
 };
+
+inline const SmsFilterData&
+SmsFilter::GetData() const {
+  return mData;
+}
 
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
 
-namespace IPC {
-
-/**
- * Delivery state serializer.
- */
-template <>
-struct ParamTraits<mozilla::dom::sms::DeliveryState>
-  : public EnumSerializer<mozilla::dom::sms::DeliveryState,
-                          mozilla::dom::sms::eDeliveryState_Sent,
-                          mozilla::dom::sms::eDeliveryState_Unknown>
-{};
-
-} // namespace IPC
-
-#endif // mozilla_dom_sms_Types_h
+#endif // mozilla_dom_sms_SmsFilter_h
