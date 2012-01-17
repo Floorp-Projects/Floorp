@@ -39,7 +39,7 @@
 interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 
-[scriptable, function, uuid(8bebc119-845c-4ae1-96e7-7b7ee970485b)]
+[scriptable, function, uuid(4e628d96-abc9-45e1-b158-8970885a2552)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short      getNumberOfMessagesForText(in DOMString text);
@@ -51,6 +51,7 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
   jsval send(in jsval number, in DOMString message);
 
   [binaryname(GetMessageMoz)] nsIDOMMozSmsRequest getMessage(in long id);
+  nsIDOMMozSmsRequest delete(in long id);
 
   attribute nsIDOMEventListener onreceived;
   attribute nsIDOMEventListener onsent;

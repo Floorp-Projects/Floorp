@@ -204,6 +204,18 @@ SmsParent::RecvGetMessage(const PRInt32& aMessageId, const PRInt32& aRequestId,
   return true;
 }
 
+bool
+SmsParent::RecvDeleteMessage(const PRInt32& aMessageId, const PRInt32& aRequestId,
+                             const PRUint64& aProcessId)
+{
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, true);
+
+  smsDBService->DeleteMessage(aMessageId, aRequestId, aProcessId);
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
