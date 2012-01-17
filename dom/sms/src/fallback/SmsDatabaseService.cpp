@@ -86,6 +86,13 @@ SmsDatabaseService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsDatabaseService::ClearMessageList(PRInt32 aListId)
+{
+  NS_ERROR("We should not be here!");
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

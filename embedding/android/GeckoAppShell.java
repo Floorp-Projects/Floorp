@@ -1728,6 +1728,10 @@ public class GeckoAppShell
         GeckoSmsManager.getNextMessageInList(aListId, aRequestId, aProcessId);
     }
 
+    public static void clearMessageList(int aListId) {
+        GeckoSmsManager.clearMessageList(aListId);
+    }
+
     public static boolean isTablet() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
             Configuration config = GeckoApp.mAppContext.getResources().getConfiguration();

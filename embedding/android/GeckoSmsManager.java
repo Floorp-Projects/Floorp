@@ -912,6 +912,10 @@ public class GeckoSmsManager
     }
   }
 
+  public static void clearMessageList(int aListId) {
+    MessagesListManager.getInstance().remove(aListId);
+  }
+
   public static void shutdown() {
     SmsIOThread.getInstance().interrupt();
     MessagesListManager.getInstance().clear();

@@ -72,6 +72,22 @@ SmsCursor::SmsCursor(PRInt32 aListId, nsIDOMMozSmsRequest* aRequest)
 {
 }
 
+SmsCursor::~SmsCursor()
+{
+  NS_ASSERTION(!mMessage, "mMessage shouldn't be set!");
+
+  if (mListId != -1) {
+    nsCOMPtr<nsISmsDatabaseService> smsDBService =
+      do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+
+    if (!smsDBService) {
+      NS_ERROR("Can't find SmsDBService!");
+    }
+
+    smsDBService->ClearMessageList(mListId);
+  }
+}
+
 void
 SmsCursor::Disconnect()
 {
