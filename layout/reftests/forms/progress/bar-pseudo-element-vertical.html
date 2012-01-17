@@ -21,7 +21,7 @@
     body > progress:nth-child(13)::-moz-progress-bar { height: 10px; }
     body > progress:nth-child(14)::-moz-progress-bar { height: 10%; }
     body > progress:nth-child(15)::-moz-progress-bar { height: 200%; }
-    body > progress:nth-child(16)::-moz-progress-bar { margin: 64px; padding: 64px; }
+    body > progress:nth-of-type(16)::-moz-progress-bar { margin: 64px; padding: 64px; }
   </style>
   <body>
     <!-- Those will be used to change padding/margin on ::-moz-progress-bar -->
@@ -41,6 +41,6 @@
     <progress value='1'></progress>
     <progress value='1'></progress>
     <progress value='1'></progress>
-    <progress value='1'></progress>
+    <br><progress value='1'></progress>
   </body>
 </html>
