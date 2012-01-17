@@ -247,6 +247,18 @@ SmsParent::RecvGetNextMessageInList(const PRInt32& aListId,
   return true;
 }
 
+bool
+SmsParent::RecvClearMessageList(const PRInt32& aListId)
+{
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, true);
+
+  smsDBService->ClearMessageList(aListId);
+
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

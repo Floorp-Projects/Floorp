@@ -60,6 +60,8 @@ public:
   SmsCursor();
   SmsCursor(PRInt32 aListId, nsIDOMMozSmsRequest* aRequest);
 
+  ~SmsCursor();
+
   void SetMessage(nsIDOMMozSmsMessage* aMessage);
 
   void Disconnect();

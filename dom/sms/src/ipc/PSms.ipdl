@@ -120,6 +120,8 @@ parent:
 
     GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint64 aProcessId);
 
+    ClearMessageList(PRInt32 aListId);
+
     __delete__();
 };
 
