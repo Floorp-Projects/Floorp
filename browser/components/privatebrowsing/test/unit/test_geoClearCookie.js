@@ -41,7 +41,7 @@
 const accessToken = '{"location":{"latitude":51.5090332,"longitude":-0.1212726,"accuracy":150.0},"access_token":"2:jVhRZJ-j6PiRchH_:RGMrR0W1BiwdZs12"}'
 function run_test_on_service() {
   var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch2);
+                   getService(Ci.nsIPrefBranch);
   var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
            getService(Ci.nsIPrivateBrowsingService);
   prefBranch.setCharPref("geo.wifi.access_token.test", accessToken);

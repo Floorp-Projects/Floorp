@@ -221,11 +221,8 @@ HandlerInfoWrapper.prototype = {
   _handlerSvc: Cc["@mozilla.org/uriloader/handler-service;1"].
                getService(Ci.nsIHandlerService),
 
-  // Retrieve this as nsIPrefBranch and then immediately QI to nsIPrefBranch2
-  // so both interfaces are available to callers.
   _prefSvc: Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefBranch).
-            QueryInterface(Ci.nsIPrefBranch2),
+            getService(Ci.nsIPrefBranch),
 
   _categoryMgr: Cc["@mozilla.org/categorymanager;1"].
                 getService(Ci.nsICategoryManager),
@@ -885,11 +882,8 @@ var gApplicationsPane = {
   _list           : null,
   _filter         : null,
 
-  // Retrieve this as nsIPrefBranch and then immediately QI to nsIPrefBranch2
-  // so both interfaces are available to callers.
   _prefSvc      : Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefBranch).
-                  QueryInterface(Ci.nsIPrefBranch2),
+                  getService(Ci.nsIPrefBranch),
 
   _mimeSvc      : Cc["@mozilla.org/mime;1"].
                   getService(Ci.nsIMIMEService),
