@@ -1701,35 +1701,67 @@ public class GeckoAppShell
      * WebSMS related methods.
      */
     public static int getNumberOfMessagesForText(String aText) {
-        return GeckoSmsManager.getNumberOfMessagesForText(aText);
+        if (SmsManager.getInstance() == null) {
+            return 0;
+        }
+
+        return SmsManager.getInstance().getNumberOfMessagesForText(aText);
     }
 
     public static void sendMessage(String aNumber, String aMessage, int aRequestId, long aProcessId) {
-        GeckoSmsManager.send(aNumber, aMessage, aRequestId, aProcessId);
+        if (SmsManager.getInstance() == null) {
+            return;
+        }
+
+        SmsManager.getInstance().send(aNumber, aMessage, aRequestId, aProcessId);
     }
 
     public static int saveSentMessage(String aRecipient, String aBody, long aDate) {
-        return GeckoSmsManager.saveSentMessage(aRecipient, aBody, aDate);
+        if (SmsManager.getInstance() == null) {
+            return -1;
+        }
+
+        return SmsManager.getInstance().saveSentMessage(aRecipient, aBody, aDate);
     }
 
     public static void getMessage(int aMessageId, int aRequestId, long aProcessId) {
-        GeckoSmsManager.getMessage(aMessageId, aRequestId, aProcessId);
+        if (SmsManager.getInstance() == null) {
+            return;
+        }
+
+        SmsManager.getInstance().getMessage(aMessageId, aRequestId, aProcessId);
     }
 
     public static void deleteMessage(int aMessageId, int aRequestId, long aProcessId) {
-        GeckoSmsManager.deleteMessage(aMessageId, aRequestId, aProcessId);
+        if (SmsManager.getInstance() == null) {
+            return;
+        }
+
+        SmsManager.getInstance().deleteMessage(aMessageId, aRequestId, aProcessId);
     }
 
     public static void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId, long aProcessId) {
-        GeckoSmsManager.createMessageList(aStartDate, aEndDate, aNumbers, aNumbersCount, aDeliveryState, aReverse, aRequestId, aProcessId);
+        if (SmsManager.getInstance() == null) {
+            return;
+        }
+
+        SmsManager.getInstance().createMessageList(aStartDate, aEndDate, aNumbers, aNumbersCount, aDeliveryState, aReverse, aRequestId, aProcessId);
     }
 
     public static void getNextMessageInList(int aListId, int aRequestId, long aProcessId) {
-        GeckoSmsManager.getNextMessageInList(aListId, aRequestId, aProcessId);
+        if (SmsManager.getInstance() == null) {
+            return;
+        }
+
+        SmsManager.getInstance().getNextMessageInList(aListId, aRequestId, aProcessId);
     }
 
     public static void clearMessageList(int aListId) {
-        GeckoSmsManager.clearMessageList(aListId);
+        if (SmsManager.getInstance() == null) {
+            return;
+        }
+
+        SmsManager.getInstance().clearMessageList(aListId);
     }
 
     public static boolean isTablet() {

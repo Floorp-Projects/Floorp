@@ -88,7 +88,6 @@ abstract public class GeckoApp
     private IntentFilter mConnectivityFilter;
     private BroadcastReceiver mConnectivityReceiver;
     private BroadcastReceiver mBatteryReceiver;
-    private BroadcastReceiver mSmsReceiver;
 
     enum LaunchState {PreLaunch, Launching, WaitForDebugger,
                       Launched, GeckoRunning, GeckoExiting};
@@ -414,14 +413,9 @@ abstract public class GeckoApp
         mBatteryReceiver = new GeckoBatteryManager();
         registerReceiver(mBatteryReceiver, batteryFilter);
 
-        IntentFilter smsFilter = new IntentFilter();
-        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_RECEIVED);
-        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_SENT);
-        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_DELIVERED);
-        mSmsReceiver = new GeckoSmsManager();
-        registerReceiver(mSmsReceiver, smsFilter);
-
-        GeckoSmsManager.init();
+        if (SmsManager.getInstance() != null) {
+            SmsManager.getInstance().init();
+        }
 
         if (!checkAndSetLaunchState(LaunchState.PreLaunch,
                                     LaunchState.Launching))
@@ -576,16 +570,17 @@ abstract public class GeckoApp
     {
         Log.i(LOG_FILE_NAME, "destroy");
 
-        GeckoSmsManager.shutdown();
-
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
         if (isFinishing())
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_SHUTDOWN));
 
+        if (SmsManager.getInstance() != null) {
+            SmsManager.getInstance().shutdown();
+        }
+
         super.onDestroy();
 
-        unregisterReceiver(mSmsReceiver);
         unregisterReceiver(mBatteryReceiver);
     }
 

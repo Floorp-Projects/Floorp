@@ -83,7 +83,6 @@ FENNEC_JAVA_FILES = \
   GeckoEventListener.java \
   GeckoInputConnection.java \
   GeckoPreferences.java \
-  GeckoSmsManager.java \
   GeckoStateListDrawable.java \
   GeckoThread.java \
   GlobalHistory.java \
@@ -126,6 +125,10 @@ FENNEC_JAVA_FILES = \
   ui/SubdocumentScrollHelper.java \
   $(NULL)
 
+ifdef MOZ_WEBSMS_BACKEND
+FENNEC_JAVA_FILES += GeckoSmsManager.java
+endif
+
 FENNEC_PP_JAVA_FILES = \
   App.java \
   LauncherShortcuts.java \
@@ -133,6 +136,7 @@ FENNEC_PP_JAVA_FILES = \
   Restarter.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
+  SmsManager.java \
   $(NULL)
 
 

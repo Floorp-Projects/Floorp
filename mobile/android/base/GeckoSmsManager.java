@@ -48,6 +48,7 @@ import android.app.Activity;
 import android.database.Cursor;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.ContentResolver;
@@ -319,6 +320,7 @@ class MessagesListManager
 
 public class GeckoSmsManager
   extends BroadcastReceiver
+  implements ISmsManager
 {
   public final static String ACTION_SMS_RECEIVED  = "android.provider.Telephony.SMS_RECEIVED";
   public final static String ACTION_SMS_SENT      = "org.mozilla.gecko.SMS_SENT";
@@ -354,7 +356,14 @@ public class GeckoSmsManager
 
   private final static String[] kRequiredMessageRows = new String[] { "_id", "address", "body", "date", "type" };
 
-  public static void init() {
+  public void init() {
+    IntentFilter smsFilter = new IntentFilter();
+    smsFilter.addAction(GeckoSmsManager.ACTION_SMS_RECEIVED);
+    smsFilter.addAction(GeckoSmsManager.ACTION_SMS_SENT);
+    smsFilter.addAction(GeckoSmsManager.ACTION_SMS_DELIVERED);
+
+    GeckoApp.mAppContext.registerReceiver(this, smsFilter);
+
     SmsIOThread.getInstance().start();
   }
 
@@ -480,11 +489,11 @@ public class GeckoSmsManager
     }
   }
 
-  public static int getNumberOfMessagesForText(String aText) {
+  public int getNumberOfMessagesForText(String aText) {
     return SmsManager.getDefault().divideMessage(aText).size();
   }
 
-  public static void send(String aNumber, String aMessage, int aRequestId, long aProcessId) {
+  public void send(String aNumber, String aMessage, int aRequestId, long aProcessId) {
     int envelopeId = Postman.kUnknownEnvelopeId;
 
     try {
@@ -570,7 +579,7 @@ public class GeckoSmsManager
     }
   }
 
-  public static int saveSentMessage(String aRecipient, String aBody, long aDate) {
+  public int saveSentMessage(String aRecipient, String aBody, long aDate) {
     class IdTooHighException extends Exception { }
 
     try {
@@ -600,7 +609,7 @@ public class GeckoSmsManager
     }
   }
 
-  public static void getMessage(int aMessageId, int aRequestId, long aProcessId) {
+  public void getMessage(int aMessageId, int aRequestId, long aProcessId) {
     class GetMessageRunnable implements Runnable {
       private int mMessageId;
       private int mRequestId;
@@ -687,7 +696,7 @@ public class GeckoSmsManager
     }
   }
 
-  public static void deleteMessage(int aMessageId, int aRequestId, long aProcessId) {
+  public void deleteMessage(int aMessageId, int aRequestId, long aProcessId) {
     class DeleteMessageRunnable implements Runnable {
       private int mMessageId;
       private int mRequestId;
@@ -730,7 +739,7 @@ public class GeckoSmsManager
     }
   }
 
-  public static void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId, long aProcessId) {
+  public void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId, long aProcessId) {
     class CreateMessageListRunnable implements Runnable {
       private long     mStartDate;
       private long     mEndDate;
@@ -853,7 +862,7 @@ public class GeckoSmsManager
     }
   }
 
-  public static void getNextMessageInList(int aListId, int aRequestId, long aProcessId) {
+  public void getNextMessageInList(int aListId, int aRequestId, long aProcessId) {
     class GetNextMessageInListRunnable implements Runnable {
       private int mListId;
       private int mRequestId;
@@ -912,11 +921,13 @@ public class GeckoSmsManager
     }
   }
 
-  public static void clearMessageList(int aListId) {
+  public void clearMessageList(int aListId) {
     MessagesListManager.getInstance().remove(aListId);
   }
 
-  public static void shutdown() {
+  public void shutdown() {
+    GeckoApp.mAppContext.unregisterReceiver(this);
+
     SmsIOThread.getInstance().interrupt();
     MessagesListManager.getInstance().clear();
   }
