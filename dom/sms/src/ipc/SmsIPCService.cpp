@@ -126,6 +126,15 @@ SmsIPCService::GetMessageMoz(PRInt32 aMessageId, PRInt32 aRequestId,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsIPCService::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId,
+                             PRUint64 aProcessId)
+{
+  GetSmsChild()->SendDeleteMessage(aMessageId, aRequestId,
+                                   ContentChild::GetSingleton()->GetID());
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

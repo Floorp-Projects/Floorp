@@ -227,6 +227,22 @@ SmsManager::GetMessageMoz(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsManager::Delete(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
+{
+  int requestId =
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext, aRequest);
+  NS_ASSERTION(*aRequest, "The request object must have been created!");
+
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, NS_ERROR_FAILURE);
+
+  smsDBService->DeleteMessage(aId, requestId, 0);
+
+  return NS_OK;
+}
+
 NS_IMPL_EVENT_HANDLER(SmsManager, received)
 NS_IMPL_EVENT_HANDLER(SmsManager, sent)
 NS_IMPL_EVENT_HANDLER(SmsManager, delivered)
