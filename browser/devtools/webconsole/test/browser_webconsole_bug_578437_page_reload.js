@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 // Tests that the console object still exists after a page reload.
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 function test() {
   addTab(TEST_URI);
