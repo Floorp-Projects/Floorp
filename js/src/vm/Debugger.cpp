@@ -1159,6 +1159,8 @@ Debugger::markAllIteratively(GCMarker *trc)
         const GlobalObjectSet &debuggees = dc->getDebuggees();
         for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
             GlobalObject *global = r.front();
+            if (IsAboutToBeFinalized(cx, global))
+                continue;
 
             /*
              * Every debuggee has at least one debugger, so in this case
