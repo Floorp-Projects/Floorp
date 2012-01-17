@@ -41,6 +41,7 @@
 #include "android/log.h"
 #include "ui/FramebufferNativeWindow.h"
 
+#include "mozilla/Hal.h"
 #include "Framebuffer.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
@@ -101,6 +102,11 @@ nsWindow::~nsWindow()
 void
 nsWindow::DoDraw(void)
 {
+    if (!hal::GetScreenEnabled()) {
+        gDrawRequest = true;
+        return;
+    }
+
     if (!gWindowToRedraw) {
         LOG("  no window to draw, bailing");
         return;
