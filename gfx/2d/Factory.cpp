@@ -44,20 +44,13 @@
 
 #ifdef USE_SKIA
 #include "DrawTargetSkia.h"
-#include "ScaledFontBase.h"
-#endif
-
-#ifdef WIN32
-#include "ScaledFontWin.h"
-#endif
-
 #ifdef XP_MACOSX
 #include "ScaledFontMac.h"
 #endif
-
-
-#ifdef XP_MACOSX
-#include "DrawTargetCG.h"
+#ifdef WIN32
+#include "ScaledFontWin.h"
+#endif
+#include "ScaledFontSkia.h"
 #endif
 
 #ifdef WIN32
@@ -97,7 +90,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
       }
       break;
     }
-#elif defined XP_MACOSX || defined ANDROID
+#endif
 #ifdef USE_SKIA
   case BACKEND_SKIA:
     {
@@ -108,18 +101,6 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
       }
       break;
     }
-#endif
-#ifdef XP_MACOSX
-  case BACKEND_COREGRAPHICS:
-    {
-      RefPtr<DrawTargetCG> newTarget;
-      newTarget = new DrawTargetCG();
-      if (newTarget->Init(aSize, aFormat)) {
-        return newTarget;
-      }
-      break;
-    }
-#endif
 #endif
   default:
     gfxDebug() << "Invalid draw target type specified.";
@@ -141,13 +122,13 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
       return new ScaledFontDWrite(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
     }
 #endif
+#ifdef USE_SKIA
 #ifdef XP_MACOSX
   case NATIVE_FONT_MAC_FONT_FACE:
     {
       return new ScaledFontMac(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
     }
 #endif
-#ifdef USE_SKIA
 #ifdef WIN32
   case NATIVE_FONT_GDI_FONT_FACE:
     {
@@ -156,7 +137,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 #endif
   case NATIVE_FONT_SKIA_FONT_FACE:
     {
-      return new ScaledFontBase(static_cast<gfxFont*>(aNativeFont.mFont), aSize);
+      return new ScaledFontSkia(static_cast<gfxFont*>(aNativeFont.mFont), aSize);
     }
 #endif
   case NATIVE_FONT_CAIRO_FONT_FACE:
