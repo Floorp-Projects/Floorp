@@ -257,6 +257,8 @@ Section "Uninstall"
   Call un.RenameDelete
   Push "$INSTDIR\maintenanceservice_tmp.exe"
   Call un.RenameDelete
+  Push "$INSTDIR\maintenanceservice.old"
+  Call un.RenameDelete
   Push "$INSTDIR\Uninstall.exe"
   Call un.RenameDelete
   RMDir /REBOOTOK "$INSTDIR"
