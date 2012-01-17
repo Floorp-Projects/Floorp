@@ -539,9 +539,9 @@
       ]]></constructor>
 
       <destructor><![CDATA[
-          var ps2 = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch2);
-          ps2.removeObserver("browser.search.suggest.enabled", this);
+          var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+          prefs.removeObserver("browser.search.suggest.enabled", this);
 
         // Because XBL and the customize toolbar code interacts poorly,
         // there may not be anything to remove here
@@ -635,9 +635,9 @@
           this.controllers.appendController(this.searchbarController);
 
           // Add observer for suggest preference
-          var ps2 = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch2);
-          ps2.addObserver("browser.search.suggest.enabled", this, false);
+          var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+          prefs.addObserver("browser.search.suggest.enabled", this, false);
         ]]></body>
       </method>
 
