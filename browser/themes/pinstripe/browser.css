@@ -1702,12 +1702,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   opacity: .8;
 }
 
-/* Prevent overlapping of tabs during the close animation */
-.tab-label:not([fadein]):not([pinned]) {
-  margin-left: -16px;
-  margin-right: -16px;
-  -moz-transition: opacity 100ms ease-out,
-                   margin 30ms ease-out 80ms;
+.tabbrowser-tab:not([pinned]):not([fadein]) {
+  -moz-transition: min-width 200ms ease-out /* copied from browser/base/content/browser.css */,
+                   max-width 250ms ease-out /* copied from browser/base/content/browser.css */,
+                   opacity 50ms ease-out 100ms /* hide the tab for the last 100ms of the max-width transition */;
 }
 
 .tab-stack {
