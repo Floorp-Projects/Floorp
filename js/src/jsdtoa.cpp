@@ -142,7 +142,7 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
         return NULL;
     }
 
-    memcpy(buffer + 2, numBegin, nDigits);
+    js_memcpy(buffer + 2, numBegin, nDigits);
     freedtoa(PASS_STATE numBegin);
     numBegin = buffer + 2; /* +2 leaves space for sign and/or decimal point */
     numEnd = numBegin + nDigits;

@@ -1148,14 +1148,14 @@ UpdateDecompiledText(SprintStack *ss, jsbytecode *pc, ptrdiff_t todo)
         const char *text = OFF2STR(&ss->sprinter, todo);
         size_t len = strlen(text) + 1;
 
-        const char *ntext = ss->printer->pool.newArrayUninitialized<char>(len);
+        char *ntext = ss->printer->pool.newArrayUninitialized<char>(len);
         if (!ntext) {
             js_ReportOutOfMemory(ss->sprinter.context);
             return false;
         }
 
-        memcpy((char *) ntext, text, len);
-        jp->decompiled(pc).text = ntext;
+        js_memcpy(ntext, text, len);
+        jp->decompiled(pc).text = const_cast<const char *>(ntext);
     }
 
     return true;
@@ -1168,7 +1168,7 @@ SprintDupeStr(SprintStack *ss, const char *str)
 
     const char *nstr = ss->printer->pool.newArrayUninitialized<char>(len);
     if (nstr) {
-        memcpy((char *) nstr, str, len);
+        js_memcpy((char *) nstr, str, len);
     } else {
         js_ReportOutOfMemory(ss->sprinter.context);
         nstr = "";
