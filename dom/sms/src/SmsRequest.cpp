@@ -106,6 +106,21 @@ SmsRequest::~SmsRequest()
 }
 
 void
+SmsRequest::Reset()
+{
+  NS_ASSERTION(mDone, "mDone should be true if we try to reset!");
+  NS_ASSERTION(mResult != JSVAL_VOID, "mResult should be set if we try to reset!");
+  NS_ASSERTION(mError == eNoError, "There should be no error if we try to reset!");
+
+  if (mResultRooted) {
+    UnrootResult();
+  }
+
+  mResult = JSVAL_VOID;
+  mDone = false;
+}
+
+void
 SmsRequest::RootResult()
 {
   NS_ASSERTION(!mResultRooted, "Don't call RootResult() if already rooted!");

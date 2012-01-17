@@ -99,6 +99,14 @@ SmsDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsDatabaseService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
+                                         PRUint64 aProcessId)
+{
+  // TODO: implement
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
