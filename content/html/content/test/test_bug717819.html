@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717819
+-->
+<head>
+  <title>Test for Bug 717819</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717819">Mozilla Bug 717819</a>
+<p id="display"></p>
+<div id="content">
+  <table style="position: relative; top: 100px;">
+    <tr>
+      <td>
+        <div id="test" style="position: absolute; top: 50px;"></div>
+      </td>
+    </tr>
+  </table>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 717819 **/
+var div = document.getElementById("test");
+is(div.offsetTop, 50, "The offsetTop must be calculated correctly");
+is(div.offsetParent, document.querySelector("table"),
+   "The offset should be calculated off of the correct parent");
+
+</script>
+</pre>
+</body>
+</html>

@@ -59,9 +59,8 @@
 #include "nsWrapperCacheInlines.h"
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "jstypedarray.h"
-
-#include "jscntxt.h" // cx->compartment
 
 using namespace mozilla;
 
@@ -1137,7 +1136,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
 
             flat = locationWrapper;
         } else if (wrapper->NeedsSOW() &&
-                   !xpc::AccessCheck::isChrome(cx->compartment)) {
+                   !xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
             JSObject *sowWrapper = wrapper->GetWrapper();
             if (!sowWrapper) {
                 sowWrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);

@@ -43,7 +43,6 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jscntxt.h"
 
 #include "nsTraceRefcnt.h"
 #include "xpcpublic.h"

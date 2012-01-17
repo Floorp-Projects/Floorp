@@ -1014,8 +1014,8 @@
             <toolbarbutton id="inspector-3D-button"
                            class="devtools-toolbarbutton"
                            hidden="true"
-                           label="&inspect3DButton.label;"
-                           accesskey="&inspect3DButton.accesskey;"
+                           label="&inspect3DViewButton.label;"
+                           accesskey="&inspect3DViewButton.accesskey;"
                            command="Inspector:Tilt"/>
             <toolbarbutton id="inspector-style-button"
                            class="devtools-toolbarbutton"

@@ -207,6 +207,12 @@ class NunboxAssembler : public JSC::MacroAssembler
         JS_ASSERT(differenceBetween(start, load) == 0);
         (void) load;
         return start;
+#elif defined JS_CPU_MIPS
+        /*
+         * On MIPS there are LUI/ORI to patch.
+         */
+        load64WithPatch(address, treg, dreg, TAG_OFFSET, PAYLOAD_OFFSET);
+        return start;
 #endif
     }
 
@@ -232,6 +238,12 @@ class NunboxAssembler : public JSC::MacroAssembler
         return start;
 #elif defined JS_CPU_ARM || defined JS_CPU_SPARC
         return store64WithAddressOffsetPatch(treg, dreg, address);
+#elif defined JS_CPU_MIPS
+        /*
+         * On MIPS there are LUI/ORI to patch.
+         */
+        store64WithPatch(address, treg, dreg, TAG_OFFSET, PAYLOAD_OFFSET);
+        return start;
 #endif
     }
 
@@ -248,6 +260,12 @@ class NunboxAssembler : public JSC::MacroAssembler
         return start;
 #elif defined JS_CPU_ARM || defined JS_CPU_SPARC
         return store64WithAddressOffsetPatch(type, dreg, address);
+#elif defined JS_CPU_MIPS
+        /*
+         * On MIPS there are LUI/ORI to patch.
+         */
+        store64WithPatch(address, type, dreg, TAG_OFFSET, PAYLOAD_OFFSET);
+        return start;
 #endif
     }
 
@@ -267,6 +285,12 @@ class NunboxAssembler : public JSC::MacroAssembler
         return start;
 #elif defined JS_CPU_ARM || defined JS_CPU_SPARC
         return store64WithAddressOffsetPatch(type, payload, address);
+#elif defined JS_CPU_MIPS
+        /*
+         * On MIPS there are LUI/ORI to patch.
+         */
+        store64WithPatch(address, type, payload, TAG_OFFSET, PAYLOAD_OFFSET);
+        return start;
 #endif
     }
 
@@ -470,6 +494,12 @@ class NunboxAssembler : public JSC::MacroAssembler
 #elif defined JS_CPU_ARM
         // Yes, we are backwards from SPARC.
         fastStoreDouble(srcDest, dataReg, typeReg);
+#elif defined JS_CPU_MIPS
+#if defined(IS_LITTLE_ENDIAN)
+        fastStoreDouble(srcDest, dataReg, typeReg);
+#else
+        fastStoreDouble(srcDest, typeReg, dataReg);
+#endif
 #else
         JS_NOT_REACHED("implement this - push double, pop pop is easiest");
 #endif

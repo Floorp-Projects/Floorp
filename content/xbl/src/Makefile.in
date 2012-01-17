@@ -90,7 +90,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../layout/style \
 		-I$(srcdir)/../../../dom/base \
 		-I$(topsrcdir)/xpcom/ds \
-		-I$(srcdir)/../../../js/xpconnect/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

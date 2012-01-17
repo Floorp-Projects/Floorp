@@ -55,8 +55,6 @@
 #include "xpcprivate.h"
 #include "nsStringBuffer.h"
 
-#include "jscntxt.h" // emptyAtom
-
 static int sDOMStringFinalizerIndex = -1;
 
 static void
@@ -89,10 +87,8 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
 
     PRUint32 length = readable.Length();
 
-    JSAtom *atom;
-    if (length == 0 && (atom = cx->runtime->atomState.emptyAtom)) {
-        return STRING_TO_JSVAL(atom);
-    }
+    if (length == 0)
+        return JS_GetEmptyStringValue(cx);
 
     nsStringBuffer *buf = nsStringBuffer::FromString(readable);
     if (buf) {

@@ -39,8 +39,6 @@
 #include "base/basictypes.h"
 
 #include "jsapi.h"
-// FIXME(bug 332648): Give me a real API please!
-#include "jscntxt.h"
 #include "jsfriendapi.h"
 
 #include "nsIInterfaceRequestorUtils.h"

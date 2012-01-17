@@ -4,15 +4,16 @@
 <body>
 <span contenteditable id="t" style="border: 1px dashed green; min-height: 2px; padding-right: 20px;"> </span></body>
 <script>
-  // Enter a character in the span and delete it
   var sel = window.getSelection();
   sel.removeAllRanges();
 
+  // Focus the span to put the caret at its beginning.
   var area = document.getElementById('t');
   area.focus();
 
-  sendKey("W"); // enter a character
-  sendKey("VK_BACK_SPACE");
+  // Enter a character in the span then delete it.
+  sendChar("W");
+  sendKey("BACK_SPACE");
 </script>
 </body>
 </html>

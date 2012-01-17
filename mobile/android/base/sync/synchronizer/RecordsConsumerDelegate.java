@@ -43,6 +43,14 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 
 interface RecordsConsumerDelegate {
   public abstract ConcurrentLinkedQueue<Record> getQueue();
-  public abstract void consumerIsDone();
+
+  /**
+   * Called when no more items will be processed.
+   * If forced is true, the consumer is terminating because it was told to halt;
+   * not all items will necessarily have been processed.
+   * If forced is false, the consumer has invoked store and received an onStoreCompleted callback.
+   * @param forced
+   */
+  public abstract void consumerIsDone(boolean forced);
   public abstract void store(Record record);
 }

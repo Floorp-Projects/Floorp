@@ -104,7 +104,7 @@ nsScriptableUnescapeHTML::Unescape(const nsAString & aFromStr,
 
   parser->Parse(aFromStr, 0, NS_LITERAL_CSTRING("text/html"),
                 true, eDTDMode_fragment);
-  
+
   return NS_OK;
 }
 

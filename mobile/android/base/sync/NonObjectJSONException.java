@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Richard Newman <rnewman@mozilla.com>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,10 +37,10 @@
 
 package org.mozilla.gecko.sync;
 
-public class NonObjectJSONException extends Exception {
-  private static final long serialVersionUID = 435366246452253073L;
-  Object obj;
+public class NonObjectJSONException extends UnexpectedJSONException {
+  private static final long serialVersionUID = 2214238763035650087L;
+
   public NonObjectJSONException(Object object) {
-    obj = object;
+    super(object);
   }
 }

@@ -40,12 +40,12 @@ package org.mozilla.gecko.sync.net;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
 import java.util.Scanner;
 
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.Utils;
 
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
@@ -75,10 +75,15 @@ public class SyncResponse {
     return this.getStatusCode() == 200;
   }
 
+  private String body = null;
   public String body() throws IllegalStateException, IOException {
+    if (body != null) {
+      return body;
+    }
     InputStreamReader is = new InputStreamReader(this.response.getEntity().getContent());
     // Oh, Java, you are so evil.
-    return new Scanner(is).useDelimiter("\\A").next();
+    body = new Scanner(is).useDelimiter("\\A").next();
+    return body;
   }
 
   /**
@@ -92,6 +97,10 @@ public class SyncResponse {
    */
   public Object jsonBody() throws IllegalStateException, IOException,
                           ParseException {
+    if (body != null) {
+      // Do it from the cached String.
+      ExtendedJSONObject.parse(body);
+    }
     HttpEntity entity = this.response.getEntity();
     if (entity == null) {
       return null;
@@ -133,15 +142,6 @@ public class SyncResponse {
     return this.getIntegerHeader("x-weave-backoff");
   }
 
-  // This lives until Bug 708956 lands, and we don't have to do it any more.
-  public static long decimalSecondsToMilliseconds(String decimal) {
-    try {
-      return new BigDecimal(decimal).movePointRight(3).longValue();
-    } catch (Exception e) {
-      return -1;
-    }
-  }
-
   /**
    * The timestamp returned from a Sync server is a decimal number of seconds,
    * e.g., 1323393518.04.
@@ -157,7 +157,7 @@ public class SyncResponse {
       return -1;
     }
 
-    return decimalSecondsToMilliseconds(this.response.getFirstHeader(h).getValue());
+    return Utils.decimalSecondsToMilliseconds(this.response.getFirstHeader(h).getValue());
   }
 
   public int weaveRecords() throws NumberFormatException {

@@ -77,13 +77,6 @@ extern JS_FRIEND_API(JSObject*)
 js_NewDateObject(JSContext* cx, int year, int mon, int mday,
                  int hour, int min, int sec);
 
-/*
- * Detect whether the internal date value is NaN.  (Because failure is
- * out-of-band for js_DateGet*)
- */
-extern JS_FRIEND_API(JSBool)
-js_DateIsValid(JSContext *cx, JSObject* obj);
-
 extern JS_FRIEND_API(int)
 js_DateGetYear(JSContext *cx, JSObject* obj);
 
@@ -101,9 +94,6 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj);
 
 extern JS_FRIEND_API(int)
 js_DateGetSeconds(JSContext *cx, JSObject* obj);
-
-extern JS_FRIEND_API(jsdouble)
-js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj);
 
 typedef uint32_t JSIntervalTime;
 
