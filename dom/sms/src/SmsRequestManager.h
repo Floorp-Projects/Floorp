@@ -62,6 +62,8 @@ public:
                         nsIScriptContext* aScriptContext,
                         nsIDOMMozSmsRequest** aRequest);
 
+  PRInt32 AddRequest(nsIDOMMozSmsRequest* aRequest);
+
   void NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
   void NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
   void NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);

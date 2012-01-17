@@ -59,11 +59,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(SmsCursor)
 
   SmsCursor(nsIDOMMozSmsFilter* aFilter);
-  SmsCursor(nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsRequest* aRequest);
+  SmsCursor(PRInt32 aListId, nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsRequest* aRequest);
 
   void SetMessage(nsIDOMMozSmsMessage* aMessage);
 
 private:
+  PRInt32                       mListId;
   nsCOMPtr<nsIDOMMozSmsFilter>  mFilter;
   nsCOMPtr<nsIDOMMozSmsRequest> mRequest;
   nsCOMPtr<nsIDOMMozSmsMessage> mMessage;

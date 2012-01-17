@@ -233,6 +233,20 @@ SmsParent::RecvCreateMessageList(const SmsFilterData& aFilter,
   return true;
 }
 
+bool
+SmsParent::RecvGetNextMessageInList(const PRInt32& aListId,
+                                    const PRInt32& aRequestId,
+                                    const PRUint64& aProcessId)
+{
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, true);
+
+  smsDBService->GetNextMessageInList(aListId, aRequestId, aProcessId);
+
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

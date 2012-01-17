@@ -45,7 +45,7 @@
 
 interface nsIDOMMozSmsFilter;
 
-[scriptable, function, uuid(33358749-d1b3-4bd6-835c-ef3869f0e966)]
+[scriptable, function, uuid(a253ec42-142e-490b-a479-1e9c605c0a58)]
 interface nsISmsDatabaseService : nsISupports
 {
   // Takes some information required to save the message and returns its id.
@@ -55,4 +55,5 @@ interface nsISmsDatabaseService : nsISupports
   void deleteMessage(in long messageId, in long requestId, [optional] in unsigned long long processId);
 
   void createMessageList(in nsIDOMMozSmsFilter filter, in boolean reverse, in long requestId, [optional] in unsigned long long processId);
+  void getNextMessageInList(in long listId, in long requestId, in unsigned long long processId);
 };

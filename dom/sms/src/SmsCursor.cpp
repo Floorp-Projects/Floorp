@@ -41,6 +41,9 @@
 #include "nsIDOMSmsFilter.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsRequest.h"
+#include "SmsRequest.h"
+#include "SmsRequestManager.h"
+#include "nsISmsDatabaseService.h"
 
 DOMCI_DATA(MozSmsCursor, mozilla::dom::sms::SmsCursor)
 
@@ -60,12 +63,14 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(SmsCursor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SmsCursor)
 
 SmsCursor::SmsCursor(nsIDOMMozSmsFilter* aFilter)
-  : mFilter(aFilter)
+  : mListId(-1)
+  , mFilter(aFilter)
 {
 }
 
-SmsCursor::SmsCursor(nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsRequest* aRequest)
-  : mFilter(aFilter)
+SmsCursor::SmsCursor(PRInt32 aListId, nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsRequest* aRequest)
+  : mListId(aListId)
+  , mFilter(aFilter)
   , mRequest(aRequest)
 {
 }
@@ -92,9 +97,16 @@ SmsCursor::Continue()
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  // TODO: ask for the next message and reset the request
-  // TODO: add the associated request to the request manager
-  //       and send the id to the backend
+  mMessage = nsnull;
+  static_cast<SmsRequest*>(mRequest.get())->Reset();
+
+  PRInt32 requestId = SmsRequestManager::GetInstance()->AddRequest(mRequest);
+
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, NS_ERROR_FAILURE);
+
+  smsDBService->GetNextMessageInList(mListId, requestId, 0);
 
   return NS_OK;
 }
