@@ -60,11 +60,12 @@ const INVISIBLE_ELEMENTS = {
 
 const STACK_THICKNESS = 15;
 const WIREFRAME_COLOR = [0, 0, 0, 0.25];
-const INTRO_TRANSITION_DURATION = 80;
-const OUTRO_TRANSITION_DURATION = 50;
+const INTRO_TRANSITION_DURATION = 50;
+const OUTRO_TRANSITION_DURATION = 40;
 const INITIAL_Z_TRANSLATION = 400;
 
 const MOUSE_CLICK_THRESHOLD = 10;
+const MOUSE_INTRO_DELAY = 10;
 const ARCBALL_SENSITIVITY = 0.5;
 const ARCBALL_ROTATION_STEP = 0.15;
 const ARCBALL_TRANSLATION_STEP = 35;
@@ -296,7 +297,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
 
     // call the attached ondraw event handler if specified (by the controller)
     if ("function" === typeof this.ondraw) {
-      this.ondraw();
+      this.ondraw(this.frames);
     }
 
     if (!TiltVisualizer.Prefs.introTransition && !this.isExecutingDestruction) {
@@ -1019,9 +1020,13 @@ TiltVisualizer.Controller.prototype = {
 
   /**
    * Function called each frame, updating the visualization camera transforms.
+   *
+   * @param {Number} aFrames
+   *                 the current animation frame count
    */
-  update: function TVC_update()
+  update: function TVC_update(aFrames)
   {
+    this.frames = aFrames;
     this.coordinates = this.arcball.update();
 
     this.presenter.setRotation(this.coordinates.rotation);
@@ -1036,6 +1041,10 @@ TiltVisualizer.Controller.prototype = {
     e.target.focus();
     e.preventDefault();
     e.stopPropagation();
+
+    if (this.frames < MOUSE_INTRO_DELAY) {
+      return;
+    }
 
     // calculate x and y coordinates using using the client and target offset
     let button = e.which;
@@ -1052,6 +1061,10 @@ TiltVisualizer.Controller.prototype = {
   {
     e.preventDefault();
     e.stopPropagation();
+
+    if (this.frames < MOUSE_INTRO_DELAY) {
+      return;
+    }
 
     // calculate x and y coordinates using using the client and target offset
     let button = e.which;
@@ -1076,6 +1089,10 @@ TiltVisualizer.Controller.prototype = {
   {
     e.preventDefault();
     e.stopPropagation();
+
+    if (this.frames < MOUSE_INTRO_DELAY) {
+      return;
+    }
 
     // calculate x and y coordinates using using the client and target offset
     let moveX = e.clientX - e.target.offsetLeft;
