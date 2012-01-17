@@ -2128,7 +2128,7 @@ TypeCompartment::growPendingArray(JSContext *cx)
         return false;
     }
 
-    memcpy(newArray, pendingArray, pendingCount * sizeof(PendingWork));
+    PodCopy(newArray, pendingArray, pendingCount);
     cx->free_(pendingArray);
 
     pendingArray = newArray;
