@@ -523,9 +523,7 @@
 ; svg
 @BINPATH@/res/svg.css
 @BINPATH@/components/dom_svg.xpt
-#ifdef MOZ_SMIL
 @BINPATH@/components/dom_smil.xpt
-#endif
 
 ; [Personal Security Manager]
 ;
