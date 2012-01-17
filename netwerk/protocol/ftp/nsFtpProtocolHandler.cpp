@@ -66,7 +66,7 @@ using namespace mozilla::net;
 #include "prlog.h"
 #include "nsNetUtil.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch2.h"
+#include "nsIPrefBranch.h"
 #include "nsIObserverService.h"
 #include "nsEscape.h"
 #include "nsAlgorithm.h"
@@ -140,7 +140,7 @@ nsFtpProtocolHandler::Init()
 
     if (mIdleTimeout == -1) {
         nsresult rv;
-        nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &mIdleTimeout);

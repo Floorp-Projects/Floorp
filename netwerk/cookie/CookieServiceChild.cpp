@@ -40,7 +40,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch2.h"
+#include "nsIPrefBranch.h"
 
 namespace mozilla {
 namespace net {
@@ -86,7 +86,7 @@ CookieServiceChild::CookieServiceChild()
   gNeckoChild->SendPCookieServiceConstructor(this);
 
   // Init our prefs and observer.
-  nsCOMPtr<nsIPrefBranch2> prefBranch =
+  nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_WARN_IF_FALSE(prefBranch, "no prefservice");
   if (prefBranch) {
