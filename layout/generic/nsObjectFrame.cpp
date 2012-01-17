@@ -111,7 +111,6 @@
 #include "nsIObserverService.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/Preferences.h"
-#include "sampler.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -699,7 +698,6 @@ nsObjectFrame::InstantiatePlugin(nsPluginHost* aPluginHost,
                                  const char* aMimeType,
                                  nsIURI* aURI)
 {
-  SAMPLE_LABEL("nsObjectFrame", "InstantiatePlugin");
   NS_ASSERTION(mPreventInstantiation,
                "Instantiation should be prevented here!");
 
@@ -2152,7 +2150,6 @@ nsObjectFrame::PrepareInstanceOwner()
 nsresult
 nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener)
 {
-  SAMPLE_LABEL("plugin", "nsObjectFrame::Instantiate");
   if (mPreventInstantiation) {
     return NS_OK;
   }
@@ -2203,7 +2200,6 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
 nsresult
 nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 {
-  SAMPLE_LABEL("plugin", "nsObjectFrame::Instantiate");
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsObjectFrame::Instantiate(%s) called on frame %p\n", aMimeType,
           this));
@@ -2352,7 +2348,6 @@ DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, bool aDelayedStop)
 static void
 DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, bool aDelayedStop)
 {
-  SAMPLE_LABEL("plugin", "DoStopPlugin");
   nsRefPtr<nsNPAPIPluginInstance> inst;
   aInstanceOwner->GetInstance(getter_AddRefs(inst));
   if (inst) {
@@ -2395,7 +2390,6 @@ nsStopPluginRunnable::Notify(nsITimer *aTimer)
 NS_IMETHODIMP
 nsStopPluginRunnable::Run()
 {
-  SAMPLE_LABEL("plugin", "nsStopPluginRunnable::Run");
   // InitWithCallback calls Release before AddRef so we need to hold a
   // strong ref on 'this' since we fall through to this scope if it fails.
   nsCOMPtr<nsITimerCallback> kungFuDeathGrip = this;

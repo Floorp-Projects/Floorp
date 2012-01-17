@@ -69,7 +69,6 @@
 #include "mozilla/Telemetry.h"
 #include "nsDOMError.h"
 #include "nsAlgorithm.h"
-#include "sampler.h"
 
 using namespace mozilla;
 
@@ -4214,7 +4213,6 @@ nsHttpChannel::ContinueOnStartRequest3(nsresult result)
 NS_IMETHODIMP
 nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
-    SAMPLE_LABEL("network", "nsHttpChannel::OnStopRequest");
     LOG(("nsHttpChannel::OnStopRequest [this=%p request=%p status=%x]\n",
         this, request, status));
 
@@ -4390,7 +4388,6 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                nsIInputStream *input,
                                PRUint32 offset, PRUint32 count)
 {
-    SAMPLE_LABEL("network", "nsHttpChannel::OnDataAvailable");
     LOG(("nsHttpChannel::OnDataAvailable [this=%p request=%p offset=%u count=%u]\n",
         this, request, offset, count));
 

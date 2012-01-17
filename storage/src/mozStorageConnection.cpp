@@ -71,7 +71,6 @@
 #include "SQLCollations.h"
 #include "FileSystemModule.h"
 #include "mozStorageHelper.h"
-#include "sampler.h"
 
 #include "prlog.h"
 #include "prprf.h"
@@ -609,7 +608,6 @@ Connection::initialize(nsIFile *aDatabaseFile,
                        const char* aVFSName)
 {
   NS_ASSERTION (!mDBConn, "Initialize called on already opened database!");
-  SAMPLE_LABEL("storage", "Connection::initialize");
 
   int srv;
   nsresult rv;
@@ -1030,7 +1028,6 @@ NS_IMETHODIMP
 Connection::Clone(bool aReadOnly,
                   mozIStorageConnection **_connection)
 {
-  SAMPLE_LABEL("storage", "Connection::Clone");
   if (!mDBConn)
     return NS_ERROR_NOT_INITIALIZED;
   if (!mDatabaseFile)

@@ -47,7 +47,6 @@
 #include "gfxFailure.h"
 #include "prenv.h"
 #include "mozilla/Preferences.h"
-#include "sampler.h"
 
 namespace mozilla {
 namespace gl {
@@ -196,7 +195,6 @@ public:
 
     bool SwapBuffers()
     {
-      SAMPLE_LABEL("GLContext", "SwapBuffers");
       [mContext flushBuffer];
       return true;
     }

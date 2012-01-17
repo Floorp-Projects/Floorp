@@ -54,8 +54,6 @@
 #include "nsVariant.h"
 #include "mozilla/storage.h"
 
-#include "sampler.h"
-
 using namespace mozilla;
 
 #define ENSURE_ANNO_TYPE(_type, _statement)                                    \
@@ -238,7 +236,6 @@ nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
                                        PRInt32 aFlags,
                                        PRUint16 aExpiration)
 {
-  SAMPLE_LABEL("AnnotationService", "SetItemAnnotation");
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG(aValue);
 
