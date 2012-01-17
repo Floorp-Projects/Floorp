@@ -1165,10 +1165,8 @@ nsCanvasRenderingContext2DAzure::Redraw()
     return NS_OK;
   }
 
-  if (!mThebesSurface)
-    mThebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
-  mThebesSurface->MarkDirty();
+  if (mThebesSurface)
+      mThebesSurface->MarkDirty();
 
   nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 
@@ -1197,10 +1195,8 @@ nsCanvasRenderingContext2DAzure::Redraw(const mgfx::Rect &r)
     return;
   }
 
-  if (!mThebesSurface)
-    mThebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
-  mThebesSurface->MarkDirty();
+  if (mThebesSurface)
+      mThebesSurface->MarkDirty();
 
   nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 

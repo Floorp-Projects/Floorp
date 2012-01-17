@@ -230,10 +230,6 @@ pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 
 #ifdef XP_WIN
 pref("gfx.canvas.azure.enabled", true);
-#else
-#ifdef XP_MACOSX
-pref("gfx.canvas.azure.enabled", true);
-#endif
 #endif
 
 pref("accessibility.browsewithcaret", false);
