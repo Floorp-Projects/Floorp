@@ -33,6 +33,11 @@ class Sampler::PlatformData : public Malloced {
   HANDLE profiled_thread_;
 };
 
+uintptr_t
+Sampler::GetThreadHandle(Sampler::PlatformData* aData)
+{
+  return (uintptr_t) aData->profiled_thread();
+}
 
 class SamplerThread : public Thread {
  public:
