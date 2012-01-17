@@ -717,8 +717,6 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     nsComponentManagerImpl::gComponentManager = nsnull;
     nsCategoryManager::Destroy();
 
-    ShutdownSpecialSystemDirectory();
-
     NS_PurgeAtomTable();
 
     NS_IF_RELEASE(gDebug);

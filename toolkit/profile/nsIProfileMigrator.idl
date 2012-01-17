@@ -73,7 +73,8 @@ interface nsIProfileStartup : nsISupports
 interface nsIProfileMigrator : nsISupports 
 {
   /**
-   * Do profile migration.
+   * Migrate data from an outside source, if possible.  Does nothing
+   * otherwise.
    *
    * When this method is called, a default profile has been created;
    * XPCOM has been initialized such that compreg.dat is in the
@@ -85,7 +86,7 @@ interface nsIProfileMigrator : nsISupports
    * If your migrator needs to access services that use the profile (to
    * set profile prefs or bookmarks, for example), use aStartup.doStartup.
    *
-   * The startup code ignores COM exceptions thrown from this method.
+   * @note The startup code ignores COM exceptions thrown from this method.
    */
   void migrate(in nsIProfileStartup aStartup);
 };  

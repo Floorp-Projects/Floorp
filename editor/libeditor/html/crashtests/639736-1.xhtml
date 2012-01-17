@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+  try { document.execCommand("removeformat", false, null); } catch(e) { }
+  document.adoptNode(document.documentElement);
+}
+
+</script>
+</head>
+<body onload="boom();"><td contenteditable="true" /></body>
+</html>
