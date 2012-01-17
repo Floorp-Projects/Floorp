@@ -689,11 +689,6 @@ public:
     return (mFlags & nsIPlaintextEditor::eEditorMailMask) != 0;
   }
 
-  bool UseAsyncUpdate() const
-  {
-    return (mFlags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) != 0;
-  }
-
   bool IsWrapHackEnabled() const
   {
     return (mFlags & nsIPlaintextEditor::eEditorEnableWrapHackMask) != 0;
@@ -768,7 +763,6 @@ protected:
 
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   PRInt32         mUpdateCount;
-  nsIViewManager::UpdateViewBatch mBatch;
 
   // Spellchecking
   enum Tristate {

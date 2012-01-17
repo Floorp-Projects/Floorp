@@ -31,11 +31,6 @@ function test() {
 
         is(Tilt.visualizers[id], null,
           "A instance of the visualizer shouldn't be initialized yet.");
-
-        is(typeof TiltVisualizer.Prefs.enabled, "boolean",
-          "The 'enabled' pref should have been loaded by now.");
-        is(typeof TiltVisualizer.Prefs.forceEnabled, "boolean",
-          "The 'force-enabled' pref should have been loaded by now.");
       },
       onTiltOpen: function(instance)
       {

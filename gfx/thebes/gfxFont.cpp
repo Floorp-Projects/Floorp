@@ -69,6 +69,7 @@
 #include "nsCompressedCharMap.h"
 #include "nsStyleConsts.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -81,6 +82,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using mozilla::services::GetObserverService;
 
 gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 
@@ -954,6 +956,39 @@ gfxFontFamily::FindFont(const nsAString& aPostscriptName)
     return nsnull;
 }
 
+/*
+ * gfxFontCache - global cache of gfxFont instances.
+ * Expires unused fonts after a short interval;
+ * notifies fonts to age their cached shaped-word records;
+ * observes memory-pressure notification and tells fonts to clear their
+ * shaped-word caches to free up memory.
+ */
+
+// Observer for the memory-pressure notification, to trigger
+// flushing of the shaped-word caches
+class MemoryPressureObserver : public nsIObserver,
+                               public nsSupportsWeakReference
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS2(MemoryPressureObserver, nsIObserver, nsISupportsWeakReference)
+
+NS_IMETHODIMP
+MemoryPressureObserver::Observe(nsISupports *aSubject,
+                                const char *aTopic,
+                                const PRUnichar *someData)
+{
+    if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
+        gfxFontCache *fontCache = gfxFontCache::GetCache();
+        if (fontCache) {
+            fontCache->FlushShapedWordCaches();
+        }
+    }
+    return NS_OK;
+}
 
 nsresult
 gfxFontCache::Init()
@@ -986,6 +1021,12 @@ gfxFontCache::gfxFontCache()
     : nsExpirationTracker<gfxFont,3>(FONT_TIMEOUT_SECONDS * 1000)
 {
     mFonts.Init();
+
+    nsCOMPtr<nsIObserverService> obs = GetObserverService();
+    if (obs) {
+        obs->AddObserver(new MemoryPressureObserver, "memory-pressure", false);
+    }
+
     mWordCacheExpirationTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mWordCacheExpirationTimer) {
         mWordCacheExpirationTimer->
@@ -1100,6 +1141,14 @@ gfxFontCache::WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache)
 {
     gfxFontCache* cache = static_cast<gfxFontCache*>(aCache);
     cache->mFonts.EnumerateEntries(AgeCachedWordsForFont, nsnull);
+}
+
+/*static*/
+PLDHashOperator
+gfxFontCache::ClearCachedWordsForFont(HashEntry* aHashEntry, void* aUserData)
+{
+    aHashEntry->mFont->ClearCachedWords();
+    return PL_DHASH_NEXT;
 }
 
 void
@@ -3328,8 +3377,12 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
     }
 
     PRUint32 prevCh = 0;
-    gfxFont *prevFont = nsnull;
     PRUint8 matchType = 0;
+
+    // initialize prevFont to the group's primary font, so that this will be
+    // used for string-initial control chars, etc rather than risk hitting font
+    // fallback for these (bug 716229)
+    gfxFont *prevFont = GetFontAt(0);
 
     for (PRUint32 i = 0; i < aLength; i++) {
 

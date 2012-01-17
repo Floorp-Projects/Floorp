@@ -42,6 +42,9 @@
 
 #include "nsICharsetConverterManager.h"
 #include "nsIServiceManager.h"
+
+#include "mozilla/Assertions.h"
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 #ifdef XP_OS2
@@ -105,70 +108,33 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const unsigned char* src =(unsigned char*) aSrc;
    PRUnichar* destEnd = aDest + *aDestLen;
    PRUnichar* dest = aDest;
-   while((src < srcEnd))
-   {
-       switch(mState)
-       {
-
+   while (src < srcEnd) {
+       switch (mState) {
           case 0:
-          if(*src & 0x80)
-          {
-            mData = SJIS_INDEX[*src & 0x7F];
-            if(mData < 0xE000 )
-            {
-               mState = 1; // two bytes 
-            } else {
-               if( mData > 0xFF00)
-               {
-                 if(0xFFFD == mData) {
-                   // IE-compatible handling of undefined codepoints:
-                   // 0x80 --> U+0080
-                   // 0xa0 --> U+F8F0
-                   // 0xfd --> U+F8F1
-                   // 0xfe --> U+F8F2
-                   // 0xff --> U+F8F3
-                   switch (*src) {
-                     case 0x80:
-                       *dest++ = (PRUnichar) *src;
-                       break;
-
-                     case 0xa0:
-                       *dest++ = (PRUnichar) 0xf8f0;
-                       break;
-
-                     case 0xfd:
-                     case 0xfe:
-                     case 0xff:
-                       *dest++ = (PRUnichar) 0xf8f1 + 
-                                   (*src - (unsigned char)(0xfd));
-                       break;
-
-                     default:
-                       if (mErrBehavior == kOnError_Signal)
-                         goto error_invalidchar;
-                       *dest++ = SJIS_UNMAPPED;
-                   }
-                   if(dest >= destEnd)
-                     goto error1;
-                 } else {
-                   *dest++ = mData; // JIS 0201
-                   if(dest >= destEnd)
-                     goto error1;
-                 }
-               } else {
-                 mState = 2; // EUDC
-               }
-            }
-          } else {
+          if (*src <= 0x80) {
             // ASCII
             *dest++ = (PRUnichar) *src;
-            if(dest >= destEnd)
+            if (dest >= destEnd) {
               goto error1;
+            }
+          } else {
+            mData = SJIS_INDEX[*src & 0x7F];
+            if (mData < 0xE000) {
+              mState = 1; // two bytes
+            } else if (mData < 0xF000) {
+              mState = 2; // EUDC
+            } else {
+              *dest++ = mData; // JIS 0201
+              if (dest >= destEnd) {
+                goto error1;
+              }
+            }
           }
           break;
 
           case 1: // Index to table
           {
+            MOZ_ASSERT(mData < 0xE000);
             PRUint8 off = sbIdx[*src];
 
             // Error handling: in the case where the second octet is not in the
@@ -198,6 +164,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
 
           case 2: // EUDC
           {
+            MOZ_ASSERT(0xE000 <= mData && mData < 0xF000);
             PRUint8 off = sbIdx[*src];
 
             // Error handling as in case 1

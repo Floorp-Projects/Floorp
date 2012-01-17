@@ -50,11 +50,14 @@
 #include <stdio.h>
 #include "js-config.h"
 #include "jspubtd.h"
+#include "jsutil.h"
 #include "jsval.h"
 
 #include "js/Utility.h"
 
 #ifdef __cplusplus
+#include "jsalloc.h"
+#include "js/Vector.h"
 #include "mozilla/Attributes.h"
 #endif
 
@@ -650,7 +653,7 @@ class Value
 
     friend jsval_layout (::JSVAL_TO_IMPL)(Value);
     friend Value (::IMPL_TO_JSVAL)(jsval_layout l);
-} JSVAL_ALIGNMENT;
+};
 
 inline bool
 IsPoisonedValue(const Value &v)
@@ -1032,6 +1035,104 @@ class AutoEnumStateRooter : private AutoGCRooter
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+template<class T>
+class AutoVectorRooter : protected AutoGCRooter
+{
+  public:
+    explicit AutoVectorRooter(JSContext *cx, ptrdiff_t tag
+                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoGCRooter(cx, tag), vector(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    size_t length() const { return vector.length(); }
+
+    bool append(const T &v) { return vector.append(v); }
+
+    /* For use when space has already been reserved. */
+    void infallibleAppend(const T &v) { vector.infallibleAppend(v); }
+
+    void popBack() { vector.popBack(); }
+    T popCopy() { return vector.popCopy(); }
+
+    bool growBy(size_t inc) {
+        size_t oldLength = vector.length();
+        if (!vector.growByUninitialized(inc))
+            return false;
+        makeRangeGCSafe(oldLength);
+        return true;
+    }
+
+    bool resize(size_t newLength) {
+        size_t oldLength = vector.length();
+        if (newLength <= oldLength) {
+            vector.shrinkBy(oldLength - newLength);
+            return true;
+        }
+        if (!vector.growByUninitialized(newLength - oldLength))
+            return false;
+        makeRangeGCSafe(oldLength);
+        return true;
+    }
+
+    void clear() { vector.clear(); }
+
+    bool reserve(size_t newLength) {
+        return vector.reserve(newLength);
+    }
+
+    T &operator[](size_t i) { return vector[i]; }
+    const T &operator[](size_t i) const { return vector[i]; }
+
+    const T *begin() const { return vector.begin(); }
+    T *begin() { return vector.begin(); }
+
+    const T *end() const { return vector.end(); }
+    T *end() { return vector.end(); }
+
+    const T &back() const { return vector.back(); }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    void makeRangeGCSafe(size_t oldLength) {
+        T *t = vector.begin() + oldLength;
+        for (size_t i = oldLength; i < vector.length(); ++i, ++t)
+            memset(t, 0, sizeof(T));
+    }
+
+    typedef js::Vector<T, 8> VectorImpl;
+    VectorImpl vector;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoValueVector : public AutoVectorRooter<Value>
+{
+  public:
+    explicit AutoValueVector(JSContext *cx
+                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<Value>(cx, VALVECTOR)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoIdVector : public AutoVectorRooter<jsid>
+{
+  public:
+    explicit AutoIdVector(JSContext *cx
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<jsid>(cx, IDVECTOR)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 }  /* namespace JS */
 
 /************************************************************************/
@@ -1057,6 +1158,11 @@ IMPL_TO_JSVAL(jsval_layout l)
     return v;
 }
 
+#ifdef DEBUG
+struct JSValueAlignmentTester { char c; JS::Value v; };
+JS_STATIC_ASSERT(sizeof(JSValueAlignmentTester) == 16);
+#endif /* DEBUG */
+
 #else  /* defined(__cplusplus) */
 
 /*
@@ -1080,6 +1186,11 @@ IMPL_TO_JSVAL(jsval_layout l)
 }
 
 #endif  /* defined(__cplusplus) */
+
+#ifdef DEBUG
+typedef struct { char c; jsval_layout l; } JSLayoutAlignmentTester;
+JS_STATIC_ASSERT(sizeof(JSLayoutAlignmentTester) == 16);
+#endif /* DEBUG */
 
 JS_STATIC_ASSERT(sizeof(jsval_layout) == sizeof(jsval));
 
@@ -3078,16 +3189,8 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
 /*
  * API for JSTraceCallback implementations.
  */
-# define JS_TRACER_INIT(trc, cx_, callback_)                                  \
-    JS_BEGIN_MACRO                                                            \
-        (trc)->runtime = (cx_)->runtime;                                      \
-        (trc)->context = (cx_);                                               \
-        (trc)->callback = (callback_);                                        \
-        (trc)->debugPrinter = NULL;                                           \
-        (trc)->debugPrintArg = NULL;                                          \
-        (trc)->debugPrintIndex = (size_t)-1;                                  \
-        (trc)->eagerlyTraceWeakMaps = JS_TRUE;                                \
-    JS_END_MACRO
+extern JS_PUBLIC_API(void)
+JS_TracerInit(JSTracer *trc, JSContext *cx, JSTraceCallback callback);
 
 extern JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);
@@ -5130,6 +5233,8 @@ struct JSErrorReport {
 #define JSREPORT_IS_STRICT(flags)       (((flags) & JSREPORT_STRICT) != 0)
 #define JSREPORT_IS_STRICT_MODE_ERROR(flags) (((flags) &                      \
                                               JSREPORT_STRICT_MODE_ERROR) != 0)
+extern JS_PUBLIC_API(JSErrorReporter)
+JS_GetErrorReporter(JSContext *cx);
 
 extern JS_PUBLIC_API(JSErrorReporter)
 JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);

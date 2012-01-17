@@ -138,6 +138,10 @@ private:
 
   // used while visiting headers, to send them to child: else null
   RequestHeaderTuples *mHeadersToSyncToChild;
+
+  bool mSentRedirect1Begin : 1;
+  bool mSentRedirect1BeginFailed : 1;
+  bool mReceivedRedirect2Verify : 1;
 };
 
 } // namespace net

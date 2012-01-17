@@ -1495,7 +1495,7 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 
-    JS_TRACER_INIT(&countTracer.base, cx, CountHeapNotify);
+    JS_TracerInit(&countTracer.base, cx, CountHeapNotify);
     if (!JS_DHashTableInit(&countTracer.visited, JS_DHashGetStubOps(),
                            NULL, sizeof(JSDHashEntryStub),
                            JS_DHASH_DEFAULT_CAPACITY(100))) {

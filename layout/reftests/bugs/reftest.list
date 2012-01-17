@@ -1196,7 +1196,7 @@ fails-if(cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
 == 456484-1.html 456484-1-ref.html
 == 457398-1.html 457398-1-ref.html
 == 457398-2.html 457398-2-ref.html
-== 458296-1a.html 458296-1-ref.html
+== 458296-1a.html 458296-1a-ref.html
 == 458296-1b.html 458296-1-ref.html
 == 458296-1c.html 458296-1-ref.html
 == 458296-1d.html 458296-1-ref.html
@@ -1567,7 +1567,7 @@ fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\
 == 582037-1b.html 582037-1-ref.html
 == 582037-2a.html 582037-2-ref.html
 == 582037-2b.html 582037-2-ref.html
-asserts(0-1) == 582146-1.html about:blank
+asserts(0-11) == 582146-1.html about:blank
 == 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html
@@ -1666,6 +1666,7 @@ fails-if(layersGPUAccelerated&&cocoaWidget) == 654950-1.html 654950-1-ref.html #
 == 664127-1.xul 664127-1-ref.xul
 == 660682-1.html 660682-1-ref.html
 == 665597-1.html 665597-1-ref.html
+== 665597-2.html 665597-2-ref.html
 != 669015-1.xul 669015-1-notref.xul
 == 668319-1.xul about:blank
 == 670442-1.html 670442-1-ref.html

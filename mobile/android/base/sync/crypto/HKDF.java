@@ -45,6 +45,8 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.mozilla.gecko.sync.Utils;
+
 
 /*
  * A standards-compliant implementation of RFC 5869
