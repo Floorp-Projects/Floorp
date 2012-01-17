@@ -138,10 +138,10 @@ SmsMessage::GetDelivery(nsAString& aDelivery)
 {
   switch (mData.delivery()) {
     case eDeliveryState_Received:
-      aDelivery.AssignLiteral("received");
+      aDelivery = DELIVERY_RECEIVED;
       break;
     case eDeliveryState_Sent:
-      aDelivery.AssignLiteral("sent");
+      aDelivery = DELIVERY_SENT;
       break;
     case eDeliveryState_Unknown:
     default:
