@@ -213,14 +213,17 @@ public class BrowserToolbar extends LinearLayout {
             mTabsCount.setOutAnimation(mSlideUpOut);
         }
 
-        if (count > 1)
-            mTabs.setImageLevel(count);
-        else
-            mTabs.setImageLevel(0);
-
-        mTabsCount.setVisibility(View.VISIBLE);
+        // Always update the count text even if we're not showing it,
+        // since it can appear in a future animation (e.g. 1 -> 2)
         mTabsCount.setText(String.valueOf(count));
         mCount = count;
+
+        if (count > 1) {
+            // Show tab count if it is greater than 1
+            mTabsCount.setVisibility(View.VISIBLE);
+            // Set image to more tabs dropdown "v"
+            mTabs.setImageLevel(count);
+        }
 
         mHandler.postDelayed(new Runnable() {
             public void run() {
@@ -230,13 +233,15 @@ public class BrowserToolbar extends LinearLayout {
 
         mHandler.postDelayed(new Runnable() {
             public void run() {
+                // This will only happen when we are animating from 2 -> 1.
+                // We're doing this here (as opposed to above) because we want
+                // the count to disappear _after_ the animation.
                 if (Tabs.getInstance().getCount() == 1) {
+                    // Set image to new tab button "+"
                     mTabs.setImageLevel(1);
                     mTabsCount.setVisibility(View.GONE);
-                    ((TextView) mTabsCount.getCurrentView()).setTextColor(mCounterColor);
-                } else {
-                    ((TextView) mTabsCount.getCurrentView()).setTextColor(mCounterColor);
                 }
+                ((TextView) mTabsCount.getCurrentView()).setTextColor(mCounterColor);
             }
         }, 2 * mDuration);
     }
