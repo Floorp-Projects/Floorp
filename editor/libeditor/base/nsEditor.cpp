@@ -3605,32 +3605,37 @@ IsElementVisible(dom::Element* aElement)
 
   nsIContent *cur = aElement;
   for (; ;) {
+    // Walk up the tree looking for the nearest ancestor with a frame.
+    // The state of the child right below it will determine whether
+    // we might possibly have a frame or not.
+    bool haveLazyBitOnChild = cur->HasFlag(NODE_NEEDS_FRAME);
     cur = cur->GetFlattenedTreeParent();
     if (!cur) {
-      // None of our ancestors have lazy bits set, so we shouldn't have a frame
-      return false;
+      if (!haveLazyBitOnChild) {
+        // None of our ancestors have lazy bits set, so we shouldn't
+        // have a frame
+        return false;
+      }
+
+      // The root has a lazy frame construction bit.  We need to check
+      // our style.
+      break;
     }
 
     if (cur->GetPrimaryFrame()) {
-      // None of our ancestors up to the nearest ancestor with a frame have
-      // lazy bits; that means we won't get a frame
-      return false;
-    }
-
-    if (cur->HasFlag(NODE_NEEDS_FRAME)) {
-      // Double-check that the parent doesn't have a leaf frame
-      nsIContent *parent = cur->GetFlattenedTreeParent();
-      if (parent) {
-        NS_ASSERTION(parent->GetPrimaryFrame(),
-                     "Why does our parent not have a frame?");
-        if (parent->GetPrimaryFrame()->IsLeaf()) {
-          // No frame for us
-          return false;
-        }
+      if (!haveLazyBitOnChild) {
+        // Our ancestor directly under |cur| doesn't have lazy bits;
+        // that means we won't get a frame
+        return false;
       }
 
-      // |cur| will get a frame sometime.  What does that mean for us?
-      // |We have to figure that out!
+      if (cur->GetPrimaryFrame()->IsLeaf()) {
+        // Nothing under here will ever get frames
+        return false;
+      }
+
+      // Otherwise, we might end up with a frame when that lazy bit is
+      // processed.  Figure out our actual style.
       break;
     }
   }
