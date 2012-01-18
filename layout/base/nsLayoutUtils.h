@@ -538,6 +538,13 @@ public:
                                              const nsRect& aRect,
                                              nsIFrame* aAncestor);
 
+
+  /**
+   * Gets the transform for aFrame relative to aAncestor. Pass null for aAncestor
+   * to go up to the root frame.
+   */
+  static gfx3DMatrix GetTransformToAncestor(nsIFrame *aFrame, nsIFrame *aAncestor);
+
   /**
    * Given a point in the global coordinate space, returns that point expressed
    * in the coordinate system of aFrame.  This effectively inverts all transforms

@@ -1340,11 +1340,12 @@ public class GeckoAppShell
     }
 
     public static void addPluginView(View view,
-                                     double x, double y,
-                                     double w, double h)
+                                     int x, int y,
+                                     int w, int h,
+                                     String metadata)
     {
-        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h ) ;
-        GeckoApp.mAppContext.addPluginView(view, x, y, w, h);
+        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + " metadata: " + metadata);
+        GeckoApp.mAppContext.addPluginView(view, x, y, w, h, metadata);
     }
 
     public static void removePluginView(View view) {
