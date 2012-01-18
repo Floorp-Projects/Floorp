@@ -89,6 +89,7 @@ CPP_UNIT_TESTS = \
                  TestCOMArray.cpp \
                  TestCOMPtr.cpp \
                  TestCOMPtrEq.cpp \
+                 TestDeque.cpp \
                  TestFile.cpp \
                  TestHashtables.cpp \
                  TestID.cpp \
@@ -109,7 +110,6 @@ endif
 #CPP_UNIT_TESTS += \
 #                  TestArray.cpp \
 #                  TestCRT.cpp \
-#                  TestDeque.cpp \
 #                  TestEncoding.cpp \
 #                  TestExpirationTracker.cpp \
 #                  TestPipes.cpp \
