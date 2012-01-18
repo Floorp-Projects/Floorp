@@ -1551,9 +1551,8 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
 
   nsresult result = NS_OK;
 
-  nsCOMPtr<nsILayoutHistoryState> history;
   nsCAutoString key;
-  GetLayoutHistoryAndKey(aContent, false, getter_AddRefs(history), key);
+  nsCOMPtr<nsILayoutHistoryState> history = GetLayoutHistoryAndKey(aContent, false, key);
 
   if (history) {
     // Get the pres state for this key, if it doesn't exist, create one
@@ -1568,10 +1567,9 @@ nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
 }
 
 
-nsresult
+already_AddRefed<nsILayoutHistoryState>
 nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
                                              bool aRead,
-                                             nsILayoutHistoryState** aHistory,
                                              nsACString& aKey)
 {
   //
@@ -1579,20 +1577,19 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
   //
   nsCOMPtr<nsIDocument> doc = aContent->GetDocument();
   if (!doc) {
-    return NS_OK;
+    return nsnull;
   }
 
   //
   // Get the history (don't bother with the key if the history is not there)
   //
-  *aHistory = doc->GetLayoutHistoryState().get();
-  if (!*aHistory) {
-    return NS_OK;
+  nsCOMPtr<nsILayoutHistoryState> history = doc->GetLayoutHistoryState();
+  if (!history) {
+    return nsnull;
   }
 
-  if (aRead && !(*aHistory)->HasStates()) {
-    NS_RELEASE(*aHistory);
-    return NS_OK;
+  if (aRead && !history->HasStates()) {
+    return nsnull;
   }
 
   //
@@ -1602,31 +1599,27 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
                                                  nsIStatefulFrame::eNoID,
                                                  aKey);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(*aHistory);
-    return rv;
+    return nsnull;
   }
 
   // If the state key is blank, this is anonymous content or for
   // whatever reason we are not supposed to save/restore state.
   if (aKey.IsEmpty()) {
-    NS_RELEASE(*aHistory);
-    return NS_OK;
+    return nsnull;
   }
 
   // Add something unique to content so layout doesn't muck us up
   aKey += "-C";
 
-  return rv;
+  return history.forget();
 }
 
 bool
 nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
                                               nsIFormControl* aControl)
 {
-  nsCOMPtr<nsILayoutHistoryState> history;
   nsCAutoString key;
-  GetLayoutHistoryAndKey(aContent, true,
-                         getter_AddRefs(history), key);
+  nsCOMPtr<nsILayoutHistoryState> history = GetLayoutHistoryAndKey(aContent, true, key);
   if (!history) {
     return false;
   }

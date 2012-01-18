@@ -556,7 +556,8 @@ var BrowserApp = {
     let ms = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
     let mimeInfo = ms.getFromTypeAndExtension("application/pdf", "pdf");
 
-    let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
+    let webBrowserPrint = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                                .getInterface(Ci.nsIWebBrowserPrint);
 
     let cancelable = {
       cancel: function (aReason) {
