@@ -210,7 +210,7 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
             *vp = Int32Value(lval.toString()->length());
             return true;
         }
-        if (lval.isMagic(JS_LAZY_ARGUMENTS)) {
+        if (lval.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
             *vp = Int32Value(cx->fp()->numActualArgs());
             return true;
         }
@@ -778,14 +778,8 @@ GetElementOperation(JSContext *cx, JSOp op, const Value &lref, const Value &rref
         }
     }
 
-    if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
-        if (rref.isInt32() && size_t(rref.toInt32()) < cx->regs().fp()->numActualArgs()) {
-            *res = cx->regs().fp()->canonicalActualArg(rref.toInt32());
-            return true;
-        }
-        types::MarkArgumentsCreated(cx, cx->fp()->script());
-        JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
-    }
+    if (lref.isMagic(JS_OPTIMIZED_ARGUMENTS))
+        return NormalArgumentsObject::optimizedGetElem(cx, cx->fp(), rref, res);
 
     bool isObject = lref.isObject();
     JSObject *obj = ValueToObject(cx, lref);

@@ -1264,10 +1264,8 @@ stubs::Throw(VMFrame &f)
 void JS_FASTCALL
 stubs::Arguments(VMFrame &f)
 {
-    ArgumentsObject *arguments = js_GetArgsObject(f.cx, f.fp());
-    if (!arguments)
-        THROW();
-    f.regs.sp[0] = ObjectValue(*arguments);
+    JS_ASSERT(f.fp()->script()->needsArgsObj());
+    f.regs.sp[0] = ObjectValue(f.fp()->argsObj());
 }
 
 JSBool JS_FASTCALL
