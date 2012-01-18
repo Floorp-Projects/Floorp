@@ -121,9 +121,8 @@ ShowUnInstDetails nevershow
 !define MUI_ABORTWARNING
 
 ; Uninstaller Pages
-!insertmacro MUI_UNPAGE_WELCOME
+!insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
-!insertmacro MUI_UNPAGE_FINISH
 
 ################################################################################
 # Language
@@ -256,6 +255,8 @@ Section "Uninstall"
   Push "$INSTDIR\maintenanceservice.exe"
   Call un.RenameDelete
   Push "$INSTDIR\maintenanceservice_tmp.exe"
+  Call un.RenameDelete
+  Push "$INSTDIR\maintenanceservice.old"
   Call un.RenameDelete
   Push "$INSTDIR\Uninstall.exe"
   Call un.RenameDelete

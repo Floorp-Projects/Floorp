@@ -16,4 +16,4 @@ function foo(x, j, n) {
 }
 
 var a = foo([1,2,3,4], 3, 100);
-assertEq(a, 49);
+assertEq(a, 0);

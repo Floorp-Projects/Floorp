@@ -66,9 +66,9 @@ public:
   AndroidGraphicBuffer(PRUint32 width, PRUint32 height, PRUint32 usage, gfxASurface::gfxImageFormat format);
   virtual ~AndroidGraphicBuffer();
 
-  bool Lock(PRUint32 usage, unsigned char **bits);
-  bool Lock(PRUint32 usage, const nsIntRect& rect, unsigned char **bits);
-  bool Unlock();
+  int Lock(PRUint32 usage, unsigned char **bits);
+  int Lock(PRUint32 usage, const nsIntRect& rect, unsigned char **bits);
+  int Unlock();
   bool Reallocate(PRUint32 aWidth, PRUint32 aHeight, gfxASurface::gfxImageFormat aFormat);
 
   PRUint32 Width() { return mWidth; }

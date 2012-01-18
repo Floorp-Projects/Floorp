@@ -75,6 +75,7 @@ DIRS += \
   sms \
   src \
   locales \
+  network \
   plugins/base \
   plugins/ipc \
   indexedDB \
