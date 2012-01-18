@@ -1208,8 +1208,8 @@ nsLayoutUtils::MatrixTransformPoint(const nsPoint &aPoint,
                  NSFloatPixelsToAppUnits(float(image.y), aFactor));
 }
 
-static gfx3DMatrix
-GetTransformToAncestor(nsIFrame *aFrame, nsIFrame *aAncestor)
+gfx3DMatrix
+nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame, nsIFrame *aAncestor)
 {
   nsIFrame* parent;
   gfx3DMatrix ctm = aFrame->GetTransformMatrix(aAncestor, &parent);
@@ -1224,7 +1224,7 @@ TransformGfxPointFromAncestor(nsIFrame *aFrame,
                               const gfxPoint &aPoint,
                               nsIFrame *aAncestor)
 {
-  gfx3DMatrix ctm = GetTransformToAncestor(aFrame, aAncestor);
+  gfx3DMatrix ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
   return ctm.Inverse().ProjectPoint(aPoint);
 }
 
@@ -1233,7 +1233,7 @@ TransformGfxRectFromAncestor(nsIFrame *aFrame,
                              const gfxRect &aRect,
                              nsIFrame *aAncestor)
 {
-  gfx3DMatrix ctm = GetTransformToAncestor(aFrame, aAncestor);
+  gfx3DMatrix ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
   return ctm.Inverse().ProjectRectBounds(aRect);
 }
 
@@ -1242,7 +1242,7 @@ TransformGfxRectToAncestor(nsIFrame *aFrame,
                            const gfxRect &aRect,
                            nsIFrame *aAncestor)
 {
-  gfx3DMatrix ctm = GetTransformToAncestor(aFrame, aAncestor);
+  gfx3DMatrix ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
   return ctm.ProjectRectBounds(aRect);
 }
 
