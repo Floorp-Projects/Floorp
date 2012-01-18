@@ -97,4 +97,11 @@
 
   <string name="button_ok">&button_ok;</string>
   <string name="button_cancel">&button_cancel;</string>
+
+  <string name="abouthome_addons_title">&abouthome_addons_title;</string>
+  <string name="abouthome_addons_browse">&abouthome_addons_browse;</string>
+  <string name="abouthome_last_tabs_title">&abouthome_last_tabs_title;</string>
+  <string name="abouthome_last_tabs_open">&abouthome_last_tabs_open;</string>
+  <string name="abouthome_top_sites_title">&abouthome_top_sites_title;</string>
+  <string name="abouthome_top_sites_browse">&abouthome_top_sites_browse;</string>
 </resources>
