@@ -57,12 +57,12 @@
             onpaneload="gSyncPane.init()">
 
     <preferences>
+      <preference id="engine.addons"    name="services.sync.engine.addons"    type="bool"/>
       <preference id="engine.bookmarks" name="services.sync.engine.bookmarks" type="bool"/>
       <preference id="engine.history"   name="services.sync.engine.history"   type="bool"/>
       <preference id="engine.tabs"      name="services.sync.engine.tabs"      type="bool"/>
       <preference id="engine.prefs"     name="services.sync.engine.prefs"     type="bool"/>
       <preference id="engine.passwords" name="services.sync.engine.passwords" type="bool"/>
-      <preference id="engine.addons"    name="services.sync.engine.addons"    type="bool"/>
     </preferences>
 
 
@@ -129,6 +129,11 @@
                            orient="vertical"
                            onselect="if (this.selectedCount) this.clearSelection();">
                 <richlistitem>
+                  <checkbox label="&engine.addons.label;"
+                            accesskey="&engine.addons.accesskey;"
+                            preference="engine.addons"/>
+                </richlistitem>
+                <richlistitem>
                   <checkbox label="&engine.bookmarks.label;"
                             accesskey="&engine.bookmarks.accesskey;"
                             preference="engine.bookmarks"/>
@@ -152,11 +157,6 @@
                   <checkbox label="&engine.tabs.label;"
                             accesskey="&engine.tabs.accesskey;"
                             preference="engine.tabs"/>
-                </richlistitem>
-                <richlistitem>
-                  <checkbox label="&engine.addons.label;"
-                            accesskey="&engine.addons.accesskey;"
-                            preference="engine.addons"/>
                 </richlistitem>
               </richlistbox>
             </vbox>
