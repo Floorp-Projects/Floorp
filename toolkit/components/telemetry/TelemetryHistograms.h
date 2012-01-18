@@ -324,6 +324,7 @@ HISTOGRAM_BOOLEAN(XMLHTTPREQUEST_ASYNC_OR_SYNC, "Type of XMLHttpRequest, async o
  * DOM telemetry.
  */
 HISTOGRAM(DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT, 1, 3000, 10, EXPONENTIAL, "DOM: Timer handlers called per native timer expiration")
+HISTOGRAM(DOM_TIMERS_RECENTLY_SET, 1, 3000, 10, EXPONENTIAL, "DOM: setTimeout/setInterval calls recently (last 30s or more)")
 
 /**
  * DOM Storage telemetry.
