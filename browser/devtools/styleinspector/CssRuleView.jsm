@@ -1271,7 +1271,7 @@ InplaceEditor.prototype = {
     // Replace spaces with non-breaking spaces.  Otherwise setting
     // the span's textContent will collapse spaces and the measurement
     // will be wrong.
-    this._measurement.textContent = this.input.value.replace(' ', '\u00a0', 'g');
+    this._measurement.textContent = this.input.value.replace(/ /g, '\u00a0');
 
     // We add a bit of padding to the end.  Should be enough to fit
     // any letter that could be typed, otherwise we'll scroll before
