@@ -1382,31 +1382,9 @@ static bool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
   return true;
 }
 
-/**
- * Returns true if aFrame is overflow:hidden and we should interpret
- * that as -moz-hidden-unscrollable.
- */
-static inline bool ApplyOverflowHiddenClipping(const nsIFrame* aFrame,
-                                                 const nsStyleDisplay* aDisp)
-{
-  if (aDisp->mOverflowX != NS_STYLE_OVERFLOW_HIDDEN)
-    return false;
-    
-  nsIAtom* type = aFrame->GetType();
-  // REVIEW: these are the frame types that call IsTableClip and set up
-  // clipping. Actually there were also table rows and the inner table frame
-  // doing this, but 'overflow' isn't applicable to them according to
-  // CSS 2.1 so I removed them. Also, we used to clip at tableOuterFrame
-  // but we should actually clip at tableFrame (as per discussion with Hixie and
-  // bz).
-  return type == nsGkAtoms::tableFrame ||
-       type == nsGkAtoms::tableCellFrame ||
-       type == nsGkAtoms::bcTableCellFrame;
-}
-
 static bool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
-                                    const nsIFrame* aFrame,
-                                    const nsStyleDisplay* aDisp, nsRect* aRect) {
+                                  const nsIFrame* aFrame,
+                                  const nsStyleDisplay* aDisp, nsRect* aRect) {
   // REVIEW: from nsContainerFrame.cpp SyncFrameViewGeometryDependentProperties,
   // except that that function used the border-edge for
   // -moz-hidden-unscrollable which I don't think is correct... Also I've
@@ -1415,16 +1393,12 @@ static bool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
   // Only -moz-hidden-unscrollable is handled here (and 'hidden' for table
   // frames, and any non-visible value for blocks in a paginated context).
   // Other overflow clipping is applied by nsHTML/XULScrollFrame.
-  if (!ApplyOverflowHiddenClipping(aFrame, aDisp) &&
-      !nsFrame::ApplyPaginatedOverflowClipping(aFrame)) {
-    bool clip = aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP;
-    if (!clip)
-      return false;
-    // We allow -moz-hidden-unscrollable to apply to any kind of frame. This
-    // is required by comboboxes which make their display text (an inline frame)
-    // have clipping.
+  // We allow -moz-hidden-unscrollable to apply to any kind of frame. This
+  // is required by comboboxes which make their display text (an inline frame)
+  // have clipping.
+  if (!nsFrame::ApplyOverflowClipping(aFrame, aDisp)) {
+    return false;
   }
-  
   *aRect = aFrame->GetPaddingRect() - aFrame->GetPosition();
   if (aBuilder) {
     *aRect += aBuilder->ToReferenceFrame(aFrame);
@@ -6609,13 +6583,11 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // children are actually clipped to the padding-box, but since the
   // overflow area should include the entire border-box, just set it to
   // the border-box here.
-  const nsStyleDisplay *disp = GetStyleDisplay();
+  const nsStyleDisplay* disp = GetStyleDisplay();
   NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
                (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
                "If one overflow is clip, the other should be too");
-  if (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
-      disp->IsTableClip() ||
-      nsFrame::ApplyPaginatedOverflowClipping(this)) {
+  if (nsFrame::ApplyOverflowClipping(this, disp)) {
     // The contents are actually clipped to the padding area 
     aOverflowAreas.SetAllTo(bounds);
   }
