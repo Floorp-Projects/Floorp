@@ -123,7 +123,7 @@ js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
 }
 
 js::ArgumentsObject *
-ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee, StackFrame *fp)
+ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
@@ -166,7 +166,7 @@ ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee, StackFra
     JS_ASSERT(UINT32_MAX > (uint64_t(argc) << PACKED_BITS_COUNT));
     argsobj.initInitialLength(argc);
     argsobj.initData(data);
-    argsobj.setStackFrame(strict ? NULL : fp);
+    argsobj.setStackFrame(NULL);
 
     JS_ASSERT(argsobj.numFixedSlots() >= NormalArgumentsObject::RESERVED_SLOTS);
     JS_ASSERT(argsobj.numFixedSlots() >= StrictArgumentsObject::RESERVED_SLOTS);
@@ -211,8 +211,7 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
     if (fp->hasArgsObj())
         return &fp->argsObj();
 
-    ArgumentsObject *argsobj =
-        ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee(), fp);
+    ArgumentsObject *argsobj = ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee());
     if (!argsobj)
         return argsobj;
 
@@ -1112,7 +1111,19 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             return false;
         }
 
-        return js_GetArgsValue(cx, fp, vp);
+        /*
+         * Purposefully disconnect the returned arguments object from the frame
+         * by always creating a new copy that does not alias formal parameters.
+         * This allows function-local analysis to determine that formals are
+         * not aliased and generally simplifies arguments objects.
+         */
+        ArgumentsObject *argsobj = ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee());
+        if (!argsobj)
+            return false;
+
+        fp->forEachCanonicalActualArg(PutArg(cx->compartment, argsobj->data()->slots));
+        *vp = ObjectValue(*argsobj);
+        return true;
     }
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {

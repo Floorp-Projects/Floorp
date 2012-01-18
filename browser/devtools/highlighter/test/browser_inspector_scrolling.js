@@ -73,8 +73,8 @@ function inspectNode()
 {
   Services.obs.removeObserver(inspectNode,
     InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-  Services.obs.addObserver(performScrollingTest,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+
+  InspectorUI.highlighter.addListener("nodeselected", performScrollingTest);
 
   executeSoon(function() {
     InspectorUI.inspectNode(div);
@@ -83,12 +83,13 @@ function inspectNode()
 
 function performScrollingTest()
 {
-  Services.obs.removeObserver(performScrollingTest,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+  InspectorUI.highlighter.removeListener("nodeselected", performScrollingTest);
 
-  EventUtils.synthesizeMouseScroll(div, 10, 10,
-    {axis:"vertical", delta:50, type:"MozMousePixelScroll"},
-    iframe.contentWindow);
+  executeSoon(function() {
+    EventUtils.synthesizeMouseScroll(div, 10, 10,
+      {axis:"vertical", delta:50, type:"MozMousePixelScroll"},
+      iframe.contentWindow);
+  });
 
   gBrowser.selectedBrowser.addEventListener("scroll", function() {
     gBrowser.selectedBrowser.removeEventListener("scroll", arguments.callee,

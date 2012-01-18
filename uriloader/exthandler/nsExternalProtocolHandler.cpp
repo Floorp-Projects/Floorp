@@ -376,8 +376,9 @@ bool nsExternalProtocolHandler::HaveExternalProtocolHandler(nsIURI * aURI)
   {
     nsCAutoString scheme;
     aURI->GetScheme(scheme);
-    if (gExtProtSvc)
-      gExtProtSvc->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
+    nsCOMPtr<nsIExternalProtocolService> extProtSvc(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
+    if (extProtSvc)
+      extProtSvc->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
   }
 
   return haveHandler;
@@ -438,8 +439,9 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
 //////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsExternalProtocolHandler::ExternalAppExistsForScheme(const nsACString& aScheme, bool *_retval)
 {
-  if (gExtProtSvc)
-    return gExtProtSvc->ExternalProtocolHandlerExists(
+  nsCOMPtr<nsIExternalProtocolService> extProtSvc(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
+  if (extProtSvc)
+    return extProtSvc->ExternalProtocolHandlerExists(
       PromiseFlatCString(aScheme).get(), _retval);
 
   // In case we don't have external protocol service.

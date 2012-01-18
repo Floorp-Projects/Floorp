@@ -53,7 +53,31 @@ interface nsITelephoneCallback : nsISupports
                              in boolean isActive);
 };
 
-[scriptable, uuid(5be6e41d-3aee-4f5c-8284-95cf529dd6fe)]
+[scriptable, uuid(8399fddd-471c-41ac-8f35-99f7dbb738ec)]
+interface nsIDataCallInfo : nsISupports
+{
+  readonly attribute unsigned long callState;
+  readonly attribute AString cid;
+  readonly attribute AString apn;
+};
+
+[scriptable, uuid(36cc4b89-0338-4ff7-a3c2-d78e60f2ea98)]
+interface nsIPhoneDataCallCallback : nsISupports
+{
+  /**
+   * This method is called when the state of a data call is changed.
+   *
+   * @param dataState use DATACALL_STATE_* values from nsITelephone.
+   */
+  void dataCallStateChanged(in AString cid,
+                            in AString interfaceName,
+                            in unsigned short callState);
+
+  void receiveDataCallList([array,size_is(aLength)] in nsIDataCallInfo aDataCalls,
+                           in unsigned long aLength);
+};
+
+[scriptable, uuid(78ed0beb-d6ad-42f8-929a-8d003285784f)]
 interface nsITelephone : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -68,6 +92,13 @@ interface nsITelephone : nsISupports
   const unsigned short CALL_STATE_DISCONNECTING = 9;
   const unsigned short CALL_STATE_DISCONNECTED = 10;
   const unsigned short CALL_STATE_INCOMING = 11;
+
+  // Keep consistent with GECKO_DATACALL_STATE_* values in ril_consts.js
+  const unsigned short DATACALL_STATE_UNKNOWN = 0;
+  const unsigned short DATACALL_STATE_CONNECTING = 1;
+  const unsigned short DATACALL_STATE_CONNECTED = 2;
+  const unsigned short DATACALL_STATE_DISCONNECTING = 3;
+  const unsigned short DATACALL_STATE_DISCONNECTED = 4;
 
   readonly attribute jsval currentState;
 
@@ -94,6 +125,20 @@ interface nsITelephone : nsISupports
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
+
+  // PDP APIs
+  void setupDataCall(in long radioTech,
+                     in DOMString apn,
+                     in DOMString user,
+                     in DOMString passwd,
+                     in long chappap,
+                     in DOMString pdptype);
+  void deactivateDataCall(in DOMString cid,
+                          in DOMString reason);
+  void getDataCallList();
+  
+  void registerDataCallCallback(in nsIPhoneDataCallCallback callback);
+  void unregisterDataCallCallback(in nsIPhoneDataCallCallback callback);
 
   /**
    * SMS-related functionality.

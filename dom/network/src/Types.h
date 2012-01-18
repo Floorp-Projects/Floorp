@@ -12,18 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is The Browser Profile Migrator.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Ben Goodger.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Ben Goodger <ben@bengoodger.com>
+ *   Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,31 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-#ifndef profilemigrator___h___
-#define profilemigrator___h___
 
-#include "nsIBrowserProfileMigrator.h"
-#include "nsIProfileMigrator.h"
-#include "nsCOMPtr.h"
+#ifndef mozilla_dom_network_Types_h
+#define mozilla_dom_network_Types_h
 
-#define NS_FIREFOX_PROFILEMIGRATOR_CID \
-{ 0x4ca3c946, 0x5408, 0x49f0, { 0x9e, 0xca, 0x3a, 0x97, 0xd5, 0xc6, 0x77, 0x50 } }
+namespace mozilla {
+namespace hal {
+class NetworkInformation;
+} // namespace hal
 
-class nsProfileMigrator : public nsIProfileMigrator
-{
-public:
-  NS_DECL_NSIPROFILEMIGRATOR
-  NS_DECL_ISUPPORTS
+template <class T>
+class Observer;
 
-  nsProfileMigrator() { }
+typedef Observer<hal::NetworkInformation> NetworkObserver;
 
-protected:
-  ~nsProfileMigrator() { }
+} // namespace mozilla
 
-  nsresult GetDefaultBrowserMigratorKey(nsACString& key,
-                                        nsCOMPtr<nsIBrowserProfileMigrator>& bpm);
-};
-
-#endif
-
+#endif // mozilla_dom_network_Types_h

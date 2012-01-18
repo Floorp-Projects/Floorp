@@ -2868,8 +2868,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   if (!mInstance || !mObjectFrame)
     return;
 
-  PRInt32 model;
-  mInstance->GetDrawingModel(&model);
+  PRInt32 model = mInstance->GetANPDrawingModel();
 
   if (model == kSurface_ANPDrawingModel) {
     if (!AddPluginView(aFrameRect)) {

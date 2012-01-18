@@ -360,10 +360,9 @@ class StackFrame
         JSFunction      *fun;           /*   function frame, pre GetScopeChain */
     } exec;
     union {                             /* describes the arguments of a function */
-        uintN           nactual;        /*   before js_GetArgsObject */
-        ArgumentsObject *obj;           /*   after js_GetArgsObject */
-        JSScript        *script;        /* eval has no args, but needs a script */
-    } args;
+        uintN           nactual;        /*   for non-eval frames */
+        JSScript        *evalScript;    /*   the script of an eval-in-function */
+    } u;
     mutable JSObject    *scopeChain_;   /* current scope chain */
     StackFrame          *prev_;         /* previous cx->regs->fp */
     void                *ncode_;        /* return address for method JIT */
@@ -371,6 +370,7 @@ class StackFrame
     /* Lazily initialized */
     Value               rval_;          /* return value of the frame */
     StaticBlockObject   *blockChain_;   /* innermost let block */
+    ArgumentsObject     *argsObj_;      /* if has HAS_ARGS_OBJ */
     jsbytecode          *prevpc_;       /* pc of previous frame*/
     JSInlinedSite       *prevInline_;   /* inlined site in previous frame */
     void                *hookData_;     /* closure returned by call hook */
@@ -578,13 +578,13 @@ class StackFrame
     JSScript *script() const {
         JS_ASSERT(isScriptFrame());
         return isFunctionFrame()
-               ? isEvalFrame() ? args.script : fun()->script()
+               ? isEvalFrame() ? u.evalScript : fun()->script()
                : exec.script;
     }
 
     JSScript *functionScript() const {
         JS_ASSERT(isFunctionFrame());
-        return isEvalFrame() ? args.script : fun()->script();
+        return isEvalFrame() ? u.evalScript : fun()->script();
     }
 
     JSScript *globalScript() const {
@@ -702,7 +702,7 @@ class StackFrame
     ArgumentsObject &argsObj() const {
         JS_ASSERT(hasArgsObj());
         JS_ASSERT(!isEvalFrame());
-        return *args.obj;
+        return *argsObj_;
     }
 
     ArgumentsObject *maybeArgsObj() const {
@@ -1118,21 +1118,12 @@ class StackFrame
         return offsetof(StackFrame, exec);
     }
 
-    static size_t offsetOfArgs() {
-        return offsetof(StackFrame, args);
-    }    
-
-    void *addressOfArgs() {
-        return &args;
+    static size_t offsetOfNumActual() {
+        return offsetof(StackFrame, u.nactual);
     }
 
     static size_t offsetOfScopeChain() {
         return offsetof(StackFrame, scopeChain_);
-    }
-
-    JSObject **addressOfScopeChain() {
-        JS_ASSERT(flags_ & HAS_SCOPECHAIN);
-        return &scopeChain_;
     }
 
     static size_t offsetOfPrev() {
@@ -1141,6 +1132,10 @@ class StackFrame
 
     static size_t offsetOfReturnValue() {
         return offsetof(StackFrame, rval_);
+    }
+
+    static size_t offsetOfArgsObj() {
+        return offsetof(StackFrame, argsObj_);
     }
 
     static ptrdiff_t offsetOfNcode() {

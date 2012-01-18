@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,13 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Suresh Duddi <dp@netscape.com>
+ *   Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,33 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIMemory.idl"
+#ifndef mozilla_dom_sms_SmsServicesFactory_h
+#define mozilla_dom_sms_SmsServicesFactory_h
 
-/**
- *
- * nsIRecyclingAllocator: A wrapper for the nsRecyclingAllocator
- *
- * Holds allocations and reuses them for subsequent allocs.
- * Thread safe and uses a timer to release freelist.
- *
- * @status UNDER_DEVELOPMENT
- */
+#include "nsCOMPtr.h"
 
-[scriptable, uuid(d064a04c-9cee-4319-be31-64d565bccba9)]
-interface nsIRecyclingAllocator : nsIMemory
+class nsISmsService;
+class nsISmsDatabaseService;
+
+namespace mozilla {
+namespace dom {
+namespace sms {
+
+class SmsServicesFactory
 {
-    void init(in size_t nblocks, in size_t recycleAfter, in string id);
+public:
+  static already_AddRefed<nsISmsService> CreateSmsService();
+  static already_AddRefed<nsISmsDatabaseService> CreateSmsDatabaseService();
 };
 
-%{C++
-#define NS_RECYCLINGALLOCATOR_CID \
-{ /* ac07ed4c-bf17-4976-a15c-d2194db3b1bf */ \
-    0xac07ed4c,                              \
-    0xbf17,                                  \
-    0x4976,                                  \
-    {0xa1, 0x5c, 0xd2, 0x19, 0x4d, 0xb3, 0xb1, 0xbf} }
+} // namespace sms
+} // namespace dom
+} // namespace mozilla
 
-#define NS_RECYCLINGALLOCATOR_CLASSNAME "Recycling Allocator"
-
-#define NS_RECYCLINGALLOCATOR_CONTRACTID "@mozilla.org/recycling-allocator;1"
-%}
+#endif // mozilla_dom_sms_SmsServicesFactory_h

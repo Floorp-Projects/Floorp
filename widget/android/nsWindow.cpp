@@ -837,14 +837,14 @@ nsWindow::HasDirectTexture()
       gfxASurface::ImageFormatRGB16_565);
 
   unsigned char* bits = NULL;
-  if (!buffer->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, &bits) || !bits) {
+  if (buffer->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, &bits) != 0 || !bits) {
     ALOG("failed to lock graphic buffer");
     buffer->Unlock();
     sHasDirectTexture = false;
     goto cleanup;
   }
 
-  if (!buffer->Unlock()) {
+  if (buffer->Unlock() != 0) {
     ALOG("failed to unlock graphic buffer");
     sHasDirectTexture = false;
     goto cleanup;

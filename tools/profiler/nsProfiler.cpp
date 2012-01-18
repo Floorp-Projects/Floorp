@@ -124,7 +124,9 @@ nsProfiler::GetFeatures(PRUint32 *aCount, char ***aFeatures)
     return NS_OK;
   }
 
-  while (features[++len]);
+  while (features[len]) {
+    len++;
+  }
 
   char **featureList = static_cast<char **>
                        (nsMemory::Alloc(len * sizeof(char*)));

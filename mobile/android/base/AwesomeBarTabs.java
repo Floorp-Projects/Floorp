@@ -47,6 +47,7 @@ import android.graphics.Color;
 import android.graphics.LightingColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.provider.Browser;
 import android.util.AttributeSet;
 import android.util.Base64;
@@ -352,9 +353,13 @@ public class AwesomeBarTabs extends TabHost {
 
             if (delta < 0) {
                 return HistorySection.TODAY;
-            } else if (delta > 0 && delta < MS_PER_DAY) {
+            }
+
+            if (delta < MS_PER_DAY) {
                 return HistorySection.YESTERDAY;
-            } else if (delta > MS_PER_DAY && delta < MS_PER_WEEK) {
+            }
+
+            if (delta < MS_PER_WEEK) {
                 return HistorySection.WEEK;
             }
 
@@ -622,12 +627,12 @@ public class AwesomeBarTabs extends TabHost {
         mAllPagesCursorAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
                 ContentResolver resolver = mContext.getContentResolver();
-                long start = new Date().getTime();
+                long start = SystemClock.uptimeMillis();
 
                 Cursor c = BrowserDB.filter(resolver, constraint, MAX_RESULTS);
                 c.getCount(); // ensure the query runs at least once
 
-                long end = new Date().getTime();
+                long end = SystemClock.uptimeMillis();
                 Log.i(LOGTAG, "Got cursor in " + (end - start) + "ms");
 
                 return c;

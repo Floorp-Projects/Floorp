@@ -324,16 +324,16 @@ AndroidGraphicBuffer::EnsureInitialized()
   return true;
 }
 
-bool
+int
 AndroidGraphicBuffer::Lock(PRUint32 aUsage, unsigned char **bits)
 {
   if (!EnsureInitialized())
     return true;
 
-  return sGLFunctions.fGraphicBufferLock(mHandle, GetAndroidUsage(aUsage), bits) == 0;
+  return sGLFunctions.fGraphicBufferLock(mHandle, GetAndroidUsage(aUsage), bits);
 }
 
-bool
+int
 AndroidGraphicBuffer::Lock(PRUint32 aUsage, const nsIntRect& aRect, unsigned char **bits)
 {
   if (!EnsureInitialized())
@@ -345,16 +345,16 @@ AndroidGraphicBuffer::Lock(PRUint32 aUsage, const nsIntRect& aRect, unsigned cha
   rect.right = aRect.x + aRect.width;
   rect.bottom = aRect.y + aRect.height;
 
-  return sGLFunctions.fGraphicBufferLockRect(mHandle, GetAndroidUsage(aUsage), rect, bits) == 0;
+  return sGLFunctions.fGraphicBufferLockRect(mHandle, GetAndroidUsage(aUsage), rect, bits);
 }
 
-bool
+int
 AndroidGraphicBuffer::Unlock()
 {
   if (!EnsureInitialized())
     return false;
 
-  return sGLFunctions.fGraphicBufferUnlock(mHandle) == 0;
+  return sGLFunctions.fGraphicBufferUnlock(mHandle);
 }
 
 bool

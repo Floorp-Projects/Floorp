@@ -43,6 +43,8 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+FAIL_ON_WARNINGS := 1
+
 MODULE = services-crypto
 XPIDL_MODULE = services-crypto-component
 

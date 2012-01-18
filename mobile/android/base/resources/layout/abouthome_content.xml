@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <RelativeLayout android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:background="@drawable/abouthome_bg_repeat">
+    <LinearLayout android:layout_width="fill_parent"
+                  android:orientation="vertical"
+                  android:layout_height="fill_parent"
+                  android:background="@drawable/abouthome_bg_repeat">
 
         <RelativeLayout android:id="@+id/top_sites"
                         android:layout_width="fill_parent"
@@ -32,7 +33,7 @@
                       android:textSize="12sp"
                       android:textColor="#000000"
                       android:textStyle="bold"
-                      android:text="Top Sites"/>
+                      android:text="@string/abouthome_top_sites_title"/>
 
             <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
                   android:id="@+id/top_sites_grid"
@@ -53,60 +54,75 @@
                   android:textColor="#22629e"
                   android:textSize="12sp"
                   android:gravity="top|center_horizontal"
-                  android:text="Browse all your top sites"/>
+                  android:text="@string/abouthome_top_sites_browse"/>
+
+            <ImageView android:id="@+id/logo"
+                       android:layout_width="wrap_content"
+                       android:layout_height="wrap_content"
+                       android:layout_marginTop="16dip"
+                       android:layout_marginBottom="10dip"
+                       android:layout_marginLeft="12dip"
+                       android:layout_alignParentTop="true"
+                       android:layout_alignParentLeft="true"
+                       android:src="@drawable/abouthome_logo"/>
 
         </RelativeLayout>
 
-        <ImageView android:id="@+id/logo"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:layout_marginTop="16dip"
-                   android:layout_marginBottom="10dip"
-                   android:layout_marginLeft="12dip"
-                   android:layout_alignParentTop="true"
-                   android:layout_alignParentLeft="true"
-                   android:src="@drawable/abouthome_logo"/>
-
-        <TextView android:id="@+id/recommended_addons_title"
+        <TextView android:id="@+id/last_tabs_title"
                   android:layout_width="fill_parent"
                   android:layout_height="26dip"
                   android:paddingLeft="12dip"
-                  android:layout_below="@id/top_sites"
                   android:background="@drawable/abouthome_separator"
                   android:textSize="12sp"
                   android:textColor="#000000"
                   android:textStyle="bold"
                   android:gravity="left|center_vertical"
-                  android:text="Add-ons for your Firefox"/>
+                  android:visibility="gone"
+                  android:text="@string/abouthome_last_tabs_title"/>
+
+        <LinearLayout android:id="@+id/last_tabs"
+                      android:orientation="vertical"
+                      android:layout_width="fill_parent"
+                      android:layout_height="wrap_content"/>
+
+        <view class="org.mozilla.gecko.AboutHomeContent$LinkTextView"
+              android:id="@+id/last_tabs_open_all"
+              android:layout_width="fill_parent"
+              android:layout_height="47dip"
+              android:background="@drawable/abouthome_separator"
+              android:textColor="#22629e"
+              android:textSize="12sp"
+              android:gravity="center"
+              android:visibility="gone"
+              android:text="@string/abouthome_last_tabs_open"/>
+
+        <TextView android:id="@+id/recommended_addons_title"
+                  android:layout_width="fill_parent"
+                  android:layout_height="26dip"
+                  android:paddingLeft="12dip"
+                  android:background="@drawable/abouthome_separator"
+                  android:textSize="12sp"
+                  android:textColor="#000000"
+                  android:textStyle="bold"
+                  android:gravity="left|center_vertical"
+                  android:text="@string/abouthome_addons_title"/>
 
         <LinearLayout android:id="@+id/recommended_addons"
                       android:orientation="vertical"
                       android:layout_width="fill_parent"
                       android:layout_height="wrap_content"
-                      android:layout_below="@id/recommended_addons_title"
-                      android:background="@drawable/abouthome_separator"
-                      android:isScrollContainer="false">
+                      android:isScrollContainer="false"/>
 
-            <view class="org.mozilla.gecko.AboutHomeContent$AddonsListView"
-                  android:id="@+id/recommended_addons_list"
-                  android:layout_width="fill_parent"
-                  android:layout_height="wrap_content"
-                  android:divider="@drawable/abouthome_separator"
-                  android:isScrollContainer="false"
-                  android:dividerHeight="2dip"/>
+        <view class="org.mozilla.gecko.AboutHomeContent$LinkTextView"
+              android:id="@+id/all_addons_text"
+              android:layout_width="fill_parent"
+              android:layout_height="47dip"
+              android:background="@drawable/abouthome_separator"
+              android:textColor="#22629e"
+              android:textSize="12sp"
+              android:gravity="center"
+              android:text="@string/abouthome_addons_browse"/>
 
-            <view class="org.mozilla.gecko.AboutHomeContent$LinkTextView"
-                  android:id="@+id/all_addons_text"
-                  android:layout_width="fill_parent"
-                  android:layout_height="47dip"
-                  android:background="@drawable/abouthome_separator"
-                  android:textColor="#22629e"
-                  android:textSize="12sp"
-                  android:gravity="center"
-                  android:text="Browse all Firefox Add-ons"/>
-
-        </LinearLayout>
-
-    </RelativeLayout>
+    </LinearLayout>
 
 </merge>

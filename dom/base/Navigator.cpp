@@ -74,6 +74,7 @@
 #include "mozilla/Hal.h"
 #include "nsIWebNavigation.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "Connection.h"
 
 #ifdef MOZ_B2G_RIL
 #include "TelephonyFactory.h"
@@ -130,6 +131,7 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
 #ifdef MOZ_B2G_RIL
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorTelephony)
 #endif
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorNetwork)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -172,6 +174,11 @@ Navigator::Invalidate()
     mTelephony = nsnull;
   }
 #endif
+
+  if (mConnection) {
+    mConnection->Shutdown();
+    mConnection = nsnull;
+  }
 }
 
 nsPIDOMWindow *
@@ -994,13 +1001,17 @@ Navigator::IsSmsAllowed() const
 bool
 Navigator::IsSmsSupported() const
 {
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+#ifdef MOZ_WEBSMS_BACKEND
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, false);
 
   bool result = false;
   smsService->HasSupport(&result);
 
   return result;
+#else
+  return false;
+#endif
 }
 
 NS_IMETHODIMP
@@ -1058,6 +1069,33 @@ Navigator::GetMozTelephony(nsIDOMTelephony** aTelephony)
 }
 
 #endif // MOZ_B2G_RIL
+
+//*****************************************************************************
+//    Navigator::nsIDOMNavigatorNetwork
+//*****************************************************************************
+
+NS_IMETHODIMP
+Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
+{
+  *aConnection = nsnull;
+
+  if (!mConnection) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
+
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
+    NS_ENSURE_TRUE(sgo, NS_OK);
+
+    nsIScriptContext* scx = sgo->GetContext();
+    NS_ENSURE_TRUE(scx, NS_OK);
+
+    mConnection = new network::Connection();
+    mConnection->Init(window, scx);
+  }
+
+  NS_ADDREF(*aConnection = mConnection);
+  return NS_OK;
+}
 
 PRInt64
 Navigator::SizeOf() const
