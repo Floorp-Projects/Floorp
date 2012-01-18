@@ -49,6 +49,7 @@ EXTRA_JS_MODULES = \
 	domplate.jsm \
 	InsideOutBox.jsm \
 	TreePanel.jsm \
+	highlighter.jsm \
 	$(NULL)
 
 ifdef ENABLE_TESTS
