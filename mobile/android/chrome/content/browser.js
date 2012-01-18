@@ -2682,7 +2682,7 @@ var FormAssistant = {
   handleClick: function(aTarget) {
     let target = aTarget;
     while (target) {
-      if (this._isSelectElement(target)) {
+      if (this._isSelectElement(target) && !target.disabled) {
         target.focus();
         let list = this.getListForElement(target);
         this.show(list, target);

@@ -41,7 +41,7 @@ body {
   font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
   font-size: 23px;
   color: #222222;
-  background-image: url("chrome://browser/skin/about-bg-lightblue.png");
+  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
 }
 
 #header {
@@ -52,7 +52,7 @@ body {
   margin: 30px 0 0 15px;
   width: 123px;
   height: 36px;
-  background: url("chrome://browser/skin/wordmark-hdpi.png") no-repeat;
+  background: url("chrome://browser/skin/images/wordmark-hdpi.png") no-repeat;
 }
 
 #version {
@@ -63,7 +63,7 @@ body {
 #banner {
   margin: 0 -10px;
   height: 150px;
-  background-image: url("chrome://browser/skin/about-bg-darkblue.png");
+  background-image: url("chrome://browser/skin/images/about-bg-darkblue.png");
 }
 
 #logo {
@@ -72,7 +72,7 @@ body {
   right: 0;
   width: 375px;
   height: 300px;
-  background: url("chrome://browser/skin/logo-hdpi.png") no-repeat;
+  background: url("chrome://browser/skin/images/logo-hdpi.png") no-repeat;
 }
 
 #updateBox {
@@ -82,7 +82,7 @@ body {
   width: 60%; /* looks much larger!? */
   padding: 20px 1em;
   text-align: center;
-  background-image: url("chrome://browser/skin/about-btn-darkgrey.png");
+  background-image: url("chrome://browser/skin/images/about-btn-darkgrey.png");
   background-size: contain;
   border-bottom-width: 4px;
   border-bottom-style: solid;

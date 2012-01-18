@@ -18,6 +18,23 @@ function IsD2DEnabled() {
     return enabled;
 }
 
+function IsMacOSX10_5orOlder() {
+    var is105orOlder = false;
+
+    if (navigator.platform.indexOf("Mac") == 0) {
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        var version = Components.classes["@mozilla.org/system-info;1"]
+                            .getService(Components.interfaces.nsIPropertyBag2)
+                            .getProperty("version");
+        // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
+        // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
+        // is the Darwin version.
+        is105orOlder = (parseFloat(version) < 10.0);
+    }
+    return is105orOlder;
+}
+
+
 function IsAzureEnabled() {
   var enabled = false;
 
@@ -5778,10 +5795,12 @@ function test_2d_gradient_interpolate_overlap() {
 var canvas = document.getElementById('c215');
 var ctx = canvas.getContext('2d');
 
-if (!IsD2DEnabled()) {
-    // Only run this on non-D2D. On D2D the different nature of how gradients
+if (!IsD2DEnabled() && !IsMacOSX10_5orOlder()) {
+    // On D2D the different nature of how gradients
     // are drawn makes it so we cannot guarantee these stops are completely
     // hard.
+
+    // On OS X 10.5 quartz is confused by the overlapping stops: Bug #715235
     canvas.width = 200;
     var g = ctx.createLinearGradient(0, 0, 200, 0);
     g.addColorStop(0, '#f00');
@@ -5835,12 +5854,15 @@ for (var p = 0; p < ps.length; ++p)
 }
 ctx.fillStyle = g;
 ctx.fillRect(0, 0, 100, 50);
-isPixel(ctx, 1,25, 0,255,0,255, 0);
-isPixel(ctx, 30,25, 0,255,0,255, 0);
-isPixel(ctx, 40,25, 0,255,0,255, 0);
-isPixel(ctx, 60,25, 0,255,0,255, 0);
-isPixel(ctx, 80,25, 0,255,0,255, 0);
 
+if (!IsMacOSX10_5orOlder()) {
+    // On OS X 10.5 quartz is confused by the overlapping stops: Bug #715235
+    isPixel(ctx, 1,25, 0,255,0,255, 0);
+    isPixel(ctx, 30,25, 0,255,0,255, 0);
+    isPixel(ctx, 40,25, 0,255,0,255, 0);
+    isPixel(ctx, 60,25, 0,255,0,255, 0);
+    isPixel(ctx, 80,25, 0,255,0,255, 0);
+}
 
 }
 </script>
