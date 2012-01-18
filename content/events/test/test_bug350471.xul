@@ -222,7 +222,7 @@ function initPrefs()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
-                  getService(Components.interfaces.nsIPrefBranch2);
+                  getService(Components.interfaces.nsIPrefBranch);
   // Disables the app level scroll acceleration
   prefSvc.setIntPref("mousewheel.acceleration.start", -1);
   prefSvc.setBoolPref("mousewheel.system_scroll_override_on_root_content.enabled", false);
@@ -233,7 +233,7 @@ function clearPrefs()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
-                  getService(Components.interfaces.nsIPrefBranch2);
+                  getService(Components.interfaces.nsIPrefBranch);
 
   prefSvc.clearUserPref("mousewheel.acceleration.start");
   prefSvc.clearUserPref("mousewheel.system_scroll_override_on_root_content.enabled");

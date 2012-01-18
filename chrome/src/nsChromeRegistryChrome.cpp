@@ -67,7 +67,7 @@
 #include "nsILocaleService.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
-#include "nsIPrefBranch2.h"
+#include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIResProtocolHandler.h"
 #include "nsIScriptError.h"
@@ -190,12 +190,9 @@ nsChromeRegistryChrome::Init()
 
     SelectLocaleFromPref(prefs);
 
-    nsCOMPtr<nsIPrefBranch2> prefs2 (do_QueryInterface(prefs));
-    if (prefs2) {
-      rv = prefs2->AddObserver(MATCH_OS_LOCALE_PREF, this, true);
-      rv = prefs2->AddObserver(SELECTED_LOCALE_PREF, this, true);
-      rv = prefs2->AddObserver(SELECTED_SKIN_PREF, this, true);
-    }
+    rv = prefs->AddObserver(MATCH_OS_LOCALE_PREF, this, true);
+    rv = prefs->AddObserver(SELECTED_LOCALE_PREF, this, true);
+    rv = prefs->AddObserver(SELECTED_SKIN_PREF, this, true);
   }
 
   nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
@@ -220,7 +217,7 @@ nsChromeRegistryChrome::CheckForOSAccessibility()
       RefreshSkins();
     }
 
-    nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+    nsCOMPtr<nsIPrefBranch> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefs) {
       prefs->RemoveObserver(SELECTED_SKIN_PREF, this);
     }
@@ -387,7 +384,7 @@ nsChromeRegistryChrome::Observe(nsISupports *aSubject, const char *aTopic,
                                         false, uiLocale);
       if (NS_SUCCEEDED(rv) && !uiLocale.IsEmpty()) {
         CopyUTF16toUTF8(uiLocale, mSelectedLocale);
-        nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
+        nsCOMPtr<nsIPrefBranch> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
         if (prefs) {
           prefs->RemoveObserver(SELECTED_LOCALE_PREF, this);
         }

@@ -40,7 +40,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIPermissionManager.h"
-#include "nsIPrefBranch2.h"
+#include "nsIPrefBranch.h"
 
 class nsIPrefBranch;
 
@@ -71,7 +71,7 @@ private:
                           bool *aFromPrefs);
 
   nsCOMPtr<nsIPermissionManager> mPermissionManager;
-  nsCOMPtr<nsIPrefBranch2> mPrefBranchInternal;
+  nsCOMPtr<nsIPrefBranch> mPrefBranchInternal;
   static PRUint8 mBehaviorPref[];
 };
 
