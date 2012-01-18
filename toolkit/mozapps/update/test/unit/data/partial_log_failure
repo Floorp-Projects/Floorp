@@ -1,6 +1,4 @@
-DoUpdate: changing update channel
 UPDATE TYPE partial
-DoUpdate: unable to change channel with a partial update
 PREPARE ADD precomplete
 PREPARE ADD a/b/searchplugins/searchpluginstext0
 PREPARE PATCH a/b/searchplugins/searchpluginspng1.png
