@@ -603,6 +603,12 @@ Layer::Dump(FILE* aFile, const char* aPrefix)
   DumpSelf(aFile, aPrefix);
   fprintf(aFile, "</a>");
 
+  if (Layer* mask = GetMaskLayer()) {
+    nsCAutoString pfx(aPrefix);
+    pfx += "  Mask layer: ";
+    mask->Dump(aFile, pfx.get());
+  }
+
   if (Layer* kid = GetFirstChild()) {
     nsCAutoString pfx(aPrefix);
     pfx += "  ";
