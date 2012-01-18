@@ -47,6 +47,8 @@ BEGIN_WORKERS_NAMESPACE
 
 namespace events {
 
+// If you inherit this class then you need to add some way to compare the
+// JSClass for your subclass in EnsureObjectIsEventTarget().
 class EventTarget : public PrivatizableBase
 {
   ListenerManager mListenerManager;

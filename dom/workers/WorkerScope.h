@@ -48,6 +48,9 @@ BEGIN_WORKERS_NAMESPACE
 JSObject*
 CreateDedicatedWorkerGlobalScope(JSContext* aCx);
 
+bool
+ClassIsWorkerGlobalScope(JSClass* aClass);
+
 END_WORKERS_NAMESPACE
 
 #endif /* mozilla_dom_workers_workerscope_h__ */
