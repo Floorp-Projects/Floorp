@@ -1,5 +1,10 @@
 ; Package file for the Firefox build. 
 ;
+; Packaging manifest is used to copy files from dist/bin
+; to the staging directory.
+; Some other files are built in the staging directory directly,
+; so they will be implicitly packaged too.
+;
 ; File format:
 ;
 ; [] designates a toplevel component. Example: [xpcom]
@@ -502,36 +507,29 @@
 
 ; [Personal Security Manager]
 ;
-@BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
-@BINPATH@/components/pipboot.xpt
-@BINPATH@/components/pipnss.xpt
-@BINPATH@/components/pippki.xpt
+; NSS libraries are signed in the staging directory,
+; meaning their .chk files are created there directly.
+;
+@BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nss3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
+#ifndef NSS_DISABLE_DBM
+@BINPATH@/@DLL_PREFIX@nssdbm3@DLL_SUFFIX@
+#endif
 @BINPATH@/@DLL_PREFIX@nssutil3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@smime3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@softokn3@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@ssl3@DLL_SUFFIX@
-#ifndef CROSS_COMPILE
-@BINPATH@/@DLL_PREFIX@freebl3.chk
-@BINPATH@/@DLL_PREFIX@softokn3.chk
-#endif
-#ifndef NSS_DISABLE_DBM
-@BINPATH@/@DLL_PREFIX@nssdbm3@DLL_SUFFIX@
-#ifndef CROSS_COMPILE
-@BINPATH@/@DLL_PREFIX@nssdbm3.chk
-#endif
-#endif
 @BINPATH@/chrome/pippki@JAREXT@
 @BINPATH@/chrome/pippki.manifest
+@BINPATH@/components/pipboot.xpt
+@BINPATH@/components/pipnss.xpt
+@BINPATH@/components/pippki.xpt
 
 ; for Solaris SPARC
 #ifdef SOLARIS
-bin/libfreebl_32fpu_3.chk
 bin/libfreebl_32fpu_3.so
-bin/libfreebl_32int_3.chk
 bin/libfreebl_32int_3.so
-bin/libfreebl_32int64_3.chk
 bin/libfreebl_32int64_3.so
 #endif
 
