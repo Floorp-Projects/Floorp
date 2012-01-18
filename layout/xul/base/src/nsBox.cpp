@@ -53,7 +53,6 @@
 #include "nsIDocument.h"
 #include "nsITheme.h"
 #include "nsIServiceManager.h"
-#include "nsIViewManager.h"
 #include "nsBoxLayout.h"
 #include "FrameLayerBuilder.h"
 

@@ -920,13 +920,6 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
   return cbSize;
 }
 
-static inline bool IsClippingChildren(nsIFrame* aFrame,
-                                      const nsStyleDisplay* display)
-{
-  return display->mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
-    nsFrame::ApplyPaginatedOverflowClipping(aFrame);
-}
-
 NS_IMETHODIMP
 nsBlockFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
@@ -958,7 +951,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // make sure our kids fit too.
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE &&
       aReflowState.ComputedHeight() != NS_AUTOHEIGHT &&
-      IsClippingChildren(this, aReflowState.mStyleDisplay)) {
+      ApplyOverflowClipping(this, aReflowState.mStyleDisplay)) {
     nsMargin heightExtras = aReflowState.mComputedBorderPadding;
     if (GetSkipSides() & NS_SIDE_TOP) {
       heightExtras.top = 0;
@@ -1463,7 +1456,7 @@ nsBlockFrame::ComputeOverflowAreas(const nsRect&         aBounds,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   nsOverflowAreas areas(aBounds, aBounds);
-  if (!IsClippingChildren(this, aDisplay)) {
+  if (!ApplyOverflowClipping(this, aDisplay)) {
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line) {

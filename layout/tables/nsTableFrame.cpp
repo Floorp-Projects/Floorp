@@ -1829,7 +1829,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
   // make sure the table overflow area does include the table rect.
   nsRect tableRect(0, 0, aDesiredSize.width, aDesiredSize.height) ;
 
-  if (!aReflowState.mStyleDisplay->IsTableClip()) {
+  if (!ApplyOverflowClipping(this, aReflowState.mStyleDisplay)) {
     // collapsed border may leak out
     nsMargin bcMargin = GetExcludedOuterBCBorder();
     tableRect.Inflate(bcMargin);
@@ -1855,7 +1855,7 @@ nsTableFrame::UpdateOverflow()
 
   // As above in Reflow, make sure the table overflow area includes the table
   // rect, and check for collapsed borders leaking out.
-  if (!GetStyleDisplay()->IsTableClip()) {
+  if (!ApplyOverflowClipping(this, GetStyleDisplay())) {
     nsMargin bcMargin = GetExcludedOuterBCBorder();
     bounds.Inflate(bcMargin);
   }

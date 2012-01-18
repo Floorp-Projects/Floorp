@@ -1641,14 +1641,6 @@ struct nsStyleDisplay {
            mOverflowX != NS_STYLE_OVERFLOW_CLIP;
   }
 
-  // For table elements that don't support scroll frame creation, we
-  // support 'overflow: hidden' to mean 'overflow: -moz-hidden-unscrollable'.
-  bool IsTableClip() const {
-    return mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
-           (mOverflowX == NS_STYLE_OVERFLOW_HIDDEN &&
-            mOverflowY == NS_STYLE_OVERFLOW_HIDDEN);
-  }
-
   /* Returns whether the element has the -moz-transform property. */
   bool HasTransform() const {
     return mSpecifiedTransform != nsnull || mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D;
