@@ -131,6 +131,7 @@ endif
 EXPORTS_NAMESPACES = gfxipc mozilla/layers
 EXPORTS_gfxipc = ShadowLayerUtils.h
 EXPORTS_mozilla/layers =\
+        CompositorCocoaWidgetHelper.h \
         CompositorChild.h \
         CompositorParent.h \
         ShadowLayers.h \
@@ -140,6 +141,7 @@ EXPORTS_mozilla/layers =\
         $(NULL)
 
 CPPSRCS += \
+        CompositorCocoaWidgetHelper.cpp \
         CompositorChild.cpp \
         CompositorParent.cpp \
         ShadowLayers.cpp \
