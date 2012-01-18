@@ -287,6 +287,7 @@ typedef enum JSWhyMagic
     JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
     JS_LAZY_ARGUMENTS,           /* lazy arguments value on the stack */
     JS_UNASSIGNED_ARGUMENTS,     /* the initial value of callobj.arguments */
+    JS_OPTIMIZED_ARGUMENTS,      /* optimized-away 'arguments' value */
     JS_IS_CONSTRUCTING,          /* magic value passed to natives to indicate construction */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;

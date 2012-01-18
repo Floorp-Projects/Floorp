@@ -323,11 +323,20 @@ class DebugScript
     BreakpointSite  *breakpoints[1];
 };
 
+/*
+ * NB: after a successful JSXDR_DECODE, js_XDRScript callers must do any
+ * required subsequent set-up of owning function or script object and then call
+ * js_CallNewScriptHook.
+ */
+extern JSBool
+XDRScript(JSXDRState *xdr, JSScript **scriptp);
+
 } /* namespace js */
 
 static const uint32_t JS_SCRIPT_COOKIE = 0xc00cee;
 
-struct JSScript : public js::gc::Cell {
+struct JSScript : public js::gc::Cell
+{
     /*
      * Two successively less primitive ways to make a new JSScript.  The first
      * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
@@ -346,6 +355,8 @@ struct JSScript : public js::gc::Cell {
                                JSVersion version);
 
     static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
+
+    friend JSBool js::XDRScript(JSXDRState *, JSScript **);
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /*
@@ -390,7 +401,6 @@ struct JSScript : public js::gc::Cell {
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
     bool            usesEval:1;       /* script uses eval() */
-    bool            usesArguments:1;  /* script uses arguments */
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
@@ -403,8 +413,6 @@ struct JSScript : public js::gc::Cell {
                                         * outer function */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
-    bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
-    bool            createdArgs:1;    /* script has had arguments objects created */
     bool            uninlineable:1;   /* script is considered uninlineable by analysis */
     bool            reentrantOuterFunction:1; /* outer function marked reentrant */
     bool            typesPurged:1;    /* TypeScript has been purged at some point */
@@ -413,6 +421,28 @@ struct JSScript : public js::gc::Cell {
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
 #endif
     bool            callDestroyHook:1;/* need to call destroy hook */
+
+    /*
+     * An arguments object is created for a function script (when the function
+     * is first called) iff script->needsArgsObj(). There are several cases
+     * where the 'arguments' keyword is technically used but which don't really
+     * need an object (e.g., 'arguments[i]', 'f.apply(null, arguments')'). This
+     * determination is made during script analysis which occurs lazily (right
+     * before a script is run). Thus, the output of the front-end is a
+     * conservative 'mayNeedArgsObj' which leads to further analysis in
+     * analyzeBytecode and analyzeSSA. To avoid the complexity of spurious
+     * argument objects creation, we maintain the invariant that needsArgsObj()
+     * is only queried after this analysis has occurred (analyzedArgsUsage()).
+     */
+  private:
+    bool            mayNeedArgsObj_:1;
+    bool            analyzedArgsUsage_:1;
+    bool            needsArgsObj_:1;
+  public:
+    bool mayNeedArgsObj() const { return mayNeedArgsObj_; }
+    bool analyzedArgsUsage() const { return analyzedArgsUsage_; }
+    bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
+    void setNeedsArgsObj(bool needsArgsObj);
 
     uint32_t        natoms;     /* length of atoms array */
     uint16_t        nslots;     /* vars plus maximum stack depth */
@@ -865,14 +895,6 @@ CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_C
 
 extern JSScript *
 CloneScript(JSContext *cx, JSScript *script);
-
-/*
- * NB: after a successful JSXDR_DECODE, XDRScript callers must do any
- * required subsequent set-up of owning function or script object and then call
- * js_CallNewScriptHook.
- */
-extern JSBool
-XDRScript(JSXDRState *xdr, JSScript **scriptp);
 
 }
 
