@@ -620,3 +620,44 @@ add_test(function test_exception_in_onProgress() {
     server.stop(run_next_test);
   });
 });
+
+add_test(function test_new_channel() {
+  _("Ensure a redirect to a new channel is handled properly.");
+
+  let redirectRequested = false;
+  function redirectHandler(metadata, response) {
+    redirectRequested = true;
+
+    let body = "Redirecting";
+    response.setStatusLine(metadata.httpVersion, 307, "TEMPORARY REDIRECT");
+    response.setHeader("Location", "http://localhost:8081/resource");
+    response.bodyOutputStream.write(body, body.length);
+  }
+
+  let resourceRequested = false;
+  function resourceHandler(metadata, response) {
+    resourceRequested = true;
+
+    let body = "Test";
+    response.setHeader("Content-Type", "text/plain");
+    response.bodyOutputStream.write(body, body.length);
+  }
+  let server1 = httpd_setup({"/redirect": redirectHandler}, 8080);
+  let server2 = httpd_setup({"/resource": resourceHandler}, 8081);
+
+  function advance() {
+    server1.stop(function () {
+      server2.stop(run_next_test);
+    });
+  }
+
+  let request = new RESTRequest("http://localhost:8080/redirect");
+  request.get(function onComplete(error) {
+    let response = this.response;
+
+    do_check_eq(200, response.status);
+    do_check_eq("Test", response.body);
+
+    advance();
+  });
+});

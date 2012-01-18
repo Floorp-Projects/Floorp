@@ -23,9 +23,9 @@ function return_timestamp(request, response, timestamp) {
   return timestamp;
 }
 
-function httpd_setup (handlers) {
+function httpd_setup (handlers, port) {
+  let port   = port || 8080;
   let server = new nsHttpServer();
-  let port   = 8080;
   for (let path in handlers) {
     server.registerPathHandler(path, handlers[path]);
   }

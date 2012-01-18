@@ -244,15 +244,15 @@ AsyncResource.prototype = {
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
 
-    // Setup a callback to handle bad HTTPS certificates.
-    channel.notificationCallbacks = new BadCertListener();
+    // Setup a callback to handle channel notifications.
+    channel.notificationCallbacks = new ChannelNotificationListener();
 
     // Compose a UA string fragment from the various available identifiers.
     if (Svc.Prefs.get("sendVersionInfo", true)) {
       let ua = this._userAgent + Svc.Prefs.get("client.type", "desktop");
       channel.setRequestHeader("user-agent", ua, false);
     }
-    
+
     // Avoid calling the authorizer more than once.
     let headers = this.headers;
     for (let key in headers) {
@@ -520,7 +520,14 @@ ChannelListener.prototype = {
 
   onStartRequest: function Channel_onStartRequest(channel) {
     this._log.trace("onStartRequest called for channel " + channel + ".");
-    channel.QueryInterface(Ci.nsIHttpChannel);
+
+    try {
+      channel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (ex) {
+      this._log.error("Unexpected error: channel is not a nsIHttpChannel!");
+      channel.cancel(Cr.NS_BINDING_ABORTED);
+      return;
+    }
 
     // Save the latest server timestamp when possible.
     try {
@@ -538,6 +545,22 @@ ChannelListener.prototype = {
     // Clear the abort timer now that the channel is done.
     this.abortTimer.clear();
 
+    if (!this._onComplete) {
+      this._log.error("Unexpected error: _onComplete not defined in onStopRequest.");
+      this._onProgress = null;
+      return;
+    }
+
+    try {
+      channel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (ex) {
+      this._log.error("Unexpected error: channel is not a nsIHttpChannel!");
+
+      this._onComplete(ex, this._data, channel);
+      this._onComplete = this._onProgress = null;
+      return;
+    }
+
     let statusSuccess = Components.isSuccessCode(status);
     let uri = channel && channel.URI && channel.URI.spec || "<unknown>";
     this._log.trace("Channel for " + channel.requestMethod + " " + uri + ": " +
@@ -553,7 +576,9 @@ ChannelListener.prototype = {
     if (!statusSuccess) {
       let message = Components.Exception("", status).name;
       let error   = Components.Exception(message, status);
+
       this._onComplete(error, undefined, channel);
+      this._onComplete = this._onProgress = null;
       return;
     }
 
@@ -561,6 +586,7 @@ ChannelListener.prototype = {
                     ", URI = " + uri +
                     ", HTTP success? " + channel.requestSucceeded);
     this._onComplete(null, this._data, channel);
+    this._onComplete = this._onProgress = null;
   },
 
   onDataAvailable: function Channel_onDataAvail(req, cb, stream, off, count) {
@@ -600,40 +626,49 @@ ChannelListener.prototype = {
     this.onStopRequest = function() {};
     let error = Components.Exception("Aborting due to channel inactivity.",
                                      Cr.NS_ERROR_NET_TIMEOUT);
+    if (!this._onComplete) {
+      this._log.error("Unexpected error: _onComplete not defined in " +
+                      "abortRequest.");
+      return;
+    }
     this._onComplete(error);
   }
 };
 
-// = BadCertListener =
-//
-// We use this listener to ignore bad HTTPS
-// certificates and continue a request on a network
-// channel. Probably not a very smart thing to do,
-// but greatly simplifies debugging and is just very
-// convenient.
-function BadCertListener() {
+/**
+ * This class handles channel notification events.
+ *
+ * An instance of this class is bound to each created channel.
+ */
+function ChannelNotificationListener() {
 }
-BadCertListener.prototype = {
+ChannelNotificationListener.prototype = {
   getInterface: function(aIID) {
     return this.QueryInterface(aIID);
   },
 
   QueryInterface: function(aIID) {
-    if (aIID.equals(Components.interfaces.nsIBadCertListener2) ||
-        aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
-        aIID.equals(Components.interfaces.nsISupports))
+    if (aIID.equals(Ci.nsIBadCertListener2) ||
+        aIID.equals(Ci.nsIInterfaceRequestor) ||
+        aIID.equals(Ci.nsISupports) ||
+        aIID.equals(Ci.nsIChannelEventSink))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   notifyCertProblem: function certProblem(socketInfo, sslStatus, targetHost) {
-    // Silently ignore?
     let log = Log4Moz.repository.getLogger("Sync.CertListener");
-    log.level =
-      Log4Moz.Level[Svc.Prefs.get("log.logger.network.resources")];
-    log.debug("Invalid HTTPS certificate encountered, ignoring!");
+    log.warn("Invalid HTTPS certificate encountered!");
 
+    // This suppresses the UI warning only. The request is still cancelled.
     return true;
+  },
+
+  asyncOnChannelRedirect:
+    function asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
+
+    // We let all redirects proceed.
+    callback.onRedirectVerifyCallback(Cr.NS_OK);
   }
 };

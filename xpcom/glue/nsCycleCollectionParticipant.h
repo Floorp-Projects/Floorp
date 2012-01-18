@@ -134,6 +134,9 @@ protected:
 class NS_NO_VTABLE nsCycleCollectionParticipant
 {
 public:
+    nsCycleCollectionParticipant() : mMightSkip(false) {}
+    nsCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {} 
+    
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONPARTICIPANT_IID)
 
     NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb) = 0;
@@ -141,43 +144,6 @@ public:
     NS_IMETHOD Root(void *p) = 0;
     NS_IMETHOD Unlink(void *p) = 0;
     NS_IMETHOD Unroot(void *p) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant, 
-                              NS_CYCLECOLLECTIONPARTICIPANT_IID)
-
-#undef IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_COM_GLUE
-
-typedef void
-(* TraceCallback)(PRUint32 langID, void *p, const char *name, void *closure);
-
-class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
-{
-public:
-    NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure) = 0;
-    void NS_COM_GLUE TraverseScriptObjects(void *p,
-                                        nsCycleCollectionTraversalCallback &cb);
-};
-
-class NS_COM_GLUE nsXPCOMCycleCollectionParticipant
-    : public nsScriptObjectTracer
-{
-public:
-    nsXPCOMCycleCollectionParticipant() : mMightSkip(false) {}
-    nsXPCOMCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {}
-
-    NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
-
-    NS_IMETHOD Root(void *p);
-    NS_IMETHOD Unlink(void *p);
-    NS_IMETHOD Unroot(void *p);
-
-    NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);
-
-    NS_IMETHOD_(void) UnmarkPurple(nsISupports *p);
-
-    bool CheckForRightISupports(nsISupports *s);
 
     // If CanSkip returns true, p is removed from the purple buffer during
     // a call to nsCycleCollector_forgetSkippable().
@@ -221,6 +187,48 @@ protected:
 
 private:
     bool mMightSkip;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant, 
+                              NS_CYCLECOLLECTIONPARTICIPANT_IID)
+
+#undef IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY NS_COM_GLUE
+
+typedef void
+(* TraceCallback)(PRUint32 langID, void *p, const char *name, void *closure);
+
+class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
+{
+public:
+    nsScriptObjectTracer() : nsCycleCollectionParticipant(false) {}
+    nsScriptObjectTracer(bool aSkip) : nsCycleCollectionParticipant(aSkip) {}
+
+    NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure) = 0;
+    void NS_COM_GLUE TraverseScriptObjects(void *p,
+                                        nsCycleCollectionTraversalCallback &cb);
+};
+
+class NS_COM_GLUE nsXPCOMCycleCollectionParticipant
+    : public nsScriptObjectTracer
+{
+public:
+    nsXPCOMCycleCollectionParticipant()
+    : nsScriptObjectTracer(false) {}
+    nsXPCOMCycleCollectionParticipant(bool aSkip)
+    : nsScriptObjectTracer(aSkip) {}
+
+    NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
+
+    NS_IMETHOD Root(void *p);
+    NS_IMETHOD Unlink(void *p);
+    NS_IMETHOD Unroot(void *p);
+
+    NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);
+
+    NS_IMETHOD_(void) UnmarkPurple(nsISupports *p);
+
+    bool CheckForRightISupports(nsISupports *s);
 };
 
 #undef IMETHOD_VISIBILITY
