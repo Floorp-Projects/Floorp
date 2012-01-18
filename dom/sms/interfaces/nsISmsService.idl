@@ -40,8 +40,8 @@
 interface nsIDOMMozSmsMessage;
 
 %{C++
-#define NS_SMSSERVICE_CID { 0xbada3cb8, 0xa568, 0x4dff, { 0xb5, 0x43, 0x52, 0xbb, 0xb3, 0x14, 0x31, 0x21 } }
-#define SMSSERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
+#define SMS_SERVICE_CID { 0xbada3cb8, 0xa568, 0x4dff, { 0xb5, 0x43, 0x52, 0xbb, 0xb3, 0x14, 0x31, 0x21 } }
+#define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
 [scriptable, builtinclass, uuid(a0fbbe74-5d61-4b7e-b7ab-9b5224f9e5e9)]
@@ -49,7 +49,8 @@ interface nsISmsService : nsISupports
 {
   boolean        hasSupport();
   unsigned short getNumberOfMessagesForText(in DOMString text);
-            void send(in DOMString number, in DOMString message);
+            void send(in DOMString number, in DOMString message,
+                      in long requestId, [optional] in unsigned long long processId);
 
   [implicit_jscontext]
   nsIDOMMozSmsMessage createSmsMessage(in long      id,

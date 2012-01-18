@@ -1678,13 +1678,7 @@ void
 JSContext::updateJITEnabled()
 {
 #ifdef JS_METHODJIT
-    methodJitEnabled = (runOptions & JSOPTION_METHODJIT) &&
-                       !IsJITBrokenHere()
-# if defined JS_CPU_X86 || defined JS_CPU_X64
-                       && JSC::MacroAssemblerX86Common::getSSEState() >=
-                          JSC::MacroAssemblerX86Common::HasSSE2
-# endif
-                        ;
+    methodJitEnabled = (runOptions & JSOPTION_METHODJIT) && !IsJITBrokenHere();
 #endif
 }
 

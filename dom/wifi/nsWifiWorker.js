@@ -51,6 +51,13 @@ const WIFIWORKER_CID        = Components.ID("{a14e8977-d259-433a-a88d-58dd44657e
 
 const WIFIWORKER_WORKER     = "resource://gre/modules/network_worker.js";
 
+// A note about errors and error handling in this file:
+// The libraries that we use in this file are intended for C code. For
+// C code, it is natural to return -1 for errors and 0 for success.
+// Therefore, the code that interacts directly with the worker uses this
+// convention (note: command functions do get boolean results since the
+// command always succeeds and we do a string/boolean check for the
+// expected results).
 var WifiManager = (function() {
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
@@ -506,6 +513,37 @@ var WifiManager = (function() {
     connectToSupplicant(connectCallback);
   }
 
+  function onconnected() {
+    runDhcp(manager.ifname, function (data) {
+      if (!data) {
+        debug("DHCP failed to run");
+        return;
+      }
+      setProperty("net.dns1", ipToString(data.dns1), function(ok) {
+        if (!ok) {
+          debug("Unable to set net.dns1");
+          return;
+        }
+        setProperty("net.dns2", ipToString(data.dns2), function(ok) {
+          if (!ok) {
+            debug("Unable to set net.dns2");
+            return;
+          }
+          getProperty("net.dnschange", "0", function(value) {
+            if (value === null) {
+              debug("Unable to get net.dnschange");
+              return;
+            }
+            setProperty("net.dnschange", String(Number(value) + 1), function(ok) {
+              if (!ok)
+                debug("Unable to set net.dnschange");
+            });
+          });
+        });
+      });
+    });
+  }
+
   var supplicantStatesMap = ["DISCONNECTED", "INACTIVE", "SCANNING", "ASSOCIATING",
                              "FOUR_WAY_HANDSHAKE", "GROUP_HANDSHAKE", "COMPLETED",
                              "DORMANT", "UNINITIALIZED"];
@@ -569,6 +607,7 @@ var WifiManager = (function() {
       var bssid = eventData.split(" ")[4];
       var id = eventData.substr(eventData.indexOf("id=")).split(" ")[0];
       notify("statechange", { state: "CONNECTED", BSSID: bssid, id: id });
+      onconnected();
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-SCAN-RESULTS") === 0) {
@@ -591,12 +630,37 @@ var WifiManager = (function() {
     if (enable && airplaneMode)
       return false;
     if (enable) {
-      loadDriver(function (ok) {
-        (ok === 0) ? startSupplicant(callback) : callback(-1);
+      loadDriver(function (status) {
+        if (status < 0) {
+          callback(status);
+          return;
+        }
+        startSupplicant(function (status) {
+          if (status < 0) {
+            callback(status);
+            return;
+          }
+          getProperty("wifi.interface", "tiwlan0", function (ifname) {
+            if (!ifname) {
+              callback(-1);
+              return;
+            }
+            manager.ifname = ifname;
+            enableInterface(ifname, function (ok) {
+              callback(ok ? 0 : -1);
+            });
+          });
+        });
       });
     } else {
-      stopSupplicant(function (ok) {
-        (ok === 0) ? unloadDriver(callback) : callback(-1);
+      stopSupplicant(function (status) {
+        if (ok < 0) {
+          callback(-1);
+          return;
+        }
+        disableInterface(manager.ifname, function (ok) {
+          unloadDriver(callback);
+        });
       });
     }
   }
@@ -700,50 +764,7 @@ var WifiManager = (function() {
   }
 
   manager.enableNetwork = function(netId, disableOthers, callback) {
-    getProperty("wifi.interface", "tiwlan0", function (ifname) {
-      if (!ifname) {
-        callback(false);
-        return;
-      }
-      enableInterface(ifname, function (ok) {
-        if (!ok) {
-          callback(false);
-          return;
-        }
-        enableNetworkCommand(netId, disableOthers, function (ok) {
-          if (!ok) {
-            disableInterface(ifname, function () {
-              callback(false);
-            });
-            return;
-          }
-          runDhcp(ifname, function (data) {
-            debug("After running dhcp, got data: " + uneval(data));
-            if (!data) {
-              disableInterface(ifname, function() {
-                callback(false);
-              });
-              return;
-            }
-            setProperty("net.dns1", ipToString(data.dns1), function(ok) {
-              if (!ok) {
-                callback(false);
-                return;
-              }
-              getProperty("net.dnschange", "0", function(value) {
-                if (value === null) {
-                  callback(false);
-                  return;
-                }
-                setProperty("net.dnschange", String(Number(value) + 1), function(ok) {
-                  callback(ok);
-                });
-              });
-            });
-          });
-        });
-      });
-    });
+    enableNetworkCommand(netId, disableOthers, callback);
   }
   manager.disableNetwork = function(netId, callback) {
     disableNetworkCommand(netId, callback);

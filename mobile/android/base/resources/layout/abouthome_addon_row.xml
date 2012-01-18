@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="47dip"
-          android:paddingLeft="12dip"
-          android:gravity="left|center_vertical"
-          android:textSize="15sp"
-          android:textColor="#222222"/>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="fill_parent"
+             android:layout_height="wrap_content"
+             android:background="@drawable/abouthome_separator">
+
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/addon_title"
+              android:layout_width="fill_parent"
+              android:layout_height="47dip"
+              android:paddingLeft="12dip"
+              android:gravity="left|center_vertical"
+              android:textSize="15sp"
+              android:background="@android:drawable/list_selector_background"
+              android:textColor="#222222"
+              android:clickable="true"/>
+
+</FrameLayout>

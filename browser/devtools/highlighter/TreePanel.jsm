@@ -361,7 +361,7 @@ TreePanel.prototype = {
           this.IUI.stopInspecting(true);
         } else {
           this.IUI.select(node, true, false);
-          this.IUI.highlighter.highlightNode(node);
+          this.IUI.highlighter.highlight(node);
         }
       }
     }

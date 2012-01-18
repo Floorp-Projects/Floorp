@@ -59,6 +59,9 @@
 #include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
+#ifdef JS_METHODJIT
+# include "assembler/assembler/MacroAssembler.h"
+#endif
 
 #include "jsatominlines.h"
 #include "jsgcinlines.h"
@@ -1961,8 +1964,13 @@ TypeCompartment::init(JSContext *cx)
 {
     PodZero(this);
 
-    if (cx && cx->getRunOptions() & JSOPTION_TYPE_INFERENCE)
-        inferenceEnabled = true;
+    if (cx && cx->getRunOptions() & JSOPTION_TYPE_INFERENCE) {
+#ifdef JS_METHODJIT
+        JSC::MacroAssembler masm;
+        if (masm.supportsFloatingPoint())
+#endif
+            inferenceEnabled = true;
+    }
 }
 
 TypeObject *
@@ -4301,7 +4309,7 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, const SSAValue &v, Vector
         return true;
 
     for (unsigned i = 0; i < seen->length(); i++) {
-        if (v.equals((*seen)[i]))
+        if (v == (*seen)[i])
             return true;
     }
     if (!seen->append(v)) {

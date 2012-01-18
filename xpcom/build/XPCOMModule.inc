@@ -62,8 +62,6 @@
     COMPONENT(VARIANT, nsVariantConstructor)
     COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton)
 
-    COMPONENT(RECYCLINGALLOCATOR, nsRecyclingAllocatorImplConstructor)
-
     COMPONENT(HASH_PROPERTY_BAG, nsHashPropertyBagConstructor)
 
     COMPONENT(UUID_GENERATOR, nsUUIDGeneratorConstructor)

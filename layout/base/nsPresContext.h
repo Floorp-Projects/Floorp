@@ -110,19 +110,6 @@ class nsIDOMMediaQueryList;
 class nsRenderingContext;
 #endif
 
-enum nsWidgetType {
-  eWidgetType_Button  	= 1,
-  eWidgetType_Checkbox	= 2,
-  eWidgetType_Radio			= 3,
-  eWidgetType_Text			= 4
-};
-
-enum nsLanguageSpecificTransformType {
-  eLanguageSpecificTransformType_Unknown = -1,
-  eLanguageSpecificTransformType_None = 0,
-  eLanguageSpecificTransformType_Japanese
-};
-
 // supported values for cached bool types
 enum nsPresContext_CachedBoolPrefType {
   kPresContext_UseDocumentColors = 1,

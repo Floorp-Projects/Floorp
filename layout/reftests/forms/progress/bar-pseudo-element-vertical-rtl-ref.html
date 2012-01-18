@@ -17,10 +17,10 @@
     body > div:nth-child(10) > .progress-bar {  }
     body > div:nth-child(11) > .progress-bar { }
     /* 12 - 15 should have 100% width, no need to specify. */
-    body > div:nth-child(16) > .progress-bar { position: relative; top: 64px;
-                                               left: -moz-calc(100% + 128px + 32px );
-                                               height: -moz-calc(100% - 32px);
-                                               width: -moz-calc(100% + 128px - 1em); }
+    body > div:nth-of-type(16) > .progress-bar { position: relative; top: 64px;
+                                                 left: -moz-calc(100% + 128px + 32px );
+                                                 height: -moz-calc(100% - 32px);
+                                                 width: -moz-calc(100% + 128px - 1em); }
   </style>
   <body dir='rtl'>
     <div class="progress-element vertical">
@@ -83,7 +83,7 @@
       <div class="progress-bar">
       </div>
     </div>
-    <div class="progress-element vertical">
+    <br><div class="progress-element vertical">
       <div class="progress-bar">
       </div>
     </div>

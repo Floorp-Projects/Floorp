@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Hal.h"
+#include "mozilla/dom/network/Constants.h"
 
 #ifndef MOZ_ENABLE_DBUS
 #include <mozilla/dom/battery/Constants.h>
@@ -89,6 +90,21 @@ GetScreenBrightness()
 void
 SetScreenBrightness(double brightness)
 {}
+
+void
+EnableNetworkNotifications()
+{}
+
+void
+DisableNetworkNotifications()
+{}
+
+void
+GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
+{
+  aNetworkInfo->bandwidth() = dom::network::kDefaultBandwidth;
+  aNetworkInfo->canBeMetered() = dom::network::kDefaultCanBeMetered;
+}
 
 } // hal_impl
 } // mozilla

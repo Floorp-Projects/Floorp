@@ -4629,6 +4629,7 @@ USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
+MOZ_WEBSMS_BACKEND=1
 MOZ_GRAPHITE=1
 
 case "${target}" in
@@ -5465,6 +5466,18 @@ if test -n "$MOZ_ANDROID_HISTORY"; then
      AC_DEFINE(MOZ_ANDROID_HISTORY)
 fi
 
+dnl ========================================================
+dnl = Disable WebSMS backend
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(websms-backend,
+[  --disable-websms-backend
+                           Disable WebSMS backend],
+    MOZ_WEBSMS_BACKEND=,
+    MOZ_WEBSMS_BACKEND=1)
+
+if test $MOZ_WEBSMS_BACKEND -eq 1; then
+    AC_DEFINE(MOZ_WEBSMS_BACKEND)
+fi
 
 dnl ========================================================
 dnl = Build Personal Security Manager
@@ -8445,6 +8458,7 @@ AC_SUBST(MOZ_D3DX9_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_DLL)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)
+AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(USE_ELF_DYNSTR_GC)

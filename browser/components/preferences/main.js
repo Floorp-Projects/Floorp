@@ -371,7 +371,7 @@ var gMainPane = {
     } else {
       // 'Desktop'
       downloadFolder.label = bundlePreferences.getString("desktopFolderName");
-      iconUrlSpec = fph.getURLSpecFromFile(desk);
+      iconUrlSpec = fph.getURLSpecFromFile(this._getDownloadsFolder("Desktop"));
     }
     downloadFolder.image = "moz-icon://" + iconUrlSpec + "?size=16";
     
