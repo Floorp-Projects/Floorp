@@ -83,7 +83,7 @@ endif
 #   browser_sanitize-download-history.js is bug 432425
 #
 # browser_sanitizeDialog_treeView.js is disabled until the tree view is added
-# back to the clear recent history dialog (santize.xul), if it ever is (bug
+# back to the clear recent history dialog (sanitize.xul), if it ever is (bug
 # 480169)
 
 # browser_drag.js is disabled, as it needs to be updated for the new behavior from bug 320638.
