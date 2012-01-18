@@ -67,7 +67,7 @@
 // base::FileDescriptor acts as a static assert that we only get one
 // def or the other (or neither, in which case code using
 // FileDescriptor fails to build)
-namespace base { class FileDescriptor { }; }
+namespace base { struct FileDescriptor { }; }
 #endif
 
 using mozilla::layers::LayerManager;

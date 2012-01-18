@@ -45,6 +45,9 @@ function test() {
   checkInterface("NavigatorSms");
   checkInterface("SmsMessage");
   checkInterface("SmsEvent");
+  checkInterface("SmsRequest");
+  checkInterface("SmsFilter");
+  checkInterface("SmsCursor");
 
   // If sms are disabled and whitelist is empty, sms is disabled.
   SpecialPowers.setBoolPref("dom.sms.enabled", false);

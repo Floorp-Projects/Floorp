@@ -87,7 +87,10 @@
 
 <body dir="&locale.dir;" onload="init();" onunload="uninit();">
   <div id="addons-header">
-    <div>&aboutAddons.header;</div>
+    <div>
+      <div>&aboutAddons.header2;</div>
+      <img src="chrome://browser/skin/images/addons-amo-hdpi.png" pref="extensions.getAddons.browseAddons" onclick="openLink(this);"/>
+    </div>
   </div>
   <div id="addons-list" style="display: none;">
   </div>
@@ -144,6 +147,15 @@
 
     function uninit() {
       AddonManager.removeInstallListener(Addons);
+    }
+
+    function openLink(aElement) {
+      try {
+        let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+        let url = formatter.formatURLPref(aElement.getAttribute("pref"));
+        let BrowserApp = getChromeWin().BrowserApp;
+        BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
+      } catch (ex) {}
     }
 
     function onPopState(aEvent) {
@@ -307,13 +319,11 @@
       },
 
       showDetails: function showDetails(aListItem) {
-        Services.console.logStringMessage("---- showing details")
         let detailItem = document.querySelector("#addons-details > .addon-item");
         detailItem.setAttribute("isDisabled", aListItem.getAttribute("isDisabled"));
         detailItem.setAttribute("opType", aListItem.getAttribute("opType"));
         detailItem.setAttribute("optionsURL", aListItem.getAttribute("optionsURL"));
         detailItem.addon = aListItem.addon;
-        Services.console.logStringMessage("---- did step 1")
 
         let addon = detailItem.addon;
         document.querySelector("#addons-details > .addon-item .favicon").setAttribute("src", addon.iconURL);
@@ -321,7 +331,6 @@
         document.querySelector("#addons-details > .addon-item .version").textContent = addon.version;
         document.querySelector("#addons-details > .addon-item .tag").textContent = gStringBundle.GetStringFromName("addonType." + addon.type);
         document.querySelector("#addons-details > .addon-item .description-full").textContent = addon.description;
-        Services.console.logStringMessage("---- did step 2")
 
         let enableBtn = document.getElementById("uninstall-btn");
         if (addon.appDisabled)
@@ -377,7 +386,6 @@
         list.style.display = "none";
         let details = document.querySelector("#addons-details");
         details.style.display = "block";
-        Services.console.logStringMessage("---- did step 3")
       },
 
       enable: function enable() {
@@ -425,7 +433,7 @@
         detailItem.setAttribute("isDisabled", isDisabled);
 
         // Sync to the list item
-        let listItem = this._getElementForAddon(detailItemaddon.id);
+        let listItem = this._getElementForAddon(detailItem.addon.id);
         listItem.setAttribute("isDisabled", detailItem.getAttribute("isDisabled"));
         listItem.setAttribute("opType", detailItem.getAttribute("opType"));
       },

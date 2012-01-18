@@ -35,29 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "SmsServiceFactory.h"
-#include "nsXULAppAPI.h"
-#include "SmsService.h"
-#include "SmsIPCService.h"
+#ifndef mozilla_dom_network_Types_h
+#define mozilla_dom_network_Types_h
 
 namespace mozilla {
-namespace dom {
-namespace sms {
+namespace hal {
+class NetworkInformation;
+} // namespace hal
 
-/* static */ already_AddRefed<nsISmsService>
-SmsServiceFactory::Create()
-{
-  nsCOMPtr<nsISmsService> smsService;
+template <class T>
+class Observer;
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    smsService = new SmsIPCService();
-  } else {
-    smsService = new SmsService();
-  }
+typedef Observer<hal::NetworkInformation> NetworkObserver;
 
-  return smsService.forget();
-}
-
-} // namespace sms
-} // namespace dom
 } // namespace mozilla
+
+#endif // mozilla_dom_network_Types_h

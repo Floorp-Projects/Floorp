@@ -50,6 +50,8 @@ const DEBUG = true; // set to false to suppress debug messages
 
 const TELEPHONYWORKER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
+const DATACALLINFO_CID =
+  Components.ID("{ef474cd9-94f7-4c05-a31b-29b9de8a10d2}");
 
 const nsIAudioManager = Ci.nsIAudioManager;
 const nsITelephone = Ci.nsITelephone;
@@ -108,6 +110,20 @@ XPCOMUtils.defineLazyGetter(this, "gAudioManager", function getAudioManager() {
     return FakeAudioManager;
   }
 });
+
+
+function DataCallInfo(state, cid, apn) {
+  this.callState = state;
+  this.cid = cid;
+  this.apn = apn;
+}
+DataCallInfo.protoptype = {
+  classID:      DATACALLINFO_CID,
+  classInfo:    XPCOMUtils.generateCI({classID: DATACALLINFO_CID,
+                                       classDescription: "DataCallInfo",
+                                       interfaces: [Ci.nsIDataCallInfo]}),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDataCallInfo]),
+};
 
 
 function nsTelephonyWorker() {
@@ -178,6 +194,12 @@ nsTelephonyWorker.prototype = {
       case "sms-received":
         this.handleSmsReceived(message);
         return;
+      case "datacallstatechange":
+        this.handleDataCallState(message);
+        break;
+      case "datacalllist":
+        this.handleDataCallList(message);
+        break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
     }
@@ -278,6 +300,29 @@ nsTelephonyWorker.prototype = {
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
   },
 
+  /**
+   * Handle data call state changes.
+   */
+  handleDataCallState: function handleDataCallState(message) {
+    let ifname = message.ifname ? message.ifname : "";
+    this._deliverDataCallCallback("dataCallStateChanged",
+                                  [message.cid, ifname, message.state]);
+  },
+
+  /**
+   * Handle data call list.
+   */
+  handleDataCallList: function handleDataCallList(message) {
+    let datacalls = [];
+    for each (let datacall in message.datacalls) {
+      datacalls.push(new DataCallInfo(datacall.state,
+                                      datacall.cid,
+                                      datacall.apn));
+    }
+    this._deliverDataCallCallback("receiveDataCallList",
+                                  [datacalls, datacalls.length]);
+  },
+
   // nsIRadioWorker
 
   worker: null,
@@ -295,7 +340,7 @@ nsTelephonyWorker.prototype = {
     debug("Hanging up call no. " + callIndex);
     this.worker.postMessage({type: "hangUp", callIndex: callIndex});
   },
-  
+
   startTone: function startTone(dtmfChar) {
     debug("Sending Tone for " + dtmfChar);
     this.worker.postMessage({type: "startTone", dtmfChar: dtmfChar});
@@ -415,6 +460,84 @@ nsTelephonyWorker.prototype = {
       }
     }
   },
+
+  registerDataCallCallback: function registerDataCallCallback(callback) {
+    if (this._datacall_callbacks) {
+      if (this._datacall_callbacks.indexOf(callback) != -1) {
+        throw new Error("Already registered this callback!");
+      }
+    } else {
+      this._datacall_callbacks = [];
+    }
+    this._datacall_callbacks.push(callback);
+    debug("Registering callback: " + callback);
+  },
+
+  unregisterDataCallCallback: function unregisterDataCallCallback(callback) {
+    if (!this._datacall_callbacks) {
+      return;
+    }
+    let index = this._datacall_callbacks.indexOf(callback);
+    if (index != -1) {
+      this._datacall_callbacks.splice(index, 1);
+      debug("Unregistering callback: " + callback);
+    }
+  },
+
+  _deliverDataCallCallback: function _deliverDataCallCallback(name, args) {
+    // We need to worry about callback registration state mutations during the
+    // callback firing. The behaviour we want is to *not* call any callbacks
+    // that are added during the firing and to *not* call any callbacks that are
+    // removed during the firing. To address this, we make a copy of the
+    // callback list before dispatching and then double-check that each callback
+    // is still registered before calling it.
+    if (!this._datacall_callbacks) {
+      return;
+    }
+    let callbacks = this._datacall_callbacks.slice();
+    for each (let callback in callbacks) {
+      if (this._datacall_callbacks.indexOf(callback) == -1) {
+        continue;
+      }
+      let handler = callback[name];
+      if (typeof handler != "function") {
+        throw new Error("No handler for " + name);
+      }
+      try {
+        handler.apply(callback, args);
+      } catch (e) {
+        debug("callback handler for " + name + " threw an exception: " + e);
+      }
+    }
+  },
+
+  setupDataCall: function(radioTech, apn, user, passwd, chappap, pdptype) {
+    this.worker.postMessage({type: "setupDataCall",
+                             radioTech: radioTech,
+                             apn: apn,
+                             user: user,
+                             passwd: passwd,
+                             chappap: chappap,
+                             pdptype: pdptype});
+    this._deliverDataCallCallback("dataCallStateChanged",
+                                  [message.cid, "",
+                                   RIL.GECKO_DATACALL_STATE_CONNECTING]);
+  },
+
+  deactivateDataCall: function(cid, reason) {
+    this.worker.postMessage({type: "deactivateDataCall",
+                             cid: cid,
+                             reason: reason});
+    this._deliverDataCallCallback("dataCallStateChanged",
+                                  [message.cid,
+                                   "",
+                                   RIL.GECKO_DATACALL_STATE_DISCONNECTING]);
+  },
+
+  getDataCallList: function getDataCallList() {
+    this.worker.postMessage({type: "getDataCallList"});
+  },
+
 };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([nsTelephonyWorker]);

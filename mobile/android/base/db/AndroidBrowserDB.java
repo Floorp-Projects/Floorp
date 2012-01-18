@@ -38,7 +38,6 @@
 package org.mozilla.gecko.db;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Date;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -82,7 +81,7 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                             // was accessed with a site accessed today getting 120 and a site accessed 119 or more
                             // days ago getting 1
                             Browser.BookmarkColumns.VISITS + " * MAX(1, (" +
-                            Browser.BookmarkColumns.DATE + " - " + new Date().getTime() + ") / 86400000 + 120) DESC LIMIT " + limit);
+                            Browser.BookmarkColumns.DATE + " - " + System.currentTimeMillis() + ") / 86400000 + 120) DESC LIMIT " + limit);
 
         return new AndroidDBCursor(c);
     }
