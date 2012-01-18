@@ -289,7 +289,7 @@ HISTOGRAM(PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS, 50, 500, 10, EXPONENTIAL, "PLA
 /**
  * Updater telemetry.
  */
-HISTOGRAM(UPDATE_STATUS, 1, 16006, 20, LINEAR, "Updater: the status of the latest update performed")
+HISTOGRAM(UPDATE_STATUS, 1, 16006, 27, LINEAR, "Updater: the status of the latest update performed")
 
 /**
  * Thunderbird-specific telemetry.
