@@ -133,6 +133,13 @@ private:
 };
 
 /**
+ * Indicates whether Telemetry recording is turned on.  This is intended
+ * to guard calls to Accumulate when the statistic being recorded is
+ * expensive to compute.
+ */
+bool CanRecord();
+
+/**
  * Records slow SQL statements for Telemetry reporting.
  * For privacy reasons, only prepared statements are reported.
  *
