@@ -5,9 +5,9 @@
 // These are small test files, good for just seeing if something loads. We
 // really only need one test file per backend here.
 var gSmallTests = [
+  { name:"small-shot.ogg", type:"audio/ogg", duration:0.276 },
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233 },
-  { name:"small-shot.ogg", type:"audio/ogg", duration:0.276 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
@@ -294,6 +294,14 @@ function checkMetadata(msg, e, test) {
 function getPlayableVideo(candidates) {
   var v = document.createElement("video");
   var resources = candidates.filter(function(x){return /^video/.test(x.type) && v.canPlayType(x.type);});
+  if (resources.length > 0)
+    return resources[0];
+  return null;
+}
+
+function getPlayableAudio(candidates) {
+  var v = document.createElement("audio");
+  var resources = candidates.filter(function(x){return /^audio/.test(x.type) && v.canPlayType(x.type);});
   if (resources.length > 0)
     return resources[0];
   return null;
