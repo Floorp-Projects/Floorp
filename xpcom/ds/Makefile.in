@@ -65,7 +65,6 @@ CPPSRCS		= \
 		nsObserverService.cpp \
 		nsProperties.cpp \
 		nsPersistentProperties.cpp \
-		nsRecyclingAllocator.cpp \
 		nsStaticNameTable.cpp \
 		nsStringEnumerator.cpp \
 		nsSupportsArray.cpp \
@@ -107,7 +106,6 @@ EXPORTS		= \
 		nsIUnicharBuffer.h \
 		nsMathUtils.h \
 		nsObserverService.h \
-		nsRecyclingAllocator.h \
 		nsStaticNameTable.h \
 		nsStaticAtom.h \
 		nsSupportsArray.h \
@@ -132,7 +130,6 @@ XPIDLSRCS	= \
 		nsIPropertyBag2.idl \
 		nsIWritablePropertyBag.idl \
 		nsIWritablePropertyBag2.idl \
-		nsIRecyclingAllocator.idl \
 		nsIVariant.idl \
 		nsISerializable.idl \
 		nsIStringEnumerator.idl \
