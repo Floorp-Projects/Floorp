@@ -101,7 +101,7 @@
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       _PrefSvc = Components.classes["@mozilla.org/preferences-service;1"]
         .getService(Components.interfaces.nsIPrefService)
-        .QueryInterface(Components.interfaces.nsIPrefBranch2);
+        .QueryInterface(Components.interfaces.nsIPrefBranch);
       return _PrefSvc;
     } catch (e) {}
     return null;

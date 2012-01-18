@@ -88,7 +88,6 @@ WeaveCrypto.prototype = {
         try {
             // Preferences. Add observer so we get notified of changes.
             this.prefBranch = Services.prefs.getBranch("services.sync.log.");
-            this.prefBranch.QueryInterface(Ci.nsIPrefBranch2);
             this.prefBranch.addObserver("cryptoDebug", this.observer, false);
             this.observer._self = this;
             this.debug = this.prefBranch.getBoolPref("cryptoDebug");
