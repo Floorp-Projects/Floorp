@@ -94,6 +94,7 @@ struct leaky {
   bool  quiet;
   bool  showAddress;
   bool  showThreads;
+  bool  cleo;
   u_int stackDepth;
   int   onlyThread;
   char* output_dir;
