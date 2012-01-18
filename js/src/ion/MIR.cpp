@@ -419,7 +419,9 @@ MPhi::foldsTo(bool useValueNumbers)
     MDefinition *first = getOperand(0);
 
     for (size_t i = 1; i < inputs_.length(); i++) {
-        if (!EqualValues(useValueNumbers, getOperand(i), first))
+        // Phis need dominator information to fold based on value numbers. For
+        // simplicity, we only compare SSA names right now (bug 714727).
+        if (!EqualValues(false, getOperand(i), first))
             return this;
     }
 
