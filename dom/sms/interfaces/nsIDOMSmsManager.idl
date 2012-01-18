@@ -37,12 +37,28 @@
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMEventListener;
+interface nsIDOMMozSmsRequest;
+interface nsIDOMMozSmsFilter;
 
-[scriptable, function, uuid(807d593c-09cb-4aa3-afa5-aa0a671bd0d3)]
+[scriptable, function, uuid(c9916dce-2947-41bb-95c2-818f792a020c)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
-  unsigned short getNumberOfMessagesForText(in DOMString text);
-            void send(in DOMString number, in DOMString message);
+  unsigned short      getNumberOfMessagesForText(in DOMString text);
+
+  // The first parameter can be either a DOMString (only one number) or an array
+  // of DOMStrings.
+  // The method returns a SmsRequest object if one number has been passed.
+  // An array of SmsRequest objects otherwise.
+  jsval send(in jsval number, in DOMString message);
+
+  [binaryname(GetMessageMoz)] nsIDOMMozSmsRequest getMessage(in long id);
+
+  // The parameter can be either a message id or a SmsMessage.
+  nsIDOMMozSmsRequest delete(in jsval param);
+
+  nsIDOMMozSmsRequest getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
 
   attribute nsIDOMEventListener onreceived;
+  attribute nsIDOMEventListener onsent;
+  attribute nsIDOMEventListener ondelivered;
 };

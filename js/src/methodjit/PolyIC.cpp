@@ -2439,7 +2439,7 @@ GetElementIC::attachArguments(VMFrame &f, JSObject *obj, const Value &v, jsid id
 
     masm.push(typeReg);
 
-    Address argsObject(typeReg, StackFrame::offsetOfArgs());
+    Address argsObject(typeReg, StackFrame::offsetOfArgsObj());
     masm.loadPtr(argsObject, typeReg);
 
     masm.load32(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), 
@@ -2537,6 +2537,14 @@ GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid i
                  : Int32Key::FromRegister(idRemat.dataReg());
 
     JSObject *tarray = js::TypedArray::getTypedArray(obj);
+    if (!masm.supportsFloatingPoint() &&
+        (TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT32 ||
+         TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT64 ||
+         TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT32))
+    {
+        return disable(cx, "fpu not supported");
+    }
+
     MaybeRegisterID tempReg;
     masm.loadFromTypedArray(TypedArray::getType(tarray), objReg, key, typeReg, objReg, tempReg);
 
@@ -2829,6 +2837,13 @@ SetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, int32_t key)
     masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);
 
     JSObject *tarray = js::TypedArray::getTypedArray(obj);
+    if (!masm.supportsFloatingPoint() &&
+        (TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT32 ||
+         TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT64))
+    {
+        return disable(cx, "fpu not supported");
+    }
+
     int shift = js::TypedArray::slotWidth(obj);
     if (hasConstantKey) {
         Address addr(objReg, keyValue * shift);

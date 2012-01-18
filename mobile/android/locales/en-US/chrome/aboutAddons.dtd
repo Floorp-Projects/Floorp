@@ -1,5 +1,5 @@
 <!ENTITY aboutAddons.title                      "Add-ons Manager">
-<!ENTITY aboutAddons.header                     "Add-ons">
+<!ENTITY aboutAddons.header2                    "Your Add-ons">
 <!ENTITY aboutAddons.options                    "Options">
 
 <!ENTITY addonAction.enable                     "Enable">

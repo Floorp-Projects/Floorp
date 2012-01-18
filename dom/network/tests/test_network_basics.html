@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Network API</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Network API **/
+
+function checkInterface(aInterface) {
+  ok(!(aInterface in window), aInterface + " should be prefixed");
+  ok(("Moz" + aInterface) in window, aInterface + " should be prefixed");
+}
+
+ok('mozConnection' in navigator, "navigator.mozConnection should exist");
+
+ok(navigator.mozConnection, "navigator.mozConnection returns an object");
+
+ok(navigator.mozConnection instanceof MozConnection,
+   "navigator.mozConnection is a MozConnection object");
+
+checkInterface("Connection");
+
+ok('bandwidth' in navigator.mozConnection,
+   "bandwidth should be a Connection attribute");
+is(navigator.mozConnection.bandwidth, Infinity,
+   "By default connection.bandwidth is equals to Infinity");
+
+ok('metered' in navigator.mozConnection,
+   "metered should be a Connection attribute");
+is(navigator.mozConnection.metered, false,
+   "By default the connection is not metered");
+
+</script>
+</pre>
+</body>
+</html>

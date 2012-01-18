@@ -35,25 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsServiceFactory_h
-#define mozilla_dom_sms_SmsServiceFactory_h
-
-#include "nsCOMPtr.h"
-
-class nsISmsService;
+#include "Utils.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace dom {
-namespace sms {
+namespace network {
 
-class SmsServiceFactory
+/* extern */ bool
+IsAPIEnabled()
 {
-public:
-  static already_AddRefed<nsISmsService> Create();
-};
+  return Preferences::GetBool("dom.network.enabled", true);
+}
 
-} // namespace sms
+} // namespace network
 } // namespace dom
 } // namespace mozilla
-
-#endif // mozilla_dom_sms_SmsServiceFactory_h

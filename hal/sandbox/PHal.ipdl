@@ -50,6 +50,13 @@ namespace hal {
   };
 }
 
+namespace hal {
+  struct NetworkInformation {
+    double bandwidth;
+    bool   canBeMetered;
+  };
+}
+
 namespace hal_sandbox {
 
 sync protocol PHal {
@@ -57,6 +64,7 @@ sync protocol PHal {
 
 child:
     NotifyBatteryChange(BatteryInformation aBatteryInfo);
+    NotifyNetworkChange(NetworkInformation aNetworkInfo);
 
 parent:
     Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
@@ -66,6 +74,11 @@ parent:
     DisableBatteryNotifications();
     sync GetCurrentBatteryInformation()
       returns (BatteryInformation aBatteryInfo);
+
+    EnableNetworkNotifications();
+    DisableNetworkNotifications();
+    sync GetCurrentNetworkInformation()
+      returns (NetworkInformation aNetworkInfo);
 
     sync GetScreenEnabled() returns (bool enabled);
     SetScreenEnabled(bool enabled);

@@ -273,6 +273,24 @@ protected:
 
 static BatteryObserversManager sBatteryObservers;
 
+class NetworkObserversManager : public ObserversManager<NetworkInformation>
+{
+protected:
+  void EnableNotifications() {
+    PROXY_IF_SANDBOXED(EnableNetworkNotifications());
+  }
+
+  void DisableNotifications() {
+    PROXY_IF_SANDBOXED(DisableNetworkNotifications());
+  }
+
+  void GetCurrentInformationInternal(NetworkInformation* aInfo) {
+    PROXY_IF_SANDBOXED(GetCurrentNetworkInformation(aInfo));
+  }
+};
+
+static NetworkObserversManager sNetworkObservers;
+
 void
 RegisterBatteryObserver(BatteryObserver* aObserver)
 {
@@ -324,6 +342,34 @@ void SetScreenBrightness(double brightness)
 {
   AssertMainThread();
   PROXY_IF_SANDBOXED(SetScreenBrightness(clamped(brightness, 0.0, 1.0)));
+}
+
+void
+RegisterNetworkObserver(NetworkObserver* aObserver)
+{
+  AssertMainThread();
+  sNetworkObservers.AddObserver(aObserver);
+}
+
+void
+UnregisterNetworkObserver(NetworkObserver* aObserver)
+{
+  AssertMainThread();
+  sNetworkObservers.RemoveObserver(aObserver);
+}
+
+void
+GetCurrentNetworkInformation(NetworkInformation* aInfo)
+{
+  AssertMainThread();
+  *aInfo = sNetworkObservers.GetCurrentInformation();
+}
+
+void
+NotifyNetworkChange(const NetworkInformation& aInfo)
+{
+  sNetworkObservers.CacheInformation(aInfo);
+  sNetworkObservers.BroadcastCachedInformation();
 }
 
 } // namespace hal

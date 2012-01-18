@@ -63,26 +63,34 @@ EXPORTS_NAMESPACES = mozilla/dom/sms
 EXPORTS_mozilla/dom/sms = \
   SmsChild.h \
   SmsParent.h \
-  SmsServiceFactory.h \
+  SmsServicesFactory.h \
   Constants.h \
   Types.h \
   SmsMessage.h \
+  SmsRequestManager.h \
+  SmsRequest.h \
   $(NULL)
 
 CPPSRCS = \
   SmsManager.cpp \
   SmsService.cpp \
   SmsIPCService.cpp \
-  SmsServiceFactory.cpp \
+  SmsServicesFactory.cpp \
   SmsParent.cpp \
   SmsMessage.cpp \
   SmsEvent.cpp \
   Constants.cpp \
   SmsChild.cpp \
+  SmsDatabaseService.cpp \
+  SmsRequest.cpp \
+  SmsRequestManager.cpp \
+  SmsFilter.cpp \
+  SmsCursor.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
+  -I$(topsrcdir)/dom/base \
   $(NULL)
 
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
