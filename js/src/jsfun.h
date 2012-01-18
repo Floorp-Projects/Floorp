@@ -348,19 +348,6 @@ JSFunction::toExtended() const
     return static_cast<const js::FunctionExtended *>(this);
 }
 
-/*
- * Get the arguments object for the given frame.  If the frame is strict mode
- * code, its current arguments will be copied into the arguments object.
- *
- * NB: Callers *must* get the arguments object before any parameters are
- *     mutated when the frame is strict mode code!  The emitter ensures this
- *     occurs for strict mode functions containing syntax which might mutate a
- *     named parameter by synthesizing an arguments access at the start of the
- *     function.
- */
-extern js::ArgumentsObject *
-js_GetArgsObject(JSContext *cx, js::StackFrame *fp);
-
 extern void
 js_PutArgsObject(js::StackFrame *fp);
 

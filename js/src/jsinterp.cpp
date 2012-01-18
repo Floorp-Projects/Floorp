@@ -479,7 +479,6 @@ bool
 js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
 {
     JS_ASSERT(args.length() <= StackSpace::ARGS_LENGTH_MAX);
-
     JS_ASSERT(!cx->compartment->activeAnalysis);
 
     /* MaybeConstruct is a subset of InitialFrameFlags */
@@ -2970,27 +2969,10 @@ END_VARLEN_CASE
 }
 
 BEGIN_CASE(JSOP_ARGUMENTS)
-{
-    Value rval;
-    if (cx->typeInferenceEnabled() && !script->strictModeCode) {
-        if (!script->ensureRanInference(cx))
-            goto error;
-        if (script->createdArgs) {
-            ArgumentsObject *arguments = js_GetArgsObject(cx, regs.fp());
-            if (!arguments)
-                goto error;
-            rval = ObjectValue(*arguments);
-        } else {
-            rval = MagicValue(JS_LAZY_ARGUMENTS);
-        }
-    } else {
-        ArgumentsObject *arguments = js_GetArgsObject(cx, regs.fp());
-        if (!arguments)
-            goto error;
-        rval = ObjectValue(*arguments);
-    }
-    PUSH_COPY(rval);
-}
+    if (script->needsArgsObj())
+        PUSH_COPY(ObjectValue(regs.fp()->argsObj()));
+    else
+        PUSH_COPY(MagicValue(JS_OPTIMIZED_ARGUMENTS));
 END_CASE(JSOP_ARGUMENTS)
 
 BEGIN_CASE(JSOP_GETARG)
@@ -4055,7 +4037,6 @@ BEGIN_CASE(JSOP_GENERATOR)
     JSObject *obj = js_NewGenerator(cx);
     if (!obj)
         goto error;
-    JS_ASSERT(!regs.fp()->hasCallObj() && !regs.fp()->hasArgsObj());
     regs.fp()->setReturnValue(ObjectValue(*obj));
     interpReturnOK = true;
     if (entryFrame != regs.fp())
