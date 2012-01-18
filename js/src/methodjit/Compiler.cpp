@@ -1110,7 +1110,7 @@ mjit::Compiler::generatePrologue()
          * stub for heavyweight functions (including nesting outer functions).
          */
         JS_ASSERT_IF(nesting && nesting->children, script->function()->isHeavyweight());
-        if (script->function()->isHeavyweight()) {
+        if (script->function()->isHeavyweight() || script->needsArgsObj()) {
             prepareStubCall(Uses(0));
             INLINE_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
         } else {
@@ -1157,21 +1157,6 @@ mjit::Compiler::generatePrologue()
                 OOL_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
                 stubcc.crossJump(stubcc.masm.jump(), masm.label());
             }
-        }
-
-        if (outerScript->usesArguments && !script->function()->isHeavyweight()) {
-            /*
-             * Make sure that fp->u.nactual is always coherent. This may be
-             * inspected directly by JIT code, and is not guaranteed to be
-             * correct if the UNDERFLOW and OVERFLOW flags are not set.
-             */
-            Jump hasArgs = masm.branchTest32(Assembler::NonZero, FrameFlagsAddress(),
-                                             Imm32(StackFrame::UNDERFLOW_ARGS |
-                                                   StackFrame::OVERFLOW_ARGS |
-                                                   StackFrame::HAS_ARGS_OBJ));
-            masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
-                          Address(JSFrameReg, StackFrame::offsetOfNumActual()));
-            hasArgs.linkTo(masm.label(), &masm);
         }
 
         j.linkTo(masm.label(), &masm);
@@ -2254,13 +2239,11 @@ mjit::Compiler::generateMethod()
 
                 applyTricks = LazyArgsObj;
                 pushSyncedEntry(0);
-            } else if (cx->typeInferenceEnabled() && !script->strictModeCode &&
-                       !types::TypeSet::HasObjectFlags(cx, script->function()->getType(cx),
-                                                       types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
-                frame.push(MagicValue(JS_LAZY_ARGUMENTS));
-            } else {
+            } else if (script->needsArgsObj()) {
                 jsop_arguments(REJOIN_FALLTHROUGH);
                 pushSyncedEntry(0);
+            } else {
+                frame.push(MagicValue(JS_OPTIMIZED_ARGUMENTS));
             }
           END_CASE(JSOP_ARGUMENTS)
 
@@ -3823,14 +3806,16 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
      */
     if (script->function()) {
         types::TypeScriptNesting *nesting = script->nesting();
-        if (script->function()->isHeavyweight() || (nesting && nesting->children)) {
+        if (script->function()->isHeavyweight() || script->needsArgsObj() ||
+            (nesting && nesting->children))
+        {
             prepareStubCall(Uses(fe ? 1 : 0));
             INLINE_STUBCALL(stubs::FunctionFrameEpilogue, REJOIN_NONE);
         } else {
-            /* if (hasCallObj() || hasArgsObj()) */
+            /* if hasCallObj() */
             Jump putObjs = masm.branchTest32(Assembler::NonZero,
                                              Address(JSFrameReg, StackFrame::offsetOfFlags()),
-                                             Imm32(StackFrame::HAS_CALL_OBJ | StackFrame::HAS_ARGS_OBJ));
+                                             Imm32(StackFrame::HAS_CALL_OBJ));
             stubcc.linkExit(putObjs, Uses(frame.frameSlots()));
 
             stubcc.leave();

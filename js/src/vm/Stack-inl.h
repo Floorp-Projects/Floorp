@@ -303,15 +303,6 @@ StackFrame::actualArgsEnd() const
 }
 
 inline void
-StackFrame::setArgsObj(ArgumentsObject &obj)
-{
-    JS_ASSERT_IF(hasArgsObj(), &obj == argsObj_);
-    JS_ASSERT_IF(!hasArgsObj(), numActualArgs() == obj.initialLength());
-    argsObj_ = &obj;
-    flags_ |= HAS_ARGS_OBJ;
-}
-
-inline void
 StackFrame::setScopeChainNoCallObj(JSObject &obj)
 {
 #ifdef DEBUG
@@ -366,8 +357,13 @@ inline bool
 StackFrame::functionPrologue(JSContext *cx)
 {
     JS_ASSERT(isNonEvalFunctionFrame());
+    JS_ASSERT(!isGeneratorFrame());
 
     JSFunction *fun = this->fun();
+    JSScript *script = fun->script();
+
+    if (script->needsArgsObj() && !ArgumentsObject::create(cx, this))
+        return false;
 
     if (fun->isHeavyweight()) {
         if (!CallObject::createForFunction(cx, this))
@@ -377,7 +373,7 @@ StackFrame::functionPrologue(JSContext *cx)
         scopeChain();
     }
 
-    if (script()->nesting()) {
+    if (script->nesting()) {
         JS_ASSERT(maintainNestingState());
         types::NestingPrologue(cx, this);
     }
@@ -391,10 +387,9 @@ StackFrame::functionEpilogue()
     JS_ASSERT(isNonEvalFunctionFrame());
 
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
-        /* NB: there is an ordering dependency here. */
         if (hasCallObj())
             js_PutCallObject(this);
-        else if (hasArgsObj())
+        if (hasArgsObj())
             js_PutArgsObject(this);
     }
 
