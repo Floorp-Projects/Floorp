@@ -2,6 +2,8 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
+import android.widget.TextView;
+import java.util.ArrayList;
 
 public class testBookmark extends BaseTest {
     private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
@@ -9,23 +11,22 @@ public class testBookmark extends BaseTest {
     public void testBookmark() {
         enterUrl(URL);
 
-        //Click the top item in the list.
+        //Click the top item in the awesome list.
         mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
         hitEnterAndWait();
 
-        //Click the Top item in the history list.
+        //Click the top item in the history list.
         clickOnAwesomeBar();
         mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
         mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
-        getInstrumentation().waitForIdleSync();
-        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
-        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
+        ArrayList<TextView> l = null;
+        while (l == null || l.size() < 1) {
+            // first item in the history list is a heading ("Today");
+            // click on the next one
+            l = mSolo.clickInList(2);
+        }
+        waitForLoad();
 
-        hitEnterAndWait();
-
-        getInstrumentation().waitForIdleSync();
-        //Unfortunately, the item isn't constant so can't be tested.
-        //awesomebar.click();
-        //asserter.is(url, urlbar.getText(),"Shouldn't this be the last url in the history?");
+        //Order of history items isn't constant so URL can't be tested.
     }
 }
