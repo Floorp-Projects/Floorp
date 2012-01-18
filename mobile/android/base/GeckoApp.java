@@ -1307,16 +1307,27 @@ abstract public class GeckoApp
     }
 
     void addPluginView(final View view,
-                       final double x, final double y,
-                       final double w, final double h) {
+                       final int x, final int y,
+                       final int w, final int h,
+                       final String metadata) {
         mMainHandler.post(new Runnable() { 
             public void run() {
                 PluginLayoutParams lp;
+                JSONObject viewportObject;
+                ViewportMetrics pluginViewport;
 
-                ViewportMetrics geckoViewport = mSoftwareLayerClient.getGeckoViewportMetrics();
+                ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
+                
+                try {
+                    viewportObject = new JSONObject(metadata);
+                    pluginViewport = new ViewportMetrics(viewportObject);
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Bad viewport metadata: ", e);
+                    return;
+                }
 
                 if (mPluginContainer.indexOfChild(view) == -1) {
-                    lp = PluginLayoutParams.create((int)x, (int)y, (int)w, (int)h, geckoViewport.getZoomFactor());
+                    lp = new PluginLayoutParams(x, y, w, h, pluginViewport);
 
                     view.setWillNotDraw(false);
                     if (view instanceof SurfaceView) {
@@ -1330,7 +1341,8 @@ abstract public class GeckoApp
                     mPluginViews.add(view);
                 } else {
                     lp = (PluginLayoutParams)view.getLayoutParams();
-                    lp.reset((int)x, (int)y, (int)w, (int)h, geckoViewport.getZoomFactor());
+                    lp.reset(x, y, w, h, pluginViewport);
+                    lp.reposition(targetViewport);
                     try {
                         mPluginContainer.updateViewLayout(view, lp);
                     } catch (IllegalArgumentException e) {
@@ -1366,15 +1378,14 @@ abstract public class GeckoApp
     }
 
     public void repositionPluginViews(boolean setVisible) {
-        ViewportMetrics hostViewport = mSoftwareLayerClient.getGeckoViewportMetrics();
         ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
 
-        if (hostViewport == null || targetViewport == null)
+        if (targetViewport == null)
             return;
 
         for (View view : mPluginViews) {
             PluginLayoutParams lp = (PluginLayoutParams)view.getLayoutParams();
-            lp.reposition(hostViewport, targetViewport);
+            lp.reposition(targetViewport);
 
             if (setVisible) {
                 view.setVisibility(View.VISIBLE);
@@ -2449,35 +2460,22 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     private int mOriginalY;
     private int mOriginalWidth;
     private int mOriginalHeight;
-    private float mOriginalResolution;
-
+    private ViewportMetrics mOriginalViewport;
     private float mLastResolution;
 
-    /*
-     * This awkward pattern is necessary due to Java's restrictions on when one can call superclass
-     * constructors.
-     */
-    private PluginLayoutParams(int aX, int aY, int aWidth, int aHeight, float aResolution) {
+    public PluginLayoutParams(int aX, int aY, int aWidth, int aHeight, ViewportMetrics aViewport) {
         super(aWidth, aHeight, aX, aY);
 
-        Log.i(LOGTAG, "Creating plugin at " + aX + ", " + aY + ", " + aWidth + "x" + aHeight + ", (" + (aResolution * 100) + "%)");
+        Log.i(LOGTAG, "Creating plugin at " + aX + ", " + aY + ", " + aWidth + "x" + aHeight + ", (" + (aViewport.getZoomFactor() * 100) + "%)");
 
         mOriginalX = aX;
         mOriginalY = aY;
         mOriginalWidth = aWidth;
         mOriginalHeight = aHeight;
-        mLastResolution = mOriginalResolution = aResolution;
+        mOriginalViewport = aViewport;
+        mLastResolution = aViewport.getZoomFactor();
 
         clampToMaxSize();
-    }
-
-    public static PluginLayoutParams create(int aX, int aY, int aWidth, int aHeight, float aResolution) {
-        aX = Math.round(aX * aResolution);
-        aY = Math.round(aY * aResolution);
-        aWidth = Math.round(aWidth * aResolution);
-        aHeight = Math.round(aHeight * aResolution);
-
-        return new PluginLayoutParams(aX, aY, aWidth, aHeight, aResolution);
     }
 
     private void clampToMaxSize() {
@@ -2492,40 +2490,37 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
         }
     }
 
-    public void reset(int aX, int aY, int aWidth, int aHeight, float aResolution) {
-        x = mOriginalX = Math.round(aX * aResolution);
-        y = mOriginalY = Math.round(aY * aResolution);
-        width = mOriginalWidth = Math.round(aWidth * aResolution);
-        height = mOriginalHeight = Math.round(aHeight * aResolution);
-        mLastResolution = mOriginalResolution = aResolution;
+    public void reset(int aX, int aY, int aWidth, int aHeight, ViewportMetrics aViewport) {
+        x = mOriginalX = aX;
+        y = mOriginalY = aY;
+        width = mOriginalWidth = aWidth;
+        height = mOriginalHeight = aHeight;
+        mOriginalViewport = aViewport;
+        mLastResolution = aViewport.getZoomFactor();
 
         clampToMaxSize();
-
-        Log.i(LOGTAG, "Resetting plugin to " + x + ", " + y + ", " + width + "x" + height + ", (" + (aResolution * 100) + "%)");
     }
 
     private void reposition(Point aOffset, float aResolution) {
-        Log.i(LOGTAG, "Repositioning plugin by " + aOffset.x + ", " + aOffset.y + ", (" + (aResolution * 100) + "%)");
         x = mOriginalX + aOffset.x;
         y = mOriginalY + aOffset.y;
 
         if (!FloatUtils.fuzzyEquals(mLastResolution, aResolution)) {
-            float scaleFactor = aResolution / mOriginalResolution;
-            width = Math.round(scaleFactor * mOriginalWidth);
-            height = Math.round(scaleFactor * mOriginalHeight);
+            width = Math.round(aResolution * mOriginalWidth);
+            height = Math.round(aResolution * mOriginalHeight);
             mLastResolution = aResolution;
 
             clampToMaxSize();
         }
     }
 
-    public void reposition(ViewportMetrics hostViewport, ViewportMetrics targetViewport) {
-        PointF targetOrigin = targetViewport.getOrigin();
-        PointF hostOrigin = hostViewport.getOrigin();
+    public void reposition(ViewportMetrics viewport) {
+        PointF targetOrigin = viewport.getDisplayportOrigin();
+        PointF originalOrigin = mOriginalViewport.getDisplayportOrigin();
 
-        Point offset = new Point(Math.round(hostOrigin.x - targetOrigin.x),
-                                 Math.round(hostOrigin.y - targetOrigin.y));
+        Point offset = new Point(Math.round(originalOrigin.x - targetOrigin.x),
+                                 Math.round(originalOrigin.y - targetOrigin.y));
 
-        reposition(offset, hostViewport.getZoomFactor());
+        reposition(offset, viewport.getZoomFactor());
     }
 }
