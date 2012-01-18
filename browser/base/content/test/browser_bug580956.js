@@ -4,9 +4,7 @@ function numClosedTabs()
     getClosedTabCount(window);
 
 function isUndoCloseEnabled() {
-  document.popupNode = gBrowser.tabs[0];
-  TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
-  TabContextMenu.contextTab = null;
+  updateTabContextMenu();
   return !document.getElementById("context_undoCloseTab").disabled;
 }
 
