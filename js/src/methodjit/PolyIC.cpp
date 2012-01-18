@@ -2439,7 +2439,7 @@ GetElementIC::attachArguments(VMFrame &f, JSObject *obj, const Value &v, jsid id
 
     masm.push(typeReg);
 
-    Address argsObject(typeReg, StackFrame::offsetOfArgs());
+    Address argsObject(typeReg, StackFrame::offsetOfArgsObj());
     masm.loadPtr(argsObject, typeReg);
 
     masm.load32(Address(typeReg, JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT)), 

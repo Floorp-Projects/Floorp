@@ -1533,7 +1533,7 @@ ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
      */
     if (node->length <= 8) {
         for (unsigned i = 0; i < node->length; i++) {
-            if (v.equals(node->options[i]))
+            if (v == node->options[i])
                 return;
         }
     }
@@ -1577,7 +1577,7 @@ ScriptAnalysis::mergeValue(JSContext *cx, uint32_t offset, const SSAValue &v, Sl
     /* Make sure that v is accounted for in the pending value or phi value at pv. */
     JS_ASSERT(v.kind() != SSAValue::EMPTY && pv->value.kind() != SSAValue::EMPTY);
 
-    if (v.equals(pv->value))
+    if (v == pv->value)
         return;
 
     if (pv->value.kind() != SSAValue::PHI || pv->value.phiOffset() < offset) {
@@ -1707,7 +1707,7 @@ ScriptAnalysis::mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint3
 
         bool duplicate = false;
         for (unsigned i = 0; i < pending->length(); i++) {
-            if ((*pending)[i].slot == slot && (*pending)[i].value.equals(value))
+            if ((*pending)[i].slot == slot && (*pending)[i].value == value)
                 duplicate = true;
         }
 
