@@ -819,6 +819,11 @@ ThebesLayerOGL::IsEmpty()
   return !mBuffer;
 }
 
+void
+ThebesLayerOGL::CleanupResources()
+{
+  mBuffer = nsnull;
+}
 
 class ShadowBufferOGL : public ThebesLayerBufferOGL
 {
@@ -963,6 +968,12 @@ ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
   mBuffer->RenderTo(aOffset, mOGLManager, 0);
+}
+
+void
+ShadowThebesLayerOGL::CleanupResources()
+{
+  DestroyFrontBuffer();
 }
 
 } /* layers */

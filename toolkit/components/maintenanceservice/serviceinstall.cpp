@@ -189,30 +189,92 @@ SvcInstall(SvcInstallAction action)
         return FALSE;
       }
 
-      if (!DeleteFileW(serviceConfig.lpBinaryPathName)) {
-        LOG(("Could not delete old service binary file %ls.  (%d)\n", 
-             serviceConfig.lpBinaryPathName, GetLastError()));
-        return FALSE;
+      if (!wcscmp(newServiceBinaryPath, serviceConfig.lpBinaryPathName)) {
+        LOG(("File is already in the correct location, no action needed for "
+             "upgrade.\n"));
+        return TRUE;
       }
 
+      BOOL result = TRUE;
+
+      // Attempt to copy the new binary over top the existing binary.
+      // If there is an error we try to move it out of the way and then
+      // copy it in.  First try the safest / easiest way to overwrite the file.
       if (!CopyFileW(newServiceBinaryPath, 
-                    serviceConfig.lpBinaryPathName, FALSE)) {
-        LOG(("Could not overwrite old service binary file. "
-             "This should never happen, but if it does the next upgrade will fix"
-             " it, the service is not a critical component that needs to be "
-             " installed for upgrades to work. (%d)\n", 
-             GetLastError()));
-        return FALSE;
+                     serviceConfig.lpBinaryPathName, FALSE)) {
+        LOG(("WARNING: Could not overwrite old service binary file."
+             " (%d)\n", GetLastError()));
+
+        // We rename the last 3 filename chars in an unsafe way.  Manually
+        // verify there are more than 3 chars for safe failure in MoveFileExW.
+        const size_t len = wcslen(serviceConfig.lpBinaryPathName);
+        if (len > 3) {
+          // Calculate the temp file path that we're moving the file to. This 
+          // is the same as the proper service path but with a .old extension.
+          LPWSTR oldServiceBinaryTempPath = 
+            new WCHAR[wcslen(serviceConfig.lpBinaryPathName) + 1];
+          wcscpy(oldServiceBinaryTempPath, serviceConfig.lpBinaryPathName);
+          // Rename the last 3 chars to 'old'
+          wcscpy(oldServiceBinaryTempPath + len - 3, L"old");
+
+          // Move the current (old) service file to the temp path.
+          if (MoveFileExW(serviceConfig.lpBinaryPathName, 
+                          oldServiceBinaryTempPath, 
+                          MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+            // The old binary is moved out of the way, copy in the new one.
+            if (!CopyFileW(newServiceBinaryPath, 
+                           serviceConfig.lpBinaryPathName, FALSE)) {
+              // It is best to leave the old service binary in this condition.
+              LOG(("ERROR: The new service binary could not be copied in."
+                   " The service will not be upgraded.\n"));
+              result = FALSE;
+            } else {
+              LOG(("The new service binary was copied in by first moving the"
+                   " old one out of the way.\n"));
+            }
+
+            // Attempt to get rid of the old service temp path.
+            if (DeleteFileW(oldServiceBinaryTempPath)) {
+              LOG(("The old temp service path was deleted: %ls.\n", 
+                   oldServiceBinaryTempPath));
+            } else {
+              // The old temp path could not be removed.  It will be removed
+              // the next time the user can't copy the binary in or on uninstall.
+              LOG(("WARNING: The old temp service path was not deleted.\n"));
+            }
+          } else {
+            // It is best to leave the old service binary in this condition.
+            LOG(("ERROR: Could not move old service file out of the way from:"
+                 " \"%ls\" to \"%ls\". Service will not be upgraded. (%d)\n", 
+                 serviceConfig.lpBinaryPathName, 
+                 oldServiceBinaryTempPath, GetLastError()));
+            result = FALSE;
+          }
+          delete[] oldServiceBinaryTempPath;
+        } else {
+            // It is best to leave the old service binary in this condition.
+            LOG(("ERROR: Service binary path was less than 3, service will"
+                 " not be updated.  This should never happen.\n"));
+            result = FALSE;
+        }
+      } else {
+        LOG(("The new service binary was copied in.\n"));
       }
 
       // We made a copy of ourselves to the existing location.
       // The tmp file (the process of which we are executing right now) will be
       // left over.  Attempt to delete the file on the next reboot.
-      MoveFileExW(newServiceBinaryPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+      if (MoveFileExW(newServiceBinaryPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT)) {
+        LOG(("Deleting the old file path on the next reboot: %ls.\n", 
+             newServiceBinaryPath));
+      } else {
+        LOG(("Call to delete the old file path failed: %ls.\n", 
+             newServiceBinaryPath));
+      }
       
       // Setup the new module path
       wcsncpy(newServiceBinaryPath, serviceConfig.lpBinaryPathName, MAX_PATH);
-      // Fall through so we replace the service
+      return result;
     } else {
       // We don't need to copy ourselves to the existing location.
       // The tmp file (the process of which we are executing right now) will be
@@ -279,7 +341,9 @@ StopService()
 
   LOG(("Sending stop request...\n"));
   SERVICE_STATUS status;
-  if (!ControlService(schService, SERVICE_CONTROL_STOP, &status)) {
+  SetLastError(ERROR_SUCCESS);
+  if (!ControlService(schService, SERVICE_CONTROL_STOP, &status) &&
+      GetLastError() != ERROR_SERVICE_NOT_ACTIVE) {
     LOG(("Error sending stop request: %d\n", GetLastError()));
   }
 

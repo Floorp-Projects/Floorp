@@ -55,15 +55,20 @@ JAVAFILES = \
   AlertNotification.java \
   SurfaceInfo.java \
   GeckoBatteryManager.java \
-  GeckoSmsManager.java \
   VideoPlayer.java \
+  GeckoNetworkManager.java \
   $(NULL)
+
+ifdef MOZ_WEBSMS_BACKEND
+JAVAFILES += GeckoSmsManager.java
+endif
 
 PROCESSEDJAVAFILES = \
   App.java \
   Restarter.java \
   NotificationHandler.java \
   LauncherShortcuts.java \
+  SmsManager.java \
   $(NULL)
 
 
@@ -191,7 +196,7 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png AndroidManifest.xml chrome
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
 gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/values/strings.xml FORCE

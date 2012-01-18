@@ -39,6 +39,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/Util.h"
+#include "SmsFilter.h" // On top because it includes basictypes.h.
+
+#ifdef XP_WIN
+#undef GetClassName
+#endif
 
 // JavaScript includes
 #include "jsapi.h"
@@ -163,11 +168,6 @@
 #include "nsIObjectFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIPluginHost.h"
-
-// Oh, did I mention that I hate Microsoft for doing this to me?
-#ifdef XP_WIN
-#undef GetClassName
-#endif
 
 // HTMLOptionsCollection includes
 #include "nsIDOMHTMLOptionElement.h"
@@ -514,7 +514,12 @@
 #include "nsIDOMSmsManager.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsEvent.h"
+#include "nsIDOMSmsRequest.h"
+#include "nsIDOMSmsFilter.h"
+#include "nsIDOMSmsCursor.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIDOMConnection.h"
+#include "mozilla/dom/network/Utils.h"
 
 #ifdef MOZ_B2G_RIL
 #include "Telephony.h"
@@ -1411,6 +1416,18 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MozSmsEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(MozSmsRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(MozSmsFilter, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(MozSmsCursor, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(MozConnection, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceStyleDecl, nsCSSStyleDeclSH,
@@ -1637,6 +1654,7 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CloseEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozSmsFilter, sms::SmsFilter::NewSmsFilter)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2359,6 +2377,8 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_B2G_RIL
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorTelephony)
 #endif
+    DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMMozNavigatorNetwork,
+                                        network::IsAPIEnabled())
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Plugin, nsIDOMPlugin)
@@ -3984,6 +4004,23 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(MozSmsEvent, nsIDOMMozSmsEvent)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsEvent)
      DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozSmsRequest, nsIDOMMozSmsRequest)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsRequest)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozSmsFilter, nsIDOMMozSmsFilter)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsFilter)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozSmsCursor, nsIDOMMozSmsCursor)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsCursor)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozConnection, nsIDOMMozConnection)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozConnection)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)

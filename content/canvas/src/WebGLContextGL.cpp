@@ -1449,7 +1449,7 @@ WebGLContext::UndoFakeVertexAttrib0()
                              mAttribBuffers[0].type,
                              mAttribBuffers[0].normalized,
                              mAttribBuffers[0].stride,
-                             (const GLvoid *) mAttribBuffers[0].byteOffset);
+                             reinterpret_cast<const GLvoid *>(mAttribBuffers[0].byteOffset));
 
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
 }
@@ -1708,7 +1708,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
         return NS_OK;
 
     SetupRobustnessTimer();
-    gl->fDrawElements(mode, count, type, (GLvoid*) (byteOffset));
+    gl->fDrawElements(mode, count, type, reinterpret_cast<GLvoid*>(byteOffset));
 
     UndoFakeVertexAttrib0();
     UnbindFakeBlackTextures();
@@ -4700,7 +4700,7 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
 
     gl->fVertexAttribPointer(index, size, type, normalized,
                              stride,
-                             (void*) (byteOffset));
+                             reinterpret_cast<void*>(byteOffset));
 
     return NS_OK;
 }

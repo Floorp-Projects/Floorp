@@ -100,73 +100,49 @@ nsSVGGeometryFrame::GetStrokeWidth()
                              GetStyleSVG()->mStrokeWidth);
 }
 
-nsresult
-nsSVGGeometryFrame::GetStrokeDashArray(gfxFloat **aDashes, PRUint32 *aCount)
+bool
+nsSVGGeometryFrame::GetStrokeDashData(FallibleTArray<gfxFloat>& dashes,
+                                      gfxFloat *dashOffset)
 {
-  nsSVGElement *ctx = static_cast<nsSVGElement*>
-                                 (mContent->IsNodeOfType(nsINode::eTEXT) ?
-                                     mContent->GetParent() : mContent);
-  *aDashes = nsnull;
-  *aCount = 0;
-
   PRUint32 count = GetStyleSVG()->mStrokeDasharrayLength;
-  gfxFloat *dashes = nsnull;
-
-  if (count) {
-    const nsStyleCoord *dasharray = GetStyleSVG()->mStrokeDasharray;
-    nsPresContext *presContext = PresContext();
-    gfxFloat totalLength = 0.0f;
-
-    gfxFloat pathScale = 1.0;
-
-    if (mContent->Tag() == nsGkAtoms::path) {
-      pathScale = static_cast<nsSVGPathElement*>(mContent)->
-                    GetPathLengthScale(nsSVGPathElement::eForStroking);
-      if (pathScale <= 0) {
-        return NS_OK;
-      }
-    }
-
-    dashes = new gfxFloat[count];
-    if (dashes) {
-      for (PRUint32 i = 0; i < count; i++) {
-        dashes[i] =
-          nsSVGUtils::CoordToFloat(presContext,
-                                   ctx,
-                                   dasharray[i]) * pathScale;
-        if (dashes[i] < 0.0f) {
-          delete [] dashes;
-          return NS_OK;
-        }
-        totalLength += dashes[i];
-      }
-    } else {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (totalLength == 0.0f) {
-      delete [] dashes;
-      return NS_OK;
-    }
-
-    *aDashes = dashes;
-    *aCount = count;
+  if (!count || !dashes.SetLength(count)) {
+    return false;
   }
 
-  return NS_OK;
-}
+  gfxFloat pathScale = 1.0;
 
-float
-nsSVGGeometryFrame::GetStrokeDashoffset()
-{
+  if (mContent->Tag() == nsGkAtoms::path) {
+    pathScale = static_cast<nsSVGPathElement*>(mContent)->
+                  GetPathLengthScale(nsSVGPathElement::eForStroking);
+    if (pathScale <= 0) {
+      return false;
+    }
+  }
+  
   nsSVGElement *ctx = static_cast<nsSVGElement*>
                                  (mContent->IsNodeOfType(nsINode::eTEXT) ?
                                      mContent->GetParent() : mContent);
 
-  return
-    nsSVGUtils::CoordToFloat(PresContext(),
-                             ctx,
-                             GetStyleSVG()->mStrokeDashoffset);
+  const nsStyleCoord *dasharray = GetStyleSVG()->mStrokeDasharray;
+  nsPresContext *presContext = PresContext();
+  gfxFloat totalLength = 0.0;
+
+  for (PRUint32 i = 0; i < count; i++) {
+    dashes[i] =
+      nsSVGUtils::CoordToFloat(presContext,
+                               ctx,
+                               dasharray[i]) * pathScale;
+    if (dashes[i] < 0.0) {
+      return false;
+    }
+    totalLength += dashes[i];
+  }
+
+  *dashOffset = nsSVGUtils::CoordToFloat(presContext,
+                                         ctx,
+                                         GetStyleSVG()->mStrokeDashoffset);
+
+  return (totalLength > 0.0);
 }
 
 PRUint16
@@ -304,12 +280,10 @@ nsSVGGeometryFrame::SetupCairoStrokeHitGeometry(gfxContext *aContext)
 {
   SetupCairoStrokeGeometry(aContext);
 
-  gfxFloat *dashArray;
-  PRUint32 count;
-  GetStrokeDashArray(&dashArray, &count);
-  if (count > 0) {
-    aContext->SetDash(dashArray, count, GetStrokeDashoffset());
-    delete [] dashArray;
+  AutoFallibleTArray<gfxFloat, 10> dashes;
+  gfxFloat dashOffset;
+  if (GetStrokeDashData(dashes, &dashOffset)) {
+    aContext->SetDash(dashes.Elements(), dashes.Length(), dashOffset);
   }
 }
 

@@ -1165,8 +1165,10 @@ nsCanvasRenderingContext2DAzure::Redraw()
     return NS_OK;
   }
 
-  if (mThebesSurface)
-      mThebesSurface->MarkDirty();
+  if (!mThebesSurface)
+    mThebesSurface =
+      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
+  mThebesSurface->MarkDirty();
 
   nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 
@@ -1195,8 +1197,10 @@ nsCanvasRenderingContext2DAzure::Redraw(const mgfx::Rect &r)
     return;
   }
 
-  if (mThebesSurface)
-      mThebesSurface->MarkDirty();
+  if (!mThebesSurface)
+    mThebesSurface =
+      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
+  mThebesSurface->MarkDirty();
 
   nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 
@@ -3081,8 +3085,6 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
                       DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
       } else if (mOp == nsCanvasRenderingContext2DAzure::TEXT_DRAW_OPERATION_STROKE) {
         RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
-            
-        Matrix oldTransform = mCtx->mTarget->GetTransform();
 
         const ContextState& state = *mState;
         nsCanvasRenderingContext2DAzure::AdjustedTarget(mCtx)->

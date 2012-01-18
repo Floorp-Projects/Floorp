@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <unistd.h>
+#include <errno.h>
 #include "AndroidDirectTexture.h"
 
 typedef gfxASurface::gfxImageFormat gfxImageFormat;
@@ -84,9 +86,8 @@ AndroidDirectTexture::ReallocPendingBuffer()
 bool
 AndroidDirectTexture::Lock(PRUint32 aUsage, unsigned char **bits)
 {
-  mLock.Lock();
-  ReallocPendingBuffer();
-  return mBackBuffer->Lock(aUsage, bits);
+  nsIntRect rect(0, 0, mWidth, mHeight);
+  return Lock(aUsage, rect, bits);
 }
 
 bool
@@ -94,7 +95,13 @@ AndroidDirectTexture::Lock(PRUint32 aUsage, const nsIntRect& aRect, unsigned cha
 {
   mLock.Lock();
   ReallocPendingBuffer();
-  return mBackBuffer->Lock(aUsage, aRect, bits);
+
+  int result;
+  while ((result = mBackBuffer->Lock(aUsage, aRect, bits)) == -EBUSY) {
+    usleep(1000); // 1ms
+  }
+
+  return result == 0;
 }
 
 bool
