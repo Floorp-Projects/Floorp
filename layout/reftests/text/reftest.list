@@ -50,6 +50,7 @@ skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixe
 == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
 HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
+== synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 # Tests for text-align-last
 == text-align-last-start.html text-align-last-start-ref.html
 == text-align-last-end.html text-align-last-end-ref.html
