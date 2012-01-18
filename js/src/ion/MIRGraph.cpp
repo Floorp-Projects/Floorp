@@ -720,8 +720,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred)
     // Predecessors must be finished, and at the correct stack depth.
     JS_ASSERT(lastIns_);
     JS_ASSERT(pred->lastIns_);
-    JS_ASSERT(pred->stackPosition_ == stackPosition_);
-    JS_ASSERT(entryResumePoint()->stackDepth() == stackPosition_);
+    JS_ASSERT(pred->stackDepth() == entryResumePoint()->stackDepth());
 
     // We must be a pending loop header
     JS_ASSERT(kind_ == PENDING_LOOP_HEADER);
@@ -733,7 +732,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred)
     // This algorithm would break in the face of copies, so we take care to
     // give every assignment its own unique SSA name. See
     // MBasicBlock::setVariable for more information.
-    for (uint32 i = 0; i < stackPosition_; i++) {
+    for (uint32 i = 0; i < pred->stackDepth(); i++) {
         MDefinition *entryDef = entryResumePoint()->getOperand(i);
         MDefinition *exitDef = pred->slots_[i].def;
 
@@ -815,7 +814,7 @@ MBasicBlock::setBackedge(MBasicBlock *pred)
         // push two stack slots with the same SSA name as |a|. However, at loop
         // edges, the expression stack is empty, and thus we expect there to be
         // no copies.
-        for (uint32 j = i + 1; j < stackPosition_; j++)
+        for (uint32 j = i + 1; j < pred->stackDepth(); j++)
             JS_ASSERT(slots_[j].def != entryDef);
 #endif
 
