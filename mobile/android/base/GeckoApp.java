@@ -197,22 +197,6 @@ abstract public class GeckoApp
         }
     }
 
-    void showErrorDialog(String message)
-    {
-        new AlertDialog.Builder(this)
-            .setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton(R.string.exit_label,
-                               new DialogInterface.OnClickListener() {
-                                   public void onClick(DialogInterface dialog,
-                                                       int id)
-                                   {
-                                       GeckoApp.this.finish();
-                                       System.exit(0);
-                                   }
-                               }).show();
-    }
-
     public static final String PLUGIN_ACTION = "android.webkit.PLUGIN";
 
     /**
