@@ -150,6 +150,7 @@ _TEST_FILES = \
 		test_source_write.html \
 		test_standalone.html \
 		test_timeupdate_small_files.html \
+		test_too_many_elements.html \
 		test_volume.html \
 		test_video_to_canvas.html \
 		use_large_cache.js \
