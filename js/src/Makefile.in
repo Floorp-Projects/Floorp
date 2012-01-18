@@ -150,6 +150,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
+		ArgumentsObject.cpp \
 		ScopeObject.cpp \
 		Debugger.cpp \
 		GlobalObject.cpp \
