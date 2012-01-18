@@ -36,8 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 html {
+  font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
   font-size: 18px;
-  background-color: black;
+  background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
+  -moz-text-size-adjust: none;
 }
 
 body {
@@ -45,32 +47,37 @@ body {
 }
 
 #addons-header {
-  color: white;
+  color: black;
   padding: 8px;
+  -moz-padding-start: 25px;
   font-size: 20px;
   font-weight: bold;
-  text-transform: uppercase;
-  height: 44px;
-  border-bottom: 2px solid #d96016;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #ff9100 #f27900;
+}
+
+#addons-header > div {
   width: 100%;
+  height: 44px;
   display: -moz-box;
   -moz-box-align: center;
 }
 
-#addons-list {
-  background-color: #0e1012;
+#addons-header > div > div {
+  -moz-box-flex: 1;
 }
 
 .addon-item {
-  color: #656565;
-  background-color: #0e1012;
-  border-bottom: 3px solid black;
+  color: black;
+  background-image: url("chrome://browser/skin/images/row-bg-normal.png");
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #ffffff #bac2ac;
   position: relative;
-  padding-top: 8px;
+  height: 86px;
 }
 
-.addon-item:last-child {
-  border-bottom: 0;
+.addon-item[isDisabled="true"] {
+  color: #999999;
 }
 
 .addon-item:not([optionsURL]) .options-header,
@@ -80,16 +87,21 @@ body {
   display: none;
 }
 
-/* Make room for the image */
 .inner {
-  -moz-margin-start: 56px;
-  -moz-margin-end: 8px;
+  background-image: url("chrome://browser/skin/images/row-bg-light.png");
+  height: 100%;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 8px;
+
+  /* make room for the favicon */
+  -moz-margin-start: 82px;
 }
 
 .details {
   display: -moz-box;
   -moz-box-orient: horizontal;
   width: 100%;
+  margin-top: 8px;
 }
 
 .details > div {
@@ -99,19 +111,25 @@ body {
 
 .title {
   font-size: 22px;
-  color: white;
   font-weight: bold;
 }
 
 .version {
-  /* The addon title is not localized, so keep the margin on the left side */
+  /* title is not localized, so keep the margin on the left side */
   margin-left: 12px;
-  font-size: 18px;
+
+  /* push the tag to the end of the box */
   -moz-box-flex: 1;
+
+  /* compensate for the title baseline */
+  padding-bottom: 1px;
 }
 
 .tag {
   text-align: end;
+
+  /* compensate for the title baseline */
+  padding-bottom: 1px;
 }
 
 .description {
@@ -122,7 +140,6 @@ body {
 }
 
 .buttons {
-  padding-top: 8px;
   display: -moz-box;
   -moz-box-orient: horizontal;
   width: 100%;
@@ -130,13 +147,13 @@ body {
 
 .buttons > button {
   -moz-appearance: none;
-  color: white;
+  color: black;
   font-size: 18px !important;
-  border: 2px solid transparent;
-  border-top-color: black;
-  -moz-border-start-color: black;
+  border: 1px solid transparent;
+  border-top-color: #bac2ac;
+  -moz-border-start-color: #bac2ac;
   background-image: none;
-  background-color: #17181a;
+  background-color: #edf0f5;
   border-radius: 0px !important;
   -moz-box-flex: 1;
   padding: 20px 8px;
@@ -151,17 +168,21 @@ body {
 }
 
 body[dir="ltr"] .favicon {
-  left: 12px;
+  left: 25px;
 }
 
 body[dir="ltr"] .favicon {
-  right: 12px;
+  right: 25px;
 }
 
 .favicon {
   border: none;
-  top: 8;
+  top: 27px;
   width: 32px;
   height: 32px;
   position: absolute;
+}
+
+.addon-item[isDisabled="true"] .favicon {
+  opacity: 0.3;
 }
