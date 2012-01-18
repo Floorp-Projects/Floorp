@@ -171,8 +171,7 @@ class ArgumentsObject : public JSObject
 
   public:
     /* Create an arguments object for the given callee function and frame. */
-    static ArgumentsObject *create(JSContext *cx, uint32_t argc, JSObject &callee,
-                                   StackFrame *fp);
+    static ArgumentsObject *create(JSContext *cx, uint32_t argc, JSObject &callee);
 
     /*
      * Return the initial length of the arguments.  This may differ from the
@@ -221,7 +220,7 @@ class NormalArgumentsObject : public ArgumentsObject
     friend bool JSObject::isNormalArguments() const;
     friend struct EmptyShape; // for EmptyShape::getEmptyArgumentsShape
     friend ArgumentsObject *
-    ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee, StackFrame *fp);
+    ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee);
 
   public:
     /*
@@ -238,7 +237,7 @@ class StrictArgumentsObject : public ArgumentsObject
 {
     friend bool JSObject::isStrictArguments() const;
     friend ArgumentsObject *
-    ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee, StackFrame *fp);
+    ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee);
 };
 
 } // namespace js

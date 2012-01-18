@@ -831,7 +831,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
 
     void loadFrameActuals(JSFunction *fun, RegisterID reg) {
         /* Bias for the case where there was an arguments overflow. */
-        load32(Address(JSFrameReg, StackFrame::offsetOfArgs()), reg);
+        load32(Address(JSFrameReg, StackFrame::offsetOfNumActual()), reg);
         add32(Imm32(fun->nargs + 2), reg);
         Jump overflowArgs = branchTest32(Assembler::NonZero,
                                          Address(JSFrameReg, StackFrame::offsetOfFlags()),

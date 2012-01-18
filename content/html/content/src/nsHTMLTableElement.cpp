@@ -736,12 +736,14 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       // is appended.
       if (aIndex == -1 || PRUint32(aIndex) == rowCount) {
         rv = parent->AppendChild(newRowNode, getter_AddRefs(retChild));
+        NS_ENSURE_SUCCESS(rv, rv);
       }
       else
       {
         // insert the new row before the reference row we found above
         rv = parent->InsertBefore(newRowNode, refRow,
                                   getter_AddRefs(retChild));
+        NS_ENSURE_SUCCESS(rv, rv);
       }
 
       if (retChild) {
@@ -778,6 +780,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
       if (newRowGroup) {
         rv = AppendChildTo(newRowGroup, true);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         rowGroup = do_QueryInterface(newRowGroup);
       }

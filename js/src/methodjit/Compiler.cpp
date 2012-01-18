@@ -814,7 +814,7 @@ mjit::Compiler::generatePrologue()
 
         if (outerScript->usesArguments && !script->function()->isHeavyweight()) {
             /*
-             * Make sure that fp->args.nactual is always coherent. This may be
+             * Make sure that fp->u.nactual is always coherent. This may be
              * inspected directly by JIT code, and is not guaranteed to be
              * correct if the UNDERFLOW and OVERFLOW flags are not set.
              */
@@ -824,7 +824,7 @@ mjit::Compiler::generatePrologue()
                                                    StackFrame::OVERFLOW_ARGS |
                                                    StackFrame::HAS_ARGS_OBJ));
             masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
-                          Address(JSFrameReg, StackFrame::offsetOfArgs()));
+                          Address(JSFrameReg, StackFrame::offsetOfNumActual()));
             hasArgs.linkTo(masm.label(), &masm);
         }
 
@@ -4530,12 +4530,11 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
 
         /*
          * Check if we are accessing the 'length' of the lazy arguments for the
-         * current frame. No actual arguments object has ever been constructed
-         * for the script, so we can go straight to nactual.
+         * current frame.
          */
         if (types->isLazyArguments(cx)) {
             frame.pop();
-            frame.pushWord(Address(JSFrameReg, StackFrame::offsetOfArgs()), JSVAL_TYPE_INT32);
+            frame.pushWord(Address(JSFrameReg, StackFrame::offsetOfNumActual()), JSVAL_TYPE_INT32);
             if (script->pcCounters)
                 bumpPropCounter(PC, OpcodeCounts::PROP_DEFINITE);
             return true;
@@ -5033,7 +5032,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
         ScriptAnalysis::NameAccess access =
             analysis->resolveNameAccess(cx, ATOM_TO_JSID(name), true);
         if (access.nesting) {
-            /* Use a SavedReg so it isn't clobbered by sync or the stub call. */
+            /* Use a SavedReg so it isn't clobbered by the stub call. */
             RegisterID nameReg = frame.allocReg(Registers::SavedRegs).reg();
             Address address = frame.loadNameAddress(access, nameReg);
 
@@ -5080,9 +5079,9 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
             if (!isObject)
                 notObject = frame.testObject(Assembler::NotEqual, lhs);
 #ifdef JSGC_INCREMENTAL_MJ
+            frame.pinReg(reg);
             if (cx->compartment->needsBarrier() && propertyTypes->needsBarrier(cx)) {
                 /* Write barrier. */
-                frame.pinReg(reg);
                 Jump j = masm.testGCThing(Address(reg, JSObject::getFixedSlotOffset(slot)));
                 stubcc.linkExit(j, Uses(0));
                 stubcc.leave();
@@ -5090,8 +5089,8 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
                                    reg, Registers::ArgReg1);
                 OOL_STUBCALL(stubs::GCThingWriteBarrier, REJOIN_NONE);
                 stubcc.rejoin(Changes(0));
-                frame.unpinReg(reg);
             }
+            frame.unpinReg(reg);
 #endif
             if (!isObject) {
                 stubcc.linkExit(notObject.get(), Uses(2));

@@ -683,7 +683,7 @@ struct gfxTextRange {
  * completely, with all its words, and avoid the cost of aging the words
  * individually. That only happens with longer-lived fonts.
  */
-class THEBES_API gfxFontCache : public nsExpirationTracker<gfxFont,3> {
+class THEBES_API gfxFontCache MOZ_FINAL : public nsExpirationTracker<gfxFont,3> {
 public:
     enum {
         FONT_TIMEOUT_SECONDS = 10,
