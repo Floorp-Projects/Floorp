@@ -953,7 +953,7 @@ AddFile::Execute()
   if (!WideCharToMultiByte(CP_UTF8, 0, mFile, -1, sourcefile, MAXPATHLEN,
                            NULL, NULL)) {
     LOG(("error converting wchar to utf8: %d\n", GetLastError()));
-    return MEM_ERROR;
+    return STRING_CONVERSION_ERROR;
   }
 
   rv = gArchiveReader.ExtractFile(sourcefile, mFile);
@@ -1033,7 +1033,7 @@ PatchFile::LoadSourceFile(FILE* ofile)
 
   buf = (unsigned char *) malloc(header.slen);
   if (!buf)
-    return MEM_ERROR;
+    return UPDATER_MEM_ERROR;
 
   size_t r = header.slen;
   unsigned char *rb = buf;
@@ -1107,7 +1107,7 @@ PatchFile::Prepare()
   if (!WideCharToMultiByte(CP_UTF8, 0, mPatchFile, -1, sourcefile, MAXPATHLEN,
                            NULL, NULL)) {
     LOG(("error converting wchar to utf8: %d\n", GetLastError()));
-    return MEM_ERROR;
+    return STRING_CONVERSION_ERROR;
   }
 
   int rv = gArchiveReader.ExtractFileToStream(sourcefile, fp);
@@ -2317,7 +2317,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
                      NS_T("%s"), ftsdirEntry->fts_accpath);
         quotedpath = get_quoted_path(foundpath);
         if (!quotedpath) {
-          rv = MEM_ERROR;
+          rv = UPDATER_QUOTED_PATH_MEM_ERROR;
           break;
         }
         action = new RemoveFile();
@@ -2334,7 +2334,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
                      NS_T("%s/"), ftsdirEntry->fts_accpath);
         quotedpath = get_quoted_path(foundpath);
         if (!quotedpath) {
-          rv = MEM_ERROR;
+          rv = UPDATER_QUOTED_PATH_MEM_ERROR;
           break;
         }
 
@@ -2483,7 +2483,7 @@ int AddPreCompleteActions(ActionList *list, bool &isChannelChange)
     }
 
     if (!action)
-      return MEM_ERROR;
+      return BAD_ACTION_ERROR;
 
     rv = action->Parse(line);
     if (rv)
@@ -2617,7 +2617,7 @@ int DoUpdate()
     }
 
     if (!action)
-      return MEM_ERROR;
+      return BAD_ACTION_ERROR;
 
     rv = action->Parse(line);
     if (rv)

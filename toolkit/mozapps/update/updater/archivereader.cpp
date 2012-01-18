@@ -67,7 +67,7 @@ ArchiveReader::Open(const NS_tchar *path)
       inbuf_size = 1024;
       inbuf = (char *)malloc(inbuf_size);
       if (!inbuf)
-        return MEM_ERROR;
+        return ARCHIVE_READER_MEM_ERROR;
     }
   }
 
@@ -78,7 +78,7 @@ ArchiveReader::Open(const NS_tchar *path)
       outbuf_size = 1024;
       outbuf = (char *)malloc(outbuf_size);
       if (!outbuf)
-        return MEM_ERROR;
+        return ARCHIVE_READER_MEM_ERROR;
     }
   }
 
