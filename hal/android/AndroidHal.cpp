@@ -39,6 +39,7 @@
 #include "HalImpl.h"
 #include "WindowIdentifier.h"
 #include "AndroidBridge.h"
+#include "mozilla/dom/network/Constants.h"
 
 using mozilla::hal::WindowIdentifier;
 
@@ -138,6 +139,39 @@ GetScreenBrightness()
 void
 SetScreenBrightness(double brightness)
 {}
+
+void
+EnableNetworkNotifications()
+{
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->EnableNetworkNotifications();
+}
+
+void
+DisableNetworkNotifications()
+{
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->DisableNetworkNotifications();
+}
+
+void
+GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
+{
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->GetCurrentNetworkInformation(aNetworkInfo);
+}
 
 } // hal_impl
 } // mozilla

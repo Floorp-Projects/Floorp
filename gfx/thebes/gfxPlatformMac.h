@@ -50,6 +50,7 @@
 #define MAC_OS_X_MAJOR_VERSION_MASK 0xFFFFFFF0U
 
 class gfxTextRun;
+class mozilla::gfx::DrawTarget;
 
 class THEBES_API gfxPlatformMac : public gfxPlatform {
 public:
@@ -104,6 +105,8 @@ public:
     // lower threshold on font anti-aliasing
     PRUint32 GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
 
+    virtual already_AddRefed<gfxASurface>
+    GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
 private:
     virtual qcms_profile* GetPlatformCMSOutputProfile();
     

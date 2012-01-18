@@ -57,8 +57,7 @@ function test()
       InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
 
     executeSoon(function() {
-      Services.obs.addObserver(isTheIframeSelected,
-        InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+      InspectorUI.highlighter.addListener("nodeselected", isTheIframeSelected);
 
       moveMouseOver(iframeNode, 1, 1);
     });
@@ -66,26 +65,21 @@ function test()
 
   function isTheIframeSelected()
   {
-    Services.obs.removeObserver(isTheIframeSelected,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+    InspectorUI.highlighter.removeListener("nodeselected", isTheIframeSelected);
 
     is(InspectorUI.selection, iframeNode, "selection matches node");
     iframeNode.style.marginBottom = doc.defaultView.innerHeight + "px";
     doc.defaultView.scrollBy(0, 40);
 
     executeSoon(function() {
-      Services.obs.addObserver(isTheIframeContentSelected,
-        InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
-
+      InspectorUI.highlighter.addListener("nodeselected", isTheIframeContentSelected);
       moveMouseOver(iframeNode, 40, 40);
     });
   }
 
   function isTheIframeContentSelected()
   {
-    Services.obs.removeObserver(isTheIframeContentSelected,
-      InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
-
+    InspectorUI.highlighter.removeListener("nodeselected", isTheIframeContentSelected);
     is(InspectorUI.selection, iframeBodyNode, "selection matches node");
     // 184 == 200 + 11(border) + 13(padding) - 40(scroll)
     is(InspectorUI.highlighter._highlightRect.height, 184,

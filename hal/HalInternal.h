@@ -67,6 +67,16 @@ void EnableBatteryNotifications();
  */
 void DisableBatteryNotifications();
 
+/**
+ * Enables network notifications from the backend.
+ */
+void EnableNetworkNotifications();
+
+/**
+ * Disables network notifications from the backend.
+ */
+void DisableNetworkNotifications();
+
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 

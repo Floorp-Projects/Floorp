@@ -233,6 +233,9 @@ public:
   UpdateAllWorkerGCZeal();
 #endif
 
+  void
+  GarbageCollectAllWorkers(bool aShrinking);
+
   class AutoSafeJSContext
   {
     JSContext* mContext;

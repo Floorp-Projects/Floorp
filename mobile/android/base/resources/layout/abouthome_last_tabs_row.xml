@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="fill_parent"
+             android:layout_height="wrap_content"
+             android:background="@drawable/abouthome_separator">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:id="@+id/last_tab_row"
+                  android:layout_width="fill_parent"
+                  android:layout_height="47dip"
+                  android:paddingLeft="12dip"
+                  android:paddingRight="12dip"
+                  android:gravity="center_vertical"
+                  android:background="@android:drawable/list_selector_background"
+                  android:orientation="horizontal"
+                  android:clickable="true">
+
+        <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+                   android:id="@+id/last_tab_favicon"
+                   android:layout_width="32dip"
+                   android:layout_height="32dip"
+                   android:src="@drawable/favicon"
+                   android:layout_centerVertical="true"/>
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:paddingLeft="10dip"
+                      android:orientation="vertical">
+
+            <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+                      android:id="@+id/last_tab_title"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="15sp"
+                      android:singleLine="true"
+                      android:textColor="#222222"/>
+
+            <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+                      android:id="@+id/last_tab_url"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="12sp"
+                      android:singleLine="true"
+                      android:layout_marginTop="-2dip"
+                      android:textColor="#666666"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

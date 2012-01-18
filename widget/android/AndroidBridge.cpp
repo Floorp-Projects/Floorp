@@ -50,6 +50,7 @@
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
+#include "mozilla/dom/sms/PSms.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -167,7 +168,17 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
 
     jNumberOfMessages = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNumberOfMessagesForText", "(Ljava/lang/String;)I");
-    jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jSendMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;IJ)V");
+    jSaveSentMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "saveSentMessage", "(Ljava/lang/String;Ljava/lang/String;J)I");
+    jGetMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMessage", "(IIJ)V");
+    jDeleteMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "deleteMessage", "(IIJ)V");
+    jCreateMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createMessageList", "(JJ[Ljava/lang/String;IIZIJ)V");
+    jGetNextMessageinList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNextMessageInList", "(IIJ)V");
+    jClearMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "clearMessageList", "(I)V");
+
+    jGetCurrentNetworkInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentNetworkInformation", "()[D");
+    jEnableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableNetworkNotifications", "()V");
+    jDisableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableNetworkNotifications", "()V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1342,7 +1353,7 @@ AndroidBridge::GetNumberOfMessagesForText(const nsAString& aText)
 }
 
 void
-AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage)
+AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage, PRInt32 aRequestId, PRUint64 aProcessId)
 {
     ALOG_BRIDGE("AndroidBridge::SendMessage");
 
@@ -1350,7 +1361,113 @@ AndroidBridge::SendMessage(const nsAString& aNumber, const nsAString& aMessage)
     jstring jNumber = GetJNIForThread()->NewString(PromiseFlatString(aNumber).get(), aNumber.Length());
     jstring jMessage = GetJNIForThread()->NewString(PromiseFlatString(aMessage).get(), aMessage.Length());
 
-    GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSendMessage, jNumber, jMessage);
+    GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSendMessage, jNumber, jMessage, aRequestId, aProcessId);
+}
+
+PRInt32
+AndroidBridge::SaveSentMessage(const nsAString& aRecipient,
+                                const nsAString& aBody, PRUint64 aDate)
+{
+    ALOG_BRIDGE("AndroidBridge::SaveSentMessage");
+
+    AutoLocalJNIFrame jniFrame(GetJNIForThread());
+    jstring jRecipient = GetJNIForThread()->NewString(PromiseFlatString(aRecipient).get(), aRecipient.Length());
+    jstring jBody = GetJNIForThread()->NewString(PromiseFlatString(aBody).get(), aBody.Length());
+    return GetJNIForThread()->CallStaticIntMethod(mGeckoAppShellClass, jSaveSentMessage, jRecipient, jBody, aDate);
+}
+
+void
+AndroidBridge::GetMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId)
+{
+    ALOG_BRIDGE("AndroidBridge::GetMessage");
+
+    JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jGetMessage, aMessageId, aRequestId, aProcessId);
+}
+
+void
+AndroidBridge::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId)
+{
+    ALOG_BRIDGE("AndroidBridge::DeleteMessage");
+
+    JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jDeleteMessage, aMessageId, aRequestId, aProcessId);
+}
+
+void
+AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse,
+                                 PRInt32 aRequestId, PRUint64 aProcessId)
+{
+    ALOG_BRIDGE("AndroidBridge::CreateMessageList");
+
+    AutoLocalJNIFrame jniFrame;
+
+    jobjectArray numbers =
+      (jobjectArray)JNI()->NewObjectArray(aFilter.numbers().Length(),
+                                          JNI()->FindClass("java/lang/String"),
+                                          JNI()->NewStringUTF(""));
+
+    for (PRUint32 i = 0; i < aFilter.numbers().Length(); ++i) {
+      JNI()->SetObjectArrayElement(numbers, i,
+                                   JNI()->NewStringUTF(NS_ConvertUTF16toUTF8(aFilter.numbers()[i]).get()));
+    }
+
+    JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jCreateMessageList,
+                                aFilter.startDate(), aFilter.endDate(),
+                                numbers, aFilter.numbers().Length(),
+                                aFilter.delivery(), aReverse, aRequestId,
+                                aProcessId);
+}
+
+void
+AndroidBridge::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint64 aProcessId)
+{
+    ALOG_BRIDGE("AndroidBridge::GetNextMessageInList");
+
+    JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jGetNextMessageinList, aListId, aRequestId, aProcessId);
+}
+
+void
+AndroidBridge::ClearMessageList(PRInt32 aListId)
+{
+    ALOG_BRIDGE("AndroidBridge::ClearMessageList");
+
+    JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jClearMessageList, aListId);
+}
+
+void
+AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
+{
+    ALOG_BRIDGE("AndroidBridge::GetCurrentNetworkInformation");
+
+    AutoLocalJNIFrame jniFrame;
+
+    // To prevent calling too many methods through JNI, the Java method returns
+    // an array of double even if we actually want a double and a boolean.
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jGetCurrentNetworkInformation);
+    jdoubleArray arr = static_cast<jdoubleArray>(obj);
+    if (!arr || mJNIEnv->GetArrayLength(arr) != 2) {
+        return;
+    }
+
+    jdouble* info = mJNIEnv->GetDoubleArrayElements(arr, 0);
+
+    aNetworkInfo->bandwidth() = info[0];
+    aNetworkInfo->canBeMetered() = info[1] == 1.0f;
+
+    mJNIEnv->ReleaseDoubleArrayElements(arr, info, 0);
+}
+
+void
+AndroidBridge::EnableNetworkNotifications()
+{
+    ALOG_BRIDGE("AndroidBridge::EnableNetworkNotifications");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableNetworkNotifications);
+}
+
+void
+AndroidBridge::DisableNetworkNotifications()
+{
+    ALOG_BRIDGE("AndroidBridge::DisableNetworkNotifications");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jDisableNetworkNotifications);
 }
 
 void *

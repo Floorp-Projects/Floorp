@@ -172,7 +172,7 @@ function inspectNodesFromContextTestWhileOpen()
 {
   Services.obs.removeObserver(inspectNodesFromContextTestWhileOpen, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
   Services.obs.addObserver(inspectNodesFromContextTestTrap, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-  Services.obs.addObserver(inspectNodesFromContextTestHighlight, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
+  InspectorUI.highlighter.addListener("nodeselected", inspectNodesFromContextTestHighlight);
   is(InspectorUI.selection, salutation, "Inspector is highlighting salutation");
   closing = doc.getElementById("closing");
   ok(closing, "we have the closing statement");
@@ -184,7 +184,7 @@ function inspectNodesFromContextTestWhileOpen()
 function inspectNodesFromContextTestHighlight()
 {
   winId = InspectorUI.winID;
-  Services.obs.removeObserver(inspectNodesFromContextTestHighlight, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+  InspectorUI.highlighter.removeListener("nodeselected", inspectNodesFromContextTestHighlight);
   Services.obs.addObserver(finishInspectorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.DESTROYED, false);
   is(InspectorUI.selection, closing, "InspectorUI.selection is header");
   executeSoon(function() {

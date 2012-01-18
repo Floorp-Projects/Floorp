@@ -12,4 +12,5 @@ browser.jar:
     content/browser/orion.js                      (sourceeditor/orion/orion.js)
     content/browser/orion.css                     (sourceeditor/orion/orion.css)
     content/browser/orion-mozilla.css             (sourceeditor/orion/mozilla.css)
+    content/browser/source-editor-overlay.xul     (sourceeditor/source-editor-overlay.xul)
 

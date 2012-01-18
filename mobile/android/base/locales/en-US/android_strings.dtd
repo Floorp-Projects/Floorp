@@ -60,7 +60,8 @@
 <!ENTITY pref_plugins_enabled "Enabled">
 <!ENTITY pref_plugins_tap_to_play "Tap to play">
 <!ENTITY pref_plugins_disabled "Disabled">
-<!ENTITY pref_font_size "Font size">
+<!ENTITY pref_text_size "Text size">
+<!ENTITY pref_font_size_tiny "Tiny">
 <!ENTITY pref_font_size_small "Small">
 <!ENTITY pref_font_size_medium "Medium">
 <!ENTITY pref_font_size_large "Large">
@@ -92,3 +93,10 @@
 
 <!ENTITY button_ok "OK">
 <!ENTITY button_cancel "Cancel">
+
+<!ENTITY abouthome_addons_title "Add-ons for your &brandShortName;">
+<!ENTITY abouthome_addons_browse "Browse all &brandShortName; add-ons">
+<!ENTITY abouthome_last_tabs_title "Your tabs from last time">
+<!ENTITY abouthome_last_tabs_open "Open all tabs from last time">
+<!ENTITY abouthome_top_sites_title "Top sites">
+<!ENTITY abouthome_top_sites_browse "Browse all your top sites">
