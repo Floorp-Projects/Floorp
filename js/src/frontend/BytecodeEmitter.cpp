@@ -3235,7 +3235,7 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
                 JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
                 uintN pickDistance = (uintN)((bce->stackDepth + 1) - depthBefore);
                 if (pickDistance > 0) {
-                    if (pickDistance > jsbytecode(-1)) {
+                    if (pickDistance > UINT8_MAX) {
                         ReportCompileErrorNumber(cx, bce->tokenStream(), pn3, JSREPORT_ERROR,
                                                  JSMSG_TOO_MANY_LOCALS);
                         return JS_FALSE;

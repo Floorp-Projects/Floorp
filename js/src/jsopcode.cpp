@@ -695,7 +695,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         goto print_int;
 
       case JOF_UINT8:
-        i = pc[1];
+        i = GET_UINT8(pc);
         goto print_int;
 
       case JOF_INT8:
@@ -3868,7 +3868,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_ITER:
-                foreach = (pc[1] & (JSITER_FOREACH | JSITER_KEYVALUE)) ==
+                foreach = (GET_UINT8(pc) & (JSITER_FOREACH | JSITER_KEYVALUE)) ==
                           JSITER_FOREACH;
                 todo = -2;
                 break;
@@ -5150,7 +5150,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_NEWINIT:
               {
-                i = pc[1];
+                i = GET_UINT8(pc);
                 LOCAL_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
                 todo = ss->sprinter.getOffset();
