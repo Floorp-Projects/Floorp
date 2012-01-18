@@ -697,6 +697,35 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
+   * Set a layer to mask this layer.
+   *
+   * The mask layer should be applied using its effective transform (after it
+   * is calculated by ComputeEffectiveTransformForMaskLayer), this should use
+   * this layer's parent's transform and the mask layer's transform, but not
+   * this layer's. That is, the mask layer is specified relative to this layer's
+   * position in it's parent layer's coord space.
+   * Currently, only 2D translations are supported for the mask layer transform.
+   *
+   * Ownership of aMaskLayer passes to this.
+   * Typical use would be an ImageLayer with an alpha image used for masking.
+   * See also ContainerState::BuildMaskLayer in FrameLayerBuilder.cpp.
+   */
+  void SetMaskLayer(Layer* aMaskLayer)
+  {
+#ifdef DEBUG
+    if (aMaskLayer) {
+      gfxMatrix maskTransform;
+      bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D(&maskTransform);
+      NS_ASSERTION(maskIs2D && maskTransform.HasOnlyIntegerTranslation(),
+                   "Mask layer has invalid transform.");
+    }
+#endif
+
+    mMaskLayer = aMaskLayer;
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
    * Tell this layer what its transform should be. The transformation
    * is applied when compositing the layer into its parent container.
    * XXX Currently only transformations corresponding to 2D affine transforms
@@ -722,6 +751,7 @@ public:
   virtual Layer* GetLastChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
+  Layer* GetMaskLayer() { return mMaskLayer; }
 
   /**
    * DRAWING PHASE ONLY
@@ -903,6 +933,7 @@ protected:
     mNextSibling(nsnull),
     mPrevSibling(nsnull),
     mImplData(aImplData),
+    mMaskLayer(nsnull),
     mOpacity(1.0),
     mContentFlags(0),
     mUseClipRect(false),
@@ -946,6 +977,7 @@ protected:
   Layer* mNextSibling;
   Layer* mPrevSibling;
   void* mImplData;
+  nsRefPtr<Layer> mMaskLayer;
   LayerUserDataSet mUserData;
   nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
