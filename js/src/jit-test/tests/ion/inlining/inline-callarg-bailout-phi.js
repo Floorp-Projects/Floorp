@@ -21,7 +21,7 @@ assertEq(accum, 2000);
 var accum = 0;
 for (var i = 0; i < 11000; ++i)
     accum = runBinop(add, i, i);
-assertEq(accum, 2000);
+assertEq(accum, 21998);
 
 var t30 = 1 << 30;
 var t31 = t30 + t30;
