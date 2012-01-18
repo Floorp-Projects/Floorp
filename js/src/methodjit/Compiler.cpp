@@ -814,7 +814,7 @@ mjit::Compiler::generatePrologue()
 
         if (outerScript->usesArguments && !script->function()->isHeavyweight()) {
             /*
-             * Make sure that fp->args.nactual is always coherent. This may be
+             * Make sure that fp->u.nactual is always coherent. This may be
              * inspected directly by JIT code, and is not guaranteed to be
              * correct if the UNDERFLOW and OVERFLOW flags are not set.
              */
@@ -824,7 +824,7 @@ mjit::Compiler::generatePrologue()
                                                    StackFrame::OVERFLOW_ARGS |
                                                    StackFrame::HAS_ARGS_OBJ));
             masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
-                          Address(JSFrameReg, StackFrame::offsetOfArgs()));
+                          Address(JSFrameReg, StackFrame::offsetOfNumActual()));
             hasArgs.linkTo(masm.label(), &masm);
         }
 
@@ -4527,12 +4527,11 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
 
         /*
          * Check if we are accessing the 'length' of the lazy arguments for the
-         * current frame. No actual arguments object has ever been constructed
-         * for the script, so we can go straight to nactual.
+         * current frame.
          */
         if (types->isLazyArguments(cx)) {
             frame.pop();
-            frame.pushWord(Address(JSFrameReg, StackFrame::offsetOfArgs()), JSVAL_TYPE_INT32);
+            frame.pushWord(Address(JSFrameReg, StackFrame::offsetOfNumActual()), JSVAL_TYPE_INT32);
             if (script->pcCounters)
                 bumpPropCounter(PC, OpcodeCounts::PROP_DEFINITE);
             return true;

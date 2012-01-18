@@ -4301,7 +4301,7 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, const SSAValue &v, Vector
         return true;
 
     for (unsigned i = 0; i < seen->length(); i++) {
-        if (v.equals((*seen)[i]))
+        if (v == (*seen)[i])
             return true;
     }
     if (!seen->append(v)) {

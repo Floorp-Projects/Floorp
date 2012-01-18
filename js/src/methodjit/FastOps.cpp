@@ -1905,7 +1905,7 @@ mjit::Compiler::jsop_getelem_args()
 
     // Guard on nactual.
     if (!hoistedLength) {
-        Address nactualAddr(JSFrameReg, StackFrame::offsetOfArgs());
+        Address nactualAddr(JSFrameReg, StackFrame::offsetOfNumActual());
         MaybeJump rangeGuard;
         if (key.isConstant()) {
             JS_ASSERT(key.index() >= 0);
