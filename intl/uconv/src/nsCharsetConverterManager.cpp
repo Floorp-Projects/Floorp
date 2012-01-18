@@ -238,7 +238,6 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
   *aResult = NULL;
 
   nsresult rv;
-  nsCAutoString alias;
 
   nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv))
@@ -262,18 +261,13 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
     if (!supStr)
       continue;
 
-    nsCAutoString fullName(aPrefix);
-    
     nsCAutoString name;
     if (NS_FAILED(supStr->GetData(name)))
       continue;
 
-    fullName += name;
-    rv = GetCharsetAlias(fullName.get(), alias);
-    if (NS_FAILED(rv)) 
-      continue;
-
-    rv = array->AppendElement(alias) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    nsCAutoString fullName(aPrefix);
+    fullName.Append(name);
+    NS_ENSURE_TRUE(array->AppendElement(fullName), NS_ERROR_OUT_OF_MEMORY);
   }
     
   return NS_NewAdoptingUTF8StringEnumerator(aResult, array);
@@ -317,7 +311,6 @@ nsCharsetConverterManager::GetCharsetAlias(const char * aCharset,
   nsCOMPtr<nsICharsetAlias> csAlias(do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString pref;
   rv = csAlias->GetPreferred(nsDependentCString(aCharset), aResult);
   NS_ENSURE_SUCCESS(rv, rv);
 
