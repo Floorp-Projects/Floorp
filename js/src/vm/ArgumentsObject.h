@@ -166,12 +166,20 @@ class ArgumentsObject : public JSObject
 #endif
 
     void initInitialLength(uint32_t length);
-
     void initData(ArgumentsData *data);
+    static ArgumentsObject *create(JSContext *cx, uint32_t argc, JSObject &callee);
 
   public:
-    /* Create an arguments object for the given callee function and frame. */
-    static ArgumentsObject *create(JSContext *cx, uint32_t argc, JSObject &callee);
+    /* Create an arguments object for a frame that is expecting them. */
+    static bool create(JSContext *cx, StackFrame *fp);
+
+    /*
+     * Purposefully disconnect the returned arguments object from the frame
+     * by always creating a new copy that does not alias formal parameters.
+     * This allows function-local analysis to determine that formals are
+     * not aliased and generally simplifies arguments objects.
+     */
+    static ArgumentsObject *createUnexpected(JSContext *cx, StackFrame *fp);
 
     /*
      * Return the initial length of the arguments.  This may differ from the
@@ -223,11 +231,6 @@ class ArgumentsObject : public JSObject
 
 class NormalArgumentsObject : public ArgumentsObject
 {
-    friend bool JSObject::isNormalArguments() const;
-    friend struct EmptyShape; // for EmptyShape::getEmptyArgumentsShape
-    friend ArgumentsObject *
-    ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee);
-
   public:
     /*
      * Stores arguments.callee, or MagicValue(JS_ARGS_HOLE) if the callee has
@@ -237,14 +240,17 @@ class NormalArgumentsObject : public ArgumentsObject
 
     /* Clear the location storing arguments.callee's initial value. */
     inline void clearCallee();
+
+    /*
+     * Return 'arguments[index]' for some unmodified NormalArgumentsObject of
+     * 'fp' (the actual instance of 'arguments' doesn't matter so it does not
+     * have to be passed or even created).
+     */
+    static bool optimizedGetElem(JSContext *cx, StackFrame *fp, const Value &elem, Value *vp);
 };
 
 class StrictArgumentsObject : public ArgumentsObject
-{
-    friend bool JSObject::isStrictArguments() const;
-    friend ArgumentsObject *
-    ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee);
-};
+{};
 
 } // namespace js
 
