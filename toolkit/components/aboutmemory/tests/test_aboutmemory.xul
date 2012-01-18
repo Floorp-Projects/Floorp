@@ -250,6 +250,8 @@ Other Measurements\n\
 \n\
 3rd Process\n\
 \n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is zero and the 'explicit' tree shows less memory than it should.\n\
+\n\
 Explicit Allocations\n\
 777.00 MB (100.0%) -- explicit\n\
 ├──777.00 MB (100.0%) -- a\n\
@@ -335,6 +337,8 @@ Other Measurements\n\
   116,391,936 B -- other1\n\
 \n\
 3rd Process\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is zero and the 'explicit' tree shows less memory than it should.\n\
 \n\
 Explicit Allocations\n\
 814,743,552 B (100.0%) -- explicit\n\
