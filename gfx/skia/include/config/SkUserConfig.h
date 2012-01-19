@@ -145,6 +145,10 @@
 //#define SK_SUPPORT_UNITTEST
 #endif
 
+/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
+ */
+#define SK_DISABLE_DITHER_32BIT_GRADIENT
+
 /* If your system embeds skia and has complex event logging, define this
    symbol to name a file that maps the following macros to your system's
    equivalents:
@@ -165,5 +169,11 @@
         #define SK_B32_SHIFT    0
         #define SK_A32_SHIFT    24
 #endif
+
+/*  Don't include stdint.h on windows as it conflicts with our build system.
+ */
+#ifdef SK_BUILD_FOR_WIN32 
+    #define SK_IGNORE_STDINT_DOT_H 
+#endif 
 
 #endif
