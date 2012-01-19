@@ -640,9 +640,6 @@ var AddonManagerInternal = {
         gStrictCompatibility = STRICT_COMPATIBILITY_DEFAULT;
       }
 
-      // XXXunf Currently, this won't notify listeners that an addon's
-      // compatibility status has changed if the addon's appDisabled state
-      // doesn't change.
       if (gStrictCompatibility != oldValue)
         this.updateAddonAppDisabledStates();
 
