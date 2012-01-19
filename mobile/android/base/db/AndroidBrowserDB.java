@@ -63,13 +63,9 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
 
     private static final Uri BOOKMARKS_CONTENT_URI_POST_11 = Uri.parse("content://com.android.browser/bookmarks");
 
-    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter) {
+    private Cursor filterAllSites(ContentResolver cr, String[] projection, CharSequence constraint, int limit, CharSequence urlFilter) {
         Cursor c = cr.query(Browser.BOOKMARKS_URI,
-                            new String[] { URL_COLUMN_ID,
-                                           BookmarkColumns.URL,
-                                           BookmarkColumns.TITLE,
-                                           BookmarkColumns.FAVICON,
-                                           URL_COLUMN_THUMBNAIL },
+                            projection,
                             // The length restriction on URL is for the same reason as in the general bookmark query
                             // (see comment earlier in this file).
                             (urlFilter != null ? "(" + Browser.BookmarkColumns.URL + " NOT LIKE ? ) AND " : "" ) + 
@@ -84,6 +80,28 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                             Browser.BookmarkColumns.DATE + " - " + System.currentTimeMillis() + ") / 86400000 + 120) DESC LIMIT " + limit);
 
         return new AndroidDBCursor(c);
+    }
+
+    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
+        return filterAllSites(cr,
+                              new String[] { URL_COLUMN_ID,
+                                             BookmarkColumns.URL,
+                                             BookmarkColumns.TITLE,
+                                             BookmarkColumns.FAVICON },
+                              constraint,
+                              limit,
+                              null);
+    }
+
+    public Cursor getTopSites(ContentResolver cr, int limit) {
+        return filterAllSites(cr,
+                              new String[] { URL_COLUMN_ID,
+                                             BookmarkColumns.URL,
+                                             BookmarkColumns.TITLE,
+                                             URL_COLUMN_THUMBNAIL },
+                              "",
+                              limit,
+                              BrowserDB.ABOUT_PAGES_URL_FILTER);
     }
 
     public void updateVisitedHistory(ContentResolver cr, String uri) {
