@@ -1244,21 +1244,21 @@ TiltVisualizer.Arcball = function TV_Arcball(
    */
   this._lastRot = quat4.create();
   this._deltaRot = quat4.create();
-  this._currentRot = quat4.create();
+  this._currentRot = quat4.create(aInitialRot);
 
   /**
    * The current camera translation coordinates.
    */
   this._lastTrans = vec3.create();
   this._deltaTrans = vec3.create();
-  this._currentTrans = vec3.create();
+  this._currentTrans = vec3.create(aInitialTrans);
   this._zoomAmount = 0;
 
   /**
    * Additional rotation and translation vectors.
    */
-  this._additionalRot = vec3.create(aInitialRot);
-  this._additionalTrans = vec3.create(aInitialTrans);
+  this._additionalRot = vec3.create();
+  this._additionalTrans = vec3.create();
   this._deltaAdditionalRot = quat4.create();
   this._deltaAdditionalTrans = vec3.create();
 
@@ -1666,21 +1666,22 @@ TiltVisualizer.Arcball.prototype = {
    */
   reset: function TVA_reset(aFinalTranslation, aFinalRotation)
   {
+    if ("function" === typeof this.onResetStart) {
+      this.onResetStart();
+      this.onResetStart = null;
+    }
+
     this.cancelMouseEvents();
     this.cancelKeyEvents();
+    this._cancelResetInterval();
 
-    if (!this._resetInterval) {
-      let window = TiltUtils.getBrowserWindow();
-      let func = this._nextResetIntervalStep.bind(this);
+    let window = TiltUtils.getBrowserWindow();
+    let func = this._nextResetIntervalStep.bind(this);
 
-      vec3.zero(this._additionalTrans);
-      vec3.zero(this._additionalRot);
-
-      this._save();
-      this._resetFinalTranslation = vec3.create(aFinalTranslation);
-      this._resetFinalRotation = quat4.create(aFinalRotation);
-      this._resetInterval = window.setInterval(func, ARCBALL_RESET_INTERVAL);
-    }
+    this._save();
+    this._resetFinalTranslation = vec3.create(aFinalTranslation);
+    this._resetFinalRotation = quat4.create(aFinalRotation);
+    this._resetInterval = window.setInterval(func, ARCBALL_RESET_INTERVAL);
   },
 
   /**
@@ -1715,10 +1716,12 @@ TiltVisualizer.Arcball.prototype = {
     let r = quat4.multiply(quat4.inverse(quat4.create(this._currentRot)), fRot);
 
     // reset the rotation quaternion and translation vector
-    vec3.lerp(this._currentTrans, t, ARCBALL_RESET_FACTOR);
+    vec3.lerp(this._currentTrans, t, ARCBALL_RESET_FACTOR / 4);
     quat4.slerp(this._currentRot, r, 1 - ARCBALL_RESET_FACTOR);
 
     // also reset any additional transforms by the keyboard or mouse
+    vec3.scale(this._additionalTrans, ARCBALL_RESET_FACTOR);
+    vec3.scale(this._additionalRot, ARCBALL_RESET_FACTOR);
     this._zoomAmount *= ARCBALL_RESET_FACTOR;
 
     // clear the loop if the all values are very close to zero
@@ -1727,7 +1730,9 @@ TiltVisualizer.Arcball.prototype = {
         vec3.length(vec3.subtract(this._currentRot, fRot, [])) < fDelta &&
         vec3.length(vec3.subtract(this._lastTrans, fTran, [])) < fDelta &&
         vec3.length(vec3.subtract(this._deltaTrans, fTran, [])) < fDelta &&
-        vec3.length(vec3.subtract(this._currentTrans, fTran, [])) < fDelta) {
+        vec3.length(vec3.subtract(this._currentTrans, fTran, [])) < fDelta &&
+        vec3.length(this._additionalRot) < fDelta &&
+        vec3.length(this._additionalTrans) < fDelta) {
 
       this._cancelResetInterval();
     }
