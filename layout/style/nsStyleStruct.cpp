@@ -670,7 +670,7 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
       (outlineIsVisible && (mOutlineOffset != aOther.mOutlineOffset ||
                             mOutlineWidth != aOther.mOutlineWidth ||
                             mTwipsPerPixel != aOther.mTwipsPerPixel))) {
-    return NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame);
+    return NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
   }
   if ((mOutlineStyle != aOther.mOutlineStyle) ||
       (mOutlineColor != aOther.mOutlineColor) ||
@@ -684,7 +684,7 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 /* static */
 nsChangeHint nsStyleOutline::MaxDifference()
 {
-  return NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame);
+  return NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
 }
 #endif
 
@@ -2238,39 +2238,37 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   else if (HasTransform()) {
     /* Otherwise, if we've kept the property lying around and we already had a
      * transform, we need to see whether or not we've changed the transform.
-     * If so, we need to do a reflow and a repaint. The reflow is to recompute
-     * the overflow rect (which probably changed if the transform changed)
-     * and to redraw within the bounds of that new overflow rect.
+     * If so, we need to recompute its overflow rect (which probably changed
+     * if the transform changed) and to redraw within the bounds of that new
+     * overflow rect.
      */
     if (!mSpecifiedTransform != !aOther.mSpecifiedTransform ||
-        (mSpecifiedTransform && *mSpecifiedTransform != *aOther.mSpecifiedTransform))
-      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
+        (mSpecifiedTransform &&
+         *mSpecifiedTransform != *aOther.mSpecifiedTransform)) {
+      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_UpdateOverflow,
                                          nsChangeHint_UpdateTransformLayer));
-    
+    }
+
+    const nsChangeHint kUpdateOverflowAndRepaintHint =
+      NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
     for (PRUint8 index = 0; index < 3; ++index)
       if (mTransformOrigin[index] != aOther.mTransformOrigin[index]) {
-        NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
-                                           nsChangeHint_RepaintFrame));
+        NS_UpdateHint(hint, kUpdateOverflowAndRepaintHint);
         break;
       }
     
     for (PRUint8 index = 0; index < 2; ++index)
       if (mPerspectiveOrigin[index] != aOther.mPerspectiveOrigin[index]) {
-        NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
-                                           nsChangeHint_RepaintFrame));
+        NS_UpdateHint(hint, kUpdateOverflowAndRepaintHint);
         break;
       }
 
-    if (mChildPerspective != aOther.mChildPerspective)
-      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
-                                         nsChangeHint_RepaintFrame));
+    if (mChildPerspective != aOther.mChildPerspective ||
+        mTransformStyle != aOther.mTransformStyle)
+      NS_UpdateHint(hint, kUpdateOverflowAndRepaintHint);
 
     if (mBackfaceVisibility != aOther.mBackfaceVisibility)
       NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-
-    if (mTransformStyle != aOther.mTransformStyle)
-      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
-                                         nsChangeHint_RepaintFrame));
   }
 
   // Note:  Our current behavior for handling changes to the
@@ -2295,8 +2293,10 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 nsChangeHint nsStyleDisplay::MaxDifference()
 {
   // All the parts of FRAMECHANGE are present above in CalcDifference.
-  return nsChangeHint(NS_STYLE_HINT_FRAMECHANGE | nsChangeHint_UpdateOpacityLayer |
-                      nsChangeHint_UpdateTransformLayer);
+  return nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
+                      nsChangeHint_UpdateOpacityLayer |
+                      nsChangeHint_UpdateTransformLayer |
+                      nsChangeHint_UpdateOverflow);
 }
 #endif
 

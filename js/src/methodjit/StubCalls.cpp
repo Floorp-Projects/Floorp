@@ -297,7 +297,7 @@ stubs::ImplicitThis(VMFrame &f, PropertyName *name)
 {
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(f.cx, name, false, false, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(f.cx, name, false, f.cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         THROW();
 
     if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))
@@ -894,8 +894,23 @@ void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
     ExpandInlineFrames(f.cx->compartment);
-    Recompiler recompiler(f.cx, f.script());
-    recompiler.recompile(/* resetUses */ false);
+    Recompiler::clearStackReferences(f.cx, f.script());
+
+    bool releaseChunk = true;
+    if (f.jit()->nchunks > 1) {
+        StackFrame *fp = f.fp();
+        for (FrameRegsIter i(f.cx); !i.done(); ++i) {
+            StackFrame *xfp = i.fp();
+            if (xfp->script() == fp->script() && xfp != fp) {
+                mjit::ReleaseScriptCode(f.cx, fp->script());
+                releaseChunk = false;
+                break;
+            }
+        }
+    }
+
+    if (releaseChunk)
+        f.jit()->destroyChunk(f.cx, f.chunkIndex(), /* resetUses = */ false);
 }
 
 void JS_FASTCALL
@@ -1477,21 +1492,33 @@ stubs::LeaveBlock(VMFrame &f)
     fp->setBlockChain(blockObj.enclosingBlock());
 }
 
+inline void *
+FindNativeCode(VMFrame &f, jsbytecode *target)
+{
+    void* native = f.fp()->script()->nativeCodeForPC(f.fp()->isConstructing(), target);
+    if (native)
+        return native;
+
+    CompileStatus status = CanMethodJIT(f.cx, f.script(), target, f.fp()->isConstructing(),
+                                        CompileRequest_Interpreter);
+    if (status == Compile_Error)
+        THROWV(NULL);
+
+    mjit::ClearAllFrames(f.cx->compartment);
+    return target;
+}
+
 void * JS_FASTCALL
 stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
 {
     jsbytecode *jpc = pc;
     JSScript *script = f.fp()->script();
-    bool ctor = f.fp()->isConstructing();
 
     /* This is correct because the compiler adjusts the stack beforehand. */
     Value lval = f.regs.sp[-1];
 
-    if (!lval.isPrimitive()) {
-        void* native = script->nativeCodeForPC(ctor, pc + GET_JUMP_OFFSET(pc));
-        JS_ASSERT(native);
-        return native;
-    }
+    if (!lval.isPrimitive())
+        return FindNativeCode(f, pc + GET_JUMP_OFFSET(pc));
 
     JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
 
@@ -1510,12 +1537,8 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += INDEX_LEN;
             if (rval.isString()) {
                 JSLinearString *rhs = &rval.toString()->asLinear();
-                if (rhs == str || EqualStrings(str, rhs)) {
-                    void* native = script->nativeCodeForPC(ctor,
-                                                           jpc + GET_JUMP_OFFSET(pc));
-                    JS_ASSERT(native);
-                    return native;
-                }
+                if (rhs == str || EqualStrings(str, rhs))
+                    return FindNativeCode(f, jpc + GET_JUMP_OFFSET(pc));
             }
             pc += JUMP_OFFSET_LEN;
         }
@@ -1524,31 +1547,21 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
         for (uint32_t i = 1; i <= npairs; i++) {
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
-            if (rval.isNumber() && d == rval.toNumber()) {
-                void* native = script->nativeCodeForPC(ctor,
-                                                       jpc + GET_JUMP_OFFSET(pc));
-                JS_ASSERT(native);
-                return native;
-            }
+            if (rval.isNumber() && d == rval.toNumber())
+                return FindNativeCode(f, jpc + GET_JUMP_OFFSET(pc));
             pc += JUMP_OFFSET_LEN;
         }
     } else {
         for (uint32_t i = 1; i <= npairs; i++) {
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
-            if (lval == rval) {
-                void* native = script->nativeCodeForPC(ctor,
-                                                       jpc + GET_JUMP_OFFSET(pc));
-                JS_ASSERT(native);
-                return native;
-            }
+            if (lval == rval)
+                return FindNativeCode(f, jpc + GET_JUMP_OFFSET(pc));
             pc += JUMP_OFFSET_LEN;
         }
     }
 
-    void* native = script->nativeCodeForPC(ctor, jpc + GET_JUMP_OFFSET(jpc));
-    JS_ASSERT(native);
-    return native;
+    return FindNativeCode(f, jpc + GET_JUMP_OFFSET(jpc));
 }
 
 void * JS_FASTCALL
@@ -1596,11 +1609,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 
 finally:
     /* Provide the native address. */
-    JSScript* script = f.fp()->script();
-    void* native = script->nativeCodeForPC(f.fp()->isConstructing(),
-                                           originalPC + jumpOffset);
-    JS_ASSERT(native);
-    return native;
+    return FindNativeCode(f, originalPC + jumpOffset);
 }
 
 void JS_FASTCALL
@@ -1617,7 +1626,7 @@ stubs::DelName(VMFrame &f, PropertyName *name)
 {
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindProperty(f.cx, name, false, &obj, &obj2, &prop))
+    if (!FindProperty(f.cx, name, f.cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -1892,8 +1901,8 @@ stubs::InvariantFailure(VMFrame &f, void *rval)
 
     ExpandInlineFrames(f.cx->compartment);
 
-    Recompiler recompiler(f.cx, script);
-    recompiler.recompile();
+    mjit::Recompiler::clearStackReferences(f.cx, script);
+    mjit::ReleaseScriptCode(f.cx, script);
 
     /* Return the same value (if any) as the call triggering the invariant failure. */
     return rval;

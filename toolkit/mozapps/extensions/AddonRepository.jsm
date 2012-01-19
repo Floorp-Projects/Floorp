@@ -148,14 +148,14 @@ function convertHTMLToPlainText(html) {
 
   var input = Cc["@mozilla.org/supports-string;1"].
               createInstance(Ci.nsISupportsString);
-  input.data = html.replace("\n", "<br>", "g");
+  input.data = html.replace(/\n/g, "<br>");
 
   var output = {};
   converter.convert("text/html", input, input.data.length, "text/unicode",
                     output, {});
 
   if (output.value instanceof Ci.nsISupportsString)
-    return output.value.data.replace("\r\n", "\n", "g");
+    return output.value.data.replace(/\r\n/g, "\n");
   return html;
 }
 

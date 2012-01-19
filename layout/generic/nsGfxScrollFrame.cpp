@@ -799,7 +799,7 @@ nsHTMLScrollFrame::GetPadding(nsMargin& aMargin)
 }
 
 bool
-nsHTMLScrollFrame::IsCollapsed(nsBoxLayoutState& aBoxLayoutState)
+nsHTMLScrollFrame::IsCollapsed()
 {
   // We're never collapsed in the box sense.
   return false;
@@ -3267,6 +3267,27 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
       aBox->InvalidateFrameSubtree();
     }
   }
+}
+
+bool
+nsGfxScrollFrameInner::UpdateOverflow()
+{
+  nsIScrollableFrame* sf = do_QueryFrame(mOuter);
+  ScrollbarStyles ss = sf->GetScrollbarStyles();
+
+  if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN ||
+      ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
+      GetScrollPosition() != nsPoint()) {
+    // If there are scrollbars, or we're not at the beginning of the pane,
+    // the scroll position may change. In this case, mark the frame as
+    // needing reflow.
+    mOuter->PresContext()->PresShell()->FrameNeedsReflow(
+      mOuter, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+  }
+
+  // Scroll frames never have overflow area because they always clip their
+  // children, so return false.
+  return false;
 }
 
 void

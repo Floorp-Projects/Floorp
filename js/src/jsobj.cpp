@@ -3624,9 +3624,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         char tmp[tl::Max<sizeof(JSFunction), sizeof(JSObject_Slots16)>::result];
         JS_ASSERT(size <= sizeof(tmp));
 
-        memcpy(tmp, a, size);
-        memcpy(a, b, size);
-        memcpy(b, tmp, size);
+        js_memcpy(tmp, a, size);
+        js_memcpy(a, b, size);
+        js_memcpy(b, tmp, size);
     } else {
         /*
          * If the objects are of differing sizes, use the space we reserved
@@ -3653,9 +3653,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         void *bpriv = b->hasPrivate() ? b->getPrivate() : NULL;
 
         char tmp[sizeof(JSObject)];
-        memcpy(&tmp, a, sizeof tmp);
-        memcpy(a, b, sizeof tmp);
-        memcpy(b, &tmp, sizeof tmp);
+        js_memcpy(&tmp, a, sizeof tmp);
+        js_memcpy(a, b, sizeof tmp);
+        js_memcpy(b, &tmp, sizeof tmp);
 
         if (a->isNative())
             a->shape_->setNumFixedSlots(reserved.newafixed);
@@ -4318,8 +4318,8 @@ JSObject::growElements(JSContext *cx, uintN newcap)
         newheader = (ObjectElements *) cx->malloc_(newAllocated * sizeof(Value));
         if (!newheader)
             return false;  /* Ditto. */
-        memcpy(newheader, getElementsHeader(),
-               (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
+        js_memcpy(newheader, getElementsHeader(),
+                  (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
     }
 
     newheader->capacity = actualCapacity;
@@ -5096,28 +5096,13 @@ js::LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 }
 
 bool
-js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool global,
+js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, JSObject *scopeChain,
                        JSObject **objp, JSObject **pobjp, JSProperty **propp)
 {
     jsid id = ATOM_TO_JSID(name);
-    JSObject *scopeChain, *obj, *parent, *pobj;
+    JSObject *obj, *parent, *pobj;
     int scopeIndex;
     JSProperty *prop;
-
-    scopeChain = cx->stack.currentScriptedScopeChain();
-
-    if (global) {
-        /*
-         * Skip along the scope chain to the enclosing global object. This is
-         * used for GNAME opcodes where the bytecode emitter has determined a
-         * name access must be on the global. It also insulates us from bugs
-         * in the emitter: type inference will assume that GNAME opcodes are
-         * accessing the global object, and the inferred behavior should match
-         * the actual behavior even if the id could be found on the scope chain
-         * before the global object.
-         */
-        scopeChain = &scopeChain->global();
-    }
 
     /* Scan entries on the scope chain that we can cache across. */
     obj = scopeChain;
@@ -5203,10 +5188,10 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
  * Otherwise, its type and meaning depends on the host object's implementation.
  */
 bool
-js::FindProperty(JSContext *cx, PropertyName *name, bool global,
+js::FindProperty(JSContext *cx, PropertyName *name, JSObject *scopeChain,
                  JSObject **objp, JSObject **pobjp, JSProperty **propp)
 {
-    return !!FindPropertyHelper(cx, name, false, global, objp, pobjp, propp);
+    return !!FindPropertyHelper(cx, name, false, scopeChain, objp, pobjp, propp);
 }
 
 JSObject *
