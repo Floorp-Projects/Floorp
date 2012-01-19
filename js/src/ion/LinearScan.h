@@ -269,12 +269,14 @@ class LiveInterval
     Requirement requirement_;
     Requirement hint_;
     InlineForwardList<UsePosition> uses_;
+    size_t lastProcessedRange_;
 
   public:
 
     LiveInterval(VirtualRegister *reg, uint32 index)
       : reg_(reg),
-        index_(index)
+        index_(index),
+        lastProcessedRange_(size_t(-1))
     { }
 
     bool addRange(CodePosition from, CodePosition to);
@@ -298,6 +300,17 @@ class LiveInterval
     }
     const Range *getRange(size_t i) const {
         return &ranges_[i];
+    }
+    void setLastProcessedRange(size_t range, DebugOnly<CodePosition> pos) {
+        // If the range starts after pos, we may not be able to use
+        // it in the next lastProcessedRangeIfValid call.
+        JS_ASSERT(ranges_[range].from <= pos);
+        lastProcessedRange_ = range;
+    }
+    size_t lastProcessedRangeIfValid(CodePosition pos) const {
+        if (lastProcessedRange_ < ranges_.length() && ranges_[lastProcessedRange_].from <= pos)
+            return lastProcessedRange_;
+        return ranges_.length() - 1;
     }
 
     LAllocation *getAllocation() {
