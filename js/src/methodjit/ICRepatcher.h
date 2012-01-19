@@ -60,7 +60,7 @@ class Repatcher : public JSC::RepatchBuffer
     CodeLocationLabel label;
 
   public:
-    explicit Repatcher(JITScript *js)
+    explicit Repatcher(JITChunk *js)
       : JSC::RepatchBuffer(js->code), label(js->code.m_code.executableAddress())
     { }
 

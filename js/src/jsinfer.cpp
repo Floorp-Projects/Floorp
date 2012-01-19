@@ -1404,13 +1404,13 @@ TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, Type type)
 class TypeConstraintFreeze : public TypeConstraint
 {
 public:
-    JSScript *script;
+    RecompileInfo info;
 
     /* Whether a new type has already been added, triggering recompilation. */
     bool typeAdded;
 
-    TypeConstraintFreeze(JSScript *script)
-        : TypeConstraint("freeze"), script(script), typeAdded(false)
+    TypeConstraintFreeze(RecompileInfo info)
+        : TypeConstraint("freeze"), info(info), typeAdded(false)
     {}
 
     void newType(JSContext *cx, TypeSet *source, Type type)
@@ -1419,7 +1419,7 @@ public:
             return;
 
         typeAdded = true;
-        cx->compartment->types.addPendingRecompile(cx, script);
+        cx->compartment->types.addPendingRecompile(cx, info);
     }
 };
 
@@ -1427,7 +1427,7 @@ void
 TypeSet::addFreeze(JSContext *cx)
 {
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreeze>(
-                cx->compartment->types.compiledScript), false);
+                cx->compartment->types.compiledInfo), false);
 }
 
 /*
@@ -1437,7 +1437,7 @@ TypeSet::addFreeze(JSContext *cx)
 class TypeConstraintFreezeTypeTag : public TypeConstraint
 {
 public:
-    JSScript *script;
+    RecompileInfo info;
 
     /*
      * Whether the type tag has been marked unknown due to a type change which
@@ -1445,8 +1445,8 @@ public:
      */
     bool typeUnknown;
 
-    TypeConstraintFreezeTypeTag(JSScript *script)
-        : TypeConstraint("freezeTypeTag"), script(script), typeUnknown(false)
+    TypeConstraintFreezeTypeTag(RecompileInfo info)
+        : TypeConstraint("freezeTypeTag"), info(info), typeUnknown(false)
     {}
 
     void newType(JSContext *cx, TypeSet *source, Type type)
@@ -1461,7 +1461,7 @@ public:
         }
 
         typeUnknown = true;
-        cx->compartment->types.addPendingRecompile(cx, script);
+        cx->compartment->types.addPendingRecompile(cx, info);
     }
 };
 
@@ -1511,9 +1511,9 @@ TypeSet::getKnownTypeTag(JSContext *cx)
     bool empty = flags == 0 && baseObjectCount() == 0;
     JS_ASSERT_IF(empty, type == JSVAL_TYPE_UNKNOWN);
 
-    if (cx->compartment->types.compiledScript && (empty || type != JSVAL_TYPE_UNKNOWN)) {
+    if (cx->compartment->types.compiledInfo.script && (empty || type != JSVAL_TYPE_UNKNOWN)) {
         add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeTypeTag>(
-                  cx->compartment->types.compiledScript), false);
+                  cx->compartment->types.compiledInfo), false);
     }
 
     return type;
@@ -1523,7 +1523,7 @@ TypeSet::getKnownTypeTag(JSContext *cx)
 class TypeConstraintFreezeObjectFlags : public TypeConstraint
 {
 public:
-    JSScript *script;
+    RecompileInfo info;
 
     /* Flags we are watching for on this object. */
     TypeObjectFlags flags;
@@ -1532,13 +1532,13 @@ public:
     bool *pmarked;
     bool localMarked;
 
-    TypeConstraintFreezeObjectFlags(JSScript *script, TypeObjectFlags flags, bool *pmarked)
-        : TypeConstraint("freezeObjectFlags"), script(script), flags(flags),
+    TypeConstraintFreezeObjectFlags(RecompileInfo info, TypeObjectFlags flags, bool *pmarked)
+        : TypeConstraint("freezeObjectFlags"), info(info), flags(flags),
           pmarked(pmarked), localMarked(false)
     {}
 
-    TypeConstraintFreezeObjectFlags(JSScript *script, TypeObjectFlags flags)
-        : TypeConstraint("freezeObjectFlags"), script(script), flags(flags),
+    TypeConstraintFreezeObjectFlags(RecompileInfo info, TypeObjectFlags flags)
+        : TypeConstraint("freezeObjectFlags"), info(info), flags(flags),
           pmarked(&localMarked), localMarked(false)
     {}
 
@@ -1548,9 +1548,9 @@ public:
     {
         if (object->hasAnyFlags(flags) && !*pmarked) {
             *pmarked = true;
-            cx->compartment->types.addPendingRecompile(cx, script);
+            cx->compartment->types.addPendingRecompile(cx, info);
         } else if (force) {
-            cx->compartment->types.addPendingRecompile(cx, script);
+            cx->compartment->types.addPendingRecompile(cx, info);
         }
     }
 };
@@ -1562,13 +1562,13 @@ public:
 class TypeConstraintFreezeObjectFlagsSet : public TypeConstraint
 {
 public:
-    JSScript *script;
+    RecompileInfo info;
 
     TypeObjectFlags flags;
     bool marked;
 
-    TypeConstraintFreezeObjectFlagsSet(JSScript *script, TypeObjectFlags flags)
-        : TypeConstraint("freezeObjectKindSet"), script(script), flags(flags), marked(false)
+    TypeConstraintFreezeObjectFlagsSet(RecompileInfo info, TypeObjectFlags flags)
+        : TypeConstraint("freezeObjectKindSet"), info(info), flags(flags), marked(false)
     {}
 
     void newType(JSContext *cx, TypeSet *source, Type type)
@@ -1593,7 +1593,7 @@ public:
                 if (!types)
                     return;
                 types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
-                                  script, flags, &marked), false);
+                                  info, flags, &marked), false);
                 return;
             }
         } else {
@@ -1601,7 +1601,7 @@ public:
         }
 
         marked = true;
-        cx->compartment->types.addPendingRecompile(cx, script);
+        cx->compartment->types.addPendingRecompile(cx, info);
     }
 };
 
@@ -1635,7 +1635,7 @@ TypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
      * in this set to add any needed FreezeArray constraints.
      */
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlagsSet>(
-                 cx->compartment->types.compiledScript, flags));
+                 cx->compartment->types.compiledInfo, flags));
 
     return false;
 }
@@ -1650,7 +1650,7 @@ TypeSet::HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags flags
     if (!types)
         return true;
     types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
-                      cx->compartment->types.compiledScript, flags), false);
+                      cx->compartment->types.compiledInfo, flags), false);
     return false;
 }
 
@@ -1732,21 +1732,21 @@ TypeSet::WatchObjectStateChange(JSContext *cx, TypeObject *obj)
      * called, which will set 'force' to true.
      */
     types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
-                     cx->compartment->types.compiledScript,
+                     cx->compartment->types.compiledInfo,
                      0));
 }
 
 class TypeConstraintFreezeOwnProperty : public TypeConstraint
 {
 public:
-    JSScript *script;
+    RecompileInfo info;
 
     bool updated;
     bool configurable;
 
-    TypeConstraintFreezeOwnProperty(JSScript *script, bool configurable)
+    TypeConstraintFreezeOwnProperty(RecompileInfo info, bool configurable)
         : TypeConstraint("freezeOwnProperty"),
-          script(script), updated(false), configurable(configurable)
+          info(info), updated(false), configurable(configurable)
     {}
 
     void newType(JSContext *cx, TypeSet *source, Type type) {}
@@ -1757,7 +1757,7 @@ public:
             return;
         if (source->isOwnProperty(configurable)) {
             updated = true;
-            cx->compartment->types.addPendingRecompile(cx, script);
+            cx->compartment->types.addPendingRecompile(cx, info);
         }
     }
 };
@@ -1787,7 +1787,7 @@ TypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
         return true;
 
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeOwnProperty>(
-                                                      cx->compartment->types.compiledScript,
+                                                      cx->compartment->types.compiledInfo,
                                                       configurable), false);
     return false;
 }
@@ -1881,7 +1881,7 @@ TypeSet::getSingleton(JSContext *cx, bool freeze)
 
     if (freeze) {
         add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreeze>(
-                                               cx->compartment->types.compiledScript), false);
+                                               cx->compartment->types.compiledInfo), false);
     }
 
     return obj;
@@ -1906,11 +1906,11 @@ TypeHasGlobal(Type type, JSObject *global)
 class TypeConstraintFreezeGlobal : public TypeConstraint
 {
 public:
-    JSScript *script;
+    RecompileInfo info;
     JSObject *global;
 
-    TypeConstraintFreezeGlobal(JSScript *script, JSObject *global)
-        : TypeConstraint("freezeGlobal"), script(script), global(global)
+    TypeConstraintFreezeGlobal(RecompileInfo info, JSObject *global)
+        : TypeConstraint("freezeGlobal"), info(info), global(global)
     {
         JS_ASSERT(global);
     }
@@ -1921,7 +1921,7 @@ public:
             return;
 
         global = NULL;
-        cx->compartment->types.addPendingRecompile(cx, script);
+        cx->compartment->types.addPendingRecompile(cx, info);
     }
 };
 
@@ -1939,7 +1939,7 @@ TypeSet::hasGlobalObject(JSContext *cx, JSObject *global)
     }
 
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeGlobal>(
-              cx->compartment->types.compiledScript, global), false);
+              cx->compartment->types.compiledInfo, global), false);
 
     return true;
 }
@@ -2141,7 +2141,7 @@ void
 TypeCompartment::processPendingRecompiles(JSContext *cx)
 {
     /* Steal the list of scripts to recompile, else we will try to recursively recompile them. */
-    Vector<JSScript*> *pending = pendingRecompiles;
+    Vector<RecompileInfo> *pending = pendingRecompiles;
     pendingRecompiles = NULL;
 
     JS_ASSERT(!pending->empty());
@@ -2151,10 +2151,12 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
     mjit::ExpandInlineFrames(cx->compartment);
 
     for (unsigned i = 0; i < pending->length(); i++) {
-        JSScript *script = (*pending)[i];
-        mjit::Recompiler recompiler(cx, script);
-        if (script->hasJITCode())
-            recompiler.recompile();
+        const RecompileInfo &info = (*pending)[i];
+        mjit::JITScript *jit = info.script->getJIT(info.constructing);
+        if (jit && jit->chunkDescriptor(info.chunkIndex).chunk) {
+            mjit::Recompiler::clearStackReferences(cx, info.script);
+            jit->destroyChunk(cx, info.chunkIndex);
+        }
     }
 
 #endif /* JS_METHODJIT */
@@ -2220,31 +2222,31 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
     JSCompartment *compartment = cx->compartment;
     mjit::ExpandInlineFrames(compartment);
+    mjit::ClearAllFrames(compartment);
 
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
 
     for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if (script->hasJITCode()) {
-            mjit::Recompiler recompiler(cx, script);
-            recompiler.recompile();
-        }
+        if (script->hasJITCode())
+            mjit::ReleaseScriptCode(cx, script);
     }
 #endif /* JS_METHODJIT */
 
 }
 
 void
-TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
+TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 {
 #ifdef JS_METHODJIT
-    if (!script->jitNormal && !script->jitCtor) {
+    mjit::JITScript *jit = info.script->getJIT(info.constructing);
+    if (!jit || !jit->chunkDescriptor(info.chunkIndex).chunk) {
         /* Scripts which haven't been compiled yet don't need to be recompiled. */
         return;
     }
 
     if (!pendingRecompiles) {
-        pendingRecompiles = cx->new_< Vector<JSScript*> >(cx);
+        pendingRecompiles = cx->new_< Vector<RecompileInfo> >(cx);
         if (!pendingRecompiles) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2252,13 +2254,34 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
     }
 
     for (unsigned i = 0; i < pendingRecompiles->length(); i++) {
-        if (script == (*pendingRecompiles)[i])
+        if (info == (*pendingRecompiles)[i])
             return;
     }
 
-    if (!pendingRecompiles->append(script)) {
+    if (!pendingRecompiles->append(info)) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
+    }
+#endif
+}
+
+void
+TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+#ifdef JS_METHODJIT
+    RecompileInfo info;
+    info.script = script;
+
+    if (script->jitNormal) {
+        info.constructing = false;
+        info.chunkIndex = script->jitNormal->chunkIndex(pc);
+        addPendingRecompile(cx, info);
+    }
+
+    if (script->jitCtor) {
+        info.constructing = true;
+        info.chunkIndex = script->jitCtor->chunkIndex(pc);
+        addPendingRecompile(cx, info);
     }
 #endif
 }
@@ -2289,7 +2312,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32_t offse
     if (!returnOnly)
         code.monitoredTypes = true;
 
-    cx->compartment->types.addPendingRecompile(cx, script);
+    cx->compartment->types.addPendingRecompile(cx, script, pc);
 
     /* Trigger recompilation of any inline callers. */
     if (script->function() && !script->function()->hasLazyType())
@@ -2383,7 +2406,7 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
          * however, do not trigger recompilation (the script will be recompiled
          * if any of the barriers is ever violated).
          */
-        cx->compartment->types.addPendingRecompile(cx, script);
+        cx->compartment->types.addPendingRecompile(cx, script, const_cast<jsbytecode*>(pc));
 
         /* Trigger recompilation of any inline callers. */
         if (script->function() && !script->function()->hasLazyType())
@@ -2418,7 +2441,7 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
 
     if (!code.typeBarriers) {
         /* Trigger recompilation as for normal type barriers. */
-        cx->compartment->types.addPendingRecompile(cx, script);
+        cx->compartment->types.addPendingRecompile(cx, script, const_cast<jsbytecode*>(pc));
         if (script->function() && !script->function()->hasLazyType())
             ObjectStateChange(cx, script->function()->type(), false, true);
     }

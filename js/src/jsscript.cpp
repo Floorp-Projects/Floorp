@@ -1745,10 +1745,9 @@ bool
 JSScript::recompileForStepMode(JSContext *cx)
 {
 #ifdef JS_METHODJIT
-    js::mjit::JITScript *jit = jitNormal ? jitNormal : jitCtor;
-    if (jit && stepModeEnabled() != jit->singleStepMode) {
-        js::mjit::Recompiler recompiler(cx, this);
-        recompiler.recompile();
+    if (jitNormal || jitCtor) {
+        mjit::ClearAllFrames(cx->compartment);
+        mjit::ReleaseScriptCode(cx, this);
     }
 #endif
     return true;

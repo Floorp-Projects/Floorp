@@ -335,12 +335,6 @@ namespace JSC {
 
 #define JS_UNJITTABLE_SCRIPT (reinterpret_cast<void*>(1))
 
-enum JITScriptStatus {
-    JITScript_None,
-    JITScript_Invalid,
-    JITScript_Valid
-};
-
 namespace js { namespace mjit { struct JITScript; } }
 #endif
 
@@ -639,7 +633,6 @@ struct JSScript : public js::gc::Cell {
 
     // These methods are implemented in MethodJIT.h.
     inline void **nativeMap(bool constructing);
-    inline void *maybeNativeCodeForPC(bool constructing, jsbytecode *pc);
     inline void *nativeCodeForPC(bool constructing, jsbytecode *pc);
 
     js::mjit::JITScript *getJIT(bool constructing) {
@@ -650,15 +643,6 @@ struct JSScript : public js::gc::Cell {
     size_t incUseCount() { return ++useCount; }
     size_t *addressOfUseCount() { return &useCount; }
     void resetUseCount() { useCount = 0; }
-
-    JITScriptStatus getJITStatus(bool constructing) {
-        void *addr = constructing ? jitArityCheckCtor : jitArityCheckNormal;
-        if (addr == NULL)
-            return JITScript_None;
-        if (addr == JS_UNJITTABLE_SCRIPT)
-            return JITScript_Invalid;
-        return JITScript_Valid;
-    }
 
     /* Size of the JITScript and all sections.  (This method is implemented in MethodJIT.cpp.) */
     size_t jitDataSize(JSMallocSizeOfFun mallocSizeOf);

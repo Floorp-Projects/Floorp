@@ -74,7 +74,6 @@
 #include "frontend/BytecodeEmitter.h"
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
-#include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
 #endif
 #include "vm/Debugger.h"
@@ -464,7 +463,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
-    status = mjit::CanMethodJIT(cx, script, fp->isConstructing(),
+    status = mjit::CanMethodJIT(cx, script, script->code, fp->isConstructing(),
                                 mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
         return false;
@@ -1507,7 +1506,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESET_USE_METHODJIT()                                                 \
     JS_BEGIN_MACRO                                                            \
         useMethodJIT = cx->methodJitEnabled &&                                \
-            script->getJITStatus(regs.fp()->isConstructing()) != JITScript_Invalid && \
            (interpMode == JSINTERP_NORMAL ||                                  \
             interpMode == JSINTERP_REJOIN ||                                  \
             interpMode == JSINTERP_SKIP_TRAP);                                \
@@ -1827,12 +1825,14 @@ check_backedge:
     if (!useMethodJIT)
         DO_OP();
     mjit::CompileStatus status =
-        mjit::CanMethodJITAtBranch(cx, script, regs.fp(), regs.pc);
+        mjit::CanMethodJIT(cx, script, regs.pc, regs.fp()->isConstructing(),
+                           mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
         goto error;
     if (status == mjit::Compile_Okay) {
         void *ncode =
             script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);
+        JS_ASSERT(ncode);
         mjit::JaegerStatus status =
             mjit::JaegerShotAtSafePoint(cx, ncode, true);
         CHECK_PARTIAL_METHODJIT(status);
@@ -3043,7 +3043,8 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
                                        ? mjit::CompileRequest_Interpreter
                                        : mjit::CompileRequest_JIT;
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, construct, request);
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, script->code,
+                                                        construct, request);
         if (status == mjit::Compile_Error)
             goto error;
         if (status == mjit::Compile_Okay) {
