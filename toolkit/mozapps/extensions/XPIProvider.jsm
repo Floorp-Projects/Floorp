@@ -3758,12 +3758,22 @@ var XPIProvider = {
     let wasDisabled = isAddonDisabled(aAddon);
     let isDisabled = aUserDisabled || aSoftDisabled || appDisabled;
 
+    // If appDisabled changes but the result of isAddonDisabled() doesn't,
+    // no onDisabling/onEnabling is sent - so send a onPropertyChanged.
+    let appDisabledChanged = aAddon.appDisabled != appDisabled;
+
     // Update the properties in the database
     XPIDatabase.setAddonProperties(aAddon, {
       userDisabled: aUserDisabled,
       appDisabled: appDisabled,
       softDisabled: aSoftDisabled
     });
+
+    if (appDisabledChanged) {
+      AddonManagerPrivate.callAddonListeners("onPropertyChanged",
+                                            aAddon,
+                                            ["appDisabled"]);
+    }
 
     // If the add-on is not visible or the add-on is not changing state then
     // there is no need to do anything else
