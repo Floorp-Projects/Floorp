@@ -78,8 +78,10 @@ static const Register pc  = { Registers::pc };
 
 static const Register ScratchRegister = {Registers::ip};
 
-static const Register OsrFrameReg = { Registers::r10 };
-static const Register ArgumentsRectifierReg = {Registers::r8};
+static const Register OsrFrameReg = r10;
+static const Register ArgumentsRectifierReg = r8;
+static const Register CallTempReg1 = r5;
+static const Register CallTempReg2 = r6;
 
 static const Register InvalidReg = { Registers::invalid_reg };
 static const FloatRegister InvalidFloatReg = { FloatRegisters::invalid_freg };

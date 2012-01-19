@@ -68,9 +68,11 @@ static const Register StackPointer = esp;
 static const Register ReturnReg = eax;
 static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm7 };
 
-static const Register ArgumentsRectifierReg = { JSC::X86Registers::esi };
+static const Register ArgumentsRectifierReg = esi;
+static const Register CallTempReg1 = edi;
+static const Register CallTempReg2 = eax;
 
-static const Register OsrFrameReg = { JSC::X86Registers::edx };
+static const Register OsrFrameReg = edx;
 
 // GCC stack is aligned on 16 bytes, but we don't maintain the invariant in
 // jitted code.

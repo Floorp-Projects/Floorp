@@ -125,20 +125,18 @@ class LDouble : public LInstructionHelper<1, 1, 0>
 // The other thre registers that can be trashed are marked as such. For the time
 // being, the link register is not marked as trashed because we never allocate
 // to the link register.
-class LDivI : public LBinaryMath<3>
+class LDivI : public LBinaryMath<2>
 {
   public:
     LIR_HEADER(DivI);
 
     LDivI(const LAllocation &lhs, const LAllocation &rhs,
-          const LDefinition &temp1, const LDefinition &temp2,
-          const LDefinition &temp3)
+          const LDefinition &temp1, const LDefinition &temp2)
     {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp1);
         setTemp(1, temp2);
-        setTemp(2, temp3);
     }
 };
 // Takes a tableswitch with an integer to decide
