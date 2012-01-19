@@ -36,9 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 /**
  * Unit test for Bug 378079 - AutoComplete returns invalid rows when
  * more than one AutoCompleteSearch is used.
