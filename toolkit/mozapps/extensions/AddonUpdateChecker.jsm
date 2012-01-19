@@ -709,7 +709,7 @@ var AddonUpdateChecker = {
    *         The version of the platform or null to use the current version
    * @param  aIgnoreMaxVersion
    *         When determining compatible updates, ignore maxVersion. Optional.
-   * @param  aIgnoreMaxVersion
+   * @param  aIgnoreStrictCompat
    *         When determining compatible updates, ignore strictCompatibility. Optional.
    * @param  aCompatOverrides
    *         Array of AddonCompatibilityOverride to take into account. Optional.
