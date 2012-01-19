@@ -91,7 +91,9 @@ void GrBufferAllocPool::reset() {
         fFirstPreallocBuffer = (fFirstPreallocBuffer + fPreallocBuffersInUse) %
                                fPreallocBuffers.count();
     }
-    fCpuData.reset(fGpu->getCaps().fBufferLockSupport ? 0 : fMinBlockSize);
+    // we may have created a large cpu mirror of a large VB. Reset the size
+    // to match our pre-allocated VBs.
+    fCpuData.reset(fMinBlockSize);
     GrAssert(0 == fPreallocBuffersInUse);
     VALIDATE();
 }
@@ -320,14 +322,13 @@ void GrBufferAllocPool::flushCpuData(GrGeometryBuffer* buffer,
     GrAssert(fCpuData.get() == fBufferPtr);
     GrAssert(flushSize <= buffer->sizeInBytes());
 
-    bool updated = false;
     if (fGpu->getCaps().fBufferLockSupport &&
         flushSize > GR_GEOM_BUFFER_LOCK_THRESHOLD) {
         void* data = buffer->lock();
         if (NULL != data) {
             memcpy(data, fBufferPtr, flushSize);
             buffer->unlock();
-            updated = true;
+            return;
         }
     }
     buffer->updateData(fBufferPtr, flushSize);

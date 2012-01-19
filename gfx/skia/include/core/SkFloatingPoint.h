@@ -58,12 +58,24 @@ static inline float sk_float_copysign(float x, float y) {
     #define sk_float_acos(x)        acosf(x)
     #define sk_float_asin(x)        asinf(x)
 #endif
-    #define sk_float_atan2(y,x) atan2f(y,x)
+    #define sk_float_atan2(y,x)     atan2f(y,x)
     #define sk_float_abs(x)         fabsf(x)
     #define sk_float_mod(x,y)       fmodf(x,y)
     #define sk_float_exp(x)         expf(x)
     #define sk_float_log(x)         logf(x)
-    #define sk_float_isNaN(x)       _isnan(x)
+#endif
+
+#ifdef SK_BUILD_FOR_WIN
+    #define sk_float_isfinite(x)    _finite(x)
+    #define sk_float_isnan(x)       _isnan(x)
+    static inline int sk_float_isinf(float x) {
+        int32_t bits = SkFloat2Bits(x);
+        return (bits << 1) == (0xFF << 24);
+    }
+#else
+    #define sk_float_isfinite(x)    isfinite(x)
+    #define sk_float_isnan(x)       isnan(x)
+    #define sk_float_isinf(x)       isinf(x)
 #endif
 
 #ifdef SK_USE_FLOATBITS
