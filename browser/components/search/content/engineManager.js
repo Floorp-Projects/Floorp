@@ -38,6 +38,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
@@ -51,17 +53,18 @@ var gEngineManagerDialog = {
   init: function engineManager_init() {
     gEngineView = new EngineView(new EngineStore());
 
-    var prefService = Cc["@mozilla.org/preferences-service;1"].
-                      getService(Ci.nsIPrefBranch);
-    var suggestEnabled = prefService.getBoolPref(BROWSER_SUGGEST_PREF);
+    var suggestEnabled = Services.prefs.getBoolPref(BROWSER_SUGGEST_PREF);
     document.getElementById("enableSuggest").checked = suggestEnabled;
 
     var tree = document.getElementById("engineList");
     tree.view = gEngineView;
 
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.addObserver(this, "browser-search-engine-modified", false);
+    Services.obs.addObserver(this, "browser-search-engine-modified", false);
+  },
+
+  destroy: function engineManager_destroy() {
+    // Remove the observer
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
   },
 
   observe: function engineManager_observe(aEngine, aTopic, aVerb) {
@@ -85,26 +88,12 @@ var gEngineManagerDialog = {
   },
 
   onOK: function engineManager_onOK() {
-    // Remove the observer
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.removeObserver(this, "browser-search-engine-modified");
-
     // Set the preference
     var newSuggestEnabled = document.getElementById("enableSuggest").checked;
-    var prefService = Cc["@mozilla.org/preferences-service;1"].
-                      getService(Ci.nsIPrefBranch);
-    prefService.setBoolPref(BROWSER_SUGGEST_PREF, newSuggestEnabled);
+    Services.prefs.setBoolPref(BROWSER_SUGGEST_PREF, newSuggestEnabled);
 
     // Commit the changes
     gEngineView._engineStore.commit();
-  },
-  
-  onCancel: function engineManager_onCancel() {
-    // Remove the observer
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.removeObserver(this, "browser-search-engine-modified");
   },
 
   onRestoreDefaults: function engineManager_onRestoreDefaults() {
@@ -156,14 +145,12 @@ var gEngineManagerDialog = {
     if (!selectedEngine)
       return;
 
-    var prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                 getService(Ci.nsIPromptService);
     var alias = { value: selectedEngine.alias };
     var strings = document.getElementById("engineManagerBundle");
     var title = strings.getString("editTitle");
     var msg = strings.getFormattedString("editMsg", [selectedEngine.name]);
 
-    while (prompt.prompt(window, title, msg, alias, null, { })) {
+    while (Services.prompt.prompt(window, title, msg, alias, null, { })) {
       var bduplicate = false;
       var eduplicate = false;
 
@@ -193,7 +180,7 @@ var gEngineManagerDialog = {
         var emsg = strings.getFormattedString("duplicateEngineMsg",
                                               [engine.name]);
 
-        prompt.alert(window, dtitle, (eduplicate) ? emsg : bmsg);
+        Services.prompt.alert(window, dtitle, eduplicate ? emsg : bmsg);
       } else {
         gEngineView._engineStore.changeEngine(selectedEngine, "alias",
                                               alias.value);
@@ -243,9 +230,7 @@ EngineMoveOp.prototype = {
   _engine: null,
   _newIndex: null,
   commit: function EMO_commit() {
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    searchService.moveEngine(this._engine, this._newIndex);
+    Services.search.moveEngine(this._engine, this._newIndex);
   }
 }
 
@@ -257,9 +242,7 @@ function EngineRemoveOp(aEngineClone) {
 EngineRemoveOp.prototype = {
   _engine: null,
   commit: function ERO_commit() {
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    searchService.removeEngine(this._engine);
+    Services.search.removeEngine(this._engine);
   }
 }
 
@@ -274,9 +257,7 @@ EngineUnhideOp.prototype = {
   _newIndex: null,
   commit: function EUO_commit() {
     this._engine.hidden = false;
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    searchService.moveEngine(this._engine, this._newIndex);
+    Services.search.moveEngine(this._engine, this._newIndex);
   }
 }
 
@@ -298,10 +279,8 @@ EngineChangeOp.prototype = {
 }
 
 function EngineStore() {
-  var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                      getService(Ci.nsIBrowserSearchService);
-  this._engines = searchService.getVisibleEngines().map(this._cloneEngine);
-  this._defaultEngines = searchService.getDefaultEngines().map(this._cloneEngine);
+  this._engines = Services.search.getVisibleEngines().map(this._cloneEngine);
+  this._defaultEngines = Services.search.getDefaultEngines().map(this._cloneEngine);
 
   this._ops = [];
 
@@ -348,9 +327,7 @@ EngineStore.prototype = {
   },
 
   commit: function ES_commit() {
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    var currentEngine = this._cloneEngine(searchService.currentEngine);
+    var currentEngine = this._cloneEngine(Services.search.currentEngine);
     for (var i = 0; i < this._ops.length; i++)
       this._ops[i].commit();
 
@@ -358,7 +335,7 @@ EngineStore.prototype = {
     // Needed if the user deletes currentEngine and then restores it.
     if (this._defaultEngines.some(this._isSameEngine, currentEngine) &&
         !currentEngine.originalEngine.hidden)
-      searchService.currentEngine = currentEngine.originalEngine;
+      Services.search.currentEngine = currentEngine.originalEngine;
   },
 
   addEngine: function ES_addEngine(aEngine) {
