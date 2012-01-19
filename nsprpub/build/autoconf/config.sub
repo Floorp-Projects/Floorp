@@ -1432,9 +1432,9 @@ case $os in
 	-dicos*)
 		os=-dicos
 		;;
-        -android*)
-	        os=android
-                ;;
+	-android*)
+		os=-android
+		;;
 	-none)
 		;;
 	*)
