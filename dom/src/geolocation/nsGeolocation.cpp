@@ -88,6 +88,10 @@
 #include "AndroidLocationProvider.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+#include "GonkGPSGeolocationProvider.h"
+#endif
+
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 
@@ -577,6 +581,13 @@ nsresult nsGeolocationService::Init()
   if (provider)
     mProviders.AppendObject(provider);
 #endif
+
+#ifdef MOZ_WIDGET_GONK
+  provider = GonkGPSGeolocationProvider::GetSingleton();
+  if (provider)
+    mProviders.AppendObject(provider);
+#endif
+
   return NS_OK;
 }
 
