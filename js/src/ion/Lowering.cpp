@@ -159,16 +159,19 @@ LIRGenerator::visitCall(MCall *call)
     uint32 argc = call->argc();
     JS_ASSERT(call->getFunction()->type() == MIRType_Object);
 
+    JS_ASSERT(CallTempReg1 != CallTempReg2);
+    JS_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
+    JS_ASSERT(CallTempReg2 != ArgumentsRectifierReg);
+
     // Height of the current argument vector.
     uint32 argslot = getArgumentSlotForCall();
 
     // A call is entirely stateful, depending upon arguments already being
     // stored in an argument vector. Therefore visitCall() may be generic.
-    LCallGeneric *ins = new LCallGeneric(useRegisterAtStart(call->getFunction()),
+    LCallGeneric *ins = new LCallGeneric(useFixed(call->getFunction(), CallTempReg1),
                                          argslot,
                                          tempFixed(ArgumentsRectifierReg),
-                                         temp(LDefinition::GENERAL),
-                                         tempCopy(call->getFunction(), 0));
+                                         tempFixed(CallTempReg2));
     if (!defineReturn(ins, call))
         return false;
     if (!assignSnapshot(ins))
