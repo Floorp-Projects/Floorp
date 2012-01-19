@@ -169,10 +169,12 @@ int sa_stream_create_pcm(sa_stream_t **s,
   _s->deviceName = DEFAULT_DEVICE_NAME;
   _s->device = DEFAULT_DEVICE;
   _s->playing = 0;
-  _s->blockSize = BYTES_PER_SAMPLE * ((rate * nchannels * BLOCK_DURATION_MS) / 1000);
+  _s->blockSize = BYTES_PER_SAMPLE * nchannels * ((rate * BLOCK_DURATION_MS) / 1000);
   /* Other parts of the code assumes that the block size is evenly
      divisible by 2. */
   assert((_s->blockSize & 1) != 1);
+  assert((_s->blockSize % BYTES_PER_SAMPLE) == 0);
+  assert(((_s->blockSize / BYTES_PER_SAMPLE) % nchannels) == 0);
   *s = _s; 
   return SA_SUCCESS;
 }
