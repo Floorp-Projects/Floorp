@@ -61,7 +61,6 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
-		-I$(srcdir)/../../../xsl/document/src \
 		-I$(srcdir)/../../../html/document/src \
 		-I$(srcdir)/../../../../layout/style \
 		-I$(srcdir)/../../../base/src \
