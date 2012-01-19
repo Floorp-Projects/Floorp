@@ -459,6 +459,12 @@ protected:
   nsresult DidCauseReflow();
   friend class nsAutoCauseReflowNotifier;
 
+  bool TouchesAreEqual(nsIDOMTouch *aTouch1, nsIDOMTouch *aTouch2);
+  void DispatchTouchEvent(nsEvent *aEvent,
+                          nsEventStatus* aStatus,
+                          nsPresShellEventCB* aEventCB,
+                          bool aTouchIsNew);
+
   void     WillDoReflow();
   void     DidDoReflow(bool aInterruptible);
   // ProcessReflowCommands returns whether we processed all our dirty roots

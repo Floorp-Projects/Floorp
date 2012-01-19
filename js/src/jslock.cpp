@@ -740,30 +740,4 @@ js_Unlock(JSContext *cx, JSThinLock *tl)
     ThinUnlock(tl, CX_THINLOCK_ID(cx));
 }
 
-void
-js_LockRuntime(JSRuntime *rt)
-{
-    PR_Lock(rt->rtLock);
-#ifdef DEBUG
-    rt->rtLockOwner = js_CurrentThreadId();
-#endif
-}
-
-void
-js_UnlockRuntime(JSRuntime *rt)
-{
-#ifdef DEBUG
-    rt->rtLockOwner = NULL;
-#endif
-    PR_Unlock(rt->rtLock);
-}
-
-#ifdef DEBUG
-JSBool
-js_IsRuntimeLocked(JSRuntime *rt)
-{
-    return js_CurrentThreadId() == rt->rtLockOwner;
-}
-#endif /* DEBUG */
-
 #endif /* JS_THREADSAFE */

@@ -499,4 +499,10 @@ InitClass(JSContext* aCx, JSObject* aGlobal, JSObject* aProto,
 
 } // namespace chromeworker
 
+bool
+ClassIsWorker(JSClass* aClass)
+{
+  return Worker::Class() == aClass || ChromeWorker::Class() == aClass;
+}
+
 END_WORKERS_NAMESPACE

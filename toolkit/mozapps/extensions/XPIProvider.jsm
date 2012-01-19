@@ -828,8 +828,8 @@ function loadManifestFromRDF(aUri, aStream) {
   let byte_string = [String.fromCharCode(byte) for each (byte in bytes)]
                     .join("");
   // Base64 encode
-  addon.syncGUID = btoa(byte_string).replace('+', '-', 'g')
-                                    .replace('/', '_', 'g');
+  addon.syncGUID = btoa(byte_string).replace(/\+/g, '-')
+                                    .replace(/\//g, '_');
 
   return addon;
 }

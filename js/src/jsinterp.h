@@ -215,10 +215,8 @@ Execute(JSContext *cx, JSScript *script, JSObject &scopeChain, Value *rval);
 enum InterpMode
 {
     JSINTERP_NORMAL    = 0, /* interpreter is running normally */
-    JSINTERP_RECORD    = 1, /* interpreter has been started to record/run traces */
-    JSINTERP_PROFILE   = 2, /* interpreter should profile a loop */
-    JSINTERP_REJOIN    = 3, /* as normal, but the frame has already started */
-    JSINTERP_SKIP_TRAP = 4  /* as REJOIN, but skip trap at first opcode */
+    JSINTERP_REJOIN    = 1, /* as normal, but the frame has already started */
+    JSINTERP_SKIP_TRAP = 2  /* as REJOIN, but skip trap at first opcode */
 };
 
 /*

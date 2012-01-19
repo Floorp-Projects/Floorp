@@ -49,6 +49,8 @@
 #include "nsEventStateManager.h"
 #include "nsFrameManager.h"
 #include "nsRefreshDriver.h"
+#include "nsDOMTouchEvent.h"
+#include "nsIDOMTouchEvent.h"
 
 #include "nsIScrollableFrame.h"
 
@@ -548,6 +550,79 @@ nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
 
   nsEventStatus status;
   return widget->DispatchEvent(&event, status);
+}
+
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
+                                 PRUint32 *aIdentifiers,
+                                 PRInt32 *aXs,
+                                 PRInt32 *aYs,
+                                 PRUint32 *aRxs,
+                                 PRUint32 *aRys,
+                                 float *aRotationAngles,
+                                 float *aForces,
+                                 PRUint32 aCount,
+                                 PRInt32 aModifiers,
+                                 bool aIgnoreRootScrollFrame,
+                                 bool *aPreventDefault)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // get the widget to send the event to
+  nsPoint offset;
+  nsCOMPtr<nsIWidget> widget = GetWidget(&offset);
+  if (!widget) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  PRInt32 msg;
+  if (aType.EqualsLiteral("touchstart")) {
+    msg = NS_TOUCH_START;
+  } else if (aType.EqualsLiteral("touchmove")) {
+    msg = NS_TOUCH_MOVE;
+  } else if (aType.EqualsLiteral("touchend")) {
+    msg = NS_TOUCH_END;
+  } else if (aType.EqualsLiteral("touchcancel")) {
+    msg = NS_TOUCH_CANCEL;
+  } else {
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsTouchEvent event(true, msg, widget);
+  event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? true : false;
+  event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? true : false;
+  event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? true : false;
+  event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? true : false;
+  event.widget = widget;
+  event.time = PR_Now();
+
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_FAILURE;
+  }
+  event.touches.SetCapacity(aCount);
+  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
+  for (int i = 0; i < aCount; ++i) {
+    nsIntPoint pt(0, 0);
+    pt.x =
+      NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aXs[i]) + offset.x,
+                            appPerDev);
+    pt.y =
+      NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aYs[i]) + offset.y,
+                            appPerDev);
+    nsCOMPtr<nsIDOMTouch> t(new nsDOMTouch(aIdentifiers[i],
+                                           pt,
+                                           nsIntPoint(aRxs[i], aRys[i]),
+                                           aRotationAngles[i],
+                                           aForces[i]));
+    event.touches.AppendElement(t);
+  }
+
+  nsEventStatus status;
+  nsresult rv = widget->DispatchEvent(&event, status);
+  *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
+  return rv;
 }
 
 NS_IMETHODIMP
