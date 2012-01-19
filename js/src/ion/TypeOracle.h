@@ -269,6 +269,12 @@ ValueTypeFromMIRType(MIRType type)
   }
 }
 
+static inline JSValueTag
+MIRTypeToTag(MIRType type)
+{
+    return JSVAL_TYPE_TO_TAG(ValueTypeFromMIRType(type));
+}
+
 static inline const char *
 StringFromMIRType(MIRType type)
 {

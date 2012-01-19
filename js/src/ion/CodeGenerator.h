@@ -57,7 +57,7 @@ namespace ion {
 
 class CheckOverRecursedFailure;
 class OutOfLineUnboxDouble;
-class OutOfLineGetPropertyCache;
+class OutOfLineCache;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -105,18 +105,40 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetName(LCallGetName *lir);
     bool visitCallGetNameTypeOf(LCallGetNameTypeOf *lir);
-    bool visitGetPropertyCacheV(LGetPropertyCacheV *load) { return visitGetPropertyCache(load); }
-    bool visitGetPropertyCacheT(LGetPropertyCacheT *load) { return visitGetPropertyCache(load); }
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
 
     bool visitUnboxDouble(LUnboxDouble *lir);
     bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
-    bool visitOutOfLineGetPropertyCache(OutOfLineGetPropertyCache *ool);
+    bool visitOutOfLineCacheGetProperty(OutOfLineCache *ool);
+    bool visitOutOfLineCacheSetProperty(OutOfLineCache *ool);
+
+    bool visitGetPropertyCacheV(LGetPropertyCacheV *ins) {
+        return visitCache(ins);
+    }
+    bool visitGetPropertyCacheT(LGetPropertyCacheT *ins) {
+        return visitCache(ins);
+    }
+    bool visitCacheSetPropertyV(LCacheSetPropertyV *ins) {
+        return visitCache(ins);
+    }
+    bool visitCacheSetPropertyT(LCacheSetPropertyT *ins) {
+        return visitCache(ins);
+    }
+
+    bool visitCallSetPropertyV(LCallSetPropertyV *ins) {
+        return visitCallSetProperty(ins);
+    }
+    bool visitCallSetPropertyT(LCallSetPropertyT *ins) {
+        return visitCallSetProperty(ins);
+    }
 
   private:
-    bool visitGetPropertyCache(LInstruction *load);
+    bool visitCache(LInstruction *load);
+    bool visitCallSetProperty(LInstruction *ins);
+
+    ConstantOrRegister getSetPropertyValue(LInstruction *ins);
 };
 
 } // namespace ion

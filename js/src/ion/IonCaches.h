@@ -53,6 +53,7 @@ namespace js {
 namespace ion {
 
 class IonCacheGetProperty;
+class IonCacheSetProperty;
 
 // Common structure encoding the state of a polymorphic inline cache contained
 // in the code for an IonScript. IonCaches are used for polymorphic operations
@@ -85,15 +86,36 @@ class IonCacheGetProperty;
 // or coalesced by LICM or GVN. This also constrains the stubs which can be
 // generated for the cache.
 
+struct TypedOrValueRegisterSpace
+{
+    AlignedStorage2<TypedOrValueRegister> data_;
+    TypedOrValueRegister &data() {
+        return *data_.addr();
+    }
+    const TypedOrValueRegister &data() const {
+        return *data_.addr();
+    }
+};
+
+struct ConstantOrRegisterSpace
+{
+    AlignedStorage2<ConstantOrRegister> data_;
+    ConstantOrRegister &data() {
+        return *data_.addr();
+    }
+    const ConstantOrRegister &data() const {
+        return *data_.addr();
+    }
+};
+
 class IonCache
 {
   protected:
 
     enum Kind {
         Invalid = 0,
-
-        // Property access on an input object.
-        GetProperty
+        GetProperty,
+        SetProperty
     } kind : 8;
 
     bool pure_ : 1;
@@ -111,10 +133,15 @@ class IonCache
         struct {
             Register object;
             JSAtom *atom;
+            TypedOrValueRegisterSpace output;
         } getprop;
-    } input;
-
-    TypedOrValueRegister output;
+        struct {
+            Register object;
+            JSAtom *atom;
+            ConstantOrRegisterSpace value;
+            bool strict;
+        } setprop;
+    } u;
 
     // Registers live after the cache, excluding output registers. The initial
     // value of these registers must be preserved by the cache.
@@ -124,21 +151,18 @@ class IonCache
     JSScript *script;
     jsbytecode *pc;
 
-    void init(Kind kind, RegisterSet liveRegs, TypedOrValueRegister output,
+    void init(Kind kind, RegisterSet liveRegs,
               CodeOffsetJump initialJump,
               CodeOffsetLabel rejoinLabel,
               CodeOffsetLabel cacheLabel) {
         this->kind = kind;
         this->liveRegs = liveRegs;
-        this->output = output;
         this->initialJump_ = initialJump;
         this->lastJump_ = initialJump;
         this->cacheLabel_ = cacheLabel;
 
         JS_ASSERT(rejoinLabel.offset() == initialJump.offset() + REJOIN_LABEL_OFFSET);
     }
-
-    void loadResult(MacroAssembler &masm, Address address);
 
   public:
 
@@ -174,6 +198,11 @@ class IonCache
         return * (IonCacheGetProperty *) this;
     }
 
+    IonCacheSetProperty &toSetProperty() {
+        JS_ASSERT(kind == SetProperty);
+        return * (IonCacheSetProperty *) this;
+    }
+
     void setScriptedLocation(JSScript *script, jsbytecode *pc) {
         this->script = script;
         this->pc = pc;
@@ -204,19 +233,50 @@ class IonCacheGetProperty : public IonCache
                         Register object, JSAtom *atom,
                         TypedOrValueRegister output)
     {
-        init(GetProperty, liveRegs, output, initialJump, rejoinLabel, cacheLabel);
-        this->input.getprop.object = object;
-        this->input.getprop.atom = atom;
+        init(GetProperty, liveRegs, initialJump, rejoinLabel, cacheLabel);
+        u.getprop.object = object;
+        u.getprop.atom = atom;
+        u.getprop.output.data() = output;
     }
 
-    Register object() const { return input.getprop.object; }
-    JSAtom *atom() const { return input.getprop.atom; }
+    Register object() const { return u.getprop.object; }
+    JSAtom *atom() const { return u.getprop.atom; }
+    TypedOrValueRegister output() const { return u.getprop.output.data(); }
 
     bool attachNative(JSContext *cx, JSObject *obj, const Shape *shape);
 };
 
+class IonCacheSetProperty : public IonCache
+{
+  public:
+    IonCacheSetProperty(CodeOffsetJump initialJump,
+                        CodeOffsetLabel rejoinLabel,
+                        CodeOffsetLabel cacheLabel,
+                        RegisterSet liveRegs,
+                        Register object, JSAtom *atom,
+                        ConstantOrRegister value,
+                        bool strict)
+    {
+        init(SetProperty, liveRegs, initialJump, rejoinLabel, cacheLabel);
+        u.setprop.object = object;
+        u.setprop.atom = atom;
+        u.setprop.value.data() = value;
+        u.setprop.strict = strict;
+    }
+
+    Register object() const { return u.setprop.object; }
+    JSAtom *atom() const { return u.setprop.atom; }
+    ConstantOrRegister value() const { return u.setprop.value.data(); }
+    bool strict() const { return u.setprop.strict; }
+
+    bool attachNativeExisting(JSContext *cx, JSObject *obj, const Shape *shape);
+};
+
 bool
 GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp);
+
+bool
+SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value value);
 
 } // namespace ion
 } // namespace js

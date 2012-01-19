@@ -280,6 +280,10 @@ class Assembler : public AssemblerX86Shared
         movq(ptr, ScratchReg);
         push(ScratchReg);
     }
+    void push(const ImmWord ptr) {
+        movq(ptr, ScratchReg);
+        push(ScratchReg);
+    }
     void push(const FloatRegister &src) {
         subq(Imm32(sizeof(void*)), StackPointer);
         movsd(src, Operand(StackPointer, 0));

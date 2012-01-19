@@ -1236,6 +1236,90 @@ class LCallGetNameTypeOf : public LCallGetPropertyOrName
     LIR_HEADER(CallGetNameTypeOf);
 };
 
+// Call a stub to perform a property or name assignment of a generic value.
+class LCallSetPropertyV : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CallSetPropertyV);
+
+    LCallSetPropertyV(const LAllocation &obj) {
+        setOperand(0, obj);
+    }
+
+    static const size_t Value = 1;
+
+    const MGenericSetProperty *mir() const {
+        return mir_->toGenericSetProperty();
+    }
+};
+
+// Call a stub to perform a property or name assignment of a typed value.
+class LCallSetPropertyT : public LCallInstructionHelper<0, 2, 0>
+{
+    MIRType valueType_;
+
+  public:
+    LIR_HEADER(CallSetPropertyT);
+
+    LCallSetPropertyT(const LAllocation &obj, const LAllocation &value,
+                            MIRType valueType)
+        : valueType_(valueType)
+    {
+        setOperand(0, obj);
+        setOperand(1, value);
+    }
+
+    const MGenericSetProperty *mir() const {
+        return mir_->toGenericSetProperty();
+    }
+    MIRType valueType() {
+        return valueType_;
+    }
+};
+
+// Patchable jump to stubs generated for a SetProperty cache, which stores a
+// boxed value.
+class LCacheSetPropertyV : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CacheSetPropertyV);
+
+    LCacheSetPropertyV(const LAllocation &object) {
+        setOperand(0, object);
+    }
+
+    static const size_t Value = 1;
+
+    const MGenericSetProperty *mir() const {
+        return mir_->toGenericSetProperty();
+    }
+};
+
+// Patchable jump to stubs generated for a SetProperty cache, which stores a
+// value of a known type.
+class LCacheSetPropertyT : public LInstructionHelper<0, 2, 0>
+{
+    MIRType valueType_;
+
+  public:
+    LIR_HEADER(CacheSetPropertyT);
+
+    LCacheSetPropertyT(const LAllocation &object, const LAllocation &value,
+                             MIRType valueType)
+        : valueType_(valueType)
+    {
+        setOperand(0, object);
+        setOperand(1, value);
+    }
+
+    const MGenericSetProperty *mir() const {
+        return mir_->toGenericSetProperty();
+    }
+    MIRType valueType() {
+        return valueType_;
+    }
+};
+
 // Mark a Value if it is a GCThing.
 class LWriteBarrierV : public LInstructionHelper<0, BOX_PIECES, 0>
 {

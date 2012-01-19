@@ -621,6 +621,17 @@ class LInstruction
         LOp_Invalid
     };
 
+    const char *opName() {
+        switch (op()) {
+#   define LIR_NAME_INS(name)                   \
+            case LOp_##name: return #name;
+            LIR_OPCODE_LIST(LIR_NAME_INS)
+#   undef LIR_NAME_INS
+          default:
+            return "Invalid";
+        }
+    }
+
   public:
     virtual Opcode op() const = 0;
 
@@ -663,6 +674,10 @@ class LInstruction
     }
     void setMir(MDefinition *mir) {
         mir_ = mir;
+    }
+    MDefinition *mirRaw() {
+        /* Untyped MIR for this op. Prefer mir() methods in subclasses. */
+        return mir_;
     }
     void assignSnapshot(LSnapshot *snapshot);
     void assignPostSnapshot(LSnapshot *snapshot);

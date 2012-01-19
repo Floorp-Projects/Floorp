@@ -933,26 +933,6 @@ CodeGeneratorARM::visitOsrValue(LOsrValue *value)
     return true;
 }
 
-static inline JSValueTag
-MIRTypeToTag(MIRType type)
-{
-    switch (type) {
-      case MIRType_Boolean:
-        return JSVAL_TAG_BOOLEAN;
-      case MIRType_Int32:
-        return JSVAL_TAG_INT32;
-      case MIRType_String:
-        return JSVAL_TAG_STRING;
-      case MIRType_Object:
-        return JSVAL_TAG_OBJECT;
-      case MIRType_Null:
-        return JSVAL_TAG_NULL;
-      default:
-        JS_NOT_REACHED("no payload...");
-    }
-    return JSVAL_TAG_NULL;
-}
-
 bool
 CodeGeneratorARM::visitBox(LBox *box)
 {

@@ -105,19 +105,8 @@ CodeGeneratorX64::visitOsrValue(LOsrValue *value)
 static inline JSValueShiftedTag
 MIRTypeToShiftedTag(MIRType type)
 {
-    switch (type) {
-      case MIRType_Int32:
-        return JSVAL_SHIFTED_TAG_INT32;
-      case MIRType_String:
-        return JSVAL_SHIFTED_TAG_STRING;
-      case MIRType_Boolean:
-        return JSVAL_SHIFTED_TAG_BOOLEAN;
-      case MIRType_Object:
-        return JSVAL_SHIFTED_TAG_OBJECT;
-      default:
-        JS_NOT_REACHED("unexpected type");
-        return JSVAL_SHIFTED_TAG_NULL;
-    }
+    JS_ASSERT(type != MIRType_Double && type >= MIRType_Boolean);
+    return (JSValueShiftedTag) JSVAL_TYPE_TO_SHIFTED_TAG(ValueTypeFromMIRType(type));
 }
 
 bool
