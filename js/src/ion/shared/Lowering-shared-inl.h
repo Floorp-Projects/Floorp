@@ -101,7 +101,9 @@ LIRGeneratorShared::defineFixed(LInstructionHelper<1, X, Y> *lir, MDefinition *m
     LDefinition def(type, LDefinition::PRESET);
     def.setOutput(output);
 
-    return define(lir, mir, def);
+    // Add an LNop to avoid regalloc problems if the next op uses this value
+    // with a fixed or at-start policy.
+    return define(lir, mir, def) && add(new LNop);
 }
 
 template <size_t Ops, size_t Temps> bool
@@ -184,7 +186,7 @@ LIRGeneratorShared::defineVMReturn(LInstructionHelper<Defs, Ops, Temps> *lir, MD
 
     mir->setVirtualRegister(vreg);
     lir->setMir(mir);
-    return add(lir);
+    return add(lir) && add(new LNop);
 }
 
 // In LIR, we treat booleans and integers as the same low-level type (INTEGER).

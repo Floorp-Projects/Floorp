@@ -44,6 +44,7 @@
 
 #define LIR_COMMON_OPCODE_LIST(_)   \
     _(Label)                        \
+    _(Nop)                          \
     _(CaptureAllocations)           \
     _(MoveGroup)                    \
     _(Integer)                      \

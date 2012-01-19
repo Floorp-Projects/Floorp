@@ -134,7 +134,7 @@ LiveInterval::addRange(CodePosition from, CodePosition to)
     }
     // Perform coalescing on overlapping ranges
     for (; i >= ranges_.begin(); i--) {
-        if (newRange.to < i->from.previous())
+        if (newRange.to < i->from)
             break;
         if (newRange.to < i->to)
             newRange.to = i->to;
@@ -151,7 +151,10 @@ LiveInterval::setFrom(CodePosition from)
         if (ranges_.back().to < from) {
             ranges_.erase(&ranges_.back());
         } else {
-            ranges_.back().from = from;
+            if (from == ranges_.back().to)
+                ranges_.erase(&ranges_.back());
+            else
+                ranges_.back().from = from;
             break;
         }
     }
@@ -325,22 +328,6 @@ LiveInterval::nextUseAfter(CodePosition after)
 {
     for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
         if (usePos->pos >= after && usePos->use->policy() != LUse::KEEPALIVE)
-            return *usePos;
-    }
-    return NULL;
-}
-
-/*
- * Return the UsePosition with FIXED policy at position pos, or NULL
- * if there is no such use.
- */
-UsePosition *
-LiveInterval::fixedUseAt(CodePosition pos)
-{
-    for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
-        if (usePos->pos > pos)
-            return NULL;
-        if (usePos->pos == pos && usePos->use->policy() == LUse::FIXED)
             return *usePos;
     }
     return NULL;
@@ -558,12 +545,13 @@ LinearScanAllocator::buildLivenessInfo()
                         from = inputOf(*ins);
                     }
 
+                    LiveInterval *interval = vregs[def].getInterval(0);
+                    interval->setFrom(from);
+
                     // Ensure that if there aren't any uses, there's at least
                     // some interval for the output to go into.
-                    if (vregs[def].getInterval(0)->numRanges() == 0)
-                        vregs[def].getInterval(0)->addRange(from, from.next());
-                    vregs[def].getInterval(0)->setFrom(from);
-
+                    if (interval->numRanges() == 0)
+                        interval->addRange(from, from.next());
                     live->remove(def->virtualRegister());
                 }
             }
@@ -951,11 +939,11 @@ LinearScanAllocator::resolveControlFlow()
 }
 
 bool
-LinearScanAllocator::moveBeforeAlloc(CodePosition pos, LAllocation *from, LAllocation *to)
+LinearScanAllocator::moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to)
 {
-    LMoveGroup *moves = getMoveGroupBefore(pos);
     if (*from == *to)
         return true;
+    LMoveGroup *moves = getInputMoveGroup(pos);
     return moves->add(from, to);
 }
 
@@ -982,7 +970,7 @@ LinearScanAllocator::reifyAllocations()
                 LiveInterval *to = fixedIntervals[GetFixedRegister(reg->def(), usePos->use).code()];
 
                 *static_cast<LAllocation *>(usePos->use) = *to->getAllocation();
-                if (!moveBefore(inputOf(vregs[usePos->pos].ins()), interval, to))
+                if (!moveInput(inputOf(vregs[usePos->pos].ins()), interval, to))
                     return false;
             } else {
                 JS_ASSERT(UseCompatibleWith(usePos->use, *interval->getAllocation()));
@@ -1008,7 +996,7 @@ LinearScanAllocator::reifyAllocations()
                     LAllocation *origAlloc = LAllocation::New(*alloc);
 
                     *alloc = *interval->getAllocation();
-                    if (!moveBeforeAlloc(inputOf(reg->ins()), origAlloc, alloc))
+                    if (!moveInputAlloc(inputOf(reg->ins()), origAlloc, alloc))
                         return false;
                 }
 
@@ -1022,7 +1010,7 @@ LinearScanAllocator::reifyAllocations()
                 LAllocation *origAlloc = LAllocation::New(*alloc);
 
                 *alloc = *interval->getAllocation();
-                if (!moveBeforeAlloc(inputOf(reg->ins()), origAlloc, alloc))
+                if (!moveInputAlloc(inputOf(reg->ins()), origAlloc, alloc))
                     return false;
             }
 
@@ -1053,18 +1041,23 @@ LinearScanAllocator::reifyAllocations()
             // If the interval starts at the output half of an instruction, we have to
             // emit the move *after* this instruction, to prevent clobbering an input
             // register.
+            LiveInterval *prevInterval = reg->getInterval(interval->index() - 1);
             CodePosition start = interval->start();
             VirtualRegister *vreg = &vregs[start];
 
             if (start.subpos() == CodePosition::INPUT || start <= inputOf(vreg->ins())) {
-                // Instructions can have multiple VirtualRegister's, but we want to use the
-                // same movegroup.
-                start = inputOf(vreg->ins());
-                if (!moveBefore(start, reg->getInterval(interval->index() - 1), interval))
-                    return false;
+                if (start < inputOf(vreg->ins())) {
+                    // Note: an instruction can have multiple VirtualRegister's, but we want
+                    // to use the same movegroup. So we have to use inputOf(vreg->ins()) instead
+                    // of start.
+                    if (!moveBefore(inputOf(vreg->ins()), prevInterval, interval))
+                        return false;
+                } else {
+                    if (!moveInput(inputOf(vreg->ins()), prevInterval, interval))
+                        return false;
+                }
             } else {
-                start = outputOf(vreg->ins());
-                if (!moveAfter(start, reg->getInterval(interval->index() - 1), interval))
+                if (!moveAfter(outputOf(vreg->ins()), prevInterval, interval))
                     return false;
             }
 
@@ -1665,8 +1658,10 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
             AnyRegister reg = i->getAllocation()->toRegister();
             if (nextUsePos[reg.code()] != CodePosition::MIN) {
                 CodePosition pos = i->intersect(current);
-                if (pos != CodePosition::MIN && pos < nextUsePos[reg.code()])
+                if (pos != CodePosition::MIN && pos < nextUsePos[reg.code()]) {
                     nextUsePos[reg.code()] = pos;
+                    IonSpew(IonSpew_RegAlloc, "   Register %s next used %u (fixed)", reg.name(), pos.pos());
+                }
             }
         }
     }
@@ -1718,8 +1713,29 @@ LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
     if (vreg->movesBefore())
         return vreg->movesBefore();
 
+    // Insert before the input movegroup.
+    LMoveGroup *input = getInputMoveGroup(pos);
     LMoveGroup *moves = new LMoveGroup;
     vreg->setMovesBefore(moves);
+    vreg->block()->insertBefore(input, moves);
+
+    return moves;
+}
+
+LMoveGroup *
+LinearScanAllocator::getInputMoveGroup(CodePosition pos)
+{
+    VirtualRegister *vreg = &vregs[pos];
+    JS_ASSERT(vreg->ins());
+    JS_ASSERT(!vreg->ins()->isPhi());
+    JS_ASSERT(!vreg->ins()->isLabel());;
+    JS_ASSERT(pos.subpos() == CodePosition::INPUT);
+
+    if (vreg->inputMoves())
+        return vreg->inputMoves();
+
+    LMoveGroup *moves = new LMoveGroup;
+    vreg->setInputMoves(moves);
     vreg->block()->insertBefore(vreg->ins(), moves);
 
     return moves;
@@ -1758,6 +1774,13 @@ bool
 LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to)
 {
     LMoveGroup *moves = getMoveGroupBefore(pos);
+    return addMove(moves, from, to);
+}
+
+bool
+LinearScanAllocator::moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to)
+{
+    LMoveGroup *moves = getInputMoveGroup(pos);
     return addMove(moves, from, to);
 }
 
