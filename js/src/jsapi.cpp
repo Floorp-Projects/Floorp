@@ -220,7 +220,7 @@ JS_GetEmptyStringValue(JSContext *cx)
 JS_PUBLIC_API(JSString *)
 JS_GetEmptyString(JSRuntime *rt)
 {
-    JS_ASSERT(rt->state == JSRTS_UP);
+    JS_ASSERT(rt->hasContexts());
     return rt->emptyString;
 }
 
@@ -684,7 +684,6 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
 JSRuntime::JSRuntime()
   : atomsCompartment(NULL),
-    state(),
     cxCallback(NULL),
     compartmentCallback(NULL),
     activityCallback(NULL),
@@ -743,11 +742,6 @@ JSRuntime::JSRuntime()
     requestCount(0),
     gcThread(NULL),
     gcHelperThread(thisFromCtor()),
-    rtLock(NULL),
-# ifdef DEBUG
-    rtLockOwner(0),
-# endif
-    stateChange(NULL),
 #endif
     debuggerMutations(0),
     securityCallbacks(NULL),
@@ -815,12 +809,6 @@ JSRuntime::init(uint32_t maxbytes)
     /* this is asymmetric with JS_ShutDown: */
     if (!js_SetupLocks(8, 16))
         return false;
-    rtLock = JS_NEW_LOCK();
-    if (!rtLock)
-        return false;
-    stateChange = JS_NEW_CONDVAR(gcLock);
-    if (!stateChange)
-        return false;
 #endif
 
     debugMode = false;
@@ -863,10 +851,6 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_CONDVAR(gcDone);
     if (requestDone)
         JS_DESTROY_CONDVAR(requestDone);
-    if (rtLock)
-        JS_DESTROY_LOCK(rtLock);
-    if (stateChange)
-        JS_DESTROY_CONDVAR(stateChange);
 #endif
 }
 
@@ -1144,18 +1128,6 @@ JS_IsInRequest(JSContext *cx)
 #else
     return false;
 #endif
-}
-
-JS_PUBLIC_API(void)
-JS_Lock(JSRuntime *rt)
-{
-    JS_LOCK_RUNTIME(rt);
-}
-
-JS_PUBLIC_API(void)
-JS_Unlock(JSRuntime *rt)
-{
-    JS_UNLOCK_RUNTIME(rt);
 }
 
 JS_PUBLIC_API(JSContextCallback)
@@ -1888,6 +1860,7 @@ static JSStdName standard_class_names[] = {
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray),
                                 TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
 
+    {js_InitWeakMapClass,       EAGER_ATOM_AND_CLASP(WeakMap)},
     {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},
 
     {NULL,                      0, NULL, NULL}
@@ -1936,8 +1909,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
     *resolved = JS_FALSE;
 
     rt = cx->runtime;
-    JS_ASSERT(rt->state != JSRTS_DOWN);
-    if (rt->state == JSRTS_LANDING || !JSID_IS_ATOM(id))
+    if (!rt->hasContexts() || !JSID_IS_ATOM(id))
         return JS_TRUE;
 
     idstr = JSID_TO_STRING(id);
@@ -2242,15 +2214,12 @@ JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s)
 {
-    size_t n;
-    void *p;
-
     AssertNoGC(cx);
-    n = strlen(s) + 1;
-    p = cx->malloc_(n);
+    size_t n = strlen(s) + 1;
+    void *p = cx->malloc_(n);
     if (!p)
         return NULL;
-    return (char *)memcpy(p, s, n);
+    return (char *)js_memcpy(p, s, n);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2542,7 +2511,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     n = strlen(name);
     if (n > bufsize - 1)
         n = bufsize - 1;
-    memcpy(buf, name, n + 1);
+    js_memcpy(buf, name, n + 1);
     buf += n;
     bufsize -= n;
 
@@ -2657,9 +2626,6 @@ DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
     JSDumpingTracer *dtrc;
     JSContext *cx;
     JSDHashEntryStub *entry;
-    JSHeapDumpNode *node;
-    const char *edgeName;
-    size_t edgeNameSize;
 
     JS_ASSERT(trc->callback == DumpNotify);
     dtrc = (JSDumpingTracer *)trc;
@@ -2698,10 +2664,10 @@ DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
         entry->key = thing;
     }
 
-    edgeName = JS_GetTraceEdgeName(&dtrc->base, dtrc->buffer, sizeof(dtrc->buffer));
-    edgeNameSize = strlen(edgeName) + 1;
+    const char *edgeName = JS_GetTraceEdgeName(&dtrc->base, dtrc->buffer, sizeof(dtrc->buffer));
+    size_t edgeNameSize = strlen(edgeName) + 1;
     size_t bytes = offsetof(JSHeapDumpNode, edgeName) + edgeNameSize;
-    node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
+    JSHeapDumpNode *node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
     if (!node) {
         dtrc->ok = JS_FALSE;
         return;
@@ -2711,7 +2677,7 @@ DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
     node->kind = kind;
     node->next = NULL;
     node->parent = dtrc->parentNode;
-    memcpy(node->edgeName, edgeName, edgeNameSize);
+    js_memcpy(node->edgeName, edgeName, edgeNameSize);
 
     JS_ASSERT(!*dtrc->lastNodep);
     *dtrc->lastNodep = node;
@@ -5527,7 +5493,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
 
     args.calleev().setObject(*ctor);
     args.thisv().setNull();
-    memcpy(args.array(), argv, argc * sizeof(jsval));
+    PodCopy(args.array(), argv, argc);
 
     if (!InvokeConstructor(cx, args))
         return NULL;
@@ -6092,7 +6058,7 @@ JSAutoStructuredCloneBuffer::copy(const uint64_t *srcData, size_t nbytes, uint32
     if (!newData)
         return false;
 
-    memcpy(newData, srcData, nbytes);
+    js_memcpy(newData, srcData, nbytes);
 
     clear();
     data_ = newData;

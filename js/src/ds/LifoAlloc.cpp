@@ -143,8 +143,12 @@ LifoAlloc::freeUnused()
     }
 
     /* Free all chunks after |latest|. */
-    for (BumpChunk *victim = latest->next(); victim; victim = victim->next())
+    BumpChunk *it = latest->next();
+    while (it) {
+        BumpChunk *victim = it;
+        it = it->next();
         BumpChunk::delete_(victim);
+    }
 
     latest->setNext(NULL);
 }
@@ -223,5 +227,5 @@ LifoAlloc::reallocUnaligned(void *origPtr, size_t origSize, size_t incr)
     /* Otherwise, memcpy. */
     size_t newSize = origSize + incr;
     void *newPtr = allocUnaligned(newSize);
-    return newPtr ? memcpy(newPtr, origPtr, origSize) : NULL;
+    return newPtr ? js_memcpy(newPtr, origPtr, origSize) : NULL;
 }

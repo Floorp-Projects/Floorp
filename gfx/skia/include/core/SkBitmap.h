@@ -158,6 +158,19 @@ public:
     */
     Sk64 getSafeSize64() const ;
 
+    /** Returns true if this bitmap is marked as immutable, meaning that the
+        contents of its pixels will not change for the lifetime of the bitmap.
+    */
+    bool isImmutable() const;
+
+    /** Marks this bitmap as immutable, meaning that the contents of its
+        pixels will not change for the lifetime of the bitmap and of the
+        underlying pixelref. This state can be set, but it cannot be 
+        cleared once it is set. This state propagates to all other bitmaps
+        that share the same pixelref.
+    */
+    void setImmutable();
+
     /** Returns true if the bitmap is opaque (has no translucent/transparent pixels).
     */
     bool isOpaque() const;
@@ -225,12 +238,11 @@ public:
     /** Copies the bitmap's pixels to the location pointed at by dst and returns
         true if possible, returns false otherwise.
 
-        In the event that the bitmap's stride is equal to dstRowBytes, and if
-        it is greater than strictly required by the bitmap's current config
-        (this may happen if the bitmap is an extracted subset of another), then
-        this function will copy bytes past the eand of each row, excluding the
-        last row. No copies are made outside of the declared size of dst,
-        however.
+        In the case when the dstRowBytes matches the bitmap's rowBytes, the copy
+        may be made faster by copying over the dst's per-row padding (for all
+        rows but the last). By setting preserveDstPad to true the caller can
+        disable this optimization and ensure that pixels in the padding are not
+        overwritten.
 
         Always returns false for RLE formats.
 
@@ -239,26 +251,11 @@ public:
                         pixels using indicated stride.
         @param dstRowBytes  Width of each line in the buffer. If -1, uses
                             bitmap's internal stride.
+        @param preserveDstPad Must we preserve padding in the dst
     */
-    bool copyPixelsTo(void* const dst, size_t dstSize, int dstRowBytes = -1)
+    bool copyPixelsTo(void* const dst, size_t dstSize, int dstRowBytes = -1,
+                      bool preserveDstPad = false)
          const;
-
-    /** Copies the pixels at location src to the bitmap's pixel buffer.
-        Returns true if copy if possible (bitmap buffer is large enough),
-        false otherwise.
-
-        Like copyPixelsTo, this function may write values beyond the end of
-        each row, although never outside the defined buffer.
-
-        Always returns false for RLE formats.
-
-        @param src      Location of the source buffer.
-        @param srcSize  Height of source buffer in pixels.
-        @param srcRowBytes  Width of each line in the buffer. If -1, uses i
-                            bitmap's internal stride.
-    */
-    bool copyPixelsFrom(const void* const src, size_t srcSize,
-                        int srcRowBytes = -1);
 
     /** Use the standard HeapAllocator to create the pixelref that manages the
         pixel memory. It will be sized based on the current width/height/config.
@@ -478,18 +475,28 @@ public:
     */
     bool extractSubset(SkBitmap* dst, const SkIRect& subset) const;
 
-    /** Makes a deep copy of this bitmap, respecting the requested config.
-        Returns false if either there is an error (i.e. the src does not have
-        pixels) or the request cannot be satisfied (e.g. the src has per-pixel
-        alpha, and the requested config does not support alpha).
-        @param dst The bitmap to be sized and allocated
-        @param c The desired config for dst
-        @param allocator Allocator used to allocate the pixelref for the dst
-                         bitmap. If this is null, the standard HeapAllocator
-                         will be used.
-        @return true if the copy could be made.
-    */
+    /** Makes a deep copy of this bitmap, respecting the requested config,
+     *  and allocating the dst pixels on the cpu.
+     *  Returns false if either there is an error (i.e. the src does not have
+     *  pixels) or the request cannot be satisfied (e.g. the src has per-pixel
+     *  alpha, and the requested config does not support alpha).
+     *  @param dst The bitmap to be sized and allocated
+     *  @param c The desired config for dst
+     *  @param allocator Allocator used to allocate the pixelref for the dst
+     *                   bitmap. If this is null, the standard HeapAllocator
+     *                   will be used.
+     *  @return true if the copy could be made.
+     */
     bool copyTo(SkBitmap* dst, Config c, Allocator* allocator = NULL) const;
+
+    /** Makes a deep copy of this bitmap, respecting the requested config, and
+     *  with custom allocation logic that will keep the copied pixels
+     *  in the same domain as the source: If the src pixels are allocated for
+     *  the cpu, then so will the dst. If the src pixels are allocated on the
+     *  gpu (typically as a texture), the it will do the same for the dst.
+     *  If the request cannot be fulfilled, returns false and dst is unmodified.
+     */
+    bool deepCopyTo(SkBitmap* dst, Config c) const;
 
     /** Returns true if this bitmap can be deep copied into the requested config
         by calling copyTo().
@@ -595,8 +602,9 @@ private:
     mutable int         fRawPixelGenerationID;
 
     enum Flags {
-        kImageIsOpaque_Flag = 0x01,
-        kImageIsVolatile_Flag     = 0x02
+        kImageIsOpaque_Flag     = 0x01,
+        kImageIsVolatile_Flag   = 0x02,
+        kImageIsImmutable_Flag  = 0x04
     };
 
     uint32_t    fRowBytes;

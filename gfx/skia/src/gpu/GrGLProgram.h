@@ -12,6 +12,7 @@
 
 #include "GrDrawState.h"
 #include "GrGLInterface.h"
+#include "GrGLSL.h"
 #include "GrStringBuilder.h"
 #include "GrGpu.h"
 
@@ -36,22 +37,6 @@ struct ShaderCodeSegments;
  */
 class GrGLProgram {
 public:
-    // Limited set of GLSL versions we build shaders for. Caller should round
-    // down the GLSL version to one of these enums.
-    enum GLSLVersion {
-        /**
-         * Desktop GLSL 1.10 and ES2 shading lang (based on desktop GLSL 1.20)
-         */
-        k110_GLSLVersion,
-        /**
-         * Desktop GLSL 1.30
-         */
-        k130_GLSLVersion,
-        /**
-         * Dekstop GLSL 1.50
-         */
-        k150_GLSLVersion,
-    };
 
     class CachedData;
 
@@ -64,7 +49,7 @@ public:
      *  but in a separate cacheable container.
      */
     bool genProgram(const GrGLInterface* gl,
-                    GLSLVersion glslVersion,
+                    GrGLSLGeneration glslVersion,
                     CachedData* programData) const;
 
      /**
@@ -102,6 +87,15 @@ public:
             memset(this, 0, sizeof(ProgramDesc));
         }
 
+        enum OutputPM {
+            // PM-color OR color with no alpha channel
+            kYes_OutputPM,
+            // nonPM-color with alpha channel
+            kNo_OutputPM,
+
+            kOutputPMCnt
+        };
+
         struct StageDesc {
             enum OptFlagBits {
                 kNoPerspective_OptFlagBit       = 1 << 0,
@@ -109,18 +103,45 @@ public:
                 kCustomTextureDomain_OptFlagBit = 1 << 2,
                 kIsEnabled_OptFlagBit           = 1 << 7
             };
-            enum Modulation {
-                kColor_Modulation,
-                kAlpha_Modulation,
-
-                kModulationCnt
-            };
             enum FetchMode {
                 kSingle_FetchMode,
                 k2x2_FetchMode,
                 kConvolution_FetchMode,
 
                 kFetchModeCnt,
+            };
+            /**
+              Flags set based on a src texture's pixel config. The operations
+              described are performed after reading a texel.
+             */
+            enum InConfigFlags {
+                kNone_InConfigFlag              = 0x0,
+
+                /**
+                  Swap the R and B channels. This is incompatible with
+                  kSmearAlpha. It is prefereable to perform the swizzle outside
+                  the shader using GL_ARB_texture_swizzle if possible rather
+                  than setting this flag.
+                 */
+                kSwapRAndB_InConfigFlag         = 0x1,
+
+                /**
+                 Smear alpha across all four channels. This is incompatible with
+                 kSwapRAndB and kPremul.  It is prefereable to perform the
+                 smear outside the shader using GL_ARB_texture_swizzle if
+                 possible rather than setting this flag.
+                */
+                kSmearAlpha_InConfigFlag        = 0x2,
+
+                /**
+                 Multiply r,g,b by a after texture reads. This flag incompatible
+                 with kSmearAlpha and may only be used with FetchMode kSingle.
+                 */
+                kMulRGBByAlpha_InConfigFlag     =  0x4,
+
+                kDummyInConfigFlag,
+                kInConfigBitMask = (kDummyInConfigFlag-1) |
+                                   (kDummyInConfigFlag-2)
             };
             enum CoordMapping {
                 kIdentity_CoordMapping,
@@ -134,10 +155,13 @@ public:
             };
 
             uint8_t fOptFlags;
-            uint8_t fModulation;  // casts to enum Modulation
-            uint8_t fFetchMode;  // casts to enum FetchMode
+            uint8_t fInConfigFlags; // bitfield of InConfigFlags values
+            uint8_t fFetchMode;     // casts to enum FetchMode
             uint8_t fCoordMapping;  // casts to enum CoordMapping
             uint8_t fKernelWidth;
+
+            GR_STATIC_ASSERT((InConfigFlags)(uint8_t)kInConfigBitMask ==
+                             kInConfigBitMask);
 
             inline bool isEnabled() const {
                 return SkToBool(fOptFlags & kIsEnabled_OptFlagBit);
@@ -153,13 +177,13 @@ public:
 
         // Specifies where the intitial color comes from before the stages are
         // applied.
-        enum ColorType {
-            kSolidWhite_ColorType,
-            kTransBlack_ColorType,
-            kAttribute_ColorType,
-            kUniform_ColorType,
+        enum ColorInput {
+            kSolidWhite_ColorInput,
+            kTransBlack_ColorInput,
+            kAttribute_ColorInput,
+            kUniform_ColorInput,
 
-            kColorTypeCnt
+            kColorInputCnt
         };
         // Dual-src blending makes use of a secondary output color that can be
         // used as a per-pixel blend coeffecient. This controls whether a
@@ -186,16 +210,17 @@ public:
         bool fExperimentalGS;
 #endif
 
-        uint8_t fColorType;  // casts to enum ColorType
-        uint8_t fDualSrcOutput;  // casts to enum DualSrcOutput
+        uint8_t fColorInput;        // casts to enum ColorInput
+        uint8_t fOutputPM;          // cases to enum OutputPM
+        uint8_t fDualSrcOutput;     // casts to enum DualSrcOutput
         int8_t fFirstCoverageStage;
         SkBool8 fEmitsPointSize;
         SkBool8 fEdgeAAConcave;
+        SkBool8 fColorMatrixEnabled;
 
         int8_t fEdgeAANumEdges;
         uint8_t fColorFilterXfermode;  // casts to enum SkXfermode::Mode
-
-        uint8_t fPadTo32bLengthMultiple [1];
+        int8_t fPadding[3];
 
     } fProgramDesc;
     GR_STATIC_ASSERT(!(sizeof(ProgramDesc) % 4));
@@ -206,6 +231,7 @@ public:
 private:
 
     const ProgramDesc& getDesc() { return fProgramDesc; }
+    const char* adjustInColor(const GrStringBuilder& inColor) const;
 
 public:
     enum {
@@ -237,12 +263,16 @@ public:
         GrGLint fColorUni;
         GrGLint fEdgesUni;
         GrGLint fColorFilterUni;
+        GrGLint fColorMatrixUni;
+        GrGLint fColorMatrixVecUni;
         StageUniLocations fStages[GrDrawState::kNumStages];
         void reset() {
             fViewMatrixUni = kUnusedUniform;
             fColorUni = kUnusedUniform;
             fEdgesUni = kUnusedUniform;
             fColorFilterUni = kUnusedUniform;
+            fColorMatrixUni = kUnusedUniform;
+            fColorMatrixVecUni = kUnusedUniform;
             for (int s = 0; s < GrDrawState::kNumStages; ++s) {
                 fStages[s].reset();
             }
@@ -315,7 +345,7 @@ private:
                       StageUniLocations* locations) const;
 
     void genGeometryShader(const GrGLInterface* gl,
-                           GLSLVersion glslVersion,
+                           GrGLSLGeneration glslVersion,
                            ShaderCodeSegments* segments) const;
 
     // generates code to compute coverage based on edge AA.
@@ -326,7 +356,7 @@ private:
                          ShaderCodeSegments* segments) const;
 
     static bool CompileShaders(const GrGLInterface* gl,
-                               GLSLVersion glslVersion,
+                               GrGLSLGeneration glslVersion,
                                const ShaderCodeSegments& segments, 
                                CachedData* programData);
 

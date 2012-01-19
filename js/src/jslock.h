@@ -113,29 +113,12 @@ typedef PRLock JSLock;
 #define JS_LOCK(cx, tl)             js_Lock(cx, tl)
 #define JS_UNLOCK(cx, tl)           js_Unlock(cx, tl)
 
-#define JS_LOCK_RUNTIME(rt)         js_LockRuntime(rt)
-#define JS_UNLOCK_RUNTIME(rt)       js_UnlockRuntime(rt)
-
 extern void js_Lock(JSContext *cx, JSThinLock *tl);
 extern void js_Unlock(JSContext *cx, JSThinLock *tl);
-extern void js_LockRuntime(JSRuntime *rt);
-extern void js_UnlockRuntime(JSRuntime *rt);
 extern int js_SetupLocks(int,int);
 extern void js_CleanupLocks();
 extern void js_InitLock(JSThinLock *);
 extern void js_FinishLock(JSThinLock *);
-
-#ifdef DEBUG
-
-#define JS_IS_RUNTIME_LOCKED(rt)        js_IsRuntimeLocked(rt)
-
-extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
-
-#else
-
-#define JS_IS_RUNTIME_LOCKED(rt)        0
-
-#endif /* DEBUG */
 
 #else  /* !JS_THREADSAFE */
 
@@ -157,11 +140,6 @@ extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
 #define JS_WAIT_CONDVAR(cv,to)      ((void)0)
 #define JS_NOTIFY_CONDVAR(cv)       ((void)0)
 #define JS_NOTIFY_ALL_CONDVAR(cv)   ((void)0)
-
-#define JS_LOCK_RUNTIME(rt)         ((void)0)
-#define JS_UNLOCK_RUNTIME(rt)       ((void)0)
-
-#define JS_IS_RUNTIME_LOCKED(rt)        1
 
 #endif /* !JS_THREADSAFE */
 

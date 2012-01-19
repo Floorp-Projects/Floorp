@@ -16,7 +16,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
-    private Solo mSolo;
+    protected Solo mSolo;
     protected Driver mDriver;
     protected Assert mAsserter;
     protected Actions mActions;
@@ -95,6 +95,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected final void hitEnterAndWait() {
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
+        // wait for screen to load
+        contentEventExpecter.blockForEvent();
+    }
+
+    protected final void waitForLoad() {
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         // wait for screen to load
         contentEventExpecter.blockForEvent();
     }

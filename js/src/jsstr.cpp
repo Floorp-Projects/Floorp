@@ -3268,7 +3268,7 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
     jschar *news = (jschar *) cx->malloc_(m);
     if (!news)
         return NULL;
-    memcpy(news, s, m);
+    js_memcpy(news, s, m);
     JSFixedString *str = js_NewString(cx, news, n);
     if (!str)
         cx->free_(news);

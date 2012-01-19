@@ -219,7 +219,7 @@ SCInput::readArray(T *p, size_t nelems)
         return eof();
 
     if (sizeof(T) == 1) {
-        memcpy(p, point, nelems);
+        js_memcpy(p, point, nelems);
     } else {
         const T *q = (const T *) point;
         const T *qend = q + nelems;
@@ -329,7 +329,7 @@ SCOutput::writeArray(const T *p, size_t nelems)
 
     T *q = (T *) &buf[start];
     if (sizeof(T) == 1) {
-        memcpy(q, p, nelems);
+        js_memcpy(q, p, nelems);
     } else {
         const T *pend = p + nelems;
         while (p != pend)

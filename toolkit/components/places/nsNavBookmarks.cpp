@@ -57,6 +57,8 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Util.h"
 
+#include "sampler.h"
+
 #define BOOKMARKS_TO_KEYWORDS_INITIAL_CACHE_SIZE 64
 #define RECENT_BOOKMARKS_INITIAL_CACHE_SIZE 10
 // Threashold to expire old bookmarks if the initial cache size is exceeded.
@@ -681,6 +683,7 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 {
+  SAMPLE_LABEL("bookmarks", "RemoveItem");
   NS_ENSURE_ARG(aItemId != mRoot);
 
   BookmarkData bookmark;
@@ -1132,6 +1135,7 @@ nsNavBookmarks::GetDescendantChildren(PRInt64 aFolderId,
 NS_IMETHODIMP
 nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
 {
+  SAMPLE_LABEL("bookmarks", "RemoveFolderChilder");
   NS_ENSURE_ARG_MIN(aFolderId, 1);
 
   BookmarkData folder;
@@ -2751,6 +2755,7 @@ nsNavBookmarks::EnsureKeywordsHash() {
 NS_IMETHODIMP
 nsNavBookmarks::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                                nsISupports* aUserData) {
+  SAMPLE_LABEL("bookmarks", "RunInBatchMode");
   NS_ENSURE_ARG(aCallback);
 
   mBatching = true;

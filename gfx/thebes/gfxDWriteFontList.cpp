@@ -431,6 +431,36 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
     HRESULT hr;
     if (mFont) {
         hr = mFont->CreateFontFace(aFontFace);
+        if (SUCCEEDED(hr) && (aSimulations & DWRITE_FONT_SIMULATIONS_BOLD) &&
+            !((*aFontFace)->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD)) {
+            // need to replace aFontFace with a version that has the Bold
+            // simulation - unfortunately, DWrite doesn't provide a simple API
+            // for this
+            nsRefPtr<IDWriteFontFace> origFace = (*aFontFace);
+            (*aFontFace)->Release();
+            *aFontFace = NULL;
+            UINT32 numberOfFiles = 0;
+            hr = origFace->GetFiles(&numberOfFiles, NULL);
+            if (FAILED(hr)) {
+                return NS_ERROR_FAILURE;
+            }
+            nsAutoTArray<IDWriteFontFile*,1> files;
+            files.AppendElements(numberOfFiles);
+            hr = origFace->GetFiles(&numberOfFiles, files.Elements());
+            if (FAILED(hr)) {
+                return NS_ERROR_FAILURE;
+            }
+            hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
+                CreateFontFace(origFace->GetType(),
+                               numberOfFiles,
+                               files.Elements(),
+                               origFace->GetIndex(),
+                               aSimulations,
+                               aFontFace);
+            for (UINT32 i = 0; i < numberOfFiles; ++i) {
+                files[i]->Release();
+            }
+        }
     } else if (mFontFile) {
         IDWriteFontFile *fontFile = mFontFile.get();
         hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->

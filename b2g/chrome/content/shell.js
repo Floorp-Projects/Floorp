@@ -201,6 +201,11 @@ var shell = {
             break;
           case evt.DOM_VK_SLEEP:
             this.toggleScreen();
+
+            let details = {
+              'enabled': screen.mozEnabled
+            };
+            this.sendEvent(this.home.contentWindow, 'sleep', details);
             break;
           case evt.DOM_VK_ESCAPE:
             if (evt.defaultPrevented)

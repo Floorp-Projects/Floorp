@@ -61,6 +61,13 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     *  Return the width/height of the underlying device. The current drawable
+     *  area may be small (due to clipping or saveLayer). For a canvas with
+     *  no device, 0,0 will be returned.
+     */
+    SkISize getDeviceSize() const;
+
     /** Return the canvas' device object, which may be null. The device holds
         the bitmap of the pixels that the canvas draws into. The reference count
         of the returned device is not changed by this call.
@@ -99,23 +106,106 @@ public:
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     *  Copy the pixels from the device into bitmap. Returns true on success.
-     *  If false is returned, then the bitmap parameter is left unchanged.
-     *  The bitmap parameter is treated as output-only, and will be completely
-     *  overwritten (if the method returns true).
+     * This enum can be used with read/writePixels to perform a pixel ops to or
+     * from an 8888 config other than Skia's native config (SkPMColor). There
+     * are three byte orders supported: native, BGRA, and RGBA. Each has a
+     * premultiplied and unpremultiplied variant.
+     *
+     * Components of a 8888 pixel can be packed/unpacked from a 32bit word using
+     * either byte offsets or shift values. Byte offsets are endian-invariant
+     * while shifts are not. BGRA and RGBA configs are defined by byte
+     * orderings. The native config is defined by shift values (SK_A32_SHIFT,
+     * ..., SK_B32_SHIFT).
+     */
+    enum Config8888 {
+        /**
+         * Skia's native order specified by:
+         *      SK_A32_SHIFT, SK_R32_SHIFT, SK_G32_SHIFT, and SK_B32_SHIFT
+         *
+         * kNative_Premul_Config8888 is equivalent to SkPMColor
+         * kNative_Unpremul_Config8888 has the same component order as SkPMColor
+         * but is not premultiplied.
+         */
+        kNative_Premul_Config8888,
+        kNative_Unpremul_Config8888,
+        /**
+         * low byte to high byte: B, G, R, A.
+         */
+        kBGRA_Premul_Config8888,
+        kBGRA_Unpremul_Config8888,
+        /**
+         * low byte to high byte: R, G, B, A.
+         */
+        kRGBA_Premul_Config8888,
+        kRGBA_Unpremul_Config8888,
+    };
+
+    /**
+     *  On success (returns true), copy the canvas pixels into the bitmap.
+     *  On failure, the bitmap parameter is left unchanged and false is
+     *  returned.
+     *
+     *  The canvas' pixels are converted to the bitmap's config. The only
+     *  supported config is kARGB_8888_Config, though this is likely to be
+     *  relaxed in  the future. The meaning of config kARGB_8888_Config is
+     *  modified by the enum param config8888. The default value interprets
+     *  kARGB_8888_Config as SkPMColor
+     *
+     *  If the bitmap has pixels already allocated, the canvas pixels will be
+     *  written there. If not, bitmap->allocPixels() will be called 
+     *  automatically. If the bitmap is backed by a texture readPixels will
+     *  fail.
+     *
+     *  The actual pixels written is the intersection of the canvas' bounds, and
+     *  the rectangle formed by the bitmap's width,height and the specified x,y.
+     *  If bitmap pixels extend outside of that intersection, they will not be
+     *  modified.
+     *
+     *  Other failure conditions:
+     *    * If the canvas is backed by a non-raster device (e.g. PDF) then
+     *       readPixels will fail.
+     *    * If bitmap is texture-backed then readPixels will fail. (This may be
+     *       relaxed in the future.)
+     *
+     *  Example that reads the entire canvas into a bitmap using the native
+     *  SkPMColor:
+     *    SkISize size = canvas->getDeviceSize();
+     *    bitmap->setConfig(SkBitmap::kARGB_8888_Config, size.fWidth,
+     *                                                   size.fHeight);
+     *    if (canvas->readPixels(bitmap, 0, 0)) {
+     *       // use the pixels
+     *    }
+     */
+    bool readPixels(SkBitmap* bitmap,
+                    int x, int y,
+                    Config8888 config8888 = kNative_Premul_Config8888);
+
+    /**
+     * DEPRECATED: This will be removed as soon as webkit is no longer relying
+     * on it. The bitmap is resized to the intersection of srcRect and the
+     * canvas bounds. New pixels are always allocated on success. Bitmap is
+     * unmodified on failure.
      */
     bool readPixels(const SkIRect& srcRect, SkBitmap* bitmap);
-    bool readPixels(SkBitmap* bitmap);
 
     /**
      *  Similar to draw sprite, this method will copy the pixels in bitmap onto
-     *  the device, with the top/left corner specified by (x, y). The pixel
-     *  values in the device are completely replaced: there is no blending.
+     *  the canvas, with the top/left corner specified by (x, y). The canvas'
+     *  pixel values are completely replaced: there is no blending.
+     *
+     *  Currently if bitmap is backed by a texture this is a no-op. This may be
+     *  relaxed in the future.
+     *
+     *  If the bitmap has config kARGB_8888_Config then the config8888 param
+     *  will determines how the pixel valuess are intepreted. If the bitmap is
+     *  not kARGB_8888_Config then this parameter is ignored.
      *
      *  Note: If you are recording drawing commands on this canvas to
      *  SkPicture, writePixels() is ignored!
      */
-    void writePixels(const SkBitmap& bitmap, int x, int y);
+    void writePixels(const SkBitmap& bitmap,
+                     int x, int y,
+                     Config8888 config8888 = kNative_Premul_Config8888);
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -196,6 +286,11 @@ public:
         @param saveCount    The number of save() levels to restore from
     */
     void restoreToCount(int saveCount);
+
+    /** Returns true if drawing is currently going to a layer (from saveLayer)
+     *  rather than to the root device.
+     */
+    bool isDrawingToLayer() const;
 
     /** Preconcat the current matrix with the specified translation
         @param dx   The distance to translate in X
@@ -646,7 +741,7 @@ public:
                                 const SkPath& path, const SkMatrix* matrix,
                                 const SkPaint& paint);
 
-#ifdef ANDROID
+#ifdef SK_BUILD_FOR_ANDROID
     /** Draw the text on path, with each character/glyph origin specified by the pos[]
         array. The origin is interpreted by the Align setting in the paint.
         @param text The text to be drawn
@@ -842,6 +937,7 @@ private:
 
     SkBounder*  fBounder;
     SkDevice*   fLastDeviceToGainFocus;
+    int         fLayerCount;    // number of successful saveLayer calls
 
     void prepareForDeviceDraw(SkDevice*, const SkMatrix&, const SkRegion&,
                               const SkClipStack& clipStack);

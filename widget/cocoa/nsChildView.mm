@@ -94,6 +94,8 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
+#include "sampler.h"
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
@@ -2477,6 +2479,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
 {
+  SAMPLE_LABEL("widget", "ChildView::drawRect");
   bool isVisible;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
       !isVisible)

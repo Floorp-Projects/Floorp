@@ -631,7 +631,6 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
   LOG(PR_LOG_DEBUG, ("%p Begun audio thread/loop", mDecoder.get()));
   PRInt64 audioDuration = 0;
   PRInt64 audioStartTime = -1;
-  PRInt64 framesWritten = 0;
   PRUint32 channels, rate;
   double volume = -1;
   bool setVolume;
@@ -746,6 +745,7 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
       break;
     }
 
+    PRInt64 framesWritten = 0;
     if (missingFrames > 0) {
       // The next audio chunk begins some time after the end of the last chunk
       // we pushed to the audio hardware. We must push silence into the audio
@@ -780,18 +780,22 @@ void nsBuiltinDecoderStateMachine::AudioLoop()
     bool seeking = false;
     {
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      if (framesWritten < minWriteFrames) {
-        // We've not written minWriteFrames in the last write, the audio
-        // may not start playing. Write silence to ensure we've got enough
-        // written to start playback.
-        PRInt64 minToWrite = minWriteFrames - framesWritten;
-        if (minToWrite < PR_UINT32_MAX / channels) {
+      PRInt64 unplayedFrames = audioDuration % minWriteFrames;
+      if (minWriteFrames > 1 && unplayedFrames > 0) {
+        // Sound is written by libsydneyaudio to the hardware in blocks of
+        // frames of size minWriteFrames. So if the number of frames we've
+        // written isn't an exact multiple of minWriteFrames, we'll have
+        // left over audio data which hasn't yet been written to the hardware,
+        // and so that audio will not start playing. Write silence to ensure
+        // the last block gets pushed to hardware, so that playback starts.
+        PRInt64 framesToWrite = minWriteFrames - unplayedFrames;
+        if (framesToWrite < PR_UINT32_MAX / channels) {
           // Write silence manually rather than using PlaySilence(), so that
           // the AudioAPI doesn't get a copy of the audio frames.
-          PRUint32 numSamples = minToWrite * channels;
+          PRUint32 numSamples = framesToWrite * channels;
           nsAutoArrayPtr<AudioDataValue> buf(new AudioDataValue[numSamples]);
           memset(buf.get(), 0, numSamples * sizeof(AudioDataValue));
-          mAudioStream->Write(buf, minToWrite);
+          mAudioStream->Write(buf, framesToWrite);
         }
       }
 

@@ -61,7 +61,7 @@
         #undef GR_IOS_BUILD
         #define GR_IOS_BUILD        1
 //      #error "IOS"
-    #elif (defined(ANDROID_NDK) && ANDROID_NDK) || defined(ANDROID)
+    #elif defined(SK_BUILD_FOR_ANDROID)
         #undef GR_ANDROID_BUILD
         #define GR_ANDROID_BUILD    1
 //      #error "ANDROID"
@@ -220,12 +220,12 @@ extern GR_API void GrPrintf(const char format[], ...);
  */
 #if !defined(GR_ALWAYSBREAK)
     #if     GR_WIN32_BUILD
-        #define GR_ALWAYSBREAK __debugbreak()
+        #define GR_ALWAYSBREAK SkNO_RETURN_HINT(); __debugbreak()
     #else
         // TODO: do other platforms really not have continuable breakpoints?
         // sign extend for 64bit architectures to be sure this is
         // in the high address range
-        #define GR_ALWAYSBREAK *((int*)(int64_t)(int32_t)0xbeefcafe) = 0;
+        #define GR_ALWAYSBREAK SkNO_RETURN_HINT(); *((int*)(int64_t)(int32_t)0xbeefcafe) = 0;
     #endif
 #endif
 
@@ -351,7 +351,7 @@ inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
  *  program.
  */
 #if !defined(GR_AGGRESSIVE_SHADER_OPTS)
-    #define GR_AGGRESSIVE_SHADER_OPTS 0
+    #define GR_AGGRESSIVE_SHADER_OPTS 1
 #endif
 
 /**
@@ -379,6 +379,7 @@ inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
 #if !defined(GR_MAX_OFFSCREEN_AA_SIZE)
     #define GR_MAX_OFFSCREEN_AA_SIZE    256
 #endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // tail section:
