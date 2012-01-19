@@ -259,8 +259,8 @@ load 465651-1.html
 load 467137-1.html
 load 467213-1.html
 load 467487-1.html
-asserts(11-12) load 467493-1.html
-asserts(10-11) load 467493-2.html
+asserts(10-13) load 467493-1.html
+asserts(9-12) load 467493-2.html
 load 467875-1.xhtml
 load 467914-1.html
 load 468207-1.html
