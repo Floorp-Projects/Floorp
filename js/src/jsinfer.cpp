@@ -2246,17 +2246,16 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 	
 #if defined(JS_METHODJIT)
     mjit::JITScript *jit = info.script->getJIT(info.constructing);
-    hasJITCode = jit && jit->chunkDescriptor(info.chunkIndex).chunk;
+    hasJITCode |= jit && jit->chunkDescriptor(info.chunkIndex).chunk;
 	
 # if defined(JS_ION)
-    hasJITCode = !!info.script->hasIonScript();
+    hasJITCode |= !!info.script->hasIonScript();
 # endif
 
     if (!hasJITCode) {
         /* Scripts which haven't been compiled yet don't need to be recompiled. */
         return;
     }
-
 #endif
 
 #if defined(JS_METHODJIT)
@@ -2298,6 +2297,10 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode
         info.chunkIndex = script->jitCtor->chunkIndex(pc);
         addPendingRecompile(cx, info);
     }
+# ifdef JS_ION
+    if (script->hasIonScript())
+        addPendingRecompile(cx, RecompileInfo(script));
+# endif
 #endif
 }
 
