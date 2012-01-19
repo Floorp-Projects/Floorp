@@ -47,6 +47,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/Element.h"
+#include "sampler.h"
 
 namespace mozilla {
 namespace dom {
@@ -113,6 +114,7 @@ private:
 NS_IMETHODIMP
 PluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
+  SAMPLE_LABEL("PluginStreamListener", "OnStartRequest");
   // Have to set up our plugin stuff before we call OnStartRequest, so
   // that the plugin listener can get that call.
   nsresult rv = SetupPlugin();
