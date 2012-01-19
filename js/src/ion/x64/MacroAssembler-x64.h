@@ -122,6 +122,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void storeValue(ValueOperand val, const Address &dest) {
         storeValue(val, Operand(dest));
     }
+    void storeValue(JSValueType type, Register reg, Address dest) {
+        boxValue((JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type),
+                 Operand(reg), ScratchReg);
+        movq(ScratchReg, Operand(dest));
+    }
+    void storeValue(const Value &val, Address dest) {
+        jsval_layout jv = JSVAL_TO_IMPL(val);
+        movq(ImmWord(jv.asBits), ScratchReg);
+        if (val.isMarkable())
+            writeDataRelocation(masm.currentOffset());
+        movq(ScratchReg, Operand(dest));
+    }
     void loadValue(Operand src, ValueOperand val) {
         movq(src, val.valueReg());
     }
@@ -137,6 +149,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void popValue(ValueOperand val) {
         pop(val.valueReg());
+    }
+    void pushValue(const Value &val) {
+        jsval_layout jv = JSVAL_TO_IMPL(val);
+        push(ImmWord(jv.asBits));
+    }
+    void pushValue(JSValueType type, Register reg) {
+        boxValue((JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type),
+                 Operand(reg), ScratchReg);
+        push(ScratchReg);
     }
 
     void movePtr(Operand op, const Register &dest) {

@@ -951,6 +951,34 @@ LIRGenerator::visitCallGetNameTypeOf(MCallGetNameTypeOf *ins)
 }
 
 bool
+LIRGenerator::visitGenericSetProperty(MGenericSetProperty *ins)
+{
+    LUse obj = useRegister(ins->obj());
+
+    LInstruction *lir;
+    if (ins->value()->type() == MIRType_Value) {
+        if (ins->monitored())
+            lir = new LCallSetPropertyV(obj);
+        else
+            lir = new LCacheSetPropertyV(obj);
+        JS_STATIC_ASSERT(LCallSetPropertyV::Value == LCacheSetPropertyV::Value);
+        if (!useBox(lir, LCallSetPropertyV::Value, ins->value()))
+            return false;
+    } else {
+        LAllocation value = useRegisterOrConstant(ins->value());
+        if (ins->monitored())
+            lir = new LCallSetPropertyT(obj, value, ins->value()->type());
+        else
+            lir = new LCacheSetPropertyT(obj, value, ins->value()->type());
+    }
+
+    if (!add(lir, ins))
+        return false;
+
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitStringLength(MStringLength *ins)
 {
     JS_ASSERT(ins->string()->type() == MIRType_String);

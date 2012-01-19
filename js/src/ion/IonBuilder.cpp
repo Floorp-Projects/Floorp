@@ -767,6 +767,10 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CALLPROP:
         return jsop_getprop(info().getAtom(pc));
 
+      case JSOP_SETPROP:
+      case JSOP_SETNAME:
+        return jsop_setprop(info().getAtom(pc));
+
       default:
 #ifdef DEBUG
         return abort("Unsupported opcode: %s (line %d)", js_CodeName[op], info().lineno(cx, pc));
@@ -3190,6 +3194,29 @@ IonBuilder::jsop_getprop(JSAtom *atom)
         return false;
 
     return pushTypeBarrier(ins, types, barrier);
+}
+
+bool
+IonBuilder::jsop_setprop(JSAtom *atom)
+{
+    // :FIXME: bug 719433
+#ifdef JS_CPU_ARM
+    return abort("SETPROP on ARM");
+#endif
+
+    MDefinition *value = current->pop();
+    MDefinition *obj = current->pop();
+
+    bool monitored = !oracle->propertyWriteCanSpecialize(script, pc);
+
+    TypeOracle::Binary binary = oracle->binaryOp(script, pc);
+    MGenericSetProperty *ins = MGenericSetProperty::New(obj, value, atom,
+                                                        script->strictModeCode,
+                                                        monitored);
+    current->add(ins);
+    current->push(value);
+
+    return resumeAfter(ins);
 }
 
 bool

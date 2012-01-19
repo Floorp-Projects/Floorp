@@ -64,15 +64,6 @@ CodeLocationJump::repoint(IonCode *code)
     markAbsolute(true);
 }
 
-void
-IonCache::loadResult(MacroAssembler &masm, Address address)
-{
-    if (output.hasValue())
-        masm.loadValue(address, output.valueReg());
-    else
-        masm.loadUnboxedValue(address, output.typedReg());
-}
-
 static const size_t MAX_STUBS = 16;
 
 bool
@@ -89,23 +80,26 @@ IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, const Shape *sha
     masm.bind(&exit_);
 
     if (obj->isFixedSlot(shape->slot())) {
-        loadResult(masm, Address(object(), JSObject::getFixedSlotOffset(shape->slot())));
+        Address addr(object(), JSObject::getFixedSlotOffset(shape->slot()));
+        masm.loadTypedOrValue(addr, output());
     } else {
         bool restoreSlots = false;
         Register slotsReg;
 
-        if (output.hasValue()) {
-            slotsReg = output.valueReg().scratchReg();
-        } else if (output.type() == MIRType_Double) {
+        if (output().hasValue()) {
+            slotsReg = output().valueReg().scratchReg();
+        } else if (output().type() == MIRType_Double) {
             slotsReg = object();
             masm.Push(slotsReg);
             restoreSlots = true;
         } else {
-            slotsReg = output.typedReg().gpr();
+            slotsReg = output().typedReg().gpr();
         }
 
         masm.loadPtr(Address(object(), JSObject::offsetOfSlots()), slotsReg);
-        loadResult(masm, Address(slotsReg, obj->dynamicSlotIndex(shape->slot()) * sizeof(Value)));
+
+        Address addr(slotsReg, obj->dynamicSlotIndex(shape->slot()) * sizeof(Value));
+        masm.loadTypedOrValue(addr, output());
 
         if (restoreSlots)
             masm.Pop(slotsReg);
@@ -145,7 +139,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
         cache.incrementStubCount();
 
         const Shape *shape = obj->nativeLookup(cx, ATOM_TO_JSID(atom));
-        if (shape && shape->hasSlot() && shape->hasDefaultGetter()) {
+        if (shape && shape->hasSlot() && shape->hasDefaultGetter() && !shape->isMethod()) {
             if (!cache.attachNative(cx, obj, shape))
                 return false;
         }
@@ -164,4 +158,74 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     types::TypeScript::Monitor(cx, script, pc, *vp);
 
     return true;
+}
+
+bool
+IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Shape *shape)
+{
+    MacroAssembler masm;
+
+    Label exit_;
+    CodeOffsetJump exitOffset =
+        masm.branchPtrWithPatch(Assembler::NotEqual,
+                                Address(object(), JSObject::offsetOfShape()),
+                                ImmGCPtr(obj->lastProperty()),
+                                &exit_);
+    masm.bind(&exit_);
+
+    if (obj->isFixedSlot(shape->slot())) {
+        Address addr(object(), JSObject::getFixedSlotOffset(shape->slot()));
+        masm.storeConstantOrRegister(value(), addr);
+    } else {
+        Register slotsReg = object();
+        masm.Push(slotsReg);
+
+        masm.loadPtr(Address(object(), JSObject::offsetOfSlots()), slotsReg);
+
+        Address addr(slotsReg, obj->dynamicSlotIndex(shape->slot()) * sizeof(Value));
+        masm.storeConstantOrRegister(value(), addr);
+
+        masm.Pop(slotsReg);
+    }
+
+    Label rejoin_;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
+    masm.bind(&rejoin_);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+
+    PatchJump(lastJump(), CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated native SETPROP stub at %p", code->raw());
+
+    return true;
+}
+
+bool
+js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value value)
+{
+    IonScript *ion = GetTopIonFrame(cx);
+    IonCacheSetProperty &cache = ion->getCache(cacheIndex).toSetProperty();
+    JSAtom *atom = cache.atom();
+
+    // Stop generating new stubs once we hit the stub count limit, see
+    // GetPropertyCache.
+    if (cache.stubCount() < MAX_STUBS) {
+        cache.incrementStubCount();
+
+        const Shape *shape = obj->nativeLookup(cx, ATOM_TO_JSID(atom));
+        if (shape && shape->hasSlot() && shape->hasDefaultSetter() && !shape->isMethod()) {
+            if (!cache.attachNativeExisting(cx, obj, shape))
+                return false;
+        }
+    }
+
+    return obj->setGeneric(cx, ATOM_TO_JSID(atom), &value, cache.strict());
 }

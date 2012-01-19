@@ -301,6 +301,7 @@ class MacroAssemblerARM : public Assembler
 
     void ma_vstr(FloatRegister src, VFPAddr addr);
     void ma_vstr(FloatRegister src, const Operand &addr);
+
     void ma_vstr(FloatRegister src, Register base, Register index, int32 shift = defaultShift);
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
     void ma_callIon(const Register reg);
@@ -561,6 +562,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storeValue(ValueOperand val, const Address &dest) {
         storeValue(val, Operand(dest));
     }
+    void storeValue(JSValueType type, Register reg, Address dest) {
+        JS_NOT_REACHED("NYI");
+    }
+    void storeValue(const Value &val, Address dest) {
+        JS_NOT_REACHED("NYI");
+    }
 
     void loadValue(Address src, ValueOperand val);
     void loadValue(Operand dest, ValueOperand val) {
@@ -569,6 +576,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadValue(Register base, Register index, ValueOperand val, int32 shift = defaultShift);
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
+    void pushValue(const Value &val) {
+        JS_NOT_REACHED("NYI");
+    }
+    void pushValue(JSValueType type, Register reg) {
+        JS_NOT_REACHED("NYI");
+    }
     void storePayload(const Value &val, Operand dest);
     void storePayload(Register src, Operand dest);
     void storePayload(const Value &val, Register base, Register index, int32 shift = defaultShift);
@@ -607,9 +620,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         push(ptr);
         adjustFrame(STACK_SLOT_SIZE);
     }
-    void Push(const ValueOperand &val) {
-        pushValue(val);
-        adjustFrame(sizeof(Value));
+    void Push(const FloatRegister &t) {
+        JS_NOT_REACHED("NYI");
     }
     void Pop(const Register &reg) {
         ma_pop(reg);

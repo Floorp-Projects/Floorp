@@ -379,6 +379,10 @@ GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *v
 bool
 AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
 
+template <bool strict>
+bool
+SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value value);
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */
