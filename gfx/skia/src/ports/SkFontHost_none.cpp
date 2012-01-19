@@ -30,7 +30,8 @@ SkTypeface* SkFontHost::CreateTypefaceFromFile(char const*) {
 // static
 SkAdvancedTypefaceMetrics* SkFontHost::GetAdvancedTypefaceMetrics(
         uint32_t fontID,
-        SkAdvancedTypefaceMetrics::PerGlyphInfo perGlyphInfo) {
+        SkAdvancedTypefaceMetrics::PerGlyphInfo perGlyphInfo,
+        const uint32_t*, uint32_t) {
     SkDEBUGFAIL("SkFontHost::GetAdvancedTypefaceMetrics unimplemented");
     return NULL;
 }
