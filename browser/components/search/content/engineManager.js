@@ -313,12 +313,12 @@ EngineStore.prototype = {
     return null;
   },
 
-  _cloneEngine: function ES_cloneObj(aEngine) {
-    var newO=[];
+  _cloneEngine: function ES_cloneEngine(aEngine) {
+    var clonedObj={};
     for (var i in aEngine)
-      newO[i] = aEngine[i];
-    newO.originalEngine = aEngine;
-    return newO;
+      clonedObj[i] = aEngine[i];
+    clonedObj.originalEngine = aEngine;
+    return clonedObj;
   },
 
   // Callback for Array's some(). A thisObj must be passed to some()
