@@ -287,7 +287,6 @@ SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
 SHELL_WRAPPER0(bindWidgetTexture);
-SHELL_WRAPPER0_WITH_RETURN(testDirectTexture, bool);
 SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong);
 SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong);
 SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong);
@@ -686,7 +685,6 @@ loadLibs(const char *apkName)
   GETFUNC(notifyBatteryChange);
   GETFUNC(notifySmsReceived);
   GETFUNC(bindWidgetTexture);
-  GETFUNC(testDirectTexture);
   GETFUNC(saveMessageInSentbox);
   GETFUNC(notifySmsSent);
   GETFUNC(notifySmsDelivered);

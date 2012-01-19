@@ -274,6 +274,9 @@ DEFAULT_GMAKE_FLAGS += \
 endif
 
 DEFAULT_GMAKE_FLAGS += FREEBL_NO_DEPEND=0
+ifeq ($(OS_TARGET),Linux)
+DEFAULT_GMAKE_FLAGS += FREEBL_LOWHASH=1
+endif
 
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
 

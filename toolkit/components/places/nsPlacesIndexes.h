@@ -137,6 +137,15 @@
   )
 
 /**
+ * moz_hosts
+ */
+
+#define CREATE_IDX_MOZ_HOSTS_FRECENCYHOST \
+  CREATE_PLACES_IDX( \
+    "frecencyhostindex", "moz_hosts", "frecency, host", "" \
+  )
+
+/**
  * moz_items_annos
  */
 

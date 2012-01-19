@@ -270,6 +270,34 @@ public:
   static nsresult create(mozIStorageConnection *aDBConn);
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Fixup URL Function
+
+/**
+ * Make a given URL more suitable for searches, by removing common prefixes
+ * such as "www."
+ *
+ * @param url
+ *        A URL.
+ * @return
+ *        The same URL, with redundant parts removed.
+ */
+class FixupURLFunction : public mozIStorageFunction
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+};
+
 } // namespace places
 } // namespace storage
 

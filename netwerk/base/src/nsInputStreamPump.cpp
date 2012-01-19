@@ -383,7 +383,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
 {
     LOG(("nsInputStreamPump::OnInputStreamReady [this=%x]\n", this));
 
-    SAMPLE_LABEL("Input", "OnInputStreamReady");
+    SAMPLE_LABEL("Input", "nsInputStreamPump::OnInputStreamReady");
     // this function has been called from a PLEvent, so we can safely call
     // any listener or progress sink methods directly from here.
 
@@ -426,6 +426,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
 PRUint32
 nsInputStreamPump::OnStateStart()
 {
+    SAMPLE_LABEL("nsInputStreamPump", "OnStateStart");
     LOG(("  OnStateStart [this=%x]\n", this));
 
     nsresult rv;
@@ -453,6 +454,7 @@ nsInputStreamPump::OnStateStart()
 PRUint32
 nsInputStreamPump::OnStateTransfer()
 {
+    SAMPLE_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
     LOG(("  OnStateTransfer [this=%x]\n", this));
 
     // if canceled, go directly to STATE_STOP...
@@ -562,6 +564,7 @@ nsInputStreamPump::OnStateTransfer()
 PRUint32
 nsInputStreamPump::OnStateStop()
 {
+    SAMPLE_LABEL("Input", "nsInputStreamPump::OnStateTransfer");
     LOG(("  OnStateStop [this=%x status=%x]\n", this, mStatus));
 
     // if an error occurred, we must be sure to pass the error onto the async

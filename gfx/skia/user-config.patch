@@ -1,0 +1,40 @@
+diff --git a/gfx/skia/include/config/SkUserConfig.h b/gfx/skia/include/config/SkUserConfig.h
+--- a/gfx/skia/include/config/SkUserConfig.h
++++ b/gfx/skia/include/config/SkUserConfig.h
+@@ -140,16 +140,20 @@
+ /*  If SK_DEBUG is defined, then you can optionally define SK_SUPPORT_UNITTEST
+     which will run additional self-tests at startup. These can take a long time,
+     so this flag is optional.
+  */
+ #ifdef SK_DEBUG
+ //#define SK_SUPPORT_UNITTEST
+ #endif
+ 
++/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
++ */
++#define SK_DISABLE_DITHER_32BIT_GRADIENT
++
+ /* If your system embeds skia and has complex event logging, define this
+    symbol to name a file that maps the following macros to your system's
+    equivalents:
+        SK_TRACE_EVENT0(event)
+        SK_TRACE_EVENT1(event, name1, value1)
+        SK_TRACE_EVENT2(event, name1, value1, name2, value2)
+    src/utils/SkDebugTrace.h has a trivial implementation that writes to
+    the debug output stream. If SK_USER_TRACE_INCLUDE_FILE is not defined,
+@@ -161,9 +165,15 @@
+  */
+ #ifdef SK_SAMPLES_FOR_X
+         #define SK_R32_SHIFT    16
+         #define SK_G32_SHIFT    8
+         #define SK_B32_SHIFT    0
+         #define SK_A32_SHIFT    24
+ #endif
+ 
++/*  Don't include stdint.h on windows as it conflicts with our build system.
++ */
++#ifdef SK_BUILD_FOR_WIN32 
++    #define SK_IGNORE_STDINT_DOT_H 
++#endif 
++
+ #endif

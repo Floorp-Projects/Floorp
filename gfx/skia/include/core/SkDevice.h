@@ -107,36 +107,40 @@ public:
     const SkBitmap& accessBitmap(bool changePixels);
 
     /**
-     *  Copy the pixels from the device into bitmap. Returns true on success.
-     *  If false is returned, then the bitmap parameter is left unchanged.
-     *  The bitmap parameter is treated as output-only, and will be completely
-     *  overwritten (if the method returns true).
-     */
-    virtual bool readPixels(const SkIRect& srcRect, SkBitmap* bitmap);
-
-    /**
+     *  DEPRECATED: This will be made protected once WebKit stops using it.
+     *              Instead use Canvas' writePixels method.
+     *
      *  Similar to draw sprite, this method will copy the pixels in bitmap onto
      *  the device, with the top/left corner specified by (x, y). The pixel
      *  values in the device are completely replaced: there is no blending.
+     *
+     *  Currently if bitmap is backed by a texture this is a no-op. This may be
+     *  relaxed in the future.
+     *
+     *  If the bitmap has config kARGB_8888_Config then the config8888 param
+     *  will determines how the pixel valuess are intepreted. If the bitmap is
+     *  not kARGB_8888_Config then this parameter is ignored.
      */
-    virtual void writePixels(const SkBitmap& bitmap, int x, int y);
+    virtual void writePixels(const SkBitmap& bitmap, int x, int y,
+                             SkCanvas::Config8888 config8888 = SkCanvas::kNative_Premul_Config8888);
 
     /**
      * Return the device's associated gpu render target, or NULL.
      */
     virtual SkGpuRenderTarget* accessRenderTarget() { return NULL; }
 
-protected:
-    enum Usage {
-       kGeneral_Usage,
-       kSaveLayer_Usage, // <! internal use only
-    };
 
     /**
      *  Return the device's origin: its offset in device coordinates from
      *  the default origin in its canvas' matrix/clip
      */
     const SkIPoint& getOrigin() const { return fOrigin; }
+
+protected:
+    enum Usage {
+       kGeneral_Usage,
+       kSaveLayer_Usage, // <! internal use only
+    };
 
     struct TextFlags {
         uint32_t            fFlags;     // SkPaint::getFlags()
@@ -226,7 +230,7 @@ protected:
     virtual void drawTextOnPath(const SkDraw&, const void* text, size_t len,
                                 const SkPath& path, const SkMatrix* matrix,
                                 const SkPaint& paint);
-#ifdef ANDROID
+#ifdef SK_BUILD_FOR_ANDROID
     virtual void drawPosTextOnPath(const SkDraw& draw, const void* text, size_t len,
                                    const SkPoint pos[], const SkPaint& paint,
                                    const SkPath& path, const SkMatrix* matrix);
@@ -242,6 +246,37 @@ protected:
     virtual void drawDevice(const SkDraw&, SkDevice*, int x, int y,
                             const SkPaint&);
 
+    /**
+     *  On success (returns true), copy the device pixels into the bitmap.
+     *  On failure, the bitmap parameter is left unchanged and false is
+     *  returned.
+     *
+     *  The device's pixels are converted to the bitmap's config. The only
+     *  supported config is kARGB_8888_Config, though this is likely to be
+     *  relaxed in  the future. The meaning of config kARGB_8888_Config is
+     *  modified by the enum param config8888. The default value interprets
+     *  kARGB_8888_Config as SkPMColor
+     *
+     *  If the bitmap has pixels already allocated, the device pixels will be
+     *  written there. If not, bitmap->allocPixels() will be called 
+     *  automatically. If the bitmap is backed by a texture readPixels will
+     *  fail.
+     *
+     *  The actual pixels written is the intersection of the device's bounds,
+     *  and the rectangle formed by the bitmap's width,height and the specified
+     *  x,y. If bitmap pixels extend outside of that intersection, they will not
+     *  be modified.
+     *
+     *  Other failure conditions:
+     *    * If the device is not a raster device (e.g. PDF) then readPixels will
+     *      fail.
+     *    * If bitmap is texture-backed then readPixels will fail. (This may be
+     *      relaxed in the future.)
+     */
+    bool readPixels(SkBitmap* bitmap,
+                    int x, int y,
+                    SkCanvas::Config8888 config8888);
+
     ///////////////////////////////////////////////////////////////////////////
 
     /** Update as needed the pixel value in the bitmap, so that the caller can access
@@ -256,6 +291,17 @@ protected:
         fBitmap.setPixelRef(pr, offset);
         return pr;
     }
+    
+    /**
+     * Implements readPixels API. The caller will ensure that:
+     *  1. bitmap has pixel config kARGB_8888_Config.
+     *  2. bitmap has pixels.
+     *  3. The rectangle (x, y, x + bitmap->width(), y + bitmap->height()) is
+     *     contained in the device bounds.
+     */
+    virtual bool onReadPixels(const SkBitmap& bitmap,
+                              int x, int y,
+                              SkCanvas::Config8888 config8888);
 
     /** Called when this device is installed into a Canvas. Balanaced by a call
         to unlockPixels() when the device is removed from a Canvas.
@@ -263,12 +309,26 @@ protected:
     virtual void lockPixels();
     virtual void unlockPixels();
 
+    /**
+     *  Override and return true for filters that the device handles
+     *  intrinsically. Returning false means call the filter.
+     *  Default impl returns false.
+     */
+    virtual bool filterImage(SkImageFilter*, const SkBitmap& src,
+                             const SkMatrix& ctm,
+                             SkBitmap* result, SkIPoint* offset);
+
+    // This is equal kBGRA_Premul_Config8888 or kRGBA_Premul_Config8888 if 
+    // either is identical to kNative_Premul_Config8888. Otherwise, -1.
+    static const SkCanvas::Config8888 kPMColorAlias;
+
 private:
     friend class SkCanvas;
     friend struct DeviceCM; //for setMatrixClip
     friend class SkDraw;
     friend class SkDrawIter;
     friend class SkDeviceFilteredPaint;
+    friend class DeviceImageFilterProxy;
 
     // just called by SkCanvas when built as a layer
     void setOrigin(int x, int y) { fOrigin.set(x, y); }

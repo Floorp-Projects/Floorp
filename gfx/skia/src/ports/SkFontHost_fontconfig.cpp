@@ -44,9 +44,6 @@ static std::map<unsigned, std::string> global_fc_map_inverted;
 static std::map<uint32_t, SkTypeface *> global_fc_typefaces;
 static unsigned global_fc_map_next_id = 0;
 
-// This is the maximum size of the font cache.
-static const unsigned kFontCacheMemoryBudget = 2 * 1024 * 1024;  // 2MB
-
 static unsigned UniqueIdToFileId(unsigned uniqueid)
 {
     return uniqueid >> 8;
@@ -114,7 +111,7 @@ static FcPattern* FontMatch(const char* type, FcType vtype, const void* value,
                 fcvalue.u.i = (int)(intptr_t)value;
                 break;
             default:
-                SkASSERT(!"FontMatch unhandled type");
+                SkDEBUGFAIL("FontMatch unhandled type");
         }
         FcPatternAdd(pattern, type, fcvalue, 0);
 
@@ -295,14 +292,14 @@ SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
 // static
 SkTypeface* SkFontHost::CreateTypefaceFromStream(SkStream* stream)
 {
-    SkASSERT(!"SkFontHost::CreateTypefaceFromStream unimplemented");
+    SkDEBUGFAIL("SkFontHost::CreateTypefaceFromStream unimplemented");
     return NULL;
 }
 
 // static
 SkTypeface* SkFontHost::CreateTypefaceFromFile(const char path[])
 {
-    SkASSERT(!"SkFontHost::CreateTypefaceFromFile unimplemented");
+    SkDEBUGFAIL("SkFontHost::CreateTypefaceFromFile unimplemented");
     return NULL;
 }
 
@@ -348,11 +345,11 @@ size_t SkFontHost::GetFileName(SkFontID fontID, char path[], size_t length,
 }
 
 void SkFontHost::Serialize(const SkTypeface*, SkWStream*) {
-    SkASSERT(!"SkFontHost::Serialize unimplemented");
+    SkDEBUGFAIL("SkFontHost::Serialize unimplemented");
 }
 
 SkTypeface* SkFontHost::Deserialize(SkStream* stream) {
-    SkASSERT(!"SkFontHost::Deserialize unimplemented");
+    SkDEBUGFAIL("SkFontHost::Deserialize unimplemented");
     return NULL;
 }
 
@@ -361,12 +358,3 @@ SkFontID SkFontHost::NextLogicalFont(SkFontID currFontID, SkFontID origFontID) {
     return 0;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-size_t SkFontHost::ShouldPurgeFontCache(size_t sizeAllocatedSoFar)
-{
-    if (sizeAllocatedSoFar > kFontCacheMemoryBudget)
-        return sizeAllocatedSoFar - kFontCacheMemoryBudget;
-    else
-        return 0;   // nothing to do
-}

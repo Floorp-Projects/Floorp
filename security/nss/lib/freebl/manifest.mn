@@ -150,6 +150,7 @@ CSRCS = \
 	$(MPI_SRCS) \
 	$(MPCPU_SRCS) \
 	$(ECL_SRCS) \
+	$(STUBS_SRCS) \
 	$(LOWHASH_SRCS) \
 	$(NULL)
 

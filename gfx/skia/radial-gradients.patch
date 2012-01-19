@@ -1,12 +1,12 @@
 diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/SkGradientShader.cpp
 --- a/gfx/skia/src/effects/SkGradientShader.cpp
 +++ b/gfx/skia/src/effects/SkGradientShader.cpp
-@@ -1652,17 +1652,20 @@ public:
+@@ -1665,17 +1665,20 @@ public:
          }
          return kRadial2_GradientType;
      }
  
-     virtual void shadeSpan(int x, int y, SkPMColor* SK_RESTRICT dstC, int count) {
+     virtual void shadeSpan(int x, int y, SkPMColor* SK_RESTRICT dstC, int count) SK_OVERRIDE {
          SkASSERT(count > 0);
  
          // Zero difference between radii:  fill with transparent black.
