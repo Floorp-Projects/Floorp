@@ -56,7 +56,7 @@ namespace JSC {
 
 static bool isVFPPresent()
 {
-#if WTF_OS_LINUX || WTF_OS_ANDROID
+#if WTF_PLATFORM_LINUX
     int fd = open("/proc/self/auxv", O_RDONLY);
     if (fd > 0) {
         Elf32_auxv_t aux;
