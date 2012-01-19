@@ -79,7 +79,12 @@ MIN_CPU_VERSION=5
 endif
 
 ifeq (,$(ANDROID_VERSION_CODE))
-ANDROID_VERSION_CODE=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10)
+# decrement the version code by 1 so native fennec will win any compatability ties
+ANDROID_VERSION_CODE=$(shell echo `$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10` + 1 | bc)
+endif
+
+ifeq (Tablets,$(MOZ_MOBILE_COMPAT))
+MOZ_TABLETS_ONLY=1
 endif
 
 DEFINES += \
@@ -92,6 +97,7 @@ DEFINES += \
   -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
   -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
   -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
+  -DMOZ_TABLETS_ONLY=$(MOZ_TABLETS_ONLY) \
   $(NULL)
 
 GARBAGE += \
