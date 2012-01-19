@@ -52,23 +52,11 @@
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 
-#include "MethodJIT-inl.h"
-
 using namespace js;
 using namespace js::mjit;
 
 namespace js {
 namespace mjit {
-
-static inline JSRejoinState ScriptedRejoin(uint32_t pcOffset)
-{
-    return REJOIN_SCRIPTED | (pcOffset << 1);
-}
-
-static inline JSRejoinState StubRejoin(RejoinState rejoin)
-{
-    return rejoin << 1;
-}
 
 static inline void
 SetRejoinState(StackFrame *fp, const CallSite &site, void **location)
@@ -97,12 +85,12 @@ CallsiteMatches(uint8_t *codeStart, const CallSite &site, void *location)
 }
 
 void
-Recompiler::patchCall(JITScript *jit, StackFrame *fp, void **location)
+Recompiler::patchCall(JITChunk *chunk, StackFrame *fp, void **location)
 {
-    uint8_t* codeStart = (uint8_t *)jit->code.m_code.executableAddress();
+    uint8_t* codeStart = (uint8_t *)chunk->code.m_code.executableAddress();
 
-    CallSite *callSites_ = jit->callSites();
-    for (uint32_t i = 0; i < jit->nCallSites; i++) {
+    CallSite *callSites_ = chunk->callSites();
+    for (uint32_t i = 0; i < chunk->nCallSites; i++) {
         if (CallsiteMatches(codeStart, callSites_[i], *location)) {
             JS_ASSERT(callSites_[i].inlineIndex == analyze::CrossScriptSSA::OUTER_FRAME);
             SetRejoinState(fp, callSites_[i], location);
@@ -114,7 +102,7 @@ Recompiler::patchCall(JITScript *jit, StackFrame *fp, void **location)
 }
 
 void
-Recompiler::patchNative(JSCompartment *compartment, JITScript *jit, StackFrame *fp,
+Recompiler::patchNative(JSCompartment *compartment, JITChunk *chunk, StackFrame *fp,
                         jsbytecode *pc, RejoinState rejoin)
 {
     /*
@@ -122,10 +110,10 @@ Recompiler::patchNative(JSCompartment *compartment, JITScript *jit, StackFrame *
      * The recompilation could have been triggered either by the native call
      * itself, or by a SplatApplyArgs preparing for the native call. Either
      * way, we don't want to patch up the call, but will instead steal the pool
-     * for the IC so it doesn't get freed with the JITScript, and patch up the
+     * for the IC so it doesn't get freed with the JITChunk, and patch up the
      * jump at the end to go to the interpoline.
      *
-     * When doing this, we do not reset the the IC itself; the JITScript must
+     * When doing this, we do not reset the the IC itself; the JITChunk must
      * be dead and about to be released due to the recompilation (or a GC).
      */
     fp->setRejoin(StubRejoin(rejoin));
@@ -139,8 +127,8 @@ Recompiler::patchNative(JSCompartment *compartment, JITScript *jit, StackFrame *
      * Find and patch all native call stubs attached to the given PC. There may
      * be multiple ones for getter stubs attached to e.g. a GETELEM.
      */
-    for (unsigned i = 0; i < jit->nativeCallStubs.length(); i++) {
-        NativeCallStub &stub = jit->nativeCallStubs[i];
+    for (unsigned i = 0; i < chunk->nativeCallStubs.length(); i++) {
+        NativeCallStub &stub = chunk->nativeCallStubs[i];
         if (stub.pc != pc)
             continue;
 
@@ -194,7 +182,7 @@ Recompiler::patchFrame(JSCompartment *compartment, VMFrame *f, JSScript *script)
         rejoin == REJOIN_NATIVE_GETTER) {
         /* Native call. */
         if (fp->script() == script) {
-            patchNative(compartment, fp->jit(), fp, f->regs.pc, rejoin);
+            patchNative(compartment, fp->jit()->chunk(f->regs.pc), fp, f->regs.pc, rejoin);
             f->stubRejoin = REJOIN_NATIVE_PATCHED;
         }
     } else if (rejoin == REJOIN_NATIVE_PATCHED) {
@@ -206,10 +194,17 @@ Recompiler::patchFrame(JSCompartment *compartment, VMFrame *f, JSScript *script)
             *addr = JS_FUNC_TO_DATA_PTR(void *, JaegerInterpoline);
             f->stubRejoin = 0;
         }
-    } else if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
-        patchCall(script->jitCtor, fp, addr);
-    } else if (script->jitNormal && script->jitNormal->isValidCode(*addr)) {
-        patchCall(script->jitNormal, fp, addr);
+    } else {
+        if (script->jitCtor) {
+            JITChunk *chunk = script->jitCtor->findCodeChunk(*addr);
+            if (chunk)
+                patchCall(chunk, fp, addr);
+        }
+        if (script->jitNormal) {
+            JITChunk *chunk = script->jitNormal->findCodeChunk(*addr);
+            if (chunk)
+                patchCall(chunk, fp, addr);
+        }
     }
 }
 
@@ -268,15 +263,18 @@ Recompiler::expandInlineFrames(JSCompartment *compartment,
      */
     compartment->types.frameExpansions++;
 
+    jsbytecode *pc = next ? next->prevpc(NULL) : f->regs.pc;
+    JITChunk *chunk = fp->jit()->chunk(pc);
+
     /*
      * Patch the VMFrame's return address if it is returning at the given inline site.
      * Note there is no worry about handling a native or CompileFunction call here,
      * as such IC stubs are not generated within inline frames.
      */
     void **frameAddr = f->returnAddressLocation();
-    uint8_t* codeStart = (uint8_t *)fp->jit()->code.m_code.executableAddress();
+    uint8_t* codeStart = (uint8_t *)chunk->code.m_code.executableAddress();
 
-    InlineFrame *inner = &fp->jit()->inlineFrames()[inlined->inlineIndex];
+    InlineFrame *inner = &chunk->inlineFrames()[inlined->inlineIndex];
     jsbytecode *innerpc = inner->fun->script()->code + inlined->pcOffset;
 
     StackFrame *innerfp = expandInlineFrameChain(fp, inner);
@@ -383,11 +381,6 @@ ClearAllFrames(JSCompartment *compartment)
     }
 }
 
-Recompiler::Recompiler(JSContext *cx, JSScript *script)
-  : cx(cx), script(script)
-{    
-}
-
 /*
  * Recompilation can be triggered either by the debugger (turning debug mode on for
  * a script or setting/clearing a trap), or by dynamic changes in type information
@@ -408,7 +401,7 @@ Recompiler::Recompiler(JSContext *cx, JSScript *script)
  *   redirect that entryncode to the interpoline.
  */
 void
-Recompiler::recompile(bool resetUses)
+Recompiler::clearStackReferences(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(script->hasJITCode());
 
@@ -449,8 +442,8 @@ Recompiler::recompile(bool resetUses)
                 void **addr = next->addressOfNativeReturnAddress();
 
                 if (JITCodeReturnAddress(*addr)) {
-                    JS_ASSERT(fp->jit()->isValidCode(*addr));
-                    patchCall(fp->jit(), fp, addr);
+                    JITChunk *chunk = fp->jit()->findCodeChunk(*addr);
+                    patchCall(chunk, fp, addr);
                 }
             }
 
@@ -460,42 +453,7 @@ Recompiler::recompile(bool resetUses)
         patchFrame(cx->compartment, f, script);
     }
 
-    if (script->jitNormal) {
-        cleanup(script->jitNormal);
-        ReleaseScriptCode(cx, script, false);
-    }
-    if (script->jitCtor) {
-        cleanup(script->jitCtor);
-        ReleaseScriptCode(cx, script, true);
-    }
-
-    if (resetUses) {
-        /*
-         * Wait for the script to get warm again before doing another compile,
-         * unless we are recompiling *because* the script got hot.
-         */
-        script->resetUseCount();
-    }
-
     cx->compartment->types.recompilations++;
-}
-
-void
-Recompiler::cleanup(JITScript *jit)
-{
-    while (!JS_CLIST_IS_EMPTY(&jit->callers)) {
-        JaegerSpew(JSpew_Recompile, "Purging IC caller\n");
-
-        JS_STATIC_ASSERT(offsetof(ic::CallICInfo, links) == 0);
-        ic::CallICInfo *ic = (ic::CallICInfo *) jit->callers.next;
-
-        uint8_t *start = (uint8_t *)ic->funGuard.executableAddress();
-        JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
-
-        repatch.repatch(ic->funGuard, NULL);
-        repatch.relink(ic->funJump, ic->slowPathStart);
-        ic->purgeGuardedObject();
-    }
 }
 
 } /* namespace mjit */
