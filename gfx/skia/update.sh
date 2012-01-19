@@ -106,4 +106,6 @@ patch -p3 < radial-gradients.patch
 patch -p3 < skia_restrict_problem.patch
 # Changes to SkUserConfig.h - no bug
 patch -p3 < user-config.patch
+# Bug 715718 - Unitialized variable 'margin' in compute_bounds : SkDraw.cpp
+patch -p3 < uninitialized-margin.patch
 
