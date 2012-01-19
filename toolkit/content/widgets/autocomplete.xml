@@ -166,7 +166,7 @@
 
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;"
-                onget="return parseInt(this.getAttribute('timeout')) || 50;"/>
+                onget="var t = parseInt(this.getAttribute('timeout')); return isNaN(t) ? 50 : t;"/>
 
       <property name="searchParam"
                 onget="return this.getAttribute('autocompletesearchparam') || '';"
