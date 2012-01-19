@@ -37,7 +37,7 @@
  *
  ***** END LICENSE BLOCK *****/
 
-/*global Components, ChromeWorker */
+/*global Components, Services, ChromeWorker */
 /*global TiltGL, TiltMath, EPSILON, vec3, mat4, quat4, TiltUtils */
 "use strict";
 
@@ -78,6 +78,7 @@ const ARCBALL_RESET_INTERVAL = 1000 / 60;
 const TILT_CRAFTER = "resource:///modules/devtools/TiltWorkerCrafter.js";
 const TILT_PICKER = "resource:///modules/devtools/TiltWorkerPicker.js";
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/TiltGL.jsm");
 Cu.import("resource:///modules/devtools/TiltMath.jsm");
 Cu.import("resource:///modules/devtools/TiltUtils.jsm");
@@ -94,6 +95,7 @@ let EXPORTED_SYMBOLS = ["TiltVisualizer"];
  *        {Window} contentWindow: the content window holding the visualized doc
  *      {Function} requestAnimationFrame: responsible with scheduling loops
  *   {InspectorUI} inspectorUI: necessary instance of the InspectorUI
+ *        {Object} notifications: necessary notifications for Tilt
  *      {Function} onError: optional, function called if initialization failed
  *      {Function} onLoad: optional, function called if initialization worked
  */
@@ -117,6 +119,7 @@ function TiltVisualizer(aProperties)
     aProperties.contentWindow,
     aProperties.requestAnimationFrame,
     aProperties.inspectorUI,
+    aProperties.notifications,
     aProperties.onError || null,
     aProperties.onLoad || null);
 
@@ -177,19 +180,26 @@ TiltVisualizer.prototype = {
  *                   function responsible with scheduling loop frames
  * @param {InspectorUI} aInspectorUI
  *                      necessary instance of the InspectorUI
+ * @param {Object} aNotifications
+ *                 necessary notifications for Tilt
  * @param {Function} onError
  *                   function called if initialization failed
  * @param {Function} onLoad
  *                   function called if initialization worked
  */
 TiltVisualizer.Presenter = function TV_Presenter(
-  aCanvas, aContentWindow, aRequestAnimationFrame, aInspectorUI,
+  aCanvas, aContentWindow, aRequestAnimationFrame, aInspectorUI, aNotifications,
   onError, onLoad)
 {
   this.canvas = aCanvas;
   this.contentWindow = aContentWindow;
   this.inspectorUI = aInspectorUI;
   this.tiltUI = aInspectorUI.chromeWin.Tilt;
+
+  /**
+   * Shortcut for accessing notifications strings.
+   */
+  this.NOTIFICATIONS = aNotifications;
 
   /**
    * Create the renderer, containing useful functions for easy drawing.
@@ -234,8 +244,9 @@ TiltVisualizer.Presenter = function TV_Presenter(
   /**
    * Variables holding information about the initial and current node selected.
    */
-  this._initialSelection = false; // true if an initial selection was made
   this._currentSelection = -1; // the selected node index
+  this._initialSelection = false; // true if an initial selection was made
+  this._initialMeshConfiguration = false; // true if the 3D mesh was configured
 
   /**
    * Variable specifying if the scene should be redrawn.
@@ -295,28 +306,12 @@ TiltVisualizer.Presenter = function TV_Presenter(
       this.drawVisualization();
     }
 
-    // call the attached ondraw event handler if specified (by the controller)
+    // call the attached ondraw function and handle all keyframe notifications
     if ("function" === typeof this.ondraw) {
       this.ondraw(this.frames);
     }
 
-    if (!TiltVisualizer.Prefs.introTransition && !this.isExecutingDestruction) {
-      this.frames = INTRO_TRANSITION_DURATION;
-    }
-    if (!TiltVisualizer.Prefs.outroTransition && this.isExecutingDestruction) {
-      this.frames = OUTRO_TRANSITION_DURATION;
-    }
-
-    if ("function" === typeof this.onInitializationFinished &&
-        this.frames === INTRO_TRANSITION_DURATION &&
-       !this.isExecutingDestruction) {
-      this.onInitializationFinished();
-    }
-    if ("function" === typeof this.onDestructionFinished &&
-        this.frames === OUTRO_TRANSITION_DURATION &&
-        this.isExecutingDestruction) {
-      this.onDestructionFinished();
-    }
+    this.handleKeyframeNotifications();
   }.bind(this);
 
   setup();
@@ -629,10 +624,6 @@ TiltVisualizer.Presenter.prototype = {
    */
   highlightNode: function TVP_highlightNode(aNode)
   {
-    if (!aNode) {
-      return;
-    }
-
     this.highlightNodeFor(this.traverseData.nodes.indexOf(aNode));
   },
 
@@ -701,10 +692,13 @@ TiltVisualizer.Presenter.prototype = {
     if (this._currentSelection === aNodeIndex) {
       return;
     }
+
     // if an invalid or nonexisted node is specified, disable the highlight
     if (aNodeIndex < 0) {
       this._currentSelection = -1;
       this.highlight.disabled = true;
+
+      Services.obs.notifyObservers(null, this.NOTIFICATIONS.UNHIGHLIGHTING, null);
       return;
     }
 
@@ -732,6 +726,8 @@ TiltVisualizer.Presenter.prototype = {
     this._currentSelection = aNodeIndex;
     this.inspectorUI.inspectNode(node, this.contentWindow.innerHeight < y ||
                                        this.contentWindow.pageYOffset > 0);
+
+    Services.obs.notifyObservers(null, this.NOTIFICATIONS.HIGHLIGHTING, null);
   },
 
   /**
@@ -758,6 +754,9 @@ TiltVisualizer.Presenter.prototype = {
     this.meshStacks.vertices = new renderer.VertexBuffer(meshData.vertices, 3);
     this.highlight.disabled = true;
     this.redraw = true;
+
+    Services.obs.notifyObservers(null,
+      this.NOTIFICATIONS.NODE_REMOVED, null);
   },
 
   /**
@@ -867,17 +866,40 @@ TiltVisualizer.Presenter.prototype = {
   },
 
   /**
-   * Checks if this object was initialized properly.
-   *
-   * @return {Boolean} true if the object was initialized properly
+   * Handles notifications at specific frame counts.
    */
-  isInitialized: function TVP_isInitialized()
+  handleKeyframeNotifications: function TV_handleKeyframeNotifications()
   {
-    return this.renderer && this.renderer.context;
+    if (!TiltVisualizer.Prefs.introTransition && !this.isExecutingDestruction) {
+      this.frames = INTRO_TRANSITION_DURATION;
+    }
+    if (!TiltVisualizer.Prefs.outroTransition && this.isExecutingDestruction) {
+      this.frames = OUTRO_TRANSITION_DURATION;
+    }
+
+    if (this.frames === INTRO_TRANSITION_DURATION &&
+       !this.isExecutingDestruction) {
+
+      Services.obs.notifyObservers(null, this.NOTIFICATIONS.INITIALIZED, null);
+
+      if ("function" === typeof this.onInitializationFinished) {
+        this.onInitializationFinished();
+      }
+    }
+
+    if (this.frames === OUTRO_TRANSITION_DURATION &&
+        this.isExecutingDestruction) {
+
+      Services.obs.notifyObservers(null, this.NOTIFICATIONS.BEFORE_DESTROYED, null);
+
+      if ("function" === typeof this.onDestructionFinished) {
+        this.onDestructionFinished();
+      }
+    }
   },
 
   /**
-   * Starts executing a destruction animation and executes a callback function
+   * Starts executing the destruction sequence and issues a callback function
    * when finished.
    *
    * @param {Function} aCallback
@@ -889,6 +911,10 @@ TiltVisualizer.Presenter.prototype = {
       this.isExecutingDestruction = true;
       this.onDestructionFinished = aCallback;
 
+      // if we execute the destruction after the initialization finishes,
+      // proceed normally; otherwise, skip everything and immediately issue
+      // the callback
+
       if (this.frames > OUTRO_TRANSITION_DURATION) {
         this.frames = 0;
         this.redraw = true;
@@ -896,6 +922,16 @@ TiltVisualizer.Presenter.prototype = {
         aCallback();
       }
     }
+  },
+
+  /**
+   * Checks if this object was initialized properly.
+   *
+   * @return {Boolean} true if the object was initialized properly
+   */
+  isInitialized: function TVP_isInitialized()
+  {
+    return this.renderer && this.renderer.context;
   },
 
   /**
@@ -975,7 +1011,7 @@ TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
 TiltVisualizer.Controller.prototype = {
 
   /**
-   * Adds all added events listeners required by this controller.
+   * Adds events listeners required by this controller.
    */
   addEventListeners: function TVC_addEventListeners()
   {
@@ -1156,9 +1192,10 @@ TiltVisualizer.Controller.prototype = {
   onKeyUp: function TVC_onKeyUp(e)
   {
     let code = e.keyCode || e.which;
+    let tilt = this.presenter.tiltUI;
 
     if (code === e.DOM_VK_ESCAPE) {
-      this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId, 1);
+      tilt.destroy(tilt.currentWindowId, true);
       return;
     }
     if (code === e.DOM_VK_X) {
@@ -1758,8 +1795,8 @@ TiltVisualizer.Arcball.prototype = {
   /**
    * Loads the keys to control this arcball.
    */
-  _loadKeys: function TVA__loadKeys() {
-
+  _loadKeys: function TVA__loadKeys()
+  {
     this.rotateKeys = {
       "up": Ci.nsIDOMKeyEvent["DOM_VK_W"],
       "down": Ci.nsIDOMKeyEvent["DOM_VK_S"],
