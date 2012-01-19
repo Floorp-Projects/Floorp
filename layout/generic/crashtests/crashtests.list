@@ -322,7 +322,7 @@ load 536692-1.xhtml
 load 541277-1.html
 load 541277-2.html
 asserts(4) load 541714-1.html
-asserts(5-6) load 541714-2.html
+asserts(4-7) load 541714-2.html
 load 542136-1.html
 load 545571-1.html
 load 547338.xul
