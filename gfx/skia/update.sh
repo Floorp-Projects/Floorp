@@ -56,7 +56,6 @@ cp $1/src/utils/mac/SampleApp.xib ./src/utils/mac/
 cp $1/src/utils/mac/*.cpp ./src/utils/mac/
 cp $1/src/utils/mac/*.h ./src/utils/mac/
 cp $1/src/utils/mac/*.mm ./src/utils/mac/
-cp $1/src/utils/mesa/*.cpp ./src/utils/mesa/
 cp $1/src/utils/SDL/*.cpp ./src/utils/SDL/
 cp $1/src/utils/*.cpp ./src/utils/
 cp $1/src/utils/*.h ./src/utils/

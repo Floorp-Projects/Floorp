@@ -6,10 +6,6 @@
  */
 
 
-#ifdef ANDROID
-    #include <machine/cpu-features.h>
-#endif
-
 #include "SkBlitRow.h"
 #include "SkBlitMask.h"
 #include "SkColorPriv.h"
@@ -554,7 +550,7 @@ static void S32A_Opaque_BlitRow32_neon(SkPMColor* SK_RESTRICT dst,
 #error The ARM asm version of S32A_Opaque_BlitRow32 does not support TEST_SRC_ALPHA
 #endif
 
-static void  __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
+static void S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
                                   const SkPMColor* SK_RESTRICT src,
                                   int count, U8CPU alpha) {
 
@@ -651,7 +647,7 @@ static void  __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Opaqu
 /*
  * ARM asm version of S32A_Blend_BlitRow32
  */
-static void __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Blend_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
+static void S32A_Blend_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
                                  const SkPMColor* SK_RESTRICT src,
                                  int count, U8CPU alpha) {
     asm volatile (
@@ -992,7 +988,7 @@ static void S32A_D565_Opaque_Dither_neon (uint16_t * SK_RESTRICT dst,
 
 	    /* calculate 'd', which will be 0..7 */
 	    /* dbase[] is 0..7; alpha is 0..256; 16 bits suffice */
-#if ANDROID
+#if SK_BUILD_FOR_ANDROID
 	    /* SkAlpha255To256() semantic a+1 vs a+a>>7 */
 	    alpha8 = vaddw_u8(vmovl_u8(sa), vdup_n_u8(1));
 #else
@@ -1309,10 +1305,16 @@ SkBlitRow::ColorProc SkBlitRow::PlatformColorProc() {
     return NULL;
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
-SkBlitMask::Proc SkBlitMask::PlatformProcs(SkBitmap::Config dstConfig,
-                                           SkMask::Format maskFormat,
-                                           SkColor color)
-{
-   return NULL;
+SkBlitMask::ColorProc SkBlitMask::PlatformColorProcs(SkBitmap::Config dstConfig,
+                                                     SkMask::Format maskFormat,
+                                                     SkColor color) {
+    return NULL;
+}
+
+SkBlitMask::RowProc SkBlitMask::PlatformRowProcs(SkBitmap::Config dstConfig,
+                                                 SkMask::Format maskFormat,
+                                                 RowFlags flags) {
+    return NULL;
 }
