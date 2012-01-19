@@ -640,6 +640,14 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
         style.AssignLiteral("2");
         tile.AssignLiteral("0");
         break;
+      case BACKGROUND_FILL:
+        style.AssignLiteral("10");
+        tile.AssignLiteral("0");
+        break;
+      case BACKGROUND_FIT:
+        style.AssignLiteral("6");
+        tile.AssignLiteral("0");
+        break;
     }
 
     rv = regKey->WriteStringValue(NS_LITERAL_STRING("TileWallpaper"), tile);
