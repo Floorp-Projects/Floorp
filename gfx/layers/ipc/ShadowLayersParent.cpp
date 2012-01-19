@@ -47,6 +47,7 @@
 #include "mozilla/unused.h"
 
 #include "mozilla/layout/RenderFrameParent.h"
+#include "CompositorParent.h"
 
 #include "gfxSharedImageSurface.h"
 
@@ -121,11 +122,11 @@ ShadowChild(const OpRemoveChild& op)
 
 //--------------------------------------------------
 // ShadowLayersParent
-ShadowLayersParent::ShadowLayersParent(ShadowLayerManager* aManager)
-  : mDestroyed(false)
+ShadowLayersParent::ShadowLayersParent(ShadowLayerManager* aManager,
+                                       ShadowLayersManager* aLayersManager)
+  : mLayerManager(aManager), mShadowLayersManager(aLayersManager), mDestroyed(false)
 {
   MOZ_COUNT_CTOR(ShadowLayersParent);
-  mLayerManager = aManager;
 }
 
 ShadowLayersParent::~ShadowLayersParent()
@@ -382,7 +383,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // other's buffer contents.
   ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
 
-  Frame()->ShadowLayersUpdated();
+  mShadowLayersManager->ShadowLayersUpdated();
 
   return true;
 }
@@ -398,12 +399,6 @@ ShadowLayersParent::DeallocPLayer(PLayerParent* actor)
 {
   delete actor;
   return true;
-}
-
-RenderFrameParent*
-ShadowLayersParent::Frame()
-{
-  return static_cast<RenderFrameParent*>(Manager());
 }
 
 void
