@@ -43,7 +43,7 @@
 #include "TelephonyCommon.h"
 
 #include "nsIDOMTelephonyCall.h"
-#include "nsITelephone.h"
+#include "nsIRadioInterfaceLayer.h"
 
 class nsPIDOMWindow;
 
@@ -131,7 +131,7 @@ public:
 private:
   TelephonyCall()
   : mCallIndex(kOutgoingPlaceholderCallIndex),
-    mCallState(nsITelephone::CALL_STATE_UNKNOWN), mLive(false), mOutgoing(false)
+    mCallState(nsIRadioInterfaceLayer::CALL_STATE_UNKNOWN), mLive(false), mOutgoing(false)
   { }
 
   ~TelephonyCall()
