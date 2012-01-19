@@ -56,7 +56,7 @@ public class SQLiteBridge {
     // Remember column names from last query result.
     private ArrayList<String> mColumns;
 
-    // JNI code in $(topdir)/storage/android/..
+    // JNI code in $(topdir)/mozglue/android/..
     private static native void sqliteCall(String aDb, String aQuery,
                                           String[] aParams,
                                           ArrayList<String> aColumns,
