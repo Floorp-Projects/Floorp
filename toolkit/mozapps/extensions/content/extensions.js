@@ -2990,6 +2990,9 @@ var gDetailView = {
       let hideFindUpdates = AddonManager.shouldAutoUpdate(this._addon);
       document.getElementById("detail-findUpdates-btn").hidden = hideFindUpdates;
     }
+
+    if (aProperties.indexOf("appDisabled") != -1)
+      this.updateState();
   },
 
   onExternalInstall: function(aAddon, aExistingAddon, aNeedsRestart) {
