@@ -6228,15 +6228,11 @@ mjit::Compiler::iterNext(ptrdiff_t offset)
     /* Get cursor. */
     masm.loadPtr(Address(T1, offsetof(NativeIterator, props_cursor)), T2);
 
-    /* Test if the jsid is a string. */
+    /* Get the next string in the iterator. */
     masm.loadPtr(T2, T3);
-    masm.move(T3, T4);
-    masm.andPtr(Imm32(JSID_TYPE_MASK), T4);
-    notFast = masm.branchTestPtr(Assembler::NonZero, T4, T4);
-    stubcc.linkExit(notFast, Uses(1));
 
     /* It's safe to increase the cursor now. */
-    masm.addPtr(Imm32(sizeof(jsid)), T2, T4);
+    masm.addPtr(Imm32(sizeof(JSString*)), T2, T4);
     masm.storePtr(T4, Address(T1, offsetof(NativeIterator, props_cursor)));
 
     frame.freeReg(T4);

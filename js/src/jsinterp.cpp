@@ -1350,13 +1350,9 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
         NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
-            jsid id = *ni->current();
-            if (JSID_IS_ATOM(id)) {
-                rval->setString(JSID_TO_STRING(id));
-                ni->incCursor();
-                return true;
-            }
-            /* Take the slow path if we have to stringify a numeric property name. */
+            rval->setString(*ni->current());
+            ni->incCursor();
+            return true;
         }
     }
     return js_IteratorNext(cx, iterobj, rval);
