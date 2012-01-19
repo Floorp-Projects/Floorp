@@ -2555,6 +2555,9 @@ class MGenericSetProperty
     bool congruentTo(MDefinition * const &) const {
         return false;
     }
+    TypePolicy *typePolicy() {
+        return this;
+    }
 };
 
 class MCallGetProperty : public MCallGetPropertyOrName
