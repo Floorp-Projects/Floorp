@@ -106,8 +106,6 @@ class LIRGeneratorShared : public MInstructionVisitor
     inline LUse useRegisterAtStart(MDefinition *mir);
     inline LUse useFixed(MDefinition *mir, Register reg);
     inline LUse useFixed(MDefinition *mir, FloatRegister reg);
-    inline LUse useFixedAtStart(MDefinition *mir, Register reg);
-    inline LUse useFixedAtStart(MDefinition *mir, FloatRegister reg);
     inline LAllocation useOrConstant(MDefinition *mir);
     // "Any" is architecture dependent, and will include registers and stack slots on X86,
     // and only registers on ARM.

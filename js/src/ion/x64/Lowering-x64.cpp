@@ -173,7 +173,7 @@ LIRGeneratorX64::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
 bool
 LIRGeneratorX64::lowerDivI(MDiv *div)
 {
-    LDivI *lir = new LDivI(useFixedAtStart(div->lhs(), rax), useRegister(div->rhs()), tempFixed(rdx));
+    LDivI *lir = new LDivI(useFixed(div->lhs(), rax), useRegister(div->rhs()), tempFixed(rdx));
     return defineFixed(lir, div, LAllocation(AnyRegister(rax))) && assignSnapshot(lir);
 }
 
