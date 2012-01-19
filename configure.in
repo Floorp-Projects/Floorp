@@ -460,6 +460,9 @@ case "$target" in
     if test -z "$ANDROID_PACKAGE_NAME" ; then
         ANDROID_PACKAGE_NAME='org.mozilla.$(MOZ_APP_NAME)'
     fi
+    if test -z "$MOZ_MOBILE_COMPAT" ; then
+        MOZ_MOBILE_COMPAT='All'
+    fi
 
     AC_DEFINE(ANDROID)
     AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
@@ -481,6 +484,7 @@ AC_SUBST(ANDROID_PLATFORM)
 AC_SUBST(ANDROID_SDK)
 AC_SUBST(ANDROID_PLATFORM_TOOLS)
 AC_SUBST(ANDROID_PACKAGE_NAME)
+AC_SUBST(MOZ_MOBILE_COMPAT)
 AC_SUBST(OBJCOPY)
 
 dnl ========================================================
