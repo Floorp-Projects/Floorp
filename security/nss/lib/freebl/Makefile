@@ -76,7 +76,11 @@ endif
 
 ifeq ($(FREEBL_NO_DEPEND),1)
 	DEFINES += -DFREEBL_NO_DEPEND
-	LOWHASH_SRCS = stubs.c nsslowhash.c
+	STUBS_SRCS = stubs.c
+endif
+
+ifeq ($(FREEBL_LOWHASH),1)
+	LOWHASH_SRCS = nsslowhash.c
 	LOWHASH_EXPORTS = nsslowhash.h
 	MAPFILE_SOURCE = freebl_hash.def
 else
