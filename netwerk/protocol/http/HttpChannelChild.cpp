@@ -196,7 +196,7 @@ class StartRequestEvent : public ChannelEvent
   StartRequestEvent(HttpChannelChild* child,
                     const nsHttpResponseHead& responseHead,
                     const bool& useResponseHead,
-                    const RequestHeaderTuples& requestHeaders,
+                    const nsHttpHeaderArray& requestHeaders,
                     const bool& isFromCache,
                     const bool& cacheEntryAvailable,
                     const PRUint32& cacheExpirationTime,
@@ -227,7 +227,7 @@ class StartRequestEvent : public ChannelEvent
  private:
   HttpChannelChild* mChild;
   nsHttpResponseHead mResponseHead;
-  RequestHeaderTuples mRequestHeaders;
+  nsHttpHeaderArray mRequestHeaders;
   bool mUseResponseHead;
   bool mIsFromCache;
   bool mCacheEntryAvailable;
@@ -241,7 +241,7 @@ class StartRequestEvent : public ChannelEvent
 bool 
 HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const bool& useResponseHead,
-                                     const RequestHeaderTuples& requestHeaders,
+                                     const nsHttpHeaderArray& requestHeaders,
                                      const bool& isFromCache,
                                      const bool& cacheEntryAvailable,
                                      const PRUint32& cacheExpirationTime,
@@ -268,7 +268,7 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
 void 
 HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
                                  const bool& useResponseHead,
-                                 const RequestHeaderTuples& requestHeaders,
+                                 const nsHttpHeaderArray& requestHeaders,
                                  const bool& isFromCache,
                                  const bool& cacheEntryAvailable,
                                  const PRUint32& cacheExpirationTime,
@@ -295,11 +295,7 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
   // replace our request headers with what actually got sent in the parent
-  mRequestHead.ClearHeaders();
-  for (PRUint32 i = 0; i < requestHeaders.Length(); i++) {
-    mRequestHead.Headers().SetHeader(nsHttp::ResolveAtom(requestHeaders[i].mHeader),
-                                     requestHeaders[i].mValue);
-  }
+  mRequestHead.Headers() = requestHeaders;
 
   // notify "http-on-examine-response" observers
   gHttpHandler->OnExamineResponse(this);
@@ -902,7 +898,7 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
       do_QueryInterface(mRedirectChannelChild);
   if (newHttpChannelChild && NS_SUCCEEDED(result)) {
     newHttpChannelChild->AddCookiesToRequest();
-    newHttpChannelChild->GetHeaderTuples(&headerTuples);
+    newHttpChannelChild->GetClientSetRequestHeaders(&headerTuples);
   }
 
   // After we verify redirect, nsHttpChannel may hit the network: must give
@@ -1074,7 +1070,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI),
                 IPC::URI(mDocumentURI), IPC::URI(mReferrer), mLoadFlags,
-                mRequestHeaders, mRequestHead.Method(),
+                mClientSetRequestHeaders, mRequestHead.Method(),
                 IPC::InputStream(mUploadStream), mUploadStreamHasHeaders,
                 mPriority, mRedirectionLimit, mAllowPipelining,
                 mForceAllowThirdPartyCookie, mSendResumeAt,
@@ -1097,7 +1093,7 @@ HttpChannelChild::SetRequestHeader(const nsACString& aHeader,
   if (NS_FAILED(rv))
     return rv;
 
-  RequestHeaderTuple* tuple = mRequestHeaders.AppendElement();
+  RequestHeaderTuple* tuple = mClientSetRequestHeaders.AppendElement();
   if (!tuple)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1442,9 +1438,9 @@ NS_IMETHODIMP HttpChannelChild::AddCookiesToRequest()
   return NS_OK;
 }
 
-NS_IMETHODIMP HttpChannelChild::GetHeaderTuples(RequestHeaderTuples **aHeaderTuples)
+NS_IMETHODIMP HttpChannelChild::GetClientSetRequestHeaders(RequestHeaderTuples **aRequestHeaders)
 {
-  *aHeaderTuples = &mRequestHeaders;
+  *aRequestHeaders = &mClientSetRequestHeaders;
   return NS_OK;
 }
 
