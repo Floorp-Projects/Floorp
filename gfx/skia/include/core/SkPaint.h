@@ -841,6 +841,9 @@ public:
     void getTextPath(const void* text, size_t length, SkScalar x, SkScalar y,
                      SkPath* path) const;
 
+    void getPosTextPath(const void* text, size_t length, 
+                        const SkPoint pos[], SkPath* path) const;
+
 #ifdef SK_BUILD_FOR_ANDROID
     const SkGlyph& getUnicharMetrics(SkUnichar);
     const void* findImage(const SkGlyph&);

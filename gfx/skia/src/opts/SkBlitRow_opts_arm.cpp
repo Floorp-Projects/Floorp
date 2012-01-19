@@ -550,7 +550,7 @@ static void S32A_Opaque_BlitRow32_neon(SkPMColor* SK_RESTRICT dst,
 #error The ARM asm version of S32A_Opaque_BlitRow32 does not support TEST_SRC_ALPHA
 #endif
 
-static void S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
+static void  __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
                                   const SkPMColor* SK_RESTRICT src,
                                   int count, U8CPU alpha) {
 
@@ -647,7 +647,7 @@ static void S32A_Opaque_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
 /*
  * ARM asm version of S32A_Blend_BlitRow32
  */
-static void S32A_Blend_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
+static void __attribute((noinline,optimize("-fomit-frame-pointer"))) S32A_Blend_BlitRow32_arm(SkPMColor* SK_RESTRICT dst,
                                  const SkPMColor* SK_RESTRICT src,
                                  int count, U8CPU alpha) {
     asm volatile (
