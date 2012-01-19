@@ -4040,8 +4040,8 @@ static JSFunctionSpec shell_functions[] = {
 #ifdef JS_METHODJIT
     JS_FN("mjitcodestats",  MJitCodeStats,  0,0),
     JS_FN("mjitdatastats",  MJitDataStats,  0,0),
-    JS_FN("mjitChunkLimit", MJitChunkLimit, 1,0),
 #endif
+    JS_FN("mjitChunkLimit", MJitChunkLimit, 1,0),
     JS_FN("stringstats",    StringStats,    0,0),
     JS_FN("newGlobal",      NewGlobal,      1,0),
     JS_FN("parseLegacyJSON",ParseLegacyJSON,1,0),
@@ -4187,8 +4187,8 @@ static const char *const shell_help_messages[] = {
 #ifdef JS_METHODJIT
 "mjitcodestats()          Return stats on mjit code memory usage.",
 "mjitdatastats()          Return stats on mjit data memory usage.",
-"mjitChunkLimit(N)        Specify limit on compiled chunk size during mjit compilation.",
 #endif
+"mjitChunkLimit(N)        Specify limit on compiled chunk size during mjit compilation.",
 "stringstats()            Return stats on string memory usage.",
 "newGlobal(kind)          Return a new global object, in the current\n"
 "                         compartment if kind === 'same-compartment' or in a\n"
