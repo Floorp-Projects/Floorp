@@ -265,17 +265,13 @@ WinLaunchChild(const PRUnichar *exePath,
   si.lpDesktop = L"winsta0\\Default";
   PROCESS_INFORMATION pi = {0};
 
-  DWORD creationFlags = 0;
-#ifdef DEBUG
-  creationFlags |= CREATE_NEW_CONSOLE;
-#endif
   if (userToken == NULL) {
     ok = CreateProcessW(exePath,
                         cl,
                         NULL,  // no special security attributes
                         NULL,  // no special thread attributes
                         FALSE, // don't inherit filehandles
-                        creationFlags,
+                        0,     // creation flags
                         NULL,  // inherit my environment
                         NULL,  // use my current directory
                         &si,
@@ -294,11 +290,7 @@ WinLaunchChild(const PRUnichar *exePath,
                               NULL,  // no special security attributes
                               NULL,  // no special thread attributes
                               FALSE, // don't inherit filehandles
-                              CREATE_DEFAULT_ERROR_MODE |
-#ifdef DEBUG
-                              CREATE_NEW_CONSOLE |
-#endif
-                              CREATE_UNICODE_ENVIRONMENT,                              
+                              0,     // creation flags
                               environmentBlock,
                               NULL,  // use my current directory
                               &si,
