@@ -80,13 +80,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return uri.buildUpon().appendQueryParameter(BrowserContract.PARAM_PROFILE, mProfile).build();
     }
 
-    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter) {
+    private Cursor filterAllSites(ContentResolver cr, String[] projection, CharSequence constraint, int limit, CharSequence urlFilter) {
         Cursor c = cr.query(appendProfileAndLimit(History.CONTENT_URI, limit),
-                            new String[] { History._ID,
-                                           History.URL,
-                                           History.TITLE,
-                                           History.FAVICON,
-                                           History.THUMBNAIL },
+                            projection,
                             (urlFilter != null ? "(" + History.URL + " NOT LIKE ? ) AND " : "" ) + 
                             "(" + History.URL + " LIKE ? OR " + History.TITLE + " LIKE ?)",
                             urlFilter == null ? new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%"} :
@@ -98,6 +94,28 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                             History.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000 + 120) DESC");
 
         return new LocalDBCursor(c);
+    }
+
+    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
+        return filterAllSites(cr,
+                              new String[] { History._ID,
+                                             History.URL,
+                                             History.TITLE,
+                                             History.FAVICON },
+                              constraint,
+                              limit,
+                              null);
+    }
+
+    public Cursor getTopSites(ContentResolver cr, int limit) {
+        return filterAllSites(cr,
+                              new String[] { History._ID,
+                                             History.URL,
+                                             History.TITLE,
+                                             History.THUMBNAIL },
+                              "",
+                              limit,
+                              BrowserDB.ABOUT_PAGES_URL_FILTER);
     }
 
     private void truncateHistory(ContentResolver cr) {
