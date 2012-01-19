@@ -1277,13 +1277,10 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
     JSProperty *prop;
     JSBool ok;
 
-    if (JOF_OPMODE(*pc) == JOF_NAME) {
-        bool global = js_CodeSpec[*pc].format & JOF_GNAME;
-        ok = FindProperty(cx, name, global, &obj, &pobj, &prop);
-    } else {
-        obj = start;
-        ok = LookupProperty(cx, obj, name, &pobj, &prop);
-    }
+    if (JOF_OPMODE(*pc) == JOF_NAME)
+        ok = FindProperty(cx, name, start, &obj, &pobj, &prop);
+    else
+        ok = LookupProperty(cx, start, name, &pobj, &prop);
     JS_ASSERT(ok);
 
     if (cx->runtime->gcNumber != sample)
@@ -2613,7 +2610,7 @@ BEGIN_CASE(JSOP_DELNAME)
     LOAD_NAME(0, name);
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindProperty(cx, name, false, &obj, &obj2, &prop))
+    if (!FindProperty(cx, name, cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         goto error;
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -3092,7 +3089,7 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
 
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, false, false, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, false, cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         goto error;
 
     Value v;

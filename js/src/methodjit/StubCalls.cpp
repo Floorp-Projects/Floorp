@@ -297,7 +297,7 @@ stubs::ImplicitThis(VMFrame &f, PropertyName *name)
 {
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(f.cx, name, false, false, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(f.cx, name, false, f.cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         THROW();
 
     if (!ComputeImplicitThis(f.cx, obj, &f.regs.sp[0]))
@@ -1626,7 +1626,7 @@ stubs::DelName(VMFrame &f, PropertyName *name)
 {
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindProperty(f.cx, name, false, &obj, &obj2, &prop))
+    if (!FindProperty(f.cx, name, f.cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         THROW();
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
