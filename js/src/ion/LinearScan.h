@@ -356,7 +356,6 @@ class LiveInterval
 
     void addUse(UsePosition *use);
     UsePosition *nextUseAfter(CodePosition pos);
-    UsePosition *fixedUseAt(CodePosition pos);
     CodePosition nextUsePosAfter(CodePosition pos);
     CodePosition firstIncompatibleUse(LAllocation alloc);
 
@@ -382,6 +381,7 @@ class VirtualRegister
     LDefinition *def_;
     Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
     LMoveGroup *movesBefore_;
+    LMoveGroup *inputMoves_;
     LMoveGroup *movesAfter_;
     LAllocation *canonicalSpill_;
     CodePosition spillPosition_ ;
@@ -452,6 +452,12 @@ class VirtualRegister
     }
     LMoveGroup *movesBefore() const {
         return movesBefore_;
+    }
+    void setInputMoves(LMoveGroup *moves) {
+        inputMoves_ = moves;
+    }
+    LMoveGroup *inputMoves() const {
+        return inputMoves_;
     }
     void setMovesAfter(LMoveGroup *moves) {
         movesAfter_ = moves;
@@ -621,10 +627,12 @@ class LinearScanAllocator
     AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
+    LMoveGroup *getInputMoveGroup(CodePosition pos);
     LMoveGroup *getMoveGroupAfter(CodePosition pos);
     bool addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
-    bool moveBeforeAlloc(CodePosition pos, LAllocation *from, LAllocation *to);
+    bool moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to);
+    bool moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to);
     bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to);
     void setIntervalRequirement(LiveInterval *interval);
     size_t findFirstSafepoint(LiveInterval *interval, size_t firstSafepoint);

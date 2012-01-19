@@ -262,6 +262,12 @@ CodeGenerator::visitLabel(LLabel *lir)
 }
 
 bool
+CodeGenerator::visitNop(LNop *lir)
+{
+    return true;
+}
+
+bool
 CodeGenerator::visitCaptureAllocations(LCaptureAllocations *)
 {
     return true;

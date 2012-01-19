@@ -71,6 +71,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool generate();
 
     bool visitLabel(LLabel *lir);
+    bool visitNop(LNop *lir);
     bool visitCaptureAllocations(LCaptureAllocations *lir);
     bool visitGoto(LGoto *lir);
     bool visitParameter(LParameter *lir);
