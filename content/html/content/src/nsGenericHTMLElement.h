@@ -471,10 +471,10 @@ public:
    * @param aState the history state object (out param)
    * @param aKey the key (out param)
    */
-  static nsresult GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
-                                         bool aRead,
-                                         nsILayoutHistoryState** aState,
-                                         nsACString& aKey);
+  static already_AddRefed<nsILayoutHistoryState>
+  GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
+                         bool aRead,
+                         nsACString& aKey);
   /**
    * Restore the state for a form control.  Ends up calling
    * nsIFormControl::RestoreState().
@@ -869,7 +869,7 @@ public:
   {
     return NS_OK;
   }
-  
+
   virtual bool RestoreState(nsPresState* aState)
   {
     return false;

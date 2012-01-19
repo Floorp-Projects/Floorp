@@ -75,9 +75,6 @@ using namespace skia_advanced_typeface_metrics_utils;
 static const uint16_t BUFFERSIZE = (16384 - 32);
 static uint8_t glyphbuf[BUFFERSIZE];
 
-// Give 1MB font cache budget
-#define FONT_CACHE_MEMORY_BUDGET    (1024 * 1024)
-
 /**
  *  Since LOGFONT wants its textsize as an int, and we support fractional sizes,
  *  and since we have a cache of LOGFONTs for our tyepfaces, we always set the
@@ -204,6 +201,11 @@ SkFontID SkFontHost::NextLogicalFont(SkFontID currFontID, SkFontID origFontID) {
   // This function is implemented on Android, but doesn't have much
   // meaning here.
   return 0;
+}
+
+static void ensure_typeface_accessible(SkFontID fontID) {
+    LogFontTypeface* face = (LogFontTypeface*)SkTypefaceCache::FindByID(fontID);
+    SkFontHost::EnsureTypefaceAccessible(*face);
 }
 
 static void GetLogFontByID(SkFontID fontID, LOGFONT* lf) {
@@ -396,9 +398,11 @@ const void* HDCOffscreen::draw(const SkGlyph& glyph, bool isBW,
     SetWorldTransform(fDC, &xform);
 
     uint16_t glyphID = glyph.getGlyphID();
-    ExtTextOutW(fDC, 0, 0, ETO_GLYPH_INDEX, NULL, reinterpret_cast<LPCWSTR>(&glyphID), 1, NULL);
+    BOOL ret = ExtTextOutW(fDC, 0, 0, ETO_GLYPH_INDEX, NULL, reinterpret_cast<LPCWSTR>(&glyphID), 1, NULL);
     GdiFlush();
-
+    if (0 == ret) {
+        return NULL;
+    }
     *srcRBPtr = srcRB;
     // offset to the start of the image
     return (const char*)fBits + (fHeight - glyph.fHeight) * srcRB;
@@ -464,15 +468,7 @@ static BYTE compute_quality(const SkScalerContext::Rec& rec) {
         case SkMask::kLCD32_Format:
             return CLEARTYPE_QUALITY;
         default:
-            // here we just want AA, but we may have to force the issue
-            // since sometimes GDI will instead really give us BW
-            // (for some fonts and some sizes)
-            if (rec.fFlags & SkScalerContext::kForceAA_Flag) {
-                return CLEARTYPE_QUALITY;
-            } else {
-                return ANTIALIASED_QUALITY;
-            }
-            break;
+            return ANTIALIASED_QUALITY;
     }
 }
 
@@ -509,7 +505,7 @@ SkScalerContext_Windows::SkScalerContext_Windows(const SkDescriptor* desc)
 
     // if we're rotated, or want fractional widths, create a hires font
     fHiResFont = 0;
-    if (needHiResMetrics(fRec.fPost2x2) || (fRec.fFlags & kSubpixelPositioning_Flag)) {
+    if (needHiResMetrics(fRec.fPost2x2)) {
         lf.lfHeight = -HIRES_TEXTSIZE;
         fHiResFont = CreateFontIndirect(&lf);
 
@@ -595,6 +591,10 @@ void SkScalerContext_Windows::generateMetrics(SkGlyph* glyph) {
     // Note: need to use GGO_GRAY8_BITMAP instead of GGO_METRICS because GGO_METRICS returns a smaller
     // BlackBlox; we need the bigger one in case we need the image.  fAdvance is the same.
     uint32_t ret = GetGlyphOutlineW(fDDC, glyph->getGlyphID(0), GGO_GRAY8_BITMAP | GGO_GLYPH_INDEX, &gm, 0, NULL, &fMat22);
+    if (GDI_ERROR == ret) {
+        ensure_typeface_accessible(fRec.fFontID);
+        ret = GetGlyphOutlineW(fDDC, glyph->getGlyphID(0), GGO_GRAY8_BITMAP | GGO_GLYPH_INDEX, &gm, 0, NULL, &fMat22);
+    }
 
     if (GDI_ERROR != ret) {
         if (ret == 0) {
@@ -653,6 +653,10 @@ void SkScalerContext_Windows::generateFontMetrics(SkPaint::FontMetrics* mx, SkPa
     OUTLINETEXTMETRIC otm;
 
     uint32_t ret = GetOutlineTextMetrics(fDDC, sizeof(otm), &otm);
+    if (GDI_ERROR == ret) {
+        ensure_typeface_accessible(fRec.fFontID);
+        ret = GetOutlineTextMetrics(fDDC, sizeof(otm), &otm);
+    }
     if (sizeof(otm) != ret) {
       return;
     }
@@ -849,6 +853,9 @@ static inline unsigned clamp255(unsigned x) {
     return x - (x >> 8);
 }
 
+#define WHITE_LUMINANCE_LIMIT   0xA0
+#define BLACK_LUMINANCE_LIMIT   0x40
+
 void SkScalerContext_Windows::generateImage(const SkGlyph& glyph) {
     SkAutoMutexAcquire  ac(gFTMutex);
 
@@ -856,11 +863,8 @@ void SkScalerContext_Windows::generateImage(const SkGlyph& glyph) {
 
     const bool isBW = SkMask::kBW_Format == fRec.fMaskFormat;
     const bool isAA = !isLCD(fRec);
-
-    bool isWhite = SkToBool(fRec.fFlags & SkScalerContext::kGammaForWhite_Flag);
-    bool isBlack = SkToBool(fRec.fFlags & SkScalerContext::kGammaForBlack_Flag);
-    SkASSERT(!(isWhite && isBlack));
-    SkASSERT(!isBW || (!isWhite && !isBlack));
+    bool isWhite = fRec.getLuminanceByte() >= WHITE_LUMINANCE_LIMIT;
+    bool isBlack = fRec.getLuminanceByte() <= BLACK_LUMINANCE_LIMIT;
 
     SkGdiRGB fgColor;
     uint32_t rgbXOR;
@@ -879,9 +883,13 @@ void SkScalerContext_Windows::generateImage(const SkGlyph& glyph) {
 
     size_t srcRB;
     const void* bits = fOffscreen.draw(glyph, isBW, fgColor, &srcRB);
-    if (!bits) {
-        sk_bzero(glyph.fImage, glyph.computeImageSize());
-        return;
+    if (NULL == bits) {
+        ensure_typeface_accessible(fRec.fFontID);
+        bits = fOffscreen.draw(glyph, isBW, fgColor, &srcRB);
+        if (NULL == bits) {
+            sk_bzero(glyph.fImage, glyph.computeImageSize());
+            return;
+        }
     }
 
     if (table) {
@@ -945,6 +953,10 @@ void SkScalerContext_Windows::generatePath(const SkGlyph& glyph, SkPath* path) {
 
     GLYPHMETRICS gm;
     uint32_t total_size = GetGlyphOutlineW(fDDC, glyph.fID, GGO_NATIVE | GGO_GLYPH_INDEX, &gm, BUFFERSIZE, glyphbuf, &fMat22);
+    if (GDI_ERROR == total_size) {
+        ensure_typeface_accessible(fRec.fFontID);
+        total_size = GetGlyphOutlineW(fDDC, glyph.fID, GGO_NATIVE | GGO_GLYPH_INDEX, &gm, BUFFERSIZE, glyphbuf, &fMat22);
+    }
 
     if (GDI_ERROR != total_size) {
 
@@ -996,11 +1008,11 @@ void SkScalerContext_Windows::generatePath(const SkGlyph& glyph, SkPath* path) {
 }
 
 void SkFontHost::Serialize(const SkTypeface* face, SkWStream* stream) {
-    SkASSERT(!"SkFontHost::Serialize unimplemented");
+    SkDEBUGFAIL("SkFontHost::Serialize unimplemented");
 }
 
 SkTypeface* SkFontHost::Deserialize(SkStream* stream) {
-    SkASSERT(!"SkFontHost::Deserialize unimplemented");
+    SkDEBUGFAIL("SkFontHost::Deserialize unimplemented");
     return NULL;
 }
 
@@ -1040,8 +1052,12 @@ SkAdvancedTypefaceMetrics* SkFontHost::GetAdvancedTypefaceMetrics(
     // To request design units, create a logical font whose height is specified
     // as unitsPerEm.
     OUTLINETEXTMETRIC otm;
-    if (!GetOutlineTextMetrics(hdc, sizeof(otm), &otm) ||
-        !GetTextFace(hdc, LF_FACESIZE, lf.lfFaceName)) {
+    unsigned int otmRet = GetOutlineTextMetrics(hdc, sizeof(otm), &otm);
+    if (0 == otmRet) {
+        ensure_typeface_accessible(fontID);
+        otmRet = GetOutlineTextMetrics(hdc, sizeof(otm), &otm);
+    }
+    if (!otmRet || !GetTextFace(hdc, LF_FACESIZE, lf.lfFaceName)) {
         goto Error;
     }
     lf.lfHeight = -SkToS32(otm.otmEMSquare);
@@ -1184,6 +1200,10 @@ SkStream* SkFontHost::OpenStream(SkFontID uniqueID) {
     DWORD tables[2] = {kTTCTag, 0};
     for (int i = 0; i < SK_ARRAY_COUNT(tables); i++) {
         size_t bufferSize = GetFontData(hdc, tables[i], 0, NULL, 0);
+        if (bufferSize == GDI_ERROR) {
+            ensure_typeface_accessible(uniqueID);
+            bufferSize = GetFontData(hdc, tables[i], 0, NULL, 0);
+        }
         if (bufferSize != GDI_ERROR) {
             stream = new SkMemoryStream(bufferSize);
             if (GetFontData(hdc, tables[i], 0, (void*)stream->getMemoryBase(),
@@ -1249,13 +1269,6 @@ SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
     return SkCreateTypefaceFromLOGFONT(lf);
 }
 
-size_t SkFontHost::ShouldPurgeFontCache(size_t sizeAllocatedSoFar) {
-    if (sizeAllocatedSoFar > FONT_CACHE_MEMORY_BUDGET)
-        return sizeAllocatedSoFar - FONT_CACHE_MEMORY_BUDGET;
-    else
-        return 0;   // nothing to do
-}
-
 SkTypeface* SkFontHost::CreateTypefaceFromFile(const char path[]) {
     printf("SkFontHost::CreateTypefaceFromFile unimplemented");
     return NULL;
@@ -1266,6 +1279,7 @@ void SkFontHost::FilterRec(SkScalerContext::Rec* rec) {
                                   SkScalerContext::kAutohinting_Flag |
                                   SkScalerContext::kEmbeddedBitmapText_Flag |
                                   SkScalerContext::kEmbolden_Flag |
+                                  SkScalerContext::kSubpixelPositioning_Flag |
                                   SkScalerContext::kLCD_BGROrder_Flag |
                                   SkScalerContext::kLCD_Vertical_Flag;
     rec->fFlags &= ~flagsWeDontSupport;
@@ -1285,12 +1299,27 @@ void SkFontHost::FilterRec(SkScalerContext::Rec* rec) {
             h = SkPaint::kNormal_Hinting;
             break;
         default:
-            SkASSERT(!"unknown hinting");
+            SkDEBUGFAIL("unknown hinting");
     }
 #else
     h = SkPaint::kNormal_Hinting;
 #endif
     rec->setHinting(h);
+
+    // for compatibility at the moment, discretize luminance to 3 settings
+    // black, white, gray. This helps with fontcache utilization, since we
+    // won't create multiple entries that in the end map to the same results.
+    {
+        unsigned lum = rec->getLuminanceByte();
+        if (lum <= BLACK_LUMINANCE_LIMIT) {
+            lum = 0;
+        } else if (lum >= WHITE_LUMINANCE_LIMIT) {
+            lum = SkScalerContext::kLuminance_Max;
+        } else {
+            lum = SkScalerContext::kLuminance_Max >> 1;
+        }
+        rec->setLuminanceBits(lum);
+    }
 
 // turn this off since GDI might turn A8 into BW! Need a bigger fix.
 #if 0
@@ -1305,53 +1334,6 @@ void SkFontHost::FilterRec(SkScalerContext::Rec* rec) {
         rec->fMaskFormat = SkMask::kLCD32_Format;
     }
 #endif
-    // don't specify gamma if we BW (perhaps caller should do this check)
-    if (SkMask::kBW_Format == rec->fMaskFormat) {
-        rec->fFlags &= ~(SkScalerContext::kGammaForBlack_Flag |
-                         SkScalerContext::kGammaForWhite_Flag);
-    }
-}
-
-//////////////////////////////////////////////////////////////////////////
-
-void SkFontHost::GetGammaTables(const uint8_t* tables[2]) {
-    tables[0] = NULL;
-    tables[1] = NULL;
-}
-
-static bool justAColor(const SkPaint& paint, SkColor* color) {
-    if (paint.getShader()) {
-        return false;
-    }
-    SkColor c = paint.getColor();
-    if (paint.getColorFilter()) {
-        c = paint.getColorFilter()->filterColor(c);
-    }
-    if (color) {
-        *color = c;
-    }
-    return true;
-}
-
-#define BLACK_GAMMA_THRESHOLD   0x40
-#define WHITE_GAMMA_THRESHOLD   0xA0
-
-int SkFontHost::ComputeGammaFlag(const SkPaint& paint) {
-    SkColor c;
-    if (justAColor(paint, &c)) {
-        int r = SkColorGetR(c);
-        int g = SkColorGetG(c);
-        int b = SkColorGetB(c);
-        int luminance = (r * 2 + g * 5 + b) >> 3;
-
-        if (luminance <= BLACK_GAMMA_THRESHOLD) {
-            return SkScalerContext::kGammaForBlack_Flag;
-        }
-        if (luminance >= WHITE_GAMMA_THRESHOLD) {
-            return SkScalerContext::kGammaForWhite_Flag;
-        }
-    }
-    return 0;
 }
 
 #endif // WIN32

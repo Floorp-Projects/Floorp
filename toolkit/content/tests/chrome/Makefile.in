@@ -88,6 +88,7 @@ _TEST_FILES = 	findbar_window.xul \
 		test_autocomplete2.xul \
 		test_autocomplete3.xul \
 		test_autocomplete4.xul \
+		test_autocomplete_delayOnPaste.xul \
 		test_keys.xul \
 		window_keys.xul \
 		test_showcaret.xul \

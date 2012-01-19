@@ -64,6 +64,8 @@
 
 #include "gfxCrashReporterUtils.h"
 
+#include "sampler.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -758,6 +760,7 @@ LayerManagerOGL::BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
 void
 LayerManagerOGL::Render()
 {
+  SAMPLE_LABEL("LayerManagerOGL", "Render");
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;

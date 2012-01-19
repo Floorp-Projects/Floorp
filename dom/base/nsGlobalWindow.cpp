@@ -1340,8 +1340,8 @@ nsGlobalWindow::FreeInnerObjects(bool aClearScope)
     // them ever even make it into the fast-back cache?
 
     mDummyJavaPluginOwner->Destroy();
-
     mDummyJavaPluginOwner = nsnull;
+    mDidInitJavaProperties = false;
   }
 
   CleanupCachedXBLHandlers(this);
@@ -1481,6 +1481,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   if (tmp->mDummyJavaPluginOwner) {
     tmp->mDummyJavaPluginOwner->Destroy();
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDummyJavaPluginOwner)
+    tmp->mDidInitJavaProperties = false;
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFocusedNode)
@@ -2234,6 +2235,16 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         // XXXmarkh - tell other languages about this?
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
+
+        if (mDummyJavaPluginOwner) {
+          // Since we're reusing the inner window, tear down the
+          // dummy Java plugin we created for the old document in
+          // this window.
+          mDummyJavaPluginOwner->Destroy();
+          mDummyJavaPluginOwner = nsnull;
+
+          mDidInitJavaProperties = false;
+        }
       }
     } else {
       rv = newInnerWindow->InnerSetNewDocument(aDocument);

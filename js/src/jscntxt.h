@@ -336,13 +336,6 @@ typedef enum JSDestroyContextMode {
     JSDCM_NEW_FAILED
 } JSDestroyContextMode;
 
-typedef enum JSRuntimeState {
-    JSRTS_DOWN,
-    JSRTS_LAUNCHING,
-    JSRTS_UP,
-    JSRTS_LANDING
-} JSRuntimeState;
-
 typedef struct JSPropertyTreeEntry {
     JSDHashEntryHdr     hdr;
     js::Shape           *child;
@@ -361,9 +354,6 @@ struct JSRuntime
 
     /* List of compartments (protected by the GC lock). */
     js::CompartmentVector compartments;
-
-    /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
-    JSRuntimeState      state;
 
     /* See comment for JS_AbortIfWrongThread in jsapi.h. */
 #ifdef JS_THREADSAFE
@@ -543,6 +533,10 @@ struct JSRuntime
     /* List of active contexts sharing this runtime; protected by gcLock. */
     JSCList             contextList;
 
+    bool hasContexts() const {
+        return !JS_CLIST_IS_EMPTY(&contextList);
+    }
+    
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
     JSDebugHooks        globalDebugHooks;
 
@@ -573,15 +567,6 @@ struct JSRuntime
     JSThread            *gcThread;
 
     js::GCHelperThread  gcHelperThread;
-
-    /* Lock and owning thread pointer for JS_LOCK_RUNTIME. */
-    PRLock              *rtLock;
-#ifdef DEBUG
-    void *              rtLockOwner;
-#endif
-
-    /* Used to synchronize down/up state change; protected by gcLock. */
-    PRCondVar           *stateChange;
 
     /*
      * Mapping from NSPR thread identifiers to JSThreads.

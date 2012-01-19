@@ -135,29 +135,6 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
         escapedSlots[LocalSlot(script, index)] = true;
 }
 
-// return whether op bytecodes do not fallthrough (they may do a jump).
-static inline bool
-BytecodeNoFallThrough(JSOp op)
-{
-    switch (op) {
-      case JSOP_GOTO:
-      case JSOP_DEFAULT:
-      case JSOP_RETURN:
-      case JSOP_STOP:
-      case JSOP_RETRVAL:
-      case JSOP_THROW:
-      case JSOP_TABLESWITCH:
-      case JSOP_LOOKUPSWITCH:
-      case JSOP_FILTER:
-        return true;
-      case JSOP_GOSUB:
-        // these fall through indirectly, after executing a 'finally'.
-        return false;
-      default:
-        return false;
-    }
-}
-
 void
 ScriptAnalysis::analyzeBytecode(JSContext *cx)
 {
@@ -1342,29 +1319,16 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
         stackDepth += ndefs;
 
-        switch (op) {
-          case JSOP_SETARG:
-          case JSOP_SETLOCAL:
-          case JSOP_SETLOCALPOP:
-          case JSOP_DEFLOCALFUN:
-          case JSOP_DEFLOCALFUN_FC:
-          case JSOP_INCARG:
-          case JSOP_DECARG:
-          case JSOP_ARGINC:
-          case JSOP_ARGDEC:
-          case JSOP_INCLOCAL:
-          case JSOP_DECLOCAL:
-          case JSOP_LOCALINC:
-          case JSOP_LOCALDEC: {
+        if (BytecodeUpdatesSlot(op)) {
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (trackSlot(slot)) {
                 mergeBranchTarget(cx, values[slot], slot, branchTargets);
                 mergeExceptionTarget(cx, values[slot], slot, exceptionTargets);
                 values[slot].initWritten(slot, offset);
             }
-            break;
-          }
+        }
 
+        switch (op) {
           case JSOP_GETARG:
           case JSOP_GETLOCAL: {
             uint32_t slot = GetBytecodeSlot(script, pc);

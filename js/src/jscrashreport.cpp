@@ -106,7 +106,7 @@ GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffe
 #endif
 #endif
 
-    memcpy(buffer, (void *)p, len);
+    js_memcpy(buffer, (void *)p, len);
 
     return true;
 }
@@ -157,7 +157,7 @@ GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffe
     regs->ip = (uint64_t)context.uc_mcontext.gregs[REG_EIP];
 #endif
 
-    memcpy(buffer, (void *)p, len);
+    js_memcpy(buffer, (void *)p, len);
 
     return true;
 }
@@ -230,11 +230,11 @@ Ring::copyBytes(void *data, size_t size)
     if (offset + size > bufferSize()) {
         size_t first = bufferSize() - offset;
         size_t second = size - first;
-        memcpy(&buffer[offset], data, first);
-        memcpy(buffer, (char *)data + first, second);
+        js_memcpy(&buffer[offset], data, first);
+        js_memcpy(buffer, (char *)data + first, second);
         offset = second;
     } else {
-        memcpy(&buffer[offset], data, size);
+        js_memcpy(&buffer[offset], data, size);
         offset += size;
     }
 }

@@ -692,7 +692,7 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
         if (!oracle.init(cx, script))
             return false;
 
-        types::AutoEnterCompilation enterCompiler(cx, script);
+        types::AutoEnterCompilation enterCompiler(cx, script, false, 0);
 
         IonBuilder builder(cx, &fp->scopeChain(), temp, graph, &oracle, *info);
         if (!TestCompiler(builder, graph)) {
@@ -1007,13 +1007,13 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
 }
 
 void
-ion::Invalidate(JSContext *cx, const Vector<JSScript *> &invalid, bool resetUses)
+ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
     // Add an invalidation reference to all invalidated IonScripts to indicate
     // to the traversal which frames have been invalidated.
     for (size_t i = 0; i < invalid.length(); i++) {
-        if (invalid[i]->hasIonScript())
-            invalid[i]->ion->incref();
+        if (invalid[i].script->hasIonScript())
+            invalid[i].script->ion->incref();
     }
 
     for (IonActivationIterator iter(cx); iter.more(); ++iter) {
@@ -1025,9 +1025,9 @@ ion::Invalidate(JSContext *cx, const Vector<JSScript *> &invalid, bool resetUses
     // IonScript will be immediately destroyed. Otherwise, it will be held live
     // until its last InvalidationRecord is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
-        if (invalid[i]->hasIonScript()) {
-            invalid[i]->ion->decref(cx);
-            invalid[i]->ion = NULL;
+        if (invalid[i].script->hasIonScript()) {
+            invalid[i].script->ion->decref(cx);
+            invalid[i].script->ion = NULL;
         }
     }
 
@@ -1035,7 +1035,7 @@ ion::Invalidate(JSContext *cx, const Vector<JSScript *> &invalid, bool resetUses
     // unless we are recompiling *because* a script got hot.
     if (resetUses) {
         for (size_t i = 0; i < invalid.length(); i++)
-            invalid[i]->resetUseCount();
+            invalid[i].script->resetUseCount();
     }
 }
 

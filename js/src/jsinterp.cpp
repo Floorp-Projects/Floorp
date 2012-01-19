@@ -74,7 +74,6 @@
 #include "frontend/BytecodeEmitter.h"
 #ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
-#include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
 #endif
 #include "ion/Ion.h"
@@ -473,7 +472,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
-    status = mjit::CanMethodJIT(cx, script, fp->isConstructing(),
+    status = mjit::CanMethodJIT(cx, script, script->code, fp->isConstructing(),
                                 mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
         return false;
@@ -563,7 +562,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Val
 
     args.calleev() = fval;
     args.thisv() = thisv;
-    memcpy(args.array(), argv, argc * sizeof(Value));
+    PodCopy(args.array(), argv, argc);
 
     if (args.thisv().isObject()) {
         /*
@@ -632,7 +631,7 @@ js::InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
 
     args.calleev() = fval;
     args.thisv().setMagic(JS_THIS_POISON);
-    memcpy(args.array(), argv, argc * sizeof(Value));
+    PodCopy(args.array(), argv, argc);
 
     if (!InvokeConstructor(cx, args))
         return false;
@@ -1287,13 +1286,10 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
     JSProperty *prop;
     JSBool ok;
 
-    if (JOF_OPMODE(*pc) == JOF_NAME) {
-        bool global = js_CodeSpec[*pc].format & JOF_GNAME;
-        ok = FindProperty(cx, name, global, &obj, &pobj, &prop);
-    } else {
-        obj = start;
-        ok = LookupProperty(cx, obj, name, &pobj, &prop);
-    }
+    if (JOF_OPMODE(*pc) == JOF_NAME)
+        ok = FindProperty(cx, name, start, &obj, &pobj, &prop);
+    else
+        ok = LookupProperty(cx, start, name, &pobj, &prop);
     JS_ASSERT(ok);
 
     if (cx->runtime->gcNumber != sample)
@@ -1360,13 +1356,9 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
         NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
-            jsid id = *ni->current();
-            if (JSID_IS_ATOM(id)) {
-                rval->setString(JSID_TO_STRING(id));
-                ni->incCursor();
-                return true;
-            }
-            /* Take the slow path if we have to stringify a numeric property name. */
+            rval->setString(*ni->current());
+            ni->incCursor();
+            return true;
         }
     }
     return js_IteratorNext(cx, iterobj, rval);
@@ -1516,7 +1508,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESET_USE_METHODJIT()                                                 \
     JS_BEGIN_MACRO                                                            \
         useMethodJIT = cx->methodJitEnabled &&                                \
-            script->getJITStatus(regs.fp()->isConstructing()) != JITScript_Invalid && \
            (interpMode == JSINTERP_NORMAL ||                                  \
             interpMode == JSINTERP_REJOIN ||                                  \
             interpMode == JSINTERP_SKIP_TRAP);                                \
@@ -1852,12 +1843,14 @@ check_backedge:
     if (!useMethodJIT)
         DO_OP();
     mjit::CompileStatus status =
-        mjit::CanMethodJITAtBranch(cx, script, regs.fp(), regs.pc);
+        mjit::CanMethodJIT(cx, script, regs.pc, regs.fp()->isConstructing(),
+                           mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
         goto error;
     if (status == mjit::Compile_Okay) {
         void *ncode =
             script->nativeCodeForPC(regs.fp()->isConstructing(), regs.pc);
+        JS_ASSERT(ncode);
         mjit::JaegerStatus status =
             mjit::JaegerShotAtSafePoint(cx, ncode, true);
         CHECK_PARTIAL_METHODJIT(status);
@@ -2573,7 +2566,7 @@ BEGIN_CASE(JSOP_DELNAME)
     LOAD_NAME(0, name);
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindProperty(cx, name, false, &obj, &obj2, &prop))
+    if (!FindProperty(cx, name, cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         goto error;
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -3010,7 +3003,8 @@ BEGIN_CASE(JSOP_FUNAPPLY)
         mjit::CompileRequest request = (interpMode == JSINTERP_NORMAL)
                                        ? mjit::CompileRequest_Interpreter
                                        : mjit::CompileRequest_JIT;
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, construct, request);
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, script->code,
+                                                        construct, request);
         if (status == mjit::Compile_Error)
             goto error;
         if (status == mjit::Compile_Okay) {
@@ -3062,7 +3056,7 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
 
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, false, false, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, false, cx->stack.currentScriptedScopeChain(), &obj, &obj2, &prop))
         goto error;
 
     Value v;
@@ -4913,11 +4907,12 @@ js::GetObjectProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *v
 }
 
 bool
-js::GetScopeName(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp)
+js::GetScopeName(JSContext *cx, JSObject *scopeChain, PropertyName *name, Value *vp)
 {
+    JSObject *obj;
     JSObject *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, false, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, true, scopeChain, &obj, &obj2, &prop))
         return false;
 
     if (!prop) {
@@ -4935,11 +4930,12 @@ js::GetScopeName(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp)
  * which do not report an exception on (typeof foo == "undefined") tests.
  */
 bool
-js::GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp)
+js::GetScopeNameForTypeOf(JSContext *cx, JSObject *scopeChain, PropertyName *name, Value *vp)
 {
+    JSObject *obj;
     JSObject *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, false, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, true, scopeChain, &obj, &obj2, &prop))
         return false;
 
     if (!prop) {

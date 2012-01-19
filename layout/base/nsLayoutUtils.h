@@ -426,6 +426,20 @@ public:
                                                nsIFrame* aFrame);
 
   /**
+   * Get the coordinates of a given point relative to an event and a
+   * given frame.
+   * @param aEvent the event
+   * @param aPoint the point to get the coordinates relative to
+   * @param aFrame the frame to make coordinates relative to
+   * @return the point, or (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if
+   * for some reason the coordinates for the mouse are not known (e.g.,
+   * the event is not a GUI event).
+   */
+  static nsPoint GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
+                                               const nsIntPoint aPoint,
+                                               nsIFrame* aFrame);
+
+  /**
    * Get the popup frame of a given native mouse event.
    * @param aPresContext only check popups within aPresContext or a descendant
    * @param aEvent  the event.
@@ -523,6 +537,13 @@ public:
   static nsRect TransformFrameRectToAncestor(nsIFrame* aFrame,
                                              const nsRect& aRect,
                                              nsIFrame* aAncestor);
+
+
+  /**
+   * Gets the transform for aFrame relative to aAncestor. Pass null for aAncestor
+   * to go up to the root frame.
+   */
+  static gfx3DMatrix GetTransformToAncestor(nsIFrame *aFrame, nsIFrame *aAncestor);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
@@ -1474,6 +1495,13 @@ public:
    * Checks if CSS 3D transforms are currently enabled.
    */
   static bool Are3DTransformsEnabled();
+
+  /**
+   * Unions the overflow areas of all non-popup children of aFrame with
+   * aOverflowAreas.
+   */
+  static void UnionChildOverflow(nsIFrame* aFrame,
+                                 nsOverflowAreas& aOverflowAreas);
 
   /**
    * Return whether this is a frame whose width is used when computing

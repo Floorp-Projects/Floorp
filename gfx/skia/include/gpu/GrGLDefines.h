@@ -174,7 +174,9 @@
 #define GR_GL_COLOR_CLEAR_VALUE              0x0C22
 #define GR_GL_COLOR_WRITEMASK                0x0C23
 #define GR_GL_UNPACK_ALIGNMENT               0x0CF5
+#define GR_GL_UNPACK_FLIP_Y                  0x9240
 #define GR_GL_PACK_ALIGNMENT                 0x0D05
+#define GR_GL_PACK_REVERSE_ROW_ORDER         0x93A4
 #define GR_GL_MAX_TEXTURE_SIZE               0x0D33
 #define GR_GL_MAX_VIEWPORT_DIMS              0x0D3A
 #define GR_GL_SUBPIXEL_BITS                  0x0D50
@@ -282,6 +284,9 @@
 
 /* PixelFormat */
 #define GR_GL_DEPTH_COMPONENT                0x1902
+#define GR_GL_RED                            0x1903
+#define GR_GL_GREEN                          0x1904
+#define GR_GL_BLUE                           0x1905
 #define GR_GL_ALPHA                          0x1906
 #define GR_GL_RGB                            0x1907
 #define GR_GL_RGBA                           0x1908
@@ -289,6 +294,7 @@
 #define GR_GL_LUMINANCE                      0x1909
 #define GR_GL_LUMINANCE_ALPHA                0x190A
 #define GR_GL_PALETTE8_RGBA8                 0x8B96
+#define GR_GL_ALPHA8                         0x803C
 
 /* PixelType */
 /*      GL_UNSIGNED_BYTE */
@@ -348,7 +354,9 @@
 #define GR_GL_EXTENSIONS                     0x1F03
 
 /* Pixel Mode / Transfer */
-#define GR_GL_UNPACK_ROW_LENGTH            0x0CF2
+#define GR_GL_UNPACK_ROW_LENGTH              0x0CF2
+#define GR_GL_PACK_ROW_LENGTH                0x0D02
+
 
 /* TextureMagFilter */
 #define GR_GL_NEAREST                        0x2600
@@ -362,11 +370,15 @@
 #define GR_GL_NEAREST_MIPMAP_LINEAR          0x2702
 #define GR_GL_LINEAR_MIPMAP_LINEAR           0x2703
 
+/* TextureUsage */
+#define GR_GL_FRAMEBUFFER_ATTACHMENT         0x93A3
+
 /* TextureParameterName */
 #define GR_GL_TEXTURE_MAG_FILTER             0x2800
 #define GR_GL_TEXTURE_MIN_FILTER             0x2801
 #define GR_GL_TEXTURE_WRAP_S                 0x2802
 #define GR_GL_TEXTURE_WRAP_T                 0x2803
+#define GR_GL_TEXTURE_USAGE                  0x93A2
 
 /* TextureTarget */
 /*      GL_TEXTURE_2D */
@@ -422,10 +434,17 @@
 #define GR_GL_CLAMP_TO_EDGE                  0x812F
 #define GR_GL_MIRRORED_REPEAT                0x8370
 
+/* Texture Swizzle */
+#define GR_GL_TEXTURE_SWIZZLE_R              0x8E42
+#define GR_GL_TEXTURE_SWIZZLE_G              0x8E43
+#define GR_GL_TEXTURE_SWIZZLE_B              0x8E44
+#define GR_GL_TEXTURE_SWIZZLE_A              0x8E45
+#define GR_GL_TEXTURE_SWIZZLE_RGBA           0x8E46
+
 /* Texture mapping */
-#define GR_GL_TEXTURE_ENV                   0x2300
-#define GR_GL_TEXTURE_ENV_MODE              0x2200
-#define GR_GL_TEXTURE_1D                    0x0DE0
+#define GR_GL_TEXTURE_ENV                    0x2300
+#define GR_GL_TEXTURE_ENV_MODE               0x2200
+#define GR_GL_TEXTURE_1D                     0x0DE0
 /* GL_TEXTURE_2D */
 /* GL_TEXTURE_WRAP_S */
 /* GL_TEXTURE_WRAP_T */
@@ -614,6 +633,7 @@
 #define GR_GL_RGB565                         0x8D62
 #define GR_GL_RGBA8                          0x8058
 #define GR_GL_RGB8                           0x8051
+#define GR_GL_BGRA8                          0x93A1
 #define GR_GL_SRGB                           0x8C40
 #define GR_GL_SRGB8                          0x8C41
 #define GR_GL_SRGB_ALPHA                     0x8C42
