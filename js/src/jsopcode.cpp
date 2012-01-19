@@ -657,18 +657,10 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         Sprint(sp, " %u", GET_SLOTNO(pc));
         break;
 
-      case JOF_SLOTATOM:
       case JOF_SLOTOBJECT: {
         Sprint(sp, " %u", GET_SLOTNO(pc));
         uintN index = js_GetIndexFromBytecode(script, pc, SLOTNO_LEN);
-        jsval v;
-        if (type == JOF_SLOTATOM) {
-            JSAtom *atom = script->getAtom(index);
-            v = STRING_TO_JSVAL(atom);
-        } else {
-            v = OBJECT_TO_JSVAL(script->getObject(index));
-        }
-
+        jsval v = OBJECT_TO_JSVAL(script->getObject(index));
         JSAutoByteString bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
