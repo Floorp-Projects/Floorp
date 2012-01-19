@@ -743,8 +743,10 @@ struct GetPropHelper {
   public:
     LookupStatus bind() {
         RecompilationMonitor monitor(cx);
-        bool global = (js_CodeSpec[*f.pc()].format & JOF_GNAME);
-        if (!FindProperty(cx, name, global, &obj, &holder, &prop))
+        JSObject *scopeChain = cx->stack.currentScriptedScopeChain();
+        if (js_CodeSpec[*f.pc()].format & JOF_GNAME)
+            scopeChain = &scopeChain->global();
+        if (!FindProperty(cx, name, scopeChain, &obj, &holder, &prop))
             return ic.error(cx);
         if (monitor.recompiled())
             return Lookup_Uncacheable;
