@@ -697,7 +697,7 @@ stubs::ScriptProbeOnlyEpilogue(VMFrame &f)
 void JS_FASTCALL
 stubs::CrossChunkShim(VMFrame &f, void *edge_)
 {
-    CrossChunkEdge *edge = (CrossChunkEdge *) edge_;
+    DebugOnly<CrossChunkEdge*> edge = (CrossChunkEdge *) edge_;
 
     mjit::ExpandInlineFrames(f.cx->compartment);
 

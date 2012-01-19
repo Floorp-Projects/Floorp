@@ -35,9 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 /**
  * Unit test for Bug 440866 - First AutoCompleteSearch that returns
  * RESULT_NOMATCH cancels all other searches when popup is open

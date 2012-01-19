@@ -157,7 +157,6 @@ public class GeckoAppShell
     public static native ByteBuffer allocateDirectBuffer(long size);
     public static native void freeDirectBuffer(ByteBuffer buf);
     public static native void bindWidgetTexture();
-    public static native boolean testDirectTexture();
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -437,14 +436,6 @@ public class GeckoAppShell
         GeckoAppShell.nativeInit();
 
         Log.i(LOGTAG, "post native init");
-
-        // If we have direct texture available, use it
-        if (GeckoAppShell.testDirectTexture()) {
-            Log.i(LOGTAG, "Using direct texture for widget layer");
-            GeckoApp.mAppContext.getSoftwareLayerClient().installWidgetLayer();
-        } else {
-            Log.i(LOGTAG, "Falling back to traditional texture upload");
-        }
 
         // Tell Gecko where the target byte buffer is for rendering
         GeckoAppShell.setSoftwareLayerClient(GeckoApp.mAppContext.getSoftwareLayerClient());

@@ -38,6 +38,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
@@ -51,22 +53,23 @@ var gEngineManagerDialog = {
   init: function engineManager_init() {
     gEngineView = new EngineView(new EngineStore());
 
-    var prefService = Cc["@mozilla.org/preferences-service;1"].
-                      getService(Ci.nsIPrefBranch);
-    var suggestEnabled = prefService.getBoolPref(BROWSER_SUGGEST_PREF);
+    var suggestEnabled = Services.prefs.getBoolPref(BROWSER_SUGGEST_PREF);
     document.getElementById("enableSuggest").checked = suggestEnabled;
 
     var tree = document.getElementById("engineList");
     tree.view = gEngineView;
 
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.addObserver(this, "browser-search-engine-modified", false);
+    Services.obs.addObserver(this, "browser-search-engine-modified", false);
+  },
+
+  destroy: function engineManager_destroy() {
+    // Remove the observer
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
   },
 
   observe: function engineManager_observe(aEngine, aTopic, aVerb) {
     if (aTopic == "browser-search-engine-modified") {
-      aEngine.QueryInterface(Ci.nsISearchEngine)
+      aEngine.QueryInterface(Ci.nsISearchEngine);
       switch (aVerb) {
       case "engine-added":
         gEngineView._engineStore.addEngine(aEngine);
@@ -74,37 +77,23 @@ var gEngineManagerDialog = {
         break;
       case "engine-changed":
         gEngineView._engineStore.reloadIcons();
+        gEngineView.invalidate();
         break;
       case "engine-removed":
       case "engine-current":
         // Not relevant
-        return;
+        break;
       }
-      gEngineView.invalidate();
     }
   },
 
   onOK: function engineManager_onOK() {
-    // Remove the observer
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.removeObserver(this, "browser-search-engine-modified");
-
     // Set the preference
     var newSuggestEnabled = document.getElementById("enableSuggest").checked;
-    var prefService = Cc["@mozilla.org/preferences-service;1"].
-                      getService(Ci.nsIPrefBranch);
-    prefService.setBoolPref(BROWSER_SUGGEST_PREF, newSuggestEnabled);
+    Services.prefs.setBoolPref(BROWSER_SUGGEST_PREF, newSuggestEnabled);
 
     // Commit the changes
     gEngineView._engineStore.commit();
-  },
-  
-  onCancel: function engineManager_onCancel() {
-    // Remove the observer
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.removeObserver(this, "browser-search-engine-modified");
   },
 
   onRestoreDefaults: function engineManager_onRestoreDefaults() {
@@ -129,7 +118,7 @@ var gEngineManagerDialog = {
     gEngineView.rowCountChanged(index, -1);
     gEngineView.invalidate();
     gEngineView.selection.select(Math.min(index, gEngineView.lastIndex));
-    gEngineView.ensureRowIsVisible(Math.min(index, gEngineView.lastIndex));
+    gEngineView.ensureRowIsVisible(gEngineView.currentIndex);
     document.getElementById("engineList").focus();
   },
 
@@ -156,14 +145,12 @@ var gEngineManagerDialog = {
     if (!selectedEngine)
       return;
 
-    var prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                 getService(Ci.nsIPromptService);
     var alias = { value: selectedEngine.alias };
     var strings = document.getElementById("engineManagerBundle");
     var title = strings.getString("editTitle");
     var msg = strings.getFormattedString("editMsg", [selectedEngine.name]);
 
-    while (prompt.prompt(window, title, msg, alias, null, { })) {
+    while (Services.prompt.prompt(window, title, msg, alias, null, {})) {
       var bduplicate = false;
       var eduplicate = false;
 
@@ -178,7 +165,7 @@ var gEngineManagerDialog = {
         // Check for duplicates in changes we haven't committed yet
         let engines = gEngineView._engineStore.engines;
         for each (let engine in engines) {
-          if (engine.alias == alias.value && 
+          if (engine.alias == alias.value &&
               engine.name != selectedEngine.name) {
             eduplicate = true;
             break;
@@ -193,7 +180,7 @@ var gEngineManagerDialog = {
         var emsg = strings.getFormattedString("duplicateEngineMsg",
                                               [engine.name]);
 
-        prompt.alert(window, dtitle, (eduplicate) ? emsg : bmsg);
+        Services.prompt.alert(window, dtitle, eduplicate ? emsg : bmsg);
       } else {
         gEngineView._engineStore.changeEngine(selectedEngine, "alias",
                                               alias.value);
@@ -204,23 +191,24 @@ var gEngineManagerDialog = {
   },
 
   onSelect: function engineManager_onSelect() {
-    // buttons only work if an engine is selected and it's not the last engine
-    var disableButtons = (gEngineView.selectedIndex == -1) ||
-                         (gEngineView.lastIndex == 0);
+    // Buttons only work if an engine is selected and it's not the last engine,
+    // the latter is true when the selected is first and last at the same time.
     var lastSelected = (gEngineView.selectedIndex == gEngineView.lastIndex);
     var firstSelected = (gEngineView.selectedIndex == 0);
     var noSelection = (gEngineView.selectedIndex == -1);
 
-    document.getElementById("cmd_remove").setAttribute("disabled",
-                                                       disableButtons);
+    document.getElementById("cmd_remove")
+            .setAttribute("disabled", noSelection ||
+                                      (firstSelected && lastSelected));
 
-    document.getElementById("cmd_moveup").setAttribute("disabled",
-                                            disableButtons || firstSelected);
+    document.getElementById("cmd_moveup")
+            .setAttribute("disabled", noSelection || firstSelected);
 
-    document.getElementById("cmd_movedown").setAttribute("disabled",
-                                             disableButtons || lastSelected);
-    document.getElementById("cmd_editkeyword").setAttribute("disabled",
-                                                            noSelection);
+    document.getElementById("cmd_movedown")
+            .setAttribute("disabled", noSelection || lastSelected);
+
+    document.getElementById("cmd_editkeyword")
+            .setAttribute("disabled", noSelection);
   }
 };
 
@@ -243,9 +231,7 @@ EngineMoveOp.prototype = {
   _engine: null,
   _newIndex: null,
   commit: function EMO_commit() {
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    searchService.moveEngine(this._engine, this._newIndex);
+    Services.search.moveEngine(this._engine, this._newIndex);
   }
 }
 
@@ -257,9 +243,7 @@ function EngineRemoveOp(aEngineClone) {
 EngineRemoveOp.prototype = {
   _engine: null,
   commit: function ERO_commit() {
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    searchService.removeEngine(this._engine);
+    Services.search.removeEngine(this._engine);
   }
 }
 
@@ -274,9 +258,7 @@ EngineUnhideOp.prototype = {
   _newIndex: null,
   commit: function EUO_commit() {
     this._engine.hidden = false;
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    searchService.moveEngine(this._engine, this._newIndex);
+    Services.search.moveEngine(this._engine, this._newIndex);
   }
 }
 
@@ -298,10 +280,8 @@ EngineChangeOp.prototype = {
 }
 
 function EngineStore() {
-  var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                      getService(Ci.nsIBrowserSearchService);
-  this._engines = searchService.getVisibleEngines().map(this._cloneEngine);
-  this._defaultEngines = searchService.getDefaultEngines().map(this._cloneEngine);
+  this._engines = Services.search.getVisibleEngines().map(this._cloneEngine);
+  this._defaultEngines = Services.search.getDefaultEngines().map(this._cloneEngine);
 
   this._ops = [];
 
@@ -334,12 +314,12 @@ EngineStore.prototype = {
     return null;
   },
 
-  _cloneEngine: function ES_cloneObj(aEngine) {
-    var newO=[];
+  _cloneEngine: function ES_cloneEngine(aEngine) {
+    var clonedObj={};
     for (var i in aEngine)
-      newO[i] = aEngine[i];
-    newO.originalEngine = aEngine;
-    return newO;
+      clonedObj[i] = aEngine[i];
+    clonedObj.originalEngine = aEngine;
+    return clonedObj;
   },
 
   // Callback for Array's some(). A thisObj must be passed to some()
@@ -348,9 +328,7 @@ EngineStore.prototype = {
   },
 
   commit: function ES_commit() {
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    var currentEngine = this._cloneEngine(searchService.currentEngine);
+    var currentEngine = this._cloneEngine(Services.search.currentEngine);
     for (var i = 0; i < this._ops.length; i++)
       this._ops[i].commit();
 
@@ -358,7 +336,7 @@ EngineStore.prototype = {
     // Needed if the user deletes currentEngine and then restores it.
     if (this._defaultEngines.some(this._isSameEngine, currentEngine) &&
         !currentEngine.originalEngine.hidden)
-      searchService.currentEngine = currentEngine.originalEngine;
+      Services.search.currentEngine = currentEngine.originalEngine;
   },
 
   addEngine: function ES_addEngine(aEngine) {
@@ -386,7 +364,7 @@ EngineStore.prototype = {
     var index = this._getIndexForEngine(aEngine);
     if (index == -1)
       throw new Error("invalid engine?");
- 
+
     this._engines.splice(index, 1);
     this._ops.push(new EngineRemoveOp(aEngine));
     if (this._defaultEngines.some(this._isSameEngine, aEngine))
@@ -442,8 +420,8 @@ EngineView.prototype = {
   get selectedIndex() {
     var seln = this.selection;
     if (seln.getRangeCount() > 0) {
-      var min = { };
-      seln.getRangeAt(0, min, { });
+      var min = {};
+      seln.getRangeAt(0, min, {});
       return min.value;
     }
     return -1;
@@ -496,7 +474,7 @@ EngineView.prototype = {
     var sourceIndex = this.getSourceIndexFromDrag(dataTransfer);
     return (sourceIndex != -1 &&
             sourceIndex != targetIndex &&
-            sourceIndex != (targetIndex + orientation));
+            sourceIndex != targetIndex + orientation);
   },
 
   drop: function(dropIndex, orientation, dataTransfer) {
@@ -508,7 +486,7 @@ EngineView.prototype = {
         dropIndex--;
     } else {
       if (orientation == Ci.nsITreeView.DROP_AFTER)
-        dropIndex++;    
+        dropIndex++;
     }
 
     this._engineStore.moveEngine(sourceEngine, dropIndex);
@@ -516,7 +494,6 @@ EngineView.prototype = {
 
     // Redraw, and adjust selection
     this.invalidate();
-    this.selection.clearSelection();
     this.selection.select(dropIndex);
   },
 

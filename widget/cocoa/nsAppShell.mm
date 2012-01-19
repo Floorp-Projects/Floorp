@@ -63,6 +63,7 @@
 #include "nsToolkit.h"
 #include "TextInputHandler.h"
 #include "mozilla/HangMonitor.h"
+#include "sampler.h"
 
 #include "npapi.h"
 
@@ -405,7 +406,7 @@ void
 nsAppShell::ProcessGeckoEvents(void* aInfo)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
+  SAMPLE_LABEL("Events", "ProcessGeckoEvents");
   nsAppShell* self = static_cast<nsAppShell*> (aInfo);
 
   if (self->mRunningEventLoop) {

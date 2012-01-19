@@ -22,14 +22,13 @@ public:
              GrGpuGLShaders(const GrGLInterface* glInterface);
     virtual ~GrGpuGLShaders();
 
-    virtual void resetContext();
-
     virtual void abandonResources();
 
     bool programUnitTest();
 
 protected:
     // overrides from GrGpu
+    virtual void onResetContext() SK_OVERRIDE;
     virtual bool flushGraphicsState(GrPrimitiveType type);
     virtual void setupGeometry(int* startVertex,
                                int* startIndex,
@@ -47,6 +46,8 @@ private:
     class ProgramCache;
 
     // Helpers to make code more readable
+    const GrMatrix& getHWViewMatrix();
+    void recordHWViewMatrix(const GrMatrix& matrix);
     const GrMatrix& getHWSamplerMatrix(int stage);
     void recordHWSamplerMatrix(int stage, const GrMatrix& matrix);
 
@@ -73,6 +74,9 @@ private:
 
     // flushes the edges for edge AA
     void flushEdgeAAData();
+
+    // flushes the color matrix
+    void flushColorMatrix();
 
     static void DeleteProgram(const GrGLInterface* gl,
                               CachedData* programData);

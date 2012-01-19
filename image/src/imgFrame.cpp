@@ -49,6 +49,7 @@
 static bool gDisableOptimize = false;
 
 #include "cairo.h"
+#include "sampler.h"
 
 #if defined(XP_WIN)
 
@@ -435,6 +436,7 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
                     const gfxMatrix &aUserSpaceToImageSpace, const gfxRect& aFill,
                     const nsIntMargin &aPadding, const nsIntRect &aSubimage)
 {
+  SAMPLE_LABEL("image", "imgFrame::Draw");
   NS_ASSERTION(!aFill.IsEmpty(), "zero dest size --- fix caller");
   NS_ASSERTION(!aSubimage.IsEmpty(), "zero source size --- fix caller");
   NS_ASSERTION(!mPalettedImageData, "Directly drawing a paletted image!");

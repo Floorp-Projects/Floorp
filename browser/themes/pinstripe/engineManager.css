@@ -45,5 +45,5 @@
 }
 
 #engineList treechildren::-moz-tree-row {
-  height: 20px !important;
+  height: 20px;
 }

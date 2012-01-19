@@ -324,7 +324,7 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
     jLockBufferMethod = getMethod("lockBuffer", "()Ljava/nio/ByteBuffer;");
     jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
     jBeginDrawingMethod = getMethod("beginDrawing", "(II)V");
-    jEndDrawingMethod = getMethod("endDrawing", "(IIIILjava/lang/String;)V");
+    jEndDrawingMethod = getMethod("endDrawing", "(IIIILjava/lang/String;Z)V");
 #endif
 }
 
@@ -626,13 +626,13 @@ AndroidGeckoSoftwareLayerClient::BeginDrawing(int aWidth, int aHeight)
 }
 
 void
-AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect, const nsAString &aMetadata)
+AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect, const nsAString &aMetadata, bool aHasDirectTexture)
 {
     NS_ASSERTION(!isNull(), "EndDrawing() called on null software layer client!");
     AndroidBridge::AutoLocalJNIFrame(1);
     jstring jMetadata = JNI()->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
     return JNI()->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width,
-                                 aRect.height, jMetadata);
+                                 aRect.height, jMetadata, aHasDirectTexture);
 }
 
 jobject
