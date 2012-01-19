@@ -681,3 +681,32 @@ add_test(function() {
     });
   });
 });
+
+// Check that onPropertyChanges for appDisabled updates the UI
+add_test(function() {
+  info("Checking that onPropertyChanges for appDisabled updates the UI");
+
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(aAddon) {
+    aAddon.userDisabled = true;
+    aAddon.isCompatible = true;
+    aAddon.appDisabled = false;
+
+    gManagerWindow.loadView("addons://list/extension");
+    wait_for_view_load(gManagerWindow, function() {
+      var el = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
+
+      is(el.getAttribute("active"), "false", "Addon should not be marked as active");
+      is_element_hidden(get_node(el, "warning"), "Warning message should not be visible");
+
+      info("Making addon incompatible and appDisabled");
+      aAddon.isCompatible = false;
+      aAddon.appDisabled = true;
+
+      is(el.getAttribute("active"), "false", "Addon should not be marked as active");
+      is_element_visible(get_node(el, "warning"), "Warning message should be visible");
+      is(get_node(el, "warning").textContent, "Test add-on 2 is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
+
+      run_next_test();
+    });
+  });
+});
