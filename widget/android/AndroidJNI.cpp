@@ -106,7 +106,6 @@ extern "C" {
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
-    NS_EXPORT bool JNICALL Java_org_mozilla_gecko_GeckoAppShell_testDirectTexture(JNIEnv* jenv, jclass);
 #endif
 }
 
@@ -849,12 +848,6 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass)
 {
     nsWindow::BindToTexture();
-}
-
-NS_EXPORT bool JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_testDirectTexture(JNIEnv* jenv, jclass)
-{
-    return nsWindow::HasDirectTexture();
 }
 
 #endif
