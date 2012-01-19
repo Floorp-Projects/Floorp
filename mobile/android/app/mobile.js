@@ -690,3 +690,6 @@ pref("dom.report_all_js_exceptions", true);
 pref("javascript.options.showInConsole", true);
 
 pref("full-screen-api.enabled", true);
+
+pref("direct-texture.force.enabled", false);
+pref("direct-texture.force.disabled", false);

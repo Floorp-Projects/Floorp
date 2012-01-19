@@ -162,7 +162,7 @@ public:
     unsigned char *LockBufferBits();
     void UnlockBuffer();
     void BeginDrawing(int aWidth, int aHeight);
-    void EndDrawing(const nsIntRect &aRect, const nsAString &aMetadata);
+    void EndDrawing(const nsIntRect &aRect, const nsAString &aMetadata, bool aHasDirectTexture);
 
 private:
     static jclass jGeckoSoftwareLayerClientClass;
