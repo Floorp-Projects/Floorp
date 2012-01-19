@@ -63,6 +63,12 @@ class LLabel : public LInstructionHelper<0, 0, 0>
     }
 };
 
+class LNop : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(Nop);
+};
+
 // Used to fill post snapshots when the register allocator process the
 // stream of instructions.
 class LCaptureAllocations : public LInstructionHelper<0, 0, 0>
