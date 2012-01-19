@@ -18,12 +18,17 @@
 #define SCALE   (1 << SHIFT)
 #define MASK    (SCALE - 1)
 
-/*
+/** @file
     We have two techniques for capturing the output of the supersampler:
     - SUPERMASK, which records a large mask-bitmap
         this is often faster for small, complex objects
     - RLE, which records a rle-encoded scanline
         this is often faster for large objects with big spans
+
+    These blitters use two coordinate systems:
+    - destination coordinates, scale equal to the output - often
+        abbreviated with 'i' or 'I' in variable names
+    - supersampled coordinates, scale equal to the output * SCALE
 
     NEW_AA is a set of code-changes to try to make both paths produce identical
     results. Its not quite there yet, though the remaining differences may be
@@ -35,29 +40,37 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/// Base class for a single-pass supersampled blitter.
 class BaseSuperBlitter : public SkBlitter {
 public:
     BaseSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
                      const SkRegion& clip);
 
+    /// Must be explicitly defined on subclasses.
     virtual void blitAntiH(int x, int y, const SkAlpha antialias[],
-                           const int16_t runs[]) {
-        SkASSERT(!"How did I get here?");
+                           const int16_t runs[]) SK_OVERRIDE {
+        SkDEBUGFAIL("How did I get here?");
     }
-    virtual void blitV(int x, int y, int height, SkAlpha alpha) {
-        SkASSERT(!"How did I get here?");
-    }
-    virtual void blitRect(int x, int y, int width, int height) {
-        SkASSERT(!"How did I get here?");
+    /// May not be called on BaseSuperBlitter because it blits out of order.
+    virtual void blitV(int x, int y, int height, SkAlpha alpha) SK_OVERRIDE {
+        SkDEBUGFAIL("How did I get here?");
     }
 
 protected:
     SkBlitter*  fRealBlitter;
+    /// Current y coordinate, in destination coordinates.
     int         fCurrIY;
-    int         fWidth, fLeft, fSuperLeft;
+    /// Widest row of region to be blitted, in destination coordinates.
+    int         fWidth;
+    /// Leftmost x coordinate in any row, in destination coordinates.
+    int         fLeft;
+    /// Leftmost x coordinate in any row, in supersampled coordinates.
+    int         fSuperLeft;
 
     SkDEBUGCODE(int fCurrX;)
+    /// Current y coordinate in supersampled coordinates.
     int fCurrY;
+    /// Initial y coordinate (top of bounds).
     int fTop;
 };
 
@@ -84,6 +97,7 @@ BaseSuperBlitter::BaseSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
     SkDEBUGCODE(fCurrX = -1;)
 }
 
+/// Run-length-encoded supersampling antialiased blitter.
 class SuperBlitter : public BaseSuperBlitter {
 public:
     SuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
@@ -94,10 +108,16 @@ public:
         sk_free(fRuns.fRuns);
     }
 
+    /// Once fRuns contains a complete supersampled row, flush() blits
+    /// it out through the wrapped blitter.
     void flush();
 
-    virtual void blitH(int x, int y, int width);
-    virtual void blitRect(int x, int y, int width, int height);
+    /// Blits a row of pixels, with location and width specified
+    /// in supersampled coordinates.
+    virtual void blitH(int x, int y, int width) SK_OVERRIDE;
+    /// Blits a rectangle of pixels, with location and size specified
+    /// in supersampled coordinates.
+    virtual void blitRect(int x, int y, int width, int height) SK_OVERRIDE;
 
 private:
     SkAlphaRuns fRuns;
@@ -136,9 +156,15 @@ static inline int coverage_to_alpha(int aa) {
     return aa;
 }
 
-#define SUPER_Mask      ((1 << SHIFT) - 1)
+static inline int coverage_to_exact_alpha(int aa) {
+    int alpha = (256 >> SHIFT) * aa;
+    // clamp 256->255
+    return alpha - (alpha >> 8);
+}
 
 void SuperBlitter::blitH(int x, int y, int width) {
+    SkASSERT(width > 0);
+
     int iy = y >> SHIFT;
     SkASSERT(iy >= fCurrIY);
 
@@ -163,16 +189,13 @@ void SuperBlitter::blitH(int x, int y, int width) {
         fCurrIY = iy;
     }
 
-    // we sub 1 from maxValue 1 time for each block, so that we don't
-    // hit 256 as a summed max, but 255.
-//  int maxValue = (1 << (8 - SHIFT)) - (((y & MASK) + 1) >> SHIFT);
-
     int start = x;
     int stop = x + width;
 
     SkASSERT(start >= 0 && stop > start);
-    int fb = start & SUPER_Mask;
-    int fe = stop & SUPER_Mask;
+    // integer-pixel-aligned ends of blit, rounded out
+    int fb = start & MASK;
+    int fe = stop & MASK;
     int n = (stop >> SHIFT) - (start >> SHIFT) - 1;
 
     if (n < 0) {
@@ -183,11 +206,13 @@ void SuperBlitter::blitH(int x, int y, int width) {
         if (fb == 0) {
             n += 1;
         } else {
-            fb = (1 << SHIFT) - fb;
+            fb = SCALE - fb;
         }
     }
 
-    fOffsetX = fRuns.add(x >> SHIFT, coverage_to_alpha(fb), n, coverage_to_alpha(fe),
+    // TODO - should this be using coverage_to_exact_alpha?
+    fOffsetX = fRuns.add(x >> SHIFT, coverage_to_alpha(fb),
+                         n, coverage_to_alpha(fe),
                          (1 << (8 - SHIFT)) - (((y & MASK) + 1) >> SHIFT),
                          fOffsetX);
 
@@ -197,16 +222,141 @@ void SuperBlitter::blitH(int x, int y, int width) {
 #endif
 }
 
-void SuperBlitter::blitRect(int x, int y, int width, int height) {
-    for (int i = 0; i < height; ++i) {
-        blitH(x, y + i, width);
+static void set_left_rite_runs(SkAlphaRuns& runs, int ileft, U8CPU leftA,
+                               int n, U8CPU riteA) {
+    SkASSERT(leftA <= 0xFF);
+    SkASSERT(riteA <= 0xFF);
+
+    int16_t* run = runs.fRuns;
+    uint8_t* aa = runs.fAlpha;
+
+    if (ileft > 0) {
+        run[0] = ileft;
+        aa[0] = 0;
+        run += ileft;
+        aa += ileft;
     }
 
-    flush();
+    SkASSERT(leftA < 0xFF);
+    if (leftA > 0) {
+        *run++ = 1;
+        *aa++ = leftA;
+    }
+
+    if (n > 0) {
+        run[0] = n;
+        aa[0] = 0xFF;
+        run += n;
+        aa += n;
+    }
+
+    SkASSERT(riteA < 0xFF);
+    if (riteA > 0) {
+        *run++ = 1;
+        *aa++ = riteA;
+    }
+    run[0] = 0;
+}
+
+void SuperBlitter::blitRect(int x, int y, int width, int height) {
+    SkASSERT(width > 0);
+    SkASSERT(height > 0);
+
+    // blit leading rows
+    while ((y & MASK)) {
+        this->blitH(x, y++, width);
+        if (--height <= 0) {
+            return;
+        }
+    }
+    SkASSERT(height > 0);
+
+    // Since this is a rect, instead of blitting supersampled rows one at a
+    // time and then resolving to the destination canvas, we can blit
+    // directly to the destintion canvas one row per SCALE supersampled rows.
+    int start_y = y >> SHIFT;
+    int stop_y = (y + height) >> SHIFT;
+    int count = stop_y - start_y;
+    if (count > 0) {
+        y += count << SHIFT;
+        height -= count << SHIFT;
+
+        // save original X for our tail blitH() loop at the bottom
+        int origX = x;
+
+        x -= fSuperLeft;
+        // hack, until I figure out why my cubics (I think) go beyond the bounds
+        if (x < 0) {
+            width += x;
+            x = 0;
+        }
+
+        // There is always a left column, a middle, and a right column.
+        // ileft is the destination x of the first pixel of the entire rect.
+        // xleft is (SCALE - # of covered supersampled pixels) in that
+        // destination pixel.
+        int ileft = x >> SHIFT;
+        int xleft = x & MASK;
+        // irite is the destination x of the last pixel of the OPAQUE section.
+        // xrite is the number of supersampled pixels extending beyond irite;
+        // xrite/SCALE should give us alpha.
+        int irite = (x + width) >> SHIFT;
+        int xrite = (x + width) & MASK;
+        if (!xrite) {
+            xrite = SCALE;
+            irite--;
+        }
+
+        // Need to call flush() to clean up pending draws before we
+        // even consider blitV(), since otherwise it can look nonmonotonic.
+        SkASSERT(start_y > fCurrIY);
+        this->flush();
+
+        int n = irite - ileft - 1;
+        if (n < 0) {
+            // If n < 0, we'll only have a single partially-transparent column
+            // of pixels to render.
+            xleft = xrite - xleft;
+            SkASSERT(xleft <= SCALE);
+            SkASSERT(xleft > 0);
+            xrite = 0;
+            fRealBlitter->blitV(ileft + fLeft, start_y, count,
+                coverage_to_exact_alpha(xleft));
+        } else {
+            // With n = 0, we have two possibly-transparent columns of pixels
+            // to render; with n > 0, we have opaque columns between them.
+
+            xleft = SCALE - xleft;
+
+            // Using coverage_to_exact_alpha is not consistent with blitH()
+            const int coverageL = coverage_to_exact_alpha(xleft);
+            const int coverageR = coverage_to_exact_alpha(xrite);
+
+            SkASSERT(coverageL > 0 || n > 0 || coverageR > 0);
+            SkASSERT((coverageL != 0) + n + (coverageR != 0) <= fWidth);
+
+            fRealBlitter->blitAntiRect(ileft + fLeft, start_y, n, count,
+                                       coverageL, coverageR);
+        }
+
+        // preamble for our next call to blitH()
+        fCurrIY = stop_y - 1;
+        fOffsetX = 0;
+        fCurrY = y - 1;
+        fRuns.reset(fWidth);
+        x = origX;
+    }
+
+    // catch any remaining few rows
+    SkASSERT(height <= MASK);
+    while (--height >= 0) {
+        this->blitH(x, y++, width);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/// Masked supersampling antialiased blitter.
 class MaskSuperBlitter : public BaseSuperBlitter {
 public:
     MaskSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir,
@@ -215,7 +365,7 @@ public:
         fRealBlitter->blitMask(fMask, fClipRect);
     }
 
-    virtual void blitH(int x, int y, int width);
+    virtual void blitH(int x, int y, int width) SK_OVERRIDE;
 
     static bool CanHandleRect(const SkIRect& bounds) {
 #ifdef FORCE_RLE
@@ -364,18 +514,14 @@ void MaskSuperBlitter::blitH(int x, int y, int width) {
         x = 0;
     }
 
-    // we sub 1 from maxValue 1 time for each block, so that we don't
-    // hit 256 as a summed max, but 255.
-//  int maxValue = (1 << (8 - SHIFT)) - (((y & MASK) + 1) >> SHIFT);
-
     uint8_t* row = fMask.fImage + iy * fMask.fRowBytes + (x >> SHIFT);
 
     int start = x;
     int stop = x + width;
 
     SkASSERT(start >= 0 && stop > start);
-    int fb = start & SUPER_Mask;
-    int fe = stop & SUPER_Mask;
+    int fb = start & MASK;
+    int fe = stop & MASK;
     int n = (stop >> SHIFT) - (start >> SHIFT) - 1;
 
 
@@ -388,10 +534,10 @@ void MaskSuperBlitter::blitH(int x, int y, int width) {
         if (0 == fb) {
             n += 1;
         } else {
-            fb = (1 << SHIFT) - fb;
+            fb = SCALE - fb;
         }
 #else
-        fb = (1 << SHIFT) - fb;
+        fb = SCALE - fb;
 #endif
         SkASSERT(row >= fMask.fImage);
         SkASSERT(row + n + 1 < fMask.fImage + kMAX_STORAGE + 1);
@@ -424,6 +570,9 @@ void SkScan::AntiFillPath(const SkPath& path, const SkRegion& clip,
     SkIRect ir;
     path.getBounds().roundOut(&ir);
     if (ir.isEmpty()) {
+        if (path.isInverseFillType()) {
+            blitter->blitRegion(clip);
+        }
         return;
     }
 

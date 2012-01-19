@@ -36,9 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 /**
  * Unit test for Bug 438861 - Previous search results not returned to multiple
  * searches.
