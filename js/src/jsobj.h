@@ -1829,7 +1829,7 @@ static const uintN RESOLVE_INFER = 0xffff;
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
  */
 extern bool
-FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool global,
+FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, JSObject *scopeChain,
                    JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 /*
@@ -1837,7 +1837,7 @@ FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool glo
  * global object, per the global parameter.
  */
 extern bool
-FindProperty(JSContext *cx, PropertyName *name, bool global,
+FindProperty(JSContext *cx, PropertyName *name, JSObject *scopeChain,
              JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 extern JSObject *

@@ -108,7 +108,7 @@ LightweightThemeConsumer.prototype = {
 
 function _setImage(aElement, aActive, aURL) {
   aElement.style.backgroundImage =
-    (aActive && aURL) ? 'url("' + aURL.replace('"', '\\"', "g") + '")' : "";
+    (aActive && aURL) ? 'url("' + aURL.replace(/"/g, '\\"') + '")' : "";
 }
 
 function _parseRGB(aColorString) {

@@ -2449,12 +2449,6 @@ class JSAutoCheckRequest {
 JS_BEGIN_EXTERN_C
 #endif
 
-extern JS_PUBLIC_API(void)
-JS_Lock(JSRuntime *rt);
-
-extern JS_PUBLIC_API(void)
-JS_Unlock(JSRuntime *rt);
-
 extern JS_PUBLIC_API(JSContextCallback)
 JS_SetContextCallback(JSRuntime *rt, JSContextCallback cxCallback);
 

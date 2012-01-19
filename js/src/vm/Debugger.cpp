@@ -187,8 +187,8 @@ BreakpointSite::recompile(JSContext *cx, bool forTrap)
             if (!ac.ref().enter())
                 return false;
         }
-        mjit::Recompiler recompiler(cx, script);
-        recompiler.recompile();
+        mjit::Recompiler::clearStackReferences(cx, script);
+        mjit::ReleaseScriptCode(cx, script);
     }
 #endif
     return true;

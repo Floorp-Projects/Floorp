@@ -1141,8 +1141,8 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 
     JS_ASSERT(script->mainOffset == 0);
     script->mainOffset = prologLength;
-    memcpy(script->code, bce->prologBase(), prologLength * sizeof(jsbytecode));
-    memcpy(script->main(), bce->base(), mainLength * sizeof(jsbytecode));
+    PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
+    PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
     nfixed = bce->inFunction()
              ? bce->bindings.countVars()
              : bce->sharpSlots();
@@ -1209,22 +1209,22 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 
     if (bce->hasUpvarIndices()) {
         JS_ASSERT(bce->upvarIndices->count() <= bce->upvarMap.length());
-        memcpy(script->upvars()->vector, bce->upvarMap.begin(),
-               bce->upvarIndices->count() * sizeof(bce->upvarMap[0]));
+        PodCopy<UpvarCookie>(script->upvars()->vector, bce->upvarMap.begin(),
+                             bce->upvarIndices->count());
         bce->upvarIndices->clear();
         bce->upvarMap.clear();
     }
 
     if (bce->globalUses.length()) {
-        memcpy(script->globals()->vector, &bce->globalUses[0],
-               bce->globalUses.length() * sizeof(GlobalSlotArray::Entry));
+        PodCopy<GlobalSlotArray::Entry>(script->globals()->vector, &bce->globalUses[0],
+                                        bce->globalUses.length());
     }
 
     if (script->nClosedArgs)
-        memcpy(script->closedSlots, &bce->closedArgs[0], script->nClosedArgs * sizeof(uint32_t));
+        PodCopy<uint32_t>(script->closedSlots, &bce->closedArgs[0], script->nClosedArgs);
     if (script->nClosedVars) {
-        memcpy(&script->closedSlots[script->nClosedArgs], &bce->closedVars[0],
-               script->nClosedVars * sizeof(uint32_t));
+        PodCopy<uint32_t>(&script->closedSlots[script->nClosedArgs], &bce->closedVars[0],
+                          script->nClosedVars);
     }
 
     script->bindings.transfer(cx, &bce->bindings);
@@ -1715,7 +1715,7 @@ js_CloneScript(JSContext *cx, JSScript *script)
 void
 JSScript::copyClosedSlotsTo(JSScript *other)
 {
-    memcpy(other->closedSlots, closedSlots, nClosedArgs + nClosedVars);
+    js_memcpy(other->closedSlots, closedSlots, nClosedArgs + nClosedVars);
 }
 
 bool
@@ -1745,10 +1745,9 @@ bool
 JSScript::recompileForStepMode(JSContext *cx)
 {
 #ifdef JS_METHODJIT
-    js::mjit::JITScript *jit = jitNormal ? jitNormal : jitCtor;
-    if (jit && stepModeEnabled() != jit->singleStepMode) {
-        js::mjit::Recompiler recompiler(cx, this);
-        recompiler.recompile();
+    if (jitNormal || jitCtor) {
+        mjit::ClearAllFrames(cx->compartment);
+        mjit::ReleaseScriptCode(cx, this);
     }
 #endif
     return true;

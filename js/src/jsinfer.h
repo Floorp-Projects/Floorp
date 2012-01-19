@@ -1131,6 +1131,17 @@ typedef HashMap<ObjectTableKey,ObjectTableEntry,ObjectTableKey,SystemAllocPolicy
 struct AllocationSiteKey;
 typedef HashMap<AllocationSiteKey,ReadBarriered<TypeObject>,AllocationSiteKey,SystemAllocPolicy> AllocationSiteTable;
 
+struct RecompileInfo
+{
+    JSScript *script;
+    bool constructing:1;
+    uint32_t chunkIndex:31;
+
+    bool operator == (const RecompileInfo &o) const {
+        return script == o.script && constructing == o.constructing && chunkIndex == o.chunkIndex;
+    }
+};
+
 /* Type information for a compartment. */
 struct TypeCompartment
 {
@@ -1147,7 +1158,7 @@ struct TypeCompartment
     bool pendingNukeTypes;
 
     /* Pending recompilations to perform before execution of JIT code can resume. */
-    Vector<JSScript*> *pendingRecompiles;
+    Vector<RecompileInfo> *pendingRecompiles;
 
     /*
      * Number of recompilation events and inline frame expansions that have
@@ -1162,7 +1173,7 @@ struct TypeCompartment
      * changes inducing recompilation are keyed to this script. Note: script
      * compilation is not reentrant.
      */
-    JSScript *compiledScript;
+    RecompileInfo compiledInfo;
 
     /* Table for referencing types of objects keyed to an allocation site. */
     AllocationSiteTable *allocationSiteTable;
@@ -1235,7 +1246,8 @@ struct TypeCompartment
     void setPendingNukeTypes(JSContext *cx);
 
     /* Mark a script as needing recompilation once inference has finished. */
-    void addPendingRecompile(JSContext *cx, JSScript *script);
+    void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
+    void addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc);
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, JSScript *script, uint32_t offset,

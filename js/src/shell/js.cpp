@@ -3768,7 +3768,7 @@ Serialize(JSContext *cx, uintN argc, jsval *vp)
     }
     JSObject *array = TypedArray::getTypedArray(arrayobj);
     JS_ASSERT((uintptr_t(TypedArray::getDataOffset(array)) & 7) == 0);
-    memcpy(TypedArray::getDataOffset(array), datap, nbytes);
+    js_memcpy(TypedArray::getDataOffset(array), datap, nbytes);
     JS_free(cx, datap);
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(arrayobj));
     return true;
@@ -3852,6 +3852,26 @@ MJitDataStats(JSContext *cx, uintN argc, jsval *vp)
 #else
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 #endif
+    return true;
+}
+
+JSBool
+MJitChunkLimit(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc > 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    jsdouble t;
+    if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t))
+        return JS_FALSE;
+
+#ifdef JS_METHODJIT
+    mjit::SetChunkLimit((uint32_t) t);
+#endif
+
+    vp->setUndefined();
     return true;
 }
 
@@ -4020,6 +4040,7 @@ static JSFunctionSpec shell_functions[] = {
 #ifdef JS_METHODJIT
     JS_FN("mjitcodestats",  MJitCodeStats,  0,0),
     JS_FN("mjitdatastats",  MJitDataStats,  0,0),
+    JS_FN("mjitChunkLimit", MJitChunkLimit, 1,0),
 #endif
     JS_FN("stringstats",    StringStats,    0,0),
     JS_FN("newGlobal",      NewGlobal,      1,0),
@@ -4166,6 +4187,7 @@ static const char *const shell_help_messages[] = {
 #ifdef JS_METHODJIT
 "mjitcodestats()          Return stats on mjit code memory usage.",
 "mjitdatastats()          Return stats on mjit data memory usage.",
+"mjitChunkLimit(N)        Specify limit on compiled chunk size during mjit compilation.",
 #endif
 "stringstats()            Return stats on string memory usage.",
 "newGlobal(kind)          Return a new global object, in the current\n"
