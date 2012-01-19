@@ -63,6 +63,7 @@ endif
 
 XPIDLSRCS = \
   nsIAudioManager.idl \
+  nsIRadioInterfaceLayer.idl \
   nsIWorkerHolder.idl \
   $(NULL)
 
@@ -72,6 +73,16 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/telephony \
   -I$(topsrcdir)/dom/wifi \
   -I$(topsrcdir)/content/events/src \
+  $(NULL)
+
+EXTRA_COMPONENTS = \
+  RadioInterfaceLayer.manifest \
+  RadioInterfaceLayer.js \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+  ril_consts.js \
+  ril_worker.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
