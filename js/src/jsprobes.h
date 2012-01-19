@@ -48,6 +48,10 @@
 #include "jsscript.h"
 #include "jsobj.h"
 
+#ifdef JS_METHODJIT
+#include "methodjit/MethodJIT.h"
+#endif
+
 namespace js {
 
 namespace mjit {
@@ -248,7 +252,7 @@ public:
 #ifdef JS_METHODJIT
     static bool CollectNativeRegions(RegionVector &regions,
                                      JSRuntime *rt,
-                                     mjit::JITScript *jit,
+                                     mjit::JITChunk *jit,
                                      mjit::JSActiveFrame *outerFrame,
                                      mjit::JSActiveFrame **inlineFrames);
 

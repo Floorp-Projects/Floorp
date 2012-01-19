@@ -1095,9 +1095,10 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          * to recover its callee object.
          */
         JSInlinedSite *inlined;
-        fp->prev()->pcQuadratic(cx->stack, fp, &inlined);
+        jsbytecode *prevpc = fp->prev()->pcQuadratic(cx->stack, fp, &inlined);
         if (inlined) {
-            JSFunction *fun = fp->prev()->jit()->inlineFrames()[inlined->inlineIndex].fun;
+            mjit::JITChunk *chunk = fp->prev()->jit()->chunk(prevpc);
+            JSFunction *fun = chunk->inlineFrames()[inlined->inlineIndex].fun;
             fun->script()->uninlineable = true;
             MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
         }
