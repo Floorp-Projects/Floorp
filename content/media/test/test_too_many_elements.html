@@ -14,22 +14,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=713381
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=713381">Mozilla Bug 713381</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
 </div>
+
+<p>Received loadeddata event for <span id="result">0</span> <span id="expected"></span>audio elements.</p>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 713381 **/
 
 const num = 500;
-var ended = 0;
+var loadeddata = 0;
+
+var result = document.getElementById("result");
+document.getElementById("expected").innerHTML = " of " + num + " ";
 
 var finish = function(testNum) {
   return function() {
-    ok(true, "Received ended event for instance " + testNum );
-    ended++;
-    if (ended == num) {
-      ok(true, "Should receive ended events for all " + num + " elements.");
+    ok(true, "Received loadeddata event for instance " + testNum );
+    loadeddata++;
+    if (loadeddata == num) {
+      ok(true, "Should receive loadeddata events for all " + num + " elements.");
       SimpleTest.finish();
     }
   }
@@ -50,14 +54,13 @@ if (resource == null) {
     function() {  
       for (var i=0; i<num; ++i) {
         var a = new Audio(resource.name);
-        a.addEventListener("ended", finish(i), false);
-        a.volume = 0.1;
-        a.play();
+        a.addEventListener("loadeddata", finish(i), false);
       }
     }, false);
   res.play();
 }
 
+setInterval(function() { result.innerHTML = loadeddata; }, 1000);
 
 </script>
 </pre>
