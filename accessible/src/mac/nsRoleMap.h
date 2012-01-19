@@ -74,7 +74,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityGroupRole,                     // ROLE_CELL
   @"AXLink",                                    // ROLE_LINK. 10.4+ the attr first define in SDK 10.4, so we define it here too. ROLE_LINK
   @"AXHelpTag",                                 // ROLE_HELPBALLOON
-  NSAccessibilityUnknownRole,                   // ROLE_CHARACTER. unusued on OS X
+  NSAccessibilityUnknownRole,                   // ROLE_CHARACTER. unused on OS X
   NSAccessibilityListRole,                      // ROLE_LIST
   NSAccessibilityRowRole,                       // ROLE_LISTITEM
   NSAccessibilityOutlineRole,                   // ROLE_OUTLINE
