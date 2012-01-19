@@ -41,6 +41,12 @@
   color: white;
 }
 
+.loading .splitview-nav-container {
+  background-image: url(chrome://global/skin/icons/loading_16.png);
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
 .splitview-nav {
   -moz-appearance: none;
   margin: 0;
@@ -70,7 +76,6 @@
 
 .placeholder {
   -moz-box-flex: 1;
-  -moz-box-back: center;
   text-align: center;
 }
 

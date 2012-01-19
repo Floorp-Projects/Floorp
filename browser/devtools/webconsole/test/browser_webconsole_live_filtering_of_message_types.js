@@ -40,7 +40,7 @@
 
 // Tests that the message type filter checkboxes work.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 function test() {
   addTab(TEST_URI);
