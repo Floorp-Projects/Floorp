@@ -749,6 +749,8 @@ struct ChunkDescriptor
 
     /* Optional compiled code for the chunk. */
     JITChunk *chunk;
+
+    ChunkDescriptor() { PodZero(this); }
 };
 
 /* Jump or fallthrough edge in the bytecode which crosses a chunk boundary. */
@@ -775,6 +777,8 @@ struct CrossChunkEdge
      * the source is compiled but not the target.
      */
     void *shimLabel;
+
+    CrossChunkEdge() { PodZero(this); }
 };
 
 struct JITScript
