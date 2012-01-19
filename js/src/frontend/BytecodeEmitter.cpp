@@ -1032,8 +1032,7 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index, BytecodeEmitter
     ptrdiff_t off;
     jsbytecode *pc;
 
-    JS_ASSERT(JOF_OPTYPE(op) == JOF_SLOTATOM ||
-              JOF_OPTYPE(op) == JOF_SLOTOBJECT);
+    JS_ASSERT(JOF_OPTYPE(op) == JOF_SLOTOBJECT);
     bigSuffix = EmitBigIndexPrefix(cx, bce, index);
     if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
