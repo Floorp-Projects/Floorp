@@ -89,15 +89,11 @@ function test() {
 }
 
 function Disabled() {
-  document.popupNode = gBrowser.selectedTab;
-  TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
-  TabContextMenu.contextTab = null;
+  updateTabContextMenu();
   return document.getElementById("Browser:BookmarkAllTabs").getAttribute("disabled") == "true";
 }
 
 function Hidden() {
-  document.popupNode = gBrowser.selectedTab;
-  TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
-  TabContextMenu.contextTab = null;
+  updateTabContextMenu();
   return document.getElementById("context_bookmarkAllTabs").hidden;
 }
