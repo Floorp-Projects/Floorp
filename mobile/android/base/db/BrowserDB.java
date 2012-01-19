@@ -42,6 +42,8 @@ import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
 public class BrowserDB {
+    public static String ABOUT_PAGES_URL_FILTER = "about:%";
+
     public static interface URLColumns {
         public static String URL = "url";
         public static String TITLE = "title";
@@ -53,7 +55,9 @@ public class BrowserDB {
     private static BrowserDBIface sDb;
 
     public interface BrowserDBIface {
-        public Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter);
+        public Cursor filter(ContentResolver cr, CharSequence constraint, int limit);
+
+        public Cursor getTopSites(ContentResolver cr, int limit);
 
         public void updateVisitedHistory(ContentResolver cr, String uri);
 
@@ -87,12 +91,12 @@ public class BrowserDB {
         sDb = new LocalBrowserDB(BrowserContract.DEFAULT_PROFILE);
     }
 
-    public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter) {
-        return sDb.filter(cr, constraint, limit, urlFilter);
+    public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
+        return sDb.filter(cr, constraint, limit);
     }
 
-    public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
-        return sDb.filter(cr, constraint, limit, null);
+    public static Cursor getTopSites(ContentResolver cr, int limit) {
+        return sDb.getTopSites(cr, limit);
     }
 
     public static void updateVisitedHistory(ContentResolver cr, String uri) {
