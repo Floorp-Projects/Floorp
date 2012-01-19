@@ -116,6 +116,7 @@ DrawTargetCG::~DrawTargetCG()
     CGColorSpaceRelease(mColorSpace);
   if (mCg)
     CGContextRelease(mCg);
+  free(mData);
 }
 
 TemporaryRef<SourceSurface>
@@ -845,7 +846,6 @@ DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &)
   // XXX: currently we allocate ourselves so that we can easily return a gfxImageSurface
   // we might not need to later if once we don't need to support gfxImageSurface
   //XXX: currently Init implicitly clears, that can often be a waste of time
-  // XXX: leaked
   mData = calloc(mSize.height * stride, 1);
   // XXX: what should we do if this fails?
   mCg = CGBitmapContextCreate (mData,
