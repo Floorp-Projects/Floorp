@@ -195,7 +195,13 @@
         <setter><![CDATA[
           // Completing a result should simulate the user typing the result,
           // so fire an input event.
+          // Trim popup selected values, but never trim results coming from
+          // autofill.
+          if (this.popup.selectedIndex == -1)
+            this._disableTrim = true;
           this.value = val;
+          this._disableTrim = false;
+
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("input", true, false, window, 0);
           this.mIgnoreInput = true;
@@ -266,6 +272,7 @@
       <!-- =================== PUBLIC MEMBERS =================== -->
 
       <field name="valueIsTyped">false</field>
+      <field name="_disableTrim">false</field>
       <property name="value">
         <getter><![CDATA[
           if (typeof this.onBeforeValueGet == "function") {
@@ -281,7 +288,7 @@
           if (typeof this.onBeforeValueSet == "function")
             val = this.onBeforeValueSet(val);
 
-          if (typeof this.trimValue == "function")
+          if (typeof this.trimValue == "function" && !this._disableTrim)
             val = this.trimValue(val);
 
           this.valueIsTyped = false;
