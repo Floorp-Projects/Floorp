@@ -14,13 +14,14 @@
  * The Original Code is Telephony.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
  *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Sinker Li <thinker@codemud.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,13 +49,13 @@ Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 const DEBUG = true; // set to false to suppress debug messages
 
-const TELEPHONYWORKER_CID =
+const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
 const DATACALLINFO_CID =
   Components.ID("{ef474cd9-94f7-4c05-a31b-29b9de8a10d2}");
 
 const nsIAudioManager = Ci.nsIAudioManager;
-const nsITelephone = Ci.nsITelephone;
+const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 
 const kSmsReceivedObserverTopic          = "sms-received";
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
@@ -66,17 +67,17 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
 function convertRILCallState(state) {
   switch (state) {
     case RIL.CALL_STATE_ACTIVE:
-      return nsITelephone.CALL_STATE_CONNECTED;
+      return nsIRadioInterfaceLayer.CALL_STATE_CONNECTED;
     case RIL.CALL_STATE_HOLDING:
-      return nsITelephone.CALL_STATE_HELD;
+      return nsIRadioInterfaceLayer.CALL_STATE_HELD;
     case RIL.CALL_STATE_DIALING:
-      return nsITelephone.CALL_STATE_DIALING;
+      return nsIRadioInterfaceLayer.CALL_STATE_DIALING;
     case RIL.CALL_STATE_ALERTING:
-      return nsITelephone.CALL_STATE_RINGING;
+      return nsIRadioInterfaceLayer.CALL_STATE_RINGING;
     case RIL.CALL_STATE_INCOMING:
-      return nsITelephone.CALL_STATE_INCOMING;
+      return nsIRadioInterfaceLayer.CALL_STATE_INCOMING;
     case RIL.CALL_STATE_WAITING:
-      return nsITelephone.CALL_STATE_HELD; // XXX This may not be right...
+      return nsIRadioInterfaceLayer.CALL_STATE_HELD; // XXX This may not be right...
     default:
       throw new Error("Unknown rilCallState: " + state);
   }
@@ -126,7 +127,7 @@ DataCallInfo.protoptype = {
 };
 
 
-function nsTelephonyWorker() {
+function RadioInterfaceLayer() {
   this.worker = new ChromeWorker("resource://gre/modules/ril_worker.js");
   this.worker.onerror = this.onerror.bind(this);
   this.worker.onmessage = this.onmessage.bind(this);
@@ -138,16 +139,16 @@ function nsTelephonyWorker() {
     cardState:      null
   };
 }
-nsTelephonyWorker.prototype = {
+RadioInterfaceLayer.prototype = {
 
-  classID:   TELEPHONYWORKER_CID,
-  classInfo: XPCOMUtils.generateCI({classID: TELEPHONYWORKER_CID,
-                                    classDescription: "Telephone",
+  classID:   RADIOINTERFACELAYER_CID,
+  classInfo: XPCOMUtils.generateCI({classID: RADIOINTERFACELAYER_CID,
+                                    classDescription: "RadioInterfaceLayer",
                                     interfaces: [Ci.nsIWorkerHolder,
-                                                 Ci.nsITelephone]}),
+                                                 Ci.nsIRadioInterfaceLayer]}),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
-                                         Ci.nsITelephone]),
+                                         Ci.nsIRadioInterfaceLayer]),
 
   onerror: function onerror(event) {
     debug("Got an error: " + event.filename + ":" +
@@ -219,12 +220,12 @@ nsTelephonyWorker.prototype = {
       return;
     }
     switch (this._activeCall.state) {
-      case nsITelephone.CALL_STATE_INCOMING:
+      case nsIRadioInterfaceLayer.CALL_STATE_INCOMING:
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_RINGTONE;
         debug("Incoming call, put audio system into PHONE_STATE_RINGTONE.");
         break;
-      case nsITelephone.CALL_STATE_DIALING: // Fall through...
-      case nsITelephone.CALL_STATE_CONNECTED:
+      case nsIRadioInterfaceLayer.CALL_STATE_DIALING: // Fall through...
+      case nsIRadioInterfaceLayer.CALL_STATE_CONNECTED:
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
         gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
                                      nsIAudioManager.FORCE_NONE);
@@ -240,7 +241,7 @@ nsTelephonyWorker.prototype = {
   handleCallStateChange: function handleCallStateChange(call) {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
-    if (call.state == nsITelephone.CALL_STATE_CONNECTED) {
+    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_CONNECTED) {
       // This is now the active call.
       this._activeCall = call;
     }
@@ -259,7 +260,8 @@ nsTelephonyWorker.prototype = {
     }
     this.updateCallAudioState();
     this._deliverCallback("callStateChanged",
-                          [call.callIndex, nsITelephone.CALL_STATE_DISCONNECTED,
+                          [call.callIndex,
+                           nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED,
                            call.number]);
   },
 
@@ -327,7 +329,7 @@ nsTelephonyWorker.prototype = {
 
   worker: null,
 
-  // nsITelephone
+  // nsIRadioInterfaceLayer
 
   currentState: null,
 
@@ -540,12 +542,12 @@ nsTelephonyWorker.prototype = {
 
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([nsTelephonyWorker]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([RadioInterfaceLayer]);
 
 let debug;
 if (DEBUG) {
   debug = function (s) {
-    dump("-*- TelephonyWorker component: " + s + "\n");
+    dump("-*- RadioInterfaceLayer: " + s + "\n");
   };
 } else {
   debug = function (s) {};
