@@ -104,4 +104,6 @@ patch -p3 < new-aa.patch
 patch -p3 < radial-gradients.patch
 # Fix restrict keyword problem for VS2005
 patch -p3 < skia_restrict_problem.patch
+# Changes to SkUserConfig.h - no bug
+patch -p3 < user-config.patch
 
