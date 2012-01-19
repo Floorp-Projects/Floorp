@@ -69,7 +69,7 @@ var gEngineManagerDialog = {
 
   observe: function engineManager_observe(aEngine, aTopic, aVerb) {
     if (aTopic == "browser-search-engine-modified") {
-      aEngine.QueryInterface(Ci.nsISearchEngine)
+      aEngine.QueryInterface(Ci.nsISearchEngine);
       switch (aVerb) {
       case "engine-added":
         gEngineView._engineStore.addEngine(aEngine);
@@ -118,7 +118,7 @@ var gEngineManagerDialog = {
     gEngineView.rowCountChanged(index, -1);
     gEngineView.invalidate();
     gEngineView.selection.select(Math.min(index, gEngineView.lastIndex));
-    gEngineView.ensureRowIsVisible(Math.min(index, gEngineView.lastIndex));
+    gEngineView.ensureRowIsVisible(gEngineView.currentIndex);
     document.getElementById("engineList").focus();
   },
 
@@ -150,7 +150,7 @@ var gEngineManagerDialog = {
     var title = strings.getString("editTitle");
     var msg = strings.getFormattedString("editMsg", [selectedEngine.name]);
 
-    while (Services.prompt.prompt(window, title, msg, alias, null, { })) {
+    while (Services.prompt.prompt(window, title, msg, alias, null, {})) {
       var bduplicate = false;
       var eduplicate = false;
 
@@ -165,7 +165,7 @@ var gEngineManagerDialog = {
         // Check for duplicates in changes we haven't committed yet
         let engines = gEngineView._engineStore.engines;
         for each (let engine in engines) {
-          if (engine.alias == alias.value && 
+          if (engine.alias == alias.value &&
               engine.name != selectedEngine.name) {
             eduplicate = true;
             break;
@@ -364,7 +364,7 @@ EngineStore.prototype = {
     var index = this._getIndexForEngine(aEngine);
     if (index == -1)
       throw new Error("invalid engine?");
- 
+
     this._engines.splice(index, 1);
     this._ops.push(new EngineRemoveOp(aEngine));
     if (this._defaultEngines.some(this._isSameEngine, aEngine))
@@ -420,8 +420,8 @@ EngineView.prototype = {
   get selectedIndex() {
     var seln = this.selection;
     if (seln.getRangeCount() > 0) {
-      var min = { };
-      seln.getRangeAt(0, min, { });
+      var min = {};
+      seln.getRangeAt(0, min, {});
       return min.value;
     }
     return -1;
@@ -474,7 +474,7 @@ EngineView.prototype = {
     var sourceIndex = this.getSourceIndexFromDrag(dataTransfer);
     return (sourceIndex != -1 &&
             sourceIndex != targetIndex &&
-            sourceIndex != (targetIndex + orientation));
+            sourceIndex != targetIndex + orientation);
   },
 
   drop: function(dropIndex, orientation, dataTransfer) {
@@ -486,7 +486,7 @@ EngineView.prototype = {
         dropIndex--;
     } else {
       if (orientation == Ci.nsITreeView.DROP_AFTER)
-        dropIndex++;    
+        dropIndex++;
     }
 
     this._engineStore.moveEngine(sourceEngine, dropIndex);
@@ -494,7 +494,6 @@ EngineView.prototype = {
 
     // Redraw, and adjust selection
     this.invalidate();
-    this.selection.clearSelection();
     this.selection.select(dropIndex);
   },
 
