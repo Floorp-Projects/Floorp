@@ -311,6 +311,7 @@ CPPSRCS += \
 	SkFontHost_FreeType.cpp \
 	SkFontHost_android.cpp \
 	SkFontHost_gamma.cpp \
+	FontHostConfiguration_android.cpp \
 	SkMMapStream.cpp \
 	SkTime_Unix.cpp \
 	$(NULL)
@@ -326,6 +327,7 @@ EXPORTS_skia += \
 	$(NULL)
 CPPSRCS += \
 	SkFontHost_win.cpp \
+	SkFontHost_sandbox_none.cpp \
 	SkTime_win.cpp \
 	$(NULL)
 endif
