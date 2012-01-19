@@ -502,7 +502,7 @@
         <textbox id="urlbar" flex="1"
                  placeholder="&urlbar.placeholder;"
                  type="autocomplete"
-                 autocompletesearch="history"
+                 autocompletesearch="urlinline history"
                  autocompletesearchparam="enable-actions"
                  autocompletepopup="PopupAutoCompleteRichResult"
                  completeselectedindex="true"

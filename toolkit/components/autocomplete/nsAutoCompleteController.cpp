@@ -1098,6 +1098,12 @@ nsAutoCompleteController::StartSearchTimer()
   PRUint32 timeout;
   mInput->GetTimeout(&timeout);
 
+  if (timeout == 0) {
+    // The consumer wants to execute the search synchronously
+    StartSearch();
+    return NS_OK;
+  }
+
   nsresult rv;
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_FAILED(rv))
