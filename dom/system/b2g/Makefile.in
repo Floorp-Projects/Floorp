@@ -55,7 +55,10 @@ CPPSRCS = \
   $(NULL)
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += AudioManager.cpp
+CPPSRCS += \
+  AudioManager.cpp \
+  GonkGPSGeolocationProvider.cpp \
+  $(NULL)
 endif
 
 XPIDLSRCS = \
@@ -65,6 +68,7 @@ XPIDLSRCS = \
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/src/geolocation \
   -I$(topsrcdir)/dom/telephony \
   -I$(topsrcdir)/dom/wifi \
   -I$(topsrcdir)/content/events/src \
