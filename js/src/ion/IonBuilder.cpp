@@ -1456,9 +1456,11 @@ IonBuilder::assertValidLoopHeadOp(jsbytecode *pc)
 #ifdef DEBUG
     JS_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
 
-    // Make sure this is the next opcode after the loop header.
+    // Make sure this is the next opcode after the loop header,
+    // unless the for loop is unconditional.
     CFGState &state = cfgStack_.back();
-    JS_ASSERT(GetNextPc(state.loop.entry->pc()) == pc);
+    JS_ASSERT_IF((JSOp)*(state.loop.entry->pc()) == JSOP_GOTO,
+        GetNextPc(state.loop.entry->pc()) == pc);
 
     // do-while loops have a source note.
     jssrcnote *sn = info().getNote(cx, pc);
