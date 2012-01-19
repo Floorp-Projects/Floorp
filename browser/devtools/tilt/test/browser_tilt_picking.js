@@ -3,7 +3,7 @@
 
 /*global ok, is, info, waitForExplicitFinish, finish, gBrowser */
 /*global isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Services, InspectorUI, TILT_DESTROYED */
+/*global Services, InspectorUI, DESTROYED */
 "use strict";
 
 function test() {
@@ -35,7 +35,7 @@ function test() {
               ok(!presenter.highlight.disabled,
                 "After only picking a node, it shouldn't be highlighted.");
 
-              Services.obs.addObserver(cleanup, TILT_DESTROYED, false);
+              Services.obs.addObserver(cleanup, DESTROYED, false);
               InspectorUI.closeInspectorUI();
             }
           });
@@ -46,7 +46,7 @@ function test() {
 }
 
 function cleanup() {
-  Services.obs.removeObserver(cleanup, TILT_DESTROYED);
+  Services.obs.removeObserver(cleanup, DESTROYED);
   gBrowser.removeCurrentTab();
   finish();
 }

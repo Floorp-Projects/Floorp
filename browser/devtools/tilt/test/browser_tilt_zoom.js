@@ -3,7 +3,7 @@
 
 /*global ok, is, info, waitForExplicitFinish, finish, executeSoon, gBrowser */
 /*global isApprox, isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Services, EventUtils, TiltUtils, InspectorUI, TILT_DESTROYED */
+/*global Services, EventUtils, TiltUtils, InspectorUI, DESTROYED */
 "use strict";
 
 const ZOOM = 2;
@@ -84,7 +84,7 @@ function test() {
 
           window.resizeBy(RESIZE * ZOOM, RESIZE * ZOOM);
 
-          Services.obs.addObserver(cleanup, TILT_DESTROYED, false);
+          Services.obs.addObserver(cleanup, DESTROYED, false);
           InspectorUI.closeInspectorUI();
         });
       },
@@ -93,7 +93,7 @@ function test() {
 }
 
 function cleanup() {
-  Services.obs.removeObserver(cleanup, TILT_DESTROYED);
+  Services.obs.removeObserver(cleanup, DESTROYED);
   gBrowser.removeCurrentTab();
   finish();
 }
