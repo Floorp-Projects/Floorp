@@ -2827,12 +2827,15 @@ IonBuilder::jsop_getgname(JSAtom *atom)
     // For the fastest path, the property must be found, and it must be found
     // as a normal data property on exactly the global object.
     const js::Shape *shape = globalObj->nativeLookup(cx, id);
-    if (!shape)
-        return abort("GETGNAME property not found on global");
-    if (!shape->hasDefaultGetterOrIsMethod())
-        return abort("GETGNAME found a getter");
-    if (!shape->hasSlot())
-        return abort("GETGNAME property has no slot");
+    if (!shape || !shape->hasDefaultGetterOrIsMethod() || !shape->hasSlot())
+        return jsop_getname(atom);
+
+    types::TypeSet *propertyTypes = oracle->globalPropertyTypeSet(script, pc, id);
+    if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
+        // The property has been reconfigured as non-configurable, non-enumerable
+        // or non-writable.
+        return jsop_getname(atom);
+    }
 
     // If the property is permanent, a shape guard isn't necessary.
     JSValueType knownType = JSVAL_TYPE_UNKNOWN;
@@ -2861,12 +2864,6 @@ IonBuilder::jsop_getgname(JSAtom *atom)
 
     MInstruction *global = MConstant::New(ObjectValue(*globalObj));
     current->add(global);
-
-    types::TypeSet *propertyTypes = oracle->globalPropertyTypeSet(script, pc, id);
-    if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
-        return abort("GETGNAME property reconfigured as non-configurable, non-enumerable "
-                     "or non-writable");
-    }
 
     // If we have a property typeset, the isOwnProperty call will trigger recompilation if
     // the property is deleted or reconfigured.
@@ -2900,7 +2897,7 @@ IonBuilder::jsop_setgname(JSAtom *atom)
 
     // This should only happen for a few names like __proto__.
     if (!canSpecialize)
-        return abort("SETGNAME unable to specialize property access");
+        return jsop_setprop(atom);
 
     JSObject *globalObj = script->global();
     JS_ASSERT(globalObj->isNative());
@@ -2908,19 +2905,17 @@ IonBuilder::jsop_setgname(JSAtom *atom)
     // For the fastest path, the property must be found, and it must be found
     // as a normal data property on exactly the global object.
     const js::Shape *shape = globalObj->nativeLookup(cx, id);
-    if (!shape)
-        return abort("SETGNAME property not found on global");
-    if (shape->isMethod())
-        return abort("SETGNAME found a method");
-    if (!shape->hasDefaultSetter())
-        return abort("SETGNAME found a setter");
-    if (!shape->writable())
-        return abort("SETGNAME non-writable property");
-    if (!shape->hasSlot())
-        return abort("SETGNAME property has no slot");
+    if (!shape || shape->isMethod() || !shape->hasDefaultSetter() ||
+        !shape->writable() || !shape->hasSlot())
+    {
+        return jsop_setprop(atom);
+    }
 
-    if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true))
-        return abort("SETGNAME property is non-configurable, non-enumerable or non-writable");
+    if (propertyTypes && propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
+        // The property has been reconfigured as non-configurable, non-enumerable
+        // or non-writable.
+        return jsop_setprop(atom);
+    }
 
     MInstruction *global = MConstant::New(ObjectValue(*globalObj));
     current->add(global);
@@ -2975,16 +2970,23 @@ IonBuilder::jsop_setgname(JSAtom *atom)
 bool
 IonBuilder::jsop_getname(JSAtom *atom)
 {
-    current->pushSlot(info().scopeChainSlot());
-    MDefinition *scopeChain = current->pop();
+    MDefinition *object;
+    if (js_CodeSpec[*pc].format & JOF_GNAME) {
+        MInstruction *global = MConstant::New(ObjectValue(*script->global()));
+        current->add(global);
+        object = global;
+    } else {
+        current->pushSlot(info().scopeChainSlot());
+        object = current->pop();
+    }
 
     MCallGetPropertyOrName *ins;
 
-    JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
+    JSOp op2 = JSOp(*GetNextPc(pc));
     if (op2 == JSOP_TYPEOF)
-        ins = MCallGetNameTypeOf::New(scopeChain, atom);
+        ins = MCallGetNameTypeOf::New(object, atom);
     else
-        ins = MCallGetName::New(scopeChain, atom);
+        ins = MCallGetName::New(object, atom);
 
     current->add(ins);
     current->push(ins);
