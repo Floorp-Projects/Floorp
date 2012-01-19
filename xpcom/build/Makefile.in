@@ -99,8 +99,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../io \
 		-I$(srcdir)/../components \
 		-I$(srcdir)/../threads \
-		-I$(srcdir)/../threads/_xpidlgen \
-		-I$(srcdir)/../proxy/src \
 		-I$(srcdir)/../reflect/xptinfo/src \
 		-I$(topsrcdir)/chrome/src \
 		-I$(srcdir)/../../docshell/base \
