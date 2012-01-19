@@ -4950,6 +4950,16 @@ js::GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Valu
     return obj->getProperty(cx, name, vp);
 }
 
+template <bool strict>
+bool
+js::SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value value)
+{
+    return obj->setGeneric(cx, ATOM_TO_JSID(atom), &value, strict);
+}
+
+template bool js::SetProperty<true> (JSContext *cx, JSObject *obj, JSAtom *atom, Value value);
+template bool js::SetProperty<false>(JSContext *cx, JSObject *obj, JSAtom *atom, Value value);
+
 bool
 js::AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
 {

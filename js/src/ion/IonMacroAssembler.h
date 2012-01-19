@@ -107,6 +107,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void loadBaseShape(Register objReg, Register dest) {
         loadPtr(Address(objReg, JSObject::offsetOfShape()), dest);
+
         loadPtr(Address(dest, Shape::offsetOfBase()), dest);
     }
     void loadBaseShapeClass(Register baseShapeReg, Register dest) {
@@ -115,6 +116,32 @@ class MacroAssembler : public MacroAssemblerSpecific
     void loadObjClass(Register objReg, Register dest) {
         loadBaseShape(objReg, dest);
         loadBaseShapeClass(dest, dest);
+    }
+
+    void loadTypedOrValue(Address address, TypedOrValueRegister dest)
+    {
+        if (dest.hasValue())
+            loadValue(address, dest.valueReg());
+        else
+            loadUnboxedValue(address, dest.typedReg());
+    }
+
+    void storeTypedOrValue(TypedOrValueRegister src, Address address)
+    {
+        if (src.hasValue())
+            storeValue(src.valueReg(), address);
+        else if (src.type() == MIRType_Double)
+            storeDouble(src.typedReg().fpu(), address);
+        else
+            storeValue(ValueTypeFromMIRType(src.type()), src.typedReg().gpr(), address);
+    }
+
+    void storeConstantOrRegister(ConstantOrRegister src, Address address)
+    {
+        if (src.constant())
+            storeValue(src.value(), address);
+        else
+            storeTypedOrValue(src.reg(), address);
     }
 
     void storeCallResult(AnyRegister dest)
@@ -172,6 +199,39 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void PushRegsInMask(RegisterSet set);
     void PopRegsInMask(RegisterSet set);
+
+    using MacroAssemblerSpecific::Push;
+
+    void Push(TypedOrValueRegister v) {
+        if (v.hasValue())
+            Push(v.valueReg());
+        else if (v.type() == MIRType_Double)
+            Push(v.typedReg().fpu());
+        else
+            Push(ValueTypeFromMIRType(v.type()), v.typedReg().gpr());
+    }
+
+    void Push(ConstantOrRegister v) {
+        if (v.constant())
+            Push(v.value());
+        else
+            Push(v.reg());
+    }
+
+    void Push(const ValueOperand &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
+    }
+
+    void Push(const Value &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
+    }
+
+    void Push(JSValueType type, Register reg) {
+        pushValue(type, reg);
+        framePushed_ += sizeof(Value);
+    }
 };
 
 } // namespace ion

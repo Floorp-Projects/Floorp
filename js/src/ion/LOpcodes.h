@@ -112,6 +112,10 @@
     _(CallGetProperty)              \
     _(CallGetName)                  \
     _(CallGetNameTypeOf)            \
+    _(CallSetPropertyV)             \
+    _(CallSetPropertyT)             \
+    _(CacheSetPropertyV)            \
+    _(CacheSetPropertyT)            \
     _(ArrayLength)                  \
     _(StringLength)
 

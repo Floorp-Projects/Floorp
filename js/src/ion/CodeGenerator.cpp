@@ -679,6 +679,7 @@ CodeGenerator::generateBody()
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         current = graph.getBlock(i);
         for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
+            IonSpew(IonSpew_Codegen, "instruction %s", iter->opName());
             if (!iter->accept(this))
                 return false;
         }
@@ -917,22 +918,18 @@ CodeGenerator::visitCallGetNameTypeOf(LCallGetNameTypeOf *lir)
     return callVM(Info, lir);
 }
 
-// An out-of-line path to call an inline cache and load a result property.
-class OutOfLineGetPropertyCache : public OutOfLineCodeBase<CodeGenerator>
+// An out-of-line path to call an inline cache function.
+class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
 {
-    // GetPropertyCacheT or GetPropertyCacheV
     LInstruction *ins;
 
     CodeOffsetJump inlineJump;
     CodeOffsetLabel inlineLabel;
 
   public:
-    OutOfLineGetPropertyCache(LInstruction *ins)
+    OutOfLineCache(LInstruction *ins)
       : ins(ins)
-    {
-        JS_ASSERT(ins->op() == LInstruction::LOp_GetPropertyCacheT ||
-                  ins->op() == LInstruction::LOp_GetPropertyCacheV);
-    }
+    {}
 
     void setInlineJump(CodeOffsetJump jump, CodeOffsetLabel label) {
         inlineJump = jump;
@@ -948,7 +945,17 @@ class OutOfLineGetPropertyCache : public OutOfLineCodeBase<CodeGenerator>
     }
 
     bool accept(CodeGenerator *codegen) {
-        return codegen->visitOutOfLineGetPropertyCache(this);
+        switch (ins->op()) {
+          case LInstruction::LOp_GetPropertyCacheT:
+          case LInstruction::LOp_GetPropertyCacheV:
+            return codegen->visitOutOfLineCacheGetProperty(this);
+          case LInstruction::LOp_CacheSetPropertyT:
+          case LInstruction::LOp_CacheSetPropertyV:
+            return codegen->visitOutOfLineCacheSetProperty(this);
+          default:
+            JS_NOT_REACHED("Bad instruction");
+            return false;
+        }
     }
 
     LInstruction *cache() {
@@ -957,9 +964,9 @@ class OutOfLineGetPropertyCache : public OutOfLineCodeBase<CodeGenerator>
 };
 
 bool
-CodeGenerator::visitGetPropertyCache(LInstruction *ins)
+CodeGenerator::visitCache(LInstruction *ins)
 {
-    OutOfLineGetPropertyCache *ool = new OutOfLineGetPropertyCache(ins);
+    OutOfLineCache *ool = new OutOfLineCache(ins);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -972,7 +979,7 @@ CodeGenerator::visitGetPropertyCache(LInstruction *ins)
 }
 
 bool
-CodeGenerator::visitOutOfLineGetPropertyCache(OutOfLineGetPropertyCache *ool)
+CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
 {
     Register objReg = ToRegister(ool->cache()->getOperand(0));
     RegisterSet liveRegs = ool->cache()->liveRegisters();
@@ -1012,6 +1019,96 @@ CodeGenerator::visitOutOfLineGetPropertyCache(OutOfLineGetPropertyCache *ool)
         return false;
 
     masm.storeCallResult(output);
+    masm.PopRegsInMask(liveRegs);
+
+    masm.jump(ool->rejoin());
+
+    return true;
+}
+
+ConstantOrRegister
+CodeGenerator::getSetPropertyValue(LInstruction *ins)
+{
+    if (ins->getOperand(1)->isConstant()) {
+        JS_ASSERT(ins->isCallSetPropertyT() || ins->isCacheSetPropertyT());
+        return ConstantOrRegister(*ins->getOperand(1)->toConstant());
+    }
+
+    switch (ins->op()) {
+      case LInstruction::LOp_CallSetPropertyV:
+        return TypedOrValueRegister(ToValue(ins, LCallSetPropertyV::Value));
+      case LInstruction::LOp_CacheSetPropertyV:
+        return TypedOrValueRegister(ToValue(ins, LCacheSetPropertyV::Value));
+      case LInstruction::LOp_CallSetPropertyT: {
+        LCallSetPropertyT *ins_ = ins->toCallSetPropertyT();
+        return TypedOrValueRegister(ins_->valueType(), ToAnyRegister(ins->getOperand(1)));
+      }
+      case LInstruction::LOp_CacheSetPropertyT: {
+        LCacheSetPropertyT *ins_ = ins->toCacheSetPropertyT();
+        return TypedOrValueRegister(ins_->valueType(), ToAnyRegister(ins->getOperand(1)));
+      }
+      default:
+        JS_NOT_REACHED("Bad opcode");
+        return ConstantOrRegister(UndefinedValue());
+    }
+}
+
+bool
+CodeGenerator::visitCallSetProperty(LInstruction *ins)
+{
+    ConstantOrRegister value = getSetPropertyValue(ins);
+    const MGenericSetProperty *mir = ins->mirRaw()->toGenericSetProperty();
+
+    const Register objReg = ToRegister(ins->getOperand(0));
+
+    pushArg(value);
+    pushArg(ImmGCPtr(mir->atom()));
+    pushArg(objReg);
+
+    typedef bool (*pf)(JSContext *, JSObject *, JSAtom *, Value);
+    if (mir->strict()) {
+        static const VMFunction info = FunctionInfo<pf>(SetProperty<true>);
+        if (!callVM(info, ins))
+            return false;
+    } else {
+        static const VMFunction info = FunctionInfo<pf>(SetProperty<false>);
+        if (!callVM(info, ins))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineCacheSetProperty(OutOfLineCache *ool)
+{
+    LInstruction *ins = ool->cache();
+
+    Register objReg = ToRegister(ins->getOperand(0));
+    RegisterSet liveRegs = ins->liveRegisters();
+
+    ConstantOrRegister value = getSetPropertyValue(ins);
+    const MGenericSetProperty *mir = ins->mirRaw()->toGenericSetProperty();
+
+    IonCacheSetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
+                              masm.labelForPatch(), liveRegs,
+                              objReg, mir->atom(), value,
+                              mir->strict());
+
+    size_t cacheIndex = allocateCache(cache);
+
+    masm.PushRegsInMask(liveRegs);
+
+    pushArg(value);
+    pushArg(objReg);
+    pushArg(Imm32(cacheIndex));
+
+    typedef bool (*pf)(JSContext *, size_t, JSObject *, Value);
+    static const VMFunction info = FunctionInfo<pf>(ion::SetPropertyCache);
+
+    if (!callVM(info, ool->cache()))
+        return false;
+
     masm.PopRegsInMask(liveRegs);
 
     masm.jump(ool->rejoin());

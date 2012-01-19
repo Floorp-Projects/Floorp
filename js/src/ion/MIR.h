@@ -2515,6 +2515,48 @@ class MCallGetPropertyOrName
     }
 };
 
+class MGenericSetProperty
+  : public MBinaryInstruction,
+    public ObjectPolicy
+{
+    JSAtom *atom_;
+    bool strict_;
+    bool monitored_;
+
+    MGenericSetProperty(MDefinition *obj, MDefinition *value, JSAtom *atom,
+                        bool strict, bool monitored)
+      : MBinaryInstruction(obj, value),
+        atom_(atom), strict_(strict), monitored_(monitored)
+    {}
+
+  public:
+    INSTRUCTION_HEADER(GenericSetProperty);
+
+    static MGenericSetProperty *New(MDefinition *obj, MDefinition *value, JSAtom *atom,
+                                    bool strict, bool monitored) {
+        return new MGenericSetProperty(obj, value, atom, strict, monitored);
+    }
+
+    MDefinition *obj() const {
+        return getOperand(0);
+    }
+    MDefinition *value() const {
+        return getOperand(1);
+    }
+    JSAtom *atom() const {
+        return atom_;
+    }
+    bool strict() const {
+        return strict_;
+    }
+    bool monitored() const {
+        return monitored_;
+    }
+    bool congruentTo(MDefinition * const &) const {
+        return false;
+    }
+};
+
 class MCallGetProperty : public MCallGetPropertyOrName
 {
     MCallGetProperty(MDefinition *obj, JSAtom *atom)
