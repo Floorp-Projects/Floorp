@@ -126,7 +126,9 @@ function viewPartialSourceForSelection(selection)
   // loading and the like.  The use of importNode here, as opposed to adoptNode,
   // is _very_ important.
   // XXXbz wish there were a less hacky way to create an untrusted document here
-  var dataDoc =
+  var isHTML = (doc.createElement("div").tagName == "DIV");
+  var dataDoc = isHTML ? 
+    ancestorContainer.ownerDocument.implementation.createHTMLDocument("") :
     ancestorContainer.ownerDocument.implementation.createDocument("", "", null);
   ancestorContainer = dataDoc.importNode(ancestorContainer, true);
   startContainer = ancestorContainer;
@@ -212,7 +214,9 @@ function viewPartialSourceForSelection(selection)
 
   // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
-  getWebNavigation().loadURI("view-source:data:text/html;charset=utf-8,"
+  getWebNavigation().loadURI((isHTML ?
+                              "view-source:data:text/html;charset=utf-8," :
+                              "view-source:data:application/xml;charset=utf-8,")
                              + encodeURIComponent(tmpNode.innerHTML),
                              loadFlags, null, null, null);
 }
