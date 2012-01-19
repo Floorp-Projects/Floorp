@@ -77,6 +77,15 @@
  * It is not extern "C".
  * The GrGLInterface field fCallback specifies the function ptr and there is an
  * additional field fCallbackData of type intptr_t for client data.
+ *
+ * GR_GL_RGBA_8888_PIXEL_OPS_SLOW: Set this to 1 if it is known that performing
+ * glReadPixels / glTex(Sub)Image with format=GL_RGBA, type=GL_UNISIGNED_BYTE is
+ * significantly slower than format=GL_BGRA, type=GL_UNISIGNED_BYTE.
+ *
+ * GR_GL_FULL_READPIXELS_FASTER_THAN_PARTIAL: Set this to 1 if calling
+ * glReadPixels to read the entire framebuffer is faster than calling it with
+ * the same sized rectangle but with a framebuffer bound that is larger than
+ * the rectangle read.
  */
 
 #if !defined(GR_GL_LOG_CALLS)
@@ -111,21 +120,17 @@
     #define GR_GL_PER_GL_FUNC_CALLBACK          0
 #endif
 
+#if !defined(GR_GL_RGBA_8888_PIXEL_OPS_SLOW)
+    #define GR_GL_RGBA_8888_PIXEL_OPS_SLOW      0
+#endif
+
+#if !defined(GR_GL_FULL_READPIXELS_FASTER_THAN_PARTIAL)
+    #define GR_GL_FULL_READPIXELS_FASTER_THAN_PARTIAL 0
+#endif
+
 #if(GR_GL_NO_CONSTANT_ATTRIBUTES) && (GR_GL_ATTRIBUTE_MATRICES)
     #error "Cannot combine GR_GL_NO_CONSTANT_ATTRIBUTES and GR_GL_ATTRIBUTE_MATRICES"
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * The following macros are used to staticlly configure the default
- * GrGLInterface, but should not be used outside of the GrGLInterface
- * scaffolding.  Undefine here to prevent accidental use.
- */
-#undef GR_SUPPORT_GLDESKTOP
-#undef GR_SUPPORT_GLES1
-#undef GR_SUPPORT_GLES2
-#undef GR_SUPPORT_GLES
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -148,16 +153,6 @@
     #define GR_GL_TEXT_TEXTURE_NORMALIZED   0
 #else
     #error "unknown GR_TEXT_SCALAR type"
-#endif
-
-// Pick a pixel config for 32bit bitmaps. Our default is GL_RGBA (except on
-// Windows where we match GDI's order).
-#ifndef GR_GL_32BPP_COLOR_FORMAT
-    #if GR_WIN32_BUILD || GR_LINUX_BUILD
-        #define GR_GL_32BPP_COLOR_FORMAT    GR_GL_BGRA
-    #else
-        #define GR_GL_32BPP_COLOR_FORMAT    GR_GL_RGBA
-    #endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,14 +216,6 @@ extern void GrGLClearErr(const GrGLInterface* gl);
     } while (false)
 
 #define GR_GL_GET_ERROR(IFACE) (IFACE)->fGetError()
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- *  GrGLResetRowLength() will reset GL_UNPACK_ROW_LENGTH to 0. We write
- *  this wrapper, since GL_UNPACK_ROW_LENGTH is not available on all GL versions
- */
-extern void GrGLResetRowLength(const GrGLInterface*);
 
 ////////////////////////////////////////////////////////////////////////////////
 

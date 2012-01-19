@@ -96,7 +96,7 @@ include svg-integration/reftest.list
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
-fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 421587 for WinXP
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 421587 for WinXP
 == dynamic-text-05.svg pass.svg
 == dynamic-text-06.svg pass.svg
 == dynamic-text-07.svg dynamic-text-07-ref.svg

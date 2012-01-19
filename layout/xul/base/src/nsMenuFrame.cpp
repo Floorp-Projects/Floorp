@@ -1321,7 +1321,7 @@ nsMenuFrame::AppendFrames(ChildListID     aListID,
 bool
 nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
 {
-  if (!IsCollapsed(aState)) {
+  if (!IsCollapsed()) {
     bool widthSet, heightSet;
     nsSize tmpSize(-1, 0);
     nsIBox::AddCSSPrefSize(this, tmpSize, widthSet, heightSet);

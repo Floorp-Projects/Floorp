@@ -442,11 +442,17 @@ SocksTestServer.prototype = {
 
   close: function()
   {
-    if (this.client_subprocess)
+    if (this.client_subprocess) {
       this.client_subprocess.kill();
+      this.client_subprocess = null;
+    }
     for each (var client in this.client_connections)
       client.close();
-    this.listener.close();
+    this.client_connections = [];
+    if (this.listener) {
+      this.listener.close();
+      this.listener = null;
+    }
   }
 };
 

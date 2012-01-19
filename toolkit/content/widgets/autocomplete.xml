@@ -94,7 +94,14 @@
       <constructor><![CDATA[
         mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
                         getService(Components.interfaces.nsIAutoCompleteController);
+
+        // For security reasons delay searches on pasted values.
+        this.inputField.controllers.insertControllerAt(0, this._pasteController);
       ]]></constructor>
+
+      <destructor><![CDATA[
+        this.inputField.controllers.removeController(this._pasteController);
+      ]]></destructor>
 
       <!-- =================== nsIAccessibleProvider =================== -->
 
@@ -165,8 +172,18 @@
                 onget="return this.getAttribute('showimagecolumn') == 'true';"/>
 
       <property name="timeout"
-                onset="this.setAttribute('timeout', val); return val;"
-                onget="return parseInt(this.getAttribute('timeout')) || 50;"/>
+                onset="this.setAttribute('timeout', val); return val;">
+        <getter><![CDATA[
+          // For security reasons delay searches on pasted values. 
+          if (this._valueIsPasted) {
+            let t = parseInt(this.getAttribute('pastetimeout'));
+            return isNaN(t) ? 1000 : t;
+          }
+
+          let t = parseInt(this.getAttribute('timeout'));
+          return isNaN(t) ? 50 : t;
+        ]]></getter>
+      </property>
 
       <property name="searchParam"
                 onget="return this.getAttribute('autocompletesearchparam') || '';"
@@ -195,7 +212,13 @@
         <setter><![CDATA[
           // Completing a result should simulate the user typing the result,
           // so fire an input event.
+          // Trim popup selected values, but never trim results coming from
+          // autofill.
+          if (this.popup.selectedIndex == -1)
+            this._disableTrim = true;
           this.value = val;
+          this._disableTrim = false;
+
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("input", true, false, window, 0);
           this.mIgnoreInput = true;
@@ -266,6 +289,7 @@
       <!-- =================== PUBLIC MEMBERS =================== -->
 
       <field name="valueIsTyped">false</field>
+      <field name="_disableTrim">false</field>
       <property name="value">
         <getter><![CDATA[
           if (typeof this.onBeforeValueGet == "function") {
@@ -281,7 +305,7 @@
           if (typeof this.onBeforeValueSet == "function")
             val = this.onBeforeValueSet(val);
 
-          if (typeof this.trimValue == "function")
+          if (typeof this.trimValue == "function" && !this._disableTrim)
             val = this.trimValue(val);
 
           this.valueIsTyped = false;
@@ -556,13 +580,31 @@
         ]]></body>
       </method>
 
+      <field name="_valueIsPasted">false</field>
+      <field name="_pasteController"><![CDATA[
+        ({
+          _autocomplete: this,
+          _kGlobalClipboard: Components.interfaces.nsIClipboard.kGlobalClipboard,
+          supportsCommand: function(aCommand) aCommand == "cmd_paste",
+          doCommand: function(aCommand) {
+            this._autocomplete._valueIsPasted = true;
+            this._autocomplete.editor.paste(this._kGlobalClipboard);
+            this._autocomplete._valueIsPasted = false;
+          },
+          isCommandEnabled: function(aCommand) {
+            return this._autocomplete.editor.isSelectionEditable &&
+                   this._autocomplete.editor.canPaste(this._kGlobalClipboard);
+          },
+          onEvent: function() {}
+        })
+      ]]></field>
     </implementation>
 
     <handlers>
       <handler event="input"><![CDATA[
         if (!this.mIgnoreInput && this.mController.input == this) {
           this.valueIsTyped = true;
-          this.mController.handleText(true);
+          this.mController.handleText();
         }
         this.resetActionType();
       ]]></handler>
@@ -1120,7 +1162,7 @@
             }
 
             // set these attributes before we set the class
-            // so that we can use them from the contructor
+            // so that we can use them from the constructor
             item.setAttribute("image", controller.getImageAt(this._currentIndex));
             item.setAttribute("url", url);
             item.setAttribute("title", controller.getCommentAt(this._currentIndex));

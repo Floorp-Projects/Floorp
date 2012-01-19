@@ -232,20 +232,9 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
 
-    /** Return the number of bytes (approx) that should be purged from the font
-        cache. The input parameter is the cache's estimate of how much as been
-        allocated by the cache so far.
-        To purge (basically) everything, return the input parameter.
-        To purge nothing, return 0
-    */
-    static size_t ShouldPurgeFontCache(size_t sizeAllocatedSoFar);
+    /** DEPRECATED -- only called by SkFontHost_FreeType internally
 
-    /** Return SkScalerContext gamma flag, or 0, based on the paint that will be
-        used to draw something with antialiasing.
-    */
-    static int ComputeGammaFlag(const SkPaint& paint);
-
-    /** Return NULL or a pointer to 256 bytes for the black (table[0]) and
+        Return NULL or a pointer to 256 bytes for the black (table[0]) and
         white (table[1]) gamma tables.
     */
     static void GetGammaTables(const uint8_t* tables[2]);
@@ -286,7 +275,7 @@ public:
     static void SetSubpixelOrder(LCDOrder order);
     static LCDOrder GetSubpixelOrder();
 
-#ifdef ANDROID
+#ifdef SK_BUILD_FOR_ANDROID
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -297,6 +286,14 @@ public:
      */
     static uint32_t GetUnitsPerEm(SkFontID fontID);
 #endif
+
+    /** If Skia is running in a constrained environment and the typeface
+        implementation is handle based, the typeface data may become
+        unavailable asynchronously. If a font host or scaler context method is
+        unable to access font data, it may call this function as a request to
+        make the handle contained in the typeface useable.
+    */
+    static void EnsureTypefaceAccessible(const SkTypeface& typeface);
 };
 
 #endif

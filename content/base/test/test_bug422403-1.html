@@ -23,17 +23,17 @@ function loadFileContent(aFile, aCharset) {
     if(aCharset == undefined)
         aCharset = 'UTF-8';
 
-    var baseUri = Components.classes['@mozilla.org/network/standard-url;1']
+    var baseUri = SpecialPowers.wrap(Components).classes['@mozilla.org/network/standard-url;1']
                    .createInstance(Components.interfaces.nsIURI);
     baseUri.spec = window.location.href;
 
-    var ios = Components.classes['@mozilla.org/network/io-service;1']
+    var ios = SpecialPowers.wrap(Components).classes['@mozilla.org/network/io-service;1']
             .getService(Components.interfaces.nsIIOService);
     var chann = ios.newChannel(aFile, aCharset, baseUri);
 
     var cis = Components.interfaces.nsIConverterInputStream;
 
-    var inputStream = Components.classes["@mozilla.org/intl/converter-input-stream;1"]
+    var inputStream = SpecialPowers.wrap(Components).classes["@mozilla.org/intl/converter-input-stream;1"]
                        .createInstance(cis);
     inputStream.init(chann.open(), aCharset, 1024, cis.DEFAULT_REPLACEMENT_CHARACTER);
     var str = {}, content = '';
@@ -45,12 +45,11 @@ function loadFileContent(aFile, aCharset) {
 
 
 function testHtmlSerializer_1 () {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   const de = Components.interfaces.nsIDocumentEncoder
-  var encoder = Components.classes["@mozilla.org/layout/documentEncoder;1?type=application/xhtml+xml"]
+  var encoder = SpecialPowers.wrap(Components).classes["@mozilla.org/layout/documentEncoder;1?type=application/xhtml+xml"]
                    .createInstance(Components.interfaces.nsIDocumentEncoder);
 
-  var doc = $("testframe").contentDocument;
+  var doc = SpecialPowers.wrap($("testframe")).contentDocument;
   var out, expected;
 
   // in the following tests, we must use the OutputLFLineBreak flag, to avoid

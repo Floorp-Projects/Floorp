@@ -43,7 +43,8 @@ NS_IMPL_ISUPPORTS2(nsAutoCompleteSimpleResult,
 
 nsAutoCompleteSimpleResult::nsAutoCompleteSimpleResult() :
   mDefaultIndex(-1),
-  mSearchResult(RESULT_NOMATCH)
+  mSearchResult(RESULT_NOMATCH),
+  mTypeAheadResult(false)
 {
 }
 
@@ -101,6 +102,20 @@ nsAutoCompleteSimpleResult::SetErrorDescription(
                                              const nsAString &aErrorDescription)
 {
   mErrorDescription.Assign(aErrorDescription);
+  return NS_OK;
+}
+
+// typeAheadResult
+NS_IMETHODIMP
+nsAutoCompleteSimpleResult::GetTypeAheadResult(bool *aTypeAheadResult)
+{
+  *aTypeAheadResult = mTypeAheadResult;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsAutoCompleteSimpleResult::SetTypeAheadResult(bool aTypeAheadResult)
+{
+  mTypeAheadResult = aTypeAheadResult;
   return NS_OK;
 }
 

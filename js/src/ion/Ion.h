@@ -44,6 +44,7 @@
 
 #include "jscntxt.h"
 #include "IonCode.h"
+#include "jsinfer.h"
 
 namespace js {
 namespace ion {
@@ -162,7 +163,7 @@ bool Cannon(JSContext *cx, StackFrame *fp);
 bool SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
-void Invalidate(JSContext *cx, const Vector<JSScript *> &invalid, bool resetUses = true);
+void Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
 
 static inline bool IsEnabled()
 {

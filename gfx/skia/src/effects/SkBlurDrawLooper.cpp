@@ -82,7 +82,7 @@ bool SkBlurDrawLooper::next(SkCanvas* canvas, SkPaint* paint) {
                 fState = kDone;
                 return false;
             }
-#ifdef ANDROID
+#ifdef SK_BUILD_FOR_ANDROID
             SkColor blurColor;
             blurColor = fBlurColor;
             if (SkColorGetA(blurColor) == 255) {
@@ -116,6 +116,5 @@ bool SkBlurDrawLooper::next(SkCanvas* canvas, SkPaint* paint) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static SkFlattenable::Registrar gReg("SkBlurDrawLooper",
-                                     SkBlurDrawLooper::CreateProc);
+SK_DEFINE_FLATTENABLE_REGISTRAR(SkBlurDrawLooper)
 

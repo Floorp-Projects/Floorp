@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+.accuracyWarning {
+  color: #f00;
+}
+
 .mrValue {
   font-weight: bold;
   color: #400;

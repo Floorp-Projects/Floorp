@@ -130,6 +130,12 @@ _TEST_FILES += \
 		$(NULL)
 endif
 
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+_TEST_FILES += \
+		test_bug603008.html \
+		$(NULL)
+endif
+
 _CHROME_FILES = \
 		test_bug336682_2.xul \
 		test_bug336682.js \

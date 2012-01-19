@@ -117,8 +117,9 @@ public:
     virtual ~Gradient_Shader();
 
     // overrides
-    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&);
-    virtual uint32_t getFlags() { return fFlags; }
+    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&) SK_OVERRIDE;
+    virtual uint32_t getFlags() SK_OVERRIDE { return fFlags; }
+    virtual bool isOpaque() const SK_OVERRIDE;
 
 protected:
     Gradient_Shader(SkFlattenableReadBuffer& );
@@ -161,7 +162,8 @@ private:
         kStorageSize = kColorStorageCount * (sizeof(SkColor) + sizeof(Rec))
     };
     SkColor     fStorage[(kStorageSize + 3) >> 2];
-    SkColor*    fOrigColors;
+    SkColor*    fOrigColors; // original colors, before modulation by paint in setContext
+    bool        fColorsAreOpaque;
 
     mutable uint16_t*   fCache16;   // working ptr. If this is NULL, we need to recompute the cache values
     mutable SkPMColor*  fCache32;   // working ptr. If this is NULL, we need to recompute the cache values
@@ -175,6 +177,7 @@ private:
     static void Build32bitCache(SkPMColor[], SkColor c0, SkColor c1, int count,
                                 U8CPU alpha);
     void setCacheAlpha(U8CPU alpha) const;
+    void initCommon();
 
     typedef SkShader INHERITED;
 };
@@ -303,7 +306,7 @@ Gradient_Shader::Gradient_Shader(const SkColor colors[], const SkScalar pos[],
             }
         }
     }
-    fFlags = 0;
+    this->initCommon();
 }
 
 Gradient_Shader::Gradient_Shader(SkFlattenableReadBuffer& buffer) :
@@ -337,7 +340,7 @@ Gradient_Shader::Gradient_Shader(SkFlattenableReadBuffer& buffer) :
         }
     }
     SkReadMatrix(&buffer, &fPtsToUnit);
-    fFlags = 0;
+    this->initCommon();
 }
 
 Gradient_Shader::~Gradient_Shader() {
@@ -349,6 +352,15 @@ Gradient_Shader::~Gradient_Shader() {
         sk_free(fOrigColors);
     }
     SkSafeUnref(fMapper);
+}
+
+void Gradient_Shader::initCommon() {
+    fFlags = 0;
+    unsigned colorAlpha = 0xFF;
+    for (int i = 0; i < fColorCount; i++) {
+        colorAlpha &= SkColorGetA(fOrigColors[i]);
+    }
+    fColorsAreOpaque = colorAlpha == 0xFF;
 }
 
 void Gradient_Shader::flatten(SkFlattenableWriteBuffer& buffer) {
@@ -365,6 +377,10 @@ void Gradient_Shader::flatten(SkFlattenableWriteBuffer& buffer) {
         }
     }
     SkWriteMatrix(&buffer, fPtsToUnit);
+}
+
+bool Gradient_Shader::isOpaque() const {
+    return fColorsAreOpaque;
 }
 
 bool Gradient_Shader::setContext(const SkBitmap& device,
@@ -385,23 +401,14 @@ bool Gradient_Shader::setContext(const SkBitmap& device,
 
     // now convert our colors in to PMColors
     unsigned paintAlpha = this->getPaintAlpha();
-    unsigned colorAlpha = 0xFF;
-
-    // FIXME: record colorAlpha in constructor, since this is not affected
-    // by setContext()
-    for (int i = 0; i < fColorCount; i++) {
-        SkColor src = fOrigColors[i];
-        unsigned sa = SkColorGetA(src);
-        colorAlpha &= sa;
-    }
 
     fFlags = this->INHERITED::getFlags();
-    if ((colorAlpha & paintAlpha) == 0xFF) {
+    if (fColorsAreOpaque && paintAlpha == 0xFF) {
         fFlags |= kOpaqueAlpha_Flag;
     }
     // we can do span16 as long as our individual colors are opaque,
     // regardless of the paint's alpha
-    if (0xFF == colorAlpha) {
+    if (fColorsAreOpaque) {
         fFlags |= kHasSpan16_Flag;
     }
 
@@ -789,18 +796,18 @@ public:
         pts_to_unit_matrix(pts, &fPtsToUnit);
     }
 
-    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&);
-    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
-    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
-    virtual BitmapType asABitmap(SkBitmap*, SkMatrix*,
-                             TileMode*, SkScalar* twoPointRadialParams) const;
-    virtual GradientType asAGradient(GradientInfo* info) const;
+    virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&) SK_OVERRIDE;
+    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) SK_OVERRIDE;
+    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count) SK_OVERRIDE;
+    virtual BitmapType asABitmap(SkBitmap*, SkMatrix*, TileMode*,
+                             SkScalar* twoPointRadialParams) const SK_OVERRIDE;
+    virtual GradientType asAGradient(GradientInfo* info) const SK_OVERRIDE;
 
     static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer) {
         return SkNEW_ARGS(Linear_Gradient, (buffer));
     }
 
-    virtual void flatten(SkFlattenableWriteBuffer& buffer) {
+    virtual void flatten(SkFlattenableWriteBuffer& buffer) SK_OVERRIDE {
         this->INHERITED::flatten(buffer);
         buffer.writeScalar(fStart.fX);
         buffer.writeScalar(fStart.fY);
@@ -808,13 +815,15 @@ public:
         buffer.writeScalar(fEnd.fY);
     }
 
+    SK_DECLARE_FLATTENABLE_REGISTRAR()
+
 protected:
     Linear_Gradient(SkFlattenableReadBuffer& buffer)
         : Gradient_Shader(buffer),
           fStart(unflatten_point(buffer)),
           fEnd(unflatten_point(buffer)) {
     }
-    virtual Factory getFactory() { return CreateProc; }
+    virtual Factory getFactory() SK_OVERRIDE { return CreateProc; }
 
 private:
     typedef Gradient_Shader INHERITED;
@@ -896,21 +905,22 @@ void Linear_Gradient::shadeSpan(int x, int y, SkPMColor* SK_RESTRICT dstC, int c
                 } else if (fx > 0xFFFF) {
                     sk_memset32(dstC, cache[kCache32Count * 2], count);
                 } else {
-                    sk_memset32(dstC, cache[fx >> (16 - kCache32Bits)], count);
+                    unsigned fi = proc(fx) >> (16 - kCache32Bits);
+                    sk_memset32_dither(dstC, cache[toggle + fi],
+                                       cache[(toggle ^ TOGGLE_MASK) + fi], count);
                 }
             } else {
-                unsigned fi = proc(fx);
-                SkASSERT(fi <= 0xFFFF);
-                // TODO: dither version
-                sk_memset32(dstC, cache[fi >> (16 - kCache32Bits)], count);
+                unsigned fi = proc(fx) >> (16 - kCache32Bits);
+                sk_memset32_dither(dstC, cache[toggle + fi],
+                                   cache[(toggle ^ TOGGLE_MASK) + fi], count);
             }
         } else if (proc == clamp_tileproc) {
             SkClampRange range;
-            range.init(fx, dx, count, 0, 0xFF);
+            range.init(fx, dx, count, cache[-1], cache[kCache32Count * 2]);
 
             if ((count = range.fCount0) > 0) {
-                // Do we really want to dither the clamp values?
-                sk_memset32(dstC, cache[-1], count);
+                 // Do we really want to dither the clamp values?
+                 sk_memset32(dstC, range.fV0, count);
                 dstC += count;
             }
             if ((count = range.fCount1) > 0) {
@@ -929,7 +939,7 @@ void Linear_Gradient::shadeSpan(int x, int y, SkPMColor* SK_RESTRICT dstC, int c
                 }
             }
             if ((count = range.fCount2) > 0) {
-                sk_memset32(dstC, cache[kCache32Count * 2], count);
+                sk_memset32(dstC, range.fV1, count);
             }
         } else if (proc == mirror_tileproc) {
             do {
@@ -1175,13 +1185,13 @@ public:
         rad_to_unit_matrix(center, radius, &fPtsToUnit);
     }
 
-    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
-    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
+    virtual void shadeSpan(int x, int y, SkPMColor* dstC, int count) SK_OVERRIDE;
+    virtual void shadeSpan16(int x, int y, uint16_t* dstC, int count) SK_OVERRIDE;
 
     virtual BitmapType asABitmap(SkBitmap* bitmap,
                                  SkMatrix* matrix,
                                  TileMode* xy,
-                                 SkScalar* twoPointRadialParams) const {
+                                 SkScalar* twoPointRadialParams) const SK_OVERRIDE {
         if (bitmap) {
             this->commonAsABitmap(bitmap);
         }
@@ -1195,7 +1205,7 @@ public:
         }
         return kRadial_BitmapType;
     }
-    virtual GradientType asAGradient(GradientInfo* info) const {
+    virtual GradientType asAGradient(GradientInfo* info) const SK_OVERRIDE {
         if (info) {
             commonAsAGradient(info);
             info->fPoint[0] = fCenter;
@@ -1208,7 +1218,7 @@ public:
         return SkNEW_ARGS(Radial_Gradient, (buffer));
     }
 
-    virtual void flatten(SkFlattenableWriteBuffer& buffer) {
+    virtual void flatten(SkFlattenableWriteBuffer& buffer) SK_OVERRIDE {
         this->INHERITED::flatten(buffer);
         buffer.writeScalar(fCenter.fX);
         buffer.writeScalar(fCenter.fY);
@@ -1221,7 +1231,7 @@ protected:
           fCenter(unflatten_point(buffer)),
           fRadius(buffer.readScalar()) {
     }
-    virtual Factory getFactory() { return CreateProc; }
+    virtual Factory getFactory() SK_OVERRIDE { return CreateProc; }
 
 private:
     typedef Gradient_Shader INHERITED;
@@ -1644,7 +1654,7 @@ public:
         return kTwoPointRadial_BitmapType;
     }
 
-    virtual GradientType asAGradient(GradientInfo* info) const {
+    virtual GradientType asAGradient(GradientInfo* info) const SK_OVERRIDE {
         if (info) {
             commonAsAGradient(info);
             info->fPoint[0] = fCenter1;
@@ -1655,11 +1665,11 @@ public:
         return kRadial2_GradientType;
     }
 
-    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
+    virtual void shadeSpan(int x, int y, SkPMColor* dstC, int count) SK_OVERRIDE;
 
     virtual bool setContext(const SkBitmap& device,
                             const SkPaint& paint,
-                            const SkMatrix& matrix) {
+                            const SkMatrix& matrix) SK_OVERRIDE {
         if (!this->INHERITED::setContext(device, paint, matrix)) {
             return false;
         }
@@ -1673,7 +1683,7 @@ public:
         return SkNEW_ARGS(Two_Point_Radial_Gradient, (buffer));
     }
 
-    virtual void flatten(SkFlattenableWriteBuffer& buffer) {
+    virtual void flatten(SkFlattenableWriteBuffer& buffer) SK_OVERRIDE {
         this->INHERITED::flatten(buffer);
         buffer.writeScalar(fCenter1.fX);
         buffer.writeScalar(fCenter1.fY);
@@ -1692,7 +1702,7 @@ protected:
               fRadius2(buffer.readScalar()) {
         init();
     };
-    virtual Factory getFactory() { return CreateProc; }
+    virtual Factory getFactory() SK_OVERRIDE { return CreateProc; }
 
 private:
     typedef Gradient_Shader INHERITED;
@@ -1739,7 +1749,7 @@ void Two_Point_Radial_Gradient::shadeSpan(int x, int y, SkPMColor* SK_RESTRICT d
     if (fDstToIndexClass != kPerspective_MatrixClass) {
         SkPoint srcPt;
         dstProc(fDstToIndex, SkIntToScalar(x) + SK_ScalarHalf,
-                                 SkIntToScalar(y) + SK_ScalarHalf, &srcPt);
+                             SkIntToScalar(y) + SK_ScalarHalf, &srcPt);
         SkScalar dx, fx = srcPt.fX;
         SkScalar dy, fy = srcPt.fY;
 
@@ -1824,13 +1834,13 @@ public:
     {
         fPtsToUnit.setTranslate(-cx, -cy);
     }
-    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
-    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
+    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) SK_OVERRIDE;
+    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count) SK_OVERRIDE;
 
     virtual BitmapType asABitmap(SkBitmap* bitmap,
                                  SkMatrix* matrix,
                                  TileMode* xy,
-                                 SkScalar* twoPointRadialParams) const {
+                                 SkScalar* twoPointRadialParams) const SK_OVERRIDE {
         if (bitmap) {
             this->commonAsABitmap(bitmap);
         }
@@ -1844,7 +1854,7 @@ public:
         return kSweep_BitmapType;
     }
 
-    virtual GradientType asAGradient(GradientInfo* info) const {
+    virtual GradientType asAGradient(GradientInfo* info) const SK_OVERRIDE {
         if (info) {
             commonAsAGradient(info);
             info->fPoint[0] = fCenter;
@@ -1856,7 +1866,7 @@ public:
         return SkNEW_ARGS(Sweep_Gradient, (buffer));
     }
 
-    virtual void flatten(SkFlattenableWriteBuffer& buffer) {
+    virtual void flatten(SkFlattenableWriteBuffer& buffer) SK_OVERRIDE {
         this->INHERITED::flatten(buffer);
         buffer.writeScalar(fCenter.fX);
         buffer.writeScalar(fCenter.fY);
@@ -1868,7 +1878,7 @@ protected:
           fCenter(unflatten_point(buffer)) {
     }
 
-    virtual Factory getFactory() { return CreateProc; }
+    virtual Factory getFactory() SK_OVERRIDE { return CreateProc; }
 
 private:
     typedef Gradient_Shader INHERITED;
@@ -2095,7 +2105,7 @@ static unsigned SkATan2_255(SkFixed y, SkFixed x) {
     else if (192 == add)
         SkASSERT(x > 0 && y < 0);
     else
-        SkASSERT(!"bad value for add");
+        SkDEBUGFAIL("bad value for add");
 #endif
 
     /*  This ^ trick makes x, y positive, and the swap<> handles quadrants
@@ -2270,15 +2280,11 @@ SkShader* SkGradientShader::CreateSweep(SkScalar cx, SkScalar cy,
     return SkNEW_ARGS(Sweep_Gradient, (cx, cy, colors, pos, count, mapper));
 }
 
-static SkFlattenable::Registrar gLinearGradientReg("Linear_Gradient",
-                                                   Linear_Gradient::CreateProc);
+SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkGradientShader)
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(Linear_Gradient)
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(Radial_Gradient)
 
-static SkFlattenable::Registrar gRadialGradientReg("Radial_Gradient",
-                                                   Radial_Gradient::CreateProc);
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(Sweep_Gradient)
 
-static SkFlattenable::Registrar gSweepGradientReg("Sweep_Gradient",
-                                                   Sweep_Gradient::CreateProc);
-
-static SkFlattenable::Registrar
-    gTwoPointRadialGradientReg("Two_Point_Radial_Gradient",
-                               Two_Point_Radial_Gradient::CreateProc);
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(Two_Point_Radial_Gradient)
+SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_END

@@ -36,13 +36,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMUIEvent.idl"
+%{C++
+#include "nsWeakPtr.h"
+#include "nsPoint.h"
+%}
 interface nsIVariant;
 
 /**
  * @see http://dvcs.w3.org/hg/webevents/raw-file/tip/touchevents.html
  */
 
-[scriptable, uuid(98bc0f7d-5bff-4387-9c42-58af54b48dd5)]
+[scriptable, builtinclass, uuid(98bc0f7d-5bff-4387-9c42-58af54b48dd5)]
 interface nsIDOMTouch : nsISupports {
   readonly attribute long              identifier;
   readonly attribute nsIDOMEventTarget target;
@@ -56,6 +60,14 @@ interface nsIDOMTouch : nsISupports {
   readonly attribute long              radiusY;
   readonly attribute float             rotationAngle;
   readonly attribute float             force;
+  %{C++
+    nsCOMPtr<nsIDOMEventTarget> mTarget;
+    nsIDOMEventTarget *GetTarget() { return mTarget; }
+    void SetTarget(nsIDOMEventTarget *target) { mTarget = target; }
+    nsIntPoint mRefPoint;
+    bool mChanged;
+    PRUint32 mMessage;
+  %}
 };
 
 [scriptable, uuid(60706eb7-d50d-4379-b01c-e78e6af84213)]

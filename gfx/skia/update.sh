@@ -56,7 +56,6 @@ cp $1/src/utils/mac/SampleApp.xib ./src/utils/mac/
 cp $1/src/utils/mac/*.cpp ./src/utils/mac/
 cp $1/src/utils/mac/*.h ./src/utils/mac/
 cp $1/src/utils/mac/*.mm ./src/utils/mac/
-cp $1/src/utils/mesa/*.cpp ./src/utils/mesa/
 cp $1/src/utils/SDL/*.cpp ./src/utils/SDL/
 cp $1/src/utils/*.cpp ./src/utils/
 cp $1/src/utils/*.h ./src/utils/
@@ -105,6 +104,8 @@ patch -p3 < new-aa.patch
 patch -p3 < radial-gradients.patch
 # Fix restrict keyword problem for VS2005
 patch -p3 < skia_restrict_problem.patch
-# Bug 705656 - Broken SKIA compilation on mingw
-patch -p3 < mingw-fix.patch
+# Changes to SkUserConfig.h - no bug
+patch -p3 < user-config.patch
+# Bug 715718 - Unitialized variable 'margin' in compute_bounds : SkDraw.cpp
+patch -p3 < uninitialized-margin.patch
 

@@ -232,7 +232,7 @@ interface nsIMemoryMultiReporter : nsISupports
   readonly attribute PRInt64 explicitNonHeap;
 };
 
-[scriptable, uuid(84ba9c85-3372-4423-b7ab-74708b9269a6)]
+[scriptable, uuid(4527b1d8-a81f-4af3-9623-80e4120392c7)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -293,6 +293,11 @@ interface nsIMemoryReporterManager : nsISupports
    * to compute in JS.  -1 means unknown.
    */
   readonly attribute PRInt64 explicit;
+
+  /*
+   * This attribute indicates if moz_malloc_usable_size() works.
+   */
+  readonly attribute boolean hasMozMallocUsableSize;
 };
 
 %{C++
@@ -340,13 +345,11 @@ namespace mozilla {
 
 /*
  * Functions generated via this macro should be used by all traversal-based
- * memory reporters.
+ * memory reporters.  Such functions return moz_malloc_usable_size(ptr),
+ * which will be 0 on obscure platforms that don't implement
+ * malloc_usable_size() or an equivalent.
  *
- * - On platforms where moz_malloc_usable_size(ptr) returns 0 it just returns
- *   |computedSize|.  This happens on platforms where malloc_usable_size() or
- *   equivalent isn't available.
- *
- * - Otherwise, it returns |moz_malloc_usable_size(ptr)|.
+ * XXX: bug 715453 will remove the unused |computedSize| argument.
  *
  * You might be wondering why we have a macro that creates multiple functions
  * distinguished only by |name|, instead of a single MemoryReporterMallocSizeOf
@@ -359,9 +362,6 @@ namespace mozilla {
   size_t fn(const void *ptr, size_t computedSize)                             \
   {                                                                           \
       size_t usable = moz_malloc_usable_size((void*)ptr);                     \
-      if (!usable) {                                                          \
-          return computedSize;                                                \
-      }                                                                       \
       VALGRIND_DMD_REPORT(ptr, usable, name);                                 \
       return usable;                                                          \
   }
@@ -374,9 +374,6 @@ namespace mozilla {
   size_t fn(const void *ptr, size_t computedSize)                             \
   {                                                                           \
       size_t usable = moz_malloc_usable_size((void*)ptr);                     \
-      if (!usable) {                                                          \
-          return computedSize;                                                \
-      }                                                                       \
       VALGRIND_DMD_UNREPORT(ptr);                                             \
       return usable;                                                          \
   }

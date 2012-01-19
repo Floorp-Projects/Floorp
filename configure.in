@@ -566,6 +566,11 @@ if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
     AC_DEFINE(CROSS_COMPILE)
 else
     AC_PROG_CC
+    case "$target" in
+    *-mingw*)
+      # Work around the conftest.exe access problem on Windows
+      sleep 1
+    esac
     AC_PROG_CXX
     AC_PROG_RANLIB
     MOZ_PATH_PROGS(AS, $AS as, $CC)
@@ -4897,6 +4902,7 @@ cairo-uikit)
 
 cairo-android)
     AC_DEFINE(MOZ_WIDGET_ANDROID)
+    AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=android
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
@@ -4904,6 +4910,7 @@ cairo-android)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     MOZ_OLD_LINKER=1
+    MOZ_TOUCH=1
     ;;
 
 cairo-gonk)

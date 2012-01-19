@@ -16,7 +16,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-#if !defined(SK_BUILD_FOR_ANDROID_NDK) && !defined(SK_BUILD_FOR_IOS) && !defined(SK_BUILD_FOR_PALM) && !defined(SK_BUILD_FOR_WINCE) && !defined(SK_BUILD_FOR_WIN32) && !defined(SK_BUILD_FOR_SYMBIAN) && !defined(SK_BUILD_FOR_UNIX) && !defined(SK_BUILD_FOR_MAC) && !defined(SK_BUILD_FOR_SDL) && !defined(SK_BUILD_FOR_BREW)
+#if !defined(SK_BUILD_FOR_ANDROID) && !defined(SK_BUILD_FOR_ANDROID_NDK) && !defined(SK_BUILD_FOR_IOS) && !defined(SK_BUILD_FOR_PALM) && !defined(SK_BUILD_FOR_WINCE) && !defined(SK_BUILD_FOR_WIN32) && !defined(SK_BUILD_FOR_SYMBIAN) && !defined(SK_BUILD_FOR_UNIX) && !defined(SK_BUILD_FOR_MAC) && !defined(SK_BUILD_FOR_SDL) && !defined(SK_BUILD_FOR_BREW)
 
     #ifdef __APPLE__
         #include "TargetConditionals.h"
@@ -30,18 +30,28 @@
         #define SK_BUILD_FOR_WIN32
     #elif defined(__SYMBIAN32__)
         #define SK_BUILD_FOR_WIN32
-    #elif defined(linux) || defined(__OpenBSD_)
+    #elif defined(linux) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
+          defined(__sun) || defined(__NetBSD__) || defined(__DragonFly__)
         #define SK_BUILD_FOR_UNIX
     #elif TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
         #define SK_BUILD_FOR_IOS
     #elif defined(ANDROID_NDK)
         #define SK_BUILD_FOR_ANDROID_NDK
-    #elif defined(ANROID)
+    #elif defined(ANDROID)
         #define SK_BUILD_FOR_ANDROID
     #else
         #define SK_BUILD_FOR_MAC
     #endif
 
+#endif
+
+/* Even if the user only defined the NDK variant we still need to build
+ * the default Android code. Therefore, when attempting to include/exclude
+ * something from the NDK variant check first that we are building for 
+ * Android then check the status of the NDK define.
+ */
+#if defined(SK_BUILD_FOR_ANDROID_NDK) && !defined(SK_BUILD_FOR_ANDROID)
+    #define SK_BUILD_FOR_ANDROID
 #endif
 
 //////////////////////////////////////////////////////////////////////

@@ -203,7 +203,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
         for (i = 0; report->messageArgs[i]; ++i) {
             copy->messageArgs[i] = (const jschar *)cursor;
             argSize = JS_CHARS_SIZE(report->messageArgs[i]);
-            memcpy(cursor, report->messageArgs[i], argSize);
+            js_memcpy(cursor, report->messageArgs[i], argSize);
             cursor += argSize;
         }
         copy->messageArgs[i] = NULL;
@@ -212,13 +212,13 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
 
     if (report->ucmessage) {
         copy->ucmessage = (const jschar *)cursor;
-        memcpy(cursor, report->ucmessage, ucmessageSize);
+        js_memcpy(cursor, report->ucmessage, ucmessageSize);
         cursor += ucmessageSize;
     }
 
     if (report->uclinebuf) {
         copy->uclinebuf = (const jschar *)cursor;
-        memcpy(cursor, report->uclinebuf, uclinebufSize);
+        js_memcpy(cursor, report->uclinebuf, uclinebufSize);
         cursor += uclinebufSize;
         if (report->uctokenptr) {
             copy->uctokenptr = copy->uclinebuf + (report->uctokenptr -
@@ -228,7 +228,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
 
     if (report->linebuf) {
         copy->linebuf = (const char *)cursor;
-        memcpy(cursor, report->linebuf, linebufSize);
+        js_memcpy(cursor, report->linebuf, linebufSize);
         cursor += linebufSize;
         if (report->tokenptr) {
             copy->tokenptr = copy->linebuf + (report->tokenptr -
@@ -238,7 +238,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
 
     if (report->filename) {
         copy->filename = (const char *)cursor;
-        memcpy(cursor, report->filename, filenameSize);
+        js_memcpy(cursor, report->filename, filenameSize);
     }
     JS_ASSERT(cursor + filenameSize == (uint8_t *)copy + mallocSize);
 

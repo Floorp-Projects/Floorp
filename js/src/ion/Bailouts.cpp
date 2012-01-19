@@ -453,8 +453,8 @@ ion::RecompileForInlining()
             script->lineno);
 
     // Invalidate the script to force a recompile.
-    Vector<JSScript *> scripts(cx);
-    if (!scripts.append(script))
+    Vector<types::RecompileInfo> scripts(cx);
+    if (!scripts.append(types::RecompileInfo(script)))
         return BAILOUT_RETURN_FATAL_ERROR;
 
     Invalidate(cx, scripts, /* resetUses */ false);

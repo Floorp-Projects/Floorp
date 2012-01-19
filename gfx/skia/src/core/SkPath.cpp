@@ -14,6 +14,18 @@
 
 ////////////////////////////////////////////////////////////////////////////
 
+/**
+ *  Path.bounds is defined to be the bounds of all the control points.
+ *  If we called bounds.join(r) we would skip r if r was empty, which breaks
+ *  our promise. Hence we have a custom joiner that doesn't look at emptiness
+ */
+static void joinNoEmptyChecks(SkRect* dst, const SkRect& src) {
+    dst->fLeft = SkMinScalar(dst->fLeft, src.fLeft);
+    dst->fTop = SkMinScalar(dst->fTop, src.fTop);
+    dst->fRight = SkMaxScalar(dst->fRight, src.fRight);
+    dst->fBottom = SkMaxScalar(dst->fBottom, src.fBottom);
+}
+
 /*  This guy's constructor/destructor bracket a path editing operation. It is
     used when we know the bounds of the amount we are going to add to the path
     (usually a new contour, but not required).
@@ -43,7 +55,7 @@ public:
             fPath->fBounds = fRect;
             fPath->fBoundsIsDirty = false;
         } else if (!fDirty) {
-            fPath->fBounds.join(fRect);
+            joinNoEmptyChecks(&fPath->fBounds, fRect);
             fPath->fBoundsIsDirty = false;
         }
     }
@@ -77,13 +89,14 @@ static void compute_pt_bounds(SkRect* bounds, const SkTDArray<SkPoint>& pts) {
 
 /*
     Stores the verbs and points as they are given to us, with exceptions:
-    - we only record "Close" if it was immediately preceeded by Line | Quad | Cubic
+    - we only record "Close" if it was immediately preceeded by Move | Line | Quad | Cubic
     - we insert a Move(0,0) if Line | Quad | Cubic is our first command
 
     The iterator does more cleanup, especially if forceClose == true
-    1. if we encounter Close, return a cons'd up Line() first (if the curr-pt != start-pt)
-    2. if we encounter Move without a preceeding Close, and forceClose is true, goto #1
-    3. if we encounter Line | Quad | Cubic after Close, cons up a Move
+    1. If we encounter degenerate segments, remove them
+    2. if we encounter Close, return a cons'd up Line() first (if the curr-pt != start-pt)
+    3. if we encounter Move without a preceeding Close, and forceClose is true, goto #2
+    4. if we encounter Line | Quad | Cubic after Close, cons up a Move
 */
 
 ////////////////////////////////////////////////////////////////////////////
@@ -93,7 +106,7 @@ SkPath::SkPath()
     , fBoundsIsDirty(true) {
     fConvexity = kUnknown_Convexity;
     fSegmentMask = 0;
-#ifdef ANDROID
+#ifdef SK_BUILD_FOR_ANDROID
     fGenerationID = 0;
 #endif
 }
@@ -101,7 +114,7 @@ SkPath::SkPath()
 SkPath::SkPath(const SkPath& src) {
     SkDEBUGCODE(src.validate();)
     *this = src;
-#ifdef ANDROID
+#ifdef SK_BUILD_FOR_ANDROID
     // the assignment operator above increments the ID so correct for that here
     fGenerationID--;
 #endif
@@ -156,7 +169,7 @@ void SkPath::swap(SkPath& other) {
     }
 }
 
-#ifdef ANDROID
+#ifdef SK_BUILD_FOR_ANDROID
 uint32_t SkPath::getGenerationID() const {
     return fGenerationID;
 }
@@ -179,16 +192,19 @@ void SkPath::rewind() {
     fPts.rewind();
     fVerbs.rewind();
     GEN_ID_INC;
-    fBoundsIsDirty = true;
     fConvexity = kUnknown_Convexity;
+    fBoundsIsDirty = true;
     fSegmentMask = 0;
 }
 
 bool SkPath::isEmpty() const {
     SkDEBUGCODE(this->validate();)
-
+#if SK_OLD_EMPTY_PATH_BEHAVIOR
     int count = fVerbs.count();
     return count == 0 || (count == 1 && fVerbs[0] == kMove_Verb);
+#else
+    return 0 == fVerbs.count();
+#endif
 }
 
 /*
@@ -373,10 +389,10 @@ void SkPath::setConvexity(Convexity c) {
 //////////////////////////////////////////////////////////////////////////////
 //  Construction methods
 
-#define DIRTY_AFTER_EDIT                \
-    do {                                \
-        fBoundsIsDirty = true;          \
-        fConvexity = kUnknown_Convexity;\
+#define DIRTY_AFTER_EDIT                 \
+    do {                                 \
+        fBoundsIsDirty = true;           \
+        fConvexity = kUnknown_Convexity; \
     } while (0)
 
 void SkPath::incReserve(U16CPU inc) {
@@ -394,12 +410,17 @@ void SkPath::moveTo(SkScalar x, SkScalar y) {
     int      vc = fVerbs.count();
     SkPoint* pt;
 
+#ifdef SK_OLD_EMPTY_PATH_BEHAVIOR
     if (vc > 0 && fVerbs[vc - 1] == kMove_Verb) {
         pt = &fPts[fPts.count() - 1];
     } else {
         pt = fPts.append();
         *fVerbs.append() = kMove_Verb;
     }
+#else
+    pt = fPts.append();
+    *fVerbs.append() = kMove_Verb;
+#endif
     pt->set(x, y);
 
     GEN_ID_INC;
@@ -493,11 +514,14 @@ void SkPath::close() {
             case kLine_Verb:
             case kQuad_Verb:
             case kCubic_Verb:
+#ifndef SK_OLD_EMPTY_PATH_BEHAVIOR
+            case kMove_Verb:
+#endif
                 *fVerbs.append() = kClose_Verb;
                 GEN_ID_INC;
                 break;
             default:
-                // don't add a close if the prev wasn't a primitive
+                // don't add a close if it's the first verb or a repeat
                 break;
         }
     }
@@ -634,7 +658,7 @@ static void add_corner_arc(SkPath* path, const SkRect& rect,
             break;
         case 180: r.offset(rect.fLeft - r.fLeft,   rect.fTop - r.fTop); break;
         case 270: r.offset(rect.fRight - r.fRight, rect.fTop - r.fTop); break;
-        default: SkASSERT(!"unexpected startAngle in add_corner_arc");
+        default: SkDEBUGFAIL("unexpected startAngle in add_corner_arc");
     }
 
     SkScalar start = SkIntToScalar(startAngle);
@@ -911,7 +935,7 @@ void SkPath::addPath(const SkPath& path, SkScalar dx, SkScalar dy) {
 void SkPath::addPath(const SkPath& path, const SkMatrix& matrix) {
     this->incReserve(path.fPts.count());
 
-    Iter    iter(path, false);
+    RawIter iter(path);
     SkPoint pts[4];
     Verb    verb;
 
@@ -939,7 +963,7 @@ void SkPath::addPath(const SkPath& path, const SkMatrix& matrix) {
                 this->close();
                 break;
             default:
-                SkASSERT(!"unknown verb");
+                SkDEBUGFAIL("unknown verb");
         }
     }
 }
@@ -1021,7 +1045,7 @@ void SkPath::reversePathTo(const SkPath& path) {
                               pts[-3].fX, pts[-3].fY);
                 break;
             default:
-                SkASSERT(!"bad verb");
+                SkDEBUGFAIL("bad verb");
                 break;
         }
         pts -= gPtsInVerb[verbs[i]];
@@ -1097,7 +1121,7 @@ void SkPath::transform(const SkMatrix& matrix, SkPath* dst) const {
                     tmp.close();
                     break;
                 default:
-                    SkASSERT(!"unknown verb");
+                    SkDEBUGFAIL("unknown verb");
                     break;
             }
         }
@@ -1131,17 +1155,20 @@ void SkPath::transform(const SkMatrix& matrix, SkPath* dst) const {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-enum NeedMoveToState {
-    kAfterClose_NeedMoveToState,
-    kAfterCons_NeedMoveToState,
-    kAfterPrefix_NeedMoveToState
+enum SegmentState {
+    kAfterClose_SegmentState,     // We will need a move next, but we have a
+                                  // previous close pt to use for the new move.
+    kAfterMove_SegmentState,      // We have seen a move, but nothing else.
+    kAfterPrimitive_SegmentState  // We have seen a primitive but not yet
+                                  // closed the path. Also the initial state.
 };
 
 SkPath::Iter::Iter() {
 #ifdef SK_DEBUG
     fPts = NULL;
     fMoveTo.fX = fMoveTo.fY = fLastPt.fX = fLastPt.fY = 0;
-    fForceClose = fNeedMoveTo = fCloseLine = false;
+    fForceClose = fCloseLine = false;
+    fSegmentState = kAfterPrimitive_SegmentState;
 #endif
     // need to init enough to make next() harmlessly return kDone_Verb
     fVerbs = NULL;
@@ -1157,9 +1184,11 @@ void SkPath::Iter::setPath(const SkPath& path, bool forceClose) {
     fPts = path.fPts.begin();
     fVerbs = path.fVerbs.begin();
     fVerbStop = path.fVerbs.end();
+    fLastPt.fX = fLastPt.fY = 0;
+    fMoveTo.fX = fMoveTo.fY = 0;
     fForceClose = SkToU8(forceClose);
     fNeedClose = false;
-    fNeedMoveTo = kAfterPrefix_NeedMoveToState;
+    fSegmentState = kAfterClose_SegmentState;
 }
 
 bool SkPath::Iter::isClosedContour() const {
@@ -1213,23 +1242,27 @@ SkPath::Verb SkPath::Iter::autoClose(SkPoint pts[2]) {
 }
 
 bool SkPath::Iter::cons_moveTo(SkPoint pts[1]) {
-    if (fNeedMoveTo == kAfterClose_NeedMoveToState) {
+    if (fSegmentState == kAfterClose_SegmentState) {
+        // We have closed a curve and have a primitive, so we need a move.
+        // Set the first return pt to the most recent move pt
         if (pts) {
             *pts = fMoveTo;
         }
         fNeedClose = fForceClose;
-        fNeedMoveTo = kAfterCons_NeedMoveToState;
-        fVerbs -= 1;
+        fSegmentState = kAfterMove_SegmentState;
+        fVerbs -= 1; // Step back to see the primitive again
         return true;
     }
 
-    if (fNeedMoveTo == kAfterCons_NeedMoveToState) {
+    if (fSegmentState == kAfterMove_SegmentState) {
+        // Set the first return pt to the move pt
         if (pts) {
             *pts = fMoveTo;
         }
-        fNeedMoveTo = kAfterPrefix_NeedMoveToState;
+        fSegmentState = kAfterPrimitive_SegmentState;
     } else {
-        SkASSERT(fNeedMoveTo == kAfterPrefix_NeedMoveToState);
+        SkASSERT(fSegmentState == kAfterPrimitive_SegmentState);
+         // Set the first return pt to the last pt of the previous primitive.
         if (pts) {
             *pts = fPts[-1];
         }
@@ -1237,9 +1270,93 @@ bool SkPath::Iter::cons_moveTo(SkPoint pts[1]) {
     return false;
 }
 
+void SkPath::Iter::consumeDegenerateSegments() {
+    // We need to step over anything that will not move the current draw point
+    // forward before the next move is seen
+    const uint8_t* lastMoveVerb = 0;
+    const SkPoint* lastMovePt = 0;
+    SkPoint lastPt = fLastPt;
+    while (fVerbs != fVerbStop) {
+        unsigned verb = *fVerbs;
+        switch (verb) {
+            case kMove_Verb:
+                // Keep a record of this most recent move
+                lastMoveVerb = fVerbs;
+                lastMovePt = fPts;
+                lastPt = fPts[0];
+                fVerbs++;
+                fPts++;
+                break;
+
+            case kClose_Verb:
+                // A close when we are in a segment is always valid
+                if (fSegmentState == kAfterPrimitive_SegmentState) {
+                    return;
+                }
+                // A close at any other time must be ignored
+                fVerbs++;
+                break;
+
+            case kLine_Verb:
+                if (!IsLineDegenerate(lastPt, fPts[0])) {
+                    if (lastMoveVerb) {
+                        fVerbs = lastMoveVerb;
+                        fPts = lastMovePt;
+                        return;
+                    }
+                    return;
+                }
+                // Ignore this line and continue
+                fVerbs++;
+                fPts++;
+                break;
+
+            case kQuad_Verb:
+                if (!IsQuadDegenerate(lastPt, fPts[0], fPts[1])) {
+                    if (lastMoveVerb) {
+                        fVerbs = lastMoveVerb;
+                        fPts = lastMovePt;
+                        return;
+                    }
+                    return;
+                }
+                // Ignore this line and continue
+                fVerbs++;
+                fPts += 2;
+                break;
+
+            case kCubic_Verb:
+                if (!IsCubicDegenerate(lastPt, fPts[0], fPts[1], fPts[2])) {
+                    if (lastMoveVerb) {
+                        fVerbs = lastMoveVerb;
+                        fPts = lastMovePt;
+                        return;
+                    }
+                    return;
+                }
+                // Ignore this line and continue
+                fVerbs++;
+                fPts += 3;
+                break;
+
+            default:
+                SkDEBUGFAIL("Should never see kDone_Verb");
+        }
+    }
+}
+
 SkPath::Verb SkPath::Iter::next(SkPoint pts[4]) {
+#ifndef SK_OLD_EMPTY_PATH_BEHAVIOR
+    this->consumeDegenerateSegments();
+#endif
+
     if (fVerbs == fVerbStop) {
+        // Close the curve if requested and if there is some curve to close
+#ifdef SK_OLD_EMPTY_PATH_BEHAVIOR
         if (fNeedClose) {
+#else
+        if (fNeedClose && fSegmentState == kAfterPrimitive_SegmentState) {
+#endif
             if (kLine_Verb == this->autoClose(pts)) {
                 return kLine_Verb;
             }
@@ -1270,7 +1387,10 @@ SkPath::Verb SkPath::Iter::next(SkPoint pts[4]) {
                 pts[0] = *srcPts;
             }
             srcPts += 1;
-            fNeedMoveTo = kAfterCons_NeedMoveToState;
+            fSegmentState = kAfterMove_SegmentState;
+#ifndef SK_OLD_EMPTY_PATH_BEHAVIOR
+            fLastPt = fMoveTo;
+#endif
             fNeedClose = fForceClose;
             break;
         case kLine_Verb:
@@ -1310,8 +1430,91 @@ SkPath::Verb SkPath::Iter::next(SkPoint pts[4]) {
                 fVerbs -= 1;
             } else {
                 fNeedClose = false;
+#ifndef SK_OLD_EMPTY_PATH_BEHAVIOR
+                fSegmentState = kAfterClose_SegmentState;
+#endif
             }
-            fNeedMoveTo = kAfterClose_NeedMoveToState;
+#ifdef SK_OLD_EMPTY_PATH_BEHAVIOR
+            fSegmentState = kAfterClose_SegmentState;
+#else
+            fLastPt = fMoveTo;
+#endif
+            break;
+    }
+    fPts = srcPts;
+    return (Verb)verb;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+SkPath::RawIter::RawIter() {
+#ifdef SK_DEBUG
+    fPts = NULL;
+    fMoveTo.fX = fMoveTo.fY = fLastPt.fX = fLastPt.fY = 0;
+#endif
+    // need to init enough to make next() harmlessly return kDone_Verb
+    fVerbs = NULL;
+    fVerbStop = NULL;
+}
+
+SkPath::RawIter::RawIter(const SkPath& path) {
+    this->setPath(path);
+}
+
+void SkPath::RawIter::setPath(const SkPath& path) {
+    fPts = path.fPts.begin();
+    fVerbs = path.fVerbs.begin();
+    fVerbStop = path.fVerbs.end();
+    fMoveTo.fX = fMoveTo.fY = 0;
+    fLastPt.fX = fLastPt.fY = 0;
+}
+
+SkPath::Verb SkPath::RawIter::next(SkPoint pts[4]) {
+    if (fVerbs == fVerbStop) {
+        return kDone_Verb;
+    }
+
+    unsigned        verb = *fVerbs++;
+    const SkPoint*  srcPts = fPts;
+
+    switch (verb) {
+        case kMove_Verb:
+            if (pts) {
+                pts[0] = *srcPts;
+            }
+            fMoveTo = srcPts[0];
+            fLastPt = fMoveTo;
+            srcPts += 1;
+            break;
+        case kLine_Verb:
+            if (pts) {
+                pts[0] = fLastPt;
+                pts[1] = srcPts[0];
+            }
+            fLastPt = srcPts[0];
+            srcPts += 1;
+            break;
+        case kQuad_Verb:
+            if (pts) {
+                pts[0] = fLastPt;
+                memcpy(&pts[1], srcPts, 2 * sizeof(SkPoint));
+            }
+            fLastPt = srcPts[1];
+            srcPts += 2;
+            break;
+        case kCubic_Verb:
+            if (pts) {
+                pts[0] = fLastPt;
+                memcpy(&pts[1], srcPts, 3 * sizeof(SkPoint));
+            }
+            fLastPt = srcPts[2];
+            srcPts += 3;
+            break;
+        case kClose_Verb:
+            fLastPt = fMoveTo;
+            if (pts) {
+                pts[0] = fMoveTo;
+            }
             break;
     }
     fPts = srcPts;
@@ -1349,7 +1552,6 @@ void SkPath::unflatten(SkReader32& buffer) {
     SkDEBUGCODE(this->validate();)
 }
 
-///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkPath::dump(bool forceClose, const char title[]) const {
@@ -1434,7 +1636,13 @@ void SkPath::validate() const {
             SkASSERT(bounds.isEmpty());
             SkASSERT(fBounds.isEmpty());
         } else {
-            fBounds.contains(bounds);
+            if (bounds.isEmpty()) {
+                SkASSERT(fBounds.isEmpty());
+            } else {
+                if (!fBounds.isEmpty()) {
+                    SkASSERT(fBounds.contains(bounds));
+                }
+            }
         }
     }
 
@@ -1568,7 +1776,7 @@ SkPath::Convexity SkPath::ComputeConvexity(const SkPath& path) {
                 count = 0;
                 break;
             default:
-                SkASSERT(!"bad verb");
+                SkDEBUGFAIL("bad verb");
                 return kConcave_Convexity;
         }
 

@@ -1,7 +1,7 @@
 diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/SkGradientShader.cpp
 --- a/gfx/skia/src/effects/SkGradientShader.cpp
 +++ b/gfx/skia/src/effects/SkGradientShader.cpp
-@@ -165,16 +165,17 @@ private:
+@@ -167,16 +167,17 @@ private:
  
      mutable uint16_t*   fCache16;   // working ptr. If this is NULL, we need to recompute the cache values
      mutable SkPMColor*  fCache32;   // working ptr. If this is NULL, we need to recompute the cache values
@@ -15,11 +15,11 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
      static void Build32bitCache(SkPMColor[], SkColor c0, SkColor c1, int count,
                                  U8CPU alpha);
      void setCacheAlpha(U8CPU alpha) const;
+     void initCommon();
  
      typedef SkShader INHERITED;
  };
- 
-@@ -505,16 +506,31 @@ static inline U8CPU dither_fixed_to_8(Sk
+@@ -512,16 +513,31 @@ static inline U8CPU dither_fixed_to_8(Sk
   *  For dithering with premultiply, we want to ceiling the alpha component,
   *  to ensure that it is always >= any color component.
   */
@@ -51,7 +51,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
      SkFixed a = SkMulDiv255Round(SkColorGetA(c0), paintAlpha);
      SkFixed da;
      {
-@@ -606,24 +622,24 @@ const uint16_t* Gradient_Shader::getCach
+@@ -613,24 +629,24 @@ const uint16_t* Gradient_Shader::getCach
          }
      }
      return fCache16;
@@ -78,7 +78,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
              int prevIndex = 0;
              for (int i = 1; i < fColorCount; i++) {
                  int nextIndex = SkFixedToFFFF(rec[i].fPos) >> (16 - kCache32Bits);
-@@ -637,28 +653,31 @@ const SkPMColor* Gradient_Shader::getCac
+@@ -644,28 +660,31 @@ const SkPMColor* Gradient_Shader::getCac
              }
              SkASSERT(prevIndex == kCache32Count - 1);
          }
@@ -112,7 +112,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
   *  over and over, we'd like to return exactly the same "bitmap" if possible,
   *  allowing the client to utilize a cache of our bitmap (e.g. with a GPU).
   *  To do that, we maintain a private cache of built-bitmaps, based on our
-@@ -866,29 +885,37 @@ void Linear_Gradient::shadeSpan(int x, i
+@@ -875,28 +894,38 @@ void Linear_Gradient::shadeSpan(int x, i
              dx = dxStorage[0];
          } else {
              SkASSERT(fDstToIndexClass == kLinear_MatrixClass);
@@ -121,35 +121,36 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
  
          if (SkFixedNearlyZero(dx)) {
              // we're a vertical gradient, so no change in a span
--            unsigned fi = proc(fx);
--            SkASSERT(fi <= 0xFFFF);
--            // TODO: dither version
--            sk_memset32(dstC, cache[fi >> (16 - kCache32Bits)], count);
+-            unsigned fi = proc(fx) >> (16 - kCache32Bits);
+-            sk_memset32_dither(dstC, cache[toggle + fi],
+-                                     cache[(toggle ^ TOGGLE_MASK) + fi], count);
 +            if (proc == clamp_tileproc) {
 +                if (fx < 0) {
 +                    sk_memset32(dstC, cache[-1], count);
 +                } else if (fx > 0xFFFF) {
 +                    sk_memset32(dstC, cache[kCache32Count * 2], count);
 +                } else {
-+                    sk_memset32(dstC, cache[fx >> (16 - kCache32Bits)], count);
++                    unsigned fi = proc(fx) >> (16 - kCache32Bits);
++                    sk_memset32_dither(dstC, cache[toggle + fi],
++                                       cache[(toggle ^ TOGGLE_MASK) + fi], count);
 +                }
 +            } else {
-+                unsigned fi = proc(fx);
-+                SkASSERT(fi <= 0xFFFF);
-+                // TODO: dither version
-+                sk_memset32(dstC, cache[fi >> (16 - kCache32Bits)], count);
++                unsigned fi = proc(fx) >> (16 - kCache32Bits);
++                sk_memset32_dither(dstC, cache[toggle + fi],
++                                   cache[(toggle ^ TOGGLE_MASK) + fi], count);
 +            }
          } else if (proc == clamp_tileproc) {
              SkClampRange range;
-             range.init(fx, dx, count, 0, 0xFF);
+-            range.init(fx, dx, count, 0, 0xFF);
++            range.init(fx, dx, count, cache[-1], cache[kCache32Count * 2]);
  
              if ((count = range.fCount0) > 0) {
 -                sk_memset32_dither(dstC,
 -                                   cache[toggle + range.fV0],
 -                                   cache[(toggle ^ TOGGLE_MASK) + range.fV0],
 -                                   count);
-+                // Do we really want to dither the clamp values?
-+                sk_memset32(dstC, cache[-1], count);
++                 // Do we really want to dither the clamp values?
++                 sk_memset32(dstC, range.fV0, count);
                  dstC += count;
              }
              if ((count = range.fCount1) > 0) {
@@ -158,7 +159,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
                  for (int i = 0; i < unroll; i++) {
                      NO_CHECK_ITER;  NO_CHECK_ITER;
                      NO_CHECK_ITER;  NO_CHECK_ITER;
-@@ -897,20 +924,17 @@ void Linear_Gradient::shadeSpan(int x, i
+@@ -905,20 +934,17 @@ void Linear_Gradient::shadeSpan(int x, i
                  }
                  if ((count &= 7) > 0) {
                      do {
@@ -171,7 +172,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
 -                                   cache[toggle + range.fV1],
 -                                   cache[(toggle ^ TOGGLE_MASK) + range.fV1],
 -                                   count);
-+                sk_memset32(dstC, cache[kCache32Count * 2], count);
++                sk_memset32(dstC, range.fV1, count);
              }
          } else if (proc == mirror_tileproc) {
              do {
@@ -180,7 +181,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
                  fx += dx;
                  *dstC++ = cache[toggle + fi];
                  toggle ^= TOGGLE_MASK;
-@@ -1662,19 +1686,24 @@ public:
+@@ -1670,19 +1699,24 @@ public:
              }
              SkScalar b = (SkScalarMul(fDiff.fX, fx) +
                           SkScalarMul(fDiff.fY, fy) - fStartRadius) * 2;
@@ -208,17 +209,3 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
                  for (; count > 0; --count) {
                      SkFixed t = two_point_radial(b, fx, fy, fSr2D2, foura, fOneOverTwoA, posRoot);
                      SkFixed index = mirror_tileproc(t);
-diff --git a/gfx/skia/update.sh b/gfx/skia/update.sh
---- a/gfx/skia/update.sh
-+++ b/gfx/skia/update.sh
-@@ -90,9 +90,10 @@ if [ -n "$rev" ]; then
-   version=$rev
-   sed -i "" "s/r[0-9][0-9][0-9][0-9]/r$version/" README_MOZILLA
- else
-   echo "Remember to update README_MOZILLA with the version details."
- fi
- 
- # Patch to get arm opts to build with frame pointers enabled. Bug 689069
- patch -p3 < arm-opts.patch
-+patch -p3
- 

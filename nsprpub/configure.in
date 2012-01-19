@@ -138,17 +138,23 @@ dnl ========================================================
 
 AC_ARG_WITH(android-ndk,
 [  --with-android-ndk=DIR
-                      location where the Android NDK can be found],
+                          location where the Android NDK can be found],
     android_ndk=$withval)
 
 AC_ARG_WITH(android-toolchain,
 [  --with-android-toolchain=DIR
-                            location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+                          location of the Android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
     android_toolchain=$withval)
+
+AC_ARG_WITH(android-version,
+[  --with-android-version=VER
+                          Android platform version, default 5],
+    android_version=$withval,
+    android_version=5)
 
 AC_ARG_WITH(android-platform,
 [  --with-android-platform=DIR
-                           location of platform dir, default NDK/build/platforms/android-5/arch-arm],
+                          location of platform dir, default NDK/build/platforms/android-5/arch-arm],
     android_platform=$withval)
 
 case "$target" in
@@ -173,8 +179,7 @@ dnl = and the specified gonk directory doesn't matter here.
 dnl ========================================================
 
 AC_ARG_WITH(gonk,
-[  --with-gonk=DIR
-               location of gonk dir],
+[  --with-gonk=DIR         location of gonk dir],
     gonkdir=$withval)
 
 if test -n "$gonkdir" ; then
@@ -224,11 +229,11 @@ case "$target" in
     if test -z "$android_platform" ; then
         AC_MSG_CHECKING([for android platform directory])
 
-        android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+        android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$target_cpu"
 
         # With newer NDK, the platform path has changed.
         if ! test -d "$android_platform" ; then
-            android_platform="$android_ndk"/platforms/android-5/arch-arm
+            android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_cpu"
         fi
 
         if test -d "$android_platform" ; then
@@ -268,6 +273,7 @@ case "$target" in
     fi
 
     AC_DEFINE(ANDROID)
+    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
     ;;
 esac
 fi
@@ -2735,7 +2741,10 @@ dnl ========================================================
 dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
-AC_CHECK_FUNCS(lchown strerror)
+_SAVE_LDFLAGS="$LDFLAGS"
+LDFLAGS="$OS_LIBS"
+AC_CHECK_FUNCS(lchown strerror dladdr)
+LDFLAGS="$_SAVE_LDFLAGS"
 
 dnl AC_FUNC_MEMCMP
 dnl AC_FUNC_MMAP
