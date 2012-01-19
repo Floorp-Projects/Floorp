@@ -40,9 +40,11 @@
 
 [ptr] native RequestHeaderTuples(mozilla::net::RequestHeaderTuples);
 
-[uuid(40192377-f83c-4b31-92c6-dbc6c767c860)]
+[uuid(306ACF4D-C6DF-4EF6-BDA9-5CB92E83EDD9)]
 interface nsIHttpChannelChild : nsISupports
 {
   void addCookiesToRequest();
-  readonly attribute RequestHeaderTuples headerTuples;
+
+  // Headers that the channel client has set via SetRequestHeader.
+  readonly attribute RequestHeaderTuples clientSetRequestHeaders;
 };
