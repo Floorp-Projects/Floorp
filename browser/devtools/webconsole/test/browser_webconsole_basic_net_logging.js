@@ -41,7 +41,7 @@
 // Tests that the page's resources are displayed in the console as they're
 // loaded
 
-const TEST_NETWORK_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-network.html" + "?_date=" + Date.now();
+const TEST_NETWORK_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-network.html" + "?_date=" + Date.now();
 
 function test() {
   addTab("data:text/html,Web Console basic network logging test");
