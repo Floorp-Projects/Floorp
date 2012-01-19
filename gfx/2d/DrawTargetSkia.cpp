@@ -49,9 +49,14 @@
 #include "skia/SkDashPathEffect.h"
 #include "Logging.h"
 #include "HelpersSkia.h"
-#include "gfxImageSurface.h"
 #include "Tools.h"
 #include <algorithm>
+
+#ifdef ANDROID
+# define USE_SOFT_CLIPPING false
+#else
+# define USE_SOFT_CLIPPING true
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -716,7 +721,7 @@ DrawTargetSkia::ClearRect(const Rect &aRect)
   MarkChanged();
   SkPaint paint;
   mCanvas->save();
-  mCanvas->clipRect(RectToSkRect(aRect), SkRegion::kIntersect_Op);
+  mCanvas->clipRect(RectToSkRect(aRect), SkRegion::kIntersect_Op, USE_SOFT_CLIPPING);
   paint.setColor(SkColorSetARGB(0, 0, 0, 0));
   paint.setXfermodeMode(SkXfermode::kSrc_Mode);
   mCanvas->drawPaint(paint);
@@ -732,7 +737,7 @@ DrawTargetSkia::PushClip(const Path *aPath)
 
   const PathSkia *skiaPath = static_cast<const PathSkia*>(aPath);
   mCanvas->save(SkCanvas::kClip_SaveFlag);
-  mCanvas->clipPath(skiaPath->GetPath());
+  mCanvas->clipPath(skiaPath->GetPath(), SkRegion::kIntersect_Op, USE_SOFT_CLIPPING);
 }
 
 void
@@ -741,7 +746,7 @@ DrawTargetSkia::PushClipRect(const Rect& aRect)
   SkRect rect = RectToSkRect(aRect);
 
   mCanvas->save(SkCanvas::kClip_SaveFlag);
-  mCanvas->clipRect(rect);
+  mCanvas->clipRect(rect, SkRegion::kIntersect_Op, USE_SOFT_CLIPPING);
 }
 
 void
