@@ -47,9 +47,10 @@ function test() {
 }
 
 function popup(tab) {
-  document.popupNode = tab;
-  TabContextMenu.updateContextMenu(document.getElementById("tabContextMenu"));
+  let menu = document.getElementById("tabContextMenu");
+  menu.openPopup(tab, "end_after", 0, 0, true, false, {target: tab});
+  TabContextMenu.updateContextMenu(menu);
   is(TabContextMenu.contextTab, tab, "TabContextMenu context is the expected tab");
-  TabContextMenu.contextTab = null;
+  menu.hidePopup();
 }
 
