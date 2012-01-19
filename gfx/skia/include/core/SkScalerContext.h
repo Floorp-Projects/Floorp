@@ -157,33 +157,36 @@ struct SkGlyph {
 class SkScalerContext {
 public:
     enum Flags {
-        kFrameAndFill_Flag  = 0x01,
-        kDevKernText_Flag   = 0x02,
-        kGammaForBlack_Flag = 0x04, // illegal to set both Gamma flags
-        kGammaForWhite_Flag = 0x08, // illegal to set both Gamma flags
+        kFrameAndFill_Flag        = 0x0001,
+        kDevKernText_Flag         = 0x0002,
+        kEmbeddedBitmapText_Flag  = 0x0004,
+        kEmbolden_Flag            = 0x0008,
+        kSubpixelPositioning_Flag = 0x0010,
+        kAutohinting_Flag         = 0x0020,
+        kVertical_Flag            = 0x0040,
 
         // together, these two flags resulting in a two bit value which matches
         // up with the SkPaint::Hinting enum.
-        kHintingBit1_Flag   = 0x10,
-        kHintingBit2_Flag   = 0x20,
-
-        kEmbeddedBitmapText_Flag = 0x40,
-        kEmbolden_Flag      = 0x80,
-        kSubpixelPositioning_Flag = 0x100,
-        kAutohinting_Flag   = 0x200,
+        kHinting_Shift            = 7, // to shift into the other flags above
+        kHintingBit1_Flag         = 0x0080,
+        kHintingBit2_Flag         = 0x0100,
 
         // these should only ever be set if fMaskFormat is LCD16 or LCD32
-        kLCD_Vertical_Flag  = 0x400,    // else Horizontal
-        kLCD_BGROrder_Flag  = 0x800,    // else RGB order
+        kLCD_Vertical_Flag        = 0x0200,    // else Horizontal
+        kLCD_BGROrder_Flag        = 0x0400,    // else RGB order
 
-        // experimental
-        kForceAA_Flag       = 0x1000
+        // luminance : 0 for black text, kLuminance_Max for white text
+        kLuminance_Shift          = 11, // to shift into the other flags above
+        kLuminance_Bits           = 3,  // ensure Flags doesn't exceed 16bits
     };
-private:
+    
+    // computed values
     enum {
-        kHintingMask = kHintingBit1_Flag | kHintingBit2_Flag
+        kHinting_Mask   = kHintingBit1_Flag | kHintingBit2_Flag,
+        kLuminance_Max  = (1 << kLuminance_Bits) - 1,
+        kLuminance_Mask = kLuminance_Max << kLuminance_Shift,
     };
-public:
+
     struct Rec {
         uint32_t    fOrigFontID;
         uint32_t    fFontID;
@@ -203,11 +206,29 @@ public:
         void    getSingleMatrix(SkMatrix*) const;
 
         SkPaint::Hinting getHinting() const {
-            return static_cast<SkPaint::Hinting>((fFlags & kHintingMask) >> 4);
+            unsigned hint = (fFlags & kHinting_Mask) >> kHinting_Shift;
+            return static_cast<SkPaint::Hinting>(hint);
         }
 
         void setHinting(SkPaint::Hinting hinting) {
-            fFlags = (fFlags & ~kHintingMask) | (hinting << 4);
+            fFlags = (fFlags & ~kHinting_Mask) | (hinting << kHinting_Shift);
+        }
+
+        unsigned getLuminanceBits() const {
+            return (fFlags & kLuminance_Mask) >> kLuminance_Shift;
+        }
+        
+        void setLuminanceBits(unsigned lum) {
+            SkASSERT(lum <= kLuminance_Max);
+            fFlags = (fFlags & ~kLuminance_Mask) | (lum << kLuminance_Shift);
+        }
+
+        U8CPU getLuminanceByte() const {
+            SkASSERT(3 == kLuminance_Bits);
+            unsigned lum = this->getLuminanceBits();
+            lum |= (lum << kLuminance_Bits);
+            lum |= (lum << kLuminance_Bits*2);
+            return lum >> (4*kLuminance_Bits - 8);
         }
 
         SkMask::Format getFormat() const {
@@ -222,6 +243,10 @@ public:
         return (SkMask::Format)fRec.fMaskFormat;
     }
 
+    bool isSubpixel() const {
+        return SkToBool(fRec.fFlags & kSubpixelPositioning_Flag);
+    }
+    
     // remember our glyph offset/base
     void setBaseGlyphCount(unsigned baseGlyphCount) {
         fBaseGlyphCount = baseGlyphCount;
@@ -232,7 +257,7 @@ public:
         fact correspond to a different font/context. In that case, we use the
         base-glyph-count to know how to translate back into local glyph space.
      */
-    uint16_t    charToGlyphID(SkUnichar uni);
+    uint16_t charToGlyphID(SkUnichar uni);
 
     /** Map the glyphID to its glyph index, and then to its char code. Unmapped
         glyphs return zero.

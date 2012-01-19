@@ -32,7 +32,7 @@ void sk_memset32_portable(uint32_t dst[], uint32_t value, int count);
 typedef void (*SkMemset32Proc)(uint32_t dst[], uint32_t value, int count);
 SkMemset32Proc SkMemset32GetPlatformProc();
 
-#if defined(ANDROID) && !defined(SK_BUILD_FOR_ANDROID_NDK)
+#if defined(SK_BUILD_FOR_ANDROID) && !defined(SK_BUILD_FOR_ANDROID_NDK)
     #include "cutils/memory.h"
     
     #define sk_memset16(dst, value, count)    android_memset16(dst, value, (count) << 1)
@@ -90,6 +90,21 @@ size_t SkUTF16_FromUnichar(SkUnichar uni, uint16_t utf16[] = NULL);
 
 size_t SkUTF16_ToUTF8(const uint16_t utf16[], int numberOf16BitValues,
                            char utf8[] = NULL);
+
+inline bool SkUnichar_IsVariationSelector(SkUnichar uni) {
+/*  The 'true' ranges are:
+ *      0x180B  <= uni <=  0x180D
+ *      0xFE00  <= uni <=  0xFE0F
+ *      0xE0100 <= uni <= 0xE01EF
+ */
+    if (uni < 0x180B || uni > 0xE01EF) {
+        return false;
+    }
+    if ((uni > 0x180D && uni < 0xFE00) || (uni > 0xFE0F && uni < 0xE0100)) {
+        return false;
+    }
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
