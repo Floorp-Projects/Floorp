@@ -62,9 +62,9 @@ namespace js {
 
 struct NativeIterator {
     HeapPtrObject obj;
-    HeapId    *props_array;
-    HeapId    *props_cursor;
-    HeapId    *props_end;
+    HeapPtr<JSFlatString> *props_array;
+    HeapPtr<JSFlatString> *props_cursor;
+    HeapPtr<JSFlatString> *props_end;
     const Shape **shapes_array;
     uint32_t  shapes_length;
     uint32_t  shapes_key;
@@ -73,11 +73,11 @@ struct NativeIterator {
 
     bool isKeyIter() const { return (flags & JSITER_FOREACH) == 0; }
 
-    inline HeapId *begin() const {
+    inline HeapPtr<JSFlatString> *begin() const {
         return props_array;
     }
 
-    inline HeapId *end() const {
+    inline HeapPtr<JSFlatString> *end() const {
         return props_end;
     }
 
@@ -85,7 +85,7 @@ struct NativeIterator {
         return end() - begin();
     }
 
-    HeapId *current() const {
+    HeapPtr<JSFlatString> *current() const {
         JS_ASSERT(props_cursor < props_end);
         return props_cursor;
     }
