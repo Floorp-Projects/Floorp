@@ -162,10 +162,16 @@ LiveInterval::setFrom(CodePosition from)
 bool
 LiveInterval::covers(CodePosition pos)
 {
-    for (size_t i = 0; i < ranges_.length(); i++) {
-        if (ranges_[i].to <= pos)
+    if (pos < start() || pos >= end())
+        return false;
+
+    // Loop over the ranges in ascending order.
+    size_t i = lastProcessedRangeIfValid(pos);
+    for (; i < ranges_.length(); i--) {
+        if (pos < ranges_[i].from)
             return false;
-        if (ranges_[i].from <= pos)
+        setLastProcessedRange(i, pos);
+        if (pos < ranges_[i].to)
             return true;
     }
     return false;
@@ -189,18 +195,34 @@ LiveInterval::nextCoveredAfter(CodePosition pos)
 CodePosition
 LiveInterval::intersect(LiveInterval *other)
 {
-    size_t i = 0;
-    size_t j = 0;
+    if (start() > other->start())
+        return other->intersect(this);
 
-    while (i < ranges_.length() && j < other->ranges_.length()) {
-        if (ranges_[i].from <= other->ranges_[j].from) {
-            if (other->ranges_[j].from < ranges_[i].to)
-                return other->ranges_[j].from;
-            i++;
-        } else if (other->ranges_[j].from <= ranges_[i].from) {
-            if (ranges_[i].from < other->ranges_[j].to)
-                return ranges_[i].from;
-            j++;
+    // Loop over the ranges in ascending order. As an optimization,
+    // try to start at the last processed range.
+    size_t i = lastProcessedRangeIfValid(other->start());
+    size_t j = other->ranges_.length() - 1;
+    if (i >= ranges_.length() || j >= other->ranges_.length())
+        return CodePosition::MIN;
+
+    while (true) {
+        const Range &r1 = ranges_[i];
+        const Range &r2 = other->ranges_[j];
+
+        if (r1.from <= r2.from) {
+            if (r1.from <= other->start())
+                setLastProcessedRange(i, other->start());
+            if (r2.from < r1.to)
+                return r2.from;
+            if (i == 0 || ranges_[i-1].from > other->end())
+                break;
+            i--;
+        } else {
+            if (r1.from < r2.to)
+                return r1.from;
+            if (j == 0 || other->ranges_[j-1].from > end())
+                break;
+            j--;
         }
     }
 
@@ -751,7 +773,8 @@ LinearScanAllocator::allocateRegisters()
     enqueueVirtualRegisterIntervals();
     unhandled.assertSorted();
 
-    // Iterate through all intervals in ascending start order
+    // Iterate through all intervals in ascending start order.
+    CodePosition prevPosition = CodePosition::MIN;
     while ((current = unhandled.dequeue()) != NULL) {
         JS_ASSERT(current->getAllocation()->isUse());
         JS_ASSERT(current->numRanges() > 0);
@@ -765,34 +788,39 @@ LinearScanAllocator::allocateRegisters()
                 current->end().pos(), current->requirement()->priority());
 
         // Shift active intervals to the inactive or handled sets as appropriate
-        for (IntervalIterator i(active.begin()); i != active.end(); ) {
-            LiveInterval *it = *i;
-            JS_ASSERT(it->numRanges() > 0);
+        if (position != prevPosition) {
+            JS_ASSERT(position > prevPosition);
+            prevPosition = position;
 
-            if (it->end() <= position) {
-                i = active.removeAt(i);
-                finishInterval(it);
-            } else if (!it->covers(position)) {
-                i = active.removeAt(i);
-                inactive.pushBack(it);
-            } else {
-                i++;
+            for (IntervalIterator i(active.begin()); i != active.end(); ) {
+                LiveInterval *it = *i;
+                JS_ASSERT(it->numRanges() > 0);
+
+                if (it->end() <= position) {
+                    i = active.removeAt(i);
+                    finishInterval(it);
+                } else if (!it->covers(position)) {
+                    i = active.removeAt(i);
+                    inactive.pushBack(it);
+                } else {
+                    i++;
+                }
             }
-        }
 
-        // Shift inactive intervals to the active or handled sets as appropriate
-        for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
-            LiveInterval *it = *i;
-            JS_ASSERT(it->numRanges() > 0);
+            // Shift inactive intervals to the active or handled sets as appropriate
+            for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
+                LiveInterval *it = *i;
+                JS_ASSERT(it->numRanges() > 0);
 
-            if (it->end() <= position) {
-                i = inactive.removeAt(i);
-                finishInterval(it);
-            } else if (it->covers(position)) {
-                i = inactive.removeAt(i);
-                active.pushBack(it);
-            } else {
-                i++;
+                if (it->end() <= position) {
+                    i = inactive.removeAt(i);
+                    finishInterval(it);
+                } else if (it->covers(position)) {
+                    i = inactive.removeAt(i);
+                    active.pushBack(it);
+                } else {
+                    i++;
+                }
             }
         }
 
