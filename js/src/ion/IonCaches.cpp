@@ -217,7 +217,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
 
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.
-    if (cache.stubCount() < MAX_STUBS) {
+    if (cache.stubCount() < MAX_STUBS && obj->isNative()) {
         cache.incrementStubCount();
 
         const Shape *shape = obj->nativeLookup(cx, ATOM_TO_JSID(atom));
