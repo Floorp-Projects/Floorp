@@ -286,21 +286,21 @@ SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
 SHELL_WRAPPER0(executeNextRunnable)
 SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
-SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
-SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
-SHELL_WRAPPER0(bindWidgetTexture);
-SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong);
-SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong);
-SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong);
-SHELL_WRAPPER3(notifySmsSendFailed, jint, jint, jlong);
-SHELL_WRAPPER7(notifyGetSms, jint, jstring, jstring, jstring, jlong, jint, jlong);
-SHELL_WRAPPER3(notifyGetSmsFailed, jint, jint, jlong);
-SHELL_WRAPPER3(notifySmsDeleted, jboolean, jint, jlong);
-SHELL_WRAPPER3(notifySmsDeleteFailed, jint, jint, jlong);
-SHELL_WRAPPER2(notifyNoMessageInList, jint, jlong);
-SHELL_WRAPPER8(notifyListCreated, jint, jint, jstring, jstring, jstring, jlong, jint, jlong);
-SHELL_WRAPPER7(notifyGotNextMessage, jint, jstring, jstring, jstring, jlong, jint, jlong);
-SHELL_WRAPPER3(notifyReadingMessageListFailed, jint, jint, jlong);
+SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble)
+SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong)
+SHELL_WRAPPER0(bindWidgetTexture)
+SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong)
+SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong)
+SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong)
+SHELL_WRAPPER3(notifySmsSendFailed, jint, jint, jlong)
+SHELL_WRAPPER7(notifyGetSms, jint, jstring, jstring, jstring, jlong, jint, jlong)
+SHELL_WRAPPER3(notifyGetSmsFailed, jint, jint, jlong)
+SHELL_WRAPPER3(notifySmsDeleted, jboolean, jint, jlong)
+SHELL_WRAPPER3(notifySmsDeleteFailed, jint, jint, jlong)
+SHELL_WRAPPER2(notifyNoMessageInList, jint, jlong)
+SHELL_WRAPPER8(notifyListCreated, jint, jint, jstring, jstring, jstring, jlong, jint, jlong)
+SHELL_WRAPPER7(notifyGotNextMessage, jint, jstring, jstring, jstring, jlong, jint, jlong)
+SHELL_WRAPPER3(notifyReadingMessageListFailed, jint, jint, jlong)
 
 static void * xul_handle = NULL;
 static void * sqlite_handle = NULL;
