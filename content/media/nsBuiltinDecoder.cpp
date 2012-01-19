@@ -193,6 +193,7 @@ nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
 
     nsresult rv = aStream->Open(aStreamListener);
     if (NS_FAILED(rv)) {
+      LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
       delete aStream;
       return rv;
     }
@@ -259,6 +260,7 @@ nsresult nsBuiltinDecoder::Play()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  NS_ASSERTION(mDecoderStateMachine != nsnull, "Should have state machine.");
   nsresult res = ScheduleStateMachineThread();
   NS_ENSURE_SUCCESS(res,res);
   if (mPlayState == PLAY_STATE_SEEKING) {
