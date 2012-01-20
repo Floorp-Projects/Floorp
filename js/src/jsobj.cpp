@@ -188,15 +188,26 @@ obj_setProto(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     }
 
     if (!vp->isObjectOrNull())
-        return true;
+        return JS_TRUE;
 
     JSObject *pobj = vp->toObjectOrNull();
+    if (pobj) {
+        /*
+         * Innerize pobj here to avoid sticking unwanted properties on the
+         * outer object. This ensures that any with statements only grant
+         * access to the inner object.
+         */
+        OBJ_TO_INNER_OBJECT(cx, pobj);
+        if (!pobj)
+            return JS_FALSE;
+    }
+
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
     if (!CheckAccess(cx, obj, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
-        return false;
+        return JS_FALSE;
 
-    return SetProto(cx, obj, pobj, true);
+    return SetProto(cx, obj, pobj, JS_TRUE);
 }
 
 #else  /* !JS_HAS_OBJ_PROTO_PROP */
