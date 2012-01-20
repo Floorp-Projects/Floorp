@@ -80,14 +80,8 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     private ByteBuffer mBuffer;
     private Layer mTileLayer;
 
-    /* The viewport that Gecko is currently displaying. */
+    /* The viewport rect that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
-
-    /* The viewport that Gecko will display when drawing is finished */
-    private ViewportMetrics mNewGeckoViewport;
-
-    /* The offset used to make sure tiles are snapped to the pixel grid */
-    private Point mRenderOffset;
 
     private CairoImage mCairoImage;
 
@@ -114,7 +108,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         mScreenSize = new IntSize(0, 0);
         mBufferSize = new IntSize(0, 0);
         mFormat = CairoImage.FORMAT_RGB16_565;
-        mRenderOffset = new Point(0, 0);
 
         mCairoImage = new CairoImage() {
             @Override
@@ -124,6 +117,8 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             @Override
             public int getFormat() { return mFormat; }
         };
+
+        mTileLayer = new MultiTileLayer(mCairoImage, TILE_SIZE);
     }
 
     public int getWidth() {
@@ -156,8 +151,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
-        GeckoAppShell.registerGeckoEventListener("Document:Shown", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Selected", this);
 
         // This needs to happen before a call to sendResizeEventIfNecessary
         // happens, but only needs to be called once. As that is only called by
@@ -170,9 +163,9 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         sendResizeEventIfNecessary();
     }
 
-    private boolean setHasDirectTexture(boolean hasDirectTexture) {
-        if (mTileLayer != null && hasDirectTexture == mHasDirectTexture)
-            return false;
+    private void setHasDirectTexture(boolean hasDirectTexture) {
+        if (hasDirectTexture == mHasDirectTexture)
+            return;
 
         mHasDirectTexture = hasDirectTexture;
 
@@ -180,7 +173,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         if (mHasDirectTexture) {
             mTileLayer = new WidgetTileLayer(mCairoImage);
             tileSize = new IntSize(0, 0);
-            mRenderOffset.set(0, 0);
         } else {
             mTileLayer = new MultiTileLayer(mCairoImage, TILE_SIZE);
             tileSize = TILE_SIZE;
@@ -194,57 +186,18 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         // Force a resize event to be sent because the results of this
         // are different depending on what tile system we're using
         sendResizeEventIfNecessary(true);
-
-        return true;
     }
 
-    public boolean beginDrawing(int width, int height, String metadata, boolean hasDirectTexture) {
-        // If we've changed surface types, cancel this draw
-        if (setHasDirectTexture(hasDirectTexture))
-            return false;
-
+    public void beginDrawing(int width, int height) {
         beginTransaction(mTileLayer);
-
-        try {
-            JSONObject viewportObject = new JSONObject(metadata);
-            mNewGeckoViewport = new ViewportMetrics(viewportObject);
-
-            // We only need to set a render offset/allocate buffer memory if
-            // we're using MultiTileLayer. Otherwise, just synchronise the
-            // buffer size and return.
-            if (!(mTileLayer instanceof MultiTileLayer)) {
-                if (mBufferSize.width != width || mBufferSize.height != height)
-                    mBufferSize = new IntSize(width, height);
-                return true;
-            }
-
-            // If the origin has changed, alter the rendering offset so that
-            // rendering is snapped to the tile grid and clear the invalid area.
-            Point oldOrigin = PointUtils.round(mGeckoViewport.getDisplayportOrigin());
-            Point origin = PointUtils.round(mNewGeckoViewport.getDisplayportOrigin());
-
-            if (!origin.equals(oldOrigin)) {
-                Point tileOrigin = new Point((origin.x / TILE_SIZE.width) * TILE_SIZE.width,
-                                             (origin.y / TILE_SIZE.height) * TILE_SIZE.height);
-                mRenderOffset.set(origin.x - tileOrigin.x, origin.y - tileOrigin.y);
-                ((MultiTileLayer)mTileLayer).invalidateBuffer();
-            }
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Bad viewport description: " + metadata);
-            throw new RuntimeException(e);
-        }
 
         if (mBufferSize.width != width || mBufferSize.height != height) {
             mBufferSize = new IntSize(width, height);
 
-            // We over-allocate to allow for the render offset. nsWindow
-            // assumes that this will happen.
-            IntSize realBufferSize = new IntSize(width + TILE_SIZE.width,
-                                                 height + TILE_SIZE.height);
-
             // Reallocate the buffer if necessary
-            int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
-            int size = realBufferSize.getArea() * bpp;
+
+            // * 2 because it's a 16-bit buffer (so 2 bytes per pixel).
+            int size = mBufferSize.getArea() * 2;
             if (mBuffer == null || mBuffer.capacity() != size) {
                 // Free the old buffer
                 if (mBuffer != null) {
@@ -255,35 +208,39 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
                 mBuffer = GeckoAppShell.allocateDirectBuffer(size);
             }
         }
-
-        return true;
     }
 
-    private void updateViewport(final boolean onlyUpdatePageSize) {
-        // save and restore the viewport size stored in java; never let the
-        // JS-side viewport dimensions override the java-side ones because
-        // java is the One True Source of this information, and allowing JS
-        // to override can lead to race conditions where this data gets clobbered.
-        FloatSize viewportSize = getLayerController().getViewportSize();
-        mGeckoViewport = mNewGeckoViewport;
-        mGeckoViewport.setSize(viewportSize);
+    private void updateViewport(String viewportDescription, final boolean onlyUpdatePageSize) {
+        try {
+            JSONObject viewportObject = new JSONObject(viewportDescription);
 
-        LayerController controller = getLayerController();
-        PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
-        Point tileOrigin = PointUtils.round(displayportOrigin);
-        tileOrigin.offset(-mRenderOffset.x, -mRenderOffset.y);
-        mTileLayer.setOrigin(tileOrigin);
-        mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+            // save and restore the viewport size stored in java; never let the
+            // JS-side viewport dimensions override the java-side ones because
+            // java is the One True Source of this information, and allowing JS
+            // to override can lead to race conditions where this data gets clobbered.
+            FloatSize viewportSize = getLayerController().getViewportSize();
+            mGeckoViewport = new ViewportMetrics(viewportObject);
+            mGeckoViewport.setSize(viewportSize);
 
-        if (onlyUpdatePageSize) {
-            // Don't adjust page size when zooming unless zoom levels are
-            // approximately equal.
-            if (FloatUtils.fuzzyEquals(controller.getZoomFactor(),
-                    mGeckoViewport.getZoomFactor()))
-                controller.setPageSize(mGeckoViewport.getPageSize());
-        } else {
-            controller.setViewportMetrics(mGeckoViewport);
-            controller.abortPanZoomAnimation();
+            LayerController controller = getLayerController();
+            PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
+            mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
+            mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+
+            if (onlyUpdatePageSize) {
+                // Don't adjust page size when zooming unless zoom levels are
+                // approximately equal.
+                if (FloatUtils.fuzzyEquals(controller.getZoomFactor(),
+                        mGeckoViewport.getZoomFactor()))
+                    controller.setPageSize(mGeckoViewport.getPageSize());
+            } else {
+                Log.d(LOGTAG, "Received viewport update from gecko");
+                controller.setViewportMetrics(mGeckoViewport);
+                controller.abortPanZoomAnimation();
+            }
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Bad viewport description: " + viewportDescription);
+            throw new RuntimeException(e);
         }
     }
 
@@ -291,17 +248,17 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
      * TODO: Would be cleaner if this took an android.graphics.Rect instead, but that would require
      * a little more JNI magic.
      */
-    public void endDrawing(int x, int y, int width, int height) {
+    public void endDrawing(int x, int y, int width, int height, String metadata, boolean hasDirectTexture) {
         synchronized (getLayerController()) {
             try {
-                updateViewport(!mUpdateViewportOnEndDraw);
+                updateViewport(metadata, !mUpdateViewportOnEndDraw);
                 mUpdateViewportOnEndDraw = false;
+                Rect rect = new Rect(x, y, x + width, y + height);
 
-                if (mTileLayer instanceof MultiTileLayer) {
-                    Rect rect = new Rect(x, y, x + width, y + height);
-                    rect.offset(mRenderOffset.x, mRenderOffset.y);
+                setHasDirectTexture(hasDirectTexture);
+
+                if (!mHasDirectTexture)
                     ((MultiTileLayer)mTileLayer).invalidate(rect);
-                }
             } finally {
                 endTransaction(mTileLayer);
             }
@@ -320,28 +277,29 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         ByteBuffer tileBuffer = mBuffer.slice();
         int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
 
-        for (int y = 0; y <= mBufferSize.height; y += TILE_SIZE.height) {
-            for (int x = 0; x <= mBufferSize.width; x += TILE_SIZE.width) {
+        for (int y = 0; y < mBufferSize.height; y += TILE_SIZE.height) {
+            for (int x = 0; x < mBufferSize.width; x += TILE_SIZE.width) {
+                // Calculate tile size
+                IntSize tileSize = new IntSize(Math.min(mBufferSize.width - x, TILE_SIZE.width),
+                                               Math.min(mBufferSize.height - y, TILE_SIZE.height));
+
                 // Create a Bitmap from this tile
-                Bitmap tile = Bitmap.createBitmap(TILE_SIZE.width, TILE_SIZE.height,
+                Bitmap tile = Bitmap.createBitmap(tileSize.width, tileSize.height,
                                                   CairoUtils.cairoFormatTobitmapConfig(mFormat));
                 tile.copyPixelsFromBuffer(tileBuffer.asIntBuffer());
 
                 // Copy the tile to the master Bitmap and recycle it
-                c.drawBitmap(tile, x - mRenderOffset.x, y - mRenderOffset.y, null);
+                c.drawBitmap(tile, x, y, null);
                 tile.recycle();
 
                 // Progress the buffer to the next tile
-                tileBuffer.position(TILE_SIZE.getArea() * bpp);
+                tileBuffer.position(tileSize.getArea() * bpp);
                 tileBuffer = tileBuffer.slice();
             }
         }
     }
 
     public Bitmap getBitmap() {
-        if (mTileLayer == null)
-            return null;
-
         // Begin a tile transaction, otherwise the buffer can be destroyed while
         // we're reading from it.
         beginTransaction(mTileLayer);
@@ -353,8 +311,12 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
                 if (mTileLayer instanceof MultiTileLayer) {
                     b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
-                                            CairoUtils.cairoFormatTobitmapConfig(mFormat));
+                                               CairoUtils.cairoFormatTobitmapConfig(mFormat));
                     copyPixelsFromMultiTileLayer(b);
+                } else if (mTileLayer instanceof SingleTileLayer) {
+                    b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
+                                               CairoUtils.cairoFormatTobitmapConfig(mFormat));
+                    b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
                 } else {
                     Log.w(LOGTAG, "getBitmap() called on a layer (" + mTileLayer + ") we don't know how to get a bitmap from");
                 }
@@ -372,10 +334,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     /** Returns the back buffer. This function is for Gecko to use. */
     public ByteBuffer lockBuffer() {
         return mBuffer;
-    }
-
-    public Point getRenderOffset() {
-        return mRenderOffset;
     }
 
     /**
@@ -412,7 +370,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         // Round up depending on layer implementation to remove texture wastage
         if (mTileLayer instanceof MultiTileLayer) {
-            // Round to the next multiple of the tile size
+            // Round to the next multiple of the tile size, respecting maximum texture size
             bufferSize = new IntSize(((mScreenSize.width + LayerController.MIN_BUFFER.width - 1) / TILE_SIZE.width + 1) * TILE_SIZE.width,
                                      ((mScreenSize.height + LayerController.MIN_BUFFER.height - 1) / TILE_SIZE.height + 1) * TILE_SIZE.height);
 
@@ -423,7 +381,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             if (mScreenSize.width > maxSize || mScreenSize.height > maxSize)
                 throw new RuntimeException("Screen size of " + mScreenSize + " larger than maximum texture size of " + maxSize);
 
-            // Round to next power of two until we have NPOT texture support, respecting maximum texture size
+            // Round to next power of two until we have NPOT texture support
             bufferSize = new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width + LayerController.MIN_BUFFER.width)),
                                      Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.height + LayerController.MIN_BUFFER.height)));
         }
@@ -494,16 +452,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.DRAW, rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
             mUpdateViewportOnEndDraw = true;
-        } else if (("Document:Shown".equals(event) ||
-                    "Tab:Selected".equals(event)) &&
-                   (mTileLayer instanceof MultiTileLayer)) {
-            beginTransaction(mTileLayer);
-            try {
-                ((MultiTileLayer)mTileLayer).invalidateTiles();
-                ((MultiTileLayer)mTileLayer).invalidateBuffer();
-            } finally {
-                endTransaction(mTileLayer);
-            }
         }
     }
 }
