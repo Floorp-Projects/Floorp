@@ -5600,7 +5600,7 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    if (!s)
+    if (!s || !*s)
         return cx->runtime->emptyString;
     n = strlen(s);
     js = InflateString(cx, s, &n);

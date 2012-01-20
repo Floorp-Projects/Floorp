@@ -57,11 +57,11 @@ void
 PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     printf("#%u:", script->id());
-    LifoAlloc lifoAlloc(1024);
-    Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &lifoAlloc, 0);
+    Sprinter sprinter(cx);
+    if (!sprinter.init())
+        return;
     js_Disassemble1(cx, script, pc, pc - script->code, true, &sprinter);
-    fprintf(stdout, "%s", sprinter.base);
+    fprintf(stdout, "%s", sprinter.string());
 }
 #endif
 

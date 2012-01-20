@@ -440,26 +440,80 @@ DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
 /*
  * Sprintf, but with unlimited and automatically allocated buffering.
  */
-struct Sprinter {
-    JSContext       *context;       /* context executing the decompiler */
-    LifoAlloc       *pool;          /* string allocation pool */
-    char            *base;          /* base address of buffer in pool */
-    size_t          size;           /* size of buffer allocated at base */
-    ptrdiff_t       offset;         /* offset of next free char in buffer */
+class Sprinter
+{
+  public:
+    struct InvariantChecker
+    {
+        const Sprinter *parent;
+
+        explicit InvariantChecker(const Sprinter *p) : parent(p) {
+            parent->checkInvariants();
+        }
+
+        ~InvariantChecker() {
+            parent->checkInvariants();
+        }
+    };
+
+    JSContext               *context;       /* context executing the decompiler */
+
+  private:
+    static const size_t     DefaultSize;
+#ifdef DEBUG
+    bool                    initialized;    /* true if this is initialized, use for debug builds */
+#endif
+    char                    *base;          /* malloc'd buffer address */
+    size_t                  size;           /* size of buffer allocated at base */
+    ptrdiff_t               offset;         /* offset of next free char in buffer */
+
+    bool realloc_(size_t newSize);
+
+  public:
+    explicit Sprinter(JSContext *cx);
+    ~Sprinter();
+
+    /* Initialize this sprinter, returns false on error */
+    bool init();
+
+    void checkInvariants() const;
+
+    const char *string() const;
+    const char *stringEnd() const;
+    /* Returns the string at offset |off| */
+    char *stringAt(ptrdiff_t off) const;
+    /* Returns the char at offset |off| */
+    char &operator[](size_t off);
+    /* Test if this Sprinter is empty */
+    bool empty() const;
+
+    /*
+     * Attempt to reserve len + 1 space (for a trailing NULL byte). If the
+     * attempt succeeds, return a pointer to the start of that space and adjust the
+     * internal content. The caller *must* completely fill this space on success.
+     */
+    char *reserve(size_t len);
+    /* Like reserve, but memory is initialized to 0 */
+    char *reserveAndClear(size_t len);
+
+    /*
+     * Puts |len| characters from |s| at the current position and return an offset to
+     * the beginning of this new data
+     */
+    ptrdiff_t put(const char *s, size_t len);
+    ptrdiff_t putString(JSString *str);
+
+    /* Prints a formatted string into the buffer */
+    int printf(const char *fmt, ...);
+
+    /* Change the offset */
+    void setOffset(const char *end);
+    void setOffset(ptrdiff_t off);
+
+    /* Get the offset */
+    ptrdiff_t getOffset() const;
+    ptrdiff_t getOffsetOf(const char *string) const;
 };
-
-#define INIT_SPRINTER(cx, sp, ap, off) \
-    ((sp)->context = cx, (sp)->pool = ap, (sp)->base = NULL, (sp)->size = 0,  \
-     (sp)->offset = off)
-
-/*
- * Attempt to reserve len space in sp (including a trailing NULL byte). If the
- * attempt succeeds, return a pointer to the start of that space and adjust the
- * length of sp's contents. The caller *must* completely fill this space
- * (including the space for the trailing NULL byte) on success.
- */
-extern char *
-SprintReserveAmount(Sprinter *sp, size_t len);
 
 extern ptrdiff_t
 SprintPut(Sprinter *sp, const char *s, size_t len);
