@@ -36,9 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global Components, Services, ChromeWorker */
-/*global TiltGL, TiltMath, EPSILON, vec3, mat4, quat4, TiltUtils */
 "use strict";
 
 const Cu = Components.utils;
@@ -508,7 +505,7 @@ TiltVisualizer.Presenter.prototype = {
    * @param {Object} aData
    *                 object containing the necessary mesh verts, texcoord etc.
    */
-  setupMesh: function TVP_setupMesh(aData) /*global TiltVisualizerStyle */
+  setupMesh: function TVP_setupMesh(aData)
   {
     let renderer = this.renderer;
 

@@ -1,8 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, waitForExplicitFinish, finish, gBrowser */
-/*global Cu, LayoutHelpers, TiltUtils */
 "use strict";
 
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
@@ -60,7 +57,7 @@ function test() {
 
     let nodeCoordinates = LayoutHelpers.getRect(
       iframe.contentDocument.getElementById("test-div"), iframe.contentWindow);
- 
+
     let frameOffset = LayoutHelpers.getIframeContentOffset(iframe);
     let frameRect = iframe.getBoundingClientRect();
 
