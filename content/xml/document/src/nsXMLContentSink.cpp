@@ -327,7 +327,6 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
   }
   else {
     // Kick off layout for non-XSLT transformed documents.
-    mDocument->ScriptLoader()->RemoveObserver(this);
 
     // Check if we want to prettyprint
     MaybePrettyPrint();
@@ -418,8 +417,6 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
       htmlDoc->SetDocWriteDisabled(false);
     }
   }
-
-  originalDocument->ScriptLoader()->RemoveObserver(this);
 
   // Notify document observers that all the content has been stuck
   // into the document.  
@@ -596,15 +593,12 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       return NS_OK;
     }
 
+    // Always check the clock in nsContentSink right after a script
+    StopDeflecting();
+
     // Now tell the script that it's ready to go. This may execute the script
     // or return true, or neither if the script doesn't need executing.
     bool block = sele->AttemptToExecute();
-
-    // If the act of insertion evaluated the script, we're fine.
-    // Else, block the parser till the script has loaded.
-    if (block) {
-      mScriptElements.AppendObject(sele);
-    }
 
     // If the parser got blocked, make sure to return the appropriate rv.
     // I'm not sure if this is actually needed or not.
@@ -1681,3 +1675,21 @@ nsXMLContentSink::IsMonolithicContainer(nsINodeInfo* aNodeInfo)
           (aNodeInfo->NameAtom() == nsGkAtoms::math))
           );
 }
+
+void
+nsXMLContentSink::ContinueInterruptedParsingIfEnabled()
+{
+  if (mParser && mParser->IsParserEnabled()) {
+    mParser->ContinueInterruptedParsing();
+  }
+}
+
+void
+nsXMLContentSink::ContinueInterruptedParsingAsync()
+{
+  nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this,
+    &nsXMLContentSink::ContinueInterruptedParsingIfEnabled);
+
+  NS_DispatchToCurrentThread(ev);
+}
+

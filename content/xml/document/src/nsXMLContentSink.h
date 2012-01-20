@@ -102,6 +102,7 @@ public:
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
   virtual bool IsScriptExecuting();
+  virtual void ContinueInterruptedParsingAsync();
 
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument);
@@ -115,6 +116,9 @@ public:
                           bool &aIsAlternate);
 
 protected:
+
+  void ContinueInterruptedParsingIfEnabled();
+
   // Start layout.  If aIgnorePendingSheets is true, this will happen even if
   // we still have stylesheet loads pending.  Otherwise, we'll wait until the
   // stylesheets are all done loading.

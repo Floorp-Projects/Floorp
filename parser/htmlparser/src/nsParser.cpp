@@ -1192,6 +1192,12 @@ nsParser::UnblockParser()
   }
 }
 
+NS_IMETHODIMP_(void)
+nsParser::ContinueInterruptedParsingAsync()
+{
+  mSink->ContinueInterruptedParsingAsync();
+}
+
 /**
  * Call this to query whether the parser is enabled or not.
  */

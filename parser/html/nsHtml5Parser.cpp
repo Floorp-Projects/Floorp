@@ -197,6 +197,13 @@ NS_IMETHODIMP_(void)
 nsHtml5Parser::UnblockParser()
 {
   mBlocked = false;
+  mExecutor->ContinueInterruptedParsingAsync();
+}
+
+NS_IMETHODIMP_(void)
+nsHtml5Parser::ContinueInterruptedParsingAsync()
+{
+  mExecutor->ContinueInterruptedParsingAsync();
 }
 
 NS_IMETHODIMP_(bool)
