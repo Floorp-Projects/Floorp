@@ -46,7 +46,6 @@
 // Base class for contentsink implementations.
 
 #include "nsICSSLoaderObserver.h"
-#include "nsIScriptLoaderObserver.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -64,6 +63,7 @@
 #include "nsIRequest.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsThreadUtils.h"
+#include "nsIScriptElement.h"
 
 class nsIDocument;
 class nsIURI;
@@ -113,16 +113,13 @@ extern PRLogModuleInfo* gContentSinkLogModuleInfo;
 #define NS_DELAY_FOR_WINDOW_CREATION  500000
 
 class nsContentSink : public nsICSSLoaderObserver,
-                      public nsIScriptLoaderObserver,
                       public nsSupportsWeakReference,
                       public nsStubDocumentObserver,
                       public nsITimerCallback
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsContentSink,
-                                           nsIScriptLoaderObserver)
-  NS_DECL_NSISCRIPTLOADEROBSERVER
-
+                                           nsICSSLoaderObserver)
     // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
 
@@ -290,10 +287,6 @@ protected:
     return sNotificationInterval;
   }
 
-  // Overridable hooks into script evaluation
-  virtual void PreEvaluateScript()                            {return;}
-  virtual void PostEvaluateScript(nsIScriptElement *aElement) {return;}
-
   virtual nsresult FlushTags() = 0;
 
   // Later on we might want to make this more involved somehow
@@ -302,15 +295,16 @@ protected:
 
   void DoProcessLinkHeader();
 
+  void StopDeflecting() {
+    mDeflectedCount = sPerfDeflectCount;
+  }
+
 private:
   // People shouldn't be allocating this class directly.  All subclasses should
   // be allocated using a zeroing operator new.
   void* operator new(size_t sz) CPP_THROW_NEW;  // Not to be implemented
 
 protected:
-
-  virtual void ContinueInterruptedParsingAsync();
-  void ContinueInterruptedParsingIfEnabled();
 
   nsCOMPtr<nsIDocument>         mDocument;
   nsCOMPtr<nsIParser>           mParser;
@@ -319,8 +313,6 @@ protected:
   nsRefPtr<mozilla::css::Loader> mCSSLoader;
   nsRefPtr<nsNodeInfoManager>   mNodeInfoManager;
   nsRefPtr<nsScriptLoader>      mScriptLoader;
-
-  nsCOMArray<nsIScriptElement> mScriptElements;
 
   // back off timer notification after count
   PRInt32 mBackoffCount;

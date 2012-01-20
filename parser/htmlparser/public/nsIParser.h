@@ -55,8 +55,8 @@
 #include "nsIAtom.h"
 
 #define NS_IPARSER_IID \
-{ 0x30ffba62, 0x0928, 0x4503, \
-  { 0xa8, 0x95, 0xd1, 0x32, 0x76, 0x40, 0x2a, 0x2a } }
+{ 0x11a4f41f, 0x7044, 0x4c57, \
+  { 0xb3, 0xa4, 0xed, 0x79, 0xc7, 0xc4, 0x61, 0x99 } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -218,6 +218,11 @@ class nsIParser : public nsISupports {
     // automatically. It's the callers' responsibility to restart
     // the parsing engine.
     NS_IMETHOD_(void) UnblockParser() = 0;
+
+    /**
+     * Asynchronously continues parsing.
+     */
+    NS_IMETHOD_(void) ContinueInterruptedParsingAsync() = 0;
 
     NS_IMETHOD_(bool) IsParserEnabled() = 0;
     NS_IMETHOD_(bool) IsComplete() = 0;

@@ -216,6 +216,7 @@ class nsParser : public nsIParser,
     NS_IMETHOD        ContinueInterruptedParsing();
     NS_IMETHOD_(void) BlockParser();
     NS_IMETHOD_(void) UnblockParser();
+    NS_IMETHOD_(void) ContinueInterruptedParsingAsync();
     NS_IMETHOD        Terminate(void);
 
     /**

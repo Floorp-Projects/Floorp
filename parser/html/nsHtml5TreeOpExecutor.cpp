@@ -159,7 +159,6 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
   }
 
   ScrollToRef();
-  mDocument->ScriptLoader()->RemoveObserver(this);
   mDocument->RemoveObserver(this);
   if (!mParser) {
     // DidBuildModelImpl may cause mParser to be nulled out
@@ -558,7 +557,8 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       // must be tail call when mFlushState is eNotFlushing
       RunScript(scriptElement);
       
-      // The script execution machinery makes sure this doesn't get deflected.
+      // Always check the clock in nsContentSink right after a script
+      StopDeflecting();
       if (nsContentSink::DidProcessATokenImpl() == 
           NS_ERROR_HTMLPARSER_INTERRUPTED) {
         #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
@@ -756,7 +756,6 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
   if (block) {
-    mScriptElements.AppendObject(sele);
     if (mParser) {
       mParser->BlockParser();
     }
