@@ -145,7 +145,6 @@ class Registers
         VolatileMask |         // = arguments
         (1 << Registers::r4) | // = Invalidation saved PC
         (1 << Registers::r5);  // = argBase
-    JS_STATIC_ASSERT(WrapperMask > ArgRegMask);
 
     static const uint32 SingleByteRegs =
         VolatileMask | NonVolatileMask;
