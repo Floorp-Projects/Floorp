@@ -331,13 +331,6 @@ LInstruction::assignPostSnapshot(LSnapshot *snapshot)
 #endif
 }
 
-RegisterSet
-LInstruction::liveRegisters()
-{
-    return RegisterSet(GeneralRegisterSet(Registers::AllocatableMask),
-                       FloatRegisterSet(FloatRegisters::AllocatableMask));
-}
-
 void
 LInstruction::print(FILE *fp)
 {

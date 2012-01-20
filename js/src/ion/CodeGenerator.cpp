@@ -982,7 +982,7 @@ bool
 CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
 {
     Register objReg = ToRegister(ool->cache()->getOperand(0));
-    RegisterSet liveRegs = ool->cache()->liveRegisters();
+    RegisterSet liveRegs = ool->cache()->safepoint()->liveRegs();
 
     LInstruction *ins_ = ool->cache();
     const MGetPropertyCache *mir;
@@ -1008,18 +1008,18 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     cache.setScriptedLocation(mir->script(), mir->pc());
     size_t cacheIndex = allocateCache(cache);
 
-    masm.PushRegsInMask(liveRegs);
+    saveLive(ins_);
 
     typedef bool (*pf)(JSContext *, size_t, JSObject *, Value *);
     static const VMFunction GetPropertyCacheInfo = FunctionInfo<pf>(GetPropertyCache);
 
     pushArg(objReg);
     pushArg(Imm32(cacheIndex));
-    if (!callVM(GetPropertyCacheInfo, ool->cache()))
+    if (!callVM(GetPropertyCacheInfo, ins_))
         return false;
 
     masm.storeCallResult(output);
-    masm.PopRegsInMask(liveRegs);
+    restoreLive(ins_);
 
     masm.jump(ool->rejoin());
 

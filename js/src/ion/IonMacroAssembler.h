@@ -198,7 +198,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void PushRegsInMask(RegisterSet set);
+    void PushRegsInMask(GeneralRegisterSet set) {
+        PushRegsInMask(RegisterSet(set, FloatRegisterSet()));
+    }
     void PopRegsInMask(RegisterSet set);
+    void PopRegsInMask(GeneralRegisterSet set) {
+        PopRegsInMask(RegisterSet(set, FloatRegisterSet()));
+    }
 
     using MacroAssemblerSpecific::Push;
 

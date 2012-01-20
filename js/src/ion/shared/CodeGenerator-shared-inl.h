@@ -117,6 +117,24 @@ GetValueOutput(LInstruction *ins)
 #endif
 }
 
+void
+CodeGeneratorShared::saveLive(LInstruction *ins)
+{
+    LSafepoint *safepoint = ins->safepoint();
+
+    masm.PushRegsInMask(safepoint->restRegs());
+    masm.PushRegsInMask(safepoint->gcRegs());
+}
+
+void
+CodeGeneratorShared::restoreLive(LInstruction *ins)
+{
+    LSafepoint *safepoint = ins->safepoint();
+
+    masm.PopRegsInMask(safepoint->restRegs());
+    masm.PopRegsInMask(safepoint->gcRegs());
+}
+
 } // ion
 } // js
 
