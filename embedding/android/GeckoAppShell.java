@@ -113,7 +113,8 @@ public class GeckoAppShell
     public static native void onLowMemory();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
-    public static native void loadLibs(String apkName, boolean shouldExtract);
+    public static native void loadGeckoLibsNative(String apkName);
+    public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
     public static native void reportJavaCrash(String stack);
 
@@ -396,7 +397,8 @@ public class GeckoAppShell
                 }
             }
         }
-        loadLibs(apkName, extractLibs);
+        loadSQLiteLibsNative(apkName, extractLibs);
+        loadGeckoLibsNative(apkName);
     }
 
     private static void putLocaleEnv() {

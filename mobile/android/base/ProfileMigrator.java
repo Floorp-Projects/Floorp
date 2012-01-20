@@ -15,7 +15,7 @@
  * The Original Code is Mozilla Android code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2011-2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -38,24 +38,22 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.sqlite.ByteBufferInputStream;
+import org.mozilla.gecko.sqlite.SQLiteBridge;
+import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteStatement;
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.provider.Browser;
 import android.util.Log;
-import android.webkit.WebIconDatabase;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,7 +68,6 @@ public class ProfileMigrator {
     private static final String LOGTAG = "ProfMigr";
     private File mProfileDir;
     private ContentResolver mCr;
-    private SQLiteDatabase mDb;
 
     /*
       Amount of Android history entries we will remember
@@ -82,32 +79,32 @@ public class ProfileMigrator {
        These queries are derived from the low-level Places schema
        https://developer.mozilla.org/en/The_Places_database
     */
-    final String bookmarkQuery = "SELECT places.url AS a_url, "
+    private final String bookmarkQuery = "SELECT places.url AS a_url, "
         + "places.title AS a_title FROM "
         + "(moz_places as places JOIN moz_bookmarks as bookmarks ON "
         + "places.id = bookmarks.fk) WHERE places.hidden <> 1 "
         + "ORDER BY bookmarks.dateAdded";
-    // Don't ask why. Just curse along at the Android devs.
-    final String bookmarkUrl = "a_url";
-    final String bookmarkTitle = "a_title";
+    // Result column of relevant data
+    private final String bookmarkUrl   = "a_url";
+    private final String bookmarkTitle = "a_title";
 
-    final String historyQuery =
+    private final String historyQuery =
         "SELECT places.url AS a_url, places.title AS a_title, "
         + "history.visit_date AS a_date FROM "
         + "(moz_historyvisits AS history JOIN moz_places AS places ON "
         + "places.id = history.place_id) WHERE places.hidden <> 1 "
         + "ORDER BY history.visit_date DESC";
-    final String historyUrl = "a_url";
-    final String historyTitle = "a_title";
-    final String historyDate = "a_date";
+    private final String historyUrl   = "a_url";
+    private final String historyTitle = "a_title";
+    private final String historyDate  = "a_date";
 
-    final String faviconQuery =
+    private final String faviconQuery =
         "SELECT places.url AS a_url, favicon.data AS a_data, "
         + "favicon.mime_type AS a_mime FROM (moz_places AS places JOIN "
         + "moz_favicons AS favicon ON places.favicon_id = favicon.id)";
-    final String faviconUrl = "a_url";
-    final String faviconData = "a_data";
-    final String faviconMime = "a_mime";
+    private final String faviconUrl  = "a_url";
+    private final String faviconData = "a_data";
+    private final String faviconMime = "a_mime";
 
     public ProfileMigrator(ContentResolver cr, File profileDir) {
         mProfileDir = profileDir;
@@ -116,12 +113,8 @@ public class ProfileMigrator {
 
     public void launchBackground() {
         // Work around http://code.google.com/p/android/issues/detail?id=11291
-        // The WebIconDatabase needs to be initialized within the UI thread so
-        // just request the instance here.
-        WebIconDatabase.getInstance();
-
-        PlacesTask placesTask = new PlacesTask();
-        new Thread(placesTask).start();
+        // WebIconDatabase needs to be initialized within a looper thread.
+        GeckoAppShell.getHandler().post(new PlacesTask());
     }
 
     private class PlacesTask implements Runnable {
@@ -177,37 +170,24 @@ public class ProfileMigrator {
             }
         }
 
-        protected void migrateHistory(SQLiteDatabase db) {
+        protected void migrateHistory(SQLiteBridge db) {
             Map<String, Long> androidHistory = gatherAndroidHistory();
             final ArrayList<String> placesHistory = new ArrayList<String>();
 
-            Cursor cursor = null;
             try {
-                cursor =
-                    db.rawQuery(historyQuery, new String[] { });
-                final int urlCol =
-                    cursor.getColumnIndexOrThrow(historyUrl);
-                final int titleCol =
-                    cursor.getColumnIndexOrThrow(historyTitle);
-                final int dateCol =
-                    cursor.getColumnIndexOrThrow(historyDate);
+                ArrayList<Object[]> queryResult = db.query(historyQuery);
+                final int urlCol = db.getColumnIndex(historyUrl);
+                final int titleCol = db.getColumnIndex(historyTitle);
+                final int dateCol = db.getColumnIndex(historyDate);
 
-                cursor.moveToFirst();
-                while (!cursor.isAfterLast()) {
-                    String url = cursor.getString(urlCol);
-                    String title = cursor.getString(titleCol);
-                    // Convert from us (Places) to ms (Java, Android)
-                    long date = cursor.getLong(dateCol) / (long)1000;
+                for (Object[] resultRow: queryResult) {
+                    String url = (String)resultRow[urlCol];
+                    String title = (String)resultRow[titleCol];
+                    long date = Long.parseLong((String)(resultRow[dateCol])) / (long)1000;
                     addHistory(androidHistory, url, title, date);
                     placesHistory.add(url);
-                    cursor.moveToNext();
                 }
-
-                cursor.close();
-            } catch (SQLiteException e) {
-                if (cursor != null) {
-                    cursor.close();
-                }
+            } catch (SQLiteBridgeException e) {
                 Log.i(LOGTAG, "Failed to get bookmarks: " + e.getMessage());
                 return;
             }
@@ -231,88 +211,53 @@ public class ProfileMigrator {
             }
         }
 
-        protected void migrateBookmarks(SQLiteDatabase db) {
-            Cursor cursor = null;
+        protected void migrateBookmarks(SQLiteBridge db) {
             try {
-                cursor = db.rawQuery(bookmarkQuery,
-                                     new String[] {});
-                if (cursor.getCount() > 0) {
-                    final int urlCol =
-                        cursor.getColumnIndexOrThrow(bookmarkUrl);
-                    final int titleCol =
-                        cursor.getColumnIndexOrThrow(bookmarkTitle);
+                ArrayList<Object[]> queryResult = db.query(bookmarkQuery);
+                final int urlCol = db.getColumnIndex(bookmarkUrl);
+                final int titleCol = db.getColumnIndex(bookmarkTitle);
 
-                    cursor.moveToFirst();
-                    while (!cursor.isAfterLast()) {
-                        String url = cursor.getString(urlCol);
-                        String title = cursor.getString(titleCol);
-                        addBookmark(url, title);
-                        cursor.moveToNext();
-                    }
+                for (Object[] resultRow: queryResult) {
+                    String url = (String)resultRow[urlCol];
+                    String title = (String)resultRow[titleCol];
+                    addBookmark(url, title);
                 }
-                cursor.close();
-            } catch (SQLiteException e) {
-                if (cursor != null) {
-                    cursor.close();
-                }
+            } catch (SQLiteBridgeException e) {
                 Log.i(LOGTAG, "Failed to get bookmarks: " + e.getMessage());
                 return;
             }
         }
 
-        protected void addFavicon(String url, String mime, byte[] data) {
-            ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+        protected void addFavicon(String url, String mime, ByteBuffer data) {
+            ByteBufferInputStream byteStream = new ByteBufferInputStream(data);
             BitmapDrawable image = (BitmapDrawable) Drawable.createFromStream(byteStream, "src");
             if (image != null) {
                 try {
                     BrowserDB.updateFaviconForUrl(mCr, url, image);
-                } catch (SQLiteException e) {
+                } catch (SQLException e) {
                     Log.i(LOGTAG, "Migrating favicon failed: " + mime + " URL: " + url
                           + " error:" + e.getMessage());
                 }
             }
         }
 
-        protected void migrateFavicons(SQLiteDatabase db) {
-            Cursor cursor = null;
+        protected void migrateFavicons(SQLiteBridge db) {
             try {
-                cursor = db.rawQuery(faviconQuery,
-                                     new String[] {});
-                if (cursor.getCount() > 0) {
-                    final int urlCol =
-                        cursor.getColumnIndexOrThrow(faviconUrl);
-                    final int dataCol =
-                        cursor.getColumnIndexOrThrow(faviconData);
-                    final int mimeCol =
-                        cursor.getColumnIndexOrThrow(faviconMime);
+                ArrayList<Object[]> queryResult = db.query(faviconQuery);
+                final int urlCol = db.getColumnIndex(faviconUrl);
+                final int mimeCol = db.getColumnIndex(faviconMime);
+                final int dataCol = db.getColumnIndex(faviconData);
 
-                    cursor.moveToFirst();
-                    while (!cursor.isAfterLast()) {
-                        String url = cursor.getString(urlCol);
-                        String mime = cursor.getString(mimeCol);
-                        byte[] data = cursor.getBlob(dataCol);
-                        addFavicon(url, mime, data);
-                        cursor.moveToNext();
-                    }
+                for (Object[] resultRow: queryResult) {
+                    String url = (String)resultRow[urlCol];
+                    String mime = (String)resultRow[mimeCol];
+                    ByteBuffer dataBuff = (ByteBuffer)resultRow[dataCol];
+                    addFavicon(url, mime, dataBuff);
                 }
-                cursor.close();
-            } catch (SQLiteException e) {
-                if (cursor != null) {
-                    cursor.close();
-                }
+            } catch (SQLiteBridgeException e) {
                 Log.i(LOGTAG, "Failed to get favicons: " + e.getMessage());
                 return;
             }
-        }
-
-        SQLiteDatabase openPlaces(String dbPath) throws SQLiteException {
-            /* http://stackoverflow.com/questions/2528489/no-such-table-android-metadata-whats-the-problem */
-            SQLiteDatabase db = SQLiteDatabase.openDatabase(dbPath,
-                                                            null,
-                                                            SQLiteDatabase.OPEN_READONLY |
-                                                            SQLiteDatabase.NO_LOCALIZED_COLLATORS);
-
-            return db;
         }
 
         protected void migratePlaces(File aFile) {
@@ -329,9 +274,9 @@ public class ProfileMigrator {
             File dbFileWal = new File(dbPathWal);
             File dbFileShm = new File(dbPathShm);
 
-            SQLiteDatabase db = null;
+            SQLiteBridge db = null;
             try {
-                db = openPlaces(dbPath);
+                db = new SQLiteBridge(dbPath);
                 migrateBookmarks(db);
                 migrateHistory(db);
                 migrateFavicons(db);
@@ -343,7 +288,7 @@ public class ProfileMigrator {
                 dbFileShm.delete();
 
                 Log.i(LOGTAG, "Profile migration finished");
-            } catch (SQLiteException e) {
+            } catch (SQLiteBridgeException e) {
                 if (db != null) {
                     db.close();
                 }

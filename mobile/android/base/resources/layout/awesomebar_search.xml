@@ -12,7 +12,7 @@
           android:paddingLeft="15dip"
           android:paddingRight="40dip"
           android:hint="@string/awesomebar_default_text"
-          android:inputType="textUri"
+          android:inputType="textUri|textNoSuggestions"
           android:imeOptions="actionSearch"
           android:singleLine="true"
           android:gravity="center_vertical|left">

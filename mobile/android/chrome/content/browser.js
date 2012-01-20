@@ -426,6 +426,12 @@ var BrowserApp = {
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
 
+    if ("showProgress" in aParams) {
+      let tab = this.getTabForBrowser(aBrowser);
+      if (tab)
+        tab.showProgress = aParams.showProgress;
+    }
+
     try {
       aBrowser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
     } catch(e) {
@@ -825,6 +831,11 @@ var BrowserApp = {
       };
 
       let url = this.getSearchOrFixupURI(data);
+
+      // Don't show progress throbber for about:home
+      if (url == "about:home")
+        params.showProgress = false;
+
       if (aTopic == "Tab:Add")
         this.addTab(url, params);
       else
@@ -1297,6 +1308,7 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.vbox = null;
   this.id = 0;
+  this.showProgress = true;
   this.create(aURL, aParams);
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
                      pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
@@ -1367,6 +1379,9 @@ Tab.prototype = {
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
       let charset = "charset" in aParams ? aParams.charset : null;
+
+      // This determines whether or not we show the progress throbber in the urlbar
+      this.showProgress = "showProgress" in aParams ? aParams.showProgress : true;
 
       try {
         this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
@@ -1749,11 +1764,14 @@ Tab.prototype = {
           type: "Content:StateChange",
           tabID: this.id,
           uri: uri,
-          state: aStateFlags
+          state: aStateFlags,
+          showProgress: this.showProgress
         }
       };
-
       sendMessageToJava(message);
+
+      // Reset showProgress after state change
+      this.showProgress = true;
     }
   },
 

@@ -86,8 +86,9 @@ public class GeckoThread extends Thread {
         // At some point while loading the gecko libs our default locale gets set
         // so just save it to locale here and reset it as default after the join
         Locale locale = Locale.getDefault();
-        GeckoAppShell.loadGeckoLibs(
-            app.getApplication().getPackageResourcePath());
+        String resourcePath = app.getApplication().getPackageResourcePath();
+        GeckoAppShell.ensureSQLiteLibsLoaded(resourcePath);
+        GeckoAppShell.loadGeckoLibs(resourcePath);
         Locale.setDefault(locale);
         Resources res = app.getBaseContext().getResources();
         Configuration config = res.getConfiguration();

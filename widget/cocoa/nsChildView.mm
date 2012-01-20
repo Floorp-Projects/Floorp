@@ -87,6 +87,7 @@
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 #include "GLContext.h"
+#include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 
 #include "mozilla/Preferences.h"
 
@@ -1772,6 +1773,22 @@ NSView<mozView>* nsChildView::GetEditorView()
 
 #pragma mark -
 
+void
+nsChildView::CreateCompositor()
+{
+  nsBaseWidget::CreateCompositor();
+  if (mCompositorChild) {
+    LayerManagerOGL *manager =
+      static_cast<LayerManagerOGL*>(compositor::GetLayerManager(mCompositorParent));
+
+    NSOpenGLContext *glContext =
+      (NSOpenGLContext *) manager->gl()->GetNativeData(GLContext::NativeGLContext);
+
+    [(ChildView *)mView setGLContext:glContext];
+    [(ChildView *)mView setUsingOMTCompositor:true];
+  }
+}
+
 gfxASurface*
 nsChildView::GetThebesSurface()
 {
@@ -2092,6 +2109,16 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   [mGLContext clearDrawable];
   [mGLContext setView:self];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)setGLContext:(NSOpenGLContext *)aGLContext
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  mGLContext = aGLContext;
+  [mGLContext retain];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2546,13 +2573,18 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 #endif
 
-  if (mGeckoChild->GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL) {
-    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager(nsnull));
-    manager->SetClippingRegion(paintEvent.region); 
+  LayerManager *layerManager = mGeckoChild->GetLayerManager(nsnull);
+  if (layerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+    NSOpenGLContext *glContext;
+
+    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
+    manager->SetClippingRegion(paintEvent.region);
+    glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+
     if (!mGLContext) {
-      mGLContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
-      [mGLContext retain];
+      [self setGLContext:glContext];
     }
+
     mGeckoChild->DispatchWindowEvent(paintEvent);
 
     // Force OpenGL to refresh the very first time we draw. This works around a
@@ -2590,6 +2622,16 @@ NSEvent* gLastDragMouseDownEvent = nil;
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BasicLayerManager::BUFFER_NONE);
     painted = mGeckoChild->DispatchWindowEvent(paintEvent);
+  }
+
+  // Force OpenGL to refresh the very first time we draw. This works around a
+  // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
+  if (painted && !mDidForceRefreshOpenGL &&
+      layerManager->AsShadowManager() && mUsingOMTCompositor) {
+    if (!mDidForceRefreshOpenGL) {
+      [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
+      mDidForceRefreshOpenGL = YES;
+    }
   }
 
   if (!painted && [self isOpaque]) {
@@ -3128,6 +3170,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mSwipeAnimationCancelled = &animationCancelled;
 }
 #endif // #ifdef __LP64__
+
+- (void)setUsingOMTCompositor:(BOOL)aUseOMTC
+{
+  mUsingOMTCompositor = aUseOMTC;
+}
+
 
 // Returning NO from this method only disallows ordering on mousedown - in order
 // to prevent it for mouseup too, we need to call [NSApp preventWindowOrdering]

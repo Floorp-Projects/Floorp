@@ -19,7 +19,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Ben Turner <bent.mozilla@gmail.com>
+ *   Sinker Li <thinker@codemud.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,48 +39,85 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(9b7e3a01-9c45-4af3-81bb-1bf08a842226)]
-interface nsITelephoneCallback : nsISupports
+[scriptable, uuid(03eafd60-d138-4f09-81b4-90cd4996b3c7)]
+interface nsIRILTelephonyCallback : nsISupports
 {
-  // 'callState' uses the CALL_STATE values from nsITelephone.
+  /**
+   * Notified when a telephony call changes state.
+   *
+   * @param callIndex
+   *        Call identifier assigned by the RIL.
+   * @param callState
+   *        One of the nsIRadioInterfaceLayer::CALL_STATE_* values.
+   * @param number
+   *        Number of the other party.
+   */
   void callStateChanged(in unsigned long callIndex,
                         in unsigned short callState,
                         in AString number);
 
-  // 'callState' uses the CALL_STATE values from nsITelephone. Return true to
-  // continue enumeration or false to cancel.
+  /**
+   * Called when nsIRadioInterfaceLayer is asked to enumerate the current
+   * telephony call state (nsIRadioInterfaceLayer::enumerateCalls). This is
+   * called once per call that is currently managed by the RIL.
+   *
+   * @param callIndex
+   *        Call identifier assigned by the RIL.
+   * @param callState
+   *        One of the nsIRadioInterfaceLayer::CALL_STATE_* values.
+   * @param number
+   *        Number of the other party.
+   * @param isActive
+   *        Indicates whether this call is the active one.
+   *
+   * @return true to continue enumeration or false to cancel.
+   */
   boolean enumerateCallState(in unsigned long callIndex,
                              in unsigned short callState,
                              in AString number,
                              in boolean isActive);
 };
 
-[scriptable, uuid(8399fddd-471c-41ac-8f35-99f7dbb738ec)]
-interface nsIDataCallInfo : nsISupports
+[scriptable, uuid(66a55943-e63b-4731-aece-9c04bfc14019)]
+interface nsIRILDataCallInfo : nsISupports
 {
   readonly attribute unsigned long callState;
   readonly attribute AString cid;
   readonly attribute AString apn;
 };
 
-[scriptable, uuid(36cc4b89-0338-4ff7-a3c2-d78e60f2ea98)]
-interface nsIPhoneDataCallCallback : nsISupports
+[scriptable, uuid(cea91bcb-3cfb-42bb-8638-dae89e8870fc)]
+interface nsIRILDataCallback : nsISupports
 {
   /**
-   * This method is called when the state of a data call is changed.
+   * Notified when a data call changes state.
    *
-   * @param dataState use DATACALL_STATE_* values from nsITelephone.
+   * @param cid
+   *        The CID of the data call.
+   * @param interfaceName
+   *        Name of the associated network interface.
+   * @param dataState
+   *        One of the nsIRadioInterfaceLayer::DATACALL_STATE_* values.
    */
   void dataCallStateChanged(in AString cid,
                             in AString interfaceName,
                             in unsigned short callState);
 
-  void receiveDataCallList([array,size_is(aLength)] in nsIDataCallInfo aDataCalls,
-                           in unsigned long aLength);
+  /**
+   * Called when nsIRadioInterfaceLayer is asked to enumerate the current
+   * data call state.
+   *
+   * @param datacalls
+   *        Array of nsIRILDataCallInfo objects.
+   * @param length
+   *        Lenght of the aforementioned array.
+   */
+  void receiveDataCallList([array,size_is(length)] in nsIRILDataCallInfo dataCalls,
+                           in unsigned long length);
 };
 
-[scriptable, uuid(78ed0beb-d6ad-42f8-929a-8d003285784f)]
-interface nsITelephone : nsISupports
+[scriptable, uuid(9b7e3a01-9c45-4af3-81bb-1bf08a842226)]
+interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
   const unsigned short CALL_STATE_DIALING = 1;
@@ -102,14 +141,14 @@ interface nsITelephone : nsISupports
 
   readonly attribute jsval currentState;
 
-  void registerCallback(in nsITelephoneCallback callback);
-  void unregisterCallback(in nsITelephoneCallback callback);
+  void registerCallback(in nsIRILTelephonyCallback callback);
+  void unregisterCallback(in nsIRILTelephonyCallback callback);
 
   /**
    * Will continue calling callback.enumerateCallState until the callback
    * returns false.
    */
-  void enumerateCalls(in nsITelephoneCallback callback);
+  void enumerateCalls(in nsIRILTelephonyCallback callback);
 
   /**
    * Functionality for making and managing phone calls.
@@ -126,7 +165,9 @@ interface nsITelephone : nsISupports
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
 
-  // PDP APIs
+  /**
+   * PDP APIs
+   */
   void setupDataCall(in long radioTech,
                      in DOMString apn,
                      in DOMString user,
@@ -137,8 +178,8 @@ interface nsITelephone : nsISupports
                           in DOMString reason);
   void getDataCallList();
   
-  void registerDataCallCallback(in nsIPhoneDataCallCallback callback);
-  void unregisterDataCallCallback(in nsIPhoneDataCallCallback callback);
+  void registerDataCallCallback(in nsIRILDataCallback callback);
+  void unregisterDataCallCallback(in nsIRILDataCallback callback);
 
   /**
    * SMS-related functionality.
