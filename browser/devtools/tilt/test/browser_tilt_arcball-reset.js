@@ -1,9 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, isApproxVec, waitForExplicitFinish, executeSoon, finish */
-/*global isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Services, EventUtils, InspectorUI, TiltVisualizer, DESTROYED */
 "use strict";
 
 function test() {
@@ -102,7 +98,7 @@ function performTest(canvas, arcball, callback) {
   }, Math.random() * 1000);
 }
 
-function cleanup() { /*global gBrowser */
+function cleanup() {
   info("Cleaning up arcball reset test.");
 
   Services.obs.removeObserver(cleanup, DESTROYED);
