@@ -2120,7 +2120,7 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
     ins->infer(oracle->binaryOp(script, pc));
 
     if (ins->type() == MIRType_Value || (op == JSOP_MOD && ins->type() != MIRType_Int32))
-        return abort("unspecialized add not yet supported");
+        return abort("unspecialized %s not yet supported", js_CodeName[op]);
 
     current->push(ins);
     return true;
