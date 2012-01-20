@@ -1166,7 +1166,7 @@ Debugger::markAllIteratively(GCMarker *trc)
              */
             const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
             JS_ASSERT(debuggers);
-            for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
+            for (Debugger * const *p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger *dbg = *p;
 
                 /*
