@@ -535,6 +535,7 @@ IonCompartment::generateBailoutHandler(JSContext *cx)
 IonCode *
 IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
+    using Register::Codes;
     typedef MoveResolver::MoveOperand MoveOperand;
 
     JS_ASSERT(functionWrappers_);
@@ -545,8 +546,10 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Generate a separated code for the wrapper.
     MacroAssembler masm;
-    GeneralRegisterSet regs = GeneralRegisterSet(Register::Codes::WrapperMask);
-    JS_ASSERT(Register::Codes::WrapperMask > Register::Codes::ArgRegMask);
+    GeneralRegisterSet regs = GeneralRegisterSet(WrapperMask);
+
+    // Wrapper register set is a superset of Volatile register set.
+    JS_STATIC_ASSERT((VolatileMask & ~WrapperMask) == 0);
 
     // Stack is:
     //    ... frame ...
