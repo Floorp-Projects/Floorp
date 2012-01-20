@@ -101,30 +101,12 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         CairoImage backgroundImage = new BufferedCairoImage(controller.getBackgroundPattern());
         mBackgroundLayer = new SingleTileLayer(true, backgroundImage);
-        mBackgroundLayer.beginTransaction(null);
-        try {
-            mBackgroundLayer.invalidate();
-        } finally {
-            mBackgroundLayer.endTransaction();
-        }
 
         CairoImage checkerboardImage = new BufferedCairoImage(controller.getCheckerboardPattern());
         mCheckerboardLayer = new SingleTileLayer(true, checkerboardImage);
-        mCheckerboardLayer.beginTransaction(null);
-        try {
-            mCheckerboardLayer.invalidate();
-        } finally {
-            mCheckerboardLayer.endTransaction();
-        }
 
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
-        mShadowLayer.beginTransaction(null);
-        try {
-            mShadowLayer.invalidate();
-        } finally {
-            mShadowLayer.endTransaction();
-        }
 
         IntSize frameRateLayerSize = new IntSize(FRAME_RATE_METER_WIDTH, FRAME_RATE_METER_HEIGHT);
         mFrameRateLayer = TextLayer.create(frameRateLayerSize, "-- ms/--");
