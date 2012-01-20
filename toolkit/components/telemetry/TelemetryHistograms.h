@@ -68,6 +68,7 @@ HISTOGRAM(CYCLE_COLLECTOR_VISITED_REF_COUNTED, 1, 300000, 50, EXPONENTIAL, "Numb
 HISTOGRAM(CYCLE_COLLECTOR_VISITED_GCED, 1, 300000, 50, EXPONENTIAL, "Number of JS objects visited by the cycle collector")
 HISTOGRAM(CYCLE_COLLECTOR_COLLECTED, 1, 100000, 50, EXPONENTIAL, "Number of objects collected by the cycle collector")
 HISTOGRAM_BOOLEAN(CYCLE_COLLECTOR_NEED_GC, "Needed garbage collection before cycle collection.")
+HISTOGRAM(CYCLE_COLLECTOR_TIME_BETWEEN, 1, 120, 50, EXPONENTIAL, "Time spent in between cycle collections (seconds)")
 
 /**
  * GC telemetry
