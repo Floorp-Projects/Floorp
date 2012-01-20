@@ -47,8 +47,8 @@
 using namespace js;
 using namespace js::ion;
 
-static void
-PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
+void
+MDefinition::PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
 {
     static const char *names[] =
     {
