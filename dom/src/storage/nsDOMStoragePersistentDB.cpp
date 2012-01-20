@@ -520,8 +520,6 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  aStorage->CacheKeysFromDB();
-
   usage += aKey.Length() + aValue.Length();
 
   nsAutoString previousValue;
