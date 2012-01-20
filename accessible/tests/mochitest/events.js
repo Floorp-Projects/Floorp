@@ -1595,7 +1595,7 @@ var gLogger =
   {
     if (gA11yEventDumpToConsole)
       dump("\n" + aMsg + "\n");
-  }
+  },
 
   /**
    * Log message to error console.
@@ -1604,7 +1604,7 @@ var gLogger =
   {
     if (gA11yEventDumpToAppConsole)
       Services.console.logStringMessage("events: " + aMsg);
-  },
+  }
 };
 
 
