@@ -179,7 +179,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     /**
      * Sets the parser.
      */
-    NS_IMETHOD SetParser(nsIParser* aParser);
+    NS_IMETHOD SetParser(nsParserBase* aParser);
 
     /**
      * No-op for backwards compat.
