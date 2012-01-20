@@ -1150,6 +1150,9 @@ inline TypeObject::TypeObject(JSObject *proto, bool function, bool unknown)
 {
     PodZero(this);
 
+    /* Inner objects may not appear on prototype chains. */
+    JS_ASSERT(!proto->getClass()->ext.outerObject);
+
     this->proto = proto;
 
     if (function)
