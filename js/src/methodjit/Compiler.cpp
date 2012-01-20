@@ -1840,13 +1840,12 @@ mjit::Compiler::finishThisUp()
 #define SPEW_OPCODE()                                                         \
     JS_BEGIN_MACRO                                                            \
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
-            LifoAllocScope las(&cx->tempLifoAlloc());                         \
-            Sprinter sprinter;                                                \
-            INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);            \
+            Sprinter sprinter(cx);                                            \
+            sprinter.init();                                                  \
             js_Disassemble1(cx, script, PC, PC - script->code,                \
                             JS_TRUE, &sprinter);                              \
             JaegerSpew(JSpew_JSOps, "    %2d %s",                             \
-                       frame.stackDepth(), sprinter.base);                    \
+                       frame.stackDepth(), sprinter.string());                \
         }                                                                     \
     JS_END_MACRO;
 #else
