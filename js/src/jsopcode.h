@@ -89,7 +89,7 @@ typedef enum JSOp {
 #define JOF_INT32         14      /* int32_t immediate operand */
 #define JOF_OBJECT        15      /* unsigned 16-bit object index */
 #define JOF_SLOTOBJECT    16      /* uint16_t slot index + object index */
-#define JOF_REGEXP        17      /* unsigned 16-bit regexp index */
+#define JOF_REGEXP        17      /* unsigned 32-bit regexp index */
 #define JOF_INT8          18      /* int8_t immediate operand */
 #define JOF_ATOMOBJECT    19      /* uint16_t constant index + object index */
 #define JOF_UINT16PAIR    20      /* pair of uint16_t immediates */
@@ -191,10 +191,27 @@ SET_JUMP_OFFSET(jsbytecode *pc, int32_t off)
     pc[4] = (jsbytecode)off;
 }
 
+#define UINT32_INDEX_LEN        4
+
+static JS_ALWAYS_INLINE uint32_t
+GET_UINT32_INDEX(jsbytecode *pc)
+{
+    return (pc[1] << 24) | (pc[2] << 16) | (pc[3] << 8) | pc[4];
+}
+
+static JS_ALWAYS_INLINE void
+SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
+{
+    pc[1] = (jsbytecode)(index >> 24);
+    pc[2] = (jsbytecode)(index >> 16);
+    pc[3] = (jsbytecode)(index >> 8);
+    pc[4] = (jsbytecode)index;
+}
+
 /*
  * A literal is indexed by a per-script atom or object maps. Most scripts
- * have relatively few literals, so the standard JOF_ATOM, JOF_OBJECT and
- * JOF_REGEXP formats specifies a fixed 16 bits of immediate operand index.
+ * have relatively few literals, so the standard JOF_ATOM and JOF_OBJECT
+ * format specifies a fixed 16 bits of immediate operand index.
  * A script with more than 64K literals must wrap the bytecode into
  * JSOP_INDEXBASE and JSOP_RESETBASE pair.
  */
@@ -355,12 +372,6 @@ js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
     JS_BEGIN_MACRO                                                            \
         uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
         fun = (script)->getFunction(index_);                                  \
-    JS_END_MACRO
-
-#define GET_REGEXP_FROM_BYTECODE(script, pc, pcoff, obj)                      \
-    JS_BEGIN_MACRO                                                            \
-        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
-        obj = (script)->getRegExp(index_);                                    \
     JS_END_MACRO
 
 #ifdef __cplusplus
