@@ -103,7 +103,7 @@ public:
   NS_IMETHOD WillParse(void) { return NS_OK; }
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }
   NS_IMETHOD WillResume(void) { return NS_OK; }
-  NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
+  NS_IMETHOD SetParser(nsParserBase* aParser) { return NS_OK; }
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);

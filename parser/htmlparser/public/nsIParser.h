@@ -53,10 +53,11 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 #include "nsIAtom.h"
+#include "nsParserBase.h"
 
 #define NS_IPARSER_IID \
-{ 0x11a4f41f, 0x7044, 0x4c57, \
-  { 0xb3, 0xa4, 0xed, 0x79, 0xc7, 0xc4, 0x61, 0x99 } }
+{ 0xd064f0d6, 0x44e3, 0x4366, \
+  { 0xa7, 0x05, 0xcf, 0x7a, 0x91, 0x26, 0x14, 0xb6 } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -129,7 +130,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDebugDumpContent, NS_IDEBUG_DUMP_CONTENT_IID)
  *  This class defines the iparser interface. This XPCOM
  *  inteface is all that parser clients ever need to see.
  */
-class nsIParser : public nsISupports {
+class nsIParser : public nsParserBase {
   public:
 
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPARSER_IID)
@@ -272,12 +273,6 @@ class nsIParser : public nsISupports {
     NS_IMETHOD CancelParsingEvents() = 0;
 
     virtual void Reset() = 0;
-
-    /**
-     * True if the parser can currently be interrupted. Returns false when
-     * parsing for example document.write or innerHTML.
-     */
-    virtual bool CanInterrupt() = 0;
 
     /**
      * True if the insertion point (per HTML5) is defined.

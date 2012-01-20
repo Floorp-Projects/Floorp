@@ -65,7 +65,7 @@ public:
   NS_IMETHOD DidBuildModel(bool aTerminated);
   NS_IMETHOD WillInterrupt();
   NS_IMETHOD WillResume();
-  NS_IMETHOD SetParser(nsIParser* aParser);
+  NS_IMETHOD SetParser(nsParserBase* aParser);
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
@@ -106,7 +106,6 @@ protected:
   int                  mLevel;
   nsIHTMLContentSink  *mSink;
   bool                 mAutoDeleteOutput;
-  nsIParser*           mParser;
 };
 
 #endif

@@ -307,7 +307,7 @@ private:
 protected:
 
   nsCOMPtr<nsIDocument>         mDocument;
-  nsCOMPtr<nsIParser>           mParser;
+  nsRefPtr<nsParserBase>        mParser;
   nsCOMPtr<nsIURI>              mDocumentURI;
   nsCOMPtr<nsIDocShell>         mDocShell;
   nsRefPtr<mozilla::css::Loader> mCSSLoader;

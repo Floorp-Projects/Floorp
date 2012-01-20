@@ -213,7 +213,7 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHODIMP CancelParsingEvents();
 
     /**
-     * Sets the state to initial values
+     * Don't call. For interface compat only.
      */
     virtual void Reset();
     
@@ -252,25 +252,6 @@ class nsHtml5Parser : public nsIParser,
     virtual bool IsScriptCreated();
 
     /* End nsIParser  */
-
-    /**
-     * Invoke the fragment parsing algorithm (innerHTML).
-     *
-     * @param aSourceBuffer the string being set as innerHTML
-     * @param aTargetNode the target container
-     * @param aContextLocalName local name of context node
-     * @param aContextNamespace namespace of context node
-     * @param aQuirks true to make <table> not close <p>
-     * @param aPreventScriptExecution true to prevent scripts from executing;
-     * don't set to false when parsing into a target node that has been bound
-     * to tree.
-     */
-    nsresult ParseHtml5Fragment(const nsAString& aSourceBuffer,
-                                nsIContent* aTargetNode,
-                                nsIAtom* aContextLocalName,
-                                PRInt32 aContextNamespace,
-                                bool aQuirks,
-                                bool aPreventScriptExecution);
 
     // Not from an external interface
     // Non-inherited methods
