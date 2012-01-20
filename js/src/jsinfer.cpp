@@ -2026,7 +2026,7 @@ TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, const AllocationSite
          * observed by other code before all properties have been added. Mark
          * all the properties as definite properties of the object.
          */
-        JSObject *baseobj = key.script->getObject(GET_SLOTNO(pc));
+        JSObject *baseobj = key.script->getObject(GET_UINT32_INDEX(pc));
 
         if (!res->addDefiniteProperties(cx, baseobj))
             return NULL;
@@ -2045,13 +2045,6 @@ GetAtomId(JSContext *cx, JSScript *script, const jsbytecode *pc, unsigned offset
 {
     unsigned index = js_GetIndexFromBytecode(script, (jsbytecode*) pc, offset);
     return MakeTypeId(cx, ATOM_TO_JSID(script->getAtom(index)));
-}
-
-static inline JSObject *
-GetScriptObject(JSContext *cx, JSScript *script, const jsbytecode *pc, unsigned offset)
-{
-    unsigned index = js_GetIndexFromBytecode(script, (jsbytecode*) pc, offset);
-    return script->getObject(index);
 }
 
 static inline const Value &
@@ -3528,7 +3521,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_OBJECT: {
-        JSObject *obj = GetScriptObject(cx, script, pc, 0);
+        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc));
         pushed[0].addType(cx, Type::ObjectType(obj));
         break;
       }
@@ -3833,7 +3826,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_DEFLOCALFUN:
       case JSOP_DEFLOCALFUN_FC: {
         unsigned off = (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) ? SLOTNO_LEN : 0;
-        JSObject *obj = GetScriptObject(cx, script, pc, off);
+        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc + off));
 
         TypeSet *res = NULL;
         if (op == JSOP_LAMBDA || op == JSOP_LAMBDA_FC) {
