@@ -934,7 +934,7 @@ SpecialPowersAPI.prototype = {
 
   // :jdm gets credit for this.  ex: getPrivilegedProps(window, 'location.href');
   getPrivilegedProps: function(obj, props) {
-    parts = props.split('.');
+    var parts = props.split('.');
 
     for (var i = 0; i < parts.length; i++) {
       var p = parts[i];
