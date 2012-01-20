@@ -565,7 +565,7 @@ CheckTypeSet(JSContext *cx, BytecodeEmitter *bce, JSOp op)
         ptrdiff_t off_ = EmitN(cx, bce, op, 2 * UINT16_LEN);                  \
         if (off_ < 0)                                                         \
             return JS_FALSE;                                                  \
-        jsbytecode *pc_ = bce->code(off_);                                 \
+        jsbytecode *pc_ = bce->code(off_);                                    \
         SET_UINT16(pc_, i);                                                   \
         pc_ += UINT16_LEN;                                                    \
         SET_UINT16(pc_, j);                                                   \
@@ -573,9 +573,18 @@ CheckTypeSet(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 
 #define EMIT_UINT16_IN_PLACE(offset, op, i)                                   \
     JS_BEGIN_MACRO                                                            \
-        bce->code(offset)[0] = op;                                         \
-        bce->code(offset)[1] = UINT16_HI(i);                               \
-        bce->code(offset)[2] = UINT16_LO(i);                               \
+        bce->code(offset)[0] = op;                                            \
+        bce->code(offset)[1] = UINT16_HI(i);                                  \
+        bce->code(offset)[2] = UINT16_LO(i);                                  \
+    JS_END_MACRO
+
+#define EMIT_UINT32_IN_PLACE(offset, op, i)                                   \
+    JS_BEGIN_MACRO                                                            \
+        bce->code(offset)[0] = op;                                            \
+        bce->code(offset)[1] = jsbytecode(i >> 24);                           \
+        bce->code(offset)[2] = jsbytecode(i >> 16);                           \
+        bce->code(offset)[3] = jsbytecode(i >> 8);                            \
+        bce->code(offset)[4] = jsbytecode(i);                                 \
     JS_END_MACRO
 
 static JSBool
@@ -970,17 +979,11 @@ EmitAtomOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, JSOp *ps
     return EmitAtomOp(cx, pn->pn_atom, op, bce, psuffix);
 }
 
-static JSBool
-EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
-{
-    JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
-    return EmitIndexOp(cx, op, bce->objectList.index(objbox), bce);
-}
-
 static bool
 EmitIndex32(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
 {
     const size_t len = 1 + UINT32_INDEX_LEN;
+    JS_ASSERT(js_CodeSpec[op].length == len);
     ptrdiff_t offset = EmitCheck(cx, bce, len);
     if (offset < 0)
         return false;
@@ -995,42 +998,38 @@ EmitIndex32(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
 }
 
 static bool
+EmitFunctionOp(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
+{
+    return EmitIndex32(cx, op, index, bce);
+}
+
+static bool
+EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
+{
+    JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
+    return EmitIndex32(cx, op, bce->objectList.index(objbox), bce);
+}
+
+static bool
 EmitRegExp(JSContext *cx, uint32_t index, BytecodeEmitter *bce)
 {
     return EmitIndex32(cx, JSOP_REGEXP, index, bce);
 }
 
-/*
- * What good are ARGNO_LEN and SLOTNO_LEN, you ask?  The answer is that, apart
- * from EmitSlotIndexOp, they abstract out the detail that both are 2, and in
- * other parts of the code there's no necessary relationship between the two.
- * The abstraction cracks here in order to share EmitSlotIndexOp code among
- * the JSOP_DEFLOCALFUN and JSOP_GET{ARG,VAR,LOCAL}PROP cases.
- */
-JS_STATIC_ASSERT(ARGNO_LEN == 2);
-JS_STATIC_ASSERT(SLOTNO_LEN == 2);
-
-static JSBool
-EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index, BytecodeEmitter *bce)
+static bool
+EmitSlotObjectOp(JSContext *cx, JSOp op, uintN slot, uint32_t index, BytecodeEmitter *bce)
 {
-    JSOp bigSuffix;
-    ptrdiff_t off;
-    jsbytecode *pc;
-
     JS_ASSERT(JOF_OPTYPE(op) == JOF_SLOTOBJECT);
-    bigSuffix = EmitBigIndexPrefix(cx, bce, index);
-    if (bigSuffix == JSOP_FALSE)
-        return JS_FALSE;
 
-    /* Emit [op, slot, index]. */
-    off = EmitN(cx, bce, op, 2 + INDEX_LEN);
+    ptrdiff_t off = EmitN(cx, bce, op, SLOTNO_LEN + UINT32_INDEX_LEN);
     if (off < 0)
-        return JS_FALSE;
-    pc = bce->code(off);
+        return false;
+
+    jsbytecode *pc = bce->code(off);
     SET_UINT16(pc, slot);
-    pc += 2;
-    SET_INDEX(pc, index);
-    return bigSuffix == JSOP_NOP || Emit1(cx, bce, bigSuffix) >= 0;
+    pc += SLOTNO_LEN;
+    SET_UINT32_INDEX(pc, index);
+    return true;
 }
 
 bool
@@ -3910,8 +3909,19 @@ EmitFunctionDefNop(JSContext *cx, BytecodeEmitter *bce, uintN index)
 static bool
 EmitNewInit(JSContext *cx, BytecodeEmitter *bce, JSProtoKey key, ParseNode *pn)
 {
-    if (Emit3(cx, bce, JSOP_NEWINIT, (jsbytecode) key, 0) < 0)
+    const size_t len = 1 + UINT32_INDEX_LEN;
+    ptrdiff_t offset = EmitCheck(cx, bce, len);
+    if (offset < 0)
         return false;
+
+    jsbytecode *next = bce->next();
+    next[0] = JSOP_NEWINIT;
+    next[1] = jsbytecode(key);
+    next[2] = 0;
+    next[3] = 0;
+    next[4] = 0;
+    bce->current->next = next + len;
+    UpdateDepth(cx, bce, offset);
     CheckTypeSet(cx, bce, JSOP_NEWINIT);
     return true;
 }
@@ -5109,8 +5119,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         {
             return false;
         }
-        EMIT_INDEX_OP(pn->getOp(), index);
-        return true;
+
+        return EmitFunctionOp(cx, pn->getOp(), index, bce);
     }
 
     /*
@@ -5129,7 +5139,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (pn->pn_cookie.isFree()) {
             bce->switchToProlog();
             JSOp op = fun->isFlatClosure() ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
-            EMIT_INDEX_OP(op, index);
+            if (!EmitFunctionOp(cx, op, index, bce))
+                return false;
             bce->switchToMain();
         }
 
@@ -5149,7 +5160,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         {
             return false;
         }
-        return EmitSlotIndexOp(cx, op, slot, index, bce);
+        return EmitSlotObjectOp(cx, op, slot, index, bce);
     }
 
     return true;
@@ -6046,8 +6057,11 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!objbox)
             return false;
         uintN index = bce->objectList.index(objbox);
-        if (FitsWithoutBigIndex(index))
-            EMIT_UINT16_IN_PLACE(offset, JSOP_NEWOBJECT, uint16_t(index));
+        if (FitsWithoutBigIndex(index)) {
+            MOZ_STATIC_ASSERT(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
+                              "newinit and newobject must have equal length to edit in-place");
+            EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(index));
+        }
     }
 
     return true;
