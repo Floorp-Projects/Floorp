@@ -5,12 +5,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <cstring>
 #include <cstdlib>
 #include "Mappable.h"
 #ifdef ANDROID
 #include <linux/ashmem.h>
 #endif
+#include "ElfLoader.h"
 #include "Logging.h"
 
 #ifndef PAGE_SIZE
@@ -57,6 +59,70 @@ MappableFile::finalize()
 {
   /* Close file ; equivalent to close(fd.forget()) */
   fd = -1;
+}
+
+MappableExtractFile *
+MappableExtractFile::Create(const char *name, Zip::Stream *stream)
+{
+  const char *cachePath = getenv("MOZ_LINKER_CACHE");
+  if (!cachePath || !*cachePath) {
+    log("Warning: MOZ_LINKER_EXTRACT is set, but not MOZ_LINKER_CACHE; "
+        "not extracting");
+    return NULL;
+  }
+  AutoDeleteArray<char> path = new char[strlen(cachePath) + strlen(name) + 2];
+  sprintf(path, "%s/%s", cachePath, name);
+  debug("Extracting to %s", (char *)path);
+  AutoCloseFD fd = open(path, O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
+                              S_IRUSR | S_IWUSR);
+  if (fd == -1) {
+    log("Couldn't open %s to decompress library", path.get());
+    return NULL;
+  }
+  AutoUnlinkFile file = path.forget();
+  if (ftruncate(fd, stream->GetUncompressedSize()) == -1) {
+    log("Couldn't ftruncate %s to decompress library", file.get());
+    return NULL;
+  }
+  /* Map the temporary file for use as inflate buffer */
+  MappedPtr buffer(::mmap(NULL, stream->GetUncompressedSize(), PROT_WRITE,
+                          MAP_SHARED, fd, 0), stream->GetUncompressedSize());
+  if (buffer == MAP_FAILED) {
+    log("Couldn't map %s to decompress library", file.get());
+    return NULL;
+  }
+  z_stream zStream = stream->GetZStream(buffer);
+
+  /* Decompress */
+  if (inflateInit2(&zStream, -MAX_WBITS) != Z_OK) {
+    log("inflateInit failed: %s", zStream.msg);
+    return NULL;
+  }
+  if (inflate(&zStream, Z_FINISH) != Z_STREAM_END) {
+    log("inflate failed: %s", zStream.msg);
+    return NULL;
+  }
+  if (inflateEnd(&zStream) != Z_OK) {
+    log("inflateEnd failed: %s", zStream.msg);
+    return NULL;
+  }
+  if (zStream.total_out != stream->GetUncompressedSize()) {
+    log("File not fully uncompressed! %ld / %d", zStream.total_out,
+        static_cast<unsigned int>(stream->GetUncompressedSize()));
+    return NULL;
+  }
+
+  return new MappableExtractFile(fd.forget(), file.forget());
+}
+
+MappableExtractFile::~MappableExtractFile()
+{
+  /* When destroying from a forked process, we don't want the file to be
+   * removed, as the main process is still using the file. Although it
+   * doesn't really matter, it helps e.g. valgrind that the file is there.
+   * The string still needs to be delete[]d, though */
+  if (pid != getpid())
+    delete [] path.forget();
 }
 
 /**
@@ -165,23 +231,9 @@ MappableDeflate::Create(const char *name, Zip *zip, Zip::Stream *stream)
 
 MappableDeflate::MappableDeflate(_MappableBuffer *buf, Zip *zip,
                                  Zip::Stream *stream)
-: zip(zip), buffer(buf)
-{
-  /* Initialize Zlib data with zip stream info and decompression buffer */
-  memset(&zStream, 0, sizeof(zStream));
-  zStream.avail_in = stream->GetSize();
-  zStream.next_in = const_cast<Bytef *>(
-                    reinterpret_cast<const Bytef *>(stream->GetBuffer()));
-  zStream.total_in = 0;
-  zStream.avail_out = stream->GetUncompressedSize();
-  zStream.next_out = static_cast<Bytef*>(*buffer);
-  zStream.total_out = 0;
-}
+: zip(zip), buffer(buf), zStream(stream->GetZStream(*buf)) { }
 
-MappableDeflate::~MappableDeflate()
-{
-  delete buffer;
-}
+MappableDeflate::~MappableDeflate() { }
 
 void *
 MappableDeflate::mmap(const void *addr, size_t length, int prot, int flags, off_t offset)
@@ -240,7 +292,6 @@ void
 MappableDeflate::finalize()
 {
   /* Free decompression buffer */
-  delete buffer;
   buffer = NULL;
   /* Remove reference to Zip archive */
   zip = NULL;

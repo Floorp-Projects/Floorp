@@ -203,8 +203,18 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
     zip = zips.GetZip(zip_path);
     Zip::Stream s;
     if (zip && zip->GetStream(subpath, &s)) {
-      if (s.GetType() == Zip::Stream::DEFLATE)
-        mappable = MappableDeflate::Create(name, zip, &s);
+      if (s.GetType() == Zip::Stream::DEFLATE) {
+        /* When the MOZ_LINKER_EXTRACT environment variable is set to "1",
+         * compressed libraries are going to be (temporarily) extracted as
+         * files, in the directory pointed by the MOZ_LINKER_CACHE
+         * environment variable. */
+        const char *extract = getenv("MOZ_LINKER_EXTRACT");
+        if (extract && !strncmp(extract, "1", 2 /* Including '\0' */))
+          mappable = MappableExtractFile::Create(name, &s);
+        /* The above may fail in some cases. */
+        if (!mappable)
+          mappable = MappableDeflate::Create(name, zip, &s);
+      }
     }
   }
   /* If we couldn't load above, try with a MappableFile */
