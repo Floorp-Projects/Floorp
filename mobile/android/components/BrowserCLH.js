@@ -14,15 +14,21 @@ function openWindow(aParent, aURL, aTarget, aFeatures, aArgs) {
   let argsArray = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
   let urlString = null;
   let restoreSessionBool = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+  let widthInt = Cc["@mozilla.org/supports-PRInt32;1"].createInstance(Ci.nsISupportsPRInt32);
+  let heightInt = Cc["@mozilla.org/supports-PRInt32;1"].createInstance(Ci.nsISupportsPRInt32);
 
   if ("url" in aArgs) {
     urlString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
     urlString.data = aArgs.url;
   }
   restoreSessionBool.data = "restoreSession" in aArgs ? aArgs.restoreSession : false;
+  widthInt.data = "width" in aArgs ? aArgs.width : 1;
+  heightInt.data = "height" in aArgs ? aArgs.height : 1;
 
   argsArray.AppendElement(urlString, false);
   argsArray.AppendElement(restoreSessionBool, false);
+  argsArray.AppendElement(widthInt, false);
+  argsArray.AppendElement(heightInt, false);
   return Services.ww.openWindow(aParent, aURL, aTarget, aFeatures, argsArray);
 }
 
@@ -48,11 +54,19 @@ BrowserCLH.prototype = {
   handle: function fs_handle(aCmdLine) {
     let urlParam = "about:home";
     let restoreSession = false;
+    let width = 1;
+    let height = 1;
     try {
       urlParam = aCmdLine.handleFlagWithParam("remote", false);
     } catch (e) { /* Optional */ }
     try {
       restoreSession = aCmdLine.handleFlag("restoresession", false);
+    } catch (e) { /* Optional */ }
+    try {
+      width = aCmdLine.handleFlagWithParam("width", false);
+    } catch (e) { /* Optional */ }
+    try {
+      height = aCmdLine.handleFlagWithParam("height", false);
     } catch (e) { /* Optional */ }
 
     try {
@@ -66,7 +80,9 @@ BrowserCLH.prototype = {
       } else {
         let args = {
           url: urlParam,
-          restoreSession: restoreSession
+          restoreSession: restoreSession,
+          width: width,
+          height: height
         };
         browserWin = openWindow(null, "chrome://browser/content/browser.xul", "_blank", "chrome,dialog=no,all", args);
       }
