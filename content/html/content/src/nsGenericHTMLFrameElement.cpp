@@ -6,10 +6,20 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGenericHTMLFrameElement.h"
+#include "nsIWebProgress.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMCustomEvent.h"
+#include "nsIVariant.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsVariant.h"
 #include "nsContentUtils.h"
 #include "nsDOMMemoryReporter.h"
+#include "nsEventDispatcher.h"
+#include "nsContentUtils.h"
+#include "nsAsyncDOMEvent.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFrameElement)
@@ -19,12 +29,15 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_TABLE_HEAD(nsGenericHTMLFrameElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsGenericHTMLFrameElement,
-                                nsIFrameLoaderOwner)
+  NS_INTERFACE_TABLE_INHERITED3(nsGenericHTMLFrameElement,
+                                nsIFrameLoaderOwner,
+                                nsIDOMMozBrowserFrame,
+                                nsIWebProgressListener)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsGenericHTMLFrameElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_INT_ATTR(nsGenericHTMLFrameElement, TabIndex, tabindex)
+NS_IMPL_BOOL_ATTR(nsGenericHTMLFrameElement, Mozbrowser, mozbrowser)
 
 nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
 {
@@ -93,6 +106,24 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
   }
 
   mFrameLoader = nsFrameLoader::Create(this, mNetworkCreated);
+  if (!mFrameLoader) {
+    // Strangely enough, this method doesn't actually ensure that the
+    // frameloader exists.  It's more of a best-effort kind of thing.
+    return NS_OK;
+  }
+
+  // Register ourselves as a web progress listener on the frameloader's
+  // docshell.
+  nsCOMPtr<nsIDocShell> docShell;
+  mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(docShell);
+  NS_ENSURE_TRUE(webProgress, NS_OK);
+
+  // This adds a weak ref, so we don't have to worry about unregistering.
+  webProgress->AddProgressListener(this,
+    nsIWebProgress::NOTIFY_LOCATION |
+    nsIWebProgress::NOTIFY_STATE_WINDOW);
+
   return NS_OK;
 }
 
@@ -252,4 +283,164 @@ nsGenericHTMLFrameElement::SizeOf() const
   // TODO: need to implement SizeOf() in nsFrameLoader, bug 672539.
   size += mFrameLoader ? sizeof(*mFrameLoader.get()) : 0;
   return size;
+}
+
+/**
+ * Return true if this frame element has permission to send mozbrowser
+ * events, and false otherwise.
+ */
+bool
+nsGenericHTMLFrameElement::BrowserFrameSecurityCheck()
+{
+  // Fail if browser frames are globally disabled.
+  if (!Preferences::GetBool("dom.mozBrowserFramesEnabled")) {
+    return false;
+  }
+
+  // Fail if this frame doesn't have the mozbrowser attribute.
+  bool isBrowser = false;
+  GetMozbrowser(&isBrowser);
+  if (!isBrowser) {
+    return false;
+  }
+
+  // Fail if the node principal isn't trusted.
+  nsIPrincipal *principal = NodePrincipal();
+  nsCOMPtr<nsIURI> principalURI;
+  principal->GetURI(getter_AddRefs(principalURI));
+  if (!nsContentUtils::URIIsChromeOrInPref(principalURI,
+                                           "dom.mozBrowserFramesWhitelist")) {
+    return false;
+  }
+
+  // Otherwise, succeed.
+  return true;
+}
+
+/**
+ * Fire a mozbrowser event, if we have permission.
+ *
+ * @param aEventName the event name (e.g. "locationchange").  "mozbrowser" is
+ *        added to the beginning of aEventName automatically.
+ * @param aEventType the event type.  Must be either "event" or "customevent".
+ * @param aValue the value passed along with the event.  This value will be
+ *        set as the event's "detail" property.  This must be empty if
+ *        aEventType is "event".
+ */
+nsresult
+nsGenericHTMLFrameElement::MaybeFireBrowserEvent(
+  const nsAString &aEventName,
+  const nsAString &aEventType,
+  const nsAString &aValue /* = EmptyString() */)
+{
+  MOZ_ASSERT(aEventType.EqualsLiteral("event") ||
+             aEventType.EqualsLiteral("customevent"));
+  MOZ_ASSERT_IF(aEventType.EqualsLiteral("event"),
+                aValue.IsEmpty());
+
+  if (!BrowserFrameSecurityCheck()) {
+    return NS_OK;
+  }
+
+  nsAutoString eventName;
+  eventName.AppendLiteral("mozbrowser");
+  eventName.Append(aEventName);
+
+  nsCOMPtr<nsIDOMEvent> domEvent;
+  nsEventDispatcher::CreateEvent(GetPresContext(), nsnull,
+                                 aEventType, getter_AddRefs(domEvent));
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+  NS_ENSURE_STATE(privateEvent);
+
+  nsresult rv = privateEvent->SetTrusted(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aEventType.EqualsLiteral("customevent")) {
+    nsCOMPtr<nsIDOMCustomEvent> customEvent = do_QueryInterface(domEvent);
+    NS_ENSURE_STATE(customEvent);
+
+    nsCOMPtr<nsIWritableVariant> value = new nsVariant();
+    value->SetAsAString(aValue);
+
+    rv = customEvent->InitCustomEvent(eventName,
+                                      /* bubbles = */ false,
+                                      /* cancelable = */ false,
+                                      value);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    rv = domEvent->InitEvent(eventName,
+                             /* bubbles = */ false,
+                             /* cancelable = */ false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return (new nsAsyncDOMEvent(this, domEvent))->PostDOMEvent();
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::OnLocationChange(nsIWebProgress* aWebProgress,
+                                            nsIRequest* aRequest,
+                                            nsIURI* aURI,
+                                            PRUint32 aFlags)
+{
+  nsCAutoString spec;
+  aURI->GetSpec(spec);
+
+  MaybeFireBrowserEvent(NS_LITERAL_STRING("locationchange"),
+                        NS_LITERAL_STRING("customevent"),
+                        NS_ConvertUTF8toUTF16(spec));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::OnStateChange(nsIWebProgress* aProgress,
+                                         nsIRequest* aRequest,
+                                         PRUint32 aProgressStateFlags,
+                                         nsresult aStatus)
+{
+  if (!(aProgressStateFlags & STATE_IS_WINDOW)) {
+    return NS_OK;
+  }
+
+  nsAutoString status;
+  if (aProgressStateFlags & STATE_START) {
+    MaybeFireBrowserEvent(NS_LITERAL_STRING("loadstart"),
+                          NS_LITERAL_STRING("event"));
+  }
+  else if (aProgressStateFlags & STATE_STOP) {
+    MaybeFireBrowserEvent(NS_LITERAL_STRING("loadend"),
+                          NS_LITERAL_STRING("event"));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::OnProgressChange(nsIWebProgress* aProgress,
+                                            nsIRequest* aRequest,
+                                            PRInt32 aCurSelfProgress,
+                                            PRInt32 aMaxSelfProgress,
+                                            PRInt32 aCurTotalProgress,
+                                            PRInt32 aMaxTotalProgress)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::OnStatusChange(nsIWebProgress* aWebProgress,
+                                          nsIRequest* aRequest,
+                                          nsresult aStatus,
+                                          const PRUnichar* aMessage)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                            nsIRequest *aRequest,
+                                            PRUint32 state)
+{
+  return NS_OK;
 }
