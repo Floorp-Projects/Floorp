@@ -37,14 +37,15 @@
 
 package org.mozilla.gecko;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.ContentResolver;
-import android.graphics.drawable.*;
 import android.util.Log;
-
-import org.json.JSONObject;
-import org.json.JSONException;
 
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -146,6 +147,8 @@ public class Tabs implements GeckoEventListener {
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(nextTab.getId())));
         GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", String.valueOf(tab.getId())));
+
+        GeckoApp.mAppContext.handleCloseTab(tab.getId());
     }
 
     /** Return the tab that will be selected by default after this one is closed */
