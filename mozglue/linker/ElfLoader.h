@@ -9,6 +9,7 @@
 /* Until RefPtr.h stops using JS_Assert */
 #undef DEBUG
 #include "mozilla/RefPtr.h"
+#include "Zip.h"
 
 /**
  * dlfcn.h replacement functions
@@ -118,6 +119,7 @@ protected:
    * to do this without RTTI)
    */
   friend class ElfLoader;
+  friend class CustomElf;
   virtual bool IsSystemElf() const { return false; }
 
 private:
@@ -222,6 +224,70 @@ private:
   /* Bookkeeping */
   typedef std::vector<LibHandle *> LibHandleList;
   LibHandleList handles;
+
+protected:
+  friend class CustomElf;
+  /* Definition of static destructors as to be used for C++ ABI compatibility */
+  typedef void (*Destructor)(void *object);
+
+  /**
+   * C++ ABI makes static initializers register destructors through a specific
+   * atexit interface. On glibc/linux systems, the dso_handle is a pointer
+   * within a given library. On bionic/android systems, it is an undefined
+   * symbol. Making sense of the value is not really important, and all that
+   * is really important is that it is different for each loaded library, so
+   * that they can be discriminated when shutting down. For convenience, on
+   * systems where the dso handle is a symbol, that symbol is resolved to
+   * point at corresponding CustomElf.
+   *
+   * Destructors are registered with __*_atexit with an associated object to
+   * be passed as argument when it is called.
+   *
+   * When __cxa_finalize is called, destructors registered for the given
+   * DSO handle are called in the reverse order they were registered.
+   */
+#ifdef __ARM_EABI__
+  static int __wrap_aeabi_atexit(void *that, Destructor destructor,
+                                 void *dso_handle);
+#else
+  static int __wrap_cxa_atexit(Destructor destructor, void *that,
+                               void *dso_handle);
+#endif
+
+  static void __wrap_cxa_finalize(void *dso_handle);
+
+  /**
+   * Registered destructor. Keeps track of the destructor function pointer,
+   * associated object to call it with, and DSO handle.
+   */
+  class DestructorCaller {
+  public:
+    DestructorCaller(Destructor destructor, void *object, void *dso_handle)
+    : destructor(destructor), object(object), dso_handle(dso_handle) { }
+
+    /**
+     * Call the destructor function with the associated object.
+     * Call only once, see CustomElf::~CustomElf.
+     */
+    void Call();
+
+    /**
+     * Returns whether the destructor is associated to the given DSO handle
+     */
+    bool IsForHandle(void *handle) const
+    {
+      return handle == dso_handle;
+    }
+
+  private:
+    Destructor destructor;
+    void *object;
+    void *dso_handle;
+  };
+
+private:
+  /* Keep track of all registered destructors */
+  std::vector<DestructorCaller> destructors;
 };
 
 #endif /* ElfLoader_h */

@@ -7,7 +7,9 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <algorithm>
+#include <fcntl.h>
 #include "ElfLoader.h"
+#include "CustomElf.h"
 #include "Logging.h"
 
 using namespace mozilla;
@@ -173,6 +175,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   }
 
   char *abs_path = NULL;
+  const char *requested_path = path;
 
   /* When the path is not absolute and the library is being loaded for
    * another, first try to load the library from the directory containing
@@ -186,7 +189,15 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
     path = abs_path;
   }
 
-  handle = SystemElf::Load(path, flags);
+  /* Try loading the file with the custom linker, and fall back to the
+   * system linker if that fails */
+  AutoCloseFD fd = open(path, O_RDONLY);
+  if (fd != -1) {
+    handle = CustomElf::Load(fd, path, flags);
+    fd.forget();
+  }
+  if (!handle)
+    handle = SystemElf::Load(path, flags);
 
   /* If we didn't have an absolute path and haven't been able to load
    * a library yet, try in the system search path */
@@ -194,7 +205,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
     handle = SystemElf::Load(name, flags);
 
   delete [] abs_path;
-  debug("ElfLoader::Load(\"%s\", 0x%x, %p [\"%s\"]) = %p", path, flags,
+  debug("ElfLoader::Load(\"%s\", 0x%x, %p [\"%s\"]) = %p", requested_path, flags,
         reinterpret_cast<void *>(parent), parent ? parent->GetPath() : "",
         static_cast<void *>(handle));
 
@@ -271,5 +282,50 @@ ElfLoader::~ElfLoader()
          * pointers in the handle list we're scanning */
       }
     }
+  }
+}
+
+#ifdef __ARM_EABI__
+int
+ElfLoader::__wrap_aeabi_atexit(void *that, ElfLoader::Destructor destructor,
+                               void *dso_handle)
+{
+  Singleton.destructors.push_back(
+    DestructorCaller(destructor, that, dso_handle));
+  return 0;
+}
+#else
+int
+ElfLoader::__wrap_cxa_atexit(ElfLoader::Destructor destructor, void *that,
+                             void *dso_handle)
+{
+  Singleton.destructors.push_back(
+    DestructorCaller(destructor, that, dso_handle));
+  return 0;
+}
+#endif
+
+void
+ElfLoader::__wrap_cxa_finalize(void *dso_handle)
+{
+  /* Call all destructors for the given DSO handle in reverse order they were
+   * registered. */
+  std::vector<DestructorCaller>::reverse_iterator it;
+  for (it = Singleton.destructors.rbegin();
+       it < Singleton.destructors.rend(); ++it) {
+    if (it->IsForHandle(dso_handle)) {
+      it->Call();
+    }
+  }
+}
+
+void
+ElfLoader::DestructorCaller::Call()
+{
+  if (destructor) {
+    debug("ElfLoader::DestructorCaller::Call(%p, %p, %p)",
+          FunctionPtr(destructor), object, dso_handle);
+    destructor(object);
+    destructor = NULL;
   }
 }
