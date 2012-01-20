@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-603750-websocket.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-603750-websocket.html";
 const pref_ws = "network.websocket.enabled";
 const pref_block = "network.websocket.override-security-block";
 

@@ -4,6 +4,8 @@
 
 const TESTCASE_URI = TEST_BASE + "simple.html";
 
+const TRANSITION_CLASS = "moz-styleeditor-transitioning";
+
 
 function test()
 {
@@ -30,6 +32,7 @@ function run(aChrome)
 
 let gAddedCount = 0;  // to add new stylesheet after the 2 initial stylesheets
 let gNewEditor;       // to make sure only one new stylesheet got created
+let gUpdateCount = 0; // to make sure only one Update event is triggered
 let gCommitCount = 0; // to make sure only one Commit event is triggered
 
 function testEditorAdded(aChrome, aEditor)
@@ -82,6 +85,13 @@ function testEditorAdded(aChrome, aEditor)
       }, gChromeWindow) ;
     },
 
+    onUpdate: function (aEditor) {
+      gUpdateCount++;
+
+      ok(content.document.documentElement.classList.contains(TRANSITION_CLASS),
+         "StyleEditor's transition class has been added to content");
+    },
+
     onCommit: function (aEditor) {
       gCommitCount++;
 
@@ -99,7 +109,11 @@ function testEditorAdded(aChrome, aEditor)
       is(computedStyle.backgroundColor, "rgb(255, 0, 0)",
          "content's background color has been updated to red");
 
+      ok(!content.document.documentElement.classList.contains(TRANSITION_CLASS),
+         "StyleEditor's transition class has been removed from content");
+
       executeSoon(function () {
+        is(gUpdateCount, 1, "received only one Update event (throttle)");
         is(gCommitCount, 1, "received only one Commit event (throttle)");
 
         aEditor.removeActionListener(listener);
