@@ -15,6 +15,14 @@
 
 using namespace mozilla;
 
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
+#endif
+
+#ifndef PAGE_MASK
+#define PAGE_MASK (~ (PAGE_SIZE - 1))
+#endif
+
 /**
  * dlfcn.h replacements functions
  */
@@ -92,7 +100,6 @@ LeafName(const char *path)
  */
 LibHandle::~LibHandle()
 {
-  ElfLoader::Singleton.Forget(this);
   free(path);
 }
 
@@ -118,8 +125,11 @@ SystemElf::Load(const char *path, int flags)
   void *handle = dlopen(path, flags);
   debug("dlopen(\"%s\", %x) = %p", path, flags, handle);
   ElfLoader::Singleton.lastError = dlerror();
-  if (handle)
-    return new SystemElf(path, handle);
+  if (handle) {
+    SystemElf *elf = new SystemElf(path, handle);
+    ElfLoader::Singleton.Register(elf);
+    return elf;
+  }
   return NULL;
 }
 
@@ -130,6 +140,7 @@ SystemElf::~SystemElf()
   debug("dlclose(%p [\"%s\"])", dlhandle, GetPath());
   dlclose(dlhandle);
   ElfLoader::Singleton.lastError = dlerror();
+  ElfLoader::Singleton.Forget(this);
 }
 
 void *
@@ -156,7 +167,6 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   /* Handle dlopen(NULL) directly. */
   if (!path) {
     handle = SystemElf::Load(NULL, flags);
-    handles.push_back(handle);
     return handle;
   }
 
@@ -239,10 +249,6 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
         reinterpret_cast<void *>(parent), parent ? parent->GetPath() : "",
         static_cast<void *>(handle));
 
-  /* Bookkeeping */
-  if (handle)
-    handles.push_back(handle);
-
   return handle;
 }
 
@@ -258,12 +264,22 @@ ElfLoader::GetHandleByPtr(void *addr)
 }
 
 void
+ElfLoader::Register(LibHandle *handle)
+{
+  handles.push_back(handle);
+  if (dbg && !handle->IsSystemElf())
+    dbg->Add(static_cast<CustomElf *>(handle));
+}
+
+void
 ElfLoader::Forget(LibHandle *handle)
 {
   LibHandleList::iterator it = std::find(handles.begin(), handles.end(), handle);
   if (it != handles.end()) {
     debug("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
                                             handle->GetPath());
+    if (dbg && !handle->IsSystemElf())
+      dbg->Remove(static_cast<CustomElf *>(handle));
     handles.erase(it);
   } else {
     debug("ElfLoader::Forget(%p [\"%s\"]): Handle not found",
@@ -358,4 +374,195 @@ ElfLoader::DestructorCaller::Call()
     destructor(object);
     destructor = NULL;
   }
+}
+
+void
+ElfLoader::InitDebugger()
+{
+  /* Find ELF auxiliary vectors.
+   *
+   * The kernel stores the following data on the stack when starting a
+   * program:
+   *   argc
+   *   argv[0] (pointer into argv strings defined below)
+   *   argv[1] (likewise)
+   *   ...
+   *   argv[argc - 1] (likewise)
+   *   NULL
+   *   envp[0] (pointer into environment strings defined below)
+   *   envp[1] (likewise)
+   *   ...
+   *   envp[n] (likewise)
+   *   NULL
+   *   auxv[0] (first ELF auxiliary vector)
+   *   auxv[1] (second ELF auxiliary vector)
+   *   ...
+   *   auxv[p] (last ELF auxiliary vector)
+   *   (AT_NULL, NULL)
+   *   padding
+   *   argv strings, separated with '\0'
+   *   environment strings, separated with '\0'
+   *   NULL
+   *
+   * What we are after are the auxv values defined by the following struct.
+   */
+  struct AuxVector {
+    Elf::Addr type;
+    Elf::Addr value;
+  };
+
+  /* Pointer to the environment variables list */
+  extern char **environ;
+
+  /* The environment may have changed since the program started, in which
+   * case the environ variables list isn't the list the kernel put on stack
+   * anymore. But in this new list, variables that didn't change still point
+   * to the strings the kernel put on stack. It is quite unlikely that two
+   * modified environment variables point to two consecutive strings in memory,
+   * so we assume that if two consecutive environment variables point to two
+   * consecutive strings, we found strings the kernel put on stack. */
+  char **env;
+  for (env = environ; *env; env++)
+    if (*env + strlen(*env) + 1 == env[1])
+      break;
+  if (!*env)
+    return;
+
+  /* Next, we scan the stack backwards to find a pointer to one of those
+   * strings we found above, which will give us the location of the original
+   * envp list. As we are looking for pointers, we need to look at 32-bits or
+   * 64-bits aligned values, depening on the architecture. */
+  char **scan = reinterpret_cast<char **>(
+                reinterpret_cast<uintptr_t>(*env) & ~(sizeof(void *) - 1));
+  while (*env != *scan)
+    scan--;
+
+  /* Finally, scan forward to find the last environment variable pointer and
+   * thus the first auxiliary vector. */
+  while (*scan++);
+  AuxVector *auxv = reinterpret_cast<AuxVector *>(scan);
+
+  /* The two values of interest in the auxiliary vectors are AT_PHDR and
+   * AT_PHNUM, which gives us the the location and size of the ELF program
+   * headers. */
+  Array<Elf::Phdr> phdrs;
+  char *base = NULL;
+  while (auxv->type) {
+    if (auxv->type == AT_PHDR) {
+      phdrs.Init(reinterpret_cast<Elf::Phdr*>(auxv->value));
+      /* Assume the base address is the first byte of the same page */
+      base = reinterpret_cast<char *>(auxv->value & PAGE_MASK);
+    }
+    if (auxv->type == AT_PHNUM)
+      phdrs.Init(auxv->value);
+    auxv++;
+  }
+
+  if (!phdrs) {
+    debug("Couldn't find program headers");
+    return;
+  }
+
+  /* In some cases, the address for the program headers we get from the
+   * auxiliary vectors is not mapped, because of the PT_LOAD segments
+   * definitions in the program executable. Trying to map anonymous memory
+   * with a hint giving the base address will return a different address
+   * if something is mapped there, and the base address otherwise. */
+  MappedPtr mem(mmap(base, PAGE_SIZE, PROT_NONE,
+                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0), PAGE_SIZE);
+  if (mem == base) {
+    /* If program headers aren't mapped, try to map them */
+    int fd = open("/proc/self/exe", O_RDONLY);
+    if (fd == -1) {
+      debug("Failed to open /proc/self/exe");
+      return;
+    }
+    mem.Assign(mmap(base, PAGE_SIZE, PROT_READ, MAP_PRIVATE, fd, 0), PAGE_SIZE);
+    /* If we don't manage to map at the right address, just give up. */
+    if (mem != base) {
+      debug("Couldn't read program headers");
+      return;
+    }
+  }
+  /* Sanity check: the first bytes at the base address should be an ELF
+   * header. */
+  if (!Elf::Ehdr::validate(base)) {
+     debug("Couldn't find program base");
+     return;
+  }
+
+  /* Search for the program PT_DYNAMIC segment */
+  Array<Elf::Dyn> dyns;
+  for (Array<Elf::Phdr>::iterator phdr = phdrs.begin(); phdr < phdrs.end();
+       ++phdr) {
+    /* While the program headers are expected within the first mapped page of
+     * the program executable, the executable PT_LOADs may actually make them
+     * loaded at an address that is not the wanted base address of the
+     * library. We thus need to adjust the base address, compensating for the
+     * virtual address of the PT_LOAD segment corresponding to offset 0. */
+    if (phdr->p_type == PT_LOAD && phdr->p_offset == 0)
+      base -= phdr->p_vaddr;
+    if (phdr->p_type == PT_DYNAMIC)
+      dyns.Init(base + phdr->p_vaddr, phdr->p_filesz);
+  }
+  if (!dyns) {
+    debug("Failed to find PT_DYNAMIC section in program");
+    return;
+  }
+
+  /* Search for the DT_DEBUG information */
+  for (Array<Elf::Dyn>::iterator dyn = dyns.begin(); dyn < dyns.end(); ++dyn) {
+    if (dyn->d_tag == DT_DEBUG) {
+      dbg = reinterpret_cast<r_debug *>(dyn->d_un.d_ptr);
+      break;
+    }
+  }
+  debug("DT_DEBUG points at %p", dbg);
+}
+
+/**
+ * The system linker maintains a doubly linked list of library it loads
+ * for use by the debugger. Unfortunately, it also uses the list pointers
+ * in a lot of operations and adding our data in the list is likely to
+ * trigger crashes when the linker tries to use data we don't provide or
+ * that fall off the amount data we allocated. Fortunately, the linker only
+ * traverses the list forward and accesses the head of the list from a
+ * private pointer instead of using the value in the r_debug structure.
+ * This means we can safely add members at the beginning of the list.
+ * Unfortunately, gdb checks the coherency of l_prev values, so we have
+ * to adjust the l_prev value for the first element the system linker
+ * knows about. Fortunately, it doesn't use l_prev, and the first element
+ * is not ever going to be released before our elements, since it is the
+ * program executable, so the system linker should not be changing
+ * r_debug::r_map.
+ */
+void
+ElfLoader::r_debug::Add(ElfLoader::link_map *map)
+{
+  if (!r_brk)
+    return;
+  r_state = RT_ADD;
+  r_brk();
+  map->l_prev = NULL;
+  map->l_next = r_map;
+  r_map->l_prev = map;
+  r_map = map;
+  r_state = RT_CONSISTENT;
+  r_brk();
+}
+
+void
+ElfLoader::r_debug::Remove(ElfLoader::link_map *map)
+{
+  if (!r_brk)
+    return;
+  r_state = RT_DELETE;
+  r_brk();
+  if (r_map == map)
+    r_map = map->l_next;
+  else
+    map->l_prev->l_next = map->l_next;
+  map->l_next->l_prev = map->l_prev;
+  r_state = RT_CONSISTENT;
+  r_brk();
 }

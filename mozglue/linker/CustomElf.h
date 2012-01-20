@@ -208,8 +208,9 @@ class Mappable;
  * Library Handle class for ELF libraries we don't let the system linker
  * handle.
  */
-class CustomElf: public LibHandle
+class CustomElf: public LibHandle, private ElfLoader::link_map
 {
+  friend class ElfLoader;
 public:
   /**
    * Returns a new CustomElf using the given file descriptor to map ELF
