@@ -946,6 +946,9 @@ class MNewArray : public MAryInstruction<0>
     types::TypeObject *type() const {
         return type_;
     }
+    bool congruentTo(MDefinition * const &ins) const {
+        return false;
+    }
 };
 
 // Designates the start of call frame construction.
@@ -1039,6 +1042,9 @@ class MCall
 
     TypePolicy *typePolicy() {
         return this;
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        return false;
     }
     virtual AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::Any);
@@ -2268,7 +2274,9 @@ class MGetPropertyCache
     jsbytecode *pc() const {
         return pc_;
     }
-
+    bool congruentTo(MDefinition * const &ins) const {
+        return false;
+    }
     TypePolicy *typePolicy() { return this; }
 };
 
