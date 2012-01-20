@@ -102,7 +102,6 @@ class Registers {
         (1 << JSC::X86Registers::ebp);
 
     static const uint32 WrapperMask = VolatileMask;
-    JS_STATIC_ASSERT(WrapperMask > ArgRegMask);
 
     static const uint32 SingleByteRegs =
         (1 << JSC::X86Registers::eax) |
