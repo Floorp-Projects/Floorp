@@ -36,8 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global Components, Services, TiltGL, TiltUtils, TiltVisualizer */
 "use strict";
 
 const Cu = Components.utils;

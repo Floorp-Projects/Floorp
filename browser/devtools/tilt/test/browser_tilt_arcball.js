@@ -1,8 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, isApprox, isApproxVec, vec3, quat4 */
-/*global TiltVisualizer */
 "use strict";
 
 function cloneUpdate(update) {

@@ -1,10 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, waitForExplicitFinish, finish, executeSoon, gBrowser */
-/*global isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Services, EventUtils, Tilt, TiltUtils, TiltVisualizer, InspectorUI */
-/*global Ci, INITIALIZING, DESTROYED, INSPECTOR_OPENED */
 "use strict";
 
 let id;

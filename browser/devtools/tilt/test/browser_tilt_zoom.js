@@ -1,9 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, waitForExplicitFinish, finish, executeSoon, gBrowser */
-/*global isApprox, isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Services, EventUtils, TiltUtils, InspectorUI, DESTROYED */
 "use strict";
 
 const ZOOM = 2;

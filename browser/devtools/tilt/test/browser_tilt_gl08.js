@@ -1,7 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, isnot, info, isWebGLSupported, createCanvas, TiltGL */
 "use strict";
 
 let isWebGLAvailable;
