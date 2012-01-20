@@ -47,7 +47,6 @@
 #include "nsPIPlacesHistoryListenersNotifier.h"
 #include "nsIBrowserHistory.h"
 #include "nsIGlobalHistory.h"
-#include "nsIDownloadHistory.h"
 #include "nsINavBookmarksService.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsIFaviconService.h"
@@ -109,7 +108,6 @@ class nsNavHistory : public nsSupportsWeakReference
                    , public nsINavHistoryService
                    , public nsIObserver
                    , public nsIBrowserHistory
-                   , public nsIDownloadHistory
                    , public nsPIPlacesDatabase
                    , public nsPIPlacesHistoryListenersNotifier
                    , public mozIStorageVacuumParticipant
@@ -122,7 +120,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYSERVICE
   NS_DECL_NSIGLOBALHISTORY2
-  NS_DECL_NSIDOWNLOADHISTORY
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSPIPLACESDATABASE
