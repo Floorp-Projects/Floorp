@@ -778,8 +778,8 @@ EXPAND_LIBS_GEN = $(PYTHON) $(topsrcdir)/config/pythonpath.py -I$(DEPTH)/config 
 EXPAND_AR = $(EXPAND_LIBS_EXEC) --extract -- $(AR)
 EXPAND_CC = $(EXPAND_LIBS_EXEC) --uselist -- $(CC)
 EXPAND_CCC = $(EXPAND_LIBS_EXEC) --uselist -- $(CCC)
-EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist -- $(LD)
-EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) --uselist -- $(MKSHLIB)
+EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist $(if $(REORDER),--reorder $(REORDER))-- $(LD)
+EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) --uselist $(if $(REORDER),--reorder $(REORDER))-- $(MKSHLIB)
 
 ifdef STDCXX_COMPAT
 CHECK_STDCXX = objdump -p $(1) | grep -e 'GLIBCXX_3\.4\.\(9\|[1-9][0-9]\)' > /dev/null && echo "TEST-UNEXPECTED-FAIL | | We don't want these libstdc++ symbols to be used:" && objdump -T $(1) | grep -e 'GLIBCXX_3\.4\.\(9\|[1-9][0-9]\)' && exit 1 || exit 0
