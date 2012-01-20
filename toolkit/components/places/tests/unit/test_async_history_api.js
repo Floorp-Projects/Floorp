@@ -41,29 +41,6 @@ function VisitInfo(aTransitionType,
 }
 
 /**
- * Generic nsINavHistoryObserver that doesn't implement anything, but provides
- * dummy methods to prevent errors about an object not having a certain method.
- */
-function NavHistoryObserver()
-{
-}
-NavHistoryObserver.prototype =
-{
-  onBeginUpdateBatch: function() { },
-  onEndUpdateBatch: function() { },
-  onVisit: function() { },
-  onTitleChanged: function() { },
-  onBeforeDeleteURI: function() { },
-  onDeleteURI: function() { },
-  onClearHistory: function() { },
-  onPageChanged: function() { },
-  onDeleteVisits: function() { },
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsINavHistoryObserver,
-  ]),
-};
-
-/**
  * Listens for a title change notification, and calls aCallback when it gets it.
  *
  * @param aURI
