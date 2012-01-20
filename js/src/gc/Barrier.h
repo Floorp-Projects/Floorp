@@ -321,26 +321,31 @@ class HeapValue
     const Value &get() const { return value; }
     operator const Value &() const { return value; }
 
-    bool isMarkable() const { return value.isMarkable(); }
-    bool isMagic(JSWhyMagic why) const { return value.isMagic(why); }
     bool isUndefined() const { return value.isUndefined(); }
-    bool isObject() const { return value.isObject(); }
-    bool isGCThing() const { return value.isGCThing(); }
+    bool isNull() const { return value.isNull(); }
+    bool isBoolean() const { return value.isBoolean(); }
     bool isTrue() const { return value.isTrue(); }
     bool isFalse() const { return value.isFalse(); }
+    bool isNumber() const { return value.isNumber(); }
     bool isInt32() const { return value.isInt32(); }
-    bool isNull() const { return value.isNull(); }
+    bool isString() const { return value.isString(); }
+    bool isObject() const { return value.isObject(); }
+    bool isMagic(JSWhyMagic why) const { return value.isMagic(why); }
+    bool isGCThing() const { return value.isGCThing(); }
+    bool isMarkable() const { return value.isMarkable(); }
 
+    bool toBoolean() const { return value.toBoolean(); }
+    double toNumber() const { return value.toNumber(); }
+    int32_t toInt32() const { return value.toInt32(); }
+    double toDouble() const { return value.toDouble(); }
+    JSString *toString() const { return value.toString(); }
     JSObject &toObject() const { return value.toObject(); }
     JSObject *toObjectOrNull() const { return value.toObjectOrNull(); }
     void *toGCThing() const { return value.toGCThing(); }
-    double toDouble() const { return value.toDouble(); }
-    int32_t toInt32() const { return value.toInt32(); }
-    JSString *toString() const { return value.toString(); }
-    bool toBoolean() const { return value.toBoolean(); }
-    double toNumber() const { return value.toNumber(); }
 
     JSGCTraceKind gcKind() const { return value.gcKind(); }
+
+    uint64_t asRawBits() const { return value.asRawBits(); }
 
 #ifdef DEBUG
     JSWhyMagic whyMagic() const { return value.whyMagic(); }

@@ -92,6 +92,8 @@ JS_PROTO(Uint8ClampedArray,     33,     js_InitTypedArrayClasses)
 JS_PROTO(Proxy,                 34,     js_InitProxyClass)
 JS_PROTO(AnyName,               35,     js_InitNullClass)
 JS_PROTO(WeakMap,               36,     js_InitWeakMapClass)
+JS_PROTO(Map,                   37,     js_InitMapClass)
+JS_PROTO(Set,                   38,     js_InitSetClass)
 
 #undef XML_INIT
 #undef NAMESPACE_INIT
