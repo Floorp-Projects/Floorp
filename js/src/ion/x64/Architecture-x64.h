@@ -121,6 +121,9 @@ class Registers {
         (1 << JSC::X86Registers::r14) |
         (1 << JSC::X86Registers::r15);
 
+    static const uint32 WrapperMask = VolatileMask;
+    JS_STATIC_ASSERT(WrapperMask > ArgRegMask);
+
     static const uint32 SingleByteRegs = VolatileMask | NonVolatileMask;
 
     static const uint32 NonAllocatableMask =
@@ -177,8 +180,9 @@ class FloatRegisters {
         AllMask;
 #endif
 
-
     static const uint32 NonVolatileMask = AllMask & ~VolatileMask;
+
+    static const uint32 WrapperMask = VolatileMask;
 
     static const uint32 NonAllocatableMask =
         (1 << JSC::X86Registers::xmm15);    // This is ScratchFloatReg.

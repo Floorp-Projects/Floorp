@@ -530,8 +530,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Avoid conflicts with argument registers while discarding the result after
     // the function call.
-    GeneralRegisterSet regs =
-        GeneralRegisterSet::Not(GeneralRegisterSet(Register::Codes::VolatileMask));
+    GeneralRegisterSet regs = GeneralRegisterSet(Register::Codes::WrapperMask);
 
     // Stack is:
     //    ... frame ...

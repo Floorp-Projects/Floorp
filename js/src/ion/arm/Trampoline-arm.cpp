@@ -545,10 +545,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Generate a separated code for the wrapper.
     MacroAssembler masm;
-    GeneralRegisterSet regs =
-        GeneralRegisterSet::Not(GeneralRegisterSet(Register::Codes::VolatileMask));
-
-    regs.take(r4);
+    GeneralRegisterSet regs = GeneralRegisterSet(Register::Codes::WrapperMask);
 
     // Stack is:
     //    ... frame ...
@@ -558,14 +555,17 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // We're aligned to an exit frame, so link it up.
     masm.linkExitFrame();
 
-    // Push the return address, which we'll use to check for OSI.
-    masm.ma_mov(lr, r4);
+    // Save the return address, which we'll use to check for OSI.
+    Register savedRetAddr = r4;
+    regs.take(savedRetAddr);
+    masm.ma_mov(lr, savedRetAddr);
 
     // Save the base of the argument set stored on the stack.
     Register argsBase = InvalidReg;
     uint32 argumentPadding = (f.explicitStackSlots() * sizeof(void *)) % StackAlignment;
     if (f.explicitArgs) {
-        argsBase = regs.takeAny();
+        argsBase = r5;
+        regs.take(argsBase);
         masm.ma_add(sp, Imm32(sizeof(IonExitFrameLayout) + argumentPadding), argsBase);
     }
 
@@ -581,6 +581,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.setupAlignedABICall(f.argc());
 
     // Initialize and set the context parameter.
+    // r0 is the first argument register.
     Register cxreg = r0;
     masm.movePtr(ImmWord(JS_THREAD_DATA(cx)), cxreg);
     masm.loadPtr(Address(cxreg, offsetof(ThreadData, ionJSContext)), cxreg);
@@ -637,7 +638,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // Check if the calling frame has been invalidated, in which case we can't
     // disturb the frame descriptor.
     Label invalidated;
-    masm.ma_cmp(r4, Operand(sp, 0));
+    masm.ma_cmp(savedRetAddr, Operand(sp, 0));
     masm.ma_b(&invalidated, Assembler::NotEqual);
 
     masm.retn(Imm32(sizeof(IonExitFrameLayout) + argumentPadding +
