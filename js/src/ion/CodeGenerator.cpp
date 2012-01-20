@@ -1097,7 +1097,7 @@ CodeGenerator::visitOutOfLineCacheSetProperty(OutOfLineCache *ool)
 
     size_t cacheIndex = allocateCache(cache);
 
-    masm.PushRegsInMask(liveRegs);
+    saveLive(ins);
 
     pushArg(value);
     pushArg(objReg);
@@ -1109,7 +1109,7 @@ CodeGenerator::visitOutOfLineCacheSetProperty(OutOfLineCache *ool)
     if (!callVM(info, ool->cache()))
         return false;
 
-    masm.PopRegsInMask(liveRegs);
+    restoreLive(ins);
 
     masm.jump(ool->rejoin());
 
