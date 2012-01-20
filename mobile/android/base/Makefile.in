@@ -476,6 +476,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/awesomebar_tab_press_selected.xml      \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
+  mobile/android/base/resources/drawable/background.png                         \
   mobile/android/base/resources/drawable/desktop_notification.png               \
   mobile/android/base/resources/drawable/favicon.png                            \
   mobile/android/base/resources/drawable/gecko_actionbar_bg.xml                 \
