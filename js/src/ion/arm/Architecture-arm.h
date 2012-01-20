@@ -141,6 +141,12 @@ class Registers
         (1 << Registers::r12) |
         (1 << Registers::r14);
 
+    static const uint32 WrapperMask =
+        VolatileMask |         // = arguments
+        (1 << Registers::r4) | // = Invalidation saved PC
+        (1 << Registers::r5);  // = argBase
+    JS_STATIC_ASSERT(WrapperMask > ArgRegMask);
+
     static const uint32 SingleByteRegs =
         VolatileMask | NonVolatileMask;
     // we should also account for any scratch registers that we care about.x
@@ -226,6 +232,8 @@ class FloatRegisters
 
     static const uint32 VolatileMask = AllMask;
     static const uint32 NonVolatileMask = 0;
+
+    static const uint32 WrapperMask = VolatileMask;
 
     static const uint32 NonAllocatableMask =
         // the scratch float register for ARM.
