@@ -185,12 +185,9 @@ GreedyAllocator::prescanUses(LInstruction *ins)
         LUse *use = a->toUse();
         VirtualRegister *vr = getVirtualRegister(use);
         if (use->policy() == LUse::FIXED) {
-            // If this use is marked as at-start, a def or temp may use the
-            // same register, so we have to use the unchecked version.
-            if (use->usedAtStart())
-                disallowed.addUnchecked(GetFixedRegister(vr->def, use));
-            else
-                disallowed.add(GetFixedRegister(vr->def, use));
+            // A def or temp may use the same register, so we have to use the
+            // unchecked version.
+            disallowed.addUnchecked(GetFixedRegister(vr->def, use));
         } else if (vr->hasRegister()) {
             discouraged.addUnchecked(vr->reg());
         }
