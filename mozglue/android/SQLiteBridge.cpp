@@ -39,6 +39,7 @@
 #include <android/log.h>
 #include "dlfcn.h"
 #include "APKOpen.h"
+#include "ElfLoader.h"
 #include "SQLiteBridge.h"
 
 #ifdef DEBUG
