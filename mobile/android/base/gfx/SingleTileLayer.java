@@ -43,7 +43,6 @@ import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.TileLayer;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.opengl.GLES11;
 import android.opengl.GLES11Ext;
@@ -59,8 +58,6 @@ import javax.microedition.khronos.opengles.GL10;
  * TODO: Repeating textures really should be their own type of layer.
  */
 public class SingleTileLayer extends TileLayer {
-    private static final String LOGTAG = "GeckoSingleTileLayer";
-
     public SingleTileLayer(CairoImage image) { this(false, image); }
 
     public SingleTileLayer(boolean repeat, CairoImage image) {
@@ -74,11 +71,6 @@ public class SingleTileLayer extends TileLayer {
         if (!initialized())
             return;
 
-        // If the texture contents is entirely invalid, we have nothing to draw.
-        Rect validTexture = getValidTextureArea();
-        if (validTexture.isEmpty())
-            return;
-
         GLES11.glBindTexture(GL10.GL_TEXTURE_2D, getTextureID());
 
         RectF bounds;
@@ -87,27 +79,13 @@ public class SingleTileLayer extends TileLayer {
         RectF viewport = context.viewport;
 
         if (repeats()) {
-            if (!validTexture.equals(new Rect(0, 0, size.width, size.height))) {
-                Log.e(LOGTAG, "Drawing partial repeating textures is unsupported!");
-            }
-
             bounds = new RectF(0.0f, 0.0f, viewport.width(), viewport.height());
             int width = Math.round(viewport.width());
             int height = Math.round(-viewport.height());
             cropRect = new int[] { 0, size.height, width, height };
         } else {
             bounds = getBounds(context, new FloatSize(size));
-
-            float scaleFactor = bounds.width() / (float)size.width;
-            bounds.left += validTexture.left * scaleFactor;
-            bounds.top += validTexture.top * scaleFactor;
-            bounds.right -= (size.width - validTexture.right) * scaleFactor;
-            bounds.bottom -= (size.height - validTexture.bottom) * scaleFactor;
-
-            cropRect = new int[] { validTexture.left,
-                                   validTexture.bottom,
-                                   validTexture.width(),
-                                   -validTexture.height() };
+            cropRect = new int[] { 0, size.height, size.width, -size.height };
         }
 
         GLES11.glTexParameteriv(GL10.GL_TEXTURE_2D, GLES11Ext.GL_TEXTURE_CROP_RECT_OES, cropRect,
