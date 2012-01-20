@@ -6,6 +6,7 @@
 #define ElfLoader_h
 
 #include <vector>
+#include <dlfcn.h>
 /* Until RefPtr.h stops using JS_Assert */
 #undef DEBUG
 #include "mozilla/RefPtr.h"

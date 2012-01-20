@@ -5,6 +5,7 @@
 #ifndef Mappable_h
 #define Mappable_h
 
+#include <sys/types.h>
 #include "Zip.h"
 #include "mozilla/RefPtr.h"
 #include "zlib.h"
@@ -52,17 +53,65 @@ public:
   virtual void *mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
   virtual void finalize();
 
-private:
+protected:
   MappableFile(int fd): fd(fd) { }
 
+private:
   /* File descriptor */
   AutoCloseFD fd;
+};
+
+/**
+ * Mappable implementation for deflated stream in a Zip archive
+ * Inflates the complete stream into a cache file.
+ */
+class MappableExtractFile: public MappableFile
+{
+public:
+  ~MappableExtractFile();
+
+  /**
+   * Create a MappableExtractFile instance for the given Zip stream. The name
+   * argument is used to create the cache file in the cache directory.
+   */
+  static MappableExtractFile *Create(const char *name, Zip::Stream *stream);
+
+  /**
+   * Returns the path of the extracted file.
+   */
+  char *GetPath() {
+    return path;
+  }
+private:
+  MappableExtractFile(int fd, char *path)
+  : MappableFile(fd), path(path), pid(getpid()) { }
+
+  /**
+   * AutoUnlinkFile keeps track or a file name and removes (unlinks) the file
+   * when the instance is destroyed.
+   */
+  struct AutoUnlinkFileTraits: public AutoDeleteArrayTraits<char>
+  {
+    static void clean(char *value)
+    {
+      unlink(value);
+      AutoDeleteArrayTraits<char>::clean(value);
+    }
+  };
+  typedef AutoClean<AutoUnlinkFileTraits> AutoUnlinkFile;
+
+  /* Extracted file */
+  AutoUnlinkFile path;
+
+  /* Id of the process that initialized the instance */
+  pid_t pid;
 };
 
 class _MappableBuffer;
 
 /**
- * Mappable implementation for deflated stream in a Zip archive
+ * Mappable implementation for deflated stream in a Zip archive.
+ * Inflates the mapped bits in a temporary buffer. 
  */
 class MappableDeflate: public Mappable
 {
@@ -87,7 +136,7 @@ private:
   mozilla::RefPtr<Zip> zip;
 
   /* Decompression buffer */
-  _MappableBuffer *buffer;
+  AutoDeletePtr<_MappableBuffer> buffer;
 
   /* Zlib data */
   z_stream zStream;
