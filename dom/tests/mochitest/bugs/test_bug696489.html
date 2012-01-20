@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696489
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 696489</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696489">Mozilla Bug 696489</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 696489 **/
+window.__proto__ = null;
+try {
+  Object.prototype.__proto__ = window;
+  ok(false, "Didn't throw for cyclic proto!");
+}
+catch (e) {
+  ok(true, "Threw like we should.");
+}
+
+</script>
+</pre>
+</body>
+</html>
