@@ -5359,16 +5359,15 @@ static JS_ALWAYS_INLINE JSBool
 js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
                            uint32_t getHow, Value *vp)
 {
-    JSObject *aobj, *obj2;
+    JSObject *obj2;
     JSProperty *prop;
     const Shape *shape;
 
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
 
-    aobj = js_GetProtoIfDenseArray(obj);
     /* This call site is hot -- use the always-inlined variant of LookupPropertyWithFlags(). */
-    if (!LookupPropertyWithFlagsInline(cx, aobj, id, cx->resolveFlags, &obj2, &prop))
+    if (!LookupPropertyWithFlagsInline(cx, obj, id, cx->resolveFlags, &obj2, &prop))
         return false;
 
     if (!prop) {
@@ -5442,7 +5441,7 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
     shape = (Shape *) prop;
 
     if (getHow & JSGET_CACHE_RESULT)
-        JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, obj2, shape);
+        JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj2, shape);
 
     /* This call site is hot -- use the always-inlined variant of js_NativeGet(). */
     if (!js_NativeGetInline(cx, receiver, obj, obj2, shape, getHow, vp))
