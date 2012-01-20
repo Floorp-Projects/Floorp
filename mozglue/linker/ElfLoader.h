@@ -205,10 +205,15 @@ public:
 
 protected:
   /**
-   * Forget about the given handle. This method is meant to be called by
-   * the LibHandle destructor.
+   * Registers the given handle. This method is meant to be called by
+   * LibHandle subclass creators.
    */
-  friend LibHandle::~LibHandle();
+  void Register(LibHandle *handle);
+
+  /**
+   * Forget about the given handle. This method is meant to be called by
+   * LibHandle subclass destructors.
+   */
   void Forget(LibHandle *handle);
 
   /* Last error. Used for dlerror() */
@@ -219,7 +224,7 @@ protected:
   const char *lastError;
 
 private:
-  ElfLoader() { }
+  ElfLoader() { InitDebugger(); }
   ~ElfLoader();
 
   /* Bookkeeping */
@@ -292,6 +297,58 @@ private:
 
   /* Keep track of Zips used for library loading */
   ZipCollection zips;
+
+public:
+  /* Loaded object descriptor for the debugger interface below*/
+  struct link_map {
+    /* Base address of the loaded object. */
+    const void *l_addr;
+    /* File name */
+    const char *l_name;
+    /* Address of the PT_DYNAMIC segment. */
+    const void *l_ld;
+    /* Double linked list of loaded objects. */
+    link_map *l_next, *l_prev;
+  };
+
+private:
+  /* Data structure used by the linker to give details about shared objects it
+   * loaded to debuggers. This is normally defined in link.h, but Android
+   * headers lack this file. This also gives the opportunity to make it C++. */
+  class r_debug {
+  public:
+    /* Make the debugger aware of a new loaded object */
+    void Add(link_map *map);
+
+    /* Make the debugger aware of the unloading of an object */
+    void Remove(link_map *map);
+
+  private:
+    /* Version number of the protocol. */
+    int r_version;
+
+    /* Head of the linked list of loaded objects. */
+    struct link_map *r_map;
+
+    /* Function to be called when updates to the linked list of loaded objects
+     * are going to occur. The function is to be called before and after
+     * changes. */
+    void (*r_brk)(void);
+
+    /* Indicates to the debugger what state the linked list of loaded objects
+     * is in when the function above is called. */
+    enum {
+      RT_CONSISTENT, /* Changes are complete */
+      RT_ADD,        /* Beginning to add a new object */
+      RT_DELETE      /* Beginning to remove an object */
+    } r_state;
+  };
+  r_debug *dbg;
+
+  /**
+   * Initializes the pointer to the debugger data structure.
+   */
+  void InitDebugger();
 };
 
 #endif /* ElfLoader_h */

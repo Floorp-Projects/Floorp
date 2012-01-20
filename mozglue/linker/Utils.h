@@ -183,7 +183,9 @@ public:
   GenericMappedPtr(void *buf, size_t length): buf(buf), length(length) { }
   GenericMappedPtr(): buf(MAP_FAILED), length(0) { }
 
-  void Init(void *b, size_t len) {
+  void Assign(void *b, size_t len) {
+    if (buf != MAP_FAILED)
+      static_cast<T *>(this)->munmap(buf, length);
     buf = b;
     length = len;
   }

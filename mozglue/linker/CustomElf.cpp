@@ -176,7 +176,7 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
 
   /* Reserve enough memory to map the complete virtual address space for this
    * library. */
-  elf->base.Init(mmap(NULL, max_vaddr, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
+  elf->base.Assign(mmap(NULL, max_vaddr, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
                       -1, 0), max_vaddr);
   if (elf->base == MAP_FAILED) {
     log("%s: Failed to mmap", elf->GetPath());
@@ -194,6 +194,11 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
 
   report_mapping(const_cast<char *>(elf->GetName()), elf->base,
                  (max_vaddr + PAGE_SIZE - 1) & PAGE_MASK, 0);
+
+  elf->l_addr = elf->base;
+  elf->l_name = elf->GetPath();
+  elf->l_ld = elf->GetPtr<Dyn>(dyn->p_vaddr);
+  ElfLoader::Singleton.Register(elf);
 
   if (!elf->InitDyn(dyn))
     return NULL;
@@ -213,6 +218,7 @@ CustomElf::~CustomElf()
    * calls destructors once, so call it in all cases. */
   ElfLoader::__wrap_cxa_finalize(this);
   delete mappable;
+  ElfLoader::Singleton.Forget(this);
 }
 
 namespace {
