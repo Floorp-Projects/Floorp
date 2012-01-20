@@ -62,6 +62,18 @@
 #define LEADING_UNDERSCORE
 #endif
 
+#ifdef MOZ_LINKER
+extern "C" {
+NS_HIDDEN __typeof(dlopen) __wrap_dlopen;
+NS_HIDDEN __typeof(dlsym) __wrap_dlsym;
+NS_HIDDEN __typeof(dlclose) __wrap_dlclose;
+}
+
+#define dlopen __wrap_dlopen
+#define dlsym __wrap_dlsym
+#define dlclose __wrap_dlclose
+#endif
+
 #ifdef NS_TRACE_MALLOC
 extern "C" {
 NS_EXPORT_(__ptr_t) __libc_malloc(size_t);
@@ -228,9 +240,15 @@ XPCOMGlueLoad(const char *xpcomFile, GetFrozenFunctionsFunc *func)
 
             XPCOMGlueLoadDependentLibs(xpcomDir, ReadDependentCB);
 
+#ifdef __GLIBC__
+            // XUL_DLL is already loaded by XPCOMGlueLoadDependentLibs, so
+            // dlopening without the full path will return that one.
+            sXULLibHandle = dlopen(XUL_DLL, RTLD_GLOBAL | RTLD_LAZY);
+#else
             snprintf(lastSlash, MAXPATHLEN - strlen(xpcomDir), "/" XUL_DLL);
 
             sXULLibHandle = dlopen(xpcomDir, RTLD_GLOBAL | RTLD_LAZY);
+#endif
 
 #ifdef NS_TRACE_MALLOC
             _malloc = (__ptr_t(*)(size_t)) dlsym(sXULLibHandle, "malloc");
