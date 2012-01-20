@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-613013-console-api-iframe.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-613013-console-api-iframe.html";
 
 let TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
