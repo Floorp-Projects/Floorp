@@ -619,6 +619,7 @@ class LinearScanAllocator
 
     uint32 allocateSlotFor(const LiveInterval *interval);
     bool splitInterval(LiveInterval *interval, CodePosition pos);
+    bool splitBlockingIntervals(LAllocation allocation);
     bool assign(LAllocation allocation);
     bool spill();
     void freeAllocation(LiveInterval *interval, LAllocation *alloc);

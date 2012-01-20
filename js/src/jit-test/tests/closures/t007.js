@@ -12,7 +12,6 @@ function t() {
   k(function (i) { x = i; });
   appendToActual(i);
 }
-dis(k);
 
 for (var i = 0; i < 10; ++i) {
   t();

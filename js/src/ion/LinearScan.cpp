@@ -792,8 +792,9 @@ LinearScanAllocator::allocateRegisters()
         // Sanity check all intervals in all sets
         validateIntervals();
 
-        // If the interval has a hard requirement, grant it
+        // If the interval has a hard requirement, grant it.
         if (req->kind() == Requirement::FIXED) {
+            JS_ASSERT(!req->allocation().isRegister());
             if (!assign(req->allocation()))
                 return false;
             continue;
@@ -851,6 +852,8 @@ LinearScanAllocator::allocateRegisters()
             AnyRegister best = AnyRegister::FromCode(bestCode);
             IonSpew(IonSpew_RegAlloc, "  Decided best register was %s", best.name());
 
+            if (!splitBlockingIntervals(LAllocation(best)))
+                return false;
             if (!assign(LAllocation(best)))
                 return false;
 
@@ -1291,6 +1294,65 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     return true;
 }
 
+bool
+LinearScanAllocator::splitBlockingIntervals(LAllocation allocation)
+{
+    JS_ASSERT(allocation.isRegister());
+
+    // Split current before the next fixed use.
+    LiveInterval *fixed = fixedIntervals[allocation.toRegister().code()];
+    if (fixed->numRanges() > 0) {
+        CodePosition fixedPos = current->intersect(fixed);
+        if (fixedPos != CodePosition::MIN) {
+            JS_ASSERT(fixedPos < current->end());
+            if (!splitInterval(current, fixedPos))
+                return false;
+        }
+    }
+
+    // Split the blocking interval if it exists.
+    for (IntervalIterator i(active.begin()); i != active.end(); i++) {
+        if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
+            IonSpew(IonSpew_RegAlloc, " Splitting active interval %u = [%u, %u]",
+                    i->reg()->ins()->id(), i->start().pos(), i->end().pos());
+
+            JS_ASSERT(i->start() != current->start());
+            JS_ASSERT(i->covers(current->start()));
+            JS_ASSERT(i->start() != current->start());
+
+            if (!splitInterval(*i, current->start()))
+                return false;
+
+            LiveInterval *it = *i;
+            active.removeAt(i);
+            finishInterval(it);
+            break;
+        }
+    }
+
+    // Split any inactive intervals at the next live point.
+    for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
+        if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
+            IonSpew(IonSpew_RegAlloc, " Splitting inactive interval %u = [%u, %u]",
+                    i->reg()->ins()->id(), i->start().pos(), i->end().pos());
+
+            LiveInterval *it = *i;
+            CodePosition nextActive = it->nextCoveredAfter(current->start());
+            JS_ASSERT(nextActive != CodePosition::MIN);
+
+            if (!splitInterval(it, nextActive))
+                return false;
+
+            i = inactive.removeAt(i);
+            finishInterval(it);
+        } else {
+            i++;
+        }
+    }
+
+    return true;
+}
+
 /*
  * Assign the current interval the given allocation, splitting conflicting
  * intervals as necessary to make the allocation stick.
@@ -1305,71 +1367,19 @@ LinearScanAllocator::assign(LAllocation allocation)
     // Split this interval at the next incompatible one
     VirtualRegister *reg = current->reg();
     if (reg) {
-        // Split before the incompatible use. This ensures the use position is
-        // part of the second half of the interval and guarantees we never split
-        // at the end (zero-length intervals are invalid).
         CodePosition splitPos = current->firstIncompatibleUse(allocation);
-        if (splitPos != CodePosition::MAX)
-            splitPos = splitPos.previous();
-
-        // Split before the next fixed use.
-        if (allocation.isRegister()) {
-            LiveInterval *fixed = fixedIntervals[allocation.toRegister().code()];
-            if (fixed->numRanges() > 0) {
-                CodePosition fixedPos = current->intersect(fixed);
-                if (fixedPos != CodePosition::MIN && fixedPos < splitPos)
-                    splitPos = fixedPos;
-            }
-        }
-
         if (splitPos != CodePosition::MAX) {
+            // Split before the incompatible use. This ensures the use position is
+            // part of the second half of the interval and guarantees we never split
+            // at the end (zero-length intervals are invalid).
+            splitPos = splitPos.previous();
             JS_ASSERT (splitPos < current->end());
             if (!splitInterval(current, splitPos))
                 return false;
         }
     }
 
-    if (allocation.isRegister()) {
-        // Split the blocking interval if it exists
-        for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-            if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
-                IonSpew(IonSpew_RegAlloc, " Splitting active interval %u = [%u, %u]",
-                        i->reg()->ins()->id(), i->start().pos(), i->end().pos());
-
-                JS_ASSERT(i->start() != current->start());
-                JS_ASSERT(i->covers(current->start()));
-                JS_ASSERT(i->start() != current->start());
-
-                if (!splitInterval(*i, current->start()))
-                    return false;
-
-                LiveInterval *it = *i;
-                active.removeAt(i);
-                finishInterval(it);
-                break;
-            }
-        }
-
-        // Split any inactive intervals at the next live point
-        for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
-            if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
-                IonSpew(IonSpew_RegAlloc, " Splitting inactive interval %u = [%u, %u]",
-                        i->reg()->ins()->id(), i->start().pos(), i->end().pos());
-
-                LiveInterval *it = *i;
-                CodePosition nextActive = it->nextCoveredAfter(current->start());
-                JS_ASSERT(nextActive != CodePosition::MIN);
-
-                if (!splitInterval(it, nextActive))
-                    return false;
-
-                i = inactive.removeAt(i);
-                finishInterval(it);
-            } else {
-                i++;
-            }
-        }
-    } else if (reg && allocation.isMemory()) {
+    if (reg && allocation.isMemory()) {
         if (reg->canonicalSpill()) {
             JS_ASSERT(allocation == *current->reg()->canonicalSpill());
 
