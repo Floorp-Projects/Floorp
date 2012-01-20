@@ -126,10 +126,10 @@ Tilt.prototype = {
 
     // create a visualizer instance for the current tab
     this.visualizers[id] = new TiltVisualizer({
-      parentNode: this.chromeWindow.gBrowser.selectedBrowser.parentNode,
+      chromeWindow: this.chromeWindow,
       contentWindow: this.chromeWindow.gBrowser.selectedBrowser.contentWindow,
+      parentNode: this.chromeWindow.gBrowser.selectedBrowser.parentNode,
       requestAnimationFrame: this.chromeWindow.mozRequestAnimationFrame,
-      inspectorUI: this.chromeWindow.InspectorUI,
       notifications: this.NOTIFICATIONS
     });
 
@@ -183,7 +183,7 @@ Tilt.prototype = {
       let pageYOffset = content.pageYOffset * presenter.transforms.zoom;
 
       Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYING, null);
-      TiltUtils.setDocumentZoom(presenter.transforms.zoom);
+      TiltUtils.setDocumentZoom(this.chromeWindow, presenter.transforms.zoom);
 
       controller.removeEventListeners();
       controller.arcball.reset([-pageXOffset, -pageYOffset]);

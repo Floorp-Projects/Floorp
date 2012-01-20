@@ -531,18 +531,6 @@ TiltUtils.destroyObject = function TU_destroyObject(aScope)
 };
 
 /**
- * Gets the most recent browser window.
- *
- * @return {Window} the window
- */
-TiltUtils.getBrowserWindow = function TU_getBrowserWindow()
-{
-  return Cc["@mozilla.org/appshell/window-mediator;1"]
-    .getService(Ci.nsIWindowMediator)
-    .getMostRecentWindow("navigator:browser");
-};
-
-/**
  * Retrieve the unique ID of a window object.
  *
  * @param {Window} aWindow
@@ -564,32 +552,38 @@ TiltUtils.getWindowId = function TU_getWindowId(aWindow)
 /**
  * Gets the markup document viewer zoom for the currently selected browser.
  *
+ * @param {Window} aChromeWindow
+ *                 the top-level browser window
+ *
  * @return {Number} the zoom ammount
  */
-TiltUtils.getDocumentZoom = function TU_getDocumentZoom() {
-  return TiltUtils.getBrowserWindow()
-                  .gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
+TiltUtils.getDocumentZoom = function TU_getDocumentZoom(aChromeWindow) {
+  return aChromeWindow.gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
 };
 
 /**
  * Sets the markup document viewer zoom for the currently selected browser.
  *
+ * @param {Window} aChromeWindow
+ *                 the top-level browser window
+ *
  * @param {Number} the zoom ammount
  */
-TiltUtils.setDocumentZoom = function TU_getDocumentZoom(aZoom) {
-  TiltUtils.getBrowserWindow()
-           .gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = aZoom;
+TiltUtils.setDocumentZoom = function TU_setDocumentZoom(aChromeWindow, aZoom) {
+  aChromeWindow.gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = aZoom;
 };
 
 /**
  * Performs a garbage collection.
+ *
+ * @param {Window} aChromeWindow
+ *                 the top-level browser window
  */
-TiltUtils.gc = function TU_gc()
+TiltUtils.gc = function TU_gc(aChromeWindow)
 {
-  TiltUtils.getBrowserWindow()
-           .QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIDOMWindowUtils)
-           .garbageCollect();
+  aChromeWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindowUtils)
+               .garbageCollect();
 };
 
 /**
