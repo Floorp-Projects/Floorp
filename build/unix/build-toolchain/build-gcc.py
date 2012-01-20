@@ -40,12 +40,6 @@ def build_package(package_source_dir, package_build_dir, configure_args):
     run_in(package_build_dir, ["make", "-j8"])
     run_in(package_build_dir, ["make", "install"])
 
-def build_binutils(base_dir, binutils_inst_dir):
-    binutils_build_dir = base_dir + '/binutils_build'
-    build_package(binutils_source_dir, binutils_build_dir,
-                  ["--prefix=%s" % binutils_inst_dir])
-
-# FIXME: factor this with build_binutils
 def build_tar(base_dir, tar_inst_dir):
     tar_build_dir = base_dir + '/tar_build'
     build_package(tar_source_dir, tar_build_dir,
@@ -71,10 +65,15 @@ def build_one_stage(env, stage_dir):
                    "--with-gmp=%s" % lib_inst_dir,
                    "--with-mpfr=%s" % lib_inst_dir])
 
+    tool_inst_dir = stage_dir + '/inst'
+
+    binutils_build_dir = stage_dir + '/binutils'
+    build_package(binutils_source_dir, binutils_build_dir,
+                  ["--prefix=%s" % tool_inst_dir])
+
     gcc_build_dir = stage_dir + '/gcc'
-    gcc_inst_dir = stage_dir + '/inst'
     build_package(gcc_source_dir, gcc_build_dir,
-                  ["--prefix=%s" % gcc_inst_dir,
+                  ["--prefix=%s" % tool_inst_dir,
                    "--enable-__cxa_atexit",
                    "--with-gmp=%s" % lib_inst_dir,
                    "--with-mpfr=%s" % lib_inst_dir,
@@ -134,6 +133,7 @@ gcc_source_dir  = build_source_dir('gcc-', gcc_version)
 if not os.path.exists(source_dir):
     os.mkdir(source_dir)
     extract(binutils_source_tar, source_dir)
+    patch('binutils-deterministic.patch', 1, binutils_source_dir)
     extract(tar_source_tar, source_dir)
     extract(mpc_source_tar, source_dir)
     extract(mpfr_source_tar, source_dir)
@@ -147,21 +147,18 @@ if os.path.exists(build_dir):
     shutil.rmtree(build_dir)
 os.mkdir(build_dir)
 
-tools_inst_dir = build_dir + '/tools_inst'
-build_binutils(build_dir, tools_inst_dir)
-build_tar(build_dir, tools_inst_dir)
-
-os.environ["AR"] = os.path.realpath('det-ar.sh')
-os.environ["MOZ_AR"] = tools_inst_dir + '/bin/ar'
-os.environ["RANLIB"] = "true"
+tar_inst_dir = build_dir + '/tar_inst'
+build_tar(build_dir, tar_inst_dir)
 
 stage1_dir = build_dir + '/stage1'
 build_one_stage({"CC": "gcc", "CXX" : "g++"}, stage1_dir)
 
-stage1_gcc_inst_dir = stage1_dir + '/inst'
+stage1_tool_inst_dir = stage1_dir + '/inst'
 stage2_dir = build_dir + '/stage2'
-build_one_stage({"CC"  : stage1_gcc_inst_dir + "/bin/gcc",
-                 "CXX" : stage1_gcc_inst_dir + "/bin/g++"}, stage2_dir)
+build_one_stage({"CC"     : stage1_tool_inst_dir + "/bin/gcc",
+                 "CXX"    : stage1_tool_inst_dir + "/bin/g++",
+                 "AR"     : stage1_tool_inst_dir + "/bin/ar",
+                 "RANLIB" : "true" })
 
-build_tar_package(tools_inst_dir + "/bin/tar",
+build_tar_package(tar_inst_dir + "/bin/tar",
                   "toolchain.tar", stage2_dir, "inst")
