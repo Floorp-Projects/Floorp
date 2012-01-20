@@ -1603,8 +1603,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      * Initialize the index segment register used by LOAD_ATOM and
      * GET_FULL_INDEX macros below. As a register we use a pointer based on
      * the atom map to turn frequently executed LOAD_ATOM into simple array
-     * access. For less frequent object and regexp loads we have to recover
-     * the segment from atoms pointer first.
+     * access. For less frequent object loads we have to recover the segment
+     * from atoms pointer first.
      */
     JSAtom **atoms = script->atoms;
 
@@ -3085,7 +3085,7 @@ BEGIN_CASE(JSOP_REGEXP)
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc.
      */
-    jsatomid index = GET_FULL_INDEX(0);
+    uint32_t index = GET_UINT32_INDEX(regs.pc);
     JSObject *proto = regs.fp()->scopeChain().global().getOrCreateRegExpPrototype(cx);
     if (!proto)
         goto error;

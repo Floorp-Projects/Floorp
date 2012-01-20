@@ -1015,6 +1015,29 @@ EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
     return EmitIndexOp(cx, op, bce->objectList.index(objbox), bce);
 }
 
+static bool
+EmitIndex32(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
+{
+    const size_t len = 1 + UINT32_INDEX_LEN;
+    ptrdiff_t offset = EmitCheck(cx, bce, len);
+    if (offset < 0)
+        return false;
+
+    jsbytecode *next = bce->next();
+    next[0] = jsbytecode(op);
+    SET_UINT32_INDEX(next, index);
+    bce->current->next = next + len;
+    UpdateDepth(cx, bce, offset);
+    CheckTypeSet(cx, bce, op);
+    return true;
+}
+
+static bool
+EmitRegExp(JSContext *cx, uint32_t index, BytecodeEmitter *bce)
+{
+    return EmitIndex32(cx, JSOP_REGEXP, index, bce);
+}
+
 /*
  * What good are ARGNO_LEN and SLOTNO_LEN, you ask?  The answer is that, apart
  * from EmitSlotIndexOp, they abstract out the detail that both are 2, and in
@@ -6670,7 +6693,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_REGEXP:
         JS_ASSERT(pn->isOp(JSOP_REGEXP));
-        ok = EmitIndexOp(cx, JSOP_REGEXP, bce->regexpList.index(pn->pn_objbox), bce);
+        ok = EmitRegExp(cx, bce->regexpList.index(pn->pn_objbox), bce);
         break;
 
 #if JS_HAS_XML_SUPPORT
