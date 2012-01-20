@@ -199,8 +199,6 @@ class nsParser : public nsIParser,
                      bool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
-    NS_IMETHOD_(void *) GetRootContextKey();
-
     /**
      * This method needs documentation
      */
