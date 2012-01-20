@@ -38,7 +38,7 @@
 #include "mozilla/Util.h"
 
 #include "nsIDOMHTMLFrameElement.h"
-#include "nsGenericHTMLElement.h"
+#include "nsGenericHTMLFrameElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
