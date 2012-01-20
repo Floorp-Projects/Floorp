@@ -202,6 +202,8 @@ struct Rela: public Elf_(Rela)
 
 } /* namespace Elf */
 
+class Mappable;
+
 /**
  * Library Handle class for ELF libraries we don't let the system linker
  * handle.
@@ -218,7 +220,7 @@ public:
    * currently, none are supported and the behaviour is more or less that of
    * RTLD_GLOBAL | RTLD_BIND_NOW.
    */
-  static mozilla::TemporaryRef<LibHandle> Load(int fd,
+  static mozilla::TemporaryRef<LibHandle> Load(Mappable *mappable,
                                                const char *path, int flags);
 
   /**
@@ -251,8 +253,8 @@ private:
   /**
    * Private constructor
    */
-  CustomElf(int fd, const char *path)
-  : LibHandle(path), fd(fd), init(0), fini(0), initialized(false)
+  CustomElf(Mappable *mappable, const char *path)
+  : LibHandle(path), mappable(mappable), init(0), fini(0), initialized(false)
   { }
 
   /**
@@ -333,8 +335,8 @@ private:
     return CallFunction(GetPtr(addr));
   }
 
-  /* Appropriated file descriptor */
-  AutoCloseFD fd;
+  /* Appropriated Mappable */
+  Mappable *mappable;
 
   /* Base address where the library is loaded */
   MappedPtr base;

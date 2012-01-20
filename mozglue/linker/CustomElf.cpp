@@ -7,6 +7,7 @@
 #include <vector>
 #include <dlfcn.h>
 #include "CustomElf.h"
+#include "Mappable.h"
 #include "Logging.h"
 
 using namespace Elf;
@@ -73,18 +74,37 @@ void debug_phdr(const char *type, const Phdr *phdr)
 
 } /* anonymous namespace */
 
+/**
+ * RAII wrapper for a mapping of the first page off a Mappable object.
+ * This calls Mappable::munmap instead of system munmap.
+ */
+class Mappable1stPagePtr: public GenericMappedPtr<Mappable1stPagePtr> {
+public:
+  Mappable1stPagePtr(Mappable *mappable)
+  : GenericMappedPtr<Mappable1stPagePtr>(
+      mappable->mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE, 0), PAGE_SIZE)
+  , mappable(mappable)
+  { }
+
+  void munmap(void *buf, size_t length) {
+    mappable->munmap(buf, length);
+  }
+private:
+  Mappable *mappable;
+};
+
+
 TemporaryRef<LibHandle>
-CustomElf::Load(int fd, const char *path, int flags)
+CustomElf::Load(Mappable *mappable, const char *path, int flags)
 {
   debug("CustomElf::Load(\"%s\", %x) = ...", path, flags);
-  if (fd == -1)
+  if (!mappable)
     return NULL;
   /* Keeping a RefPtr of the CustomElf is going to free the appropriate
    * resources when returning NULL */
-  RefPtr<CustomElf> elf = new CustomElf(fd, path);
+  RefPtr<CustomElf> elf = new CustomElf(mappable, path);
   /* Map the first page of the Elf object to access Elf and program headers */
-  MappedPtr ehdr_raw(mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE, fd, 0),
-                      PAGE_SIZE);
+  Mappable1stPagePtr ehdr_raw(mappable);
   if (ehdr_raw == MAP_FAILED)
     return NULL;
 
@@ -169,6 +189,9 @@ CustomElf::Load(int fd, const char *path, int flags)
     if (!elf->LoadSegment(*it))
       return NULL;
 
+  /* We're not going to mmap anymore */
+  mappable->finalize();
+
   report_mapping(const_cast<char *>(elf->GetName()), elf->base,
                  (max_vaddr + PAGE_SIZE - 1) & PAGE_MASK, 0);
 
@@ -189,6 +212,7 @@ CustomElf::~CustomElf()
    * Android NDK before r6b doesn't do that. Our wrapped cxa_finalize only
    * calls destructors once, so call it in all cases. */
   ElfLoader::__wrap_cxa_finalize(this);
+  delete mappable;
 }
 
 namespace {
@@ -339,9 +363,9 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
                                           prot & PROT_READ ? 'r' : '-',
                                           prot & PROT_WRITE ? 'w' : '-',
                                           prot & PROT_EXEC ? 'x' : '-');
-  void *mapped = mmap(where, pt_load->p_filesz + page_offset,
-                      prot, MAP_PRIVATE | MAP_FIXED, fd,
-                      pt_load->p_offset - page_offset);
+  void *mapped = mappable->mmap(where, pt_load->p_filesz + page_offset,
+                                prot, MAP_PRIVATE | MAP_FIXED,
+                                pt_load->p_offset - page_offset);
   if (mapped != where) {
     if (mapped == MAP_FAILED) {
       log("%s: Failed to mmap", GetPath());
@@ -354,14 +378,9 @@ CustomElf::LoadSegment(const Phdr *pt_load) const
 
   /* When p_memsz is greater than p_filesz, we need to have nulled out memory
    * after p_filesz and before p_memsz.
-   * We first null out bytes after p_filesz and up to the end of the page
-   * p_filesz is in. */
-  Addr end_offset = pt_load->p_filesz + page_offset;
-  if ((prot & PROT_WRITE) && (end_offset & ~PAGE_MASK)) {
-    memset(reinterpret_cast<char *>(mapped) + end_offset,
-           0, PAGE_SIZE - (end_offset & ~PAGE_MASK));
-  }
-  /* Above the end of that page, and up to p_memsz, we already have nulled out
+   * Mappable::mmap already guarantees that after p_filesz and up to the end
+   * of the page p_filesz is in, memory is nulled out.
+   * Above the end of that page, and up to p_memsz, we already have nulled out
    * memory because we mapped anonymous memory on the whole library virtual
    * address space. We just need to adjust this anonymous memory protection
    * flags. */
