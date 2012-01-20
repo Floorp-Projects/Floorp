@@ -251,6 +251,9 @@ SessionStoreService.prototype = {
 
   // whether to restore hidden tabs or not, pref controlled.
   _restoreHiddenTabs: null,
+  
+  // whether to restore app tabs on demand or not, pref controlled.
+  _restorePinnedTabsOnDemand: null,
 
   // The state from the previous session (after restoring pinned tabs). This
   // state is persisted and passed through to the next session during an app
@@ -313,6 +316,10 @@ SessionStoreService.prototype = {
     this._restoreHiddenTabs =
       this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
     this._prefBranch.addObserver("sessionstore.restore_hidden_tabs", this, true);
+    
+    this._restorePinnedTabsOnDemand =
+      this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
+    this._prefBranch.addObserver("sessionstore.restore_pinned_tabs_on_demand", this, true);
 
     // Make sure gRestoreTabsProgressListener has a reference to sessionstore
     // so that it can make calls back in
@@ -687,6 +694,10 @@ SessionStoreService.prototype = {
       case "sessionstore.restore_hidden_tabs":
         this._restoreHiddenTabs =
           this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
+        break;
+      case "sessionstore.restore_pinned_tabs_on_demand":
+        this._restorePinnedTabsOnDemand =
+          this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
         break;
       }
       break;
@@ -3187,7 +3198,8 @@ SessionStoreService.prototype = {
       return;
 
     // If it's not possible to restore anything, then just bail out.
-    if ((!this._tabsToRestore.priority.length && this._restoreOnDemand) ||
+    if ((this._restoreOnDemand &&
+        (this._restorePinnedTabsOnDemand || !this._tabsToRestore.priority.length)) ||
         this._tabsRestoringCount >= MAX_CONCURRENT_TAB_RESTORES)
       return;
 
