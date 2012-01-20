@@ -1072,7 +1072,13 @@ LinearScanAllocator::reifyAllocations()
         // Fill in the live register sets for all non-call safepoints.
         LAllocation *a = interval->getAllocation();
         if (a->isRegister()) {
-            for (size_t i = 0; i < graph.numNonCallSafepoints(); i++) {
+            // Don't add output registers to the safepoint.
+            CodePosition start = interval->start();
+            if (interval->index() == 0 && !reg->isTemp())
+                start = start.next();
+
+            size_t i = findFirstNonCallSafepoint(start);
+            for (; i < graph.numNonCallSafepoints(); i++) {
                 LInstruction *ins = graph.getNonCallSafepoint(i);
                 CodePosition pos = inputOf(ins);
 
@@ -1081,11 +1087,8 @@ LinearScanAllocator::reifyAllocations()
                 if (interval->end() < pos)
                     break;
 
-                if (!interval->covers(pos)) {
-                    if (pos < interval->start())
-                        break;
+                if (!interval->covers(pos))
                     continue;
-                }
 
                 LSafepoint *safepoint = ins->safepoint();
                 safepoint->addLiveRegister(a->toRegister());
@@ -1107,6 +1110,18 @@ LinearScanAllocator::findFirstSafepoint(LiveInterval *interval, size_t startFrom
     for (; i < graph.numSafepoints(); i++) {
         LInstruction *ins = graph.getSafepoint(i);
         if (interval->start() <= inputOf(ins))
+            break;
+    }
+    return i;
+}
+
+size_t
+LinearScanAllocator::findFirstNonCallSafepoint(CodePosition from)
+{
+    size_t i = 0;
+    for (; i < graph.numNonCallSafepoints(); i++) {
+        LInstruction *ins = graph.getNonCallSafepoint(i);
+        if (from <= inputOf(ins))
             break;
     }
     return i;
