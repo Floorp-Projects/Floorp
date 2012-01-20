@@ -202,7 +202,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     // nsContentSink methods
     virtual void UpdateChildCounts();
     virtual nsresult FlushTags();
-    virtual void PostEvaluateScript(nsIScriptElement *aElement);
     virtual void ContinueInterruptedParsingAsync();
  
     /**

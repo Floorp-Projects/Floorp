@@ -49,9 +49,8 @@ class nsContentList;
 class nsWrapperCache;
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x51a360fa, 0xd659, 0x4d85, \
-  { 0xa5, 0xc5, 0x4a, 0xbb, 0x0d, 0x97, 0x0f, 0x7a } }
-
+{ 0xa921276f, 0x5e70, 0x42e0, \
+  { 0xb8, 0x36, 0x7e, 0x6a, 0xb8, 0x30, 0xb3, 0xc0 } }
 
 /**
  * HTML document extensions to nsIDocument.
@@ -70,18 +69,6 @@ public:
                                nsIContent *aForm,
                                nsISupports **aResult,
                                nsWrapperCache **aCache) = 0;
-
-  /**
-   * Called from the script loader to notify this document that a new
-   * script is being loaded.
-   */
-  virtual void ScriptLoading(nsIScriptElement *aScript) = 0;
-
-  /**
-   * Called from the script loader to notify this document that a script
-   * just finished executing.
-   */
-  virtual void ScriptExecuted(nsIScriptElement *aScript) = 0;
 
   /**
    * Called when form->BindToTree() is called so that document knows

@@ -298,14 +298,6 @@ nsHtml5TreeOpExecutor::FlushTags()
 }
 
 void
-nsHtml5TreeOpExecutor::PostEvaluateScript(nsIScriptElement *aElement)
-{
-  nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
-  NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
-  htmlDocument->ScriptExecuted(aElement);
-}
-
-void
 nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
 {
   nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);  
@@ -756,11 +748,6 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   
   sele->SetCreatorParser(mParser);
 
-  // Notify our document that we're loading this script.
-  nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
-  NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
-  htmlDocument->ScriptLoading(sele);
-
   // Copied from nsXMLContentSink
   // Now tell the script that it's ready to go. This may execute the script
   // or return true, or neither if the script doesn't need executing.
@@ -774,10 +761,6 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
       mParser->BlockParser();
     }
   } else {
-    // This may have already happened if the script executed, but in case
-    // it didn't then remove the element so that it doesn't get stuck forever.
-    htmlDocument->ScriptExecuted(sele);
-    
     // mParser may have been nulled out by now, but the flusher deals
 
     // If this event isn't needed, it doesn't do anything. It is sometimes
