@@ -19,8 +19,9 @@ function test() {
   let webGLLoad = false;
 
   let visualizer = new TiltVisualizer({
-    parentNode: gBrowser.selectedBrowser.parentNode,
+    chromeWindow: window,
     contentWindow: gBrowser.selectedBrowser.contentWindow,
+    parentNode: gBrowser.selectedBrowser.parentNode,
     requestAnimationFrame: window.mozRequestAnimationFrame,
     inspectorUI: window.InspectorUI,
 
