@@ -329,26 +329,41 @@ do_get_lastVisit(PRInt64 placeId, VisitRecord& result)
   do_check_success(rv);
 }
 
-static const char TOPIC_PROFILE_TEARDOWN[] = "profile-change-teardown";
 static const char TOPIC_PROFILE_CHANGE[] = "profile-before-change";
 static const char TOPIC_PLACES_CONNECTION_CLOSED[] = "places-connection-closed";
 
-class ProfileScopedXPCOM : public ScopedXPCOM
+class WaitForConnectionClosed : public nsIObserver
 {
 public:
-  ProfileScopedXPCOM(const char* testName)
-    : ScopedXPCOM(testName)
-  {
-  }
+  NS_DECL_ISUPPORTS
 
-  ~ProfileScopedXPCOM() {
-    nsRefPtr<WaitForTopicSpinner> spinner =
-      new WaitForTopicSpinner(TOPIC_PLACES_CONNECTION_CLOSED);
+  WaitForConnectionClosed()
+  {
     nsCOMPtr<nsIObserverService> os =
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-    (void)os->NotifyObservers(nsnull, TOPIC_PROFILE_TEARDOWN, nsnull);
-    (void)os->NotifyObservers(nsnull, TOPIC_PROFILE_CHANGE, nsnull);
-    // Wait for connection close.
+    MOZ_ASSERT(os);
+    if (os) {
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->AddObserver(this, TOPIC_PROFILE_CHANGE, false)));
+    }
+  }
+
+  NS_IMETHOD Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const PRUnichar* aData)
+  {
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    MOZ_ASSERT(os);
+    if (os) {
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(os->RemoveObserver(this, aTopic)));
+    }
+
+    nsRefPtr<WaitForTopicSpinner> spinner =
+      new WaitForTopicSpinner(TOPIC_PLACES_CONNECTION_CLOSED);
     spinner->Spin();
+
+    return NS_OK;
   }
 };
+
+NS_IMPL_ISUPPORTS1(WaitForConnectionClosed, nsIObserver)
