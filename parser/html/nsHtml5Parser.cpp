@@ -288,6 +288,10 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     // document.close()
     NS_ASSERTION(!mStreamParser,
                  "Had stream parser but got document.close().");
+    if (mDocumentClosed) {
+      // already closed
+      return NS_OK;
+    }
     mDocumentClosed = true;
     if (!mBlocked && !mInDocumentWrite) {
       ParseUntilBlocked();

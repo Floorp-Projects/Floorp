@@ -295,9 +295,6 @@ protected:
   void CloseHeadContext();
 
   // nsContentSink overrides
-  virtual void PreEvaluateScript();
-  virtual void PostEvaluateScript(nsIScriptElement *aElement);
-
   void UpdateChildCounts();
 
   void NotifyInsert(nsIContent* aContent,
@@ -2716,79 +2713,12 @@ HTMLContentSink::UpdateChildCounts()
   mCurrentContext->UpdateChildCounts();
 }
 
-void
-HTMLContentSink::PreEvaluateScript()
-{
-  // Eagerly append all pending elements (including the current body child)
-  // to the body (so that they can be seen by scripts) and force reflow.
-  SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_CALLS,
-             ("HTMLContentSink::PreEvaluateScript: flushing tags before "
-              "evaluating script"));
-
-  // XXX Should this call FlushTags()?
-  mCurrentContext->FlushText();
-}
-
-void
-HTMLContentSink::PostEvaluateScript(nsIScriptElement *aElement)
-{
-  mHTMLDocument->ScriptExecuted(aElement);
-}
-
 nsresult
 HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
                                      bool aMalformed)
 {
-  // Flush all tags up front so that we are in as stable state as possible
-  // when calling DoneAddingChildren. This may not be strictly needed since
-  // any ScriptAvailable calls will cause us to flush anyway. But it gives a
-  // warm fuzzy feeling to be in a stable state before even attempting to
-  // run scripts.
-  // It would however be needed if we properly called BeginUpdate and
-  // EndUpdate while we were inserting stuff into the DOM.
-
-  // XXX Should this call FlushTags()?
-  mCurrentContext->FlushText();
-
-  nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
-  NS_ASSERTION(sele, "Not really closing a script tag?");
-
-  if (aMalformed) {
-    // Make sure to serialize this script correctly, for nice round tripping.
-    sele->SetIsMalformed();
-  }
-  if (mFrameset) {
-    sele->PreventExecution();
-  }
-
-  // Notify our document that we're loading this script.
-  mHTMLDocument->ScriptLoading(sele);
-
-  // Now tell the script that it's ready to go. This may execute the script
-  // or return true, or neither if the script doesn't need executing.
-  bool block = sele->AttemptToExecute();
-
-  // If the act of insertion evaluated the script, we're fine.
-  // Else, block the parser till the script has loaded.
-  if (block) {
-    // If this append fails we'll never unblock the parser, but the UI will
-    // still remain responsive. There are other ways to deal with this, but
-    // the end result is always that the page gets botched, so there is no
-    // real point in making it more complicated.
-    mScriptElements.AppendObject(sele);
-  } else {
-    // This may have already happened if the script executed, but in case
-    // it didn't then remove the element so that it doesn't get stuck forever.
-    mHTMLDocument->ScriptExecuted(sele);
-  }
-
-  // If the parser got blocked, make sure to return the appropriate rv.
-  // I'm not sure if this is actually needed or not.
-  if (mParser && !mParser->IsParserEnabled()) {
-    block = true;
-  }
-
-  return block ? NS_ERROR_HTMLPARSER_BLOCK : NS_OK;
+  MOZ_NOT_REACHED("Must not use HTMLContentSink to run scripts.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // 3 ways to load a style sheet: inline, style src=, link tag
