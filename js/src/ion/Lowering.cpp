@@ -488,9 +488,9 @@ LIRGenerator::visitAddGeneric(MAddGeneric *ins)
     JS_ASSERT(rhs->type() == MIRType_Value);
 
     LAddV *lir = new LAddV;
-    if (!useBoxAtStart(lir, LAddV::LhsInput, lhs))
+    if (!useBox(lir, LAddV::LhsInput, lhs))
         return false;
-    if (!useBoxAtStart(lir, LAddV::RhsInput, rhs))
+    if (!useBox(lir, LAddV::RhsInput, rhs))
         return false;
     if (!defineVMReturn(lir, ins))
         return false;
@@ -506,7 +506,7 @@ LIRGenerator::visitConcat(MConcat *ins)
     JS_ASSERT(lhs->type() == MIRType_String);
     JS_ASSERT(rhs->type() == MIRType_String);
 
-    LConcat *lir = new LConcat(useRegisterAtStart(lhs), useRegisterAtStart(rhs));
+    LConcat *lir = new LConcat(useRegister(lhs), useRegister(rhs));
     if (!defineVMReturn(lir, ins))
         return false;
     return assignSafepoint(lir, ins);
@@ -672,7 +672,7 @@ LIRGenerator::visitToString(MToString *ins)
         break;
 
       case MIRType_Int32: {
-        LIntToString *lir = new LIntToString(useRegisterAtStart(opd));
+        LIntToString *lir = new LIntToString(useRegister(opd));
 
         if (!defineVMReturn(lir, ins))
             return false;
@@ -930,7 +930,7 @@ bool
 LIRGenerator::visitCallGetProperty(MCallGetProperty *ins)
 {
     LCallGetProperty *lir = new LCallGetProperty();
-    lir->setOperand(0, useRegisterAtStart(ins->getOperand(0)));
+    lir->setOperand(0, useRegister(ins->getOperand(0)));
     return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
@@ -938,7 +938,7 @@ bool
 LIRGenerator::visitCallGetName(MCallGetName *ins)
 {
     LCallGetName *lir = new LCallGetName();
-    lir->setOperand(0, useRegisterAtStart(ins->getOperand(0)));
+    lir->setOperand(0, useRegister(ins->getOperand(0)));
     return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
@@ -946,7 +946,7 @@ bool
 LIRGenerator::visitCallGetNameTypeOf(MCallGetNameTypeOf *ins)
 {
     LCallGetNameTypeOf *lir = new LCallGetNameTypeOf();
-    lir->setOperand(0, useRegisterAtStart(ins->getOperand(0)));
+    lir->setOperand(0, useRegister(ins->getOperand(0)));
     return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
