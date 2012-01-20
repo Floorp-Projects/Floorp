@@ -166,7 +166,7 @@ NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aResult)
 nsXMLFragmentContentSink::nsXMLFragmentContentSink()
  : mParseError(false)
 {
-  mFragmentMode = true;
+  mRunsToCompletion = true;
 }
 
 nsXMLFragmentContentSink::~nsXMLFragmentContentSink()

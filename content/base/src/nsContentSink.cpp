@@ -181,7 +181,6 @@ PRInt32 nsContentSink::sPerfParseTime;
 PRInt32 nsContentSink::sInteractiveTime;
 PRInt32 nsContentSink::sInitialPerfTime;
 PRInt32 nsContentSink::sEnablePerfMode;
-bool    nsContentSink::sCanInterruptParser;
 
 void
 nsContentSink::InitializeStatics()
@@ -218,8 +217,6 @@ nsContentSink::InitializeStatics()
                               "content.sink.initial_perf_time", 2000000);
   Preferences::AddIntVarCache(&sEnablePerfMode,
                               "content.sink.enable_perf_mode", 0);
-  Preferences::AddBoolVarCache(&sCanInterruptParser,
-                               "content.interrupt.parsing", true);
 }
 
 nsresult
@@ -241,7 +238,7 @@ nsContentSink::Init(nsIDocument* aDoc,
   mDocShell = do_QueryInterface(aContainer);
   mScriptLoader = mDocument->ScriptLoader();
 
-  if (!mFragmentMode) {
+  if (!mRunsToCompletion) {
     if (mDocShell) {
       PRUint32 loadType = 0;
       mDocShell->GetLoadType(&loadType);
@@ -263,10 +260,6 @@ nsContentSink::Init(nsIDocument* aDoc,
     FavorPerformanceHint(!mDynamicLowerValue, 0);
   }
 
-  // prevent DropParserAndPerfHint from unblocking onload in the fragment
-  // case
-  mCanInterruptParser = !mFragmentMode && sCanInterruptParser;
-
   return NS_OK;
 }
 
@@ -275,7 +268,7 @@ nsContentSink::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 bool aWasAlternate,
                                 nsresult aStatus)
 {
-  NS_ASSERTION(!mFragmentMode, "How come a fragment parser observed sheets?");
+  NS_ASSERTION(!mRunsToCompletion, "How come a fragment parser observed sheets?");
   if (!aWasAlternate) {
     NS_ASSERTION(mPendingSheetCount > 0, "How'd that happen?");
     --mPendingSheetCount;
@@ -739,10 +732,10 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   // If this is a fragment parser, we don't want to observe.
   bool isAlternate;
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
-                                 mFragmentMode ? nsnull : this, &isAlternate);
+                                 mRunsToCompletion ? nsnull : this, &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  if (!isAlternate && !mFragmentMode) {
+  if (!isAlternate && !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddExecuteBlocker();
   }
@@ -1354,7 +1347,7 @@ nsContentSink::WillResumeImpl()
 nsresult
 nsContentSink::DidProcessATokenImpl()
 {
-  if (!mCanInterruptParser || !mParser) {
+  if (mRunsToCompletion || !mParser) {
     return NS_OK;
   }
 
@@ -1491,7 +1484,7 @@ nsContentSink::DropParserAndPerfHint(void)
     FavorPerformanceHint(true, 0);
   }
 
-  if (mCanInterruptParser) {
+  if (!mRunsToCompletion) {
     mDocument->UnblockOnload(true);
   }
 }
@@ -1505,7 +1498,7 @@ nsContentSink::IsScriptExecutingImpl()
 nsresult
 nsContentSink::WillParseImpl(void)
 {
-  if (!mCanInterruptParser) {
+  if (mRunsToCompletion) {
     return NS_OK;
   }
 
@@ -1544,7 +1537,7 @@ nsContentSink::WillParseImpl(void)
 void
 nsContentSink::WillBuildModelImpl()
 {
-  if (mCanInterruptParser) {
+  if (!mRunsToCompletion) {
     mDocument->BlockOnload();
 
     mBeginLoadTime = PR_IntervalToMicroseconds(PR_IntervalNow());
