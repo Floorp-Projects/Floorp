@@ -942,8 +942,9 @@ nsScriptLoader::ProcessPendingRequests()
       !mParserBlockingRequest->mLoading &&
       ReadyToExecuteScripts()) {
     request.swap(mParserBlockingRequest);
-    // nsContentSink::ScriptAvailable unblocks the parser
+    UnblockParser(request);
     ProcessRequest(request);
+    ContinueParserAsync(request);
   }
 
   while (ReadyToExecuteScripts() && 
@@ -1169,8 +1170,9 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
       FireScriptAvailable(rv, request);
     } else if (mParserBlockingRequest == request) {
       mParserBlockingRequest = nsnull;
-      // nsContentSink::ScriptAvailable unblocks the parser
+      UnblockParser(request);
       FireScriptAvailable(rv, request);
+      ContinueParserAsync(request);
     } else {
       mPreloads.RemoveElement(request, PreloadRequestComparator());
     }
@@ -1180,6 +1182,18 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   ProcessPendingRequests();
 
   return NS_OK;
+}
+
+void
+nsScriptLoader::UnblockParser(nsScriptLoadRequest* aParserBlockingRequest)
+{
+  aParserBlockingRequest->mElement->UnblockParser();
+}
+
+void
+nsScriptLoader::ContinueParserAsync(nsScriptLoadRequest* aParserBlockingRequest)
+{
+  aParserBlockingRequest->mElement->ContinueParserAsync();
 }
 
 nsresult

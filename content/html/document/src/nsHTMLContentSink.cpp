@@ -1699,8 +1699,6 @@ HTMLContentSink::DidBuildModel(bool aTerminated)
 
   ScrollToRef();
 
-  mDocument->ScriptLoader()->RemoveObserver(this);
-
   // Make sure we no longer respond to document mutations.  We've flushed all
   // our notifications out, so there's no need to do anything else here.
 

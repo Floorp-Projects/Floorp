@@ -149,6 +149,11 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD_(void) UnblockParser();
 
     /**
+     * Asynchronously continues parsing.
+     */
+    NS_IMETHOD_(void) ContinueInterruptedParsingAsync();
+
+    /**
      * Query whether the parser is enabled (i.e. not blocked) or not.
      */
     NS_IMETHOD_(bool) IsParserEnabled();
