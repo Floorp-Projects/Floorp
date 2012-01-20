@@ -1,0 +1,21 @@
+diff --git a/media/libvorbis/lib/vorbis_floor1.c b/media/libvorbis/lib/vorbis_floor1.c
+--- a/media/libvorbis/lib/vorbis_floor1.c
++++ b/media/libvorbis/lib/vorbis_floor1.c
+@@ -162,16 +162,17 @@ static vorbis_info_floor *floor1_unpack 
+ 
+   /* read the post list */
+   info->mult=oggpack_read(opb,2)+1;     /* only 1,2,3,4 legal now */
+   rangebits=oggpack_read(opb,4);
+   if(rangebits<0)goto err_out;
+ 
+   for(j=0,k=0;j<info->partitions;j++){
+     count+=info->class_dim[info->partitionclass[j]];
++    if(count>VIF_POSIT) goto err_out;
+     for(;k<count;k++){
+       int t=info->postlist[k+2]=oggpack_read(opb,rangebits);
+       if(t<0 || t>=(1<<rangebits))
+         goto err_out;
+     }
+   }
+   info->postlist[0]=0;
+   info->postlist[1]=1<<rangebits;
