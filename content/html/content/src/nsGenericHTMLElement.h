@@ -42,7 +42,6 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
-#include "nsIDOMHTMLFrameElement.h"
 #include "nsFrameLoader.h"
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
@@ -1011,73 +1010,6 @@ protected:
 
 // Make sure we have enough space for those bits
 PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
-
-//----------------------------------------------------------------------
-
-/**
- * A helper class for frame elements
- */
-
-class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
-                                  public nsIFrameLoaderOwner
-{
-public:
-  nsGenericHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                            mozilla::dom::FromParser aFromParser)
-    : nsGenericHTMLElement(aNodeInfo)
-  {
-    mNetworkCreated = aFromParser == mozilla::dom::FROM_PARSER_NETWORK;
-  }
-  virtual ~nsGenericHTMLFrameElement();
-
-  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  // nsIFrameLoaderOwner
-  NS_DECL_NSIFRAMELOADEROWNER
-
-  // nsIContent
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, bool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify);
-  virtual void DestroyContent();
-
-  nsresult CopyInnerTo(nsGenericElement* aDest) const;
-
-  // nsIDOMHTMLElement 
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGenericHTMLFrameElement,
-                                                     nsGenericHTMLElement)
-
-protected:
-  // This doesn't really ensure a frame loade in all cases, only when
-  // it makes sense.
-  nsresult EnsureFrameLoader();
-  nsresult LoadSrc();
-  nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
-  nsresult GetContentWindow(nsIDOMWindow** aContentWindow);
-
-  nsRefPtr<nsFrameLoader> mFrameLoader;
-  // True when the element is created by the parser
-  // using NS_FROM_PARSER_NETWORK flag.
-  // If the element is modified, it may lose the flag.
-  bool                    mNetworkCreated;
-};
 
 //----------------------------------------------------------------------
 
