@@ -112,6 +112,7 @@ public class GeckoAppShell
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
     static private int sDensityDpi = 0;
+    private static Boolean sSQLiteLibsLoaded = false;
 
     private static HashMap<String, ArrayList<GeckoEventListener>> mEventListeners;
 
@@ -129,7 +130,8 @@ public class GeckoAppShell
     public static native void onLowMemory();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
-    public static native void loadLibs(String apkName, boolean shouldExtract);
+    public static native void loadGeckoLibsNative(String apkName);
+    public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
     public static native void reportJavaCrash(String stack);
     public static void notifyUriVisited(String uri) {
@@ -310,7 +312,7 @@ public class GeckoAppShell
     }
 
     // java-side stuff
-    public static void loadGeckoLibs(String apkName) {
+    public static boolean loadLibsSetup(String apkName) {
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
@@ -415,7 +417,23 @@ public class GeckoAppShell
                 }
             }
         }
-        loadLibs(apkName, extractLibs);
+        return extractLibs;
+    }
+
+    public static void ensureSQLiteLibsLoaded(String apkName) {
+        if (sSQLiteLibsLoaded)
+            return;
+        synchronized(sSQLiteLibsLoaded) {
+            if (sSQLiteLibsLoaded)
+                return;
+            loadSQLiteLibsNative(apkName, loadLibsSetup(apkName));
+            sSQLiteLibsLoaded = true;
+        }
+    }
+
+    public static void loadGeckoLibs(String apkName) {
+        boolean extractLibs = loadLibsSetup(apkName);
+        loadGeckoLibsNative(apkName);
     }
 
     private static void putLocaleEnv() {

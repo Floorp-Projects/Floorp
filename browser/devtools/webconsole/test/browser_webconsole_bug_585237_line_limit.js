@@ -12,7 +12,7 @@
 // Tests that the Web Console limits the number of lines displayed according to
 // the user's preferences.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 function test() {
   addTab(TEST_URI);

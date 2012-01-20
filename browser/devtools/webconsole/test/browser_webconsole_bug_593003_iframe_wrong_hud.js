@@ -36,11 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-593003-iframe-wrong-hud.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-593003-iframe-wrong-hud.html";
 
-const TEST_IFRAME_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-593003-iframe-wrong-hud-iframe.html";
+const TEST_IFRAME_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-593003-iframe-wrong-hud-iframe.html";
 
-const TEST_DUMMY_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
+const TEST_DUMMY_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
 let tab1, tab2;
 
