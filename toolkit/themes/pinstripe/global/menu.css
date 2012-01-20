@@ -136,14 +136,19 @@ menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
-  -moz-appearance: none !important;
+  -moz-appearance: none;
   padding: 2px 5px 2px 7px;
   margin: 1px 0;
 }
 
+menubar > menu[_moz-menuactive="true"] {
+  color: inherit;
+  background-color: transparent;
+}
+
 menubar > menu[_moz-menuactive="true"][open="true"] {
-  -moz-appearance: menuitem !important;
-  color: -moz-mac-menutextselect !important
+  -moz-appearance: menuitem;
+  color: -moz-mac-menutextselect;
 }
 
 /* ..... internal content .... */
