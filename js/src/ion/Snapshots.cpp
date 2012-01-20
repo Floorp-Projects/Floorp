@@ -46,6 +46,11 @@
 #include "IonLinker.h"
 #include "IonSpewer.h"
 
+#ifdef TRACK_SNAPSHOTS
+#include "MIR.h"
+#include "LIR.h"
+#endif
+
 using namespace js;
 using namespace js::ion;
 
@@ -153,6 +158,20 @@ SnapshotReader::readSnapshotBody()
     pcOffset_ = reader_.readUnsigned();
     slotCount_ = reader_.readUnsigned();
     IonSpew(IonSpew_Snapshots, "Read pc offset %u, nslots %u", pcOffset_, slotCount_);
+
+#ifdef TRACK_SNAPSHOTS
+    pcOpcode_ = reader_.readUnsigned();
+    mirOpcode_ = reader_.readUnsigned();
+    lirOpcode_ = reader_.readUnsigned();
+    if (IonSpewEnabled(IonSpew_Snapshots)) {
+        IonSpewHeader(IonSpew_Snapshots);
+        fprintf(IonSpewFile, "Involved Opcodes, Bytecode: %s, MIR: ", js_CodeName[pcOpcode_]);
+        MDefinition::PrintOpcodeName(IonSpewFile, MDefinition::Opcode(mirOpcode_));
+        fprintf(IonSpewFile, ", LIR: ");
+        LInstruction::printName(IonSpewFile, LInstruction::Opcode(lirOpcode_));
+        fprintf(IonSpewFile, "\n");
+    }
+#endif
 }
 
 #ifdef JS_NUNBOX32
@@ -480,6 +499,16 @@ SnapshotWriter::startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, ui
     writer_.writeUnsigned(pcoff);
     writer_.writeUnsigned(nslots_);
 }
+
+#ifdef TRACK_SNAPSHOTS
+void
+SnapshotWriter::trackFrame(uint32 pcOpcode, uint32 mirOpcode, uint32 lirOpcode)
+{
+    writer_.writeUnsigned(pcOpcode);
+    writer_.writeUnsigned(mirOpcode);
+    writer_.writeUnsigned(lirOpcode);
+}
+#endif
 
 void
 SnapshotWriter::endFrame()

@@ -192,7 +192,7 @@ LPhi::New(MIRGenerator *gen, MPhi *ins)
 }
 
 void
-LInstruction::printName(FILE *fp)
+LInstruction::printName(FILE *fp, Opcode op)
 {
     static const char *names[] =
     {
@@ -200,10 +200,16 @@ LInstruction::printName(FILE *fp)
         LIR_OPCODE_LIST(LIROP)
 #undef LIROP
     };
-    const char *name = names[op()];
+    const char *name = names[op];
     size_t len = strlen(name);
     for (size_t i = 0; i < len; i++)
         fprintf(fp, "%c", tolower(name[i]));
+}
+
+void
+LInstruction::printName(FILE *fp)
+{
+    printName(fp, op());
 }
 
 static const char *TypeChars[] =

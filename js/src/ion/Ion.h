@@ -46,6 +46,11 @@
 #include "IonCode.h"
 #include "jsinfer.h"
 
+#ifdef DEBUG
+// Track the pipeline of opcodes which has produced a snapshot.
+#define TRACK_SNAPSHOTS 1
+#endif
+
 namespace js {
 namespace ion {
 

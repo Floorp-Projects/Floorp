@@ -675,7 +675,7 @@ class LInstruction
     void setMir(MDefinition *mir) {
         mir_ = mir;
     }
-    MDefinition *mirRaw() {
+    MDefinition *mirRaw() const {
         /* Untyped MIR for this op. Prefer mir() methods in subclasses. */
         return mir_;
     }
@@ -684,6 +684,7 @@ class LInstruction
     void initSafepoint();
 
     virtual void print(FILE *fp);
+    static void printName(FILE *fp, Opcode op);
     virtual void printName(FILE *fp);
     virtual void printOperands(FILE *fp);
     virtual void printInfo(FILE *fp) { }
@@ -703,6 +704,28 @@ class LInstruction
 
 class LInstructionVisitor
 {
+#ifdef TRACK_SNAPSHOTS
+    LInstruction *ins_;
+
+  protected:
+    LInstruction *instruction() {
+        return ins_;
+    }
+#endif
+
+  public:
+    void setInstruction(LInstruction *ins) {
+#ifdef TRACK_SNAPSHOTS
+        ins_ = ins;
+#endif
+    }
+
+    LInstructionVisitor()
+#ifdef TRACK_SNAPSHOTS
+      : ins_(NULL)
+#endif
+    {}
+
   public:
 #define VISIT_INS(op) virtual bool visit##op(L##op *) { JS_NOT_REACHED("NYI: " #op); return false; }
     LIR_OPCODE_LIST(VISIT_INS)
@@ -1190,6 +1213,7 @@ LAllocation::toRegister() const
         return LInstruction::LOp_##opcode;                                  \
     }                                                                       \
     bool accept(LInstructionVisitor *visitor) {                             \
+        visitor->setInstruction(this);                                      \
         return visitor->visit##opcode(this);                                \
     }
 
