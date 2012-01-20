@@ -920,6 +920,8 @@ DOMStorageImpl::SetDBValue(const nsAString& aKey,
   offlineAppPermission = GetQuota(mDomain, &quota, &warnQuota,
                                   CanUseChromePersist());
 
+  CacheKeysFromDB();
+
   PRInt32 usage;
   rv = gStorageDB->SetKey(this, aKey, aValue, aSecure, quota,
                          !IS_PERMISSION_ALLOWED(offlineAppPermission),
