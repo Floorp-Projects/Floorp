@@ -1,0 +1,38 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set tw=80 expandtab softtabstop=2 ts=2 sw=2: */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(4CAFE116-581B-4194-B0DE-7F02378FC51D)]
+interface nsIDOMMozBrowserFrame : nsISupports
+{
+  /**
+   * <iframe> and <frame> elements may have the mozbrowser attribute.
+   *
+   * The mozbrowser attribute has no effect unless the <iframe> or <frame>
+   * element is contained in a document privileged to create browser frames.
+   *
+   * An <iframe> or <frame> element in a privileged document with the
+   * mozbrowser attribute emits mozBrowserPropertyChange events when various
+   * things happen inside the frame.
+   *
+   * The mozBrowserPropertyChangeEvent object has two properties:
+   *
+   *   property: The property which changed
+   *   value:    The property's new value
+   *
+   * Currently, the |property| field may take on the following values:
+   *
+   *   'location': The content window's location changed. |value| gives the new
+   *               URI.
+   *
+   *   'loading':  The content window started loading a new page (|value| ==
+   *               'start') or finished loading (|value| == 'stop').
+   *
+   */
+  attribute boolean mozbrowser;
+};

@@ -74,6 +74,11 @@ _TEST_FILES = \
 		test_focusrings.xul \
 		file_moving_xhr.html \
 		test_vibrator.html \
+		browserFrameHelpers.js \
+		test_browserFrame1.html \
+		test_browserFrame2.html \
+		test_browserFrame3.html \
+		test_browserFrame4.html \
 		$(NULL)
 
 _CHROME_FILES = \

@@ -7,12 +7,16 @@
 
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLFrameElement.h"
+#include "nsIDOMMozBrowserFrame.h"
+#include "nsIWebProgressListener.h"
 
 /**
  * A helper class for frame elements
  */
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
-                                  public nsIFrameLoaderOwner
+                                  public nsIFrameLoaderOwner,
+                                  public nsIDOMMozBrowserFrame,
+                                  public nsIWebProgressListener
 {
 public:
   nsGenericHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -23,13 +27,11 @@ public:
   }
   virtual ~nsGenericHTMLFrameElement();
 
-  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
-
-  // nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  // nsIFrameLoaderOwner
   NS_DECL_NSIFRAMELOADEROWNER
+  NS_DECL_NSIDOMMOZBROWSERFRAME
+  NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
 
   // nsIContent
   virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
@@ -64,6 +66,11 @@ protected:
   nsresult LoadSrc();
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
   nsresult GetContentWindow(nsIDOMWindow** aContentWindow);
+
+  bool BrowserFrameSecurityCheck();
+  nsresult MaybeFireBrowserEvent(const nsAString &aEventName,
+                                 const nsAString &aEventType,
+                                 const nsAString &aValue = EmptyString());
 
   nsRefPtr<nsFrameLoader> mFrameLoader;
   // True when the element is created by the parser
