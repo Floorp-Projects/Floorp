@@ -122,8 +122,8 @@ CodeGeneratorShared::saveLive(LInstruction *ins)
 {
     LSafepoint *safepoint = ins->safepoint();
 
-    masm.PushRegsInMask(safepoint->restRegs());
     masm.PushRegsInMask(safepoint->gcRegs());
+    masm.PushRegsInMask(safepoint->restRegs());
 }
 
 void

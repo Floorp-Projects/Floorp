@@ -636,6 +636,7 @@ class LinearScanAllocator
     bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to);
     void setIntervalRequirement(LiveInterval *interval);
     size_t findFirstSafepoint(LiveInterval *interval, size_t firstSafepoint);
+    size_t findFirstNonCallSafepoint(CodePosition from);
 
     void addFixedRange(AnyRegister reg, CodePosition from, CodePosition to) {
         fixedIntervals[reg.code()]->addRange(from, to);
