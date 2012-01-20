@@ -21,6 +21,7 @@ CPPSRCS = \
 ifndef MOZ_OLD_LINKER
 CPPSRCS += \
   ElfLoader.cpp \
+  CustomElf.cpp \
   $(NULL)
 endif
 
