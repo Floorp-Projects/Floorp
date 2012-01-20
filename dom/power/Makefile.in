@@ -52,6 +52,8 @@ CPPSRCS = \
   $(NULL)
 
 XPIDLSRCS = \
+  nsIDOMPowerManager.idl \
+  nsIPowerManagerService.idl \
   $(NULL)
 
 ifdef ENABLE_TESTS
