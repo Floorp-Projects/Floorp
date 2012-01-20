@@ -97,8 +97,9 @@ class nsHtml5ExecutorReflusher : public nsRunnable
     }
 };
 
-nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
+nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor(bool aRunsToCompletion)
 {
+  mRunsToCompletion = aRunsToCompletion;
   mPreloadedURLs.Init(23); // Mean # of preloadable resources per page on dmoz
   // zeroing operator new for everything else
 }
@@ -135,7 +136,9 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
     }
   }
   
-  GetParser()->DropStreamParser();
+  if (!mRunsToCompletion) {
+    GetParser()->DropStreamParser();
+  }
 
   // This comes from nsXMLContentSink and nsHTMLContentSink
   DidBuildModelImpl(aTerminated);
@@ -273,7 +276,7 @@ void
 nsHtml5TreeOpExecutor::MarkAsBroken()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!mFragmentMode, "Fragment parsers can't be broken!");
+  NS_ASSERTION(!mRunsToCompletion, "Fragment parsers can't be broken!");
   mBroken = true;
   if (mStreamParser) {
     mStreamParser->Terminate();
@@ -324,10 +327,10 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
 
   bool willNotify;
   bool isAlternate;
-  nsresult rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
+  nsresult rv = ssle->UpdateStyleSheet(mRunsToCompletion ? nsnull : this,
                                        &willNotify,
                                        &isAlternate);
-  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mFragmentMode) {
+  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddExecuteBlocker();
   }
@@ -732,7 +735,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   if (mPreventScriptExecution) {
     sele->PreventExecution();
   }
-  if (mFragmentMode) {
+  if (mRunsToCompletion) {
     return;
   }
 
@@ -820,25 +823,21 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding,
 nsHtml5Parser*
 nsHtml5TreeOpExecutor::GetParser()
 {
+  MOZ_ASSERT(!mRunsToCompletion);
   return static_cast<nsHtml5Parser*>(mParser.get());
-}
-
-nsHtml5Tokenizer*
-nsHtml5TreeOpExecutor::GetTokenizer()
-{
-  return GetParser()->GetTokenizer();
 }
 
 void
 nsHtml5TreeOpExecutor::Reset()
 {
+  MOZ_ASSERT(mRunsToCompletion);
   DropHeldElements();
   mOpQueue.Clear();
   mStarted = false;
   mFlushState = eNotFlushing;
   mRunFlushLoopOnStack = false;
-  NS_ASSERTION(!mReadingFromStage, "String parser reading from stage?");
-  NS_ASSERTION(!mBroken, "String parser got broken.");
+  MOZ_ASSERT(!mReadingFromStage);
+  MOZ_ASSERT(!mBroken);
 }
 
 void

@@ -2555,78 +2555,8 @@ HTMLContentSink::CloseHeadContext()
 nsresult
 HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 {
-  nsresult  result = NS_OK;
-
-  if (mCurrentContext) {
-    // Create content object
-    nsCOMPtr<nsIContent> element;
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull,
-                                             kNameSpaceID_XHTML,
-                                             nsIDOMNode::ELEMENT_NODE);
-
-    result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo.forget(),
-                               NOT_FROM_PARSER);
-    NS_ENSURE_SUCCESS(result, result);
-
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(element));
-
-    if (ssle) {
-      // XXX need prefs. check here.
-      if (!mInsideNoXXXTag) {
-        ssle->InitStyleLinkElement(false);
-        ssle->SetEnableUpdates(false);
-      } else {
-        ssle->InitStyleLinkElement(true);
-      }
-    }
-
-    // Add in the attributes and add the style content object to the
-    // head container.
-    result = AddAttributes(aNode, element);
-    if (NS_FAILED(result)) {
-      return result;
-    }
-
-    mCurrentContext->AddLeaf(element); // <link>s are leaves
-
-    if (ssle) {
-      ssle->SetEnableUpdates(true);
-      bool willNotify;
-      bool isAlternate;
-      result = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
-                                      &willNotify,
-                                      &isAlternate);
-      if (NS_SUCCEEDED(result) && willNotify && !isAlternate && !mFragmentMode) {
-        ++mPendingSheetCount;
-        mScriptLoader->AddExecuteBlocker();
-      }
-
-      // look for <link rel="next" href="url">
-      nsAutoString relVal;
-      element->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
-      if (!relVal.IsEmpty()) {
-        PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(relVal);
-        bool hasPrefetch = linkTypes & PREFETCH;
-        if (hasPrefetch || (linkTypes & NEXT)) {
-          nsAutoString hrefVal;
-          element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            PrefetchHref(hrefVal, element, hasPrefetch);
-          }
-        }
-        if (linkTypes & DNS_PREFETCH) {
-          nsAutoString hrefVal;
-          element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            PrefetchDNS(hrefVal);
-          }
-        }
-      }
-    }
-  }
-
-  return result;
+  MOZ_NOT_REACHED("Old HTMLContentSink used for processing links.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #ifdef DEBUG
@@ -2725,29 +2655,8 @@ HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
 nsresult
 HTMLContentSink::ProcessSTYLEEndTag(nsGenericHTMLElement* content)
 {
-  nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(content);
-
-  NS_ASSERTION(ssle,
-               "html:style doesn't implement nsIStyleSheetLinkingElement");
-
-  nsresult rv = NS_OK;
-
-  if (ssle) {
-    // Note: if we are inside a noXXX tag, then we init'ed this style element
-    // with mDontLoadStyle = true, so these two calls will have no effect.
-    ssle->SetEnableUpdates(true);
-    bool willNotify;
-    bool isAlternate;
-    rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
-                                &willNotify,
-                                &isAlternate);
-    if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mFragmentMode) {
-      ++mPendingSheetCount;
-      mScriptLoader->AddExecuteBlocker();
-    }
-  }
-
-  return rv;
+  MOZ_NOT_REACHED("Old HTMLContentSink used for processing style elements.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void

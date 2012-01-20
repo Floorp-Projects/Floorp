@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=102699
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 102699</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=102699">Mozilla Bug 102699</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 102699 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var p = new DOMParser();
+
+var d = p.parseFromString(
+'<meta charset="windows-1252">' +
+'\u003cscript>' +
+'document.documentElement.setAttribute("data-fail", "FAIL");' +
+'\u003c/script>' +
+'\u003cscript src="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs">\u003c/script>' +
+'\u003cscript src="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs" defer>\u003c/script>' +
+'\u003cscript src="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs" async>\u003c/script>' +
+'<link type="stylesheet" href="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs">' +
+'<body onload=\'document.documentElement.setAttribute("data-fail", "FAIL");\'>' +
+'<img src="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs">' +
+'<iframe src="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs"></iframe>' +
+'<video poster="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs" src="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs"></video>' +
+'<object data="http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug102699.sjs"></object>' +
+'<noscript><div></div></noscript>"', "text/html");
+
+is(d.createElement("div").tagName, "DIV", "The created document should have HTML nature.");
+
+is(d.getElementsByTagName("div").length, 1, "There should be one div.");
+
+is(d.contentType, "text/html", "contentType should be text/html");
+
+is(d.characterSet, "UTF-8", "Expected the <meta> to be ignored.");
+
+is(d.compatMode, "BackCompat", "Should be in the quirks mode.");
+
+var scripts = d.getElementsByTagName("script");
+is(scripts.length, 4, "Unexpected number of scripts.");
+while (scripts.length) {
+  // These should not run when moved to another doc
+  document.body.appendChild(scripts[0]);
+}
+var s = document.createElement("script");
+s.src = "file_bug102699.sjs?report=1";
+document.body.appendChild(s);
+
+function continueAfterReport() {
+  ok(!d.documentElement.hasAttribute("data-fail"), "Should not have a data-fail attribute.");
+
+  d = p.parseFromString("<!DOCTYPE html>", "text/html");
+  is(d.compatMode, "CSS1Compat", "Should be in the standards mode.");  
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -1049,7 +1049,8 @@ public:
    *        don't set to false when parsing into a target node that has been
    *        bound to tree.
    * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
-   *         fragments is made and NS_OK otherwise.
+   *         fragments is made, NS_ERROR_OUT_OF_MEMORY if aSourceBuffer is too
+   *         long and NS_OK otherwise.
    */
   static nsresult ParseFragmentHTML(const nsAString& aSourceBuffer,
                                     nsIContent* aTargetNode,
@@ -1074,6 +1075,20 @@ public:
                                    nsTArray<nsString>& aTagStack,
                                    bool aPreventScriptExecution,
                                    nsIDOMDocumentFragment** aReturn);
+
+  /**
+   * Parse a string into a document using the HTML parser.
+   * Script elements are marked unexecutable.
+   *
+   * @param aSourceBuffer the string to parse as an HTML document
+   * @param aTargetDocument the document object to parse into. Must not have
+   *                        child nodes.
+   * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
+   *         fragments is made, NS_ERROR_OUT_OF_MEMORY if aSourceBuffer is too
+   *         long and NS_OK otherwise.
+   */
+  static nsresult ParseDocumentHTML(const nsAString& aSourceBuffer,
+                                    nsIDocument* aTargetDocument);
 
   /**
    * Creates a new XML document, which is marked to be loaded as data.
