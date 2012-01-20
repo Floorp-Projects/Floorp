@@ -89,6 +89,9 @@ FENNEC_JAVA_FILES = \
   LinkPreference.java \
   ProfileMigrator.java \
   PromptService.java \
+  sqlite/ByteBufferInputStream.java \
+  sqlite/SQLiteBridge.java \
+  sqlite/SQLiteBridgeException.java \
   SurfaceLockInfo.java \
   Tab.java \
   Tabs.java \

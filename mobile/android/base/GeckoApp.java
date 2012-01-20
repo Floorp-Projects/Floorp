@@ -893,7 +893,8 @@ abstract public class GeckoApp
                 if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
                         Log.i(LOGTAG, "Got a document start");
-                        handleDocumentStart(tabId);
+                        final boolean showProgress = message.getBoolean("showProgress");
+                        handleDocumentStart(tabId, showProgress);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         Log.i(LOGTAG, "Got a document stop");
                         handleDocumentStop(tabId);
@@ -1181,7 +1182,7 @@ abstract public class GeckoApp
         });
     }
 
-    void handleDocumentStart(int tabId) {
+    void handleDocumentStart(int tabId, final boolean showProgress) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
@@ -1193,7 +1194,8 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    mBrowserToolbar.setProgressVisibility(true);
+                    if (showProgress)
+                        mBrowserToolbar.setProgressVisibility(true);
                 }
                 onTabsChanged(tab);
             }
@@ -2099,9 +2101,10 @@ abstract public class GeckoApp
         File profileDir = getProfileDir();
         if (profileDir != null) {
             Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
+            final GeckoApp app = GeckoApp.mAppContext;
+            GeckoAppShell.ensureSQLiteLibsLoaded(app.getApplication().getPackageResourcePath());
             ProfileMigrator profileMigrator =
-                new ProfileMigrator(GeckoApp.mAppContext.getContentResolver(),
-                                    profileDir);
+                new ProfileMigrator(app.getContentResolver(), profileDir);
             profileMigrator.launchBackground();
         }
     }
