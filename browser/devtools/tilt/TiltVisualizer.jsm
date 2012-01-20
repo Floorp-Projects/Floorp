@@ -91,10 +91,10 @@ let EXPORTED_SYMBOLS = ["TiltVisualizer"];
  *
  * @param {Object} aProperties
  *                 an object containing the following properties:
- *       {Element} parentNode: the parent node to hold the visualization
+ *        {Window} chromeWindow: a reference to the top level window
  *        {Window} contentWindow: the content window holding the visualized doc
+ *       {Element} parentNode: the parent node to hold the visualization
  *      {Function} requestAnimationFrame: responsible with scheduling loops
- *   {InspectorUI} inspectorUI: necessary instance of the InspectorUI
  *        {Object} notifications: necessary notifications for Tilt
  *      {Function} onError: optional, function called if initialization failed
  *      {Function} onLoad: optional, function called if initialization worked
@@ -103,6 +103,11 @@ function TiltVisualizer(aProperties)
 {
   // make sure the properties parameter is a valid object
   aProperties = aProperties || {};
+
+  /**
+   * Save a reference to the top-level window.
+   */
+  this.chromeWindow = aProperties.chromeWindow;
 
   /**
    * The canvas element used for rendering the visualization.
@@ -116,9 +121,9 @@ function TiltVisualizer(aProperties)
    * Visualization logic and drawing loop.
    */
   this.presenter = new TiltVisualizer.Presenter(this.canvas,
+    aProperties.chromeWindow,
     aProperties.contentWindow,
     aProperties.requestAnimationFrame,
-    aProperties.inspectorUI,
     aProperties.notifications,
     aProperties.onError || null,
     aProperties.onLoad || null);
@@ -163,9 +168,12 @@ TiltVisualizer.prototype = {
     if (this.presenter) {
       TiltUtils.destroyObject(this.presenter);
     }
+
+    let chromeWindow = this.chromeWindow;
+
     TiltUtils.destroyObject(this);
     TiltUtils.clearCache();
-    TiltUtils.gc();
+    TiltUtils.gc(chromeWindow);
   }
 };
 
@@ -174,12 +182,12 @@ TiltVisualizer.prototype = {
  *
  * @param {HTMLCanvasElement} aCanvas
  *                            the canvas element used for rendering
- * @param {Object} aContentWindow
+ * @param {Window} aChromeWindow
+ *                 a reference to the top-level window
+ * @param {Window} aContentWindow
  *                 the content window holding the document to be visualized
  * @param {Function} aRequestAnimationFrame
  *                   function responsible with scheduling loop frames
- * @param {InspectorUI} aInspectorUI
- *                      necessary instance of the InspectorUI
  * @param {Object} aNotifications
  *                 necessary notifications for Tilt
  * @param {Function} onError
@@ -188,13 +196,23 @@ TiltVisualizer.prototype = {
  *                   function called if initialization worked
  */
 TiltVisualizer.Presenter = function TV_Presenter(
-  aCanvas, aContentWindow, aRequestAnimationFrame, aInspectorUI, aNotifications,
+  aCanvas, aChromeWindow, aContentWindow, aRequestAnimationFrame, aNotifications,
   onError, onLoad)
 {
+  /**
+   * A canvas overlay used for drawing the visualization.
+   */
   this.canvas = aCanvas;
+
+  /**
+   * Save a reference to the top-level window, to access InspectorUI or Tilt.
+   */
+  this.chromeWindow = aChromeWindow;
+
+  /**
+   * The content window generating the visualization
+   */
   this.contentWindow = aContentWindow;
-  this.inspectorUI = aInspectorUI;
-  this.tiltUI = aInspectorUI.chromeWin.Tilt;
 
   /**
    * Shortcut for accessing notifications strings.
@@ -235,7 +253,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
    * Modified by events in the controller through delegate functions.
    */
   this.transforms = {
-    zoom: TiltUtils.getDocumentZoom(),
+    zoom: TiltUtils.getDocumentZoom(aChromeWindow),
     offset: vec3.create(),      // mesh offset, aligned to the viewport center
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create()    // scene rotation, expressed as a quaternion
@@ -525,13 +543,13 @@ TiltVisualizer.Presenter.prototype = {
     // if there's no initial selection made, highlight the required node
     if (!this._initialSelection) {
       this._initialSelection = true;
-      this.highlightNode(this.inspectorUI.selection);
+      this.highlightNode(this.chromeWindow.InspectorUI.selection);
     }
 
     if (!this._initialMeshConfiguration) {
       this._initialMeshConfiguration = true;
 
-      let zoom = TiltUtils.getDocumentZoom();
+      let zoom = this.transforms.zoom;
       let width = Math.min(aData.meshWidth * zoom, renderer.width);
       let height = Math.min(aData.meshHeight * zoom, renderer.height);
 
@@ -605,7 +623,7 @@ TiltVisualizer.Presenter.prototype = {
    */
   onResize: function TVP_onResize(e)
   {
-    let zoom = TiltUtils.getDocumentZoom();
+    let zoom = TiltUtils.getDocumentZoom(this.chromeWindow);
     let width = e.target.innerWidth * zoom;
     let height = e.target.innerHeight * zoom;
 
@@ -724,8 +742,10 @@ TiltVisualizer.Presenter.prototype = {
     vec3.set([x,     y + h, z * STACK_THICKNESS], highlight.v3);
 
     this._currentSelection = aNodeIndex;
-    this.inspectorUI.inspectNode(node, this.contentWindow.innerHeight < y ||
-                                       this.contentWindow.pageYOffset > 0);
+
+    this.chromeWindow.InspectorUI.inspectNode(node,
+      this.contentWindow.innerHeight < y ||
+      this.contentWindow.pageYOffset > 0);
 
     Services.obs.notifyObservers(null, this.NOTIFICATIONS.HIGHLIGHTING, null);
   },
@@ -796,7 +816,7 @@ TiltVisualizer.Presenter.prototype = {
       }
     }, false);
 
-    let zoom = TiltUtils.getDocumentZoom();
+    let zoom = TiltUtils.getDocumentZoom(this.chromeWindow);
     let width = this.renderer.width * zoom;
     let height = this.renderer.height * zoom;
     let mesh = this.meshStacks;
@@ -971,26 +991,34 @@ TiltVisualizer.Presenter.prototype = {
  */
 TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
 {
+  /**
+   * A canvas overlay on which mouse and keyboard event listeners are attached.
+   */
   this.canvas = aCanvas;
+
+  /**
+   * Save a reference to the presenter to modify its model-view transforms.
+   */
   this.presenter = aPresenter;
 
   /**
    * The initial controller dimensions and offset, in pixels.
    */
-  this.left = aPresenter.contentWindow.pageXOffset || 0;
-  this.top = aPresenter.contentWindow.pageYOffset || 0;
+  this.zoom = aPresenter.transforms.zoom;
+  this.left = (aPresenter.contentWindow.pageXOffset || 0) * this.zoom;
+  this.top = (aPresenter.contentWindow.pageYOffset || 0) * this.zoom;
   this.width = aCanvas.width;
   this.height = aCanvas.height;
-
-  this.left *= TiltUtils.getDocumentZoom();
-  this.top *= TiltUtils.getDocumentZoom();
 
   /**
    * Arcball used to control the visualization using the mouse.
    */
-  this.arcball = new TiltVisualizer.Arcball(this.width, this.height, 0,
-    [this.width + this.left < aPresenter.maxTextureSize ? -this.left : 0,
-     this.height + this.top < aPresenter.maxTextureSize ? -this.top : 0]);
+  this.arcball = new TiltVisualizer.Arcball(
+    this.presenter.chromeWindow, this.width, this.height, 0,
+    [
+      this.width + this.left < aPresenter.maxTextureSize ? -this.left : 0,
+      this.height + this.top < aPresenter.maxTextureSize ? -this.top : 0
+    ]);
 
   /**
    * Object containing the rotation quaternion and the translation amount.
@@ -1192,7 +1220,7 @@ TiltVisualizer.Controller.prototype = {
   onKeyUp: function TVC_onKeyUp(e)
   {
     let code = e.keyCode || e.which;
-    let tilt = this.presenter.tiltUI;
+    let tilt = this.presenter.chromeWindow.Tilt;
 
     if (code === e.DOM_VK_ESCAPE) {
       tilt.destroy(tilt.currentWindowId, true);
@@ -1221,7 +1249,7 @@ TiltVisualizer.Controller.prototype = {
    */
   onResize: function TVC_onResize(e)
   {
-    let zoom = TiltUtils.getDocumentZoom();
+    let zoom = TiltUtils.getDocumentZoom(this.presenter.chromeWindow);
     let width = e.target.innerWidth * zoom;
     let height = e.target.innerHeight * zoom;
 
@@ -1256,6 +1284,8 @@ TiltVisualizer.Controller.prototype = {
  * in the Graphics Interface ’92 Proceedings. It features good behavior
  * easy implementation, cheap execution.
  *
+ * @param {Window} aChromeWindow
+ *                 a reference to the top-level window
  * @param {Number} aWidth
  *                 the width of canvas
  * @param {Number} aHeight
@@ -1268,8 +1298,13 @@ TiltVisualizer.Controller.prototype = {
  *                optional, initial quaternion rotation
  */
 TiltVisualizer.Arcball = function TV_Arcball(
-  aWidth, aHeight, aRadius, aInitialTrans, aInitialRot)
+  aChromeWindow, aWidth, aHeight, aRadius, aInitialTrans, aInitialRot)
 {
+  /**
+   * Save a reference to the top-level window to set/remove intervals.
+   */
+  this.chromeWindow = aChromeWindow;
+
   /**
    * Values retaining the current horizontal and vertical mouse coordinates.
    */
@@ -1725,17 +1760,17 @@ TiltVisualizer.Arcball.prototype = {
       this.onResetStart = null;
     }
 
+    let func = this._nextResetIntervalStep.bind(this);
+
     this.cancelMouseEvents();
     this.cancelKeyEvents();
     this._cancelResetInterval();
 
-    let window = TiltUtils.getBrowserWindow();
-    let func = this._nextResetIntervalStep.bind(this);
-
     this._save();
     this._resetFinalTranslation = vec3.create(aFinalTranslation);
     this._resetFinalRotation = quat4.create(aFinalRotation);
-    this._resetInterval = window.setInterval(func, ARCBALL_RESET_INTERVAL);
+    this._resetInterval =
+      this.chromeWindow.setInterval(func, ARCBALL_RESET_INTERVAL);
   },
 
   /**
@@ -1744,9 +1779,8 @@ TiltVisualizer.Arcball.prototype = {
   _cancelResetInterval: function TVA__cancelResetInterval()
   {
     if (this._resetInterval) {
-      let window = TiltUtils.getBrowserWindow();
+      this.chromeWindow.clearInterval(this._resetInterval);
 
-      window.clearInterval(this._resetInterval);
       this._resetInterval = null;
       this._save();
 

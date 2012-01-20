@@ -29,15 +29,15 @@ const DEFAULT_HTML = "data:text/html," +
     "</head>" +
     "<body>" +
       "<div id='first-law'>" +
-        "A robot may not injure a human being or, through inaction, allow a" +
+        "A robot may not injure a human being or, through inaction, allow a " +
         "human being to come to harm." +
       "</div>" +
       "<div>" +
-        "A robot must obey the orders given to it by human beings, except" +
+        "A robot must obey the orders given to it by human beings, except " +
         "where such orders would conflict with the First Law." +
       "</div>" +
       "<div>" +
-        "A robot must protect its own existence as long as such protection" +
+        "A robot must protect its own existence as long as such protection " +
         "does not conflict with the First or Second Laws." +
       "</div>" +
     "<body>" +
