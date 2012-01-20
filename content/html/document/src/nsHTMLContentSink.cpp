@@ -802,11 +802,13 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       break;
 
     case eHTMLTag_button:
+#ifdef MOZ_MEDIA
     case eHTMLTag_audio:
     case eHTMLTag_video:
+#endif
       content->DoneCreatingElement();
       break;
-      
+
     default:
       break;
   }
