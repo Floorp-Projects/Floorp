@@ -96,22 +96,26 @@ private:
 /**
  * MappedPtr is a RAII wrapper for mmap()ed memory. It can be used as
  * a simple void * or unsigned char *.
+ *
+ * It is defined as a derivative of a template that allows to use a
+ * different unmapping strategy.
  */
-class MappedPtr
+template <typename T>
+class GenericMappedPtr
 {
 public:
-  MappedPtr(void *buf, size_t length): buf(buf), length(length) { }
-  MappedPtr(): buf(MAP_FAILED), length(0) { }
+  GenericMappedPtr(void *buf, size_t length): buf(buf), length(length) { }
+  GenericMappedPtr(): buf(MAP_FAILED), length(0) { }
 
   void Init(void *b, size_t len) {
     buf = b;
     length = len;
   }
 
-  ~MappedPtr()
+  ~GenericMappedPtr()
   {
     if (buf != MAP_FAILED)
-      munmap(buf, length);
+      static_cast<T *>(this)->munmap(buf, length);
   }
 
   operator void *() const
@@ -145,9 +149,29 @@ public:
     return (ptr >= buf) && (ptr < reinterpret_cast<char *>(buf) + length);
   }
 
+  /**
+   * Returns the length of the mapped range
+   */
+  size_t GetLength() const
+  {
+    return length;
+  }
+
 private:
   void *buf;
   size_t length;
+};
+
+struct MappedPtr: public GenericMappedPtr<MappedPtr>
+{
+  MappedPtr(void *buf, size_t length)
+  : GenericMappedPtr<MappedPtr>(buf, length) { }
+  MappedPtr(): GenericMappedPtr<MappedPtr>() { }
+
+  void munmap(void *buf, size_t length)
+  {
+    ::munmap(buf, length);
+  }
 };
 
 /**

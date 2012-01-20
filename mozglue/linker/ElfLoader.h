@@ -288,6 +288,9 @@ protected:
 private:
   /* Keep track of all registered destructors */
   std::vector<DestructorCaller> destructors;
+
+  /* Keep track of Zips used for library loading */
+  ZipCollection zips;
 };
 
 #endif /* ElfLoader_h */

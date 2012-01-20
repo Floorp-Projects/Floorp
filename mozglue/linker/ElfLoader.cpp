@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include "ElfLoader.h"
 #include "CustomElf.h"
+#include "Mappable.h"
 #include "Logging.h"
 
 using namespace mozilla;
@@ -189,13 +190,32 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
     path = abs_path;
   }
 
-  /* Try loading the file with the custom linker, and fall back to the
-   * system linker if that fails */
-  AutoCloseFD fd = open(path, O_RDONLY);
-  if (fd != -1) {
-    handle = CustomElf::Load(fd, path, flags);
-    fd.forget();
+  /* Create a mappable object for the given path. Paths in the form
+   *   /foo/bar/baz/archive!/directory/lib.so
+   * try to load the directory/lib.so in /foo/bar/baz/archive, provided
+   * that file is a Zip archive. */
+  Mappable *mappable = NULL;
+  RefPtr<Zip> zip;
+  const char *subpath;
+  if ((subpath = strchr(path, '!'))) {
+    char *zip_path = strndup(path, subpath - path);
+    while (*(++subpath) == '/') { }
+    zip = zips.GetZip(zip_path);
+    Zip::Stream s;
+    if (zip && zip->GetStream(subpath, &s)) {
+      if (s.GetType() == Zip::Stream::DEFLATE)
+        mappable = MappableDeflate::Create(name, zip, &s);
+    }
   }
+  /* If we couldn't load above, try with a MappableFile */
+  if (!mappable && !zip)
+    mappable = MappableFile::Create(path);
+
+  /* Try loading with the custom linker if we have a Mappable */
+  if (mappable)
+    handle = CustomElf::Load(mappable, path, flags);
+
+  /* Try loading with the system linker if everything above failed */
   if (!handle)
     handle = SystemElf::Load(path, flags);
 

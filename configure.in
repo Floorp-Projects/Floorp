@@ -7159,6 +7159,9 @@ else
     dnl And we need mozglue symbols to be exported.
     MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS -rdynamic"
   fi
+  if test "$MOZ_LINKER" = 1; then
+    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS $ZLIB_LIBS"
+  fi
 fi
 
 if test -z "$MOZ_MEMORY"; then
