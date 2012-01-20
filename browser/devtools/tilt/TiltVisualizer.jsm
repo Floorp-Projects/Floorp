@@ -250,7 +250,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
    * Modified by events in the controller through delegate functions.
    */
   this.transforms = {
-    zoom: TiltUtils.getDocumentZoom(aChromeWindow),
+    zoom: 1,
     offset: vec3.create(),      // mesh offset, aligned to the viewport center
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create()    // scene rotation, expressed as a quaternion
@@ -280,6 +280,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
   let setup = function TVP_setup()
   {
     let renderer = this.renderer;
+    let inspector = this.chromeWindow.InspectorUI;
 
     // if the renderer was destroyed, don't continue setup
     if (!renderer || !renderer.context) {
@@ -293,6 +294,11 @@ TiltVisualizer.Presenter = function TV_Presenter(
       attributes: ["vertexPosition", "vertexTexCoord", "vertexColor"],
       uniforms: ["mvMatrix", "projMatrix", "sampler"]
     });
+
+    // get the document zoom to properly scale the visualization
+    if (inspector.highlighter) {
+      this.transforms.zoom = inspector.highlighter.zoom;
+    }
 
     this.setupTexture();
     this.setupMeshData();
@@ -620,7 +626,7 @@ TiltVisualizer.Presenter.prototype = {
    */
   onResize: function TVP_onResize(e)
   {
-    let zoom = TiltUtils.getDocumentZoom(this.chromeWindow);
+    let zoom = this.chromeWindow.InspectorUI.highlighter.zoom;
     let width = e.target.innerWidth * zoom;
     let height = e.target.innerHeight * zoom;
 
@@ -813,7 +819,7 @@ TiltVisualizer.Presenter.prototype = {
       }
     }, false);
 
-    let zoom = TiltUtils.getDocumentZoom(this.chromeWindow);
+    let zoom = this.chromeWindow.InspectorUI.highlighter.zoom;
     let width = this.renderer.width * zoom;
     let height = this.renderer.height * zoom;
     let mesh = this.meshStacks;
@@ -1256,7 +1262,7 @@ TiltVisualizer.Controller.prototype = {
    */
   onResize: function TVC_onResize(e)
   {
-    let zoom = TiltUtils.getDocumentZoom(this.presenter.chromeWindow);
+    let zoom = this.presenter.chromeWindow.InspectorUI.highlighter.zoom;
     let width = e.target.innerWidth * zoom;
     let height = e.target.innerHeight * zoom;
 

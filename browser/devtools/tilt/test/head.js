@@ -137,8 +137,10 @@ function createTilt(callbacks, close) {
       if ("function" === typeof callbacks.onInspectorOpen) {
         callbacks.onInspectorOpen();
       }
-      Services.obs.addObserver(onTiltOpen, INITIALIZING, false);
-      Tilt.initialize();
+      executeSoon(function() {
+        Services.obs.addObserver(onTiltOpen, INITIALIZING, false);
+        Tilt.initialize();
+      });
     });
   }
 
@@ -150,8 +152,10 @@ function createTilt(callbacks, close) {
         callbacks.onTiltOpen(Tilt.visualizers[Tilt.currentWindowId]);
       }
       if (close) {
-        Services.obs.addObserver(onTiltClose, DESTROYED, false);
-        Tilt.destroy(Tilt.currentWindowId);
+        executeSoon(function() {
+          Services.obs.addObserver(onTiltClose, DESTROYED, false);
+          Tilt.destroy(Tilt.currentWindowId);
+        });
       }
     });
   }
@@ -164,8 +168,10 @@ function createTilt(callbacks, close) {
         callbacks.onTiltClose();
       }
       if (close) {
-        Services.obs.addObserver(onInspectorClose, INSPECTOR_CLOSED, false);
-        InspectorUI.closeInspectorUI();
+        executeSoon(function() {
+          Services.obs.addObserver(onInspectorClose, INSPECTOR_CLOSED, false);
+          InspectorUI.closeInspectorUI();
+        });
       }
     });
   }

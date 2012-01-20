@@ -6,13 +6,6 @@ const ZOOM = 2;
 const RESIZE = 50;
 
 function test() {
-  let random = Math.random() * 10;
-
-  TiltUtils.setDocumentZoom(window, random);
-  ok(isApprox(TiltUtils.getDocumentZoom(window), random),
-    "The getDocumentZoom utility function didn't return the expected results.");
-
-
   if (!isTiltEnabled()) {
     info("Skipping controller test because Tilt isn't enabled.");
     return;
@@ -32,6 +25,9 @@ function test() {
       },
       onTiltOpen: function(instance)
       {
+        ok(isApprox(InspectorUI.highlighter.zoom, ZOOM),
+          "The Highlighter zoom doesn't have the expected results.");
+
         ok(isApprox(instance.presenter.transforms.zoom, ZOOM),
           "The presenter transforms zoom wasn't initially set correctly.");
 
@@ -74,10 +70,11 @@ function test() {
 
           window.resizeBy(RESIZE * ZOOM, RESIZE * ZOOM);
 
+
           Services.obs.addObserver(cleanup, DESTROYED, false);
           InspectorUI.closeInspectorUI();
         });
-      },
+      }
     });
   });
 }
