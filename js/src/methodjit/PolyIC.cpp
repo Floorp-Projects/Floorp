@@ -761,7 +761,19 @@ struct GetPropHelper {
     }
 
     LookupStatus lookup() {
-        JSObject *aobj = js_GetProtoIfDenseArray(obj);
+        /*
+         * Skip to the prototype of dense arrays, which are non-native objects
+         * and otherwise uncacheable. This is not valid to do for indexed
+         * properties (which will not be a PropertyName), nor for __proto__,
+         * which needs to be filtered here.
+         */
+        JSObject *aobj = obj;
+        if (obj->isDenseArray()) {
+            if (name == cx->runtime->atomState.protoAtom)
+                return ic.disable(cx, "__proto__");
+            aobj = obj->getProto();
+        }
+
         if (!aobj->isNative())
             return ic.disable(f, "non-native");
 
@@ -2604,8 +2616,8 @@ GetElementIC::update(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *
     /*
      * Only treat this as a GETPROP for non-numeric string identifiers. The
      * GETPROP IC assumes the id has already gone through filtering for string
-     * indexes in the emitter, i.e. js_GetProtoIfDenseArray is only valid to
-     * use when looking up non-integer identifiers.
+     * indexes in the emitter, i.e. skipping to the prototype of dense arrays
+     * is only valid to do when looking up non-integer identifiers.
      */
     if (v.isString() && js_CheckForStringIndex(id) == id)
         return attachGetProp(f, obj, v, JSID_TO_ATOM(id)->asPropertyName(), vp);
