@@ -80,7 +80,10 @@ SmsService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult
 }
 
 NS_IMETHODIMP
-SmsService::Send(const nsAString& aNumber, const nsAString& aMessage)
+SmsService::Send(const nsAString& aNumber,
+                 const nsAString& aMessage,
+                 PRInt32 aRequestId,
+                 PRUint64 aProcessId)
 {
   if (!mRIL) {
     return NS_OK;

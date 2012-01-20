@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-599725-response-headers.sjs";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-599725-response-headers.sjs";
 
 let lastFinishedRequest = null;
 

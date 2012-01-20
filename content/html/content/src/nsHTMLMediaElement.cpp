@@ -1999,6 +1999,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
   LOG(PR_LOG_DEBUG, ("%p Cloned decoder %p from %p", this, decoder.get(), aOriginal));
 
   if (!decoder->Init(this)) {
+    LOG(PR_LOG_DEBUG, ("%p Failed to init cloned decoder %p", this, decoder.get()));
     return NS_ERROR_FAILURE;
   }
 
@@ -2010,6 +2011,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
 
   nsMediaStream* stream = originalStream->CloneData(decoder);
   if (!stream) {
+    LOG(PR_LOG_DEBUG, ("%p Failed to cloned stream for decoder %p", this, decoder.get()));
     return NS_ERROR_FAILURE;
   }
 
@@ -2017,6 +2019,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
 
   nsresult rv = decoder->Load(stream, nsnull, aOriginal);
   if (NS_FAILED(rv)) {
+    LOG(PR_LOG_DEBUG, ("%p Failed to load decoder/stream for decoder %p", this, decoder.get()));
     return rv;
   }
 

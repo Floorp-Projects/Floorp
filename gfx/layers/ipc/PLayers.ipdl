@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//include protocol PCompositor;
+include protocol PCompositor;
 include protocol PLayer;
 include protocol PRenderFrame;
 
@@ -226,7 +226,7 @@ union EditReply {
 
 
 sync protocol PLayers {
-  manager PRenderFrame /*or PCompositor or PMedia or PPlugin*/;
+  manager PRenderFrame or PCompositor;
   manages PLayer;
 
 parent:
