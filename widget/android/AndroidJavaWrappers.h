@@ -161,8 +161,9 @@ public:
     jobject LockBuffer();
     unsigned char *LockBufferBits();
     void UnlockBuffer();
-    void BeginDrawing(int aWidth, int aHeight);
-    void EndDrawing(const nsIntRect &aRect, const nsAString &aMetadata, bool aHasDirectTexture);
+    void GetRenderOffset(nsIntPoint &aOffset);
+    bool BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata, bool aHasDirectTexture);
+    void EndDrawing(const nsIntRect &aRect);
 
 private:
     static jclass jGeckoSoftwareLayerClientClass;
@@ -170,6 +171,7 @@ private:
     static jmethodID jUnlockBufferMethod;
 
 protected:
+     static jmethodID jGetRenderOffsetMethod;
      static jmethodID jBeginDrawingMethod;
      static jmethodID jEndDrawingMethod;
 };
