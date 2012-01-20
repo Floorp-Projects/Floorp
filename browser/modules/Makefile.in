@@ -52,7 +52,6 @@ EXTRA_JS_MODULES = \
 	openLocationLastURL.jsm \
 	NetworkPrioritizer.jsm \
 	offlineAppCache.jsm \
-	PageThumbs.jsm \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
