@@ -42,6 +42,7 @@
 #ifndef jsion_snapshots_h__
 #define jsion_snapshots_h__
 
+#include "Ion.h"
 #include "IonCode.h"
 #include "IonRegisters.h"
 #include "CompactBuffer.h"
@@ -49,6 +50,10 @@
 
 namespace js {
 namespace ion {
+
+#ifdef TRACK_SNAPSHOTS
+class LInstruction;
+#endif
 
 static const uint32 SNAPSHOT_MAX_NARGS = 127;
 static const uint32 SNAPSHOT_MAX_STACK = 127;
@@ -69,6 +74,12 @@ class SnapshotReader
     // In debug mode we include the JSScript in order to make a few assertions.
     JSScript *script_;
     uint32 slotsRead_;
+#endif
+
+#ifdef TRACK_SNAPSHOTS
+    uint32 pcOpcode_;
+    uint32 mirOpcode_;
+    uint32 lirOpcode_;
 #endif
 
     void readSnapshotHeader();
@@ -309,6 +320,9 @@ class SnapshotWriter
   public:
     SnapshotOffset startSnapshot(uint32 frameCount, BailoutKind kind);
     void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32 exprStack);
+#ifdef TRACK_SNAPSHOTS
+    void trackFrame(uint32 pcOpcode, uint32 mirOpcode, uint32 lirOpcode);
+#endif
     void endFrame();
 
     void addSlot(const FloatRegister &reg);

@@ -283,6 +283,21 @@ class MDefinition : public MNode
         flags_ |= flags;
     }
 
+#ifdef TRACK_SNAPSHOTS
+    // Track bailouts by storing the current pc in MIR instruction.
+    jsbytecode *trackedPc_;
+
+  public:
+    void setTrackedPc(jsbytecode *pc) {
+        if (!trackedPc_)
+            trackedPc_ = pc;
+    }
+
+    jsbytecode *trackedPc() {
+        return trackedPc_;
+    }
+#endif
+
   public:
     MDefinition()
       : id_(0),
@@ -290,10 +305,14 @@ class MDefinition : public MNode
         resultType_(MIRType_None),
         flags_(0),
         dependency_(NULL)
+#ifdef TRACK_SNAPSHOTS
+      , trackedPc_(NULL)
+#endif
     { }
 
     virtual Opcode op() const = 0;
     void printName(FILE *fp);
+    static void PrintOpcodeName(FILE *fp, Opcode op);
     virtual void printOpcode(FILE *fp);
 
     virtual HashNumber valueHash() const;
@@ -482,7 +501,8 @@ class MInstruction
     MResumePoint *resumePoint_;
 
   public:
-    MInstruction() : resumePoint_(NULL)
+    MInstruction()
+      : resumePoint_(NULL)
     { }
 
     virtual bool accept(MInstructionVisitor *visitor) = 0;

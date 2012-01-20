@@ -130,6 +130,9 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
     immediateDominator_(NULL),
     numDominated_(0),
     loopHeader_(NULL)
+#ifdef TRACK_SNAPSHOTS
+  , trackedPc_(pc)
+#endif
 {
 }
 
@@ -580,6 +583,9 @@ MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
     ins->setBlock(this);
     graph().allocDefinitionId(ins);
     instructions_.insertBefore(at, ins);
+#ifdef TRACK_SNAPSHOTS
+    ins->setTrackedPc(at->trackedPc());
+#endif
 }
 
 void
@@ -588,6 +594,9 @@ MBasicBlock::insertAfter(MInstruction *at, MInstruction *ins)
     ins->setBlock(this);
     graph().allocDefinitionId(ins);
     instructions_.insertAfter(at, ins);
+#ifdef TRACK_SNAPSHOTS
+    ins->setTrackedPc(at->trackedPc());
+#endif
 }
 
 void
@@ -597,6 +606,9 @@ MBasicBlock::add(MInstruction *ins)
     ins->setBlock(this);
     graph().allocDefinitionId(ins);
     instructions_.pushBack(ins);
+#ifdef TRACK_SNAPSHOTS
+    ins->setTrackedPc(trackedPc_);
+#endif
 }
 
 void
