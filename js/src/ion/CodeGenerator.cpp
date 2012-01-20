@@ -1085,7 +1085,7 @@ CodeGenerator::visitOutOfLineCacheSetProperty(OutOfLineCache *ool)
     LInstruction *ins = ool->cache();
 
     Register objReg = ToRegister(ins->getOperand(0));
-    RegisterSet liveRegs = ins->liveRegisters();
+    RegisterSet liveRegs = ins->safepoint()->liveRegs();
 
     ConstantOrRegister value = getSetPropertyValue(ins);
     const MGenericSetProperty *mir = ins->mirRaw()->toGenericSetProperty();
