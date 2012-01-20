@@ -58,7 +58,7 @@ interface nsITelemetry : nsISupports
    * where data is consists of the following properties:
    *   min - Minimal bucket size
    *   max - Maximum bucket size
-   *   histogram_type - HISTOGRAM_EXPONENTIAL or HISTOGRAM_LINEAR
+   *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, or HISTOGRAM_BOOLEAN
    *   counts - array representing contents of the buckets in the histogram
    *   ranges -  an array with calculated bucket sizes
    *   sum - sum of the bucket contents
@@ -94,13 +94,13 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval registeredHistograms;
 
   /** 
-   * Create and return a histogram where bucket sizes increase exponentially. Parameters:
+   * Create and return a histogram.  Parameters:
    *
    * @param name Unique histogram name
    * @param min - Minimal bucket size
    * @param max - Maximum bucket size
    * @param bucket_count - number of buckets in the histogram.
-   * @param type - HISTOGRAM_EXPONENTIAL or HISTOGRAM_LINEAR
+   * @param type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR or HISTOGRAM_BOOLEAN
    * The returned object has the following functions:
    *   add(int) - Adds an int value to the appropriate bucket
    *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
@@ -136,4 +136,56 @@ interface nsITelemetry : nsISupports
    * A flag indicating whether Telemetry can submit official results.
    */
   readonly attribute boolean canSend;
+
+  /** Addon telemetry hooks */
+
+  /**
+   * Register a histogram for an addon.  Throws an error if the
+   * histogram name has been registered previously.
+   *
+   * @param addon_id - Unique ID of the addon
+   * @param name - Unique histogram name
+   * @param min - Minimal bucket size
+   * @param max - Maximum bucket size
+   * @param bucket_count - number of buckets in the histogram
+   * @param histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, or
+   *        HISTOGRAM_BOOLEAN
+   */
+  void registerAddonHistogram(in ACString addon_id, in ACString name,
+                              in PRUint32 min, in PRUint32 max,
+                              in PRUint32 bucket_count,
+                              in unsigned long histogram_type);
+
+  /**
+   * Return a histogram previously registered via
+   * registerAddonHistogram.  Throws an error if the id/name combo has
+   * not been registered via registerAddonHistogram.
+   *
+   * @param addon_id - Unique ID of the addon
+   * @param name - Registered histogram name
+   *
+   * The returned object has the same functions as a histogram returned
+   * from newHistogram.
+   */
+  [implicit_jscontext]
+  jsval getAddonHistogram(in ACString addon_id, in ACString name);
+
+  /**
+   * Delete all histograms associated with the given addon id.
+   *
+   * @param addon_id - Unique ID of the addon
+   */
+  void unregisterAddonHistograms(in ACString addon_id);
+
+  /**
+   * An object containing a snapshot from all of the currently
+   * registered addon histograms.
+   * { addon-id1 : data1, ... }
+   *
+   * where data is an object whose properties are the names of the
+   * addon's histograms and whose corresponding values are as in
+   * histogramSnapshots.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval addonHistogramSnapshots;
 };
