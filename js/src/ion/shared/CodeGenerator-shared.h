@@ -201,6 +201,13 @@ class CodeGeneratorShared : public LInstructionVisitor
     }
 
   public:
+    // These functions have to be called before and after any callVM and before
+    // any modifications of the stack.  Modification of the stack made after
+    // these calls should update the framePushed variable, needed by the exit
+    // frame produced by callVM.
+    inline void saveLive(LInstruction *ins);
+    inline void restoreLive(LInstruction *ins);
+
     template <typename T>
     void pushArg(const T &t) {
         masm.Push(t);
