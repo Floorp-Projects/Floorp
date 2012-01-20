@@ -6870,7 +6870,7 @@ mjit::Compiler::jsop_newinit()
 bool
 mjit::Compiler::jsop_regexp()
 {
-    JSObject *obj = script->getRegExp(fullAtomIndex(PC));
+    JSObject *obj = script->getRegExp(GET_UINT32_INDEX(PC));
     RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
 
     if (!globalObj ||

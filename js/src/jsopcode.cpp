@@ -570,8 +570,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       }
 
       case JOF_ATOM:
-      case JOF_OBJECT:
-      case JOF_REGEXP: {
+      case JOF_OBJECT: {
         uintN index = js_GetIndexFromBytecode(script, pc, 0);
         jsval v;
         if (type == JOF_ATOM) {
@@ -582,17 +581,15 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
                 v = STRING_TO_JSVAL(atom);
             }
         } else {
-            JSObject *obj;
-            if (type == JOF_OBJECT) {
-                /* Don't call obj.toSource if analysis/inference is active. */
-                if (cx->compartment->activeAnalysis) {
-                    Sprint(sp, " object");
-                    break;
-                }
-                obj = script->getObject(index);
-            } else {
-                obj = script->getRegExp(index);
+            JS_ASSERT(type == JOF_OBJECT);
+
+            /* Don't call obj.toSource if analysis/inference is active. */
+            if (cx->compartment->activeAnalysis) {
+                Sprint(sp, " object");
+                break;
             }
+
+            JSObject *obj = script->getObject(index);
             v = OBJECT_TO_JSVAL(obj);
         }
         {
@@ -601,6 +598,15 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
                 return 0;
             Sprint(sp, " %s", bytes.ptr());
         }
+        break;
+      }
+
+      case JOF_REGEXP: {
+        JSObject *obj = script->getRegExp(GET_UINT32_INDEX(pc));
+        JSAutoByteString bytes;
+        if (!ToDisassemblySource(cx, ObjectValue(*obj), &bytes))
+            return 0;
+        Sprint(sp, " %s", bytes.ptr());
         break;
       }
 
@@ -2661,9 +2667,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 #define LOAD_FUNCTION(PCOFF)                                                  \
     GET_FUNCTION_FROM_BYTECODE(jp->script, pc, PCOFF, fun)
-
-#define LOAD_REGEXP(PCOFF)                                                    \
-    GET_REGEXP_FROM_BYTECODE(jp->script, pc, PCOFF, obj)
 
 #define GET_SOURCE_NOTE_ATOM(sn, atom)                                        \
     JS_BEGIN_MACRO                                                            \
@@ -4934,7 +4937,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 goto sprint_string;
 
               case JSOP_REGEXP:
-                GET_REGEXP_FROM_BYTECODE(jp->script, pc, 0, obj);
+                obj = jp->script->getRegExp(GET_UINT32_INDEX(pc));
                 str = obj->asRegExp().toString(cx);
                 if (!str)
                     return NULL;
