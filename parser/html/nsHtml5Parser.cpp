@@ -565,79 +565,6 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
-                                  nsIContent* aTargetNode,
-                                  nsIAtom* aContextLocalName,
-                                  PRInt32 aContextNamespace,
-                                  bool aQuirks,
-                                  bool aPreventScriptExecution)
-{
-  NS_ENSURE_TRUE(aSourceBuffer.Length() <= PR_INT32_MAX,
-      NS_ERROR_OUT_OF_MEMORY);
-  nsIDocument* doc = aTargetNode->OwnerDoc();
-  
-  nsIURI* uri = doc->GetDocumentURI();
-  NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
-
-  mExecutor->EnableFragmentMode(aPreventScriptExecution);
-
-  Initialize(doc, uri, nsnull, nsnull);
-
-  mExecutor->SetParser(this);
-  mExecutor->SetNodeInfoManager(doc->NodeInfoManager());
-
-  nsIContent* target = aTargetNode;
-  mTreeBuilder->setFragmentContext(aContextLocalName,
-                                   aContextNamespace,
-                                   &target,
-                                   aQuirks);
-
-#ifdef DEBUG
-  if (!aPreventScriptExecution) {
-    NS_ASSERTION(!aTargetNode->IsInDoc(),
-        "If script execution isn't prevented, "
-        "the target node must not be in doc.");
-    nsCOMPtr<nsIDOMDocumentFragment> domFrag = do_QueryInterface(aTargetNode);
-    NS_ASSERTION(domFrag,
-        "If script execution isn't prevented, must parse to DOM fragment.");
-  }
-#endif
-
-  NS_PRECONDITION(!mExecutor->HasStarted(),
-                  "Tried to start parse without initializing the parser.");
-  mTreeBuilder->setScriptingEnabled(mExecutor->IsScriptEnabled());
-  mTokenizer->start();
-  mExecutor->Start(); // Don't call WillBuildModel in fragment case
-  if (!aSourceBuffer.IsEmpty()) {
-    bool lastWasCR = false;
-    nsHtml5DependentUTF16Buffer buffer(aSourceBuffer);    
-    while (buffer.hasMore()) {
-      buffer.adjust(lastWasCR);
-      lastWasCR = false;
-      if (buffer.hasMore()) {
-        lastWasCR = mTokenizer->tokenizeBuffer(&buffer);
-        if (mTreeBuilder->HasScript()) {
-          // Flush on each script, because the execution prevention code
-          // can handle at most one script per flush.
-          mTreeBuilder->Flush(); // Move ops to the executor
-          mExecutor->FlushDocumentWrite(); // run the ops
-        }
-      }
-    }
-  }
-  mTokenizer->eof();
-  mTreeBuilder->StreamEnded();
-  mTreeBuilder->Flush();
-  mExecutor->FlushDocumentWrite();
-  mTokenizer->end();
-  mExecutor->DropParserAndPerfHint();
-  mExecutor->DropHeldElements();
-  mTreeBuilder->DropHandles();
-  mAtomTable.Clear();
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHtml5Parser::BuildModel()
 {
@@ -655,21 +582,7 @@ nsHtml5Parser::CancelParsingEvents()
 void
 nsHtml5Parser::Reset()
 {
-  NS_PRECONDITION(mExecutor->IsFragmentMode(),
-                  "Reset called on a non-fragment parser.");
-  mExecutor->Reset();
-  mLastWasCR = false;
-  UnblockParser();
-  mDocumentClosed = false;
-  mStreamParser = nsnull;
-  mRootContextLineNumber = 1;
-  mParserInsertedScriptsBeingEvaluated = 0;
-  mAtomTable.Clear(); // should be already cleared in the fragment case anyway
-  // Portable parser objects
-  mFirstBuffer->next = nsnull;
-  mFirstBuffer->setStart(0);
-  mFirstBuffer->setEnd(0);
-  mLastBuffer = mFirstBuffer;
+  NS_NOTREACHED("Don't call this!");
 }
 
 bool

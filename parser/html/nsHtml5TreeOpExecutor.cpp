@@ -196,7 +196,7 @@ nsHtml5TreeOpExecutor::WillResume()
 }
 
 NS_IMETHODIMP
-nsHtml5TreeOpExecutor::SetParser(nsIParser* aParser)
+nsHtml5TreeOpExecutor::SetParser(nsParserBase* aParser)
 {
   mParser = aParser;
   return NS_OK;
@@ -426,7 +426,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
   
   nsHtml5FlushLoopGuard guard(this); // this is also the self-kungfu!
   
-  nsCOMPtr<nsIParser> parserKungFuDeathGrip(mParser);
+  nsCOMPtr<nsISupports> parserKungFuDeathGrip(mParser);
 
   // Remember the entry time
   (void) nsContentSink::WillParseImpl();
@@ -593,7 +593,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 
   // avoid crashing near EOF
   nsRefPtr<nsHtml5TreeOpExecutor> kungFuDeathGrip(this);
-  nsCOMPtr<nsIParser> parserKungFuDeathGrip(mParser);
+  nsRefPtr<nsParserBase> parserKungFuDeathGrip(mParser);
 
   NS_ASSERTION(!mReadingFromStage,
     "Got doc write flush when reading from stage");
@@ -746,7 +746,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
 
   mReadingFromStage = false;
   
-  sele->SetCreatorParser(mParser);
+  sele->SetCreatorParser(GetParser());
 
   // Copied from nsXMLContentSink
   // Now tell the script that it's ready to go. This may execute the script
@@ -757,7 +757,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   // Else, block the parser till the script has loaded.
   if (block) {
     if (mParser) {
-      mParser->BlockParser();
+      GetParser()->BlockParser();
     }
   } else {
     // mParser may have been nulled out by now, but the flusher deals
@@ -833,12 +833,12 @@ void
 nsHtml5TreeOpExecutor::Reset()
 {
   DropHeldElements();
-  mReadingFromStage = false;
   mOpQueue.Clear();
   mStarted = false;
   mFlushState = eNotFlushing;
   mRunFlushLoopOnStack = false;
-  NS_ASSERTION(!mBroken, "Fragment parser got broken.");
+  NS_ASSERTION(!mReadingFromStage, "String parser reading from stage?");
+  NS_ASSERTION(!mBroken, "String parser got broken.");
 }
 
 void

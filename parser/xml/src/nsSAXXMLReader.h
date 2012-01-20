@@ -79,7 +79,7 @@ public:
 
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
   NS_IMETHOD DidBuildModel(bool aTerminated);
-  NS_IMETHOD SetParser(nsIParser* aParser);
+  NS_IMETHOD SetParser(nsParserBase* aParser);
   
   NS_IMETHOD WillInterrupt()
   {
