@@ -214,7 +214,7 @@ nsHtml5Parser::IsComplete()
 NS_IMETHODIMP
 nsHtml5Parser::Parse(nsIURI* aURL,
                      nsIRequestObserver* aObserver,
-                     void* aKey,
+                     void* aKey, // legacy; ignored
                      nsDTDMode aMode) // legacy; ignored
 {
   /*
@@ -229,7 +229,6 @@ nsHtml5Parser::Parse(nsIURI* aURL,
   mStreamParser->SetViewSourceTitle(aURL); // In case we're viewing source
   mExecutor->SetStreamParser(mStreamParser);
   mExecutor->SetParser(this);
-  mRootContextKey = aKey;
   return NS_OK;
 }
 
@@ -284,7 +283,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     return NS_OK;
   }
 
-  if (aLastCall && aSourceBuffer.IsEmpty() && aKey == GetRootContextKey()) {
+  if (aLastCall && aSourceBuffer.IsEmpty() && !aKey) {
     // document.close()
     NS_ASSERTION(!mStreamParser,
                  "Had stream parser but got document.close().");
@@ -406,7 +405,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     mLastWasCR = false;
     if (stackBuffer.hasMore()) {
       PRInt32 lineNumberSave;
-      bool inRootContext = (!mStreamParser && (aKey == mRootContextKey));
+      bool inRootContext = (!mStreamParser && !aKey);
       if (inRootContext) {
         mTokenizer->setLineNumber(mRootContextLineNumber);
       } else {
@@ -531,15 +530,6 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   }
 
   return NS_OK;
-}
-
-/**
- * This magic value is passed to the previous method on document.close()
- */
-NS_IMETHODIMP_(void *)
-nsHtml5Parser::GetRootContextKey()
-{
-  return mRootContextKey;
 }
 
 NS_IMETHODIMP
@@ -667,7 +657,6 @@ nsHtml5Parser::Reset()
   mStreamParser = nsnull;
   mRootContextLineNumber = 1;
   mParserInsertedScriptsBeingEvaluated = 0;
-  mRootContextKey = nsnull;
   mAtomTable.Clear(); // should be already cleared in the fragment case anyway
   // Portable parser objects
   mFirstBuffer->next = nsnull;
@@ -804,8 +793,7 @@ nsHtml5Parser::ParseUntilBlocked()
     mFirstBuffer->adjust(mLastWasCR);
     mLastWasCR = false;
     if (mFirstBuffer->hasMore()) {
-      bool inRootContext = (!mStreamParser &&
-                              (mFirstBuffer->key == mRootContextKey));
+      bool inRootContext = (!mStreamParser && !mFirstBuffer->key);
       if (inRootContext) {
         mTokenizer->setLineNumber(mRootContextLineNumber);
       }

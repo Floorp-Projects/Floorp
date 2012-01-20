@@ -187,11 +187,6 @@ class nsHtml5Parser : public nsIParser,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
     /**
-     * Gets the key passed to initial Parse()
-     */
-    NS_IMETHOD_(void *) GetRootContextKey();
-
-    /**
      * Stops the parser prematurely
      */
     NS_IMETHOD Terminate();

@@ -1628,7 +1628,7 @@ nsHTMLDocument::Close()
   }
 
   ++mWriteLevel;
-  nsresult rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
+  nsresult rv = mParser->Parse(EmptyString(), nsnull,
                                GetContentTypeInternal(), true);
   --mWriteLevel;
 
@@ -1730,8 +1730,8 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
 
   static NS_NAMED_LITERAL_STRING(new_line, "\n");
 
-  // Save the data in cache
-  if (mWyciwygChannel) {
+  // Save the data in cache if the write isn't from within the doc
+  if (mWyciwygChannel && !key) {
     if (!aText.IsEmpty()) {
       mWyciwygChannel->WriteToCacheEntry(aText);
     }
@@ -2256,7 +2256,7 @@ nsHTMLDocument::GenerateParserKey(void)
         // Make scripts that aren't inserted by the active parser of this document
         // participate in the context of the script that document.open()ed 
         // this document.
-        return mParser->GetRootContextKey();
+        return nsnull;
       }
     }
     return script;
