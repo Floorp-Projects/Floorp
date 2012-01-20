@@ -44,7 +44,7 @@
 
 #include "nsIDOMTelephony.h"
 #include "nsIDOMTelephonyCall.h"
-#include "nsITelephone.h"
+#include "nsIRadioInterfaceLayer.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -54,8 +54,8 @@ BEGIN_TELEPHONY_NAMESPACE
 class Telephony : public nsDOMEventTargetWrapperCache,
                   public nsIDOMTelephony
 {
-  nsCOMPtr<nsITelephone> mTelephone;
-  nsCOMPtr<nsITelephoneCallback> mTelephoneCallback;
+  nsCOMPtr<nsIRadioInterfaceLayer> mRIL;
+  nsCOMPtr<nsIRILTelephonyCallback> mRILTelephonyCallback;
 
   NS_DECL_EVENT_HANDLER(incoming);
 
@@ -71,14 +71,14 @@ class Telephony : public nsDOMEventTargetWrapperCache,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMTELEPHONY
-  NS_DECL_NSITELEPHONECALLBACK
+  NS_DECL_NSIRILTELEPHONYCALLBACK
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
                                                    Telephony,
                                                    nsDOMEventTargetWrapperCache)
 
   static already_AddRefed<Telephony>
-  Create(nsPIDOMWindow* aOwner, nsITelephone* aTelephone);
+  Create(nsPIDOMWindow* aOwner, nsIRadioInterfaceLayer* aRIL);
 
   nsIDOMEventTarget*
   ToIDOMEventTarget() const
@@ -109,10 +109,10 @@ public:
     mCallsArray = nsnull;
   }
 
-  nsITelephone*
-  Telephone() const
+  nsIRadioInterfaceLayer*
+  RIL() const
   {
-    return mTelephone;
+    return mRIL;
   }
 
   nsPIDOMWindow*
@@ -137,15 +137,15 @@ private:
   void
   SwitchActiveCall(TelephonyCall* aCall);
 
-  class TelephoneCallback : public nsITelephoneCallback
+  class RILTelephonyCallback : public nsIRILTelephonyCallback
   {
     Telephony* mTelephony;
 
   public:
     NS_DECL_ISUPPORTS
-    NS_FORWARD_NSITELEPHONECALLBACK(mTelephony->)
+    NS_FORWARD_NSIRILTELEPHONYCALLBACK(mTelephony->)
 
-    TelephoneCallback(Telephony* aTelephony)
+    RILTelephonyCallback(Telephony* aTelephony)
     : mTelephony(aTelephony)
     {
       NS_ASSERTION(mTelephony, "Null pointer!");

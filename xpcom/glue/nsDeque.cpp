@@ -350,6 +350,22 @@ void* nsDeque::ObjectAt(PRInt32 aIndex) const {
   return result;
 }
 
+void* nsDeque::RemoveObjectAt(PRInt32 aIndex) {
+  if ((aIndex<0) || (aIndex>=mSize)) {
+    return 0;
+  }
+  void* result=mData[modulus(mOrigin + aIndex, mCapacity)];
+
+  // "Shuffle down" all elements in the array by 1, overwritting the element
+  // being removed.
+  for (PRInt32 i=aIndex; i<mSize; i++) {
+    mData[modulus(mOrigin + i, mCapacity)] = mData[modulus(mOrigin + i + 1, mCapacity)];
+  }
+  mSize--;
+
+  return result;
+}
+
 /**
  * Create and return an iterator pointing to
  * the beginning of the queue. Note that this

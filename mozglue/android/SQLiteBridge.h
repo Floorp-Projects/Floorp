@@ -11,15 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Telephony.
+ * The Original Code is Mozilla Android code.
  *
- * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
+ *   Gian-Carlo Pascutto <gpascutto@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,7 +34,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This must always match the CID given in nsTelephonyWorker.manifest!
-#define NS_TELEPHONYWORKER_CID \
-    { 0x2d831c8d, 0x6017, 0x435b, \
-      { 0xa8, 0x0c, 0xe5, 0xd4, 0x22, 0x81, 0x0c, 0xea } }
+#ifndef SQLiteBridge_h
+#define SQLiteBridge_h
+
+#include "sqlite3.h"
+
+void setup_sqlite_functions(void *sqlite_handle);
+
+#define SQLITE_WRAPPER(name, return_type, args...) \
+typedef return_type (*name ## _t)(args);  \
+extern name ## _t f_ ## name;
+
+SQLITE_WRAPPER(sqlite3_open, int, const char*, sqlite3**)
+SQLITE_WRAPPER(sqlite3_errmsg, const char*, sqlite3*)
+SQLITE_WRAPPER(sqlite3_prepare_v2, int, sqlite3*, const char*, int, sqlite3_stmt**, const char**)
+SQLITE_WRAPPER(sqlite3_bind_parameter_count, int, sqlite3_stmt*)
+SQLITE_WRAPPER(sqlite3_bind_text, int, sqlite3_stmt*, int, const char*, int, void(*)(void*))
+SQLITE_WRAPPER(sqlite3_step, int, sqlite3_stmt*)
+SQLITE_WRAPPER(sqlite3_column_count, int, sqlite3_stmt*)
+SQLITE_WRAPPER(sqlite3_finalize, int, sqlite3_stmt*)
+SQLITE_WRAPPER(sqlite3_close, int, sqlite3*)
+SQLITE_WRAPPER(sqlite3_column_name, const char*, sqlite3_stmt*, int)
+SQLITE_WRAPPER(sqlite3_column_type, int, sqlite3_stmt*, int)
+SQLITE_WRAPPER(sqlite3_column_blob, const void*, sqlite3_stmt*, int)
+SQLITE_WRAPPER(sqlite3_column_bytes, int, sqlite3_stmt*, int)
+SQLITE_WRAPPER(sqlite3_column_text, const unsigned char*, sqlite3_stmt*, int)
+
+#endif /* SQLiteBridge_h */
