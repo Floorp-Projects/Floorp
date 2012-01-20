@@ -44,13 +44,16 @@
 #include "jsapi.h"
 #include "jsbool.h"
 #include "jscompartment.h"
+#include "jsinfer.h"
 #include "jsinterp.h"
+#include "jslibmath.h"
 #include "jsnum.h"
 #include "jsprobes.h"
 #include "jsstr.h"
 #include "methodjit/MethodJIT.h"
 
 #include "jsfuninlines.h"
+#include "jsinferinlines.h"
 #include "jspropertycacheinlines.h"
 #include "jstypedarrayinlines.h"
 
@@ -509,6 +512,137 @@ InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
 {
     if (script == regs->fp()->script())
         enabler.enableInterrupts();
+}
+
+static JS_ALWAYS_INLINE bool
+AddOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    Value lval = lhs;
+    Value rval = rhs;
+
+    if (lval.isInt32() && rval.isInt32()) {
+        int32_t l = lval.toInt32(), r = rval.toInt32();
+        int32_t sum = l + r;
+        if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
+            res->setDouble(double(l) + double(r));
+            types::TypeScript::MonitorOverflow(cx);
+        } else {
+            res->setInt32(sum);
+        }
+    } else
+#if JS_HAS_XML_SUPPORT
+    if (IsXML(lval) && IsXML(rval)) {
+        if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), res))
+            return false;
+        types::TypeScript::MonitorUnknown(cx);
+    } else
+#endif
+    {
+        /*
+         * If either operand is an object, any non-integer result must be
+         * reported to inference.
+         */
+        bool lIsObject = lval.isObject(), rIsObject = rval.isObject();
+
+        if (!ToPrimitive(cx, &lval))
+            return false;
+        if (!ToPrimitive(cx, &rval))
+            return false;
+        bool lIsString, rIsString;
+        if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
+            js::AutoStringRooter lstr(cx), rstr(cx);
+            if (lIsString) {
+                lstr.setString(lval.toString());
+            } else {
+                lstr.setString(ToString(cx, lval));
+                if (!lstr.string())
+                    return false;
+            }
+            if (rIsString) {
+                rstr.setString(rval.toString());
+            } else {
+                rstr.setString(ToString(cx, rval));
+                if (!rstr.string())
+                    return false;
+            }
+            JSString *str = js_ConcatStrings(cx, lstr.string(), rstr.string());
+            if (!str)
+                return false;
+            if (lIsObject || rIsObject)
+                types::TypeScript::MonitorString(cx);
+            res->setString(str);
+        } else {
+            double l, r;
+            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
+                return false;
+            l += r;
+            if (!res->setNumber(l) &&
+                (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble()))) {
+                types::TypeScript::MonitorOverflow(cx);
+            }
+        }
+    }
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+SubOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    double d1, d2;
+    if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
+        return false;
+    double d = d1 - d2;
+    if (!res->setNumber(d) && !(lhs.isDouble() || rhs.isDouble()))
+        types::TypeScript::MonitorOverflow(cx);
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+MulOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    double d1, d2;
+    if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
+        return false;
+    double d = d1 * d2;
+    if (!res->setNumber(d) && !(lhs.isDouble() || rhs.isDouble()))
+        types::TypeScript::MonitorOverflow(cx);
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+DivOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    double d1, d2;
+    if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
+        return false;
+    res->setNumber(NumberDiv(d1, d2));
+
+    if (d2 == 0 || (res->isDouble() && !(lhs.isDouble() || rhs.isDouble())))
+        types::TypeScript::MonitorOverflow(cx);
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+ModOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    int32_t l, r;
+    if (lhs.isInt32() && rhs.isInt32() &&
+        (l = lhs.toInt32()) >= 0 && (r = rhs.toInt32()) > 0) {
+        int32_t mod = l % r;
+        res->setInt32(mod);
+        return true;
+    }
+
+    double d1, d2;
+    if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
+        return false;
+
+    if (d2 == 0)
+        res->setDouble(js_NaN);
+    else
+        res->setDouble(js_fmod(d1, d2));
+    types::TypeScript::MonitorOverflow(cx);
+    return true;
 }
 
 }  /* namespace js */
