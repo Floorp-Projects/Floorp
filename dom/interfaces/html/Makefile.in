@@ -116,7 +116,6 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLAudioElement.idl		\
 	nsIDOMValidityState.idl		\
 	nsIDOMDOMStringMap.idl		\
-	nsIDOMMozBrowserFrameElement.idl	\
 	$(NULL)
 
 XPIDLSRCS = 					\
