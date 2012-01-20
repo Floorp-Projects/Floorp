@@ -113,6 +113,8 @@ private:
 
     // Header cannot be merged: only one value possible
     bool    IsSingletonHeader(nsHttpAtom header);
+    // For some headers, we treat no value as possible CRLF attack
+    bool    HeaderMustHaveValue(nsHttpAtom header);
 
     // Subset of singleton headers: should never see multiple, different
     // instances of these, else something fishy may be going on (like CLRF
@@ -154,6 +156,12 @@ nsHttpHeaderArray::IsSingletonHeader(nsHttpAtom header)
            header == nsHttp::From                ||
            header == nsHttp::Location            ||
            header == nsHttp::Max_Forwards;
+}
+
+inline bool
+nsHttpHeaderArray::HeaderMustHaveValue(nsHttpAtom header)
+{
+    return header == nsHttp::Location;
 }
 
 inline void
