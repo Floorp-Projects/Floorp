@@ -45,6 +45,7 @@ class nsHtml5TreeOpExecutor;
 class nsHtml5TreeBuilder;
 class nsHtml5Tokenizer;
 class nsIContent;
+class nsIDocument;
 
 class nsHtml5StringParser : public nsParserBase
 {
@@ -52,11 +53,16 @@ class nsHtml5StringParser : public nsParserBase
 
     NS_DECL_ISUPPORTS
 
+    /**
+     * Constructor for use ONLY by nsContentUtils. Others, please call the
+     * nsContentUtils statics that wrap this.
+     */
     nsHtml5StringParser();
     virtual ~nsHtml5StringParser();
 
     /**
      * Invoke the fragment parsing algorithm (innerHTML).
+     * DO NOT CALL from outside nsContentUtils.cpp.
      *
      * @param aSourceBuffer the string being set as innerHTML
      * @param aTargetNode the target container
@@ -67,14 +73,26 @@ class nsHtml5StringParser : public nsParserBase
      * don't set to false when parsing into a target node that has been bound
      * to tree.
      */
-    nsresult ParseHtml5Fragment(const nsAString& aSourceBuffer,
-                                nsIContent* aTargetNode,
-                                nsIAtom* aContextLocalName,
-                                PRInt32 aContextNamespace,
-                                bool aQuirks,
-                                bool aPreventScriptExecution);
+    nsresult ParseFragment(const nsAString& aSourceBuffer,
+                           nsIContent* aTargetNode,
+                           nsIAtom* aContextLocalName,
+                           PRInt32 aContextNamespace,
+                           bool aQuirks,
+                           bool aPreventScriptExecution);
+
+    /**
+     * Parse an entire HTML document from a source string.
+     * DO NOT CALL from outside nsContentUtils.cpp.
+     *
+     */
+    nsresult ParseDocument(const nsAString& aSourceBuffer,
+                           nsIDocument* aTargetDoc);
 
   private:
+
+    void Tokenize(const nsAString& aSourceBuffer,
+                  nsIDocument* aDocument,
+                  bool aScriptingEnabledForNoscriptParsing);
 
     /**
      * The tree operation executor

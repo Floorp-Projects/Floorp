@@ -327,7 +327,6 @@ protected:
   // Have we already called BeginUpdate for this set of content changes?
   PRUint8 mBeganUpdate : 1;
   PRUint8 mLayoutStarted : 1;
-  PRUint8 mCanInterruptParser : 1;
   PRUint8 mDynamicLowerValue : 1;
   PRUint8 mParsing : 1;
   PRUint8 mDroppedTimer : 1;
@@ -339,8 +338,9 @@ protected:
   // shouldn't be performing any more content model notifications,
   // since we're not longer updating our child counts.
   PRUint8 mIsDocumentObserver : 1;
-  // True if this is a fragment parser
-  PRUint8 mFragmentMode : 1;
+  // True if this is parser is a fragment parser or an HTML DOMParser.
+  // XML DOMParser leaves this to false for now!
+  PRUint8 mRunsToCompletion : 1;
   // True to call prevent script execution in the fragment mode.
   PRUint8 mPreventScriptExecution : 1;
   
@@ -398,7 +398,6 @@ protected:
   static PRInt32 sInitialPerfTime;
   // Should we switch between perf-mode and interactive-mode
   static PRInt32 sEnablePerfMode;
-  static bool sCanInterruptParser;
 };
 
 #endif // _nsContentSink_h_

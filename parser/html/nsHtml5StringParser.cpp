@@ -48,7 +48,7 @@
 NS_IMPL_ISUPPORTS0(nsHtml5StringParser)
 
 nsHtml5StringParser::nsHtml5StringParser()
-  : mExecutor(new nsHtml5TreeOpExecutor())
+  : mExecutor(new nsHtml5TreeOpExecutor(true))
   , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nsnull))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
 {
@@ -63,26 +63,19 @@ nsHtml5StringParser::~nsHtml5StringParser()
 }
 
 nsresult
-nsHtml5StringParser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
-                                        nsIContent* aTargetNode,
-                                        nsIAtom* aContextLocalName,
-                                        PRInt32 aContextNamespace,
-                                        bool aQuirks,
-                                        bool aPreventScriptExecution)
+nsHtml5StringParser::ParseFragment(const nsAString& aSourceBuffer,
+                                   nsIContent* aTargetNode,
+                                   nsIAtom* aContextLocalName,
+                                   PRInt32 aContextNamespace,
+                                   bool aQuirks,
+                                   bool aPreventScriptExecution)
 {
   NS_ENSURE_TRUE(aSourceBuffer.Length() <= PR_INT32_MAX,
-      NS_ERROR_OUT_OF_MEMORY);
-  nsIDocument* doc = aTargetNode->OwnerDoc();
+                 NS_ERROR_OUT_OF_MEMORY);
 
+  nsIDocument* doc = aTargetNode->OwnerDoc();
   nsIURI* uri = doc->GetDocumentURI();
   NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
-
-  mExecutor->EnableFragmentMode(aPreventScriptExecution);
-
-  mExecutor->Init(doc, uri, nsnull, nsnull);
-
-  mExecutor->SetParser(this);
-  mExecutor->SetNodeInfoManager(doc->NodeInfoManager());
 
   nsIContent* target = aTargetNode;
   mTreeBuilder->setFragmentContext(aContextLocalName,
@@ -93,17 +86,55 @@ nsHtml5StringParser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
 #ifdef DEBUG
   if (!aPreventScriptExecution) {
     NS_ASSERTION(!aTargetNode->IsInDoc(),
-        "If script execution isn't prevented, "
-        "the target node must not be in doc.");
+                 "If script execution isn't prevented, "
+                 "the target node must not be in doc.");
     nsCOMPtr<nsIDOMDocumentFragment> domFrag = do_QueryInterface(aTargetNode);
     NS_ASSERTION(domFrag,
-        "If script execution isn't prevented, must parse to DOM fragment.");
+      "If script execution isn't prevented, must parse to DOM fragment.");
   }
 #endif
 
+  mExecutor->EnableFragmentMode(aPreventScriptExecution);
+
+  Tokenize(aSourceBuffer, doc, true);
+  return NS_OK;
+}
+
+nsresult
+nsHtml5StringParser::ParseDocument(const nsAString& aSourceBuffer,
+                                   nsIDocument* aTargetDoc)
+{
+  MOZ_ASSERT(!aTargetDoc->GetFirstChild());
+
+  NS_ENSURE_TRUE(aSourceBuffer.Length() <= PR_INT32_MAX,
+                 NS_ERROR_OUT_OF_MEMORY);
+
+  mTreeBuilder->setFragmentContext(nsnull,
+                                   kNameSpaceID_None,
+                                   nsnull,
+                                   false);
+
+  mExecutor->PreventScriptExecution();
+
+  Tokenize(aSourceBuffer, aTargetDoc, false);
+  return NS_OK;
+}
+
+void
+nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
+                              nsIDocument* aDocument,
+                              bool aScriptingEnabledForNoscriptParsing) {
+
+  nsIURI* uri = aDocument->GetDocumentURI();
+
+  mExecutor->Init(aDocument, uri, nsnull, nsnull);
+
+  mExecutor->SetParser(this);
+  mExecutor->SetNodeInfoManager(aDocument->NodeInfoManager());
+
   NS_PRECONDITION(!mExecutor->HasStarted(),
                   "Tried to start parse without initializing the parser.");
-  mTreeBuilder->setScriptingEnabled(mExecutor->IsScriptEnabled());
+  mTreeBuilder->setScriptingEnabled(aScriptingEnabledForNoscriptParsing);
   mTokenizer->start();
   mExecutor->Start(); // Don't call WillBuildModel in fragment case
   if (!aSourceBuffer.IsEmpty()) {
@@ -133,5 +164,4 @@ nsHtml5StringParser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
   mTreeBuilder->DropHandles();
   mAtomTable.Clear();
   mExecutor->Reset();
-  return NS_OK;
 }

@@ -246,8 +246,6 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
                      bool aLastCall,
                      nsDTDMode aMode) // ignored
 {
-  NS_PRECONDITION(!mExecutor->IsFragmentMode(),
-                  "Document.write called in fragment mode!");
   if (mExecutor->IsBroken()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -650,9 +648,6 @@ nsHtml5Parser::IsScriptCreated()
 void
 nsHtml5Parser::ParseUntilBlocked()
 {
-  NS_PRECONDITION(!mExecutor->IsFragmentMode(),
-                  "ParseUntilBlocked called in fragment mode.");
-
   if (mBlocked || mExecutor->IsComplete() || mExecutor->IsBroken()) {
     return;
   }
