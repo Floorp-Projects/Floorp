@@ -43,7 +43,7 @@
 class nsParserBase : public nsISupports
 {
   public:
-    virtual bool IsParserEnabled() { return true; }
+    NS_IMETHOD_(bool) IsParserEnabled() { return true; }
     NS_IMETHOD GetChannel(nsIChannel** aChannel) {
       *aChannel = nsnull;
       return NS_OK;
