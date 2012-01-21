@@ -1625,15 +1625,36 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     StringBuffer sb(cx);
 
     if (!locale && !seplen && obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj)) {
-        /* Elements beyond the initialized length are 'undefined' and thus can be ignored. */
-        const Value *beg = obj->getDenseArrayElements();
-        const Value *end = beg + Min(length, obj->getDenseArrayInitializedLength());
-        for (const Value *vp = beg; vp != end; ++vp) {
+        const Value *start = obj->getDenseArrayElements();
+        const Value *end = start + obj->getDenseArrayInitializedLength();
+        const Value *elem;
+        for (elem = start; elem < end; elem++) {
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
 
-            if (!vp->isMagic(JS_ARRAY_HOLE) && !vp->isNullOrUndefined()) {
-                if (!ValueToStringBuffer(cx, *vp, sb))
+            /*
+             * Object stringifying is slow; delegate it to a separate loop to
+             * keep this one tight.
+             */
+            if (elem->isObject())
+                break;
+
+            if (!elem->isMagic(JS_ARRAY_HOLE) && !elem->isNullOrUndefined()) {
+                if (!ValueToStringBuffer(cx, *elem, sb))
+                    return false;
+            }
+        }
+
+        for (uint32_t i = uint32_t(PointerRangeSize(start, elem)); i < length; i++) {
+            if (!JS_CHECK_OPERATION_LIMIT(cx))
+                return false;
+
+            JSBool hole;
+            Value v;
+            if (!GetElement(cx, obj, i, &hole, &v))
+                return false;
+            if (!hole && !v.isNullOrUndefined()) {
+                if (!ValueToStringBuffer(cx, v, sb))
                     return false;
             }
         }
