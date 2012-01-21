@@ -15,18 +15,15 @@ public class testBookmark extends BaseTest {
         mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
         hitEnterAndWait();
 
-        //Click the top item in the history list.
+        //Click the top item in the bookmark list.
         clickOnAwesomeBar();
-        mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
         mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
         ArrayList<TextView> l = null;
         while (l == null || l.size() < 1) {
-            // first item in the history list is a heading ("Today");
-            // click on the next one
-            l = mSolo.clickInList(2);
+            l = mSolo.clickInList(1);
         }
         waitForLoad();
 
-        //Order of history items isn't constant so URL can't be tested.
+        //Items in bookmarks aren't constant so URL can't be tested.
     }
 }
