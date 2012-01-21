@@ -265,6 +265,10 @@ var BrowserApp = {
         url = window.arguments[0];
       if (window.arguments[1])
         restoreSession = window.arguments[1];
+      if (window.arguments[2])
+        gScreenWidth = window.arguments[2];
+      if (window.arguments[3])
+        gScreenHeight = window.arguments[3];
     }
 
     // XXX maybe we don't do this if the launch was kicked off from external
@@ -465,7 +469,9 @@ var BrowserApp = {
     return newTab;
   },
 
-  closeTab: function closeTab(aTab) {
+  // WARNING: Calling this will only update the state in BrowserApp. It will
+  // not close the tab in the Java UI.
+  _closeTab: function _closeTab(aTab) {
     if (aTab == this.selectedTab)
       this.selectedTab = null;
 
@@ -843,7 +849,7 @@ var BrowserApp = {
     } else if (aTopic == "Tab:Select") {
       this.selectTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Close") {
-      this.closeTab(this.getTabForId(parseInt(aData)));
+      this._closeTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Screenshot") {
       this.screenshotTab(aData);
     } else if (aTopic == "Browser:Quit") {
@@ -1423,14 +1429,6 @@ Tab.prototype = {
     this.browser = null;
     this.vbox = null;
     this.documentIdForCurrentViewport = null;
-    let message = {
-      gecko: {
-        type: "Tab:Closed",
-        tabID: this.id
-      }
-    };
-
-    sendMessageToJava(message);
   },
 
   set active(aActive) {

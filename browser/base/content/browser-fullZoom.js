@@ -232,8 +232,8 @@ var FullZoom = {
 
     let browser = aBrowser || gBrowser.selectedBrowser;
 
-    // Image documents should always start at 1, and are not affected by prefs.
-    if (!aIsTabSwitch && browser.contentDocument instanceof ImageDocument) {
+    // Media documents should always start at 1, and are not affected by prefs.
+    if (!aIsTabSwitch && browser.contentDocument.mozSyntheticDocument) {
       ZoomManager.setZoomForBrowser(browser, 1);
       return;
     }
@@ -309,7 +309,7 @@ var FullZoom = {
 
     var browser = aBrowser || (gBrowser && gBrowser.selectedBrowser);
     try {
-      if (browser.contentDocument instanceof ImageDocument)
+      if (browser.contentDocument.mozSyntheticDocument)
         return;
 
       if (typeof aValue != "undefined")
@@ -324,7 +324,7 @@ var FullZoom = {
 
   _applySettingToPref: function FullZoom__applySettingToPref() {
     if (!this.siteSpecific || gInPrintPreviewMode ||
-        content.document instanceof ImageDocument)
+        content.document.mozSyntheticDocument)
       return;
 
     var zoomLevel = ZoomManager.zoom;
@@ -332,7 +332,7 @@ var FullZoom = {
   },
 
   _removePref: function FullZoom__removePref() {
-    if (!(content.document instanceof ImageDocument))
+    if (!(content.document.mozSyntheticDocument))
       Services.contentPrefs.removePref(gBrowser.currentURI, this.name);
   },
 

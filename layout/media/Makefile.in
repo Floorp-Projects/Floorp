@@ -90,9 +90,9 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifeq (WINNT,$(OS_TARGET))
 EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
 
-ifeq (WINNT,$(OS_TARGET))
 # OTS uses uncompress2() from libz, so we need to link with this
 ifdef MOZ_NATIVE_ZLIB
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
@@ -101,9 +101,11 @@ EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
 DEFFILE = symbols.def
-
-symbols.def: symbols.def.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(ACDEFINES) $< > $@
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq (WINNT,$(OS_TARGET))
+symbols.def: symbols.def.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(ACDEFINES) $< > $@
+endif

@@ -55,7 +55,7 @@
 
 #include "nspr.h"
 
-using namespace mozilla::imagelib;
+using namespace mozilla::image;
 
 NS_IMPL_ADDREF(imgRequestProxy)
 NS_IMPL_RELEASE(imgRequestProxy)
