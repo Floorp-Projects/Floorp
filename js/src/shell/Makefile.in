@@ -59,12 +59,6 @@ SHELL_INSTALL_AUTOLOAD_DEST := $(DIST)/bin
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_SHARK
-CFLAGS += -F/System/Library/PrivateFrameworks
-CXXFLAGS += -F/System/Library/PrivateFrameworks
-LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
-endif
-
 # People expect the js shell to wind up in the top-level JS dir.
 libs::
 	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(DEPTH)
