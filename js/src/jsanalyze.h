@@ -1198,6 +1198,8 @@ class ScriptAnalysis
                            const Vector<uint32_t> &branchTargets);
     void mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                               const Vector<uint32_t> &exceptionTargets);
+    void mergeAllExceptionTargets(JSContext *cx, SSAValue *values,
+                                  const Vector<uint32_t> &exceptionTargets);
     bool removeBranchTarget(Vector<uint32_t> &branchTargets,
                             Vector<uint32_t> &exceptionTargets,
                             uint32_t offset);
