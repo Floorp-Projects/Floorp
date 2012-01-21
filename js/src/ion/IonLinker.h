@@ -52,6 +52,7 @@
 namespace js {
 namespace ion {
 
+static const int CodeAlignment = 8;
 class Linker
 {
     MacroAssembler &masm;
@@ -67,7 +68,7 @@ class Linker
             return fail(cx);
 
         JSC::ExecutablePool *pool;
-        size_t bytesNeeded = masm.bytesNeeded() + sizeof(IonCode *);
+        size_t bytesNeeded = masm.bytesNeeded() + sizeof(IonCode *) + CodeAlignment;
         if (bytesNeeded >= MAX_BUFFER_SIZE)
             return fail(cx);
 
@@ -75,8 +76,11 @@ class Linker
         if (!result)
             return fail(cx);
 
-        IonCode *code = IonCode::New(cx, result + sizeof(IonCode *),
-                                     bytesNeeded - sizeof(IonCode *), pool);
+        // Bump the code up to a nice alignment.
+        uint8 *codeStart = (uint8 *)AlignBytes((uintptr_t)result, CodeAlignment);
+        uint32 headerSize = codeStart - result;
+        IonCode *code = IonCode::New(cx, codeStart,
+                                     bytesNeeded - headerSize, pool);
         if (!code)
             return NULL;
         code->copyFrom(masm);

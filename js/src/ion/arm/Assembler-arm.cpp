@@ -187,14 +187,14 @@ InstDTR::asTHIS(Instruction &i)
 }
 
 bool
-InstBranchReg::isTHIS(Instruction &i)
+InstBranchReg::isTHIS(const Instruction &i)
 {
     return InstBXReg::isTHIS(i) ||
         InstBLXReg::isTHIS(i);
 }
 
 InstBranchReg *
-InstBranchReg::asTHIS(Instruction &i)
+InstBranchReg::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstBranchReg*)&i;
@@ -212,14 +212,14 @@ InstBranchReg::checkDest(Register dest)
 }
 
 bool
-InstBranchImm::isTHIS(Instruction &i)
+InstBranchImm::isTHIS(const Instruction &i)
 {
     return InstBImm::isTHIS(i) ||
         InstBLImm::isTHIS(i);
 }
 
 InstBranchImm *
-InstBranchImm::asTHIS(Instruction &i)
+InstBranchImm::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstBranchImm*)&i;
@@ -233,13 +233,13 @@ InstBranchImm::extractImm(BOffImm *dest)
 }
 
 bool
-InstBXReg::isTHIS(Instruction &i)
+InstBXReg::isTHIS(const Instruction &i)
 {
-    return (i.encode () & IsBRegMask) == IsBX;
+    return (i.encode() & IsBRegMask) == IsBX;
 }
 
 InstBXReg *
-InstBXReg::asTHIS(Instruction &i)
+InstBXReg::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstBXReg*)&i;
@@ -247,13 +247,13 @@ InstBXReg::asTHIS(Instruction &i)
 }
 
 bool
-InstBLXReg::isTHIS(Instruction &i)
+InstBLXReg::isTHIS(const Instruction &i)
 {
-    return (i.encode () & IsBRegMask) == IsBLX;
+    return (i.encode() & IsBRegMask) == IsBLX;
 
 }
 InstBLXReg *
-InstBLXReg::asTHIS(Instruction &i)
+InstBLXReg::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstBLXReg*)&i;
@@ -261,12 +261,12 @@ InstBLXReg::asTHIS(Instruction &i)
 }
 
 bool
-InstBImm::isTHIS(Instruction &i)
+InstBImm::isTHIS(const Instruction &i)
 {
     return (i.encode () & IsBImmMask) == IsB;
 }
 InstBImm *
-InstBImm::asTHIS(Instruction &i)
+InstBImm::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstBImm*)&i;
@@ -274,7 +274,7 @@ InstBImm::asTHIS(Instruction &i)
 }
 
 bool
-InstBLImm::isTHIS(Instruction &i)
+InstBLImm::isTHIS(const Instruction &i)
 {
     return (i.encode () & IsBImmMask) == IsBL;
 
@@ -324,20 +324,20 @@ InstMovWT::checkDest(Register dest)
 }
 
 bool
-InstMovW::isTHIS(Instruction &i)
+InstMovW::isTHIS(const Instruction &i)
 {
     return (i.encode() & IsWTMask) == IsW;
 }
 
 InstMovW *
-InstMovW::asTHIS(Instruction &i)
+InstMovW::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstMovW*) (&i);
     return NULL;
 }
 InstMovT *
-InstMovT::asTHIS(Instruction &i)
+InstMovT::asTHIS(const Instruction &i)
 {
     if (isTHIS(i))
         return (InstMovT*) (&i);
@@ -345,7 +345,7 @@ InstMovT::asTHIS(Instruction &i)
 }
 
 bool
-InstMovT::isTHIS(Instruction &i)
+InstMovT::isTHIS(const Instruction &i)
 {
     return (i.encode() & IsWTMask) == IsT;
 }
@@ -361,13 +361,10 @@ Imm16::Imm16() : invalid(0xfff) {}
 void
 Assembler::executableCopy(uint8 *buffer)
 {
-    ASSERT(m_buffer.sizeOfConstantPool() == 0);
-    memcpy(buffer, m_buffer.data(), m_buffer.size());
+    m_buffer.executableCopy(buffer);
 
     for (size_t i = 0; i < jumps_.length(); i++) {
-        //        RelativePatch &rp = jumps_[i];
         JS_NOT_REACHED("Feature NYI");
-        //JSC::ARMAssembler::setRel32(buffer + rp.offset, rp.target);
     }
     JSC::ExecutableAllocator::cacheFlush(buffer, m_buffer.size());
 }
@@ -492,6 +489,16 @@ TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
     }
 
 }
+static void
+TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer, CompactBufferReader &reader)
+{
+    while (reader.more()) {
+        size_t offset = reader.readUnsigned();
+        void *ptr = ion::Assembler::getPtr32Target((Instruction*)(buffer->getInst(BufferOffset(offset))));
+        gc::MarkGCThing(trc, ptr, "immgcptr");
+    }
+
+}
 void
 Assembler::TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
 {
@@ -522,7 +529,7 @@ Assembler::trace(JSTracer *trc)
     }
     if (dataRelocations_.length()) {
         CompactBufferReader reader(dataRelocations_);
-        ::TraceDataRelocations(trc, m_buffer.buffer(), reader);
+        ::TraceDataRelocations(trc, &m_buffer, reader);
     }
 }
 
@@ -903,11 +910,13 @@ Assembler::addCodeLabel(CodeLabel *label)
     return codeLabels_.append(label);
 }
 
-// Size of the instruction stream, in bytes.
+// Size of the instruction stream, in bytes.  Including pools. This function expects
+// all pools that need to be placed have been placed.  If they haven't then we
+// need to go an flush the pools :(
 size_t
 Assembler::size() const
 {
-    return m_buffer.uncheckedSize();
+    return m_buffer.size();
 }
 // Size of the relocation table, in bytes.
 size_t
@@ -1232,7 +1241,7 @@ Assembler::as_Imm32Pool(Register dest, uint32 value)
     php.phd.destReg = dest.code();
     php.phd.index = 0;
     php.phd.ONES = 0xf;
-    m_buffer.putIntWithConstantInt(php.raw, value);
+    m_buffer.insertEntry(4, (uint8*)&php.raw, int32Pool, (uint8*)&value);
 }
 
 void
@@ -1244,7 +1253,7 @@ Assembler::as_FImm64Pool(VFPRegister dest, double value)
     php.phd.destReg = dest.code();
     php.phd.index = 0;
     php.phd.ONES = 0xf;
-    m_buffer.putIntWithConstantDouble(php.raw, value);
+    m_buffer.insertEntry(4, (uint8*)&php.raw, doublePool, (uint8*)&value);
 }
 // Pool callbacks stuff:
 uint32
@@ -1252,11 +1261,26 @@ Assembler::patchConstantPoolLoad(uint32 load, int32 index)
 {
     PoolHintPun php;
     php.raw = load;
-    JS_ASSERT(php.phd.ONES == 0xf && php.phd.loadType != PoolHintData::poolBOGUS);
+    JS_ASSERT((php.phd.ONES == 0xf) && (php.phd.loadType != PoolHintData::poolBOGUS));
     php.phd.index = index;
     JS_ASSERT(index == php.phd.index);
     return php.raw;
 }
+
+// Pool callbacks stuff:
+void
+Assembler::insertTokenIntoTag(uint32 instSize, uint8 *load_, int32 token)
+{
+    uint32 *load = (uint32*) load_;
+    PoolHintPun php;
+    php.raw = *load;
+    JS_ASSERT((php.phd.ONES == 0xf) && (php.phd.loadType != PoolHintData::poolBOGUS));
+    php.phd.index = token;
+    JS_ASSERT(token == php.phd.index);
+    *load = php.raw;
+}
+// patchConstantPoolLoad takes the address of the instruction that wants to be patched, and
+//the address of the start of the constant pool, and figures things out from there.
 void
 Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
 {
@@ -1275,7 +1299,7 @@ Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
         break;
       case PoolHintData::poolVDTR:
         dummy->as_vdtr(IsLoad, VFPRegister(FloatRegister::FromCode(data.destReg)),
-                       VFPAddr(pc, VFPOffImm(offset+4*data.index - 8)), Always, instAddr);
+                       VFPAddr(pc, VFPOffImm(offset+8*data.index - 8)), Always, instAddr);
         break;
     }
 }
@@ -1303,23 +1327,34 @@ void
 Assembler::as_bx(Register r, Condition c)
 {
     writeInst(((int) c) | op_bx | r.code());
+    if (c == Always)
+        m_buffer.markGuard();
 }
-
+void
+Assembler::writePoolGuard(BufferOffset branch, Instruction *dest, BufferOffset afterPool)
+{
+    BOffImm off = branch.diffB<BOffImm>(afterPool);
+    *dest = InstBImm(off, Always);
+}
 // Branch can branch to an immediate *or* to a register.
 // Branches to immediates are pc relative, branches to registers
 // are absolute
 void
 Assembler::as_b(BOffImm off, Condition c)
 {
+    m_buffer.markNextAsBranch();
     writeInst(((int)c) | op_b | off.encode());
+    if (c == Always)
+        m_buffer.markGuard();
 }
 
 void
 Assembler::as_b(Label *l, Condition c)
 {
     BufferOffset next = nextOffset();
+    m_buffer.markNextAsBranch();
     if (l->bound()) {
-        as_b(BufferOffset(l).diffB(next), c);
+        as_b(BufferOffset(l).diffB<BOffImm>(next), c);
     } else {
         // Ugh.  int32 :(
         int32 old = l->use(next.getOffset());
@@ -1371,7 +1406,7 @@ Assembler::as_bl(Label *l, Condition c)
 {
     BufferOffset next = nextOffset();
     if (l->bound()) {
-        as_bl(BufferOffset(l).diffB(next), c);
+        as_bl(BufferOffset(l).diffB<BOffImm>(next), c);
     } else {
         int32 old = l->use(next.getOffset());
         // See if the list was empty :(
@@ -1673,9 +1708,9 @@ Assembler::bind(Label *label, BufferOffset boff)
             Condition c;
             branch.extractCond(&c);
             if (branch.is<InstBImm>())
-                as_b(dest.diffB(b), c, b);
+                as_b(dest.diffB<BOffImm>(b), c, b);
             else if (branch.is<InstBLImm>())
-                as_bl(dest.diffB(b), c, b);
+                as_bl(dest.diffB<BOffImm>(b), c, b);
             else
                 JS_NOT_REACHED("crazy fixup!");
             b = next;
@@ -1730,8 +1765,7 @@ Assembler::as_bkpt()
 void
 Assembler::dumpPool()
 {
-    JS_ASSERT(lastWasUBranch);
-    m_buffer.flushWithoutBarrier(true);
+    m_buffer.flushPool();
 }
 
 void
@@ -1741,5 +1775,38 @@ Assembler::as_jumpPool(uint32 numCases)
         writeInst(-1);
 }
 
-Assembler *Assembler::dummy = NULL;
+ptrdiff_t
+Assembler::getBranchOffset(const Instruction *i_)
+{
+    InstBranchImm *i = i_->as<InstBranchImm>();
+    BOffImm dest;
+    i->extractImm(&dest);
+    return dest.decode()+8;
+}
 
+void
+Assembler::retargetBranch(Instruction *i, int offset)
+{
+    Condition cond;
+    i->extractCond(&cond);
+    if (i->is<InstBImm>())
+        new (i) InstBImm(BOffImm(offset-8), cond);
+    else
+        new (i) InstBLImm(BOffImm(offset-8), cond);
+}
+
+void
+Assembler::writePoolHeader(uint8 *start, Pool *p)
+{
+    return;
+}
+
+
+void
+Assembler::writePoolFooter(uint8 *start, Pool *p)
+{
+    return;
+}
+
+
+Assembler *Assembler::dummy = NULL;
