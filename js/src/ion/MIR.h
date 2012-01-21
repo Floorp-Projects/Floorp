@@ -1254,6 +1254,30 @@ class MUnbox : public MUnaryInstruction
     }
 };
 
+class MGuardObject : public MUnaryInstruction, public ObjectPolicy
+{
+    MGuardObject(MDefinition *ins)
+      : MUnaryInstruction(ins)
+    {
+        setGuard();
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardObject);
+
+    static MGuardObject *New(MDefinition *ins) {
+        return new MGuardObject(ins);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // Passes an MDefinition to an MCall. Must occur between an MPrepareCall and
 // MCall. Boxes the input and stores it to the correct location on stack.
 //
@@ -2231,6 +2255,73 @@ class MStoreElement
         // StoreElement can update the initialized lenght, the array length
         // or reallocate obj->elements.
         return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
+    }
+};
+
+class MLoadFixedSlot : public MUnaryInstruction, public ObjectPolicy
+{
+    size_t slot_;
+
+    MLoadFixedSlot(MDefinition *obj, size_t slot)
+      : MUnaryInstruction(obj), slot_(slot)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadFixedSlot);
+
+    static MLoadFixedSlot *New(MDefinition *obj, size_t slot) {
+        return new MLoadFixedSlot(obj, slot);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    size_t slot() const {
+        return slot_;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Slot);
+    }
+};
+
+class MStoreFixedSlot : public MBinaryInstruction, public ObjectPolicy
+{
+    size_t slot_;
+
+    MStoreFixedSlot(MDefinition *obj, MDefinition *rval, size_t slot)
+      : MBinaryInstruction(obj, rval), slot_(slot)
+    {}
+
+  public:
+    INSTRUCTION_HEADER(StoreFixedSlot);
+
+    static MStoreFixedSlot *New(MDefinition *obj, MDefinition *rval, size_t slot) {
+        return new MStoreFixedSlot(obj, rval, slot);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    MDefinition *value() const {
+        return getOperand(1);
+    }
+    size_t slot() const {
+        return slot_;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Slot);
     }
 };
 

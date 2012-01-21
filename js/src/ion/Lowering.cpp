@@ -901,6 +901,39 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
 }
 
 bool
+LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+
+    if (ins->type() == MIRType_Value) {
+        LLoadFixedSlotV *lir = new LLoadFixedSlotV(useRegister(ins->object()));
+        return defineBox(lir, ins);
+    }
+
+    LLoadFixedSlotT *lir = new LLoadFixedSlotT(useRegister(ins->object()));
+    return define(lir, ins);
+}
+
+bool
+LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+
+    if (ins->value()->type() == MIRType_Value) {
+        LStoreFixedSlotV *lir = new LStoreFixedSlotV(useRegister(ins->object()));
+
+        if (!useBox(lir, LStoreFixedSlotV::Value, ins->value()))
+            return false;
+        return add(lir, ins);
+    }
+
+    LStoreFixedSlotT *lir = new LStoreFixedSlotT(useRegister(ins->object()),
+                                                 useRegisterOrConstant(ins->value()));
+
+    return add(lir, ins);
+}
+
+bool
 LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);
