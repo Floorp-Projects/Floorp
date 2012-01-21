@@ -549,6 +549,10 @@ ArrayBuffer::obj_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JS
         if (delegate->getProto() != oldDelegateProto) {
             // actual __proto__ was set and not a plain property called
             // __proto__
+            if (!obj->isExtensible()) {
+                obj->reportNotExtensible(cx);
+                return false;
+            }
             if (!SetProto(cx, obj, vp->toObjectOrNull(), true)) {
                 // this can be caused for example by setting x.__proto__ = x
                 // restore delegate prototype chain
