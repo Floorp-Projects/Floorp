@@ -17,8 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
   mozbrowserX events when they're globally pref'ed off.
 -->
 
-<iframe id='iframe' mozbrowser onload='iframeLoad()'></iframe>
-
 <script type="application/javascript;version=1.7">
 "use strict";
 
@@ -32,17 +30,19 @@ function runTest() {
     ok(false, 'Should not send mozbrowserloadstart event.');
   });
 
+  iframe.addEventListener('load', function() {
+    ok(true, 'Got iframe load event.');
+    SimpleTest.finish();
+  });
+
   iframe.src = 'http://example.com';
 }
 
-function iframeLoad() {
-  ok(true, 'Got iframe load event.');
-  SimpleTest.finish();
-}
-
-addEventListener('load', runTest());
+addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
 
 </script>
+
+<iframe id='iframe' mozbrowser></iframe>
 
 </body>
 </html>
