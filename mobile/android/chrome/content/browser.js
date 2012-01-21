@@ -1569,9 +1569,12 @@ Tab.prototype = {
     return this._viewport;
   },
 
-  updateViewport: function(aReset) {
+  updateViewport: function(aReset, aZoomLevel) {
+    if (!aZoomLevel)
+      aZoomLevel = this.getDefaultZoomLevel();
+
     let win = this.browser.contentWindow;
-    let zoom = (aReset ? this.getDefaultZoomLevel() : this._viewport.zoom);
+    let zoom = (aReset ? aZoomLevel : this._viewport.zoom);
     let xpos = ((aReset && win) ? win.scrollX * zoom : this._viewport.x);
     let ypos = ((aReset && win) ? win.scrollY * zoom : this._viewport.y);
 
@@ -1949,7 +1952,23 @@ Tab.prototype = {
     let minScale = this.getPageZoomLevel(screenW);
     viewportH = Math.max(viewportH, screenH / minScale);
 
+    let oldBrowserWidth = parseInt(this.browser.style.width);
     this.setBrowserSize(viewportW, viewportH);
+
+    // Avoid having the scroll position jump around after device rotation.
+    let win = this.browser.contentWindow;
+    this.userScrollPos.x = win.scrollX;
+    this.userScrollPos.y = win.scrollY;
+
+    // If the browser width changes, we change the zoom proportionally. This ensures sensible
+    // behavior when rotating the device on pages with automatically-resizing viewports.
+
+    if (viewportW == oldBrowserWidth)
+      return;
+
+    let viewport = this.viewport;
+    let newZoom = oldBrowserWidth * viewport.zoom / viewportW;
+    this.updateViewport(true, newZoom);
   },
 
   getDefaultZoomLevel: function getDefaultZoomLevel() {
