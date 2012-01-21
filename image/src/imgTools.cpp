@@ -53,7 +53,7 @@
 #include "nsNetUtil.h"
 #include "RasterImage.h"
 
-using namespace mozilla::imagelib;
+using namespace mozilla::image;
 
 /* ========== imgITools implementation ========== */
 

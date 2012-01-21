@@ -114,8 +114,17 @@ int
 main(int aArgc,
      char** aArgv)
 {
-  ProfileScopedXPCOM xpcom(TEST_NAME);
+  ScopedXPCOM xpcom(TEST_NAME);
+  if (xpcom.failed())
+    return -1;
+  // Initialize a profile folder to ensure a clean shutdown.
   nsCOMPtr<nsIFile> profile = xpcom.GetProfileDirectory();
+  if (!profile) {
+    fail("Couldn't get the profile directory.");
+    return -1;
+  }
+
+  nsRefPtr<WaitForConnectionClosed> spinClose = new WaitForConnectionClosed();
 
   // Tinderboxes are constantly on idle.  Since idle tasks can interact with
   // tests, causing random failures, disable the idle service.

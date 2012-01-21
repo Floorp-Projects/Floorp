@@ -59,7 +59,7 @@
  *
  * NB: the capacity and length of a dense array are entirely unrelated!  The
  * length may be greater than, less than, or equal to the capacity. The first
- * case may occur when the user writes "new Array(100), in which case the
+ * case may occur when the user writes "new Array(100)", in which case the
  * length is 100 while the capacity remains 0 (indices below length and above
  * capacity must be treated as holes). See array_length_setter for another
  * explanation of how the first case may occur.

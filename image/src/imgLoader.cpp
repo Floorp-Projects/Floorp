@@ -96,7 +96,7 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
-using namespace mozilla::imagelib;
+using namespace mozilla::image;
 
 #if defined(DEBUG_pavlov) || defined(DEBUG_timeless)
 #include "nsISimpleEnumerator.h"

@@ -2441,73 +2441,51 @@ END_CASE(JSOP_URSH)
 
 BEGIN_CASE(JSOP_ADD)
 {
-    Value &lval = regs.sp[-2];
-    Value &rval = regs.sp[-1];
-    if (!AddValues(cx, lval, rval, &regs.sp[-2]))
+    Value lval = regs.sp[-2];
+    Value rval = regs.sp[-1];
+    if (!AddOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
 END_CASE(JSOP_ADD)
 
-#define BINARY_OP(OP)                                                         \
-    JS_BEGIN_MACRO                                                            \
-        Value rval = regs.sp[-1];                                             \
-        Value lval = regs.sp[-2];                                             \
-        double d1, d2;                                                        \
-        if (!ToNumber(cx, lval, &d1) || !ToNumber(cx, rval, &d2))             \
-            goto error;                                                       \
-        double d = d1 OP d2;                                                  \
-        regs.sp--;                                                            \
-        if (!regs.sp[-1].setNumber(d) &&                                      \
-            !(lval.isDouble() || rval.isDouble())) {                          \
-            TypeScript::MonitorOverflow(cx, script, regs.pc);                 \
-        }                                                                     \
-    JS_END_MACRO
-
 BEGIN_CASE(JSOP_SUB)
-    BINARY_OP(-);
+{
+    Value lval = regs.sp[-2];
+    Value rval = regs.sp[-1];
+    if (!SubOperation(cx, lval, rval, &regs.sp[-2]))
+        goto error;
+    regs.sp--;
+}
 END_CASE(JSOP_SUB)
 
 BEGIN_CASE(JSOP_MUL)
-    BINARY_OP(*);
+{
+    Value lval = regs.sp[-2];
+    Value rval = regs.sp[-1];
+    if (!MulOperation(cx, lval, rval, &regs.sp[-2]))
+        goto error;
+    regs.sp--;
+}
 END_CASE(JSOP_MUL)
-
-#undef BINARY_OP
 
 BEGIN_CASE(JSOP_DIV)
 {
-    Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
-    double d1, d2;
-    if (!ToNumber(cx, lval, &d1) || !ToNumber(cx, rval, &d2))
+    Value rval = regs.sp[-1];
+    if (!DivOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
-
-    regs.sp[-1].setNumber(NumberDiv(d1, d2));
-
-    if (d2 == 0 || (regs.sp[-1].isDouble() && !(lval.isDouble() || rval.isDouble())))
-        TypeScript::MonitorOverflow(cx, script, regs.pc);
 }
 END_CASE(JSOP_DIV)
 
 BEGIN_CASE(JSOP_MOD)
 {
-    Value &lref = regs.sp[-2];
-    Value &rref = regs.sp[-1];
-    int32_t l, r;
-    if (lref.isInt32() && rref.isInt32() &&
-        (l = lref.toInt32()) >= 0 && (r = rref.toInt32()) > 0) {
-        int32_t mod = l % r;
-        regs.sp--;
-        regs.sp[-1].setInt32(mod);
-    } else {
-        double d1, d2;
-        if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
-            goto error;
-        regs.sp--;
-        regs.sp[-1].setNumber(NumberMod(d1, d2));
-        TypeScript::MonitorOverflow(cx, script, regs.pc);
-    }
+    Value lval = regs.sp[-2];
+    Value rval = regs.sp[-1];
+    if (!ModOperation(cx, lval, rval, &regs.sp[-2]))
+        goto error;
+    regs.sp--;
 }
 END_CASE(JSOP_MOD)
 
@@ -4959,70 +4937,5 @@ template bool js::SetProperty<false>(JSContext *cx, JSObject *obj, JSAtom *atom,
 bool
 js::AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
 {
-    Value rval = rhs;
-    Value lval = lhs;
-
-    if (lval.isInt32() && rval.isInt32()) {
-        int32_t l = lval.toInt32(), r = rval.toInt32();
-        int32_t sum = l + r;
-        if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
-            res->setDouble(double(l) + double(r));
-            TypeScript::MonitorOverflow(cx);
-        } else {
-            res->setInt32(sum);
-        }
-    } else
-#if JS_HAS_XML_SUPPORT
-    if (IsXML(lval) && IsXML(rval)) {
-        if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), res))
-            return false;
-        TypeScript::MonitorUnknown(cx);
-    } else
-#endif
-    {
-        /*
-         * If either operand is an object, any non-integer result must be
-         * reported to inference.
-         */
-        bool lIsObject = lval.isObject(), rIsObject = rval.isObject();
-
-        if (!ToPrimitive(cx, &lval))
-            return false;
-        if (!ToPrimitive(cx, &rval))
-            return false;
-        bool lIsString, rIsString;
-        if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
-            js::AutoStringRooter lstr(cx), rstr(cx);
-            if (lIsString) {
-                lstr.setString(lval.toString());
-            } else {
-                lstr.setString(ToString(cx, lval));
-                if (!lstr.string())
-                    return false;
-            }
-            if (rIsString) {
-                rstr.setString(rval.toString());
-            } else {
-                rstr.setString(ToString(cx, rval));
-                if (!rstr.string())
-                    return false;
-            }
-            JSString *str = js_ConcatStrings(cx, lstr.string(), rstr.string());
-            if (!str)
-                return false;
-            if (lIsObject || rIsObject)
-                TypeScript::MonitorString(cx);
-            res->setString(str);
-        } else {
-            double l, r;
-            if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))
-                return false;
-            l += r;
-            if (!res->setNumber(l) &&
-                (lIsObject || rIsObject || (!lval.isDouble() && !rval.isDouble()))) {
-                TypeScript::MonitorOverflow(cx);
-            }
-        }
-    }
-    return true;
+    return AddOperation(cx, lhs, rhs, res);
 }

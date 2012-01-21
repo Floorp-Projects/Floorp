@@ -72,16 +72,16 @@ namespace tls {
 typedef unsigned long key;
 
 template <typename T>
-static T* get(key mykey) {
+inline T* get(key mykey) {
   return (T*) TlsGetValue(mykey);
 }
 
 template <typename T>
-static bool set(key mykey, const T* value) {
+inline bool set(key mykey, const T* value) {
   return TlsSetValue(mykey, const_cast<T*>(value));
 }
 
-static inline bool create(key* mykey) {
+inline bool create(key* mykey) {
   key newkey = TlsAlloc();
   if (newkey == (unsigned long)0xFFFFFFFF /* TLS_OUT_OF_INDEXES */) {
     return false;
@@ -95,16 +95,16 @@ static inline bool create(key* mykey) {
 typedef pthread_key_t key;
 
 template <typename T>
-static T* get(key mykey) {
+inline T* get(key mykey) {
   return (T*) pthread_getspecific(mykey);
 }
 
 template <typename T>
-static bool set(key mykey, const T* value) {
+inline bool set(key mykey, const T* value) {
   return !pthread_setspecific(mykey, value);
 }
 
-static bool create(key* mykey) {
+inline bool create(key* mykey) {
   return !pthread_key_create(mykey, NULL);
 }
 

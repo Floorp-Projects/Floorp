@@ -66,7 +66,7 @@
 using namespace mozilla::dom;
 
 namespace mozilla {
-namespace imagelib {
+namespace image {
 
 NS_IMPL_ISUPPORTS4(SVGDocumentWrapper,
                    nsIStreamListener,
@@ -464,5 +464,5 @@ SVGDocumentWrapper::GetRootSVGElem()
   return static_cast<nsSVGSVGElement*>(rootElem);
 }
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla

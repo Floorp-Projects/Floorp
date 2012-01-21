@@ -993,7 +993,6 @@
              hidden="true">
       <vbox flex="1">
         <resizer id="inspector-top-resizer" flex="1" 
-                 class="inspector-resizer"
                  dir="top" disabled="true"
                  element="inspector-tree-box"/>
         <hbox>
@@ -1029,10 +1028,6 @@
                          oncommand="InspectorUI.closeInspectorUI(false);"
                          tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
-          <resizer id="inspector-end-resizer"
-                   class="inspector-resizer"
-                   dir="top" disabled="true"
-                   element="inspector-tree-box"/>
         </hbox>
       </vbox>
     </toolbar>

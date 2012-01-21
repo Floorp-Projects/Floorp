@@ -3040,7 +3040,7 @@ function FillInHTMLTooltip(tipElement)
   // Don't show the tooltip if the tooltip node is a XUL element, a document or is disconnected.
   if (tipElement.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" ||
       !tipElement.ownerDocument ||
-      tipElement.ownerDocument.compareDocumentPosition(tipElement) == document.DOCUMENT_POSITION_DISCONNECTED)
+      (tipElement.ownerDocument.compareDocumentPosition(tipElement) & document.DOCUMENT_POSITION_DISCONNECTED))
     return retVal;
 
   const XLinkNS = "http://www.w3.org/1999/xlink";
