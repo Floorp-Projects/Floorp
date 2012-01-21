@@ -1122,22 +1122,27 @@ StackIter::operator==(const StackIter &rhs) const
 AllFramesIter::AllFramesIter(StackSpace &space)
   : seg_(space.seg_),
     fp_(seg_ ? seg_->maybefp() : NULL)
-{}
+{
+    settle();
+}
 
 AllFramesIter&
 AllFramesIter::operator++()
 {
     JS_ASSERT(!done());
     fp_ = fp_->prev();
-    if (!seg_->contains(fp_)) {
-        seg_ = seg_->prevInMemory();
-        while (seg_) {
-            fp_ = seg_->maybefp();
-            if (fp_)
-                return *this;
-            seg_ = seg_->prevInMemory();
-        }
-        JS_ASSERT(!fp_);
-    }
+    settle();
     return *this;
+}
+
+void
+AllFramesIter::settle()
+{
+    while (seg_ && (!fp_ || !seg_->contains(fp_))) {
+        seg_ = seg_->prevInMemory();
+        fp_ = seg_ ? seg_->maybefp() : NULL;
+    }
+
+    JS_ASSERT(!!seg_ == !!fp_);
+    JS_ASSERT_IF(fp_, seg_->contains(fp_));
 }
