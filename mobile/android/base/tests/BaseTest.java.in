@@ -99,12 +99,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         contentEventExpecter.blockForEvent();
     }
 
-    protected final void waitForLoad() {
-        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-        // wait for screen to load
-        contentEventExpecter.blockForEvent();
-    }
-
     protected final void loadUrl(String url) {
         enterUrl(url);
         hitEnterAndWait();

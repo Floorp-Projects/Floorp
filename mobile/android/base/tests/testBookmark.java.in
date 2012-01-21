@@ -18,11 +18,15 @@ public class testBookmark extends BaseTest {
         //Click the top item in the bookmark list.
         clickOnAwesomeBar();
         mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
+
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+
         ArrayList<TextView> l = null;
         while (l == null || l.size() < 1) {
             l = mSolo.clickInList(1);
         }
-        waitForLoad();
+
+        contentEventExpecter.blockForEvent();
 
         //Items in bookmarks aren't constant so URL can't be tested.
     }
