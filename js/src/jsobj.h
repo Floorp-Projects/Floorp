@@ -1546,8 +1546,7 @@ class ValueArray {
 #define CLEAR_BUSY(he)  ((he)->value = (void *) (uintptr_t((he)->value)&~BUSY_BIT))
 
 extern JSHashEntry *
-js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
-                    jschar **sp);
+js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap, bool *alreadySeen);
 
 extern void
 js_LeaveSharpObject(JSContext *cx, JSIdArray **idap);

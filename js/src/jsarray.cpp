@@ -1412,20 +1412,20 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 class ArraySharpDetector
 {
     JSContext *cx;
-    jschar *chars;
     JSHashEntry *he;
+    bool alreadySeen;
     bool sharp;
 
   public:
     ArraySharpDetector(JSContext *cx)
       : cx(cx),
-        chars(NULL),
         he(NULL),
+        alreadySeen(false),
         sharp(false)
     {}
 
     bool init(JSObject *obj) {
-        he = js_EnterSharpObject(cx, obj, NULL, &chars);
+        he = js_EnterSharpObject(cx, obj, NULL, &alreadySeen);
         if (!he)
             return false;
         sharp = IS_SHARP(he);
@@ -1433,23 +1433,11 @@ class ArraySharpDetector
     }
 
     bool initiallySharp() const {
-        JS_ASSERT_IF(sharp, hasSharpChars());
+        JS_ASSERT_IF(sharp, alreadySeen);
         return sharp;
     }
 
-    bool hasSharpChars() const {
-        return chars != NULL;
-    }
-
-    jschar *takeSharpChars() {
-        jschar *ret = chars;
-        chars = NULL;
-        return ret;
-    }
-
     ~ArraySharpDetector() {
-        if (chars)
-            cx->free_(chars);
         if (he && !sharp)
             js_LeaveSharpObject(cx, NULL);
     }
