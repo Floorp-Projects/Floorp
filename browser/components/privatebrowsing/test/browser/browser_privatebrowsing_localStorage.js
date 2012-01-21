@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla code.
+ * The Original Code is Private Browsing Tests.
  *
- * The Initial Developer of the Original Code is the Mozilla Foundation.
- *
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * The Initial Developer of the Original Code is
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Justin Lebar <justin.lebar@gmail.com>
+ *   Josh Matthews <josh@joshmatthews.net> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,33 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-
-[scriptable, function, uuid(37687881-1801-489f-ad03-7af651a93448)]
-interface nsIDOMMozGetContentStateCallback : nsISupports
-{
-  void callback(in DOMString value);
-};
-
-[scriptable, uuid(2ff0f421-64e4-4186-b0dd-619629f46048)]
-interface nsIDOMMozBrowserFrameElement : nsISupports
-{
-  /**
-   * If true, a privileged page can call mozGetContentState on this element.
-   * If false, mozGetContentState will fail.
-   */
-  attribute boolean mozBrowser;
-
-  /**
-   * Get a piece of state from this element's content window, returning its
-   * value via |callback|.
-   *
-   * At the moment, the only valid property is "location", which returns the
-   * content window's location.  Passing any other property causes an error.
-   *
-   * If the iframe's mozBrowser is false, or if the calling window is not
-   * privileged, this function fails.
-   */
-  void mozGetContentState(in DOMString property,
-                          in nsIDOMMozGetContentStateCallback callback);
-};
+function test() {
+  let pb = Cc["@mozilla.org/privatebrowsing;1"].
+           getService(Ci.nsIPrivateBrowsingService);
+  waitForExplicitFinish();
+  pb.privateBrowsingEnabled = true;
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let browser = gBrowser.selectedBrowser;
+  browser.addEventListener('load', function() {
+    browser.removeEventListener('load', arguments.callee, true);
+    let tab2 = gBrowser.selectedTab = gBrowser.addTab();
+    browser.contentWindow.location = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
+                     'browser_privatebrowsing_localStorage_page2.html';
+    browser.addEventListener('load', function() {
+      browser.removeEventListener('load', arguments.callee, true);
+      is(browser.contentWindow.document.title, '2', "localStorage should contain 2 items");
+      pb.privateBrowsingEnabled = false;
+      finish();
+    }, true);
+  }, true);
+  browser.loadURI('http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
+                  'browser_privatebrowsing_localStorage_page1.html');
+}

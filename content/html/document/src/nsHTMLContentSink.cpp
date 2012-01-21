@@ -191,7 +191,7 @@ public:
   NS_IMETHOD DidBuildModel(bool aTerminated);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
-  NS_IMETHOD SetParser(nsIParser* aParser);
+  NS_IMETHOD SetParser(nsParserBase* aParser);
   virtual void FlushPendingNotifications(mozFlushType aType);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
@@ -295,9 +295,6 @@ protected:
   void CloseHeadContext();
 
   // nsContentSink overrides
-  virtual void PreEvaluateScript();
-  virtual void PostEvaluateScript(nsIScriptElement *aElement);
-
   void UpdateChildCounts();
 
   void NotifyInsert(nsIContent* aContent,
@@ -805,11 +802,13 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       break;
 
     case eHTMLTag_button:
+#ifdef MOZ_MEDIA
     case eHTMLTag_audio:
     case eHTMLTag_video:
+#endif
       content->DoneCreatingElement();
       break;
-      
+
     default:
       break;
   }
@@ -1702,8 +1701,6 @@ HTMLContentSink::DidBuildModel(bool aTerminated)
 
   ScrollToRef();
 
-  mDocument->ScriptLoader()->RemoveObserver(this);
-
   // Make sure we no longer respond to document mutations.  We've flushed all
   // our notifications out, so there's no need to do anything else here.
 
@@ -1721,7 +1718,7 @@ HTMLContentSink::DidBuildModel(bool aTerminated)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::SetParser(nsIParser* aParser)
+HTMLContentSink::SetParser(nsParserBase* aParser)
 {
   NS_PRECONDITION(aParser, "Should have a parser here!");
   mParser = aParser;
@@ -2560,78 +2557,8 @@ HTMLContentSink::CloseHeadContext()
 nsresult
 HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 {
-  nsresult  result = NS_OK;
-
-  if (mCurrentContext) {
-    // Create content object
-    nsCOMPtr<nsIContent> element;
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull,
-                                             kNameSpaceID_XHTML,
-                                             nsIDOMNode::ELEMENT_NODE);
-
-    result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo.forget(),
-                               NOT_FROM_PARSER);
-    NS_ENSURE_SUCCESS(result, result);
-
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(element));
-
-    if (ssle) {
-      // XXX need prefs. check here.
-      if (!mInsideNoXXXTag) {
-        ssle->InitStyleLinkElement(false);
-        ssle->SetEnableUpdates(false);
-      } else {
-        ssle->InitStyleLinkElement(true);
-      }
-    }
-
-    // Add in the attributes and add the style content object to the
-    // head container.
-    result = AddAttributes(aNode, element);
-    if (NS_FAILED(result)) {
-      return result;
-    }
-
-    mCurrentContext->AddLeaf(element); // <link>s are leaves
-
-    if (ssle) {
-      ssle->SetEnableUpdates(true);
-      bool willNotify;
-      bool isAlternate;
-      result = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
-                                      &willNotify,
-                                      &isAlternate);
-      if (NS_SUCCEEDED(result) && willNotify && !isAlternate && !mFragmentMode) {
-        ++mPendingSheetCount;
-        mScriptLoader->AddExecuteBlocker();
-      }
-
-      // look for <link rel="next" href="url">
-      nsAutoString relVal;
-      element->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
-      if (!relVal.IsEmpty()) {
-        PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(relVal);
-        bool hasPrefetch = linkTypes & PREFETCH;
-        if (hasPrefetch || (linkTypes & NEXT)) {
-          nsAutoString hrefVal;
-          element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            PrefetchHref(hrefVal, element, hasPrefetch);
-          }
-        }
-        if (linkTypes & DNS_PREFETCH) {
-          nsAutoString hrefVal;
-          element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            PrefetchDNS(hrefVal);
-          }
-        }
-      }
-    }
-  }
-
-  return result;
+  MOZ_NOT_REACHED("Old HTMLContentSink used for processing links.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #ifdef DEBUG
@@ -2716,79 +2643,12 @@ HTMLContentSink::UpdateChildCounts()
   mCurrentContext->UpdateChildCounts();
 }
 
-void
-HTMLContentSink::PreEvaluateScript()
-{
-  // Eagerly append all pending elements (including the current body child)
-  // to the body (so that they can be seen by scripts) and force reflow.
-  SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_CALLS,
-             ("HTMLContentSink::PreEvaluateScript: flushing tags before "
-              "evaluating script"));
-
-  // XXX Should this call FlushTags()?
-  mCurrentContext->FlushText();
-}
-
-void
-HTMLContentSink::PostEvaluateScript(nsIScriptElement *aElement)
-{
-  mHTMLDocument->ScriptExecuted(aElement);
-}
-
 nsresult
 HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
                                      bool aMalformed)
 {
-  // Flush all tags up front so that we are in as stable state as possible
-  // when calling DoneAddingChildren. This may not be strictly needed since
-  // any ScriptAvailable calls will cause us to flush anyway. But it gives a
-  // warm fuzzy feeling to be in a stable state before even attempting to
-  // run scripts.
-  // It would however be needed if we properly called BeginUpdate and
-  // EndUpdate while we were inserting stuff into the DOM.
-
-  // XXX Should this call FlushTags()?
-  mCurrentContext->FlushText();
-
-  nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
-  NS_ASSERTION(sele, "Not really closing a script tag?");
-
-  if (aMalformed) {
-    // Make sure to serialize this script correctly, for nice round tripping.
-    sele->SetIsMalformed();
-  }
-  if (mFrameset) {
-    sele->PreventExecution();
-  }
-
-  // Notify our document that we're loading this script.
-  mHTMLDocument->ScriptLoading(sele);
-
-  // Now tell the script that it's ready to go. This may execute the script
-  // or return true, or neither if the script doesn't need executing.
-  bool block = sele->AttemptToExecute();
-
-  // If the act of insertion evaluated the script, we're fine.
-  // Else, block the parser till the script has loaded.
-  if (block) {
-    // If this append fails we'll never unblock the parser, but the UI will
-    // still remain responsive. There are other ways to deal with this, but
-    // the end result is always that the page gets botched, so there is no
-    // real point in making it more complicated.
-    mScriptElements.AppendObject(sele);
-  } else {
-    // This may have already happened if the script executed, but in case
-    // it didn't then remove the element so that it doesn't get stuck forever.
-    mHTMLDocument->ScriptExecuted(sele);
-  }
-
-  // If the parser got blocked, make sure to return the appropriate rv.
-  // I'm not sure if this is actually needed or not.
-  if (mParser && !mParser->IsParserEnabled()) {
-    block = true;
-  }
-
-  return block ? NS_ERROR_HTMLPARSER_BLOCK : NS_OK;
+  MOZ_NOT_REACHED("Must not use HTMLContentSink to run scripts.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // 3 ways to load a style sheet: inline, style src=, link tag
@@ -2797,29 +2657,8 @@ HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
 nsresult
 HTMLContentSink::ProcessSTYLEEndTag(nsGenericHTMLElement* content)
 {
-  nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(content);
-
-  NS_ASSERTION(ssle,
-               "html:style doesn't implement nsIStyleSheetLinkingElement");
-
-  nsresult rv = NS_OK;
-
-  if (ssle) {
-    // Note: if we are inside a noXXX tag, then we init'ed this style element
-    // with mDontLoadStyle = true, so these two calls will have no effect.
-    ssle->SetEnableUpdates(true);
-    bool willNotify;
-    bool isAlternate;
-    rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
-                                &willNotify,
-                                &isAlternate);
-    if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mFragmentMode) {
-      ++mPendingSheetCount;
-      mScriptLoader->AddExecuteBlocker();
-    }
-  }
-
-  return rv;
+  MOZ_NOT_REACHED("Old HTMLContentSink used for processing style elements.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void

@@ -167,6 +167,14 @@ public:
   }
 
   /**
+   * Return true if ARIA role is specified on the element.
+   */
+  inline bool HasARIARole() const
+  {
+    return mRoleMapEntry;
+  }
+
+  /**
    * Return accessible role specified by ARIA (see constants in
    * roles).
    */

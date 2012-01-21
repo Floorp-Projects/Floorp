@@ -74,7 +74,7 @@ public:
     NS_IMETHOD DidBuildModel(bool aTerminated);
     NS_IMETHOD WillInterrupt(void);
     NS_IMETHOD WillResume(void);
-    NS_IMETHOD SetParser(nsIParser* aParser);
+    NS_IMETHOD SetParser(nsParserBase* aParser);
     virtual void FlushPendingNotifications(mozFlushType aType) { }
     NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
     virtual nsISupports *GetTarget();
@@ -180,7 +180,7 @@ protected:
     nsRefPtr<nsXULPrototypeDocument> mPrototype;  // [OWNER]
 
     // We use regular pointer b/c of funky exports on nsIParser:
-    nsIParser*             mParser;               // [OWNER]
+    nsParserBase*         mParser;               // [OWNER]
     nsCOMPtr<nsIScriptSecurityManager> mSecMan;
 };
 

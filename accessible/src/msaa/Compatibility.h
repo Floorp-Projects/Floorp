@@ -97,6 +97,19 @@ private:
     IA2OffMode = 1 << 3
   };
 
+  /**
+   * List of detected consumers of a11y (used for statistics/telemetry)
+   */
+  enum {
+    NVDA = 0,
+    JAWS = 1,
+    OLDJAWS = 2,
+    WE = 3,
+    DOLPHIN = 4,
+    SEROTEK = 5,
+    COBRA = 6
+  };
+
 private:
   static PRUint32 sMode;
 };
