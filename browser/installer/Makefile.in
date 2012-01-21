@@ -92,6 +92,10 @@ ifneq (,$(filter aurora beta,$(MOZ_UPDATE_CHANNEL)))
 DEFINES += -DSHIP_FEEDBACK=1
 endif
 
+ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
+DEFINES += -DMOZ_SHARED_MOZGLUE=1
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 

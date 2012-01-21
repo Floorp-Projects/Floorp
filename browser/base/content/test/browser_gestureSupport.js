@@ -383,7 +383,7 @@ function test_latchedGesture(gesture, inc, dec, eventPrefix)
 
   // Restore the gesture to its original configuration.
   gPrefService.setBoolPref(branch + "latched", oldLatchedValue);
-  for (dir in cmd)
+  for (let dir in cmd)
     test_removeCommand(cmd[dir]);
 }
 
