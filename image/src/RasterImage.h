@@ -162,7 +162,7 @@ namespace layers {
 class LayerManager;
 class ImageContainer;
 }
-namespace imagelib {
+namespace image {
 
 class imgDecodeWorker;
 class Decoder;
@@ -637,7 +637,7 @@ class imgDecodeRequestor : public nsRunnable
     nsWeakPtr mContainer;
 };
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla
 
 #endif /* mozilla_imagelib_RasterImage_h_ */

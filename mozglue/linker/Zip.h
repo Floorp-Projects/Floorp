@@ -8,6 +8,7 @@
 #include <cstring>
 #include <stdint.h>
 #include <vector>
+#include <zlib.h>
 #include "Utils.h"
 /* Until RefPtr.h stops using JS_Assert */
 #undef DEBUG
@@ -61,10 +62,30 @@ public:
     Stream(): compressedBuf(NULL), compressedSize(0), uncompressedSize(0)
             , type(STORE) { }
 
+    /**
+     * Getters
+     */
     const void *GetBuffer() { return compressedBuf; }
     size_t GetSize() { return compressedSize; }
     size_t GetUncompressedSize() { return uncompressedSize; }
     Type GetType() { return type; }
+
+    /**
+     * Returns a z_stream for use with inflate functions using the given
+     * buffer as inflate output. The caller is expected to allocate enough
+     * memory for the Stream uncompressed size.
+     */
+    z_stream GetZStream(void *buf)
+    {
+      z_stream zStream;
+      memset(&zStream, 0, sizeof(zStream));
+      zStream.avail_in = compressedSize;
+      zStream.next_in = reinterpret_cast<Bytef *>(
+                        const_cast<void *>(compressedBuf));
+      zStream.avail_out = uncompressedSize;
+      zStream.next_out = static_cast<Bytef *>(buf);
+      return zStream;
+    }
 
   protected:
     friend class Zip;

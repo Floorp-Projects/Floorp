@@ -80,7 +80,6 @@ using namespace mozilla;
 #define NS_PARSER_FLAG_PARSER_ENABLED         0x00000002
 #define NS_PARSER_FLAG_OBSERVERS_ENABLED      0x00000004
 #define NS_PARSER_FLAG_PENDING_CONTINUE_EVENT 0x00000008
-#define NS_PARSER_FLAG_CAN_INTERRUPT          0x00000010
 #define NS_PARSER_FLAG_FLUSH_TOKENS           0x00000020
 #define NS_PARSER_FLAG_CAN_TOKENIZE           0x00000040
 
@@ -1075,21 +1074,6 @@ nsParser::SetUnusedInput(nsString& aBuffer)
   mUnusedInput = aBuffer;
 }
 
-NS_IMETHODIMP_(void *)
-nsParser::GetRootContextKey()
-{
-  CParserContext* pc = mParserContext;
-  if (!pc) {
-    return nsnull;
-  }
-
-  while (pc->mPrevContext) {
-    pc = pc->mPrevContext;
-  }
-
-  return pc->mKey;
-}
-
 /**
  *  Call this when you want to *force* the parser to terminate the
  *  parsing process altogether. This is binary -- so once you terminate
@@ -1207,6 +1191,12 @@ nsParser::UnblockParser()
   }
 }
 
+NS_IMETHODIMP_(void)
+nsParser::ContinueInterruptedParsingAsync()
+{
+  mSink->ContinueInterruptedParsingAsync();
+}
+
 /**
  * Call this to query whether the parser is enabled or not.
  */
@@ -1241,12 +1231,6 @@ void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev)
 }
 
 bool
-nsParser::CanInterrupt()
-{
-  return (mFlags & NS_PARSER_FLAG_CAN_INTERRUPT) != 0;
-}
-
-bool
 nsParser::IsInsertionPointDefined()
 {
   return true;
@@ -1271,16 +1255,6 @@ bool
 nsParser::IsScriptCreated()
 {
   return false;
-}
-
-void
-nsParser::SetCanInterrupt(bool aCanInterrupt)
-{
-  if (aCanInterrupt) {
-    mFlags |= NS_PARSER_FLAG_CAN_INTERRUPT;
-  } else {
-    mFlags &= ~NS_PARSER_FLAG_CAN_INTERRUPT;
-  }
 }
 
 /**
@@ -1610,7 +1584,6 @@ nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
 
         // Only allow parsing to be interrupted in the subsequent call to
         // build model.
-        SetCanInterrupt(aCanInterrupt);
         nsresult theTokenizerResult = (mFlags & NS_PARSER_FLAG_CAN_TOKENIZE)
                                       ? Tokenize(aIsFinalChunk)
                                       : NS_OK;
@@ -1619,7 +1592,6 @@ nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
         if (result == NS_ERROR_HTMLPARSER_INTERRUPTED && aIsFinalChunk) {
           PostContinueEvent();
         }
-        SetCanInterrupt(false);
 
         theIterationIsOk = theTokenizerResult != kEOF &&
                            result != NS_ERROR_HTMLPARSER_INTERRUPTED;
@@ -1709,11 +1681,9 @@ nsParser::BuildModel()
 
   if (NS_SUCCEEDED(result)) {
     if (mDTD) {
-      // XXXbenjamn CanInterrupt() and !inDocWrite appear to be covariant.
       bool inDocWrite = !!mParserContext->mPrevContext;
       result = mDTD->BuildModel(theTokenizer,
                                 // ignore interruptions in document.write
-                                CanInterrupt() && !inDocWrite,
                                 !inDocWrite, // don't count lines in document.write
                                 &mCharset);
     }

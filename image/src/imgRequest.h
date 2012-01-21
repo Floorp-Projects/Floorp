@@ -71,9 +71,9 @@ class imgMemoryReporter;
 class imgRequestNotifyRunnable;
 
 namespace mozilla {
-namespace imagelib {
+namespace image {
 class Image;
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla
 
 class imgRequest : public imgIDecoderObserver,
@@ -227,7 +227,7 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   // Status-tracker -- transferred to mImage, when it gets instantiated
   nsAutoPtr<imgStatusTracker> mStatusTracker;
-  nsRefPtr<mozilla::imagelib::Image> mImage;
+  nsRefPtr<mozilla::image::Image> mImage;
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIChannel> mChannel;
