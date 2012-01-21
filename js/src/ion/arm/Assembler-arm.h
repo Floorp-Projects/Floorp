@@ -47,6 +47,7 @@
 #include "ion/CompactBuffer.h"
 #include "ion/IonCode.h"
 #include "ion/arm/Architecture-arm.h"
+#include "ion/shared/IonAssemblerBufferWithConstantPools.h"
 
 namespace js {
 namespace ion {
@@ -893,15 +894,15 @@ class BOffImm
         return data;
     }
     int32 decode() {
-        return (data << 8) >> 6;
+        return (((int32)data) << 8) >> 6;
     }
 
     BOffImm(int offset)
-      : data (offset >> 2 & 0x00ffffff)
+        : data ((offset - 8) >> 2 & 0x00ffffff)
     {
         JS_ASSERT ((offset & 0x3) == 0);
-        JS_ASSERT (offset >= -33554432);
-        JS_ASSERT (offset <= 33554428);
+        JS_ASSERT ((offset - 8) >= -33554432);
+        JS_ASSERT ((offset - 8) <= 33554428);
     }
 
     BOffImm()
@@ -1034,8 +1035,13 @@ class Operand
 static inline void
 PatchJump(CodeLocationJump jump, CodeLocationLabel label)
 {
+    // We need to determine if this jump can fit into the standard 24+2 bit address
+    // or if we need a larger branch (or just need to use our pool entry)
     JS_NOT_REACHED("NYI");
 }
+
+class Assembler;
+typedef js::ion::AssemblerBufferWithConstantPool<16, 4, Instruction, Assembler> ARMBuffer;
 
 class Assembler
 {
@@ -1096,9 +1102,9 @@ class Assembler
     }
     // :( this should be protected, but since CodeGenerator
     // wants to use it, It needs to go out here :(
-    class BufferOffset;
-    BufferOffset nextOffset () {
-        return BufferOffset(m_buffer.uncheckedSize());
+
+    BufferOffset nextOffset() {
+        return m_buffer.nextOffset();
     }
 
   protected:
@@ -1107,43 +1113,9 @@ class Assembler
     }
 
     Instruction * editSrc (BufferOffset bo) {
-        return (Instruction*)(((char*)m_buffer.data()) + bo.getOffset());
+        return m_buffer.getInst(bo);
     }
 
-  public:
-    // Encodes offsets within a buffer, This should be the ONLY interface
-    // for reading data out of a code buffer.
-    class BufferOffset
-    {
-        int offset;
-
-      public:
-        friend BufferOffset nextOffset();
-
-        BufferOffset()
-          : offset(INT_MIN)
-        { }
-        explicit BufferOffset(int offset_)
-          : offset(offset_)
-        { }
-        explicit BufferOffset(Label *l)
-          : offset(l->offset())
-        { }
-
-        int getOffset() const {
-            return offset;
-        }
-
-        BOffImm diffB(BufferOffset other) const {
-            return BOffImm(offset - other.offset-8);
-        }
-        BOffImm diffB(Label *other) const {
-            JS_ASSERT(other->bound());
-            return BOffImm(offset - other->offset()-8);
-        }
-
-        bool assigned() { return offset != INT_MIN; };
-    };
   protected:
 
     // structure for fixing up pc-relative loads/jumps when a the machine code
@@ -1184,13 +1156,8 @@ class Assembler
 
     bool enoughMemory_;
 
-    typedef JSC::AssemblerBufferWithConstantPool<1024, 4, 4, js::ion::Assembler> ARMBuffer;
+    //typedef JSC::AssemblerBufferWithConstantPool<1024, 4, 4, js::ion::Assembler> ARMBuffer;
     ARMBuffer m_buffer;
-    // was the last instruction emitted an unconditional branch?
-    // if it was, then this is a good candidate for dumping the pool!
-    // It actually looks like this is presently handled by a callback to the
-    // assembly buffer.  I may want to chang this
-    bool lastWasUBranch;
 
     // There is now a semi-unified interface for instruction generation.
     // During assembly, there is an active buffer that instructions are
@@ -1202,17 +1169,34 @@ class Assembler
     // dest parameter, a this object is still needed.  dummy always happens
     // to be null, but we shouldn't be looking at it in any case.
     static Assembler *dummy;
-
-
+    Pool pools_[4];
+    Pool *int32Pool;
+    Pool *doublePool;
 public:
     Assembler()
       : dataBytesNeeded_(0),
         enoughMemory_(true),
-        lastWasUBranch(true),
+        m_buffer(4, 4, 0, 2, &pools_[0], 8),
+        int32Pool(m_buffer.getPool(1)),
+        doublePool(m_buffer.getPool(0)),
         dtmActive(false),
         dtmCond(Always)
-    { }
-
+    {
+        // Set up the backwards double region
+        new (&pools_[2]) Pool (1024, 8, 4, 8, 8, true);
+        // Set up the backwards 32 bit region
+        new (&pools_[3]) Pool (4096, 4, 4, 4, 4, true, true);
+        // Set up the forwards double region
+        new (doublePool) Pool (1024, 8, 4, 8, 8, false, false, &pools_[2]);
+        // Set up the forwards 32 bit region
+        new (int32Pool) Pool (4096, 4, 4, 4, 4, false, true, &pools_[3]);
+        for (int i = 0; i < 4; i++) {
+            if (pools_[i].poolData == NULL) {
+                m_buffer.fail_oom();
+                return;
+            }
+        }
+    }
     static Condition InvertCondition(Condition cond);
 
     // MacroAssemblers hold onto gcthings, so they are traced by the GC.
@@ -1583,6 +1567,7 @@ public:
 
     // generate an initial placeholder instruction that we want to later fix up
     static uint32 patchConstantPoolLoad(uint32 load, int32 value);
+    static void insertTokenIntoTag(uint32 size, uint8 *load, int32 token);
     // take the stub value that was written in before, and write in an actual load
     // using the index we'd computed previously as well as the address of the pool start.
     static void patchConstantPoolLoad(void* loadAddr, void* constPoolAddr);
@@ -1594,7 +1579,14 @@ public:
     // This is to force an opportunistic dump of the pool, prefferably when it
     // is more convenient to do a dump.
     void dumpPool();
-}; // Assembler.
+    // this should return a BOffImm, but I didn't want to require everyplace that used the
+    // AssemblerBuffer to make that class.
+    static ptrdiff_t getBranchOffset(const Instruction *i);
+    static void retargetBranch(Instruction *i, int32 offset);
+    static void writePoolHeader(uint8 *start, Pool *p);
+    static void writePoolFooter(uint8 *start, Pool *p);
+    static void writePoolGuard(BufferOffset branch, Instruction *inst, BufferOffset dest);
+}; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.
 // many classes have not been implemented thusfar.
@@ -1615,22 +1607,17 @@ class Instruction
     // You should never create an instruction directly.  You should create a
     // more specific instruction which will eventually call one of these
     // constructors for you.
-
   public:
-    uint32 encode() {
+    uint32 encode() const {
         return data;
     }
     // Check if this instruction is really a particular case
     template <class C>
-    bool is() {
-        return C::isTHIS(*this);
-    }
+    bool is() const { return C::isTHIS(*this); }
 
     // safely get a more specific variant of this pointer
     template <class C>
-    C *as() {
-        return C::asTHIS(*this);
-    }
+    C *as() const { return C::asTHIS(*this); }
 
     const Instruction & operator=(const Instruction &src) {
         data = src.data;
@@ -1685,14 +1672,12 @@ class InstBranchReg : public Instruction
         IsBLX = 0x012fff30
     };
     static const uint32 IsBRegMask = 0x0ffffff0;
-
     InstBranchReg(BranchTag tag, Register rm, Assembler::Condition c)
       : Instruction(tag | RM(rm), c)
     { }
-
   public:
-    static bool isTHIS (Instruction &i);
-    static InstBranchReg *asTHIS (Instruction &i);
+    static bool isTHIS (const Instruction &i);
+    static InstBranchReg *asTHIS (const Instruction &i);
     // Get the register that is being branched to
     void extractDest(Register *dest);
     // Make sure we are branching to a pre-known register
@@ -1715,8 +1700,8 @@ class InstBranchImm : public Instruction
     { }
 
   public:
-    static bool isTHIS (Instruction &i);
-    static InstBranchImm *asTHIS (Instruction &i);
+    static bool isTHIS (const Instruction &i);
+    static InstBranchImm *asTHIS (const Instruction &i);
     void extractImm(BOffImm *dest);
 };
 JS_STATIC_ASSERT(sizeof(InstBranchImm) == sizeof(Instruction));
@@ -1725,14 +1710,14 @@ JS_STATIC_ASSERT(sizeof(InstBranchImm) == sizeof(Instruction));
 class InstBXReg : public InstBranchReg
 {
   public:
-    static bool isTHIS (Instruction &i);
-    static InstBXReg *asTHIS (Instruction &i);
+    static bool isTHIS (const Instruction &i);
+    static InstBXReg *asTHIS (const Instruction &i);
 };
 class InstBLXReg : public InstBranchReg
 {
   public:
-    static bool isTHIS (Instruction &i);
-    static InstBLXReg *asTHIS (Instruction &i);
+    static bool isTHIS (const Instruction &i);
+    static InstBLXReg *asTHIS (const Instruction &i);
 };
 class InstBImm : public InstBranchImm
 {
@@ -1741,8 +1726,8 @@ class InstBImm : public InstBranchImm
       : InstBranchImm(IsB, off, c)
     { }
 
-    static bool isTHIS (Instruction &i);
-    static InstBImm *asTHIS (Instruction &i);
+    static bool isTHIS (const Instruction &i);
+    static InstBImm *asTHIS (const Instruction &i);
 };
 class InstBLImm : public InstBranchImm
 {
@@ -1751,7 +1736,7 @@ class InstBLImm : public InstBranchImm
       : InstBranchImm(IsBL, off, c)
     { }
 
-    static bool isTHIS (Instruction &i);
+    static bool isTHIS (const Instruction &i);
     static InstBLImm *asTHIS (Instruction &i);
 };
 
@@ -1789,8 +1774,8 @@ class InstMovW : public InstMovWT
       : InstMovWT(rd, imm, IsW, c)
     { }
 
-    static bool isTHIS (Instruction &i);
-    static InstMovW *asTHIS (Instruction &i);
+    static bool isTHIS (const Instruction &i);
+    static InstMovW *asTHIS (const Instruction &i);
 };
 
 class InstMovT : public InstMovWT
@@ -1799,13 +1784,10 @@ class InstMovT : public InstMovWT
     InstMovT (Register rd, Imm16 imm, Assembler::Condition c)
       : InstMovWT(rd, imm, IsT, c)
     { }
-
-    static bool isTHIS (Instruction &i);
-    static InstMovT *asTHIS (Instruction &i);
+    static bool isTHIS (const Instruction &i);
+    static InstMovT *asTHIS (const Instruction &i);
 };
-
 static const uint32 NumArgRegs = 4;
-
 static inline bool
 GetArgReg(uint32 arg, Register *out)
 {

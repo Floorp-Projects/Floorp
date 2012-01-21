@@ -61,9 +61,9 @@ using namespace js::ion;
 class DeferredJumpTable : public DeferredData
 {
     LTableSwitch *lswitch;
-    Assembler::BufferOffset off;
+    BufferOffset off;
   public:
-    DeferredJumpTable(LTableSwitch *lswitch, Assembler::BufferOffset off_)
+    DeferredJumpTable(LTableSwitch *lswitch, BufferOffset off_)
         : lswitch(lswitch), off(off_)
     { }
 
