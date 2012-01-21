@@ -126,8 +126,10 @@ template void JS_FASTCALL stubs::SetGlobalName<false>(VMFrame &f, PropertyName *
 void JS_FASTCALL
 stubs::Name(VMFrame &f)
 {
-    if (!NameOperation(f.cx, f.pc(), &f.regs.sp[0]))
+    Value rval;
+    if (!NameOperation(f.cx, f.pc(), &rval))
         THROW();
+    f.regs.sp[0] = rval;
 }
 
 void JS_FASTCALL
