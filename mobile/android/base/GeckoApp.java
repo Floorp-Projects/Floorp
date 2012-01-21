@@ -914,6 +914,10 @@ abstract public class GeckoApp
                 Boolean selected = message.getBoolean("selected");
                 if (selected)
                     handleSelectTab(tab.getId());
+            } else if (event.equals("Tab:Closed")) {
+                Log.i(LOGTAG, "Destroyed a tab");
+                int tabId = message.getInt("tabID");
+                handleCloseTab(tabId);
             } else if (event.equals("Tab:ScreenshotData")) {
                 int tabId = message.getInt("tabID");
                 Tab tab = Tabs.getInstance().getTab(tabId);
@@ -1580,6 +1584,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:ScreenshotData", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
@@ -1908,6 +1913,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Selected", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:ScreenshotData", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
