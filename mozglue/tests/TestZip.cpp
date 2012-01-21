@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include "Zip.h"
 
+extern "C" void report_mapping() { }
+
 /**
  * test.zip is a basic test zip file with a central directory. It contains
  * four entries, in the following order:

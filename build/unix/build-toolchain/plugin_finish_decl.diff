@@ -1,0 +1,179 @@
+Index: gcc/doc/plugins.texi
+===================================================================
+--- gcc/doc/plugins.texi	(revision 162126)
++++ gcc/doc/plugins.texi	(working copy)
+@@ -144,6 +144,7 @@
+ @{
+   PLUGIN_PASS_MANAGER_SETUP,    /* To hook into pass manager.  */
+   PLUGIN_FINISH_TYPE,           /* After finishing parsing a type.  */
++  PLUGIN_FINISH_DECL,           /* After finishing parsing a declaration. */
+   PLUGIN_FINISH_UNIT,           /* Useful for summary processing.  */
+   PLUGIN_PRE_GENERICIZE,        /* Allows to see low level AST in C and C++ frontends.  */
+   PLUGIN_FINISH,                /* Called before GCC exits.  */
+Index: gcc/plugin.def
+===================================================================
+--- gcc/plugin.def	(revision 162126)
++++ gcc/plugin.def	(working copy)
+@@ -24,6 +24,9 @@
+ /* After finishing parsing a type.  */
+ DEFEVENT (PLUGIN_FINISH_TYPE)
+ 
++/* After finishing parsing a declaration. */
++DEFEVENT (PLUGIN_FINISH_DECL)
++
+ /* Useful for summary processing.  */
+ DEFEVENT (PLUGIN_FINISH_UNIT)
+ 
+Index: gcc/testsuite/g++.dg/plugin/plugin.exp
+===================================================================
+--- gcc/testsuite/g++.dg/plugin/plugin.exp	(revision 162126)
++++ gcc/testsuite/g++.dg/plugin/plugin.exp	(working copy)
+@@ -51,7 +51,8 @@
+     { pragma_plugin.c pragma_plugin-test-1.C } \
+     { selfassign.c self-assign-test-1.C self-assign-test-2.C self-assign-test-3.C } \
+     { dumb_plugin.c dumb-plugin-test-1.C } \
+-    { header_plugin.c header-plugin-test.C } ]
++    { header_plugin.c header-plugin-test.C } \
++    { decl_plugin.c decl-plugin-test.C } ]
+ 
+ foreach plugin_test $plugin_test_list {
+     # Replace each source file with its full-path name
+Index: gcc/testsuite/g++.dg/plugin/decl-plugin-test.C
+===================================================================
+--- gcc/testsuite/g++.dg/plugin/decl-plugin-test.C	(revision 0)
++++ gcc/testsuite/g++.dg/plugin/decl-plugin-test.C	(revision 0)
+@@ -0,0 +1,32 @@
++
++
++extern int global; // { dg-warning "Decl Global global" }
++int global_array[] = { 1, 2, 3 }; // { dg-warning "Decl Global global_array" }
++
++int takes_args(int arg1, int arg2)
++{
++  int local = arg1 + arg2 + global; // { dg-warning "Decl Local local" }
++  return local + 1;
++}
++
++int global = 12; // { dg-warning "Decl Global global" }
++
++struct test_str {
++  int field; // { dg-warning "Decl Field field" }
++};
++
++class test_class {
++  int class_field1; // { dg-warning "Decl Field class_field1" }
++  int class_field2; // { dg-warning "Decl Field class_field2" }
++
++  test_class() // { dg-warning "Decl Function test_class" }
++    : class_field1(0), class_field2(0)
++  {}
++
++  void swap_fields(int bias) // { dg-warning "Decl Function swap_fields" }
++  {
++    int temp = class_field1 + bias; // { dg-warning "Decl Local temp" }
++    class_field1 = class_field2 - bias;
++    class_field2 = temp;
++  }
++};
+Index: gcc/testsuite/g++.dg/plugin/decl_plugin.c
+===================================================================
+--- gcc/testsuite/g++.dg/plugin/decl_plugin.c	(revision 0)
++++ gcc/testsuite/g++.dg/plugin/decl_plugin.c	(revision 0)
+@@ -0,0 +1,51 @@
++/* A plugin example that shows which declarations are caught by FINISH_DECL */
++
++#include "gcc-plugin.h"
++#include <stdlib.h>
++#include "config.h"
++#include "system.h"
++#include "coretypes.h"
++#include "tree.h"
++#include "tree-pass.h"
++#include "intl.h"
++
++int plugin_is_GPL_compatible;
++
++/* Callback function to invoke after GCC finishes a declaration. */
++
++void plugin_finish_decl (void *event_data, void *data)
++{
++  tree decl = (tree) event_data;
++
++  const char *kind = NULL;
++  switch (TREE_CODE(decl)) {
++  case FUNCTION_DECL:
++    kind = "Function"; break;
++  case PARM_DECL:
++    kind = "Parameter"; break;
++  case VAR_DECL:
++    if (DECL_CONTEXT(decl) != NULL)
++      kind = "Local";
++    else
++      kind = "Global";
++    break;
++  case FIELD_DECL:
++    kind = "Field"; break;
++  default:
++    kind = "Unknown";
++  }
++
++  warning (0, G_("Decl %s %s"),
++           kind, IDENTIFIER_POINTER (DECL_NAME (decl)));
++}
++
++int
++plugin_init (struct plugin_name_args *plugin_info,
++             struct plugin_gcc_version *version)
++{
++  const char *plugin_name = plugin_info->base_name;
++
++  register_callback (plugin_name, PLUGIN_FINISH_DECL,
++                     plugin_finish_decl, NULL);
++  return 0;
++}
+Index: gcc/cp/decl.c
+===================================================================
+--- gcc/cp/decl.c	(revision 162126)
++++ gcc/cp/decl.c	(working copy)
+@@ -5967,6 +5967,8 @@
+   /* If this was marked 'used', be sure it will be output.  */
+   if (lookup_attribute ("used", DECL_ATTRIBUTES (decl)))
+     mark_decl_referenced (decl);
++
++  invoke_plugin_callbacks (PLUGIN_FINISH_DECL, decl);
+ }
+ 
+ /* Returns a declaration for a VAR_DECL as if:
+Index: gcc/c-decl.c
+===================================================================
+--- gcc/c-decl.c	(revision 162126)
++++ gcc/c-decl.c	(working copy)
+@@ -4392,6 +4392,8 @@
+       && DECL_INITIAL (decl) == NULL_TREE)
+     warning_at (DECL_SOURCE_LOCATION (decl), OPT_Wc___compat,
+ 		"uninitialized const %qD is invalid in C++", decl);
++
++  invoke_plugin_callbacks (PLUGIN_FINISH_DECL, decl);
+ }
+ 
+ /* Given a parsed parameter declaration, decode it into a PARM_DECL.  */
+Index: gcc/plugin.c
+===================================================================
+--- gcc/plugin.c	(revision 162126)
++++ gcc/plugin.c	(working copy)
+@@ -400,6 +400,7 @@
+ 	  }
+       /* Fall through.  */
+       case PLUGIN_FINISH_TYPE:
++      case PLUGIN_FINISH_DECL:
+       case PLUGIN_START_UNIT:
+       case PLUGIN_FINISH_UNIT:
+       case PLUGIN_PRE_GENERICIZE:
+@@ -481,6 +482,7 @@
+ 	gcc_assert (event < event_last);
+       /* Fall through.  */
+       case PLUGIN_FINISH_TYPE:
++      case PLUGIN_FINISH_DECL:
+       case PLUGIN_START_UNIT:
+       case PLUGIN_FINISH_UNIT:
+       case PLUGIN_PRE_GENERICIZE:

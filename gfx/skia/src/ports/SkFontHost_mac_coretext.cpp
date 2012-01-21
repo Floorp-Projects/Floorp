@@ -796,8 +796,8 @@ CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph& 
 void SkScalerContext_Mac::getVerticalOffset(CGGlyph glyphID, SkIPoint* offset) const {
     CGSize vertOffset;
     CTFontGetVerticalTranslationsForGlyphs(fCTVerticalFont, &glyphID, &vertOffset, 1);
-    const SkPoint trans = {SkFloatToScalar(vertOffset.width),
-                           SkFloatToScalar(vertOffset.height)};
+    const SkPoint trans = {SkScalar(SkFloatToScalar(vertOffset.width)),
+                           SkScalar(SkFloatToScalar(vertOffset.height))};
     SkPoint floatOffset;
     fVerticalMatrix.mapPoints(&floatOffset, &trans, 1);
     if (!isSnowLeopard()) {

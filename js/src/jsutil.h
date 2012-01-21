@@ -370,7 +370,7 @@ UnsignedPtrDiff(const void *bigger, const void *smaller)
 }
 
 /*
- * Ordinarily, a function taking a JSContext* 'cx' paremter reports errors on
+ * Ordinarily, a function taking a JSContext* 'cx' parameter reports errors on
  * the context. In some cases, functions optionally report and indicate this by
  * taking a nullable 'maybecx' parameter. In some cases, though, a function
  * always needs a 'cx', but optionally reports. This option is presented by the
