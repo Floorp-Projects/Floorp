@@ -80,6 +80,7 @@ namespace ion {
     _(Copy)                                                                 \
     _(Box)                                                                  \
     _(Unbox)                                                                \
+    _(GuardObject)                                                          \
     _(ToDouble)                                                             \
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
@@ -102,6 +103,8 @@ namespace ion {
     _(BoundsCheck)                                                          \
     _(LoadElement)                                                          \
     _(StoreElement)                                                         \
+    _(LoadFixedSlot)                                                        \
+    _(StoreFixedSlot)                                                       \
     _(CallGetProperty)                                                      \
     _(CallGetName)                                                          \
     _(CallGetNameTypeOf)                                                    \

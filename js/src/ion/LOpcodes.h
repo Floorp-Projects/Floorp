@@ -106,6 +106,10 @@
     _(LoadElementT)                 \
     _(StoreElementV)                \
     _(StoreElementT)                \
+    _(LoadFixedSlotV)               \
+    _(LoadFixedSlotT)               \
+    _(StoreFixedSlotV)              \
+    _(StoreFixedSlotT)              \
     _(FunctionEnvironment)          \
     _(GetPropertyCacheV)            \
     _(GetPropertyCacheT)            \
