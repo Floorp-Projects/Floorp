@@ -1058,6 +1058,77 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0>
     }
 };
 
+// Load a boxed value from an object's fixed slot.
+class LLoadFixedSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(LoadFixedSlotV);
+    BOX_OUTPUT_ACCESSORS();
+
+    LLoadFixedSlotV(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const MLoadFixedSlot *mir() const {
+        return mir_->toLoadFixedSlot();
+    }
+};
+
+// Load a typed value from an object's fixed slot.
+class LLoadFixedSlotT : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(LoadFixedSlotT);
+
+    LLoadFixedSlotT(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const MLoadFixedSlot *mir() const {
+        return mir_->toLoadFixedSlot();
+    }
+};
+
+// Store a boxed value to an object's fixed slot.
+class LStoreFixedSlotV : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(StoreFixedSlotV);
+
+    LStoreFixedSlotV(const LAllocation &obj) {
+        setOperand(0, obj);
+    }
+
+    static const size_t Value = 1;
+
+    const MStoreFixedSlot *mir() const {
+        return mir_->toStoreFixedSlot();
+    }
+    const LAllocation *obj() {
+        return getOperand(0);
+    }
+};
+
+// Store a typed value to an object's fixed slot.
+class LStoreFixedSlotT : public LInstructionHelper<0, 2, 0>
+{
+  public:
+    LIR_HEADER(StoreFixedSlotT);
+
+    LStoreFixedSlotT(const LAllocation &obj, const LAllocation &value)
+    {
+        setOperand(0, obj);
+        setOperand(1, value);
+    }
+    const MStoreFixedSlot *mir() const {
+        return mir_->toStoreFixedSlot();
+    }
+    const LAllocation *obj() {
+        return getOperand(0);
+    }
+    const LAllocation *value() {
+        return getOperand(1);
+    }
+};
+
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
 class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1, 0>
@@ -1261,8 +1332,7 @@ class LCallSetPropertyT : public LCallInstructionHelper<0, 2, 0>
   public:
     LIR_HEADER(CallSetPropertyT);
 
-    LCallSetPropertyT(const LAllocation &obj, const LAllocation &value,
-                            MIRType valueType)
+    LCallSetPropertyT(const LAllocation &obj, const LAllocation &value, MIRType valueType)
         : valueType_(valueType)
     {
         setOperand(0, obj);
@@ -1304,8 +1374,7 @@ class LCacheSetPropertyT : public LInstructionHelper<0, 2, 0>
   public:
     LIR_HEADER(CacheSetPropertyT);
 
-    LCacheSetPropertyT(const LAllocation &object, const LAllocation &value,
-                             MIRType valueType)
+    LCacheSetPropertyT(const LAllocation &object, const LAllocation &value, MIRType valueType)
         : valueType_(valueType)
     {
         setOperand(0, object);

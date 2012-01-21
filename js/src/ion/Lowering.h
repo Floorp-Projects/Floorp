@@ -155,6 +155,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitBoundsCheck(MBoundsCheck *ins);
     bool visitLoadElement(MLoadElement *ins);
     bool visitStoreElement(MStoreElement *ins);
+    bool visitLoadFixedSlot(MLoadFixedSlot *ins);
+    bool visitStoreFixedSlot(MStoreFixedSlot *ins);
     bool visitGetPropertyCache(MGetPropertyCache *ins);
     bool visitGuardClass(MGuardClass *ins);
     bool visitCallGetProperty(MCallGetProperty *ins);
@@ -162,6 +164,11 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCallGetNameTypeOf(MCallGetNameTypeOf *ins);
     bool visitGenericSetProperty(MGenericSetProperty *ins);
     bool visitStringLength(MStringLength *ins);
+
+    bool visitGuardObject(MGuardObject *ins) {
+        // The type policy associated with this instruction does all the work.
+        return true;
+    }
 };
 
 } // namespace ion

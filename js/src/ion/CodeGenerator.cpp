@@ -918,6 +918,58 @@ CodeGenerator::visitCallGetNameTypeOf(LCallGetNameTypeOf *lir)
     return callVM(Info, lir);
 }
 
+bool
+CodeGenerator::visitLoadFixedSlotV(LLoadFixedSlotV *ins)
+{
+    const Register obj = ToRegister(ins->getOperand(0));
+    size_t slot = ins->mir()->slot();
+    ValueOperand result = GetValueOutput(ins);
+
+    masm.loadValue(Address(obj, JSObject::getFixedSlotOffset(slot)), result);
+    return true;
+}
+
+bool
+CodeGenerator::visitLoadFixedSlotT(LLoadFixedSlotT *ins)
+{
+    const Register obj = ToRegister(ins->getOperand(0));
+    size_t slot = ins->mir()->slot();
+    AnyRegister result = ToAnyRegister(ins->getDef(0));
+
+    masm.loadUnboxedValue(Address(obj, JSObject::getFixedSlotOffset(slot)), result);
+    return true;
+}
+
+bool
+CodeGenerator::visitStoreFixedSlotV(LStoreFixedSlotV *ins)
+{
+    const Register obj = ToRegister(ins->getOperand(0));
+    size_t slot = ins->mir()->slot();
+
+    const ValueOperand value = ToValue(ins, LStoreFixedSlotV::Value);
+    masm.storeValue(value, Address(obj, JSObject::getFixedSlotOffset(slot)));
+
+    return true;
+}
+
+bool
+CodeGenerator::visitStoreFixedSlotT(LStoreFixedSlotT *ins)
+{
+    const Register obj = ToRegister(ins->getOperand(0));
+    size_t slot = ins->mir()->slot();
+
+    const LAllocation *value = ins->value();
+    MIRType valueType = ins->mir()->value()->type();
+
+    ConstantOrRegister nvalue = value->isConstant()
+                              ? ConstantOrRegister(*value->toConstant())
+                              : TypedOrValueRegister(valueType, ToAnyRegister(value));
+
+    masm.storeConstantOrRegister(nvalue, Address(obj, JSObject::getFixedSlotOffset(slot)));
+
+    return true;
+}
+
 // An out-of-line path to call an inline cache function.
 class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
 {
