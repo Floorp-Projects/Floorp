@@ -60,6 +60,7 @@ class SubdocumentScrollHelper implements GeckoEventListener {
     private boolean mOverridePanning;
     private boolean mOverrideScrollAck;
     private boolean mOverrideScrollPending;
+    private boolean mScrollSucceeded;
 
     SubdocumentScrollHelper(PanZoomController controller) {
         mPanZoomController = controller;
@@ -104,6 +105,10 @@ class SubdocumentScrollHelper implements GeckoEventListener {
         return mOverridePanning;
     }
 
+    boolean lastScrollSucceeded() {
+        return mScrollSucceeded;
+    }
+
     // GeckoEventListener implementation
 
     public void handleMessage(final String event, final JSONObject message) {
@@ -116,10 +121,12 @@ class SubdocumentScrollHelper implements GeckoEventListener {
                         mOverridePanning = true;
                         mOverrideScrollAck = true;
                         mOverrideScrollPending = false;
+                        mScrollSucceeded = true;
                     } else if (MESSAGE_CANCEL_OVERRIDE.equals(event)) {
                         mOverridePanning = false;
                     } else if (MESSAGE_SCROLL_ACK.equals(event)) {
                         mOverrideScrollAck = true;
+                        mScrollSucceeded = message.getBoolean("scrolled");
                         if (mOverridePanning && mOverrideScrollPending) {
                             scrollBy(mPanZoomController.getDisplacement());
                         }
