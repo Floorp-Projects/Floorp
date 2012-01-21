@@ -1473,23 +1473,34 @@ nsAccessible::State()
   // Apply ARIA states to be sure accessible states will be overridden.
   ApplyARIAState(&state);
 
-  if (mRoleMapEntry && mRoleMapEntry->role == roles::PAGETAB &&
-      !(state & states::SELECTED) &&
+  // If this is an ARIA item of the selectable widget and if it's focused and
+  // not marked unselected explicitly (i.e. aria-selected="false") then expose
+  // it as selected to make ARIA widget authors life easier.
+  if (mRoleMapEntry && !(state & states::SELECTED) &&
       !mContent->AttrValueIs(kNameSpaceID_None,
                              nsGkAtoms::aria_selected,
                              nsGkAtoms::_false, eCaseMatters)) {
-    // Special case: for tabs, focused implies selected, unless explicitly
-    // false, i.e. aria-selected="false".
-    if (state & states::FOCUSED) {
-      state |= states::SELECTED;
-    } else {
-      // If focus is in a child of the tab panel surely the tab is selected!
-      Relation rel = RelationByType(nsIAccessibleRelation::RELATION_LABEL_FOR);
-      nsAccessible* relTarget = nsnull;
-      while ((relTarget = rel.Next())) {
-        if (relTarget->Role() == roles::PROPERTYPAGE &&
-            FocusMgr()->IsFocusWithin(relTarget))
-          state |= states::SELECTED;
+    // Special case for tabs: focused tab or focus inside related tab panel
+    // implies selected state.
+    if (mRoleMapEntry->role == roles::PAGETAB) {
+      if (state & states::FOCUSED) {
+        state |= states::SELECTED;
+      } else {
+        // If focus is in a child of the tab panel surely the tab is selected!
+        Relation rel = RelationByType(nsIAccessibleRelation::RELATION_LABEL_FOR);
+        nsAccessible* relTarget = nsnull;
+        while ((relTarget = rel.Next())) {
+          if (relTarget->Role() == roles::PROPERTYPAGE &&
+              FocusMgr()->IsFocusWithin(relTarget))
+            state |= states::SELECTED;
+        }
+      }
+    } else if (state & states::FOCUSED) {
+      nsAccessible* container = nsAccUtils::GetSelectableContainer(this, state);
+      if (container &&
+          !nsAccUtils::HasDefinedARIAToken(container->GetContent(),
+                                           nsGkAtoms::aria_multiselectable)) {
+        state |= states::SELECTED;
       }
     }
   }

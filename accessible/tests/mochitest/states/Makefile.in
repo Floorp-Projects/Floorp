@@ -48,7 +48,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =\
 		test_aria.html \
 		test_aria_imgmap.html \
-		test_aria_tabs.html \
+		test_aria_widgetitems.html \
 		test_buttons.html \
 		test_doc.html \
 		test_docarticle.html \
