@@ -43,7 +43,8 @@ function test() {
 }
 
 function afterZoomAndLoad(cb) {
-  let didLoad = didZoom = false;
+  let didLoad = false;
+  let didZoom = false;
   tabElm.linkedBrowser.addEventListener("load", function() {
     tabElm.linkedBrowser.removeEventListener("load", arguments.callee, true);
     didLoad = true;

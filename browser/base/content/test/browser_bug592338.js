@@ -4,7 +4,9 @@
 
 const TESTROOT = "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
 
-Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
+var tempScope = {};
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
+var LightweightThemeManager = tempScope.LightweightThemeManager;
 
 function wait_for_notification(aCallback) {
   PopupNotifications.panel.addEventListener("popupshown", function() {

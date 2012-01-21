@@ -56,6 +56,7 @@ CPPSRCS = dummy.cpp
 endif
  
 # Build mozglue as a shared lib on Windows, OSX and Android.
+# If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
 ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
 FORCE_SHARED_LIB = 1
 else
