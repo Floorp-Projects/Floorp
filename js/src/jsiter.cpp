@@ -513,12 +513,13 @@ NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVe
                     + slength * sizeof(Shape *));
     if (!ni)
         return NULL;
+    AutoValueVector strings(cx);
     ni->props_array = ni->props_cursor = (HeapPtr<JSFlatString> *) (ni + 1);
     ni->props_end = ni->props_array + plength;
     if (plength) {
         for (size_t i = 0; i < plength; i++) {
             JSFlatString *str = IdToString(cx, props[i]);
-            if (!str)
+            if (!str || !strings.append(StringValue(str)))
                 return NULL;
             ni->props_array[i].init(str);
         }
