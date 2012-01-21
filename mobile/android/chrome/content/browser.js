@@ -2075,8 +2075,12 @@ var BrowserEventHandler = {
       }
 
       // Scroll the scrollable element
-      this._scrollElementBy(this._scrollableElement, data.x, data.y);
-      sendMessageToJava({ gecko: { type: "Gesture:ScrollAck" } });
+      if (this._elementCanScroll(this._scrollableElement, data.x, data.y)) {
+        this._scrollElementBy(this._scrollableElement, data.x, data.y);
+        sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: true } });
+      } else {
+        sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: false } });
+      }
     } else if (aTopic == "Gesture:CancelTouch") {
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:ShowPress") {
