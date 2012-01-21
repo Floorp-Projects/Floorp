@@ -40,6 +40,7 @@
 #include "Compatibility.h"
 
 #include "nsWinUtils.h"
+#include "Statistics.h"
 
 #include "mozilla/Preferences.h"
 
@@ -84,18 +85,37 @@ PRUint32 Compatibility::sMode = Compatibility::NoCompatibilityMode;
 void
 Compatibility::Init()
 {
+  // Note we collect some AT statistics/telemetry here for convenience.
+
   HMODULE jawsHandle = ::GetModuleHandleW(L"jhook");
   if (jawsHandle) {
     sMode |= JAWSMode;
     // IA2 off mode for JAWS versions below 8.0.2173.
-    if (IsModuleVersionLessThan(jawsHandle, 8, 2173))
+    if (IsModuleVersionLessThan(jawsHandle, 8, 2173)) {
       sMode |= IA2OffMode;
+      statistics::A11yConsumers(OLDJAWS);
+    } else {
+      statistics::A11yConsumers(JAWS);
+    }
   }
 
-  if (::GetModuleHandleW(L"gwm32inc"))
+  if (::GetModuleHandleW(L"gwm32inc")) {
     sMode |= WEMode;
-  if (::GetModuleHandleW(L"dolwinhk"))
+    statistics::A11yConsumers(WE);
+  }
+  if (::GetModuleHandleW(L"dolwinhk")) {
     sMode |= DolphinMode;
+    statistics::A11yConsumers(DOLPHIN);
+  }
+
+  if (::GetModuleHandleW(L"STSA32"))
+    statistics::A11yConsumers(SEROTEK);
+
+  if (::GetModuleHandleW(L"nvdaHelperRemote"))
+    statistics::A11yConsumers(NVDA);
+
+  if (::GetModuleHandleW(L"OsmHooks"))
+    statistics::A11yConsumers(COBRA);
 
   // Turn off new tab switching for Jaws and WE.
   if (sMode & JAWSMode || sMode & WEMode) {

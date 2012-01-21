@@ -69,10 +69,6 @@ import java.nio.ByteBuffer;
 public class LayerRenderer implements GLSurfaceView.Renderer {
     private static final String LOGTAG = "GeckoLayerRenderer";
 
-    private static final float BACKGROUND_COLOR_R = 0.81f;
-    private static final float BACKGROUND_COLOR_G = 0.81f;
-    private static final float BACKGROUND_COLOR_B = 0.81f;
-
     /*
      * The amount of time a frame is allowed to take to render before we declare it a dropped
      * frame.
@@ -83,6 +79,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private static final int FRAME_RATE_METER_HEIGHT = 32;
 
     private final LayerView mView;
+    private final SingleTileLayer mBackgroundLayer;
     private final SingleTileLayer mCheckerboardLayer;
     private final NinePatchTileLayer mShadowLayer;
     private final TextLayer mFrameRateLayer;
@@ -101,6 +98,9 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         mView = view;
 
         LayerController controller = view.getController();
+
+        CairoImage backgroundImage = new BufferedCairoImage(controller.getBackgroundPattern());
+        mBackgroundLayer = new SingleTileLayer(true, backgroundImage);
 
         CairoImage checkerboardImage = new BufferedCairoImage(controller.getCheckerboardPattern());
         mCheckerboardLayer = new SingleTileLayer(true, checkerboardImage);
@@ -169,6 +169,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
             /* Update layers. */
             if (rootLayer != null) updated &= rootLayer.update(gl, pageContext);
+            updated &= mBackgroundLayer.update(gl, screenContext);
             updated &= mShadowLayer.update(gl, pageContext);
             updated &= mCheckerboardLayer.update(gl, screenContext);
             updated &= mFrameRateLayer.update(gl, screenContext);
@@ -176,8 +177,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             updated &= mHorizScrollLayer.update(gl, pageContext);
 
             /* Draw the background. */
-            gl.glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 1.0f);
-            gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+            mBackgroundLayer.draw(screenContext);
 
             /* Draw the drop shadow, if we need to. */
             Rect pageRect = getPageRect();

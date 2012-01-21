@@ -469,6 +469,10 @@ public class GeckoAppShell
         if (restoreSession)
             combinedArgs += " -restoresession";
 
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        combinedArgs += " -width " + metrics.widthPixels + " -height " + metrics.heightPixels;
+
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
                 public void run() {
                     geckoLoaded();

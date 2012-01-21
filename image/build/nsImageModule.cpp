@@ -62,11 +62,11 @@
 
 // objects that just require generic constructors
 namespace mozilla {
-namespace imagelib {
+namespace image {
 NS_GENERIC_FACTORY_CONSTRUCTOR(RasterImage)
 }
 }
-using namespace mozilla::imagelib;
+using namespace mozilla::image;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(imgLoader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
@@ -136,7 +136,7 @@ static void
 imglib_Shutdown()
 {
   imgLoader::Shutdown();
-  mozilla::imagelib::DiscardTracker::Shutdown();
+  mozilla::image::DiscardTracker::Shutdown();
 }
 
 static const mozilla::Module kImageModule = {

@@ -1016,6 +1016,18 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
     // (only used if not rounding)
     double hb2appUnits = FixedToFloat(aShapedWord->AppUnitsPerDevUnit());
 
+    // Residual from rounding of previous advance, for use in rounding the
+    // subsequent offset or advance appropriately.  16.16 fixed-point
+    //
+    // When rounding, the goal is to make the distance between glyphs and
+    // their base glyph equal to the integral number of pixels closest to that
+    // suggested by that shaper.
+    // i.e. posInfo[n].x_advance - posInfo[n].x_offset + posInfo[n+1].x_offset
+    //
+    // The value of the residual is the part of the desired distance that has
+    // not been included in integer offsets.
+    hb_position_t x_residual = 0;
+
     // keep track of y-position to set glyph offsets if needed
     nscoord yPos = 0;
 
@@ -1116,17 +1128,27 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
             continue;
         }
 
-        // Check if it's a simple one-to-one mapping
+        hb_position_t x_offset = posInfo[glyphStart].x_offset;
         hb_position_t x_advance = posInfo[glyphStart].x_advance;
-        nscoord advance =
-            roundX ? appUnitsPerDevUnit * FixedToIntRound(x_advance)
-            : floor(hb2appUnits * x_advance + 0.5);
-
+        nscoord xOffset, advance;
+        if (roundX) {
+            xOffset =
+                appUnitsPerDevUnit * FixedToIntRound(x_offset + x_residual);
+            // Desired distance from the base glyph to the next reference point.
+            hb_position_t width = x_advance - x_offset;
+            int intWidth = FixedToIntRound(width);
+            x_residual = width - FloatToFixed(intWidth);
+            advance = appUnitsPerDevUnit * intWidth + xOffset;
+        } else {
+            xOffset = floor(hb2appUnits * x_offset + 0.5);
+            advance = floor(hb2appUnits * x_advance + 0.5);
+        }
+        // Check if it's a simple one-to-one mapping
         if (glyphsInClump == 1 &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(ginfo[glyphStart].codepoint) &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
             aShapedWord->IsClusterStart(baseCharIndex) &&
-            posInfo[glyphStart].x_offset == 0 &&
+            xOffset == 0 &&
             posInfo[glyphStart].y_offset == 0 && yPos == 0)
         {
             gfxTextRun::CompressedGlyph g;
@@ -1143,20 +1165,14 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                     detailedGlyphs.AppendElement();
                 details->mGlyphID = ginfo[glyphStart].codepoint;
 
-                // Rounding offsets independently of advances on the assumption
-                // that clusters use offsets and rounding of offsets should
-                // not accumulate, and that advances are typically between
-                // clusters.
-                hb_position_t x_offset = posInfo[glyphStart].x_offset;
-                details->mXOffset =
-                    roundX ? appUnitsPerDevUnit * FixedToIntRound(x_offset)
-                    : floor(hb2appUnits * x_offset + 0.5);
+                details->mXOffset = xOffset;
+                details->mAdvance = advance;
+
                 hb_position_t y_offset = posInfo[glyphStart].y_offset;
                 details->mYOffset = yPos -
                     (roundY ? appUnitsPerDevUnit * FixedToIntRound(y_offset)
                      : floor(hb2appUnits * y_offset + 0.5));
 
-                details->mAdvance = advance;
                 hb_position_t y_advance = posInfo[glyphStart].y_advance;
                 if (y_advance != 0) {
                     yPos -=
@@ -1166,10 +1182,25 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                 if (++glyphStart >= glyphEnd) {
                     break;
                 }
+
+                x_offset = posInfo[glyphStart].x_offset;
                 x_advance = posInfo[glyphStart].x_advance;
-                advance =
-                    roundX ? appUnitsPerDevUnit * FixedToIntRound(x_advance)
-                    : floor(hb2appUnits * x_advance + 0.5);
+                if (roundX) {
+                    xOffset = appUnitsPerDevUnit *
+                        FixedToIntRound(x_offset + x_residual);
+                    // Desired distance to the next reference point.  The
+                    // residual is considered here, and includes the residual
+                    // from the base glyph offset and subsequent advances, so
+                    // that the distance from the base glyph is optimized
+                    // rather than the distance from combining marks.
+                    x_advance += x_residual;
+                    int intAdvance = FixedToIntRound(x_advance);
+                    x_residual = x_advance - FloatToFixed(intAdvance);
+                    advance = appUnitsPerDevUnit * intAdvance;
+                } else {
+                    xOffset = floor(hb2appUnits * x_offset + 0.5);
+                    advance = floor(hb2appUnits * x_advance + 0.5);
+                }
             }
 
             gfxTextRun::CompressedGlyph g;

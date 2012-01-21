@@ -42,6 +42,7 @@
 
 #include "mozilla/IHistory.h"
 #include "mozIAsyncHistory.h"
+#include "nsIDownloadHistory.h"
 #include "Database.h"
 
 #include "mozilla/dom/Link.h"
@@ -62,12 +63,14 @@ struct VisitData;
   {0x0937a705, 0x91a6, 0x417a, {0x82, 0x92, 0xb2, 0x2e, 0xb1, 0x0d, 0xa8, 0x6c}}
 
 class History : public IHistory
+              , public nsIDownloadHistory
               , public mozIAsyncHistory
               , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IHISTORY
+  NS_DECL_NSIDOWNLOADHISTORY
   NS_DECL_MOZIASYNCHISTORY
   NS_DECL_NSIOBSERVER
 

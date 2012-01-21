@@ -265,6 +265,10 @@ var BrowserApp = {
         url = window.arguments[0];
       if (window.arguments[1])
         restoreSession = window.arguments[1];
+      if (window.arguments[2])
+        gScreenWidth = window.arguments[2];
+      if (window.arguments[3])
+        gScreenHeight = window.arguments[3];
     }
 
     // XXX maybe we don't do this if the launch was kicked off from external

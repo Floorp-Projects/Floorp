@@ -567,6 +567,11 @@ class Value
     }
 
     JS_ALWAYS_INLINE
+    uint64_t asRawBits() const {
+        return data.asBits;
+    }
+
+    JS_ALWAYS_INLINE
     JSValueType extractNonDoubleType() const {
         return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
     }

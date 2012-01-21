@@ -906,78 +906,17 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 void
 nsHTMLDocument::StopDocumentLoad()
 {
-  if (nsHtml5Module::sEnabled) {
-    BlockOnload();
-    if (mWriteState == eDocumentOpened) {
-      NS_ASSERTION(IsHTML(), "document.open()ed doc is not HTML?");
+  BlockOnload();
 
-      // Marking the document as closed, since pending scripts will be
-      // stopped by nsDocument::StopDocumentLoad() below
-      mWriteState = eDocumentClosed;
+  // Remove the wyciwyg channel request from the document load group
+  // that we added in Open() if Open() was called on this doc.
+  RemoveWyciwygChannel();
+  NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::StopDocumentLoad(): "
+               "nsIWyciwygChannel could not be removed!");
 
-      // Remove the wyciwyg channel request from the document load group
-      // that we added in Open().
-      NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::StopDocumentLoad(): "
-                   "Trying to remove nonexistent wyciwyg channel!");
-      RemoveWyciwygChannel();
-      NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::StopDocumentLoad(): "
-                   "nsIWyciwygChannel could not be removed!");
-    }
-    nsDocument::StopDocumentLoad();
-    UnblockOnload(false);
-    return;
-  }
-  // Code for the old parser:
-
-  // If we're writing (i.e., there's been a document.open call), then
-  // nsDocument::StopDocumentLoad will do the wrong thing and simply terminate
-  // our parser.
-  if (mWriteState != eNotWriting) {
-    Close();
-  } else {
-    nsDocument::StopDocumentLoad();
-  }
-}
-
-// static
-void
-nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
-{
-  nsCOMPtr<nsIArray> arr = do_QueryInterface(aRef);
-  NS_ASSERTION(arr, "Must have array!");
-
-  nsCOMPtr<nsIDocument> doc = do_QueryElementAt(arr, 0);
-  NS_ASSERTION(doc, "Must have document!");
-  
-  nsCOMPtr<nsIParser> parser = do_QueryElementAt(arr, 1);
-  NS_ASSERTION(parser, "Must have parser!");
-
-  nsHTMLDocument *htmldoc = static_cast<nsHTMLDocument*>(doc.get());
-
-  // Check whether htmldoc still has the same parser.  If not, it's
-  // not for us to mess with it.
-  if (htmldoc->mParser != parser) {
-    return;
-  }
-
-  // If the document is in the middle of a document.write() call, this
-  // most likely means that script on a page document.write()'d out a
-  // script tag that did location="..." and we're right now finishing
-  // up executing the script that was written with
-  // document.write(). Since there's still script on the stack (the
-  // script that called document.write()) we don't want to release the
-  // parser now, that would cause the next document.write() call to
-  // cancel the load that was initiated by the location="..." in the
-  // script that was written out by document.write().
-
-  if (!htmldoc->mWriteLevel && htmldoc->mWriteState != eDocumentOpened) {
-    // Release the document's parser so that the call to EndLoad()
-    // doesn't just return early and set the termination function again.
-
-    htmldoc->mParser = nsnull;
-  }
-
-  htmldoc->EndLoad();
+  nsDocument::StopDocumentLoad();
+  UnblockOnload(false);
+  return;
 }
 
 void
@@ -998,65 +937,6 @@ nsHTMLDocument::BeginLoad()
 void
 nsHTMLDocument::EndLoad()
 {
-  if (mParser && mWriteState != eDocumentClosed) {
-    nsCOMPtr<nsIJSContextStack> stack =
-      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-
-    if (stack) {
-      JSContext *cx = nsnull;
-      stack->Peek(&cx);
-
-      if (cx) {
-        nsIScriptContext *scx = nsJSUtils::GetDynamicScriptContext(cx);
-
-        if (scx) {
-          // The load of the document was terminated while we're
-          // called from within JS and we have a parser (i.e. we're in
-          // the middle of doing document.write()). In stead of
-          // releasing the parser and ending the document load
-          // directly, we'll make that happen once the script is done
-          // executing. This way subsequent document.write() calls
-          // won't end up creating a new parser and interrupting other
-          // loads that were started while the script was
-          // running. I.e. this makes the following case work as
-          // expected:
-          //
-          //   document.write("foo");
-          //   location.href = "http://www.mozilla.org";
-          //   document.write("bar");
-
-          nsresult rv;
-
-          nsCOMPtr<nsIMutableArray> arr =
-            do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-          if (NS_SUCCEEDED(rv)) {
-            rv = arr->AppendElement(static_cast<nsIDocument*>(this),
-                                    false);
-            if (NS_SUCCEEDED(rv)) {
-              rv = arr->AppendElement(mParser, false);
-              if (NS_SUCCEEDED(rv)) {
-                rv = scx->SetTerminationFunction(DocumentWriteTerminationFunc,
-                                                 arr);
-                // If we fail to set the termination function, just go ahead
-                // and EndLoad now.  The slight bugginess involved is better
-                // than leaking.
-                if (NS_SUCCEEDED(rv)) {
-                  return;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Reset this now, since we're really done "loading" this document.written
-  // document.
-  NS_ASSERTION(mWriteState == eNotWriting || mWriteState == ePendingClose ||
-               mWriteState == eDocumentClosed, "EndLoad called early");
-  mWriteState = eNotWriting;
-
   bool turnOnEditing =
     mParser && (HasFlag(NODE_IS_EDITABLE) || mContentEditableCount > 0);
   // Note: nsDocument::EndLoad nulls out mParser.
@@ -1673,8 +1553,6 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   // This will be propagated to the parser when someone actually calls write()
   SetContentTypeInternal(contentType);
 
-  mWriteState = eDocumentOpened;
-
   if (NS_SUCCEEDED(rv)) {
     if (loadAsHtml5) {
       nsHtml5Module::Initialize(mParser, this, uri, shell, channel);
@@ -1686,7 +1564,6 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
       if (NS_FAILED(rv)) {
         // Don't use a parser without a content sink.
         mParser = nsnull;
-        mWriteState = eNotWriting;
         return rv;
       }
 
@@ -1746,55 +1623,51 @@ nsHTMLDocument::Close()
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsresult rv = NS_OK;
-
-  if (mParser && mWriteState == eDocumentOpened) {
-    mPendingScripts.RemoveElement(GenerateParserKey());
-
-    mWriteState = mPendingScripts.IsEmpty() ? eDocumentClosed : ePendingClose;
-
-    ++mWriteLevel;
-    rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
-                        GetContentTypeInternal(), true);
-    --mWriteLevel;
-
-    // XXX Make sure that all the document.written content is
-    // reflowed.  We should remove this call once we change
-    // nsHTMLDocument::OpenCommon() so that it completely destroys the
-    // earlier document's content and frame hierarchy.  Right now, it
-    // re-uses the earlier document's root content object and
-    // corresponding frame objects.  These re-used frame objects think
-    // that they have already been reflowed, so they drop initial
-    // reflows.  For certain cases of document.written content, like a
-    // frameset document, the dropping of the initial reflow means
-    // that we end up in document.close() without appended any reflow
-    // commands to the reflow queue and, consequently, without adding
-    // the dummy layout request to the load group.  Since the dummy
-    // layout request is not added to the load group, the onload
-    // handler of the frameset fires before the frames get reflowed
-    // and loaded.  That is the long explanation for why we need this
-    // one line of code here!
-    // XXXbz as far as I can tell this may not be needed anymore; all
-    // the testcases in bug 57636 pass without this line...  Leaving
-    // it be for now, though.  In any case, there's no reason to do
-    // this if we have no presshell, since in that case none of the
-    // above about reusing frames applies.
-    if (GetShell()) {
-      FlushPendingNotifications(Flush_Layout);
-    }
-
-    // Remove the wyciwyg channel request from the document load group
-    // that we added in OpenCommon().  If all other requests between
-    // document.open() and document.close() have completed, then this
-    // method should cause the firing of an onload event.
-    NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::Close(): Trying to remove "
-                 "nonexistent wyciwyg channel!");
-    RemoveWyciwygChannel();
-    NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::Close(): "
-                 "nsIWyciwygChannel could not be removed!");
+  if (!mParser || !mParser->IsScriptCreated()) {
+    return NS_OK;
   }
 
-  return NS_OK;
+  ++mWriteLevel;
+  nsresult rv = mParser->Parse(EmptyString(), nsnull,
+                               GetContentTypeInternal(), true);
+  --mWriteLevel;
+
+  // XXX Make sure that all the document.written content is
+  // reflowed.  We should remove this call once we change
+  // nsHTMLDocument::OpenCommon() so that it completely destroys the
+  // earlier document's content and frame hierarchy.  Right now, it
+  // re-uses the earlier document's root content object and
+  // corresponding frame objects.  These re-used frame objects think
+  // that they have already been reflowed, so they drop initial
+  // reflows.  For certain cases of document.written content, like a
+  // frameset document, the dropping of the initial reflow means
+  // that we end up in document.close() without appended any reflow
+  // commands to the reflow queue and, consequently, without adding
+  // the dummy layout request to the load group.  Since the dummy
+  // layout request is not added to the load group, the onload
+  // handler of the frameset fires before the frames get reflowed
+  // and loaded.  That is the long explanation for why we need this
+  // one line of code here!
+  // XXXbz as far as I can tell this may not be needed anymore; all
+  // the testcases in bug 57636 pass without this line...  Leaving
+  // it be for now, though.  In any case, there's no reason to do
+  // this if we have no presshell, since in that case none of the
+  // above about reusing frames applies.
+  //
+  // XXXhsivonen keeping this around for bug 577508 / 253951 still :-(
+  if (GetShell()) {
+    FlushPendingNotifications(Flush_Layout);
+  }
+
+  // Removing the wyciwygChannel here is wrong when document.close() is
+  // called from within the document itself. However, legacy requires the
+  // channel to be removed here. Otherwise, the load event never fires.
+  NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::Close(): Trying to remove "
+               "nonexistent wyciwyg channel!");
+  RemoveWyciwygChannel();
+  NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::Close(): "
+               "nsIWyciwygChannel could not be removed!");
+  return rv;
 }
 
 nsresult
@@ -1815,10 +1688,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
   nsresult rv = NS_OK;
 
   void *key = GenerateParserKey();
-  if (mWriteState == eDocumentClosed ||
-      (mWriteState == ePendingClose &&
-       !mPendingScripts.Contains(key)) ||
-      (mParser && !mParser->IsInsertionPointDefined())) {
+  if (mParser && !mParser->IsInsertionPointDefined()) {
     if (mExternalScriptsBeingEvaluated) {
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -1829,7 +1699,6 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
                                       mDocumentURI);
       return NS_OK;
     }
-    mWriteState = eDocumentClosed;
     mParser->Terminate();
     NS_ASSERTION(!mParser, "mParser should have been null'd out");
   }
@@ -1861,8 +1730,8 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
 
   static NS_NAMED_LITERAL_STRING(new_line, "\n");
 
-  // Save the data in cache
-  if (mWyciwygChannel) {
+  // Save the data in cache if the write isn't from within the doc
+  if (mWyciwygChannel && !key) {
     if (!aText.IsEmpty()) {
       mWyciwygChannel->WriteToCacheEntry(aText);
     }
@@ -1881,11 +1750,11 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
   if (aNewlineTerminate) {
     rv = mParser->Parse(aText + new_line,
                         key, GetContentTypeInternal(),
-                        (mWriteState == eNotWriting || (mWriteLevel > 1)));
+                        false);
   } else {
     rv = mParser->Parse(aText,
                         key, GetContentTypeInternal(),
-                        (mWriteState == eNotWriting || (mWriteLevel > 1)));
+                        false);
   }
 
   --mWriteLevel;
@@ -1937,30 +1806,6 @@ nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
   list.forget(aReturn);
 
   return NS_OK;
-}
-
-void
-nsHTMLDocument::ScriptLoading(nsIScriptElement *aScript)
-{
-  if (mWriteState == eNotWriting) {
-    return;
-  }
-
-  mPendingScripts.AppendElement(aScript);
-}
-
-void
-nsHTMLDocument::ScriptExecuted(nsIScriptElement *aScript)
-{
-  if (mWriteState == eNotWriting) {
-    return;
-  }
-
-  mPendingScripts.RemoveElement(aScript);
-  if (mPendingScripts.IsEmpty() && mWriteState == ePendingClose) {
-    // The last pending script just finished, terminate our parser now.
-    mWriteState = eDocumentClosed;
-  }
 }
 
 void
@@ -2411,7 +2256,7 @@ nsHTMLDocument::GenerateParserKey(void)
         // Make scripts that aren't inserted by the active parser of this document
         // participate in the context of the script that document.open()ed 
         // this document.
-        return mParser->GetRootContextKey();
+        return nsnull;
       }
     }
     return script;
