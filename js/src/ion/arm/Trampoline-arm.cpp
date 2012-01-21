@@ -287,7 +287,7 @@ generateBailoutTail(MacroAssembler &masm)
     // Test for an exception
     masm.as_cmp(r0, Imm8(0));
     masm.ma_b(&exception, Assembler::Zero);
-    masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
+    masm.ma_pop(pc);
     masm.bind(&exception);
     masm.handleException();
 }

@@ -826,6 +826,8 @@ void
 MacroAssemblerARM::ma_pop(Register r)
 {
     ma_dtr(IsLoad, sp, Imm32(4), r, PostIndex);
+    if (r == pc)
+        m_buffer.markGuard();
 }
 void
 MacroAssemblerARM::ma_push(Register r)
