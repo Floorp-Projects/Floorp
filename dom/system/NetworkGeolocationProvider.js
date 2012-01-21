@@ -239,7 +239,7 @@ WifiGeoPositionProvider.prototype = {
 
     // This is a background load
     xhr.mozBackgroundRequest = true;
-    xhr.open("GET", providerUrl, false);
+    xhr.open("GET", providerUrl, true);
     xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
     xhr.addEventListener("error", function(req) {
         LOG("onerror: " + req);
