@@ -55,6 +55,8 @@ _TEST_FILES =	parser_datreader.js \
 		html5_tree_construction_exceptions.js \
 		test_html5_tree_construction.html \
 		test_html5_tree_construction_part2.html \
+		test_bug102699.html \
+		file_bug102699.sjs \
 		test_bug174351.html \
 	 	test_bug339350.xhtml \
 		test_bug358797.html \
@@ -93,6 +95,8 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug655682.html \
 		file_bug655682.sjs \
 		test_viewsource.html \
+		test_bug715112.html \
+		test_bug715739.html \
 		$(NULL)
 
 # Disabled test due to orange on Linux

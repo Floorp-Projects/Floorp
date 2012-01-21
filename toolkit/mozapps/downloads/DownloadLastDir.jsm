@@ -63,9 +63,7 @@ const nsILocalFile = Components.interfaces.nsILocalFile;
 
 var EXPORTED_SYMBOLS = [ "gDownloadLastDir" ];
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Dict.jsm");
 
 let pbSvc = null;
 if (PBSVC_CID in Components.classes) {

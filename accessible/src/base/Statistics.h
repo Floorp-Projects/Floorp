@@ -49,6 +49,9 @@ namespace statistics {
   inline void A11yInitialized()
     { Telemetry::Accumulate(Telemetry::A11Y_INSTANTIATED, true); }
 
+  inline void A11yConsumers(PRUint32 aConsumer)
+    { Telemetry::Accumulate(Telemetry::A11Y_CONSUMERS, aConsumer); }
+
   /**
    * Report that ISimpleDOM* has been used.
    */

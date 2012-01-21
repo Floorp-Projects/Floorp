@@ -1302,7 +1302,6 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 
 NS_IMETHODIMP
 nsExpatDriver::BuildModel(nsITokenizer* aTokenizer,
-                          bool,// aCanInterrupt,
                           bool,// aCountLines,
                           const nsCString*)// aCharsetPtr)
 {

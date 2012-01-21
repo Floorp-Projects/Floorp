@@ -48,7 +48,7 @@ interface nsIDOMDragEvent;
 interface nsIDOMDataTransfer;
 interface nsISelection;
 
-[scriptable, uuid(82B58ADA-F490-4C3D-B737-1057C4F1D052)]
+[scriptable, uuid(82B58ADA-F490-4C3D-B737-1057C4F1D052), builtinclass]
 interface nsIDragService : nsISupports
 {
   const long DRAGDROP_ACTION_NONE = 0;

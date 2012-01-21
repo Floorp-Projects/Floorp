@@ -207,7 +207,7 @@ nsXMLContentSink::WillBuildModel(nsDTDMode aDTDMode)
   // Check for correct load-command for maybe prettyprinting
   if (mPrettyPrintXML) {
     nsCAutoString command;
-    mParser->GetCommand(command);
+    GetParser()->GetCommand(command);
     if (!command.EqualsLiteral("view")) {
       mPrettyPrintXML = false;
     }
@@ -327,7 +327,6 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
   }
   else {
     // Kick off layout for non-XSLT transformed documents.
-    mDocument->ScriptLoader()->RemoveObserver(this);
 
     // Check if we want to prettyprint
     MaybePrettyPrint();
@@ -419,8 +418,6 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     }
   }
 
-  originalDocument->ScriptLoader()->RemoveObserver(this);
-
   // Notify document observers that all the content has been stuck
   // into the document.  
   // XXX do we need to notify for things like PIs?  Or just the
@@ -476,7 +473,7 @@ nsXMLContentSink::WillResume(void)
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::SetParser(nsIParser* aParser)
+nsXMLContentSink::SetParser(nsParserBase* aParser)
 {
   NS_PRECONDITION(aParser, "Should have a parser here!");
   mParser = aParser;
@@ -505,7 +502,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
     sele->SetScriptLineNumber(aLineNumber);
-    sele->SetCreatorParser(mParser);
+    sele->SetCreatorParser(GetParser());
     mConstrainSize = false;
   }
 
@@ -596,21 +593,18 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       return NS_OK;
     }
 
+    // Always check the clock in nsContentSink right after a script
+    StopDeflecting();
+
     // Now tell the script that it's ready to go. This may execute the script
     // or return true, or neither if the script doesn't need executing.
     bool block = sele->AttemptToExecute();
-
-    // If the act of insertion evaluated the script, we're fine.
-    // Else, block the parser till the script has loaded.
-    if (block) {
-      mScriptElements.AppendObject(sele);
-    }
 
     // If the parser got blocked, make sure to return the appropriate rv.
     // I'm not sure if this is actually needed or not.
     if (mParser && !mParser->IsParserEnabled()) {
       // XXX The HTML sink doesn't call BlockParser here, why do we?
-      mParser->BlockParser();
+      GetParser()->BlockParser();
       block = true;
     }
 
@@ -632,10 +626,10 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       ssle->SetEnableUpdates(true);
       bool willNotify;
       bool isAlternate;
-      rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
+      rv = ssle->UpdateStyleSheet(mRunsToCompletion ? nsnull : this,
                                   &willNotify,
                                   &isAlternate);
-      if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mFragmentMode) {
+      if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
         ++mPendingSheetCount;
         mScriptLoader->AddExecuteBlocker();
       }
@@ -733,7 +727,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
   nsCAutoString cmd;
   if (mParser)
-    mParser->GetCommand(cmd);
+    GetParser()->GetCommand(cmd);
   if (cmd.EqualsASCII(kLoadAsData))
     return NS_OK; // Do not load stylesheets when loading as data
 
@@ -1077,9 +1071,13 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   if (nodeInfo->NamespaceID() == kNameSpaceID_XHTML) {
     if (nodeInfo->NameAtom() == nsGkAtoms::input ||
         nodeInfo->NameAtom() == nsGkAtoms::button ||
-        nodeInfo->NameAtom() == nsGkAtoms::menuitem ||
-        nodeInfo->NameAtom() == nsGkAtoms::audio || 
-        nodeInfo->NameAtom() == nsGkAtoms::video) {
+        nodeInfo->NameAtom() == nsGkAtoms::menuitem
+#ifdef MOZ_MEDIA
+        ||
+        nodeInfo->NameAtom() == nsGkAtoms::audio ||
+        nodeInfo->NameAtom() == nsGkAtoms::video
+#endif
+        ) {
       content->DoneCreatingElement();
     } else if (nodeInfo->NameAtom() == nsGkAtoms::head && !mCurrentHead) {
       mCurrentHead = content;
@@ -1324,14 +1322,14 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
     ssle->SetEnableUpdates(true);
     bool willNotify;
     bool isAlternate;
-    rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
+    rv = ssle->UpdateStyleSheet(mRunsToCompletion ? nsnull : this,
                                 &willNotify,
                                 &isAlternate);
     NS_ENSURE_SUCCESS(rv, rv);
     
     if (willNotify) {
       // Successfully started a stylesheet load
-      if (!isAlternate && !mFragmentMode) {
+      if (!isAlternate && !mRunsToCompletion) {
         ++mPendingSheetCount;
         mScriptLoader->AddExecuteBlocker();
       }
@@ -1680,4 +1678,27 @@ nsXMLContentSink::IsMonolithicContainer(nsINodeInfo* aNodeInfo)
           (aNodeInfo->NamespaceID() == kNameSpaceID_MathML &&
           (aNodeInfo->NameAtom() == nsGkAtoms::math))
           );
+}
+
+void
+nsXMLContentSink::ContinueInterruptedParsingIfEnabled()
+{
+  if (mParser && mParser->IsParserEnabled()) {
+    GetParser()->ContinueInterruptedParsing();
+  }
+}
+
+void
+nsXMLContentSink::ContinueInterruptedParsingAsync()
+{
+  nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this,
+    &nsXMLContentSink::ContinueInterruptedParsingIfEnabled);
+
+  NS_DispatchToCurrentThread(ev);
+}
+
+nsIParser*
+nsXMLContentSink::GetParser()
+{
+  return static_cast<nsIParser*>(mParser.get());
 }

@@ -38,7 +38,7 @@
  ***** END LICENSE BLOCK *****/
 
 /*global Components, ChromeWorker */
-/*global TiltGL, TiltMath, vec3, mat4, quat4, TiltUtils, TiltVisualizerStyle */
+/*global TiltGL, TiltMath, EPSILON, vec3, mat4, quat4, TiltUtils */
 "use strict";
 
 const Cu = Components.utils;
@@ -60,16 +60,19 @@ const INVISIBLE_ELEMENTS = {
 
 const STACK_THICKNESS = 15;
 const WIREFRAME_COLOR = [0, 0, 0, 0.25];
-const INITIAL_TRANSITION_DURATION = 100;
+const INTRO_TRANSITION_DURATION = 80;
+const OUTRO_TRANSITION_DURATION = 50;
 const INITIAL_Z_TRANSLATION = 400;
 
 const MOUSE_CLICK_THRESHOLD = 10;
-const ARCBALL_SENSITIVITY = 0.3;
+const ARCBALL_SENSITIVITY = 0.5;
 const ARCBALL_ROTATION_STEP = 0.15;
 const ARCBALL_TRANSLATION_STEP = 35;
 const ARCBALL_ZOOM_STEP = 0.1;
 const ARCBALL_ZOOM_MIN = -3000;
 const ARCBALL_ZOOM_MAX = 500;
+const ARCBALL_RESET_FACTOR = 0.9;
+const ARCBALL_RESET_INTERVAL = 1000 / 60;
 
 const TILT_CRAFTER = "resource:///modules/devtools/TiltWorkerCrafter.js";
 const TILT_PICKER = "resource:///modules/devtools/TiltWorkerPicker.js";
@@ -295,6 +298,24 @@ TiltVisualizer.Presenter = function TV_Presenter(
     if ("function" === typeof this.ondraw) {
       this.ondraw();
     }
+
+    if (!TiltVisualizer.Prefs.introTransition && !this.isExecutingDestruction) {
+      this.frames = INTRO_TRANSITION_DURATION;
+    }
+    if (!TiltVisualizer.Prefs.outroTransition && this.isExecutingDestruction) {
+      this.frames = OUTRO_TRANSITION_DURATION;
+    }
+
+    if ("function" === typeof this.onInitializationFinished &&
+        this.frames === INTRO_TRANSITION_DURATION &&
+       !this.isExecutingDestruction) {
+      this.onInitializationFinished();
+    }
+    if ("function" === typeof this.onDestructionFinished &&
+        this.frames === OUTRO_TRANSITION_DURATION &&
+        this.isExecutingDestruction) {
+      this.onDestructionFinished();
+    }
   }.bind(this);
 
   setup();
@@ -310,6 +331,8 @@ TiltVisualizer.Presenter.prototype = {
   {
     let renderer = this.renderer;
     let transforms = this.transforms;
+    let w = renderer.width;
+    let h = renderer.height;
 
     // if the mesh wasn't created yet, don't continue rendering
     if (!this.meshStacks || !this.meshWireframe) {
@@ -321,10 +344,15 @@ TiltVisualizer.Presenter.prototype = {
     renderer.perspective();
 
     // apply a transition transformation using an ortho and perspective matrix
-    let f = this.frames / INITIAL_TRANSITION_DURATION;
-    let w = renderer.width;
-    let h = renderer.height;
-    renderer.lerp(renderer.projMatrix, mat4.ortho(0, w, h, 0, -1, 1000), f, 8);
+    let ortho = mat4.ortho(0, w, h, 0, -1000, 1000);
+
+    if (!this.isExecutingDestruction) {
+      let f = this.frames / INTRO_TRANSITION_DURATION;
+      renderer.lerp(renderer.projMatrix, ortho, f, 8);
+    } else {
+      let f = this.frames / OUTRO_TRANSITION_DURATION;
+      renderer.lerp(renderer.projMatrix, ortho, 1 - f, 8);
+    }
 
     // apply the preliminary transformations to the model view
     renderer.translate(w * 0.5, h * 0.5, -INITIAL_Z_TRANSLATION);
@@ -349,7 +377,8 @@ TiltVisualizer.Presenter.prototype = {
     this.drawHighlight();
 
     // make sure the initial transition is drawn until finished
-    if (this.frames < INITIAL_TRANSITION_DURATION) {
+    if (this.frames < INTRO_TRANSITION_DURATION ||
+        this.frames < OUTRO_TRANSITION_DURATION) {
       this.redraw = true;
     }
     this.frames++;
@@ -460,7 +489,7 @@ TiltVisualizer.Presenter.prototype = {
    * @param {Object} aData
    *                 object containing the necessary mesh verts, texcoord etc.
    */
-  setupMesh: function TVP_setupMesh(aData)
+  setupMesh: function TVP_setupMesh(aData) /*global TiltVisualizerStyle */
   {
     let renderer = this.renderer;
 
@@ -668,7 +697,8 @@ TiltVisualizer.Presenter.prototype = {
     vec3.set([x,     y + h, z * STACK_THICKNESS], highlight.v3);
 
     this._currentSelection = aNodeIndex;
-    this.inspectorUI.inspectNode(node);
+    this.inspectorUI.inspectNode(node, this.contentWindow.innerHeight < y ||
+                                       this.contentWindow.pageYOffset > 0);
   },
 
   /**
@@ -788,6 +818,28 @@ TiltVisualizer.Presenter.prototype = {
   },
 
   /**
+   * Starts executing a destruction animation and executes a callback function
+   * when finished.
+   *
+   * @param {Function} aCallback
+   *                   the destruction finished callback
+   */
+  executeDestruction: function TV_executeDestruction(aCallback)
+  {
+    if (!this.isExecutingDestruction) {
+      this.isExecutingDestruction = true;
+      this.onDestructionFinished = aCallback;
+
+      if (this.frames > OUTRO_TRANSITION_DURATION) {
+        this.frames = 0;
+        this.redraw = true;
+      } else {
+        aCallback();
+      }
+    }
+  },
+
+  /**
    * Function called when this object is destroyed.
    */
   finalize: function TVP_finalize()
@@ -851,26 +903,60 @@ TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
   TiltUtils.bindObjectFunc(this, "update");
   TiltUtils.bindObjectFunc(this, "^on");
 
-  // bind commonly used mouse and keyboard events with the controller
-  aCanvas.addEventListener("mousedown", this.onMouseDown, false);
-  aCanvas.addEventListener("mouseup", this.onMouseUp, false);
-  aCanvas.addEventListener("click", this.onMouseClick, false);
-  aCanvas.addEventListener("mousemove", this.onMouseMove, false);
-  aCanvas.addEventListener("mouseover", this.onMouseOver, false);
-  aCanvas.addEventListener("mouseout", this.onMouseOut, false);
-  aCanvas.addEventListener("MozMousePixelScroll", this.onMozScroll, false);
-  aCanvas.addEventListener("keydown", this.onKeyDown, false);
-  aCanvas.addEventListener("keyup", this.onKeyUp, false);
-  aCanvas.addEventListener("blur", this.onBlur, false);
-
-  // handle resize events to change the arcball dimensions
-  aPresenter.contentWindow.addEventListener("resize", this.onResize, false);
+  // add the necessary event listeners
+  this.addEventListeners();
 
   // attach this controller's update function to the presenter ondraw event
   aPresenter.ondraw = this.update;
 };
 
 TiltVisualizer.Controller.prototype = {
+
+  /**
+   * Adds all added events listeners required by this controller.
+   */
+  addEventListeners: function TVC_addEventListeners()
+  {
+    let canvas = this.canvas;
+    let presenter = this.presenter;
+
+    // bind commonly used mouse and keyboard events with the controller
+    canvas.addEventListener("mousedown", this.onMouseDown, false);
+    canvas.addEventListener("mouseup", this.onMouseUp, false);
+    canvas.addEventListener("click", this.onMouseClick, false);
+    canvas.addEventListener("mousemove", this.onMouseMove, false);
+    canvas.addEventListener("mouseover", this.onMouseOver, false);
+    canvas.addEventListener("mouseout", this.onMouseOut, false);
+    canvas.addEventListener("MozMousePixelScroll", this.onMozScroll, false);
+    canvas.addEventListener("keydown", this.onKeyDown, false);
+    canvas.addEventListener("keyup", this.onKeyUp, false);
+    canvas.addEventListener("blur", this.onBlur, false);
+
+    // handle resize events to change the arcball dimensions
+    presenter.contentWindow.addEventListener("resize", this.onResize, false);
+  },
+
+  /**
+   * Removes all added events listeners required by this controller.
+   */
+  removeEventListeners: function TVC_removeEventListeners()
+  {
+    let canvas = this.canvas;
+    let presenter = this.presenter;
+
+    canvas.removeEventListener("mousedown", this.onMouseDown, false);
+    canvas.removeEventListener("mouseup", this.onMouseUp, false);
+    canvas.removeEventListener("click", this.onMouseClick, false);
+    canvas.removeEventListener("mousemove", this.onMouseMove, false);
+    canvas.removeEventListener("mouseover", this.onMouseOver, false);
+    canvas.removeEventListener("mouseout", this.onMouseOut, false);
+    canvas.removeEventListener("MozMousePixelScroll", this.onMozScroll, false);
+    canvas.removeEventListener("keydown", this.onKeyDown, false);
+    canvas.removeEventListener("keyup", this.onKeyUp, false);
+    canvas.removeEventListener("blur", this.onBlur, false);
+
+    presenter.contentWindow.removeEventListener("resize", this.onResize,false);
+  },
 
   /**
    * Function called each frame, updating the visualization camera transforms.
@@ -992,14 +1078,12 @@ TiltVisualizer.Controller.prototype = {
   {
     let code = e.keyCode || e.which;
 
-    if (code >= e.DOM_VK_LEFT && code <= e.DOM_VK_DOWN) {
+    if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
       e.preventDefault();
       e.stopPropagation();
-    }
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-      this.arcball.cancelKeyEvents();
-    } else {
       this.arcball.keyDown(code);
+    } else {
+      this.arcball.cancelKeyEvents();
     }
   },
 
@@ -1010,15 +1094,16 @@ TiltVisualizer.Controller.prototype = {
   {
     let code = e.keyCode || e.which;
 
-    if (code >= e.DOM_VK_LEFT && code <= e.DOM_VK_DOWN) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
     if (code === e.DOM_VK_ESCAPE) {
-      this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId);
+      this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId, 1);
       return;
     }
-    this.arcball.keyUp(code);
+
+    if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.arcball.keyUp(code);
+    }
   },
 
   /**
@@ -1055,24 +1140,11 @@ TiltVisualizer.Controller.prototype = {
    */
   finalize: function TVC_finalize()
   {
-    let canvas = this.canvas;
-    let presenter = this.presenter;
-
     TiltUtils.destroyObject(this.arcball);
     TiltUtils.destroyObject(this.coordinates);
 
-    canvas.removeEventListener("mousedown", this.onMouseDown, false);
-    canvas.removeEventListener("mouseup", this.onMouseUp, false);
-    canvas.removeEventListener("click", this.onMouseClick, false);
-    canvas.removeEventListener("mousemove", this.onMouseMove, false);
-    canvas.removeEventListener("mouseover", this.onMouseOver, false);
-    canvas.removeEventListener("mouseout", this.onMouseOut, false);
-    canvas.removeEventListener("MozMousePixelScroll", this.onMozScroll, false);
-    canvas.removeEventListener("keydown", this.onKeyDown, false);
-    canvas.removeEventListener("keyup", this.onKeyUp, false);
-    canvas.removeEventListener("blur", this.onBlur, false);
-    presenter.contentWindow.removeEventListener("resize", this.onResize,false);
-    presenter.ondraw = null;
+    this.removeEventListeners();
+    this.presenter.ondraw = null;
   }
 };
 
@@ -1123,23 +1195,26 @@ TiltVisualizer.Arcball = function TV_Arcball(
    */
   this._lastRot = quat4.create();
   this._deltaRot = quat4.create();
-  this._currentRot = quat4.create(aInitialRot);
+  this._currentRot = quat4.create();
 
   /**
    * The current camera translation coordinates.
    */
   this._lastTrans = vec3.create();
   this._deltaTrans = vec3.create();
-  this._currentTrans = vec3.create(aInitialTrans);
+  this._currentTrans = vec3.create();
   this._zoomAmount = 0;
 
   /**
    * Additional rotation and translation vectors.
    */
-  this._addKeyRot = vec3.create();
-  this._addKeyTrans = vec3.create();
-  this._deltaKeyRot = quat4.create();
-  this._deltaKeyTrans = vec3.create();
+  this._additionalRot = vec3.create(aInitialRot);
+  this._additionalTrans = vec3.create(aInitialTrans);
+  this._deltaAdditionalRot = quat4.create();
+  this._deltaAdditionalTrans = vec3.create();
+
+  // load the keys controlling the arcball
+  this._loadKeys();
 
   // set the current dimensions of the arcball
   this.resize(aWidth, aHeight, aRadius);
@@ -1247,68 +1322,75 @@ TiltVisualizer.Arcball.prototype = {
     deltaTrans[2] = (zoomAmount - currentTrans[2]) * ARCBALL_ZOOM_STEP;
     currentTrans[2] += deltaTrans[2];
 
-    let addKeyRot = this._addKeyRot;
-    let addKeyTrans = this._addKeyTrans;
-    let deltaKeyRot = this._deltaKeyRot;
-    let deltaKeyTrans = this._deltaKeyTrans;
+    let additionalRot = this._additionalRot;
+    let additionalTrans = this._additionalTrans;
+    let deltaAdditionalRot = this._deltaAdditionalRot;
+    let deltaAdditionalTrans = this._deltaAdditionalTrans;
+
+    let rotateKeys = this.rotateKeys;
+    let panKeys = this.panKeys;
+    let zoomKeys = this.zoomKeys;
+    let resetKey = this.resetKey;
 
     // handle additional rotation and translation by the keyboard
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_A]) {
-      addKeyRot[0] -= ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
+    if (keyCode[rotateKeys.left]) {
+      additionalRot[0] -= ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_D]) {
-      addKeyRot[0] += ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
+    if (keyCode[rotateKeys.right]) {
+      additionalRot[0] += ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_W]) {
-      addKeyRot[1] += ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
+    if (keyCode[rotateKeys.up]) {
+      additionalRot[1] += ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_S]) {
-      addKeyRot[1] -= ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
+    if (keyCode[rotateKeys.down]) {
+      additionalRot[1] -= ARCBALL_SENSITIVITY * ARCBALL_ROTATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_LEFT]) {
-      addKeyTrans[0] -= ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    if (keyCode[panKeys.left]) {
+      additionalTrans[0] -= ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_RIGHT]) {
-      addKeyTrans[0] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    if (keyCode[panKeys.right]) {
+      additionalTrans[0] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_UP]) {
-      addKeyTrans[1] -= ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    if (keyCode[panKeys.up]) {
+      additionalTrans[1] -= ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_DOWN]) {
-      addKeyTrans[1] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    if (keyCode[panKeys.down]) {
+      additionalTrans[1] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_I] ||
-        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_ADD] ||
-        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_EQUALS]) {
+    if (keyCode[zoomKeys["in"][0]] ||
+        keyCode[zoomKeys["in"][1]] ||
+        keyCode[zoomKeys["in"][2]]) {
       this.zoom(-ARCBALL_TRANSLATION_STEP);
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_O] ||
-        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_SUBTRACT]) {
+    if (keyCode[zoomKeys["out"][0]] ||
+        keyCode[zoomKeys["out"][1]]) {
       this.zoom(ARCBALL_TRANSLATION_STEP);
     }
-    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_R] ||
-        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_0]) {
+    if (keyCode[zoomKeys["unzoom"]]) {
       this._zoomAmount = 0;
+    }
+    if (keyCode[resetKey]) {
+      this.reset();
     }
 
     // update the delta key rotations and translations
-    deltaKeyRot[0] +=
-      (addKeyRot[0] - deltaKeyRot[0]) * ARCBALL_SENSITIVITY;
-    deltaKeyRot[1] +=
-      (addKeyRot[1] - deltaKeyRot[1]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalRot[0] +=
+      (additionalRot[0] - deltaAdditionalRot[0]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalRot[1] +=
+      (additionalRot[1] - deltaAdditionalRot[1]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalRot[2] +=
+      (additionalRot[2] - deltaAdditionalRot[2]) * ARCBALL_SENSITIVITY;
 
-    deltaKeyTrans[0] +=
-      (addKeyTrans[0] - deltaKeyTrans[0]) * ARCBALL_SENSITIVITY;
-    deltaKeyTrans[1] +=
-      (addKeyTrans[1] - deltaKeyTrans[1]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalTrans[0] +=
+      (additionalTrans[0] - deltaAdditionalTrans[0]) * ARCBALL_SENSITIVITY;
+    deltaAdditionalTrans[1] +=
+      (additionalTrans[1] - deltaAdditionalTrans[1]) * ARCBALL_SENSITIVITY;
 
     // create an additional rotation based on the key events
-    quat4.fromEuler(deltaKeyRot[0], deltaKeyRot[1], 0, deltaRot);
+    quat4.fromEuler(deltaAdditionalRot[0], deltaAdditionalRot[1], 0, deltaRot);
 
     // create an additional translation based on the key events
-    deltaTrans[0] = deltaKeyTrans[0];
-    deltaTrans[1] = deltaKeyTrans[1];
-    deltaTrans[2] = 0;
+    vec3.set([deltaAdditionalTrans[0], deltaAdditionalTrans[1], 0], deltaTrans);
 
     // return the current rotation and translation
     return {
@@ -1334,6 +1416,7 @@ TiltVisualizer.Arcball.prototype = {
     this._mousePress[0] = x;
     this._mousePress[1] = y;
     this._mouseButton = aButton;
+    this._cancelResetInterval();
     this._save();
 
     // find the sphere coordinates of the mouse positions
@@ -1409,6 +1492,7 @@ TiltVisualizer.Arcball.prototype = {
    */
   zoom: function TVA_zoom(aZoom)
   {
+    this._cancelResetInterval();
     this._zoomAmount = TiltMath.clamp(this._zoomAmount - aZoom,
       ARCBALL_ZOOM_MIN, ARCBALL_ZOOM_MAX);
   },
@@ -1422,6 +1506,7 @@ TiltVisualizer.Arcball.prototype = {
    */
   keyDown: function TVA_keyDown(aCode)
   {
+    this._cancelResetInterval();
     this._keyCode[aCode] = true;
   },
 
@@ -1484,8 +1569,18 @@ TiltVisualizer.Arcball.prototype = {
   /**
    * Cancels all pending transformations caused by key events.
    */
-  cancelKeyEvents: function TVA_cancelKeyEvents() {
+  cancelKeyEvents: function TVA_cancelKeyEvents()
+  {
     this._keyCode = {};
+  },
+
+  /**
+   * Cancels all pending transformations caused by mouse events.
+   */
+  cancelMouseEvents: function TVA_cancelMouseEvents()
+  {
+    this._rotating = false;
+    this._mouseButton = -1;
   },
 
   /**
@@ -1513,19 +1608,138 @@ TiltVisualizer.Arcball.prototype = {
   },
 
   /**
+   * Starts an animation resetting the arcball transformations to identity.
+   *
+   * @param {Array} aFinalTranslation
+   *                optional, final vector translation
+   * @param {Array} aFinalRotation
+   *                optional, final quaternion rotation
+   */
+  reset: function TVA_reset(aFinalTranslation, aFinalRotation)
+  {
+    this.cancelMouseEvents();
+    this.cancelKeyEvents();
+
+    if (!this._resetInterval) {
+      let window = TiltUtils.getBrowserWindow();
+      let func = this._nextResetIntervalStep.bind(this);
+
+      vec3.zero(this._additionalTrans);
+      vec3.zero(this._additionalRot);
+
+      this._save();
+      this._resetFinalTranslation = vec3.create(aFinalTranslation);
+      this._resetFinalRotation = quat4.create(aFinalRotation);
+      this._resetInterval = window.setInterval(func, ARCBALL_RESET_INTERVAL);
+    }
+  },
+
+  /**
+   * Cancels the current arcball reset animation if there is one.
+   */
+  _cancelResetInterval: function TVA__cancelResetInterval()
+  {
+    if (this._resetInterval) {
+      let window = TiltUtils.getBrowserWindow();
+
+      window.clearInterval(this._resetInterval);
+      this._resetInterval = null;
+      this._save();
+
+      if ("function" === typeof this.onResetFinish) {
+        this.onResetFinish();
+        this.onResetFinish = null;
+      }
+    }
+  },
+
+  /**
+   * Executes the next step in the arcball reset animation.
+   */
+  _nextResetIntervalStep: function TVA__nextResetIntervalStep()
+  {
+    let fDelta = EPSILON * EPSILON;
+    let fTran = this._resetFinalTranslation;
+    let fRot = this._resetFinalRotation;
+
+    let t = vec3.create(fTran);
+    let r = quat4.multiply(quat4.inverse(quat4.create(this._currentRot)), fRot);
+
+    // reset the rotation quaternion and translation vector
+    vec3.lerp(this._currentTrans, t, ARCBALL_RESET_FACTOR);
+    quat4.slerp(this._currentRot, r, 1 - ARCBALL_RESET_FACTOR);
+
+    // also reset any additional transforms by the keyboard or mouse
+    this._zoomAmount *= ARCBALL_RESET_FACTOR;
+
+    // clear the loop if the all values are very close to zero
+    if (vec3.length(vec3.subtract(this._lastRot, fRot, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._deltaRot, fRot, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._currentRot, fRot, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._lastTrans, fTran, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._deltaTrans, fTran, [])) < fDelta &&
+        vec3.length(vec3.subtract(this._currentTrans, fTran, [])) < fDelta) {
+
+      this._cancelResetInterval();
+    }
+  },
+
+  /**
+   * Loads the keys to control this arcball.
+   */
+  _loadKeys: function TVA__loadKeys() {
+
+    this.rotateKeys = {
+      "up": Ci.nsIDOMKeyEvent["DOM_VK_W"],
+      "down": Ci.nsIDOMKeyEvent["DOM_VK_S"],
+      "left": Ci.nsIDOMKeyEvent["DOM_VK_A"],
+      "right": Ci.nsIDOMKeyEvent["DOM_VK_D"],
+    };
+    this.panKeys = {
+      "up": Ci.nsIDOMKeyEvent["DOM_VK_UP"],
+      "down": Ci.nsIDOMKeyEvent["DOM_VK_DOWN"],
+      "left": Ci.nsIDOMKeyEvent["DOM_VK_LEFT"],
+      "right": Ci.nsIDOMKeyEvent["DOM_VK_RIGHT"],
+    };
+    this.zoomKeys = {
+      "in": [
+        Ci.nsIDOMKeyEvent["DOM_VK_I"],
+        Ci.nsIDOMKeyEvent["DOM_VK_ADD"],
+        Ci.nsIDOMKeyEvent["DOM_VK_EQUALS"],
+      ],
+      "out": [
+        Ci.nsIDOMKeyEvent["DOM_VK_O"],
+        Ci.nsIDOMKeyEvent["DOM_VK_SUBTRACT"],
+      ],
+      "unzoom": Ci.nsIDOMKeyEvent["DOM_VK_0"]
+    };
+    this.resetKey = Ci.nsIDOMKeyEvent["DOM_VK_R"];
+  },
+
+  /**
    * Saves the current arcball state, typically after resize or mouse events.
    */
   _save: function TVA__save()
   {
-    let x = this._mousePress[0];
-    let y = this._mousePress[1];
+    if (this._mousePress) {
+      let x = this._mousePress[0];
+      let y = this._mousePress[1];
 
-    this._mouseMove[0] = x;
-    this._mouseMove[1] = y;
-    this._mouseRelease[0] = x;
-    this._mouseRelease[1] = y;
-    this._mouseLerp[0] = x;
-    this._mouseLerp[1] = y;
+      this._mouseMove[0] = x;
+      this._mouseMove[1] = y;
+      this._mouseRelease[0] = x;
+      this._mouseRelease[1] = y;
+      this._mouseLerp[0] = x;
+      this._mouseLerp[1] = y;
+    }
+  },
+
+  /**
+   * Function called when this object is destroyed.
+   */
+  finalize: function TVA_finalize()
+  {
+    this._cancelResetInterval();
   }
 };
 
@@ -1548,14 +1762,39 @@ TiltVisualizer.Prefs = {
     this._enabled = value;
   },
 
+  get introTransition()
+  {
+    return this._introTransition;
+  },
+
+  set introTransition(value)
+  {
+    TiltUtils.Preferences.set("intro_transition", "boolean", value);
+    this._introTransition = value;
+  },
+
+  get outroTransition()
+  {
+    return this._outroTransition;
+  },
+
+  set outroTransition(value)
+  {
+    TiltUtils.Preferences.set("outro_transition", "boolean", value);
+    this._outroTransition = value;
+  },
+
   /**
    * Loads the preferences.
    */
   load: function TVC_load()
   {
-    let prefs = TiltUtils.Preferences;
+    let prefs = TiltVisualizer.Prefs;
+    let get = TiltUtils.Preferences.get;
 
-    TiltVisualizer.Prefs._enabled = prefs.get("enabled", "boolean");
+    prefs._enabled = get("enabled", "boolean");
+    prefs._introTransition = get("intro_transition", "boolean");
+    prefs._outroTransition = get("outro_transition", "boolean");
   }
 };
 

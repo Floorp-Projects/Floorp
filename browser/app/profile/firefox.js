@@ -804,6 +804,10 @@ pref("browser.sessionstore.max_resumed_crashes", 1);
 pref("browser.sessionstore.restore_on_demand", false);
 // Whether to automatically restore hidden tabs (i.e., tabs in other tab groups) or not
 pref("browser.sessionstore.restore_hidden_tabs", false);
+// If restore_on_demand is set, pinned tabs are restored on startup by default.
+// When set to true, this pref overrides that behavior, and pinned tabs will only
+// be restored when they are focused.
+pref("browser.sessionstore.restore_pinned_tabs_on_demand", false);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
@@ -1032,6 +1036,8 @@ pref("devtools.styleinspector.enabled", true);
 
 // Enable the Tilt inspector
 pref("devtools.tilt.enabled", true);
+pref("devtools.tilt.intro_transition", true);
+pref("devtools.tilt.outro_transition", true);
 
 // Enable the rules view
 pref("devtools.ruleview.enabled", true);
@@ -1047,7 +1053,7 @@ pref("devtools.styleeditor.transitions", true);
 pref("devtools.chrome.enabled", false);
 
 // Disable the GCLI enhanced command line.
-pref("devtools.gcli.enable", true);
+pref("devtools.gcli.enable", false);
 
 // The last Web Console height. This is initially 0 which means that the Web
 // Console will use the default height next time it shows.

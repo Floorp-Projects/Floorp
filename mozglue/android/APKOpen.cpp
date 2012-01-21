@@ -53,10 +53,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <endian.h>
 #include <unistd.h>
 #include <zlib.h>
+#ifdef MOZ_OLD_LINKER
 #include <linux/ashmem.h>
+#include <endian.h>
+#endif
 #include "dlfcn.h"
 #include "APKOpen.h"
 #include <sys/time.h>
@@ -64,6 +66,9 @@
 #include "Zip.h"
 #include "sqlite3.h"
 #include "SQLiteBridge.h"
+#ifndef MOZ_OLD_LINKER
+#include "ElfLoader.h"
+#endif
 
 /* Android headers don't define RUSAGE_THREAD */
 #ifndef RUSAGE_THREAD
@@ -91,6 +96,7 @@ getLibraryMapping()
   return lib_mapping;
 }
 
+#ifdef MOZ_OLD_LINKER
 static int
 createAshmem(size_t bytes, const char *name)
 {
@@ -109,6 +115,7 @@ createAshmem(size_t bytes, const char *name)
   close(fd);
   return -1;
 }
+#endif
 
 #define SHELL_WRAPPER0(name) \
 typedef void (*name ## _t)(JNIEnv *, jclass); \
@@ -304,6 +311,7 @@ SHELL_WRAPPER3(notifyReadingMessageListFailed, jint, jint, jlong)
 
 static void * xul_handle = NULL;
 static void * sqlite_handle = NULL;
+#ifdef MOZ_OLD_LINKER
 static time_t apk_mtime = 0;
 #ifdef DEBUG
 extern "C" int extractLibs = 1;
@@ -375,6 +383,7 @@ extractFile(const char * path, Zip::Stream &s)
 #endif
   munmap(buf, size);
 }
+#endif
 
 static void
 extractLib(Zip::Stream &s, void * dest)
@@ -415,6 +424,7 @@ getLibraryCache()
   return cache_mapping;
 }
 
+#ifdef MOZ_OLD_LINKER
 static void
 ensureLibCache()
 {
@@ -575,7 +585,9 @@ static void * mozload(const char * path, Zip *zip)
 
   return handle;
 }
+#endif
 
+#ifdef MOZ_CRASHREPORTER
 static void *
 extractBuf(const char * path, Zip *zip)
 {
@@ -595,6 +607,7 @@ extractBuf(const char * path, Zip *zip)
 
   return buf;
 }
+#endif
 
 static int mapping_count = 0;
 static char *file_ids = NULL;
@@ -618,16 +631,20 @@ report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
     info->file_id = strndup(entry + strlen(name) + 1, 32);
 }
 
+#ifdef MOZ_OLD_LINKER
 extern "C" void simple_linker_init(void);
+#endif
 
 static void
 loadGeckoLibs(const char *apkName)
 {
   chdir(getenv("GRE_HOME"));
 
+#ifdef MOZ_OLD_LINKER
   struct stat status;
   if (!stat(apkName, &status))
     apk_mtime = status.st_mtime;
+#endif
 
   struct timeval t0, t1;
   gettimeofday(&t0, 0);
@@ -640,6 +657,14 @@ loadGeckoLibs(const char *apkName)
   file_ids = (char *)extractBuf("lib.id", zip);
 #endif
 
+#ifndef MOZ_OLD_LINKER
+  char *file = new char[strlen(apkName) + sizeof("!/libxpcom.so")];
+  sprintf(file, "%s!/libxpcom.so", apkName);
+  __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
+  // libxul.so is pulled from libxpcom.so, so we don't need to give the full path
+  xul_handle = __wrap_dlopen("libxul.so", RTLD_GLOBAL | RTLD_LAZY);
+  delete[] file;
+#else
 #define MOZLOAD(name) mozload("lib" name ".so", zip)
   MOZLOAD("mozalloc");
   MOZLOAD("nspr4");
@@ -655,6 +680,7 @@ loadGeckoLibs(const char *apkName)
   MOZLOAD("freebl3");
   MOZLOAD("softokn3");
 #undef MOZLOAD
+#endif
 
   delete zip;
 
@@ -715,11 +741,13 @@ static void loadSQLiteLibs(const char *apkName)
 {
   chdir(getenv("GRE_HOME"));
 
+#ifdef MOZ_OLD_LINKER
   simple_linker_init();
 
   struct stat status;
   if (!stat(apkName, &status))
     apk_mtime = status.st_mtime;
+#endif
 
   Zip *zip = new Zip(apkName);
   lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
@@ -728,9 +756,16 @@ static void loadSQLiteLibs(const char *apkName)
   file_ids = (char *)extractBuf("lib.id", zip);
 #endif
 
+#ifndef MOZ_OLD_LINKER
+  char *file = new char[strlen(apkName) + sizeof("!/mozsqlite3.so")];
+  sprintf(file, "%s!/mozsqlite3.so", apkName);
+  __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
+  delete [] file;
+#else
 #define MOZLOAD(name) mozload("lib" name ".so", zip)
   sqlite_handle = MOZLOAD("mozsqlite3");
 #undef MOZLOAD
+#endif
 
   delete zip;
 
@@ -761,8 +796,13 @@ Java_org_mozilla_gecko_GeckoAppShell_loadGeckoLibsNative(JNIEnv *jenv, jclass jG
 
 extern "C" NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName, jboolean jShouldExtract) {
-  if (jShouldExtract)
+  if (jShouldExtract) {
+#ifdef MOZ_OLD_LINKER
     extractLibs = 1;
+#else
+    putenv("MOZ_LINKER_EXTRACT=1");
+#endif
+  }
 
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
@@ -790,7 +830,9 @@ ChildProcessInit(int argc, char* argv[])
     break;
   }
 
+#ifdef MOZ_OLD_LINKER
   fillLibCache(argv[argc - 1]);
+#endif
   loadSQLiteLibs(argv[i]);
   loadGeckoLibs(argv[i]);
 
