@@ -105,7 +105,7 @@ MergeArrayRuns(T *dst, const T *src, size_t run1, size_t run2, Comparator c)
  *
  *     bool operator()(const T& a, const T& a, bool *lessOrEqualp);
  *
- * It should return true on success and sets lessOrEqualp to the result of
+ * It should return true on success and set *lessOrEqualp to the result of
  * a <= b operation. If it returns false, the sort terminates immediately with
  * the false result. In this case the content of the array and scratch is
  * arbitrary.

@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=715739
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 715739</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="tick()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=715739">Mozilla Bug 715739</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 715739 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var runNumber = 0;
+
+function textChildren(node) {
+  var s = "";
+  var n = node.firstChild;
+  while (n) {
+    if (n.nodeType == Node.TEXT_NODE) {
+      s += n.nodeValue;
+    }
+    n = n.nextSibling;
+  }
+  return s;
+}
+
+function tick() {
+  runNumber++;
+  var f = document.getElementsByTagName("iframe")[0];
+  var d = f.contentDocument;
+
+  if (runNumber == 1) {
+    d.open();
+    f.addEventListener("load", tick);
+    d.write("X");
+    d.write("\u003cscript>document.write('Y');\u003c/script>");
+    d.write("Z");
+    d.close();
+    return;
+  }
+  
+  if (runNumber == 2) {
+    var text = textChildren(d.body);
+    is(text, "XYZ", "Wrong text before reload.");
+    f.contentWindow.location.reload();
+    return;
+  }
+
+  if (runNumber == 3) {
+    var text = textChildren(d.body);
+    is(text, "XYZ", "Wrong text after reload.");
+    SimpleTest.finish();
+    return;
+  }
+}
+
+</script>
+</pre>
+<div id="content" style="display: none">
+  <iframe></iframe>
+</div>
+</body>
+</html>
