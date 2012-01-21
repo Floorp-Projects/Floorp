@@ -53,7 +53,7 @@
 #include "ImageLogging.h"
 
 namespace mozilla {
-namespace imagelib {
+namespace image {
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
@@ -775,5 +775,5 @@ void nsBMPDecoder::ProcessInfoHeader()
     mBIH.important_colors = LITTLE_TO_NATIVE32(mBIH.important_colors);
 }
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla

@@ -97,8 +97,9 @@ class nsHtml5ExecutorReflusher : public nsRunnable
     }
 };
 
-nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
+nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor(bool aRunsToCompletion)
 {
+  mRunsToCompletion = aRunsToCompletion;
   mPreloadedURLs.Init(23); // Mean # of preloadable resources per page on dmoz
   // zeroing operator new for everything else
 }
@@ -135,7 +136,9 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
     }
   }
   
-  GetParser()->DropStreamParser();
+  if (!mRunsToCompletion) {
+    GetParser()->DropStreamParser();
+  }
 
   // This comes from nsXMLContentSink and nsHTMLContentSink
   DidBuildModelImpl(aTerminated);
@@ -159,7 +162,6 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
   }
 
   ScrollToRef();
-  mDocument->ScriptLoader()->RemoveObserver(this);
   mDocument->RemoveObserver(this);
   if (!mParser) {
     // DidBuildModelImpl may cause mParser to be nulled out
@@ -197,7 +199,7 @@ nsHtml5TreeOpExecutor::WillResume()
 }
 
 NS_IMETHODIMP
-nsHtml5TreeOpExecutor::SetParser(nsIParser* aParser)
+nsHtml5TreeOpExecutor::SetParser(nsParserBase* aParser)
 {
   mParser = aParser;
   return NS_OK;
@@ -274,7 +276,7 @@ void
 nsHtml5TreeOpExecutor::MarkAsBroken()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!mFragmentMode, "Fragment parsers can't be broken!");
+  NS_ASSERTION(!mRunsToCompletion, "Fragment parsers can't be broken!");
   mBroken = true;
   if (mStreamParser) {
     mStreamParser->Terminate();
@@ -295,14 +297,6 @@ nsresult
 nsHtml5TreeOpExecutor::FlushTags()
 {
   return NS_OK;
-}
-
-void
-nsHtml5TreeOpExecutor::PostEvaluateScript(nsIScriptElement *aElement)
-{
-  nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
-  NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
-  htmlDocument->ScriptExecuted(aElement);
 }
 
 void
@@ -333,10 +327,10 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
 
   bool willNotify;
   bool isAlternate;
-  nsresult rv = ssle->UpdateStyleSheet(mFragmentMode ? nsnull : this,
+  nsresult rv = ssle->UpdateStyleSheet(mRunsToCompletion ? nsnull : this,
                                        &willNotify,
                                        &isAlternate);
-  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mFragmentMode) {
+  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddExecuteBlocker();
   }
@@ -435,7 +429,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
   
   nsHtml5FlushLoopGuard guard(this); // this is also the self-kungfu!
   
-  nsCOMPtr<nsIParser> parserKungFuDeathGrip(mParser);
+  nsCOMPtr<nsISupports> parserKungFuDeathGrip(mParser);
 
   // Remember the entry time
   (void) nsContentSink::WillParseImpl();
@@ -566,7 +560,8 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       // must be tail call when mFlushState is eNotFlushing
       RunScript(scriptElement);
       
-      // The script execution machinery makes sure this doesn't get deflected.
+      // Always check the clock in nsContentSink right after a script
+      StopDeflecting();
       if (nsContentSink::DidProcessATokenImpl() == 
           NS_ERROR_HTMLPARSER_INTERRUPTED) {
         #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
@@ -601,7 +596,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 
   // avoid crashing near EOF
   nsRefPtr<nsHtml5TreeOpExecutor> kungFuDeathGrip(this);
-  nsCOMPtr<nsIParser> parserKungFuDeathGrip(mParser);
+  nsRefPtr<nsParserBase> parserKungFuDeathGrip(mParser);
 
   NS_ASSERTION(!mReadingFromStage,
     "Got doc write flush when reading from stage");
@@ -740,7 +735,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   if (mPreventScriptExecution) {
     sele->PreventExecution();
   }
-  if (mFragmentMode) {
+  if (mRunsToCompletion) {
     return;
   }
 
@@ -754,12 +749,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
 
   mReadingFromStage = false;
   
-  sele->SetCreatorParser(mParser);
-
-  // Notify our document that we're loading this script.
-  nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
-  NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
-  htmlDocument->ScriptLoading(sele);
+  sele->SetCreatorParser(GetParser());
 
   // Copied from nsXMLContentSink
   // Now tell the script that it's ready to go. This may execute the script
@@ -769,15 +759,10 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
   if (block) {
-    mScriptElements.AppendObject(sele);
     if (mParser) {
-      mParser->BlockParser();
+      GetParser()->BlockParser();
     }
   } else {
-    // This may have already happened if the script executed, but in case
-    // it didn't then remove the element so that it doesn't get stuck forever.
-    htmlDocument->ScriptExecuted(sele);
-    
     // mParser may have been nulled out by now, but the flusher deals
 
     // If this event isn't needed, it doesn't do anything. It is sometimes
@@ -838,25 +823,21 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding,
 nsHtml5Parser*
 nsHtml5TreeOpExecutor::GetParser()
 {
+  MOZ_ASSERT(!mRunsToCompletion);
   return static_cast<nsHtml5Parser*>(mParser.get());
-}
-
-nsHtml5Tokenizer*
-nsHtml5TreeOpExecutor::GetTokenizer()
-{
-  return GetParser()->GetTokenizer();
 }
 
 void
 nsHtml5TreeOpExecutor::Reset()
 {
+  MOZ_ASSERT(mRunsToCompletion);
   DropHeldElements();
-  mReadingFromStage = false;
   mOpQueue.Clear();
   mStarted = false;
   mFlushState = eNotFlushing;
   mRunFlushLoopOnStack = false;
-  NS_ASSERTION(!mBroken, "Fragment parser got broken.");
+  MOZ_ASSERT(!mReadingFromStage);
+  MOZ_ASSERT(!mBroken);
 }
 
 void

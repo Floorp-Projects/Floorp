@@ -804,6 +804,10 @@ pref("browser.sessionstore.max_resumed_crashes", 1);
 pref("browser.sessionstore.restore_on_demand", false);
 // Whether to automatically restore hidden tabs (i.e., tabs in other tab groups) or not
 pref("browser.sessionstore.restore_hidden_tabs", false);
+// If restore_on_demand is set, pinned tabs are restored on startup by default.
+// When set to true, this pref overrides that behavior, and pinned tabs will only
+// be restored when they are focused.
+pref("browser.sessionstore.restore_pinned_tabs_on_demand", false);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);

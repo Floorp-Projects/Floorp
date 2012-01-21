@@ -166,7 +166,7 @@ NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aResult)
 nsXMLFragmentContentSink::nsXMLFragmentContentSink()
  : mParseError(false)
 {
-  mFragmentMode = true;
+  mRunsToCompletion = true;
 }
 
 nsXMLFragmentContentSink::~nsXMLFragmentContentSink()
@@ -211,7 +211,7 @@ nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode)
 NS_IMETHODIMP 
 nsXMLFragmentContentSink::DidBuildModel(bool aTerminated)
 {
-  nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
+  nsRefPtr<nsParserBase> kungFuDeathGrip(mParser);
 
   // Drop our reference to the parser to get rid of a circular
   // reference.

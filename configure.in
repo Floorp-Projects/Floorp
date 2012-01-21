@@ -4909,7 +4909,9 @@ cairo-android)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
-    MOZ_OLD_LINKER=1
+    if test "$MOZ_BUILD_APP" = "mobile/xul"; then
+        MOZ_OLD_LINKER=1
+    fi
     MOZ_TOUCH=1
     ;;
 
@@ -7159,6 +7161,9 @@ else
     dnl And we need mozglue symbols to be exported.
     MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS -rdynamic"
   fi
+  if test "$MOZ_LINKER" = 1; then
+    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS $ZLIB_LIBS"
+  fi
 fi
 
 if test -z "$MOZ_MEMORY"; then
@@ -9048,7 +9053,17 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     if test -n "$USE_ARM_KUSER"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
+    if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a $ac_cv_func_dladdr = no ; then
+      # dladdr is supported by the new linker, even when the system linker doesn't
+      # support it. Trick nspr into using dladdr when it's not supported.
+      _SAVE_CPPFLAGS="$CPPFLAGS"
+      export CPPFLAGS="-include $_topsrcdir/mozglue/linker/dladdr.h $CPPFLAGS"
+    fi
     AC_OUTPUT_SUBDIRS(nsprpub)
+    if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a $ac_cv_func_dladdr = no; then
+      unset CPPFLAGS
+      CPPFLAGS="$_SAVE_CFLAGS"
+    fi
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
 

@@ -1576,6 +1576,7 @@ class AllFramesIter
     StackFrame *fp() const { return fp_; }
 
   private:
+    void settle();
     StackSegment *seg_;
     StackFrame *fp_;
 };

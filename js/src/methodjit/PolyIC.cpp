@@ -1126,7 +1126,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     void generateGetterStub(Assembler &masm, const Shape *shape,
-                            Label start, const Vector<Jump, 8> &shapeMismatches)
+                            Label start, Vector<Jump, 8> &shapeMismatches)
     {
         /*
          * Getter hook needs to be called from the stub. The state is fully
@@ -1304,7 +1304,7 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
-    void linkerEpilogue(LinkerHelper &buffer, Label start, const Vector<Jump, 8> &shapeMismatches)
+    void linkerEpilogue(LinkerHelper &buffer, Label start, Vector<Jump, 8> &shapeMismatches)
     {
         // The guard exit jumps to the original slow case.
         for (Jump *pj = shapeMismatches.begin(); pj != shapeMismatches.end(); ++pj)
