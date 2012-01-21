@@ -4909,9 +4909,7 @@ cairo-android)
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
-    if test "$MOZ_BUILD_APP" = "mobile/xul"; then
-        MOZ_OLD_LINKER=1
-    fi
+    MOZ_OLD_LINKER=1
     MOZ_TOUCH=1
     ;;
 
