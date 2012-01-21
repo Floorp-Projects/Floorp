@@ -17,6 +17,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
   mozbrowserX events when this page is not in the whitelist.
 -->
 
+<iframe id='iframe' mozbrowser onload='iframeLoad()'></iframe>
+
 <script type="application/javascript;version=1.7">
 "use strict";
 
@@ -42,8 +44,6 @@ function iframeLoad() {
 addEventListener('load', runTest());
 
 </script>
-
-<iframe id='iframe' mozbrowser onload='iframeLoad()'></iframe>
 
 </body>
 </html>
