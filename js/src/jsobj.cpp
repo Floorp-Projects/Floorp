@@ -225,28 +225,18 @@ js_hash_object(const void *key)
 static JSHashEntry *
 MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
 {
-    JSSharpObjectMap *map;
-    JSHashTable *table;
-    JSHashNumber hash;
-    JSHashEntry **hep, *he;
-    jsatomid sharpid;
-    JSIdArray *ida;
-    JSBool ok;
-    jsint i, length;
-    jsid id;
-    JSObject *obj2;
-    JSProperty *prop;
-
     JS_CHECK_RECURSION(cx, return NULL);
 
-    map = &cx->sharpObjectMap;
+    JSIdArray *ida;
+
+    JSSharpObjectMap *map = &cx->sharpObjectMap;
     JS_ASSERT(map->depth >= 1);
-    table = map->table;
-    hash = js_hash_object(obj);
-    hep = JS_HashTableRawLookup(table, hash, obj);
-    he = *hep;
+    JSHashTable *table = map->table;
+    JSHashNumber hash = js_hash_object(obj);
+    JSHashEntry **hep = JS_HashTableRawLookup(table, hash, obj);
+    JSHashEntry *he = *hep;
     if (!he) {
-        sharpid = 0;
+        jsatomid sharpid = 0;
         he = JS_HashTableRawAdd(table, hep, hash, obj, (void *) sharpid);
         if (!he) {
             JS_ReportOutOfMemory(cx);
@@ -257,9 +247,11 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
         if (!ida)
             return NULL;
 
-        ok = JS_TRUE;
-        for (i = 0, length = ida->length; i < length; i++) {
-            id = ida->vector[i];
+        bool ok = true;
+        for (jsint i = 0, length = ida->length; i < length; i++) {
+            jsid id = ida->vector[i];
+            JSObject *obj2;
+            JSProperty *prop;
             ok = obj->lookupGeneric(cx, id, &obj2, &prop);
             if (!ok)
                 break;
@@ -292,9 +284,8 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                 if (!ok)
                     break;
             }
-            if (v.value().isObject() &&
-                !MarkSharpObjects(cx, &v.value().toObject(), NULL)) {
-                ok = JS_FALSE;
+            if (v.value().isObject() && !MarkSharpObjects(cx, &v.value().toObject(), NULL)) {
+                ok = false;
                 break;
             }
         }
@@ -303,7 +294,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
         if (!ok)
             return NULL;
     } else {
-        sharpid = uintptr_t(he->value);
+        jsatomid sharpid = uintptr_t(he->value);
         if (sharpid == 0) {
             sharpid = ++map->sharpgen << SHARP_ID_SHIFT;
             he->value = (void *) sharpid;
@@ -316,25 +307,15 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
 }
 
 JSHashEntry *
-js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
-                    jschar **sp)
+js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap, bool *alreadySeen)
 {
-    JSSharpObjectMap *map;
-    JSHashTable *table;
-    JSIdArray *ida;
-    JSHashNumber hash;
-    JSHashEntry *he, **hep;
-    jsatomid sharpid;
-    char buf[20];
-    size_t len;
-
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return NULL;
 
-    /* Set to null in case we return an early error. */
-    *sp = NULL;
-    map = &cx->sharpObjectMap;
-    table = map->table;
+    *alreadySeen = false;
+
+    JSSharpObjectMap *map = &cx->sharpObjectMap;
+    JSHashTable *table = map->table;
     if (!table) {
         table = JS_NewHashTable(8, js_hash_object, JS_CompareValues,
                                 JS_CompareValues, NULL, NULL);
@@ -346,8 +327,11 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         JS_KEEP_ATOMS(cx->runtime);
     }
 
+    JSHashEntry *he;
+    jsatomid sharpid;
+    JSIdArray *ida = NULL;
+
     /* From this point the control must flow either through out: or bad:. */
-    ida = NULL;
     if (map->depth == 0) {
         /*
          * Although MarkSharpObjects tries to avoid invoking getters,
@@ -372,8 +356,8 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
             ida = NULL;
         }
     } else {
-        hash = js_hash_object(obj);
-        hep = JS_HashTableRawLookup(table, hash, obj);
+        JSHashNumber hash = js_hash_object(obj);
+        JSHashEntry **hep = JS_HashTableRawLookup(table, hash, obj);
         he = *hep;
 
         /*
@@ -395,30 +379,16 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     }
 
     sharpid = uintptr_t(he->value);
-    if (sharpid != 0) {
-        len = JS_snprintf(buf, sizeof buf, "#%u%c",
-                          sharpid >> SHARP_ID_SHIFT,
-                          (sharpid & SHARP_BIT) ? '#' : '=');
-        *sp = InflateString(cx, buf, &len);
-        if (!*sp) {
-            if (ida)
-                JS_DestroyIdArray(cx, ida);
-            goto bad;
-        }
-    }
+    if (sharpid != 0)
+        *alreadySeen = true;
 
 out:
     JS_ASSERT(he);
     if ((sharpid & SHARP_BIT) == 0) {
         if (idap && !ida) {
             ida = JS_Enumerate(cx, obj);
-            if (!ida) {
-                if (*sp) {
-                    cx->free_(*sp);
-                    *sp = NULL;
-                }
+            if (!ida)
                 goto bad;
-            }
         }
         map->depth++;
     }
@@ -441,10 +411,7 @@ bad:
 void
 js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
 {
-    JSSharpObjectMap *map;
-    JSIdArray *ida;
-
-    map = &cx->sharpObjectMap;
+    JSSharpObjectMap *map = &cx->sharpObjectMap;
     JS_ASSERT(map->depth > 0);
     if (--map->depth == 0) {
         JS_UNKEEP_ATOMS(cx->runtime);
@@ -453,8 +420,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
         map->table = NULL;
     }
     if (idap) {
-        ida = *idap;
-        if (ida) {
+        if (JSIdArray *ida = *idap) {
             JS_DestroyIdArray(cx, ida);
             *idap = NULL;
         }
@@ -502,13 +468,10 @@ static JSBool
 obj_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JSBool ok;
-    JSIdArray *ida;
-    jschar *chars, *ochars, *vsharp;
+    jschar *ochars, *vsharp;
     const jschar *idstrchars, *vchars;
     size_t nchars, idstrlength, gsoplength, vlength, vsharplength, curlen;
     const char *comma;
-    JSObject *obj2;
-    JSProperty *prop;
     Value *val;
     JSString *gsop[2];
     JSString *valstr, *str;
@@ -521,59 +484,44 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
     AutoArrayRooter tvr(cx, ArrayLength(localroot), localroot);
 
     /* If outermost, we need parentheses to be an expression, not a block. */
-    JSBool outermost = (cx->sharpObjectMap.depth == 0);
+    bool outermost = (cx->sharpObjectMap.depth == 0);
 
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
 
-    JSHashEntry *he = js_EnterSharpObject(cx, obj, &ida, &chars);
+    jschar *chars;
+    JSIdArray *ida;
+    bool alreadySeen = false;
+    JSHashEntry *he = js_EnterSharpObject(cx, obj, &ida, &alreadySeen);
     if (!he)
         return false;
 
     if (!ida) {
         /*
-         * We didn't enter -- obj is already "sharp", meaning we've visited it
-         * already in our depth first search, and therefore chars contains a
-         * string of the form "#n#".
+         * We've already seen obj, so don't serialize it again (particularly as
+         * we might recur in the process): just serialize an empty object.
          */
-        JS_ASSERT(IS_SHARP(he));
-        chars[0] = '{';
-        chars[1] = '}';
-        chars[2] = '\0';
-        nchars = 2;
-        goto make_string;
+        JS_ASSERT(alreadySeen);
+        JSString *str = js_NewStringCopyZ(cx, "{}");
+        if (!str)
+            return false;
+        vp->setString(str);
+        return true;
     }
     JS_ASSERT(!IS_SHARP(he));
     ok = JS_TRUE;
 
-    if (!chars) {
-        /* If outermost, allocate 4 + 1 for "({})" and the terminator. */
-        chars = (jschar *) cx->malloc_(((outermost ? 4 : 2) + 1) * sizeof(jschar));
-        nchars = 0;
-        if (!chars)
-            goto error;
-        if (outermost)
-            chars[nchars++] = '(';
-    } else {
-        /* js_EnterSharpObject returned a string of the form "#n=" in chars. */
+    if (alreadySeen)
         MAKE_SHARP(he);
-        nchars = js_strlen(chars);
-        chars = (jschar *)
-            cx->realloc_((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
-        if (!chars) {
-            Foreground::free_(ochars);
-            goto error;
-        }
-        if (outermost) {
-            /*
-             * No need for parentheses around the whole shebang, because #n=
-             * unambiguously begins an object initializer, and never a block
-             * statement.
-             */
-            outermost = JS_FALSE;
-        }
-    }
+
+    /* If outermost, allocate 4 + 1 for "({})" and the terminator. */
+    chars = (jschar *) cx->malloc_(((outermost ? 4 : 2) + 1) * sizeof(jschar));
+    nchars = 0;
+    if (!chars)
+        goto error;
+    if (outermost)
+        chars[nchars++] = '(';
 
     chars[nchars++] = '{';
 
@@ -590,6 +538,8 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
         /* Get strings for id and value and GC-root them via vp. */
         jsid id = ida->vector[i];
 
+        JSObject *obj2;
+        JSProperty *prop;
         ok = obj->lookupGeneric(cx, id, &obj2, &prop);
         if (!ok)
             goto error;
@@ -800,7 +750,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
         JS_ReportOutOfMemory(cx);
         return false;
     }
-  make_string:
+
     str = js_NewString(cx, chars, nchars);
     if (!str) {
         cx->free_(chars);
