@@ -1833,7 +1833,7 @@ DrawResizer(CGContextRef aCtx)
 }
 
 void
-nsChildView::DrawOver(LayerManager* aManager, nsIntRect aRect)
+nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
   if (!ShowsResizeIndicator(nsnull)) {
     return;

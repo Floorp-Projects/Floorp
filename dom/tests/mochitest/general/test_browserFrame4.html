@@ -17,8 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
   mozbrowserX events when this page is in the whitelist.
 -->
 
-<iframe id='iframe' mozbrowser></iframe>
-
 <script type="application/javascript;version=1.7">
 "use strict";
 
@@ -82,6 +80,8 @@ function waitForAllCallbacks() {
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
 
 </script>
+
+<iframe id='iframe' mozbrowser></iframe>
 
 </body>
 </html>

@@ -167,7 +167,16 @@ public class LayerController {
      * result in an infinite loop.
      */
     public void setViewportSize(FloatSize size) {
+        // Resize the viewport, and modify its zoom factor so that the page retains proportionally
+        // zoomed relative to the screen.
+        float oldWidth = mViewportMetrics.getSize().width;
+        float oldZoomFactor = mViewportMetrics.getZoomFactor();
         mViewportMetrics.setSize(size);
+
+        PointF newFocus = new PointF(size.width / 2.0f, size.height / 2.0f);
+        float newZoomFactor = size.width * oldZoomFactor / oldWidth;
+        mViewportMetrics.scaleTo(newZoomFactor, newFocus);
+
         Log.d(LOGTAG, "setViewportSize: " + mViewportMetrics);
         setForceRedraw();
 
