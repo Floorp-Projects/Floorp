@@ -6275,20 +6275,21 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
   for (colX = leftCol; colX != rightCol; colX += mColInc) {
     nsTableColFrame* colFrame = mTableFirstInFlow->GetColFrame(colX);
     if (!colFrame) ABORT1(false);
-    // conservatively estimate the half border widths outside the col
-    nscoord leftBorderHalf =
-       nsPresContext::CSSPixelsToAppUnits(colFrame->GetLeftBorderWidth() + 1);
-    nscoord rightBorderHalf =
-      nsPresContext::CSSPixelsToAppUnits(colFrame->GetRightBorderWidth() + 1);
     // get the col rect relative to the table rather than the col group
     nsSize size = colFrame->GetSize();
     if (haveIntersect) {
+      // conservatively estimate the left half border width outside the col
+      nscoord leftBorderHalf =
+        nsPresContext::CSSPixelsToAppUnits(colFrame->GetLeftBorderWidth() + 1);
       if (aDirtyRect.XMost() >= (x - leftBorderHalf)) {
         endColIndex = colX;
       }
       else break;
     }
     else {
+      // conservatively estimate the right half border width outside the col
+      nscoord rightBorderHalf =
+        nsPresContext::CSSPixelsToAppUnits(colFrame->GetRightBorderWidth() + 1);
       if ((x + size.width + rightBorderHalf) >= aDirtyRect.x) {
         startColIndex = endColIndex = colX;
         haveIntersect = true;
@@ -6339,7 +6340,7 @@ BCPaintBorderIterator::Reset()
   mCellData      = nsnull;
   mBCData        = nsnull;
   ResetVerInfo();
- }
+}
 
 /**
  * Set the iterator data to a new cellmap coordinate
