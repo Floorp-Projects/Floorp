@@ -499,7 +499,7 @@ public:
 
   virtual void CreateCompositor();
   virtual gfxASurface* GetThebesSurface();
-  virtual void DrawOver(LayerManager* aManager, nsIntRect aRect);
+  virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);
 

@@ -817,8 +817,8 @@ LayerManagerOGL::Render()
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
-                           
-  mWidget->DrawOver(this, rect);
+
+  mWidget->DrawWindowOverlay(this, rect);
 
   if (mTarget) {
     CopyToTarget();
