@@ -6436,14 +6436,14 @@ BCPaintBorderIterator::SetNewRowGroup()
   if (PRUint32(mRgIndex) < mRowGroups.Length()) {
     mPrevRg = mRg;
     mRg = mRowGroups[mRgIndex];
-    mFifRgFirstRowIndex = ((nsTableRowGroupFrame*)mRg->GetFirstInFlow())->GetStartRowIndex();
+    nsTableRowGroupFrame* fifRg =
+      static_cast<nsTableRowGroupFrame*>(mRg->GetFirstInFlow());
+    mFifRgFirstRowIndex = fifRg->GetStartRowIndex();
     mRgFirstRowIndex    = mRg->GetStartRowIndex();
     mRgLastRowIndex     = mRgFirstRowIndex + mRg->GetRowCount() - 1;
 
     if (SetNewRow(mRg->GetFirstRow())) {
-      mCellMap =
-        mTableCellMap->GetMapFor((nsTableRowGroupFrame*)mRg->GetFirstInFlow(),
-                                  nsnull);
+      mCellMap = mTableCellMap->GetMapFor(fifRg, nsnull);
       if (!mCellMap) ABORT1(false);
     }
     if (mRg && mTable->GetPrevInFlow() && !mRg->GetPrevInFlow()) {
