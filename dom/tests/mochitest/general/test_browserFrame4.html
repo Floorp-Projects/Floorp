@@ -47,6 +47,7 @@ function runTest() {
     ok(seenLoadStart, 'Location change after load start.');
     ok(!seenLoad, 'Location change before load.');
     ok(!seenLoadEnd, 'Location change before load end.');
+    ok(e.detail, 'http://example.com', "event's reported location");
   });
 
   iframe.addEventListener('load', function() {
