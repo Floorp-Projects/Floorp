@@ -1591,10 +1591,6 @@ int NS_main(int argc, NS_tchar **argv)
   gSourcePath = argv[1];
 
 #ifdef XP_WIN
-  // Disable every privilege we don't need. Processes started using
-  // CreateProcess will use the same token as this process.
-  UACHelper::DisablePrivileges(NULL);
-
   bool useService = false;
   bool testOnlyFallbackKeyExists = false;
   bool noServiceFallback = getenv("MOZ_NO_SERVICE_FALLBACK") != NULL;
@@ -1713,6 +1709,23 @@ int NS_main(int argc, NS_tchar **argv)
     NS_tsnprintf(elevatedLockFilePath,
                  sizeof(elevatedLockFilePath)/sizeof(elevatedLockFilePath[0]),
                  NS_T("%s/update_elevated.lock"), argv[1]);
+
+
+    // Even if a file has no sharing access, you can still get its attributes
+    bool startedFromUnelevatedUpdater =
+      GetFileAttributesW(elevatedLockFilePath) != INVALID_FILE_ATTRIBUTES;
+    
+    // If we're running from the service, then we were started with the same
+    // token as the service so the permissions are already dropped.  If we're
+    // running from an elevated updater that was started from an unelevated 
+    // updater, then we drop the permissions here. We do not drop the 
+    // permissions on the originally called updater because we use its token
+    // to start the callback application.
+    if(startedFromUnelevatedUpdater) {
+      // Disable every privilege we don't need. Processes started using
+      // CreateProcess will use the same token as this process.
+      UACHelper::DisablePrivileges(NULL);
+    }
 
     if (updateLockFileHandle == INVALID_HANDLE_VALUE || 
         (useService && testOnlyFallbackKeyExists && noServiceFallback)) {
