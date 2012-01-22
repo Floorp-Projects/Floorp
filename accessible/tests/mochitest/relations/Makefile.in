@@ -48,6 +48,7 @@ include $(topsrcdir)/config/rules.mk
 # test_tabbrowser.xul disabled for misusing <tabbrowser> (bug 715857)
 
 _TEST_FILES =\
+		test_embeds.xul \
 		test_general.html \
 		test_general.xul \
 		test_tree.xul \
