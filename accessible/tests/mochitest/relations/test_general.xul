@@ -103,19 +103,6 @@
       // 'default button' relation
       testRelation("textbox", RELATION_DEFAULT_BUTTON, "submit");
 
-      // 'embeds' relation for root accessible
-      var docAcc = null;
-      var parentOfDocAcc = null;
-      var parentDocAcc = getAccessible(document);
-      do {
-        docAcc = parentDocAcc;
-        parentOfDocAcc = getAccessible(docAcc.parent, [nsIAccessNode]);
-        parentDocAcc = getAccessible(parentOfDocAcc.document,
-                                     [nsIAccessible]);
-      } while (getRole(parentDocAcc) != ROLE_CHROME_WINDOW)
-
-      testRelation(parentDocAcc, RELATION_EMBEDS, docAcc);
-
       // 'labelled by'/'label for' relation for xul:goupbox and xul:label of
       // xul:caption
       var groupboxAcc = getAccessible("groupbox");
