@@ -43,4 +43,8 @@ function test() {
     "Not all members of the destroyed object were deleted.");
   is(typeof someObject.func, "undefined",
     "Not all function members of the destroyed object were deleted.");
+
+
+  is(TiltUtils.getBrowserWindow(), window,
+    "The getBrowserWindow() function didn't return the correct window.");
 }

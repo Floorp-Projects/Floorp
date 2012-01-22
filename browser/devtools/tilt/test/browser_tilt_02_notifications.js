@@ -30,6 +30,7 @@ function createNewTab() {
   tab0 = gBrowser.selectedTab;
 
   tab1 = createTab(function() {
+    Services.obs.addObserver(cleanup, TILT_DESTROYED, false);
     Services.obs.addObserver(tab_TILT_INITIALIZED, TILT_INITIALIZED, false);
     Services.obs.addObserver(tab_TILT_DESTROYED, TILT_DESTROYED, false);
     Services.obs.addObserver(tab_TILT_SHOWN, TILT_SHOWN, false);
@@ -70,24 +71,26 @@ let testSteps = [
   },
   function step2() {
     Tilt.destroy(Tilt.currentWindowId);
-
-    Services.obs.removeObserver(tab_TILT_INITIALIZED, TILT_INITIALIZED, false);
-    Services.obs.removeObserver(tab_TILT_DESTROYED, TILT_DESTROYED, false);
-    Services.obs.removeObserver(tab_TILT_SHOWN, TILT_SHOWN, false);
-    Services.obs.removeObserver(tab_TILT_HIDDEN, TILT_HIDDEN, false);
-    gBrowser.removeCurrentTab();
-  },
-  function step3_cleanup() {
-    is(tabEvents, "ti;th;ts;td;",
-      "The notifications weren't fired in the correct order.");
-
-    tab0 = null;
-    tab1 = null;
-
-    gBrowser.tabContainer.removeEventListener("TabSelect", tabSelect, false);
-    finish();
   }
 ];
+
+function cleanup() {
+  is(tabEvents, "ti;th;ts;td;",
+    "The notifications weren't fired in the correct order.");
+
+  tab0 = null;
+  tab1 = null;
+
+  Services.obs.removeObserver(cleanup, TILT_DESTROYED);
+  Services.obs.removeObserver(tab_TILT_INITIALIZED, TILT_INITIALIZED, false);
+  Services.obs.removeObserver(tab_TILT_DESTROYED, TILT_DESTROYED, false);
+  Services.obs.removeObserver(tab_TILT_SHOWN, TILT_SHOWN, false);
+  Services.obs.removeObserver(tab_TILT_HIDDEN, TILT_HIDDEN, false);
+
+  gBrowser.tabContainer.removeEventListener("TabSelect", tabSelect, false);
+  gBrowser.removeCurrentTab();
+  finish();
+}
 
 function tabSelect() {
   if (testStep !== -1) {
