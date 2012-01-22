@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/*global ok, is, isApproxVec, vec3, quat4, TiltVisualizer */
-/*global Cc, Ci, Cu */
+/*global ok, is, info, isApprox, isApproxVec, vec3, quat4 */
+/*global TiltVisualizer */
 "use strict";
 
 function cloneUpdate(update) {
@@ -19,6 +19,8 @@ function isExpectedUpdate(update1, update2) {
   for (let i = 0, len = update1.length; i < len; i++) {
     if (!isApproxVec(update1[i].rotation, update2[i].rotation) ||
         !isApproxVec(update1[i].translation, update2[i].translation)) {
+      info("isExpectedUpdate expected " + JSON.stringify(update1), ", got " +
+                                          JSON.stringify(update2) + " instead.");
       return false;
     }
   }
@@ -57,44 +59,44 @@ function test() {
   let stack1 = [];
   let expect1 = [
     { rotation: [
-      -0.054038457572460175, 0.015347825363278389,
-      -0.02533721923828125, -0.9980993270874023],
+      -0.08877250552177429, 0.0242881178855896,
+      -0.04222869873046875, -0.9948599338531494],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.09048379212617874, 0.024709727615118027,
-      -0.04307326674461365, -0.9946591854095459],
+      -0.13086390495300293, 0.03413732722401619,
+      -0.06334304809570312, -0.9887855648994446],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.11537143588066101, 0.03063894622027874,
-      -0.05548851564526558, -0.9912980198860168],
+      -0.15138940513134003, 0.03854173421859741,
+      -0.07390022277832031, -0.9849540591239929],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.13250185549259186, 0.03449848294258118,
-      -0.0641791820526123, -0.9885009527206421],
+      -0.1615273654460907, 0.040619146078825,
+      -0.0791788101196289, -0.9828477501869202],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.14435507357120514, 0.037062086164951324,
-      -0.07026264816522598, -0.9863321781158447],
+      -0.16656573116779327, 0.04162723943591118,
+      -0.0818181037902832, -0.9817478656768799],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.15258607268333435, 0.03879034146666527,
-      -0.07452107220888138, -0.9847128391265869],
+      -0.16907735168933868, 0.042123712599277496,
+      -0.08313775062561035, -0.9811863303184509],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.1583157479763031, 0.03996811807155609,
-      -0.07750196009874344, -0.9835304617881775],
+      -0.17033125460147858, 0.042370058596134186,
+      -0.08379757404327393, -0.9809026718139648],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.16231097280979156, 0.04077700152993202,
-      -0.07958859205245972, -0.982679009437561],
+      -0.17095772922039032, 0.04249274358153343,
+      -0.08412748575210571, -0.9807600975036621],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.16510005295276642, 0.04133564606308937,
-      -0.08104922622442245, -0.9820714592933655],
+      -0.17127084732055664, 0.04255397245287895,
+      -0.0842924416065216, -0.9806886315345764],
       translation: [0, 0, 0] },
     { rotation: [
-      -0.16704875230789185, 0.04172303527593613,
-      -0.08207167685031891, -0.9816405177116394],
+      -0.171427384018898, 0.042584557086229324,
+      -0.08437491953372955, -0.9806528687477112],
       translation: [0, 0, 0] }];
 
   arcball3.mouseDown(10, 10, 1);
@@ -251,14 +253,14 @@ function test() {
       -0.08445733785629272, -0.980617105960846],
       translation: [0, 0, -8.784234046936035] }];
 
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_A);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_D);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_W);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_S);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_LEFT);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_RIGHT);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_UP);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_DOWN);
+  arcball3.keyDown(arcball3.rotateKeys.left);
+  arcball3.keyDown(arcball3.rotateKeys.right);
+  arcball3.keyDown(arcball3.rotateKeys.up);
+  arcball3.keyDown(arcball3.rotateKeys.down);
+  arcball3.keyDown(arcball3.panKeys.left);
+  arcball3.keyDown(arcball3.panKeys.right);
+  arcball3.keyDown(arcball3.panKeys.up);
+  arcball3.keyDown(arcball3.panKeys.down);
   for (let i4 = 0; i4 < 10; i4++) {
     stack4.push(cloneUpdate(arcball3.update()));
   }
@@ -309,14 +311,14 @@ function test() {
       -0.0844573974609375, -0.980617105960846],
       translation: [0, 0, -9.576087951660156] }];
 
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_A);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_D);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_W);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_S);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_LEFT);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_RIGHT);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_UP);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_DOWN);
+  arcball3.keyUp(arcball3.rotateKeys.left);
+  arcball3.keyUp(arcball3.rotateKeys.right);
+  arcball3.keyUp(arcball3.rotateKeys.up);
+  arcball3.keyUp(arcball3.rotateKeys.down);
+  arcball3.keyUp(arcball3.panKeys.left);
+  arcball3.keyUp(arcball3.panKeys.right);
+  arcball3.keyUp(arcball3.panKeys.up);
+  arcball3.keyUp(arcball3.panKeys.down);
   for (let i5 = 0; i5 < 10; i5++) {
     stack5.push(cloneUpdate(arcball3.update()));
   }
@@ -367,15 +369,15 @@ function test() {
       -0.0844573974609375, -0.980617105960846],
       translation: [0, 0, 112.18525695800781] }];
 
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_I);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_ADD);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_EQUALS);
+  arcball3.keyDown(arcball3.zoomKeys["in"][0]);
+  arcball3.keyDown(arcball3.zoomKeys["in"][1]);
+  arcball3.keyDown(arcball3.zoomKeys["in"][2]);
   for (let i6 = 0; i6 < 10; i6++) {
     stack6.push(cloneUpdate(arcball3.update()));
   }
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_I);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_ADD);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_EQUALS);
+  arcball3.keyUp(arcball3.zoomKeys["in"][0]);
+  arcball3.keyUp(arcball3.zoomKeys["in"][1]);
+  arcball3.keyUp(arcball3.zoomKeys["in"][2]);
 
   ok(isExpectedUpdate(stack6, expect6),
     "Key zoom in events didn't create the expected transformation results.");
@@ -423,13 +425,13 @@ function test() {
       -0.0844573974609375, -0.980617105960846],
       translation: [0, 0, 138.52847290039062] }];
 
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_O);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_SUBTRACT);
+  arcball3.keyDown(arcball3.zoomKeys["out"][0]);
+  arcball3.keyDown(arcball3.zoomKeys["out"][1]);
   for (let i7 = 0; i7 < 10; i7++) {
     stack7.push(cloneUpdate(arcball3.update()));
   }
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_O);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_SUBTRACT);
+  arcball3.keyUp(arcball3.zoomKeys["out"][0]);
+  arcball3.keyUp(arcball3.zoomKeys["out"][1]);
 
   ok(isExpectedUpdate(stack7, expect7),
     "Key zoom out events didn't create the expected transformation results.");
@@ -477,13 +479,11 @@ function test() {
       -0.0844573974609375, -0.980617105960846],
       translation: [0, 0, 47.91447448730469] }];
 
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_R);
-  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_0);
+  arcball3.keyDown(arcball3.zoomKeys["unzoom"]);
   for (let i8 = 0; i8 < 10; i8++) {
     stack8.push(cloneUpdate(arcball3.update()));
   }
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_R);
-  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_0);
+  arcball3.keyUp(arcball3.zoomKeys["unzoom"]);
 
   ok(isExpectedUpdate(stack8, expect8),
     "Key zoom reset events didn't create the expected transformation results.");
@@ -491,9 +491,9 @@ function test() {
 
   arcball3.resize(123, 456);
   is(arcball3.width, 123,
-    "The arcball width wasn't updated correctly.");
+    "The third arcball width wasn't updated correctly.");
   is(arcball3.height, 456,
-    "The arcball height wasn't updated correctly.");
+    "The third arcball height wasn't updated correctly.");
   is(arcball3.radius, 123,
-    "The arcball radius wasn't implicitly updated correctly.");
+    "The third arcball radius wasn't implicitly updated correctly.");
 }
