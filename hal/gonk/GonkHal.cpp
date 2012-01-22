@@ -59,6 +59,7 @@
 #include <math.h>
 #include <fcntl.h>
 #include <errno.h>
+#include "mozilla/dom/network/Constants.h"
 
 using mozilla::hal::WindowIdentifier;
 
@@ -412,6 +413,21 @@ SetScreenBrightness(double brightness)
   MOZ_ASSERT(numChars < static_cast<int>(sizeof(str)));
 
   WriteToFile(screenBrightnessFilename, str);
+}
+
+void
+EnableNetworkNotifications()
+{}
+
+void
+DisableNetworkNotifications()
+{}
+
+void
+GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
+{
+  aNetworkInfo->bandwidth() = dom::network::kDefaultBandwidth;
+  aNetworkInfo->canBeMetered() = dom::network::kDefaultCanBeMetered;
 }
 
 } // hal_impl

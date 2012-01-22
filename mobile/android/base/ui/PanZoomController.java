@@ -610,7 +610,7 @@ public class PanZoomController
             boolean flingingX = mX.advanceFling();
             boolean flingingY = mY.advanceFling();
 
-            boolean overscrolled = ((mX.overscrolled() || mY.overscrolled()) && !mSubscroller.scrolling());
+            boolean overscrolled = (mX.overscrolled() || mY.overscrolled());
 
             /* If we're still flinging in any direction, update the origin. */
             if (flingingX || flingingY) {
@@ -622,7 +622,7 @@ public class PanZoomController
                  * coast smoothly to a stop when not. In other words, require a greater velocity to
                  * maintain the fling once we enter overscroll.
                  */
-                float threshold = (overscrolled ? STOPPED_THRESHOLD : FLING_STOPPED_THRESHOLD);
+                float threshold = (overscrolled && !mSubscroller.scrolling() ? STOPPED_THRESHOLD : FLING_STOPPED_THRESHOLD);
                 if (getVelocity() >= threshold) {
                     // we're still flinging
                     return;
@@ -632,10 +632,7 @@ public class PanZoomController
                 mY.stopFling();
             }
 
-            /*
-             * Perform a bounce-back animation if overscrolled, unless panning is being
-             * handled by the subwindow scroller.
-             */
+            /* Perform a bounce-back animation if overscrolled. */
             if (overscrolled) {
                 bounce();
             } else {
