@@ -1094,7 +1094,7 @@ struct JSObject : js::gc::Cell
     bool arrayGetOwnDataElement(JSContext *cx, size_t i, js::Value *vp);
 
   public:
-    bool allocateArrayBufferSlots(JSContext *cx, uint32_t size);
+    bool allocateArrayBufferSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
     inline uint32_t arrayBufferByteLength();
     inline uint8_t * arrayBufferDataOffset();
 
