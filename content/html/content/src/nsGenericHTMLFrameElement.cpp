@@ -385,6 +385,11 @@ nsGenericHTMLFrameElement::OnLocationChange(nsIWebProgress* aWebProgress,
                                             nsIURI* aURI,
                                             PRUint32 aFlags)
 {
+  // aURI may be null, but that indicates an error case we don't care about.
+  if (!aURI) {
+    return NS_OK;
+  }
+
   nsCAutoString spec;
   aURI->GetSpec(spec);
 
