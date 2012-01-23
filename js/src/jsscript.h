@@ -638,7 +638,7 @@ struct JSScript : public js::gc::Cell {
     void resetUseCount() { useCount = 0; }
 
     /* Size of the JITScript and all sections.  (This method is implemented in MethodJIT.cpp.) */
-    size_t jitDataSize(JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfJitScripts(JSMallocSizeOfFun mallocSizeOf);
 
 #endif
 
@@ -656,12 +656,13 @@ struct JSScript : public js::gc::Cell {
     }
 
     /*
-     * The first dataSize() is the in-use size of all the data sections, the
-     * second is the size of the block allocated to hold all the data sections
+     * computedSizeOfData() is the in-use size of all the data sections. 
+     * sizeOfData() is the size of the block allocated to hold all the data sections
      * (which can be larger than the in-use size).
      */
-    JS_FRIEND_API(size_t) dataSize();                               /* Size of all data sections */
-    JS_FRIEND_API(size_t) dataSize(JSMallocSizeOfFun mallocSizeOf); /* Size of all data sections */
+    size_t computedSizeOfData();
+    size_t sizeOfData(JSMallocSizeOfFun mallocSizeOf);
+
     uint32_t numNotes();  /* Number of srcnote slots in the srcnotes section */
 
     /* Script notes are allocated right after the code. */
