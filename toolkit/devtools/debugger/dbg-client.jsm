@@ -60,8 +60,8 @@ function dumpn(str)
   dump("DBG-CLIENT: " + str + "\n");
 }
 
-let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Components.interfaces.mozIJSSubScriptLoader);
+let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://global/content/devtools/dbg-transport.js");
 
 /**
@@ -79,12 +79,16 @@ function eventSource(aProto) {
    *
    * @param aName string
    *        The event to listen for, or null to listen to all events.
-   * @param aListener
+   * @param aListener function
    *        Called when the event is fired. If the same listener
    *        is added more the once, it will be called once per
    *        addListener call.
    */
   aProto.addListener = function EV_addListener(aName, aListener) {
+    if (typeof aListener != "function") {
+      return;
+    }
+
     if (!this._listeners) {
       this._listeners = {};
     }
@@ -170,7 +174,12 @@ function eventSource(aProto) {
     }
 
     for each (let listener in listeners) {
-      listener.apply(null, arguments);
+      try {
+        listener.apply(null, arguments);
+      } catch (e) {
+        // Prevent a bad listener from interfering with the others.
+        Cu.reportError(e);
+      }
     }
   }
 }
@@ -227,14 +236,13 @@ function DebuggerClient(aTransport)
 
 DebuggerClient.prototype = {
   /**
-   * Signals you are ready to communicate with the server.  Will start
-   * responding to messages from the debug server.
+   * Connect to the server and start exchanging protocol messages.
    *
    * @param aOnConnected function
    *        If specified, will be called when the greeting packet is
    *        received from the debugging server.
    */
-  ready: function DC_ready(aOnConnected) {
+  connect: function DC_connect(aOnConnected) {
     if (aOnConnected) {
       this.addOneTimeListener("connected", function(aName, aApplicationType, aTraits) {
         aOnConnected(aApplicationType, aTraits);
@@ -342,11 +350,11 @@ DebuggerClient.prototype = {
   /**
    * Send a request to the debugging server.
    *
-   * @aRequest object
-   *           A JSON packet to send to the debugging server.
-   * @aOnResponse function
-   *           If specified, will be called with the response packet when
-   *           debugging server responds.
+   * @param aRequest object
+   *        A JSON packet to send to the debugging server.
+   * @param aOnResponse function
+   *        If specified, will be called with the response packet when
+   *        debugging server responds.
    */
   request: function DC_request(aRequest, aOnResponse) {
     if (!this._connected) {
@@ -380,8 +388,14 @@ DebuggerClient.prototype = {
     });
   },
 
-  // Transport hooks
+  // Transport hooks.
 
+  /**
+   * Called by DebuggerTransport to dispatch incoming packets as appropriate.
+   *
+   * @param aPacket object
+   *        The incoming packet.
+   */
   onPacket: function DC_onPacket(aPacket) {
     if (!this._connected) {
       // Hello packet.
@@ -422,7 +436,14 @@ DebuggerClient.prototype = {
     this._sendRequests();
   },
 
-  onClosed: function DC_onClosed() {
+  /**
+   * Called by DebuggerTransport when the underlying stream is closed.
+   *
+   * @param aStatus nsresult
+   *        The status code that corresponds to the reason for closing
+   *        the stream.
+   */
+  onClosed: function DC_onClosed(aStatus) {
     this.notify("closed");
   },
 }
@@ -433,6 +454,11 @@ eventSource(DebuggerClient.prototype);
  * Creates a tab client for the remote debugging protocol server. This client
  * is a front to the tab actor created in the server side, hiding the protocol
  * details in a traditional JavaScript API.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aActor string
+ *        The actor ID for this tab.
  */
 function TabClient(aClient, aActor) {
   this._client = aClient;
@@ -467,6 +493,11 @@ eventSource(TabClient.prototype);
  * Creates a thread client for the remote debugging protocol server. This client
  * is a front to the thread actor created in the server side, hiding the
  * protocol details in a traditional JavaScript API.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aActor string
+ *        The actor ID for this thread.
  */
 function ThreadClient(aClient, aActor) {
   this._client = aClient;
@@ -563,9 +594,11 @@ ThreadClient.prototype = {
   /**
    * Request to set a breakpoint in the specified location.
    *
-   * @param aLocation object The source location object where the breakpoint
-   *                  will be set.
-   * @param aOnResponse integer Called with the thread's response.
+   * @param aLocation object
+   *        The source location object where the breakpoint
+   *        will be set.
+   * @param aOnResponse integer
+   *        Called with the thread's response.
    */
   setBreakpoint: function TC_setBreakpoint(aLocation, aOnResponse) {
     this._assertPaused("setBreakpoint");
@@ -585,9 +618,10 @@ ThreadClient.prototype = {
   /**
    * Request the loaded scripts for the current thread.
    *
-   * @param aOnResponse integer Called with the thread's response.
+   * @param aOnResponse integer
+   *        Called with the thread's response.
    */
-  scripts: function TC_scripts(aOnResponse) {
+  getScripts: function TC_getScripts(aOnResponse) {
     let packet = { to: this._actor, type: DebugProtocolTypes.scripts };
     this._client.request(packet, aOnResponse);
   },
@@ -608,7 +642,7 @@ ThreadClient.prototype = {
    */
   fillScripts: function TC_fillScripts() {
     let self = this;
-    this.scripts(function(aResponse) {
+    this.getScripts(function(aResponse) {
       for each (let script in aResponse.scripts) {
         self._scriptCache[script.url] = script;
       }
@@ -634,13 +668,16 @@ ThreadClient.prototype = {
   /**
    * Request frames from the callstack for the current thread.
    *
-   * @param aStart integer The number of the youngest stack frame to return
-   *               (the youngest frame is 0).
-   * @param aCount integer The maximum number of frames to return, or null
-   *               to return all frames.
-   * @param aOnResponse integer Called with the thread's response.
+   * @param aStart integer
+   *        The number of the youngest stack frame to return (the youngest
+   *        frame is 0).
+   * @param aCount integer
+   *        The maximum number of frames to return, or null to return all
+   *        frames.
+   * @param aOnResponse function
+   *        Called with the thread's response.
    */
-  frames: function TC_frames(aStart, aCount, aOnResponse) {
+  getFrames: function TC_getFrames(aStart, aCount, aOnResponse) {
     this._assertPaused("frames");
 
     let packet = { to: this._actor, type: DebugProtocolTypes.frames,
@@ -669,7 +706,8 @@ ThreadClient.prototype = {
    * ThreadClient's stack frame cache. A framesadded event will be
    * sent when the stack frame cache is updated.
    *
-   * @param aTotal The minimum number of stack frames to be included.
+   * @param aTotal number
+   *        The minimum number of stack frames to be included.
    *
    * @returns true if a framesadded notification should be expected.
    */
@@ -683,7 +721,7 @@ ThreadClient.prototype = {
     let numFrames = this._frameCache.length;
 
     let self = this;
-    this.frames(numFrames, aTotal - numFrames, function(aResponse) {
+    this.getFrames(numFrames, aTotal - numFrames, function(aResponse) {
       for each (let frame in aResponse.frames) {
         self._frameCache[frame.depth] = frame;
       }
@@ -709,10 +747,10 @@ ThreadClient.prototype = {
   /**
    * Return a GripClient object for the given object grip.
    *
-   * @param aGrip object A pause-lifetime object grip returned by the
-   * protocol.
+   * @param aGrip object
+   *        A pause-lifetime object grip returned by the protocol.
    */
-  pauseGrip: function DC_pauseGrip(aGrip) {
+  pauseGrip: function TC_pauseGrip(aGrip) {
     if (!this._pauseGrips) {
       this._pauseGrips = {};
     }
@@ -753,6 +791,11 @@ eventSource(ThreadClient.prototype);
 
 /**
  * Grip clients are used to retrieve information about the relevant object.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aGrip object
+ *        A pause-lifetime object grip returned by the protocol.
  */
 function GripClient(aClient, aGrip)
 {
@@ -770,11 +813,12 @@ GripClient.prototype = {
   /**
    * Request the name of the function and its formal parameters.
    *
-   * @param aOnResponse function Called with the request's response.
+   * @param aOnResponse function
+   *        Called with the request's response.
    */
-  nameAndParameters: function GC_nameAndParameters(aOnResponse) {
+  getSignature: function GC_getSignature(aOnResponse) {
     if (this._grip["class"] !== "Function") {
-      throw "nameAndParameters is only valid for function grips.";
+      throw "getSignature is only valid for function grips.";
     }
 
     let packet = { to: this.actor, type: DebugProtocolTypes.nameAndParameters };
@@ -791,7 +835,7 @@ GripClient.prototype = {
    *
    * @param aOnResponse function Called with the request's response.
    */
-  ownPropertyNames: function GC_ownPropertyNames(aOnResponse) {
+  getOwnPropertyNames: function GC_getOwnPropertyNames(aOnResponse) {
     let packet = { to: this.actor, type: DebugProtocolTypes.ownPropertyNames };
     this._client.request(packet, function (aResponse) {
                                    if (aOnResponse) {
@@ -805,7 +849,7 @@ GripClient.prototype = {
    *
    * @param aOnResponse function Called with the request's response.
    */
-  prototypeAndProperties: function GC_prototypeAndProperties(aOnResponse) {
+  getPrototypeAndProperties: function GC_getPrototypeAndProperties(aOnResponse) {
     let packet = { to: this.actor,
                    type: DebugProtocolTypes.prototypeAndProperties };
     this._client.request(packet, function (aResponse) {
@@ -821,7 +865,7 @@ GripClient.prototype = {
    * @param aName string The name of the requested property.
    * @param aOnResponse function Called with the request's response.
    */
-  property: function GC_property(aName, aOnResponse) {
+  getProperty: function GC_getProperty(aName, aOnResponse) {
     let packet = { to: this.actor, type: DebugProtocolTypes.property,
                    name: aName };
     this._client.request(packet, function (aResponse) {
@@ -836,7 +880,7 @@ GripClient.prototype = {
    *
    * @param aOnResponse function Called with the request's response.
    */
-  prototype: function GC_prototype(aOnResponse) {
+  getPrototype: function GC_getPrototype(aOnResponse) {
     let packet = { to: this.actor, type: DebugProtocolTypes.prototype };
     this._client.request(packet, function (aResponse) {
                                    if (aOnResponse) {
@@ -848,6 +892,11 @@ GripClient.prototype = {
 
 /**
  * Breakpoint clients are used to remove breakpoints that are no longer used.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aActor string
+ *        The actor ID for this breakpoint.
  */
 function BreakpointClient(aClient, aActor) {
   this._client = aClient;
@@ -875,7 +924,12 @@ BreakpointClient.prototype = {
 eventSource(BreakpointClient.prototype);
 
 /**
- * Returns a DebuggerTransport.
+ * Connects to a debugger server socket and returns a DebuggerTransport.
+ *
+ * @param aHost string
+ *        The host name or IP address of the debugger server.
+ * @param aPort number
+ *        The port number of the debugger server.
  */
 function debuggerSocketConnect(aHost, aPort)
 {

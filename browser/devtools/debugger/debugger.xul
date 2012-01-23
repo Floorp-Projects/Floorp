@@ -47,8 +47,8 @@
 ]>
 <xul:window xmlns="http://www.w3.org/1999/xhtml"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <xul:script type="text/javascript;version=1.8" src="debugger.js"/>
-    <xul:script type="text/javascript;version=1.8" src="debugger-view.js"/>
+    <xul:script type="text/javascript" src="debugger.js"/>
+    <xul:script type="text/javascript" src="debugger-view.js"/>
 
     <div id="body" class="vbox flex">
         <xul:toolbar id="dbg-toolbar">

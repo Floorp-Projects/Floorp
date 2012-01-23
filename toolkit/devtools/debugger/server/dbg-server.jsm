@@ -60,6 +60,7 @@ function loadSubScript(aURL)
 Cu.import("resource:///modules/devtools/dbg-client.jsm");
 
 // Load the debugging server in a sandbox with its own compartment.
+// Note that this is slated for elimination in bug 703718.
 var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
   .createInstance(Ci.nsIPrincipal);
 

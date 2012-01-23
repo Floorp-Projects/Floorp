@@ -93,7 +93,7 @@ var DebuggerServer = {
    */
   initTransport: function DH_initTransport() {
     if (this._transportInitialized) {
-        return;
+      return;
     }
 
     this._connections = {};
@@ -411,6 +411,12 @@ DebuggerServerConnection.prototype = {
 
   // Transport hooks.
 
+  /**
+   * Called by DebuggerTransport to dispatch incoming packets as appropriate.
+   *
+   * @param aPacket object
+   *        The incoming packet.
+   */
   onPacket: function DSC_onPacket(aPacket) {
     let actor = this.getActor(aPacket.to);
     if (!actor) {
@@ -448,7 +454,14 @@ DebuggerServerConnection.prototype = {
     this.transport.send(ret);
   },
 
-  onClosed: function DSC_onClosed() {
+  /**
+   * Called by DebuggerTransport when the underlying stream is closed.
+   *
+   * @param aStatus nsresult
+   *        The status code that corresponds to the reason for closing
+   *        the stream.
+   */
+  onClosed: function DSC_onClosed(aStatus) {
     dumpn("Cleaning up connection.");
 
     this._actorPool.cleanup();

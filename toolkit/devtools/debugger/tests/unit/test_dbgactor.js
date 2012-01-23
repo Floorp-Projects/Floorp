@@ -29,7 +29,7 @@ function run_test()
       do_check_true(false);
     });
   });
-  gClient.ready();
+  gClient.connect();
 
   do_test_pending();
 }
