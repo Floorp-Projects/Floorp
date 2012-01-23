@@ -616,6 +616,9 @@ nsAccessible::VisibilityState()
   } while (accessible = accessible->Parent());
 
   nsIFrame* frame = GetFrame();
+  if (!frame)
+    return vstates;
+
   const nsCOMPtr<nsIPresShell> shell(GetPresShell());
 
   // We need to know if at least a kMinPixels around the object is visible,
