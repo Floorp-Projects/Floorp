@@ -6331,7 +6331,7 @@ GetScriptMemoryStats(JSScript *script, TypeInferenceMemoryStats *stats, JSMalloc
     }
 }
 
-JS_PUBLIC_API(void)
+void
 JS::SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment,
                                        TypeInferenceMemoryStats *stats,
                                        JSMallocSizeOfFun mallocSizeOf)
@@ -6377,8 +6377,8 @@ JS::SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment
     }
 }
 
-JS_PUBLIC_API(void)
-JS::SizeOfObjectTypeInferenceData(void *object_, TypeInferenceMemoryStats *stats, JSMallocSizeOfFun mallocSizeOf)
+void
+JS::SizeOfTypeObjectExcludingThis(void *object_, TypeInferenceMemoryStats *stats, JSMallocSizeOfFun mallocSizeOf)
 {
     TypeObject *object = (TypeObject *) object_;
 
