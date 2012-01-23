@@ -534,12 +534,12 @@
                onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
                ondragstart="gIdentityHandler.onDragStart(event);">
             <hbox id="identity-box-inner" align="center">
-              <stack id="page-proxy-stack"
-                     onclick="PageProxyClickHandler(event);">
+              <hbox id="page-proxy-stack"
+                    onclick="PageProxyClickHandler(event);">
                 <image id="page-proxy-favicon" validate="never"
                        pageproxystate="invalid"
                        onerror="this.removeAttribute('src');"/>
-              </stack>
+              </hbox>
               <hbox id="identity-icon-labels">
                 <label id="identity-icon-label" class="plain" flex="1"/>
                 <label id="identity-icon-country-label" class="plain"/>
