@@ -621,7 +621,7 @@ var BrowserApp = {
             case Ci.nsIPrefBranch.PREF_STRING:
             default:
               pref.type = "string";
-              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsISupportsString).data;
+              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
               break;
           }
         } catch (e) {
