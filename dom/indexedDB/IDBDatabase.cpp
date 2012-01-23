@@ -148,7 +148,8 @@ private:
 
 // static
 already_AddRefed<IDBDatabase>
-IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
+IDBDatabase::Create(nsIScriptContext* aScriptContext,
+                    nsPIDOMWindow* aOwner,
                     already_AddRefed<DatabaseInfo> aDatabaseInfo,
                     const nsACString& aASCIIOrigin,
                     FileManager* aFileManager)
@@ -161,9 +162,8 @@ IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
 
   nsRefPtr<IDBDatabase> db(new IDBDatabase());
 
-  db->mScriptContext = aOwnerCache->GetScriptContext();
-  db->mOwner = aOwnerCache->GetOwner();
-  db->mScriptOwner = aOwnerCache->GetScriptOwner();
+  db->mScriptContext = aScriptContext;
+  db->mOwner = aOwner;
 
   db->mDatabaseId = databaseInfo->id;
   db->mName = databaseInfo->name;
@@ -205,8 +205,6 @@ IDBDatabase::~IDBDatabase()
       mgr->UnregisterDatabase(this);
     }
   }
-
-  nsContentUtils::ReleaseWrapper(static_cast<nsIDOMEventTarget*>(this), this);
 }
 
 void
@@ -220,7 +218,7 @@ IDBDatabase::Invalidate()
   // When the IndexedDatabaseManager needs to invalidate databases, all it has
   // is an origin, so we call back into the manager to cancel any prompts for
   // our owner.
-  IndexedDatabaseManager::CancelPromptsForWindow(GetOwner());
+  IndexedDatabaseManager::CancelPromptsForWindow(Owner());
 
   mInvalidated = true;
 }
@@ -282,8 +280,7 @@ void
 IDBDatabase::OnUnlink()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!GetOwner() && !GetScriptOwner(),
-               "Should have been cleared already!");
+  NS_ASSERTION(!mOwner, "Should have been cleared already!");
 
   // We've been unlinked, at the very least we should be able to prevent further
   // transactions from starting and unblock any other SetVersion callers.
@@ -301,16 +298,18 @@ IDBDatabase::OnUnlink()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBDatabase)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(abort)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(versionchange)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBDatabase,
+                                                  nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnVersionChangeListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(abort)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(error)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(versionchange)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase,
+                                                nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnVersionChangeListener)
 
   // Do some cleanup.
   tmp->OnUnlink();
@@ -319,16 +318,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabase)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabase)
-NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(IDBDatabase, IDBWrapperCache)
-NS_IMPL_RELEASE_INHERITED(IDBDatabase, IDBWrapperCache)
+NS_IMPL_ADDREF_INHERITED(IDBDatabase, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBDatabase, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBDatabase, IDBDatabase)
-
-NS_IMPL_EVENT_HANDLER(IDBDatabase, abort);
-NS_IMPL_EVENT_HANDLER(IDBDatabase, error);
-NS_IMPL_EVENT_HANDLER(IDBDatabase, versionchange);
 
 NS_IMETHODIMP
 IDBDatabase::GetName(nsAString& aName)
@@ -671,6 +666,47 @@ IDBDatabase::Close()
 
   NS_ASSERTION(mClosed, "Should have set the closed flag!");
   return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBDatabase::SetOnabort(nsIDOMEventListener* aAbortListener)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_EVT_STR),
+                                mOnAbortListener, aAbortListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::GetOnabort(nsIDOMEventListener** aAbortListener)
+{
+  return GetInnerEventListener(mOnAbortListener, aAbortListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::SetOnerror(nsIDOMEventListener* aErrorListener)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_EVT_STR),
+                                mOnErrorListener, aErrorListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::GetOnerror(nsIDOMEventListener** aErrorListener)
+{
+  return GetInnerEventListener(mOnErrorListener, aErrorListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::SetOnversionchange(nsIDOMEventListener* aVersionChangeListener)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(VERSIONCHANGE_EVT_STR),
+                                mOnVersionChangeListener,
+                                aVersionChangeListener);
+}
+
+NS_IMETHODIMP
+IDBDatabase::GetOnversionchange(nsIDOMEventListener** aVersionChangeListener)
+{
+  return GetInnerEventListener(mOnVersionChangeListener,
+                               aVersionChangeListener);
 }
 
 nsresult

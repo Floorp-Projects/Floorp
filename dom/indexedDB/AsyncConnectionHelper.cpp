@@ -146,11 +146,18 @@ HelperBase::WrapNative(JSContext* aCx,
   NS_ASSERTION(aResult, "Null pointer!");
   NS_ASSERTION(mRequest, "Null request!");
 
-  JSObject* global = mRequest->GetParentObject();
-  NS_ASSERTION(global, "This should never be null!");
+  JSObject* obj;
+  if (mRequest->ScriptContext()) {
+    obj = mRequest->ScriptContext()->GetNativeGlobal();
+  }
+  else {
+    obj = mRequest->GetWrapper();
+  }
+
+  NS_ENSURE_TRUE(obj, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv =
-    nsContentUtils::WrapNative(aCx, global, aNative, aResult);
+    nsContentUtils::WrapNative(aCx, obj, aNative, aResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
@@ -281,7 +288,7 @@ AsyncConnectionHelper::Run()
   if (NS_SUCCEEDED(rv)) {
     bool hasSavepoint = false;
     if (mDatabase) {
-      IndexedDatabaseManager::SetCurrentWindow(mDatabase->GetOwner());
+      IndexedDatabaseManager::SetCurrentWindow(mDatabase->Owner());
 
       // Make the first savepoint.
       if (mTransaction) {
