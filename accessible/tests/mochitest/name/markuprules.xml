@@ -139,6 +139,18 @@
       <rule attr="title" type="string"/>
     </ruleset>
 
+    <ruleset id="htmlimage">
+      <ruleset ref="aria"/>
+      <rule attr="alt" type="string"/>
+      <ruleset ref="htmlelm_end"/>
+    </ruleset>
+
+    <ruleset id="htmlimageemptyalt">
+      <ruleset ref="aria"/>
+      <ruleset ref="htmlelm_end"/>
+      <rule attr="alt" type="string"/>
+    </ruleset>
+
     <ruleset id="htmltable">
       <ruleset ref="htmlelm_start"/>
       <rule elm="caption"/>
@@ -188,6 +200,28 @@
                      a11yname="option1">option1</html:option>
         <html:option>option2</html:option>
       </html:select>
+    </markup>
+
+    <markup ref="html:img" ruleset="htmlimage">
+      <html:span id="l1" a11yname="test2">test2</html:span>
+      <html:span id="l2" a11yname="test3">test3</html:span>
+      <html:img id="img"
+                aria-label="Logo of Mozilla"
+                aria-labelledby="l1 l2"
+                alt="Mozilla logo"
+                title="This is a logo"
+                src="moz.png"/>
+    </markup>
+
+    <markup ref="html:img" ruleset="htmlimageemptyalt">
+      <html:span id="l1" a11yname="test2">test2</html:span>
+      <html:span id="l2" a11yname="test3">test3</html:span>
+      <html:img id="img"
+                 aria-label="Logo of Mozilla"
+                 aria-labelledby="l1 l2"
+                 title="This is a logo"
+                 alt=""
+                 src="moz.png"/>
     </markup>
 
     <markup ref="html:table/html:tr/html:td" ruleset="htmlelm"

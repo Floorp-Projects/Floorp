@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=718809
+-->
+<head>
+  <title>Test for Bug 718809</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+   
+</head>
+<body style=margin:0>
+<div style="background:blue;height:50px;width:100px; -moz-transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 10, 1); -moz-transform-origin:0 0"></div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=718809">Mozilla Bug 718809</a>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  var rect = document.querySelector("div").getBoundingClientRect();
+
+   is(rect.top, 0, "Incorrect bounding rect");
+   is(rect.left, 0, "Incorrect bounding rect");
+   is(rect.right, 100, "Incorrect bounding rect");
+   is(rect.bottom, 50, "Incorrect bounding rect");
+</script>
+</pre>
+</body>
+</html>
+
