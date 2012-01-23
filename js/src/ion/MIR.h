@@ -1094,6 +1094,9 @@ class MBinaryInstruction : public MAryInstruction<2>
         if (type() != ins->type())
             return false;
 
+        if (isEffectful() || ins->isEffectful())
+            return false;
+
         MDefinition *left = getOperand(0);
         MDefinition *right = getOperand(1);
         MDefinition *tmp;
@@ -1785,34 +1788,6 @@ class MMod : public MBinaryArithInstruction
     double getIdentity() {
         JS_NOT_REACHED("not used");
         return 1;
-    }
-};
-
-class MAddGeneric :
-    public MBinaryInstruction,
-    public BoxInputsPolicy
-{
-    MAddGeneric(MDefinition *left, MDefinition *right)
-      : MBinaryInstruction(left, right)
-    {
-        setResultType(MIRType_Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(AddGeneric);
-    static MAddGeneric *New(MDefinition *left, MDefinition *right) {
-        return new MAddGeneric(left, right);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-
-    bool congruentTo(MDefinition * const &ins) const {
-        return false;
-    }
-    virtual AliasSet getAliasSet() const {
-        return AliasSet::Store(AliasSet::Any);
     }
 };
 

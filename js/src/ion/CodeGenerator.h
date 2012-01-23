@@ -103,7 +103,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitLoadFixedSlotT(LLoadFixedSlotT *ins);
     bool visitStoreFixedSlotV(LStoreFixedSlotV *ins);
     bool visitStoreFixedSlotT(LStoreFixedSlotT *ins);
-    bool visitAddV(LAddV *lir);
+    bool visitBinaryV(LBinaryV *lir);
     bool visitConcat(LConcat *lir);
     bool visitFunctionEnvironment(LFunctionEnvironment *lir);
     bool visitCallGetProperty(LCallGetProperty *lir);

@@ -2012,88 +2012,25 @@ IonBuilder::jsop_bitop(JSOp op)
 }
 
 bool
-IonBuilder::jsop_add(MDefinition *left, MDefinition *right)
+IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
 {
-    if (jsop_add_specialized(left, right))
-        return true;
+    TypeOracle::Binary b = oracle->binaryOp(script, pc);
 
-    MAddGeneric *ins = MAddGeneric::New(left, right);
-    current->add(ins);
-    current->push(ins);
-
-    if (!resumeAfter(ins))
-        return false;
-    return true;
-}
-
-bool
-IonBuilder::jsop_add_specialized(MDefinition *left, MDefinition *right)
-{
-    TypeOracle::BinaryTypes b = oracle->binaryTypes(script, pc);
-
-    if (!b.lhsTypes || !b.rhsTypes || !b.outTypes)
-        return false;
-
-    if (b.outTypes->getKnownTypeTag(cx) == JSVAL_TYPE_INT32 ||
-        b.outTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE)
+    if (op == JSOP_ADD && b.rval == MIRType_String &&
+        (b.lhs == MIRType_String || b.lhs == MIRType_Int32) &&
+        (b.rhs == MIRType_String || b.rhs == MIRType_Int32))
     {
-
-        if (b.lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32 &&
-            b.lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_DOUBLE &&
-            b.lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_UNDEFINED)
-         {
-            return false;
-         }
-
-        if (b.rhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32 &&
-            b.rhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_DOUBLE &&
-            b.rhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_UNDEFINED)
-         {
-            return false;
-         }
-
-        MBinaryArithInstruction *ins = MAdd::New(left, right);
-        current->add(ins);
-        ins->infer(oracle->binaryOp(script, pc));
-        current->push(ins);
-
-    } else if (b.outTypes->getKnownTypeTag(cx) == JSVAL_TYPE_STRING) {
-        if (b.lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32 &&
-            b.lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_STRING)
-         {
-            return false;
-         }
-
-        if (b.lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_STRING &&
-            b.rhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_STRING)
-         {
-            return false;
-         }
-
-        if (b.rhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32 &&
-            b.rhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_STRING)
-         {
-            return false;
-         }
-
         MConcat *ins = MConcat::New(left, right);
         current->add(ins);
         current->push(ins);
-
-    } else {
-        return false;
+        return true;
     }
 
-    return true;
-}
-
-bool
-IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
-{
     MBinaryArithInstruction *ins;
     switch (op) {
       case JSOP_ADD:
-        return jsop_add(left, right);
+        ins = MAdd::New(left, right);
+        break;
 
       case JSOP_SUB:
         ins = MSub::New(left, right);
@@ -2117,12 +2054,11 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
     }
 
     current->add(ins);
-    ins->infer(oracle->binaryOp(script, pc));
-
-    if (ins->type() == MIRType_Value || (op == JSOP_MOD && ins->type() != MIRType_Int32))
-        return abort("unspecialized %s not yet supported", js_CodeName[op]);
-
+    ins->infer(b);
     current->push(ins);
+
+    if (ins->isEffectful())
+        return resumeAfter(ins);
     return true;
 }
 

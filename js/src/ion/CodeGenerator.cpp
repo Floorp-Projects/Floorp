@@ -727,16 +727,40 @@ CodeGenerator::visitStringLength(LStringLength *lir)
 }
 
 bool
-CodeGenerator::visitAddV(LAddV *lir)
+CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
-    static const VMFunction AddValuesInfo = FunctionInfo<pf>(js::AddValues);
+    typedef bool (*Stub)(JSContext *, const Value &, const Value &, Value *);
 
-    pushArg(ToValue(lir, LAddV::RhsInput));
-    pushArg(ToValue(lir, LAddV::LhsInput));
-    if (!callVM(AddValuesInfo, lir))
+    Stub stub;
+    switch (lir->jsop()) {
+      case JSOP_ADD:
+        stub = js::AddValues;
+        break;
+
+      case JSOP_SUB:
+        stub = js::SubValues;
+        break;
+
+      case JSOP_MUL:
+        stub = js::MulValues;
+        break;
+
+      case JSOP_DIV:
+        stub = js::DivValues;
+        break;
+
+      case JSOP_MOD:
+        stub = js::ModValues;
+        break;
+
+      default:
+        JS_ASSERT("Unexpected binary op");
         return false;
-    return true;
+    }
+
+    pushArg(ToValue(lir, LBinaryV::RhsInput));
+    pushArg(ToValue(lir, LBinaryV::LhsInput));
+    return callVM(FunctionInfo<Stub>(stub), lir);
 }
 
 bool

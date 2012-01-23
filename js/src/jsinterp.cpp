@@ -4939,3 +4939,27 @@ js::AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
 {
     return AddOperation(cx, lhs, rhs, res);
 }
+
+bool
+js::SubValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    return SubOperation(cx, lhs, rhs, res);
+}
+
+bool
+js::MulValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    return MulOperation(cx, lhs, rhs, res);
+}
+
+bool
+js::DivValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    return DivOperation(cx, lhs, rhs, res);
+}
+
+bool
+js::ModValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
+{
+    return ModOperation(cx, lhs, rhs, res);
+}
