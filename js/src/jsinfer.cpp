@@ -3430,6 +3430,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_POP:
       case JSOP_NOP:
       case JSOP_LOOPHEAD:
+      case JSOP_LOOPENTRY:
       case JSOP_GOTO:
       case JSOP_IFEQ:
       case JSOP_IFNE:

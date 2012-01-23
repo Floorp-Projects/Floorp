@@ -3921,6 +3921,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     next = js_GetSrcNoteOffset(sn, 0);
                     tail = js_GetSrcNoteOffset(sn, 1);
                     JS_ASSERT(pc[next] == JSOP_POP);
+                    JS_ASSERT(pc[cond] == JSOP_LOOPENTRY);
+                    cond += JSOP_LOOPENTRY_LENGTH;
                     JS_ASSERT(pc[cond] == JSOP_MOREITER);
                     DECOMPILE_CODE(pc + oplen, next - oplen);
                     lval = POP_STR();
