@@ -77,17 +77,6 @@ function init(aEvent)
     document.getElementById("communityDesc").hidden = true;
   }
 
-#ifdef MOZ_OFFICIAL_BRANDING
-  // Hide the Charlton trademark attribution for non-en-US/en-GB
-  // DO NOT REMOVE without consulting people involved with bug 616193
-  let chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].
-                       getService(Components.interfaces.nsIXULChromeRegistry);
-  let currentLocale = chromeRegistry.getSelectedLocale("global");
-  if (currentLocale != "en-US" && currentLocale != "en-GB") {
-    document.getElementById("extra-trademark").hidden = true;
-  }
-#endif
-
 #ifdef MOZ_UPDATER
   gAppUpdater = new appUpdater();
 
