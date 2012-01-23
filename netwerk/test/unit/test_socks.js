@@ -439,11 +439,21 @@ SocksTestServer.prototype = {
     var client = new SocksClient(this, input, output);
     this.client_connections.push(client);
   },
+  
+  onStopListening: function(socket)
+  {  
+  },
 
   close: function()
   {
     if (this.client_subprocess) {
-      this.client_subprocess.kill();
+      try {
+        this.client_subprocess.kill();      
+      } catch (x) {
+        do_print('Killing subprocess failed: ' + e);
+        if (x.stack)
+          _dump_exception_stack(x.stack);
+      }
       this.client_subprocess = null;
     }
     for each (var client in this.client_connections)
