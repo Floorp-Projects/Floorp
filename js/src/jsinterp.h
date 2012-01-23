@@ -377,6 +377,18 @@ GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *v
 bool
 AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
 
+bool
+SubValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+
+bool
+MulValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+
+bool
+DivValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+
+bool
+ModValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
+
 template <bool strict>
 bool
 SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value value);

@@ -76,7 +76,7 @@
     _(SubI)                         \
     _(MulI)                         \
     _(MathD)                        \
-    _(AddV)                         \
+    _(BinaryV)                      \
     _(Concat)                       \
     _(Int32ToDouble)                \
     _(ValueToDouble)                \
