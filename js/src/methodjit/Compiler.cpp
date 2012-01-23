@@ -3226,6 +3226,9 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_LOOPHEAD)
 
+          BEGIN_CASE(JSOP_LOOPENTRY)
+          END_CASE(JSOP_LOOPENTRY)
+
           BEGIN_CASE(JSOP_DEBUGGER)
           {
             prepareStubCall(Uses(0));

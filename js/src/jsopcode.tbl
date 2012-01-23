@@ -572,3 +572,6 @@ OPDEF(JSOP_TOID,          225, "toid",         NULL,  1,  1,  1,  0,  JOF_BYTE)
 
 /* Push the implicit 'this' value for calls to the associated name. */
 OPDEF(JSOP_IMPLICITTHIS,  226, "implicitthis", "",    3,  0,  1,  0,  JOF_ATOM)
+
+/* This opcode is the target of the entry jump for some loop. */
+OPDEF(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  1,  0,  0,  0,  JOF_BYTE)
