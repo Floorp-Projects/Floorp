@@ -39,6 +39,9 @@
 #include <aclapi.h>
 #include <stdlib.h>
 
+// Used for DNLEN and UNLEN
+#include <lm.h>
+
 #include <nsAutoPtr.h>
 #include <nsWindowsHelpers.h>
 #include <nsMemory.h>
@@ -488,12 +491,47 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
     return GetLastError();
   }
 
+  PSID sid;
+  DWORD SIDSize = SECURITY_MAX_SID_SIZE;
+  sid = LocalAlloc(LMEM_FIXED, SIDSize);
+  if (!sid) {
+    LOG(("Could not allocate SID memory.  (%d)\n", GetLastError()));
+    return GetLastError();
+  }
+
+  if (!CreateWellKnownSid(WinBuiltinUsersSid, NULL, sid, &SIDSize)) {
+    DWORD lastError = GetLastError();
+    LOG(("Could not create well known SID.  (%d)\n", lastError));
+    LocalFree(sid);
+    return lastError;
+  }
+
+  // Lookup the account name, the function fails if you don't pass in
+  // a buffer for the domain name but it's not used since we're using
+  // the built in account Sid.
+  SID_NAME_USE accountType;
+  WCHAR accountName[UNLEN + 1];
+  WCHAR domainName[DNLEN + 1];
+  DWORD accountNameSize = UNLEN + 1;
+  DWORD domainNameSize = DNLEN + 1;
+  if (!LookupAccountSidW(NULL, sid, accountName, 
+                         &accountNameSize, 
+                         domainName, &domainNameSize, &accountType)) {
+    LOG(("Warning: Could not lookup account Sid, will try Users.  (%d)\n",
+         GetLastError()));
+    wcscpy(accountName, L"Users");
+  }
+
+  // We already have the group name so we can get rid of the SID
+  FreeSid(sid);
+  sid = NULL;
+
   // Build the ACE, BuildExplicitAccessWithName cannot fail so it is not logged.
   EXPLICIT_ACCESS ea;
-  BuildExplicitAccessWithName(&ea, TEXT("Users"), 
+  BuildExplicitAccessWithNameW(&ea, accountName, 
                               SERVICE_START | SERVICE_STOP | GENERIC_READ, 
                               SET_ACCESS, NO_INHERITANCE);
-  DWORD lastError = SetEntriesInAcl(1, (PEXPLICIT_ACCESS)&ea, pacl, &pNewAcl);
+  DWORD lastError = SetEntriesInAclW(1, (PEXPLICIT_ACCESS)&ea, pacl, &pNewAcl);
   if (ERROR_SUCCESS != lastError) {
     LOG(("Warning: Could not set entries in ACL.  (%d)\n", lastError));
     return lastError;
