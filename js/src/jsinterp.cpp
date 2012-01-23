@@ -824,7 +824,7 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
 
         if (lval.isDouble()) {
             double l = lval.toDouble(), r = rval.toDouble();
-            *result = JSDOUBLE_COMPARE(l, ==, r, false);
+            *result = (l == r);
             return true;
         }
 
@@ -875,7 +875,7 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
     double l, r;
     if (!ToNumber(cx, lvalue, &l) || !ToNumber(cx, rvalue, &r))
         return false;
-    *result = JSDOUBLE_COMPARE(l, ==, r, false);
+    *result = (l == r);
     return true;
 }
 
@@ -887,7 +887,7 @@ js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, bool *equ
         if (lval.isString())
             return EqualStrings(cx, lval.toString(), rval.toString(), equal);
         if (lval.isDouble()) {
-            *equal = JSDOUBLE_COMPARE(lval.toDouble(), ==, rval.toDouble(), JS_FALSE);
+            *equal = (lval.toDouble() == rval.toDouble());
             return true;
         }
         if (lval.isObject()) {
@@ -905,13 +905,13 @@ js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, bool *equ
     if (lval.isDouble() && rval.isInt32()) {
         double ld = lval.toDouble();
         double rd = rval.toInt32();
-        *equal = JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+        *equal = (ld == rd);
         return true;
     }
     if (lval.isInt32() && rval.isDouble()) {
         double ld = lval.toInt32();
         double rd = rval.toDouble();
-        *equal = JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+        *equal = (ld == rd);
         return true;
     }
 
@@ -2325,7 +2325,7 @@ END_CASE(JSOP_CASE)
                 double l, r;                                                  \
                 if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))       \
                     goto error;                                               \
-                cond = JSDOUBLE_COMPARE(l, OP, r, false);                     \
+                cond = (l OP r);                                              \
             }                                                                 \
         }                                                                     \
         TRY_BRANCH_AFTER_COND(cond, 2);                                       \
