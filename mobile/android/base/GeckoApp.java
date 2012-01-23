@@ -1610,12 +1610,7 @@ abstract public class GeckoApp
                     try {
                         Looper.loop();
                     } catch (Exception e) {
-                        Log.e(LOGTAG, "top level exception", e);
-                        StringWriter sw = new StringWriter();
-                        PrintWriter pw = new PrintWriter(sw);
-                        e.printStackTrace(pw);
-                        pw.flush();
-                        GeckoAppShell.reportJavaCrash(sw.toString());
+                        GeckoAppShell.reportJavaCrash(e);
                     }
                     // resetting this is kinda pointless, but oh well
                     sTryCatchAttached = false;
