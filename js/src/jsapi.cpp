@@ -41,6 +41,9 @@
 /*
  * JavaScript API.
  */
+
+#include "mozilla/FloatingPoint.h"
+
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -547,7 +550,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, double *dp)
 JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(double d, int32_t *ip)
 {
-    return JSDOUBLE_IS_INT32(d, ip);
+    return MOZ_DOUBLE_IS_INT32(d, ip);
 }
 
 JS_PUBLIC_API(int32_t)
