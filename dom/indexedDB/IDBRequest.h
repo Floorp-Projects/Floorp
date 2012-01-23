@@ -46,7 +46,8 @@
 #include "nsIIDBRequest.h"
 #include "nsIIDBOpenDBRequest.h"
 
-#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
+#include "nsDOMEventTargetWrapperCache.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -56,18 +57,19 @@ BEGIN_INDEXEDDB_NAMESPACE
 class HelperBase;
 class IDBTransaction;
 
-class IDBRequest : public IDBWrapperCache,
+class IDBRequest : public nsDOMEventTargetWrapperCache,
                    public nsIIDBRequest
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBREQUEST
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBRequest,
-                                                         IDBWrapperCache)
+                                                         nsDOMEventTargetWrapperCache)
 
   static
   already_AddRefed<IDBRequest> Create(nsISupports* aSource,
-                                      IDBWrapperCache* aOwnerCache,
+                                      nsIScriptContext* aScriptContext,
+                                      nsPIDOMWindow* aOwner,
                                       IDBTransaction* aTransaction);
 
   // nsIDOMEventTarget
@@ -90,10 +92,18 @@ public:
     mErrorCode = rv;
   }
 
-  void RootResultVal();
-  void UnrootResultVal();
+  nsIScriptContext* ScriptContext()
+  {
+    return mScriptContext;
+  }
 
-  virtual void OnWrapperCreated();
+  nsPIDOMWindow* Owner()
+  {
+    return mOwner;
+  }
+
+  virtual void RootResultVal();
+  virtual void UnrootResultVal();
 
 protected:
   IDBRequest();
@@ -102,14 +112,14 @@ protected:
   nsCOMPtr<nsISupports> mSource;
   nsRefPtr<IDBTransaction> mTransaction;
 
-  NS_DECL_EVENT_HANDLER(success);
-  NS_DECL_EVENT_HANDLER(error);
+  nsRefPtr<nsDOMEventListenerWrapper> mOnSuccessListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
 
   jsval mResultVal;
 
   PRUint16 mErrorCode;
+  bool mResultValRooted;
   bool mHaveResultOrErrorCode;
-  bool mManuallyRooted;
 };
 
 class IDBOpenDBRequest : public IDBRequest,
@@ -119,30 +129,24 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIIDBREQUEST(IDBRequest::)
   NS_DECL_NSIIDBOPENDBREQUEST
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBOpenDBRequest, IDBRequest)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBOpenDBRequest,
+                                           IDBRequest)
 
   static
   already_AddRefed<IDBOpenDBRequest>
   Create(nsIScriptContext* aScriptContext,
-         nsPIDOMWindow* aOwner,
-         JSObject* aScriptOwner);
-
-  static
-  already_AddRefed<IDBOpenDBRequest>
-  Create(IDBWrapperCache* aOwnerCache)
-  {
-    return Create(aOwnerCache->GetScriptContext(), aOwnerCache->GetOwner(),
-                  aOwnerCache->GetScriptOwner());
-  }
+         nsPIDOMWindow* aOwner);
 
   void SetTransaction(IDBTransaction* aTransaction);
+
+  virtual void RootResultVal();
+  virtual void UnrootResultVal();
 
 protected:
   ~IDBOpenDBRequest();
 
-  // Only touched on the main thread.
-  NS_DECL_EVENT_HANDLER(blocked);
-  NS_DECL_EVENT_HANDLER(upgradeneeded);
+  nsRefPtr<nsDOMEventListenerWrapper> mOnblockedListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnupgradeneededListener;
 };
 
 END_INDEXEDDB_NAMESPACE

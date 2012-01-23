@@ -41,12 +41,13 @@
 #define mozilla_dom_indexeddb_idbdatabase_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
+#include "mozilla/dom/indexedDB/FileManager.h"
 
-#include "nsIDocument.h"
 #include "nsIIDBDatabase.h"
 
-#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
-#include "mozilla/dom/indexedDB/FileManager.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsDOMEventTargetHelper.h"
+#include "nsIDocument.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -60,7 +61,7 @@ class IDBObjectStore;
 class IDBTransaction;
 class IndexedDatabaseManager;
 
-class IDBDatabase : public IDBWrapperCache,
+class IDBDatabase : public nsDOMEventTargetHelper,
                     public nsIIDBDatabase
 {
   friend class AsyncConnectionHelper;
@@ -70,10 +71,12 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBDATABASE
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBDatabase, IDBWrapperCache)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBDatabase,
+                                           nsDOMEventTargetHelper)
 
   static already_AddRefed<IDBDatabase>
-  Create(IDBWrapperCache* aOwnerCache,
+  Create(nsIScriptContext* aScriptContext,
+         nsPIDOMWindow* aOwner,
          already_AddRefed<DatabaseInfo> aDatabaseInfo,
          const nsACString& aASCIIOrigin,
          FileManager* aFileManager);
@@ -99,6 +102,16 @@ public:
   const nsString& FilePath()
   {
     return mFilePath;
+  }
+
+  nsIScriptContext* ScriptContext()
+  {
+    return mScriptContext;
+  }
+
+  nsPIDOMWindow* Owner()
+  {
+    return mOwner;
   }
 
   already_AddRefed<nsIDocument> GetOwnerDocument()
@@ -155,9 +168,9 @@ private:
   nsRefPtr<FileManager> mFileManager;
 
   // Only touched on the main thread.
-  NS_DECL_EVENT_HANDLER(abort);
-  NS_DECL_EVENT_HANDLER(error);
-  NS_DECL_EVENT_HANDLER(versionchange);
+  nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnVersionChangeListener;
 };
 
 END_INDEXEDDB_NAMESPACE

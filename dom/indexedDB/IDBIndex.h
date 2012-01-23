@@ -113,6 +113,9 @@ private:
 
   nsRefPtr<IDBObjectStore> mObjectStore;
 
+  nsCOMPtr<nsIScriptContext> mScriptContext;
+  nsCOMPtr<nsPIDOMWindow> mOwner;
+
   PRInt64 mId;
   nsString mName;
   nsString mKeyPath;

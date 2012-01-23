@@ -1611,9 +1611,7 @@ OpenDatabaseHelper::DoDatabaseWork()
 
   NS_ASSERTION(mOpenDBRequest, "This should never be null!");
 
-  // This will be null for non-window contexts.
-  nsPIDOMWindow* window = mOpenDBRequest->GetOwner();
-
+  nsPIDOMWindow* window = mOpenDBRequest->Owner();
   AutoEnterWindow autoWindow(window);
 
   nsCOMPtr<nsIFile> dbDirectory;
@@ -2113,7 +2111,8 @@ OpenDatabaseHelper::EnsureSuccessResult()
   dbInfo->nextIndexId = mLastIndexId + 1;
 
   nsRefPtr<IDBDatabase> database =
-    IDBDatabase::Create(mOpenDBRequest,
+    IDBDatabase::Create(mOpenDBRequest->ScriptContext(),
+                        mOpenDBRequest->Owner(),
                         dbInfo.forget(),
                         mASCIIOrigin,
                         mFileManager);
