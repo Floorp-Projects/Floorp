@@ -606,12 +606,22 @@ class LMathD : public LBinaryMath<0>
     }
 };
 
-// Adds two string, returning a string.
-class LAddV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
+// Call a stub to perform a binary operation.
+class LBinaryV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 {
+    JSOp jsop_;
+
   public:
-    LIR_HEADER(AddV);
+    LIR_HEADER(BinaryV);
     BOX_OUTPUT_ACCESSORS();
+
+    LBinaryV(JSOp jsop)
+      : jsop_(jsop)
+    { }
+
+    JSOp jsop() const {
+        return jsop_;
+    }
 
     static const size_t LhsInput = 0;
     static const size_t RhsInput = BOX_PIECES;

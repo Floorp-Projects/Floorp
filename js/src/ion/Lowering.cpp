@@ -391,9 +391,12 @@ LIRGenerator::visitAdd(MAdd *ins)
         return lowerForALU(lir, ins, lhs, rhs);
     }
 
-    JS_ASSERT(ins->specialization() == MIRType_Double);
-    JS_ASSERT(lhs->type() == MIRType_Double);
-    return lowerForFPU(new LMathD(JSOP_ADD), ins, lhs, rhs);
+    if (ins->specialization() == MIRType_Double) {
+        JS_ASSERT(lhs->type() == MIRType_Double);
+        return lowerForFPU(new LMathD(JSOP_ADD), ins, lhs, rhs);
+    }
+
+    return lowerBinaryV(JSOP_ADD, ins);
 }
 
 bool
@@ -416,8 +419,7 @@ LIRGenerator::visitSub(MSub *ins)
         return lowerForFPU(new LMathD(JSOP_SUB), ins, lhs, rhs);
     }
 
-    JS_NOT_REACHED("NYI");
-    return false;
+    return lowerBinaryV(JSOP_SUB, ins);
 }
 
 bool
@@ -437,8 +439,7 @@ LIRGenerator::visitMul(MMul *ins)
         return lowerForFPU(new LMathD(JSOP_MUL), ins, lhs, rhs);
     }
 
-    JS_NOT_REACHED("NYI");
-    return false;
+    return lowerBinaryV(JSOP_MUL, ins);
 }
 
 bool
@@ -457,8 +458,7 @@ LIRGenerator::visitDiv(MDiv *ins)
         return lowerForFPU(new LMathD(JSOP_DIV), ins, lhs, rhs);
     }
 
-    JS_NOT_REACHED("NYI");
-    return false;
+    return lowerBinaryV(JSOP_DIV, ins);
 }
 
 bool
@@ -474,12 +474,11 @@ LIRGenerator::visitMod(MMod *ins)
     }
     // TODO: Implement for ins->specialization() == MIRType_Double
 
-    JS_NOT_REACHED("NYI");
-    return false;
+    return lowerBinaryV(JSOP_MOD, ins);
 }
 
 bool
-LIRGenerator::visitAddGeneric(MAddGeneric *ins)
+LIRGenerator::lowerBinaryV(JSOp op, MBinaryInstruction *ins)
 {
     MDefinition *lhs = ins->getOperand(0);
     MDefinition *rhs = ins->getOperand(1);
@@ -487,10 +486,10 @@ LIRGenerator::visitAddGeneric(MAddGeneric *ins)
     JS_ASSERT(lhs->type() == MIRType_Value);
     JS_ASSERT(rhs->type() == MIRType_Value);
 
-    LAddV *lir = new LAddV;
-    if (!useBox(lir, LAddV::LhsInput, lhs))
+    LBinaryV *lir = new LBinaryV(op);
+    if (!useBox(lir, LBinaryV::LhsInput, lhs))
         return false;
-    if (!useBox(lir, LAddV::RhsInput, rhs))
+    if (!useBox(lir, LBinaryV::RhsInput, rhs))
         return false;
     if (!defineVMReturn(lir, ins))
         return false;

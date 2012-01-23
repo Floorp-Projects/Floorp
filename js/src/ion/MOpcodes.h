@@ -74,7 +74,6 @@ namespace ion {
     _(Mul)                                                                  \
     _(Div)                                                                  \
     _(Mod)                                                                  \
-    _(AddGeneric)                                                           \
     _(Concat)                                                               \
     _(Return)                                                               \
     _(Copy)                                                                 \
