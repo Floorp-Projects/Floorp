@@ -146,16 +146,16 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
     case JSTRACE_SHAPE:
     {
         Shape *shape = static_cast<Shape*>(thing);
+        size_t propTableSize, kidsSize;
+        shape->sizeOfExcludingThis(data->mallocSizeOf, &propTableSize, &kidsSize);
         if (shape->inDictionary()) {
             curr->gcHeapShapesDict += thingSize;
-            curr->shapesExtraDictTables +=
-                shape->sizeOfPropertyTable(data->mallocSizeOf);
+            curr->shapesExtraDictTables += propTableSize;
+            JS_ASSERT(kidsSize == 0);
         } else {
             curr->gcHeapShapesTree += thingSize;
-            curr->shapesExtraTreeTables +=
-                shape->sizeOfPropertyTable(data->mallocSizeOf);
-            curr->shapesExtraTreeShapeKids +=
-                shape->sizeOfKids(data->mallocSizeOf);
+            curr->shapesExtraTreeTables += propTableSize;
+            curr->shapesExtraTreeShapeKids += kidsSize;
         }
         break;
     }
