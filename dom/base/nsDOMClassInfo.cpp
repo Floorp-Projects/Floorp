@@ -527,8 +527,6 @@
 #include "CallEvent.h"
 #endif
 
-#include "DOMError.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1587,9 +1585,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CallEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
-
-  NS_DEFINE_CLASSINFO_DATA(DOMError, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that should be constructable through |new Name();|
@@ -4322,10 +4317,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
 #endif
-
-  DOM_CLASSINFO_MAP_BEGIN(DOMError, nsIDOMDOMError)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMError)
-  DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
   {
