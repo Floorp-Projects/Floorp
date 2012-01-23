@@ -78,6 +78,14 @@ function checkHistograms(request, response) {
     do_check_eq(payload.info[f], expected_info[f]);
   }
 
+  var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  var isOSX = ("nsILocalFileMac" in Components.interfaces);
+
+  if (isWindows || isOSX) {
+    do_check_true("adapterVendorID" in payload.info);
+    do_check_true("adapterDeviceID" in payload.info);
+  }
+
   const TELEMETRY_PING = "TELEMETRY_PING";
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   do_check_true(TELEMETRY_PING in payload.histograms);

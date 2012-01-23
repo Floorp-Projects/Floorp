@@ -238,6 +238,30 @@ TelemetryPing.prototype = {
       ret[field] = value
     }
 
+    // gfxInfo fields are not always available, get what we can.
+    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    let gfxfields = ["adapterDescription", "adapterVendorID", "adapterDeviceID",
+                     "adapterRAM", "adapterDriver", "adapterDriverVersion",
+                     "adapterDriverDate", "adapterDescription2",
+                     "adapterVendorID2", "adapterDeviceID2", "adapterRAM2",
+                     "adapterDriver2", "adapterDriverVersion2",
+                     "adapterDriverDate2", "isGPU2Active", "D2DEnabled;",
+                     "DWriteEnabled", "DWriteVersion"
+                    ];
+
+    if (gfxInfo) {
+      for each (let field in gfxfields) {
+        try {
+          let value = "";
+          value = gfxInfo[field];
+          if (value != "")
+            ret[field] = value;
+        } catch (e) {
+          continue
+        }
+      }
+    }
+
     let theme = LightweightThemeManager.currentTheme;
     if (theme)
       ret.persona = theme.id;
