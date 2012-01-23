@@ -82,7 +82,7 @@ function debug_tab_pane(aURL, aOnDebugging)
 
     let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
 
-    let pane = DebuggerUI.startDebugger();
+    let pane = DebuggerUI.toggleDebugger();
     pane.onConnected = function() {
       // Wait for the initial resume...
       pane.debuggerWindow.gClient.addOneTimeListener("resumed", function() {

@@ -16,7 +16,7 @@ function test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.ready(function (aType, aTraits) {
+  gClient.connect(function (aType, aTraits) {
     is(aType, "browser", "Root actor should identify itself as a browser.");
     get_tab();
   });

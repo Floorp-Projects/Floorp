@@ -47,6 +47,10 @@
  *
  * ThreadActors manage a JSInspector object and manage execution/inspection
  * of debuggees.
+ *
+ * @param aHooks object
+ *        An object with preNest and postNest methods that can be called when
+ *        entering and exiting a nested event loop.
  */
 function ThreadActor(aHooks)
 {
@@ -220,9 +224,9 @@ ThreadActor.prototype = {
     let packet = this._paused(youngest);
     packet.why = { type: "clientEvaluated" };
     if ("return" in completion) {
-      packet.why.value = this.valueGrip(completion["return"]);
+      packet.why.value = this.createValueGrip(completion["return"]);
     } else if ("throw" in completion) {
-      packet.why.exception = this.valueGrip(completion["throw"]);
+      packet.why.exception = this.createValueGrip(completion["throw"]);
     } else {
       // XXXspec
       packet.why.terminated = true;
@@ -254,7 +258,7 @@ ThreadActor.prototype = {
     // frames if count is not defined.
     let frames = [];
     for (; frame && (!count || i < (start + count)); i++) {
-      let grip = this._frameActor(frame).grip();
+      let grip = this._createFrameActor(frame).grip();
       grip.depth = i;
       frames.push(grip);
       frame = frame.older;
@@ -401,7 +405,7 @@ ThreadActor.prototype = {
                    type: "paused",
                    actor: this._pauseActor.actorID };
     if (aFrame) {
-      packet.frame = this._frameActor(aFrame).grip();
+      packet.frame = this._createFrameActor(aFrame).grip();
     }
 
     if (poppedFrames) {
@@ -475,7 +479,7 @@ ThreadActor.prototype = {
     return popped;
   },
 
-  _frameActor: function TA_threadActor(aFrame) {
+  _createFrameActor: function TA_createFrameActor(aFrame) {
     if (aFrame.actor) {
       return aFrame.actor;
     }
@@ -497,7 +501,7 @@ ThreadActor.prototype = {
    *        The pool where the newly-created actor will be placed.
    * @return The EnvironmentActor for aObject.
    */
-  environmentActor: function TA_environmentActor(aObject, aPool) {
+  createEnvironmentActor: function TA_createEnvironmentActor(aObject, aPool) {
     let environment = aObject.environment;
     // XXX: need to spec this: when the object is a function proxy or not a
     // function implemented in JavaScript, we don't return a scope property at
@@ -522,7 +526,7 @@ ThreadActor.prototype = {
    * Create a grip for the given debuggee value.  If the value is an
    * object, will create a pause-lifetime actor.
    */
-  valueGrip: function TA_valueGrip(aValue) {
+  createValueGrip: function TA_createValueGrip(aValue) {
     let type = typeof(aValue);
     if (type === "boolean" || type === "string" || type === "number") {
       return aValue;
@@ -544,6 +548,14 @@ ThreadActor.prototype = {
     return null;
   },
 
+  /**
+   * Create a grip for the given debuggee object.
+   *
+   * @param aValue Debugger.Object
+   *        The debuggee object value.
+   * @param aPool ActorPool
+   *        The actor pool where the new object actor will be added.
+   */
   objectGrip: function TA_objectGrip(aValue, aPool) {
     if (!aPool.objectActors) {
       aPool.objectActors = new WeakMap();
@@ -559,6 +571,12 @@ ThreadActor.prototype = {
     return actor.grip();
   },
 
+  /**
+   * Create a grip for the given debuggee object with a pause lifetime.
+   *
+   * @param aValue Debugger.Object
+   *        The debuggee object value.
+   */
   pauseObjectGrip: function TA_pauseObjectGrip(aValue) {
     if (!this._pausePool) {
       throw "Object grip requested while not paused.";
@@ -567,15 +585,37 @@ ThreadActor.prototype = {
     return this.objectGrip(aValue, this._pausePool);
   },
 
+  /**
+   * Create a grip for the given debuggee object with a thread lifetime.
+   *
+   * @param aValue Debugger.Object
+   *        The debuggee object value.
+   */
   threadObjectGrip: function TA_threadObjectGrip(aValue) {
     return this.objectGrip(aValue, this.threadLifetimePool);
   },
 
-  // JS Debugger hooks.
+  // JS Debugger API hooks.
+
+  /**
+   * A function that the engine calls when a call to a debug event hook,
+   * breakpoint handler, watchpoint handler, or similar function throws some
+   * exception.
+   *
+   * @param aException exception
+   *        The exception that was thrown in the debugger code.
+   */
   uncaughtExceptionHook: function TA_uncaughtExceptionHook(aException) {
     dumpn("Got an exception:" + aException);
   },
 
+  /**
+   * A function that the engine calls when a debugger statement has been
+   * executed in the specified frame.
+   *
+   * @param aFrame Debugger.Frame
+   *        The stack frame that contained the debugger statement.
+   */
   onDebuggerStatement: function TA_onDebuggerStatement(aFrame) {
     try {
       let packet = this._paused(aFrame);
@@ -591,6 +631,19 @@ ThreadActor.prototype = {
     }
   },
 
+  /**
+   * A function that the engine calls when a new script has been loaded into a
+   * debuggee compartment. If the new code is part of a function, aFunction is
+   * a Debugger.Object reference to the function object. (Not all code is part
+   * of a function; for example, the code appearing in a <script> tag that is
+   * outside of any functions defined in that tag would be passed to
+   * onNewScript without an accompanying function argument.)
+   *
+   * @param aScript Debugger.Script
+   *        The source script that has been loaded into a debuggee compartment.
+   * @param aFunction Debugger.Object
+   *        The function object that the ew code is part of.
+   */
   onNewScript: function TA_onNewScript(aScript, aFunction) {
     dumpn("Got a new script:" + aScript + ", url: " + aScript.url +
           ", startLine: " + aScript.startLine + ", lineCount: " +
@@ -642,6 +695,14 @@ PauseActor.prototype = {
 };
 
 
+/**
+ * Creates an actor for the specified object.
+ *
+ * @param aObj Debugger.Object
+ *        The debuggee object.
+ * @param aThreadActor ThreadActor
+ *        The parent thread actor for this object.
+ */
 function ObjectActor(aObj, aThreadActor)
 {
   this.obj = aObj;
@@ -656,12 +717,18 @@ ObjectActor.prototype = {
     message: "Object actors can only be accessed while the thread is paused."
   },
 
+  /**
+   * Returns a grip for this actor for returning in a protocol message.
+   */
   grip: function OA_grip() {
     return { "type": "object",
              "class": this.obj["class"],
              "actor": this.actorID };
   },
 
+  /**
+   * Releases this actor from the pool.
+   */
   release: function OA_release() {
     this.registeredPool.objectActors.delete(this.obj);
     this.registeredPool.removeActor(this.actorID);
@@ -670,6 +737,9 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the names of the properties defined on
    * the object and not its prototype.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onOwnPropertyNames: function OA_onOwnPropertyNames(aRequest) {
     if (this.threadActor.state !== "paused") {
@@ -683,6 +753,9 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the prototype and own properties of
    * the object.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onPrototypeAndProperties: function OA_onPrototypeAndProperties(aRequest) {
     if (this.threadActor.state !== "paused") {
@@ -702,12 +775,15 @@ ObjectActor.prototype = {
       }
     }
     return { from: this.actorID,
-             prototype: this.threadActor.valueGrip(this.obj.proto),
+             prototype: this.threadActor.createValueGrip(this.obj.proto),
              ownProperties: ownProperties };
   },
 
   /**
    * Handle a protocol request to provide the prototype of the object.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onPrototype: function OA_onPrototype(aRequest) {
     if (this.threadActor.state !== "paused") {
@@ -715,12 +791,15 @@ ObjectActor.prototype = {
     }
 
     return { from: this.actorID,
-             prototype: this.threadActor.valueGrip(this.obj.proto) };
+             prototype: this.threadActor.createValueGrip(this.obj.proto) };
   },
 
   /**
    * Handle a protocol request to provide the property descriptor of the
    * object's specified property.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onProperty: function OA_onProperty(aRequest) {
     if (this.threadActor.state !== "paused") {
@@ -738,8 +817,11 @@ ObjectActor.prototype = {
   },
 
   /**
-   * A helper method that creates a property descriptor, properly formatted for
-   * sending in a protocol response.
+   * A helper method that creates a property descriptor for the provided object,
+   * properly formatted for sending in a protocol response.
+   *
+   * @param aObject object
+   *        The object that the descriptor is generated for.
    */
   _propertyDescriptor: function OA_propertyDescriptor(aObject) {
     let descriptor = {};
@@ -747,16 +829,19 @@ ObjectActor.prototype = {
     descriptor.enumerable = aObject.enumerable;
     if (aObject.value) {
       descriptor.writable = aObject.writable;
-      descriptor.value = this.threadActor.valueGrip(aObject.value);
+      descriptor.value = this.threadActor.createValueGrip(aObject.value);
     } else {
-      descriptor.get = this.threadActor.valueGrip(aObject.get);
-      descriptor.set = this.threadActor.valueGrip(aObject.set);
+      descriptor.get = this.threadActor.createValueGrip(aObject.get);
+      descriptor.set = this.threadActor.createValueGrip(aObject.set);
     }
     return descriptor;
   },
 
   /**
    * Handle a protocol request to provide the source code of a function.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onDecompile: function OA_onDecompile(aRequest) {
     if (this.threadActor.state !== "paused") {
@@ -776,6 +861,9 @@ ObjectActor.prototype = {
 
   /**
    * Handle a protocol request to provide the lexical scope of a function.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onScope: function OA_onScope(aRequest) {
     if (this.threadActor.state !== "paused") {
@@ -790,7 +878,7 @@ ObjectActor.prototype = {
     }
 
     let packet = { name: this.obj.name || null };
-    let envActor = this.threadActor.environmentActor(this.obj, this.registeredPool);
+    let envActor = this.threadActor.createEnvironmentActor(this.obj, this.registeredPool);
     packet.scope = envActor ? envActor.grip() : envActor;
 
     return packet;
@@ -798,6 +886,9 @@ ObjectActor.prototype = {
 
   /**
    * Handle a protocol request to provide the name and parameters of a function.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onNameAndParameters: function OA_onNameAndParameters(aRequest) {
     if (this.threadActor.state !== "paused") {
@@ -814,6 +905,13 @@ ObjectActor.prototype = {
              parameters: this.obj.parameterNames };
   },
 
+  /**
+   * Handle a protocol request to promote a pause-lifetime grip to a
+   * thread-lifetime grip.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
   onThreadGrip: function OA_onThreadGrip(aRequest) {
     if (this.threadActor.state !== "paused") {
       return this.WRONG_STATE_RESPONSE;
@@ -822,6 +920,12 @@ ObjectActor.prototype = {
     return { threadGrip: this.threadActor.threadObjectGrip(this.obj) };
   },
 
+  /**
+   * Handle a protocol request to release a thread-lifetime grip.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
   onRelease: function OA_onRelease(aRequest) {
     if (this.threadActor.state !== "paused") {
       return this.WRONG_STATE_RESPONSE;
@@ -850,6 +954,14 @@ ObjectActor.prototype.requestTypes = {
 };
 
 
+/**
+ * Creates an actor for the specified stack frame.
+ *
+ * @param aFrame Debugger.Frame
+ *        The debuggee frame.
+ * @param aThreadActor ThreadActor
+ *        The parent thread actor for this frame.
+ */
 function FrameActor(aFrame, aThreadActor)
 {
   this.frame = aFrame;
@@ -871,23 +983,32 @@ FrameActor.prototype = {
     return this._frameLifetimePool;
   },
 
+  /**
+   * Finalization handler that is called when the actor is being evicted from
+   * the pool.
+   */
   disconnect: function FA_disconnect() {
     this.conn.removeActorPool(this._frameLifetimePool);
     this._frameLifetimePool = null;
   },
 
+  /**
+   * Returns a grip for this actor for returning in a protocol message.
+   */
   grip: function FA_grip() {
     let grip = { actor: this.actorID,
                  type: this.frame.type };
     if (this.frame.type === "call") {
-      grip.callee = this.threadActor.valueGrip(this.frame.callee);
+      grip.callee = this.threadActor.createValueGrip(this.frame.callee);
       grip.calleeName = this.frame.callee.name;
     }
 
-    let envActor = this.threadActor.environmentActor(this.frame, this.frameLifetimePool);
+    let envActor = this.threadActor
+                       .createEnvironmentActor(this.frame,
+                                               this.frameLifetimePool);
     grip.environment = envActor ? envActor.grip() : envActor;
-    grip["this"] = this.threadActor.valueGrip(this.frame["this"]);
-    grip.arguments = this.args();
+    grip["this"] = this.threadActor.createValueGrip(this.frame["this"]);
+    grip.arguments = this._args();
 
     if (!this.frame.older) {
       grip.oldest = true;
@@ -896,15 +1017,21 @@ FrameActor.prototype = {
     return grip;
   },
 
-  args: function FA_args() {
+  _args: function FA__args() {
     if (!this.frame["arguments"]) {
       return [];
     }
 
-    return [this.threadActor.valueGrip(arg)
+    return [this.threadActor.createValueGrip(arg)
             for each (arg in this.frame["arguments"])];
   },
 
+  /**
+   * Handle a protocol request to pop this frame from the stack.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
   onPop: function FA_onPop(aRequest) {
     return { error: "notImplemented",
              message: "Popping frames is not yet implemented." };
@@ -920,6 +1047,7 @@ FrameActor.prototype.requestTypes = {
  * Creates a BreakpointActor. BreakpointActors exist for the lifetime of their
  * containing thread and are responsible for deleting breakpoints, handling
  * breakpoint hits and associating breakpoints with scripts.
+ *
  * @param Debugger.Script aScript
  *        The script this breakpoint is set on.
  * @param ThreadActor aThreadActor
@@ -934,6 +1062,12 @@ function BreakpointActor(aScript, aThreadActor)
 BreakpointActor.prototype = {
   actorPrefix: "breakpoint",
 
+  /**
+   * A function that the engine calls when a breakpoint has been hit.
+   *
+   * @param aFrame Debugger.Frame
+   *        The stack frame that contained the breakpoint.
+   */
   hit: function BA_hit(aFrame) {
     try {
       let packet = this.threadActor._paused(aFrame);
@@ -950,6 +1084,12 @@ BreakpointActor.prototype = {
     }
   },
 
+  /**
+   * Handle a protocol request to remove this breakpoint.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
   onDelete: function BA_onDelete(aRequest) {
     this.threadActor.breakpointActorPool.removeActor(this.actorID);
     this.script.clearBreakpoint(this);
@@ -968,6 +1108,7 @@ BreakpointActor.prototype.requestTypes = {
  * Creates an EnvironmentActor. EnvironmentActors are responsible for listing
  * the bindings introduced by a lexical environment and assigning new values to
  * those identifier bindings.
+ *
  * @param Debugger.Object aObject
  *        The object whose lexical environment will be used to create the actor.
  * @param ThreadActor aThreadActor
@@ -982,6 +1123,9 @@ function EnvironmentActor(aObject, aThreadActor)
 EnvironmentActor.prototype = {
   actorPrefix: "environment",
 
+  /**
+   * Returns a grip for this actor for returning in a protocol message.
+   */
   grip: function EA_grip() {
     // Debugger.Frame might be dead by the time we get here, which will cause
     // accessing its properties to throw.
@@ -991,18 +1135,20 @@ EnvironmentActor.prototype = {
 
     let parent;
     if (this.obj.environment.parent) {
-      parent = this.threadActor.environmentActor(this.obj.environment.parent, this.registeredPool);
+      parent = this.threadActor
+                   .createEnvironmentActor(this.obj.environment.parent,
+                                           this.registeredPool);
     }
     let grip = { actor: this.actorID,
                  parent: parent ? parent.grip() : parent };
 
     if (this.obj.environment.type == "object") {
       grip.type = "object"; // XXX: how can we tell if it's "with"?
-      grip.object = this.threadActor.valueGrip(this.obj.environment.object);
+      grip.object = this.threadActor.createValueGrip(this.obj.environment.object);
     } else {
       if (this.obj["class"] == "Function") {
         grip.type = "function";
-        grip["function"] = this.threadActor.valueGrip(this.obj);
+        grip["function"] = this.threadActor.createValueGrip(this.obj);
         grip.functionName = this.obj.name;
       } else {
         grip.type = "block";
@@ -1042,6 +1188,9 @@ EnvironmentActor.prototype = {
   /**
    * Handle a protocol request to change the value of a variable bound in this
    * lexical environment.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onAssign: function EA_onAssign(aRequest) {
     let desc = this.obj.environment.getVariableDescriptor(aRequest.name);
@@ -1069,6 +1218,9 @@ EnvironmentActor.prototype = {
   /**
    * Handle a protocol request to fully enumerate the bindings introduced by the
    * lexical environment.
+   *
+   * @param aRequest object
+   *        The protocol request object.
    */
   onBindings: function EA_onBindings(aRequest) {
     return { from: this.actorID,

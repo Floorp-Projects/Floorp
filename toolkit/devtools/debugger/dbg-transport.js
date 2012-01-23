@@ -96,7 +96,7 @@ DebuggerTransport.prototype = {
     }
   },
 
-  onOutputStreamReady: function DT_ready(aStream) {
+  onOutputStreamReady: function DT_onOutputStreamReady(aStream) {
     let written = aStream.write(this._outgoing, this._outgoing.length);
     this._outgoing = this._outgoing.slice(written);
     this._flushOutgoing();
@@ -125,7 +125,7 @@ DebuggerTransport.prototype = {
     try {
       this._incoming += NetUtil.readInputStreamToString(aStream,
                                                         aStream.available());
-      while (this.processIncoming()) {};
+      while (this._processIncoming()) {};
     } catch(e) {
       dumpn("Unexpected error reading from debugging connection: " + e + " - " + e.stack);
       this.close();
@@ -134,13 +134,13 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Process incomig packets. Returns true if a packet has been received, either
+   * Process incoming packets. Returns true if a packet has been received, either
    * if it was properly parsed or not. Returns false if the incoming stream does
    * not contain a full packet yet. After a proper packet is parsed, the dispatch
    * handler DebuggerTransport.hooks.onPacket is called with the packet as a
    * parameter.
    */
-  processIncoming: function DT_processIncoming() {
+  _processIncoming: function DT__processIncoming() {
     // Well this is ugly.
     let sep = this._incoming.indexOf(':');
     if (sep < 0) {

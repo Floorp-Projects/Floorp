@@ -45,7 +45,7 @@
 interface nsIJSInspector : nsISupports
 {
   /**
-   * Process the thread's event queue until exi
+   * Process the thread's event queue until exit.
    *
    * @return depth Returns the number of times the event loop
    *         has been nested using this API.

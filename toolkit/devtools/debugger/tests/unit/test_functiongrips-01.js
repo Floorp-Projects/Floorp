@@ -14,7 +14,7 @@ function run_test()
   }.toString());
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.ready(function() {
+  gClient.connect(function() {
     attachTestGlobalClientAndResume(gClient, "test-grips", function(aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_named_function();
@@ -32,7 +32,7 @@ function test_named_function()
     // No name for an anonymous function.
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.nameAndParameters(function(aResponse) {
+    objClient.getSignature(function(aResponse) {
       do_check_eq(aResponse.name, "stopMe");
       do_check_eq(aResponse.parameters.length, 1);
       do_check_eq(aResponse.parameters[0], "arg1");
@@ -55,7 +55,7 @@ function test_anon_function() {
     // No name for an anonymous function.
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.nameAndParameters(function(aResponse) {
+    objClient.getSignature(function(aResponse) {
       do_check_eq(aResponse.name, null);
       do_check_eq(aResponse.parameters.length, 3);
       do_check_eq(aResponse.parameters[0], "foo");

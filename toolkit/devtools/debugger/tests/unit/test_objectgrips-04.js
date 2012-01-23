@@ -14,7 +14,7 @@ function run_test()
   }.toString());
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.ready(function() {
+  gClient.connect(function() {
     attachTestGlobalClientAndResume(gClient, "test-grips", function(aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_object_grip();
@@ -31,7 +31,7 @@ function test_object_grip()
     do_check_eq(args[0]["class"], "Object");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.prototypeAndProperties(function(aResponse) {
+    objClient.getPrototypeAndProperties(function(aResponse) {
       do_check_eq(aResponse.ownProperties.x.configurable, true);
       do_check_eq(aResponse.ownProperties.x.enumerable, true);
       do_check_eq(aResponse.ownProperties.x.writable, true);
@@ -51,7 +51,7 @@ function test_object_grip()
       do_check_true(aResponse.prototype != undefined);
 
       let protoClient = gThreadClient.pauseGrip(aResponse.prototype);
-      protoClient.ownPropertyNames(function(aResponse) {
+      protoClient.getOwnPropertyNames(function(aResponse) {
         do_check_true(aResponse.ownPropertyNames.toString != undefined);
 
         gThreadClient.resume(function() {

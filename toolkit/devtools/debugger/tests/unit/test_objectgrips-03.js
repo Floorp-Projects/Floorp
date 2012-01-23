@@ -14,7 +14,7 @@ function run_test()
   }.toString());
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.ready(function() {
+  gClient.connect(function() {
     attachTestGlobalClientAndResume(gClient, "test-grips", function(aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_object_grip();
@@ -31,19 +31,19 @@ function test_object_grip()
     do_check_eq(args[0]["class"], "Object");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.property("x", function(aResponse) {
+    objClient.getProperty("x", function(aResponse) {
       do_check_eq(aResponse.descriptor.configurable, true);
       do_check_eq(aResponse.descriptor.enumerable, true);
       do_check_eq(aResponse.descriptor.writable, true);
       do_check_eq(aResponse.descriptor.value, 10);
 
-      objClient.property("y", function(aResponse) {
+      objClient.getProperty("y", function(aResponse) {
         do_check_eq(aResponse.descriptor.configurable, true);
         do_check_eq(aResponse.descriptor.enumerable, true);
         do_check_eq(aResponse.descriptor.writable, true);
         do_check_eq(aResponse.descriptor.value, "kaiju");
 
-        objClient.property("a", function(aResponse) {
+        objClient.getProperty("a", function(aResponse) {
           do_check_eq(aResponse.descriptor.configurable, true);
           do_check_eq(aResponse.descriptor.enumerable, true);
           do_check_eq(aResponse.descriptor.get.type, "object");

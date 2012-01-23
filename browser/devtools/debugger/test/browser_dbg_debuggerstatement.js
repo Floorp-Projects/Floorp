@@ -16,7 +16,7 @@ function test()
 {
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.ready(function(aType, aTraits) {
+  gClient.connect(function(aType, aTraits) {
     gTab = addTab(DEBUGGER_TAB_URL, function() {
       attach_tab_actor_for_url(gClient, DEBUGGER_TAB_URL, function(actor, response) {
         test_early_debugger_statement(response);
