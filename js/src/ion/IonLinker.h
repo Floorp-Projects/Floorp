@@ -76,8 +76,11 @@ class Linker
         if (!result)
             return fail(cx);
 
+        // The IonCode pointer will be stored right before the code buffer.
+        uint8 *codeStart = result + sizeof(IonCode *);
+
         // Bump the code up to a nice alignment.
-        uint8 *codeStart = (uint8 *)AlignBytes((uintptr_t)result, CodeAlignment);
+        codeStart = (uint8 *)AlignBytes((uintptr_t)codeStart, CodeAlignment);
         uint32 headerSize = codeStart - result;
         IonCode *code = IonCode::New(cx, codeStart,
                                      bytesNeeded - headerSize, pool);
