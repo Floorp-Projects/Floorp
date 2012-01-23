@@ -85,7 +85,7 @@ function testFirstStyleSheetEditor(aChrome, aEditor)
   ok(!summary.classList.contains("inline"),
      "first stylesheet UI does not have INLINE class");
 
-  let name = summary.querySelector(".stylesheet-name").textContent;
+  let name = summary.querySelector(".stylesheet-name > label").getAttribute("value");
   is(name, "simple.css",
      "first stylesheet's name is `simple.css`");
 
@@ -113,7 +113,7 @@ function testSecondStyleSheetEditor(aChrome, aEditor)
   ok(summary.classList.contains("inline"),
      "second stylesheet UI has INLINE class");
 
-  let name = summary.querySelector(".stylesheet-name").textContent;
+  let name = summary.querySelector(".stylesheet-name > label").getAttribute("value");
   ok(/^<.*>$/.test(name),
      "second stylesheet's name is surrounded by `<>`");
 
