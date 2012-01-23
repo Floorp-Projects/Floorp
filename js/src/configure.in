@@ -1762,6 +1762,17 @@ if test "$OS_TARGET" = "Android"; then
 fi
 
 dnl ========================================================
+dnl Suppress Clang Argument Warnings
+dnl ========================================================
+if test -n "$CLANG_CC"; then
+    _WARNINGS_CFLAGS="-Qunused-arguments ${_WARNINGS_CFLAGS}"
+    CPPFLAGS="-Qunused-arguments ${CPPFLAGS}"
+fi
+if test -n "$CLANG_CXX"; then
+    _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
+fi
+
+dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
