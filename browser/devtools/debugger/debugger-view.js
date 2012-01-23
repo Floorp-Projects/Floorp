@@ -56,7 +56,7 @@ let DebuggerView = {
    * L10N shortcut function
    *
    * @param string aName
-   * @returns string
+   * @return string
    */
   getStr: function DV_getStr(aName) {
     return this.stringBundle.GetStringFromName(aName);
@@ -67,7 +67,7 @@ let DebuggerView = {
    *
    * @param string aName
    * @param array aArray
-   * @returns string
+   * @return string
    */
   getFormatStr: function DV_getFormatStr(aName, aArray) {
     return this.stringBundle.formatStringFromName(aName, aArray, aArray.length);
@@ -228,11 +228,11 @@ DebuggerView.Stackframes = {
   /**
    * Sets if the active thread has more frames that need to be loaded.
    *
-   * @param boolean value
+   * @param boolean aValue
    *        True if should load more frames.
    */
-  set dirty(value) {
-    this._dirty = value;
+  set dirty(aValue) {
+    this._dirty = aValue;
   },
 
   /**
@@ -243,7 +243,7 @@ DebuggerView.Stackframes = {
   /**
    * Listener handling the stackframes container scroll event.
    */
-  _onFramesScroll: function DVF__onFramesScroll(e) {
+  _onFramesScroll: function DVF__onFramesScroll(aEvent) {
     // update the stackframes container only if we have to
     if (this._dirty) {
       let clientHeight = this._frames.clientHeight;

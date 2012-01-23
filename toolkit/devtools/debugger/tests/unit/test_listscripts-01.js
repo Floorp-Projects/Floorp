@@ -14,7 +14,7 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.ready(function () {
+  gClient.connect(function () {
     attachTestGlobalClientAndResume(gClient, "test-stack", function (aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_listscripts();
@@ -27,7 +27,7 @@ function test_simple_listscripts()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     var path = getFilePath('test_listscripts-01.js');
-    gThreadClient.scripts(function (aResponse) {
+    gThreadClient.getScripts(function (aResponse) {
         // Check the return value.
         do_check_eq(aResponse.scripts[0].url, path);
         do_check_eq(aResponse.scripts[0].startLine, 41);

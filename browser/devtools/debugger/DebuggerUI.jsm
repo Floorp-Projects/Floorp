@@ -48,9 +48,9 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource:///modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/dbg-server.jsm");
-Cu.import("resource:///modules/devtools/dbg-client.jsm");
 Cu.import("resource:///modules/source-editor.jsm");
 
 let EXPORTED_SYMBOLS = ["DebuggerUI"];
@@ -60,8 +60,8 @@ let EXPORTED_SYMBOLS = ["DebuggerUI"];
  */
 function DebuggerPane(aTab) {
   this._tab = aTab;
-  this.close = this.close.bind(this);
-  this.debugTab = this.debugTab.bind(this);
+  this._close = this.close.bind(this);
+  this._debugTab = this.debugTab.bind(this);
 }
 
 DebuggerPane.prototype = {
@@ -97,9 +97,9 @@ DebuggerPane.prototype = {
       };
 
       let editorPlaceholder = self.frame.contentDocument.getElementById("editor");
-      self.editor.init(editorPlaceholder, config, self.onEditorLoad.bind(self));
+      self.editor.init(editorPlaceholder, config, self._onEditorLoad.bind(self));
     }, true);
-    this.frame.addEventListener("DebuggerClose", this.close, true);
+    this.frame.addEventListener("DebuggerClose", this._close, true);
 
     this.frame.setAttribute("src", "chrome://browser/content/debugger.xul");
   },
@@ -108,7 +108,7 @@ DebuggerPane.prototype = {
    * The load event handler for the source editor. This method does post-load
    * editor initialization.
    */
-  onEditorLoad: function DP_onEditorLoad() {
+  _onEditorLoad: function DP__onEditorLoad() {
     // Connect to the debugger server.
     this.connect();
   },
@@ -124,8 +124,8 @@ DebuggerPane.prototype = {
     if (this.frame) {
       DebuggerUIPreferences.height = this.frame.height;
 
-      this.frame.removeEventListener("unload", this.close, true);
-      this.frame.removeEventListener("DebuggerClose", this.close, true);
+      this.frame.removeEventListener("unload", this._close, true);
+      this.frame.removeEventListener("DebuggerClose", this._close, true);
       if (this.frame.parentNode) {
         this.frame.parentNode.removeChild(this.frame);
       }
@@ -140,8 +140,8 @@ DebuggerPane.prototype = {
 
     if (this._client) {
       this._client.removeListener("newScript", this.onNewScript);
-      this._client.removeListener("tabDetached", this.close);
-      this._client.removeListener("tabNavigated", this.debugTab);
+      this._client.removeListener("tabDetached", this._close);
+      this._client.removeListener("tabNavigated", this._debugTab);
       this._client.close();
       this._client = null;
     }
@@ -152,7 +152,7 @@ DebuggerPane.prototype = {
    * wiring event handlers as necessary.
    */
   connect: function DP_connect() {
-    this.frame.addEventListener("unload", this.close, true);
+    this.frame.addEventListener("unload", this._close, true);
 
     let transport = DebuggerServer.connectPipe();
     this._client = new DebuggerClient(transport);
@@ -160,10 +160,10 @@ DebuggerPane.prototype = {
     // don't need to go through the iframe, since it might be cleared.
     this.onNewScript = this.debuggerWindow.SourceScripts.onNewScript;
     let self = this;
-    this._client.addListener("tabNavigated", this.debugTab);
-    this._client.addListener("tabDetached", this.close);
+    this._client.addListener("tabNavigated", this._debugTab);
+    this._client.addListener("tabDetached", this._close);
     this._client.addListener("newScript", this.onNewScript);
-    this._client.ready(function(aType, aTraits) {
+    this._client.connect(function(aType, aTraits) {
       self._client.listTabs(function(aResponse) {
         let tab = aResponse.tabs[aResponse.selected];
         self.debuggerWindow.startDebuggingTab(self._client, tab);
@@ -213,14 +213,14 @@ DebuggerPane.prototype = {
 function DebuggerUI(aWindow) {
   this.aWindow = aWindow;
 
-  aWindow.addEventListener("Debugger:LoadSource", this.onLoadSource.bind(this));
+  aWindow.addEventListener("Debugger:LoadSource", this._onLoadSource.bind(this));
 }
 
 DebuggerUI.prototype = {
   /**
    * Starts the debugger or stops it, if it is already started.
    */
-  startDebugger: function DebuggerUI_startDebugger() {
+  toggleDebugger: function DebuggerUI_toggleDebugger() {
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
       DebuggerServer.addBrowserActors();
@@ -244,7 +244,7 @@ DebuggerUI.prototype = {
     return aTab._scriptDebugger;
   },
 
-  getPreferences: function DebuggerUI_getPreferences() {
+  get preferences() {
     return DebuggerUIPreferences;
   },
 
@@ -255,7 +255,7 @@ DebuggerUI.prototype = {
    * without relying on caching when we can (not for eval, etc.):
    * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
    */
-  onLoadSource: function DebuggerUI_onLoadSource(aEvent) {
+  _onLoadSource: function DebuggerUI__onLoadSource(aEvent) {
     let gBrowser = this.aWindow.gBrowser;
 
     let url = aEvent.detail;
@@ -271,7 +271,7 @@ DebuggerUI.prototype = {
             }
             let source = NetUtil.readInputStreamToString(aStream, aStream.available());
             aStream.close();
-            this.onSourceLoaded(url, source);
+            this._onSourceLoaded(url, source);
           }.bind(this));
         } catch (ex) {
           return this.logError(url, ex.name);
@@ -295,7 +295,7 @@ DebuggerUI.prototype = {
               return this.logError(url, aStatusCode);
             }
 
-            this.onSourceLoaded(url, chunks.join(""));
+            this._onSourceLoaded(url, chunks.join(""));
           }.bind(this)
         };
 
@@ -326,7 +326,7 @@ DebuggerUI.prototype = {
    * @param string aSourceText
    *        The text of the source script.
    */
-  onSourceLoaded: function DebuggerUI_onSourceLoaded(aSourceUrl, aSourceText) {
+  _onSourceLoaded: function DebuggerUI__onSourceLoaded(aSourceUrl, aSourceText) {
     let dbg = this.getDebugger(this.aWindow.gBrowser.selectedTab);
     if (aSourceUrl.slice(-3) == ".js") {
       dbg.editor.setMode(SourceEditor.MODES.JAVASCRIPT);

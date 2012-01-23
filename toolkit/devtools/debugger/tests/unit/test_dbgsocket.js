@@ -76,7 +76,7 @@ function test_pipe_conn()
       do_check_eq(aPacket.from, "root");
       transport.close();
     },
-    onClosed: function(aPacket) {
+    onClosed: function(aStatus) {
       run_next_test();
     }
   };

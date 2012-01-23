@@ -15,7 +15,7 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.ready(function() {
+  gClient.connect(function() {
     attachTestGlobalClientAndResume(gClient, "test-stack", function(aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
@@ -30,7 +30,7 @@ function test_pause_frame()
     let args = aPacket.frame["arguments"];
     let objActor1 = args[0].actor;
 
-    gThreadClient.frames(0, 1, function(aResponse) {
+    gThreadClient.getFrames(0, 1, function(aResponse) {
       let frame = aResponse.frames[0];
       dump(JSON.stringify(frame));
       do_check_eq(objActor1, frame.arguments[0].actor);

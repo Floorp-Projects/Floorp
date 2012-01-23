@@ -14,7 +14,7 @@ function run_test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.ready(function(aType, aTraits) {
+  gClient.connect(function(aType, aTraits) {
     getTestGlobalContext(gClient, "test-1", function(aContext) {
       test_attach(aContext);
     });

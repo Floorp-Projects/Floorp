@@ -14,7 +14,7 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.ready(function() {
+  gClient.connect(function() {
     attachTestGlobalClientAndResume(gClient, "test-stack", function(aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_eval();

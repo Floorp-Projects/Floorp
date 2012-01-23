@@ -61,6 +61,11 @@ function initDebugger()
 
 /**
  * Called by chrome to set up a debugging session.
+ *
+ * @param DebuggerClient aClient
+ *        The debugger client.
+ * @param object aTabGrip
+ *        The remote protocol grip of the tab.
  */
 function startDebuggingTab(aClient, aTabGrip)
 {
@@ -182,6 +187,9 @@ var StackFrames = {
     this.activeThread.removeListener("framescleared", this.onFramesCleared);
   },
 
+  /**
+   * Handler for the thread client's paused notification.
+   */
   onPaused: function SF_onPaused() {
     this.activeThread.fillFrames(this.pageSize);
   },
@@ -216,8 +224,10 @@ var StackFrames = {
     DebuggerView.Properties.globalScope.empty();
   },
 
+  /**
+   * Event handler for clicks on stack frames.
+   */
   onClick: function SF_onClick(aEvent) {
-    // Check for clicks on stack frames.
     let target = aEvent.target;
     while (target) {
       if (target.stackFrame) {
@@ -228,6 +238,13 @@ var StackFrames = {
     }
   },
 
+  /**
+   * Marks the stack frame in the specified depth as selected and updates the
+   * properties view with the stack frame's data.
+   *
+   * @param number aDepth
+   *        The depth of the frame in the stack.
+   */
   selectFrame: function SF_selectFrame(aDepth) {
     if (this.selectedFrame !== null) {
       DebuggerView.Stackframes.highlightFrame(this.selectedFrame, false);
@@ -261,7 +278,7 @@ var StackFrames = {
 
       // Add variables for every argument.
       let objClient = this.activeThread.pauseGrip(frame.callee);
-      objClient.nameAndParameters(function SF_onNameAndParameters(aResponse) {
+      objClient.getSignature(function SF_getSignature(aResponse) {
         for (let i = 0; i < aResponse.parameters.length; i++) {
           let param = aResponse.parameters[i];
           let paramVar = localScope.addVar(param);
@@ -310,7 +327,7 @@ var StackFrames = {
     }
 
     let objClient = this.activeThread.pauseGrip(aObject);
-    objClient.prototypeAndProperties(function SF_onProtoAndProps(aResponse) {
+    objClient.getPrototypeAndProperties(function SF_onProtoAndProps(aResponse) {
       // Add __proto__.
       if (aResponse.prototype.type != "null") {
         let properties = {};
@@ -335,6 +352,12 @@ var StackFrames = {
     }.bind(this));
   },
 
+  /**
+   * Adds the specified stack frame to the list.
+   *
+   * @param Debugger.Frame aFrame
+   *        The new frame to add.
+   */
   _addFramePanel: function SF_addFramePanel(aFrame) {
     let depth = aFrame.depth;
     let idText = "#" + aFrame.depth + " ";
@@ -347,11 +370,21 @@ var StackFrames = {
     }
   },
 
-  _addMoreFrames: function SF_addMoreLink(aFrame) {
+  /**
+   * Loads more stack frames from the debugger server cache.
+   */
+  _addMoreFrames: function SF_addMoreFrames() {
     this.activeThread.fillFrames(
       this.activeThread.cachedFrames.length + this.pageSize);
   },
 
+  /**
+   * Create a textual representation for the stack frame specified, for
+   * displaying in the stack frame list.
+   *
+   * @param Debugger.Frame aFrame
+   *        The stack frame to label.
+   */
   _frameTitle: function SF_frameTitle(aFrame) {
     if (aFrame.type == "call") {
       return aFrame["calleeName"] ? aFrame["calleeName"] + "()" : "(anonymous)";
@@ -401,6 +434,9 @@ var SourceScripts = {
     this.activeThread.removeListener("scriptscleared", this.onScriptsCleared);
   },
 
+  /**
+   * Handler for the thread client's paused notification.
+   */
   onPaused: function SS_onPaused() {
     this.activeThread.fillScripts();
   },

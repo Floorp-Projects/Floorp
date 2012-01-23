@@ -14,7 +14,7 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.ready(function() {
+  gClient.connect(function() {
     attachTestGlobalClientAndResume(gClient, "test-stack", function(aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
       test_syntax_error_eval();
@@ -27,7 +27,7 @@ function test_syntax_error_eval()
 {
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
 
-    gThreadClient.frames(0, 2, function(aResponse) {
+    gThreadClient.getFrames(0, 2, function(aResponse) {
       let frame0 = aResponse.frames[0];
       let frame1 = aResponse.frames[1];
 

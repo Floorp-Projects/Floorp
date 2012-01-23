@@ -55,6 +55,9 @@ function createRootActor(aConnection)
  * The root actor is responsible for the initial 'hello' packet and for
  * responding to a 'listTabs' request that produces the list of currently open
  * tabs.
+ *
+ * @param aConnection DebuggerServerConnection
+ *        The conection to the client.
  */
 function BrowserRootActor(aConnection)
 {
@@ -205,13 +208,18 @@ BrowserRootActor.prototype.requestTypes = {
 /**
  * Creates a tab actor for handling requests to a browser tab, like attaching
  * and detaching.
+ *
+ * @param aConnection DebuggerServerConnection
+ *        The conection to the client.
+ * @param aBrowser browser
+ *        The browser instance that contains this tab.
  */
 function BrowserTabActor(aConnection, aBrowser)
 {
   this.conn = aConnection;
   this._browser = aBrowser;
 
-  this.onWindowCreated = this.onWindowCreated.bind(this);
+  this._onWindowCreated = this.onWindowCreated.bind(this);
 }
 
 // XXX (bug 710213): BrowserTabActor attach/detach/exit/disconnect is a
@@ -282,7 +290,7 @@ BrowserTabActor.prototype = {
     this._pushContext();
 
     // Watch for globals being created in this tab.
-    this.browser.addEventListener("DOMWindowCreated", this.onWindowCreated, true);
+    this.browser.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
 
     this._attached = true;
   },
@@ -323,7 +331,7 @@ BrowserTabActor.prototype = {
       return;
     }
 
-    this.browser.removeEventListener("DOMWindowCreated", this.onWindowCreated);
+    this.browser.removeEventListener("DOMWindowCreated", this._onWindowCreated, true);
 
     this._popContext();
 
@@ -356,26 +364,26 @@ BrowserTabActor.prototype = {
     return { type: "detached" };
   },
 
-  onThreadActor: function BTA_onThreadActor(aRequest) {
-    if (!this.attached) {
-      return { error: "wrongState" };
-    }
-
-    return { threadActor: this.threadActor.actorID };
-  },
-
+  /**
+   * Suppresses content-initiated events. Called right before entering the
+   * nested event loop.
+   */
   preNest: function BTA_preNest() {
     this.browser.contentWindow
-      .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils)
-      .suppressEventHandling(true);
+        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils)
+        .suppressEventHandling(true);
   },
 
+  /**
+   * Re-enables content-initiated events. Called right after exiting the
+   * nested event loop.
+   */
   postNest: function BTA_postNest(aNestData) {
     this.browser.contentWindow
-      .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils)
-      .suppressEventHandling(false);
+        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils)
+        .suppressEventHandling(false);
   },
 
   /**
@@ -404,6 +412,11 @@ BrowserTabActor.prototype.requestTypes = {
 /**
  * Registers handlers for new request types defined dynamically. This is used
  * for example by add-ons to augment the functionality of the tab actor.
+ *
+ * @param aName string
+ *        The name of the new request type.
+ * @param aFunction function
+ *        The handler for this request type.
  */
 DebuggerServer.addTabRequest = function DS_addTabRequest(aName, aFunction) {
   BrowserTabActor.prototype.requestTypes[aName] = function(aRequest) {
