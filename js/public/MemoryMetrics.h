@@ -101,6 +101,7 @@ struct CompartmentStats
     int64_t gcHeapXML;
 
     int64_t objectSlots;
+    int64_t objectElements;
     int64_t stringChars;
     int64_t shapesExtraTreeTables;
     int64_t shapesExtraDictTables;

@@ -669,9 +669,12 @@ struct JSObject : js::gc::Cell
 
     inline bool hasPropertyTable() const;
 
-    inline size_t structSize() const;
-    inline size_t slotsAndStructSize() const;
-    inline size_t dynamicSlotSize(JSMallocSizeOfFun mallocSizeOf) const;
+    inline size_t sizeOfThis() const;
+    inline size_t computedSizeOfIncludingThis() const;
+
+    /* mallocSizeOf can be NULL, in which case we compute the sizes analytically */
+    inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
+                                    size_t *slotsSize, size_t *elementsSize) const;
 
     inline size_t numFixedSlots() const;
 

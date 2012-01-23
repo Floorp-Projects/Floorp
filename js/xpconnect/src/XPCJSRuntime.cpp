@@ -1514,6 +1514,13 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
+                                              "object-elements"),
+                       nsIMemoryReporter::KIND_HEAP, stats.objectElements,
+                       "Memory allocated for the compartment's object element arrays, "
+                       "which are used to represent indexed object properties." SLOP_BYTES_STRING,
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "string-chars"),
                        nsIMemoryReporter::KIND_HEAP, stats.stringChars,
                        "Memory allocated to hold the compartment's string characters.  Sometimes "
