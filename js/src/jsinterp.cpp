@@ -45,7 +45,6 @@
 #include <string.h>
 #include <math.h>
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
