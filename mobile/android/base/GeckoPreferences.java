@@ -73,6 +73,7 @@ public class GeckoPreferences
 
     private ArrayList<String> mPreferencesList = new ArrayList<String>();
     private PreferenceScreen mPreferenceScreen;
+    private static boolean sIsCharEncodingEnabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,12 +141,22 @@ public class GeckoPreferences
     final private int DIALOG_CREATE_MASTER_PASSWORD = 0;
     final private int DIALOG_REMOVE_MASTER_PASSWORD = 1;
 
+    public static void setCharEncodingState(boolean enabled) {
+        sIsCharEncodingEnabled = enabled;
+    }
+
+    public static boolean getCharEncodingState() {
+        return sIsCharEncodingEnabled;
+    }
+
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefName = preference.getKey();
         if (prefName != null && prefName.equals("privacy.masterpassword.enabled")) {
             showDialog((Boolean)newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
             return false;
+        } else if (prefName != null && prefName.equals("browser.menu.showCharacterEncoding")) {
+            setCharEncodingState(((String) newValue).equals("true"));
         }
 
         setPreference(prefName, newValue);
