@@ -14,7 +14,6 @@ function createDocument()
     '<span class="matches">Some styled text</span>' +
     '</div>';
   doc.title = "Style Inspector key binding test";
-  ok(window.StyleInspector, "StyleInspector exists");
   stylePanel = new StyleInspector(window);
   Services.obs.addObserver(runStyleInspectorTests, "StyleInspector-opened", false);
   stylePanel.createPanel(false, function() {

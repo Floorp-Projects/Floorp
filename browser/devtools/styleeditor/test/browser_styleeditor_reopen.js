@@ -7,7 +7,10 @@ const TESTCASE_URI = TEST_BASE_HTTP + "simple.gz.html";
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
+
+let tempScope = {};
+Components.utils.import("resource://gre/modules/FileUtils.jsm", tempScope);
+let FileUtils = tempScope.FileUtils;
 
 
 function test()
