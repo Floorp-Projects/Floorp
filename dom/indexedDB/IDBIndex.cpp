@@ -294,7 +294,8 @@ GenerateRequest(IDBIndex* aIndex)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   IDBTransaction* transaction = aIndex->ObjectStore()->Transaction();
   IDBDatabase* database = transaction->Database();
-  return IDBRequest::Create(aIndex, database, transaction);
+  return IDBRequest::Create(aIndex, database->ScriptContext(),
+                            database->Owner(), transaction);
 }
 
 } // anonymous namespace
@@ -311,6 +312,9 @@ IDBIndex::Create(IDBObjectStore* aObjectStore,
   IDBDatabase* database = aObjectStore->Transaction()->Database();
 
   nsRefPtr<IDBIndex> index = new IDBIndex();
+
+  index->mScriptContext = database->ScriptContext();
+  index->mOwner = database->Owner();
 
   index->mObjectStore = aObjectStore;
   index->mId = aIndexInfo->id;
@@ -339,10 +343,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBIndex)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBIndex)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBIndex)
   // Don't unlink mObjectStore!
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBIndex)
