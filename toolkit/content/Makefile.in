@@ -90,6 +90,7 @@ EXTRA_JS_MODULES = \
   InlineSpellChecker.jsm \
   PopupNotifications.jsm \
   Dict.jsm \
+  PropertyListUtils.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \

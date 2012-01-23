@@ -6515,7 +6515,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       }
     }
 
-    if (JSVAL_IS_PRIMITIVE(prop_val)) {
+    if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
       JSObject *scope;
 
       if (aWin->IsOuterWindow()) {
@@ -7268,7 +7268,7 @@ nsNavigatorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (JSVAL_IS_PRIMITIVE(prop_val)) {
+  if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = WrapNative(cx, obj, native, true, &prop_val,
                     getter_AddRefs(holder));
