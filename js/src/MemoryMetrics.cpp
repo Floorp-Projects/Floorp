@@ -140,7 +140,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
     {
         JSString *str = static_cast<JSString *>(thing);
         curr->gcHeapStrings += thingSize;
-        curr->stringChars += str->charsHeapSize(data->mallocSizeOf);
+        curr->stringChars += str->sizeOfExcludingThis(data->mallocSizeOf);
         break;
     }
     case JSTRACE_SHAPE:
