@@ -537,5 +537,3 @@ DOMCI_CLASS(Telephony)
 DOMCI_CLASS(TelephonyCall)
 DOMCI_CLASS(CallEvent)
 #endif
-
-DOMCI_CLASS(DOMError)
