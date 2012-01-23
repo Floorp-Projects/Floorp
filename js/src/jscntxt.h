@@ -54,7 +54,6 @@
 #include "jsclist.h"
 #include "jsdhash.h"
 #include "jsgc.h"
-#include "jsgcchunk.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
 #include "jsutil.h"

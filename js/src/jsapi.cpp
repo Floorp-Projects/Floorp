@@ -88,6 +88,7 @@
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
+#include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
 #include "mozilla/Util.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -944,6 +945,8 @@ JS_NewRuntime(uint32_t maxbytes)
 #include "js.msg"
 #undef MSG_DEF
 #endif /* DEBUG */
+
+        InitMemorySubsystem();
 
         js_NewRuntimeWasCalled = JS_TRUE;
     }
