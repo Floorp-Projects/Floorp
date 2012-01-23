@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/FloatingPoint.h"
+
 #include "jscntxt.h"
 #include "jsscope.h"
 #include "jsobj.h"
@@ -726,13 +728,13 @@ stubs::Div(VMFrame &f)
         const Value *vp;
 #ifdef XP_WIN
         /* XXX MSVC miscompiles such that (NaN == 0) */
-        if (JSDOUBLE_IS_NaN(d2))
+        if (MOZ_DOUBLE_IS_NaN(d2))
             vp = &rt->NaNValue;
         else
 #endif
-        if (d1 == 0 || JSDOUBLE_IS_NaN(d1))
+        if (d1 == 0 || MOZ_DOUBLE_IS_NaN(d1))
             vp = &rt->NaNValue;
-        else if (JSDOUBLE_IS_NEG(d1) != JSDOUBLE_IS_NEG(d2))
+        else if (MOZ_DOUBLE_IS_NEGATIVE(d1) != MOZ_DOUBLE_IS_NEGATIVE(d2))
             vp = &rt->negativeInfinityValue;
         else
             vp = &rt->positiveInfinityValue;
@@ -1380,7 +1382,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         if (d == 0) {
             /* Treat -0 (double) as 0. */
             tableIdx = 0;
-        } else if (!JSDOUBLE_IS_INT32(d, &tableIdx)) {
+        } else if (!MOZ_DOUBLE_IS_INT32(d, &tableIdx)) {
             goto finally;
         }
     } else {

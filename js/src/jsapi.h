@@ -44,6 +44,8 @@
  * JavaScript API.
  */
 
+#include "mozilla/Attributes.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/StandardInteger.h"
 
 #include <stddef.h>
@@ -58,7 +60,6 @@
 #ifdef __cplusplus
 #include "jsalloc.h"
 #include "js/Vector.h"
-#include "mozilla/Attributes.h"
 #endif
 
 /************************************************************************/
@@ -361,7 +362,7 @@ class Value
     JS_ALWAYS_INLINE
     bool setNumber(double d) {
         int32_t i;
-        if (JSDOUBLE_IS_INT32(d, &i)) {
+        if (MOZ_DOUBLE_IS_INT32(d, &i)) {
             setInt32(i);
             return true;
         } else {

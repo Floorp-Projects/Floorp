@@ -39,6 +39,7 @@
 
 #include <string.h>
 
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
@@ -93,7 +94,7 @@ ValueIsLength(JSContext *cx, const Value &v, uint32_t *len)
 
     if (v.isDouble()) {
         double d = v.toDouble();
-        if (JSDOUBLE_IS_NaN(d))
+        if (MOZ_DOUBLE_IS_NaN(d))
             return false;
 
         uint32_t length = uint32_t(d);
@@ -1715,7 +1716,7 @@ class TypedArrayTemplate
     static NativeType
     nativeFromDouble(double d)
     {
-        if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
+        if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(MOZ_DOUBLE_IS_NaN(d)))
             return NativeType(int32_t(0));
         if (TypeIsFloatingPoint<NativeType>())
             return NativeType(d);
@@ -2058,7 +2059,7 @@ TypedArrayTemplate<float>::copyIndexToValue(JSContext *cx, JSObject *tarray, uin
      * This could be removed for platforms/compilers known to convert a 32-bit
      * non-canonical nan to a 64-bit canonical nan.
      */
-    if (JS_UNLIKELY(JSDOUBLE_IS_NaN(dval)))
+    if (JS_UNLIKELY(MOZ_DOUBLE_IS_NaN(dval)))
         dval = js_NaN;
 
     vp->setDouble(dval);
@@ -2077,7 +2078,7 @@ TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, JSObject *tarray, ui
      * confuse the engine into interpreting a double-typed jsval as an
      * object-typed jsval.
      */
-    if (JS_UNLIKELY(JSDOUBLE_IS_NaN(val)))
+    if (JS_UNLIKELY(MOZ_DOUBLE_IS_NaN(val)))
         val = js_NaN;
 
     vp->setDouble(val);

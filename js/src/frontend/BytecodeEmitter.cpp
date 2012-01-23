@@ -41,6 +41,9 @@
 /*
  * JS bytecode generation.
  */
+
+#include "mozilla/FloatingPoint.h"
+
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif
@@ -2298,7 +2301,7 @@ EmitNumberOp(JSContext *cx, double dval, BytecodeEmitter *bce)
     ptrdiff_t off;
     jsbytecode *pc;
 
-    if (JSDOUBLE_IS_INT32(dval, &ival)) {
+    if (MOZ_DOUBLE_IS_INT32(dval, &ival)) {
         if (ival == 0)
             return Emit1(cx, bce, JSOP_ZERO) >= 0;
         if (ival == 1)
