@@ -62,8 +62,8 @@ USING_INDEXEDDB_NAMESPACE
 IDBRequest::IDBRequest()
 : mResultVal(JSVAL_VOID),
   mErrorCode(0),
-  mResultValRooted(false),
-  mHaveResultOrErrorCode(false)
+  mHaveResultOrErrorCode(false),
+  mManuallyRooted(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -72,19 +72,13 @@ IDBRequest::~IDBRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mResultValRooted) {
-    // Calling a virtual from the destructor is bad... But we know that we won't
-    // call a subclass' implementation because mResultValRooted will be set to
-    // false.
-    UnrootResultVal();
-  }
+  UnrootResultVal();
 }
 
 // static
 already_AddRefed<IDBRequest>
 IDBRequest::Create(nsISupports* aSource,
-                   nsIScriptContext* aScriptContext,
-                   nsPIDOMWindow* aOwner,
+                   IDBWrapperCache* aOwnerCache,
                    IDBTransaction* aTransaction)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -92,8 +86,9 @@ IDBRequest::Create(nsISupports* aSource,
 
   request->mSource = aSource;
   request->mTransaction = aTransaction;
-  request->mScriptContext = aScriptContext;
-  request->mOwner = aOwner;
+  request->mScriptContext = aOwnerCache->GetScriptContext();
+  request->mOwner = aOwnerCache->GetOwner();
+  request->mScriptOwner = aOwnerCache->GetScriptOwner();
 
   return request.forget();
 }
@@ -105,9 +100,7 @@ IDBRequest::Reset()
   mResultVal = JSVAL_VOID;
   mHaveResultOrErrorCode = false;
   mErrorCode = 0;
-  if (mResultValRooted) {
-    UnrootResultVal();
-  }
+  UnrootResultVal();
 }
 
 nsresult
@@ -115,7 +108,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mHaveResultOrErrorCode, "Already called!");
-  NS_ASSERTION(!mResultValRooted, "Already rooted?!");
+  NS_ASSERTION(!PreservingWrapper(), "Already rooted?!");
   NS_ASSERTION(JSVAL_IS_VOID(mResultVal), "Should be undefined!");
 
   // See if our window is still valid. If not then we're going to pretend that
@@ -135,44 +128,39 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   }
 
   // Otherwise we need to get the result from the helper.
-  JSContext* cx = nsnull;
-  JSObject* obj = nsnull;
-  if (mScriptContext) {   
-    cx = mScriptContext->GetNativeContext();
-    NS_ASSERTION(cx, "Failed to get a context!");
-
-    obj = mScriptContext->GetNativeGlobal();
-    NS_ASSERTION(obj, "Failed to get global object!");
-  } 
-  else {
+  JSContext* cx;
+  if (mScriptOwner) {
     nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
     NS_ASSERTION(cxStack, "Failed to get thread context stack!");
 
-    NS_ENSURE_SUCCESS(cxStack->GetSafeJSContext(&cx),
-                      NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    obj = GetWrapper();
-    NS_ENSURE_TRUE(obj, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    if (NS_FAILED(cxStack->GetSafeJSContext(&cx))) {
+      NS_WARNING("Failed to get safe JSContext!");
+      rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      mErrorCode = NS_ERROR_GET_CODE(rv);
+      return rv;
+    }
   }
+  else {
+    cx = mScriptContext->GetNativeContext();
+    NS_ASSERTION(cx, "Failed to get a context!");
+  } 
+
+  JSObject* global = GetParentObject();
+  NS_ASSERTION(global, "This should never be null!");
 
   JSAutoRequest ar(cx);
   JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, obj)) {
-    rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-  else {
+  if (ac.enter(cx, global)) {
     RootResultVal();
 
     rv = aHelper->GetSuccessResult(cx, &mResultVal);
-    if (NS_SUCCEEDED(rv)) {
-      // Unroot if we don't really need to be rooted.
-      if (!JSVAL_IS_GCTHING(mResultVal)) {
-        UnrootResultVal();
-      }
-    }
-    else {
+    if (NS_FAILED(rv)) {
       NS_WARNING("GetSuccessResult failed!");
     }
+  }
+  else {
+    NS_WARNING("Failed to enter correct compartment!");
+    rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -189,17 +177,47 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
 void
 IDBRequest::RootResultVal()
 {
-  NS_ASSERTION(!mResultValRooted, "This should be false!");
-  NS_HOLD_JS_OBJECTS(this, IDBRequest);
-  mResultValRooted = true;
+  // We want to use the preserved wrapper to keep our result alive, but we don't
+  // always get a wrapper right away. Manually root if we don't have a wrapper.
+  if (!PreservingWrapper() && GetWrapperPreserveColor()) {
+    NS_ASSERTION(!mManuallyRooted, "Should not be manually rooted here!");
+    nsContentUtils::PreserveWrapper(static_cast<nsIDOMEventTarget*>(this),
+                                    this);
+  }
+  else if (!mManuallyRooted) {
+    NS_HOLD_JS_OBJECTS(this, IDBRequest);
+    mManuallyRooted = true;
+  }
 }
 
 void
 IDBRequest::UnrootResultVal()
 {
-  NS_ASSERTION(mResultValRooted, "This should be true!");
-  NS_DROP_JS_OBJECTS(this, IDBRequest);
-  mResultValRooted = false;
+  if (mManuallyRooted) {
+    NS_ASSERTION(!PreservingWrapper(), "Shouldn't have a wrapper here!");
+    NS_DROP_JS_OBJECTS(this, IDBRequest);
+    mManuallyRooted = false;
+  }
+  else if (PreservingWrapper()) {
+    nsContentUtils::ReleaseWrapper(static_cast<nsIDOMEventTarget*>(this), this);
+  }
+}
+
+void
+IDBRequest::OnWrapperCreated()
+{
+  NS_ASSERTION(!PreservingWrapper(),
+               "Shouldn't have had a wrapper before now!");
+
+  // Update our rooting strategy to accommodate new wrapper if needed. We have
+  // to unroot the old way first. This is annoying because XPConnect uses a hash
+  // table to store these so we could be just fine adding an entry for a second
+  // time... However nsContentUtils keeps a counter that will get out of sync if
+  // we do. Safest to just remove the old holder and then add a new one.
+  if (mManuallyRooted) {
+    UnrootResultVal();
+    RootResultVal();
+  }
 }
 
 NS_IMETHODIMP
@@ -262,66 +280,32 @@ IDBRequest::GetErrorCode(PRUint16* aErrorCode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-IDBRequest::SetOnsuccess(nsIDOMEventListener* aSuccessListener)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return RemoveAddEventListener(NS_LITERAL_STRING(SUCCESS_EVT_STR),
-                                mOnSuccessListener, aSuccessListener);
-}
-
-NS_IMETHODIMP
-IDBRequest::GetOnsuccess(nsIDOMEventListener** aSuccessListener)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return GetInnerEventListener(mOnSuccessListener, aSuccessListener);
-}
-
-NS_IMETHODIMP
-IDBRequest::SetOnerror(nsIDOMEventListener* aErrorListener)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_EVT_STR),
-                                mOnErrorListener, aErrorListener);
-}
-
-NS_IMETHODIMP
-IDBRequest::GetOnerror(nsIDOMEventListener** aErrorListener)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return GetInnerEventListener(mOnErrorListener, aErrorListener);
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBRequest)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest,
-                                                  nsDOMEventTargetWrapperCache)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnSuccessListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
+  // Don't need NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS because
+  // nsDOMEventTargetHelper does it for us.
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(success)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
                                                        nsPIDOMEventTarget)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest,
-                                                nsDOMEventTargetWrapperCache)
-  if (tmp->mResultValRooted) {
-    tmp->mResultVal = JSVAL_VOID;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
+  tmp->mResultVal = JSVAL_VOID;
+  if (tmp->mManuallyRooted) {
     tmp->UnrootResultVal();
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnSuccessListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(success)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(error)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTransaction)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IDBRequest,
-                                               nsDOMEventTargetWrapperCache)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
+  // Don't need NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER because
+  // nsDOMEventTargetHelper does it for us.
   if (JSVAL_IS_GCTHING(tmp->mResultVal)) {
     void *gcThing = JSVAL_TO_GCTHING(tmp->mResultVal);
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mResultVal")
@@ -331,12 +315,15 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBRequest)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBRequest)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 
-NS_IMPL_ADDREF_INHERITED(IDBRequest, nsDOMEventTargetWrapperCache)
-NS_IMPL_RELEASE_INHERITED(IDBRequest, nsDOMEventTargetWrapperCache)
+NS_IMPL_ADDREF_INHERITED(IDBRequest, IDBWrapperCache)
+NS_IMPL_RELEASE_INHERITED(IDBRequest, IDBWrapperCache)
 
 DOMCI_DATA(IDBRequest, IDBRequest)
+
+NS_IMPL_EVENT_HANDLER(IDBRequest, success);
+NS_IMPL_EVENT_HANDLER(IDBRequest, error);
 
 nsresult
 IDBRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
@@ -352,21 +339,21 @@ IDBOpenDBRequest::~IDBOpenDBRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mResultValRooted) {
-    UnrootResultVal();
-  }
+  UnrootResultVal();
 }
 
 // static
 already_AddRefed<IDBOpenDBRequest>
 IDBOpenDBRequest::Create(nsIScriptContext* aScriptContext,
-                         nsPIDOMWindow* aOwner)
+                         nsPIDOMWindow* aOwner,
+                         JSObject* aScriptOwner)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   nsRefPtr<IDBOpenDBRequest> request(new IDBOpenDBRequest());
 
   request->mScriptContext = aScriptContext;
   request->mOwner = aOwner;
+  request->mScriptOwner = aScriptOwner;
 
   return request.forget();
 }
@@ -377,37 +364,18 @@ IDBOpenDBRequest::SetTransaction(IDBTransaction* aTransaction)
   mTransaction = aTransaction;
 }
 
-void
-IDBOpenDBRequest::RootResultVal()
-{
-  NS_ASSERTION(!mResultValRooted, "This should be false!");
-  NS_HOLD_JS_OBJECTS(this, IDBOpenDBRequest);
-  mResultValRooted = true;
-}
-
-void
-IDBOpenDBRequest::UnrootResultVal()
-{
-  NS_ASSERTION(mResultValRooted, "This should be true!");
-  NS_DROP_JS_OBJECTS(this, IDBOpenDBRequest);
-  mResultValRooted = false;
-}
-
-NS_IMPL_EVENT_HANDLER(IDBOpenDBRequest, blocked)
-NS_IMPL_EVENT_HANDLER(IDBOpenDBRequest, upgradeneeded)
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBOpenDBRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBOpenDBRequest,
                                                   IDBRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnupgradeneededListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnblockedListener)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(upgradeneeded)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(blocked)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBOpenDBRequest,
                                                 IDBRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnupgradeneededListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnblockedListener)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(upgradeneeded)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(blocked)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBOpenDBRequest)
@@ -419,3 +387,6 @@ NS_IMPL_ADDREF_INHERITED(IDBOpenDBRequest, IDBRequest)
 NS_IMPL_RELEASE_INHERITED(IDBOpenDBRequest, IDBRequest)
 
 DOMCI_DATA(IDBOpenDBRequest, IDBOpenDBRequest)
+
+NS_IMPL_EVENT_HANDLER(IDBOpenDBRequest, blocked);
+NS_IMPL_EVENT_HANDLER(IDBOpenDBRequest, upgradeneeded);

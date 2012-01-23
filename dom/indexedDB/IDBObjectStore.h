@@ -41,12 +41,13 @@
 #define mozilla_dom_indexeddb_idbobjectstore_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
-#include "mozilla/dom/indexedDB/IDBTransaction.h"
 
 #include "nsIIDBObjectStore.h"
 #include "nsIIDBTransaction.h"
 
 #include "nsCycleCollectionParticipant.h"
+
+#include "mozilla/dom/indexedDB/IDBTransaction.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -203,9 +204,6 @@ protected:
 
 private:
   nsRefPtr<IDBTransaction> mTransaction;
-
-  nsCOMPtr<nsIScriptContext> mScriptContext;
-  nsCOMPtr<nsPIDOMWindow> mOwner;
 
   PRInt64 mId;
   nsString mName;
