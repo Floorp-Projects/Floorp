@@ -507,8 +507,8 @@ GenerateRequest(IDBObjectStore* aObjectStore)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   IDBDatabase* database = aObjectStore->Transaction()->Database();
-  return IDBRequest::Create(aObjectStore, database->ScriptContext(),
-                            database->Owner(), aObjectStore->Transaction());
+  return IDBRequest::Create(aObjectStore, database,
+                            aObjectStore->Transaction());
 }
 
 JSClass gDummyPropClass = {
@@ -531,9 +531,6 @@ IDBObjectStore::Create(IDBTransaction* aTransaction,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<IDBObjectStore> objectStore = new IDBObjectStore();
-
-  objectStore->mScriptContext = aTransaction->Database()->ScriptContext();
-  objectStore->mOwner = aTransaction->Database()->Owner();
 
   objectStore->mTransaction = aTransaction;
   objectStore->mName = aStoreInfo->name;
@@ -1376,8 +1373,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBObjectStore)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBObjectStore)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
                                                        nsIDOMEventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
 
   for (PRUint32 i = 0; i < tmp->mCreatedIndexes.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedIndexes[i]");
@@ -1387,8 +1382,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBObjectStore)
   // Don't unlink mTransaction!
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
 
   tmp->mCreatedIndexes.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
