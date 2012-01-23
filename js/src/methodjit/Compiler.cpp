@@ -1334,7 +1334,7 @@ mjit::Compiler::finishThisUp()
             nNmapLive++;
     }
 
-    /* Please keep in sync with JITChunk::scriptDataSize! */
+    /* Please keep in sync with JITChunk::sizeOfIncludingThis! */
     size_t dataSize = sizeof(JITChunk) +
                       sizeof(NativeMapEntry) * nNmapLive +
                       sizeof(InlineFrame) * inlineFrames.length() +
@@ -1726,8 +1726,8 @@ mjit::Compiler::finishThisUp()
 #endif
 
     JS_ASSERT(size_t(cursor - (uint8_t*)chunk) == dataSize);
-    /* Pass in NULL here -- we don't want slop bytes to be counted. */
-    JS_ASSERT(chunk->scriptDataSize(NULL) == dataSize);
+    /* Use the computed size here -- we don't want slop bytes to be counted. */
+    JS_ASSERT(chunk->computedSizeOfIncludingThis() == dataSize);
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());

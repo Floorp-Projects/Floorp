@@ -719,8 +719,8 @@ struct JITChunk
 
     void nukeScriptDependentICs();
 
-    /* |mallocSizeOf| can be NULL here, in which case the fallback size computation will be used. */
-    size_t scriptDataSize(JSMallocSizeOfFun mallocSizeOf);
+    size_t computedSizeOfIncludingThis();
+    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     ~JITChunk();
 
@@ -842,7 +842,7 @@ struct JITScript
 
     jsbytecode *nativeToPC(void *returnAddress, CallSite **pinline);
 
-    size_t scriptDataSize(JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     void destroy(JSContext *cx);
     void destroyChunk(JSContext *cx, unsigned chunkIndex, bool resetUses = true);
