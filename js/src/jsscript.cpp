@@ -1267,7 +1267,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 }
 
 size_t
-JSScript::dataSize()
+JSScript::computedSizeOfData()
 {
 #if JS_SCRIPT_INLINE_DATA_LIMIT
     if (data == inlineData)
@@ -1280,14 +1280,14 @@ JSScript::dataSize()
 }
 
 size_t
-JSScript::dataSize(JSMallocSizeOfFun mallocSizeOf)
+JSScript::sizeOfData(JSMallocSizeOfFun mallocSizeOf)
 {
 #if JS_SCRIPT_INLINE_DATA_LIMIT
     if (data == inlineData)
         return 0;
 #endif
 
-    return mallocSizeOf(data, dataSize());
+    return mallocSizeOf(data, computedSizeOfData());
 }
 
 /*
@@ -1370,7 +1370,7 @@ JSScript::finalize(JSContext *cx, bool background)
     if (data != inlineData)
 #endif
     {
-        JS_POISON(data, 0xdb, dataSize());
+        JS_POISON(data, 0xdb, computedSizeOfData());
         cx->free_(data);
     }
 }

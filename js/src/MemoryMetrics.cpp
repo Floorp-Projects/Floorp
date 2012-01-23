@@ -168,9 +168,9 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
     {
         JSScript *script = static_cast<JSScript *>(thing);
         curr->gcHeapScripts += thingSize;
-        curr->scriptData += script->dataSize(data->mallocSizeOf);
+        curr->scriptData += script->sizeOfData(data->mallocSizeOf);
 #ifdef JS_METHODJIT
-        curr->mjitData += script->jitDataSize(data->mallocSizeOf);
+        curr->mjitData += script->sizeOfJitScripts(data->mallocSizeOf);
 #endif
         break;
     }
