@@ -69,6 +69,7 @@
 <!ENTITY pref_font_size_large "Large">
 <!ENTITY pref_font_size_xlarge "Extra Large">
 <!ENTITY pref_use_master_password "Use master password">
+<!ENTITY pref_sync "Sync">
 
 <!ENTITY quit "Quit">
 
