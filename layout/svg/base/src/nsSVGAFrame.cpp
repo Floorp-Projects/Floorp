@@ -138,10 +138,16 @@ nsSVGAFrame::AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType)
 {
-  if (aNameSpaceID == kNameSpaceID_None &&
-      aAttribute == nsGkAtoms::transform) {
+  if (aNameSpaceID != kNameSpaceID_None)
+    return NS_OK;
 
-    NotifySVGChanged(TRANSFORM_CHANGED);
+  if (aAttribute == nsGkAtoms::transform) {
+    // transform has changed
+
+    // make sure our cached transform matrix gets (lazily) updated
+    mCanvasTM = nsnull;
+    
+    nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
   }
 
  return NS_OK;
