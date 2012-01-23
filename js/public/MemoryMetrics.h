@@ -195,17 +195,17 @@ GetExplicitNonHeapForRuntime(JSRuntime *rt, int64_t *amount,
 
 #endif /* JS_THREADSAFE */
 
-extern JS_PUBLIC_API(void)
+extern void
 SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment,
                                    TypeInferenceMemoryStats *stats,
                                    JSMallocSizeOfFun mallocSizeOf);
 
-extern JS_PUBLIC_API(void)
-SizeOfObjectTypeInferenceData(/*TypeObject*/ void *object,
+extern void
+SizeOfTypeObjectExcludingThis(/*TypeObject*/ void *object,
                               TypeInferenceMemoryStats *stats,
                               JSMallocSizeOfFun mallocSizeOf);
 
-extern JS_PUBLIC_API(size_t)
+extern size_t
 SizeOfCompartmentShapeTable(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf);
 
 extern JS_PUBLIC_API(size_t)

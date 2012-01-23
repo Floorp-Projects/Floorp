@@ -178,7 +178,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
     {
         types::TypeObject *obj = static_cast<types::TypeObject *>(thing);
         curr->gcHeapTypeObjects += thingSize;
-        SizeOfObjectTypeInferenceData(obj, &curr->typeInferenceMemory,
+        SizeOfTypeObjectExcludingThis(obj, &curr->typeInferenceMemory,
                                       data->mallocSizeOf);
         break;
     }
