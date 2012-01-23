@@ -104,7 +104,7 @@ function sendString(aStr, aWindow) {
  * KeyEvent constant name for this key.  No modifiers are handled at this point.
  */
 function sendKey(aKey, aWindow) {
-  keyName = "VK_" + aKey.toUpperCase();
+  var keyName = "VK_" + aKey.toUpperCase();
   synthesizeKey(keyName, { shiftKey: false }, aWindow);
 }
 
