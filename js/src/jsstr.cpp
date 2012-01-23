@@ -50,6 +50,7 @@
  */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/FloatingPoint.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -1240,7 +1241,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
             double d;
             if (!ToNumber(cx, args[1], &d))
                 return false;
-            if (!JSDOUBLE_IS_NaN(d)) {
+            if (!MOZ_DOUBLE_IS_NaN(d)) {
                 d = js_DoubleToInteger(d);
                 if (d <= 0)
                     i = 0;
@@ -3300,7 +3301,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
         return js_QuoteString(cx, v.toString(), '"');
     if (v.isPrimitive()) {
         /* Special case to preserve negative zero, _contra_ toString. */
-        if (v.isDouble() && JSDOUBLE_IS_NEGZERO(v.toDouble())) {
+        if (v.isDouble() && MOZ_DOUBLE_IS_NEGATIVE_ZERO(v.toDouble())) {
             /* NB: _ucNstr rather than _ucstr to indicate non-terminated. */
             static const jschar js_negzero_ucNstr[] = {'-', '0'};
 

@@ -96,11 +96,13 @@
  * SlowArrayClass, but have the same performance characteristics as a dense
  * array for slot accesses, at some cost in code complexity.
  */
+
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/RangedPtr.h"
+
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "mozilla/RangedPtr.h"
 
 #include "jstypes.h"
 #include "jsutil.h"
@@ -2191,7 +2193,7 @@ SortComparatorFunction::operator()(const Value &a, const Value &b, bool *lessOrE
      * 'consistent compare functions' that don't return NaN, but is silent
      * about what the result should be. So we currently ignore it.
      */
-    *lessOrEqualp = (JSDOUBLE_IS_NaN(cmp) || cmp <= 0);
+    *lessOrEqualp = (MOZ_DOUBLE_IS_NaN(cmp) || cmp <= 0);
     return true;
 }
 

@@ -41,6 +41,10 @@
 /*
  * JS bytecode descriptors, disassemblers, and decompilers.
  */
+
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/Util.h"
+
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif
@@ -48,8 +52,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "mozilla/Util.h"
 
 #include "jstypes.h"
 #include "jsutil.h"
@@ -1586,12 +1588,12 @@ SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
 
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
     d = JSVAL_TO_DOUBLE(v);
-    if (JSDOUBLE_IS_NEGZERO(d)) {
+    if (MOZ_DOUBLE_IS_NEGATIVE_ZERO(d)) {
         todo = sp->put("-0");
         *opp = JSOP_NEG;
-    } else if (!JSDOUBLE_IS_FINITE(d)) {
+    } else if (!MOZ_DOUBLE_IS_FINITE(d)) {
         /* Don't use Infinity and NaN, as local variables may shadow them. */
-        todo = sp->put(JSDOUBLE_IS_NaN(d)
+        todo = sp->put(MOZ_DOUBLE_IS_NaN(d)
                        ? "0 / 0"
                        : (d < 0)
                        ? "1 / -0"
@@ -2128,7 +2130,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
 
           case JSOP_DOUBLE:
             d = jp->script->getConst(GET_UINT32_INDEX(pc)).toDouble();
-            LOCAL_ASSERT(JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d));
+            LOCAL_ASSERT(MOZ_DOUBLE_IS_FINITE(d) && !MOZ_DOUBLE_IS_NEGATIVE_ZERO(d));
             i = (int)d;
 
           do_getelem:

@@ -44,11 +44,13 @@
 #ifndef jsdate_h___
 #define jsdate_h___
 
+#include "mozilla/FloatingPoint.h"
+
 #include "jscntxt.h"
 
 #define HalfTimeDomain  8.64e15
 
-#define TIMECLIP(d) ((JSDOUBLE_IS_FINITE(d) \
+#define TIMECLIP(d) ((MOZ_DOUBLE_IS_FINITE(d) \
                       && !((d < 0 ? -d : d) > HalfTimeDomain)) \
                      ? js_DoubleToInteger(d + (+0.)) : js_NaN)
 

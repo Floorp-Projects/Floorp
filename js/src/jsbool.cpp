@@ -40,6 +40,9 @@
 /*
  * JS boolean implementation.
  */
+
+#include "mozilla/FloatingPoint.h"
+
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsapi.h"
@@ -227,7 +230,7 @@ js_ValueToBoolean(const Value &v)
         double d;
 
         d = v.toDouble();
-        return !JSDOUBLE_IS_NaN(d) && d != 0;
+        return !MOZ_DOUBLE_IS_NaN(d) && d != 0;
     }
     JS_ASSERT(v.isBoolean());
     return v.toBoolean();
