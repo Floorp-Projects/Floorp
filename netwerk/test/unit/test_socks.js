@@ -450,9 +450,7 @@ SocksTestServer.prototype = {
       try {
         this.client_subprocess.kill();      
       } catch (x) {
-        do_print('Killing subprocess failed: ' + e);
-        if (x.stack)
-          _dump_exception_stack(x.stack);
+        do_note_exception(x, 'Killing subprocess failed');
       }
       this.client_subprocess = null;
     }
