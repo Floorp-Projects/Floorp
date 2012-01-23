@@ -45,7 +45,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 
 #ifdef WIN32
