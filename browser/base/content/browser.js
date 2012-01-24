@@ -5973,12 +5973,12 @@ function MultiplexHandler(event)
     var name = node.getAttribute('name');
 
     if (name == 'detectorGroup') {
-        SetForcedDetector(true);
+        BrowserCharsetReload();
         SelectDetector(event, false);
     } else if (name == 'charsetGroup') {
         var charset = node.getAttribute('id');
         charset = charset.substring('charset.'.length, charset.length)
-        SetForcedCharset(charset);
+        BrowserSetForcedCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
         //do nothing - please remove this else statement, once the charset prefs moves to the pref window
     } else {
@@ -6009,28 +6009,17 @@ function SelectDetector(event, doReload)
     }
 }
 
-function SetForcedDetector(doReload)
-{
-    BrowserSetForcedDetector(doReload);
-}
-
-function SetForcedCharset(charset)
-{
-    BrowserSetForcedCharacterSet(charset);
-}
-
 function BrowserSetForcedCharacterSet(aCharset)
 {
   gBrowser.docShell.charset = aCharset;
   // Save the forced character-set
   PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
-  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  BrowserCharsetReload();
 }
 
-function BrowserSetForcedDetector(doReload)
+function BrowserCharsetReload()
 {
-  if (doReload)
-    BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
 function charsetMenuGetElement(parent, id) {
