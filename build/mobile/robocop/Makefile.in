@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = robocop
 
-ROBOTIUM_PATH = $(srcdir)/robotium-solo-3.0.jar
+ROBOTIUM_PATH = $(srcdir)/robotium-solo-3.1.jar
 
 JAVAFILES = \
   R.java \
