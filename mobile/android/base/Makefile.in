@@ -284,6 +284,7 @@ RES_DRAWABLE_MDPI_V8 = \
   res/drawable-mdpi-v8/abouthome_topsite_shadow.9.png \
   res/drawable-mdpi-v8/awesomebar_tab.9.png \
   res/drawable-mdpi-v8/awesomebar_tab_pressed.9.png \
+  res/drawable-mdpi-v8/ic_addons_empty.png \
   res/drawable-mdpi-v8/ic_awesomebar_go.png \
   res/drawable-mdpi-v8/ic_awesomebar_search.png \
   res/drawable-mdpi-v8/ic_menu_bookmark_add.png \
@@ -327,6 +328,7 @@ RES_DRAWABLE_HDPI_V8 = \
   res/drawable-hdpi-v8/abouthome_topsite_shadow.9.png \
   res/drawable-hdpi-v8/awesomebar_tab.9.png \
   res/drawable-hdpi-v8/awesomebar_tab_pressed.9.png \
+  res/drawable-hdpi-v8/ic_addons_empty.png \
   res/drawable-hdpi-v8/ic_awesomebar_go.png \
   res/drawable-hdpi-v8/ic_awesomebar_search.png \
   res/drawable-hdpi-v8/ic_menu_bookmark_add.png \
@@ -388,6 +390,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/abouthome_topsite_shadow.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
+  res/drawable-xhdpi-v11/ic_addons_empty.png \
   res/drawable-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-xhdpi-v11/ic_awesomebar_search.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \

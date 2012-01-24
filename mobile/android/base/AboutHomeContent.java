@@ -43,6 +43,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -65,6 +67,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
@@ -406,6 +409,24 @@ public class AboutHomeContent extends ScrollView {
         return str;
     }
 
+    private String getPageUrlFromIconUrl(String iconUrl) {
+        // Addon icon URLs come with a query argument that is usually
+        // used for expiration purposes. We want the "page URL" here to be
+        // stable enough to avoid unnecessary duplicate records of the
+        // same addon.
+        String pageUrl = iconUrl;
+
+        try {
+            URL urlForIcon = new URL(iconUrl);
+            URL urlForPage = new URL(urlForIcon.getProtocol(), urlForIcon.getAuthority(), urlForIcon.getPath());
+            pageUrl = urlForPage.toString();
+        } catch (MalformedURLException e) {
+            // Defaults to pageUrl = iconUrl in case of error
+        }
+
+        return pageUrl;
+    }
+
     private void readRecommendedAddons(final Activity activity) {
         final String addonsFilename = "recommended-addons.json";
         String jsonString = readJSONFile(activity, addonsFilename);
@@ -430,9 +451,23 @@ public class AboutHomeContent extends ScrollView {
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject jsonobj = array.getJSONObject(i);
 
-                        View row = mInflater.inflate(R.layout.abouthome_addon_row, mAddonsLayout, false);
+                        final View row = mInflater.inflate(R.layout.abouthome_addon_row, mAddonsLayout, false);
                         ((TextView) row.findViewById(R.id.addon_title)).setText(jsonobj.getString("name"));
                         ((TextView) row.findViewById(R.id.addon_version)).setText(jsonobj.getString("version"));
+
+                        String iconUrl = jsonobj.getString("iconURL");
+                        String pageUrl = getPageUrlFromIconUrl(iconUrl);
+
+                        Favicons favicons = GeckoApp.mAppContext.mFavicons;
+                        favicons.loadFavicon(pageUrl, iconUrl,
+                                    new Favicons.OnFaviconLoadedListener() {
+                            public void onFaviconLoaded(String url, Drawable favicon) {
+                                if (favicon != null) {
+                                    ImageView icon = (ImageView) row.findViewById(R.id.addon_icon);
+                                    icon.setImageDrawable(favicon);
+                                }
+                            }
+                        });
 
                         mAddonsLayout.addView(row);
                     }
