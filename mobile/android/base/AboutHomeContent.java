@@ -337,7 +337,6 @@ public class AboutHomeContent extends ScrollView {
     }
 
     private String readJSONFile(Activity activity, String filename) {
-        String json = null;
         InputStream fileStream = null;
         File profileDir = GeckoApp.mAppContext.getProfileDir();
 
