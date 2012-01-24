@@ -76,9 +76,8 @@ public class GeckoEvent {
     public static final int SAVE_STATE = 18;
     public static final int BROADCAST = 19;
     public static final int VIEWPORT = 20;
-    public static final int TILE_SIZE = 21;
-    public static final int VISTITED = 22;
-    public static final int NETWORK_CHANGED = 23;
+    public static final int VISTITED = 21;
+    public static final int NETWORK_CHANGED = 22;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -102,7 +101,7 @@ public class GeckoEvent {
     public int mType;
     public int mAction;
     public long mTime;
-    public Point mP0, mP1;
+    public Point mP0, mP1, mP2;
     public Rect mRect;
     public double mX, mY, mZ;
     public double mAlpha, mBeta, mGamma;
@@ -230,6 +229,7 @@ public class GeckoEvent {
 
         mP0 = new Point(w, h);
         mP1 = new Point(screenw, screenh);
+        mP2 = new Point(0, 0);
     }
 
     public GeckoEvent(String subject, String data) {
