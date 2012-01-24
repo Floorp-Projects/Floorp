@@ -225,7 +225,7 @@ abstract public class GeckoApp
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
 
         ArrayList<String> directories = new ArrayList<String>();
-        PackageManager pm = this.mAppContext.getPackageManager();
+        PackageManager pm = mAppContext.getPackageManager();
         List<ResolveInfo> plugins = pm.queryIntentServices(new Intent(PLUGIN_ACTION),
                 PackageManager.GET_SERVICES | PackageManager.GET_META_DATA);
 
@@ -371,7 +371,7 @@ abstract public class GeckoApp
 
     Class<?> getPluginClass(String packageName, String className)
             throws NameNotFoundException, ClassNotFoundException {
-        Context pluginContext = this.mAppContext.createPackageContext(packageName,
+        Context pluginContext = mAppContext.createPackageContext(packageName,
                 Context.CONTEXT_INCLUDE_CODE |
                 Context.CONTEXT_IGNORE_SECURITY);
         ClassLoader pluginCL = pluginContext.getClassLoader();
@@ -394,7 +394,7 @@ abstract public class GeckoApp
         while (i.hasNext()) {
             final ExtraMenuItem item = i.next();
             if (aMenu.findItem(item.id) == null) {
-                final MenuItem mi = aMenu.add(aMenu.NONE, item.id, aMenu.NONE, item.label);
+                final MenuItem mi = aMenu.add(Menu.NONE, item.id, Menu.NONE, item.label);
                 if (item.icon != null) {
                     if (item.icon.startsWith("data")) {
                         byte[] raw = Base64.decode(item.icon.substring(22), Base64.DEFAULT);
@@ -1172,7 +1172,7 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() {
             public void run() {
                 Tab tab = Tabs.getInstance().getTab(tabId);
-                mAppContext.mDoorHangerPopup.addDoorHanger(message, value, buttons,
+                mDoorHangerPopup.addDoorHanger(message, value, buttons,
                                                            tab, options);
             }
         });
