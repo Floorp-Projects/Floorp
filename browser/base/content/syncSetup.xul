@@ -260,23 +260,24 @@
              value="&addDevice.showMeHow.label;"
              href="https://services.mozilla.com/sync/help/easy-setup"/>
     </description>
-    <description>&addDevice.setup.enterCode.label;</description>
+    <label value="&addDevice.setup.enterCode.label;"
+           control="easySetupPIN1"/>
     <spacer flex="1"/>
     <vbox align="center" flex="1">
       <textbox id="easySetupPIN1"
                class="pin"
                value=""
-               disabled="true"
+               readonly="true"
                />
       <textbox id="easySetupPIN2"
                class="pin"
                value=""
-               disabled="true"
+               readonly="true"
                />
       <textbox id="easySetupPIN3"
                class="pin"
                value=""
-               disabled="true"
+               readonly="true"
                />
     </vbox>
     <spacer flex="3"/>
