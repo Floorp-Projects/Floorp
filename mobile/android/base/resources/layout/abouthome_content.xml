@@ -37,6 +37,20 @@
                       android:textStyle="bold"
                       android:text="@string/abouthome_top_sites_title"/>
 
+            <TextView android:id="@+id/no_top_sites_text"
+                      android:layout_width="fill_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_below="@id/top_sites_title"
+                      android:paddingTop="47dp"
+                      android:paddingBottom="47dp"
+                      android:paddingLeft="60dp"
+                      android:paddingRight="60dp"
+                      android:gravity="center"
+                      android:textSize="12sp"
+                      android:textColor="#666666"
+                      android:text="@string/abouthome_no_top_sites"
+                      android:visibility="gone"/>
+
             <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
                   android:id="@+id/top_sites_grid"
                   android:layout_width="fill_parent"
