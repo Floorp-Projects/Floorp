@@ -126,7 +126,6 @@ abstract public class GeckoApp
     private static int mOrientation;
 
     private IntentFilter mConnectivityFilter;
-    private IntentFilter mBatteryFilter;
 
     private BroadcastReceiver mConnectivityReceiver;
     private BroadcastReceiver mBatteryReceiver;
@@ -864,7 +863,6 @@ abstract public class GeckoApp
         Log.i(LOGTAG, "Got message: " + event);
         try {
             if (event.equals("Menu:Add")) {
-                String name = message.getString("name");
                 ExtraMenuItem item = new ExtraMenuItem();
                 item.label = message.getString("name");
                 item.id = message.getInt("id");
@@ -894,13 +892,11 @@ abstract public class GeckoApp
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
                 final String title = message.getString("title");
-                final CharSequence titleText = title;
                 handleContentLoaded(tabId, uri, title);
                 Log.i(LOGTAG, "URI - " + uri + ", title - " + title);
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
                 final String title = message.getString("title");
-                final CharSequence titleText = title;
                 handleTitleChanged(tabId, title);
                 Log.i(LOGTAG, "title - " + title);
             } else if (event.equals("DOMLinkAdded")) {
