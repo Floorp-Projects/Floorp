@@ -205,21 +205,29 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         jsbytecode *pc = mir->pc();
         uint32 exprStack = mir->stackDepth() - block->info().ninvoke();
         snapshots_.startFrame(fun, script, pc, exprStack);
+
 #ifdef TRACK_SNAPSHOTS
         LInstruction *ins = instruction();
-        uint32 lirOpcode = 0;
-        uint32 mirOpcode = 0;
+
         uint32 pcOpcode = 0;
+        uint32 lirOpcode = 0;
+        uint32 lirId = 0;
+        uint32 mirOpcode = 0;
+        uint32 mirId = 0;
+
         if (ins) {
             lirOpcode = ins->op();
+            lirId = ins->id();
             if (ins->mirRaw()) {
                 mirOpcode = ins->mirRaw()->op();
+                mirId = ins->mirRaw()->id();
                 if (ins->mirRaw()->trackedPc())
                     pcOpcode = *ins->mirRaw()->trackedPc();
             }
         }
-        snapshots_.trackFrame(pcOpcode, mirOpcode, lirOpcode);
+        snapshots_.trackFrame(pcOpcode, mirOpcode, mirId, lirOpcode, lirId);
 #endif
+
         encodeSlots(snapshot, mir, &startIndex);
         snapshots_.endFrame();
     }
