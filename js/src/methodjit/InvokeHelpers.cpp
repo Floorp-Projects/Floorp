@@ -872,11 +872,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         f.regs.pc = nextpc;
         break;
 
-      case REJOIN_JUMP:
-        f.regs.pc = (jsbytecode *) returnReg;
-        JS_ASSERT(unsigned(f.regs.pc - script->code) < script->length);
-        break;
-
       case REJOIN_NATIVE:
       case REJOIN_NATIVE_LOWERED:
       case REJOIN_NATIVE_GETTER: {
