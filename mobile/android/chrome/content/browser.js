@@ -567,7 +567,7 @@ var BrowserApp = {
 
   saveAsPDF: function saveAsPDF(aBrowser) {
     // Create the final destination file location
-    let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.documentURI, null, null);
+    let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.currentURI, null, null);
     fileName = fileName.trim() + ".pdf";
 
     let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
