@@ -6021,8 +6021,7 @@ function SetForcedCharset(charset)
 
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var docCharset = gBrowser.docShell.QueryInterface(Ci.nsIDocCharset);
-  docCharset.charset = aCharset;
+  gBrowser.docShell.charset = aCharset;
   // Save the forced character-set
   PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
   BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
