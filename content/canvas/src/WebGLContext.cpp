@@ -221,7 +221,6 @@ WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
       gl(nsnull)
 {
-    mWidth = mHeight = 0;
     mGeneration = 0;
     mInvalidated = false;
     mResetLayer = true;
