@@ -2153,10 +2153,8 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
     for (unsigned i = 0; i < pending->length(); i++) {
         const RecompileInfo &info = (*pending)[i];
         mjit::JITScript *jit = info.script->getJIT(info.constructing);
-        if (jit && jit->chunkDescriptor(info.chunkIndex).chunk) {
-            mjit::Recompiler::clearStackReferences(cx, info.script);
-            jit->destroyChunk(cx, info.chunkIndex);
-        }
+        if (jit && jit->chunkDescriptor(info.chunkIndex).chunk)
+            mjit::Recompiler::clearStackReferencesAndChunk(cx, info.script, jit, info.chunkIndex);
     }
 
 #endif /* JS_METHODJIT */

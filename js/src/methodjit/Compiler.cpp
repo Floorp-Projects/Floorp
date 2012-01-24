@@ -732,10 +732,6 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
                 }
             }
 
-            /*
-             * Watch for cross-chunk edges in a table switch. Don't handle
-             * lookup switches, as these are always stubbed.
-             */
             if (op == JSOP_TABLESWITCH) {
                 jsbytecode *pc2 = pc;
                 unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
@@ -765,6 +761,31 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
                             return NULL;
                     }
                     pc2 += JUMP_OFFSET_LEN;
+                }
+            }
+
+            if (op == JSOP_LOOKUPSWITCH) {
+                unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+                jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
+                unsigned npairs = GET_UINT16(pc2);
+                pc2 += UINT16_LEN;
+
+                CrossChunkEdge edge;
+                edge.source = offset;
+                edge.target = defaultOffset;
+                if (!currentEdges.append(edge))
+                    return NULL;
+
+                while (npairs) {
+                    pc2 += INDEX_LEN;
+                    unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
+                    CrossChunkEdge edge;
+                    edge.source = offset;
+                    edge.target = targetOffset;
+                    if (!currentEdges.append(edge))
+                        return NULL;
+                    pc2 += JUMP_OFFSET_LEN;
+                    npairs--;
                 }
             }
 
@@ -2683,7 +2704,7 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
             /* prepareStubCall() is not needed due to syncAndForgetEverything() */
-            INLINE_STUBCALL(stubs::TableSwitch, REJOIN_JUMP);
+            INLINE_STUBCALL(stubs::TableSwitch, REJOIN_NONE);
             frame.pop();
 
             masm.jump(Registers::ReturnReg);
@@ -2702,7 +2723,7 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
             /* prepareStubCall() is not needed due to syncAndForgetEverything() */
-            INLINE_STUBCALL(stubs::LookupSwitch, REJOIN_JUMP);
+            INLINE_STUBCALL(stubs::LookupSwitch, REJOIN_NONE);
             frame.pop();
 
             masm.jump(Registers::ReturnReg);
@@ -7358,7 +7379,7 @@ mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
         masm.move(ImmPtr(originalPC), Registers::ArgReg1);
 
         /* prepareStubCall() is not needed due to forgetEverything() */
-        INLINE_STUBCALL(stubs::TableSwitch, REJOIN_JUMP);
+        INLINE_STUBCALL(stubs::TableSwitch, REJOIN_NONE);
         frame.pop();
         masm.jump(Registers::ReturnReg);
         return true;
@@ -7405,7 +7426,7 @@ mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
         stubcc.linkExitDirect(notInt.get(), stubcc.masm.label());
         stubcc.leave();
         stubcc.masm.move(ImmPtr(originalPC), Registers::ArgReg1);
-        OOL_STUBCALL(stubs::TableSwitch, REJOIN_JUMP);
+        OOL_STUBCALL(stubs::TableSwitch, REJOIN_NONE);
         stubcc.masm.jump(Registers::ReturnReg);
     }
     frame.pop();
