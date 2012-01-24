@@ -1693,13 +1693,13 @@ abstract public class GeckoApp
         registerReceiver(mBatteryReceiver, batteryFilter);
 
         if (SmsManager.getInstance() != null) {
-          SmsManager.getInstance().init();
+          SmsManager.getInstance().start();
         }
 
         GeckoNetworkManager.getInstance().init();
 
         final GeckoApp self = this;
- 
+
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
                 Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - pre checkLaunchState");
@@ -2016,7 +2016,9 @@ abstract public class GeckoApp
         mFavicons.close();
 
         if (SmsManager.getInstance() != null) {
-          SmsManager.getInstance().shutdown();
+            SmsManager.getInstance().stop();
+            if (isFinishing())
+                SmsManager.getInstance().shutdown();
         }
 
         GeckoNetworkManager.getInstance().stop();
