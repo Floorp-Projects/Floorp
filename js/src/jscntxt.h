@@ -1318,7 +1318,6 @@ class AutoXMLRooter : private AutoGCRooter {
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void JS::MarkRuntime(JSTracer *trc);
 
   private:
     JSXML * const xml;
