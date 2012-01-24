@@ -180,7 +180,7 @@
 
             if (aCharset) {
               try { 
-                this.documentCharsetInfo.parentCharset = this.mAtomService.getAtom(aCharset);
+                this.docShell.parentCharset = this.mAtomService.getAtom(aCharset);
               }
               catch (e) {
               }
@@ -436,10 +436,6 @@
 
       <property name="contentViewerFile"
                 onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerFile);"
-                readonly="true"/>
-
-      <property name="documentCharsetInfo"
-                onget="return this.docShell.documentCharsetInfo;"
                 readonly="true"/>
 
       <property name="contentDocument"

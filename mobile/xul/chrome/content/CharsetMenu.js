@@ -52,7 +52,7 @@ var CharsetMenu = {
   updatePageAction: function(aNode) {
     let pref = Services.prefs.getComplexValue("browser.menu.showCharacterEncoding", Ci.nsIPrefLocalizedString).data;
     if (pref == "true") {
-      let charset = getBrowser().documentCharsetInfo.forcedCharset;
+      let charset = getBrowser().docShell.forcedCharset;
       if (charset) {
         charset = charset.toString();
         charset = charset.trim().toLowerCase();
@@ -95,7 +95,7 @@ var CharsetMenu = {
       this._charsets = Services.prefs.getComplexValue("intl.charsetmenu.browser.static", Ci.nsIPrefLocalizedString).data.split(",");
     }
     let charsets = this._charsets;
-    let currentCharset = getBrowser().documentCharsetInfo.forcedCharset;
+    let currentCharset = getBrowser().docShell.forcedCharset;
     
     if (currentCharset) {
       currentCharset = currentCharset.toString();
