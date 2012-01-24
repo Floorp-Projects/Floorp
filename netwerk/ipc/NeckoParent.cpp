@@ -145,16 +145,8 @@ bool
 NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname,
                                  const PRUint16& flags)
 {
-  nsHTMLDNSPrefetch::Prefetch(hostname, flags);
-  return true;
-}
-
-bool
-NeckoParent::RecvCancelHTMLDNSPrefetch(const nsString& hostname,
-                                 const PRUint16& flags,
-                                 const nsresult& reason)
-{
-  nsHTMLDNSPrefetch::CancelPrefetch(hostname, flags, reason);
+  nsAutoString h(hostname);
+  nsHTMLDNSPrefetch::Prefetch(h, flags);
   return true;
 }
 
