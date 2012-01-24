@@ -149,6 +149,17 @@ public class AboutHomeContent extends ScrollView {
         }
     }
 
+    private void updateLayout() {
+        boolean hasTopSites = mTopSitesAdapter.getCount() > 0;
+
+        int visibilityWithTopSites = hasTopSites ? View.VISIBLE : View.GONE;
+        int visibilityWithoutTopSites = !hasTopSites ? View.VISIBLE : View.GONE;
+
+        findViewById(R.id.top_sites_grid).setVisibility(visibilityWithTopSites);
+        findViewById(R.id.all_top_sites_text).setVisibility(visibilityWithTopSites);
+        findViewById(R.id.no_top_sites_text).setVisibility(visibilityWithoutTopSites);
+    }
+
     private int getNumberOfTopSites() {
         Configuration config = getContext().getResources().getConfiguration();
         if (config.orientation == Configuration.ORIENTATION_LANDSCAPE)
@@ -189,6 +200,8 @@ public class AboutHomeContent extends ScrollView {
 
                         mTopSitesGrid.setAdapter(mTopSitesAdapter);
                         mTopSitesAdapter.setViewBinder(new TopSitesViewBinder());
+
+                        updateLayout();
                     }
                 });
 
@@ -217,6 +230,7 @@ public class AboutHomeContent extends ScrollView {
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
             public void run() {
                 mTopSitesGrid.setAdapter(mTopSitesAdapter);
+                updateLayout();
             }
         });
     }
