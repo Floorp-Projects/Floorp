@@ -81,11 +81,8 @@ public class LayerController {
      * updates our visible rect appropriately.
      */
 
-    private OnTouchListener mOnTouchListener;       /* The touch listener. */
-    private LayerClient mLayerClient;               /* The layer client. */
-
-    /* The new color for the checkerboard. */
-    private int mCheckerboardColor;
+    private OnTouchListener mOnTouchListener;   /* The touch listener. */
+    private LayerClient mLayerClient;           /* The layer client. */
 
     private boolean mForceRedraw;
 
@@ -147,6 +144,7 @@ public class LayerController {
     }
 
     public Bitmap getBackgroundPattern()    { return getDrawable("background"); }
+    public Bitmap getCheckerboardPattern()  { return getDrawable("checkerboard"); }
     public Bitmap getShadowPattern()        { return getDrawable("shadow"); }
 
     public GestureDetector.OnGestureListener getGestureListener()                   { return mPanZoomController; }
@@ -352,17 +350,6 @@ public class LayerController {
         if (mOnTouchListener != null)
             return mOnTouchListener.onTouch(mView, event);
         return false;
-    }
-
-    /** Retrieves the color that the checkerboard should be. */
-    public int getCheckerboardColor() {
-        return mCheckerboardColor;
-    }
-
-    /** Sets a new color for the checkerboard. */
-    public void setCheckerboardColor(int newColor) {
-        mCheckerboardColor = newColor;
-        mView.requestRender();
     }
 }
 
