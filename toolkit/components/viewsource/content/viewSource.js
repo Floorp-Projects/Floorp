@@ -711,11 +711,12 @@ function highlightSyntax()
   gPageLoader.loadPage(gPageLoader.currentDescriptor, gPageLoader.DISPLAY_NORMAL);
 }
 
+// Reload after change to character encoding or autodetection
+//
 // Fix for bug 136322: this function overrides the function in
 // browser.js to call PageLoader.loadPage() instead of BrowserReloadWithFlags()
-function BrowserSetForcedCharacterSet(aCharset)
+function BrowserCharsetReload()
 {
-  gBrowser.docShell.charset = aCharset;
   if (isHistoryEnabled()) {
     gPageLoader.loadPage(gPageLoader.currentDescriptor,
                          gPageLoader.DISPLAY_NORMAL);
@@ -724,22 +725,10 @@ function BrowserSetForcedCharacterSet(aCharset)
   }
 }
 
-// fix for bug #229503
-// we need to define BrowserSetForcedDetector() so that we can
-// change auto-detect options in the "View | Character Encoding" menu.
-// As with BrowserSetForcedCharacterSet(), call PageLoader.loadPage() 
-// instead of BrowserReloadWithFlags()
-function BrowserSetForcedDetector(doReload)
+function BrowserSetForcedCharacterSet(aCharset)
 {
-  if (doReload)
-  {
-    if (isHistoryEnabled()) {
-      gPageLoader.loadPage(gPageLoader.currentDescriptor,
-                           gPageLoader.DISPLAY_NORMAL);
-    } else {
-      gBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
-    }
-  }
+  gBrowser.docShell.charset = aCharset;
+  BrowserCharsetReload();
 }
 
 function BrowserForward(aEvent) {
