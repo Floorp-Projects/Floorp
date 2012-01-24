@@ -17,8 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
   mozbrowserX events when this page is in the whitelist.
 -->
 
-<iframe id='iframe' mozbrowser></iframe>
-
 <script type="application/javascript;version=1.7">
 "use strict";
 
@@ -49,6 +47,7 @@ function runTest() {
     ok(seenLoadStart, 'Location change after load start.');
     ok(!seenLoad, 'Location change before load.');
     ok(!seenLoadEnd, 'Location change before load end.');
+    ok(e.detail, 'http://example.com', "event's reported location");
   });
 
   iframe.addEventListener('load', function() {
@@ -82,6 +81,8 @@ function waitForAllCallbacks() {
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
 
 </script>
+
+<iframe id='iframe' mozbrowser></iframe>
 
 </body>
 </html>

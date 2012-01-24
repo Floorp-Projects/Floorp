@@ -688,17 +688,19 @@ function ReadManifest(aURL, inherited_status)
         var needs_focus = false;
         var slow = false;
         var prefSettings = [];
+        var fuzzy_max_delta = 2;
+        var fuzzy_max_pixels = 1;
         
         while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref|fuzzy)/)) {
             var item = items.shift();
             var stat;
             var cond;
-            var m = item.match(/^(fails|random|skip|silentfail|fuzzy)-if(\(.*\))$/);
+            var m = item.match(/^(fails|random|skip|silentfail)-if(\(.*\))$/);
             if (m) {
                 stat = m[1];
                 // Note: m[2] contains the parentheses, and we want them.
                 cond = Components.utils.evalInSandbox(m[2], sandbox);
-            } else if (item.match(/^(fails|random|skip|fuzzy)$/)) {
+            } else if (item.match(/^(fails|random|skip)$/)) {
                 stat = item;
                 cond = true;
             } else if (item == "needs-focus") {
@@ -769,6 +771,18 @@ function ReadManifest(aURL, inherited_status)
                 prefSettings.push( { name: prefName,
                                      type: prefType,
                                      value: prefVal } );
+            } else if ((m = item.match(/^fuzzy\((\d+),(\d+)\)$/))) {
+              cond = false;
+              expected_status = EXPECTED_FUZZY;
+              fuzzy_max_delta = Number(m[1]);
+              fuzzy_max_pixels = Number(m[2]);
+            } else if ((m = item.match(/^fuzzy-if\((.*?),(\d+),(\d+)\)$/))) {
+              cond = false;
+              if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox)) {
+                expected_status = EXPECTED_FUZZY;
+                fuzzy_max_delta = Number(m[2]);
+                fuzzy_max_pixels = Number(m[3]);
+              }
             } else {
                 throw "Error 1 in manifest file " + aURL.spec + " line " + lineNo;
             }
@@ -780,8 +794,6 @@ function ReadManifest(aURL, inherited_status)
                     expected_status = EXPECTED_RANDOM;
                 } else if (stat == "skip") {
                     expected_status = EXPECTED_DEATH;
-                } else if (stat == "fuzzy") {
-                    expected_status = EXPECTED_FUZZY;
                 } else if (stat == "silentfail") {
                     allow_silent_fail = true;
                 }
@@ -850,6 +862,8 @@ function ReadManifest(aURL, inherited_status)
                           needsFocus: needs_focus,
                           slow: slow,
                           prefSettings: prefSettings,
+                          fuzzyMaxDelta: fuzzy_max_delta,
+                          fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: null } );
         } else if (items[0] == TYPE_SCRIPT) {
@@ -873,6 +887,8 @@ function ReadManifest(aURL, inherited_status)
                           needsFocus: needs_focus,
                           slow: slow,
                           prefSettings: prefSettings,
+                          fuzzyMaxDelta: fuzzy_max_delta,
+                          fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: null } );
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL) {
@@ -899,6 +915,8 @@ function ReadManifest(aURL, inherited_status)
                           needsFocus: needs_focus,
                           slow: slow,
                           prefSettings: prefSettings,
+                          fuzzyMaxDelta: fuzzy_max_delta,
+                          fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: refURI } );
         } else {
@@ -1413,7 +1431,8 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             // what is expected on this platform (PASS, FAIL, or RANDOM)
             var expected = gURLs[0].expected;
 
-            if (maxDifference.value > 0 && maxDifference.value <= 2) {
+            if (maxDifference.value > 0 && maxDifference.value <= gURLs[0].fuzzyMaxDelta &&
+                differences <= gURLs[0].fuzzyMaxPixels) {
                 if (equal) {
                     throw "Inconsistent result from compareCanvases.";
                 }

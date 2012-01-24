@@ -757,9 +757,9 @@ static void loadSQLiteLibs(const char *apkName)
 #endif
 
 #ifndef MOZ_OLD_LINKER
-  char *file = new char[strlen(apkName) + sizeof("!/mozsqlite3.so")];
-  sprintf(file, "%s!/mozsqlite3.so", apkName);
-  __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
+  char *file = new char[strlen(apkName) + sizeof("!/libmozsqlite3.so")];
+  sprintf(file, "%s!/libmozsqlite3.so", apkName);
+  sqlite_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete [] file;
 #else
 #define MOZLOAD(name) mozload("lib" name ".so", zip)
