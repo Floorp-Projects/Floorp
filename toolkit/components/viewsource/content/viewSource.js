@@ -164,8 +164,7 @@ function viewSource(url)
 
       try {
         if (arg === true) {
-          var docCharset = gBrowser.docShell.QueryInterface(Ci.nsIDocCharset);
-          docCharset.charset = charset;
+          gBrowser.docShell.charset = charset;
         }
       } catch (ex) {
         // Ignore the failure and keep processing arguments...
@@ -716,8 +715,7 @@ function highlightSyntax()
 // browser.js to call PageLoader.loadPage() instead of BrowserReloadWithFlags()
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var docCharset = gBrowser.docShell.QueryInterface(Ci.nsIDocCharset);
-  docCharset.charset = aCharset;
+  gBrowser.docShell.charset = aCharset;
   if (isHistoryEnabled()) {
     gPageLoader.loadPage(gPageLoader.currentDescriptor,
                          gPageLoader.DISPLAY_NORMAL);

@@ -72,7 +72,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(0666adf8-8738-4ca7-a917-0348f47d2f40)]
+[scriptable, uuid(0615d1a6-313f-11e1-a043-6c626d69675c)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -553,4 +553,40 @@ interface nsIDocShell : nsISupports
    * @param aPrincipal the principal to use for the new document.
    */
   void createAboutBlankContentViewer(in nsIPrincipal aPrincipal);
+
+  /**
+   * The charset attribute allows the user to view, hint, and set which
+   * converter is used to read the document's data.
+   *
+   * <P>Inside Mozilla all text is encoded as Unicode. By standardizing  
+   * on Unicode every piece of code that handles characters no longer 
+   * needs to: 
+   *
+   *     Have access to a character encoding parameter.
+   *     Ask is the data stateful?
+   *     Ask is the data single byte?
+   *     Ask is the data multi-byte?
+   *     If multi-byte: have access to a routine that can
+   *         determine how many bytes in the current character.
+   *
+   * When the document is read in a converter is used to convert 
+   * the document's data to Unicode.
+   *
+   * The charset attribute provides the ability to:
+   *
+   *   See what converter was used when inputting the documents
+   *   data.
+   *
+   *   Override the character set for documents where the specified 
+   *   fallback, or auto-detected character set is incorrect
+   *
+   * Get/sets the encoding (converter) used to read the 
+   * document. Get returns the encoding used. Set forces 
+   * (overrides) the encoding. After forcing the charset the 
+   * embedding application will need to cause the data to be 
+   * reparsed in order to update the DOM / display.
+   *
+   * A force also sets the fallback encoding for this frame.
+   */
+  attribute string charset;
 };

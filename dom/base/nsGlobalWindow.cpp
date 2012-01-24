@@ -8318,6 +8318,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
     if (mDocShell) {
       nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
       if (docCharset) {
+        NS_WARNING("Using deprecated nsIDocCharset: use nsIDocShell.GetCharset() instead ");
         *aSink = docCharset;
         NS_ADDREF(((nsISupports *) *aSink));
       }
