@@ -686,8 +686,16 @@ WebGLContext::CheckFramebufferStatus(WebGLenum target, WebGLenum *retval)
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("checkFramebufferStatus: target must be FRAMEBUFFER");
 
-    if (mBoundFramebuffer && mBoundFramebuffer->HasBadAttachments())
+    if (!mBoundFramebuffer)
+        *retval = LOCAL_GL_FRAMEBUFFER_COMPLETE;
+    else if(mBoundFramebuffer->HasDepthStencilConflict())
         *retval = LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
+    else if(!mBoundFramebuffer->ColorAttachment().IsDefined())
+        *retval = LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
+    else if(mBoundFramebuffer->HasIncompleteAttachment())
+        *retval = LOCAL_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+    else if(mBoundFramebuffer->HasAttachmentsOfMismatchedDimensions())
+        *retval = LOCAL_GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
     else
         *retval = gl->fCheckFramebufferStatus(target);
 
@@ -710,7 +718,7 @@ WebGLContext::Clear(PRUint32 mask)
 
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-            return NS_OK;
+            return ErrorInvalidFramebufferOperation("clear: incomplete framebuffer");
     } else {
         // no FBO is bound, so we are clearing the backbuffer here
         EnsureBackbufferClearedAsNeeded();
@@ -861,7 +869,7 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
             || y+height <= 0)
         {
             // we are completely outside of range, can exit now with buffer filled with zeros
-            return NS_OK;
+            return DummyFramebufferOperation(info);
         }
 
         GLint   actual_x             = clamped(x, 0, framebufferWidth);
@@ -946,8 +954,9 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
         return ErrorInvalidOperation("copyTexImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
 
-    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-        return NS_OK;
+    if (mBoundFramebuffer)
+        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+            return ErrorInvalidFramebufferOperation("copyTexImage2D: incomplete framebuffer");
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
     if (!tex)
@@ -1053,8 +1062,9 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
         return ErrorInvalidOperation("copyTexSubImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
 
-    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-        return NS_OK;
+    if (mBoundFramebuffer)
+        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+            return ErrorInvalidFramebufferOperation("copyTexSubImage2D: incomplete framebuffer");
 
     return CopyTexSubImage2D_base(target, level, format, xoffset, yoffset, x, y, width, height, true);
 }
@@ -1588,7 +1598,7 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-            return NS_OK;
+            return ErrorInvalidFramebufferOperation("drawArrays: incomplete framebuffer");
     } else {
         EnsureBackbufferClearedAsNeeded();
     }
@@ -1699,7 +1709,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
 
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-            return NS_OK;
+            return ErrorInvalidFramebufferOperation("drawElements: incomplete framebuffer");
     } else {
         EnsureBackbufferClearedAsNeeded();
     }
@@ -3372,7 +3382,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     if (mBoundFramebuffer) {
         // prevent readback of arbitrary video memory through uninitialized renderbuffers!
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-            return NS_OK;
+            return ErrorInvalidFramebufferOperation("readPixels: incomplete framebuffer");
     } else {
         EnsureBackbufferClearedAsNeeded();
     }
@@ -3380,7 +3390,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
 
     // If we won't be reading any pixels anyways, just skip the actual reading
     if (width == 0 || height == 0)
-        return NS_OK;
+        return DummyFramebufferOperation("readPixels");
 
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
         // the easy case: we're not reading out-of-range pixels
@@ -3403,7 +3413,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
             || y+height <= 0)
         {
             // we are completely outside of range, can exit now with buffer filled with zeros
-            return NS_OK;
+            return DummyFramebufferOperation("readPixels");
         }
 
         // compute the parameters of the subrect we're actually going to call glReadPixels on
@@ -3568,7 +3578,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         GLenum error = LOCAL_GL_NO_ERROR;
         UpdateWebGLErrorAndClearGLError(&error);
         if (error) {
-            LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+            LogMessageIfVerbose("renderbufferStorage generated error %s", ErrorName(error));
             return NS_OK;
         }
     } else {
