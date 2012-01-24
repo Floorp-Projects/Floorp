@@ -207,7 +207,7 @@ class Assembler : public AssemblerX86Shared
     }
     void addPendingJump(JmpSrc src, void *target, Relocation::Kind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target, kind));
-        if (kind == Relocation::CODE)
+        if (kind == Relocation::IONCODE)
             writeRelocation(src);
     }
 
@@ -323,29 +323,29 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
-    void jmp(void *target, Relocation::Kind reloc = Relocation::EXTERNAL) {
+    void jmp(void *target, Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jmp();
         addPendingJump(src, target, reloc);
     }
     void j(Condition cond, void *target,
-           Relocation::Kind reloc = Relocation::EXTERNAL) {
+           Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
     void jmp(IonCode *target) {
-        jmp(target->raw(), Relocation::CODE);
+        jmp(target->raw(), Relocation::IONCODE);
     }
     void j(Condition cond, IonCode *target) {
-        j(cond, target->raw(), Relocation::CODE);
+        j(cond, target->raw(), Relocation::IONCODE);
     }
     void call(IonCode *target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target->raw(), Relocation::CODE);
+        addPendingJump(src, target->raw(), Relocation::IONCODE);
     }
     void call(ImmWord target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target.asPointer(), Relocation::EXTERNAL);
+        addPendingJump(src, target.asPointer(), Relocation::HARDCODED);
     }
 
     // Re-routes pending jumps to an external target, flushing the label in the

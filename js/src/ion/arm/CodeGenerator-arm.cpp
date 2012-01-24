@@ -262,7 +262,7 @@ CodeGeneratorARM::generateOutOfLineCode()
         if (!handler)
             return false;
 
-        masm.ma_b(handler->raw(), Relocation::CODE);
+        masm.ma_b(handler->raw(), Relocation::IONCODE);
     }
 
     return true;
@@ -282,7 +282,7 @@ CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
 
     if (assignBailoutId(snapshot)) {
         uint8 *code = deoptTable_->raw() + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
-        masm.ma_b(code, Relocation::EXTERNAL, condition);
+        masm.ma_b(code, Relocation::HARDCODED, condition);
         return true;
     }
 
@@ -319,7 +319,7 @@ CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
 #if 0
     if (assignBailoutId(snapshot)) {
         uint8 *code = deoptTable_->raw() + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
-        masm.retarget(label, code, Relocation::EXTERNAL);
+        masm.retarget(label, code, Relocation::HARDCODED);
         return true;
     }
 #endif

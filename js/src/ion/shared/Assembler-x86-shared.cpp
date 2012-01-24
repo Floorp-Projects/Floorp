@@ -80,7 +80,7 @@ AssemblerX86Shared::trace(JSTracer *trc)
 {
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
-        if (rp.kind == Relocation::CODE)
+        if (rp.kind == Relocation::IONCODE)
             MarkIonCodeUnbarriered(trc, IonCode::FromExecutable((uint8 *)rp.target), "masmrel32");
     }
     if (dataRelocations_.length()) {

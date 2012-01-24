@@ -249,7 +249,7 @@ class Assembler : public AssemblerX86Shared
     void addPendingJump(JmpSrc src, void *target, Relocation::Kind reloc);
 
   protected:
-    size_t addPatchableJump(JmpSrc src);
+    size_t addPatchableJump(JmpSrc src, Relocation::Kind reloc);
 
   public:
     using AssemblerX86Shared::j;
@@ -478,25 +478,25 @@ class Assembler : public AssemblerX86Shared
         masm.testq_rr(rhs.code(), lhs.code());
     }
 
-    void jmp(void *target, Relocation::Kind reloc = Relocation::EXTERNAL) {
+    void jmp(void *target, Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jmp();
         addPendingJump(src, target, reloc);
     }
     void j(Condition cond, void *target,
-           Relocation::Kind reloc = Relocation::EXTERNAL) {
+           Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
     void jmp(IonCode *target) {
-        jmp(target->raw(), Relocation::CODE);
+        jmp(target->raw(), Relocation::IONCODE);
     }
     void j(Condition cond, IonCode *target) {
-        j(cond, target->raw(), Relocation::CODE);
+        j(cond, target->raw(), Relocation::IONCODE);
     }
     void call(IonCode *target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target->raw(), Relocation::CODE);
+        addPendingJump(src, target->raw(), Relocation::IONCODE);
     }
 
     // Do not mask shared implementations.

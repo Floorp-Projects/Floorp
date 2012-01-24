@@ -308,12 +308,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     CodeOffsetJump jumpWithPatch(Label *label) {
         JmpSrc src = jmpSrc(label);
-        return CodeOffsetJump(size(), addPatchableJump(src));
+        return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
     }
     CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
         cmpPtr(Operand(addr), ptr);
         JmpSrc src = jSrc(cond, label);
-        return CodeOffsetJump(size(), addPatchableJump(src));
+        return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         cmpPtr(lhs, rhs);
