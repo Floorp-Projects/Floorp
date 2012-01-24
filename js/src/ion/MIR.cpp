@@ -155,7 +155,7 @@ MDefinition::valueHash() const
 }
 
 bool
-MDefinition::congruentTo(MDefinition * const &ins) const
+MDefinition::congruentIfOperandsEqual(MDefinition * const &ins) const
 {
     if (numOperands() != ins->numOperands())
         return false;
@@ -164,6 +164,9 @@ MDefinition::congruentTo(MDefinition * const &ins) const
         return false;
 
     if (type() != ins->type())
+        return false;
+
+    if (isEffectful() || ins->isEffectful())
         return false;
 
     for (size_t i = 0; i < numOperands(); i++) {
@@ -439,7 +442,7 @@ MPhi::congruentTo(MDefinition *const &ins) const
     if (ins->block()->id() != block()->id())
         return false;
 
-    return MDefinition::congruentTo(ins);
+    return congruentIfOperandsEqual(ins);
 }
 
 bool
