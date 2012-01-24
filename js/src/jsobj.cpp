@@ -2141,17 +2141,17 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
                 break;
 
             if (desc.hasGet) {
-                JSBool same;
+                bool same;
                 if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
-                    return JS_FALSE;
+                    return false;
                 if (!same)
                     break;
             }
 
             if (desc.hasSet) {
-                JSBool same;
+                bool same;
                 if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
-                    return JS_FALSE;
+                    return false;
                 if (!same)
                     break;
             }
@@ -2190,10 +2190,10 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
                 if (!shape->isDataDescriptor())
                     break;
 
-                JSBool same;
+                bool same;
                 if (desc.hasValue) {
                     if (!SameValue(cx, desc.value, v, &same))
-                        return JS_FALSE;
+                        return false;
                     if (!same) {
                         /*
                          * Insist that a non-configurable js::PropertyOp data
@@ -2268,9 +2268,9 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
             if (desc.hasWritable && desc.writable())
                 return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             if (desc.hasValue) {
-                JSBool same;
+                bool same;
                 if (!SameValue(cx, desc.value, v, &same))
-                    return JS_FALSE;
+                    return false;
                 if (!same)
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
@@ -2282,17 +2282,17 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
         JS_ASSERT(desc.isAccessorDescriptor() && shape->isAccessorDescriptor());
         if (!shape->configurable()) {
             if (desc.hasSet) {
-                JSBool same;
+                bool same;
                 if (!SameValue(cx, desc.setterValue(), shape->setterOrUndefined(), &same))
-                    return JS_FALSE;
+                    return false;
                 if (!same)
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
 
             if (desc.hasGet) {
-                JSBool same;
+                bool same;
                 if (!SameValue(cx, desc.getterValue(), shape->getterOrUndefined(), &same))
-                    return JS_FALSE;
+                    return false;
                 if (!same)
                     return Reject(cx, JSMSG_CANT_REDEFINE_PROP, throwError, id, rval);
             }
