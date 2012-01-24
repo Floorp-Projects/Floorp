@@ -125,6 +125,7 @@ FENNEC_JAVA_FILES = \
   gfx/WidgetTileLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \
+  ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
   $(NULL)
