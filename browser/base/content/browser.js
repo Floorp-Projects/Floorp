@@ -1554,7 +1554,11 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // Perform default browser checking (after window opens).
   var shell = getShellService();
   if (shell) {
+#ifdef DEBUG
+    var shouldCheck = false;
+#else
     var shouldCheck = shell.shouldCheckDefaultBrowser;
+#endif
     var willRecoverSession = false;
     try {
       var ss = Cc["@mozilla.org/browser/sessionstartup;1"].

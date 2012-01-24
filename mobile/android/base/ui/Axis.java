@@ -212,6 +212,12 @@ abstract class Axis {
         if (mFlingState != FlingStates.FLINGING) {
             return false;
         }
+        if (mSubscroller.scrolling() && !mSubscroller.lastScrollSucceeded()) {
+            // if the subdocument stopped scrolling, it's because it reached the end
+            // of the subdocument. we don't do overscroll on subdocuments, so there's
+            // no point in continuing this fling.
+            return false;
+        }
 
         float excess = getExcess();
         if (mDisableSnap || FloatUtils.fuzzyEquals(excess, 0.0f)) {

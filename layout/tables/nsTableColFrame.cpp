@@ -92,7 +92,7 @@ nsTableColFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
-    nsRect damageArea = nsRect(GetColIndex(), 0, 1, tableFrame->GetRowCount());
+    nsIntRect damageArea(GetColIndex(), 0, 1, tableFrame->GetRowCount());
     tableFrame->AddBCDamageArea(damageArea);
   }
 }
@@ -168,10 +168,11 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
     break;
   }
   printf("\nm:%d c:%d(%c) p:%f sm:%d sc:%d sp:%f f:%d",
-         mMinCoord, mPrefCoord, mHasSpecifiedCoord ? 's' : 'u', mPrefPercent,
-         mSpanMinCoord, mSpanPrefCoord,
+         PRInt32(mMinCoord), PRInt32(mPrefCoord),
+         mHasSpecifiedCoord ? 's' : 'u', mPrefPercent,
+         PRInt32(mSpanMinCoord), PRInt32(mSpanPrefCoord),
          mSpanPrefPercent,
-         GetFinalWidth());
+         PRInt32(GetFinalWidth()));
   printf("\n%s**END COL DUMP** ", indent);
   delete [] indent;
 }

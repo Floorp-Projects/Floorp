@@ -402,7 +402,7 @@
       </xul:vbox>
       <xul:hbox anonid="input-container" align="center" class="setting-input">
         <xul:button type="button" anonid="button" label="&settings.path.button.label;" xbl:inherits="disabled" oncommand="showPicker();" />
-        <xul:label anonid="input" flex="1" crop="start" xbl:inherits="disabled" />
+        <xul:label anonid="input" flex="1" crop="center" xbl:inherits="disabled" />
       </xul:hbox>
     </content>
 
@@ -466,6 +466,7 @@
               label = this.hasAttribute("fullpath") ? file.path : file.leafName;
             } catch (e) {}
           }
+          this.input.tooltipText = val;
           return this.input.value = label;
        ]]>
         </setter>
