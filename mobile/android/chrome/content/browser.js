@@ -802,18 +802,7 @@ var BrowserApp = {
   },
 
   getDrawMetadata: function getDrawMetadata() {
-    let viewport = this.selectedTab.viewport;
-
-    // Sample the background color of the page and pass it along. (This is used to draw the
-    // checkerboard.)
-    let browser = this.selectedBrowser;
-    if (browser) {
-      let { contentDocument, contentWindow } = browser;
-      let computedStyle = contentWindow.getComputedStyle(contentDocument.body);
-      viewport.backgroundColor = computedStyle.backgroundColor;
-    }
-
-    return JSON.stringify(viewport);
+    return JSON.stringify(this.selectedTab.viewport);
   },
 
   observe: function(aSubject, aTopic, aData) {
