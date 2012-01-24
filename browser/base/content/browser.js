@@ -1554,7 +1554,11 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // Perform default browser checking (after window opens).
   var shell = getShellService();
   if (shell) {
+#ifdef DEBUG
+    var shouldCheck = false;
+#else
     var shouldCheck = shell.shouldCheckDefaultBrowser;
+#endif
     var willRecoverSession = false;
     try {
       var ss = Cc["@mozilla.org/browser/sessionstartup;1"].
@@ -5197,7 +5201,7 @@ nsBrowserAccess.prototype = {
         let win, needToFocusWin;
 
         // try the current window.  if we're in a popup, fall back on the most recent browser window
-        if (!window.document.documentElement.getAttribute("chromehidden"))
+        if (window.toolbar.visible)
           win = window;
         else {
           win = Cc["@mozilla.org/browser/browserglue;1"]

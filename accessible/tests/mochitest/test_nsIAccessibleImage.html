@@ -76,14 +76,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       is(height.value, aHeight, "wrong height for " + aID + "!");
     }
 
-    function testThis(aID, aName, aSRC, aWidth, aHeight,
+    function testThis(aID, aSRC, aWidth, aHeight,
                       aNumActions, aActionNames)
     {
       var acc = getAccessible(aID, [nsIAccessibleImage]);
       if (!acc)
         return;
-
-      is(acc.name, aName, "wrong name for " + aID + "!");
 
       // Test role
       testRole(aID, ROLE_GRAPHIC);
@@ -108,50 +106,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
     function doTest()
     {
       // Test non-linked image
-      testThis("nonLinkedImage", null, "moz.png", 89, 38);
+      testThis("nonLinkedImage", "moz.png", 89, 38);
 
       // Test linked image
-      testThis("linkedImage", null, "moz.png", 89, 38);
-
-      // Test non-linked image with alt attribute
-      testThis("nonLinkedImageWithAlt", "MoFo", "moz.png", 89, 38);
-
-      // Test linked image with alt attribute
-      testThis("linkedImageWithAlt", "MoFo link", "moz.png", 89, 38);
-
-      // Test non-linked image with title attribute
-      testThis("nonLinkedImageWithTitle", "MoFo logo", "moz.png", 89, 38);
-
-      // Test linked image with title attribute
-      testThis("linkedImageWithTitle", "Link to MoFo", "moz.png", 89, 38);
-
-      // Test simple image with empty alt attribute
-      testThis("nonLinkedImageEmptyAlt", "", "moz.png", 89, 38);
-
-      // Test linked image with empty alt attribute
-      testThis("linkedImageEmptyAlt", "", "moz.png", 89, 38);
-
-      // Test simple image with empty alt attribute and title
-      testThis("nonLinkedImageEmptyAltAndTitle", "MozillaFoundation", "moz.png", 89, 38);
-
-      // Test linked image with empty alt attribute and title
-      testThis("linkedImageEmptyAltAndTitle", "Link to Mozilla Foundation", "moz.png", 89, 38);
+      testThis("linkedImage", "moz.png", 89, 38);
 
       // Image with long desc
       var actionNamesArray = new Array("showlongdesc");
-      testThis("longdesc", "Image of Mozilla logo", "moz.png", 89, 38, 1,
+      testThis("longdesc", "moz.png", 89, 38, 1,
                actionNamesArray);
 
       // Image with click and long desc
       actionNamesArray = null;
       actionNamesArray = new Array("click", "showlongdesc");
-      testThis("clickAndLongdesc", "Another image of Mozilla logo", "moz.png",
+      testThis("clickAndLongdesc", "moz.png",
                89, 38, 2, actionNamesArray);
       
       // Image with click
       actionNamesArray = null;
       actionNamesArray = new Array("click");
-      testThis("click", "A third image of Mozilla logo", "moz.png",
+      testThis("click", "moz.png",
                89, 38, 1, actionNamesArray);
       
       SimpleTest.finish();
@@ -172,23 +146,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
   <img id="nonLinkedImage" src="moz.png"/>
   <br>Linked image:<br>
   <a href="http://www.mozilla.org"><img id="linkedImage" src="moz.png"></a>
-  <br>Simple image with alt:<br>
-  <img id="nonLinkedImageWithAlt" src="moz.png" alt="MoFo"/>
-  <br>Linked image with alt:<br>
-  <a href="http://www.mozilla.org"><img id="linkedImageWithAlt" src="moz.png" alt="MoFo link"/></a>
-  <br>Simple image with title:<br>
-  <img id="nonLinkedImageWithTitle" src="moz.png" title="MoFo logo"/>
-  <br>Linked image with title:<br>
-  <a href="http://www.mozilla.org"><img id="linkedImageWithTitle" src="moz.png" title="Link to MoFo"/></a>
-  <br>Simple image with empty alt:<br>
-  <img id="nonLinkedImageEmptyAlt" src="moz.png" alt=""/>
-  <br>Linked image with empty alt:<br>
-  <a href="http://www.mozilla.org"><img id="linkedImageEmptyAlt" src="moz.png" alt=""/></a>
-  <br>Simple image with empty alt and title:<br>
-  <img id="nonLinkedImageEmptyAltAndTitle" src="moz.png" alt="" title="MozillaFoundation"/>
-  <br>Linked image with empty alt and title:<br>
-  <a href="http://www.mozilla.org"><img id="linkedImageEmptyAltAndTitle" src="moz.png" alt=""
-     title="Link to Mozilla Foundation"/></a>
   <br>Image with longdesc:<br>
   <img id="longdesc" src="moz.png" longdesc="longdesc_src.html"
        alt="Image of Mozilla logo"/>

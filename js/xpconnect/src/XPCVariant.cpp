@@ -118,9 +118,11 @@ XPCTraceableVariant::PrintTraceName(JSTracer* trc, char *buf, size_t bufsize)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
     jsval val = tmp->GetJSValPreserveColor();
-    if (JSVAL_IS_OBJECT(val))
+    if (JSVAL_IS_OBJECT(val)) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSVal");
         cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
                            JSVAL_TO_OBJECT(val));
+    }
 
     nsVariant::Traverse(tmp->mData, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

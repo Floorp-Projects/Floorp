@@ -133,7 +133,18 @@ public class GeckoAppShell
     public static native void loadGeckoLibsNative(String apkName);
     public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
-    public static native void reportJavaCrash(String stack);
+
+    public static void reportJavaCrash(Throwable e) {
+        Log.e(LOGTAG, "top level exception", e);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        pw.flush();
+        reportJavaCrash(sw.toString());
+    }
+
+    private static native void reportJavaCrash(String stackTrace);
+
     public static void notifyUriVisited(String uri) {
         sendEventToGecko(new GeckoEvent(GeckoEvent.VISTITED, uri));
     }

@@ -891,9 +891,11 @@ SpdySession::HandleSynReply(SpdySession *self)
   
   Telemetry::Accumulate(Telemetry::SPDY_SYN_REPLY_SIZE,
                         self->mFrameDataSize - 6);
-  PRUint32 ratio =
-    (self->mFrameDataSize - 6) * 100 / self->mDecompressBufferUsed;
-  Telemetry::Accumulate(Telemetry::SPDY_SYN_REPLY_RATIO, ratio);
+  if (self->mDecompressBufferUsed) {
+    PRUint32 ratio =
+      (self->mFrameDataSize - 6) * 100 / self->mDecompressBufferUsed;
+    Telemetry::Accumulate(Telemetry::SPDY_SYN_REPLY_RATIO, ratio);
+  }
 
   // status and version are required.
   nsDependentCSubstring status, version;
