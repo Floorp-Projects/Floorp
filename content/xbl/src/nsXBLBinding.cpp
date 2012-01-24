@@ -309,6 +309,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLBinding)
   tmp->mInsertionPointTable = nsnull;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXBLBinding)
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                                     "mPrototypeBinding->XBLDocumentInfo()");
   cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(
                       tmp->mPrototypeBinding->XBLDocumentInfo()));
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)

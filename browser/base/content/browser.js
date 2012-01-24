@@ -5201,7 +5201,7 @@ nsBrowserAccess.prototype = {
         let win, needToFocusWin;
 
         // try the current window.  if we're in a popup, fall back on the most recent browser window
-        if (!window.document.documentElement.getAttribute("chromehidden"))
+        if (window.toolbar.visible)
           win = window;
         else {
           win = Cc["@mozilla.org/browser/browserglue;1"]
