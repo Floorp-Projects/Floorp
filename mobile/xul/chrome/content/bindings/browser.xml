@@ -654,7 +654,6 @@
          <getter><![CDATA[
             return {
                forcedCharset : this._charset,
-               forcedDetector : false,
                parentCharset : "",
                parentCharsetSource : 0
             }

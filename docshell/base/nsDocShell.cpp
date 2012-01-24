@@ -1896,18 +1896,6 @@ NS_IMETHODIMP nsDocShell::GetForcedCharset(nsIAtom ** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::SetForcedDetector(bool aForced)
-{
-  // XXX write me
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetForcedDetector(bool * aResult)
-{
-  // XXX write me
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDocShell::SetParentCharset(nsIAtom * aCharset)
 {
   mParentCharset = aCharset;
