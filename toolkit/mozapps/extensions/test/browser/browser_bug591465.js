@@ -5,7 +5,9 @@
 // Bug 591465 - Context menu of add-ons miss context related state change entries
 
 
-Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
+let tempScope = {};
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
+let LightweightThemeManager = tempScope.LightweightThemeManager;
 
 
 const PREF_GETADDONS_MAXRESULTS = "extensions.getAddons.maxResults";
