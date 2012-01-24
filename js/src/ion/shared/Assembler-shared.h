@@ -97,13 +97,13 @@ struct Address
 class Relocation {
   public:
     enum Kind {
-        // The target will never move, so patching is only needed if the source
-        // buffer is moved.
-        EXTERNAL,
+        // The target is immovable, so patching is only needed if the source
+        // buffer is relocated and the reference is relative.
+        HARDCODED,
 
-        // The target could move, so patching may be needed. The actual
-        // reference in source is relative.
-        CODE
+        // The target is the start of an IonCode buffer, which must be traced
+        // during garbage collection. Relocations and patching may be needed.
+        IONCODE
     };
 };
 

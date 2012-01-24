@@ -1469,7 +1469,7 @@ public:
   protected:
     void addPendingJump(BufferOffset src, void *target, Relocation::Kind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src, target, kind));
-        if (kind == Relocation::CODE)
+        if (kind == Relocation::IONCODE)
             writeRelocation(src);
     }
 

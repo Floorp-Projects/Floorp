@@ -291,7 +291,7 @@ CodeGeneratorX86Shared::generateOutOfLineCode()
         if (!handler)
             return false;
 
-        masm.jmp(handler->raw(), Relocation::CODE);
+        masm.jmp(handler->raw(), Relocation::IONCODE);
     }
 
     return true;
@@ -305,7 +305,7 @@ class BailoutJump {
     { }
 #ifdef JS_CPU_X86
     void operator()(MacroAssembler &masm, uint8 *code) const {
-        masm.j(cond_, code, Relocation::EXTERNAL);
+        masm.j(cond_, code, Relocation::HARDCODED);
     }
 #endif
     void operator()(MacroAssembler &masm, Label *label) const {
@@ -321,7 +321,7 @@ class BailoutLabel {
     { }
 #ifdef JS_CPU_X86
     void operator()(MacroAssembler &masm, uint8 *code) const {
-        masm.retarget(label_, code, Relocation::EXTERNAL);
+        masm.retarget(label_, code, Relocation::HARDCODED);
     }
 #endif
     void operator()(MacroAssembler &masm, Label *label) const {

@@ -66,17 +66,19 @@ Assembler::addPendingJump(JmpSrc src, void *target, Relocation::Kind reloc)
 
     // Emit reloc before modifying the jump table, since it computes a 0-based
     // index.
-    if (reloc == Relocation::CODE)
+    if (reloc == Relocation::IONCODE)
         writeRelocation(src);
     enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target, reloc));
 }
 
 size_t
-Assembler::addPatchableJump(JmpSrc src)
+Assembler::addPatchableJump(JmpSrc src, Relocation::Kind reloc)
 {
-    writeRelocation(src);
+    if (reloc == Relocation::IONCODE)
+        writeRelocation(src);
+
     size_t index = jumps_.length();
-    enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), NULL, Relocation::CODE));
+    enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), NULL, reloc));
     return index;
 }
 
@@ -112,10 +114,13 @@ Assembler::flush()
     extendedJumpTable_ = masm.size();
 
     // Now that we know the offset to the jump table, squirrel it into the
-    // jump relocation buffer.
-    JS_ASSERT(jumpRelocations_.length() >= sizeof(uint32));
-    *(uint32 *)jumpRelocations_.buffer() = extendedJumpTable_;
+    // jump relocation buffer if any IonCode references exist and must be
+    // tracked for GC.
+    JS_ASSERT_IF(jumpRelocations_.length(), jumpRelocations_.length() >= sizeof(uint32));
+    if (jumpRelocations_.length())
+        *(uint32 *)jumpRelocations_.buffer() = extendedJumpTable_;
 
+    // Zero the extended jumps table.
     for (size_t i = 0; i < jumps_.length(); i++) {
 #ifdef DEBUG
         size_t oldSize = masm.size();
