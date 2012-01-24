@@ -429,8 +429,11 @@ public class AboutHomeContent extends ScrollView {
                 try {
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject jsonobj = array.getJSONObject(i);
+
                         View row = mInflater.inflate(R.layout.abouthome_addon_row, mAddonsLayout, false);
                         ((TextView) row.findViewById(R.id.addon_title)).setText(jsonobj.getString("name"));
+                        ((TextView) row.findViewById(R.id.addon_version)).setText(jsonobj.getString("version"));
+
                         mAddonsLayout.addView(row);
                     }
                 } catch (JSONException e) {
