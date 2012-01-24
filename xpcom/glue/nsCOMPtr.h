@@ -58,7 +58,7 @@
   // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
 #ifndef nsDebug_h___
 #include "nsDebug.h"
-  // for |NS_PRECONDITION|
+  // for |NS_ABORT_IF_FALSE|, |NS_ASSERTION|
 #endif
 
 #ifndef nsISupportsUtils_h__
@@ -806,7 +806,7 @@ class nsCOMPtr MOZ_FINAL
       T*
       operator->() const
         {
-          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator->().");
+          NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator->().");
           return get();
         }
 
@@ -830,7 +830,7 @@ class nsCOMPtr MOZ_FINAL
       T&
       operator*() const
         {
-          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator*().");
+          NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator*().");
           return *get();
         }
 
@@ -1113,7 +1113,7 @@ class nsCOMPtr<nsISupports>
       nsISupports*
       operator->() const
         {
-          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator->().");
+          NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator->().");
           return get();
         }
 
@@ -1138,7 +1138,7 @@ class nsCOMPtr<nsISupports>
       nsISupports&
       operator*() const
         {
-          NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator*().");
+          NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a NULL nsCOMPtr with operator*().");
           return *get();
         }
 
