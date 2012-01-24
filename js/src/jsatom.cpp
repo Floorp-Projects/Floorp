@@ -385,14 +385,9 @@ js_TraceAtomState(JSTracer *trc)
     JSRuntime *rt = trc->runtime;
     JSAtomState *state = &rt->atomState;
 
-#ifdef DEBUG
-    size_t number = 0;
-#endif
-
     if (rt->gcKeepAtoms) {
         for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
-            JS_SET_TRACING_INDEX(trc, "locked_atom", number++);
-            MarkAtom(trc, r.front().asPtr());
+            MarkRoot(trc, r.front().asPtr(), "locked_atom");
         }
     } else {
         for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
@@ -400,8 +395,7 @@ js_TraceAtomState(JSTracer *trc)
             if (!entry.isTagged())
                 continue;
 
-            JS_SET_TRACING_INDEX(trc, "interned_atom", number++);
-            MarkAtom(trc, entry.asPtr());
+            MarkRoot(trc, entry.asPtr(), "interned_atom");
         }
     }
 }

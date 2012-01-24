@@ -163,20 +163,6 @@ MarkString(JSTracer *trc, const MarkablePtr<JSString> &str, const char *name)
 }
 
 void
-MarkAtom(JSTracer *trc, JSAtom *atom)
-{
-    JS_ASSERT(trc);
-    JS_ASSERT(atom);
-    Mark(trc, atom);
-}
-
-void
-MarkAtom(JSTracer *trc, JSAtom *atom, const char *name)
-{
-    MarkStringUnbarriered(trc, atom, name);
-}
-
-void
 MarkObjectUnbarriered(JSTracer *trc, JSObject *obj, const char *name)
 {
     JS_ASSERT(trc);
