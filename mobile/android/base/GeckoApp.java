@@ -950,23 +950,6 @@ abstract public class GeckoApp
             } else if (event.equals("onCameraCapture")) {
                 //GeckoApp.mAppContext.doCameraCapture(message.getString("path"));
                 doCameraCapture();
-            } else if (event.equals("Tab:Added")) {
-                Log.i(LOGTAG, "Received message from Gecko: " + SystemClock.uptimeMillis() + " - Tab:Added");
-                Tab tab = Tabs.getInstance().addTab(message);
-                Boolean selected = message.getBoolean("selected");
-                if (selected)
-                    Tabs.getInstance().selectTab(tab.getId());
-            } else if (event.equals("Tab:Close")) {
-                int tabId = message.getInt("tabID");
-                Tab tab = Tabs.getInstance().getTab(tabId);
-                Tabs.getInstance().closeTab(tab);
-            } else if (event.equals("Tab:ScreenshotData")) {
-                int tabId = message.getInt("tabID");
-                Tab tab = Tabs.getInstance().getTab(tabId);
-                processThumbnail(tab, null, Base64.decode(message.getString("data").substring(22), Base64.DEFAULT));
-            } else if (event.equals("Tab:Select")) {
-                int tabId = message.getInt("tabID");
-                Tabs.getInstance().selectTab(tabId);
             } else if (event.equals("Doorhanger:Add")) {
                 handleDoorHanger(message);
             } else if (event.equals("Doorhanger:Remove")) {
@@ -1612,10 +1595,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Tab:Close", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Tab:Select", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Tab:ScreenshotData", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
@@ -1943,10 +1922,6 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Tab:Close", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Tab:Select", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Tab:ScreenshotData", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
