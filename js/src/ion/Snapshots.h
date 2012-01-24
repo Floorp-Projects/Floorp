@@ -79,7 +79,9 @@ class SnapshotReader
 #ifdef TRACK_SNAPSHOTS
     uint32 pcOpcode_;
     uint32 mirOpcode_;
+    uint32 mirId_;
     uint32 lirOpcode_;
+    uint32 lirId_;
 #endif
 
     void readSnapshotHeader();
@@ -321,7 +323,8 @@ class SnapshotWriter
     SnapshotOffset startSnapshot(uint32 frameCount, BailoutKind kind);
     void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32 exprStack);
 #ifdef TRACK_SNAPSHOTS
-    void trackFrame(uint32 pcOpcode, uint32 mirOpcode, uint32 lirOpcode);
+    void trackFrame(uint32 pcOpcode, uint32 mirOpcode, uint32 mirId,
+                                     uint32 lirOpcode, uint32 lirId);
 #endif
     void endFrame();
 
