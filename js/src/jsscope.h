@@ -48,15 +48,13 @@
 #include <stdio.h>
 #endif
 
+#include "jsdhash.h"
+#include "jsobj.h"
+#include "jspropertytree.h"
 #include "jstypes.h"
 
-#include "jscntxt.h"
-#include "jsobj.h"
-#include "jsprvtd.h"
-#include "jspubtd.h"
-#include "jspropertytree.h"
-
 #include "js/HashTable.h"
+#include "gc/Root.h"
 #include "mozilla/Attributes.h"
 
 #ifdef _MSC_VER

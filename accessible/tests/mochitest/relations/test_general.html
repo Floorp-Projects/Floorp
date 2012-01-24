@@ -126,6 +126,19 @@
       testRelation("legend", RELATION_LABEL_FOR, "fieldset");
       testRelation("fieldset", RELATION_LABELLED_BY, "legend");
 
+      // 'embeds' relation for root accessible
+      var docAcc = null;
+      var parentOfDocAcc = null;
+      var parentDocAcc = getAccessible(document);
+      do {
+        docAcc = parentDocAcc;
+        parentOfDocAcc = getAccessible(docAcc.parent, [nsIAccessNode]);
+        parentDocAcc = getAccessible(parentOfDocAcc.document,
+                                     [nsIAccessible]);
+      } while (getRole(parentDocAcc) != ROLE_CHROME_WINDOW)
+
+      testRelation(parentDocAcc, RELATION_EMBEDS, docAcc);
+
       // finish test
       SimpleTest.finish();
     }

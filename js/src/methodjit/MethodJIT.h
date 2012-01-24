@@ -309,9 +309,6 @@ enum RejoinState {
     /* State is coherent for the start of the next (fallthrough) bytecode. */
     REJOIN_FALLTHROUGH,
 
-    /* State is coherent for the start of the bytecode returned by the call. */
-    REJOIN_JUMP,
-
     /*
      * As for REJOIN_FALLTHROUGH, but holds a reference on the compartment's
      * orphaned native pools which needs to be reclaimed by InternalInterpret.

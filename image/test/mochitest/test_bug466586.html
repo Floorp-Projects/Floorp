@@ -8,38 +8,47 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=466586
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body onload="loadSmall()">
+
+<body onload="loadSmall();">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=89419">Mozilla Bug 466586</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<img src="big.png" width="100" height="100" id="big" />
+  <img id="big" src="big.png"/>
 </div>
 <pre id="test">
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
 
-// We have loaded the large png with id "big". We want to test if it'll be
+var jsBig = new Image();
+
+// We have loaded the large png with id "big". We want to test if it will be
 // kicked out of the cache and thus have to be reloaded, but to ensure that, we
-// need to get the cache to look at what's there. So we load another image,
+// need to get the cache to look at what is there. So we load another image,
 // this one small.
 function loadSmall()
 {
-  var small = new Image();
+  // Trivial check, for reference.
+  is(document.getElementById("big").width, 3000,
+     "HTML 'big' image width after page onload()");
 
+  var small = new Image();
   small.onload = smallLoaded;
-  small.src="red.png";
+  small.src = "red.png";
 }
 
 function smallLoaded()
 {
-  // Make sure that we don't need another load.
-  var big = document.getElementById('big');
-  var img = new Image();
-  img.src = big.src;
-// temporarily disabled while we work out why it's failing (bug 490384)
-//  ok(img.width != 0);
-  ok(true);
+  jsBig.src = document.getElementById("big").src;
+  // Check that it is not needed to wait for onload().
+  is(jsBig.width, 3000, "JS 'big' image width before its onload()");
+  // Check again after onload(), for reference.
+  jsBig.onload = jsBigLoaded;
+}
+
+function jsBigLoaded()
+{
+  is(jsBig.width, 3000, "JS 'big' image width after its onload()");
 
   SimpleTest.finish();
 }
