@@ -80,6 +80,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     private final LayerView mView;
     private final SingleTileLayer mBackgroundLayer;
+    private final CheckerboardImage mCheckerboardImage;
     private final SingleTileLayer mCheckerboardLayer;
     private final NinePatchTileLayer mShadowLayer;
     private final TextLayer mFrameRateLayer;
@@ -108,8 +109,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             mBackgroundLayer.endTransaction();
         }
 
-        CairoImage checkerboardImage = new BufferedCairoImage(controller.getCheckerboardPattern());
-        mCheckerboardLayer = new SingleTileLayer(true, checkerboardImage);
+        mCheckerboardImage = new CheckerboardImage();
+        mCheckerboardLayer = new SingleTileLayer(true, mCheckerboardImage);
         mCheckerboardLayer.beginTransaction(null);
         try {
             mCheckerboardLayer.invalidate();
@@ -189,7 +190,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (rootLayer != null) updated &= rootLayer.update(gl, pageContext);
             updated &= mBackgroundLayer.update(gl, screenContext);
             updated &= mShadowLayer.update(gl, pageContext);
-            updated &= mCheckerboardLayer.update(gl, screenContext);
+            updateCheckerboardLayer(gl, screenContext);
             updated &= mFrameRateLayer.update(gl, screenContext);
             updated &= mVertScrollLayer.update(gl, pageContext);
             updated &= mHorizScrollLayer.update(gl, pageContext);
@@ -350,6 +351,23 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                 mShowFrameRate = preferences.getBoolean("showFrameRate", false);
             }
         }).start();
+    }
+
+    private void updateCheckerboardLayer(GL10 gl, RenderContext renderContext) {
+        int newCheckerboardColor = mView.getController().getCheckerboardColor();
+        if (newCheckerboardColor == mCheckerboardImage.getColor()) {
+            return;
+        }
+
+        mCheckerboardLayer.beginTransaction();
+        try {
+            mCheckerboardImage.setColor(newCheckerboardColor);
+            mCheckerboardLayer.invalidate();
+        } finally {
+            mCheckerboardLayer.endTransaction();
+        }
+
+        mCheckerboardLayer.update(gl, renderContext);
     }
 
     class FadeRunnable implements Runnable {
