@@ -951,8 +951,8 @@ abstract public class GeckoApp
                 //GeckoApp.mAppContext.doCameraCapture(message.getString("path"));
                 doCameraCapture();
             } else if (event.equals("Tab:Added")) {
-                Log.i(LOGTAG, "Created a new tab");
-                Tab tab = handleAddTab(message);
+                Log.i(LOGTAG, "Received message from Gecko: " + SystemClock.uptimeMillis() + " - Tab:Added");
+                Tab tab = Tabs.getInstance().addTab(message);
                 Boolean selected = message.getBoolean("selected");
                 if (selected)
                     Tabs.getInstance().selectTab(tab.getId());
@@ -1214,19 +1214,6 @@ abstract public class GeckoApp
                 mDoorHangerPopup.updatePopup();
             }
         });
-    }
-
-    Tab handleAddTab(JSONObject params) throws JSONException {
-        Log.i(LOGTAG, params.toString());
-        final Tab tab = Tabs.getInstance().addTab(params);
-
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
-            }
-        });
-
-        return tab;
     }
 
     void handleDocumentStart(int tabId, final boolean showProgress) {
@@ -2379,6 +2366,7 @@ abstract public class GeckoApp
             Log.e(LOGTAG, "error building JSON arguments");
         }
         if (type == AwesomeBar.Type.ADD) {
+            Log.i(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
             GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Add", args.toString()));
         } else {
             GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Load", args.toString()));
@@ -2415,6 +2403,7 @@ abstract public class GeckoApp
         } catch (Exception e) {
             Log.e(LOGTAG, "error building JSON arguments");
         }
+        Log.i(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
         GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Add", args.toString()));
     }
 
