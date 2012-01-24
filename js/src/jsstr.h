@@ -186,7 +186,7 @@ namespace js {
  * or str2 are not GC-allocated things.
  */
 extern bool
-EqualStrings(JSContext *cx, JSString *str1, JSString *str2, JSBool *result);
+EqualStrings(JSContext *cx, JSString *str1, JSString *str2, bool *result);
 
 /* EqualStrings is infallible on linear strings. */
 extern bool
