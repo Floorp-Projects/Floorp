@@ -160,15 +160,19 @@ SnapshotReader::readSnapshotBody()
     IonSpew(IonSpew_Snapshots, "Read pc offset %u, nslots %u", pcOffset_, slotCount_);
 
 #ifdef TRACK_SNAPSHOTS
-    pcOpcode_ = reader_.readUnsigned();
+    pcOpcode_  = reader_.readUnsigned();
     mirOpcode_ = reader_.readUnsigned();
+    mirId_     = reader_.readUnsigned();
     lirOpcode_ = reader_.readUnsigned();
-    if (IonSpewEnabled(IonSpew_Snapshots)) {
-        IonSpewHeader(IonSpew_Snapshots);
-        fprintf(IonSpewFile, "Involved Opcodes, Bytecode: %s, MIR: ", js_CodeName[pcOpcode_]);
+    lirId_     = reader_.readUnsigned();
+
+    if (IonSpewEnabled(IonSpew_Bailouts)) {
+        IonSpewHeader(IonSpew_Bailouts);
+        fprintf(IonSpewFile, " bailing from bytecode: %s, MIR: ", js_CodeName[pcOpcode_]);
         MDefinition::PrintOpcodeName(IonSpewFile, MDefinition::Opcode(mirOpcode_));
-        fprintf(IonSpewFile, ", LIR: ");
+        fprintf(IonSpewFile, " [%u], LIR: ", mirId_);
         LInstruction::printName(IonSpewFile, LInstruction::Opcode(lirOpcode_));
+        fprintf(IonSpewFile, " [%u]", lirId_);
         fprintf(IonSpewFile, "\n");
     }
 #endif
@@ -502,11 +506,14 @@ SnapshotWriter::startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, ui
 
 #ifdef TRACK_SNAPSHOTS
 void
-SnapshotWriter::trackFrame(uint32 pcOpcode, uint32 mirOpcode, uint32 lirOpcode)
+SnapshotWriter::trackFrame(uint32 pcOpcode, uint32 mirOpcode, uint32 mirId,
+                                            uint32 lirOpcode, uint32 lirId)
 {
     writer_.writeUnsigned(pcOpcode);
     writer_.writeUnsigned(mirOpcode);
+    writer_.writeUnsigned(mirId);
     writer_.writeUnsigned(lirOpcode);
+    writer_.writeUnsigned(lirId);
 }
 #endif
 
