@@ -501,6 +501,11 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case VISITED: {
+            ReadCharactersField(jenv);
+            break;
+        }
+
         default:
             break;
     }
