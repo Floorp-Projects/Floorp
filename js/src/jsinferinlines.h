@@ -630,6 +630,15 @@ TypeScript::MonitorUnknown(JSContext *cx)
 }
 
 /* static */ inline void
+TypeScript::Monitor(JSContext *cx, const js::Value &rval)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    GetPcScript(cx, &script, &pc);
+    Monitor(cx, script, pc, rval);
+}
+
+/* static */ inline void
 TypeScript::MonitorAssign(JSContext *cx, JSScript *script, jsbytecode *pc,
                           JSObject *obj, jsid id, const js::Value &rval)
 {

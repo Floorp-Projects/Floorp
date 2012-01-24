@@ -210,17 +210,6 @@ stubs::GetElem(VMFrame &f)
 #endif
 }
 
-static inline bool
-FetchElementId(VMFrame &f, JSObject *obj, const Value &idval, jsid &id, Value *vp)
-{
-    int32_t i_;
-    if (ValueFitsInInt32(idval, &i_) && INT_FITS_IN_JSID(i_)) {
-        id = INT_TO_JSID(i_);
-        return true;
-    }
-    return !!js_InternNonIntElementId(f.cx, obj, idval, &id, vp);
-}
-
 template<JSBool strict>
 void JS_FASTCALL
 stubs::SetElem(VMFrame &f)
@@ -239,7 +228,7 @@ stubs::SetElem(VMFrame &f)
     if (!obj)
         THROW();
 
-    if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
         THROW();
 
     TypeScript::MonitorAssign(cx, f.script(), f.pc(), obj, id, rval);
@@ -287,7 +276,7 @@ stubs::ToId(VMFrame &f)
         THROW();
 
     jsid id;
-    if (!FetchElementId(f, obj, idval, id, &idval))
+    if (!FetchElementId(f.cx, obj, idval, id, &idval))
         THROW();
 
     if (!idval.isInt32())
@@ -1032,7 +1021,7 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     /* Fetch id now that we have obj. */
     jsid id;
     const Value &idval = regs.sp[-2];
-    if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
         THROW();
 
     /*
@@ -1744,7 +1733,7 @@ stubs::In(VMFrame &f)
 
     JSObject *obj = &rref.toObject();
     jsid id;
-    if (!FetchElementId(f, obj, f.regs.sp[-2], id, &f.regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id, &f.regs.sp[-2]))
         THROWV(JS_FALSE);
 
     JSObject *obj2;

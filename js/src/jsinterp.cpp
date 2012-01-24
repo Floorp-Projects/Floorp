@@ -2721,78 +2721,8 @@ BEGIN_CASE(JSOP_GETELEM)
 {
     Value &lref = regs.sp[-2];
     Value &rref = regs.sp[-1];
-    Value &rval = regs.sp[-2];
-    if (lref.isString() && rref.isInt32()) {
-        JSString *str = lref.toString();
-        int32_t i = rref.toInt32();
-        if (size_t(i) < str->length()) {
-            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(i));
-            if (!str)
-                goto error;
-            rval.setString(str);
-            TypeScript::Monitor(cx, script, regs.pc, rval);
-            regs.sp--;
-            len = JSOP_GETELEM_LENGTH;
-            DO_NEXT_OP(len);
-        }
-    }
-
-    if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
-        if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
-            rval = regs.fp()->canonicalActualArg(rref.toInt32());
-            TypeScript::Monitor(cx, script, regs.pc, rval);
-            regs.sp--;
-            len = JSOP_GETELEM_LENGTH;
-            DO_NEXT_OP(len);
-        }
-        MarkArgumentsCreated(cx, script);
-        JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
-    }
-
-    JSObject *obj;
-    VALUE_TO_OBJECT(cx, &lref, obj);
-
-    uint32_t index;
-    if (IsDefinitelyIndex(rref, &index)) {
-        if (obj->isDenseArray()) {
-            if (index < obj->getDenseArrayInitializedLength()) {
-                rval = obj->getDenseArrayElement(index);
-                if (!rval.isMagic())
-                    goto end_getelem;
-            }
-        } else if (obj->isArguments()) {
-            if (obj->asArguments().getElement(index, &rval))
-                goto end_getelem;
-        }
-
-        if (!obj->getElement(cx, index, &rval))
-            goto error;
-    } else {
-        if (script->hasAnalysis())
-            script->analysis()->getCode(regs.pc).getStringElement = true;
-
-        SpecialId special;
-        if (ValueIsSpecial(obj, &rref, &special, cx)) {
-            if (!obj->getSpecial(cx, obj, special, &rval))
-                goto error;
-        } else {
-            JSAtom *name;
-            if (!js_ValueToAtom(cx, rref, &name))
-                goto error;
-
-            if (name->isIndex(&index)) {
-                if (!obj->getElement(cx, index, &rval))
-                    goto error;
-            } else {
-                if (!obj->getProperty(cx, name->asPropertyName(), &rval))
-                    goto error;
-            }
-        }
-    }
-
-  end_getelem:
-    assertSameCompartment(cx, rval);
-    TypeScript::Monitor(cx, script, regs.pc, rval);
+    if (!GetElementOperation(cx, lref, rref, &regs.sp[-2]))
+        goto error;
     regs.sp--;
 }
 END_CASE(JSOP_GETELEM)
@@ -2832,32 +2762,10 @@ BEGIN_CASE(JSOP_SETELEM)
     FETCH_OBJECT(cx, -3, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
-    Value rval;
-    TypeScript::MonitorAssign(cx, script, regs.pc, obj, id, regs.sp[-1]);
-    do {
-        if (obj->isDenseArray() && JSID_IS_INT(id)) {
-            jsuint length = obj->getDenseArrayInitializedLength();
-            jsint i = JSID_TO_INT(id);
-            if ((jsuint)i < length) {
-                if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
-                    if (js_PrototypeHasIndexedProperties(cx, obj))
-                        break;
-                    if ((jsuint)i >= obj->getArrayLength())
-                        obj->setArrayLength(cx, i + 1);
-                }
-                obj->setDenseArrayElementWithType(cx, i, regs.sp[-1]);
-                goto end_setelem;
-            } else {
-                if (script->hasAnalysis())
-                    script->analysis()->getCode(regs.pc).arrayWriteHole = true;
-            }
-        }
-    } while (0);
-    rval = regs.sp[-1];
-    if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
+    Value &value = regs.sp[-1];
+    if (!SetObjectElementOperation(cx, obj, id, value))
         goto error;
-  end_setelem:
-    regs.sp[-3] = regs.sp[-1];
+    regs.sp[-3] = value;
     regs.sp -= 2;
 }
 END_CASE(JSOP_SETELEM)
