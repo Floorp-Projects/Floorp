@@ -76,12 +76,6 @@ CPPSRCS = \
 		nsParserMsgUtils.cpp\
 		$(NULL)
 
-ifdef MOZ_DEBUG
-CPPSRCS += \
-		nsLoggingSink.cpp   \
-		$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/io
