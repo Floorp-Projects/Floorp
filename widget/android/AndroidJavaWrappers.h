@@ -161,8 +161,9 @@ public:
     jobject LockBuffer();
     unsigned char *LockBufferBits();
     void UnlockBuffer();
-    void BeginDrawing(int aWidth, int aHeight);
-    void EndDrawing(const nsIntRect &aRect, const nsAString &aMetadata, bool aHasDirectTexture);
+    void GetRenderOffset(nsIntPoint &aOffset);
+    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, const nsAString &aMetadata, bool aHasDirectTexture);
+    void EndDrawing(const nsIntRect &aRect);
 
 private:
     static jclass jGeckoSoftwareLayerClientClass;
@@ -170,6 +171,7 @@ private:
     static jmethodID jUnlockBufferMethod;
 
 protected:
+     static jmethodID jGetRenderOffsetMethod;
      static jmethodID jBeginDrawingMethod;
      static jmethodID jEndDrawingMethod;
 };
@@ -434,6 +436,7 @@ public:
     int64_t Time() { return mTime; }
     const nsIntPoint& P0() { return mP0; }
     const nsIntPoint& P1() { return mP1; }
+    const nsIntPoint& P2() { return mP2; }
     double Alpha() { return mAlpha; }
     double Beta() { return mBeta; }
     double Gamma() { return mGamma; }
@@ -464,6 +467,7 @@ protected:
     int64_t mTime;
     nsIntPoint mP0;
     nsIntPoint mP1;
+    nsIntPoint mP2;
     nsIntRect mRect;
     int mFlags, mMetaState;
     int mKeyCode, mUnicodeChar;
@@ -480,6 +484,7 @@ protected:
 
     void ReadP0Field(JNIEnv *jenv);
     void ReadP1Field(JNIEnv *jenv);
+    void ReadP2Field(JNIEnv *jenv);
     void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);
@@ -490,6 +495,7 @@ protected:
     static jfieldID jTimeField;
     static jfieldID jP0Field;
     static jfieldID jP1Field;
+    static jfieldID jP2Field;
     static jfieldID jAlphaField;
     static jfieldID jBetaField;
     static jfieldID jGammaField;
@@ -539,9 +545,8 @@ public:
         ACTIVITY_START = 17,
         BROADCAST = 19,
         VIEWPORT = 20,
-        TILE_SIZE = 21,
-        VISITED = 22,
-        NETWORK_CHANGED = 23,
+        VISITED = 21,
+        NETWORK_CHANGED = 22,
         dummy_java_enum_list_end
     };
 
