@@ -1519,7 +1519,7 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   const nsStyleFont* fontStyle2 = sc2->GetStyleFont();
   const nsStyleText* textStyle2 = sc2->GetStyleText();
   return fontStyle1->mFont.BaseEquals(fontStyle2->mFont) &&
-    sc1->GetStyleVisibility()->mLanguage == sc2->GetStyleVisibility()->mLanguage &&
+    sc1->GetStyleFont()->mLanguage == sc2->GetStyleFont()->mLanguage &&
     nsLayoutUtils::GetTextRunFlagsForStyle(sc1, textStyle1, fontStyle1) ==
       nsLayoutUtils::GetTextRunFlagsForStyle(sc2, textStyle2, fontStyle2);
 }
@@ -2172,7 +2172,7 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
                                                 PRUint32    aFlags)
 {
   // textruns have uniform language
-  nsIAtom* language = mMappedFlows[0].mStartFrame->GetStyleVisibility()->mLanguage;
+  nsIAtom* language = mMappedFlows[0].mStartFrame->GetStyleFont()->mLanguage;
   // We keep this pointed at the skip-chars data for the current mappedFlow.
   // This lets us cheaply check whether the flow has compressed initial
   // whitespace...
@@ -2560,7 +2560,7 @@ static PRInt32 FindChar(const nsTextFragment* frag,
 
 static bool IsChineseOrJapanese(nsIFrame* aFrame)
 {
-  nsIAtom* language = aFrame->GetStyleVisibility()->mLanguage;
+  nsIAtom* language = aFrame->GetStyleFont()->mLanguage;
   if (!language) {
     return false;
   }

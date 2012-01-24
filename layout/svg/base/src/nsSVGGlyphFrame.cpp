@@ -1574,7 +1574,7 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     bool printerFont = (presContext->Type() == nsPresContext::eContext_PrintPreview ||
                           presContext->Type() == nsPresContext::eContext_Print);
     gfxFontStyle fontStyle(font.style, font.weight, font.stretch, textRunSize,
-                           mStyleContext->GetStyleVisibility()->mLanguage,
+                           mStyleContext->GetStyleFont()->mLanguage,
                            font.sizeAdjust, font.systemFont,
                            printerFont,
                            font.featureSettings,
