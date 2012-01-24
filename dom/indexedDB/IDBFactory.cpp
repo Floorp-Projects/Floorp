@@ -69,7 +69,6 @@
 #include "IDBKeyRange.h"
 #include "IndexedDatabaseManager.h"
 #include "Key.h"
-#include "nsIScriptSecurityManager.h"
 
 using namespace mozilla;
 
@@ -91,8 +90,13 @@ struct ObjectStoreInfoMap
 } // anonymous namespace
 
 IDBFactory::IDBFactory()
+: mOwningObject(nsnull)
 {
   IDBFactory::NoteUsedByProcessType(XRE_GetProcessType());
+}
+
+IDBFactory::~IDBFactory()
+{
 }
 
 // static
@@ -101,18 +105,31 @@ IDBFactory::Create(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aWindow && aWindow->IsOuterWindow()) {
+  NS_ENSURE_TRUE(aWindow, nsnull);
+
+  if (aWindow->IsOuterWindow()) {
     aWindow = aWindow->GetCurrentInnerWindow();
     NS_ENSURE_TRUE(aWindow, nsnull);
   }
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
+  factory->mWindow = aWindow;
+  return factory.forget();
+}
 
-  if (aWindow) {
-    factory->mWindow = do_GetWeakReference(aWindow);
-    NS_ENSURE_TRUE(factory->mWindow, nsnull);
-  }
+// static
+already_AddRefed<nsIIDBFactory>
+IDBFactory::Create(JSContext* aCx,
+                   JSObject* aOwningObject)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aCx, "Null context!");
+  NS_ASSERTION(aOwningObject, "Null object!");
+  NS_ASSERTION(JS_GetGlobalForObject(aCx, aOwningObject) == aOwningObject,
+               "Not a global object!");
 
+  nsRefPtr<IDBFactory> factory = new IDBFactory();
+  factory->mOwningObject = aOwningObject;
   return factory.forget();
 }
 
@@ -400,14 +417,35 @@ IDBFactory::SetDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
   return NS_OK;
 }
 
-NS_IMPL_ADDREF(IDBFactory)
-NS_IMPL_RELEASE(IDBFactory)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBFactory)
 
-NS_INTERFACE_MAP_BEGIN(IDBFactory)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBFactory)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBFactory)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBFactory)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIIDBFactory)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBFactory)
 NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBFactory)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mWindow)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBFactory)
+  if (tmp->mOwningObject) {
+    tmp->mOwningObject = nsnull;
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mWindow)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBFactory)
+  if (tmp->mOwningObject) {
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mOwningObject,
+                                               "mOwningObject")
+  }
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(IDBFactory, IDBFactory)
 
@@ -418,6 +456,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
                        nsIIDBOpenDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mWindow || mOwningObject, "Must have one of these!");
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // Force ContentChild to cache the path from the parent, so that
@@ -430,16 +469,19 @@ IDBFactory::OpenCommon(const nsAString& aName,
   nsCOMPtr<nsPIDOMWindow> window;
   nsCOMPtr<nsIScriptGlobalObject> sgo;
   nsIScriptContext* context = nsnull;
+  JSObject* scriptOwner = nsnull;
 
   if (mWindow) {
-    window = do_QueryReferent(mWindow);
-    NS_ENSURE_TRUE(window, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    
-    sgo = do_QueryInterface(window);
+    sgo = do_QueryInterface(mWindow);
     NS_ENSURE_TRUE(sgo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    
+
     context = sgo->GetContext();
     NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    window = mWindow;
+  }
+  else {
+    scriptOwner = mOwningObject;
   }
 
   nsCString origin;
@@ -448,7 +490,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<IDBOpenDBRequest> request =
-    IDBOpenDBRequest::Create(context, window);
+    IDBOpenDBRequest::Create(context, window, scriptOwner);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =

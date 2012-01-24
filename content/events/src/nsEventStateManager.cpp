@@ -2516,7 +2516,7 @@ nsEventStateManager::DoScrollZoom(nsIFrame *aTargetFrame,
       // positive adjustment to decrease zoom, negative to increase
       PRInt32 change = (adjustment > 0) ? -1 : 1;
 
-      if (Preferences::GetBool("browser.zoom.full")) {
+      if (Preferences::GetBool("browser.zoom.full") || content->GetCurrentDoc()->IsSyntheticDocument()) {
         ChangeFullZoom(change);
       } else {
         ChangeTextSize(change);
