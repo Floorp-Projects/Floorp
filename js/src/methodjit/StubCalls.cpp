@@ -896,23 +896,8 @@ void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
     ExpandInlineFrames(f.cx->compartment);
-    Recompiler::clearStackReferences(f.cx, f.script());
-
-    bool releaseChunk = true;
-    if (f.jit()->nchunks > 1) {
-        StackFrame *fp = f.fp();
-        for (FrameRegsIter i(f.cx); !i.done(); ++i) {
-            StackFrame *xfp = i.fp();
-            if (xfp->script() == fp->script() && xfp != fp) {
-                mjit::ReleaseScriptCode(f.cx, fp->script());
-                releaseChunk = false;
-                break;
-            }
-        }
-    }
-
-    if (releaseChunk)
-        f.jit()->destroyChunk(f.cx, f.chunkIndex(), /* resetUses = */ false);
+    Recompiler::clearStackReferencesAndChunk(f.cx, f.script(), f.jit(), f.chunkIndex(),
+                                             /* resetUses = */ false);
 }
 
 void JS_FASTCALL
@@ -1501,13 +1486,18 @@ FindNativeCode(VMFrame &f, jsbytecode *target)
     if (native)
         return native;
 
-    CompileStatus status = CanMethodJIT(f.cx, f.script(), target, f.fp()->isConstructing(),
-                                        CompileRequest_Interpreter);
-    if (status == Compile_Error)
-        THROWV(NULL);
+    uint32_t sourceOffset = f.pc() - f.script()->code;
+    uint32_t targetOffset = target - f.script()->code;
 
-    mjit::ClearAllFrames(f.cx->compartment);
-    return target;
+    CrossChunkEdge *edges = f.jit()->edges();
+    for (size_t i = 0; i < f.jit()->nedges; i++) {
+        const CrossChunkEdge &edge = edges[i];
+        if (edge.source == sourceOffset && edge.target == targetOffset)
+            return edge.shimLabel;
+    }
+
+    JS_NOT_REACHED("Missing edge");
+    return NULL;
 }
 
 void * JS_FASTCALL

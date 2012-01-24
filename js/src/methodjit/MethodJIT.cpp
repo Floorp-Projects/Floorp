@@ -1296,6 +1296,9 @@ JITScript::destroy(JSContext *cx)
 {
     for (unsigned i = 0; i < nchunks; i++)
         destroyChunk(cx, i);
+
+    if (shimPool)
+        shimPool->release();
 }
 
 void

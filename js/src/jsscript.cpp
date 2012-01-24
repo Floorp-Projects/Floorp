@@ -1746,7 +1746,7 @@ JSScript::recompileForStepMode(JSContext *cx)
 {
 #ifdef JS_METHODJIT
     if (jitNormal || jitCtor) {
-        mjit::ClearAllFrames(cx->compartment);
+        mjit::Recompiler::clearStackReferences(cx, this);
         mjit::ReleaseScriptCode(cx, this);
     }
 #endif

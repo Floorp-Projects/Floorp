@@ -58,6 +58,8 @@
   <string name="pref_remember_signons">&pref_remember_signons;</string>
   <string name="pref_cookies">&pref_cookies;</string>
   <string name="pref_char_encoding">&pref_char_encoding;</string>
+  <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
+  <string name="pref_char_encoding_off">&pref_char_encoding_off;</string>
   <string name="pref_clear_history">&pref_clear_history;</string>
   <string name="pref_clear_history_confirm">&pref_clear_history_confirm;</string>
   <string name="pref_clear_private_data">&pref_clear_private_data;</string>
@@ -72,12 +74,14 @@
   <string name="pref_font_size_medium">&pref_font_size_medium;</string>
   <string name="pref_font_size_large">&pref_font_size_large;</string>
   <string name="pref_font_size_xlarge">&pref_font_size_xlarge;</string>
+  <string name="pref_sync">&pref_sync;</string>
 
   <string name="reload">&reload;</string>
   <string name="forward">&forward;</string>
   <string name="new_tab">&new_tab;</string>
   <string name="addons">&addons;</string>
   <string name="downloads">&downloads;</string>
+  <string name="char_encoding">&char_encoding;</string>
 
   <string name="site_settings_title">&site_settings_title;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>

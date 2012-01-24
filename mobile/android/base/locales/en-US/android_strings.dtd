@@ -51,7 +51,9 @@
 <!ENTITY pref_telemetry "Send performance data">
 <!ENTITY pref_remember_signons "Remember passwords">
 <!ENTITY pref_cookies "Enable cookies">
-<!ENTITY pref_char_encoding "Show character encoding">
+<!ENTITY pref_char_encoding "Character encoding">
+<!ENTITY pref_char_encoding_on "Show menu">
+<!ENTITY pref_char_encoding_off "Don\'t show menu">
 <!ENTITY pref_clear_history "Clear history">
 <!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
 <!ENTITY pref_clear_private_data "Clear private data">
@@ -67,11 +69,13 @@
 <!ENTITY pref_font_size_large "Large">
 <!ENTITY pref_font_size_xlarge "Extra Large">
 <!ENTITY pref_use_master_password "Use master password">
+<!ENTITY pref_sync "Sync">
 
 <!ENTITY quit "Quit">
 
 <!ENTITY addons "Add-ons">
 <!ENTITY downloads "Downloads">
+<!ENTITY char_encoding "Character Encoding">
 
 <!ENTITY share "Share">
 <!ENTITY save_as_pdf "Save as PDF">
