@@ -2059,7 +2059,7 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
     font.size = NSToCoordRound(font.size * aInflation);
   }
   return aStyleContext->PresContext()->DeviceContext()->GetMetricsFor(
-                  font, aStyleContext->GetStyleVisibility()->mLanguage,
+                  font, aStyleContext->GetStyleFont()->mLanguage,
                   fs, *aFontMetrics);
 }
 

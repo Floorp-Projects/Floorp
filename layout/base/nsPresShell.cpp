@@ -8653,7 +8653,7 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       aPresContext->DeviceContext()->GetMetricsFor(font,
         // We have one frame, therefore we must have a root...
         aPresContext->FrameManager()->GetRootFrame()->
-          GetStyleVisibility()->mLanguage,
+          GetStyleFont()->mLanguage,
         aPresContext->GetUserFontSet(), *getter_AddRefs(fm));
 
       aRenderingContext->SetFont(fm);
