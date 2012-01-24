@@ -82,6 +82,13 @@ public class Tabs implements GeckoEventListener {
         Tab tab = new Tab(id, url, external, parentId, title);
         tabs.put(id, tab);
         order.add(tab);
+
+        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            public void run() {
+                GeckoApp.mBrowserToolbar.updateTabs(getCount());
+            }
+        });
+
         Log.i(LOGTAG, "Added a tab with id: " + id + ", url: " + url);
         return tab;
     }
