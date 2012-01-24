@@ -5436,8 +5436,9 @@ public:
   }
   NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void* child)
   {
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-      mFound = child == mWrapper;
+    if (langID == nsIProgrammingLanguage::JAVASCRIPT &&
+        child == mWrapper) {
+      mFound = true;
     }
   }
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child)

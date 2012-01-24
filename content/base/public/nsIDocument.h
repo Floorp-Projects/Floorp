@@ -1600,6 +1600,8 @@ public:
   void WarnOnceAbout(DeprecatedOperations aOperation);
 
   virtual void PostVisibilityUpdateEvent() = 0;
+  
+  bool IsSyntheticDocument() { return mIsSyntheticDocument; }
 
   void SetNeedLayoutFlush() {
     mNeedLayoutFlush = true;
