@@ -105,7 +105,7 @@ my_strtoui(int* result, const char* s) {
 // Return the length of the given, non-negative integer when expressed in base
 // 10.
 static inline unsigned
-my_int_len(int i) {
+my_int_len(intmax_t i) {
   if (!i)
     return 1;
 
@@ -125,7 +125,7 @@ my_int_len(int i) {
 //   i: the non-negative integer to serialise.
 //   i_len: the length of the integer in base 10 (see |my_int_len|).
 static inline void
-my_itos(char* output, int i, unsigned i_len) {
+my_itos(char* output, intmax_t i, unsigned i_len) {
   for (unsigned index = i_len; index; --index, i /= 10)
     output[index - 1] = '0' + (i % 10);
 }
