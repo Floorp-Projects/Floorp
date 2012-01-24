@@ -374,7 +374,7 @@ AllocChunk()
      * Notice that we have to unmap before we remap, due to Windows's
      * restriction that there be a 1:1 mapping between VM alloc and dealloc
      * operations.
-     * */
+     */
     UnmapPages(p, ChunkSize);
     p = MapPages(FindChunkStart(p), ChunkSize);
     if (p) {
