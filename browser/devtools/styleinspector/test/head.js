@@ -35,8 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource:///modules/devtools/StyleInspector.jsm");
-Cu.import("resource://gre/modules/HUDService.jsm");
+let tempScope = {};
+Cu.import("resource:///modules/devtools/StyleInspector.jsm", tempScope);
+Cu.import("resource://gre/modules/HUDService.jsm", tempScope);
+let StyleInspector = tempScope.StyleInspector;
+let HUDService = tempScope.HUDService;
+let ConsoleUtils = tempScope.ConsoleUtils;
 
 function log(aMsg)
 {

@@ -12,7 +12,6 @@ function createDocument()
   doc.body.innerHTML = "<div style='color:blue;'></div>";
 
   doc.title = "Style Inspector Selector Text Test";
-  ok(window.StyleInspector, "StyleInspector exists");
   stylePanel = new StyleInspector(window);
 
 
