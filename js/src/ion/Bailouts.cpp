@@ -159,7 +159,7 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
 {
     uint32 exprStackSlots = iter.slots() - fp->script()->nfixed;
 
-    IonSpew(IonSpew_Bailouts, "expr stack slots %u, is function frame %u",
+    IonSpew(IonSpew_Bailouts, " expr stack slots %u, is function frame %u",
             exprStackSlots, fp->isFunctionFrame());
 
     // The scope chain value will be undefined if the function never
@@ -177,7 +177,7 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
         fp->formalArgs()[-1] = thisv;
 
         JS_ASSERT(iter.slots() >= CountArgSlots(fp->fun()));
-        IonSpew(IonSpew_Bailouts, "frame slots %u, nargs %u, nfixed %u",
+        IonSpew(IonSpew_Bailouts, " frame slots %u, nargs %u, nfixed %u",
                 iter.slots(), fp->fun()->nargs, fp->script()->nfixed);
 
         for (uint32 i = 0; i < fp->fun()->nargs; i++) {
