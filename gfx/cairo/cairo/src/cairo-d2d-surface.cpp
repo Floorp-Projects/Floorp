@@ -3281,7 +3281,7 @@ _cairo_d2d_mask(void			*surface,
     cairo_box_t box;
     _cairo_box_from_rectangle(&box, &extents);
 
-    if (clip) {
+    if (clip && isSolidAlphaMask) {
 	// We do some work here to try and avoid pushing and popping clips for rectangular areas,
 	// if we do this fill rects will occur without rectangular clips being pushed and popped.
 	// This is faster for non-axis aligned clips in general and allows more efficient batching

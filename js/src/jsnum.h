@@ -92,11 +92,8 @@ JSDOUBLE_IS_NaN(jsdouble d)
 {
     jsdpun u;
     u.d = d;
-#if defined(mips) || defined(__mips__) || defined(MIPS) || defined(_MIPS_)
-    return (u.u64 & ~JSDOUBLE_SIGNBIT) > JSDOUBLE_EXPMASK;
-#else
-    return (u.s.hi & JSDOUBLE_HI32_NAN) == JSDOUBLE_HI32_NAN;
-#endif
+    return (u.u64 & JSDOUBLE_EXPMASK) == JSDOUBLE_EXPMASK &&
+           (u.u64 & JSDOUBLE_MANTMASK) != 0;
 }
 
 static inline int

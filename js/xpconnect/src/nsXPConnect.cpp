@@ -1023,8 +1023,8 @@ public:
         // collected.
         unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
         cb.DescribeRefCountedNode(refCount, js::SizeOfJSContext(), "JSContext");
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
         if (JSObject *global = JS_GetGlobalObject(cx)) {
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, global);
         }
 

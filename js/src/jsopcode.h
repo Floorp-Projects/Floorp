@@ -82,14 +82,14 @@ typedef enum JSOp {
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
 #define JOF_QARG          6       /* quickened get/set function argument ops */
 #define JOF_LOCAL         7       /* var or block-local variable */
-#define JOF_SLOTATOM      8       /* uint16_t slot + constant index */
+/* 8 is unused */
 #define JOF_UINT24        12      /* extended unsigned 24-bit literal (index) */
 #define JOF_UINT8         13      /* uint8_t immediate, e.g. top 8 bits of 24-bit
                                      atom index */
 #define JOF_INT32         14      /* int32_t immediate operand */
 #define JOF_OBJECT        15      /* unsigned 16-bit object index */
 #define JOF_SLOTOBJECT    16      /* uint16_t slot index + object index */
-#define JOF_REGEXP        17      /* unsigned 16-bit regexp index */
+#define JOF_REGEXP        17      /* unsigned 32-bit regexp index */
 #define JOF_INT8          18      /* int8_t immediate operand */
 #define JOF_ATOMOBJECT    19      /* uint16_t constant index + object index */
 #define JOF_UINT16PAIR    20      /* pair of uint16_t immediates */
@@ -151,6 +151,18 @@ typedef enum JSOp {
  * Immediate operand getters, setters, and bounds.
  */
 
+static JS_ALWAYS_INLINE uint8_t
+GET_UINT8(jsbytecode *pc)
+{
+    return (uint8_t) pc[1];
+}
+
+static JS_ALWAYS_INLINE void
+SET_UINT8(jsbytecode *pc, uint8_t u)
+{
+    pc[1] = (jsbytecode) u;
+}
+
 /* Common uint16_t immediate format helpers. */
 #define UINT16_LEN              2
 #define UINT16_HI(i)            ((jsbytecode)((i) >> 8))
@@ -179,10 +191,27 @@ SET_JUMP_OFFSET(jsbytecode *pc, int32_t off)
     pc[4] = (jsbytecode)off;
 }
 
+#define UINT32_INDEX_LEN        4
+
+static JS_ALWAYS_INLINE uint32_t
+GET_UINT32_INDEX(jsbytecode *pc)
+{
+    return (pc[1] << 24) | (pc[2] << 16) | (pc[3] << 8) | pc[4];
+}
+
+static JS_ALWAYS_INLINE void
+SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
+{
+    pc[1] = (jsbytecode)(index >> 24);
+    pc[2] = (jsbytecode)(index >> 16);
+    pc[3] = (jsbytecode)(index >> 8);
+    pc[4] = (jsbytecode)index;
+}
+
 /*
  * A literal is indexed by a per-script atom or object maps. Most scripts
- * have relatively few literals, so the standard JOF_ATOM, JOF_OBJECT and
- * JOF_REGEXP formats specifies a fixed 16 bits of immediate operand index.
+ * have relatively few literals, so the standard JOF_ATOM and JOF_OBJECT
+ * format specifies a fixed 16 bits of immediate operand index.
  * A script with more than 64K literals must wrap the bytecode into
  * JSOP_INDEXBASE and JSOP_RESETBASE pair.
  */
@@ -345,12 +374,6 @@ js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
         fun = (script)->getFunction(index_);                                  \
     JS_END_MACRO
 
-#define GET_REGEXP_FROM_BYTECODE(script, pc, pcoff, obj)                      \
-    JS_BEGIN_MACRO                                                            \
-        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
-        obj = (script)->getRegExp(index_);                                    \
-    JS_END_MACRO
-
 #ifdef __cplusplus
 namespace js {
 
@@ -440,26 +463,80 @@ DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
 /*
  * Sprintf, but with unlimited and automatically allocated buffering.
  */
-struct Sprinter {
-    JSContext       *context;       /* context executing the decompiler */
-    LifoAlloc       *pool;          /* string allocation pool */
-    char            *base;          /* base address of buffer in pool */
-    size_t          size;           /* size of buffer allocated at base */
-    ptrdiff_t       offset;         /* offset of next free char in buffer */
+class Sprinter
+{
+  public:
+    struct InvariantChecker
+    {
+        const Sprinter *parent;
+
+        explicit InvariantChecker(const Sprinter *p) : parent(p) {
+            parent->checkInvariants();
+        }
+
+        ~InvariantChecker() {
+            parent->checkInvariants();
+        }
+    };
+
+    JSContext               *context;       /* context executing the decompiler */
+
+  private:
+    static const size_t     DefaultSize;
+#ifdef DEBUG
+    bool                    initialized;    /* true if this is initialized, use for debug builds */
+#endif
+    char                    *base;          /* malloc'd buffer address */
+    size_t                  size;           /* size of buffer allocated at base */
+    ptrdiff_t               offset;         /* offset of next free char in buffer */
+
+    bool realloc_(size_t newSize);
+
+  public:
+    explicit Sprinter(JSContext *cx);
+    ~Sprinter();
+
+    /* Initialize this sprinter, returns false on error */
+    bool init();
+
+    void checkInvariants() const;
+
+    const char *string() const;
+    const char *stringEnd() const;
+    /* Returns the string at offset |off| */
+    char *stringAt(ptrdiff_t off) const;
+    /* Returns the char at offset |off| */
+    char &operator[](size_t off);
+    /* Test if this Sprinter is empty */
+    bool empty() const;
+
+    /*
+     * Attempt to reserve len + 1 space (for a trailing NULL byte). If the
+     * attempt succeeds, return a pointer to the start of that space and adjust the
+     * internal content. The caller *must* completely fill this space on success.
+     */
+    char *reserve(size_t len);
+    /* Like reserve, but memory is initialized to 0 */
+    char *reserveAndClear(size_t len);
+
+    /*
+     * Puts |len| characters from |s| at the current position and return an offset to
+     * the beginning of this new data
+     */
+    ptrdiff_t put(const char *s, size_t len);
+    ptrdiff_t putString(JSString *str);
+
+    /* Prints a formatted string into the buffer */
+    int printf(const char *fmt, ...);
+
+    /* Change the offset */
+    void setOffset(const char *end);
+    void setOffset(ptrdiff_t off);
+
+    /* Get the offset */
+    ptrdiff_t getOffset() const;
+    ptrdiff_t getOffsetOf(const char *string) const;
 };
-
-#define INIT_SPRINTER(cx, sp, ap, off) \
-    ((sp)->context = cx, (sp)->pool = ap, (sp)->base = NULL, (sp)->size = 0,  \
-     (sp)->offset = off)
-
-/*
- * Attempt to reserve len space in sp (including a trailing NULL byte). If the
- * attempt succeeds, return a pointer to the start of that space and adjust the
- * length of sp's contents. The caller *must* completely fill this space
- * (including the space for the trailing NULL byte) on success.
- */
-extern char *
-SprintReserveAmount(Sprinter *sp, size_t len);
 
 extern ptrdiff_t
 SprintPut(Sprinter *sp, const char *s, size_t len);

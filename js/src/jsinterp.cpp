@@ -1603,8 +1603,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      * Initialize the index segment register used by LOAD_ATOM and
      * GET_FULL_INDEX macros below. As a register we use a pointer based on
      * the atom map to turn frequently executed LOAD_ATOM into simple array
-     * access. For less frequent object and regexp loads we have to recover
-     * the segment from atoms pointer first.
+     * access. For less frequent object loads we have to recover the segment
+     * from atoms pointer first.
      */
     JSAtom **atoms = script->atoms;
 
@@ -1803,6 +1803,7 @@ ADD_EMPTY_CASE(JSOP_STARTXML)
 ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
 #endif
 ADD_EMPTY_CASE(JSOP_LOOPHEAD)
+ADD_EMPTY_CASE(JSOP_LOOPENTRY)
 END_EMPTY_CASES
 
 BEGIN_CASE(JSOP_LABEL)
@@ -2046,7 +2047,7 @@ END_CASE(JSOP_AND)
 #define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(js_CodeSpec[op].length == 1);                               \
-        uintN diff_ = (uintN) regs.pc[1] - (uintN) JSOP_IFEQ;                 \
+        uintN diff_ = (uintN) GET_UINT8(regs.pc) - (uintN) JSOP_IFEQ;         \
         if (diff_ <= 1) {                                                     \
             regs.sp -= spdec;                                                 \
             if (cond == (diff_ != 0)) {                                       \
@@ -2083,7 +2084,7 @@ END_CASE(JSOP_IN)
 BEGIN_CASE(JSOP_ITER)
 {
     JS_ASSERT(regs.sp > regs.fp()->base());
-    uintN flags = regs.pc[1];
+    uint8_t flags = GET_UINT8(regs.pc);
     if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
         goto error;
     CHECK_INTERRUPT_HANDLER();
@@ -2154,10 +2155,10 @@ END_CASE(JSOP_SWAP)
 
 BEGIN_CASE(JSOP_PICK)
 {
-    jsint i = regs.pc[1];
-    JS_ASSERT(regs.sp - (i+1) >= regs.fp()->base());
-    Value lval = regs.sp[-(i+1)];
-    memmove(regs.sp - (i+1), regs.sp - i, sizeof(Value)*i);
+    unsigned i = GET_UINT8(regs.pc);
+    JS_ASSERT(regs.sp - (i + 1) >= regs.fp()->base());
+    Value lval = regs.sp[-int(i + 1)];
+    memmove(regs.sp - (i + 1), regs.sp - i, sizeof(Value) * i);
     regs.sp[-1] = lval;
 }
 END_CASE(JSOP_PICK)
@@ -3084,7 +3085,7 @@ BEGIN_CASE(JSOP_REGEXP)
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc.
      */
-    jsatomid index = GET_FULL_INDEX(0);
+    uint32_t index = GET_UINT32_INDEX(regs.pc);
     JSObject *proto = regs.fp()->scopeChain().global().getOrCreateRegExpPrototype(cx);
     if (!proto)
         goto error;
@@ -3771,18 +3772,16 @@ END_CASE(JSOP_HOLE)
 
 BEGIN_CASE(JSOP_NEWINIT)
 {
-    jsint i = regs.pc[1];
-
+    uint8_t i = GET_UINT8(regs.pc);
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
-    JSObject *obj;
 
+    JSObject *obj;
     if (i == JSProto_Array) {
         obj = NewDenseEmptyArray(cx);
     } else {
         gc::AllocKind kind = GuessObjectGCKind(0);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
     }
-
     if (!obj)
         goto error;
 

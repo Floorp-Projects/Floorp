@@ -197,22 +197,6 @@ abstract public class GeckoApp
         }
     }
 
-    void showErrorDialog(String message)
-    {
-        new AlertDialog.Builder(this)
-            .setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton(R.string.exit_label,
-                               new DialogInterface.OnClickListener() {
-                                   public void onClick(DialogInterface dialog,
-                                                       int id)
-                                   {
-                                       GeckoApp.this.finish();
-                                       System.exit(0);
-                                   }
-                               }).show();
-    }
-
     public static final String PLUGIN_ACTION = "android.webkit.PLUGIN";
 
     /**
@@ -440,6 +424,7 @@ abstract public class GeckoApp
         MenuItem share = aMenu.findItem(R.id.share);
         MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
         MenuItem downloads = aMenu.findItem(R.id.downloads);
+        MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
 
         if (tab == null) {
             bookmark.setEnabled(false);
@@ -475,6 +460,8 @@ abstract public class GeckoApp
         // DownloadManager support is tied to level 12 and higher
         if (Build.VERSION.SDK_INT < 12)
             downloads.setVisible(false);
+
+        charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
 
         return true;
     }
@@ -537,6 +524,9 @@ abstract public class GeckoApp
             case R.id.downloads:
                 intent = new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS);
                 startActivity(intent);
+                return true;
+            case R.id.char_encoding:
+                GeckoAppShell.sendEventToGecko(new GeckoEvent("CharEncoding:Get", null));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -985,6 +975,51 @@ abstract public class GeckoApp
                 int size = message.getInt("size");
 
                 handleDownloadDone(displayName, path, mimeType, size);
+            } else if (event.equals("CharEncoding:Data")) {
+                final JSONArray charsets = message.getJSONArray("charsets");
+                int selected = message.getInt("selected");
+
+                final int len = charsets.length();
+                final String[] titleArray = new String[len];
+                for (int i = 0; i < len; i++) {
+                    JSONObject charset = charsets.getJSONObject(i);
+                    titleArray[i] = charset.getString("title");
+                }
+
+                final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+                dialogBuilder.setSingleChoiceItems(titleArray, selected, new AlertDialog.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        try {
+                            JSONObject charset = charsets.getJSONObject(which);
+                            GeckoAppShell.sendEventToGecko(new GeckoEvent("CharEncoding:Set", charset.getString("code")));
+                            dialog.dismiss();
+                        } catch (JSONException e) {
+                            Log.e(LOGTAG, "error parsing json", e);
+                        }
+                    }
+                });
+                dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        dialogBuilder.show();
+                    }
+                });
+            } else if (event.equals("CharEncoding:State")) {
+                final boolean visible = message.getString("visible").equals("true");
+                GeckoPreferences.setCharEncodingState(visible);
+                if (sMenu != null) {
+                    mMainHandler.post(new Runnable() {
+                        public void run() {
+                            sMenu.findItem(R.id.char_encoding).setVisible(visible);
+                        }
+                    });
+                }
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1559,12 +1594,7 @@ abstract public class GeckoApp
                     try {
                         Looper.loop();
                     } catch (Exception e) {
-                        Log.e(LOGTAG, "top level exception", e);
-                        StringWriter sw = new StringWriter();
-                        PrintWriter pw = new PrintWriter(sw);
-                        e.printStackTrace(pw);
-                        pw.flush();
-                        GeckoAppShell.reportJavaCrash(sw.toString());
+                        GeckoAppShell.reportJavaCrash(e);
                     }
                     // resetting this is kinda pointless, but oh well
                     sTryCatchAttached = false;
@@ -1598,6 +1628,8 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1926,6 +1958,8 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
 
         mFavicons.close();
 
