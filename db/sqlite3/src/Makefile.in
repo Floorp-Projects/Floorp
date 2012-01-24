@@ -89,6 +89,12 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 
+# Force /O2 optimisation on Windows because using the default /O1 causes
+# crashes with MSVC2005 and PGO. See bug 719584.
+ifeq ($(OS_ARCH),WINNT)
+MODULE_OPTIMIZE_FLAGS = -O2
+endif
+
 EXPORTS = \
   sqlite3.h \
   $(NULL)
