@@ -164,8 +164,7 @@ typedef HashSet<ScriptFilenameEntry *,
 
 } /* namespace js */
 
-struct JSCompartment
-{
+struct JS_FRIEND_API(JSCompartment) {
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
 
