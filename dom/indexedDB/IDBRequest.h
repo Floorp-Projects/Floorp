@@ -116,8 +116,8 @@ protected:
   nsCOMPtr<nsISupports> mSource;
   nsRefPtr<IDBTransaction> mTransaction;
 
-  NS_DECL_EVENT_HANDLER(success);
-  NS_DECL_EVENT_HANDLER(error);
+  NS_DECL_EVENT_HANDLER(success)
+  NS_DECL_EVENT_HANDLER(error)
 
   jsval mResultVal;
 
