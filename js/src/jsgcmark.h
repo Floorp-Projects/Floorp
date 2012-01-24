@@ -52,12 +52,6 @@ namespace js {
 namespace gc {
 
 void
-MarkAtom(JSTracer *trc, JSAtom *str);
-
-void
-MarkAtom(JSTracer *trc, JSAtom *str, const char *name);
-
-void
 MarkObjectUnbarriered(JSTracer *trc, JSObject *obj, const char *name);
 
 void
