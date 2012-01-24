@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIAtom.idl"
 
 %{ C++
 class nsPresContext;
@@ -59,7 +60,6 @@ interface nsIContentViewer;
 interface nsIURIContentListener;
 interface nsIDOMEventTarget;
 interface nsIDocShellLoadInfo;
-interface nsIDocumentCharsetInfo;
 interface nsIWebNavigation;
 interface nsISimpleEnumerator;
 interface nsIInputStream;
@@ -235,12 +235,6 @@ interface nsIDocShell : nsISupports
    * be of interest to chrome.
    */
   attribute nsIDOMEventTarget chromeEventHandler;
-
-  /**
-   * The document charset info.  This is used by a load to determine priorities
-   * for charset detection etc.
-   */
-  attribute nsIDocumentCharsetInfo documentCharsetInfo;
 
   /**
    * Whether to allow plugin execution
@@ -589,4 +583,25 @@ interface nsIDocShell : nsISupports
    * A force also sets the fallback encoding for this frame.
    */
   attribute string charset;
+
+  /**
+   * The charset forced by the user. When the charset attribute is set this
+   * attribute is set to the same value.
+   *
+   * XXX Could this be replaced by a boolean?
+   */
+  attribute nsIAtom forcedCharset;
+
+  attribute boolean forcedDetector;
+
+  /**
+   * In a child docshell, this is the charset of the parent docshell
+   */
+  attribute nsIAtom parentCharset;
+
+  /*
+   * In a child docshell, this is the source of parentCharset
+   * @see nsIParser
+   */
+  attribute PRInt32 parentCharsetSource;
 };

@@ -731,7 +731,7 @@ function BrowserSetForcedCharacterSet(aCharset)
 // instead of BrowserReloadWithFlags()
 function BrowserSetForcedDetector(doReload)
 {
-  gBrowser.documentCharsetInfo.forcedDetector = true; 
+  gBrowser.docShell.forcedDetector = true; 
   if (doReload)
   {
     if (isHistoryEnabled()) {
