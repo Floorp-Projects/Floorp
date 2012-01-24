@@ -118,6 +118,8 @@ RefTestCmdLineHandler.prototype =
     branch.setIntPref("dom.max_script_run_time", 0);
     branch.setIntPref("dom.max_chrome_script_run_time", 0);
     branch.setIntPref("hangmonitor.timeout", 0);
+    // Ensure autoplay is enabled for all platforms.
+    branch.setBoolPref("media.autoplay.enabled", true);
 
     var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                            .getService(nsIWindowWatcher);
