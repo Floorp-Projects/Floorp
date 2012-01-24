@@ -6029,7 +6029,6 @@ function BrowserSetForcedCharacterSet(aCharset)
 
 function BrowserSetForcedDetector(doReload)
 {
-  gBrowser.docShell.forcedDetector = true;
   if (doReload)
     BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }

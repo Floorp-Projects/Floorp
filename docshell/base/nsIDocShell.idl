@@ -592,8 +592,6 @@ interface nsIDocShell : nsISupports
    */
   attribute nsIAtom forcedCharset;
 
-  attribute boolean forcedDetector;
-
   /**
    * In a child docshell, this is the charset of the parent docshell
    */
