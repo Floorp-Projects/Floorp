@@ -835,12 +835,16 @@ js::HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 }
 
 bool
-js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result)
+js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *result)
 {
 #if JS_HAS_XML_SUPPORT
     if (JS_UNLIKELY(lval.isObject() && lval.toObject().isXML()) ||
                     (rval.isObject() && rval.toObject().isXML())) {
-        return js_TestXMLEquality(cx, lval, rval, result);
+        JSBool res;
+        if (!js_TestXMLEquality(cx, lval, rval, &res))
+            return false;
+        *result = !!res;
+        return true;
     }
 #endif
 
@@ -862,7 +866,11 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *re
             JSObject *r = &rval.toObject();
 
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
-                return eq(cx, l, &rval, result);
+                JSBool res;
+                if (!eq(cx, l, &rval, &res))
+                    return false;
+                *result = !!res;
+                return true;
             }
 
             *result = l == r;
@@ -905,7 +913,7 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *re
 }
 
 bool
-js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, JSBool *equal)
+js::StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref, bool *equal)
 {
     Value lval = lref, rval = rref;
     if (SameType(lval, rval)) {
@@ -957,7 +965,7 @@ IsNaN(const Value &v)
 }
 
 bool
-js::SameValue(JSContext *cx, const Value &v1, const Value &v2, JSBool *same)
+js::SameValue(JSContext *cx, const Value &v1, const Value &v2, bool *same)
 {
     if (IsNegativeZero(v1)) {
         *same = IsNegativeZero(v2);
@@ -2264,7 +2272,7 @@ END_CASE(JSOP_BITAND)
     JS_BEGIN_MACRO                                                            \
         Value rval = regs.sp[-1];                                             \
         Value lval = regs.sp[-2];                                             \
-        JSBool cond;                                                          \
+        bool cond;                                                            \
         if (!LooselyEqual(cx, lval, rval, &cond))                             \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
@@ -2287,7 +2295,7 @@ END_CASE(JSOP_NE)
     JS_BEGIN_MACRO                                                            \
         const Value &rref = regs.sp[-1];                                      \
         const Value &lref = regs.sp[-2];                                      \
-        JSBool equal;                                                         \
+        bool equal;                                                           \
         if (!StrictlyEqual(cx, lref, rref, &equal))                           \
             goto error;                                                       \
         COND = equal OP JS_TRUE;                                              \

@@ -3132,12 +3132,12 @@ array_indexOfHelper(JSContext *cx, IndexOfKind mode, CallArgs &args)
             return JS_FALSE;
         }
         if (!hole) {
-            JSBool equal;
+            bool equal;
             if (!StrictlyEqual(cx, elt, tosearch, &equal))
-                return JS_FALSE;
+                return false;
             if (equal) {
                 args.rval().setNumber(i);
-                return JS_TRUE;
+                return true;
             }
         }
         if (i == stop)
