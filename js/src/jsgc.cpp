@@ -2094,11 +2094,7 @@ MarkWeakReferences(GCMarker *gcmarker)
     JS_ASSERT(gcmarker->isMarkStackEmpty());
 }
 
-} // namespace js
-
-namespace JS {
-
-void
+static void
 MarkRuntime(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
@@ -2152,10 +2148,6 @@ MarkRuntime(JSTracer *trc)
             (*op)(trc, rt->gcGrayRootsData);
     }
 }
-
-} // namespace JS
-
-namespace js {
 
 void
 TriggerGC(JSRuntime *rt, gcstats::Reason reason)
