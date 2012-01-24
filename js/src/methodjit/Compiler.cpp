@@ -1992,6 +1992,8 @@ mjit::Compiler::generateMethod()
 
         if (PC >= script->code + chunkEnd) {
             if (fallthrough) {
+                if (opinfo->jumpTarget)
+                    fixDoubleTypes(PC);
                 frame.syncAndForgetEverything();
                 jsbytecode *curPC = PC;
                 do {
