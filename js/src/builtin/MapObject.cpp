@@ -138,7 +138,7 @@ HashableValue::equals(const HashableValue &other) const
                             &other.value.toString()->asLinear()));
 
 #ifdef DEBUG
-    JSBool same;
+    bool same;
     JS_ASSERT(SameValue(NULL, value, other.value, &same));
     JS_ASSERT(same == b);
 #endif
