@@ -138,10 +138,12 @@
     ; and we need a return result back to the service when run that way.
     ${If} $5 == ""
       ; An install of maintenance service was never attempted.
-      ; We call ExecShell (which is ShellExecute) with the verb "runas"
-      ; to ask for elevation if the user isn't already elevated.  If the user 
-      ; is already elevated it will just launch the program.
-      ExecShell "runas" "$INSTDIR\maintenanceservice_installer.exe"
+      ; We know we are an Admin and that we have write access into HKLM
+      ; based on the above checks, so attempt to just run the EXE.
+      ; In the worst case, in case there is some edge case with the 
+      ; IsAdmin check and the permissions check, the maintenance service
+      ; will just fail to be attempted to be installed. 
+      nsExec::Exec "$INSTDIR\maintenanceservice_installer.exe" 
     ${EndIf}
   ${EndIf}
 !endif

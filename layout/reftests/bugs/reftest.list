@@ -1688,4 +1688,4 @@ needs-focus != 703186-1.html 703186-2.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
-fuzzy == 718521.html 718521-ref.html
+fuzzy-if(cocoaWidget,1,170) == 718521.html 718521-ref.html

@@ -132,7 +132,7 @@ public:
                                           bool* aAllowRetaining = nsnull);
 
   virtual void            CreateCompositor();
-  virtual void            DrawOver(LayerManager* aManager, nsIntRect aRect) {}
+  virtual void            DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}
   virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(bool aModal); 

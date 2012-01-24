@@ -1435,6 +1435,10 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             break;
           }
 
+          case JSOP_THROW:
+            mergeAllExceptionTargets(cx, values, exceptionTargets);
+            break;
+
           default:;
         }
 
@@ -1667,16 +1671,35 @@ ScriptAnalysis::mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint3
      * seen at exception handlers via exception paths.
      */
     for (unsigned i = 0; i < exceptionTargets.length(); i++) {
-        Vector<SlotValue> *pending = getCode(exceptionTargets[i]).pendingValues;
+        unsigned offset = exceptionTargets[i];
+        Vector<SlotValue> *pending = getCode(offset).pendingValues;
 
         bool duplicate = false;
         for (unsigned i = 0; i < pending->length(); i++) {
-            if ((*pending)[i].slot == slot && (*pending)[i].value == value)
+            if ((*pending)[i].slot == slot) {
                 duplicate = true;
+                SlotValue &v = (*pending)[i];
+                mergeValue(cx, offset, value, &v);
+                break;
+            }
         }
 
         if (!duplicate && !pending->append(SlotValue(slot, value)))
             setOOM(cx);
+    }
+}
+
+void
+ScriptAnalysis::mergeAllExceptionTargets(JSContext *cx, SSAValue *values,
+                                         const Vector<uint32_t> &exceptionTargets)
+{
+    for (unsigned i = 0; i < exceptionTargets.length(); i++) {
+        Vector<SlotValue> *pending = getCode(exceptionTargets[i]).pendingValues;
+        for (unsigned i = 0; i < pending->length(); i++) {
+            const SlotValue &v = (*pending)[i];
+            if (trackSlot(v.slot))
+                mergeExceptionTarget(cx, values[v.slot], v.slot, exceptionTargets);
+        }
     }
 }
 

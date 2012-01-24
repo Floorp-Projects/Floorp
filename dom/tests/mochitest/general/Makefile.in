@@ -79,6 +79,7 @@ _TEST_FILES = \
 		test_browserFrame2.html \
 		test_browserFrame3.html \
 		test_browserFrame4.html \
+		test_browserFrame5.html \
 		$(NULL)
 
 _CHROME_FILES = \

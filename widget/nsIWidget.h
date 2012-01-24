@@ -1068,7 +1068,7 @@ class nsIWidget : public nsISupports {
      * @param aManager The drawing LayerManager.
      * @param aRect Current widget rect that is being drawn.
      */
-    virtual void DrawOver(LayerManager* aManager, nsIntRect aRect) = 0;
+    virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) = 0;
 
     /**
      * Called when Gecko knows which themed widgets exist in this window.
