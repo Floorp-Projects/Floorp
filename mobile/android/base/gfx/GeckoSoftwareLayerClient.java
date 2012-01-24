@@ -59,6 +59,7 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import org.json.JSONException;
@@ -327,6 +328,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
                 endTransaction(mTileLayer);
             }
         }
+        Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
     }
 
     public ViewportMetrics getGeckoViewportMetrics() {
