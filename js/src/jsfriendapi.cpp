@@ -323,6 +323,12 @@ js::SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val)
     fun->toFunction()->setExtendedSlot(which, val);
 }
 
+JS_FRIEND_API(void)
+js::SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const js::Value &value)
+{
+    obj->setSlot(slot, value);
+}
+
 void
 js::SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback)
 {

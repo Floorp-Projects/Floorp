@@ -378,11 +378,18 @@ GetReservedSlot(const JSObject *obj, size_t slot)
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
+JS_FRIEND_API(void)
+SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const Value &value);
+
 inline void
 SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 {
     JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
-    reinterpret_cast<shadow::Object *>(obj)->slotRef(slot) = value;
+    shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
+    if (sobj->slotRef(slot).isMarkable())
+        SetReservedSlotWithBarrier(obj, slot, value);
+    else
+        sobj->slotRef(slot) = value;
 }
 
 JS_FRIEND_API(uint32_t)
