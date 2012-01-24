@@ -566,12 +566,15 @@ public:
     nsresult ErrorInvalidEnum(const char *fmt = 0, ...);
     nsresult ErrorInvalidOperation(const char *fmt = 0, ...);
     nsresult ErrorInvalidValue(const char *fmt = 0, ...);
+    nsresult ErrorInvalidFramebufferOperation(const char *fmt = 0, ...);
     nsresult ErrorInvalidEnumInfo(const char *info, PRUint32 enumvalue) {
         return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
     }
     nsresult ErrorOutOfMemory(const char *fmt = 0, ...);
-    
+
     const char *ErrorName(GLenum error);
+
+    nsresult DummyFramebufferOperation(const char *info);
 
     WebGLTexture *activeBoundTextureForTarget(WebGLenum target) {
         return target == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
@@ -1939,31 +1942,6 @@ public:
         return mTextureCubeMapFace;
     }
 
-    bool IsIncompatibleWithAttachmentPoint() const
-    {
-        // textures can only be color textures in WebGL
-        if (mTexturePtr)
-            return mAttachmentPoint != LOCAL_GL_COLOR_ATTACHMENT0;
-
-        if (mRenderbufferPtr) {
-            WebGLenum format = mRenderbufferPtr->InternalFormat();
-            switch (mAttachmentPoint) {
-                case LOCAL_GL_COLOR_ATTACHMENT0:
-                    return format != LOCAL_GL_RGB565 &&
-                           format != LOCAL_GL_RGB5_A1 &&
-                           format != LOCAL_GL_RGBA4;
-                case LOCAL_GL_DEPTH_ATTACHMENT:
-                    return format != LOCAL_GL_DEPTH_COMPONENT16;
-                case LOCAL_GL_STENCIL_ATTACHMENT:
-                    return format != LOCAL_GL_STENCIL_INDEX8;
-                case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-                    return format != LOCAL_GL_DEPTH_STENCIL;
-            }
-        }
-
-        return false; // no attachment at all, so no incompatibility
-    }
-
     bool HasUninitializedRenderbuffer() const {
         return mRenderbufferPtr && !mRenderbufferPtr->Initialized();
     }
@@ -1987,6 +1965,39 @@ public:
         return thisRect &&
                otherRect &&
                thisRect->HasSameDimensionsAs(*otherRect);
+    }
+
+    bool IsComplete() const {
+        const WebGLRectangleObject *thisRect = RectangleObject();
+
+        if (!thisRect ||
+            !thisRect->Width() ||
+            !thisRect->Height())
+            return false;
+
+        if (mTexturePtr)
+            return mAttachmentPoint == LOCAL_GL_COLOR_ATTACHMENT0;
+
+        if (mRenderbufferPtr) {
+            WebGLenum format = mRenderbufferPtr->InternalFormat();
+            switch (mAttachmentPoint) {
+                case LOCAL_GL_COLOR_ATTACHMENT0:
+                    return format == LOCAL_GL_RGB565 ||
+                           format == LOCAL_GL_RGB5_A1 ||
+                           format == LOCAL_GL_RGBA4;
+                case LOCAL_GL_DEPTH_ATTACHMENT:
+                    return format == LOCAL_GL_DEPTH_COMPONENT16;
+                case LOCAL_GL_STENCIL_ATTACHMENT:
+                    return format == LOCAL_GL_STENCIL_INDEX8;
+                case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
+                    return format == LOCAL_GL_DEPTH_STENCIL;
+                default:
+                    NS_ABORT(); // should have been validated earlier
+            }
+        }
+
+        NS_ABORT(); // should never get there
+        return false;
     }
 };
 
@@ -2135,50 +2146,23 @@ public:
         return NS_OK;
     }
 
-    bool CheckAndInitializeRenderbuffers()
-    {
-        if (HasBadAttachments()) {
-            mContext->SynthesizeGLError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
-            return false;
-        }
-
-        if (mColorAttachment.HasUninitializedRenderbuffer() ||
-            mDepthAttachment.HasUninitializedRenderbuffer() ||
-            mStencilAttachment.HasUninitializedRenderbuffer() ||
-            mDepthStencilAttachment.HasUninitializedRenderbuffer())
-        {
-            InitializeRenderbuffers();
-        }
-
-        return true;
+    bool HasIncompleteAttachment() const {
+        return (mColorAttachment.IsDefined() && !mColorAttachment.IsComplete()) ||
+               (mDepthAttachment.IsDefined() && !mDepthAttachment.IsComplete()) ||
+               (mStencilAttachment.IsDefined() && !mStencilAttachment.IsComplete()) ||
+               (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.IsComplete());
     }
 
-    bool HasBadAttachments() const {
-        if (mColorAttachment.IsIncompatibleWithAttachmentPoint() ||
-            mDepthAttachment.IsIncompatibleWithAttachmentPoint() ||
-            mStencilAttachment.IsIncompatibleWithAttachmentPoint() ||
-            mDepthStencilAttachment.IsIncompatibleWithAttachmentPoint())
-        {
-            // some attachment is incompatible with its attachment point
-            return true;
-        }
+    bool HasDepthStencilConflict() const {
+        return int(mDepthAttachment.IsDefined()) +
+               int(mStencilAttachment.IsDefined()) +
+               int(mDepthStencilAttachment.IsDefined()) >= 2;
+    }
 
-        if (int(mDepthAttachment.IsDefined()) +
-            int(mStencilAttachment.IsDefined()) +
-            int(mDepthStencilAttachment.IsDefined()) >= 2)
-        {
-            // has at least two among Depth, Stencil, DepthStencil
-            return true;
-        }
-
-        if (mDepthAttachment.IsDefined() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment))
-            return true;
-        if (mStencilAttachment.IsDefined() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment))
-            return true;
-        if (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment))
-            return true;
-
-        return false;
+    bool HasAttachmentsOfMismatchedDimensions() const {
+        return (mDepthAttachment.IsDefined() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment)) ||
+               (mStencilAttachment.IsDefined() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment)) ||
+               (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment));
     }
 
     const WebGLFramebufferAttachment& ColorAttachment() const {
@@ -2238,15 +2222,32 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLFRAMEBUFFER
 
-protected:
-
-    // protected because WebGLContext should only call InitializeRenderbuffers
-    void InitializeRenderbuffers()
+    bool CheckAndInitializeRenderbuffers()
     {
+        // enforce WebGL section 6.5 which is WebGL-specific, hence OpenGL itself would not
+        // generate the INVALID_FRAMEBUFFER_OPERATION that we need here
+        if (HasDepthStencilConflict())
+            return false;
+
+        if (!mColorAttachment.HasUninitializedRenderbuffer() &&
+            !mDepthAttachment.HasUninitializedRenderbuffer() &&
+            !mStencilAttachment.HasUninitializedRenderbuffer() &&
+            !mDepthStencilAttachment.HasUninitializedRenderbuffer())
+            return true;
+
+        // ensure INVALID_FRAMEBUFFER_OPERATION in zero-size case
+        const WebGLRectangleObject *rect = mColorAttachment.RectangleObject();
+        if (!rect ||
+            !rect->Width() ||
+            !rect->Height())
+            return false;
+
         mContext->MakeContextCurrent();
 
-        if (mContext->gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE)
-            return;
+        WebGLenum status;
+        mContext->CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER, &status);
+        if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE)
+            return false;
 
         PRUint32 mask = 0;
 
@@ -2265,7 +2266,6 @@ protected:
             mask |= LOCAL_GL_STENCIL_BUFFER_BIT;
         }
 
-        const WebGLRectangleObject *rect = mColorAttachment.RectangleObject();
         mContext->ForceClearFramebufferWithDefaultValues(mask, nsIntRect(0, 0, rect->Width(), rect->Height()));
 
         if (mColorAttachment.HasUninitializedRenderbuffer())
@@ -2279,6 +2279,8 @@ protected:
 
         if (mDepthStencilAttachment.HasUninitializedRenderbuffer())
             mDepthStencilAttachment.Renderbuffer()->SetInitialized(true);
+
+        return true;
     }
 
     WebGLuint mGLName;
