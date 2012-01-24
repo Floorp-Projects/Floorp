@@ -414,7 +414,7 @@ abstract public class GeckoApp
         registerReceiver(mBatteryReceiver, batteryFilter);
 
         if (SmsManager.getInstance() != null) {
-            SmsManager.getInstance().init();
+            SmsManager.getInstance().start();
         }
 
         GeckoNetworkManager.getInstance().init();
@@ -580,7 +580,9 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_SHUTDOWN));
 
         if (SmsManager.getInstance() != null) {
-            SmsManager.getInstance().shutdown();
+            SmsManager.getInstance().stop();
+            if (isFinishing())
+                SmsManager.getInstance().shutdown();
         }
 
         GeckoNetworkManager.getInstance().stop();
