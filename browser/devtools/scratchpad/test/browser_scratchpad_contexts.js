@@ -75,6 +75,7 @@ function runTests()
   sp.run();
 
   is(window.foobarBug636725, "aloha2", "window.foobarBug636725 has been set");
+  delete window.foobarBug636725;
 
   sp.setText("gBrowser", 7);
 
