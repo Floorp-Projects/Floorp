@@ -818,10 +818,6 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 
 #endif
 
-extern void
-MarkRuntime(JSTracer *trc);
-
-
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
     AutoGCRooter(JSContext *cx, ptrdiff_t tag);
@@ -919,7 +915,6 @@ class AutoValueRooter : private AutoGCRooter
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void MarkRuntime(JSTracer *trc);
 
   private:
     Value val;
@@ -948,7 +943,6 @@ class AutoObjectRooter : private AutoGCRooter {
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void MarkRuntime(JSTracer *trc);
 
   private:
     JSObject *obj;
@@ -2022,7 +2016,6 @@ class AutoIdRooter : private AutoGCRooter
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void MarkRuntime(JSTracer *trc);
 
   private:
     jsid id_;
