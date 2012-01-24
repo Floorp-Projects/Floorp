@@ -265,7 +265,8 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(
   const gfxMatrix &aToBBoxUserspace,
   PRUint32 aFlags)
 {
-  gfxRect bboxUnion(0.0, 0.0, 0.0, 0.0);
+  gfxRect bboxUnion;
+  bool firstChild = true;
 
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
@@ -277,8 +278,16 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(
         transform = static_cast<nsSVGElement*>(content)->
                       PrependLocalTransformTo(aToBBoxUserspace);
       }
-      bboxUnion =
-        bboxUnion.Union(svgKid->GetBBoxContribution(transform, aFlags));
+      // We need to include zero width/height vertical/horizontal lines, so we have
+      // to use UnionEdges, but we must special case the first bbox so that we don't
+      // include the initial gfxRect(0,0,0,0).
+      gfxRect childBBox = svgKid->GetBBoxContribution(transform, aFlags);
+      if (firstChild) {
+        bboxUnion = childBBox;
+        firstChild = false;
+        continue;
+      }
+      bboxUnion = bboxUnion.UnionEdges(childBBox);
     }
     kid = kid->GetNextSibling();
   }

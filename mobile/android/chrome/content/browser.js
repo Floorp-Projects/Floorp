@@ -146,7 +146,8 @@ function resolveGeckoURI(aURI) {
 var Strings = {};
 [
   ["brand",      "chrome://branding/locale/brand.properties"],
-  ["browser",    "chrome://browser/locale/browser.properties"]
+  ["browser",    "chrome://browser/locale/browser.properties"],
+  ["charset",    "chrome://global/locale/charsetTitles.properties"]
 ].forEach(function (aStringBundle) {
   let [name, bundle] = aStringBundle;
   XPCOMUtils.defineLazyGetter(Strings, name, function() {
@@ -252,6 +253,7 @@ var BrowserApp = {
     ConsoleAPI.init();
     ClipboardHelper.init();
     PermissionsHelper.init();
+    CharacterEncoding.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -357,6 +359,7 @@ var BrowserApp = {
     ViewportHandler.uninit();
     XPInstallObserver.uninit();
     ConsoleAPI.uninit();
+    CharacterEncoding.uninit();
   },
 
   get tabs() {
@@ -621,7 +624,7 @@ var BrowserApp = {
             case Ci.nsIPrefBranch.PREF_STRING:
             default:
               pref.type = "string";
-              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsISupportsString).data;
+              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
               break;
           }
         } catch (e) {
@@ -637,10 +640,6 @@ var BrowserApp = {
           case "network.cookie.cookieBehavior":
             pref.type = "bool";
             pref.value = pref.value == 0;
-            break;
-          case "browser.menu.showCharacterEncoding":
-            pref.type = "bool";
-            pref.value = pref.value == "true";
             break;
           case "font.size.inflation.minTwips":
             pref.type = "string";
@@ -682,10 +681,6 @@ var BrowserApp = {
       case "network.cookie.cookieBehavior":
         json.type = "int";
         json.value = (json.value ? 0 : 2);
-        break;
-      case "browser.menu.showCharacterEncoding":
-        json.type = "string";
-        json.value = (json.value ? "true" : "false");
         break;
       case "font.size.inflation.minTwips":
         json.type = "int";
@@ -3819,7 +3814,7 @@ var PermissionsHelper = {
       Services.contentPrefs.removePref(aURI, aType + ".request.remember");
     }
   }
-}
+};
 
 var MasterPassword = {
   pref: "privacy.masterpassword.enabled",
@@ -3899,4 +3894,99 @@ var MasterPassword = {
       }
     });
   }
-}
+};
+
+var CharacterEncoding = {
+  _charsets: [],
+
+  init: function init() {
+    Services.obs.addObserver(this, "CharEncoding:Get", false);
+    Services.obs.addObserver(this, "CharEncoding:Set", false);
+    this.sendState();
+  },
+
+  uninit: function uninit() {
+    Services.obs.removeObserver(this, "CharEncoding:Get", false);
+    Services.obs.removeObserver(this, "CharEncoding:Set", false);
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "CharEncoding:Get":
+        this.getEncoding();
+        break;
+      case "CharEncoding:Set":
+        this.setEncoding(aData);
+        break;
+    }
+  },
+
+  sendState: function sendState() {
+    let showCharEncoding = "false";
+    try {
+      showCharEncoding = Services.prefs.getComplexValue("browser.menu.showCharacterEncoding", Ci.nsIPrefLocalizedString).data;
+    } catch (e) { /* Optional */ }
+
+    sendMessageToJava({
+      gecko: {
+        type: "CharEncoding:State",
+        visible: showCharEncoding
+      }
+    });
+  },
+
+  getEncoding: function getEncoding() {
+    function normalizeCharsetCode(charsetCode) {
+      return charsetCode.trim().toLowerCase();
+    }
+
+    function getTitle(charsetCode) {
+      let charsetTitle = charsetCode;
+      try {
+        charsetTitle = Strings.charset.GetStringFromName(charsetCode + ".title");
+      } catch (e) {
+        dump("error: title not found for " + charsetCode);
+      }
+      return charsetTitle;
+    }
+
+    if (!this._charsets.length) {
+      let charsets = Services.prefs.getComplexValue("intl.charsetmenu.browser.static", Ci.nsIPrefLocalizedString).data;
+      this._charsets = charsets.split(",").map(function (charset) {
+        return {
+          code: normalizeCharsetCode(charset),
+          title: getTitle(charset)
+        };
+      });
+    }
+
+    // if document charset is not in charset options, add it
+    let docCharset = normalizeCharsetCode(BrowserApp.selectedBrowser.contentDocument.characterSet);
+    let selected = 0;
+    let charsetCount = this._charsets.length;
+    for (; selected < charsetCount && this._charsets[selected].code != docCharset; selected++);
+    if (selected == charsetCount) {
+      this._charsets.push({
+        code: docCharset,
+        title: getTitle(docCharset)
+      });
+    }
+
+    sendMessageToJava({
+      gecko: {
+        type: "CharEncoding:Data",
+        charsets: this._charsets,
+        selected: selected
+      }
+    });
+  },
+
+  setEncoding: function setEncoding(aEncoding) {
+    let browser = BrowserApp.selectedBrowser;
+    let docCharset = browser.docShell.QueryInterface(Ci.nsIDocCharset);
+    docCharset.charset = aEncoding;
+    browser.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  },
+
+};
+

@@ -411,7 +411,7 @@ OPDEF(JSOP_GNAMEINC,      158,"gnameinc",  NULL,       4,  0,  1, 15,  JOF_ATOM|
 OPDEF(JSOP_GNAMEDEC,      159,"gnamedec",  NULL,       4,  0,  1, 15,  JOF_ATOM|JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT3|JOF_GNAME|JOF_DECOMPOSE)
 
 /* Regular expression literal requiring special "fork on exec" handling. */
-OPDEF(JSOP_REGEXP,        160,"regexp",   NULL,       3,  0,  1, 19,  JOF_REGEXP)
+OPDEF(JSOP_REGEXP,        160,"regexp",   NULL,       5,  0,  1, 19,  JOF_REGEXP)
 
 /* XML (ECMA-357, a.k.a. "E4X") support. */
 OPDEF(JSOP_DEFXMLNS,      161,"defxmlns",   NULL,     1,  1,  0,  0,  JOF_BYTE)
@@ -572,3 +572,6 @@ OPDEF(JSOP_TOID,          225, "toid",         NULL,  1,  1,  1,  0,  JOF_BYTE)
 
 /* Push the implicit 'this' value for calls to the associated name. */
 OPDEF(JSOP_IMPLICITTHIS,  226, "implicitthis", "",    3,  0,  1,  0,  JOF_ATOM)
+
+/* This opcode is the target of the entry jump for some loop. */
+OPDEF(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  1,  0,  0,  0,  JOF_BYTE)

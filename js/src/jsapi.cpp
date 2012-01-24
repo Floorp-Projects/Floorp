@@ -5600,7 +5600,7 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    if (!s)
+    if (!s || !*s)
         return cx->runtime->emptyString;
     n = strlen(s);
     js = InflateString(cx, s, &n);
@@ -6710,79 +6710,6 @@ JS_FRIEND_API(void *)
 js_GetCompartmentPrivate(JSCompartment *compartment)
 {
     return compartment->data;
-}
-
-/************************************************************************/
-
-JS_PUBLIC_API(void)
-JS_RegisterReference(void **ref)
-{
-}
-
-JS_PUBLIC_API(void)
-JS_ModifyReference(void **ref, void *newval)
-{
-    // XPConnect uses the lower bits of its JSObject refs for evil purposes,
-    // so we need to fix this.
-    void *thing = *ref;
-    *ref = newval;
-    thing = (void *)((uintptr_t)thing & ~7);
-    if (!thing)
-        return;
-    JS_ASSERT(!static_cast<gc::Cell *>(thing)->compartment()->rt->gcRunning);
-    uint32_t kind = GetGCThingTraceKind(thing);
-    if (kind == JSTRACE_OBJECT)
-        JSObject::writeBarrierPre((JSObject *) thing);
-    else if (kind == JSTRACE_STRING)
-        JSString::writeBarrierPre((JSString *) thing);
-    else
-        JS_NOT_REACHED("invalid trace kind");
-}
-
-JS_PUBLIC_API(void)
-JS_UnregisterReference(void **ref)
-{
-    // For now we just want to trigger a write barrier.
-    JS_ModifyReference(ref, NULL);
-}
-
-JS_PUBLIC_API(void)
-JS_UnregisterReferenceRT(JSRuntime *rt, void **ref)
-{
-    // For now we just want to trigger a write barrier.
-    if (!rt->gcRunning)
-        JS_ModifyReference(ref, NULL);
-}
-
-JS_PUBLIC_API(void)
-JS_RegisterValue(jsval *val)
-{
-}
-
-JS_PUBLIC_API(void)
-JS_ModifyValue(jsval *val, jsval newval)
-{
-    HeapValue::writeBarrierPre(*val);
-    *val = newval;
-}
-
-JS_PUBLIC_API(void)
-JS_UnregisterValue(jsval *val)
-{
-    JS_ModifyValue(val, JSVAL_VOID);
-}
-
-JS_PUBLIC_API(void)
-JS_UnregisterValueRT(JSRuntime *rt, jsval *val)
-{
-    if (!rt->gcRunning)
-        JS_ModifyValue(val, JSVAL_VOID);
-}
-
-JS_PUBLIC_API(JSTracer *)
-JS_GetIncrementalGCTracer(JSRuntime *rt)
-{
-    return rt->gcIncrementalTracer;
 }
 
 /************************************************************************/

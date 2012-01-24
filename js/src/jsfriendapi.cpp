@@ -323,6 +323,12 @@ js::SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val)
     fun->toFunction()->setExtendedSlot(which, val);
 }
 
+JS_FRIEND_API(void)
+js::SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const js::Value &value)
+{
+    obj->setSlot(slot, value);
+}
+
 void
 js::SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback)
 {
@@ -468,6 +474,39 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
 #endif
 
 namespace js {
+
+JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSRuntime *rt)
+{
+    return !!rt->gcIncrementalTracer && !rt->gcRunning;
+}
+
+JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSContext *cx)
+{
+    return IsIncrementalBarrierNeeded(cx->runtime);
+}
+
+extern JS_FRIEND_API(void)
+IncrementalReferenceBarrier(void *ptr)
+{
+    if (!ptr)
+        return;
+    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->gcRunning);
+    uint32_t kind = gc::GetGCThingTraceKind(ptr);
+    if (kind == JSTRACE_OBJECT)
+        JSObject::writeBarrierPre((JSObject *) ptr);
+    else if (kind == JSTRACE_STRING)
+        JSString::writeBarrierPre((JSString *) ptr);
+    else
+        JS_NOT_REACHED("invalid trace kind");
+}
+
+extern JS_FRIEND_API(void)
+IncrementalValueBarrier(const Value &v)
+{
+    HeapValue::writeBarrierPre(v);
+}
 
 /* static */ void
 AutoLockGC::LockGC(JSRuntime *rt)

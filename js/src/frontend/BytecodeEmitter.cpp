@@ -539,7 +539,7 @@ UpdateLineNumberNotes(JSContext *cx, BytecodeEmitter *bce, uintN line)
 }
 
 static ptrdiff_t
-EmitTraceOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
+EmitLoopHead(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
 {
     if (nextpn) {
         /*
@@ -555,6 +555,21 @@ EmitTraceOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
     }
 
     return Emit1(cx, bce, JSOP_LOOPHEAD);
+}
+
+static bool
+EmitLoopEntry(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
+{
+    if (nextpn) {
+        /* Update the line number, as for LOOPHEAD. */
+        JS_ASSERT_IF(nextpn->isKind(PNK_STATEMENTLIST), nextpn->isArity(PN_LIST));
+        if (nextpn->isKind(PNK_STATEMENTLIST) && nextpn->pn_head)
+            nextpn = nextpn->pn_head;
+        if (!UpdateLineNumberNotes(cx, bce, nextpn->pn_pos.begin.lineno))
+            return false;
+    }
+
+    return Emit1(cx, bce, JSOP_LOOPENTRY) >= 0;
 }
 
 /*
@@ -1000,6 +1015,29 @@ EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
     return EmitIndexOp(cx, op, bce->objectList.index(objbox), bce);
 }
 
+static bool
+EmitIndex32(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
+{
+    const size_t len = 1 + UINT32_INDEX_LEN;
+    ptrdiff_t offset = EmitCheck(cx, bce, len);
+    if (offset < 0)
+        return false;
+
+    jsbytecode *next = bce->next();
+    next[0] = jsbytecode(op);
+    SET_UINT32_INDEX(next, index);
+    bce->current->next = next + len;
+    UpdateDepth(cx, bce, offset);
+    CheckTypeSet(cx, bce, op);
+    return true;
+}
+
+static bool
+EmitRegExp(JSContext *cx, uint32_t index, BytecodeEmitter *bce)
+{
+    return EmitIndex32(cx, JSOP_REGEXP, index, bce);
+}
+
 /*
  * What good are ARGNO_LEN and SLOTNO_LEN, you ask?  The answer is that, apart
  * from EmitSlotIndexOp, they abstract out the detail that both are 2, and in
@@ -1017,8 +1055,7 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index, BytecodeEmitter
     ptrdiff_t off;
     jsbytecode *pc;
 
-    JS_ASSERT(JOF_OPTYPE(op) == JOF_SLOTATOM ||
-              JOF_OPTYPE(op) == JOF_SLOTOBJECT);
+    JS_ASSERT(JOF_OPTYPE(op) == JOF_SLOTOBJECT);
     bigSuffix = EmitBigIndexPrefix(cx, bce, index);
     if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
@@ -3220,7 +3257,7 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
                 JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
                 uintN pickDistance = (uintN)((bce->stackDepth + 1) - depthBefore);
                 if (pickDistance > 0) {
-                    if (pickDistance > jsbytecode(-1)) {
+                    if (pickDistance > UINT8_MAX) {
                         ReportCompileErrorNumber(cx, bce->tokenStream(), pn3, JSREPORT_ERROR,
                                                  JSMSG_TOO_MANY_LOCALS);
                         return JS_FALSE;
@@ -4831,7 +4868,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 
     top = bce->offset();
     SET_STATEMENT_TOP(&stmtInfo, top);
-    if (EmitTraceOp(cx, bce, NULL) < 0)
+    if (EmitLoopHead(cx, bce, NULL) < 0)
         return false;
 
 #ifdef DEBUG
@@ -4874,6 +4911,8 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      * Fixup the goto that starts the loop to jump down to JSOP_MOREITER.
      */
     SetJumpOffsetAt(bce, jmp);
+    if (!EmitLoopEntry(cx, bce, NULL))
+        return false;
     if (Emit1(cx, bce, JSOP_MOREITER) < 0)
         return false;
     ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
@@ -4978,7 +5017,9 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     SET_STATEMENT_TOP(&stmtInfo, top);
 
     /* Emit code for the loop body. */
-    if (EmitTraceOp(cx, bce, forBody) < 0)
+    if (EmitLoopHead(cx, bce, forBody) < 0)
+        return false;
+    if (jmp == -1 && !EmitLoopEntry(cx, bce, forBody))
         return false;
     if (!EmitTree(cx, bce, forBody))
         return false;
@@ -5026,6 +5067,8 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         /* Fix up the goto from top to target the loop condition. */
         JS_ASSERT(jmp >= 0);
         SetJumpOffsetAt(bce, jmp);
+        if (!EmitLoopEntry(cx, bce, forHead->pn_kid2))
+            return false;
 
         if (!EmitTree(cx, bce, forHead->pn_kid2))
             return false;
@@ -5191,8 +5234,10 @@ EmitDo(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     /* Compile the loop body. */
-    ptrdiff_t top = EmitTraceOp(cx, bce, pn->pn_left);
+    ptrdiff_t top = EmitLoopHead(cx, bce, pn->pn_left);
     if (top < 0)
+        return false;
+    if (!EmitLoopEntry(cx, bce, NULL))
         return false;
 
     StmtInfo stmtInfo;
@@ -5259,7 +5304,7 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (jmp < 0)
         return false;
 
-    top = EmitTraceOp(cx, bce, pn->pn_right);
+    top = EmitLoopHead(cx, bce, pn->pn_right);
     if (top < 0)
         return false;
 
@@ -5267,6 +5312,8 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         return false;
 
     SetJumpOffsetAt(bce, jmp);
+    if (!EmitLoopEntry(cx, bce, pn->pn_left))
+        return false;
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
 
@@ -6497,12 +6544,14 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ptrdiff_t jmp = EmitJump(cx, bce, JSOP_FILTER, 0);
         if (jmp < 0)
             return JS_FALSE;
-        top = EmitTraceOp(cx, bce, pn->pn_right);
+        top = EmitLoopHead(cx, bce, pn->pn_right);
         if (top < 0)
             return JS_FALSE;
         if (!EmitTree(cx, bce, pn->pn_right))
             return JS_FALSE;
         SetJumpOffsetAt(bce, jmp);
+        if (!EmitLoopEntry(cx, bce, NULL))
+            return false;
         if (EmitJump(cx, bce, JSOP_ENDFILTER, top - bce->offset()) < 0)
             return JS_FALSE;
         break;
@@ -6644,7 +6693,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_REGEXP:
         JS_ASSERT(pn->isOp(JSOP_REGEXP));
-        ok = EmitIndexOp(cx, JSOP_REGEXP, bce->regexpList.index(pn->pn_objbox), bce);
+        ok = EmitRegExp(cx, bce->regexpList.index(pn->pn_objbox), bce);
         break;
 
 #if JS_HAS_XML_SUPPORT
