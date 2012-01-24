@@ -1,4 +1,6 @@
 #include "nsAccessibleWrap.h"
+
+#include "nsCocoaUtils.h"
 #include "nsObjCExceptions.h"
 
 #import "mozTextAccessible.h"
@@ -12,6 +14,7 @@ using namespace mozilla::a11y;
 - (long)textLength;
 - (BOOL)isReadOnly;
 - (void)setText:(NSString*)newText;
+- (NSString*)text;
 @end
 
 @implementation mozTextAccessible
@@ -79,8 +82,9 @@ using namespace mozilla::a11y;
     return [self selectedText];
   // Apple's SpeechSynthesisServer expects AXValue to return an AXStaticText
   // object's AXSelectedText attribute.  See bug 674612.
+  // Also if there is no selected text, we return the full text.See bug 369710
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
-    return [self selectedText];
+    return [self selectedText] ? : [self text];
 
   // let mozAccessible handle all other attributes
   return [super accessibilityAttributeValue:attribute];
@@ -156,6 +160,20 @@ using namespace mozilla::a11y;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (NSString*)text
+{
+  if (!mGeckoTextAccessible)
+    return nil;
+    
+  nsAutoString text;
+  nsresult rv = 
+    mGeckoTextAccessible->GetText(0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT,
+				  text);
+  NS_ENSURE_SUCCESS(rv, nil);
+
+  return text.IsEmpty() ? nil : nsCocoaUtils::ToNSString(text);
 }
 
 - (long)textLength
