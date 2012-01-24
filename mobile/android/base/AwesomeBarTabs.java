@@ -48,7 +48,6 @@ import android.graphics.LightingColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.SystemClock;
-import android.provider.Browser;
 import android.util.AttributeSet;
 import android.util.Base64;
 import android.util.Log;
@@ -412,16 +411,10 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
-        private int mLayout;
-        private String[] mFrom;
-        private int[] mTo;
         private String mSearchTerm;
 
         public AwesomeBarCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
             super(context, layout, c, from, to);
-            mLayout = layout;
-            mTo = to;
-            mFrom = from;
             mSearchTerm = "";
         }
 
