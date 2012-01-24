@@ -43,6 +43,9 @@
 
 //CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, PrivateCGCompositeMode);
 
+// A private API that Cairo has been using for a long time
+CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
+
 namespace mozilla {
 namespace gfx {
 
@@ -923,7 +926,12 @@ DrawTargetCG::PushClipRect(const Rect &aRect)
 {
   CGContextSaveGState(mCg);
 
+  /* We go through a bit of trouble to temporarilly set the transform
+   * while we add the path */
+  CGAffineTransform previousTransform = CGContextGetCTM(mCg);
+  CGContextConcatCTM(mCg, GfxMatrixToCGAffineTransform(mTransform));
   CGContextClipToRect(mCg, RectToCGRect(aRect));
+  CGContextSetCTM(mCg, previousTransform);
 }
 
 
@@ -946,7 +954,14 @@ DrawTargetCG::PushClip(const Path *aPath)
   }
 
 
+  /* We go through a bit of trouble to temporarilly set the transform
+   * while we add the path. XXX: this could be improved if we keep
+   * the CTM as resident state on the DrawTarget. */
+  CGContextSaveGState(mCg);
+  CGContextConcatCTM(mCg, GfxMatrixToCGAffineTransform(mTransform));
   CGContextAddPath(mCg, cgPath->GetPath());
+  CGContextRestoreGState(mCg);
+
   if (cgPath->GetFillRule() == FILL_EVEN_ODD)
     CGContextEOClip(mCg);
   else
