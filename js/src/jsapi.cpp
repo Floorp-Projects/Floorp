@@ -640,11 +640,7 @@ JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
-    bool eq;
-    if (!StrictlyEqual(cx, v1, v2, &eq))
-        return false;
-    *equal = eq;
-    return true;
+    return StrictlyEqual(cx, v1, v2, equal);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -653,11 +649,7 @@ JS_LooselyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
-    bool eq;
-    if (!LooselyEqual(cx, v1, v2, &eq))
-        return false;
-    *equal = eq;
-    return true;
+    return LooselyEqual(cx, v1, v2, equal);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -666,11 +658,7 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
-    bool s;
-    if (!SameValue(cx, v1, v2, &s))
-        return false;
-    *same = s;
-    return true;
+    return SameValue(cx, v1, v2, same);
 }
 
 JS_PUBLIC_API(JSBool)

@@ -239,14 +239,14 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, PropertyName *name, uintN attrs
 }
 
 extern bool
-StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *equal);
+StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *equal);
 
 extern bool
-LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *equal);
+LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *equal);
 
 /* === except that NaN is the same as NaN and -0 is not the same as +0. */
 extern bool
-SameValue(JSContext *cx, const Value &v1, const Value &v2, bool *same);
+SameValue(JSContext *cx, const Value &v1, const Value &v2, JSBool *same);
 
 extern JSType
 TypeOfValue(JSContext *cx, const Value &v);

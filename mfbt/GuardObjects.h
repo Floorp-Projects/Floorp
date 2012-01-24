@@ -44,7 +44,6 @@
 #define mozilla_GuardObjects_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Types.h"
 
 #ifdef __cplusplus
 
@@ -100,7 +99,7 @@ namespace detail {
  * For more details, and examples of using these macros, see
  * https://developer.mozilla.org/en/Using_RAII_classes_in_Mozilla
  */
-class MOZ_EXPORT_API(GuardObjectNotifier)
+class GuardObjectNotifier
 {
   private:
     bool* statementDone;
@@ -117,7 +116,7 @@ class MOZ_EXPORT_API(GuardObjectNotifier)
     }
 };
 
-class MOZ_EXPORT_API(GuardObjectNotificationReceiver)
+class GuardObjectNotificationReceiver
 {
   private:
     bool statementDone;
