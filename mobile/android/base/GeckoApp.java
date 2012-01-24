@@ -93,6 +93,12 @@ abstract public class GeckoApp
 {
     private static final String LOGTAG = "GeckoApp";
 
+    public static enum StartupMode {
+        NORMAL,
+        NEW_VERSION,
+        NEW_PROFILE
+    }
+
     public static final String ACTION_ALERT_CLICK   = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR   = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
     public static final String ACTION_WEBAPP        = "org.mozilla.gecko.WEBAPP";
@@ -105,6 +111,7 @@ abstract public class GeckoApp
     public static final String SAVED_STATE_SCREEN   = "screen";
     public static final String SAVED_STATE_SESSION  = "session";
 
+    StartupMode mStartupMode = null;
     private LinearLayout mMainLayout;
     private RelativeLayout mGeckoLayout;
     public static SurfaceView cameraView;
@@ -756,6 +763,51 @@ abstract public class GeckoApp
                 }
             }
         });
+    }
+
+    public StartupMode getStartupMode() {
+        // This function might touch the disk and should not
+        // be called from UI's main thread.
+
+        synchronized(this) {
+            if (mStartupMode != null)
+                return mStartupMode;
+
+            String packageName = getPackageName();
+            SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+
+            // This key should be profile-dependent. For now, we're simply hardcoding
+            // the "default" profile here.
+            String keyName = packageName + ".default.startup_version";
+            String appVersion = null;
+
+            try {
+                PackageInfo pkgInfo = getPackageManager().getPackageInfo(packageName, 0);
+                appVersion = pkgInfo.versionName;
+            } catch(NameNotFoundException nnfe) {
+                // If, for some reason, we can't fetch the app version
+                // we fallback to NORMAL startup mode.
+                mStartupMode = StartupMode.NORMAL;
+                return mStartupMode;
+            }
+
+            String startupVersion = settings.getString(keyName, null);
+            if (startupVersion == null) {
+                mStartupMode = StartupMode.NEW_PROFILE;
+            } else {
+                if (startupVersion.equals(appVersion))
+                    mStartupMode = StartupMode.NORMAL;
+                else
+                    mStartupMode = StartupMode.NEW_VERSION;
+            }
+
+            if (mStartupMode != StartupMode.NORMAL)
+                settings.edit().putString(keyName, appVersion).commit();
+
+            Log.i(LOGTAG, "Startup mode: " + mStartupMode);
+
+            return mStartupMode;
+        }
     }
 
     public File getProfileDir() {
