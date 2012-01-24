@@ -50,7 +50,7 @@ import android.util.Log;
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
 
-    private static int selectedTab = -1;
+    private Tab selectedTab;
     private HashMap<Integer, Tab> tabs;
     private ArrayList<Tab> order;
     private ContentResolver resolver;
@@ -97,9 +97,36 @@ public class Tabs implements GeckoEventListener {
     public Tab selectTab(int id) {
         if (!tabs.containsKey(id))
             return null;
- 
-        selectedTab = id;
-        return tabs.get(id);
+
+        final Tab tab = tabs.get(id);
+        // This avoids a NPE below, but callers need to be careful to
+        // handle this case
+        if (tab == null)
+            return null;
+
+        if (tab.getURL().equals("about:home"))
+            GeckoApp.mAppContext.showAboutHome();
+        else
+            GeckoApp.mAppContext.hideAboutHome();
+
+        GeckoApp.mAppContext.mMainHandler.post(new Runnable() { 
+            public void run() {
+                GeckoApp.mAutoCompletePopup.hide();
+                // Do we need to do this check?
+                if (isSelectedTab(tab)) {
+                    GeckoApp.mBrowserToolbar.setTitle(tab.getDisplayTitle());
+                    GeckoApp.mBrowserToolbar.setFavicon(tab.getFavicon());
+                    GeckoApp.mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+                    GeckoApp.mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                    GeckoApp.mDoorHangerPopup.updatePopup();
+                    GeckoApp.mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
+                }
+            }
+        });
+
+        // Pass a message to Gecko to update tab state in BrowserApp
+        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Selected", String.valueOf(tab.getId())));
+        return selectedTab = tab;
     }
 
     public int getIndexOf(Tab tab) {
@@ -114,15 +141,14 @@ public class Tabs implements GeckoEventListener {
     }
 
     public Tab getSelectedTab() {
-        return tabs.get(selectedTab);
-    }
-
-    public int getSelectedTabId() {
         return selectedTab;
     }
 
     public boolean isSelectedTab(Tab tab) {
-        return (tab.getId() == selectedTab);
+        if (selectedTab == null)
+            return false;
+
+        return tab == selectedTab;
     }
 
     public Tab getTab(int id) {
@@ -145,9 +171,7 @@ public class Tabs implements GeckoEventListener {
         if (tab == null || nextTab == null)
             return;
 
-        // TODO: Clean up the Tab:Select/Tab:Selected message passing so that we can
-        // immediately update the Java UI here (bug 719493)
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(nextTab.getId())));
+        selectTab(nextTab.getId());
 
         int tabId = tab.getId();
         removeTab(tabId);

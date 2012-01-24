@@ -207,7 +207,7 @@ var BrowserApp = {
 
     Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
-    Services.obs.addObserver(this, "Tab:Select", false);
+    Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
     Services.obs.addObserver(this, "Tab:Screenshot", false);
     Services.obs.addObserver(this, "Session:Back", false);
@@ -512,23 +512,33 @@ var BrowserApp = {
       tab.screenshot(width, height);
   },
 
+  // Use this method to select a tab from JS. This method sends a message
+  // to Java to select the tab in the Java UI (we'll get a Tab:Selected message
+  // back from Java when that happens).
   selectTab: function selectTab(aTab) {
-    if (aTab != null) {
+    if (!aTab) {
+      Cu.reportError("Error trying to select tab (tab doesn't exist)");
+      return;
+    }
+
+    let message = {
+      gecko: {
+        type: "Tab:Select",
+        tabID: aTab.id
+      }
+    };
+    sendMessageToJava(message);
+  },
+
+  // This method updates the state in BrowserApp after a tab has been selected
+  // in the Java UI.
+  _handleTabSelected: function _handleTabSelected(aTab) {
       this.selectedTab = aTab;
       aTab.active = true;
-      let message = {
-        gecko: {
-          type: "Tab:Selected",
-          tabID: aTab.id
-        }
-      };
 
       let evt = document.createEvent("UIEvents");
       evt.initUIEvent("TabSelect", true, false, window, null);
       aTab.browser.dispatchEvent(evt);
-
-      sendMessageToJava(message);
-    }
   },
 
   quit: function quit() {
@@ -859,8 +869,8 @@ var BrowserApp = {
         this.addTab(url, params);
       else
         this.loadURI(url, browser, params);
-    } else if (aTopic == "Tab:Select") {
-      this.selectTab(this.getTabForId(parseInt(aData)));
+    } else if (aTopic == "Tab:Selected") {
+      this._handleTabSelected(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Closed") {
       this._handleTabClosed(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Screenshot") {
