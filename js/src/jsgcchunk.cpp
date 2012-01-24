@@ -396,7 +396,7 @@ AllocChunkSlow()
      * space for one chunk.
      */
 
-    char *p = reinterpret_cast<char*>(MapPages(NULL, ChunkSize * 2));
+    char *p = static_cast<char*>(MapPages(NULL, ChunkSize * 2));
     if (p == NULL)
         return NULL;
 
@@ -434,7 +434,7 @@ AllocChunk()
      */
 
     /* Fast path; just allocate one chunk and hope it's aligned. */
-    char *p = reinterpret_cast<char*>(MapPages(NULL, ChunkSize));
+    char *p = static_cast<char*>(MapPages(NULL, ChunkSize));
     if (!p)
         return NULL;
 
