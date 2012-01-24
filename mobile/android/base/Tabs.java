@@ -45,6 +45,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.ContentResolver;
+import android.os.SystemClock;
+import android.util.Base64;
 import android.util.Log;
 
 public class Tabs implements GeckoEventListener {
@@ -63,6 +65,10 @@ public class Tabs implements GeckoEventListener {
         GeckoAppShell.registerGeckoEventListener("SessionHistory:Forward", this);
         GeckoAppShell.registerGeckoEventListener("SessionHistory:Goto", this);
         GeckoAppShell.registerGeckoEventListener("SessionHistory:Purge", this);
+        GeckoAppShell.registerGeckoEventListener("Tab:Added", this);
+        GeckoAppShell.registerGeckoEventListener("Tab:Close", this);
+        GeckoAppShell.registerGeckoEventListener("Tab:Select", this);
+        GeckoAppShell.registerGeckoEventListener("Tab:ScreenshotData", this);
     }
 
     public int getCount() {
@@ -253,6 +259,7 @@ public class Tabs implements GeckoEventListener {
     // GeckoEventListener implementation
 
     public void handleMessage(String event, JSONObject message) {
+        Log.i(LOGTAG, "Got message: " + event);
         try {
             if (event.startsWith("SessionHistory:")) {
                 Tab tab = getTab(message.getInt("tabID"));
@@ -260,6 +267,20 @@ public class Tabs implements GeckoEventListener {
                     event = event.substring("SessionHistory:".length());
                     tab.handleSessionHistoryMessage(event, message);
                 }
+            } else if (event.equals("Tab:Added")) {
+                Log.i(LOGTAG, "Received message from Gecko: " + SystemClock.uptimeMillis() + " - Tab:Added");
+                Tab tab = addTab(message);
+                if (message.getBoolean("selected"))
+                    selectTab(tab.getId());
+            } else if (event.equals("Tab:Close")) {
+                Tab tab = getTab(message.getInt("tabID"));
+                closeTab(tab);
+            } else if (event.equals("Tab:Select")) {
+                selectTab(message.getInt("tabID"));
+            } else if (event.equals("Tab:ScreenshotData")) {
+                Tab tab = getTab(message.getInt("tabID"));
+                byte[] compressed = Base64.decode(message.getString("data").substring(22), Base64.DEFAULT);
+                GeckoApp.mAppContext.processThumbnail(tab, null, compressed);
             }
         } catch (Exception e) { 
             Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
