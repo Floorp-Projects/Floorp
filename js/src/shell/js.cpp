@@ -3958,6 +3958,13 @@ GetMaxArgs(JSContext *cx, uintN arg, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+Terminate(JSContext *cx, uintN arg, jsval *vp)
+{
+    JS_ClearPendingException(cx);
+    return JS_FALSE;
+}
+
 static JSFunctionSpec shell_functions[] = {
     JS_FN("version",        Version,        0,0),
     JS_FN("revertVersion",  RevertVersion,  0,0),
@@ -4046,6 +4053,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("parseLegacyJSON",ParseLegacyJSON,1,0),
     JS_FN("enableStackWalkingAssertion",EnableStackWalkingAssertion,1,0),
     JS_FN("getMaxArgs",     GetMaxArgs,     0,0),
+    JS_FN("terminate",      Terminate,      0,0),
     JS_FS_END
 };
 
@@ -4200,6 +4208,8 @@ static const char *const shell_help_messages[] = {
 "  assertion increases test duration by an order of magnitude, you shouldn't\n"
 "  use this.",
 "getMaxArgs()             Return the maximum number of supported args for a call.",
+"terminate()              Terminate JavaScript execution, as if we had run out of\n"
+"                         memory or been terminated by the slow script dialog.",
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
