@@ -101,6 +101,7 @@ FENNEC_JAVA_FILES = \
   gfx/CairoGLInfo.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
+  gfx/CheckerboardImage.java \
   gfx/FloatSize.java \
   gfx/GeckoSoftwareLayerClient.java \
   gfx/InputConnectionHandler.java \
@@ -510,7 +511,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tabs_tray_close_button.xml             \
   mobile/android/base/resources/drawable/tabs_tray_list_divider.xml             \
   mobile/android/base/resources/drawable/tabs_tray_list_selector.xml            \
-  mobile/android/base/resources/drawable/checkerboard.png                       \
   mobile/android/base/resources/drawable/shadow.png                             \
   $(NULL)
 
