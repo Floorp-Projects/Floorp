@@ -145,6 +145,14 @@ ifeq ($(OS_TARGET),Android)
 DEFINES += -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
 endif
 
+# Force using malloc_usable_size when building with jemalloc because _msize
+# causes assertions on Win64. See bug 719579.
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_MEMORY
+DEFINES += -DHAVE_MALLOC_USABLE_SIZE
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # next line allows use of MOZ_OBJDIR in .mozconfig with older gcc on BeOS, maybe others
