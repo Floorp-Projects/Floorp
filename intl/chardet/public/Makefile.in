@@ -44,13 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= chardet
 
-XPIDLSRCS       = \
-                nsIDocumentCharsetInfo.idl \
-		$(NULL)
-
 EXPORTS		= \
 		nsDetectionConfident.h \
-		nsDocumentCharsetInfoCID.h \
 		nsICharsetDetectionObserver.h \
 		nsICharsetDetector.h \
 		nsIStringCharsetDetector.h \

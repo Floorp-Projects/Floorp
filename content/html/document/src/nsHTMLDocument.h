@@ -63,7 +63,7 @@ class nsIEditorDocShell;
 class nsIParser;
 class nsIURI;
 class nsIMarkupDocumentViewer;
-class nsIDocumentCharsetInfo;
+class nsIDocShell;
 class nsICachingChannel;
 
 class nsHTMLDocument : public nsDocument,
@@ -253,14 +253,14 @@ protected:
                                PRInt32& aCharsetSource,
                                nsACString& aCharset);
   static bool TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
-                                     nsIDocumentCharsetInfo*  aDocInfo,
+                                     nsIDocShell*  aDocShell,
                                      PRInt32& aCharsetSource,
                                      nsACString& aCharset);
   static bool TryCacheCharset(nsICachingChannel* aCachingChannel,
                                 PRInt32& aCharsetSource,
                                 nsACString& aCharset);
   // aParentDocument could be null.
-  bool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
+  bool TryParentCharset(nsIDocShell*  aDocShell,
                           nsIDocument* aParentDocument,
                           PRInt32& charsetSource, nsACString& aCharset);
   static bool UseWeakDocTypeDefault(PRInt32& aCharsetSource,
