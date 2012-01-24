@@ -490,6 +490,7 @@
 #include "DOMSVGPointList.h"
 #include "DOMSVGTransformList.h"
 
+#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
@@ -500,6 +501,8 @@
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 #include "mozilla/dom/indexedDB/IDBIndex.h"
 #include "nsIIDBDatabaseException.h"
+
+using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "nsIDOMMediaQueryList.h"
 
@@ -593,6 +596,9 @@ static const char kDOMStringBundleURL[] =
   (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
    nsIXPCScriptable::WANT_ADDPROPERTY)
 
+#define IDBEVENTTARGET_SCRIPTABLE_FLAGS                                       \
+  (EVENTTARGET_SCRIPTABLE_FLAGS)
+
 #define DOMCLASSINFO_STANDARD_FLAGS                                           \
   (nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::DOM_OBJECT)
 
@@ -653,6 +659,34 @@ DOMCI_DATA(DOMConstructor, void)
 #define NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(_class, _helper, _flags)          \
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA_WITH_NAME(_class, _class, _helper, \
                                                  _flags)
+
+namespace {
+
+class IDBEventTargetSH : public nsEventTargetSH
+{
+protected:
+  IDBEventTargetSH(nsDOMClassInfoData* aData) : nsEventTargetSH(aData)
+  { }
+
+  virtual ~IDBEventTargetSH()
+  { }
+
+public:
+  NS_IMETHOD PreCreate(nsISupports *aNativeObj, JSContext *aCx,
+                       JSObject *aGlobalObj, JSObject **aParentObj);
+
+  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *aWrapper, JSContext *aCx,
+                         JSObject *aObj, jsid aId, jsval *aVp, bool *aRetval);
+
+  virtual void PreserveWrapper(nsISupports *aNative);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData *aData)
+  {
+    return new IDBEventTargetSH(aData);
+  }
+};
+
+} // anonymous namespace
 
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
 // classes their correct behavior when used through XPConnect. The
@@ -1537,14 +1571,14 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(IDBFactory, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBRequest, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBDatabase, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBRequest, IDBEventTargetSH,
+                           IDBEVENTTARGET_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBDatabase, IDBEventTargetSH,
+                           IDBEVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBObjectStore, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBTransaction, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBTransaction, IDBEventTargetSH,
+                           IDBEVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBCursorWithValue, nsDOMGenericSH,
@@ -1555,8 +1589,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBVersionChangeEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBOpenDBRequest, IDBEventTargetSH,
+                           IDBEVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBDatabaseException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -7612,6 +7646,36 @@ nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
   nsContentUtils::PreserveWrapper(aNative, target);
 }
 
+// IDBEventTarget helper
+
+NS_IMETHODIMP
+IDBEventTargetSH::PreCreate(nsISupports *aNativeObj, JSContext *aCx,
+                            JSObject *aGlobalObj, JSObject **aParentObj)
+{
+  IDBWrapperCache *target = IDBWrapperCache::FromSupports(aNativeObj);
+  JSObject *parent = target->GetParentObject();
+  *aParentObj = parent ? parent : aGlobalObj;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBEventTargetSH::AddProperty(nsIXPConnectWrappedNative *aWrapper,
+                              JSContext *aCx, JSObject *aObj, jsid aId,
+                              jsval *aVp, bool *aRetval)
+{
+  if (aId != sAddEventListener_id) {
+    IDBEventTargetSH::PreserveWrapper(GetNative(aWrapper, aObj));
+  }
+
+  return NS_OK;
+}
+
+void
+IDBEventTargetSH::PreserveWrapper(nsISupports *aNative)
+{
+  IDBWrapperCache *target = IDBWrapperCache::FromSupports(aNative);
+  nsContentUtils::PreserveWrapper(aNative, target);
+}
 
 // Element helper
 

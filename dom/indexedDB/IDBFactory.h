@@ -45,11 +45,11 @@
 #include "mozIStorageConnection.h"
 #include "nsIIDBFactory.h"
 
-#include "nsIWeakReferenceUtils.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsXULAppAPI.h"
 
-class nsPIDOMWindow;
 class nsIAtom;
+class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -60,11 +60,16 @@ struct ObjectStoreInfo;
 class IDBFactory : public nsIIDBFactory
 {
   typedef nsTArray<nsRefPtr<ObjectStoreInfo> > ObjectStoreInfoArray;
+
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBFactory)
   NS_DECL_NSIIDBFACTORY
 
   static already_AddRefed<nsIIDBFactory> Create(nsPIDOMWindow* aWindow);
+
+  static already_AddRefed<nsIIDBFactory> Create(JSContext* aCx,
+                                                JSObject* aOwningObject);
 
   static already_AddRefed<mozIStorageConnection>
   GetConnection(const nsAString& aDatabaseFilePath);
@@ -96,7 +101,7 @@ public:
 
 private:
   IDBFactory();
-  ~IDBFactory() { }
+  ~IDBFactory();
 
   nsresult
   OpenCommon(const nsAString& aName,
@@ -104,7 +109,10 @@ private:
              bool aDeleting,
              nsIIDBOpenDBRequest** _retval);
 
-  nsCOMPtr<nsIWeakReference> mWindow;
+  // If this factory lives on a window then mWindow must be non-null. Otherwise
+  // mOwningObject must be non-null.
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+  JSObject* mOwningObject;
 };
 
 END_INDEXEDDB_NAMESPACE
