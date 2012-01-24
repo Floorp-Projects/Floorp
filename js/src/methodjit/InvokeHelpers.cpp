@@ -547,10 +547,10 @@ js_InternalThrow(VMFrame &f)
                 switch (st) {
                 case JSTRAP_ERROR:
                     cx->clearPendingException();
-                    return NULL;
+                    break;
 
                 case JSTRAP_CONTINUE:
-                  break;
+                    break;
 
                 case JSTRAP_RETURN:
                     cx->clearPendingException();
