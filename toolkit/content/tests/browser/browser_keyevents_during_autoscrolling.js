@@ -14,11 +14,26 @@ function test()
   var key;
   var root;
 
+  /**
+   * Encapsulates EventUtils.sendChar().
+   */
+  function sendChar(aChar)
+  {
+    key = aChar;
+    dispatchedKeyEvents = kNoKeyEvents;
+    EventUtils.sendChar(key, gBrowser.contentWindow);
+    is(dispatchedKeyEvents, expectedKeyEvents,
+       "unexpected key events were dispatched or not dispatched: " + key);
+  }
+
+  /**
+   * Encapsulates EventUtils.sendKey().
+   */
   function sendKey(aKey)
   {
     key = aKey;
     dispatchedKeyEvents = kNoKeyEvents;
-    EventUtils.synthesizeKey(key, {}, gBrowser.contentWindow);
+    EventUtils.sendKey(key, gBrowser.contentWindow);
     is(dispatchedKeyEvents, expectedKeyEvents,
        "unexpected key events were dispatched or not dispatched: " + key);
   }
@@ -69,7 +84,7 @@ function test()
 
     // Test whether the key events are handled correctly under normal condition
     expectedKeyEvents = kAllKeyEvents;
-    sendKey("A");
+    sendChar("A");
 
     // Start autoscrolling by middle button lick on the page
     EventUtils.synthesizeMouse(root, 10, 10, { button: 1 },
@@ -77,24 +92,24 @@ function test()
 
     // Most key events should be eaten by the browser.
     expectedKeyEvents = kNoKeyEvents;
-    sendKey("A");
-    sendKey("VK_DOWN");
-    sendKey("VK_RETURN");
-    sendKey("VK_ENTER");
-    sendKey("VK_HOME");
-    sendKey("VK_END");
-    sendKey("VK_TAB");
-    sendKey("VK_ENTER");
+    sendChar("A");
+    sendKey("DOWN");
+    sendKey("RETURN");
+    sendKey("ENTER");
+    sendKey("HOME");
+    sendKey("END");
+    sendKey("TAB");
+    sendKey("ENTER");
 
     // Finish autoscrolling by ESC key.  Note that only keydown and keypress
     // events are eaten because keyup event is fired *after* the autoscrolling
     // is finished.
     expectedKeyEvents = kKeyUpEvent;
-    sendKey("VK_ESCAPE");
+    sendKey("ESCAPE");
 
     // Test whether the key events are handled correctly under normal condition
     expectedKeyEvents = kAllKeyEvents;
-    sendKey("A");
+    sendChar("A");
 
     root.removeEventListener("keydown", onKey, true);
     root.removeEventListener("keypress", onKey, true);
