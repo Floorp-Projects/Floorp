@@ -92,22 +92,21 @@ public class ProfileMigrator {
         "SELECT places.url AS a_url, places.title AS a_title,"
         + "MAX(history.visit_date) AS a_date, COUNT(*) AS a_visits, "
         // see BrowserDB.filterAllSites for this formula
-        + "MAX(1, (((MAX(history.visit_date)/1000) - ?) / 86400000 + 120)) AS a_recent "
+        + "MAX(1, (((MAX(history.visit_date)/1000) - ?) / 86400000 + 120)) AS a_recent, "
+        + "favicon.data AS a_favicon_data, favicon.mime_type AS a_favicon_mime "
         + "FROM (moz_historyvisits AS history JOIN moz_places AS places "
-        + "ON places.id = history.place_id) WHERE places.hidden <> 1 "
+        + "ON places.id = history.place_id "
+        // Add favicon data if a favicon is present for this URL.
+        + "LEFT OUTER JOIN moz_favicons AS favicon "
+        + "ON places.favicon_id = favicon.id) "
+        + "WHERE places.hidden <> 1 "
         + "GROUP BY a_url ORDER BY a_visits * a_recent DESC LIMIT ?";
     private final String historyUrl    = "a_url";
     private final String historyTitle  = "a_title";
     private final String historyDate   = "a_date";
     private final String historyVisits = "a_visits";
-
-    private final String faviconQuery =
-        "SELECT places.url AS a_url, favicon.data AS a_data, "
-        + "favicon.mime_type AS a_mime FROM (moz_places AS places JOIN "
-        + "moz_favicons AS favicon ON places.favicon_id = favicon.id)";
-    private final String faviconUrl  = "a_url";
-    private final String faviconData = "a_data";
-    private final String faviconMime = "a_mime";
+    private final String faviconData   = "a_favicon_data";
+    private final String faviconMime   = "a_favicon_mime";
 
     public ProfileMigrator(ContentResolver cr, File profileDir) {
         mProfileDir = profileDir;
@@ -190,6 +189,8 @@ public class ProfileMigrator {
                 final int titleCol = db.getColumnIndex(historyTitle);
                 final int dateCol = db.getColumnIndex(historyDate);
                 final int visitsCol = db.getColumnIndex(historyVisits);
+                final int faviconMimeCol = db.getColumnIndex(faviconMime);
+                final int faviconDataCol = db.getColumnIndex(faviconData);
 
                 for (Object[] resultRow: queryResult) {
                     String url = (String)resultRow[urlCol];
@@ -198,6 +199,17 @@ public class ProfileMigrator {
                     int visits = Integer.parseInt((String)(resultRow[visitsCol]));
                     addHistory(browserDBHistory, url, title, date, visits);
                     placesHistory.add(url);
+
+                    String mime = (String)resultRow[faviconMimeCol];
+                    if (mime != null) {
+                        // Some GIFs can cause us to lock up completely
+                        // without exceptions or anything. Not cool.
+                        if (mime.compareTo("image/gif") != 0) {
+                            ByteBuffer dataBuff =
+                                (ByteBuffer)resultRow[faviconDataCol];
+                            addFavicon(url, mime, dataBuff);
+                        }
+                    }
                 }
             } catch (SQLiteBridgeException e) {
                 Log.i(LOGTAG, "Failed to get bookmarks: " + e.getMessage());
@@ -253,35 +265,6 @@ public class ProfileMigrator {
             }
         }
 
-        protected void migrateFavicons(SQLiteBridge db) {
-            // Determine which URLs are really stored.
-            Map<String, Long> browserDBHistory = gatherBrowserDBHistory();
-
-            try {
-                ArrayList<Object[]> queryResult = db.query(faviconQuery);
-                final int urlCol = db.getColumnIndex(faviconUrl);
-                final int mimeCol = db.getColumnIndex(faviconMime);
-                final int dataCol = db.getColumnIndex(faviconData);
-
-                for (Object[] resultRow: queryResult) {
-                    String url = (String)resultRow[urlCol];
-                    // Don't try to store a favicon if we don't know the URL.
-                    if (browserDBHistory.containsKey(url)) {
-                        String mime = (String)resultRow[mimeCol];
-                        // Some GIFs can cause us to lock up completely
-                        // without exceptions or anything. Not cool.
-                        if (mime.compareTo("image/gif") != 0) {
-                            ByteBuffer dataBuff = (ByteBuffer)resultRow[dataCol];
-                            addFavicon(url, mime, dataBuff);
-                        }
-                    }
-                }
-            } catch (SQLiteBridgeException e) {
-                Log.i(LOGTAG, "Failed to get favicons: " + e.getMessage());
-                return;
-            }
-        }
-
         protected void migratePlaces(File aFile) {
             String dbPath = aFile.getPath() + "/places.sqlite";
             String dbPathWal = aFile.getPath() + "/places.sqlite-wal";
@@ -301,7 +284,6 @@ public class ProfileMigrator {
                 db = new SQLiteBridge(dbPath);
                 migrateBookmarks(db);
                 migrateHistory(db);
-                migrateFavicons(db);
                 db.close();
 
                 // Clean up
