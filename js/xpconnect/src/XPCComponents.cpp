@@ -3600,7 +3600,7 @@ nsXPCComponents_Utils::GetWeakReference(const JS::Value &object, JSContext *cx,
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC(JSContext *cx)
 {
-    JS_GC(cx);
+    js::GCForReason(cx, js::gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
@@ -3608,7 +3608,7 @@ nsXPCComponents_Utils::ForceGC(JSContext *cx)
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceShrinkingGC(JSContext *cx)
 {
-    JS_ShrinkingGC(cx);
+    js::ShrinkingGC(cx, js::gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
@@ -3636,9 +3636,9 @@ class PreciseGCRunnable : public nsRunnable
         }
 
         if (mShrinking)
-            JS_ShrinkingGC(mCx);
+            js::ShrinkingGC(mCx, js::gcreason::COMPONENT_UTILS);
         else
-            JS_GC(mCx);
+            js::GCForReason(mCx, js::gcreason::COMPONENT_UTILS);
 
         mCallback->Callback();
         return NS_OK;
