@@ -785,6 +785,7 @@ nsPlacesAutoComplete.prototype = {
     // Clear our state
     delete this._originalSearchString;
     delete this._currentSearchString;
+    delete this._strippedPrefix;
     delete this._searchTokens;
     delete this._listener;
     delete this._result;
@@ -1380,6 +1381,11 @@ urlInlineComplete.prototype = {
     this._originalSearchString = aSearchString;
     this._currentSearchString =
       fixupSearchText(this._originalSearchString.toLowerCase());
+    // The protocol and the domain are lowercased by nsIURI, so it's fine to
+    // lowercase the typed prefix to add it back to the results later.
+    this._strippedPrefix = this._originalSearchString.slice(
+      0, this._originalSearchString.length - this._currentSearchString.length
+    ).toLowerCase();
 
     let result = Cc["@mozilla.org/autocomplete/simple-result;1"].
                  createInstance(Ci.nsIAutoCompleteSimpleResult);
@@ -1419,8 +1425,7 @@ urlInlineComplete.prototype = {
 
       if (hasDomainResult) {
         // We got a match for a domain, we can add it immediately.
-        let appendResult = domain.slice(this._currentSearchString.length);
-        result.appendMatch(aSearchString + appendResult, "");
+        result.appendMatch(this._strippedPrefix + domain, "");
 
         this._finishSearch();
         return;
@@ -1493,17 +1498,18 @@ urlInlineComplete.prototype = {
     let url = fixupSearchText(row.getResultByIndex(0));
 
     // We must complete the URL up to the next separator (which is /, ? or #).
-    let appendText = url.slice(this._currentSearchString.length);
-    let separatorIndex = appendText.search(/[\/\?\#]/);
+    let separatorIndex = url.slice(this._currentSearchString.length)
+                            .search(/[\/\?\#]/);
     if (separatorIndex != -1) {
-      if (appendText[separatorIndex] == "/") {
+      separatorIndex += this._currentSearchString.length;
+      if (url[separatorIndex] == "/") {
         separatorIndex++; // Include the "/" separator
       }
-      appendText = appendText.slice(0, separatorIndex);
+      url = url.slice(0, separatorIndex);
     }
 
     // Add the result
-    this._result.appendMatch(this._originalSearchString + appendText, "");
+    this._result.appendMatch(this._strippedPrefix + url, "");
 
     // handleCompletion() will cause the result listener to be called, and
     // will display the result in the UI.
