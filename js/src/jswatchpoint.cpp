@@ -221,6 +221,21 @@ WatchpointMap::markIteratively(JSTracer *trc)
 }
 
 void
+WatchpointMap::markAll(JSTracer *trc)
+{
+    for (Map::Range r = map.all(); !r.empty(); r.popFront()) {
+        Map::Entry &e = r.front();
+        MarkObject(trc, e.key.object, "held Watchpoint object");
+
+        const HeapId &id = e.key.id;
+        JS_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
+        MarkId(trc, id, "WatchKey::id");
+
+        MarkObject(trc, e.value.closure, "Watchpoint::closure");
+    }
+}
+
+void
 WatchpointMap::sweepAll(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
