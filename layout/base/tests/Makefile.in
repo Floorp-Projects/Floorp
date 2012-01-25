@@ -383,6 +383,7 @@ _BROWSER_FILES = \
 _INFLATION_REFTEST_FILES = \
 		$(shell find $(srcdir)/font-inflation/ -name '*.html' -o -name '*.xhtml') \
 		$(srcdir)/../../reftests/webm-video/black140x100.webm \
+		$(srcdir)/../../reftests/fonts/Ahem.ttf \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

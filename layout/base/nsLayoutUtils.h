@@ -1638,6 +1638,43 @@ public:
 #endif
 };
 
+namespace mozilla {
+  namespace layout {
+
+    /**
+     * An RAII class which will, for the duration of its lifetime,
+     * **if** the frame given is a container for font size inflation,
+     * set the current inflation container on the pres context to null
+     * (and then, in its destructor, restore the old value).
+     */
+    class AutoMaybeNullInflationContainer {
+    public:
+      AutoMaybeNullInflationContainer(nsIFrame *aFrame)
+      {
+        if (nsLayoutUtils::IsContainerForFontSizeInflation(aFrame)) {
+          mPresContext = aFrame->PresContext();
+          mOldValue = mPresContext->mCurrentInflationContainer;
+          mPresContext->mCurrentInflationContainer = nsnull;
+        } else {
+          // indicate we have nothing to restore
+          mPresContext = nsnull;
+        }
+      }
+
+      ~AutoMaybeNullInflationContainer()
+      {
+        if (mPresContext) {
+          mPresContext->mCurrentInflationContainer = mOldValue;
+        }
+      }
+    private:
+      nsPresContext *mPresContext;
+      nsIFrame *mOldValue;
+    };
+
+  }
+}
+
 class nsSetAttrRunnable : public nsRunnable
 {
 public:
