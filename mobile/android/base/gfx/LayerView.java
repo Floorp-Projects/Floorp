@@ -77,7 +77,7 @@ public class LayerView extends GLSurfaceView
     private static String LOGTAG = "GeckoLayerView";
     /* List of events to be processed if the page does not prevent them. Should only be touched on the main thread */
     private LinkedList<MotionEvent> mEventQueue = new LinkedList<MotionEvent>();
-    private boolean sendTouchEvents = false;
+    private boolean touchEventsEnabled = false;
     private String touchEventsPrefName = "dom.w3c_touch_events.enabled";
 
     public LayerView(Context context, LayerController controller) {
@@ -112,7 +112,7 @@ public class LayerView extends GLSurfaceView
                     JSONObject jPref = jsonPrefs.getJSONObject(i);
                     final String prefName = jPref.getString("name");
                     if (prefName.equals(touchEventsPrefName)) {
-                        sendTouchEvents = jPref.getBoolean("value");
+                        touchEventsEnabled = jPref.getBoolean("value");
                         GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
                     }
                 }
@@ -141,7 +141,7 @@ public class LayerView extends GLSurfaceView
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (sendTouchEvents && mController.onTouchEvent(event)) {
+        if (touchEventsEnabled && mController.onTouchEvent(event)) {
             addToEventQueue(event);
             return true;
         }
