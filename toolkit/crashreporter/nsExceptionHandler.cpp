@@ -216,6 +216,7 @@ static const int kOOMAllocationSizeParameterLen =
 
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
+static Mutex* notesFieldLock;
 static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
@@ -657,6 +658,8 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
   NS_ASSERTION(!crashReporterAPILock, "Shouldn't have a lock yet");
   crashReporterAPILock = new Mutex("crashReporterAPILock");
+  NS_ASSERTION(!notesFieldLock, "Shouldn't have a lock yet");
+  notesFieldLock = new Mutex("notesFieldLock");
 
   crashReporterAPIData_Hash =
     new nsDataHashtable<nsCStringHashKey,nsCString>();
@@ -1086,6 +1089,9 @@ nsresult UnsetExceptionHandler()
   delete crashReporterAPILock;
   crashReporterAPILock = nsnull;
 
+  delete notesFieldLock;
+  notesFieldLock = nsnull;
+
   delete crashReporterAPIData;
   crashReporterAPIData = nsnull;
 
@@ -1255,6 +1261,10 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
     return NS_ERROR_INVALID_ARG;
 
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    if (!NS_IsMainThread()) {
+      NS_ERROR("Cannot call AnnotateCrashReport in child processes from non-main thread.");
+      return NS_ERROR_FAILURE;
+    }
     PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
     if (!reporter) {
       EnqueueDelayedNote(new DelayedNote(data));
@@ -1273,6 +1283,8 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
       return NS_ERROR_FAILURE;
     return NS_OK;
   }
+
+  MutexAutoLock lock(*notesFieldLock);
 
   notesField->Append(data);
   return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);
