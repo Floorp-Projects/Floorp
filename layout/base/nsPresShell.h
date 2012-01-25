@@ -138,10 +138,10 @@ public:
     size_t n = 0;
     StackBlock *block = mBlocks;
     while (block) {
-      n += aMallocSizeOf(block, sizeof(StackBlock));
+      n += aMallocSizeOf(block);
       block = block->mNext;
     }
-    n += aMallocSizeOf(mMarks, mMarkLength * sizeof(StackMark));
+    n += aMallocSizeOf(mMarks);
     return n;
   }
 
@@ -904,7 +904,7 @@ public:
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
     size_t n = 0;
 
-    n += aMallocSizeOf(this, sizeof(PresShell));
+    n += aMallocSizeOf(this);
     n += mStackArena.SizeOfExcludingThis(aMallocSizeOf);
     n += mFrameArena.SizeOfExcludingThis(aMallocSizeOf);
 

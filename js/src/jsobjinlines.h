@@ -1218,7 +1218,7 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
 {
     if (hasDynamicSlots()) {
         size_t computedSize = numDynamicSlots() * sizeof(js::Value);
-        *slotsSize = mallocSizeOf ? mallocSizeOf(slots, computedSize) : computedSize;
+        *slotsSize = mallocSizeOf ? mallocSizeOf(slots) : computedSize;
     } else {
         *slotsSize = 0;
     }
@@ -1227,7 +1227,7 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
             (js::ObjectElements::VALUES_PER_HEADER +
              getElementsHeader()->capacity) * sizeof(js::Value);
         *elementsSize =
-            mallocSizeOf ? mallocSizeOf(getElementsHeader(), computedSize) : computedSize;
+            mallocSizeOf ? mallocSizeOf(getElementsHeader()) : computedSize;
     } else {
         *elementsSize = 0;
     }

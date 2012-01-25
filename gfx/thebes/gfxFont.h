@@ -2105,7 +2105,7 @@ private:
         }
 
         size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) {
-            return aMallocSizeOf(this, sizeof(DetailedGlyphStore)) +
+            return aMallocSizeOf(this) +
                 mDetails.SizeOfExcludingThis(aMallocSizeOf) +
                 mOffsetToIndex.SizeOfExcludingThis(aMallocSizeOf);
         }

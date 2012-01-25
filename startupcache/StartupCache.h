@@ -115,7 +115,7 @@ struct CacheEntry
   }
 
   size_t SizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf) {
-    return mallocSizeOf(data, size);
+    return mallocSizeOf(data);
   }
 };
 

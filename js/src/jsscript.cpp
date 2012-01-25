@@ -1287,7 +1287,7 @@ JSScript::sizeOfData(JSMallocSizeOfFun mallocSizeOf)
         return 0;
 #endif
 
-    return mallocSizeOf(data, computedSizeOfData());
+    return mallocSizeOf(data);
 }
 
 /*

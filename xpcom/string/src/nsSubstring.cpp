@@ -312,7 +312,7 @@ nsStringBuffer::SizeOfIncludingThisIfUnshared(nsMallocSizeOfFun aMallocSizeOf) c
   {
     if (!IsReadonly())
       {
-        return aMallocSizeOf(this, sizeof(nsStringBuffer) + mStorageSize);
+        return aMallocSizeOf(this);
       }
     return 0;
   }

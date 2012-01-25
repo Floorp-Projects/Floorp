@@ -658,11 +658,11 @@ class HashTable : private AllocPolicy
     }
 
     size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        return mallocSizeOf(table, capacity() * sizeof(Entry));
+        return mallocSizeOf(table);
     }
 
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        return mallocSizeOf(this, sizeof(HashTable)) + sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
 
     Ptr lookup(const Lookup &l) const {
@@ -1072,7 +1072,7 @@ class HashMap
          * Don't just call |impl.sizeOfExcludingThis()| because there's no
          * guarantee that |impl| is the first field in HashMap.
          */
-        return mallocSizeOf(this, sizeof(*this)) + impl.sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
     /*
@@ -1282,7 +1282,7 @@ class HashSet
          * Don't just call |impl.sizeOfExcludingThis()| because there's no
          * guarantee that |impl| is the first field in HashSet.
          */
-        return mallocSizeOf(this, sizeof(*this)) + impl.sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
     /*
