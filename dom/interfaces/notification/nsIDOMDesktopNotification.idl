@@ -40,7 +40,7 @@ interface nsIDOMEventListener;
 interface nsIDOMDesktopNotification;
 
 
-[scriptable, function, uuid(CCEA6185-0A3D-45AB-9058-1004DD4B8C50)]
+[scriptable, uuid(CCEA6185-0A3D-45AB-9058-1004DD4B8C50)]
 interface nsIDOMDesktopNotificationCenter : nsISupports
 {
   nsIDOMDesktopNotification createNotification(in DOMString title,
@@ -49,7 +49,7 @@ interface nsIDOMDesktopNotificationCenter : nsISupports
 };
 
 
-[scriptable, function, uuid(9131FD07-A7DB-4B3A-A98B-6D9F3746682F)]
+[scriptable, uuid(9131FD07-A7DB-4B3A-A98B-6D9F3746682F)]
 interface nsIDOMDesktopNotification : nsISupports
 {
   void show();

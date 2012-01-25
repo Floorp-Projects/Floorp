@@ -79,7 +79,7 @@ JSString::isExternal() const
 }
 
 size_t
-JSString::charsHeapSize(JSMallocSizeOfFun mallocSizeOf)
+JSString::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
     /* JSRope: do nothing, we'll count all children chars when we hit the leaf strings. */
     if (isRope())

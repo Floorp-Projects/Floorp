@@ -69,11 +69,6 @@ function SplitView(aRoot)
 
   this._mql = aRoot.ownerDocument.defaultView.matchMedia(LANDSCAPE_MEDIA_QUERY);
 
-  this._filter = aRoot.querySelector(".splitview-filter");
-  if (this._filter) {
-    this._setupFilterBox();
-  }
-
   // items list focus and search-on-type handling
   this._nav.addEventListener("keydown", function onKeyCatchAll(aEvent) {
     function getFocusedItemWithin(nav) {
@@ -115,13 +110,6 @@ function SplitView(aRoot)
         el.focus();
       }
       return false;
-    }
-
-    // search-on-type when any non-whitespace character is pressed while list
-    // has the focus
-    if (this._filter &&
-        !/\s/.test(String.fromCharCode(aEvent.which))) {
-      this._filter.focus();
     }
   }.bind(this), false);
 }
@@ -227,10 +215,6 @@ SplitView.prototype = {
    *         Called when the item is hidden/inactive.
    *     - function(summary, details, data) onDestroy
    *         Called when the item has been removed.
-   *     - function(summary, details, data, query) onFilterBy
-   *         Called when the user performs a filtering search.
-   *         If the function returns false, the item does not match query
-   *         string and will be hidden.
    *     - object data
    *         Object to pass to the callbacks above.
    *     - number ordinal
@@ -328,71 +312,6 @@ SplitView.prototype = {
   },
 
   /**
-    * Filter items by given string.
-    * Matching is performed on every item by calling onFilterBy when defined
-    * and then by searching aQuery in the summary element's text item.
-    * Non-matching item is hidden.
-    *
-    * If no item matches, 'splitview-all-filtered' class is set on the filter
-    * input element and the splitview-nav element.
-    *
-    * @param string aQuery
-    *        The query string. Use null to reset (no filter).
-    * @return number
-    *         The number of filtered (non-matching) item.
-    */
-  filterItemsBy: function ASV_filterItemsBy(aQuery)
-  {
-    if (!this._nav.hasChildNodes()) {
-      return 0;
-    }
-    if (aQuery) {
-      aQuery = aQuery.trim();
-    }
-    if (!aQuery) {
-      for (let i = 0; i < this._nav.childNodes.length; ++i) {
-        this._nav.childNodes[i].classList.remove("splitview-filtered");
-      }
-      this._filter.classList.remove("splitview-all-filtered");
-      this._nav.classList.remove("splitview-all-filtered");
-      return 0;
-    }
-
-    let count = 0;
-    let filteredCount = 0;
-    for (let i = 0; i < this._nav.childNodes.length; ++i) {
-      let summary = this._nav.childNodes[i];
-
-      let matches = false;
-      let binding = summary.getUserData(BINDING_USERDATA);
-      if (binding.onFilterBy) {
-        matches = binding.onFilterBy(summary, binding._details, binding.data, aQuery);
-      }
-      if (!matches) { // try text content
-        let content = summary.textContent.toUpperCase();
-        matches = (content.indexOf(aQuery.toUpperCase()) > -1);
-      }
-
-      count++;
-      if (!matches) {
-        summary.classList.add("splitview-filtered");
-        filteredCount++;
-      } else {
-        summary.classList.remove("splitview-filtered");
-      }
-    }
-
-    if (count > 0 && filteredCount == count) {
-      this._filter.classList.add("splitview-all-filtered");
-      this._nav.classList.add("splitview-all-filtered");
-    } else {
-      this._filter.classList.remove("splitview-all-filtered");
-      this._nav.classList.remove("splitview-all-filtered");
-    }
-    return filteredCount;
-  },
-
-  /**
    * Set the item's CSS class name.
    * This sets the class on both the summary and details elements, retaining
    * any SplitView-specific classes.
@@ -415,39 +334,4 @@ SplitView.prototype = {
     viewSpecific = viewSpecific ? viewSpecific.join(" ") : "";
     binding._details.className = viewSpecific + " " + aClassName;
   },
-
-  /**
-   * Set up filter search box.
-   */
-  _setupFilterBox: function ASV__setupFilterBox()
-  {
-    let clearFilter = function clearFilter(aEvent) {
-      this._filter.value = "";
-      this.filterItemsBy("");
-      return false;
-    }.bind(this);
-
-    this._filter.addEventListener("command", function onFilterInput(aEvent) {
-      this.filterItemsBy(this._filter.value);
-    }.bind(this), false);
-
-    this._filter.addEventListener("keyup", function onFilterKeyUp(aEvent) {
-      if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
-        clearFilter();
-      }
-      if (aEvent.keyCode == aEvent.DOM_VK_ENTER ||
-          aEvent.keyCode == aEvent.DOM_VK_RETURN) {
-        // autofocus matching item if there is only one
-        let matches = this._nav.querySelectorAll("* > li:not(.splitview-filtered)");
-        if (matches.length == 1) {
-          this.activeSummary = matches[0];
-        }
-      }
-    }.bind(this), false);
-
-    let clearButtons = this._root.querySelectorAll(".splitview-filter-clearButton");
-    for (let i = 0; i < clearButtons.length; ++i) {
-      clearButtons[i].addEventListener("click", clearFilter, false);
-    }
-  }
 };

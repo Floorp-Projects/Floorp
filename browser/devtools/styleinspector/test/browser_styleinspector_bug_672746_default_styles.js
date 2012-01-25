@@ -14,7 +14,6 @@ function createDocument()
     '<span id="matches" class="matches">Some styled text</span>' +
     '</div>';
   doc.title = "Style Inspector Default Styles Test";
-  ok(window.StyleInspector, "StyleInspector exists");
   // ok(StyleInspector.isEnabled, "style inspector preference is enabled");
   stylePanel = new StyleInspector(window);
   Services.obs.addObserver(runStyleInspectorTests, "StyleInspector-opened", false);

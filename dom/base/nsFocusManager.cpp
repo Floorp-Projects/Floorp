@@ -2916,14 +2916,12 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
                                 bool aForward)
 {
   PRInt32 tabIndex, childTabIndex;
-  nsIContent *child;
-
-  PRUint32 count = aParent->GetChildCount();
 
   if (aForward) {
     tabIndex = 0;
-    for (PRUint32 index = 0; index < count; index++) {
-      child = aParent->GetChildAt(index);
+    for (nsIContent* child = aParent->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
       childTabIndex = GetNextTabIndex(child, aCurrentTabIndex, aForward);
       if (childTabIndex > aCurrentTabIndex && childTabIndex != tabIndex) {
         tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex;
@@ -2939,8 +2937,9 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
   }
   else { /* !aForward */
     tabIndex = 1;
-    for (PRUint32 index = 0; index < count; index++) {
-      child = aParent->GetChildAt(index);
+    for (nsIContent* child = aParent->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
       childTabIndex = GetNextTabIndex(child, aCurrentTabIndex, aForward);
       if ((aCurrentTabIndex == 0 && childTabIndex > tabIndex) ||
           (childTabIndex < aCurrentTabIndex && childTabIndex > tabIndex)) {
@@ -2996,23 +2995,18 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
     return nsnull;
 
   Element *rootElement = aDocument->GetRootElement();
-  if (rootElement) {
-    if (aCheckVisibility && !rootElement->GetPrimaryFrame()) {
-      return nsnull;
-    }
+  if (!rootElement) {
+    return nsnull;
+  }
 
-    // Finally, check if this is a frameset
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
-    if (htmlDoc) {
-      PRUint32 childCount = rootElement->GetChildCount();
-      for (PRUint32 i = 0; i < childCount; ++i) {
-        nsIContent *childContent = rootElement->GetChildAt(i);
-        nsINodeInfo *ni = childContent->NodeInfo();
-        if (childContent->IsHTML() &&
-            ni->Equals(nsGkAtoms::frameset))
-          return nsnull;
-      }
-    }
+  if (aCheckVisibility && !rootElement->GetPrimaryFrame()) {
+    return nsnull;
+  }
+
+  // Finally, check if this is a frameset
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
+  if (htmlDoc && aDocument->GetHtmlChildElement(nsGkAtoms::frameset)) {
+    return nsnull;
   }
 
   return rootElement;

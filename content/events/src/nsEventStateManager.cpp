@@ -2516,7 +2516,7 @@ nsEventStateManager::DoScrollZoom(nsIFrame *aTargetFrame,
       // positive adjustment to decrease zoom, negative to increase
       PRInt32 change = (adjustment > 0) ? -1 : 1;
 
-      if (Preferences::GetBool("browser.zoom.full")) {
+      if (Preferences::GetBool("browser.zoom.full") || content->GetCurrentDoc()->IsSyntheticDocument()) {
         ChangeFullZoom(change);
       } else {
         ChangeTextSize(change);
@@ -2549,7 +2549,8 @@ GetScrollableLineHeight(nsIFrame* aTargetFrame)
   // Fall back to the font height of the target frame.
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(aTargetFrame, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(aTargetFrame));
+    nsLayoutUtils::FontSizeInflationFor(aTargetFrame,
+                                        nsLayoutUtils::eNotInReflow));
   NS_ASSERTION(fm, "FontMetrics is null!");
   if (fm)
     return fm->MaxHeight();

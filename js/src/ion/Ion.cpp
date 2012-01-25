@@ -254,28 +254,28 @@ IonCompartment::~IonCompartment()
 
 IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
   : cx_(cx),
-    prev_(JS_THREAD_DATA(cx)->ionActivation),
+    prev_(cx->runtime->ionActivation),
     entryfp_(fp),
     bailout_(NULL),
-    prevIonTop_(JS_THREAD_DATA(cx)->ionTop),
-    prevIonJSContext_(JS_THREAD_DATA(cx)->ionJSContext),
+    prevIonTop_(cx->runtime->ionTop),
+    prevIonJSContext_(cx->runtime->ionJSContext),
     failedInvalidation_(false)
 {
     fp->setRunningInIon();
-    JS_THREAD_DATA(cx)->ionJSContext = cx;
-    JS_THREAD_DATA(cx)->ionActivation = this;
-    JS_THREAD_DATA(cx)->ionStackLimit = cx->stackLimit;
+    cx->runtime->ionJSContext = cx;
+    cx->runtime->ionActivation = this;
+    cx->runtime->ionStackLimit = cx->stackLimit;
 }
 
 IonActivation::~IonActivation()
 {
-    JS_ASSERT(JS_THREAD_DATA(cx_)->ionActivation == this);
+    JS_ASSERT(cx_->runtime->ionActivation == this);
     JS_ASSERT(!bailout_);
 
     entryfp_->clearRunningInIon();
-    JS_THREAD_DATA(cx_)->ionActivation = prev();
-    JS_THREAD_DATA(cx_)->ionTop = prevIonTop_;
-    JS_THREAD_DATA(cx_)->ionJSContext = prevIonJSContext_;
+    cx_->runtime->ionActivation = prev();
+    cx_->runtime->ionTop = prevIonTop_;
+    cx_->runtime->ionJSContext = prevIonJSContext_;
 }
 
 IonCode *

@@ -229,7 +229,10 @@ public class Favicons {
         private OnFaviconLoadedListener mListener;
 
         public LoadFaviconTask(String pageUrl, String faviconUrl, OnFaviconLoadedListener listener) {
-            mId = ++mNextFaviconLoadId;
+            synchronized(this) {
+                mId = ++mNextFaviconLoadId;
+            }
+
             mPageUrl = pageUrl;
             mFaviconUrl = faviconUrl;
             mListener = listener;

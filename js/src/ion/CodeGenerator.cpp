@@ -632,7 +632,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
     // Ion may legally place frames very close to the limit. Calling additional
     // C functions may then violate the limit without any checking.
 
-    ThreadData *threadData = gen->cx->threadData();
+    JSRuntime *rt = gen->cx->runtime;
 
     // No registers are allocated yet, so it's safe to grab anything.
     const LAllocation *limit = lir->limitTemp();
@@ -640,7 +640,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
 
     // Since Ion frames exist on the C stack, the stack limit may be
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
-    uintptr_t *limitAddr = &threadData->ionStackLimit;
+    uintptr_t *limitAddr = &rt->ionStackLimit;
     masm.loadPtr(ImmWord(limitAddr), limitReg);
 
     CheckOverRecursedFailure *ool = new CheckOverRecursedFailure(lir);

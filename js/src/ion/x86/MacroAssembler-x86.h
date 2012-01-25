@@ -563,7 +563,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // ThreadData::ionTop.
     void linkExitFrame() {
         JSContext *cx = GetIonContext()->cx;
-        movl(StackPointer, Operand(&JS_THREAD_DATA(cx)->ionTop));
+        movl(StackPointer, Operand(&cx->runtime->ionTop));
     }
 };
 

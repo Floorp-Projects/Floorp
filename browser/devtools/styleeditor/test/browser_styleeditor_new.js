@@ -5,7 +5,7 @@
 const TESTCASE_URI = TEST_BASE + "simple.html";
 
 const TRANSITION_CLASS = "moz-styleeditor-transitioning";
-
+const TESTCASE_CSS_SOURCE = "body{background-color:red;";
 
 function test()
 {
@@ -79,9 +79,13 @@ function testEditorAdded(aChrome, aEditor)
         is(computedStyle.backgroundColor, "rgb(255, 255, 255)",
            "content's background color is initially white");
 
-        for each (let c in "body{background-color:red;}") {
+        for each (let c in TESTCASE_CSS_SOURCE) {
           EventUtils.synthesizeKey(c, {}, gChromeWindow);
         }
+
+        is(aEditor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
+           "rule bracket has been auto-closed");
+
       }, gChromeWindow) ;
     },
 

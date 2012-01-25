@@ -260,7 +260,6 @@ PRUint32 nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
 #endif
 nsTArray< nsCOMPtr<nsIRunnable> >* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
-PRUint32 nsContentUtils::sScriptBlockerCountWhereRunnersPrevented = 0;
 nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 
 bool nsContentUtils::sIsHandlingKeyBoardEvent = false;
@@ -4419,23 +4418,10 @@ nsContentUtils::AddScriptBlocker()
 
 /* static */
 void
-nsContentUtils::AddScriptBlockerAndPreventAddingRunners()
-{
-  AddScriptBlocker();
-  if (sScriptBlockerCountWhereRunnersPrevented == 0) {
-    sScriptBlockerCountWhereRunnersPrevented = sScriptBlockerCount;
-  }
-}
-
-/* static */
-void
 nsContentUtils::RemoveScriptBlocker()
 {
   NS_ASSERTION(sScriptBlockerCount != 0, "Negative script blockers");
   --sScriptBlockerCount;
-  if (sScriptBlockerCount < sScriptBlockerCountWhereRunnersPrevented) {
-    sScriptBlockerCountWhereRunnersPrevented = 0;
-  }
   if (sScriptBlockerCount) {
     return;
   }
@@ -4469,10 +4455,6 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
   }
 
   if (sScriptBlockerCount) {
-    if (sScriptBlockerCountWhereRunnersPrevented > 0) {
-      NS_ERROR("Adding a script runner when that is prevented!");
-      return false;
-    }
     return sBlockedScriptRunners->AppendElement(aRunnable) != nsnull;
   }
   
@@ -5454,8 +5436,9 @@ public:
   }
   NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void* child)
   {
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-      mFound = child == mWrapper;
+    if (langID == nsIProgrammingLanguage::JAVASCRIPT &&
+        child == mWrapper) {
+      mFound = true;
     }
   }
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child)

@@ -557,10 +557,6 @@ class NodeBuilder
     bool generatorExpression(Value body, NodeVector &blocks, Value filter,
                              TokenPos *pos, Value *dst);
 
-    bool graphExpression(jsint idx, Value expr, TokenPos *pos, Value *dst);
-
-    bool graphIndexExpression(jsint idx, TokenPos *pos, Value *dst);
-
     bool letExpression(NodeVector &head, Value expr, TokenPos *pos, Value *dst);
 
     /*
@@ -1219,29 +1215,6 @@ NodeBuilder::generatorExpression(Value body, NodeVector &blocks, Value filter, T
                    "blocks", array,
                    "filter", filter,
                    dst);
-}
-
-bool
-NodeBuilder::graphExpression(jsint idx, Value expr, TokenPos *pos, Value *dst)
-{
-    Value cb = callbacks[AST_GRAPH_EXPR];
-    if (!cb.isNull())
-        return callback(cb, NumberValue(idx), pos, dst);
-
-    return newNode(AST_GRAPH_EXPR, pos,
-                   "index", NumberValue(idx),
-                   "expression", expr,
-                   dst);
-}
-
-bool
-NodeBuilder::graphIndexExpression(jsint idx, TokenPos *pos, Value *dst)
-{
-    Value cb = callbacks[AST_GRAPH_IDX_EXPR];
-    if (!cb.isNull())
-        return callback(cb, NumberValue(idx), pos, dst);
-
-    return newNode(AST_GRAPH_IDX_EXPR, pos, "index", NumberValue(idx), dst);
 }
 
 bool
@@ -2618,19 +2591,6 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         Value arg;
         return optExpression(pn->pn_kid, &arg) &&
                builder.yieldExpression(arg, &pn->pn_pos, dst);
-      }
-
-      case PNK_DEFSHARP:
-      {
-        DefSharpExpression &defsharp = pn->asDefSharpExpression();
-        Value expr;
-        return expression(&defsharp.expression(), &expr) &&
-               builder.graphExpression(defsharp.number(), expr, &defsharp.pn_pos, dst);
-      }
-
-      case PNK_USESHARP: {
-        UseSharpExpression &expr = pn->asUseSharpExpression();
-        return builder.graphIndexExpression(expr.number(), &expr.pn_pos, dst);
       }
 
       case PNK_ARRAYCOMP:

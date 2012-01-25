@@ -317,12 +317,6 @@ mozSanitizingHTMLSerializer::AddLeaf(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::AddDocTypeDecl(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::SetDocumentCharset(nsACString& aCharset)
 {
   // No idea, if this works - it isn't invoked by |TestOutput|.
