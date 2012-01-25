@@ -249,7 +249,6 @@ protected:
   nsAutoTArray<SinkContext*, 8> mContextStack;
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
-  PRInt32 mNumOpenIFRAMES;
 
   // depth of containment within <noembed>, <noframes> etc
   PRInt32 mInsideNoXXXTag;
@@ -754,10 +753,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       mSink->mInsideNoXXXTag++;
       break;
 
-    case eHTMLTag_iframe:
-      mSink->mNumOpenIFRAMES++;
-      break;
-
     case eHTMLTag_script:
     case eHTMLTag_style:
       MOZ_NOT_REACHED("Must not use HTMLContentSink for styles and scripts.");
@@ -888,10 +883,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
         result = CloseContainer(aTag);
       }
     }
-
-    break;
-  case eHTMLTag_iframe:
-    mSink->mNumOpenIFRAMES--;
 
     break;
 
