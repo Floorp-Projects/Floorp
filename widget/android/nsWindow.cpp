@@ -58,6 +58,7 @@ using mozilla::unused;
 
 #include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"
+#include "nsDOMTouchEvent.h"
 
 #include "nsGkAtoms.h"
 #include "nsWidgetsCID.h"
@@ -895,8 +896,11 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 win->mChildren[i]->mBounds.height = 0;
             }
         case AndroidGeckoEvent::SIZE_CHANGED: {
-            int nw = ae->P0().x;
-            int nh = ae->P0().y;
+            nsTArray<nsIntPoint> points = ae->Points();
+            NS_ASSERTION(points.Length() != 3, "Size changed does not have enough coordinates");
+
+            int nw = points[0].x;
+            int nh = points[0].y;
 
             if (ae->Type() == AndroidGeckoEvent::FORCED_RESIZE || nw != gAndroidBounds.width ||
                 nh != gAndroidBounds.height) {
@@ -913,11 +917,11 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 }
             }
 
-            gAndroidTileSize.width = ae->P2().x;
-            gAndroidTileSize.height = ae->P2().y;
+            gAndroidTileSize.width = points[2].x;
+            gAndroidTileSize.height = points[2].y;
 
-            int newScreenWidth = ae->P1().x;
-            int newScreenHeight = ae->P1().y;
+            int newScreenWidth = points[1].x;
+            int newScreenHeight = points[1].y;
 
             if (newScreenWidth == gAndroidScreenBounds.width &&
                 newScreenHeight == gAndroidScreenBounds.height)
@@ -951,29 +955,36 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 else
                     obs->RemoveObserver(notifier, "ipc:content-created");
             }
+            break;
         }
 
         case AndroidGeckoEvent::MOTION_EVENT: {
             win->UserActivity();
             if (!gTopLevelWindows.IsEmpty()) {
-                nsIntPoint pt(ae->P0());
+                nsIntPoint pt(0,0);
+                nsTArray<nsIntPoint> points = ae->Points();
+                if (points.Length() > 0) {
+                    pt = points[0];
+                }
                 pt.x = clamped(pt.x, 0, gAndroidBounds.width - 1);
                 pt.y = clamped(pt.y, 0, gAndroidBounds.height - 1);
                 nsWindow *target = win->FindWindowForPoint(pt);
-
 #if 0
-                ALOG("MOTION_EVENT %f,%f -> %p (visible: %d children: %d)", ae->P0().x, ae->P0().y, (void*)target,
+                ALOG("MOTION_EVENT %f,%f -> %p (visible: %d children: %d)", pt.x, pt.y, (void*)target,
                      target ? target->mIsVisible : 0,
                      target ? target->mChildren.Length() : 0);
 
                 DumpWindows();
 #endif
-
                 if (target) {
-                    if (ae->Count() > 1)
-                        target->OnMultitouchEvent(ae);
-                    else
+                    bool preventDefaultActions = target->OnMultitouchEvent(ae);
+                    if (!preventDefaultActions && ae->Count() == 2) {
+                        target->OnGestureEvent(ae);
+                    }
+#ifndef MOZ_ONLY_TOUCH_EVENTS
+                    if (!preventDefaultActions && ae->Count() < 2)
                         target->OnMotionEvent(ae);
+#endif
                 }
             }
             break;
@@ -1470,30 +1481,11 @@ nsWindow::OnMotionEvent(AndroidGeckoEvent *ae)
             return;
     }
 
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
-    nsIntPoint pt(ae->P0());
-    nsIntPoint offset = WidgetToScreenOffset();
-
-    //ALOG("#### motion pt: %d %d offset: %d %d", pt.x, pt.y, offset.x, offset.y);
-
-    pt.x -= offset.x;
-    pt.y -= offset.y;
-
-    // XXX possibly bound the range of pt here. some code may get confused.
-
 send_again:
 
     nsMouseEvent event(true,
                        msg, this,
                        nsMouseEvent::eReal, nsMouseEvent::eNormal);
-    InitEvent(event, &pt);
-
-    event.time = ae->Time();
-    event.isShift = !!(ae->MetaState() & AndroidKeyEvent::META_SHIFT_ON);
-    event.isControl = false;
-    event.isMeta = false;
-    event.isAlt = !!(ae->MetaState() & AndroidKeyEvent::META_ALT_ON);
-
     // XXX can we synthesize different buttons?
     event.button = nsMouseEvent::eLeftButton;
 
@@ -1501,8 +1493,8 @@ send_again:
         event.clickCount = 1;
 
     // XXX add the double-click handling logic here
-
-    DispatchEvent(&event);
+    if (ae->Points().Length() > 0)
+        DispatchMotionEvent(event, ae, ae->Points()[0]);
     if (Destroyed())
         return;
 
@@ -1520,16 +1512,87 @@ getDistance(const nsIntPoint &p1, const nsIntPoint &p2)
     return sqrt(deltaX*deltaX + deltaY*deltaY);
 }
 
-void nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
+bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
+{
+    switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
+        case AndroidMotionEvent::ACTION_DOWN:
+        case AndroidMotionEvent::ACTION_POINTER_DOWN: {
+            nsTouchEvent event(PR_TRUE, NS_TOUCH_START, this);
+            return DispatchMultitouchEvent(event, ae);
+        }
+        case AndroidMotionEvent::ACTION_MOVE: {
+            nsTouchEvent event(PR_TRUE, NS_TOUCH_MOVE, this);
+            return DispatchMultitouchEvent(event, ae);
+        }
+        case AndroidMotionEvent::ACTION_UP:
+        case AndroidMotionEvent::ACTION_POINTER_UP: {
+            nsTouchEvent event(PR_TRUE, NS_TOUCH_END, this);
+            return DispatchMultitouchEvent(event, ae);
+        }
+        case AndroidMotionEvent::ACTION_OUTSIDE:
+        case AndroidMotionEvent::ACTION_CANCEL: {
+            nsTouchEvent event(PR_TRUE, NS_TOUCH_CANCEL, this);
+            return DispatchMultitouchEvent(event, ae);
+        }
+    }
+    return false;
+}
+
+bool
+nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
+{
+    nsIntPoint offset = WidgetToScreenOffset();
+
+    event.isShift = false;
+    event.isControl = false;
+    event.isMeta = false;
+    event.isAlt = false;
+    event.time = ae->Time();
+
+    int action = ae->Action() & AndroidMotionEvent::ACTION_MASK;
+    if (action == AndroidMotionEvent::ACTION_UP ||
+        action == AndroidMotionEvent::ACTION_POINTER_UP) {
+        event.touches.SetCapacity(1);
+        int pointerIndex = ae->PointerIndex();
+        nsCOMPtr<nsIDOMTouch> t(new nsDOMTouch(ae->PointIndicies()[pointerIndex],
+                                               ae->Points()[pointerIndex] - offset,
+                                               ae->PointRadii()[pointerIndex],
+                                               ae->Orientations()[pointerIndex],
+                                               ae->Pressures()[pointerIndex]));
+        event.touches.AppendElement(t);
+    } else {
+        int count = ae->Count();
+        event.touches.SetCapacity(count);
+        for (int i = 0; i < count; i++) {
+            nsCOMPtr<nsIDOMTouch> t(new nsDOMTouch(ae->PointIndicies()[i],
+                                                   ae->Points()[i] - offset,
+                                                   ae->PointRadii()[i],
+                                                   ae->Orientations()[i],
+                                                   ae->Pressures()[i]));
+            event.touches.AppendElement(t);
+        }
+    }
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+    if (status == nsEventStatus_eConsumeNoDefault) {
+        AndroidBridge::Bridge()->PreventPanning();
+        return true;
+    }
+    return false;
+}
+
+void
+nsWindow::OnGestureEvent(AndroidGeckoEvent *ae)
 {
     PRUint32 msg = 0;
 
     nsIntPoint midPoint;
-    midPoint.x = ((ae->P0().x + ae->P1().x) / 2);
-    midPoint.y = ((ae->P0().y + ae->P1().y) / 2);
+    midPoint.x = ((ae->Points()[0].x + ae->Points()[1].x) / 2);
+    midPoint.y = ((ae->Points()[0].y + ae->Points()[1].y) / 2);
     nsIntPoint refPoint = midPoint - WidgetToScreenOffset();
 
-    double pinchDist = getDistance(ae->P0(), ae->P1());
+    double pinchDist = getDistance(ae->Points()[0], ae->Points()[1]);
     double pinchDelta = 0;
 
     switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
@@ -1608,6 +1671,26 @@ nsWindow::DispatchGestureEvent(PRUint32 msg, PRUint32 direction, double delta,
     event.isAlt = false;
     event.time = time;
     event.refPoint = refPoint;
+
+    DispatchEvent(&event);
+}
+
+
+void
+nsWindow::DispatchMotionEvent(nsInputEvent &event, AndroidGeckoEvent *ae,
+                              const nsIntPoint &refPoint)
+{
+    nsIntPoint offset = WidgetToScreenOffset();
+
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isMeta = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.time = ae->Time();
+
+    // XXX possibly bound the range of event.refPoint here.
+    //     some code may get confused.
+    event.refPoint = refPoint - offset;
 
     DispatchEvent(&event);
 }
