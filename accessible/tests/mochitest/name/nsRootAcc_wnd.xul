@@ -10,6 +10,9 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <script type="application/javascript"
+          src="chrome://browser/content/utilityOverlay.js"/>
+
   <script type="application/javascript">
   <![CDATA[
     var gOpenerWnd = window.opener.wrappedJSObject;
