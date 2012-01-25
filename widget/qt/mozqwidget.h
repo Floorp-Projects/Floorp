@@ -39,6 +39,7 @@
 #define MOZQWIDGET_H
 
 #include "moziqwidget.h"
+#include "nsIWidget.h"
 
 class MozQWidget : public IMozQWidget
 {
