@@ -771,7 +771,7 @@ struct Shape : public js::gc::Cell
     }
 
     jsid propid() const { JS_ASSERT(!isEmptyShape()); return maybePropid(); }
-    jsid maybePropid() const { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
+    const HeapId &maybePropid() const { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
 
     int16_t shortid() const { JS_ASSERT(hasShortID()); return maybeShortid(); }
     int16_t maybeShortid() const { return shortid_; }
