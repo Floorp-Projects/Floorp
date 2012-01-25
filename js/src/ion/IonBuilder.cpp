@@ -68,6 +68,17 @@ IonBuilder::IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp,
     pc = info.startPC();
 }
 
+bool
+IonBuilder::abort(const char *message, ...)
+{
+    va_list ap;
+    va_start(ap, message);
+    abortFmt(message, ap);
+    va_end(ap);
+    IonSpew(IonSpew_Abort, "aborted @ %s:%d", script->filename, js_PCToLineNumber(cx, script, pc));
+    return false;
+}
+
 static inline int32
 GetJumpOffset(jsbytecode *pc)
 {

@@ -197,6 +197,7 @@ class IonBuilder : public MIRGenerator
     bool inspectOpcode(JSOp op);
     uint32 readIndex(jsbytecode *pc);
     JSAtom *readAtom(jsbytecode *pc);
+    bool abort(const char *message, ...);
 
     static bool inliningEnabled() {
         return js_IonOptions.inlining;
