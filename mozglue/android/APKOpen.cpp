@@ -506,7 +506,7 @@ static void * mozload(const char * path, Zip *zip)
 
   if (extractLibs) {
     char fullpath[PATH_MAX];
-    snprintf(fullpath, PATH_MAX, "%s/%s", getenv("CACHE_PATH"), path);
+    snprintf(fullpath, PATH_MAX, "%s/%s", getenv("MOZ_LINKER_CACHE"), path);
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "resolved %s to %s", path, fullpath);
     extractFile(fullpath, s);
     handle = __wrap_dlopen(fullpath, RTLD_LAZY);
