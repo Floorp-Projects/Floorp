@@ -2125,6 +2125,12 @@ MarkRuntime(JSTracer *trc)
         if (c->activeAnalysis)
             c->markTypes(trc);
 
+        /* During a GC, these are treated as weak pointers. */
+        if (!IS_GC_MARKING_TRACER(trc)) {
+            if (c->watchpointMap)
+                c->watchpointMap->markAll(trc);
+        }
+
         /* Do not discard scripts with counters while profiling. */
         if (rt->profilingScripts) {
             for (CellIterUnderGC i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
