@@ -243,7 +243,6 @@ protected:
 
   nsRefPtr<nsGenericHTMLElement> mRoot;
   nsRefPtr<nsGenericHTMLElement> mBody;
-  nsRefPtr<nsGenericHTMLElement> mFrameset;
   nsRefPtr<nsGenericHTMLElement> mHead;
 
   nsRefPtr<nsGenericHTMLElement> mCurrentForm;
@@ -273,21 +272,12 @@ protected:
 
   nsresult FlushTags();
 
-  void StartLayout(bool aIgnorePendingSheets);
-
   // Routines for tags that require special handling
   nsresult CloseHTML();
-  nsresult OpenFrameset(const nsIParserNode& aNode);
-  nsresult CloseFrameset();
   nsresult OpenBody(const nsIParserNode& aNode);
   nsresult CloseBody();
   nsresult OpenForm(const nsIParserNode& aNode);
   nsresult CloseForm();
-  nsresult ProcessLINKTag(const nsIParserNode& aNode);
-
-  // Routines for tags that require special handling when we reach their end
-  // tag.
-  nsresult ProcessSTYLEEndTag(nsGenericHTMLElement* content);
 
   nsresult OpenHeadContext();
   void CloseHeadContext();
@@ -658,8 +648,7 @@ SinkContext::IsCurrentContainer(nsHTMLTag aTag)
 void
 SinkContext::DidAddContent(nsIContent* aContent)
 {
-  if ((mStackPos == 2) && (mSink->mBody == mStack[1].mContent ||
-                           mSink->mFrameset == mStack[1].mContent)) {
+  if ((mStackPos == 2) && (mSink->mBody == mStack[1].mContent)) {
     // We just finished adding something to the body
     mNotifyLevel = 0;
   }
@@ -740,25 +729,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mInsertionPoint = -1;
   ++mStackPos;
 
-  // XXX Need to do this before we start adding attributes.
-  if (nodeType == eHTMLTag_style) {
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(content);
-    NS_ASSERTION(ssle, "Style content isn't a style sheet?");
-    ssle->SetLineNumber(aNode.GetSourceLineNumber());
-
-    // Now disable updates so that every time we add an attribute or child
-    // text token, we don't try to update the style sheet.
-    if (!mSink->mInsideNoXXXTag) {
-      ssle->InitStyleLinkElement(false);
-    }
-    else {
-      // We're not going to be evaluating this style anyway.
-      ssle->InitStyleLinkElement(true);
-    }
-
-    ssle->SetEnableUpdates(false);
-  }
-  
   rv = mSink->AddAttributes(aNode, content);
   MaybeSetForm(content, nodeType, mSink);
 
@@ -777,9 +747,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       break;
 
     case eHTMLTag_frameset:
-      if (!mSink->mFrameset && mSink->mFramesEnabled) {
-        mSink->mFrameset = content;
-      }
+      MOZ_NOT_REACHED("Must not use HTMLContentSink for frames.");
       break;
 
     case eHTMLTag_noembed:
@@ -792,11 +760,8 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       break;
 
     case eHTMLTag_script:
-      {
-        nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
-        NS_ASSERTION(sele, "Script content isn't a script element?");
-        sele->SetScriptLineNumber(aNode.GetSourceLineNumber());
-      }
+    case eHTMLTag_style:
+      MOZ_NOT_REACHED("Must not use HTMLContentSink for styles and scripts.");
       break;
 
     case eHTMLTag_button:
@@ -949,7 +914,8 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
     break;
 
   case eHTMLTag_style:
-    result = mSink->ProcessSTYLEEndTag(content);
+    MOZ_NOT_REACHED("Must not use HTMLContentSink for styles.");
+    result = NS_ERROR_NOT_IMPLEMENTED;
     break;
 
   default:
@@ -1006,8 +972,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       case eHTMLTag_meta:
         // XXX It's just not sufficient to check if the parent is head. Also
         // check for the preference.
-        // Bug 40072: Don't evaluate METAs after FRAMESET.
-        if (!mSink->mInsideNoXXXTag && !mSink->mFrameset) {
+        if (!mSink->mInsideNoXXXTag) {
           rv = mSink->ProcessMETATag(content);
         }
         break;
@@ -1104,7 +1069,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
   {
     Node &parentNode = mStack[mStackPos - 1];
     nsGenericHTMLElement *parent = parentNode.mContent;
-    if (!mSink->mBody && !mSink->mFrameset && mSink->mHead)
+    if (!mSink->mBody && mSink->mHead)
       // XXXbz but this will make DidAddContent use the wrong parent for
       // the notification!  That seems so bogus it's not even funny.
       parentNode.mContent = mSink->mHead;
@@ -1488,7 +1453,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLContentSink, nsContentSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHTMLDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mBody)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFrameset)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHead)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCurrentForm)
   for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
@@ -1500,7 +1464,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLContentSink,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHTMLDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBody)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameset)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHead)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentForm)
   for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
@@ -1672,7 +1635,7 @@ HTMLContentSink::DidBuildModel(bool aTerminated)
   DidBuildModelImpl(aTerminated);
 
   // Reflow the last batch of content
-  if (mBody || mFrameset) {
+  if (mBody) {
     SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
                ("HTMLContentSink::DidBuildModel: layout final content"));
     mCurrentContext->FlushTags();
@@ -2002,93 +1965,6 @@ HTMLContentSink::CloseForm()
   return result;
 }
 
-nsresult
-HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
-{
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenFrameset", 
-                  eHTMLTag_frameset,
-                  mCurrentContext->mStackPos, 
-                  this);
-
-  CloseHeadContext(); // do this just in case if the HEAD was left open!
-
-  // Need to keep track of whether OpenContainer changes mFrameset
-  nsGenericHTMLElement* oldFrameset = mFrameset;
-  nsresult rv = mCurrentContext->OpenContainer(aNode);
-  bool isFirstFrameset = NS_SUCCEEDED(rv) && mFrameset != oldFrameset;
-
-  if (isFirstFrameset && mCurrentContext->mStackPos > 1) {
-    NS_ASSERTION(mFrameset, "Must have frameset!");
-    // Have to notify for the frameset now, since we never actually
-    // close out <html>, so won't notify for it then.
-    PRInt32 parentIndex    = mCurrentContext->mStackPos - 2;
-    nsGenericHTMLElement *parent = mCurrentContext->mStack[parentIndex].mContent;
-    PRInt32 numFlushed     = mCurrentContext->mStack[parentIndex].mNumFlushed;
-    PRInt32 childCount = parent->GetChildCount();
-    NS_ASSERTION(numFlushed < childCount, "Already notified on the frameset?");
-
-    PRInt32 insertionPoint =
-      mCurrentContext->mStack[parentIndex].mInsertionPoint;
-
-    // XXX: I have yet to see a case where numFlushed is non-zero and
-    // insertionPoint is not -1, but this code will try to handle
-    // those cases too.
-
-    PRUint32 oldUpdates = mUpdatesInNotification;
-    mUpdatesInNotification = 0;
-    if (insertionPoint != -1) {
-      NotifyInsert(parent, mFrameset, insertionPoint - 1);
-    } else {
-      NotifyAppend(parent, numFlushed);
-    }
-    mCurrentContext->mStack[parentIndex].mNumFlushed = childCount;
-    if (mUpdatesInNotification > 1) {
-      UpdateChildCounts();
-    }
-    mUpdatesInNotification = oldUpdates;
-  }
-  
-  return rv;
-}
-
-nsresult
-HTMLContentSink::CloseFrameset()
-{
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                   "HTMLContentSink::CloseFrameset", 
-                   eHTMLTag_frameset,
-                   mCurrentContext->mStackPos - 1,
-                   this);
-
-  SinkContext* sc = mCurrentContext;
-  nsGenericHTMLElement* fs = sc->mStack[sc->mStackPos - 1].mContent;
-  bool done = fs == mFrameset;
-
-  nsresult rv;
-  if (done) {
-    bool didFlush;
-    rv = sc->FlushTextAndRelease(&didFlush);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Flush out anything that's left
-    SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
-               ("HTMLContentSink::CloseFrameset: layout final content"));
-
-    sc->FlushTags();
-  }
-
-  rv = sc->CloseContainer(eHTMLTag_frameset);
-
-  if (done && mFramesEnabled) {
-    StartLayout(false);
-  }
-
-  return rv;
-}
-
 NS_IMETHODIMP
 HTMLContentSink::IsEnabled(PRInt32 aTag, bool* aReturn)
 {
@@ -2112,7 +1988,8 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   switch (aNode.GetNodeType()) {
     case eHTMLTag_frameset:
-      rv = OpenFrameset(aNode);
+      MOZ_NOT_REACHED("Must not use HTMLContentSink for frames.");
+      rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
     case eHTMLTag_head:
       rv = OpenHeadContext();
@@ -2153,7 +2030,8 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
 
   switch (aTag) {
     case eHTMLTag_frameset:
-      rv = CloseFrameset();
+      MOZ_NOT_REACHED("Must not use HTMLContentSink for frames.");
+      rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
     case eHTMLTag_head:
       CloseHeadContext();
@@ -2189,8 +2067,8 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   switch (nodeType) {
   case eHTMLTag_link:
-    mCurrentContext->FlushTextAndRelease();
-    rv = ProcessLINKTag(aNode);
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+    MOZ_NOT_REACHED("Must not use HTMLContentSink for links.");
 
     break;
   default:
@@ -2239,224 +2117,8 @@ HTMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
 {
-  nsAutoString docTypeStr(aNode.GetText());
-  nsresult rv = NS_OK;
-
-  PRInt32 publicStart = docTypeStr.Find("PUBLIC", true);
-  PRInt32 systemStart = docTypeStr.Find("SYSTEM", true);
-  nsAutoString name, publicId, systemId;
-
-  if (publicStart >= 0 || systemStart >= 0) {
-    /*
-     * If we find the keyword 'PUBLIC' after the keyword 'SYSTEM' we assume
-     * that we got a system id that happens to contain the string "PUBLIC"
-     * and we ignore that as the start of the public id.
-     */
-    if (systemStart >= 0 && (publicStart > systemStart)) {
-      publicStart = -1;
-    }
-
-    /*
-     * We found 'PUBLIC' or 'SYSTEM' in the doctype, put everything before
-     * the first one of those in name.
-     */
-    docTypeStr.Mid(name, 0, publicStart >= 0 ? publicStart : systemStart);
-
-    if (publicStart >= 0) {
-      // We did find 'PUBLIC'
-      docTypeStr.Mid(publicId, publicStart + 6,
-                     docTypeStr.Length() - publicStart);
-      publicId.Trim(" \t\n\r");
-
-      // Strip quotes
-      PRUnichar ch = publicId.IsEmpty() ? '\0' : publicId.First();
-
-      bool hasQuote = false;
-      if (ch == '"' || ch == '\'') {
-        publicId.Cut(0, 1);
-
-        PRInt32 end = publicId.FindChar(ch);
-
-        if (end < 0) {
-          /*
-           * We didn't find an end quote, so just make sure we cut off
-           * the '>' on the end of the doctype declaration
-           */
-
-          end = publicId.FindChar('>');
-        } else {
-          hasQuote = true;
-        }
-
-        /*
-         * If we didn't find a closing quote or a '>' we leave publicId as
-         * it is.
-         */
-        if (end >= 0) {
-          publicId.Truncate(end);
-        }
-      } else {
-        // No quotes, ignore the public id
-        publicId.Truncate();
-      }
-
-      /*
-       * Make sure the 'SYSTEM' word we found is not inside the pubilc id
-       */
-      PRInt32 pos = docTypeStr.Find(publicId);
-
-      if (systemStart > 0) {
-        if (systemStart < pos + (PRInt32)publicId.Length()) {
-          systemStart = docTypeStr.Find("SYSTEM", true,
-                                        pos + publicId.Length());
-        }
-      }
-
-      /*
-       * If we didn't find 'SYSTEM' we treat everything after the public id
-       * as the system id.
-       */
-      if (systemStart < 0) {
-        // 1 is the end quote
-        systemStart = pos + publicId.Length() + (hasQuote ? 1 : 0);
-      }
-    }
-
-    if (systemStart >= 0) {
-      // We either found 'SYSTEM' or we have data after the public id
-      docTypeStr.Mid(systemId, systemStart,
-                     docTypeStr.Length() - systemStart);
-
-      // Strip off 'SYSTEM' if we have it.
-      if (StringBeginsWith(systemId, NS_LITERAL_STRING("SYSTEM")))
-        systemId.Cut(0, 6);
-
-      systemId.Trim(" \t\n\r");
-
-      // Strip quotes
-      PRUnichar ch = systemId.IsEmpty() ? '\0' : systemId.First();
-
-      if (ch == '"' || ch == '\'') {
-        systemId.Cut(0, 1);
-
-        PRInt32 end = systemId.FindChar(ch);
-
-        if (end < 0) {
-          // We didn't find an end quote, then we just make sure we
-          // cut of the '>' on the end of the doctype declaration
-
-          end = systemId.FindChar('>');
-        }
-
-        // If we found an closing quote nor a '>' we truncate systemId
-        // at that length.
-        if (end >= 0) {
-          systemId.Truncate(end);
-        }
-      } else {
-        systemId.Truncate();
-      }
-    }
-  } else {
-    name.Assign(docTypeStr);
-  }
-
-  // Cut out "<!DOCTYPE" or "DOCTYPE" from the name.
-  if (StringBeginsWith(name, NS_LITERAL_STRING("<!DOCTYPE"), nsCaseInsensitiveStringComparator())) {
-    name.Cut(0, 9);
-  } else if (StringBeginsWith(name, NS_LITERAL_STRING("DOCTYPE"), nsCaseInsensitiveStringComparator())) {
-    name.Cut(0, 7);
-  }
-
-  name.Trim(" \t\n\r");
-
-  // Check if name contains whitespace chars. If it does and the first
-  // char is not a quote, we set the name to contain the characters
-  // before the whitespace
-  PRInt32 nameEnd = 0;
-
-  if (name.IsEmpty() || (name.First() != '"' && name.First() != '\'')) {
-    nameEnd = name.FindCharInSet(" \n\r\t");
-  }
-
-  // If we didn't find a public id we grab everything after the name
-  // and use that as public id.
-  if (publicStart < 0) {
-    name.Mid(publicId, nameEnd, name.Length() - nameEnd);
-    publicId.Trim(" \t\n\r");
-
-    PRUnichar ch = publicId.IsEmpty() ? '\0' : publicId.First();
-
-    if (ch == '"' || ch == '\'') {
-      publicId.Cut(0, 1);
-
-      PRInt32 publicEnd = publicId.FindChar(ch);
-
-      if (publicEnd < 0) {
-        publicEnd = publicId.FindChar('>');
-      }
-
-      if (publicEnd < 0) {
-        publicEnd = publicId.Length();
-      }
-
-      publicId.Truncate(publicEnd);
-    } else {
-      // No quotes, no public id
-      publicId.Truncate();
-    }
-  }
-
-  if (nameEnd >= 0) {
-    name.Truncate(nameEnd);
-  } else {
-    nameEnd = name.FindChar('>');
-
-    if (nameEnd >= 0) {
-      name.Truncate(nameEnd);
-    }
-  }
-
-  if (!publicId.IsEmpty() || !systemId.IsEmpty() || !name.IsEmpty()) {
-    nsCOMPtr<nsIDOMDocumentType> oldDocType;
-    nsCOMPtr<nsIDOMDocumentType> docType;
-
-    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mHTMLDocument));
-    doc->GetDoctype(getter_AddRefs(oldDocType));
-
-    // Assign "HTML" if we don't have anything, and normalize
-    // the name if it is something like "hTmL", per HTML5.
-    if (name.IsEmpty() || name.LowerCaseEqualsLiteral("html")) {
-      name.AssignLiteral("HTML");
-    }
-
-    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(name);
-    if (!nameAtom) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Indicate that there is no internal subset (not just an empty one)
-    rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
-                               mDocument->NodeInfoManager(), nameAtom,
-                               publicId, systemId, NullString());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (oldDocType) {
-      // If we already have a doctype we replace the old one.
-      nsCOMPtr<nsIDOMNode> tmpNode;
-      rv = doc->ReplaceChild(oldDocType, docType, getter_AddRefs(tmpNode));
-    } else {
-      // If we don't already have one we insert it as the first child,
-      // this might not be 100% correct but since this is called from
-      // the content sink we assume that this is what we want.
-      nsCOMPtr<nsIContent> content = do_QueryInterface(docType);
-      NS_ASSERTION(content, "Doctype isn't content?");
-      
-      mDocument->InsertChildAt(content, 0, true);
-    }
-  }
-
-  return rv;
+  MOZ_NOT_REACHED("Must not use HTMLContentSink for doctypes.");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -2487,18 +2149,6 @@ NS_IMETHODIMP
 HTMLContentSink::WillResume()
 {
   return WillResumeImpl();
-}
-
-void
-HTMLContentSink::StartLayout(bool aIgnorePendingSheets)
-{
-  if (mLayoutStarted) {
-    return;
-  }
-
-  mHTMLDocument->SetIsFrameset(mFrameset != nsnull);
-
-  nsContentSink::StartLayout(aIgnorePendingSheets);
 }
 
 nsresult
@@ -2550,13 +2200,6 @@ HTMLContentSink::CloseHeadContext()
     mCurrentContext = mContextStack.ElementAt(n);
     mContextStack.RemoveElementAt(n);
   }
-}
-
-nsresult
-HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
-{
-  MOZ_NOT_REACHED("Old HTMLContentSink used for processing links.");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #ifdef DEBUG
@@ -2639,16 +2282,6 @@ HTMLContentSink::UpdateChildCounts()
   }
 
   mCurrentContext->UpdateChildCounts();
-}
-
-// 3 ways to load a style sheet: inline, style src=, link tag
-// XXX What does nav do if we have SRC= and some style data inline?
-
-nsresult
-HTMLContentSink::ProcessSTYLEEndTag(nsGenericHTMLElement* content)
-{
-  MOZ_NOT_REACHED("Old HTMLContentSink used for processing style elements.");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void
