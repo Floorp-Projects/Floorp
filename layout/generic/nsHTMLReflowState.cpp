@@ -2170,20 +2170,23 @@ GetNormalLineHeight(nsFontMetrics* aFontMetrics)
 static inline nscoord
 ComputeLineHeight(nsStyleContext* aStyleContext,
                   nscoord aBlockHeight,
-                  bool* aIsBlockHeight)
+                  float aFontSizeInflation)
 {
-  *aIsBlockHeight = false;
-
   const nsStyleCoord& lhCoord = aStyleContext->GetStyleText()->mLineHeight;
 
-  if (lhCoord.GetUnit() == eStyleUnit_Coord)
-    return lhCoord.GetCoordValue();
+  if (lhCoord.GetUnit() == eStyleUnit_Coord) {
+    nscoord result = lhCoord.GetCoordValue();
+    if (aFontSizeInflation != 1.0f) {
+      result = NSToCoordRound(result * aFontSizeInflation);
+    }
+    return result;
+  }
 
   if (lhCoord.GetUnit() == eStyleUnit_Factor)
     // For factor units the computed value of the line-height property 
     // is found by multiplying the factor by the font's computed size
     // (adjusted for min-size prefs and text zoom).
-    return NSToCoordRound(lhCoord.GetFactorValue() *
+    return NSToCoordRound(lhCoord.GetFactorValue() * aFontSizeInflation *
                           aStyleContext->GetStyleFont()->mFont.size);
 
   NS_ASSERTION(lhCoord.GetUnit() == eStyleUnit_Normal ||
@@ -2194,14 +2197,14 @@ ComputeLineHeight(nsStyleContext* aStyleContext,
     NS_ASSERTION(lhCoord.GetIntValue() == NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT,
                  "bad line-height value");
     if (aBlockHeight != NS_AUTOHEIGHT) {
-      *aIsBlockHeight = true;
       return aBlockHeight;
     }
   }
 
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
-                                               getter_AddRefs(fm));
+                                               getter_AddRefs(fm),
+                                               aFontSizeInflation);
   return GetNormalLineHeight(fm);
 }
 
@@ -2224,15 +2227,10 @@ nsHTMLReflowState::CalcLineHeight(nsStyleContext* aStyleContext,
 {
   NS_PRECONDITION(aStyleContext, "Must have a style context");
 
-  bool isBlockHeight;
   nscoord lineHeight =
-    ComputeLineHeight(aStyleContext, aBlockHeight, &isBlockHeight);
+    ComputeLineHeight(aStyleContext, aBlockHeight, aFontSizeInflation);
 
   NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
-
-  if (aFontSizeInflation != 1.0f && !isBlockHeight) {
-    lineHeight = NSToCoordRound(lineHeight * aFontSizeInflation);
-  }
 
   return lineHeight;
 }
