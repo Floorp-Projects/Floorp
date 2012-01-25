@@ -215,33 +215,6 @@ nsLoggingSink::AddLeaf(const nsIParserNode& aNode) {
 
 } 
 
-/**
- *  This gets called by the parser when you want to add
- *  a comment node to the current container in the content
- *  model.
- *  
- *  @updated gess 3/25/98
- *  @param   
- *  @return  
- */
-NS_IMETHODIMP
-nsLoggingSink::AddComment(const nsIParserNode& aNode){
-
-#ifdef VERBOSE_DEBUG
-  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
-#endif
-
-  nsresult theResult=NS_OK;
-
-  //then proxy the call to the real sink if you have one.
-  if(mSink) {
-    theResult=mSink->AddComment(aNode);
-  }
-  
-  return theResult;
-
-}
-
 NS_IMETHODIMP
 nsLoggingSink::OpenHead() {
   WriteTabs(mOutput,++mLevel);
