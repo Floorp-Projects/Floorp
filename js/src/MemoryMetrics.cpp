@@ -219,26 +219,37 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
 
         data->runtimeObject = data->mallocSizeOf(rt, sizeof(JSRuntime));
 
-        size_t normal, temporary, regexpCode, stackCommitted;
-        rt->sizeOfExcludingThis(data->mallocSizeOf,
-                                &normal,
-                                &temporary,
-                                &regexpCode,
-                                &stackCommitted);
-
-        data->runtimeNormal = normal;
-        data->runtimeTemporary = temporary;
-        data->runtimeRegexpCode = regexpCode;
-        data->runtimeStackCommitted = stackCommitted;
-
         // Nb: we use sizeOfExcludingThis() because atomState.atoms is within
         // JSRuntime, and so counted when JSRuntime is counted.
         data->runtimeAtomsTable =
             rt->atomState.atoms.sizeOfExcludingThis(data->mallocSizeOf);
 
-        JSContext *acx, *iter = NULL;
-        while ((acx = JS_ContextIteratorUnlocked(rt, &iter)) != NULL)
-            data->runtimeContexts += acx->sizeOfIncludingThis(data->mallocSizeOf);
+        {
+            // Need the GC lock to call JS_ContextIteratorUnlocked() and to
+            // access rt->threads.
+            AutoLockGC lock(rt);
+
+            JSContext *acx, *iter = NULL;
+            while ((acx = JS_ContextIteratorUnlocked(rt, &iter)) != NULL) {
+                data->runtimeContexts +=
+                    acx->sizeOfIncludingThis(data->mallocSizeOf);
+            }
+
+            for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
+                JSThread *thread = r.front().value;
+                size_t normal, temporary, regexpCode, stackCommitted;
+                thread->sizeOfIncludingThis(data->mallocSizeOf,
+                                            &normal,
+                                            &temporary,
+                                            &regexpCode,
+                                            &stackCommitted);
+
+                data->runtimeThreadsNormal         += normal;
+                data->runtimeThreadsTemporary      += temporary;
+                data->runtimeThreadsRegexpCode     += regexpCode;
+                data->runtimeThreadsStackCommitted += stackCommitted;
+            }
+        }
     }
 
     JS_DestroyContextNoGC(cx);
@@ -335,17 +346,26 @@ GetExplicitNonHeapForRuntime(JSRuntime *rt, int64_t *amount,
         IterateCompartments(cx, &n, ExplicitNonHeapCompartmentCallback);
         *amount += n;
 
-        // explicit/runtime/regexp-code
-        // explicit/runtime/stack-committed
-        size_t regexpCode, stackCommitted;
-        rt->sizeOfExcludingThis(mallocSizeOf,
-                                NULL,
-                                NULL,
-                                &regexpCode,
-                                &stackCommitted);
+        {
+            // Need the GC lock to call JS_ContextIteratorUnlocked() and to
+            // access rt->threads.
+            AutoLockGC lock(rt);
 
-        *amount += regexpCode;
-        *amount += stackCommitted;
+            // explicit/runtime/threads/regexp-code
+            // explicit/runtime/threads/stack-committed
+            for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
+                JSThread *thread = r.front().value;
+                size_t regexpCode, stackCommitted;
+                thread->sizeOfIncludingThis(mallocSizeOf,
+                                            NULL,
+                                            NULL,
+                                            &regexpCode,
+                                            &stackCommitted);
+
+                *amount += regexpCode;
+                *amount += stackCommitted;
+            }
+        }
     }
 
     JS_DestroyContextNoGC(cx);

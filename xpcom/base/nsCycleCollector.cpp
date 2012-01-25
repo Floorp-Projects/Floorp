@@ -3748,13 +3748,10 @@ public:
             aListener = nsnull;
         mListener = aListener;
 
-        if (GetJSRuntime()->NotifyLeaveMainThread()) {
-            mRequest.Notify();
-            mReply.Wait();
-            GetJSRuntime()->NotifyEnterMainThread();
-        } else {
-            mCollected = mCollector->BeginCollection(mListener);
-        }
+        GetJSRuntime()->NotifyLeaveMainThread();
+        mRequest.Notify();
+        mReply.Wait();
+        GetJSRuntime()->NotifyEnterMainThread();
 
         mListener = nsnull;
 

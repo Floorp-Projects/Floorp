@@ -554,10 +554,14 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
     if (!cx)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    // Clear after mCycleCollectionContext is destroyed
+    JS_SetContextThread(cx);
+
     NS_ASSERTION(!mCycleCollectionContext, "Didn't call FinishTraverse?");
     mCycleCollectionContext = new XPCCallContext(NATIVE_CALLER, cx);
     if (!mCycleCollectionContext->IsValid()) {
         mCycleCollectionContext = nsnull;
+        JS_ClearContextThread(cx);
         return NS_ERROR_FAILURE;
     }
 
@@ -606,15 +610,11 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
     return NS_OK;
 }
 
-bool
+void
 nsXPConnect::NotifyLeaveMainThread()
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
-    JSRuntime *rt = mRuntime->GetJSRuntime();
-    if (JS_IsInRequest(rt) || JS_IsInSuspendedRequest(rt))
-        return false;
-    JS_ClearRuntimeThread(rt);
-    return true;
+    JS_ClearRuntimeThread(mRuntime->GetJSRuntime());
 }
 
 void
@@ -641,8 +641,11 @@ nsXPConnect::NotifyEnterMainThread()
 nsresult
 nsXPConnect::FinishTraverse()
 {
-    if (mCycleCollectionContext)
+    if (mCycleCollectionContext) {
+        JSContext *cx = mCycleCollectionContext->GetJSContext();
         mCycleCollectionContext = nsnull;
+        JS_ClearContextThread(cx);
+    }
     return NS_OK;
 }
 

@@ -333,8 +333,11 @@ js_InitAtomState(JSRuntime *rt)
     if (!state->atoms.init(JS_STRING_HASH_COUNT))
         return false;
 
+#ifdef JS_THREADSAFE
+    js_InitLock(&state->lock);
+#endif
     JS_ASSERT(state->atoms.initialized());
-    return true;
+    return JS_TRUE;
 }
 
 void
@@ -352,6 +355,10 @@ js_FinishAtomState(JSRuntime *rt)
 
     for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront())
         r.front().asPtr()->finalize(rt);
+
+#ifdef JS_THREADSAFE
+    js_FinishLock(&state->lock);
+#endif
 }
 
 bool
@@ -426,6 +433,7 @@ AtomIsInterned(JSContext *cx, JSAtom *atom)
     if (StaticStrings::isStatic(atom))
         return true;
 
+    AutoLockAtomsCompartment lock(cx);
     AtomSet::Ptr p = cx->runtime->atomState.atoms.lookup(atom);
     if (!p)
         return false;
@@ -453,6 +461,8 @@ AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
 
     if (JSAtom *s = cx->runtime->staticStrings.lookup(chars, length))
         return s;
+
+    AutoLockAtomsCompartment lock(cx);
 
     AtomSet &atoms = cx->runtime->atomState.atoms;
     AtomSet::AddPtr p = atoms.lookupForAdd(AtomHasher::Lookup(chars, length));
@@ -511,6 +521,9 @@ js_AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
         /* N.B. static atoms are effectively always interned. */
         if (ib != InternAtom || js::StaticStrings::isStatic(&atom))
             return &atom;
+
+        /* Here we have to check whether the atom is already interned. */
+        AutoLockAtomsCompartment lock(cx);
 
         AtomSet &atoms = cx->runtime->atomState.atoms;
         AtomSet::Ptr p = atoms.lookup(AtomHasher::Lookup(&atom));
@@ -591,9 +604,9 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
 {
     if (JSAtom *atom = cx->runtime->staticStrings.lookup(chars, length))
         return atom;
-    if (AtomSet::Ptr p = cx->runtime->atomState.atoms.lookup(AtomHasher::Lookup(chars, length)))
-        return p->asPtr();
-    return NULL;
+    AutoLockAtomsCompartment lock(cx);
+    AtomSet::Ptr p = cx->runtime->atomState.atoms.lookup(AtomHasher::Lookup(chars, length));
+    return p ? p->asPtr() : NULL;
 }
 
 #ifdef DEBUG

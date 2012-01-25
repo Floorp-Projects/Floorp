@@ -492,14 +492,38 @@ StackSpace::sizeOfCommitted()
 
 ContextStack::ContextStack(JSContext *cx)
   : seg_(NULL),
-    space_(&cx->runtime->stackSpace),
+    space_(&JS_THREAD_DATA(cx)->stackSpace),
     cx_(cx)
-{}
+{
+    threadReset();
+}
 
 ContextStack::~ContextStack()
 {
     JS_ASSERT(!seg_);
 }
+
+void
+ContextStack::threadReset()
+{
+#ifdef JS_THREADSAFE
+    if (cx_->thread())
+        space_ = &JS_THREAD_DATA(cx_)->stackSpace;
+    else
+        space_ = NULL;
+#else
+    space_ = &JS_THREAD_DATA(cx_)->stackSpace;
+#endif
+}
+
+#ifdef DEBUG
+void
+ContextStack::assertSpaceInSync() const
+{
+    JS_ASSERT(space_);
+    JS_ASSERT(space_ == &JS_THREAD_DATA(cx_)->stackSpace);
+}
+#endif
 
 bool
 ContextStack::onTop() const

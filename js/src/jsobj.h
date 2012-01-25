@@ -1519,6 +1519,21 @@ struct JSObject_Slots16 : JSObject { js::Value fslots[16]; };
 
 #define JSSLOT_FREE(clasp)  JSCLASS_RESERVED_SLOTS(clasp)
 
+#ifdef JS_THREADSAFE
+
+/*
+ * The GC runs only when all threads except the one on which the GC is active
+ * are suspended at GC-safe points, so calling obj->getSlot() from the GC's
+ * thread is safe when rt->gcRunning is set. See jsgc.cpp for details.
+ */
+#define THREAD_IS_RUNNING_GC(rt, thread)                                      \
+    ((rt)->gcRunning && (rt)->gcThread == (thread))
+
+#define CX_THREAD_IS_RUNNING_GC(cx)                                           \
+    THREAD_IS_RUNNING_GC((cx)->runtime, (cx)->thread)
+
+#endif /* JS_THREADSAFE */
+
 class JSValueArray {
   public:
     jsval *array;

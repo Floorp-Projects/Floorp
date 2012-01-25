@@ -539,7 +539,7 @@ public:
                         nsCycleCollectionTraversalCallback &cb);
 
     // nsCycleCollectionLanguageRuntime
-    virtual bool NotifyLeaveMainThread();
+    virtual void NotifyLeaveMainThread();
     virtual void NotifyEnterCycleCollectionThread();
     virtual void NotifyLeaveCycleCollectionThread();
     virtual void NotifyEnterMainThread();
@@ -3665,7 +3665,9 @@ public:
             JS_Assert("NS_IsMainThread()", __FILE__, __LINE__);
 
         if (cx) {
-            if (js::GetOwnerThread(cx) == sMainJSThread)
+            NS_ASSERTION(js::GetContextThread(cx), "Uh, JS context w/o a thread?");
+
+            if (js::GetContextThread(cx) == sMainJSThread)
                 return sMainThreadData;
         } else if (sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread()) {
             return sMainThreadData;
@@ -3768,7 +3770,7 @@ public:
         {sMainJSThread = nsnull; sMainThreadData = nsnull;}
 
     static bool IsMainThread(JSContext *cx)
-        { return js::GetOwnerThread(cx) == sMainJSThread; }
+        { return js::GetContextThread(cx) == sMainJSThread; }
 
 private:
     XPCPerThreadData();
