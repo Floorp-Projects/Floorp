@@ -1507,7 +1507,10 @@ public:
    * Return whether this is a frame whose width is used when computing
    * the font size inflation of its descendants.
    */
-  static bool IsContainerForFontSizeInflation(const nsIFrame *aFrame);
+  static bool IsContainerForFontSizeInflation(const nsIFrame *aFrame)
+  {
+    return aFrame->GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER;
+  }
 
   /**
    * Return the font size inflation *ratio* for a given frame.  This is

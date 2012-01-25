@@ -4681,54 +4681,6 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
   return (1.0f / ratio) + (1.0f / 3.0f);
 }
 
-/* static */ bool
-nsLayoutUtils::IsContainerForFontSizeInflation(const nsIFrame *aFrame)
-{
-  /*
-   * Font size inflation is build around the idea that we're inflating
-   * the fonts for a pan-and-zoom UI so that when the user scales up a
-   * block or other container to fill the width of the device, the fonts
-   * will be readable.  To do this, we need to pick what counts as a
-   * container.
-   *
-   * From a code perspective, the only hard requirement is that frames
-   * that are line participants
-   * (nsIFrame::IsFrameOfType(nsIFrame::eLineParticipant)) are never
-   * containers, since line layout assumes that the inflation is
-   * consistent within a line.
-   *
-   * This is not an imposition, since we obviously want a bunch of text
-   * (possibly with inline elements) flowing within a block to count the
-   * block (or higher) as its container.
-   *
-   * We also want form controls, including the text in the anonymous
-   * content inside of them, to match each other and the text next to
-   * them, so they and their anonymous content should also not be a
-   * container.
-   *
-   * However, because we can't reliably compute sizes across XUL during
-   * reflow, any XUL frame with a XUL parent is always a container.
-   *
-   * There are contexts where it would be nice if some blocks didn't
-   * count as a container, so that, for example, an indented quotation
-   * didn't end up with a smaller font size.  However, it's hard to
-   * distinguish these situations where we really do want the indented
-   * thing to count as a container, so we don't try, and blocks are
-   * always containers.
-   */
-  bool isInline = (aFrame->GetStyleDisplay()->mDisplay ==
-                     NS_STYLE_DISPLAY_INLINE ||
-                   (aFrame->GetContent() &&
-                    aFrame->GetContent()->IsInNativeAnonymousSubtree())) &&
-                  !(aFrame->IsBoxFrame() && aFrame->GetParent() &&
-                    aFrame->GetParent()->IsBoxFrame());
-  NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) || isInline,
-               "line participants must not be containers");
-  NS_ASSERTION(aFrame->GetType() != nsGkAtoms::bulletFrame || isInline,
-               "bullets should not be containers");
-  return !isInline;
-}
-
 static bool
 ShouldInflateFontsForContainer(const nsIFrame *aFrame)
 {
