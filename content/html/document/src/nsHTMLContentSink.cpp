@@ -953,9 +953,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       // Additional processing needed once the element is in the tree
       switch (nodeType) {
       case eHTMLTag_meta:
-        // XXX It's just not sufficient to check if the parent is head. Also
-        // check for the preference.
-        rv = mSink->ProcessMETATag(content);
+        MOZ_NOT_REACHED("Must not use HTMLContentSink for metas.");
+        rv = NS_ERROR_NOT_IMPLEMENTED;
         break;
 
       case eHTMLTag_input:
