@@ -1047,6 +1047,22 @@ protected:
   // charset rather than explicitly specified as a lang attribute).
   nsIAtom*              mLanguage;      // [STRONG]
 
+public:
+  // The following are public member variables so that we can use them
+  // with mozilla::AutoToggle or mozilla::AutoRestore.
+
+  // The frame that is the container for font size inflation for the
+  // reflow or intrinsic width computation currently happening.  If this
+  // frame is null, then font inflation should not be performed.
+  nsIFrame*             mCurrentInflationContainer; // [WEAK]
+
+  // The content-rect width of mCurrentInflationContainer.  If
+  // mCurrentInflationContainer is currently in reflow, this is its new
+  // width, which is not yet set on its rect.
+  nscoord               mCurrentInflationContainerWidth;
+
+protected:
+
   nsRefPtrHashtable<nsVoidPtrHashKey, nsImageLoader>
                         mImageLoaders[IMAGE_LOAD_TYPE_COUNT];
 
