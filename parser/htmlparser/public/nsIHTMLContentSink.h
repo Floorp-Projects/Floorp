@@ -83,8 +83,8 @@
 #include "nsHTMLTags.h"
 
 #define NS_IHTML_CONTENT_SINK_IID \
-{ 0x44b5a4f4, 0x01f7, 0x4116, \
-  { 0xb5, 0xa5, 0x56, 0x4d, 0x64, 0x0b, 0x68, 0x1f } }
+{ 0xa3aad227, 0xe137, 0x407c, \
+  { 0xa4, 0xa0, 0x9e, 0x23, 0xb6, 0x38, 0xf3, 0x42 } }
 
 #define MAX_REFLOW_DEPTH  200
 
@@ -204,16 +204,6 @@ public:
    * @param  nsIParserNode reference to parser node interface
    */     
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This method is called by the parser when it encounters
-   * a document type declaration.
-   *
-   * XXX Should the parser also parse the internal subset?
-   *
-   * @param  nsIParserNode reference to parser node interface
-   */
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode) = 0;
 
   /**
    * Call this method to determnine if a FORM is on the sink's stack

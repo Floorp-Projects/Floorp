@@ -1987,15 +1987,7 @@ CNavDTD::HandleDocTypeDeclToken(CToken* aToken)
   // Now remove "<!" from the begining
   docTypeStr.Cut(0, 2);
   theToken->SetStringValue(docTypeStr);
-
-  nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
-  NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult result = mSink ? mSink->AddDocTypeDecl(*theNode) : NS_OK;
-
-  IF_FREE(theNode, &mNodeAllocator);
-
-  return result;
+  return NS_OK;
 }
 
 /**
