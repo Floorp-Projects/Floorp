@@ -395,6 +395,10 @@ public:
                        bool aMozBRDoesntCount = false,
                        bool aListOrCellNotEmpty = false,
                        bool aSafeToAskFrames = false);
+  nsresult IsEmptyNode(nsINode* aNode, bool* outIsEmptyBlock,
+                       bool aMozBRDoesntCount = false,
+                       bool aListOrCellNotEmpty = false,
+                       bool aSafeToAskFrames = false);
   nsresult IsEmptyNodeImpl(nsINode* aNode,
                            bool *outIsEmptyBlock, 
                            bool aMozBRDoesntCount,
