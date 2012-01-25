@@ -2942,10 +2942,10 @@ nsHTMLEditRules::DidDeleteSelection(nsISelection *aSelection,
   res = GetTopEnclosingMailCite(startNode, address_of(citeNode), 
                                 IsPlaintextEditor());
   NS_ENSURE_SUCCESS(res, res);
-  if (citeNode)
-  {
+  if (citeNode) {
+    nsCOMPtr<nsINode> cite = do_QueryInterface(citeNode);
     bool isEmpty = true, seenBR = false;
-    mHTMLEditor->IsEmptyNodeImpl(citeNode, &isEmpty, true, true, false, &seenBR);
+    mHTMLEditor->IsEmptyNodeImpl(cite, &isEmpty, true, true, false, &seenBR);
     if (isEmpty)
     {
       nsCOMPtr<nsIDOMNode> parent, brNode;
