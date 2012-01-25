@@ -1258,13 +1258,13 @@ inline InterpreterFrames::InterpreterFrames(JSContext *cx, FrameRegs *regs,
                                             const InterruptEnablerBase &enabler)
   : context(cx), regs(regs), enabler(enabler)
 {
-    older = cx->runtime->interpreterFrames;
-    cx->runtime->interpreterFrames = this;
+    older = JS_THREAD_DATA(cx)->interpreterFrames;
+    JS_THREAD_DATA(cx)->interpreterFrames = this;
 }
  
 inline InterpreterFrames::~InterpreterFrames()
 {
-    context->runtime->interpreterFrames = older;
+    JS_THREAD_DATA(context)->interpreterFrames = older;
 }
 
 #if defined(DEBUG) && !defined(JS_THREADSAFE)
@@ -1554,7 +1554,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      */
 #define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
-        if (cx->runtime->interrupt && !js_HandleExecutionInterrupt(cx))       \
+        if (JS_THREAD_DATA(cx)->interruptFlags && !js_HandleExecutionInterrupt(cx)) \
             goto error;                                                       \
     JS_END_MACRO
 

@@ -86,6 +86,7 @@ typedef struct JSGenerator          JSGenerator;
 typedef struct JSNativeEnumerator   JSNativeEnumerator;
 typedef struct JSProperty           JSProperty;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
+typedef struct JSThread             JSThread;
 typedef struct JSTryNote            JSTryNote;
 
 /* Friend "Advanced API" typedefs. */
