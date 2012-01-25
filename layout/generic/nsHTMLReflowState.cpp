@@ -2213,7 +2213,8 @@ nsHTMLReflowState::CalcLineHeight() const
     (mCBReflowState ? mCBReflowState->mComputedHeight : NS_AUTOHEIGHT);
 
   return CalcLineHeight(frame->GetStyleContext(), blockHeight,
-                        nsLayoutUtils::FontSizeInflationFor(*this));
+                        nsLayoutUtils::FontSizeInflationFor(frame,
+                          nsLayoutUtils::eInReflow));
 }
 
 /* static */ nscoord

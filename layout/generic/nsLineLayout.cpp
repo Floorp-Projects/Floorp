@@ -120,7 +120,8 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   mTrimmableWidth = 0;
 
   mInflationMinFontSize =
-    nsLayoutUtils::InflationMinFontSizeFor(*aOuterReflowState);
+    nsLayoutUtils::InflationMinFontSizeFor(aOuterReflowState->frame,
+                                           nsLayoutUtils::eInReflow);
 
   // Instead of always pre-initializing the free-lists for frames and
   // spans, we do it on demand so that situations that only use a few

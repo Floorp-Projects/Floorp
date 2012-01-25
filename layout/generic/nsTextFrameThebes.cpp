@@ -4621,7 +4621,8 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     GetTextDecorations(aPresContext, textDecs);
     if (textDecs.HasDecorationLines()) {
       nscoord inflationMinFontSize =
-        nsLayoutUtils::InflationMinFontSizeFor(aBlockReflowState);
+        nsLayoutUtils::InflationMinFontSizeFor(aBlockReflowState.frame,
+                                               nsLayoutUtils::eInReflow);
 
       const nscoord width = GetSize().width;
       const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
@@ -5608,7 +5609,7 @@ nsTextFrame::DrawTextRunAndDecorations(
                       aDirtyRect.Width() / app, aDirtyRect.Height() / app);
 
     nscoord inflationMinFontSize =
-      nsLayoutUtils::InflationMinFontSizeFor(this);
+      nsLayoutUtils::InflationMinFontSizeFor(this, nsLayoutUtils::eNotInReflow);
 
     // Underlines
     for (PRUint32 i = aDecorations.mUnderlines.Length(); i-- > 0; ) {
@@ -7347,9 +7348,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     } 
   }
 
-  float fontSizeInflation = nsLayoutUtils::FontSizeInflationInner(this,
-                              nsLayoutUtils::InflationMinFontSizeFor(
-                                *aLineLayout.GetLineContainerRS()));
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this,
+                              nsLayoutUtils::eInReflow);
 
   if (fontSizeInflation != GetFontSizeInflation()) {
     // FIXME: Ideally, if we already have a text run, we'd move it to be

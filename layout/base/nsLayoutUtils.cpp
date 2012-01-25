@@ -4717,92 +4717,39 @@ ShouldInflateFontsForContainer(const nsIFrame *aFrame)
 }
 
 nscoord
-nsLayoutUtils::InflationMinFontSizeFor(const nsHTMLReflowState &aReflowState)
+nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame,
+                                       WidthDetermination aWidthDetermination)
 {
 #ifdef DEBUG
-  {
-    const nsHTMLReflowState *rs = &aReflowState;
-    nsIFrame *f = aReflowState.frame;
-    for (; rs; rs = rs->parentReflowState, f = f->GetParent()) {
-      NS_ABORT_IF_FALSE(rs->frame == f,
-                        "reflow state parentage must match frame parentage");
-      nsIScrollableFrame *sf;
-      NS_ABORT_IF_FALSE(rs->parentReflowState ||
-                        IsContainerForFontSizeInflation(f) ||
-                        // OK if NS_FRAME_IN_REFLOW is not set on
-                        // (non-null) parent, since its ancestors have a
-                        // real size.  (Do we set NS_FRAME_IN_REFLOW
-                        // correctly for xul?)
-                        !(f->GetParent()->GetStateBits() &
-                          NS_FRAME_IN_REFLOW) ||
-                        // ugly exception, but ok because the
-                        // child is a container
-                        (f->GetType() == nsGkAtoms::scrollFrame &&
-                         (sf = do_QueryFrame(f)) &&
-                         (IsContainerForFontSizeInflation(
-                            sf->GetScrolledFrame()))),
-                        "must hit container at top of reflow state chain");
-    }
-  }
-#endif
-
-  if (!FontSizeInflationEnabled(aReflowState.frame->PresContext())) {
-    return 0;
-  }
-
-  nsIFrame *reflowRoot = nsnull;
-  for (const nsHTMLReflowState *rs = &aReflowState; rs;
-       reflowRoot = rs->frame, rs = rs->parentReflowState) {
-    if (IsContainerForFontSizeInflation(rs->frame)) {
-      if (!ShouldInflateFontsForContainer(rs->frame)) {
-        return 0;
+  if (aWidthDetermination == eNotInReflow) {
+    // Check that neither this frame nor any of its ancestors are
+    // currently being reflowed.
+    // It's ok for box frames (but not arbitrary ancestors of box frames)
+    // since they set their size before reflow.
+    if (!(aFrame->IsBoxFrame() && IsContainerForFontSizeInflation(aFrame))) {
+      for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
+        NS_ABORT_IF_FALSE(!(f->GetStateBits() & NS_FRAME_IN_REFLOW),
+                          "must call nsHTMLReflowState& version during reflow");
       }
-
-      NS_ABORT_IF_FALSE(rs->ComputedWidth() != NS_INTRINSICSIZE,
-                        "must have a computed width");
-      return MinimumFontSizeFor(aReflowState.frame->PresContext(),
-                                rs->ComputedWidth());
     }
+    // It's ok if frames are dirty, or even if they've never been
+    // reflowed, since they will be eventually and then we'll get the
+    // right size.
   }
-
-  // We've hit the end of the reflow state chain.  There are two
-  // possibilities now:  we're either at a reflow root or we're crossing
-  // into flexbox layout.  (Note that sometimes we cross into and out of
-  // flexbox layout on the same frame, e.g., for nsTextControlFrame,
-  // which breaks the reflow state parentage chain.)
-  // This code depends on:
-  //  * When we cross from HTML to XUL and then on the child jump back
-  //    to HTML again, we link the reflow states correctly (see hack in
-  //    nsFrame::BoxReflow setting reflowState.parentReflowState).
-  //  * For any other cases, the XUL frame is a font size inflation
-  //    container, so we won't cross back into HTML (see the conditions
-  //    under which we test the assertion in
-  //    InflationMinFontSizeFor(const nsIFrame *).
-
-  return InflationMinFontSizeFor(reflowRoot->GetParent());
-}
-
-nscoord
-nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame)
-{
-#ifdef DEBUG
-  // Check that neither this frame nor any of its ancestors are
-  // currently being reflowed.
-  // It's ok for box frames (but not arbitrary ancestors of box frames)
-  // since they set their size before reflow.
-  if (!(aFrame->IsBoxFrame() && IsContainerForFontSizeInflation(aFrame))) {
-    for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
-      NS_ABORT_IF_FALSE(!(f->GetStateBits() & NS_FRAME_IN_REFLOW),
-                        "must call nsHTMLReflowState& version during reflow");
-    }
-  }
-  // It's ok if frames are dirty, or even if they've never been
-  // reflowed, since they will be eventually and then we'll get the
-  // right size.
 #endif
 
   if (!FontSizeInflationEnabled(aFrame->PresContext())) {
     return 0;
+  }
+
+  if (aWidthDetermination == eInReflow) {
+    nsPresContext *presContext = aFrame->PresContext();
+    nsIFrame *container = presContext->mCurrentInflationContainer;
+    if (!container || !ShouldInflateFontsForContainer(container)) {
+      return 0;
+    }
+    return MinimumFontSizeFor(presContext,
+                              presContext->mCurrentInflationContainerWidth);
   }
 
   for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
@@ -4821,93 +4768,35 @@ nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame)
   return 0;
 }
 
-/* static */ nscoord
-nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame,
-                                       nscoord aInflationContainerWidth)
-{
-  if (!FontSizeInflationEnabled(aFrame->PresContext())) {
-    return 0;
-  }
-
-  for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
-    if (IsContainerForFontSizeInflation(f)) {
-      if (!ShouldInflateFontsForContainer(f)) {
-        return 0;
-      }
-
-      // The caller is (sketchily) asserting that it picked the right
-      // container when passing aInflationContainerWidth.  We only do
-      // this for text inputs and a few other limited situations.
-      return MinimumFontSizeFor(aFrame->PresContext(),
-                                aInflationContainerWidth);
-    }
-  }
-
-  NS_ABORT_IF_FALSE(false, "root should always be container");
-
-  return 0;
-}
-
 float
-nsLayoutUtils::FontSizeInflationFor(const nsHTMLReflowState &aReflowState)
-{
-#ifdef DEBUG
-  {
-    const nsHTMLReflowState *rs = &aReflowState;
-    const nsIFrame *f = aReflowState.frame;
-    for (; rs; rs = rs->parentReflowState, f = f->GetParent()) {
-      NS_ABORT_IF_FALSE(rs->frame == f,
-                        "reflow state parentage must match frame parentage");
-    }
-  }
-#endif
-
-  if (!FontSizeInflationEnabled(aReflowState.frame->PresContext())) {
-    return 1.0;
-  }
-
-  return FontSizeInflationInner(aReflowState.frame,
-             InflationMinFontSizeFor(aReflowState));
-}
-
-float
-nsLayoutUtils::FontSizeInflationFor(const nsIFrame *aFrame)
-{
-#ifdef DEBUG
-  // Check that neither this frame nor any of its ancestors are
-  // currently being reflowed.
-  // It's ok for box frames (but not arbitrary ancestors of box frames)
-  // since they set their size before reflow.
-  if (!(aFrame->IsBoxFrame() && IsContainerForFontSizeInflation(aFrame))) {
-    for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
-      NS_ABORT_IF_FALSE(!(f->GetStateBits() & NS_FRAME_IN_REFLOW),
-                        "must call nsHTMLReflowState& version during reflow");
-    }
-  }
-  // It's ok if frames are dirty, or even if they've never been
-  // reflowed, since they will be eventually and then we'll get the
-  // right size.
-#endif
-
-  if (!FontSizeInflationEnabled(aFrame->PresContext())) {
-    return 1.0;
-  }
-
-  return FontSizeInflationInner(aFrame,
-                                InflationMinFontSizeFor(aFrame));
-}
-
-/* static */ float
 nsLayoutUtils::FontSizeInflationFor(const nsIFrame *aFrame,
-                                    nscoord aInflationContainerWidth)
+                                    WidthDetermination aWidthDetermination)
 {
+#ifdef DEBUG
+  if (aWidthDetermination == eNotInReflow) {
+    // Check that neither this frame nor any of its ancestors are
+    // currently being reflowed.
+    // It's ok for box frames (but not arbitrary ancestors of box frames)
+    // since they set their size before reflow.
+    if (!(aFrame->IsBoxFrame() && IsContainerForFontSizeInflation(aFrame))) {
+      for (const nsIFrame *f = aFrame; f; f = f->GetParent()) {
+        NS_ABORT_IF_FALSE(!(f->GetStateBits() & NS_FRAME_IN_REFLOW),
+                          "must call nsHTMLReflowState& version during reflow");
+      }
+    }
+    // It's ok if frames are dirty, or even if they've never been
+    // reflowed, since they will be eventually and then we'll get the
+    // right size.
+  }
+#endif
+
   if (!FontSizeInflationEnabled(aFrame->PresContext())) {
     return 1.0;
   }
 
   return FontSizeInflationInner(aFrame,
                                 InflationMinFontSizeFor(aFrame,
-                                  aInflationContainerWidth));
+                                                        aWidthDetermination));
 }
 
 /* static */ bool

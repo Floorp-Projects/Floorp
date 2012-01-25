@@ -7627,8 +7627,8 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       // We're a frame (such as a text control frame) that jumps into
       // box reflow and then straight out of it on the child frame.
       // This means we actually have a real parent reflow state.
-      // nsLayoutUtils::InflationMinFontSizeFor needs this to be linked
-      // up correctly for text control frames, so do so here).
+      // nsLayoutUtils::InflationMinFontSizeFor used to need this to be
+      // linked up correctly for text control frames, so do so here).
       reflowState.parentReflowState = outerReflowState;
       reflowState.mCBReflowState = outerReflowState;
     } else {
