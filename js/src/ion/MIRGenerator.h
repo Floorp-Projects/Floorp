@@ -87,6 +87,7 @@ class MIRGenerator
     // Set an error state and prints a message. Returns false so errors can be
     // propagated up.
     bool abort(const char *message, ...);
+    bool abortFmt(const char *message, va_list ap);
 
     bool errored() const {
         return error_;

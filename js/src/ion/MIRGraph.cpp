@@ -59,13 +59,20 @@ MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, MIRGraph &graph, 
 { }
 
 bool
+MIRGenerator::abortFmt(const char *message, va_list ap)
+{
+    IonSpewVA(IonSpew_Abort, message, ap);
+    error_ = true;
+    return false;
+}
+
+bool
 MIRGenerator::abort(const char *message, ...)
 {
     va_list ap;
     va_start(ap, message);
-    IonSpewVA(IonSpew_Abort, message, ap);
+    abortFmt(message, ap);
     va_end(ap);
-    error_ = true;
     return false;
 }
 
