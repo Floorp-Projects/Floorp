@@ -65,6 +65,7 @@ FENNEC_JAVA_FILES = \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
+  SyncPreference.java \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
