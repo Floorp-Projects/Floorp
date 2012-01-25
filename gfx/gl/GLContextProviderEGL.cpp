@@ -1474,6 +1474,7 @@ public:
               mGLContext->UploadSurfaceToTexture(aSurf,
                                                  region,
                                                  mTexture,
+                                                 mSize,
                                                  mTextureState == Created,
                                                  bounds.TopLeft() + aFrom,
                                                  false);
