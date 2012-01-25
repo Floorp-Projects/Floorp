@@ -176,8 +176,7 @@
       <menuseparator class="appmenu-menuseparator"/>
       <menu id="appmenu_webDeveloper"
             label="&appMenuWebDeveloper.label;">
-        <menupopup id="appmenu_webDeveloper_popup"
-                   onpopupshowing="onWebDeveloperMenuShowing();">
+        <menupopup id="appmenu_webDeveloper_popup">
           <menuitem id="appmenu_webConsole"
                     label="&webConsoleCmd.label;"
                     type="checkbox"
