@@ -4175,7 +4175,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     if (aCheckForBraces) {
       REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
     } else {
-      REPORT_UNEXPECTED(PEBadDeclEnd);
+      REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);
     }
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
