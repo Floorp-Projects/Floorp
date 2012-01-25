@@ -316,36 +316,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 #endif
 
     /*
-     * Global variables (gvars) share the atom index space with locals. Due to
-     * incremental code generation we need to patch the bytecode to adjust the
-     * local references to skip the globals.
-     */
-    if (bce.hasSharps()) {
-        jsbytecode *code, *end;
-        JSOp op;
-        const JSCodeSpec *cs;
-        uintN len, slot;
-
-        code = bce.base();
-        for (end = code + bce.offset(); code != end; code += len) {
-            JS_ASSERT(code < end);
-            op = (JSOp) *code;
-            cs = &js_CodeSpec[op];
-            len = (cs->length > 0)
-                  ? (uintN) cs->length
-                  : js_GetVariableBytecodeLength(code);
-            if ((cs->format & JOF_SHARPSLOT) || JOF_TYPE(cs->format) == JOF_LOCAL) {
-                slot = GET_SLOTNO(code);
-                if (!(cs->format & JOF_SHARPSLOT))
-                    slot += bce.sharpSlots();
-                if (slot >= SLOTNO_LIMIT)
-                    goto too_many_slots;
-                SET_SLOTNO(code, slot);
-            }
-        }
-    }
-
-    /*
      * Nowadays the threaded interpreter needs a stop instruction, so we
      * do have to emit that here.
      */
@@ -366,11 +336,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
   out:
     Probes::compileScriptEnd(cx, script, filename, lineno);
     return script;
-
-  too_many_slots:
-    parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
-    script = NULL;
-    goto out;
 }
 
 /*

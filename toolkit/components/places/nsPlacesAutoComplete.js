@@ -39,6 +39,8 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
@@ -1387,7 +1389,12 @@ urlInlineComplete.prototype = {
     this._result = result;
     this._listener = aListener;
 
-    if (this._currentSearchString.length == 0 || !this._db) {
+    // Don't autoFill if the search term is recognized as a keyword, otherwise
+    // it will override default keywords behavior.  Note that keywords are
+    // hashed on first use, so while the first query may delay a little bit,
+    // next ones will just hit the memory hash.
+    if (this._currentSearchString.length == 0 || !this._db ||
+        PlacesUtils.bookmarks.getURIForKeyword(this._currentSearchString)) {
       this._finishSearch();
       return;
     }

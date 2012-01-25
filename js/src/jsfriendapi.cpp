@@ -561,10 +561,10 @@ CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *
 }
 
 #ifdef JS_THREADSAFE
-JSThread *
-GetContextThread(const JSContext *cx)
+void *
+GetOwnerThread(const JSContext *cx)
 {
-    return cx->thread();
+    return cx->runtime->ownerThread();
 }
 
 JS_FRIEND_API(unsigned)
@@ -585,18 +585,18 @@ AutoSkipConservativeScan::AutoSkipConservativeScan(JSContext *cx
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-    ThreadData &threadData = context->thread()->data;
-    JS_ASSERT(threadData.requestDepth >= 1);
-    JS_ASSERT(!threadData.conservativeGC.requestThreshold);
-    if (threadData.requestDepth == 1)
-        threadData.conservativeGC.requestThreshold = 1;
+    JSRuntime *rt = context->runtime;
+    JS_ASSERT(rt->requestDepth >= 1);
+    JS_ASSERT(!rt->conservativeGC.requestThreshold);
+    if (rt->requestDepth == 1)
+        rt->conservativeGC.requestThreshold = 1;
 }
 
 AutoSkipConservativeScan::~AutoSkipConservativeScan()
 {
-    ThreadData &threadData = context->thread()->data;
-    if (threadData.requestDepth == 1)
-        threadData.conservativeGC.requestThreshold = 0;
+    JSRuntime *rt = context->runtime;
+    if (rt->requestDepth == 1)
+        rt->conservativeGC.requestThreshold = 0;
 }
 #endif
 
@@ -626,12 +626,9 @@ IsContextRunningJS(JSContext *cx)
 }
 
 JS_FRIEND_API(void)
-TriggerOperationCallbacksForActiveContexts(JSRuntime *rt)
+TriggerOperationCallback(JSRuntime *rt)
 {
-    JSContext* cx = NULL;
-    while ((cx = js_NextActiveContext(rt, cx))) {
-        TriggerOperationCallback(cx);
-    }
+    rt->triggerOperationCallback();
 }
 
 JS_FRIEND_API(const CompartmentVector&)

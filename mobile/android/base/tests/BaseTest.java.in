@@ -73,7 +73,13 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         Instrumentation inst = getInstrumentation();
         Instrumentation.ActivityMonitor monitor = inst.addMonitor((String)null, null, false);
         element.click();
+        // wait for click to take effect before waiting for activity
+        // (otherwise we sometimes get the previous activity)
+        getInstrumentation().waitForIdleSync();
         Activity activity = inst.waitForMonitor(monitor);
+        // give the activity time to render itself and initialize views 
+        // before continuing, so that views are created before access
+        // attempts are made
         getInstrumentation().waitForIdleSync();
         return activity;
     }
