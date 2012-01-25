@@ -4868,10 +4868,21 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
                            bool aSafeToAskFrames)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node && outIsEmptyNode, NS_ERROR_NULL_POINTER);
+  return IsEmptyNode(node, outIsEmptyNode, aSingleBRDoesntCount,
+                     aListOrCellNotEmpty, aSafeToAskFrames);
+}
+
+nsresult
+nsHTMLEditor::IsEmptyNode(nsINode* aNode,
+                          bool* outIsEmptyNode,
+                          bool aSingleBRDoesntCount,
+                          bool aListOrCellNotEmpty,
+                          bool aSafeToAskFrames)
+{
+  NS_ENSURE_TRUE(aNode && outIsEmptyNode, NS_ERROR_NULL_POINTER);
   *outIsEmptyNode = true;
   bool seenBR = false;
-  return IsEmptyNodeImpl(node, outIsEmptyNode, aSingleBRDoesntCount,
+  return IsEmptyNodeImpl(aNode, outIsEmptyNode, aSingleBRDoesntCount,
                          aListOrCellNotEmpty, aSafeToAskFrames, &seenBR);
 }
 
