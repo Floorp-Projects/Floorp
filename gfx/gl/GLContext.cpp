@@ -382,6 +382,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     }
 
     const char *glVendorString;
+    const char *glRendererString;
 
     if (mInitialized) {
         glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
@@ -393,8 +394,20 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         };
         mVendor = VendorOther;
         for (int i = 0; i < VendorOther; ++i) {
-            if (DoesVendorStringMatch(glVendorString, vendorMatchStrings[i])) {
+            if (DoesStringMatch(glVendorString, vendorMatchStrings[i])) {
                 mVendor = i;
+                break;
+            }
+        }
+
+        glRendererString = (const char *)fGetString(LOCAL_GL_RENDERER);
+        const char *rendererMatchStrings[RendererOther] = {
+                "Adreno 200"
+        };
+        mRenderer = RendererOther;
+        for (int i = 0; i < RendererOther; ++i) {
+            if (DoesStringMatch(glRendererString, rendererMatchStrings[i])) {
+                mRenderer = i;
                 break;
             }
         }
@@ -590,6 +603,15 @@ GLContext::IsExtensionSupported(const char *extension)
     return ListHasExtension(fGetString(LOCAL_GL_EXTENSIONS), extension);
 }
 
+bool
+GLContext::CanUploadSubTextures()
+{
+    // There are certain GPUs that we don't want to use glTexSubImage2D on
+    // because that function can be very slow and/or buggy
+
+    return !(Renderer() == RendererAdreno200);
+}
+
 // Common code for checking for both GL extensions and GLX extensions.
 bool
 GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
@@ -688,7 +710,12 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
     // determine the region the client will need to repaint
-    GetUpdateRegion(aRegion);
+    if (!mGLContext->CanUploadSubTextures()) {
+        aRegion = nsIntRect(nsIntPoint(0, 0), mSize);
+    } else {
+        GetUpdateRegion(aRegion);
+    }
+
     mUpdateRegion = aRegion;
 
     nsIntRect rgnSize = mUpdateRegion.GetBounds();
@@ -740,6 +767,7 @@ BasicTextureImage::EndUpdate()
         mGLContext->UploadSurfaceToTexture(mUpdateSurface,
                                            mUpdateRegion,
                                            mTexture,
+                                           mSize,
                                            mTextureState == Created,
                                            mUpdateOffset,
                                            relative);
@@ -798,6 +826,7 @@ BasicTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
         mGLContext->UploadSurfaceToTexture(aSurf,
                                            region,
                                            mTexture,
+                                           mSize,
                                            mTextureState == Created,
                                            bounds.TopLeft() + aFrom,
                                            false);
@@ -851,7 +880,8 @@ bool
 TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */)
 {
     nsIntRegion region;
-    if (mTextureState != Valid) {
+
+    if (mTextureState != Valid || !mGL->CanUploadSubTextures()) {
         nsIntRect bounds = nsIntRect(0, 0, mSize.width, mSize.height);
         region = nsIntRegion(bounds);
     } else {
@@ -1922,6 +1952,7 @@ ShaderProgramType
 GLContext::UploadSurfaceToTexture(gfxASurface *aSurface, 
                                   const nsIntRegion& aDstRegion,
                                   GLuint& aTexture,
+                                  const nsIntSize& aTextureSize,
                                   bool aOverwrite,
                                   const nsIntPoint& aSrcPoint,
                                   bool aPixelBuffer)
@@ -1985,6 +2016,7 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
         if (!aPixelBuffer) {
               data = imageSurface->Data();
         }
+        
         data += DataOffset(imageSurface, aSrcPoint);
     }
 
@@ -2049,7 +2081,20 @@ GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
         NS_ASSERTION(textureInited || (iterRect->x == 0 && iterRect->y == 0), 
                      "Must be uploading to the origin when we don't have an existing texture");
 
-        if (textureInited) {
+        bool useTexSubImage2D = true;
+
+        nsIntRect bounds = aDstRegion.GetBounds();
+
+        // Only use glTexSubImage2D when we aren't rendering
+        // the entire texture
+        if (iterRect->x == 0 &&
+            iterRect->y == 0 &&
+            iterRect->width >= aTextureSize.width &&
+            iterRect->height >= aTextureSize.height) {
+            useTexSubImage2D = false;
+        }
+
+        if (textureInited && useTexSubImage2D) {
             TexSubImage2D(LOCAL_GL_TEXTURE_2D,
                           0,
                           iterRect->x,
@@ -2100,6 +2145,10 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
                       GLenum type, const GLvoid *pixels)
 {
 #ifdef USE_GLES2
+
+    NS_ASSERTION(format == internalformat,
+                 "format and internalformat not the same for glTexImage2D on GLES2");
+
     // Use GLES-specific workarounds for GL_UNPACK_ROW_LENGTH; these are
     // implemented in TexSubImage2D.
     fTexImage2D(target,
