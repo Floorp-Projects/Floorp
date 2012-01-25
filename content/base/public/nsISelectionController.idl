@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -47,11 +46,12 @@ typedef short SelectionType;
 typedef short SelectionRegion;
 %}
 
+interface nsIContent;
 interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(cf30315f-b65d-44c3-8c57-557e36d18fd2)]
+[scriptable, uuid(b1ff7faa-8097-431d-b7f1-b0615e3cd596)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -276,6 +276,7 @@ interface nsISelectionController : nsISelectionDisplay
    *  @param aReturnBool   boolean returned TRUE if visible FALSE if not
    */
     boolean checkVisibility(in nsIDOMNode node, in short startOffset, in short endOffset);
+    [noscript,nostdcall] boolean checkVisibilityContent(in nsIContent node, in short startOffset, in short endOffset);
 
 };
 %{ C++
