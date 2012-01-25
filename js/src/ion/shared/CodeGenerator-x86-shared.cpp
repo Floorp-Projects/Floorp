@@ -226,24 +226,34 @@ CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest,
     }
 }
 
-bool
-CodeGeneratorX86Shared::visitCompareI(LCompareI *comp)
+void
+CodeGeneratorX86Shared::emitCompare(MIRType type, const LAllocation *left, const LAllocation *right)
 {
-    if (comp->right()->isConstant())
-        masm.cmpl(ToRegister(comp->left()), Imm32(ToInt32(comp->right())));
+#ifdef JS_CPU_X64
+    if (type == MIRType_Object) {
+        masm.cmpq(ToRegister(left), ToOperand(right));
+        return;
+    }
+#endif
+
+    if (right->isConstant())
+        masm.cmpl(ToRegister(left), Imm32(ToInt32(right)));
     else
-        masm.cmpl(ToRegister(comp->left()), ToOperand(comp->right()));
+        masm.cmpl(ToRegister(left), ToOperand(right));
+}
+
+bool
+CodeGeneratorX86Shared::visitCompare(LCompare *comp)
+{
+    emitCompare(comp->mir()->specialization(), comp->left(), comp->right());
     emitSet(JSOpToCondition(comp->jsop()), ToRegister(comp->output()));
     return true;
 }
 
 bool
-CodeGeneratorX86Shared::visitCompareIAndBranch(LCompareIAndBranch *comp)
+CodeGeneratorX86Shared::visitCompareAndBranch(LCompareAndBranch *comp)
 {
-    if (comp->right()->isConstant())
-        masm.cmpl(ToRegister(comp->left()), Imm32(ToInt32(comp->right())));
-    else
-        masm.cmpl(ToRegister(comp->left()), ToOperand(comp->right()));
+    emitCompare(comp->mir()->specialization(), comp->left(), comp->right());
     Assembler::Condition cond = JSOpToCondition(comp->jsop());
     emitBranch(cond, comp->ifTrue(), comp->ifFalse());
     return true;

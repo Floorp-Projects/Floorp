@@ -107,8 +107,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitShiftOp(LShiftOp *ins);
 
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
-    virtual bool visitCompareI(LCompareI *comp);
-    virtual bool visitCompareIAndBranch(LCompareIAndBranch *comp);
+    virtual bool visitCompare(LCompare *comp);
+    virtual bool visitCompareAndBranch(LCompareAndBranch *comp);
     virtual bool visitTestDAndBranch(LTestDAndBranch *test);
     virtual bool visitCompareD(LCompareD *comp);
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);

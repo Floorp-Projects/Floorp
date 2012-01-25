@@ -69,9 +69,9 @@
     _(TestIAndBranch)               \
     _(TestDAndBranch)               \
     _(TestVAndBranch)               \
-    _(CompareI)                     \
+    _(Compare)                      \
     _(CompareD)                     \
-    _(CompareIAndBranch)            \
+    _(CompareAndBranch)             \
     _(CompareDAndBranch)            \
     _(AddI)                         \
     _(SubI)                         \

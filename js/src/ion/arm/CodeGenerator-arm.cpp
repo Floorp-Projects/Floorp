@@ -192,7 +192,7 @@ CodeGeneratorARM::emitSet(Assembler::Condition cond, const Register &dest)
 }
 
 bool
-CodeGeneratorARM::visitCompareI(LCompareI *comp)
+CodeGeneratorARM::visitCompare(LCompare *comp)
 {
     const LAllocation *left = comp->getOperand(0);
     const LAllocation *right = comp->getOperand(1);
@@ -208,32 +208,8 @@ CodeGeneratorARM::visitCompareI(LCompareI *comp)
 }
 
 bool
-CodeGeneratorARM::visitCompareIAndBranch(LCompareIAndBranch *comp)
+CodeGeneratorARM::visitCompareAndBranch(LCompareAndBranch *comp)
 {
-#if 0
-    const LAllocation *left = comp->getOperand(0);
-    const LAllocation *right = comp->getOperand(1);
-    LBlock *ifTrue = comp->ifTrue()->lir();
-    LBlock *ifFalse = comp->ifFalse()->lir();
-    Assembler::Condition cond = comp->condition();
-
-    // Compare the operands
-    if (right->isConstant())
-        masm.ma_cmp(ToRegister(left), Imm32(ToInt32(right)));
-    else
-        masm.ma_cmp(ToRegister(left), ToOperand(right));
-
-    // Take advantage of block fallthrough when possible
-    if (isNextBlock(ifFalse)) {
-        masm.ma_b(ifTrue->label(), cond);
-    } else if (isNextBlock(ifTrue)) {
-        masm.ma_b(ifFalse->label(), Assembler::inverseCondition(cond));
-    } else {
-        masm.ma_b(ifTrue->label(), cond);
-        masm.ma_b(ifFalse->label(), Assembler::Always);
-    }
-    return true;
-#endif
     Assembler::Condition cond = JSOpToCondition(comp->jsop());
     if (comp->right()->isConstant())
         masm.ma_cmp(ToRegister(comp->left()), Imm32(ToInt32(comp->right())));

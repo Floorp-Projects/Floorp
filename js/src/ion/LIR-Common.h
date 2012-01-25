@@ -380,13 +380,15 @@ class LTestVAndBranch : public LInstructionHelper<0, BOX_PIECES, 1>
     Label *ifFalse();
 };
 
-class LCompareI : public LInstructionHelper<1, 2, 0>
+// Compares two integral values of the same JS type, either integer or object.
+// For objects, both operands are in registers.
+class LCompare : public LInstructionHelper<1, 2, 0>
 {
     JSOp jsop_;
 
   public:
-    LIR_HEADER(CompareI);
-    LCompareI(JSOp jsop, const LAllocation &left, const LAllocation &right)
+    LIR_HEADER(Compare);
+    LCompare(JSOp jsop, const LAllocation &left, const LAllocation &right)
       : jsop_(jsop)
     {
         setOperand(0, left);
@@ -404,6 +406,9 @@ class LCompareI : public LInstructionHelper<1, 2, 0>
     }
     const LDefinition *output() {
         return getDef(0);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
     }
 };
 
@@ -434,20 +439,23 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     }
 };
 
-class LCompareIAndBranch : public LInstructionHelper<0, 2, 0>
+// Compares two integral values of the same JS type, either integer or object.
+// For objects, both operands are in registers.
+class LCompareAndBranch : public LInstructionHelper<0, 2, 0>
 {
     JSOp jsop_;
     MBasicBlock *ifTrue_;
     MBasicBlock *ifFalse_;
 
   public:
-    LIR_HEADER(CompareIAndBranch);
-    LCompareIAndBranch(JSOp jsop, const LAllocation &left, const LAllocation &right,
+    LIR_HEADER(CompareAndBranch);
+    LCompareAndBranch(MCompare *mir, JSOp jsop, const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
       : jsop_(jsop),
         ifTrue_(ifTrue),
         ifFalse_(ifFalse)
     {
+        mir_ = mir;
         setOperand(0, left);
         setOperand(1, right);
     }
@@ -466,6 +474,9 @@ class LCompareIAndBranch : public LInstructionHelper<0, 2, 0>
     }
     const LAllocation *right() {
         return getOperand(1);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
     }
 };
 
