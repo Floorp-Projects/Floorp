@@ -287,8 +287,6 @@ protected:
 
   // Routines for tags that require special handling when we reach their end
   // tag.
-  nsresult ProcessSCRIPTEndTag(nsGenericHTMLElement* content,
-                               bool aMalformed);
   nsresult ProcessSTYLEEndTag(nsGenericHTMLElement* content);
 
   nsresult OpenHeadContext();
@@ -318,7 +316,7 @@ public:
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
                  PRUint32 aNumFlushed, PRInt32 aInsertionPoint);
   nsresult OpenContainer(const nsIParserNode& aNode);
-  nsresult CloseContainer(const nsHTMLTag aTag, bool aMalformed);
+  nsresult CloseContainer(const nsHTMLTag aTag);
   nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsIContent* aContent);
   nsresult AddComment(const nsIParserNode& aNode);
@@ -842,7 +840,7 @@ SinkContext::Node::Add(nsIContent *child)
 }
 
 nsresult
-SinkContext::CloseContainer(const nsHTMLTag aTag, bool aMalformed)
+SinkContext::CloseContainer(const nsHTMLTag aTag)
 {
   nsresult result = NS_OK;
 
@@ -923,7 +921,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, bool aMalformed)
       // of invalid form nesting. When the end FORM tag comes through,
       // we'll ignore it.
       if (aTag != nodeType) {
-        result = CloseContainer(aTag, false);
+        result = CloseContainer(aTag);
       }
     }
 
@@ -946,8 +944,8 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, bool aMalformed)
     break;
 
   case eHTMLTag_script:
-    result = mSink->ProcessSCRIPTEndTag(content,
-                                        aMalformed);
+    MOZ_NOT_REACHED("Must not use HTMLContentSink to run scripts.");
+    result = NS_ERROR_NOT_IMPLEMENTED;
     break;
 
   case eHTMLTag_style:
@@ -1939,7 +1937,7 @@ HTMLContentSink::CloseBody()
              ("HTMLContentSink::CloseBody: layout final body content"));
 
   mCurrentContext->FlushTags();
-  mCurrentContext->CloseContainer(eHTMLTag_body, false);
+  mCurrentContext->CloseContainer(eHTMLTag_body);
 
   return NS_OK;
 }
@@ -1994,7 +1992,7 @@ HTMLContentSink::CloseForm()
   if (mCurrentForm) {
     // if this is a well-formed form, close it too
     if (mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
-      result = mCurrentContext->CloseContainer(eHTMLTag_form, false);
+      result = mCurrentContext->CloseContainer(eHTMLTag_form);
       mFormOnStack = false;
     }
 
@@ -2082,7 +2080,7 @@ HTMLContentSink::CloseFrameset()
     sc->FlushTags();
   }
 
-  rv = sc->CloseContainer(eHTMLTag_frameset, false);    
+  rv = sc->CloseContainer(eHTMLTag_frameset);
 
   if (done && mFramesEnabled) {
     StartLayout(false);
@@ -2170,7 +2168,7 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
       rv = CloseForm();
       break;
     default:
-      rv = mCurrentContext->CloseContainer(aTag, false);
+      rv = mCurrentContext->CloseContainer(aTag);
       break;
   }
 
@@ -2180,7 +2178,7 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
 NS_IMETHODIMP
 HTMLContentSink::CloseMalformedContainer(const eHTMLTags aTag)
 {
-  return mCurrentContext->CloseContainer(aTag, true);
+  return mCurrentContext->CloseContainer(aTag);
 }
 
 NS_IMETHODIMP
@@ -2641,14 +2639,6 @@ HTMLContentSink::UpdateChildCounts()
   }
 
   mCurrentContext->UpdateChildCounts();
-}
-
-nsresult
-HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
-                                     bool aMalformed)
-{
-  MOZ_NOT_REACHED("Must not use HTMLContentSink to run scripts.");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // 3 ways to load a style sheet: inline, style src=, link tag
