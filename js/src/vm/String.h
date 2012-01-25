@@ -422,6 +422,7 @@ class JSString : public js::gc::Cell
     static inline void writeBarrierPre(JSString *str);
     static inline void writeBarrierPost(JSString *str, void *addr);
     static inline bool needWriteBarrierPre(JSCompartment *comp);
+    static inline void readBarrier(JSString *str);
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_STRING; }
 };

@@ -49,6 +49,10 @@
 #include "jsxml.h"
 #endif
 
+#include "jsatominlines.h"
+
+#include "vm/String-inl.h"
+
 using namespace js;
 
 static ParseNode *
