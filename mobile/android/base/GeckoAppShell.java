@@ -503,6 +503,9 @@ public class GeckoAppShell
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
+                if (event == null)
+                    return true;
+                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
                 return true;
             }
         });
@@ -1113,6 +1116,15 @@ public class GeckoAppShell
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
             public void run() {
                 // TODO
+            }
+        });
+    }
+
+    public static void preventPanning() {
+        getMainHandler().post(new Runnable() {
+            public void run() {
+                LayerController layerController = GeckoApp.mAppContext.getLayerController();
+                layerController.preventPanning(true);
             }
         });
     }
