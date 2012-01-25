@@ -224,10 +224,13 @@ LIRGenerator::visitTest(MTest *test)
         MDefinition *left = comp->getOperand(0);
         MDefinition *right = comp->getOperand(1);
 
-        if (comp->specialization() == MIRType_Int32) {
+        if (comp->specialization() == MIRType_Int32 || comp->specialization() == MIRType_Object) {
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-            return add(new LCompareIAndBranch(op, useRegister(left), useAnyOrConstant(right),
-                                              ifTrue, ifFalse));
+            LAllocation rhs = comp->specialization() == MIRType_Object
+                              ? useRegister(right)
+                              : useAnyOrConstant(right); 
+            return add(new LCompareAndBranch(opd->toCompare(), op, useRegister(left), rhs,
+                                             ifTrue, ifFalse));
         }
         if (comp->specialization() == MIRType_Double) {
             return add(new LCompareDAndBranch(comp->jsop(), useRegister(left),
@@ -267,9 +270,12 @@ LIRGenerator::visitCompare(MCompare *comp)
         if (willOptimize && comp->canEmitAtUses())
             return emitAtUses(comp);
 
-        if (comp->specialization() == MIRType_Int32) {
+        if (comp->specialization() == MIRType_Int32 || comp->specialization() == MIRType_Object) {
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-            return define(new LCompareI(op, useRegister(left), useAnyOrConstant(right)), comp);
+            LAllocation rhs = comp->specialization() == MIRType_Object
+                              ? useRegister(right)
+                              : useAnyOrConstant(right); 
+            return define(new LCompare(op, useRegister(left), rhs), comp);
         }
 
         if (comp->specialization() == MIRType_Double)

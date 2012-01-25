@@ -643,17 +643,29 @@ MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
 }
 
 void
-MCompare::infer(const TypeOracle::Binary &b)
+MCompare::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
 {
     // Set specialization
-    if (b.lhs < MIRType_String && b.rhs < MIRType_String) {
-        if (CoercesToDouble(b.lhs) || CoercesToDouble(b.rhs))
+    if (!b.lhsTypes || !b.rhsTypes)
+        return;
+
+    MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag(cx));
+    MIRType rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag(cx));
+
+    if (lhs < MIRType_String && rhs < MIRType_String) {
+        if (CoercesToDouble(lhs) || CoercesToDouble(rhs))
             specialization_ = MIRType_Double;
         else
             specialization_ = MIRType_Int32;
-    }
-    else {
-        specialization_ = MIRType_None;
+    } else if (jsop() == JSOP_EQ || jsop() == JSOP_NE) {
+        if (lhs == MIRType_Object && rhs == MIRType_Object) {
+            if (b.lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
+                b.rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY))
+            {
+                return;
+            }
+            specialization_ = MIRType_Object;
+        }
     }
 }
 
