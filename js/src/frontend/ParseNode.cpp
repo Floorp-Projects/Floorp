@@ -535,7 +535,6 @@ CloneParseTree(ParseNode *opn, TreeContext *tc)
 
       case PN_UNARY:
         NULLCHECK(pn->pn_kid = CloneParseTree(opn->pn_kid, tc));
-        pn->pn_u.unary.num = opn->pn_u.unary.num;
         pn->pn_hidden = opn->pn_hidden;
         break;
 

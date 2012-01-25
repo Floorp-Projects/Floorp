@@ -59,7 +59,7 @@ function test()
     timeout(3);
     try
     {
-      eval('while(x|=#3={}) with({}) const x;');
+      eval('while(x|={}) with({}) const x;');
     }
     catch(ex)
     {

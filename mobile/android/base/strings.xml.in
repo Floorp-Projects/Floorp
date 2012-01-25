@@ -108,4 +108,7 @@
   <string name="abouthome_last_tabs_open">&abouthome_last_tabs_open;</string>
   <string name="abouthome_top_sites_title">&abouthome_top_sites_title;</string>
   <string name="abouthome_top_sites_browse">&abouthome_top_sites_browse;</string>
+  <string name="abouthome_no_top_sites">&abouthome_no_top_sites;</string>
+  <string name="abouthome_about_sync">&abouthome_about_sync;</string>
+  <string name="abouthome_sync_bold_name">&abouthome_sync_bold_name;</string>
 </resources>

@@ -963,11 +963,6 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         return Compile_Skipped;
     }
 
-#if JS_HAS_SHARP_VARS
-    if (script->hasSharps)
-        return Compile_Abort;
-#endif
-
     if (!cx->compartment->ensureJaegerCompartmentExists(cx))
         return Compile_Error;
 
@@ -1339,7 +1334,7 @@ mjit::Compiler::finishThisUp()
             nNmapLive++;
     }
 
-    /* Please keep in sync with JITChunk::scriptDataSize! */
+    /* Please keep in sync with JITChunk::sizeOfIncludingThis! */
     size_t dataSize = sizeof(JITChunk) +
                       sizeof(NativeMapEntry) * nNmapLive +
                       sizeof(InlineFrame) * inlineFrames.length() +
@@ -1731,8 +1726,8 @@ mjit::Compiler::finishThisUp()
 #endif
 
     JS_ASSERT(size_t(cursor - (uint8_t*)chunk) == dataSize);
-    /* Pass in NULL here -- we don't want slop bytes to be counted. */
-    JS_ASSERT(chunk->scriptDataSize(NULL) == dataSize);
+    /* Use the computed size here -- we don't want slop bytes to be counted. */
+    JS_ASSERT(chunk->computedSizeOfIncludingThis() == dataSize);
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
@@ -3933,19 +3928,7 @@ mjit::Compiler::interruptCheckHelper()
         /* For barrier verification, always take the interrupt so we can verify. */
         jump = masm.jump();
     } else {
-        /*
-         * Bake in and test the address of the interrupt counter for the runtime.
-         * This is faster than doing two additional loads for the context's
-         * thread data, but will cause this thread to run slower if there are
-         * pending interrupts on some other thread.  For non-JS_THREADSAFE builds
-         * we can skip this, as there is only one flag to poll.
-         */
-#ifdef JS_THREADSAFE
-        void *interrupt = (void*) &cx->runtime->interruptCounter;
-#else
-        void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
-#endif
-
+        void *interrupt = (void*) &cx->runtime->interrupt;
 #if defined(JS_CPU_X86) || defined(JS_CPU_ARM) || defined(JS_CPU_MIPS)
         jump = masm.branch32(Assembler::NotEqual, AbsoluteAddress(interrupt), Imm32(0));
 #else

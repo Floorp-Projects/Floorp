@@ -37,6 +37,9 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoEventListener;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerController;
@@ -48,6 +51,12 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.util.Log;
+import java.util.LinkedList;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A view rendered by the layer compositor.
@@ -55,7 +64,8 @@ import android.view.inputmethod.InputConnection;
  * This view delegates to LayerRenderer to actually do the drawing. Its role is largely that of a
  * mediator between the LayerRenderer and the LayerController.
  */
-public class LayerView extends GLSurfaceView {
+public class LayerView extends GLSurfaceView
+    implements GeckoEventListener {
     private Context mContext;
     private LayerController mController;
     private InputConnectionHandler mInputConnectionHandler;
@@ -64,6 +74,11 @@ public class LayerView extends GLSurfaceView {
     private SimpleScaleGestureDetector mScaleGestureDetector;
     private long mRenderTime;
     private boolean mRenderTimeReset;
+    private static String LOGTAG = "GeckoLayerView";
+    /* List of events to be processed if the page does not prevent them. Should only be touched on the main thread */
+    private LinkedList<MotionEvent> mEventQueue = new LinkedList<MotionEvent>();
+    private boolean touchEventsEnabled = false;
+    private String touchEventsPrefName = "dom.w3c_touch_events.enabled";
 
     public LayerView(Context context, LayerController controller) {
         super(context);
@@ -81,16 +96,66 @@ public class LayerView extends GLSurfaceView {
 
         setFocusable(true);
         setFocusableInTouchMode(true);
+
+        GeckoAppShell.registerGeckoEventListener("Preferences:Data", this);
+        JSONArray jsonPrefs = new JSONArray();
+        jsonPrefs.put(touchEventsPrefName);
+        GeckoEvent event = new GeckoEvent("Preferences:Get", jsonPrefs.toString());
+        GeckoAppShell.sendEventToGecko(event);
+    }
+
+    public void handleMessage(String event, JSONObject message) {
+        if (event.equals("Preferences:Data")) {
+            try {
+                JSONArray jsonPrefs = message.getJSONArray("preferences");
+                for (int i = 0; i < jsonPrefs.length(); i++) {
+                    JSONObject jPref = jsonPrefs.getJSONObject(i);
+                    final String prefName = jPref.getString("name");
+                    if (prefName.equals(touchEventsPrefName)) {
+                        touchEventsEnabled = jPref.getBoolean("value");
+                        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
+                    }
+                }
+            } catch(JSONException ex) {
+                Log.e(LOGTAG, "Error decoding JSON", ex);
+            }
+        }
+    }
+
+    private void addToEventQueue(MotionEvent event) {
+        MotionEvent copy = MotionEvent.obtain(event);
+        mEventQueue.add(copy);
+    }
+
+    public void processEventQueue() {
+        MotionEvent event = mEventQueue.poll();
+        while(event != null) {
+            processEvent(event);
+            event = mEventQueue.poll();
+        }
+    }
+
+    public void clearEventQueue() {
+        mEventQueue.clear();
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (touchEventsEnabled && mController.onTouchEvent(event)) {
+            addToEventQueue(event);
+            return true;
+        }
+        return processEvent(event);
+    }
+
+    private boolean processEvent(MotionEvent event) {
         if (mGestureDetector.onTouchEvent(event))
             return true;
         mScaleGestureDetector.onTouchEvent(event);
         if (mScaleGestureDetector.isInProgress())
             return true;
-        return mController.onTouchEvent(event);
+        mController.getPanZoomController().onTouchEvent(event);
+        return true;
     }
 
     public LayerController getController() { return mController; }
