@@ -2370,7 +2370,7 @@ abstract public class GeckoApp
             while (tabsIter.hasNext()) {
                 Tab tab = tabsIter.next();
                 if (url.equals(tab.getURL())) {
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(tab.getId())));
+                    Tabs.getInstance().selectTab(tab.getId());
                     return;
                 }
             }
