@@ -51,15 +51,16 @@ let gBrowserThumbnails = {
 
   handleEvent: function Thumbnails_handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "scroll":
+        let browser = aEvent.currentTarget;
+        if (this._timeouts.has(browser))
+          this._delayedCapture(browser);
+        break;
       case "TabSelect":
         this._delayedCapture(aEvent.target.linkedBrowser);
         break;
       case "TabClose": {
-        let browser = aEvent.target.linkedBrowser;
-        if (this._timeouts.has(browser)) {
-          clearTimeout(this._timeouts.get(browser));
-          this._timeouts.delete(browser);
-        }
+        this._clearTimeout(aEvent.target.linkedBrowser);
         break;
       }
     }
@@ -85,9 +86,11 @@ let gBrowserThumbnails = {
   _delayedCapture: function Thumbnails_delayedCapture(aBrowser) {
     if (this._timeouts.has(aBrowser))
       clearTimeout(this._timeouts.get(aBrowser));
+    else
+      aBrowser.addEventListener("scroll", this, true);
 
     let timeout = setTimeout(function () {
-      this._timeouts.delete(aBrowser);
+      this._clearTimeout(aBrowser);
       this._capture(aBrowser);
     }.bind(this), this._captureDelayMS);
 
@@ -114,6 +117,14 @@ let gBrowserThumbnails = {
     } catch (e) {
       // Not a http channel, we just assume a success status code.
       return true;
+    }
+  },
+
+  _clearTimeout: function Thumbnails_clearTimeout(aBrowser) {
+    if (this._timeouts.has(aBrowser)) {
+      aBrowser.removeEventListener("scroll", this, false);
+      clearTimeout(this._timeouts.get(aBrowser));
+      this._timeouts.delete(aBrowser);
     }
   }
 };
