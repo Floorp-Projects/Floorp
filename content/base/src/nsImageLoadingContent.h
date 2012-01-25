@@ -181,7 +181,7 @@ protected:
 
   /**
    * Returns the CORS mode that will be used for all future image loads. The
-   * default implementation returns nsGenericHTMLElement::CORS_NONE unconditionally.
+   * default implementation returns CORS_NONE unconditionally.
    */
   virtual nsGenericHTMLElement::CORSMode GetCORSMode();
 
