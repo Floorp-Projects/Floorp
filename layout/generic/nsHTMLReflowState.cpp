@@ -67,6 +67,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::layout;
 
 // Prefs-driven control for |text-decoration: blink|
 static bool sPrefIsLoaded = false;
@@ -1243,24 +1244,28 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   bool heightIsAuto = eStyleUnit_Auto == mStylePosition->mHeight.GetUnit();
 
   bool shrinkWrap = leftIsAuto || rightIsAuto;
-  nsSize size =
-    frame->ComputeSize(rendContext,
-                       nsSize(containingBlockWidth,
-                              containingBlockHeight),
-                       containingBlockWidth, // XXX or availableWidth?
-                       nsSize(mComputedMargin.LeftRight() +
-                                mComputedOffsets.LeftRight(),
-                              mComputedMargin.TopBottom() +
-                                mComputedOffsets.TopBottom()),
-                       nsSize(mComputedBorderPadding.LeftRight() -
-                                mComputedPadding.LeftRight(),
-                              mComputedBorderPadding.TopBottom() -
+  {
+    AutoMaybeNullInflationContainer an(frame);
+
+    nsSize size =
+      frame->ComputeSize(rendContext,
+                         nsSize(containingBlockWidth,
+                                containingBlockHeight),
+                         containingBlockWidth, // XXX or availableWidth?
+                         nsSize(mComputedMargin.LeftRight() +
+                                  mComputedOffsets.LeftRight(),
+                                mComputedMargin.TopBottom() +
+                                  mComputedOffsets.TopBottom()),
+                         nsSize(mComputedBorderPadding.LeftRight() -
+                                  mComputedPadding.LeftRight(),
+                                mComputedBorderPadding.TopBottom() -
+                                  mComputedPadding.TopBottom()),
+                         nsSize(mComputedPadding.LeftRight(),
                                 mComputedPadding.TopBottom()),
-                       nsSize(mComputedPadding.LeftRight(),
-                              mComputedPadding.TopBottom()),
-                       shrinkWrap);
-  mComputedWidth = size.width;
-  mComputedHeight = size.height;
+                         shrinkWrap);
+    mComputedWidth = size.width;
+    mComputedHeight = size.height;
+  }
   NS_ASSERTION(mComputedWidth >= 0, "Bogus width");
   NS_ASSERTION(mComputedHeight == NS_UNCONSTRAINEDSIZE ||
                mComputedHeight >= 0, "Bogus height");
@@ -1862,6 +1867,8 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       InitAbsoluteConstraints(aPresContext, cbrs, aContainingBlockWidth,
                               aContainingBlockHeight, aFrameType);
     } else {
+      AutoMaybeNullInflationContainer an(frame);
+
       bool isBlock =
         NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
       // make sure legend frames with display:block and width:auto still
