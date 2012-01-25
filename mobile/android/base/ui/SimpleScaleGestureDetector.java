@@ -103,7 +103,7 @@ public class SimpleScaleGestureDetector {
 
     private void onTouchStart(MotionEvent event) {
         mLastEventTime = event.getEventTime();
-        mPointerInfo.push(PointerInfo.create(event, event.getActionIndex()));
+        mPointerInfo.addFirst(PointerInfo.create(event, event.getActionIndex()));
         if (getPointersDown() == 2) {
             sendScaleGesture(EventType.BEGIN);
         }

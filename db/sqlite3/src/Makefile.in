@@ -89,6 +89,12 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 
+# Force /O2 optimisation on Windows because using the default /O1 causes
+# crashes with MSVC2005 and PGO. See bug 719584.
+ifeq ($(OS_ARCH),WINNT)
+MODULE_OPTIMIZE_FLAGS = -O2
+endif
+
 EXPORTS = \
   sqlite3.h \
   $(NULL)
@@ -143,8 +149,14 @@ endif
 ifeq ($(OS_TARGET),Android)
 # default to user readable only to fit Android security model
 DEFINES += -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
-# Force using fsync, since there is not fdatasync in ndk 5.
-DEFINES += -Dfdatasync=fsync
+endif
+
+# Force using malloc_usable_size when building with jemalloc because _msize
+# causes assertions on Win64. See bug 719579.
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_MEMORY
+DEFINES += -DHAVE_MALLOC_USABLE_SIZE
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

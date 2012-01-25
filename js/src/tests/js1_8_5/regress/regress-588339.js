@@ -1,5 +1,5 @@
-(#3={})
-eval("#1={}")
+({})
+eval("{}")
 
 /* Watch for crash. */
 reportCompare(0, 0, "");

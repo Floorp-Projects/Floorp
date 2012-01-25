@@ -1412,20 +1412,20 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 class ArraySharpDetector
 {
     JSContext *cx;
-    jschar *chars;
     JSHashEntry *he;
+    bool alreadySeen;
     bool sharp;
 
   public:
     ArraySharpDetector(JSContext *cx)
       : cx(cx),
-        chars(NULL),
         he(NULL),
+        alreadySeen(false),
         sharp(false)
     {}
 
     bool init(JSObject *obj) {
-        he = js_EnterSharpObject(cx, obj, NULL, &chars);
+        he = js_EnterSharpObject(cx, obj, NULL, &alreadySeen);
         if (!he)
             return false;
         sharp = IS_SHARP(he);
@@ -1433,27 +1433,11 @@ class ArraySharpDetector
     }
 
     bool initiallySharp() const {
-        JS_ASSERT_IF(sharp, hasSharpChars());
+        JS_ASSERT_IF(sharp, alreadySeen);
         return sharp;
     }
 
-    void makeSharp() {
-        MAKE_SHARP(he);
-    }
-
-    bool hasSharpChars() const {
-        return chars != NULL;
-    }
-
-    jschar *takeSharpChars() {
-        jschar *ret = chars;
-        chars = NULL;
-        return ret;
-    }
-
     ~ArraySharpDetector() {
-        if (chars)
-            cx->free_(chars);
         if (he && !sharp)
             js_LeaveSharpObject(cx, NULL);
     }
@@ -1477,23 +1461,11 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
 
     StringBuffer sb(cx);
 
-#if JS_HAS_SHARP_VARS
-    if (detector.initiallySharp()) {
-        jschar *chars = detector.takeSharpChars();
-        sb.replaceRawBuffer(chars, js_strlen(chars));
-        goto make_string;
-    } else if (detector.hasSharpChars()) {
-        detector.makeSharp();
-        jschar *chars = detector.takeSharpChars();
-        sb.replaceRawBuffer(chars, js_strlen(chars));
-    }
-#else
     if (detector.initiallySharp()) {
         if (!sb.append("[]"))
             return false;
         goto make_string;
     }
-#endif
 
     if (!sb.append('['))
         return false;
@@ -3132,12 +3104,12 @@ array_indexOfHelper(JSContext *cx, IndexOfKind mode, CallArgs &args)
             return JS_FALSE;
         }
         if (!hole) {
-            JSBool equal;
+            bool equal;
             if (!StrictlyEqual(cx, elt, tosearch, &equal))
-                return JS_FALSE;
+                return false;
             if (equal) {
                 args.rval().setNumber(i);
-                return JS_TRUE;
+                return true;
             }
         }
         if (i == stop)

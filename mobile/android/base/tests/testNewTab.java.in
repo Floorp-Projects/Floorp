@@ -9,13 +9,13 @@ public class testNewTab extends BaseTest {
         // TODO: find a better way to not hardcode this url
         String url = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
         String url2 = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
-        Element tabs = mDriver.findElement(getActivity(), "tabs");
-        // Add one tab
-        Activity awesomeBarActivity = getActivityFromClick(tabs);
 
-        getInstrumentation().waitForIdleSync();
-        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        // Add one tab
+        Element tabs = mDriver.findElement(getActivity(), "tabs");
+        Activity activity = getActivityFromClick(tabs);
+        Element urlbar = mDriver.findElement(activity, "awesomebar_text");
         mActions.sendKeys(url);
         mAsserter.is(urlbar.getText(), url, "Awesomebar url is fine");
         hitEnterAndWait();
@@ -25,18 +25,18 @@ public class testNewTab extends BaseTest {
         mAsserter.is(tabCount.getText(), "2", "Number of tabs has increased");
 
         // Click tab list
-        Activity tabTray = getActivityFromClick(tabs);
-        Element addTab = mDriver.findElement(tabTray, "add_tab");
+        activity = getActivityFromClick(tabs);
+        Element addTab = mDriver.findElement(activity, "add_tab");
 
-        //Add another tab
-        addTab.click();
-        getInstrumentation().waitForIdleSync();
+        // Add another tab. The new tab has its own awesome bar activity, so it
+        // is important to use the new activity to fetch the awesome bar text.
+        activity = getActivityFromClick(addTab);
         mActions.sendKeys(url2);
-        getInstrumentation().waitForIdleSync();
+        urlbar = mDriver.findElement(activity, "awesomebar_text");
         mAsserter.is(urlbar.getText(), url2, "URL is still fine");
 
         hitEnterAndWait();
-        //Check tab count another time.
+        // Check tab count another time.
         mAsserter.is(tabCount.getText(), "3", "Number of tabs has increased");
     }
 }

@@ -475,8 +475,8 @@ JS_FRIEND_API(JSString *)
 GetPCCountScriptContents(JSContext *cx, size_t script);
 
 #ifdef JS_THREADSAFE
-JS_FRIEND_API(JSThread *)
-GetContextThread(const JSContext *cx);
+JS_FRIEND_API(void *)
+GetOwnerThread(const JSContext *cx);
 
 JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx);
@@ -562,7 +562,7 @@ IsContextRunningJS(JSContext *cx);
 
 /* Must be called with GC lock taken. */
 extern JS_FRIEND_API(void)
-TriggerOperationCallbacksForActiveContexts(JSRuntime *rt);
+TriggerOperationCallback(JSRuntime *rt);
 
 class SystemAllocPolicy;
 typedef Vector<JSCompartment*, 0, SystemAllocPolicy> CompartmentVector;
