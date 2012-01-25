@@ -366,6 +366,8 @@ public:
   NS_IMETHOD CompleteMove(bool aForward, bool aExtend);
   NS_IMETHOD SelectAll();
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, bool *_retval);
+  virtual nsresult CheckVisibilityContent(nsIContent* aNode, PRInt16 aStartOffset,
+                                          PRInt16 aEndOffset, bool* aRetval);
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE

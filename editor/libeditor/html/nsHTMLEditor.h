@@ -391,9 +391,6 @@ public:
   nsresult IsVisTextNode(nsIContent* aNode,
                          bool* outIsEmptyNode,
                          bool aSafeToAskFrames);
-  nsresult IsVisTextNode( nsIDOMNode *aNode, 
-                          bool *outIsEmptyNode, 
-                          bool aSafeToAskFrames);
   nsresult IsEmptyNode(nsIDOMNode *aNode, bool *outIsEmptyBlock, 
                        bool aMozBRDoesntCount = false,
                        bool aListOrCellNotEmpty = false,
