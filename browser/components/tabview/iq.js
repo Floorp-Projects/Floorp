@@ -741,6 +741,11 @@ iQClass.prototype = {
           if (pair.original == func) {
             handler = pair.modified;
             elem.iQEventData[type].splice(a, 1);
+            if (!elem.iQEventData[type].length) {
+              delete elem.iQEventData[type];
+              if (!Object.keys(elem.iQEventData).length)
+                delete elem.iQEventData;
+            }
             break;
           }
         }
@@ -765,10 +770,10 @@ iQClass.prototype = {
       if (!elem.iQEventData)
         continue;
 
-      for (let type in elem.iQEventData) {
-        while (elem.iQEventData[type].length)
+      Object.keys(elem.iQEventData).forEach(function (type) {
+        while (elem.iQEventData && elem.iQEventData[type])
           this.unbind(type, elem.iQEventData[type][0].original);
-      }
+      }, this);
     }
 
     return this;
