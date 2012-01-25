@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -180,7 +180,35 @@ HashChars(const jschar *chars, size_t length)
     return h;
 }
 
-typedef TaggedPointerEntry<JSAtom> AtomStateEntry;
+class AtomStateEntry
+{
+    uintptr_t bits;
+
+    static const uintptr_t NO_TAG_MASK = uintptr_t(-1) - 1;
+
+  public:
+    AtomStateEntry() : bits(0) {}
+    AtomStateEntry(const AtomStateEntry &other) : bits(other.bits) {}
+    AtomStateEntry(JSAtom *ptr, bool tagged)
+      : bits(uintptr_t(ptr) | uintptr_t(tagged))
+    {
+        JS_ASSERT((uintptr_t(ptr) & 0x1) == 0);
+    }
+
+    bool isTagged() const {
+        return bits & 0x1;
+    }
+
+    /*
+     * Non-branching code sequence. Note that the const_cast is safe because
+     * the hash function doesn't consider the tag to be a portion of the key.
+     */
+    void setTagged(bool enabled) const {
+        const_cast<AtomStateEntry *>(this)->bits |= uintptr_t(enabled);
+    }
+
+    JSAtom *asPtr() const;
+};
 
 struct AtomHasher
 {
@@ -239,10 +267,6 @@ enum FlationCoding
 struct JSAtomState
 {
     js::AtomSet         atoms;
-
-#ifdef JS_THREADSAFE
-    JSThinLock          lock;
-#endif
 
     /*
      * From this point until the end of struct definition the struct must
