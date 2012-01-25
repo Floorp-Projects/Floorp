@@ -376,43 +376,6 @@ TreeContext::inStatement(StmtType type)
 }
 
 bool
-TreeContext::ensureSharpSlots()
-{
-#if JS_HAS_SHARP_VARS
-    JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
-
-    if (sharpSlotBase >= 0) {
-        JS_ASSERT(flags & TCF_HAS_SHARPS);
-        return true;
-    }
-
-    JS_ASSERT(!(flags & TCF_HAS_SHARPS));
-    if (inFunction()) {
-        JSContext *cx = parser->context;
-        JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6);
-        JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6);
-        if (!sharpArrayAtom || !sharpDepthAtom)
-            return false;
-
-        sharpSlotBase = bindings.countVars();
-        if (!bindings.addVariable(cx, sharpArrayAtom))
-            return false;
-        if (!bindings.addVariable(cx, sharpDepthAtom))
-            return false;
-    } else {
-        /*
-         * js::frontend::CompileScript will rebase immediate operands
-         * indexing the sharp slots to come at the end of the global script's
-         * |nfixed| slots storage, after gvars and regexps.
-         */
-        sharpSlotBase = 0;
-    }
-    flags |= TCF_HAS_SHARPS;
-#endif
-    return true;
-}
-
-bool
 TreeContext::skipSpansGenerator(unsigned skip)
 {
     TreeContext *tc = this;
@@ -1808,10 +1771,10 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool *ans
 
           default:
             /*
-             * All of PNK_INC, PNK_DEC, PNK_THROW, PNK_YIELD, and PNK_DEFSHARP
-             * have direct effects. Of the remaining unary-arity node types,
-             * we can't easily prove that the operand never denotes an object
-             * with a toString or valueOf method.
+             * All of PNK_INC, PNK_DEC, PNK_THROW, and PNK_YIELD have direct
+             * effects. Of the remaining unary-arity node types, we can't
+             * easily prove that the operand never denotes an object with a
+             * toString or valueOf method.
              */
             *answer = JS_TRUE;
             break;
@@ -3946,33 +3909,12 @@ EmitFunctionDefNop(JSContext *cx, BytecodeEmitter *bce, uintN index)
 }
 
 static bool
-EmitNewInit(JSContext *cx, BytecodeEmitter *bce, JSProtoKey key, ParseNode *pn, int sharpnum)
+EmitNewInit(JSContext *cx, BytecodeEmitter *bce, JSProtoKey key, ParseNode *pn)
 {
     if (Emit3(cx, bce, JSOP_NEWINIT, (jsbytecode) key, 0) < 0)
         return false;
     CheckTypeSet(cx, bce, JSOP_NEWINIT);
-#if JS_HAS_SHARP_VARS
-    if (bce->hasSharps()) {
-        if (pn->pn_count != 0)
-            EMIT_UINT16_IMM_OP(JSOP_SHARPINIT, bce->sharpSlotBase);
-        if (sharpnum >= 0)
-            EMIT_UINT16PAIR_IMM_OP(JSOP_DEFSHARP, bce->sharpSlotBase, sharpnum);
-    } else {
-        JS_ASSERT(sharpnum < 0);
-    }
-#endif
     return true;
-}
-
-static bool
-EmitEndInit(JSContext *cx, BytecodeEmitter *bce, uint32_t count)
-{
-#if JS_HAS_SHARP_VARS
-    /* Emit an op for sharp array cleanup and decompilation. */
-    if (bce->hasSharps() && count != 0)
-        EMIT_UINT16_IMM_OP(JSOP_SHARPINIT, bce->sharpSlotBase);
-#endif
-    return Emit1(cx, bce, JSOP_ENDINIT) >= 0;
 }
 
 bool
@@ -5139,13 +5081,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         bce2->flags = pn->pn_funbox->tcflags | TCF_COMPILING | TCF_IN_FUNCTION |
                      (bce->flags & TCF_FUN_MIGHT_ALIAS_LOCALS);
         bce2->bindings.transfer(cx, &pn->pn_funbox->bindings);
-#if JS_HAS_SHARP_VARS
-        if (bce2->flags & TCF_HAS_SHARPS) {
-            bce2->sharpSlotBase = bce2->bindings.sharpSlotBase(cx);
-            if (bce2->sharpSlotBase < 0)
-                return false;
-        }
-#endif
         bce2->setFunction(fun);
         bce2->funbox = pn->pn_funbox;
         bce2->parent = bce;
@@ -5991,7 +5926,7 @@ EmitConditionalExpression(JSContext *cx, BytecodeEmitter *bce, ConditionalExpres
 }
 
 static bool
-EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
+EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
 #if JS_HAS_DESTRUCTURING_SHORTHAND
     if (pn->pn_xflags & PNX_DESTRUCT) {
@@ -6001,11 +5936,8 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
     }
 #endif
 
-    if (!bce->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
-        bce->checkSingletonContext())
-    {
+    if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
         return EmitSingletonInitialiser(cx, bce, pn);
-    }
 
     /*
      * Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
@@ -6016,7 +5948,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
      * property is added, as JSOP_SETELEM/JSOP_SETPROP would do.
      */
     ptrdiff_t offset = bce->next() - bce->base();
-    if (!EmitNewInit(cx, bce, JSProto_Object, pn, sharpnum))
+    if (!EmitNewInit(cx, bce, JSProto_Object, pn))
         return false;
 
     /*
@@ -6024,7 +5956,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
      * JSOP_NEWOBJECT with the final shape instead.
      */
     JSObject *obj = NULL;
-    if (!bce->hasSharps() && bce->compileAndGo()) {
+    if (bce->compileAndGo()) {
         gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
@@ -6103,7 +6035,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
         }
     }
 
-    if (!EmitEndInit(cx, bce, pn->pn_count))
+    if (Emit1(cx, bce, JSOP_ENDINIT) < 0)
         return false;
 
     if (obj) {
@@ -6123,7 +6055,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
 }
 
 static bool
-EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
+EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     /*
      * Emit code for [a, b, c] that is equivalent to constructing a new
@@ -6136,7 +6068,7 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
 
 #if JS_HAS_GENERATORS
     if (pn->isKind(PNK_ARRAYCOMP)) {
-        if (!EmitNewInit(cx, bce, JSProto_Array, pn, sharpnum))
+        if (!EmitNewInit(cx, bce, JSProto_Array, pn))
             return false;
 
         /*
@@ -6152,30 +6084,19 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
         bce->arrayCompDepth = saveDepth;
 
         /* Emit the usual op needed for decompilation. */
-        if (!EmitEndInit(cx, bce, 1))
-            return false;
-        return true;
+        return Emit1(cx, bce, JSOP_ENDINIT) >= 0;
     }
 #endif /* JS_HAS_GENERATORS */
 
-    if (!bce->hasSharps() && !(pn->pn_xflags & PNX_NONCONST) && pn->pn_head &&
-        bce->checkSingletonContext())
-    {
+    if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
         return EmitSingletonInitialiser(cx, bce, pn);
-    }
 
-    /* Use the slower NEWINIT for arrays in scripts containing sharps. */
-    if (bce->hasSharps()) {
-        if (!EmitNewInit(cx, bce, JSProto_Array, pn, sharpnum))
-            return false;
-    } else {
-        ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);
-        if (off < 0)
-            return false;
-        CheckTypeSet(cx, bce, JSOP_NEWARRAY);
-        jsbytecode *pc = bce->code(off);
-        SET_UINT24(pc, pn->pn_count);
-    }
+    ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);
+    if (off < 0)
+        return false;
+    CheckTypeSet(cx, bce, JSOP_NEWARRAY);
+    jsbytecode *pc = bce->code(off);
+    SET_UINT24(pc, pn->pn_count);
 
     ParseNode *pn2 = pn->pn_head;
     jsatomid atomIndex;
@@ -6200,11 +6121,8 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
             return false;
     }
 
-    /*
-     * Emit an op to finish the array and, secondarily, to aid in sharp
-     * array cleanup (if JS_HAS_SHARP_VARS) and decompilation.
-     */
-    return EmitEndInit(cx, bce, atomIndex);
+    /* Emit an op to finish the array and aid in decompilation. */
+    return Emit1(cx, bce, JSOP_ENDINIT) >= 0;
 }
 
 static bool
@@ -6621,46 +6539,12 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #if JS_HAS_GENERATORS
       case PNK_ARRAYCOMP:
 #endif
-        ok = EmitArray(cx, bce, pn, -1);
+        ok = EmitArray(cx, bce, pn);
         break;
 
       case PNK_RC:
-        ok = EmitObject(cx, bce, pn, -1);
+        ok = EmitObject(cx, bce, pn);
         break;
-
-#if JS_HAS_SHARP_VARS
-      case PNK_DEFSHARP:
-      {
-        JS_ASSERT(bce->hasSharps());
-        jsint sharpnum = pn->asDefSharpExpression().number();
-        pn = pn->pn_kid;
-        if (pn->isKind(PNK_RB)) {
-            ok = EmitArray(cx, bce, pn, sharpnum);
-            break;
-        }
-# if JS_HAS_GENERATORS
-        if (pn->isKind(PNK_ARRAYCOMP)) {
-            ok = EmitArray(cx, bce, pn, sharpnum);
-            break;
-        }
-# endif
-        if (pn->isKind(PNK_RC)) {
-            ok = EmitObject(cx, bce, pn, sharpnum);
-            break;
-        }
-
-        if (!EmitTree(cx, bce, pn))
-            return JS_FALSE;
-        EMIT_UINT16PAIR_IMM_OP(JSOP_DEFSHARP, bce->sharpSlotBase, jsatomid(sharpnum));
-        break;
-      }
-
-      case PNK_USESHARP:
-        JS_ASSERT(bce->hasSharps());
-        EMIT_UINT16PAIR_IMM_OP(JSOP_USESHARP, bce->sharpSlotBase,
-                               jsatomid(pn->asUseSharpExpression().number()));
-        break;
-#endif /* JS_HAS_SHARP_VARS */
 
       case PNK_NAME:
         /*

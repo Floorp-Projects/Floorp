@@ -127,9 +127,7 @@ typedef enum JSOp {
 #define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
 
-#define JOF_SHARPSLOT    (1U<<24) /* first immediate is uint16_t stack slot no.
-                                     that needs fixup when in global code (see
-                                     js::frontend::CompileScript) */
+/* (1U<<24) is unused */
 #define JOF_GNAME        (1U<<25) /* predicted global name */
 #define JOF_TYPESET      (1U<<26) /* has an entry in a script's type sets */
 #define JOF_DECOMPOSE    (1U<<27) /* followed by an equivalent decomposed

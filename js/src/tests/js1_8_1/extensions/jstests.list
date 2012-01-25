@@ -5,7 +5,6 @@ script regress-437288-01.js
 script regress-452498-162.js
 script regress-452498-193.js
 script regress-452498-196.js
-script regress-452498-224.js
 script regress-466905-04.js
 skip script regress-466905-05.js  # no-op in browser, fails in shell - see bug 554793
 script regress-477158.js

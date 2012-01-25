@@ -86,6 +86,11 @@ def relativize(path):
         return relpath
     return path
 
+def isObject(path):
+    '''Returns whether the given path points to an object file, that is,
+    ends with OBJ_SUFFIX or .i_o'''
+    return os.path.splitext(path)[1] in [conf.OBJ_SUFFIX, '.i_o']
+
 class LibDescriptor(dict):
     KEYS = ['OBJS', 'LIBS']
 

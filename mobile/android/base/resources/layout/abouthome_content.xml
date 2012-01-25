@@ -14,7 +14,8 @@
                         android:isScrollContainer="false"
                         android:background="@drawable/abouthome_topsites_bg_repeat">
 
-            <ImageView android:layout_width="fill_parent"
+            <ImageView android:id="@+id/top_sites_top"
+                       android:layout_width="fill_parent"
                        android:layout_height="50dip"
                        android:gravity="fill"
                        android:background="@drawable/abouthome_bg_repeat"/>
@@ -28,12 +29,27 @@
             <TextView android:id="@+id/top_sites_title"
                       android:layout_width="fill_parent"
                       android:layout_height="wrap_content"
+                      android:layout_below="@id/top_sites_top"
                       android:layout_marginLeft="12dip"
-                      android:layout_marginTop="55dip"
+                      android:layout_marginTop="5dip"
                       android:textSize="12sp"
                       android:textColor="#000000"
                       android:textStyle="bold"
                       android:text="@string/abouthome_top_sites_title"/>
+
+            <TextView android:id="@+id/no_top_sites_text"
+                      android:layout_width="fill_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_below="@id/top_sites_title"
+                      android:paddingTop="47dp"
+                      android:paddingBottom="47dp"
+                      android:paddingLeft="60dp"
+                      android:paddingRight="60dp"
+                      android:gravity="center"
+                      android:textSize="12sp"
+                      android:textColor="#666666"
+                      android:text="@string/abouthome_no_top_sites"
+                      android:visibility="gone"/>
 
             <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
                   android:id="@+id/top_sites_grid"
@@ -55,6 +71,45 @@
                   android:textSize="12sp"
                   android:gravity="top|center_horizontal"
                   android:text="@string/abouthome_top_sites_browse"/>
+
+            <RelativeLayout android:id="@+id/sync_box_container"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/all_top_sites_text"
+                            android:gravity="center"
+                            android:paddingLeft="12dp"
+                            android:paddingRight="12dp"
+                            android:paddingTop="17dp"
+                            android:paddingBottom="14dp"
+                            android:visibility="gone">
+
+                <RelativeLayout android:id="@+id/sync_box"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:clickable="true"
+                                android:background="@drawable/abouthome_sync_box">
+
+                    <ImageView android:id="@+id/sync_logo"
+                               android:layout_width="wrap_content"
+                               android:layout_height="wrap_content"
+                               android:layout_centerVertical="true"
+                               android:src="@drawable/abouthome_sync_logo"/>
+
+                    <TextView android:id="@+id/sync_text"
+                              android:layout_width="fill_parent"
+                              android:layout_height="wrap_content"
+                              android:layout_centerVertical="true"
+                              android:layout_toRightOf="@id/sync_logo"
+                              android:layout_marginLeft="7dp"
+                              android:gravity="center"
+                              android:textSize="15sp"
+                              android:textColor="#FFFFFF"
+                              android:text="@string/abouthome_about_sync"/>
+
+                </RelativeLayout>
+
+            </RelativeLayout>
 
             <ImageView android:id="@+id/logo"
                        android:layout_width="wrap_content"

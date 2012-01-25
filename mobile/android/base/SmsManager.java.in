@@ -57,7 +57,8 @@ class SmsManager
 
 interface ISmsManager
 {
-  public void init();
+  public void start();
+  public void stop();
   public void shutdown();
 
   public int getNumberOfMessagesForText(String aText);

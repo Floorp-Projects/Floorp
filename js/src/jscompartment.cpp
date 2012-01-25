@@ -744,7 +744,7 @@ JSCompartment::createBarrierTracer()
     return NULL;
 }
 
-JS_PUBLIC_API(size_t)
+size_t
 JS::SizeOfCompartmentShapeTable(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf)
 {
     return c->baseShapes.sizeOfExcludingThis(mallocSizeOf)

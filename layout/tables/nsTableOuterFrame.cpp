@@ -54,6 +54,9 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 
+using namespace mozilla;
+using namespace mozilla::layout;
+
 /* ----------- nsTableCaptionFrame ---------- */
 
 #define NS_TABLE_FRAME_CAPTION_LIST_INDEX 1
@@ -97,6 +100,11 @@ nsTableCaptionFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 {
   nsSize result = nsBlockFrame::ComputeAutoSize(aRenderingContext, aCBSize,
                     aAvailableWidth, aMargin, aBorder, aPadding, aShrinkWrap);
+
+  // If we're a container for font size inflation, then shrink
+  // wrapping inside of us should not apply font size inflation.
+  AutoMaybeNullInflationContainer an(this);
+
   PRUint8 captionSide = GetStyleTableBorder()->mCaptionSide;
   if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
       captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
@@ -527,6 +535,8 @@ ChildShrinkWrapWidth(nsRenderingContext *aRenderingContext,
                      nsSize aCBSize, nscoord aAvailableWidth,
                      nscoord *aMarginResult = nsnull)
 {
+  AutoMaybeNullInflationContainer an(aChildFrame);
+
   nsCSSOffsetState offsets(aChildFrame, aRenderingContext, aCBSize.width);
   nsSize size = aChildFrame->ComputeSize(aRenderingContext, aCBSize,
                   aAvailableWidth,

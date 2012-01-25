@@ -1,18 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="fill_parent"
-             android:layout_height="wrap_content"
-             android:background="@drawable/abouthome_separator">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="47dip"
+                android:gravity="left|center_vertical"
+                android:background="@drawable/abouthome_separator">
 
-    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/addon_title"
-              android:layout_width="fill_parent"
-              android:layout_height="47dip"
-              android:paddingLeft="12dip"
-              android:gravity="left|center_vertical"
+    <ImageView android:id="@+id/addon_icon"
+               android:layout_width="32dp"
+               android:layout_height="32dp"
+               android:layout_centerVertical="true"
+               android:layout_marginLeft="12dip"
+               android:src="@drawable/ic_addons_empty"/>
+
+    <TextView android:id="@+id/addon_title"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_toRightOf="@id/addon_icon"
+              android:layout_marginLeft="12dip"
+              android:layout_centerVertical="true"
               android:textSize="15sp"
-              android:background="@android:drawable/list_selector_background"
-              android:textColor="#222222"
-              android:clickable="true"/>
+              android:textColor="#222222"/>
 
-</FrameLayout>
+    <TextView android:id="@+id/addon_version"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_centerVertical="true"
+              android:layout_toRightOf="@id/addon_title"
+              android:layout_alignBottom="@id/addon_title"
+              android:layout_marginLeft="5dip"
+              android:textSize="12sp"
+              android:textColor="#666666"/>
+
+</RelativeLayout>

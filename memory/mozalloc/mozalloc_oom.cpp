@@ -45,11 +45,23 @@
 #include "mozilla/mozalloc_abort.h"
 #include "mozilla/mozalloc_oom.h"
 
+static mozalloc_oom_abort_handler gAbortHandler;
+
 void
-mozalloc_handle_oom()
+mozalloc_handle_oom(size_t size)
 {
     // NB: this is handle_oom() stage 1, which simply aborts on OOM.
     // we might proceed to a stage 2 in which an attempt is made to
     // reclaim memory
+
+    if (gAbortHandler)
+        gAbortHandler(size);
+
     mozalloc_abort("out of memory");
+}
+
+void
+mozalloc_set_oom_abort_handler(mozalloc_oom_abort_handler handler)
+{
+    gAbortHandler = handler;
 }

@@ -1447,7 +1447,7 @@ JSFunction::trace(JSTracer *trc)
     }
 
     if (atom)
-        MarkAtom(trc, atom, "atom");
+        MarkStringUnbarriered(trc, atom, "atom");
 
     if (isInterpreted()) {
         if (script())
