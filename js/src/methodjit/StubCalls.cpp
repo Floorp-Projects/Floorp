@@ -1897,7 +1897,7 @@ stubs::Exception(VMFrame &f)
 {
     // Check the interrupt flag to allow interrupting deeply nested exception
     // handling.
-    if (f.cx->runtime->interrupt && !js_HandleExecutionInterrupt(f.cx))
+    if (JS_THREAD_DATA(f.cx)->interruptFlags && !js_HandleExecutionInterrupt(f.cx))
         THROW();
 
     f.regs.sp[0] = f.cx->getPendingException();
