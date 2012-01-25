@@ -54,6 +54,17 @@
         persist="screenX screenY width height sizemode">
 <xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
+<xul:commandset id="style-editor-commandset">
+  <xul:command id="style-editor-cmd-close" oncommand="window.close();"/>
+</xul:commandset>
+
+<xul:keyset id="style-editor-keyset">
+  <xul:key id="style-editor-key-close"
+           key="&closeCmd.key;"
+           command="style-editor-cmd-close"
+           modifiers="accel"/>
+</xul:keyset>
+
 <xul:box id="style-editor-chrome" class="splitview-root loading">
   <xul:box class="splitview-controller">
     <xul:box class="splitview-main">
