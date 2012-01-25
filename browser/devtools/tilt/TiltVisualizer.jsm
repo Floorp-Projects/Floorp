@@ -480,6 +480,11 @@ TiltVisualizer.Presenter.prototype = {
                                                      this.maxTextureSize),
       format: "RGB"
     });
+
+    if ("function" === typeof this.onSetupTexture) {
+      this.onSetupTexture();
+      this.onSetupTexture = null;
+    }
   },
 
   /**
@@ -501,6 +506,9 @@ TiltVisualizer.Presenter.prototype = {
     if (!renderer || !renderer.context) {
       return;
     }
+
+    // save the mesh data for future use
+    this.meshData = aData;
 
     // create the visualization mesh using the vertices, texture coordinates
     // and indices computed when traversing the document object model
@@ -524,19 +532,28 @@ TiltVisualizer.Presenter.prototype = {
       this.highlightNode(this.inspectorUI.selection);
     }
 
-    let zoom = TiltUtils.getDocumentZoom();
-    let width = Math.min(aData.meshWidth * zoom, renderer.width);
-    let height = Math.min(aData.meshHeight * zoom, renderer.height);
+    if (!this._initialMeshConfiguration) {
+      this._initialMeshConfiguration = true;
 
-    // set the necessary mesh offsets
-    this.transforms.offset[0] = -width * 0.5;
-    this.transforms.offset[1] = -height * 0.5;
+      let zoom = TiltUtils.getDocumentZoom();
+      let width = Math.min(aData.meshWidth * zoom, renderer.width);
+      let height = Math.min(aData.meshHeight * zoom, renderer.height);
 
-    // make sure the canvas is opaque now that the initialization is finished
-    this.canvas.style.background = TiltVisualizerStyle.canvas.background;
+      // set the necessary mesh offsets
+      this.transforms.offset[0] = -width * 0.5;
+      this.transforms.offset[1] = -height * 0.5;
 
-    this.drawVisualization();
-    this.redraw = true;
+      // make sure the canvas is opaque now that the initialization is finished
+      this.canvas.style.background = TiltVisualizerStyle.canvas.background;
+
+      this.drawVisualization();
+      this.redraw = true;
+    }
+
+    if ("function" === typeof this.onSetupMesh) {
+      this.onSetupMesh();
+      this.onSetupMesh = null;
+    }
   },
 
   /**
@@ -626,9 +643,16 @@ TiltVisualizer.Presenter.prototype = {
    *                 the current horizontal coordinate of the mouse
    * @param {Number} y
    *                 the current vertical coordinate of the mouse
+   * @param {Object} aProperties
+   *                 an object containing the following properties:
+   *      {Function} onpick: function to be called after picking succeeded
+   *      {Function} onfail: function to be called after picking failed
    */
-  highlightNodeAt: function TVP_highlightNodeAt(x, y)
+  highlightNodeAt: function TVP_highlightNodeAt(x, y, aProperties)
   {
+    // make sure the properties parameter is a valid object
+    aProperties = aProperties || {};
+
     // try to pick a mesh node using the current x, y coordinates
     this.pickNode(x, y, {
 
@@ -638,6 +662,10 @@ TiltVisualizer.Presenter.prototype = {
       onfail: function TVP_onHighlightFail()
       {
         this.highlightNodeFor(-1);
+
+        if ("function" === typeof aProperties.onfail) {
+          aProperties.onfail();
+        }
       }.bind(this),
 
       /**
@@ -649,6 +677,10 @@ TiltVisualizer.Presenter.prototype = {
       onpick: function TVP_onHighlightPick(aIntersection)
       {
         this.highlightNodeFor(aIntersection.index);
+
+        if ("function" === typeof aProperties.onpick) {
+          aProperties.onpick();
+        }
       }.bind(this)
     });
   },
@@ -699,6 +731,32 @@ TiltVisualizer.Presenter.prototype = {
     this._currentSelection = aNodeIndex;
     this.inspectorUI.inspectNode(node, this.contentWindow.innerHeight < y ||
                                        this.contentWindow.pageYOffset > 0);
+  },
+
+  /**
+   * Deletes a node from the visualization mesh.
+   *
+   * @param {Number} aNodeIndex
+   *                 the index of the node in the this.traverseData array;
+   *                 if not specified, it will default to the current selection
+   */
+  deleteNode: function TVP_deleteNode(aNodeIndex)
+  {
+    // we probably don't want to delete the html or body node.. just sayin'
+    if ((aNodeIndex = aNodeIndex || this._currentSelection) < 1) {
+      return;
+    }
+
+    let renderer = this.renderer;
+    let meshData = this.meshData;
+
+    for (let i = 0, k = 36 * aNodeIndex; i < 36; i++) {
+      meshData.vertices[i + k] = 0;
+    }
+
+    this.meshStacks.vertices = new renderer.VertexBuffer(meshData.vertices, 3);
+    this.highlight.disabled = true;
+    this.redraw = true;
   },
 
   /**
@@ -923,7 +981,6 @@ TiltVisualizer.Controller.prototype = {
     // bind commonly used mouse and keyboard events with the controller
     canvas.addEventListener("mousedown", this.onMouseDown, false);
     canvas.addEventListener("mouseup", this.onMouseUp, false);
-    canvas.addEventListener("click", this.onMouseClick, false);
     canvas.addEventListener("mousemove", this.onMouseMove, false);
     canvas.addEventListener("mouseover", this.onMouseOver, false);
     canvas.addEventListener("mouseout", this.onMouseOut, false);
@@ -946,7 +1003,6 @@ TiltVisualizer.Controller.prototype = {
 
     canvas.removeEventListener("mousedown", this.onMouseDown, false);
     canvas.removeEventListener("mouseup", this.onMouseUp, false);
-    canvas.removeEventListener("click", this.onMouseClick, false);
     canvas.removeEventListener("mousemove", this.onMouseMove, false);
     canvas.removeEventListener("mouseover", this.onMouseOver, false);
     canvas.removeEventListener("mouseout", this.onMouseOut, false);
@@ -979,10 +1035,11 @@ TiltVisualizer.Controller.prototype = {
     e.stopPropagation();
 
     // calculate x and y coordinates using using the client and target offset
+    let button = e.which;
     this._downX = e.clientX - e.target.offsetLeft;
     this._downY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mouseDown(this._downX, this._downY, e.which);
+    this.arcball.mouseDown(this._downX, this._downY, button);
   },
 
   /**
@@ -998,29 +1055,15 @@ TiltVisualizer.Controller.prototype = {
     let upX = e.clientX - e.target.offsetLeft;
     let upY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mouseUp(upX, upY, button);
-  },
-
-  /**
-   * Called every time a mouse button is clicked.
-   */
-  onMouseClick: function TVC_onMouseClick(e)
-  {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // calculate x and y coordinates using using the client and target offset
-    let button = e.which;
-    let clickX = e.clientX - e.target.offsetLeft;
-    let clickY = e.clientY - e.target.offsetTop;
-
     // a click in Tilt is issued only when the mouse pointer stays in
     // relatively the same position
-    if (Math.abs(this._downX - clickX) < MOUSE_CLICK_THRESHOLD &&
-        Math.abs(this._downY - clickY) < MOUSE_CLICK_THRESHOLD) {
+    if (Math.abs(this._downX - upX) < MOUSE_CLICK_THRESHOLD &&
+        Math.abs(this._downY - upY) < MOUSE_CLICK_THRESHOLD) {
 
-      this.presenter.highlightNodeAt(clickX, clickY);
+      this.presenter.highlightNodeAt(upX, upY);
     }
+
+    this.arcball.mouseUp(upX, upY, button);
   },
 
   /**
@@ -1097,6 +1140,9 @@ TiltVisualizer.Controller.prototype = {
     if (code === e.DOM_VK_ESCAPE) {
       this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId, 1);
       return;
+    }
+    if (code === e.DOM_VK_X) {
+      this.presenter.deleteNode();
     }
 
     if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
