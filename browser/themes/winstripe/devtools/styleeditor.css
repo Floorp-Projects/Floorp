@@ -135,7 +135,7 @@ h3 {
 }
 
 /* portrait mode */
-@media (max-aspect-ratio: 5/3) {
+@media (max-width: 550px) {
   .splitview-nav {
     box-shadow: none;
   }
