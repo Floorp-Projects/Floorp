@@ -97,6 +97,7 @@ class WebGLUniformLocation;
 class WebGLExtension;
 struct WebGLVertexAttribData;
 
+class WebGLRectangleObject;
 class WebGLContextBoundObject;
 
 enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
@@ -435,6 +436,47 @@ private:
     CheckedInt<WebGLMonotonicHandle> mCurrentMonotonicHandle;
 };
 
+// this class is a mixin for GL objects that have dimensions
+// that we need to track.
+class WebGLRectangleObject
+{
+public:
+    WebGLRectangleObject()
+        : mWidth(0), mHeight(0) { }
+
+    WebGLRectangleObject(WebGLsizei width, WebGLsizei height)
+        : mWidth(width), mHeight(height) { }
+
+    WebGLsizei Width() const { return mWidth; }
+    void width(WebGLsizei value) { mWidth = value; }
+
+    WebGLsizei Height() const { return mHeight; }
+    void height(WebGLsizei value) { mHeight = value; }
+
+    void setDimensions(WebGLsizei width, WebGLsizei height) {
+        mWidth = width;
+        mHeight = height;
+    }
+
+    void setDimensions(WebGLRectangleObject *rect) {
+        if (rect) {
+            mWidth = rect->Width();
+            mHeight = rect->Height();
+        } else {
+            mWidth = 0;
+            mHeight = 0;
+        }
+    }
+
+    bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
+        return Width() == other.Width() && Height() == other.Height(); 
+    }
+
+protected:
+    WebGLsizei mWidth;
+    WebGLsizei mHeight;
+};
+
 struct WebGLContextOptions {
     // these are defaults
     WebGLContextOptions()
@@ -469,7 +511,8 @@ class WebGLContext :
     public nsIDOMWebGLRenderingContext,
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference,
-    public nsITimerCallback
+    public nsITimerCallback,
+    public WebGLRectangleObject
 {
     friend class WebGLMemoryReporter;
     friend class WebGLExtensionLoseContext;
@@ -523,12 +566,15 @@ public:
     nsresult ErrorInvalidEnum(const char *fmt = 0, ...);
     nsresult ErrorInvalidOperation(const char *fmt = 0, ...);
     nsresult ErrorInvalidValue(const char *fmt = 0, ...);
+    nsresult ErrorInvalidFramebufferOperation(const char *fmt = 0, ...);
     nsresult ErrorInvalidEnumInfo(const char *info, PRUint32 enumvalue) {
         return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
     }
     nsresult ErrorOutOfMemory(const char *fmt = 0, ...);
-    
+
     const char *ErrorName(GLenum error);
+
+    nsresult DummyFramebufferOperation(const char *info);
 
     WebGLTexture *activeBoundTextureForTarget(WebGLenum target) {
         return target == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
@@ -543,6 +589,8 @@ public:
     // a number that increments every time we have an event that causes
     // all context resources to be lost.
     PRUint32 Generation() { return mGeneration.value(); }
+
+    const WebGLRectangleObject *FramebufferRectangleObject() const;
 
     // this is similar to GLContext::ClearSafely, but is more comprehensive
     // (takes care of scissor, stencil write mask, dithering, viewport...)
@@ -642,7 +690,6 @@ protected:
 
     nsRefPtr<gl::GLContext> gl;
 
-    PRInt32 mWidth, mHeight;
     CheckedUint32 mGeneration;
 
     WebGLContextOptions mOptions;
@@ -911,45 +958,6 @@ public:
     friend class WebGLUniformLocation;
 };
 
-// this class is a mixin for GL objects that have dimensions
-// that we need to track.
-class WebGLRectangleObject
-{
-protected:
-    WebGLRectangleObject()
-        : mWidth(0), mHeight(0) { }
-
-public:
-    WebGLsizei width() const { return mWidth; }
-    void width(WebGLsizei value) { mWidth = value; }
-
-    WebGLsizei height() const { return mHeight; }
-    void height(WebGLsizei value) { mHeight = value; }
-
-    void setDimensions(WebGLsizei width, WebGLsizei height) {
-        mWidth = width;
-        mHeight = height;
-    }
-
-    void setDimensions(WebGLRectangleObject *rect) {
-        if (rect) {
-            mWidth = rect->width();
-            mHeight = rect->height();
-        } else {
-            mWidth = 0;
-            mHeight = 0;
-        }
-    }
-
-    bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
-        return width() == other.width() && height() == other.height(); 
-    }
-
-protected:
-    WebGLsizei mWidth;
-    WebGLsizei mHeight;
-};
-
 // This class is a mixin for objects that are tied to a specific
 // context (which is to say, all of them).  They provide initialization
 // as well as comparison with the current context.
@@ -1206,11 +1214,12 @@ protected:
 
 public:
 
-    struct ImageInfo {
-        ImageInfo() : mWidth(0), mHeight(0), mFormat(0), mType(0), mIsDefined(false) {}
+    class ImageInfo : public WebGLRectangleObject {
+    public:
+        ImageInfo() : mFormat(0), mType(0), mIsDefined(false) {}
         ImageInfo(WebGLsizei width, WebGLsizei height,
                   WebGLenum format, WebGLenum type)
-            : mWidth(width), mHeight(height), mFormat(format), mType(type), mIsDefined(true) {}
+            : WebGLRectangleObject(width, height), mFormat(format), mType(type), mIsDefined(true) {}
 
         bool operator==(const ImageInfo& a) const {
             return mWidth == a.mWidth && mHeight == a.mHeight &&
@@ -1235,9 +1244,13 @@ public:
             PRInt64 texelSize = WebGLContext::GetTexelSize(mFormat, mType);
             return PRInt64(mWidth) * PRInt64(mHeight) * texelSize;
         }
-        WebGLsizei mWidth, mHeight;
+        WebGLenum Format() const { return mFormat; }
+        WebGLenum Type() const { return mType; }
+    protected:
         WebGLenum mFormat, mType;
         bool mIsDefined;
+
+        friend class WebGLTexture;
     };
 
     ImageInfo& ImageInfoAt(size_t level, size_t face = 0) {
@@ -1826,7 +1839,7 @@ public:
     void SetInternalFormatForGL(WebGLenum aInternalFormatForGL) { mInternalFormatForGL = aInternalFormatForGL; }
     
     PRInt64 MemoryUsage() const {
-        PRInt64 pixels = PRInt64(width()) * PRInt64(height());
+        PRInt64 pixels = PRInt64(Width()) * PRInt64(Height());
         switch (mInternalFormatForGL) {
             case LOCAL_GL_STENCIL_INDEX8:
                 return pixels;
@@ -1864,7 +1877,6 @@ protected:
 };
 
 class WebGLFramebufferAttachment
-    : public WebGLRectangleObject
 {
     // deleting a texture or renderbuffer immediately detaches it
     WebGLRefPtr<WebGLTexture> mTexturePtr;
@@ -1890,10 +1902,10 @@ public:
 
     bool HasAlpha() const {
         WebGLenum format = 0;
-        if (Texture() && Texture()->HasImageInfoAt(0,0))
-            format = mTexturePtr->ImageInfoAt(0,0).mFormat;
+        if (Texture() && Texture()->HasImageInfoAt(mTextureLevel, mTextureCubeMapFace))
+            format = Texture()->ImageInfoAt(mTextureLevel, mTextureCubeMapFace).Format();
         else if (Renderbuffer())
-            format = mRenderbufferPtr->InternalFormat();
+            format = Renderbuffer()->InternalFormat();
         return format == LOCAL_GL_RGBA ||
                format == LOCAL_GL_LUMINANCE_ALPHA ||
                format == LOCAL_GL_ALPHA ||
@@ -1906,54 +1918,28 @@ public:
         mRenderbufferPtr = nsnull;
         mTextureLevel = level;
         mTextureCubeMapFace = face;
-        if (tex) {
-            const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
-            setDimensions(imageInfo.mWidth, imageInfo.mHeight);
-        } else {
-            setDimensions(0, 0);
-        }
     }
     void SetRenderbuffer(WebGLRenderbuffer *rb) {
         mTexturePtr = nsnull;
         mRenderbufferPtr = rb;
-        setDimensions(rb);
     }
-    WebGLTexture *Texture() const {
-        return mTexturePtr.get();
+    const WebGLTexture *Texture() const {
+        return mTexturePtr;
     }
-    WebGLRenderbuffer *Renderbuffer() const {
-        return mRenderbufferPtr.get();
+    WebGLTexture *Texture() {
+        return mTexturePtr;
+    }
+    const WebGLRenderbuffer *Renderbuffer() const {
+        return mRenderbufferPtr;
+    }
+    WebGLRenderbuffer *Renderbuffer() {
+        return mRenderbufferPtr;
     }
     WebGLint TextureLevel() const {
         return mTextureLevel;
     }
     WebGLenum TextureCubeMapFace() const {
         return mTextureCubeMapFace;
-    }
-
-    bool IsIncompatibleWithAttachmentPoint() const
-    {
-        // textures can only be color textures in WebGL
-        if (mTexturePtr)
-            return mAttachmentPoint != LOCAL_GL_COLOR_ATTACHMENT0;
-
-        if (mRenderbufferPtr) {
-            WebGLenum format = mRenderbufferPtr->InternalFormat();
-            switch (mAttachmentPoint) {
-                case LOCAL_GL_COLOR_ATTACHMENT0:
-                    return format != LOCAL_GL_RGB565 &&
-                           format != LOCAL_GL_RGB5_A1 &&
-                           format != LOCAL_GL_RGBA4;
-                case LOCAL_GL_DEPTH_ATTACHMENT:
-                    return format != LOCAL_GL_DEPTH_COMPONENT16;
-                case LOCAL_GL_STENCIL_ATTACHMENT:
-                    return format != LOCAL_GL_STENCIL_INDEX8;
-                case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-                    return format != LOCAL_GL_DEPTH_STENCIL;
-            }
-        }
-
-        return false; // no attachment at all, so no incompatibility
     }
 
     bool HasUninitializedRenderbuffer() const {
@@ -1963,6 +1949,55 @@ public:
     void Reset() {
         mTexturePtr = nsnull;
         mRenderbufferPtr = nsnull;
+    }
+
+    const WebGLRectangleObject* RectangleObject() const {
+        if (Texture() && Texture()->HasImageInfoAt(mTextureLevel, mTextureCubeMapFace))
+            return &Texture()->ImageInfoAt(mTextureLevel, mTextureCubeMapFace);
+        else if (Renderbuffer())
+            return Renderbuffer();
+        else
+            return nsnull;
+    }
+    bool HasSameDimensionsAs(const WebGLFramebufferAttachment& other) const {
+        const WebGLRectangleObject *thisRect = RectangleObject();
+        const WebGLRectangleObject *otherRect = other.RectangleObject();
+        return thisRect &&
+               otherRect &&
+               thisRect->HasSameDimensionsAs(*otherRect);
+    }
+
+    bool IsComplete() const {
+        const WebGLRectangleObject *thisRect = RectangleObject();
+
+        if (!thisRect ||
+            !thisRect->Width() ||
+            !thisRect->Height())
+            return false;
+
+        if (mTexturePtr)
+            return mAttachmentPoint == LOCAL_GL_COLOR_ATTACHMENT0;
+
+        if (mRenderbufferPtr) {
+            WebGLenum format = mRenderbufferPtr->InternalFormat();
+            switch (mAttachmentPoint) {
+                case LOCAL_GL_COLOR_ATTACHMENT0:
+                    return format == LOCAL_GL_RGB565 ||
+                           format == LOCAL_GL_RGB5_A1 ||
+                           format == LOCAL_GL_RGBA4;
+                case LOCAL_GL_DEPTH_ATTACHMENT:
+                    return format == LOCAL_GL_DEPTH_COMPONENT16;
+                case LOCAL_GL_STENCIL_ATTACHMENT:
+                    return format == LOCAL_GL_STENCIL_INDEX8;
+                case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
+                    return format == LOCAL_GL_DEPTH_STENCIL;
+                default:
+                    NS_ABORT(); // should have been validated earlier
+            }
+        }
+
+        NS_ABORT(); // should never get there
+        return false;
     }
 };
 
@@ -2002,9 +2037,6 @@ public:
     bool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
     WebGLuint GLName() { return mGLName; }
-
-    WebGLsizei width() { return mColorAttachment.width(); }
-    WebGLsizei height() { return mColorAttachment.height(); }
 
     nsresult FramebufferRenderbuffer(WebGLenum target,
                                      WebGLenum attachment,
@@ -2114,50 +2146,23 @@ public:
         return NS_OK;
     }
 
-    bool CheckAndInitializeRenderbuffers()
-    {
-        if (HasBadAttachments()) {
-            mContext->SynthesizeGLError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
-            return false;
-        }
-
-        if (mColorAttachment.HasUninitializedRenderbuffer() ||
-            mDepthAttachment.HasUninitializedRenderbuffer() ||
-            mStencilAttachment.HasUninitializedRenderbuffer() ||
-            mDepthStencilAttachment.HasUninitializedRenderbuffer())
-        {
-            InitializeRenderbuffers();
-        }
-
-        return true;
+    bool HasIncompleteAttachment() const {
+        return (mColorAttachment.IsDefined() && !mColorAttachment.IsComplete()) ||
+               (mDepthAttachment.IsDefined() && !mDepthAttachment.IsComplete()) ||
+               (mStencilAttachment.IsDefined() && !mStencilAttachment.IsComplete()) ||
+               (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.IsComplete());
     }
 
-    bool HasBadAttachments() const {
-        if (mColorAttachment.IsIncompatibleWithAttachmentPoint() ||
-            mDepthAttachment.IsIncompatibleWithAttachmentPoint() ||
-            mStencilAttachment.IsIncompatibleWithAttachmentPoint() ||
-            mDepthStencilAttachment.IsIncompatibleWithAttachmentPoint())
-        {
-            // some attachment is incompatible with its attachment point
-            return true;
-        }
+    bool HasDepthStencilConflict() const {
+        return int(mDepthAttachment.IsDefined()) +
+               int(mStencilAttachment.IsDefined()) +
+               int(mDepthStencilAttachment.IsDefined()) >= 2;
+    }
 
-        if (int(mDepthAttachment.IsDefined()) +
-            int(mStencilAttachment.IsDefined()) +
-            int(mDepthStencilAttachment.IsDefined()) >= 2)
-        {
-            // has at least two among Depth, Stencil, DepthStencil
-            return true;
-        }
-
-        if (mDepthAttachment.IsDefined() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment))
-            return true;
-        if (mStencilAttachment.IsDefined() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment))
-            return true;
-        if (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment))
-            return true;
-
-        return false;
+    bool HasAttachmentsOfMismatchedDimensions() const {
+        return (mDepthAttachment.IsDefined() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment)) ||
+               (mStencilAttachment.IsDefined() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment)) ||
+               (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment));
     }
 
     const WebGLFramebufferAttachment& ColorAttachment() const {
@@ -2210,18 +2215,39 @@ public:
             FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nsnull);
     }
 
+    const WebGLRectangleObject *RectangleObject() {
+        return mColorAttachment.RectangleObject();
+    }
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLFRAMEBUFFER
 
-protected:
-
-    // protected because WebGLContext should only call InitializeRenderbuffers
-    void InitializeRenderbuffers()
+    bool CheckAndInitializeRenderbuffers()
     {
+        // enforce WebGL section 6.5 which is WebGL-specific, hence OpenGL itself would not
+        // generate the INVALID_FRAMEBUFFER_OPERATION that we need here
+        if (HasDepthStencilConflict())
+            return false;
+
+        if (!mColorAttachment.HasUninitializedRenderbuffer() &&
+            !mDepthAttachment.HasUninitializedRenderbuffer() &&
+            !mStencilAttachment.HasUninitializedRenderbuffer() &&
+            !mDepthStencilAttachment.HasUninitializedRenderbuffer())
+            return true;
+
+        // ensure INVALID_FRAMEBUFFER_OPERATION in zero-size case
+        const WebGLRectangleObject *rect = mColorAttachment.RectangleObject();
+        if (!rect ||
+            !rect->Width() ||
+            !rect->Height())
+            return false;
+
         mContext->MakeContextCurrent();
 
-        if (mContext->gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE)
-            return;
+        WebGLenum status;
+        mContext->CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER, &status);
+        if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE)
+            return false;
 
         PRUint32 mask = 0;
 
@@ -2240,8 +2266,7 @@ protected:
             mask |= LOCAL_GL_STENCIL_BUFFER_BIT;
         }
 
-        // the one useful line of code
-        mContext->ForceClearFramebufferWithDefaultValues(mask, nsIntRect(0,0,width(),height()));
+        mContext->ForceClearFramebufferWithDefaultValues(mask, nsIntRect(0, 0, rect->Width(), rect->Height()));
 
         if (mColorAttachment.HasUninitializedRenderbuffer())
             mColorAttachment.Renderbuffer()->SetInitialized(true);
@@ -2254,6 +2279,8 @@ protected:
 
         if (mDepthStencilAttachment.HasUninitializedRenderbuffer())
             mDepthStencilAttachment.Renderbuffer()->SetInitialized(true);
+
+        return true;
     }
 
     WebGLuint mGLName;
@@ -2362,6 +2389,11 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLEXTENSION
 };
+
+inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
+    return mBoundFramebuffer ? mBoundFramebuffer->RectangleObject()
+                             : static_cast<const WebGLRectangleObject*>(this);
+}
 
 /**
  ** Template implementations

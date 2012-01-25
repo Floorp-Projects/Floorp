@@ -55,7 +55,15 @@ function test()
   q = [];
   q.__defineGetter__("0", q.toString);
   q[2] = q;
-  q.toSource();
+  try
+  {
+    q.toSource();
+    throw new Error("didn't throw");
+  }
+  catch (e)
+  {
+    assertEq(e instanceof InternalError, true, "bad error: " + e);
+  }
 
   reportCompare(expect, actual, summary);
 

@@ -77,10 +77,13 @@ class AllFramesIter;
 class ArgumentsObject;
 class StaticBlockObject;
 
+#ifdef JS_METHODJIT
 namespace mjit {
     struct JITScript;
     jsbytecode *NativeToPC(JITScript *jit, void *ncode, CallSite **pinline);
 }
+#endif
+
 namespace detail {
     struct OOMCheck;
 }

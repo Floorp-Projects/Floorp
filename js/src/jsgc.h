@@ -1320,11 +1320,6 @@ typedef HashMap<Value, Value, WrapperHasher, SystemAllocPolicy> WrapperMap;
 
 } /* namespace js */
 
-#ifdef DEBUG
-extern bool
-CheckAllocation(JSContext *cx);
-#endif
-
 extern JS_FRIEND_API(JSGCTraceKind)
 js_GetGCThingTraceKind(void *thing);
 
@@ -1415,22 +1410,6 @@ typedef enum JSGCInvocationKind {
 /* Pass NULL for |comp| to get a full GC. */
 extern void
 js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcstats::Reason r);
-
-#ifdef JS_THREADSAFE
-/*
- * This is a helper for code at can potentially run outside JS request to
- * ensure that the GC is not running when the function returns.
- *
- * This function must be called with the GC lock held.
- */
-extern void
-js_WaitForGC(JSRuntime *rt);
-
-#else /* !JS_THREADSAFE */
-
-# define js_WaitForGC(rt)    ((void) 0)
-
-#endif
 
 namespace js {
 
@@ -1584,57 +1563,6 @@ struct GCChunkHasher {
 };
 
 typedef HashSet<js::gc::Chunk *, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
-
-struct ConservativeGCThreadData {
-
-    /*
-     * The GC scans conservatively between ThreadData::nativeStackBase and
-     * nativeStackTop unless the latter is NULL.
-     */
-    uintptr_t           *nativeStackTop;
-
-    union {
-        jmp_buf         jmpbuf;
-        uintptr_t       words[JS_HOWMANY(sizeof(jmp_buf), sizeof(uintptr_t))];
-    } registerSnapshot;
-
-    /*
-     * Cycle collector uses this to communicate that the native stack of the
-     * GC thread should be scanned only if the thread have more than the given
-     * threshold of requests.
-     */
-    unsigned requestThreshold;
-
-    ConservativeGCThreadData()
-      : nativeStackTop(NULL), requestThreshold(0)
-    {
-    }
-
-    ~ConservativeGCThreadData() {
-#ifdef JS_THREADSAFE
-        /*
-         * The conservative GC scanner should be disabled when the thread leaves
-         * the last request.
-         */
-        JS_ASSERT(!hasStackToScan());
-#endif
-    }
-
-    JS_NEVER_INLINE void recordStackTop();
-
-#ifdef JS_THREADSAFE
-    void updateForRequestEnd(unsigned suspendCount) {
-        if (suspendCount)
-            recordStackTop();
-        else
-            nativeStackTop = NULL;
-    }
-#endif
-
-    bool hasStackToScan() const {
-        return !!nativeStackTop;
-    }
-};
 
 template<class T>
 struct MarkStack {

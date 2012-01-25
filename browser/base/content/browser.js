@@ -1501,6 +1501,8 @@ function prepareForStartup() {
 }
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
+  Cu.import("resource:///modules/TelemetryTimestamps.jsm");
+  TelemetryTimestamps.add("delayedStartupStarted");
   gDelayedStartupTimeoutId = null;
 
   Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
@@ -1765,6 +1767,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   window.addEventListener("dragover", MousePosTracker, false);
 
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
+  TelemetryTimestamps.add("delayedStartupFinished");
 }
 
 function BrowserShutdown() {
@@ -3109,20 +3112,13 @@ function FillInHTMLTooltip(tipElement)
 
   [titleText, XLinkTitleText, SVGTitleText].forEach(function (t) {
     if (t && /\S/.test(t)) {
-
-      // Per HTML 4.01 6.2 (CDATA section), literal CRs and tabs should be
-      // replaced with spaces, and LFs should be removed entirely.
-      // XXX Bug 322270: We don't preserve the result of entities like &#13;,
-      // which should result in a line break in the tooltip, because we can't
-      // distinguish that from a literal character in the source by this point.
-      t = t.replace(/[\r\t]/g, ' ');
-      t = t.replace(/\n/g, '');
+      // Make CRLF and CR render one line break each.  
+      t = t.replace(/\r\n?/g, '\n');
 
       tipNode.setAttribute("label", t);
       retVal = true;
     }
   });
-
   return retVal;
 }
 

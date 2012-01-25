@@ -45,10 +45,12 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoEvent;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -59,6 +61,8 @@ import android.view.GestureDetector;
 import android.view.ScaleGestureDetector;
 import android.view.View.OnTouchListener;
 import java.lang.Math;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * The layer controller manages a tile that represents the visible page. It does panning and
@@ -74,6 +78,7 @@ public class LayerController {
     private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
     private ViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
+    private boolean mWaitForTouchListeners;
 
     private PanZoomController mPanZoomController;
     /*
@@ -81,8 +86,11 @@ public class LayerController {
      * updates our visible rect appropriately.
      */
 
-    private OnTouchListener mOnTouchListener;   /* The touch listener. */
-    private LayerClient mLayerClient;           /* The layer client. */
+    private OnTouchListener mOnTouchListener;       /* The touch listener. */
+    private LayerClient mLayerClient;               /* The layer client. */
+
+    /* The new color for the checkerboard. */
+    private int mCheckerboardColor;
 
     private boolean mForceRedraw;
 
@@ -96,6 +104,15 @@ public class LayerController {
      * we start aggressively redrawing to minimize checkerboarding. */
     private static final int DANGER_ZONE_X = 75;
     private static final int DANGER_ZONE_Y = 150;
+
+    /* The time limit for pages to respond with preventDefault on touchevents
+     * before we begin panning the page */
+    private static final int PREVENT_DEFAULT_TIMEOUT = 200;
+
+    private boolean allowDefaultActions = true;
+    private Timer allowDefaultTimer =  null;
+    private boolean inTouchSession = false;
+    private PointF initialTouchLocation = null;
 
     public LayerController(Context context) {
         mContext = context;
@@ -144,9 +161,9 @@ public class LayerController {
     }
 
     public Bitmap getBackgroundPattern()    { return getDrawable("background"); }
-    public Bitmap getCheckerboardPattern()  { return getDrawable("checkerboard"); }
     public Bitmap getShadowPattern()        { return getDrawable("shadow"); }
 
+    public PanZoomController getPanZoomController()                                 { return mPanZoomController; }
     public GestureDetector.OnGestureListener getGestureListener()                   { return mPanZoomController; }
     public SimpleScaleGestureDetector.SimpleScaleGestureListener getScaleGestureListener() {
         return mPanZoomController;
@@ -345,11 +362,86 @@ public class LayerController {
      * pan/zoom controller to do the dirty work.
      */
     public boolean onTouchEvent(MotionEvent event) {
-        if (mPanZoomController.onTouchEvent(event))
-            return true;
+        int action = event.getAction();
+        PointF point = new PointF(event.getX(), event.getY());
+        if ((action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+            initialTouchLocation = point;
+            post(new Runnable() {
+                public void run() {
+                    mView.clearEventQueue();
+                    preventPanning(mWaitForTouchListeners);
+                }
+            });
+        }
+
+        if (initialTouchLocation != null && (action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_MOVE) {
+            if (PointUtils.subtract(point, initialTouchLocation).length() > PanZoomController.PAN_THRESHOLD * 240) {
+                initialTouchLocation = null;
+            } else {
+                return !allowDefaultActions;
+            }
+        }
+
         if (mOnTouchListener != null)
-            return mOnTouchListener.onTouch(mView, event);
-        return false;
+            mOnTouchListener.onTouch(mView, event);
+
+        if (!mWaitForTouchListeners)
+            return !allowDefaultActions;
+
+        switch (action & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_MOVE: {
+                if (!inTouchSession && allowDefaultTimer == null) {
+                    inTouchSession = true;
+                    allowDefaultTimer = new Timer();
+                    allowDefaultTimer.schedule(new TimerTask() {
+                        public void run() {
+                            post(new Runnable() {
+                                public void run() {
+                                    preventPanning(false);
+                                }
+                            });
+                        }
+                    }, PREVENT_DEFAULT_TIMEOUT);
+                }
+                break;
+            }
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP: {
+                inTouchSession = false;
+            }
+        }
+        return !allowDefaultActions;
+    }
+
+    public void preventPanning(boolean aValue) {
+        if (allowDefaultTimer != null) {
+            allowDefaultTimer.cancel();
+            allowDefaultTimer.purge();
+            allowDefaultTimer = null;
+        }
+        allowDefaultActions = !aValue;
+
+        if (aValue) {
+            mView.clearEventQueue();
+            mPanZoomController.cancelTouch();
+        } else {
+            mView.processEventQueue();
+        }
+    }
+
+    public void setWaitForTouchListeners(boolean aValue) {
+        mWaitForTouchListeners = aValue;
+    }
+
+    /** Retrieves the color that the checkerboard should be. */
+    public int getCheckerboardColor() {
+        return mCheckerboardColor;
+    }
+
+    /** Sets a new color for the checkerboard. */
+    public void setCheckerboardColor(int newColor) {
+        mCheckerboardColor = newColor;
+        mView.requestRender();
     }
 }
 

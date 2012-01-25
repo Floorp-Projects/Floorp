@@ -132,6 +132,7 @@
 
 using namespace mozilla;
 using namespace mozilla::layers;
+using namespace mozilla::layout;
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
@@ -424,6 +425,69 @@ NS_QUERYFRAME_TAIL_INHERITANCE_ROOT
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
+static bool
+IsFontSizeInflationContainer(nsIFrame* aFrame,
+                             const nsStyleDisplay* aStyleDisplay)
+{
+  /*
+   * Font size inflation is built around the idea that we're inflating
+   * the fonts for a pan-and-zoom UI so that when the user scales up a
+   * block or other container to fill the width of the device, the fonts
+   * will be readable.  To do this, we need to pick what counts as a
+   * container.
+   *
+   * From a code perspective, the only hard requirement is that frames
+   * that are line participants
+   * (nsIFrame::IsFrameOfType(nsIFrame::eLineParticipant)) are never
+   * containers, since line layout assumes that the inflation is
+   * consistent within a line.
+   *
+   * This is not an imposition, since we obviously want a bunch of text
+   * (possibly with inline elements) flowing within a block to count the
+   * block (or higher) as its container.
+   *
+   * We also want form controls, including the text in the anonymous
+   * content inside of them, to match each other and the text next to
+   * them, so they and their anonymous content should also not be a
+   * container.
+   *
+   * However, because we can't reliably compute sizes across XUL during
+   * reflow, any XUL frame with a XUL parent is always a container.
+   *
+   * There are contexts where it would be nice if some blocks didn't
+   * count as a container, so that, for example, an indented quotation
+   * didn't end up with a smaller font size.  However, it's hard to
+   * distinguish these situations where we really do want the indented
+   * thing to count as a container, so we don't try, and blocks are
+   * always containers.
+   */
+  nsIContent *content = aFrame->GetContent();
+  bool isInline = (aStyleDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE ||
+                   (aStyleDisplay->IsFloating() &&
+                    aFrame->GetType() == nsGkAtoms::letterFrame) ||
+                   // Given multiple frames for the same node, only the
+                   // outer one should be considered a container.
+                   // (Important, e.g., for nsSelectsAreaFrame.)
+                   (aFrame->GetParent() &&
+                    aFrame->GetParent()->GetContent() == content) ||
+                   (content && (content->IsHTML(nsGkAtoms::option) ||
+                                content->IsHTML(nsGkAtoms::optgroup) ||
+                                content->IsInNativeAnonymousSubtree()))) &&
+                  !(aFrame->IsBoxFrame() && aFrame->GetParent() &&
+                    aFrame->GetParent()->IsBoxFrame());
+  NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
+               isInline ||
+               // br frames and mathml frames report being line
+               // participants even when their position or display is
+               // set
+               aFrame->GetType() == nsGkAtoms::brFrame ||
+               aFrame->IsFrameOfType(nsIFrame::eMathML),
+               "line participants must not be containers");
+  NS_ASSERTION(aFrame->GetType() != nsGkAtoms::bulletFrame || isInline,
+               "bullets should not be containers");
+  return !isInline;
+}
+
 NS_IMETHODIMP
 nsFrame::Init(nsIContent*      aContent,
               nsIFrame*        aParent,
@@ -457,12 +521,25 @@ nsFrame::Init(nsIContent*      aContent,
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_GENERATED_CONTENT);
   }
-  if (GetStyleDisplay()->HasTransform()) {
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if (disp->HasTransform()) {
     // The frame gets reconstructed if we toggle the -moz-transform
     // property, so we can set this bit here and then ignore it.
     mState |= NS_FRAME_MAY_BE_TRANSFORMED;
   }
-  
+
+  if (nsLayoutUtils::FontSizeInflationEnabled(PresContext())
+#ifdef DEBUG
+      // We have assertions that check inflation invariants even when
+      // font size inflation is not enabled.
+      || true
+#endif
+      ) {
+    if (IsFontSizeInflationContainer(this, disp)) {
+      mState |= NS_FRAME_FONT_INFLATION_CONTAINER;
+    }
+  }
+
   DidSetStyleContext(nsnull);
 
   if (IsBoxWrapped())
@@ -3783,6 +3860,10 @@ nscoord
 nsFrame::ShrinkWidthToFit(nsRenderingContext *aRenderingContext,
                           nscoord aWidthInCB)
 {
+  // If we're a container for font size inflation, then shrink
+  // wrapping inside of us should not apply font size inflation.
+  AutoMaybeNullInflationContainer an(this);
+
   nscoord result;
   nscoord minWidth = GetMinWidth(aRenderingContext);
   if (minWidth > aWidthInCB) {
@@ -7170,8 +7251,16 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     nsMargin bp(0,0,0,0);
     GetBorderAndPadding(bp);
 
-    metrics->mBlockPrefSize.width = GetPrefWidth(rendContext) + bp.LeftRight();
-    metrics->mBlockMinSize.width = GetMinWidth(rendContext) + bp.LeftRight();
+    {
+      // If we're a container for font size inflation, then shrink
+      // wrapping inside of us should not apply font size inflation.
+      AutoMaybeNullInflationContainer an(this);
+
+      metrics->mBlockPrefSize.width =
+        GetPrefWidth(rendContext) + bp.LeftRight();
+      metrics->mBlockMinSize.width =
+        GetMinWidth(rendContext) + bp.LeftRight();
+    }
 
     // do the nasty.
     nsHTMLReflowMetrics desiredSize;
@@ -7545,8 +7634,8 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       // We're a frame (such as a text control frame) that jumps into
       // box reflow and then straight out of it on the child frame.
       // This means we actually have a real parent reflow state.
-      // nsLayoutUtils::InflationMinFontSizeFor needs this to be linked
-      // up correctly for text control frames, so do so here).
+      // nsLayoutUtils::InflationMinFontSizeFor used to need this to be
+      // linked up correctly for text control frames, so do so here).
       reflowState.parentReflowState = outerReflowState;
       reflowState.mCBReflowState = outerReflowState;
     } else {

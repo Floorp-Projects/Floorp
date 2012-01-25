@@ -407,7 +407,7 @@ class JSString : public js::gc::Cell
 
     /* Gets the number of bytes that the chars take on the heap. */
 
-    JS_FRIEND_API(size_t) charsHeapSize(JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     /* Offsets for direct field from jit code. */
 
@@ -422,6 +422,7 @@ class JSString : public js::gc::Cell
     static inline void writeBarrierPre(JSString *str);
     static inline void writeBarrierPost(JSString *str, void *addr);
     static inline bool needWriteBarrierPre(JSCompartment *comp);
+    static inline void readBarrier(JSString *str);
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_STRING; }
 };

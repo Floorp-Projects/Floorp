@@ -26,13 +26,9 @@ var gTests = [
   // file) has font inflation set to 15 em per line.
 
 
-  // FIXME (maybe): Commented out due to rounding differences between
-  // inflating the 'normal' line height of a smaller font and using the
-  // normal line height of the inflated font.
-  //"== text-1.html text-1-ref.html",
+  "== text-1.html text-1-ref.html",
   "== text-2.html text-2-ref.html",
-  // FIXME (maybe): same as text-1.
-  //"== text-3.html text-3-ref.html",
+  "== text-3.html text-3-ref.html",
   "== text-4.html text-4-ref.html",
   "== decoration-1.html decoration-1-ref.html",
   "== bullet-1.html bullet-1-ref.html",
@@ -47,6 +43,22 @@ var gTests = [
   "== css-transform-2.html css-transform-2-ref.html",
   "== container-with-clamping.html container-with-clamping-ref.html",
   "!= video-1.html about:blank", // crashtest
+  "== intrinsic-min-1.html intrinsic-min-1-ref.html",
+  "== intrinsic-max-1.html intrinsic-max-1-ref.html",
+  "== intrinsic-fit-1a.html intrinsic-fit-1a-ref.html",
+  "== intrinsic-fit-1b.html intrinsic-fit-1b-ref.html",
+  "== intrinsic-fit-1c.html intrinsic-fit-1c-ref.html",
+  "== intrinsic-fit-2a.html intrinsic-fit-1a-ref.html",
+  "== intrinsic-fit-2b.html intrinsic-fit-1b-ref.html",
+  "== intrinsic-fit-2c.html intrinsic-fit-1c-ref.html",
+  "== select-listbox-1.html select-listbox-1-ref.html",
+  "!= select-listbox-1.html select-listbox-1.html",
+  "== select-combobox-1.html select-combobox-1-ref.html",
+  "!= select-combobox-1.html select-combobox-1.html",
+  "== select-listbox-2.html select-listbox-2-ref.html",
+  "!= select-listbox-2.html select-listbox-2.html",
+  "== select-combobox-2.html select-combobox-2-ref.html",
+  "!= select-combobox-2.html select-combobox-2.html",
 ];
 
 // Maintain a reference count of how many things we're waiting for until

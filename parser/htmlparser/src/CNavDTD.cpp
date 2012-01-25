@@ -63,10 +63,6 @@
 #include "nsIServiceManager.h"
 #include "nsParserConstants.h"
 
-#ifdef NS_DEBUG
-#include "nsLoggingSink.h"
-#endif
-
 using namespace mozilla;
 
 /*
@@ -128,54 +124,10 @@ CNavDTD::CNavDTD()
 {
 }
 
-#ifdef NS_DEBUG
-
-static nsLoggingSink*
-GetLoggingSink()
-{
-  // This returns a content sink that is useful for following what calls the DTD
-  // makes to the content sink.
-
-  static bool checkForPath = true;
-  static nsLoggingSink *theSink = nsnull;
-  static const char* gLogPath = nsnull; 
-
-  if (checkForPath) {
-    // Only check once per run.
-    gLogPath = PR_GetEnv("PARSE_LOGFILE"); 
-    checkForPath = false;
-  }
-  
-
-  if (gLogPath && !theSink) {
-    static nsLoggingSink gLoggingSink;
-
-    PRIntn theFlags = PR_CREATE_FILE | PR_RDWR;
-
-    // Open the record file.
-    PRFileDesc *theLogFile = PR_Open(gLogPath, theFlags, 0);
-    gLoggingSink.SetOutputStream(theLogFile, true);
-    theSink = &gLoggingSink;
-  }
-
-  return theSink;
-}
- 
-#endif
-
 CNavDTD::~CNavDTD()
 {
   delete mBodyContext;
   delete mTempContext;
-
-#ifdef NS_DEBUG
-  if (mSink) {
-    nsLoggingSink *theLogSink = GetLoggingSink();
-    if (mSink == theLogSink) {
-      theLogSink->ReleaseProxySink();
-    }
-  }
-#endif
 }
 
 NS_IMETHODIMP
@@ -204,17 +156,6 @@ CNavDTD::WillBuildModel(const CParserContext& aParserContext,
         return result;
       }
     }
-
-    // Let's see if the environment is set up for us to write output to
-    // a logging sink. If so, then we'll create one, and make it the
-    // proxy for the real sink we're given from the parser.
-#ifdef NS_DEBUG
-    nsLoggingSink *theLogSink = GetLoggingSink();
-    if (theLogSink) {
-      theLogSink->SetProxySink(mSink);
-      mSink = theLogSink;
-    }
-#endif    
 
     mFlags |= nsHTMLTokenizer::GetFlags(aSink);
 
