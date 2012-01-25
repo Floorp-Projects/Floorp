@@ -248,7 +248,7 @@ public:
    * Function to calculate the height a row, for use with the "size" attribute.
    * Can't be const because GetNumberOfOptions() isn't const.
    */
-  nscoord CalcHeightOfARow(const nsHTMLReflowState& aReflowState);
+  nscoord CalcHeightOfARow();
 
   /**
    * Function to ask whether we're currently in what might be the
