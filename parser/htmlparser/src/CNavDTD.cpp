@@ -1930,15 +1930,7 @@ nsresult
 CNavDTD::HandleProcessingInstructionToken(CToken* aToken)
 {
   NS_PRECONDITION(nsnull != aToken, kNullToken);
-
-  nsCParserNode* theNode = mNodeAllocator.CreateNode(aToken, mTokenAllocator);
-  NS_ENSURE_TRUE(theNode, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult result = mSink ? mSink->AddProcessingInstruction(*theNode) : NS_OK;
-
-  IF_FREE(theNode, &mNodeAllocator);
-
-  return result;
+  return NS_OK;
 }
 
 /**

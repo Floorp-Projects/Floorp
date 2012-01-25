@@ -108,8 +108,6 @@ public:
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode) { return NS_OK; }
-  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode)
-                                                    { return NS_OK; }
   virtual void FlushPendingNotifications(mozFlushType aType) { }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget() { return nsnull; }
