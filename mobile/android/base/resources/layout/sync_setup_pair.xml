@@ -1,28 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/SyncTextFrame" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncLayout" >
+  <LinearLayout
+    android:id="@+id/pair_top"
+    style="@style/SyncTop" >
+    <ImageView
+      style="@style/SyncTopIcon" />
+    <TextView
+      android:id="@+id/setup_title"
+      style="@style/SyncTextTitle"
+      android:text="@string/sync_title_pair" />
+  </LinearLayout>
   <ScrollView
-    style="@style/SyncLayout" >
+    style="@style/SyncLayout"
+    android:layout_below="@id/pair_top"
+    android:layout_above="@+id/pair_bottom" >
 
     <LinearLayout
-      style="@style/SyncLayout" >
-
-      <TextView
-        android:id="@+id/setup_title"
-        style="@style/SyncTextTitle"
-        android:text="@string/sync_title_pair" />
-
-      <View
-        style="@style/SyncViewLine" />
+      style="@style/SyncLayout.Vertical"
+      android:gravity="center"
+      android:padding="10dp" >
 
       <TextView
         android:id="@+id/setup_subtitle"
         style="@style/SyncTextItem"
+        android:layout_marginTop="20dp"
         android:layout_marginBottom="10dp"
         android:text="@string/sync_subtitle_connect" />
 
       <TextView
         style="@style/SyncLinkItem"
+        android:layout_marginBottom="10dp"
         android:onClick="showClickHandler"
         android:text="@string/sync_link_show" />
 
@@ -32,16 +40,16 @@
         android:gravity="center"
         android:orientation="vertical" >
 
-          <EditText
-            android:id="@+id/pair_row1"
-            style="@style/SyncEditPin" />
-          <EditText
-            android:id="@+id/pair_row2"
-            style="@style/SyncEditPin" />
-          <EditText
-            android:id="@+id/pair_row3"
-            style="@style/SyncEditPin"
-            android:imeOptions="actionDone" />
+        <EditText
+          android:id="@+id/pair_row1"
+          style="@style/SyncEditPin" />
+        <EditText
+          android:id="@+id/pair_row2"
+          style="@style/SyncEditPin" />
+        <EditText
+          android:id="@+id/pair_row3"
+          style="@style/SyncEditPin"
+          android:imeOptions="actionDone" />
       </LinearLayout>
 
       <LinearLayout
@@ -54,31 +62,28 @@
 
         <TextView
           style="@style/SyncTextItem"
-          android:layout_marginTop="10dp"
-          android:layout_marginBottom="10dp"
+          android:layout_margin="10dp"
           android:text="@string/sync_pair_tryagain"
           android:textSize="10dp" />
       </LinearLayout>
-
-      <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal" >
-
-        <Button
-          style="@style/SyncButtonCommon"
-          android:onClick="cancelClickHandler"
-          android:text="@string/sync_button_cancel" />
-
-        <Button
-          android:id="@+id/pair_button_connect"
-          style="@style/SyncButtonCommon"
-          android:onClick="connectClickHandler"
-          android:clickable="false"
-          android:enabled="false"
-          android:text="@string/sync_button_connect" />
-      </LinearLayout>
     </LinearLayout>
   </ScrollView>
-</TableLayout>
+  <LinearLayout
+    android:id="@id/pair_bottom"
+    style="@style/SyncBottom"
+    android:orientation="horizontal" >
+
+    <Button
+      style="@style/SyncButton"
+      android:onClick="cancelClickHandler"
+      android:text="@string/sync_button_cancel" />
+
+    <Button
+      android:id="@+id/pair_button_connect"
+      style="@style/SyncButton"
+      android:onClick="connectClickHandler"
+      android:clickable="false"
+      android:enabled="false"
+      android:text="@string/sync_button_connect" />
+  </LinearLayout>
+</RelativeLayout>
