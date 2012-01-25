@@ -2838,16 +2838,17 @@ var FormAssistant = {
     }
 
     this.forOptions(aElement, function(aNode, aIndex) {
-      result.listitems[aIndex] = {
+      let item = {
         label: aNode.text || aNode.label,
         isGroup: this._isOptionGroupElement(aNode),
         inGroup: this._isOptionGroupElement(aNode.parentNode),
         disabled: aNode.disabled,
         id: aIndex
       }
-      if (result.listitems[aIndex].inGroup)
-        result.listitems[aIndex].disabled = result.listitems[aIndex].disabled || aNode.parentNode.disabled;
+      if (item.inGroup)
+        item.disabled = item.disabled || aNode.parentNode.disabled;
 
+      result.listitems[aIndex] = item;
       result.selected[aIndex] = aNode.selected;
     });
     return result;
