@@ -92,6 +92,7 @@ FENNEC_JAVA_FILES = \
   sqlite/ByteBufferInputStream.java \
   sqlite/SQLiteBridge.java \
   sqlite/SQLiteBridgeException.java \
+  SetupScreen.java \
   SurfaceLockInfo.java \
   Tab.java \
   Tabs.java \
@@ -228,6 +229,7 @@ RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/site_setting_title.xml \
+  res/layout/setup_screen.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
