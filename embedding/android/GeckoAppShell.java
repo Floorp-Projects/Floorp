@@ -1790,4 +1790,7 @@ public class GeckoAppShell
     public static void disableNetworkNotifications() {
         GeckoNetworkManager.getInstance().disableNotifications();
     }
+
+    // This is only used in Native Fennec.
+    public static void preventPanning() { }
 }

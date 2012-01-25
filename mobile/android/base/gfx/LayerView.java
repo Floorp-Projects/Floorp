@@ -48,6 +48,8 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.util.Log;
+import java.util.LinkedList;
 
 /**
  * A view rendered by the layer compositor.
@@ -64,6 +66,10 @@ public class LayerView extends GLSurfaceView {
     private SimpleScaleGestureDetector mScaleGestureDetector;
     private long mRenderTime;
     private boolean mRenderTimeReset;
+    private static String LOGTAG = "GeckoLayerView";
+    /* List of events to be processed if the page does not prevent them. Should only be touched on the main thread */
+    private LinkedList<MotionEvent> mEventQueue = new LinkedList<MotionEvent>();
+
 
     public LayerView(Context context, LayerController controller) {
         super(context);
@@ -83,14 +89,40 @@ public class LayerView extends GLSurfaceView {
         setFocusableInTouchMode(true);
     }
 
+    private void addToEventQueue(MotionEvent event) {
+        MotionEvent copy = MotionEvent.obtain(event);
+        mEventQueue.add(copy);
+    }
+
+    public void processEventQueue() {
+        MotionEvent event = mEventQueue.poll();
+        while(event != null) {
+            processEvent(event);
+            event = mEventQueue.poll();
+        }
+    }
+
+    public void clearEventQueue() {
+        mEventQueue.clear();
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (mController.onTouchEvent(event)) {
+            addToEventQueue(event);
+            return true;
+        }
+        return processEvent(event);
+    }
+
+    private boolean processEvent(MotionEvent event) {
         if (mGestureDetector.onTouchEvent(event))
             return true;
         mScaleGestureDetector.onTouchEvent(event);
         if (mScaleGestureDetector.isInProgress())
             return true;
-        return mController.onTouchEvent(event);
+        mController.getPanZoomController().onTouchEvent(event);
+        return true;
     }
 
     public LayerController getController() { return mController; }
