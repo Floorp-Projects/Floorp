@@ -2762,9 +2762,12 @@ var FormAssistant = {
   show: function(aList, aElement) {
     let data = JSON.parse(sendMessageToJava({ gecko: aList }));
     let selected = data.button;
+    if (selected == -1)
+        return;
+
     if (!(selected instanceof Array)) {
       let temp = [];
-      for (let i = 0;  i < aList.listitems.length; i++) {
+      for (let i = 0; i < aList.listitems.length; i++) {
         temp[i] = (i == selected);
       }
       selected = temp;
