@@ -2426,7 +2426,7 @@ IonBuilder::jsop_compare(JSOp op)
     MCompare *ins = MCompare::New(left, right, op);
     current->add(ins);
 
-    ins->infer(oracle->binaryOp(script, pc));
+    ins->infer(cx, oracle->binaryTypes(script, pc));
 
     if (ins->specialization() == MIRType_None)
         return abort("unspecialized compare not yet supported");

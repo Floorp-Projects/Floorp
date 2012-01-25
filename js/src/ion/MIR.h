@@ -1127,7 +1127,7 @@ class MCompare
     INSTRUCTION_HEADER(Compare);
     static MCompare *New(MDefinition *left, MDefinition *right, JSOp op);
 
-    void infer(const TypeOracle::Binary &b);
+    void infer(JSContext *cx, const TypeOracle::BinaryTypes &b);
     MIRType specialization() const {
         return specialization_;
     }
@@ -1139,7 +1139,7 @@ class MCompare
         return this;
     }
     AliasSet getAliasSet() const {
-        if (specialization_ >= MIRType_Object)
+        if (specialization_ == MIRType_None)
             return AliasSet::Store(AliasSet::Any);
         return AliasSet::None();
     }

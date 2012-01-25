@@ -101,6 +101,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         NaN_IsFalse
     };
 
+    void emitCompare(MIRType type, const LAllocation *left, const LAllocation *right);
+
     // Emits a conditional set.
     void emitSet(Assembler::Condition cond, const Register &dest, NaNCond ifNaN = NaN_Unexpected);
 
@@ -125,8 +127,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
     virtual bool visitTestDAndBranch(LTestDAndBranch *test);
-    virtual bool visitCompareI(LCompareI *comp);
-    virtual bool visitCompareIAndBranch(LCompareIAndBranch *comp);
+    virtual bool visitCompare(LCompare *comp);
+    virtual bool visitCompareAndBranch(LCompareAndBranch *comp);
     virtual bool visitCompareD(LCompareD *comp);
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
     virtual bool visitMathD(LMathD *math);
