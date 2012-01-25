@@ -504,16 +504,16 @@ SpdyStream::TransmitFrame(const char *buf,
     LOG3(("SpdyStream::TransmitFrame for inline session=%p "
           "stream=%p result %x len=%d",
           mSession, this, rv, transmittedCount));
-    SpdySession::LogIO(mSession, this, "Writing from Inline Buffer",
-                       mTxInlineFrame + mTxInlineFrameSent,
-                       transmittedCount);
-
     if (rv == NS_BASE_STREAM_WOULD_BLOCK)
       mBlockedOnWrite = 1;
 
     if (NS_FAILED(rv))     // this will include WOULD_BLOCK
       return rv;
     
+    SpdySession::LogIO(mSession, this, "Writing from Inline Buffer",
+                       mTxInlineFrame + mTxInlineFrameSent,
+                       transmittedCount);
+
     mTxInlineFrameSent += transmittedCount;
   }
 
