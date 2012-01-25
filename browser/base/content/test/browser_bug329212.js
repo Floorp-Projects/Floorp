@@ -11,16 +11,16 @@ function test () {
     is(tooltip.getAttribute("label"), "This is a non-root SVG element title");
 
     ok(FillInHTMLTooltip(doc.getElementById("text1"), "should get title"));
-    is(tooltip.getAttribute("label"), "    This            is a title    ");
+    is(tooltip.getAttribute("label"), "\n\n\n    This            is a title\n\n    ");
 
     ok(!FillInHTMLTooltip(doc.getElementById("text2"), "should not get title"));
 
     ok(!FillInHTMLTooltip(doc.getElementById("text3"), "should not get title"));
 
     ok(FillInHTMLTooltip(doc.getElementById("link1"), "should get title"));
-    is(tooltip.getAttribute("label"), "      This is a title    ");
+    is(tooltip.getAttribute("label"), "\n      This is a title\n    ");
     ok(FillInHTMLTooltip(doc.getElementById("text4"), "should get title"));
-    is(tooltip.getAttribute("label"), "      This is a title    ");
+    is(tooltip.getAttribute("label"), "\n      This is a title\n    ");
 
     ok(!FillInHTMLTooltip(doc.getElementById("link2"), "should not get title"));
 
