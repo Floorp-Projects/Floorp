@@ -195,6 +195,7 @@
 #include "nsEventStateManager.h"
 #include "nsITimedChannel.h"
 #include "nsICookiePermission.h"
+#include "nsServiceManagerUtils.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #include "nsIDOMXULControlElement.h"
@@ -294,6 +295,8 @@ static bool                 gDOMWindowDumpEnabled      = false;
 #if defined(DEBUG_bryner) || defined(DEBUG_chb)
 #define DEBUG_PAGE_CACHE
 #endif
+
+#define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
 
 // The default shortest interval/timeout we permit
 #define DEFAULT_MIN_TIMEOUT_VALUE 4 // 4ms
@@ -7628,6 +7631,15 @@ void nsGlobalWindow::UpdateTouchState()
 
   if (mMayHaveTouchEventListener) {
     mainWidget->RegisterTouchWindow();
+
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      nsPIDOMWindow *inner = GetCurrentInnerWindowInternal();
+      observerService->NotifyObservers(mainWidget,
+                                       DOM_TOUCH_LISTENER_ADDED,
+                                       nsnull);
+    }
   } else {
     mainWidget->UnregisterTouchWindow();
   }
