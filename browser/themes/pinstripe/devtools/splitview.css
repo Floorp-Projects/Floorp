@@ -160,16 +160,3 @@
   border-top: 1px solid hsla(210,8%,5%,.5);
   border-bottom: 1px solid hsla(210,8%,5%,.5);
 }
-
-/* limited width mode (hide search unless it has focus [search-on-type]) */
-@media (max-width: 250px) {
-  .splitview-filter {
-    max-width: none;
-    position: fixed;
-    margin: 0;
-    bottom: -4em;
-  }
-  .splitview-filter[focused="true"] {
-    bottom: 0;
-  }
-}
