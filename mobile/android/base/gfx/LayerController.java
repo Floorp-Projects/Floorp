@@ -112,6 +112,7 @@ public class LayerController {
     private boolean allowDefaultActions = true;
     private Timer allowDefaultTimer =  null;
     private boolean inTouchSession = false;
+    private PointF initialTouchLocation = null;
 
     public LayerController(Context context) {
         mContext = context;
@@ -362,13 +363,23 @@ public class LayerController {
      */
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
+        PointF point = new PointF(event.getX(), event.getY());
         if ((action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+            initialTouchLocation = point;
             post(new Runnable() {
                 public void run() {
                     mView.clearEventQueue();
                     preventPanning(mWaitForTouchListeners);
                 }
             });
+        }
+
+        if (initialTouchLocation != null && (action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_MOVE) {
+            if (PointUtils.subtract(point, initialTouchLocation).length() > PanZoomController.PAN_THRESHOLD * 240) {
+                initialTouchLocation = null;
+            } else {
+                return !allowDefaultActions;
+            }
         }
 
         if (mOnTouchListener != null)
