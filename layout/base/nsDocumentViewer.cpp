@@ -2873,7 +2873,7 @@ DocumentViewerImpl::SetMinFontSize(PRInt32 aMinFontSize)
 
   // Now change our own min font
   nsPresContext* pc = GetPresContext();
-  if (pc && aMinFontSize != mPresContext->MinFontSize()) {
+  if (pc && aMinFontSize != mPresContext->MinFontSize(nsnull)) {
     pc->SetMinFontSize(aMinFontSize);
   }
 
@@ -2889,7 +2889,7 @@ DocumentViewerImpl::GetMinFontSize(PRInt32* aMinFontSize)
 {
   NS_ENSURE_ARG_POINTER(aMinFontSize);
   nsPresContext* pc = GetPresContext();
-  *aMinFontSize = pc ? pc->MinFontSize() : 0;
+  *aMinFontSize = pc ? pc->MinFontSize(nsnull) : 0;
   return NS_OK;
 }
 
