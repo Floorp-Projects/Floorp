@@ -1747,16 +1747,6 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
       PRInt32   attrCount;
       PRInt32   theTopIndex = anIndex + 1;
       PRInt32   theTagCount = mBodyContext->GetCount();
-      bool      formWasOnStack = mSink->IsFormOnStack();
-
-      if (formWasOnStack) {
-        // Do this to synchronize dtd stack and the sink stack.
-        // Note: FORM is never on the dtd stack because its always
-        // considered as a leaf. However, in the sink FORM can either
-        // be a container or a leaf. Therefore, we have to check
-        // with the sink -- Ref: Bug 20087.
-        ++anIndex;
-      }
 
       // Pause the main context and switch to the new context.
       result = mSink->BeginContext(anIndex);
@@ -1821,12 +1811,6 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
         CloseContainersTo(theTopIndex, mBodyContext->TagAt(theTopIndex),
                           true);
       }      
-
-      if (!formWasOnStack && mSink->IsFormOnStack()) {
-        // If a form has appeared on the sink context stack since the beginning of
-        // HandleSavedTokens, have the sink close it:
-        mSink->CloseContainer(eHTMLTag_form);
-      }
 
       // Bad-contents were successfully processed. Now, itz time to get
       // back to the original body context state.
