@@ -547,10 +547,10 @@ js_InternalThrow(VMFrame &f)
                 switch (st) {
                 case JSTRAP_ERROR:
                     cx->clearPendingException();
-                    return NULL;
+                    break;
 
                 case JSTRAP_CONTINUE:
-                  break;
+                    break;
 
                 case JSTRAP_RETURN:
                     cx->clearPendingException();
@@ -870,11 +870,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
       case REJOIN_FALLTHROUGH:
         f.regs.pc = nextpc;
-        break;
-
-      case REJOIN_JUMP:
-        f.regs.pc = (jsbytecode *) returnReg;
-        JS_ASSERT(unsigned(f.regs.pc - script->code) < script->length);
         break;
 
       case REJOIN_NATIVE:

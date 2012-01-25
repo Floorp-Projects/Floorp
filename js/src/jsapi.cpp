@@ -60,6 +60,7 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdate.h"
+#include "jsdtoa.h"
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -68,6 +69,7 @@
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsmath.h"
+#include "jsnativestack.h"
 #include "jsnum.h"
 #include "json.h"
 #include "jsobj.h"
@@ -88,7 +90,8 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "js/MemoryMetrics.h"
-#include "mozilla/Util.h" // DebugOnly
+#include "mozilla/Util.h"
+#include "yarr/BumpPointerAllocator.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -641,7 +644,11 @@ JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
-    return StrictlyEqual(cx, v1, v2, equal);
+    bool eq;
+    if (!StrictlyEqual(cx, v1, v2, &eq))
+        return false;
+    *equal = eq;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -650,7 +657,11 @@ JS_LooselyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
-    return LooselyEqual(cx, v1, v2, equal);
+    bool eq;
+    if (!LooselyEqual(cx, v1, v2, &eq))
+        return false;
+    *equal = eq;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -659,7 +670,11 @@ JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v1, v2);
-    return SameValue(cx, v1, v2, same);
+    bool s;
+    if (!SameValue(cx, v1, v2, &s))
+        return false;
+    *same = s;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -684,11 +699,27 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
 static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
 JSRuntime::JSRuntime()
-  : atomsCompartment(NULL),
+  : interrupt(0),
+    atomsCompartment(NULL),
+#ifdef JS_THREADSAFE
+    ownerThread_(NULL),
+#endif
+    tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    execAlloc_(NULL),
+    bumpAlloc_(NULL),
+    repCache_(NULL),
+    interpreterFrames(NULL),
     cxCallback(NULL),
     compartmentCallback(NULL),
     activityCallback(NULL),
     activityCallbackArg(NULL),
+#ifdef JS_THREADSAFE
+    suspendCount(0),
+    requestDepth(0),
+# ifdef DEBUG
+    checkRequestDepth(0),
+# endif
+#endif
     gcSystemAvailableChunkListHead(NULL),
     gcUserAvailableChunkListHead(NULL),
     gcKeepAtoms(0),
@@ -738,10 +769,7 @@ JSRuntime::JSRuntime()
     data(NULL),
 #ifdef JS_THREADSAFE
     gcLock(NULL),
-    gcDone(NULL),
-    requestDone(NULL),
     requestCount(0),
-    gcThread(NULL),
     gcHelperThread(thisFromCtor()),
 #endif
     debuggerMutations(0),
@@ -749,25 +777,26 @@ JSRuntime::JSRuntime()
     structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
     propertyRemovals(0),
-    scriptFilenameTable(NULL),
-#ifdef JS_THREADSAFE
-    scriptFilenameTableLock(NULL),
-#endif
     thousandsSeparator(0),
     decimalSeparator(0),
     numGrouping(0),
     anynameObject(NULL),
     functionNamespaceObject(NULL),
-#ifdef JS_THREADSAFE
-    interruptCounter(0),
-#else
-    threadData(thisFromCtor()),
-#endif
+    waiveGCQuota(false),
+    dtoaState(NULL),
+    pendingProxyOperation(NULL),
     trustedPrincipals_(NULL),
-    wrapObjectCallback(NULL),
+    wrapObjectCallback(TransparentObjectWrapper),
     preWrapObjectCallback(NULL),
     preserveWrapperCallback(NULL),
-    inOOMReport(0)
+#ifdef DEBUG
+    noGCOrAllocationCheck(0),
+#endif
+    inOOMReport(0),
+    ionTop(NULL),
+    ionJSContext(NULL),
+    ionStackLimit(0),
+    ionActivation(NULL)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);
@@ -781,7 +810,7 @@ bool
 JSRuntime::init(uint32_t maxbytes)
 {
 #ifdef JS_THREADSAFE
-    ownerThread_ = js_CurrentThreadId();
+    ownerThread_ = PR_GetCurrentThread();
 #endif
 
 #ifdef JS_METHODJIT_SPEW
@@ -804,25 +833,28 @@ JSRuntime::init(uint32_t maxbytes)
     if (!js_InitAtomState(this))
         return false;
 
-    wrapObjectCallback = js::TransparentObjectWrapper;
-
-#ifdef JS_THREADSAFE
-    /* this is asymmetric with JS_ShutDown: */
-    if (!js_SetupLocks(8, 16))
-        return false;
-#endif
-
-    debugMode = false;
-    if (!js_InitThreads(this))
-        return false;
     if (!InitRuntimeNumberState(this))
         return false;
 
+    dtoaState = js_NewDtoaState();
+    if (!dtoaState)
+        return false;
+
+    if (!stackSpace.init())
+        return false;
+
+    conservativeGC.nativeStackBase = GetNativeStackBase();
     return true;
 }
 
 JSRuntime::~JSRuntime()
 {
+    JS_ASSERT(onOwnerThread());
+
+    delete_<JSC::ExecutableAllocator>(execAlloc_);
+    delete_<WTF::BumpPointerAllocator>(bumpAlloc_);
+    JS_ASSERT(!repCache_);
+
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
     if (!JS_CLIST_IS_EMPTY(&contextList)) {
@@ -841,17 +873,15 @@ JSRuntime::~JSRuntime()
 #endif
 
     FinishRuntimeNumberState(this);
-    js_FinishThreads(this);
     js_FinishAtomState(this);
+
+    if (dtoaState)
+        js_DestroyDtoaState(dtoaState);
 
     js_FinishGC(this);
 #ifdef JS_THREADSAFE
     if (gcLock)
-        JS_DESTROY_LOCK(gcLock);
-    if (gcDone)
-        JS_DESTROY_CONDVAR(gcDone);
-    if (requestDone)
-        JS_DESTROY_CONDVAR(requestDone);
+        PR_DestroyLock(gcLock);
 #endif
 }
 
@@ -859,23 +889,27 @@ JSRuntime::~JSRuntime()
 void
 JSRuntime::setOwnerThread()
 {
-    JS_ASSERT(ownerThread_ == (void *)-1);
-    ownerThread_ = js_CurrentThreadId();
+    JS_ASSERT(ownerThread_ == (void *)0xc1ea12);  /* "clear" */
+    JS_ASSERT(requestDepth == 0);
+    ownerThread_ = PR_GetCurrentThread();
+    conservativeGC.nativeStackBase = GetNativeStackBase();
 }
 
 void
 JSRuntime::clearOwnerThread()
 {
     JS_ASSERT(onOwnerThread());
-    ownerThread_ = (void *)-1;
+    JS_ASSERT(requestDepth == 0);
+    ownerThread_ = (void *)0xc1ea12;  /* "clear" */
+    conservativeGC.nativeStackBase = 0;
 }
 
 JS_FRIEND_API(bool)
 JSRuntime::onOwnerThread() const
 {
-    return ownerThread_ == js_CurrentThreadId();
+    return ownerThread_ == PR_GetCurrentThread();
 }
-#endif
+#endif  /* JS_THREADSAFE */
 
 JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32_t maxbytes)
@@ -940,10 +974,6 @@ JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
     Probes::shutdown();
-
-#ifdef JS_THREADSAFE
-    js_CleanupLocks();
-#endif
     PRMJ_NowShutdown();
 }
 
@@ -987,31 +1017,17 @@ JS::UserCompartmentCount(const JSRuntime *rt)
 static void
 StartRequest(JSContext *cx)
 {
-    JSThread *t = cx->thread();
-    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(rt->onOwnerThread());
 
-    if (t->data.requestDepth) {
-        t->data.requestDepth++;
+    if (rt->requestDepth) {
+        rt->requestDepth++;
     } else {
-        JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
-
-        /* Wait until the GC is finished. */
-        if (rt->gcThread != cx->thread()) {
-            while (rt->gcThread)
-                JS_AWAIT_GC_DONE(rt);
-        }
 
         /* Indicate that a request is running. */
         rt->requestCount++;
-        t->data.requestDepth = 1;
-
-        /*
-         * Adjust rt->interruptCounter to reflect any interrupts added while the
-         * thread was suspended.
-         */
-        if (t->data.interruptFlags)
-            JS_ATOMIC_INCREMENT(&rt->interruptCounter);
+        rt->requestDepth = 1;
 
         if (rt->requestCount == 1 && rt->activityCallback)
             rt->activityCallback(rt->activityCallbackArg, true);
@@ -1021,32 +1037,23 @@ StartRequest(JSContext *cx)
 static void
 StopRequest(JSContext *cx)
 {
-    JSThread *t = cx->thread();
-    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
-    JS_ASSERT(t->data.requestDepth != 0);
-    if (t->data.requestDepth != 1) {
-        t->data.requestDepth--;
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(rt->onOwnerThread());
+    JS_ASSERT(rt->requestDepth != 0);
+    if (rt->requestDepth != 1) {
+        rt->requestDepth--;
     } else {
-        t->data.conservativeGC.updateForRequestEnd(t->suspendCount);
+        rt->conservativeGC.updateForRequestEnd(rt->suspendCount);
 
         /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
-        JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
 
-        t->data.requestDepth = 0;
-
-        /*
-         * Adjust rt->interruptCounter to reflect any interrupts added while the
-         * thread still had active requests.
-         */
-        if (t->data.interruptFlags)
-            JS_ATOMIC_DECREMENT(&rt->interruptCounter);
+        rt->requestDepth = 0;
 
         /* Give the GC a chance to run if this was the last request running. */
         JS_ASSERT(rt->requestCount > 0);
         rt->requestCount--;
         if (rt->requestCount == 0) {
-            JS_NOTIFY_REQUEST_DONE(rt);
             if (rt->activityCallback)
                 rt->activityCallback(rt->activityCallbackArg, false);
         }
@@ -1087,15 +1094,15 @@ JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JSThread *t = cx->thread();
-    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(rt->onOwnerThread());
 
-    jsrefcount saveDepth = t->data.requestDepth;
+    jsrefcount saveDepth = rt->requestDepth;
     if (!saveDepth)
         return 0;
 
-    t->suspendCount++;
-    t->data.requestDepth = 1;
+    rt->suspendCount++;
+    rt->requestDepth = 1;
     StopRequest(cx);
     return saveDepth;
 #else
@@ -1107,25 +1114,36 @@ JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
 #ifdef JS_THREADSAFE
-    JSThread *t = cx->thread();
-    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(rt->onOwnerThread());
     if (saveDepth == 0)
         return;
     JS_ASSERT(saveDepth >= 1);
-    JS_ASSERT(!t->data.requestDepth);
-    JS_ASSERT(t->suspendCount);
+    JS_ASSERT(!rt->requestDepth);
+    JS_ASSERT(rt->suspendCount);
     StartRequest(cx);
-    t->data.requestDepth = saveDepth;
-    t->suspendCount--;
+    rt->requestDepth = saveDepth;
+    rt->suspendCount--;
 #endif
 }
 
 JS_PUBLIC_API(JSBool)
-JS_IsInRequest(JSContext *cx)
+JS_IsInRequest(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
-    return JS_THREAD_DATA(cx)->requestDepth != 0;
+    JS_ASSERT(rt->onOwnerThread());
+    return rt->requestDepth != 0;
+#else
+    return false;
+#endif
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsInSuspendedRequest(JSRuntime *rt)
+{
+#ifdef JS_THREADSAFE
+    JS_ASSERT(rt->onOwnerThread());
+    return rt->suspendCount != 0;
 #else
     return false;
 #endif
@@ -3021,15 +3039,11 @@ JS_SetThreadStackLimit(JSContext *cx, uintptr_t limitAddr)
 JS_PUBLIC_API(void)
 JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
 {
-#ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread());
-#endif
-
 #if JS_STACK_GROWTH_DIRECTION > 0
     if (stackSize == 0) {
         cx->stackLimit = UINTPTR_MAX;
     } else {
-        uintptr_t stackBase = reinterpret_cast<uintptr_t>(JS_THREAD_DATA(cx)->nativeStackBase);
+        uintptr_t stackBase = cx->runtime->nativeStackBase;
         JS_ASSERT(stackBase <= size_t(-1) - stackSize);
         cx->stackLimit = stackBase + stackSize - 1;
     }
@@ -3037,7 +3051,7 @@ JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
     if (stackSize == 0) {
         cx->stackLimit = 0;
     } else {
-        uintptr_t stackBase = reinterpret_cast<uintptr_t>(JS_THREAD_DATA(cx)->nativeStackBase);
+        uintptr_t stackBase = uintptr_t(cx->runtime->conservativeGC.nativeStackBase);
         JS_ASSERT(stackBase >= stackSize);
         cx->stackLimit = stackBase - (stackSize - 1);
     }
@@ -5520,9 +5534,6 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
 JS_PUBLIC_API(JSOperationCallback)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback)
 {
-#ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
-#endif
     JSOperationCallback old = cx->operationCallback;
     cx->operationCallback = callback;
     return old;
@@ -5540,26 +5551,21 @@ JS_TriggerOperationCallback(JSContext *cx)
 #ifdef JS_THREADSAFE
     AutoLockGC lock(cx->runtime);
 #endif
-    TriggerOperationCallback(cx);
+    cx->runtime->triggerOperationCallback();
 }
 
 JS_PUBLIC_API(void)
-JS_TriggerAllOperationCallbacks(JSRuntime *rt)
+JS_TriggerRuntimeOperationCallback(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
     AutoLockGC lock(rt);
 #endif
-    TriggerAllOperationCallbacks(rt);
+    rt->triggerOperationCallback();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
-#ifdef JS_THREADSAFE
-    if (!cx->thread())
-        return false;
-#endif
-
     StackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
         fp = fp->prev();
@@ -5614,7 +5620,7 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    if (!s)
+    if (!s || !*s)
         return cx->runtime->emptyString;
     n = strlen(s);
     js = InflateString(cx, s, &n);
@@ -6592,48 +6598,11 @@ JS_ThrowStopIteration(JSContext *cx)
 JS_PUBLIC_API(intptr_t)
 JS_GetCurrentThread()
 {
-    return reinterpret_cast<intptr_t>(js_CurrentThreadId());
-}
-
-/*
- * Get the owning thread id of a context. Returns 0 if the context is not
- * owned by any thread.
- */
-JS_PUBLIC_API(intptr_t)
-JS_GetContextThread(JSContext *cx)
-{
 #ifdef JS_THREADSAFE
-    return cx->thread() ? reinterpret_cast<intptr_t>(cx->thread()->id) : 0;
+    return reinterpret_cast<intptr_t>(PR_GetCurrentThread());
 #else
     return 0;
 #endif
-}
-
-/*
- * Set the current thread as the owning thread of a context. Returns the
- * old owning thread id, or -1 if the operation failed.
- */
-JS_PUBLIC_API(intptr_t)
-JS_SetContextThread(JSContext *cx)
-{
-    /* This function can be called by a finalizer. */
-    JS_AbortIfWrongThread(cx->runtime);
-
-#ifdef JS_THREADSAFE
-    JS_ASSERT(!cx->outstandingRequests);
-    if (cx->thread()) {
-        JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
-        return reinterpret_cast<intptr_t>(cx->thread()->id);
-    }
-
-    if (!js_InitContextThreadAndLockGC(cx)) {
-        js_ReportOutOfMemory(cx);
-        return -1;
-    }
-
-    JS_UNLOCK_GC(cx->runtime);
-#endif
-    return 0;
 }
 
 extern JS_PUBLIC_API(void)
@@ -6663,44 +6632,6 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 #endif
 }
 
-JS_PUBLIC_API(intptr_t)
-JS_ClearContextThread(JSContext *cx)
-{
-    JS_AbortIfWrongThread(cx->runtime);
-    AssertNoGC(cx);
-
-#ifdef JS_THREADSAFE
-    /*
-     * cx must have exited all requests it entered and, if cx is associated
-     * with a thread, this must be called only from that thread.  If not, this
-     * is a harmless no-op.
-     */
-    JS_ASSERT(cx->outstandingRequests == 0);
-    JSThread *t = cx->thread();
-    if (!t)
-        return 0;
-    JS_ASSERT(CURRENT_THREAD_IS_ME(t));
-
-    /*
-     * We must not race with a GC that accesses cx->thread for all threads,
-     * see bug 476934.
-     */
-    JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
-    js_WaitForGC(rt);
-    js_ClearContextThread(cx);
-    JS_ASSERT_IF(JS_CLIST_IS_EMPTY(&t->contextList), !t->data.requestDepth);
-
-    /*
-     * We can access t->id as long as the GC lock is held and we cannot race
-     * with the GC that may delete t.
-     */
-    return reinterpret_cast<intptr_t>(t->id);
-#else
-    return 0;
-#endif
-}
-
 #ifdef JS_GC_ZEAL
 JS_PUBLIC_API(void)
 JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency, JSBool compartment)
@@ -6724,79 +6655,6 @@ JS_FRIEND_API(void *)
 js_GetCompartmentPrivate(JSCompartment *compartment)
 {
     return compartment->data;
-}
-
-/************************************************************************/
-
-JS_PUBLIC_API(void)
-JS_RegisterReference(void **ref)
-{
-}
-
-JS_PUBLIC_API(void)
-JS_ModifyReference(void **ref, void *newval)
-{
-    // XPConnect uses the lower bits of its JSObject refs for evil purposes,
-    // so we need to fix this.
-    void *thing = *ref;
-    *ref = newval;
-    thing = (void *)((uintptr_t)thing & ~7);
-    if (!thing)
-        return;
-    JS_ASSERT(!static_cast<gc::Cell *>(thing)->compartment()->rt->gcRunning);
-    uint32_t kind = GetGCThingTraceKind(thing);
-    if (kind == JSTRACE_OBJECT)
-        JSObject::writeBarrierPre((JSObject *) thing);
-    else if (kind == JSTRACE_STRING)
-        JSString::writeBarrierPre((JSString *) thing);
-    else
-        JS_NOT_REACHED("invalid trace kind");
-}
-
-JS_PUBLIC_API(void)
-JS_UnregisterReference(void **ref)
-{
-    // For now we just want to trigger a write barrier.
-    JS_ModifyReference(ref, NULL);
-}
-
-JS_PUBLIC_API(void)
-JS_UnregisterReferenceRT(JSRuntime *rt, void **ref)
-{
-    // For now we just want to trigger a write barrier.
-    if (!rt->gcRunning)
-        JS_ModifyReference(ref, NULL);
-}
-
-JS_PUBLIC_API(void)
-JS_RegisterValue(jsval *val)
-{
-}
-
-JS_PUBLIC_API(void)
-JS_ModifyValue(jsval *val, jsval newval)
-{
-    HeapValue::writeBarrierPre(*val);
-    *val = newval;
-}
-
-JS_PUBLIC_API(void)
-JS_UnregisterValue(jsval *val)
-{
-    JS_ModifyValue(val, JSVAL_VOID);
-}
-
-JS_PUBLIC_API(void)
-JS_UnregisterValueRT(JSRuntime *rt, jsval *val)
-{
-    if (!rt->gcRunning)
-        JS_ModifyValue(val, JSVAL_VOID);
-}
-
-JS_PUBLIC_API(JSTracer *)
-JS_GetIncrementalGCTracer(JSRuntime *rt)
-{
-    return rt->gcIncrementalTracer;
 }
 
 /************************************************************************/

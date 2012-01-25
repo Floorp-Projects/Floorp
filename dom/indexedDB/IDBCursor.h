@@ -154,6 +154,7 @@ protected:
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow> mOwner;
+  JSObject* mScriptOwner;
 
   Type mType;
   PRUint16 mDirection;

@@ -326,7 +326,7 @@ ion::Bailout(BailoutStack *sp)
 {
     JSContext *cx = GetIonContext()->cx;
     IonCompartment *ioncompartment = cx->compartment->ionCompartment();
-    IonActivation *activation = cx->threadData()->ionActivation;
+    IonActivation *activation = cx->runtime->ionActivation;
     FrameRecovery in = FrameRecoveryFromBailout(ioncompartment, sp);
 
     IonSpew(IonSpew_Bailouts, "Took bailout! Snapshot offset: %d", in.snapshotOffset());
@@ -348,7 +348,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
 {
     JSContext *cx = GetIonContext()->cx;
     IonCompartment *ioncompartment = cx->compartment->ionCompartment();
-    IonActivation *activation = cx->threadData()->ionActivation;
+    IonActivation *activation = cx->runtime->ionActivation;
     FrameRecovery in = FrameRecoveryFromInvalidation(ioncompartment, sp);
 
     IonSpew(IonSpew_Bailouts, "Took invalidation bailout! Snapshot offset: %d", in.snapshotOffset());
@@ -405,7 +405,7 @@ uint32
 ion::ReflowTypeInfo(uint32 bailoutResult)
 {
     JSContext *cx = GetIonContext()->cx;
-    IonActivation *activation = cx->threadData()->ionActivation;
+    IonActivation *activation = cx->runtime->ionActivation;
 
     IonSpew(IonSpew_Bailouts, "reflowing type info");
 
@@ -447,7 +447,7 @@ ion::RecompileForInlining()
 {
     JSContext *cx = GetIonContext()->cx;
     JSScript *script = cx->fp()->script();
-    IonActivation *activation = cx->threadData()->ionActivation;
+    IonActivation *activation = cx->runtime->ionActivation;
 
     IonSpew(IonSpew_Inlining, "Recompiling script to inline calls %s:%d", script->filename,
             script->lineno);
@@ -469,7 +469,7 @@ JSBool
 ion::ThunkToInterpreter(Value *vp)
 {
     JSContext *cx = GetIonContext()->cx;
-    IonActivation *activation = JS_THREAD_DATA(cx)->ionActivation;
+    IonActivation *activation = cx->runtime->ionActivation;
     BailoutClosure *br = activation->takeBailout();
 
     bool ok = Interpret(cx, br->entryfp(), JSINTERP_BAILOUT);

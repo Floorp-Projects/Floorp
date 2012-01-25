@@ -338,7 +338,7 @@ struct ResumeFromException
 
 void HandleException(ResumeFromException *rfe);
 
-void MarkIonActivations(ThreadData *td, JSTracer *trc);
+void MarkIonActivations(JSRuntime *rt, JSTracer *trc);
 
 static inline uint32
 MakeFrameDescriptor(uint32 frameSize, FrameType type)
@@ -396,7 +396,7 @@ IonFrameIterator::more() const
 static inline IonScript *
 GetTopIonFrame(JSContext *cx)
 {
-    IonFrameIterator iter(JS_THREAD_DATA(cx)->ionTop);
+    IonFrameIterator iter(cx->runtime->ionTop);
     JS_ASSERT(iter.type() == IonFrame_Exit);
     ++iter;
     JS_ASSERT(iter.type() == IonFrame_JS);

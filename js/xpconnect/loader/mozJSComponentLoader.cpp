@@ -317,7 +317,6 @@ public:
 
 private:
     JSContext* mContext;
-    intN       mContextThread;
     nsIThreadJSContextStack* mContextStack;
     char*      mBuf;
 
@@ -1355,23 +1354,18 @@ mozJSComponentLoader::ModuleEntry::GetFactory(const mozilla::Module& module,
 //----------------------------------------------------------------------
 
 JSCLContextHelper::JSCLContextHelper(mozJSComponentLoader *loader)
-    : mContext(loader->mContext), mContextThread(0),
+    : mContext(loader->mContext),
       mContextStack(loader->mContextStack),
       mBuf(nsnull)
 {
     mContextStack->Push(mContext);
-    mContextThread = JS_GetContextThread(mContext);
-    if (mContextThread) {
-        JS_BeginRequest(mContext);
-    }
+    JS_BeginRequest(mContext);
 }
 
 JSCLContextHelper::~JSCLContextHelper()
 {
     if (mContextStack) {
-        if (mContextThread) {
-            JS_EndRequest(mContext);
-        }
+        JS_EndRequest(mContext);
 
         mContextStack->Pop(nsnull);
 

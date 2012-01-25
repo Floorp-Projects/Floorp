@@ -1501,6 +1501,8 @@ function prepareForStartup() {
 }
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
+  Cu.import("resource:///modules/TelemetryTimestamps.jsm");
+  TelemetryTimestamps.add("delayedStartupStarted");
   gDelayedStartupTimeoutId = null;
 
   Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
@@ -1765,6 +1767,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   window.addEventListener("dragover", MousePosTracker, false);
 
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
+  TelemetryTimestamps.add("delayedStartupFinished");
 }
 
 function BrowserShutdown() {
@@ -3109,20 +3112,13 @@ function FillInHTMLTooltip(tipElement)
 
   [titleText, XLinkTitleText, SVGTitleText].forEach(function (t) {
     if (t && /\S/.test(t)) {
-
-      // Per HTML 4.01 6.2 (CDATA section), literal CRs and tabs should be
-      // replaced with spaces, and LFs should be removed entirely.
-      // XXX Bug 322270: We don't preserve the result of entities like &#13;,
-      // which should result in a line break in the tooltip, because we can't
-      // distinguish that from a literal character in the source by this point.
-      t = t.replace(/[\r\t]/g, ' ');
-      t = t.replace(/\n/g, '');
+      // Make CRLF and CR render one line break each.  
+      t = t.replace(/\r\n?/g, '\n');
 
       tipNode.setAttribute("label", t);
       retVal = true;
     }
   });
-
   return retVal;
 }
 
@@ -5201,7 +5197,7 @@ nsBrowserAccess.prototype = {
         let win, needToFocusWin;
 
         // try the current window.  if we're in a popup, fall back on the most recent browser window
-        if (!window.document.documentElement.getAttribute("chromehidden"))
+        if (window.toolbar.visible)
           win = window;
         else {
           win = Cc["@mozilla.org/browser/browserglue;1"]
@@ -5973,12 +5969,12 @@ function MultiplexHandler(event)
     var name = node.getAttribute('name');
 
     if (name == 'detectorGroup') {
-        SetForcedDetector(true);
+        BrowserCharsetReload();
         SelectDetector(event, false);
     } else if (name == 'charsetGroup') {
         var charset = node.getAttribute('id');
         charset = charset.substring('charset.'.length, charset.length)
-        SetForcedCharset(charset);
+        BrowserSetForcedCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
         //do nothing - please remove this else statement, once the charset prefs moves to the pref window
     } else {
@@ -6009,30 +6005,17 @@ function SelectDetector(event, doReload)
     }
 }
 
-function SetForcedDetector(doReload)
-{
-    BrowserSetForcedDetector(doReload);
-}
-
-function SetForcedCharset(charset)
-{
-    BrowserSetForcedCharacterSet(charset);
-}
-
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var docCharset = gBrowser.docShell.QueryInterface(Ci.nsIDocCharset);
-  docCharset.charset = aCharset;
+  gBrowser.docShell.charset = aCharset;
   // Save the forced character-set
   PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
-  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  BrowserCharsetReload();
 }
 
-function BrowserSetForcedDetector(doReload)
+function BrowserCharsetReload()
 {
-  gBrowser.documentCharsetInfo.forcedDetector = true;
-  if (doReload)
-    BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
 function charsetMenuGetElement(parent, id) {
@@ -8922,9 +8905,10 @@ var TabContextMenu = {
 };
 
 XPCOMUtils.defineLazyGetter(this, "HUDConsoleUI", function () {
-  Cu.import("resource:///modules/HUDService.jsm");
+  let tempScope = {};
+  Cu.import("resource:///modules/HUDService.jsm", tempScope);
   try {
-    return HUDService.consoleUI;
+    return tempScope.HUDService.consoleUI;
   }
   catch (ex) {
     Components.utils.reportError(ex);

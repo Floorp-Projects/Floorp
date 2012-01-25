@@ -110,8 +110,6 @@ enum TokenKind {
     TOK_RETURN,                    /* return keyword */
     TOK_NEW,                       /* new keyword */
     TOK_DELETE,                    /* delete keyword */
-    TOK_DEFSHARP,                  /* #n= for object/array initializers */
-    TOK_USESHARP,                  /* #n# for object/array initializers */
     TOK_TRY,                       /* try keyword */
     TOK_CATCH,                     /* catch keyword */
     TOK_FINALLY,                   /* finally keyword */
@@ -326,7 +324,6 @@ struct Token {
             PropertyName *target;       /* non-empty */
             JSAtom       *data;         /* maybe empty, never null */
         } xmlpi;
-        uint16_t        sharpNumber;    /* sharp variable number: #1# or #1= */
         jsdouble        number;         /* floating point number */
         RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
@@ -364,10 +361,6 @@ struct Token {
         u.reflags = flags;
     }
 
-    void setSharpNumber(uint16_t sharpNum) {
-        u.sharpNumber = sharpNum;
-    }
-
     void setNumber(jsdouble n) {
         u.number = n;
     }
@@ -403,11 +396,6 @@ struct Token {
         JS_ASSERT(type == TOK_REGEXP);
         JS_ASSERT((u.reflags & AllFlags) == u.reflags);
         return u.reflags;
-    }
-
-    uint16_t sharpNumber() const {
-        JS_ASSERT(type == TOK_DEFSHARP || type == TOK_USESHARP);
-        return u.sharpNumber;
     }
 
     jsdouble number() const {

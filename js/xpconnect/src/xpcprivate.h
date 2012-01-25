@@ -539,7 +539,7 @@ public:
                         nsCycleCollectionTraversalCallback &cb);
 
     // nsCycleCollectionLanguageRuntime
-    virtual void NotifyLeaveMainThread();
+    virtual bool NotifyLeaveMainThread();
     virtual void NotifyEnterCycleCollectionThread();
     virtual void NotifyLeaveCycleCollectionThread();
     virtual void NotifyEnterMainThread();
@@ -1654,10 +1654,10 @@ private:
     // default parent for the XPCWrappedNatives that have us as the scope,
     // unless a PreCreate hook overrides it.  Note that this _may_ be null (see
     // constructor).
-    JS::HeapPtrObject                mGlobalJSObject;
+    js::ObjectPtr                    mGlobalJSObject;
 
     // Cached value of Object.prototype
-    JS::HeapPtrObject                mPrototypeJSObject;
+    js::ObjectPtr                    mPrototypeJSObject;
     // Prototype to use for wrappers with no helper.
     JSObject*                        mPrototypeNoHelper;
 
@@ -2306,6 +2306,12 @@ public:
             mScriptableInfo->Mark();
     }
 
+    void WriteBarrierPre(JSRuntime* rt)
+    {
+        if (js::IsIncrementalBarrierNeeded(rt) && mJSProtoObject)
+            mJSProtoObject.writeBarrierPre(rt);
+    }
+
     // NOP. This is just here to make the AutoMarkingPtr code compile.
     inline void AutoTrace(JSTracer* trc) {}
 
@@ -2348,7 +2354,7 @@ private:
     }
 
     XPCWrappedNativeScope*   mScope;
-    JS::HeapPtrObject        mJSProtoObject;
+    js::ObjectPtr            mJSProtoObject;
     nsCOMPtr<nsIClassInfo>   mClassInfo;
     PRUint32                 mClassInfoFlags;
     XPCNativeSet*            mSet;
@@ -2737,8 +2743,9 @@ public:
     }
     void SetWrapper(JSObject *obj)
     {
+        js::IncrementalReferenceBarrier(GetWrapperPreserveColor());
         PRWord newval = PRWord(obj) | (mWrapperWord & FLAG_MASK);
-        JS_ModifyReference((void **)&mWrapperWord, (void *)newval);
+        mWrapperWord = newval;
     }
 
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
@@ -3658,9 +3665,7 @@ public:
             JS_Assert("NS_IsMainThread()", __FILE__, __LINE__);
 
         if (cx) {
-            NS_ASSERTION(js::GetContextThread(cx), "Uh, JS context w/o a thread?");
-
-            if (js::GetContextThread(cx) == sMainJSThread)
+            if (js::GetOwnerThread(cx) == sMainJSThread)
                 return sMainThreadData;
         } else if (sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread()) {
             return sMainThreadData;
@@ -3763,7 +3768,7 @@ public:
         {sMainJSThread = nsnull; sMainThreadData = nsnull;}
 
     static bool IsMainThread(JSContext *cx)
-        { return js::GetContextThread(cx) == sMainJSThread; }
+        { return js::GetOwnerThread(cx) == sMainJSThread; }
 
 private:
     XPCPerThreadData();

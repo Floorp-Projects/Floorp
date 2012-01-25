@@ -140,14 +140,27 @@ public:
   virtual nsEventStates IntrinsicState() const;
 
   virtual nsXPCClassInfo* GetClassInfo();
+  
+  virtual void OnDNSPrefetchDeferred();
+  virtual void OnDNSPrefetchRequested();
+  virtual bool HasDeferredDNSPrefetchRequest();
 };
 
+// Indicates that a DNS Prefetch has been requested from this Anchor elem
+#define HTML_ANCHOR_DNS_PREFETCH_REQUESTED \
+  (1 << ELEMENT_TYPE_SPECIFIC_BITS_OFFSET)
+// Indicates that a DNS Prefetch was added to the deferral queue
+#define HTML_ANCHOR_DNS_PREFETCH_DEFERRED \
+  (1 << (ELEMENT_TYPE_SPECIFIC_BITS_OFFSET+1))
+
+// Make sure we have enough space for those bits
+PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET+1 < 32);
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 
 nsHTMLAnchorElement::nsHTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    Link(this)
+  : nsGenericHTMLElement(aNodeInfo)
+  , Link(this)
 {
 }
 
@@ -202,6 +215,26 @@ nsHTMLAnchorElement::GetDraggable(bool* aDraggable)
   return nsGenericHTMLElement::GetDraggable(aDraggable);
 }
 
+void
+nsHTMLAnchorElement::OnDNSPrefetchRequested()
+{
+  UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
+  SetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+}
+
+void
+nsHTMLAnchorElement::OnDNSPrefetchDeferred()
+{
+  UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+  SetFlags(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
+}
+
+bool
+nsHTMLAnchorElement::HasDeferredDNSPrefetchRequest()
+{
+  return HasFlag(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
+}
+
 nsresult
 nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
@@ -228,6 +261,21 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsHTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
+  // Cancel any DNS prefetches
+  // Note: Must come before ResetLinkState.  If called after, it will recreate
+  // mCachedURI based on data that is invalid - due to a call to GetHostname.
+
+  // If prefetch was deferred, clear flag and move on
+  if (HasFlag(HTML_ANCHOR_DNS_PREFETCH_DEFERRED))
+    UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
+  // Else if prefetch was requested, clear flag and send cancellation
+  else if (HasFlag(HTML_ANCHOR_DNS_PREFETCH_REQUESTED)) {
+    UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+    // Possible that hostname could have changed since binding, but since this
+    // covers common cases, most DNS prefetch requests will be canceled
+    nsHTMLDNSPrefetch::CancelPrefetchLow(this, NS_ERROR_ABORT);
+  }
+  
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false);

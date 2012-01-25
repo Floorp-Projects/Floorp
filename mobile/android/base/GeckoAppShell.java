@@ -133,9 +133,20 @@ public class GeckoAppShell
     public static native void loadGeckoLibsNative(String apkName);
     public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
-    public static native void reportJavaCrash(String stack);
+
+    public static void reportJavaCrash(Throwable e) {
+        Log.e(LOGTAG, "top level exception", e);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        pw.flush();
+        reportJavaCrash(sw.toString());
+    }
+
+    private static native void reportJavaCrash(String stackTrace);
+
     public static void notifyUriVisited(String uri) {
-        sendEventToGecko(new GeckoEvent(GeckoEvent.VISTITED, uri));
+        sendEventToGecko(new GeckoEvent(GeckoEvent.VISITED, uri));
     }
 
     public static native void processNextNativeEvent();
@@ -379,7 +390,7 @@ public class GeckoAppShell
         GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
 
         File cacheFile = getCacheDir();
-        GeckoAppShell.putenv("CACHE_PATH=" + cacheFile.getPath());
+        GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
 
         File pluginDataDir = GeckoApp.mAppContext.getDir("plugins", 0);
         GeckoAppShell.putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());
@@ -492,6 +503,9 @@ public class GeckoAppShell
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
+                if (event == null)
+                    return true;
+                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
                 return true;
             }
         });
@@ -509,7 +523,7 @@ public class GeckoAppShell
     }
 
     public static void sendEventToGecko(GeckoEvent e) {
-        if (GeckoApp.mAppContext.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
+        if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
         } else {
             gPendingEvents.addLast(e);
@@ -627,7 +641,7 @@ public class GeckoAppShell
 
     static void onXreExit() {
         // mLaunchState can only be Launched or GeckoRunning at this point
-        GeckoApp.mAppContext.setLaunchState(GeckoApp.LaunchState.GeckoExiting);
+        GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoExiting);
         Log.i(LOGTAG, "XRE exited");
         if (gRestartScheduled) {
             GeckoApp.mAppContext.doRestart();
@@ -1106,6 +1120,15 @@ public class GeckoAppShell
         });
     }
 
+    public static void preventPanning() {
+        getMainHandler().post(new Runnable() {
+            public void run() {
+                LayerController layerController = GeckoApp.mAppContext.getLayerController();
+                layerController.preventPanning(true);
+            }
+        });
+    }
+
     public static boolean isNetworkLinkUp() {
         ConnectivityManager cm = (ConnectivityManager)
             GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -1271,7 +1294,7 @@ public class GeckoAppShell
         int countdown = 40;
         while (!checkForGeckoProcs() &&  --countdown > 0) {
             try {
-                Thread.currentThread().sleep(100);
+                Thread.sleep(100);
             } catch (InterruptedException ie) {}
         }
     }

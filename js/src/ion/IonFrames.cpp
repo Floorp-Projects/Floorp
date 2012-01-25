@@ -257,7 +257,7 @@ ion::HandleException(ResumeFromException *rfe)
 
     IonSpew(IonSpew_Invalidate, "handling exception");
 
-    IonFrameIterator iter(JS_THREAD_DATA(cx)->ionTop);
+    IonFrameIterator iter(cx->runtime->ionTop);
     while (iter.type() != IonFrame_Entry) {
         if (iter.type() == IonFrame_JS) {
             IonJSFrameLayout *fp = iter.jsFrame();
@@ -273,14 +273,14 @@ ion::HandleException(ResumeFromException *rfe)
 }
 
 IonActivationIterator::IonActivationIterator(JSContext *cx)
-  : top_(JS_THREAD_DATA(cx)->ionTop),
-    activation_(JS_THREAD_DATA(cx)->ionActivation)
+  : top_(cx->runtime->ionTop),
+    activation_(cx->runtime->ionActivation)
 {
 }
 
-IonActivationIterator::IonActivationIterator(ThreadData *td)
-  : top_(td->ionTop),
-    activation_(td->ionActivation)
+IonActivationIterator::IonActivationIterator(JSRuntime *rt)
+  : top_(rt->ionTop),
+    activation_(rt->ionActivation)
 {
 }
 
@@ -384,9 +384,9 @@ MarkIonActivation(JSTracer *trc, uint8 *top)
 }
 
 void
-ion::MarkIonActivations(ThreadData *td, JSTracer *trc)
+ion::MarkIonActivations(JSRuntime *rt, JSTracer *trc)
 {
-    for (IonActivationIterator activations(td); activations.more(); ++activations)
+    for (IonActivationIterator activations(rt); activations.more(); ++activations)
         MarkIonActivation(trc, activations.top());
 }
 
@@ -401,7 +401,7 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
     JS_ASSERT(cx->fp()->runningInIon());
     FrameRecovery fr = FrameRecovery::FromFrameIterator(
-        IonFrameIterator(JS_THREAD_DATA(cx)->ionTop));
+        IonFrameIterator(cx->runtime->ionTop));
 
     // This function assume that the MIR which has generated the indirect-call
     // to this function is effectful. Which implies that the assignSafepoint

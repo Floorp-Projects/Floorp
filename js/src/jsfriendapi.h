@@ -378,11 +378,18 @@ GetReservedSlot(const JSObject *obj, size_t slot)
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
+JS_FRIEND_API(void)
+SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const Value &value);
+
 inline void
 SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 {
     JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
-    reinterpret_cast<shadow::Object *>(obj)->slotRef(slot) = value;
+    shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
+    if (sobj->slotRef(slot).isMarkable())
+        SetReservedSlotWithBarrier(obj, slot, value);
+    else
+        sobj->slotRef(slot) = value;
 }
 
 JS_FRIEND_API(uint32_t)
@@ -468,8 +475,8 @@ JS_FRIEND_API(JSString *)
 GetPCCountScriptContents(JSContext *cx, size_t script);
 
 #ifdef JS_THREADSAFE
-JS_FRIEND_API(JSThread *)
-GetContextThread(const JSContext *cx);
+JS_FRIEND_API(void *)
+GetOwnerThread(const JSContext *cx);
 
 JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx);
@@ -555,7 +562,7 @@ IsContextRunningJS(JSContext *cx);
 
 /* Must be called with GC lock taken. */
 extern JS_FRIEND_API(void)
-TriggerOperationCallbacksForActiveContexts(JSRuntime *rt);
+TriggerOperationCallback(JSRuntime *rt);
 
 class SystemAllocPolicy;
 typedef Vector<JSCompartment*, 0, SystemAllocPolicy> CompartmentVector;
@@ -564,6 +571,56 @@ GetRuntimeCompartments(JSRuntime *rt);
 
 extern JS_FRIEND_API(size_t)
 SizeOfJSContext();
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSRuntime *rt);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSContext *cx);
+
+extern JS_FRIEND_API(void)
+IncrementalReferenceBarrier(void *ptr);
+
+extern JS_FRIEND_API(void)
+IncrementalValueBarrier(const Value &v);
+
+class ObjectPtr
+{
+    JSObject *value;
+
+  public:
+    ObjectPtr() : value(NULL) {}
+
+    ObjectPtr(JSObject *obj) : value(obj) {}
+
+    /* Always call finalize before the destructor. */
+    ~ObjectPtr() { JS_ASSERT(!value); }
+
+    void finalize(JSRuntime *rt) {
+        if (IsIncrementalBarrierNeeded(rt))
+            IncrementalReferenceBarrier(value);
+        value = NULL;
+    }
+    void finalize(JSContext *cx) { finalize(JS_GetRuntime(cx)); }
+
+    void init(JSObject *obj) { value = obj; }
+
+    JSObject *get() const { return value; }
+
+    void writeBarrierPre(JSRuntime *rt) {
+        IncrementalReferenceBarrier(value);
+    }
+
+    ObjectPtr &operator=(JSObject *obj) {
+        IncrementalReferenceBarrier(value);
+        value = obj;
+        return *this;
+    }
+
+    JSObject &operator*() const { return *value; }
+    JSObject *operator->() const { return value; }
+    operator JSObject *() const { return value; }
+};
 
 } /* namespace js */
 
