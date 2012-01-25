@@ -195,7 +195,6 @@ public:
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD CloseMalformedContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD DidProcessTokens(void);
   NS_IMETHOD WillProcessAToken(void);
   NS_IMETHOD DidProcessAToken(void);
@@ -290,7 +289,6 @@ public:
   nsresult CloseContainer(const nsHTMLTag aTag);
   nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsIContent* aContent);
-  nsresult AddComment(const nsIParserNode& aNode);
   nsresult End();
 
   nsresult GrowStack();
@@ -953,51 +951,6 @@ SinkContext::AddLeaf(nsIContent* aContent)
 #endif
 
   return NS_OK;
-}
-
-nsresult
-SinkContext::AddComment(const nsIParserNode& aNode)
-{
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::AddLeaf", 
-                  nsHTMLTag(aNode.GetNodeType()), 
-                  mStackPos, mSink);
-  FlushTextAndRelease();
-
-  if (!mSink) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  
-  nsCOMPtr<nsIContent> comment;
-  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment),
-                                  mSink->mNodeInfoManager);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  comment->SetText(aNode.GetText(), false);
-
-  NS_ASSERTION(mStackPos > 0, "stack out of bounds");
-  if (mStackPos <= 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  {
-    Node &parentNode = mStack[mStackPos - 1];
-    nsGenericHTMLElement *parent = parentNode.mContent;
-    if (!mSink->mBody && mSink->mHead)
-      // XXXbz but this will make DidAddContent use the wrong parent for
-      // the notification!  That seems so bogus it's not even funny.
-      parentNode.mContent = mSink->mHead;
-    DidAddContent(parentNode.Add(comment));
-    parentNode.mContent = parent;
-  }
-
-#ifdef DEBUG
-  if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
-    mSink->ForceReflow();
-  }
-#endif
-
-  return rv;
 }
 
 nsresult
@@ -1924,20 +1877,6 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 
     break;
   }
-
-  return rv;
-}
-
-/**
- * This gets called by the parsing system when we find a comment
- * @update	gess11/9/98
- * @param   aNode contains a comment token
- * @return  error code
- */
-nsresult
-HTMLContentSink::AddComment(const nsIParserNode& aNode)
-{
-  nsresult rv = mCurrentContext->AddComment(aNode);
 
   return rv;
 }
