@@ -61,8 +61,8 @@ function testEditorAdded(aChrome, aEditor)
            "new editor is loaded when attached");
         ok(aEditor.hasFlag("new"),
            "new editor has NEW flag");
-        ok(!aEditor.hasFlag("unsaved"),
-           "new editor does not have UNSAVED flag");
+        ok(aEditor.hasFlag("unsaved"),
+           "new editor has UNSAVED flag");
 
         ok(aEditor.inputElement,
            "new editor has an input element attached");
