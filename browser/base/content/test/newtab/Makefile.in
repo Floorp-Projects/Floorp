@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = browser/base/content/test/newtab
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_BROWSER_FILES = \
+	browser_newtab_block.js \
+	browser_newtab_disable.js \
+	browser_newtab_drag_drop.js \
+	browser_newtab_drop_preview.js \
+	browser_newtab_private_browsing.js \
+	browser_newtab_reset.js \
+	browser_newtab_tabsync.js \
+	browser_newtab_unpin.js \
+	head.js \
+	$(NULL)
+
+libs::	$(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
