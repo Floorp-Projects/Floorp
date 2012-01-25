@@ -2108,12 +2108,19 @@ abstract public class GeckoApp
     private void checkMigrateProfile() {
         File profileDir = getProfileDir();
         if (profileDir != null) {
+            long currentTime = SystemClock.uptimeMillis();
             Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
             final GeckoApp app = GeckoApp.mAppContext;
+            final SetupScreen setupScreen = new SetupScreen(app);
+            // don't show unless we take a while
+            setupScreen.showDelayed(mMainHandler);
             GeckoAppShell.ensureSQLiteLibsLoaded(app.getApplication().getPackageResourcePath());
             ProfileMigrator profileMigrator =
                 new ProfileMigrator(app.getContentResolver(), profileDir);
-            profileMigrator.launchBackground();
+            profileMigrator.launch();
+            setupScreen.dismiss();
+            long timeDiff = SystemClock.uptimeMillis() - currentTime;
+            Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
         }
     }
 

@@ -111,10 +111,8 @@ public class ProfileMigrator {
         mCr = cr;
     }
 
-    public void launchBackground() {
-        // Work around http://code.google.com/p/android/issues/detail?id=11291
-        // WebIconDatabase needs to be initialized within a looper thread.
-        GeckoAppShell.getHandler().post(new PlacesTask());
+    public void launch() {
+        new PlacesTask().run();
     }
 
     private class PlacesTask implements Runnable {
