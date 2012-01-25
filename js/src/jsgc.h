@@ -1382,11 +1382,11 @@ MarkContext(JSTracer *trc, JSContext *acx);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerGC(JSRuntime *rt, js::gcstats::Reason reason);
+TriggerGC(JSRuntime *rt, js::gcreason::Reason reason);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerCompartmentGC(JSCompartment *comp, js::gcstats::Reason reason);
+TriggerCompartmentGC(JSCompartment *comp, js::gcreason::Reason reason);
 
 extern void
 MaybeGC(JSContext *cx);
@@ -1409,7 +1409,7 @@ typedef enum JSGCInvocationKind {
 
 /* Pass NULL for |comp| to get a full GC. */
 extern void
-js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcstats::Reason r);
+js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcreason::Reason r);
 
 namespace js {
 
