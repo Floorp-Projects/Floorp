@@ -2078,6 +2078,7 @@ var BrowserEventHandler = {
     Services.obs.addObserver(this, "Gesture:CancelTouch", false);
     Services.obs.addObserver(this, "Gesture:DoubleTap", false);
     Services.obs.addObserver(this, "Gesture:Scroll", false);
+    Services.obs.addObserver(this, "dom-touch-listener-added", false);
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
   },
@@ -2157,6 +2158,21 @@ var BrowserEventHandler = {
     } else if (aTopic == "Gesture:DoubleTap") {
       this._cancelTapHighlight();
       this.onDoubleTap(aData);
+    } else if (aTopic == "dom-touch-listener-added") {
+      let browser = BrowserApp.getBrowserForWindow(aSubject);
+      if (!browser)
+        return;
+
+      let tab = BrowserApp.getTabForBrowser(browser);
+      if (!tab)
+        return;
+
+      sendMessageToJava({
+        gecko: {
+          type: "Tab:HasTouchListener",
+          tabID: tab.id
+        }
+      });
     }
   },
  

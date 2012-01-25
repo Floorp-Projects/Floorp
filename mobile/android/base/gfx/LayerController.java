@@ -78,6 +78,7 @@ public class LayerController {
     private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
     private ViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
+    private boolean mWaitForTouchListeners;
 
     private PanZoomController mPanZoomController;
     /*
@@ -365,13 +366,16 @@ public class LayerController {
             post(new Runnable() {
                 public void run() {
                     mView.clearEventQueue();
-                    preventPanning(true);
+                    preventPanning(mWaitForTouchListeners);
                 }
             });
         }
 
         if (mOnTouchListener != null)
             mOnTouchListener.onTouch(mView, event);
+
+        if (!mWaitForTouchListeners)
+            return !allowDefaultActions;
 
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_MOVE: {
@@ -412,6 +416,10 @@ public class LayerController {
         } else {
             mView.processEventQueue();
         }
+    }
+
+    public void setWaitForTouchListeners(boolean aValue) {
+        mWaitForTouchListeners = aValue;
     }
 
     /** Retrieves the color that the checkerboard should be. */
