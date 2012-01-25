@@ -1355,9 +1355,9 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aPO,
   }
 
   // walk children content
-  PRUint32 count = aContent->GetChildCount();
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsIContent *child = aContent->GetChildAt(i);
+  for (nsIContent* child = aContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     MapContentForPO(aPO, child);
   }
 }
@@ -2763,13 +2763,11 @@ bool nsPrintEngine::HasFramesetChild(nsIContent* aContent)
     return false;
   }
 
-  PRUint32 numChildren = aContent->GetChildCount();
-
   // do a breadth search across all siblings
-  for (PRUint32 i = 0; i < numChildren; ++i) {
-    nsIContent *child = aContent->GetChildAt(i);
-    if (child->Tag() == nsGkAtoms::frameset &&
-        child->IsHTML()) {
+  for (nsIContent* child = aContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTML(nsGkAtoms::frameset)) {
       return true;
     }
   }

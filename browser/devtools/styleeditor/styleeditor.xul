@@ -54,8 +54,19 @@
         persist="screenX screenY width height sizemode">
 <xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
+<xul:commandset id="style-editor-commandset">
+  <xul:command id="style-editor-cmd-close" oncommand="window.close();"/>
+</xul:commandset>
+
+<xul:keyset id="style-editor-keyset">
+  <xul:key id="style-editor-key-close"
+           key="&closeCmd.key;"
+           command="style-editor-cmd-close"
+           modifiers="accel"/>
+</xul:keyset>
+
 <xul:box id="style-editor-chrome" class="splitview-root loading">
-  <xul:box class="splitview-controller" id="stylesheets-controller" persist="width height">
+  <xul:box class="splitview-controller">
     <xul:box class="splitview-main">
       <xul:toolbar class="devtools-toolbar">
         <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
@@ -68,14 +79,10 @@
                     tooltiptext="&importButton.tooltip;"
                     label="&importButton.label;"
                     disabled="true"/>
-        <xul:spacer flex="1"/>
-        <xul:textbox class="splitview-filter devtools-searchinput"
-                     type="search" flex="1"
-                     tooltiptext="&searchInput.tooltip;"
-                     placeholder="&searchInput.placeholder;"/>
       </xul:toolbar>
     </xul:box>
-    <xul:box class="splitview-nav-container">
+    <xul:box id="splitview-resizer-target" class="splitview-nav-container"
+             persist="width height">
       <ol class="splitview-nav" tabindex="0"></ol>
       <div class="splitview-nav placeholder empty">
         <p><strong>&noStyleSheet.label;</strong></p>
@@ -83,13 +90,6 @@
           <a href="#"
              class="style-editor-newButton">&noStyleSheet-tip-action.label;</a>
           &noStyleSheet-tip-end.label;</p>
-      </div>
-      <div class="splitview-nav placeholder all-filtered">
-        <p><strong>&searchNoResults.label;</strong></p>
-        <p>
-          <a href="#"
-             class="splitview-filter-clearButton">&searchClearButton.label;</a>
-        </p>
       </div>
     </xul:box> <!-- .splitview-nav-container -->
   </xul:box>   <!-- .splitview-controller -->
@@ -101,7 +101,7 @@
          title="&visibilityToggle.tooltip;"
          accesskey="&saveButton.accesskey;"></a>
       <hgroup class="stylesheet-info">
-        <h1><a class="stylesheet-name" href="#"></a></h1>
+        <h1><a class="stylesheet-name" href="#"><xul:label crop="start"/></a></h1>
         <div class="stylesheet-more">
           <h3 class="stylesheet-title"></h3>
           <h3 class="stylesheet-rule-count"></h3>
@@ -116,12 +116,12 @@
 
     <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
       <xul:resizer class="splitview-portrait-resizer"
-               dir="bottom"
-               element="stylesheets-controller"/>
+                   dir="bottom"
+                   element="splitview-resizer-target"/>
       <xul:toolbar id="splitview-details-toolbar" class="devtools-toolbar">
         <xul:resizer class="splitview-landscape-resizer"
                      dir="bottomend"
-                     element="stylesheets-controller"/>
+                     element="splitview-resizer-target"/>
       </xul:toolbar>
       <xul:box class="stylesheet-editor-input textbox"
                data-placeholder="&editorTextbox.placeholder;"/>

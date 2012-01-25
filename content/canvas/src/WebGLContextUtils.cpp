@@ -198,6 +198,17 @@ WebGLContext::ErrorInvalidValue(const char *fmt, ...)
 }
 
 nsresult
+WebGLContext::ErrorInvalidFramebufferOperation(const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    LogMessageIfVerbose(fmt, va);
+    va_end(va);
+
+    return SynthesizeGLError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
+}
+
+nsresult
 WebGLContext::ErrorOutOfMemory(const char *fmt, ...)
 {
     va_list va;

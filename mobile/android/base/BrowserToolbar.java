@@ -51,7 +51,6 @@ import android.util.AttributeSet;
 import android.view.animation.TranslateAnimation;
 import android.view.Gravity;
 import android.view.ContextThemeWrapper;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;

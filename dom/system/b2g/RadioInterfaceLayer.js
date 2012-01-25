@@ -255,7 +255,7 @@ RadioInterfaceLayer.prototype = {
    */
   handleCallDisconnected: function handleCallDisconnected(call) {
     debug("handleCallDisconnected: " + JSON.stringify(call));
-    if (this._activeCall.callIndex == call.callIndex) {
+    if (this._activeCall && this._activeCall.callIndex == call.callIndex) {
       this._activeCall = null;
     }
     this.updateCallAudioState();

@@ -103,6 +103,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/dom/system/android \
 	-I$(topsrcdir)/toolkit/components/places \
 	-I$(topsrcdir)/docshell/base \
+	-I$(topsrcdir)/content/events/src \
 	-I$(srcdir) \
 	$(NULL)
 

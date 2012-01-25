@@ -698,12 +698,14 @@ Highlighter.prototype = {
   {
     this.browser.addEventListener("resize", this, true);
     this.browser.addEventListener("scroll", this, true);
+    this.browser.addEventListener("MozAfterPaint", this, true);
   },
 
   detachPageListeners: function Highlighter_detachPageListeners()
   {
     this.browser.removeEventListener("resize", this, true);
     this.browser.removeEventListener("scroll", this, true);
+    this.browser.removeEventListener("MozAfterPaint", this, true);
   },
 
   attachKeysListeners: function Highlighter_attachKeysListeners()
@@ -734,8 +736,10 @@ Highlighter.prototype = {
         this.handleMouseMove(aEvent);
         break;
       case "resize":
-      case "scroll":
         this.computeZoomFactor();
+        break;
+      case "MozAfterPaint":
+      case "scroll":
         this.brieflyDisableTransitions();
         this.invalidateSize();
         break;
@@ -745,74 +749,10 @@ Highlighter.prototype = {
         aEvent.stopPropagation();
         aEvent.preventDefault();
         break;
-        break;
       case "keypress":
         switch (aEvent.keyCode) {
           case this.chromeWin.KeyEvent.DOM_VK_RETURN:
             this.locked ? this.unlock() : this.lock();
-            aEvent.preventDefault();
-            aEvent.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_LEFT:
-            let node;
-            if (this.node) {
-              node = this.node.parentNode;
-            } else {
-              node = this.defaultSelection;
-            }
-            if (node && this.isNodeHighlightable(node)) {
-              this.highlight(node);
-            }
-            aEvent.preventDefault();
-            aEvent.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_RIGHT:
-            if (this.node) {
-              // Find the first child that is highlightable.
-              for (let i = 0; i < this.node.childNodes.length; i++) {
-                node = this.node.childNodes[i];
-                if (node && this.isNodeHighlightable(node)) {
-                  break;
-                }
-              }
-            } else {
-              node = this.defaultSelection;
-            }
-            if (node && this.isNodeHighlightable(node)) {
-              this.highlight(node, true);
-            }
-            aEvent.preventDefault();
-            aEvent.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_UP:
-            if (this.node) {
-              // Find a previous sibling that is highlightable.
-              node = this.node.previousSibling;
-              while (node && !this.isNodeHighlightable(node)) {
-                node = node.previousSibling;
-              }
-            } else {
-              node = this.defaultSelection;
-            }
-            if (node && this.isNodeHighlightable(node)) {
-              this.highlight(node, true);
-            }
-            aEvent.preventDefault();
-            aEvent.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_DOWN:
-            if (this.node) {
-              // Find a next sibling that is highlightable.
-              node = this.node.nextSibling;
-              while (node && !this.isNodeHighlightable(node)) {
-                node = node.nextSibling;
-              }
-            } else {
-              node = this.defaultSelection;
-            }
-            if (node && this.isNodeHighlightable(node)) {
-              this.highlight(node, true);
-            }
             aEvent.preventDefault();
             aEvent.stopPropagation();
             break;

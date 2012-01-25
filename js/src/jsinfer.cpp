@@ -2153,10 +2153,8 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
     for (unsigned i = 0; i < pending->length(); i++) {
         const RecompileInfo &info = (*pending)[i];
         mjit::JITScript *jit = info.script->getJIT(info.constructing);
-        if (jit && jit->chunkDescriptor(info.chunkIndex).chunk) {
-            mjit::Recompiler::clearStackReferences(cx, info.script);
-            jit->destroyChunk(cx, info.chunkIndex);
-        }
+        if (jit && jit->chunkDescriptor(info.chunkIndex).chunk)
+            mjit::Recompiler::clearStackReferencesAndChunk(cx, info.script, jit, info.chunkIndex);
     }
 
 #endif /* JS_METHODJIT */
@@ -3275,7 +3273,7 @@ GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
     JSOp op = JSOp(*pc);
     JS_ASSERT(op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT || op == JSOP_NEWINIT);
 
-    bool isArray = (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && pc[1] == JSProto_Array));
+    bool isArray = (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && GET_UINT8(pc) == JSProto_Array));
     return TypeScript::InitObject(cx, script, pc, isArray ? JSProto_Array : JSProto_Object);
 }
 
@@ -3449,6 +3447,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_NOP:
       case JSOP_NOTEARG:
       case JSOP_LOOPHEAD:
+      case JSOP_LOOPENTRY:
       case JSOP_GOTO:
       case JSOP_IFEQ:
       case JSOP_IFNE:
@@ -3467,7 +3466,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_STARTXML:
       case JSOP_STARTXMLEXPR:
       case JSOP_DEFXMLNS:
-      case JSOP_SHARPINIT:
       case JSOP_INDEXBASE:
       case JSOP_INDEXBASE1:
       case JSOP_INDEXBASE2:
@@ -3580,7 +3578,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_SWAP:
       case JSOP_PICK: {
-        unsigned pickedDepth = (op == JSOP_SWAP ? 1 : pc[1]);
+        unsigned pickedDepth = (op == JSOP_SWAP ? 1 : GET_UINT8(pc));
         /* The last popped value is the last pushed. */
         poppedTypes(pc, pickedDepth)->addSubset(cx, &pushed[pickedDepth]);
         for (unsigned i = 0; i < pickedDepth; i++)
@@ -4043,7 +4041,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
               return false;
         }
 
-        if (pc[1] & JSITER_FOREACH)
+        if (GET_UINT8(pc) & JSITER_FOREACH)
             state.forTypes->addType(cx, Type::UnknownType());
         else
             state.forTypes->addType(cx, Type::StringType());
@@ -4151,13 +4149,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_ENDFILTER:
         poppedTypes(pc, 1)->addSubset(cx, &pushed[0]);
-        break;
-
-      case JSOP_DEFSHARP:
-        break;
-
-      case JSOP_USESHARP:
-        pushed[0].addType(cx, Type::UnknownType());
         break;
 
       case JSOP_CALLEE:
@@ -6359,7 +6350,7 @@ GetScriptMemoryStats(JSScript *script, TypeInferenceMemoryStats *stats, JSMalloc
     }
 }
 
-JS_PUBLIC_API(void)
+void
 JS::SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment,
                                        TypeInferenceMemoryStats *stats,
                                        JSMallocSizeOfFun mallocSizeOf)
@@ -6405,8 +6396,8 @@ JS::SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment
     }
 }
 
-JS_PUBLIC_API(void)
-JS::SizeOfObjectTypeInferenceData(void *object_, TypeInferenceMemoryStats *stats, JSMallocSizeOfFun mallocSizeOf)
+void
+JS::SizeOfTypeObjectExcludingThis(void *object_, TypeInferenceMemoryStats *stats, JSMallocSizeOfFun mallocSizeOf)
 {
     TypeObject *object = (TypeObject *) object_;
 

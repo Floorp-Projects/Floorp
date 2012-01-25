@@ -1453,6 +1453,15 @@ nsAutoCompleteController::GetDefaultCompleteValue(PRInt32 aResultIndex,
     return NS_ERROR_FAILURE;
   }
 
+  // If the result wrongly notifies a RESULT_SUCCESS with no matches, or
+  // provides a defaultIndex greater than its matchCount, avoid trying to
+  // complete to an empty value.
+  PRUint32 matchCount = 0;
+  result->GetMatchCount(&matchCount);
+  // Here defaultIndex is surely non-negative, so can be cast to unsigned.
+  if ((PRUint32)defaultIndex >= matchCount)
+    return NS_ERROR_FAILURE;
+
   nsAutoString resultValue;
   result->GetValueAt(defaultIndex, resultValue);
   if (aPreserveCasing &&

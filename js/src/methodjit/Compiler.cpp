@@ -732,10 +732,6 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
                 }
             }
 
-            /*
-             * Watch for cross-chunk edges in a table switch. Don't handle
-             * lookup switches, as these are always stubbed.
-             */
             if (op == JSOP_TABLESWITCH) {
                 jsbytecode *pc2 = pc;
                 unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
@@ -765,6 +761,31 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
                             return NULL;
                     }
                     pc2 += JUMP_OFFSET_LEN;
+                }
+            }
+
+            if (op == JSOP_LOOKUPSWITCH) {
+                unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+                jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
+                unsigned npairs = GET_UINT16(pc2);
+                pc2 += UINT16_LEN;
+
+                CrossChunkEdge edge;
+                edge.source = offset;
+                edge.target = defaultOffset;
+                if (!currentEdges.append(edge))
+                    return NULL;
+
+                while (npairs) {
+                    pc2 += INDEX_LEN;
+                    unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
+                    CrossChunkEdge edge;
+                    edge.source = offset;
+                    edge.target = targetOffset;
+                    if (!currentEdges.append(edge))
+                        return NULL;
+                    pc2 += JUMP_OFFSET_LEN;
+                    npairs--;
                 }
             }
 
@@ -941,11 +962,6 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     {
         return Compile_Skipped;
     }
-
-#if JS_HAS_SHARP_VARS
-    if (script->hasSharps)
-        return Compile_Abort;
-#endif
 
     if (!cx->compartment->ensureJaegerCompartmentExists(cx))
         return Compile_Error;
@@ -1318,7 +1334,7 @@ mjit::Compiler::finishThisUp()
             nNmapLive++;
     }
 
-    /* Please keep in sync with JITChunk::scriptDataSize! */
+    /* Please keep in sync with JITChunk::sizeOfIncludingThis! */
     size_t dataSize = sizeof(JITChunk) +
                       sizeof(NativeMapEntry) * nNmapLive +
                       sizeof(InlineFrame) * inlineFrames.length() +
@@ -1710,8 +1726,8 @@ mjit::Compiler::finishThisUp()
 #endif
 
     JS_ASSERT(size_t(cursor - (uint8_t*)chunk) == dataSize);
-    /* Pass in NULL here -- we don't want slop bytes to be counted. */
-    JS_ASSERT(chunk->scriptDataSize(NULL) == dataSize);
+    /* Use the computed size here -- we don't want slop bytes to be counted. */
+    JS_ASSERT(chunk->computedSizeOfIncludingThis() == dataSize);
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
@@ -1840,13 +1856,12 @@ mjit::Compiler::finishThisUp()
 #define SPEW_OPCODE()                                                         \
     JS_BEGIN_MACRO                                                            \
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
-            LifoAllocScope las(&cx->tempLifoAlloc());                         \
-            Sprinter sprinter;                                                \
-            INIT_SPRINTER(cx, &sprinter, &cx->tempLifoAlloc(), 0);            \
+            Sprinter sprinter(cx);                                            \
+            sprinter.init();                                                  \
             js_Disassemble1(cx, script, PC, PC - script->code,                \
                             JS_TRUE, &sprinter);                              \
             JaegerSpew(JSpew_JSOps, "    %2d %s",                             \
-                       frame.stackDepth(), sprinter.base);                    \
+                       frame.stackDepth(), sprinter.string());                \
         }                                                                     \
     JS_END_MACRO;
 #else
@@ -1993,6 +2008,8 @@ mjit::Compiler::generateMethod()
 
         if (PC >= script->code + chunkEnd) {
             if (fallthrough) {
+                if (opinfo->jumpTarget)
+                    fixDoubleTypes(PC);
                 frame.syncAndForgetEverything();
                 jsbytecode *curPC = PC;
                 do {
@@ -2263,12 +2280,12 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_PICK)
           {
-            int32_t amt = GET_INT8(PC);
+            uint32_t amt = GET_UINT8(PC);
 
             // Push -(amt + 1), say amt == 2
             // Stack before: X3 X2 X1
             // Stack after:  X3 X2 X1 X3
-            frame.dupAt(-(amt + 1));
+            frame.dupAt(-int32_t(amt + 1));
 
             // For each item X[i...1] push it then move it down.
             // The above would transition like so:
@@ -2276,7 +2293,7 @@ mjit::Compiler::generateMethod()
             //   X2 X2 X1 X3    (shift)
             //   X2 X2 X1 X3 X1 (dupAt)
             //   X2 X1 X1 X3    (shift)
-            for (int32_t i = -amt; i < 0; i++) {
+            for (int32_t i = -int32_t(amt); i < 0; i++) {
                 frame.dupAt(i - 1);
                 frame.shift(i - 2);
             }
@@ -2685,7 +2702,7 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
             /* prepareStubCall() is not needed due to syncAndForgetEverything() */
-            INLINE_STUBCALL(stubs::TableSwitch, REJOIN_JUMP);
+            INLINE_STUBCALL(stubs::TableSwitch, REJOIN_NONE);
             frame.pop();
 
             masm.jump(Registers::ReturnReg);
@@ -2704,7 +2721,7 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
             /* prepareStubCall() is not needed due to syncAndForgetEverything() */
-            INLINE_STUBCALL(stubs::LookupSwitch, REJOIN_JUMP);
+            INLINE_STUBCALL(stubs::LookupSwitch, REJOIN_NONE);
             frame.pop();
 
             masm.jump(Registers::ReturnReg);
@@ -2735,7 +2752,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_STRICTEQ)
 
           BEGIN_CASE(JSOP_ITER)
-            if (!iter(PC[1]))
+            if (!iter(GET_UINT8(PC)))
                 return Compile_Error;
           END_CASE(JSOP_ITER)
 
@@ -3229,6 +3246,9 @@ mjit::Compiler::generateMethod()
             }
           }
           END_CASE(JSOP_LOOPHEAD)
+
+          BEGIN_CASE(JSOP_LOOPENTRY)
+          END_CASE(JSOP_LOOPENTRY)
 
           BEGIN_CASE(JSOP_DEBUGGER)
           {
@@ -3911,19 +3931,7 @@ mjit::Compiler::interruptCheckHelper()
         /* For barrier verification, always take the interrupt so we can verify. */
         jump = masm.jump();
     } else {
-        /*
-         * Bake in and test the address of the interrupt counter for the runtime.
-         * This is faster than doing two additional loads for the context's
-         * thread data, but will cause this thread to run slower if there are
-         * pending interrupts on some other thread.  For non-JS_THREADSAFE builds
-         * we can skip this, as there is only one flag to poll.
-         */
-#ifdef JS_THREADSAFE
-        void *interrupt = (void*) &cx->runtime->interruptCounter;
-#else
-        void *interrupt = (void*) &JS_THREAD_DATA(cx)->interruptFlags;
-#endif
-
+        void *interrupt = (void*) &cx->runtime->interrupt;
 #if defined(JS_CPU_X86) || defined(JS_CPU_ARM) || defined(JS_CPU_MIPS)
         jump = masm.branch32(Assembler::NotEqual, AbsoluteAddress(interrupt), Imm32(0));
 #else
@@ -6778,7 +6786,7 @@ mjit::Compiler::jsop_newinit()
     JSObject *baseobj = NULL;
     switch (*PC) {
       case JSOP_NEWINIT:
-        isArray = (PC[1] == JSProto_Array);
+        isArray = (GET_UINT8(PC) == JSProto_Array);
         break;
       case JSOP_NEWARRAY:
         isArray = true;
@@ -6871,7 +6879,7 @@ mjit::Compiler::jsop_newinit()
 bool
 mjit::Compiler::jsop_regexp()
 {
-    JSObject *obj = script->getRegExp(fullAtomIndex(PC));
+    JSObject *obj = script->getRegExp(GET_UINT32_INDEX(PC));
     RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
 
     if (!globalObj ||
@@ -7357,7 +7365,7 @@ mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
         masm.move(ImmPtr(originalPC), Registers::ArgReg1);
 
         /* prepareStubCall() is not needed due to forgetEverything() */
-        INLINE_STUBCALL(stubs::TableSwitch, REJOIN_JUMP);
+        INLINE_STUBCALL(stubs::TableSwitch, REJOIN_NONE);
         frame.pop();
         masm.jump(Registers::ReturnReg);
         return true;
@@ -7404,7 +7412,7 @@ mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
         stubcc.linkExitDirect(notInt.get(), stubcc.masm.label());
         stubcc.leave();
         stubcc.masm.move(ImmPtr(originalPC), Registers::ArgReg1);
-        OOL_STUBCALL(stubs::TableSwitch, REJOIN_JUMP);
+        OOL_STUBCALL(stubs::TableSwitch, REJOIN_NONE);
         stubcc.masm.jump(Registers::ReturnReg);
     }
     frame.pop();

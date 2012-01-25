@@ -369,10 +369,8 @@
 @BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
 #ifdef MOZ_B2G_RIL
-@BINPATH@/components/nsTelephonyWorker.manifest
-@BINPATH@/components/nsTelephonyWorker.js
-@BINPATH@/components/Telephony.manifest
-@BINPATH@/components/Telephony.js
+@BINPATH@/components/RadioInterfaceLayer.manifest
+@BINPATH@/components/RadioInterfaceLayer.js
 @BINPATH@/components/nsWifiWorker.js
 @BINPATH@/components/nsWifiWorker.manifest
 #endif

@@ -127,7 +127,7 @@ class IonActivationIterator
 
   public:
     IonActivationIterator(JSContext *cx);
-    IonActivationIterator(ThreadData *td);
+    IonActivationIterator(JSRuntime *rt);
 
     IonActivationIterator &operator++();
 

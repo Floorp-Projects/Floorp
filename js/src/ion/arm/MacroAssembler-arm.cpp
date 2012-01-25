@@ -1684,8 +1684,8 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Register base, Register index,
 
 void
 MacroAssemblerARMCompat::linkExitFrame() {
-    movePtr(ImmWord(JS_THREAD_DATA(GetIonContext()->cx)), ScratchRegister);
-    ma_str(StackPointer, Operand(ScratchRegister, offsetof(ThreadData, ionTop)));
+    movePtr(ImmWord(GetIonContext()->cx->runtime), ScratchRegister);
+    ma_str(StackPointer, Operand(ScratchRegister, offsetof(JSRuntime, ionTop)));
 }
 
 // ARM says that all reads of pc will return 8 higher than the

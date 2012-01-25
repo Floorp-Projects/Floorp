@@ -5,10 +5,20 @@
 /*global InspectorUI, Tilt, TiltGL, EPSILON */
 "use strict";
 
-Components.utils.import("resource:///modules/devtools/TiltGL.jsm");
-Components.utils.import("resource:///modules/devtools/TiltMath.jsm");
-Components.utils.import("resource:///modules/devtools/TiltUtils.jsm");
-Components.utils.import("resource:///modules/devtools/TiltVisualizer.jsm");
+let tempScope = {};
+Components.utils.import("resource:///modules/devtools/TiltGL.jsm", tempScope);
+Components.utils.import("resource:///modules/devtools/TiltMath.jsm", tempScope);
+Components.utils.import("resource:///modules/devtools/TiltUtils.jsm", tempScope);
+Components.utils.import("resource:///modules/devtools/TiltVisualizer.jsm", tempScope);
+let TiltGL = tempScope.TiltGL;
+let EPSILON = tempScope.EPSILON;
+let TiltMath = tempScope.TiltMath;
+let vec3 = tempScope.vec3;
+let mat3 = tempScope.mat3;
+let mat4 = tempScope.mat4;
+let quat4 = tempScope.quat4;
+let TiltUtils = tempScope.TiltUtils;
+let TiltVisualizer = tempScope.TiltVisualizer;
 
 
 const DEFAULT_HTML = "data:text/html," +

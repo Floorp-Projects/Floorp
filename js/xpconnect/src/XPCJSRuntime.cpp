@@ -946,7 +946,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
 #endif
             PR_WaitCondVar(self->mWatchdogWakeup, sleepInterval);
         JS_ASSERT(status == PR_SUCCESS);
-        js::TriggerOperationCallbacksForActiveContexts(self->mJSRuntime);
+        js::TriggerOperationCallback(self->mJSRuntime);
     }
 
     /* Wake up the main thread waiting for the watchdog to terminate. */
@@ -1043,7 +1043,6 @@ XPCJSRuntime::GetJSCycleCollectionContext()
         mJSCycleCollectionContext = JS_NewContext(mJSRuntime, 0);
         if (!mJSCycleCollectionContext)
             return nsnull;
-        JS_ClearContextThread(mJSCycleCollectionContext);
     }
     return mJSCycleCollectionContext;
 }
@@ -1067,10 +1066,8 @@ XPCJSRuntime::~XPCJSRuntime()
         mWatchdogWakeup = nsnull;
     }
 
-    if (mJSCycleCollectionContext) {
-        JS_SetContextThread(mJSCycleCollectionContext);
+    if (mJSCycleCollectionContext)
         JS_DestroyContextNoGC(mJSCycleCollectionContext);
-    }
 
 #ifdef XPC_DUMP_AT_SHUTDOWN
     {
@@ -1517,6 +1514,13 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
+                                              "object-elements"),
+                       nsIMemoryReporter::KIND_HEAP, stats.objectElements,
+                       "Memory allocated for the compartment's object element arrays, "
+                       "which are used to represent indexed object properties." SLOP_BYTES_STRING,
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "string-chars"),
                        nsIMemoryReporter::KIND_HEAP, stats.stringChars,
                        "Memory allocated to hold the compartment's string characters.  Sometimes "
@@ -1639,30 +1643,30 @@ ReportJSRuntimeStats(const JS::IterateData &data, const nsACString &pathPrefix,
                       "hanging off them."  SLOP_BYTES_STRING,
                       callback, closure);
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/threads/normal"),
-                      nsIMemoryReporter::KIND_HEAP, data.runtimeThreadsNormal,
-                      "Memory used by JSThread objects and their data, "
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/normal"),
+                      nsIMemoryReporter::KIND_HEAP, data.runtimeNormal,
+                      "Memory used by a JSRuntime, "
                       "excluding memory that is reported by "
                       "other reporters under 'explicit/js/runtime/'." SLOP_BYTES_STRING,
                       callback, closure);
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/threads/temporary"),
-                      nsIMemoryReporter::KIND_HEAP, data.runtimeThreadsTemporary,
-                      "Memory held transiently in JSThreads and used during "
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/temporary"),
+                      nsIMemoryReporter::KIND_HEAP, data.runtimeTemporary,
+                      "Memory held transiently in JSRuntime and used during "
                       "compilation.  It mostly holds parse nodes."
                       SLOP_BYTES_STRING,
                       callback, closure);
 
-    ReportMemoryBytes0(pathPrefix + NS_LITERAL_CSTRING("runtime/threads/regexp-code"),
-                       nsIMemoryReporter::KIND_NONHEAP, data.runtimeThreadsRegexpCode,
+    ReportMemoryBytes0(pathPrefix + NS_LITERAL_CSTRING("runtime/regexp-code"),
+                       nsIMemoryReporter::KIND_NONHEAP, data.runtimeRegexpCode,
                        "Memory used by the regexp JIT to hold generated code.",
                        callback, closure);
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/threads/stack-committed"),
-                      nsIMemoryReporter::KIND_NONHEAP, data.runtimeThreadsStackCommitted,
-                      "Memory used for the thread stacks.  This is the committed portions "
-                      "of the stacks; any uncommitted portions are not measured because they "
-                      "hardly cost anything.",
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/stack-committed"),
+                      nsIMemoryReporter::KIND_NONHEAP, data.runtimeStackCommitted,
+                      "Memory used for the JS call stack.  This is the committed portion "
+                      "of the stack; the uncommitted portion is not measured because it "
+                      "hardly costs anything.",
                       callback, closure);
 
     ReportGCHeapBytes(pathPrefix +
@@ -1965,9 +1969,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
         JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
-        mWatchdogWakeup = JS_NEW_CONDVAR(js::GetRuntimeGCLock(mJSRuntime));
+        mWatchdogWakeup = PR_NewCondVar(js::GetRuntimeGCLock(mJSRuntime));
         if (!mWatchdogWakeup)
-            NS_RUNTIMEABORT("JS_NEW_CONDVAR failed.");
+            NS_RUNTIMEABORT("PR_NewCondVar failed.");
 
         js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
 

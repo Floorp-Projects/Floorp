@@ -26,7 +26,6 @@ function createDocument()
     '<p>Inspect using inspectstyle(document.querySelectorAll("span")[0])</p>' +
     '</div>';
   doc.title = "Style Inspector Test";
-  ok(window.StyleInspector, "StyleInspector exists");
   stylePanel = new StyleInspector(window);
   Services.obs.addObserver(runStyleInspectorTests, "StyleInspector-opened", false);
   stylePanel.createPanel(false, function() {

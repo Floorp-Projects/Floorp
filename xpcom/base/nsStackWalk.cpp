@@ -338,6 +338,7 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
 struct WalkStackData {
   PRUint32 skipFrames;
   HANDLE thread;
+  bool walkCallingThread;
   HANDLE process;
   HANDLE eventStart;
   HANDLE eventEnd;
@@ -564,7 +565,8 @@ WalkStackMain64(struct WalkStackData* data)
     HANDLE myThread = data->thread;
     DWORD64 addr;
     STACKFRAME64 frame64;
-    int skip = 3 + data->skipFrames; // skip our own stack walking frames
+    // skip our own stack walking frames
+    int skip = (data->walkCallingThread ? 3 : 0) + data->skipFrames;
     BOOL ok;
 
     // Get a context for the specified thread.
@@ -812,11 +814,13 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     if (!EnsureImageHlpInitialized())
         return false;
 
-    HANDLE targetThread;
+    HANDLE targetThread = ::GetCurrentThread();
+    data.walkCallingThread = true;
     if (aThread) {
-        targetThread = reinterpret_cast<HANDLE> (aThread);
-    } else {
-        targetThread = ::GetCurrentThread();
+        HANDLE threadToWalk = reinterpret_cast<HANDLE> (aThread);
+        // walkCallingThread indicates whether we are walking the caller's stack
+        data.walkCallingThread = (threadToWalk == targetThread);
+        targetThread = threadToWalk;
     }
 
     // Have to duplicate handle to get a real handle.

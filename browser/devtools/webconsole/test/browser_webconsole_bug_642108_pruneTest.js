@@ -21,7 +21,7 @@ function test() {
 function populateConsoleRepeats(aHudRef) {
   let hud = aHudRef.HUDBox;
 
-  for (i = 0; i < 5; i++) {
+  for (let i = 0; i < 5; i++) {
     let node = ConsoleUtils.createMessageNode(hud.ownerDocument,
                                               CATEGORY_CSS,
                                               SEVERITY_WARNING,
@@ -35,7 +35,7 @@ function populateConsoleRepeats(aHudRef) {
 function populateConsole(aHudRef) {
   let hud = aHudRef.HUDBox;
 
-  for (i = 0; i < LOG_LIMIT + 5; i++) {
+  for (let i = 0; i < LOG_LIMIT + 5; i++) {
     let node = ConsoleUtils.createMessageNode(hud.ownerDocument,
                                               CATEGORY_CSS,
                                               SEVERITY_WARNING,
