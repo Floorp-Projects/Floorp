@@ -594,11 +594,10 @@ abstract public class GeckoApp
         }
     }
 
-    void getAndProcessThumbnailForTab(Tab tab) {
-        Bitmap bitmap = null;
-        if (Tabs.getInstance().isSelectedTab(tab))
-            bitmap = mSoftwareLayerClient.getBitmap();
-
+    void getAndProcessThumbnailForTab(final Tab tab) {
+        final Bitmap bitmap = Tabs.getInstance().isSelectedTab(tab) ?
+            mSoftwareLayerClient.getBitmap() : null;
+        
         if (bitmap != null) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
