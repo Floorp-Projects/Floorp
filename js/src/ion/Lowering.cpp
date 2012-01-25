@@ -1017,6 +1017,18 @@ LIRGenerator::visitStringLength(MStringLength *ins)
     return define(new LStringLength(useRegister(ins->string())), ins);
 }
 
+bool
+LIRGenerator::visitThrow(MThrow *ins)
+{
+    MDefinition *value = ins->getOperand(0);
+    JS_ASSERT(value->type() == MIRType_Value);
+
+    LThrow *lir = new LThrow;
+    if (!useBox(lir, LThrow::Value, value))
+        return false;
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {

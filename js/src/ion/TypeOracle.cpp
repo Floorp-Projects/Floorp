@@ -297,7 +297,7 @@ bool
 TypeInferenceOracle::canEnterInlinedScript(JSScript *inlineScript)
 {
     return inlineScript->hasAnalysis() && inlineScript->analysis()->ranInference() &&
-        !inlineScript->analysis()->usesScopeChain();
+        inlineScript->analysis()->inlineable() && !inlineScript->analysis()->usesScopeChain();
 }
 
 TypeSet *

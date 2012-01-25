@@ -366,6 +366,9 @@ JSObject*
 NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
 
 bool
+Throw(JSContext *cx, const Value &v);
+
+bool
 GetObjectProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
 
 bool
