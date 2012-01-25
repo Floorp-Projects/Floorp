@@ -204,7 +204,6 @@ public:
   NS_IMETHOD EndContext(PRInt32 aID);
   NS_IMETHOD OpenHead();
   NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn);
-  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
 
 #ifdef DEBUG
   // nsIDebugDumpContent

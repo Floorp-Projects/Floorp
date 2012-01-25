@@ -81,7 +81,6 @@ public:
   /* Take the largest possible feature set. */
   { NS_ENSURE_ARG_POINTER(aReturn); *aReturn = true; return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
 
   NS_IMETHOD BeginContext(PRInt32 aPosition);
   NS_IMETHOD EndContext(PRInt32 aPosition);

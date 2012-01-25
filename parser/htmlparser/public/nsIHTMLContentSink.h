@@ -83,8 +83,8 @@
 #include "nsHTMLTags.h"
 
 #define NS_IHTML_CONTENT_SINK_IID \
-{ 0xa3aad227, 0xe137, 0x407c, \
-  { 0xa4, 0xa0, 0x9e, 0x23, 0xb6, 0x38, 0xf3, 0x42 } }
+{ 0xb6d6ae00, 0x0884, 0x4a30, \
+  { 0xa8, 0xb4, 0xce, 0xca, 0x57, 0x27, 0x1a, 0x3e } }
 
 #define MAX_REFLOW_DEPTH  200
 
@@ -204,14 +204,6 @@ public:
    * @param  nsIParserNode reference to parser node interface
    */     
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) = 0;
-
-  /**
-   * Call this method to determnine if a FORM is on the sink's stack
-   *
-   * @return true if found else false
-   */
-  NS_IMETHOD_(bool) IsFormOnStack() = 0;
-
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLContentSink, NS_IHTML_CONTENT_SINK_IID)

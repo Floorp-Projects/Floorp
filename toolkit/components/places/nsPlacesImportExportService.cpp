@@ -375,7 +375,6 @@ public:
   NS_IMETHOD AddComment(const nsIParserNode& aNode) { return NS_OK; }
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
 
 protected:
   nsCOMPtr<nsINavBookmarksService> mBookmarksService;
