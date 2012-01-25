@@ -549,7 +549,7 @@ public:
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual bool NeedCollect();
-    virtual void Collect(bool shrinkingGC=false);
+    virtual void Collect(PRUint32 reason, PRUint32 kind);
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
 #endif

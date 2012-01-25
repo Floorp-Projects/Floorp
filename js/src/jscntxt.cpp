@@ -323,13 +323,13 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
 
         if (last) {
-            js_GC(cx, NULL, GC_NORMAL, gcstats::LASTCONTEXT);
+            js_GC(cx, NULL, GC_NORMAL, gcreason::LAST_CONTEXT);
 
             /* Take the runtime down, now that it has no contexts or atoms. */
             JS_LOCK_GC(rt);
         } else {
             if (mode == JSDCM_FORCE_GC)
-                js_GC(cx, NULL, GC_NORMAL, gcstats::DESTROYCONTEXT);
+                js_GC(cx, NULL, GC_NORMAL, gcreason::DESTROY_CONTEXT);
             else if (mode == JSDCM_MAYBE_GC)
                 JS_MaybeGC(cx);
 
@@ -1179,7 +1179,7 @@ JSContext::runningWithTrustedPrincipals() const
 JS_FRIEND_API(void)
 JSRuntime::onTooMuchMalloc()
 {
-    TriggerGC(this, gcstats::TOOMUCHMALLOC);
+    TriggerGC(this, gcreason::TOO_MUCH_MALLOC);
 }
 
 JS_FRIEND_API(void *)

@@ -1870,9 +1870,6 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
       case JS_TELEMETRY_GC_IS_COMPARTMENTAL:
         Telemetry::Accumulate(Telemetry::GC_IS_COMPARTMENTAL, sample);
         break;
-      case JS_TELEMETRY_GC_IS_SHAPE_REGEN:
-        Telemetry::Accumulate(Telemetry::GC_IS_SHAPE_REGEN, sample);
-        break;
       case JS_TELEMETRY_GC_MS:
         Telemetry::Accumulate(Telemetry::GC_MS, sample);
         break;
