@@ -727,7 +727,7 @@ UploadYUVToTexture(GLContext* gl, const PlanarYCbCrImage::Data& aData,
                                                    aData.mYSize,
                                                    aData.mYStride,
                                                    gfxASurface::ImageFormatA8);
-  gl->UploadSurfaceToTexture(surf, size, texture, true);
+  gl->UploadSurfaceToTexture(surf, size, texture, aData.mYSize, true);
   
   size = nsIntRect(0, 0, aData.mCbCrSize.width, aData.mCbCrSize.height);
   texture = aUTexture->GetTextureID();
@@ -735,14 +735,14 @@ UploadYUVToTexture(GLContext* gl, const PlanarYCbCrImage::Data& aData,
                              aData.mCbCrSize,
                              aData.mCbCrStride,
                              gfxASurface::ImageFormatA8);
-  gl->UploadSurfaceToTexture(surf, size, texture, true);
+  gl->UploadSurfaceToTexture(surf, size, texture, aData.mCbCrSize, true);
 
   texture = aVTexture->GetTextureID();
   surf = new gfxImageSurface(aData.mCrChannel,
                              aData.mCbCrSize,
                              aData.mCbCrStride,
                              gfxASurface::ImageFormatA8);
-  gl->UploadSurfaceToTexture(surf, size, texture, true);
+  gl->UploadSurfaceToTexture(surf, size, texture, aData.mCbCrSize, true);
 }
 
 void
@@ -797,7 +797,7 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   mLayerProgram =
     gl->UploadSurfaceToTexture(aData.mSurface,
                                nsIntRect(0,0, mSize.width, mSize.height),
-                               tex, true);
+                               tex, mSize, true);
 }
 
 void CairoImageOGL::SetTiling(bool aTiling)
