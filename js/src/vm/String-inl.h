@@ -76,6 +76,16 @@ JSString::needWriteBarrierPre(JSCompartment *comp)
 #endif
 }
 
+inline void
+JSString::readBarrier(JSString *str)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = str->compartment();
+    if (comp->needsBarrier())
+        MarkStringUnbarriered(comp->barrierTracer(), str, "read barrier");
+#endif
+}
+
 JS_ALWAYS_INLINE bool
 JSString::validateLength(JSContext *cx, size_t length)
 {

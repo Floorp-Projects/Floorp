@@ -54,8 +54,6 @@
 #include "frontend/Parser.h"
 #include "frontend/ParseMaps.h"
 
-#include "jsatominlines.h"
-
 namespace js {
 
 /*
