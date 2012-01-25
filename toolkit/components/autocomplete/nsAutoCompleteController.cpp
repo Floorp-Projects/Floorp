@@ -524,7 +524,7 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, bool *_retval)
         nsAutoString value;
         nsAutoString inputValue;
         input->GetTextValue(inputValue);
-        if (NS_SUCCEEDED(GetDefaultCompleteValue(selectedIndex, false, value)) &&
+        if (NS_SUCCEEDED(GetDefaultCompleteValue(-1, false, value)) &&
             value.Equals(inputValue, nsCaseInsensitiveStringComparator())) {
           input->SetTextValue(value);
           input->SelectTextRange(value.Length(), value.Length());
@@ -1162,7 +1162,7 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
       nsAutoString defaultIndexValue;
       nsAutoString inputValue;
       input->GetTextValue(inputValue);
-      if (NS_SUCCEEDED(GetDefaultCompleteValue(selectedIndex, false, defaultIndexValue)) &&
+      if (NS_SUCCEEDED(GetDefaultCompleteValue(-1, false, defaultIndexValue)) &&
           defaultIndexValue.Equals(inputValue, nsCaseInsensitiveStringComparator()))
         value = defaultIndexValue;
     }
