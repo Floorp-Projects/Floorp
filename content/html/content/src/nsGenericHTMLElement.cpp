@@ -2884,6 +2884,14 @@ nsGenericHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
+const nsAttrValue::EnumTable nsGenericHTMLElement::kCORSAttributeTable[] = {
+  // Order matters here
+  // See ParseAttribute in nsHTMLImageElement or nsHTMLMediaElement
+  { "anonymous",       nsGenericHTMLElement::CORS_ANONYMOUS       },
+  { "use-credentials", nsGenericHTMLElement::CORS_USE_CREDENTIALS },
+  { 0 }
+};
+
 /* virtual */
 bool
 nsGenericHTMLFormElement::IsDisabled() const
