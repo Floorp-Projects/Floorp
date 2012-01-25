@@ -126,7 +126,7 @@ public:
   NS_DECL_NSIDOMHTMLIMAGEELEMENT
 
   // override from nsImageLoadingContent
-  nsGenericHTMLElement::CORSMode GetCORSMode();
+  CORSMode GetCORSMode();
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
