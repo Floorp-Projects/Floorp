@@ -73,10 +73,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIScriptElement.h"
 
-#include "nsIDOMHTMLFormElement.h"
-#include "nsIFormControl.h"
-#include "nsIForm.h"
-
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
@@ -161,8 +157,6 @@ static const contentCreatorCallback sContentCreatorCallbacks[] = {
 class SinkContext;
 class HTMLContentSink;
 
-static void MaybeSetForm(nsGenericHTMLElement*, nsHTMLTag, HTMLContentSink*);
-
 class HTMLContentSink : public nsContentSink,
 #ifdef DEBUG
                         public nsIDebugDumpContent,
@@ -171,7 +165,6 @@ class HTMLContentSink : public nsContentSink,
 {
 public:
   friend class SinkContext;
-  friend void MaybeSetForm(nsGenericHTMLElement*, nsHTMLTag, HTMLContentSink*);
 
   HTMLContentSink();
   virtual ~HTMLContentSink();
@@ -211,7 +204,7 @@ public:
   NS_IMETHOD EndContext(PRInt32 aID);
   NS_IMETHOD OpenHead();
   NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn);
-  NS_IMETHOD_(bool) IsFormOnStack();
+  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
 
 #ifdef DEBUG
   // nsIDebugDumpContent
@@ -244,8 +237,6 @@ protected:
   nsRefPtr<nsGenericHTMLElement> mBody;
   nsRefPtr<nsGenericHTMLElement> mHead;
 
-  nsRefPtr<nsGenericHTMLElement> mCurrentForm;
-
   nsAutoTArray<SinkContext*, 8> mContextStack;
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
@@ -260,8 +251,7 @@ protected:
 
   PRUint8 mScriptEnabled : 1;
   PRUint8 mFramesEnabled : 1;
-  PRUint8 mFormOnStack : 1;
-  PRUint8 unused : 5;  // bits available if someone needs one
+  PRUint8 unused : 6;  // bits available if someone needs one
 
   nsINodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
 
@@ -271,8 +261,6 @@ protected:
   nsresult CloseHTML();
   nsresult OpenBody(const nsIParserNode& aNode);
   nsresult CloseBody();
-  nsresult OpenForm(const nsIParserNode& aNode);
-  nsresult CloseForm();
 
   nsresult OpenHeadContext();
   void CloseHeadContext();
@@ -458,39 +446,6 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   }
 
   return NS_OK;
-}
-
-static void
-MaybeSetForm(nsGenericHTMLElement* aContent, nsHTMLTag aNodeType,
-             HTMLContentSink* aSink)
-{
-  nsGenericHTMLElement* form = aSink->mCurrentForm;
-
-  if (!form) {
-    return;
-  }
-
-  switch (aNodeType) {
-    case eHTMLTag_button:
-    case eHTMLTag_fieldset:
-    case eHTMLTag_label:
-    case eHTMLTag_object:
-    case eHTMLTag_input:
-    case eHTMLTag_select:
-    case eHTMLTag_textarea:
-      break;
-    default:
-      return;
-  }
-  
-  nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
-  NS_ASSERTION(formControl,
-               "nsGenericHTMLElement didn't implement nsIFormControl");
-  nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(form));
-  NS_ASSERTION(formElement,
-               "nsGenericHTMLElement didn't implement nsIDOMHTMLFormElement");
-
-  formControl->SetForm(formElement);
 }
 
 /**
@@ -725,7 +680,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   ++mStackPos;
 
   rv = mSink->AddAttributes(aNode, content);
-  MaybeSetForm(content, nodeType, mSink);
 
   mStack[mStackPos - 2].Add(content);
 
@@ -738,7 +692,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   // Special handling for certain tags
   switch (nodeType) {
     case eHTMLTag_form:
-      mSink->mCurrentForm = content;
+      MOZ_NOT_REACHED("Must not use HTMLContentSink for forms.");
       break;
 
     case eHTMLTag_frameset:
@@ -818,7 +772,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   --mStackPos;
   nsHTMLTag nodeType = mStack[mStackPos].mType;
 
-  NS_ASSERTION(nodeType == eHTMLTag_form || nodeType == aTag,
+  NS_ASSERTION(nodeType == aTag,
                "Tag mismatch.  Closing tag on wrong context or something?");
 
   nsGenericHTMLElement* content = mStack[mStackPos].mContent;
@@ -865,18 +819,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
     break;
 
   case eHTMLTag_form:
-    {
-      mSink->mFormOnStack = false;
-      // If there's a FORM on the stack, but this close tag doesn't
-      // close the form, then close out the form *and* close out the
-      // next container up. This is since the parser doesn't do fix up
-      // of invalid form nesting. When the end FORM tag comes through,
-      // we'll ignore it.
-      if (aTag != nodeType) {
-        result = CloseContainer(aTag);
-      }
-    }
-
+    MOZ_NOT_REACHED("Must not use HTMLContentSink for forms.");
     break;
 
 #ifdef MOZ_MEDIA
@@ -937,15 +880,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
         mSink->CreateContentObject(aNode, nodeType);
       NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
-      if (nodeType == eHTMLTag_form) {
-        mSink->mCurrentForm = content;
-      }
-
       rv = mSink->AddAttributes(aNode, content);
-
       NS_ENSURE_SUCCESS(rv, rv);
-
-      MaybeSetForm(content, nodeType, mSink);
 
       // Add new leaf to its parent
       AddLeaf(content);
@@ -1434,7 +1370,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLContentSink, nsContentSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mBody)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHead)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCurrentForm)
   for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
     NS_IF_RELEASE(tmp->mNodeInfoCache[i]);
   }
@@ -1445,7 +1380,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLContentSink,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBody)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHead)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentForm)
   for (PRUint32 i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mNodeInfoCache[i]");
     cb.NoteXPCOMChild(tmp->mNodeInfoCache[i]);
@@ -1666,12 +1600,6 @@ HTMLContentSink::SetParser(nsParserBase* aParser)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(bool)
-HTMLContentSink::IsFormOnStack()
-{
-  return mFormOnStack;
-}
-
 NS_IMETHODIMP
 HTMLContentSink::BeginContext(PRInt32 aPosition)
 {
@@ -1885,66 +1813,6 @@ HTMLContentSink::CloseBody()
   return NS_OK;
 }
 
-nsresult
-HTMLContentSink::OpenForm(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-
-  mCurrentContext->FlushTextAndRelease();
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenForm", 
-                  eHTMLTag_form,
-                  mCurrentContext->mStackPos, 
-                  this);
-
-  // Close out previous form if it's there. If there is one
-  // around, it's probably because the last one wasn't well-formed.
-  mCurrentForm = nsnull;
-
-  // Check if the parent is a table, tbody, thead, tfoot, tr, col or
-  // colgroup. If so, we fix up by making the form leaf content.
-  if (mCurrentContext->IsCurrentContainer(eHTMLTag_table) ||
-      mCurrentContext->IsCurrentContainer(eHTMLTag_tbody) ||
-      mCurrentContext->IsCurrentContainer(eHTMLTag_thead) ||
-      mCurrentContext->IsCurrentContainer(eHTMLTag_tfoot) ||
-      mCurrentContext->IsCurrentContainer(eHTMLTag_tr) ||
-      mCurrentContext->IsCurrentContainer(eHTMLTag_col) ||
-      mCurrentContext->IsCurrentContainer(eHTMLTag_colgroup)) {
-    result = mCurrentContext->AddLeaf(aNode);
-  } else {
-    mFormOnStack = true;
-    // Otherwise the form can be a content parent.
-    result = mCurrentContext->OpenContainer(aNode);
-  }
-
-  return result;
-}
-
-nsresult
-HTMLContentSink::CloseForm()
-{
-  nsresult result = NS_OK;
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseForm",
-                  eHTMLTag_form,
-                  mCurrentContext->mStackPos - 1, 
-                  this);
-
-  if (mCurrentForm) {
-    // if this is a well-formed form, close it too
-    if (mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
-      result = mCurrentContext->CloseContainer(eHTMLTag_form);
-      mFormOnStack = false;
-    }
-
-    mCurrentForm = nsnull;
-  }
-
-  return result;
-}
-
 NS_IMETHODIMP
 HTMLContentSink::IsEnabled(PRInt32 aTag, bool* aReturn)
 {
@@ -1993,7 +1861,8 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       }
       break;
     case eHTMLTag_form:
-      rv = OpenForm(aNode);
+      MOZ_NOT_REACHED("Must not use HTMLContentSink for forms.");
+      rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
     default:
       rv = mCurrentContext->OpenContainer(aNode);
@@ -2023,7 +1892,8 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
       rv = CloseHTML();
       break;
     case eHTMLTag_form:
-      rv = CloseForm();
+      MOZ_NOT_REACHED("Must not use HTMLContentSink for forms.");
+      rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
     default:
       rv = mCurrentContext->CloseContainer(aTag);
