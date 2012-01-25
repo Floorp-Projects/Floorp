@@ -866,7 +866,7 @@ RoundUpPow2(size_t x)
 /*
  * This is SpiderMonkey's equivalent to |nsMallocSizeOfFun|.
  */
-typedef size_t(*JSMallocSizeOfFun)(const void *p, size_t computedSize);
+typedef size_t(*JSMallocSizeOfFun)(const void *p);
 
 /* sixgill annotation defines */
 #ifndef HAVE_STATIC_ANNOTATIONS

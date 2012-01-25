@@ -220,7 +220,7 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
                                        ArenaCallback, CellCallback);
         IterateChunks(cx, data, ChunkCallback);
 
-        data->runtimeObject = data->mallocSizeOf(rt, sizeof(JSRuntime));
+        data->runtimeObject = data->mallocSizeOf(rt);
 
         size_t normal, temporary, regexpCode, stackCommitted;
         rt->sizeOfExcludingThis(data->mallocSizeOf,

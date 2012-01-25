@@ -818,9 +818,7 @@ PL_DHashTableSizeOfExcludingThis(const PLDHashTable *table,
                                  void *arg /* = NULL */)
 {
     size_t n = 0;
-    n += mallocSizeOf(table->entryStore,
-                      PL_DHASH_TABLE_SIZE(table) * table->entrySize +
-                      ENTRY_STORE_EXTRA);
+    n += mallocSizeOf(table->entryStore);
     if (sizeOfEntryExcludingThis) {
         SizeOfEntryExcludingThisArg arg2 = { 0, sizeOfEntryExcludingThis, mallocSizeOf, arg };
         PL_DHashTableEnumerate(const_cast<PLDHashTable *>(table),
@@ -836,7 +834,7 @@ PL_DHashTableSizeOfIncludingThis(const PLDHashTable *table,
                                  nsMallocSizeOfFun mallocSizeOf,
                                  void *arg /* = NULL */)
 {
-    return mallocSizeOf(table, sizeof(PLDHashTable)) +
+    return mallocSizeOf(table) +
            PL_DHashTableSizeOfExcludingThis(table, sizeOfEntryExcludingThis,
                                             mallocSizeOf, arg);
 }

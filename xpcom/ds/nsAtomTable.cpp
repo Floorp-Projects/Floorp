@@ -453,7 +453,7 @@ AtomImpl::IsStaticAtom()
 size_t
 AtomImpl::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  return aMallocSizeOf(this, sizeof(AtomImpl)) +
+  return aMallocSizeOf(this) +
          nsStringBuffer::FromData(mString)->
            SizeOfIncludingThisIfUnshared(aMallocSizeOf);
 }

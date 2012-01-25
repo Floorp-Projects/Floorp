@@ -637,7 +637,11 @@ struct JSScript : public js::gc::Cell {
     size_t *addressOfUseCount() { return &useCount; }
     void resetUseCount() { useCount = 0; }
 
-    /* Size of the JITScript and all sections.  (This method is implemented in MethodJIT.cpp.) */
+    /*
+     * Size of the JITScript and all sections.  If |mallocSizeOf| is NULL, the
+     * size is computed analytically.  (This method is implemented in
+     * MethodJIT.cpp.)
+     */
     size_t sizeOfJitScripts(JSMallocSizeOfFun mallocSizeOf);
 
 #endif

@@ -973,7 +973,7 @@ size_t
 XPCJSRuntime::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 {
     size_t n = 0;
-    n += mallocSizeOf(this, sizeof(XPCJSRuntime));
+    n += mallocSizeOf(this);
     n += mWrappedJSMap->SizeOfIncludingThis(mallocSizeOf);
     n += mIID2NativeInterfaceMap->SizeOfIncludingThis(mallocSizeOf);
     n += mClassInfo2NativeSetMap->ShallowSizeOfIncludingThis(mallocSizeOf);
