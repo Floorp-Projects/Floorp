@@ -132,6 +132,7 @@
 
 using namespace mozilla;
 using namespace mozilla::layers;
+using namespace mozilla::layout;
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
@@ -3852,6 +3853,10 @@ nscoord
 nsFrame::ShrinkWidthToFit(nsRenderingContext *aRenderingContext,
                           nscoord aWidthInCB)
 {
+  // If we're a container for font size inflation, then shrink
+  // wrapping inside of us should not apply font size inflation.
+  AutoMaybeNullInflationContainer an(this);
+
   nscoord result;
   nscoord minWidth = GetMinWidth(aRenderingContext);
   if (minWidth > aWidthInCB) {
@@ -7239,8 +7244,16 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     nsMargin bp(0,0,0,0);
     GetBorderAndPadding(bp);
 
-    metrics->mBlockPrefSize.width = GetPrefWidth(rendContext) + bp.LeftRight();
-    metrics->mBlockMinSize.width = GetMinWidth(rendContext) + bp.LeftRight();
+    {
+      // If we're a container for font size inflation, then shrink
+      // wrapping inside of us should not apply font size inflation.
+      AutoMaybeNullInflationContainer an(this);
+
+      metrics->mBlockPrefSize.width =
+        GetPrefWidth(rendContext) + bp.LeftRight();
+      metrics->mBlockMinSize.width =
+        GetMinWidth(rendContext) + bp.LeftRight();
+    }
 
     // do the nasty.
     nsHTMLReflowMetrics desiredSize;
