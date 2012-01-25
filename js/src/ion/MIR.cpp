@@ -452,12 +452,6 @@ MPhi::addInput(MDefinition *ins)
     return inputs_.append(ins);
 }
 
-MReturn *
-MReturn::New(MDefinition *ins)
-{
-    return new MReturn(ins);
-}
-
 uint32
 MPrepareCall::argc() const
 {

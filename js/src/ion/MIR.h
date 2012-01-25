@@ -795,14 +795,18 @@ class MTableSwitch
     }
 };
 
-template <size_t Arity>
+template <size_t Arity, size_t Successors>
 class MAryControlInstruction : public MControlInstruction
 {
     FixedArityList<MDefinition *, Arity> operands_;
+    FixedArityList<MBasicBlock *, Successors> successors_;
 
   protected:
     void setOperand(size_t index, MDefinition *operand) {
         operands_[index] = operand;
+    }
+    void setSuccessor(size_t index, MBasicBlock *successor) {
+        successors_[index] = successor;
     }
 
   public:
@@ -812,36 +816,30 @@ class MAryControlInstruction : public MControlInstruction
     size_t numOperands() const {
         return Arity;
     }
+    size_t numSuccessors() const {
+        return Successors;
+    }
+    MBasicBlock *getSuccessor(size_t i) const {
+        return successors_[i];
+    }
+    void replaceSuccessor(size_t i, MBasicBlock *succ) {
+        successors_[i] = succ;
+    }
 };
 
 // Jump to the start of another basic block.
-class MGoto : public MAryControlInstruction<0>
+class MGoto : public MAryControlInstruction<0, 1>
 {
-    FixedArityList<MBasicBlock *, 1> successors_;
-
-    MGoto(MBasicBlock *target)
-    {
-        successors_[0] = target;
+    MGoto(MBasicBlock *target) {
+        setSuccessor(0, target);
     }
 
   public:
     INSTRUCTION_HEADER(Goto);
     static MGoto *New(MBasicBlock *target);
 
-    size_t numSuccessors() const {
-        return 1;
-    }
-
-    MBasicBlock *getSuccessor(size_t i) const {
-        return successors_[i];
-    }
-
-    void replaceSuccessor(size_t i, MBasicBlock *succ) {
-        successors_[i] = succ;
-    }
-
     MBasicBlock *target() {
-        return successors_[0];
+        return getSuccessor(0);
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
@@ -850,33 +848,18 @@ class MGoto : public MAryControlInstruction<0>
 
 // Tests if the input instruction evaluates to true or false, and jumps to the
 // start of a corresponding basic block.
-class MTest : public MAryControlInstruction<1>
+class MTest : public MAryControlInstruction<1, 2>
 {
-    FixedArityList<MBasicBlock *, 2> successors_;
-
-    MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false)
-    {
-        successors_[0] = if_true;
-        successors_[1] = if_false;
+    MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false) {
         initOperand(0, ins);
+        setSuccessor(0, if_true);
+        setSuccessor(1, if_false);
     }
 
   public:
     INSTRUCTION_HEADER(Test);
     static MTest *New(MDefinition *ins,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse);
-
-    size_t numSuccessors() const {
-        return 2;
-    }
-
-    MBasicBlock *getSuccessor(size_t i) const {
-        return successors_[i];
-    }
-
-    void replaceSuccessor(size_t i, MBasicBlock *successor) {
-        successors_[i] = successor;
-    }
 
     MBasicBlock *ifTrue() const {
         return getSuccessor(0);
@@ -892,36 +875,45 @@ class MTest : public MAryControlInstruction<1>
 
 // Returns from this function to the previous caller.
 class MReturn
-  : public MAryControlInstruction<1>,
+  : public MAryControlInstruction<1, 0>,
     public BoxInputsPolicy
 {
-    FixedArityList<MBasicBlock *, 0> successors_;
-
-    MReturn(MDefinition *ins)
-    {
+    MReturn(MDefinition *ins) {
         initOperand(0, ins);
     }
 
   public:
     INSTRUCTION_HEADER(Return);
-    static MReturn *New(MDefinition *ins);
-
-    size_t numSuccessors() const {
-        return 0;
-    }
-
-    MBasicBlock *getSuccessor(size_t i) const {
-        return successors_[i];
-    }
-
-    void replaceSuccessor(size_t i, MBasicBlock *successor) {
-        JS_NOT_REACHED("There are no successors");
+    static MReturn *New(MDefinition *ins) {
+        return new MReturn(ins);
     }
 
     TypePolicy *typePolicy() {
         return this;
     }
     AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+class MThrow
+  : public MAryControlInstruction<1, 0>,
+    public BoxInputsPolicy
+{
+    MThrow(MDefinition *ins) {
+        initOperand(0, ins);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Throw);
+    static MThrow *New(MDefinition *ins) {
+        return new MThrow(ins);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    virtual AliasSet getAliasSet() const {
         return AliasSet::None();
     }
 };

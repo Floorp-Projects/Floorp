@@ -4080,11 +4080,10 @@ END_CASE(JSOP_THROWING)
 
 BEGIN_CASE(JSOP_THROW)
 {
-    JS_ASSERT(!cx->isExceptionPending());
     CHECK_BRANCH();
     Value v;
     POP_COPY_TO(v);
-    cx->setPendingException(v);
+    JS_ALWAYS_FALSE(Throw(cx, v));
     /* let the code at error try to catch the exception. */
     goto error;
 }
@@ -4876,6 +4875,14 @@ js::NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
         return NULL;
     obj->setType(type);
     return obj;
+}
+
+bool
+js::Throw(JSContext *cx, const Value &v)
+{
+    JS_ASSERT(!cx->isExceptionPending());
+    cx->setPendingException(v);
+    return false;
 }
 
 bool

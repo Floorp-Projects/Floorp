@@ -1192,5 +1192,15 @@ CodeGenerator::visitOutOfLineCacheSetProperty(OutOfLineCache *ool)
     return true;
 }
 
+bool
+CodeGenerator::visitThrow(LThrow *lir)
+{
+    typedef bool (*pf)(JSContext *, const Value &);
+    static const VMFunction ThrowInfo = FunctionInfo<pf>(js::Throw);
+
+    pushArg(ToValue(lir, LThrow::Value));
+    return callVM(ThrowInfo, lir);
+}
+
 } // namespace ion
 } // namespace js
