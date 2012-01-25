@@ -143,7 +143,6 @@ FENNEC_PP_JAVA_FILES = \
   db/BrowserContract.java \
   db/BrowserProvider.java \
   SmsManager.java \
-  SyncPreference.java \
   $(NULL)
 
 
