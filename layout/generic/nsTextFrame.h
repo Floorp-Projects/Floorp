@@ -272,10 +272,22 @@ public:
   nsOverflowAreas
     RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState);
 
+  enum TextRunType {
+    // Anything in reflow (but not intrinsic width calculation) or
+    // painting should use the inflated text run (i.e., with font size
+    // inflation applied).
+    eInflated,
+    // Intrinsic width calculation should use the non-inflated text run.
+    // When there is font size inflation, it will be different.
+    eNotInflated
+  };
+
   void AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
-                                nsIFrame::InlineMinWidthData *aData);
+                                nsIFrame::InlineMinWidthData *aData,
+                                float aInflation, TextRunType aTextRunType);
   void AddInlinePrefWidthForFlow(nsRenderingContext *aRenderingContext,
-                                 InlinePrefWidthData *aData);
+                                 InlinePrefWidthData *aData,
+                                 float aInflation, TextRunType aTextRunType);
 
   /**
    * Calculate the horizontal bounds of the grapheme clusters that fit entirely
@@ -368,16 +380,6 @@ public:
   // and going to the end of the text node or the next bidi continuation
   // boundary.
   PRInt32 GetInFlowContentLength();
-
-  enum TextRunType {
-    // Anything in reflow (but not intrinsic width calculation) or
-    // painting should use the inflated text run (i.e., with font size
-    // inflation applied).
-    eInflated,
-    // Intrinsic width calculation should use the non-inflated text run.
-    // When there is font size inflation, it will be different.
-    eNotInflated
-  };
 
   /**
    * Acquires the text run for this content, if necessary.
