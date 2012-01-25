@@ -1,4 +1,4 @@
-  /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -213,6 +213,14 @@ static const int kAvailableVirtualMemoryParameterLen =
 static const char kOOMAllocationSizeParameter[] = "OOMAllocationSize=";
 static const int kOOMAllocationSizeParameterLen =
   sizeof(kOOMAllocationSizeParameter)-1;
+
+static const char kAvailablePageFileParameter[] = "AvailablePageFile=";
+static const int kAvailablePageFileParameterLen =
+  sizeof(kAvailablePageFileParameter)-1;
+
+static const char kAvailablePhysicalMemoryParameter[] = "AvailablePhysicalMemory=";
+static const int kAvailablePhysicalMemoryParameterLen =
+  sizeof(kAvailablePhysicalMemoryParameter)-1;
 
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
@@ -455,34 +463,31 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
                   &nBytes, NULL);
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
       }
+
       // Try to get some information about memory.
       MEMORYSTATUSEX statex;
       statex.dwLength = sizeof(statex);
       if (GlobalMemoryStatusEx(&statex)) {
         char buffer[128];
         int bufferLen;
-        WriteFile(hFile, kSysMemoryParameter,
-                  kSysMemoryParameterLen, &nBytes, NULL);
-        ltoa(statex.dwMemoryLoad, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
-                  &nBytes, NULL);
+
+#define WRITE_STATEX_FIELD(field, paramName, conversionFunc)  \
+        WriteFile(hFile, k##paramName##Parameter,             \
+                  k##paramName##ParameterLen, &nBytes, NULL); \
+        conversionFunc(statex.field, buffer, 10);             \
+        bufferLen = strlen(buffer);                           \
+        WriteFile(hFile, buffer, bufferLen, &nBytes, NULL);   \
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
-        WriteFile(hFile, kTotalVirtualMemoryParameter,
-                  kTotalVirtualMemoryParameterLen, &nBytes, NULL);
-        _ui64toa(statex.ullTotalVirtual, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
-                  &nBytes, NULL);
-        WriteFile(hFile, "\n", 1, &nBytes, NULL);
-        WriteFile(hFile, kAvailableVirtualMemoryParameter,
-                  kAvailableVirtualMemoryParameterLen, &nBytes, NULL);
-        _ui64toa(statex.ullAvailVirtual, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
-                  &nBytes, NULL);
-        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+
+        WRITE_STATEX_FIELD(dwMemoryLoad, SysMemory, ltoa);
+        WRITE_STATEX_FIELD(ullTotalVirtual, TotalVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailVirtual, AvailableVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailPageFile, AvailablePageFile, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailPhys, AvailablePhysicalMemory, _ui64toa);
+
+#undef WRITE_STATEX_FIELD
       }
+
       if (oomAllocationSizeBufferLen) {
         WriteFile(hFile, kOOMAllocationSizeParameter,
                   kOOMAllocationSizeParameterLen, &nBytes, NULL);
