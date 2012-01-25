@@ -217,32 +217,6 @@ nsLoggingSink::AddLeaf(const nsIParserNode& aNode) {
 
 /**
  *  This gets called by the parser when you want to add
- *  a PI node to the current container in the content
- *  model.
- *  
- *  @updated gess 3/25/98
- *  @param   
- *  @return  
- */
-NS_IMETHODIMP
-nsLoggingSink::AddProcessingInstruction(const nsIParserNode& aNode){
-
-#ifdef VERBOSE_DEBUG
-  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
-#endif
-
-  nsresult theResult=NS_OK;
-
-  //then proxy the call to the real sink if you have one.
-  if(mSink) {
-    theResult=mSink->AddProcessingInstruction(aNode);
-  }
-  
-  return theResult;
-}
-
-/**
- *  This gets called by the parser when you want to add
  *  a comment node to the current container in the content
  *  model.
  *  
