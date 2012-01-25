@@ -226,6 +226,7 @@ class IonBuilder : public MIRGenerator
     ControlStatus processAndOrEnd(CFGState &state);
     ControlStatus processSwitchBreak(JSOp op, jssrcnote *sn);
     ControlStatus processReturn(JSOp op);
+    ControlStatus processThrow();
     ControlStatus processContinue(JSOp op, jssrcnote *sn);
     ControlStatus processBreak(JSOp op, jssrcnote *sn);
     ControlStatus maybeLoop(JSOp op, jssrcnote *sn);

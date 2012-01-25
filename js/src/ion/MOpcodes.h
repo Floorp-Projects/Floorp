@@ -76,6 +76,7 @@ namespace ion {
     _(Mod)                                                                  \
     _(Concat)                                                               \
     _(Return)                                                               \
+    _(Throw)                                                                \
     _(Copy)                                                                 \
     _(Box)                                                                  \
     _(Unbox)                                                                \

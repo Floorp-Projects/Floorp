@@ -164,6 +164,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCallGetNameTypeOf(MCallGetNameTypeOf *ins);
     bool visitGenericSetProperty(MGenericSetProperty *ins);
     bool visitStringLength(MStringLength *ins);
+    bool visitThrow(MThrow *ins);
 
     bool visitGuardObject(MGuardObject *ins) {
         // The type policy associated with this instruction does all the work.

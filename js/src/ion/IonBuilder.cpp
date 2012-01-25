@@ -544,6 +544,9 @@ IonBuilder::snoopControlFlow(JSOp op)
       case JSOP_STOP:
         return processReturn(op);
 
+      case JSOP_THROW:
+        return processThrow();
+
       case JSOP_GOTO:
       {
         jssrcnote *sn = info().getNote(cx, pc);
@@ -1947,6 +1950,22 @@ IonBuilder::processReturn(JSOp op)
 
     MReturn *ret = MReturn::New(def);
     current->end(ret);
+
+    if (!graph().addExit(current))
+        return ControlStatus_Error;
+
+    // Make sure no one tries to use this block now.
+    current = NULL;
+    return processControlEnd();
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processThrow()
+{
+    MDefinition *def = current->pop();
+
+    MThrow *ins = MThrow::New(def);
+    current->end(ins);
 
     if (!graph().addExit(current))
         return ControlStatus_Error;

@@ -64,6 +64,7 @@
     _(BitOp)                        \
     _(ShiftOp)                      \
     _(Return)                       \
+    _(Throw)                        \
     _(Phi)                          \
     _(TestIAndBranch)               \
     _(TestDAndBranch)               \
