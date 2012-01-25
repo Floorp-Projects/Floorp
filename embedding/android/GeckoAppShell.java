@@ -362,7 +362,7 @@ public class GeckoAppShell
         GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
 
         File cacheFile = getCacheDir();
-        GeckoAppShell.putenv("CACHE_PATH=" + cacheFile.getPath());
+        GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
 
         // gingerbread introduces File.getUsableSpace(). We should use that.
         long freeSpace = getFreeSpace();
