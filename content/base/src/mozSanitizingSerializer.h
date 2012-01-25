@@ -118,7 +118,6 @@ public:
   NS_IMETHOD OpenHead();
   NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn);
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
