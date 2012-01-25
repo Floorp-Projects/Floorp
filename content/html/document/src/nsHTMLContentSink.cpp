@@ -204,7 +204,6 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
   NS_IMETHOD DidProcessTokens(void);
   NS_IMETHOD WillProcessAToken(void);
   NS_IMETHOD DidProcessAToken(void);
@@ -2107,18 +2106,6 @@ HTMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
   // Implementation of AddProcessingInstruction() should start here
 
   return result;
-}
-
-/**
- *  This gets called by the parser when it encounters
- *  a DOCTYPE declaration in the HTML document.
- */
-
-NS_IMETHODIMP
-HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
-{
-  MOZ_NOT_REACHED("Must not use HTMLContentSink for doctypes.");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
