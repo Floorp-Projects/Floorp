@@ -96,7 +96,7 @@ JSString::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
     /* JSExtensibleString: count the full capacity, not just the used space. */
     if (isExtensible()) {
         JSExtensibleString &extensible = asExtensible();
-        return mallocSizeOf(extensible.chars(), asExtensible().capacity() * sizeof(jschar));
+        return mallocSizeOf(extensible.chars());
     }
 
     JS_ASSERT(isFixed());
@@ -111,7 +111,7 @@ JSString::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
 
     /* JSAtom, JSFixedString: count the chars. +1 for the null char. */
     JSFixedString &fixed = asFixed();
-    return mallocSizeOf(fixed.chars(), (length() + 1) * sizeof(jschar));
+    return mallocSizeOf(fixed.chars());
 }
 
 static JS_ALWAYS_INLINE bool

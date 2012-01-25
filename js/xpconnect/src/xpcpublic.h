@@ -209,7 +209,7 @@ bool StringToJsval(JSContext *cx, nsString &str, JS::Value *rval);
 
 void *GetCompartmentName(JSContext *cx, JSCompartment *c);
 void DestroyCompartmentName(void *string);
-size_t JsMallocSizeOf(const void *ptr, size_t computedSize);
+size_t JsMallocSizeOf(const void *ptr);
 
 } // namespace xpc
 

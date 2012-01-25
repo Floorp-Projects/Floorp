@@ -6304,18 +6304,18 @@ GetScriptMemoryStats(JSScript *script, TypeInferenceMemoryStats *stats, JSMalloc
 
     /* If TI is disabled, a single TypeScript is still present. */
     if (!script->compartment()->types.inferenceEnabled) {
-        stats->scripts += mallocSizeOf(typeScript, sizeof(TypeScript));
+        stats->scripts += mallocSizeOf(typeScript);
         return;
     }
 
-    stats->scripts += mallocSizeOf(typeScript->nesting, sizeof(TypeScriptNesting));
+    stats->scripts += mallocSizeOf(typeScript->nesting);
 
     unsigned count = TypeScript::NumTypeSets(script);
-    stats->scripts += mallocSizeOf(typeScript, sizeof(TypeScript) + count * sizeof(TypeSet));
+    stats->scripts += mallocSizeOf(typeScript);
 
     TypeResult *result = typeScript->dynamicList;
     while (result) {
-        stats->scripts += mallocSizeOf(result, sizeof(TypeResult));
+        stats->scripts += mallocSizeOf(result);
         result = result->next;
     }
 
@@ -6345,8 +6345,7 @@ JS::SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment
 
     /* Pending arrays are cleared on GC along with the analysis pool. */
     stats->temporary +=
-        mallocSizeOf(compartment->types.pendingArray, 
-                     sizeof(TypeCompartment::PendingWork) * compartment->types.pendingCapacity);
+        mallocSizeOf(compartment->types.pendingArray);
 
     /* TypeCompartment::pendingRecompiles is non-NULL only while inference code is running. */
     JS_ASSERT(!compartment->types.pendingRecompiles);
@@ -6371,8 +6370,7 @@ JS::SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment
             const ObjectTableEntry &value = e.front().value;
 
             /* key.ids and values.types have the same length. */
-            stats->tables += mallocSizeOf(key.ids, key.nslots * sizeof(jsid)) +
-                             mallocSizeOf(value.types, key.nslots * sizeof(Type));
+            stats->tables += mallocSizeOf(key.ids) + mallocSizeOf(value.types);
         }
     }
 }
@@ -6392,16 +6390,8 @@ JS::SizeOfTypeObjectExcludingThis(void *object_, TypeInferenceMemoryStats *stats
         return;
     }
 
-    if (object->newScript) {
-        /* The initializerList is tacked onto the end of the TypeNewScript. */
-        size_t computedSize = sizeof(TypeNewScript);
-        for (TypeNewScript::Initializer *init = object->newScript->initializerList; ; init++) {
-            computedSize += sizeof(TypeNewScript::Initializer);
-            if (init->kind == TypeNewScript::Initializer::DONE)
-                break;
-        }
-        stats->objects += mallocSizeOf(object->newScript, computedSize);
-    }
+    if (object->newScript)
+        stats->objects += mallocSizeOf(object->newScript);
 
     /*
      * This counts memory that is in the temp pool but gets attributed

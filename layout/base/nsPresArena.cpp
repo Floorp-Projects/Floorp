@@ -389,14 +389,14 @@ struct nsPresArena::State {
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   {
-    size_t n = aMallocSizeOf(this, sizeof(*this));
+    size_t n = aMallocSizeOf(this);
 
     // The first PLArena is within the PLArenaPool, i.e. within |this|, so we
     // don't measure it.  Subsequent PLArenas are by themselves and must be
     // measured.
     const PLArena *arena = mPool.first.next;
     while (arena) {
-      n += aMallocSizeOf(arena, arena->limit - arena->base);
+      n += aMallocSizeOf(arena);
       arena = arena->next;
     }
     return n;

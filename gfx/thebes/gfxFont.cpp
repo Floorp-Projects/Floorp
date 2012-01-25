@@ -5279,10 +5279,7 @@ gfxTextRun::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
 size_t
 gfxTextRun::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
-    // The second arg is how much gfxTextRun::AllocateStorageForTextRun would
-    // have allocated, given the character count of this run.
-    return aMallocSizeOf(this, sizeof(gfxTextRun) + sizeof(CompressedGlyph) * GetLength()) +
-           SizeOfExcludingThis(aMallocSizeOf);
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 
