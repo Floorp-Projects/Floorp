@@ -4793,6 +4793,7 @@ var XULBrowserWindow = {
   },
 
   hideChromeForLocation: function(aLocation) {
+    aLocation = aLocation.toLowerCase();
     return this.inContentWhitelist.some(function(aSpec) {
       return aSpec == aLocation;
     });
