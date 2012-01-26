@@ -6,6 +6,10 @@
 
   <g transform="scale(2)">
     <text x="10" y="30"
-          fill="black" stroke="black" stroke-width="1">abc</text>
+          fill="black" stroke="black" stroke-width="1">a</text>
+    <text x="20" y="30"
+          fill="black" stroke="black" stroke-width="1">b</text>
+    <text x="30" y="30"
+          fill="black" stroke="black" stroke-width="1">c</text>
   </g>
 </svg>
