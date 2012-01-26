@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="utf-8">
+  <script>
+
+function boom()
+{
+  // Force frame construction
+  document.documentElement.offsetHeight;
+
+  // A dynamic change
+  var x = document.getElementById("x");
+  x.parentNode.removeChild(x);
+}
+
+  </script>
+ </head>
+ <body onload="boom();">
+  <div><span>&#x0661;<span id="x"></span>&#x0663;</span>&#x062A;</div>
+ </body>
+</html>
