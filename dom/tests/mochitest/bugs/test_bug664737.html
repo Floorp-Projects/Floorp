@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=664737
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 664737</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=664737">Mozilla Bug 664737</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 664737 **/
+function shouldfail(name) {
+    try {
+        var rv = history[name];
+        fail(false, "able to access history." + name);
+    } catch (e) {
+        ok(e.message.indexOf("Permission denied") >= 0, "cannot access history." + name);
+    }
+}
+
+shouldfail("current");
+shouldfail("previous");
+shouldfail("next");
+
+
+</script>
+</pre>
+</body>
+</html>
