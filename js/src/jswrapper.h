@@ -206,7 +206,14 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, J
                          uintN flags);
 
 JS_FRIEND_API(bool) IsWrapper(const JSObject *obj);
-JS_FRIEND_API(JSObject *) UnwrapObject(JSObject *obj, uintN *flagsp = NULL);
+
+// Given a JSObject, returns that object stripped of wrappers. If
+// stopAtOuter is true, then this returns the outer window if it was
+// previously wrapped. Otherwise, this returns the first object for
+// which JSObject::isWrapper returns false.
+JS_FRIEND_API(JSObject *) UnwrapObject(JSObject *obj, bool stopAtOuter = true,
+                                       uintN *flagsp = NULL);
+
 bool IsCrossCompartmentWrapper(const JSObject *obj);
 
 } /* namespace js */
