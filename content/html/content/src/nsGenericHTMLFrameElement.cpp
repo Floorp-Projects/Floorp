@@ -11,6 +11,7 @@
 #include "nsIDOMCustomEvent.h"
 #include "nsIVariant.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsWeakPtr.h"
 #include "nsVariant.h"
 #include "nsContentUtils.h"
 #include "nsDOMMemoryReporter.h"
@@ -37,10 +38,13 @@ NS_INTERFACE_TABLE_HEAD(nsGenericHTMLFrameElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_INT_ATTR(nsGenericHTMLFrameElement, TabIndex, tabindex)
-NS_IMPL_BOOL_ATTR(nsGenericHTMLFrameElement, Mozbrowser, mozbrowser)
 
 nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
 {
+  if (mTitleChangedListener) {
+    mTitleChangedListener->Unregister();
+  }
+
   if (mFrameLoader) {
     mFrameLoader->Destroy();
   }
@@ -112,17 +116,7 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
     return NS_OK;
   }
 
-  // Register ourselves as a web progress listener on the frameloader's
-  // docshell.
-  nsCOMPtr<nsIDocShell> docShell;
-  mFrameLoader->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(docShell);
-  NS_ENSURE_TRUE(webProgress, NS_OK);
-
-  // This adds a weak ref, so we don't have to worry about unregistering.
-  webProgress->AddProgressListener(this,
-    nsIWebProgress::NOTIFY_LOCATION |
-    nsIWebProgress::NOTIFY_STATE_WINDOW);
+  MaybeEnsureBrowserFrameListenersRegistered();
 
   return NS_OK;
 }
@@ -283,6 +277,84 @@ nsGenericHTMLFrameElement::SizeOf() const
   // TODO: need to implement SizeOf() in nsFrameLoader, bug 672539.
   size += mFrameLoader ? sizeof(*mFrameLoader.get()) : 0;
   return size;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetMozbrowser(bool *aValue)
+{
+  return GetBoolAttr(nsGkAtoms::mozbrowser, aValue);
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::SetMozbrowser(bool aValue)
+{
+  nsresult rv = SetBoolAttr(nsGkAtoms::mozbrowser, aValue);
+  if (NS_SUCCEEDED(rv)) {
+    MaybeEnsureBrowserFrameListenersRegistered();
+  }
+  return rv;
+}
+
+/*
+ * If this frame element is allowed to be a browser frame (because it passes
+ * BrowserFrameSecurityCheck()), then make sure that it has the appropriate
+ * event listeners enabled.
+ */
+void
+nsGenericHTMLFrameElement::MaybeEnsureBrowserFrameListenersRegistered()
+{
+  if (mBrowserFrameListenersRegistered) {
+    return;
+  }
+
+  // If this frame passes the browser frame security check, ensure that its
+  // listeners are active.
+  if (!BrowserFrameSecurityCheck()) {
+    return;
+  }
+
+  // Not much we can do without a frameLoader.  But EnsureFrameLoader will call
+  // this function, so we'll get a chance to pass this test.
+  if (!mFrameLoader) {
+    return;
+  }
+
+  mBrowserFrameListenersRegistered = true;
+
+  // Register ourselves as a web progress listener on the frameloader's
+  // docshell.
+  nsCOMPtr<nsIDocShell> docShell;
+  mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(docShell);
+
+  // This adds a weak ref, so we don't have to worry about unregistering.
+  if (webProgress) {
+    webProgress->AddProgressListener(this,
+      nsIWebProgress::NOTIFY_LOCATION |
+      nsIWebProgress::NOTIFY_STATE_WINDOW);
+  }
+
+  // Register a listener for DOMTitleChanged on the window's chrome event
+  // handler.  The chrome event handler outlives this iframe, so we'll have to
+  // unregister when the iframe is destroyed.
+
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(docShell);
+  if (!window) {
+    return;
+  }
+  MOZ_ASSERT(window->IsOuterWindow());
+
+  nsIDOMEventTarget *chromeHandler = window->GetChromeEventHandler();
+  if (!chromeHandler) {
+    return;
+  }
+
+  MOZ_ASSERT(!mTitleChangedListener);
+  mTitleChangedListener = new TitleChangedListener(this, chromeHandler);
+  chromeHandler->AddSystemEventListener(NS_LITERAL_STRING("DOMTitleChanged"),
+                                        mTitleChangedListener,
+                                        /* useCapture = */ false,
+                                        /* wantsUntrusted = */ false);
 }
 
 /**
@@ -448,4 +520,78 @@ nsGenericHTMLFrameElement::OnSecurityChange(nsIWebProgress *aWebProgress,
                                             PRUint32 state)
 {
   return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(nsGenericHTMLFrameElement::TitleChangedListener,
+                   nsIDOMEventListener)
+
+nsGenericHTMLFrameElement::TitleChangedListener::TitleChangedListener(
+  nsGenericHTMLFrameElement *aElement,
+  nsIDOMEventTarget *aChromeHandler)
+{
+  mElement =
+    do_GetWeakReference(NS_ISUPPORTS_CAST(nsIDOMMozBrowserFrame*, aElement));
+  mChromeHandler = do_GetWeakReference(aChromeHandler);
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::TitleChangedListener::HandleEvent(nsIDOMEvent *aEvent)
+{
+#ifdef DEBUG
+  {
+    nsString eventType;
+    aEvent->GetType(eventType);
+    MOZ_ASSERT(eventType.EqualsLiteral("DOMTitleChanged"));
+  }
+#endif
+
+  nsCOMPtr<nsIDOMMozBrowserFrame> element = do_QueryReferent(mElement);
+  if (!element) {
+    // Hm, our element is gone, but somehow we weren't unregistered?
+    Unregister();
+    return NS_OK;
+  }
+
+  nsGenericHTMLFrameElement* frameElement =
+    static_cast<nsGenericHTMLFrameElement*>(element.get());
+
+  nsCOMPtr<nsIDOMDocument> frameDocument;
+  frameElement->GetContentDocument(getter_AddRefs(frameDocument));
+  NS_ENSURE_STATE(frameDocument);
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMDocument> targetDocument = do_QueryInterface(target);
+  NS_ENSURE_STATE(targetDocument);
+
+  if (frameDocument != targetDocument) {
+    // This is a titlechange event for the wrong document!
+    return NS_OK;
+  }
+
+  nsString newTitle;
+  nsresult rv = targetDocument->GetTitle(newTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  frameElement->MaybeFireBrowserEvent(
+    NS_LITERAL_STRING("titlechange"),
+    NS_LITERAL_STRING("customevent"),
+    newTitle);
+
+  return NS_OK;
+}
+
+void
+nsGenericHTMLFrameElement::TitleChangedListener::Unregister()
+{
+  nsCOMPtr<nsIDOMEventTarget> chromeHandler = do_QueryReferent(mChromeHandler);
+  if (!chromeHandler) {
+    return;
+  }
+
+  chromeHandler->RemoveSystemEventListener(NS_LITERAL_STRING("DOMTitleChanged"),
+                                           this, /* useCapture = */ false);
+
+  // Careful; the call above may have removed the last strong reference to this
+  // class, so don't dereference |this| here.
 }

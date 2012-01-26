@@ -8,6 +8,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMMozBrowserFrame.h"
+#include "nsIDOMEventListener.h"
 #include "nsIWebProgressListener.h"
 
 /**
@@ -22,9 +23,11 @@ public:
   nsGenericHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                             mozilla::dom::FromParser aFromParser)
     : nsGenericHTMLElement(aNodeInfo)
+    , mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK)
+    , mBrowserFrameListenersRegistered(false)
   {
-    mNetworkCreated = aFromParser == mozilla::dom::FROM_PARSER_NETWORK;
   }
+
   virtual ~nsGenericHTMLFrameElement();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -60,6 +63,28 @@ public:
                                                      nsGenericHTMLElement)
 
 protected:
+  /**
+   * Listens to titlechanged events from the document inside the iframe and
+   * forwards them along to the iframe so it can fire a mozbrowsertitlechange
+   * event if appropriate.
+   */
+  class TitleChangedListener : public nsIDOMEventListener
+  {
+  public:
+    TitleChangedListener(nsGenericHTMLFrameElement *aElement,
+                         nsIDOMEventTarget *aChromeHandler);
+
+    /* Unregister this listener. */
+    void Unregister();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDOMEVENTLISTENER
+
+  private:
+    nsWeakPtr mElement; /* nsGenericHTMLFrameElement */
+    nsWeakPtr mChromeHandler; /* nsIDOMEventTarget */
+  };
+
   // This doesn't really ensure a frame loade in all cases, only when
   // it makes sense.
   nsresult EnsureFrameLoader();
@@ -67,14 +92,19 @@ protected:
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
   nsresult GetContentWindow(nsIDOMWindow** aContentWindow);
 
+  void MaybeEnsureBrowserFrameListenersRegistered();
   bool BrowserFrameSecurityCheck();
   nsresult MaybeFireBrowserEvent(const nsAString &aEventName,
                                  const nsAString &aEventType,
                                  const nsAString &aValue = EmptyString());
 
   nsRefPtr<nsFrameLoader> mFrameLoader;
+  nsRefPtr<TitleChangedListener> mTitleChangedListener;
+
   // True when the element is created by the parser
   // using NS_FROM_PARSER_NETWORK flag.
   // If the element is modified, it may lose the flag.
   bool                    mNetworkCreated;
+
+  bool                    mBrowserFrameListenersRegistered;
 };
