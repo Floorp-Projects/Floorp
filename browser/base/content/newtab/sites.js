@@ -120,10 +120,8 @@ Site.prototype = {
    * Renders the site's data (fills the HTML fragment).
    */
   _render: function Site_render() {
-    let title = this.title || this.url;
-    this.node.setAttribute("title", title);
     this.node.setAttribute("href", this.url);
-    this._querySelector(".site-title").textContent = title;
+    this._querySelector(".site-title").textContent = this.title || this.url;
 
     if (this.isPinned())
       this._updateAttributes(true);
