@@ -88,7 +88,7 @@ MacroAssembler::guardTypeSet(const T &address, types::TypeSet *types,
 
         for (unsigned i = 0; i < count; i++) {
             if (types::TypeObject *object = types->getTypeObject(i))
-                branchPtr(Equal, obj, ImmGCPtr(object), &matched);
+                branchPtr(Equal, scratch, ImmGCPtr(object), &matched);
         }
     }
 
