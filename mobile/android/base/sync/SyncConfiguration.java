@@ -63,9 +63,9 @@ public class SyncConfiguration implements CredentialsSource {
       this.editor = config.getEditor();
     }
 
-    @Override
     public void apply() {
-      this.editor.apply();
+      // Android <=r8 SharedPreferences.Editor does not contain apply() for overriding.
+      this.editor.commit();
     }
 
     @Override
