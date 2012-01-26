@@ -390,7 +390,7 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
         return NS_ERROR_FAILURE;
     }
 
-    ResumeSend(httpTransaction);
+    ResumeSend();
 
     return NS_OK;
 }
@@ -796,7 +796,7 @@ nsHttpConnection::PushBack(const char *data, PRUint32 length)
 }
 
 nsresult
-nsHttpConnection::ResumeSend(nsAHttpTransaction *)
+nsHttpConnection::ResumeSend()
 {
     LOG(("nsHttpConnection::ResumeSend [this=%p]\n", this));
 
@@ -810,7 +810,7 @@ nsHttpConnection::ResumeSend(nsAHttpTransaction *)
 }
 
 nsresult
-nsHttpConnection::ResumeRecv(nsAHttpTransaction *)
+nsHttpConnection::ResumeRecv()
 {
     LOG(("nsHttpConnection::ResumeRecv [this=%p]\n", this));
 
