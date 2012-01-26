@@ -63,6 +63,11 @@ typedef InlineForwardListIterator<MPhi> MPhiIterator;
 
 class LBlock;
 
+enum BranchDirection {
+    FALSE_BRANCH,
+    TRUE_BRANCH
+};
+
 class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 {
     static const uint32 NotACopy = uint32(-1);
@@ -332,6 +337,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setImmediateDominator(MBasicBlock *dom) {
         immediateDominator_ = dom;
     }
+
+    MTest *immediateDominatorBranch(BranchDirection *pdirection);
 
     size_t numImmediatelyDominatedBlocks() const {
         return immediatelyDominated_.length();

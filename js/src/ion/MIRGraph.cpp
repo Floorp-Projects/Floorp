@@ -926,3 +926,30 @@ MBasicBlock::dumpStack(FILE *fp)
 #endif
 }
 
+MTest *
+MBasicBlock::immediateDominatorBranch(BranchDirection *pdirection)
+{
+    *pdirection = FALSE_BRANCH;
+
+    if (numPredecessors() != 1)
+        return NULL;
+
+    MBasicBlock *dom = immediateDominator();
+    if (dom != getPredecessor(0))
+        return NULL;
+
+    // Look for a trailing MTest branching to this block.
+    MInstruction *ins = dom->lastIns();
+    if (ins->isTest()) {
+        MTest *test = ins->toTest();
+
+        JS_ASSERT(test->ifTrue() == this || test->ifFalse() == this);
+        if (test->ifTrue() == this && test->ifFalse() == this)
+            return NULL;
+
+        *pdirection = (test->ifTrue() == this) ? TRUE_BRANCH : FALSE_BRANCH;
+        return test;
+    }
+
+    return NULL;
+}

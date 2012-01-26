@@ -153,6 +153,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitArrayLength(MArrayLength *ins);
     bool visitInitializedLength(MInitializedLength *ins);
     bool visitBoundsCheck(MBoundsCheck *ins);
+    bool visitBoundsCheckLower(MBoundsCheckLower *ins);
     bool visitLoadElement(MLoadElement *ins);
     bool visitStoreElement(MStoreElement *ins);
     bool visitLoadFixedSlot(MLoadFixedSlot *ins);

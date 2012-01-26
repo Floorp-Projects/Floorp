@@ -398,6 +398,13 @@ class MDefinition : public MNode
     }
     void replaceAllUsesWith(MDefinition *dom);
 
+    // Mark this instruction as having replaced all uses of ins, as during GVN,
+    // returning false if the replacement should not be performed. For use when
+    // GVN eliminates instructions which are not equivalent to one another.
+    virtual bool updateForReplacement(MDefinition *ins) {
+        return true;
+    }
+
     // Adds a use from a node that is being recycled during operand
     // replacement.
     void linkUse(MUse *use) {
@@ -2116,12 +2123,18 @@ class MArrayLength
     }
 };
 
-// Bailout if index >= length.
+// Bailout if index + minimum < 0 or index + maximum >= length. The length used
+// in a bounds check must not be negative, or the wrong result may be computed
+// (unsigned comparisons may be used).
 class MBoundsCheck
   : public MBinaryInstruction
 {
+    // Range over which to perform the bounds check, may be modified by GVN.
+    int32 minimum_;
+    int32 maximum_;
+
     MBoundsCheck(MDefinition *index, MDefinition *length)
-      : MBinaryInstruction(index, length)
+      : MBinaryInstruction(index, length), minimum_(0), maximum_(0)
     {
         setGuard();
         setMovable();
@@ -2142,8 +2155,56 @@ class MBoundsCheck
     MDefinition *length() const {
         return getOperand(1);
     }
-    bool congruentTo(MDefinition * const &ins) const {
-        return false;
+    int32 minimum() const {
+        return minimum_;
+    }
+    void setMinimum(int32 n) {
+        minimum_ = n;
+    }
+    int32 maximum() const {
+        return maximum_;
+    }
+    void setMaximum(int32 n) {
+        maximum_ = n;
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    HashNumber valueHash() const;
+    bool congruentTo(MDefinition * const &ins) const;
+    bool updateForReplacement(MDefinition *ins);
+};
+
+// Bailout if index < minimum.
+class MBoundsCheckLower
+  : public MUnaryInstruction
+{
+    int32 minimum_;
+
+    MBoundsCheckLower(MDefinition *index)
+      : MUnaryInstruction(index), minimum_(0)
+    {
+        setGuard();
+        setMovable();
+        JS_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(BoundsCheckLower);
+
+    static MBoundsCheckLower *New(MDefinition *index) {
+        return new MBoundsCheckLower(index);
+    }
+
+    MDefinition *index() const {
+        return getOperand(0);
+    }
+    int32 minimum() const {
+        return minimum_;
+    }
+    void setMinimum(int32 n) {
+        minimum_ = n;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
