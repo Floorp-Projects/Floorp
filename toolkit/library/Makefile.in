@@ -425,6 +425,7 @@ OS_LIBS += \
   -lmedia \
   -lhardware_legacy \
   -lhardware \
+  -lutils \
   $(NULL)
 endif
 

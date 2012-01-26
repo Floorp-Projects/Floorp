@@ -128,9 +128,15 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 }
 
 JS_FRIEND_API(void)
-JS_ShrinkingGC(JSContext *cx)
+js::GCForReason(JSContext *cx, gcreason::Reason reason)
 {
-    js_GC(cx, NULL, GC_SHRINK, gcstats::PUBLIC_API);
+    js_GC(cx, NULL, GC_NORMAL, reason);
+}
+
+JS_FRIEND_API(void)
+js::ShrinkingGC(JSContext *cx, gcreason::Reason reason)
+{
+    js_GC(cx, NULL, GC_SHRINK, reason);
 }
 
 JS_FRIEND_API(void)

@@ -50,6 +50,7 @@ import android.util.Log;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.HttpVersion;
 import ch.boye.httpclientandroidlib.auth.Credentials;
 import ch.boye.httpclientandroidlib.auth.UsernamePasswordCredentials;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
@@ -157,6 +158,7 @@ public class BaseResource implements Resource {
     HttpConnectionParams.setConnectionTimeout(params, delegate.connectionTimeout());
     HttpConnectionParams.setSoTimeout(params, delegate.socketTimeout());
     HttpProtocolParams.setContentCharset(params, charset);
+    HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
     delegate.addHeaders(request, client);
   }
 
@@ -182,8 +184,7 @@ public class BaseResource implements Resource {
     SchemeRegistry schemeRegistry = new SchemeRegistry();
     schemeRegistry.register(new Scheme("https", 443, sf));
     schemeRegistry.register(new Scheme("http", 80, new PlainSocketFactory()));
-    ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(
-        schemeRegistry);
+    ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(schemeRegistry);
     connManager = cm;
     return cm;
   }
