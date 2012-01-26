@@ -632,7 +632,7 @@
                   autocomplete.unregisterOpenPage(this.mBrowser.registeredOpenURI);
                   delete this.mBrowser.registeredOpenURI;
                 }
-                if (!isBlankPageURL(aLocation.spec)) {
+                if (aLocation.spec != "about:blank") {
                   autocomplete.registerOpenPage(aLocation);
                   this.mBrowser.registeredOpenURI = aLocation;
                 }
@@ -1065,7 +1065,7 @@
                 }
               }
 
-              if (title && !isBlankPageURL(title)) {
+              if (title && title != "about:blank") {
                 // At this point, we now have a URI.
                 // Let's try to unescape it using a character set
                 // in case the URI is not ASCII.
@@ -1589,7 +1589,7 @@
             aTab.closing = true;
             this._removingTabs.push(aTab);
             if (newTab)
-              this.addTab(BROWSER_NEW_TAB_URL, {skipAnimation: true});
+              this.addTab("about:blank", {skipAnimation: true});
             else
               this.tabContainer.updateVisibility();
 
