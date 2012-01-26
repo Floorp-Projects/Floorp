@@ -105,6 +105,8 @@ static RedirEntry kRedirMap[] = {
   { "home", "chrome://browser/content/aboutHome.xhtml",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::ALLOW_SCRIPT },
+  { "newtab", "chrome://browser/content/newtab/newTab.xul",
+    nsIAboutModule::ALLOW_SCRIPT },
   { "permissions", "chrome://browser/content/preferences/aboutPermissions.xul",
     nsIAboutModule::ALLOW_SCRIPT },
 };
