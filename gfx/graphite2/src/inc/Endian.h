@@ -42,8 +42,8 @@ class be
 	}
 public:
 	template<typename T>
-	inline static T peek(const unsigned char * p) { 
-		return T(_peek<sizeof(T)>(p));
+	inline static T peek(const void * p) {
+		return T(_peek<sizeof(T)>(static_cast<const unsigned char *>(p)));
 	}
 
 	template<typename T>
@@ -76,8 +76,8 @@ class le
 	}
 public:
 	template<typename T>
-	inline static T peek(const unsigned char * p) { 
-		return T(_peek<sizeof(T)>(p));
+	inline static T peek(const void * p) {
+		return T(_peek<sizeof(T)>(static_cast<const unsigned char *>(p)));
 	}
 
 	template<typename T>

@@ -26,22 +26,28 @@ of the License or (at your option) any later version.
 */
 #include <cstring>
 
-#include "Main.h"
-#include "Endian.h"
-#include "FeatureMap.h"
-#include "FeatureVal.h"
+#include "inc/Main.h"
+#include "inc/Endian.h"
+#include "inc/FeatureMap.h"
+#include "inc/FeatureVal.h"
 #include "graphite2/Font.h"
-#include "XmlTraceLog.h"
-#include "TtfUtil.h"
+#include "inc/TtfUtil.h"
 #include <cstdlib>
-#include "Face.h"
+#include "inc/Face.h"
 
 
 using namespace graphite2;
 
-static int cmpNameAndFeatures(const void *a, const void *b) { return (*(NameAndFeatureRef *)a < *(NameAndFeatureRef *)b 
-                                                                        ? -1 : (*(NameAndFeatureRef *)b < *(NameAndFeatureRef *)a 
-                                                                                    ? 1 : 0)); }
+namespace
+{
+	static int cmpNameAndFeatures(const void *ap, const void *bp)
+	{
+		const NameAndFeatureRef & a = *static_cast<const NameAndFeatureRef *>(ap),
+								& b = *static_cast<const NameAndFeatureRef *>(bp);
+		return (a < b ? -1 : (b < a ? 1 : 0));
+	}
+}
+
 
 bool FeatureMap::readFeats(const Face & face)
 {
@@ -65,15 +71,6 @@ bool FeatureMap::readFeats(const Face & face)
     byte currIndex = 0;
     byte currBits = 0;     //to cause overflow on first Feature
 
-#ifndef DISABLE_TRACING
-    if (XmlTraceLog::get().active())
-    {
-        XmlTraceLog::get().openElement(ElementFeatures);
-        XmlTraceLog::get().addAttribute(AttrMajor, version >> 16);
-        XmlTraceLog::get().addAttribute(AttrMinor, version & 0xFFFF);
-        XmlTraceLog::get().addAttribute(AttrNum, m_numFeats);
-    }
-#endif
     for (int i = 0, ie = m_numFeats; i != ie; i++)
     {
         uint32 name;
@@ -101,23 +98,9 @@ bool FeatureMap::readFeats(const Face & face)
         const byte *pSet = pOrig + offset;
         uint16 maxVal = 0;
 
-#ifndef DISABLE_TRACING
-        if (XmlTraceLog::get().active())
-        {
-            XmlTraceLog::get().openElement(ElementFeature);
-            XmlTraceLog::get().addAttribute(AttrIndex, i);
-            XmlTraceLog::get().addAttribute(AttrNum, name);
-            XmlTraceLog::get().addAttribute(AttrFlags, flags);
-            XmlTraceLog::get().addAttribute(AttrLabel, uiName);
-        }
-#endif
-
         if (numSet == 0)
         {
             --m_numFeats;
-#ifndef DISABLE_TRACING
-            XmlTraceLog::get().closeElement(ElementFeature);
-#endif
             continue;
         }
 
@@ -130,17 +113,6 @@ bool FeatureMap::readFeats(const Face & face)
             if (j == 0) defVals[i] = val;
             uint16 label = be::read<uint16>(pSet);
             new (uiSet + j) FeatureSetting(label, val);
-#ifndef DISABLE_TRACING
-            if (XmlTraceLog::get().active())
-            {
-                XmlTraceLog::get().openElement(ElementFeatureSetting);
-                XmlTraceLog::get().addAttribute(AttrIndex, j);
-                XmlTraceLog::get().addAttribute(AttrValue, val);
-                XmlTraceLog::get().addAttribute(AttrLabel, label);
-                if (j == 0) XmlTraceLog::get().addAttribute(AttrDefault, defVals[i]);
-                XmlTraceLog::get().closeElement(ElementFeatureSetting);
-            }
-#endif
         }
         uint32 mask = 1;
         byte bits = 0;
@@ -161,9 +133,6 @@ bool FeatureMap::readFeats(const Face & face)
                 break;
             }
         }
-#ifndef DISABLE_TRACING
-    XmlTraceLog::get().closeElement(ElementFeature);
-#endif
     }
     m_defaultFeatures = new Features(currIndex + 1, *this);
     m_pNamedFeats = new NameAndFeatureRef[m_numFeats];
@@ -176,10 +145,6 @@ bool FeatureMap::readFeats(const Face & face)
     free(defVals);
 
     qsort(m_pNamedFeats, m_numFeats, sizeof(NameAndFeatureRef), &cmpNameAndFeatures);
-
-#ifndef DISABLE_TRACING
-    XmlTraceLog::get().closeElement(ElementFeatures);
-#endif
 
     return true;
 }

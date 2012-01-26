@@ -24,9 +24,9 @@ Mozilla Public License (http://mozilla.org/MPL) or the GNU General Public
 License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
-#include "Main.h"
-#include "Slot.h"
-#include "Segment.h"
+#include "inc/Main.h"
+#include "inc/Slot.h"
+#include "inc/Segment.h"
 
 using namespace graphite2;
 

@@ -26,9 +26,9 @@ of the License or (at your option) any later version.
 */
 #pragma once
 
-#include "Main.h"
+#include "inc/Main.h"
 
-#include "Pass.h"
+#include "inc/Pass.h"
 
 namespace graphite2 {
 
@@ -64,7 +64,7 @@ public:
     Silf() throw();
     ~Silf() throw();
     
-    bool readGraphite(void *pSilf, size_t lSilf, const Face &face, uint32 version);
+    bool readGraphite(const void *pSilf, size_t lSilf, const Face &face, uint32 version);
     bool runGraphite(Segment *seg, uint8 firstPass=0, uint8 lastPass=0) const;
     uint16 findClassIndex(uint16 cid, uint16 gid) const;
     uint16 getClassGlyph(uint16 cid, unsigned int index) const;
@@ -106,7 +106,6 @@ private:
     
     void releaseBuffers() throw();
     
-private:			//defensive
     Silf(const Silf&);
     Silf& operator=(const Silf&);
 };

@@ -26,44 +26,30 @@
 */
 #pragma once
 
-#include <stddef.h>
+#include <graphite2/Types.h>
+#include <stdio.h>
 
-typedef unsigned char   gr_uint8;
-typedef gr_uint8        gr_byte;
-typedef signed char     gr_int8;
-typedef unsigned short  gr_uint16;
-typedef short           gr_int16;
-typedef unsigned int    gr_uint32;
-typedef int             gr_int32;
+typedef enum {
+    GRLOG_NONE = 0x0,
+    GRLOG_FACE = 0x01,
+    GRLOG_SEGMENT = 0x02,
+    GRLOG_PASS = 0x04,
+    GRLOG_CACHE = 0x08,
+    
+    GRLOG_OPCODE = 0x80,
+    GRLOG_ALL = 0xFF
+} GrLogMask;
 
-enum gr_encform {
-  gr_utf8 = 1/*sizeof(uint8)*/, gr_utf16 = 2/*sizeof(uint16)*/, gr_utf32 = 4/*sizeof(uint32)*/
-};
+// If startGraphiteLogging returns true, logging is enabled and the FILE handle
+// will be closed by graphite when stopGraphiteLogging is called.
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-// Definitions for library publicly exported symbols
-#if defined _WIN32 || defined __CYGWIN__
-  #if defined GRAPHITE2_STATIC
-    #define GR2_API
-  #elif defined GRAPHITE2_EXPORTING
-    #if defined __GNUC__
-      #define GR2_API    __attribute__((dllexport))
-    #else
-      #define GR2_API    __declspec(dllexport)
-    #endif
-  #else
-    #if defined __GNUC__
-      #define GR2_API    __attribute__((dllimport))
-    #else
-      #define GR2_API    __declspec(dllimport)
-    #endif
-  #endif
-  #define GR2_LOCAL
-#else
-  #if __GNUC__ >= 4
-    #define GR2_API      __attribute__ ((visibility("default")))
-    #define GR2_LOCAL       __attribute__ ((visibility("hidden")))
-  #else
-    #define GR2_API
-    #define GR2_LOCAL
-  #endif
+GR2_API bool graphite_start_logging(FILE * logFile, GrLogMask mask);		//may not do anthing if disabled in the implementation of the engine.
+GR2_API void graphite_stop_logging();
+
+#ifdef __cplusplus
+}
 #endif

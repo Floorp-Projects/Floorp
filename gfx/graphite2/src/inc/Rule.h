@@ -27,7 +27,8 @@ of the License or (at your option) any later version.
 
 #pragma once
 
-#include "Code.h"
+#include "inc/Code.h"
+#include "inc/Slot.h"
 
 namespace graphite2 {
 
@@ -110,13 +111,15 @@ public:
   Slot       * * end();
   size_t         size() const;
   unsigned short context() const;
-  void           setContext(unsigned short);
+  void           reset(Slot &, unsigned short);
   
   Slot * const & operator[](int n) const;
   Slot       * & operator [] (int);
   void           pushSlot(Slot * const slot);
+  void			 collectGarbage();
+
   Slot         * highwater() { return m_highwater; }
-  void           highwater(Slot *s) { m_highwater = s; }
+  void           highwater(Slot *s) { m_highwater = s; m_highpassed = false; }
   bool			 highpassed() const { return m_highpassed; }
   void			 highpassed(bool v) { m_highpassed = v; }
 
@@ -155,7 +158,7 @@ private:
 
 public:
   FiniteStateMachine(SlotMap & map);
-  void      setContext(short unsigned int);
+  void      reset(Slot * & slot, const short unsigned int max_pre_ctxt);
   Rules     rules;
   SlotMap   & slots;
 };
@@ -165,10 +168,12 @@ inline FiniteStateMachine::FiniteStateMachine(SlotMap& map)
 {
 }
 
-inline void FiniteStateMachine::setContext(short unsigned int ctxt)
+inline void FiniteStateMachine::reset(Slot * & slot, const short unsigned int max_pre_ctxt)
 {
   rules.clear();
-  slots.setContext(ctxt);
+  int ctxt = 0;
+  for (; ctxt != max_pre_ctxt && slot->prev(); ++ctxt, slot = slot->prev());
+  slots.reset(*slot, ctxt);
 }
 
 inline FiniteStateMachine::Rules::Rules()
@@ -251,10 +256,11 @@ inline short unsigned int SlotMap::context() const
   return m_precontext;
 }
 
-inline void SlotMap::setContext(short unsigned int ctxt)
+inline void SlotMap::reset(Slot & slot, short unsigned int ctxt)
 {
   m_size = 0;
   m_precontext = ctxt;
+  *m_slot_map = slot.prev();
 }
 
 inline void SlotMap::pushSlot(Slot*const slot)

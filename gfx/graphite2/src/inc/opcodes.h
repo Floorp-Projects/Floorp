@@ -66,21 +66,13 @@ of the License or (at your option) any later version.
 // #define NOT_IMPLEMENTED     assert(false)
 #define NOT_IMPLEMENTED
 
-#ifdef ENABLE_DEEP_TRACING
-#define TRACEPARAM(n)       XmlTraceLog::get().addArrayElement(ElementParams, dp-n, n)
-#define TRACEPUSH(n)        XmlTraceLog::get().addSingleElement(ElementPush, n)
-#else
-#define TRACEPARAM(n)
-#define TRACEPUSH(n)
-#endif
-
-#define binop(op)           const int32 a = pop(); *sp = int32(*sp) op a; TRACEPUSH(*sp)
-#define use_params(n)       dp += n; TRACEPARAM(n)
+#define binop(op)           const int32 a = pop(); *sp = int32(*sp) op a
+#define use_params(n)       dp += n
 
 #define declare_params(n)   const byte * param = dp; \
                             use_params(n);
 
-#define push(n)             { *++sp = n; TRACEPUSH(n); }
+#define push(n)             { *++sp = n; }
 #define pop()               (*sp--)
 #define slotat(x)           (map[(x)])
 #define DIE                 { is=seg.last(); EXIT(1); }
@@ -251,7 +243,7 @@ STARTOP(put_copy)
     const int  slot_ref = int8(*param);
     if (is && (slot_ref ||is != *map))
     {
-        uint16 *tempUserAttrs = is->userAttrs();
+        int16 *tempUserAttrs = is->userAttrs();
         slotref ref = slotat(slot_ref);
         if (ref)
         {
@@ -335,6 +327,8 @@ STARTOP(delete_)
     else
         seg.last(is->prev());
     
+    if (is == smap.highwater())
+        	smap.highwater(is->next());
     if (is->prev())
         is = is->prev();
     seg.extendLength(-1);
@@ -407,7 +401,7 @@ STARTOP(attr_sub)
         flags |= POSITIONED;
     }
     int res = is->getAttr(&seg, slat, 0);
-    is->setAttr(&seg, slat, 0, val - res, smap);
+    is->setAttr(&seg, slat, 0, res - val, smap);
 ENDOP
 
 STARTOP(attr_set_slot)
@@ -480,7 +474,7 @@ STARTOP(push_att_to_gattr_obs)
     slotref slot = slotat(slot_ref);
     if (slot)
     {
-        slotref att = slot->attachTo();
+        slotref att = slot->attachedTo();
         if (att) slot = att;
         push(seg.glyphAttr(slot->gid(), glyph_attr));
     }
@@ -494,7 +488,7 @@ STARTOP(push_att_to_glyph_metric)
     slotref slot = slotat(slot_ref);
     if (slot)
     {
-        slotref att = slot->attachTo();
+        slotref att = slot->attachedTo();
         if (att) slot = att;
         push(seg.getGlyphMetric(slot, glyph_attr, attr_level));
     }
@@ -570,7 +564,7 @@ STARTOP(iattr_sub)
         flags |= POSITIONED;
     }
     int res = is->getAttr(&seg, slat, idx);
-    is->setAttr(&seg, slat, idx, val - res, smap);
+    is->setAttr(&seg, slat, idx, res - val, smap);
 ENDOP
 
 STARTOP(push_proc_state)
@@ -637,7 +631,7 @@ STARTOP(push_att_to_glyph_attr)
     slotref slot = slotat(slot_ref);
     if (slot)
     {
-        slotref att = slot->attachTo();
+        slotref att = slot->attachedTo();
         if (att) slot = att;
         push(seg.glyphAttr(slot->gid(), glyph_attr));
     }
@@ -645,10 +639,10 @@ ENDOP
 
 STARTOP(temp_copy)
     slotref newSlot = seg.newSlot();
-    uint16 *tempUserAttrs = newSlot->userAttrs();
+    int16 *tempUserAttrs = newSlot->userAttrs();
     memcpy(newSlot, is, sizeof(Slot));
-    newSlot->userAttrs(tempUserAttrs);
     memcpy(tempUserAttrs, is->userAttrs(), seg.numAttrs() * sizeof(uint16));
+    newSlot->userAttrs(tempUserAttrs);
     newSlot->markCopied(true);
     *map = newSlot;
 ENDOP
