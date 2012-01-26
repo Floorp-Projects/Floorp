@@ -855,8 +855,7 @@ Sprinter::put(const char *s, size_t len)
             s = stringAt(s - oldBase);  /* this is where it lives now */
         memmove(bp, s, len);
     } else {
-        JS_ASSERT(s < base || s >= base + size);
-        memcpy(bp, s, len);
+        js_memcpy(bp, s, len);
     }
 
     bp[len] = 0;
@@ -2059,7 +2058,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc, JS
          * the nb parameter.
          */
         ptrdiff_t todo = ss->sprinter.getOffset();
-        ss->sprinter.setOffset(todo + PAREN_SLOP);
+        ss->sprinter.reserve(PAREN_SLOP);
         pc = Decompile(ss, pc, -((intN)ss->top));
         if (!pc)
             return NULL;
