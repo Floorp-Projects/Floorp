@@ -58,6 +58,7 @@ box,
 .splitview-controller {
   min-height: 3em;
   max-height: 14em;
+  max-width: 400px;
 }
 
 .splitview-nav {
@@ -122,5 +123,9 @@ ol.splitview-nav > li.splitview-filtered {
 
   .splitview-portrait-resizer {
     display: -moz-box;
+  }
+
+  .splitview-controller {
+    max-width: none;
   }
 }
