@@ -216,7 +216,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
         /* Don't unwrap an outer window proxy. */
         if (!obj->getClass()->ext.innerObject) {
-            obj = UnwrapObject(&vp->toObject(), &flags);
+            obj = UnwrapObject(&vp->toObject(), true, &flags);
             vp->setObject(*obj);
             if (obj->compartment() == this)
                 return true;
