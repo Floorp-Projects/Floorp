@@ -346,5 +346,6 @@ asserts(2) load 675246-1.xhtml # Bug 675713
 load 691118-1.html
 load 695861.html
 load 698335.html
+needs-focus pref(accessibility.browsewithcaret,true) load 699353-1.html
 load 707098.html
 load 722137.html
