@@ -1421,9 +1421,6 @@ namespace mozilla {
 namespace xpconnect {
 namespace memory {
 
-#define SLOP_BYTES_STRING \
-    " The measurement includes slop bytes caused by the heap allocator rounding up request sizes."
-
 static PRInt64
 ReportCompartmentStats(const JS::CompartmentStats &stats,
                        const nsACString &pathPrefix,
@@ -1528,14 +1525,14 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
                        "which are used to represent object properties.  Some objects also "
                        "contain a fixed number of slots which are stored on the compartment's "
                        "JavaScript heap; those slots are not counted here, but in "
-                       "'gc-heap/objects' instead." SLOP_BYTES_STRING,
+                       "'gc-heap/objects' instead.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "object-elements"),
                        nsIMemoryReporter::KIND_HEAP, stats.objectElements,
                        "Memory allocated for the compartment's object element arrays, "
-                       "which are used to represent indexed object properties." SLOP_BYTES_STRING,
+                       "which are used to represent indexed object properties.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
@@ -1552,14 +1549,14 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
                                               "shapes-extra/tree-tables"),
                        nsIMemoryReporter::KIND_HEAP, stats.shapesExtraTreeTables,
                        "Memory allocated for the compartment's property tables that belong to "
-                       "shapes that are in a property tree." SLOP_BYTES_STRING,
+                       "shapes that are in a property tree.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "shapes-extra/dict-tables"),
                        nsIMemoryReporter::KIND_HEAP, stats.shapesExtraDictTables,
                        "Memory allocated for the compartment's property tables that belong to "
-                       "shapes that are in dictionary mode." SLOP_BYTES_STRING,
+                       "shapes that are in dictionary mode.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
@@ -1580,7 +1577,7 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
                                               "script-data"),
                        nsIMemoryReporter::KIND_HEAP, stats.scriptData,
                        "Memory allocated for JSScript bytecode and various variable-length "
-                       "tables." SLOP_BYTES_STRING,
+                       "tables.",
                        callback, closure);
 
 #ifdef JS_METHODJIT
@@ -1594,7 +1591,7 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
                                               "mjit-data"),
                        nsIMemoryReporter::KIND_HEAP, stats.mjitData,
                        "Memory used by the method JIT for the compartment's compilation data: "
-                       "JITScripts, native maps, and inline cache structs." SLOP_BYTES_STRING,
+                       "JITScripts, native maps, and inline cache structs.",
                        callback, closure);
 #endif
 
@@ -1647,32 +1644,31 @@ ReportJSRuntimeStats(const JS::IterateData &data, const nsACString &pathPrefix,
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/runtime-object"),
                       nsIMemoryReporter::KIND_HEAP, data.runtimeObject,
-                      "Memory used by the JSRuntime object." SLOP_BYTES_STRING,
+                      "Memory used by the JSRuntime object.",
                       callback, closure);
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/atoms-table"),
                       nsIMemoryReporter::KIND_HEAP, data.runtimeAtomsTable,
-                      "Memory used by the atoms table." SLOP_BYTES_STRING,
+                      "Memory used by the atoms table.",
                       callback, closure);
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/contexts"),
                       nsIMemoryReporter::KIND_HEAP, data.runtimeContexts,
                       "Memory used by JSContext objects and certain structures "
-                      "hanging off them."  SLOP_BYTES_STRING,
+                      "hanging off them." ,
                       callback, closure);
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/normal"),
                       nsIMemoryReporter::KIND_HEAP, data.runtimeNormal,
                       "Memory used by a JSRuntime, "
                       "excluding memory that is reported by "
-                      "other reporters under 'explicit/js/runtime/'." SLOP_BYTES_STRING,
+                      "other reporters under 'explicit/js/runtime/'.",
                       callback, closure);
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/temporary"),
                       nsIMemoryReporter::KIND_HEAP, data.runtimeTemporary,
                       "Memory held transiently in JSRuntime and used during "
-                      "compilation.  It mostly holds parse nodes."
-                      SLOP_BYTES_STRING,
+                      "compilation.  It mostly holds parse nodes.",
                       callback, closure);
 
     ReportMemoryBytes0(pathPrefix + NS_LITERAL_CSTRING("runtime/regexp-code"),
@@ -1763,7 +1759,7 @@ public:
 
         ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("xpconnect"),
                           nsIMemoryReporter::KIND_HEAP, xpconnect,
-                          "Memory used by XPConnect." SLOP_BYTES_STRING,
+                          "Memory used by XPConnect.",
                           callback, closure);
 
         ReportMemoryBytes(NS_LITERAL_CSTRING("js-gc-heap-chunk-dirty-unused"),
