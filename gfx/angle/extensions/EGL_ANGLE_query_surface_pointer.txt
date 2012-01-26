@@ -26,7 +26,7 @@ Version
 
 Number
 
-    EGL Extension #??
+    EGL Extension #28
 
 Dependencies
 
