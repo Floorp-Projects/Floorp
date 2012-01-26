@@ -41,6 +41,7 @@
 #include "nsSVGPathElement.h"
 #include "prdtoa.h"
 #include "nsSVGUtils.h"
+#include "nsIDOMSVGPathSeg.h"
 #include <stdlib.h>
 #include <math.h>
 

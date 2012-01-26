@@ -39,12 +39,12 @@
 #ifndef __NS_SVGIMAGEELEMENT_H__
 #define __NS_SVGIMAGEELEMENT_H__
 
-#include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsImageLoadingContent.h"
-#include "nsSVGString.h"
 #include "nsSVGLength2.h"
+#include "nsSVGPathGeometryElement.h"
+#include "nsSVGString.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 typedef nsSVGPathGeometryElement nsSVGImageElementBase;

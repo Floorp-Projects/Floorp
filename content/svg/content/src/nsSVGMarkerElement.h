@@ -37,15 +37,15 @@
 #ifndef __NS_SVGMARKERELEMENT_H__
 #define __NS_SVGMARKERELEMENT_H__
 
-#include "nsSVGGraphicElement.h"
-#include "nsIDOMSVGMarkerElement.h"
+#include "gfxMatrix.h"
 #include "nsIDOMSVGFitToViewBox.h"
-#include "nsSVGLength2.h"
-#include "nsSVGEnum.h"
+#include "nsIDOMSVGMarkerElement.h"
 #include "nsSVGAngle.h"
+#include "nsSVGEnum.h"
+#include "nsSVGGraphicElement.h"
+#include "nsSVGLength2.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "gfxMatrix.h"
 
 class nsSVGOrientType
 {

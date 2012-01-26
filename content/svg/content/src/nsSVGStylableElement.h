@@ -39,10 +39,10 @@
 #ifndef __NS_SVGSTYLABLEELEMENT_H__
 #define __NS_SVGSTYLABLEELEMENT_H__
 
-#include "nsSVGElement.h"
+#include "nsAutoPtr.h"
 #include "nsIDOMSVGStylable.h"
 #include "nsSVGClass.h"
-#include "nsAutoPtr.h"
+#include "nsSVGElement.h"
 
 typedef nsSVGElement nsSVGStylableElementBase;
 
