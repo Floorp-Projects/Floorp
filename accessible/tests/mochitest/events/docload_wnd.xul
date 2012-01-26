@@ -12,8 +12,6 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/utilityOverlay.js"/>
 
   <script type="application/javascript">
   <![CDATA[
