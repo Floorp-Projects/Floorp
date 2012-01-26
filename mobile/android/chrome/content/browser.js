@@ -504,31 +504,7 @@ var BrowserApp = {
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
   },
 
-  screenshotQueue: null,
-
   screenshotTab: function screenshotTab(aData) {
-      if (this.screenshotQueue == null) {
-          this.screenShotQueue = [];
-          this.doScreenshotTab(aData);
-      } else {
-          this.screenshotQueue.push(aData);
-      }
-  },
-
-  doNextScreenshot: function() {
-      if (this.screenshotQueue == null || this.screenshotQueue.length == 0) {
-          this.screenshotQueue = null;
-          return;
-      }
-      let data = this.screenshotQueue.pop();
-      if (data == null) {
-          this.screenshotQueue = null;
-          return;
-      }
-      this.doScreenshotTab(data);
-  },
-
-  doScreenshotTab: function doScreenshotTab(aData) {
       let json = JSON.parse(aData);
       let tab = this.getTabForId(parseInt(json.tabID));
       let width = parseInt(json.width);
@@ -923,8 +899,6 @@ var BrowserApp = {
       this._handleTabClosed(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Screenshot") {
       this.screenshotTab(aData);
-    } else if (aTopic == "Tab:Screenshot:Cancel") {
-      this.screenshotQueue = null;
     } else if (aTopic == "Browser:Quit") {
       this.quit();
     } else if (aTopic == "SaveAs:PDF") {
@@ -1583,9 +1557,6 @@ Tab.prototype = {
         }
       };
       sendMessageToJava(message);
-      Services.tm.mainThread.dispatch(function() {
-	  BrowserApp.doNextScreenshot()
-      }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   updateTransform: function() {
