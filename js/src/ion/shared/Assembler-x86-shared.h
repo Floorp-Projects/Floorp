@@ -41,7 +41,7 @@
 
 #ifndef jsion_assembler_x86_shared__
 #define jsion_assembler_x86_shared__
-
+#include <cstddef>
 #include "assembler/assembler/X86Assembler.h"
 
 namespace js {
@@ -829,6 +829,10 @@ class AssemblerX86Shared
     }
     void xorpd(const FloatRegister &src, const FloatRegister &dest) {
         masm.xorpd_rr(src.code(), dest.code());
+    }
+
+    ptrdiff_t actualOffset(uint8* x) {
+        return (ptrdiff_t)x;
     }
 };
 

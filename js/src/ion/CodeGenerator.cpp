@@ -848,7 +848,7 @@ CodeGenerator::generate()
     if (frameInfoTable_.length())
         script->ion->copyFrameInfoTable(&frameInfoTable_[0]);
     if (cacheList_.length())
-        script->ion->copyCacheEntries(&cacheList_[0]);
+        script->ion->copyCacheEntries(&cacheList_[0], masm);
     if (safepoints_.size())
         script->ion->copySafepoints(&safepoints_);
 

@@ -497,7 +497,7 @@ IonScript::copyFrameInfoTable(const IonFrameInfo *fi)
 }
 
 void
-IonScript::copyCacheEntries(const IonCache *caches)
+IonScript::copyCacheEntries(const IonCache *caches, MacroAssembler &masm)
 {
     memcpy(cacheList(), caches, numCaches() * sizeof(IonCache));
 
@@ -507,7 +507,7 @@ IonScript::copyCacheEntries(const IonCache *caches)
      * final code address now.
      */
     for (size_t i = 0; i < numCaches(); i++)
-        getCache(i).updateBaseAddress(method_);
+        getCache(i).updateBaseAddress(method_, masm);
 }
 
 const IonFrameInfo *
