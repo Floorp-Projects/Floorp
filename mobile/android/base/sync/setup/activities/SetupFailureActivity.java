@@ -50,6 +50,7 @@ public class SetupFailureActivity extends Activity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    setTheme(R.style.SyncTheme);
     super.onCreate(savedInstanceState);
     setContentView(R.layout.sync_setup_failure);
     mContext = this.getApplicationContext();

@@ -82,6 +82,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    setTheme(R.style.SyncTheme);
     super.onCreate(savedInstanceState);
     setContentView(R.layout.sync_account);
     mContext = getApplicationContext();
@@ -132,7 +133,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
   }
 
   public void cancelClickHandler(View target) {
-    moveTaskToBack(true);
+    finish();
   }
 
   /*
