@@ -292,9 +292,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         LayerController controller = getLayerController();
         PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
-        Point tileOrigin = PointUtils.round(displayportOrigin);
-        tileOrigin.offset(-mRenderOffset.x, -mRenderOffset.y);
-        mTileLayer.setOrigin(tileOrigin);
+        mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
         mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
 
         if (onlyUpdatePageSize) {
@@ -323,6 +321,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
                     Rect rect = new Rect(x, y, x + width, y + height);
                     rect.offset(mRenderOffset.x, mRenderOffset.y);
                     ((MultiTileLayer)mTileLayer).invalidate(rect);
+                    ((MultiTileLayer)mTileLayer).setRenderOffset(mRenderOffset);
                 }
             } finally {
                 endTransaction(mTileLayer);
