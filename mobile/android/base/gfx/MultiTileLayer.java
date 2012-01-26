@@ -333,7 +333,7 @@ public class MultiTileLayer extends Layer {
                 }
 
                 // Dirty tile, find out if we already have this tile to reuse.
-                boolean reusedTile = true;
+                boolean reusedTile;
                 Point tileOrigin = new Point(x, y);
                 SubTile tile = mPositionHash.get(longFromPoint(tileOrigin));
 
@@ -343,6 +343,10 @@ public class MultiTileLayer extends Layer {
                     reusedTile = false;
                 } else {
                     mTiles.remove(tile);
+
+                    // Reuse the tile (i.e. keep the texture data and metrics)
+                    // only if the resolution matches
+                    reusedTile = FloatUtils.fuzzyEquals(tile.getResolution(), getResolution());
                 }
 
                 // Place tile at the end of the tile-list so it isn't re-used.
@@ -396,10 +400,36 @@ public class MultiTileLayer extends Layer {
     @Override
     public void draw(RenderContext context) {
         for (SubTile layer : mTiles) {
+            // Skip invalid tiles
+            if (layer.key == null) {
+                continue;
+            }
+
             // Avoid work, only draw tiles that intersect with the viewport
             RectF layerBounds = layer.getBounds(context, new FloatSize(layer.getSize()));
-            if (RectF.intersects(layerBounds, context.viewport))
+            if (RectF.intersects(layerBounds, context.viewport)) {
                 layer.draw(context);
+            }
+        }
+    }
+
+    @Override
+    public void setOrigin(Point origin) {
+        Point oldOrigin = getOrigin();
+
+        if (!origin.equals(oldOrigin)) {
+            super.setOrigin(origin);
+            invalidateBuffer();
+        }
+    }
+
+    @Override
+    public void setResolution(float resolution) {
+        float oldResolution = getResolution();
+
+        if (!FloatUtils.fuzzyEquals(resolution, oldResolution)) {
+            super.setResolution(resolution);
+            invalidateBuffer();
         }
     }
 
