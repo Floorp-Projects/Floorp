@@ -853,7 +853,7 @@ SpdySession::HandleSynReply(SpdySession *self)
   
   self->mFrameDataStream->UpdateTransportReadEvents(self->mFrameDataSize);
 
-  if (!self->mFrameDataStream->SetFullyOpen()) {
+  if (self->mFrameDataStream->GetFullyOpen()) {
     // "If an endpoint receives multiple SYN_REPLY frames for the same active
     // stream ID, it must drop the stream, and send a RST_STREAM for the
     // stream with the error PROTOCOL_ERROR."
@@ -864,6 +864,7 @@ SpdySession::HandleSynReply(SpdySession *self)
     self->GenerateRstStream(RST_PROTOCOL_ERROR, streamID);
     return NS_ERROR_ILLEGAL_VALUE;
   }
+  self->mFrameDataStream->SetFullyOpen();
 
   self->mFrameDataLast = self->mFrameBuffer[4] & kFlag_Data_FIN;
 
