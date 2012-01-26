@@ -37,11 +37,13 @@
 #ifndef MOZILLA_SVGANIMATEDPATHSEGLIST_H__
 #define MOZILLA_SVGANIMATEDPATHSEGLIST_H__
 
+#include "nsAutoPtr.h"
+#include "nsISMILAttr.h"
 #include "SVGPathData.h"
 
+class nsISMILAnimationElement;
+class nsSMILValue;
 class nsSVGElement;
-
-#include "nsISMILAttr.h"
 
 namespace mozilla {
 

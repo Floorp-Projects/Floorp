@@ -39,15 +39,15 @@
 #ifndef __NS_SVGPATTERNELEMENT_H__
 #define __NS_SVGPATTERNELEMENT_H__
 
-#include "nsSVGStylableElement.h"
-#include "nsIDOMSVGURIReference.h"
+#include "DOMSVGTests.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGPatternElement.h"
-#include "DOMSVGTests.h"
 #include "nsIDOMSVGUnitTypes.h"
-#include "nsSVGLength2.h"
+#include "nsIDOMSVGURIReference.h"
 #include "nsSVGEnum.h"
+#include "nsSVGLength2.h"
 #include "nsSVGString.h"
+#include "nsSVGStylableElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedTransformList.h"

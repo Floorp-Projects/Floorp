@@ -37,11 +37,10 @@
 #ifndef MOZILLA_SVGPATHSEGUTILS_H__
 #define MOZILLA_SVGPATHSEGUTILS_H__
 
-#include "nsIDOMSVGPathSeg.h"
-#include "nsIContent.h"
-#include "nsAString.h"
-#include "nsContentUtils.h"
 #include "gfxPoint.h"
+#include "nsDebug.h"
+#include "nsIDOMSVGPathSeg.h"
+#include "nsMemory.h"
 
 #define NS_SVG_PATH_SEG_MAX_ARGS         7
 #define NS_SVG_PATH_SEG_FIRST_VALID_TYPE nsIDOMSVGPathSeg::PATHSEG_CLOSEPATH

@@ -38,14 +38,13 @@
 #ifndef NS_SVGAELEMENT_H_
 #define NS_SVGAELEMENT_H_
 
-#include "nsSVGGraphicElement.h"
+#include "DOMSVGTests.h"
+#include "Link.h"
 #include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"
+#include "nsSVGGraphicElement.h"
 #include "nsSVGString.h"
-#include "DOMSVGTests.h"
-
-#include "Link.h"
 
 typedef nsSVGGraphicElement nsSVGAElementBase;
 

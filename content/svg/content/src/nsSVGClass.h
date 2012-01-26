@@ -37,13 +37,12 @@
 #ifndef __NS_SVGCLASS_H__
 #define __NS_SVGCLASS_H__
 
-#include "nsIDOMSVGAnimatedString.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsString.h"
 #include "nsDOMError.h"
-
+#include "nsIDOMSVGAnimatedString.h"
 #include "nsISMILAttr.h"
+#include "nsString.h"
 
 class nsSVGStylableElement;
 

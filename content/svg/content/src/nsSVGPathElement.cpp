@@ -44,6 +44,7 @@
 #include "DOMSVGPathSegList.h"
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"
+#include "nsContentUtils.h"
 #include "nsSVGPathDataParser.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGUtils.h"

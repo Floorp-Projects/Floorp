@@ -38,9 +38,12 @@
 #ifndef __NS_SVGZOOMEVENT_H__
 #define __NS_SVGZOOMEVENT_H__
 
-#include "nsIDOMSVGZoomEvent.h"
+#include "nsAutoPtr.h"
 #include "nsDOMUIEvent.h"
-#include "nsIDOMSVGSVGElement.h"
+#include "nsIDOMSVGZoomEvent.h"
+
+class nsGUIEvent;
+class nsPresContext;
 
 namespace mozilla {
 class DOMSVGPoint;

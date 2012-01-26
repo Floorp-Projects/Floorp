@@ -39,7 +39,6 @@
 
 #include "nsDebug.h"
 #include "gfxPoint.h"
-#include "nsMathUtils.h"
 
 namespace mozilla {
 

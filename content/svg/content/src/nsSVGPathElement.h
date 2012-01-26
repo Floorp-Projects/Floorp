@@ -39,12 +39,11 @@
 #ifndef __NS_SVGPATHELEMENT_H__
 #define __NS_SVGPATHELEMENT_H__
 
-#include "nsSVGPathGeometryElement.h"
-#include "nsIDOMSVGPathElement.h"
 #include "nsIDOMSVGAnimatedPathData.h"
+#include "nsIDOMSVGPathElement.h"
 #include "nsSVGNumber2.h"
+#include "nsSVGPathGeometryElement.h"
 #include "SVGAnimatedPathSegList.h"
-#include "gfxPath.h"
 
 class gfxContext;
 

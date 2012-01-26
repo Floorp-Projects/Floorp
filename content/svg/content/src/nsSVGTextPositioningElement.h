@@ -38,8 +38,8 @@
 
 #include "nsIDOMSVGTextPositionElem.h"
 #include "nsSVGTextContentElement.h"
-#include "SVGAnimatedNumberList.h"
 #include "SVGAnimatedLengthList.h"
+#include "SVGAnimatedNumberList.h"
 
 class nsSVGElement;
 

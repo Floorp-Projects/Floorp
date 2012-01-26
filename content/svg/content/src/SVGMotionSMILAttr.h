@@ -41,6 +41,10 @@
 #define MOZILLA_SVGMOTIONSMILATTR_H_
 
 #include "nsISMILAttr.h"
+
+class nsIContent;
+class nsISMILAnimationElement;
+class nsSMILValue;
 class nsSVGElement;
 
 namespace mozilla {
