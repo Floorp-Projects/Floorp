@@ -103,7 +103,7 @@ static AndroidDirectTexture* sDirectTexture = new AndroidDirectTexture(2048, 204
         AndroidGraphicBuffer::UsageSoftwareWrite | AndroidGraphicBuffer::UsageTexture,
         gfxASurface::ImageFormatRGB16_565);
 
-static bool sHasDirectTexture = true;
+static bool sHasDirectTexture = false;
 
 #endif
 
