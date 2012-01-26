@@ -3794,10 +3794,10 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
   AssertIsOnWorkerThread();
 
   if (aShrinking) {
-    JS_ShrinkingGC(aCx);
+    js::ShrinkingGC(aCx, js::gcreason::DOM_WORKER);
   }
   else {
-    JS_GC(aCx);
+    js::GCForReason(aCx, js::gcreason::DOM_WORKER);
   }
 
   if (aCollectChildren) {

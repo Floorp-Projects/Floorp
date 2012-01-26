@@ -6,7 +6,7 @@ mk_add_options AUTOCONF=autoconf213
 ac_cv_visibility_pragma=no
 
 ac_add_options --disable-install-strip
-ac_add_options --disable-installer
+
 ac_add_options --enable-application=mobile/android
 
 # Nightlies only since this has a cost in performance
