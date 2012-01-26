@@ -54,7 +54,7 @@
         persist="screenX screenY width height"
         onkeypress="gPermissionManager.onWindowKeyPress(event);">
 
-  <script src="chrome://browser/content/preferences/permissionsutils.js"/>
+  <script src="chrome://global/content/treeUtils.js"/>
   <script src="chrome://browser/content/preferences/permissions.js"/>
 
   <stringbundle id="bundlePreferences"

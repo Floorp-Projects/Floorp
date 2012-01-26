@@ -239,7 +239,8 @@ var gPermissionManager = {
         ++this._view._rowCount;
         this._tree.treeBoxObject.rowCountChanged(this._view.rowCount - 1, 1);        
         // Re-do the sort, since we inserted this new item at the end. 
-        gTreeUtils.sort(this._tree, this._view, this._permissions, 
+        gTreeUtils.sort(this._tree, this._view, this._permissions,
+                        this._permissionsComparator,
                         this._lastPermissionSortColumn, 
                         this._lastPermissionSortAscending);        
       }
@@ -254,7 +255,8 @@ var gPermissionManager = {
         // or vice versa, since if we're sorted on status, we may no
         // longer be in order. 
         if (this._lastPermissionSortColumn.id == "statusCol") {
-          gTreeUtils.sort(this._tree, this._view, this._permissions, 
+          gTreeUtils.sort(this._tree, this._view, this._permissions,
+                          this._permissionsComparator,
                           this._lastPermissionSortColumn, 
                           this._lastPermissionSortAscending);
         }
@@ -311,13 +313,19 @@ var gPermissionManager = {
   
   _lastPermissionSortColumn: "",
   _lastPermissionSortAscending: false,
+  _permissionsComparator : function (a, b)
+  {
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+  },
+
   
   onPermissionSort: function (aColumn)
   {
     this._lastPermissionSortAscending = gTreeUtils.sort(this._tree, 
                                                         this._view, 
                                                         this._permissions,
-                                                        aColumn, 
+                                                        aColumn,
+                                                        this._permissionsComparator,
                                                         this._lastPermissionSortColumn, 
                                                         this._lastPermissionSortAscending);
     this._lastPermissionSortColumn = aColumn;
