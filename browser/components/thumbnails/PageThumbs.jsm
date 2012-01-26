@@ -77,7 +77,7 @@ let PageThumbs = {
    * @return The newly created canvas containing the image data.
    */
   capture: function PageThumbs_capture(aWindow) {
-    let [sx, sy, sw, sh, scale] = this._determineCropRectangle(aWindow);
+    let [sw, sh, scale] = this._determineCropSize(aWindow);
 
     let canvas = this._createCanvas();
     let ctx = canvas.getContext("2d");
@@ -87,7 +87,7 @@ let PageThumbs = {
 
     try {
       // Draw the window contents to the canvas.
-      ctx.drawWindow(aWindow, sx, sy, sw, sh, THUMBNAIL_BG_COLOR,
+      ctx.drawWindow(aWindow, 0, 0, sw, sh, THUMBNAIL_BG_COLOR,
                      ctx.DRAWWINDOW_DO_NOT_FLUSH);
     } catch (e) {
       // We couldn't draw to the canvas for some reason.
@@ -152,14 +152,11 @@ let PageThumbs = {
   },
 
   /**
-   * Determines the crop rectangle for a given content window.
+   * Determines the crop size for a given content window.
    * @param aWindow The content window.
-   * @return An array containing x, y, width, heigh and the scale of the crop
-   *         rectangle.
+   * @return An array containing width, height and scale.
    */
-  _determineCropRectangle: function PageThumbs_determineCropRectangle(aWindow) {
-    let sx = 0;
-    let sy = 0;
+  _determineCropSize: function PageThumbs_determineCropSize(aWindow) {
     let sw = aWindow.innerWidth;
     let sh = aWindow.innerHeight;
 
@@ -167,17 +164,13 @@ let PageThumbs = {
     let scaledWidth = sw * scale;
     let scaledHeight = sh * scale;
 
-    if (scaledHeight > THUMBNAIL_HEIGHT) {
-      sy = Math.floor(Math.abs((scaledHeight - THUMBNAIL_HEIGHT) / 2) / scale);
-      sh -= 2 * sy;
-    }
+    if (scaledHeight > THUMBNAIL_HEIGHT)
+      sh -= Math.floor(Math.abs(scaledHeight - THUMBNAIL_HEIGHT) * scale);
 
-    if (scaledWidth > THUMBNAIL_WIDTH) {
-      sx = Math.floor(Math.abs((scaledWidth - THUMBNAIL_WIDTH) / 2) / scale);
-      sw -= 2 * sx;
-    }
+    if (scaledWidth > THUMBNAIL_WIDTH)
+      sw -= Math.floor(Math.abs(scaledWidth - THUMBNAIL_WIDTH) * scale);
 
-    return [sx, sy, sw, sh, scale];
+    return [sw, sh, scale];
   },
 
   /**
