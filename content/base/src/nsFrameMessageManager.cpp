@@ -1110,3 +1110,15 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
   nsFrameMessageManager::sChildProcessManager = mm;
   return CallQueryInterface(mm, aResult);
 }
+
+bool
+nsFrameMessageManager::MarkForCC()
+{
+  PRUint32 len = mListeners.Length();
+  for (PRUint32 i = 0; i < len; ++i) {
+    nsCOMPtr<nsIXPConnectWrappedJS> wjs =
+      do_QueryInterface(mListeners[i].mListener);
+    xpc_UnmarkGrayObject(wjs);
+  }
+  return true;
+}

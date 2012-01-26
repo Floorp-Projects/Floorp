@@ -156,6 +156,7 @@ public:
 
   void Disconnect(bool aRemoveFromParent = true);
   void SetCallbackData(void* aData, bool aLoadScripts = true);
+  void* GetCallbackData() { return mCallbackData; }
   void GetParamsForMessage(const jsval& aObject,
                            JSContext* aCx,
                            nsAString& aJSON);
