@@ -32,7 +32,7 @@ class OutputHLSL : public TIntermTraverser
     static TString arrayString(const TType &type);
     static TString initializer(const TType &type);
     static TString decorate(const TString &string);                      // Prepends an underscore to avoid naming clashes
-    static TString decorateUniform(const TString &string, bool array);
+    static TString decorateUniform(const TString &string, const TType &type);
 
   protected:
     void header();
