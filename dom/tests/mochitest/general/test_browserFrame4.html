@@ -18,7 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 -->
 
 <script type="application/javascript;version=1.7">
-"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -31,8 +30,24 @@ function runTest() {
   browserFrameHelpers.setEnabledPref(true);
   browserFrameHelpers.addToWhitelist();
 
-  var iframe = document.getElementById('iframe');
+  // Load example.org into the iframe, wait for that to load, then call
+  // runTest2.  This would *almost* work if we just had a <iframe mozbrowser>
+  // in the HTML, except that we have to set the prefs before we create the
+  // iframe!
 
+  var iframe = document.createElement('iframe');
+  iframe.id = 'iframe';
+  document.body.appendChild(iframe);
+  iframe.src = 'data:text/html,1';
+  iframe.addEventListener('load', function() {
+    iframe.removeEventListener('load', arguments.callee);
+    SimpleTest.executeSoon(runTest2);
+  });
+}
+
+function runTest2() {
+  var iframe = document.getElementById('iframe');
+  iframe.mozbrowser = true;
   iframe.addEventListener('mozbrowserloadstart', function() {
     ok(!seenLoadStart, 'Just one loadstart event.');
     seenLoadStart = true;
@@ -81,8 +96,6 @@ function waitForAllCallbacks() {
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
 
 </script>
-
-<iframe id='iframe' mozbrowser></iframe>
 
 </body>
 </html>
