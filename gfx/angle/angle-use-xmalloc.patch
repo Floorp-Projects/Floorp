@@ -1,6 +1,5 @@
 # HG changeset patch
-# Parent bc7188c29ec5b942046c0589ce959d7985f7ad6e
-
+# Parent 93033f21b121382b50e5bc9787edf704d6906508
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in
@@ -23,75 +22,6 @@ diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
  libs::
  	expand "$(MOZ_D3DX9_CAB)" -F:$(MOZ_D3DX9_DLL) "$(DIST)/bin"
  	expand "$(MOZ_D3DCOMPILER_CAB)" -F:$(MOZ_D3DCOMPILER_DLL) "$(DIST)/bin"
-diff --git a/gfx/angle/angle-use-xmalloc.patch b/gfx/angle/angle-use-xmalloc.patch
---- a/gfx/angle/angle-use-xmalloc.patch
-+++ b/gfx/angle/angle-use-xmalloc.patch
-@@ -1,14 +1,14 @@
- # HG changeset patch
--# Parent 31d1c6ebb61eb118868ca924769a2fa3a50d54ef
-+# Parent 6a1ee30b3a60564c165795ecf79e9c2081ee80ab
- diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
- --- a/gfx/angle/Makefile.in
- +++ b/gfx/angle/Makefile.in
--@@ -127,16 +127,18 @@ CSRCS   = \
-+@@ -129,16 +129,18 @@ CSRCS   = \
-  	$(NULL)
-  
-  DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD -DCOMPILER_IMPLEMENTATION
-  
-  #these defines are from ANGLE's build_angle.gyp
-  DEFINES += -DANGLE_DISABLE_TRACE
-  DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL0
-  
-@@ -17,47 +17,26 @@ diff --git a/gfx/angle/Makefile.in b/gfx
-  ifdef MOZ_ANGLE
-  
-  # libEGL depends on (links against!) libGLESv2!
-  DIRS = src/libGLESv2 src/libEGL
-  
-  libs::
-  	expand "$(MOZ_D3DX9_CAB)" -F:$(MOZ_D3DX9_DLL) "$(DIST)/bin"
-  	expand "$(MOZ_D3DCOMPILER_CAB)" -F:$(MOZ_D3DCOMPILER_DLL) "$(DIST)/bin"
--diff --git a/gfx/angle/README.mozilla b/gfx/angle/README.mozilla
----- a/gfx/angle/README.mozilla
--+++ b/gfx/angle/README.mozilla
--@@ -3,16 +3,17 @@ This is the ANGLE project, from http://c
-- Current revision: r885
-- 
-- == Applied local patches ==
-- 
-- In this order:
--   angle-renaming-debug.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
--   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
--   angle-limit-identifiers-to-250-chars.patch - see bug 675625
--+  angle-use-xmalloc.patch - see bug 680840. Can drop this patch whenever the new preprocessor lands.
-- 
-- In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
-- 
-- == How to update this ANGLE copy ==
-- 
-- 1. Unapply patches
-- 2. Apply diff with new ANGLE version
-- 3. Reapply patches.
- diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler/preprocessor/atom.c
- --- a/gfx/angle/src/compiler/preprocessor/atom.c
- +++ b/gfx/angle/src/compiler/preprocessor/atom.c
- @@ -48,16 +48,18 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
-  
-  #include <stdlib.h>
-  #include <stdio.h>
-  #include <string.h>
-  
-- #include "compiler/compilerdebug.h"
-+ #include "compiler/debug.h"
-  #include "compiler/preprocessor/slglobals.h"
-  
- +#include "../../../../../memory/mozalloc/mozalloc.h"
- +
-  #undef malloc
-  #undef realloc
-  #undef free
-  
 diff --git a/gfx/angle/src/compiler/preprocessor/atom.c b/gfx/angle/src/compiler/preprocessor/atom.c
 --- a/gfx/angle/src/compiler/preprocessor/atom.c
 +++ b/gfx/angle/src/compiler/preprocessor/atom.c

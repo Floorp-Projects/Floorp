@@ -82,7 +82,6 @@ CPPSRCS = \
         Intermediate.cpp \
         intermOut.cpp \
         IntermTraverse.cpp \
-        MozAngleLink.cpp \
         parseConst.cpp \
         ParseHelper.cpp \
         PoolAlloc.cpp \
@@ -149,6 +148,7 @@ CPPSRCS	+= \
 	main.cpp \
 	Program.cpp \
 	RefCountObject.cpp \
+	Query.cpp \
 	Renderbuffer.cpp \
 	ResourceManager.cpp \
 	Shader.cpp \

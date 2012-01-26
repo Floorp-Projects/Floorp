@@ -139,7 +139,7 @@ void OutputHLSL::header()
                 {
                     if (mReferencedUniforms.find(name.c_str()) != mReferencedUniforms.end())
                     {
-                        uniforms += "uniform " + typeString(type) + " " + decorateUniform(name, type.isArray()) + arrayString(type) + ";\n";
+                        uniforms += "uniform " + typeString(type) + " " + decorateUniform(name, type) + arrayString(type) + ";\n";
                     }
                 }
                 else if (qualifier == EvqVaryingIn || qualifier == EvqInvariantVaryingIn)
@@ -303,7 +303,7 @@ void OutputHLSL::header()
                 {
                     if (mReferencedUniforms.find(name.c_str()) != mReferencedUniforms.end())
                     {
-                        uniforms += "uniform " + typeString(type) + " " + decorateUniform(name, type.isArray()) + arrayString(type) + ";\n";
+                        uniforms += "uniform " + typeString(type) + " " + decorateUniform(name, type) + arrayString(type) + ";\n";
                     }
                 }
                 else if (qualifier == EvqAttribute)
@@ -759,7 +759,7 @@ void OutputHLSL::visitSymbol(TIntermSymbol *node)
         if (qualifier == EvqUniform)
         {
             mReferencedUniforms.insert(name.c_str());
-            out << decorateUniform(name, node->isArray());
+            out << decorateUniform(name, node->getType());
         }
         else if (qualifier == EvqAttribute)
         {
@@ -2019,6 +2019,8 @@ TString OutputHLSL::typeString(const TType &type)
             return "sampler2D";
           case EbtSamplerCube:
             return "samplerCUBE";
+          case EbtSamplerExternalOES:
+            return "sampler2D";
         }
     }
 
@@ -2370,11 +2372,15 @@ TString OutputHLSL::decorate(const TString &string)
     return string;
 }
 
-TString OutputHLSL::decorateUniform(const TString &string, bool array)
+TString OutputHLSL::decorateUniform(const TString &string, const TType &type)
 {
-    if (array)
+    if (type.isArray())
     {
         return "ar_" + string;   // Allows identifying arrays of size 1
+    }
+    else if (type.getBasicType() == EbtSamplerExternalOES)
+    {
+        return "ex_" + string;
     }
     
     return decorate(string);
