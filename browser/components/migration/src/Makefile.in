@@ -49,16 +49,15 @@ USE_STATIC_LIBS = 1
 endif
 
 
-CPPSRCS  = nsBrowserProfileMigratorUtils.cpp \
-           $(NULL)
-
 ifeq ($(OS_ARCH)_$(GNU_CXX),WINNT_)
 CPPSRCS += nsIEProfileMigrator.cpp \
+           nsBrowserProfileMigratorUtils.cpp \
            $(NULL)
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsSafariProfileMigrator.cpp \
+           nsBrowserProfileMigratorUtils.cpp \
            $(NULL)
 endif            
 
