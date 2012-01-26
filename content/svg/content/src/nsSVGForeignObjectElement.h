@@ -39,9 +39,9 @@
 #ifndef __NS_SVGFOREIGNOBJECTELEMENT_H__
 #define __NS_SVGFOREIGNOBJECTELEMENT_H__
 
-#include "nsSVGGraphicElement.h"
-#include "nsIDOMSVGForeignObjectElem.h"
 #include "DOMSVGTests.h"
+#include "nsIDOMSVGForeignObjectElem.h"
+#include "nsSVGGraphicElement.h"
 #include "nsSVGLength2.h"
 
 typedef nsSVGGraphicElement nsSVGForeignObjectElementBase;

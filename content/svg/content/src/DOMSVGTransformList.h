@@ -41,12 +41,15 @@
 #ifndef MOZILLA_DOMSVGTRANSFORMLIST_H__
 #define MOZILLA_DOMSVGTRANSFORMLIST_H__
 
-#include "nsIDOMSVGTransformList.h"
-#include "SVGTransformList.h"
 #include "DOMSVGAnimatedTransformList.h"
-#include "nsCOMArray.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsDebug.h"
+#include "nsIDOMSVGTransformList.h"
+#include "nsTArray.h"
+#include "SVGTransformList.h"
 
+class nsIDOMSVGTransform;
 class nsSVGElement;
 
 namespace mozilla {

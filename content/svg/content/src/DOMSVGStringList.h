@@ -38,12 +38,11 @@
 #ifndef MOZILLA_DOMSVGSTRINGLIST_H__
 #define MOZILLA_DOMSVGSTRINGLIST_H__
 
-#include "nsIDOMSVGStringList.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsCOMArray.h"
 #include "nsAutoPtr.h"
-
-class nsSVGElement;
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDOMSVGStringList.h"
+#include "nsSVGElement.h"
 
 namespace mozilla {
 

@@ -37,11 +37,10 @@
 #ifndef MOZILLA_DOMSVGPATHSEG_H__
 #define MOZILLA_DOMSVGPATHSEG_H__
 
-#include "nsIDOMSVGPathSeg.h"
 #include "DOMSVGPathSegList.h"
-#include "SVGPathSegUtils.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDOMSVGPathSeg.h"
 
 class nsSVGElement;
 

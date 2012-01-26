@@ -37,9 +37,8 @@
 #ifndef MOZILLA_SVGLENGTH_H__
 #define MOZILLA_SVGLENGTH_H__
 
+#include "nsDebug.h"
 #include "nsIDOMSVGLength.h"
-#include "nsIContent.h"
-#include "nsAString.h"
 #include "nsMathUtils.h"
 
 class nsSVGElement;

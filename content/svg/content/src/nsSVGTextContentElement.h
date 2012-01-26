@@ -39,10 +39,10 @@
 #ifndef __NS_SVGTEXTCONTENTELEMENTBASE_H__
 #define __NS_SVGTEXTCONTENTELEMENTBASE_H__
 
-#include "nsIDOMSVGTextContentElement.h"
-#include "nsSVGTextContainerFrame.h"
-#include "nsSVGStylableElement.h"
 #include "DOMSVGTests.h"
+#include "nsIDOMSVGTextContentElement.h"
+#include "nsSVGStylableElement.h"
+#include "nsSVGTextContainerFrame.h"
 
 typedef nsSVGStylableElement nsSVGTextContentElementBase;
 

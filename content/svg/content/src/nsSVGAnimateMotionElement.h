@@ -38,8 +38,8 @@
 #ifndef NS_SVGANIMATEMOTIONELEMENT_H_
 #define NS_SVGANIMATEMOTIONELEMENT_H_
 
-#include "nsSVGAnimationElement.h"
 #include "nsIDOMSVGAnimateMotionElement.h"
+#include "nsSVGAnimationElement.h"
 #include "nsSVGEnum.h"
 #include "SVGMotionSMILAnimationFunction.h"
 

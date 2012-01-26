@@ -36,9 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsSVGElement.h"
+
 #include "mozilla/Util.h"
 
-#include "nsSVGElement.h"
 #include "nsSVGSVGElement.h"
 #include "nsIDocument.h"
 #include "nsRange.h"

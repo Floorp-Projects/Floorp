@@ -41,11 +41,18 @@
 #ifndef MOZILLA_DOMSVGTRANSFORM_H__
 #define MOZILLA_DOMSVGTRANSFORM_H__
 
-#include "nsIDOMSVGTransform.h"
 #include "DOMSVGTransformList.h"
-#include "SVGTransform.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsDebug.h"
+#include "nsID.h"
+#include "nsIDOMSVGTransform.h"
+#include "nsTArray.h"
+#include "SVGTransform.h"
+
+class nsSVGElement;
+
+struct gfxMatrix;
 
 // We make DOMSVGTransform a pseudo-interface to allow us to QI to it in order
 // to check that the objects that scripts pass in are our our *native* transform
