@@ -358,6 +358,19 @@ Imm16::Imm16(uint32 imm)
     JS_ASSERT(decode() == imm);
 }
 Imm16::Imm16() : invalid(0xfff) {}
+
+void
+ion::PatchJump(CodeLocationJump jump_, CodeLocationLabel label)
+{
+    // We need to determine if this jump can fit into the standard 24+2 bit address
+    // or if we need a larger branch (or just need to use our pool entry)
+    Instruction *jump = (Instruction*)jump_.raw();
+    Assembler::Condition c;
+    jump->extractCond(&c);
+    JS_ASSERT(jump->is<InstBranchImm>());
+    Assembler::retargetBranch(jump, label.raw() - jump_.raw());
+}
+
 void
 Assembler::executableCopy(uint8 *buffer)
 {
@@ -367,6 +380,24 @@ Assembler::executableCopy(uint8 *buffer)
         JS_NOT_REACHED("Feature NYI");
     }
     JSC::ExecutableAllocator::cacheFlush(buffer, m_buffer.size());
+}
+
+void
+Assembler::resetCounter()
+{
+    m_buffer.resetCounter();
+}
+
+ptrdiff_t
+Assembler::actualOffset(uint8 *off_)
+{
+    return (ptrdiff_t)off_ + m_buffer.poolSizeBefore((ptrdiff_t)off_);
+}
+
+BufferOffset
+Assembler::actualOffset(BufferOffset off_)
+{
+    return BufferOffset(off_.getOffset() + m_buffer.poolSizeBefore(off_.getOffset()));
 }
 
 class RelocationIterator

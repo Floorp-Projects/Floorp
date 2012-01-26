@@ -296,7 +296,7 @@ struct IonScript
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const Value *vp);
     void copyFrameInfoTable(const IonFrameInfo *hf);
-    void copyCacheEntries(const IonCache *caches);
+    void copyCacheEntries(const IonCache *caches, MacroAssembler &masm);
     void copySafepoints(const SafepointWriter *writer);
 
     bool invalidated() const {

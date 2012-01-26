@@ -709,6 +709,20 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         int codeEnd = this->nextOffset().getOffset();
         return (codeEnd - pi.offset) + pi.finalPos;
     }
+    ptrdiff_t curDumpsite;
+    void resetCounter() {
+        curDumpsite = 0;
+    }
+    ptrdiff_t poolSizeBefore(ptrdiff_t offset) {
+        curDumpsite = 0;
+        while (curDumpsite < numDumps && poolInfo[curDumpsite].offset <= offset)
+            curDumpsite++;
+        // poolInfo[curDumpsite] is now larger than the offset
+        // either this is the first one, or the previous is the last one we care about
+        if (curDumpsite == 0)
+            return 0;
+        return poolInfo[curDumpsite].finalPos - poolInfo[curDumpsite].offset;
+    }
 };
 } // ion
 } // js
