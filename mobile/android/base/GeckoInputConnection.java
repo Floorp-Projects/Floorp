@@ -435,6 +435,7 @@ public class GeckoInputConnection
 
     public void reset() {
         mComposing = false;
+        mCompositionStart = -1;
         mBatchMode = false;
         mUpdateRequest = null;
     }
@@ -442,11 +443,17 @@ public class GeckoInputConnection
     // TextWatcher
     public void onTextChanged(CharSequence s, int start, int before, int count)
     {
+        if (mComposing && mCompositionStart != start) {
+            // Changed range is different from the composition, need to reset the composition
+            endComposition();
+        }
+
         if (!mComposing) {
             if (DEBUG) Log.d(LOGTAG, ". . . onTextChanged: IME_COMPOSITION_BEGIN");
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(GeckoEvent.IME_COMPOSITION_BEGIN, 0, 0));
             mComposing = true;
+            mCompositionStart = start;
 
             if (DEBUG) Log.d(LOGTAG, ". . . onTextChanged: IME_SET_SELECTION, start=" + start + ", len=" + before);
             GeckoAppShell.sendEventToGecko(
@@ -474,6 +481,7 @@ public class GeckoInputConnection
         GeckoAppShell.sendEventToGecko(
             new GeckoEvent(GeckoEvent.IME_COMPOSITION_END, 0, 0));
         mComposing = false;
+        mCompositionStart = -1;
     }
 
     private void sendTextToGecko(CharSequence text, int caretPos) {
@@ -888,7 +896,8 @@ public class GeckoInputConnection
     }
 
     // Is a composition active?
-    boolean mComposing;
+    private boolean mComposing;
+    private int mCompositionStart = -1;
 
     // IME stuff
     public static final int IME_STATE_DISABLED = 0;
