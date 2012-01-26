@@ -162,6 +162,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCallGetProperty(MCallGetProperty *ins);
     bool visitCallGetName(MCallGetName *ins);
     bool visitCallGetNameTypeOf(MCallGetNameTypeOf *ins);
+    bool visitCallGetElement(MCallGetElement *ins);
     bool visitGenericSetProperty(MGenericSetProperty *ins);
     bool visitStringLength(MStringLength *ins);
     bool visitThrow(MThrow *ins);

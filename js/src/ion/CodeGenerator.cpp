@@ -943,6 +943,17 @@ CodeGenerator::visitCallGetNameTypeOf(LCallGetNameTypeOf *lir)
 }
 
 bool
+CodeGenerator::visitCallGetElement(LCallGetElement *lir)
+{
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    static const VMFunction GetElementInfo = FunctionInfo<pf>(js::GetElement);
+
+    pushArg(ToValue(lir, LCallGetElement::RhsInput));
+    pushArg(ToValue(lir, LCallGetElement::LhsInput));
+    return callVM(GetElementInfo, lir);
+}
+
+bool
 CodeGenerator::visitLoadFixedSlotV(LLoadFixedSlotV *ins)
 {
     const Register obj = ToRegister(ins->getOperand(0));

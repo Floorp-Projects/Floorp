@@ -4734,6 +4734,12 @@ template bool js::SetProperty<true> (JSContext *cx, JSObject *obj, JSAtom *atom,
 template bool js::SetProperty<false>(JSContext *cx, JSObject *obj, JSAtom *atom, Value value);
 
 bool
+js::GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)
+{
+    return GetElementOperation(cx, lref, rref, res);
+}
+
+bool
 js::AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
 {
     return AddOperation(cx, lhs, rhs, res);
