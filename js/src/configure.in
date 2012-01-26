@@ -803,15 +803,8 @@ EOF
                            ])
             MOZ_WINSDK_MAXVER=${ac_cv_winsdk_maxver}
         else
-            # The Vista SDK is the only one to have sdkddkver.h but not
-            # WinSDKVer.h
-            MOZ_CHECK_HEADERS([sdkddkver.h])
-            if test "$ac_cv_header_sdkddkver_h" = "yes"; then
-                MOZ_WINSDK_MAXVER=0x06000000
-            else
-                # Assume the Server 2003 Platform SDK
-                MOZ_WINSDK_MAXVER=0x05020000
-            fi
+            # Any SDK which doesn't have WinSDKVer.h is too old.
+            AC_MSG_ERROR([Your SDK does not have WinSDKVer.h. It is probably too old. Please upgrade to a newer SDK or try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
         fi
 
         unset _MSVC_VER_FILTER
