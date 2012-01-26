@@ -214,6 +214,7 @@ ContainerRender(Container* aContainer,
     framebufferRect -= childOffset; 
     aManager->CreateFBOWithTexture(framebufferRect,
                                    mode,
+                                   aPreviousFrameBuffer,
                                    &frameBuffer,
                                    &containerSurface);
     childOffset.x = visibleRect.x;
