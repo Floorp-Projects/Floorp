@@ -73,9 +73,6 @@ extern JS_FRIEND_API(uint32_t)
 JS_ObjectCountDynamicSlots(JSObject *obj);
 
 extern JS_FRIEND_API(void)
-JS_ShrinkingGC(JSContext *cx);
-
-extern JS_FRIEND_API(void)
 JS_ShrinkGCBuffers(JSRuntime *rt);
 
 extern JS_FRIEND_API(size_t)
@@ -101,7 +98,6 @@ JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape);
 enum {
     JS_TELEMETRY_GC_REASON,
     JS_TELEMETRY_GC_IS_COMPARTMENTAL,
-    JS_TELEMETRY_GC_IS_SHAPE_REGEN,
     JS_TELEMETRY_GC_MS,
     JS_TELEMETRY_GC_MARK_MS,
     JS_TELEMETRY_GC_SWEEP_MS
@@ -571,6 +567,56 @@ GetRuntimeCompartments(JSRuntime *rt);
 
 extern JS_FRIEND_API(size_t)
 SizeOfJSContext();
+
+#define GCREASONS(D)                            \
+    /* Reasons internal to the JS engine */     \
+    D(API)                                      \
+    D(MAYBEGC)                                  \
+    D(LAST_CONTEXT)                             \
+    D(DESTROY_CONTEXT)                          \
+    D(LAST_DITCH)                               \
+    D(TOO_MUCH_MALLOC)                          \
+    D(ALLOC_TRIGGER)                            \
+    D(UNUSED1) /* was CHUNK */                  \
+    D(UNUSED2) /* was SHAPE */                  \
+    D(UNUSED3) /* was REFILL */                 \
+                                                \
+    /* Reasons from Firefox */                  \
+    D(DOM_WINDOW_UTILS)                         \
+    D(COMPONENT_UTILS)                          \
+    D(MEM_PRESSURE)                             \
+    D(CC_WAITING)                               \
+    D(CC_FORCED)                                \
+    D(LOAD_END)                                 \
+    D(POST_COMPARTMENT)                         \
+    D(PAGE_HIDE)                                \
+    D(NSJSCONTEXT_DESTROY)                      \
+    D(SET_NEW_DOCUMENT)                         \
+    D(SET_DOC_SHELL)                            \
+    D(DOM_UTILS)                                \
+    D(DOM_IPC)                                  \
+    D(DOM_WORKER)                               \
+    D(INTER_SLICE_GC)                           \
+    D(REFRESH_FRAME)
+
+namespace gcreason {
+
+/* GCReasons will end up looking like JSGC_MAYBEGC */
+enum Reason {
+#define MAKE_REASON(name) name,
+    GCREASONS(MAKE_REASON)
+#undef MAKE_REASON
+    NO_REASON,
+    NUM_REASONS
+};
+
+} /* namespace gcreason */
+
+extern JS_FRIEND_API(void)
+GCForReason(JSContext *cx, gcreason::Reason reason);
+
+extern JS_FRIEND_API(void)
+ShrinkingGC(JSContext *cx, gcreason::Reason reason);
 
 extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime *rt);

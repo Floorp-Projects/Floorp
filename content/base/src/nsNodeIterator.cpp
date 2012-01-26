@@ -170,9 +170,8 @@ void nsNodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
 
 nsNodeIterator::nsNodeIterator(nsINode *aRoot,
                                PRUint32 aWhatToShow,
-                               nsIDOMNodeFilter *aFilter,
-                               bool aExpandEntityReferences) :
-    nsTraversal(aRoot, aWhatToShow, aFilter, aExpandEntityReferences),
+                               nsIDOMNodeFilter *aFilter) :
+    nsTraversal(aRoot, aWhatToShow, aFilter),
     mDetached(false),
     mPointer(mRoot, true)
 {
@@ -247,7 +246,7 @@ NS_IMETHODIMP nsNodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
 /* readonly attribute boolean expandEntityReferences; */
 NS_IMETHODIMP nsNodeIterator::GetExpandEntityReferences(bool *aExpandEntityReferences)
 {
-    *aExpandEntityReferences = mExpandEntityReferences;
+    *aExpandEntityReferences = false;
     return NS_OK;
 }
 
