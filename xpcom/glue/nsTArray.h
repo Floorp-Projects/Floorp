@@ -66,22 +66,22 @@
 // moz_free() end up calling the same underlying free()).
 //
 
+#if defined(MOZALLOC_HAVE_XMALLOC)
 struct nsTArrayFallibleAllocator
 {
   static void* Malloc(size_t size) {
-    return NS_Alloc(size);
+    return moz_malloc(size);
   }
 
   static void* Realloc(void* ptr, size_t size) {
-    return NS_Realloc(ptr, size);
+    return moz_realloc(ptr, size);
   }
 
   static void Free(void* ptr) {
-    NS_Free(ptr);
+    moz_free(ptr);
   }
 };
 
-#if defined(MOZALLOC_HAVE_XMALLOC)
 struct nsTArrayInfallibleAllocator
 {
   static void* Malloc(size_t size) {
@@ -96,6 +96,25 @@ struct nsTArrayInfallibleAllocator
     moz_free(ptr);
   }
 };
+
+#else
+
+#include <stdlib.h>
+struct nsTArrayFallibleAllocator
+{
+  static void* Malloc(size_t size) {
+    return malloc(size);
+  }
+
+  static void* Realloc(void* ptr, size_t size) {
+    return realloc(ptr, size);
+  }
+
+  static void Free(void* ptr) {
+    free(ptr);
+  }
+};
+
 #endif
 
 #if defined(MOZALLOC_HAVE_XMALLOC)
