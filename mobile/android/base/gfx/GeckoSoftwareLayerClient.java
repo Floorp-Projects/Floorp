@@ -162,8 +162,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
-        GeckoAppShell.registerGeckoEventListener("Document:Shown", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Selected:Done", this);
 
         sendResizeEventIfNecessary();
     }
@@ -252,7 +250,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             Point tileOrigin = new Point((origin.x / TILE_SIZE.width) * TILE_SIZE.width,
                                          (origin.y / TILE_SIZE.height) * TILE_SIZE.height);
             mRenderOffset.set(origin.x - tileOrigin.x, origin.y - tileOrigin.y);
-            ((MultiTileLayer)mTileLayer).invalidateBuffer();
         }
 
         // If the window size has changed, reallocate the buffer to match.
@@ -519,16 +516,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.DRAW, rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
             mUpdateViewportOnEndDraw = true;
-        } else if (("Document:Shown".equals(event) ||
-                    "Tab:Selected:Done".equals(event)) &&
-                   (mTileLayer instanceof MultiTileLayer)) {
-            beginTransaction(mTileLayer);
-            try {
-                ((MultiTileLayer)mTileLayer).invalidateTiles();
-                ((MultiTileLayer)mTileLayer).invalidateBuffer();
-            } finally {
-                endTransaction(mTileLayer);
-            }
         }
     }
 
