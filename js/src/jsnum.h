@@ -655,6 +655,30 @@ ToInteger(JSContext *cx, const js::Value &v, jsdouble *dp)
     return true;
 }
 
+inline bool
+SafeAdd(int32_t one, int32_t two, int32_t *res)
+{
+    *res = one + two;
+    int64_t ores = (int64_t)one + (int64_t)two;
+    return ores == (int64_t)*res;
+}
+
+inline bool
+SafeSub(int32_t one, int32_t two, int32_t *res)
+{
+    *res = one - two;
+    int64_t ores = (int64_t)one - (int64_t)two;
+    return ores == (int64_t)*res;
+}
+
+inline bool
+SafeMul(int32_t one, int32_t two, int32_t *res)
+{
+    *res = one * two;
+    int64_t ores = (int64_t)one * (int64_t)two;
+    return ores == (int64_t)*res;
+}
+
 } /* namespace js */
 
 #endif /* jsnum_h___ */

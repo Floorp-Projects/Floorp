@@ -831,16 +831,6 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
 }
 
 bool
-CodeGeneratorX86Shared::visitBoundsCheck(LBoundsCheck *lir)
-{
-    if (lir->index()->isConstant())
-        masm.cmpl(ToRegister(lir->length()), Imm32(ToInt32(lir->index())));
-    else
-        masm.cmpl(ToRegister(lir->length()), ToRegister(lir->index()));
-    return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
-}
-
-bool
 CodeGeneratorX86Shared::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());

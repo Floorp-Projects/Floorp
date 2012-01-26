@@ -1211,16 +1211,6 @@ CodeGeneratorARM::visitStoreElementT(LStoreElementT *store)
 }
 
 bool
-CodeGeneratorARM::visitBoundsCheck(LBoundsCheck *lir)
-{
-    if (lir->index()->isConstant())
-        masm.ma_cmp(ToRegister(lir->length()), Imm32(ToInt32(lir->index())));
-    else
-        masm.ma_cmp(ToRegister(lir->length()), ToRegister(lir->index()));
-    return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
-}
-
-bool
 CodeGeneratorARM::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());

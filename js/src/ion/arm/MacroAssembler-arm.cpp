@@ -1146,6 +1146,13 @@ MacroAssemblerARMCompat::cmp32(const Register &lhs, const Imm32 &rhs)
 {
     ma_cmp(lhs, rhs);
 }
+
+void
+MacroAssemblerARMCompat::cmp32(const Register &lhs, const Register &rhs)
+{
+    ma_cmp(lhs, rhs);
+}
+
 void
 MacroAssemblerARMCompat::cmpPtr(const Register &lhs, const ImmWord &rhs)
 {

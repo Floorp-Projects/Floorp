@@ -101,6 +101,7 @@ namespace ion {
     _(ArrayLength)                                                          \
     _(InitializedLength)                                                    \
     _(BoundsCheck)                                                          \
+    _(BoundsCheckLower)                                                     \
     _(LoadElement)                                                          \
     _(StoreElement)                                                         \
     _(LoadFixedSlot)                                                        \

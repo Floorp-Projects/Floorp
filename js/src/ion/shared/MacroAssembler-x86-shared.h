@@ -117,6 +117,15 @@ class MacroAssemblerX86Shared : public Assembler
     void cmp32(const Register &src, const Imm32 &imm) {
         cmpl(src, imm);
     }
+    void cmp32(Register a, Register b) {
+        cmpl(a, b);
+    }
+    void add32(Imm32 imm, Register dest) {
+        addl(imm, dest);
+    }
+    void sub32(Imm32 imm, Register dest) {
+        subl(imm, dest);
+    }
 
     void branch32(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
         cmpl(lhs, imm);

@@ -75,7 +75,7 @@ ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
 
     MDefinition *ins = def->foldsTo(useValueNumbers);
 
-    if (ins == def)
+    if (ins == def || !ins->updateForReplacement(def))
         return def;
 
     if (!ins->block()) {
@@ -375,7 +375,7 @@ ValueNumberer::eliminateRedundancies()
             if (!dom)
                 return false; // Insertion failed.
 
-            if (dom == ins) {
+            if (dom == ins || !dom->updateForReplacement(ins)) {
                 iter++;
                 continue;
             }
