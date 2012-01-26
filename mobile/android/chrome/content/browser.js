@@ -1614,10 +1614,20 @@ Tab.prototype = {
     let doc = this.browser.contentDocument;
     if (doc != null) {
       let pageWidth = this._viewport.width, pageHeight = this._viewport.height;
-      let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-      let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-      pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
-      pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
+      if (doc instanceof SVGDocument) {
+        let rect = doc.rootElement.getBoundingClientRect();
+        // we need to add rect.left and rect.top twice so that the SVG is drawn
+        // centered on the page; if we add it only once then the SVG will be
+        // on the bottom-right of the page and if we don't add it at all then
+        // we end up with a cropped SVG (see bug 712065)
+        pageWidth = Math.ceil(rect.left + rect.width + rect.left);
+        pageHeight = Math.ceil(rect.top + rect.height + rect.top);
+      } else {
+        let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+        let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+        pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
+        pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
+      }
 
       /* Transform the page width and height based on the zoom factor. */
       pageWidth *= this._viewport.zoom;
