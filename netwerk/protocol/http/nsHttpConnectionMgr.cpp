@@ -1718,15 +1718,15 @@ nsHttpConnectionMgr::nsConnectionHandle::OnHeadersAvailable(nsAHttpTransaction *
 }
 
 nsresult
-nsHttpConnectionMgr::nsConnectionHandle::ResumeSend(nsAHttpTransaction *caller)
+nsHttpConnectionMgr::nsConnectionHandle::ResumeSend()
 {
-    return mConn->ResumeSend(caller);
+    return mConn->ResumeSend();
 }
 
 nsresult
-nsHttpConnectionMgr::nsConnectionHandle::ResumeRecv(nsAHttpTransaction *caller)
+nsHttpConnectionMgr::nsConnectionHandle::ResumeRecv()
 {
-    return mConn->ResumeRecv(caller);
+    return mConn->ResumeRecv();
 }
 
 void

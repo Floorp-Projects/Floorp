@@ -54,7 +54,6 @@ public:
   SpdyStream(nsAHttpTransaction *,
              SpdySession *, nsISocketTransport *,
              PRUint32, z_stream *, PRInt32);
-  ~SpdyStream();
 
   PRUint32 StreamID() { return mStreamID; }
 
@@ -100,6 +99,12 @@ public:
 
 private:
 
+  // a SpdyStream object is only destroyed by being removed from the
+  // SpdySession mStreamTransactionHash - make the dtor private to
+  // just the AutoPtr implementation needed for that hash.
+  friend class nsAutoPtr<SpdyStream>;
+  ~SpdyStream();
+
   enum stateType {
     GENERATING_SYN_STREAM,
     SENDING_SYN_STREAM,
@@ -130,7 +135,10 @@ private:
   // sending_request_body for each SPDY chunk in the upload.
   enum stateType mUpstreamState;
 
-  // The underlying HTTP transaction
+  // The underlying HTTP transaction. This pointer is used as the key
+  // in the SpdySession mStreamTransactionHash so it is important to
+  // keep a reference to it as long as this stream is a member of that hash.
+  // (i.e. don't change it or release it after it is set in the ctor).
   nsRefPtr<nsAHttpTransaction> mTransaction;
 
   // The session that this stream is a subset of
