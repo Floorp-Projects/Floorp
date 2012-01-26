@@ -494,6 +494,23 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
         mMaxTextureImageSize = mMaxTextureSize;
 
+        mSupport_ES_ReadPixels_BGRA_UByte = false;
+        if (mIsGLES2) {
+            if (IsExtensionSupported(gl::GLContext::EXT_bgra)) {
+                mSupport_ES_ReadPixels_BGRA_UByte = true;
+            } else if (IsExtensionSupported(gl::GLContext::EXT_read_format_bgra) ||
+                       IsExtensionSupported(gl::GLContext::IMG_read_format)) {
+                GLint auxFormat = 0;
+                GLint auxType = 0;
+
+                fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT, &auxFormat);
+                fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE, &auxType);
+
+                if (auxFormat == LOCAL_GL_BGRA && auxType == LOCAL_GL_UNSIGNED_BYTE)
+                    mSupport_ES_ReadPixels_BGRA_UByte = true;
+            }
+        }
+
         UpdateActualFormat();
     }
 
@@ -1718,10 +1735,7 @@ GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
     if (IsGLES2()) {
         datatype = LOCAL_GL_UNSIGNED_BYTE;
 
-        if (IsExtensionSupported(gl::GLContext::EXT_read_format_bgra) ||
-            IsExtensionSupported(gl::GLContext::IMG_read_format) ||
-            IsExtensionSupported(gl::GLContext::EXT_bgra))
-        {
+        if (mSupport_ES_ReadPixels_BGRA_UByte) {
             format = LOCAL_GL_BGRA;
         } else {
             format = LOCAL_GL_RGBA;
