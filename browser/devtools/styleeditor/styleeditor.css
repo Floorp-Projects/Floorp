@@ -64,11 +64,8 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   -moz-box-flex: 1;
 }
 
-.stylesheet-name {
-  outline: none;
-}
-
 .stylesheet-name > label {
+  display: inline;
   cursor: pointer;
 }
 
