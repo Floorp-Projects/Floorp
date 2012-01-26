@@ -830,6 +830,15 @@ class AssemblerX86Shared
     void xorpd(const FloatRegister &src, const FloatRegister &dest) {
         masm.xorpd_rr(src.code(), dest.code());
     }
+    void fstp(const Operand &src) {
+         switch (src.kind()) {
+           case Operand::REG_DISP:
+             masm.fstp_m(src.disp(), src.base());
+             break;
+           default:
+             JS_NOT_REACHED("unexpected operand kind");
+ 	    }
+    }
 
     ptrdiff_t actualOffset(uint8* x) {
         return (ptrdiff_t)x;

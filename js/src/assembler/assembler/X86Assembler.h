@@ -246,6 +246,7 @@ private:
         OP_INT3                         = 0xCC,
         OP_GROUP2_Ev1                   = 0xD1,
         OP_GROUP2_EvCL                  = 0xD3,
+	    OP_FPU6				            = 0xDD,
         OP_CALL_rel32                   = 0xE8,
         OP_JMP_rel32                    = 0xE9,
         PRE_SSE_F2                      = 0xF2,
@@ -330,6 +331,8 @@ private:
         GROUP5_OP_CALLN = 2,
         GROUP5_OP_JMPN  = 4,
         GROUP5_OP_PUSH  = 6,
+
+        FPU6_OP_FSTP = 3,
 
         GROUP11_MOV = 0
     } GroupOpcodeID;
@@ -650,6 +653,11 @@ public:
         }
     }
 #endif
+
+    void fstp_m(int offset, RegisterID base)
+    {
+	m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FSTP, base, offset);
+    }
 
     void negl_r(RegisterID dst)
     {
