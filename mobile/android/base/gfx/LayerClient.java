@@ -54,11 +54,11 @@ public abstract class LayerClient {
 
     /**
      * A utility function for calling Layer.beginTransaction with the
-     * appropriate LayerView.
+     * appropriate AbstractLayerView.
      */
     public void beginTransaction(Layer aLayer) {
         if (mLayerController != null) {
-            LayerView view = mLayerController.getView();
+            AbstractLayerView view = mLayerController.getView();
             if (view != null) {
                 aLayer.beginTransaction(view);
                 return;

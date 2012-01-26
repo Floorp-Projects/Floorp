@@ -1927,15 +1927,22 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
+    printf_stderr("... requesting window surface from bridge\n");
+
     // On Android, we have to ask Java to make the eglCreateWindowSurface
     // call for us.  See GLHelpers.java for a description of why.
     //
     // We also only have one true "window", so we just use it directly and ignore
     // what was passed in.
+    AndroidGeckoSurfaceView& sview = mozilla::AndroidBridge::Bridge()->SurfaceView();
+    if (sview.isNull()) {
+        printf_stderr("got null surface\n");
+        return NULL;
+    }
+
     printf_stderr("... requesting window surface from bridge\n");
     surface = mozilla::AndroidBridge::Bridge()->
-        CallEglCreateWindowSurface(EGL_DISPLAY(), config,
-                                   mozilla::AndroidBridge::Bridge()->SurfaceView());
+        CallEglCreateWindowSurface(EGL_DISPLAY(), config, sview);
     printf_stderr("got surface %p\n", surface);
 #else
     surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(aWidget), 0);

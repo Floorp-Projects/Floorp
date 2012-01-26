@@ -42,7 +42,7 @@ import org.mozilla.gecko.gfx.BufferedCairoImage;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.gfx.LayerController;
-import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.gfx.AbstractLayerView;
 import org.mozilla.gecko.gfx.NinePatchTileLayer;
 import org.mozilla.gecko.gfx.SingleTileLayer;
 import org.mozilla.gecko.gfx.TextureReaper;
@@ -82,7 +82,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private static final int FRAME_RATE_METER_WIDTH = 64;
     private static final int FRAME_RATE_METER_HEIGHT = 32;
 
-    private final LayerView mView;
+    private final AbstractLayerView mView;
     private final SingleTileLayer mCheckerboardLayer;
     private final NinePatchTileLayer mShadowLayer;
     private final TextLayer mFrameRateLayer;
@@ -97,7 +97,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private int mCurrentFrame, mFrameTimingsSum, mDroppedFrames;
     private boolean mShowFrameRate;
 
-    public LayerRenderer(LayerView view) {
+    public LayerRenderer(AbstractLayerView view) {
         mView = view;
 
         LayerController controller = view.getController();

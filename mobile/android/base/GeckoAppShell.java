@@ -41,7 +41,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.LayerController;
-import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.gfx.AbstractLayerView;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -473,9 +473,8 @@ public class GeckoAppShell
     // Called on the UI thread after Gecko loads.
     private static void geckoLoaded() {
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
-        LayerView v = layerController.getView();
-        mInputConnection = GeckoInputConnection.create(v);
-        v.setInputConnectionHandler(mInputConnection);
+        AbstractLayerView v = layerController.getView();
+        mInputConnection = v.setInputConnectionHandler();
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
@@ -556,7 +555,7 @@ public class GeckoAppShell
     static Sensor gOrientationSensor = null;
 
     public static void enableDeviceMotion(boolean enable) {
-        LayerView v = GeckoApp.mAppContext.getLayerController().getView();
+        AbstractLayerView v = GeckoApp.mAppContext.getLayerController().getView();
         SensorManager sm = (SensorManager) v.getContext().getSystemService(Context.SENSOR_SERVICE);
 
         if (gAccelerometerSensor == null || gOrientationSensor == null) {
@@ -580,7 +579,7 @@ public class GeckoAppShell
     public static void enableLocation(final boolean enable) {
         getMainHandler().post(new Runnable() { 
                 public void run() {
-                    LayerView v = GeckoApp.mAppContext.getLayerController().getView();
+                    //AbstractLayerView v = GeckoApp.mAppContext.getLayerController().getView();
 
                     LocationManager lm = (LocationManager)
                         GeckoApp.mAppContext.getSystemService(Context.LOCATION_SERVICE);
@@ -1054,15 +1053,15 @@ public class GeckoAppShell
 
     public static void performHapticFeedback(boolean aIsLongPress) {
         LayerController layerController = GeckoApp.mAppContext.getLayerController();
-        LayerView layerView = layerController.getView();
-        layerView.performHapticFeedback(aIsLongPress ?
+        AbstractLayerView layerView = layerController.getView();
+        layerView.getAndroidView().performHapticFeedback(aIsLongPress ?
                                         HapticFeedbackConstants.LONG_PRESS :
                                         HapticFeedbackConstants.VIRTUAL_KEY);
     }
 
     private static Vibrator vibrator() {
         LayerController layerController = GeckoApp.mAppContext.getLayerController();
-        LayerView layerView = layerController.getView();
+        AbstractLayerView layerView = layerController.getView();
 
         return (Vibrator) layerView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
     }
@@ -1728,7 +1727,7 @@ public class GeckoAppShell
             return;
 
         LayerController layerController = GeckoApp.mAppContext.getLayerController();
-        LayerView layerView = layerController.getView();
+        AbstractLayerView layerView = layerController.getView();
 
         AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
         event.setClassName(layerView.getClass().getName() + "$" + role);
