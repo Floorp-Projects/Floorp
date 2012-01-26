@@ -193,9 +193,6 @@ class MacroAssembler : public MacroAssemblerSpecific
             storeCallResult(dest.typedReg());
     }
 
-    CodeOffsetLabel labelForPatch() {
-        return CodeOffsetLabel(size());
-    }
 
     void PushRegsInMask(RegisterSet set);
     void PushRegsInMask(GeneralRegisterSet set) {

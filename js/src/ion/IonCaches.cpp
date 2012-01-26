@@ -53,15 +53,26 @@ using namespace js;
 using namespace js::ion;
 
 void
-CodeLocationJump::repoint(IonCode *code)
+CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 {
     JS_ASSERT(!absolute);
-    JS_ASSERT(size_t(raw_) <= code->instructionsSize());
-    raw_ = code->raw() + size_t(raw_);
+    size_t new_off = masm->actualOffset(raw_);
+    raw_ = code->raw() + new_off;
 #ifdef JS_CPU_X64
     jumpTableEntry_ = Assembler::PatchableJumpAddress(code, (size_t) jumpTableEntry_);
 #endif
     markAbsolute(true);
+}
+
+void
+CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
+{
+     JS_ASSERT(!absolute);
+     size_t new_off = masm ? masm->actualOffset(raw_) : size_t(raw_);
+     JS_ASSERT(new_off < code->instructionsSize());
+
+     raw_ = code->raw() + new_off;
+     markAbsolute(true);
 }
 
 static const size_t MAX_STUBS = 16;
@@ -158,6 +169,13 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     types::TypeScript::Monitor(cx, script, pc, *vp);
 
     return true;
+}
+void
+IonCache::updateBaseAddress(IonCode *code, MacroAssembler &masm)
+{
+    initialJump_.repoint(code, &masm);
+    lastJump_.repoint(code, &masm);
+    cacheLabel_.repoint(code, &masm);
 }
 
 bool

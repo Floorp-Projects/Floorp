@@ -179,6 +179,11 @@ class MacroAssemblerX86Shared : public Assembler
     void callIon(const Register &callee) {
         call(callee);
     }
+
+    CodeOffsetLabel labelForPatch() {
+        return CodeOffsetLabel(size());
+    }
+
 };
 
 } // namespace ion

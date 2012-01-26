@@ -349,10 +349,14 @@ class CodeLocationJump
         markAbsolute(false);
     }
 
-    void repoint(IonCode *code);
+    void repoint(IonCode *code, MacroAssembler* masm = NULL);
 
     uint8 *raw() {
         JS_ASSERT(absolute);
+        return raw_;
+    }
+    uint8 *offset() {
+        JS_ASSERT(!absolute);
         return raw_;
     }
 
@@ -396,15 +400,14 @@ class CodeLocationLabel
         markAbsolute(false);
     }
 
-    void repoint(IonCode *code) {
-        JS_ASSERT(!absolute);
-        JS_ASSERT(size_t(raw_) < code->instructionsSize());
-        raw_ = code->raw() + size_t(raw_);
-        markAbsolute(true);
-    }
+    void repoint(IonCode *code, MacroAssembler *masm = NULL);
 
     uint8 *raw() {
         JS_ASSERT(absolute);
+        return raw_;
+    }
+    uint8 *offset() {
+        JS_ASSERT(!absolute);
         return raw_;
     }
 };
