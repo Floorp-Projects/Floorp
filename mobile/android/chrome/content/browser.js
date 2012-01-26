@@ -235,8 +235,16 @@ var BrowserApp = {
           type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
         }
       });
+    }, false);
 
-      if (!window.fullScreen)
+    window.addEventListener("mozfullscreenchange", function() {
+      sendMessageToJava({
+        gecko: {
+          type: document.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
+        }
+      });
+
+      if (document.mozFullScreen)
         showFullScreenWarning();
     }, false);
 
