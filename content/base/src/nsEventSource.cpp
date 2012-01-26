@@ -63,6 +63,7 @@
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
 #include "nsCrossSiteListenerProxy.h"
+#include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
 
@@ -104,6 +105,30 @@ nsEventSource::~nsEventSource()
 //-----------------------------------------------------------------------------
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventSource)
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsEventSource)
+  if (tmp->IsBlack()) {
+    if (tmp->mListenerManager) {
+      tmp->mListenerManager->UnmarkGrayJSListeners();
+      NS_UNMARK_LISTENER_WRAPPER(Open)
+      NS_UNMARK_LISTENER_WRAPPER(Message)
+      NS_UNMARK_LISTENER_WRAPPER(Error)
+    }
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsEventSource)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsEventSource)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsEventSource,
+                                               nsDOMEventTargetWrapperCache)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsEventSource,
                                                   nsDOMEventTargetWrapperCache)

@@ -197,6 +197,13 @@ public:
 
   virtual void GC(js::gcreason::Reason aReason);
 
+  nsIScriptGlobalObject* GetCachedGlobalObject()
+  {
+    // Verify that we have a global so that this
+    // does always return a null when GetGlobalObject() is null.
+    JSObject* global = JS_GetGlobalObject(mContext);
+    return global ? mGlobalObjectRef.get() : nsnull;
+  }
 protected:
   nsresult InitializeExternalClasses();
 
