@@ -44,6 +44,7 @@
 
 // This file declares the data structures used to build a control-flow graph
 // containing MIR.
+#include <stdarg.h>
 
 #include "jscntxt.h"
 #include "jscompartment.h"
