@@ -43,6 +43,7 @@
 
 #include "nscore.h"
 #include "nsDiskCacheBinding.h"
+#include "nsCacheService.h"
 
 
 
@@ -124,7 +125,8 @@ nsDiskCacheBinding::~nsDiskCacheBinding()
     
     // sever streamIO/binding link
     if (mStreamIO) {
-        mStreamIO->ClearBinding();
+        if (NS_FAILED(mStreamIO->ClearBinding()))
+            nsCacheService::DoomEntry(mCacheEntry);
         NS_RELEASE(mStreamIO);
     }
 }
