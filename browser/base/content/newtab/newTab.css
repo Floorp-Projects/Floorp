@@ -1,0 +1,173 @@
+:root {
+  -moz-appearance: none;
+}
+
+#scrollbox:not([page-disabled]) {
+  overflow: auto;
+}
+
+#body {
+  position: relative;
+  margin: 0;
+  min-width: 675px;
+  -moz-user-select: none;
+}
+
+.button {
+  cursor: pointer;
+}
+
+/* TOOLBAR */
+#toolbar {
+  position: absolute;
+}
+
+#toolbar[page-disabled] {
+  position: fixed;
+}
+
+#toolbar:-moz-locale-dir(rtl) {
+  left: 8px;
+  right: auto;
+}
+
+.toolbar-button {
+  position: absolute;
+  cursor: pointer;
+  -moz-transition: opacity 200ms ease-out;
+}
+
+#toolbar-button-show,
+#toolbar-button-reset {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#toolbar-button-reset[modified],
+#toolbar-button-show[page-disabled] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#toolbar-button-hide[page-disabled],
+#toolbar-button-reset[page-disabled] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* GRID */
+#grid {
+  width: 637px;
+  height: 411px;
+  overflow: hidden;
+  list-style-type: none;
+  -moz-transition: opacity 200ms ease-out;
+}
+
+#grid[page-disabled] {
+  opacity: 0;
+}
+
+#grid[page-disabled],
+#grid[locked] {
+  pointer-events: none;
+}
+
+/* CELLS */
+.cell {
+  float: left;
+  width: 201px;
+  height: 127px;
+  margin-bottom: 15px;
+  -moz-margin-end: 16px;
+}
+
+.cell:-moz-locale-dir(rtl) {
+  float: right;
+}
+
+.cell:nth-child(3n+3) {
+  -moz-margin-end: 0;
+}
+
+/* SITES */
+.site {
+  display: block;
+  position: relative;
+  width: 201px;
+  height: 127px;
+}
+
+.site[frozen] {
+  position: absolute;
+  pointer-events: none;
+}
+
+.site[ontop] {
+  z-index: 10;
+}
+
+/* SITE IMAGE */
+.site-img {
+  display: block;
+  opacity: 0.75;
+  -moz-transition: opacity 200ms ease-out;
+}
+
+.site:hover > .site-img,
+.site[ontop] > .site-img,
+.site:-moz-focusring > .site-img {
+  opacity: 1;
+}
+
+.site-img[loading] {
+  display: none;
+}
+
+/* SITE TITLE */
+.site-title {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+/* SITE STRIP */
+.site-strip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 195px;
+  height: 17px;
+  overflow: hidden;
+  opacity: 0;
+  -moz-transition: opacity 200ms ease-out;
+}
+
+.site:hover:not([frozen]) > .site-strip {
+  opacity: 1;
+}
+
+.strip-button-pin,
+.strip-button-block:-moz-locale-dir(rtl) {
+  float: left;
+}
+
+.strip-button-block,
+.strip-button-pin:-moz-locale-dir(rtl) {
+  float: right;
+}
+
+/* DRAG & DROP */
+
+/*
+ * This is just a temporary drag element used for dataTransfer.setDragImage()
+ * so that we can use custom drag images and elements. It needs an opacity of
+ * 0.01 so that the core code detects that it's in fact a visible element.
+ */
+.drag-element {
+  width: 1px;
+  height: 1px;
+  background-color: #fff;
+  opacity: 0.01;
+}
