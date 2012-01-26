@@ -68,6 +68,7 @@ FENNEC_JAVA_FILES = \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
+  SyncPreference.java \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
@@ -95,6 +96,7 @@ FENNEC_JAVA_FILES = \
   sqlite/ByteBufferInputStream.java \
   sqlite/SQLiteBridge.java \
   sqlite/SQLiteBridgeException.java \
+  SetupScreen.java \
   SurfaceLockInfo.java \
   Tab.java \
   Tabs.java \
@@ -231,6 +233,7 @@ RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/site_setting_title.xml \
+  res/layout/setup_screen.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
@@ -277,6 +280,7 @@ RES_DRAWABLE_NODPI = \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V8 = \
+  res/drawable-mdpi-v8/favicon.png \
   res/drawable-mdpi-v8/abouthome_icon.png \
   res/drawable-mdpi-v8/abouthome_logo.png \
   res/drawable-mdpi-v8/abouthome_separator.9.png \
@@ -319,6 +323,7 @@ RES_DRAWABLE_MDPI_V8 = \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V8 = \
+  res/drawable-hdpi-v8/favicon.png \
   res/drawable-hdpi-v8/home_bg.png \
   res/drawable-hdpi-v8/home_star.png \
   res/drawable-hdpi-v8/abouthome_icon.png \
@@ -383,6 +388,7 @@ RES_DRAWABLE_HDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_XHDPI_V11 = \
+  res/drawable-xhdpi-v11/favicon.png \
   res/drawable-xhdpi-v11/abouthome_icon.png \
   res/drawable-xhdpi-v11/abouthome_logo.png \
   res/drawable-xhdpi-v11/abouthome_separator.9.png \
@@ -496,7 +502,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
   mobile/android/base/resources/drawable/background.png                         \
   mobile/android/base/resources/drawable/desktop_notification.png               \
-  mobile/android/base/resources/drawable/favicon.png                            \
   mobile/android/base/resources/drawable/gecko_actionbar_bg.xml                 \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/progress_spinner_1.png                 \

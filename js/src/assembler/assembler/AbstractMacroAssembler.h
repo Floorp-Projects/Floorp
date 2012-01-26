@@ -33,7 +33,6 @@
 #include "assembler/wtf/Platform.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"
-#include "jsstdint.h"
 
 #if ENABLE_ASSEMBLER
 
