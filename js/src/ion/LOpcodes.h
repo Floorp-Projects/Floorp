@@ -117,6 +117,7 @@
     _(CallGetProperty)              \
     _(CallGetName)                  \
     _(CallGetNameTypeOf)            \
+    _(CallGetElement)               \
     _(CallSetPropertyV)             \
     _(CallSetPropertyT)             \
     _(CacheSetPropertyV)            \

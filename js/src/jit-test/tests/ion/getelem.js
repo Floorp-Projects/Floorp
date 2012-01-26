@@ -62,3 +62,16 @@ function testClassGuard() {
     assertEq(f(b), 100);
 }
 testClassGuard();
+
+function testGeneric1() {
+    function f(o, i) {
+        return o[i];
+    }
+    for (var i=0; i<100; i++) {
+        assertEq(f("abc", 1), "b");
+        assertEq(f("foo", "length"), 3);
+        assertEq(f([], -1), undefined);
+        assertEq(f({x: 1}, "x"), 1);
+    }
+}
+testGeneric1();

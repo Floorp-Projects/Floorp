@@ -1336,6 +1336,17 @@ class LCallGetNameTypeOf : public LCallGetPropertyOrName
     LIR_HEADER(CallGetNameTypeOf);
 };
 
+// Call a js::GetElement stub.
+class LCallGetElement : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CallGetElement);
+    BOX_OUTPUT_ACCESSORS();
+
+    static const size_t LhsInput = 0;
+    static const size_t RhsInput = BOX_PIECES;
+};
+
 // Call a stub to perform a property or name assignment of a generic value.
 class LCallSetPropertyV : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {

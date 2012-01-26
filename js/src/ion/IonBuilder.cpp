@@ -3054,7 +3054,19 @@ IonBuilder::jsop_getelem()
     if (oracle->elementReadIsDense(script, pc))
         return jsop_getelem_dense();
 
-    return abort("GETELEM Not a dense array");
+    MDefinition *rhs = current->pop();
+    MDefinition *lhs = current->pop();
+
+    MInstruction *ins = MCallGetElement::New(lhs, rhs);
+    current->add(ins);
+    current->push(ins);
+
+    if (!resumeAfter(ins))
+        return false;
+
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+    return pushTypeBarrier(ins, types, barrier);
 }
 
 bool
