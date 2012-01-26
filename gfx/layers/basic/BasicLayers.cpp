@@ -1309,6 +1309,8 @@ BasicLayerManager::BasicLayerManager() :
 #endif
   mWidget(nsnull)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(false)
+  , mCachedSurfaceInUse(false)
+  , mTransactionIncomplete(false)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
 }
