@@ -660,18 +660,16 @@ WINSDK_TARGETVER=601
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
                           Highest Windows version to target using this SDK
-                              502: Windows Server 2003
-                              600: Windows Vista
                               601: Windows 7],
   WINSDK_TARGETVER=$withval)
 
 case "$WINSDK_TARGETVER" in
-502|600|601)
+601)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 502, 600 or 601]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 601]);
     ;;
 
 esac
@@ -4439,8 +4437,7 @@ dnl ========================================================
 dnl ETW - Event Tracing for Windows
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(ETW,
-[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting
-                          (needs Windows Vista+ SDK)],
+[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting],
     MOZ_ETW=1,
     MOZ_ETW= )
 if test -n "$MOZ_ETW"; then
@@ -4451,8 +4448,6 @@ fi
 if test -n "$MOZ_ETW"; then
     if test -z "$MOZ_WINSDK_TARGETVER"; then
         AC_MSG_ERROR([--enable-ETW is only valid on Windows])
-    elif test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-        AC_MSG_ERROR([--enable-ETW requires the Windows Vista SDK or newer])
     fi
 fi
 
