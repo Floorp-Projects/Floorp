@@ -3122,13 +3122,20 @@ IonBuilder::jsop_getelem_dense()
 bool
 IonBuilder::jsop_setelem()
 {
-    if (!oracle->propertyWriteCanSpecialize(script, pc))
-        return abort("SETELEM cannot specialize");
+    if (oracle->propertyWriteCanSpecialize(script, pc)) {
+        if (oracle->elementWriteIsDense(script, pc))
+            return jsop_setelem_dense();
+    }
 
-    if (oracle->elementWriteIsDense(script, pc))
-        return jsop_setelem_dense();
+    MDefinition *value = current->pop();
+    MDefinition *index = current->pop();
+    MDefinition *object = current->pop();
 
-    return abort("SETELEM Not a dense array");
+    MInstruction *ins = MCallSetElement::New(object, index, value);
+    current->add(ins);
+    current->push(value);
+
+    return resumeAfter(ins);
 }
 
 bool

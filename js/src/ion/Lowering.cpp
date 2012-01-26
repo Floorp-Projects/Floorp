@@ -1032,6 +1032,22 @@ LIRGenerator::visitGenericSetProperty(MGenericSetProperty *ins)
     return assignSafepoint(lir, ins);
 }
 
+ bool
+LIRGenerator::visitCallSetElement(MCallSetElement *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+    JS_ASSERT(ins->index()->type() == MIRType_Value);
+    JS_ASSERT(ins->value()->type() == MIRType_Value);
+
+    LCallSetElement *lir = new LCallSetElement();
+    lir->setOperand(0, useRegister(ins->object()));
+    if (!useBox(lir, LCallSetElement::Index, ins->index()))
+        return false;
+    if (!useBox(lir, LCallSetElement::Value, ins->value()))
+        return false;
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
 bool
 LIRGenerator::visitStringLength(MStringLength *ins)
 {
