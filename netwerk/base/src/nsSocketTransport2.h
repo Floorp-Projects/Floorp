@@ -226,7 +226,11 @@ private:
 
     nsCOMPtr<nsICancelable> mDNSRequest;
     nsCOMPtr<nsIDNSRecord>  mDNSRecord;
+
+    // mNetAddr is valid from GetPeerAddr() once we have
+    // reached STATE_TRANSFERRING. It must not change after that.
     PRNetAddr               mNetAddr;
+    bool                    mNetAddrIsSet;
 
     // socket methods (these can only be called on the socket thread):
 
