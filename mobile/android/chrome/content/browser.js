@@ -539,6 +539,14 @@ var BrowserApp = {
       let evt = document.createEvent("UIEvents");
       evt.initUIEvent("TabSelect", true, false, window, null);
       aTab.browser.dispatchEvent(evt);
+
+    let message = {
+      gecko: {
+        type: "Tab:Selected:Done",
+        tabID: aTab.id
+      }
+    };
+    sendMessageToJava(message);
   },
 
   quit: function quit() {
