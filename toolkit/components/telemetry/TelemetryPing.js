@@ -137,6 +137,42 @@ function getSimpleMeasurements() {
   return ret;
 }
 
+/**
+ * Read the update channel from defaults only.  We do this to ensure that
+ * the channel is tightly coupled with the application and does not apply
+ * to other installations of the application that may use the same profile.
+ */
+function getUpdateChannel() {
+  var channel = "default";
+  var prefName;
+  var prefValue;
+
+  var defaults = Services.prefs.getDefaultBranch(null);
+  try {
+    channel = defaults.getCharPref("app.update.channel");
+  } catch (e) {
+    // use default when pref not found
+  }
+
+  try {
+    var partners = Services.prefs.getChildList("app.partner.");
+    if (partners.length) {
+      channel += "-cck";
+      partners.sort();
+
+      for each (prefName in partners) {
+        prefValue = Services.prefs.getCharPref(prefName);
+        channel += "-" + prefValue;
+      }
+    }
+  }
+  catch (e) {
+    Cu.reportError(e);
+  }
+
+  return channel;
+}
+
 function TelemetryPing() {}
 
 TelemetryPing.prototype = {
@@ -231,7 +267,8 @@ TelemetryPing.prototype = {
       appVersion: ai.version,
       appName: ai.name,
       appBuildID: ai.appBuildID,
-      platformBuildID: ai.platformBuildID,
+      appUpdateChannel: getUpdateChannel(),
+      platformBuildID: ai.platformBuildID
     };
 
     // sysinfo fields are not always available, get what we can.

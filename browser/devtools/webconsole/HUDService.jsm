@@ -1552,8 +1552,6 @@ HUD_SERVICE.prototype =
       this.disableAnimation(hudId);
     }
 
-    chromeDocument.getElementById("Tools:WebConsole").setAttribute("checked", "true");
-
     // Create a processing instruction for GCLIs CSS stylesheet, but only if
     // we don't have one for this document. Also record the context we're
     // adding this for so we know when to remove it.
@@ -1602,8 +1600,6 @@ HUD_SERVICE.prototype =
 
       window.focus();
     }
-
-    chromeDocument.getElementById("Tools:WebConsole").setAttribute("checked", "false");
 
     // Remove this context from the list of contexts that need the GCLI CSS
     // processing instruction and then remove the processing instruction if it

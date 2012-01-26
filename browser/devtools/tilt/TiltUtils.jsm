@@ -673,6 +673,16 @@ TiltUtils.getDocumentZoom = function TU_getDocumentZoom() {
 };
 
 /**
+ * Sets the markup document viewer zoom for the currently selected browser.
+ *
+ * @param {Number} the zoom ammount
+ */
+TiltUtils.setDocumentZoom = function TU_getDocumentZoom(aZoom) {
+  TiltUtils.getBrowserWindow()
+           .gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = aZoom;
+};
+
+/**
  * Performs a garbage collection.
  */
 TiltUtils.gc = function TU_gc()

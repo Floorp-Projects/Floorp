@@ -60,11 +60,12 @@ const INVISIBLE_ELEMENTS = {
 
 const STACK_THICKNESS = 15;
 const WIREFRAME_COLOR = [0, 0, 0, 0.25];
-const INTRO_TRANSITION_DURATION = 80;
-const OUTRO_TRANSITION_DURATION = 50;
+const INTRO_TRANSITION_DURATION = 50;
+const OUTRO_TRANSITION_DURATION = 40;
 const INITIAL_Z_TRANSLATION = 400;
 
 const MOUSE_CLICK_THRESHOLD = 10;
+const MOUSE_INTRO_DELAY = 10;
 const ARCBALL_SENSITIVITY = 0.5;
 const ARCBALL_ROTATION_STEP = 0.15;
 const ARCBALL_TRANSLATION_STEP = 35;
@@ -296,7 +297,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
 
     // call the attached ondraw event handler if specified (by the controller)
     if ("function" === typeof this.ondraw) {
-      this.ondraw();
+      this.ondraw(this.frames);
     }
 
     if (!TiltVisualizer.Prefs.introTransition && !this.isExecutingDestruction) {
@@ -480,6 +481,11 @@ TiltVisualizer.Presenter.prototype = {
                                                      this.maxTextureSize),
       format: "RGB"
     });
+
+    if ("function" === typeof this.onSetupTexture) {
+      this.onSetupTexture();
+      this.onSetupTexture = null;
+    }
   },
 
   /**
@@ -501,6 +507,9 @@ TiltVisualizer.Presenter.prototype = {
     if (!renderer || !renderer.context) {
       return;
     }
+
+    // save the mesh data for future use
+    this.meshData = aData;
 
     // create the visualization mesh using the vertices, texture coordinates
     // and indices computed when traversing the document object model
@@ -524,19 +533,28 @@ TiltVisualizer.Presenter.prototype = {
       this.highlightNode(this.inspectorUI.selection);
     }
 
-    let zoom = TiltUtils.getDocumentZoom();
-    let width = Math.min(aData.meshWidth * zoom, renderer.width);
-    let height = Math.min(aData.meshHeight * zoom, renderer.height);
+    if (!this._initialMeshConfiguration) {
+      this._initialMeshConfiguration = true;
 
-    // set the necessary mesh offsets
-    this.transforms.offset[0] = -width * 0.5;
-    this.transforms.offset[1] = -height * 0.5;
+      let zoom = TiltUtils.getDocumentZoom();
+      let width = Math.min(aData.meshWidth * zoom, renderer.width);
+      let height = Math.min(aData.meshHeight * zoom, renderer.height);
 
-    // make sure the canvas is opaque now that the initialization is finished
-    this.canvas.style.background = TiltVisualizerStyle.canvas.background;
+      // set the necessary mesh offsets
+      this.transforms.offset[0] = -width * 0.5;
+      this.transforms.offset[1] = -height * 0.5;
 
-    this.drawVisualization();
-    this.redraw = true;
+      // make sure the canvas is opaque now that the initialization is finished
+      this.canvas.style.background = TiltVisualizerStyle.canvas.background;
+
+      this.drawVisualization();
+      this.redraw = true;
+    }
+
+    if ("function" === typeof this.onSetupMesh) {
+      this.onSetupMesh();
+      this.onSetupMesh = null;
+    }
   },
 
   /**
@@ -626,9 +644,16 @@ TiltVisualizer.Presenter.prototype = {
    *                 the current horizontal coordinate of the mouse
    * @param {Number} y
    *                 the current vertical coordinate of the mouse
+   * @param {Object} aProperties
+   *                 an object containing the following properties:
+   *      {Function} onpick: function to be called after picking succeeded
+   *      {Function} onfail: function to be called after picking failed
    */
-  highlightNodeAt: function TVP_highlightNodeAt(x, y)
+  highlightNodeAt: function TVP_highlightNodeAt(x, y, aProperties)
   {
+    // make sure the properties parameter is a valid object
+    aProperties = aProperties || {};
+
     // try to pick a mesh node using the current x, y coordinates
     this.pickNode(x, y, {
 
@@ -638,6 +663,10 @@ TiltVisualizer.Presenter.prototype = {
       onfail: function TVP_onHighlightFail()
       {
         this.highlightNodeFor(-1);
+
+        if ("function" === typeof aProperties.onfail) {
+          aProperties.onfail();
+        }
       }.bind(this),
 
       /**
@@ -649,6 +678,10 @@ TiltVisualizer.Presenter.prototype = {
       onpick: function TVP_onHighlightPick(aIntersection)
       {
         this.highlightNodeFor(aIntersection.index);
+
+        if ("function" === typeof aProperties.onpick) {
+          aProperties.onpick();
+        }
       }.bind(this)
     });
   },
@@ -699,6 +732,32 @@ TiltVisualizer.Presenter.prototype = {
     this._currentSelection = aNodeIndex;
     this.inspectorUI.inspectNode(node, this.contentWindow.innerHeight < y ||
                                        this.contentWindow.pageYOffset > 0);
+  },
+
+  /**
+   * Deletes a node from the visualization mesh.
+   *
+   * @param {Number} aNodeIndex
+   *                 the index of the node in the this.traverseData array;
+   *                 if not specified, it will default to the current selection
+   */
+  deleteNode: function TVP_deleteNode(aNodeIndex)
+  {
+    // we probably don't want to delete the html or body node.. just sayin'
+    if ((aNodeIndex = aNodeIndex || this._currentSelection) < 1) {
+      return;
+    }
+
+    let renderer = this.renderer;
+    let meshData = this.meshData;
+
+    for (let i = 0, k = 36 * aNodeIndex; i < 36; i++) {
+      meshData.vertices[i + k] = 0;
+    }
+
+    this.meshStacks.vertices = new renderer.VertexBuffer(meshData.vertices, 3);
+    this.highlight.disabled = true;
+    this.redraw = true;
   },
 
   /**
@@ -887,6 +946,9 @@ TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
   this.width = aCanvas.width;
   this.height = aCanvas.height;
 
+  this.left *= TiltUtils.getDocumentZoom();
+  this.top *= TiltUtils.getDocumentZoom();
+
   /**
    * Arcball used to control the visualization using the mouse.
    */
@@ -923,7 +985,6 @@ TiltVisualizer.Controller.prototype = {
     // bind commonly used mouse and keyboard events with the controller
     canvas.addEventListener("mousedown", this.onMouseDown, false);
     canvas.addEventListener("mouseup", this.onMouseUp, false);
-    canvas.addEventListener("click", this.onMouseClick, false);
     canvas.addEventListener("mousemove", this.onMouseMove, false);
     canvas.addEventListener("mouseover", this.onMouseOver, false);
     canvas.addEventListener("mouseout", this.onMouseOut, false);
@@ -946,7 +1007,6 @@ TiltVisualizer.Controller.prototype = {
 
     canvas.removeEventListener("mousedown", this.onMouseDown, false);
     canvas.removeEventListener("mouseup", this.onMouseUp, false);
-    canvas.removeEventListener("click", this.onMouseClick, false);
     canvas.removeEventListener("mousemove", this.onMouseMove, false);
     canvas.removeEventListener("mouseover", this.onMouseOver, false);
     canvas.removeEventListener("mouseout", this.onMouseOut, false);
@@ -960,9 +1020,13 @@ TiltVisualizer.Controller.prototype = {
 
   /**
    * Function called each frame, updating the visualization camera transforms.
+   *
+   * @param {Number} aFrames
+   *                 the current animation frame count
    */
-  update: function TVC_update()
+  update: function TVC_update(aFrames)
   {
+    this.frames = aFrames;
     this.coordinates = this.arcball.update();
 
     this.presenter.setRotation(this.coordinates.rotation);
@@ -978,11 +1042,16 @@ TiltVisualizer.Controller.prototype = {
     e.preventDefault();
     e.stopPropagation();
 
+    if (this.frames < MOUSE_INTRO_DELAY) {
+      return;
+    }
+
     // calculate x and y coordinates using using the client and target offset
+    let button = e.which;
     this._downX = e.clientX - e.target.offsetLeft;
     this._downY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mouseDown(this._downX, this._downY, e.which);
+    this.arcball.mouseDown(this._downX, this._downY, button);
   },
 
   /**
@@ -993,34 +1062,24 @@ TiltVisualizer.Controller.prototype = {
     e.preventDefault();
     e.stopPropagation();
 
+    if (this.frames < MOUSE_INTRO_DELAY) {
+      return;
+    }
+
     // calculate x and y coordinates using using the client and target offset
     let button = e.which;
     let upX = e.clientX - e.target.offsetLeft;
     let upY = e.clientY - e.target.offsetTop;
 
-    this.arcball.mouseUp(upX, upY, button);
-  },
-
-  /**
-   * Called every time a mouse button is clicked.
-   */
-  onMouseClick: function TVC_onMouseClick(e)
-  {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // calculate x and y coordinates using using the client and target offset
-    let button = e.which;
-    let clickX = e.clientX - e.target.offsetLeft;
-    let clickY = e.clientY - e.target.offsetTop;
-
     // a click in Tilt is issued only when the mouse pointer stays in
     // relatively the same position
-    if (Math.abs(this._downX - clickX) < MOUSE_CLICK_THRESHOLD &&
-        Math.abs(this._downY - clickY) < MOUSE_CLICK_THRESHOLD) {
+    if (Math.abs(this._downX - upX) < MOUSE_CLICK_THRESHOLD &&
+        Math.abs(this._downY - upY) < MOUSE_CLICK_THRESHOLD) {
 
-      this.presenter.highlightNodeAt(clickX, clickY);
+      this.presenter.highlightNodeAt(upX, upY);
     }
+
+    this.arcball.mouseUp(upX, upY, button);
   },
 
   /**
@@ -1030,6 +1089,10 @@ TiltVisualizer.Controller.prototype = {
   {
     e.preventDefault();
     e.stopPropagation();
+
+    if (this.frames < MOUSE_INTRO_DELAY) {
+      return;
+    }
 
     // calculate x and y coordinates using using the client and target offset
     let moveX = e.clientX - e.target.offsetLeft;
@@ -1097,6 +1160,9 @@ TiltVisualizer.Controller.prototype = {
     if (code === e.DOM_VK_ESCAPE) {
       this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId, 1);
       return;
+    }
+    if (code === e.DOM_VK_X) {
+      this.presenter.deleteNode();
     }
 
     if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
@@ -1195,21 +1261,21 @@ TiltVisualizer.Arcball = function TV_Arcball(
    */
   this._lastRot = quat4.create();
   this._deltaRot = quat4.create();
-  this._currentRot = quat4.create();
+  this._currentRot = quat4.create(aInitialRot);
 
   /**
    * The current camera translation coordinates.
    */
   this._lastTrans = vec3.create();
   this._deltaTrans = vec3.create();
-  this._currentTrans = vec3.create();
+  this._currentTrans = vec3.create(aInitialTrans);
   this._zoomAmount = 0;
 
   /**
    * Additional rotation and translation vectors.
    */
-  this._additionalRot = vec3.create(aInitialRot);
-  this._additionalTrans = vec3.create(aInitialTrans);
+  this._additionalRot = vec3.create();
+  this._additionalTrans = vec3.create();
   this._deltaAdditionalRot = quat4.create();
   this._deltaAdditionalTrans = vec3.create();
 
@@ -1617,21 +1683,22 @@ TiltVisualizer.Arcball.prototype = {
    */
   reset: function TVA_reset(aFinalTranslation, aFinalRotation)
   {
+    if ("function" === typeof this.onResetStart) {
+      this.onResetStart();
+      this.onResetStart = null;
+    }
+
     this.cancelMouseEvents();
     this.cancelKeyEvents();
+    this._cancelResetInterval();
 
-    if (!this._resetInterval) {
-      let window = TiltUtils.getBrowserWindow();
-      let func = this._nextResetIntervalStep.bind(this);
+    let window = TiltUtils.getBrowserWindow();
+    let func = this._nextResetIntervalStep.bind(this);
 
-      vec3.zero(this._additionalTrans);
-      vec3.zero(this._additionalRot);
-
-      this._save();
-      this._resetFinalTranslation = vec3.create(aFinalTranslation);
-      this._resetFinalRotation = quat4.create(aFinalRotation);
-      this._resetInterval = window.setInterval(func, ARCBALL_RESET_INTERVAL);
-    }
+    this._save();
+    this._resetFinalTranslation = vec3.create(aFinalTranslation);
+    this._resetFinalRotation = quat4.create(aFinalRotation);
+    this._resetInterval = window.setInterval(func, ARCBALL_RESET_INTERVAL);
   },
 
   /**
@@ -1666,10 +1733,12 @@ TiltVisualizer.Arcball.prototype = {
     let r = quat4.multiply(quat4.inverse(quat4.create(this._currentRot)), fRot);
 
     // reset the rotation quaternion and translation vector
-    vec3.lerp(this._currentTrans, t, ARCBALL_RESET_FACTOR);
+    vec3.lerp(this._currentTrans, t, ARCBALL_RESET_FACTOR / 4);
     quat4.slerp(this._currentRot, r, 1 - ARCBALL_RESET_FACTOR);
 
     // also reset any additional transforms by the keyboard or mouse
+    vec3.scale(this._additionalTrans, ARCBALL_RESET_FACTOR);
+    vec3.scale(this._additionalRot, ARCBALL_RESET_FACTOR);
     this._zoomAmount *= ARCBALL_RESET_FACTOR;
 
     // clear the loop if the all values are very close to zero
@@ -1678,7 +1747,9 @@ TiltVisualizer.Arcball.prototype = {
         vec3.length(vec3.subtract(this._currentRot, fRot, [])) < fDelta &&
         vec3.length(vec3.subtract(this._lastTrans, fTran, [])) < fDelta &&
         vec3.length(vec3.subtract(this._deltaTrans, fTran, [])) < fDelta &&
-        vec3.length(vec3.subtract(this._currentTrans, fTran, [])) < fDelta) {
+        vec3.length(vec3.subtract(this._currentTrans, fTran, [])) < fDelta &&
+        vec3.length(this._additionalRot) < fDelta &&
+        vec3.length(this._additionalTrans) < fDelta) {
 
       this._cancelResetInterval();
     }

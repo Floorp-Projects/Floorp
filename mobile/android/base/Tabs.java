@@ -288,8 +288,12 @@ public class Tabs implements GeckoEventListener {
     }
 
     public void refreshThumbnails() {
-        Iterator<Tab> iterator = tabs.values().iterator();
-        while (iterator.hasNext())
-            GeckoApp.mAppContext.getAndProcessThumbnailForTab(iterator.next());
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                Iterator<Tab> iterator = tabs.values().iterator();
+                while (iterator.hasNext())
+                    GeckoApp.mAppContext.getAndProcessThumbnailForTab(iterator.next());
+            }
+        });
     }
 }

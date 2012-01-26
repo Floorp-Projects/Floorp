@@ -200,9 +200,31 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { uri });
     }
 
-    public void updateHistoryDate(ContentResolver cr, String uri, long date) {
+    public void updateHistoryEntry(ContentResolver cr, String uri, String title,
+                                   long date, int visits) {
+        int oldVisits = 0;
+        Cursor cursor = null;
+        try {
+            cursor = cr.query(appendProfile(History.CONTENT_URI),
+                              new String[] { History.VISITS },
+                              History.URL + " = ?",
+                              new String[] { uri },
+                              null);
+
+            if (cursor.moveToFirst()) {
+                oldVisits = cursor.getInt(0);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+
         ContentValues values = new ContentValues();
         values.put(History.DATE_LAST_VISITED, date);
+        values.put(History.VISITS, oldVisits + visits);
+        if (title != null) {
+            values.put(History.TITLE, title);
+        }
 
         cr.update(appendProfile(History.CONTENT_URI),
                   values,
@@ -226,12 +248,17 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                            History.URL,
                                            History.TITLE,
                                            History.FAVICON,
-                                           History.DATE_LAST_VISITED },
+                                           History.DATE_LAST_VISITED,
+                                           History.VISITS },
                             History.DATE_LAST_VISITED + " > 0",
                             null,
                             History.DATE_LAST_VISITED + " DESC");
 
         return new LocalDBCursor(c);
+    }
+
+    public int getMaxHistoryCount() {
+        return MAX_HISTORY_COUNT;
     }
 
     public void clearHistory(ContentResolver cr) {
@@ -401,6 +428,8 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                 columnName = ImageColumns.THUMBNAIL;
             } else if (columnName.equals(BrowserDB.URLColumns.DATE_LAST_VISITED)) {
                 columnName = History.DATE_LAST_VISITED;
+            } else if (columnName.equals(BrowserDB.URLColumns.VISITS)) {
+                columnName = History.VISITS;
             }
 
             return columnName;

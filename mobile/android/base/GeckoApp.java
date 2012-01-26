@@ -105,6 +105,7 @@ abstract public class GeckoApp
     public static final String ACTION_DEBUG         = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
+    public static final String ACTION_UPDATE        = "org.mozilla.gecko.UPDATE";
     public static final String SAVED_STATE_URI      = "uri";
     public static final String SAVED_STATE_TITLE    = "title";
     public static final String SAVED_STATE_VIEWPORT = "viewport";
@@ -593,11 +594,10 @@ abstract public class GeckoApp
         }
     }
 
-    void getAndProcessThumbnailForTab(Tab tab) {
-        Bitmap bitmap = null;
-        if (Tabs.getInstance().isSelectedTab(tab))
-            bitmap = mSoftwareLayerClient.getBitmap();
-
+    void getAndProcessThumbnailForTab(final Tab tab) {
+        final Bitmap bitmap = Tabs.getInstance().isSelectedTab(tab) ?
+            mSoftwareLayerClient.getBitmap() : null;
+        
         if (bitmap != null) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
@@ -1052,6 +1052,8 @@ abstract public class GeckoApp
                         }
                     });
                 }
+            } else if (event.equals("Update:Restart")) {
+                doRestart("org.mozilla.gecko.restart_update");
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1458,6 +1460,11 @@ abstract public class GeckoApp
             }
         }
 
+        if (ACTION_UPDATE.equals(intent.getAction()) || args != null && args.contains("-alert update-app")) {
+            Log.i(LOGTAG,"onCreate: Update request");
+            checkAndLaunchUpdate();
+        }
+
         String uri = intent.getDataString();
         String title = uri;
         if (uri != null && uri.length() > 0) {
@@ -1606,6 +1613,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("CharEncoding:State", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Update:Restart", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1641,10 +1649,6 @@ abstract public class GeckoApp
                     return;
                 }
 
-                // it would be good only to do this if MOZ_UPDATER was defined
-                long startTime = SystemClock.uptimeMillis();
-                checkAndLaunchUpdate();
-                Log.w(LOGTAG, "checking for an update took " + (SystemClock.uptimeMillis() - startTime) + "ms");
                 checkMigrateProfile();
             }
         }, 50);
@@ -2012,8 +2016,12 @@ abstract public class GeckoApp
     }
 
     public void doRestart() {
+        doRestart("org.mozilla.gecko.restart");
+    }
+
+    public void doRestart(String action) {
+        Log.i(LOGTAG, "doRestart(\"" + action + "\")");
         try {
-            String action = "org.mozilla.gecko.restart";
             Intent intent = new Intent(action);
             intent.setClassName(getPackageName(),
                                 getPackageName() + ".Restarter");
@@ -2108,12 +2116,19 @@ abstract public class GeckoApp
     private void checkMigrateProfile() {
         File profileDir = getProfileDir();
         if (profileDir != null) {
+            long currentTime = SystemClock.uptimeMillis();
             Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
             final GeckoApp app = GeckoApp.mAppContext;
+            final SetupScreen setupScreen = new SetupScreen(app);
+            // don't show unless we take a while
+            setupScreen.showDelayed(mMainHandler);
             GeckoAppShell.ensureSQLiteLibsLoaded(app.getApplication().getPackageResourcePath());
             ProfileMigrator profileMigrator =
                 new ProfileMigrator(app.getContentResolver(), profileDir);
-            profileMigrator.launchBackground();
+            profileMigrator.launch();
+            setupScreen.dismiss();
+            long timeDiff = SystemClock.uptimeMillis() - currentTime;
+            Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
         }
     }
 
@@ -2363,7 +2378,7 @@ abstract public class GeckoApp
             while (tabsIter.hasNext()) {
                 Tab tab = tabsIter.next();
                 if (url.equals(tab.getURL())) {
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(tab.getId())));
+                    Tabs.getInstance().selectTab(tab.getId());
                     return;
                 }
             }

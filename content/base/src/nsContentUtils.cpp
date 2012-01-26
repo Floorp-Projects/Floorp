@@ -206,7 +206,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIScriptElement.h"
 #include "nsIContentViewer.h"
 #include "nsIObjectLoadingContent.h"
-
+#include "nsCCUncollectableMarker.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
 
@@ -3387,6 +3387,32 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
 
     mozAutoSubtreeModified subtree(aOwnerDoc, aParent);
     nsEventDispatcher::Dispatch(aChild, nsnull, &mutation);
+  }
+}
+
+PLDHashOperator
+ListenerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
+                   PRUint32 aNumber, void* aArg)
+{
+  PRUint32* gen = static_cast<PRUint32*>(aArg);
+  EventListenerManagerMapEntry* entry =
+    static_cast<EventListenerManagerMapEntry*>(aEntry);
+  if (entry) {
+    nsINode* n = static_cast<nsINode*>(entry->mListenerManager->GetTarget());
+    if (n && n->IsInDoc() &&
+        nsCCUncollectableMarker::InGeneration(n->OwnerDoc()->GetMarkedCCGeneration())) {
+      entry->mListenerManager->UnmarkGrayJSListeners();
+    }
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(PRUint32 aGeneration)
+{
+  if (sEventListenerManagersHash.ops) {
+    PL_DHashTableEnumerate(&sEventListenerManagersHash, ListenerEnumerator,
+                           &aGeneration);
   }
 }
 
