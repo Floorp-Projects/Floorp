@@ -83,8 +83,8 @@ public:
   nsWebSocket();
   virtual ~nsWebSocket();
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsWebSocket,
-                                           nsDOMEventTargetWrapperCache)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(nsWebSocket,
+                                                                   nsDOMEventTargetWrapperCache)
   NS_DECL_NSIWEBSOCKET
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBSOCKETLISTENER

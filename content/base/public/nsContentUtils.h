@@ -994,6 +994,8 @@ public:
   static nsEventListenerManager* GetListenerManager(nsINode* aNode,
                                                     bool aCreateIfNotFound);
 
+  static void UnmarkGrayJSListenersInCCGenerationDocuments(PRUint32 aGeneration);
+
   /**
    * Remove the eventlistener manager for aNode.
    *

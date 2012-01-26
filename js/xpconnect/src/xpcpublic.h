@@ -55,6 +55,7 @@
 #include "nsTArray.h"
 
 class nsIPrincipal;
+class nsIXPConnectWrappedJS;
 struct nsDOMClassInfoData;
 
 #ifndef BAD_TLS_INDEX
@@ -188,6 +189,15 @@ xpc_UnmarkGrayObject(JSObject *obj)
     if (obj && xpc_IsGrayGCThing(obj))
         xpc_UnmarkGrayObjectRecursive(obj);
 }
+
+// If aVariant is an XPCVariant, this marks the object to be in aGeneration.
+// This also unmarks the gray JSObject.
+extern void
+xpc_MarkInCCGeneration(nsISupports* aVariant, PRUint32 aGeneration);
+
+// Unmarks aWrappedJS's JSObject.
+extern void
+xpc_UnmarkGrayObject(nsIXPConnectWrappedJS* aWrappedJS);
 
 // No JS can be on the stack when this is called. Probably only useful from
 // xpcshell.
