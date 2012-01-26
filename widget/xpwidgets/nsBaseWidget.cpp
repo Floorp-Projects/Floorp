@@ -1259,6 +1259,18 @@ nsBaseWidget::BeginMoveDrag(nsMouseEvent* aEvent)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+PRUint32
+nsBaseWidget::GetGLFrameBufferFormat()
+{
+  if (mLayerManager &&
+      mLayerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+    // Assume that the default framebuffer has RGBA format.  Specific
+    // backends that know differently will override this method.
+    return LOCAL_GL_RGBA;
+  }
+  return LOCAL_GL_NONE;
+}
+
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////
 //

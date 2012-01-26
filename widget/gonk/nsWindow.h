@@ -126,6 +126,8 @@ public:
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
 
+    virtual PRUint32 GetGLFrameBufferFormat() MOZ_OVERRIDE;
+
 protected:
     nsWindow* mParent;
     bool mVisible;
