@@ -28,8 +28,8 @@ of the License or (at your option) any later version.
 // #include <cstring>
 // #include "graphite2/Types.h"
 #include "graphite2/Font.h"
-#include "Main.h"
-#include "FeatureVal.h"
+#include "inc/Main.h"
+#include "inc/FeatureVal.h"
 
 namespace graphite2 {
 

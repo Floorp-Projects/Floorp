@@ -40,11 +40,13 @@
 $(_NS)_SOURCES = \
     $($(_NS)_BASE)/src/$($(_NS)_MACHINE)_machine.cpp \
     $($(_NS)_BASE)/src/gr_char_info.cpp \
-    $($(_NS)_BASE)/src/gr_features.cpp \
     $($(_NS)_BASE)/src/gr_face.cpp \
+    $($(_NS)_BASE)/src/gr_features.cpp \
     $($(_NS)_BASE)/src/gr_font.cpp \
+	$($(_NS)_BASE)/src/gr_logging.cpp \
     $($(_NS)_BASE)/src/gr_segment.cpp \
     $($(_NS)_BASE)/src/gr_slot.cpp \
+    $($(_NS)_BASE)/src/json.cpp \
     $($(_NS)_BASE)/src/Bidi.cpp \
     $($(_NS)_BASE)/src/CachedFace.cpp \
     $($(_NS)_BASE)/src/CmapCache.cpp \
@@ -67,43 +69,43 @@ $(_NS)_SOURCES = \
     $($(_NS)_BASE)/src/UtfCodec.cpp
 
 $(_NS)_PRIVATE_HEADERS = \
-    $($(_NS)_BASE)/src/CachedFace.h \
-    $($(_NS)_BASE)/src/CharInfo.h \
-    $($(_NS)_BASE)/src/CmapCache.h \
-    $($(_NS)_BASE)/src/Code.h \
-    $($(_NS)_BASE)/src/Face.h \
-    $($(_NS)_BASE)/src/FeatureMap.h \
-    $($(_NS)_BASE)/src/FeatureVal.h \
-    $($(_NS)_BASE)/src/Font.h \
-    $($(_NS)_BASE)/src/GlyphFaceCache.h \
-    $($(_NS)_BASE)/src/GlyphFace.h \
-    $($(_NS)_BASE)/src/List.h \
-    $($(_NS)_BASE)/src/locale2lcid.h \
-    $($(_NS)_BASE)/src/Machine.h \
-    $($(_NS)_BASE)/src/Main.h \
-    $($(_NS)_BASE)/src/NameTable.h \
-    $($(_NS)_BASE)/src/opcodes.h \
-    $($(_NS)_BASE)/src/opcode_table.h \
-    $($(_NS)_BASE)/src/Pass.h \
-    $($(_NS)_BASE)/src/Position.h \
-    $($(_NS)_BASE)/src/processUTF.h \
-    $($(_NS)_BASE)/src/Rule.h \
-    $($(_NS)_BASE)/src/SegCacheEntry.h \
-    $($(_NS)_BASE)/src/SegCache.h \
-    $($(_NS)_BASE)/src/SegCacheStore.h \
-    $($(_NS)_BASE)/src/Segment.h \
-    $($(_NS)_BASE)/src/Silf.h \
-    $($(_NS)_BASE)/src/Slot.h \
-    $($(_NS)_BASE)/src/Sparse.h \
-    $($(_NS)_BASE)/src/TtfTypes.h \
-    $($(_NS)_BASE)/src/TtfUtil.h \
-    $($(_NS)_BASE)/src/UtfCodec.h \
-    $($(_NS)_BASE)/src/XmlTraceLog.h \
-    $($(_NS)_BASE)/src/XmlTraceLogTags.h 
+    $($(_NS)_BASE)/src/inc/debug.h \
+    $($(_NS)_BASE)/src/inc/json.h \
+    $($(_NS)_BASE)/src/inc/CachedFace.h \
+    $($(_NS)_BASE)/src/inc/CharInfo.h \
+    $($(_NS)_BASE)/src/inc/CmapCache.h \
+    $($(_NS)_BASE)/src/inc/Code.h \
+    $($(_NS)_BASE)/src/inc/Endian.h \
+    $($(_NS)_BASE)/src/inc/Face.h \
+    $($(_NS)_BASE)/src/inc/FeatureMap.h \
+    $($(_NS)_BASE)/src/inc/FeatureVal.h \
+    $($(_NS)_BASE)/src/inc/Font.h \
+    $($(_NS)_BASE)/src/inc/GlyphFace.h \
+    $($(_NS)_BASE)/src/inc/GlyphFaceCache.h \
+    $($(_NS)_BASE)/src/inc/List.h \
+    $($(_NS)_BASE)/src/inc/locale2lcid.h \
+    $($(_NS)_BASE)/src/inc/Machine.h \
+    $($(_NS)_BASE)/src/inc/Main.h \
+    $($(_NS)_BASE)/src/inc/NameTable.h \
+    $($(_NS)_BASE)/src/inc/opcode_table.h \
+    $($(_NS)_BASE)/src/inc/opcodes.h \
+    $($(_NS)_BASE)/src/inc/Pass.h \
+    $($(_NS)_BASE)/src/inc/Position.h \
+    $($(_NS)_BASE)/src/inc/Rule.h \
+    $($(_NS)_BASE)/src/inc/SegCache.h \
+    $($(_NS)_BASE)/src/inc/SegCacheEntry.h \
+    $($(_NS)_BASE)/src/inc/SegCacheStore.h \
+    $($(_NS)_BASE)/src/inc/Segment.h \
+    $($(_NS)_BASE)/src/inc/Silf.h \
+    $($(_NS)_BASE)/src/inc/Slot.h \
+    $($(_NS)_BASE)/src/inc/Sparse.h \
+    $($(_NS)_BASE)/src/inc/TtfTypes.h \
+    $($(_NS)_BASE)/src/inc/TtfUtil.h \
+    $($(_NS)_BASE)/src/inc/UtfCodec.h
 
 $(_NS)_PUBLIC_HEADERS = \
     $($(_NS)_BASE)/include/graphite2/Font.h \
+    $($(_NS)_BASE)/include/graphite2/Log.h \
     $($(_NS)_BASE)/include/graphite2/Segment.h \
-    $($(_NS)_BASE)/include/graphite2/Types.h \
-    $($(_NS)_BASE)/include/graphite2/XmlLog.h
+    $($(_NS)_BASE)/include/graphite2/Types.h
 

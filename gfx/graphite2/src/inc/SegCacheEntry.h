@@ -26,9 +26,9 @@ of the License or (at your option) any later version.
 */
 #pragma once
 
-#ifndef DISABLE_SEGCACHE
+#ifndef GRAPHITE2_NSEGCACHE
 
-#include "Main.h"
+#include "inc/Main.h"
 
 namespace graphite2 {
 
@@ -78,7 +78,6 @@ public:
     const Slot * first() const { return m_glyph; }
     const Slot * last() const { return m_glyph + (m_glyphLength - 1); }
 
-    void log(size_t unicodeLength) const;
     /** Total number of times this entry has been accessed since creation */
     unsigned long long accessCount() const { return m_accessCount; }
     /** "time" of last access where "time" is measured in accesses to the cache owning this entry */
@@ -100,13 +99,13 @@ public:
     CLASS_NEW_DELETE;
 private:
 
-    size_t m_glyphLength;
+    size_t   m_glyphLength;
     /** glyph ids resulting from cmap mapping from unicode to glyph before substitution
      * the length of this array is determined by the position in the SegCachePrefixEntry */
     uint16 * m_unicode;
     /** slots after shapping and positioning */
-    Slot * m_glyph;
-    uint16 * m_attr;
+    Slot   * m_glyph;
+    int16  * m_attr;
     mutable unsigned long long m_accessCount;
     mutable unsigned long long m_lastAccess;
 };

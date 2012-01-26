@@ -26,7 +26,7 @@ of the License or (at your option) any later version.
 */
 #include <cassert>
 #include "graphite2/Segment.h"
-#include "CharInfo.h"
+#include "inc/CharInfo.h"
 
 extern "C"
 {

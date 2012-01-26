@@ -25,51 +25,40 @@ License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
 #pragma once
+#include "inc/Main.h"
 
-#include <cstdlib>
-#include "graphite2/Types.h"
-
-#ifdef GR2_CUSTOM_HEADER
-#include GR2_CUSTOM_HEADER
-#endif
 
 namespace graphite2 {
 
-typedef gr_uint8        uint8;
-typedef gr_uint8        byte;
-typedef gr_uint16       uint16;
-typedef gr_uint32       uint32;
-typedef gr_int8         int8;
-typedef gr_int16        int16;
-typedef gr_int32        int32;
-typedef size_t          uintptr;
-
-// typesafe wrapper around malloc for simple types
-// use free(pointer) to deallocate
-template <typename T> T * gralloc(size_t n)
+class CharInfo
 {
-    return reinterpret_cast<T*>(malloc(sizeof(T) * n));
-}
 
-template <typename T> T * grzeroalloc(size_t n)
-{
-    return reinterpret_cast<T*>(calloc(n, sizeof(T)));
-}
+public:
+    CharInfo() : m_before(-1), m_after(0) {}
+    void init(int cid) { m_char = cid; }
+    unsigned int unicodeChar() const { return m_char; }
+    void feats(int offset) { m_featureid = offset; }
+    int fid() const { return m_featureid; }
+    int breakWeight() const { return m_break; }
+    void breakWeight(int val) { m_break = val; }
+    int after() const { return m_after; }
+    void after(int val) { m_after = val; }
+    int before() const { return m_before; }
+    void before(int val) { m_before = val; }
+    size_t base() const { return m_base; }
+    void base(size_t offset) { m_base = offset; }
+
+    CLASS_NEW_DELETE
+private:
+    int m_char;     // Unicode character from character stream
+    int m_before;   // slot index before us, comes before
+    int m_after;    // slot index after us, comes after
+    size_t  m_base; // offset into input string corresponding to this charinfo
+    uint8 m_featureid;	// index into features list in the segment
+    int8 m_break;	// breakweight coming from lb table
+};
 
 } // namespace graphite2
 
-#define CLASS_NEW_DELETE \
-    void * operator new   (size_t size){ return malloc(size);} \
-    void * operator new   (size_t, void * p) throw() { return p; } \
-    void * operator new[] (size_t size) {return malloc(size);} \
-    void * operator new[] (size_t, void * p) throw() { return p; } \
-    void operator delete   (void * p) throw() { free(p);} \
-    void operator delete   (void *, void *) throw() {} \
-    void operator delete[] (void * p)throw() { free(p); } \
-    void operator delete[] (void *, void *) throw() {}
+struct gr_char_info : public graphite2::CharInfo {};
 
-#ifdef __GNUC__
-#define GR_MAYBE_UNUSED __attribute__((unused))
-#else
-#define GR_MAYBE_UNUSED
-#endif

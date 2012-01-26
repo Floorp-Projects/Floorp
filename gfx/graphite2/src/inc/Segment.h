@@ -26,17 +26,16 @@ of the License or (at your option) any later version.
 */
 #pragma once
 
-#include "Main.h"
+#include "inc/Main.h"
 
 #include <cassert>
 
-#include "Slot.h"
-#include "CharInfo.h"
-#include "FeatureVal.h"
-#include "XmlTraceLog.h"
-#include "Silf.h"
+#include "inc/Slot.h"
+#include "inc/CharInfo.h"
+#include "inc/FeatureVal.h"
+#include "inc/Silf.h"
 
-#include "List.h"
+#include "inc/List.h"
 
 #define MAX_SEG_GROWTH_FACTOR  256
 
@@ -44,9 +43,9 @@ namespace graphite2 {
 
 typedef Vector<Features>        FeatureList;
 typedef Vector<Slot *>          SlotRope;
-typedef Vector<uint16 *>        AttributeRope;
+typedef Vector<int16 *>        AttributeRope;
 
-#ifndef DISABLE_SEGCACHE
+#ifndef GRAPHITE2_NSEGCACHE
 class SegmentScopeState;
 #endif
 class Segment;
@@ -89,7 +88,7 @@ public:
 
     Segment(unsigned int numchars, const Face* face, uint32 script, int dir);
     ~Segment();
-#ifndef DISABLE_SEGCACHE
+#ifndef GRAPHITE2_NSEGCACHE
     SegmentScopeState setScope(Slot * firstSlot, Slot * lastSlot, size_t subLength);
     void removeScope(SegmentScopeState & state);
     void append(const Segment &other);
@@ -103,7 +102,8 @@ public:
     void appendSlot(int i, int cid, int gid, int fid, size_t coffset);
     Slot *newSlot();
     void freeSlot(Slot *);
-    void positionSlots(const Font *font, Slot *iStart = NULL, Slot *iEnd = NULL);
+    Position positionSlots(const Font *font, Slot *first=0, Slot *last=0);
+    void linkClusters(Slot *first, Slot *last);
     uint16 getClassGlyph(uint16 cid, uint16 offset) const { return m_silf->getClassGlyph(cid, offset); }
     uint16 findClassIndex(uint16 cid, uint16 gid) const { return m_silf->findClassIndex(cid, gid); }
     int addFeatures(const Features& feats) { m_feats.push_back(feats); return m_feats.size() - 1; }
@@ -121,19 +121,14 @@ public:
     }
     float glyphAdvance(uint16 gid) const { return m_face->getAdvance(gid, 1.0); }
     const Rect &theGlyphBBoxTemporary(uint16 gid) const { return m_face->theBBoxTemporary(gid); }   //warning value may become invalid when another glyph is accessed
-    Slot *findRoot(Slot *is) const { return is->attachTo() ? findRoot(is->attachTo()) : is; }
-    int numAttrs() { return m_silf->numUser(); }
+    Slot *findRoot(Slot *is) const { return is->attachedTo() ? findRoot(is->attachedTo()) : is; }
+    int numAttrs() const { return m_silf->numUser(); }
     int defaultOriginal() const { return m_defaultOriginal; }
     const Face * getFace() const { return m_face; }
     const Features & getFeatures(unsigned int /*charIndex*/) { assert(m_feats.size() == 1); return m_feats[0]; }
     void bidiPass(uint8 aBidi, int paradir, uint8 aMirror);
 
     CLASS_NEW_DELETE
-
-#ifndef DISABLE_TRACING
-    void logSegment(gr_encform enc, const void* pStart, size_t nChars) const;
-    void logSegment() const;
-#endif
 
 public:       //only used by: GrSegment* makeAndInitialize(const GrFont *font, const GrFace *face, uint32 script, const FeaturesHandle& pFeats/*must not be IsNull*/, encform enc, const void* pStart, size_t nChars, int dir);
     void read_text(const Face *face, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void*pStart, size_t nChars);

@@ -25,9 +25,9 @@ License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
 #include "graphite2/Segment.h"
-#include "Segment.h"
-#include "Slot.h"
-#include "Font.h"
+#include "inc/Segment.h"
+#include "inc/Slot.h"
+#include "inc/Font.h"
 
 
 extern "C" {
@@ -48,7 +48,7 @@ const gr_slot* gr_slot_prev_in_segment(const gr_slot* p/*not NULL*/)
 const gr_slot* gr_slot_attached_to(const gr_slot* p/*not NULL*/)        //returns NULL iff base. If called repeatedly on result, will get to a base
 {
     assert(p);
-    return static_cast<const gr_slot*>(p->attachTo());
+    return static_cast<const gr_slot*>(p->attachedTo());
 }
 
 
@@ -156,8 +156,8 @@ void gr_slot_linebreak_before(gr_slot* p/*not NULL*/)
 {
     assert(p);
     gr_slot *prev = (gr_slot *)p->prev();
-    prev->next(NULL);
     prev->sibling(NULL);
+    prev->next(NULL);
     p->prev(NULL);
 }
 

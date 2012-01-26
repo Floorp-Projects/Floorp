@@ -26,14 +26,14 @@ of the License or (at your option) any later version.
 */
 #pragma once
 
-#ifndef DISABLE_SEGCACHE
+#ifndef GRAPHITE2_NSEGCACHE
 
 #include <graphite2/Segment.h>
-#include "Main.h"
-#include "Slot.h"
-#include "FeatureVal.h"
-#include "SegCacheEntry.h"
-#include "Segment.h"
+#include "inc/Main.h"
+#include "inc/Slot.h"
+#include "inc/FeatureVal.h"
+#include "inc/SegCacheEntry.h"
+#include "inc/Segment.h"
 
 namespace graphite2 {
 
@@ -58,10 +58,8 @@ public:
             {
                 assert(m_entries[j]);
                 for (size_t k = 0; k < m_entryCounts[j]; k++)
-                {
-                    m_entries[j][k].log(j);
                     m_entries[j][k].clear();
-                }
+
                 free(m_entries[j]);
             }
         }
