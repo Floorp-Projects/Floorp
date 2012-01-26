@@ -42,6 +42,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 // Fired by TelemetryPing when async telemetry data should be collected.
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
@@ -95,6 +96,13 @@ PlacesCategoriesStarter.prototype = {
       case PlacesUtils.TOPIC_SHUTDOWN:
         Services.obs.removeObserver(this, PlacesUtils.TOPIC_SHUTDOWN);
         Services.obs.removeObserver(this, TOPIC_GATHER_TELEMETRY);
+        let globalObj =
+          Cu.getGlobalForObject(PlacesCategoriesStarter.prototype);
+        let descriptor =
+          Object.getOwnPropertyDescriptor(globalObj, "PlacesDBUtils");
+        if (descriptor.value !== undefined) {
+          PlacesDBUtils.shutdown();
+        }
         break;
       case TOPIC_GATHER_TELEMETRY:
         PlacesDBUtils.telemetry();
