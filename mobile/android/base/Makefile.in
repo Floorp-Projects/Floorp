@@ -582,7 +582,10 @@ $(PP_RES_XML): $(subst res/,$(srcdir)/resources/, $(PP_RES_XML).in)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
-AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in Makefile.in
+# AndroidManifest.xml includes these files, so they need to be marked as dependencies.
+SYNC_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/sync/manifests/*.in)
+
+AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in Makefile.in $(SYNC_MANIFEST_FRAGMENTS)
 	mkdir -p db sync/repositories/android
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
