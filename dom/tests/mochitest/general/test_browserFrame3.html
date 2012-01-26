@@ -26,7 +26,10 @@ function runTest() {
   browserFrameHelpers.setEnabledPref(true);
   browserFrameHelpers.setWhitelistPref(' http://foobar.com');
 
-  var iframe = document.getElementById('iframe');
+  var iframe = document.createElement('iframe');
+  iframe.mozbrowser = true;
+  document.body.appendChild(iframe);
+
   iframe.addEventListener('mozbrowserloadstart', function() {
     ok(false, 'Should not send mozbrowserloadstart event.');
   });
@@ -42,8 +45,6 @@ function runTest() {
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
 
 </script>
-
-<iframe id='iframe' mozbrowser></iframe>
 
 </body>
 </html>
