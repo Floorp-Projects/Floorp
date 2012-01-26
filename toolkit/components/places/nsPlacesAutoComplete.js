@@ -1419,7 +1419,8 @@ urlInlineComplete.prototype = {
 
       if (hasDomainResult) {
         // We got a match for a domain, we can add it immediately.
-        result.appendMatch(domain, "");
+        let appendResult = domain.slice(this._currentSearchString.length);
+        result.appendMatch(aSearchString + appendResult, "");
 
         this._finishSearch();
         return;
@@ -1492,18 +1493,17 @@ urlInlineComplete.prototype = {
     let url = fixupSearchText(row.getResultByIndex(0));
 
     // We must complete the URL up to the next separator (which is /, ? or #).
-    let separatorIndex = url.slice(this._currentSearchString.length)
-                            .search(/[\/\?\#]/);
+    let appendText = url.slice(this._currentSearchString.length);
+    let separatorIndex = appendText.search(/[\/\?\#]/);
     if (separatorIndex != -1) {
-      separatorIndex += this._currentSearchString.length;
-      if (url[separatorIndex] == "/") {
+      if (appendText[separatorIndex] == "/") {
         separatorIndex++; // Include the "/" separator
       }
-      url = url.slice(0, separatorIndex);
+      appendText = appendText.slice(0, separatorIndex);
     }
 
     // Add the result
-    this._result.appendMatch(url, "");
+    this._result.appendMatch(this._originalSearchString + appendText, "");
 
     // handleCompletion() will cause the result listener to be called, and
     // will display the result in the UI.
