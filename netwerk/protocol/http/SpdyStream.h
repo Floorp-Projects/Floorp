@@ -72,11 +72,11 @@ public:
   }
 
   // returns false if called more than once
-  bool SetFullyOpen()
+  bool GetFullyOpen() {return mFullyOpen;}
+  void SetFullyOpen() 
   {
-    bool result = !mFullyOpen;
+    NS_ABORT_IF_FALSE(!mFullyOpen, "SetFullyOpen already open");
     mFullyOpen = 1;
-    return result;
   }
 
   nsAHttpTransaction *Transaction()
@@ -113,7 +113,7 @@ private:
                                           nsAutoPtr<nsCString> &,
                                           void *);
 
-  void     ChangeState(enum stateType );
+  void     ChangeState(enum stateType);
   nsresult ParseHttpRequestHeaders(const char *, PRUint32, PRUint32 *);
   nsresult TransmitFrame(const char *, PRUint32 *);
   void     GenerateDataFrameHeader(PRUint32, bool);
@@ -154,9 +154,11 @@ private:
   // Flag is set when all http request headers have been read
   PRUint32                     mSynFrameComplete     : 1;
 
-  // Flag is set when there is more request data to send and the
-  // stream needs to be rescheduled for writing. Sometimes this
-  // is done as a matter of fairness, not really due to blocking
+  // The mBlockedOnWrite flags is set when the stream is waiting for
+  // a write callback because there is more request data to be sent.
+  // This can be because the network blocked previous write attempts or
+  // it may be because they were cut short as a matter of fairness to the
+  // other streams.
   PRUint32                     mBlockedOnWrite       : 1;
 
   // Flag is set when the HTTP processor has more data to send
@@ -180,8 +182,8 @@ private:
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.
   nsAutoArrayPtr<char>         mTxInlineFrame;
-  PRUint32                     mTxInlineFrameAllocation;
   PRUint32                     mTxInlineFrameSize;
+  PRUint32                     mTxInlineFrameUsed;
   PRUint32                     mTxInlineFrameSent;
 
   // mTxStreamFrameSize and mTxStreamFrameSent track the progress of
@@ -201,7 +203,7 @@ private:
   // for a stream closed indication. Relying on stream close results
   // in an extra 0-length runt packet and seems to have some interop
   // problems with the google servers.
-  PRInt64                      mRequestBodyLen;
+  PRInt64                      mRequestBodyLenRemaining;
 
   // based on nsISupportsPriority definitions
   PRInt32                      mPriority;
