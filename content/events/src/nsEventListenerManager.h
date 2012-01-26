@@ -247,6 +247,7 @@ public:
 
   void UnmarkGrayJSListeners();
 
+  nsISupports* GetTarget() { return mTarget; }
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEventListener* aListener,
