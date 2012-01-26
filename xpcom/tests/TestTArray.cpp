@@ -865,6 +865,42 @@ static bool test_swap() {
   return true;
 }
 
+static bool test_fallible()
+{
+  // Test that FallibleTArray works properly; that is, it never OOMs, but
+  // instead eventually returns false.
+  //
+  // This test is only meaningful on 32-bit systems.  On a 64-bit system, we
+  // might never OOM.
+  if (sizeof(void*) > 4) {
+    return true;
+  }
+
+  // Allocate a bunch of 512MB arrays.  We could go bigger, but nsTArray will
+  // bail before even attempting to malloc() for gigantic arrays.  512MB should
+  // be under that threshold.
+  //
+  // 9 * 512MB > 4GB, so we should definitely OOM by the 9th array.
+  const int numArrays = 9;
+  FallibleTArray<char> arrays[numArrays];
+  for (PRUint32 i = 0; i < numArrays; i++) {
+    bool success = arrays[i].SetCapacity(512 * 1024 * 1024);
+    if (!success) {
+      // We got our OOM.  Check that it didn't come too early.
+      if (i < 2) {
+        printf("test_fallible: Got OOM on iteration %d.  Too early!\n", i);
+        return false;
+      }
+      return true;
+    }
+  }
+
+  // No OOM?  That's...weird.
+  printf("test_fallible: Didn't OOM or crash?  nsTArray::SetCapacity "
+         "must be lying.\n");
+  return false;
+}
+
 //----
 
 typedef bool (*TestFunc)();
@@ -889,6 +925,7 @@ static const struct Test {
   DECL_TEST(test_indexof),
   DECL_TEST(test_heap),
   DECL_TEST(test_swap),
+  DECL_TEST(test_fallible),
   { nsnull, nsnull }
 };
 
