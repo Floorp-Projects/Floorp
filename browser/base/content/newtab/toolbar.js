@@ -24,16 +24,6 @@ let gToolbar = {
       let handler = function () self[aType]();
 
       button.addEventListener("click", handler, false);
-
-#ifdef XP_MACOSX
-      // Per default buttons lose focus after being clicked on Mac OS X.
-      // So when the URL bar has focus and a toolbar button is clicked the
-      // URL bar regains focus and the history pops up. We need to prevent
-      // that by explicitly removing its focus.
-      button.addEventListener("mousedown", function () {
-        window.focus();
-      }, false);
-#endif
     }, this);
   },
 
