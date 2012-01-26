@@ -117,7 +117,7 @@ abstract public class GeckoApp
     private RelativeLayout mGeckoLayout;
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
-    public static boolean mFullScreen = false;
+    public static boolean mDOMFullScreen = false;
     public static File sGREDir = null;
     public static Menu sMenu;
     private static GeckoThread sGeckoThread = null;
@@ -994,6 +994,10 @@ abstract public class GeckoApp
                         mBrowserToolbar.setVisibility(View.VISIBLE);
                     }
                 });
+            } else if (event.equals("DOMFullScreen:Start")) {
+                mDOMFullScreen = true;
+            } else if (event.equals("DOMFullScreen:Stop")) {
+                mDOMFullScreen = false;
             } else if (event.equals("FormAssist:AutoComplete")) {
                 final JSONArray suggestions = message.getJSONArray("suggestions");
                 if (suggestions.length() == 0) {
@@ -1434,7 +1438,6 @@ abstract public class GeckoApp
     }
 
     public void setFullScreen(final boolean fullscreen) {
-        mFullScreen = fullscreen;
         mMainHandler.post(new Runnable() { 
             public void run() {
                 // Hide/show the system notification bar
@@ -1625,6 +1628,8 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Start", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
@@ -2237,7 +2242,7 @@ abstract public class GeckoApp
             return;
         }
 
-        if (mFullScreen) {
+        if (mDOMFullScreen) {
             GeckoAppShell.sendEventToGecko(new GeckoEvent("FullScreen:Exit", null));
             return;
         }
