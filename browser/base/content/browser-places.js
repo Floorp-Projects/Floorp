@@ -1012,7 +1012,7 @@ var PlacesStarButton = {
     }
 
     // We can load about:blank before the actual page, but there is no point in handling that page.
-    if (isBlankPageURL(this._uri.spec)) {
+    if (this._uri.spec == "about:blank") {
       return;
     }
 
