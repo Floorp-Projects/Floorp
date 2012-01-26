@@ -284,6 +284,11 @@ hb_ot_layout_table_choose_script (hb_face_t      *face,
   if (g.find_script_index (HB_OT_TAG_DEFAULT_LANGUAGE, script_index))
     return FALSE;
 
+  /* try with 'latn'; some old fonts put their features there even though
+     they're really trying to support Thai, for example :( */
+  if (g.find_script_index (HB_TAG ('l','a','t','n'), script_index))
+    return FALSE;
+
   if (script_index) *script_index = HB_OT_LAYOUT_NO_SCRIPT_INDEX;
   return FALSE;
 }
