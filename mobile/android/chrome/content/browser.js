@@ -812,7 +812,7 @@ var BrowserApp = {
 
       // tell gecko to scroll the field into view. this will scroll any nested scrollable elements
       // as well as the browser's content window, and modify the scrollX and scrollY on the content window.
-      focused.scrollIntoView(true);
+      focused.scrollIntoView(false);
 
       // update userScrollPos so that we don't send a duplicate viewport update by triggering
       // our scroll listener
