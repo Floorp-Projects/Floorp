@@ -90,12 +90,22 @@ AccessCheck::isSameOrigin(JSCompartment *a, JSCompartment *b)
 bool
 AccessCheck::isLocationObjectSameOrigin(JSContext *cx, JSObject *wrapper)
 {
+    // Location objects are parented to the outer window for which they
+    // were created. This gives us an easy way to determine whether our
+    // object is same origin with the current inner window:
+
+    // Grab the outer window...
     JSObject *obj = js::GetObjectParent(js::UnwrapObject(wrapper));
     if (!js::GetObjectClass(obj)->ext.innerObject) {
+        // ...which might be wrapped in a security wrapper.
         obj = js::UnwrapObject(obj);
         JS_ASSERT(js::GetObjectClass(obj)->ext.innerObject);
     }
+
+    // Now innerize it to find the *current* inner window for our outer.
     obj = JS_ObjectToInnerObject(cx, obj);
+
+    // Which lets us compare the current compartment against the old one.
     return obj &&
            (isSameOrigin(js::GetObjectCompartment(wrapper),
                          js::GetObjectCompartment(obj)) ||
@@ -384,7 +394,7 @@ AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
     JS_ASSERT(js::IsWrapper(wrapper));
 
     uintN flags;
-    JSObject *obj = js::UnwrapObject(wrapper, &flags);
+    JSObject *obj = js::UnwrapObject(wrapper, true, &flags);
 
     // If the wrapper indicates script-only access, we are done.
     if (flags & WrapperFactory::SCRIPT_ACCESS_ONLY_FLAG) {
