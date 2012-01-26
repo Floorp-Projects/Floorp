@@ -7,9 +7,8 @@
         <org.mozilla.gecko.LinkPreference android:title="@string/pref_about_firefox"
                                           url="about:" />
 
-        <!-- TODO: Default Search Engine -->
-
-        <!-- TODO: Sync -->
+        <org.mozilla.gecko.SyncPreference android:title="@string/pref_sync"
+                                          android:persistent="false" />
 
     </PreferenceCategory>
 

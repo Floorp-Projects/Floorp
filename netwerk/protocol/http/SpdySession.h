@@ -132,11 +132,15 @@ public:
   // but if it needs to grow for huge headers it can do so dynamically.
   // About 1% of requests to SPDY google services seem to be > 1000
   // with all less than 2000.
-  const static PRUint32 kDefaultBufferSize = 2000;
+  const static PRUint32 kDefaultBufferSize = 2048;
 
-  const static PRUint32 kDefaultQueueSize =  16000;
-  const static PRUint32 kQueueTailRoom    =  4000;
-  const static PRUint32 kSendingChunkSize = 4000;
+  // kDefaultQueueSize must be >= other queue size constants
+  const static PRUint32 kDefaultQueueSize =  16384;
+  const static PRUint32 kQueueMinimumCleanup = 8192;
+  const static PRUint32 kQueueTailRoom    =  4096;
+  const static PRUint32 kQueueReserved    =  1024;
+
+  const static PRUint32 kSendingChunkSize = 4096;
   const static PRUint32 kDefaultMaxConcurrent = 100;
   const static PRUint32 kMaxStreamID = 0x7800000;
   
@@ -157,19 +161,29 @@ public:
   static void LogIO(SpdySession *, SpdyStream *, const char *,
                     const char *, PRUint32);
 
+  // an overload of nsAHttpConnection
+  void TransactionHasDataToWrite(nsAHttpTransaction *);
+
+  // a similar version for SpdyStream
+  void TransactionHasDataToWrite(SpdyStream *);
+
+  // an overload of nsAHttpSegementReader
+  virtual nsresult CommitToSegmentSize(PRUint32 size);
+  
 private:
 
   enum stateType {
     BUFFERING_FRAME_HEADER,
     BUFFERING_CONTROL_FRAME,
     PROCESSING_DATA_FRAME,
-    DISCARD_DATA_FRAME,
+    DISCARDING_DATA_FRAME,
     PROCESSING_CONTROL_SYN_REPLY,
     PROCESSING_CONTROL_RST_STREAM
   };
 
-  PRUint32    WriteQueueSize();
+  PRUint32    GetWriteQueueSize();
   void        ChangeDownstreamState(enum stateType);
+  void        ResetDownstreamState();
   nsresult    DownstreamUncompress(char *, PRUint32);
   void        zlibInit();
   nsresult    FindHeader(nsCString, nsDependentCSubstring &);
@@ -180,16 +194,16 @@ private:
   void        GenerateGoAway();
   void        CleanupStream(SpdyStream *, nsresult);
 
-  void        SetWriteCallbacks(nsAHttpTransaction *);
+  void        SetWriteCallbacks();
   void        FlushOutputQueue();
 
   bool        RoomForMoreConcurrent();
   void        ActivateStream(SpdyStream *);
   void        ProcessPending();
 
-  static PLDHashOperator Shutdown(nsAHttpTransaction *,
-                                  nsAutoPtr<SpdyStream> &,
-                                  void *);
+  static PLDHashOperator ShutdownEnumerator(nsAHttpTransaction *,
+                                            nsAutoPtr<SpdyStream> &,
+                                            void *);
 
   // This is intended to be nsHttpConnectionMgr:nsHttpConnectionHandle taken
   // from the first transaction on this session. That object contains the
@@ -230,36 +244,35 @@ private:
   // this queue in place to ease that transition.
   nsDeque           mUrgentForWrite;
 
-  // If we block while wrting out a frame then this points to the stream
-  // that was blocked. When writing again that stream must be the first
-  // one to write. It is null if there is not a partial frame.
-  SpdyStream        *mPartialFrame;
-
   // Compression contexts for header transport using deflate.
   // SPDY compresses only HTTP headers and does not reset zlib in between
   // frames.
   z_stream            mDownstreamZlib;
   z_stream            mUpstreamZlib;
 
-  // mFrameBuffer is used to store received control packets and the 8 bytes
+  // mInputFrameBuffer is used to store received control packets and the 8 bytes
   // of header on data packets
-  PRUint32             mFrameBufferSize;
-  PRUint32             mFrameBufferUsed;
-  nsAutoArrayPtr<char> mFrameBuffer;
+  PRUint32             mInputFrameBufferSize;
+  PRUint32             mInputFrameBufferUsed;
+  nsAutoArrayPtr<char> mInputFrameBuffer;
   
-  // mFrameDataSize/Read are used for tracking the amount of data consumed
+  // mInputFrameDataSize/Read are used for tracking the amount of data consumed
   // in a data frame. the data itself is not buffered in spdy
-  // The frame size is mFrameDataSize + the constant 8 byte header
-  PRUint32             mFrameDataSize;
-  PRUint32             mFrameDataRead;
-  bool                 mFrameDataLast; // This frame was marked FIN
+  // The frame size is mInputFrameDataSize + the constant 8 byte header
+  PRUint32             mInputFrameDataSize;
+  PRUint32             mInputFrameDataRead;
+  bool                 mInputFrameDataLast; // This frame was marked FIN
 
   // When a frame has been received that is addressed to a particular stream
   // (e.g. a data frame after the stream-id has been decoded), this points
   // to the stream.
-  SpdyStream          *mFrameDataStream;
+  SpdyStream          *mInputFrameDataStream;
   
-  // A state variable to cleanup a closed stream after the stack has unwound.
+  // mNeedsCleanup is a state variable to defer cleanup of a closed stream
+  // If needed, It is set in session::OnWriteSegments() and acted on and
+  // cleared when the stack returns to session::WriteSegments(). The stream
+  // cannot be destroyed directly out of OnWriteSegments because
+  // stream::writeSegments() is on the stack at that time.
   SpdyStream          *mNeedsCleanup;
 
   // The CONTROL_TYPE value for a control frame
@@ -280,7 +293,11 @@ private:
   nsCString            mFlatHTTPResponseHeaders;
   PRUint32             mFlatHTTPResponseHeadersOut;
 
-  // when set, the session will go away when it reaches 0 streams
+  // when set, the session will go away when it reaches 0 streams. This flag
+  // is set when: the stream IDs are running out (at either the client or the
+  // server), when DontReuse() is called, a RST that is not specific to a
+  // particular stream is received, a GOAWAY frame has been received from
+  // the server.
   bool                 mShouldGoAway;
 
   // the session has received a nsAHttpTransaction::Close()  call

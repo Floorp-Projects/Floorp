@@ -525,7 +525,7 @@ template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
             double l, r;                                                      \
             if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))           \
                 THROWV(JS_FALSE);                                             \
-            cond = JSDOUBLE_COMPARE(l, OP, r, false);                         \
+            cond = (l OP r);                                                  \
         }                                                                     \
         regs.sp[-2].setBoolean(cond);                                         \
         return cond;                                                          \
@@ -568,7 +568,7 @@ stubs::Not(VMFrame &f)
     f.regs.sp[-1].setBoolean(b);
 }
 
-template <bool EQ, bool IFNAN>
+template <bool EQ>
 static inline bool
 StubEqualityOp(VMFrame &f)
 {
@@ -606,9 +606,9 @@ StubEqualityOp(VMFrame &f)
             double l = lval.toDouble();
             double r = rval.toDouble();
             if (EQ)
-                cond = JSDOUBLE_COMPARE(l, ==, r, IFNAN);
+                cond = (l == r);
             else
-                cond = JSDOUBLE_COMPARE(l, !=, r, IFNAN);
+                cond = (l != r);
         } else if (lval.isObject()) {
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
@@ -652,9 +652,9 @@ StubEqualityOp(VMFrame &f)
                     return false;
 
                 if (EQ)
-                    cond = JSDOUBLE_COMPARE(l, ==, r, false);
+                    cond = (l == r);
                 else
-                    cond = JSDOUBLE_COMPARE(l, !=, r, true);
+                    cond = (l != r);
             }
         }
     }
@@ -666,7 +666,7 @@ StubEqualityOp(VMFrame &f)
 JSBool JS_FASTCALL
 stubs::Equal(VMFrame &f)
 {
-    if (!StubEqualityOp<true, false>(f))
+    if (!StubEqualityOp<true>(f))
         THROWV(JS_FALSE);
     return f.regs.sp[-2].toBoolean();
 }
@@ -674,7 +674,7 @@ stubs::Equal(VMFrame &f)
 JSBool JS_FASTCALL
 stubs::NotEqual(VMFrame &f)
 {
-    if (!StubEqualityOp<false, true>(f))
+    if (!StubEqualityOp<false>(f))
         THROWV(JS_FALSE);
     return f.regs.sp[-2].toBoolean();
 }

@@ -55,7 +55,6 @@
 #include <string.h>     /* for memset used when DEBUG */
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jshash.h"
 #include "jsclist.h"
