@@ -2708,6 +2708,29 @@ class MCallGetNameTypeOf : public MCallGetPropertyOrName
     }
 };
 
+// Inline call to handle lhs[rhs]. The first input is a Value so that this
+// instruction can handle both objects and strings.
+class MCallGetElement
+  : public MBinaryInstruction,
+    public BoxInputsPolicy
+{
+    MCallGetElement(MDefinition *lhs, MDefinition *rhs)
+      : MBinaryInstruction(lhs, rhs)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CallGetElement);
+
+    static MCallGetElement *New(MDefinition *lhs, MDefinition *rhs) {
+        return new MCallGetElement(lhs, rhs);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MStringLength
   : public MUnaryInstruction,
     public StringPolicy

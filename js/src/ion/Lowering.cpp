@@ -989,6 +989,22 @@ LIRGenerator::visitCallGetNameTypeOf(MCallGetNameTypeOf *ins)
 }
 
 bool
+LIRGenerator::visitCallGetElement(MCallGetElement *ins)
+{
+    JS_ASSERT(ins->lhs()->type() == MIRType_Value);
+    JS_ASSERT(ins->rhs()->type() == MIRType_Value);
+
+    LCallGetElement *lir = new LCallGetElement();
+    if (!useBox(lir, LCallGetElement::LhsInput, ins->lhs()))
+        return false;
+    if (!useBox(lir, LCallGetElement::RhsInput, ins->rhs()))
+        return false;
+    if (!defineVMReturn(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitGenericSetProperty(MGenericSetProperty *ins)
 {
     LUse obj = useRegister(ins->obj());

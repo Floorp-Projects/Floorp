@@ -378,6 +378,9 @@ bool
 GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
 
 bool
+GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
+
+bool
 AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
 
 bool
