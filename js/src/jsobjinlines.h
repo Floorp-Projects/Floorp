@@ -1154,14 +1154,6 @@ JSObject::isNative() const
     return lastProperty()->isNative();
 }
 
-inline const js::Shape *
-JSObject::nativeLookup(JSContext *cx, jsid id)
-{
-    JS_ASSERT(isNative());
-    js::Shape **spp;
-    return js::Shape::search(cx, lastProperty(), id, &spp);
-}
-
 inline bool
 JSObject::nativeContains(JSContext *cx, jsid id)
 {
