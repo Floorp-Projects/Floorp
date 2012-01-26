@@ -47,6 +47,7 @@
 #include "nsAppShellSingleton.h"
 #include "nsScreenManagerGonk.h"
 #include "nsIdleServiceGonk.h"
+#include "nsTransferable.h"
 
 #include "nsHTMLFormatConverter.h"
 #include "nsXULAppAPI.h"
@@ -55,6 +56,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGonk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceGonk)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
@@ -62,6 +64,7 @@ NS_DEFINE_NAMED_CID(NS_CHILD_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_WINDOW_CID, false, NULL, nsWindowConstructor },
@@ -70,6 +73,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerGonkConstructor },
     { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
     { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceGonkConstructor },
+    { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
     { NULL }
 };
 
@@ -80,6 +84,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
     { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
     { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
+    { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
     { NULL }
 };
 

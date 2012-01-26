@@ -75,6 +75,7 @@ SpdyStream::SpdyStream(nsAHttpTransaction *httpTransaction,
     mSentFinOnData(0),
     mRecvdFin(0),
     mFullyOpen(0),
+    mSentWaitingFor(0),
     mTxInlineFrameAllocation(SpdySession::kDefaultBufferSize),
     mTxInlineFrameSize(0),
     mTxInlineFrameSent(0),
@@ -82,7 +83,9 @@ SpdyStream::SpdyStream(nsAHttpTransaction *httpTransaction,
     mTxStreamFrameSent(0),
     mZlib(compressionContext),
     mRequestBodyLen(0),
-    mPriority(priority)
+    mPriority(priority),
+    mTotalSent(0),
+    mTotalRead(0)
 {
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
@@ -458,6 +461,36 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
   return NS_OK;
 }
 
+void
+SpdyStream::UpdateTransportReadEvents(PRUint32 count)
+{
+  mTotalRead += count;
+
+  mTransaction->OnTransportStatus(mSocketTransport,
+                                  NS_NET_STATUS_RECEIVING_FROM,
+                                  mTotalRead);
+}
+
+void
+SpdyStream::UpdateTransportSendEvents(PRUint32 count)
+{
+  mTotalSent += count;
+
+  if (mUpstreamState != SENDING_FIN_STREAM)
+    mTransaction->OnTransportStatus(mSocketTransport,
+                                    NS_NET_STATUS_SENDING_TO,
+                                    mTotalSent);
+
+  if (!mSentWaitingFor && !mRequestBodyLen &&
+      mTxInlineFrameSent == mTxInlineFrameSize  &&
+      mTxStreamFrameSent == mTxStreamFrameSize) {
+    mSentWaitingFor = 1;
+    mTransaction->OnTransportStatus(mSocketTransport,
+                                    NS_NET_STATUS_WAITING_FOR,
+                                    LL_ZERO);
+  }
+}
+
 nsresult
 SpdyStream::TransmitFrame(const char *buf,
                           PRUint32 *countUsed)
@@ -538,16 +571,11 @@ SpdyStream::TransmitFrame(const char *buf,
     SpdySession::LogIO(mSession, this, "Writing from Transaction Buffer",
                        buf + offset, transmittedCount);
 
-    if (mUpstreamState == SENDING_REQUEST_BODY) {
-      mTransaction->OnTransportStatus(mSocketTransport,
-                                      nsISocketTransport::STATUS_SENDING_TO,
-                                      transmittedCount);
-    }
-    
     *countUsed += transmittedCount;
     avail -= transmittedCount;
     offset += transmittedCount;
     mTxStreamFrameSent += transmittedCount;
+    UpdateTransportSendEvents(transmittedCount);
   }
 
   if (!avail) {
