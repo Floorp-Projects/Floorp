@@ -381,6 +381,9 @@ bool
 GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
 
 bool
+SetObjectElement(JSContext *cx, JSObject *obj, const Value &index, const Value &value);
+
+bool
 AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
 
 bool

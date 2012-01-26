@@ -110,6 +110,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallGetName(LCallGetName *lir);
     bool visitCallGetNameTypeOf(LCallGetNameTypeOf *lir);
     bool visitCallGetElement(LCallGetElement *lir);
+    bool visitCallSetElement(LCallSetElement *lir);
     bool visitThrow(LThrow *lir);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);

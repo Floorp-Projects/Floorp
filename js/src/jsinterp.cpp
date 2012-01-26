@@ -4740,6 +4740,16 @@ js::GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)
 }
 
 bool
+js::SetObjectElement(JSContext *cx, JSObject *obj, const Value &index, const Value &value)
+{
+    jsid id;
+    Value indexval = index;
+    if (!FetchElementId(cx, obj, indexval, id, &indexval))
+        return false;
+    return SetObjectElementOperation(cx, obj, id, value);
+}
+
+bool
 js::AddValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
 {
     return AddOperation(cx, lhs, rhs, res);

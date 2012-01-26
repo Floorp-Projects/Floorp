@@ -954,6 +954,18 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 }
 
 bool
+CodeGenerator::visitCallSetElement(LCallSetElement *lir)
+{
+    typedef bool (*pf)(JSContext *, JSObject *, const Value &, const Value &);
+    static const VMFunction SetObjectElementInfo = FunctionInfo<pf>(js::SetObjectElement);
+
+    pushArg(ToValue(lir, LCallSetElement::Value));
+    pushArg(ToValue(lir, LCallSetElement::Index));
+    pushArg(ToRegister(lir->getOperand(0)));
+    return callVM(SetObjectElementInfo, lir);
+}
+
+bool
 CodeGenerator::visitLoadFixedSlotV(LLoadFixedSlotV *ins)
 {
     const Register obj = ToRegister(ins->getOperand(0));

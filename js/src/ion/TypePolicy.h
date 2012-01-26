@@ -146,6 +146,12 @@ class StringPolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
+class CallSetElementPolicy : public ObjectPolicy
+{
+  public:
+    bool adjustInputs(MInstruction *def);
+};
+
 static inline bool
 CoercesToDouble(MIRType type)
 {
