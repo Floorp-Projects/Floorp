@@ -365,7 +365,7 @@ nsXPConnect::NeedCollect()
 }
 
 void
-nsXPConnect::Collect(bool shrinkingGC)
+nsXPConnect::Collect(PRUint32 reason, PRUint32 kind)
 {
     // We're dividing JS objects into 2 categories:
     //
@@ -424,16 +424,20 @@ nsXPConnect::Collect(bool shrinkingGC)
     // XPCCallContext::Init we disable the conservative scanner if that call
     // has started the request on this thread.
     js::AutoSkipConservativeScan ascs(cx);
-    if (shrinkingGC)
-        JS_ShrinkingGC(cx);
-    else
-        JS_GC(cx);
+    MOZ_ASSERT(reason < js::gcreason::NUM_REASONS);
+    js::gcreason::Reason gcreason = (js::gcreason::Reason)reason;
+    if (kind == nsGCShrinking) {
+        js::ShrinkingGC(cx, gcreason);
+    } else {
+        MOZ_ASSERT(kind == nsGCNormal);
+        js::GCForReason(cx, gcreason);
+    }
 }
 
 NS_IMETHODIMP
-nsXPConnect::GarbageCollect(bool shrinkingGC)
+nsXPConnect::GarbageCollect(PRUint32 reason, PRUint32 kind)
 {
-    Collect(shrinkingGC);
+    Collect(reason, kind);
     return NS_OK;
 }
 
@@ -816,6 +820,30 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
         JS_TraceShapeCycleCollectorChildren(trc, thing);
     } else if (kind != JSTRACE_STRING) {
         JS_TraceChildren(trc, thing, kind);
+    }
+}
+
+void
+xpc_MarkInCCGeneration(nsISupports* aVariant, PRUint32 aGeneration)
+{
+    nsCOMPtr<XPCVariant> variant = do_QueryInterface(aVariant);
+    if (variant) {
+        variant->SetCCGeneration(aGeneration);
+        variant->GetJSVal(); // Unmarks gray JSObject.
+        XPCVariant* weak = variant.get();
+        variant = nsnull;
+        if (weak->IsPurple()) {
+          weak->RemovePurple();
+        }
+    }
+}
+
+void
+xpc_UnmarkGrayObject(nsIXPConnectWrappedJS* aWrappedJS)
+{
+    if (aWrappedJS) {
+        // Unmarks gray JSObject.
+        static_cast<nsXPCWrappedJS*>(aWrappedJS)->GetJSObject();
     }
 }
 

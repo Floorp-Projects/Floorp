@@ -38,7 +38,6 @@
 #include <limits.h>
 #include "assembler/jit/ExecutableAllocator.h"
 #include "assembler/wtf/Assertions.h"
-#include "jsstdint.h"
 
 namespace JSC {
 

@@ -42,9 +42,9 @@
 /*
  * JS script operations.
  */
+
 #include <string.h>
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jscrashreport.h"
 #include "jsprf.h"

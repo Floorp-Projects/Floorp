@@ -75,7 +75,9 @@ public class Restarter extends Activity {
             Log.i(LOGTAG, e.toString());
         }
         try {
-            String action = "android.intent.action.MAIN";
+            String action = "org.mozilla.gecko.restart_update".equals(getIntent().getAction()) ?
+                            App.ACTION_UPDATE : Intent.ACTION_MAIN;
+
             Intent intent = new Intent(action);
             intent.setClassName("@ANDROID_PACKAGE_NAME@",
                                 "@ANDROID_PACKAGE_NAME@.App");

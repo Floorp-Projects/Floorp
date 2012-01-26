@@ -98,7 +98,14 @@ def build_tar_package(tar, name, base, directory):
 
 ##############################################
 
-source_dir = os.path.realpath('src')
+# The directories end up in the debug info, so the easy way of getting
+# a reproducible build is to run it in a know absolute directory.
+# We use a directory in /builds/slave because the mozilla infrastructure
+# cleans it up automatically.
+base_dir = "/builds/slave/moz-toolschain"
+
+source_dir = base_dir + "/src"
+build_dir  = base_dir + "/build"
 
 def build_source_dir(prefix, version):
     return source_dir + '/' + prefix + version
@@ -133,8 +140,6 @@ mpfr_source_tar = download_uri(mpfr_source_uri)
 gmp_source_tar = download_uri(gmp_source_uri)
 gcc_source_tar = download_uri(gcc_source_uri)
 
-build_dir = os.path.realpath('build')
-
 binutils_source_dir  = build_source_dir('binutils-', binutils_version)
 glibc_source_dir  = build_source_dir('glibc-', glibc_version)
 tar_source_dir  = build_source_dir('tar-', tar_version)
@@ -144,7 +149,7 @@ gmp_source_dir  = build_source_dir('gmp-', gmp_version)
 gcc_source_dir  = build_source_dir('gcc-', gcc_version)
 
 if not os.path.exists(source_dir):
-    os.mkdir(source_dir)
+    os.makedirs(source_dir)
     extract(binutils_source_tar, source_dir)
     patch('binutils-deterministic.patch', 1, binutils_source_dir)
     extract(glibc_source_tar, source_dir)
@@ -160,7 +165,7 @@ if not os.path.exists(source_dir):
 
 if os.path.exists(build_dir):
     shutil.rmtree(build_dir)
-os.mkdir(build_dir)
+os.makedirs(build_dir)
 
 tar_inst_dir = build_dir + '/tar_inst'
 build_tar(build_dir, tar_inst_dir)

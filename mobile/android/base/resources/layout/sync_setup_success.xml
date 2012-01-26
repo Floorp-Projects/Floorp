@@ -1,38 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/SyncTextFrame" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncLayout" >
 
+  <LinearLayout
+    android:id="@+id/success_top"
+    style="@style/SyncTop" >
+    <ImageView
+      style="@style/SyncTopIcon"/>
     <TextView
-        style="@style/SyncTextTitle"
-        android:text="@string/sync_title_success" />
+      style="@style/SyncTextTitle"
+      android:text="@string/sync_title_success" />
+  </LinearLayout>
+  <TextView
+    android:id="@+id/setup_success_subtitle"
+	style="@style/SyncTextItem"
+	android:gravity="left"
+    android:padding="20dp"
+    android:layout_below="@id/success_top"
+	android:text="@string/sync_subtitle_success" />
 
-    <View style="@style/SyncViewLine" />
-
-    <TextView
-        android:id="@+id/setup_success_subtitle"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="20dp"
-        android:text="@string/sync_subtitle_success" />
-
+  <LinearLayout
+    style="@style/SyncBottom" >
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:onClick="settingsClickHandler"
-        android:text="@string/sync_settings" />
-
-    <View
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1" />
-
-    <TextView
-        android:id="@+id/link_pair"
-        style="@style/SyncLinkItem"
-        android:layout_gravity="center|bottom"
-        android:onClick="pairClickHandler"
-        android:text="@string/sync_title_pair" />
-
-</TableLayout>
+      style="@style/SyncButton"
+      android:onClick="settingsClickHandler"
+      android:text="@string/sync_settings" />
+  </LinearLayout>
+</RelativeLayout>
