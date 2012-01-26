@@ -60,7 +60,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(XPCVariant)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(XPCVariant)
 
 XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
-    : mJSVal(aJSVal)
+    : mJSVal(aJSVal), mCCGeneration(0)
 {
     nsVariant::Initialize(&mData);
     if (!JSVAL_IS_PRIMITIVE(mJSVal)) {
