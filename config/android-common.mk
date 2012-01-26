@@ -48,6 +48,7 @@ endif
 DX=$(ANDROID_PLATFORM_TOOLS)/dx
 AAPT=$(ANDROID_PLATFORM_TOOLS)/aapt
 APKBUILDER=$(ANDROID_SDK)/../../tools/apkbuilder
+PROGUARD=java -jar $(ANDROID_SDK)/../../tools/proguard/lib/proguard.jar
 ZIPALIGN=$(ANDROID_SDK)/../../tools/zipalign
 
 ifdef JARSIGNER
