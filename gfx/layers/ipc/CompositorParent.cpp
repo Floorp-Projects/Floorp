@@ -43,6 +43,10 @@
 #include "LayerManagerOGL.h"
 #include "nsIWidget.h"
 
+#if defined(MOZ_WIDGET_ANDROID)
+#include "AndroidBridge.h"
+#endif
+
 namespace mozilla {
 namespace layers {
 
@@ -126,6 +130,12 @@ CompositorParent::ShadowLayersUpdated()
 PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend &backendType)
 {
+#ifdef MOZ_WIDGET_ANDROID
+  // Registering with the compositor will create the surface view that
+  // the layer manager expects to attach to.
+  RegisterCompositorWithJava();
+#endif
+
   if (backendType == LayerManager::LAYERS_OPENGL) {
     nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(mWidget);
     mWidget = NULL;
@@ -153,6 +163,15 @@ CompositorParent::DeallocPLayers(PLayersParent* actor)
   delete actor;
   return true;
 }
+
+#ifdef MOZ_WIDGET_ANDROID
+void
+CompositorParent::RegisterCompositorWithJava()
+{
+  mozilla::AndroidBridge::Bridge()->RegisterCompositor();
+}
+#endif
+
 
 } // namespace layers
 } // namespace mozilla

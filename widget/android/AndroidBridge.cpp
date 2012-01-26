@@ -187,6 +187,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jEGLConfigImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLConfigImpl"));
     jEGLDisplayImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLDisplayImpl"));
 
+    jOGLSurfaceView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/layers/OGLSurfaceView"));
+
     InitAndroidJavaWrappers(jEnv);
 
     // jEnv should NOT be cached here by anything -- the jEnv here
@@ -875,7 +877,7 @@ void *
 AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView &sview)
 {
     ALOG_BRIDGE("AndroidBridge::CallEglCreateWindowSurface");
-    AutoLocalJNIFrame jniFrame;
+    AutoLocalJNIFrame jniFrame(GetJNIForThread());
 
     /*
      * This is basically:
@@ -914,6 +916,17 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
     jint realSurface = mJNIEnv->GetIntField(surf, sfield);
 
     return (void*) realSurface;
+}
+
+void
+AndroidBridge::RegisterCompositor()
+{
+    ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
+    AutoLocalJNIFrame jniFrame(GetJNIForThread());
+
+    jmethodID registerCompositor = GetJNIForThread()->GetStaticMethodID(jOGLSurfaceView, "registerCompositor", "()V");
+
+    GetJNIForThread()->CallStaticVoidMethod(jOGLSurfaceView, registerCompositor);
 }
 
 bool

@@ -40,14 +40,17 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerController;
+import org.mozilla.gecko.GeckoInputConnection;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.view.View;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.ScaleGestureDetector;
+import android.widget.RelativeLayout;
 
 /**
  * A view rendered by the layer compositor.
@@ -55,7 +58,7 @@ import android.view.ScaleGestureDetector;
  * This view delegates to LayerRenderer to actually do the drawing. Its role is largely that of a
  * mediator between the LayerRenderer and the LayerController.
  */
-public class LayerView extends GLSurfaceView {
+public class LayerView extends GLSurfaceView implements AbstractLayerView {
     private Context mContext;
     private LayerController mController;
     private InputConnectionHandler mInputConnectionHandler;
@@ -99,8 +102,10 @@ public class LayerView extends GLSurfaceView {
         mController.setViewportSize(new FloatSize(size));
     }
 
-    public void setInputConnectionHandler(InputConnectionHandler handler) {
-        mInputConnectionHandler = handler;
+    public GeckoInputConnection setInputConnectionHandler() {
+        mInputConnectionHandler = GeckoInputConnection.create(this);
+        setInputConnectionHandler(mInputConnectionHandler);
+        return mInputConnectionHandler;
     }
 
     @Override
@@ -170,6 +175,10 @@ public class LayerView extends GLSurfaceView {
 
     public int getMaxTextureSize() {
         return mRenderer.getMaxTextureSize();
+    }
+
+    public View getAndroidView() {
+        return this;
     }
 }
 

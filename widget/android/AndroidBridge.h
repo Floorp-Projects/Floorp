@@ -285,6 +285,9 @@ public:
     /* See GLHelpers.java as to why this is needed */
     void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
 
+    // Switch Java to composite with the Gecko Compositor thread
+    void RegisterCompositor();
+
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result);
 
     bool GetStaticIntField(const char *className, const char *fieldName, PRInt32* aInt);
@@ -461,6 +464,8 @@ protected:
     jclass jEGLDisplayImplClass;
     jclass jEGLContextClass;
     jclass jEGL10Class;
+
+    jclass jOGLSurfaceView;
 
     // calls we've dlopened from libjnigraphics.so
     int (* AndroidBitmap_getInfo)(JNIEnv *env, jobject bitmap, void *info);
