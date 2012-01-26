@@ -47,7 +47,6 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"

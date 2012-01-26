@@ -162,7 +162,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
         GeckoAppShell.registerGeckoEventListener("Document:Shown", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:Selected", this);
+        GeckoAppShell.registerGeckoEventListener("Tab:Selected:Done", this);
 
         sendResizeEventIfNecessary();
     }
@@ -519,7 +519,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         } else if ("Viewport:UpdateLater".equals(event)) {
             mUpdateViewportOnEndDraw = true;
         } else if (("Document:Shown".equals(event) ||
-                    "Tab:Selected".equals(event)) &&
+                    "Tab:Selected:Done".equals(event)) &&
                    (mTileLayer instanceof MultiTileLayer)) {
             beginTransaction(mTileLayer);
             try {

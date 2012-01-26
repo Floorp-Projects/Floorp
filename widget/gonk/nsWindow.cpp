@@ -449,3 +449,15 @@ nsWindow::UserActivity()
         mIdleService->ResetIdleTimeOut();
     }
 }
+
+PRUint32
+nsWindow::GetGLFrameBufferFormat()
+{
+    if (mLayerManager &&
+        mLayerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+        // We directly map the hardware fb on Gonk.  The hardware fb
+        // has RGB format.
+        return LOCAL_GL_RGB;
+    }
+    return LOCAL_GL_NONE;
+}

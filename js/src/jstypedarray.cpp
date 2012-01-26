@@ -42,7 +42,6 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jshash.h"
 #include "jsprf.h"
@@ -1544,7 +1543,7 @@ class TypedArrayTemplate
         int32_t length = -1;
 
         if (argc > 1) {
-            if (!NonstandardToInt32(cx, argv[1], &byteOffset))
+            if (!ToInt32(cx, argv[1], &byteOffset))
                 return NULL;
             if (byteOffset < 0) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1553,7 +1552,7 @@ class TypedArrayTemplate
             }
 
             if (argc > 2) {
-                if (!NonstandardToInt32(cx, argv[2], &length))
+                if (!ToInt32(cx, argv[2], &length))
                     return NULL;
                 if (length < 0) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1625,7 +1624,7 @@ class TypedArrayTemplate
         int32_t off = 0;
 
         if (args.length() > 1) {
-            if (!NonstandardToInt32(cx, args[1], &off))
+            if (!ToInt32(cx, args[1], &off))
                 return false;
 
             if (off < 0 || uint32_t(off) > getLength(tarray)) {
