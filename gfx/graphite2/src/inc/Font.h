@@ -27,8 +27,8 @@ of the License or (at your option) any later version.
 #pragma once
 #include <cassert>
 #include "graphite2/Font.h"
-#include "Main.h"
-#include "Face.h"
+#include "inc/Main.h"
+#include "inc/Face.h"
 
 namespace graphite2 {
 

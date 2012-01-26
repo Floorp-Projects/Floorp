@@ -43,9 +43,9 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
-class gr_face;
-class gr_font;
-class gr_segment;
+struct gr_face;
+struct gr_font;
+struct gr_segment;
 
 class gfxGraphiteShaper : public gfxFontShaper {
 public:

@@ -25,11 +25,10 @@ License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
 #include <iterator>
-#include "GlyphFace.h"
-#include "XmlTraceLog.h"
-#include "GlyphFaceCache.h"
-#include "TtfUtil.h"
-#include "Endian.h"
+#include "inc/GlyphFace.h"
+#include "inc/GlyphFaceCache.h"
+#include "inc/TtfUtil.h"
+#include "inc/Endian.h"
 
 
 using namespace graphite2;
@@ -79,6 +78,8 @@ namespace
 	};
 }
 
+
+
 GlyphFace::GlyphFace(const GlyphFaceCacheHeader& hdr, unsigned short glyphid)
 {
     if (glyphid < hdr.m_nGlyphsWithGraphics)
@@ -93,7 +94,6 @@ GlyphFace::GlyphFace(const GlyphFaceCacheHeader& hdr, unsigned short glyphid)
             m_advance = Position();
         if (pGlyph && TtfUtil::GlyfBox(pGlyph, xMin, yMin, xMax, yMax))
             m_bbox = Rect(Position(static_cast<float>(xMin), static_cast<float>(yMin)),
-//                    Position(static_cast<float>(xMax - xMin), static_cast<float>(yMax - yMin)));
                 Position(static_cast<float>(xMax), static_cast<float>(yMax)));
         else
             m_bbox = Rect();
@@ -103,32 +103,25 @@ GlyphFace::GlyphFace(const GlyphFaceCacheHeader& hdr, unsigned short glyphid)
         m_advance = Position();
         m_bbox = Rect();
     }
-#ifndef DISABLE_TRACING
-    if (XmlTraceLog::get().active())
-    {
-        XmlTraceLog::get().openElement(ElementGlyphFace);
-        XmlTraceLog::get().addAttribute(AttrGlyphId, glyphid);
-        XmlTraceLog::get().addAttribute(AttrAdvanceX, m_advance.x);
-        XmlTraceLog::get().addAttribute(AttrAdvanceY, m_advance.y);
-    }
-#endif
     if (glyphid < hdr.m_nGlyphsWithAttributes)
     {
         size_t glocs, gloce;
+        const byte * gloc = hdr.m_pGloc;
+
         if (hdr.m_locFlagsUse32Bit)
         {
-            glocs = be::swap<uint32>(((uint32 *)hdr.m_pGloc)[2+glyphid]);
-            gloce = be::swap<uint32>(((uint32 *)hdr.m_pGloc)[3+glyphid]);
+        	be::skip<uint32>(gloc, glyphid);
+            glocs = be::read<uint32>(gloc);
+            gloce = be::read<uint32>(gloc);
         }
         else
         {
-            glocs = be::swap<uint16>(((uint16 *)hdr.m_pGloc)[4+glyphid]);
-            gloce = be::swap<uint16>(((uint16 *)hdr.m_pGloc)[5+glyphid]);
+        	be::skip<uint16>(gloc, glyphid);
+            glocs = be::read<uint16>(gloc);
+            gloce = be::read<uint16>(gloc);
         }
         if (glocs < hdr.m_lGlat && gloce <= hdr.m_lGlat)
         {
-//            m_attrs = grzeroalloc<uint16>(hdr.m_numAttrs);
-//            readAttrs(hdr.m_pGlat + glocs, hdr.m_pGlat + gloce, m_attrs, hdr.m_numAttrs, hdr.m_fGlat);
         	if (hdr.m_fGlat < 0x00020000)
         	{
         		if (gloce - glocs < 2*sizeof(byte)+sizeof(uint16)
@@ -153,87 +146,8 @@ GlyphFace::GlyphFace(const GlyphFaceCacheHeader& hdr, unsigned short glyphid)
         	}
         }
     }
-#ifndef DISABLE_TRACING
-    XmlTraceLog::get().closeElement(ElementGlyphFace);
-#endif
 }
 
-
-//void GlyphFace::readAttrs(const byte *glat, const byte * const glat_end, uint16 * attrs, size_t num, uint32 format)
-//{
-//	glat_iterator::value_type v;
-//
-//	if (format < 0x00020000)
-//	{
-//		for (glat_iterator i = glat, end = glat_end; i != end; ++i)
-//		{
-//			v = *i;
-//			if (v.id >= num) break;
-//			attrs[v.id] = v.value;
-//		}
-//	}
-//	else
-//	{
-//		for (glat2_iterator i = glat, end = glat_end; i != end; ++i)
-//		{
-//			v = *i;
-//			if (v.id >= num) break;
-//			attrs[v.id] = v.value;
-//		}
-//	}
-//
-//	if (v.id >= num) {
-//#ifndef DISABLE_TRACING
-//		XmlTraceLog::get().warning("Invalid glat entry: attr id %d max id %d", v.id, num);
-//#endif
-//	}
-//
-//	const byte * 		glat 		= static_cast<const byte *>(pGlat) + start,
-//			   * const 	glat_end 	= glat + end - start;
-
-
-//	while (glat < glat_end)
-//	{
-//		uint16 * attr, * attr_end;
-//
-//		if (format < 0x00020000)
-//		{
-//			attr = attrs + *glat++; attr_end = attr + *glat++;
-//		}
-//		else
-//		{
-//			attr = attrs + be::read<uint16>(glat); attr_end = attr + be::read<uint16>(glat);
-//		}
-//
-//		if (attr_end > attrs + num)
-//		{
-//#ifndef DISABLE_TRACING
-//			XmlTraceLog::get().warning("Invalid glat entry: attr id %d count %d", *attr, attr_end - attr);
-//#endif
-//			return;
-//		}
-//		while (attr != attr_end)
-//		{
-//			*attr++ = be::read<uint16>(glat);
-//			logAttr(attrs, attr-1);
-//		}
-//	}
-//}
-
-
-inline
-void GlyphFace::logAttr(GR_MAYBE_UNUSED const uint16 attrs[], GR_MAYBE_UNUSED const uint16 * attr)
-{
-#ifndef DISABLE_TRACING
-	if (XmlTraceLog::get().active())
-	{
-		XmlTraceLog::get().openElement(ElementAttr);
-		XmlTraceLog::get().addAttribute(AttrAttrId, attr - attrs);
-		XmlTraceLog::get().addAttribute(AttrAttrVal, *attr);
-		XmlTraceLog::get().closeElement(ElementAttr);
-	}
-#endif
-}
 
 
 uint16 GlyphFace::getMetric(uint8 metric) const

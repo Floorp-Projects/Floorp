@@ -25,51 +25,51 @@ License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
 #pragma once
-#include <cstring>
-#include <cassert>
-#include "Main.h"
-#include "List.h"
+
+#include <cstdlib>
+#include "graphite2/Types.h"
+
+#ifdef GRAPHITE2_CUSTOM_HEADER
+#include GRAPHITE2_CUSTOM_HEADER
+#endif
 
 namespace graphite2 {
 
-class FeatureRef;
-class FeatureMap;
+typedef gr_uint8        uint8;
+typedef gr_uint8        byte;
+typedef gr_uint16       uint16;
+typedef gr_uint32       uint32;
+typedef gr_int8         int8;
+typedef gr_int16        int16;
+typedef gr_int32        int32;
+typedef size_t          uintptr;
 
-class FeatureVal : public Vector<uint32>
+// typesafe wrapper around malloc for simple types
+// use free(pointer) to deallocate
+template <typename T> T * gralloc(size_t n)
 {
-public:
-    uint32 maskedOr(const FeatureVal &other, const FeatureVal &mask) {
-        uint32 len = size() ;
-        if (other.size()<len) len = other.size();		//defensive
-        if (mask.size()<len) len = mask.size();		//defensive
-        for (uint32 i = 0; i < len; i++)
-            if (mask[i]) operator[](i) = (operator[](i) & ~mask[i]) | (other[i] & mask[i]);
-        return len;
-    }
+    return reinterpret_cast<T*>(malloc(sizeof(T) * n));
+}
 
-    FeatureVal() : m_pMap(0) { }
-    FeatureVal(int num, const FeatureMap & pMap) : Vector<uint32>(num), m_pMap(&pMap) {}
-    FeatureVal(const FeatureVal & rhs) : Vector<uint32>(rhs), m_pMap(rhs.m_pMap) {}
-
-    bool operator ==(const FeatureVal & b) const
-    {
-        size_t n = size();
-        if (n != b.size())      return false;
-        
-        for(const_iterator l = begin(), r = b.begin(); n && *l == *r; --n, ++l, ++r);
-        
-        return n == 0;
-    }
-
-    CLASS_NEW_DELETE
-private:
-    friend class FeatureRef;		//so that FeatureRefs can manipulate m_vec directly
-    const FeatureMap* m_pMap;
-};
-
-typedef FeatureVal Features;
+template <typename T> T * grzeroalloc(size_t n)
+{
+    return reinterpret_cast<T*>(calloc(n, sizeof(T)));
+}
 
 } // namespace graphite2
 
+#define CLASS_NEW_DELETE \
+    void * operator new   (size_t size){ return malloc(size);} \
+    void * operator new   (size_t, void * p) throw() { return p; } \
+    void * operator new[] (size_t size) {return malloc(size);} \
+    void * operator new[] (size_t, void * p) throw() { return p; } \
+    void operator delete   (void * p) throw() { free(p);} \
+    void operator delete   (void *, void *) throw() {} \
+    void operator delete[] (void * p)throw() { free(p); } \
+    void operator delete[] (void *, void *) throw() {}
 
-struct gr_feature_val : public graphite2::FeatureVal {};
+#ifdef __GNUC__
+#define GR_MAYBE_UNUSED __attribute__((unused))
+#else
+#define GR_MAYBE_UNUSED
+#endif

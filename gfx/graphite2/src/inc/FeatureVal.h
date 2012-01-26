@@ -25,40 +25,51 @@ License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
 #pragma once
-#include "Main.h"
-
+#include <cstring>
+#include <cassert>
+#include "inc/Main.h"
+#include "inc/List.h"
 
 namespace graphite2 {
 
-class CharInfo
-{
+class FeatureRef;
+class FeatureMap;
 
+class FeatureVal : public Vector<uint32>
+{
 public:
-    CharInfo() : m_before(-1), m_after(0) {}
-    void init(int cid) { m_char = cid; }
-    unsigned int unicodeChar() const { return m_char; }
-    void feats(int offset) { m_featureid = offset; }
-    int fid() const { return m_featureid; }
-    int breakWeight() const { return m_break; }
-    void breakWeight(int val) { m_break = val; }
-    int after() const { return m_after; }
-    void after(int val) { m_after = val; }
-    int before() const { return m_before; }
-    void before(int val) { m_before = val; }
-    size_t base() const { return m_base; }
-    void base(size_t offset) { m_base = offset; }
+    uint32 maskedOr(const FeatureVal &other, const FeatureVal &mask) {
+        uint32 len = size() ;
+        if (other.size()<len) len = other.size();		//defensive
+        if (mask.size()<len) len = mask.size();		//defensive
+        for (uint32 i = 0; i < len; i++)
+            if (mask[i]) operator[](i) = (operator[](i) & ~mask[i]) | (other[i] & mask[i]);
+        return len;
+    }
+
+    FeatureVal() : m_pMap(0) { }
+    FeatureVal(int num, const FeatureMap & pMap) : Vector<uint32>(num), m_pMap(&pMap) {}
+    FeatureVal(const FeatureVal & rhs) : Vector<uint32>(rhs), m_pMap(rhs.m_pMap) {}
+
+    bool operator ==(const FeatureVal & b) const
+    {
+        size_t n = size();
+        if (n != b.size())      return false;
+        
+        for(const_iterator l = begin(), r = b.begin(); n && *l == *r; --n, ++l, ++r);
+        
+        return n == 0;
+    }
 
     CLASS_NEW_DELETE
 private:
-    int m_char;     // Unicode character from character stream
-    int m_before;   // slot index before us, comes before
-    int m_after;    // slot index after us, comes after
-    size_t  m_base; // offset into input string corresponding to this charinfo
-    uint8 m_featureid;	// index into features list in the segment
-    int8 m_break;	// breakweight coming from lb table
+    friend class FeatureRef;		//so that FeatureRefs can manipulate m_vec directly
+    const FeatureMap* m_pMap;
 };
+
+typedef FeatureVal Features;
 
 } // namespace graphite2
 
-struct gr_char_info : public graphite2::CharInfo {};
 
+struct gr_feature_val : public graphite2::FeatureVal {};

@@ -26,27 +26,37 @@ of the License or (at your option) any later version.
 */
 #pragma once
 
-#ifndef DISABLE_SEGCACHE
-
-#include "Face.h"
+#include <graphite2/Segment.h>
+#include "inc/TtfTypes.h"
+#include "inc/locale2lcid.h"
 
 namespace graphite2 {
 
-class SegCacheStore;
-
-class CachedFace : public Face
+class NameTable
 {
 public:
-    CachedFace(const void* appFaceHandle/*non-NULL*/, gr_get_table_fn getTable2);
-    bool setupCache(unsigned int cacheSize);
-    virtual ~CachedFace();
-    virtual bool runGraphite(Segment *seg, const Silf *silf) const;
-    SegCacheStore * cacheStore() { return m_cacheStore; }
+    NameTable(const void * data, size_t length, uint16 platfromId=3, uint16 encodingID = 1);
+    ~NameTable() { free(const_cast<TtfUtil::Sfnt::FontNames *>(m_table)); }
+    enum eNameFallback {
+        eNoFallback = 0,
+        eEnUSFallbackOnly = 1,
+        eEnOrAnyFallback = 2
+    };
+    uint16 setPlatformEncoding(uint16 platfromId=3, uint16 encodingID = 1);
+    void * getName(uint16 & languageId, uint16 nameId, gr_encform enc, uint32 & length);
+    uint16 getLanguageId(const char * bcp47Locale);
+
+    CLASS_NEW_DELETE
 private:
-    SegCacheStore * m_cacheStore;
+    uint16 m_platformId;
+    uint16 m_encodingId;
+    uint16 m_languageCount;
+    uint16 m_platformOffset; // offset of first NameRecord with for platform 3, encoding 1
+    uint16 m_platformLastRecord;
+    uint16 m_nameDataLength;
+    const TtfUtil::Sfnt::FontNames * m_table;
+    const uint8 * m_nameData;
+    Locale2Lang m_locale2Lang;
 };
 
 } // namespace graphite2
-
-#endif
-

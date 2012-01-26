@@ -35,11 +35,10 @@ of the License or (at your option) any later version.
 #include <cassert>
 #include <cstring>
 #include <graphite2/Segment.h>
-#include "Machine.h"
-#include "Segment.h"
-#include "XmlTraceLog.h"
-#include "Slot.h"
-#include "Rule.h"
+#include "inc/Machine.h"
+#include "inc/Segment.h"
+#include "inc/Slot.h"
+#include "inc/Rule.h"
 
 // Disable the unused parameter warning as th compiler is mistaken since dp
 // is always updated (even if by 0) on every opcode.
@@ -52,13 +51,11 @@ of the License or (at your option) any later version.
 
 // These are required by opcodes.h and should not be changed
 #define STARTOP(name)	    bool name(registers) REGPARM(4);\
-                            bool name(registers) { \
-                                STARTTRACE(name,is);
-#define ENDOP                   ENDTRACE; \
-                                return (sp - sb)/Machine::STACK_MAX==0; \
+                            bool name(registers) {
+#define ENDOP                   return (sp - sb)/Machine::STACK_MAX==0; \
                             }
 
-#define EXIT(status)        { push(status); ENDTRACE; return false; }
+#define EXIT(status)        { push(status); return false; }
 
 // This is required by opcode_table.h
 #define do_(name)           instr(name)
@@ -90,7 +87,7 @@ namespace {
 #define mapb    reg.map_base
 #define flags   reg.flags
 
-#include "opcodes.h"
+#include "inc/opcodes.h"
 
 #undef smap
 #undef seg
@@ -129,7 +126,7 @@ Machine::stack_t  Machine::run(const instr   * program,
 
 // Pull in the opcode table
 namespace {
-#include "opcode_table.h"
+#include "inc/opcode_table.h"
 }
 
 const opcode_t * Machine::getOpcodeTable() throw()
