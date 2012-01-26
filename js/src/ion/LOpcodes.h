@@ -103,6 +103,8 @@
     _(TypeBarrier)                  \
     _(InitializedLength)            \
     _(BoundsCheck)                  \
+    _(BoundsCheckRange)             \
+    _(BoundsCheckLower)             \
     _(LoadElementV)                 \
     _(LoadElementT)                 \
     _(StoreElementV)                \

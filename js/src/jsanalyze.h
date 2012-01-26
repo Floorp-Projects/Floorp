@@ -330,6 +330,28 @@ ReverseCompareOp(JSOp op)
     }
 }
 
+static inline JSOp
+NegateCompareOp(JSOp op)
+{
+    switch (op) {
+      case JSOP_GT:
+        return JSOP_LE;
+      case JSOP_GE:
+        return JSOP_LT;
+      case JSOP_LT:
+        return JSOP_GE;
+      case JSOP_LE:
+        return JSOP_GT;
+      case JSOP_EQ:
+        return JSOP_NE;
+      case JSOP_NE:
+        return JSOP_EQ;
+      default:
+        JS_NOT_REACHED("unrecognized op");
+        return op;
+    }
+}
+
 static inline unsigned
 FollowBranch(JSContext *cx, JSScript *script, unsigned offset)
 {

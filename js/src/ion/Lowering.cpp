@@ -841,8 +841,22 @@ LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 bool
 LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
 {
-    LBoundsCheck *check = new LBoundsCheck(useRegisterOrConstant(ins->index()),
-                                           useRegister(ins->length()));
+    LInstruction *check;
+    if (ins->minimum() || ins->maximum()) {
+        check = new LBoundsCheckRange(useRegisterOrConstant(ins->index()),
+                                      useRegister(ins->length()),
+                                      temp(LDefinition::GENERAL));
+    } else {
+        check = new LBoundsCheck(useRegisterOrConstant(ins->index()),
+                                 useRegister(ins->length()));
+    }
+    return assignSnapshot(check) && add(check, ins);
+}
+
+bool
+LIRGenerator::visitBoundsCheckLower(MBoundsCheckLower *ins)
+{
+    LInstruction *check = new LBoundsCheckLower(useRegister(ins->index()));
     return assignSnapshot(check) && add(check, ins);
 }
 
