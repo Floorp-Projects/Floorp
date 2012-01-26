@@ -335,16 +335,6 @@ else
 GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/mobile/android/base)
 endif
 
-INNER_ROBOCOP_PACKAGE=echo
-ifeq ($(MOZ_BUILD_APP),mobile/android)
-UPLOAD_EXTRA_FILES += robocop.apk
-ROBOCOP_PATH = $(call core_abspath,$(_ABS_DIST)/../build/mobile/robocop)
-INNER_ROBOCOP_PACKAGE= \
-  $(APKBUILDER) $(_ABS_DIST)/robocop-raw.apk -v $(APKBUILDER_FLAGS) -z $(ROBOCOP_PATH)/robocop.ap_ -f $(ROBOCOP_PATH)/classes.dex && \
-  $(JARSIGNER) $(_ABS_DIST)/robocop-raw.apk && \
-  $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/robocop-raw.apk $(_ABS_DIST)/robocop.apk
-endif
-
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
   make -C $(GECKO_APP_AP_PATH) gecko.ap_ && \
@@ -545,9 +535,9 @@ endif
 
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
 MAKE_PACKAGE    = $(PREPARE_PACKAGE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) \
-		  $(MOZ_PKG_DIR) && $(INNER_MAKE_PACKAGE) && $(INNER_ROBOCOP_PACKAGE)
+		  $(MOZ_PKG_DIR) && $(INNER_MAKE_PACKAGE)
 else
-MAKE_PACKAGE    = $(PREPARE_PACKAGE) && $(INNER_MAKE_PACKAGE) && $(INNER_ROBOCOP_PACKAGE)
+MAKE_PACKAGE    = $(PREPARE_PACKAGE) && $(INNER_MAKE_PACKAGE)
 endif
 
 ifdef MOZ_SIGN_PACKAGE_CMD
