@@ -201,8 +201,8 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
     uintN pcOff = iter.pcOffset();
     regs.pc = fp->script()->code + pcOff;
 
-    IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p",
-            pcOff, (void *) fp->script());
+    IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p (line %d)",
+            pcOff, (void *)fp->script(), js_PCToLineNumber(cx, fp->script(), regs.pc));
     JS_ASSERT(exprStackSlots == js_ReconstructStackDepth(cx, fp->script(), regs.pc));
 }
 
