@@ -531,9 +531,7 @@ var BrowserApp = {
   doScreenshotTab: function doScreenshotTab(aData) {
       let json = JSON.parse(aData);
       let tab = this.getTabForId(parseInt(json.tabID));
-      let width = parseInt(json.width);
-      let height =  parseInt(json.height);
-      tab.screenshot(width, height);
+      tab.screenshot(json.source, json.destination);
   },
 
   // Use this method to select a tab from JS. This method sends a message
@@ -1565,20 +1563,20 @@ Tab.prototype = {
       this.updateTransform();
   },
 
-  screenshot: function(aWidth, aHeight) {
+  screenshot: function(aSrc, aDst) {
       if (!this.browser || !this.browser.contentWindow)
           return;
       let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      canvas.setAttribute("width", aWidth);  
-      canvas.setAttribute("height", aHeight);
+      canvas.setAttribute("width", aDst.width);  
+      canvas.setAttribute("height", aDst.height);
       let ctx = canvas.getContext("2d");
-      ctx.drawWindow(this.browser.contentWindow, 0, 0, aWidth, aHeight, "rgb(255, 255, 255)");
+      ctx.drawWindow(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, "rgb(255, 255, 255)");
       let message = {
         gecko: {
           type: "Tab:ScreenshotData",
           tabID: this.id,
-          width: aWidth,
-          height: aHeight,
+          width: aDst.width,
+          height: aDst.height,
           data: canvas.toDataURL()
         }
       };
