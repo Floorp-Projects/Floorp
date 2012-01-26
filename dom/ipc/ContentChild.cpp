@@ -800,14 +800,14 @@ ContentChild::GetIndexedDBPath()
 bool
 ContentChild::RecvGarbageCollect()
 {
-    nsJSContext::GarbageCollectNow();
+    nsJSContext::GarbageCollectNow(js::gcreason::DOM_IPC);
     return true;
 }
 
 bool
 ContentChild::RecvCycleCollect()
 {
-    nsJSContext::GarbageCollectNow();
+    nsJSContext::GarbageCollectNow(js::gcreason::DOM_IPC);
     nsJSContext::CycleCollectNow();
     return true;
 }

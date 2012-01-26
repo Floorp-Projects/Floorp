@@ -753,6 +753,7 @@ private:
     CompileStatus jsop_equality_obj_obj(JSOp op, jsbytecode *target, JSOp fused);
     bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
+    void jsop_in();
 
     static inline Assembler::Condition
     GetCompareCondition(JSOp op, JSOp fused)

@@ -63,8 +63,7 @@ public:
 
     nsTreeWalker(nsINode *aRoot,
                  PRUint32 aWhatToShow,
-                 nsIDOMNodeFilter *aFilter,
-                 bool aExpandEntityReferences);
+                 nsIDOMNodeFilter *aFilter);
     virtual ~nsTreeWalker();
 
     NS_DECL_CYCLE_COLLECTION_CLASS(nsTreeWalker)
