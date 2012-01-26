@@ -91,8 +91,8 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             }
         });
 
-        Tabs.getInstance().refreshThumbnails();
         GeckoApp.registerOnTabsChangedListener(this);
+        Tabs.getInstance().refreshThumbnails();
         onTabsChanged(null);
     }
 
@@ -140,6 +140,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     void finishActivity() {
         finish();
         overridePendingTransition(0, R.anim.shrink_fade_out);
+        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Screenshot:Cancel",""));
     }
 
     // Adapter to bind tabs into a list 

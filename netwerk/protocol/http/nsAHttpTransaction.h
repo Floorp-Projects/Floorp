@@ -131,6 +131,20 @@ public:
     virtual nsresult OnReadSegment(const char *segment,
                                    PRUint32 count,
                                    PRUint32 *countRead) = 0;
+
+    // Ask the segment reader to commit to accepting size bytes of
+    // data from subsequent OnReadSegment() calls or throw hard
+    // (i.e. not wouldblock) exceptions. Implementations
+    // can return NS_ERROR_FAILURE if they never make commitments of that size
+    // (the default), NS_BASE_STREAM_WOULD_BLOCK if they cannot make
+    // the commitment now but might in the future, or NS_OK
+    // if they make the commitment.
+    //
+    // Spdy uses this to make sure frames are atomic.
+    virtual nsresult CommitToSegmentSize(PRUint32 size)
+    {
+        return NS_ERROR_FAILURE;
+    }
 };
 
 #define NS_DECL_NSAHTTPSEGMENTREADER \

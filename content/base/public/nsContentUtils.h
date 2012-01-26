@@ -994,6 +994,8 @@ public:
   static nsEventListenerManager* GetListenerManager(nsINode* aNode,
                                                     bool aCreateIfNotFound);
 
+  static void UnmarkGrayJSListenersInCCGenerationDocuments(PRUint32 aGeneration);
+
   /**
    * Remove the eventlistener manager for aNode.
    *
@@ -2122,13 +2124,6 @@ public:
 #else
 #define DOUBLE_NaN {{0xffffffff,                                         \
                         DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK}}
-#endif
-
-#if defined(XP_WIN)
-#define DOUBLE_COMPARE(LVAL, OP, RVAL)                                  \
-    (!DOUBLE_IS_NaN(LVAL) && !DOUBLE_IS_NaN(RVAL) && (LVAL) OP (RVAL))
-#else
-#define DOUBLE_COMPARE(LVAL, OP, RVAL) ((LVAL) OP (RVAL))
 #endif
 
 /*

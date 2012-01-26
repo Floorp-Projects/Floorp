@@ -1,4 +1,4 @@
-  /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -214,8 +214,17 @@ static const char kOOMAllocationSizeParameter[] = "OOMAllocationSize=";
 static const int kOOMAllocationSizeParameterLen =
   sizeof(kOOMAllocationSizeParameter)-1;
 
+static const char kAvailablePageFileParameter[] = "AvailablePageFile=";
+static const int kAvailablePageFileParameterLen =
+  sizeof(kAvailablePageFileParameter)-1;
+
+static const char kAvailablePhysicalMemoryParameter[] = "AvailablePhysicalMemory=";
+static const int kAvailablePhysicalMemoryParameterLen =
+  sizeof(kAvailablePhysicalMemoryParameter)-1;
+
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
+static Mutex* notesFieldLock;
 static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
@@ -454,34 +463,31 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
                   &nBytes, NULL);
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
       }
+
       // Try to get some information about memory.
       MEMORYSTATUSEX statex;
       statex.dwLength = sizeof(statex);
       if (GlobalMemoryStatusEx(&statex)) {
         char buffer[128];
         int bufferLen;
-        WriteFile(hFile, kSysMemoryParameter,
-                  kSysMemoryParameterLen, &nBytes, NULL);
-        ltoa(statex.dwMemoryLoad, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
-                  &nBytes, NULL);
+
+#define WRITE_STATEX_FIELD(field, paramName, conversionFunc)  \
+        WriteFile(hFile, k##paramName##Parameter,             \
+                  k##paramName##ParameterLen, &nBytes, NULL); \
+        conversionFunc(statex.field, buffer, 10);             \
+        bufferLen = strlen(buffer);                           \
+        WriteFile(hFile, buffer, bufferLen, &nBytes, NULL);   \
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
-        WriteFile(hFile, kTotalVirtualMemoryParameter,
-                  kTotalVirtualMemoryParameterLen, &nBytes, NULL);
-        _ui64toa(statex.ullTotalVirtual, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
-                  &nBytes, NULL);
-        WriteFile(hFile, "\n", 1, &nBytes, NULL);
-        WriteFile(hFile, kAvailableVirtualMemoryParameter,
-                  kAvailableVirtualMemoryParameterLen, &nBytes, NULL);
-        _ui64toa(statex.ullAvailVirtual, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
-                  &nBytes, NULL);
-        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+
+        WRITE_STATEX_FIELD(dwMemoryLoad, SysMemory, ltoa);
+        WRITE_STATEX_FIELD(ullTotalVirtual, TotalVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailVirtual, AvailableVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailPageFile, AvailablePageFile, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailPhys, AvailablePhysicalMemory, _ui64toa);
+
+#undef WRITE_STATEX_FIELD
       }
+
       if (oomAllocationSizeBufferLen) {
         WriteFile(hFile, kOOMAllocationSizeParameter,
                   kOOMAllocationSizeParameterLen, &nBytes, NULL);
@@ -657,6 +663,8 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
   NS_ASSERTION(!crashReporterAPILock, "Shouldn't have a lock yet");
   crashReporterAPILock = new Mutex("crashReporterAPILock");
+  NS_ASSERTION(!notesFieldLock, "Shouldn't have a lock yet");
+  notesFieldLock = new Mutex("notesFieldLock");
 
   crashReporterAPIData_Hash =
     new nsDataHashtable<nsCStringHashKey,nsCString>();
@@ -1086,6 +1094,9 @@ nsresult UnsetExceptionHandler()
   delete crashReporterAPILock;
   crashReporterAPILock = nsnull;
 
+  delete notesFieldLock;
+  notesFieldLock = nsnull;
+
   delete crashReporterAPIData;
   crashReporterAPIData = nsnull;
 
@@ -1255,6 +1266,10 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
     return NS_ERROR_INVALID_ARG;
 
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    if (!NS_IsMainThread()) {
+      NS_ERROR("Cannot call AnnotateCrashReport in child processes from non-main thread.");
+      return NS_ERROR_FAILURE;
+    }
     PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
     if (!reporter) {
       EnqueueDelayedNote(new DelayedNote(data));
@@ -1273,6 +1288,8 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
       return NS_ERROR_FAILURE;
     return NS_OK;
   }
+
+  MutexAutoLock lock(*notesFieldLock);
 
   notesField->Append(data);
   return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);

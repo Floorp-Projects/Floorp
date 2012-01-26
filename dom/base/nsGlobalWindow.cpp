@@ -1405,11 +1405,32 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGlobalWindow)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGlobalWindow)
 
+static PLDHashOperator
+MarkXBLHandlers(const void* aKey, JSObject* aData, void* aClosure)
+{
+  xpc_UnmarkGrayObject(aData);
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindow)
+  if (tmp->IsBlackForCC()) {
+    if (tmp->mCachedXBLPrototypeHandlers.IsInitialized()) {
+      tmp->mCachedXBLPrototypeHandlers.EnumerateRead(MarkXBLHandlers, nsnull);
+    }
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsGlobalWindow)
+  return tmp->IsBlackForCC();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsGlobalWindow)
+  return tmp->IsBlackForCC();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
-  if ((tmp->mDoc && nsCCUncollectableMarker::InGeneration(
-                      cb, tmp->mDoc->GetMarkedCCGeneration())) ||
-      (nsCCUncollectableMarker::sGeneration && tmp->IsBlack())) {
+  if (!cb.WantAllTraces() && tmp->IsBlackForCC()) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -1517,6 +1538,28 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindow)
     tmp->mCachedXBLPrototypeHandlers.EnumerateRead(TraceXBLHandlers, &data);
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+bool
+nsGlobalWindow::IsBlackForCC()
+{
+  return
+    (mDoc &&
+     nsCCUncollectableMarker::InGeneration(mDoc->GetMarkedCCGeneration())) ||
+    (nsCCUncollectableMarker::sGeneration && IsBlack());
+}
+
+void
+nsGlobalWindow::UnmarkGrayTimers()
+{
+  for (nsTimeout* timeout = FirstTimeout();
+       timeout && IsTimeout(timeout);
+       timeout = timeout->Next()) {
+    if (timeout->mScriptHandler) {
+      JSObject* o = timeout->mScriptHandler->GetScriptObject();
+      xpc_UnmarkGrayObject(o);
+    }
+  }
+}
 
 //*****************************************************************************
 // nsGlobalWindow::nsIScriptGlobalObject
@@ -2272,7 +2315,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
-  mContext->GC();
+  mContext->GC(js::gcreason::SET_NEW_DOCUMENT);
   mContext->DidInitializeContext();
 
   if (newInnerWindow && !newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
@@ -2429,7 +2472,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     }
 
     if (mContext) {
-      mContext->GC();
+      mContext->GC(js::gcreason::SET_DOC_SHELL);
       mContext->FinalizeContext();
       mContext = nsnull;
     }

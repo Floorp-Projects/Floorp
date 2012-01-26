@@ -196,6 +196,7 @@ let gInitialPages = [
 #include browser-places.js
 #include browser-tabPreviews.js
 #include browser-tabview.js
+#include browser-thumbnails.js
 
 #ifdef MOZ_SERVICES_SYNC
 #include browser-syncui.js
@@ -1705,6 +1706,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gSyncUI.init();
 #endif
 
+  gBrowserThumbnails.init();
   TabView.init();
 
   setUrlAndSearchBarWidthForConditionalForwardButton();
@@ -1827,6 +1829,7 @@ function BrowserShutdown() {
     gPrefService.removeObserver(allTabs.prefName, allTabs);
     ctrlTab.uninit();
     TabView.uninit();
+    gBrowserThumbnails.uninit();
 
     try {
       FullZoom.destroy();
@@ -4785,6 +4788,7 @@ var XULBrowserWindow = {
   },
 
   hideChromeForLocation: function(aLocation) {
+    aLocation = aLocation.toLowerCase();
     return this.inContentWhitelist.some(function(aSpec) {
       return aSpec == aLocation;
     });
@@ -9060,6 +9064,11 @@ var StyleEditor = {
   }
 };
 
+function onWebDeveloperMenuShowing() {
+  document.getElementById("Tools:WebConsole").setAttribute("checked", HUDConsoleUI.getOpenHUD() != null);
+}
+
+
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
 #ifdef XP_WIN
   // Only show resizers on Windows 2000 and XP
@@ -9134,6 +9143,7 @@ var MousePosTracker = {
     }
   }
 };
+
 function focusNextFrame(event) {
   let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
   let dir = event.shiftKey ? fm.MOVEFOCUS_BACKWARDDOC : fm.MOVEFOCUS_FORWARDDOC;

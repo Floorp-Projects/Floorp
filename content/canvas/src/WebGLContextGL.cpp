@@ -3950,7 +3950,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         return NS_ERROR_FAILURE;
     }
 
-    // We disallow loading cross-domain images that have not been validated
+    // We disallow loading cross-domain images and videos that have not been validated
     // with CORS as WebGL textures. The reason for doing that is that timing
     // attacks on WebGL shaders are able to retrieve approximations of the
     // pixel values in WebGL textures; see bug 655987.

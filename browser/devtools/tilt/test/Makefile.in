@@ -73,6 +73,11 @@ _BROWSER_TEST_FILES = \
 	browser_tilt_math05.js \
 	browser_tilt_math06.js \
 	browser_tilt_math07.js \
+	browser_tilt_picking.js \
+	browser_tilt_picking_delete.js \
+	browser_tilt_picking_highlight01.js \
+	browser_tilt_picking_highlight02.js \
+	browser_tilt_picking_highlight03.js \
 	browser_tilt_utils01.js \
 	browser_tilt_utils02.js \
 	browser_tilt_utils03.js \

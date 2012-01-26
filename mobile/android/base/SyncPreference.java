@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#filter substitution
 package org.mozilla.gecko;
 
 import android.accounts.Account;
@@ -47,13 +46,11 @@ import android.preference.Preference;
 import android.util.AttributeSet;
 import android.util.Log;
 
+import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
+
 class SyncPreference extends Preference {
-    private static final String FEEDS_PACKAGE_NAME = "com.android.providers.subscribedfeeds";
-    private static final String ACCOUNT_SYNC_CLASS_NAME = "com.android.settings.AccountSyncSettings";
-    private static final String ACCOUNT_KEY = "account";
-    private static final String FENNEC_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
-    private static final String FENNEC_SYNC_CLASS_NAME = "org.mozilla.gecko.sync.setup.activities.SetupSyncActivity";
     private static final String FENNEC_ACCOUNT_TYPE = "org.mozilla.firefox_sync";
+    private static final String SYNC_SETTINGS = "android.settings.SYNC_SETTINGS";
 
     private Context mContext;
 
@@ -64,18 +61,13 @@ class SyncPreference extends Preference {
 
     @Override
     protected void onClick() {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
+        // show sync setup if no accounts exist; otherwise, show account settings
         Account[] accounts = AccountManager.get(mContext).getAccountsByType(FENNEC_ACCOUNT_TYPE);
-        if (accounts.length > 0) {
-            // show sync account
-            // we assume there's exactly one sync account. see bugs 716906 and 710407.
-            intent.setComponent(new ComponentName(FEEDS_PACKAGE_NAME, ACCOUNT_SYNC_CLASS_NAME));
-            Account account = accounts[0];
-            intent.putExtra(ACCOUNT_KEY, account);
-        } else {
-            // show sync setup
-            intent.setComponent(new ComponentName(FENNEC_PACKAGE_NAME, FENNEC_SYNC_CLASS_NAME));
-        }
+        Intent intent;
+        if (accounts.length > 0)
+            intent = new Intent(SYNC_SETTINGS);
+        else
+            intent = new Intent(mContext, SetupSyncActivity.class);
         mContext.startActivity(intent);
     }
 }

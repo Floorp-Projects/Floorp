@@ -55,7 +55,6 @@
 #include <string.h>     /* for memset used when DEBUG */
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jshash.h"
 #include "jsclist.h"
@@ -753,7 +752,7 @@ Chunk::allocateArena(JSCompartment *comp, AllocKind thingKind)
     rt->gcBytes += ArenaSize;
     comp->gcBytes += ArenaSize;
     if (comp->gcBytes >= comp->gcTriggerBytes)
-        TriggerCompartmentGC(comp, gcstats::ALLOCTRIGGER);
+        TriggerCompartmentGC(comp, gcreason::ALLOC_TRIGGER);
 
     return aheader;
 }
@@ -1691,7 +1690,7 @@ RunLastDitchGC(JSContext *cx)
 
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
-    js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL, gcstats::LASTDITCH);
+    js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL, gcreason::LAST_DITCH);
 }
 
 /* static */ void *
@@ -2194,7 +2193,7 @@ MarkRuntime(JSTracer *trc)
 }
 
 void
-TriggerGC(JSRuntime *rt, gcstats::Reason reason)
+TriggerGC(JSRuntime *rt, gcreason::Reason reason)
 {
     JS_ASSERT(rt->onOwnerThread());
 
@@ -2209,7 +2208,7 @@ TriggerGC(JSRuntime *rt, gcstats::Reason reason)
 }
 
 void
-TriggerCompartmentGC(JSCompartment *comp, gcstats::Reason reason)
+TriggerCompartmentGC(JSCompartment *comp, gcreason::Reason reason)
 {
     JSRuntime *rt = comp->rt;
     JS_ASSERT(!rt->gcRunning);
@@ -2255,18 +2254,18 @@ MaybeGC(JSContext *cx)
     JS_ASSERT(rt->onOwnerThread());
 
     if (rt->gcZeal()) {
-        js_GC(cx, NULL, GC_NORMAL, gcstats::MAYBEGC);
+        js_GC(cx, NULL, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
 
     JSCompartment *comp = cx->compartment;
     if (rt->gcIsNeeded) {
-        js_GC(cx, (comp == rt->gcTriggerCompartment) ? comp : NULL, GC_NORMAL, gcstats::MAYBEGC);
+        js_GC(cx, (comp == rt->gcTriggerCompartment) ? comp : NULL, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
 
     if (comp->gcBytes > 8192 && comp->gcBytes >= 3 * (comp->gcTriggerBytes / 4)) {
-        js_GC(cx, (rt->gcMode == JSGC_MODE_COMPARTMENT) ? comp : NULL, GC_NORMAL, gcstats::MAYBEGC);
+        js_GC(cx, (rt->gcMode == JSGC_MODE_COMPARTMENT) ? comp : NULL, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
 
@@ -2280,7 +2279,7 @@ MaybeGC(JSContext *cx)
         if (rt->gcChunkAllocationSinceLastGC ||
             rt->gcNumArenasFreeCommitted > FreeCommittedArenasThreshold)
         {
-            js_GC(cx, NULL, GC_SHRINK, gcstats::MAYBEGC);
+            js_GC(cx, NULL, GC_SHRINK, gcreason::MAYBEGC);
         } else {
             rt->gcNextFullGCTime = now + GC_IDLE_FULL_SPAN;
         }
@@ -3029,7 +3028,7 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 }
 
 void
-js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, gcstats::Reason reason)
+js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     JSRuntime *rt = cx->runtime;
     JS_AbortIfWrongThread(rt);

@@ -105,6 +105,7 @@
 #include "nsIFileChannel.h"
 #include "mozilla/Telemetry.h"
 #include "sampler.h"
+#include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
 
@@ -577,6 +578,31 @@ nsXMLHttpRequest::SetRequestObserver(nsIRequestObserver* aObserver)
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXMLHttpRequest)
+  if (tmp->IsBlack()) {
+    if (tmp->mListenerManager) {
+      tmp->mListenerManager->UnmarkGrayJSListeners();
+      NS_UNMARK_LISTENER_WRAPPER(Load)
+      NS_UNMARK_LISTENER_WRAPPER(Error)
+      NS_UNMARK_LISTENER_WRAPPER(Abort)
+      NS_UNMARK_LISTENER_WRAPPER(LoadStart)
+      NS_UNMARK_LISTENER_WRAPPER(Progress)
+      NS_UNMARK_LISTENER_WRAPPER(Loadend)
+      NS_UNMARK_LISTENER_WRAPPER(UploadProgress)
+      NS_UNMARK_LISTENER_WRAPPER(Readystatechange)
+    }
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsXMLHttpRequest)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsXMLHttpRequest)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
                                                   nsXHREventTarget)

@@ -47,7 +47,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsclist.h"
 #include "jsdhash.h"
@@ -739,6 +738,7 @@ JSRuntime::JSRuntime()
     gcIsNeeded(0),
     gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
+    gcTriggerReason(gcreason::NO_REASON),
     gcTriggerCompartment(NULL),
     gcCurrentCompartment(NULL),
     gcCheckCompartment(NULL),
@@ -2875,7 +2875,7 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp)
     JS_ASSERT(comp != cx->runtime->atomsCompartment);
 
     js::gc::VerifyBarriers(cx, true);
-    js_GC(cx, comp, GC_NORMAL, gcstats::PUBLIC_API);
+    js_GC(cx, comp, GC_NORMAL, gcreason::API);
 }
 
 JS_PUBLIC_API(void)
