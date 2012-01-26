@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Felix Fung <felix.the.cheshire.cat@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,12 +47,12 @@ var gTreeUtils = {
     aView._rowCount = 0;
     aTree.treeBoxObject.rowCountChanged(0, -oldCount);
   },
-  
+
   deleteSelectedItems: function (aTree, aView, aItems, aDeletedItems)
   {
     var selection = aTree.view.selection;
     selection.selectEventsSuppressed = true;
-    
+
     var rc = selection.getRangeCount();
     for (var i = 0; i < rc; ++i) {
       var min = { }; var max = { };
@@ -61,7 +62,7 @@ var gTreeUtils = {
         aItems[j] = null;
       }
     }
-    
+
     var nextSelection = 0;
     for (i = 0; i < aItems.length; ++i) {
       if (!aItems[i]) {
@@ -82,20 +83,28 @@ var gTreeUtils = {
     }
     selection.selectEventsSuppressed = false;
   },
-  
-  sort: function (aTree, aView, aDataSet, aColumn, 
-                  aLastSortColumn, aLastSortAscending) 
+
+  sort: function (aTree, aView, aDataSet, aColumn, aComparator,
+                  aLastSortColumn, aLastSortAscending)
   {
     var ascending = (aColumn == aLastSortColumn) ? !aLastSortAscending : true;
-    aDataSet.sort(function (a, b) { return a[aColumn].toLowerCase().localeCompare(b[aColumn].toLowerCase()); });
+    if (aDataSet.length == 0)
+      return ascending;
+
+    var numericSort = !isNaN(aDataSet[0][aColumn]);
+    var sortFunction = null;
+    if (aComparator) {
+      sortFunction = function (a, b) { return aComparator(a[aColumn], b[aColumn]); };
+    }
+    aDataSet.sort(sortFunction);
     if (!ascending)
       aDataSet.reverse();
-    
+
     aTree.view.selection.select(-1);
     aTree.view.selection.select(0);
     aTree.treeBoxObject.invalidate();
     aTree.treeBoxObject.ensureRowIsVisible(0);
-    
+
     return ascending;
   }
 };
