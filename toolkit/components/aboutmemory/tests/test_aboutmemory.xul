@@ -123,6 +123,7 @@
           f("map/vsize/a",      19);
           f("map/swap/b/c",     10);
           f("map/resident/a",   42);
+          f("map/pss/a",        43);
        },
        explicitNonHeap: 0
      }
@@ -186,50 +187,33 @@ Main Process\n\
 Explicit Allocations\n\
 623.58 MB (100.0%) -- explicit\n\
 ├──232.00 MB (37.20%) -- b\n\
-│  ├───85.00 MB (13.63%) -- a\n\
-│  ├───75.00 MB (12.03%) -- b\n\
+│  ├───85.00 MB (13.63%) ── a\n\
+│  ├───75.00 MB (12.03%) ── b\n\
 │  └───72.00 MB (11.55%) -- c\n\
-│      ├──70.00 MB (11.23%) -- a\n\
-│      └───2.00 MB (00.32%) -- (1 omitted)\n\
-├──222.00 MB (35.60%) -- a\n\
+│      ├──70.00 MB (11.23%) ── a\n\
+│      └───2.00 MB (00.32%) ── b\n\
+├──222.00 MB (35.60%) ── a\n\
 ├──100.00 MB (16.04%) -- c\n\
-│  ├───77.00 MB (12.35%) -- other\n\
-│  └───23.00 MB (03.69%) -- d [2]\n\
-├───23.00 MB (03.69%) -- cc [2]\n\
+│  ├───77.00 MB (12.35%) ── other\n\
+│  └───23.00 MB (03.69%) ── d [2]\n\
+├───23.00 MB (03.69%) ── cc [2]\n\
 ├───20.00 MB (03.21%) -- f\n\
 │   └──20.00 MB (03.21%) -- g\n\
 │      └──20.00 MB (03.21%) -- h\n\
-│         └──20.00 MB (03.21%) -- i\n\
-├───15.00 MB (02.41%) -- g\n\
-│   ├───6.00 MB (00.96%) -- a\n\
-│   ├───5.00 MB (00.80%) -- b\n\
-│   └───4.00 MB (00.64%) -- other\n\
-├───11.00 MB (01.76%) -- heap-unclassified\n\
-└────0.58 MB (00.09%) -- (2 omitted)\n\
-\n\
-Resident Set Size (RSS) Breakdown\n\
-0.16 MB (100.0%) -- resident\n\
-└──0.16 MB (100.0%) -- a\n\
-\n\
-Virtual Size Breakdown\n\
-0.17 MB (100.0%) -- vsize\n\
-└──0.17 MB (100.0%) -- a [2]\n\
-\n\
-Swap Usage Breakdown\n\
-0.05 MB (100.0%) -- swap\n\
-├──0.04 MB (76.92%) -- b\n\
-│  └──0.04 MB (76.92%) -- c\n\
-└──0.01 MB (23.08%) -- a [2]\n\
+│         └──20.00 MB (03.21%) ── i\n\
+├───15.00 MB (02.41%) ++ g\n\
+├───11.00 MB (01.76%) ── heap-unclassified\n\
+└────0.58 MB (00.09%) ++ (2 tiny)\n\
 \n\
 Other Measurements\n\
-500.00 MB -- heap-allocated\n\
-100.00 MB -- heap-unallocated\n\
-111.00 MB -- other1\n\
-222.00 MB -- other2\n\
-      777 -- other3\n\
-      888 -- other4\n\
-   45.67% -- perc1\n\
-  100.00% -- perc2\n\
+500.00 MB ── heap-allocated\n\
+100.00 MB ── heap-unallocated\n\
+111.00 MB ── other1\n\
+222.00 MB ── other2\n\
+      777 ── other3\n\
+      888 ── other4\n\
+   45.67% ── perc1\n\
+  100.00% ── perc2\n\
 \n\
 2nd Process\n\
 \n\
@@ -237,16 +221,16 @@ Explicit Allocations\n\
 1,000.00 MB (100.0%) -- explicit\n\
 ├────499.00 MB (49.90%) -- a\n\
 │    └──499.00 MB (49.90%) -- b\n\
-│       └──499.00 MB (49.90%) -- c [3]\n\
-├────200.00 MB (20.00%) -- flip/the/backslashes\n\
-├────200.00 MB (20.00%) -- compartment(compartment-url)\n\
-└────101.00 MB (10.10%) -- heap-unclassified\n\
+│       └──499.00 MB (49.90%) ── c [3]\n\
+├────200.00 MB (20.00%) ── flip/the/backslashes\n\
+├────200.00 MB (20.00%) ── compartment(compartment-url)\n\
+└────101.00 MB (10.10%) ── heap-unclassified\n\
 \n\
 Other Measurements\n\
-  666.00 MB -- danger<script>window.alert(1)</script>\n\
-1,000.00 MB -- heap-allocated\n\
-  100.00 MB -- heap-unallocated\n\
-  111.00 MB -- other1\n\
+  666.00 MB ── danger<script>window.alert(1)</script>\n\
+1,000.00 MB ── heap-allocated\n\
+  100.00 MB ── heap-unallocated\n\
+  111.00 MB ── other1\n\
 \n\
 3rd Process\n\
 \n\
@@ -255,14 +239,14 @@ WARNING: the 'heap-allocated' memory reporter does not work for this platform an
 Explicit Allocations\n\
 777.00 MB (100.0%) -- explicit\n\
 ├──777.00 MB (100.0%) -- a\n\
-│  ├──444.00 MB (57.14%) -- c [2]\n\
-│  ├──333.00 MB (42.86%) -- b\n\
-│  └────0.00 MB (00.00%) -- (1 omitted)\n\
-└────0.00 MB (00.00%) -- (2 omitted)\n\
+│  ├──444.00 MB (57.14%) ── c [2]\n\
+│  ├──333.00 MB (42.86%) ── b\n\
+│  └────0.00 MB (00.00%) ── d [*] [2]\n\
+└────0.00 MB (00.00%) ++ (2 tiny)\n\
 \n\
 Other Measurements\n\
-0.00 MB -- heap-allocated [*]\n\
-0.00 MB -- other1 [*]\n\
+0.00 MB ── heap-allocated [*]\n\
+0.00 MB ── other1 [*]\n\
 \n\
 ";
 
@@ -273,51 +257,49 @@ Main Process\n\
 Explicit Allocations\n\
 653,876,224 B (100.0%) -- explicit\n\
 ├──243,269,632 B (37.20%) -- b\n\
-│  ├───89,128,960 B (13.63%) -- a\n\
-│  ├───78,643,200 B (12.03%) -- b\n\
+│  ├───89,128,960 B (13.63%) ── a\n\
+│  ├───78,643,200 B (12.03%) ── b\n\
 │  └───75,497,472 B (11.55%) -- c\n\
-│      ├──73,400,320 B (11.23%) -- a\n\
-│      └───2,097,152 B (00.32%) -- b\n\
-├──232,783,872 B (35.60%) -- a\n\
+│      ├──73,400,320 B (11.23%) ── a\n\
+│      └───2,097,152 B (00.32%) ── b\n\
+├──232,783,872 B (35.60%) ── a\n\
 ├──104,857,600 B (16.04%) -- c\n\
-│  ├───80,740,352 B (12.35%) -- other\n\
-│  └───24,117,248 B (03.69%) -- d [2]\n\
-├───24,117,248 B (03.69%) -- cc [2]\n\
+│  ├───80,740,352 B (12.35%) ── other\n\
+│  └───24,117,248 B (03.69%) ── d [2]\n\
+├───24,117,248 B (03.69%) ── cc [2]\n\
 ├───20,971,520 B (03.21%) -- f\n\
 │   └──20,971,520 B (03.21%) -- g\n\
 │      └──20,971,520 B (03.21%) -- h\n\
-│         └──20,971,520 B (03.21%) -- i\n\
+│         └──20,971,520 B (03.21%) ── i\n\
 ├───15,728,640 B (02.41%) -- g\n\
-│   ├───6,291,456 B (00.96%) -- a\n\
-│   ├───5,242,880 B (00.80%) -- b\n\
-│   └───4,194,304 B (00.64%) -- other\n\
-├───11,534,336 B (01.76%) -- heap-unclassified\n\
-├──────510,976 B (00.08%) -- d\n\
-└──────102,400 B (00.02%) -- e\n\
+│   ├───6,291,456 B (00.96%) ── a\n\
+│   ├───5,242,880 B (00.80%) ── b\n\
+│   └───4,194,304 B (00.64%) ── other\n\
+├───11,534,336 B (01.76%) ── heap-unclassified\n\
+├──────510,976 B (00.08%) ── d\n\
+└──────102,400 B (00.02%) ── e\n\
 \n\
 Resident Set Size (RSS) Breakdown\n\
-172,032 B (100.0%) -- resident\n\
-└──172,032 B (100.0%) -- a\n\
+172,032 B (100.0%) ++ resident\n\
+\n\
+Proportional Set Size (PSS) Breakdown\n\
+176,128 B (100.0%) ++ pss\n\
 \n\
 Virtual Size Breakdown\n\
-176,128 B (100.0%) -- vsize\n\
-└──176,128 B (100.0%) -- a [2]\n\
+176,128 B (100.0%) ++ vsize\n\
 \n\
 Swap Usage Breakdown\n\
-53,248 B (100.0%) -- swap\n\
-├──40,960 B (76.92%) -- b\n\
-│  └──40,960 B (76.92%) -- c\n\
-└──12,288 B (23.08%) -- a [2]\n\
+53,248 B (100.0%) ++ swap\n\
 \n\
 Other Measurements\n\
-524,288,000 B -- heap-allocated\n\
-104,857,600 B -- heap-unallocated\n\
-116,391,936 B -- other1\n\
-232,783,872 B -- other2\n\
-          777 -- other3\n\
-          888 -- other4\n\
-       45.67% -- perc1\n\
-      100.00% -- perc2\n\
+524,288,000 B ── heap-allocated\n\
+104,857,600 B ── heap-unallocated\n\
+116,391,936 B ── other1\n\
+232,783,872 B ── other2\n\
+          777 ── other3\n\
+          888 ── other4\n\
+       45.67% ── perc1\n\
+      100.00% ── perc2\n\
 \n\
 2nd Process\n\
 \n\
@@ -325,16 +307,16 @@ Explicit Allocations\n\
 1,048,576,000 B (100.0%) -- explicit\n\
 ├────523,239,424 B (49.90%) -- a\n\
 │    └──523,239,424 B (49.90%) -- b\n\
-│       └──523,239,424 B (49.90%) -- c [3]\n\
-├────209,715,200 B (20.00%) -- flip/the/backslashes\n\
-├────209,715,200 B (20.00%) -- compartment(compartment-url)\n\
-└────105,906,176 B (10.10%) -- heap-unclassified\n\
+│       └──523,239,424 B (49.90%) ── c [3]\n\
+├────209,715,200 B (20.00%) ── flip/the/backslashes\n\
+├────209,715,200 B (20.00%) ── compartment(compartment-url)\n\
+└────105,906,176 B (10.10%) ── heap-unclassified\n\
 \n\
 Other Measurements\n\
-  698,351,616 B -- danger<script>window.alert(1)</script>\n\
-1,048,576,000 B -- heap-allocated\n\
-  104,857,600 B -- heap-unallocated\n\
-  116,391,936 B -- other1\n\
+  698,351,616 B ── danger<script>window.alert(1)</script>\n\
+1,048,576,000 B ── heap-allocated\n\
+  104,857,600 B ── heap-unallocated\n\
+  116,391,936 B ── other1\n\
 \n\
 3rd Process\n\
 \n\
@@ -343,15 +325,15 @@ WARNING: the 'heap-allocated' memory reporter does not work for this platform an
 Explicit Allocations\n\
 814,743,552 B (100.0%) -- explicit\n\
 ├──814,743,552 B (100.0%) -- a\n\
-│  ├──465,567,744 B (57.14%) -- c [2]\n\
-│  ├──349,175,808 B (42.86%) -- b\n\
-│  └────────────0 B (00.00%) -- d [*] [2]\n\
-├────────────0 B (00.00%) -- b [*]\n\
-└────────────0 B (00.00%) -- heap-unclassified [*]\n\
+│  ├──465,567,744 B (57.14%) ── c [2]\n\
+│  ├──349,175,808 B (42.86%) ── b\n\
+│  └────────────0 B (00.00%) ── d [*] [2]\n\
+├────────────0 B (00.00%) ── b [*]\n\
+└────────────0 B (00.00%) ── heap-unclassified [*]\n\
 \n\
 Other Measurements\n\
-0 B -- heap-allocated [*]\n\
-0 B -- other1 [*]\n\
+0 B ── heap-allocated [*]\n\
+0 B ── other1 [*]\n\
 \n\
 "
 
@@ -375,13 +357,18 @@ Other Measurements\n\
     SimpleTest.finish();
   }
 
+  var gHaveDumped = false;
+
   function checkClipboard(actual, expected) {
     if (actual != expected) {
-      dump("*******ACTUAL*******\n");
-      dump(actual);
-      dump("******EXPECTED******\n");
-      dump(expected);
-      dump("********************\n");
+      if (!gHaveDumped) {
+        dump("******EXPECTED******\n");
+        dump(expected);
+        dump("*******ACTUAL*******\n");
+        dump(actual);
+        dump("********************\n");
+        gHaveDumped = true;
+      }
       return false;
     }
     return true;
@@ -391,15 +378,8 @@ Other Measurements\n\
   // expect.  This tests the output in general and also that the cutting and
   // pasting works as expected.
   function test(aFrame, aExpectedText, aNext) {
-    // Click all h2.collapsed elements so they expand.
-    var win = document.querySelector("#" + aFrame).contentWindow;
-    var nodes = win.document.querySelectorAll("pre.collapsed");
-    for (var i = 0; i < nodes.length; i++) {
-      nodes[i].classList.toggle('collapsed');
-    }
-
     SimpleTest.executeSoon(function() {
-      document.querySelector("#" + aFrame).focus();
+      document.getElementById(aFrame).focus();
       SimpleTest.waitForClipboard(
         function(actual) { return checkClipboard(actual, aExpectedText) },
         function() {
