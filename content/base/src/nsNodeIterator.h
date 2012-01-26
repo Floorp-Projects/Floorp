@@ -63,8 +63,7 @@ public:
 
     nsNodeIterator(nsINode *aRoot,
                    PRUint32 aWhatToShow,
-                   nsIDOMNodeFilter *aFilter,
-                   bool aExpandEntityReferences);
+                   nsIDOMNodeFilter *aFilter);
     virtual ~nsNodeIterator();
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED

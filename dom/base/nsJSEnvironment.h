@@ -41,10 +41,12 @@
 #include "nsIScriptRuntime.h"
 #include "nsCOMPtr.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "nsIObserver.h"
 #include "nsIXPCScriptNotify.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIXPConnect.h"
 
 class nsIXPConnectJSObjectHolder;
 class nsRootedJSValueArray;
@@ -179,11 +181,11 @@ public:
   static void LoadStart();
   static void LoadEnd();
 
-  static void GarbageCollectNow(bool shrinkingGC = false);
+  static void GarbageCollectNow(js::gcreason::Reason reason, PRUint32 gckind = nsGCNormal);
   static void ShrinkGCBuffersNow();
   static void CycleCollectNow(nsICycleCollectorListener *aListener = nsnull);
 
-  static void PokeGC();
+  static void PokeGC(js::gcreason::Reason aReason);
   static void KillGCTimer();
 
   static void PokeShrinkGCBuffers();
@@ -193,7 +195,7 @@ public:
   static void MaybePokeCC();
   static void KillCCTimer();
 
-  virtual void GC();
+  virtual void GC(js::gcreason::Reason aReason);
 
 protected:
   nsresult InitializeExternalClasses();

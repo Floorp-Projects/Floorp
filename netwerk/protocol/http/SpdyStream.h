@@ -89,6 +89,9 @@ public:
   void SetRecvdFin(bool aStatus) { mRecvdFin = aStatus ? 1 : 0; }
   bool RecvdFin() { return mRecvdFin; }
 
+  void UpdateTransportSendEvents(PRUint32 count);
+  void UpdateTransportReadEvents(PRUint32 count);
+
   // The zlib header compression dictionary defined by SPDY,
   // and hooks to the mozilla allocator for zlib to use.
   static const char *kDictionary;
@@ -171,6 +174,9 @@ private:
   // Flag is set after syn reply received
   PRUint32                     mFullyOpen            : 1;
 
+  // Flag is set after the WAITING_FOR Transport event has been generated
+  PRUint32                     mSentWaitingFor       : 1;
+
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.
   nsAutoArrayPtr<char>         mTxInlineFrame;
@@ -200,6 +206,9 @@ private:
   // based on nsISupportsPriority definitions
   PRInt32                      mPriority;
 
+  // For Progress Events
+  PRUint64                     mTotalSent;
+  PRUint64                     mTotalRead;
 };
 
 }} // namespace mozilla::net
