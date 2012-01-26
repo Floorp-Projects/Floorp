@@ -823,6 +823,30 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
     }
 }
 
+void
+xpc_MarkInCCGeneration(nsISupports* aVariant, PRUint32 aGeneration)
+{
+    nsCOMPtr<XPCVariant> variant = do_QueryInterface(aVariant);
+    if (variant) {
+        variant->SetCCGeneration(aGeneration);
+        variant->GetJSVal(); // Unmarks gray JSObject.
+        XPCVariant* weak = variant.get();
+        variant = nsnull;
+        if (weak->IsPurple()) {
+          weak->RemovePurple();
+        }
+    }
+}
+
+void
+xpc_UnmarkGrayObject(nsIXPConnectWrappedJS* aWrappedJS)
+{
+    if (aWrappedJS) {
+        // Unmarks gray JSObject.
+        static_cast<nsXPCWrappedJS*>(aWrappedJS)->GetJSObject();
+    }
+}
+
 static JSBool
 WrapperIsNotMainThreadOnly(XPCWrappedNative *wrapper)
 {
