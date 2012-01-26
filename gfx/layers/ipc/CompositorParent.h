@@ -75,6 +75,16 @@ private:
   void ScheduleComposition();
   void Composite();
 
+  // Platform specific functions
+#ifdef MOZ_WIDGET_ANDROID
+  /**
+   * Register the compositor thread with the Java native thread.
+   * This will replace the temporary compositor with the real
+   * Gecko compositor thread.
+   **/
+  void RegisterCompositorWithJava();
+#endif
+
   nsRefPtr<LayerManager> mLayerManager;
   bool mStopped;
   nsIWidget* mWidget;

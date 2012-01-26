@@ -93,6 +93,7 @@ FENNEC_JAVA_FILES = \
   Tab.java \
   Tabs.java \
   TabsTray.java \
+  gfx/AbstractLayerView.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
@@ -120,6 +121,7 @@ FENNEC_JAVA_FILES = \
   gfx/TileLayer.java \
   gfx/ViewportMetrics.java \
   gfx/WidgetTileLayer.java \
+  gfx/layers/OGLSurfaceView.java \
   ui/Axis.java \
   ui/PanZoomController.java \
   ui/SubdocumentScrollHelper.java \

@@ -199,6 +199,14 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jDraw2DBufferMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
     jGetSurfaceMethod = getMethod("getSurface", "()Landroid/view/Surface;");
     jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
+#else
+    initInit();
+
+    jGeckoSurfaceViewClass = getClassGlobalRef("org/mozilla/gecko/gfx/layers/OGLSurfaceView");
+
+    jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
+
+
 #endif
 }
 
@@ -656,7 +664,7 @@ AndroidGeckoSurfaceView::GetSurface()
 jobject
 AndroidGeckoSurfaceView::GetSurfaceHolder()
 {
-    return JNI()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
+    return GetJNIForThread()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
 }
 
 void

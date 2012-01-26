@@ -781,25 +781,34 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         return mLayerManager;
     }
 
-    if (!sGLContext) {
-        // the window we give doesn't matter here
-        sGLContext = mozilla::gl::GLContextProvider::CreateForWindow(this);
+    bool useCompositor =
+        Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+
+    if (useCompositor) {
+        CreateCompositor();
     }
 
-    if (sGLContext) {
-        nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
-            new mozilla::layers::LayerManagerOGL(this);
+    if (!mLayerManager) {
+        if (!sGLContext) {
+            // the window we give doesn't matter here
+            sGLContext = mozilla::gl::GLContextProvider::CreateForWindow(this);
+        }
 
-        if (layerManager && layerManager->Initialize(sGLContext))
-            mLayerManager = layerManager;
-        sValidSurface = true;
-    }
+        if (sGLContext) {
+                nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
+                        new mozilla::layers::LayerManagerOGL(this);
 
-    if (!sGLContext || !mLayerManager) {
-        sGLContext = nsnull;
-        sFailedToCreateGLContext = true;
+                if (layerManager && layerManager->Initialize(sGLContext))
+                        mLayerManager = layerManager;
+                sValidSurface = true;
+        }
 
-        mLayerManager = CreateBasicLayerManager();
+        if (!sGLContext || !mLayerManager) {
+                sGLContext = nsnull;
+                sFailedToCreateGLContext = true;
+
+                mLayerManager = CreateBasicLayerManager();
+        }
     }
 
     return mLayerManager;

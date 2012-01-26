@@ -44,7 +44,6 @@ import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PlaceholderLayerClient;
 import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ViewportMetrics;
@@ -1532,7 +1531,7 @@ abstract public class GeckoApp
             mPlaceholderLayerClient = PlaceholderLayerClient.createInstance(this);
             mLayerController.setLayerClient(mPlaceholderLayerClient);
 
-            mGeckoLayout.addView(mLayerController.getView(), 0);
+            mGeckoLayout.addView(mLayerController.getView().getAndroidView(), 0);
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
