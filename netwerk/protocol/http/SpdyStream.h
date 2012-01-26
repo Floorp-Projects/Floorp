@@ -60,11 +60,6 @@ public:
   nsresult ReadSegments(nsAHttpSegmentReader *,  PRUint32, PRUint32 *);
   nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *);
 
-  bool BlockedOnWrite()
-  {
-    return static_cast<bool>(mBlockedOnWrite);
-  }
-
   bool RequestBlockedOnRead()
   {
     return static_cast<bool>(mRequestBlockedOnRead);
@@ -162,13 +157,6 @@ private:
   // Flag is set when all http request headers have been read
   PRUint32                     mSynFrameComplete     : 1;
 
-  // The mBlockedOnWrite flags is set when the stream is waiting for
-  // a write callback because there is more request data to be sent.
-  // This can be because the network blocked previous write attempts or
-  // it may be because they were cut short as a matter of fairness to the
-  // other streams.
-  PRUint32                     mBlockedOnWrite       : 1;
-
   // Flag is set when the HTTP processor has more data to send
   // but has blocked in doing so.
   PRUint32                     mRequestBlockedOnRead : 1;
@@ -192,13 +180,11 @@ private:
   nsAutoArrayPtr<char>         mTxInlineFrame;
   PRUint32                     mTxInlineFrameSize;
   PRUint32                     mTxInlineFrameUsed;
-  PRUint32                     mTxInlineFrameSent;
 
-  // mTxStreamFrameSize and mTxStreamFrameSent track the progress of
+  // mTxStreamFrameSize tracks the progress of
   // transmitting a request body data frame. The data frame itself
   // is never copied into the spdy layer.
   PRUint32                     mTxStreamFrameSize;
-  PRUint32                     mTxStreamFrameSent;
 
   // Compression context and buffer for request header compression.
   // This is a copy of SpdySession::mUpstreamZlib because it needs

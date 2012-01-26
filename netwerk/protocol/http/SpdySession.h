@@ -164,6 +164,12 @@ public:
   // an overload of nsAHttpConnection
   void TransactionHasDataToWrite(nsAHttpTransaction *);
 
+  // a similar version for SpdyStream
+  void TransactionHasDataToWrite(SpdyStream *);
+
+  // an overload of nsAHttpSegementReader
+  virtual nsresult CommitToSegmentSize(PRUint32 size);
+  
 private:
 
   enum stateType {
@@ -237,11 +243,6 @@ private:
   // be removed. But they will be reintroduced for v3, so we will leave
   // this queue in place to ease that transition.
   nsDeque           mUrgentForWrite;
-
-  // If we block while writing out a frame then this points to the stream
-  // that was blocked. When writing again that stream must be the first
-  // one to write. It is null if there is not a partial frame.
-  SpdyStream        *mPartialFrameSender;
 
   // Compression contexts for header transport using deflate.
   // SPDY compresses only HTTP headers and does not reset zlib in between
