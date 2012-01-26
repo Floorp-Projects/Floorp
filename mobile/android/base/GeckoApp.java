@@ -595,7 +595,8 @@ abstract public class GeckoApp
     }
 
     void getAndProcessThumbnailForTab(final Tab tab) {
-        final Bitmap bitmap = Tabs.getInstance().isSelectedTab(tab) ?
+        boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
+        final Bitmap bitmap = isSelectedTab ?
             mSoftwareLayerClient.getBitmap() : null;
         
         if (bitmap != null) {
@@ -604,11 +605,29 @@ abstract public class GeckoApp
             processThumbnail(tab, bitmap, bos.toByteArray());
         } else {
             mLastScreen = null;
-            GeckoAppShell.sendEventToGecko(
-                new GeckoEvent("Tab:Screenshot", 
-                               "{\"width\": \"" + mSoftwareLayerClient.getWidth() + "\", " +
-                               "\"height\": \"" + mSoftwareLayerClient.getHeight() + "\", " +
-                               "\"tabID\": \"" + tab.getId() + "\" }"));
+            int sw = isSelectedTab ? mSoftwareLayerClient.getWidth() : tab.getMinScreenshotWidth();
+            int sh = isSelectedTab ? mSoftwareLayerClient.getHeight(): tab.getMinScreenshotHeight();
+            int dw = isSelectedTab ? sw : tab.getThumbnailWidth();
+            int dh = isSelectedTab ? sh : tab.getThumbnailHeight();
+            try {
+                JSONObject message = new JSONObject();
+                message.put("tabID", tab.getId());
+
+                JSONObject source = new JSONObject();
+                source.put("width", sw);
+                source.put("height", sh);
+                message.put("source", source);
+
+                JSONObject destination = new JSONObject();
+                source.put("width", dw);
+                source.put("height", dh);
+                message.put("destination", destination);
+
+                String json = message.toString();
+                GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Screenshot", json));
+            } catch(JSONException jsonEx) {
+                Log.w(LOGTAG, "Constructing the JSON data for Tab:Screenshot event failed", jsonEx);
+            }
         }
     }
     
