@@ -99,7 +99,7 @@
   height: 2.4em;
   width: 189px;
   padding: 0 6px;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0,0,0,0.8);
   border: solid transparent;
   border-width: 6px 0;
   color: #fff;
@@ -110,8 +110,10 @@
 
 /* SITE STRIP */
 .site-strip {
-  padding: 4px 3px;
-  background-color: rgba(0,0,0,0.5);
+  padding: 3px;
+  border: solid rgba(30,30,30,0.8);
+  border-width: 1px 0;
+  background-color: rgba(0,0,0,0.8);
 }
 
 .strip-button {
