@@ -2731,6 +2731,37 @@ class MCallGetElement
     }
 };
 
+class MCallSetElement
+  : public MAryInstruction<3>,
+    public CallSetElementPolicy
+{
+    MCallSetElement(MDefinition *object, MDefinition *index, MDefinition *value) {
+        initOperand(0, object);
+        initOperand(1, index);
+        initOperand(2, value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CallSetElement);
+
+    static MCallSetElement *New(MDefinition *object, MDefinition *index, MDefinition *value) {
+        return new MCallSetElement(object, index, value);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *value() const {
+        return getOperand(2);
+    }
+};
+
 class MStringLength
   : public MUnaryInstruction,
     public StringPolicy

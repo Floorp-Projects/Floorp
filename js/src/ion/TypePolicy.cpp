@@ -257,3 +257,18 @@ CallPolicy::adjustInputs(MInstruction *ins)
     return true;
 }
 
+bool
+CallSetElementPolicy::adjustInputs(MInstruction *ins)
+{
+    // The first operand should be an object.
+    ObjectPolicy::adjustInputs(ins);
+
+    // Box the index and value operands.
+    for (size_t i = 1; i < ins->numOperands(); i++) {
+        MDefinition *in = ins->getOperand(i);
+        if (in->type() == MIRType_Value)
+            continue;
+        ins->replaceOperand(i, boxAt(ins, in));
+    }
+    return true;
+}
