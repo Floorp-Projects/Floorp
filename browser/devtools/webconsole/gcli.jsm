@@ -200,6 +200,11 @@ var console = {};
    *        The constructor name
    */
   function getCtorName(aObj) {
+    if (aObj.constructor && aObj.constructor.name) {
+      return aObj.constructor.name;
+    }
+    // If that fails, use Objects toString which sometimes gives something
+    // better than 'Object', and at least defaults to Object if nothing better
     return Object.prototype.toString.call(aObj).slice(8, -1);
   }
 
@@ -869,6 +874,10 @@ function Command(commandSpec) {
   // index is important. We don't want 'holes' in the order caused by
   // parameter groups.
   var usingGroups = false;
+
+  if (this.returnType == null) {
+    this.returnType = 'string';
+  }
 
   // In theory this could easily be made recursive, so param groups could
   // contain nested param groups. Current thinking is that the added
@@ -3020,6 +3029,15 @@ JavascriptType.prototype.parse = function(arg) {
   var typed = arg.text;
   var scope = globalObject;
 
+  // Just accept numbers
+  if (!isNaN(parseFloat(typed)) && isFinite(typed)) {
+    return new Conversion(typed, arg);
+  }
+  // Just accept constants like true/false/null/etc
+  if (typed.trim().match(/(null|undefined|NaN|Infinity|true|false)/)) {
+    return new Conversion(typed, arg);
+  }
+
   // Analyze the input text and find the beginning of the last part that
   // should be completed.
   var beginning = this._findCompletionBeginning(typed);
@@ -3984,34 +4002,12 @@ var evalCommandSpec = {
       description: ''
     }
   ],
-  returnType: 'html',
+  returnType: 'object',
   description: { key: 'cliEvalJavascript' },
   exec: function(args, context) {
-    // &#x2192; is right arrow. We use explicit entities to ensure XML validity
-    var resultPrefix = '<em>{ ' + args.javascript + ' }</em> &#x2192; ';
-    try {
-      var result = customEval(args.javascript);
-
-      if (result === null) {
-        return resultPrefix + 'null.';
-      }
-
-      if (result === undefined) {
-        return resultPrefix + 'undefined.';
-      }
-
-      if (typeof result === 'function') {
-        // &#160; is &nbsp;
-        return resultPrefix +
-            (result + '').replace(/\n/g, '<br>').replace(/ /g, '&#160;');
-      }
-
-      return resultPrefix + result;
-    }
-    catch (ex) {
-      return resultPrefix + 'Exception: ' + ex.message;
-    }
-  }
+    return customEval(args.javascript);
+  },
+  evalRegexp: /^\s*{\s*/
 };
 
 
@@ -4195,8 +4191,9 @@ Requisition.prototype._onAssignmentChange = function(ev) {
   // Refactor? See bug 660765
   // Do preceding arguments need to have dummy values applied so we don't
   // get a hole in the command line?
+  var i;
   if (ev.assignment.param.isPositionalAllowed()) {
-    for (var i = 0; i < ev.assignment.paramIndex; i++) {
+    for (i = 0; i < ev.assignment.paramIndex; i++) {
       var assignment = this.getAssignment(i);
       if (assignment.param.isPositionalAllowed()) {
         if (assignment.ensureVisibleArgument()) {
@@ -4208,7 +4205,7 @@ Requisition.prototype._onAssignmentChange = function(ev) {
 
   // Remember where we found the first match
   var index = MORE_THAN_THE_MOST_ARGS_POSSIBLE;
-  for (var i = 0; i < this._args.length; i++) {
+  for (i = 0; i < this._args.length; i++) {
     if (this._args[i].assignment === ev.assignment) {
       if (i < index) {
         index = i;
@@ -4224,7 +4221,7 @@ Requisition.prototype._onAssignmentChange = function(ev) {
   else {
     // Is there a way to do this that doesn't involve a loop?
     var newArgs = ev.conversion.arg.getArgs();
-    for (var i = 0; i < newArgs.length; i++) {
+    for (i = 0; i < newArgs.length; i++) {
       this._args.splice(index + i, 0, newArgs[i]);
     }
   }
@@ -4267,14 +4264,14 @@ Requisition.prototype.getAssignment = function(nameOrNumber) {
     nameOrNumber :
     Object.keys(this._assignments)[nameOrNumber];
   return this._assignments[name] || undefined;
-},
+};
 
 /**
  * Where parameter name == assignment names - they are the same
  */
 Requisition.prototype.getParameterNames = function() {
   return Object.keys(this._assignments);
-},
+};
 
 /**
  * A *shallow* clone of the assignments.
@@ -4407,14 +4404,15 @@ Requisition.prototype.createInputArgTrace = function() {
   }
 
   var args = [];
+  var i;
   this._args.forEach(function(arg) {
-    for (var i = 0; i < arg.prefix.length; i++) {
+    for (i = 0; i < arg.prefix.length; i++) {
       args.push({ arg: arg, char: arg.prefix[i], part: 'prefix' });
     }
-    for (var i = 0; i < arg.text.length; i++) {
+    for (i = 0; i < arg.text.length; i++) {
       args.push({ arg: arg, char: arg.text[i], part: 'text' });
     }
-    for (var i = 0; i < arg.suffix.length; i++) {
+    for (i = 0; i < arg.suffix.length; i++) {
       args.push({ arg: arg, char: arg.suffix[i], part: 'suffix' });
     }
   });
@@ -4575,10 +4573,18 @@ Requisition.prototype.exec = function(input) {
     return false;
   }
 
+  // Display JavaScript input without the initial { or closing }
+  var typed = this.toString();
+  if (evalCommandSpec.evalRegexp.test(typed)) {
+    typed = typed.replace(evalCommandSpec.evalRegexp, '');
+    // Bug 717763: What if the JavaScript naturally ends with a }?
+    typed = typed.replace(/\s*}\s*$/, '');
+  }
+
   var outputObject = {
     command: command,
     args: args,
-    typed: this.toString(),
+    typed: typed,
     canonical: this.toCanonicalString(),
     completed: false,
     start: new Date()
@@ -4586,7 +4592,7 @@ Requisition.prototype.exec = function(input) {
 
   this.commandOutputManager.sendCommandOutput(outputObject);
 
-  var onComplete = (function(output, error) {
+  var onComplete = function(output, error) {
     if (visible) {
       outputObject.end = new Date();
       outputObject.duration = outputObject.end.getTime() - outputObject.start.getTime();
@@ -4595,7 +4601,7 @@ Requisition.prototype.exec = function(input) {
       outputObject.completed = true;
       this.commandOutputManager.sendCommandOutput(outputObject);
     }
-  }).bind(this);
+  }.bind(this);
 
   try {
     var context = new ExecutionContext(this);
@@ -4614,6 +4620,7 @@ Requisition.prototype.exec = function(input) {
     }
   }
   catch (ex) {
+    console.error(ex);
     onComplete(ex, true);
   }
 
@@ -4768,6 +4775,7 @@ Requisition.prototype._tokenize = function(typed) {
 
   while (true) {
     var c = typed[i];
+    var str;
     switch (mode) {
       case In.WHITESPACE:
         if (c === '\'') {
@@ -4800,7 +4808,7 @@ Requisition.prototype._tokenize = function(typed) {
         // There is an edge case of xx'xx which we are assuming to
         // be a single parameter (and same with ")
         if (c === ' ') {
-          var str = unescape2(typed.substring(start, i));
+          str = unescape2(typed.substring(start, i));
           args.push(new Argument(str, prefix, ''));
           mode = In.WHITESPACE;
           start = i;
@@ -4810,7 +4818,7 @@ Requisition.prototype._tokenize = function(typed) {
 
       case In.SINGLE_Q:
         if (c === '\'') {
-          var str = unescape2(typed.substring(start, i));
+          str = unescape2(typed.substring(start, i));
           args.push(new Argument(str, prefix, c));
           mode = In.WHITESPACE;
           start = i + 1;
@@ -4820,7 +4828,7 @@ Requisition.prototype._tokenize = function(typed) {
 
       case In.DOUBLE_Q:
         if (c === '"') {
-          var str = unescape2(typed.substring(start, i));
+          str = unescape2(typed.substring(start, i));
           args.push(new Argument(str, prefix, c));
           mode = In.WHITESPACE;
           start = i + 1;
@@ -4835,7 +4843,7 @@ Requisition.prototype._tokenize = function(typed) {
         else if (c === '}') {
           blockDepth--;
           if (blockDepth === 0) {
-            var str = unescape2(typed.substring(start, i));
+            str = unescape2(typed.substring(start, i));
             args.push(new ScriptArgument(str, prefix, c));
             mode = In.WHITESPACE;
             start = i + 1;
@@ -4864,11 +4872,11 @@ Requisition.prototype._tokenize = function(typed) {
         }
       }
       else if (mode === In.SCRIPT) {
-        var str = unescape2(typed.substring(start, i + 1));
+        str = unescape2(typed.substring(start, i + 1));
         args.push(new ScriptArgument(str, prefix, ''));
       }
       else {
-        var str = unescape2(typed.substring(start, i + 1));
+        str = unescape2(typed.substring(start, i + 1));
         args.push(new Argument(str, prefix, ''));
       }
       break;
@@ -4901,16 +4909,16 @@ Requisition.prototype._split = function(args) {
   // Handle the special case of the user typing { javascript(); }
   // We use the hidden 'eval' command directly rather than shift()ing one of
   // the parameters, and parse()ing it.
+  var conversion;
   if (args[0] instanceof ScriptArgument) {
     // Special case: if the user enters { console.log('foo'); } then we need to
     // use the hidden 'eval' command
-    var conversion = new Conversion(evalCommand, new Argument());
+    conversion = new Conversion(evalCommand, new Argument());
     this.commandAssignment.setConversion(conversion);
     return;
   }
 
   var argsUsed = 1;
-  var conversion;
 
   while (argsUsed <= args.length) {
     var arg = (argsUsed === 1) ?
