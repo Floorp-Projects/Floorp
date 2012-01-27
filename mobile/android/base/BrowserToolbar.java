@@ -41,11 +41,13 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.AttributeSet;
@@ -151,7 +153,16 @@ public class BrowserToolbar extends LinearLayout {
             public View makeView() {
                 TextView text = new TextView(mContext);
                 text.setGravity(Gravity.CENTER);
-                text.setTextSize(20);
+
+                if (Build.VERSION.SDK_INT >= 11) {
+                    if (GeckoApp.mOrientation == Configuration.ORIENTATION_PORTRAIT)
+                        text.setTextSize(24);
+                    else
+                        text.setTextSize(20);
+                } else {
+                    text.setTextSize(22);
+                }
+
                 text.setTextColor(mCounterColor);
                 text.setShadowLayer(1.0f, 0f, 1.0f, Color.BLACK);
                 return text;
@@ -174,10 +185,10 @@ public class BrowserToolbar extends LinearLayout {
         mShadow = (ImageView) findViewById(R.id.shadow);
 
         mHandler = new Handler();
-        mSlideUpIn = new TranslateAnimation(0, 0, 30, 0);
-        mSlideUpOut = new TranslateAnimation(0, 0, 0, -30);
-        mSlideDownIn = new TranslateAnimation(0, 0, -30, 0);
-        mSlideDownOut = new TranslateAnimation(0, 0, 0, 30);
+        mSlideUpIn = new TranslateAnimation(0, 0, 40, 0);
+        mSlideUpOut = new TranslateAnimation(0, 0, 0, -40);
+        mSlideDownIn = new TranslateAnimation(0, 0, -40, 0);
+        mSlideDownOut = new TranslateAnimation(0, 0, 0, 40);
 
         mDuration = 750;
         mSlideUpIn.setDuration(mDuration);
