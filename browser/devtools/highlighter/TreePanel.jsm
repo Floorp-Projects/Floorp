@@ -64,7 +64,7 @@ function TreePanel(aContext, aIUI) {
 TreePanel.prototype = {
   showTextNodesWithWhitespace: false,
   id: "treepanel", // DO NOT LOCALIZE
-  openInDock: true,
+  _open: false,
 
   /**
    * The tree panel container element.
@@ -75,11 +75,7 @@ TreePanel.prototype = {
    */
   get container()
   {
-    if (this.openInDock) {
-      return this.document.getElementById("inspector-tree-box");
-    }
-
-    return this.document.getElementById("inspector-tree-panel");
+    return this.document.getElementById("inspector-tree-box");
   },
 
   /**
@@ -93,6 +89,8 @@ TreePanel.prototype = {
     this.IUI = aIUI;
     this.window = aContext;
     this.document = this.window.document;
+    this.button =
+     this.IUI.chromeDoc.getElementById("inspector-treepanel-toolbutton");
 
     domplateUtils.setDOM(this.window);
 
@@ -100,28 +98,7 @@ TreePanel.prototype = {
 
     let isOpen = this.isOpen.bind(this);
 
-    this.registrationObject = {
-      id: this.id,
-      label: this.IUI.strings.GetStringFromName("htmlPanel.label"),
-      tooltiptext: this.IUI.strings.GetStringFromName("htmlPanel.tooltiptext"),
-      accesskey: this.IUI.strings.GetStringFromName("htmlPanel.accesskey"),
-      context: this,
-      get isOpen() isOpen(),
-      show: this.open,
-      hide: this.close,
-      onSelect: this.select,
-      panel: this.openInDock ? null : this.container,
-      unregister: this.destroy,
-    };
     this.editingEvents = {};
-
-    if (!this.openInDock) {
-      this._boundClose = this.close.bind(this);
-      this.container.addEventListener("popuphiding", this._boundClose, false);
-    }
-
-    // Register the HTML panel with the highlighter
-    this.IUI.registerTool(this.registrationObject);
   },
 
   /**
@@ -154,13 +131,14 @@ TreePanel.prototype = {
    */
   open: function TP_open()
   {
-    if (this.initializingTreePanel && !this.treeLoaded) {
+    if (this._open) {
       return;
     }
 
+    this._open = true;
+
+    this.button.setAttribute("checked", true);
     this.initializingTreePanel = true;
-    if (!this.openInDock)
-      this.container.hidden = false;
 
     this.treeIFrame = this.document.getElementById("inspector-tree-iframe");
     if (!this.treeIFrame) {
@@ -170,56 +148,6 @@ TreePanel.prototype = {
       this.treeIFrame.setAttribute("type", "content");
     }
 
-    if (this.openInDock) { // Create vbox
-      this.openDocked();
-      return;
-    }
-
-    let resizerBox = this.document.getElementById("tree-panel-resizer-box");
-    this.treeIFrame = this.container.insertBefore(this.treeIFrame, resizerBox);
-
-    let boundLoadedInitializeTreePanel = function loadedInitializeTreePanel()
-    {
-      this.treeIFrame.removeEventListener("load",
-        boundLoadedInitializeTreePanel, true);
-      this.initializeIFrame();
-    }.bind(this);
-
-    let boundTreePanelShown = function treePanelShown()
-    {
-      this.container.removeEventListener("popupshown",
-        boundTreePanelShown, false);
-
-      this.treeIFrame.addEventListener("load",
-        boundLoadedInitializeTreePanel, true);
-
-      let src = this.treeIFrame.getAttribute("src");
-      if (src != INSPECTOR_URI) {
-        this.treeIFrame.setAttribute("src", INSPECTOR_URI);
-      } else {
-        this.treeIFrame.contentWindow.location.reload();
-      }
-    }.bind(this);
-
-    this.container.addEventListener("popupshown", boundTreePanelShown, false);
-
-    const panelWidthRatio = 7 / 8;
-    const panelHeightRatio = 1 / 5;
-
-    let width = parseInt(this.IUI.win.outerWidth * panelWidthRatio);
-    let height = parseInt(this.IUI.win.outerHeight * panelHeightRatio);
-    let y = Math.min(this.document.defaultView.screen.availHeight - height,
-      this.IUI.win.innerHeight);
-
-    this.container.openPopup(this.browser, "overlap", 0, 0,
-      false, false);
-
-    this.container.moveTo(80, y);
-    this.container.sizeTo(width, height);
-  },
-
-  openDocked: function TP_openDocked()
-  {
     let treeBox = null;
     treeBox = this.document.createElement("vbox");
     treeBox.id = "inspector-tree-box";
@@ -242,15 +170,16 @@ TreePanel.prototype = {
 
     treeBox.appendChild(this.treeIFrame);
 
-    let boundLoadedInitializeTreePanel = function loadedInitializeTreePanel()
+    this._boundLoadedInitializeTreePanel = function loadedInitializeTreePanel()
     {
       this.treeIFrame.removeEventListener("load",
-        boundLoadedInitializeTreePanel, true);
+        this._boundLoadedInitializeTreePanel, true);
+      delete this._boundLoadedInitializeTreePanel;
       this.initializeIFrame();
     }.bind(this);
 
     this.treeIFrame.addEventListener("load",
-      boundLoadedInitializeTreePanel, true);
+      this._boundLoadedInitializeTreePanel, true);
 
     let src = this.treeIFrame.getAttribute("src");
     if (src != INSPECTOR_URI) {
@@ -265,15 +194,21 @@ TreePanel.prototype = {
    */
   close: function TP_close()
   {
-    if (this.openInDock) {
-      let treeBox = this.container;
-      Services.prefs.setIntPref("devtools.inspector.htmlHeight", treeBox.height);
-      let treeBoxParent = treeBox.parentNode;
-      treeBoxParent.removeChild(this.splitter);
-      treeBoxParent.removeChild(treeBox);
-    } else {
-      this.container.hidePopup();
+    this._open = false;
+
+    // Stop caring about the tree iframe load if it's in progress.
+    if (this._boundLoadedInitializeTreePanel) {
+      this.treeIFrame.removeEventListener("load",
+        this._boundLoadedInitializeTreePanel, true);
+      delete this._boundLoadedInitializeTreePanel;
     }
+
+    this.button.removeAttribute("checked");
+    let treeBox = this.container;
+    Services.prefs.setIntPref("devtools.inspector.htmlHeight", treeBox.height);
+    let treeBoxParent = treeBox.parentNode;
+    treeBoxParent.removeChild(this.splitter);
+    treeBoxParent.removeChild(treeBox);
 
     if (this.treePanelDiv) {
       this.treePanelDiv.ownerPanel = null;
@@ -292,10 +227,15 @@ TreePanel.prototype = {
    */
   isOpen: function TP_isOpen()
   {
-    if (this.openInDock)
-      return this.treeLoaded && this.container;
+    return this._open;
+  },
 
-    return this.treeLoaded && this.container.state == "open";
+  /**
+   * Toggle the TreePanel.
+   */
+  toggle: function TP_toggle()
+  {
+    this.isOpen() ? this.close() : this.open();
   },
 
   /**
@@ -703,11 +643,6 @@ TreePanel.prototype = {
     if (this.ioBox) {
       this.ioBox.destroy();
       delete this.ioBox;
-    }
-
-    if (!this.openInDock) {
-      this.container.removeEventListener("popuphiding", this._boundClose, false);
-      delete this._boundClose;
     }
   }
 };

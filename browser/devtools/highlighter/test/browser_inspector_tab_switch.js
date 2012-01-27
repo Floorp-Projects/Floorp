@@ -136,7 +136,7 @@ function inspectorFocusTab1()
   Services.obs.addObserver(inspectorOpenTreePanelTab1,
     InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
 
-  InspectorUI.treePanel.open();
+  InspectorUI.toggleHTMLPanel();
 }
 
 function inspectorOpenTreePanelTab1()

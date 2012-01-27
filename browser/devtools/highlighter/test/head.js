@@ -41,6 +41,14 @@ let tempScope = {};
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
 
+// Clear preferences that may be set during the course of tests.
+function clearUserPrefs()
+{
+  Services.prefs.clearUserPref("devtools.inspector.htmlPanelOpen");
+}
+
+registerCleanupFunction(clearUserPrefs);
+
 function isHighlighting()
 {
   let veil = InspectorUI.highlighter.veilTransparentBox;

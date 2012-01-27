@@ -1028,6 +1028,7 @@ pref("devtools.errorconsole.enabled", false);
 // Enable the Inspector
 pref("devtools.inspector.enabled", true);
 pref("devtools.inspector.htmlHeight", 112);
+pref("devtools.inspector.htmlPanelOpen", false);
 
 // Enable the Debugger
 pref("devtools.debugger.enabled", false);
