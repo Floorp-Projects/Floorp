@@ -111,8 +111,8 @@ public class AboutHomeContent extends ScrollView {
         public void callback(String uriSpec);
     }
 
-    public AboutHomeContent(Context context, AttributeSet attrs) {
-        super(context, attrs);
+    public AboutHomeContent(Context context) {
+        super(context);
         setScrollContainer(true);
         setBackgroundResource(R.drawable.abouthome_bg_repeat);
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
