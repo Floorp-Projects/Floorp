@@ -117,7 +117,7 @@ abstract public class GeckoApp
     private RelativeLayout mGeckoLayout;
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
-    public static boolean mFullScreen = false;
+    public static boolean mDOMFullScreen = false;
     public static File sGREDir = null;
     public static Menu sMenu;
     private static GeckoThread sGeckoThread = null;
@@ -595,7 +595,8 @@ abstract public class GeckoApp
     }
 
     void getAndProcessThumbnailForTab(final Tab tab) {
-        final Bitmap bitmap = Tabs.getInstance().isSelectedTab(tab) ?
+        boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
+        final Bitmap bitmap = isSelectedTab ?
             mSoftwareLayerClient.getBitmap() : null;
         
         if (bitmap != null) {
@@ -604,11 +605,29 @@ abstract public class GeckoApp
             processThumbnail(tab, bitmap, bos.toByteArray());
         } else {
             mLastScreen = null;
-            GeckoAppShell.sendEventToGecko(
-                new GeckoEvent("Tab:Screenshot", 
-                               "{\"width\": \"" + mSoftwareLayerClient.getWidth() + "\", " +
-                               "\"height\": \"" + mSoftwareLayerClient.getHeight() + "\", " +
-                               "\"tabID\": \"" + tab.getId() + "\" }"));
+            int sw = isSelectedTab ? mSoftwareLayerClient.getWidth() : tab.getMinScreenshotWidth();
+            int sh = isSelectedTab ? mSoftwareLayerClient.getHeight(): tab.getMinScreenshotHeight();
+            int dw = isSelectedTab ? sw : tab.getThumbnailWidth();
+            int dh = isSelectedTab ? sh : tab.getThumbnailHeight();
+            try {
+                JSONObject message = new JSONObject();
+                message.put("tabID", tab.getId());
+
+                JSONObject source = new JSONObject();
+                source.put("width", sw);
+                source.put("height", sh);
+                message.put("source", source);
+
+                JSONObject destination = new JSONObject();
+                source.put("width", dw);
+                source.put("height", dh);
+                message.put("destination", destination);
+
+                String json = message.toString();
+                GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Screenshot", json));
+            } catch(JSONException jsonEx) {
+                Log.w(LOGTAG, "Constructing the JSON data for Tab:Screenshot event failed", jsonEx);
+            }
         }
     }
     
@@ -975,6 +994,10 @@ abstract public class GeckoApp
                         mBrowserToolbar.setVisibility(View.VISIBLE);
                     }
                 });
+            } else if (event.equals("DOMFullScreen:Start")) {
+                mDOMFullScreen = true;
+            } else if (event.equals("DOMFullScreen:Stop")) {
+                mDOMFullScreen = false;
             } else if (event.equals("FormAssist:AutoComplete")) {
                 final JSONArray suggestions = message.getJSONArray("suggestions");
                 if (suggestions.length() == 0) {
@@ -1079,8 +1102,8 @@ abstract public class GeckoApp
         public void run() {
             mAutoCompletePopup.hide();
             if (mAboutHomeContent == null && mShow) {
-                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext, null);
-                mAboutHomeContent.init(GeckoApp.mAppContext);
+                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext);
+                mAboutHomeContent.update(GeckoApp.mAppContext, AboutHomeContent.UpdateFlags.ALL);
                 mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                     public void callback(String url) {
                         mBrowserToolbar.setProgressVisibility(true);
@@ -1091,7 +1114,11 @@ abstract public class GeckoApp
                     new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, 
                                                     LayoutParams.FILL_PARENT);
                 mGeckoLayout.addView(mAboutHomeContent, lp);
+            } else if (mAboutHomeContent != null && mShow) {
+                mAboutHomeContent.update(GeckoApp.mAppContext,
+                                         EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
             }
+
             if (mAboutHomeContent != null)
                 mAboutHomeContent.setVisibility(mShow ? View.VISIBLE : View.GONE);
         }
@@ -1415,7 +1442,6 @@ abstract public class GeckoApp
     }
 
     public void setFullScreen(final boolean fullscreen) {
-        mFullScreen = fullscreen;
         mMainHandler.post(new Runnable() { 
             public void run() {
                 // Hide/show the system notification bar
@@ -1606,6 +1632,8 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Start", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
@@ -2218,7 +2246,7 @@ abstract public class GeckoApp
             return;
         }
 
-        if (mFullScreen) {
+        if (mDOMFullScreen) {
             GeckoAppShell.sendEventToGecko(new GeckoEvent("FullScreen:Exit", null));
             return;
         }

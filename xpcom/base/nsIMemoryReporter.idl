@@ -345,11 +345,8 @@ namespace mozilla {
 
 /*
  * Functions generated via this macro should be used by all traversal-based
- * memory reporters.  Such functions return moz_malloc_usable_size(ptr),
- * which will be 0 on obscure platforms that don't implement
- * malloc_usable_size() or an equivalent.
- *
- * XXX: bug 715453 will remove the unused |computedSize| argument.
+ * memory reporters.  Such functions return |moz_malloc_size_of(ptr)|;  this
+ * will always be zero on some obscure platforms.
  *
  * You might be wondering why we have a macro that creates multiple functions
  * distinguished only by |name|, instead of a single MemoryReporterMallocSizeOf
@@ -359,9 +356,9 @@ namespace mozilla {
  * the relevant memory reporter(s).
  */
 #define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(fn, name)                        \
-  size_t fn(const void *ptr, size_t computedSize)                             \
+  size_t fn(const void *ptr)                                                  \
   {                                                                           \
-      size_t usable = moz_malloc_usable_size((void*)ptr);                     \
+      size_t usable = moz_malloc_size_of(ptr);                                \
       VALGRIND_DMD_REPORT(ptr, usable, name);                                 \
       return usable;                                                          \
   }
@@ -371,9 +368,9 @@ namespace mozilla {
  * "unreport" message to DMD.
  */
 #define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN_UN(fn)                           \
-  size_t fn(const void *ptr, size_t computedSize)                             \
+  size_t fn(const void *ptr)                                                  \
   {                                                                           \
-      size_t usable = moz_malloc_usable_size((void*)ptr);                     \
+      size_t usable = moz_malloc_size_of(ptr);                                \
       VALGRIND_DMD_UNREPORT(ptr);                                             \
       return usable;                                                          \
   }

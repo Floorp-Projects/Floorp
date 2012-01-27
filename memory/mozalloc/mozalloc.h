@@ -135,7 +135,7 @@ MOZALLOC_EXPORT char* moz_strdup(const char* str)
 
 MOZALLOC_EXPORT size_t moz_malloc_usable_size(void *ptr);
 
-MOZALLOC_EXPORT size_t moz_malloc_size_of(const void *ptr, size_t computedSize);
+MOZALLOC_EXPORT size_t moz_malloc_size_of(const void *ptr);
 
 #if defined(HAVE_STRNDUP)
 MOZALLOC_EXPORT char* moz_xstrndup(const char* str, size_t strsize)

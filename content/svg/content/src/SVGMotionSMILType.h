@@ -40,12 +40,11 @@
 #ifndef MOZILLA_SVGMOTIONSMILTYPE_H_
 #define MOZILLA_SVGMOTIONSMILTYPE_H_
 
-#include "nsISMILType.h"
 #include "gfxMatrix.h"
-#include "nsTArray.h"
-class nsSVGPathElement;
-class nsSMILValue;
+#include "nsISMILType.h"
+
 class gfxFlattenedPath;
+class nsSMILValue;
 
 namespace mozilla {
 

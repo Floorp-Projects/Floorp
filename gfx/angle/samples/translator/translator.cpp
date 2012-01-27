@@ -301,6 +301,7 @@ void PrintActiveVariables(ShHandle compiler, ShShaderInfo varType, bool mapLongV
             case SH_FLOAT_MAT4: typeName = "GL_FLOAT_MAT4"; break;
             case SH_SAMPLER_2D: typeName = "GL_SAMPLER_2D"; break;
             case SH_SAMPLER_CUBE: typeName = "GL_SAMPLER_CUBE"; break;
+            case SH_SAMPLER_EXTERNAL_OES: typeName = "GL_SAMPLER_EXTERNAL_OES"; break;
             default: assert(0);
         }
         printf("%d: name:%s type:%s size:%d", i, name, typeName, size);

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Style-Type" content="text/css">
+        <title>Test for consistent kerning, bug 716402</title>
+        <style type="text/css">
+          @font-face {
+            font-family: mplus;
+            src: url(../fonts/mplus/mplus-1p-regular-no-OT.ttf);
+            /* a copy of M+ with OpenType tables removed,
+               so only legacy 'kern' is present */
+          }
+          body {
+             text-rendering: optimizeLegibility;
+             font-family: mplus;
+             font-size: 15px;
+             background: white;
+             color: black;
+          }
+          .right {
+             text-align: right;
+          }
+        </style>
+</head>
+<body>
+  <div>
+    AVAV
+  </div>
+  <div class="right">
+    AVAV
+  </div>
+</body>

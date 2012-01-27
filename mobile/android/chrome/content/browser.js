@@ -235,8 +235,16 @@ var BrowserApp = {
           type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
         }
       });
+    }, false);
 
-      if (!window.fullScreen)
+    window.addEventListener("mozfullscreenchange", function() {
+      sendMessageToJava({
+        gecko: {
+          type: document.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
+        }
+      });
+
+      if (document.mozFullScreen)
         showFullScreenWarning();
     }, false);
 
@@ -531,9 +539,7 @@ var BrowserApp = {
   doScreenshotTab: function doScreenshotTab(aData) {
       let json = JSON.parse(aData);
       let tab = this.getTabForId(parseInt(json.tabID));
-      let width = parseInt(json.width);
-      let height =  parseInt(json.height);
-      tab.screenshot(width, height);
+      tab.screenshot(json.source, json.destination);
   },
 
   // Use this method to select a tab from JS. This method sends a message
@@ -806,7 +812,7 @@ var BrowserApp = {
 
       // tell gecko to scroll the field into view. this will scroll any nested scrollable elements
       // as well as the browser's content window, and modify the scrollX and scrollY on the content window.
-      focused.scrollIntoView(true);
+      focused.scrollIntoView(false);
 
       // update userScrollPos so that we don't send a duplicate viewport update by triggering
       // our scroll listener
@@ -1565,20 +1571,20 @@ Tab.prototype = {
       this.updateTransform();
   },
 
-  screenshot: function(aWidth, aHeight) {
+  screenshot: function(aSrc, aDst) {
       if (!this.browser || !this.browser.contentWindow)
           return;
       let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      canvas.setAttribute("width", aWidth);  
-      canvas.setAttribute("height", aHeight);
+      canvas.setAttribute("width", aDst.width);  
+      canvas.setAttribute("height", aDst.height);
       let ctx = canvas.getContext("2d");
-      ctx.drawWindow(this.browser.contentWindow, 0, 0, aWidth, aHeight, "rgb(255, 255, 255)");
+      ctx.drawWindow(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, "rgb(255, 255, 255)");
       let message = {
         gecko: {
           type: "Tab:ScreenshotData",
           tabID: this.id,
-          width: aWidth,
-          height: aHeight,
+          width: aDst.width,
+          height: aDst.height,
           data: canvas.toDataURL()
         }
       };
@@ -1616,10 +1622,20 @@ Tab.prototype = {
     let doc = this.browser.contentDocument;
     if (doc != null) {
       let pageWidth = this._viewport.width, pageHeight = this._viewport.height;
-      let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-      let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-      pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
-      pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
+      if (doc instanceof SVGDocument) {
+        let rect = doc.rootElement.getBoundingClientRect();
+        // we need to add rect.left and rect.top twice so that the SVG is drawn
+        // centered on the page; if we add it only once then the SVG will be
+        // on the bottom-right of the page and if we don't add it at all then
+        // we end up with a cropped SVG (see bug 712065)
+        pageWidth = Math.ceil(rect.left + rect.width + rect.left);
+        pageHeight = Math.ceil(rect.top + rect.height + rect.top);
+      } else {
+        let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+        let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+        pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
+        pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
+      }
 
       /* Transform the page width and height based on the zoom factor. */
       pageWidth *= this._viewport.zoom;

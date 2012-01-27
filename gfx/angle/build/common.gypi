@@ -8,6 +8,18 @@
   },
   'target_defaults': {
     'default_configuration': 'Debug',
+    'variables': {
+      'warn_as_error%': 1,
+    },
+    'target_conditions': [
+      ['warn_as_error == 1', {
+        'msvs_settings': {
+          'VCCLCompilerTool': {
+            'WarnAsError': 'true',
+          },
+        },
+      }],
+    ],
     'configurations': {
       'Common': {
         'abstract': 1,
