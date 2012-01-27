@@ -531,7 +531,8 @@
               <menu id="webDeveloperMenu"
                     label="&webDeveloperMenu.label;"
                     accesskey="&webDeveloperMenu.accesskey;">
-                <menupopup id="menuWebDeveloperPopup">
+                <menupopup id="menuWebDeveloperPopup"
+                           onpopupshowing="onWebDeveloperMenuShowing();">
                   <menuitem id="webConsole"
                             type="checkbox"
                             label="&webConsoleCmd.label;"

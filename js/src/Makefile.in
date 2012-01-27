@@ -130,7 +130,6 @@ CPPSRCS		= \
 		jsinfer.cpp \
 		jsinterp.cpp \
 		jsiter.cpp \
-		jslock.cpp \
 		jslog2.cpp \
 		jsmath.cpp \
 		jsnativestack.cpp \
@@ -619,7 +618,7 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 59 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 58 \
 		"in Makefile.in" "{cx,rt}->{new_,array_new,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
 	$(srcdir)/config/check_source_count.py UnwantedForeground:: 31 \
@@ -700,10 +699,6 @@ DEFINES		+= -DJS_HAS_CTYPES
 DEFINES         += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 endif
 
-ifdef JS_NO_THIN_LOCKS
-DEFINES		+= -DJS_USE_ONLY_NSPR_LOCKS
-endif
-
 ifdef JS_VERSION
 DEFINES		+= -DJS_VERSION=$(JS_VERSION)
 endif
@@ -780,20 +775,6 @@ else
 EXTRA_LIBS	+= -lposix4 -ldl -lnsl -lsocket
 endif
 endif
-
-ifdef SOLARIS_SUNPRO_CXX
-ifeq ($(TARGET_CPU),sparc)
-# Sun Studio SPARC doesn't work well with gcc inline asm, use lock_SunOS_sparc*.il
-jslock.o: jslock.cpp Makefile.in lock_sparcv8plus.il lock_sparcv9.il
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
-ifeq (sparcv9,$(findstring sparcv9,$(OS_TEST)))
-	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv9.il $<
-else
-	$(CXX) -o $@ -c $(COMPILE_CFLAGS) $(srcdir)/lock_sparcv8plus.il $<
-endif # sparcv9
-endif # sparc
-endif # SOLARIS_SUNPRO_CXX
 
 # An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.

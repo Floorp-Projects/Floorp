@@ -114,7 +114,7 @@ class BumpChunk
 
     size_t used() const { return bump - bumpBase(); }
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) {
-        return mallocSizeOf(this, limit - headerBase());
+        return mallocSizeOf(this);
     }
 
     void resetBump() {
@@ -134,7 +134,6 @@ class BumpChunk
     }
 
     bool canAlloc(size_t n);
-    bool canAllocUnaligned(size_t n);
 
     /* Try to perform an allocation of size |n|, return null if not possible. */
     JS_ALWAYS_INLINE
@@ -153,8 +152,6 @@ class BumpChunk
         setBump(newBump);
         return aligned;
     }
-
-    void *tryAllocUnaligned(size_t n);
 
     void *allocInfallible(size_t n) {
         void *result = tryAlloc(n);
@@ -308,8 +305,7 @@ class LifoAlloc
 
     /* Like sizeOfExcludingThis(), but includes the size of the LifoAlloc itself. */
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        return mallocSizeOf(this, sizeof(LifoAlloc)) +
-               sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
 
     /* Doesn't perform construction; useful for lazily-initialized POD types. */
@@ -320,11 +316,6 @@ class LifoAlloc
     }
 
     JS_DECLARE_NEW_METHODS(alloc, JS_ALWAYS_INLINE)
-
-    /* Some legacy clients (ab)use LifoAlloc to act like a vector, see bug 688891. */
-
-    void *allocUnaligned(size_t n);
-    void *reallocUnaligned(void *origPtr, size_t origSize, size_t incr);
 };
 
 class LifoAllocScope

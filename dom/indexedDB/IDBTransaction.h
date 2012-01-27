@@ -41,8 +41,6 @@
 #define mozilla_dom_indexeddb_idbtransaction_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
-#include "mozilla/dom/indexedDB/IDBDatabase.h"
-#include "mozilla/dom/indexedDB/FileInfo.h"
 
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
@@ -51,13 +49,14 @@
 #include "nsIRunnable.h"
 #include "nsIThreadInternal.h"
 
-#include "nsDOMEventTargetHelper.h"
-#include "nsCycleCollectionParticipant.h"
-
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
+
+#include "mozilla/dom/indexedDB/IDBDatabase.h"
+#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
+#include "mozilla/dom/indexedDB/FileInfo.h"
 
 class nsIThread;
 
@@ -78,7 +77,7 @@ public:
   virtual nsresult NotifyTransactionComplete(IDBTransaction* aTransaction) = 0;
 };
 
-class IDBTransaction : public nsDOMEventTargetHelper,
+class IDBTransaction : public IDBWrapperCache,
                        public nsIIDBTransaction,
                        public nsIThreadObserver
 {
@@ -92,8 +91,7 @@ public:
   NS_DECL_NSIIDBTRANSACTION
   NS_DECL_NSITHREADOBSERVER
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction,
-                                           nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, IDBWrapperCache)
 
   static already_AddRefed<IDBTransaction>
   Create(IDBDatabase* aDatabase,
@@ -180,9 +178,9 @@ private:
   PRUint32 mCreatedRecursionDepth;
 
   // Only touched on the main thread.
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnCompleteListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
+  NS_DECL_EVENT_HANDLER(error);
+  NS_DECL_EVENT_HANDLER(complete);
+  NS_DECL_EVENT_HANDLER(abort);
 
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;

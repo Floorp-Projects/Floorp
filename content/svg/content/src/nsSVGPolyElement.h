@@ -37,8 +37,8 @@
 #ifndef NS_SVGPOLYELEMENT_H_
 #define NS_SVGPOLYELEMENT_H_
 
-#include "nsSVGPathGeometryElement.h"
 #include "nsIDOMSVGAnimatedPoints.h"
+#include "nsSVGPathGeometryElement.h"
 #include "SVGAnimatedPointList.h"
 
 typedef nsSVGPathGeometryElement nsSVGPolyElementBase;

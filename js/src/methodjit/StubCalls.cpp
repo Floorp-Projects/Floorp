@@ -210,17 +210,6 @@ stubs::GetElem(VMFrame &f)
 #endif
 }
 
-static inline bool
-FetchElementId(VMFrame &f, JSObject *obj, const Value &idval, jsid &id, Value *vp)
-{
-    int32_t i_;
-    if (ValueFitsInInt32(idval, &i_) && INT_FITS_IN_JSID(i_)) {
-        id = INT_TO_JSID(i_);
-        return true;
-    }
-    return !!js_InternNonIntElementId(f.cx, obj, idval, &id, vp);
-}
-
 template<JSBool strict>
 void JS_FASTCALL
 stubs::SetElem(VMFrame &f)
@@ -239,7 +228,7 @@ stubs::SetElem(VMFrame &f)
     if (!obj)
         THROW();
 
-    if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
         THROW();
 
     TypeScript::MonitorAssign(cx, f.script(), f.pc(), obj, id, rval);
@@ -287,7 +276,7 @@ stubs::ToId(VMFrame &f)
         THROW();
 
     jsid id;
-    if (!FetchElementId(f, obj, idval, id, &idval))
+    if (!FetchElementId(f.cx, obj, idval, id, &idval))
         THROW();
 
     if (!idval.isInt32())
@@ -536,7 +525,7 @@ template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
             double l, r;                                                      \
             if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))           \
                 THROWV(JS_FALSE);                                             \
-            cond = JSDOUBLE_COMPARE(l, OP, r, false);                         \
+            cond = (l OP r);                                                  \
         }                                                                     \
         regs.sp[-2].setBoolean(cond);                                         \
         return cond;                                                          \
@@ -579,7 +568,7 @@ stubs::Not(VMFrame &f)
     f.regs.sp[-1].setBoolean(b);
 }
 
-template <JSBool EQ, bool IFNAN>
+template <bool EQ>
 static inline bool
 StubEqualityOp(VMFrame &f)
 {
@@ -589,23 +578,25 @@ StubEqualityOp(VMFrame &f)
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
 
-    JSBool cond;
+    bool cond;
 
     /* The string==string case is easily the hottest;  try it first. */
     if (lval.isString() && rval.isString()) {
         JSString *l = lval.toString();
         JSString *r = rval.toString();
-        JSBool equal;
+        bool equal;
         if (!EqualStrings(cx, l, r, &equal))
             return false;
         cond = equal == EQ;
     } else
 #if JS_HAS_XML_SUPPORT
     if ((lval.isObject() && lval.toObject().isXML()) ||
-        (rval.isObject() && rval.toObject().isXML())) {
-        if (!js_TestXMLEquality(cx, lval, rval, &cond))
+        (rval.isObject() && rval.toObject().isXML()))
+    {
+        JSBool equal;
+        if (!js_TestXMLEquality(cx, lval, rval, &equal))
             return false;
-        cond = cond == EQ;
+        cond = !!equal == EQ;
     } else
 #endif
 
@@ -615,15 +606,16 @@ StubEqualityOp(VMFrame &f)
             double l = lval.toDouble();
             double r = rval.toDouble();
             if (EQ)
-                cond = JSDOUBLE_COMPARE(l, ==, r, IFNAN);
+                cond = (l == r);
             else
-                cond = JSDOUBLE_COMPARE(l, !=, r, IFNAN);
+                cond = (l != r);
         } else if (lval.isObject()) {
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
-                if (!eq(cx, l, &rval, &cond))
+                JSBool equal;
+                if (!eq(cx, l, &rval, &equal))
                     return false;
-                cond = cond == EQ;
+                cond = !!equal == EQ;
             } else {
                 cond = (l == r) == EQ;
             }
@@ -650,7 +642,7 @@ StubEqualityOp(VMFrame &f)
             if (lval.isString() && rval.isString()) {
                 JSString *l = lval.toString();
                 JSString *r = rval.toString();
-                JSBool equal;
+                bool equal;
                 if (!EqualStrings(cx, l, r, &equal))
                     return false;
                 cond = equal == EQ;
@@ -660,9 +652,9 @@ StubEqualityOp(VMFrame &f)
                     return false;
 
                 if (EQ)
-                    cond = JSDOUBLE_COMPARE(l, ==, r, false);
+                    cond = (l == r);
                 else
-                    cond = JSDOUBLE_COMPARE(l, !=, r, true);
+                    cond = (l != r);
             }
         }
     }
@@ -674,7 +666,7 @@ StubEqualityOp(VMFrame &f)
 JSBool JS_FASTCALL
 stubs::Equal(VMFrame &f)
 {
-    if (!StubEqualityOp<JS_TRUE, false>(f))
+    if (!StubEqualityOp<true>(f))
         THROWV(JS_FALSE);
     return f.regs.sp[-2].toBoolean();
 }
@@ -682,7 +674,7 @@ stubs::Equal(VMFrame &f)
 JSBool JS_FASTCALL
 stubs::NotEqual(VMFrame &f)
 {
-    if (!StubEqualityOp<JS_FALSE, true>(f))
+    if (!StubEqualityOp<false>(f))
         THROWV(JS_FALSE);
     return f.regs.sp[-2].toBoolean();
 }
@@ -896,23 +888,8 @@ void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
     ExpandInlineFrames(f.cx->compartment);
-    Recompiler::clearStackReferences(f.cx, f.script());
-
-    bool releaseChunk = true;
-    if (f.jit()->nchunks > 1) {
-        StackFrame *fp = f.fp();
-        for (FrameRegsIter i(f.cx); !i.done(); ++i) {
-            StackFrame *xfp = i.fp();
-            if (xfp->script() == fp->script() && xfp != fp) {
-                mjit::ReleaseScriptCode(f.cx, fp->script());
-                releaseChunk = false;
-                break;
-            }
-        }
-    }
-
-    if (releaseChunk)
-        f.jit()->destroyChunk(f.cx, f.chunkIndex(), /* resetUses = */ false);
+    Recompiler::clearStackReferencesAndChunk(f.cx, f.script(), f.jit(), f.chunkIndex(),
+                                             /* resetUses = */ false);
 }
 
 void JS_FASTCALL
@@ -1047,7 +1024,7 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     /* Fetch id now that we have obj. */
     jsid id;
     const Value &idval = regs.sp[-2];
-    if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
         THROW();
 
     /*
@@ -1345,7 +1322,7 @@ stubs::StrictEq(VMFrame &f)
 {
     const Value &rhs = f.regs.sp[-1];
     const Value &lhs = f.regs.sp[-2];
-    JSBool equal;
+    bool equal;
     if (!StrictlyEqual(f.cx, lhs, rhs, &equal))
         THROW();
     f.regs.sp--;
@@ -1357,7 +1334,7 @@ stubs::StrictNe(VMFrame &f)
 {
     const Value &rhs = f.regs.sp[-1];
     const Value &lhs = f.regs.sp[-2];
-    JSBool equal;
+    bool equal;
     if (!StrictlyEqual(f.cx, lhs, rhs, &equal))
         THROW();
     f.regs.sp--;
@@ -1501,13 +1478,18 @@ FindNativeCode(VMFrame &f, jsbytecode *target)
     if (native)
         return native;
 
-    CompileStatus status = CanMethodJIT(f.cx, f.script(), target, f.fp()->isConstructing(),
-                                        CompileRequest_Interpreter);
-    if (status == Compile_Error)
-        THROWV(NULL);
+    uint32_t sourceOffset = f.pc() - f.script()->code;
+    uint32_t targetOffset = target - f.script()->code;
 
-    mjit::ClearAllFrames(f.cx->compartment);
-    return target;
+    CrossChunkEdge *edges = f.jit()->edges();
+    for (size_t i = 0; i < f.jit()->nedges; i++) {
+        const CrossChunkEdge &edge = edges[i];
+        if (edge.source == sourceOffset && edge.target == targetOffset)
+            return edge.shimLabel;
+    }
+
+    JS_NOT_REACHED("Missing edge");
+    return NULL;
 }
 
 void * JS_FASTCALL
@@ -1754,7 +1736,7 @@ stubs::In(VMFrame &f)
 
     JSObject *obj = &rref.toObject();
     jsid id;
-    if (!FetchElementId(f, obj, f.regs.sp[-2], id, &f.regs.sp[-2]))
+    if (!FetchElementId(f.cx, obj, f.regs.sp[-2], id, &f.regs.sp[-2]))
         THROWV(JS_FALSE);
 
     JSObject *obj2;
@@ -1915,7 +1897,7 @@ stubs::Exception(VMFrame &f)
 {
     // Check the interrupt flag to allow interrupting deeply nested exception
     // handling.
-    if (JS_THREAD_DATA(f.cx)->interruptFlags && !js_HandleExecutionInterrupt(f.cx))
+    if (f.cx->runtime->interrupt && !js_HandleExecutionInterrupt(f.cx))
         THROW();
 
     f.regs.sp[0] = f.cx->getPendingException();

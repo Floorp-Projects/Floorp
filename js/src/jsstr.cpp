@@ -54,7 +54,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jshash.h"
 #include "jsprf.h"
@@ -3378,7 +3377,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
 namespace js {
 
 bool
-EqualStrings(JSContext *cx, JSString *str1, JSString *str2, JSBool *result)
+EqualStrings(JSContext *cx, JSString *str1, JSString *str2, bool *result)
 {
     if (str1 == str2) {
         *result = true;
@@ -3430,25 +3429,15 @@ CompareStringsImpl(JSContext *cx, JSString *str1, JSString *str2, int32_t *resul
         return true;
     }
 
-    size_t l1 = str1->length();
     const jschar *s1 = str1->getChars(cx);
     if (!s1)
         return false;
 
-    size_t l2 = str2->length();
     const jschar *s2 = str2->getChars(cx);
     if (!s2)
         return false;
 
-    size_t n = JS_MIN(l1, l2);
-    for (size_t i = 0; i < n; i++) {
-        if (int32_t cmp = s1[i] - s2[i]) {
-            *result = cmp;
-            return true;
-        }
-    }
-    *result = (int32_t)(l1 - l2);
-    return true;
+    return CompareChars(s1, str1->length(), s2, str2->length(), result);
 }
 
 bool

@@ -1,13 +1,14 @@
   <string name="sync_app_name">&sync.app.name.label;</string>
-  <string name="sync_title_connect">&sync.title.connect.label;</string>
+  <string name="sync_title_connect">&sync.title.adddevice.label;</string>
   <string name="sync_title_pair">&sync.title.pair.label;</string>
 
   <!-- J-PAKE PIN Screen -->
-  <string name="sync_subtitle_connect">&sync.subtitle.connect.label;</string>
+  <string name="sync_subtitle_header">&sync.subtitle.header.label;</string>
+  <string name="sync_subtitle_connect">&sync.subtitle.connectlocation.label;</string>
   <string name="sync_subtitle_pair">&sync.subtitle.pair.label;</string>
-  <string name="sync_pin_default">&sync.pin.default.label;</string>
-  <string name="sync_link_show">&sync.link.show.label;</string>
-  <string name="sync_link_nodevice">&sync.link.nodevice.label;</string>
+  <string name="sync_pin_default">&sync.pin.oneline.label;</string>
+  <string name="sync_link_show"><u>&sync.link.show.label;</u></string>
+  <string name="sync_link_advancedsetup"><u>&sync.link.advancedsetup.label;</u></string>
 
   <!-- J-PAKE Waiting Screen -->
   

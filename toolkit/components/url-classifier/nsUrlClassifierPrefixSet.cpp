@@ -350,7 +350,7 @@ nsUrlClassifierPrefixSet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
   MutexAutoLock lock(mPrefixSetLock);
   size_t n = 0;
-  n += aMallocSizeOf(this, sizeof(nsUrlClassifierPrefixSet));
+  n += aMallocSizeOf(this);
   n += mDeltas.SizeOfExcludingThis(aMallocSizeOf);
   n += mIndexPrefixes.SizeOfExcludingThis(aMallocSizeOf);
   n += mIndexStarts.SizeOfExcludingThis(aMallocSizeOf);

@@ -182,6 +182,7 @@ public class BrowserProvider extends ContentProvider {
 
         // Images
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images", IMAGES);
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images/#", IMAGES_ID);
 
         map = IMAGES_PROJECTION_MAP;
         map.put(Images._ID, Images._ID);
@@ -383,8 +384,25 @@ public class BrowserProvider extends ContentProvider {
 
             // From Honeycomb on, it's possible to run several db
             // commands in parallel using multiple connections.
-            if (Build.VERSION.SDK_INT >= 11)
+            if (Build.VERSION.SDK_INT >= 11) {
                 db.enableWriteAheadLogging();
+            } else {
+                // Pre-Honeycomb, we can do some lesser optimizations.
+                Cursor cursor = null;
+                try {
+                    cursor = db.rawQuery("PRAGMA synchronous=NORMAL", null);
+                } finally {
+                    if (cursor != null)
+                        cursor.close();
+                }
+                cursor = null;
+                try {
+                    cursor = db.rawQuery("PRAGMA journal_mode=PERSIST", null);
+                } finally {
+                    if (cursor != null)
+                        cursor.close();
+                }
+            }
         }
     }
 

@@ -7,16 +7,17 @@
         <org.mozilla.gecko.LinkPreference android:title="@string/pref_about_firefox"
                                           url="about:" />
 
-        <!-- TODO: Default Search Engine -->
-
-        <!-- TODO: Sync -->
+        <org.mozilla.gecko.SyncPreference android:title="@string/pref_sync"
+                                          android:persistent="false" />
 
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_content">
 
-        <CheckBoxPreference android:key="browser.menu.showCharacterEncoding"
+        <ListPreference     android:key="browser.menu.showCharacterEncoding"
                             android:title="@string/pref_char_encoding"
+                            android:entries="@array/pref_char_encoding_entries"
+                            android:entryValues="@array/pref_char_encoding_values"
                             android:persistent="false" />
 
         <ListPreference     android:key="plugin.enable"

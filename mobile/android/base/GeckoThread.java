@@ -106,12 +106,7 @@ public class GeckoThread extends Thread {
                                    mUri,
                                    mRestoreSession);
         } catch (Exception e) {
-            Log.e(LOGTAG, "top level exception", e);
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            pw.flush();
-            GeckoAppShell.reportJavaCrash(sw.toString());
+            GeckoAppShell.reportJavaCrash(e);
         }
     }
 }

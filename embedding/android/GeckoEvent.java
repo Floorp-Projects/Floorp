@@ -46,6 +46,7 @@ import android.widget.*;
 import android.hardware.*;
 import android.location.*;
 import android.util.FloatMath;
+import android.util.DisplayMetrics;
 
 import android.util.Log;
 
@@ -76,9 +77,8 @@ public class GeckoEvent {
     public static final int SAVE_STATE = 18;
     public static final int BROADCAST = 19;
     public static final int VIEWPORT = 20;
-    public static final int TILE_SIZE = 21;
-    public static final int VISTITED = 22;
-    public static final int NETWORK_CHANGED = 23;
+    public static final int VISTITED = 21;
+    public static final int NETWORK_CHANGED = 22;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -102,7 +102,12 @@ public class GeckoEvent {
     public int mType;
     public int mAction;
     public long mTime;
-    public Point mP0, mP1;
+    public Point[] mPoints;
+    public int[] mPointIndicies;
+    public int mPointerIndex;
+    public float[] mOrientations;
+    public float[] mPressures;
+    public Point[] mPointRadii;
     public Rect mRect;
     public double mX, mY, mZ;
     public double mAlpha, mBeta, mGamma;
@@ -145,10 +150,76 @@ public class GeckoEvent {
         mAction = m.getAction();
         mTime = m.getEventTime();
         mMetaState = m.getMetaState();
-        mP0 = new Point((int)m.getX(0), (int)m.getY(0));
-        mCount = m.getPointerCount();
-        if (mCount > 1)
-            mP1 = new Point((int)m.getX(1), (int)m.getY(1));
+
+        switch (mAction & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP:
+            case MotionEvent.ACTION_POINTER_DOWN:
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_MOVE: {
+                mCount = m.getPointerCount();
+                mPoints = new Point[mCount];
+                mPointIndicies = new int[mCount];
+                mOrientations = new float[mCount];
+                mPressures = new float[mCount];
+                mPointRadii = new Point[mCount];
+                mPointerIndex = (mAction & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                for (int i = 0; i < mCount; i++) {
+                    addMotionPoint(i, i, m);
+                }
+                break;
+            }
+            default: {
+                mCount = 0;
+                mPointerIndex = -1;
+                mPoints = new Point[mCount];
+                mPointIndicies = new int[mCount];
+                mOrientations = new float[mCount];
+                mPressures = new float[mCount];
+                mPointRadii = new Point[mCount];
+            }
+        }
+    }
+
+    public void addMotionPoint(int index, int eventIndex, MotionEvent event) {
+        PointF geckoPoint = new PointF(event.getX(eventIndex), event.getY(eventIndex));
+    
+        mPoints[index] = new Point((int)Math.round(geckoPoint.x), (int)Math.round(geckoPoint.y));
+        mPointIndicies[index] = event.getPointerId(eventIndex);
+        // getToolMajor, getToolMinor and getOrientation are API Level 9 features
+        if (Build.VERSION.SDK_INT >= 9) {
+            double radians = event.getOrientation(eventIndex);
+            mOrientations[index] = (float) Math.toDegrees(radians);
+            // w3c touchevents spec does not allow orientations == 90
+            // this shifts it to -90, which will be shifted to zero below
+            if (mOrientations[index] == 90)
+                mOrientations[index] = -90;
+
+            // w3c touchevent radius are given by an orientation between 0 and 90
+            // the radius is found by removing the orientation and measuring the x and y
+            // radius of the resulting ellipse
+            // for android orientations >= 0 and < 90, the major axis should correspond to
+            // just reporting the y radius as the major one, and x as minor
+            // however, for a radius < 0, we have to shift the orientation by adding 90, and
+            // reverse which radius is major and minor
+            if (mOrientations[index] < 0) {
+                mOrientations[index] += 90;
+                mPointRadii[index] = new Point((int)event.getToolMajor(eventIndex)/2,
+                                               (int)event.getToolMinor(eventIndex)/2);
+            } else {
+                mPointRadii[index] = new Point((int)event.getToolMinor(eventIndex)/2,
+                                               (int)event.getToolMajor(eventIndex)/2);
+            }
+        } else {
+            float size = event.getSize(eventIndex);
+            DisplayMetrics displaymetrics = new DisplayMetrics();
+            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+            size = size*Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
+            mPointRadii[index] = new Point((int)size,(int)size);
+            mOrientations[index] = 0;
+        }
+        mPressures[index] = event.getPressure(eventIndex);
     }
 
     public GeckoEvent(SensorEvent s) {
@@ -228,8 +299,10 @@ public class GeckoEvent {
 
         mType = etype;
 
-        mP0 = new Point(w, h);
-        mP1 = new Point(screenw, screenh);
+        mPoints = new Point[3];
+        mPoints[0] = new Point(w, h);
+        mPoints[1] = new Point(screenw, screenh);
+        mPoints[2] = new Point(0, 0);
     }
 
     public GeckoEvent(String subject, String data) {

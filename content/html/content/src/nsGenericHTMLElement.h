@@ -542,6 +542,32 @@ public:
     return HasAttr(kNameSpaceID_None, nsGkAtoms::hidden);
   }
 
+  /**
+   * Shared cross-origin resource sharing attributes so they don't get
+   * duplicated on every CORS-enabled element
+   */
+
+  enum CORSMode {
+    /**
+     * The default of not using CORS to validate cross-origin loads.
+     */
+    CORS_NONE,
+
+    /**
+     * Validate cross-site loads using CORS, but do not send any credentials
+     * (cookies, HTTP auth logins, etc) along with the request.
+     */
+    CORS_ANONYMOUS,
+
+    /**
+     * Validate cross-site loads using CORS, and send credentials such as cookies
+     * and HTTP auth logins along with the request.
+     */
+    CORS_USE_CREDENTIALS
+  };
+
+  const static nsAttrValue::EnumTable kCORSAttributeTable[];
+
 protected:
   /**
    * Add/remove this element to the documents name cache

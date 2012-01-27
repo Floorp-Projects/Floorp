@@ -37,15 +37,21 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.gfx.CairoImage;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.SingleTileLayer;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Region;
 import android.util.Log;
+import java.lang.Long;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.ListIterator;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -57,9 +63,12 @@ public class MultiTileLayer extends Layer {
     private static final String LOGTAG = "GeckoMultiTileLayer";
 
     private final CairoImage mImage;
-    private IntSize mTileSize;
+    private final IntSize mTileSize;
     private IntSize mBufferSize;
-    private final ArrayList<SingleTileLayer> mTiles;
+    private Region mDirtyRegion;
+    private Region mValidRegion;
+    private final LinkedList<SubTile> mTiles;
+    private final HashMap<Long, SubTile> mPositionHash;
 
     public MultiTileLayer(CairoImage image, IntSize tileSize) {
         super();
@@ -67,34 +76,37 @@ public class MultiTileLayer extends Layer {
         mImage = image;
         mTileSize = tileSize;
         mBufferSize = new IntSize(0, 0);
-        mTiles = new ArrayList<SingleTileLayer>();
+        mDirtyRegion = new Region();
+        mValidRegion = new Region();
+        mTiles = new LinkedList<SubTile>();
+        mPositionHash = new HashMap<Long, SubTile>();
     }
 
+    /**
+     * Invalidates a sub-region of the layer. Data will be uploaded from the
+     * backing buffer over subsequent calls to update().
+     * This method is only valid inside a transaction.
+     */
     public void invalidate(Rect dirtyRect) {
-        if (!inTransaction())
+        if (!inTransaction()) {
             throw new RuntimeException("invalidate() is only valid inside a transaction");
-
-        int x = 0, y = 0;
-        IntSize size = getSize();
-        for (SingleTileLayer layer : mTiles) {
-            Rect tileRect = new Rect(x, y, x + mTileSize.width, y + mTileSize.height);
-
-            if (tileRect.intersect(dirtyRect)) {
-                tileRect.offset(-x, -y);
-                layer.invalidate(tileRect);
-            }
-
-            x += mTileSize.width;
-            if (x >= size.width) {
-                x = 0;
-                y += mTileSize.height;
-            }
         }
+
+        mDirtyRegion.union(dirtyRect);
+        mValidRegion.union(dirtyRect);
     }
 
-    public void invalidate() {
-        for (SingleTileLayer layer : mTiles)
-            layer.invalidate();
+    /**
+     * Invalidates the backing buffer. Data will not be uploaded from an invalid
+     * backing buffer. This method is only valid inside a transaction.
+     */
+    public void invalidateBuffer() {
+        if (!inTransaction()) {
+            throw new RuntimeException("invalidateBuffer() is only valid inside a transaction");
+        }
+
+        mDirtyRegion.setEmpty();
+        mValidRegion.setEmpty();
     }
 
     @Override
@@ -102,61 +114,104 @@ public class MultiTileLayer extends Layer {
         return mImage.getSize();
     }
 
+    /**
+     * Makes sure there are enough tiles to accommodate the buffer image.
+     */
     private void validateTiles() {
         IntSize size = getSize();
 
         if (size.equals(mBufferSize))
             return;
 
-        // Regenerate tiles
-        mTiles.clear();
-        int offset = 0;
-        final int format = mImage.getFormat();
-        final ByteBuffer buffer = mImage.getBuffer().slice();
-        final int bpp = CairoUtils.bitsPerPixelForCairoFormat(format) / 8;
-        for (int y = 0; y < size.height; y += mTileSize.height) {
-            for (int x = 0; x < size.width; x += mTileSize.width) {
-                // Create a CairoImage implementation that returns a
-                // tile from the parent CairoImage. It's assumed that
-                // the tiles are stored in series.
-                final IntSize layerSize =
-                    new IntSize(Math.min(mTileSize.width, size.width - x),
-                                Math.min(mTileSize.height, size.height - y));
-                final int tileOffset = offset;
+        mBufferSize = size;
 
-                CairoImage subImage = new CairoImage() {
-                    @Override
-                    public ByteBuffer getBuffer() {
-                        // Create a ByteBuffer that shares the data of the original
-                        // buffer, but is positioned and limited so that only the
-                        // tile data is accessible.
-                        buffer.position(tileOffset);
-                        ByteBuffer tileBuffer = buffer.slice();
-                        tileBuffer.limit(layerSize.getArea() * bpp);
+        // Shrink/grow tile pool
+        int nTiles = (Math.round(size.width / (float)mTileSize.width) + 1) *
+                     (Math.round(size.height / (float)mTileSize.height) + 1);
+        if (mTiles.size() < nTiles) {
+            Log.i(LOGTAG, "Tile pool growing from " + mTiles.size() + " to " + nTiles);
 
-                        return tileBuffer;
-                    }
+            for (int i = 0; i < nTiles; i++) {
+                mTiles.add(new SubTile(new SubImage(mImage, mTileSize)));
+            }
+        } else if (mTiles.size() > nTiles) {
+            Log.i(LOGTAG, "Tile pool shrinking from " + mTiles.size() + " to " + nTiles);
 
-                    @Override
-                    public IntSize getSize() {
-                        return layerSize;
-                    }
-
-                    @Override
-                    public int getFormat() {
-                        return format;
-                    }
-                };
-
-                mTiles.add(new SingleTileLayer(subImage));
-                offset += layerSize.getArea() * bpp;
+            // Remove tiles from the beginning of the list, as these are
+            // least recently used tiles
+            for (int i = mTiles.size(); i > nTiles; i--) {
+                SubTile tile = mTiles.get(0);
+                if (tile.key != null) {
+                    mPositionHash.remove(tile.key);
+                }
+                mTiles.remove(0);
             }
         }
 
-        // Set tile origins and resolution
-        refreshTileMetrics(getOrigin(), getResolution(), false);
+        // A buffer size probably means a layout change, so invalidate all tiles.
+        invalidateTiles();
+    }
 
-        mBufferSize = size;
+    /**
+     * Returns a Long representing the given Point. Used for hashing.
+     */
+    private Long longFromPoint(Point point) {
+        // Assign 32 bits for each dimension of the point.
+        return new Long((((long)point.x) << 32) | point.y);
+    }
+
+    /**
+     * Performs the necessary functions to update the specified properties of
+     * a sub-tile.
+     */
+    private void updateTile(GL10 gl, RenderContext context, SubTile tile, Point tileOrigin, Rect dirtyRect, boolean reused) {
+        tile.beginTransaction(null);
+        try {
+            if (reused) {
+                // Invalidate any area that isn't represented in the current
+                // buffer. This is done as SingleTileLayer always updates the
+                // entire width, regardless of the dirty-rect's width, and so
+                // can override existing data.
+                Point origin = getOrigin();
+                Rect validRect = tile.getValidTextureArea();
+                validRect.offset(tileOrigin.x - origin.x, tileOrigin.y - origin.y);
+                Region validRegion = new Region(validRect);
+                validRegion.op(mValidRegion, Region.Op.INTERSECT);
+
+                // SingleTileLayer can't draw complex regions, so in that case,
+                // just invalidate the entire area.
+                tile.invalidateTexture();
+                if (!validRegion.isComplex()) {
+                    validRect.set(validRegion.getBounds());
+                    validRect.offset(origin.x - tileOrigin.x, origin.y - tileOrigin.y);
+                }
+            } else {
+                // Update tile metrics
+                tile.setOrigin(tileOrigin);
+                tile.setResolution(getResolution());
+
+                // Make sure that non-reused tiles are marked as invalid before
+                // uploading new content.
+                tile.invalidateTexture();
+
+                // (Re)Place in the position hash for quick retrieval.
+                if (tile.key != null) {
+                    mPositionHash.remove(tile.key);
+                }
+                tile.key = longFromPoint(tileOrigin);
+                mPositionHash.put(tile.key, tile);
+            }
+
+            // Invalidate the area we want to upload.
+            tile.invalidate(dirtyRect);
+
+            // Perform updates and mark texture as valid.
+            if (!tile.performUpdates(gl, context)) {
+                Log.e(LOGTAG, "Sub-tile failed to update fully");
+            }
+        } finally {
+            tile.endTransaction();
+        }
     }
 
     @Override
@@ -165,119 +220,265 @@ public class MultiTileLayer extends Layer {
 
         validateTiles();
 
-        // Iterate over the tiles and decide which ones we'll be drawing
-        int dirtyTiles = 0;
-        boolean screenUpdateDone = false;
-        SingleTileLayer firstDirtyTile = null;
-        for (SingleTileLayer layer : mTiles) {
-            // First do a non-texture update to make sure coordinates are
-            // up-to-date.
-            boolean invalid = layer.getSkipTextureUpdate();
-            layer.setSkipTextureUpdate(true);
-            layer.performUpdates(gl, context);
+        // Bail out early if we have nothing to do.
+        if (mDirtyRegion.isEmpty() || mTiles.isEmpty()) {
+            return true;
+        }
 
-            RectF layerBounds = layer.getBounds(context, new FloatSize(layer.getSize()));
-            boolean isDirty = layer.isDirty();
+        // Check that we're capable of updating from this origin.
+        Point origin = getOrigin();
+        if ((origin.x % mTileSize.width) != 0 || (origin.y % mTileSize.height) != 0) {
+            Log.e(LOGTAG, "MultiTileLayer doesn't support non tile-aligned origins! (" +
+                  origin.x + ", " + origin.y + ")");
+            return true;
+        }
 
-            if (isDirty) {
-                if (!RectF.intersects(layerBounds, context.viewport)) {
-                    if (firstDirtyTile == null)
-                        firstDirtyTile = layer;
-                    dirtyTiles ++;
-                    invalid = true;
+        // Transform the viewport into tile-space so we can see what part of the
+        // dirty region intersects with it.
+        // We update any tiles intersecting with the screen before tiles
+        // intersecting with the viewport.
+        // XXX Maybe we want to to split this update even further to update
+        //     checkerboard area before updating screen regions with old data.
+        //     Note that this could provide inconsistent views, so we may not
+        //     want to do this.
+        Rect tilespaceViewport;
+        float scaleFactor = getResolution() / context.zoomFactor;
+        tilespaceViewport = RectUtils.roundOut(RectUtils.scale(context.viewport, scaleFactor));
+        tilespaceViewport.offset(-origin.x, -origin.y);
+
+        // Expand tile-space viewport to tile boundaries
+        tilespaceViewport.left = (tilespaceViewport.left / mTileSize.width) * mTileSize.width;
+        tilespaceViewport.right += mTileSize.width - 1;
+        tilespaceViewport.right = (tilespaceViewport.right / mTileSize.width) * mTileSize.width;
+        tilespaceViewport.top = (tilespaceViewport.top / mTileSize.height) * mTileSize.height;
+        tilespaceViewport.bottom += mTileSize.height - 1;
+        tilespaceViewport.bottom = (tilespaceViewport.bottom / mTileSize.height) * mTileSize.height;
+
+        // Declare a region for storing the results of Region operations
+        Region opRegion = new Region();
+
+        // Test if the dirty region intersects with the screen
+        boolean updateVisible = false;
+        Region updateRegion = mDirtyRegion;
+        if (opRegion.op(tilespaceViewport, mDirtyRegion, Region.Op.INTERSECT)) {
+            updateVisible = true;
+            updateRegion = new Region(opRegion);
+        }
+
+        // Invalidate any tiles that are due to be replaced if their resolution
+        // doesn't match the parent layer resolution, and any tiles that are
+        // off-screen and off-buffer, as we cannot guarantee their validity.
+        //
+        // Note that we also cannot guarantee the validity of on-screen,
+        // off-buffer tiles, but this is a rare case that we allow for
+        // optimisation purposes.
+        //
+        // XXX Ideally, we want to remove this second invalidation clause
+        //     somehow. It may be possible to know if off-screen tiles are
+        //     valid by monitoring reflows on the browser element, or
+        //     something along these lines.
+        LinkedList<SubTile> invalidTiles = new LinkedList<SubTile>();
+        Rect bounds = mValidRegion.getBounds();
+        for (ListIterator<SubTile> i = mTiles.listIterator(); i.hasNext();) {
+            SubTile tile = i.next();
+
+            if (tile.key == null) {
+                continue;
+            }
+
+            RectF tileBounds = tile.getBounds(context, new FloatSize(tile.getSize()));
+            Rect tilespaceTileBounds =
+                RectUtils.round(RectUtils.scale(tileBounds, scaleFactor));
+            tilespaceTileBounds.offset(-origin.x, -origin.y);
+
+            // First bracketed clause: Invalidate off-screen, off-buffer tiles
+            // Second: Invalidate visible tiles at the wrong resolution that have updates
+            if ((!Rect.intersects(bounds, tilespaceTileBounds) &&
+                 !Rect.intersects(tilespaceViewport, tilespaceTileBounds)) ||
+                (!FloatUtils.fuzzyEquals(tile.getResolution(), getResolution()) &&
+                 opRegion.op(tilespaceTileBounds, updateRegion, Region.Op.INTERSECT))) {
+                tile.invalidateTexture();
+
+                // Add to the list of invalid tiles and remove from the main list
+                invalidTiles.add(tile);
+                i.remove();
+
+                // Remove from the position hash
+                mPositionHash.remove(tile.key);
+                tile.key = null;
+            }
+        }
+
+        // Push invalid tiles to the head of the queue so they get used first
+        mTiles.addAll(0, invalidTiles);
+
+        // Update tiles
+        // Note, it's <= as the buffer is over-allocated due to render-offsetting.
+        for (int y = origin.y; y <= origin.y + mBufferSize.height; y += mTileSize.height) {
+            for (int x = origin.x; x <= origin.x + mBufferSize.width; x += mTileSize.width) {
+                // Does this tile intersect with the dirty region?
+                Rect tilespaceTileRect = new Rect(x - origin.x, y - origin.y,
+                                                  (x - origin.x) + mTileSize.width,
+                                                  (y - origin.y) + mTileSize.height);
+                if (!opRegion.op(tilespaceTileRect, updateRegion, Region.Op.INTERSECT)) {
+                    continue;
+                }
+
+                // Dirty tile, find out if we already have this tile to reuse.
+                boolean reusedTile = true;
+                Point tileOrigin = new Point(x, y);
+                SubTile tile = mPositionHash.get(longFromPoint(tileOrigin));
+
+                // If we don't, get an unused tile (we store these at the head of the list).
+                if (tile == null) {
+                    tile = mTiles.removeFirst();
+                    reusedTile = false;
                 } else {
-                    // This tile intersects with the screen and is dirty,
-                    // update it immediately.
-                    layer.setSkipTextureUpdate(false);
-                    screenUpdateDone = true;
-                    layer.performUpdates(gl, context);
-                    invalid = false;
+                    mTiles.remove(tile);
+                }
+
+                // Place tile at the end of the tile-list so it isn't re-used.
+                mTiles.add(tile);
+
+                // Work out the tile's invalid area in this tile's space.
+                if (opRegion.isComplex()) {
+                    Log.w(LOGTAG, "MultiTileLayer encountered complex dirty region");
+                }
+                Rect dirtyRect = opRegion.getBounds();
+                dirtyRect.offset(origin.x - x, origin.y - y);
+
+                // Update tile metrics and texture data
+                tile.x = (x - origin.x) / mTileSize.width;
+                tile.y = (y - origin.y) / mTileSize.height;
+                updateTile(gl, context, tile, tileOrigin, dirtyRect, reusedTile);
+
+                // If this update isn't visible, we only want to update one
+                // tile at a time.
+                if (!updateVisible) {
+                    mDirtyRegion.op(opRegion, Region.Op.XOR);
+                    return mDirtyRegion.isEmpty();
                 }
             }
-
-            // We use the SkipTextureUpdate flag as a marker of a tile's
-            // validity. This is required, as sometimes layers are drawn
-            // without updating first, and we mustn't draw tiles that have
-            // been marked as invalid that we haven't updated.
-            layer.setSkipTextureUpdate(invalid);
         }
 
-        // Now if no tiles that intersect with the screen were updated, update
-        // a single tile that doesn't (if there are any). This has the effect
-        // of spreading out non-critical texture upload over time, and smoothing
-        // upload-related hitches.
-        if (!screenUpdateDone && firstDirtyTile != null) {
-            firstDirtyTile.setSkipTextureUpdate(false);
-            firstDirtyTile.performUpdates(gl, context);
-            dirtyTiles --;
-        }
+        // Remove the update region from the dirty region
+        mDirtyRegion.op(updateRegion, Region.Op.XOR);
 
-        return (dirtyTiles == 0);
-    }
-
-    private void refreshTileMetrics(Point origin, float resolution, boolean inTransaction) {
-        int x = 0, y = 0;
-        IntSize size = getSize();
-        for (SingleTileLayer layer : mTiles) {
-            if (!inTransaction)
-                layer.beginTransaction(null);
-
-            if (origin != null)
-                layer.setOrigin(new Point(origin.x + x, origin.y + y));
-            if (resolution >= 0.0f)
-                layer.setResolution(resolution);
-
-            if (!inTransaction)
-                layer.endTransaction();
-
-            x += mTileSize.width;
-            if (x >= size.width) {
-                x = 0;
-                y += mTileSize.height;
-            }
-        }
-    }
-
-    @Override
-    public void setOrigin(Point newOrigin) {
-        super.setOrigin(newOrigin);
-        refreshTileMetrics(newOrigin, -1, true);
-    }
-
-    @Override
-    public void setResolution(float newResolution) {
-        super.setResolution(newResolution);
-        refreshTileMetrics(null, newResolution, true);
+        return mDirtyRegion.isEmpty();
     }
 
     @Override
     public void beginTransaction(LayerView aView) {
         super.beginTransaction(aView);
 
-        for (SingleTileLayer layer : mTiles)
+        for (SubTile layer : mTiles) {
             layer.beginTransaction(aView);
+        }
     }
 
     @Override
     public void endTransaction() {
-        for (SingleTileLayer layer : mTiles)
+        for (SubTile layer : mTiles) {
             layer.endTransaction();
+        }
 
         super.endTransaction();
     }
 
     @Override
     public void draw(RenderContext context) {
-        for (SingleTileLayer layer : mTiles) {
-            // We use the SkipTextureUpdate flag as a validity flag. If it's false,
-            // the contents of this tile are invalid and we shouldn't draw it.
-            if (layer.getSkipTextureUpdate())
-                continue;
-
+        for (SubTile layer : mTiles) {
             // Avoid work, only draw tiles that intersect with the viewport
             RectF layerBounds = layer.getBounds(context, new FloatSize(layer.getSize()));
             if (RectF.intersects(layerBounds, context.viewport))
                 layer.draw(context);
+        }
+    }
+
+    /**
+     * Invalidates all sub-tiles. This should be called if the source backing
+     * this layer has changed. This method is only valid inside a transaction.
+     */
+    public void invalidateTiles() {
+        if (!inTransaction()) {
+            throw new RuntimeException("invalidateTiles() is only valid inside a transaction");
+        }
+
+        for (SubTile tile : mTiles) {
+            // Remove tile from position hash and mark it as invalid
+            if (tile.key != null) {
+                mPositionHash.remove(tile.key);
+                tile.key = null;
+            }
+            tile.invalidateTexture();
+        }
+    }
+
+    /**
+     * A SingleTileLayer extension with fields for relevant tile data that
+     * MultiTileLayer requires.
+     */
+    private static class SubTile extends SingleTileLayer {
+        public int x;
+        public int y;
+
+        public Long key;
+
+        public SubTile(SubImage aImage) {
+            super(aImage);
+
+            aImage.tile = this;
+        }
+    }
+
+    /**
+     * A CairoImage implementation that returns a tile from a parent CairoImage.
+     * This assumes that the parent image has a size that is a multiple of the
+     * tile size.
+     */
+    private static class SubImage extends CairoImage {
+        public SubTile tile;
+
+        private IntSize mTileSize;
+        private CairoImage mImage;
+
+        public SubImage(CairoImage image, IntSize tileSize) {
+            mTileSize = tileSize;
+            mImage = image;
+        }
+
+        @Override
+        public ByteBuffer getBuffer() {
+            // Create a ByteBuffer that shares the data of the original
+            // buffer, but is positioned and limited so that only the
+            // tile data is accessible.
+            IntSize bufferSize = mImage.getSize();
+            int bpp = CairoUtils.bitsPerPixelForCairoFormat(getFormat()) / 8;
+            int index = (tile.y * (bufferSize.width / mTileSize.width + 1)) + tile.x;
+
+            ByteBuffer buffer = mImage.getBuffer().slice();
+
+            try {
+                buffer.position(index * mTileSize.getArea() * bpp);
+                buffer = buffer.slice();
+                buffer.limit(mTileSize.getArea() * bpp);
+            } catch (IllegalArgumentException e) {
+                Log.e(LOGTAG, "Tile image-data out of bounds! Tile: (" +
+                      tile.x + ", " + tile.y + "), image (" + bufferSize + ")");
+                return null;
+            }
+
+            return buffer;
+        }
+
+        @Override
+        public IntSize getSize() {
+            return mTileSize;
+        }
+
+        @Override
+        public int getFormat() {
+            return mImage.getFormat();
         }
     }
 }

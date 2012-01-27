@@ -49,11 +49,20 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
-#include "jsstdint.h"
 #include "jslock.h"
 #include "jsworkers.h"
 
 extern size_t gMaxStackSize;
+
+class AutoLock
+{
+  private:
+    PRLock *lock;
+
+  public:
+    AutoLock(PRLock *lock) : lock(lock) { PR_Lock(lock); }
+    ~AutoLock() { PR_Unlock(lock); }
+};
 
 /*
  * JavaScript shell workers.
@@ -150,7 +159,7 @@ class WorkerParent {
     bool initWorkerParent() { return children.init(8); }
 
   public:
-    virtual JSLock *getLock() = 0;
+    virtual PRLock *getLock() = 0;
     virtual ThreadPool *getThreadPool() = 0;
     virtual bool post(Event *item) = 0;  // false on OOM or queue closed
     virtual void trace(JSTracer *trc) = 0;
@@ -177,7 +186,7 @@ class ThreadSafeQueue
 {
   protected:
     Queue<T, SystemAllocPolicy> queue;
-    JSLock *lock;
+    PRLock *lock;
     PRCondVar *condvar;
     bool closed;
 
@@ -189,9 +198,9 @@ class ThreadSafeQueue
 
     ~ThreadSafeQueue() {
         if (condvar)
-            JS_DESTROY_CONDVAR(condvar);
+            PR_DestroyCondVar(condvar);
         if (lock)
-            JS_DESTROY_LOCK(lock);
+            PR_DestroyLock(lock);
     }
 
     // Called by take() with the lock held.
@@ -201,7 +210,7 @@ class ThreadSafeQueue
     bool initThreadSafeQueue() {
         JS_ASSERT(!lock);
         JS_ASSERT(!condvar);
-        return (lock = JS_NEW_LOCK()) && (condvar = JS_NEW_CONDVAR(lock));
+        return (lock = PR_NewLock()) && (condvar = PR_NewCondVar(lock));
     }
 
     bool post(T t) {
@@ -209,7 +218,7 @@ class ThreadSafeQueue
         if (closed)
             return false;
         if (queue.empty())
-            JS_NOTIFY_ALL_CONDVAR(condvar);
+            PR_NotifyAllCondVar(condvar);
         return queue.push(t);
     }
 
@@ -217,7 +226,7 @@ class ThreadSafeQueue
         AutoLock hold(lock);
         closed = true;
         queue.clear();
-        JS_NOTIFY_ALL_CONDVAR(condvar);
+        PR_NotifyAllCondVar(condvar);
     }
 
     // The caller must hold the lock.
@@ -225,7 +234,7 @@ class ThreadSafeQueue
         while (queue.empty()) {
             if (shouldStop())
                 return false;
-            JS_WAIT_CONDVAR(condvar, JS_NO_TIMEOUT);
+            PR_WaitCondVar(condvar, PR_INTERVAL_NO_TIMEOUT);
         }
         *t = queue.pop();
         busy.append(*t);
@@ -253,7 +262,7 @@ class ThreadSafeQueue
 
     void wake() {
         AutoLock hold(lock);
-        JS_NOTIFY_ALL_CONDVAR(condvar);
+        PR_NotifyAllCondVar(condvar);
     }
 
     void trace(JSTracer *trc) {
@@ -371,7 +380,7 @@ class MainQueue MOZ_FINAL : public EventQueue, public WorkerParent
         delete this;
     }
 
-    virtual JSLock *getLock() { return lock; }
+    virtual PRLock *getLock() { return lock; }
     virtual ThreadPool *getThreadPool() { return threadPool; }
 
   protected:
@@ -390,7 +399,7 @@ class MainQueue MOZ_FINAL : public EventQueue, public WorkerParent
 
         Event *event;
         while (take(&event)) {
-            JS_RELEASE_LOCK(lock);
+            PR_Unlock(lock);
             Event::Result result;
             {
                 JSAutoRequest req(cx);
@@ -414,7 +423,7 @@ class MainQueue MOZ_FINAL : public EventQueue, public WorkerParent
                     result = Event::ok;
                 }
             }
-            JS_ACQUIRE_LOCK(lock);
+            PR_Lock(lock);
             drop(event);
             event->destroy(cx);
             if (result != Event::ok)
@@ -596,7 +605,7 @@ class Worker MOZ_FINAL : public WorkerParent
     JSObject *object;  // Worker object exposed to parent
     JSRuntime *runtime;
     JSContext *context;
-    JSLock *lock;
+    PRLock *lock;
     Queue<Event *, SystemAllocPolicy> events;  // owning pointers to pending events
     Event *current;
     bool terminated;
@@ -616,7 +625,7 @@ class Worker MOZ_FINAL : public WorkerParent
         threadPool = parent->getThreadPool();
         this->parent = parent;
         this->object = obj;
-        lock = JS_NEW_LOCK();
+        lock = PR_NewLock();
         return lock &&
                createRuntime(parentcx) &&
                createContext(parentcx, parent) &&
@@ -681,7 +690,6 @@ class Worker MOZ_FINAL : public WorkerParent
         js::SetFunctionNativeReserved(post, 0, PRIVATE_TO_JSVAL(this));
 
         JS_EndRequest(context);
-        JS_ClearContextThread(context);
         return true;
 
     bad:
@@ -769,13 +777,12 @@ class Worker MOZ_FINAL : public WorkerParent
         while (!events.empty())
             events.pop()->destroy(context);
         if (lock) {
-            JS_DESTROY_LOCK(lock);
+            PR_DestroyLock(lock);
             lock = NULL;
         }
         if (runtime)
             JS_SetRuntimeThread(runtime);
         if (context) {
-            JS_SetContextThread(context);
             JS_DestroyContextNoGC(context);
             context = NULL;
         }
@@ -801,7 +808,7 @@ class Worker MOZ_FINAL : public WorkerParent
 
     WorkerParent *getParent() { return parent; }
 
-    virtual JSLock *getLock() { return lock; }
+    virtual PRLock *getLock() { return lock; }
 
     virtual ThreadPool *getThreadPool() { return threadPool; }
 
@@ -1030,15 +1037,15 @@ WorkerQueue::work() {
 
     Worker *w;
     while (take(&w)) {  // can block outside the mutex
-        JS_RELEASE_LOCK(lock);
+        PR_Unlock(lock);
         w->processOneEvent();     // enters request on w->context
-        JS_ACQUIRE_LOCK(lock);
+        PR_Lock(lock);
         drop(w);
 
         if (lockedIsIdle()) {
-            JS_RELEASE_LOCK(lock);
+            PR_Unlock(lock);
             main->wake();
-            JS_ACQUIRE_LOCK(lock);
+            PR_Lock(lock);
         }
     }
 }
@@ -1136,8 +1143,6 @@ Worker::processOneEvent()
     }
 
     JS_SetRuntimeThread(runtime);
-    JS_SetContextThread(context);
-    JS_SetNativeStackQuota(context, gMaxStackSize);
 
     Event::Result result;
     {
@@ -1171,7 +1176,6 @@ Worker::processOneEvent()
 
     if (event)
         event->destroy(context);
-    JS_ClearContextThread(context);
     JS_ClearRuntimeThread(runtime);
 
     {

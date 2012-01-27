@@ -43,6 +43,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -52,16 +54,22 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -75,6 +83,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -146,7 +155,84 @@ public class AboutHomeContent extends ScrollView {
                         mUriLoadCallback.callback("about:addons");
                 }
             });
+
+            TextView syncTextView = (TextView) findViewById(R.id.sync_text);
+            String syncText = syncTextView.getText().toString() + " \u00BB";
+            String boldName = getContext().getResources().getString(R.string.abouthome_sync_bold_name);
+            int styleIndex = syncText.indexOf(boldName);
+
+            // Highlight any occurrence of "Firefox Sync" in the string
+            // with a bold style.
+            if (styleIndex >= 0) {
+                SpannableString spannableText = new SpannableString(syncText);
+                spannableText.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), styleIndex, styleIndex + 12, 0);
+                syncTextView.setText(spannableText, TextView.BufferType.SPANNABLE);
+            }
+
+            RelativeLayout syncBox = (RelativeLayout) findViewById(R.id.sync_box);
+            syncBox.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Context context = v.getContext();
+                    Intent intent = new Intent(context, SetupSyncActivity.class);
+                    context.startActivity(intent);
+                }
+            });
         }
+    }
+
+    private void setTopSitesVisibility(boolean visible, boolean hasTopSites) {
+        int visibility = visible ? View.VISIBLE : View.GONE;
+        int visibilityWithTopSites = visible && hasTopSites ? View.VISIBLE : View.GONE;
+        int visibilityWithoutTopSites = visible && !hasTopSites ? View.VISIBLE : View.GONE;
+
+        findViewById(R.id.top_sites_grid).setVisibility(visibilityWithTopSites);
+        findViewById(R.id.top_sites_title).setVisibility(visibility);
+        findViewById(R.id.all_top_sites_text).setVisibility(visibilityWithTopSites);
+        findViewById(R.id.no_top_sites_text).setVisibility(visibilityWithoutTopSites);
+    }
+
+    private void setSyncVisibility(boolean visible) {
+        int visibility = visible ? View.VISIBLE : View.GONE;
+        findViewById(R.id.sync_box_container).setVisibility(visibility);
+    }
+
+    private void updateSyncLayout(boolean isFirstRun, boolean hasTopSites) {
+        RelativeLayout syncContainer = (RelativeLayout) findViewById(R.id.sync_box_container);
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) syncContainer.getLayoutParams();
+
+        int below = R.id.all_top_sites_text;
+        if (isFirstRun && !hasTopSites)
+            below = R.id.top_sites_top;
+        else if (!hasTopSites)
+            below = R.id.no_top_sites_text;
+
+        int background = R.drawable.abouthome_bg_repeat;
+        if (isFirstRun && !hasTopSites)
+            background = 0;
+
+        params.addRule(RelativeLayout.BELOW, below);
+        syncContainer.setLayoutParams(params);
+
+        syncContainer.setBackgroundResource(background);
+    }
+
+    private boolean isSyncSetup() {
+        AccountManager accountManager = AccountManager.get(getContext());
+        Account[] accounts = accountManager.getAccountsByType("org.mozilla.firefox_sync");
+        return accounts.length > 0;
+    }
+
+    private void updateLayout(GeckoApp.StartupMode startupMode, boolean syncIsSetup) {
+        // The idea here is that we only show the sync invitation
+        // on the very first run. Show sync banner below the top
+        // sites section in all other cases.
+
+        boolean hasTopSites = mTopSitesAdapter.getCount() > 0;
+        boolean isFirstRun = (startupMode == GeckoApp.StartupMode.NEW_PROFILE);
+
+        setTopSitesVisibility(!isFirstRun || hasTopSites, hasTopSites);
+        setSyncVisibility(!syncIsSetup);
+        updateSyncLayout(isFirstRun, hasTopSites);
     }
 
     private int getNumberOfTopSites() {
@@ -172,6 +258,15 @@ public class AboutHomeContent extends ScrollView {
                 if (mCursor != null)
                     activity.stopManagingCursor(mCursor);
 
+                // Ensure we initialize GeckoApp's startup mode in
+                // background thread before we use it when updating
+                // the top sites section layout in main thread.
+                final GeckoApp.StartupMode startupMode = GeckoApp.mAppContext.getStartupMode();
+
+                // The isSyncSetup method should not be called on
+                // UI thread as it touches disk to access a sqlite DB.
+                final boolean syncIsSetup = isSyncSetup();
+
                 ContentResolver resolver = GeckoApp.mAppContext.getContentResolver();
                 mCursor = BrowserDB.getTopSites(resolver, NUMBER_OF_TOP_SITES_PORTRAIT);
                 activity.startManagingCursor(mCursor);
@@ -189,6 +284,8 @@ public class AboutHomeContent extends ScrollView {
 
                         mTopSitesGrid.setAdapter(mTopSitesAdapter);
                         mTopSitesAdapter.setViewBinder(new TopSitesViewBinder());
+
+                        updateLayout(startupMode, syncIsSetup);
                     }
                 });
 
@@ -214,9 +311,17 @@ public class AboutHomeContent extends ScrollView {
     }
 
     public void onActivityContentChanged(Activity activity) {
-        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+        GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                mTopSitesGrid.setAdapter(mTopSitesAdapter);
+                final GeckoApp.StartupMode startupMode = GeckoApp.mAppContext.getStartupMode();
+                final boolean syncIsSetup = isSyncSetup();
+
+                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                    public void run() {
+                        mTopSitesGrid.setAdapter(mTopSitesAdapter);
+                        updateLayout(startupMode, syncIsSetup);
+                    }
+                });
             }
         });
     }
@@ -232,7 +337,6 @@ public class AboutHomeContent extends ScrollView {
     }
 
     private String readJSONFile(Activity activity, String filename) {
-        String json = null;
         InputStream fileStream = null;
         File profileDir = GeckoApp.mAppContext.getProfileDir();
 
@@ -304,6 +408,24 @@ public class AboutHomeContent extends ScrollView {
         return str;
     }
 
+    private String getPageUrlFromIconUrl(String iconUrl) {
+        // Addon icon URLs come with a query argument that is usually
+        // used for expiration purposes. We want the "page URL" here to be
+        // stable enough to avoid unnecessary duplicate records of the
+        // same addon.
+        String pageUrl = iconUrl;
+
+        try {
+            URL urlForIcon = new URL(iconUrl);
+            URL urlForPage = new URL(urlForIcon.getProtocol(), urlForIcon.getAuthority(), urlForIcon.getPath());
+            pageUrl = urlForPage.toString();
+        } catch (MalformedURLException e) {
+            // Defaults to pageUrl = iconUrl in case of error
+        }
+
+        return pageUrl;
+    }
+
     private void readRecommendedAddons(final Activity activity) {
         final String addonsFilename = "recommended-addons.json";
         String jsonString = readJSONFile(activity, addonsFilename);
@@ -327,8 +449,25 @@ public class AboutHomeContent extends ScrollView {
                 try {
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject jsonobj = array.getJSONObject(i);
-                        View row = mInflater.inflate(R.layout.abouthome_addon_row, mAddonsLayout, false);
+
+                        final View row = mInflater.inflate(R.layout.abouthome_addon_row, mAddonsLayout, false);
                         ((TextView) row.findViewById(R.id.addon_title)).setText(jsonobj.getString("name"));
+                        ((TextView) row.findViewById(R.id.addon_version)).setText(jsonobj.getString("version"));
+
+                        String iconUrl = jsonobj.getString("iconURL");
+                        String pageUrl = getPageUrlFromIconUrl(iconUrl);
+
+                        Favicons favicons = GeckoApp.mAppContext.mFavicons;
+                        favicons.loadFavicon(pageUrl, iconUrl,
+                                    new Favicons.OnFaviconLoadedListener() {
+                            public void onFaviconLoaded(String url, Drawable favicon) {
+                                if (favicon != null) {
+                                    ImageView icon = (ImageView) row.findViewById(R.id.addon_icon);
+                                    icon.setImageDrawable(favicon);
+                                }
+                            }
+                        });
+
                         mAddonsLayout.addView(row);
                     }
                 } catch (JSONException e) {

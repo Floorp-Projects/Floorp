@@ -7,8 +7,10 @@
 const testURL1 = "http://mochi.test:8888/browser/browser/base/content/test/browser_clearplugindata.html";
 const testURL2 = "http://mochi.test:8888/browser/browser/base/content/test/browser_clearplugindata_noage.html";
 
+let tempScope = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
-                                           .loadSubScript("chrome://browser/content/sanitize.js");
+                                           .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
+let Sanitizer = tempScope.Sanitizer;
 
 const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);

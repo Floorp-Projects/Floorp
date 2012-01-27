@@ -34,7 +34,6 @@ script findReferences-01.js
 script findReferences-02.js
 script findReferences-03.js
 script findReferences-04.js
-script regress-613452.js
 script regress-627859.js
 script regress-627984-1.js
 script regress-627984-2.js
@@ -43,7 +42,6 @@ script regress-627984-4.js
 script regress-627984-5.js
 script regress-627984-6.js
 script regress-627984-7.js
-script regress-630377.js
 script regress-631723.js
 skip-if(!xulRuntime.shell) script regress-636818.js
 script regress-636697.js

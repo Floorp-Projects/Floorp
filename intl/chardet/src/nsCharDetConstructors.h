@@ -48,14 +48,10 @@
 #include "nsISupports.h"
 #include "nsICharsetDetector.h"
 #include "nsICharsetAlias.h"
-#include "nsDocumentCharsetInfo.h"
 #include "nsICharsetDetectionObserver.h"
 #include "nsIStringCharsetDetector.h"
 #include "nsCyrillicDetector.h"
-#include "nsDocumentCharsetInfoCID.h"
-#include "nsXMLEncodingCID.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDocumentCharsetInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRUProbDetector)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUKProbDetector)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRUStringProbDetector)

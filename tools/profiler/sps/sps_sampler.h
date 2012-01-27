@@ -102,8 +102,8 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 # define STORE_SEQUENCER() pLinuxKernelMemoryBarrier()
 #elif defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_X64)
 # if defined(_MSC_VER)
-   // MSVC2005 has a name collision bug caused when both <intrin.h> and <windows.h> are included together.
-#ifdef _INC_WINDOWS
+    // MSVC2005 has a name collision bug caused when both <intrin.h> and <winnt.h> are included together.
+#ifdef _WINNT_
 #  define _interlockedbittestandreset _interlockedbittestandreset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
 #  define _interlockedbittestandset _interlockedbittestandset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
 #  include <intrin.h>

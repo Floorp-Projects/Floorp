@@ -38,19 +38,15 @@
 package org.mozilla.gecko;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -95,8 +91,8 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             }
         });
 
-        Tabs.getInstance().refreshThumbnails();
         GeckoApp.registerOnTabsChangedListener(this);
+        Tabs.getInstance().refreshThumbnails();
         onTabsChanged(null);
     }
 
@@ -144,6 +140,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     void finishActivity() {
         finish();
         overridePendingTransition(0, R.anim.shrink_fade_out);
+        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Screenshot:Cancel",""));
     }
 
     // Adapter to bind tabs into a list 
@@ -162,7 +159,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             
             mOnInfoClickListener = new View.OnClickListener() {
                 public void onClick(View v) {
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", v.getTag().toString()));
+                    Tabs.getInstance().selectTab(Integer.parseInt((String) v.getTag()));
                     finishActivity();
                 }
             };
@@ -182,17 +179,14 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             };
         }
 
-        @Override    
         public int getCount() {
             return mTabs.size();
         }
     
-        @Override    
         public Tab getItem(int position) {
             return mTabs.get(position);
         }
 
-        @Override    
         public long getItemId(int position) {
             return position;
         }
@@ -223,7 +217,6 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             title.setText(tab.getDisplayTitle());
         }
 
-        @Override    
         public View getView(int position, View convertView, ViewGroup parent) {
             convertView = mInflater.inflate(R.layout.tabs_row, null);
 
