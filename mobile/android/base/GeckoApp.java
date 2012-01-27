@@ -1102,7 +1102,7 @@ abstract public class GeckoApp
         public void run() {
             mAutoCompletePopup.hide();
             if (mAboutHomeContent == null && mShow) {
-                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext, null);
+                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext);
                 mAboutHomeContent.init(GeckoApp.mAppContext);
                 mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                     public void callback(String url) {
