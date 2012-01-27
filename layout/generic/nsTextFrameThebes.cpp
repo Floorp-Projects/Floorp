@@ -5562,7 +5562,7 @@ nsTextFrame::DrawTextRun(gfxContext* const aCtx,
                          gfxFloat& aAdvanceWidth,
                          bool aDrawSoftHyphen)
 {
-  mTextRun->Draw(aCtx, aTextBaselinePt, aOffset, aLength,
+  mTextRun->Draw(aCtx, aTextBaselinePt, gfxFont::GLYPH_FILL, aOffset, aLength,
                  &aProvider, &aAdvanceWidth);
 
   if (aDrawSoftHyphen) {
@@ -5575,7 +5575,7 @@ nsTextFrame::DrawTextRun(gfxContext* const aCtx,
       gfxFloat hyphenBaselineX = aTextBaselinePt.x + mTextRun->GetDirection() * aAdvanceWidth -
         (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull) : 0);
       hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
-                          0, hyphenTextRun->GetLength(), nsnull, nsnull);
+                          gfxFont::GLYPH_FILL, 0, hyphenTextRun->GetLength(), nsnull, nsnull);
     }
   }
 }

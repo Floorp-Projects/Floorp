@@ -163,7 +163,6 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
                 -I$(srcdir)/../ds \
-		-I$(srcdir)/services \
 		$(NULL)
 
 libs::

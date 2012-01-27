@@ -41,7 +41,7 @@
 const EXPORTED_SYMBOLS = ["SplitView"];
 
 /* this must be kept in sync with CSS (ie. splitview.css) */
-const LANDSCAPE_MEDIA_QUERY = "(min-aspect-ratio: 5/3)";
+const LANDSCAPE_MEDIA_QUERY = "(min-width: 551px)";
 
 const BINDING_USERDATA = "splitview-binding";
 
@@ -171,7 +171,6 @@ SplitView.prototype = {
     if (binding.onShow) {
       binding.onShow(aSummary, binding._details, binding.data);
     }
-    aSummary.scrollIntoView();
   },
 
   /**

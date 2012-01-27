@@ -52,7 +52,7 @@
         persist="screenX screenY width height"
         onkeypress="gCookiesWindow.onWindowKeyPress(event);">
 
-  <script src="chrome://browser/content/preferences/permissionsutils.js"/>
+  <script src="chrome://global/content/treeUtils.js"/>
   <script src="chrome://browser/content/preferences/cookies.js"/>
 
   <stringbundle id="bundlePreferences"

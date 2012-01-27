@@ -42,14 +42,16 @@ enum gr_encform {
 
 // Definitions for library publicly exported symbols
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef GR2_EXPORTING
-    #ifdef __GNUC__
+  #if defined GRAPHITE2_STATIC
+    #define GR2_API
+  #elif defined GRAPHITE2_EXPORTING
+    #if defined __GNUC__
       #define GR2_API    __attribute__((dllexport))
     #else
       #define GR2_API    __declspec(dllexport)
     #endif
   #else
-    #ifdef __GNUC__
+    #if defined __GNUC__
       #define GR2_API    __attribute__((dllimport))
     #else
       #define GR2_API    __declspec(dllimport)
