@@ -1316,43 +1316,6 @@ class FlatMatch
 };
 
 /*
- * Some string methods operate on a RegExpObject, if it is present, but if it
- * is absent create an internal regular expression matcher. This unifies the
- * interface.
- */
-class RegExpPair
-{
-    JSContext               *cx;
-    mutable RegExpMatcher   matcher_;
-    RegExpObject            *reobj_;
-
-    explicit RegExpPair(RegExpPair &) MOZ_DELETE;
-    void operator=(const RegExpPair &) MOZ_DELETE;
-
-  public:
-    explicit RegExpPair(JSContext *cx) : cx(cx), matcher_(cx) {}
-
-    bool reset(RegExpObject *reobj) {
-        reobj_ = reobj;
-        return matcher_.reset(reobj);
-    }
-
-    bool reset(JSLinearString *patstr, JSString *opt) {
-        reobj_ = NULL;
-        return matcher_.reset(patstr, opt);
-    }
-
-    bool null() const { return matcher_.null(); }
-
-    RegExpObject *reobj() const { return reobj_; }
-
-    RegExpMatcher &matcher() const {
-        JS_ASSERT(!null());
-        return matcher_;
-    }
-};
-
-/*
  * RegExpGuard factors logic out of String regexp operations.
  *
  * |optarg| indicates in which argument position RegExp flags will be found, if
@@ -1363,9 +1326,9 @@ class RegExpGuard
     RegExpGuard(const RegExpGuard &) MOZ_DELETE;
     void operator=(const RegExpGuard &) MOZ_DELETE;
 
-    JSContext   *cx;
-    RegExpPair  rep;
-    FlatMatch   fm;
+    JSContext     *cx;
+    RegExpMatcher matcher;
+    FlatMatch     fm;
 
     /*
      * Upper bound on the number of characters we are willing to potentially
@@ -1394,7 +1357,7 @@ class RegExpGuard
     }
 
   public:
-    explicit RegExpGuard(JSContext *cx) : cx(cx), rep(cx) {}
+    explicit RegExpGuard(JSContext *cx) : cx(cx), matcher(cx) {}
     ~RegExpGuard() {}
 
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
@@ -1402,8 +1365,11 @@ class RegExpGuard
     init(uintN argc, Value *vp, bool convertVoid = false)
     {
         if (argc != 0 && ValueIsRegExp(vp[2])) {
-            if (!rep.reset(&vp[2].toObject().asRegExp()))
+            RegExpObject &reobj = vp[2].toObject().asRegExp();
+            RegExpShared *shared = reobj.getShared(cx);
+            if (!shared)
                 return false;
+            matcher.init(NeedsIncRef<RegExpShared>(shared));
         } else {
             if (convertVoid && (argc == 0 || vp[2].isUndefined())) {
                 fm.patstr = cx->runtime->emptyString;
@@ -1431,7 +1397,7 @@ class RegExpGuard
     tryFlatMatch(JSContext *cx, JSString *textstr, uintN optarg, uintN argc,
                  bool checkMetaChars = true)
     {
-        if (!rep.null())
+        if (matcher.initialized())
             return NULL;
 
         fm.pat = fm.patstr->chars();
@@ -1461,11 +1427,11 @@ class RegExpGuard
     }
 
     /* If the pattern is not already a regular expression, make it so. */
-    const RegExpPair *
+    const RegExpMatcher *
     normalizeRegExp(bool flat, uintN optarg, uintN argc, Value *vp)
     {
-        if (!rep.null())
-            return &rep;
+        if (matcher.initialized())
+            return &matcher;
 
         /* Build RegExp from pattern string. */
         JSString *opt;
@@ -1487,14 +1453,14 @@ class RegExpGuard
         }
         JS_ASSERT(patstr);
 
-        if (!rep.reset(patstr, opt))
+        if (!matcher.init(patstr, opt))
             return NULL;
 
-        return &rep;
+        return &matcher;
     }
 
 #if DEBUG
-    bool hasRegExpPair() const { return !rep.null(); }
+    bool matcherInitialized() const { return matcher.initialized(); }
 #endif
 };
 
@@ -1523,22 +1489,18 @@ enum MatchControlFlags {
 
 /* Factor out looping and matching logic. */
 static bool
-DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpPair &regExpPair,
+DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpMatcher &matcher,
         DoMatchCallback callback, void *data, MatchControlFlags flags, Value *rval)
 {
-    RegExpMatcher &matcher = regExpPair.matcher();
     JSLinearString *linearStr = str->ensureLinear(cx);
     if (!linearStr)
         return false;
+
     const jschar *chars = linearStr->chars();
     size_t length = linearStr->length();
 
     if (matcher.global()) {
-        /* global matching ('g') */
         RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
-        if (RegExpObject *reobj = regExpPair.reobj())
-            reobj->zeroLastIndex();
-
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
             if (!ExecuteRegExp(cx, res, matcher, linearStr, chars, length, &i, type, rval))
                 return false;
@@ -1550,7 +1512,6 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpPair &regE
                 ++i;
         }
     } else {
-        /* single match */
         RegExpExecType type = (flags & TEST_SINGLE_BIT) ? RegExpTest : RegExpExec;
         bool callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
@@ -1618,18 +1579,18 @@ js::str_match(JSContext *cx, uintN argc, Value *vp)
     if (cx->isExceptionPending())  /* from tryFlatMatch */
         return false;
 
-    const RegExpPair *rep = g.normalizeRegExp(false, 1, argc, vp);
-    if (!rep)
+    const RegExpMatcher *matcher = g.normalizeRegExp(false, 1, argc, vp);
+    if (!matcher)
         return false;
 
     JSObject *array = NULL;
     MatchArgType arg = &array;
     RegExpStatics *res = cx->regExpStatics();
     Value rval;
-    if (!DoMatch(cx, res, str, *rep, MatchCallback, arg, MATCH_ARGS, &rval))
+    if (!DoMatch(cx, res, str, *matcher, MatchCallback, arg, MATCH_ARGS, &rval))
         return false;
 
-    if (rep->matcher().global())
+    if (matcher->global())
         vp->setObjectOrNull(array);
     else
         *vp = rval;
@@ -1650,22 +1611,25 @@ js::str_search(JSContext *cx, uintN argc, Value *vp)
         vp->setInt32(fm->match());
         return true;
     }
+
     if (cx->isExceptionPending())  /* from tryFlatMatch */
         return false;
 
-    const RegExpPair *rep = g.normalizeRegExp(false, 1, argc, vp);
-    if (!rep)
+    const RegExpMatcher *matcher = g.normalizeRegExp(false, 1, argc, vp);
+    if (!matcher)
         return false;
 
     JSLinearString *linearStr = str->ensureLinear(cx);
     if (!linearStr)
         return false;
+
     const jschar *chars = linearStr->chars();
     size_t length = linearStr->length();
     RegExpStatics *res = cx->regExpStatics();
+
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
-    if (!ExecuteRegExp(cx, res, rep->matcher(), linearStr, chars, length, &i, RegExpTest, vp))
+    if (!ExecuteRegExp(cx, res, *matcher, linearStr, chars, length, &i, RegExpTest, vp))
         return false;
 
     if (vp->isTrue())
@@ -2106,8 +2070,8 @@ BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *reps
 static inline bool
 str_replace_regexp(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata)
 {
-    const RegExpPair *rep = rdata.g.normalizeRegExp(true, 2, argc, vp);
-    if (!rep)
+    const RegExpMatcher *matcher = rdata.g.normalizeRegExp(true, 2, argc, vp);
+    if (!matcher)
         return false;
 
     rdata.leftIndex = 0;
@@ -2115,7 +2079,7 @@ str_replace_regexp(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata)
 
     RegExpStatics *res = cx->regExpStatics();
     Value tmp;
-    if (!DoMatch(cx, res, rdata.str, *rep, ReplaceRegExpCallback, &rdata, REPLACE_ARGS, &tmp))
+    if (!DoMatch(cx, res, rdata.str, *matcher, ReplaceRegExpCallback, &rdata, REPLACE_ARGS, &tmp))
         return false;
 
     if (!rdata.calledBack) {
@@ -2270,7 +2234,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
     if (!fm) {
         if (cx->isExceptionPending())  /* oom in RopeMatch in tryFlatMatch */
             return false;
-        JS_ASSERT_IF(!rdata.g.hasRegExpPair(), argc > optarg);
+        JS_ASSERT_IF(!rdata.g.matcherInitialized(), argc > optarg);
         return str_replace_regexp(cx, argc, vp, rdata);
     }
 
@@ -2461,11 +2425,7 @@ class SplitRegExpMatcher {
 
     inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
                            SplitMatchResult *result) {
-        Value rval
-#ifdef __GNUC__ /* quell GCC overwarning */
-            = UndefinedValue()
-#endif
-        ;
+        Value rval = UndefinedValue();
         const jschar *chars = str->chars();
         size_t length = str->length();
         if (!ExecuteRegExp(cx, res, matcher, str, chars, length, &index, RegExpTest, &rval))
@@ -2537,8 +2497,11 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
     bool sepUndefined = (argc == 0 || vp[2].isUndefined());
     if (!sepUndefined) {
         if (ValueIsRegExp(vp[2])) {
-            if (!matcher.reset(&vp[2].toObject().asRegExp()))
+            RegExpObject &reobj = vp[2].toObject().asRegExp();
+            RegExpShared *shared = reobj.getShared(cx);
+            if (!shared)
                 return false;
+            matcher.init(NeedsIncRef<RegExpShared>(shared));
         } else {
             JSString *sep = ToString(cx, vp[2]);
             if (!sep)
@@ -2577,7 +2540,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
 
     /* Steps 11-15. */
     JSObject *aobj;
-    if (matcher.null()) {
+    if (!matcher.initialized()) {
         // NB: sepstr is anchored through its storage in vp[2].
         aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr), type);
     } else {
