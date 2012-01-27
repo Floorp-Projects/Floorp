@@ -183,9 +183,7 @@ private:
     };
 
     static Properties sProtoProperties[];
-    static size_t sProtoPropertiesCount;
     static Methods sProtoMethods[];
-    static size_t sProtoMethodsCount;
 
     static JSObject *ensureExpandoObject(JSContext *cx, JSObject *obj);
 
@@ -246,15 +244,14 @@ public:
     static bool objIsList(JSObject *obj) {
         return js::IsProxy(obj) && proxyHandlerIsList(js::GetProxyHandler(obj));
     }
-    static inline bool instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee);
+    static bool instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee);
     virtual bool isInstanceOf(JSObject *prototype)
     {
         return js::GetObjectClass(prototype) == &sInterfaceClass;
     }
-    static inline ListType *getListObject(JSObject *obj);
+    static ListType *getListObject(JSObject *obj);
 
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope);
-    static inline bool protoIsClean(JSContext *cx, JSObject *proto, bool *isClean);
     static bool shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *shouldCache);
     static bool resolveNativeName(JSContext *cx, JSObject *proxy, jsid id,
                                   JSPropertyDescriptor *desc);

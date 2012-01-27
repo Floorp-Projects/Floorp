@@ -443,7 +443,7 @@ listTemplate = (
 "    JS_EnumerateStub,\n"
 "    JS_ResolveStub,\n"
 "    JS_ConvertStub,\n"
-"    JS_FinalizeStub,\n"
+"    NULL,                   /* finalize */\n"
 "    NULL,                   /* reserved0 */\n"
 "    NULL,                   /* checkAccess */\n"
 "    NULL,                   /* call */\n"
@@ -527,27 +527,16 @@ nameSetterTemplate = (
 "}\n"
 "\n")
 
-propertiesTemplate = (
+listTemplateFooter = (
 "template<>\n"
 "${name}Wrapper::Properties ${name}Wrapper::sProtoProperties[] = {\n"
 "${properties}\n"
 "};\n"
-"\n"
-"template<>\n"
-"size_t ${name}Wrapper::sProtoPropertiesCount = ArrayLength(${name}Wrapper::sProtoProperties);\n"
-"\n")
-
-methodsTemplate = (
-"template<>\n"
+"\n""template<>\n"
 "${name}Wrapper::Methods ${name}Wrapper::sProtoMethods[] = {\n"
 "${methods}\n"
 "};\n"
 "\n"
-"template<>\n"
-"size_t ${name}Wrapper::sProtoMethodsCount = ArrayLength(${name}Wrapper::sProtoMethods);\n"
-"\n")
-
-listTemplateFooter = (
 "template class ListBase<${name}Class>;\n"
 "\n"
 "JSObject*\n"
@@ -729,11 +718,7 @@ def writeStubFile(filename, config, interfaces):
                 else:
                     propertiesList.append(writeAttrStubs(f, clazz.name, member))
 
-            if len(propertiesList) > 0:
-                f.write(string.Template(propertiesTemplate).substitute(clazz, properties=",\n".join(propertiesList)))
-            if len(methodsList) > 0:
-                f.write(string.Template(methodsTemplate).substitute(clazz, methods=",\n".join(methodsList)))
-            f.write(string.Template(listTemplateFooter).substitute(clazz))
+            f.write(string.Template(listTemplateFooter).substitute(clazz, methods=",\n".join(methodsList), properties=",\n".join(propertiesList)))
             
         f.write("// Register prototypes\n\n")
 
