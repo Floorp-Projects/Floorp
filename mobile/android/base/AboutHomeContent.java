@@ -281,13 +281,8 @@ public class AboutHomeContent extends ScrollView {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 loadTopSites(activity);
-
-                GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
-                        readLastTabs(activity);
-                        readRecommendedAddons(activity);
-                    }
-                });
+                readLastTabs(activity);
+                readRecommendedAddons(activity);
             }
         });
     }
