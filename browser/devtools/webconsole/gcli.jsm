@@ -6544,6 +6544,7 @@ define('gcli/ui/field', ['require', 'exports', 'module' , 'gcli/util', 'gcli/l10
 
 var dom = require('gcli/util').dom;
 var createEvent = require('gcli/util').createEvent;
+var KeyEvent = require('gcli/util').event.KeyEvent;
 var l10n = require('gcli/l10n');
 
 var Argument = require('gcli/argument').Argument;
@@ -6572,16 +6573,21 @@ var Menu = require('gcli/ui/menu').Menu;
  * This class is designed to be inherited from. It's important that all
  * subclasses have a similar constructor signature because they are created
  * via getField(...)
- * @param document The document we use in calling createElement
  * @param type The type to use in conversions
- * @param named Is this parameter named? That is to say, are positional
- * arguments disallowed, if true, then we need to provide updates to the
- * command line that explicitly name the parameter in use (e.g. --verbose, or
- * --name Fred rather than just true or Fred)
- * @param name If this parameter is named, what name should we use
- * @param requ The requisition that we're attached to
+ * @param options A set of properties to help fields configure themselves:
+ * - document: The document we use in calling createElement
+ * - named: Is this parameter named? That is to say, are positional
+ *         arguments disallowed, if true, then we need to provide updates to
+ *         the command line that explicitly name the parameter in use
+ *         (e.g. --verbose, or --name Fred rather than just true or Fred)
+ * - name: If this parameter is named, what name should we use
+ * - requisition: The requisition that we're attached to
+ * - required: Boolean to indicate if this is a mandatory field
  */
-function Field(document, type, named, name, requ) {
+function Field(type, options) {
+  this.type = type;
+  this.document = options.document;
+  this.requisition = options.requisition;
 }
 
 /**
@@ -6638,10 +6644,14 @@ Field.prototype.setMessage = function(message) {
  * Method to be called by subclasses when their input changes, which allows us
  * to properly pass on the fieldChanged event.
  */
-Field.prototype.onInputChange = function() {
+Field.prototype.onInputChange = function(ev) {
   var conversion = this.getConversion();
   this.fieldChanged({ conversion: conversion });
   this.setMessage(conversion.message);
+
+  if (ev.keyCode === KeyEvent.DOM_VK_RETURN) {
+    this.requisition.exec();
+  }
 };
 
 /**
@@ -6715,8 +6725,7 @@ exports.getField = getField;
  * A field that allows editing of strings
  */
 function StringField(type, options) {
-  this.document = options.document;
-  this.type = type;
+  Field.call(this, type, options);
   this.arg = new Argument();
 
   this.element = dom.createElement(this.document, 'input');
@@ -6763,8 +6772,7 @@ addField(StringField);
  * A field that allows editing of numbers using an [input type=number] field
  */
 function NumberField(type, options) {
-  this.document = options.document;
-  this.type = type;
+  Field.call(this, type, options);
   this.arg = new Argument();
 
   this.element = dom.createElement(this.document, 'input');
@@ -6818,8 +6826,8 @@ addField(NumberField);
  * A field that uses a checkbox to toggle a boolean field
  */
 function BooleanField(type, options) {
-  this.document = options.document;
-  this.type = type;
+  Field.call(this, type, options);
+
   this.name = options.name;
   this.named = options.named;
 
@@ -6876,8 +6884,8 @@ addField(BooleanField);
  * </ul>
  */
 function SelectionField(type, options) {
-  this.document = options.document;
-  this.type = type;
+  Field.call(this, type, options);
+
   this.items = [];
 
   this.element = dom.createElement(this.document, 'select');
@@ -6944,9 +6952,7 @@ addField(SelectionField);
  * A field that allows editing of javascript
  */
 function JavascriptField(type, options) {
-  this.document = options.document;
-  this.type = type;
-  this.requ = options.requisition;
+  Field.call(this, type, options);
 
   this.onInputChange = this.onInputChange.bind(this);
   this.arg = new Argument('', '{ ', ' }');
@@ -7050,10 +7056,8 @@ addField(JavascriptField);
  * last possible time
  */
 function DeferredField(type, options) {
-  this.document = options.document;
-  this.type = type;
+  Field.call(this, type, options);
   this.options = options;
-  this.requisition = options.requisition;
   this.requisition.assignmentChange.add(this.update, this);
 
   this.element = dom.createElement(this.document, 'div');
@@ -7111,8 +7115,8 @@ addField(DeferredField);
  * BlankFields are not for general use.
  */
 function BlankField(type, options) {
-  this.document = options.document;
-  this.type = type;
+  Field.call(this, type, options);
+
   this.element = dom.createElement(this.document, 'div');
 
   this.fieldChanged = createEvent('BlankField.fieldChanged');
@@ -7139,10 +7143,8 @@ addField(BlankField);
  * given for a parameter.
  */
 function ArrayField(type, options) {
-  this.document = options.document;
-  this.type = type;
+  Field.call(this, type, options);
   this.options = options;
-  this.requ = options.requisition;
 
   this._onAdd = this._onAdd.bind(this);
   this.members = [];
