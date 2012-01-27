@@ -262,18 +262,16 @@ struct TokenPos {
     TokenPtr          end;            /* index 1 past last char, last line */
 
     static TokenPos make(const TokenPtr &begin, const TokenPtr &end) {
-        // Assertions temporarily disabled by jorendorff. See bug 695922.
-        //JS_ASSERT(begin <= end);
+        JS_ASSERT(begin <= end);
         TokenPos pos = {begin, end};
         return pos;
     }
 
     /* Return a TokenPos that covers left, right, and anything in between. */
     static TokenPos box(const TokenPos &left, const TokenPos &right) {
-        // Assertions temporarily disabled by jorendorff. See bug 695922.
-        //JS_ASSERT(left.begin <= left.end);
-        //JS_ASSERT(left.end <= right.begin);
-        //JS_ASSERT(right.begin <= right.end);
+        JS_ASSERT(left.begin <= left.end);
+        JS_ASSERT(left.end <= right.begin);
+        JS_ASSERT(right.begin <= right.end);
         TokenPos pos = {left.begin, right.end};
         return pos;
     }
