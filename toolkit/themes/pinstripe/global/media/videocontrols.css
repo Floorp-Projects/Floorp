@@ -196,6 +196,24 @@
   background: url(chrome://global/skin/media/error.png) no-repeat center;
 }
 
+/* Overlay Play button */
+.clickToPlay {
+  width: 64px;
+  height: 64px;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  opacity: 0.7;
+  background-image: url(chrome://global/skin/media/clicktoplay-bgtexture.png),
+                    url(chrome://global/skin/media/videoClickToPlayButton.svg);
+  background-repeat: repeat, no-repeat;
+  background-position: center, center;
+  background-size: auto, 64px 64px;
+  background-color: hsla(0,0%,10%,.5);
+}
+.clickToPlay:hover {
+  opacity: 1;
+}
+
 /* Statistics formatting */
 html|*.statsDiv {
   position: relative;
@@ -222,6 +240,18 @@ html|table {
 }
 
 /* CSS Transitions */
+.clickToPlay {
+  -moz-transition-property: opacity, background-size;
+  -moz-transition-duration: 400ms, 400ms;
+}
+.clickToPlay[fadeout] {
+  background-size: auto, 192px 192px;
+  opacity: 0;
+}
+.clickToPlay[fadeout][immediate] {
+  -moz-transition-property: opacity, background-size;
+  -moz-transition-duration: 0s, 0s;
+}
 .controlBar:not([immediate]) {
   -moz-transition-property: opacity;
   -moz-transition-duration: 200ms;
