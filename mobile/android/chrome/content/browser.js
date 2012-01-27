@@ -1573,12 +1573,16 @@ Tab.prototype = {
 
   screenshot: function(aSrc, aDst) {
       if (!this.browser || !this.browser.contentWindow)
-          return;
+        return;
+
       let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
       canvas.setAttribute("width", aDst.width);  
       canvas.setAttribute("height", aDst.height);
+      canvas.setAttribute("moz-opaque", "true");
+
       let ctx = canvas.getContext("2d");
-      ctx.drawWindow(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, "rgb(255, 255, 255)");
+      let flags = ctx.DRAWWINDOW_DO_NOT_FLUSH;
+      ctx.drawWindow(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, "#fff", flags);
       let message = {
         gecko: {
           type: "Tab:ScreenshotData",
