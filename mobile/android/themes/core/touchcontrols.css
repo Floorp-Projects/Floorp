@@ -48,6 +48,11 @@
   background: url("chrome://browser/skin/images/unmute-hdpi.png") no-repeat center;
 }
 
+/* This button is hidden until bug 704229 is fixed. */
+.fullscreenButton {
+  display: none;
+}
+
 /* bars */
 .scrubberStack {
   width: 100%;
