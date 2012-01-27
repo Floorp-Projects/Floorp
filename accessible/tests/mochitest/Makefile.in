@@ -75,6 +75,7 @@ _TEST_FILES =\
 		actions.js \
 		attributes.js \
 		autocomplete.js \
+		browser.js \
 		common.js \
 		events.js \
 		grid.js \

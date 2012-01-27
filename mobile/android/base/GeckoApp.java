@@ -1102,8 +1102,8 @@ abstract public class GeckoApp
         public void run() {
             mAutoCompletePopup.hide();
             if (mAboutHomeContent == null && mShow) {
-                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext, null);
-                mAboutHomeContent.init(GeckoApp.mAppContext);
+                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext);
+                mAboutHomeContent.update(GeckoApp.mAppContext, AboutHomeContent.UpdateFlags.ALL);
                 mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                     public void callback(String url) {
                         mBrowserToolbar.setProgressVisibility(true);
@@ -1114,7 +1114,11 @@ abstract public class GeckoApp
                     new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, 
                                                     LayoutParams.FILL_PARENT);
                 mGeckoLayout.addView(mAboutHomeContent, lp);
+            } else if (mAboutHomeContent != null && mShow) {
+                mAboutHomeContent.update(GeckoApp.mAppContext,
+                                         EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
             }
+
             if (mAboutHomeContent != null)
                 mAboutHomeContent.setVisibility(mShow ? View.VISIBLE : View.GONE);
         }
