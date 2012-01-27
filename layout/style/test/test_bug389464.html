@@ -31,7 +31,7 @@ SimpleTest.waitForExplicitFinish();
 var cs1 = getComputedStyle(document.getElementById("one"), "");
 var cs2 = getComputedStyle(document.getElementById("two"), "");
 
-SpecialPowers.pushPrefEnv({'set': [['variable.x-western', 25], ['fixed.x-western', 20]]}, function() setTimeout(part1, 0));
+SpecialPowers.pushPrefEnv({'set': [['variable.x-western', 25], ['fixed.x-western', 20]]}, part1);
 
 function part1()
 {

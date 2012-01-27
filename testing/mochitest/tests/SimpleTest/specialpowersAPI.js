@@ -546,8 +546,21 @@ SpecialPowersAPI.prototype = {
     }
 
     if (pendingActions.length > 0) {
+      // The callback needs to be delayed twice. One delay is because the pref
+      // service doesn't guarantee the order it calls its observers in, so it
+      // may notify the observer holding the callback before the other
+      // observers have been notified and given a chance to make the changes
+      // that the callback checks for. The second delay is because pref
+      // observers often defer making their changes by posting an event to the
+      // event loop.
+      function delayedCallback() {
+        function delayAgain() {
+          content.window.setTimeout(callback, 0);
+        }
+        content.window.setTimeout(delayAgain, 0);
+      }
       this._prefEnvUndoStack.push(cleanupActions);
-      this._pendingPrefs.push([pendingActions, callback]);
+      this._pendingPrefs.push([pendingActions, delayedCallback]);
       this._applyPrefs();
     } else {
       content.window.setTimeout(callback, 0);
@@ -556,8 +569,16 @@ SpecialPowersAPI.prototype = {
 
   popPrefEnv: function(callback) {
     if (this._prefEnvUndoStack.length > 0) {
+      // See pushPrefEnv comment regarding delay.
+      function delayedCallback() {
+        function delayAgain() {
+          content.window.setTimeout(callback, 0);
+        }
+        content.window.setTimeout(delayAgain, 0);
+      }
+      let cb = callback ? delayedCallback : null; 
       /* Each pop will have a valid block of preferences */
-      this._pendingPrefs.push([this._prefEnvUndoStack.pop(), callback]);
+      this._pendingPrefs.push([this._prefEnvUndoStack.pop(), cb]);
       this._applyPrefs();
     } else {
       content.window.setTimeout(callback, 0);
