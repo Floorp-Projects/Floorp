@@ -53,7 +53,7 @@
 namespace JS {
 
 /* Data for tracking analysis/inference memory usage. */
-struct TypeInferenceMemoryStats
+struct TypeInferenceSizes
 {
     int64_t scripts;
     int64_t objects;
@@ -113,7 +113,7 @@ struct CompartmentStats
     int64_t mjitCode;
     int64_t mjitData;
 #endif
-    TypeInferenceMemoryStats typeInferenceMemory;
+    TypeInferenceSizes typeInferenceSizes;
 };
 
 struct IterateData
@@ -194,19 +194,6 @@ GetExplicitNonHeapForRuntime(JSRuntime *rt, int64_t *amount,
                              JSMallocSizeOfFun mallocSizeOf);
 
 #endif /* JS_THREADSAFE */
-
-extern void
-SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment,
-                                   TypeInferenceMemoryStats *stats,
-                                   JSMallocSizeOfFun mallocSizeOf);
-
-extern void
-SizeOfTypeObjectExcludingThis(/*TypeObject*/ void *object,
-                              TypeInferenceMemoryStats *stats,
-                              JSMallocSizeOfFun mallocSizeOf);
-
-extern size_t
-SizeOfCompartmentShapeTable(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf);
 
 extern JS_PUBLIC_API(size_t)
 SystemCompartmentCount(const JSRuntime *rt);

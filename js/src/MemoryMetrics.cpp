@@ -70,11 +70,8 @@ CompartmentMemoryCallback(JSContext *cx, void *vdata, JSCompartment *compartment
 #ifdef JS_METHODJIT
     curr.mjitCode = compartment->sizeOfMjitCode();
 #endif
-    SizeOfCompartmentTypeInferenceData(cx, compartment,
-                                       &curr.typeInferenceMemory,
-                                       data->mallocSizeOf);
-    curr.shapesCompartmentTables =
-        SizeOfCompartmentShapeTable(compartment, data->mallocSizeOf);
+    compartment->sizeOfTypeInferenceData(cx, &curr.typeInferenceSizes, data->mallocSizeOf);
+    curr.shapesCompartmentTables = compartment->sizeOfShapeTable(data->mallocSizeOf);
 }
 
 static void
@@ -178,8 +175,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
     {
         types::TypeObject *obj = static_cast<types::TypeObject *>(thing);
         curr->gcHeapTypeObjects += thingSize;
-        SizeOfTypeObjectExcludingThis(obj, &curr->typeInferenceMemory,
-                                      data->mallocSizeOf);
+        obj->sizeOfExcludingThis(&curr->typeInferenceSizes, data->mallocSizeOf);
         break;
     }
     case JSTRACE_XML:
@@ -292,10 +288,10 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
                               stats.mjitData;
 #endif
         data->totalTypeInference += stats.gcHeapTypeObjects +
-                                    stats.typeInferenceMemory.objects +
-                                    stats.typeInferenceMemory.scripts +
-                                    stats.typeInferenceMemory.tables;
-        data->totalAnalysisTemp  += stats.typeInferenceMemory.temporary;
+                                    stats.typeInferenceSizes.objects +
+                                    stats.typeInferenceSizes.scripts +
+                                    stats.typeInferenceSizes.tables;
+        data->totalAnalysisTemp  += stats.typeInferenceSizes.temporary;
     }
 
     size_t numDirtyChunks = (data->gcHeapChunkTotal -
