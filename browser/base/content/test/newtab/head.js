@@ -126,10 +126,15 @@ function addNewTabPageTab() {
 
     cw = browser.contentWindow;
 
-    if (NewTabUtils.allPages.enabled)
+    if (NewTabUtils.allPages.enabled) {
       cells = cw.gGrid.cells;
 
-    TestRunner.next();
+      // Continue when the link cache has been populated.
+      NewTabUtils.links.populateCache(TestRunner.next);
+    } else {
+      TestRunner.next();
+    }
+
   }, true);
 }
 

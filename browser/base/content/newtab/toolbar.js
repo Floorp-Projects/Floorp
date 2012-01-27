@@ -60,7 +60,7 @@ let gToolbar = {
 
         // Without the setTimeout() we have a strange flicker.
         setTimeout(function () gTransformation.fadeNodeIn(node, aCallback));
-      });
+      }, true);
     });
   },
 
