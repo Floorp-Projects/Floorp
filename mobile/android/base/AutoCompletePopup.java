@@ -43,6 +43,7 @@ import org.mozilla.gecko.gfx.FloatSize;
 import android.content.Context;
 import android.util.Log;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -65,6 +66,9 @@ public class AutoCompletePopup extends ListView {
     private Animation mAnimation; 
 
     private static final String LOGTAG = "AutoCompletePopup";
+
+    private static int sMinWidth = 0;
+    private static final int AUTOCOMPLETE_MIN_WIDTH_IN_DPI = 200;
 
     public AutoCompletePopup(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -127,10 +131,25 @@ public class AutoCompletePopup extends ListView {
 
         FloatSize viewport = GeckoApp.mAppContext.getLayerController().getViewportSize();
 
+        // Late initializing variable to allow DisplayMetrics not to be null and avoid NPE
+        if (sMinWidth == 0) {
+            DisplayMetrics metrics = new DisplayMetrics();
+            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            sMinWidth = (int) (AUTOCOMPLETE_MIN_WIDTH_IN_DPI * metrics.density);
+        }
+
         // If the textbox is smaller than the screen-width,
         // shrink the list's width
         if ((left + width) < viewport.width) 
-            listWidth = left + width;
+            listWidth = left < 0 ? left + width : width;
+
+        // listWidth can be negative if it is a constant - FILL_PARENT or MATCH_PARENT
+        if (listWidth >= 0 && listWidth < sMinWidth) {
+            listWidth = sMinWidth;
+
+            if ((listLeft + listWidth) > viewport.width)
+                listLeft = (int) (viewport.width - listWidth);
+        }
 
         // If the list is extending outside of the viewport
         // try moving above
