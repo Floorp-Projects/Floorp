@@ -114,68 +114,60 @@ public class AboutHomeContent extends ScrollView {
     public AboutHomeContent(Context context) {
         super(context);
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    }
+        mInflater.inflate(R.layout.abouthome_content, this);
 
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-        synchronized (this) {
-            if (mTopSitesGrid != null && mAddonsLayout != null && mLastTabsLayout != null)
-                return;
+        mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
+        mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                Cursor c = (Cursor) parent.getItemAtPosition(position);
 
-            mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
-            mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                    Cursor c = (Cursor) parent.getItemAtPosition(position);
+                String spec = c.getString(c.getColumnIndex(URLColumns.URL));
+                Log.i(LOGTAG, "clicked: " + spec);
 
-                    String spec = c.getString(c.getColumnIndex(URLColumns.URL));
-                    Log.i(LOGTAG, "clicked: " + spec);
-
-                    if (mUriLoadCallback != null)
-                        mUriLoadCallback.callback(spec);
-                }
-            });
-
-            mAddonsLayout = (LinearLayout) findViewById(R.id.recommended_addons);
-            mLastTabsLayout = (LinearLayout) findViewById(R.id.last_tabs);
-
-            TextView allTopSitesText = (TextView) findViewById(R.id.all_top_sites_text);
-            allTopSitesText.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    GeckoApp.mAppContext.showAwesomebar(AwesomeBar.Type.EDIT);
-                }
-            });
-
-            TextView allAddonsText = (TextView) findViewById(R.id.all_addons_text);
-            allAddonsText.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    if (mUriLoadCallback != null)
-                        mUriLoadCallback.callback("about:addons");
-                }
-            });
-
-            TextView syncTextView = (TextView) findViewById(R.id.sync_text);
-            String syncText = syncTextView.getText().toString() + " \u00BB";
-            String boldName = getContext().getResources().getString(R.string.abouthome_sync_bold_name);
-            int styleIndex = syncText.indexOf(boldName);
-
-            // Highlight any occurrence of "Firefox Sync" in the string
-            // with a bold style.
-            if (styleIndex >= 0) {
-                SpannableString spannableText = new SpannableString(syncText);
-                spannableText.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), styleIndex, styleIndex + 12, 0);
-                syncTextView.setText(spannableText, TextView.BufferType.SPANNABLE);
+                if (mUriLoadCallback != null)
+                    mUriLoadCallback.callback(spec);
             }
+        });
 
-            RelativeLayout syncBox = (RelativeLayout) findViewById(R.id.sync_box);
-            syncBox.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Context context = v.getContext();
-                    Intent intent = new Intent(context, SetupSyncActivity.class);
-                    context.startActivity(intent);
-                }
-            });
+        mAddonsLayout = (LinearLayout) findViewById(R.id.recommended_addons);
+        mLastTabsLayout = (LinearLayout) findViewById(R.id.last_tabs);
+
+        TextView allTopSitesText = (TextView) findViewById(R.id.all_top_sites_text);
+        allTopSitesText.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                GeckoApp.mAppContext.showAwesomebar(AwesomeBar.Type.EDIT);
+            }
+        });
+
+        TextView allAddonsText = (TextView) findViewById(R.id.all_addons_text);
+        allAddonsText.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (mUriLoadCallback != null)
+                    mUriLoadCallback.callback("about:addons");
+            }
+        });
+
+        TextView syncTextView = (TextView) findViewById(R.id.sync_text);
+        String syncText = syncTextView.getText().toString() + " \u00BB";
+        String boldName = getContext().getResources().getString(R.string.abouthome_sync_bold_name);
+        int styleIndex = syncText.indexOf(boldName);
+
+        // Highlight any occurrence of "Firefox Sync" in the string
+        // with a bold style.
+        if (styleIndex >= 0) {
+            SpannableString spannableText = new SpannableString(syncText);
+            spannableText.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), styleIndex, styleIndex + 12, 0);
+            syncTextView.setText(spannableText, TextView.BufferType.SPANNABLE);
         }
+
+        RelativeLayout syncBox = (RelativeLayout) findViewById(R.id.sync_box);
+        syncBox.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Context context = v.getContext();
+                Intent intent = new Intent(context, SetupSyncActivity.class);
+                context.startActivity(intent);
+            }
+        });
     }
 
     private void setTopSitesVisibility(boolean visible, boolean hasTopSites) {
@@ -250,8 +242,7 @@ public class AboutHomeContent extends ScrollView {
     }
 
     void init(final Activity activity) {
-        mInflater.inflate(R.layout.abouthome_content, this);
-        final Runnable generateCursorsRunnable = new Runnable() {
+        GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 if (mCursor != null)
                     activity.stopManagingCursor(mCursor);
@@ -294,14 +285,7 @@ public class AboutHomeContent extends ScrollView {
                     }
                 });
             }
-        };
-        Runnable finishInflateRunnable = new Runnable() {
-            public void run() {
-                onFinishInflate();
-                GeckoAppShell.getHandler().post(generateCursorsRunnable);
-            }
-        };
-        GeckoApp.mAppContext.mMainHandler.post(finishInflateRunnable);
+        });
     }
 
     public void setUriLoadCallback(UriLoadCallback uriLoadCallback) {
