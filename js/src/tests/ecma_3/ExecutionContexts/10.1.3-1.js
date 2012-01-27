@@ -104,7 +104,10 @@ addThis();
 
 /*
  * f.toString() should preserve any duplicate formal parameter names that exist
+ *
+ * Note: this test case is disabled for bug 714614.
  */
+/*
 function f5(x,x,x,x)
 {
 }
@@ -113,6 +116,7 @@ actual = f5.toString().match(/\((.*)\)/)[1];
 actual = actual.replace(/\s/g, ''); // for definiteness, remove any white space
 expect = 'x,x,x,x';
 addThis();
+*/
 
 
 function f6(x,x,x,x)
