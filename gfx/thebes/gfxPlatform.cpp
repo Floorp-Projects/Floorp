@@ -529,16 +529,16 @@ cairo_user_data_key_t kDrawSourceSurface;
 static void
 DataSourceSurfaceDestroy(void *dataSourceSurface)
 {
-      static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
+  static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
 }
 
-void DestroyThebesSurface(void *data)
+UserDataKey kThebesSurfaceKey;
+void
+DestroyThebesSurface(void *data)
 {
   gfxASurface *surface = static_cast<gfxASurface*>(data);
   surface->Release();
 }
-
-UserDataKey ThebesSurfaceKey;
 
 // The semantics of this function are sort of weird. We snapshot the first
 // time and then return the snapshotted surface for the lifetime of the
@@ -546,7 +546,8 @@ UserDataKey ThebesSurfaceKey;
 already_AddRefed<gfxASurface>
 gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  void *surface = aTarget->GetUserData(&ThebesSurfaceKey);
+  // If we have already created a thebes surface, we can just return it.
+  void *surface = aTarget->GetUserData(&kThebesSurfaceKey);
   if (surface) {
     nsRefPtr<gfxASurface> surf = static_cast<gfxASurface*>(surface);
     return surf.forget();
@@ -571,7 +572,7 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
   // add a reference to be held by the drawTarget
   // careful, the reference graph is getting complicated here
   surf->AddRef();
-  aTarget->AddUserData(&ThebesSurfaceKey, surf.get(), DestroyThebesSurface);
+  aTarget->AddUserData(&kThebesSurfaceKey, surf.get(), DestroyThebesSurface);
 
   return surf.forget();
 }
