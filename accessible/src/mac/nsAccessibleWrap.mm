@@ -127,7 +127,10 @@ nsAccessibleWrap::GetNativeType ()
     case roles::TEXT_LEAF:
       // normal textfield (static or editable)
       return [mozTextAccessible class]; 
-      
+
+    case roles::LINK:
+      return [mozLinkAccessible class];
+
     case roles::COMBOBOX:
       return [mozPopupButtonAccessible class];
       
