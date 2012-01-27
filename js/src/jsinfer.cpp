@@ -5669,9 +5669,6 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto)
      */
     JS_ASSERT_IF(cx->typeInferenceEnabled(), hasSingletonType());
 
-    /* Inner objects may not appear on prototype chains. */
-    JS_ASSERT_IF(proto, !proto->getClass()->ext.outerObject);
-
     /*
      * Force type instantiation when splicing lazy types. This may fail,
      * in which case inference will be disabled for the compartment.
