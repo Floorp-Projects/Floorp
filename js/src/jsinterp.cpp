@@ -994,10 +994,6 @@ EnterWith(JSContext *cx, jsint stackIndex)
     if (!parent)
         return JS_FALSE;
 
-    OBJ_TO_INNER_OBJECT(cx, obj);
-    if (!obj)
-        return JS_FALSE;
-
     JSObject *withobj = WithObject::create(cx, fp, *obj, *parent,
                                            sp + stackIndex - fp->base());
     if (!withobj)
