@@ -93,6 +93,19 @@ public class BrowserToolbar extends LinearLayout {
         super(context, attrs);
         mContext = context;
         mInflated = false;
+
+        // Get the device's highlight color
+        TypedArray typedArray;
+
+        if (Build.VERSION.SDK_INT >= 11) {            
+            typedArray = context.obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+        } else {
+            ContextThemeWrapper wrapper  = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
+            typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+        }
+
+        mColor = typedArray.getColor(typedArray.getIndex(0), 0);
+        typedArray.recycle();
     }
 
     @Override
@@ -106,11 +119,6 @@ public class BrowserToolbar extends LinearLayout {
             return;
 
         mInflated = true;
-
-        // Get the device's highlight color
-        ContextThemeWrapper wrapper = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
-        TypedArray typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
-        mColor = typedArray.getColor(typedArray.getIndex(0), 0);
 
         mAwesomeBar = (Button) findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
