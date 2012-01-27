@@ -2969,9 +2969,9 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
   if (aImg->mError)
     return NS_OK;
 
-  // If we don't have a decoder, we must have finished already (for example,
-  // a synchronous decode request came while the worker was pending).
-  if (!aImg->mDecoder)
+  // If mDecoded or we don't have a decoder, we must have finished already (for
+  // example, a synchronous decode request came while the worker was pending).
+  if (!aImg->mDecoder || aImg->mDecoded)
     return NS_OK;
 
   nsRefPtr<Decoder> decoderKungFuDeathGrip = aImg->mDecoder;
@@ -2988,21 +2988,12 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
     maxBytes = gDecodeBytesAtATime;
   }
 
-  // Loop control
   PRInt32 chunkCount = 0;
   TimeStamp start = TimeStamp::Now();
   TimeStamp deadline = start + TimeDuration::FromMilliseconds(gMaxMSBeforeYield);
 
-  // We keep decoding chunks until one of events occurs:
-  // 1) We don't have any data left to decode
-  // 2) The decode completes
-  // 3) We're an UNTIL_SIZE decode and we get the size
-  // 4) We hit the deadline and yield to keep the UI snappy
-  while (aImg->mSourceData.Length() > aImg->mBytesDecoded &&
-         !aImg->IsDecodeFinished() &&
-         TimeStamp::Now() < deadline) {
-
-    // Decode a chunk of data.
+  // Decode some chunks of data.
+  do {
     chunkCount++;
     nsresult rv = aImg->DecodeSomeData(maxBytes);
     if (NS_FAILED(rv)) {
@@ -3010,11 +3001,18 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
       return rv;
     }
 
-    // If we're an UNTIL_SIZE decode and we got the image's size, we're done
-    // here.
+    // We keep decoding chunks until either:
+    //  * we're an UNTIL_SIZE decode and we get the size,
+    //  * we don't have any data left to decode,
+    //  * the decode completes, or
+    //  * we run out of time.
+
     if (aDecodeType == DECODE_TYPE_UNTIL_SIZE && aImg->mHasSize)
       break;
   }
+  while (aImg->mSourceData.Length() > aImg->mBytesDecoded &&
+         !aImg->IsDecodeFinished() &&
+         TimeStamp::Now() < deadline);
 
   aImg->mDecodeRequest.mDecodeTime += (TimeStamp::Now() - start);
 
