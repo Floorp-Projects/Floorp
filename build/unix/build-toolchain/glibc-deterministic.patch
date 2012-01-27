@@ -1,0 +1,36 @@
+diff -ru a/configure.in b/configure.in
+--- a/configure.in	2011-01-17 23:34:07.000000000 -0500
++++ b/configure.in	2012-01-25 20:40:27.919485606 -0500
+@@ -2230,6 +2230,7 @@
+ fi
+ AC_SUBST(old_glibc_headers)
+ 
++libc_cv_slibdir=${prefix}/lib64
+ AC_SUBST(libc_cv_slibdir)
+ AC_SUBST(libc_cv_localedir)
+ AC_SUBST(libc_cv_sysconfdir)
+diff -ru a/csu/Makefile b/csu/Makefile
+--- a/csu/Makefile	2011-01-17 23:34:07.000000000 -0500
++++ b/csu/Makefile	2012-01-23 13:58:28.957792633 -0500
+@@ -234,8 +234,7 @@
+ 		   if [ -z "$$os" ]; then \
+ 		     os=Linux; \
+ 		   fi; \
+-		   printf '"Compiled on a %s %s system on %s.\\n"\n' \
+-			  "$$os" "$$version" "`date +%Y-%m-%d`";; \
++                   ;; \
+ 	   *) ;; \
+ 	 esac; \
+ 	 files="$(all-Banner-files)";				\
+diff -ru a/nscd/nscd_stat.c b/nscd/nscd_stat.c
+--- a/nscd/nscd_stat.c	2011-01-17 23:34:07.000000000 -0500
++++ b/nscd/nscd_stat.c	2012-01-23 15:54:45.231607606 -0500
+@@ -38,7 +38,7 @@
+ 
+ 
+ /* We use this to make sure the receiver is the same.  */
+-static const char compilation[21] = __DATE__ " " __TIME__;
++static const char compilation[21] = "don't need this";
+ 
+ /* Statistic data for one database.  */
+ struct dbstat
