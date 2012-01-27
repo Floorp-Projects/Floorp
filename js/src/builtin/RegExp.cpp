@@ -218,19 +218,18 @@ EscapeNakedForwardSlashes(JSContext *cx, JSLinearString *unescaped)
  *       flags := ToString(flags) if defined(flags) else ''
  */
 static bool
-CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
-                    uintN argc, Value *argv, Value *rval)
+CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 {
-    if (argc == 0) {
+    if (args.length() == 0) {
         RegExpStatics *res = cx->regExpStatics();
         RegExpObject *reobj = builder.build(cx->runtime->emptyString, res->getFlags());
         if (!reobj)
             return false;
-        *rval = ObjectValue(*reobj);
+        args.rval() = ObjectValue(*reobj);
         return true;
     }
 
-    Value sourceValue = argv[0];
+    Value sourceValue = args[0];
     if (ValueIsRegExp(sourceValue)) {
         /*
          * If we get passed in a |RegExpObject| source we return a new
@@ -239,7 +238,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
          * Note: the regexp static flags are not taken into consideration here.
          */
         JSObject &sourceObj = sourceValue.toObject();
-        if (argc >= 2 && !argv[1].isUndefined()) {
+        if (args.length() >= 2 && !args[1].isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEWREGEXP_FLAGGED);
             return false;
         }
@@ -247,7 +246,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
         RegExpObject *reobj = builder.build(&sourceObj.asRegExp());
         if (!reobj)
             return false;
-        *rval = ObjectValue(*reobj);
+        args.rval() = ObjectValue(*reobj);
         return true;
     }
 
@@ -265,11 +264,11 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
     }
 
     RegExpFlag flags = RegExpFlag(0);
-    if (argc > 1 && !argv[1].isUndefined()) {
-        JSString *flagStr = ToString(cx, argv[1]);
+    if (args.length() > 1 && !args[1].isUndefined()) {
+        JSString *flagStr = ToString(cx, args[1]);
         if (!flagStr)
             return false;
-        argv[1].setString(flagStr);
+        args[1].setString(flagStr);
         if (!ParseRegExpFlags(cx, flagStr, &flags))
             return false;
     }
@@ -286,7 +285,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
     if (!reobj)
         return NULL;
 
-    *rval = ObjectValue(*reobj);
+    args.rval() = ObjectValue(*reobj);
     return true;
 }
 
@@ -301,32 +300,30 @@ regexp_compile(JSContext *cx, uintN argc, Value *vp)
         return ok;
 
     RegExpObjectBuilder builder(cx, &obj->asRegExp());
-    return CompileRegExpObject(cx, builder, args.length(), args.array(), &args.rval());
+    return CompileRegExpObject(cx, builder, args);
 }
 
 static JSBool
 regexp_construct(JSContext *cx, uintN argc, Value *vp)
 {
-    Value *argv = JS_ARGV(cx, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!IsConstructing(vp)) {
+    if (!IsConstructing(args)) {
         /*
          * If first arg is regexp and no flags are given, just return the arg.
          * Otherwise, delegate to the standard constructor.
          * See ECMAv5 15.10.3.1.
          */
-        if (argc >= 1 && ValueIsRegExp(argv[0]) && (argc == 1 || argv[1].isUndefined())) {
-            *vp = argv[0];
+        if (args.length() >= 1 && ValueIsRegExp(args[0]) &&
+            (args.length() == 1 || args[1].isUndefined()))
+        {
+            args.rval() = args[0];
             return true;
         }
     }
 
     RegExpObjectBuilder builder(cx);
-    if (!CompileRegExpObject(cx, builder, argc, argv, &JS_RVAL(cx, vp)))
-        return false;
-
-    *vp = ObjectValue(*builder.reobj());
-    return true;
+    return CompileRegExpObject(cx, builder, args);
 }
 
 static JSBool
