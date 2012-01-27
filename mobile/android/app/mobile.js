@@ -604,7 +604,7 @@ pref("media.preload.auto", 2);    // preload metadata if preload=auto
 //  0: don't show fullscreen keyboard
 //  1: always show fullscreen keyboard
 // -1: show fullscreen keyboard based on threshold pref
-pref("widget.ime.android.landscape_fullscreen", -1);
+pref("widget.ime.android.landscape_fullscreen", 1);
 pref("widget.ime.android.fullscreen_threshold", 250); // in hundreths of inches
 
 // optimize images memory usage

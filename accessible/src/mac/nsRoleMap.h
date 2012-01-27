@@ -52,12 +52,12 @@ static const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_CARET. unused on OS X
   NSAccessibilityWindowRole,                    // ROLE_ALERT
   NSAccessibilityWindowRole,                    // ROLE_WINDOW. irrelevant on OS X; all window a11y is handled by the system.
-  @"AXWebArea",                                 // ROLE_INTERNAL_FRAME
+  NSAccessibilityScrollAreaRole,                // ROLE_INTERNAL_FRAME
   NSAccessibilityMenuRole,                      // ROLE_MENUPOPUP. the parent of menuitems
   NSAccessibilityMenuItemRole,                  // ROLE_MENUITEM.
   @"AXHelpTag",                                 // ROLE_TOOLTIP. 10.4+ only, so we re-define the constant.
   NSAccessibilityGroupRole,                     // ROLE_APPLICATION. unused on OS X. the system will take care of this.
-  NSAccessibilityGroupRole,                     // ROLE_DOCUMENT
+  @"AXWebArea",                                 // ROLE_DOCUMENT
   NSAccessibilityGroupRole,                     // ROLE_PANE
   NSAccessibilityUnknownRole,                   // ROLE_CHART
   NSAccessibilityWindowRole,                    // ROLE_DIALOG. there's a dialog subrole.
@@ -79,7 +79,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityRowRole,                       // ROLE_LISTITEM
   NSAccessibilityOutlineRole,                   // ROLE_OUTLINE
   NSAccessibilityRowRole,                       // ROLE_OUTLINEITEM. XXX: use OutlineRow as subrole.
-  NSAccessibilityGroupRole,                     // ROLE_PAGETAB
+  NSAccessibilityRadioButtonRole,               // ROLE_PAGETAB
   NSAccessibilityGroupRole,                     // ROLE_PROPERTYPAGE
   NSAccessibilityUnknownRole,                   // ROLE_INDICATOR
   NSAccessibilityImageRole,                     // ROLE_GRAPHIC
@@ -102,7 +102,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityMenuButtonRole,                // ROLE_BUTTONMENU
   NSAccessibilityGroupRole,                     // ROLE_BUTTONDROPDOWNGRID
   NSAccessibilityUnknownRole,                   // ROLE_WHITESPACE
-  NSAccessibilityGroupRole,                     // ROLE_PAGETABLIST
+  NSAccessibilityTabGroupRole,                  // ROLE_PAGETABLIST
   NSAccessibilityUnknownRole,                   // ROLE_CLOCK. unused on OS X
   NSAccessibilityButtonRole,                    // ROLE_SPLITBUTTON
   NSAccessibilityUnknownRole,                   // ROLE_IPADDRESS
@@ -146,9 +146,9 @@ static const NSString* AXRoles [] = {
   NSAccessibilityTextFieldRole,                 // ROLE_EDITBAR
   NSAccessibilityTextFieldRole,                 // ROLE_ENTRY
   NSAccessibilityStaticTextRole,                // ROLE_CAPTION
-  @"AXWebArea",                                 // ROLE_DOCUMENT_FRAME
+  NSAccessibilityScrollAreaRole,                // ROLE_DOCUMENT_FRAME
   @"AXHeading",                                 // ROLE_HEADING
-  NSAccessibilityGroupRole,                     // ROLE_PAGE
+  NSAccessibilityGroupRole,                     // ROLE_PAG
   NSAccessibilityGroupRole,                     // ROLE_SECTION
   NSAccessibilityUnknownRole,                   // ROLE_REDUNDANT_OBJECT
   NSAccessibilityGroupRole,                     // ROLE_FORM
