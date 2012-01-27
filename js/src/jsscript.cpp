@@ -184,6 +184,47 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
     return true;
 }
 
+Shape *
+Bindings::callObjectShape(JSContext *cx) const
+{
+    if (!hasDup())
+        return lastShape();
+
+    /*
+     * Build a vector of non-duplicate properties in order from last added
+     * to first (i.e., the order we normally have iterate over Shapes). Choose
+     * the last added property in each set of dups.
+     */
+    Vector<const Shape *> shapes(cx);
+    HashSet<jsid> seen(cx);
+    if (!seen.init())
+        return false;
+
+    for (Shape::Range r = lastShape()->all(); !r.empty(); r.popFront()) {
+        const Shape &s = r.front();
+        HashSet<jsid>::AddPtr p = seen.lookupForAdd(s.propid());
+        if (!p) {
+            if (!seen.add(p, s.propid()))
+                return NULL;
+            if (!shapes.append(&s))
+                return NULL;
+        }
+    }
+
+    /*
+     * Now build the Shape without duplicate properties.
+     */
+    RootedVarShape shape(cx);
+    shape = initialShape(cx);
+    for (int i = shapes.length() - 1; i >= 0; --i) {
+        shape = shape->getChildBinding(cx, shapes[i]);
+        if (!shape)
+            return NULL;
+    }
+
+    return shape;
+}
+
 bool
 Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
 {
