@@ -23,12 +23,12 @@
                        android:layout_width="match_parent"
                        android:layout_height="50dip"
                        android:orientation="horizontal"
-                       android:gravity="center|right"
+                       android:gravity="center|left"
                        android:background="@drawable/tabs_tray_list_selector">
 
              <ImageView android:layout_width="20dip"
                         android:layout_height="20dip"
-                        android:layout_marginRight="20dip"
+                        android:layout_marginLeft="20dip"
                         android:src="@drawable/tab_new"/>
 
          </LinearLayout>
