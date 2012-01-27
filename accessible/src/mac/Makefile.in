@@ -57,8 +57,9 @@ CMMSRCS = nsAccessNodeWrap.mm \
           mozActionElements.mm \
           mozTextAccessible.mm \
           mozHTMLAccessible.mm \
+          MacUtils.mm \
           $(NULL)
-          
+
 
 EXPORTS = \
   nsAccessNodeWrap.h \

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       android:isScrollContainer="false"
+       android:background="@drawable/abouthome_bg_repeat">
 
     <LinearLayout android:layout_width="fill_parent"
                   android:orientation="vertical"

@@ -1,4 +1,5 @@
 /* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +17,11 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Håkan Waara <hwaara@gmail.com>
+ *   Original Author: Hubert Figuiere <hub@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,29 +37,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Cocoa/Cocoa.h>
-#import "mozAccessible.h"
+#import "MacUtils.h"
 
-/* Simple subclasses for things like checkboxes, buttons, etc. */
+#include "nsAccessible.h"
 
-@interface mozButtonAccessible : mozAccessible
-- (void)click;
-- (BOOL)isTab;
-@end
+#include "nsCocoaUtils.h"
 
-@interface mozCheckboxAccessible : mozButtonAccessible
-// returns one of the constants defined in CheckboxValue
-- (int)isChecked;
-@end
+namespace mozilla {
+namespace a11y {
+namespace utils {
 
-/* Used for buttons that may pop up a menu. */
-@interface mozPopupButtonAccessible : mozButtonAccessible
-@end
-
-/* Class for tabs - not individual tabs */
-@interface mozTabsAccessible : mozAccessible
+/**
+ * Get a localized string from the a11y string bundle.
+ * Return nil if not found.
+ */
+NSString* 
+LocalizedString(const nsString& aString)
 {
-  NSMutableArray* mTabs;
+  nsString text;
+  
+  nsAccessible::TranslateString(aString, text);
+  
+  return text.IsEmpty() ? nil : nsCocoaUtils::ToNSString(text);
 }
--(id)tabs;
-@end
+
+}
+}
+}
