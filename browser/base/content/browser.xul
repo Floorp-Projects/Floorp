@@ -38,6 +38,7 @@
 #   David Dahl <ddahl@mozilla.com>
 #   Frank Yan <fyan@mozilla.com>
 #   Victor Porof <vporof@mozilla.com>
+#   Paul Rouget <paul@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1004,6 +1005,12 @@
                      label="&inspectButton.label;"
                      accesskey="&inspectButton.accesskey;"
                      command="Inspector:Inspect"/>
+      <toolbarbutton id="inspector-treepanel-toolbutton"
+                     class="devtools-toolbarbutton"
+                     label="&htmlPanel.label;"
+                     accesskey="&htmlPanel.accesskey;"
+                     tooltiptext="&htmlPanel.tooltiptext;"
+                     command="Inspector:HTMLPanel"/>
       <arrowscrollbox id="inspector-breadcrumbs"
                       flex="1" orient="horizontal"
                       clicktoscroll="true"/>
