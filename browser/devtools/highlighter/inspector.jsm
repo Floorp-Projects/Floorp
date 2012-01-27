@@ -108,7 +108,6 @@ InspectorUI.prototype = {
   tools: null,
   toolEvents: null,
   inspecting: false,
-  treePanelEnabled: true,
   ruleViewEnabled: true,
   isDirty: false,
   store: null,
@@ -193,6 +192,22 @@ InspectorUI.prototype = {
   },
 
   /**
+   * Toggle the TreePanel.
+   */
+  toggleHTMLPanel: function TP_toggle()
+  {
+    if (this.treePanel.isOpen()) {
+      this.treePanel.close();
+      Services.prefs.setBoolPref("devtools.inspector.htmlPanelOpen", false);
+      this.store.setValue(this.winID, "htmlPanelOpen", false);
+    } else {
+      this.treePanel.open();
+      Services.prefs.setBoolPref("devtools.inspector.htmlPanelOpen", true);
+      this.store.setValue(this.winID, "htmlPanelOpen", true);
+    }
+  },
+
+  /**
    * Is the inspector UI open? Simply check if the toolbar is visible or not.
    *
    * @returns boolean
@@ -260,9 +275,7 @@ InspectorUI.prototype = {
     this.initTools();
     this.chromeWin.Tilt.setup();
 
-    if (this.treePanelEnabled) {
-      this.treePanel = new TreePanel(this.chromeWin, this);
-    }
+    this.treePanel = new TreePanel(this.chromeWin, this);
 
     if (Services.prefs.getBoolPref("devtools.ruleview.enabled") &&
         !this.toolRegistered("ruleview")) {
@@ -349,6 +362,10 @@ InspectorUI.prototype = {
       this.store.setValue(this.winID, "selectedNode", null);
       this.store.setValue(this.winID, "inspecting", true);
       this.store.setValue(this.winID, "isDirty", this.isDirty);
+
+      this.store.setValue(this.winID, "htmlPanelOpen",
+        Services.prefs.getBoolPref("devtools.inspector.htmlPanelOpen"));
+
       this.win.addEventListener("pagehide", this, true);
     }
   },
@@ -399,6 +416,8 @@ InspectorUI.prototype = {
     // highlighter/HTML panel dismisses the editor
     if (this.treePanel && this.treePanel.editingContext)
       this.treePanel.closeEditor();
+
+    this.treePanel.destroy();
 
     if (this.closing || !this.win || !this.browser) {
       return;
@@ -538,6 +557,7 @@ InspectorUI.prototype = {
 
     this.breadcrumbs.update();
     this.chromeWin.Tilt.update(aNode);
+    this.treePanel.select(aNode, aScroll);
 
     this.toolsSelect(aScroll);
   },
@@ -585,6 +605,10 @@ InspectorUI.prototype = {
 
     this.win.focus();
     this.highlighter.highlight();
+
+    if (this.store.getValue(this.winID, "htmlPanelOpen")) {
+      this.treePanel.open();
+    }
 
     Services.obs.notifyObservers({wrappedJSObject: this},
                                  INSPECTOR_NOTIFICATIONS.OPENED, null);
