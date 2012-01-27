@@ -701,7 +701,7 @@ JSRuntime::JSRuntime()
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc_(NULL),
     bumpAlloc_(NULL),
-    repCache_(NULL),
+    reCache_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
     interpreterFrames(NULL),
@@ -849,7 +849,7 @@ JSRuntime::~JSRuntime()
 
     delete_<JSC::ExecutableAllocator>(execAlloc_);
     delete_<WTF::BumpPointerAllocator>(bumpAlloc_);
-    JS_ASSERT(!repCache_);
+    JS_ASSERT(!reCache_);
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
