@@ -197,14 +197,14 @@ bool releaseMemory(JSContext *cx, void *address, size_t nbytes);
  * Multiple compartments' GC will be interleaved during a global collection
  * (eg, compartment 1 starts, compartment 2 starts, compartment 1 ends, ...)
  */
-bool GCStart(bool isFull);
-bool GCEnd(bool isFull);
+bool GCStart(JSCompartment *compartment);
+bool GCEnd(JSCompartment *compartment);
 
-bool GCStartMarkPhase();
-bool GCEndMarkPhase();
+bool GCStartMarkPhase(JSCompartment *compartment);
+bool GCEndMarkPhase(JSCompartment *compartment);
 
-bool GCStartSweepPhase();
-bool GCEndSweepPhase();
+bool GCStartSweepPhase(JSCompartment *compartment);
+bool GCEndSweepPhase(JSCompartment *compartment);
 
 /*
  * Various APIs for inserting custom probe points. These might be used to mark
