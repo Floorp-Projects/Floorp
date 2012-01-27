@@ -2067,7 +2067,16 @@ HUD_SERVICE.prototype =
     // Pipe the message to createMessageNode().
     let hud = HUDService.hudReferences[aHUDId];
     function formatResult(x) {
-      return (typeof(x) == "string") ? x : hud.jsterm.formatResult(x);
+      if (typeof(x) == "string") {
+        return x;
+      }
+      if (hud.gcliterm) {
+        return hud.gcliterm.formatResult(x);
+      }
+      if (hud.jsterm) {
+        return hud.jsterm.formatResult(x);
+      }
+      return x;
     }
 
     let body = null;
@@ -7068,5 +7077,8 @@ GcliTerm.prototype = {
   },
 
   clearOutput: JSTerm.prototype.clearOutput,
-};
 
+  formatResult: JSTerm.prototype.formatResult,
+  getResultType: JSTerm.prototype.getResultType,
+  formatString: JSTerm.prototype.formatString,
+};
