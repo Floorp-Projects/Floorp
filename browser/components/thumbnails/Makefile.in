@@ -18,10 +18,9 @@ EXTRA_PP_JS_MODULES = \
 	PageThumbs.jsm \
 	$(NULL)
 
-# FIXME Bug 721422 - Re-enable tests and make them work with URI_DANGEROUS_TO_LOAD
-#ifdef ENABLE_TESTS
-#	DIRS += test
-#endif
+ifdef ENABLE_TESTS
+	DIRS += test
+endif
 
 include $(topsrcdir)/config/rules.mk
 
