@@ -1052,6 +1052,7 @@ TiltVisualizer.Controller.prototype = {
     canvas.addEventListener("MozMousePixelScroll", this.onMozScroll, false);
     canvas.addEventListener("keydown", this.onKeyDown, false);
     canvas.addEventListener("keyup", this.onKeyUp, false);
+    canvas.addEventListener("keypress", this.onKeyPress, true);
     canvas.addEventListener("blur", this.onBlur, false);
 
     // handle resize events to change the arcball dimensions
@@ -1074,6 +1075,7 @@ TiltVisualizer.Controller.prototype = {
     canvas.removeEventListener("MozMousePixelScroll", this.onMozScroll, false);
     canvas.removeEventListener("keydown", this.onKeyDown, false);
     canvas.removeEventListener("keyup", this.onKeyUp, false);
+    canvas.removeEventListener("keypress", this.onKeyPress, true);
     canvas.removeEventListener("blur", this.onBlur, false);
 
     presenter.contentWindow.removeEventListener("resize", this.onResize,false);
@@ -1217,20 +1219,28 @@ TiltVisualizer.Controller.prototype = {
   onKeyUp: function TVC_onKeyUp(e)
   {
     let code = e.keyCode || e.which;
-    let tilt = this.presenter.chromeWindow.Tilt;
 
-    if (code === e.DOM_VK_ESCAPE) {
-      tilt.destroy(tilt.currentWindowId, true);
-      return;
-    }
     if (code === e.DOM_VK_X) {
       this.presenter.deleteNode();
     }
-
     if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
       e.preventDefault();
       e.stopPropagation();
       this.arcball.keyUp(code);
+    }
+  },
+
+  /**
+   * Called when a key is pressed.
+   */
+  onKeyPress: function TVC_onKeyPress(e)
+  {
+    let tilt = this.presenter.chromeWindow.Tilt;
+
+    if (e.keyCode === e.DOM_VK_ESCAPE) {
+      e.preventDefault();
+      e.stopPropagation();
+      tilt.destroy(tilt.currentWindowId, true);
     }
   },
 
