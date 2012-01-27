@@ -337,12 +337,12 @@ endif
 
 INNER_ROBOCOP_PACKAGE=
 ifeq ($(MOZ_BUILD_APP),mobile/android)
-UPLOAD_EXTRA_FILES += robocop.apk
+UPLOAD_EXTRA_FILES += robocop.zip
 ROBOCOP_PATH = $(call core_abspath,$(_ABS_DIST)/../build/mobile/robocop)
 INNER_ROBOCOP_PACKAGE= \
   && $(APKBUILDER) $(_ABS_DIST)/robocop-raw.apk -v $(APKBUILDER_FLAGS) -z $(ROBOCOP_PATH)/robocop.ap_ -f $(ROBOCOP_PATH)/classes.dex \
   && $(JARSIGNER) $(_ABS_DIST)/robocop-raw.apk \
-  && $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/robocop-raw.apk $(_ABS_DIST)/robocop.apk
+  && $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/robocop-raw.apk $(_ABS_DIST)/robocop.zip
 endif
 
 PKG_SUFFIX      = .apk
