@@ -77,21 +77,21 @@ let gPage = {
 
     this._initialized = true;
 
-    let self = this;
+    gLinks.populateCache(function () {
+      // Check if the grid is modified.
+      this.updateModifiedFlag();
 
-    // Check if the grid is modified.
-    this.updateModifiedFlag();
+      // Initialize and render the grid.
+      gGrid.init(this._gridSelector);
 
-    // Initialize and render the grid.
-    gGrid.init(this._gridSelector);
+      // Initialize the drop target shim.
+      gDropTargetShim.init();
 
-    // Initialize the drop target shim.
-    gDropTargetShim.init();
-
-    // Workaround to prevent a delay on MacOSX due to a slow drop animation.
-    let doc = document.documentElement;
-    doc.addEventListener("dragover", this.onDragOver, false);
-    doc.addEventListener("drop", this.onDrop, false);
+      // Workaround to prevent a delay on MacOSX due to a slow drop animation.
+      let doc = document.documentElement;
+      doc.addEventListener("dragover", this.onDragOver, false);
+      doc.addEventListener("drop", this.onDrop, false);
+    }.bind(this));
   },
 
   /**
