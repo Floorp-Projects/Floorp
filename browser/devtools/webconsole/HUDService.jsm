@@ -6850,7 +6850,11 @@ function GcliTerm(aContentWindow, aHudId, aDocument, aConsole, aHintNode, aConso
   };
 
   this.opts = {
-    environment: { hudId: this.hudId },
+    environment: {
+      hudId: this.hudId,
+      chromeDocument: this.document,
+      contentDocument: aContentWindow.document
+    },
     chromeDocument: this.document,
     contentDocument: aContentWindow.document,
     jsEnvironment: {
