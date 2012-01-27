@@ -71,7 +71,7 @@ class gfxTextRun;
 class nsIURI;
 class nsIAtom;
 
-extern mozilla::gfx::UserDataKey ThebesSurfaceKey;
+extern mozilla::gfx::UserDataKey kThebesSurfaceKey;
 void DestroyThebesSurface(void *data);
 
 extern cairo_user_data_key_t kDrawTarget;
