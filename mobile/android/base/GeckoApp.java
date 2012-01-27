@@ -1103,7 +1103,7 @@ abstract public class GeckoApp
             mAutoCompletePopup.hide();
             if (mAboutHomeContent == null && mShow) {
                 mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext);
-                mAboutHomeContent.init(GeckoApp.mAppContext);
+                mAboutHomeContent.update(GeckoApp.mAppContext, AboutHomeContent.UpdateFlags.ALL);
                 mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                     public void callback(String url) {
                         mBrowserToolbar.setProgressVisibility(true);

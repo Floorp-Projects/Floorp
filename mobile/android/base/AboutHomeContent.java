@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -96,6 +97,14 @@ public class AboutHomeContent extends ScrollView {
 
     private static final int NUMBER_OF_COLS_PORTRAIT = 2;
     private static final int NUMBER_OF_COLS_LANDSCAPE = 3;
+
+    static enum UpdateFlags {
+        TOP_SITES,
+        PREVIOUS_TABS,
+        RECOMMENDED_ADDONS;
+
+        public static final EnumSet<UpdateFlags> ALL = EnumSet.allOf(UpdateFlags.class);
+    }
 
     private Cursor mCursor;
     UriLoadCallback mUriLoadCallback = null;
@@ -241,7 +250,7 @@ public class AboutHomeContent extends ScrollView {
             return NUMBER_OF_COLS_PORTRAIT;
     }
 
-    private void loadTopSites(Activity activity) {
+    private void loadTopSites(final Activity activity) {
         if (mCursor != null)
             activity.stopManagingCursor(mCursor);
 
@@ -258,31 +267,40 @@ public class AboutHomeContent extends ScrollView {
         mCursor = BrowserDB.getTopSites(resolver, NUMBER_OF_TOP_SITES_PORTRAIT);
         activity.startManagingCursor(mCursor);
 
-        mTopSitesAdapter = new TopSitesCursorAdapter(activity,
-                                                     R.layout.abouthome_topsite_item,
-                                                     mCursor,
-                                                     new String[] { URLColumns.TITLE,
-                                                                    URLColumns.THUMBNAIL },
-                                                     new int[] { R.id.title, R.id.thumbnail });
-
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
             public void run() {
-                mTopSitesGrid.setNumColumns(getNumberOfColumns());
+                if (mTopSitesAdapter == null) {
+                    mTopSitesAdapter = new TopSitesCursorAdapter(activity,
+                                                                 R.layout.abouthome_topsite_item,
+                                                                 mCursor,
+                                                                 new String[] { URLColumns.TITLE,
+                                                                                URLColumns.THUMBNAIL },
+                                                                 new int[] { R.id.title, R.id.thumbnail });
 
-                mTopSitesGrid.setAdapter(mTopSitesAdapter);
-                mTopSitesAdapter.setViewBinder(new TopSitesViewBinder());
+                    mTopSitesAdapter.setViewBinder(new TopSitesViewBinder());
+                    mTopSitesGrid.setAdapter(mTopSitesAdapter);
+                } else {
+                    mTopSitesAdapter.changeCursor(mCursor);
+                }
+
+                mTopSitesGrid.setNumColumns(getNumberOfColumns());
 
                 updateLayout(startupMode, syncIsSetup);
             }
         });
     }
 
-    void init(final Activity activity) {
+    void update(final Activity activity, final EnumSet<UpdateFlags> flags) {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                loadTopSites(activity);
-                readLastTabs(activity);
-                readRecommendedAddons(activity);
+                if (flags.contains(UpdateFlags.TOP_SITES))
+                    loadTopSites(activity);
+
+                if (flags.contains(UpdateFlags.PREVIOUS_TABS))
+                    readLastTabs(activity);
+
+                if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS))
+                    readRecommendedAddons(activity);
             }
         });
     }
@@ -292,19 +310,7 @@ public class AboutHomeContent extends ScrollView {
     }
 
     public void onActivityContentChanged(Activity activity) {
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                final GeckoApp.StartupMode startupMode = GeckoApp.mAppContext.getStartupMode();
-                final boolean syncIsSetup = isSyncSetup();
-
-                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-                    public void run() {
-                        mTopSitesGrid.setAdapter(mTopSitesAdapter);
-                        updateLayout(startupMode, syncIsSetup);
-                    }
-                });
-            }
-        });
+        update(activity, EnumSet.of(UpdateFlags.TOP_SITES));
     }
 
     @Override
