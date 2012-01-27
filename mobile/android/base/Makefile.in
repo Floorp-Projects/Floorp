@@ -248,6 +248,10 @@ RES_LAYOUT_V11 = \
   res/layout-v11/awesomebar.xml \
   res/layout-v11/gecko_app.xml \
   $(NULL)
+ 
+RES_LAYOUT_LAND_V14 = \
+  res/layout-land-v14/browser_toolbar.xml \
+  $(NULL)
 
 RES_VALUES = \
   $(SYNC_RES_VALUES) \
@@ -423,6 +427,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/urlbar_stop.png \
   res/drawable-xhdpi-v11/site_security_identified.png \
   res/drawable-xhdpi-v11/site_security_verified.png \
+  res/drawable-xhdpi-v11/tabs_button_tail.9.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_MDPI_V14 = \
@@ -468,6 +473,7 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
   res/drawable-land-xhdpi-v14/site_security_identified.png \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
+  res/drawable-land-xhdpi-v14/tabs_button_tail.9.png \
   $(NULL)
 
 RES_COLOR = \
@@ -525,6 +531,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
+  mobile/android/base/resources/drawable/tabs_button_tail.xml                   \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
   mobile/android/base/resources/drawable/tabs_tray_pressed_bg_repeat.xml        \
@@ -536,11 +543,12 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \
   res/layout-v11          \
+  res/layout-land-v14     \
   res/values              \
   res/values-v11          \
   res/xml                 \

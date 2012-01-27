@@ -104,7 +104,6 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         if (Build.VERSION.SDK_INT >= 11) {
             RelativeLayout actionBarLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.awesomebar_search, null);
 
-            GeckoActionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
             GeckoActionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
                                                                                   ActionBar.DISPLAY_SHOW_HOME |
                                                                                   ActionBar.DISPLAY_SHOW_TITLE |
