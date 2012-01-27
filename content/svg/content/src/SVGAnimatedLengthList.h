@@ -37,11 +37,13 @@
 #ifndef MOZILLA_SVGANIMATEDLENGTHLIST_H__
 #define MOZILLA_SVGANIMATEDLENGTHLIST_H__
 
+#include "nsAutoPtr.h"
+#include "nsISMILAttr.h"
 #include "SVGLengthList.h"
 
+class nsISMILAnimationElement;
+class nsSMILValue;
 class nsSVGElement;
-
-#include "nsISMILAttr.h"
 
 namespace mozilla {
 

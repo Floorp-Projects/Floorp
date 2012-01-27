@@ -40,8 +40,8 @@
 #ifndef __NS_SVGRECT_H__
 #define __NS_SVGRECT_H__
 
-#include "nsIDOMSVGRect.h"
 #include "gfxRect.h"
+#include "nsIDOMSVGRect.h"
 
 nsresult
 NS_NewSVGRect(nsIDOMSVGRect** result,

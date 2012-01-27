@@ -722,6 +722,7 @@ nsSocketTransport::nsSocketTransport()
     , mInputClosed(true)
     , mOutputClosed(true)
     , mResolving(false)
+    , mNetAddrIsSet(false)
     , mLock("nsSocketTransport.mLock")
     , mFD(nsnull)
     , mFDref(0)
@@ -858,6 +859,7 @@ nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const PRNetAddr *addr
     mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
     mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     mState = STATE_TRANSFERRING;
+    mNetAddrIsSet = true;
 
     mFD = fd;
     mFDref = 1;
@@ -1399,6 +1401,10 @@ nsSocketTransport::OnSocketConnected()
     mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     mState = STATE_TRANSFERRING;
 
+    // Set the mNetAddrIsSet flag only when state has reached TRANSFERRING
+    // because we need to make sure its value does not change due to failover
+    mNetAddrIsSet = true;
+
     // assign mFD (must do this within the transport lock), but take care not
     // to trample over mFDref if mFD is already set.
     {
@@ -1915,7 +1921,11 @@ nsSocketTransport::GetPeerAddr(PRNetAddr *addr)
     // we can freely access mNetAddr from any thread without being
     // inside a critical section.
 
-    NS_ENSURE_TRUE(mState == STATE_TRANSFERRING, NS_ERROR_NOT_AVAILABLE);
+    if (!mNetAddrIsSet) {
+        SOCKET_LOG(("nsSocketTransport::GetPeerAddr [this=%p state=%d] "
+                    "NOT_AVAILABLE because not yet connected.", this, mState));
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
     memcpy(addr, &mNetAddr, sizeof(mNetAddr));
     return NS_OK;

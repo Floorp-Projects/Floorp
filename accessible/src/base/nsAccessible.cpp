@@ -579,16 +579,13 @@ nsAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
   return *aIndexInParent != -1 ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aStringOut)
+void 
+nsAccessible::TranslateString(const nsAString& aKey, nsAString& aStringOut)
 {
   nsXPIDLString xsValue;
 
-  if (!gStringBundle || 
-    NS_FAILED(gStringBundle->GetStringFromName(PromiseFlatString(aKey).get(), getter_Copies(xsValue)))) 
-    return NS_ERROR_FAILURE;
-
+  gStringBundle->GetStringFromName(PromiseFlatString(aKey).get(), getter_Copies(xsValue));
   aStringOut.Assign(xsValue);
-  return NS_OK;
 }
 
 PRUint64
@@ -1896,7 +1893,8 @@ nsAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescription)
   nsresult rv = GetActionName(aIndex, name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetTranslatedString(name, aDescription);
+  TranslateString(name, aDescription);
+  return NS_OK;
 }
 
 // void doAction(in PRUint8 index)

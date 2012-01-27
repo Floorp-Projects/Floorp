@@ -53,6 +53,9 @@ AutoCompleteInput.prototype = {
     this._selEnd = aEnd;
   },
 
+  onTextEntered: function() false,
+  onTextReverted: function() false,
+
   get searchCount() {
     return this.searches.length;
   },
@@ -66,7 +69,7 @@ AutoCompleteInput.prototype = {
   popupOpen: false,
 
   popup: {
-    selectedIndex: 0,
+    selectedIndex: -1,
     invalidate: function () {},
 
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
@@ -80,8 +83,24 @@ AutoCompleteInput.prototype = {
  *        String to search.
  * @param aExpectedValue
  *        Expected value returned by autoFill.
+ *        May be a string, or an object like
+ *        {
+ *          autoFilled: the value suggested by autofill,
+ *          completed: the value completed on user's confirmation
+ *        }
+ *        In the latter case this will also check that on user's confirmation
+ *        the result's casing is correctly applied.
  */
 function ensure_results(aSearchString, aExpectedValue) {
+  let autoFilledValue, completedValue;
+  if (typeof(aExpectedValue) == "string") {
+    autoFilledValue = aExpectedValue;
+  }
+  else {
+    autoFilledValue = aExpectedValue.autoFilled;
+    completedValue = aExpectedValue.completed;
+  }
+
   // Make an AutoCompleteInput that uses our searches and confirms results.
   let input = new AutoCompleteInput(["urlinline"]);
   input.textValue = aSearchString;
@@ -107,7 +126,15 @@ function ensure_results(aSearchString, aExpectedValue) {
     do_check_eq(numSearchesStarted, 1);
 
     // Check the autoFilled result.
-    do_check_eq(input.textValue, aExpectedValue);
+    do_check_eq(input.textValue, autoFilledValue);
+
+    if (completedValue) {
+      // Now force completion and check correct casing of the result.
+      // This ensures the controller is able to do its magic case-preserving
+      // stuff and correct replacement of the user's casing with result's one.
+      controller.handleEnter(false);
+      do_check_eq(input.textValue, completedValue);
+    }
 
     waitForCleanup(run_next_test);
   };

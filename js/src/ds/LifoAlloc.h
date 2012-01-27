@@ -114,7 +114,7 @@ class BumpChunk
 
     size_t used() const { return bump - bumpBase(); }
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) {
-        return mallocSizeOf(this, limit - headerBase());
+        return mallocSizeOf(this);
     }
 
     void resetBump() {
@@ -305,8 +305,7 @@ class LifoAlloc
 
     /* Like sizeOfExcludingThis(), but includes the size of the LifoAlloc itself. */
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        return mallocSizeOf(this, sizeof(LifoAlloc)) +
-               sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
 
     /* Doesn't perform construction; useful for lazily-initialized POD types. */

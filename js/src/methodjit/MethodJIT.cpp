@@ -1375,10 +1375,7 @@ JSScript::sizeOfJitScripts(JSMallocSizeOfFun mallocSizeOf)
 size_t
 mjit::JITScript::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
-    size_t computedSize = sizeof(JITScript) +
-                          (nchunks * sizeof(ChunkDescriptor)) +
-                          (nedges * sizeof(CrossChunkEdge));
-    size_t n = mallocSizeOf(this, computedSize);
+    size_t n = mallocSizeOf(this);
     for (unsigned i = 0; i < nchunks; i++) {
         const ChunkDescriptor &desc = chunkDescriptor(i);
         if (desc.chunk)
@@ -1413,7 +1410,7 @@ mjit::JITChunk::computedSizeOfIncludingThis()
 size_t
 mjit::JITChunk::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
-    return mallocSizeOf(this, computedSizeOfIncludingThis());
+    return mallocSizeOf(this);
 }
 
 void

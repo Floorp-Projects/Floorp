@@ -37,11 +37,13 @@
 #ifndef MOZILLA_SVGANIMATEDNUMBERLIST_H__
 #define MOZILLA_SVGANIMATEDNUMBERLIST_H__
 
+#include "nsAutoPtr.h"
+#include "nsISMILAttr.h"
 #include "SVGNumberList.h"
 
+class nsISMILAnimationElement;
+class nsSMILValue;
 class nsSVGElement;
-
-#include "nsISMILAttr.h"
 
 namespace mozilla {
 

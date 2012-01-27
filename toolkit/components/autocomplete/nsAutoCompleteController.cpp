@@ -1391,7 +1391,7 @@ nsAutoCompleteController::ClearResults()
 nsresult
 nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aResultIndex)
 {
-  if (mDefaultIndexCompleted || mBackspaced || mSearchString.Length() == 0)
+  if (mDefaultIndexCompleted || mBackspaced || mSearchString.Length() == 0 || !mInput)
     return NS_OK;
 
   PRInt32 selectionStart;
