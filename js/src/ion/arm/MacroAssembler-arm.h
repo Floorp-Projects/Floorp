@@ -662,7 +662,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void reserveStack(uint32 amount);
     void freeStack(uint32 amount);
 
+    void add32(const Imm32 &imm, const Register &dest);
+    void sub32(const Imm32 &imm, const Register &dest);
+
     void move32(const Imm32 &imm, const Register &dest);
+
     void move32(const Address &src, const Register &dest);
     void movePtr(const ImmWord &imm, const Register &dest);
     void movePtr(const ImmGCPtr &imm, const Register &dest);
