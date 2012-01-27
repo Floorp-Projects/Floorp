@@ -686,8 +686,16 @@ WebGLContext::CheckFramebufferStatus(WebGLenum target, WebGLenum *retval)
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("checkFramebufferStatus: target must be FRAMEBUFFER");
 
-    if (mBoundFramebuffer && mBoundFramebuffer->HasBadAttachments())
+    if (!mBoundFramebuffer)
+        *retval = LOCAL_GL_FRAMEBUFFER_COMPLETE;
+    else if(mBoundFramebuffer->HasDepthStencilConflict())
         *retval = LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
+    else if(!mBoundFramebuffer->ColorAttachment().IsDefined())
+        *retval = LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
+    else if(mBoundFramebuffer->HasIncompleteAttachment())
+        *retval = LOCAL_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+    else if(mBoundFramebuffer->HasAttachmentsOfMismatchedDimensions())
+        *retval = LOCAL_GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
     else
         *retval = gl->fCheckFramebufferStatus(target);
 
@@ -710,7 +718,7 @@ WebGLContext::Clear(PRUint32 mask)
 
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-            return NS_OK;
+            return ErrorInvalidFramebufferOperation("clear: incomplete framebuffer");
     } else {
         // no FBO is bound, so we are clearing the backbuffer here
         EnsureBackbufferClearedAsNeeded();
@@ -802,9 +810,9 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
                                      WebGLsizei height,
                                      bool sub)
 {
-
-    WebGLsizei framebufferWidth =  mBoundFramebuffer ? mBoundFramebuffer->width() : mWidth;
-    WebGLsizei framebufferHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
+    const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
+    WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
+    WebGLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
     const char *info = sub ? "copyTexSubImage2D" : "copyTexImage2D";
 
@@ -861,7 +869,7 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
             || y+height <= 0)
         {
             // we are completely outside of range, can exit now with buffer filled with zeros
-            return NS_OK;
+            return DummyFramebufferOperation(info);
         }
 
         GLint   actual_x             = clamped(x, 0, framebufferWidth);
@@ -946,8 +954,9 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
         return ErrorInvalidOperation("copyTexImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
 
-    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-        return NS_OK;
+    if (mBoundFramebuffer)
+        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+            return ErrorInvalidFramebufferOperation("copyTexImage2D: incomplete framebuffer");
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
     if (!tex)
@@ -962,10 +971,10 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
     if (tex->HasImageInfoAt(level, face)) {
         const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(level, face);
 
-        sizeMayChange = width != imageInfo.mWidth ||
-                        height != imageInfo.mHeight ||
-                        internalformat != imageInfo.mFormat ||
-                        type != imageInfo.mType;
+        sizeMayChange = width != imageInfo.Width() ||
+                        height != imageInfo.Height() ||
+                        internalformat != imageInfo.Format() ||
+                        type != imageInfo.Type();
     }
 
     if (sizeMayChange) {
@@ -1032,8 +1041,9 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
     if (!tex->HasImageInfoAt(level, face))
         return ErrorInvalidOperation("copyTexSubImage2D: no texture image previously defined for this level and face");
 
-    WebGLsizei texWidth = tex->ImageInfoAt(level, face).mWidth;
-    WebGLsizei texHeight = tex->ImageInfoAt(level, face).mHeight;
+    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
+    WebGLsizei texWidth = imageInfo.Width();
+    WebGLsizei texHeight = imageInfo.Height();
 
     if (xoffset + width > texWidth || xoffset + width < 0)
       return ErrorInvalidValue("copyTexSubImage2D: xoffset+width is too large");
@@ -1041,10 +1051,10 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
     if (yoffset + height > texHeight || yoffset + height < 0)
       return ErrorInvalidValue("copyTexSubImage2D: yoffset+height is too large");
 
-    WebGLenum format = tex->ImageInfoAt(level, face).mFormat;
+    WebGLenum format = imageInfo.Format();
     bool texFormatRequiresAlpha = format == LOCAL_GL_RGBA ||
-                                    format == LOCAL_GL_ALPHA ||
-                                    format == LOCAL_GL_LUMINANCE_ALPHA;
+                                  format == LOCAL_GL_ALPHA ||
+                                  format == LOCAL_GL_LUMINANCE_ALPHA;
     bool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment().HasAlpha()
                                                  : bool(gl->ActualFormat().alpha > 0);
 
@@ -1052,8 +1062,9 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
         return ErrorInvalidOperation("copyTexSubImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
 
-    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-        return NS_OK;
+    if (mBoundFramebuffer)
+        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+            return ErrorInvalidFramebufferOperation("copyTexSubImage2D: incomplete framebuffer");
 
     return CopyTexSubImage2D_base(target, level, format, xoffset, yoffset, x, y, width, height, true);
 }
@@ -1587,7 +1598,7 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-            return NS_OK;
+            return ErrorInvalidFramebufferOperation("drawArrays: incomplete framebuffer");
     } else {
         EnsureBackbufferClearedAsNeeded();
     }
@@ -1698,7 +1709,7 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
 
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-            return NS_OK;
+            return ErrorInvalidFramebufferOperation("drawElements: incomplete framebuffer");
     } else {
         EnsureBackbufferClearedAsNeeded();
     }
@@ -2406,7 +2417,7 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
                 break;
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-                wrval->SetAsISupports(fba.Renderbuffer());
+                wrval->SetAsISupports(const_cast<WebGLRenderbuffer*>(fba.Renderbuffer()));
                 break;
 
             default:
@@ -2419,7 +2430,7 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
                 break;
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-                wrval->SetAsISupports(fba.Texture());
+                wrval->SetAsISupports(const_cast<WebGLTexture*>(fba.Texture()));
                 break;
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
@@ -3288,8 +3299,9 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     if (!pixels)
         return ErrorInvalidValue("ReadPixels: null array passed");
 
-    WebGLsizei boundWidth = mBoundFramebuffer ? mBoundFramebuffer->width() : mWidth;
-    WebGLsizei boundHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
+    const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
+    WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
+    WebGLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
     void* data = JS_GetTypedArrayData(pixels);
     PRUint32 dataByteLen = JS_GetTypedArrayByteLength(pixels);
@@ -3370,7 +3382,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     if (mBoundFramebuffer) {
         // prevent readback of arbitrary video memory through uninitialized renderbuffers!
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
-            return NS_OK;
+            return ErrorInvalidFramebufferOperation("readPixels: incomplete framebuffer");
     } else {
         EnsureBackbufferClearedAsNeeded();
     }
@@ -3378,9 +3390,9 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
 
     // If we won't be reading any pixels anyways, just skip the actual reading
     if (width == 0 || height == 0)
-        return NS_OK;
+        return DummyFramebufferOperation("readPixels");
 
-    if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, boundWidth, boundHeight)) {
+    if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
         // the easy case: we're not reading out-of-range pixels
         gl->fReadPixels(x, y, width, height, format, type, data);
     } else {
@@ -3395,22 +3407,22 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
         // 100% efficient here, but in practice this is a quite rare case anyway.
         memset(data, 0, dataByteLen);
 
-        if (   x >= boundWidth
+        if (   x >= framebufferWidth
             || x+width <= 0
-            || y >= boundHeight
+            || y >= framebufferHeight
             || y+height <= 0)
         {
             // we are completely outside of range, can exit now with buffer filled with zeros
-            return NS_OK;
+            return DummyFramebufferOperation("readPixels");
         }
 
         // compute the parameters of the subrect we're actually going to call glReadPixels on
         GLint   subrect_x      = NS_MAX(x, 0);
-        GLint   subrect_end_x  = NS_MIN(x+width, boundWidth);
+        GLint   subrect_end_x  = NS_MIN(x+width, framebufferWidth);
         GLsizei subrect_width  = subrect_end_x - subrect_x;
 
         GLint   subrect_y      = NS_MAX(y, 0);
-        GLint   subrect_end_y  = NS_MIN(y+height, boundHeight);
+        GLint   subrect_end_y  = NS_MIN(y+height, framebufferHeight);
         GLsizei subrect_height = subrect_end_y - subrect_y;
 
         if (subrect_width < 0 || subrect_height < 0 ||
@@ -3557,8 +3569,8 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
 
     MakeContextCurrent();
 
-    bool sizeChanges = width != mBoundRenderbuffer->width() ||
-                       height != mBoundRenderbuffer->height() ||
+    bool sizeChanges = width != mBoundRenderbuffer->Width() ||
+                       height != mBoundRenderbuffer->Height() ||
                        internalformat != mBoundRenderbuffer->InternalFormat();
     if (sizeChanges) {
         UpdateWebGLErrorAndClearGLError();
@@ -3566,7 +3578,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
         GLenum error = LOCAL_GL_NO_ERROR;
         UpdateWebGLErrorAndClearGLError(&error);
         if (error) {
-            LogMessageIfVerbose("bufferData generated error %s", ErrorName(error));
+            LogMessageIfVerbose("renderbufferStorage generated error %s", ErrorName(error));
             return NS_OK;
         }
     } else {
@@ -3938,7 +3950,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         return NS_ERROR_FAILURE;
     }
 
-    // We disallow loading cross-domain images that have not been validated
+    // We disallow loading cross-domain images and videos that have not been validated
     // with CORS as WebGL textures. The reason for doing that is that timing
     // attacks on WebGL shaders are able to retrieve approximations of the
     // pixel values in WebGL textures; see bug 655987.
@@ -4732,10 +4744,10 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
     
     if (tex->HasImageInfoAt(level, face)) {
         const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(level, face);
-        sizeMayChange = width != imageInfo.mWidth ||
-                        height != imageInfo.mHeight ||
-                        format != imageInfo.mFormat ||
-                        type != imageInfo.mType;
+        sizeMayChange = width != imageInfo.Width() ||
+                        height != imageInfo.Height() ||
+                        format != imageInfo.Format() ||
+                        type != imageInfo.Type();
     }
     
     if (sizeMayChange) {
@@ -5039,11 +5051,11 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
         return ErrorInvalidOperation("texSubImage2D: no texture image previously defined for this level and face");
     
     const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
-    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.mWidth, imageInfo.mHeight))
+    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.Width(), imageInfo.Height()))
         return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
     
     // Require the format and type in texSubImage2D to match that of the existing texture as created by texImage2D
-    if (imageInfo.mFormat != format || imageInfo.mType != type)
+    if (imageInfo.Format() != format || imageInfo.Type() != type)
         return ErrorInvalidOperation("texSubImage2D: format or type doesn't match the existing texture");
 
     MakeContextCurrent();

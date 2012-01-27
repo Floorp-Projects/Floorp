@@ -56,7 +56,7 @@ Implies --extract.
 from __future__ import with_statement
 import sys
 import os
-from expandlibs import ExpandArgs, relativize
+from expandlibs import ExpandArgs, relativize, isObject
 import expandlibs_config as conf
 from optparse import OptionParser
 import subprocess
@@ -97,7 +97,7 @@ class ExpandArgsMore(ExpandArgs):
                     subprocess.call(ar_extract + [os.path.abspath(arg)], cwd=tmp)
                     objs = []
                     for root, dirs, files in os.walk(tmp):
-                        objs += [relativize(os.path.join(root, f)) for f in files if os.path.splitext(f)[1] in [conf.OBJ_SUFFIX, '.i_o']]
+                        objs += [relativize(os.path.join(root, f)) for f in files if isObject(f)]
                     newlist += objs
                 else:
                     newlist += [arg]
@@ -109,7 +109,7 @@ class ExpandArgsMore(ExpandArgs):
         '''Replaces object file names with a temporary list file, using a
         list format depending on the EXPAND_LIBS_LIST_STYLE variable
         '''
-        objs = [o for o in self if os.path.splitext(o)[1] == conf.OBJ_SUFFIX]
+        objs = [o for o in self if isObject(o)]
         if not len(objs): return
         fd, tmp = tempfile.mkstemp(suffix=".list",dir=os.curdir)
         if conf.EXPAND_LIBS_LIST_STYLE == "linkerscript":
@@ -134,7 +134,7 @@ class ExpandArgsMore(ExpandArgs):
         so that the object file names it contains are ordered according to
         that list.
         '''
-        objs = [o for o in self if o.endswith(conf.OBJ_SUFFIX)]
+        objs = [o for o in self if isObject(o)]
         if not objs: return
         idx = self.index(objs[0])
         # Keep everything before the first object, then the ordered objects,
@@ -142,7 +142,7 @@ class ExpandArgsMore(ExpandArgs):
         objnames = dict([(os.path.splitext(os.path.basename(o))[0], o) for o in objs])
         self[0:] = self[0:idx] + [objnames[o] for o in order_list if o in objnames] + \
                    [o for o in objs if os.path.splitext(os.path.basename(o))[0] not in order_list] + \
-                   [x for x in self[idx:] if not x.endswith(conf.OBJ_SUFFIX)]
+                   [x for x in self[idx:] if not isObject(x)]
 
 
 def main():

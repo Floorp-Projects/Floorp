@@ -47,11 +47,12 @@ import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.animation.TranslateAnimation;
 import android.view.Gravity;
 import android.view.ContextThemeWrapper;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -62,6 +63,7 @@ import android.widget.TextSwitcher;
 import android.widget.ViewSwitcher.ViewFactory;
 
 public class BrowserToolbar extends LinearLayout {
+    private static final String LOGTAG = "GeckoToolbar";    
     private Button mAwesomeBar;
     private ImageButton mTabs;
     public ImageButton mFavicon;
@@ -251,10 +253,12 @@ public class BrowserToolbar extends LinearLayout {
             mFavicon.setImageDrawable(mProgressSpinner);
             mProgressSpinner.start();
             setStopVisibility(true);
+            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber start");
         } else {
             mProgressSpinner.stop();
             setStopVisibility(false);
             setFavicon(Tabs.getInstance().getSelectedTab().getFavicon());
+            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
         }
     }
 

@@ -818,10 +818,6 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 
 #endif
 
-extern void
-MarkRuntime(JSTracer *trc);
-
-
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
     AutoGCRooter(JSContext *cx, ptrdiff_t tag);
@@ -919,7 +915,6 @@ class AutoValueRooter : private AutoGCRooter
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void MarkRuntime(JSTracer *trc);
 
   private:
     Value val;
@@ -948,7 +943,6 @@ class AutoObjectRooter : private AutoGCRooter {
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void MarkRuntime(JSTracer *trc);
 
   private:
     JSObject *obj;
@@ -2022,7 +2016,6 @@ class AutoIdRooter : private AutoGCRooter
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
-    friend void MarkRuntime(JSTracer *trc);
 
   private:
     jsid id_;
@@ -2330,6 +2323,9 @@ JS_ShutDown(void);
 JS_PUBLIC_API(void *)
 JS_GetRuntimePrivate(JSRuntime *rt);
 
+extern JS_PUBLIC_API(JSRuntime *)
+JS_GetRuntime(JSContext *cx);
+
 JS_PUBLIC_API(void)
 JS_SetRuntimePrivate(JSRuntime *rt, void *data);
 
@@ -2350,7 +2346,10 @@ extern JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsInRequest(JSContext *cx);
+JS_IsInRequest(JSRuntime *rt);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsInSuspendedRequest(JSRuntime *rt);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
@@ -2432,14 +2431,14 @@ class JSAutoCheckRequest {
     JSAutoCheckRequest(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM) {
 #if defined JS_THREADSAFE && defined DEBUG
         mContext = cx;
-        JS_ASSERT(JS_IsInRequest(cx));
+        JS_ASSERT(JS_IsInRequest(JS_GetRuntime(cx)));
 #endif
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~JSAutoCheckRequest() {
 #if defined JS_THREADSAFE && defined DEBUG
-        JS_ASSERT(JS_IsInRequest(mContext));
+        JS_ASSERT(JS_IsInRequest(JS_GetRuntime(mContext)));
 #endif
     }
 
@@ -3225,105 +3224,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind kind,
             void *thingToFind, size_t maxDepth, void *thingToIgnore);
 
-#endif
-
-/*
- * Write barrier API.
- *
- * This API is used to inform SpiderMonkey of pointers to JS GC things in the
- * malloc heap. There is no need to use this API unless incremental GC is
- * enabled. When they are, the requirements for using the API are as follows:
- *
- * All pointers to JS GC things from the malloc heap must be registered and
- * unregistered with the API functions below. This is *in addition* to the
- * normal rooting and tracing that must be done normally--these functions will
- * not take care of rooting for you.
- *
- * Besides registration, the JS_ModifyReference function must be called to
- * change the value of these references. You should not change them using
- * assignment.
- *
- * Only the RT versions of these functions (which take a JSRuntime argument)
- * should be called during GC. Without a JSRuntime, it is not possible to know
- * if the object being barriered has already been finalized.
- *
- * To avoid the headache of using these API functions, the JSBarrieredObjectPtr
- * C++ class is provided--simply replace your JSObject* with a
- * JSBarrieredObjectPtr. It will take care of calling the registration and
- * modification APIs.
- *
- * For more explanation, see the comment in gc/Barrier.h.
- */
-
-/* These functions are to be used for objects and strings. */
-extern JS_PUBLIC_API(void)
-JS_RegisterReference(void **ref);
-
-extern JS_PUBLIC_API(void)
-JS_ModifyReference(void **ref, void *newval);
-
-extern JS_PUBLIC_API(void)
-JS_UnregisterReference(void **ref);
-
-extern JS_PUBLIC_API(void)
-JS_UnregisterReferenceRT(JSRuntime *rt, void **ref);
-
-/* These functions are for values. */
-extern JS_PUBLIC_API(void)
-JS_RegisterValue(jsval *val);
-
-extern JS_PUBLIC_API(void)
-JS_ModifyValue(jsval *val, jsval newval);
-
-extern JS_PUBLIC_API(void)
-JS_UnregisterValue(jsval *val);
-
-extern JS_PUBLIC_API(void)
-JS_UnregisterValueRT(JSRuntime *rt, jsval *val);
-
-extern JS_PUBLIC_API(JSTracer *)
-JS_GetIncrementalGCTracer(JSRuntime *rt);
-
-#ifdef __cplusplus
-JS_END_EXTERN_C
-
-namespace JS {
-
-class HeapPtrObject
-{
-    JSObject *value;
-
-  public:
-    HeapPtrObject() : value(NULL) { JS_RegisterReference((void **) &value); }
-
-    HeapPtrObject(JSObject *obj) : value(obj) { JS_RegisterReference((void **) &value); }
-
-    /* Always call finalize before the destructor. */
-    ~HeapPtrObject() { JS_ASSERT(!value); }
-
-    void finalize(JSRuntime *rt) {
-        JS_UnregisterReferenceRT(rt, (void **) &value);
-        value = NULL;
-    }
-    void finalize(JSContext *cx) { finalize(JS_GetRuntime(cx)); }
-
-    void init(JSObject *obj) { value = obj; }
-
-    JSObject *get() const { return value; }
-
-    HeapPtrObject &operator=(JSObject *obj) {
-        JS_ModifyReference((void **) &value, obj);
-        return *this;
-    }
-
-    JSObject &operator*() const { return *value; }
-    JSObject *operator->() const { return value; }
-    operator JSObject *() const { return value; }
-};
-
-} /* namespace JS */
-
-JS_BEGIN_EXTERN_C
 #endif
 
 /*
@@ -4595,7 +4495,7 @@ extern JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_TriggerAllOperationCallbacks(JSRuntime *rt);
+JS_TriggerRuntimeOperationCallback(JSRuntime *rt);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);
@@ -5366,24 +5266,6 @@ JS_ThrowStopIteration(JSContext *cx);
 
 extern JS_PUBLIC_API(intptr_t)
 JS_GetCurrentThread();
-
-/*
- * Associate the current thread with the given context.  This is done
- * implicitly by JS_NewContext.
- *
- * Returns the old thread id for this context, which should be treated as
- * an opaque value.  This value is provided for comparison to 0, which
- * indicates that ClearContextThread has been called on this context
- * since the last SetContextThread, or non-0, which indicates the opposite.
- */
-extern JS_PUBLIC_API(intptr_t)
-JS_GetContextThread(JSContext *cx);
-
-extern JS_PUBLIC_API(intptr_t)
-JS_SetContextThread(JSContext *cx);
-
-extern JS_PUBLIC_API(intptr_t)
-JS_ClearContextThread(JSContext *cx);
 
 /*
  * A JS runtime always has an "owner thread". The owner thread is set when the

@@ -1,0 +1,19 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The functionality of the nsIDocCharset interface has been incorporated into
+ * nsIDocShell.
+ *
+ * This is an empty interface for backwards compatibility that will go away at
+ * some point in the future
+ *
+ */
+
+[scriptable, uuid(c3faaf6e-40f0-11e1-95fc-6c626d69675c)]
+interface nsIDocCharset : nsISupports
+{};

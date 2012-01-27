@@ -235,7 +235,7 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
     // For each row, add an Object[] to the passed ArrayList,
     // with that containing either String or ByteArray objects
     // containing the columns
-    do {
+    while (rc != SQLITE_DONE) {
         // Process row
         // Construct Object[]
         jobjectArray jRow = jenv->NewObjectArray(cols,
@@ -297,7 +297,7 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
             LOG("Can't re-step statement:(%d) %s\n", rc, f_sqlite3_errmsg(db));
             goto error_close;
         }
-    } while (rc != SQLITE_DONE);
+    }
 
     rc = f_sqlite3_finalize(ppStmt);
     if (rc != SQLITE_OK) {

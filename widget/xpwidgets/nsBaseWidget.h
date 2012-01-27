@@ -201,6 +201,9 @@ public:
   }
 
   NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) = 0;
+
+  virtual PRUint32 GetGLFrameBufferFormat() MOZ_OVERRIDE;
+
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
    * (nsBaseWidget::GetLayerManager() does). This sets up the widget's

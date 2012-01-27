@@ -50,6 +50,7 @@ public class BrowserDB {
         public static String FAVICON = "favicon";
         public static String THUMBNAIL = "thumbnail";
         public static String DATE_LAST_VISITED = "date-last-visited";
+        public static String VISITS = "visits";
     }
 
     private static BrowserDBIface sDb;
@@ -63,11 +64,14 @@ public class BrowserDB {
 
         public void updateHistoryTitle(ContentResolver cr, String uri, String title);
 
-        public void updateHistoryDate(ContentResolver cr, String uri, long date);
+        public void updateHistoryEntry(ContentResolver cr, String uri, String title,
+                                       long date, int visits);
 
         public Cursor getAllVisitedHistory(ContentResolver cr);
 
         public Cursor getRecentHistory(ContentResolver cr, int limit);
+
+        public int getMaxHistoryCount();
 
         public void clearHistory(ContentResolver cr);
 
@@ -107,8 +111,9 @@ public class BrowserDB {
         sDb.updateHistoryTitle(cr, uri, title);
     }
 
-    public static void updateHistoryDate(ContentResolver cr, String uri, long date) {
-        sDb.updateHistoryDate(cr, uri, date);
+    public static void updateHistoryEntry(ContentResolver cr, String uri, String title,
+                                          long date, int visits) {
+        sDb.updateHistoryEntry(cr, uri, title, date, visits);
     }
 
     public static Cursor getAllVisitedHistory(ContentResolver cr) {
@@ -117,6 +122,10 @@ public class BrowserDB {
 
     public static Cursor getRecentHistory(ContentResolver cr, int limit) {
         return sDb.getRecentHistory(cr, limit);
+    }
+
+    public static int getMaxHistoryCount() {
+        return sDb.getMaxHistoryCount();
     }
 
     public static void clearHistory(ContentResolver cr) {

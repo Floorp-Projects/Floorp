@@ -37,18 +37,17 @@
 #ifndef MOZILLA_DOMSVGANIMATEDNUMBERLIST_H__
 #define MOZILLA_DOMSVGANIMATEDNUMBERLIST_H__
 
-#include "nsIDOMSVGAnimatedNumberList.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
-#include "nsTArray.h"
-
-class nsSVGElement;
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDOMSVGAnimatedNumberList.h"
+#include "nsSVGElement.h"
 
 namespace mozilla {
 
+class DOMSVGNumberList;
 class SVGAnimatedNumberList;
 class SVGNumberList;
-class DOMSVGNumberList;
 
 /**
  * Class DOMSVGAnimatedNumberList

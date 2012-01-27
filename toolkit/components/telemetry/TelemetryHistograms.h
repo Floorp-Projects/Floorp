@@ -75,7 +75,6 @@ HISTOGRAM(CYCLE_COLLECTOR_TIME_BETWEEN, 1, 120, 50, EXPONENTIAL, "Time spent in 
  */
 HISTOGRAM(GC_REASON, 1, 20, 20, LINEAR, "Reason (enum value) for initiating a GC")
 HISTOGRAM_BOOLEAN(GC_IS_COMPARTMENTAL, "Is it a compartmental GC?")
-HISTOGRAM_BOOLEAN(GC_IS_SHAPE_REGEN, "Is it a shape regenerating GC?")
 HISTOGRAM(GC_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC (ms)")
 HISTOGRAM(GC_MARK_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC mark phase (ms)")
 HISTOGRAM(GC_SWEEP_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC sweep phase (ms)")

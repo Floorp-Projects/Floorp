@@ -174,7 +174,7 @@ BrowserGlue.prototype = {
         Services.obs.removeObserver(this, "browser-delayed-startup-finished");
         break;
       case "sessionstore-windows-restored":
-        this._onBrowserStartup();
+        this._onWindowsRestored();
         break;
       case "browser:purge-session-history":
         // reset the console service's error buffer
@@ -373,8 +373,8 @@ BrowserGlue.prototype = {
     this._sanitizer.onShutdown();
   },
 
-  // Browser startup complete. All initial windows have opened.
-  _onBrowserStartup: function BG__onBrowserStartup() {
+  // All initial windows have opened.
+  _onWindowsRestored: function BG__onWindowsRestored() {
     // Show about:rights notification, if needed.
     if (this._shouldShowRights()) {
       this._showRightsNotification();
@@ -1442,7 +1442,7 @@ BrowserGlue.prototype = {
   getMostRecentBrowserWindow: function BG_getMostRecentBrowserWindow() {
     function isFullBrowserWindow(win) {
       return !win.closed &&
-             !win.document.documentElement.getAttribute("chromehidden");
+             win.toolbar.visible;
     }
 
 #ifdef BROKEN_WM_Z_ORDER

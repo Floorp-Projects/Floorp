@@ -50,6 +50,7 @@
 #include "BasicLayers.h"
 #include "ImageLayers.h"
 
+#include "prprf.h"
 #include "nsTArray.h"
 #include "nsGUIEvent.h"
 #include "gfxContext.h"
@@ -1308,6 +1309,8 @@ BasicLayerManager::BasicLayerManager() :
 #endif
   mWidget(nsnull)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(false)
+  , mCachedSurfaceInUse(false)
+  , mTransactionIncomplete(false)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
 }
@@ -2399,7 +2402,12 @@ BasicShadowableThebesLayer::CreateBuffer(Buffer::ContentType aType,
   if (!BasicManager()->AllocBuffer(gfxIntSize(aSize.width, aSize.height),
                                    aType,
                                    &mBackBuffer)) {
-      NS_RUNTIMEABORT("creating ThebesLayer 'back buffer' failed!");
+      enum { buflen = 256 };
+      char buf[buflen];
+      PR_snprintf(buf, buflen,
+                  "creating ThebesLayer 'back buffer' failed! width=%d, height=%d, type=%x",
+                  aSize.width, aSize.height, int(aType));
+      NS_RUNTIMEABORT(buf);
   }
 
   NS_ABORT_IF_FALSE(!mIsNewBuffer,

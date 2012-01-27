@@ -30,6 +30,10 @@
     <item android:id="@+id/downloads"
           android:title="@string/downloads"/>
 
+    <item android:id="@+id/char_encoding"
+          android:visible="false"
+          android:title="@string/char_encoding"/>
+
     <item android:id="@+id/settings"
           android:title="@string/settings" />
 

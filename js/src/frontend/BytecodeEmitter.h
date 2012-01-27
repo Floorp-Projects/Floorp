@@ -54,8 +54,6 @@
 #include "frontend/Parser.h"
 #include "frontend/ParseMaps.h"
 
-#include "jsatominlines.h"
-
 namespace js {
 
 /*
@@ -183,7 +181,7 @@ struct StmtInfo {
                                         chain */
 #define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
                                         from global script */
-#define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
+/* bit 0x8000 is unused */
 
 /*
  * Set when parsing a declaration-like destructuring pattern.  This
@@ -278,7 +276,6 @@ struct StmtInfo {
                                  TCF_FUN_HEAVYWEIGHT     |                    \
                                  TCF_FUN_IS_GENERATOR    |                    \
                                  TCF_FUN_USES_OWN_NAME   |                    \
-                                 TCF_HAS_SHARPS          |                    \
                                  TCF_FUN_CALLS_EVAL      |                    \
                                  TCF_FUN_MIGHT_ALIAS_LOCALS |                 \
                                  TCF_FUN_MUTATES_PARAMETER |                  \
@@ -395,13 +392,6 @@ struct TreeContext {                /* tree context for semantic checks */
     }
 
     inline bool needStrictChecks();
-
-    /*
-     * sharpSlotBase is -1 or first slot of pair for [sharpArray, sharpDepth].
-     * The parser calls ensureSharpSlots to allocate these two stack locals.
-     */
-    int sharpSlotBase;
-    bool ensureSharpSlots();
 
     // Return true there is a generator function within |skip| lexical scopes
     // (going upward) from this context's lexical scope. Always return true if
@@ -633,16 +623,6 @@ struct BytecodeEmitter : public TreeContext
 
     bool hasUpvarIndices() const {
         return upvarIndices.hasMap() && !upvarIndices->empty();
-    }
-
-    bool hasSharps() const {
-        bool rv = !!(flags & TCF_HAS_SHARPS);
-        JS_ASSERT((sharpSlotBase >= 0) == rv);
-        return rv;
-    }
-
-    uintN sharpSlots() const {
-        return hasSharps() ? SHARP_NSLOTS : 0;
     }
 
     bool compilingForEval() const { return !!(flags & TCF_COMPILE_FOR_EVAL); }

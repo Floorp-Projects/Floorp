@@ -209,6 +209,7 @@ CPPSRCS	= \
 	$(NULL)
 
 ifdef MOZ_GRAPHITE
+DEFINES += -DGRAPHITE2_STATIC
 CPPSRCS	+= \
 	gfxGraphiteShaper.cpp \
 	$(NULL)

@@ -129,7 +129,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.7.1
+SQLITE_VERSION=3.7.10
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -337,6 +337,7 @@ if test -n "$gonkdir" ; then
 
     AC_DEFINE(ANDROID)
     AC_DEFINE(HAVE_SYS_UIO_H)
+    AC_DEFINE(HAVE_PTHREADS)
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
     ZLIB_DIR=yes
@@ -668,28 +669,19 @@ WINSDK_TARGETVER=601
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
                           Highest Windows version to target using this SDK
-                              502: Windows Server 2003
-                              600: Windows Vista
                               601: Windows 7],
   WINSDK_TARGETVER=$withval)
 
 case "$WINSDK_TARGETVER" in
-502|600|601)
+601)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 502, 600 or 601]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 601]);
     ;;
 
 esac
-
-if test -n "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-    # We can't build parental controls either
-    MOZ_DISABLE_PARENTAL_CONTROLS=1
-fi
-fi
 
 case "$target" in
 *-mingw*)
@@ -851,15 +843,8 @@ EOF
                            ])
             MOZ_WINSDK_MAXVER=${ac_cv_winsdk_maxver}
         else
-            # The Vista SDK is the only one to have sdkddkver.h but not
-            # WinSDKVer.h
-            MOZ_CHECK_HEADERS([sdkddkver.h])
-            if test "$ac_cv_header_sdkddkver_h" = "yes"; then
-                MOZ_WINSDK_MAXVER=0x06000000
-            else
-                # Assume the Server 2003 Platform SDK
-                MOZ_WINSDK_MAXVER=0x05020000
-            fi
+            # Any SDK which doesn't have WinSDKVer.h is too old.
+            AC_MSG_ERROR([Your SDK does not have WinSDKVer.h. It is probably too old. Please upgrade to a newer SDK or try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
         fi
 
         unset _MSVC_VER_FILTER
@@ -1824,9 +1809,23 @@ if test "$OS_TARGET" = "Android"; then
 fi
 
 dnl ========================================================
+dnl Suppress Clang Argument Warnings
+dnl ========================================================
+if test -n "$CLANG_CC"; then
+    _WARNINGS_CFLAGS="-Qunused-arguments ${_WARNINGS_CFLAGS}"
+    CPPFLAGS="-Qunused-arguments ${CPPFLAGS}"
+fi
+if test -n "$CLANG_CXX"; then
+    _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
+fi
+
+dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
+    # Per bug 719659 comment 2, some of the headers on ancient build machines
+    # require gnu89 inline semantics.  But otherwise, we use C99.
+    CFLAGS="$CFLAGS -std=gnu99 -fgnu89-inline"
     # FIXME: Let us build with strict aliasing. bug 414641.
     CFLAGS="$CFLAGS -fno-strict-aliasing"
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
@@ -4649,14 +4648,7 @@ esac
 case "$target_os" in
     mingw*)
         NS_ENABLE_TSF=1
-        if test -z "$GNU_CC"; then
-            if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-                NS_ENABLE_TSF=
-            fi
-        fi
-        if test -n "$NS_ENABLE_TSF"; then
-            AC_DEFINE(NS_ENABLE_TSF)
-        fi
+        AC_DEFINE(NS_ENABLE_TSF)
         ;;
 esac
 
@@ -7331,8 +7323,7 @@ dnl ========================================================
 dnl ETW - Event Tracing for Windows
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(ETW,
-[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting
-                          (needs Windows Vista+ SDK)],
+[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting],
     MOZ_ETW=1,
     MOZ_ETW= )
 if test -n "$MOZ_ETW"; then
@@ -7342,8 +7333,6 @@ fi
 if test -n "$MOZ_ETW"; then
     if test -z "$MOZ_WINSDK_TARGETVER"; then
         AC_MSG_ERROR([--enable-ETW is only valid on Windows])
-    elif test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-        AC_MSG_ERROR([--enable-ETW requires the Windows Vista SDK or newer])
     fi
 fi
 
@@ -8041,7 +8030,7 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
-if test "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android"; then
+if test "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
 MOZ_ENABLE_SKIA=1
 else
 MOZ_ENABLE_SKIA=

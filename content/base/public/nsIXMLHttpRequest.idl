@@ -53,7 +53,7 @@ interface nsIDOMBlob;
 #include "jsapi.h"
 %}
 
-[scriptable, builtinclass, uuid(e2b59e48-3655-4429-a94c-b4332c346ba2)]
+[scriptable, builtinclass, uuid(5e346bf8-7083-4ef8-b9b9-736a1b5aa7ab)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
   attribute nsIDOMEventListener onabort;
@@ -61,10 +61,11 @@ interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   attribute nsIDOMEventListener onload;
   attribute nsIDOMEventListener onloadstart;
   attribute nsIDOMEventListener onprogress;
+  attribute nsIDOMEventListener ontimeout;
   attribute nsIDOMEventListener onloadend;
 };
 
-[scriptable, builtinclass, uuid(db9357fc-edf7-42b2-aab2-c24ab19ece20)]
+[scriptable, builtinclass, uuid(8dbd2448-740a-412c-b314-434f24a1c510)]
 interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
   // for future use
 };
@@ -110,7 +111,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(5cf8d518-51d0-4cd6-a69a-c3674c2de599)]
+[scriptable, uuid(88ffc45a-22e2-44f4-9a6e-f4586fbde376)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -277,6 +278,12 @@ interface nsIXMLHttpRequest : nsISupports
    * @param value The body of the header.
    */
   void   setRequestHeader(in AUTF8String header, in AUTF8String value);
+
+  /**
+   * The amount of milliseconds a request can take before being terminated.
+   * Initially zero. Zero means there is no timeout.
+   */
+  attribute unsigned long timeout;
 
   /**
    * The state of the request.

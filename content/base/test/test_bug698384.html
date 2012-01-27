@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+    https://bugzilla.mozilla.org/show_bug.cgi?id=698384
+  -->
+  <head>
+    <title>Test for Bug 698384</title>
+    <script type="text/javascript"
+      src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"
+      type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css"
+      href="/tests/SimpleTest/test.css" />
+  </head>
+  <body onload="runTests();">
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=698384">
+      Mozilla Bug 698384</a>
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test">
+      <script type="text/javascript">
+        /*
+          Checks to see if default parameter handling is correct when 0, 1
+          or 2 parameters are passed.
+
+          If one is only passed, aFilter should default to null
+          If none are passed, aFilter should be null and aWhatToShow should
+          be NodeFilter.SHOW_ALL
+        */
+        SimpleTest.waitForExplicitFinish();
+
+        var content = $('content'),
+            ni;
+
+        content.innerHTML = ('<span id="A"><\/span><span id="B"><\/span>'
+          + '<span id="C"><\/span>');
+
+        function runTests() {
+
+          // Test NodeIterator when no optional arguments are given
+          ni = document.createNodeIterator(content);
+          is(ni.whatToShow, NodeFilter.SHOW_ALL, "whatToShow should be " +
+            "NodeFilter.SHOW_ALL when both " +
+            " optionals are not given");
+          is(ni.filter, null, "filter should be defaulted to null when both " +
+            " optionals are not given");
+
+          // Test NodeIterator when first optional is passed
+          ni = document.createNodeIterator(content, NodeFilter.SHOW_ELEMENT);
+          is(ni.filter, null, "filter should be defaulted to null when only " +
+            " first argument is passed");
+          is(ni.whatToShow, NodeFilter.SHOW_ELEMENT, "whatToShow should " +
+            "properly be set to NodeFilter.SHOW_ELEMENT when whatToShow is " +
+            "provided and filter is not");
+
+          SimpleTest.finish();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

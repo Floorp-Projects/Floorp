@@ -24,17 +24,16 @@ Mozilla Public License (http://mozilla.org/MPL) or the GNU General Public
 License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
-#include "UtfCodec.h"
+#include "inc/UtfCodec.h"
 #include <cstring>
 #include <cstdlib>
 
-#include "Segment.h"
+#include "inc/Segment.h"
 #include "graphite2/Font.h"
-#include "CharInfo.h"
-#include "Slot.h"
-#include "Main.h"
-#include "XmlTraceLog.h"
-#include "CmapCache.h"
+#include "inc/CharInfo.h"
+#include "inc/Slot.h"
+#include "inc/Main.h"
+#include "inc/CmapCache.h"
 #include "graphite2/Segment.h"
 
 
@@ -70,7 +69,7 @@ Segment::~Segment()
     delete[] m_charinfo;
 }
 
-#ifndef DISABLE_SEGCACHE
+#ifndef GRAPHITE2_NSEGCACHE
 SegmentScopeState Segment::setScope(Slot * firstSlot, Slot * lastSlot, size_t subLength)
 {
     SegmentScopeState state;
@@ -131,7 +130,7 @@ void Segment::append(const Segment &other)
     m_advance = m_advance + other.m_advance;
     m_bbox = m_bbox.widen(bbox);
 }
-#endif // DISABLE_SEGCACHE
+#endif // GRAPHITE2_NSEGCACHE
 
 void Segment::appendSlot(int id, int cid, int gid, int iFeats, size_t coffset)
 {
@@ -167,7 +166,7 @@ Slot *Segment::newSlot()
     {
         int numUser = m_silf->numUser();
         Slot *newSlots = grzeroalloc<Slot>(m_bufSize);
-        uint16 *newAttrs = grzeroalloc<uint16>(numUser * m_bufSize);
+        int16 *newAttrs = grzeroalloc<int16>(numUser * m_bufSize);
         newSlots[0].userAttrs(newAttrs);
         for (size_t i = 1; i < m_bufSize - 1; i++)
         {
@@ -193,7 +192,9 @@ void Segment::freeSlot(Slot *aSlot)
     if (m_first == aSlot) m_first = aSlot->next();
     // reset the slot incase it is reused
     ::new (aSlot) Slot;
-    memset(aSlot->userAttrs(), 0, m_silf->numUser() * sizeof(uint16));
+    memset(aSlot->userAttrs(), 0, m_silf->numUser() * sizeof(int16));
+    // Update generation counter for debug
+    aSlot->index(aSlot->index()+1);
     // update next pointer
     if (!m_freeSlots)
         aSlot->next(NULL);
@@ -202,7 +203,7 @@ void Segment::freeSlot(Slot *aSlot)
     m_freeSlots = aSlot;
 }
 
-#ifndef DISABLE_SEGCACHE
+#ifndef GRAPHITE2_NSEGCACHE
 void Segment::splice(size_t offset, size_t length, Slot * startSlot,
                        Slot * endSlot, const Slot * firstSpliceSlot,
                        size_t numGlyphs)
@@ -285,145 +286,66 @@ void Segment::splice(size_t offset, size_t length, Slot * startSlot,
         replacement = replacement->next();
     }
 }
-#endif // DISABLE_SEGCACHE
-        
-void Segment::positionSlots(const Font *font, Slot *iStart, Slot *iEnd)
+#endif // GRAPHITE2_NSEGCACHE
+
+void Segment::linkClusters(Slot *s, Slot * end)
+{
+	end = end->next();
+
+	for (; s != end && !s->isBase(); s = s->next());
+	Slot * ls = s;
+
+	if (m_dir & 1)
+	{
+		for (; s != end; s = s->next())
+		{
+			if (!s->isBase())	continue;
+
+			s->sibling(ls);
+			ls = s;
+		}
+	}
+	else
+	{
+		for (; s != end; s = s->next())
+		{
+			if (!s->isBase())	continue;
+
+			ls->sibling(s);
+			ls = s;
+		}
+	}
+}
+
+Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd)
 {
     Position currpos(0., 0.);
-    Slot *s, *ls = NULL;
-    int iSlot = 0;
+    Rect bbox;
     float cMin = 0.;
     float clusterMin = 0.;
-    Rect bbox;
 
-    if (!iStart) iStart = m_first;
-    if (!iEnd) iEnd = m_last;
-    
+    if (!iStart)	iStart = m_first;
+    if (!iEnd)		iEnd   = m_last;
+
     if (m_dir & 1)
     {
-        for (s = iEnd, iSlot = m_numGlyphs - 1; s && s != iStart->prev(); s = s->prev(), --iSlot)
+        for (Slot * s = iEnd, * const end = iStart->prev(); s && s != end; s = s->prev())
         {
-            int j = s->before();
-            if (j >= 0)
-            {
-                for ( ; j <= s->after(); j++)
-                {
-                    CharInfo *c = charinfo(j);
-                    if (c->before() == -1 || iSlot < c->before()) c->before(iSlot);
-                    if (c->after() < iSlot) c->after(iSlot);
-                }
-            }
-            s->index(iSlot);
-
             if (s->isBase())
-            {
-                clusterMin = currpos.x;
-                currpos = s->finalise(this, font, &currpos, &bbox, &cMin, 0, &clusterMin);
-                if (ls)
-                    ls->sibling(s);
-                ls = s;
-            }
+                currpos = s->finalise(this, font, currpos, bbox, cMin, 0, clusterMin = currpos.x);
         }
     }
     else
     {
-        for (s = iStart, iSlot = 0; s && s != iEnd->next(); s = s->next(), ++iSlot)
+        for (Slot * s = iStart, * const end = iEnd->next(); s && s != end; s = s->next())
         {
-            int j = s->before();
-            if (j >= 0)
-            {
-                for ( ; j <= s->after(); j++)
-                {
-                    CharInfo *c = charinfo(j);
-                    if (c->before() == -1 || iSlot < c->before()) c->before(iSlot);
-                    if (c->after() < iSlot) c->after(iSlot);
-                }
-            }
-            s->index(iSlot);
-
             if (s->isBase())
-            {
-                clusterMin = currpos.x;
-                currpos = s->finalise(this, font, &currpos, &bbox, &cMin, 0, &clusterMin);
-                if (ls)
-                    ls->sibling(s);
-                ls = s;
-            }
+                currpos = s->finalise(this, font, currpos, bbox, cMin, 0, clusterMin = currpos.x);
         }
     }
-    if (iStart == m_first && iEnd == m_last) m_advance = currpos;
+    return currpos;
 }
 
-#ifndef DISABLE_TRACING
-void Segment::logSegment(gr_encform enc, const void* pStart, size_t nChars) const
-{
-    if (XmlTraceLog::get().active())
-    {
-        if (pStart)
-        {
-            XmlTraceLog::get().openElement(ElementText);
-            XmlTraceLog::get().addAttribute(AttrEncoding, enc);
-            XmlTraceLog::get().addAttribute(AttrLength, nChars);
-            switch (enc)
-            {
-            case gr_utf8:
-                XmlTraceLog::get().writeText(
-                    reinterpret_cast<const char *>(pStart));
-                break;
-            case gr_utf16:
-                for (size_t j = 0; j < nChars; ++j)
-                {
-                    uint32 code = reinterpret_cast<const uint16 *>(pStart)[j];
-                    if (code >= 0xD800 && code <= 0xDBFF) // high surrogate
-                    {
-                        j++;
-                        // append low surrogate
-                        code = (code << 16) + reinterpret_cast<const uint16 *>(pStart)[j];
-                    }
-                    else if (code >= 0xDC00 && code <= 0xDFFF)
-                    {
-                        XmlTraceLog::get().warning("Unexpected low surrogate %x at %d", code, j);
-                    }
-                    XmlTraceLog::get().writeUnicode(code);
-                }
-                break;
-            case gr_utf32:
-                for (size_t j = 0; j < nChars; ++j)
-                {
-                    XmlTraceLog::get().writeUnicode(
-                        reinterpret_cast<const uint32 *>(pStart)[j]);
-                }
-                break;
-            }
-            XmlTraceLog::get().closeElement(ElementText);
-        }
-        logSegment();
-    }
-}
-
-void Segment::logSegment() const
-{
-    if (XmlTraceLog::get().active())
-    {
-        XmlTraceLog::get().openElement(ElementSegment);
-        XmlTraceLog::get().addAttribute(AttrLength, slotCount());
-        XmlTraceLog::get().addAttribute(AttrAdvanceX, advance().x);
-        XmlTraceLog::get().addAttribute(AttrAdvanceY, advance().y);
-        for (Slot *i = m_first; i; i = i->next())
-        {
-            XmlTraceLog::get().openElement(ElementSlot);
-            XmlTraceLog::get().addAttribute(AttrGlyphId, i->gid());
-            XmlTraceLog::get().addAttribute(AttrX, i->origin().x);
-            XmlTraceLog::get().addAttribute(AttrY, i->origin().y);
-            XmlTraceLog::get().addAttribute(AttrBefore, i->before());
-            XmlTraceLog::get().addAttribute(AttrAfter, i->after());
-            XmlTraceLog::get().closeElement(ElementSlot);
-        }
-        XmlTraceLog::get().closeElement(ElementSegment);
-    }
-}
-
-#endif
 
 template <typename utf_iter>
 inline void process_utf_data(Segment & seg, const Face & face, const int fid, utf_iter c, size_t n_chars)
@@ -440,6 +362,7 @@ inline void process_utf_data(Segment & seg, const Face & face, const int fid, ut
 		seg.appendSlot(slotid, usv, gid, fid, c - base);
 	}
 }
+
 
 void Segment::read_text(const Face *face, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void* pStart, size_t nChars)
 {
@@ -461,7 +384,23 @@ void Segment::prepare_pos(const Font * /*font*/)
 
 void Segment::finalise(const Font *font)
 {
-    positionSlots(font);
+	if (!m_first) return;
+
+    m_advance = positionSlots(font);
+    int i = 0;
+    for (Slot * s = m_first; s; s->index(i++), s = s->next())
+    {
+        int j = s->before();
+        if (j < 0)	continue;
+
+        for (const int after = s->after(); j <= after; ++j)
+		{
+			CharInfo & c = *charinfo(j);
+			if (c.before() == -1 || i < c.before()) 	c.before(i);
+			if (c.after() < i) 							c.after(i);
+		}
+    }
+    linkClusters(m_first, m_last);
 }
 
 void Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUSED justFlags flags, Slot *pFirst, Slot *pLast)

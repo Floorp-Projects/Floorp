@@ -1510,6 +1510,12 @@ class nsIWidget : public nsISupports {
      *                   parent widget
      */
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) = 0;
+
+    /**
+     * Return the internal format of the default framebuffer for this
+     * widget.
+     */
+    virtual PRUint32 GetGLFrameBufferFormat() { return 0; /*GL_NONE*/ }
 protected:
 
     // keep the list of children.  We also keep track of our siblings.

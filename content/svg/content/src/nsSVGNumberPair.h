@@ -37,15 +37,16 @@
 #ifndef __NS_SVGNUMBERPAIR_H__
 #define __NS_SVGNUMBERPAIR_H__
 
-#include "nsIDOMSVGNumber.h"
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsError.h"
 #include "nsIDOMSVGAnimatedNumber.h"
-#include "nsSVGElement.h"
-#include "nsDOMError.h"
-#include "nsMathUtils.h"
-
 #include "nsISMILAttr.h"
+#include "nsMathUtils.h"
+#include "nsSVGElement.h"
+
+class nsISMILAnimationElement;
 class nsSMILValue;
-class nsISMILType;
 
 class nsSVGNumberPair
 {

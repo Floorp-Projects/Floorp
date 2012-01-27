@@ -107,10 +107,6 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD AddComment(const nsIParserNode& aNode) { return NS_OK; }
-  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode)
-                                                    { return NS_OK; }
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
   virtual void FlushPendingNotifications(mozFlushType aType) { }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget() { return nsnull; }
@@ -119,7 +115,6 @@ public:
   NS_IMETHOD OpenHead();
   NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn);
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }

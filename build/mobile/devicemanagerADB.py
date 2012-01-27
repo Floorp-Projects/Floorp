@@ -115,14 +115,17 @@ class DeviceManagerADB(DeviceManager):
       if (not self.dirExists(remoteDir)):
         self.mkDirs(remoteDir+"/x")
       if (self.useZip):
-        localZip = tempfile.mktemp()+".zip"
-        remoteZip = remoteDir + "/adbdmtmp.zip"
-        subprocess.check_output(["zip", "-r", localZip, '.'], cwd=localDir)
-        self.pushFile(localZip, remoteZip)
-        os.remove(localZip)
-        data = self.runCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir]).stdout.read()
-        self.checkCmdAs(["shell", "rm", remoteZip])
-        if (re.search("unzip: exiting", data) or re.search("Operation not permitted", data)):
+        try:
+          localZip = tempfile.mktemp()+".zip"
+          remoteZip = remoteDir + "/adbdmtmp.zip"
+          subprocess.check_output(["zip", "-r", localZip, '.'], cwd=localDir)
+          self.pushFile(localZip, remoteZip)
+          os.remove(localZip)
+          data = self.runCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir]).stdout.read()
+          self.checkCmdAs(["shell", "rm", remoteZip])
+          if (re.search("unzip: exiting", data) or re.search("Operation not permitted", data)):
+            raise Exception("unzip failed, or permissions error")
+        except:
           print "zip/unzip failure: falling back to normal push"
           self.useZip = False
           self.pushDir(localDir, remoteDir)

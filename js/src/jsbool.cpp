@@ -41,7 +41,6 @@
  * JS boolean implementation.
  */
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jsatom.h"

@@ -390,9 +390,15 @@ interface nsIXPCFunctionThisTranslator : nsISupports
 #define NS_XPCONNECT_CID \
 { 0xcb6593e0, 0xf9b2, 0x11d2, \
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+
+enum nsGCType {
+    nsGCNormal,
+    nsGCShrinking,
+    nsGCIncremental
+};
 %}
 
-[uuid(241e6db3-e018-4d99-b976-c782a05f9c77)]
+[uuid(686bb1d0-4711-11e1-b86c-0800200c9a66)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -723,8 +729,10 @@ interface nsIXPConnect : nsISupports
 
     /**
      * Trigger a JS garbage collection.
+     * Use a js::gcreason::Reason from jsfriendapi.h for the kind.
+     * Use the nsGCType enum for the kind.
      */
-    void GarbageCollect(in boolean shrinkingGC);
+    void GarbageCollect(in PRUint32 reason, in PRUint32 kind);
 
     /**
      * Define quick stubs on the given object, @a proto.

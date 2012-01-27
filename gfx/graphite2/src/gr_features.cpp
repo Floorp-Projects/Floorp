@@ -25,10 +25,10 @@ License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
 #include "graphite2/Font.h"
-#include "Face.h"
-#include "FeatureMap.h"
-#include "FeatureVal.h"
-#include "NameTable.h"
+#include "inc/Face.h"
+#include "inc/FeatureMap.h"
+#include "inc/FeatureVal.h"
+#include "inc/NameTable.h"
 
 using namespace graphite2;
 

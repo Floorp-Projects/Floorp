@@ -126,10 +126,12 @@ protected:
   static void GetQualifiedPath(const PRUnichar *aInPath, nsString &aOutPath);
   void GetFilterListArray(nsString& aFilterList);
   bool FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType);
-  bool ShowFolderPicker(const nsString& aInitialDir);
   bool ShowXPFolderPicker(const nsString& aInitialDir);
-  bool ShowFilePicker(const nsString& aInitialDir);
   bool ShowXPFilePicker(const nsString& aInitialDir);
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  bool ShowFolderPicker(const nsString& aInitialDir);
+  bool ShowFilePicker(const nsString& aInitialDir);
+#endif
   void AppendXPFilter(const nsAString& aTitle, const nsAString& aFilter);
   void RememberLastUsedDirectory();
   bool IsPrivacyModeEnabled();

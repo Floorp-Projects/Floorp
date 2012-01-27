@@ -82,6 +82,7 @@
 #include "jstypedarray.h"
 #include "prmem.h"
 #include "nsDOMFile.h"
+#include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;
 
@@ -428,6 +429,31 @@ nsWebSocket::~nsWebSocket()
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsWebSocket)
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsWebSocket)
+  if (tmp->IsBlack()) {
+    if (tmp->mListenerManager) {
+      tmp->mListenerManager->UnmarkGrayJSListeners();
+      NS_UNMARK_LISTENER_WRAPPER(Open)
+      NS_UNMARK_LISTENER_WRAPPER(Error)
+      NS_UNMARK_LISTENER_WRAPPER(Message)
+      NS_UNMARK_LISTENER_WRAPPER(Close)
+    }
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsWebSocket)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsWebSocket)
+  return tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsWebSocket,
+                                               nsDOMEventTargetWrapperCache)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsWebSocket,
                                                   nsDOMEventTargetWrapperCache)

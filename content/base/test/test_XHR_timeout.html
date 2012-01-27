@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=525816
+-->
+<head>
+  <title>Test for Bug 525816</title>
+  <script type="application/javascript"
+          src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet"
+        type="text/css"
+        href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=525816"
+  >Mozilla Bug 525816 (XMLHttpRequest timeout)</a>
+<p id="display"></p>
+<div id="content">
+  This test takes over 1 minute to run, probably over 2 minutes.
+</div>
+<pre id="test">
+<script class="testbody"
+        type="text/javascript"
+        src="test_XHR_timeout.js"></script>
+</pre>
+</body>
+</html>

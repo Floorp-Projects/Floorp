@@ -385,6 +385,7 @@ TraverseBinding(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME((*cb), "proto mInterfaceTable data");
   cb->NoteXPCOMChild(static_cast<nsISupports*>(aData));
   return kHashEnumerateNext;
 }
@@ -392,9 +393,12 @@ TraverseBinding(nsHashKey *aKey, void *aData, void* aClosure)
 void
 nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
 {
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "proto mBinding");
   cb.NoteXPCOMChild(mBinding);
-  if (mResources)
+  if (mResources) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "proto mResources mLoader");
     cb.NoteXPCOMChild(mResources->mLoader);
+  }
   if (mInsertionPointTable)
     mInsertionPointTable->Enumerate(TraverseInsertionPoint, &cb);
   if (mInterfaceTable)

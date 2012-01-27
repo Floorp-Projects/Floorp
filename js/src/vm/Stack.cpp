@@ -492,38 +492,14 @@ StackSpace::sizeOfCommitted()
 
 ContextStack::ContextStack(JSContext *cx)
   : seg_(NULL),
-    space_(&JS_THREAD_DATA(cx)->stackSpace),
+    space_(&cx->runtime->stackSpace),
     cx_(cx)
-{
-    threadReset();
-}
+{}
 
 ContextStack::~ContextStack()
 {
     JS_ASSERT(!seg_);
 }
-
-void
-ContextStack::threadReset()
-{
-#ifdef JS_THREADSAFE
-    if (cx_->thread())
-        space_ = &JS_THREAD_DATA(cx_)->stackSpace;
-    else
-        space_ = NULL;
-#else
-    space_ = &JS_THREAD_DATA(cx_)->stackSpace;
-#endif
-}
-
-#ifdef DEBUG
-void
-ContextStack::assertSpaceInSync() const
-{
-    JS_ASSERT(space_);
-    JS_ASSERT(space_ == &JS_THREAD_DATA(cx_)->stackSpace);
-}
-#endif
 
 bool
 ContextStack::onTop() const
@@ -793,6 +769,17 @@ ContextStack::pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrame
     /* Save this for popGeneratorFrame. */
     gfg->gen_ = gen;
     gfg->stackvp_ = stackvp;
+
+    /*
+     * Trigger incremental barrier on the floating frame's generator object.
+     * This is normally traced through only by associated arguments/call
+     * objects, but only when the generator is not actually on the stack.
+     * We don't need to worry about generational barriers as the generator
+     * object has a trace hook and cannot be nursery allocated.
+     */
+    JSObject *genobj = js_FloatingFrameToGenerator(genfp)->obj;
+    JS_ASSERT(genobj->getClass()->trace);
+    JSObject::writeBarrierPre(genobj);
 
     /* Copy from the generator's floating frame to the stack. */
     stackfp->stealFrameAndSlots(stackvp, genfp, genvp, gen->regs.sp);

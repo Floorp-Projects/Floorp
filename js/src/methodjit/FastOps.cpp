@@ -2300,7 +2300,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
     /* Constant-fold. */
     if (lhs->isConstant() && rhs->isConstant()) {
-        JSBool b;
+        bool b;
         StrictlyEqual(cx, lhs->getValue(), rhs->getValue(), &b);
         frame.popn(2);
         frame.push(BooleanValue((op == JSOP_STRICTEQ) ? b : !b));

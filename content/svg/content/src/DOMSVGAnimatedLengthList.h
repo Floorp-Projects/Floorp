@@ -37,12 +37,11 @@
 #ifndef MOZILLA_DOMSVGANIMATEDLENGTHLIST_H__
 #define MOZILLA_DOMSVGANIMATEDLENGTHLIST_H__
 
-#include "nsIDOMSVGAnimatedLengthList.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
-#include "nsTArray.h"
-
-class nsSVGElement;
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDOMSVGAnimatedLengthList.h"
+#include "nsSVGElement.h"
 
 namespace mozilla {
 

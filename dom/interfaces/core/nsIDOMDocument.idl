@@ -66,7 +66,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(5c3bff4d-ae7f-4c93-948c-519589672c30)]
+[scriptable, uuid(d7cdd08e-1bfd-4bc3-9742-d66586781ee2)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -118,16 +118,14 @@ interface nsIDOMDocument : nsIDOMNode
    */
   nsIDOMRange              createRange();
 
-  nsIDOMNodeIterator createNodeIterator(in nsIDOMNode root,
-                                        in unsigned long whatToShow,
-                                        in nsIDOMNodeFilter filter,
-                                        in boolean entityReferenceExpansion)
-                                        raises(DOMException);
-  nsIDOMTreeWalker   createTreeWalker(in nsIDOMNode root,
-                                      in unsigned long whatToShow,
-                                      in nsIDOMNodeFilter filter,
-                                      in boolean entityReferenceExpansion)
-                                        raises(DOMException);
+  [optional_argc] nsIDOMNodeIterator createNodeIterator(in nsIDOMNode root,
+                                                        [optional] in unsigned long whatToShow,
+                                                        [optional] in nsIDOMNodeFilter filter)
+                                                          raises(DOMException);
+  [optional_argc] nsIDOMTreeWalker   createTreeWalker(in nsIDOMNode root,
+                                                      [optional] in unsigned long whatToShow,
+                                                      [optional] in nsIDOMNodeFilter filter)
+                                                        raises(DOMException);
 
   nsIDOMEvent               createEvent(in DOMString eventType)
                                                raises(DOMException);

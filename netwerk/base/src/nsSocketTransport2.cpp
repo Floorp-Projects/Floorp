@@ -586,7 +586,6 @@ nsSocketOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *countWrit
     PRInt32 n = PR_Write(fd, buf, count);
 
     SOCKET_LOG(("  PR_Write returned [n=%d]\n", n));
-    NS_ASSERTION(n != 0, "unexpected return value");
 
     nsresult rv;
     {
