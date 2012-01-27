@@ -175,6 +175,17 @@ class Bindings {
     uint16_t nargs;
     uint16_t nvars;
     uint16_t nupvars;
+    /*
+     * Hack for handling duplicate parameters. We don't want to create
+     * duplicate properties in Call objects, so instead we skip that
+     * argument and record that there are holes so we can patch in fake
+     * names if needed in the decompiler.
+     *
+     * This hack would be obviated by either (a) not using JSObjects 
+     * to represent closure environments, or (b) not using the decompiler
+     * for Function.toString.
+     */
+    uint16_t hasHoles;
 
   public:
     inline Bindings(JSContext *cx);
@@ -256,6 +267,11 @@ class Bindings {
         JS_ASSERT(name != NULL); /* not destructuring */
         *slotp = nargs;
         return add(cx, name, ARGUMENT);
+    }
+    void skipArgument(JSContext *cx, JSAtom *name, uint16_t *slotp) {
+        JS_ASSERT(name != NULL); /* not destructuring */
+        hasHoles = true;
+        *slotp = nargs++;
     }
     bool addDestructuring(JSContext *cx, uint16_t *slotp) {
         *slotp = nargs;
