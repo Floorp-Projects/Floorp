@@ -1294,8 +1294,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
                 rhs->pn_cookie.set(funtc.staticLevel, slot);
                 rhs->pn_dflags |= PND_BOUND;
 
-                ParseNode *item =
-                    ParseNode::newBinaryOrAppend(PNK_ASSIGN, JSOP_NOP, lhs, rhs, &funtc);
+                ParseNode *item = new_<BinaryNode>(PNK_ASSIGN, JSOP_NOP, lhs->pn_pos, lhs, rhs);
                 if (!item)
                     return false;
                 if (!list) {
@@ -6910,6 +6909,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         for (;;) {
             JSAtom *atom;
             TokenKind ltok = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
+            TokenPtr begin = tokenStream.currentToken().pos.begin;
             switch (ltok) {
               case TOK_NUMBER:
                 pn3 = NullaryNode::create(PNK_NUMBER, tc);
@@ -6976,7 +6976,10 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
                     /* NB: Getter function in { get x(){} } is unnamed. */
                     pn2 = functionDef(NULL, op == JSOP_GETTER ? Getter : Setter, Expression);
-                    pn2 = ParseNode::newBinaryOrAppend(PNK_COLON, op, pn3, pn2, tc);
+                    if (!pn2)
+                        return NULL;
+                    TokenPos pos = {begin, pn2->pn_pos.end};
+                    pn2 = new_<BinaryNode>(PNK_COLON, op, pos, pn3, pn2);
                     goto skip;
                 }
               case TOK_STRING: {
@@ -7038,7 +7041,10 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 return NULL;
             }
 
-            pn2 = ParseNode::newBinaryOrAppend(PNK_COLON, op, pn3, pnval, tc);
+            {
+                TokenPos pos = {begin, pnval->pn_pos.end};
+                pn2 = new_<BinaryNode>(PNK_COLON, op, pos, pn3, pnval);
+            }
           skip:
             if (!pn2)
                 return NULL;
