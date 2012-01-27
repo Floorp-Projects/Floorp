@@ -1598,7 +1598,7 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "type-inference/script-main"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.scripts,
+                       stats.typeInferenceSizes.scripts,
                        "Memory used during type inference to store type sets of variables "
                        "and dynamically observed types.",
                        callback, closure);
@@ -1606,7 +1606,7 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "type-inference/object-main"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.objects,
+                       stats.typeInferenceSizes.objects,
                        "Memory used during type inference to store types and possible "
                        "property types of JS objects.",
                        callback, closure);
@@ -1614,14 +1614,14 @@ ReportCompartmentStats(const JS::CompartmentStats &stats,
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "type-inference/tables"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.tables,
+                       stats.typeInferenceSizes.tables,
                        "Memory used during type inference for compartment-wide tables.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats,
                                               "analysis-temporary"),
                        nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.temporary,
+                       stats.typeInferenceSizes.temporary,
                        "Memory used during type inference and compilation to hold transient "
                        "analysis information.  Cleared on GC.",
                        callback, closure);
