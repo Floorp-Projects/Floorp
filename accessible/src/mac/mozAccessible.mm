@@ -221,7 +221,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 #if DEBUG
   if ([attribute isEqualToString:@"AXMozDescription"])
-    return [NSString stringWithFormat:@"role = %u", mRole];
+    return [NSString stringWithFormat:@"role = %u native = %@", mRole, [self class]];
 #endif
   
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
@@ -338,7 +338,9 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 - (NSString*)accessibilityActionDescription:(NSString*)action 
 {
-  return nil;
+  // by default we return whatever the MacOS API know about.
+  // if you have custom actions, override.
+  return NSAccessibilityActionDescription(action);
 }
 
 - (void)accessibilityPerformAction:(NSString*)action 

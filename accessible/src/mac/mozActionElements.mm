@@ -75,6 +75,9 @@ enum CheckboxValue {
                                                   NSAccessibilityFocusedAttribute, // required
                                                   NSAccessibilityTitleAttribute, // required
                                                   NSAccessibilityDescriptionAttribute,
+#if DEBUG
+                                                  @"AXMozDescription",
+#endif
                                                   nil];
   }
   return attributes;
@@ -219,6 +222,9 @@ enum CheckboxValue {
                                                   NSAccessibilityTitleAttribute, // required for popupmenus, and for menubuttons with a title
                                                   NSAccessibilityChildrenAttribute, // required
                                                   NSAccessibilityDescriptionAttribute, // required if it has no title attr
+#if DEBUG
+                                                  @"AXMozDescription",
+#endif
                                                   nil];
   }
   return attributes;

@@ -63,6 +63,9 @@ using namespace mozilla::a11y;
                                                            NSAccessibilityNumberOfCharactersAttribute, // required
                                                            // TODO: NSAccessibilityVisibleCharacterRangeAttribute, // required
                                                            // TODO: NSAccessibilityInsertionPointLineNumberAttribute
+#if DEBUG
+                                                           @"AXMozDescription",
+#endif
                                                            nil];
   }
   return supportedAttributes;
@@ -279,6 +282,9 @@ using namespace mozilla::a11y;
                                                            NSAccessibilityNumberOfCharactersAttribute, // required
                                                            // TODO: NSAccessibilityVisibleCharacterRangeAttribute, // required
                                                            // TODO: NSAccessibilityInsertionPointLineNumberAttribute
+#if DEBUG
+                                                           @"AXMozDescription",
+#endif
                                                            nil];
   }
   return supportedAttributes;
