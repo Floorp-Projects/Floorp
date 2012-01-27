@@ -1071,6 +1071,19 @@ MacroAssemblerARMCompat::freeStack(uint32 amount)
         ma_add(Imm32(amount), sp);
     adjustFrame(-amount);
 }
+
+void
+MacroAssemblerARMCompat::add32(const Imm32 &imm, const Register &dest)
+{
+    ma_add(imm, dest);
+}
+
+void
+MacroAssemblerARMCompat::sub32(const Imm32 &imm, const Register &dest)
+{
+    ma_sub(imm, dest);
+}
+
 void
 MacroAssemblerARMCompat::move32(const Imm32 &imm, const Register &dest)
 {
