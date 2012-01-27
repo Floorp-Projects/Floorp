@@ -174,9 +174,6 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
   }
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
-  "resource:///modules/NewTabUtils.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "InspectorUI", function() {
   let tmp = {};
   Cu.import("resource:///modules/inspector.jsm", tmp);
@@ -1711,7 +1708,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 #endif
 
   gBrowserThumbnails.init();
-  NewTabUtils.init();
   TabView.init();
 
   setUrlAndSearchBarWidthForConditionalForwardButton();

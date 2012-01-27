@@ -464,7 +464,7 @@ let Links = {
   /**
    * The links cache.
    */
-  _links: [],
+  _links: null,
 
   /**
    * The default provider for links.
@@ -472,16 +472,47 @@ let Links = {
   _provider: PlacesProvider,
 
   /**
+   * List of callbacks waiting for the cache to be populated.
+   */
+  _populateCallbacks: [],
+
+  /**
    * Populates the cache with fresh links from the current provider.
    * @param aCallback The callback to call when finished (optional).
+   * @param aForce When true, populates the cache even when it's already filled.
    */
-  populateCache: function Links_populateCache(aCallback) {
-    let self = this;
+  populateCache: function Links_populateCache(aCallback, aForce) {
+    let callbacks = this._populateCallbacks;
 
-    this._provider.getLinks(function (aLinks) {
-      self._links = aLinks;
-      aCallback && aCallback();
-    });
+    // Enqueue the current callback.
+    callbacks.push(aCallback);
+
+    // There was a callback waiting already, thus the cache has not yet been
+    // populated.
+    if (callbacks.length > 1)
+      return;
+
+    function executeCallbacks() {
+      while (callbacks.length) {
+        let callback = callbacks.shift();
+        if (callback) {
+          try {
+            callback();
+          } catch (e) {
+            // We want to proceed even if a callback fails.
+          }
+        }
+      }
+    }
+
+    if (this._links && !aForce) {
+      executeCallbacks();
+    } else {
+      this._provider.getLinks(function (aLinks) {
+        this._links = aLinks;
+        executeCallbacks();
+      }.bind(this));
+    }
   },
 
   /**
@@ -520,20 +551,6 @@ let Links = {
  * Singleton that provides the public API of this JSM.
  */
 let NewTabUtils = {
-  _initialized: false,
-
-  /**
-   * Initializes and prepares the NewTabUtils module.
-   */
-  init: function NewTabUtils_init() {
-    if (!this._initialized) {
-      // Prefetch the links.
-      Links.populateCache();
-
-      this._initialized = true;
-    }
-  },
-
   /**
    * Resets the NewTabUtils module, its links and its storage.
    */
