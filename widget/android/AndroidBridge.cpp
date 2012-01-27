@@ -139,6 +139,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetDpi = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getDpi", "()I");
     jSetFullScreen = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setFullScreen", "(Z)V");
     jShowInputMethodPicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showInputMethodPicker", "()V");
+    jPreventPanning = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "preventPanning", "()V");
     jHideProgressDialog = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "hideProgressDialog", "()V");
     jPerformHapticFeedback = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "performHapticFeedback", "(Z)V");
     jVibrate1 = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "vibrate", "(J)V");
@@ -1610,5 +1611,11 @@ NS_IMETHODIMP nsAndroidBridge::SetDrawMetadataProvider(nsIAndroidDrawMetadataPro
 {
     gDrawMetadataProvider = aProvider;
     return NS_OK;
+}
+
+void
+AndroidBridge::PreventPanning() {
+    ALOG_BRIDGE("AndroidBridge::PreventPanning");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jPreventPanning);
 }
 

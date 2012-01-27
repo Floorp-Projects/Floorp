@@ -30,8 +30,9 @@
 #ifndef PageBlock_h
 #define PageBlock_h
 
+#include "mozilla/StdInt.h"
+
 #include <stdlib.h>
-#include "jsstdint.h"
 #include "assembler/wtf/Platform.h"
 
 namespace WTF {

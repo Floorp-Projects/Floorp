@@ -22,17 +22,6 @@
 <!ENTITY importButton.accesskey     "I">
 <!ENTITY importButton.commandkey    "i">
 
-<!ENTITY searchInput.tooltip        "Filter style sheets by name">
-<!ENTITY searchInput.placeholder    "Find style sheet">
-
-<!-- LOCALIZATION NOTE  (searchNoResults): This is shown when searching a term
-     that is not found in any stylesheet or stylesheet name. -->
-<!ENTITY searchNoResults.label      "No matching style sheet has been found.">
-
-<!-- LOCALIZATION NOTE  (searchClearButton): This button clears the search input
-     box and is visible only when a search term has been typed. -->
-<!ENTITY searchClearButton.label    "Clear">
-
 <!ENTITY visibilityToggle.tooltip   "Toggle style sheet visibility">
 <!ENTITY visibilityToggle.accesskey "V">
 
@@ -60,3 +49,6 @@
 <!ENTITY noStyleSheet-tip-action.label "append a new style sheet">
 <!-- LOCALICATION NOTE  (noStyleSheet-tip-end.label): End of the tip sentence -->
 <!ENTITY noStyleSheet-tip-end.label    "?">
+
+<!-- LOCALIZATION NOTE  (closeCmd.key): Accel + this key closes the window. -->
+<!ENTITY closeCmd.key                  "W">

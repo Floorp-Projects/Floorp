@@ -130,29 +130,32 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         } else {
             curr->gcHeapObjectsNonFunction += thingSize;
         }
-        curr->objectSlots += obj->dynamicSlotSize(data->mallocSizeOf);
+        size_t slotsSize, elementsSize;
+        obj->sizeOfExcludingThis(data->mallocSizeOf, &slotsSize, &elementsSize);
+        curr->objectSlots += slotsSize;
+        curr->objectElements += elementsSize;
         break;
     }
     case JSTRACE_STRING:
     {
         JSString *str = static_cast<JSString *>(thing);
         curr->gcHeapStrings += thingSize;
-        curr->stringChars += str->charsHeapSize(data->mallocSizeOf);
+        curr->stringChars += str->sizeOfExcludingThis(data->mallocSizeOf);
         break;
     }
     case JSTRACE_SHAPE:
     {
         Shape *shape = static_cast<Shape*>(thing);
+        size_t propTableSize, kidsSize;
+        shape->sizeOfExcludingThis(data->mallocSizeOf, &propTableSize, &kidsSize);
         if (shape->inDictionary()) {
             curr->gcHeapShapesDict += thingSize;
-            curr->shapesExtraDictTables +=
-                shape->sizeOfPropertyTable(data->mallocSizeOf);
+            curr->shapesExtraDictTables += propTableSize;
+            JS_ASSERT(kidsSize == 0);
         } else {
             curr->gcHeapShapesTree += thingSize;
-            curr->shapesExtraTreeTables +=
-                shape->sizeOfPropertyTable(data->mallocSizeOf);
-            curr->shapesExtraTreeShapeKids +=
-                shape->sizeOfKids(data->mallocSizeOf);
+            curr->shapesExtraTreeTables += propTableSize;
+            curr->shapesExtraTreeShapeKids += kidsSize;
         }
         break;
     }
@@ -165,9 +168,9 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
     {
         JSScript *script = static_cast<JSScript *>(thing);
         curr->gcHeapScripts += thingSize;
-        curr->scriptData += script->dataSize(data->mallocSizeOf);
+        curr->scriptData += script->sizeOfData(data->mallocSizeOf);
 #ifdef JS_METHODJIT
-        curr->mjitData += script->jitDataSize(data->mallocSizeOf);
+        curr->mjitData += script->sizeOfJitScripts(data->mallocSizeOf);
 #endif
         break;
     }
@@ -175,7 +178,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
     {
         types::TypeObject *obj = static_cast<types::TypeObject *>(thing);
         curr->gcHeapTypeObjects += thingSize;
-        SizeOfObjectTypeInferenceData(obj, &curr->typeInferenceMemory,
+        SizeOfTypeObjectExcludingThis(obj, &curr->typeInferenceMemory,
                                       data->mallocSizeOf);
         break;
     }
@@ -217,39 +220,28 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
                                        ArenaCallback, CellCallback);
         IterateChunks(cx, data, ChunkCallback);
 
-        data->runtimeObject = data->mallocSizeOf(rt, sizeof(JSRuntime));
+        data->runtimeObject = data->mallocSizeOf(rt);
+
+        size_t normal, temporary, regexpCode, stackCommitted;
+        rt->sizeOfExcludingThis(data->mallocSizeOf,
+                                &normal,
+                                &temporary,
+                                &regexpCode,
+                                &stackCommitted);
+
+        data->runtimeNormal = normal;
+        data->runtimeTemporary = temporary;
+        data->runtimeRegexpCode = regexpCode;
+        data->runtimeStackCommitted = stackCommitted;
 
         // Nb: we use sizeOfExcludingThis() because atomState.atoms is within
         // JSRuntime, and so counted when JSRuntime is counted.
         data->runtimeAtomsTable =
             rt->atomState.atoms.sizeOfExcludingThis(data->mallocSizeOf);
 
-        {
-            // Need the GC lock to call JS_ContextIteratorUnlocked() and to
-            // access rt->threads.
-            AutoLockGC lock(rt);
-
-            JSContext *acx, *iter = NULL;
-            while ((acx = JS_ContextIteratorUnlocked(rt, &iter)) != NULL) {
-                data->runtimeContexts +=
-                    acx->sizeOfIncludingThis(data->mallocSizeOf);
-            }
-
-            for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
-                JSThread *thread = r.front().value;
-                size_t normal, temporary, regexpCode, stackCommitted;
-                thread->sizeOfIncludingThis(data->mallocSizeOf,
-                                            &normal,
-                                            &temporary,
-                                            &regexpCode,
-                                            &stackCommitted);
-
-                data->runtimeThreadsNormal         += normal;
-                data->runtimeThreadsTemporary      += temporary;
-                data->runtimeThreadsRegexpCode     += regexpCode;
-                data->runtimeThreadsStackCommitted += stackCommitted;
-            }
-        }
+        JSContext *acx, *iter = NULL;
+        while ((acx = JS_ContextIteratorUnlocked(rt, &iter)) != NULL)
+            data->runtimeContexts += acx->sizeOfIncludingThis(data->mallocSizeOf);
     }
 
     JS_DestroyContextNoGC(cx);
@@ -283,7 +275,8 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
         data->gcHeapArenaUnused += stats.gcHeapArenaUnused;
         data->totalObjects += stats.gcHeapObjectsNonFunction +
                               stats.gcHeapObjectsFunction +
-                              stats.objectSlots;
+                              stats.objectSlots +
+                              stats.objectElements;
         data->totalShapes  += stats.gcHeapShapesTree +
                               stats.gcHeapShapesDict +
                               stats.gcHeapShapesBase +
@@ -346,26 +339,17 @@ GetExplicitNonHeapForRuntime(JSRuntime *rt, int64_t *amount,
         IterateCompartments(cx, &n, ExplicitNonHeapCompartmentCallback);
         *amount += n;
 
-        {
-            // Need the GC lock to call JS_ContextIteratorUnlocked() and to
-            // access rt->threads.
-            AutoLockGC lock(rt);
+        // explicit/runtime/regexp-code
+        // explicit/runtime/stack-committed
+        size_t regexpCode, stackCommitted;
+        rt->sizeOfExcludingThis(mallocSizeOf,
+                                NULL,
+                                NULL,
+                                &regexpCode,
+                                &stackCommitted);
 
-            // explicit/runtime/threads/regexp-code
-            // explicit/runtime/threads/stack-committed
-            for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
-                JSThread *thread = r.front().value;
-                size_t regexpCode, stackCommitted;
-                thread->sizeOfIncludingThis(mallocSizeOf,
-                                            NULL,
-                                            NULL,
-                                            &regexpCode,
-                                            &stackCommitted);
-
-                *amount += regexpCode;
-                *amount += stackCommitted;
-            }
-        }
+        *amount += regexpCode;
+        *amount += stackCommitted;
     }
 
     JS_DestroyContextNoGC(cx);

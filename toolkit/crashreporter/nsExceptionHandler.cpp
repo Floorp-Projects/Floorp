@@ -1,4 +1,4 @@
-  /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -110,6 +110,8 @@
 #include <map>
 #include <vector>
 
+#include "mozilla/mozalloc_oom.h"
+
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
 #endif
@@ -143,6 +145,7 @@ typedef std::wstring xpstring;
 #else
 #define XP_TTOA(time, buffer, base) _i64toa(time, buffer, base)
 #endif
+#define XP_STOA(size, buffer, base) _ui64toa(size, buffer, base)
 #else
 typedef char XP_CHAR;
 typedef std::string xpstring;
@@ -154,10 +157,12 @@ typedef std::string xpstring;
 #define XP_PATH_MAX PATH_MAX
 #ifdef XP_LINUX
 #define XP_STRLEN(x) my_strlen(x)
-#define XP_TTOA(time, buffer, base) my_timetostring(time, buffer, sizeof(buffer))
+#define XP_TTOA(time, buffer, base) my_inttostring(time, buffer, sizeof(buffer))
+#define XP_STOA(size, buffer, base) my_inttostring(size, buffer, sizeof(buffer))
 #else
 #define XP_STRLEN(x) strlen(x)
 #define XP_TTOA(time, buffer, base) sprintf(buffer, "%ld", time)
+#define XP_STOA(size, buffer, base) sprintf(buffer, "%zu", size)
 #define my_strlen strlen
 #define sys_close close
 #define sys_fork fork
@@ -205,8 +210,21 @@ static const char kAvailableVirtualMemoryParameter[] = "AvailableVirtualMemory="
 static const int kAvailableVirtualMemoryParameterLen =
   sizeof(kAvailableVirtualMemoryParameter)-1;
 
+static const char kOOMAllocationSizeParameter[] = "OOMAllocationSize=";
+static const int kOOMAllocationSizeParameterLen =
+  sizeof(kOOMAllocationSizeParameter)-1;
+
+static const char kAvailablePageFileParameter[] = "AvailablePageFile=";
+static const int kAvailablePageFileParameterLen =
+  sizeof(kAvailablePageFileParameter)-1;
+
+static const char kAvailablePhysicalMemoryParameter[] = "AvailablePhysicalMemory=";
+static const int kAvailablePhysicalMemoryParameterLen =
+  sizeof(kAvailablePhysicalMemoryParameter)-1;
+
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
+static Mutex* notesFieldLock;
 static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
@@ -295,7 +313,7 @@ void FileIDToGUID(const char* file_id, u_int8_t guid[sizeof(MDGUID)])
 
 #ifdef XP_LINUX
 inline void
-my_timetostring(time_t t, char* buffer, size_t buffer_length)
+my_inttostring(intmax_t t, char* buffer, size_t buffer_length)
 {
   my_memset(buffer, 0, buffer_length);
   my_itos(buffer, t, my_int_len(t));
@@ -330,6 +348,13 @@ Concat(XP_CHAR* str, const XP_CHAR* toAppend, int* size)
   return str;
 }
 
+static size_t gOOMAllocationSize = 0;
+
+void AnnotateOOMAllocationSize(size_t size)
+{
+  gOOMAllocationSize = size;
+}
+
 bool MinidumpCallback(const XP_CHAR* dump_path,
                       const XP_CHAR* minidump_id,
                       void* context,
@@ -354,6 +379,13 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
   p = Concat(p, XP_PATH_SEPARATOR, &size);
   p = Concat(p, minidump_id, &size);
   Concat(p, extraFileExtension, &size);
+
+  char oomAllocationSizeBuffer[32];
+  int oomAllocationSizeBufferLen = 0;
+  if (gOOMAllocationSize) {
+    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
+    oomAllocationSizeBufferLen = my_strlen(oomAllocationSizeBuffer);
+  }
 
   // calculate time since last crash (if possible), and store
   // the time of this crash.
@@ -431,31 +463,35 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
                   &nBytes, NULL);
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
       }
+
       // Try to get some information about memory.
       MEMORYSTATUSEX statex;
       statex.dwLength = sizeof(statex);
       if (GlobalMemoryStatusEx(&statex)) {
         char buffer[128];
         int bufferLen;
-        WriteFile(hFile, kSysMemoryParameter,
-                  kSysMemoryParameterLen, &nBytes, NULL);
-        ltoa(statex.dwMemoryLoad, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
-                  &nBytes, NULL);
+
+#define WRITE_STATEX_FIELD(field, paramName, conversionFunc)  \
+        WriteFile(hFile, k##paramName##Parameter,             \
+                  k##paramName##ParameterLen, &nBytes, NULL); \
+        conversionFunc(statex.field, buffer, 10);             \
+        bufferLen = strlen(buffer);                           \
+        WriteFile(hFile, buffer, bufferLen, &nBytes, NULL);   \
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
-        WriteFile(hFile, kTotalVirtualMemoryParameter,
-                  kTotalVirtualMemoryParameterLen, &nBytes, NULL);
-        _ui64toa(statex.ullTotalVirtual, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
-                  &nBytes, NULL);
-        WriteFile(hFile, "\n", 1, &nBytes, NULL);
-        WriteFile(hFile, kAvailableVirtualMemoryParameter,
-                  kAvailableVirtualMemoryParameterLen, &nBytes, NULL);
-        _ui64toa(statex.ullAvailVirtual, buffer, 10);
-        bufferLen = strlen(buffer);
-        WriteFile(hFile, buffer, bufferLen,
+
+        WRITE_STATEX_FIELD(dwMemoryLoad, SysMemory, ltoa);
+        WRITE_STATEX_FIELD(ullTotalVirtual, TotalVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailVirtual, AvailableVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailPageFile, AvailablePageFile, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailPhys, AvailablePhysicalMemory, _ui64toa);
+
+#undef WRITE_STATEX_FIELD
+      }
+
+      if (oomAllocationSizeBufferLen) {
+        WriteFile(hFile, kOOMAllocationSizeParameter,
+                  kOOMAllocationSizeParameterLen, &nBytes, NULL);
+        WriteFile(hFile, oomAllocationSizeBuffer, oomAllocationSizeBufferLen,
                   &nBytes, NULL);
         WriteFile(hFile, "\n", 1, &nBytes, NULL);
       }
@@ -504,6 +540,12 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
                         timeSinceLastCrashStringLen);
         ignored = sys_write(fd, "\n", 1);
       }
+      if (oomAllocationSizeBufferLen) {
+        sys_write(fd, kOOMAllocationSizeParameter,
+                  kOOMAllocationSizeParameterLen);
+        sys_write(fd, oomAllocationSizeBuffer, oomAllocationSizeBufferLen);
+        sys_write(fd, "\n", 1);
+      }        
       sys_close(fd);
     }
   }
@@ -621,6 +663,8 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
   NS_ASSERTION(!crashReporterAPILock, "Shouldn't have a lock yet");
   crashReporterAPILock = new Mutex("crashReporterAPILock");
+  NS_ASSERTION(!notesFieldLock, "Shouldn't have a lock yet");
+  notesFieldLock = new Mutex("notesFieldLock");
 
   crashReporterAPIData_Hash =
     new nsDataHashtable<nsCStringHashKey,nsCString>();
@@ -812,6 +856,8 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                                       library_mappings[i].file_offset);
   }
 #endif
+
+  mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
   return NS_OK;
 }
@@ -1048,6 +1094,9 @@ nsresult UnsetExceptionHandler()
   delete crashReporterAPILock;
   crashReporterAPILock = nsnull;
 
+  delete notesFieldLock;
+  notesFieldLock = nsnull;
+
   delete crashReporterAPIData;
   crashReporterAPIData = nsnull;
 
@@ -1217,6 +1266,10 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
     return NS_ERROR_INVALID_ARG;
 
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    if (!NS_IsMainThread()) {
+      NS_ERROR("Cannot call AnnotateCrashReport in child processes from non-main thread.");
+      return NS_ERROR_FAILURE;
+    }
     PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
     if (!reporter) {
       EnqueueDelayedNote(new DelayedNote(data));
@@ -1235,6 +1288,8 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
       return NS_ERROR_FAILURE;
     return NS_OK;
   }
+
+  MutexAutoLock lock(*notesFieldLock);
 
   notesField->Append(data);
   return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);

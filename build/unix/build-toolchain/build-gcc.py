@@ -45,9 +45,33 @@ def build_tar(base_dir, tar_inst_dir):
     build_package(tar_source_dir, tar_build_dir,
                   ["--prefix=%s" % tar_inst_dir])
 
-def build_one_stage(env, stage_dir):
+def with_env(env, f):
     old_env = os.environ.copy()
     os.environ.update(env)
+    f()
+    os.environ.clear()
+    os.environ.update(old_env)
+
+def build_glibc(env, stage_dir, inst_dir):
+    def f():
+        build_glibc_aux(stage_dir, inst_dir)
+    with_env(env, f)
+
+def build_glibc_aux(stage_dir, inst_dir):
+    glibc_build_dir = stage_dir + '/glibc'
+    build_package(glibc_source_dir, glibc_build_dir,
+                  ["--disable-profile",
+                   "--enable-add-ons=nptl",
+                   "--without-selinux",
+                   "--enable-kernel=2.6.18",
+                   "--prefix=%s" % inst_dir])
+
+def build_one_stage(env, stage_dir, is_stage_one):
+    def f():
+        build_one_stage_aux(stage_dir, is_stage_one)
+    with_env(env, f)
+
+def build_one_stage_aux(stage_dir, is_stage_one):
     os.mkdir(stage_dir)
 
     lib_inst_dir = stage_dir + '/libinst'
@@ -72,16 +96,21 @@ def build_one_stage(env, stage_dir):
                   ["--prefix=%s" % tool_inst_dir])
 
     gcc_build_dir = stage_dir + '/gcc'
-    build_package(gcc_source_dir, gcc_build_dir,
-                  ["--prefix=%s" % tool_inst_dir,
-                   "--enable-__cxa_atexit",
-                   "--with-gmp=%s" % lib_inst_dir,
-                   "--with-mpfr=%s" % lib_inst_dir,
-                   "--with-mpc=%s" % lib_inst_dir,
-                   "--enable-languages=c,c++",
-                   "--disable-bootstrap"])
-    os.environ.clear()
-    os.environ.update(old_env)
+    gcc_configure_args = ["--prefix=%s" % tool_inst_dir,
+                          "--enable-__cxa_atexit",
+                          "--with-gmp=%s" % lib_inst_dir,
+                          "--with-mpfr=%s" % lib_inst_dir,
+                          "--with-mpc=%s" % lib_inst_dir,
+                          "--disable-bootstrap"]
+    if is_stage_one:
+        gcc_configure_args.append("--enable-languages=c")
+    else:
+        gcc_configure_args.append("--enable-languages=c,c++")
+
+    build_package(gcc_source_dir, gcc_build_dir, gcc_configure_args)
+    build_glibc({"CC"  : tool_inst_dir + "/bin/gcc",
+                 "CXX" : tool_inst_dir + "/bin/g++"},
+                stage_dir, tool_inst_dir)
 
 def build_tar_package(tar, name, base, directory):
     name = os.path.realpath(name)
@@ -90,12 +119,20 @@ def build_tar_package(tar, name, base, directory):
 
 ##############################################
 
-source_dir = os.path.realpath('src')
+# The directories end up in the debug info, so the easy way of getting
+# a reproducible build is to run it in a know absolute directory.
+# We use a directory in /builds/slave because the mozilla infrastructure
+# cleans it up automatically.
+base_dir = "/builds/slave/moz-toolschain"
+
+source_dir = base_dir + "/src"
+build_dir  = base_dir + "/build"
 
 def build_source_dir(prefix, version):
     return source_dir + '/' + prefix + version
 
 binutils_version = "2.21.1"
+glibc_version = "2.13" #FIXME: should probably use 2.5.1
 tar_version = "1.26"
 gcc_version = "4.5.2"
 mpfr_version = "2.4.2"
@@ -104,6 +141,8 @@ mpc_version = "0.8.1"
 
 binutils_source_uri = "http://ftp.gnu.org/gnu/binutils/binutils-%sa.tar.bz2" % \
     binutils_version
+glibc_source_uri = "http://ftp.gnu.org/gnu/glibc/glibc-%s.tar.bz2" % \
+    glibc_version
 tar_source_uri = "http://ftp.gnu.org/gnu/tar/tar-%s.tar.bz2" % \
     tar_version
 gcc_source_uri = "http://ftp.gnu.org/gnu/gcc/gcc-%s/gcc-%s.tar.bz2" % \
@@ -115,15 +154,15 @@ mpc_source_uri = "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % \
     mpc_version
 
 binutils_source_tar = download_uri(binutils_source_uri)
+glibc_source_tar = download_uri(glibc_source_uri)
 tar_source_tar = download_uri(tar_source_uri)
 mpc_source_tar = download_uri(mpc_source_uri)
 mpfr_source_tar = download_uri(mpfr_source_uri)
 gmp_source_tar = download_uri(gmp_source_uri)
 gcc_source_tar = download_uri(gcc_source_uri)
 
-build_dir = os.path.realpath('build')
-
 binutils_source_dir  = build_source_dir('binutils-', binutils_version)
+glibc_source_dir  = build_source_dir('glibc-', glibc_version)
 tar_source_dir  = build_source_dir('tar-', tar_version)
 mpc_source_dir  = build_source_dir('mpc-', mpc_version)
 mpfr_source_dir = build_source_dir('mpfr-', mpfr_version)
@@ -131,9 +170,11 @@ gmp_source_dir  = build_source_dir('gmp-', gmp_version)
 gcc_source_dir  = build_source_dir('gcc-', gcc_version)
 
 if not os.path.exists(source_dir):
-    os.mkdir(source_dir)
+    os.makedirs(source_dir)
     extract(binutils_source_tar, source_dir)
     patch('binutils-deterministic.patch', 1, binutils_source_dir)
+    extract(glibc_source_tar, source_dir)
+    patch('glibc-deterministic.patch', 1, glibc_source_dir)
     extract(tar_source_tar, source_dir)
     extract(mpc_source_tar, source_dir)
     extract(mpfr_source_tar, source_dir)
@@ -145,20 +186,21 @@ if not os.path.exists(source_dir):
 
 if os.path.exists(build_dir):
     shutil.rmtree(build_dir)
-os.mkdir(build_dir)
+os.makedirs(build_dir)
 
 tar_inst_dir = build_dir + '/tar_inst'
 build_tar(build_dir, tar_inst_dir)
 
 stage1_dir = build_dir + '/stage1'
-build_one_stage({"CC": "gcc", "CXX" : "g++"}, stage1_dir)
+build_one_stage({"CC": "gcc", "CXX" : "g++"}, stage1_dir, True)
 
 stage1_tool_inst_dir = stage1_dir + '/inst'
 stage2_dir = build_dir + '/stage2'
 build_one_stage({"CC"     : stage1_tool_inst_dir + "/bin/gcc",
                  "CXX"    : stage1_tool_inst_dir + "/bin/g++",
                  "AR"     : stage1_tool_inst_dir + "/bin/ar",
-                 "RANLIB" : "true" })
+                 "RANLIB" : "true" },
+                stage2_dir, False)
 
 build_tar_package(tar_inst_dir + "/bin/tar",
                   "toolchain.tar", stage2_dir, "inst")

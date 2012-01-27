@@ -994,6 +994,8 @@ public:
   static nsEventListenerManager* GetListenerManager(nsINode* aNode,
                                                     bool aCreateIfNotFound);
 
+  static void UnmarkGrayJSListenersInCCGenerationDocuments(PRUint32 aGeneration);
+
   /**
    * Remove the eventlistener manager for aNode.
    *
@@ -1450,13 +1452,6 @@ public:
    * this directly
    */
   static void AddScriptBlocker();
-
-  /**
-   * Increases the count of blockers preventing scripts from running.
-   * Also, while this script blocker is active, script runners must not be
-   * added --- we'll assert if one is, and ignore it.
-   */
-  static void AddScriptBlockerAndPreventAddingRunners();
 
   /**
    * Decreases the count of blockers preventing scripts from running.
@@ -2129,13 +2124,6 @@ public:
 #else
 #define DOUBLE_NaN {{0xffffffff,                                         \
                         DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK}}
-#endif
-
-#if defined(XP_WIN)
-#define DOUBLE_COMPARE(LVAL, OP, RVAL)                                  \
-    (!DOUBLE_IS_NaN(LVAL) && !DOUBLE_IS_NaN(RVAL) && (LVAL) OP (RVAL))
-#else
-#define DOUBLE_COMPARE(LVAL, OP, RVAL) ((LVAL) OP (RVAL))
 #endif
 
 /*

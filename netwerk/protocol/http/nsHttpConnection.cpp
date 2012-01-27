@@ -178,8 +178,13 @@ nsHttpConnection::EnsureNPNComplete()
     // If for some reason the components to check on NPN aren't available,
     // this function will just return true to continue on and disable SPDY
 
-    NS_ABORT_IF_FALSE(mSocketTransport, "EnsureNPNComplete "
-                      "socket transport precondition");
+    if (!mSocketTransport) {
+        // this cannot happen
+        NS_ABORT_IF_FALSE(false,
+                          "EnsureNPNComplete socket transport precondition");
+        mNPNComplete = true;
+        return true;
+    }
 
     if (mNPNComplete)
         return true;
@@ -220,7 +225,12 @@ nsHttpConnection::EnsureNPNComplete()
     if (negotiatedNPN.Equals(NS_LITERAL_CSTRING("spdy/2"))) {
         mUsingSpdy = true;
         mEverUsedSpdy = true;
-        mIsReused = true;    /* all spdy streams are reused */
+
+        // Setting the connection as reused allows some transactions that fail
+        // with NS_ERROR_NET_RESET to be restarted and SPDY uses that code
+        // to handle clean rejections (such as those that arrived after
+        // a server goaway was generated).
+        mIsReused = true;
 
         // Wrap the old http transaction into the new spdy session
         // as the first stream
@@ -390,7 +400,7 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
         return NS_ERROR_FAILURE;
     }
 
-    ResumeSend(httpTransaction);
+    ResumeSend();
 
     return NS_OK;
 }
@@ -440,7 +450,7 @@ nsHttpConnection::DontReuse()
     mKeepAliveMask = false;
     mKeepAlive = false;
     mIdleTimeout = 0;
-    if (mUsingSpdy)
+    if (mSpdySession)
         mSpdySession->DontReuse();
 }
 
@@ -796,7 +806,7 @@ nsHttpConnection::PushBack(const char *data, PRUint32 length)
 }
 
 nsresult
-nsHttpConnection::ResumeSend(nsAHttpTransaction *)
+nsHttpConnection::ResumeSend()
 {
     LOG(("nsHttpConnection::ResumeSend [this=%p]\n", this));
 
@@ -810,7 +820,7 @@ nsHttpConnection::ResumeSend(nsAHttpTransaction *)
 }
 
 nsresult
-nsHttpConnection::ResumeRecv(nsAHttpTransaction *)
+nsHttpConnection::ResumeRecv()
 {
     LOG(("nsHttpConnection::ResumeRecv [this=%p]\n", this));
 
@@ -974,10 +984,9 @@ nsHttpConnection::OnSocketWritable()
             n = 0;
         }
         else {
-            if (gHttpHandler->IsSpdyEnabled() && !mReportedSpdy) {
+            if (!mReportedSpdy) {
                 mReportedSpdy = true;
-                gHttpHandler->ConnMgr()->
-                    ReportSpdyConnection(this, mUsingSpdy);
+                gHttpHandler->ConnMgr()->ReportSpdyConnection(this, mUsingSpdy);
             }
 
             LOG(("  writing transaction request stream\n"));

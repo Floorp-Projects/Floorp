@@ -46,7 +46,6 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -1447,7 +1446,7 @@ JSFunction::trace(JSTracer *trc)
     }
 
     if (atom)
-        MarkAtom(trc, atom, "atom");
+        MarkStringUnbarriered(trc, atom, "atom");
 
     if (isInterpreted()) {
         if (script())

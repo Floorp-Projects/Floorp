@@ -47,6 +47,15 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+inline JSAtom *
+js::AtomStateEntry::asPtr() const
+{
+    JS_ASSERT(bits != 0);
+    JSAtom *atom = reinterpret_cast<JSAtom *>(bits & NO_TAG_MASK);
+    JSString::readBarrier(atom);
+    return atom;
+}
+
 inline bool
 js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
 {

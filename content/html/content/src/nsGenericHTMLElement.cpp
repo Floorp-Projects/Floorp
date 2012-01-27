@@ -1826,7 +1826,7 @@ nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(const nsMappedAttribut
     }
   }
 
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
       aData->ValueForLang()->SetStringValue(value->GetStringValue(),
@@ -2883,6 +2883,14 @@ nsGenericHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
+
+const nsAttrValue::EnumTable nsGenericHTMLElement::kCORSAttributeTable[] = {
+  // Order matters here
+  // See ParseAttribute in nsHTMLImageElement or nsHTMLMediaElement
+  { "anonymous",       nsGenericHTMLElement::CORS_ANONYMOUS       },
+  { "use-credentials", nsGenericHTMLElement::CORS_USE_CREDENTIALS },
+  { 0 }
+};
 
 /* virtual */
 bool

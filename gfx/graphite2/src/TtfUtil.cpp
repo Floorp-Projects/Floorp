@@ -49,9 +49,9 @@ Description
 //#include <stdexcept>
 // Platform headers
 // Module headers
-#include "TtfUtil.h"
-#include "TtfTypes.h"
-#include "Endian.h"
+#include "inc/TtfUtil.h"
+#include "inc/TtfTypes.h"
+#include "inc/Endian.h"
 
 /***********************************************************************************************
 	Forward declarations
@@ -197,12 +197,13 @@ bool GetTableInfo(const Tag TableTag, const void * pHdr, const void * pTableDir,
 {
 	const Sfnt::OffsetSubTable * pOffsetTable 
 		= reinterpret_cast<const Sfnt::OffsetSubTable *>(pHdr);
+	const size_t num_tables = be::swap(pOffsetTable->num_tables);
 	const Sfnt::OffsetSubTable::Entry 
 		* entry_itr = reinterpret_cast<const Sfnt::OffsetSubTable::Entry *>(
 			pTableDir),
-		* const  dir_end = entry_itr + be::swap(pOffsetTable->num_tables);
+		* const  dir_end = entry_itr + num_tables;
 
-	if (be::swap(pOffsetTable->num_tables) > 40)
+	if (num_tables > 40)
 		return false;
 
 	for (;entry_itr != dir_end; ++entry_itr) // 40 - safe guard
@@ -811,10 +812,8 @@ bool HorMetrics(gid16 nGlyphId, const void * pHmtx, size_t lHmtxSize, const void
 			nLsb = 0;
 			return false;
 		}
-                nAdvWid = be::swap(phmtx[cLongHorMetrics - 1].advance_width);
-		const int16 * pLsb = reinterpret_cast<const int16 *>(phmtx) + 
-			lLsbOffset / sizeof(int16);
-		nLsb = be::swap(*pLsb);
+        nAdvWid = be::swap(phmtx[cLongHorMetrics - 1].advance_width);
+		nLsb = be::peek<int16>(reinterpret_cast<const int16 *>(phmtx) + lLsbOffset);
 	}
 
 	return true;
@@ -841,10 +840,10 @@ const void * FindCmapSubtable(const void * pCmap, int nPlatformId, /* =3 */ int 
             if (length)
             {
                 if (offset > length) return NULL;
-                uint16 format = be::swap(*reinterpret_cast<const uint16*>(pRtn));
+                uint16 format = be::read<uint16>(pRtn);
                 if (format == 4)
                 {
-                    uint16 subTableLength = be::swap(*reinterpret_cast<const uint16*>(pRtn + 2));
+                    uint16 subTableLength = be::peek<uint16>(pRtn);
                     if (i + 1 == csuPlatforms)
                     {
                         if (subTableLength > length - offset)
@@ -855,7 +854,7 @@ const void * FindCmapSubtable(const void * pCmap, int nPlatformId, /* =3 */ int 
                 }
                 if (format == 12)
                 {
-                    uint32 subTableLength = be::swap(*reinterpret_cast<const uint32*>(pRtn + 2));
+                    uint32 subTableLength = be::peek<uint32>(pRtn);
                     if (i + 1 == csuPlatforms)
                     {
                         if (subTableLength > length - offset)
@@ -865,7 +864,7 @@ const void * FindCmapSubtable(const void * pCmap, int nPlatformId, /* =3 */ int 
                         return NULL;
                 }
             }
-            return const_cast<void *>(reinterpret_cast<const void *>(pRtn));
+            return reinterpret_cast<const uint8 *>(pCmap) + offset;
         }
     }
 
@@ -889,7 +888,7 @@ bool CheckCmap31Subtable(const void * pCmap31)
     if (length < sizeof(Sfnt::CmapSubTableFormat4) + 4 * nRanges * sizeof(uint16))
         return false;
     // check last range is properly terminated
-    uint16 chEnd = be::swap(pTable4->end_code[nRanges-1]);
+    uint16 chEnd = be::peek<uint16>(pTable4->end_code + nRanges - 1);
     return (chEnd == 0xFFFF);
 }
 
@@ -911,7 +910,7 @@ gid16 Cmap31Lookup(const void * pCmap31, int nUnicodeId, int rangeKey)
     if (rangeKey)
     {
         pMid = &(pTable->end_code[rangeKey]);
-        chEnd = be::swap(*pMid);
+        chEnd = be::peek<uint16>(pMid);
         n = rangeKey;
     }
     else
@@ -923,10 +922,10 @@ gid16 Cmap31Lookup(const void * pCmap31, int nUnicodeId, int rangeKey)
         {
             cMid = n >> 1;           // Pick an element in the middle
             pMid = pLeft + cMid;
-            chEnd = be::swap(*pMid);
+            chEnd = be::peek<uint16>(pMid);
             if (nUnicodeId <= chEnd)
             {
-                if (cMid == 0 || nUnicodeId > be::swap(pMid[-1]))
+                if (cMid == 0 || nUnicodeId > be::peek<uint16>(pMid -1))
                         break;          // Must be this seg or none!
                 n = cMid;            // Continue on left side, omitting mid point
             }
@@ -944,12 +943,12 @@ gid16 Cmap31Lookup(const void * pCmap31, int nUnicodeId, int rangeKey)
     // Ok, we're down to one segment and pMid points to the endCode element
     // Either this is it or none is.
 
-    chStart = be::swap(*(pMid += nSeg + 1));
+    chStart = be::peek<uint16>(pMid += nSeg + 1);
     if (chEnd >= nUnicodeId && nUnicodeId >= chStart)
     {
         // Found correct segment. Find Glyph Id
-        int16 idDelta = be::swap(*(pMid += nSeg));
-        uint16 idRangeOffset = be::swap(*(pMid += nSeg));
+        int16 idDelta = be::peek<uint16>(pMid += nSeg);
+        uint16 idRangeOffset = be::peek<uint16>(pMid += nSeg);
 
         if (idRangeOffset == 0)
             return (uint16)(idDelta + nUnicodeId); // must use modulus 2^16
@@ -959,7 +958,7 @@ gid16 Cmap31Lookup(const void * pCmap31, int nUnicodeId, int rangeKey)
                 (reinterpret_cast<const uint16 *>(pMid) - reinterpret_cast<const uint16 *>(pTable));
         if (offset * 2 >= pTable->length)
             return 0;
-        gid16 nGlyphId = be::swap(*(pMid + (nUnicodeId - chStart) + (idRangeOffset >> 1)));
+        gid16 nGlyphId = be::peek<uint16>(pMid + (nUnicodeId - chStart) + (idRangeOffset >> 1));
         // If this value is 0, return 0. Else add the idDelta
         return nGlyphId ? nGlyphId + idDelta : 0;
     }
@@ -990,7 +989,7 @@ unsigned int Cmap31NextCodepoint(const void *pCmap31, unsigned int nUnicodeId, i
 		// return the first codepoint.
 		if (pRangeKey)
 			*pRangeKey = 0;
-		return be::swap(pStartCode[0]);
+		return be::peek<uint16>(pStartCode);
 	}
 	else if (nUnicodePrev >= 0xFFFF)
 	{
@@ -1001,14 +1000,14 @@ unsigned int Cmap31NextCodepoint(const void *pCmap31, unsigned int nUnicodeId, i
 
 	int iRange = (pRangeKey) ? *pRangeKey : 0;
 	// Just in case we have a bad key:
-	while (iRange > 0 && be::swap(pStartCode[iRange]) > nUnicodePrev)
+	while (iRange > 0 && be::peek<uint16>(pStartCode + iRange) > nUnicodePrev)
 		iRange--;
-	while (be::swap(pTable->end_code[iRange]) < nUnicodePrev)
+	while (be::peek<uint16>(pTable->end_code + iRange) < nUnicodePrev)
 		iRange++;
 
 	// Now iRange is the range containing nUnicodePrev.
-	unsigned int nStartCode = be::swap(pStartCode[iRange]);
-	unsigned int nEndCode = be::swap(pTable->end_code[iRange]);
+	unsigned int nStartCode = be::peek<uint16>(pStartCode + iRange);
+	unsigned int nEndCode = be::peek<uint16>(pTable->end_code + iRange);
 
 	if (nStartCode > nUnicodePrev)
 		// Oops, nUnicodePrev is not in the cmap! Adjust so we get a reasonable
@@ -1028,7 +1027,7 @@ unsigned int Cmap31NextCodepoint(const void *pCmap31, unsigned int nUnicodeId, i
 	// ends with 0xFFFF.
 	if (pRangeKey)
 		*pRangeKey = iRange + 1;
-	return be::swap(pStartCode[iRange + 1]);
+	return be::peek<uint16>(pStartCode + iRange + 1);
 }
 
 /*----------------------------------------------------------------------------------------------
@@ -1153,7 +1152,7 @@ size_t LocaLookup(gid16 nGlyphId,
 		if (nGlyphId <= (lLocaSize >> 1) - 1) // allow sentinel value to be accessed
 		{
 			const uint16 * pShortTable = reinterpret_cast<const uint16 *>(pLoca);
-			return (be::swap(pShortTable[nGlyphId]) << 1);
+			return (be::peek<uint16>(pShortTable + nGlyphId) << 1);
 		}
 	}
 	
@@ -1162,7 +1161,7 @@ size_t LocaLookup(gid16 nGlyphId,
 		if (nGlyphId <= (lLocaSize >> 2) - 1)
 		{
 			const uint32 * pLongTable = reinterpret_cast<const uint32 *>(pLoca);
-			return be::swap(pLongTable[nGlyphId]);
+			return be::peek<uint32>(pLongTable + nGlyphId);
 		}
 	}
 

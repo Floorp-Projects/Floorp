@@ -41,6 +41,8 @@
 #ifndef mozilla_mozalloc_oom_h
 #define mozilla_mozalloc_oom_h
 
+#include "mozalloc.h"
+
 #if defined(MOZALLOC_EXPORT)
 // do nothing: it's been defined to __declspec(dllexport) by
 // mozalloc*.cpp on platforms where that's required
@@ -62,8 +64,15 @@
  * We have to re-#define MOZALLOC_EXPORT because this header can be
  * used indepedently of mozalloc.h.
  */
-MOZALLOC_EXPORT void mozalloc_handle_oom();
+MOZALLOC_EXPORT void mozalloc_handle_oom(size_t requestedSize);
 
+/**
+ * Called by embedders (specifically Mozilla breakpad) which wants to be
+ * notified of an intentional abort, to annotate any crash report with
+ * the size of the allocation on which we aborted.
+ */
+typedef void (*mozalloc_oom_abort_handler)(size_t size);
+MOZALLOC_EXPORT void mozalloc_set_oom_abort_handler(mozalloc_oom_abort_handler handler);
 
 /* TODO: functions to query system memory usage and register
  * critical-memory handlers. */

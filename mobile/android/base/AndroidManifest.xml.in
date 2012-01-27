@@ -61,6 +61,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.UPDATE"/>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
 
             <!-- Default browser intents -->
             <intent-filter>
@@ -112,6 +116,7 @@
                   android:excludeFromRecents="true">
           <intent-filter>
             <action android:name="org.mozilla.gecko.restart"/>
+            <action android:name="org.mozilla.gecko.restart_update"/>
           </intent-filter>
         </activity>
 

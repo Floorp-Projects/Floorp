@@ -83,7 +83,7 @@ GetFunctionProxyConstruct(JSObject *proxy)
 static bool
 OperationInProgress(JSContext *cx, JSObject *proxy)
 {
-    PendingProxyOperation *op = JS_THREAD_DATA(cx)->pendingProxyOperation;
+    PendingProxyOperation *op = cx->runtime->pendingProxyOperation;
     while (op) {
         if (op->object == proxy)
             return true;
@@ -180,7 +180,10 @@ ProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, b
         if (desc.attrs & JSPROP_READONLY)
             return true;
         if (!desc.setter) {
-            desc.setter = JS_StrictPropertyStub;
+            // Be wary of the odd explicit undefined setter case possible through
+            // Object.defineProperty.
+            if (!(desc.attrs & JSPROP_SETTER))
+                desc.setter = JS_StrictPropertyStub;
         } else if ((desc.attrs & JSPROP_SETTER) || desc.setter != JS_StrictPropertyStub) {
             if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, strict, vp))
                 return false;
@@ -189,8 +192,11 @@ ProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, b
             if (desc.attrs & JSPROP_SHARED)
                 return true;
         }
-        if (!desc.getter)
-            desc.getter = JS_PropertyStub;
+        if (!desc.getter) {
+            // Same as above for the null setter case.
+            if (!(desc.attrs & JSPROP_GETTER))
+                desc.getter = JS_PropertyStub;
+        }
         desc.value = *vp;
         return defineProperty(cx, receiver, id, &desc);
     }
@@ -200,7 +206,10 @@ ProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, b
         if (desc.attrs & JSPROP_READONLY)
             return true;
         if (!desc.setter) {
-            desc.setter = JS_StrictPropertyStub;
+            // Be wary of the odd explicit undefined setter case possible through
+            // Object.defineProperty.
+            if (!(desc.attrs & JSPROP_SETTER))
+                desc.setter = JS_StrictPropertyStub;
         } else if ((desc.attrs & JSPROP_SETTER) || desc.setter != JS_StrictPropertyStub) {
             if (!CallSetter(cx, receiver, id, desc.setter, desc.attrs, desc.shortid, strict, vp))
                 return false;
@@ -209,8 +218,11 @@ ProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, b
             if (desc.attrs & JSPROP_SHARED)
                 return true;
         }
-        if (!desc.getter)
-            desc.getter = JS_PropertyStub;
+        if (!desc.getter) {
+            // Same as above for the null setter case.
+            if (!(desc.attrs & JSPROP_GETTER))
+                desc.getter = JS_PropertyStub;
+        }
         return defineProperty(cx, receiver, id, &desc);
     }
 
@@ -710,18 +722,18 @@ ScriptedProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value
 ScriptedProxyHandler ScriptedProxyHandler::singleton;
 
 class AutoPendingProxyOperation {
-    ThreadData              *data;
+    JSRuntime               *rt;
     PendingProxyOperation   op;
   public:
-    AutoPendingProxyOperation(JSContext *cx, JSObject *proxy) : data(JS_THREAD_DATA(cx)) {
-        op.next = data->pendingProxyOperation;
+    AutoPendingProxyOperation(JSContext *cx, JSObject *proxy) : rt(cx->runtime) {
+        op.next = rt->pendingProxyOperation;
         op.object = proxy;
-        data->pendingProxyOperation = &op;
+        rt->pendingProxyOperation = &op;
     }
 
     ~AutoPendingProxyOperation() {
-        JS_ASSERT(data->pendingProxyOperation == &op);
-        data->pendingProxyOperation = op.next;
+        JS_ASSERT(rt->pendingProxyOperation == &op);
+        rt->pendingProxyOperation = op.next;
     }
 };
 

@@ -82,6 +82,8 @@
 #include "nsDOMEvent.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsJSEnvironment.h"
+#include "xpcpublic.h"
+#include "sampler.h"
 
 using namespace mozilla::dom;
 
@@ -239,9 +241,14 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls->mListener = aListener;
   ls->mEventType = aType;
   ls->mTypeAtom = aTypeAtom;
+  ls->mWrappedJS = false;
   ls->mFlags = aFlags;
   ls->mHandlerIsString = false;
 
+  nsCOMPtr<nsIXPConnectWrappedJS> wjs = do_QueryInterface(aListener);
+  if (wjs) {
+    ls->mWrappedJS = true;
+  }
   if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
     mMayHaveSystemGroupListeners = true;
   }
@@ -751,6 +758,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                             nsEventStatus* aEventStatus,
                                             nsCxPusher* aPusher)
 {
+  SAMPLE_LABEL("nsEventListenerManager", "HandleEventInternal");
   //Set the value of the internal PreventDefault flag properly based on aEventStatus
   if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
     aEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
@@ -1010,4 +1018,21 @@ nsEventListenerManager::SizeOf() const
     }
   }
   return size;
+}
+
+void
+nsEventListenerManager::UnmarkGrayJSListeners()
+{
+  PRUint32 count = mListeners.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
+    const nsListenerStruct& ls = mListeners.ElementAt(i);
+    nsIJSEventListener* jsl = ls.GetJSListener();
+    if (jsl) {
+      xpc_UnmarkGrayObject(jsl->GetHandler());
+      xpc_UnmarkGrayObject(jsl->GetEventScope());
+    } else if (ls.mWrappedJS) {
+      nsCOMPtr<nsIXPConnectWrappedJS> wjs = do_QueryInterface(ls.mListener);
+      xpc_UnmarkGrayObject(wjs);
+    }
+  }
 }

@@ -39,6 +39,8 @@
 
 #include "nsISMILType.h"
 
+class nsSMILValue;
+
 /**
  * This nsISMILType class is a special case for the 'orient' attribute on SVG's
  * 'marker' element.

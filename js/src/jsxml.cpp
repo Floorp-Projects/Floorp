@@ -48,7 +48,6 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsprf.h"
 #include "jsutil.h"
 #include "jsapi.h"
@@ -3384,8 +3383,10 @@ retry:
         return JS_TRUE;
 
     if (JSXML_HAS_VALUE(xml)) {
-        if (!EqualStrings(cx, xml->xml_value, vxml->xml_value, bp))
+        bool equal;
+        if (!EqualStrings(cx, xml->xml_value, vxml->xml_value, &equal))
             return JS_FALSE;
+        *bp = equal;
     } else if (xml->xml_kids.length != vxml->xml_kids.length) {
         *bp = JS_FALSE;
     } else {
@@ -3425,8 +3426,10 @@ retry:
                 vattr = XMLARRAY_MEMBER(&vxml->xml_attrs, j, JSXML);
                 if (!vattr)
                     continue;
-                if (!EqualStrings(cx, attr->xml_value, vattr->xml_value, bp))
+                bool equal;
+                if (!EqualStrings(cx, attr->xml_value, vattr->xml_value, &equal))
                     return JS_FALSE;
+                *bp = equal;
             }
         }
     }
@@ -5275,8 +5278,11 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
                 if (ok) {
                     ok = (str = ToStringSlow(cx, ObjectValue(*obj))) &&
                          (vstr = ToString(cx, v));
-                    if (ok)
-                        ok = EqualStrings(cx, str, vstr, bp);
+                    if (ok) {
+                        bool equal;
+                        ok = EqualStrings(cx, str, vstr, &equal);
+                        *bp = equal;
+                    }
                     js_LeaveLocalRootScope(cx);
                 }
             } else {
@@ -5289,20 +5295,26 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
             if (HasSimpleContent(xml)) {
                 ok = (str = ToString(cx, ObjectValue(*obj))) &&
                      (vstr = ToString(cx, v));
-                if (ok)
-                    ok = EqualStrings(cx, str, vstr, bp);
+                if (ok) {
+                    bool equal;
+                    ok = EqualStrings(cx, str, vstr, &equal);
+                    *bp = equal;
+                }
             } else if (JSVAL_IS_STRING(v) || JSVAL_IS_NUMBER(v)) {
                 str = ToString(cx, ObjectValue(*obj));
                 if (!str) {
                     ok = JS_FALSE;
                 } else if (JSVAL_IS_STRING(v)) {
-                    ok = EqualStrings(cx, str, JSVAL_TO_STRING(v), bp);
+                    bool equal;
+                    ok = EqualStrings(cx, str, JSVAL_TO_STRING(v), &equal);
+                    if (ok)
+                        *bp = equal;
                 } else {
                     ok = JS_ValueToNumber(cx, STRING_TO_JSVAL(str), &d);
                     if (ok) {
                         d2 = JSVAL_IS_INT(v) ? JSVAL_TO_INT(v)
                                              : JSVAL_TO_DOUBLE(v);
-                        *bp = JSDOUBLE_COMPARE(d, ==, d2, JS_FALSE);
+                        *bp = (d == d2);
                     }
                 }
             } else {

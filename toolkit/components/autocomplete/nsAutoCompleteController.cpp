@@ -524,7 +524,7 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, bool *_retval)
         nsAutoString value;
         nsAutoString inputValue;
         input->GetTextValue(inputValue);
-        if (NS_SUCCEEDED(GetDefaultCompleteValue(selectedIndex, false, value)) &&
+        if (NS_SUCCEEDED(GetDefaultCompleteValue(-1, false, value)) &&
             value.Equals(inputValue, nsCaseInsensitiveStringComparator())) {
           input->SetTextValue(value);
           input->SelectTextRange(value.Length(), value.Length());
@@ -1162,7 +1162,7 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
       nsAutoString defaultIndexValue;
       nsAutoString inputValue;
       input->GetTextValue(inputValue);
-      if (NS_SUCCEEDED(GetDefaultCompleteValue(selectedIndex, false, defaultIndexValue)) &&
+      if (NS_SUCCEEDED(GetDefaultCompleteValue(-1, false, defaultIndexValue)) &&
           defaultIndexValue.Equals(inputValue, nsCaseInsensitiveStringComparator()))
         value = defaultIndexValue;
     }
@@ -1452,6 +1452,15 @@ nsAutoCompleteController::GetDefaultCompleteValue(PRInt32 aResultIndex,
     // be autocompleted.
     return NS_ERROR_FAILURE;
   }
+
+  // If the result wrongly notifies a RESULT_SUCCESS with no matches, or
+  // provides a defaultIndex greater than its matchCount, avoid trying to
+  // complete to an empty value.
+  PRUint32 matchCount = 0;
+  result->GetMatchCount(&matchCount);
+  // Here defaultIndex is surely non-negative, so can be cast to unsigned.
+  if ((PRUint32)defaultIndex >= matchCount)
+    return NS_ERROR_FAILURE;
 
   nsAutoString resultValue;
   result->GetValueAt(defaultIndex, resultValue);

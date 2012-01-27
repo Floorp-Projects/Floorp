@@ -25,13 +25,13 @@ License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
 
-#ifndef DISABLE_SEGCACHE
+#ifndef GRAPHITE2_NSEGCACHE
 
-#include "Main.h"
-#include "Slot.h"
-#include "Segment.h"
-#include "SegCache.h"
-#include "SegCacheEntry.h"
+#include "inc/Main.h"
+#include "inc/Slot.h"
+#include "inc/Segment.h"
+#include "inc/SegCache.h"
+#include "inc/SegCacheEntry.h"
 
 
 using namespace graphite2;
@@ -48,7 +48,7 @@ SegCacheEntry::SegCacheEntry(const uint16* cmapGlyphs, size_t length, Segment * 
     size_t glyphCount = seg->slotCount();
     const Slot * slot = seg->first();
     m_glyph = new Slot[glyphCount];
-    m_attr = gralloc<uint16>(glyphCount * seg->numAttrs());
+    m_attr = gralloc<int16>(glyphCount * seg->numAttrs());
     m_glyphLength = glyphCount;
     Slot * slotCopy = m_glyph;
     m_glyph->prev(NULL);
@@ -127,34 +127,6 @@ SegCacheEntry::SegCacheEntry(const uint16* cmapGlyphs, size_t length, Segment * 
     }
 }
 
-void SegCacheEntry::log(GR_MAYBE_UNUSED size_t unicodeLength) const
-{
-#ifndef DISABLE_TRACING
-    if (XmlTraceLog::get().active())
-    {
-        XmlTraceLog::get().openElement(ElementSegCacheEntry);
-        XmlTraceLog::get().addAttribute(AttrAccessCount, m_accessCount);
-        XmlTraceLog::get().addAttribute(AttrLastAccess, m_lastAccess);
-        for (size_t i = 0; i < unicodeLength; i++)
-        {
-            XmlTraceLog::get().openElement(ElementText);
-            XmlTraceLog::get().addAttribute(AttrGlyphId, m_unicode[i]);
-            XmlTraceLog::get().closeElement(ElementText);
-        }
-        for (size_t i = 0; i < m_glyphLength; i++)
-        {
-            XmlTraceLog::get().openElement(ElementGlyph);
-            XmlTraceLog::get().addAttribute(AttrGlyphId, m_glyph[i].gid());
-            XmlTraceLog::get().addAttribute(AttrX, m_glyph[i].origin().x);
-            XmlTraceLog::get().addAttribute(AttrY, m_glyph[i].origin().y);
-            XmlTraceLog::get().addAttribute(AttrBefore, m_glyph[i].before());
-            XmlTraceLog::get().addAttribute(AttrAfter, m_glyph[i].after());
-            XmlTraceLog::get().closeElement(ElementGlyph);
-        }
-        XmlTraceLog::get().closeElement(ElementSegCacheEntry);
-    }
-#endif
-}
 
 void SegCacheEntry::clear()
 {

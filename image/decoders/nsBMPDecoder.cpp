@@ -426,7 +426,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, PRUint32 aCount)
         aBuffer += toCopy;
         aCount -= toCopy;
     }
-    if (mBIH.compression == BI_BITFIELDS && mPos == WIN_HEADER_LENGTH + BITFIELD_LENGTH) {
+    if (mPos == WIN_HEADER_LENGTH + BITFIELD_LENGTH && 
+        mBIH.compression == BI_BITFIELDS) {
         mBitFields.red = LITTLE_TO_NATIVE32(*(PRUint32*)mRawBuf);
         mBitFields.green = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 4));
         mBitFields.blue = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 8));

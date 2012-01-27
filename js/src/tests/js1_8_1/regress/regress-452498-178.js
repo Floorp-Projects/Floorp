@@ -55,7 +55,7 @@ function test()
 
 // Assertion failure: slot < fp2->script->nfixed, at ../jsinterp.cpp:5610
 
-  eval("with({}) let(x=[])(function(){#2=x})()");
+  eval("with({}) let(x=[])(function(){x})()");
 
   reportCompare(expect, actual, summary);
 

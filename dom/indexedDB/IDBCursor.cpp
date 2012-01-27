@@ -64,8 +64,7 @@ GenerateRequest(IDBCursor* aCursor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   IDBDatabase* database = aCursor->Transaction()->Database();
-  return IDBRequest::Create(aCursor, database->ScriptContext(),
-                            database->Owner(), aCursor->Transaction());
+  return IDBRequest::Create(aCursor, database, aCursor->Transaction());
 }
 
 } // anonymous namespace
@@ -262,11 +261,14 @@ IDBCursor::CreateCommon(IDBRequest* aRequest,
 
   nsRefPtr<IDBCursor> cursor = new IDBCursor();
 
+  IDBDatabase* database = aTransaction->Database();
+  cursor->mScriptContext = database->GetScriptContext();
+  cursor->mOwner = database->GetOwner();
+  cursor->mScriptOwner = database->GetScriptOwner();
+
   cursor->mRequest = aRequest;
   cursor->mTransaction = aTransaction;
   cursor->mObjectStore = aObjectStore;
-  cursor->mScriptContext = aTransaction->Database()->ScriptContext();
-  cursor->mOwner = aTransaction->Database()->Owner();
   cursor->mDirection = aDirection;
   cursor->mContinueQuery = aContinueQuery;
   cursor->mContinueToQuery = aContinueToQuery;
@@ -276,7 +278,8 @@ IDBCursor::CreateCommon(IDBRequest* aRequest,
 }
 
 IDBCursor::IDBCursor()
-: mType(OBJECTSTORE),
+: mScriptOwner(nsnull),
+  mType(OBJECTSTORE),
   mDirection(nsIIDBCursor::NEXT),
   mCachedKey(JSVAL_VOID),
   mCachedPrimaryKey(JSVAL_VOID),
@@ -377,6 +380,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
                "Should have a cached primary key");
   NS_ASSERTION(tmp->mHaveCachedValue || JSVAL_IS_VOID(tmp->mCachedValue),
                "Should have a cached value");
+  if (tmp->mScriptOwner) {
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mScriptOwner,
+                                               "mScriptOwner")
+  }
   if (JSVAL_IS_GCTHING(tmp->mCachedKey)) {
     void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedKey);
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedKey")
@@ -395,6 +402,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBCursor)
   // Don't unlink mObjectStore, mIndex, or mTransaction!
   if (tmp->mRooted) {
     NS_DROP_JS_OBJECTS(tmp, IDBCursor);
+    tmp->mScriptOwner = nsnull;
     tmp->mCachedKey = JSVAL_VOID;
     tmp->mCachedPrimaryKey = JSVAL_VOID;
     tmp->mCachedValue = JSVAL_VOID;

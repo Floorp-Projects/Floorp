@@ -37,13 +37,15 @@
 #ifndef MOZILLA_DOMSVGLENGTHLIST_H__
 #define MOZILLA_DOMSVGLENGTHLIST_H__
 
-#include "nsIDOMSVGLengthList.h"
-#include "SVGLengthList.h"
-#include "SVGLength.h"
 #include "DOMSVGAnimatedLengthList.h"
-#include "nsCOMArray.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsDebug.h"
+#include "nsIDOMSVGLengthList.h"
+#include "nsTArray.h"
+#include "SVGLengthList.h"
 
+class nsIDOMSVGLength;
 class nsSVGElement;
 
 namespace mozilla {

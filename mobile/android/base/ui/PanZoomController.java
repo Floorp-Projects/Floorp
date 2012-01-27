@@ -55,7 +55,6 @@ import android.util.FloatMath;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -67,7 +66,7 @@ import java.util.TimerTask;
  */
 public class PanZoomController
     extends GestureDetector.SimpleOnGestureListener
-    implements ScaleGestureDetector.OnScaleGestureListener, GeckoEventListener
+    implements SimpleScaleGestureDetector.SimpleScaleGestureListener, GeckoEventListener
 {
     private static final String LOGTAG = "GeckoPanZoomController";
 
@@ -80,7 +79,7 @@ public class PanZoomController
     private static final float FLING_STOPPED_THRESHOLD = 0.1f;
     // The distance the user has to pan before we recognize it as such (e.g. to avoid
     // 1-pixel pans between the touch-down and touch-up of a click). In units of inches.
-    private static final float PAN_THRESHOLD = 0.1f;
+    public static final float PAN_THRESHOLD = 0.1f;
     // Angle from axis within which we stay axis-locked
     private static final double AXIS_LOCK_ANGLE = Math.PI / 6.0; // 30 degrees
     // The maximum amount we allow you to zoom into a page
@@ -721,7 +720,7 @@ public class PanZoomController
      * Zooming
      */
     @Override
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
+    public boolean onScaleBegin(SimpleScaleGestureDetector detector) {
         Log.d(LOGTAG, "onScaleBegin in " + mState);
 
         if (mState == PanZoomState.ANIMATED_ZOOM)
@@ -737,7 +736,7 @@ public class PanZoomController
     }
 
     @Override
-    public boolean onScale(ScaleGestureDetector detector) {
+    public boolean onScale(SimpleScaleGestureDetector detector) {
         Log.d(LOGTAG, "onScale in state " + mState);
 
         if (mState == PanZoomState.ANIMATED_ZOOM)
@@ -784,7 +783,7 @@ public class PanZoomController
     }
 
     @Override
-    public void onScaleEnd(ScaleGestureDetector detector) {
+    public void onScaleEnd(SimpleScaleGestureDetector detector) {
         Log.d(LOGTAG, "onScaleEnd in " + mState);
 
         if (mState == PanZoomState.ANIMATED_ZOOM)
@@ -844,7 +843,7 @@ public class PanZoomController
         return true;
     }
 
-    private void cancelTouch() {
+    public void cancelTouch() {
         GeckoEvent e = new GeckoEvent("Gesture:CancelTouch", "");
         GeckoAppShell.sendEventToGecko(e);
     }

@@ -38,8 +38,11 @@
 #ifndef __NS_SVGEVENT_H__
 #define __NS_SVGEVENT_H__
 
-#include "nsIDOMSVGEvent.h"
 #include "nsDOMEvent.h"
+#include "nsIDOMSVGEvent.h"
+
+class nsEvent;
+class nsPresContext;
 
 class nsDOMSVGEvent : public nsDOMEvent,
                       public nsIDOMSVGEvent

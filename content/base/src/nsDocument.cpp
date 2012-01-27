@@ -73,6 +73,7 @@
 
 #include "nsGUIEvent.h"
 #include "nsAsyncDOMEvent.h"
+#include "nsIDOMNodeFilter.h"
 
 #include "nsIDOMStyleSheet.h"
 #include "nsDOMAttribute.h"
@@ -5024,10 +5025,14 @@ NS_IMETHODIMP
 nsDocument::CreateNodeIterator(nsIDOMNode *aRoot,
                                PRUint32 aWhatToShow,
                                nsIDOMNodeFilter *aFilter,
-                               bool aEntityReferenceExpansion,
+                               PRUint8 aOptionalArgc,
                                nsIDOMNodeIterator **_retval)
 {
   *_retval = nsnull;
+
+  if (!aOptionalArgc) {
+    aWhatToShow = nsIDOMNodeFilter::SHOW_ALL;
+  }
 
   if (!aRoot)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -5042,23 +5047,26 @@ nsDocument::CreateNodeIterator(nsIDOMNode *aRoot,
 
   nsNodeIterator *iterator = new nsNodeIterator(root,
                                                 aWhatToShow,
-                                                aFilter,
-                                                aEntityReferenceExpansion);
+                                                aFilter);
   NS_ENSURE_TRUE(iterator, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*_retval = iterator);
 
-  return NS_OK; 
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
                              PRUint32 aWhatToShow,
                              nsIDOMNodeFilter *aFilter,
-                             bool aEntityReferenceExpansion,
+                             PRUint8 aOptionalArgc,
                              nsIDOMTreeWalker **_retval)
 {
   *_retval = nsnull;
+
+  if (!aOptionalArgc) {
+    aWhatToShow = nsIDOMNodeFilter::SHOW_ALL;
+  }
 
   if (!aRoot)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -5073,8 +5081,7 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 
   nsTreeWalker* walker = new nsTreeWalker(root,
                                           aWhatToShow,
-                                          aFilter,
-                                          aEntityReferenceExpansion);
+                                          aFilter);
   NS_ENSURE_TRUE(walker, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*_retval = walker);
@@ -7097,8 +7104,16 @@ nsDocument::BlockOnload()
       // block onload only when there are no script blockers.
       ++mAsyncOnloadBlockCount;
       if (mAsyncOnloadBlockCount == 1) {
-        nsContentUtils::AddScriptRunner(
+        bool success = nsContentUtils::AddScriptRunner(
           NS_NewRunnableMethod(this, &nsDocument::AsyncBlockOnload));
+
+        // The script runner shouldn't fail to add. But if somebody broke
+        // something and it does, we'll thrash at 100% cpu forever. The best
+        // response is just to ignore the onload blocking request. See bug 579535.
+        if (!success) {
+          NS_WARNING("Disaster! Onload blocking script runner failed to add - expect bad things!");
+          mAsyncOnloadBlockCount = 0;
+        }
       }
       return;
     }

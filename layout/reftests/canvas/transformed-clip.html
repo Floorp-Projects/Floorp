@@ -1,0 +1,16 @@
+<html>
+<body>
+  <canvas width="500" height="500"></canvas>
+<script>
+  var canvas = document.getElementsByTagName('canvas')[0];
+  var ctx = canvas.getContext('2d');
+
+  ctx.translate(500, 500);
+  ctx.fillStyle = "red";
+  ctx.beginPath();
+  ctx.rect(-250, -250, 50, 50);
+  ctx.clip();
+  ctx.fillRect(-500,-500,500,500);
+</script>
+</body>
+</html>

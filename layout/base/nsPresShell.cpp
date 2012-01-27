@@ -2531,6 +2531,27 @@ PresShell::SelectAll()
   return mSelection->SelectAll();
 }
 
+static void
+DoCheckVisibility(nsPresContext* aPresContext,
+                  nsIContent* aNode,
+                  PRInt16 aStartOffset,
+                  PRInt16 aEndOffset,
+                  bool* aRetval)
+{
+  nsIFrame* frame = aNode->GetPrimaryFrame();
+  if (!frame) {
+    // No frame to look at so it must not be visible.
+    return;
+  }
+
+  // Start process now to go through all frames to find startOffset. Then check
+  // chars after that to see if anything until EndOffset is visible.
+  bool finished = false;
+  frame->CheckVisibility(aPresContext, aStartOffset, aEndOffset, true,
+                         &finished, aRetval);
+  // Don't worry about other return value.
+}
+
 NS_IMETHODIMP
 PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, bool *_retval)
 {
@@ -2540,14 +2561,23 @@ PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOff
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   if (!content)
     return NS_ERROR_FAILURE;
-  nsIFrame *frame = content->GetPrimaryFrame();
-  if (!frame) //no frame to look at so it must not be visible
-    return NS_OK;  
-  //start process now to go through all frames to find startOffset. then check chars after that to see 
-  //if anything until EndOffset is visible.
-  bool finished = false;
-  frame->CheckVisibility(mPresContext,startOffset,EndOffset,true,&finished, _retval);
-  return NS_OK;//dont worry about other return val
+
+  DoCheckVisibility(mPresContext, content, startOffset, EndOffset, _retval);
+  return NS_OK;
+}
+
+nsresult
+PresShell::CheckVisibilityContent(nsIContent* aNode, PRInt16 aStartOffset,
+                                  PRInt16 aEndOffset, bool* aRetval)
+{
+  if (!aNode || aStartOffset > aEndOffset || !aRetval ||
+      aStartOffset < 0 || aEndOffset < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aRetval = false;
+  DoCheckVisibility(mPresContext, aNode, aStartOffset, aEndOffset, aRetval);
+  return NS_OK;
 }
 
 //end implementations nsISelectionController
@@ -7509,6 +7539,20 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     return false;
   }
 
+  NS_ASSERTION(!mPresContext->mCurrentInflationContainer,
+               "current inflation container should be null");
+  AutoRestore<nsIFrame*> restoreInflationContainer(mPresContext->
+                           mCurrentInflationContainer);
+  for (nsIFrame *f = target->GetParent(); f; f = f->GetParent()) {
+    if (nsLayoutUtils::IsContainerForFontSizeInflation(f)) {
+      NS_ASSERTION(!(f->GetStateBits() & NS_FRAME_IN_REFLOW),
+                   "a frame outside should not be in reflow");
+      mPresContext->mCurrentInflationContainer = f;
+      mPresContext->mCurrentInflationContainerWidth = f->GetContentRect().width;
+      break;
+    }
+  }
+
 #ifdef DEBUG
   mCurrentReflowRoot = target;
 #endif
@@ -8653,7 +8697,7 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       aPresContext->DeviceContext()->GetMetricsFor(font,
         // We have one frame, therefore we must have a root...
         aPresContext->FrameManager()->GetRootFrame()->
-          GetStyleVisibility()->mLanguage,
+          GetStyleFont()->mLanguage,
         aPresContext->GetUserFontSet(), *getter_AddRefs(fm));
 
       aRenderingContext->SetFont(fm);

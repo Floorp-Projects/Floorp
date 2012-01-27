@@ -48,7 +48,7 @@ function test() {
   var file = Components.classes["@mozilla.org/file/directory_service;1"]
              .getService(Components.interfaces.nsIProperties)
              .get("TmpD", Components.interfaces.nsIFile);
-  filePath = file.path;
+  var filePath = file.path;
 
   let fieldList = {
     "//input[@name='input']":     Date.now().toString(),

@@ -645,6 +645,133 @@ ModOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
     return true;
 }
 
+static inline bool
+FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid &id, Value *vp)
+{
+    int32_t i_;
+    if (ValueFitsInInt32(idval, &i_) && INT_FITS_IN_JSID(i_)) {
+        id = INT_TO_JSID(i_);
+        return true;
+    }
+    return !!js_InternNonIntElementId(cx, obj, idval, &id, vp);
+}
+
+static JS_ALWAYS_INLINE bool
+GetObjectElementOperation(JSContext *cx, JSObject *obj, const Value &rref, Value *res)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    types::TypeScript::GetPcScript(cx, &script, &pc);
+
+    uint32_t index;
+    if (IsDefinitelyIndex(rref, &index)) {
+        do {
+            if (obj->isDenseArray()) {
+                if (index < obj->getDenseArrayInitializedLength()) {
+                    *res = obj->getDenseArrayElement(index);
+                    if (!res->isMagic())
+                        break;
+                }
+            } else if (obj->isArguments()) {
+                if (obj->asArguments().getElement(index, res))
+                    break;
+            }
+            if (!obj->getElement(cx, index, res))
+                return false;
+        } while(0);
+    } else {
+        if (script->hasAnalysis())
+            script->analysis()->getCode(pc).getStringElement = true;
+
+        SpecialId special;
+        *res = rref;
+        if (ValueIsSpecial(obj, res, &special, cx)) {
+            if (!obj->getSpecial(cx, obj, special, res))
+                return false;
+        } else {
+            JSAtom *name;
+            if (!js_ValueToAtom(cx, *res, &name))
+                return false;
+
+            if (name->isIndex(&index)) {
+                if (!obj->getElement(cx, index, res))
+                    return false;
+            } else {
+                if (!obj->getProperty(cx, name->asPropertyName(), res))
+                    return false;
+            }
+        }
+    }
+
+    assertSameCompartment(cx, *res);
+    types::TypeScript::Monitor(cx, script, pc, *res);
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+GetElementOperation(JSContext *cx, const Value &lref, const Value &rref, Value *res)
+{
+    if (lref.isString() && rref.isInt32()) {
+        JSString *str = lref.toString();
+        int32_t i = rref.toInt32();
+        if (size_t(i) < str->length()) {
+            str = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(i));
+            if (!str)
+                return false;
+            res->setString(str);
+            types::TypeScript::Monitor(cx, *res);
+            return true;
+        }
+    }
+
+    if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
+        if (rref.isInt32() && size_t(rref.toInt32()) < cx->regs().fp()->numActualArgs()) {
+            *res = cx->regs().fp()->canonicalActualArg(rref.toInt32());
+            types::TypeScript::Monitor(cx, *res);
+            return true;
+        }
+        types::MarkArgumentsCreated(cx, cx->fp()->script());
+        JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
+    }
+
+    JSObject *obj = ValueToObject(cx, lref);
+    if (!obj)
+        return false;
+    return GetObjectElementOperation(cx, obj, rref, res);
+}
+
+static JS_ALWAYS_INLINE bool
+SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &value)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    types::TypeScript::GetPcScript(cx, &script, &pc);
+    types::TypeScript::MonitorAssign(cx, script, pc, obj, id, value);
+
+    do {
+        if (obj->isDenseArray() && JSID_IS_INT(id)) {
+            jsuint length = obj->getDenseArrayInitializedLength();
+            jsint i = JSID_TO_INT(id);
+            if ((jsuint)i < length) {
+                if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
+                    if (js_PrototypeHasIndexedProperties(cx, obj))
+                        break;
+                    if ((jsuint)i >= obj->getArrayLength())
+                        obj->setArrayLength(cx, i + 1);
+                }
+                obj->setDenseArrayElementWithType(cx, i, value);
+                return true;
+            } else {
+                if (script->hasAnalysis())
+                    script->analysis()->getCode(pc).arrayWriteHole = true;
+            }
+        }
+    } while (0);
+
+    Value tmp = value;
+    return obj->setGeneric(cx, id, &tmp, script->strictModeCode);
+}
+
 }  /* namespace js */
 
 #endif /* jsinterpinlines_h__ */

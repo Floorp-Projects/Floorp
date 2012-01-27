@@ -37,18 +37,22 @@
 #ifndef __NS_SVGLENGTH2_H__
 #define __NS_SVGLENGTH2_H__
 
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGAnimatedLength.h"
-#include "nsSVGUtils.h"
-#include "nsSVGElement.h"
+#include "nsAutoPtr.h"
+#include "nsCoord.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsDOMError.h"
-#include "nsMathUtils.h"
-
+#include "nsError.h"
+#include "nsIDOMSVGAnimatedLength.h"
+#include "nsIDOMSVGLength.h"
 #include "nsISMILAttr.h"
-class nsSMILValue;
-class nsISMILType;
+#include "nsMathUtils.h"
+#include "nsSVGElement.h"
+#include "nsSVGUtils.h"
 
 class nsIFrame;
+class nsISMILAnimationElement;
+class nsSMILValue;
+class nsSVGSVGElement;
 
 class nsSVGLength2
 {

@@ -43,6 +43,7 @@
 #include "nsSVGElement.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "nsDOMError.h"
+#include "nsContentUtils.h"
 
 // See the architecture comment in DOMSVGPathSegList.h.
 

@@ -1154,14 +1154,6 @@ JSObject::isNative() const
     return lastProperty()->isNative();
 }
 
-inline const js::Shape *
-JSObject::nativeLookup(JSContext *cx, jsid id)
-{
-    JS_ASSERT(isNative());
-    js::Shape **spp;
-    return js::Shape::search(cx, lastProperty(), id, &spp);
-}
-
 inline bool
 JSObject::nativeContains(JSContext *cx, jsid id)
 {
@@ -1199,32 +1191,38 @@ JSObject::hasPropertyTable() const
 }
 
 inline size_t
-JSObject::structSize() const
+JSObject::sizeOfThis() const
 {
     return arenaHeader()->getThingSize();
 }
 
 inline size_t
-JSObject::slotsAndStructSize() const
+JSObject::computedSizeOfIncludingThis() const
 {
-    return structSize() + dynamicSlotSize(NULL);
+    size_t slotsSize, elementsSize;
+    sizeOfExcludingThis(NULL, &slotsSize, &elementsSize);
+    return sizeOfThis() + slotsSize + elementsSize;
 }
 
-inline size_t
-JSObject::dynamicSlotSize(JSMallocSizeOfFun mallocSizeOf) const
+inline void
+JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
+                              size_t *slotsSize, size_t *elementsSize) const
 {
-    size_t size = 0;
     if (hasDynamicSlots()) {
-        size_t bytes = numDynamicSlots() * sizeof(js::Value);
-        size += mallocSizeOf ? mallocSizeOf(slots, bytes) : bytes;
+        size_t computedSize = numDynamicSlots() * sizeof(js::Value);
+        *slotsSize = mallocSizeOf ? mallocSizeOf(slots) : computedSize;
+    } else {
+        *slotsSize = 0;
     }
     if (hasDynamicElements()) {
-        size_t bytes =
+        size_t computedSize =
             (js::ObjectElements::VALUES_PER_HEADER +
              getElementsHeader()->capacity) * sizeof(js::Value);
-        size += mallocSizeOf ? mallocSizeOf(getElementsHeader(), bytes) : bytes;
+        *elementsSize =
+            mallocSizeOf ? mallocSizeOf(getElementsHeader()) : computedSize;
+    } else {
+        *elementsSize = 0;
     }
-    return size;
 }
 
 inline JSBool
@@ -1564,7 +1562,7 @@ NewObjectCache::fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKi
     entry->key = key;
     entry->kind = kind;
 
-    entry->nbytes = obj->structSize();
+    entry->nbytes = obj->sizeOfThis();
     js_memcpy(&entry->templateObject, obj, entry->nbytes);
 }
 

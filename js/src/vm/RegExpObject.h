@@ -388,7 +388,6 @@ class RegExpPrivate
     createUncached(JSContext *cx, JSLinearString *source, RegExpFlag flags,
                    TokenStream *tokenStream);
 
-    static RegExpPrivateCache *getOrCreateCache(JSContext *cx);
     static bool cacheLookup(JSContext *cx, JSAtom *atom, RegExpFlag flags,
                             RegExpPrivateCacheKind kind, AlreadyIncRefed<RegExpPrivate> *result);
     static bool cacheInsert(JSContext *cx, JSAtom *atom,

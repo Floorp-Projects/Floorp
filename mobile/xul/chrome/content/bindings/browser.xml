@@ -650,8 +650,15 @@
       </property>
 
       <property name="docShell"
-                onget="return null"
-                readonly="true"/>
+                readonly="true">
+         <getter><![CDATA[
+            return {
+               forcedCharset : this._charset,
+               parentCharset : "",
+               parentCharsetSource : 0
+            }
+         ]]></getter>
+      </property>
 
       <field name="_contentTitle">null</field>
 
@@ -682,18 +689,6 @@
       <property name="contentViewerFile"
                 onget="return null"
                 readonly="true"/>
-
-      <property name="documentCharsetInfo"
-                readonly="true">
-         <getter><![CDATA[
-            return {
-               forcedCharset : this._charset,
-               forcedDetector : false,
-               parentCharset : "",
-               parentCharsetSource : 0
-            }
-         ]]></getter>
-      </property>
 
       <field name="_charset"></field>
 

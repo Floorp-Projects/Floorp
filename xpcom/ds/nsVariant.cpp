@@ -1668,6 +1668,7 @@ nsVariant::Traverse(const nsDiscriminatedUnion& data,
     {
         case nsIDataType::VTYPE_INTERFACE:
         case nsIDataType::VTYPE_INTERFACE_IS:
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mData");
             cb.NoteXPCOMChild(data.u.iface.mInterfaceValue);
             break;
         case nsIDataType::VTYPE_ARRAY:
@@ -1676,8 +1677,10 @@ nsVariant::Traverse(const nsDiscriminatedUnion& data,
                 case nsIDataType::VTYPE_INTERFACE_IS:
                 {
                     nsISupports** p = (nsISupports**) data.u.array.mArrayValue;
-                    for(PRUint32 i = data.u.array.mArrayCount; i > 0; p++, i--)
+                    for(PRUint32 i = data.u.array.mArrayCount; i > 0; p++, i--) {
+                        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mData[i]");
                         cb.NoteXPCOMChild(*p);
+                    }
                 }
                 default:
                     break;

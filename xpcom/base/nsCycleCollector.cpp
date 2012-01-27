@@ -2823,7 +2823,7 @@ nsCycleCollector::GCIfNeeded(bool aForceGC)
     // rt->Collect() must be called from the main thread,
     // because it invokes XPCJSRuntime::GCCallback(cx, JSGC_BEGIN)
     // which returns false if not in the main thread.
-    rt->Collect();
+    rt->Collect(js::gcreason::CC_FORCED, nsGCNormal);
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: GC() took %lldms\n", (PR_Now() - start) / PR_USEC_PER_MSEC);
 #endif
@@ -3748,10 +3748,13 @@ public:
             aListener = nsnull;
         mListener = aListener;
 
-        GetJSRuntime()->NotifyLeaveMainThread();
-        mRequest.Notify();
-        mReply.Wait();
-        GetJSRuntime()->NotifyEnterMainThread();
+        if (GetJSRuntime()->NotifyLeaveMainThread()) {
+            mRequest.Notify();
+            mReply.Wait();
+            GetJSRuntime()->NotifyEnterMainThread();
+        } else {
+            mCollected = mCollector->BeginCollection(mListener);
+        }
 
         mListener = nsnull;
 

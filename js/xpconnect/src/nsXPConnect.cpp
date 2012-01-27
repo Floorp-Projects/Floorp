@@ -365,7 +365,7 @@ nsXPConnect::NeedCollect()
 }
 
 void
-nsXPConnect::Collect(bool shrinkingGC)
+nsXPConnect::Collect(PRUint32 reason, PRUint32 kind)
 {
     // We're dividing JS objects into 2 categories:
     //
@@ -424,16 +424,20 @@ nsXPConnect::Collect(bool shrinkingGC)
     // XPCCallContext::Init we disable the conservative scanner if that call
     // has started the request on this thread.
     js::AutoSkipConservativeScan ascs(cx);
-    if (shrinkingGC)
-        JS_ShrinkingGC(cx);
-    else
-        JS_GC(cx);
+    MOZ_ASSERT(reason < js::gcreason::NUM_REASONS);
+    js::gcreason::Reason gcreason = (js::gcreason::Reason)reason;
+    if (kind == nsGCShrinking) {
+        js::ShrinkingGC(cx, gcreason);
+    } else {
+        MOZ_ASSERT(kind == nsGCNormal);
+        js::GCForReason(cx, gcreason);
+    }
 }
 
 NS_IMETHODIMP
-nsXPConnect::GarbageCollect(bool shrinkingGC)
+nsXPConnect::GarbageCollect(PRUint32 reason, PRUint32 kind)
 {
-    Collect(shrinkingGC);
+    Collect(reason, kind);
     return NS_OK;
 }
 
@@ -554,14 +558,10 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
     if (!cx)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // Clear after mCycleCollectionContext is destroyed
-    JS_SetContextThread(cx);
-
     NS_ASSERTION(!mCycleCollectionContext, "Didn't call FinishTraverse?");
     mCycleCollectionContext = new XPCCallContext(NATIVE_CALLER, cx);
     if (!mCycleCollectionContext->IsValid()) {
         mCycleCollectionContext = nsnull;
-        JS_ClearContextThread(cx);
         return NS_ERROR_FAILURE;
     }
 
@@ -610,11 +610,15 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
     return NS_OK;
 }
 
-void
+bool
 nsXPConnect::NotifyLeaveMainThread()
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Off main thread");
-    JS_ClearRuntimeThread(mRuntime->GetJSRuntime());
+    JSRuntime *rt = mRuntime->GetJSRuntime();
+    if (JS_IsInRequest(rt) || JS_IsInSuspendedRequest(rt))
+        return false;
+    JS_ClearRuntimeThread(rt);
+    return true;
 }
 
 void
@@ -641,11 +645,8 @@ nsXPConnect::NotifyEnterMainThread()
 nsresult
 nsXPConnect::FinishTraverse()
 {
-    if (mCycleCollectionContext) {
-        JSContext *cx = mCycleCollectionContext->GetJSContext();
+    if (mCycleCollectionContext)
         mCycleCollectionContext = nsnull;
-        JS_ClearContextThread(cx);
-    }
     return NS_OK;
 }
 
@@ -819,6 +820,30 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
         JS_TraceShapeCycleCollectorChildren(trc, thing);
     } else if (kind != JSTRACE_STRING) {
         JS_TraceChildren(trc, thing, kind);
+    }
+}
+
+void
+xpc_MarkInCCGeneration(nsISupports* aVariant, PRUint32 aGeneration)
+{
+    nsCOMPtr<XPCVariant> variant = do_QueryInterface(aVariant);
+    if (variant) {
+        variant->SetCCGeneration(aGeneration);
+        variant->GetJSVal(); // Unmarks gray JSObject.
+        XPCVariant* weak = variant.get();
+        variant = nsnull;
+        if (weak->IsPurple()) {
+          weak->RemovePurple();
+        }
+    }
+}
+
+void
+xpc_UnmarkGrayObject(nsIXPConnectWrappedJS* aWrappedJS)
+{
+    if (aWrappedJS) {
+        // Unmarks gray JSObject.
+        static_cast<nsXPCWrappedJS*>(aWrappedJS)->GetJSObject();
     }
 }
 
@@ -1023,8 +1048,8 @@ public:
         // collected.
         unsigned refCount = nsXPConnect::GetXPConnect()->GetOutstandingRequests(cx) + 1;
         cb.DescribeRefCountedNode(refCount, js::SizeOfJSContext(), "JSContext");
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
         if (JSObject *global = JS_GetGlobalObject(cx)) {
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, global);
         }
 
