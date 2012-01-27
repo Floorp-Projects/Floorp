@@ -237,6 +237,12 @@ gfxPlatform::gfxPlatform()
     mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
 #endif
     mBidiNumeralOption = UNINITIALIZED_VALUE;
+
+    if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
+        mPreferredDrawTargetBackend = BACKEND_SKIA;
+    } else {
+        mPreferredDrawTargetBackend = BACKEND_NONE;
+    }
 }
 
 gfxPlatform*
