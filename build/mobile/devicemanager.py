@@ -66,10 +66,10 @@ def abstractmethod(method):
   line = method.func_code.co_firstlineno
   filename = method.func_code.co_filename
   def not_implemented(*args, **kwargs):
-    raise NotImplementedError('Abstract method %s at File "%s", line %s \
-                              should be implemented by a concrete class' %
+    raise NotImplementedError('Abstract method %s at File "%s", line %s '
+                              'should be implemented by a concrete class' %
                               (repr(method), filename,line))
-    return not_implemented
+  return not_implemented
   
 class DeviceManager:
   
@@ -236,14 +236,14 @@ class DeviceManager:
     pieces = appname.split(' ')
     parts = pieces[0].split('/')
     app = parts[-1]
-    procre = re.compile('.*' + app + '.*')
 
     procList = self.getProcessList()
     if (procList == []):
       return None
       
     for proc in procList:
-      if (procre.match(proc[1])):
+      procName = proc[1].split('/')[-1]
+      if (procName == app):
         pid = proc[0]
         break
     return pid
@@ -357,7 +357,7 @@ class DeviceManager:
     hexval = mdsum.hexdigest()
     if (self.debug >= 3): print "local hash returned: '" + hexval + "'"
     return hexval
-  
+
   @abstractmethod
   def getDeviceRoot(self):
     """
@@ -373,12 +373,13 @@ class DeviceManager:
           /xpcshell
           /reftest
           /mochitest
-    external 
+    external
     returns:
     success: path for device root
     failure: None
     """
-  
+
+  @abstractmethod
   def getAppRoot(self):
     """
     Either we will have /tests/fennec or /tests/firefox but we will never have
@@ -389,26 +390,6 @@ class DeviceManager:
     success: path for app root
     failure: None
     """
-    
-    devroot = self.getDeviceRoot()
-    if (devroot == None):
-      return None
-
-    if (self.dirExists(devroot + '/fennec')):
-      return devroot + '/fennec'
-    elif (self.dirExists(devroot + '/firefox')):
-      return devroot + '/firefox'
-    elif (self.dirExsts('/data/data/org.mozilla.fennec')):
-      return 'org.mozilla.fennec'
-    elif (self.dirExists('/data/data/org.mozilla.firefox')):
-      return 'org.mozilla.firefox'
-    elif (self.dirExists('/data/data/org.mozilla.fennec_aurora')):
-      return 'org.mozilla.fennec_aurora'
-    elif (self.dirExists('/data/data/org.mozilla.firefox_beta')):
-      return 'org.mozilla.firefox_beta'
-
-    # Failure (either not installed or not a recognized platform)
-    return None
 
   def getTestRoot(self, type):
     """
@@ -514,7 +495,7 @@ class DeviceManager:
     success: output from agent for inst command
     failure: None
     """
-    
+
   @abstractmethod
   def uninstallAppAndReboot(self, appName, installPath=None):
     """
@@ -542,7 +523,7 @@ class DeviceManager:
     success: time in ms
     failure: None
     """
-
+    
 class NetworkTools:
   def __init__(self):
     pass
@@ -562,7 +543,10 @@ class NetworkTools:
       return None
 
   def getLanIp(self):
-    ip = socket.gethostbyname(socket.gethostname())
+    try:
+      ip = socket.gethostbyname(socket.gethostname())
+    except socket.gaierror:
+      ip = socket.gethostbyname(socket.gethostname() + ".local") # for Mac OS X
     if ip.startswith("127.") and os.name != "nt":
       interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
       for ifname in interfaces:
