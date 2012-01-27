@@ -483,7 +483,7 @@ Debugger::observesGlobal(GlobalObject *global) const
 bool
 Debugger::observesFrame(StackFrame *fp) const
 {
-    return !fp->isDummyFrame() && observesGlobal(&fp->scopeChain().global());
+    return observesGlobal(&fp->scopeChain().global());
 }
 
 JSTrapStatus
