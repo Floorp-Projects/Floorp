@@ -14,10 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=715308
 <!-- Test for Bug 715308 comment 93:
 
   - For a valid image, onload is fired and onerror is never fired.
-
-  - For an image with errors (either early or late in the image data), onerror
-    is fired, but onload is never fired.
-
+  - For an image with errors, onerror is fired, but onload is never fired.
   - For any image, either onload or onerror is fired, but never both.
 
  -->
@@ -31,7 +28,7 @@ var numCallbacks = 0;
 function image_error(name)
 {
   numCallbacks++;
-  ok(name == 'error-early' || name == 'error-late', "Got onerror for " + name);
+  ok(name == 'error-early', "Got onerror for " + name);
 }
 
 function image_load(name)
@@ -42,7 +39,7 @@ function image_load(name)
 
 function page_load()
 {
-  ok(numCallbacks == 3, 'Got page load before all onload/onerror callbacks?');
+  ok(numCallbacks == 2, 'Got page load before all onload/onerror callbacks?');
 
   // Spin the event loop a few times to let image_error run if it's going to,
   // then finish the test.
@@ -62,11 +59,6 @@ addEventListener('load', page_load);
 <div id="content">
   <img src='shaver.png' onerror='image_error("shaver")' onload='image_load("shaver")'>
   <img src='error-early.png' onerror='image_error("error-early")' onload='image_load("error-early")'>
-
-  <!-- This image has invalid data (hopefully triggering a decode error)
-       relatively late in the bitstream.  Compare to shaver.png with a binary
-       diff tool. -->
-  <img src='error-late.png' onerror='image_error("error-late")' onload='image_load("error-late")'>
 </div>
 
 </pre>
