@@ -1,4 +1,5 @@
 url-prefix ../../jsreftest.html?test=js1_8/genexps/
+script arguments-property-access-in-generator.js
 script regress-347739.js
 script regress-349012-01.js
 script regress-349326.js
