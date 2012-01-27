@@ -108,19 +108,6 @@ function getSimpleMeasurements() {
     uptime: Math.round((new Date() - si.process) / 60000)
   }
 
-  if (si.process) {
-    for each (let field in ["main", "firstPaint", "sessionRestored"]) {
-      if (!(field in si))
-        continue;
-      ret[field] = si[field] - si.process
-    }
-  }
-  ret.startupInterrupted = new Number(Services.startup.interrupted);
-
-  ret.js = Cc["@mozilla.org/js/xpc/XPConnect;1"]
-           .getService(Ci.nsIJSEngineTelemetryStats)
-           .telemetryValue;
-
   // Look for app-specific timestamps
   var appTimestamps = {};
   try {
@@ -129,10 +116,24 @@ function getSimpleMeasurements() {
     appTimestamps = o.TelemetryTimestamps.get();
   } catch (ex) {}
 
-  for (let p in appTimestamps) {
-    if (!(p in ret) && appTimestamps[p])
-      ret[p] = appTimestamps[p];
+  if (si.process) {
+    for each (let field in ["main", "firstPaint", "sessionRestored"]) {
+      if (!(field in si))
+        continue;
+      ret[field] = si[field] - si.process
+    }
+
+    for (let p in appTimestamps) {
+      if (!(p in ret) && appTimestamps[p])
+        ret[p] = appTimestamps[p] - si.process;
+    }
   }
+
+  ret.startupInterrupted = new Number(Services.startup.interrupted);
+
+  ret.js = Cc["@mozilla.org/js/xpc/XPConnect;1"]
+           .getService(Ci.nsIJSEngineTelemetryStats)
+           .telemetryValue;
 
   return ret;
 }
