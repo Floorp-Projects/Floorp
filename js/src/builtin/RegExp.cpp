@@ -159,7 +159,7 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, T *re, JSLinearString *inpu
 }
 
 bool
-js::ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpMatcher &matcher, JSLinearString *input,
+js::ExecuteRegExp(JSContext *cx, RegExpStatics *res, const RegExpMatcher &matcher, JSLinearString *input,
                   const jschar *chars, size_t length,
                   size_t *lastIndex, RegExpExecType type, Value *rval)
 {
@@ -207,7 +207,7 @@ EscapeNakedForwardSlashes(JSContext *cx, JSLinearString *unescaped)
 }
 
 /*
- * Compile a new |RegExpPrivate| for the |RegExpObject|.
+ * Compile a new |RegExpShared| for the |RegExpObject|.
  *
  * Per ECMAv5 15.10.4.1, we act on combinations of (pattern, flags) as
  * arguments:
@@ -514,15 +514,17 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    RegExpObject *reobj = &obj->asRegExp();
+    RegExpObject &reobj = obj->asRegExp();
 
     RegExpMatcher matcher(cx);
-    if (reobj->startsWithAtomizedGreedyStar()) {
-        if (!matcher.resetWithTestOptimized(reobj))
+    if (reobj.startsWithAtomizedGreedyStar()) {
+        if (!matcher.initWithTestOptimized(reobj))
             return false;
     } else {
-        if (!matcher.reset(reobj))
+        RegExpShared *shared = reobj.getShared(cx);
+        if (!shared)
             return false;
+        matcher.init(NeedsIncRef<RegExpShared>(shared));
     }
 
     RegExpStatics *res = cx->regExpStatics();
@@ -540,7 +542,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     size_t length = input->length();
 
     /* Step 4. */
-    const Value &lastIndex = reobj->getLastIndex();
+    const Value &lastIndex = reobj.getLastIndex();
 
     /* Step 5. */
     jsdouble i;
@@ -553,7 +555,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
 
     /* Step 9a. */
     if (i < 0 || i > length) {
-        reobj->zeroLastIndex();
+        reobj.zeroLastIndex();
         args.rval() = NullValue();
         return true;
     }
@@ -569,9 +571,9 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     /* Step 11 (with sticky extension). */
     if (matcher.global() || (!args.rval().isNull() && matcher.sticky())) {
         if (args.rval().isNull())
-            reobj->zeroLastIndex();
+            reobj.zeroLastIndex();
         else
-            reobj->setLastIndex(lastIndexInt);
+            reobj.setLastIndex(lastIndexInt);
     }
 
     return true;
