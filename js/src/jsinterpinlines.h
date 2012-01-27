@@ -772,6 +772,56 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
     return obj->setGeneric(cx, id, &tmp, script->strictModeCode);
 }
 
+#define RELATIONAL_OP(OP)                                                     \
+    JS_BEGIN_MACRO                                                            \
+        Value lval = lhs;                                                     \
+        Value rval = rhs;                                                     \
+        /* Optimize for two int-tagged operands (typical loop control). */    \
+        if (lval.isInt32() && rval.isInt32()) {                               \
+            *res = lval.toInt32() OP rval.toInt32();                          \
+        } else {                                                              \
+            if (!ToPrimitive(cx, JSTYPE_NUMBER, &lval))                       \
+                return false;                                                 \
+            if (!ToPrimitive(cx, JSTYPE_NUMBER, &rval))                       \
+                return false;                                                 \
+            if (lval.isString() && rval.isString()) {                         \
+                JSString *l = lval.toString(), *r = rval.toString();          \
+                int32_t result;                                               \
+                if (!CompareStrings(cx, l, r, &result))                       \
+                    return false;                                             \
+                *res = result OP 0;                                           \
+            } else {                                                          \
+                double l, r;                                                  \
+                if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))       \
+                    return false;;                                            \
+                *res = (l OP r);                                              \
+            }                                                                 \
+        }                                                                     \
+        return true;                                                          \
+    JS_END_MACRO
+
+static JS_ALWAYS_INLINE bool
+LessThanOperation(JSContext *cx, const Value &lhs, const Value &rhs, bool *res) {
+    RELATIONAL_OP(<);
+}
+
+static JS_ALWAYS_INLINE bool
+LessThanOrEqualOperation(JSContext *cx, const Value &lhs, const Value &rhs, bool *res) {
+    RELATIONAL_OP(<=);
+}
+
+static JS_ALWAYS_INLINE bool
+GreaterThanOperation(JSContext *cx, const Value &lhs, const Value &rhs, bool *res) {
+    RELATIONAL_OP(>);
+}
+
+static JS_ALWAYS_INLINE bool
+GreaterThanOrEqualOperation(JSContext *cx, const Value &lhs, const Value &rhs, bool *res) {
+    RELATIONAL_OP(>=);
+}
+
+#undef RELATIONAL_OP
+
 }  /* namespace js */
 
 #endif /* jsinterpinlines_h__ */
