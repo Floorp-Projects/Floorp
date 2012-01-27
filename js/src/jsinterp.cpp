@@ -2301,54 +2301,57 @@ END_CASE(JSOP_CASE)
 
 #undef STRICT_EQUALITY_OP
 
-#define RELATIONAL_OP(OP)                                                     \
-    JS_BEGIN_MACRO                                                            \
-        Value &rval = regs.sp[-1];                                            \
-        Value &lval = regs.sp[-2];                                            \
-        bool cond;                                                            \
-        /* Optimize for two int-tagged operands (typical loop control). */    \
-        if (lval.isInt32() && rval.isInt32()) {                               \
-            cond = lval.toInt32() OP rval.toInt32();                          \
-        } else {                                                              \
-            if (!ToPrimitive(cx, JSTYPE_NUMBER, &lval))                       \
-                goto error;                                                   \
-            if (!ToPrimitive(cx, JSTYPE_NUMBER, &rval))                       \
-                goto error;                                                   \
-            if (lval.isString() && rval.isString()) {                         \
-                JSString *l = lval.toString(), *r = rval.toString();          \
-                int32_t result;                                               \
-                if (!CompareStrings(cx, l, r, &result))                       \
-                    goto error;                                               \
-                cond = result OP 0;                                           \
-            } else {                                                          \
-                double l, r;                                                  \
-                if (!ToNumber(cx, lval, &l) || !ToNumber(cx, rval, &r))       \
-                    goto error;                                               \
-                cond = (l OP r);                                              \
-            }                                                                 \
-        }                                                                     \
-        TRY_BRANCH_AFTER_COND(cond, 2);                                       \
-        regs.sp[-2].setBoolean(cond);                                         \
-        regs.sp--;                                                            \
-    JS_END_MACRO
-
 BEGIN_CASE(JSOP_LT)
-    RELATIONAL_OP(<);
+{
+    bool cond;
+    const Value &lref = regs.sp[-2];
+    const Value &rref = regs.sp[-1];
+    if (!LessThanOperation(cx, lref, rref, &cond))
+        goto error;
+    TRY_BRANCH_AFTER_COND(cond, 2);
+    regs.sp[-2].setBoolean(cond);
+    regs.sp--;
+}
 END_CASE(JSOP_LT)
 
 BEGIN_CASE(JSOP_LE)
-    RELATIONAL_OP(<=);
+{
+    bool cond;
+    const Value &lref = regs.sp[-2];
+    const Value &rref = regs.sp[-1];
+    if (!LessThanOrEqualOperation(cx, lref, rref, &cond))
+        goto error;
+    TRY_BRANCH_AFTER_COND(cond, 2);
+    regs.sp[-2].setBoolean(cond);
+    regs.sp--;
+}
 END_CASE(JSOP_LE)
 
 BEGIN_CASE(JSOP_GT)
-    RELATIONAL_OP(>);
+{
+    bool cond;
+    const Value &lref = regs.sp[-2];
+    const Value &rref = regs.sp[-1];
+    if (!GreaterThanOperation(cx, lref, rref, &cond))
+        goto error;
+    TRY_BRANCH_AFTER_COND(cond, 2);
+    regs.sp[-2].setBoolean(cond);
+    regs.sp--;
+}
 END_CASE(JSOP_GT)
 
 BEGIN_CASE(JSOP_GE)
-    RELATIONAL_OP(>=);
+{
+    bool cond;
+    const Value &lref = regs.sp[-2];
+    const Value &rref = regs.sp[-1];
+    if (!GreaterThanOrEqualOperation(cx, lref, rref, &cond))
+        goto error;
+    TRY_BRANCH_AFTER_COND(cond, 2);
+    regs.sp[-2].setBoolean(cond);
+    regs.sp--;
+}
 END_CASE(JSOP_GE)
-
-#undef RELATIONAL_OP
 
 #define SIGNED_SHIFT_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
