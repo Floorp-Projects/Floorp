@@ -770,10 +770,10 @@ JSCompartment::createBarrierTracer()
 }
 
 size_t
-JS::SizeOfCompartmentShapeTable(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf)
+JSCompartment::sizeOfShapeTable(JSMallocSizeOfFun mallocSizeOf)
 {
-    return c->baseShapes.sizeOfExcludingThis(mallocSizeOf)
-         + c->initialShapes.sizeOfExcludingThis(mallocSizeOf)
-         + c->newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
-         + c->lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
+    return baseShapes.sizeOfExcludingThis(mallocSizeOf)
+         + initialShapes.sizeOfExcludingThis(mallocSizeOf)
+         + newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
+         + lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
 }
