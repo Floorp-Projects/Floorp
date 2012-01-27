@@ -3603,15 +3603,8 @@ define('gcli/host', ['require', 'exports', 'module' ], function(require, exports
  * There is likely a better way to do this, but this will do for now.
  */
 exports.flashNode = function(node, color) {
-  if (!node.__gcliHighlighting) {
-    node.__gcliHighlighting = true;
-    var original = node.style.background;
-    node.style.background = color;
-    setTimeout(function() {
-      node.style.background = original;
-      delete node.__gcliHighlighting;
-    }, 1000);
-  }
+  // We avoid changing the DOM under firefox developer tools so this is a no-op
+  // In future we will use the multi-highlighter implemented in bug 653545.
 };
 
 
