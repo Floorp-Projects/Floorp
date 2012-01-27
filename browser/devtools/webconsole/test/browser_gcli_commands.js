@@ -5,8 +5,6 @@
 // - https://github.com/mozilla/gcli/blob/master/docs/index.md
 // - https://wiki.mozilla.org/DevTools/Features/GCLI
 
-// Tests that the inspect command works as it should
-
 Components.utils.import("resource:///modules/gcli.jsm");
 
 let hud;
