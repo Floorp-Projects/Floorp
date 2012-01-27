@@ -70,6 +70,7 @@ import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.ListView;
+import android.widget.TabWidget;
 import android.widget.Toast;
 
 import java.util.Map;
@@ -116,6 +117,9 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
             mText = (AwesomeBarEditText) findViewById(R.id.awesomebar_text);
         }
+
+        TabWidget tabWidget = (TabWidget) findViewById(android.R.id.tabs);
+        tabWidget.setDividerDrawable(null);
 
         mAwesomeTabs = (AwesomeBarTabs) findViewById(R.id.awesomebar_tabs);
         mAwesomeTabs.setOnUrlOpenListener(new AwesomeBarTabs.OnUrlOpenListener() {
