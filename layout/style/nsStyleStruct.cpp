@@ -237,7 +237,7 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
     if ((aFont1.decorations == aFont2.decorations)) {
       return NS_STYLE_HINT_NONE;
     }
-    return NS_STYLE_HINT_VISUAL;
+    return nsChangeHint_RepaintFrame;
   }
   return NS_STYLE_HINT_REFLOW;
 }
@@ -556,7 +556,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 
   // Note that mBorderStyle stores not only the border style but also
   // color-related flags.  Given that we've already done an mComputedBorder
-  // comparison, border-style differences can only lead to a VISUAL hint.  So
+  // comparison, border-style differences can only lead to a Repaint hint.  So
   // it's OK to just compare the values directly -- if either the actual
   // style or the color flags differ we want to repaint.
   NS_FOR_CSS_SIDES(ix) {
@@ -742,7 +742,7 @@ nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
       return NS_STYLE_HINT_NONE;
     if (mImageRegion.width == aOther.mImageRegion.width &&
         mImageRegion.height == aOther.mImageRegion.height)
-      return NS_STYLE_HINT_VISUAL;
+      return nsChangeHint_RepaintFrame;
   }
   return NS_STYLE_HINT_REFLOW;
 }
@@ -852,7 +852,7 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
       mColumnRuleStyle != aOther.mColumnRuleStyle ||
       mColumnRuleColor != aOther.mColumnRuleColor ||
       mColumnRuleColorIsForeground != aOther.mColumnRuleColorIsForeground)
-    return NS_STYLE_HINT_VISUAL;
+    return nsChangeHint_RepaintFrame;
 
   return NS_STYLE_HINT_NONE;
 }
@@ -1179,7 +1179,8 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
 nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
 {
   nsChangeHint hint =
-    (mZIndex == aOther.mZIndex) ? NS_STYLE_HINT_NONE : nsChangeHint_RepaintFrame;
+    mZIndex == aOther.mZIndex ? NS_STYLE_HINT_NONE :
+      nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView);
 
   if (mBoxSizing != aOther.mBoxSizing) {
     // Can affect both widths and heights; just a bad scene.
@@ -1224,7 +1225,7 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
 /* static */
 nsChangeHint nsStylePosition::MaxDifference()
 {
-  return NS_STYLE_HINT_REFLOW;
+  return nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_SyncFrameView);
 }
 #endif
 
@@ -1328,7 +1329,7 @@ nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther
       (mBorderSpacingY == aOther.mBorderSpacingY)) {
     if (mEmptyCells == aOther.mEmptyCells)
       return NS_STYLE_HINT_NONE;
-    return NS_STYLE_HINT_VISUAL;
+    return nsChangeHint_RepaintFrame;
   }
   else
     return NS_STYLE_HINT_REFLOW;
@@ -1362,14 +1363,14 @@ nsChangeHint nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
 {
   if (mColor == aOther.mColor)
     return NS_STYLE_HINT_NONE;
-  return NS_STYLE_HINT_VISUAL;
+  return nsChangeHint_RepaintFrame;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStyleColor::MaxDifference()
 {
-  return NS_STYLE_HINT_VISUAL;
+  return nsChangeHint_RepaintFrame;
 }
 #endif
 
@@ -1818,12 +1819,12 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
       if (moreLayers->mLayers[i] != lessLayers->mLayers[i]) {
         if ((moreLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element) ||
             (lessLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element))
-          return NS_CombineHint(nsChangeHint_UpdateEffects, NS_STYLE_HINT_VISUAL);
+          return NS_CombineHint(nsChangeHint_UpdateEffects, nsChangeHint_RepaintFrame);
         hasVisualDifference = true;
       }
     } else {
       if (moreLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element)
-        return NS_CombineHint(nsChangeHint_UpdateEffects, NS_STYLE_HINT_VISUAL);
+        return NS_CombineHint(nsChangeHint_UpdateEffects, nsChangeHint_RepaintFrame);
       hasVisualDifference = true;
     }
   }
@@ -1831,7 +1832,7 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
   if (hasVisualDifference ||
       mBackgroundColor != aOther.mBackgroundColor ||
       mBackgroundInlinePolicy != aOther.mBackgroundInlinePolicy)
-    return NS_STYLE_HINT_VISUAL;
+    return nsChangeHint_RepaintFrame;
 
   return NS_STYLE_HINT_NONE;
 }
@@ -1840,7 +1841,7 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
 /* static */
 nsChangeHint nsStyleBackground::MaxDifference()
 {
-  return NS_CombineHint(nsChangeHint_UpdateEffects, NS_STYLE_HINT_VISUAL);
+  return NS_CombineHint(nsChangeHint_UpdateEffects, nsChangeHint_RepaintFrame);
 }
 #endif
 
@@ -2345,18 +2346,20 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mPointerEvents = aSource.mPointerEvents;
 } 
 
-nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
+nsChangeHint
+nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
 {
-  nsChangeHint hint = nsChangeHint(0);
-
   if (mDirection != aOther.mDirection) {
-    NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
-  } else if (mVisible != aOther.mVisible) {
+    return nsChangeHint_ReconstructFrame;
+  }
+  nsChangeHint hint = NS_STYLE_HINT_NONE;
+  if (mVisible != aOther.mVisible) {
+    NS_UpdateHint(hint, nsChangeHint_SyncFrameView);
     if ((NS_STYLE_VISIBILITY_COLLAPSE == mVisible) ||
         (NS_STYLE_VISIBILITY_COLLAPSE == aOther.mVisible)) {
       NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
     } else {
-      NS_UpdateHint(hint, NS_STYLE_HINT_VISUAL);
+      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
     }
   }
   return hint;
@@ -2366,7 +2369,7 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
 /* static */
 nsChangeHint nsStyleVisibility::MaxDifference()
 {
-  return NS_STYLE_HINT_FRAMECHANGE;
+  return nsChangeHint(NS_STYLE_HINT_FRAMECHANGE | nsChangeHint_SyncFrameView);
 }
 #endif
 
@@ -2757,7 +2760,7 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
       }
       // Repaint for other style decoration lines because they must be in
       // default overflow rect
-      return NS_STYLE_HINT_VISUAL;
+      return nsChangeHint_RepaintFrame;
     }
 
     // Repaint for decoration color changes
@@ -2766,11 +2769,11 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
     GetDecorationColor(decColor, isFG);
     aOther.GetDecorationColor(otherDecColor, otherIsFG);
     if (isFG != otherIsFG || (!isFG && decColor != otherDecColor)) {
-      return NS_STYLE_HINT_VISUAL;
+      return nsChangeHint_RepaintFrame;
     }
 
     if (mTextOverflow != aOther.mTextOverflow) {
-      return NS_STYLE_HINT_VISUAL;
+      return nsChangeHint_RepaintFrame;
     }
     return NS_STYLE_HINT_NONE;
   }
@@ -2962,7 +2965,7 @@ nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aO
     NS_UpdateHint(hint, nsChangeHint_UpdateCursor);
 
   if (mUserModify != aOther.mUserModify)
-    NS_UpdateHint(hint, NS_STYLE_HINT_VISUAL);
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
   
   if ((mUserInput != aOther.mUserInput) &&
       ((NS_STYLE_USER_INPUT_NONE == mUserInput) || 
@@ -3037,7 +3040,7 @@ nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
     return NS_STYLE_HINT_REFLOW;
   }
   if (mUserSelect != aOther.mUserSelect)
-    return NS_STYLE_HINT_VISUAL;
+    return nsChangeHint_RepaintFrame;
   return NS_STYLE_HINT_NONE;
 }
 
