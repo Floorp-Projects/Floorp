@@ -224,7 +224,7 @@ class VFPRegister
         }
     };
 
-    uint32 code() {
+    uint32 code() const {
         return _code;
     }
 };
@@ -343,6 +343,8 @@ enum ALUOp {
     op_tst = 0x8 << 21,
     op_invalid = -1
 };
+
+
 enum MULOp {
     opm_mul   = 0 << 21,
     opm_mla   = 1 << 21,
@@ -798,7 +800,7 @@ class EDtrOff
 class EDtrOffImm : public EDtrOff
 {
   public:
-    EDtrOffImm(uint32 imm)
+    EDtrOffImm(int32 imm)
       : EDtrOff(datastore::Imm8Data(abs(imm)), (imm >= 0) ? IsUp : IsDown)
     { }
 };
@@ -894,7 +896,7 @@ class BOffImm
         return data;
     }
     int32 decode() {
-        return (((int32)data) << 8) >> 6;
+        return ((((int32)data) << 8) >> 6) + 8;
     }
 
     BOffImm(int offset)
@@ -904,13 +906,13 @@ class BOffImm
         JS_ASSERT ((offset - 8) >= -33554432);
         JS_ASSERT ((offset - 8) <= 33554428);
     }
-
+    static const int INVALID = 0x00800000;
     BOffImm()
-      : data(-1)
+      : data(INVALID)
     { }
 
     bool isInvalid() {
-        return data == 0x00ffffff;
+        return data == INVALID;
     }
     Instruction *getDest(Instruction *src);
 
@@ -1125,7 +1127,9 @@ class Assembler
         BufferOffset offset;
         void *target;
         Relocation::Kind kind;
-
+        void fixOffset(ARMBuffer &m_buffer) {
+            offset = BufferOffset(offset.getOffset() + m_buffer.poolSizeBefore(offset.getOffset()));
+        }
         RelativePatch(BufferOffset offset, void *target, Relocation::Kind kind)
           : offset(offset),
             target(target),
@@ -1140,6 +1144,8 @@ class Assembler
     js::Vector<CodeLabel *, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     js::Vector<JumpPool *, 0, SystemAllocPolicy> jumpPools_;
+    js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpJumpRelocations_;
+    js::Vector<BufferOffset, 0, SystemAllocPolicy> tmpDataRelocations_;
     class JumpPool : TempObject
     {
         BufferOffset start;
@@ -1178,7 +1184,8 @@ public:
         int32Pool(m_buffer.getPool(1)),
         doublePool(m_buffer.getPool(0)),
         dtmActive(false),
-        dtmCond(Always)
+        dtmCond(Always),
+        isFinished(false)
     {
         // Set up the backwards double region
         new (&pools_[2]) Pool (1024, 8, 4, 8, 8, true);
@@ -1200,10 +1207,10 @@ public:
     // MacroAssemblers hold onto gcthings, so they are traced by the GC.
     void trace(JSTracer *trc);
     void writeRelocation(BufferOffset src) {
-        jumpRelocations_.writeUnsigned(src.getOffset());
+        tmpJumpRelocations_.append(src);
     }
     void writeDataRelocation(BufferOffset offs) {
-        dataRelocations_.writeUnsigned(offs.getOffset());
+        tmpDataRelocations_.append(offs);
     }
     // Given the start of a Control Flow sequence, grab the value that is finally branched to
     static uint32 * getCF32Target(Instruction *jump);
@@ -1212,7 +1219,10 @@ public:
     static uint32 * getPtr32Target(Instruction *load, Register *dest = NULL);
 
     bool oom() const;
-
+  private:
+    bool isFinished;
+  public:
+    void finish();
     void executableCopy(void *buffer);
     void processDeferredData(IonCode *code, uint8 *data);
     void processCodeLabels(IonCode *code);
@@ -1325,9 +1335,9 @@ public:
     void as_dtm(LoadStore ls, Register rn, uint32 mask,
                 DTMMode mode, DTMWriteBack wb, Condition c = Always);
     // load a 32 bit immediate from a pool into a register
-    void as_Imm32Pool(Register dest, uint32 value);
+    void as_Imm32Pool(Register dest, uint32 value, Condition c = Always);
     // load a 64 bit floating point immediate from a pool into a register
-    void as_FImm64Pool(VFPRegister dest, double value);
+    void as_FImm64Pool(VFPRegister dest, double value, Condition c = Always);
     // Control flow stuff:
 
     // bx can *only* branch to a register
@@ -1577,6 +1587,7 @@ public:
     // This is to force an opportunistic dump of the pool, prefferably when it
     // is more convenient to do a dump.
     void dumpPool();
+    void flushBuffer();
     // this should return a BOffImm, but I didn't want to require everyplace that used the
     // AssemblerBuffer to make that class.
     static ptrdiff_t getBranchOffset(const Instruction *i);
@@ -1652,14 +1663,26 @@ class InstDTR : public Instruction
 
     // TODO: Replace the initialization with something that is safer.
     InstDTR(LoadStore ls, IsByte_ ib, Index mode, Register rt, DTRAddr addr, Assembler::Condition c)
-      : Instruction(ls | ib | mode | RT(rt) | addr.encode() ,c)
+      : Instruction(ls | ib | mode | RT(rt) | addr.encode(), c)
     { }
 
-    static bool isTHIS(Instruction &i);
+    static bool isTHIS(const Instruction &i);
     static InstDTR *asTHIS(Instruction &i);
+
 };
 JS_STATIC_ASSERT(sizeof(InstDTR) == sizeof(Instruction));
 
+class InstLDR : public InstDTR
+{
+  public:
+    InstLDR(Index mode, Register rt, DTRAddr addr, Assembler::Condition c)
+        : InstDTR(IsLoad, IsWord, mode, rt, addr, c)
+    { }
+    static bool isTHIS(const Instruction &i);
+    static InstLDR *asTHIS(Instruction &i);
+
+};
+JS_STATIC_ASSERT(sizeof(InstDTR) == sizeof(InstLDR));
 // Branching to a register, or calling a register
 class InstBranchReg : public Instruction
 {

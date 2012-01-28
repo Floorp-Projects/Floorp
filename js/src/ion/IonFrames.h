@@ -159,6 +159,10 @@ class IonFrameInfo
     uint32 safepointOffset() const {
         return safepointOffset_;
     }
+    void adjustDisplacement(int32 offset) {
+        JS_ASSERT(offset >= displacement_);
+        displacement_ = offset;
+    }
     inline SnapshotOffset snapshotOffset() const;
     inline bool hasSnapshotOffset() const;
 };

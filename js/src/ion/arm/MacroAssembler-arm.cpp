@@ -526,12 +526,12 @@ MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest, SetCond_ 
 void
 MacroAssemblerARM::ma_cmn(Register src1, Imm32 imm, Condition c)
 {
-    ma_alu(src1, imm, InvalidReg, op_cmn);
+    ma_alu(src1, imm, InvalidReg, op_cmn, SetCond, c);
 }
 void
 MacroAssemblerARM::ma_cmn(Register src1, Register src2, Condition c)
 {
-    as_alu(InvalidReg, src2, O2Reg(src1), op_cmn);
+    as_alu(InvalidReg, src2, O2Reg(src1), op_cmn, SetCond, c);
 }
 void
 MacroAssemblerARM::ma_cmn(Register src1, Operand op, Condition c)
@@ -588,7 +588,7 @@ MacroAssemblerARM::ma_teq(Register src2, Register src1, Condition c)
 void
 MacroAssemblerARM::ma_teq(Register src1, Operand op, Condition c)
 {
-        as_teq(src1, op.toOp2(), c);
+    as_teq(src1, op.toOp2(), c);
 }
 
 
@@ -852,7 +852,7 @@ enum RelocBranchStyle {
 RelocBranchStyle
 b_type()
 {
-    return MOVWT;
+    return LDR;
 }
 void
 MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Condition c)
@@ -868,6 +868,13 @@ MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Conditi
         as_movt(ScratchRegister, Imm16(trg >> 16), c);
         // this is going to get the branch predictor pissed off.
         as_bx(ScratchRegister, c);
+        break;
+      case LDR_BX:
+        as_Imm32Pool(ScratchRegister, trg, c);
+        as_bx(ScratchRegister, c);
+        break;
+      case LDR:
+        as_Imm32Pool(pc, trg, c);
         break;
       default:
         JS_NOT_REACHED("Other methods of generating tracable jumps NYI");

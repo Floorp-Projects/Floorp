@@ -175,7 +175,7 @@ ion::VFPRegister::encode()
 VFPRegister js::ion::NoVFPRegister(true);
 
 bool
-InstDTR::isTHIS(Instruction &i)
+InstDTR::isTHIS(const Instruction &i)
 {
     return (i.encode() & IsDTRMask) == (uint32)IsDTR;
 }
@@ -185,6 +185,20 @@ InstDTR::asTHIS(Instruction &i)
 {
     if (isTHIS(i))
         return (InstDTR*)&i;
+    return NULL;
+}
+
+bool
+InstLDR::isTHIS(const Instruction &i)
+{
+    return (i.encode() & IsDTRMask) == (uint32)IsDTR;
+}
+
+InstLDR *
+InstLDR::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstLDR*)&i;
     return NULL;
 }
 
@@ -374,13 +388,26 @@ ion::PatchJump(CodeLocationJump jump_, CodeLocationLabel label)
 }
 
 void
+Assembler::finish()
+{
+    JS_ASSERT(!isFinished);
+    isFinished = true;
+    for (size_t i = 0; i < jumps_.length(); i++) {
+        jumps_[i].fixOffset(m_buffer);
+    }
+    
+    for (int i = 0; i < tmpDataRelocations_.length(); i++) {
+        int offset = tmpDataRelocations_[i].getOffset();
+        dataRelocations_.writeUnsigned(offset + m_buffer.poolSizeBefore(offset));
+    }
+}
+
+void
 Assembler::executableCopy(uint8 *buffer)
 {
+    JS_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
 
-    for (size_t i = 0; i < jumps_.length(); i++) {
-        JS_NOT_REACHED("Feature NYI");
-    }
     JSC::ExecutableAllocator::cacheFlush(buffer, m_buffer.size());
 }
 
@@ -459,6 +486,8 @@ Assembler::getCF32Target(Instruction *jump)
         JS_ASSERT(branch->checkDest(temp));
         uint32 *dest = (uint32*) (targ_bot.decode() | (targ_top.decode() << 16));
         return dest;
+    } else if (jump->is<InstLDR>()) {
+        JS_NOT_REACHED("ldr-based relocs NYI");
     }
     JS_NOT_REACHED("unsupported branch relocation");
     return NULL;
@@ -560,7 +589,7 @@ Assembler::trace(JSTracer *trc)
         if (rp.kind == Relocation::IONCODE)
             MarkIonCodeUnbarriered(trc, IonCode::FromExecutable((uint8*)rp.target), "masmrel32");
     }
-    if (dataRelocations_.length()) {
+    if (tmpDataRelocations_.length()) {
         CompactBufferReader reader(dataRelocations_);
         ::TraceDataRelocations(trc, &m_buffer, reader);
     }
@@ -1125,13 +1154,14 @@ Assembler::as_movt(Register dest, Imm16 imm, Condition c)
     writeInst(0x03400000 | c | imm.encode() | RD(dest));
 }
 
+const int mull_tag = 0x90;
 
 void
 Assembler::as_genmul(Register dhi, Register dlo, Register rm, Register rn,
           MULOp op, SetCond_ sc, Condition c)
 {
 
-    writeInst(RN(dhi) | maybeRD(dlo) | RM(rm) | rn.code() | op | sc | c);
+    writeInst(RN(dhi) | maybeRD(dlo) | RM(rm) | rn.code() | op | sc | c | mull_tag);
 }
 void
 Assembler::as_mul(Register dest, Register src1, Register src2,
@@ -1197,8 +1227,8 @@ Assembler::as_dtr(LoadStore ls, int size, Index mode,
 
     return;
 }
-struct PoolHintData {
-    int32  index : 21;
+class PoolHintData {
+  public:
     enum LoadType {
         // set 0 to bogus, since that is the value most likely to be
         // accidentally left somewhere.
@@ -1207,9 +1237,54 @@ struct PoolHintData {
         poolEDTR  = 2,
         poolVDTR  = 3
     };
+  private:
+    uint32   index    : 17;
+    uint32   cond     : 4;
     LoadType loadType : 2;
-    uint32 destReg : 5;
-    uint32 ONES : 4;
+    uint32   destReg  : 5;
+    uint32   ONES     : 4;
+  public:
+    void init(uint32 index_, Assembler::Condition cond_, LoadType lt, const Register &destReg_) {
+        index = index_;
+        JS_ASSERT(index == index_);
+        cond = cond_ >> 28;
+        JS_ASSERT(cond == cond_ >> 28);
+        loadType = lt;
+        ONES = 0xffffffff;
+        destReg = destReg_.code();
+    }
+    void init(uint32 index_, Assembler::Condition cond_, LoadType lt, const VFPRegister &destReg_) {
+        index = index_;
+        JS_ASSERT(index == index_);
+        cond = cond_ >> 28;
+        JS_ASSERT(cond == cond_ >> 28);
+        loadType = lt;
+        ONES = 0xffffffff;
+        destReg = destReg_.code();
+    }
+    Assembler::Condition getCond() {
+        return Assembler::Condition(cond << 28);
+    }
+
+    Register getReg() {
+        return Register::FromCode(destReg);
+    }
+    VFPRegister getVFPReg() {
+        return VFPRegister(FloatRegister::FromCode(destReg));
+    }
+
+    int32 getIndex() {
+        return index;
+    }
+    void setIndex(uint32 index_) {
+        JS_ASSERT(ONES == 0xf && loadType != poolBOGUS);
+        index = index_;
+        JS_ASSERT(index == index_);
+    }
+
+    LoadType getLoadType() {
+        return loadType;
+    }
 };
 
 union PoolHintPun {
@@ -1267,25 +1342,19 @@ Assembler::as_dtm(LoadStore ls, Register rn, uint32 mask,
 }
 
 void
-Assembler::as_Imm32Pool(Register dest, uint32 value)
+Assembler::as_Imm32Pool(Register dest, uint32 value, Condition c)
 {
     PoolHintPun php;
-    php.phd.loadType = PoolHintData::poolDTR;
-    php.phd.destReg = dest.code();
-    php.phd.index = 0;
-    php.phd.ONES = 0xf;
+    php.phd.init(0, c, PoolHintData::poolDTR, dest);
     m_buffer.insertEntry(4, (uint8*)&php.raw, int32Pool, (uint8*)&value);
 }
 
 void
-Assembler::as_FImm64Pool(VFPRegister dest, double value)
+Assembler::as_FImm64Pool(VFPRegister dest, double value, Condition c)
 {
     JS_ASSERT(dest.isDouble());
     PoolHintPun php;
-    php.phd.loadType = PoolHintData::poolVDTR;
-    php.phd.destReg = dest.code();
-    php.phd.index = 0;
-    php.phd.ONES = 0xf;
+    php.phd.init(0, c, PoolHintData::poolVDTR, dest);
     m_buffer.insertEntry(4, (uint8*)&php.raw, doublePool, (uint8*)&value);
 }
 // Pool callbacks stuff:
@@ -1294,9 +1363,7 @@ Assembler::patchConstantPoolLoad(uint32 load, int32 index)
 {
     PoolHintPun php;
     php.raw = load;
-    JS_ASSERT((php.phd.ONES == 0xf) && (php.phd.loadType != PoolHintData::poolBOGUS));
-    php.phd.index = index;
-    JS_ASSERT(index == php.phd.index);
+    php.phd.setIndex(index);
     return php.raw;
 }
 
@@ -1307,9 +1374,7 @@ Assembler::insertTokenIntoTag(uint32 instSize, uint8 *load_, int32 token)
     uint32 *load = (uint32*) load_;
     PoolHintPun php;
     php.raw = *load;
-    JS_ASSERT((php.phd.ONES == 0xf) && (php.phd.loadType != PoolHintData::poolBOGUS));
-    php.phd.index = token;
-    JS_ASSERT(token == php.phd.index);
+    php.phd.setIndex(token);
     *load = php.raw;
 }
 // patchConstantPoolLoad takes the address of the instruction that wants to be patched, and
@@ -1320,19 +1385,19 @@ Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
     PoolHintData data = *(PoolHintData*)loadAddr;
     uint32 *instAddr = (uint32*) loadAddr;
     int offset = (char *)constPoolAddr - (char *)loadAddr;
-    switch(data.loadType) {
+    switch(data.getLoadType()) {
       case PoolHintData::poolBOGUS:
         JS_NOT_REACHED("bogus load type!");
       case PoolHintData::poolDTR:
-        dummy->as_dtr(IsLoad, 32, Offset, Register::FromCode(data.destReg),
-                      DTRAddr(pc, DtrOffImm(offset+4*data.index - 8)), Always, instAddr);
+        dummy->as_dtr(IsLoad, 32, Offset, data.getReg(),
+                      DTRAddr(pc, DtrOffImm(offset+4*data.getIndex() - 8)), data.getCond(), instAddr);
         break;
       case PoolHintData::poolEDTR:
         JS_NOT_REACHED("edtr is too small/NYI");
         break;
       case PoolHintData::poolVDTR:
-        dummy->as_vdtr(IsLoad, VFPRegister(FloatRegister::FromCode(data.destReg)),
-                       VFPAddr(pc, VFPOffImm(offset+8*data.index - 8)), Always, instAddr);
+        dummy->as_vdtr(IsLoad, data.getVFPReg(),
+                       VFPAddr(pc, VFPOffImm(offset+8*data.getIndex() - 8)), data.getCond(), instAddr);
         break;
     }
 }
@@ -1391,12 +1456,14 @@ Assembler::as_b(Label *l, Condition c)
     } else {
         // Ugh.  int32 :(
         int32 old = l->use(next.getOffset());
-        if (old == LabelBase::INVALID_OFFSET) {
-            old = -4;
+        if (old != LabelBase::INVALID_OFFSET) {
+            // This will currently throw an assertion if we couldn't actually
+            // encode the offset of the branch.
+            as_b(BOffImm(old), c);
+        } else {
+            BOffImm inv;
+            as_b(inv, c);
         }
-        // This will currently throw an assertion if we couldn't actually
-        // encode the offset of the branch.
-        as_b(BOffImm(old), c);
     }
 }
 void
@@ -1443,12 +1510,14 @@ Assembler::as_bl(Label *l, Condition c)
     } else {
         int32 old = l->use(next.getOffset());
         // See if the list was empty :(
-        if (old == -1) {
-            old = -4;
+        if (old != LabelBase::INVALID_OFFSET) {
+            // This will currently throw an assertion if we couldn't actually
+            // encode the offset of the branch.
+            as_bl(BOffImm(old), c);
+        } else {
+            BOffImm inv;
+            as_bl(inv, c);
         }
-        // This will fail if we couldn't actually
-        // encode the offset of the branch.
-        as_bl(BOffImm(old), c);
     }
 }
 void
@@ -1493,7 +1562,7 @@ void
 Assembler::as_vdiv(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                  Condition c)
 {
-    as_vfp_float(vd, vn, vm, opv_mul, c);
+    as_vfp_float(vd, vn, vm, opv_div, c);
 }
 
 void
@@ -1802,6 +1871,12 @@ Assembler::dumpPool()
 }
 
 void
+Assembler::flushBuffer()
+{
+    m_buffer.flushPool();
+}
+
+void
 Assembler::as_jumpPool(uint32 numCases)
 {
     for (uint32 i = 0; i < numCases; i++)
@@ -1814,7 +1889,7 @@ Assembler::getBranchOffset(const Instruction *i_)
     InstBranchImm *i = i_->as<InstBranchImm>();
     BOffImm dest;
     i->extractImm(&dest);
-    return dest.decode()+8;
+    return dest.decode();
 }
 
 void
@@ -1823,9 +1898,9 @@ Assembler::retargetBranch(Instruction *i, int offset)
     Condition cond;
     i->extractCond(&cond);
     if (i->is<InstBImm>())
-        new (i) InstBImm(BOffImm(offset-8), cond);
+        new (i) InstBImm(BOffImm(offset), cond);
     else
-        new (i) InstBLImm(BOffImm(offset-8), cond);
+        new (i) InstBLImm(BOffImm(offset), cond);
     JSC::ExecutableAllocator::cacheFlush(i, 4);
 }
 

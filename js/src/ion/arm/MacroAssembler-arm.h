@@ -402,12 +402,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void ret() {
         ma_pop(pc);
-        dumpPool();
+        m_buffer.markGuard();
     }
     void retn(Imm32 n) {
         // pc <- [sp]; sp += n
         ma_dtr(IsLoad, sp, n, pc, PostIndex);
-        dumpPool();
+        m_buffer.markGuard();
     }
     void push(Imm32 imm) {
         ma_mov(imm, ScratchRegister);
@@ -525,8 +525,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
-        ma_cmp(ScratchRegister, imm);
-        ma_b(label, InvertCondition(cond));
+        ma_tst(imm, ScratchRegister);
+        ma_b(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         ma_cmp(rhs, lhs);
@@ -538,7 +538,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void branchPtr(Condition cond, Register lhs, ImmWord imm, Label *label) {
         ma_cmp(lhs, Imm32(imm.value));
-        ma_b(label, InvertCondition(cond));
+        ma_b(label, cond);
     }
     void moveValue(const Value &val, Register type, Register data);
 

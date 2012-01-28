@@ -384,30 +384,41 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.ma_dataTransferN(IsStore, 64, true, sp, Imm32(-8), r4, PreIndex);
 
         masm.ma_sub(r8, Imm32(1), r8, SetCond);
-        masm.ma_b(&copyLoopTop, Assembler::NonZero);
+        masm.ma_b(&copyLoopTop, Assembler::Unsigned);
     }
-
+    // translate the framesize from values into bytes
+    masm.ma_add(r6, Imm32(1), r6);
+    masm.ma_lsl(Imm32(3), r6, r6);
     // Construct sizeDescriptor.
     masm.makeFrameDescriptor(r6, IonFrame_Rectifier);
 
     // Construct IonJSFrameLayout.
-    masm.ma_push(r0); // calleeToken.
     masm.ma_push(r1); // calleeToken.
     masm.ma_push(r6); // sizeDescriptor.
+    masm.ma_mov(Imm32(0xdeadbeef), r11);
+    masm.ma_push(r11); // padding.
 
     // Call the target function.
     // Note that this code assumes the function is JITted.
-    masm.ma_ldr(DTRAddr(r3, DtrOffImm(offsetof(JSFunction, u.i.script_))), r3);
+    masm.ma_ldr(DTRAddr(r1, DtrOffImm(offsetof(JSFunction, u.i.script_))), r3);
     masm.ma_ldr(DTRAddr(r3, DtrOffImm(offsetof(JSScript, ion))), r3);
     masm.ma_ldr(DTRAddr(r3, DtrOffImm(offsetof(IonScript, method_))), r3);
     masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonCode::OffsetOfCode())), r3);
     masm.ma_callIonHalfPush(r3);
 
     // Remove the rectifier frame.
-    masm.ma_pop(r3);            // rbp <- sizeDescriptor with FrameType.
-    //    masm.shrl(Imm32(IonFramePrefix::FrameTypeBits), rbp); // rbp <- size of pushed arguments.
-    masm.ma_pop(r11);            // Discard calleeToken.
-    masm.ma_alu(sp, lsr(r3, FRAMETYPE_BITS), sp, op_add);      // Discard pushed arguments.
+    // callee token
+    // sizeDescriptor
+    // padding              <- sp now
+    // return address
+    masm.ma_dtr(IsLoad, sp, Imm32(4), r4, PreIndex);  // r4 <- sizeDescriptor with FrameType.
+    // Remove the rectifier frame.
+    // callee token
+    // sizeDescriptor     <- sp now; r4 <- frame descriptor
+    // padding
+    // return address
+    masm.ma_add(sp, Imm32(8), sp);
+    masm.ma_alu(sp, lsr(r4, FRAMETYPE_BITS), sp, op_add);      // Discard pushed arguments.
 
     masm.ret();
     Linker linker(masm);
@@ -629,6 +640,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Test for failure.
     Label exception;
+    // Called functions return bools, which are 0/false and non-zero/true
     masm.ma_cmp(r0, Imm32(0));
     masm.ma_b(&exception, Assembler::Zero);
 

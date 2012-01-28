@@ -326,6 +326,7 @@ bool
 CodeGenerator::visitOsrEntry(LOsrEntry *lir)
 {
     // Remember the OSR entry offset into the code buffer.
+    masm.flushBuffer();
     setOsrEntryOffset(masm.size());
 
     // Allocate the full frame for this function.
@@ -919,7 +920,7 @@ CodeGenerator::generate()
     if (graph.numConstants())
         script->ion->copyConstants(graph.constantPool());
     if (frameInfoTable_.length())
-        script->ion->copyFrameInfoTable(&frameInfoTable_[0]);
+        script->ion->copyFrameInfoTable(&frameInfoTable_[0], masm);
     if (cacheList_.length())
         script->ion->copyCacheEntries(&cacheList_[0], masm);
     if (safepoints_.size())
