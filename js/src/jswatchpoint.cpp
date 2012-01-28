@@ -261,3 +261,24 @@ WatchpointMap::sweep(JSContext *cx)
         }
     }
 }
+
+void
+WatchpointMap::traceAll(WeakMapTracer *trc)
+{
+    JSRuntime *rt = trc->context->runtime;
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        if (WatchpointMap *wpmap = (*c)->watchpointMap)
+            wpmap->trace(trc);
+    }
+}
+
+void
+WatchpointMap::trace(WeakMapTracer *trc)
+{
+    for (Map::Range r = map.all(); !r.empty(); r.popFront()) {
+        Map::Entry &e = r.front();
+        trc->callback(trc, NULL,
+                      e.key.object.get(), JSTRACE_OBJECT,
+                      e.value.closure.get(), JSTRACE_OBJECT);
+    }
+}

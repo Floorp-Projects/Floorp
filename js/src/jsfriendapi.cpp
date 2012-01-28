@@ -42,6 +42,7 @@
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 #include "jsweakmap.h"
+#include "jswatchpoint.h"
 
 #include "mozilla/GuardObjects.h"
 
@@ -374,6 +375,7 @@ void
 js::TraceWeakMaps(WeakMapTracer *trc)
 {
     WeakMapBase::traceAllMappings(trc);
+    WatchpointMap::traceAll(trc);
 }
 
 JS_FRIEND_API(void)
