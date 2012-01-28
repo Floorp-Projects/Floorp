@@ -1362,7 +1362,7 @@ enum {
     SERIALIZE_PIXELTYPE_RAW_WITH_CTABLE,
     SERIALIZE_PIXELTYPE_RAW_NO_CTABLE,
     SERIALIZE_PIXELTYPE_REF_DATA,
-    SERIALIZE_PIXELTYPE_REF_PTR,
+    SERIALIZE_PIXELTYPE_REF_PTR
 };
 
 static void writeString(SkFlattenableWriteBuffer& buffer, const char str[]) {
