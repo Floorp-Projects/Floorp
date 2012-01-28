@@ -2739,45 +2739,47 @@ nsStyleTextReset::~nsStyleTextReset(void)
 
 nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) const
 {
-  if (mVerticalAlign == aOther.mVerticalAlign
-      && mUnicodeBidi == aOther.mUnicodeBidi) {
-    // Reflow for blink changes
-    if (mTextBlink != aOther.mTextBlink) {
-      return NS_STYLE_HINT_REFLOW;
-    }
-
-    PRUint8 lineStyle = GetDecorationStyle();
-    PRUint8 otherLineStyle = aOther.GetDecorationStyle();
-    if (mTextDecorationLine != aOther.mTextDecorationLine ||
-        lineStyle != otherLineStyle) {
-      // Reflow for decoration line style changes only to or from double or
-      // wave because that may cause overflow area changes
-      if (lineStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE ||
-          lineStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY ||
-          otherLineStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE ||
-          otherLineStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
-        return NS_STYLE_HINT_REFLOW;
-      }
-      // Repaint for other style decoration lines because they must be in
-      // default overflow rect
-      return nsChangeHint_RepaintFrame;
-    }
-
-    // Repaint for decoration color changes
-    nscolor decColor, otherDecColor;
-    bool isFG, otherIsFG;
-    GetDecorationColor(decColor, isFG);
-    aOther.GetDecorationColor(otherDecColor, otherIsFG);
-    if (isFG != otherIsFG || (!isFG && decColor != otherDecColor)) {
-      return nsChangeHint_RepaintFrame;
-    }
-
-    if (mTextOverflow != aOther.mTextOverflow) {
-      return nsChangeHint_RepaintFrame;
-    }
-    return NS_STYLE_HINT_NONE;
+  if (mVerticalAlign != aOther.mVerticalAlign ||
+      mUnicodeBidi != aOther.mUnicodeBidi) {
+    return NS_STYLE_HINT_REFLOW;
   }
-  return NS_STYLE_HINT_REFLOW;
+    
+  const nsChangeHint kUpdateOverflowAndRepaintHint =
+    NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
+  if (mTextBlink != aOther.mTextBlink) {
+    return kUpdateOverflowAndRepaintHint;
+  }
+
+  PRUint8 lineStyle = GetDecorationStyle();
+  PRUint8 otherLineStyle = aOther.GetDecorationStyle();
+  if (mTextDecorationLine != aOther.mTextDecorationLine ||
+      lineStyle != otherLineStyle) {
+    // UpdateOverflow for decoration line style changes only to or from double
+    // or wave because that may cause overflow area changes.
+    if (lineStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE ||
+        lineStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY ||
+        otherLineStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE ||
+        otherLineStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
+      return kUpdateOverflowAndRepaintHint;
+    }
+    // Repaint for other style decoration lines because they must be in the
+    // default overflow rect.
+    return nsChangeHint_RepaintFrame;
+  }
+
+  // Repaint for decoration color changes.
+  nscolor decColor, otherDecColor;
+  bool isFG, otherIsFG;
+  GetDecorationColor(decColor, isFG);
+  aOther.GetDecorationColor(otherDecColor, otherIsFG);
+  if (isFG != otherIsFG || (!isFG && decColor != otherDecColor)) {
+    return nsChangeHint_RepaintFrame;
+  }
+
+  if (mTextOverflow != aOther.mTextOverflow) {
+    return nsChangeHint_RepaintFrame;
+  }
+  return NS_STYLE_HINT_NONE;
 }
 
 #ifdef DEBUG
