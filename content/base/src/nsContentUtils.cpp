@@ -1730,6 +1730,18 @@ nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
   return parent->IndexOf(child1) < aOffset2 ? -1 : 1;
 }
 
+/* static */
+PRInt32
+nsContentUtils::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                              nsIDOMNode* aParent2, PRInt32 aOffset2,
+                              bool* aDisconnected)
+{
+  nsCOMPtr<nsINode> parent1 = do_QueryInterface(aParent1);
+  nsCOMPtr<nsINode> parent2 = do_QueryInterface(aParent2);
+  NS_ENSURE_TRUE(parent1 && parent2, -1);
+  return ComparePoints(parent1, aOffset1, parent2, aOffset2);
+}
+
 inline bool
 IsCharInSet(const char* aSet,
             const PRUnichar aChar)

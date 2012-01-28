@@ -49,7 +49,7 @@
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
-#include "nsIRangeUtils.h"
+#include "nsContentUtils.h"
 #include "nsISelection.h"
 #include "nsIPlaintextEditor.h"
 #include "nsTextServicesDocument.h"
@@ -103,8 +103,6 @@ public:
 #include "nsTSAtomList.h"
 #undef TS_ATOM
 
-nsIRangeUtils* nsTextServicesDocument::sRangeHelper;
-
 nsTextServicesDocument::nsTextServicesDocument()
 {
   mRefCnt         = 0;
@@ -137,13 +135,6 @@ nsTextServicesDocument::RegisterAtoms()
   };
 
   NS_RegisterStaticAtoms(ts_atoms, ArrayLength(ts_atoms));
-}
-
-/* static */
-void
-nsTextServicesDocument::Shutdown()
-{
-  NS_IF_RELEASE(sRangeHelper);
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTextServicesDocument)
@@ -2668,13 +2659,10 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
 
   NS_ENSURE_SUCCESS(result, result);
 
-  result = ComparePoints(eStart->mNode, eStartOffset, parent, offset, &e1s1);
-
-  NS_ENSURE_SUCCESS(result, result);
-
-  result = ComparePoints(eEnd->mNode, eEndOffset, parent, offset, &e2s1);
-
-  NS_ENSURE_SUCCESS(result, result);
+  e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
+                                       parent, offset);
+  e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
+                                       parent, offset);
 
   if (e1s1 > 0 || e2s1 < 0)
   {
@@ -2962,13 +2950,10 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
     NS_ENSURE_SUCCESS(result, result);
 
-    result = ComparePoints(eStart->mNode, eStartOffset, endParent, endOffset, &e1s2);
-
-    NS_ENSURE_SUCCESS(result, result);
-
-    result = ComparePoints(eEnd->mNode, eEndOffset, startParent, startOffset, &e2s1);
-
-    NS_ENSURE_SUCCESS(result, result);
+    e1s2 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
+                                         endParent, endOffset);
+    e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
+                                         startParent, startOffset);
 
     // Break out of the loop if the text block intersects the current range.
 
@@ -2987,13 +2972,10 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
   // Now that we have an intersecting range, find out more info:
 
-  result = ComparePoints(eStart->mNode, eStartOffset, startParent, startOffset, &e1s1);
-
-  NS_ENSURE_SUCCESS(result, result);
-
-  result = ComparePoints(eEnd->mNode, eEndOffset, endParent, endOffset, &e2s2);
-
-  NS_ENSURE_SUCCESS(result, result);
+  e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
+                                       startParent, startOffset);
+  e2s2 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
+                                       endParent, endOffset);
 
   if (rangeCount > 1)
   {
@@ -3209,24 +3191,6 @@ bool
 nsTextServicesDocument::SelectionIsValid()
 {
   return(mSelStartIndex >= 0);
-}
-
-nsresult
-nsTextServicesDocument::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                                      nsIDOMNode* aParent2, PRInt32 aOffset2,
-                                      PRInt32 *aResult)
-{
-  *aResult = 0;
-
-  if (!sRangeHelper) {
-    nsresult result = CallGetService("@mozilla.org/content/range-utils;1",
-                                     &sRangeHelper);
-    NS_ENSURE_TRUE(sRangeHelper, result);
-  }
-
-  *aResult = sRangeHelper->ComparePoints(aParent1, aOffset1,
-                                         aParent2, aOffset2);
-  return NS_OK;
 }
 
 nsresult

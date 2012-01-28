@@ -79,7 +79,6 @@ class nsIClipboard;
 class TypeInState;
 class nsIContentFilter;
 class nsIURL;
-class nsIRangeUtils;
 class nsILinkHandler;
 struct PropItem;
 
@@ -771,13 +770,6 @@ protected:
 
    // for real-time spelling
    nsCOMPtr<nsITextServicesDocument> mTextServices;
-
-  // And a static range utils service
-  static nsIRangeUtils* sRangeHelper;
-
-public:
-  // ... which means that we need to listen to shutdown
-  static void Shutdown();
 
 protected:
 
