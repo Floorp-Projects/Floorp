@@ -1486,7 +1486,7 @@ abstract public class GeckoApp
         }
 
         String passedUri = null;
-        String uri = intent.getDataString();
+        String uri = getURIFromIntent(intent);
         if (uri != null && uri.length() > 0)
             passedUri = mLastTitle = uri;
 
@@ -1836,15 +1836,34 @@ abstract public class GeckoApp
             Log.i(LOGTAG,"onNewIntent: " + uri);
         }
         else if (ACTION_WEBAPP.equals(action)) {
-            String uri = intent.getStringExtra("args");
+            String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i(LOGTAG,"Intent : WEBAPP - " + uri);
         }
         else if (ACTION_BOOKMARK.equals(action)) {
-            String args = intent.getStringExtra("args");
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(args));
-            Log.i(LOGTAG,"Intent : BOOKMARK - " + args);
+            String uri = getURIFromIntent(intent);
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
+            Log.i(LOGTAG,"Intent : BOOKMARK - " + uri);
         }
+    }
+
+    /*
+     * Handles getting a uri from and intent in a way that is backwards
+     * compatable with our previous implementations
+     */
+    private String getURIFromIntent(Intent intent) {
+        String uri = intent.getDataString();
+        if (uri != null)
+            return uri;
+
+        final String action = intent.getAction();
+        if (ACTION_WEBAPP.equals(action) || ACTION_BOOKMARK.equals(action)) {
+            uri = intent.getStringExtra("args");
+            if (uri != null && uri.startsWith("--url=")) {
+                uri.replace("--url=", "");
+            }
+        }
+        return uri;
     }
 
     @Override
