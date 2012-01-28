@@ -491,9 +491,17 @@ IonScript::copyConstants(const Value *vp)
 }
 
 void
-IonScript::copyFrameInfoTable(const IonFrameInfo *fi)
+IonScript::copyFrameInfoTable(const IonFrameInfo *fi, MacroAssembler &masm)
 {
-    memcpy(frameInfoTable(), fi, frameInfoEntries_ * sizeof(IonFrameInfo));
+    IonFrameInfo *table = frameInfoTable();
+    memcpy(table, fi, frameInfoEntries_ * sizeof(IonFrameInfo));
+    /*
+     * Jumps in the caches reflect the offset of those jumps in the compiled
+     * code, not the absolute positions of the jumps. Update according to the
+     * final code address now.
+     */
+    for (size_t i = 0; i < frameInfoEntries_; i++)
+        table[i].adjustDisplacement(masm.actualOffset((uint8*)table[i].displacement()));
 }
 
 void

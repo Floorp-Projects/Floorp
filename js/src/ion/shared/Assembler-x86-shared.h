@@ -837,11 +837,18 @@ class AssemblerX86Shared
              break;
            default:
              JS_NOT_REACHED("unexpected operand kind");
- 	    }
+         }
     }
 
+    // Defined for compatibility with ARM's assembler
     ptrdiff_t actualOffset(uint8* x) {
         return (ptrdiff_t)x;
+    }
+
+    void flushBuffer() {
+    }
+
+    void finish() {
     }
 };
 

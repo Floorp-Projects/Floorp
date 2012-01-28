@@ -295,7 +295,7 @@ struct IonScript
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const Value *vp);
-    void copyFrameInfoTable(const IonFrameInfo *hf);
+    void copyFrameInfoTable(const IonFrameInfo *hf, MacroAssembler &masm);
     void copyCacheEntries(const IonCache *caches, MacroAssembler &masm);
     void copySafepoints(const SafepointWriter *writer);
 
