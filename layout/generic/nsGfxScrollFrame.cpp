@@ -3147,6 +3147,20 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
     mInner.mHadNonInitialReflow = true;
   }
 
+  // Set up overflow areas for block frames for the benefit of
+  // text-overflow.
+  nsIFrame* f = mInner.mScrolledFrame->GetContentInsertionFrame();
+  if (nsLayoutUtils::GetAsBlock(f)) {
+    nsRect origRect = f->GetRect();
+    nsRect clippedRect = origRect;
+    clippedRect.MoveBy(mInner.mScrollPort.TopLeft());
+    clippedRect.IntersectRect(clippedRect, mInner.mScrollPort);
+    nsOverflowAreas overflow = f->GetOverflowAreas();
+    f->FinishAndStoreOverflow(overflow, clippedRect.Size());
+    clippedRect.MoveTo(origRect.TopLeft());
+    f->SetRect(clippedRect);
+  }
+
   mInner.PostOverflowEvent();
   return NS_OK;
 }
