@@ -1456,6 +1456,8 @@ abstract public class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+        mAppContext = this;
+
         // StrictMode is set by defaults resource flag |enableStrictMode|.
         if (getResources().getBoolean(R.bool.enableStrictMode)) {
             enableStrictMode();
@@ -1498,12 +1500,17 @@ abstract public class GeckoApp
             mLastTitle = title;
         }
 
-        if (mLastUri == null || mLastUri.equals("") ||
-            mLastUri.equals("about:home")) {
-            showAboutHome();
+        if (mLastUri == null || mLastUri.equals("") || mLastUri.equals("about:home")) {
+            // show about:home if we aren't restoring previous session
+            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start check sessionstore.bak exists");
+            File profileDir = getProfileDir();
+            boolean sessionExists = false;
+            if (profileDir != null)
+                sessionExists = new File(profileDir, "sessionstore.bak").exists();
+            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.bak exists");
+            if (!sessionExists)
+                showAboutHome();
         }
-
-        mAppContext = this;
 
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
