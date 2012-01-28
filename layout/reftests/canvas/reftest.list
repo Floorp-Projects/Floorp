@@ -45,8 +45,6 @@ fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 
 == text-measure.html text-measure-ref.html
 
-pref(font.minimum-size.x-western,48) != text-ignore-min-size.html text-ignore-min-size-ref.html
-
 == strokeText-path.html strokeText-path-ref.html
 
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
