@@ -5427,6 +5427,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
                  nsIWidget*         aWidgetToPaint,
                  const nsRegion&    aDirtyRegion,
                  const nsIntRegion& aIntDirtyRegion,
+                 bool               aPaintDefaultBackground,
                  bool               aWillSendDidPaint)
 {
 #ifdef NS_FUNCTION_TIMER
@@ -5448,7 +5449,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
 
-  nsIFrame* frame = aViewToPaint->GetFrame();
+  nsIFrame* frame = aPaintDefaultBackground ? nsnull : aViewToPaint->GetFrame();
 
   bool isRetainingManager;
   LayerManager* layerManager =
@@ -5487,6 +5488,9 @@ PresShell::Paint(nsIView*           aViewToPaint,
     frame->BeginDeferringInvalidatesForDisplayRoot(aDirtyRegion);
 
     // We can paint directly into the widget using its layer manager.
+    // When we get rid of child widgets, this will be the only path we
+    // need. (aPaintDefaultBackground will never be needed since the
+    // chrome can always paint a default background.)
     nsLayoutUtils::PaintFrame(nsnull, frame, aDirtyRegion, bgcolor,
                               nsLayoutUtils::PAINT_WIDGET_LAYERS |
                               nsLayoutUtils::PAINT_EXISTING_TRANSACTION);
@@ -7204,11 +7208,10 @@ PresShell::DidPaint()
     return;
   }
 
-  NS_ASSERTION(mPresContext->IsRoot(), "Should only call DidPaint on root presshells");
-
   nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
-  // This should only be called on root presshells, but maybe if a document
-  // tree is torn down we might not be a root presshell...
+  if (!rootPresContext) {
+    return;
+  }
   if (rootPresContext == mPresContext) {
     rootPresContext->UpdatePluginGeometry();
   }
