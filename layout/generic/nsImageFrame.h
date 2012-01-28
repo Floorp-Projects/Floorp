@@ -386,12 +386,13 @@ public:
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx);
+  nsCOMPtr<imgIContainer> GetImage();
  
   /**
    * Returns an ImageContainer for this image if the image type
    * supports it (TYPE_RASTER only).
    */
-  already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager);
+  nsRefPtr<ImageContainer> GetContainer(LayerManager* aManager);
   
   /**
    * Configure an ImageLayer for this display item.
