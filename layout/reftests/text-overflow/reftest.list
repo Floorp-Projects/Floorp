@@ -21,3 +21,4 @@ HTTP(..) == table-cell.html table-cell-ref.html
 HTTP(..) == two-value-syntax.html two-value-syntax-ref.html
 HTTP(..) == single-value.html single-value-ref.html 
 HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html
+fuzzy(1,702) skip-if(Android) HTTP(..) == xulscroll.html xulscroll-ref.html
