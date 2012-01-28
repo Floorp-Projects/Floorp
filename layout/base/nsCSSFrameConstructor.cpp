@@ -8021,21 +8021,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
       if (hint & nsChangeHint_UpdateOverflow) {
         while (frame) {
-          nsOverflowAreas overflowAreas;
-          nsOverflowAreas* pre = static_cast<nsOverflowAreas*>
-            (frame->Properties().Get(frame->PreTransformOverflowAreasProperty()));
-          if (pre) {
-            // FinishAndStoreOverflow will change the overflow areas passed in,
-            // so make a copy.
-            overflowAreas = *pre;
-          } else {
-            // There is no transform yet on this frame, so we can just use its
-            // current overflow areas.
-            overflowAreas = frame->GetOverflowAreas();
-          }
-
-          frame->FinishAndStoreOverflow(overflowAreas, frame->GetSize());
-
+          frame->UpdateOverflow();
           nsIFrame* next =
             nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame);
           // Update the ancestors' overflow after we have updated the overflow
