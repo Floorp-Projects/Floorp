@@ -203,16 +203,6 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
         names[i] = POISON;
 #endif
 
-    if (hasHoles) {
-        AutoKeepAtoms keep(cx->runtime);
-        const char *dupchars = "<duplicate name>";
-        JSAtom *dup = js_Atomize(cx, dupchars, strlen(dupchars));
-        if (!dup)
-            return false;
-        for (unsigned i = 0; i < n; i++)
-            names[i] = dup;
-    }
-
     for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
         uintN index = uint16_t(shape.shortid());
