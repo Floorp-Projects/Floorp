@@ -137,23 +137,42 @@ InspectorUI.prototype = {
     this.sidebarSplitter.removeAttribute("hidden");
     this.stylingButton.checked = true;
 
-    // Activate the first tool in the sidebar, only if none previously-
-    // selected. We'll want to do a followup to remember selected tool-states.
+    // If no tool is already selected, show the last-used sidebar if available,
+    // otherwise just show the first.
+
     if (!Array.some(this.sidebarToolbar.children,
       function(btn) btn.hasAttribute("checked"))) {
-        let firstButtonId = this.getToolbarButtonId(this.sidebarTools[0].id);
-        this.chromeDoc.getElementById(firstButtonId).click();
+
+      let activePanel = this.sidebarTools[0];
+      let activeId = this.store.getValue(this.winID, "activeSidebar");
+      if (activeId && this.tools[activeId]) {
+        activePanel = this.tools[activeId];
+      }
+      this.activateSidebarPanel(activePanel.id);
     }
+
+    this.store.setValue(this.winID, "sidebarOpen", true);
+    Services.prefs.setBoolPref("devtools.inspector.sidebarOpen", true);
   },
 
   /**
-   * Hide the Sidebar.
+   * Tear down the sidebar.
    */
-  hideSidebar: function IUI_hideSidebar()
+  _destroySidebar: function IUI_destroySidebar()
   {
     this.sidebarBox.setAttribute("hidden", "true");
     this.sidebarSplitter.setAttribute("hidden", "true");
     this.stylingButton.checked = false;
+  },
+
+  /**
+   * Hide the sidebar.
+   */
+  hideSidebar: function IUI_hideSidebar()
+  {
+    this._destroySidebar();
+    this.store.setValue(this.winID, "sidebarOpen", false);
+    Services.prefs.setBoolPref("devtools.inspector.sidebarOpen", false);
   },
 
   /**
@@ -167,6 +186,25 @@ InspectorUI.prototype = {
     } else {
       this.hideSidebar();
     }
+  },
+
+  /**
+   * Activate a sidebar panel by id.
+   */
+  activateSidebarPanel: function IUI_activateSidebarPanel(aID)
+  {
+    let buttonId = this.getToolbarButtonId(aID);
+    this.chromeDoc.getElementById(buttonId).click();
+  },
+
+  get activeSidebarPanel()
+  {
+    for each (let tool in this.sidebarTools) {
+      if (this.sidebarDeck.selectedPanel == this.getToolIframe(tool)) {
+        return tool.id;
+      }
+    }
+    return null;
   },
 
   /**
@@ -367,6 +405,12 @@ InspectorUI.prototype = {
       this.store.setValue(this.winID, "htmlPanelOpen",
         Services.prefs.getBoolPref("devtools.inspector.htmlPanelOpen"));
 
+      this.store.setValue(this.winID, "sidebarOpen",
+        Services.prefs.getBoolPref("devtools.inspector.sidebarOpen"));
+
+      this.store.setValue(this.winID, "activeSidebar",
+        Services.prefs.getCharPref("devtools.inspector.activeSidebar"));
+
       this.win.addEventListener("pagehide", this, true);
     }
   },
@@ -455,13 +499,12 @@ InspectorUI.prototype = {
 
     this.stopInspecting();
 
-    this.saveToolState(this.winID);
     this.toolsDo(function IUI_toolsHide(aTool) {
       this.unregisterTool(aTool);
     }.bind(this));
 
     // close the sidebar
-    this.hideSidebar();
+    this._destroySidebar();
 
     if (this.highlighter) {
       this.highlighter.destroy();
@@ -600,15 +643,22 @@ InspectorUI.prototype = {
 
     if (this.store.getValue(this.winID, "inspecting")) {
       this.startInspecting();
+      this.highlighter.unlock();
+    } else {
+      this.highlighter.lock();
     }
 
-    this.restoreToolState(this.winID);
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.STATE_RESTORED, null);
 
     this.win.focus();
     this.highlighter.highlight();
 
     if (this.store.getValue(this.winID, "htmlPanelOpen")) {
       this.treePanel.open();
+    }
+
+    if (this.store.getValue(this.winID, "sidebarOpen")) {
+      this.showSidebar();
     }
 
     Services.obs.notifyObservers({wrappedJSObject: this},
@@ -1152,6 +1202,8 @@ InspectorUI.prototype = {
     let btn = this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id));
     btn.setAttribute("checked", "true");
     if (aTool.sidebar) {
+      Services.prefs.setCharPref("devtools.inspector.activeSidebar", aTool.id);
+      this.store.setValue(this.winID, "activeSidebar", aTool.id);
       this.sidebarDeck.selectedPanel = this.getToolIframe(aTool);
       this.sidebarTools.forEach(function(other) {
         if (other != aTool)
@@ -1246,57 +1298,6 @@ InspectorUI.prototype = {
   },
 
   /**
-   * Save a list of open tools to the inspector store.
-   *
-   * @param aWinID The ID of the window used to save the associated tools
-   */
-  saveToolState: function IUI_saveToolState(aWinID)
-  {
-    let openTools = {};
-    this.toolsDo(function IUI_toolsSetId(aTool) {
-      if (aTool.isOpen) {
-        openTools[aTool.id] = true;
-      }
-    });
-    this.store.setValue(aWinID, "openTools", openTools);
-  },
-
-  /**
-   * Restore tools previously save using saveToolState().
-   *
-   * @param aWinID The ID of the window to which the associated tools are to be
-   *               restored.
-   */
-  restoreToolState: function IUI_restoreToolState(aWinID)
-  {
-    let openTools = this.store.getValue(aWinID, "openTools");
-    let activeSidebarTool;
-    if (openTools) {
-      this.toolsDo(function IUI_toolsOnShow(aTool) {
-        if (aTool.id in openTools) {
-          if (aTool.sidebar && !this.isSidebarOpen) {
-            this.showSidebar();
-            activeSidebarTool = aTool;
-          }
-          this.toolShow(aTool);
-        }
-      }.bind(this));
-      this.sidebarTools.forEach(function(tool) {
-        if (tool != activeSidebarTool)
-          this.chromeDoc.getElementById(
-            this.getToolbarButtonId(tool.id)).removeAttribute("checked");
-      }.bind(this));
-    }
-    if (this.store.getValue(this.winID, "inspecting")) {
-      this.highlighter.unlock();
-    } else {
-      this.highlighter.lock();
-    }
-
-    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.STATE_RESTORED, null);
-  },
-
-  /**
    * For each tool in the tools collection select the current node that is
    * selected in the highlighter
    * @param aScroll boolean
@@ -1319,7 +1320,7 @@ InspectorUI.prototype = {
   toolsDim: function IUI_toolsDim(aState)
   {
     this.toolsDo(function IUI_toolsDim(aTool) {
-      if (aTool.isOpen && "dim" in aTool) {
+      if ("dim" in aTool) {
         aTool.dim.call(aTool.context, aState);
       }
     });
