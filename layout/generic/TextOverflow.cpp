@@ -37,21 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Util.h"
-
 #include "TextOverflow.h"
 
 // Please maintain alphabetical order below
 #include "nsBlockFrame.h"
 #include "nsCaret.h"
 #include "nsContentUtils.h"
+#include "nsGfxScrollFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
 #include "nsRenderingContext.h"
 #include "nsTextFrame.h"
-#include "nsGfxScrollFrame.h"
+#include "mozilla/Util.h"
 
 namespace mozilla {
 namespace css {
@@ -246,6 +245,53 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                             mString.Length(), baselinePt + aOffsetFromRect);
 }
 
+void
+TextOverflow::Init(nsDisplayListBuilder*   aBuilder,
+                   const nsDisplayListSet& aLists,
+                   nsIFrame*               aBlockFrame)
+{
+  mBuilder = aBuilder;
+  mBlock = aBlockFrame;
+  mMarkerList = aLists.PositionedDescendants();
+  mContentArea = aBlockFrame->GetContentRectRelativeToSelf();
+  mScrollableFrame = nsLayoutUtils::GetScrollableFrameFor(aBlockFrame);
+  PRUint8 direction = aBlockFrame->GetStyleVisibility()->mDirection;
+  mBlockIsRTL = direction == NS_STYLE_DIRECTION_RTL;
+  mAdjustForPixelSnapping = false;
+#ifdef MOZ_XUL
+  if (!mScrollableFrame) {
+    nsIAtom* pseudoType = aBlockFrame->GetStyleContext()->GetPseudo();
+    if (pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock) {
+      mScrollableFrame =
+        nsLayoutUtils::GetScrollableFrameFor(aBlockFrame->GetParent());
+      // nsXULScrollFrame::ClampAndSetBounds rounds to nearest pixels
+      // for RTL blocks (also for overflow:hidden), so we need to move
+      // the edges 1px outward in ExamineLineFrames to avoid triggering
+      // a text-overflow marker in this case.
+      mAdjustForPixelSnapping = mBlockIsRTL;
+    }
+  }
+#endif
+  mCanHaveHorizontalScrollbar = false;
+  if (mScrollableFrame) {
+    mCanHaveHorizontalScrollbar =
+      mScrollableFrame->GetScrollbarStyles().mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
+    if (!mAdjustForPixelSnapping) {
+      // Scrolling to the end position can leave some text still overflowing due
+      // to pixel snapping behaviour in our scrolling code.
+      mAdjustForPixelSnapping = mCanHaveHorizontalScrollbar;
+    }
+    mContentArea.MoveBy(mScrollableFrame->GetScrollPosition());
+    nsIFrame* scrollFrame = do_QueryFrame(mScrollableFrame);
+    scrollFrame->AddStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
+  }
+  const nsStyleTextReset* style = aBlockFrame->GetStyleTextReset();
+  mLeft.Init(style->mTextOverflow.GetLeft(direction));
+  mRight.Init(style->mTextOverflow.GetRight(direction));
+  // The left/right marker string is setup in ExamineLineFrames when a line
+  // has overflow on that side.
+}
+
 /* static */ TextOverflow*
 TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
                                const nsDisplayListSet& aLists,
@@ -254,30 +300,8 @@ TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
   if (!CanHaveTextOverflow(aBuilder, aBlockFrame)) {
     return nsnull;
   }
-
   nsAutoPtr<TextOverflow> textOverflow(new TextOverflow);
-  textOverflow->mBuilder = aBuilder;
-  textOverflow->mBlock = aBlockFrame;
-  textOverflow->mMarkerList = aLists.PositionedDescendants();
-  textOverflow->mContentArea = aBlockFrame->GetContentRectRelativeToSelf();
-  nsIScrollableFrame* scroll =
-    nsLayoutUtils::GetScrollableFrameFor(aBlockFrame);
-  textOverflow->mCanHaveHorizontalScrollbar = false;
-  if (scroll) {
-    textOverflow->mCanHaveHorizontalScrollbar =
-      scroll->GetScrollbarStyles().mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
-    textOverflow->mContentArea.MoveBy(scroll->GetScrollPosition());
-    nsIFrame* scrollFrame = do_QueryFrame(scroll);
-    scrollFrame->AddStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
-  }
-  PRUint8 direction = aBlockFrame->GetStyleVisibility()->mDirection;
-  textOverflow->mBlockIsRTL = direction == NS_STYLE_DIRECTION_RTL;
-  const nsStyleTextReset* style = aBlockFrame->GetStyleTextReset();
-  textOverflow->mLeft.Init(style->mTextOverflow.GetLeft(direction));
-  textOverflow->mRight.Init(style->mTextOverflow.GetRight(direction));
-  // The left/right marker string is setup in ExamineLineFrames when a line
-  // has overflow on that side.
-
+  textOverflow->Init(aBuilder, aLists, aBlockFrame);
   return textOverflow.forget();
 }
 
@@ -407,9 +431,8 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
   bool suppressLeft = mLeft.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
   bool suppressRight = mRight.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
   if (mCanHaveHorizontalScrollbar) {
-    nsIScrollableFrame* scroll = nsLayoutUtils::GetScrollableFrameFor(mBlock);
-    nsPoint pos = scroll->GetScrollPosition();
-    nsRect scrollRange = scroll->GetScrollRange();
+    nsPoint pos = mScrollableFrame->GetScrollPosition();
+    nsRect scrollRange = mScrollableFrame->GetScrollRange();
     // No ellipsing when nothing to scroll to on that side (this includes
     // overflow:auto that doesn't trigger a horizontal scrollbar).
     if (pos.x <= scrollRange.x) {
@@ -420,11 +443,8 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
     }
   }
 
-  // Scrolling to the end position can leave some text still overflowing due to
-  // pixel snapping behaviour in our scrolling code so we move the edges 1px
-  // outward to avoid triggering a text-overflow marker for such overflow.
   nsRect contentArea = mContentArea;
-  const nscoord scrollAdjust = mCanHaveHorizontalScrollbar ?
+  const nscoord scrollAdjust = mAdjustForPixelSnapping ?
     mBlock->PresContext()->AppUnitsPerDevPixel() : 0;
   InflateLeft(&contentArea, scrollAdjust);
   InflateRight(&contentArea, scrollAdjust);
