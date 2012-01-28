@@ -750,7 +750,8 @@ nsRange::DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
       if (newCommonAncestor) {
         RegisterCommonAncestor(newCommonAncestor);
       } else {
-        NS_ASSERTION(mIsDetached, "unexpected disconnected nodes");
+        NS_ASSERTION(mIsDetached || !mIsPositioned,
+                     "unexpected disconnected nodes");
         mInSelection = false;
       }
     }
