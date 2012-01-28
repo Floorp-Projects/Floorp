@@ -70,6 +70,11 @@
   font: 12px "DejaVu Sans Mono", monospace;
 }
 
+.hud-msg-node {
+  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
+  -moz-image-region: rect(0, 1px, 0, 0);
+}
+
 .webconsole-msg-icon {
   margin: 3px 4px;
   width: 8px;
@@ -87,8 +92,6 @@
   -moz-margin-start: 3px;
   -moz-margin-end: 6px;
   white-space: pre-wrap;
-  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
-  -moz-image-region: rect(0, 1px, 0, 0);
   font: 12px "DejaVu Sans Mono", monospace;
 }
 
