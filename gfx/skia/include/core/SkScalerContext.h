@@ -177,14 +177,14 @@ public:
 
         // luminance : 0 for black text, kLuminance_Max for white text
         kLuminance_Shift          = 11, // to shift into the other flags above
-        kLuminance_Bits           = 3,  // ensure Flags doesn't exceed 16bits
+        kLuminance_Bits           = 3  // ensure Flags doesn't exceed 16bits
     };
     
     // computed values
     enum {
         kHinting_Mask   = kHintingBit1_Flag | kHintingBit2_Flag,
         kLuminance_Max  = (1 << kLuminance_Bits) - 1,
-        kLuminance_Mask = kLuminance_Max << kLuminance_Shift,
+        kLuminance_Mask = kLuminance_Max << kLuminance_Shift
     };
 
     struct Rec {
