@@ -144,6 +144,8 @@ inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
                nsChangeHint_NeedDirtyReflow)
 #define NS_STYLE_HINT_REFLOW \
   nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_ReflowFrame)
+#define NS_STYLE_HINT_UPDATE_OVERFLOW \
+  nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateOverflow)
 #define NS_STYLE_HINT_FRAMECHANGE \
   nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_ReconstructFrame)
 
