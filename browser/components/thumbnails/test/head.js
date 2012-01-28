@@ -8,6 +8,8 @@ registerCleanupFunction(function () {
     gBrowser.removeTab(gBrowser.tabs[1]);
 });
 
+let cachedXULDocument;
+
 /**
  * Provide the default test function to start our test runner.
  */
@@ -54,7 +56,7 @@ function next() {
  */
 function addTab(aURI) {
   let tab = gBrowser.selectedTab = gBrowser.addTab(aURI);
-  whenBrowserLoaded(tab.linkedBrowser);
+  whenLoaded(tab.linkedBrowser);
 }
 
 /**
@@ -63,20 +65,86 @@ function addTab(aURI) {
  */
 function navigateTo(aURI) {
   let browser = gBrowser.selectedTab.linkedBrowser;
-  whenBrowserLoaded(browser);
+  whenLoaded(browser);
   browser.loadURI(aURI);
 }
 
 /**
- * Continues the current test execution when a load event for the given browser
- * has been received
- * @param aBrowser The browser to listen on.
+ * Continues the current test execution when a load event for the given element
+ * has been received.
+ * @param aElement The DOM element to listen on.
+ * @param aCallback The function to call when the load event was dispatched.
  */
-function whenBrowserLoaded(aBrowser) {
-  aBrowser.addEventListener("load", function onLoad() {
-    aBrowser.removeEventListener("load", onLoad, true);
-    executeSoon(next);
+function whenLoaded(aElement, aCallback) {
+  aElement.addEventListener("load", function onLoad() {
+    aElement.removeEventListener("load", onLoad, true);
+    executeSoon(aCallback || next);
   }, true);
+}
+
+/**
+ * Captures a screenshot for the currently selected tab, stores it in the cache,
+ * retrieves it from the cache and compares pixel color values.
+ * @param aRed The red component's intensity.
+ * @param aGreen The green component's intensity.
+ * @param aBlue The blue component's intensity.
+ * @param aMessage The info message to print when comparing the pixel color.
+ */
+function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
+  let window = gBrowser.selectedTab.linkedBrowser.contentWindow;
+
+  let key = Date.now();
+  let data = PageThumbs.capture(window);
+
+  // Store the thumbnail in the cache.
+  PageThumbs.store(key, data, function () {
+    let width = 100, height = 100;
+    let thumb = PageThumbs.getThumbnailURL(key, width, height);
+
+    getXULDocument(function (aDocument) {
+      let htmlns = "http://www.w3.org/1999/xhtml";
+      let img = aDocument.createElementNS(htmlns, "img");
+      img.setAttribute("src", thumb);
+
+      whenLoaded(img, function () {
+        let canvas = aDocument.createElementNS(htmlns, "canvas");
+        canvas.setAttribute("width", width);
+        canvas.setAttribute("height", height);
+
+        // Draw the image to a canvas and compare the pixel color values.
+        let ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        checkCanvasColor(ctx, aRed, aGreen, aBlue, aMessage);
+
+        next();
+      });
+    });
+  });
+}
+
+/**
+ * Passes a XUL document (created if necessary) to the given callback.
+ * @param aCallback The function to be called when the XUL document has been
+ *                  created. The first argument will be the document.
+ */
+function getXULDocument(aCallback) {
+  let hiddenWindow = Services.appShell.hiddenDOMWindow;
+  let doc = cachedXULDocument || hiddenWindow.document;
+
+  if (doc instanceof XULDocument) {
+    aCallback(cachedXULDocument = doc);
+    return;
+  }
+
+  let iframe = doc.createElement("iframe");
+  iframe.setAttribute("src", "chrome://global/content/mozilla.xhtml");
+
+  iframe.addEventListener("DOMContentLoaded", function onLoad() {
+    iframe.removeEventListener("DOMContentLoaded", onLoad, false);
+    aCallback(cachedXULDocument = iframe.contentDocument);
+  }, false);
+
+  doc.body.appendChild(iframe);
 }
 
 /**
