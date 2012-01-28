@@ -58,7 +58,7 @@ namespace js {
 
 inline
 Bindings::Bindings(JSContext *cx)
-    : lastBinding(NULL), nargs(0), nvars(0), nupvars(0), hasHoles(false)
+    : lastBinding(NULL), nargs(0), nvars(0), nupvars(0)
 {}
 
 inline void
