@@ -72,6 +72,8 @@ _TEST_FILES = \
 		test_resize_move_windows.xul \
 		test_popup_blocker_chrome.xul \
 		test_moving_xhr.xul \
+		test_nodesFromRect.html \
+		489127.html \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))
