@@ -545,9 +545,11 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   // at least GetActualBorder() differences...
   if (mTwipsPerPixel != aOther.mTwipsPerPixel ||
       GetActualBorder() != aOther.GetActualBorder() ||
-      mFloatEdge != aOther.mFloatEdge ||
-      mBorderImageOutset != aOther.mBorderImageOutset)
+      mFloatEdge != aOther.mFloatEdge)
     return NS_STYLE_HINT_REFLOW;
+
+  if (mBorderImageOutset != aOther.mBorderImageOutset)
+    return NS_STYLE_HINT_UPDATE_OVERFLOW;
 
   nsChangeHint shadowDifference =
     CalcShadowDifference(mBoxShadow, aOther.mBoxShadow);
@@ -575,8 +577,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
         mBorderImageRepeatV != aOther.mBorderImageRepeatV ||
         mBorderImageSlice   != aOther.mBorderImageSlice   ||
         mBorderImageFill    != aOther.mBorderImageFill    ||
-        mBorderImageWidth   != aOther.mBorderImageWidth   ||
-        mBorderImageOutset  != aOther.mBorderImageOutset)
+        mBorderImageWidth   != aOther.mBorderImageWidth)
       return nsChangeHint_RepaintFrame;
   }
 
