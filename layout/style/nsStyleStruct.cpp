@@ -597,8 +597,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 /* static */
 nsChangeHint nsStyleBorder::MaxDifference()
 {
-  return NS_CombineHint(nsChangeHint_UpdateOverflow,
-                        NS_STYLE_HINT_REFLOW);
+  return NS_CombineHint(NS_STYLE_HINT_UPDATE_OVERFLOW, NS_STYLE_HINT_REFLOW);
 }
 #endif
 
@@ -690,7 +689,7 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
       (outlineIsVisible && (mOutlineOffset != aOther.mOutlineOffset ||
                             mOutlineWidth != aOther.mOutlineWidth ||
                             mTwipsPerPixel != aOther.mTwipsPerPixel))) {
-    return NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
+    return NS_STYLE_HINT_UPDATE_OVERFLOW;
   }
   if ((mOutlineStyle != aOther.mOutlineStyle) ||
       (mOutlineColor != aOther.mOutlineColor) ||
@@ -704,7 +703,7 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 /* static */
 nsChangeHint nsStyleOutline::MaxDifference()
 {
-  return NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
+  return NS_STYLE_HINT_UPDATE_OVERFLOW;
 }
 #endif
 
@@ -2270,23 +2269,21 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
                                          nsChangeHint_UpdateTransformLayer));
     }
 
-    const nsChangeHint kUpdateOverflowAndRepaintHint =
-      NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
     for (PRUint8 index = 0; index < 3; ++index)
       if (mTransformOrigin[index] != aOther.mTransformOrigin[index]) {
-        NS_UpdateHint(hint, kUpdateOverflowAndRepaintHint);
+        NS_UpdateHint(hint, NS_STYLE_HINT_UPDATE_OVERFLOW);
         break;
       }
     
     for (PRUint8 index = 0; index < 2; ++index)
       if (mPerspectiveOrigin[index] != aOther.mPerspectiveOrigin[index]) {
-        NS_UpdateHint(hint, kUpdateOverflowAndRepaintHint);
+        NS_UpdateHint(hint, NS_STYLE_HINT_UPDATE_OVERFLOW);
         break;
       }
 
     if (mChildPerspective != aOther.mChildPerspective ||
         mTransformStyle != aOther.mTransformStyle)
-      NS_UpdateHint(hint, kUpdateOverflowAndRepaintHint);
+      NS_UpdateHint(hint, NS_STYLE_HINT_UPDATE_OVERFLOW);
 
     if (mBackfaceVisibility != aOther.mBackfaceVisibility)
       NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
@@ -2744,10 +2741,8 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
     return NS_STYLE_HINT_REFLOW;
   }
     
-  const nsChangeHint kUpdateOverflowAndRepaintHint =
-    NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
   if (mTextBlink != aOther.mTextBlink) {
-    return kUpdateOverflowAndRepaintHint;
+    return NS_STYLE_HINT_UPDATE_OVERFLOW;
   }
 
   PRUint8 lineStyle = GetDecorationStyle();
@@ -2760,7 +2755,7 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
         lineStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY ||
         otherLineStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE ||
         otherLineStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
-      return kUpdateOverflowAndRepaintHint;
+      return NS_STYLE_HINT_UPDATE_OVERFLOW;
     }
     // Repaint for other style decoration lines because they must be in the
     // default overflow rect.
@@ -2797,14 +2792,12 @@ CalcShadowDifference(nsCSSShadowArray* lhs,
   if (lhs == rhs)
     return NS_STYLE_HINT_NONE;
 
-  const nsChangeHint kUpdateOverflowAndRepaintHint =
-    NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
   if (!lhs || !rhs || lhs->Length() != rhs->Length())
-    return kUpdateOverflowAndRepaintHint;
+    return NS_STYLE_HINT_UPDATE_OVERFLOW;
 
   for (PRUint32 i = 0; i < lhs->Length(); ++i) {
     if (*lhs->ShadowAt(i) != *rhs->ShadowAt(i))
-      return kUpdateOverflowAndRepaintHint;
+      return NS_STYLE_HINT_UPDATE_OVERFLOW;
   }
   return NS_STYLE_HINT_NONE;
 }
@@ -2884,8 +2877,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
 /* static */
 nsChangeHint nsStyleText::MaxDifference()
 {
-  return NS_CombineHint(nsChangeHint_UpdateOverflow,
-                        NS_STYLE_HINT_FRAMECHANGE);
+  return NS_CombineHint(NS_STYLE_HINT_UPDATE_OVERFLOW, NS_STYLE_HINT_FRAMECHANGE);
 }
 #endif
 
