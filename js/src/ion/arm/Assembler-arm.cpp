@@ -42,6 +42,8 @@
 #include "Assembler-arm.h"
 #include "jsgcmark.h"
 
+#include "assembler/jit/ExecutableAllocator.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -1824,6 +1826,7 @@ Assembler::retargetBranch(Instruction *i, int offset)
         new (i) InstBImm(BOffImm(offset-8), cond);
     else
         new (i) InstBLImm(BOffImm(offset-8), cond);
+    JSC::ExecutableAllocator::cacheFlush(i, 4);
 }
 
 void
