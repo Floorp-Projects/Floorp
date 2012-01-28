@@ -123,7 +123,7 @@ abstract public class GeckoApp
     private static GeckoThread sGeckoThread = null;
     public Handler mMainHandler;
     private File mProfileDir;
-    private static boolean sIsGeckoReady = false;
+    public static boolean sIsGeckoReady = false;
     public static int mOrientation;
 
     private IntentFilter mConnectivityFilter;
