@@ -914,16 +914,28 @@ SessionStore.prototype = {
     return this._shouldRestore;
   },
 
-  restoreLastSession: function ss_restoreLastSession(aBringToFront) {
+  restoreLastSession: function ss_restoreLastSession(aBringToFront, aForceRestore) {
     let self = this;
     function notifyObservers(aMessage) {
       self._clearCache();
       Services.obs.notifyObservers(null, "sessionstore-windows-restored", aMessage || "");
     }
 
+    if (!aForceRestore) {
+      let maxCrashes = Services.prefs.getIntPref("browser.sessionstore.max_resumed_crashes");
+      let recentCrashes = Services.prefs.getIntPref("browser.sessionstore.recent_crashes") + 1;
+      Services.prefs.setIntPref("browser.sessionstore.recent_crashes", recentCrashes);
+      Services.prefs.savePrefFile(null);
+
+      if (recentCrashes > maxCrashes) {
+        notifyObservers("fail");
+        return;
+      }
+    }
+
     // The previous session data has already been renamed to the backup file
     if (!this._sessionFileBackup.exists()) {
-      notifyObservers("fail")
+      notifyObservers("fail");
       return;
     }
 

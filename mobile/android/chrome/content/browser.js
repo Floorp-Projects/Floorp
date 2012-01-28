@@ -269,12 +269,12 @@ var BrowserApp = {
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let url = "about:home";
-    let restoreSession = false;
+    let forceRestore = false;
     if ("arguments" in window) {
       if (window.arguments[0])
         url = window.arguments[0];
       if (window.arguments[1])
-        restoreSession = window.arguments[1];
+        forceRestore = window.arguments[1];
       if (window.arguments[2])
         gScreenWidth = window.arguments[2];
       if (window.arguments[3])
@@ -291,7 +291,7 @@ var BrowserApp = {
 
     // restore the previous session
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (restoreSession || ss.shouldRestore()) {
+    if (forceRestore || ss.shouldRestore()) {
       // A restored tab should not be active if we are loading a URL
       let restoreToFront = false;
 
@@ -301,20 +301,22 @@ var BrowserApp = {
       } else {
         // Let the session make a restored tab active
         restoreToFront = true;
-
-        // Be ready to handle any restore failures by making sure we have a valid tab opened
-        let restoreCleanup = {
-          observe: function(aSubject, aTopic, aData) {
-            Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
-            if (aData == "fail")
-              BrowserApp.addTab("about:home");
-          }
-        };
-        Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
       }
 
+      // Be ready to handle any restore failures by making sure we have a valid tab opened
+      let restoreCleanup = {
+        observe: function(aSubject, aTopic, aData) {
+          Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
+          if (aData == "fail") {
+            let params = { selected: restoreToFront };
+            BrowserApp.addTab("about:home");
+          }
+        }
+      };
+      Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+
       // Start the restore
-      ss.restoreLastSession(restoreToFront);
+      ss.restoreLastSession(restoreToFront, forceRestore);
     } else {
       this.addTab(url);
 
