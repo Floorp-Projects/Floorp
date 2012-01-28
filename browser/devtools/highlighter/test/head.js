@@ -45,6 +45,8 @@ let LayoutHelpers = tempScope.LayoutHelpers;
 function clearUserPrefs()
 {
   Services.prefs.clearUserPref("devtools.inspector.htmlPanelOpen");
+  Services.prefs.clearUserPref("devtools.inspector.sidebarOpen");
+  Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
 }
 
 registerCleanupFunction(clearUserPrefs);
@@ -86,3 +88,4 @@ function midPoint(aPointA, aPointB)
   pointC.y = (aPointB.y - aPointA.y) / 2 + aPointA.y;
   return pointC;
 }
+
