@@ -5552,7 +5552,13 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
             if (cx->compartment->needsBarrier()) {
                 stubcc.linkExit(masm.jump(), Uses(0));
                 stubcc.leave();
-                stubcc.masm.addPtr(Imm32(address.offset), address.base, Registers::ArgReg1);
+
+                /* sync() may have overwritten nameReg, so we reload its data. */
+                JS_ASSERT(address.base == nameReg);
+                stubcc.masm.move(ImmPtr(access.basePointer()), nameReg);
+                stubcc.masm.loadPtr(Address(nameReg), nameReg);
+                stubcc.masm.addPtr(Imm32(address.offset), nameReg, Registers::ArgReg1);
+
                 OOL_STUBCALL(stubs::WriteBarrier, REJOIN_NONE);
                 stubcc.rejoin(Changes(0));
             }

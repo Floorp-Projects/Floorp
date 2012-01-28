@@ -1154,6 +1154,10 @@ class ScriptAnalysis
         /* Decompose the slot above. */
         bool arg;
         uint32_t index;
+
+        const Value **basePointer() const {
+            return arg ? &nesting->argArray : &nesting->varArray;
+        }
     };
     NameAccess resolveNameAccess(JSContext *cx, jsid id, bool addDependency = false);
 
