@@ -72,7 +72,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMRange.h"
-#include "nsIRangeUtils.h"
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
@@ -108,8 +107,6 @@ using namespace mozilla::widget;
 static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
-
-nsIRangeUtils* nsHTMLEditor::sRangeHelper;
 
 #define IsLinkTag(s) (s.EqualsIgnoreCase(hrefText))
 #define IsNamedAnchorTag(s) (s.EqualsIgnoreCase(anchorTxt) || s.EqualsIgnoreCase(namedanchorText))
@@ -196,13 +193,6 @@ nsHTMLEditor::HideAnonymousEditingUIs()
     HideResizers();
 }
 
-/* static */
-void
-nsHTMLEditor::Shutdown()
-{
-  NS_IF_RELEASE(sRangeHelper);
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLEditor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLEditor, nsPlaintextEditor)
@@ -271,13 +261,6 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
 
   nsresult result = NS_OK, rulesRes = NS_OK;
-
-  // make a range util object for comparing dom points
-  if (!sRangeHelper) {
-    result = CallGetService("@mozilla.org/content/range-utils;1",
-                            &sRangeHelper);
-    NS_ENSURE_TRUE(sRangeHelper, result);
-  }
    
   if (1)
   {

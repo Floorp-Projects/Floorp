@@ -43,8 +43,8 @@
 #include "nsIContent.h"
 #include "nsIDOMCharacterData.h"
 #include "nsCRT.h"
-#include "nsIRangeUtils.h"
 #include "nsRange.h"
+#include "nsContentUtils.h"
 
 const PRUnichar nbsp = 160;
 
@@ -1602,7 +1602,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
       }
       bool nodeBefore, nodeAfter;
       nsCOMPtr<nsIContent> content (do_QueryInterface(node));
-      res = mHTMLEditor->sRangeHelper->CompareNodeToRange(content, range, &nodeBefore, &nodeAfter);
+      res = nsRange::CompareNodeToRange(content, range, &nodeBefore, &nodeAfter);
       NS_ENSURE_SUCCESS(res, res);
       if (nodeAfter)
       {
@@ -1861,7 +1861,8 @@ nsWSRunObject::FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, 
   WSFragment *run = mStartRun;
   while (run)
   {
-    PRInt16 comp = mHTMLEditor->sRangeHelper->ComparePoints(aNode, aOffset, run->mStartNode, run->mStartOffset);
+    PRInt16 comp = nsContentUtils::ComparePoints(aNode, aOffset, run->mStartNode,
+                                                 run->mStartOffset);
     if (comp <= 0)
     {
       if (after)
@@ -1875,7 +1876,8 @@ nsWSRunObject::FindRun(nsIDOMNode *aNode, PRInt32 aOffset, WSFragment **outRun, 
         return res;
       }
     }
-    comp = mHTMLEditor->sRangeHelper->ComparePoints(aNode, aOffset, run->mEndNode, run->mEndOffset);
+    comp = nsContentUtils::ComparePoints(aNode, aOffset,
+                                         run->mEndNode, run->mEndOffset);
     if (comp < 0)
     {
       *outRun = run;
@@ -1948,7 +1950,7 @@ nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outP
   while (curNum != lastNum)
   {
     curNode = mNodeArray[curNum];
-    cmp = mHTMLEditor->sRangeHelper->ComparePoints(aNode, aOffset, curNode, 0);
+    cmp = nsContentUtils::ComparePoints(aNode, aOffset, curNode, 0);
     if (cmp < 0)
       lastNum = curNum;
     else
@@ -1997,7 +1999,7 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *out
   while (curNum != lastNum)
   {
     curNode = mNodeArray[curNum];
-    cmp = mHTMLEditor->sRangeHelper->ComparePoints(aNode, aOffset, curNode, 0);
+    cmp = nsContentUtils::ComparePoints(aNode, aOffset, curNode, 0);
     if (cmp < 0)
       lastNum = curNum;
     else
