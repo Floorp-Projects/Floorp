@@ -2191,7 +2191,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             wrval->SetAsInt32(0);
             break;
         case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS:
-            wrval->SetAsEmpty(); // the spec says we must return null
+            wrval->SetAsEmptyArray();
             break;
 
 // unsigned int. here we may have to return very large values like 2^32-1 that can't be represented as
@@ -4459,6 +4459,51 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+WebGLContext::CompressedTexImage2D(PRInt32)
+{
+    NS_RUNTIMEABORT("CompressedTexImage2D(PRInt32) should never be called");
+
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+WebGLContext::CompressedTexImage2D_array(WebGLenum target, WebGLint level, WebGLenum internalformat,
+                                         WebGLsizei width, WebGLsizei height, WebGLint border,
+                                         JSObject *pixels)
+{
+    if (!IsContextStable())
+        return NS_OK;
+
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    if (!tex)
+        return ErrorInvalidOperation("compressedTexImage2D: no texture is bound to this target");
+
+    return ErrorInvalidEnum("compressedTexImage2D: compressed textures are not supported");
+}
+
+NS_IMETHODIMP
+WebGLContext::CompressedTexSubImage2D(PRInt32)
+{
+    NS_RUNTIMEABORT("CompressedTexSubImage2D(PRInt32) should never be called");
+
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+WebGLContext::CompressedTexSubImage2D_array(WebGLenum target, WebGLint level, WebGLint xoffset,
+                                            WebGLint yoffset, WebGLsizei width, WebGLsizei height,
+                                            WebGLenum format, JSObject *pixels)
+{
+    if (!IsContextStable())
+        return NS_OK;
+
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    if (!tex)
+        return ErrorInvalidOperation("compressedTexSubImage2D: no texture is bound to this target");
+
+    return ErrorInvalidEnum("compressedTexSubImage2D: compressed textures are not supported");
+}
 
 NS_IMETHODIMP
 WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVariant **retval)
