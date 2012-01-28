@@ -144,7 +144,6 @@ abstract public class GeckoApp
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
 
-    public String mLastUri;
     public String mLastTitle;
     public String mLastViewport;
     public byte[] mLastScreen;
@@ -554,7 +553,6 @@ abstract public class GeckoApp
 
         new SessionSnapshotRunnable(null).run();
 
-        outState.putString(SAVED_STATE_URI, mLastUri);
         outState.putString(SAVED_STATE_TITLE, mLastTitle);
         outState.putString(SAVED_STATE_VIEWPORT, mLastViewport);
         outState.putByteArray(SAVED_STATE_SCREEN, mLastScreen);
@@ -580,14 +578,10 @@ abstract public class GeckoApp
                 if (getLayerController().getLayerClient() != mSoftwareLayerClient)
                     return;
 
-                if (lastHistoryEntry.mUri.equals(mLastUri))
-                    return;
-
                 ViewportMetrics viewportMetrics = mSoftwareLayerClient.getGeckoViewportMetrics();
                 if (viewportMetrics != null)
                     mLastViewport = viewportMetrics.toJSON();
 
-                mLastUri = lastHistoryEntry.mUri;
                 mLastTitle = lastHistoryEntry.mTitle;
                 getAndProcessThumbnailForTab(tab);
             }
@@ -1467,7 +1461,6 @@ abstract public class GeckoApp
         mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
         if (savedInstanceState != null) {
-            mLastUri = savedInstanceState.getString(SAVED_STATE_URI);
             mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
             mLastViewport = savedInstanceState.getString(SAVED_STATE_VIEWPORT);
             mLastScreen = savedInstanceState.getByteArray(SAVED_STATE_SCREEN);
@@ -1481,7 +1474,6 @@ abstract public class GeckoApp
             Matcher m = p.matcher(args);
             if (m.find()) {
                 mProfileDir = new File(m.group(1));
-                mLastUri = null;
                 mLastTitle = null;
                 mLastViewport = null;
                 mLastScreen = null;
@@ -1493,14 +1485,12 @@ abstract public class GeckoApp
             checkAndLaunchUpdate();
         }
 
+        String passedUri = null;
         String uri = intent.getDataString();
-        String title = uri;
-        if (uri != null && uri.length() > 0) {
-            mLastUri = uri;
-            mLastTitle = title;
-        }
+        if (uri != null && uri.length() > 0)
+            passedUri = mLastTitle = uri;
 
-        if (mLastUri == null || mLastUri.equals("") || mLastUri.equals("about:home")) {
+        if (passedUri == null || passedUri.equals("about:home")) {
             // show about:home if we aren't restoring previous session
             Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start check sessionstore.bak exists");
             File profileDir = getProfileDir();
@@ -1514,8 +1504,6 @@ abstract public class GeckoApp
 
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
-
-        String passedUri = mLastUri;
 
         Uri data = intent.getData();
         if (data != null && "http".equals(data.getScheme()) &&
@@ -1749,7 +1737,7 @@ abstract public class GeckoApp
                         !"about".equals(data.getScheme()) && 
                         !"chrome".equals(data.getScheme())) {
                         mIntent.setData(data);
-                        mLastUri = mLastTitle = location;
+                        mLastTitle = location;
                     } else {
                         mIntent.putExtra("prefetched", 1);
                     }
