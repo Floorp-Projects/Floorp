@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>nsIDOMWindowUtils::nodesFromRect test - bug 489127</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 <script type="application/javascript;version=1.8">
 
   let SimpleTest = window.opener.SimpleTest;
@@ -11,8 +11,6 @@
   function done() { window.opener.done.apply(window.opener, arguments); }
   let e = {};
 
-  // Enable privileges so we can use nsIDOMWindowUtils interface
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   let dwu = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                   .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
