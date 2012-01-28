@@ -36,8 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global Components, Services, XPCOMUtils */
 "use strict";
 
 const Cc = Components.classes;
@@ -46,6 +44,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 
 let EXPORTED_SYMBOLS = ["TiltUtils"];
 
@@ -403,108 +402,6 @@ TiltUtils.DOM = {
   },
 
   /**
-   * Returns the absolute x, y, width and height coordinates of a node, or null
-   * if the passed node is not an ELEMENT_NODE.
-   *
-   * @param {Element} aNode
-   *                  the node which coordinates need to be calculated
-   * @param {Window} aContentWindow
-   *                 optional, the window content holding the the document
-   *
-   * @return {Object} an object containing the top, left, width, height coords
-   */
-  getNodeCoordinates: function TUD_getNodeCoordinates(aNode, aContentWindow) {
-    // make sure the contentWindow parameter is a valid object
-    aContentWindow = aContentWindow || {};
-
-    if (aNode.nodeType !== 1) { // Node.ELEMENT_NODE
-      return null;
-    }
-
-    let rect = {
-      top: 0,
-      left: 0,
-      width: 0,
-      height: 0
-    };
-
-    // the preferred way of getting the bounding client rectangle
-    let clientRect = aNode.getBoundingClientRect();
-    rect.top = clientRect.top + aContentWindow.pageYOffset;
-    rect.left = clientRect.left + aContentWindow.pageXOffset;
-    rect.width = clientRect.width;
-    rect.height = clientRect.height;
-
-    // compute the iframe position and its offset if necessary
-    let frameRect = this.getFrameOffset(
-      aNode.ownerDocument.defaultView.frameElement, aContentWindow);
-
-    if (frameRect) {
-      rect.top += frameRect.top;
-      rect.left += frameRect.left;
-    }
-
-    return rect;
-  },
-
-  /**
-   * Retuns the parent iframe position and its offset (borders and padding),
-   * or null if the passed frame is not valid.
-   *
-   * @param {Element} aNode
-   *                  the iframe which offset need to be calculated
-   * @param {Window} aContentWindow
-   *                 optional, the window content holding the the document
-   *
-   * @return {Object} an object containing the top and left coords
-   */
-  getFrameOffset: (function() {
-    let cache = {};
-
-    return function TUD_getFrameOffset(aFrame, aContentWindow) {
-      // make sure the contentWindow parameter is a valid object
-      aContentWindow = aContentWindow || {};
-
-      if (!aFrame) {
-        return null;
-      }
-
-      let id = TiltUtils.getWindowId(aFrame.contentWindow) + "," +
-        aContentWindow.pageXOffset || 0 + "," +
-        aContentWindow.pageYOffset || 0;
-
-      // check the cache to see if this iframe offset wasn't calculated already
-      if (cache[id] !== undefined) {
-        return cache[id];
-      }
-
-      let offset = {
-        top: 0,
-        left: 0
-      };
-
-      // take the parent iframe bounding rect position into account
-      let frameRect = aFrame.getBoundingClientRect();
-      offset.top = frameRect.top;
-      offset.left = frameRect.left;
-
-      // compute the iframe content offset (iframe border + padding)
-      // bug #626359
-      let style = aFrame.contentWindow.getComputedStyle(aFrame, null);
-      if (style) {
-        offset.top +=
-          parseInt(style.getPropertyValue("padding-top")) +
-          parseInt(style.getPropertyValue("border-top-width"));
-        offset.left +=
-          parseInt(style.getPropertyValue("padding-left")) +
-          parseInt(style.getPropertyValue("border-left-width"));
-      }
-
-      return (cache[id] = offset);
-    };
-  }()),
-
-  /**
    * Traverses a document object model & calculates useful info for each node.
    *
    * @param {Window} aContentWindow
@@ -549,7 +446,7 @@ TiltUtils.DOM = {
         }
 
         // get the x, y, width and height coordinates of the node
-        let coord = this.getNodeCoordinates(node, aContentWindow);
+        let coord = LayoutHelpers.getRect(node, aContentWindow);
         if (!coord) {
           continue;
         }
@@ -632,18 +529,6 @@ TiltUtils.destroyObject = function TU_destroyObject(aScope)
 };
 
 /**
- * Gets the most recent browser window.
- *
- * @return {Window} the window
- */
-TiltUtils.getBrowserWindow = function TU_getBrowserWindow()
-{
-  return Cc["@mozilla.org/appshell/window-mediator;1"]
-    .getService(Ci.nsIWindowMediator)
-    .getMostRecentWindow("navigator:browser");
-};
-
-/**
  * Retrieve the unique ID of a window object.
  *
  * @param {Window} aWindow
@@ -665,32 +550,38 @@ TiltUtils.getWindowId = function TU_getWindowId(aWindow)
 /**
  * Gets the markup document viewer zoom for the currently selected browser.
  *
+ * @param {Window} aChromeWindow
+ *                 the top-level browser window
+ *
  * @return {Number} the zoom ammount
  */
-TiltUtils.getDocumentZoom = function TU_getDocumentZoom() {
-  return TiltUtils.getBrowserWindow()
-                  .gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
+TiltUtils.getDocumentZoom = function TU_getDocumentZoom(aChromeWindow) {
+  return aChromeWindow.gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
 };
 
 /**
  * Sets the markup document viewer zoom for the currently selected browser.
  *
+ * @param {Window} aChromeWindow
+ *                 the top-level browser window
+ *
  * @param {Number} the zoom ammount
  */
-TiltUtils.setDocumentZoom = function TU_getDocumentZoom(aZoom) {
-  TiltUtils.getBrowserWindow()
-           .gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = aZoom;
+TiltUtils.setDocumentZoom = function TU_setDocumentZoom(aChromeWindow, aZoom) {
+  aChromeWindow.gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = aZoom;
 };
 
 /**
  * Performs a garbage collection.
+ *
+ * @param {Window} aChromeWindow
+ *                 the top-level browser window
  */
-TiltUtils.gc = function TU_gc()
+TiltUtils.gc = function TU_gc(aChromeWindow)
 {
-  TiltUtils.getBrowserWindow()
-           .QueryInterface(Ci.nsIInterfaceRequestor)
-           .getInterface(Ci.nsIDOMWindowUtils)
-           .garbageCollect();
+  aChromeWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindowUtils)
+               .garbageCollect();
 };
 
 /**

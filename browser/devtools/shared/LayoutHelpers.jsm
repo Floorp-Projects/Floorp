@@ -119,6 +119,51 @@ LayoutHelpers = {
   },
 
   /**
+   * Compute the absolute position and the dimensions of a node, relativalely
+   * to the root window.
+   *
+   * @param nsIDOMNode aNode
+   *        a DOM element to get the bounds for
+   * @param nsIWindow aContentWindow
+   *        the content window holding the node
+   */
+  getRect: function LH_getRect(aNode, aContentWindow) {
+    let frameWin = aNode.ownerDocument.defaultView;
+    let clientRect = aNode.getBoundingClientRect();
+
+    // Go up in the tree of frames to determine the correct rectangle.
+    // clientRect is read-only, we need to be able to change properties.
+    rect = {top: clientRect.top + aContentWindow.pageYOffset,
+            left: clientRect.left + aContentWindow.pageXOffset,
+            width: clientRect.width,
+            height: clientRect.height};
+
+    // We iterate through all the parent windows.
+    while (true) {
+
+      // Are we in the top-level window?
+      if (frameWin.parent === frameWin || !frameWin.frameElement) {
+        break;
+      }
+
+      // We are in an iframe.
+      // We take into account the parent iframe position and its
+      // offset (borders and padding).
+      let frameRect = frameWin.frameElement.getBoundingClientRect();
+
+      let [offsetTop, offsetLeft] =
+        this.getIframeContentOffset(frameWin.frameElement);
+
+      rect.top += frameRect.top + offsetTop;
+      rect.left += frameRect.left + offsetLeft;
+
+      frameWin = frameWin.parent;
+    }
+
+    return rect;
+  },
+
+  /**
    * Returns iframe content offset (iframe border + padding).
    * Note: this function shouldn't need to exist, had the platform provided a
    * suitable API for determining the offset between the iframe's content and
@@ -134,6 +179,11 @@ LayoutHelpers = {
    */
   getIframeContentOffset: function LH_getIframeContentOffset(aIframe) {
     let style = aIframe.contentWindow.getComputedStyle(aIframe, null);
+
+    // In some cases, the computed style is null
+    if (!style) {
+      return [0, 0];
+    }
 
     let paddingTop = parseInt(style.getPropertyValue("padding-top"));
     let paddingLeft = parseInt(style.getPropertyValue("padding-left"));

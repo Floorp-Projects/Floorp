@@ -51,6 +51,7 @@ endif
 EXTRA_JS_MODULES = \
 	openLocationLastURL.jsm \
 	NetworkPrioritizer.jsm \
+	NewTabUtils.jsm \
 	offlineAppCache.jsm \
 	TelemetryTimestamps.jsm \
 	$(NULL)
