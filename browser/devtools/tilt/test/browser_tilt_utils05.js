@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, waitForExplicitFinish, finish, gBrowser, TiltUtils */
 "use strict";
+
+Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 
 function init(callback) {
   let iframe = gBrowser.ownerDocument.createElement("iframe");
@@ -55,15 +55,15 @@ function test() {
       iframe.contentWindow.innerHeight,
       "The content window height wasn't calculated correctly.");
 
-
-    let nodeCoordinates = dom.getNodeCoordinates(
+    let nodeCoordinates = LayoutHelpers.getRect(
       iframe.contentDocument.getElementById("test-div"), iframe.contentWindow);
 
-    let frameOffset = dom.getFrameOffset(iframe);
+    let frameOffset = LayoutHelpers.getIframeContentOffset(iframe);
+    let frameRect = iframe.getBoundingClientRect();
 
-    is(nodeCoordinates.top, frameOffset.top + 98,
+    is(nodeCoordinates.top, frameRect.top + frameOffset[0] + 98,
       "The node coordinates top value wasn't calculated correctly.");
-    is(nodeCoordinates.left, frameOffset.left + 76,
+    is(nodeCoordinates.left, frameRect.left + frameOffset[1] + 76,
       "The node coordinates left value wasn't calculated correctly.");
     is(nodeCoordinates.width, 123,
       "The node coordinates width value wasn't calculated correctly.");

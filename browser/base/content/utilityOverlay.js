@@ -41,10 +41,22 @@
 
 // Services = object with smart getters for common XPCOM services
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "BROWSER_NEW_TAB_URL", function () {
+  return Services.prefs.getCharPref("browser.newtab.url") || "about:blank";
+});
 
 var TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
 
 var gBidiUI = false;
+
+/**
+ * Determines whether the given url is considered a special URL for new tabs.
+ */
+function isBlankPageURL(aURL) {
+  return aURL == "about:blank" || aURL == BROWSER_NEW_TAB_URL;
+}
 
 function getBrowserURL()
 {
@@ -299,7 +311,7 @@ function openLinkIn(url, where, params) {
   else
     w.gBrowser.selectedBrowser.focus();
 
-  if (!loadInBackground && url == "about:blank")
+  if (!loadInBackground && isBlankPageURL(url))
     w.focusAndSelectUrlBar();
 }
 

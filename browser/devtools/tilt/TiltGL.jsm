@@ -36,8 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global Components, Services, TiltMath, TiltUtils, mat4 */
 "use strict";
 
 const Cc = Components.classes;

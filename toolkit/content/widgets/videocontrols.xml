@@ -939,7 +939,7 @@
                 },
 
                 isVideoInFullScreen : function () {
-                    return document.mozFullScreenElement != null;
+                    return document.mozFullScreenElement == this.video;
                 },
 
                 toggleFullscreen : function () {
