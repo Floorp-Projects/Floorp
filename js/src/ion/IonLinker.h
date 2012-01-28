@@ -93,7 +93,9 @@ class Linker
   public:
     Linker(MacroAssembler &masm)
       : masm(masm)
-    { }
+    {
+        masm.finish();
+    }
 
     IonCode *newCode(JSContext *cx) {
         return newCode(cx, cx->compartment->ionCompartment());

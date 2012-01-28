@@ -121,7 +121,7 @@ MoveEmitterARM::tempReg()
     // random, and if it ends up being bad, we can use actual heuristics later.
     spilledReg_ = Register::FromCode(12);
     if (pushedAtSpill_ == -1) {
-        masm.ma_push(spilledReg_);
+        masm.Push(spilledReg_);
         pushedAtSpill_ = masm.framePushed();
     } else {
         masm.ma_str(spilledReg_, spillSlot());
