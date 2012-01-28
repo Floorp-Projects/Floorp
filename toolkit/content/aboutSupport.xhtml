@@ -115,10 +115,14 @@
 
             <td>
               <button onclick="openProfileDirectory()">
+#ifdef XP_WIN
+                &aboutSupport.showWin.label;
+#else
 #ifdef XP_MACOSX
                 &aboutSupport.showMac.label;
 #else
-                &aboutSupport.show.label;
+                &aboutSupport.showDir.label;
+#endif
 #endif
                </button>
             </td>
