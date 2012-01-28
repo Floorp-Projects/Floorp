@@ -52,15 +52,15 @@ BEGIN_TELEPHONY_NAMESPACE
 class TelephonyCall : public nsDOMEventTargetWrapperCache,
                       public nsIDOMTelephonyCall
 {
-  NS_DECL_EVENT_HANDLER(statechange);
-  NS_DECL_EVENT_HANDLER(dialing);
-  NS_DECL_EVENT_HANDLER(ringing);
-  NS_DECL_EVENT_HANDLER(busy);
-  NS_DECL_EVENT_HANDLER(connecting);
-  NS_DECL_EVENT_HANDLER(connected);
-  NS_DECL_EVENT_HANDLER(disconnecting);
-  NS_DECL_EVENT_HANDLER(disconnected);
-  NS_DECL_EVENT_HANDLER(incoming);
+  NS_DECL_EVENT_HANDLER(statechange)
+  NS_DECL_EVENT_HANDLER(dialing)
+  NS_DECL_EVENT_HANDLER(ringing)
+  NS_DECL_EVENT_HANDLER(busy)
+  NS_DECL_EVENT_HANDLER(connecting)
+  NS_DECL_EVENT_HANDLER(connected)
+  NS_DECL_EVENT_HANDLER(disconnecting)
+  NS_DECL_EVENT_HANDLER(disconnected)
+  NS_DECL_EVENT_HANDLER(incoming)
 
   nsRefPtr<Telephony> mTelephony;
 
