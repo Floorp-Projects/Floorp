@@ -539,9 +539,6 @@ nsStyleBorder::Destroy(nsPresContext* aContext) {
 
 nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
-  nsChangeHint shadowDifference =
-    CalcShadowDifference(mBoxShadow, aOther.mBoxShadow);
-
   // Note that differences in mBorder don't affect rendering (which should only
   // use mComputedBorder), so don't need to be tested for here.
   // XXXbz we should be able to return a more specific change hint for
@@ -549,9 +546,13 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   if (mTwipsPerPixel != aOther.mTwipsPerPixel ||
       GetActualBorder() != aOther.GetActualBorder() ||
       mFloatEdge != aOther.mFloatEdge ||
-      mBorderImageOutset != aOther.mBorderImageOutset ||
-      (shadowDifference & nsChangeHint_ReflowFrame))
+      mBorderImageOutset != aOther.mBorderImageOutset)
     return NS_STYLE_HINT_REFLOW;
+
+  nsChangeHint shadowDifference =
+    CalcShadowDifference(mBoxShadow, aOther.mBoxShadow);
+  if (NS_IsHintSubset(nsChangeHint_RepaintFrame, shadowDifference))
+    return shadowDifference;
 
   // Note that mBorderStyle stores not only the border style but also
   // color-related flags.  Given that we've already done an mComputedBorder
@@ -561,12 +562,12 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   NS_FOR_CSS_SIDES(ix) {
     if (mBorderStyle[ix] != aOther.mBorderStyle[ix] || 
         mBorderColor[ix] != aOther.mBorderColor[ix])
-      return NS_STYLE_HINT_VISUAL;
+      return nsChangeHint_RepaintFrame;
   }
 
   if (mBorderRadius != aOther.mBorderRadius ||
       !mBorderColors != !aOther.mBorderColors)
-    return NS_STYLE_HINT_VISUAL;
+    return nsChangeHint_RepaintFrame;
 
   if (IsBorderImageLoaded() || aOther.IsBorderImageLoaded()) {
     if (mBorderImageSource  != aOther.mBorderImageSource  ||
@@ -576,7 +577,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
         mBorderImageFill    != aOther.mBorderImageFill    ||
         mBorderImageWidth   != aOther.mBorderImageWidth   ||
         mBorderImageOutset  != aOther.mBorderImageOutset)
-      return NS_STYLE_HINT_VISUAL;
+      return nsChangeHint_RepaintFrame;
   }
 
   // Note that at this point if mBorderColors is non-null so is
@@ -585,18 +586,19 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     NS_FOR_CSS_SIDES(ix) {
       if (!nsBorderColors::Equal(mBorderColors[ix],
                                  aOther.mBorderColors[ix]))
-        return NS_STYLE_HINT_VISUAL;
+        return nsChangeHint_RepaintFrame;
     }
   }
 
-  return shadowDifference;
+  return NS_STYLE_HINT_NONE;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStyleBorder::MaxDifference()
 {
-  return NS_STYLE_HINT_REFLOW;
+  return NS_CombineHint(nsChangeHint_UpdateOverflow,
+                        NS_STYLE_HINT_REFLOW);
 }
 #endif
 
@@ -2783,10 +2785,6 @@ nsChangeHint nsStyleTextReset::MaxDifference()
 }
 #endif
 
-// Allowed to return one of NS_STYLE_HINT_NONE, NS_STYLE_HINT_REFLOW
-// or NS_STYLE_HINT_VISUAL. Currently we just return NONE or REFLOW, though.
-// XXXbz can this not return a more specific hint?  If that's ever
-// changed, nsStyleBorder::CalcDifference will need changing too.
 static nsChangeHint
 CalcShadowDifference(nsCSSShadowArray* lhs,
                      nsCSSShadowArray* rhs)
@@ -2794,12 +2792,14 @@ CalcShadowDifference(nsCSSShadowArray* lhs,
   if (lhs == rhs)
     return NS_STYLE_HINT_NONE;
 
+  const nsChangeHint kUpdateOverflowAndRepaintHint =
+    NS_CombineHint(nsChangeHint_UpdateOverflow, nsChangeHint_RepaintFrame);
   if (!lhs || !rhs || lhs->Length() != rhs->Length())
-    return NS_STYLE_HINT_REFLOW;
+    return kUpdateOverflowAndRepaintHint;
 
   for (PRUint32 i = 0; i < lhs->Length(); ++i) {
     if (*lhs->ShadowAt(i) != *rhs->ShadowAt(i))
-      return NS_STYLE_HINT_REFLOW;
+      return kUpdateOverflowAndRepaintHint;
   }
   return NS_STYLE_HINT_NONE;
 }
@@ -2879,7 +2879,8 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
 /* static */
 nsChangeHint nsStyleText::MaxDifference()
 {
-  return NS_STYLE_HINT_FRAMECHANGE;
+  return NS_CombineHint(nsChangeHint_UpdateOverflow,
+                        NS_STYLE_HINT_FRAMECHANGE);
 }
 #endif
 
