@@ -333,6 +333,9 @@ public:
   static PRInt32 ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
                                nsINode* aParent2, PRInt32 aOffset2,
                                bool* aDisconnected = nsnull);
+  static PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                               nsIDOMNode* aParent2, PRInt32 aOffset2,
+                               bool* aDisconnected = nsnull);
 
   /**
    * Brute-force search of the element subtree rooted at aContent for
