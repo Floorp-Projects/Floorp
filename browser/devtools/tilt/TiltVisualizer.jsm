@@ -552,9 +552,8 @@ TiltVisualizer.Presenter.prototype = {
     if (!this._initialMeshConfiguration) {
       this._initialMeshConfiguration = true;
 
-      let zoom = this.transforms.zoom;
-      let width = Math.min(aData.meshWidth * zoom, renderer.width);
-      let height = Math.min(aData.meshHeight * zoom, renderer.height);
+      let width = renderer.width;
+      let height = renderer.height;
 
       // set the necessary mesh offsets
       this.transforms.offset[0] = -width * 0.5;
