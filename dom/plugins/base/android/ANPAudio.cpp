@@ -140,8 +140,6 @@ NS_IMETHODIMP
 AudioRunnable::Run()
 {
   JNIEnv* jenv = GetJNIForThread();
-  if (!jenv)
-    return NS_ERROR_FAILURE;
 
   if (jenv->PushLocalFrame(128)) {
     return NS_ERROR_FAILURE;
@@ -311,9 +309,6 @@ anp_audio_start(ANPAudioTrack* s)
   }
 
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
-    return;
-
   jenv->CallVoidMethod(s->output_unit, at.play);
 
   s->isStopped = false;
@@ -334,8 +329,6 @@ anp_audio_pause(ANPAudioTrack* s)
   }
 
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
-    return;
   jenv->CallVoidMethod(s->output_unit, at.pause);
 }
 
@@ -348,8 +341,6 @@ anp_audio_stop(ANPAudioTrack* s)
 
   s->isStopped = true;
   JNIEnv *jenv = GetJNIForThread();
-  if (!jenv)
-    return;
   jenv->CallVoidMethod(s->output_unit, at.stop);
 }
 
