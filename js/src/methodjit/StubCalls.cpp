@@ -1663,49 +1663,10 @@ stubs::DelElem(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::DefVarOrConst(VMFrame &f, PropertyName *name)
+stubs::DefVarOrConst(VMFrame &f, PropertyName *dn)
 {
-    JSContext *cx = f.cx;
-    StackFrame *fp = f.fp();
-
-    JSObject *obj = &fp->varObj();
-    JS_ASSERT(!obj->getOps()->defineProperty);
-    uintN attrs = JSPROP_ENUMERATE;
-    if (!fp->isEvalFrame())
-        attrs |= JSPROP_PERMANENT;
-
-    /* Lookup id in order to check for redeclaration problems. */
-    bool shouldDefine;
-    if (JSOp(*f.pc()) == JSOP_DEFVAR) {
-        /*
-         * Redundant declaration of a |var|, even one for a non-writable
-         * property like |undefined| in ES5, does nothing.
-         */
-        JSProperty *prop;
-        JSObject *obj2;
-        if (!obj->lookupProperty(cx, name, &obj2, &prop))
-            THROW();
-        shouldDefine = (!prop || obj2 != obj);
-    } else {
-        JS_ASSERT(JSOp(*f.pc()) == JSOP_DEFCONST);
-        attrs |= JSPROP_READONLY;
-        if (!CheckRedeclaration(cx, obj, name, attrs))
-            THROW();
-
-        /*
-         * As attrs includes readonly, CheckRedeclaration can succeed only
-         * if prop does not exist.
-         */
-        shouldDefine = true;
-    }
-
-    /* Bind a variable only if it's not yet defined. */
-    if (shouldDefine && 
-        !DefineNativeProperty(cx, obj, name, UndefinedValue(),
-                              JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
-    {
+    if (!DefVarOrConstOperation(f.cx, JSOp(*f.regs.pc), dn, f.fp()))
         THROW();
-    }
 }
 
 void JS_FASTCALL
