@@ -1352,8 +1352,12 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                 return;
             }
 
-            void *buf = AndroidBridge::JNI()->GetDirectBufferAddress(bytebuf);
-            int cap = AndroidBridge::JNI()->GetDirectBufferCapacity(bytebuf);
+            JNIEnv *env = AndroidBridge::GetJNIEnv();
+            if (!env)
+                return;
+
+            void *buf = env->GetDirectBufferAddress(bytebuf);
+            int cap = env->GetDirectBufferCapacity(bytebuf);
             if (!buf || cap != (mBounds.width * mBounds.height * 2)) {
                 ALOG("### Software drawing, but unexpected buffer size %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
                 return;
