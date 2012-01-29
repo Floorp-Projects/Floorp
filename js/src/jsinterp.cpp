@@ -1744,6 +1744,7 @@ ADD_EMPTY_CASE(JSOP_UNUSED13)
 ADD_EMPTY_CASE(JSOP_UNUSED14)
 ADD_EMPTY_CASE(JSOP_UNUSED15)
 ADD_EMPTY_CASE(JSOP_UNUSED16)
+ADD_EMPTY_CASE(JSOP_UNUSED17)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -3267,35 +3268,6 @@ BEGIN_CASE(JSOP_DEFFUN)
     } while (false);
 }
 END_CASE(JSOP_DEFFUN)
-
-BEGIN_CASE(JSOP_DEFFUN_FC)
-{
-    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
-
-    JSObject *obj = js_NewFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-
-    Value rval = ObjectValue(*obj);
-
-    uintN attrs = regs.fp()->isEvalFrame()
-                  ? JSPROP_ENUMERATE
-                  : JSPROP_ENUMERATE | JSPROP_PERMANENT;
-
-    JSObject &parent = regs.fp()->varObj();
-
-    PropertyName *name = fun->atom->asPropertyName();
-    if (!CheckRedeclaration(cx, &parent, name, attrs))
-        goto error;
-
-    if ((attrs == JSPROP_ENUMERATE)
-        ? !parent.setProperty(cx, name, &rval, script->strictModeCode)
-        : !parent.defineProperty(cx, name, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
-    {
-        goto error;
-    }
-}
-END_CASE(JSOP_DEFFUN_FC)
 
 BEGIN_CASE(JSOP_DEFLOCALFUN)
 {

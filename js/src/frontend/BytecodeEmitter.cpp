@@ -5138,8 +5138,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         if (pn->pn_cookie.isFree()) {
             bce->switchToProlog();
-            JSOp op = fun->isFlatClosure() ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
-            if (!EmitFunctionOp(cx, op, index, bce))
+            MOZ_ASSERT(!fun->isFlatClosure(),
+                       "global functions can't have upvars, so they are never flat");
+            if (!EmitFunctionOp(cx, JSOP_DEFFUN, index, bce))
                 return false;
             bce->switchToMain();
         }
