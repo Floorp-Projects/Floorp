@@ -286,16 +286,18 @@ Tilt.prototype = {
 
     // FIXME: this shouldn't be done here, see bug #705131
     let onOpened = function() {
-      if (this.currentInstance) {
-        this.chromeWindow.InspectorUI.stopInspecting();
-        this.inspectButton.disabled = true;
-        this.highlighterContainer.style.display = "none";
+      if (this.inspector && this.highlighter && this.currentInstance) {
+        this.inspector.stopInspecting();
+        this.inspector.inspectToolbutton.disabled = true;
+        this.highlighter.hide();
       }
     }.bind(this);
 
     let onClosed = function() {
-      this.inspectButton.disabled = false;
-      this.highlighterContainer.style.display = "";
+      if (this.inspector && this.highlighter) {
+        this.inspector.inspectToolbutton.disabled = false;
+        this.highlighter.show();
+      }
     }.bind(this);
 
     Services.obs.addObserver(onOpened,
@@ -338,31 +340,27 @@ Tilt.prototype = {
   },
 
   /**
+   * Gets the current InspectorUI instance.
+   */
+  get inspector()
+  {
+    return this.chromeWindow.InspectorUI;
+  },
+
+  /**
+   * Gets the current Highlighter instance from the InspectorUI.
+   */
+  get highlighter()
+  {
+    return this.inspector.highlighter;
+  },
+
+  /**
    * Gets the Tilt button in the Inspector toolbar.
    */
   get tiltButton()
   {
     return this.chromeWindow.document.getElementById(
       "inspector-3D-button");
-  },
-
-  /**
-   * Gets the Inspect button in the Inspector toolbar.
-   * FIXME: this shouldn't be needed here, remove after bug #705131
-   */
-  get inspectButton()
-  {
-    return this.chromeWindow.document.getElementById(
-      "inspector-inspect-toolbutton");
-  },
-
-  /**
-   * Gets the Highlighter contaniner stack.
-   * FIXME: this shouldn't be needed here, remove after bug #705131
-   */
-  get highlighterContainer()
-  {
-    return this.chromeWindow.document.getElementById(
-      "highlighter-container");
   }
 };
