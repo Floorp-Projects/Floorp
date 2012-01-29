@@ -2786,7 +2786,7 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
 /* static */
 nsChangeHint nsStyleTextReset::MaxDifference()
 {
-  return NS_STYLE_HINT_REFLOW;
+  return nsChangeHint(NS_STYLE_HINT_REFLOW |  NS_STYLE_HINT_UPDATE_OVERFLOW);
 }
 #endif
 
