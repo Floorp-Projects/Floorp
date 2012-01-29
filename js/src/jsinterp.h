@@ -230,15 +230,6 @@ extern bool
 RunScript(JSContext *cx, JSScript *script, StackFrame *fp);
 
 extern bool
-CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs);
-
-inline bool
-CheckRedeclaration(JSContext *cx, JSObject *obj, PropertyName *name, uintN attrs)
-{
-    return CheckRedeclaration(cx, obj, ATOM_TO_JSID(name), attrs);
-}
-
-extern bool
 StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *equal);
 
 extern bool
