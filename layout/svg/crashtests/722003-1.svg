@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<marker><foreignObject><span id="x" xmlns="http://www.w3.org/1999/xhtml"></span></foreignObject></marker>
+
+<script>
+
+window.addEventListener("load", function() {
+  document.getElementById("x").getClientRects();
+}, false);
+
+</script>
+
+</svg>
