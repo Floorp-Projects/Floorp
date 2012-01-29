@@ -64,16 +64,19 @@ nsresult
 PluginPRLibrary::NP_Initialize(NPNetscapeFuncs* bFuncs,
 			       NPPluginFuncs* pFuncs, NPError* error)
 {
+  JNIEnv* env = GetJNIForThread();
+  if (!env)
+    return NS_ERROR_FAILURE;
+
   if (mNP_Initialize) {
-    *error = mNP_Initialize(bFuncs, pFuncs, GetJNIForThread());
+    *error = mNP_Initialize(bFuncs, pFuncs, env);
   } else {
     NP_InitializeFunc pfNP_Initialize = (NP_InitializeFunc)
       PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
     if (!pfNP_Initialize)
       return NS_ERROR_FAILURE;
-    *error = pfNP_Initialize(bFuncs, pFuncs, GetJNIForThread());
+    *error = pfNP_Initialize(bFuncs, pFuncs, env);
   }
-
 
   // Save pointers to functions that get called through PluginLibrary itself.
   mNPP_New = pFuncs->newp;
