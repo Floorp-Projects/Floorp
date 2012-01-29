@@ -2383,7 +2383,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     case kJavaContext_ANPGetValue: {
       LOG("get context");
-      JNIEnv* env    = GetJNIForThread();
+      JNIEnv* env = GetJNIForThread();
+      if (!env)
+        return NPERR_GENERIC_ERROR;
+
       jclass cls     = env->FindClass("org/mozilla/gecko/GeckoApp");
       jfieldID field = env->GetStaticFieldID(cls, "mAppContext",
                                              "Lorg/mozilla/gecko/GeckoApp;");
