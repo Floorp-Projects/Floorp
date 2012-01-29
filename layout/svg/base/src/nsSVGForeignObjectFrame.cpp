@@ -294,6 +294,10 @@ nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame* aAncestor,
   *aOutAncestor = nsSVGUtils::GetOuterSVGFrame(this);
   NS_ASSERTION(*aOutAncestor, "How did we end up without an outer frame?");
 
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    return gfx3DMatrix::From2D(gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+  }
+
   /* Return the matrix back to the root, factoring in the x and y offsets. */
   return gfx3DMatrix::From2D(GetCanvasTMForChildren());
 }
