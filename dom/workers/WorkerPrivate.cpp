@@ -232,16 +232,16 @@ public:
   {
     AssertIsOnMainThread();
 
-    JS::IterateData data(xpc::JsMallocSizeOf, xpc::GetCompartmentName,
-                         xpc::DestroyCompartmentName);
-    nsresult rv = CollectForRuntime(/* isQuick = */false, &data);
+    JS::RuntimeStats rtStats(xpc::JsMallocSizeOf, xpc::GetCompartmentName,
+                             xpc::DestroyCompartmentName);
+    nsresult rv = CollectForRuntime(/* isQuick = */false, &rtStats);
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     // Always report, even if we're disabled, so that we at least get an entry
     // in about::memory.
-    ReportJSRuntimeStats(data, mPathPrefix, aCallback, aClosure);
+    ReportJSRuntimeStats(rtStats, mPathPrefix, aCallback, aClosure);
 
     return NS_OK;
   }
@@ -1524,7 +1524,7 @@ public:
 
     *mSucceeded = mIsQuick
       ? JS::GetExplicitNonHeapForRuntime(JS_GetRuntime(aCx), static_cast<int64_t*>(mData), xpc::JsMallocSizeOf)
-      : JS::CollectCompartmentStatsForRuntime(JS_GetRuntime(aCx), static_cast<JS::IterateData*>(mData));
+      : JS::CollectRuntimeStats(JS_GetRuntime(aCx), static_cast<JS::RuntimeStats*>(mData));
 
     {
       MutexAutoLock lock(mMutex);

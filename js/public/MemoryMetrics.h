@@ -116,10 +116,10 @@ struct CompartmentStats
     TypeInferenceSizes typeInferenceSizes;
 };
 
-struct IterateData
+struct RuntimeStats
 {
-    IterateData(JSMallocSizeOfFun mallocSizeOf, GetNameCallback getNameCb,
-                DestroyNameCallback destroyNameCb)
+    RuntimeStats(JSMallocSizeOfFun mallocSizeOf, GetNameCallback getNameCb,
+                 DestroyNameCallback destroyNameCb)
       : runtimeObject(0)
       , runtimeAtomsTable(0)
       , runtimeContexts(0)
@@ -187,7 +187,7 @@ struct IterateData
 #ifdef JS_THREADSAFE
 
 extern JS_PUBLIC_API(bool)
-CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data);
+CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats);
 
 extern JS_PUBLIC_API(bool)
 GetExplicitNonHeapForRuntime(JSRuntime *rt, int64_t *amount,
