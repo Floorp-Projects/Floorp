@@ -1745,7 +1745,7 @@ public:
         if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats))
             return NS_ERROR_FAILURE;
 
-        uint64_t xpconnect;
+        size_t xpconnect;
         {
             xpconnect =
                 xpcrt->SizeOfIncludingThis(xpc::JsMallocSizeOf) +
