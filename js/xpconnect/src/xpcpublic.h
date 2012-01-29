@@ -230,7 +230,7 @@ namespace xpconnect {
 namespace memory {
 
 void
-ReportJSRuntimeStats(const JS::IterateData &data, const nsACString &pathPrefix,
+ReportJSRuntimeStats(const JS::RuntimeStats &rtStats, const nsACString &pathPrefix,
                      nsIMemoryMultiReporterCallback *callback,
                      nsISupports *closure);
 
