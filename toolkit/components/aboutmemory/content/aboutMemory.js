@@ -671,6 +671,11 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
   sortTreeAndInsertAggregateNodes(aTotalBytes, aT._kids[i]);
 }
 
+// Global variable indicating if we've seen any invalid values for this
+// process;  it holds the paths of any such reporters.  Reset for each new
+// process.
+var gProcessInvalidValues = [];
+
 function genWarningText(aHasKnownHeapAllocated, aHasMozMallocUsableSize)
 {
   var warningText = "";
@@ -698,6 +703,25 @@ function genWarningText(aHasKnownHeapAllocated, aHasMozMallocUsableSize)
       "by individual memory reporters and so will fall under " +
       "'heap-unclassified'.</p>\n\n";
   }
+
+  if (gProcessInvalidValues.length > 0) {
+    warningText +=
+      "<div class='accuracyWarning'>" +
+      "<p>WARNING: the following values are negative or unreasonably " +
+      "large.</p>\n" +
+      "<ul>";
+    for (var i = 0; i < gProcessInvalidValues.length; i++) {
+      warningText += " <li>" + prepName(gProcessInvalidValues[i]) + "</li>\n";
+    }
+    warningText +=
+      "</ul>" +
+      "<p>This indicates a defect in one or more memory reporters.  The " +
+      "invalid values are highlighted, but you may need to expand one " +
+      "or more sub-trees to see them.</p>\n\n" +
+      "</div>";
+    gProcessInvalidValues = [];  // reset for the next process
+  }
+
   return warningText;
 }
 
@@ -718,13 +742,6 @@ function genProcessText(aProcess, aReporters, aHasMozMallocUsableSize)
   var hasKnownHeapAllocated = fixUpExplicitTree(explicitTree, aReporters);
   sortTreeAndInsertAggregateNodes(explicitTree._amount, explicitTree);
   var explicitText = genTreeText(explicitTree, aProcess);
-
-  // Generate any warnings about inaccuracies due to platform limitations.
-  // The newlines give nice spacing if we cut+paste into a text buffer.
-  var warningText = "";
-  var accuracyTagText = "<p class='accuracyWarning'>";
-  var warningText =
-        genWarningText(hasKnownHeapAllocated, aHasMozMallocUsableSize);
 
   // We only show these breakdown trees in verbose mode.
   var mapTreeText = "";
@@ -747,10 +764,33 @@ function genProcessText(aProcess, aReporters, aHasMozMallocUsableSize)
   // looks at all the reporters which aren't part of a tree.
   var otherText = genOtherText(aReporters, aProcess);
 
+  // Generate any warnings about inaccuracies due to platform limitations.
+  // This must come after generating all the text.  The newlines give nice
+  // spacing if we cut+paste into a text buffer.
+  var warningText = "";
+  var warningText =
+        genWarningText(hasKnownHeapAllocated, aHasMozMallocUsableSize);
+
   // The newlines give nice spacing if we cut+paste into a text buffer.
   return "<h1>" + aProcess + " Process</h1>\n\n" +
          warningText + explicitText + mapTreeText + otherText +
          "<hr></hr>";
+}
+
+/**
+ * Determines if a number has a negative sign when converted to a string.
+ * Works even for -0.
+ *
+ * @param aN
+ *        The number.
+ * @return A boolean.
+ */
+function hasNegativeSign(aN)
+{
+  if (aN === 0) {                   // this succeeds for 0 and -0
+    return 1 / aN === -Infinity;    // this succeeds for -0
+  }
+  return aN < 0;
 }
 
 /**
@@ -763,7 +803,7 @@ function genProcessText(aProcess, aReporters, aHasMozMallocUsableSize)
 function formatInt(aN)
 {
   var neg = false;
-  if (aN < 0) {
+  if (hasNegativeSign(aN)) {
     neg = true;
     aN = -aN;
   }
@@ -804,7 +844,8 @@ function formatBytes(aBytes)
   } else {
     var mbytes = (aBytes / (1024 * 1024)).toFixed(2);
     var a = String(mbytes).split(".");
-    s = formatInt(a[0]) + "." + a[1] + " " + unit;
+    // If the argument to formatInt() is -0, it will print the negative sign.
+    s = formatInt(Number(a[0])) + "." + a[1] + " " + unit;
   }
   return s;
 }
@@ -889,9 +930,11 @@ const kHorizontal       = "\u2500",
       kUpAndRight       = "\u2514",
       kVerticalAndRight = "\u251c";
 
-function genMrValueText(aValue)
+function genMrValueText(aValue, aIsInvalid)
 {
-  return "<span class='mrValue'>" + aValue + " </span>";
+  return aIsInvalid ?
+         "<span class='mrValue invalid'>" + aValue + "</span>" :
+         "<span class='mrValue'>"         + aValue + "</span>";
 }
 
 function kindToString(aKind)
@@ -932,19 +975,19 @@ function prepDesc(aStr)
 }
 
 function genMrNameText(aKind, aShowSubtrees, aHasKids, aDesc, aName,
-                       aHasProblem, aNMerged)
+                       aHasProblem, aIsInvalid, aNMerged)
 {
   var text = "";
   if (aHasKids) {
     if (aShowSubtrees) {
-      text += "<span class='mrSep hidden'>++ </span>";
-      text += "<span class='mrSep'>-- </span>";
+      text += "<span class='mrSep hidden'> ++ </span>";
+      text += "<span class='mrSep'> -- </span>";
     } else {
-      text += "<span class='mrSep'>++ </span>";
-      text += "<span class='mrSep hidden'>-- </span>";
+      text += "<span class='mrSep'> ++ </span>";
+      text += "<span class='mrSep hidden'> -- </span>";
     }
   } else {
-    text += "<span class='mrSep'>" + kHorizontal + kHorizontal + " </span>";
+    text += "<span class='mrSep'> " + kHorizontal + kHorizontal + " </span>";
   }
   text += "<span class='mrName' title='" +
           kindToString(aKind) + prepDesc(aDesc) + "'>" +
@@ -952,12 +995,18 @@ function genMrNameText(aKind, aShowSubtrees, aHasKids, aDesc, aName,
   if (aHasProblem) {
     const problemDesc =
       "Warning: this memory reporter was unable to compute a useful value. ";
-    text += "<span class='mrStar' title=\"" + problemDesc + "\"> [*]</span>";
+    text += "<span class='mrNote' title=\"" + problemDesc + "\"> [*]</span>";
+  }
+  if (aIsInvalid) {
+    const invalidDesc =
+      "Warning: this value is invalid and indicates a bug in one or more " +
+      "memory reporters. ";
+    text += "<span class='mrNote' title=\"" + invalidDesc + "\"> [?!]</span>";
   }
   if (aNMerged) {
     const dupDesc = "This value is the sum of " + aNMerged +
                     " memory reporters that all have the same path.";
-    text += "<span class='mrStar' title=\"" + dupDesc + "\"> [" +
+    text += "<span class='mrNote' title=\"" + dupDesc + "\"> [" +
             aNMerged + "]</span>";
   }
   return text + '\n';
@@ -975,7 +1024,7 @@ function toggle(aEvent)
 {
   // This relies on each line being a span that contains at least five spans:
   // mrValue, mrPerc, mrSep ('++'), mrSep ('--'), mrName, and then zero or more
-  // mrStars.  All whitespace must be within one of these spans for this
+  // mrNotes.  All whitespace must be within one of these spans for this
   // function to find the right nodes.  And the span containing the children of
   // this line must immediately follow.  Assertions check this.
 
@@ -1053,6 +1102,15 @@ function genTreeText(aT, aProcess)
       return s;
     }
 
+    // Determine if we should show the sub-tree below this entry;  this
+    // involves reinstating any previous toggling of the sub-tree.
+    var path = aPrePath + aT._name;
+    var treeId = aProcess + ":" + escapeAll(path);
+    var showSubtrees = !aT._hideKids;
+    if (gToggles[treeId]) {
+      showSubtrees = !showSubtrees;
+    }
+
     // Generate the indent.
     var indent = "<span class='treeLine'>";
     if (aIndentGuide.length > 0) {
@@ -1075,24 +1133,24 @@ function genTreeText(aT, aProcess)
     }
     indent += "</span>";
 
-    // Generate the percentage, and determine if we should show subtrees.
+    // Generate the percentage;  detect and record invalid values at the same
+    // time.
     var percText = "";
-    var showSubtrees = !aT._hideKids;
+    var tIsInvalid = false;
     if (aT._amount === treeBytes) {
       percText = "100.0";
     } else {
       var perc = (100 * aT._amount / treeBytes);
+      if (!(0 <= perc && perc <= 100)) {
+        tIsInvalid = true;
+        gProcessInvalidValues.push(path);
+      }
       percText = (100 * aT._amount / treeBytes).toFixed(2);
       percText = pad(percText, 5, '0');
     }
-    percText = "<span class='mrPerc'>(" + percText + "%) </span>";
-
-    // Reinstate any previous toggling of this sub-tree.
-    var path = aPrePath + aT._name;
-    var treeId = escapeAll(aProcess + ":" + path);
-    if (gToggles[treeId]) {
-      showSubtrees = !showSubtrees;
-    }
+    percText = tIsInvalid ?
+               "<span class='mrPerc invalid'> (" + percText + "%)</span>" :
+               "<span class='mrPerc'> ("         + percText + "%)</span>";
 
     // We don't want to show '(nonheap)' on a tree like 'map/vsize', since the
     // whole tree is non-heap.
@@ -1109,9 +1167,9 @@ function genTreeText(aT, aProcess)
       text +=
         "<span onclick='toggle(event)' class='hasKids' id='" + treeId + "'>";
     }
-    text += genMrValueText(tString) + percText;
+    text += genMrValueText(tString, tIsInvalid) + percText;
     text += genMrNameText(kind, showSubtrees, hasKids, aT._description,
-                          aT._name, aT._hasProblem, aT._nMerged);
+                          aT._name, aT._hasProblem, tIsInvalid, aT._nMerged);
     if (hasKids) {
       var hiddenText = showSubtrees ? "" : " hidden";
       // The 'kids' class is just used for sanity checking in toggle().
@@ -1152,13 +1210,26 @@ function OtherReporter(aPath, aUnits, aAmount, aDescription,
 
 OtherReporter.prototype = {
   toString: function() {
-    switch(this._units) {
+    switch (this._units) {
       case UNITS_BYTES:            return formatBytes(this._amount);
       case UNITS_COUNT:
       case UNITS_COUNT_CUMULATIVE: return formatInt(this._amount);
       case UNITS_PERCENTAGE:       return formatPercentage(this._amount);
       default:
         assert(false, "bad units in OtherReporter.toString");
+    }
+  },
+
+  isInvalid: function() {
+    var n = this._amount;
+    switch (this._units) {
+      case UNITS_BYTES:
+      case UNITS_COUNT:
+      case UNITS_COUNT_CUMULATIVE: return (n !== kUnknown && n < 0);
+      case UNITS_PERCENTAGE:       return (n !== kUnknown &&
+                                           !(0 <= n && n <= 10000));
+      default:
+        assert(false, "bad units in OtherReporter.isInvalid");
     }
   }
 };
@@ -1189,7 +1260,7 @@ function genOtherText(aReportersByProcess, aProcess)
     var r = aReportersByProcess[path];
     if (!r._done) {
       assert(r._kind === KIND_OTHER, "_kind !== KIND_OTHER for " + r._path);
-      assert(r.nMerged === undefined);  // we don't allow dup'd OTHER reporters
+      assert(r._nMerged === undefined);  // we don't allow dup'd OTHER reporters
       var hasProblem = false;
       if (r._amount === kUnknown) {
         hasProblem = true;
@@ -1207,10 +1278,14 @@ function genOtherText(aReportersByProcess, aProcess)
   var text = "";
   for (var i = 0; i < otherReporters.length; i++) {
     var o = otherReporters[i];
-    text += genMrValueText(pad(o.asString, maxStringLength, ' '));
+    var oIsInvalid = o.isInvalid();
+    if (oIsInvalid) {
+      gProcessInvalidValues.push(o._path);
+    }
+    text += genMrValueText(pad(o.asString, maxStringLength, ' '), oIsInvalid);
     text += genMrNameText(KIND_OTHER, /* showSubtrees = */true,
                           /* hasKids = */false, o._description, o._path,
-                          o._hasProblem);
+                          o._hasProblem, oIsInvalid);
   }
 
   return genSectionMarkup('other', text);

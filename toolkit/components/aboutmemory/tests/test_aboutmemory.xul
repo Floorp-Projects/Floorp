@@ -166,7 +166,36 @@
     f("3rd", "explicit/a/d",    HEAP,    kUnknown),
     f("3rd", "explicit/a/d",    HEAP,    kUnknown), // dup: merge
     f("3rd", "explicit/b",      NONHEAP, kUnknown),
-    f("3rd", "other1",          OTHER,   kUnknown)
+    f2("3rd", "other1",         OTHER,   BYTES, kUnknown),
+    f2("3rd", "other2",         OTHER,   COUNT, kUnknown),
+    f2("3rd", "other3",         OTHER,   COUNT_CUMULATIVE, kUnknown),
+    f2("3rd", "other4",         OTHER,   PERCENTAGE, kUnknown),
+
+    // Invalid values (negative, too-big) should be identified.
+    f("4th", "heap-allocated",   OTHER,   100 * MB),
+    f("4th", "explicit/js/compartment(http:\\\\too-big.com\\)/stuff",
+                                 HEAP,    150 * MB),
+    f("4th", "explicit/ok",      HEAP,      5 * MB),
+    f("4th", "explicit/neg1",    NONHEAP,  -2 * MB),
+    // -111 becomes "-0.00MB" in non-verbose mode, and getting the negative
+    // sign in there correctly is non-trivial.
+    f2("4th", "other1",          OTHER,   BYTES, -111),
+    f2("4th", "other2",          OTHER,   BYTES, -222 * MB),
+    f2("4th", "other3",          OTHER,   COUNT, -333),
+    f2("4th", "other4",          OTHER,   COUNT_CUMULATIVE, -444),
+    f2("4th", "other5",          OTHER,   PERCENTAGE, -555),
+    // Escaping should again prevent this script from running when the name
+    // is printed in the warning.
+    f2("4th", "other6-danger<script>window.alert(1)</script>",
+                                 OTHER,   PERCENTAGE, 66666),
+
+    // If a negative value is within a collapsed sub-tree in non-verbose mode,
+    // we should still get the warning at the top.
+    f("5th", "heap-allocated",   OTHER,   100 * MB),
+    f("5th", "explicit/big",     HEAP,     99 * MB),
+    f("5th", "explicit/a/pos",   HEAP,     40 * KB),
+    f("5th", "explicit/a/neg1",  NONHEAP, -20 * KB),
+    f("5th", "explicit/a/neg2",  NONHEAP, -10 * KB)
   ];
   for (var i = 0; i < fakeReporters2.length; i++) {
     mgr.registerReporter(fakeReporters2[i]);
@@ -175,8 +204,8 @@
   ]]>
   </script>
 
-  <iframe id="amFrame"  height="300" src="about:memory"></iframe>
-  <iframe id="amvFrame" height="300" src="about:memory?verbose"></iframe>
+  <iframe id="amFrame"  height="400" src="about:memory"></iframe>
+  <iframe id="amvFrame" height="400" src="about:memory?verbose"></iframe>
 
   <script type="application/javascript">
   <![CDATA[
@@ -247,6 +276,58 @@ Explicit Allocations\n\
 Other Measurements\n\
 0.00 MB ── heap-allocated [*]\n\
 0.00 MB ── other1 [*]\n\
+      0 ── other2 [*]\n\
+      0 ── other3 [*]\n\
+  0.00% ── other4 [*]\n\
+\n\
+4th Process\n\
+\n\
+WARNING: the following values are negative or unreasonably large.\n\
+ explicit/js\n\
+ explicit/js/compartment(http://too-big.com/)\n\
+ explicit/js/compartment(http://too-big.com/)/stuff\n\
+ explicit/(2 tiny)\n\
+ explicit/(2 tiny)/neg1\n\
+ explicit/(2 tiny)/heap-unclassified\n\
+ other1\n\
+ other2\n\
+ other3\n\
+ other4\n\
+ other5\n\
+ other6-danger<script>window.alert(1)</script>\n\
+This indicates a defect in one or more memory reporters.  The invalid values are highlighted, but you may need to expand one or more sub-trees to see them.\n\
+\n\
+Explicit Allocations\n\
+98.00 MB (100.0%) -- explicit\n\
+├──150.00 MB (153.06%) -- js [?!]\n\
+│  └──150.00 MB (153.06%) -- compartment(http://too-big.com/) [?!]\n\
+│     └──150.00 MB (153.06%) ── stuff [?!]\n\
+├───5.00 MB (05.10%) ── ok\n\
+└──-57.00 MB (-58.16%) ++ (2 tiny) [?!]\n\
+\n\
+Other Measurements\n\
+ 100.00 MB ── heap-allocated\n\
+  -0.00 MB ── other1 [?!]\n\
+-222.00 MB ── other2 [?!]\n\
+      -333 ── other3 [?!]\n\
+      -444 ── other4 [?!]\n\
+    -5.55% ── other5 [?!]\n\
+   666.66% ── other6-danger<script>window.alert(1)</script> [?!]\n\
+\n\
+5th Process\n\
+\n\
+WARNING: the following values are negative or unreasonably large.\n\
+ explicit/(2 tiny)/a/neg2\n\
+ explicit/(2 tiny)/a/neg1\n\
+This indicates a defect in one or more memory reporters.  The invalid values are highlighted, but you may need to expand one or more sub-trees to see them.\n\
+\n\
+Explicit Allocations\n\
+99.97 MB (100.0%) -- explicit\n\
+├──99.00 MB (99.03%) ── big\n\
+└───0.97 MB (00.97%) ++ (2 tiny)\n\
+\n\
+Other Measurements\n\
+100.00 MB ── heap-allocated\n\
 \n\
 ";
 
@@ -332,8 +413,64 @@ Explicit Allocations\n\
 └────────────0 B (00.00%) ── heap-unclassified [*]\n\
 \n\
 Other Measurements\n\
-0 B ── heap-allocated [*]\n\
-0 B ── other1 [*]\n\
+  0 B ── heap-allocated [*]\n\
+  0 B ── other1 [*]\n\
+    0 ── other2 [*]\n\
+    0 ── other3 [*]\n\
+0.00% ── other4 [*]\n\
+\n\
+4th Process\n\
+\n\
+WARNING: the following values are negative or unreasonably large.\n\
+ explicit/js\n\
+ explicit/js/compartment(http://too-big.com/)\n\
+ explicit/js/compartment(http://too-big.com/)/stuff\n\
+ explicit/neg1\n\
+ explicit/heap-unclassified\n\
+ other1\n\
+ other2\n\
+ other3\n\
+ other4\n\
+ other5\n\
+ other6-danger<script>window.alert(1)</script>\n\
+This indicates a defect in one or more memory reporters.  The invalid values are highlighted, but you may need to expand one or more sub-trees to see them.\n\
+\n\
+Explicit Allocations\n\
+102,760,448 B (100.0%) -- explicit\n\
+├──157,286,400 B (153.06%) -- js [?!]\n\
+│  └──157,286,400 B (153.06%) -- compartment(http://too-big.com/) [?!]\n\
+│     └──157,286,400 B (153.06%) ── stuff [?!]\n\
+├────5,242,880 B (05.10%) ── ok\n\
+├───-2,097,152 B (-2.04%) ── neg1 [?!]\n\
+└──-57,671,680 B (-56.12%) ── heap-unclassified [?!]\n\
+\n\
+Other Measurements\n\
+ 104,857,600 B ── heap-allocated\n\
+        -111 B ── other1 [?!]\n\
+-232,783,872 B ── other2 [?!]\n\
+          -333 ── other3 [?!]\n\
+          -444 ── other4 [?!]\n\
+        -5.55% ── other5 [?!]\n\
+       666.66% ── other6-danger<script>window.alert(1)</script> [?!]\n\
+\n\
+5th Process\n\
+\n\
+WARNING: the following values are negative or unreasonably large.\n\
+ explicit/a/neg2\n\
+ explicit/a/neg1\n\
+This indicates a defect in one or more memory reporters.  The invalid values are highlighted, but you may need to expand one or more sub-trees to see them.\n\
+\n\
+Explicit Allocations\n\
+104,826,880 B (100.0%) -- explicit\n\
+├──103,809,024 B (99.03%) ── big\n\
+├────1,007,616 B (00.96%) ── heap-unclassified\n\
+└───────10,240 B (00.01%) -- a\n\
+        ├──40,960 B (00.04%) ── pos\n\
+        ├──-10,240 B (-0.01%) ── neg2 [?!]\n\
+        └──-20,480 B (-0.02%) ── neg1 [?!]\n\
+\n\
+Other Measurements\n\
+104,857,600 B ── heap-allocated\n\
 \n\
 "
 
