@@ -750,7 +750,15 @@ public:
     return NS_OK;
   }
   void RequestSurface() {
-    mozilla::AndroidBridge::Bridge()->PostToJavaThread(this);
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+      return;
+
+    if (!mozilla::AndroidBridge::Bridge()) {
+      PLUGIN_LOG(PLUGIN_LOG_BASIC, ("nsNPAPIPluginInstance null AndroidBridge"));
+      return;
+    }
+    mozilla::AndroidBridge::Bridge()->PostToJavaThread(env, this);
   }
 private:
   nsNPAPIPluginInstance* mInstance;
