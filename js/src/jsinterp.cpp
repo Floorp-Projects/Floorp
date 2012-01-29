@@ -3147,47 +3147,9 @@ END_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
-    uint32_t index = GET_INDEX(regs.pc);
-    PropertyName *name = atoms[index]->asPropertyName();
-
-    JSObject *obj = &regs.fp()->varObj();
-    JS_ASSERT(!obj->getOps()->defineProperty);
-    uintN attrs = JSPROP_ENUMERATE;
-    if (!regs.fp()->isEvalFrame())
-        attrs |= JSPROP_PERMANENT;
-
-    /* Lookup id in order to check for redeclaration problems. */
-    bool shouldDefine;
-    if (op == JSOP_DEFVAR) {
-        /*
-         * Redundant declaration of a |var|, even one for a non-writable
-         * property like |undefined| in ES5, does nothing.
-         */
-        JSProperty *prop;
-        JSObject *obj2;
-        if (!obj->lookupProperty(cx, name, &obj2, &prop))
-            goto error;
-        shouldDefine = (!prop || obj2 != obj);
-    } else {
-        JS_ASSERT(op == JSOP_DEFCONST);
-        attrs |= JSPROP_READONLY;
-        if (!CheckRedeclaration(cx, obj, name, attrs))
-            goto error;
-
-        /*
-         * As attrs includes readonly, CheckRedeclaration can succeed only
-         * if prop does not exist.
-         */
-        shouldDefine = true;
-    }
-
-    /* Bind a variable only if it's not yet defined. */
-    if (shouldDefine &&
-        !DefineNativeProperty(cx, obj, name, UndefinedValue(),
-                              JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
-    {
+    PropertyName *dn = atoms[GET_INDEX(regs.pc)]->asPropertyName();
+    if (!DefVarOrConstOperation(cx, op, dn, regs.fp()))
         goto error;
-    }
 }
 END_CASE(JSOP_DEFVAR)
 
