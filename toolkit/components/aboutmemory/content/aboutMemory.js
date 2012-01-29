@@ -383,7 +383,7 @@ function TreeNode(aName)
   // Leaf TreeNodes have these properties added later:
   // - _kind
   // - _nMerged (if > 1)
-  // - _hasProblem (only defined if true)
+  // - _isUnknown (only defined if true)
   //
   // Non-leaf TreeNodes have these properties added later:
   // - _hideKids (only defined if true)
@@ -486,7 +486,7 @@ function buildTree(aReporters, aTreeName)
         aT._amount = amount;
       } else {
         aT._amount = 0;
-        aT._hasProblem = true;
+        aT._isUnknown = true;
       }
     } else {
       // Non-leaf node.  Derive its size and description entirely from its
@@ -579,7 +579,7 @@ function fixUpExplicitTree(aT, aReporters)
       heapAllocatedBytes - getKnownHeapUsedBytes(aT);
   } else {
     heapUnclassifiedT._amount = 0;
-    heapUnclassifiedT._hasProblem = true;
+    heapUnclassifiedT._isUnknown = true;
   }
   // This kindToString() ensures the "(Heap)" prefix is set without having to
   // set the _kind property, which would mean that there is a corresponding
@@ -975,7 +975,7 @@ function prepDesc(aStr)
 }
 
 function genMrNameText(aKind, aShowSubtrees, aHasKids, aDesc, aName,
-                       aHasProblem, aIsInvalid, aNMerged)
+                       aIsUnknown, aIsInvalid, aNMerged)
 {
   var text = "";
   if (aHasKids) {
@@ -992,7 +992,7 @@ function genMrNameText(aKind, aShowSubtrees, aHasKids, aDesc, aName,
   text += "<span class='mrName' title='" +
           kindToString(aKind) + prepDesc(aDesc) + "'>" +
           prepName(aName) + "</span>";
-  if (aHasProblem) {
+  if (aIsUnknown) {
     const problemDesc =
       "Warning: this memory reporter was unable to compute a useful value. ";
     text += "<span class='mrNote' title=\"" + problemDesc + "\"> [*]</span>";
@@ -1169,7 +1169,7 @@ function genTreeText(aT, aProcess)
     }
     text += genMrValueText(tString, tIsInvalid) + percText;
     text += genMrNameText(kind, showSubtrees, hasKids, aT._description,
-                          aT._name, aT._hasProblem, tIsInvalid, aT._nMerged);
+                          aT._name, aT._isUnknown, tIsInvalid, aT._nMerged);
     if (hasKids) {
       var hiddenText = showSubtrees ? "" : " hidden";
       // The 'kids' class is just used for sanity checking in toggle().
@@ -1200,12 +1200,12 @@ function OtherReporter(aPath, aUnits, aAmount, aDescription,
   this._units       = aUnits;
   if (aAmount === kUnknown) {
     this._amount     = 0;
-    this._hasProblem = true;
+    this._isUnknown = true;
   } else {
     this._amount = aAmount;
   }
   this._description = aDescription;
-  this.asString = this.toString();
+  this._asString = this.toString();
 }
 
 OtherReporter.prototype = {
@@ -1261,14 +1261,10 @@ function genOtherText(aReportersByProcess, aProcess)
     if (!r._done) {
       assert(r._kind === KIND_OTHER, "_kind !== KIND_OTHER for " + r._path);
       assert(r._nMerged === undefined);  // we don't allow dup'd OTHER reporters
-      var hasProblem = false;
-      if (r._amount === kUnknown) {
-        hasProblem = true;
-      }
       var o = new OtherReporter(r._path, r._units, r._amount, r._description);
       otherReporters.push(o);
-      if (o.asString.length > maxStringLength) {
-        maxStringLength = o.asString.length;
+      if (o._asString.length > maxStringLength) {
+        maxStringLength = o._asString.length;
       }
     }
   }
@@ -1282,10 +1278,10 @@ function genOtherText(aReportersByProcess, aProcess)
     if (oIsInvalid) {
       gProcessInvalidValues.push(o._path);
     }
-    text += genMrValueText(pad(o.asString, maxStringLength, ' '), oIsInvalid);
+    text += genMrValueText(pad(o._asString, maxStringLength, ' '), oIsInvalid);
     text += genMrNameText(KIND_OTHER, /* showSubtrees = */true,
                           /* hasKids = */false, o._description, o._path,
-                          o._hasProblem, oIsInvalid);
+                          o._isUnknown, oIsInvalid);
   }
 
   return genSectionMarkup('other', text);
