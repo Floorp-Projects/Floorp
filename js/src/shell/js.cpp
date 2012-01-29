@@ -475,7 +475,10 @@ Process(JSContext *cx, JSObject *obj, const char *filename, bool forceTTY)
         script = JS_CompileUTF8FileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
         if (script && !compileOnly) {
-            (void) JS_ExecuteScript(cx, obj, script, NULL);
+            if (!JS_ExecuteScript(cx, obj, script, NULL)) {
+                if (!gQuitting && !gCanceled)
+                    gExitCode = EXITCODE_RUNTIME_ERROR;
+            }
             int64_t t2 = PRMJ_Now() - t1;
             if (printTiming)
                 printf("runtime = %.3f ms\n", double(t2) / PRMJ_USEC_PER_MSEC);
