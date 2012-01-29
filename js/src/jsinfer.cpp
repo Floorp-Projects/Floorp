@@ -3822,7 +3822,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_LAMBDA:
       case JSOP_LAMBDA_FC:
       case JSOP_DEFFUN:
-      case JSOP_DEFFUN_FC:
       case JSOP_DEFLOCALFUN:
       case JSOP_DEFLOCALFUN_FC: {
         unsigned off = (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) ? SLOTNO_LEN : 0;
