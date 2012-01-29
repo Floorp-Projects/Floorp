@@ -584,10 +584,10 @@ InspectorUI.prototype = {
     this.restoreToolState(this.winID);
 
     this.win.focus();
+    this.highlighter.highlight();
+
     Services.obs.notifyObservers({wrappedJSObject: this},
                                  INSPECTOR_NOTIFICATIONS.OPENED, null);
-
-    this.highlighter.highlight();
   },
 
   /**
