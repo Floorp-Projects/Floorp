@@ -5133,11 +5133,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               }
 
               case JSOP_DEFFUN:
-              case JSOP_DEFFUN_FC:
                 fun = jp->script->getFunction(GET_UINT32_INDEX(pc));
                 todo = -2;
                 goto do_function;
-                break;
 
               case JSOP_HOLE:
                 todo = SprintPut(&ss->sprinter, "", 0);
