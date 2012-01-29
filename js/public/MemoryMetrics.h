@@ -55,10 +55,10 @@ namespace JS {
 /* Data for tracking analysis/inference memory usage. */
 struct TypeInferenceSizes
 {
-    int64_t scripts;
-    int64_t objects;
-    int64_t tables;
-    int64_t temporary;
+    size_t scripts;
+    size_t objects;
+    size_t tables;
+    size_t temporary;
 };
 
 typedef void* (* GetNameCallback)(JSContext *cx, JSCompartment *c);
@@ -86,32 +86,32 @@ struct CompartmentStats
     void *name;
     DestroyNameCallback destroyNameCb;
 
-    int64_t gcHeapArenaHeaders;
-    int64_t gcHeapArenaPadding;
-    int64_t gcHeapArenaUnused;
+    size_t gcHeapArenaHeaders;
+    size_t gcHeapArenaPadding;
+    size_t gcHeapArenaUnused;
 
-    int64_t gcHeapObjectsNonFunction;
-    int64_t gcHeapObjectsFunction;
-    int64_t gcHeapStrings;
-    int64_t gcHeapShapesTree;
-    int64_t gcHeapShapesDict;
-    int64_t gcHeapShapesBase;
-    int64_t gcHeapScripts;
-    int64_t gcHeapTypeObjects;
-    int64_t gcHeapXML;
+    size_t gcHeapObjectsNonFunction;
+    size_t gcHeapObjectsFunction;
+    size_t gcHeapStrings;
+    size_t gcHeapShapesTree;
+    size_t gcHeapShapesDict;
+    size_t gcHeapShapesBase;
+    size_t gcHeapScripts;
+    size_t gcHeapTypeObjects;
+    size_t gcHeapXML;
 
-    int64_t objectSlots;
-    int64_t objectElements;
-    int64_t stringChars;
-    int64_t shapesExtraTreeTables;
-    int64_t shapesExtraDictTables;
-    int64_t shapesExtraTreeShapeKids;
-    int64_t shapesCompartmentTables;
-    int64_t scriptData;
+    size_t objectSlots;
+    size_t objectElements;
+    size_t stringChars;
+    size_t shapesExtraTreeTables;
+    size_t shapesExtraDictTables;
+    size_t shapesExtraTreeShapeKids;
+    size_t shapesCompartmentTables;
+    size_t scriptData;
 
 #ifdef JS_METHODJIT
-    int64_t mjitCode;
-    int64_t mjitData;
+    size_t mjitCode;
+    size_t mjitData;
 #endif
     TypeInferenceSizes typeInferenceSizes;
 };
@@ -151,30 +151,30 @@ struct RuntimeStats
       , destroyNameCb(destroyNameCb)
     {}
 
-    int64_t runtimeObject;
-    int64_t runtimeAtomsTable;
-    int64_t runtimeContexts;
-    int64_t runtimeNormal;
-    int64_t runtimeTemporary;
-    int64_t runtimeRegexpCode;
-    int64_t runtimeStackCommitted;
-    int64_t gcHeapChunkTotal;
-    int64_t gcHeapChunkCleanUnused;
-    int64_t gcHeapChunkDirtyUnused;
-    int64_t gcHeapChunkCleanDecommitted;
-    int64_t gcHeapChunkDirtyDecommitted;
-    int64_t gcHeapArenaUnused;
-    int64_t gcHeapChunkAdmin;
-    int64_t gcHeapUnusedPercentage;
-    int64_t totalObjects;
-    int64_t totalShapes;
-    int64_t totalScripts;
-    int64_t totalStrings;
+    size_t runtimeObject;
+    size_t runtimeAtomsTable;
+    size_t runtimeContexts;
+    size_t runtimeNormal;
+    size_t runtimeTemporary;
+    size_t runtimeRegexpCode;
+    size_t runtimeStackCommitted;
+    size_t gcHeapChunkTotal;
+    size_t gcHeapChunkCleanUnused;
+    size_t gcHeapChunkDirtyUnused;
+    size_t gcHeapChunkCleanDecommitted;
+    size_t gcHeapChunkDirtyDecommitted;
+    size_t gcHeapArenaUnused;
+    size_t gcHeapChunkAdmin;
+    size_t gcHeapUnusedPercentage;
+    size_t totalObjects;
+    size_t totalShapes;
+    size_t totalScripts;
+    size_t totalStrings;
 #ifdef JS_METHODJIT
-    int64_t totalMjit;
+    size_t totalMjit;
 #endif
-    int64_t totalTypeInference;
-    int64_t totalAnalysisTemp;
+    size_t totalTypeInference;
+    size_t totalAnalysisTemp;
 
     js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> compartmentStatsVector;
     CompartmentStats *currCompartmentStats;
