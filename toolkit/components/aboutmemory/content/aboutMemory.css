@@ -73,7 +73,7 @@ body.non-verbose pre.tree {
   color: #004;
 }
 
-.mrStar {
+.mrNote {
   color: #604;
 }
 
@@ -98,3 +98,9 @@ body.non-verbose pre.tree {
 .hidden {
   display: none;
 }
+
+.invalid {
+  color: #fff;
+  background-color: #f00;
+}
+
