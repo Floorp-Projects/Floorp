@@ -54,6 +54,7 @@ _BROWSER_TEST_FILES = \
 	                  browser_popupNode_check.js \
 			  browser_sanityException.js \
 			  browser_sanityException2.js \
+			  $(NULL)
 # Disabled, these are only good for testing the harness' failure reporting
 #	                  browser_zz_fail_openwindow.js \
 #	                  browser_fail.js \
@@ -64,7 +65,6 @@ _BROWSER_TEST_FILES = \
 #	                  browser_fail_timeout.js \
 # Disabled because it would take too long, useful to check functionality though.
 #	                  browser_requestLongerTimeout.js \
-	                  $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
