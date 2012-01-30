@@ -293,7 +293,7 @@ public class Tabs implements GeckoEventListener {
             final Tab tab = iterator.next();
             GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
-                    GeckoApp.mAppContext.getAndProcessThumbnailForTab(tab);
+                    GeckoApp.mAppContext.getAndProcessThumbnailForTab(tab, false);
                 }
             });
         }
