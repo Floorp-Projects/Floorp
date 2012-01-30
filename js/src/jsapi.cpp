@@ -2209,7 +2209,7 @@ JS_free(JSContext *cx, void *p)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
-    return cx->runtime->updateMallocCounter(nbytes);
+    return cx->runtime->updateMallocCounter(cx, nbytes);
 }
 
 JS_PUBLIC_API(char *)
