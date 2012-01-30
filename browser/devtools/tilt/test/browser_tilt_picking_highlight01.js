@@ -1,10 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, waitForExplicitFinish, finish, gBrowser */
-/*global isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Services, InspectorUI, TILT_DESTROYED */
 "use strict";
+
+let presenter;
 
 function test() {
   if (!isTiltEnabled()) {
@@ -22,29 +20,48 @@ function test() {
     createTilt({
       onTiltOpen: function(instance)
       {
-        let presenter = instance.presenter;
+        presenter = instance.presenter;
+        Services.obs.addObserver(whenHighlighting, HIGHLIGHTING, false);
 
         presenter.onSetupMesh = function() {
           let contentDocument = presenter.contentWindow.document;
-          let body = contentDocument.getElementsByTagName("body")[0];
+          let div = contentDocument.getElementById("first-law");
 
-          presenter.highlightNode(body);
-
-          ok(presenter._currentSelection > 0,
-            "Highlighting a node didn't work properly.");
-          ok(!presenter.highlight.disabled,
-            "After highlighting a node, it should be highlighted. D'oh.");
-
-          Services.obs.addObserver(cleanup, TILT_DESTROYED, false);
-          InspectorUI.closeInspectorUI();
+          presenter.highlightNode(div);
         };
       }
     });
   });
 }
 
+function whenHighlighting() {
+  ok(presenter._currentSelection > 0,
+    "Highlighting a node didn't work properly.");
+  ok(!presenter.highlight.disabled,
+    "After highlighting a node, it should be highlighted. D'oh.");
+
+  executeSoon(function() {
+    Services.obs.addObserver(whenUnhighlighting, UNHIGHLIGHTING, false);
+    presenter.highlightNode(null);
+  });
+}
+
+function whenUnhighlighting() {
+  ok(presenter._currentSelection < 0,
+    "Unhighlighting a should remove the current selection.");
+  ok(presenter.highlight.disabled,
+    "After unhighlighting a node, it shouldn't be highlighted anymore. D'oh.");
+
+  executeSoon(function() {
+    Services.obs.addObserver(cleanup, DESTROYED, false);
+    InspectorUI.closeInspectorUI();
+  });
+}
+
 function cleanup() {
-  Services.obs.removeObserver(cleanup, TILT_DESTROYED);
+  Services.obs.removeObserver(whenHighlighting, HIGHLIGHTING);
+  Services.obs.removeObserver(whenUnhighlighting, UNHIGHLIGHTING);
+  Services.obs.removeObserver(cleanup, DESTROYED);
   gBrowser.removeCurrentTab();
   finish();
 }

@@ -1973,22 +1973,35 @@ CompareStringValues(JSContext *cx, const Value &a, const Value &b, bool *lessOrE
     return true;
 }
 
-static int32_t const powersOf10Int32[] = {
+static uint32_t const powersOf10[] = {
     1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
 };
 
-static inline int
-NumDigitsBase10(int32_t n)
+static inline unsigned
+NumDigitsBase10(uint32_t n)
 {
     /*
      * This is just floor_log10(n) + 1
      * Algorithm taken from
      * http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog10
      */
-    int32_t log2, t;
+    uint32_t log2, t;
     JS_CEILING_LOG2(log2, n);
     t = log2 * 1233 >> 12;
-    return t - (n < powersOf10Int32[t]) + 1;
+    return t - (n < powersOf10[t]) + 1;
+}
+
+static JS_ALWAYS_INLINE uint32_t
+NegateNegativeInt32(int32_t i)
+{
+    /*
+     * We cannot simply return '-i' because this is undefined for INT32_MIN.
+     * 2s complement does actually give us what we want, however.  That is,
+     * ~0x80000000 + 1 = 0x80000000 which is correct when interpreted as a
+     * uint32_t. To avoid undefined behavior, we write out 2s complement
+     * explicitly and rely on the peephole optimizer to generate 'neg'.
+     */
+    return ~uint32_t(i) + 1;
 }
 
 inline bool
@@ -2010,14 +2023,14 @@ CompareLexicographicInt32(JSContext *cx, const Value &a, const Value &b, bool *l
         *lessOrEqualp = true;
     } else if ((aint >= 0) && (bint < 0)) {
         *lessOrEqualp = false;
-    } else if (bint == INT32_MIN) { /* a is negative too --> a <= b */
-        *lessOrEqualp = true;
-    } else if (aint == INT32_MIN) { /* b is negative too but not INT32_MIN --> a > b */
-        *lessOrEqualp = false;
     } else {
-        if (aint < 0) { /* b is also negative */
-            aint = -aint;
-            bint = -bint;
+        uint32_t auint, buint;
+        if (aint >= 0) {
+            auint = aint;
+            buint = bint;
+        } else {
+            auint = NegateNegativeInt32(aint);
+            buint = NegateNegativeInt32(bint);
         }
 
         /*
@@ -2026,14 +2039,14 @@ CompareLexicographicInt32(JSContext *cx, const Value &a, const Value &b, bool *l
          * If digits_a > digits_b: a < b*10e(digits_a - digits_b).
          * If digits_b > digits_a: a*10e(digits_b - digits_a) <= b.
          */
-        int digitsa = NumDigitsBase10(aint);
-        int digitsb = NumDigitsBase10(bint);
+        unsigned digitsa = NumDigitsBase10(auint);
+        unsigned digitsb = NumDigitsBase10(buint);
         if (digitsa == digitsb)
-            *lessOrEqualp = (aint <= bint);
+            *lessOrEqualp = (auint <= buint);
         else if (digitsa > digitsb)
-            *lessOrEqualp = (aint < bint*powersOf10Int32[digitsa - digitsb]);
+            *lessOrEqualp = (uint64_t(auint) < uint64_t(buint) * powersOf10[digitsa - digitsb]);
         else /* if (digitsb > digitsa) */
-            *lessOrEqualp = (aint*powersOf10Int32[digitsb - digitsa] <= bint);
+            *lessOrEqualp = (uint64_t(auint) * powersOf10[digitsb - digitsa] <= uint64_t(buint));
     }
 
     return true;

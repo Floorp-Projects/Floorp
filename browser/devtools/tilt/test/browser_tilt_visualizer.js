@@ -1,8 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, isApproxVec, isTiltEnabled, isWebGLSupported, gBrowser*/
-/*global TiltVisualizer */
 "use strict";
 
 function test() {
@@ -19,8 +16,9 @@ function test() {
   let webGLLoad = false;
 
   let visualizer = new TiltVisualizer({
-    parentNode: gBrowser.selectedBrowser.parentNode,
+    chromeWindow: window,
     contentWindow: gBrowser.selectedBrowser.contentWindow,
+    parentNode: gBrowser.selectedBrowser.parentNode,
     requestAnimationFrame: window.mozRequestAnimationFrame,
     inspectorUI: window.InspectorUI,
 

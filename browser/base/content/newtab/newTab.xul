@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/content/newtab/newTab.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/newtab/newTab.css" type="text/css"?>
+
+<!DOCTYPE window [
+  <!ENTITY % newTabDTD SYSTEM "chrome://browser/locale/newTab.dtd">
+  %newTabDTD;
+]>
+
+<xul:window xmlns="http://www.w3.org/1999/xhtml"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            disablefastfind="true" title="&newtab.pageTitle;">
+  <xul:vbox id="scrollbox" flex="1" title=" ">
+    <body id="body">
+      <div id="toolbar">
+        <input class="button toolbar-button" id="toolbar-button-show"
+               type="button" title="&newtab.show;"/>
+        <input class="button toolbar-button" id="toolbar-button-hide"
+               type="button" title="&newtab.hide;"/>
+        <input class="button toolbar-button" id="toolbar-button-reset"
+               type="button" title="&newtab.reset;"/>
+      </div>
+
+      <ul id="grid">
+        <li class="cell"/><li class="cell"/><li class="cell"/>
+        <li class="cell"/><li class="cell"/><li class="cell"/>
+        <li class="cell"/><li class="cell"/><li class="cell"/>
+      </ul>
+
+      <xul:script type="text/javascript;version=1.8" src="chrome://browser/content/newtab/newTab.js"/>
+      <xul:script type="text/javascript;version=1.8">
+        gPage.init("#toolbar", "#grid");
+      </xul:script>
+    </body>
+  </xul:vbox>
+</xul:window>

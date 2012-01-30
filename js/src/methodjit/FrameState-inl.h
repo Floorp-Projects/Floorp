@@ -919,8 +919,7 @@ FrameState::loadNameAddress(const analyze::ScriptAnalysis::NameAccess &access, R
 {
     JS_ASSERT(access.script && access.nesting);
 
-    const Value **pbase = access.arg ? &access.nesting->argArray : &access.nesting->varArray;
-    masm.move(ImmPtr(pbase), reg);
+    masm.move(ImmPtr(access.basePointer()), reg);
     masm.loadPtr(Address(reg), reg);
 
     return Address(reg, access.index * sizeof(Value));

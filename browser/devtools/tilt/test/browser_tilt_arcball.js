@@ -1,8 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, isApprox, isApproxVec, vec3, quat4 */
-/*global TiltVisualizer */
 "use strict";
 
 function cloneUpdate(update) {
@@ -28,7 +25,7 @@ function isExpectedUpdate(update1, update2) {
 }
 
 function test() {
-  let arcball1 = new TiltVisualizer.Arcball(123, 456);
+  let arcball1 = new TiltVisualizer.Arcball(window, 123, 456);
 
   is(arcball1.width, 123,
     "The first arcball width wasn't set correctly.");
@@ -38,7 +35,7 @@ function test() {
     "The first arcball radius wasn't implicitly set correctly.");
 
 
-  let arcball2 = new TiltVisualizer.Arcball(987, 654);
+  let arcball2 = new TiltVisualizer.Arcball(window, 987, 654);
 
   is(arcball2.width, 987,
     "The second arcball width wasn't set correctly.");
@@ -48,7 +45,7 @@ function test() {
     "The second arcball radius wasn't implicitly set correctly.");
 
 
-  let arcball3 = new TiltVisualizer.Arcball(512, 512);
+  let arcball3 = new TiltVisualizer.Arcball(window, 512, 512);
 
   let sphereVec = vec3.create();
   arcball3.pointToSphere(123, 456, 256, 512, 512, sphereVec);

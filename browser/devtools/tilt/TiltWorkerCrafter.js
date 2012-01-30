@@ -36,8 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global self*/
 "use strict";
 
 const SIXTEEN_OVER_255 = 16 / 255;

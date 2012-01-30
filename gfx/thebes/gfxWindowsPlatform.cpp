@@ -507,7 +507,7 @@ gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
 #ifdef XP_WIN
   if (aTarget->GetType() == BACKEND_DIRECT2D) {
-    void *surface = aTarget->GetUserData(&ThebesSurfaceKey);
+    void *surface = aTarget->GetUserData(&kThebesSurfaceKey);
     if (surface) {
       nsRefPtr<gfxASurface> surf = static_cast<gfxASurface*>(surface);
       return surf.forget();
@@ -526,7 +526,7 @@ gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 
       // add a reference to be held by the drawTarget
       surf->AddRef();
-      aTarget->AddUserData(&ThebesSurfaceKey, surf.get(), DestroyThebesSurface);
+      aTarget->AddUserData(&kThebesSurfaceKey, surf.get(), DestroyThebesSurface);
       /* "It might be worth it to clear cairo surfaces associated with a drawtarget.
 	  The strong reference means for example for D2D that cairo's scratch surface
 	  will be kept alive (well after a user being done) and consume extra VRAM.

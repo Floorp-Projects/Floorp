@@ -48,7 +48,6 @@ _TEST_FILES = \
 		test_outerHTML.html \
 		test_outerHTML.xhtml \
 		497633.html \
-		489127.html \
 		historyframes.html \
 		test_497898.html \
 		test_bug504220.html \
@@ -66,7 +65,6 @@ _TEST_FILES = \
 		test_offsets.js \
 		test_windowProperties.html \
 		test_clipboard_events.html \
-		test_nodesFromRect.html \
 		test_frameElementWrapping.html \
 		file_frameElementWrapping.html \
 		test_framedhistoryframes.html \

@@ -440,7 +440,7 @@ pref("browser.ui.touch.weight.visited", 120); // percentage
 pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", true);
 #elifdef ANDROID
-pref("plugin.disable", false);
+pref("plugin.disable", true);
 pref("dom.ipc.plugins.enabled", false);
 #else
 pref("plugin.disable", true);

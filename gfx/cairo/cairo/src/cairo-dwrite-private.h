@@ -169,6 +169,42 @@ private:
     static int mRenderingMode;
 };
 
+class AutoDWriteGlyphRun : public DWRITE_GLYPH_RUN
+{
+    static const int kNumAutoGlyphs = 256;
+
+public:
+    AutoDWriteGlyphRun() {
+        glyphCount = 0;
+    }
+
+    ~AutoDWriteGlyphRun() {
+        if (glyphCount > kNumAutoGlyphs) {
+            delete[] glyphIndices;
+            delete[] glyphAdvances;
+            delete[] glyphOffsets;
+        }
+    }
+
+    void allocate(int aNumGlyphs) {
+        glyphCount = aNumGlyphs;
+        if (aNumGlyphs <= kNumAutoGlyphs) {
+            glyphIndices = &mAutoIndices[0];
+            glyphAdvances = &mAutoAdvances[0];
+            glyphOffsets = &mAutoOffsets[0];
+        } else {
+            glyphIndices = new UINT16[aNumGlyphs];
+            glyphAdvances = new FLOAT[aNumGlyphs];
+            glyphOffsets = new DWRITE_GLYPH_OFFSET[aNumGlyphs];
+        }
+    }
+
+private:
+    DWRITE_GLYPH_OFFSET mAutoOffsets[kNumAutoGlyphs];
+    FLOAT               mAutoAdvances[kNumAutoGlyphs];
+    UINT16              mAutoIndices[kNumAutoGlyphs];
+};
+
 /* cairo_font_face_t implementation */
 struct _cairo_dwrite_font_face {
     cairo_font_face_t base;
@@ -179,12 +215,10 @@ typedef struct _cairo_dwrite_font_face cairo_dwrite_font_face_t;
 
 DWRITE_MATRIX _cairo_dwrite_matrix_from_matrix(const cairo_matrix_t *matrix);
 
-// This will create a DWrite glyph run from cairo glyphs and a scaled_font.
-// It is important to note the array members of DWRITE_GLYPH_RUN should be
-// deleted by the caller.
+// This will initialize a DWrite glyph run from cairo glyphs and a scaled_font.
 void
 _cairo_dwrite_glyph_run_from_glyphs(cairo_glyph_t *glyphs,
 				    int num_glyphs,
 				    cairo_dwrite_scaled_font_t *scaled_font,
-				    DWRITE_GLYPH_RUN *run,
+				    AutoDWriteGlyphRun *run,
 				    cairo_bool_t *transformed);

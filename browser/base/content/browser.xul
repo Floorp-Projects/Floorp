@@ -391,7 +391,7 @@
     <panel id="customizeToolbarSheetPopup"
            noautohide="true">
       <iframe id="customizeToolbarSheetIFrame"
-              style="&dialog.style;"
+              style="&dialog.dimensions;"
               hidden="true"/>
     </panel>
 

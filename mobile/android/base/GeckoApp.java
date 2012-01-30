@@ -123,8 +123,8 @@ abstract public class GeckoApp
     private static GeckoThread sGeckoThread = null;
     public Handler mMainHandler;
     private File mProfileDir;
-    private static boolean sIsGeckoReady = false;
-    private static int mOrientation;
+    public static boolean sIsGeckoReady = false;
+    public static int mOrientation;
 
     private IntentFilter mConnectivityFilter;
 
@@ -144,7 +144,6 @@ abstract public class GeckoApp
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
 
-    public String mLastUri;
     public String mLastTitle;
     public String mLastViewport;
     public byte[] mLastScreen;
@@ -554,7 +553,6 @@ abstract public class GeckoApp
 
         new SessionSnapshotRunnable(null).run();
 
-        outState.putString(SAVED_STATE_URI, mLastUri);
         outState.putString(SAVED_STATE_TITLE, mLastTitle);
         outState.putString(SAVED_STATE_VIEWPORT, mLastViewport);
         outState.putByteArray(SAVED_STATE_SCREEN, mLastScreen);
@@ -580,14 +578,10 @@ abstract public class GeckoApp
                 if (getLayerController().getLayerClient() != mSoftwareLayerClient)
                     return;
 
-                if (lastHistoryEntry.mUri.equals(mLastUri))
-                    return;
-
                 ViewportMetrics viewportMetrics = mSoftwareLayerClient.getGeckoViewportMetrics();
                 if (viewportMetrics != null)
                     mLastViewport = viewportMetrics.toJSON();
 
-                mLastUri = lastHistoryEntry.mUri;
                 mLastTitle = lastHistoryEntry.mTitle;
                 getAndProcessThumbnailForTab(tab);
             }
@@ -1456,6 +1450,8 @@ abstract public class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+        mAppContext = this;
+
         // StrictMode is set by defaults resource flag |enableStrictMode|.
         if (getResources().getBoolean(R.bool.enableStrictMode)) {
             enableStrictMode();
@@ -1465,7 +1461,6 @@ abstract public class GeckoApp
         mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
         if (savedInstanceState != null) {
-            mLastUri = savedInstanceState.getString(SAVED_STATE_URI);
             mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
             mLastViewport = savedInstanceState.getString(SAVED_STATE_VIEWPORT);
             mLastScreen = savedInstanceState.getByteArray(SAVED_STATE_SCREEN);
@@ -1479,7 +1474,6 @@ abstract public class GeckoApp
             Matcher m = p.matcher(args);
             if (m.find()) {
                 mProfileDir = new File(m.group(1));
-                mLastUri = null;
                 mLastTitle = null;
                 mLastViewport = null;
                 mLastScreen = null;
@@ -1491,24 +1485,25 @@ abstract public class GeckoApp
             checkAndLaunchUpdate();
         }
 
-        String uri = intent.getDataString();
-        String title = uri;
-        if (uri != null && uri.length() > 0) {
-            mLastUri = uri;
-            mLastTitle = title;
-        }
+        String passedUri = null;
+        String uri = getURIFromIntent(intent);
+        if (uri != null && uri.length() > 0)
+            passedUri = mLastTitle = uri;
 
-        if (mLastUri == null || mLastUri.equals("") ||
-            mLastUri.equals("about:home")) {
-            showAboutHome();
+        if (passedUri == null || passedUri.equals("about:home")) {
+            // show about:home if we aren't restoring previous session
+            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start check sessionstore.bak exists");
+            File profileDir = getProfileDir();
+            boolean sessionExists = false;
+            if (profileDir != null)
+                sessionExists = new File(profileDir, "sessionstore.bak").exists();
+            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.bak exists");
+            if (!sessionExists)
+                showAboutHome();
         }
-
-        mAppContext = this;
 
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
-
-        String passedUri = mLastUri;
 
         Uri data = intent.getData();
         if (data != null && "http".equals(data.getScheme()) &&
@@ -1532,6 +1527,8 @@ abstract public class GeckoApp
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.gecko_app);
+
+        mOrientation = getResources().getConfiguration().orientation;
 
         if (Build.VERSION.SDK_INT >= 11) {
             mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.browser_toolbar, null);
@@ -1680,8 +1677,6 @@ abstract public class GeckoApp
                 checkMigrateProfile();
             }
         }, 50);
-
-        mOrientation = getResources().getConfiguration().orientation;
     }
 
     /**
@@ -1742,7 +1737,7 @@ abstract public class GeckoApp
                         !"about".equals(data.getScheme()) && 
                         !"chrome".equals(data.getScheme())) {
                         mIntent.setData(data);
-                        mLastUri = mLastTitle = location;
+                        mLastTitle = location;
                     } else {
                         mIntent.putExtra("prefetched", 1);
                     }
@@ -1841,15 +1836,34 @@ abstract public class GeckoApp
             Log.i(LOGTAG,"onNewIntent: " + uri);
         }
         else if (ACTION_WEBAPP.equals(action)) {
-            String uri = intent.getStringExtra("args");
+            String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i(LOGTAG,"Intent : WEBAPP - " + uri);
         }
         else if (ACTION_BOOKMARK.equals(action)) {
-            String args = intent.getStringExtra("args");
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(args));
-            Log.i(LOGTAG,"Intent : BOOKMARK - " + args);
+            String uri = getURIFromIntent(intent);
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
+            Log.i(LOGTAG,"Intent : BOOKMARK - " + uri);
         }
+    }
+
+    /*
+     * Handles getting a uri from and intent in a way that is backwards
+     * compatable with our previous implementations
+     */
+    private String getURIFromIntent(Intent intent) {
+        String uri = intent.getDataString();
+        if (uri != null)
+            return uri;
+
+        final String action = intent.getAction();
+        if (ACTION_WEBAPP.equals(action) || ACTION_BOOKMARK.equals(action)) {
+            uri = intent.getStringExtra("args");
+            if (uri != null && uri.startsWith("--url=")) {
+                uri.replace("--url=", "");
+            }
+        }
+        return uri;
     }
 
     @Override
