@@ -435,9 +435,12 @@ var SourceScripts = {
   },
 
   /**
-   * Handler for the thread client's paused notification.
+   * Handler for the thread client's paused notification. This is triggered only
+   * once, to retrieve the list of scripts known to the server from before the
+   * client was ready to handle new script notifications.
    */
   onPaused: function SS_onPaused() {
+    this.activeThread.removeListener("paused", this.onPaused);
     this.activeThread.fillScripts();
   },
 
