@@ -552,10 +552,11 @@ gfxWindowsPlatform::SupportsAzure(BackendType& aBackend)
   }
 #endif
   
-  if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
-    aBackend = BACKEND_SKIA;
+  if (mPreferredDrawTargetBackend != BACKEND_NONE) {
+    aBackend = mPreferredDrawTargetBackend;
     return true;
   }
+
   return false;
 }
 
