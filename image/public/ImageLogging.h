@@ -184,16 +184,20 @@ public:
   }
 };
 
+#define LOG_SCOPE_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
+#define LOG_SCOPE_APPEND_LINE_NUMBER_EXPAND(id, line) LOG_SCOPE_APPEND_LINE_NUMBER_PASTE(id, line)
+#define LOG_SCOPE_APPEND_LINE_NUMBER(id) LOG_SCOPE_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
+
 #define LOG_SCOPE(l, s) \
-  LogScope LOG_SCOPE_TMP_VAR ##__LINE__ (l,                            \
-                                         static_cast<void *>(this),    \
-                                         NS_LITERAL_CSTRING(s))
+  LogScope LOG_SCOPE_APPEND_LINE_NUMBER(LOG_SCOPE_TMP_VAR) (l,                            \
+                                                            static_cast<void *>(this),    \
+                                                            NS_LITERAL_CSTRING(s))
 
 #define LOG_SCOPE_WITH_PARAM(l, s, pn, pv) \
-  LogScope LOG_SCOPE_TMP_VAR ##__LINE__ (l,                            \
-                                         static_cast<void *>(this),    \
-                                         NS_LITERAL_CSTRING(s),        \
-                                         NS_LITERAL_CSTRING(pn), pv)
+  LogScope LOG_SCOPE_APPEND_LINE_NUMBER(LOG_SCOPE_TMP_VAR) (l,                            \
+                                                            static_cast<void *>(this),    \
+                                                            NS_LITERAL_CSTRING(s),        \
+                                                            NS_LITERAL_CSTRING(pn), pv)
 
 #define LOG_FUNC(l, s)                  \
   LogFunc(l,                            \
