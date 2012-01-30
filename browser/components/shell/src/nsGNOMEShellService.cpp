@@ -427,10 +427,6 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
     options.Assign("wallpaper");
   else if (aPosition == BACKGROUND_STRETCH)
     options.Assign("stretched");
-  else if (aPosition == BACKGROUND_FILL)
-    options.Assign("zoom");
-  else if (aPosition == BACKGROUND_FIT)
-    options.Assign("scaled");
   else
     options.Assign("centered");
 
