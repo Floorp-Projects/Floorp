@@ -125,6 +125,9 @@ public class AboutHomeContent extends ScrollView {
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mInflater.inflate(R.layout.abouthome_content, this);
 
+        setScrollContainer(true);
+        setBackgroundResource(R.drawable.abouthome_bg_repeat);
+
         mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
         mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
