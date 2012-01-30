@@ -17,31 +17,14 @@ found in the LICENSE file.
 <div id="description"></div>
 <div id="console"></div>
 <script id="vertexShader" type="text/something-not-javascript">
-// shader with too-deep struct nesting should fail per WebGL spec
-struct nesting5 {
-  vec4 vector;
-};
-
-struct nesting4 {
-  nesting5 field5;
-};
-
-struct nesting3 {
-  nesting4 field4;
-};
-
-struct nesting2 {
-  nesting3 field3;
-};
-
-struct nesting1 {
-  nesting2 field2;
-};
-
-uniform nesting1 uniform1;
+// vertex shader uses the long integer constant should succeed
+attribute vec4 vPosition;
 void main()
 {
-    gl_Position = uniform1.field2.field3.field4.field5.vector;
+    #define TEST 0x1F
+    int a = TEST;
+
+    gl_Position = vPosition;
 }
 </script>
 <script>
@@ -50,3 +33,5 @@ successfullyParsed = true;
 </script>
 </body>
 </html>
+
+

@@ -191,7 +191,7 @@ function runTestIteration(format, type, packAlignment, width, height)
     for (var i = numComponents; i < 4; ++i)
         pixel[i] = 0;
     expectedColor = packColor(format, type, 255, 102, 0, 255);
-    shouldBeNonNull(expectedColor);
+    shouldBeNonNull("expectedColor");
     shouldBe("pixel", "expectedColor");
 }
 
