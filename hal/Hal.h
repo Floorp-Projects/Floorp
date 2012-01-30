@@ -192,6 +192,16 @@ void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
  */
 void NotifyNetworkChange(const hal::NetworkInformation& aNetworkInfo);
 
+/**
+ * Reboot the device.
+ */
+void Reboot();
+
+/**
+ * Power off the device.
+ */
+void PowerOff();
+
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 
