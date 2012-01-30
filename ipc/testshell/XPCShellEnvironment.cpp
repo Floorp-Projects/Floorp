@@ -1061,6 +1061,7 @@ XPCShellEnvironment::~XPCShellEnvironment()
 
         JSRuntime* rt = gOldContextCallback ? JS_GetRuntime(mCx) : NULL;
 
+        JS_EndRequest(mCx);
         JS_DestroyContext(mCx);
 
         if (gOldContextCallback) {

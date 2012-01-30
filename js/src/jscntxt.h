@@ -453,7 +453,6 @@ struct JSRuntime
 #ifdef JS_THREADSAFE
     /* These combine to interlock the GC and new requests. */
     PRLock              *gcLock;
-    uint32_t            requestCount;
 
     js::GCHelperThread  gcHelperThread;
 #endif /* JS_THREADSAFE */
@@ -1363,14 +1362,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
  */
 extern JSContext *
 js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
-
-/*
- * Iterate through contexts with active requests. The caller must be holding
- * rt->gcLock in case of a thread-safe build, or otherwise guarantee that the
- * context list is not alternated asynchroniously.
- */
-extern JS_FRIEND_API(JSContext *)
-js_NextActiveContext(JSRuntime *, JSContext *);
 
 #ifdef va_start
 extern JSBool
