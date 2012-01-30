@@ -673,7 +673,11 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
         if (!keys.resize(length))
             return false;
         for (size_t i = 0; i < length; ++i) {
-            keys[i] = ni->begin()[i];
+            jsid id;
+            if (!ValueToId(cx, StringValue(ni->begin()[i]), &id))
+                return false;
+            id = js_CheckForStringIndex(id);
+            keys[i] = id;
             if (!origin->wrapId(cx, &keys[i]))
                 return false;
         }

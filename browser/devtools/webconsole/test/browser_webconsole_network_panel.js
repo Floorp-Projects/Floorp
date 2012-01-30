@@ -41,9 +41,9 @@
 
 // Tests that the network panel works.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-console.html";
-const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/test//test-image.png";
-const TEST_ENCODING_ISO_8859_1 = "http://example.com/browser/browser/devtools/webconsole/test//test-encoding-ISO-8859-1.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/test/test-image.png";
+const TEST_ENCODING_ISO_8859_1 = "http://example.com/browser/browser/devtools/webconsole/test/test-encoding-ISO-8859-1.html";
 
 let testDriver;
 

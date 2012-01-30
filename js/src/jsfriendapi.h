@@ -73,9 +73,6 @@ extern JS_FRIEND_API(uint32_t)
 JS_ObjectCountDynamicSlots(JSObject *obj);
 
 extern JS_FRIEND_API(void)
-JS_ShrinkingGC(JSContext *cx);
-
-extern JS_FRIEND_API(void)
 JS_ShrinkGCBuffers(JSRuntime *rt);
 
 extern JS_FRIEND_API(size_t)
@@ -101,7 +98,6 @@ JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape);
 enum {
     JS_TELEMETRY_GC_REASON,
     JS_TELEMETRY_GC_IS_COMPARTMENTAL,
-    JS_TELEMETRY_GC_IS_SHAPE_REGEN,
     JS_TELEMETRY_GC_MS,
     JS_TELEMETRY_GC_MARK_MS,
     JS_TELEMETRY_GC_SWEEP_MS
@@ -378,11 +374,18 @@ GetReservedSlot(const JSObject *obj, size_t slot)
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
+JS_FRIEND_API(void)
+SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const Value &value);
+
 inline void
 SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 {
     JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
-    reinterpret_cast<shadow::Object *>(obj)->slotRef(slot) = value;
+    shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
+    if (sobj->slotRef(slot).isMarkable())
+        SetReservedSlotWithBarrier(obj, slot, value);
+    else
+        sobj->slotRef(slot) = value;
 }
 
 JS_FRIEND_API(uint32_t)
@@ -468,8 +471,8 @@ JS_FRIEND_API(JSString *)
 GetPCCountScriptContents(JSContext *cx, size_t script);
 
 #ifdef JS_THREADSAFE
-JS_FRIEND_API(JSThread *)
-GetContextThread(const JSContext *cx);
+JS_FRIEND_API(void *)
+GetOwnerThread(const JSContext *cx);
 
 JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx);
@@ -555,7 +558,7 @@ IsContextRunningJS(JSContext *cx);
 
 /* Must be called with GC lock taken. */
 extern JS_FRIEND_API(void)
-TriggerOperationCallbacksForActiveContexts(JSRuntime *rt);
+TriggerOperationCallback(JSRuntime *rt);
 
 class SystemAllocPolicy;
 typedef Vector<JSCompartment*, 0, SystemAllocPolicy> CompartmentVector;
@@ -564,6 +567,106 @@ GetRuntimeCompartments(JSRuntime *rt);
 
 extern JS_FRIEND_API(size_t)
 SizeOfJSContext();
+
+#define GCREASONS(D)                            \
+    /* Reasons internal to the JS engine */     \
+    D(API)                                      \
+    D(MAYBEGC)                                  \
+    D(LAST_CONTEXT)                             \
+    D(DESTROY_CONTEXT)                          \
+    D(LAST_DITCH)                               \
+    D(TOO_MUCH_MALLOC)                          \
+    D(ALLOC_TRIGGER)                            \
+    D(UNUSED1) /* was CHUNK */                  \
+    D(UNUSED2) /* was SHAPE */                  \
+    D(UNUSED3) /* was REFILL */                 \
+                                                \
+    /* Reasons from Firefox */                  \
+    D(DOM_WINDOW_UTILS)                         \
+    D(COMPONENT_UTILS)                          \
+    D(MEM_PRESSURE)                             \
+    D(CC_WAITING)                               \
+    D(CC_FORCED)                                \
+    D(LOAD_END)                                 \
+    D(POST_COMPARTMENT)                         \
+    D(PAGE_HIDE)                                \
+    D(NSJSCONTEXT_DESTROY)                      \
+    D(SET_NEW_DOCUMENT)                         \
+    D(SET_DOC_SHELL)                            \
+    D(DOM_UTILS)                                \
+    D(DOM_IPC)                                  \
+    D(DOM_WORKER)                               \
+    D(INTER_SLICE_GC)                           \
+    D(REFRESH_FRAME)
+
+namespace gcreason {
+
+/* GCReasons will end up looking like JSGC_MAYBEGC */
+enum Reason {
+#define MAKE_REASON(name) name,
+    GCREASONS(MAKE_REASON)
+#undef MAKE_REASON
+    NO_REASON,
+    NUM_REASONS
+};
+
+} /* namespace gcreason */
+
+extern JS_FRIEND_API(void)
+GCForReason(JSContext *cx, gcreason::Reason reason);
+
+extern JS_FRIEND_API(void)
+ShrinkingGC(JSContext *cx, gcreason::Reason reason);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSRuntime *rt);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSContext *cx);
+
+extern JS_FRIEND_API(void)
+IncrementalReferenceBarrier(void *ptr);
+
+extern JS_FRIEND_API(void)
+IncrementalValueBarrier(const Value &v);
+
+class ObjectPtr
+{
+    JSObject *value;
+
+  public:
+    ObjectPtr() : value(NULL) {}
+
+    ObjectPtr(JSObject *obj) : value(obj) {}
+
+    /* Always call finalize before the destructor. */
+    ~ObjectPtr() { JS_ASSERT(!value); }
+
+    void finalize(JSRuntime *rt) {
+        if (IsIncrementalBarrierNeeded(rt))
+            IncrementalReferenceBarrier(value);
+        value = NULL;
+    }
+    void finalize(JSContext *cx) { finalize(JS_GetRuntime(cx)); }
+
+    void init(JSObject *obj) { value = obj; }
+
+    JSObject *get() const { return value; }
+
+    void writeBarrierPre(JSRuntime *rt) {
+        IncrementalReferenceBarrier(value);
+    }
+
+    ObjectPtr &operator=(JSObject *obj) {
+        IncrementalReferenceBarrier(value);
+        value = obj;
+        return *this;
+    }
+
+    JSObject &operator*() const { return *value; }
+    JSObject *operator->() const { return value; }
+    operator JSObject *() const { return value; }
+};
 
 } /* namespace js */
 

@@ -63,7 +63,7 @@ class nsIEditorDocShell;
 class nsIParser;
 class nsIURI;
 class nsIMarkupDocumentViewer;
-class nsIDocumentCharsetInfo;
+class nsIDocShell;
 class nsICachingChannel;
 
 class nsHTMLDocument : public nsDocument,
@@ -148,9 +148,6 @@ public:
                                nsIContent *aForm,
                                nsISupports **aResult,
                                nsWrapperCache **aCache);
-
-  virtual void ScriptLoading(nsIScriptElement *aScript);
-  virtual void ScriptExecuted(nsIScriptElement *aScript);
 
   virtual void AddedForm();
   virtual void RemovedForm();
@@ -256,14 +253,14 @@ protected:
                                PRInt32& aCharsetSource,
                                nsACString& aCharset);
   static bool TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
-                                     nsIDocumentCharsetInfo*  aDocInfo,
+                                     nsIDocShell*  aDocShell,
                                      PRInt32& aCharsetSource,
                                      nsACString& aCharset);
   static bool TryCacheCharset(nsICachingChannel* aCachingChannel,
                                 PRInt32& aCharsetSource,
                                 nsACString& aCharset);
   // aParentDocument could be null.
-  bool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
+  bool TryParentCharset(nsIDocShell*  aDocShell,
                           nsIDocument* aParentDocument,
                           PRInt32& charsetSource, nsACString& aCharset);
   static bool UseWeakDocTypeDefault(PRInt32& aCharsetSource,
@@ -275,28 +272,11 @@ protected:
   // Override so we can munge the charset on our wyciwyg channel as needed.
   virtual void SetDocumentCharacterSet(const nsACString& aCharSetID);
 
-  // mWriteState tracks the status of this document if the document is being
-  // entirely created by script. In the normal load case, mWriteState will be
-  // eNotWriting. Once document.open has been called (either implicitly or
-  // explicitly), mWriteState will be eDocumentOpened. When document.close has
-  // been called, mWriteState will become eDocumentClosed if there have been no
-  // external script loads in the meantime. If there have been, then mWriteState
-  // becomes ePendingClose, indicating that we might still be writing, but that
-  // we shouldn't process any further close() calls.
-  enum {
-    eNotWriting,
-    eDocumentOpened,
-    ePendingClose,
-    eDocumentClosed
-  } mWriteState;
-
   // Tracks if we are currently processing any document.write calls (either
   // implicit or explicit). Note that if a write call writes out something which
   // would block the parser, then mWriteLevel will be incorrect until the parser
   // finishes processing that script.
   PRUint32 mWriteLevel;
-
-  nsAutoTArray<nsIScriptElement*, 1> mPendingScripts;
 
   // Load flags of the document's channel
   PRUint32 mLoadFlags;

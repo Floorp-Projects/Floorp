@@ -346,6 +346,8 @@ public:
   void DestroyAbsoluteFrames(nsIFrame* aDestructRoot);
   virtual bool CanContinueTextRun() const;
 
+  virtual bool UpdateOverflow();
+
   // Selection Methods
   // XXX Doc me... (in nsIFrame.h puhleeze)
   // XXX If these are selection specific, then the name should imply selection
@@ -580,15 +582,35 @@ public:
                                bool aLockScroll,
                                nsIFrame** aContainingBlock = nsnull);
 
-  // test whether aFrame should apply paginated overflow clipping.
-  static bool ApplyPaginatedOverflowClipping(const nsIFrame* aFrame)
+  /**
+   * Returns true if aFrame should apply overflow clipping.
+   */
+  static bool ApplyOverflowClipping(const nsIFrame* aFrame,
+                                    const nsStyleDisplay* aDisp)
   {
+    // clip overflow:-moz-hidden-unscrollable ...
+    if (NS_UNLIKELY(aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP)) {
+      return true;
+    }
+
+    // and overflow:hidden that we should interpret as -moz-hidden-unscrollable
+    if (aDisp->mOverflowX == NS_STYLE_OVERFLOW_HIDDEN &&
+        aDisp->mOverflowY == NS_STYLE_OVERFLOW_HIDDEN) {
+      // REVIEW: these are the frame types that set up clipping.
+      nsIAtom* type = aFrame->GetType();
+      if (type == nsGkAtoms::tableFrame ||
+          type == nsGkAtoms::tableCellFrame ||
+          type == nsGkAtoms::bcTableCellFrame) {
+        return true;
+      }
+    }
+    
     // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
     // set, then we want to clip our overflow.
     return
       aFrame->PresContext()->IsPaginated() &&
-      aFrame->GetType() == nsGkAtoms::blockFrame &&
-      (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0;
+      (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0 &&
+      aFrame->GetType() == nsGkAtoms::blockFrame;
   }
 
 protected:

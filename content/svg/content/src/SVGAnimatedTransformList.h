@@ -39,11 +39,14 @@
 #ifndef MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
 #define MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
 
+#include "nsAutoPtr.h"
+#include "nsISMILAttr.h"
 #include "SVGTransformList.h"
 
+class nsIAtom;
+class nsISMILAnimationElement;
+class nsSMILValue;
 class nsSVGElement;
-
-#include "nsISMILAttr.h"
 
 namespace mozilla {
 

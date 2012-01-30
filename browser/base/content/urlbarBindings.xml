@@ -667,7 +667,13 @@
           try {
             val = losslessDecodeURI(makeURI(val));
           } catch (ex) { }
+
+          // Trim popup selected values, but never trim results coming from
+          // autofill.
+          if (this.popup.selectedIndex == -1)
+            this._disableTrim = true;
           this.value = val;
+          this._disableTrim = false;
 
           // Completing a result should simulate the user typing the result, so
           // fire an input event.

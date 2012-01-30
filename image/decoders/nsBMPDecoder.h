@@ -48,7 +48,7 @@
 #include "BMPFileHeaders.h"
 
 namespace mozilla {
-namespace imagelib {
+namespace image {
 
 class RasterImage;
 
@@ -163,7 +163,7 @@ inline void Set4BitPixel(PRUint32*& aDecoded, PRUint8 aData,
     }
 }
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla
 
 

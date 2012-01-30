@@ -187,8 +187,8 @@ BreakpointSite::recompile(JSContext *cx, bool forTrap)
             if (!ac.ref().enter())
                 return false;
         }
-        mjit::Recompiler recompiler(cx, script);
-        recompiler.recompile();
+        mjit::Recompiler::clearStackReferences(cx, script);
+        mjit::ReleaseScriptCode(cx, script);
     }
 #endif
     return true;
@@ -1166,7 +1166,7 @@ Debugger::markAllIteratively(GCMarker *trc)
              */
             const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
             JS_ASSERT(debuggers);
-            for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
+            for (Debugger * const *p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger *dbg = *p;
 
                 /*

@@ -2,6 +2,8 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
+import android.widget.TextView;
+import java.util.ArrayList;
 
 public class testBookmark extends BaseTest {
     private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
@@ -9,23 +11,23 @@ public class testBookmark extends BaseTest {
     public void testBookmark() {
         enterUrl(URL);
 
-        //Click the top item in the list.
+        //Click the top item in the awesome list.
         mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
         hitEnterAndWait();
 
-        //Click the Top item in the history list.
+        //Click the top item in the bookmark list.
         clickOnAwesomeBar();
         mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
-        mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
-        getInstrumentation().waitForIdleSync();
-        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
-        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
 
-        hitEnterAndWait();
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
-        getInstrumentation().waitForIdleSync();
-        //Unfortunately, the item isn't constant so can't be tested.
-        //awesomebar.click();
-        //asserter.is(url, urlbar.getText(),"Shouldn't this be the last url in the history?");
+        ArrayList<TextView> l = null;
+        while (l == null || l.size() < 1) {
+            l = mSolo.clickInList(1);
+        }
+
+        contentEventExpecter.blockForEvent();
+
+        //Items in bookmarks aren't constant so URL can't be tested.
     }
 }

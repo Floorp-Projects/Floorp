@@ -39,6 +39,8 @@
 
 #include "nsISMILType.h"
 
+class nsSMILValue;
+
 namespace mozilla {
 
 class SVGNumberPairSMILType : public nsISMILType

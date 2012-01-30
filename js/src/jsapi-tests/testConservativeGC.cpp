@@ -8,7 +8,7 @@ BEGIN_TEST(testConservativeGC)
     EVAL("({foo: 'bar'});", &v2);
     CHECK(JSVAL_IS_OBJECT(v2));
     char objCopy[sizeof(JSObject)];
-    memcpy(&objCopy, JSVAL_TO_OBJECT(v2), sizeof(JSObject));
+    js_memcpy(&objCopy, JSVAL_TO_OBJECT(v2), sizeof(JSObject));
 
     jsval v3;
     EVAL("String(Math.PI);", &v3);
@@ -20,7 +20,7 @@ BEGIN_TEST(testConservativeGC)
     CHECK(JSVAL_IS_OBJECT(tmp));
     JSObject *obj2 = JSVAL_TO_OBJECT(tmp);
     char obj2Copy[sizeof(JSObject)];
-    memcpy(&obj2Copy, obj2, sizeof(JSObject));
+    js_memcpy(&obj2Copy, obj2, sizeof(JSObject));
 
     EVAL("String(Math.sqrt(3));", &tmp);
     CHECK(JSVAL_IS_STRING(tmp));

@@ -55,7 +55,6 @@ CPPSRCS		= \
 		nsObserverBase.cpp \
 		nsDebugDetector.cpp \
 		nsCyrillicDetector.cpp \
-		nsDocumentCharsetInfo.cpp \
 		nsChardetModule.cpp \
 		$(NULL)
 

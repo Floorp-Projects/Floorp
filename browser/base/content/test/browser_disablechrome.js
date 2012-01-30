@@ -104,7 +104,6 @@ function end_test() {
 
 function test_url(aURL, aCanHide, aNextTest) {
   is_chrome_visible();
-
   info("Page load");
   load_page(aURL, aCanHide, function() {
     info("Switch away");
@@ -163,5 +162,30 @@ function run_http_test_2() {
 // Should not hide the chrome
 function run_chrome_about_test_2() {
   info("Chrome about: tests");
-  test_url("about:addons", true, end_test);
+  test_url("about:addons", true, run_http_test3);
+}
+
+function run_http_test3() {
+  info("HTTP tests");
+  test_url(HTTPSRC + "disablechrome.html", false, run_chrome_about_test_3);
+}
+
+// Should not hide the chrome
+function run_chrome_about_test_3() {
+  info("Chrome about: tests");
+  test_url("about:Addons", true, function(){
+    info("Tabs on top");
+    TabsOnTop.enabled = true;
+    run_http_test4();
+  });
+}
+
+function run_http_test4() {
+  info("HTTP tests");
+  test_url(HTTPSRC + "disablechrome.html", false, run_chrome_about_test_4);
+}
+
+function run_chrome_about_test_4() {
+  info("Chrome about: tests");
+  test_url("about:Addons", true, end_test);
 }

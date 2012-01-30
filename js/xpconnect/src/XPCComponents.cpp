@@ -3600,15 +3600,23 @@ nsXPCComponents_Utils::GetWeakReference(const JS::Value &object, JSContext *cx,
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC(JSContext *cx)
 {
-    JS_GC(cx);
+    js::GCForReason(cx, js::gcreason::COMPONENT_UTILS);
+    return NS_OK;
+}
+
+/* void forceShrinkingGC (); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::ForceShrinkingGC(JSContext *cx)
+{
+    js::ShrinkingGC(cx, js::gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
 class PreciseGCRunnable : public nsRunnable
 {
   public:
-    PreciseGCRunnable(JSContext *aCx, ScheduledGCCallback* aCallback)
-    : mCallback(aCallback), mCx(aCx) {}
+    PreciseGCRunnable(JSContext *aCx, ScheduledGCCallback* aCallback, bool aShrinking)
+    : mCallback(aCallback), mCx(aCx), mShrinking(aShrinking) {}
 
     NS_IMETHOD Run()
     {
@@ -3627,7 +3635,10 @@ class PreciseGCRunnable : public nsRunnable
             }
         }
 
-        JS_GC(mCx);
+        if (mShrinking)
+            js::ShrinkingGC(mCx, js::gcreason::COMPONENT_UTILS);
+        else
+            js::GCForReason(mCx, js::gcreason::COMPONENT_UTILS);
 
         mCallback->Callback();
         return NS_OK;
@@ -3636,13 +3647,22 @@ class PreciseGCRunnable : public nsRunnable
   private:
     nsRefPtr<ScheduledGCCallback> mCallback;
     JSContext *mCx;
+    bool mShrinking;
 };
 
 /* [inline_jscontext] void schedulePreciseGC(in ScheduledGCCallback callback); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::SchedulePreciseGC(ScheduledGCCallback* aCallback, JSContext* aCx)
 {
-    nsRefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCx, aCallback);
+    nsRefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCx, aCallback, false);
+    return NS_DispatchToMainThread(event);
+}
+
+/* [inline_jscontext] void schedulePreciseShrinkingGC(in ScheduledGCCallback callback); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::SchedulePreciseShrinkingGC(ScheduledGCCallback* aCallback, JSContext* aCx)
+{
+    nsRefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCx, aCallback, true);
     return NS_DispatchToMainThread(event);
 }
 

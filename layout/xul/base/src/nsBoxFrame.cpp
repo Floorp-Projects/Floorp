@@ -779,7 +779,7 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  if (IsCollapsed(aBoxLayoutState))
+  if (IsCollapsed())
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -815,7 +815,7 @@ nsBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  if (IsCollapsed(aBoxLayoutState))
+  if (IsCollapsed())
     return 0;
 
   if (mLayoutManager)
@@ -842,7 +842,7 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  if (IsCollapsed(aBoxLayoutState))
+  if (IsCollapsed())
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -882,7 +882,7 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  if (IsCollapsed(aBoxLayoutState))
+  if (IsCollapsed())
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -1502,7 +1502,7 @@ nsBoxFrame::PaintXULDebugOverlay(nsRenderingContext& aRenderingContext,
     nsBoxLayoutState state(GetPresContext());
     nscoord flex = kid->GetFlex(state);
 
-    if (!kid->IsCollapsed(state)) {
+    if (!kid->IsCollapsed()) {
       aRenderingContext.SetColor(NS_RGB(255,255,255));
 
       if (isHorizontal) 

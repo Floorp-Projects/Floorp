@@ -108,7 +108,7 @@ void SkShader::shadeSpan16(int x, int y, uint16_t span16[], int count) {
     SkASSERT(this->canCallShadeSpan16());
 
     // basically, if we get here, the subclass screwed up
-    SkASSERT(!"kHasSpan16 flag is set, but shadeSpan16() not implemented");
+    SkDEBUGFAIL("kHasSpan16 flag is set, but shadeSpan16() not implemented");
 }
 
 #define kTempColorQuadCount 6   // balance between speed (larger) and saving stack-space
@@ -221,6 +221,13 @@ SkColorShader::SkColorShader(SkColor c) {
 
 SkColorShader::~SkColorShader() {}
 
+bool SkColorShader::isOpaque() const {
+    if (fInheritColor) {
+        return true; // using paint's alpha
+    }
+    return SkColorGetA(fColor) == 255;
+}
+
 SkColorShader::SkColorShader(SkFlattenableReadBuffer& b) : INHERITED(b) {
     fFlags = 0; // computed in setContext
 
@@ -238,6 +245,18 @@ void SkColorShader::flatten(SkFlattenableWriteBuffer& buffer) {
         return;
     }
     buffer.write32(fColor);
+}
+
+SkFlattenable* SkColorShader::CreateProc(SkFlattenableReadBuffer& buffer) {
+    return SkNEW_ARGS(SkColorShader, (buffer));
+}
+
+SkFlattenable::Factory SkColorShader::getFactory() {
+    return CreateProc;
+}
+
+uint32_t SkColorShader::getFlags() {
+    return fFlags;
 }
 
 uint8_t SkColorShader::getSpan16Alpha() const {
@@ -318,20 +337,28 @@ SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const {
 
 #include "SkEmptyShader.h"
 
-SkEmptyShader::SkEmptyShader() {}
 SkEmptyShader::SkEmptyShader(SkFlattenableReadBuffer& b) : INHERITED(b) {}
 
 uint32_t SkEmptyShader::getFlags() { return 0; }
 uint8_t SkEmptyShader::getSpan16Alpha() const { return 0; }
-bool SkEmptyShader::setContext(const SkBitmap& device, const SkPaint& paint,
-                               const SkMatrix& matrix) {
-    return false;
+
+bool SkEmptyShader::setContext(const SkBitmap&, const SkPaint&,
+                               const SkMatrix&) { return false; }
+
+void SkEmptyShader::shadeSpan(int x, int y, SkPMColor span[], int count) {
+    SkDEBUGFAIL("should never get called, since setContext() returned false");
 }
-void SkEmptyShader::shadeSpan(int x, int y, SkPMColor span[], int count) {}
-void SkEmptyShader::shadeSpan16(int x, int y, uint16_t span[], int count) {}
-void SkEmptyShader::shadeSpanAlpha(int x, int y, uint8_t alpha[], int count) {}
+
+void SkEmptyShader::shadeSpan16(int x, int y, uint16_t span[], int count) {
+    SkDEBUGFAIL("should never get called, since setContext() returned false");
+}
+
+void SkEmptyShader::shadeSpanAlpha(int x, int y, uint8_t alpha[], int count) {
+    SkDEBUGFAIL("should never get called, since setContext() returned false");
+}
 
 SkFlattenable::Factory SkEmptyShader::getFactory() { return NULL; }
+
 void SkEmptyShader::flatten(SkFlattenableWriteBuffer& buffer) {
     this->INHERITED::flatten(buffer);
 }

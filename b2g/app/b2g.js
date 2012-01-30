@@ -394,6 +394,10 @@ pref("layers.acceleration.force-enabled", true);
 pref("dom.screenEnabledProperty.enabled", true);
 pref("dom.screenBrightnessProperty.enabled", true);
 
+// Enable browser frame
+pref("dom.mozBrowserFramesEnabled", true);
+pref("dom.mozBrowserFramesWhitelist", "http://localhost:6666");
+
 // Temporary permission hack for WebSMS
 pref("dom.sms.enabled", true);
 pref("dom.sms.whitelist", "file://,http://localhost:6666");

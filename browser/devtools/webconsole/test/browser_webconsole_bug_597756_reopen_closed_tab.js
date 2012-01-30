@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-bug-597756-reopen-closed-tab.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-597756-reopen-closed-tab.html";
 
 let newTabIsOpen = false;
 

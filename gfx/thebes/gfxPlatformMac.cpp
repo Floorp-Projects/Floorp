@@ -163,7 +163,12 @@ gfxPlatformMac::GetScaledFontForFont(gfxFont *aFont)
 bool
 gfxPlatformMac::SupportsAzure(BackendType& aBackend)
 {
-  aBackend = BACKEND_COREGRAPHICS;
+  if (mPreferredDrawTargetBackend != BACKEND_NONE) {
+    aBackend = mPreferredDrawTargetBackend;
+  } else {
+    aBackend = BACKEND_COREGRAPHICS;
+  }
+
   return true;
 }
 
@@ -303,7 +308,7 @@ already_AddRefed<gfxASurface>
 gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
   if (aTarget->GetType() == BACKEND_COREGRAPHICS) {
-    void *surface = aTarget->GetUserData(&ThebesSurfaceKey);
+    void *surface = aTarget->GetUserData(&kThebesSurfaceKey);
     if (surface) {
       nsRefPtr<gfxASurface> surf = static_cast<gfxQuartzSurface*>(surface);
       return surf.forget();
@@ -319,7 +324,7 @@ gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 
       // add a reference to be held by the drawTarget
       surf->AddRef();
-      aTarget->AddUserData(&ThebesSurfaceKey, surf.get(), DestroyThebesSurface);
+      aTarget->AddUserData(&kThebesSurfaceKey, surf.get(), DestroyThebesSurface);
 
       return surf.forget();
     }

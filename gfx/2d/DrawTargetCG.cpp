@@ -43,6 +43,9 @@
 
 //CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, PrivateCGCompositeMode);
 
+// A private API that Cairo has been using for a long time
+CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
+
 namespace mozilla {
 namespace gfx {
 
@@ -116,6 +119,7 @@ DrawTargetCG::~DrawTargetCG()
     CGColorSpaceRelease(mColorSpace);
   if (mCg)
     CGContextRelease(mCg);
+  free(mData);
 }
 
 TemporaryRef<SourceSurface>
@@ -845,7 +849,6 @@ DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &)
   // XXX: currently we allocate ourselves so that we can easily return a gfxImageSurface
   // we might not need to later if once we don't need to support gfxImageSurface
   //XXX: currently Init implicitly clears, that can often be a waste of time
-  // XXX: leaked
   mData = calloc(mSize.height * stride, 1);
   // XXX: what should we do if this fails?
   mCg = CGBitmapContextCreate (mData,
@@ -923,7 +926,12 @@ DrawTargetCG::PushClipRect(const Rect &aRect)
 {
   CGContextSaveGState(mCg);
 
+  /* We go through a bit of trouble to temporarilly set the transform
+   * while we add the path */
+  CGAffineTransform previousTransform = CGContextGetCTM(mCg);
+  CGContextConcatCTM(mCg, GfxMatrixToCGAffineTransform(mTransform));
   CGContextClipToRect(mCg, RectToCGRect(aRect));
+  CGContextSetCTM(mCg, previousTransform);
 }
 
 
@@ -946,7 +954,14 @@ DrawTargetCG::PushClip(const Path *aPath)
   }
 
 
+  /* We go through a bit of trouble to temporarilly set the transform
+   * while we add the path. XXX: this could be improved if we keep
+   * the CTM as resident state on the DrawTarget. */
+  CGContextSaveGState(mCg);
+  CGContextConcatCTM(mCg, GfxMatrixToCGAffineTransform(mTransform));
   CGContextAddPath(mCg, cgPath->GetPath());
+  CGContextRestoreGState(mCg);
+
   if (cgPath->GetFillRule() == FILL_EVEN_ODD)
     CGContextEOClip(mCg);
   else

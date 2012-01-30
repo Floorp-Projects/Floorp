@@ -108,6 +108,7 @@
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 #include "sampler.h"
 
@@ -145,6 +146,8 @@ static PRLogModuleInfo* gJSDiagnostics;
 static nsITimer *sGCTimer;
 static nsITimer *sShrinkGCBuffersTimer;
 static nsITimer *sCCTimer;
+
+static PRTime sLastCCEndTime;
 
 static bool sGCHasRun;
 
@@ -200,7 +203,7 @@ nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                   const PRUnichar* aData)
 {
   if (sGCOnMemoryPressure) {
-    nsJSContext::GarbageCollectNow(true);
+    nsJSContext::GarbageCollectNow(js::gcreason::MEM_PRESSURE, nsGCShrinking);
     nsJSContext::CycleCollectNow();
   }
   return NS_OK;
@@ -1108,7 +1111,7 @@ nsJSContext::DestroyJSContext()
                                   js_options_dot_str, this);
 
   if (mGCOnDestruction) {
-    PokeGC();
+    PokeGC(js::gcreason::NSJSCONTEXT_DESTROY);
   }
         
   // Let xpconnect destroy the JSContext when it thinks the time is right.
@@ -3217,7 +3220,7 @@ nsJSContext::ScriptExecuted()
 
 //static
 void
-nsJSContext::GarbageCollectNow(bool shrinkingGC)
+nsJSContext::GarbageCollectNow(js::gcreason::Reason reason, PRUint32 gckind)
 {
   NS_TIME_FUNCTION_MIN(1.0);
   SAMPLE_LABEL("GC", "GarbageCollectNow");
@@ -3235,7 +3238,7 @@ nsJSContext::GarbageCollectNow(bool shrinkingGC)
   sLoadingInProgress = false;
 
   if (nsContentUtils::XPConnect()) {
-    nsContentUtils::XPConnect()->GarbageCollect(shrinkingGC);
+    nsContentUtils::XPConnect()->GarbageCollect(reason, gckind);
   }
 }
 
@@ -3273,11 +3276,18 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener)
   // If we collected a substantial amount of cycles, poke the GC since more objects
   // might be unreachable now.
   if (sCCollectedWaitingForGC > 250) {
-    PokeGC();
+    PokeGC(js::gcreason::CC_WAITING);
   }
 
+  PRTime now = PR_Now();
+
+  if (sLastCCEndTime) {
+    PRUint32 timeBetween = (PRUint32)(start - sLastCCEndTime) / PR_USEC_PER_SEC;
+    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_TIME_BETWEEN, timeBetween);
+  }
+  sLastCCEndTime = now;
+
   if (sPostGCEventsToConsole) {
-    PRTime now = PR_Now();
     PRTime delta = 0;
     if (sFirstCollectionTime) {
       delta = now - sFirstCollectionTime;
@@ -3305,7 +3315,8 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
 {
   NS_RELEASE(sGCTimer);
 
-  nsJSContext::GarbageCollectNow();
+  uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
+  nsJSContext::GarbageCollectNow(static_cast<js::gcreason::Reason>(reason), nsGCNormal);
 }
 
 void
@@ -3349,12 +3360,12 @@ nsJSContext::LoadEnd()
 
   // Its probably a good idea to GC soon since we have finished loading.
   sLoadingInProgress = false;
-  PokeGC();
+  PokeGC(js::gcreason::LOAD_END);
 }
 
 // static
 void
-nsJSContext::PokeGC()
+nsJSContext::PokeGC(js::gcreason::Reason aReason)
 {
   if (sGCTimer) {
     // There's already a timer for GC'ing, just return
@@ -3370,7 +3381,7 @@ nsJSContext::PokeGC()
 
   static bool first = true;
 
-  sGCTimer->InitWithFuncCallback(GCTimerFired, nsnull,
+  sGCTimer->InitWithFuncCallback(GCTimerFired, reinterpret_cast<void *>(aReason),
                                  first
                                  ? NS_FIRST_GC_DELAY
                                  : NS_GC_DELAY,
@@ -3463,9 +3474,9 @@ nsJSContext::KillCCTimer()
 }
 
 void
-nsJSContext::GC()
+nsJSContext::GC(js::gcreason::Reason aReason)
 {
-  PokeGC();
+  PokeGC(aReason);
 }
 
 static void
@@ -3503,7 +3514,7 @@ DOMGCFinishedCallback(JSRuntime *rt, JSCompartment *comp, const char *status)
     // probably a time of heavy activity and we want to delay
     // the full GC, but we do want it to happen eventually.
     if (comp) {
-      nsJSContext::PokeGC();
+      nsJSContext::PokeGC(js::gcreason::POST_COMPARTMENT);
 
       // We poked the GC, so we can kill any pending CC here.
       nsJSContext::KillCCTimer();
@@ -3615,6 +3626,7 @@ nsJSRuntime::Startup()
   // initialize all our statics, so that we can restart XPCOM
   sGCTimer = sCCTimer = nsnull;
   sGCHasRun = false;
+  sLastCCEndTime = 0;
   sPendingLoadCount = 0;
   sLoadingInProgress = false;
   sCCollectedWaitingForGC = 0;

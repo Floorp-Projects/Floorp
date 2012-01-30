@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=715112
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 715112</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=715112">Mozilla Bug 715112</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 715112 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var expected = [
+  "First",
+  "Second",
+];
+
+function log(str) {
+  is(str, expected.shift(), "Unexpected log string.");
+}
+
+var w = window.open();
+w.document.open();
+w.document.addEventListener("DOMContentLoaded", function() {
+  is(expected.length, 0, "Not all expected messages were logged.");
+  is(w.document.getElementsByTagName("script").length, 3, "The document should have 3 scripts.");
+  w.close();
+  SimpleTest.finish();
+});
+w.document.write("\u003cscript>opener.log('First');\u003c/script>");
+w.document.write("\u003cscript>document.close();\u003c/script>");
+w.document.write("\u003cscript>opener.log('Second');\u003c/script>");
+
+</script>
+</pre>
+</body>
+</html>

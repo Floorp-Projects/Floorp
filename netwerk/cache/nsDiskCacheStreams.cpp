@@ -234,12 +234,13 @@ nsDiskCacheOutputStream::~nsDiskCacheOutputStream()
 NS_IMETHODIMP
 nsDiskCacheOutputStream::Close()
 {
+    nsresult rv = NS_OK;
     mozilla::TimeStamp start = mozilla::TimeStamp::Now();
 
     if (!mClosed) {
         mClosed = true;
         // tell parent streamIO we are closing
-        mStreamIO->CloseOutputStream(this);
+        rv = mStreamIO->CloseOutputStream(this);
     }
 
     mozilla::Telemetry::ID id;
@@ -250,18 +251,19 @@ nsDiskCacheOutputStream::Close()
 
     mozilla::Telemetry::AccumulateTimeDelta(id, start);
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
 nsDiskCacheOutputStream::CloseInternal()
 {
+    nsresult rv = NS_OK;
     mozilla::TimeStamp start = mozilla::TimeStamp::Now();
 
     if (!mClosed) {
         mClosed = true;
         // tell parent streamIO we are closing
-        mStreamIO->CloseOutputStreamInternal(this);
+        rv = mStreamIO->CloseOutputStreamInternal(this);
     }
 
     mozilla::Telemetry::ID id;
@@ -272,7 +274,7 @@ nsDiskCacheOutputStream::CloseInternal()
 
     mozilla::Telemetry::AccumulateTimeDelta(id, start);
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -459,12 +461,14 @@ nsDiskCacheStreamIO::GetOutputStream(PRUint32 offset, nsIOutputStream ** outputS
     return NS_OK;
 }
 
-void
+nsresult
 nsDiskCacheStreamIO::ClearBinding()
 {
+    nsresult rv = NS_OK;
     if (mBinding && mOutStream)
-        Flush();
+        rv = Flush();
     mBinding = nsnull;
+    return rv;
 }
 
 nsresult
@@ -535,7 +539,6 @@ nsDiskCacheStreamIO::Flush()
             rv = cacheMap->DeleteStorage(record, nsDiskCache::kData);
             if (NS_FAILED(rv)) {
                 NS_WARNING("cacheMap->DeleteStorage() failed.");
-                cacheMap->DeleteRecord(record);
                 return rv;
             }
         }

@@ -19,27 +19,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375314
 
 /** Test for Bug 375314 **/
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 var lastContentType = -1;
 const testURL = window.location.href + "/this/is/the/test/url";
-const Cc = Components.classes;
+const Cc = SpecialPowers.wrap(Components).classes;
 const Ci = Components.interfaces;
 
 // Content policy / factory implementation for the test
-var policyID = Components.ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
+var policyID = SpecialPowers.wrap(Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
 var policyName = "@mozilla.org/testpolicy;1";
 var policy = {
   // nsISupports implementation
   QueryInterface: function(iid) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+    iid = SpecialPowers.wrap(iid);
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIFactory) ||
         iid.equals(Ci.nsIContentPolicy))
       return this;
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw SpecialPowers.wrap(Components).results.NS_ERROR_NO_INTERFACE;
   },
 
   // nsIFactory implementation
@@ -49,10 +47,9 @@ var policy = {
 
   // nsIContentPolicy implementation
   shouldLoad: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
     // Remember last content type seen for the test url
-    if (contentLocation.spec == testURL) {
+    if (SpecialPowers.wrap(contentLocation).spec == testURL) {
       lastContentType = contentType;
       return Ci.nsIContentPolicy.REJECT_REQUEST;
     }
@@ -61,15 +58,15 @@ var policy = {
   },
 
   shouldProcess: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }
 
 // Register content policy
-var componentManager = Components.manager
-                                 .QueryInterface(Ci.nsIComponentRegistrar);
+var componentManager = SpecialPowers.wrap(Components).manager
+                                                     .QueryInterface(Ci.nsIComponentRegistrar);
+
 componentManager.registerFactory(policyID, "Test content policy", policyName, policy);
 
 var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
@@ -85,7 +82,6 @@ SimpleTest.waitForExplicitFinish();
 setTimeout(runNextTest, 0);
 
 function runNextTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   if (curTest >= 0) {
     var type = "TYPE_" + tests[curTest];
@@ -113,7 +109,6 @@ function runNextTest() {
     setTimeout(function() {
       // Component must be unregistered delayed, otherwise other content
       // policy will not be removed from the category correctly
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       componentManager.unregisterFactory(policyID, policy);
     }, 0);
 

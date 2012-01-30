@@ -132,7 +132,7 @@ public:
                                           bool* aAllowRetaining = nsnull);
 
   virtual void            CreateCompositor();
-  virtual void            DrawOver(LayerManager* aManager, nsIntRect aRect) {}
+  virtual void            DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}
   virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(bool aModal); 
@@ -201,6 +201,9 @@ public:
   }
 
   NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) = 0;
+
+  virtual PRUint32 GetGLFrameBufferFormat() MOZ_OVERRIDE;
+
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
    * (nsBaseWidget::GetLayerManager() does). This sets up the widget's

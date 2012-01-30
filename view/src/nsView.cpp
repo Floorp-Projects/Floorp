@@ -147,8 +147,7 @@ static ViewWrapper* GetWrapperFor(nsIWidget* aWidget)
 static nsEventStatus HandleEvent(nsGUIEvent *aEvent)
 {
 #if 0
-  printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->widgetSupports, 
-         aEvent->message, aEvent->point.x, aEvent->point.y);
+  printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->message);
 #endif
   nsEventStatus result = nsEventStatus_eIgnore;
   nsView *view = nsView::GetViewFor(aEvent->widget);
@@ -327,11 +326,13 @@ nsIView* nsIView::GetViewFor(nsIWidget* aWidget)
 
   ViewWrapper* wrapper = GetWrapperFor(aWidget);
 
-  if (!wrapper)
+  if (!wrapper) {
     wrapper = GetAttachedWrapperFor(aWidget);
+  }
 
-  if (wrapper)
+  if (wrapper) {
     return wrapper->GetView();
+  }
 
   return nsnull;
 }

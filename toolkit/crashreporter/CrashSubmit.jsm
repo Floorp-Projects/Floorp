@@ -67,7 +67,7 @@ function parseKeyValuePairs(text) {
       let [key, value] = [lines[i].substring(0, eq),
                           lines[i].substring(eq + 1)];
       if (key && value)
-        data[key] = value.replace("\\n", "\n", "g").replace("\\\\", "\\", "g");
+        data[key] = value.replace(/\\n/g, "\n").replace(/\\\\/g, "\\");
     }
   }
   return data;

@@ -428,52 +428,5 @@ function run_test_pt13() {
 
 function check_test_pt13() {
   do_check_eq(getResult(gRequestURL), "?extra=param&force=1");
-  run_test_pt14();
-}
-
-// url with newchannel param that doesn't already have a param
-function run_test_pt14() {
-  gCheckFunc = check_test_pt14;
-  Services.prefs.setCharPref(PREF_APP_UPDATE_DESIREDCHANNEL, "testchannel");
-  var url = URL_PREFIX;
-  logTestInfo("testing url with newchannel param that doesn't already have a " +
-              "param - " + url);
-  setUpdateURLOverride(url);
-  gUpdateChecker.checkForUpdates(updateCheckListener, false);
-}
-
-function check_test_pt14() {
-  do_check_eq(getResult(gRequestURL), "?newchannel=testchannel");
-  run_test_pt15();
-}
-
-// url with newchannel param that already has a param
-function run_test_pt15() {
-  gCheckFunc = check_test_pt15;
-  Services.prefs.setCharPref(PREF_APP_UPDATE_DESIREDCHANNEL, "testchannel");
-  var url = URL_PREFIX + "?extra=param";
-  logTestInfo("testing url with newchannel param that already has a " +
-              "param - " + url);
-  setUpdateURLOverride(url);
-  gUpdateChecker.checkForUpdates(updateCheckListener, false);
-}
-
-function check_test_pt15() {
-  do_check_eq(getResult(gRequestURL), "?extra=param&newchannel=testchannel");
-  run_test_pt16();
-}
-
-// url with force and newchannel params
-function run_test_pt16() {
-  gCheckFunc = check_test_pt16;
-  Services.prefs.setCharPref(PREF_APP_UPDATE_DESIREDCHANNEL, "testchannel");
-  var url = URL_PREFIX;
-  logTestInfo("testing url with force and newchannel params - " + url);
-  setUpdateURLOverride(url);
-  gUpdateChecker.checkForUpdates(updateCheckListener, true);
-}
-
-function check_test_pt16() {
-  do_check_eq(getResult(gRequestURL), "?newchannel=testchannel&force=1");
   do_test_finished();
 }

@@ -41,7 +41,7 @@
 
 #include "nsIObserverService.h"
 #include "nsIJSContextStack.h"
-#include "nsITelephone.h"
+#include "nsIRadioInterfaceLayer.h"
 #include "nsIWifi.h"
 #include "nsIWorkerHolder.h"
 #include "nsIXPConnect.h"
@@ -51,8 +51,8 @@
 #include "mozilla/ipc/Ril.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsTelephonyWorker.h"
 #include "nsThreadUtils.h"
+#include "nsRadioInterfaceLayer.h"
 #include "nsWifiWorker.h"
 
 USING_TELEPHONY_NAMESPACE
@@ -61,7 +61,7 @@ using namespace mozilla::ipc;
 
 namespace {
 
-NS_DEFINE_CID(kTelephonyWorkerCID, NS_TELEPHONYWORKER_CID);
+NS_DEFINE_CID(kRadioInterfaceLayerCID, NS_RADIOINTERFACELAYER_CID);
 NS_DEFINE_CID(kWifiWorkerCID, NS_WIFIWORKER_CID);
 
 // Doesn't carry a reference, we're owned by services.
@@ -224,7 +224,7 @@ SystemWorkerManager::Init()
     return NS_ERROR_FAILURE;
   }
 
-  rv = InitTelephone(cx);
+  rv = InitRIL(cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = InitWifi(cx);
@@ -252,7 +252,7 @@ SystemWorkerManager::Shutdown()
 
   StopRil();
 
-  mTelephoneWorker = nsnull;
+  mRILWorker = nsnull;
   mWifiWorker = nsnull;
 
   nsCOMPtr<nsIObserverService> obs =
@@ -295,9 +295,9 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aIID.Equals(NS_GET_IID(nsITelephone))) {
-    return CallQueryInterface(mTelephoneWorker,
-                              reinterpret_cast<nsITelephone**>(aResult));
+  if (aIID.Equals(NS_GET_IID(nsIRadioInterfaceLayer))) {
+    return CallQueryInterface(mRILWorker,
+                              reinterpret_cast<nsIRadioInterfaceLayer**>(aResult));
   }
 
   if (aIID.Equals(NS_GET_IID(nsIWifi))) {
@@ -310,12 +310,12 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
 }
 
 nsresult
-SystemWorkerManager::InitTelephone(JSContext *cx)
+SystemWorkerManager::InitRIL(JSContext *cx)
 {
   // We're keeping as much of this implementation as possible in JS, so the real
-  // worker lives in nsTelephonyWorker.js. All we do here is hold it alive and
+  // worker lives in RadioInterfaceLayer.js. All we do here is hold it alive and
   // hook it up to the RIL thread.
-  nsCOMPtr<nsIWorkerHolder> worker = do_CreateInstance(kTelephonyWorkerCID);
+  nsCOMPtr<nsIWorkerHolder> worker = do_CreateInstance(kRadioInterfaceLayerCID);
   NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
   jsval workerval;
@@ -345,7 +345,7 @@ SystemWorkerManager::InitTelephone(JSContext *cx)
   mozilla::RefPtr<RILReceiver> receiver = new RILReceiver(wctd);
   StartRil(receiver);
 
-  mTelephoneWorker = worker;
+  mRILWorker = worker;
   return NS_OK;
 }
 

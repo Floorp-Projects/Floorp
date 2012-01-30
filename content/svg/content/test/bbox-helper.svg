@@ -6,4 +6,12 @@
   <text id="b" x="20" y="20">b</text>
   <text id="a" x="20" y="30">a</text>
   <text id="y" x="20" y="40">y</text>
+  <g id="v">
+    <circle cx="100" cy="50" r="5"/>
+    <path d="M 100,100 L 100,200"/>
+  </g>
+  <g id="h">
+    <circle cx="200" cy="50" r="5"/>
+    <path d="M 200,100 L 300,100"/>
+  </g>
 </svg>

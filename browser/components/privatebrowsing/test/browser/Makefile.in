@@ -56,6 +56,9 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_geoprompt.js \
 		browser_privatebrowsing_geoprompt_page.html \
 		browser_privatebrowsing_import.js \
+		browser_privatebrowsing_localStorage.js \
+		browser_privatebrowsing_localStorage_page1.html \
+		browser_privatebrowsing_localStorage_page2.html \
 		browser_privatebrowsing_newwindow_stopcmd.js \
 		browser_privatebrowsing_opendir.js \
 		browser_privatebrowsing_openlocation.js \
@@ -92,8 +95,7 @@ _BROWSER_TEST_FILES =  \
 # Turn off private browsing tests that perma-timeout on Linux.
 ifneq (Linux,$(OS_ARCH))
 _BROWSER_TEST_FILES += \
-		browser_privatebrowsing_beforeunload_enter.js \
-		browser_privatebrowsing_beforeunload_exit.js \
+		browser_privatebrowsing_beforeunload.js \
 		browser_privatebrowsing_cookieacceptdialog.js \
 		$(NULL)
 endif

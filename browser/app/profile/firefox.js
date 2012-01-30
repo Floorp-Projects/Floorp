@@ -244,8 +244,7 @@ pref("general.autoScroll", false);
 pref("general.autoScroll", true);
 #endif
 
-// Whether or not the application should check at startup each time if it 
-// is the default browser.
+// At startup, check if we're the default browser and prompt user if not.
 pref("browser.shell.checkDefaultBrowser", true);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
@@ -281,7 +280,7 @@ pref("browser.urlbar.doubleClickSelectsAll", true);
 #else
 pref("browser.urlbar.doubleClickSelectsAll", false);
 #endif
-pref("browser.urlbar.autoFill", false);
+pref("browser.urlbar.autoFill", true);
 // 0: Match anywhere (e.g., middle of words)
 // 1: Match on word boundaries and then try matching anywhere
 // 2: Match only on word boundaries (e.g., after / or .)
@@ -294,7 +293,7 @@ pref("browser.urlbar.maxRichResults", 12);
 // The amount of time (ms) to wait after the user has stopped typing
 // before starting to perform autocomplete.  50 is the default set in
 // autocomplete.xml.
-pref("browser.urlbar.delay", 50);
+pref("browser.urlbar.delay", 0);
 
 // The special characters below can be typed into the urlbar to either restrict
 // the search to visited history, bookmarked, tagged pages; or force a match on
@@ -804,6 +803,10 @@ pref("browser.sessionstore.max_resumed_crashes", 1);
 pref("browser.sessionstore.restore_on_demand", false);
 // Whether to automatically restore hidden tabs (i.e., tabs in other tab groups) or not
 pref("browser.sessionstore.restore_hidden_tabs", false);
+// If restore_on_demand is set, pinned tabs are restored on startup by default.
+// When set to true, this pref overrides that behavior, and pinned tabs will only
+// be restored when they are focused.
+pref("browser.sessionstore.restore_pinned_tabs_on_demand", false);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
@@ -1032,6 +1035,8 @@ pref("devtools.styleinspector.enabled", true);
 
 // Enable the Tilt inspector
 pref("devtools.tilt.enabled", true);
+pref("devtools.tilt.intro_transition", true);
+pref("devtools.tilt.outro_transition", true);
 
 // Enable the rules view
 pref("devtools.ruleview.enabled", true);
@@ -1041,12 +1046,13 @@ pref("devtools.scratchpad.enabled", true);
 
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);
+pref("devtools.styleeditor.transitions", true);
 
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
 
 // Disable the GCLI enhanced command line.
-pref("devtools.gcli.enable", true);
+pref("devtools.gcli.enable", false);
 
 // The last Web Console height. This is initially 0 which means that the Web
 // Console will use the default height next time it shows.
@@ -1103,6 +1109,12 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 pref("prompts.tab_modal.enabled", true);
 // Whether the Panorama should animate going in/out of tabs
 pref("browser.panorama.animate_zoom", true);
+
+// Defines the url to be used for new tabs.
+pref("browser.newtab.url", "about:blank");
+
+// Toggles the content of 'about:newtab'. Shows the grid when enabled.
+pref("browser.newtabpage.enabled", false);
 
 // Enable the DOM full-screen API.
 pref("full-screen-api.enabled", true);

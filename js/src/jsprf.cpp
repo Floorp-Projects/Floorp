@@ -46,7 +46,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "jsprf.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jspubtd.h"
 #include "jsstr.h"
@@ -344,7 +343,7 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
         /* Totally bogus % command to sprintf. Just ignore it */
         return 0;
     }
-    memcpy(fin, fmt0, (size_t)amount);
+    js_memcpy(fin, fmt0, (size_t)amount);
     fin[amount] = 0;
 
     /* Convert floating point using the native sprintf code */
@@ -918,7 +917,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
                 i = fmt - dolPt;
                 if( i < (int)sizeof( pattern ) ){
                     pattern[0] = '%';
-                    memcpy( &pattern[1], dolPt, (size_t)i );
+                    js_memcpy( &pattern[1], dolPt, (size_t)i );
                     rv = cvt_f(ss, u.d, pattern, &pattern[i+1] );
                 }
             } else

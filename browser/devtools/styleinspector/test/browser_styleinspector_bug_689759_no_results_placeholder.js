@@ -13,7 +13,6 @@ function createDocument()
     '.matches {color: #F00;}</style>' +
     '<span id="matches" class="matches">Some styled text</span>';
   doc.title = "Tests that the no results placeholder works properly";
-  ok(window.StyleInspector, "StyleInspector exists");
   stylePanel = new StyleInspector(window);
   Services.obs.addObserver(runStyleInspectorTests, "StyleInspector-opened", false);
   stylePanel.createPanel(false, function() {

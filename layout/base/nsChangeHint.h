@@ -91,7 +91,11 @@ enum nsChangeHint {
 
   // change requires frame change (e.g., display:).
   // This subsumes all the above.
-  nsChangeHint_ReconstructFrame = 0x400
+  nsChangeHint_ReconstructFrame = 0x400,
+
+  // The frame's effect on its ancestors' overflow areas has changed,
+  // either through a change in its transform or a change in its position.
+  nsChangeHint_UpdateOverflow = 0x800
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -133,15 +137,15 @@ inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
 // Redefine the old NS_STYLE_HINT constants in terms of the new hint structure
 #define NS_STYLE_HINT_NONE \
   nsChangeHint(0)
-#define NS_STYLE_HINT_VISUAL \
-  nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView)
 #define nsChangeHint_ReflowFrame                        \
   nsChangeHint(nsChangeHint_NeedReflow |                \
                nsChangeHint_ClearAncestorIntrinsics |   \
                nsChangeHint_ClearDescendantIntrinsics | \
                nsChangeHint_NeedDirtyReflow)
 #define NS_STYLE_HINT_REFLOW \
-  nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_ReflowFrame)
+  nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_ReflowFrame)
+#define NS_STYLE_HINT_UPDATE_OVERFLOW \
+  nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateOverflow)
 #define NS_STYLE_HINT_FRAMECHANGE \
   nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_ReconstructFrame)
 

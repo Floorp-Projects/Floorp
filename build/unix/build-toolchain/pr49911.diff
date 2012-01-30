@@ -1,0 +1,274 @@
+diff -ru gcc-4.5.2/gcc/double-int.c gcc-4.5.2-new/gcc/double-int.c
+--- gcc-4.5.2/gcc/double-int.c	2009-11-25 05:55:54.000000000 -0500
++++ gcc-4.5.2-new/gcc/double-int.c	2011-11-29 10:20:27.625583810 -0500
+@@ -296,7 +296,12 @@
+ tree
+ double_int_to_tree (tree type, double_int cst)
+ {
+-  cst = double_int_ext (cst, TYPE_PRECISION (type), TYPE_UNSIGNED (type));
++  /* Size types *are* sign extended.  */
++  bool sign_extended_type = (!TYPE_UNSIGNED (type)
++			     || (TREE_CODE (type) == INTEGER_TYPE
++				 && TYPE_IS_SIZETYPE (type)));
++
++  cst = double_int_ext (cst, TYPE_PRECISION (type), !sign_extended_type);
+ 
+   return build_int_cst_wide (type, cst.low, cst.high);
+ }
+diff -ru gcc-4.5.2/gcc/tree.c gcc-4.5.2-new/gcc/tree.c
+--- gcc-4.5.2/gcc/tree.c	2010-07-07 11:24:27.000000000 -0400
++++ gcc-4.5.2-new/gcc/tree.c	2011-11-29 10:20:27.626583813 -0500
+@@ -9750,7 +9750,7 @@
+ tree
+ upper_bound_in_type (tree outer, tree inner)
+ {
+-  unsigned HOST_WIDE_INT lo, hi;
++  double_int high;
+   unsigned int det = 0;
+   unsigned oprec = TYPE_PRECISION (outer);
+   unsigned iprec = TYPE_PRECISION (inner);
+@@ -9797,18 +9797,18 @@
+   /* Compute 2^^prec - 1.  */
+   if (prec <= HOST_BITS_PER_WIDE_INT)
+     {
+-      hi = 0;
+-      lo = ((~(unsigned HOST_WIDE_INT) 0)
++      high.high = 0;
++      high.low = ((~(unsigned HOST_WIDE_INT) 0)
+ 	    >> (HOST_BITS_PER_WIDE_INT - prec));
+     }
+   else
+     {
+-      hi = ((~(unsigned HOST_WIDE_INT) 0)
++      high.high = ((~(unsigned HOST_WIDE_INT) 0)
+ 	    >> (2 * HOST_BITS_PER_WIDE_INT - prec));
+-      lo = ~(unsigned HOST_WIDE_INT) 0;
++      high.low = ~(unsigned HOST_WIDE_INT) 0;
+     }
+ 
+-  return build_int_cst_wide (outer, lo, hi);
++  return double_int_to_tree (outer, high);
+ }
+ 
+ /* Returns the smallest value obtainable by casting something in INNER type to
+diff -ru gcc-4.5.2/gcc/tree-vrp.c gcc-4.5.2-new/gcc/tree-vrp.c
+--- gcc-4.5.2/gcc/tree-vrp.c	2010-06-14 11:23:31.000000000 -0400
++++ gcc-4.5.2-new/gcc/tree-vrp.c	2011-11-29 10:20:27.628583820 -0500
+@@ -127,10 +127,10 @@
+ static inline tree
+ vrp_val_max (const_tree type)
+ {
+-  if (!INTEGRAL_TYPE_P (type))
+-    return NULL_TREE;
++  if (INTEGRAL_TYPE_P (type))
++    return upper_bound_in_type (CONST_CAST_TREE (type), CONST_CAST_TREE (type));
+ 
+-  return TYPE_MAX_VALUE (type);
++  return NULL_TREE;
+ }
+ 
+ /* Return the minimum value for TYPE.  */
+@@ -138,10 +138,10 @@
+ static inline tree
+ vrp_val_min (const_tree type)
+ {
+-  if (!INTEGRAL_TYPE_P (type))
+-    return NULL_TREE;
++  if (INTEGRAL_TYPE_P (type))
++    return lower_bound_in_type (CONST_CAST_TREE (type), CONST_CAST_TREE (type));
+ 
+-  return TYPE_MIN_VALUE (type);
++  return NULL_TREE;
+ }
+ 
+ /* Return whether VAL is equal to the maximum value of its type.  This
+@@ -539,7 +539,7 @@
+   set_value_range (vr, VR_RANGE, zero,
+ 		   (overflow_infinity
+ 		    ? positive_overflow_infinity (type)
+-		    : TYPE_MAX_VALUE (type)),
++		    : vrp_val_max (type)),
+ 		   vr->equiv);
+ }
+ 
+@@ -1595,7 +1595,7 @@
+     }
+   else if (cond_code == LE_EXPR || cond_code == LT_EXPR)
+     {
+-      min = TYPE_MIN_VALUE (type);
++      min = vrp_val_min (type);
+ 
+       if (limit_vr == NULL || limit_vr->type == VR_ANTI_RANGE)
+ 	max = limit;
+@@ -1630,7 +1630,7 @@
+     }
+   else if (cond_code == GE_EXPR || cond_code == GT_EXPR)
+     {
+-      max = TYPE_MAX_VALUE (type);
++      max = vrp_val_max (type);
+ 
+       if (limit_vr == NULL || limit_vr->type == VR_ANTI_RANGE)
+ 	min = limit;
+@@ -2047,11 +2047,11 @@
+ 	  || code == ROUND_DIV_EXPR)
+ 	return (needs_overflow_infinity (TREE_TYPE (res))
+ 		? positive_overflow_infinity (TREE_TYPE (res))
+-		: TYPE_MAX_VALUE (TREE_TYPE (res)));
++		: vrp_val_max (TREE_TYPE (res)));
+       else
+ 	return (needs_overflow_infinity (TREE_TYPE (res))
+ 		? negative_overflow_infinity (TREE_TYPE (res))
+-		: TYPE_MIN_VALUE (TREE_TYPE (res)));
++		: vrp_val_min (TREE_TYPE (res)));
+     }
+ 
+   return res;
+@@ -2750,8 +2750,8 @@
+ 	  && TYPE_PRECISION (inner_type) < TYPE_PRECISION (outer_type))
+ 	{
+ 	  vr0.type = VR_RANGE;
+-	  vr0.min = TYPE_MIN_VALUE (inner_type);
+-	  vr0.max = TYPE_MAX_VALUE (inner_type);
++	  vr0.min = vrp_val_min (inner_type);
++	  vr0.max = vrp_val_max (inner_type);
+ 	}
+ 
+       /* If VR0 is a constant range or anti-range and the conversion is
+@@ -2836,7 +2836,7 @@
+ 	    }
+ 	}
+       else
+-	min = TYPE_MIN_VALUE (type);
++	min = vrp_val_min (type);
+ 
+       if (is_positive_overflow_infinity (vr0.min))
+ 	max = negative_overflow_infinity (type);
+@@ -2855,7 +2855,7 @@
+ 	    }
+ 	}
+       else
+-	max = TYPE_MIN_VALUE (type);
++	max = vrp_val_min (type);
+     }
+   else if (code == NEGATE_EXPR
+ 	   && TYPE_UNSIGNED (type))
+@@ -2897,7 +2897,7 @@
+       else if (!vrp_val_is_min (vr0.min))
+ 	min = fold_unary_to_constant (code, type, vr0.min);
+       else if (!needs_overflow_infinity (type))
+-	min = TYPE_MAX_VALUE (type);
++	min = vrp_val_max (type);
+       else if (supports_overflow_infinity (type))
+ 	min = positive_overflow_infinity (type);
+       else
+@@ -2911,7 +2911,7 @@
+       else if (!vrp_val_is_min (vr0.max))
+ 	max = fold_unary_to_constant (code, type, vr0.max);
+       else if (!needs_overflow_infinity (type))
+-	max = TYPE_MAX_VALUE (type);
++	max = vrp_val_max (type);
+       else if (supports_overflow_infinity (type)
+ 	       /* We shouldn't generate [+INF, +INF] as set_value_range
+ 		  doesn't like this and ICEs.  */
+@@ -2941,7 +2941,7 @@
+ 	         TYPE_MIN_VALUE, remember -TYPE_MIN_VALUE = TYPE_MIN_VALUE.  */
+ 	      if (TYPE_OVERFLOW_WRAPS (type))
+ 		{
+-		  tree type_min_value = TYPE_MIN_VALUE (type);
++		  tree type_min_value = vrp_val_min (type);
+ 
+ 		  min = (vr0.min != type_min_value
+ 			 ? int_const_binop (PLUS_EXPR, type_min_value,
+@@ -2953,7 +2953,7 @@
+ 		  if (overflow_infinity_range_p (&vr0))
+ 		    min = negative_overflow_infinity (type);
+ 		  else
+-		    min = TYPE_MIN_VALUE (type);
++		    min = vrp_val_min (type);
+ 		}
+ 	    }
+ 	  else
+@@ -2974,7 +2974,7 @@
+ 		    }
+ 		}
+ 	      else
+-		max = TYPE_MAX_VALUE (type);
++		max = vrp_val_max (type);
+ 	    }
+ 	}
+ 
+@@ -3258,11 +3258,11 @@
+   if (POINTER_TYPE_P (type) || !TYPE_MIN_VALUE (type))
+     tmin = lower_bound_in_type (type, type);
+   else
+-    tmin = TYPE_MIN_VALUE (type);
++    tmin = vrp_val_min (type);
+   if (POINTER_TYPE_P (type) || !TYPE_MAX_VALUE (type))
+     tmax = upper_bound_in_type (type, type);
+   else
+-    tmax = TYPE_MAX_VALUE (type);
++    tmax = vrp_val_max (type);
+ 
+   if (vr->type == VR_VARYING || vr->type == VR_UNDEFINED)
+     {
+@@ -4146,8 +4146,8 @@
+   if ((comp_code == GT_EXPR || comp_code == LT_EXPR)
+       && INTEGRAL_TYPE_P (TREE_TYPE (val)))
+     {
+-      tree min = TYPE_MIN_VALUE (TREE_TYPE (val));
+-      tree max = TYPE_MAX_VALUE (TREE_TYPE (val));
++      tree min = vrp_val_min (TREE_TYPE (val));
++      tree max = vrp_val_max (TREE_TYPE (val));
+ 
+       if (comp_code == GT_EXPR
+ 	  && (!max
+@@ -6426,13 +6426,13 @@
+ 		 VARYING.  Same if the previous max value was invalid for
+ 		 the type and we'd end up with vr_result.min > vr_result.max.  */
+ 	      if (vrp_val_is_max (vr_result.max)
+-		  || compare_values (TYPE_MIN_VALUE (TREE_TYPE (vr_result.min)),
++		  || compare_values (vrp_val_min (TREE_TYPE (vr_result.min)),
+ 				     vr_result.max) > 0)
+ 		goto varying;
+ 
+ 	      if (!needs_overflow_infinity (TREE_TYPE (vr_result.min))
+ 		  || !vrp_var_may_overflow (lhs, phi))
+-		vr_result.min = TYPE_MIN_VALUE (TREE_TYPE (vr_result.min));
++		vr_result.min = vrp_val_min (TREE_TYPE (vr_result.min));
+ 	      else if (supports_overflow_infinity (TREE_TYPE (vr_result.min)))
+ 		vr_result.min =
+ 		  negative_overflow_infinity (TREE_TYPE (vr_result.min));
+@@ -6448,13 +6448,13 @@
+ 		 VARYING.  Same if the previous min value was invalid for
+ 		 the type and we'd end up with vr_result.max < vr_result.min.  */
+ 	      if (vrp_val_is_min (vr_result.min)
+-		  || compare_values (TYPE_MAX_VALUE (TREE_TYPE (vr_result.max)),
++		  || compare_values (vrp_val_max (TREE_TYPE (vr_result.max)),
+ 				     vr_result.min) < 0)
+ 		goto varying;
+ 
+ 	      if (!needs_overflow_infinity (TREE_TYPE (vr_result.max))
+ 		  || !vrp_var_may_overflow (lhs, phi))
+-		vr_result.max = TYPE_MAX_VALUE (TREE_TYPE (vr_result.max));
++		vr_result.max = vrp_val_max (TREE_TYPE (vr_result.max));
+ 	      else if (supports_overflow_infinity (TREE_TYPE (vr_result.max)))
+ 		vr_result.max =
+ 		  positive_overflow_infinity (TREE_TYPE (vr_result.max));
+@@ -6782,7 +6782,7 @@
+     {
+       /* This should not be negative infinity; there is no overflow
+ 	 here.  */
+-      min = TYPE_MIN_VALUE (TREE_TYPE (op0));
++      min = vrp_val_min (TREE_TYPE (op0));
+ 
+       max = op1;
+       if (cond_code == LT_EXPR && !is_overflow_infinity (max))
+@@ -6797,7 +6797,7 @@
+     {
+       /* This should not be positive infinity; there is no overflow
+ 	 here.  */
+-      max = TYPE_MAX_VALUE (TREE_TYPE (op0));
++      max = vrp_val_max (TREE_TYPE (op0));
+ 
+       min = op1;
+       if (cond_code == GT_EXPR && !is_overflow_infinity (min))

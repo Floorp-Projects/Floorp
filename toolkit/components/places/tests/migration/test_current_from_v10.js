@@ -278,6 +278,37 @@ function test_place_guid_annotation_removed()
   run_next_test();
 }
 
+function test_moz_hosts()
+{
+  // This will throw if the column does not exist
+  let stmt = DBConn().createStatement(
+    "SELECT host, frecency "
+  + "FROM moz_hosts "
+  );
+  stmt.finalize();
+
+  // check the number of entries in moz_hosts equals the number of
+  // unique rev_host in moz_places
+  var query = "SELECT ("
+              + "SELECT COUNT(host) "
+              + "FROM moz_hosts), ("
+              + "SELECT COUNT(DISTINCT rev_host) "
+              + "FROM moz_places "
+              + "WHERE LENGTH(rev_host) > 1)";
+
+  stmt = DBConn().createStatement(query);
+  try {
+    stmt.executeStep();
+    let mozPlacesCount = stmt.getInt32(0);
+    let mozHostsCount = stmt.getInt32(1);
+    do_check_eq(mozPlacesCount, mozHostsCount);
+  }
+  finally {
+    stmt.finalize();
+    run_next_test();
+  }
+}
+
 function test_final_state()
 {
   // We open a new database mostly so that we can check that the settings were
@@ -296,6 +327,8 @@ function test_final_state()
   do_check_true(db.indexExists("moz_bookmarks_guid_uniqueindex"));
   do_check_true(db.indexExists("moz_places_guid_uniqueindex"));
   do_check_true(db.indexExists("moz_favicons_guid_uniqueindex"));
+
+  do_check_true(db.indexExists("moz_hosts_frecencyhostindex"));
 
   do_check_eq(db.schemaVersion, CURRENT_SCHEMA_VERSION);
 
@@ -316,6 +349,7 @@ function test_final_state()
   test_place_guids_non_null,
   test_place_guid_annotation_imported,
   test_place_guid_annotation_removed,
+  test_moz_hosts,
   test_final_state,
 ].forEach(add_test);
 

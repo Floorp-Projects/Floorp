@@ -93,17 +93,17 @@
 //#define SkLONGLONG int64_t
 
 
-/*  Some envorinments do not suport writable globals (eek!). If yours does not,
-    define this flag.
- */
-//#define SK_USE_RUNTIME_GLOBALS
-
-
 /*  To write debug messages to a console, skia will call SkDebugf(...) following
     printf conventions (e.g. const char* format, ...). If you want to redirect
     this to something other than printf, define yours here
  */
 //#define SkDebugf(...)  MyFunction(__VA_ARGS__)
+
+/*
+ *  To specify a different default font cache limit, define this. If this is
+ *  undefined, skia will use a built-in value.
+ */
+//#define SK_DEFAULT_FONT_CACHE_LIMIT   (1024 * 1024)
 
 /* If defined, use CoreText instead of ATSUI on OS X.
 */
@@ -145,6 +145,8 @@
 //#define SK_SUPPORT_UNITTEST
 #endif
 
+/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
+ */
 #define SK_DISABLE_DITHER_32BIT_GRADIENT
 
 /* If your system embeds skia and has complex event logging, define this
@@ -168,8 +170,10 @@
         #define SK_A32_SHIFT    24
 #endif
 
+/*  Don't include stdint.h on windows as it conflicts with our build system.
+ */
 #ifdef SK_BUILD_FOR_WIN32 
-        #define SK_IGNORE_STDINT_DOT_H 
- #endif 
+    #define SK_IGNORE_STDINT_DOT_H 
+#endif 
 
 #endif

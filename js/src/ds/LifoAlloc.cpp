@@ -82,29 +82,6 @@ BumpChunk::canAlloc(size_t n)
     return bumped <= limit && bumped > headerBase();
 }
 
-bool
-BumpChunk::canAllocUnaligned(size_t n)
-{
-    char *bumped = bump + n;
-    return bumped <= limit && bumped > headerBase();
-}
-
-void *
-BumpChunk::tryAllocUnaligned(size_t n)
-{
-    char *oldBump = bump;
-    char *newBump = bump + n;
-    if (newBump > limit)
-        return NULL;
-
-    if (JS_UNLIKELY(newBump < oldBump))
-        return NULL;
-
-    JS_ASSERT(canAllocUnaligned(n)); /* Ensure consistency between "can" and "try". */
-    setBump(newBump);
-    return oldBump;
-}
-
 } /* namespace detail */
 } /* namespace js */
 
@@ -143,8 +120,12 @@ LifoAlloc::freeUnused()
     }
 
     /* Free all chunks after |latest|. */
-    for (BumpChunk *victim = latest->next(); victim; victim = victim->next())
+    BumpChunk *it = latest->next();
+    while (it) {
+        BumpChunk *victim = it;
+        it = it->next();
         BumpChunk::delete_(victim);
+    }
 
     latest->setNext(NULL);
 }
@@ -190,38 +171,4 @@ LifoAlloc::getOrCreateChunk(size_t n)
         latest = newChunk;
     }
     return newChunk;
-}
-
-void *
-LifoAlloc::allocUnaligned(size_t n)
-{
-    void *result;
-    if (latest && (result = latest->tryAllocUnaligned(n)))
-        return result;
-
-    return alloc(n);
-}
-
-void *
-LifoAlloc::reallocUnaligned(void *origPtr, size_t origSize, size_t incr)
-{
-    JS_ASSERT(first && latest);
-
-    /*
-     * Maybe we can grow the latest allocation in a BumpChunk.
-     *
-     * Note: we could also realloc the whole BumpChunk in the !canAlloc
-     * case, but this should not be a frequently hit case.
-     */
-    if (latest
-        && origPtr == (char *) latest->mark() - origSize
-        && latest->canAllocUnaligned(incr)) {
-        JS_ALWAYS_TRUE(allocUnaligned(incr));
-        return origPtr;
-    }
-
-    /* Otherwise, memcpy. */
-    size_t newSize = origSize + incr;
-    void *newPtr = allocUnaligned(newSize);
-    return newPtr ? memcpy(newPtr, origPtr, origSize) : NULL;
 }
