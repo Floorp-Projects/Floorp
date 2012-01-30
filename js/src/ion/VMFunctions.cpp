@@ -43,6 +43,8 @@
 #include "ion/Snapshots.h"
 #include "ion/IonFrames.h"
 
+#include "jsinterpinlines.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -68,6 +70,74 @@ bool ReportOverRecursed(JSContext *cx)
 
     // Cause an InternalError.
     return false;
+}
+
+template<bool Equal>
+bool
+LooselyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res)
+{
+    bool equal;
+    if (!js::LooselyEqual(cx, lhs, rhs, &equal))
+        return false;
+    *res = (equal == Equal);
+    return true;
+}
+
+template bool LooselyEqual<true>(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+template bool LooselyEqual<false>(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+
+template<bool Equal>
+bool
+StrictlyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res)
+{
+    bool equal;
+    if (!js::StrictlyEqual(cx, lhs, rhs, &equal))
+        return false;
+    *res = (equal == Equal);
+    return true;
+}
+
+template bool StrictlyEqual<true>(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+template bool StrictlyEqual<false>(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+
+bool
+LessThan(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res)
+{
+    bool cond;
+    if (!LessThanOperation(cx, lhs, rhs, &cond))
+        return false;
+    *res = cond;
+    return true;
+}
+
+bool
+LessThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res)
+{
+    bool cond;
+    if (!LessThanOrEqualOperation(cx, lhs, rhs, &cond))
+        return false;
+    *res = cond;
+    return true;
+}
+
+bool
+GreaterThan(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res)
+{
+    bool cond;
+    if (!GreaterThanOperation(cx, lhs, rhs, &cond))
+        return false;
+    *res = cond;
+    return true;
+}
+
+bool
+GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res)
+{
+    bool cond;
+    if (!GreaterThanOrEqualOperation(cx, lhs, rhs, &cond))
+        return false;
+    *res = cond;
+    return true;
 }
 
 } // namespace ion

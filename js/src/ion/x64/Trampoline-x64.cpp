@@ -510,10 +510,22 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Reserve space for the outparameter.
     Register outReg = InvalidReg;
-    if (f.outParam == Type_Value) {
+    switch (f.outParam) {
+      case Type_Value:
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(Value));
-        masm.movq(rsp, outReg);
+        masm.movq(esp, outReg);
+        break;
+
+      case Type_JSBool:
+        outReg = regs.takeAny();
+        masm.reserveStack(sizeof(JSBool));
+        masm.movq(esp, outReg);
+        break;
+
+      default:
+        JS_ASSERT(f.outParam == Type_Void);
+        break;
     }
 
     Register temp = regs.getAny();
@@ -579,9 +591,21 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     }
 
     // Load the outparam and free any allocated stack.
-    if (f.outParam == Type_Value) {
+    switch (f.outParam) {
+      case Type_Value:
         masm.loadValue(Address(esp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
+        break;
+
+      case Type_JSBool:
+        JS_STATIC_ASSERT(sizeof(JSBool) == 4);
+        masm.load32(Address(esp, 0), ReturnReg);
+        masm.freeStack(sizeof(JSBool));
+        break;
+
+      default:
+        JS_ASSERT(f.outParam == Type_Void);
+        break;
     }
 
     // Check if the callign frame has been invalidated, in which case we can't
