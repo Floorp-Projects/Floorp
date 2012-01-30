@@ -5847,24 +5847,21 @@ nsDocument::SetTextContent(const nsAString & aTextContent)
 NS_IMETHODIMP
 nsDocument::LookupPrefix(const nsAString & namespaceURI, nsAString & aResult)
 {
-  SetDOMStringToNull(aResult);
-  return NS_OK;
+  return nsINode::LookupPrefix(namespaceURI, aResult);
 }
 
 NS_IMETHODIMP
 nsDocument::IsDefaultNamespace(const nsAString & namespaceURI,
                               bool *aResult)
 {
-  *aResult = namespaceURI.IsEmpty();
-  return NS_OK;
+  return nsINode::IsDefaultNamespace(namespaceURI, aResult);
 }
 
 NS_IMETHODIMP
 nsDocument::LookupNamespaceURI(const nsAString & prefix,
                               nsAString & aResult)
 {
-  SetDOMStringToNull(aResult);
-  return NS_OK;
+  return nsINode::LookupNamespaceURI(prefix, aResult);
 }
 
 NS_IMETHODIMP
