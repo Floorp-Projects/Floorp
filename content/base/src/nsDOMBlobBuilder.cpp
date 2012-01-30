@@ -177,7 +177,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMBlobBuilder)
 NS_INTERFACE_MAP_END
 
 nsresult
-nsDOMBlobBuilder::AppendVoidPtr(void* aData, PRUint32 aLength)
+nsDOMBlobBuilder::AppendVoidPtr(const void* aData, PRUint32 aLength)
 {
   NS_ENSURE_ARG_POINTER(aData);
 
@@ -226,6 +226,14 @@ NS_IMETHODIMP
 nsDOMBlobBuilder::GetBlob(const nsAString& aContentType,
                           nsIDOMBlob** aBlob)
 {
+  return GetBlobInternal(aContentType, true, aBlob);
+}
+
+nsresult
+nsDOMBlobBuilder::GetBlobInternal(const nsAString& aContentType,
+                                  bool aClearBuffer,
+                                  nsIDOMBlob** aBlob)
+{
   NS_ENSURE_ARG(aBlob);
 
   Flush();
@@ -238,7 +246,9 @@ nsDOMBlobBuilder::GetBlob(const nsAString& aContentType,
   // the existing contents of the BlobBuilder should be included
   // in the next blob produced.  This seems silly and has been raised
   // on the WHATWG listserv.
-  mBlobs.Clear();
+  if (aClearBuffer) {
+    mBlobs.Clear();
+  }
 
   return NS_OK;
 }
