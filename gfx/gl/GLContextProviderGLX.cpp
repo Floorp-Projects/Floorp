@@ -261,11 +261,11 @@ GLXLibrary::EnsureInitialized()
         mHasRobustness = true;
     }
 
-    gIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
+    gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
     gIsChromium = (serverVendor &&
-                   DoesStringMatch(serverVendor, "Chromium")) ||
+                   DoesVendorStringMatch(serverVendor, "Chromium")) ||
         (serverVersionStr &&
-         DoesStringMatch(serverVersionStr, "Chromium"));
+         DoesVendorStringMatch(serverVersionStr, "Chromium"));
 
     mInitialized = true;
     return true;
