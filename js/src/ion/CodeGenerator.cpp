@@ -730,38 +730,83 @@ CodeGenerator::visitStringLength(LStringLength *lir)
 bool
 CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
-    typedef bool (*Stub)(JSContext *, const Value &, const Value &, Value *);
-
-    Stub stub;
-    switch (lir->jsop()) {
-      case JSOP_ADD:
-        stub = js::AddValues;
-        break;
-
-      case JSOP_SUB:
-        stub = js::SubValues;
-        break;
-
-      case JSOP_MUL:
-        stub = js::MulValues;
-        break;
-
-      case JSOP_DIV:
-        stub = js::DivValues;
-        break;
-
-      case JSOP_MOD:
-        stub = js::ModValues;
-        break;
-
-      default:
-        JS_ASSERT("Unexpected binary op");
-        return false;
-    }
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    static const VMFunction AddInfo = FunctionInfo<pf>(js::AddValues);
+    static const VMFunction SubInfo = FunctionInfo<pf>(js::SubValues);
+    static const VMFunction MulInfo = FunctionInfo<pf>(js::MulValues);
+    static const VMFunction DivInfo = FunctionInfo<pf>(js::DivValues);
+    static const VMFunction ModInfo = FunctionInfo<pf>(js::ModValues);
 
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
-    return callVM(FunctionInfo<Stub>(stub), lir);
+
+    switch (lir->jsop()) {
+      case JSOP_ADD:
+        return callVM(AddInfo, lir);
+
+      case JSOP_SUB:
+        return callVM(SubInfo, lir);
+
+      case JSOP_MUL:
+        return callVM(MulInfo, lir);
+
+      case JSOP_DIV:
+        return callVM(DivInfo, lir);
+
+      case JSOP_MOD:
+        return callVM(ModInfo, lir);
+
+      default:
+        JS_NOT_REACHED("Unexpected binary op");
+        return false;
+    }
+}
+
+bool
+CodeGenerator::visitCompareV(LCompareV *lir)
+{
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, JSBool *);
+    static const VMFunction EqInfo = FunctionInfo<pf>(ion::LooselyEqual<true>);
+    static const VMFunction NeInfo = FunctionInfo<pf>(ion::LooselyEqual<false>);
+    static const VMFunction StrictEqInfo = FunctionInfo<pf>(ion::StrictlyEqual<true>);
+    static const VMFunction StrictNeInfo = FunctionInfo<pf>(ion::StrictlyEqual<false>);
+    static const VMFunction LtInfo = FunctionInfo<pf>(ion::LessThan);
+    static const VMFunction LeInfo = FunctionInfo<pf>(ion::LessThanOrEqual);
+    static const VMFunction GtInfo = FunctionInfo<pf>(ion::GreaterThan);
+    static const VMFunction GeInfo = FunctionInfo<pf>(ion::GreaterThanOrEqual);
+
+    pushArg(ToValue(lir, LBinaryV::RhsInput));
+    pushArg(ToValue(lir, LBinaryV::LhsInput));
+
+    switch (lir->jsop()) {
+      case JSOP_EQ:
+        return callVM(EqInfo, lir);
+
+      case JSOP_NE:
+        return callVM(NeInfo, lir);
+
+      case JSOP_STRICTEQ:
+        return callVM(StrictEqInfo, lir);
+
+      case JSOP_STRICTNE:
+        return callVM(StrictNeInfo, lir);
+
+      case JSOP_LT:
+        return callVM(LtInfo, lir);
+
+      case JSOP_LE:
+        return callVM(LeInfo, lir);
+
+      case JSOP_GT:
+        return callVM(GtInfo, lir);
+
+      case JSOP_GE:
+        return callVM(GeInfo, lir);
+
+      default:
+        JS_NOT_REACHED("Unexpected compare op");
+        return false;
+    }
 }
 
 bool

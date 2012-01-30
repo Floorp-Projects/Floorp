@@ -71,6 +71,7 @@
     _(TestVAndBranch)               \
     _(Compare)                      \
     _(CompareD)                     \
+    _(CompareV)                     \
     _(CompareAndBranch)             \
     _(CompareDAndBranch)            \
     _(AddI)                         \

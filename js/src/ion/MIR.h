@@ -1148,6 +1148,7 @@ class MCompare
     AliasSet getAliasSet() const {
         if (specialization_ == MIRType_None)
             return AliasSet::Store(AliasSet::Any);
+        JS_ASSERT(specialization_ <= MIRType_Object);
         return AliasSet::None();
     }
 };

@@ -282,9 +282,12 @@ LIRGenerator::visitCompare(MCompare *comp)
             return define(new LCompareD(comp->jsop(), useRegister(left), useRegister(right)), comp);
     }
 
-    // :TODO: implement LCompareV. Bug: 679804
-    JS_NOT_REACHED("LCompareV NYI");
-    return true;
+    LCompareV *lir = new LCompareV(comp->jsop());
+    if (!useBox(lir, LCompareV::LhsInput, left))
+        return false;
+    if (!useBox(lir, LCompareV::RhsInput, right))
+        return false;
+    return defineVMReturn(lir, comp) && assignSafepoint(lir, comp);
 }
 
 static void
