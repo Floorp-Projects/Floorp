@@ -78,8 +78,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0xdc68f070, 0x226d, 0x11e1, \
- { 0xbf, 0xc2, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+{ 0x94671671, 0x9e1b, 0x447a, \
+  { 0xad, 0xb7, 0xc3, 0x2e, 0x05, 0x6a, 0x96, 0xc9 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -947,6 +947,9 @@ public:
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+
+  virtual bool IsPurple() = 0;
+  virtual void RemovePurple() = 0;
 
 protected:
   /**
