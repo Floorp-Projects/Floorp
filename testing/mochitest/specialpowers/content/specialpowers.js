@@ -39,7 +39,7 @@
  */
 
 function SpecialPowers(window) {
-  this.window = Components.utils.getWeakReference(window);
+  this.window = window;
   this._encounteredCrashDumpFiles = [];
   this._unexpectedCrashDumpFiles = { };
   this._crashDumpDir = null;
