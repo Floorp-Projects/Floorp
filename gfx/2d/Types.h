@@ -68,6 +68,7 @@ enum SurfaceFormat
 
 enum BackendType
 {
+  BACKEND_NONE,
   BACKEND_DIRECT2D,
   BACKEND_COREGRAPHICS,
   BACKEND_CAIRO,
