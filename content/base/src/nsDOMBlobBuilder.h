@@ -84,8 +84,12 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZBLOBBUILDER
+
+  nsresult GetBlobInternal(const nsAString& aContentType,
+                           bool aClearBuffer, nsIDOMBlob** aBlob);
+  nsresult AppendVoidPtr(const void* aData, PRUint32 aLength);
+
 protected:
-  nsresult AppendVoidPtr(void* aData, PRUint32 aLength);
   nsresult AppendString(JSString* aString, JSContext* aCx);
   nsresult AppendBlob(nsIDOMBlob* aBlob);
   nsresult AppendArrayBuffer(JSObject* aBuffer);
