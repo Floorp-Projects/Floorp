@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(e01171b0-712a-47ce-8552-b7b2ef0a2507)]
+[scriptable, uuid(ab6e9c71-8aa1-40bb-8bf9-65e16429055f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -403,8 +403,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aListener listener that receives information about the CC graph
    *                  (see @mozilla.org/cycle-collector-logger;1 for a logger
    *                   component)
+   * @param aExtraForgetSkippableCalls indicates how many times
+   *                                   nsCycleCollector_forgetSkippable will
+   *                                   be called before running cycle collection.
+   *                                   -1 prevents the default
+   *                                   nsCycleCollector_forgetSkippable call
+   *                                   which happens after garbage collection.
    */
-  void garbageCollect([optional] in nsICycleCollectorListener aListener);
+  void garbageCollect([optional] in nsICycleCollectorListener aListener,
+                      [optional] in long aExtraForgetSkippableCalls);
 
   /**
    * Force a cycle collection without garbage collection.
@@ -415,8 +422,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aListener listener that receives information about the CC graph
    *                  (see @mozilla.org/cycle-collector-logger;1 for a logger
    *                   component)
+   * @param aExtraForgetSkippableCalls indicates how many times
+   *                                   nsCycleCollector_forgetSkippable will
+   *                                   be called before running cycle collection.
+   *                                   -1 prevents the default
+   *                                   nsCycleCollector_forgetSkippable call
+   *                                   which happens after garbage collection.
    */
-  void cycleCollect([optional] in nsICycleCollectorListener aListener);
+  void cycleCollect([optional] in nsICycleCollectorListener aListener,
+                    [optional] in long aExtraForgetSkippableCalls);
 
   /** Synthesize a simple gesture event for a window. The event types
    *  supported are: MozSwipeGesture, MozMagnifyGestureStart,
