@@ -1012,7 +1012,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // ALWAYS drain overflow. We never want to leave the previnflow's
   // overflow lines hanging around; block reflow depends on the
   // overflow line lists being cleared out between reflow passes.
-  DrainOverflowLines(state);
+  DrainOverflowLines();
 
   // Handle paginated overflow (see nsContainerFrame.h)
   nsOverflowAreas ocBounds;
@@ -4439,7 +4439,7 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
 // the invariant that the property is never set if the list is empty.
 
 bool
-nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
+nsBlockFrame::DrainOverflowLines()
 {
 #ifdef DEBUG
   VerifyOverflowSituation();
