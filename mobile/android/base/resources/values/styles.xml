@@ -40,7 +40,6 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">42dip</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:background">@drawable/address_bar_bg</item>
     </style>
 
     <!-- Address bar - Button -->

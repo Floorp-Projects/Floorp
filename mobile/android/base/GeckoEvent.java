@@ -193,7 +193,7 @@ public class GeckoEvent {
         PointF geckoPoint = new PointF(event.getX(eventIndex), event.getY(eventIndex));
         geckoPoint = GeckoApp.mAppContext.getLayerController().convertViewPointToLayerPoint(geckoPoint);
 
-        mPoints[index] = new Point((int)Math.round(geckoPoint.x), (int)Math.round(geckoPoint.y));
+        mPoints[index] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
         mPointIndicies[index] = event.getPointerId(eventIndex);
         // getToolMajor, getToolMinor and getOrientation are API Level 9 features
         if (Build.VERSION.SDK_INT >= 9) {

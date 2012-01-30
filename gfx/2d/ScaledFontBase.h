@@ -39,8 +39,12 @@
 #define MOZILLA_GFX_SCALEDFONTBASE_H_
 
 #include "2D.h"
+
 #ifdef USE_SKIA
 #include "skia/SkTypeface.h"
+#endif
+#ifdef USE_CAIRO
+#include "cairo.h"
 #endif
 
 class gfxFont;
@@ -58,13 +62,23 @@ public:
 #ifdef USE_SKIA
   ScaledFontBase(gfxFont* aFont, Float aSize);
   virtual SkTypeface* GetSkTypeface() { return mTypeface; }
+#endif
+
+  // Not true, but required to instantiate a ScaledFontBase.
   virtual FontType GetType() const { return FONT_SKIA; }
+
+#ifdef USE_CAIRO
+  cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
+  void SetCairoScaledFont(cairo_scaled_font_t* font);
 #endif
 
 protected:
   friend class DrawTargetSkia;
 #ifdef USE_SKIA
   SkTypeface* mTypeface;
+#endif
+#ifdef USE_CAIRO
+  cairo_scaled_font_t* mScaledFont;
 #endif
   Float mSize;
 };

@@ -36,20 +36,30 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ScaledFontBase.h"
+
+#include "gfxFont.h"
+
 #ifdef USE_SKIA
 #include "PathSkia.h"
 #include "skia/SkPaint.h"
 #include "skia/SkPath.h"
 #endif
+
+#ifdef USE_CAIRO
+#include "PathCairo.h"
+#endif
+
 #include <vector>
 #include <cmath>
+
 using namespace std;
-#include "gfxFont.h"
 
 namespace mozilla {
 namespace gfx {
+
 #ifdef USE_SKIA
-static SkTypeface::Style gfxFontStyleToSkia(const gfxFontStyle* aStyle)
+static SkTypeface::Style
+gfxFontStyleToSkia(const gfxFontStyle* aStyle)
 {
   if (aStyle->style == NS_FONT_STYLE_ITALIC) {
     if (aStyle->weight == NS_FONT_WEIGHT_BOLD) {
@@ -62,7 +72,9 @@ static SkTypeface::Style gfxFontStyleToSkia(const gfxFontStyle* aStyle)
   }
   return SkTypeface::kNormal;
 }
+#endif
 
+#ifdef USE_SKIA
 ScaledFontBase::ScaledFontBase(gfxFont* aFont, Float aSize)
   : mSize(aSize)
 {
@@ -76,6 +88,9 @@ ScaledFontBase::~ScaledFontBase()
 #ifdef USE_SKIA
   SkSafeUnref(mTypeface);
 #endif
+#ifdef USE_CAIRO
+  cairo_scaled_font_destroy(mScaledFont);
+#endif
 }
 
 ScaledFontBase::ScaledFontBase(Float aSize)
@@ -84,8 +99,10 @@ ScaledFontBase::ScaledFontBase(Float aSize)
 #ifdef USE_SKIA
   mTypeface = NULL;
 #endif
+#ifdef USE_CAIRO
+  mScaledFont = NULL;
+#endif
 }
-
 
 TemporaryRef<Path>
 ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget)
@@ -113,8 +130,44 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
     return new PathSkia(path, FILL_WINDING);
   }
 #endif
+#ifdef USE_CAIRO
+  if (aTarget->GetType() == BACKEND_CAIRO) {
+    MOZ_ASSERT(mScaledFont);
+
+    RefPtr<PathBuilder> builder_iface = aTarget->CreatePathBuilder();
+    PathBuilderCairo* builder = static_cast<PathBuilderCairo*>(builder_iface.get());
+
+    // Manually build the path for the PathBuilder.
+    RefPtr<CairoPathContext> context = builder->GetPathContext();
+
+    cairo_set_scaled_font(*context, mScaledFont);
+
+    // Convert our GlyphBuffer into an array of Cairo glyphs.
+    std::vector<cairo_glyph_t> glyphs(aBuffer.mNumGlyphs);
+    for (uint32_t i = 0; i < aBuffer.mNumGlyphs; ++i) {
+      glyphs[i].index = aBuffer.mGlyphs[i].mIndex;
+      glyphs[i].x = aBuffer.mGlyphs[i].mPosition.x;
+      glyphs[i].y = aBuffer.mGlyphs[i].mPosition.y;
+    }
+
+    cairo_glyph_path(*context, &glyphs[0], aBuffer.mNumGlyphs);
+
+    return builder->Finish();
+  }
+#endif
   return NULL;
 }
+
+#ifdef USE_CAIRO
+void
+ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font)
+{
+  MOZ_ASSERT(!mScaledFont);
+
+  mScaledFont = font;
+  cairo_scaled_font_reference(mScaledFont);
+}
+#endif
 
 }
 }

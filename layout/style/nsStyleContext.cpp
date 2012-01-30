@@ -438,16 +438,20 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // Visibility, Outline, TableBorder, Table, Text, UIReset, Quotes
   nsChangeHint maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
       nsChangeHint_UpdateTransformLayer | nsChangeHint_UpdateOpacityLayer |
-      nsChangeHint_UpdateOverflow);
+      NS_STYLE_HINT_UPDATE_OVERFLOW);
   DO_STRUCT_DIFFERENCE(Display);
 
+  // Changes to 'visibility' cause SyncFrameView.
   maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-      nsChangeHint_UpdateCursor);
+      nsChangeHint_SyncFrameView);
+  DO_STRUCT_DIFFERENCE(Visibility);
+
+  maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
+      NS_STYLE_HINT_UPDATE_OVERFLOW | nsChangeHint_UpdateCursor);
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
   DO_STRUCT_DIFFERENCE(Content);
   DO_STRUCT_DIFFERENCE(UserInterface);
-  DO_STRUCT_DIFFERENCE(Visibility);
   DO_STRUCT_DIFFERENCE(TableBorder);
   DO_STRUCT_DIFFERENCE(Table);
   DO_STRUCT_DIFFERENCE(UIReset);
@@ -461,31 +465,36 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(SVGReset);
   DO_STRUCT_DIFFERENCE(SVG);
 
+  maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW | NS_STYLE_HINT_UPDATE_OVERFLOW);
+  DO_STRUCT_DIFFERENCE(Border);
+  DO_STRUCT_DIFFERENCE(TextReset);
+      
+  // Changes to 'z-index' cause SyncFrameView.
+  maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_SyncFrameView);
+  DO_STRUCT_DIFFERENCE(Position);
+
   // At this point, we know that the worst kind of damage we could do is
   // a reflow.
   maxHint = NS_STYLE_HINT_REFLOW;
-      
+
   // The following structs cause (as their maximal difference) a reflow
-  // to occur.  REFLOW Structs: Font, Margin, Padding, Border, List,
-  // Position, Text, TextReset
+  // to occur.  REFLOW Structs: Font, Margin, Padding, List, Position,
+  // TextReset
   DO_STRUCT_DIFFERENCE(Font);
   DO_STRUCT_DIFFERENCE(Margin);
   DO_STRUCT_DIFFERENCE(Padding);
-  DO_STRUCT_DIFFERENCE(Border);
-  DO_STRUCT_DIFFERENCE(Position);
-  DO_STRUCT_DIFFERENCE(TextReset);
 
   // Outline needs to update the overflow and repaint.
-  maxHint = nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_UpdateOverflow);
+  maxHint = NS_STYLE_HINT_UPDATE_OVERFLOW;
   DO_STRUCT_DIFFERENCE(Outline);
 
-  // Most backgrounds only require a re-render (i.e., a VISUAL change), but
-  // backgrounds using -moz-element need to reset SVG effects, too.
-  maxHint = nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_UpdateEffects);
+  // Most backgrounds only require a repaint, but backgrounds using -moz-element
+  // need to reset SVG effects, too.
+  maxHint = nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
   DO_STRUCT_DIFFERENCE(Background);
 
   // Color only needs a repaint.
-  maxHint = NS_STYLE_HINT_VISUAL;
+  maxHint = nsChangeHint_RepaintFrame;
   DO_STRUCT_DIFFERENCE(Color);
 
 #undef DO_STRUCT_DIFFERENCE
