@@ -211,6 +211,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "mozilla/Preferences.h"
 
 #include "nsWrapperCacheInlines.h"
+#include "nsIDOMDocumentType.h"
+#include "nsIDOMWindowUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsUnicharUtils.h"
 
@@ -220,6 +222,17 @@ using namespace mozilla::widget;
 using namespace mozilla;
 
 const char kLoadAsData[] = "loadAsData";
+
+/**
+ * Default values for the ViewportInfo structure.
+ */
+static const float    kViewportMinScale = 0.0;
+static const float    kViewportMaxScale = 10.0;
+static const PRUint32 kViewportMinWidth = 200;
+static const PRUint32 kViewportMaxWidth = 10000;
+static const PRUint32 kViewportMinHeight = 223;
+static const PRUint32 kViewportMaxHeight = 10000;
+static const PRInt32  kViewportDefaultScreenWidth = 980;
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -4553,6 +4566,198 @@ static void ProcessViewportToken(nsIDocument *aDocument,
 
 #define IS_SEPARATOR(c) ((c == '=') || (c == ',') || (c == ';') || \
                          (c == '\t') || (c == '\n') || (c == '\r'))
+
+/* static */
+ViewportInfo
+nsContentUtils::GetViewportInfo(nsIDocument *aDocument)
+{
+  ViewportInfo ret;
+  ret.defaultZoom = 1.0;
+  ret.autoSize = true;
+  ret.allowZoom = true;
+  ret.autoScale = true;
+
+  // If the docType specifies that we are on a site optimized for mobile,
+  // then we want to return specially crafted defaults for the viewport info.
+  nsCOMPtr<nsIDOMDocument>
+    domDoc(do_QueryInterface(aDocument));
+
+  nsCOMPtr<nsIDOMDocumentType> docType;
+  nsresult rv = domDoc->GetDoctype(getter_AddRefs(docType));
+  if (NS_SUCCEEDED(rv) && docType) {
+    nsAutoString docId;
+    rv = docType->GetPublicId(docId);
+    if (NS_SUCCEEDED(rv)) {
+      if ((docId.Find("WAP") != -1) ||
+          (docId.Find("Mobile") != -1) ||
+          (docId.Find("WML") != -1))
+      {
+        return ret;
+      }
+    }
+  }
+
+  if (aDocument->IsXUL()) {
+    ret.autoScale = false;
+    return ret;
+  }
+
+  nsIDOMWindow* window = aDocument->GetWindow();
+  nsCOMPtr<nsIDOMWindowUtils> windowUtils(do_GetInterface(window));
+
+  if (!windowUtils) {
+    return ret;
+  }
+
+  nsAutoString handheldFriendly;
+  aDocument->GetHeaderData(nsGkAtoms::handheldFriendly, handheldFriendly);
+
+  if (handheldFriendly.EqualsLiteral("true")) {
+    return ret;
+  }
+
+  PRInt32 errorCode;
+
+  nsAutoString minScaleStr;
+  aDocument->GetHeaderData(nsGkAtoms::minimum_scale, minScaleStr);
+
+  float scaleMinFloat = minScaleStr.ToFloat(&errorCode);
+
+  if (errorCode) {
+    scaleMinFloat = kViewportMinScale;
+  }
+
+  scaleMinFloat = NS_MIN(scaleMinFloat, kViewportMaxScale);
+  scaleMinFloat = NS_MAX(scaleMinFloat, kViewportMinScale);
+
+  nsAutoString maxScaleStr;
+  aDocument->GetHeaderData(nsGkAtoms::maximum_scale, maxScaleStr);
+
+  // We define a special error code variable for the scale and max scale,
+  // because they are used later (see the width calculations).
+  PRInt32 scaleMaxErrorCode;
+  float scaleMaxFloat = maxScaleStr.ToFloat(&scaleMaxErrorCode);
+
+  if (scaleMaxErrorCode) {
+    scaleMaxFloat = kViewportMaxScale;
+  }
+
+  scaleMaxFloat = NS_MIN(scaleMaxFloat, kViewportMaxScale);
+  scaleMaxFloat = NS_MAX(scaleMaxFloat, kViewportMinScale);
+
+  nsAutoString scaleStr;
+  aDocument->GetHeaderData(nsGkAtoms::viewport_initial_scale, scaleStr);
+
+  PRInt32 scaleErrorCode;
+  float scaleFloat = scaleStr.ToFloat(&scaleErrorCode);
+  scaleFloat = NS_MIN(scaleFloat, scaleMaxFloat);
+  scaleFloat = NS_MAX(scaleFloat, scaleMinFloat);
+
+  nsAutoString widthStr, heightStr;
+
+  aDocument->GetHeaderData(nsGkAtoms::viewport_height, heightStr);
+  aDocument->GetHeaderData(nsGkAtoms::viewport_width, widthStr);
+
+  bool autoSize = false;
+
+  if (widthStr.EqualsLiteral("device-width")) {
+    autoSize = true;
+  }
+
+  if (widthStr.IsEmpty() &&
+     (heightStr.EqualsLiteral("device-height") ||
+          scaleFloat == 1.0))
+  {
+    autoSize = true;
+  }
+
+  // XXXjwir3:
+  // See bug 706918, comment 23 for more information on this particular section
+  // of the code. We're using "screen size" in place of the size of the content
+  // area, because on mobile, these are close or equal. This will work for our
+  // purposes (bug 706198), but it will need to be changed in the future to be
+  // more correct when we bring the rest of the viewport code into platform.
+  // We actually want the size of the content area, in the event that we don't
+  // have any metadata about the width and/or height. On mobile, the screen size
+  // and the size of the content area are very close, or the same value.
+  // In XUL fennec, the content area is the size of the <browser> widget, but
+  // in native fennec, the content area is the size of the Gecko LayerView
+  // object.
+
+  // TODO:
+  // Once bug 716575 has been resolved, this code should be changed so that it
+  // does the right thing on all platforms.
+  nsresult result;
+  PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
+  nsCOMPtr<nsIScreenManager> screenMgr =
+    do_GetService("@mozilla.org/gfx/screenmanager;1", &result);
+
+  nsCOMPtr<nsIScreen> screen;
+  screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+  screen->GetRect(&screenLeft, &screenTop, &screenWidth, &screenHeight);
+
+  PRUint32 width = widthStr.ToInteger(&errorCode);
+  if (errorCode) {
+    if (autoSize) {
+      width = screenWidth;
+    } else {
+      width = Preferences::GetInt("browser.viewport.desktopWidth", 0);
+    }
+  }
+
+  width = NS_MIN(width, kViewportMaxWidth);
+  width = NS_MAX(width, kViewportMinWidth);
+
+  // Also recalculate the default zoom, if it wasn't specified in the metadata,
+  // and the width is specified.
+  if (scaleStr.IsEmpty() && !widthStr.IsEmpty()) {
+    scaleFloat = NS_MAX(scaleFloat, (float)(screenWidth/width));
+  }
+
+  PRUint32 height = heightStr.ToInteger(&errorCode);
+
+  if (errorCode) {
+    height = width * ((float)screenHeight / screenWidth);
+  }
+
+  // If height was provided by the user, but width wasn't, then we should
+  // calculate the width.
+  if (widthStr.IsEmpty() && !heightStr.IsEmpty()) {
+    width = (PRUint32) ((height * screenWidth) / screenHeight);
+  }
+
+  height = NS_MIN(height, kViewportMaxHeight);
+  height = NS_MAX(height, kViewportMinHeight);
+
+  // We need to perform a conversion, but only if the initial or maximum
+  // scale were set explicitly by the user.
+  if (!scaleStr.IsEmpty() && !scaleErrorCode) {
+    width = NS_MAX(width, (PRUint32)(screenWidth / scaleFloat));
+    height = NS_MAX(height, (PRUint32)(screenHeight / scaleFloat));
+  } else if (!maxScaleStr.IsEmpty() && !scaleMaxErrorCode) {
+    width = NS_MAX(width, (PRUint32)(screenWidth / scaleMaxFloat));
+    height = NS_MAX(height, (PRUint32)(screenHeight / scaleMaxFloat));
+  }
+
+  bool allowZoom = true;
+  nsAutoString userScalable;
+  aDocument->GetHeaderData(nsGkAtoms::viewport_user_scalable, userScalable);
+
+  if ((userScalable.EqualsLiteral("0")) ||
+      (userScalable.EqualsLiteral("no")) ||
+      (userScalable.EqualsLiteral("false"))) {
+    allowZoom = false;
+  }
+
+  ret.allowZoom = allowZoom;
+  ret.width = width;
+  ret.height = height;
+  ret.defaultZoom = scaleFloat;
+  ret.minZoom = scaleMinFloat;
+  ret.maxZoom = scaleMaxFloat;
+  ret.autoSize = autoSize;
+  return ret;
+}
 
 /* static */
 nsresult
