@@ -164,6 +164,7 @@ CompositorParent::DeallocPLayers(PLayersParent* actor)
   return true;
 }
 
+<<<<<<< local
 #ifdef MOZ_WIDGET_ANDROID
 void
 CompositorParent::RegisterCompositorWithJava()
@@ -173,6 +174,8 @@ CompositorParent::RegisterCompositorWithJava()
 #endif
 
 
+=======
+>>>>>>> other
 } // namespace layers
 } // namespace mozilla
 

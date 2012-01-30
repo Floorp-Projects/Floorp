@@ -43,6 +43,7 @@
 
 @interface mozButtonAccessible : mozAccessible
 - (void)click;
+- (BOOL)isTab;
 @end
 
 @interface mozCheckboxAccessible : mozButtonAccessible
@@ -52,4 +53,12 @@
 
 /* Used for buttons that may pop up a menu. */
 @interface mozPopupButtonAccessible : mozButtonAccessible
+@end
+
+/* Class for tabs - not individual tabs */
+@interface mozTabsAccessible : mozAccessible
+{
+  NSMutableArray* mTabs;
+}
+-(id)tabs;
 @end

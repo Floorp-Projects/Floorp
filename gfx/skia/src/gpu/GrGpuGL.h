@@ -29,9 +29,101 @@ public:
     GrGLBinding glBinding() const { return fGLBinding; }
     GrGLVersion glVersion() const { return fGLVersion; }
 
+    // GrGpu overrides
+    virtual GrPixelConfig preferredReadPixelsConfig(GrPixelConfig config)
+                                                            const SK_OVERRIDE;
+    virtual GrPixelConfig preferredWritePixelsConfig(GrPixelConfig config)
+                                                            const SK_OVERRIDE;
+    virtual bool readPixelsWillPayForYFlip(
+                                    GrRenderTarget* renderTarget,
+                                    int left, int top,
+                                    int width, int height,
+                                    GrPixelConfig config,
+                                    size_t rowBytes) const SK_OVERRIDE;
+    virtual bool fullReadPixelsIsFasterThanPartial() const SK_OVERRIDE;
 protected:
     GrGpuGL(const GrGLInterface* glInterface, GrGLBinding glBinding);
 
+    struct GLCaps {
+        GLCaps()
+            // make defaults be the most restrictive
+            : fStencilFormats(8) // prealloc space for    stencil formats
+            , fMSFBOType(kNone_MSFBO)
+            , fMaxFragmentUniformVectors(0)
+            , fRGBA8RenderbufferSupport(false)
+            , fBGRAFormatSupport(false)
+            , fBGRAIsInternalFormat(false)
+            , fTextureSwizzleSupport(false)
+            , fUnpackRowLengthSupport(false)
+            , fUnpackFlipYSupport(false)
+            , fPackRowLengthSupport(false)
+            , fPackFlipYSupport(false)
+            , fTextureUsageSupport(false)
+            , fTexStorageSupport(false) {
+            memset(fAASamples, 0, sizeof(fAASamples));
+        }
+        SkTArray<GrGLStencilBuffer::Format, true> fStencilFormats;
+
+        enum {
+            /**
+             * no support for MSAA FBOs
+             */
+            kNone_MSFBO = 0,  
+            /**
+             * GL3.0-style MSAA FBO (GL_ARB_framebuffer_object)
+             */
+            kDesktopARB_MSFBO,
+            /**
+             * earlier GL_EXT_framebuffer* extensions
+             */
+            kDesktopEXT_MSFBO,
+            /**
+             * GL_APPLE_framebuffer_multisample ES extension
+             */
+            kAppleES_MSFBO,
+        } fMSFBOType;
+
+        // TODO: get rid of GrAALevel and use sample cnt directly
+        GrGLuint fAASamples[4];
+
+        // The maximum number of fragment uniform vectors (GLES has min. 16).
+        int fMaxFragmentUniformVectors;
+
+        // ES requires an extension to support RGBA8 in RenderBufferStorage
+        bool fRGBA8RenderbufferSupport;
+
+        // Is GL_BGRA supported
+        bool fBGRAFormatSupport;
+
+        // Depending on the ES extensions present the BGRA external format may
+        // correspond either a BGRA or RGBA internalFormat. On desktop GL it is
+        // RGBA
+        bool fBGRAIsInternalFormat;
+
+        // GL_ARB_texture_swizzle support
+        bool fTextureSwizzleSupport;
+    
+        // Is there support for GL_UNPACK_ROW_LENGTH
+        bool fUnpackRowLengthSupport;
+
+        // Is there support for GL_UNPACK_FLIP_Y
+        bool fUnpackFlipYSupport;
+
+        // Is there support for GL_PACK_ROW_LENGTH
+        bool fPackRowLengthSupport;
+
+        // Is there support for GL_PACK_REVERSE_ROW_ORDER
+        bool fPackFlipYSupport;
+
+        // Is there support for texture parameter GL_TEXTURE_USAGE
+        bool fTextureUsageSupport;
+
+        // Is there support for glTexStorage
+        bool fTexStorageSupport;
+
+        void print() const;
+    } fGLCaps;
+ 
     struct {
         size_t                  fVertexOffset;
         GrVertexLayout          fVertexLayout;
@@ -69,8 +161,10 @@ protected:
         GrGLIRect   fViewportRect;
     } fHWBounds;
 
+    const GLCaps& glCaps() const { return fGLCaps; }
+
     // GrGpu overrides
-    virtual void resetContext();
+    virtual void onResetContext() SK_OVERRIDE;
 
     virtual GrTexture* onCreateTexture(const GrTextureDesc& desc,
                                        const void* srcData,
@@ -80,6 +174,8 @@ protected:
     virtual GrIndexBuffer* onCreateIndexBuffer(uint32_t size,
                                                bool dynamic);
     virtual GrResource* onCreatePlatformSurface(const GrPlatformSurfaceDesc& desc);
+    virtual GrTexture* onCreatePlatformTexture(const GrPlatformTextureDesc& desc) SK_OVERRIDE;
+    virtual GrRenderTarget* onCreatePlatformRenderTarget(const GrPlatformRenderTargetDesc& desc) SK_OVERRIDE;
     virtual bool createStencilBufferForRenderTarget(GrRenderTarget* rt,
                                                     int width, int height);
     virtual bool attachStencilBufferToRenderTarget(GrStencilBuffer* sb,
@@ -90,8 +186,17 @@ protected:
     virtual void onForceRenderTargetFlush();
 
     virtual bool onReadPixels(GrRenderTarget* target,
-                              int left, int top, int width, int height,
-                              GrPixelConfig, void* buffer);
+                              int left, int top, 
+                              int width, int height,
+                              GrPixelConfig, 
+                              void* buffer,
+                              size_t rowBytes,
+                              bool invertY) SK_OVERRIDE;
+
+    virtual void onWriteTexturePixels(GrTexture* texture,
+                                      int left, int top, int width, int height,
+                                      GrPixelConfig config, const void* buffer,
+                                      size_t rowBytes) SK_OVERRIDE;
 
     virtual void onGpuDrawIndexed(GrPrimitiveType type,
                                   uint32_t startVertex,
@@ -136,7 +241,7 @@ protected:
         return GrGLHasExtensionFromString(ext, fExtensionString.c_str());
     }
 
-    // adjusts texture matrix to account for orientation, size, and npotness
+    // adjusts texture matrix to account for orientation
     static void AdjustTextureMatrix(const GrGLTexture* texture,
                                     GrSamplerState::SampleMode mode,
                                     GrMatrix* matrix);
@@ -178,21 +283,22 @@ private:
 
     void resolveRenderTarget(GrGLRenderTarget* texture);
 
-    bool canBeTexture(GrPixelConfig config,
-                      GrGLenum* internalFormat,
-                      GrGLenum* format,
-                      GrGLenum* type);
-    // helpers for onCreateTexture
-    void allocateAndUploadTexData(const GrGLTexture::Desc& desc,
-                                  GrGLenum internalFormat,
-                                  const void* data,
-                                  size_t rowBytes);
+    bool configToGLFormats(GrPixelConfig config,
+                           bool getSizedInternal,
+                           GrGLenum* internalFormat,
+                           GrGLenum* externalFormat,
+                           GrGLenum* externalType);
+    // helper for onCreateTexture and writeTexturePixels
+    bool uploadTexData(const GrGLTexture::Desc& desc,
+                       bool isNewTexture,
+                       int left, int top, int width, int height,
+                       GrPixelConfig dataConfig,
+                       const void* data,
+                       size_t rowBytes);
 
     bool createRenderTargetObjects(int width, int height,
                                    GrGLuint texID,
                                    GrGLRenderTarget::Desc* desc);
-
-    bool fboInternalFormat(GrPixelConfig config, GrGLenum* format);
 
     friend class GrGLVertexBuffer;
     friend class GrGLIndexBuffer;
@@ -202,43 +308,6 @@ private:
     // read these once at begining and then never again
     SkString fExtensionString;
     GrGLVersion fGLVersion;
-
-    struct GLCaps {
-        // prealloc space for 8 stencil formats
-        GLCaps() : fStencilFormats(8) {}
-        SkTArray<GrGLStencilBuffer::Format, true> fStencilFormats;
-
-        enum {
-            /**
-             * no support for MSAA FBOs
-             */
-            kNone_MSFBO = 0,  
-            /**
-             * GL3.0-style MSAA FBO (GL_ARB_framebuffer_object)
-             */
-            kDesktopARB_MSFBO,
-            /**
-             * earlier GL_EXT_framebuffer* extensions
-             */
-            kDesktopEXT_MSFBO,
-            /**
-             * GL_APPLE_framebuffer_multisample ES extension
-             */
-            kAppleES_MSFBO,
-        } fMSFBOType;
-
-        // TODO: get rid of GrAALevel and use sample cnt directly
-        GrGLuint fAASamples[4];
-
-        // The maximum number of fragment uniform vectors (GLES has min. 16).
-        int fMaxFragmentUniformVectors;
-
-        // ES requires an extension to support RGBA8 in RenderBufferStorage
-        bool fRGBA8Renderbuffer;
-
-        void print() const;
-    } fGLCaps;
-
 
     // we want to clear stencil buffers when they are created. We want to clear
     // the entire buffer even if it is larger than the color attachment. We

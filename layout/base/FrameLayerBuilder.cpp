@@ -1410,8 +1410,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         continue;
       }
 
-      aClip.RemoveRoundedCorners();
-
       // Just use its layer.
       nsRefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager, mParameters);
       if (!ownLayer) {
@@ -1435,10 +1433,13 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       NS_ASSERTION(ownLayer->Manager() == mManager, "Wrong manager");
       NS_ASSERTION(!ownLayer->HasUserData(&gLayerManagerUserData),
                    "We shouldn't have a FrameLayerBuilder-managed layer here!");
+      NS_ASSERTION(aClip.mHaveClipRect ||
+                     aClip.mRoundedClipRects.IsEmpty(),
+                   "If we have rounded rects, we must have a clip rect");
       // It has its own layer. Update that layer's clip and visible rects.
       if (aClip.mHaveClipRect) {
         ownLayer->IntersectClipRect(
-            aClip.mClipRect.ScaleToNearestPixels(
+            aClip.NonRoundedIntersection().ScaleToNearestPixels(
                 mParameters.mXScale, mParameters.mYScale, appUnitsPerDevPixel));
       }
       ThebesLayerData* data = GetTopThebesLayerData();
@@ -2364,7 +2365,6 @@ FrameLayerBuilder::Clip::IsRectClippedByRoundedCorner(const nsRect& aRect) const
 nsRect
 FrameLayerBuilder::Clip::NonRoundedIntersection() const
 {
-  NS_ASSERTION(!mRoundedClipRects.IsEmpty(), "no rounded clip rects?");
   nsRect result = mClipRect;
   for (PRUint32 i = 0, iEnd = mRoundedClipRects.Length();
        i < iEnd; ++i) {

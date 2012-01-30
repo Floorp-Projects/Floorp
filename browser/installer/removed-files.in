@@ -932,6 +932,8 @@ xpicleanup@BIN_SUFFIX@
 #endif
   components/txEXSLTRegExFunctions.js
   components/Weave.js
+  components/Webapps.js
+  components/Webapps.manifest
   components/WebContentConverter.js
   defaults/autoconfig/platform.js
   defaults/autoconfig/prefcalls.js
@@ -1057,6 +1059,7 @@ xpicleanup@BIN_SUFFIX@
   modules/tabview/AllTabs.jsm
   modules/tabview/groups.jsm
   modules/tabview/utils.jsm
+  modules/Webapps.jsm
   modules/WindowDraggingUtils.jsm
   #ifdef XP_WIN
     modules/WindowsJumpLists.jsm
@@ -1147,6 +1150,7 @@ xpicleanup@BIN_SUFFIX@
   components/directory.xpt
   components/docshell.xpt
   components/dom.xpt
+  components/dom_apps.xpt
   components/dom_base.xpt
 #ifdef MOZ_B2G_RIL
   components/dom_telephony.xpt

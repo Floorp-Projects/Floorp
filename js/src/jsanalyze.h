@@ -266,6 +266,29 @@ ExtendedDef(jsbytecode *pc)
     }
 }
 
+/* Return whether op bytecodes do not fallthrough (they may do a jump). */
+static inline bool
+BytecodeNoFallThrough(JSOp op)
+{
+    switch (op) {
+      case JSOP_GOTO:
+      case JSOP_DEFAULT:
+      case JSOP_RETURN:
+      case JSOP_STOP:
+      case JSOP_RETRVAL:
+      case JSOP_THROW:
+      case JSOP_TABLESWITCH:
+      case JSOP_LOOKUPSWITCH:
+      case JSOP_FILTER:
+        return true;
+      case JSOP_GOSUB:
+        /* These fall through indirectly, after executing a 'finally'. */
+        return false;
+      default:
+        return false;
+    }
+}
+
 /*
  * For opcodes which access local variables or arguments, we track an extra
  * use during SSA analysis for the value of the variable before/after the op.
@@ -375,6 +398,30 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       default:
         JS_NOT_REACHED("Bad slot opcode");
         return 0;
+    }
+}
+
+/* Slot opcodes which update SSA information. */
+static inline bool
+BytecodeUpdatesSlot(JSOp op)
+{
+    switch (op) {
+      case JSOP_SETARG:
+      case JSOP_SETLOCAL:
+      case JSOP_SETLOCALPOP:
+      case JSOP_DEFLOCALFUN:
+      case JSOP_DEFLOCALFUN_FC:
+      case JSOP_INCARG:
+      case JSOP_DECARG:
+      case JSOP_ARGINC:
+      case JSOP_ARGDEC:
+      case JSOP_INCLOCAL:
+      case JSOP_DECLOCAL:
+      case JSOP_LOCALINC:
+      case JSOP_LOCALDEC:
+        return true;
+      default:
+        return false;
     }
 }
 
@@ -1107,6 +1154,10 @@ class ScriptAnalysis
         /* Decompose the slot above. */
         bool arg;
         uint32_t index;
+
+        const Value **basePointer() const {
+            return arg ? &nesting->argArray : &nesting->varArray;
+        }
     };
     NameAccess resolveNameAccess(JSContext *cx, jsid id, bool addDependency = false);
 
@@ -1151,6 +1202,8 @@ class ScriptAnalysis
                            const Vector<uint32_t> &branchTargets);
     void mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                               const Vector<uint32_t> &exceptionTargets);
+    void mergeAllExceptionTargets(JSContext *cx, SSAValue *values,
+                                  const Vector<uint32_t> &exceptionTargets);
     bool removeBranchTarget(Vector<uint32_t> &branchTargets,
                             Vector<uint32_t> &exceptionTargets,
                             uint32_t offset);

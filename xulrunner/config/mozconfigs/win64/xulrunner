@@ -6,7 +6,6 @@ export JAVA_HOME=/d/jdk1.6.0_14
 
 ac_add_options --enable-application=xulrunner
 ac_add_options --enable-jemalloc
-ac_add_options --disable-installer
 ac_add_options --disable-tests
 
 mk_add_options MOZ_MAKE_FLAGS=-j1

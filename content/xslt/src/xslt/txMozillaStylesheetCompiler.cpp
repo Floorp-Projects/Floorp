@@ -115,7 +115,7 @@ public:
     NS_IMETHOD DidBuildModel(bool aTerminated);
     NS_IMETHOD WillInterrupt(void) { return NS_OK; }
     NS_IMETHOD WillResume(void) { return NS_OK; }
-    NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
+    NS_IMETHOD SetParser(nsParserBase* aParser) { return NS_OK; }
     virtual void FlushPendingNotifications(mozFlushType aType) { }
     NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
     virtual nsISupports *GetTarget() { return nsnull; }

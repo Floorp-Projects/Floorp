@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
+#include <ctype.h>
 
 #include "jscntxt.h"
 #include "jscrashformat.h"
@@ -51,6 +52,22 @@
 
 namespace js {
 namespace gcstats {
+
+static const char *
+ExplainReason(gcreason::Reason reason)
+{
+    switch (reason) {
+#define SWITCH_REASON(name)                     \
+        case gcreason::name:                    \
+          return #name;
+        GCREASONS(SWITCH_REASON)
+
+        default:
+          JS_NOT_REACHED("bad GC reason");
+          return "?";
+#undef SWITCH_REASON
+    }
+}
 
 Statistics::ColumnInfo::ColumnInfo(const char *title, double t, double total)
   : title(title)
@@ -117,8 +134,8 @@ Statistics::makeTable(ColumnInfo *cols)
 }
 
 Statistics::Statistics(JSRuntime *rt)
-  : runtime(rt)
-  , triggerReason(PUBLIC_API) //dummy reason to satisfy makeTable
+  : runtime(rt),
+    triggerReason(gcreason::NO_REASON)
 {
     PodArrayZero(counts);
     PodArrayZero(totals);
@@ -178,7 +195,7 @@ struct GCCrashData
 };
 
 void
-Statistics::beginGC(JSCompartment *comp, Reason reason)
+Statistics::beginGC(JSCompartment *comp, gcreason::Reason reason)
 {
     compartment = comp;
 
@@ -189,7 +206,7 @@ Statistics::beginGC(JSCompartment *comp, Reason reason)
     triggerReason = reason;
 
     beginPhase(PHASE_GC);
-    Probes::GCStart(compartment);
+    Probes::GCStart();
 
     GCCrashData crashData;
     crashData.isCompartment = !!compartment;
@@ -266,7 +283,7 @@ Statistics::printStats()
 void
 Statistics::endGC()
 {
-    Probes::GCEnd(compartment);
+    Probes::GCEnd();
     endPhase(PHASE_GC);
     crash::SnapshotGCStack();
 
@@ -276,7 +293,6 @@ Statistics::endGC()
     if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback) {
         (*cb)(JS_TELEMETRY_GC_REASON, triggerReason);
         (*cb)(JS_TELEMETRY_GC_IS_COMPARTMENTAL, compartment ? 1 : 0);
-        (*cb)(JS_TELEMETRY_GC_IS_SHAPE_REGEN, 0);
         (*cb)(JS_TELEMETRY_GC_MS, t(PHASE_GC));
         (*cb)(JS_TELEMETRY_GC_MARK_MS, t(PHASE_MARK));
         (*cb)(JS_TELEMETRY_GC_SWEEP_MS, t(PHASE_SWEEP));
@@ -299,16 +315,10 @@ Statistics::beginPhase(Phase phase)
 {
     phaseStarts[phase] = PRMJ_Now();
 
-    if (phase == gcstats::PHASE_SWEEP) {
-        Probes::GCStartSweepPhase(NULL);
-        if (!compartment) {
-            for (JSCompartment **c = runtime->compartments.begin();
-                 c != runtime->compartments.end(); ++c)
-            {
-                Probes::GCStartSweepPhase(*c);
-            }
-        }
-    }
+    if (phase == gcstats::PHASE_MARK)
+        Probes::GCStartMarkPhase();
+    else if (phase == gcstats::PHASE_SWEEP)
+        Probes::GCStartSweepPhase();
 }
 
 void
@@ -317,16 +327,10 @@ Statistics::endPhase(Phase phase)
     phaseEnds[phase] = PRMJ_Now();
     phaseTimes[phase] += phaseEnds[phase] - phaseStarts[phase];
 
-    if (phase == gcstats::PHASE_SWEEP) {
-        if (!compartment) {
-            for (JSCompartment **c = runtime->compartments.begin();
-                 c != runtime->compartments.end(); ++c)
-            {
-                Probes::GCEndSweepPhase(*c);
-            }
-        }
-        Probes::GCEndSweepPhase(NULL);
-    }
+    if (phase == gcstats::PHASE_MARK)
+        Probes::GCEndMarkPhase();
+    else if (phase == gcstats::PHASE_SWEEP)
+        Probes::GCEndSweepPhase();
 }
 
 } /* namespace gcstats */

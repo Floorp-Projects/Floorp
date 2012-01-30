@@ -401,6 +401,7 @@ def main():
           dm.checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])
 
         appname = options.app
+        retVal = None
         for test in robocop_tests:
             if options.testPath and options.testPath != test['name']:
                 continue
@@ -413,7 +414,7 @@ def main():
             try:
                 retVal = mochitest.runTests(options)
             except:
-                print "TEST-UNEXPECTED-ERROR | %s | Exception caught while running robocop tests." % sys.exc_info()[1]
+                print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running robocop tests." % sys.exc_info()[1]
                 mochitest.stopWebServer(options)
                 mochitest.stopWebSocketServer(options)
                 try:
@@ -421,11 +422,14 @@ def main():
                 except:
                     pass
                 sys.exit(1)
+        if retVal is None:
+            print "No tests run. Did you pass an invalid TEST_PATH?"
+            retVal = 1         
     else:
       try:
         retVal = mochitest.runTests(options)
       except:
-        print "TEST-UNEXPECTED-ERROR | %s | Exception caught while running tests." % sys.exc_info()[1]
+        print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running tests." % sys.exc_info()[1]
         mochitest.stopWebServer(options)
         mochitest.stopWebSocketServer(options)
         try:

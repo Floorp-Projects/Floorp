@@ -43,6 +43,7 @@
 #include "nsIURI.h"
 #include "nsWeakReference.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsIDocument.h"
 
 class nsDOMParser : public nsIDOMParser,
                     public nsIDOMParserJS,
@@ -66,6 +67,8 @@ public:
                         PRUint32 argc, jsval *argv);
 
 private:
+  nsresult SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult);
+
   class AttemptedInitMarker {
   public:
     AttemptedInitMarker(bool* aAttemptedInit) :

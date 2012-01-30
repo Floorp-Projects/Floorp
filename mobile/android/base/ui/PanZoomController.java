@@ -55,7 +55,6 @@ import android.util.FloatMath;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -67,7 +66,7 @@ import java.util.TimerTask;
  */
 public class PanZoomController
     extends GestureDetector.SimpleOnGestureListener
-    implements ScaleGestureDetector.OnScaleGestureListener, GeckoEventListener
+    implements SimpleScaleGestureDetector.SimpleScaleGestureListener, GeckoEventListener
 {
     private static final String LOGTAG = "GeckoPanZoomController";
 
@@ -80,7 +79,7 @@ public class PanZoomController
     private static final float FLING_STOPPED_THRESHOLD = 0.1f;
     // The distance the user has to pan before we recognize it as such (e.g. to avoid
     // 1-pixel pans between the touch-down and touch-up of a click). In units of inches.
-    private static final float PAN_THRESHOLD = 0.1f;
+    public static final float PAN_THRESHOLD = 0.1f;
     // Angle from axis within which we stay axis-locked
     private static final double AXIS_LOCK_ANGLE = Math.PI / 6.0; // 30 degrees
     // The maximum amount we allow you to zoom into a page
@@ -569,6 +568,7 @@ public class PanZoomController
             finishBounce();
             finishAnimation();
             mState = PanZoomState.NOTHING;
+            GeckoApp.mAppContext.showPluginViews();
         }
 
         /* Performs one frame of a bounce animation. */
@@ -609,7 +609,7 @@ public class PanZoomController
             boolean flingingX = mX.advanceFling();
             boolean flingingY = mY.advanceFling();
 
-            boolean overscrolled = ((mX.overscrolled() || mY.overscrolled()) && !mSubscroller.scrolling());
+            boolean overscrolled = (mX.overscrolled() || mY.overscrolled());
 
             /* If we're still flinging in any direction, update the origin. */
             if (flingingX || flingingY) {
@@ -621,7 +621,7 @@ public class PanZoomController
                  * coast smoothly to a stop when not. In other words, require a greater velocity to
                  * maintain the fling once we enter overscroll.
                  */
-                float threshold = (overscrolled ? STOPPED_THRESHOLD : FLING_STOPPED_THRESHOLD);
+                float threshold = (overscrolled && !mSubscroller.scrolling() ? STOPPED_THRESHOLD : FLING_STOPPED_THRESHOLD);
                 if (getVelocity() >= threshold) {
                     // we're still flinging
                     return;
@@ -631,10 +631,7 @@ public class PanZoomController
                 mY.stopFling();
             }
 
-            /*
-             * Perform a bounce-back animation if overscrolled, unless panning is being
-             * handled by the subwindow scroller.
-             */
+            /* Perform a bounce-back animation if overscrolled. */
             if (overscrolled) {
                 bounce();
             } else {
@@ -723,7 +720,7 @@ public class PanZoomController
      * Zooming
      */
     @Override
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
+    public boolean onScaleBegin(SimpleScaleGestureDetector detector) {
         Log.d(LOGTAG, "onScaleBegin in " + mState);
 
         if (mState == PanZoomState.ANIMATED_ZOOM)
@@ -739,7 +736,7 @@ public class PanZoomController
     }
 
     @Override
-    public boolean onScale(ScaleGestureDetector detector) {
+    public boolean onScale(SimpleScaleGestureDetector detector) {
         Log.d(LOGTAG, "onScale in state " + mState);
 
         if (mState == PanZoomState.ANIMATED_ZOOM)
@@ -786,7 +783,7 @@ public class PanZoomController
     }
 
     @Override
-    public void onScaleEnd(ScaleGestureDetector detector) {
+    public void onScaleEnd(SimpleScaleGestureDetector detector) {
         Log.d(LOGTAG, "onScaleEnd in " + mState);
 
         if (mState == PanZoomState.ANIMATED_ZOOM)
@@ -846,7 +843,7 @@ public class PanZoomController
         return true;
     }
 
-    private void cancelTouch() {
+    public void cancelTouch() {
         GeckoEvent e = new GeckoEvent("Gesture:CancelTouch", "");
         GeckoAppShell.sendEventToGecko(e);
     }

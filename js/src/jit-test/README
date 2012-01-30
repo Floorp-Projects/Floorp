@@ -55,7 +55,7 @@ The general format in EBNF is:
     flag      ::= "slow" | "allow-oom" | "valgrind" | "mjitalways" | "debug"
 
     attribute ::= name ":" value
-    name      ::= "TMFLAGS" | "error"
+    name      ::= "error" | "exitstatus"
     value     ::= <string>
 
 The metaline may appear anywhere in the first line of the file: this allows it
@@ -71,6 +71,6 @@ The meaning of the items:
 
     error        The test should be considered to pass iff it throws the
                  given JS exception.
-    TMFLAGS      Set the environment variable TMFLAGS to the given value.
+    exitstatus   The test should exit with the given status value (an integer).
 
 * END

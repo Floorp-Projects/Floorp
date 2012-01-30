@@ -78,6 +78,11 @@ let PlacesDBUtils = {
    */
   _executeTasks: function PDBU__executeTasks(aTasks)
   {
+    if (PlacesDBUtils._isShuttingDown) {
+      tasks.log("- We are shutting down. Will not schedule the tasks.");
+      aTasks.clear();
+    }
+
     let task = aTasks.pop();
     if (task) {
       task.call(PlacesDBUtils, aTasks);
@@ -100,6 +105,11 @@ let PlacesDBUtils = {
       Services.prefs.setIntPref("places.database.lastMaintenance", parseInt(Date.now() / 1000));
       Services.obs.notifyObservers(null, FINISHED_MAINTENANCE_TOPIC, null);
     }
+  },
+
+  _isShuttingDown : false,
+  shutdown: function PDBU_shutdown() {
+    PlacesDBUtils._isShuttingDown = true;
   },
 
   /**

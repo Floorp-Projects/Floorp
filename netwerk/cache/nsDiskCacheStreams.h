@@ -76,7 +76,7 @@ public:
     nsresult    Tell(PRUint32 * position);    
     nsresult    SetEOF();
 
-    void        ClearBinding();
+    nsresult    ClearBinding();
     
     void        IncrementInputStreamCount() { PR_ATOMIC_INCREMENT(&mInStreamCount); }
     void        DecrementInputStreamCount()

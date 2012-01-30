@@ -77,6 +77,7 @@
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"
+#include "SpdySession.h"
 
 #include "nsIXULAppInfo.h"
 
@@ -202,6 +203,7 @@ nsHttpHandler::nsHttpHandler()
     , mEnableSpdy(false)
     , mCoalesceSpdy(true)
     , mUseAlternateProtocol(false)
+    , mSpdySendingChunkSize(SpdySession::kSendingChunkSize)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -1092,6 +1094,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("spdy.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdyTimeout = (PRUint16) clamped(val, 1, 0xffff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.chunk-size"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("spdy.chunk-size"), &val);
+        if (NS_SUCCEEDED(rv))
+            mSpdySendingChunkSize = (PRUint32) clamped(val, 1, 0x7fffffff);
     }
 
     //

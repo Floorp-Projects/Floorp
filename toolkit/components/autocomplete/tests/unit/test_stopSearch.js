@@ -7,8 +7,6 @@
  * Purpose of the test is to check that a stopSearch call comes always before a
  * startSearch call.
  */
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 

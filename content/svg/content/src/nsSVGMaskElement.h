@@ -37,12 +37,12 @@
 #ifndef __NS_SVGMASKELEMENT_H__
 #define __NS_SVGMASKELEMENT_H__
 
-#include "nsSVGStylableElement.h"
-#include "nsIDOMSVGMaskElement.h"
 #include "DOMSVGTests.h"
+#include "nsIDOMSVGMaskElement.h"
 #include "nsIDOMSVGUnitTypes.h"
-#include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
+#include "nsSVGLength2.h"
+#include "nsSVGStylableElement.h"
 
 //--------------------- Masks ------------------------
 

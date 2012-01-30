@@ -15,9 +15,6 @@
 #include "SkPaint.h"
 #include "SkPoint.h"
 
-// Give 1MB font cache budget
-#define FONT_CACHE_MEMORY_BUDGET    (1024 * 1024)
-
 const char* gDefaultfont = "Arial"; // hard code for now
 static SkMutex      gFTMutex;
 
@@ -457,11 +454,11 @@ OSStatus SkScalerContext_Mac::Close(void *cb)
 #pragma mark -
 
 void SkFontHost::Serialize(const SkTypeface* face, SkWStream* stream) {
-    SkASSERT(!"SkFontHost::Serialize unimplemented");
+    SkDEBUGFAIL("SkFontHost::Serialize unimplemented");
 }
 
 SkTypeface* SkFontHost::Deserialize(SkStream* stream) {
-    SkASSERT(!"SkFontHost::Deserialize unimplemented");
+    SkDEBUGFAIL("SkFontHost::Deserialize unimplemented");
     return NULL;
 }
 
@@ -479,7 +476,7 @@ SkAdvancedTypefaceMetrics* SkFontHost::GetAdvancedTypefaceMetrics(
         SkAdvancedTypefaceMetrics::PerGlyphInfo perGlyphInfo,
         const uint32_t* glyphIDs,
         uint32_t glyphIDsCount) {
-    SkASSERT(!"SkFontHost::GetAdvancedTypefaceMetrics unimplemented");
+    SkDEBUGFAIL("SkFontHost::GetAdvancedTypefaceMetrics unimplemented");
     return NULL;
 }
 
@@ -506,22 +503,6 @@ SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
     } else {
         return CreateTypeface_(familyName, style);
     }
-}
-
-size_t SkFontHost::ShouldPurgeFontCache(size_t sizeAllocatedSoFar) {
-    if (sizeAllocatedSoFar > FONT_CACHE_MEMORY_BUDGET)
-        return sizeAllocatedSoFar - FONT_CACHE_MEMORY_BUDGET;
-    else
-        return 0;   // nothing to do
-}
-
-int SkFontHost::ComputeGammaFlag(const SkPaint& paint) {
-    return 0;
-}
-
-void SkFontHost::GetGammaTables(const uint8_t* tables[2]) {
-    tables[0] = NULL;   // black gamma (e.g. exp=1.4)
-    tables[1] = NULL;   // white gamma (e.g. exp= 1/1.4)
 }
 
 ///////////////////////////////////////////////////////////////////////////////

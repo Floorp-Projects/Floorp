@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              style="@style/Screen"
+              android:background="@drawable/tabs_tray_bg_repeat"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:gravity="center"
+              android:layout_gravity="center" >
+
+    <LinearLayout android:orientation="vertical"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:gravity="center"
+                  android:layout_gravity="center" >
+
+      <ImageView android:id="@+id/image"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_marginBottom="24dp"
+                 android:src="@drawable/logo" />
+
+      <LinearLayout android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal" >
+
+        <ImageView android:id="@+id/spinner_image"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:layout_marginRight="10dp"
+                   android:background="@drawable/progress_spinner" />
+
+        <TextView android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_marginTop="4dp"
+                  android:textSize="15dp"
+                  android:textColor="#FFFFFF"
+                  android:typeface="sans"
+                  android:text="@string/splash_firstrun" />
+
+      </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

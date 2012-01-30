@@ -20,6 +20,8 @@ function setDefaultPrefs() {
     branch.setIntPref("dom.max_script_run_time", 0);
     branch.setIntPref("dom.max_chrome_script_run_time", 0);
     branch.setIntPref("hangmonitor.timeout", 0);
+    // Ensure autoplay is enabled for all platforms.
+    branch.setBoolPref("media.autoplay.enabled", true);
 }
 
 var windowListener = {
@@ -36,10 +38,13 @@ var windowListener = {
                 let win = enumerator.getNext().QueryInterface(Components.interfaces.nsIDOMWindow);
                 setDefaultPrefs();
                 Components.utils.import("chrome://reftest/content/reftest.jsm");
-                win.addEventListener("UIReady", function() {OnRefTestLoad(win);});
+                win.addEventListener("pageshow", function() {
+                    win.removeEventListener("pageshow", arguments.callee); 
+                    // We add a setTimeout here because windows.innerWidth/Height are not set yet;
+                    win.setTimeout(function () {OnRefTestLoad(win);}, 0);
+                });
                 break;
             }
-
         }, false);
    },
    onCloseWindow: function(aWindow){ },

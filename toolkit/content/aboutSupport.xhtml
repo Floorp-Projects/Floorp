@@ -115,10 +115,14 @@
 
             <td>
               <button onclick="openProfileDirectory()">
+#ifdef XP_WIN
+                &aboutSupport.showWin.label;
+#else
 #ifdef XP_MACOSX
                 &aboutSupport.showMac.label;
 #else
-                &aboutSupport.show.label;
+                &aboutSupport.showDir.label;
+#endif
 #endif
                </button>
             </td>
@@ -223,14 +227,10 @@
       <table>
         <tbody id="graphics-tbody">
         </tbody>
-      </table>
 
-      <table>
         <tbody id="graphics-info-properties">
         </tbody>
-      </table>
 
-      <table>
         <tbody id="graphics-failures-tbody">
         </tbody>
       </table>

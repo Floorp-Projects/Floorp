@@ -37,9 +37,9 @@
 #ifndef __NS_SVGSTRING_H__
 #define __NS_SVGSTRING_H__
 
+#include "nsDOMError.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsSVGElement.h"
-#include "nsDOMError.h"
 
 class nsSVGString
 {

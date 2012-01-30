@@ -193,6 +193,7 @@ nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
 
     nsresult rv = aStream->Open(aStreamListener);
     if (NS_FAILED(rv)) {
+      LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
       delete aStream;
       return rv;
     }
@@ -245,6 +246,7 @@ nsresult nsBuiltinDecoder::ScheduleStateMachineThread()
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ASSERTION(mDecoderStateMachine,
                "Must have state machine to start state machine thread");
+  NS_ENSURE_STATE(mDecoderStateMachine);
 
   if (mShuttingDown)
     return NS_OK;
@@ -258,6 +260,7 @@ nsresult nsBuiltinDecoder::Play()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  NS_ASSERTION(mDecoderStateMachine != nsnull, "Should have state machine.");
   nsresult res = ScheduleStateMachineThread();
   NS_ENSURE_SUCCESS(res,res);
   if (mPlayState == PLAY_STATE_SEEKING) {
@@ -832,29 +835,19 @@ void nsBuiltinDecoder::ChangeState(PlayState aState)
   }
 
   mPlayState = aState;
-  switch (aState) {
-  case PLAY_STATE_PAUSED:
-    /* No action needed */
-    break;
-  case PLAY_STATE_PLAYING:
-    mDecoderStateMachine->Play();
-    break;
-  case PLAY_STATE_SEEKING:
-    mDecoderStateMachine->Seek(mRequestedSeekTime);
-    mRequestedSeekTime = -1.0;
-    break;
-  case PLAY_STATE_LOADING:
-    /* No action needed */
-    break;
-  case PLAY_STATE_START:
-    /* No action needed */
-    break;
-  case PLAY_STATE_ENDED:
-    /* No action needed */
-    break;
-  case PLAY_STATE_SHUTDOWN:
-    /* No action needed */
-    break;
+  if (mDecoderStateMachine) {
+    switch (aState) {
+    case PLAY_STATE_PLAYING:
+      mDecoderStateMachine->Play();
+      break;
+    case PLAY_STATE_SEEKING:
+      mDecoderStateMachine->Seek(mRequestedSeekTime);
+      mRequestedSeekTime = -1.0;
+      break;
+    default:
+      /* No action needed */
+      break;
+    }
   }
   mReentrantMonitor.NotifyAll();
 }
@@ -973,7 +966,9 @@ void nsBuiltinDecoder::Resume(bool aForceBuffering)
   }
   if (aForceBuffering) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mDecoderStateMachine->StartBuffering();
+    if (mDecoderStateMachine) {
+      mDecoderStateMachine->StartBuffering();
+    }
   }
 }
 

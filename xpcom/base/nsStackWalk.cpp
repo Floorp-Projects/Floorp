@@ -338,6 +338,7 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
 struct WalkStackData {
   PRUint32 skipFrames;
   HANDLE thread;
+  bool walkCallingThread;
   HANDLE process;
   HANDLE eventStart;
   HANDLE eventEnd;
@@ -564,7 +565,8 @@ WalkStackMain64(struct WalkStackData* data)
     HANDLE myThread = data->thread;
     DWORD64 addr;
     STACKFRAME64 frame64;
-    int skip = 3 + data->skipFrames; // skip our own stack walking frames
+    // skip our own stack walking frames
+    int skip = (data->walkCallingThread ? 3 : 0) + data->skipFrames;
     BOOL ok;
 
     // Get a context for the specified thread.
@@ -733,6 +735,19 @@ WalkStackMain(struct WalkStackData* data)
 }
 #endif
 
+static
+void PerformStackWalk(struct WalkStackData* data)
+{
+#if defined(_WIN64)
+    WalkStackMain64(data);
+#else
+    if (_StackWalk64)
+        WalkStackMain64(data);
+    else
+        WalkStackMain(data);
+#endif
+}
+
 unsigned int WINAPI
 WalkStackThread(void* aData)
 {
@@ -770,14 +785,7 @@ WalkStackThread(void* aData)
                 PrintError("ThreadSuspend");
             }
             else {
-#if defined(_WIN64)
-                WalkStackMain64(data);
-#else
-                if (_StackWalk64)
-                    WalkStackMain64(data);
-                else
-                    WalkStackMain(data);
-#endif
+                PerformStackWalk(data);
 
                 ret = ::ResumeThread(data->thread);
                 if (ret == -1) {
@@ -812,11 +820,13 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     if (!EnsureImageHlpInitialized())
         return false;
 
-    HANDLE targetThread;
+    HANDLE targetThread = ::GetCurrentThread();
+    data.walkCallingThread = true;
     if (aThread) {
-        targetThread = reinterpret_cast<HANDLE> (aThread);
-    } else {
-        targetThread = ::GetCurrentThread();
+        HANDLE threadToWalk = reinterpret_cast<HANDLE> (aThread);
+        // walkCallingThread indicates whether we are walking the caller's stack
+        data.walkCallingThread = (threadToWalk == targetThread);
+        targetThread = threadToWalk;
     }
 
     // Have to duplicate handle to get a real handle.
@@ -841,36 +851,44 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     data.skipFrames = aSkipFrames;
     data.thread = myThread;
     data.process = myProcess;
-    data.eventStart = ::CreateEvent(NULL, FALSE /* auto-reset*/,
-                          FALSE /* initially non-signaled */, NULL);
-    data.eventEnd = ::CreateEvent(NULL, FALSE /* auto-reset*/,
-                        FALSE /* initially non-signaled */, NULL);
     void *local_pcs[1024];
     data.pcs = local_pcs;
     data.pc_count = 0;
     data.pc_size = ArrayLength(local_pcs);
 
-    ::PostThreadMessage(gStackWalkThread, WM_USER, 0, (LPARAM)&data);
+    if (aThread) {
+        // If we're walking the stack of another thread, we don't need to
+        // use a separate walker thread.
+        PerformStackWalk(&data);
+    } else {
+        data.eventStart = ::CreateEvent(NULL, FALSE /* auto-reset*/,
+                              FALSE /* initially non-signaled */, NULL);
+        data.eventEnd = ::CreateEvent(NULL, FALSE /* auto-reset*/,
+                            FALSE /* initially non-signaled */, NULL);
 
-    walkerReturn = ::SignalObjectAndWait(data.eventStart,
-                       data.eventEnd, INFINITE, FALSE);
-    if (walkerReturn != WAIT_OBJECT_0)
-        PrintError("SignalObjectAndWait (1)");
-    if (data.pc_count > data.pc_size) {
-        data.pcs = (void**) malloc(data.pc_count * sizeof(void*));
-        data.pc_size = data.pc_count;
-        data.pc_count = 0;
         ::PostThreadMessage(gStackWalkThread, WM_USER, 0, (LPARAM)&data);
+
         walkerReturn = ::SignalObjectAndWait(data.eventStart,
                            data.eventEnd, INFINITE, FALSE);
         if (walkerReturn != WAIT_OBJECT_0)
-            PrintError("SignalObjectAndWait (2)");
+            PrintError("SignalObjectAndWait (1)");
+        if (data.pc_count > data.pc_size) {
+            data.pcs = (void**) malloc(data.pc_count * sizeof(void*));
+            data.pc_size = data.pc_count;
+            data.pc_count = 0;
+            ::PostThreadMessage(gStackWalkThread, WM_USER, 0, (LPARAM)&data);
+            walkerReturn = ::SignalObjectAndWait(data.eventStart,
+                               data.eventEnd, INFINITE, FALSE);
+            if (walkerReturn != WAIT_OBJECT_0)
+                PrintError("SignalObjectAndWait (2)");
+        }
+
+        ::CloseHandle(data.eventStart);
+        ::CloseHandle(data.eventEnd);
     }
 
     ::CloseHandle(myThread);
     ::CloseHandle(myProcess);
-    ::CloseHandle(data.eventStart);
-    ::CloseHandle(data.eventEnd);
 
     for (PRUint32 i = 0; i < data.pc_count; ++i)
         (*aCallback)(data.pcs[i], aClosure);

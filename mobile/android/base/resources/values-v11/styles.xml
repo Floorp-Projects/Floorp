@@ -18,7 +18,6 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:background">@drawable/address_bar_bg</item>
     </style>
 
     <!-- Lists in AwesomeBar -->
@@ -26,15 +25,6 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:layout_weight">1</item>
-    </style>
-
-    <!-- TabWidget --> 
-    <style name="TabWidget">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">48dip</item>
-        <item name="android:background">@drawable/tabs_tray_bg_repeat</item>
-        <item name="android:divider">@android:color/transparent</item>
-        <item name="android:tabStripEnabled">false</item>
     </style>
 
 </resources>

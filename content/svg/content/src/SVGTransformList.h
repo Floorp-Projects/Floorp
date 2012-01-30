@@ -39,9 +39,10 @@
 #ifndef MOZILLA_SVGTRANSFORMLIST_H__
 #define MOZILLA_SVGTRANSFORMLIST_H__
 
-#include "SVGTransform.h"
+#include "gfxMatrix.h"
+#include "nsDebug.h"
 #include "nsTArray.h"
-#include "nsSVGElement.h"
+#include "SVGTransform.h"
 
 namespace mozilla {
 

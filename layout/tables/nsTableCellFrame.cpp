@@ -254,8 +254,8 @@ nsTableCellFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     GetRowIndex(rowIndex);
     // row span needs to be clamped as we do not create rows in the cellmap
     // which do not have cells originating in them
-    nsRect damageArea(colIndex, rowIndex, GetColSpan(), NS_MIN(GetRowSpan(),
-                      tableFrame->GetRowCount() - rowIndex));
+    nsIntRect damageArea(colIndex, rowIndex, GetColSpan(),
+      NS_MIN(GetRowSpan(), tableFrame->GetRowCount() - rowIndex));
     tableFrame->AddBCDamageArea(damageArea);
   }
 }
@@ -618,6 +618,18 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   }
 }
 
+bool
+nsTableCellFrame::UpdateOverflow()
+{
+  nsRect bounds(nsPoint(0,0), GetSize());
+  bounds.Inflate(GetBorderOverflow());
+  nsOverflowAreas overflowAreas(bounds, bounds);
+
+  nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
+
+  return FinishAndStoreOverflow(overflowAreas, GetSize());
+}
+
 // Per CSS 2.1, we map 'sub', 'super', 'text-top', 'text-bottom',
 // length, percentage, and calc() values to 'baseline'.
 PRUint8
@@ -763,7 +775,7 @@ void DebugCheckChildSize(nsIFrame*            aChild,
 {
   if ((aMet.width < 0) || (aMet.width > PROBABLY_TOO_LARGE)) {
     printf("WARNING: cell content %p has large width %d \n",
-           static_cast<void*>(aChild), aMet.width);
+           static_cast<void*>(aChild), PRInt32(aMet.width));
   }
 }
 #endif

@@ -29,4 +29,4 @@ fi
 
 # Note, the version (10) is used by libffi's configure.
 ac_add_options --target=i386-apple-darwin10
-ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.5.sdk
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.6.sdk

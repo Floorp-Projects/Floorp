@@ -36,8 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global Components, Services, TiltGL, TiltUtils, TiltVisualizer */
 "use strict";
 
 const Cu = Components.utils;
@@ -45,17 +43,37 @@ const Cu = Components.utils;
 // Tilt notifications dispatched through the nsIObserverService.
 const TILT_NOTIFICATIONS = {
 
-  // Fires when Tilt completes the initialization.
+  // Fires when Tilt starts the initialization.
+  INITIALIZING: "tilt-initializing",
+
+  // Fires immediately after initialization is complete.
+  // (when the canvas overlay is visible and the 3D mesh is completely created)
   INITIALIZED: "tilt-initialized",
 
-  // Fires when Tilt is destroyed.
+  // Fires immediately before the destruction is started.
+  DESTROYING: "tilt-destroying",
+
+  // Fires immediately before the destruction is finished.
+  // (just before the canvas overlay is removed from its parent node)
+  BEFORE_DESTROYED: "tilt-before-destroyed",
+
+  // Fires when Tilt is completely destroyed.
   DESTROYED: "tilt-destroyed",
 
   // Fires when Tilt is shown (after a tab-switch).
   SHOWN: "tilt-shown",
 
   // Fires when Tilt is hidden (after a tab-switch).
-  HIDDEN: "tilt-hidden"
+  HIDDEN: "tilt-hidden",
+
+  // Fires once Tilt highlights an element in the page.
+  HIGHLIGHTING: "tilt-highlighting",
+
+  // Fires once Tilt stops highlighting any element.
+  UNHIGHLIGHTING: "tilt-unhighlighting",
+
+  // Fires when a node is removed from the 3D mesh.
+  NODE_REMOVED: "tilt-node-removed"
 };
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -100,16 +118,17 @@ Tilt.prototype = {
 
     // if the visualizer for the current tab is already open, destroy it now
     if (this.visualizers[id]) {
-      this.destroy(id);
+      this.destroy(id, true);
       return;
     }
 
     // create a visualizer instance for the current tab
     this.visualizers[id] = new TiltVisualizer({
-      parentNode: this.chromeWindow.gBrowser.selectedBrowser.parentNode,
+      chromeWindow: this.chromeWindow,
       contentWindow: this.chromeWindow.gBrowser.selectedBrowser.contentWindow,
+      parentNode: this.chromeWindow.gBrowser.selectedBrowser.parentNode,
       requestAnimationFrame: this.chromeWindow.mozRequestAnimationFrame,
-      inspectorUI: this.chromeWindow.InspectorUI
+      notifications: this.NOTIFICATIONS
     });
 
     // make sure the visualizer object was initialized properly
@@ -118,7 +137,7 @@ Tilt.prototype = {
       return;
     }
 
-    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.INITIALIZED, null);
+    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.INITIALIZING, null);
   },
 
   /**
@@ -126,27 +145,55 @@ Tilt.prototype = {
    *
    * @param {String} aId
    *                 the identifier of the instance in the visualizers array
+   * @param {Boolean} aAnimateFlag
+   *                  optional, set to true to display a destruction transition
    */
-  destroy: function T_destroy(aId)
+  destroy: function T_destroy(aId, aAnimateFlag)
   {
     // if the visualizer is already destroyed, don't do anything
     if (!this.visualizers[aId]) {
       return;
     }
 
-    this.visualizers[aId].removeOverlay();
-    this.visualizers[aId].cleanup();
-    this.visualizers[aId] = null;
+    if (!this.isDestroying) {
+      this.isDestroying = true;
 
-    this.chromeWindow.gBrowser.selectedBrowser.contentWindow.focus();
-    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYED, null);
+      let finalize = function T_finalize(aId) {
+        this.visualizers[aId].removeOverlay();
+        this.visualizers[aId].cleanup();
+        this.visualizers[aId] = null;
+
+        this.isDestroying = false;
+        this.chromeWindow.gBrowser.selectedBrowser.focus();
+        Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYED, null);
+      };
+
+      if (!aAnimateFlag) {
+        finalize.call(this, aId);
+        return;
+      }
+
+      let controller = this.visualizers[aId].controller;
+      let presenter = this.visualizers[aId].presenter;
+
+      let content = presenter.contentWindow;
+      let pageXOffset = content.pageXOffset * presenter.transforms.zoom;
+      let pageYOffset = content.pageYOffset * presenter.transforms.zoom;
+
+      Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYING, null);
+      TiltUtils.setDocumentZoom(this.chromeWindow, presenter.transforms.zoom);
+
+      controller.removeEventListeners();
+      controller.arcball.reset([-pageXOffset, -pageYOffset]);
+      presenter.executeDestruction(finalize.bind(this, aId));
+    }
   },
 
   /**
    * Handles any supplementary post-initialization work, done immediately
-   * after a TILT_NOTIFICATIONS.INITIALIZED notification.
+   * after a TILT_NOTIFICATIONS.INITIALIZING notification.
    */
-  _whenInitialized: function T__whenInitialized()
+  _whenInitializing: function T__whenInitializing()
   {
     this._whenShown();
   },
@@ -223,7 +270,7 @@ Tilt.prototype = {
 
     // add the necessary observers to handle specific notifications
     Services.obs.addObserver(
-      this._whenInitialized.bind(this), TILT_NOTIFICATIONS.INITIALIZED, false);
+      this._whenInitializing.bind(this), TILT_NOTIFICATIONS.INITIALIZING, false);
     Services.obs.addObserver(
       this._whenDestroyed.bind(this), TILT_NOTIFICATIONS.DESTROYED, false);
     Services.obs.addObserver(
@@ -257,7 +304,7 @@ Tilt.prototype = {
     Services.obs.addObserver(onClosed,
       this.chromeWindow.InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
     Services.obs.addObserver(onOpened,
-      TILT_NOTIFICATIONS.INITIALIZED, false);
+      TILT_NOTIFICATIONS.INITIALIZING, false);
     Services.obs.addObserver(onClosed,
       TILT_NOTIFICATIONS.DESTROYED, false);
 

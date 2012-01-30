@@ -23,6 +23,8 @@ LOCAL_INCLUDES += -I$(srcdir)/../linker
 MOZ_GLUE_PROGRAM_LDFLAGS =
 MOZ_GLUE_LDFLAGS =
 LIBS += $(call EXPAND_LIBNAME_PATH,linker,../linker)
+
+EXTRA_LIBS = $(ZLIB_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -111,6 +111,7 @@ interface nsISessionStore : nsISupports
   /**
    * Restores the previous browser session using a fast, lightweight strategy
    * @param aBringToFront should a restored tab be brought to the foreground?
+   * @param aForceRestore  whether we need to force a restore, regardless of the recent crash situation
    */
-  void restoreLastSession(in boolean aBringToFront);
+  void restoreLastSession(in boolean aBringToFront, in boolean aForceRestore);
 };

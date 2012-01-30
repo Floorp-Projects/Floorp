@@ -1068,7 +1068,7 @@ class nsIWidget : public nsISupports {
      * @param aManager The drawing LayerManager.
      * @param aRect Current widget rect that is being drawn.
      */
-    virtual void DrawOver(LayerManager* aManager, nsIntRect aRect) = 0;
+    virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) = 0;
 
     /**
      * Called when Gecko knows which themed widgets exist in this window.
@@ -1510,6 +1510,12 @@ class nsIWidget : public nsISupports {
      *                   parent widget
      */
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) = 0;
+
+    /**
+     * Return the internal format of the default framebuffer for this
+     * widget.
+     */
+    virtual PRUint32 GetGLFrameBufferFormat() { return 0; /*GL_NONE*/ }
 protected:
 
     // keep the list of children.  We also keep track of our siblings.

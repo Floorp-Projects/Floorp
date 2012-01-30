@@ -195,6 +195,12 @@ public:
     eDOMEvents_MozTouchDown,
     eDOMEvents_MozTouchMove,
     eDOMEvents_MozTouchUp,
+    eDOMEvents_touchstart,
+    eDOMEvents_touchend,
+    eDOMEvents_touchmove,
+    eDOMEvents_touchcancel,
+    eDOMEvents_touchenter,
+    eDOMEvents_touchleave,
     eDOMEvents_MozScrolledAreaChanged,
     eDOMEvents_transitionend,
     eDOMEvents_animationstart,
@@ -242,6 +248,17 @@ public:
   static void Shutdown();
 
   static const char* GetEventName(PRUint32 aEventType);
+  static nsIntPoint GetClientCoords(nsPresContext* aPresContext,
+                                    nsEvent* aEvent,
+                                    nsIntPoint aPoint,
+                                    nsIntPoint aDefaultPoint);
+  static nsIntPoint GetPageCoords(nsPresContext* aPresContext,
+                                  nsEvent* aEvent,
+                                  nsIntPoint aPoint,
+                                  nsIntPoint aDefaultPoint);
+  static nsIntPoint GetScreenCoords(nsPresContext* aPresContext,
+                                    nsEvent* aEvent,
+                                    nsIntPoint aPoint);
 protected:
 
   // Internal helper functions

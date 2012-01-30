@@ -135,13 +135,6 @@
     </implementation>
   </binding>
 
-  <binding id="select-button" extends="xul:box">
-    <content>
-      <svg:svg width="11px" version="1.1" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: -moz-calc(50% - 2px); left: 4px;">
-        <svg:polyline points="1 1 5 6 9 1" stroke="#414141" stroke-width="2" stroke-linecap="round" fill="transparent" stroke-linejoin="round"/>
-      </svg:svg>
-    </content>
-  </binding>
 
   <binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <handlers>

@@ -148,14 +148,14 @@ function convertHTMLToPlainText(html) {
 
   var input = Cc["@mozilla.org/supports-string;1"].
               createInstance(Ci.nsISupportsString);
-  input.data = html.replace("\n", "<br>", "g");
+  input.data = html.replace(/\n/g, "<br>");
 
   var output = {};
   converter.convert("text/html", input, input.data.length, "text/unicode",
                     output, {});
 
   if (output.value instanceof Ci.nsISupportsString)
-    return output.value.data.replace("\r\n", "\n", "g");
+    return output.value.data.replace(/\r\n/g, "\n");
   return html;
 }
 
@@ -1577,10 +1577,10 @@ var AddonDatabase = {
     }
 
     this.connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
-    if (dbMissing)
-      this._createSchema();
 
+    // Any errors in here should rollback
     try {
+      this.connection.beginTransaction();
       switch (this.connection.schemaVersion) {
         case 0:
           LOG("Recreating database schema");
@@ -1603,14 +1603,15 @@ var AddonDatabase = {
                                       "appMinVersion TEXT, " +
                                       "appMaxVersion TEXT, " +
                                       "PRIMARY KEY (addon_internal_id, num)");
-            this._createIndices();
-            this._createTriggers();
-            this.connection.schemaVersion = DB_SCHEMA;
+          this._createIndices();
+          this._createTriggers();
+          this.connection.schemaVersion = DB_SCHEMA;
         case 3:
           break;
         default:
           return tryAgain();
       }
+      this.connection.commitTransaction();
     } catch (e) {
       ERROR("Failed to create database schema", e);
       this.logSQLError(this.connection.lastError, this.connection.lastErrorString);
@@ -2196,10 +2197,7 @@ var AddonDatabase = {
    */
   _createSchema: function AD__createSchema() {
     LOG("Creating database schema");
-    this.connection.beginTransaction();
 
-    // Any errors in here should rollback
-    try {
       this.connection.createTable("addon",
                                   "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                                   "id TEXT UNIQUE, " +
@@ -2262,13 +2260,6 @@ var AddonDatabase = {
       this._createTriggers();
 
       this.connection.schemaVersion = DB_SCHEMA;
-      this.connection.commitTransaction();
-    } catch (e) {
-      ERROR("Failed to create database schema", e);
-      this.logSQLError(this.connection.lastError, this.connection.lastErrorString);
-      this.connection.rollbackTransaction();
-      throw e;
-    }
   },
 
   /**

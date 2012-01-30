@@ -9,17 +9,6 @@
 
 #include "GrStencil.h"
 
-const GrStencilSettings GrStencilSettings::gDisabled = {
-    kKeep_StencilOp,     kKeep_StencilOp,
-    kKeep_StencilOp,     kKeep_StencilOp,
-    kAlways_StencilFunc, kAlways_StencilFunc,
-    0x0,                 0x0,
-    0x0,                 0x0,
-    0x0,                 0x0
-};
-GR_STATIC_ASSERT(0 == kKeep_StencilOp);
-GR_STATIC_ASSERT(0 == kAlways_StencilFunc);
-
 ////////////////////////////////////////////////////////////////////////////////
 // Stencil Rules for Merging user stencil space into clip
 
@@ -32,172 +21,160 @@ GR_STATIC_ASSERT(0 == kAlways_StencilFunc);
 // Replace
 
 // set the ref to be the clip bit, but mask it out for the test
-static const GrStencilSettings gUserToClipReplace = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kLess_StencilFunc,   kLess_StencilFunc,
-    0xffffffff,          0xffffffff,    // unset clip bit
-    0x0,                 0x0,           // set clip bit
-    0xffffffff,          0xffffffff
-};
-static const GrStencilSettings gInvUserToClipReplace = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kEqual_StencilFunc,  kEqual_StencilFunc,
-    0xffffffff,          0xffffffff,    // unset clip bit
-    0x0,                 0x0,           // set clip bit
-    0xffffffff,          0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipReplace,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kLess_StencilFunc,
+    0xffff,           // unset clip bit
+    0x0000,           // set clip bit
+    0xffff);
+
+GR_STATIC_CONST_SAME_STENCIL(gInvUserToClipReplace,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kEqual_StencilFunc,
+    0xffff,           // unset clip bit
+    0x0000,           // set clip bit
+    0xffff);
 
 ///////
 // Intersect
-static const GrStencilSettings gUserToClipIsect = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kLess_StencilFunc,   kLess_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x0,                 0x0,           // set clip bit
-    0xffffffff,          0xffffffff
-};
-static const GrStencilSettings gInvUserToClipIsect = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kEqual_StencilFunc,  kEqual_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x0,                 0x0,           // set clip bit
-    0xffffffff,          0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipIsect,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kLess_StencilFunc,
+    0xffff,
+    0x0000,           // set clip bit
+    0xffff);
+
+GR_STATIC_CONST_SAME_STENCIL(gInvUserToClipIsect,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kEqual_StencilFunc,
+    0xffff,
+    0x0000,           // set clip bit
+    0xffff);
 
 ///////
 // Difference
-static const GrStencilSettings gUserToClipDiff = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kEqual_StencilFunc,  kEqual_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x0,                 0x0,           // set clip bit
-    0xffffffff,          0xffffffff
-};
-static const GrStencilSettings gInvUserToClipDiff = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kLess_StencilFunc,   kLess_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x0,                 0x0,           // set clip bit
-    0xffffffff,          0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipDiff,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kEqual_StencilFunc,
+    0xffff,
+    0x0000,           // set clip bit
+    0xffff);
+
+GR_STATIC_CONST_SAME_STENCIL(gInvUserToClipDiff,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kLess_StencilFunc,
+    0xffff,
+    0x0000,           // set clip bit
+    0xffff);
 
 ///////
 // Union
 
 // first pass makes all the passing cases >= just clip bit set.
-static const GrStencilSettings gUserToClipUnionPass0 = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kKeep_StencilOp,     kKeep_StencilOp,
-    kLEqual_StencilFunc, kLEqual_StencilFunc,
-    0xffffffff,          0xffffffff,    // unset clip bit
-    0x00000001,          0x00000001,    // set clip bit
-    0xffffffff,          0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipUnionPass0,
+    kReplace_StencilOp,
+    kKeep_StencilOp,
+    kLEqual_StencilFunc,
+    0xffff,
+    0x0001,           // set clip bit
+    0xffff);
 
 // second pass allows anything greater than just clip bit set to pass
-static const GrStencilSettings gUserToClipUnionPass1 = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kLEqual_StencilFunc, kLEqual_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x00000000,          0x00000000,    // set clip bit
-    0xffffffff,          0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipUnionPass1,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kLEqual_StencilFunc,
+    0xffff,
+    0x0000,           // set clip bit
+    0xffff);
 
-// for inverse first pass finds non-zerp user with clip bit set
-// and converts it to just clip bit set
-static const GrStencilSettings gInvUserToClipUnionPass0 = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kKeep_StencilOp,     kKeep_StencilOp,
-    kLess_StencilFunc,   kLess_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x00000000,          0x00000000,    // set clip bit
-    0xffffffff,          0xffffffff
-};
+// first pass finds zeros in the user bits and if found sets
+// the clip bit to 1
+GR_STATIC_CONST_SAME_STENCIL(gInvUserToClipUnionPass0,
+    kReplace_StencilOp,
+    kKeep_StencilOp,
+    kEqual_StencilFunc,
+    0xffff,
+    0x0000,           // set clip bit
+    0x0000            // set clip bit
+);
 
-// second pass lets anything through with a nonzero user portion
-// and writes a ref value with just the clip bit set to it.
-static const GrStencilSettings gInvUserToClipUnionPass1 = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kLess_StencilFunc,   kLess_StencilFunc,
-    0xffffffff,          0xffffffff,    // unset clip bit
-    0x00000000,          0x00000000,    // set clip bit
-    0xffffffff,          0xffffffff
-};
+// second pass zeros the user bits
+GR_STATIC_CONST_SAME_STENCIL(gInvUserToClipUnionPass1,
+    kZero_StencilOp,
+    kZero_StencilOp,
+    kLess_StencilFunc,
+    0xffff,
+    0x0000,
+    0xffff            // unset clip bit
+);
 
 ///////
 // Xor
-static const GrStencilSettings gUserToClipXorPass0 = {
-    kInvert_StencilOp,   kInvert_StencilOp,
-    kKeep_StencilOp,     kKeep_StencilOp,
-    kEqual_StencilFunc,  kEqual_StencilFunc,
-    0xffffffff,          0xffffffff,    // unset clip bit
-    0x00000000,          0x00000000,
-    0xffffffff,          0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipXorPass0,
+    kInvert_StencilOp,
+    kKeep_StencilOp,
+    kEqual_StencilFunc,
+    0xffff,           // unset clip bit
+    0x0000,
+    0xffff);
 
-static const GrStencilSettings gUserToClipXorPass1 = {
-    kReplace_StencilOp,   kReplace_StencilOp,
-    kZero_StencilOp,      kZero_StencilOp,
-    kGreater_StencilFunc, kGreater_StencilFunc,
-    0xffffffff,           0xffffffff,
-    0x00000000,           0x00000000,   // set clip bit
-    0xffffffff,           0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipXorPass1,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kGreater_StencilFunc,
+    0xffff,
+    0x0000,          // set clip bit
+    0xffff);
 
-static const GrStencilSettings gInvUserToClipXorPass0 = {
-    kInvert_StencilOp,   kInvert_StencilOp,
-    kKeep_StencilOp,     kKeep_StencilOp,
-    kEqual_StencilFunc,  kEqual_StencilFunc,
-    0xffffffff,          0xffffffff,    // unset clip bit
-    0x00000000,          0x00000000,
-    0xffffffff,          0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gInvUserToClipXorPass0,
+    kInvert_StencilOp,
+    kKeep_StencilOp,
+    kEqual_StencilFunc,
+    0xffff,           // unset clip bit
+    0x0000,
+    0xffff);
 
-static const GrStencilSettings gInvUserToClipXorPass1 = {
-    kReplace_StencilOp,   kReplace_StencilOp,
-    kZero_StencilOp,      kZero_StencilOp,
-    kLess_StencilFunc,    kLess_StencilFunc,
-    0xffffffff,           0xffffffff,
-    0x00000000,           0x00000000,   // set clip bit
-    0xffffffff,           0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gInvUserToClipXorPass1,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kLess_StencilFunc,
+    0xffff,
+    0x0000,          // set clip bit
+    0xffff);
 
 ///////
 // Reverse Diff
-static const GrStencilSettings gUserToClipRDiffPass0 = {
-    kInvert_StencilOp,   kInvert_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kLess_StencilFunc,   kLess_StencilFunc,
-    0xffffffff,          0xffffffff,  // unset clip bit
-    0x00000000,          0x00000000,  // set clip bit
-    0xffffffff,          0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipRDiffPass0,
+    kInvert_StencilOp,
+    kZero_StencilOp,
+    kLess_StencilFunc,
+    0xffff,         // unset clip bit
+    0x0000,         // set clip bit
+    0xffff);
 
-static const GrStencilSettings gUserToClipRDiffPass1 = {
-    kReplace_StencilOp,   kReplace_StencilOp,
-    kZero_StencilOp,      kZero_StencilOp,
-    kEqual_StencilFunc,   kEqual_StencilFunc,
-    0x00000000,           0x00000000,   // set clip bit
-    0x00000000,           0x00000000,   // set clip bit
-    0xffffffff,           0xffffffff
-};
+GR_STATIC_CONST_SAME_STENCIL(gUserToClipRDiffPass1,
+    kReplace_StencilOp,
+    kZero_StencilOp,
+    kEqual_StencilFunc,
+    0x0000,          // set clip bit
+    0x0000,          // set clip bit
+    0xffff);
 
-static const GrStencilSettings gInvUserToClipRDiff = {
-    kInvert_StencilOp,    kInvert_StencilOp,
-    kZero_StencilOp,      kZero_StencilOp,
-    kEqual_StencilFunc,   kEqual_StencilFunc,
-    0xffffffff,           0xffffffff,
-    0x00000000,           0x00000000, 
-    0x00000000,           0x00000000    // set clip bit
-};
+GR_STATIC_CONST_SAME_STENCIL(gInvUserToClipRDiff,
+    kInvert_StencilOp,
+    kZero_StencilOp,
+    kEqual_StencilFunc,
+    0xffff,
+    0x0000,
+    0x0000           // set clip bit
+);
 ///////
 // Direct to Stencil
 
@@ -207,41 +184,41 @@ static const GrStencilSettings gInvUserToClipRDiff = {
 
 // this one only works if used right after stencil clip was cleared.
 // Our GrClip doesn't allow midstream replace ops.
-static const GrStencilSettings gReplaceClip = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kAlways_StencilFunc, kAlways_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x00000000,          0x00000000,    // set clip bit
-    0x00000000,          0x00000000     // set clipBit
-};
+GR_STATIC_CONST_SAME_STENCIL(gReplaceClip,
+    kReplace_StencilOp,
+    kReplace_StencilOp,
+    kAlways_StencilFunc,
+    0xffff,
+    0x0000,           // set clip bit
+    0x0000            // set clipBit
+);
 
-static const GrStencilSettings gUnionClip = {
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kReplace_StencilOp,  kReplace_StencilOp,
-    kAlways_StencilFunc, kAlways_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x00000000,          0x00000000,    // set clip bit
-    0x00000000,          0x00000000     // set clip bit
-};
+GR_STATIC_CONST_SAME_STENCIL(gUnionClip,
+    kReplace_StencilOp,
+    kReplace_StencilOp,
+    kAlways_StencilFunc,
+    0xffff,
+    0x0000,           // set clip bit
+    0x0000            // set clip bit
+);
 
-static const GrStencilSettings gXorClip = {
-    kInvert_StencilOp,   kInvert_StencilOp,
-    kInvert_StencilOp,   kInvert_StencilOp,
-    kAlways_StencilFunc, kAlways_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x00000000,          0x00000000,
-    0x00000000,          0x00000000     // set clip bit
-};
+GR_STATIC_CONST_SAME_STENCIL(gXorClip,
+    kInvert_StencilOp,
+    kInvert_StencilOp,
+    kAlways_StencilFunc,
+    0xffff,
+    0x0000,
+    0x0000            // set clip bit
+);
 
-static const GrStencilSettings gDiffClip = {
-    kZero_StencilOp,     kZero_StencilOp,
-    kZero_StencilOp,     kZero_StencilOp,
-    kAlways_StencilFunc, kAlways_StencilFunc,
-    0xffffffff,          0xffffffff,
-    0x00000000,          0x00000000,
-    0x00000000,          0x00000000     // set clip bit
-};
+GR_STATIC_CONST_SAME_STENCIL(gDiffClip,
+    kZero_StencilOp,
+    kZero_StencilOp,
+    kAlways_StencilFunc,
+    0xffff,
+    0x0000,
+    0x0000            // set clip bit
+);
 
 bool GrStencilSettings::GetClipPasses(GrSetOp op, 
                                       bool canBeDirect,
@@ -301,14 +278,16 @@ bool GrStencilSettings::GetClipPasses(GrSetOp op,
             *numPasses = 2;
             if (invertedFill) {
                 settings[0] = gInvUserToClipUnionPass0;
+                settings[0].fFrontFuncMask &= ~stencilClipMask;
+                settings[0].fBackFuncMask = settings[0].fFrontFuncMask;
                 settings[0].fFrontFuncRef |= stencilClipMask;
-                settings[0].fBackFuncRef = settings[0].fFrontFuncMask;
+                settings[0].fBackFuncRef = settings[0].fFrontFuncRef;
+                settings[0].fFrontWriteMask |= stencilClipMask;
+                settings[0].fBackWriteMask = settings[0].fFrontWriteMask;
 
                 settings[1] = gInvUserToClipUnionPass1;
-                settings[1].fFrontFuncMask &= ~stencilClipMask;
-                settings[1].fFrontFuncRef |= stencilClipMask;
-                settings[1].fBackFuncMask = settings[1].fFrontFuncMask;
-                settings[1].fBackFuncRef = settings[1].fFrontFuncRef;
+                settings[1].fFrontWriteMask &= ~stencilClipMask;
+                settings[1].fBackWriteMask &= settings[1].fFrontWriteMask;
 
             } else {
                 settings[0] = gUserToClipUnionPass0;

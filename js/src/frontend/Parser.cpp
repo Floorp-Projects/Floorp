@@ -57,7 +57,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -5574,19 +5573,6 @@ Parser::generatorExpr(ParseNode *kid)
             return NULL;
 
         /*
-         * We have to dance around a bit to propagate sharp variables from
-         * outertc to gentc before setting TCF_HAS_SHARPS implicitly by
-         * propagating all of outertc's TCF_FUN_FLAGS flags. As below, we have
-         * to be conservative by leaving TCF_HAS_SHARPS set in outertc if we
-         * do propagate to gentc.
-         */
-        if (outertc->flags & TCF_HAS_SHARPS) {
-            gentc.flags |= TCF_IN_FUNCTION;
-            if (!gentc.ensureSharpSlots())
-                return NULL;
-        }
-
-        /*
          * We assume conservatively that any deoptimization flag in tc->flags
          * besides TCF_FUN_PARAM_ARGUMENTS can come from the kid. So we
          * propagate these flags into genfn. For code simplicity we also do
@@ -7125,48 +7111,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         break;
 #endif
-
-#if JS_HAS_SHARP_VARS
-      case TOK_DEFSHARP: {
-        if (!tc->ensureSharpSlots())
-            return NULL;
-        const Token &tok = tokenStream.currentToken();
-        TokenPtr begin = tok.pos.begin;
-        uint16_t number = tok.sharpNumber();
-
-        tt = tokenStream.getToken(TSF_OPERAND);
-        ParseNode *expr = primaryExpr(tt, false);
-        if (!expr)
-            return NULL;
-        if (expr->isKind(PNK_USESHARP) ||
-            expr->isKind(PNK_DEFSHARP) ||
-            expr->isKind(PNK_STRING) ||
-            expr->isKind(PNK_NUMBER) ||
-            expr->isKind(PNK_TRUE) ||
-            expr->isKind(PNK_FALSE) ||
-            expr->isKind(PNK_NULL) ||
-            expr->isKind(PNK_THIS))
-        {
-            reportErrorNumber(expr, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
-            return NULL;
-        }
-        pn = new_<DefSharpExpression>(number, expr, begin, tokenStream.currentToken().pos.end);
-        if (!pn)
-            return NULL;
-        break;
-      }
-
-      case TOK_USESHARP: {
-        if (!tc->ensureSharpSlots())
-            return NULL;
-        /* Check for forward/dangling references at runtime, to allow eval. */
-        const Token &tok = tokenStream.currentToken();
-        pn = new_<UseSharpExpression>(tok.sharpNumber(), tok.pos);
-        if (!pn)
-            return NULL;
-        break;
-      }
-#endif /* JS_HAS_SHARP_VARS */
 
       case TOK_LP:
       {

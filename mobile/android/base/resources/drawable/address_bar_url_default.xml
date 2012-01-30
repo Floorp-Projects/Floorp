@@ -2,10 +2,10 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/background"
-          android:left="5dp"
-          android:top="5dp"
-          android:right="5dp"
-          android:bottom="4dp"
+          android:left="1dp"
+          android:top="1dp"
+          android:right="1dp"
+          android:bottom="1dp"
           android:drawable="@drawable/address_bar_url_bg"/>
 
 </layer-list>

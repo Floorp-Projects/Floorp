@@ -292,7 +292,7 @@ public:
 
   friend class nsDelayedCalcBCBorders;
   
-  void AddBCDamageArea(const nsRect& aValue);
+  void AddBCDamageArea(const nsIntRect& aValue);
   bool BCRecalcNeeded(nsStyleContext* aOldStyleContext,
                         nsStyleContext* aNewStyleContext);
   void PaintBCBorders(nsRenderingContext& aRenderingContext,
@@ -506,6 +506,8 @@ public:
                               const nsRect& aOrigVisualOverflow,
                               bool aIsFirstReflow);
 
+  virtual bool UpdateOverflow();
+
 protected:
 
   /** protected constructor. 
@@ -698,7 +700,7 @@ protected:
   void SetFullBCDamageArea();
   void CalcBCBorders();
 
-  void ExpandBCDamageArea(nsRect& aRect) const;
+  void ExpandBCDamageArea(nsIntRect& aRect) const;
 
   void SetColumnDimensions(nscoord         aHeight,
                            const nsMargin& aReflowState);

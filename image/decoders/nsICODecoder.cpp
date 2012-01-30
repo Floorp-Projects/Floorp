@@ -56,7 +56,7 @@
 #include "nsISupportsPrimitives.h"
 
 namespace mozilla {
-namespace imagelib {
+namespace image {
 
 #define ICONCOUNTOFFSET 4
 #define DIRENTRYOFFSET 6
@@ -611,5 +611,5 @@ nsICODecoder::ProcessDirEntry(IconDirEntry& aTarget)
   aTarget.mImageOffset = LITTLE_TO_NATIVE32(aTarget.mImageOffset);
 }
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla

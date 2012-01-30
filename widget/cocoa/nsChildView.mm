@@ -95,6 +95,8 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
+#include "sampler.h"
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
@@ -1831,7 +1833,7 @@ DrawResizer(CGContextRef aCtx)
 }
 
 void
-nsChildView::DrawOver(LayerManager* aManager, nsIntRect aRect)
+nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
   if (!ShowsResizeIndicator(nsnull)) {
     return;
@@ -2504,6 +2506,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
 {
+  SAMPLE_LABEL("widget", "ChildView::drawRect");
   bool isVisible;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
       !isVisible)

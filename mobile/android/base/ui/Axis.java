@@ -190,7 +190,7 @@ abstract class Axis {
 
     /* Returns the velocity. If the axis is locked, returns 0. */
     float getRealVelocity() {
-        return mLocked ? 0.0f : mVelocity;
+        return (mLocked || !scrollable()) ? 0.0f : mVelocity;
     }
 
     void startPan() {
@@ -210,6 +210,12 @@ abstract class Axis {
     /* Advances a fling animation by one step. */
     boolean advanceFling() {
         if (mFlingState != FlingStates.FLINGING) {
+            return false;
+        }
+        if (mSubscroller.scrolling() && !mSubscroller.lastScrollSucceeded()) {
+            // if the subdocument stopped scrolling, it's because it reached the end
+            // of the subdocument. we don't do overscroll on subdocuments, so there's
+            // no point in continuing this fling.
             return false;
         }
 

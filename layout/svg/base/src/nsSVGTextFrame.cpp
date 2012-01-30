@@ -89,12 +89,8 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
     return NS_OK;
 
   if (aAttribute == nsGkAtoms::transform) {
-    // transform has changed
 
-    // make sure our cached transform matrix gets (lazily) updated
-    mCanvasTM = nsnull;
-
-    nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
+    NotifySVGChanged(TRANSFORM_CHANGED);
    
   } else if (aAttribute == nsGkAtoms::x ||
              aAttribute == nsGkAtoms::y ||
@@ -185,14 +181,24 @@ nsSVGTextFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 void
 nsSVGTextFrame::NotifySVGChanged(PRUint32 aFlags)
 {
+  bool updateGlyphMetrics = false;
+  
+  if (aFlags & COORD_CONTEXT_CHANGED) {
+    updateGlyphMetrics = true;
+  }
+
   if (aFlags & TRANSFORM_CHANGED) {
+    if (mCanvasTM && mCanvasTM->IsSingular()) {
+      // We won't have calculated the glyph positions correctly
+      updateGlyphMetrics = true;
+    }
     // make sure our cached transform matrix gets (lazily) updated
     mCanvasTM = nsnull;
   }
 
   nsSVGTextFrameBase::NotifySVGChanged(aFlags);
 
-  if (aFlags & COORD_CONTEXT_CHANGED) {
+  if (updateGlyphMetrics) {
     // If we are positioned using percentage values we need to update our
     // position whenever our viewport's dimensions change.
 

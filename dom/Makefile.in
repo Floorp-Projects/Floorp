@@ -66,8 +66,13 @@ DIRS = \
   interfaces/notification \
   interfaces/svg \
   interfaces/smil \
+  $(NULL)
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+DIRS += \
   interfaces/apps \
   $(NULL)
+endif
 
 DIRS += \
   base \

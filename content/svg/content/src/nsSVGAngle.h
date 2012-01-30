@@ -37,11 +37,17 @@
 #ifndef __NS_SVGANGLE_H__
 #define __NS_SVGANGLE_H__
 
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsDOMError.h"
+#include "nsError.h"
 #include "nsIDOMSVGAngle.h"
 #include "nsIDOMSVGAnimatedAngle.h"
+#include "nsISMILAttr.h"
 #include "nsSVGElement.h"
-#include "nsDOMError.h"
 
+class nsISMILAnimationElement;
+class nsSMILValue;
 class nsSVGOrientType;
 
 class nsSVGAngle
