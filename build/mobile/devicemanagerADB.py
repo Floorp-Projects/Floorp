@@ -237,6 +237,7 @@ class DeviceManagerADB(DeviceManager):
   def listFiles(self, rootdir):
       p = self.runCmd(["shell", "ls", "-a", rootdir])
       data = p.stdout.readlines()
+      data[:] = [item.rstrip('\r\n') for item in data]
       if (len(data) == 1):
           if (data[0] == rootdir):
               return []
