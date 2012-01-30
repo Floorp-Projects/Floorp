@@ -249,7 +249,7 @@ JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length, intN t
     if (!str)
         return NULL;
     str->init(chars, length, type, closure);
-    cx->runtime->updateMallocCounter((length + 1) * sizeof(jschar));
+    cx->runtime->updateMallocCounter(cx, (length + 1) * sizeof(jschar));
     return str;
 }
 

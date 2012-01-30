@@ -2850,6 +2850,16 @@ MarkAndSweep(JSContext *cx, JSGCInvocationKind gckind)
     /* Clear gcIsNeeded now, when we are about to start a normal GC cycle. */
     rt->gcIsNeeded = false;
     rt->gcTriggerCompartment = NULL;
+    
+    /* Clear gcMallocBytes for all compartments */
+    JSCompartment **read = rt->compartments.begin();
+    JSCompartment **end = rt->compartments.end();
+    JS_ASSERT(rt->compartments.length() >= 1);
+    
+    while (read < end) {
+        JSCompartment *compartment = *read++;
+        compartment->resetGCMallocBytes();
+    }
 
     /* Reset weak map list. */
     WeakMapBase::resetWeakMapList(rt);
