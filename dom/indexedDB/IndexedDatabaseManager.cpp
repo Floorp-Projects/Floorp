@@ -505,7 +505,7 @@ IndexedDatabaseManager::AbortCloseDatabasesForWindow(nsPIDOMWindow* aWindow)
 
   for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
     IDBDatabase*& database = liveDatabases[index];
-    if (database->Owner() == aWindow) {
+    if (database->GetOwner() == aWindow) {
       if (NS_FAILED(database->Close())) {
         NS_WARNING("Failed to close database for dying window!");
       }
@@ -533,7 +533,7 @@ IndexedDatabaseManager::HasOpenTransactions(nsPIDOMWindow* aWindow)
 
   for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
     IDBDatabase*& database = liveDatabases[index];
-    if (database->Owner() == aWindow &&
+    if (database->GetOwner() == aWindow &&
         pool->HasTransactionsForDatabase(database)) {
       return true;
     }
@@ -1591,32 +1591,32 @@ NS_IMETHODIMP
 IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-  
+  NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(aObj));
+
   // Instantiating this class will register exception providers so even 
-  // in xpcshell we will get typed (dom) exceptions, instead of general exceptions.
+  // in xpcshell we will get typed (dom) exceptions, instead of general
+  // exceptions.
   nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));
 
-  // Defining IDBKeyrange static functions on the global.
-  if (JSVAL_IS_PRIMITIVE(aObj)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsIIDBFactory> factory = IDBFactory::Create(nsnull);
-  NS_ASSERTION(factory, "IDBFactory should not be null.");
-
   JSObject* obj = JSVAL_TO_OBJECT(aObj);
+
+  JSObject* global = JS_GetGlobalForObject(aCx, obj);
+
+  nsCOMPtr<nsIIDBFactory> factory = IDBFactory::Create(aCx, global);
+  NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+
   jsval mozIndexedDBVal;
   nsresult rv = nsContentUtils::WrapNative(aCx, obj, factory, &mozIndexedDBVal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!JS_DefineProperty(aCx, obj, "mozIndexedDB", mozIndexedDBVal, 
-      nsnull, nsnull, JSPROP_ENUMERATE)) {
+  if (!JS_DefineProperty(aCx, obj, "mozIndexedDB", mozIndexedDBVal, nsnull,
+                         nsnull, JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
   }
 
   JSObject* keyrangeObj = JS_NewObject(aCx, nsnull, nsnull, nsnull);
   NS_ENSURE_TRUE(keyrangeObj, NS_ERROR_OUT_OF_MEMORY);
-    
+
   if (!IDBKeyRange::DefineConstructors(aCx, keyrangeObj)) {
     return NS_ERROR_FAILURE;
   }

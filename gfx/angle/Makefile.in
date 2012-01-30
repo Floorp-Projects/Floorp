@@ -53,7 +53,6 @@ EXPORTS_NAMESPACES = angle
 
 EXPORTS_angle = \
 	include/GLSLANG/ShaderLang.h \
-	include/GLSLANG/ResourceLimits.h \
 	$(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/include -I$(srcdir)/src
@@ -71,7 +70,6 @@ CPPSRCS = \
         Intermediate.cpp \
         intermOut.cpp \
         IntermTraverse.cpp \
-        MozAngleLink.cpp \
         parseConst.cpp \
         ParseHelper.cpp \
         PoolAlloc.cpp \

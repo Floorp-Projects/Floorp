@@ -39,6 +39,9 @@
 #include <aclapi.h>
 #include <stdlib.h>
 
+// Used for DNLEN and UNLEN
+#include <lm.h>
+
 #include <nsAutoPtr.h>
 #include <nsWindowsHelpers.h>
 #include <nsMemory.h>
@@ -120,8 +123,7 @@ SvcInstall(SvcInstallAction action)
     return FALSE;
   }
 
-  // Check if we already have an open service
-  BOOL serviceAlreadyExists = FALSE;
+  // Check if we already have the service installed.
   nsAutoServiceHandle schService(OpenServiceW(schSCManager, 
                                               SVC_NAME, 
                                               SERVICE_ALL_ACCESS));
@@ -133,7 +135,15 @@ SvcInstall(SvcInstallAction action)
   }
   
   if (schService) {
-    serviceAlreadyExists = TRUE;
+    // The service exists but it may not have the correct permissions.
+    // This could happen if the permissions were not set correctly originally
+    // or have been changed after the installation.  This will reset the 
+    // permissions back to allow limited user accounts.
+    if (!SetUserAccessServiceDACL(schService)) {
+      LOG(("Could not reset security ACE on service handle. It might not be "
+           "possible to start the service. This error should never "
+           "happen.  (%d)\n", GetLastError()));
+    }
 
     // The service exists and we opened it
     DWORD bytesNeeded;
@@ -202,8 +212,10 @@ SvcInstall(SvcInstallAction action)
       // copy it in.  First try the safest / easiest way to overwrite the file.
       if (!CopyFileW(newServiceBinaryPath, 
                      serviceConfig.lpBinaryPathName, FALSE)) {
-        LOG(("WARNING: Could not overwrite old service binary file."
-             " (%d)\n", GetLastError()));
+        LOG(("Could not overwrite old service binary file. "
+             "This should never happen, but if it does the next upgrade will "
+             "fix it, the service is not a critical component that needs to be "
+             "installed for upgrades to work. (%d)\n", GetLastError()));
 
         // We rename the last 3 filename chars in an unsafe way.  Manually
         // verify there are more than 3 chars for safe failure in MoveFileExW.
@@ -272,44 +284,42 @@ SvcInstall(SvcInstallAction action)
              newServiceBinaryPath));
       }
       
-      // Setup the new module path
-      wcsncpy(newServiceBinaryPath, serviceConfig.lpBinaryPathName, MAX_PATH);
       return result;
-    } else {
-      // We don't need to copy ourselves to the existing location.
-      // The tmp file (the process of which we are executing right now) will be
-      // left over.  Attempt to delete the file on the next reboot.
-      MoveFileExW(newServiceBinaryPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-      
-      return TRUE; // nothing to do, we already have a newer service installed
     }
-  } else if (UpgradeSvc == action) {
+
+    // We don't need to copy ourselves to the existing location.
+    // The tmp file (the process of which we are executing right now) will be
+    // left over.  Attempt to delete the file on the next reboot.
+    MoveFileExW(newServiceBinaryPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+    
+    // nothing to do, we already have a newer service installed
+    return TRUE; 
+  }
+  
+  // If the service does not exist and we are upgrading, don't install it.
+  if (UpgradeSvc == action) {
     // The service does not exist and we are upgrading, so don't install it
     return TRUE;
   }
 
-  if (!serviceAlreadyExists) {
-    // Create the service as on demand
-    schService.own(CreateServiceW(schSCManager, SVC_NAME, SVC_DISPLAY_NAME,
-                                  SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-                                  SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
-                                  newServiceBinaryPath, NULL, NULL, NULL, 
-                                  NULL, NULL));
-    if (!schService) {
-      LOG(("Could not create Windows service. "
-           "This error should never happen since a service install "
-           "should only be called when elevated. (%d)\n", GetLastError()));
-      return FALSE;
-    } 
-  }
+  // The service does not already exist so create the service as on demand
+  schService.own(CreateServiceW(schSCManager, SVC_NAME, SVC_DISPLAY_NAME,
+                                SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
+                                SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
+                                newServiceBinaryPath, NULL, NULL, NULL, 
+                                NULL, NULL));
+  if (!schService) {
+    LOG(("Could not create Windows service. "
+         "This error should never happen since a service install "
+         "should only be called when elevated. (%d)\n", GetLastError()));
+    return FALSE;
+  } 
 
-  if (schService) {
-    if (!SetUserAccessServiceDACL(schService)) {
-      LOG(("Could not set security ACE on service handle, the service will not"
-           "be able to be started from unelevated processes. "
-           "This error should never happen.  (%d)\n", 
-           GetLastError()));
-    }
+  if (!SetUserAccessServiceDACL(schService)) {
+    LOG(("Could not set security ACE on service handle, the service will not "
+         "be able to be started from unelevated processes. "
+         "This error should never happen.  (%d)\n", 
+         GetLastError()));
   }
 
   return TRUE;
@@ -481,12 +491,47 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
     return GetLastError();
   }
 
+  PSID sid;
+  DWORD SIDSize = SECURITY_MAX_SID_SIZE;
+  sid = LocalAlloc(LMEM_FIXED, SIDSize);
+  if (!sid) {
+    LOG(("Could not allocate SID memory.  (%d)\n", GetLastError()));
+    return GetLastError();
+  }
+
+  if (!CreateWellKnownSid(WinBuiltinUsersSid, NULL, sid, &SIDSize)) {
+    DWORD lastError = GetLastError();
+    LOG(("Could not create well known SID.  (%d)\n", lastError));
+    LocalFree(sid);
+    return lastError;
+  }
+
+  // Lookup the account name, the function fails if you don't pass in
+  // a buffer for the domain name but it's not used since we're using
+  // the built in account Sid.
+  SID_NAME_USE accountType;
+  WCHAR accountName[UNLEN + 1];
+  WCHAR domainName[DNLEN + 1];
+  DWORD accountNameSize = UNLEN + 1;
+  DWORD domainNameSize = DNLEN + 1;
+  if (!LookupAccountSidW(NULL, sid, accountName, 
+                         &accountNameSize, 
+                         domainName, &domainNameSize, &accountType)) {
+    LOG(("Warning: Could not lookup account Sid, will try Users.  (%d)\n",
+         GetLastError()));
+    wcscpy(accountName, L"Users");
+  }
+
+  // We already have the group name so we can get rid of the SID
+  FreeSid(sid);
+  sid = NULL;
+
   // Build the ACE, BuildExplicitAccessWithName cannot fail so it is not logged.
   EXPLICIT_ACCESS ea;
-  BuildExplicitAccessWithName(&ea, TEXT("Users"), 
+  BuildExplicitAccessWithNameW(&ea, accountName, 
                               SERVICE_START | SERVICE_STOP | GENERIC_READ, 
                               SET_ACCESS, NO_INHERITANCE);
-  DWORD lastError = SetEntriesInAcl(1, (PEXPLICIT_ACCESS)&ea, pacl, &pNewAcl);
+  DWORD lastError = SetEntriesInAclW(1, (PEXPLICIT_ACCESS)&ea, pacl, &pNewAcl);
   if (ERROR_SUCCESS != lastError) {
     LOG(("Warning: Could not set entries in ACL.  (%d)\n", lastError));
     return lastError;

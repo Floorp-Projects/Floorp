@@ -57,7 +57,7 @@ void skia_set_text_gamma(float blackGamma, float whiteGamma) {
     gBlackGammaCoeff = blackGamma;
     gWhiteGammaCoeff = whiteGamma;
     gGammaIsBuilt = false;
-    SkGraphics::SetFontCacheUsed(0);
+    SkGraphics::PurgeFontCache();
     build_power_table(gBlackGamma, gBlackGammaCoeff);
     build_power_table(gWhiteGamma, gWhiteGammaCoeff);
 }
@@ -103,31 +103,5 @@ void SkFontHost::GetGammaTables(const uint8_t* tables[2]) {
 #endif
     tables[0] = gBlackGamma;
     tables[1] = gWhiteGamma;
-}
-
-// If the luminance is <= this value, then apply the black gamma table
-#define BLACK_GAMMA_THRESHOLD   0x40
-
-// If the luminance is >= this value, then apply the white gamma table
-#define WHITE_GAMMA_THRESHOLD   0xC0
-
-int SkFontHost::ComputeGammaFlag(const SkPaint& paint) {
-    if (paint.getShader() == NULL) {
-        SkColor c = paint.getColor();
-        int r = SkColorGetR(c);
-        int g = SkColorGetG(c);
-        int b = SkColorGetB(c);
-        int luminance = (r * 2 + g * 5 + b) >> 3;
-        
-        if (luminance <= BLACK_GAMMA_THRESHOLD) {
-        //    printf("------ black gamma for [%d %d %d]\n", r, g, b);
-            return SkScalerContext::kGammaForBlack_Flag;
-        }
-        if (luminance >= WHITE_GAMMA_THRESHOLD) {
-        //    printf("------ white gamma for [%d %d %d]\n", r, g, b);
-            return SkScalerContext::kGammaForWhite_Flag;
-        }
-    }
-    return 0;
 }
 

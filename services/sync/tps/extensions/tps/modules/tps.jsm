@@ -648,7 +648,7 @@ let TPS =
                       .createInstance(CI.nsILocalFile);
     if (hh.oscpu.toLowerCase().indexOf('windows') > -1) {
       let re = /\/(\w)\/(.*)/;
-      this.config.testdir = this.config.testdir.replace(re, "$1://$2").replace("/", "\\", "g");
+      this.config.testdir = this.config.testdir.replace(re, "$1://$2").replace(/\//g, "\\");
     }
     mozmillfile.initWithPath(this.config.testdir);
     mozmillfile.appendRelativePath(testfile);

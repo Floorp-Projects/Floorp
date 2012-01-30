@@ -658,11 +658,11 @@ class HashTable : private AllocPolicy
     }
 
     size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        return mallocSizeOf(table, capacity() * sizeof(Entry));
+        return mallocSizeOf(table);
     }
 
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        return mallocSizeOf(this, sizeof(HashTable)) + sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
 
     Ptr lookup(const Lookup &l) const {
@@ -771,44 +771,6 @@ class HashTable : private AllocPolicy
 };
 
 }  /* namespace detail */
-
-/*****************************************************************************/
-
-template <typename T>
-class TaggedPointerEntry
-{
-    uintptr_t bits;
-
-    typedef TaggedPointerEntry<T> ThisT;
-
-    static const uintptr_t NO_TAG_MASK = uintptr_t(-1) - 1;
-
-  public:
-    TaggedPointerEntry() : bits(0) {}
-    TaggedPointerEntry(const TaggedPointerEntry &other) : bits(other.bits) {}
-    TaggedPointerEntry(T *ptr, bool tagged)
-      : bits(uintptr_t(ptr) | uintptr_t(tagged))
-    {
-        JS_ASSERT((uintptr_t(ptr) & 0x1) == 0);
-    }
-
-    bool isTagged() const {
-        return bits & 0x1;
-    }
-
-    /*
-     * Non-branching code sequence. Note that the const_cast is safe because
-     * the hash function doesn't consider the tag to be a portion of the key.
-     */
-    void setTagged(bool enabled) const {
-        const_cast<ThisT *>(this)->bits |= uintptr_t(enabled);
-    }
-
-    T *asPtr() const {
-        JS_ASSERT(bits != 0);
-        return reinterpret_cast<T *>(bits & NO_TAG_MASK);
-    }
-};
 
 /*****************************************************************************/
 
@@ -1110,7 +1072,7 @@ class HashMap
          * Don't just call |impl.sizeOfExcludingThis()| because there's no
          * guarantee that |impl| is the first field in HashMap.
          */
-        return mallocSizeOf(this, sizeof(*this)) + impl.sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
     /*
@@ -1320,7 +1282,7 @@ class HashSet
          * Don't just call |impl.sizeOfExcludingThis()| because there's no
          * guarantee that |impl| is the first field in HashSet.
          */
-        return mallocSizeOf(this, sizeof(*this)) + impl.sizeOfExcludingThis(mallocSizeOf);
+        return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
     /*

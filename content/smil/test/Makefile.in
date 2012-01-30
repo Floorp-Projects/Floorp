@@ -66,7 +66,6 @@ _TEST_FILES = \
 	  test_smilCSSFontStretchRelative.xhtml \
 	  test_smilCSSFromBy.xhtml \
 	  test_smilCSSFromTo.xhtml \
-	  test_smilCSSInherit.xhtml \
 	  test_smilCSSInvalidValues.xhtml \
 	  test_smilCSSPaced.xhtml \
 	  test_smilDynamicDelayedBeginElement.xhtml \
@@ -93,7 +92,10 @@ _TEST_FILES = \
 	  test_smilTimingZeroIntervals.xhtml \
 	  test_smilUpdatedInterval.xhtml \
 	  test_smilXHR.xhtml \
-		$(NULL)
+	  $(NULL)
+
+# Tests disabled due to intermittent orange
+# test_smilCSSInherit.xhtml disabled until bug 501183 is fixed
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

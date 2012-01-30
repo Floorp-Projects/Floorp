@@ -817,6 +817,19 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMemoryReporterManager::GetHasMozMallocUsableSize(bool *aHas)
+{
+    void *p = malloc(16);
+    if (!p) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    size_t usable = moz_malloc_usable_size(p);
+    free(p);
+    *aHas = !!(usable > 0);
+    return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS1(nsMemoryReporter, nsIMemoryReporter)
 
 nsMemoryReporter::nsMemoryReporter(nsACString& process,

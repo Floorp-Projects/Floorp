@@ -206,7 +206,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIScriptElement.h"
 #include "nsIContentViewer.h"
 #include "nsIObjectLoadingContent.h"
-
+#include "nsCCUncollectableMarker.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
 
@@ -260,7 +260,6 @@ PRUint32 nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
 #endif
 nsTArray< nsCOMPtr<nsIRunnable> >* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
-PRUint32 nsContentUtils::sScriptBlockerCountWhereRunnersPrevented = 0;
 nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 
 bool nsContentUtils::sIsHandlingKeyBoardEvent = false;
@@ -279,7 +278,7 @@ bool nsContentUtils::sFullScreenKeyInputRestricted = true;
 
 PRUint32 nsContentUtils::sHandlingInputTimeout = 1000;
 
-nsHtml5Parser* nsContentUtils::sHTMLFragmentParser = nsnull;
+nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nsnull;
 nsIParser* nsContentUtils::sXMLFragmentParser = nsnull;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nsnull;
 bool nsContentUtils::sFragmentParsingActive = false;
@@ -1729,6 +1728,18 @@ nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
 
   nsINode* child1 = parents1.ElementAt(--pos1);
   return parent->IndexOf(child1) < aOffset2 ? -1 : 1;
+}
+
+/* static */
+PRInt32
+nsContentUtils::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                              nsIDOMNode* aParent2, PRInt32 aOffset2,
+                              bool* aDisconnected)
+{
+  nsCOMPtr<nsINode> parent1 = do_QueryInterface(aParent1);
+  nsCOMPtr<nsINode> parent2 = do_QueryInterface(aParent2);
+  NS_ENSURE_TRUE(parent1 && parent2, -1);
+  return ComparePoints(parent1, aOffset1, parent2, aOffset2);
 }
 
 inline bool
@@ -3391,6 +3402,32 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
   }
 }
 
+PLDHashOperator
+ListenerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
+                   PRUint32 aNumber, void* aArg)
+{
+  PRUint32* gen = static_cast<PRUint32*>(aArg);
+  EventListenerManagerMapEntry* entry =
+    static_cast<EventListenerManagerMapEntry*>(aEntry);
+  if (entry) {
+    nsINode* n = static_cast<nsINode*>(entry->mListenerManager->GetTarget());
+    if (n && n->IsInDoc() &&
+        nsCCUncollectableMarker::InGeneration(n->OwnerDoc()->GetMarkedCCGeneration())) {
+      entry->mListenerManager->UnmarkGrayJSListeners();
+    }
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(PRUint32 aGeneration)
+{
+  if (sEventListenerManagersHash.ops) {
+    PL_DHashTableEnumerate(&sEventListenerManagersHash, ListenerEnumerator,
+                           &aGeneration);
+  }
+}
+
 /* static */
 void
 nsContentUtils::TraverseListenerManager(nsINode *aNode,
@@ -3663,18 +3700,37 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
   mozilla::AutoRestore<bool> guard(nsContentUtils::sFragmentParsingActive);
   nsContentUtils::sFragmentParsingActive = true;
   if (!sHTMLFragmentParser) {
-    sHTMLFragmentParser =
-      static_cast<nsHtml5Parser*>(nsHtml5Module::NewHtml5Parser().get());
+    NS_ADDREF(sHTMLFragmentParser = new nsHtml5StringParser());
     // Now sHTMLFragmentParser owns the object
   }
   nsresult rv =
-    sHTMLFragmentParser->ParseHtml5Fragment(aSourceBuffer,
-                                            aTargetNode,
-                                            aContextLocalName,
-                                            aContextNamespace,
-                                            aQuirks,
-                                            aPreventScriptExecution);
-  sHTMLFragmentParser->Reset();
+    sHTMLFragmentParser->ParseFragment(aSourceBuffer,
+                                       aTargetNode,
+                                       aContextLocalName,
+                                       aContextNamespace,
+                                       aQuirks,
+                                       aPreventScriptExecution);
+  return rv;
+}
+
+/* static */
+nsresult
+nsContentUtils::ParseDocumentHTML(const nsAString& aSourceBuffer,
+                                  nsIDocument* aTargetDocument)
+{
+  if (nsContentUtils::sFragmentParsingActive) {
+    NS_NOTREACHED("Re-entrant fragment parsing attempted.");
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+  mozilla::AutoRestore<bool> guard(nsContentUtils::sFragmentParsingActive);
+  nsContentUtils::sFragmentParsingActive = true;
+  if (!sHTMLFragmentParser) {
+    NS_ADDREF(sHTMLFragmentParser = new nsHtml5StringParser());
+    // Now sHTMLFragmentParser owns the object
+  }
+  nsresult rv =
+    sHTMLFragmentParser->ParseDocument(aSourceBuffer,
+                                       aTargetDocument);
   return rv;
 }
 
@@ -4400,23 +4456,10 @@ nsContentUtils::AddScriptBlocker()
 
 /* static */
 void
-nsContentUtils::AddScriptBlockerAndPreventAddingRunners()
-{
-  AddScriptBlocker();
-  if (sScriptBlockerCountWhereRunnersPrevented == 0) {
-    sScriptBlockerCountWhereRunnersPrevented = sScriptBlockerCount;
-  }
-}
-
-/* static */
-void
 nsContentUtils::RemoveScriptBlocker()
 {
   NS_ASSERTION(sScriptBlockerCount != 0, "Negative script blockers");
   --sScriptBlockerCount;
-  if (sScriptBlockerCount < sScriptBlockerCountWhereRunnersPrevented) {
-    sScriptBlockerCountWhereRunnersPrevented = 0;
-  }
   if (sScriptBlockerCount) {
     return;
   }
@@ -4450,10 +4493,6 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
   }
 
   if (sScriptBlockerCount) {
-    if (sScriptBlockerCountWhereRunnersPrevented > 0) {
-      NS_ERROR("Adding a script runner when that is prevented!");
-      return false;
-    }
     return sBlockedScriptRunners->AppendElement(aRunnable) != nsnull;
   }
   
@@ -5435,8 +5474,9 @@ public:
   }
   NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void* child)
   {
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-      mFound = child == mWrapper;
+    if (langID == nsIProgrammingLanguage::JAVASCRIPT &&
+        child == mWrapper) {
+      mFound = true;
     }
   }
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child)

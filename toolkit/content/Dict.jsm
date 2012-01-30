@@ -112,6 +112,52 @@ Dict.prototype = Object.freeze({
   },
 
   /**
+   * Sets a lazy getter function for a key's value. If the key is a not a string,
+   * it will be converted to a string before the set happens.
+   * @param aKey
+   *        The key to set
+   * @param aThunk
+   *        A getter function to be called the first time the value for aKey is
+   *        retrieved. It is guaranteed that aThunk wouldn't be called more
+   *        than once.  Note that the key value may be retrieved either
+   *        directly, by |get|, or indirectly, by |listvalues| or by iterating
+   *        |values|.  For the later, the value is only retrieved if and when
+   *        the iterator gets to the value in question.  Also note that calling
+   *        |has| for a lazy-key does not invoke aThunk.
+   *
+   * @note No context is provided for aThunk when it's invoked.
+   *       Use Function.bind if you wish to run it in a certain context.
+   */
+  setAsLazyGetter: function Dict_setAsLazyGetter(aKey, aThunk) {
+    let prop = convert(aKey);
+    let items = this._state.items;
+    if (!items.hasOwnProperty(prop))
+      this._state.count++;
+
+    Object.defineProperty(items, prop, {
+      get: function() {
+        delete items[prop];
+        return items[prop] = aThunk();
+      },
+      configurable: true,
+      enumerable: true     
+    });
+  },
+
+  /**
+   * Returns whether a key is set as a lazy getter.  This returns
+   * true only if the getter function was not called already.
+   * @param aKey
+   *        The key to look up.
+   * @returns whether aKey is set as a lazy getter.
+   */
+  isLazyGetter: function Dict_isLazyGetter(aKey) {
+    let descriptor = Object.getOwnPropertyDescriptor(this._state.items,
+                                                     convert(aKey));
+    return (descriptor && descriptor.get != null);
+  },
+
+  /**
    * Returns whether a key is in the dictionary. If the key is a not a string,
    * it will be converted to a string before the lookup happens.
    */

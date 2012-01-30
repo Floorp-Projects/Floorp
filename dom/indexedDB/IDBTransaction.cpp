@@ -42,6 +42,7 @@
 #include "nsIScriptContext.h"
 
 #include "mozilla/storage.h"
+#include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMLists.h"
 #include "nsEventDispatcher.h"
@@ -116,8 +117,9 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
   nsRefPtr<IDBTransaction> transaction = new IDBTransaction();
 
-  transaction->mScriptContext = aDatabase->ScriptContext();
-  transaction->mOwner = aDatabase->Owner();
+  transaction->mScriptContext = aDatabase->GetScriptContext();
+  transaction->mOwner = aDatabase->GetOwner();
+  transaction->mScriptOwner = aDatabase->GetScriptOwner();
 
   transaction->mDatabase = aDatabase;
   transaction->mMode = aMode;
@@ -184,6 +186,8 @@ IDBTransaction::~IDBTransaction()
   NS_ASSERTION(!mConnection, "Should have called CommitOrRollback!");
   NS_ASSERTION(!mCreating, "Should have been cleared already!");
   NS_ASSERTION(mFiredCompleteOrAbort, "Should have fired event!");
+
+  nsContentUtils::ReleaseWrapper(static_cast<nsIDOMEventTarget*>(this), this);
 }
 
 void
@@ -474,27 +478,25 @@ IDBTransaction::ClearCreatedFileInfos()
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransaction)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBTransaction,
-                                                  nsDOMEventTargetHelper)
+                                                  IDBWrapperCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mDatabase,
                                                        nsIDOMEventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnCompleteListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(complete)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(abort)
 
   for (PRUint32 i = 0; i < tmp->mCreatedObjectStores.Length(); i++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCreatedObjectStores[i]");
     cb.NoteXPCOMChild(static_cast<nsIIDBObjectStore*>(
                       tmp->mCreatedObjectStores[i].get()));
   }
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction,
-                                                nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBTransaction, IDBWrapperCache)
   // Don't unlink mDatabase!
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnCompleteListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(error)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(complete)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(abort)
 
   tmp->mCreatedObjectStores.Clear();
 
@@ -504,12 +506,16 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBTransaction)
   NS_INTERFACE_MAP_ENTRY(nsIIDBTransaction)
   NS_INTERFACE_MAP_ENTRY(nsIThreadObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBTransaction)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 
-NS_IMPL_ADDREF_INHERITED(IDBTransaction, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(IDBTransaction, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(IDBTransaction, IDBWrapperCache)
+NS_IMPL_RELEASE_INHERITED(IDBTransaction, IDBWrapperCache)
 
 DOMCI_DATA(IDBTransaction, IDBTransaction)
+
+NS_IMPL_EVENT_HANDLER(IDBTransaction, error);
+NS_IMPL_EVENT_HANDLER(IDBTransaction, complete);
+NS_IMPL_EVENT_HANDLER(IDBTransaction, abort);
 
 NS_IMETHODIMP
 IDBTransaction::GetDb(nsIIDBDatabase** aDB)
@@ -624,53 +630,6 @@ IDBTransaction::Abort()
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBTransaction::SetOnerror(nsIDOMEventListener* aErrorListener)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_EVT_STR),
-                                mOnErrorListener, aErrorListener);
-}
-
-NS_IMETHODIMP
-IDBTransaction::GetOnerror(nsIDOMEventListener** aErrorListener)
-{
-  return GetInnerEventListener(mOnErrorListener, aErrorListener);
-}
-
-NS_IMETHODIMP
-IDBTransaction::GetOncomplete(nsIDOMEventListener** aOncomplete)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return GetInnerEventListener(mOnCompleteListener, aOncomplete);
-}
-
-NS_IMETHODIMP
-IDBTransaction::SetOncomplete(nsIDOMEventListener* aOncomplete)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return RemoveAddEventListener(NS_LITERAL_STRING(COMPLETE_EVT_STR),
-                                mOnCompleteListener, aOncomplete);
-}
-
-NS_IMETHODIMP
-IDBTransaction::GetOnabort(nsIDOMEventListener** aOnabort)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return GetInnerEventListener(mOnAbortListener, aOnabort);
-}
-
-NS_IMETHODIMP
-IDBTransaction::SetOnabort(nsIDOMEventListener* aOnabort)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_EVT_STR),
-                                mOnAbortListener, aOnabort);
 }
 
 nsresult
@@ -817,7 +776,7 @@ CommitHelper::Run()
   }
 
   if (mConnection) {
-    IndexedDatabaseManager::SetCurrentWindow(database->Owner());
+    IndexedDatabaseManager::SetCurrentWindow(database->GetOwner());
 
     if (!mAborted && mUpdateFileRefcountFunction &&
         NS_FAILED(mUpdateFileRefcountFunction->UpdateDatabase(mConnection))) {

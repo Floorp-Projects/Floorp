@@ -747,11 +747,8 @@ SyncEngine.prototype = {
     // Clear the tracker now. If the sync fails we'll add the ones we failed
     // to upload back.
     this._tracker.clearChangedIDs();
- 
-    // Array of just the IDs from this._modified. This is what we iterate over
-    // so we can modify this._modified during the iteration.
-    this._modifiedIDs = Object.keys(this._modified);
-    this._log.info(this._modifiedIDs.length +
+
+    this._log.info(Object.keys(this._modified).length +
                    " outgoing items pre-reconciliation");
 
     // Keep track of what to delete at the end of sync
@@ -1013,19 +1010,6 @@ SyncEngine.prototype = {
     // By default, assume there's no dupe items for the engine
   },
 
-  _isEqual: function SyncEngine__isEqual(item) {
-    let local = this._createRecord(item.id);
-    if (this._log.level <= Log4Moz.Level.Trace)
-      this._log.trace("Local record: " + local);
-    if (Utils.deepEquals(item.cleartext, local.cleartext)) {
-      this._log.trace("Local record is the same");
-      return true;
-    } else {
-      this._log.trace("Local record is different");
-      return false;
-    }
-  },
-
   _deleteId: function _deleteId(id) {
     this._tracker.removeChangedID(id);
 
@@ -1036,85 +1020,195 @@ SyncEngine.prototype = {
       this._delete.ids.push(id);
   },
 
-  _handleDupe: function _handleDupe(item, dupeId) {
-    // Prefer shorter guids; for ties, just do an ASCII compare
-    let preferLocal = dupeId.length < item.id.length ||
-      (dupeId.length == item.id.length && dupeId < item.id);
-
-    if (preferLocal) {
-      this._log.trace("Preferring local id: " + [dupeId, item.id]);
-      this._deleteId(item.id);
-      item.id = dupeId;
-      this._tracker.addChangedID(dupeId, 0);
-    }
-    else {
-      this._log.trace("Switching local id to incoming: " + [item.id, dupeId]);
-      this._store.changeItemID(dupeId, item.id);
-      this._deleteId(dupeId);
-    }
-  },
-
-  // Reconcile incoming and existing records.  Return true if server
-  // data should be applied.
-  _reconcile: function SyncEngine__reconcile(item, dupePerformed) {
-    if (this._log.level <= Log4Moz.Level.Trace)
+  /**
+   * Reconcile incoming record with local state.
+   *
+   * This function essentially determines whether to apply an incoming record.
+   *
+   * @param  item
+   *         Record from server to be tested for application.
+   * @return boolean
+   *         Truthy if incoming record should be applied. False if not.
+   */
+  _reconcile: function _reconcile(item) {
+    if (this._log.level <= Log4Moz.Level.Trace) {
       this._log.trace("Incoming: " + item);
+    }
 
-    this._log.trace("Reconcile step 1: Check for conflicts");
-    if (item.id in this._modified) {
-      // If the incoming and local changes are the same, skip
-      if (this._isEqual(item)) {
-        delete this._modified[item.id];
+    // We start reconciling by collecting a bunch of state. We do this here
+    // because some state may change during the course of this function and we
+    // need to operate on the original values.
+    let existsLocally   = this._store.itemExists(item.id);
+    let locallyModified = item.id in this._modified;
+
+    // TODO Handle clock drift better. Tracked in bug 721181.
+    let remoteAge = AsyncResource.serverTime - item.modified;
+    let localAge  = locallyModified ?
+      (Date.now() / 1000 - this._modified[item.id]) : null;
+    let remoteIsNewer = remoteAge < localAge;
+
+    this._log.trace("Reconciling " + item.id + ". exists=" +
+                    existsLocally + "; modified=" + locallyModified +
+                    "; local age=" + localAge + "; incoming age=" +
+                    remoteAge);
+
+    // We handle deletions first so subsequent logic doesn't have to check
+    // deleted flags.
+    if (item.deleted) {
+      // If the item doesn't exist locally, there is nothing for us to do. We
+      // can't check for duplicates because the incoming record has no data
+      // which can be used for duplicate detection.
+      if (!existsLocally) {
+        this._log.trace("Ignoring incoming item because it was deleted and " +
+                        "the item does not exist locally.");
         return false;
       }
 
-      // Records differ so figure out which to take
-      let recordAge = AsyncResource.serverTime - item.modified;
-      let localAge = Date.now() / 1000 - this._modified[item.id];
-      this._log.trace("Record age vs local age: " + [recordAge, localAge]);
+      // We decide whether to process the deletion by comparing the record
+      // ages. If the item is not modified locally, the remote side wins and
+      // the deletion is processed. If it is modified locally, we take the
+      // newer record.
+      if (!locallyModified) {
+        this._log.trace("Applying incoming delete because the local item " +
+                        "exists and isn't modified.");
+        return true;
+      }
 
-      // Apply the record if the record is newer (server wins)
-      return recordAge < localAge;
+      // TODO As part of bug 720592, determine whether we should do more here.
+      // In the case where the local changes are newer, it is quite possible
+      // that the local client will restore data a remote client had tried to
+      // delete. There might be a good reason for that delete and it might be
+      // enexpected for this client to restore that data.
+      this._log.trace("Incoming record is deleted but we had local changes. " +
+                      "Applying the youngest record.");
+      return remoteIsNewer;
     }
 
-    this._log.trace("Reconcile step 2: Check for updates");
-    if (this._store.itemExists(item.id))
-      return !this._isEqual(item);
+    // At this point the incoming record is not for a deletion and must have
+    // data. If the incoming record does not exist locally, we check for a local
+    // duplicate existing under a different ID. The default implementation of
+    // _findDupe() is empty, so engines have to opt in to this functionality.
+    //
+    // If we find a duplicate, we change the local ID to the incoming ID and we
+    // refresh the metadata collected above. See bug 710448 for the history
+    // of this logic.
+    if (!existsLocally) {
+      let dupeID = this._findDupe(item);
+      if (dupeID) {
+        this._log.trace("Local item " + dupeID + " is a duplicate for " +
+                        "incoming item " + item.id);
 
-    this._log.trace("Reconcile step 2.5: Don't dupe deletes");
-    if (item.deleted)
+        // The local, duplicate ID is always deleted on the server.
+        this._deleteId(dupeID);
+
+        // The current API contract does not mandate that the ID returned by
+        // _findDupe() actually exists. Therefore, we have to perform this
+        // check.
+        existsLocally = this._store.itemExists(dupeID);
+
+        // We unconditionally change the item's ID in case the engine knows of
+        // an item but doesn't expose it through itemExists. If the API
+        // contract were stronger, this could be changed.
+        this._log.debug("Switching local ID to incoming: " + dupeID + " -> " +
+                        item.id);
+        this._store.changeItemID(dupeID, item.id);
+
+        // If the local item was modified, we carry its metadata forward so
+        // appropriate reconciling can be performed.
+        if (dupeID in this._modified) {
+          locallyModified = true;
+          localAge = Date.now() / 1000 - this._modified[dupeID];
+          remoteIsNewer = remoteAge < localAge;
+
+          this._modified[item.id] = this._modified[dupeID];
+          delete this._modified[dupeID];
+        } else {
+          locallyModified = false;
+          localAge = null;
+        }
+
+        this._log.debug("Local item after duplication: age=" + localAge +
+                        "; modified=" + locallyModified + "; exists=" +
+                        existsLocally);
+      } else {
+        this._log.trace("No duplicate found for incoming item: " + item.id);
+      }
+    }
+
+    // At this point we've performed duplicate detection. But, nothing here
+    // should depend on duplicate detection as the above should have updated
+    // state seamlessly.
+
+    if (!existsLocally) {
+      // If the item doesn't exist locally and we have no local modifications
+      // to the item (implying that it was not deleted), always apply the remote
+      // item.
+      if (!locallyModified) {
+        this._log.trace("Applying incoming because local item does not exist " +
+                        "and was not deleted.");
+        return true;
+      }
+
+      // If the item was modified locally but isn't present, it must have
+      // been deleted. If the incoming record is younger, we restore from
+      // that record.
+      if (remoteIsNewer) {
+        this._log.trace("Applying incoming because local item was deleted " +
+                        "before the incoming item was changed.");
+        delete this._modified[item.id];
+        return true;
+      }
+
+      this._log.trace("Ignoring incoming item because the local item's " +
+                      "deletion is newer.");
+      return false;
+    }
+
+    // If the remote and local records are the same, there is nothing to be
+    // done, so we don't do anything. In the ideal world, this logic wouldn't
+    // be here and the engine would take a record and apply it. The reason we
+    // want to defer this logic is because it would avoid a redundant and
+    // possibly expensive dip into the storage layer to query item state.
+    // This should get addressed in the async rewrite, so we ignore it for now.
+    let localRecord = this._createRecord(item.id);
+    let recordsEqual = Utils.deepEquals(item.cleartext,
+                                        localRecord.cleartext);
+
+    // If the records are the same, we don't need to do anything. This does
+    // potentially throw away a local modification time. But, if the records
+    // are the same, does it matter?
+    if (recordsEqual) {
+      this._log.trace("Ignoring incoming item because the local item is " +
+                      "identical.");
+
+      delete this._modified[item.id];
+      return false;
+    }
+
+    // At this point the records are different.
+
+    // If we have no local modifications, always take the server record.
+    if (!locallyModified) {
+      this._log.trace("Applying incoming record because no local conflicts.");
       return true;
-
-    // This shouldn't happen, but we protect ourself from infinite recursion.
-    if (dupePerformed) {
-      this._log.warn("Duplicate record not reconciled on second pass: " +
-                     item);
-      // We go ahead and apply it.
-      return true;
     }
 
-    // When a dupe is detected, we feed the record (with a possibly changed ID)
-    // back through reconciling. If there are changes in both the local and
-    // incoming records, this should ensure that the proper record is used.
-    this._log.trace("Reconcile step 3: Find dupes");
-    let dupeId = this._findDupe(item);
-    if (dupeId) {
-      // _handleDupe() doesn't really handle anything. Instead, it just
-      // determines which GUID to use.
-      this._handleDupe(item, dupeId);
-      this._log.debug("Reconciling de-duped record: " + item.id);
-      return this._reconcile(item, true);
-    }
-
-    // Apply the incoming item.
-    return true;
+    // At this point, records are different and the local record is modified.
+    // We resolve conflicts by record age, where the newest one wins. This does
+    // result in data loss and should be handled by giving the engine an
+    // opportunity to merge the records. Bug 720592 tracks this feature.
+    this._log.warn("DATA LOSS: Both local and remote changes to record: " +
+                   item.id);
+    return remoteIsNewer;
   },
 
   // Upload outgoing records
   _uploadOutgoing: function SyncEngine__uploadOutgoing() {
     this._log.trace("Uploading local changes to server.");
-    if (this._modifiedIDs.length) {
-      this._log.trace("Preparing " + this._modifiedIDs.length +
+
+    let modifiedIDs = Object.keys(this._modified);
+    if (modifiedIDs.length) {
+      this._log.trace("Preparing " + modifiedIDs.length +
                       " outgoing records");
 
       // collection we'll upload
@@ -1123,8 +1217,8 @@ SyncEngine.prototype = {
 
       // Upload what we've got so far in the collection
       let doUpload = Utils.bind2(this, function(desc) {
-        this._log.info("Uploading " + desc + " of " +
-                       this._modifiedIDs.length + " records");
+        this._log.info("Uploading " + desc + " of " + modifiedIDs.length +
+                       " records");
         let resp = up.post();
         if (!resp.success) {
           this._log.debug("Uploading records failed: " + resp);
@@ -1151,7 +1245,7 @@ SyncEngine.prototype = {
         up.clearRecords();
       });
 
-      for each (let id in this._modifiedIDs) {
+      for each (let id in modifiedIDs) {
         try {
           let out = this._createRecord(id);
           if (this._log.level <= Log4Moz.Level.Trace)
@@ -1214,8 +1308,7 @@ SyncEngine.prototype = {
     for (let [id, when] in Iterator(this._modified)) {
       this._tracker.addChangedID(id, when);
     }
-    this._modified    = {};
-    this._modifiedIDs = [];
+    this._modified = {};
   },
 
   _sync: function SyncEngine__sync() {

@@ -200,12 +200,17 @@ private:
         //
         nsCString mCoalescingKey;
 
-        // To have the UsingSpdy flag means some host with the same hash information
-        // has done NPN=spdy/2 at some point. It does not mean every connection
-        // is currently using spdy.
+        // To have the UsingSpdy flag means some host with the same connection
+        // entry has done NPN=spdy/2 at some point. It does not mean every
+        // connection is currently using spdy.
         bool mUsingSpdy;
 
+        // mTestedSpdy is set after NPN negotiation has occurred and we know
+        // with confidence whether a host speaks spdy or not (which is reflected
+        // in mUsingSpdy). Before mTestedSpdy is set, handshake parallelism is
+        // minimized so that we can multiplex on a single spdy connection.
         bool mTestedSpdy;
+
         bool mSpdyPreferred;
     };
 
@@ -321,9 +326,8 @@ private:
     void     RecvdConnect();
 
     // Manage the preferred spdy connection entry for this address
-    nsConnectionEntry *GetSpdyPreferred(nsConnectionEntry *aOriginalEntry);
-    void               SetSpdyPreferred(nsConnectionEntry *ent);
-    void               RemoveSpdyPreferred(nsACString &aDottedDecimal);
+    nsConnectionEntry *GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry);
+    void               RemoveSpdyPreferredEnt(nsACString &aDottedDecimal);
     nsHttpConnection  *GetSpdyPreferredConn(nsConnectionEntry *ent);
     nsDataHashtable<nsCStringHashKey, nsConnectionEntry *>   mSpdyPreferredHash;
     nsConnectionEntry *LookupConnectionEntry(nsHttpConnectionInfo *ci,
@@ -331,7 +335,7 @@ private:
                                              nsHttpTransaction *trans);
 
     void               ProcessSpdyPendingQ(nsConnectionEntry *ent);
-    void               ProcessSpdyPendingQ();
+    void               ProcessAllSpdyPendingQ();
     static PLDHashOperator ProcessSpdyPendingQCB(
         const nsACString &key, nsAutoPtr<nsConnectionEntry> &ent,
         void *closure);
@@ -414,8 +418,8 @@ private:
     //
     nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
 
-    // this table is protected by the monitor
-    nsCStringHashSet mAlternateProtocolHash;
+    // mAlternateProtocolHash is used only for spdy/2 upgrades for now
+    nsCStringHashSet mAlternateProtocolHash; // protected by the monitor
     static PLDHashOperator TrimAlternateProtocolHash(PLDHashTable *table,
                                                      PLDHashEntryHdr *hdr,
                                                      PRUint32 number,

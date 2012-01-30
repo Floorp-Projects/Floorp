@@ -13,7 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=631437
   <text id="text" x="10 20 30" rotate="40 50 60">abcde</text>
   <path id="path" d="M0,0 L100,100"/>
   <polygon id="poly" points="50,50 70,70 90,50"/>
-  <g id="g" transform="translate(20 30) rotate(50 60 70) scale(2)"/>
+  <g id="g" transform="translate(20 30) rotate(50 60 70) scale(2)"
+     requiredFeatures="foo bar baz"/>
 </svg>
 <script type="text/javascript;version=1.8"><![CDATA[
 var text = document.getElementById("text"),
@@ -26,6 +27,8 @@ function CheckList(aListObject, aExpectedListLength, aListDescription)
   is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".numberOfItems");
   is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".length");
   for (let i = 0; i < aListObject.length; i++) {
+    if (aListDescription.indexOf("SVGStringList") > -1)
+      continue;
     let item = aListObject.getItem(i);
     ok(aListObject[i] === item, aListDescription + "[" + i + "]");
   }
@@ -68,7 +71,14 @@ var tests = [
     subtests: [ { values: null, length: 3 },
                 { values: "skewX(45)", length: 1 },
                 { values: "translate(1 2) rotate(3) scale(4) skewY(5) skewX(6)",
-                  length: 5 } ] }
+                  length: 5 } ] },
+  { element: g,
+    attribute: "requiredFeatures",
+    listProperty: "requiredFeatures",
+    type: "SVGStringList",
+    subtests: [ { values: null, length: 3 },
+                { values: "foo", length: 1 },
+                { values: "foo bar baz qux", length: 4 } ] }
 ];
 
 for each (let test in tests) {

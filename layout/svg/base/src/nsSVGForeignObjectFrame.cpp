@@ -257,18 +257,20 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   NS_ASSERTION(!invmatrix.IsSingular(),
                "inverse of non-singular matrix should be non-singular");
 
-  gfxRect transDirtyRect = gfxRect(aDirtyRect->x, aDirtyRect->y,
-                                   aDirtyRect->width, aDirtyRect->height);
-  transDirtyRect = invmatrix.TransformBounds(transDirtyRect);
+  nsRect kidDirtyRect = kid->GetVisualOverflowRect();
+  if (aDirtyRect) {
+    gfxRect transDirtyRect = gfxRect(aDirtyRect->x, aDirtyRect->y,
+                                     aDirtyRect->width, aDirtyRect->height);
+    transDirtyRect = invmatrix.TransformBounds(transDirtyRect);
 
-  transDirtyRect.Scale(nsPresContext::AppUnitsPerCSSPixel());
-  nsPoint tl(NSToCoordFloor(transDirtyRect.X()),
-             NSToCoordFloor(transDirtyRect.Y()));
-  nsPoint br(NSToCoordCeil(transDirtyRect.XMost()),
-             NSToCoordCeil(transDirtyRect.YMost()));
-  nsRect kidDirtyRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
-
-  kidDirtyRect.IntersectRect(kidDirtyRect, kid->GetRect());
+    transDirtyRect.Scale(nsPresContext::AppUnitsPerCSSPixel());
+    nsPoint tl(NSToCoordFloor(transDirtyRect.X()),
+               NSToCoordFloor(transDirtyRect.Y()));
+    nsPoint br(NSToCoordCeil(transDirtyRect.XMost()),
+               NSToCoordCeil(transDirtyRect.YMost()));
+    kidDirtyRect.IntersectRect(kidDirtyRect,
+                               nsRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y));
+  }
 
   PRUint32 flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
   if (aContext->IsPaintingToWindow()) {
@@ -291,6 +293,10 @@ nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame* aAncestor,
   /* Set the ancestor to be the outer frame. */
   *aOutAncestor = nsSVGUtils::GetOuterSVGFrame(this);
   NS_ASSERTION(*aOutAncestor, "How did we end up without an outer frame?");
+
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    return gfx3DMatrix::From2D(gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+  }
 
   /* Return the matrix back to the root, factoring in the x and y offsets. */
   return gfx3DMatrix::From2D(GetCanvasTMForChildren());

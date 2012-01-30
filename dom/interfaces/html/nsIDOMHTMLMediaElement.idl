@@ -57,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(1f312b70-c1e1-40ca-94d4-5f70cac773da)]  
+[scriptable, uuid(6733a409-fab3-45e1-af23-9af8c361bdfd)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -66,6 +66,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   // network state
            attribute DOMString src;
   readonly attribute DOMString currentSrc;
+           attribute DOMString crossorigin;
   const unsigned short NETWORK_EMPTY = 0;
   const unsigned short NETWORK_IDLE = 1;
   const unsigned short NETWORK_LOADING = 2;

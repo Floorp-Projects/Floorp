@@ -41,6 +41,12 @@
   color: white;
 }
 
+.loading .splitview-nav-container {
+  background-image: url(chrome://global/skin/icons/loading_16.png);
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
 .splitview-nav {
   -moz-appearance: none;
   margin: 0;
@@ -70,7 +76,6 @@
 
 .placeholder {
   -moz-box-flex: 1;
-  -moz-box-back: center;
   text-align: center;
 }
 
@@ -154,17 +159,4 @@
   padding: 2px 0;
   border-top: 1px solid hsla(210,8%,5%,.5);
   border-bottom: 1px solid hsla(210,8%,5%,.5);
-}
-
-/* limited width mode (hide search unless it has focus [search-on-type]) */
-@media (max-width: 250px) {
-  .splitview-filter {
-    max-width: none;
-    position: fixed;
-    margin: 0;
-    bottom: -4em;
-  }
-  .splitview-filter[focused="true"] {
-    bottom: 0;
-  }
 }

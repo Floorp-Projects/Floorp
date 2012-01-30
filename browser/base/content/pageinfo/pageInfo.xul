@@ -66,6 +66,7 @@
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript" src="chrome://global/content/treeUtils.js"/>
   <script type="application/javascript" src="chrome://browser/content/pageinfo/pageInfo.js"/>
   <script type="application/javascript" src="chrome://browser/content/pageinfo/feeds.js"/>
   <script type="application/javascript" src="chrome://browser/content/pageinfo/permissions.js"/>
@@ -192,10 +193,12 @@
         <tree id="metatree" flex="1" hidecolumnpicker="true" contextmenu="picontext">
           <treecols>
             <treecol id="meta-name"    label="&generalMetaName;"
-                     persist="width" flex="1"/>
+                     persist="width" flex="1"
+                     onclick="gMetaView.onPageMediaSort('meta-name');"/>
             <splitter class="tree-splitter"/>
             <treecol id="meta-content" label="&generalMetaContent;"
-                     persist="width" flex="4"/>
+                     persist="width" flex="4"
+                     onclick="gMetaView.onPageMediaSort('meta-content');"/>
           </treecols>
           <treechildren flex="1"/>
         </tree>        
@@ -218,19 +221,24 @@
             ondragstart="onBeginLinkDrag(event,'image-address','image-alt')">
         <treecols>
           <treecol sortSeparators="true" primary="true" persist="width" flex="10"
-                        width="10" id="image-address" label="&mediaAddress;"/>
+                        width="10" id="image-address" label="&mediaAddress;"
+                        onclick="gImageView.onPageMediaSort('image-address');"/>
           <splitter class="tree-splitter"/>
           <treecol sortSeparators="true" persist="hidden width" flex="2"
-                        width="2"  id="image-type"    label="&mediaType;"/>
+                        width="2"  id="image-type"    label="&mediaType;"
+                        onclick="gImageView.onPageMediaSort('image-type');"/>
           <splitter class="tree-splitter"/>
           <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="2"
-                        width="2"  id="image-size"    label="&mediaSize;"/>
+                        width="2"  id="image-size"  label="&mediaSize;" value="size"
+                        onclick="gImageView.onPageMediaSort('image-size');"/>
           <splitter class="tree-splitter"/>
           <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="4"
-                        width="4"  id="image-alt"    label="&mediaAltHeader;"/>
+                        width="4"  id="image-alt"    label="&mediaAltHeader;"
+                        onclick="gImageView.onPageMediaSort('image-alt');"/>
           <splitter class="tree-splitter"/>
           <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="1"
-                        width="1"  id="image-count"    label="&mediaCount;"/>
+                        width="1"  id="image-count"    label="&mediaCount;"
+                        onclick="gImageView.onPageMediaSort('image-count');"/>
         </treecols>
         <treechildren flex="1"/>
       </tree>

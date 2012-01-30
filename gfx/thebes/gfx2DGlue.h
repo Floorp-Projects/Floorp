@@ -98,6 +98,11 @@ inline gfxSize ThebesSize(const Size &aSize)
   return gfxSize(aSize.width, aSize.height);
 }
 
+inline gfxIntSize ThebesIntSize(const IntSize &aSize)
+{
+  return gfxIntSize(aSize.width, aSize.height);
+}
+
 inline gfxRect ThebesRect(const Rect &aRect)
 {
   return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);

@@ -51,7 +51,6 @@ import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.RectUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 import android.util.Log;
 
 /**
@@ -280,22 +279,23 @@ public class ViewportMetrics {
     }
 
     public String toJSON() {
-        try {
-            JSONStringer object = new JSONStringer().object();
-            object.key("zoom").value(mZoomFactor);
-            object.key("offsetY").value(mViewportOffset.y);
-            object.key("offsetX").value(mViewportOffset.x);
-            object.key("pageHeight").value(mPageSize.height);
-            object.key("pageWidth").value(mPageSize.width);
-            object.key("height").value(mViewportRect.height());
-            object.key("width").value(mViewportRect.width());
-            object.key("y").value(mViewportRect.top);
-            object.key("x").value(mViewportRect.left);
-            return object.endObject().toString();
-        } catch (JSONException je) {
-            Log.e(LOGTAG, "Error serializing viewportmetrics", je);
-            return "";
-        }
+        // Round off height and width. Since the height and width are the size of the screen, it
+        // makes no sense to send non-integer coordinates to Gecko.
+        int height = Math.round(mViewportRect.height());
+        int width = Math.round(mViewportRect.width());
+
+        StringBuffer sb = new StringBuffer(256);
+        sb.append("{ \"x\" : ").append(mViewportRect.left)
+          .append(", \"y\" : ").append(mViewportRect.top)
+          .append(", \"width\" : ").append(width)
+          .append(", \"height\" : ").append(height)
+          .append(", \"pageWidth\" : ").append(mPageSize.width)
+          .append(", \"pageHeight\" : ").append(mPageSize.height)
+          .append(", \"offsetX\" : ").append(mViewportOffset.x)
+          .append(", \"offsetY\" : ").append(mViewportOffset.y)
+          .append(", \"zoom\" : ").append(mZoomFactor)
+          .append(" }");
+        return sb.toString();
     }
 
     @Override

@@ -102,7 +102,7 @@ moz_xmalloc(size_t size)
 {
     void* ptr = malloc(size);
     if (UNLIKELY(!ptr)) {
-        mozalloc_handle_oom();
+        mozalloc_handle_oom(size);
         return moz_xmalloc(size);
     }
     return ptr;
@@ -118,7 +118,7 @@ moz_xcalloc(size_t nmemb, size_t size)
 {
     void* ptr = calloc(nmemb, size);
     if (UNLIKELY(!ptr)) {
-        mozalloc_handle_oom();
+        mozalloc_handle_oom(size);
         return moz_xcalloc(nmemb, size);
     }
     return ptr;
@@ -134,7 +134,7 @@ moz_xrealloc(void* ptr, size_t size)
 {
     void* newptr = realloc(ptr, size);
     if (UNLIKELY(!newptr)) {
-        mozalloc_handle_oom();
+        mozalloc_handle_oom(size);
         return moz_xrealloc(ptr, size);
     }
     return newptr;
@@ -150,7 +150,7 @@ moz_xstrdup(const char* str)
 {
     char* dup = strdup(str);
     if (UNLIKELY(!dup)) {
-        mozalloc_handle_oom();
+        mozalloc_handle_oom(0);
         return moz_xstrdup(str);
     }
     return dup;
@@ -167,7 +167,7 @@ moz_xstrndup(const char* str, size_t strsize)
 {
     char* dup = strndup(str, strsize);
     if (UNLIKELY(!dup)) {
-        mozalloc_handle_oom();
+        mozalloc_handle_oom(strsize);
         return moz_xstrndup(str, strsize);
     }
     return dup;
@@ -185,7 +185,7 @@ moz_xposix_memalign(void **ptr, size_t alignment, size_t size)
 {
     int err = posix_memalign(ptr, alignment, size);
     if (UNLIKELY(err && ENOMEM == err)) {
-        mozalloc_handle_oom();
+        mozalloc_handle_oom(size);
         return moz_xposix_memalign(ptr, alignment, size);
     }
     // else: (0 == err) or (EINVAL == err)
@@ -220,7 +220,7 @@ moz_xmemalign(size_t boundary, size_t size)
 {
     void* ptr = memalign(boundary, size);
     if (UNLIKELY(!ptr && EINVAL != errno)) {
-        mozalloc_handle_oom();
+        mozalloc_handle_oom(size);
         return moz_xmemalign(boundary, size);
     }
     // non-NULL ptr or errno == EINVAL
@@ -239,7 +239,7 @@ moz_xvalloc(size_t size)
 {
     void* ptr = valloc(size);
     if (UNLIKELY(!ptr)) {
-        mozalloc_handle_oom();
+        mozalloc_handle_oom(size);
         return moz_xvalloc(size);
     }
     return ptr;
@@ -271,10 +271,9 @@ moz_malloc_usable_size(void *ptr)
 #endif
 }
 
-size_t moz_malloc_size_of(const void *ptr, size_t computedSize)
+size_t moz_malloc_size_of(const void *ptr)
 {
-    size_t usable = moz_malloc_usable_size((void *)ptr);
-    return usable ? usable : computedSize;
+    return moz_malloc_usable_size((void *)ptr);
 }
 
 namespace mozilla {

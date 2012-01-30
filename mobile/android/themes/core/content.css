@@ -231,22 +231,20 @@ input[type="checkbox"] {
   padding: 2px 1px 2px 1px;
 }
 
-select > input[type="button"] {
+select > button {
   border-width: 0px !important;
   margin: 0px !important;
   padding: 0px !important;
   -moz-border-radius: 0;
   color: #414141;
 
-  background-size: 100% 90%;
+  background-size: auto auto, 100% 90%;
   background-color: transparent;
-  background-image: -moz-radial-gradient(bottom left, #bbbbbb 40%, #f5f5f5) !important;
-  background-position: -15px center !important;
+  background-image: url("chrome://browser/skin/images/dropmarker.svg"),
+                    -moz-radial-gradient(bottom left, #bbbbbb 40%, #f5f5f5) !important;
+  background-position: -moz-calc(50% + 1px) center, -15px center !important;
   background-repeat: no-repeat !important;
 
-  /* Use to position an svg arrow on <select> element */
-  -moz-binding: url("chrome://browser/content/bindings.xml#select-button");
-  position: relative !important;
   font-size: inherit;
 }
 
@@ -330,7 +328,7 @@ input[type="checkbox"][disabled]:hover:active {
   border:1px solid rgba(125,125,125,0.4) !important;
 }
 
-select[disabled] > input[type="button"] {
+select[disabled] > button {
   opacity: 0.6;
   padding: 1px 7px 1px 7px;
 }

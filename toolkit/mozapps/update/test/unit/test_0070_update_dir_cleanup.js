@@ -58,11 +58,6 @@ function run_test() {
   log.append(FILE_UPDATE_LOG);
   writeFile(log, "Last Update Log");
 
-  let channelchange = dir.clone();
-  channelchange.append("0");
-  channelchange.append(CHANNEL_CHANGE_FILE);
-  channelchange.create(AUS_Ci.nsIFile.FILE_TYPE, PERMS_FILE);
-
   standardInit();
 
   logTestInfo("testing " + log.path + " shouldn't exist");
@@ -84,9 +79,6 @@ function run_test() {
   dir.append("0");
   logTestInfo("testing " + dir.path + " should exist (bug 512994)");
   do_check_true(dir.exists());
-
-  logTestInfo("testing " + channelchange.path + " shouldn't exist");
-  do_check_false(channelchange.exists());
 
   do_test_finished();
 }

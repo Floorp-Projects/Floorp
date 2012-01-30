@@ -195,6 +195,7 @@
 #include "nsEventStateManager.h"
 #include "nsITimedChannel.h"
 #include "nsICookiePermission.h"
+#include "nsServiceManagerUtils.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #include "nsIDOMXULControlElement.h"
@@ -294,6 +295,8 @@ static bool                 gDOMWindowDumpEnabled      = false;
 #if defined(DEBUG_bryner) || defined(DEBUG_chb)
 #define DEBUG_PAGE_CACHE
 #endif
+
+#define DOM_TOUCH_LISTENER_ADDED "dom-touch-listener-added"
 
 // The default shortest interval/timeout we permit
 #define DEFAULT_MIN_TIMEOUT_VALUE 4 // 4ms
@@ -1340,8 +1343,8 @@ nsGlobalWindow::FreeInnerObjects(bool aClearScope)
     // them ever even make it into the fast-back cache?
 
     mDummyJavaPluginOwner->Destroy();
-
     mDummyJavaPluginOwner = nsnull;
+    mDidInitJavaProperties = false;
   }
 
   CleanupCachedXBLHandlers(this);
@@ -1402,11 +1405,32 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGlobalWindow)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGlobalWindow)
 
+static PLDHashOperator
+MarkXBLHandlers(const void* aKey, JSObject* aData, void* aClosure)
+{
+  xpc_UnmarkGrayObject(aData);
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindow)
+  if (tmp->IsBlackForCC()) {
+    if (tmp->mCachedXBLPrototypeHandlers.IsInitialized()) {
+      tmp->mCachedXBLPrototypeHandlers.EnumerateRead(MarkXBLHandlers, nsnull);
+    }
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsGlobalWindow)
+  return tmp->IsBlackForCC();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsGlobalWindow)
+  return tmp->IsBlackForCC();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
-  if ((tmp->mDoc && nsCCUncollectableMarker::InGeneration(
-                      cb, tmp->mDoc->GetMarkedCCGeneration())) ||
-      (nsCCUncollectableMarker::sGeneration && tmp->IsBlack())) {
+  if (!cb.WantAllTraces() && tmp->IsBlackForCC()) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -1481,6 +1505,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   if (tmp->mDummyJavaPluginOwner) {
     tmp->mDummyJavaPluginOwner->Destroy();
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDummyJavaPluginOwner)
+    tmp->mDidInitJavaProperties = false;
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFocusedNode)
@@ -1513,6 +1538,28 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindow)
     tmp->mCachedXBLPrototypeHandlers.EnumerateRead(TraceXBLHandlers, &data);
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+bool
+nsGlobalWindow::IsBlackForCC()
+{
+  return
+    (mDoc &&
+     nsCCUncollectableMarker::InGeneration(mDoc->GetMarkedCCGeneration())) ||
+    (nsCCUncollectableMarker::sGeneration && IsBlack());
+}
+
+void
+nsGlobalWindow::UnmarkGrayTimers()
+{
+  for (nsTimeout* timeout = FirstTimeout();
+       timeout && IsTimeout(timeout);
+       timeout = timeout->Next()) {
+    if (timeout->mScriptHandler) {
+      JSObject* o = timeout->mScriptHandler->GetScriptObject();
+      xpc_UnmarkGrayObject(o);
+    }
+  }
+}
 
 //*****************************************************************************
 // nsGlobalWindow::nsIScriptGlobalObject
@@ -2234,6 +2281,16 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         // XXXmarkh - tell other languages about this?
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
+
+        if (mDummyJavaPluginOwner) {
+          // Since we're reusing the inner window, tear down the
+          // dummy Java plugin we created for the old document in
+          // this window.
+          mDummyJavaPluginOwner->Destroy();
+          mDummyJavaPluginOwner = nsnull;
+
+          mDidInitJavaProperties = false;
+        }
       }
     } else {
       rv = newInnerWindow->InnerSetNewDocument(aDocument);
@@ -2258,7 +2315,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
-  mContext->GC();
+  mContext->GC(js::gcreason::SET_NEW_DOCUMENT);
   mContext->DidInitializeContext();
 
   if (newInnerWindow && !newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
@@ -2415,7 +2472,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     }
 
     if (mContext) {
-      mContext->GC();
+      mContext->GC(js::gcreason::SET_DOC_SHELL);
       mContext->FinalizeContext();
       mContext = nsnull;
     }
@@ -4522,7 +4579,7 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 
   if (cstr) {
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", cstr);
+    __android_log_write(ANDROID_LOG_INFO, "GeckoDump", cstr);
 #endif
     FILE *fp = gDumpFile ? gDumpFile : stdout;
     fputs(cstr, fp);
@@ -7617,6 +7674,15 @@ void nsGlobalWindow::UpdateTouchState()
 
   if (mMayHaveTouchEventListener) {
     mainWidget->RegisterTouchWindow();
+
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      nsPIDOMWindow *inner = GetCurrentInnerWindowInternal();
+      observerService->NotifyObservers(mainWidget,
+                                       DOM_TOUCH_LISTENER_ADDED,
+                                       nsnull);
+    }
   } else {
     mainWidget->UnregisterTouchWindow();
   }
@@ -8307,6 +8373,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
     if (mDocShell) {
       nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
       if (docCharset) {
+        NS_WARNING("Using deprecated nsIDocCharset: use nsIDocShell.GetCharset() instead ");
         *aSink = docCharset;
         NS_ADDREF(((nsISupports *) *aSink));
       }

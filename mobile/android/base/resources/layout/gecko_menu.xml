@@ -21,9 +21,6 @@
           android:icon="@drawable/ic_menu_save_as_pdf"
           android:title="@string/save_as_pdf" />
 
-    <item android:id="@+id/settings"
-          android:title="@string/settings" />
-
     <item android:id="@+id/site_settings"
           android:title="@string/site_settings_title" />
 
@@ -32,6 +29,13 @@
 
     <item android:id="@+id/downloads"
           android:title="@string/downloads"/>
+
+    <item android:id="@+id/char_encoding"
+          android:visible="false"
+          android:title="@string/char_encoding"/>
+
+    <item android:id="@+id/settings"
+          android:title="@string/settings" />
 
     <item android:id="@+id/quit"
           android:title="@string/quit" />

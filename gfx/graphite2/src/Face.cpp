@@ -26,13 +26,12 @@ of the License or (at your option) any later version.
 */
 #include <cstring>
 #include "graphite2/Segment.h"
-#include "Face.h"
-#include "Endian.h"
-#include "Segment.h"
-#include "CmapCache.h"
-#include "NameTable.h"
-#include "SegCacheStore.h"
-#include "XmlTraceLog.h"
+#include "inc/Face.h"
+#include "inc/Endian.h"
+#include "inc/Segment.h"
+#include "inc/CmapCache.h"
+#include "inc/NameTable.h"
+#include "inc/SegCacheStore.h"
 
 
 using namespace graphite2;
@@ -84,77 +83,34 @@ bool Face::readGlyphs(uint32 faceOptions)
 
 bool Face::readGraphite()
 {
-    const byte *pSilf;
     size_t lSilf;
-    if ((pSilf = getTable(Tag::Silf, &lSilf)) == NULL) return false;
-    uint32 version;
-#ifndef DISABLE_TRACING
-    uint32 compilerVersion = 0; // wasn't set before GTF version 3
-#endif
-    uint32 offset32Pos = 2;
-    version = be::peek<uint32>(pSilf);
+    const byte * const pSilf = getTable(Tag::Silf, &lSilf),
+    		   *      p = pSilf;
+    if (!p) return false;
+
+    const uint32 version = be::read<uint32>(p);
     if (version < 0x00020000) return false;
     if (version >= 0x00030000)
-    {
-#ifndef DISABLE_TRACING
-        compilerVersion = be::swap<uint32>(((uint32 *)pSilf)[1]);
-#endif
-        m_numSilf = be::swap<uint16>(((uint16 *)pSilf)[4]);
-        offset32Pos = 3;
-    }
-    else
-        m_numSilf = be::swap<uint16>(((uint16 *)pSilf)[2]);
+    	be::skip<uint32>(p);		// compilerVersion
+    m_numSilf = be::read<uint16>(p);
+    be::skip<uint16>(p);			// reserved
 
-#ifndef DISABLE_TRACING
-        if (XmlTraceLog::get().active())
-        {
-            XmlTraceLog::get().openElement(ElementSilf);
-            XmlTraceLog::get().addAttribute(AttrMajor, version >> 16);
-            XmlTraceLog::get().addAttribute(AttrMinor, version & 0xFFFF);
-            XmlTraceLog::get().addAttribute(AttrCompilerMajor, compilerVersion >> 16);
-            XmlTraceLog::get().addAttribute(AttrCompilerMinor, compilerVersion & 0xFFFF);
-            XmlTraceLog::get().addAttribute(AttrNum, m_numSilf);
-            if (m_numSilf == 0)
-                XmlTraceLog::get().warning("No Silf subtables!");
-        }
-#endif
     bool havePasses = false;
     m_silfs = new Silf[m_numSilf];
     for (int i = 0; i < m_numSilf; i++)
     {
-        const uint32 offset = be::swap<uint32>(((uint32 *)pSilf)[offset32Pos + i]);
-        uint32 next;
-        if (i == m_numSilf - 1)
-            next = lSilf;
-        else
-            next = be::swap<uint32>(((uint32 *)pSilf)[offset32Pos + 1 + i]);
-        if (offset > lSilf || next > lSilf)
-        {
-#ifndef DISABLE_TRACING
-            XmlTraceLog::get().error("Invalid table %d offset %d length %u", i, offset, lSilf);
-            XmlTraceLog::get().closeElement(ElementSilf);
-#endif
+        const uint32 offset = be::read<uint32>(p),
+        			 next   = i == m_numSilf - 1 ? lSilf : be::peek<uint32>(p);
+        if (next > lSilf || offset >= next)
             return false;
-        }
-        if (!m_silfs[i].readGraphite((void *)((char *)pSilf + offset), next - offset, *this, version))
-        {
-#ifndef DISABLE_TRACING
-            if (XmlTraceLog::get().active())
-            {
-                XmlTraceLog::get().error("Error reading Graphite subtable %d", i);
-                XmlTraceLog::get().closeElement(ElementSilfSub); // for convenience
-                XmlTraceLog::get().closeElement(ElementSilf);
-            }
-#endif
+
+        if (!m_silfs[i].readGraphite(pSilf + offset, next - offset, *this, version))
             return false;
-        }
+
         if (m_silfs[i].numPasses())
             havePasses = true;
     }
 
-#ifndef DISABLE_TRACING
-    XmlTraceLog::get().closeElement(ElementSilf);
-#endif
     return havePasses;
 }
 
@@ -211,7 +167,7 @@ uint16 Face::languageForLocale(const char * locale) const
 }
 
 
-#ifndef DISABLE_FILE_FACE
+#ifndef GRAPHITE2_NFILEFACE
 
 FileFace::FileFace(const char *filename) :
     m_pHeader(NULL),
@@ -293,4 +249,4 @@ const void *FileFace::table_fn(const void* appFaceHandle, unsigned int name, siz
     if (len) *len = tci->size();
     return tci->data();
 }
-#endif                  //!DISABLE_FILE_FACE
+#endif                  //!GRAPHITE2_NFILEFACE

@@ -82,7 +82,6 @@ CPPSRCS = \
   Intermediate.cpp \
   intermOut.cpp \
   IntermTraverse.cpp \
-  MozAngleLink.cpp \
   parseConst.cpp \
   ParseHelper.cpp \
   PoolAlloc.cpp \
@@ -140,6 +139,7 @@ endif
 
 CPPSRCS += \
   debug.cpp \
+  RefCountObject.cpp \
   Config.cpp \
   Display.cpp \
   libEGL.cpp \

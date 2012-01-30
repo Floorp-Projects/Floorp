@@ -181,7 +181,7 @@ nsHTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   } else if (aAttribute == nsGkAtoms::moz_opaque)
   {
-    NS_UpdateHint(retval, NS_STYLE_HINT_VISUAL);
+    NS_UpdateHint(retval, nsChangeHint_RepaintFrame);
   }
   return retval;
 }

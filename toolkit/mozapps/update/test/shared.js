@@ -53,7 +53,6 @@ const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
 const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
-const PREF_APP_UPDATE_DESIREDCHANNEL      = "app.update.desiredChannel";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_LOG                 = "app.update.log";
@@ -109,6 +108,8 @@ const PR_EXCL        = 0x80;
 
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
+
+const DEFAULT_UPDATE_VERSION = "999999.0";
 
 #include sharedUpdateXML.js
 

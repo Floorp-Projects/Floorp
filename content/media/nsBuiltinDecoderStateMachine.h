@@ -253,6 +253,12 @@ public:
   // earlier, in which case the request is discarded.
   nsresult ScheduleStateMachine(PRInt64 aUsecs);
 
+  // Creates and starts a new decode thread. Don't call this directly,
+  // request a new decode thread by calling
+  // StateMachineTracker::RequestCreateDecodeThread().
+  // The decoder monitor must not be held. Called on the state machine thread.
+  nsresult StartDecodeThread();
+
   // Timer function to implement ScheduleStateMachine(aUsecs).
   void TimeoutExpired();
 
@@ -352,7 +358,8 @@ protected:
   // here. Called on the audio thread.
   PRUint32 PlayFromAudioQueue(PRUint64 aFrameOffset, PRUint32 aChannels);
 
-  // Stops the decode thread. The decoder monitor must be held with exactly
+  // Stops the decode thread, and if we have a pending request for a new
+  // decode thread it is canceled. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
   void StopDecodeThread();
 
@@ -360,9 +367,11 @@ protected:
   // one lock count. Called on the state machine thread.
   void StopAudioThread();
 
-  // Starts the decode thread. The decoder monitor must be held with exactly
-  // one lock count. Called on the state machine thread.
-  nsresult StartDecodeThread();
+  // Ensures the decode thread is running if it already exists, or requests
+  // a new decode thread be started if there currently is no decode thread.
+  // The decoder monitor must be held with exactly one lock count. Called on
+  // the state machine thread.
+  nsresult ScheduleDecodeThread();
 
   // Starts the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
@@ -625,6 +634,10 @@ protected:
 
   // True is we are decoding a realtime stream, like a camera stream
   bool mRealTime;
+
+  // True if we've requested a new decode thread, but it has not yet been
+  // created. Synchronized by the decoder monitor.
+  bool mRequestedNewDecodeThread;
   
   PRUint32 mBufferingWait;
   PRInt64  mLowDataThresholdUsecs;

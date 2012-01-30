@@ -141,7 +141,7 @@ TreePanel.prototype = {
     this.treeLoaded = true;
     this.treeIFrame.addEventListener("click", this.onTreeClick.bind(this), false);
     this.treeIFrame.addEventListener("dblclick", this.onTreeDblClick.bind(this), false);
-    this.treeIFrame.addEventListener("keypress", this.IUI, false);
+    this.treeIFrame.focus();
     delete this.initializingTreePanel;
     Services.obs.notifyObservers(null,
       this.IUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, null);
@@ -233,7 +233,7 @@ TreePanel.prototype = {
     } catch(e) {
       treeBox.height = 112;
     }
-                      
+
     treeBox.minHeight = 64;
     treeBox.flex = 1;
     toolbarParent.insertBefore(treeBox, toolbar);
@@ -466,9 +466,6 @@ TreePanel.prototype = {
     editorInput.value = aAttrVal;
     editorInput.select();
 
-    // remove tree key navigation events
-    this.treeIFrame.removeEventListener("keypress", this.IUI, false);
-
     // listen for editor specific events
     this.bindEditorEvent(editor, "click", function(aEvent) {
       aEvent.stopPropagation();
@@ -560,9 +557,6 @@ TreePanel.prototype = {
     editorInput.blur();
     this.editingContext = null;
     this.editingEvents = {};
-
-    // re-add navigation listener
-    this.treeIFrame.addEventListener("keypress", this.IUI, false);
 
     // event notification
     Services.obs.notifyObservers(null, this.IUI.INSPECTOR_NOTIFICATIONS.EDITOR_CLOSED,
@@ -700,7 +694,6 @@ TreePanel.prototype = {
     }
 
     if (this.treeIFrame) {
-      this.treeIFrame.removeEventListener("keypress", this.IUI, false);
       this.treeIFrame.removeEventListener("dblclick", this.onTreeDblClick, false);
       this.treeIFrame.removeEventListener("click", this.onTreeClick, false);
       let parent = this.treeIFrame.parentNode;

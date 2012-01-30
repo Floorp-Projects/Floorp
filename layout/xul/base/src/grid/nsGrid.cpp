@@ -652,7 +652,7 @@ nsGrid::GetFirstAndLastRow(nsBoxLayoutState& aState,
   for (i=0; i < count; i++)
   {
      nsGridRow* row = GetRowAt(i,aIsHorizontal);
-     if (!row->IsCollapsed(aState)) {
+     if (!row->IsCollapsed()) {
        aFirstIndex = i;
        aFirstRow = row;
        break;
@@ -663,7 +663,7 @@ nsGrid::GetFirstAndLastRow(nsBoxLayoutState& aState,
   for (i=count-1; i >= 0; i--)
   {
      nsGridRow* row = GetRowAt(i,aIsHorizontal);
-     if (!row->IsCollapsed(aState)) {
+     if (!row->IsCollapsed()) {
        aLastIndex = i;
        aLastRow = row;
        break;
@@ -706,7 +706,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
   // borders padding into account
   if (box && !row->mIsBogus)
   {
-    if (!box->IsCollapsed(aState))
+    if (!box->IsCollapsed())
     {
        // get real border and padding. GetBorderAndPadding
        // is redefined on nsGridRowLeafFrame. If we called it here
@@ -771,7 +771,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
       if (box) 
       {
         // ignore collapsed children
-        if (!box->IsCollapsed(aState))
+        if (!box->IsCollapsed())
         {
            // include the margin of the columns. To the row
            // at this point border/padding and margins all added
@@ -846,7 +846,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, bool aIsHoriz
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
-  if (row->IsCollapsed(aState))
+  if (row->IsCollapsed())
     return 0;
 
   if (row->IsPrefSet()) 
@@ -903,7 +903,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, bool aIsHoriz
      child = GetCellAt(aIndex,i);
 
     // ignore collapsed children
-    if (!child->IsCollapsed(aState))
+    if (!child->IsCollapsed())
     {
       nsSize childSize = child->GetPrefSize(aState);
 
@@ -923,7 +923,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, bool aIsHorizo
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
-  if (row->IsCollapsed(aState))
+  if (row->IsCollapsed())
     return 0;
 
   if (row->IsMinSet()) 
@@ -978,7 +978,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, bool aIsHorizo
      child = GetCellAt(aIndex,i);
 
     // ignore collapsed children
-    if (!child->IsCollapsed(aState))
+    if (!child->IsCollapsed())
     {
       nsSize childSize = child->GetMinSize(aState);
 
@@ -998,7 +998,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, bool aIsHorizo
 
   nsGridRow* row = GetRowAt(aIndex, aIsHorizontal);
 
-  if (row->IsCollapsed(aState))
+  if (row->IsCollapsed())
     return 0;
 
   if (row->IsMaxSet()) 
@@ -1053,7 +1053,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, bool aIsHorizo
      child = GetCellAt(aIndex,i);
 
     // ignore collapsed children
-    if (!child->IsCollapsed(aState))
+    if (!child->IsCollapsed())
     {
       nsSize min = child->GetMinSize(aState);
       nsSize childSize = nsBox::BoundsCheckMinMax(min, child->GetMaxSize(aState));

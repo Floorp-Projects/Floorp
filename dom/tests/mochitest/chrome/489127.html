@@ -1,0 +1,200 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>nsIDOMWindowUtils::nodesFromRect test - bug 489127</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script type="application/javascript;version=1.8">
+
+  let SimpleTest = window.opener.SimpleTest;
+  function ok() { window.opener.ok.apply(window.opener, arguments); }
+  function done() { window.opener.done.apply(window.opener, arguments); }
+  let e = {};
+
+  let dwu = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+  /*
+    nsIDOMNodeList nodesFromRect(in float aX,
+                                 in float aY,
+                                 in float aTopSize, 
+                                 in float aRightSize,
+                                 in float aBottomSize,
+                                 in float aLeftSize,
+                                 in boolean aIgnoreRootScrollFrame,
+                                 in boolean aFlushLayout);
+
+  */
+
+  function check(x, y, top, right, bottom, left, list) {
+    let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, true, false);
+    
+    list.push(e.body);
+    list.push(e.html);
+
+    if (nodes.length != list.length) {
+      ok(false, "Different number of nodes for rect" +
+                "[" + x + "," + y + "], " + 
+                "[" + top + "," + right + "," + bottom + "," + left + "]");
+      return;
+    }
+
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i] != list[i]) {
+        ok(false, "Unexpected node #" + i + " for rect " +
+                  "[" + x + "," + y + "], " + 
+                  "[" + top + "," + right + "," + bottom + "," + left + "]");
+        return;
+      }
+    }
+    ok(true, "All correct nodes found for rect "  +
+             "[" + x + "," + y + "], " + 
+             "[" + top + "," + right + "," + bottom + "," + left + "]");
+  }
+
+  function doTest() {
+
+    // Set up shortcut access to elements
+    e['html'] = document.getElementsByTagName("html")[0];
+    ['h1', 'd1', 'd2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'span',
+     'a1', 'a2', 'a3', 'transf', 'iframe1', 'body'].forEach(function(a) {
+      e[a] = document.getElementById(a);
+    });
+
+    window.scrollTo(0, 0);
+
+    // Top, Right, Bottom, Left directions:
+    check(53, 71, 0,  0,  0,  0, []);
+    check(53, 71, 10, 0,  0,  0, [e.h1]);
+    check(53, 71, 0,  10, 0,  0, [e.p3]);
+    check(53, 71, 0,  0,  10, 0, [e.d1]);
+    check(152, 105, 0, 0, 0, 10, [e.d1]);
+    check(152, 105, 10, 10, 10, 10, [e.p4, e.p3, e.d1]);
+
+    // e.p1 is invisible and shouldn't appear:
+    check(153,193,0,0,0,0,[e.p5]);
+    check(153,193,0,20,0,20, [e.p5, e.d2]);
+
+    // Precise pixel checks:
+    check(144, 183, 0, 0, 0, 0, []);
+    check(144, 183, 0, 0, 1, 0, [e.p5]);
+    check(144, 183, 0, 0, 0, 1, [e.d2]);
+    check(144, 183, 0, 0, 1, 1, [e.p5, e.d2]);
+    check(77,  240, 0, 0, 0, 0, [e.p2]);
+    check(77,  240, 1, 0, 0, 0, [e.p5, e.p2]);
+    check(77,  240, 0, 0, 1, 0, [e.span, e.p2]);
+    check(77,  240, 1, 0, 1, 0, [e.p5, e.span, e.p2]);
+
+    // Expanding area checks:
+    check(39, 212, 0,  0,  0,  0, []);
+    check(39, 212, 10, 0,  0,  0, [e.d2]);
+    check(39, 212, 0,  0,  10, 0, [e.p2]);
+    check(39, 212, 10, 1,  30, 0, [e.d2, e.p2]);
+    check(39, 212, 10, 5,  30, 0, [e.span, e.d2, e.p2]);
+    check(39, 212, 10, 15, 30, 0, [e.p5, e.span, e.d2, e.p2]);
+
+    // Elements inside iframe shouldn't be returned:
+    check(15, 410, 0, 30, 50, 0, [e.iframe1]);
+
+    // Area with links and text nodes:
+    let [x1, y1] = getCenterFor(e.a1);
+    let [x2, y2] = getCenterFor(e.a2);
+    let [x3, y3] = getCenterFor(e.a3);
+    let [xt, yt] = [(x2 + x1) / 2, y1]; //text node between a1 and a2
+
+    check(x1, y1, 0, 0,       0,       0, [e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, 0,       y3 - y1, 0, [e.a3.firstChild, e.a3, e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, xt - x1, 0,       0, [e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, x2 - x1, 0,       0, [e.a2.firstChild, e.a2, e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
+    check(x1, y1, 0, x2 - x1, y3 - y1, 0, [e.a3.firstChild, e.a3, e.a2.firstChild, e.a2, e.p6.childNodes[1], e.a1.firstChild, e.a1, e.p6]);
+
+    // 2d transform:
+    check(61, 671, 0, 0,  0,  0,  []);
+    check(61, 671, 0, 30, 0,  10, [e.transf]);
+    check(61, 671, 0, 30, 90, 10, [e.transf.firstChild, e.transf]);
+
+    done();
+
+  }
+
+  function getCenterFor(element) {
+    let rect = element.getBoundingClientRect();
+    return [(rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2];
+  }
+
+  addLoadEvent(doTest);
+</script>
+<style type="text/css">
+
+body {
+  margin: 8px;
+  padding: 0;
+}
+
+h1, div, p, span, iframe {
+  display: block;
+  width: 100px;
+  height: 30px;
+  border: 3px solid black;
+  padding: 10px;
+  margin: 10px;
+}
+
+
+span {
+  display: inline-block;
+}
+
+#iframe1 {
+  height: 100px;
+  margin-top: 60px;
+}
+
+#p6 {
+  height: 50px;
+  margin-top: 30px;
+}
+
+#transf {
+  margin-top: 60px;
+  -moz-transform: rotate(-45deg);
+}
+
+#decimal {
+  position: relative;
+  left: 0.5px;
+  top: 50.5px;
+}
+</style>
+</head>
+<body id="body">
+  <h1 id="h1"></h1>
+  <div id="d1"></div>
+  
+  <!-- floated element -->
+  <div id="d2" style="float: left"></div>
+
+  <!-- hidden element -->
+  <p id="p1" style="float: left; visibility: hidden"></p>
+
+  <p id="p2" style="clear: left"><span id="span"></span></p>
+  
+  <!-- absolute position -->
+  <p id="p3" style="position:absolute; top: 10px; left:50px; height:50px;"></p>
+  
+  <!-- fixed position -->
+  <p id="p4" style="position: fixed; top: 30px; left: 150px; height: 50px; background-color: blue;"></p>
+
+  <!-- relative position -->
+  <p id="p5" style="position:relative; top: -100px; left: 30px; margin-bottom: -70px; background-color: green"></p>
+
+  <!-- decimal CSS pixels -->
+  <div id="decimal"></div>
+
+  <iframe id="iframe1" src="data:text/html,<div>div</div><p>p</p>"></iframe>
+
+  <p id="p6"><a href="#" id="a1">A</a> / <a href="#" id="a2">A</a><br/><a href="#" id="a3">A</a></p>
+
+  <div id="transf">text</div>
+</body>
+</html>

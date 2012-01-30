@@ -12,6 +12,7 @@
 #include <GL/gl.h>
 #include <d3d9.h>
 #include <WindowsX.h>
+#include "SkWGL.h"
 #include "SkWindow.h"
 #include "SkCanvas.h"
 #include "SkOSMenu.h"
@@ -282,190 +283,71 @@ void SkEvent::SignalQueueTimer(SkMSec delay)
     }
 }
 
-#if defined(UNICODE)
-    #define STR_LIT(X) L## #X
-#else
-    #define STR_LIT(X) #X
-#endif
-
-static HWND create_dummy()
-{
-    HMODULE module = GetModuleHandle(NULL);
-    HWND dummy;
-    RECT windowRect;
-    windowRect.left = 0;
-    windowRect.right = 8;
-    windowRect.top = 0;
-    windowRect.bottom = 8;
-
-    WNDCLASS wc;
-
-    wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-    wc.lpfnWndProc = (WNDPROC) DefWindowProc;
-    wc.cbClsExtra = 0;
-    wc.cbWndExtra = 0;
-    wc.hInstance = module;
-    wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = NULL;
-    wc.lpszMenuName = NULL;
-    wc.lpszClassName = STR_LIT("DummyClass");
-
-    if(!RegisterClass(&wc))
-    {
-        return 0;
-    }
-
-    DWORD style, exStyle;
-    exStyle = WS_EX_CLIENTEDGE;
-    style = WS_SYSMENU;
-
-    AdjustWindowRectEx(&windowRect, style, false, exStyle);
-    if(!(dummy = CreateWindowEx(exStyle,
-        STR_LIT("DummyClass"),
-        STR_LIT("DummyWindow"),
-        WS_CLIPSIBLINGS | WS_CLIPCHILDREN | style,
-        0, 0,
-        windowRect.right-windowRect.left,
-        windowRect.bottom-windowRect.top,
-        NULL, NULL,
-        module,
-        NULL)))
-    {
-        UnregisterClass(STR_LIT("DummyClass"), module);
-        return NULL;
-    }
-    ShowWindow(dummy, SW_HIDE);
-
-    return dummy;
-}
-
-void kill_dummy(HWND dummy) {
-    DestroyWindow(dummy);
-    HMODULE module = GetModuleHandle(NULL);
-    UnregisterClass(STR_LIT("DummyClass"), module);
-}
-
-// WGL_ARB_pixel_format
-#define WGL_DRAW_TO_WINDOW_ARB      0x2001
-#define WGL_ACCELERATION_ARB        0x2003
-#define WGL_SUPPORT_OPENGL_ARB      0x2010
-#define WGL_DOUBLE_BUFFER_ARB       0x2011
-#define WGL_COLOR_BITS_ARB          0x2014
-#define WGL_ALPHA_BITS_ARB          0x201B
-#define WGL_STENCIL_BITS_ARB        0x2023
-#define WGL_FULL_ACCELERATION_ARB   0x2027
-
-// WGL_ARB_multisample
-#define WGL_SAMPLE_BUFFERS_ARB      0x2041
-#define WGL_SAMPLES_ARB             0x2042
 
 #define USE_MSAA 0
 
 HGLRC create_gl(HWND hwnd) {
-    HDC hdc;    
-    HDC prevHDC;
-    HGLRC prevGLRC, glrc;
-    PIXELFORMATDESCRIPTOR pfd;
+    HDC dc = GetDC(hwnd);
+    SkWGLExtensions extensions;
+    if (!extensions.hasExtension(dc, "WGL_ARB_pixel_format")) {
+        return NULL;
+    }
 
-    prevGLRC = wglGetCurrentContext();
-    prevHDC  = wglGetCurrentDC();
+    HDC prevDC = wglGetCurrentDC();
+    HGLRC prevGLRC = wglGetCurrentContext();
+    PIXELFORMATDESCRIPTOR pfd;
 
     int format = 0;
 
-    typedef BOOL (WINAPI *WGLChoosePixelFormatFunc)(HDC hdc,
-                                                    const int *,
-                                                    const FLOAT *,
-                                                    UINT nMaxFormats,
-                                                    int *,
-                                                    UINT *);
-
-    static WGLChoosePixelFormatFunc wglChoosePixelFormatARB;
-
-    // This is horrible but true: wglGetProcAddress cannot be called before a
-    // context is created. SetPixelFormat also needs to be called before the
-    // context is created. But SetPixelFormat is only allowed to succeed once per
-    // window. So we need to create a dummy window in order to call
-    // wglGetProcAddress to get wglChoosePixelFormatARB.
-    if (NULL == wglChoosePixelFormatARB) {
-        ZeroMemory(&pfd, sizeof(pfd));
-        pfd.nSize = sizeof(pfd);
-        pfd.nVersion = 1;
-        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-        pfd.iPixelType = PFD_TYPE_RGBA;
-        pfd.cColorBits  = 32;
-        pfd.cDepthBits  = 0;
-        pfd.cStencilBits = 8;
-        pfd.iLayerType = PFD_MAIN_PLANE;
-        HWND dummy = create_dummy();
-        SkASSERT(NULL != dummy);
-        hdc = GetDC(dummy);
-        format = ChoosePixelFormat(hdc, &pfd);
-        SetPixelFormat(hdc, format, &pfd);
-        glrc = wglCreateContext(hdc);
-        SkASSERT(glrc);
-        wglMakeCurrent(hdc, glrc);
-
-        wglChoosePixelFormatARB = (WGLChoosePixelFormatFunc) wglGetProcAddress("wglChoosePixelFormatARB");
-
-        wglMakeCurrent(hdc, NULL);
-        wglDeleteContext(glrc);
-        glrc = 0;
-        kill_dummy(dummy);
-
-        if (NULL == wglChoosePixelFormatARB) {
-            return 0;
-        }
-    }
-
-    hdc = GetDC(hwnd);
-    format = 0;
-
     GLint iattrs[] = {
-        WGL_DRAW_TO_WINDOW_ARB, TRUE,
-        WGL_DOUBLE_BUFFER_ARB, TRUE,
-        WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-        WGL_SUPPORT_OPENGL_ARB, TRUE,
-        WGL_COLOR_BITS_ARB, 24,
-        WGL_ALPHA_BITS_ARB, 8,
-        WGL_STENCIL_BITS_ARB, 8,
-#if USE_MSAA
-        WGL_SAMPLE_BUFFERS_ARB, TRUE,
-        WGL_SAMPLES_ARB, 0,
-#else
-        0, 0, 0, 0,
-#endif
+        SK_WGL_DRAW_TO_WINDOW, TRUE,
+        SK_WGL_DOUBLE_BUFFER, TRUE,
+        SK_WGL_ACCELERATION, SK_WGL_FULL_ACCELERATION,
+        SK_WGL_SUPPORT_OPENGL, TRUE,
+        SK_WGL_COLOR_BITS, 24,
+        SK_WGL_ALPHA_BITS, 8,
+        SK_WGL_STENCIL_BITS, 8,
+
+        // these must be kept last
+        SK_WGL_SAMPLE_BUFFERS, TRUE,
+        SK_WGL_SAMPLES, 0,
         0,0
     };
-    for (int samples = 16; samples > 1; --samples) {
-        iattrs[15] = samples;
-        GLfloat fattrs[] = {0,0};
-        GLuint num;
-        int formats[64];
-        wglChoosePixelFormatARB(hdc, iattrs, fattrs, 64, formats, &num);
-        num = min(num,64);
-        for (GLuint i = 0; i < num; ++i) {            
-            DescribePixelFormat(hdc, formats[i], sizeof(pfd), &pfd);
-            if (SetPixelFormat(hdc, formats[i], &pfd)) {
-                format = formats[i];
-                break;
+    static const int kSampleBuffersValueIdx = SK_ARRAY_COUNT(iattrs) - 5;
+    static const int kSamplesValueIdx = SK_ARRAY_COUNT(iattrs) - 3;
+    if (USE_MSAA && extensions.hasExtension(dc, "WGL_ARB_multisample")) {
+        for (int samples = 16; samples > 1; --samples) {
+            
+            iattrs[kSamplesValueIdx] = samples;
+            GLfloat fattrs[] = {0,0};
+            GLuint num;
+            int formats[64];
+            extensions.choosePixelFormat(dc, iattrs, fattrs, 64, formats, &num);
+            num = min(num,64);
+            for (GLuint i = 0; i < num; ++i) {
+                DescribePixelFormat(dc, formats[i], sizeof(pfd), &pfd);
+                if (SetPixelFormat(dc, formats[i], &pfd)) {
+                    format = formats[i];
+                    break;
+                }
             }
         }
     }
     if (0 == format) {
-        iattrs[12] = iattrs[13] = 0;
+        iattrs[kSampleBuffersValueIdx-1] = iattrs[kSampleBuffersValueIdx] = 0;
+        iattrs[kSamplesValueIdx-1] = iattrs[kSamplesValueIdx] = 0;
         GLfloat fattrs[] = {0,0};
         GLuint num;
-        wglChoosePixelFormatARB(hdc, iattrs, fattrs, 1, &format, &num);
-        DescribePixelFormat(hdc, format, sizeof(pfd), &pfd);
-        BOOL set = SetPixelFormat(hdc, format, &pfd);
+        extensions.choosePixelFormat(dc, iattrs, fattrs, 1, &format, &num);
+        DescribePixelFormat(dc, format, sizeof(pfd), &pfd);
+        BOOL set = SetPixelFormat(dc, format, &pfd);
         SkASSERT(TRUE == set);
     }
     
-    glrc = wglCreateContext(hdc);
-    SkASSERT(glrc);    
+    HGLRC glrc = wglCreateContext(dc);
+    SkASSERT(glrc);
 
-    wglMakeCurrent(prevHDC, prevGLRC);
+    wglMakeCurrent(prevDC, prevGLRC);
     return glrc;
 }
 

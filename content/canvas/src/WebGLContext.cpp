@@ -221,7 +221,6 @@ WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
       gl(nsnull)
 {
-    mWidth = mHeight = 0;
     mGeneration = 0;
     mInvalidated = false;
     mResetLayer = true;
@@ -1103,6 +1102,17 @@ WebGLContext::EnsureBackbufferClearedAsNeeded()
                                            nsIntRect(0, 0, mWidth, mHeight));
 
     Invalidate();
+}
+
+nsresult
+WebGLContext::DummyFramebufferOperation(const char *info)
+{
+    WebGLenum status;
+    CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER, &status);
+    if (status == LOCAL_GL_FRAMEBUFFER_COMPLETE)
+        return NS_OK;
+    else
+        return ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
 }
 
 // We use this timer for many things. Here are the things that it is activated for:

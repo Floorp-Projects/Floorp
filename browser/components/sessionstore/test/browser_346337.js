@@ -42,13 +42,13 @@ function test() {
                .get("TmpD", Components.interfaces.nsILocalFile);
   file.append("346337_test1.file");
   file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
-  filePath1 = file.path;
+  var filePath1 = file.path;
   file = Components.classes["@mozilla.org/file/directory_service;1"]
              .getService(Components.interfaces.nsIProperties)
              .get("TmpD", Components.interfaces.nsILocalFile);
   file.append("346337_test2.file");
   file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
-  filePath2 = file.path;
+  var filePath2 = file.path;
   
   let fieldList = {
     "//input[@name='input']":     Date.now().toString(),

@@ -47,6 +47,15 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+inline JSAtom *
+js::AtomStateEntry::asPtr() const
+{
+    JS_ASSERT(bits != 0);
+    JSAtom *atom = reinterpret_cast<JSAtom *>(bits & NO_TAG_MASK);
+    JSString::readBarrier(atom);
+    return atom;
+}
+
 inline bool
 js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
 {
@@ -177,14 +186,14 @@ IndexToId(JSContext *cx, uint32_t index, jsid *idp)
     return IndexToIdSlow(cx, index, idp);
 }
 
-static JS_ALWAYS_INLINE JSString *
+static JS_ALWAYS_INLINE JSFlatString *
 IdToString(JSContext *cx, jsid id)
 {
     if (JSID_IS_STRING(id))
-        return JSID_TO_STRING(id);
+        return JSID_TO_ATOM(id);
     if (JS_LIKELY(JSID_IS_INT(id)))
-        return js_IntToString(cx, JSID_TO_INT(id));
-    return js::ToStringSlow(cx, IdToValue(id));
+        return js_IntToString(cx, JSID_TO_INT(id))->ensureFlat(cx);
+    return ToStringSlow(cx, IdToValue(id))->ensureFlat(cx);
 }
 
 } // namespace js

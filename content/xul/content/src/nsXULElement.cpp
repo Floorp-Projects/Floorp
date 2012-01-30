@@ -705,6 +705,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsScriptEventHandlerOwnerTearoff)
   tmp->mElement = nsnull;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsScriptEventHandlerOwnerTearoff)
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mElement");
   cb.NoteXPCOMChild(static_cast<nsIContent*>(tmp->mElement));
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -2545,12 +2546,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
         nsXULPrototypeElement *elem =
             static_cast<nsXULPrototypeElement*>(tmp);
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mNodeInfo");
         cb.NoteXPCOMChild(elem->mNodeInfo);
         PRUint32 i;
         for (i = 0; i < elem->mNumAttributes; ++i) {
             const nsAttrName& name = elem->mAttributes[i].mName;
-            if (!name.IsAtom())
+            if (!name.IsAtom()) {
+                NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                    "mAttributes[i].mName.NodeInfo()");
                 cb.NoteXPCOMChild(name.NodeInfo());
+            }
         }
         for (i = 0; i < elem->mChildren.Length(); ++i) {
             NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i].get(),

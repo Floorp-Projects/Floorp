@@ -1,9 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, waitForExplicitFinish, finish, gBrowser */
-/*global isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Tilt, TiltUtils, TiltVisualizer */
 "use strict";
 
 function test() {

@@ -208,6 +208,83 @@ function test_set_property_non_strict() {
   do_check_eq(dict.get, realget);
 }
 
+/**
+ * Tests setting a property by a lazy getter.
+ */
+function test_set_property_lazy_getter() {
+  let thunkCalled = false;
+
+  let setThunk = function(dict) {
+    thunkCalled = false;
+    dict.setAsLazyGetter("foo", function() {
+      thunkCalled = true;
+      return "bar";
+    });
+  };
+
+  let (dict = new Dict()) {
+    setThunk(dict);
+
+    // Test that checking for the key existence does not invoke
+    // the getter function.
+    do_check_true(dict.has("foo"));
+    do_check_false(thunkCalled);
+    do_check_true(dict.isLazyGetter("foo"));
+
+    // Calling get the first time should invoke the getter function
+    // and unmark the key as a lazy getter.
+    do_check_eq(dict.get("foo"), "bar");
+    do_check_true(thunkCalled);
+    do_check_false(dict.isLazyGetter("foo"));
+
+    // Calling get again should not invoke the getter function
+    thunkCalled = false;
+    do_check_eq(dict.get("foo"), "bar");
+    do_check_false(thunkCalled);
+    do_check_false(dict.isLazyGetter("foo"));
+  }
+
+  // Test that listvalues works for lazy keys.
+  let (dict = new Dict()) {
+    setThunk(dict);
+    do_check_true(dict.isLazyGetter("foo"));
+
+    let (listvalues = dict.listvalues()) {
+      do_check_false(dict.isLazyGetter("foo"));
+      do_check_true(thunkCalled);
+      do_check_true(listvalues.length, 1);
+      do_check_eq(listvalues[0], "bar");
+    }
+
+    thunkCalled = false;
+
+    // Retrieving the list again shouldn't invoke our getter.
+    let (listvalues = dict.listvalues()) {
+      do_check_false(dict.isLazyGetter("foo"));
+      do_check_false(thunkCalled);
+      do_check_true(listvalues.length, 1);
+      do_check_eq(listvalues[0], "bar");
+    }
+  }
+
+  // Test that the values iterator also works as expected.
+  let (dict = new Dict()) {
+    setThunk(dict);
+    let values = dict.values;
+
+    // Our getter shouldn't be called before the iterator reaches it.
+    do_check_true(dict.isLazyGetter("foo"));
+    do_check_false(thunkCalled);
+    do_check_eq(values.next(), "bar");
+    do_check_true(thunkCalled);
+
+    thunkCalled = false;
+    do_check_false(dict.isLazyGetter("foo"));
+    do_check_eq(dict.get("foo"), "bar");
+    do_check_false(thunkCalled);
+  }
+}
+
 var tests = [
   test_get_set_has_del,
   test_get_default,
@@ -218,6 +295,7 @@ var tests = [
   test_iterators,
   test_set_property_strict,
   test_set_property_non_strict,
+  test_set_property_lazy_getter
 ];
 
 function run_test() {

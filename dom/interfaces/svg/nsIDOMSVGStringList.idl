@@ -41,6 +41,7 @@
 interface nsIDOMSVGStringList : nsISupports
 { 
   readonly attribute unsigned long numberOfItems;
+  readonly attribute unsigned long length;
 
   void clear();
           // raises(nsIDOMDOMException);

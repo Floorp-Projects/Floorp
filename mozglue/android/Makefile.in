@@ -53,11 +53,14 @@ DEFINES += \
 CPPSRCS = \
   nsGeckoUtils.cpp \
   APKOpen.cpp \
+  SQLiteBridge.cpp \
   $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../linker
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/startup
+LOCAL_INCLUDES += -I$(topsrcdir)/db/sqlite3/src
 ifdef MOZ_OLD_LINKER
+DEFINES += -DMOZ_OLD_LINKER
 LOCAL_INCLUDES += -I$(topsrcdir)/other-licenses/android
 ifeq ($(CPU_ARCH),arm)
 DEFINES += -DANDROID_ARM_LINKER

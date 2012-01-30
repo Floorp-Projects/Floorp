@@ -4,12 +4,16 @@
                                   style="@style/BrowserToolbar">
 
     <RelativeLayout android:id="@+id/address_bar"
-                    style="@style/AddressBar">
+                    style="@style/AddressBar"
+                    android:background="@drawable/address_bar_bg">
         
         <Button android:id="@+id/awesome_bar"
                 style="@style/AddressBar.Button"
                 android:layout_width="fill_parent"
-                android:layout_marginRight="48dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="50dp"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentBottom="true"
                 android:layout_centerVertical="true"
@@ -17,14 +21,14 @@
                 android:gravity="center_vertical|left"
                 android:hint="@string/awesomebar_default_text"
                 android:textColor="#222222"
-                android:paddingLeft="42dip"
-                android:paddingRight="42dip"/>
+                android:paddingLeft="41dip"
+                android:paddingRight="41dip"/>
 
         <ImageButton android:id="@+id/favicon"
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="21.33dip"
                      android:layout_height="21.33dip"
-                     android:layout_marginLeft="15dip"
+                     android:layout_marginLeft="10dip"
                      android:layout_centerVertical="true"
                      android:src="@drawable/favicon"
                      android:layout_alignLeft="@id/awesome_bar"/>
@@ -36,12 +40,13 @@
                      android:background="@drawable/tabs_button"
                      android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
-                     android:paddingLeft="35dip"
-                     android:paddingRight="13dip"/>
+                     android:paddingTop="3dip"
+                     android:paddingLeft="37dip"
+                     android:paddingRight="10dip"/>
 
         <TextSwitcher android:id="@+id/tabs_count"
                      style="@style/AddressBar.ImageButton"
-                     android:layout_width="50dip"
+                     android:layout_width="46dip"
                      android:layout_height="wrap_content"
                      android:layout_marginTop="4dp"
                      android:layout_alignRight="@id/tabs"
@@ -52,7 +57,7 @@
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="24dip"
                      android:layout_height="24dip"
-                     android:layout_marginRight="15dip"
+                     android:layout_marginRight="10dip"
                      android:layout_centerVertical="true"
                      android:src="@drawable/urlbar_stop"
                      android:layout_alignRight="@id/awesome_bar"
@@ -62,7 +67,7 @@
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="24dip"
                      android:layout_height="24dip"
-                     android:layout_marginRight="15dip"
+                     android:layout_marginRight="10dip"
                      android:layout_centerVertical="true"
                      android:src="@drawable/site_security_level"
                      android:layout_alignRight="@id/awesome_bar"/>

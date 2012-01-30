@@ -41,17 +41,20 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.animation.TranslateAnimation;
 import android.view.Gravity;
 import android.view.ContextThemeWrapper;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -62,6 +65,7 @@ import android.widget.TextSwitcher;
 import android.widget.ViewSwitcher.ViewFactory;
 
 public class BrowserToolbar extends LinearLayout {
+    private static final String LOGTAG = "GeckoToolbar";    
     private Button mAwesomeBar;
     private ImageButton mTabs;
     public ImageButton mFavicon;
@@ -89,6 +93,19 @@ public class BrowserToolbar extends LinearLayout {
         super(context, attrs);
         mContext = context;
         mInflated = false;
+
+        // Get the device's highlight color
+        TypedArray typedArray;
+
+        if (Build.VERSION.SDK_INT >= 11) {            
+            typedArray = context.obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+        } else {
+            ContextThemeWrapper wrapper  = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
+            typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+        }
+
+        mColor = typedArray.getColor(typedArray.getIndex(0), 0);
+        typedArray.recycle();
     }
 
     @Override
@@ -102,11 +119,6 @@ public class BrowserToolbar extends LinearLayout {
             return;
 
         mInflated = true;
-
-        // Get the device's highlight color
-        ContextThemeWrapper wrapper = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
-        TypedArray typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
-        mColor = typedArray.getColor(typedArray.getIndex(0), 0);
 
         mAwesomeBar = (Button) findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
@@ -149,7 +161,16 @@ public class BrowserToolbar extends LinearLayout {
             public View makeView() {
                 TextView text = new TextView(mContext);
                 text.setGravity(Gravity.CENTER);
-                text.setTextSize(20);
+
+                if (Build.VERSION.SDK_INT >= 11) {
+                    if (GeckoApp.mOrientation == Configuration.ORIENTATION_PORTRAIT)
+                        text.setTextSize(24);
+                    else
+                        text.setTextSize(20);
+                } else {
+                    text.setTextSize(22);
+                }
+
                 text.setTextColor(mCounterColor);
                 text.setShadowLayer(1.0f, 0f, 1.0f, Color.BLACK);
                 return text;
@@ -172,10 +193,10 @@ public class BrowserToolbar extends LinearLayout {
         mShadow = (ImageView) findViewById(R.id.shadow);
 
         mHandler = new Handler();
-        mSlideUpIn = new TranslateAnimation(0, 0, 30, 0);
-        mSlideUpOut = new TranslateAnimation(0, 0, 0, -30);
-        mSlideDownIn = new TranslateAnimation(0, 0, -30, 0);
-        mSlideDownOut = new TranslateAnimation(0, 0, 0, 30);
+        mSlideUpIn = new TranslateAnimation(0, 0, 40, 0);
+        mSlideUpOut = new TranslateAnimation(0, 0, 0, -40);
+        mSlideDownIn = new TranslateAnimation(0, 0, -40, 0);
+        mSlideDownOut = new TranslateAnimation(0, 0, 0, 40);
 
         mDuration = 750;
         mSlideUpIn.setDuration(mDuration);
@@ -251,10 +272,12 @@ public class BrowserToolbar extends LinearLayout {
             mFavicon.setImageDrawable(mProgressSpinner);
             mProgressSpinner.start();
             setStopVisibility(true);
+            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber start");
         } else {
             mProgressSpinner.stop();
             setStopVisibility(false);
             setFavicon(Tabs.getInstance().getSelectedTab().getFavicon());
+            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
         }
     }
 
@@ -268,6 +291,11 @@ public class BrowserToolbar extends LinearLayout {
     }
 
     public void setTitle(CharSequence title) {
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        // Setting a null title for about:home will ensure we just see
+        // the "Enter Search or Address" placeholder text
+        if (tab != null && tab.getURL().equals("about:home"))
+            title = null;
         mAwesomeBar.setText(title);
     }
 

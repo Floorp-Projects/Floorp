@@ -112,8 +112,8 @@ nsTArrayToJSArray(JSContext* aCx, JSObject* aGlobal,
 
 Telephony::~Telephony()
 {
-  if (mTelephone && mTelephoneCallback) {
-    mTelephone->UnregisterCallback(mTelephoneCallback);
+  if (mRIL && mRILTelephonyCallback) {
+    mRIL->UnregisterCallback(mRILTelephonyCallback);
   }
 
   if (mRooted) {
@@ -123,10 +123,10 @@ Telephony::~Telephony()
 
 // static
 already_AddRefed<Telephony>
-Telephony::Create(nsPIDOMWindow* aOwner, nsITelephone* aTelephone)
+Telephony::Create(nsPIDOMWindow* aOwner, nsIRadioInterfaceLayer* aRIL)
 {
   NS_ASSERTION(aOwner, "Null owner!");
-  NS_ASSERTION(aTelephone, "Null telephone!");
+  NS_ASSERTION(aRIL, "Null RIL!");
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aOwner);
   NS_ENSURE_TRUE(sgo, nsnull);
@@ -138,13 +138,13 @@ Telephony::Create(nsPIDOMWindow* aOwner, nsITelephone* aTelephone)
 
   telephony->mOwner = aOwner;
   telephony->mScriptContext.swap(scriptContext);
-  telephony->mTelephone = aTelephone;
-  telephony->mTelephoneCallback = new TelephoneCallback(telephony);
+  telephony->mRIL = aRIL;
+  telephony->mRILTelephonyCallback = new RILTelephonyCallback(telephony);
 
-  nsresult rv = aTelephone->EnumerateCalls(telephony->mTelephoneCallback);
+  nsresult rv = aRIL->EnumerateCalls(telephony->mRILTelephonyCallback);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  rv = aTelephone->RegisterCallback(telephony->mTelephoneCallback);
+  rv = aRIL->RegisterCallback(telephony->mRILTelephonyCallback);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return telephony.forget();
@@ -195,7 +195,7 @@ NS_IMPL_RELEASE_INHERITED(Telephony, nsDOMEventTargetWrapperCache)
 
 DOMCI_DATA(Telephony, Telephony)
 
-NS_IMPL_ISUPPORTS1(Telephony::TelephoneCallback, nsITelephoneCallback)
+NS_IMPL_ISUPPORTS1(Telephony::RILTelephonyCallback, nsIRILTelephonyCallback)
 
 NS_IMETHODIMP
 Telephony::Dial(const nsAString& aNumber, nsIDOMTelephonyCall** aResult)
@@ -205,7 +205,7 @@ Telephony::Dial(const nsAString& aNumber, nsIDOMTelephonyCall** aResult)
   for (PRUint32 index = 0; index < mCalls.Length(); index++) {
     const nsRefPtr<TelephonyCall>& tempCall = mCalls[index];
     if (tempCall->IsOutgoing() &&
-        tempCall->CallState() < nsITelephone::CALL_STATE_CONNECTED) {
+        tempCall->CallState() < nsIRadioInterfaceLayer::CALL_STATE_CONNECTED) {
       // One call has been dialed already and we only support one outgoing call
       // at a time.
       NS_WARNING("Only permitted to dial one call at a time!");
@@ -213,11 +213,11 @@ Telephony::Dial(const nsAString& aNumber, nsIDOMTelephonyCall** aResult)
     }
   }
 
-  nsresult rv = mTelephone->Dial(aNumber);
+  nsresult rv = mRIL->Dial(aNumber);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<TelephonyCall> call =
-    TelephonyCall::Create(this, aNumber, nsITelephone::CALL_STATE_DIALING);
+    TelephonyCall::Create(this, aNumber, nsIRadioInterfaceLayer::CALL_STATE_DIALING);
   NS_ASSERTION(call, "This should never fail!");
 
   NS_ASSERTION(mCalls.Contains(call), "Should have auto-added new call!");
@@ -229,7 +229,7 @@ Telephony::Dial(const nsAString& aNumber, nsIDOMTelephonyCall** aResult)
 NS_IMETHODIMP
 Telephony::GetMuted(bool* aMuted)
 {
-  nsresult rv = mTelephone->GetMicrophoneMuted(aMuted);
+  nsresult rv = mRIL->GetMicrophoneMuted(aMuted);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -238,7 +238,7 @@ Telephony::GetMuted(bool* aMuted)
 NS_IMETHODIMP
 Telephony::SetMuted(bool aMuted)
 {
-  nsresult rv = mTelephone->SetMicrophoneMuted(aMuted);
+  nsresult rv = mRIL->SetMicrophoneMuted(aMuted);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -247,7 +247,7 @@ Telephony::SetMuted(bool aMuted)
 NS_IMETHODIMP
 Telephony::GetSpeakerEnabled(bool* aSpeakerEnabled)
 {
-  nsresult rv = mTelephone->GetSpeakerEnabled(aSpeakerEnabled);
+  nsresult rv = mRIL->GetSpeakerEnabled(aSpeakerEnabled);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -256,7 +256,7 @@ Telephony::GetSpeakerEnabled(bool* aSpeakerEnabled)
 NS_IMETHODIMP
 Telephony::SetSpeakerEnabled(bool aSpeakerEnabled)
 {
-  nsresult rv = mTelephone->SetSpeakerEnabled(aSpeakerEnabled);
+  nsresult rv = mRIL->SetSpeakerEnabled(aSpeakerEnabled);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -339,7 +339,7 @@ Telephony::StartTone(const nsAString& aDTMFChar)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsresult rv = mTelephone->StartTone(aDTMFChar);
+  nsresult rv = mRIL->StartTone(aDTMFChar);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -348,7 +348,7 @@ Telephony::StartTone(const nsAString& aDTMFChar)
 NS_IMETHODIMP
 Telephony::StopTone()
 {
-  nsresult rv = mTelephone->StopTone();
+  nsresult rv = mRIL->StopTone();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -378,7 +378,7 @@ Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
     nsRefPtr<TelephonyCall>& tempCall = mCalls[index];
     if (tempCall->CallIndex() == kOutgoingPlaceholderCallIndex) {
       NS_ASSERTION(!outgoingCall, "More than one outgoing call not supported!");
-      NS_ASSERTION(tempCall->CallState() == nsITelephone::CALL_STATE_DIALING,
+      NS_ASSERTION(tempCall->CallState() == nsIRadioInterfaceLayer::CALL_STATE_DIALING,
                    "Something really wrong here!");
       // Stash this for later, we may need it if aCallIndex doesn't match one of
       // our other calls.
@@ -395,7 +395,7 @@ Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
   // an outgoing call then we must be seeing a status update for our outgoing
   // call.
   if (!modifiedCall &&
-      aCallState != nsITelephone::CALL_STATE_INCOMING &&
+      aCallState != nsIRadioInterfaceLayer::CALL_STATE_INCOMING &&
       outgoingCall) {
     outgoingCall->UpdateCallIndex(aCallIndex);
     modifiedCall.swap(outgoingCall);
@@ -406,7 +406,7 @@ Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
     modifiedCall->ChangeState(aCallState);
 
     // See if this should replace our current active call.
-    if (aCallState == nsITelephone::CALL_STATE_CONNECTED) {
+    if (aCallState == nsIRadioInterfaceLayer::CALL_STATE_CONNECTED) {
       SwitchActiveCall(modifiedCall);
     }
 
@@ -414,7 +414,7 @@ Telephony::CallStateChanged(PRUint32 aCallIndex, PRUint16 aCallState,
   }
 
   // Didn't know anything about this call before now, must be incoming.
-  NS_ASSERTION(aCallState == nsITelephone::CALL_STATE_INCOMING,
+  NS_ASSERTION(aCallState == nsIRadioInterfaceLayer::CALL_STATE_INCOMING,
                "Serious logic problem here!");
 
   nsRefPtr<TelephonyCall> call =
@@ -511,10 +511,10 @@ NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
   nsIInterfaceRequestor* ireq = SystemWorkerManager::GetInterfaceRequestor();
   NS_ENSURE_TRUE(ireq, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsITelephone> telephone = do_GetInterface(ireq);
-  NS_ENSURE_TRUE(telephone, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIRadioInterfaceLayer> ril = do_GetInterface(ireq);
+  NS_ENSURE_TRUE(ril, NS_ERROR_UNEXPECTED);
 
-  nsRefPtr<Telephony> telephony = Telephony::Create(innerWindow, telephone);
+  nsRefPtr<Telephony> telephony = Telephony::Create(innerWindow, ril);
   NS_ENSURE_TRUE(telephony, NS_ERROR_UNEXPECTED);
 
   telephony.forget(aTelephony);

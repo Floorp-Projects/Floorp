@@ -768,9 +768,10 @@ mjit::Compiler::jsop_typeof()
                 cond = (cond == Assembler::Equal) ? Assembler::BelowOrEqual : Assembler::Above;
             }
 
-            if (type != JSVAL_TYPE_UNKNOWN) {
-                PC += JSOP_STRING_LENGTH;;
-                PC += JSOP_EQ_LENGTH;
+            jsbytecode *afterPC = PC + JSOP_STRING_LENGTH + JSOP_EQ_LENGTH;
+
+            if (type != JSVAL_TYPE_UNKNOWN && bytecodeInChunk(afterPC)) {
+                PC = afterPC;
 
                 RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
 
@@ -1187,17 +1188,26 @@ mjit::Compiler::jsop_setelem_dense()
 
         /*
          * The sync call below can potentially clobber key.reg() and slotsReg.
-         * So we save and restore them. Additionally, the WriteBarrier stub can
-         * clobber both registers. The rejoin call will restore key.reg() but
-         * not slotsReg. So we restore it again after the stub call.
+         * We pin key.reg() to avoid it being clobbered. If |hoisted| is true,
+         * we can also pin slotsReg. If not, then slotsReg is owned by the
+         * compiler and we save in manually to VMFrame::scratch.
+         *
+         * Additionally, the WriteBarrier stub can clobber both registers. The
+         * rejoin call will restore key.reg() but not slotsReg. So we save
+         * slotsReg in the frame and restore it after the stub call.
          */
         stubcc.masm.storePtr(slotsReg, FrameAddress(offsetof(VMFrame, scratch)));
+        if (hoisted)
+            frame.pinReg(slotsReg);
         if (!key.isConstant())
-            stubcc.masm.push(key.reg());
+            frame.pinReg(key.reg());
         frame.sync(stubcc.masm, Uses(3));
         if (!key.isConstant())
-            stubcc.masm.pop(key.reg());
-        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scratch)), slotsReg);
+            frame.unpinReg(key.reg());
+        if (hoisted)
+            frame.unpinReg(slotsReg);
+        else
+            stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scratch)), slotsReg);
 
         if (key.isConstant())
             stubcc.masm.lea(Address(slotsReg, key.index() * sizeof(Value)), Registers::ArgReg1);
@@ -2299,7 +2309,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
     /* Constant-fold. */
     if (lhs->isConstant() && rhs->isConstant()) {
-        JSBool b;
+        bool b;
         StrictlyEqual(cx, lhs->getValue(), rhs->getValue(), &b);
         frame.popn(2);
         frame.push(BooleanValue((op == JSOP_STRICTEQ) ? b : !b));

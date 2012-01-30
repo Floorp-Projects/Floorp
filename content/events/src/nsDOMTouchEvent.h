@@ -40,7 +40,7 @@
 #include "nsDOMUIEvent.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsString.h"
-#include "nsCOMArray.h"
+#include "nsTArray.h"
 
 class nsDOMTouch : public nsIDOMTouch
 {
@@ -57,33 +57,72 @@ public:
              PRInt32 aRadiusY,
              float aRotationAngle,
              float aForce)
-  : mTarget(aTarget),
-    mIdentifier(aIdentifier),
-    mPageX(aPageX),
-    mPageY(aPageY),
-    mScreenX(aScreenX),
-    mScreenY(aScreenY),
-    mClientX(aClientX),
-    mClientY(aClientY),
-    mRadiusX(aRadiusX),
-    mRadiusY(aRadiusY),
-    mRotationAngle(aRotationAngle),
-    mForce(aForce)
-    {}
+    {
+      mTarget = aTarget;
+      mIdentifier = aIdentifier;
+      mPagePoint = nsIntPoint(aPageX, aPageY);
+      mScreenPoint = nsIntPoint(aScreenX, aScreenY);
+      mClientPoint = nsIntPoint(aClientX, aClientY);
+      mRefPoint = nsIntPoint(0, 0);
+      mPointsInitialized = true;
+      mRadius.x = aRadiusX;
+      mRadius.y = aRadiusY;
+      mRotationAngle = aRotationAngle;
+      mForce = aForce;
+
+      mChanged = false;
+      mMessage = 0;
+    }
+  nsDOMTouch(PRInt32 aIdentifier,
+             nsIntPoint aPoint,
+             nsIntPoint aRadius,
+             float aRotationAngle,
+             float aForce)
+    {
+      mIdentifier = aIdentifier;
+      mPagePoint = nsIntPoint(0, 0);
+      mScreenPoint = nsIntPoint(0, 0);
+      mClientPoint = nsIntPoint(0, 0);
+      mRefPoint = aPoint;
+      mPointsInitialized = false;
+      mRadius = aRadius;
+      mRotationAngle = aRotationAngle;
+      mForce = aForce;
+
+      mChanged = false;
+      mMessage = 0;
+    }
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMTouch)
   NS_DECL_NSIDOMTOUCH
+  void InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent)
+  {
+    if (mPointsInitialized) {
+      return;
+    }
+    mClientPoint = nsDOMEvent::GetClientCoords(aPresContext,
+                                               aEvent,
+                                               mRefPoint,
+                                               mClientPoint);
+    mPagePoint = nsDOMEvent::GetPageCoords(aPresContext,
+                                           aEvent,
+                                           mRefPoint,
+                                           mClientPoint);
+    mScreenPoint = nsDOMEvent::GetScreenCoords(aPresContext, aEvent, mRefPoint);
+    mPointsInitialized = true;
+  }
+  void SetTarget(nsIDOMEventTarget *aTarget)
+  {
+    mTarget = aTarget;
+  }
+  bool Equals(nsIDOMTouch* aTouch);
 protected:
-  nsCOMPtr<nsIDOMEventTarget> mTarget;
+  bool mPointsInitialized;
   PRInt32 mIdentifier;
-  PRInt32 mPageX;
-  PRInt32 mPageY;
-  PRInt32 mScreenX;
-  PRInt32 mScreenY;
-  PRInt32 mClientX;
-  PRInt32 mClientY;
-  PRInt32 mRadiusX;
-  PRInt32 mRadiusY;
+  nsIntPoint mPagePoint;
+  nsIntPoint mClientPoint;
+  nsIntPoint mScreenPoint;
+  nsIntPoint mRadius;
   float mRotationAngle;
   float mForce;
 };
@@ -94,25 +133,28 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMTouchList)
   NS_DECL_NSIDOMTOUCHLIST
+
+  nsDOMTouchList() { }
+  nsDOMTouchList(nsTArray<nsCOMPtr<nsIDOMTouch> > &aTouches);
   
   void Append(nsIDOMTouch* aPoint)
   {
-    mPoints.AppendObject(aPoint);
+    mPoints.AppendElement(aPoint);
   }
 
   nsIDOMTouch* GetItemAt(PRUint32 aIndex)
   {
-    return mPoints.SafeObjectAt(aIndex);
+    return mPoints.SafeElementAt(aIndex, nsnull);
   }
 protected:
-  nsCOMArray<nsIDOMTouch> mPoints;
+  nsTArray<nsCOMPtr<nsIDOMTouch> > mPoints;
 };
 
 class nsDOMTouchEvent : public nsDOMUIEvent,
                         public nsIDOMTouchEvent
 {
 public:
-  nsDOMTouchEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
+  nsDOMTouchEvent(nsPresContext* aPresContext, nsTouchEvent* aEvent);
   virtual ~nsDOMTouchEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
