@@ -184,6 +184,9 @@ TelemetryPing.prototype = {
   // duplicate submissions.
   _uuid: generateUUID(),
   _prevSession: null,
+  // Regex that matches histograms we care about during startup.
+  _startupHistogramRegex: /SQLITE|HTTP|SPDY|CACHE|DNS/,
+  _slowSQLStartup: {},
 
   /**
    * Returns a set of histograms that can be converted into JSON
@@ -382,17 +385,27 @@ TelemetryPing.prototype = {
       this.addValue(mr.path, id, val);
     }
   },
+
+  /**
+   * Return true if we're interested in having a STARTUP_* histogram for
+   * the given histogram name.
+   */
+  isInterestingStartupHistogram: function isInterestingStartupHistogram(name) {
+    return this._startupHistogramRegex.test(name);
+  },
   
   /** 
-   * Make a copy of sqlite histograms on startup
+   * Make a copy of interesting histograms at startup.
    */
-  gatherStartupSqlite: function gatherStartupSqlite() {
+  gatherStartupInformation: function gatherStartupInformation() {
     let info = Telemetry.registeredHistograms;
-    let sqlite_re = /SQLITE/;
+    let snapshots = Telemetry.histogramSnapshots;
     for (let name in info) {
-      if (sqlite_re.test(name))
+      // Only duplicate interesting histograms with actual data.
+      if (this.isInterestingStartupHistogram(name) && name in snapshots)
         Telemetry.histogramFrom("STARTUP_" + name, name);
     }
+    this._slowSQLStartup = Telemetry.slowSQL;
   },
 
   /**
@@ -436,6 +449,10 @@ TelemetryPing.prototype = {
       payloadObj.simpleMeasurements = getSimpleMeasurements();
       payloadObj.histograms = this.getHistograms(Telemetry.histogramSnapshots);
       payloadObj.slowSQL = Telemetry.slowSQL;
+      if (Object.keys(this._slowSQLStartup.mainThread).length
+          || Object.keys(this._slowSQLStartup.otherThreads).length) {
+        payloadObj.slowSQLStartup = this._slowSQLStartup;
+      }
     }
     return { previous: !!havePreviousSession, slug: slug, payload: JSON.stringify(payloadObj) };
   },
@@ -602,7 +619,7 @@ TelemetryPing.prototype = {
       }
       break;
     case "sessionstore-windows-restored":
-      this.gatherStartupSqlite();
+      this.gatherStartupInformation();
       break;
     case "idle-daily":
       // Enqueue to main-thread, otherwise components may be inited by the
