@@ -49,6 +49,7 @@ namespace ion {
 enum DataType {
     Type_Void,
     Type_Bool,
+    Type_JSBool,
     Type_Object,
     Type_Value
 };
@@ -188,6 +189,7 @@ template <> struct TypeToArgProperties<const Value &> {
 
 template <class> struct OutParamToDataType { static const DataType result = Type_Void; };
 template <> struct OutParamToDataType<Value *> { static const DataType result = Type_Value; };
+template <> struct OutParamToDataType<JSBool *> { static const DataType result = Type_JSBool; };
 
 #define FOR_EACH_ARGS_1(Macro, Sep, Last) Macro(1) Last(1)
 #define FOR_EACH_ARGS_2(Macro, Sep, Last) FOR_EACH_ARGS_1(Macro, Sep, Sep) Macro(2) Last(2)
@@ -289,6 +291,17 @@ struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4)> : public VMFunction {
 
 bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
 bool ReportOverRecursed(JSContext *cx);
+
+template<bool Equal>
+bool LooselyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+
+template<bool Equal>
+bool StrictlyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+
+bool LessThan(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+bool LessThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+bool GreaterThan(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
+bool GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
 
 } // namespace ion
 } // namespace js

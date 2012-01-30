@@ -585,10 +585,22 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Reserve space for the outparameter.
     Register outReg = InvalidReg;
-    if (f.outParam == Type_Value) {
+    switch (f.outParam) {
+      case Type_Value:
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(Value));
         masm.ma_mov(sp, outReg);
+        break;
+
+      case Type_JSBool:
+        outReg = regs.takeAny();
+        masm.reserveStack(sizeof(JSBool));
+        masm.ma_mov(sp, outReg);
+        break;
+
+      default:
+        JS_ASSERT(f.outParam == Type_Void);
+        break;
     }
 
     // ARM stack is made to be constantly aligned by 8.
@@ -645,9 +657,20 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.ma_b(&exception, Assembler::Zero);
 
     // Load the outparam and free any allocated stack.
-    if (f.outParam == Type_Value) {
+    switch (f.outParam) {
+      case Type_Value:
         masm.loadValue(Address(sp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
+        break;
+
+      case Type_JSBool:
+        masm.load32(Address(sp, 0), ReturnReg);
+        masm.freeStack(sizeof(JSBool));
+        break;
+
+      default:
+        JS_ASSERT(f.outParam == Type_Void);
+        break;
     }
 
     // Check if the calling frame has been invalidated, in which case we can't

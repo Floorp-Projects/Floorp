@@ -439,6 +439,25 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     }
 };
 
+class LCompareV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
+{
+    JSOp jsop_;
+
+  public:
+    LIR_HEADER(CompareV);
+
+    LCompareV(JSOp jsop)
+      : jsop_(jsop)
+    { }
+
+    JSOp jsop() const {
+        return jsop_;
+    }
+
+    static const size_t LhsInput = 0;
+    static const size_t RhsInput = BOX_PIECES;
+};
+
 // Compares two integral values of the same JS type, either integer or object.
 // For objects, both operands are in registers.
 class LCompareAndBranch : public LInstructionHelper<0, 2, 0>
