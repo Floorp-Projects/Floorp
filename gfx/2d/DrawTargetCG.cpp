@@ -795,6 +795,7 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   if (aSize.width == 0 || aSize.height == 0) {
     mColorSpace = NULL;
     mCg = NULL;
+    mData = NULL;
     return false;
   }
 
@@ -829,6 +830,7 @@ DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &)
   if (aSize.width == 0 || aSize.height == 0) {
     mColorSpace = NULL;
     mCg = NULL;
+    mData = NULL;
     return false;
   }
 
