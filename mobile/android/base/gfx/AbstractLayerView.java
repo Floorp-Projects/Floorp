@@ -56,5 +56,7 @@ public interface AbstractLayerView {
     public boolean postDelayed(Runnable action, long delayMillis);
     public Context getContext();
     public int getMaxTextureSize();
+    public void clearEventQueue();
+    public void processEventQueue();
 }
 

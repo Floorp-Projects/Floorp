@@ -69,7 +69,7 @@ import org.json.JSONObject;
  * mediator between the LayerRenderer and the LayerController.
  */
 public class LayerView extends GLSurfaceView
-    implements AbstractLayerView {
+    implements AbstractLayerView, GeckoEventListener {
     private Context mContext;
     private LayerController mController;
     private InputConnectionHandler mInputConnectionHandler;
@@ -170,9 +170,9 @@ public class LayerView extends GLSurfaceView
     }
 
     public GeckoInputConnection setInputConnectionHandler() {
-        mInputConnectionHandler = GeckoInputConnection.create(this);
-        setInputConnectionHandler(mInputConnectionHandler);
-        return mInputConnectionHandler;
+        GeckoInputConnection geckoInputConnection = GeckoInputConnection.create(this);
+        mInputConnectionHandler = geckoInputConnection;
+        return geckoInputConnection;
     }
 
     @Override
