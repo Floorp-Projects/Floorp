@@ -468,7 +468,7 @@ public class AboutHomeContent extends ScrollView {
         // If gecko is ready, the session restore initialization has already occurred.
         // This means sessionstore.js has been moved to sessionstore.bak. Otherwise, the
         // previous session will still be in sessionstore.js.
-        final String sessionFilename = "sessionstore." + (GeckoApp.mAppContext.sIsGeckoReady ? "bak" : "js");
+        final String sessionFilename = "sessionstore." + (GeckoApp.sIsGeckoReady ? "bak" : "js");
         final JSONArray tabs;
         String jsonString = readJSONFile(activity, sessionFilename);
         if (jsonString == null)

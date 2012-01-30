@@ -43,6 +43,7 @@ import android.view.SurfaceView;
 import android.util.Log;
 import android.view.View;
 
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.gfx.*;
 import org.mozilla.gecko.GeckoInputConnection;
 
@@ -132,6 +133,8 @@ public class OGLSurfaceView implements AbstractLayerView {
     public boolean postDelayed(Runnable action, long delayMillis) { return false; }
     public Context getContext() { return mContext; }
     public int getMaxTextureSize() { return 1024; }
+    public void clearEventQueue() {}
+    public void processEventQueue() {}
 
     private class InternalSurfaceView extends SurfaceView {
         public InternalSurfaceView() {
