@@ -127,6 +127,7 @@ _TEST_FILES = \
 		test_loop.html \
 		test_media_selection.html \
 		test_mozLoadFrom.html \
+		test_no_load_event.html \
 		test_networkState.html \
 		test_new_audio.html \
 		test_paused.html \
