@@ -1735,7 +1735,7 @@ GCGraphBuilder::NoteRoot(PRUint32 langID, void *root,
         return;
     }
 
-    if (!participant->CanSkipThis(root)) {
+    if (!participant->CanSkipThis(root) || WantAllTraces()) {
         AddNode(root, participant, langID);
     }
 }
@@ -1791,7 +1791,7 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
     
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(child, &cp);
-    if (cp && !cp->CanSkipThis(child)) {
+    if (cp && (!cp->CanSkipThis(child) || WantAllTraces())) {
 
         PtrInfo *childPi = AddNode(child, cp, nsIProgrammingLanguage::CPLUSPLUS);
         if (!childPi)
@@ -1925,7 +1925,7 @@ AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(root, &cp);
 
-    if (!cp->CanSkipInCC(root)) {
+    if (builder.WantAllTraces() || !cp->CanSkipInCC(root)) {
         PtrInfo *pinfo = builder.AddNode(root, cp,
                                          nsIProgrammingLanguage::CPLUSPLUS);
         if (!pinfo) {
@@ -3732,7 +3732,13 @@ public:
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-        mCollector->GCIfNeeded(false);
+        // On a WantAllTraces CC, force a synchronous global GC to prevent
+        // hijinks from ForgetSkippable and compartmental GCs.
+        bool wantAllTraces = false;
+        if (aListener) {
+            aListener->GetWantAllTraces(&wantAllTraces);
+        }
+        mCollector->GCIfNeeded(wantAllTraces);
 
         MutexAutoLock autoLock(mLock);
 
