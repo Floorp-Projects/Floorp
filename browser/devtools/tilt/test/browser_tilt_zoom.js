@@ -1,25 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, waitForExplicitFinish, finish, executeSoon, gBrowser */
-/*global isApprox, isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Services, EventUtils, TiltUtils, InspectorUI, TILT_DESTROYED */
 "use strict";
 
 const ZOOM = 2;
 const RESIZE = 50;
 
-function setZoom(value) {
-  gBrowser.selectedBrowser.markupDocumentViewer.fullZoom = value;
-}
-
-function getZoom() {
-  return gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
-}
-
 function test() {
-  TiltUtils.setDocumentZoom(Math.random());
-  is(getZoom(), TiltUtils.getDocumentZoom(),
+  let random = Math.random() * 10;
+
+  TiltUtils.setDocumentZoom(window, random);
+  ok(isApprox(TiltUtils.getDocumentZoom(window), random),
     "The getDocumentZoom utility function didn't return the expected results.");
 
 
@@ -38,7 +28,7 @@ function test() {
     createTilt({
       onInspectorOpen: function()
       {
-        setZoom(ZOOM);
+        TiltUtils.setDocumentZoom(window, ZOOM);
       },
       onTiltOpen: function(instance)
       {
@@ -53,38 +43,38 @@ function test() {
         let arcball = instance.controller.arcball;
 
         ok(isApprox(contentWindow.innerWidth * ZOOM, renderer.width, 1),
-          "The renderer width wasn't set correctly.");
+          "The renderer width wasn't set correctly before the resize.");
         ok(isApprox(contentWindow.innerHeight * ZOOM, renderer.height, 1),
-          "The renderer height wasn't set correctly.");
+          "The renderer height wasn't set correctly before the resize.");
 
         ok(isApprox(contentWindow.innerWidth * ZOOM, arcball.width, 1),
-          "The arcball width wasn't set correctly.");
+          "The arcball width wasn't set correctly before the resize.");
         ok(isApprox(contentWindow.innerHeight * ZOOM, arcball.height, 1),
-          "The arcball height wasn't set correctly.");
+          "The arcball height wasn't set correctly before the resize.");
 
 
         window.resizeBy(-RESIZE * ZOOM, -RESIZE * ZOOM);
 
         executeSoon(function() {
           ok(isApprox(contentWindow.innerWidth + RESIZE, initialWidth, 1),
-            "The content window width wasn't set correctly.");
+            "The content window width wasn't set correctly after the resize.");
           ok(isApprox(contentWindow.innerHeight + RESIZE, initialHeight, 1),
-            "The content window height wasn't set correctly.");
+            "The content window height wasn't set correctly after the resize.");
 
           ok(isApprox(contentWindow.innerWidth * ZOOM, renderer.width, 1),
-            "The renderer width wasn't set correctly.");
+            "The renderer width wasn't set correctly after the resize.");
           ok(isApprox(contentWindow.innerHeight * ZOOM, renderer.height, 1),
-            "The renderer height wasn't set correctly.");
+            "The renderer height wasn't set correctly after the resize.");
 
           ok(isApprox(contentWindow.innerWidth * ZOOM, arcball.width, 1),
-            "The arcball width wasn't set correctly.");
+            "The arcball width wasn't set correctly after the resize.");
           ok(isApprox(contentWindow.innerHeight * ZOOM, arcball.height, 1),
-            "The arcball height wasn't set correctly.");
+            "The arcball height wasn't set correctly after the resize.");
 
 
           window.resizeBy(RESIZE * ZOOM, RESIZE * ZOOM);
 
-          Services.obs.addObserver(cleanup, TILT_DESTROYED, false);
+          Services.obs.addObserver(cleanup, DESTROYED, false);
           InspectorUI.closeInspectorUI();
         });
       },
@@ -93,7 +83,7 @@ function test() {
 }
 
 function cleanup() {
-  Services.obs.removeObserver(cleanup, TILT_DESTROYED);
+  Services.obs.removeObserver(cleanup, DESTROYED);
   gBrowser.removeCurrentTab();
   finish();
 }

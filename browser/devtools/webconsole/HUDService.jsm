@@ -2067,7 +2067,16 @@ HUD_SERVICE.prototype =
     // Pipe the message to createMessageNode().
     let hud = HUDService.hudReferences[aHUDId];
     function formatResult(x) {
-      return (typeof(x) == "string") ? x : hud.jsterm.formatResult(x);
+      if (typeof(x) == "string") {
+        return x;
+      }
+      if (hud.gcliterm) {
+        return hud.gcliterm.formatResult(x);
+      }
+      if (hud.jsterm) {
+        return hud.jsterm.formatResult(x);
+      }
+      return x;
     }
 
     let body = null;
@@ -4699,7 +4708,7 @@ function JSTermHelper(aJSTerm)
   aJSTerm.sandbox.inspectrules = function JSTH_inspectrules(aNode)
   {
     aJSTerm.helperEvaluated = true;
-    let doc = aJSTerm.parentNode.ownerDocument;
+    let doc = aJSTerm.inputNode.ownerDocument;
     let win = doc.defaultView;
     let panel = createElement(doc, "panel", {
       label: "CSS Rules",
@@ -4813,6 +4822,7 @@ function JSTerm(aContext, aParentNode, aMixin, aConsole)
   this.parentNode = aParentNode;
   this.mixins = aMixin;
   this.console = aConsole;
+  this.document = aParentNode.ownerDocument
 
   this.setTimeout = aParentNode.ownerDocument.defaultView.setTimeout;
 
@@ -5018,7 +5028,7 @@ JSTerm.prototype = {
       });
     }
 
-    let doc = self.parentNode.ownerDocument;
+    let doc = self.document;
     let parent = doc.getElementById("mainPopupSet");
     let title = (aEvalString
         ? HUDService.getFormatStr("jsPropertyInspectTitle", [aEvalString])
@@ -5047,7 +5057,7 @@ JSTerm.prototype = {
    */
   writeOutputJS: function JST_writeOutputJS(aEvalString, aOutputObject, aOutputString)
   {
-    let node = ConsoleUtils.createMessageNode(this.parentNode.ownerDocument,
+    let node = ConsoleUtils.createMessageNode(this.document,
                                               CATEGORY_OUTPUT,
                                               SEVERITY_LOG,
                                               aOutputString,
@@ -5096,7 +5106,7 @@ JSTerm.prototype = {
    */
   writeOutput: function JST_writeOutput(aOutputMessage, aCategory, aSeverity)
   {
-    let node = ConsoleUtils.createMessageNode(this.parentNode.ownerDocument,
+    let node = ConsoleUtils.createMessageNode(this.document,
                                               aCategory, aSeverity,
                                               aOutputMessage, this.hudId);
 
@@ -6819,6 +6829,7 @@ function GcliTerm(aContentWindow, aHudId, aDocument, aConsole, aHintNode, aConso
   this.document = aDocument;
   this.console = aConsole;
   this.hintNode = aHintNode;
+  this._window = this.context.get().QueryInterface(Ci.nsIDOMWindow);
 
   this.createUI();
   this.createSandbox();
@@ -6841,7 +6852,11 @@ function GcliTerm(aContentWindow, aHudId, aDocument, aConsole, aHintNode, aConso
   };
 
   this.opts = {
-    environment: { hudId: this.hudId },
+    environment: {
+      hudId: this.hudId,
+      chromeDocument: this.document,
+      contentDocument: aContentWindow.document
+    },
     chromeDocument: this.document,
     contentDocument: aContentWindow.document,
     jsEnvironment: {
@@ -6911,6 +6926,7 @@ GcliTerm.prototype = {
     delete this.document;
     delete this.console;
     delete this.hintNode;
+    delete this._window;
 
     delete this.sandbox;
     delete this.element
@@ -6970,14 +6986,59 @@ GcliTerm.prototype = {
       return;
     }
 
-    this.writeOutput(aEvent.output.typed, { category: CATEGORY_INPUT });
+    this.writeOutput(aEvent.output.typed, CATEGORY_INPUT);
 
-    if (aEvent.output.output == null) {
+    // This is an experiment to see how much people yell when we stop reporting
+    // undefined replies.
+    if (aEvent.output.output === undefined) {
       return;
     }
 
     let output = aEvent.output.output;
-    if (aEvent.output.command.returnType == "html" && typeof output == "string") {
+    let declaredType = aEvent.output.command.returnType || "";
+
+    if (declaredType == "object") {
+      let actualType = typeof output;
+      if (output === null) {
+        output = "null";
+      }
+      else if (actualType == "string") {
+        output = "\"" + output + "\"";
+      }
+      else if (actualType == "object" || actualType == "function") {
+        let formatOpts = [ nameObject(output) ];
+        output = stringBundle.formatStringFromName('gcliterm.instanceLabel',
+                formatOpts, formatOpts.length);
+        let linkNode = this.document.createElementNS(HTML_NS, 'html:span');
+        linkNode.appendChild(this.document.createTextNode(output));
+        linkNode.classList.add("hud-clickable");
+        linkNode.setAttribute("aria-haspopup", "true");
+
+        // Make the object bring up the property panel.
+        linkNode.addEventListener("mousedown", function(aEv) {
+          this._startX = aEv.clientX;
+          this._startY = aEv.clientY;
+        }.bind(this), false);
+
+        linkNode.addEventListener("click", function(aEv) {
+          if (aEv.detail != 1 || aEv.button != 0 ||
+              (this._startX != aEv.clientX && this._startY != aEv.clientY)) {
+            return;
+          }
+
+          if (!this._panelOpen) {
+            let propPanel = this.openPropertyPanel(aEvent.output.typed, aEvent.output.output, this);
+            propPanel.panel.setAttribute("hudId", this.hudId);
+            this._panelOpen = true;
+          }
+        }.bind(this), false);
+
+        output = linkNode;
+      }
+      // else if (actualType == number/boolean/undefined) do nothing
+    }
+
+    if (declaredType == "html" && typeof output == "string") {
       output = this.document.createRange().createContextualFragment(
           '<div xmlns="' + HTML_NS + '" xmlns:xul="' + XUL_NS + '">' +
           output + '</div>');
@@ -7017,14 +7078,14 @@ GcliTerm.prototype = {
    */
   createSandbox: function Gcli_createSandbox()
   {
-    let win = this.context.get().QueryInterface(Ci.nsIDOMWindow);
-
     // create a JS Sandbox out of this.context
-    this.sandbox = new Cu.Sandbox(win, {
-      sandboxPrototype: win,
+    this.sandbox = new Cu.Sandbox(this._window, {
+      sandboxPrototype: this._window,
       wantXrays: false
     });
     this.sandbox.console = this.console;
+
+    JSTermHelper(this);
   },
 
   /**
@@ -7036,7 +7097,31 @@ GcliTerm.prototype = {
    */
   evalInSandbox: function Gcli_evalInSandbox(aString)
   {
-    return Cu.evalInSandbox(aString, this.sandbox, "1.8", "Web Console", 1);
+    let window = unwrap(this.sandbox.window);
+    let temp$ = null;
+    let temp$$ = null;
+
+    // We prefer to execute the page-provided implementations for the $() and
+    // $$() functions.
+    if (typeof window.$ == "function") {
+      temp$ = this.sandbox.$;
+      delete this.sandbox.$;
+    }
+    if (typeof window.$$ == "function") {
+      temp$$ = this.sandbox.$$;
+      delete this.sandbox.$$;
+    }
+
+    let result = Cu.evalInSandbox(aString, this.sandbox, "1.8", "Web Console", 1);
+
+    if (temp$) {
+      this.sandbox.$ = temp$;
+    }
+    if (temp$$) {
+      this.sandbox.$$ = temp$$;
+    }
+
+    return result;
   },
 
   /**
@@ -7050,14 +7135,14 @@ GcliTerm.prototype = {
    * @param number aSeverity
    *        One of the SEVERITY_ constants.
    */
-  writeOutput: function Gcli_writeOutput(aOutputMessage, aOptions)
+  writeOutput: function Gcli_writeOutput(aOutputMessage, aCategory, aSeverity, aOptions)
   {
     aOptions = aOptions || {};
 
     let node = ConsoleUtils.createMessageNode(
                     this.document,
-                    aOptions.category || CATEGORY_OUTPUT,
-                    aOptions.severity || SEVERITY_LOG,
+                    aCategory || CATEGORY_OUTPUT,
+                    aSeverity || SEVERITY_LOG,
                     aOutputMessage,
                     this.hudId,
                     aOptions.sourceUrl || undefined,
@@ -7068,5 +7153,21 @@ GcliTerm.prototype = {
   },
 
   clearOutput: JSTerm.prototype.clearOutput,
+  openPropertyPanel: JSTerm.prototype.openPropertyPanel,
+
+  formatResult: JSTerm.prototype.formatResult,
+  getResultType: JSTerm.prototype.getResultType,
+  formatString: JSTerm.prototype.formatString,
 };
 
+/**
+ * A fancy version of toString()
+ */
+function nameObject(aObj) {
+  if (aObj.constructor && aObj.constructor.name) {
+    return aObj.constructor.name;
+  }
+  // If that fails, use Objects toString which sometimes gives something
+  // better than 'Object', and at least defaults to Object if nothing better
+  return Object.prototype.toString.call(aObj).slice(8, -1);
+}

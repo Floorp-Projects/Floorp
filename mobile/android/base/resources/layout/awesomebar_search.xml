@@ -6,7 +6,7 @@
     <view class="org.mozilla.gecko.AwesomeBar$AwesomeBarEditText"
           android:id="@+id/awesomebar_text"
           style="@style/AddressBar.Button"
-          android:layout_width="fill_parent"
+          android:layout_margin="4dip"
           android:layout_alignParentBottom="true"
           android:layout_centerVertical="true"
           android:paddingLeft="15dip"
@@ -16,8 +16,13 @@
           android:imeOptions="actionSearch"
           android:singleLine="true"
           android:gravity="center_vertical|left">
-         <requestFocus/>
+              <requestFocus/>
     </view>
+
+    <LinearLayout android:layout_width="4dp"
+                  android:layout_height="match_parent"
+                  android:orientation="vertical"
+                  android:layout_alignParentRight="true"/>
 
     <ImageButton android:id="@+id/awesomebar_button"
                  style="@style/AddressBar.ImageButton"

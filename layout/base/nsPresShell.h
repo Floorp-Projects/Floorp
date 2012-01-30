@@ -316,7 +316,7 @@ public:
 
   virtual void Paint(nsIView* aViewToPaint, nsIWidget* aWidget,
                      const nsRegion& aDirtyRegion, const nsIntRegion& aIntDirtyRegion,
-                     bool aPaintDefaultBackground, bool aWillSendDidPaint);
+                     bool aWillSendDidPaint);
   virtual nsresult HandleEvent(nsIFrame*       aFrame,
                                nsGUIEvent*     aEvent,
                                bool            aDontRetargetEvents,

@@ -32,11 +32,12 @@ function FirefoxProfileMigrator()
 
 FirefoxProfileMigrator.prototype = {
   _paths: {
-    bookmarks : null,
-    cookies : null,
+    bookmarks: null,
+    cookies: null,
     currentProfile: null,    // The currently running (destination) profile.
     encryptionKey: null,
-    history : null,
+    formData: null,
+    history: null,
     passwords: null,
   },
 
@@ -185,6 +186,26 @@ FirefoxProfileMigrator.prototype = {
     }
   },
 
+  /**
+   * Migrating form history (satchel)
+   */
+  _migrateFormData : function Firefox_migrateFormData()
+  {
+    this._notifyStart(MIGRATOR.FORMDATA);
+
+    try {
+      // Access sqlite3 database of form history.
+      let file = Cc[LOCAL_FILE_CID].createInstance(Ci.nsILocalFile);
+      file.initWithPath(this._paths.formData);
+      file.copyTo(this._paths.currentProfile, null);
+    } catch (e) {
+      Cu.reportError(e);
+      this._notifyError(MIGRATOR.FORMDATA);
+    } finally {
+      this._notifyCompleted(MIGRATOR.FORMDATA);
+    }
+  },
+
 
   /**
    * nsIBrowserProfileMigrator interface implementation
@@ -224,6 +245,9 @@ FirefoxProfileMigrator.prototype = {
 
     if (aItems & MIGRATOR.PASSWORDS)
       this._migratePasswords();
+
+    if (aItems & MIGRATOR.FORMDATA)
+      this._migrateFormData();
 
     if (--this._pendingCount == 0) {
       // When async imports are immediately completed unfortunately,
@@ -305,6 +329,18 @@ FirefoxProfileMigrator.prototype = {
         this._paths.passwords = passwords.path;
         this._paths.encryptionKey = encryptionKey.path;
         result += MIGRATOR.PASSWORDS;
+      }
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
+    // Form data
+    try {
+      let file = this._sourceProfile.clone();
+      file.append("formhistory.sqlite");
+      if (file.exists()) {
+        this._paths.formData = file.path;
+        result += MIGRATOR.FORMDATA;
       }
     } catch (e) {
       Cu.reportError(e);

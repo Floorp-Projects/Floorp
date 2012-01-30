@@ -51,7 +51,8 @@ class Test:
         self.slow = False      # True means the test is slow-running
         self.allow_oom = False # True means that OOM is not considered a failure
         self.valgrind = False  # True means run under valgrind
-        self.error = ''        # Errors to expect and consider passing
+        self.expect_error = '' # Errors to expect and consider passing
+        self.expect_status = 0 # Exit status to expect from shell
 
     def copy(self):
         t = Test(self.path)
@@ -59,7 +60,8 @@ class Test:
         t.slow = self.slow
         t.allow_oom = self.allow_oom
         t.valgrind = self.valgrind
-        t.error = self.error
+        t.expect_error = self.expect_error
+        t.expect_status = self.expect_status
         return t
 
     COOKIE = '|jit-test|'
@@ -81,7 +83,12 @@ class Test:
                 if value:
                     value = value.strip()
                     if name == 'error':
-                        test.error = value
+                        test.expect_error = value
+                    elif name == 'exitstatus':
+                        try:
+                            test.expect_status = int(value, 0);
+                        except ValueError:
+                            print("warning: couldn't parse exit status %s"%value)
                     else:
                         print('warning: unrecognized |jit-test| attribute %s'%part)
                 else:
@@ -227,12 +234,12 @@ def run_test(test, lib_dir, shell_args):
         sys.stdout.write('Exit code: %s\n' % code)
     if test.valgrind:
         sys.stdout.write(err)
-    return (check_output(out, err, code, test.allow_oom, test.error), 
+    return (check_output(out, err, code, test),
             out, err, code, timed_out)
 
-def check_output(out, err, rc, allow_oom, expectedError):
-    if expectedError:
-        return expectedError in err
+def check_output(out, err, rc, test):
+    if test.expect_error:
+        return test.expect_error in err
 
     for line in out.split('\n'):
         if line.startswith('Trace stats check failed'):
@@ -242,10 +249,10 @@ def check_output(out, err, rc, allow_oom, expectedError):
         if 'Assertion failed:' in line:
             return False
 
-    if rc != 0:
+    if rc != test.expect_status:
         # Allow a non-zero exit code if we want to allow OOM, but only if we
         # actually got OOM.
-        return allow_oom and ': out of memory' in err
+        return test.allow_oom and ': out of memory' in err
 
     return True
 

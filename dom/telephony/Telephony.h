@@ -57,7 +57,7 @@ class Telephony : public nsDOMEventTargetWrapperCache,
   nsCOMPtr<nsIRadioInterfaceLayer> mRIL;
   nsCOMPtr<nsIRILTelephonyCallback> mRILTelephonyCallback;
 
-  NS_DECL_EVENT_HANDLER(incoming);
+  NS_DECL_EVENT_HANDLER(incoming)
 
   TelephonyCall* mActiveCall;
   nsTArray<nsRefPtr<TelephonyCall> > mCalls;

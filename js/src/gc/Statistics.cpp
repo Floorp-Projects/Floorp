@@ -206,7 +206,7 @@ Statistics::beginGC(JSCompartment *comp, gcreason::Reason reason)
     triggerReason = reason;
 
     beginPhase(PHASE_GC);
-    Probes::GCStart(compartment);
+    Probes::GCStart();
 
     GCCrashData crashData;
     crashData.isCompartment = !!compartment;
@@ -283,7 +283,7 @@ Statistics::printStats()
 void
 Statistics::endGC()
 {
-    Probes::GCEnd(compartment);
+    Probes::GCEnd();
     endPhase(PHASE_GC);
     crash::SnapshotGCStack();
 
@@ -315,16 +315,10 @@ Statistics::beginPhase(Phase phase)
 {
     phaseStarts[phase] = PRMJ_Now();
 
-    if (phase == gcstats::PHASE_SWEEP) {
-        Probes::GCStartSweepPhase(NULL);
-        if (!compartment) {
-            for (JSCompartment **c = runtime->compartments.begin();
-                 c != runtime->compartments.end(); ++c)
-            {
-                Probes::GCStartSweepPhase(*c);
-            }
-        }
-    }
+    if (phase == gcstats::PHASE_MARK)
+        Probes::GCStartMarkPhase();
+    else if (phase == gcstats::PHASE_SWEEP)
+        Probes::GCStartSweepPhase();
 }
 
 void
@@ -333,16 +327,10 @@ Statistics::endPhase(Phase phase)
     phaseEnds[phase] = PRMJ_Now();
     phaseTimes[phase] += phaseEnds[phase] - phaseStarts[phase];
 
-    if (phase == gcstats::PHASE_SWEEP) {
-        if (!compartment) {
-            for (JSCompartment **c = runtime->compartments.begin();
-                 c != runtime->compartments.end(); ++c)
-            {
-                Probes::GCEndSweepPhase(*c);
-            }
-        }
-        Probes::GCEndSweepPhase(NULL);
-    }
+    if (phase == gcstats::PHASE_MARK)
+        Probes::GCEndMarkPhase();
+    else if (phase == gcstats::PHASE_SWEEP)
+        Probes::GCEndSweepPhase();
 }
 
 } /* namespace gcstats */

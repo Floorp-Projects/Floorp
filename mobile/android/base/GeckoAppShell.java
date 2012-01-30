@@ -673,11 +673,11 @@ public class GeckoAppShell
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent = new Intent();
                 if (aType.equalsIgnoreCase("webapp")) {
-                    shortcutIntent.setAction("org.mozilla.gecko.WEBAPP");
-                    shortcutIntent.putExtra("args", aURI);
+                    shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
+                    shortcutIntent.setData(Uri.parse(aURI));
                 } else {
-                    shortcutIntent.setAction("org.mozilla.gecko.BOOKMARK");
-                    shortcutIntent.putExtra("args", aURI);
+                    shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
+                    shortcutIntent.setData(Uri.parse(aURI));
                 }
                 shortcutIntent.setClassName(GeckoApp.mAppContext,
                                             GeckoApp.mAppContext.getPackageName() + ".App");

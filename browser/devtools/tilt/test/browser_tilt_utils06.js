@@ -1,7 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, isnot, gBrowser, TiltUtils */
 "use strict";
 
 let someObject = {
@@ -43,8 +41,4 @@ function test() {
     "Not all members of the destroyed object were deleted.");
   is(typeof someObject.func, "undefined",
     "Not all function members of the destroyed object were deleted.");
-
-
-  is(TiltUtils.getBrowserWindow(), window,
-    "The getBrowserWindow() function didn't return the correct window.");
 }

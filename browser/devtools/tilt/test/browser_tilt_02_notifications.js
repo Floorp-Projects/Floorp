@@ -1,9 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, waitForExplicitFinish, finish, executeSoon, gBrowser */
-/*global isTiltEnabled, isWebGLSupported, createTab, createTilt, Tilt */
-/*global Services, TILT_INITIALIZED, TILT_DESTROYED, TILT_SHOWN, TILT_HIDDEN */
 "use strict";
 
 let tab0, tab1;
@@ -20,6 +16,7 @@ function test() {
     return;
   }
 
+  requestLongerTimeout(10);
   waitForExplicitFinish();
 
   gBrowser.tabContainer.addEventListener("TabSelect", tabSelect, false);
@@ -30,12 +27,14 @@ function createNewTab() {
   tab0 = gBrowser.selectedTab;
 
   tab1 = createTab(function() {
-    Services.obs.addObserver(cleanup, TILT_DESTROYED, false);
-    Services.obs.addObserver(tab_TILT_INITIALIZED, TILT_INITIALIZED, false);
-    Services.obs.addObserver(tab_TILT_DESTROYED, TILT_DESTROYED, false);
-    Services.obs.addObserver(tab_TILT_SHOWN, TILT_SHOWN, false);
-    Services.obs.addObserver(tab_TILT_HIDDEN, TILT_HIDDEN, false);
+    Services.obs.addObserver(cleanup, DESTROYED, false);
 
+    Services.obs.addObserver(tab_INITIALIZING, INITIALIZING, false);
+    Services.obs.addObserver(tab_DESTROYING, DESTROYING, false);
+    Services.obs.addObserver(tab_SHOWN, SHOWN, false);
+    Services.obs.addObserver(tab_HIDDEN, HIDDEN, false);
+
+    info("Starting up the Tilt notifications test.");
     createTilt({
       onTiltOpen: function()
       {
@@ -46,46 +45,56 @@ function createNewTab() {
   });
 }
 
-function tab_TILT_INITIALIZED() {
-  tabEvents += "ti;";
+function tab_INITIALIZING() {
+  info("Handling the INITIALIZING notification.");
+  tabEvents += "INITIALIZING;";
 }
 
-function tab_TILT_DESTROYED() {
-  tabEvents += "td;";
+function tab_DESTROYING() {
+  info("Handling the DESTROYING notification.");
+  tabEvents += "DESTROYING;";
 }
 
-function tab_TILT_SHOWN() {
-  tabEvents += "ts;";
+function tab_SHOWN() {
+  info("Handling the SHOWN notification.");
+  tabEvents += "SHOWN;";
 }
 
-function tab_TILT_HIDDEN() {
-  tabEvents += "th;";
+function tab_HIDDEN() {
+  info("Handling the HIDDEN notification.");
+  tabEvents += "HIDDEN;";
 }
 
 let testSteps = [
   function step0() {
+    info("Selecting tab0.");
     gBrowser.selectedTab = tab0;
   },
   function step1() {
+    info("Selecting tab1.");
     gBrowser.selectedTab = tab1;
   },
   function step2() {
-    Tilt.destroy(Tilt.currentWindowId);
+    info("Killing it.");
+    Tilt.destroy(Tilt.currentWindowId, true);
   }
 ];
 
 function cleanup() {
-  is(tabEvents, "ti;th;ts;td;",
+  info("Cleaning up the notifications test.");
+
+  is(tabEvents, "INITIALIZING;HIDDEN;SHOWN;DESTROYING;",
     "The notifications weren't fired in the correct order.");
 
   tab0 = null;
   tab1 = null;
 
-  Services.obs.removeObserver(cleanup, TILT_DESTROYED);
-  Services.obs.removeObserver(tab_TILT_INITIALIZED, TILT_INITIALIZED, false);
-  Services.obs.removeObserver(tab_TILT_DESTROYED, TILT_DESTROYED, false);
-  Services.obs.removeObserver(tab_TILT_SHOWN, TILT_SHOWN, false);
-  Services.obs.removeObserver(tab_TILT_HIDDEN, TILT_HIDDEN, false);
+  Services.obs.removeObserver(cleanup, DESTROYED);
+
+  Services.obs.removeObserver(tab_INITIALIZING, INITIALIZING, false);
+  Services.obs.removeObserver(tab_DESTROYING, DESTROYING, false);
+  Services.obs.removeObserver(tab_SHOWN, SHOWN, false);
+  Services.obs.removeObserver(tab_HIDDEN, HIDDEN, false);
 
   gBrowser.tabContainer.removeEventListener("TabSelect", tabSelect, false);
   gBrowser.removeCurrentTab();
