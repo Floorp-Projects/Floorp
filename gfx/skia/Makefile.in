@@ -309,7 +309,10 @@ endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
-	SkFontHost_none.cpp \
+	SkFontHost_FreeType.cpp \
+	SkFontHost_android.cpp \
+	SkFontHost_gamma.cpp \
+	FontHostConfiguration_android.cpp \
 	SkMMapStream.cpp \
 	SkTime_Unix.cpp \
 	$(NULL)
