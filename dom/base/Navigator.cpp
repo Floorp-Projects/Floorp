@@ -69,6 +69,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
+#include "PowerManager.h"
 #include "SmsManager.h"
 #include "nsISmsService.h"
 #include "mozilla/Hal.h"
@@ -163,6 +164,8 @@ Navigator::Invalidate()
     mBatteryManager->Shutdown();
     mBatteryManager = nsnull;
   }
+
+  mPowerManager = nsnull;
 
   if (mSmsManager) {
     mSmsManager->Shutdown();
@@ -942,7 +945,11 @@ Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
 NS_IMETHODIMP
 Navigator::GetMozPower(nsIDOMMozPowerManager** aPower)
 {
-  *aPower = nsnull;
+  if (!mPowerManager) {
+    mPowerManager = new power::PowerManager();
+  }
+
+  NS_ADDREF(*aPower = mPowerManager);
 
   return NS_OK;
 }

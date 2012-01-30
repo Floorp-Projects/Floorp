@@ -48,7 +48,15 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+EXPORTS_NAMESPACES = mozilla/dom/power
+
+EXPORTS_mozilla/dom/power = \
+  PowerManagerService.h \
+  $(NULL)
+
 CPPSRCS = \
+  PowerManager.cpp \
+  PowerManagerService.cpp \
   $(NULL)
 
 XPIDLSRCS = \
