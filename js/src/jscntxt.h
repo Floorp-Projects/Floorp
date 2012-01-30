@@ -558,7 +558,7 @@ struct JSRuntime
      * reporting OOM error when cx is not null. We will not GC from here.
      */
     void* malloc_(size_t bytes, JSContext *cx = NULL) {
-        updateMallocCounter(bytes);
+        updateMallocCounter(cx, bytes);
         void *p = ::js_malloc(bytes);
         return JS_LIKELY(!!p) ? p : onOutOfMemory(NULL, bytes, cx);
     }
@@ -568,14 +568,14 @@ struct JSRuntime
      * reporting OOM error when cx is not null. We will not GC from here.
      */
     void* calloc_(size_t bytes, JSContext *cx = NULL) {
-        updateMallocCounter(bytes);
+        updateMallocCounter(cx, bytes);
         void *p = ::js_calloc(bytes);
         return JS_LIKELY(!!p) ? p : onOutOfMemory(reinterpret_cast<void *>(1), bytes, cx);
     }
 
     void* realloc_(void* p, size_t oldBytes, size_t newBytes, JSContext *cx = NULL) {
         JS_ASSERT(oldBytes < newBytes);
-        updateMallocCounter(newBytes - oldBytes);
+        updateMallocCounter(cx, newBytes - oldBytes);
         void *p2 = ::js_realloc(p, newBytes);
         return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, newBytes, cx);
     }
@@ -586,7 +586,7 @@ struct JSRuntime
          * previously allocated memory.
          */
         if (!p)
-            updateMallocCounter(bytes);
+            updateMallocCounter(cx, bytes);
         void *p2 = ::js_realloc(p, bytes);
         return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, bytes, cx);
     }
@@ -620,13 +620,7 @@ struct JSRuntime
      * The function must be called outside the GC lock and in case of OOM error
      * the caller must ensure that no deadlock possible during OOM reporting.
      */
-    void updateMallocCounter(size_t nbytes) {
-        /* We tolerate any thread races when updating gcMallocBytes. */
-        ptrdiff_t newCount = gcMallocBytes - ptrdiff_t(nbytes);
-        gcMallocBytes = newCount;
-        if (JS_UNLIKELY(newCount <= 0))
-            onTooMuchMalloc();
-    }
+    void updateMallocCounter(JSContext *cx, size_t nbytes);
 
     /*
      * The function must be called outside the GC lock.

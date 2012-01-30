@@ -92,6 +92,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     watchpointMap(NULL)
 {
     PodArrayZero(evalCache);
+    setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
 }
 
 JSCompartment::~JSCompartment()
@@ -568,6 +569,30 @@ JSCompartment::purge(JSContext *cx)
     nativeIterCache.purge();
     toSourceCache.destroyIfConstructed();
 }
+
+void
+JSCompartment::resetGCMallocBytes()
+{
+    gcMallocBytes = ptrdiff_t(gcMaxMallocBytes);
+}
+
+void
+JSCompartment::setGCMaxMallocBytes(size_t value)
+{
+    /*
+     * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
+     * mean that value.
+     */
+    gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
+    resetGCMallocBytes();
+}
+
+void
+JSCompartment::onTooMuchMalloc()
+{
+    TriggerCompartmentGC(this, gcreason::TOO_MUCH_MALLOC);
+}
+
 
 MathCache *
 JSCompartment::allocMathCache(JSContext *cx)
