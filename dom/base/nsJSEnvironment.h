@@ -183,7 +183,10 @@ public:
 
   static void GarbageCollectNow(js::gcreason::Reason reason, PRUint32 gckind = nsGCNormal);
   static void ShrinkGCBuffersNow();
-  static void CycleCollectNow(nsICycleCollectorListener *aListener = nsnull);
+  // If aExtraForgetSkippableCalls is -1, forgetSkippable won't be
+  // called even if the previous collection was GC.
+  static void CycleCollectNow(nsICycleCollectorListener *aListener = nsnull,
+                              PRInt32 aExtraForgetSkippableCalls = 0);
 
   static void PokeGC(js::gcreason::Reason aReason);
   static void KillGCTimer();
@@ -191,11 +194,12 @@ public:
   static void PokeShrinkGCBuffers();
   static void KillShrinkGCBuffersTimer();
 
-  static void PokeCC();
   static void MaybePokeCC();
   static void KillCCTimer();
 
   virtual void GC(js::gcreason::Reason aReason);
+
+  static bool CleanupSinceLastGC();
 
   nsIScriptGlobalObject* GetCachedGlobalObject()
   {
