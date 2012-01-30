@@ -335,6 +335,7 @@ else
 GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/mobile/android/base)
 endif
 
+ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=echo
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
@@ -343,6 +344,9 @@ INNER_ROBOCOP_PACKAGE= \
   $(APKBUILDER) $(_ABS_DIST)/robocop-raw.apk -v $(APKBUILDER_FLAGS) -z $(ROBOCOP_PATH)/robocop.ap_ -f $(ROBOCOP_PATH)/classes.dex && \
   $(JARSIGNER) $(_ABS_DIST)/robocop-raw.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/robocop-raw.apk $(_ABS_DIST)/robocop.apk
+endif
+else
+INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Robocop for you'
 endif
 
 PKG_SUFFIX      = .apk
