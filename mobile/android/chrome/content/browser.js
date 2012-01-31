@@ -1412,7 +1412,7 @@ function Tab(aURL, aParams) {
   this.viewportExcess = { x: 0, y: 0 };
   this.documentIdForCurrentViewport = null;
   this.userScrollPos = { x: 0, y: 0 };
-  this._pluginsToPlay = [];
+  this._pluginCount = 0;
   this._pluginOverlayShowing = false;
 }
 
@@ -1729,8 +1729,10 @@ Tab.prototype = {
           }.bind(this), true);
         }
 
-        // Show a plugin doorhanger if there are no clickable overlays showing
-        if (this._pluginsToPlay.length && !this._pluginOverlayShowing)
+        // Show a plugin doorhanger if there are plugins on the page but no
+        // clickable overlays showing (this doesn't work on pages loaded after
+        // back/forward navigation - see bug 719875)
+        if (this._pluginCount && !this._pluginOverlayShowing)
           PluginHelper.showDoorHanger(this);
 
         break;
@@ -1822,10 +1824,11 @@ Tab.prototype = {
       }
 
       case "PluginClickToPlay": {
-        let plugin = aEvent.target;
-        // Keep track of all the plugins on the current page
-        this._pluginsToPlay.push(plugin);
+        // Keep track of the number of plugins to know whether or not to show
+        // the hidden plugins doorhanger
+        this._pluginCount++;
 
+        let plugin = aEvent.target;
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
         if (!overlay)
           return;
@@ -1837,8 +1840,8 @@ Tab.prototype = {
           return;
         }
 
-        // Add click to play listener
-        plugin.addEventListener("click", (function(event) {
+        // Add click to play listener to the overlay
+        overlay.addEventListener("click", (function(event) {
           // Play all the plugin objects when the user clicks on one
           PluginHelper.playAllPlugins(this, event);
         }).bind(this), true);
@@ -1851,7 +1854,7 @@ Tab.prototype = {
         // Check to make sure it's top-level pagehide
         if (aEvent.target.defaultView == this.browser.contentWindow) {
           // Reset plugin state when we leave the page
-          this._pluginsToPlay = [];
+          this._pluginCount = 0;
           this._pluginOverlayShowing = false;
         }
         break;
@@ -3730,22 +3733,40 @@ var PluginHelper = {
   },
 
   playAllPlugins: function(aTab, aEvent) {
-    let plugins = aTab._pluginsToPlay;
-    if (!plugins.length)
-      return;
-
     if (aEvent) {
       if (!aEvent.isTrusted)
         return;
       aEvent.preventDefault();
     }
 
-    for (let i = 0; i < plugins.length; i++) {
-      let objLoadingContent = plugins[i].QueryInterface(Ci.nsIObjectLoadingContent);
-      objLoadingContent.playPlugin();
+    this._findAndPlayAllPlugins(aTab.browser.contentWindow);
+  },
+
+  // Helper function that recurses through sub-frames to find all plugin objects
+  _findAndPlayAllPlugins: function _findAndPlayAllPlugins(aWindow) {
+    let embeds = aWindow.document.getElementsByTagName("embed");
+    for (let i = 0; i < embeds.length; i++) {
+      if (!embeds[i].hasAttribute("played"))
+        this._playPlugin(embeds[i]);
     }
-    // Clear _pluginsToPlay so we don't accidentally re-load them
-    aTab._pluginsToPlay = [];
+
+    let objects = aWindow.document.getElementsByTagName("object");
+    for (let i = 0; i < objects.length; i++) {
+      if (!objects[i].hasAttribute("played"))
+        this._playPlugin(objects[i]);
+    }
+
+    for (let i = 0; i < aWindow.frames.length; i++) {
+      this._findAndPlayAllPlugins(aWindow.frames[i]);
+    }
+  },
+
+  _playPlugin: function _playPlugin(aPlugin) {
+    let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    objLoadingContent.playPlugin();
+
+    // Set an attribute on the plugin object to avoid re-loading it
+    aPlugin.setAttribute("played", true);
   },
 
   getPluginPreference: function getPluginPreference() {
