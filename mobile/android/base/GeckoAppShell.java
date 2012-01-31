@@ -254,7 +254,7 @@ public class GeckoAppShell
         return sFreeSpace;
     }
 
-    private static boolean moveFile(File inFile, File outFile)
+    static boolean moveFile(File inFile, File outFile)
     {
         Log.i(LOGTAG, "moving " + inFile + " to " + outFile);
         if (outFile.isDirectory())
@@ -293,7 +293,7 @@ public class GeckoAppShell
         return true;
     }
 
-    private static boolean moveDir(File from, File to) {
+    static boolean moveDir(File from, File to) {
         try {
             to.mkdirs();
             if (from.renameTo(to))
@@ -513,7 +513,7 @@ public class GeckoAppShell
         layerController.notifyLayerClientOfGeometryChange();
     }
 
-    public static void sendPendingEventsToGecko() {
+    static void sendPendingEventsToGecko() {
         try {
             while (!gPendingEvents.isEmpty()) {
                 GeckoEvent e = gPendingEvents.removeFirst();
@@ -579,8 +579,8 @@ public class GeckoAppShell
             tmp.countDown();
     }
 
-    private static Sensor gAccelerometerSensor = null;
-    private static Sensor gOrientationSensor = null;
+    static Sensor gAccelerometerSensor = null;
+    static Sensor gOrientationSensor = null;
 
     public static void enableDeviceMotion(boolean enable) {
         LayerView v = GeckoApp.mAppContext.getLayerController().getView();
@@ -639,7 +639,7 @@ public class GeckoAppShell
         mInputConnection.returnIMEQueryResult(result, selectionStart, selectionLength);
     }
 
-    public static void onXreExit() {
+    static void onXreExit() {
         // mLaunchState can only be Launched or GeckoRunning at this point
         GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoExiting);
         Log.i(LOGTAG, "XRE exited");
@@ -653,15 +653,13 @@ public class GeckoAppShell
         Log.w(LOGTAG, "Killing via System.exit()");
         System.exit(0);
     }
-
-    public static void scheduleRestart() {
+    static void scheduleRestart() {
         Log.i(LOGTAG, "scheduling restart");
         gRestartScheduled = true;
     }
 
     // "Installs" an application by creating a shortcut
-    public static void createShortcut(String aTitle, String aURI,
-                                      String aIconData, String aType) {
+    static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
         byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
         createShortcut(aTitle, aURI, bitmap, aType);
@@ -767,14 +765,14 @@ public class GeckoAppShell
         return bitmap;
     }
 
-    public static String[] getHandlersForMimeType(String aMimeType, String aAction) {
+    static String[] getHandlersForMimeType(String aMimeType, String aAction) {
         Intent intent = getIntentForActionString(aAction);
         if (aMimeType != null && aMimeType.length() > 0)
             intent.setType(aMimeType);
         return getHandlersForIntent(intent);
     }
 
-    public static String[] getHandlersForURL(String aURL, String aAction) {
+    static String[] getHandlersForURL(String aURL, String aAction) {
         // aURL may contain the whole URL or just the protocol
         Uri uri = aURL.indexOf(':') >= 0 ? Uri.parse(aURL) : new Uri.Builder().scheme(aURL).build();
         Intent intent = getIntentForActionString(aAction);
@@ -782,7 +780,7 @@ public class GeckoAppShell
         return getHandlersForIntent(intent);
     }
 
-    private static String[] getHandlersForIntent(Intent intent) {
+    static String[] getHandlersForIntent(Intent intent) {
         PackageManager pm = GeckoApp.mAppContext.getPackageManager();
         List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
         int numAttr = 4;
@@ -800,7 +798,7 @@ public class GeckoAppShell
         return ret;
     }
 
-    private static Intent getIntentForActionString(String aAction) {
+    static Intent getIntentForActionString(String aAction) {
         // Default to the view action if no other action as been specified.
         if (aAction != null && aAction.length() > 0)
             return new Intent(aAction);
@@ -808,11 +806,11 @@ public class GeckoAppShell
             return new Intent(Intent.ACTION_VIEW);
     }
 
-    public static String getExtensionFromMimeType(String aMimeType) {
+    static String getExtensionFromMimeType(String aMimeType) {
         return MimeTypeMap.getSingleton().getExtensionFromMimeType(aMimeType);
     }
 
-    public static String getMimeTypeFromExtensions(String aFileExt) {
+    static String getMimeTypeFromExtensions(String aFileExt) {
         MimeTypeMap mtm = MimeTypeMap.getSingleton();
         StringTokenizer st = new StringTokenizer(aFileExt, "., ");
         String type = null;
@@ -837,8 +835,8 @@ public class GeckoAppShell
         return type + "/" + subType;
     }
 
-    public static boolean openUriExternal(String aUriSpec, String aMimeType, String aPackageName,
-                                          String aClassName, String aAction, String aTitle) {
+    static boolean openUriExternal(String aUriSpec, String aMimeType, String aPackageName,
+                                   String aClassName, String aAction, String aTitle) {
         Intent intent = getIntentForActionString(aAction);
         if (aAction.equalsIgnoreCase(Intent.ACTION_SEND)) {
             intent.putExtra(Intent.EXTRA_TEXT, aUriSpec);
@@ -889,16 +887,16 @@ public class GeckoAppShell
         }
     }
 
-    private static final SynchronousQueue<String> sClipboardQueue =
+    static SynchronousQueue<String> sClipboardQueue =
         new SynchronousQueue<String>();
-    private static final String EMPTY_STRING = new String();
+    private static String EMPTY_STRING = new String();
 
     // On some devices, access to the clipboard service needs to happen
     // on a thread with a looper, so dispatch this to our looper thread
     // Note: the main looper won't work because it may be blocked on the
     // gecko thread, which is most likely this thread
-    public static String getClipboardText() {
-        getHandler().post(new Runnable() {
+    static String getClipboardText() {
+        getHandler().post(new Runnable() { 
             @SuppressWarnings("deprecation")
             public void run() {
                 Context context = GeckoApp.mAppContext;
@@ -930,8 +928,8 @@ public class GeckoAppShell
         return null;
     }
 
-    public static void setClipboardText(final String text) {
-        getHandler().post(new Runnable() {
+    static void setClipboardText(final String text) {
+        getHandler().post(new Runnable() { 
             @SuppressWarnings("deprecation")
             public void run() {
                 Context context = GeckoApp.mAppContext;
@@ -1238,14 +1236,14 @@ public class GeckoAppShell
         return visitor.otherPidExist;
     }
 
-    private interface GeckoProcessesVisitor{
+    interface GeckoProcessesVisitor{
         boolean callback(int pid);
     }
 
-    private static int sPidColumn = -1;
-    private static int sUserColumn = -1;
-
+    static int sPidColumn = -1;
+    static int sUserColumn = -1;
     private static void EnumerateGeckoProcesses(GeckoProcessesVisitor visiter) {
+
         try {
 
             // run ps and parse its output
@@ -1415,9 +1413,9 @@ public class GeckoAppShell
         return null;
     }
 
-    private static native void executeNextRunnable();
+    static native void executeNextRunnable();
 
-    private static class GeckoRunnableCallback implements Runnable {
+    static class GeckoRunnableCallback implements Runnable {
         public void run() {
             Log.i(LOGTAG, "run GeckoRunnableCallback");
             GeckoAppShell.executeNextRunnable();
@@ -1428,16 +1426,15 @@ public class GeckoAppShell
         Log.i(LOGTAG, "post to " + (mainThread ? "main " : "") + "java thread");
         getMainHandler().post(new GeckoRunnableCallback());
     }
+    
+    public static android.hardware.Camera sCamera = null;
+    
+    static native void cameraCallbackBridge(byte[] data);
 
-    private static android.hardware.Camera sCamera = null;
+    static int kPreferedFps = 25;
+    static byte[] sCameraBuffer = null;
 
-    private static native void cameraCallbackBridge(byte[] data);
-
-    private static final int kPreferedFps = 25;
-    private static byte[] sCameraBuffer = null;
-
-    public static int[] initCamera(String aContentType, int aCamera,
-                                   int aWidth, int aHeight) {
+    static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
         Log.i(LOGTAG, "initCamera(" + aContentType + ", " + aWidth + "x" + aHeight + ") on thread " + Thread.currentThread().getId());
 
         getMainHandler().post(new Runnable() {
@@ -1533,7 +1530,7 @@ public class GeckoAppShell
         return result;
     }
 
-    public static synchronized void closeCamera() {
+    static synchronized void closeCamera() {
         Log.i(LOGTAG, "closeCamera() on thread " + Thread.currentThread().getId());
         getMainHandler().post(new Runnable() {
                 public void run() {
@@ -1550,7 +1547,7 @@ public class GeckoAppShell
         }
     }
 
-    public static SynchronousQueue<String> sPromptQueue = null;
+    static SynchronousQueue<String> sPromptQueue = null;
 
     public static void registerGeckoEventListener(String event, GeckoEventListener listener) {
         if (mEventListeners == null)
@@ -1664,11 +1661,11 @@ public class GeckoAppShell
         return GeckoBatteryManager.getCurrentInformation();
     }
 
-    public static void checkUriVisited(String uri) {   // invoked from native JNI code
+    static void checkUriVisited(String uri) {   // invoked from native JNI code
         GlobalHistory.getInstance().checkUriVisited(uri);
     }
 
-    public static void markUriVisited(final String uri) {    // invoked from native JNI code
+    static void markUriVisited(final String uri) {    // invoked from native JNI code
         getHandler().post(new Runnable() { 
             public void run() {
                 GlobalHistory.getInstance().add(uri);
@@ -1676,7 +1673,7 @@ public class GeckoAppShell
         });
     }
 
-    public static void hideProgressDialog() {
+    static void hideProgressDialog() {
         // unused stub
     }
 
