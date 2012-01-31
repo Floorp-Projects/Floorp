@@ -219,6 +219,15 @@ typedef struct _cairo_pattern cairo_pattern_t;
 typedef void (*cairo_destroy_func_t) (void *data);
 
 /**
+ * cairo_surface_func_t:
+ * @surface: The surface being referred to.
+ *
+ * #cairo_surface_func_t the type of function which is used for callback
+ * when a surface needs to be apssed as a parameter.
+ */
+typedef void (*cairo_surface_func_t) (cairo_surface_t *surface);
+
+/**
  * cairo_user_data_key_t:
  * @unused: not used; ignore.
  *
@@ -2155,6 +2164,14 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy);
 
+cairo_public void
+cairo_surface_attach_snapshot (cairo_surface_t *surface,
+				cairo_surface_t *snapshot,
+				cairo_surface_func_t detach_func);
+
+cairo_public void
+cairo_surface_detach_snapshot (cairo_surface_t *snapshot);
+
 #define CAIRO_MIME_TYPE_JPEG "image/jpeg"
 #define CAIRO_MIME_TYPE_PNG "image/png"
 #define CAIRO_MIME_TYPE_JP2 "image/jp2"
@@ -2332,6 +2349,11 @@ cairo_recording_surface_ink_extents (cairo_surface_t *surface,
                                      double *y0,
                                      double *width,
                                      double *height);
+
+/* Null-surface functions */
+
+cairo_public cairo_surface_t *
+cairo_null_surface_create (cairo_content_t content);
 
 /* Pattern creation functions */
 

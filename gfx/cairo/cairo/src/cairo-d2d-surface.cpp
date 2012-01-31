@@ -1956,14 +1956,14 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 						 srcSurf->data,
 						 srcSurf->stride);
 		    cairo_surface_t *nullSurf =
-			_cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+			cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
 		    cachebitmap->refs++;
 		    cachebitmap->dirty = false;
 		    cairo_surface_set_user_data(nullSurf,
 						&bitmap_key_snapshot,
 						cachebitmap,
 						NULL);
-		    _cairo_surface_attach_snapshot(surfacePattern->surface,
+		    cairo_surface_attach_snapshot(surfacePattern->surface,
 						   nullSurf,
 						   _d2d_snapshot_detached);
 		}
@@ -2020,12 +2020,12 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 						cachebitmap,
 						_d2d_release_bitmap);
 		    cairo_surface_t *nullSurf =
-			_cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+			cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
 		    cairo_surface_set_user_data(nullSurf,
 						&bitmap_key_snapshot,
 						cachebitmap,
 						NULL);
-		    _cairo_surface_attach_snapshot(surfacePattern->surface,
+		    cairo_surface_attach_snapshot(surfacePattern->surface,
 						   nullSurf,
 						   _d2d_snapshot_detached);
 		    cache_usage += _d2d_compute_bitmap_mem_size(sourceBitmap);

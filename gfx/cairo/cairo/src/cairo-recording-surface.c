@@ -281,7 +281,7 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
 	return status;
     }
 
-    _cairo_surface_attach_snapshot (&surface->base, image, NULL);
+    cairo_surface_attach_snapshot (&surface->base, image, NULL);
 
     *image_out = (cairo_image_surface_t *) image;
     *image_extra = NULL;
@@ -1051,7 +1051,7 @@ _recording_surface_get_ink_bbox (cairo_recording_surface_t *surface,
     cairo_surface_t *analysis_surface;
     cairo_status_t status;
 
-    null_surface = _cairo_null_surface_create (surface->content);
+    null_surface = cairo_null_surface_create (surface->content);
     analysis_surface = _cairo_analysis_surface_create (null_surface);
     cairo_surface_destroy (null_surface);
 

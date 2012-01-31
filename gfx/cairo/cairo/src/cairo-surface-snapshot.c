@@ -214,7 +214,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 	    snap->device_transform = surface->device_transform;
 	    snap->device_transform_inverse = surface->device_transform_inverse;
 
-	    _cairo_surface_attach_snapshot (surface, snap, NULL);
+	    cairo_surface_attach_snapshot (surface, snap, NULL);
 
 	    return snap;
 	}
@@ -247,7 +247,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     snapshot->base.device_transform = surface->device_transform;
     snapshot->base.device_transform_inverse = surface->device_transform_inverse;
 
-    _cairo_surface_attach_snapshot (surface,
+    cairo_surface_attach_snapshot (surface,
 				    &snapshot->base,
 				    _cairo_surface_snapshot_copy_on_write);
 

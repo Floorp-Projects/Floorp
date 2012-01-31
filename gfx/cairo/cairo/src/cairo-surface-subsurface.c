@@ -331,7 +331,7 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 
             cairo_surface_paint_to_target (&image->base, surface);
 
-	    _cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
+	    cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
 
 	    *image_out = image;
 	    *extra_out = NULL;

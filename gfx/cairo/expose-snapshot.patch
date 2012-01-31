@@ -1,0 +1,528 @@
+diff --git a/gfx/cairo/cairo/src/cairo-analysis-surface-private.h b/gfx/cairo/cairo/src/cairo-analysis-surface-private.h
+--- a/gfx/cairo/cairo/src/cairo-analysis-surface-private.h
++++ b/gfx/cairo/cairo/src/cairo-analysis-surface-private.h
+@@ -65,14 +65,11 @@ _cairo_analysis_surface_has_unsupported 
+ cairo_private void
+ _cairo_analysis_surface_get_bounding_box (cairo_surface_t *surface,
+ 					  cairo_box_t     *bbox);
+ 
+ cairo_private cairo_int_status_t
+ _cairo_analysis_surface_merge_status (cairo_int_status_t status_a,
+ 				      cairo_int_status_t status_b);
+ 
+-cairo_private cairo_surface_t *
+-_cairo_null_surface_create (cairo_content_t content);
+-
+ CAIRO_END_DECLS
+ 
+ #endif /* CAIRO_ANALYSIS_SURFACE_H */
+diff --git a/gfx/cairo/cairo/src/cairo-analysis-surface.c b/gfx/cairo/cairo/src/cairo-analysis-surface.c
+--- a/gfx/cairo/cairo/src/cairo-analysis-surface.c
++++ b/gfx/cairo/cairo/src/cairo-analysis-surface.c
+@@ -902,17 +902,17 @@ static const cairo_surface_backend_t cai
+     NULL, /* fill_stroke */
+     NULL, /* create_solid_pattern_surface */
+     NULL, /* can_repaint_solid_pattern_surface */
+     NULL, /* has_show_text_glyphs */
+     NULL  /* show_text_glyphs */
+ };
+ 
+ cairo_surface_t *
+-_cairo_null_surface_create (cairo_content_t content)
++cairo_null_surface_create (cairo_content_t content)
+ {
+     cairo_surface_t *surface;
+ 
+     surface = malloc (sizeof (cairo_surface_t));
+     if (unlikely (surface == NULL)) {
+ 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+     }
+ 
+diff --git a/gfx/cairo/cairo/src/cairo-d2d-surface.cpp b/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
+--- a/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
++++ b/gfx/cairo/cairo/src/cairo-d2d-surface.cpp
+@@ -1951,24 +1951,24 @@ _cairo_d2d_create_brush_for_pattern(cair
+ 			rect = D2D1::RectU(1, 1, srcSurf->width + 1, srcSurf->height + 1);
+ 		    } else {
+ 			rect = D2D1::RectU(0, 0, srcSurf->width, srcSurf->height);
+ 		    }
+ 		    sourceBitmap->CopyFromMemory(&rect,
+ 						 srcSurf->data,
+ 						 srcSurf->stride);
+ 		    cairo_surface_t *nullSurf =
+-			_cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
++			cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+ 		    cachebitmap->refs++;
+ 		    cachebitmap->dirty = false;
+ 		    cairo_surface_set_user_data(nullSurf,
+ 						&bitmap_key_snapshot,
+ 						cachebitmap,
+ 						NULL);
+-		    _cairo_surface_attach_snapshot(surfacePattern->surface,
++		    cairo_surface_attach_snapshot(surfacePattern->surface,
+ 						   nullSurf,
+ 						   _d2d_snapshot_detached);
+ 		}
+ 	    } else {
+ 		if (pattern->extend != CAIRO_EXTEND_NONE) {
+ 		    d2dsurf->rt->CreateBitmap(D2D1::SizeU(width, height),
+ 							  data + yoffset * stride + xoffset * Bpp,
+ 							  stride,
+@@ -2015,22 +2015,22 @@ _cairo_d2d_create_brush_for_pattern(cair
+ 		     * and one more in the user data structure.
+ 		     */
+ 		    cachebitmap->refs = 2;
+ 		    cairo_surface_set_user_data(surfacePattern->surface,
+ 						key,
+ 						cachebitmap,
+ 						_d2d_release_bitmap);
+ 		    cairo_surface_t *nullSurf =
+-			_cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
++			cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+ 		    cairo_surface_set_user_data(nullSurf,
+ 						&bitmap_key_snapshot,
+ 						cachebitmap,
+ 						NULL);
+-		    _cairo_surface_attach_snapshot(surfacePattern->surface,
++		    cairo_surface_attach_snapshot(surfacePattern->surface,
+ 						   nullSurf,
+ 						   _d2d_snapshot_detached);
+ 		    cache_usage += _d2d_compute_bitmap_mem_size(sourceBitmap);
+ 		}
+ 		if (pix_image) {
+ 		    pixman_image_unref(pix_image);
+   		}
+ 	    }
+diff --git a/gfx/cairo/cairo/src/cairo-recording-surface.c b/gfx/cairo/cairo/src/cairo-recording-surface.c
+--- a/gfx/cairo/cairo/src/cairo-recording-surface.c
++++ b/gfx/cairo/cairo/src/cairo-recording-surface.c
+@@ -276,17 +276,17 @@ _cairo_recording_surface_acquire_source_
+ 				     -surface->extents.y);
+ 
+     status = _cairo_recording_surface_replay (&surface->base, image);
+     if (unlikely (status)) {
+ 	cairo_surface_destroy (image);
+ 	return status;
+     }
+ 
+-    _cairo_surface_attach_snapshot (&surface->base, image, NULL);
++    cairo_surface_attach_snapshot (&surface->base, image, NULL);
+ 
+     *image_out = (cairo_image_surface_t *) image;
+     *image_extra = NULL;
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+ static void
+ _cairo_recording_surface_release_source_image (void			*abstract_surface,
+@@ -1046,17 +1046,17 @@ static cairo_status_t
+ _recording_surface_get_ink_bbox (cairo_recording_surface_t *surface,
+ 				 cairo_box_t *bbox,
+ 				 const cairo_matrix_t *transform)
+ {
+     cairo_surface_t *null_surface;
+     cairo_surface_t *analysis_surface;
+     cairo_status_t status;
+ 
+-    null_surface = _cairo_null_surface_create (surface->content);
++    null_surface = cairo_null_surface_create (surface->content);
+     analysis_surface = _cairo_analysis_surface_create (null_surface);
+     cairo_surface_destroy (null_surface);
+ 
+     status = analysis_surface->status;
+     if (unlikely (status))
+ 	return status;
+ 
+     if (transform != NULL)
+diff --git a/gfx/cairo/cairo/src/cairo-surface-private.h b/gfx/cairo/cairo/src/cairo-surface-private.h
+--- a/gfx/cairo/cairo/src/cairo-surface-private.h
++++ b/gfx/cairo/cairo/src/cairo-surface-private.h
+@@ -40,18 +40,16 @@
+ 
+ #include "cairo.h"
+ 
+ #include "cairo-types-private.h"
+ #include "cairo-list-private.h"
+ #include "cairo-reference-count-private.h"
+ #include "cairo-clip-private.h"
+ 
+-typedef void (*cairo_surface_func_t) (cairo_surface_t *);
+-
+ struct _cairo_surface {
+     const cairo_surface_backend_t *backend;
+     cairo_device_t *device;
+ 
+     /* We allow surfaces to override the backend->type by shoving something
+      * else into surface->type. This is for "wrapper" surfaces that want to
+      * hide their internal type from the user-level API. */
+     cairo_surface_type_t type;
+diff --git a/gfx/cairo/cairo/src/cairo-surface-snapshot.c b/gfx/cairo/cairo/src/cairo-surface-snapshot.c
+--- a/gfx/cairo/cairo/src/cairo-surface-snapshot.c
++++ b/gfx/cairo/cairo/src/cairo-surface-snapshot.c
+@@ -209,17 +209,17 @@ _cairo_surface_snapshot (cairo_surface_t
+ 	    if (unlikely (status)) {
+ 		cairo_surface_destroy (snap);
+ 		return _cairo_surface_create_in_error (status);
+ 	    }
+ 
+ 	    snap->device_transform = surface->device_transform;
+ 	    snap->device_transform_inverse = surface->device_transform_inverse;
+ 
+-	    _cairo_surface_attach_snapshot (surface, snap, NULL);
++	    cairo_surface_attach_snapshot (surface, snap, NULL);
+ 
+ 	    return snap;
+ 	}
+     }
+ 
+     snapshot = (cairo_surface_snapshot_t *)
+ 	_cairo_surface_has_snapshot (surface, &_cairo_surface_snapshot_backend);
+     if (snapshot != NULL)
+@@ -242,14 +242,14 @@ _cairo_surface_snapshot (cairo_surface_t
+     if (unlikely (status)) {
+ 	cairo_surface_destroy (&snapshot->base);
+ 	return _cairo_surface_create_in_error (status);
+     }
+ 
+     snapshot->base.device_transform = surface->device_transform;
+     snapshot->base.device_transform_inverse = surface->device_transform_inverse;
+ 
+-    _cairo_surface_attach_snapshot (surface,
++    cairo_surface_attach_snapshot (surface,
+ 				    &snapshot->base,
+ 				    _cairo_surface_snapshot_copy_on_write);
+ 
+     return &snapshot->base;
+ }
+diff --git a/gfx/cairo/cairo/src/cairo-surface-subsurface.c b/gfx/cairo/cairo/src/cairo-surface-subsurface.c
+--- a/gfx/cairo/cairo/src/cairo-surface-subsurface.c
++++ b/gfx/cairo/cairo/src/cairo-surface-subsurface.c
+@@ -326,17 +326,17 @@ _cairo_surface_subsurface_acquire_source
+ 		_cairo_image_surface_create_with_content (meta->content,
+ 							  surface->extents.width,
+ 							  surface->extents.height);
+ 	    if (unlikely (image->base.status))
+ 		return image->base.status;
+ 
+             cairo_surface_paint_to_target (&image->base, surface);
+ 
+-	    _cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
++	    cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
+ 
+ 	    *image_out = image;
+ 	    *extra_out = NULL;
+ 	    return CAIRO_STATUS_SUCCESS;
+ 	}
+     }
+ 
+     extra = malloc (sizeof (struct extra));
+diff --git a/gfx/cairo/cairo/src/cairo-surface.c b/gfx/cairo/cairo/src/cairo-surface.c
+--- a/gfx/cairo/cairo/src/cairo-surface.c
++++ b/gfx/cairo/cairo/src/cairo-surface.c
+@@ -305,51 +305,51 @@ _cairo_surface_detach_mime_data (cairo_s
+     if (! _cairo_surface_has_mime_data (surface))
+ 	return;
+ 
+     _cairo_user_data_array_fini (&surface->mime_data);
+     _cairo_user_data_array_init (&surface->mime_data);
+ }
+ 
+ static void
+-_cairo_surface_detach_snapshots (cairo_surface_t *surface)
++cairo_surface_detach_snapshots (cairo_surface_t *surface)
+ {
+     while (_cairo_surface_has_snapshots (surface)) {
+-	_cairo_surface_detach_snapshot (cairo_list_first_entry (&surface->snapshots,
++	cairo_surface_detach_snapshot (cairo_list_first_entry (&surface->snapshots,
+ 								cairo_surface_t,
+ 								snapshot));
+     }
+ }
+ 
+ void
+-_cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
++cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
+ {
+     assert (snapshot->snapshot_of != NULL);
+ 
+     snapshot->snapshot_of = NULL;
+     cairo_list_del (&snapshot->snapshot);
+ 
+     if (snapshot->snapshot_detach != NULL)
+ 	snapshot->snapshot_detach (snapshot);
+ 
+     cairo_surface_destroy (snapshot);
+ }
+ 
+ void
+-_cairo_surface_attach_snapshot (cairo_surface_t *surface,
++cairo_surface_attach_snapshot (cairo_surface_t *surface,
+ 				 cairo_surface_t *snapshot,
+ 				 cairo_surface_func_t detach_func)
+ {
+     assert (surface != snapshot);
+     assert (snapshot->snapshot_of != surface);
+ 
+     cairo_surface_reference (snapshot);
+ 
+     if (snapshot->snapshot_of != NULL)
+-	_cairo_surface_detach_snapshot (snapshot);
++	cairo_surface_detach_snapshot (snapshot);
+ 
+     snapshot->snapshot_of = surface;
+     snapshot->snapshot_detach = detach_func;
+ 
+     cairo_list_add (&snapshot->snapshot, &surface->snapshots);
+ 
+     assert (_cairo_surface_has_snapshot (surface, snapshot->backend) == snapshot);
+ }
+@@ -382,17 +382,17 @@ _cairo_surface_is_writable (cairo_surfac
+ 
+ static void
+ _cairo_surface_begin_modification (cairo_surface_t *surface)
+ {
+     assert (surface->status == CAIRO_STATUS_SUCCESS);
+     assert (! surface->finished);
+     assert (surface->snapshot_of == NULL);
+ 
+-    _cairo_surface_detach_snapshots (surface);
++    cairo_surface_detach_snapshots (surface);
+     _cairo_surface_detach_mime_data (surface);
+ }
+ 
+ void
+ _cairo_surface_init (cairo_surface_t			*surface,
+ 		     const cairo_surface_backend_t	*backend,
+ 		     cairo_device_t			*device,
+ 		     cairo_content_t			 content)
+@@ -711,19 +711,19 @@ cairo_surface_finish (cairo_surface_t *s
+ 
+     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
+ 	return;
+ 
+     if (surface->finished)
+ 	return;
+ 
+     /* update the snapshots *before* we declare the surface as finished */
+-    _cairo_surface_detach_snapshots (surface);
++    cairo_surface_detach_snapshots (surface);
+     if (surface->snapshot_of != NULL)
+-	_cairo_surface_detach_snapshot (surface);
++	cairo_surface_detach_snapshot (surface);
+ 
+     cairo_surface_flush (surface);
+     surface->finished = TRUE;
+ 
+     /* call finish even if in error mode */
+     if (surface->backend->finish) {
+ 	status = surface->backend->finish (surface);
+ 	if (unlikely (status))
+@@ -1106,17 +1106,17 @@ cairo_surface_flush (cairo_surface_t *su
+ 
+     if (surface->status)
+ 	return;
+ 
+     if (surface->finished)
+ 	return;
+ 
+     /* update the current snapshots *before* the user updates the surface */
+-    _cairo_surface_detach_snapshots (surface);
++    cairo_surface_detach_snapshots (surface);
+ 
+     if (surface->backend->flush) {
+ 	status = surface->backend->flush (surface);
+ 	if (unlikely (status))
+ 	    status = _cairo_surface_set_error (surface, status);
+     }
+ }
+ slim_hidden_def (cairo_surface_flush);
+@@ -1628,17 +1628,17 @@ _cairo_recording_surface_clone_similar (
+ 	    return similar->status;
+ 
+ 	status = _cairo_recording_surface_replay (src, similar);
+ 	if (unlikely (status)) {
+ 	    cairo_surface_destroy (similar);
+ 	    return status;
+ 	}
+ 
+-	_cairo_surface_attach_snapshot (src, similar, NULL);
++	cairo_surface_attach_snapshot (src, similar, NULL);
+ 
+ 	src_x = src_y = 0;
+     }
+ 
+     *clone_out = similar;
+     *clone_offset_x = src_x;
+     *clone_offset_y = src_y;
+     return CAIRO_STATUS_SUCCESS;
+diff --git a/gfx/cairo/cairo/src/cairo-vg-surface.c b/gfx/cairo/cairo/src/cairo-vg-surface.c
+--- a/gfx/cairo/cairo/src/cairo-vg-surface.c
++++ b/gfx/cairo/cairo/src/cairo-vg-surface.c
+@@ -977,17 +977,17 @@ _vg_setup_surface_source (cairo_vg_conte
+     status = _cairo_cache_insert (&context->snapshot_cache,
+ 				  &clone->snapshot_cache_entry);
+     if (unlikely (status)) {
+ 	clone->snapshot_cache_entry.hash = 0;
+ 	cairo_surface_destroy (&clone->base);
+ 	return status;
+     }
+ 
+-    _cairo_surface_attach_snapshot (spat->surface, &clone->base,
++    cairo_surface_attach_snapshot (spat->surface, &clone->base,
+ 				    _vg_surface_remove_from_cache);
+ 
+ DONE:
+     cairo_surface_destroy (&context->source->base);
+     context->source = clone;
+ 
+     vgSetParameteri (context->paint, VG_PAINT_TYPE, VG_PAINT_TYPE_PATTERN);
+ 
+diff --git a/gfx/cairo/cairo/src/cairo-xcb-surface.c b/gfx/cairo/cairo/src/cairo-xcb-surface.c
+--- a/gfx/cairo/cairo/src/cairo-xcb-surface.c
++++ b/gfx/cairo/cairo/src/cairo-xcb-surface.c
+@@ -560,17 +560,17 @@ _cairo_xcb_surface_acquire_source_image 
+ 	image = (cairo_image_surface_t *) cairo_surface_reference (&image->base);
+ 	goto DONE;
+     }
+ 
+     status = _get_image (surface, FALSE, &image);
+     if (unlikely (status))
+ 	return status;
+ 
+-    _cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
++    cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
+ 
+ DONE:
+     *image_out = image;
+     *image_extra = NULL;
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+ static void
+@@ -713,17 +713,17 @@ _cairo_xcb_surface_flush (void *abstract
+ 	status = cairo_surface_status (surface->fallback);
+ 
+ 	if (status == CAIRO_STATUS_SUCCESS) {
+ 	    status = _put_image (surface,
+ 				 (cairo_image_surface_t *) surface->fallback);
+ 	}
+ 
+ 	if (status == CAIRO_STATUS_SUCCESS) {
+-	    _cairo_surface_attach_snapshot (&surface->base,
++	    cairo_surface_attach_snapshot (&surface->base,
+ 					    surface->fallback,
+ 					    cairo_surface_finish);
+ 	}
+     }
+ 
+     cairo_surface_destroy (surface->fallback);
+     surface->fallback = NULL;
+ 
+diff --git a/gfx/cairo/cairo/src/cairo.h b/gfx/cairo/cairo/src/cairo.h
+--- a/gfx/cairo/cairo/src/cairo.h
++++ b/gfx/cairo/cairo/src/cairo.h
+@@ -214,16 +214,25 @@ typedef struct _cairo_pattern cairo_patt
+  *
+  * #cairo_destroy_func_t the type of function which is called when a
+  * data element is destroyed. It is passed the pointer to the data
+  * element and should free any memory and resources allocated for it.
+  **/
+ typedef void (*cairo_destroy_func_t) (void *data);
+ 
+ /**
++ * cairo_surface_func_t:
++ * @surface: The surface being referred to.
++ *
++ * #cairo_surface_func_t the type of function which is used for callback
++ * when a surface needs to be apssed as a parameter.
++ */
++typedef void (*cairo_surface_func_t) (cairo_surface_t *surface);
++
++/**
+  * cairo_user_data_key_t:
+  * @unused: not used; ignore.
+  *
+  * #cairo_user_data_key_t is used for attaching user data to cairo
+  * data structures.  The actual contents of the struct is never used,
+  * and there is no need to initialize the object; only the unique
+  * address of a #cairo_data_key_t object is used.  Typically, you
+  * would just use the address of a static #cairo_data_key_t object.
+@@ -2150,16 +2159,24 @@ cairo_surface_get_user_data (cairo_surfa
+ 			     const cairo_user_data_key_t *key);
+ 
+ cairo_public cairo_status_t
+ cairo_surface_set_user_data (cairo_surface_t		 *surface,
+ 			     const cairo_user_data_key_t *key,
+ 			     void			 *user_data,
+ 			     cairo_destroy_func_t	 destroy);
+ 
++cairo_public void
++cairo_surface_attach_snapshot (cairo_surface_t *surface,
++				cairo_surface_t *snapshot,
++				cairo_surface_func_t detach_func);
++
++cairo_public void
++cairo_surface_detach_snapshot (cairo_surface_t *snapshot);
++
+ #define CAIRO_MIME_TYPE_JPEG "image/jpeg"
+ #define CAIRO_MIME_TYPE_PNG "image/png"
+ #define CAIRO_MIME_TYPE_JP2 "image/jp2"
+ #define CAIRO_MIME_TYPE_URI "text/x-uri"
+ 
+ cairo_public void
+ cairo_surface_get_mime_data (cairo_surface_t		*surface,
+                              const char			*mime_type,
+@@ -2328,16 +2345,21 @@ cairo_recording_surface_create (cairo_co
+ 
+ cairo_public void
+ cairo_recording_surface_ink_extents (cairo_surface_t *surface,
+                                      double *x0,
+                                      double *y0,
+                                      double *width,
+                                      double *height);
+ 
++/* Null-surface functions */
++
++cairo_public cairo_surface_t *
++cairo_null_surface_create (cairo_content_t content);
++
+ /* Pattern creation functions */
+ 
+ cairo_public cairo_pattern_t *
+ cairo_pattern_create_rgb (double red, double green, double blue);
+ 
+ cairo_public cairo_pattern_t *
+ cairo_pattern_create_rgba (double red, double green, double blue,
+ 			   double alpha);
+diff --git a/gfx/cairo/cairo/src/cairoint.h b/gfx/cairo/cairo/src/cairoint.h
+--- a/gfx/cairo/cairo/src/cairoint.h
++++ b/gfx/cairo/cairo/src/cairoint.h
+@@ -1770,27 +1770,19 @@ _cairo_surface_clone_similar (cairo_surf
+ 			      int               height,
+ 			      int              *clone_offset_x,
+ 			      int              *clone_offset_y,
+ 			      cairo_surface_t **clone_out);
+ 
+ cairo_private cairo_surface_t *
+ _cairo_surface_snapshot (cairo_surface_t *surface);
+ 
+-cairo_private void
+-_cairo_surface_attach_snapshot (cairo_surface_t *surface,
+-				cairo_surface_t *snapshot,
+-				cairo_surface_func_t detach_func);
+-
+ cairo_private cairo_surface_t *
+ _cairo_surface_has_snapshot (cairo_surface_t *surface,
+-			     const cairo_surface_backend_t *backend);
+-
+-cairo_private void
+-_cairo_surface_detach_snapshot (cairo_surface_t *snapshot);
++		 	     const cairo_surface_backend_t *backend);
+ 
+ cairo_private cairo_bool_t
+ _cairo_surface_is_similar (cairo_surface_t *surface_a,
+ 	                   cairo_surface_t *surface_b);
+ 
+ cairo_private cairo_bool_t
+ _cairo_surface_get_extents (cairo_surface_t         *surface,
+ 			    cairo_rectangle_int_t   *extents);
