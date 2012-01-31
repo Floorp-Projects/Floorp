@@ -386,11 +386,21 @@ Jsvalify(Class *c)
 {
     return (JSClass *)c;
 }
+static JS_ALWAYS_INLINE const JSClass *
+Jsvalify(const Class *c)
+{
+    return (const JSClass *)c;
+}
 
 static JS_ALWAYS_INLINE Class *
 Valueify(JSClass *c)
 {
     return (Class *)c;
+}
+static JS_ALWAYS_INLINE const Class *
+Valueify(const JSClass *c)
+{
+    return (const Class *)c;
 }
 
 /*
