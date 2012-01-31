@@ -1,0 +1,22 @@
+diff --git a/content/canvas/test/webgl/resources/webgl-test-harness.js b/content/canvas/test/webgl/resources/webgl-test-harness.js
+--- a/content/canvas/test/webgl/resources/webgl-test-harness.js
++++ b/content/canvas/test/webgl/resources/webgl-test-harness.js
+@@ -362,18 +362,16 @@ TestHarness.prototype.addFiles_ = functi
+   }
+   log("total files: " + files.length);
+   for (var ii = 0; ii < files.length; ++ii) {
+     log("" + ii + ": " + files[ii]);
+     this.files.push(new TestFile(files[ii]));
+     this.reportFunc(TestHarness.reportType.ADD_PAGE, files[ii], undefined);
+   }
+   this.reportFunc(TestHarness.reportType.READY, undefined, undefined);
+-  this.nextFileIndex = files.length;
+-  this.lastFileIndex = files.length;
+ }
+ 
+ TestHarness.prototype.runTests = function(opt_start, opt_count) {
+   var count = opt_count || this.files.length;
+   this.nextFileIndex = opt_start || 0;
+   this.lastFileIndex = this.nextFileIndex + count;
+   this.startNextFile();
+ };

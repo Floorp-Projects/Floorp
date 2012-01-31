@@ -110,3 +110,5 @@ patch -p3 < user-config.patch
 patch -p3 < uninitialized-margin.patch
 # Bug 722011 - Fix comma at end of enum list
 patch -p3 < fix-comma-end-enum-list.patch
+# Bug 719872 - Fix crash on Android by reverting to older FontHost impl
+patch -p3 < old-android-fonthost.patch
