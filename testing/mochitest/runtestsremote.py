@@ -117,6 +117,11 @@ class RemoteOptions(MochitestOptions):
                     help = "Path to the folder where robocop.apk is located at.  Primarily used for ADB test running")
         defaults["robocopPath"] = ""
 
+        self.add_option("--robocop-ids", action = "store",
+                    type = "string", dest = "robocopIds",
+                    help = "name of the file containing the view ID map (fennec_ids.txt)")
+        defaults["robocopIds"] = ""
+
         defaults["remoteTestRoot"] = None
         defaults["logFile"] = "mochitest.log"
         defaults["autorun"] = True
@@ -187,6 +192,12 @@ class RemoteOptions(MochitestOptions):
                 print "ERROR: Unable to find robocop.apk in path '%s'" % options.robocopPath
                 return None
             options.robocopPath = os.path.abspath(options.robocopPath)
+
+        if options.robocopIds != "":
+            if not os.path.exists(options.robocopIds):
+                print "ERROR: Unable to find specified IDs file '%s'" % options.robocopIds
+                return None
+            options.robocopIds = os.path.abspath(options.robocopIds)
 
         return options
 
@@ -392,8 +403,8 @@ def main():
         dm.removeFile("/sdcard/robotium.config")
         dm.pushFile("robotium.config", "/sdcard/robotium.config")
         fennec_ids = os.path.abspath("fennec_ids.txt")
-        if not os.path.exists(fennec_ids) and options.robocopPath:
-            fennec_ids = os.path.abspath(os.path.join(options.robocopPath, "fennec_ids.txt"))
+        if not os.path.exists(fennec_ids) and options.robocopIds:
+            fennec_ids = options.robocopIds
         dm.pushFile(fennec_ids, "/sdcard/fennec_ids.txt")
         options.extraPrefs.append('robocop.logfile="%s/robocop.log"' % deviceRoot)
 

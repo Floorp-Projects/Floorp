@@ -907,7 +907,7 @@ static const cairo_surface_backend_t cairo_null_surface_backend = {
 };
 
 cairo_surface_t *
-_cairo_null_surface_create (cairo_content_t content)
+cairo_null_surface_create (cairo_content_t content)
 {
     cairo_surface_t *surface;
 

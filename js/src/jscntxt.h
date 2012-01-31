@@ -453,7 +453,6 @@ struct JSRuntime
 #ifdef JS_THREADSAFE
     /* These combine to interlock the GC and new requests. */
     PRLock              *gcLock;
-    uint32_t            requestCount;
 
     js::GCHelperThread  gcHelperThread;
 #endif /* JS_THREADSAFE */
@@ -559,7 +558,7 @@ struct JSRuntime
      * reporting OOM error when cx is not null. We will not GC from here.
      */
     void* malloc_(size_t bytes, JSContext *cx = NULL) {
-        updateMallocCounter(bytes);
+        updateMallocCounter(cx, bytes);
         void *p = ::js_malloc(bytes);
         return JS_LIKELY(!!p) ? p : onOutOfMemory(NULL, bytes, cx);
     }
@@ -569,14 +568,14 @@ struct JSRuntime
      * reporting OOM error when cx is not null. We will not GC from here.
      */
     void* calloc_(size_t bytes, JSContext *cx = NULL) {
-        updateMallocCounter(bytes);
+        updateMallocCounter(cx, bytes);
         void *p = ::js_calloc(bytes);
         return JS_LIKELY(!!p) ? p : onOutOfMemory(reinterpret_cast<void *>(1), bytes, cx);
     }
 
     void* realloc_(void* p, size_t oldBytes, size_t newBytes, JSContext *cx = NULL) {
         JS_ASSERT(oldBytes < newBytes);
-        updateMallocCounter(newBytes - oldBytes);
+        updateMallocCounter(cx, newBytes - oldBytes);
         void *p2 = ::js_realloc(p, newBytes);
         return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, newBytes, cx);
     }
@@ -587,7 +586,7 @@ struct JSRuntime
          * previously allocated memory.
          */
         if (!p)
-            updateMallocCounter(bytes);
+            updateMallocCounter(cx, bytes);
         void *p2 = ::js_realloc(p, bytes);
         return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, bytes, cx);
     }
@@ -621,13 +620,7 @@ struct JSRuntime
      * The function must be called outside the GC lock and in case of OOM error
      * the caller must ensure that no deadlock possible during OOM reporting.
      */
-    void updateMallocCounter(size_t nbytes) {
-        /* We tolerate any thread races when updating gcMallocBytes. */
-        ptrdiff_t newCount = gcMallocBytes - ptrdiff_t(nbytes);
-        gcMallocBytes = newCount;
-        if (JS_UNLIKELY(newCount <= 0))
-            onTooMuchMalloc();
-    }
+    void updateMallocCounter(JSContext *cx, size_t nbytes);
 
     /*
      * The function must be called outside the GC lock.
@@ -1363,14 +1356,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
  */
 extern JSContext *
 js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
-
-/*
- * Iterate through contexts with active requests. The caller must be holding
- * rt->gcLock in case of a thread-safe build, or otherwise guarantee that the
- * context list is not alternated asynchroniously.
- */
-extern JS_FRIEND_API(JSContext *)
-js_NextActiveContext(JSRuntime *, JSContext *);
 
 #ifdef va_start
 extern JSBool
