@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <org.mozilla.gecko.AwesomeBarTabs xmlns:android="http://schemas.android.com/apk/res/android"
                                   android:id="@+id/awesomebar_tabs"
-                                  android:layout_width="match_parent"
+                                  android:layout_width="fill_parent"
                                   android:layout_height="wrap_content">
 
     <LinearLayout android:orientation="vertical"
