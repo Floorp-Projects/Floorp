@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Hal.h"
 #include "PowerManagerService.h"
 
 namespace mozilla {
@@ -56,13 +57,15 @@ PowerManagerService::GetInstance()
 NS_IMETHODIMP
 PowerManagerService::Reboot()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  hal::Reboot();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PowerManagerService::PowerOff()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  hal::PowerOff();
+  return NS_OK;
 }
 
 } // power
