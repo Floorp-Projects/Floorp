@@ -599,12 +599,9 @@ SSLServerCertVerificationJob::Dispatch(const void * fdForLogging,
                                        CERTCertificate * serverCert)
 {
   // Runs on the socket transport thread
-
   if (!socketInfo || !serverCert) {
     NS_ERROR("Invalid parameters for SSL server cert validation");
-    socketInfo->SetCertVerificationResult(PR_INVALID_STATE_ERROR,
-                                          PlainErrorMessage);
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
     return SECFailure;
   }
   
@@ -619,10 +616,16 @@ SSLServerCertVerificationJob::Dispatch(const void * fdForLogging,
     nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
   }
   if (NS_FAILED(nrv)) {
+    // We can't call SetCertVerificationResult here to change
+    // mCertVerificationState because SetCertVerificationResult will call
+    // libssl functions that acquire SSL locks that are already being held at
+    // this point. socketInfo->mCertVerificationState will be stuck at
+    // waiting_for_cert_verification here, but that is OK because we already
+    // have to be able to handle cases where we encounter non-cert errors while
+    // in that state.
     PRErrorCode error = nrv == NS_ERROR_OUT_OF_MEMORY
                       ? SEC_ERROR_NO_MEMORY
                       : PR_INVALID_STATE_ERROR;
-    socketInfo->SetCertVerificationResult(error, PlainErrorMessage);
     PORT_SetError(error);
     return SECFailure;
   }

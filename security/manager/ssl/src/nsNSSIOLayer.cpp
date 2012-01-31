@@ -967,6 +967,10 @@ nsNSSSocketInfo::SetCertVerificationWaiting()
   mCertVerificationStarted = PR_IntervalNow();
 }
 
+// Be careful that SetCertVerificationResult does NOT get called while we are
+// processing a SSL callback function, because SSL_AuthCertificateComplete will
+// attempt to acquire locks that are already held by libssl when it calls
+// callbacks.
 void
 nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
                                            SSLErrorMessageType errorMessageType)
