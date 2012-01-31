@@ -1147,12 +1147,17 @@ public class GeckoAppShell
     }
 
     public static void setSelectedLocale(String localeCode) {
-        /* We're not using this, not need to save it (see bug 635342)
-          SharedPreferences settings =
+        /* Bug 713464: This method is still called from Gecko side.
+           Earlier we had an option to run Firefox in a language other than system's language.
+           However, this is not supported as of now.
+           Gecko resets the locale to en-US by calling this function with an empty string.
+           This affects GeckoPreferences activity in multi-locale builds.
+
+        //We're not using this, not need to save it (see bug 635342)
+        SharedPreferences settings =
             GeckoApp.mAppContext.getPreferences(Activity.MODE_PRIVATE);
         settings.edit().putString(GeckoApp.mAppContext.getPackageName() + ".locale",
                                   localeCode).commit();
-        */
         Locale locale;
         int index;
         if ((index = localeCode.indexOf('-')) != -1 ||
@@ -1169,6 +1174,7 @@ public class GeckoAppShell
         Configuration config = res.getConfiguration();
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
+        */
     }
 
     public static int[] getSystemColors() {
