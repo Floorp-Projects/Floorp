@@ -78,6 +78,12 @@
   margin: 0 auto;
 }
 
+/* CELLS */
+.cell {
+  outline: 1px dashed #ccc;
+  outline-offset: -1px;
+}
+
 /* SITES */
 .site {
   background-color: #ececec;
