@@ -369,6 +369,26 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
             cr.insert(Browser.BOOKMARKS_URI, values);
     }
 
+    public byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
+        Cursor c = cr.query(Browser.BOOKMARKS_URI,
+                            new String[] { URL_COLUMN_THUMBNAIL },
+                            Browser.BookmarkColumns.URL + " = ?",
+                            new String[] { uri },
+                            null);
+
+        if (!c.moveToFirst()) {
+            c.close();
+            return null;
+        }
+
+        int thumbnailIndex = c.getColumnIndexOrThrow(URL_COLUMN_THUMBNAIL);
+
+        byte[] b = c.getBlob(thumbnailIndex);
+        c.close();
+
+        return b;
+    }
+
     private static class AndroidDBCursor extends CursorWrapper {
         public AndroidDBCursor(Cursor c) {
             super(c);
