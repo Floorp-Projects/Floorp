@@ -455,9 +455,19 @@ AndroidGraphicBuffer::Bind()
   return ensureNoGLError("glEGLImageTargetTexture2DOES");
 }
 
-static const char* sAllowedBoards[] = {
-  "venus2", // Motorola Droid Pro
-  "tuna", // Galaxy Nexus
+static const char* const sAllowedBoards[] = {
+  "venus2",     // Motorola Droid Pro
+  "tuna",       // Galaxy Nexus
+  "omap4sdp",   // Amazon Kindle Fire
+  "droid2",     // Motorola Droid 2
+  "targa",      // Motorola Droid Bionic
+  "spyder",     // Motorola Razr
+  "shadow",     // Motorola Droid X
+  "SGH-I897",   // Samsung Galaxy S
+  "GT-I9100",   // Samsung Galaxy SII
+  "sgh-i997",   // Samsung Infuse 4G
+  "herring",    // Samsung Nexus S
+  "sgh-t839",   // Samsung Sidekick 4G
   NULL
 };
 
@@ -480,6 +490,7 @@ AndroidGraphicBuffer::IsBlacklisted()
     return true;
   }
 
+  // FIXME: (Bug 722605) use something better than a linear search
   for (int i = 0; sAllowedBoards[i]; i++) {
     if (board.Find(sAllowedBoards[i]) >= 0) {
       LOG("allowing board '%s' based on '%s'\n", boardUtf8, sAllowedBoards[i]);
