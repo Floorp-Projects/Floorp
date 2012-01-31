@@ -150,8 +150,6 @@ abstract public class GeckoApp
     public int mOwnActivityDepth = 0;
     private boolean mRestoreSession = false;
 
-    private Vector<View> mPluginViews = new Vector<View>();
-
     public interface OnTabsChangedListener {
         public void onTabsChanged(Tab tab);
     }
@@ -741,6 +739,9 @@ abstract public class GeckoApp
                     mDoorHangerPopup.updatePopup();
                     mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
                     mLayerController.setWaitForTouchListeners(false);
+
+                    if (tab != null)
+                        hidePluginViews(tab);
                 }
             }
         });
@@ -1367,6 +1368,12 @@ abstract public class GeckoApp
                 JSONObject viewportObject;
                 ViewportMetrics pluginViewport;
 
+                Tabs tabs = Tabs.getInstance();
+                Tab tab = tabs.getSelectedTab();
+
+                if (tab == null)
+                    return;
+
                 ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
                 
                 try {
@@ -1389,13 +1396,14 @@ abstract public class GeckoApp
                     }
 
                     mPluginContainer.addView(view, lp);
-                    mPluginViews.add(view);
+                    tab.addPluginView(view);
                 } else {
                     lp = (PluginLayoutParams)view.getLayoutParams();
                     lp.reset(x, y, w, h, pluginViewport);
                     lp.reposition(targetViewport);
                     try {
                         mPluginContainer.updateViewLayout(view, lp);
+                        view.setVisibility(View.VISIBLE);
                     } catch (IllegalArgumentException e) {
                         Log.i(LOGTAG, "e:" + e);
                         // it can be the case where we
@@ -1412,14 +1420,30 @@ abstract public class GeckoApp
             public void run() {
                 try {
                     mPluginContainer.removeView(view);
-                    mPluginViews.remove(view);
+
+                    Tabs tabs = Tabs.getInstance();
+                    Tab tab = tabs.getSelectedTab();
+                    if (tab == null)
+                        return;
+
+                    tab.removePluginView(view);
                 } catch (Exception e) {}
             }
         });
     }
 
     public void hidePluginViews() {
-        for (View view : mPluginViews) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+
+        if (tab == null)
+            return;
+
+        hidePluginViews(tab);
+    }
+
+    public void hidePluginViews(Tab tab) {
+        for (View view : tab.getPluginViews()) {
             view.setVisibility(View.GONE);
         }
     }
@@ -1428,13 +1452,27 @@ abstract public class GeckoApp
         repositionPluginViews(true);
     }
 
+    public void showPluginViews(Tab tab) {
+        repositionPluginViews(tab, true);
+    }
+
     public void repositionPluginViews(boolean setVisible) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+
+        if (tab == null)
+            return;
+
+        repositionPluginViews(tab, setVisible);
+    }
+
+    public void repositionPluginViews(Tab tab, boolean setVisible) {
         ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
 
         if (targetViewport == null)
             return;
 
-        for (View view : mPluginViews) {
+        for (View view : tab.getPluginViews()) {
             PluginLayoutParams lp = (PluginLayoutParams)view.getLayoutParams();
             lp.reposition(targetViewport);
 
