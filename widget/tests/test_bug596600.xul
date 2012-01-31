@@ -36,9 +36,9 @@ function moveMouseTo(x, y, andThen) {
 }
 
 function openWindows() {
-  gLeftWindow = open('window_bug596600.xul', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200');
+  gLeftWindow = open('empty_window.xul', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200');
   SimpleTest.waitForFocus(function () {
-    gRightWindow = open('window_bug596600.xul', '', 'chrome,screenX=300,screenY=50,width=200,height=200');
+    gRightWindow = open('empty_window.xul', '', 'chrome,screenX=300,screenY=50,width=200,height=200');
     SimpleTest.waitForFocus(attachIFrameToRightWindow, gRightWindow);
   }, gLeftWindow);
 }
