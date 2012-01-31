@@ -101,8 +101,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsAccessNode, LastRelease())
 // nsAccessNode construction/desctruction
 
 nsAccessNode::
-  nsAccessNode(nsIContent* aContent, nsDocAccessible* aDoc) :
-  mContent(aContent), mDoc(aDoc)
+  nsAccessNode(nsIContent *aContent, nsIWeakReference *aShell) :
+  mContent(aContent), mWeakShell(aShell)
 {
 #ifdef DEBUG_A11Y
   mIsInitialized = false;
@@ -111,15 +111,15 @@ nsAccessNode::
 
 nsAccessNode::~nsAccessNode()
 {
-  NS_ASSERTION(!mDoc, "LastRelease was never called!?!");
+  NS_ASSERTION(!mWeakShell, "LastRelease was never called!?!");
 }
 
 void nsAccessNode::LastRelease()
 {
   // First cleanup if needed...
-  if (mDoc) {
+  if (mWeakShell) {
     Shutdown();
-    NS_ASSERTION(!mDoc, "A Shutdown() impl forgot to call its parent's Shutdown?");
+    NS_ASSERTION(!mWeakShell, "A Shutdown() impl forgot to call its parent's Shutdown?");
   }
   // ... then die.
   delete this;
@@ -145,7 +145,7 @@ void
 nsAccessNode::Shutdown()
 {
   mContent = nsnull;
-  mDoc = nsnull;
+  mWeakShell = nsnull;
 }
 
 nsApplicationAccessible*
@@ -227,15 +227,31 @@ void nsAccessNode::ShutdownXPAccessibility()
   NotifyA11yInitOrShutdown(false);
 }
 
+already_AddRefed<nsIPresShell>
+nsAccessNode::GetPresShell()
+{
+  nsIPresShell* presShell = nsnull;
+  if (mWeakShell)
+    CallQueryReferent(mWeakShell.get(), &presShell);
+
+  return presShell;
+}
+
 // nsAccessNode protected
 nsPresContext* nsAccessNode::GetPresContext()
 {
-  if (IsDefunct())
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+  if (!presShell) {
     return nsnull;
+  }
+  return presShell->GetPresContext();
+}
 
-  nsIPresShell* presShell(mDoc->PresShell());
-
-  return presShell ? presShell->GetPresContext() : nsnull;
+nsDocAccessible *
+nsAccessNode::GetDocAccessible() const
+{
+  return mContent ?
+    GetAccService()->GetDocAccessible(mContent->OwnerDoc()) : nsnull;
 }
 
 nsRootAccessible*
@@ -322,13 +338,13 @@ nsAccessNode::ScrollTo(PRUint32 aScrollType)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsIPresShell* shell = mDoc->PresShell();
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsIContent* content = frame->GetContent();
+  nsCOMPtr<nsIContent> content = frame->GetContent();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   PRInt16 vPercent, hPercent;
@@ -399,7 +415,9 @@ nsAccessNode::GetCurrentFocus()
 {
   // XXX: consider to use nsFocusManager directly, it allows us to avoid
   // unnecessary query interface calls.
-  nsIDocument* doc = GetDocumentNode();
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, nsnull);
+  nsIDocument *doc = shell->GetDocument();
   NS_ENSURE_TRUE(doc, nsnull);
 
   nsIDOMWindow* win = doc->GetWindow();

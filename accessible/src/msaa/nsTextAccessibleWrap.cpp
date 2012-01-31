@@ -56,8 +56,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsTextAccessibleWrap::
-  nsTextAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsTextAccessible(aContent, aDoc)
+  nsTextAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsTextAccessible(aContent, aShell)
 {
 }
 

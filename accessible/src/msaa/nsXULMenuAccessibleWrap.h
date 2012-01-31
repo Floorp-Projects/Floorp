@@ -43,7 +43,7 @@
 class nsXULMenuitemAccessibleWrap : public nsXULMenuitemAccessible
 {
 public:
-  nsXULMenuitemAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULMenuitemAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsXULMenuitemAccessibleWrap() {}
 
   // nsIAccessible

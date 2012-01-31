@@ -217,15 +217,17 @@ public:
    * Return an accessible for the given DOM node or container accessible if
    * the node is not accessible.
    */
-  nsAccessible* GetAccessibleOrContainer(nsINode* aNode, nsIPresShell* aPresShell);
+  nsAccessible* GetAccessibleOrContainer(nsINode* aNode,
+                                         nsIWeakReference* aWeakShell);
 
   /**
    * Return a container accessible for the given DOM node.
    */
-  inline nsAccessible* GetContainerAccessible(nsINode* aNode, nsIPresShell* aPresShell)
+  inline nsAccessible* GetContainerAccessible(nsINode* aNode,
+                                              nsIWeakReference* aWeakShell)
   {
     return aNode ?
-      GetAccessibleOrContainer(aNode->GetNodeParent(), aPresShell) : nsnull;
+      GetAccessibleOrContainer(aNode->GetNodeParent(), aWeakShell) : nsnull;
   }
 
 private:
@@ -251,28 +253,28 @@ private:
    * interface.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleByType(nsIContent* aContent, nsDocAccessible* aDoc);
+    CreateAccessibleByType(nsIContent* aContent, nsIWeakReference* aWeakShell);
 
   /**
    * Create accessible for HTML node by tag name.
    */
   already_AddRefed<nsAccessible>
     CreateHTMLAccessibleByMarkup(nsIFrame* aFrame, nsIContent* aContent,
-                                 nsDocAccessible* aDoc);
+                                 nsIWeakReference* aWeakShell);
 
   /**
    * Create accessible if parent is a deck frame.
    */
   already_AddRefed<nsAccessible>
     CreateAccessibleForDeckChild(nsIFrame* aFrame, nsIContent* aContent,
-                                 nsDocAccessible* aDoc);
+                                 nsIWeakReference* aWeakShell);
 
 #ifdef MOZ_XUL
   /**
    * Create accessible for XUL tree element.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleForXULTree(nsIContent* aContent, nsDocAccessible* aDoc);
+    CreateAccessibleForXULTree(nsIContent* aContent, nsIWeakReference* aWeakShell);
 #endif
 
   /**

@@ -76,8 +76,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLTableCellAccessible::
-  nsHTMLTableCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  nsHTMLTableCellAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -347,11 +347,9 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
     else if (aRowOrColumnHeaderCell == nsAccUtils::eColumnHeaderCells)
       desiredRole = roles::COLUMNHEADER;
 
-    nsIWeakReference* weakShell = mDoc->GetWeakShell();
-
     do {
       nsAccessible* headerCell =
-        GetAccService()->GetAccessibleInWeakShell(headerCellElm, weakShell);
+        GetAccService()->GetAccessibleInWeakShell(headerCellElm, mWeakShell);
 
       if (headerCell && headerCell->Role() == desiredRole)
         headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
@@ -378,9 +376,9 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLTableHeaderCellAccessible::
-  nsHTMLTableHeaderCellAccessible(nsIContent* aContent,
-                                  nsDocAccessible* aDoc) :
-  nsHTMLTableCellAccessible(aContent, aDoc)
+  nsHTMLTableHeaderCellAccessible(nsIContent *aContent,
+                                  nsIWeakReference *aShell) :
+  nsHTMLTableCellAccessible(aContent, aShell)
 {
 }
 
@@ -438,8 +436,8 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLTableAccessible::
-  nsHTMLTableAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsHTMLTableAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -460,7 +458,7 @@ nsHTMLTableAccessible::CacheChildren()
   // caption only, because nsAccessibilityService ensures we don't create
   // accessibles for the other captions, since only the first is actually
   // visible.
-  nsAccTreeWalker walker(mDoc->GetWeakShell(), mContent, GetAllowsAnonChildAccessibles());
+  nsAccTreeWalker walker(mWeakShell, mContent, GetAllowsAnonChildAccessibles());
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {
@@ -706,7 +704,6 @@ nsHTMLTableAccessible::GetSelectedCells(nsIArray **aCells)
     rowSpan, colSpan, actualRowSpan, actualColSpan;
   bool isSelected = false;
 
-  nsIWeakReference* weakShell = mDoc->GetWeakShell();
   PRInt32 rowIndex, index;
   for (rowIndex = 0, index = 0; rowIndex < rowCount; rowIndex++) {
     PRInt32 columnIndex;
@@ -722,7 +719,7 @@ nsHTMLTableAccessible::GetSelectedCells(nsIArray **aCells)
           startColIndex == columnIndex && isSelected) {
         nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
         nsAccessible *cell =
-          GetAccService()->GetAccessibleInWeakShell(cellContent, weakShell);
+          GetAccService()->GetAccessibleInWeakShell(cellContent, mWeakShell);
         selCells->AppendElement(static_cast<nsIAccessible*>(cell), false);
       }
     }
@@ -895,8 +892,8 @@ nsHTMLTableAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
-  nsAccessible* cell = 
-    GetAccService()->GetAccessibleInWeakShell(cellContent, mDoc->GetWeakShell());
+  nsAccessible *cell =
+    GetAccService()->GetAccessibleInWeakShell(cellContent, mWeakShell);
 
   if (!cell) {
     return NS_ERROR_INVALID_ARG;
@@ -1197,7 +1194,7 @@ nsHTMLTableAccessible::AddRowOrColumnToSelection(PRInt32 aIndex,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIPresShell* presShell(mDoc->PresShell());
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   nsRefPtr<nsFrameSelection> tableSelection =
     const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
@@ -1229,7 +1226,7 @@ nsHTMLTableAccessible::RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
   nsITableLayout *tableLayout = GetTableLayout();
   NS_ENSURE_STATE(tableLayout);
 
-  nsIPresShell* presShell(mDoc->PresShell());
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   nsRefPtr<nsFrameSelection> tableSelection =
     const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 

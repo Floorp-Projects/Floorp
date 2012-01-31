@@ -162,9 +162,9 @@ mai_atk_socket_get_extents(AtkComponent* aComponent,
 }
 
 AtkSocketAccessible::AtkSocketAccessible(nsIContent* aContent,
-                                         nsDocAccessible* aDoc,
+                                         nsIWeakReference* aShell,
                                          const nsCString& aPlugId) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsAccessibleWrap(aContent, aShell)
 {
   mAtkObject = mai_atk_socket_new(this);
   if (!mAtkObject)

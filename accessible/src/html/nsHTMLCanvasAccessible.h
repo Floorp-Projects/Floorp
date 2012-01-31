@@ -46,7 +46,7 @@
 class nsHTMLCanvasAccessible : public nsHyperTextAccessible
 {
 public:
-  nsHTMLCanvasAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLCanvasAccessible(nsIContent* aContent, nsIWeakReference* aShell);
   virtual ~nsHTMLCanvasAccessible() { }
 
   // nsAccessible
