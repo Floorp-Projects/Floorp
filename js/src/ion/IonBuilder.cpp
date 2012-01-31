@@ -2557,12 +2557,23 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *pc)
     JS_ASSERT(predecessor->stackDepth() == osrBlock->stackDepth());
     JS_ASSERT(info().scopeChainSlot() == 0);
     JS_ASSERT(osrBlock->getSlot(info().scopeChainSlot())->type() == MIRType_Object);
+
+    Vector<MIRType> slotTypes(cx);
+    if (!slotTypes.growByUninitialized(osrBlock->stackDepth()))
+        return NULL;
+
+    // Fill slotTypes with the types of the predecessor block.
+    for (uint32 i = 0; i < osrBlock->stackDepth(); i++)
+        slotTypes[i] = predecessor->getSlot(i)->type();
+
+    // Update slotTypes for slots that may have a different type at this join point.
+    oracle->getNewTypesAtJoinPoint(script, pc, slotTypes);
+
     for (uint32 i = 1; i < osrBlock->stackDepth(); i++) {
-        MIRType guessType = predecessor->getSlot(i)->type();
-        if (guessType != MIRType_Value) {
+        if (slotTypes[i] != MIRType_Value) {
             MDefinition *def = osrBlock->getSlot(i);
             JS_ASSERT(def->type() == MIRType_Value);
-            MInstruction *actual = MUnbox::New(def, guessType, MUnbox::Fallible);
+            MInstruction *actual = MUnbox::New(def, slotTypes[i], MUnbox::Fallible);
             osrBlock->add(actual);
             osrBlock->rewriteSlot(i, actual);
         }
