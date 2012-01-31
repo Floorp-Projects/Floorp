@@ -77,7 +77,6 @@ endif
 DIRS += \
   base \
   battery \
-  power \
   sms \
   src \
   locales \
