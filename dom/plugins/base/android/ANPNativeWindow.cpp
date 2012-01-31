@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Doug Turner <dougt@mozilla.com>
+ *   James Willcox <jwillcox@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,111 +36,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "assert.h"
-#include "ANPBase.h"
+// must include config.h first for webkit to fiddle with new/delete
 #include <android/log.h>
 #include "AndroidBridge.h"
-#include "nsNPAPIPluginInstance.h"
+#include "AndroidMediaLayer.h"
+#include "ANPBase.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsPluginInstanceOwner.h"
-
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
-#define ASSIGN(obj, name)   (obj)->name = anp_window_##name
+#include "nsNPAPIPluginInstance.h"
+#include "gfxRect.h"
 
 using namespace mozilla;
+using namespace mozilla;
 
-void
-anp_window_setVisibleRects(NPP instance, const ANPRectI rects[], int32_t count)
-{
-  NOT_IMPLEMENTED();
-}
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
+#define ASSIGN(obj, name)   (obj)->name = anp_native_window_##name
 
-void
-anp_window_clearVisibleRects(NPP instance)
-{
-  NOT_IMPLEMENTED();
-}
-
-void
-anp_window_showKeyboard(NPP instance, bool value)
-{
-  NOT_IMPLEMENTED();
-}
-
-void
-anp_window_requestFullScreen(NPP instance)
-{
-  NOT_IMPLEMENTED();
-}
-
-void
-anp_window_exitFullScreen(NPP instance)
-{
-  NOT_IMPLEMENTED();
-}
-
-void
-anp_window_requestCenterFitZoom(NPP instance)
-{
-  NOT_IMPLEMENTED();
-}
-
-ANPRectI
-anp_window_visibleRect(NPP instance)
-{
-  ANPRectI rect = { 0, 0, 0, 0 };
-
+static ANPNativeWindow anp_native_window_acquireNativeWindow(NPP instance) {
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
 
   nsPluginInstanceOwner* owner;
   if (NS_FAILED(pinst->GetOwner((nsIPluginInstanceOwner**)&owner))) {
-    return rect;
+    return NULL;
   }
 
-  nsIntRect visibleRect = owner->GetVisibleRect();
-  rect.left = visibleRect.x;
-  rect.top = visibleRect.y;
-  rect.right = visibleRect.x + visibleRect.width;
-  rect.bottom = visibleRect.y + visibleRect.height;
 
-  return rect;
+  ANPNativeWindow window = owner->Layer()->GetNativeWindowForContent();
+  owner->Invalidate();
+
+  return window;
 }
 
-void anp_window_requestFullScreenOrientation(NPP instance, ANPScreenOrientation orientation)
-{
-  NOT_IMPLEMENTED();
+static void anp_native_window_invertPluginContent(NPP instance, bool isContentInverted) {
+  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+  nsPluginInstanceOwner* owner;
+  if (NS_FAILED(pinst->GetOwner((nsIPluginInstanceOwner**)&owner))) {
+    return;
+  }
+
+  owner->Layer()->SetInverted(isContentInverted);
 }
 
-void InitWindowInterface(ANPWindowInterfaceV0 *i) {
-  _assert(i->inSize == sizeof(*i));
-  ASSIGN(i, setVisibleRects);
-  ASSIGN(i, clearVisibleRects);
-  ASSIGN(i, showKeyboard);
-  ASSIGN(i, requestFullScreen);
-  ASSIGN(i, exitFullScreen);
-  ASSIGN(i, requestCenterFitZoom);
-}
 
-void InitWindowInterfaceV1(ANPWindowInterfaceV1 *i) {
-  _assert(i->inSize == sizeof(*i));
-  ASSIGN(i, setVisibleRects);
-  ASSIGN(i, clearVisibleRects);
-  ASSIGN(i, showKeyboard);
-  ASSIGN(i, requestFullScreen);
-  ASSIGN(i, exitFullScreen);
-  ASSIGN(i, requestCenterFitZoom);
-  ASSIGN(i, visibleRect);
+void InitNativeWindowInterface(ANPNativeWindowInterfaceV0* i) {
+    ASSIGN(i, acquireNativeWindow);
+    ASSIGN(i, invertPluginContent);
 }
-
-void InitWindowInterfaceV2(ANPWindowInterfaceV2 *i) {
-  _assert(i->inSize == sizeof(*i));
-  ASSIGN(i, setVisibleRects);
-  ASSIGN(i, clearVisibleRects);
-  ASSIGN(i, showKeyboard);
-  ASSIGN(i, requestFullScreen);
-  ASSIGN(i, exitFullScreen);
-  ASSIGN(i, requestCenterFitZoom);
-  ASSIGN(i, visibleRect);
-  ASSIGN(i, requestFullScreenOrientation);
-}
-
