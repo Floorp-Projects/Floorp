@@ -4692,7 +4692,7 @@ js::GetScopeName(JSContext *cx, JSObject *scopeChain, PropertyName *name, Value 
     JSObject *obj;
     JSObject *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, scopeChain, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, false, scopeChain, &obj, &obj2, &prop))
         return false;
 
     if (!prop) {
@@ -4715,7 +4715,7 @@ js::GetScopeNameForTypeOf(JSContext *cx, JSObject *scopeChain, PropertyName *nam
     JSObject *obj;
     JSObject *obj2;
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, scopeChain, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, false, scopeChain, &obj, &obj2, &prop))
         return false;
 
     if (!prop) {
