@@ -156,6 +156,42 @@ struct PRLock;
 
 namespace js {
 
+struct ContextFriendFields {
+    JSRuntime *const    runtime;
+
+    ContextFriendFields(JSRuntime *rt)
+      : runtime(rt) { }
+
+    static const ContextFriendFields *get(const JSContext *cx) {
+        return reinterpret_cast<const ContextFriendFields *>(cx);
+    }
+};
+
+struct RuntimeFriendFields {
+    /*
+     * If non-zero, we were been asked to call the operation callback as soon
+     * as possible.
+     */
+    volatile int32_t    interrupt;
+
+    /* Limit pointer for checking native stack consumption. */
+    uintptr_t           nativeStackLimit;
+
+    RuntimeFriendFields()
+      : interrupt(0),
+        nativeStackLimit(0) { }
+
+    static const RuntimeFriendFields *get(const JSRuntime *rt) {
+        return reinterpret_cast<const RuntimeFriendFields *>(rt);
+    }
+};
+
+inline JSRuntime *
+GetRuntime(const JSContext *cx)
+{
+    return ContextFriendFields::get(cx)->runtime;
+}
+
 typedef bool
 (* PreserveWrapperCallback)(JSContext *cx, JSObject *obj);
 
@@ -228,7 +264,7 @@ struct WeakMapTracer {
     JSContext            *context;
     WeakMapTraceCallback callback;
 
-    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb) 
+    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb)
         : context(cx), callback(cb) {}
 };
 
@@ -440,8 +476,11 @@ IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx);
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
-JS_FRIEND_API(uintptr_t)
-GetContextStackLimit(const JSContext *cx);
+inline uintptr_t
+GetContextStackLimit(const JSContext *cx)
+{
+    return RuntimeFriendFields::get(GetRuntime(cx))->nativeStackLimit;
+}
 
 #define JS_CHECK_RECURSION(cx, onerror)                                         \
     JS_BEGIN_MACRO                                                              \
