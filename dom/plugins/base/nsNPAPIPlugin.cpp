@@ -132,9 +132,10 @@ using mozilla::plugins::PluginModuleParent;
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
+#include <android/log.h>
+#include "android_npapi.h"
 #include "ANPBase.h"
 #include "AndroidBridge.h"
-#include <android/log.h>
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #endif
 
@@ -2348,7 +2349,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     case kAudioTrackInterfaceV0_ANPGetValue: {
       LOG("get audio interface");
       ANPAudioTrackInterfaceV0 *i = (ANPAudioTrackInterfaceV0 *) result;
-      InitAudioTrackInterface(i);
+      InitAudioTrackInterfaceV0(i);
       return NPERR_NO_ERROR;
     }
 
@@ -2363,7 +2364,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       LOG("get system interface");
       ANPSystemInterfaceV0* i = reinterpret_cast<ANPSystemInterfaceV0*>(result);
       InitSystemInterface(i);
-      LOG("done system interface");
       return NPERR_NO_ERROR;
     }
 
@@ -2395,6 +2395,71 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       *i = reinterpret_cast<int32_t>(ret);
       return NPERR_NO_ERROR;
     }
+
+    case kAudioTrackInterfaceV1_ANPGetValue: {
+      LOG("get audio interface v1");
+      ANPAudioTrackInterfaceV1 *i = (ANPAudioTrackInterfaceV1 *) result;
+      InitAudioTrackInterfaceV1(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kNativeWindowInterfaceV0_ANPGetValue: {
+      LOG("get native window interface v0");
+      ANPNativeWindowInterfaceV0* i = (ANPNativeWindowInterfaceV0 *) result;
+      InitNativeWindowInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kOpenGLInterfaceV0_ANPGetValue: {
+      LOG("get openGL interface");
+      ANPOpenGLInterfaceV0 *i = (ANPOpenGLInterfaceV0*) result;
+      InitOpenGLInterface(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kWindowInterfaceV1_ANPGetValue: {
+      LOG("get Window interface V1");
+      ANPWindowInterfaceV1 *i = (ANPWindowInterfaceV1 *) result;
+      InitWindowInterfaceV1(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kWindowInterfaceV2_ANPGetValue: {
+      LOG("get Window interface V2");
+      ANPWindowInterfaceV2 *i = (ANPWindowInterfaceV2 *) result;
+      InitWindowInterfaceV2(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kVideoInterfaceV0_ANPGetValue: {
+      LOG("get video interface");
+      ANPVideoInterfaceV0 *i = (ANPVideoInterfaceV0*) result;
+      InitVideoInterfaceV0(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kVideoInterfaceV1_ANPGetValue: {
+      LOG("get video interface");
+      ANPVideoInterfaceV1 *i = (ANPVideoInterfaceV1*) result;
+      InitVideoInterfaceV1(i);
+      return NPERR_NO_ERROR;
+    }
+
+
+    case kSystemInterfaceV1_ANPGetValue: {
+      LOG("get system interface v1");
+      ANPSystemInterfaceV1* i = reinterpret_cast<ANPSystemInterfaceV1*>(result);
+      InitSystemInterfaceV1(i);
+      return NPERR_NO_ERROR;
+    }
+
+    case kSystemInterfaceV2_ANPGetValue: {
+      LOG("get system interface v2");
+      ANPSystemInterfaceV2* i = reinterpret_cast<ANPSystemInterfaceV2*>(result);
+      InitSystemInterfaceV2(i);
+      return NPERR_NO_ERROR;
+    }
+
 #endif
 
   // we no longer hand out any XPCOM objects
