@@ -1543,7 +1543,6 @@ function doFrameHistoryTests()
   var t20 = getById("t20");
   t20.focus();
 
-  addEventListener("message", function() { $("childframe").goBack(); }, true);
   gChildWindow.addEventListener("focus",
     function(event) {
       if (event.target == t20) {
@@ -1552,11 +1551,7 @@ function doFrameHistoryTests()
   }, true);
 
   // make sure that loading a new page and then going back maintains the focus
-  gChildWindow.location = "data:text/html,<html><body onload='window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)." +
-                          "getInterface(Components.interfaces.nsIWebNavigation)." +
-                          "QueryInterface(Components.interfaces.nsIDocShellTreeItem).rootTreeItem." +
-                          "QueryInterface(Components.interfaces.nsIInterfaceRequestor)." +
-                          "getInterface(Components.interfaces.nsIDOMWindow).postMessage(\"content loaded\", \"*\");'>Next</body></html>";
+  gChildWindow.location = "data:text/html,<script>window.onload=function() {setTimeout(function () {window.back();}, 0);}</script>";
 }
 
 function addFrameSwitchingListeners(frame)
