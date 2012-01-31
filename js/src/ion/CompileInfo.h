@@ -57,6 +57,7 @@ class CompileInfo
     CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc)
       : script_(script), fun_(fun), osrPc_(osrPc)
     {
+        JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
         nslots_ = script->nslots + CountArgSlots(fun);
     }
 
@@ -69,6 +70,11 @@ class CompileInfo
 
     jsbytecode *osrPc() {
         return osrPc_;
+    }
+
+    bool hasOsrAt(jsbytecode *pc) {
+        JS_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
+        return pc == osrPc();
     }
 
     jsbytecode *startPC() const {
