@@ -173,14 +173,6 @@ GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
   bridge->GetCurrentNetworkInformation(aNetworkInfo);
 }
 
-void
-Reboot()
-{}
-
-void
-PowerOff()
-{}
-
 } // hal_impl
 } // mozilla
 
