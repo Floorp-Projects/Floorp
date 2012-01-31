@@ -836,6 +836,8 @@ nsWindow::BindToTexture()
 bool
 nsWindow::HasDirectTexture()
 {
+  return false;
+
   static bool sTestedDirectTexture = false;
   static bool sHasDirectTexture = false;
 
