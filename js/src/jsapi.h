@@ -3371,17 +3371,11 @@ extern JS_PUBLIC_API(void *)
 JS_GetExternalStringClosure(JSContext *cx, JSString *str);
 
 /*
- * Deprecated. Use JS_SetNativeStackQuoata instead.
- */
-extern JS_PUBLIC_API(void)
-JS_SetThreadStackLimit(JSContext *cx, uintptr_t limitAddr);
-
-/*
  * Set the size of the native stack that should not be exceed. To disable
  * stack size checking pass 0.
  */
 extern JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
+JS_SetNativeStackQuota(JSRuntime *cx, size_t stackSize);
 
 /************************************************************************/
 

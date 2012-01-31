@@ -127,9 +127,6 @@ typedef Vector<ScriptOpcodeCountsPair, 0, SystemAllocPolicy> ScriptOpcodeCountsV
 
 struct ConservativeGCData
 {
-    /* Base address of the native stack for the current thread. */
-    uintptr_t           *nativeStackBase;
-
     /*
      * The GC scans conservatively between ThreadData::nativeStackBase and
      * nativeStackTop unless the latter is NULL.
@@ -149,7 +146,7 @@ struct ConservativeGCData
     unsigned requestThreshold;
 
     ConservativeGCData()
-      : nativeStackBase(NULL), nativeStackTop(NULL), requestThreshold(0)
+      : nativeStackTop(NULL), requestThreshold(0)
     {}
 
     ~ConservativeGCData() {
@@ -180,14 +177,8 @@ struct ConservativeGCData
 
 } /* namespace js */
 
-struct JSRuntime
+struct JSRuntime : js::RuntimeFriendFields
 {
-    /*
-     * If non-zero, we were been asked to call the operation callback as soon
-     * as possible.
-     */
-    volatile int32_t    interrupt;
-
     /* Default compartment. */
     JSCompartment       *atomsCompartment;
 
@@ -242,6 +233,12 @@ struct JSRuntime
     js::RegExpPrivateCache *getRegExpPrivateCache(JSContext *cx) {
         return repCache_ ? repCache_ : createRegExpPrivateCache(cx);
     }
+
+    /* Base address of the native stack for the current thread. */
+    uintptr_t           nativeStackBase;
+
+    /* The native stack size limit that runtime should not exceed. */
+    size_t              nativeStackQuota;
 
     /*
      * Frames currently running in js::Interpret. See InterpreterFrames for
@@ -428,7 +425,7 @@ struct JSRuntime
     bool hasContexts() const {
         return !JS_CLIST_IS_EMPTY(&contextList);
     }
-    
+
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
     JSDebugHooks        globalDebugHooks;
 
@@ -764,7 +761,7 @@ typedef HashSet<JSObject *,
 
 } /* namespace js */
 
-struct JSContext
+struct JSContext : js::ContextFriendFields
 {
     explicit JSContext(JSRuntime *rt);
     JSContext *thisDuringConstruction() { return this; }
@@ -799,12 +796,6 @@ struct JSContext
      * NB: generatingError packs with throwing below.
      */
     JSPackedBool        generatingError;
-
-    /* Limit pointer for checking native stack consumption during recursion. */
-    uintptr_t           stackLimit;
-
-    /* Data shared by contexts and compartments in an address space. */
-    JSRuntime *const    runtime;
 
     /* GC heap compartment. */
     JSCompartment       *compartment;
