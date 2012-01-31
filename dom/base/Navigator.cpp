@@ -939,14 +939,6 @@ Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Navigator::GetMozPower(nsIDOMMozPowerManager** aPower)
-{
-  *aPower = nsnull;
-
-  return NS_OK;
-}
-
 //*****************************************************************************
 //    Navigator::nsIDOMNavigatorSms
 //*****************************************************************************
