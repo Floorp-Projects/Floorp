@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=715469
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 715469</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body onload="start();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=715469">Mozilla Bug 715469</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+
+<script type="application/javascript">
+
+/** Test for Bug 715469 **/
+
+var gotLoadEvent = false;
+
+function start() {
+  var resource = getPlayableVideo(gSmallTests);
+  if (resource == null) {
+    todo(false, "No types supported");
+  } else {
+    SimpleTest.waitForExplicitFinish();
+    var v = document.createElement("video");
+    v.src = resource.name;
+    v.addEventListener("loadeddata", function(){v.play();}, false);
+    v.controls = "true";
+    
+    v.addEventListener("load",
+      function(){
+        gotLoadEvent = true;
+      },
+      false);
+      
+    v.addEventListener("ended", finished, false);
+    
+    document.body.appendChild(v);
+  }
+}
+
+function finished() {
+  is(gotLoadEvent, false, "Should not receive a load on the video element");
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+</body>
+</html>

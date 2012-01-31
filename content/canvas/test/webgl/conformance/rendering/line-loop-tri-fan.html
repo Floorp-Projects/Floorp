@@ -71,6 +71,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                     if (j < w * 4 || j > w * (w - 1) * 4 || j % (w * 4) == 0 || j % (w * 4) == (w - 1) * 4) {
                         correct = green;
                     }
+                    // ignore corner pixels
+                    if ((j == 0) || (j == 4*(w-1)) || (j == 4*w*(w-1)) || (j== 4*(w*w - 1))) {
+                        continue;
+                    }
                     if (!checkPixel(buf, j, correct)) {
                         isCorrect = false;
                         break;

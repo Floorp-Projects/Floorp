@@ -5669,20 +5669,20 @@ if test -n "$MOZ_WEBM"; then
                      [MOZ_NATIVE_LIBVPX_DEC_TEST=1],
                      ([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found]))
         if test -n "$MOZ_NATIVE_LIBVPX_DEC_TEST" ; then
-            AC_MSG_CHECKING([for libvpx version >= v0.9.7])
-            dnl We need at least v0.9.7 to fix several crash bugs (for which we
-            dnl had local patches prior to v0.9.7).
+            AC_MSG_CHECKING([for libvpx version >= v1.0.0])
+            dnl We need at least v1.0.0 to fix several crash bugs (for which we
+            dnl had local patches prior to v1.0.0).
             dnl
             dnl This is a terrible test for the library version, but we don't
             dnl have a good one. There is no version number in a public header,
             dnl and testing the headers still doesn't guarantee we link against
             dnl the right version. While we could call vpx_codec_version() at
             dnl run-time, that would break cross-compiling. There are no
-            dnl additional exported symbols between the v0.9.7 release and the
-            dnl v0.9.6 one to check for.
+            dnl additional exported decoder symbols between the v1.0.0 release
+            dnl and the v0.9.7 one to check for.
             AC_TRY_COMPILE([
                 #include <vpx/vpx_decoder.h>
-                #if !defined(VPX_CODEC_USE_INPUT_PARTITION)
+                #if !defined(VPX_CODEC_USE_INPUT_FRAGMENTS)
                     #error "test failed."
                 #endif
                 ],
@@ -5693,7 +5693,7 @@ if test -n "$MOZ_WEBM"; then
                  MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
                  MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
                 [AC_MSG_RESULT([no])
-                 AC_MSG_ERROR([--with-system-libvpx requested but it is not v0.9.7 or later])])
+                 AC_MSG_ERROR([--with-system-libvpx requested but it is not v1.0.0 or later])])
         fi
         CFLAGS=$_SAVE_CFLAGS
         LDFLAGS=$_SAVE_LDFLAGS

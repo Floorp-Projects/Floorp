@@ -18,8 +18,12 @@ found in the LICENSE file.
 <div id="console"></div>
 <script id="vertexShader" type="text/something-not-javascript">
 // shader with too-deep struct nesting should fail per WebGL spec
-struct nesting4 {
+struct nesting5 {
   vec4 vector;
+};
+
+struct nesting4 {
+  nesting5 field5;
 };
 
 struct nesting3 {
@@ -37,7 +41,7 @@ struct nesting1 {
 uniform nesting1 uniform1;
 void main()
 {
-    gl_Position = uniform1.field2.field3.field4.vector;
+    gl_Position = uniform1.field2.field3.field4.field5.vector;
 }
 </script>
 <script>

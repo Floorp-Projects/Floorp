@@ -81,8 +81,9 @@ function go() {
     gl.shaderSource(vsBad, "WILL NOT COMPILE;");
     gl.compileShader(vsBad);
 
-    assertMsg(gl.getShaderParameter(vsBad, gl.COMPILE_STATUS) == false,
-              "bad vertex shader should fail to compile");
+    // GLSL 1.0.17 section 10.27. compile shader does not have to return failure.
+    //assertMsg(gl.getShaderParameter(vsBad, gl.COMPILE_STATUS) == false,
+    //          "bad vertex shader should fail to compile");
 
     var fs = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fs, "precision mediump float; varying vec4 vColor; void main() { gl_FragColor = vColor; }");
@@ -102,8 +103,9 @@ function go() {
     gl.shaderSource(fsBad, "WILL NOT COMPILE;");
     gl.compileShader(fsBad);
 
-    assertMsg(gl.getShaderParameter(fsBad, gl.COMPILE_STATUS) == false,
-              "bad fragment shader should fail to compile");
+    // GLSL 1.0.17 section 10.27. compile shader does not have to return failure.
+    //assertMsg(gl.getShaderParameter(fsBad, gl.COMPILE_STATUS) == false,
+    //          "bad fragment shader should fail to compile");
 
     glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors at this point");
 
@@ -196,8 +198,13 @@ function go() {
         if (gl.getError() != gl.NO_ERROR)
             assertMsg(false, "unexpected error in linkProgram()");
         assertMsg(gl.getProgramParameter(prog, gl.LINK_STATUS) == expected_status, errmsg);
+        var infolog = gl.getProgramInfoLog(prog);
+        if (gl.getError() != gl.NO_ERROR)
+            assertMsg(false, "unexpected error in getProgramInfoLog()");
+        if (typeof(infolog) != "string")
+            assertMsg(false, "getProgramInfoLog() did not return a string");
         if (expected_status == true && gl.getProgramParameter(prog, gl.LINK_STATUS) == false)
-            debug(gl.getProgramInfoLog(prog));
+            debug(infolog);
         if (gl.getError() != gl.NO_ERROR)
             assertMsg(false, "unexpected error in getProgramParameter()");
         gl.useProgram(prog);
@@ -251,6 +258,10 @@ function go() {
     gl.linkProgram(progGood2);
     assertMsg(gl.getProgramParameter(progGood2, gl.LINK_STATUS) == false,
               "linking should fail with in-use formerly good program, with new bad shader attached");
+
+    // Invalid link leaves previous valid program intact.
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    glErrorShouldBe(gl, gl.NO_ERROR, "drawing with a valid program shouldn't generate a GL error");
 
     gl.useProgram(progGood1);
     gl.drawArrays(gl.TRIANGLES, 0, 4);
