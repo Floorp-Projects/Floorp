@@ -23,9 +23,3 @@ pref("browser.search.param.ms-pc", "MOZI");
 pref("browser.search.param.yahoo-fr", "moz35");
 pref("browser.search.param.yahoo-fr-cjkt", "moz35"); // now unused
 pref("browser.search.param.yahoo-fr-ja", "mozff");
-
-// Defines the url to be used for new tabs.
-pref("browser.newtab.url", "about:blank");
-
-// Toggles the content of 'about:newtab'. Shows the grid when enabled.
-pref("browser.newtabpage.enabled", false);
