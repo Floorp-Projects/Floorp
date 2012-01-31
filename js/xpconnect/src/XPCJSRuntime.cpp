@@ -1491,7 +1491,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "object-slots"),
+                                              "objects/slots"),
                        nsIMemoryReporter::KIND_HEAP, cStats.objectSlots,
                        "Memory allocated for the compartment's non-fixed object slot arrays, "
                        "which are used to represent object properties.  Some objects also "
@@ -1501,10 +1501,17 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "object-elements"),
+                                              "objects/elements"),
                        nsIMemoryReporter::KIND_HEAP, cStats.objectElements,
                        "Memory allocated for the compartment's object element arrays, "
                        "which are used to represent indexed object properties.",
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
+                                              "objects/misc"),
+                       nsIMemoryReporter::KIND_HEAP, cStats.objectMisc,
+                       "Memory allocated for various small, miscellaneous "
+                       "structures that hang off certain kinds of objects.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
