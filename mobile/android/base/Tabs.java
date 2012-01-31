@@ -277,6 +277,8 @@ public class Tabs implements GeckoEventListener {
                 Tab tab = addTab(message);
                 if (message.getBoolean("selected"))
                     selectTab(tab.getId());
+                if (message.getBoolean("delayLoad"))
+                    tab.setHasLoaded(false);
             } else if (event.equals("Tab:Close")) {
                 Tab tab = getTab(message.getInt("tabID"));
                 closeTab(tab);
