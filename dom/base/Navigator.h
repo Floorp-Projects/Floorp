@@ -84,10 +84,6 @@ namespace network {
 class Connection;
 } // namespace Connection;
 
-namespace power {
-class PowerManager;
-} // namespace power
-
 class Navigator : public nsIDOMNavigator
                 , public nsIDOMClientInformation
                 , public nsIDOMNavigatorGeolocation
@@ -140,7 +136,6 @@ private:
   nsRefPtr<nsGeolocation> mGeolocation;
   nsRefPtr<nsDesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
-  nsRefPtr<power::PowerManager> mPowerManager;
   nsRefPtr<sms::SmsManager> mSmsManager;
 #ifdef MOZ_B2G_RIL
   nsCOMPtr<nsIDOMTelephony> mTelephony;
