@@ -778,7 +778,7 @@ MethodStatus
 ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *pc)
 {
     JS_ASSERT(ion::IsEnabled());
-    JS_ASSERT((JSOp)*pc == JSOP_LOOPHEAD);
+    JS_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
 
     // Skip if the script has been disabled.
     if (script->ion == ION_DISABLED_SCRIPT)
@@ -807,8 +807,7 @@ MethodStatus
 ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *osrPc)
 {
     JS_ASSERT(ion::IsEnabled());
-    JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPHEAD);
-
+    JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
 
     if (script->ion == ION_DISABLED_SCRIPT)
         return Method_CantCompile;
