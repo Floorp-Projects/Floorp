@@ -4804,7 +4804,18 @@ nsLayoutUtils::FontSizeInflationFor(const nsIFrame *aFrame,
 /* static */ bool
 nsLayoutUtils::FontSizeInflationEnabled(nsPresContext *aPresContext)
 {
-  return (sFontSizeInflationEmPerLine != 0 ||
-          sFontSizeInflationMinTwips != 0) &&
-         !aPresContext->IsChrome();
+  if ((sFontSizeInflationEmPerLine == 0 &&
+       sFontSizeInflationMinTwips == 0) ||
+       aPresContext->IsChrome()) {
+    return false;
+  }
+
+  ViewportInfo vInf =
+    nsContentUtils::GetViewportInfo(aPresContext->PresShell()->GetDocument());
+
+  if (vInf.defaultZoom >= 1.0 || vInf.autoSize) {
+    return false;
+  }
+
+  return true;
 }

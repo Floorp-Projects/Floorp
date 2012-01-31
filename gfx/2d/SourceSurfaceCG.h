@@ -44,6 +44,8 @@
 namespace mozilla {
 namespace gfx {
 
+class DrawTargetCG;
+
 class SourceSurfaceCG : public SourceSurface
 {
 public:
@@ -104,6 +106,37 @@ private:
    * deduce the format to save space in SourceSurfaceCG,
    * for now we just store it in mFormat */
 };
+
+class SourceSurfaceCGBitmapContext : public DataSourceSurface
+{
+public:
+  SourceSurfaceCGBitmapContext(DrawTargetCG *);
+  ~SourceSurfaceCGBitmapContext();
+
+  virtual SurfaceType GetType() const { return SURFACE_COREGRAPHICS_CGCONTEXT; }
+  virtual IntSize GetSize() const;
+  virtual SurfaceFormat GetFormat() const { return FORMAT_B8G8R8A8; }
+
+  CGImageRef GetImage() { EnsureImage(); return mImage; }
+
+  virtual unsigned char *GetData() { return static_cast<unsigned char*>(mData); }
+
+  virtual int32_t Stride() { return mStride; }
+
+private:
+  //XXX: do the other backends friend their DrawTarget?
+  friend class DrawTargetCG;
+  void DrawTargetWillChange();
+  void EnsureImage() const;
+
+  DrawTargetCG *mDrawTarget;
+  CGContextRef mCg;
+  mutable CGImageRef mImage;
+  void *mData;
+  int32_t mStride;
+  IntSize mSize;
+};
+
 
 }
 }

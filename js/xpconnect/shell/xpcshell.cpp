@@ -2012,6 +2012,7 @@ main(int argc, char **argv, char **envp)
             cxstack = nsnull;
             JS_GC(cx);
         } //this scopes the JSAutoCrossCompartmentCall
+        JS_EndRequest(cx);
         JS_DestroyContext(cx);
     } // this scopes the nsCOMPtrs
 

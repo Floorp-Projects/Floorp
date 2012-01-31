@@ -317,4 +317,16 @@ public class BrowserToolbar extends LinearLayout {
         else
             mSiteSecurity.setImageLevel(0);
     }
+
+    public void refresh() {
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            setTitle(tab.getDisplayTitle());
+            setFavicon(tab.getFavicon());
+            setSecurityMode(tab.getSecurityMode());
+            setProgressVisibility(tab.isLoading());
+            setShadowVisibility(!(tab.getURL().startsWith("about:")));
+            updateTabs(Tabs.getInstance().getCount());
+        }
+    }
 }

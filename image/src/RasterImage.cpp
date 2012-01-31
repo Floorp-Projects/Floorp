@@ -953,6 +953,7 @@ RasterImage::GetImageContainer(LayerManager* aManager,
        (!mImageContainer->Manager() && 
         (mImageContainer->GetBackendType() == aManager->GetBackendType())))) {
     *_retval = mImageContainer;
+    NS_ADDREF(*_retval);
     return NS_OK;
   }
   
@@ -978,6 +979,7 @@ RasterImage::GetImageContainer(LayerManager* aManager,
   mImageContainer->SetCurrentImage(image);
 
   *_retval = mImageContainer;
+  NS_ADDREF(*_retval);
   return NS_OK;
 }
 

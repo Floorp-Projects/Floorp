@@ -11,4 +11,3 @@ conformance/more/functions/uniformfArrayLen1.html
 conformance/glsl/misc/attrib-location-length-limits.html
 conformance/glsl/misc/uniform-location-length-limits.html
 conformance/renderbuffers/framebuffer-object-attachment.html
-conformance/glsl/misc/struct-nesting-exceeds-maximum.html
