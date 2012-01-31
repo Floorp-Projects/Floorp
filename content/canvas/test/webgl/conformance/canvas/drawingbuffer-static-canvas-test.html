@@ -102,7 +102,7 @@ if (!gl) {
   testPassed("context exists");
 
   gl.program = createProgram(gl, "vshader", "fshader", ["vPosition"]);
-  shouldBeNonNull(gl.program);
+  shouldBeNonNull("gl.program");
   gl.useProgram(gl.program);
   gl.enable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);

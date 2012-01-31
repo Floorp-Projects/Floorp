@@ -483,15 +483,34 @@ var WifiManager = (function() {
     }
   }
 
+  function parseStatus(status) {
+    if (status === null) {
+      debug("Unable to get wpa supplicant's status");
+      return;
+    }
+
+    var lines = status.split("\n");
+    for (let i = 0; i < lines.length; ++i) {
+      let [key, value] = lines[i].split("=");
+      if (key === "wpa_state") {
+        if (value === "COMPLETED")
+          onconnected();
+      }
+    }
+  }
+
   // try to connect to the supplicant
   var connectTries = 0;
   var retryTimer = null;
   function connectCallback(ok) {
     if (ok === 0) {
-      // tell the event worker to start waiting for events
+      // Tell the event worker to start waiting for events.
       retryTimer = null;
       waitForEvent();
       notify("supplicantconnection");
+
+      // Load up the supplicant state.
+      statusCommand(parseStatus);
       return;
     }
     if (connectTries++ < 3) {
@@ -788,12 +807,9 @@ function nsWifiWorker() {
   var networks = Object.create(null);
   WifiManager.onscanresultsavailable = function() {
     debug("Scan results are available! Asking for them.");
-    if (networks["Mozilla Guest"])
-      return;
     WifiManager.getScanResults(function(r) {
       let lines = r.split("\n");
       // NB: Skip the header line.
-      let added = !("Mozilla Guest" in networks);
       for (let i = 1; i < lines.length; ++i) {
         // bssid / frequency / signal level / flags / ssid
         var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i])
@@ -801,27 +817,6 @@ function nsWifiWorker() {
           networks[match[5]] = match[1];
         else
           debug("Match didn't find anything for: " + lines[i]);
-      }
-
-      if (("Mozilla Guest" in networks) && added) {
-        debug("Mozilla Guest exists in networks, trying to connect!");
-        var config = Object.create(null);
-        config["ssid"] = '"Mozilla Guest"';
-        //config["bssid"] = '"' + networks["Mozilla Guest"] + '"';
-        config["key_mgmt"] = "NONE";
-        config["scan_ssid"] = 1;
-        WifiManager.addNetwork(config, function (ok) {
-          if (ok) {
-            WifiManager.enableNetwork(config.netId, false, function (ok) {
-              if (ok)
-                debug("Enabled the network!");
-              else
-                debug("Failed to enable the network :(");
-            });
-          } else {
-            debug("Failed to add the network :(");
-          }
-        });
       }
     });
   }
