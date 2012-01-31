@@ -72,7 +72,7 @@ public:
    */
   static bool gCanEmbed;
 
-  AtkSocketAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  AtkSocketAccessible(nsIContent* aContent, nsIWeakReference* aShell,
                       const nsCString& aPlugId);
 
   // nsAccessNode

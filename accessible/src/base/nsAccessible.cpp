@@ -190,8 +190,8 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return nsAccessNodeWrap::QueryInterface(aIID, aInstancePtr);
 }
 
-nsAccessible::nsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessNodeWrap(aContent, aDoc),
+nsAccessible::nsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessNodeWrap(aContent, aShell),
   mParent(nsnull), mIndexInParent(-1), mFlags(eChildrenUninitialized),
   mIndexOfEmbeddedChild(-1), mRoleMapEntry(nsnull)
 {
@@ -597,7 +597,7 @@ nsAccessible::VisibilityState()
   if (!frame)
     return vstates;
 
-  nsIPresShell* shell(mDoc->PresShell());
+  const nsCOMPtr<nsIPresShell> shell(GetPresShell());
   if (!shell)
     return vstates;
 
@@ -764,7 +764,7 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
   // Get accessible for the node with the point or the first accessible in
   // the DOM parent chain.
   nsAccessible* accessible =
-    GetAccService()->GetAccessibleOrContainer(content, presShell);
+   GetAccService()->GetAccessibleOrContainer(content, mWeakShell);
   if (!accessible)
     return fallbackAnswer;
 
@@ -951,7 +951,7 @@ nsAccessible::GetBounds(PRInt32* aX, PRInt32* aY,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsIPresShell* presShell = mDoc->PresShell();
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
 
   // This routine will get the entire rectangle for all the frames in this node.
   // -------------------------------------------------------------------------
@@ -1630,7 +1630,7 @@ nsAccessible::GetValue(nsAString& aValue)
 
   // Check if it's a simple xlink.
   if (nsCoreUtils::IsXLink(mContent)) {
-    nsIPresShell* presShell = mDoc->PresShell();
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
     if (presShell) {
       nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
       return presShell->GetLinkLocation(DOMNode, aValue);
@@ -2156,7 +2156,7 @@ nsAccessible::DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex)
   if (IsDefunct())
     return;
 
-  nsIPresShell* presShell = mDoc->PresShell();
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
 
   // Scroll into view.
   presShell->ScrollContentIntoView(aContent, NS_PRESSHELL_SCROLL_ANYWHERE,
@@ -2936,10 +2936,7 @@ nsAccessible::ContainerWidget() const
 void
 nsAccessible::CacheChildren()
 {
-  nsDocAccessible* doc = GetDocAccessible();
-  NS_ENSURE_TRUE(doc,);
-
-  nsAccTreeWalker walker(doc->GetWeakShell(), mContent, GetAllowsAnonChildAccessibles());
+  nsAccTreeWalker walker(mWeakShell, mContent, GetAllowsAnonChildAccessibles());
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild()) && AppendChild(child));
@@ -3012,7 +3009,8 @@ nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError) const
 nsAccessible *
 nsAccessible::GetFirstAvailableAccessible(nsINode *aStartNode) const
 {
-  nsAccessible* accessible = mDoc->GetAccessible(aStartNode);
+  nsAccessible* accessible =
+    GetAccService()->GetAccessibleInWeakShell(aStartNode, mWeakShell);
   if (accessible)
     return accessible;
 
@@ -3034,7 +3032,8 @@ nsAccessible::GetFirstAvailableAccessible(nsINode *aStartNode) const
       return nsnull;
 
     nsCOMPtr<nsINode> node(do_QueryInterface(currentNode));
-    nsAccessible* accessible = mDoc->GetAccessible(node);
+    nsAccessible* accessible =
+      GetAccService()->GetAccessibleInWeakShell(node, mWeakShell);
     if (accessible)
       return accessible;
   }

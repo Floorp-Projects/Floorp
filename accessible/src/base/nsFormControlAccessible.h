@@ -50,8 +50,8 @@ template<int Max>
 class ProgressMeterAccessible: public nsFormControlAccessible
 {
 public:
-  ProgressMeterAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-    nsFormControlAccessible(aContent, aDoc)
+  ProgressMeterAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
+    nsFormControlAccessible(aContent, aShell)
   {
   }
 
@@ -75,7 +75,7 @@ class nsRadioButtonAccessible : public nsFormControlAccessible
 {
 
 public:
-  nsRadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsRadioButtonAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);

@@ -59,8 +59,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTabAccessible::
-  nsXULTabAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULTabAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -178,8 +178,8 @@ nsXULTabAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTabsAccessible::
-  nsXULTabsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  XULSelectControlAccessible(aContent, aDoc)
+  nsXULTabsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  XULSelectControlAccessible(aContent, aShell)
 {
 }
 
@@ -214,8 +214,8 @@ nsXULTabsAccessible::GetNameInternal(nsAString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTabpanelsAccessible::
-  nsXULTabpanelsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULTabpanelsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -231,8 +231,8 @@ nsXULTabpanelsAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTabpanelAccessible::
-  nsXULTabpanelAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULTabpanelAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 

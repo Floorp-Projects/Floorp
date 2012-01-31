@@ -61,8 +61,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 XULSelectControlAccessible::
-  XULSelectControlAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  XULSelectControlAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
   mSelectControl = do_QueryInterface(aContent);
 }
@@ -92,7 +92,7 @@ XULSelectControlAccessible::SelectedItems()
 {
   nsCOMPtr<nsIMutableArray> selectedItems =
     do_CreateInstance(NS_ARRAY_CONTRACTID);
-  if (!selectedItems || !mDoc)
+  if (!selectedItems)
     return nsnull;
 
   // For XUL multi-select control
@@ -105,7 +105,8 @@ XULSelectControlAccessible::SelectedItems()
       nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm;
       xulMultiSelect->GetSelectedItem(index, getter_AddRefs(itemElm));
       nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
-      nsAccessible* item = mDoc->GetAccessible(itemNode);
+      nsAccessible* item =
+        GetAccService()->GetAccessibleInWeakShell(itemNode, mWeakShell);
       if (item)
         selectedItems->AppendElement(static_cast<nsIAccessible*>(item),
                                      false);
@@ -115,12 +116,13 @@ XULSelectControlAccessible::SelectedItems()
       mSelectControl->GetSelectedItem(getter_AddRefs(itemElm));
       nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
       if(itemNode) {
-        nsAccessible* item = mDoc->GetAccessible(itemNode);
+        nsAccessible* item =
+          GetAccService()->GetAccessibleInWeakShell(itemNode, mWeakShell);
         if (item)
           selectedItems->AppendElement(static_cast<nsIAccessible*>(item),
                                      false);
       }
-  }
+    }
 
   nsIMutableArray* items = nsnull;
   selectedItems.forget(&items);
@@ -140,8 +142,8 @@ XULSelectControlAccessible::GetSelectedItem(PRUint32 aIndex)
     mSelectControl->GetSelectedItem(getter_AddRefs(itemElm));
 
   nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
-  return itemNode && mDoc ?
-    GetAccService()->GetAccessibleInWeakShell(itemNode, mDoc->GetWeakShell()) : nsnull;
+  return itemNode ?
+    GetAccService()->GetAccessibleInWeakShell(itemNode, mWeakShell) : nsnull;
 }
 
 PRUint32

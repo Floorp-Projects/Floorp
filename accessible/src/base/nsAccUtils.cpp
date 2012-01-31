@@ -425,11 +425,11 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
   nsCOMPtr<nsINode> focusNode(do_QueryInterface(focusDOMNode));
   nsCOMPtr<nsINode> resultNode =
     nsCoreUtils::GetDOMNodeFromDOMPoint(focusNode, focusOffset);
-  nsIPresShell* presShell(nsCoreUtils::GetPresShellFor(resultNode));
+  nsCOMPtr<nsIWeakReference> weakShell(nsCoreUtils::GetWeakShellFor(resultNode));
 
   // Get text accessible containing the result node.
   nsAccessible* accessible =
-    GetAccService()->GetAccessibleOrContainer(resultNode, presShell);
+    GetAccService()->GetAccessibleOrContainer(resultNode, weakShell);
   if (!accessible) {
     NS_NOTREACHED("No nsIAccessibleText for selection change event!");
     return nsnull;
@@ -525,8 +525,9 @@ nsAccUtils::GetScreenCoordsForWindow(nsAccessNode *aAccessNode)
 nsIntPoint
 nsAccUtils::GetScreenCoordsForParent(nsAccessNode *aAccessNode)
 {
-  nsDocAccessible* document = aAccessNode->GetDocAccessible();
-  nsAccessible* parent = document->GetContainerAccessible(aAccessNode->GetNode());
+  nsAccessible *parent =
+    GetAccService()->GetContainerAccessible(aAccessNode->GetNode(),
+                                            aAccessNode->GetWeakShell());
   if (!parent)
     return nsIntPoint(0, 0);
 

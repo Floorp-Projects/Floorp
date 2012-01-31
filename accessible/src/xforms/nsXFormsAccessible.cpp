@@ -40,7 +40,6 @@
 
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
 #include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "States.h"
@@ -78,8 +77,8 @@ nsXFormsAccessibleBase::nsXFormsAccessibleBase()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXFormsAccessible::
-  nsXFormsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+nsXFormsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -124,7 +123,7 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
   if (!children)
     return;
 
-  nsIPresShell* presShell(mDoc->PresShell());
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
 
   PRUint32 length = 0;
   children->GetLength(&length);
@@ -137,7 +136,7 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
 
     nsCOMPtr<nsIContent> child(do_QueryInterface(DOMChild));
     nsAccessible* accessible =
-      GetAccService()->GetOrCreateAccessible(child, presShell, mDoc->GetWeakShell());
+      GetAccService()->GetOrCreateAccessible(child, presShell, mWeakShell);
     if (!accessible)
       continue;
 
@@ -225,8 +224,8 @@ nsXFormsAccessible::GetAllowsAnonChildAccessibles()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXFormsContainerAccessible::
-  nsXFormsContainerAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXFormsAccessible(aContent, aDoc)
+  nsXFormsContainerAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXFormsAccessible(aContent, aShell)
 {
 }
 
@@ -248,8 +247,8 @@ nsXFormsContainerAccessible::GetAllowsAnonChildAccessibles()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXFormsEditableAccessible::
-  nsXFormsEditableAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXFormsAccessible(aContent, aDoc)
+  nsXFormsEditableAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXFormsAccessible(aContent, aShell)
 {
 }
 
@@ -298,8 +297,8 @@ nsXFormsEditableAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXFormsSelectableAccessible::
-  nsXFormsSelectableAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXFormsEditableAccessible(aContent, aDoc), mIsSelect1Element(nsnull)
+  nsXFormsSelectableAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXFormsEditableAccessible(aContent, aShell), mIsSelect1Element(nsnull)
 {
   mIsSelect1Element =
     mContent->NodeInfo()->Equals(nsGkAtoms::select1);
@@ -326,12 +325,12 @@ nsXFormsSelectableAccessible::SelectedItems()
     nsCOMPtr<nsIDOMNode> itemDOMNode;
     rv = sXFormsService->GetSelectedItemForSelect1(DOMNode,
                                                    getter_AddRefs(itemDOMNode));
-    if (NS_FAILED(rv) || !itemDOMNode || !mDoc)
+    if (NS_FAILED(rv) || !itemDOMNode)
       return nsnull;
 
     nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemDOMNode));
     nsIAccessible* item = GetAccService()->GetAccessibleInWeakShell(itemNode,
-                                                                    mDoc->GetWeakShell());
+                                                                    mWeakShell);
     if (item)
       selectedItems->AppendElement(item, false);
 
@@ -343,12 +342,11 @@ nsXFormsSelectableAccessible::SelectedItems()
   nsCOMPtr<nsIDOMNodeList> itemNodeList;
   rv = sXFormsService->GetSelectedItemsForSelect(DOMNode,
                                                  getter_AddRefs(itemNodeList));
-  if (NS_FAILED(rv) || !itemNodeList || !mDoc)
+  if (NS_FAILED(rv) || !itemNodeList)
     return nsnull;
 
   PRUint32 length = 0;
   itemNodeList->GetLength(&length);
-
   for (PRUint32 index = 0; index < length; index++) {
     nsCOMPtr<nsIDOMNode> itemDOMNode;
     itemNodeList->Item(index, getter_AddRefs(itemDOMNode));
@@ -356,7 +354,8 @@ nsXFormsSelectableAccessible::SelectedItems()
       return nsnull;
 
     nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemDOMNode));
-    nsIAccessible* item = mDoc->GetAccessible(itemNode);
+    nsIAccessible* item = GetAccService()->GetAccessibleInWeakShell(itemNode,
+                                                                    mWeakShell);
     if (item)
       selectedItems->AppendElement(item, false);
   }
@@ -431,9 +430,6 @@ nsXFormsSelectableAccessible::RemoveItemFromSelection(PRUint32 aIndex)
 nsAccessible*
 nsXFormsSelectableAccessible::GetSelectedItem(PRUint32 aIndex)
 {
-  if (!mDoc)
-    return nsnull;
-
   nsresult rv;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   if (mIsSelect1Element) {
@@ -445,7 +441,7 @@ nsXFormsSelectableAccessible::GetSelectedItem(PRUint32 aIndex)
                                                    getter_AddRefs(itemDOMNode));
     if (NS_SUCCEEDED(rv) && itemDOMNode) {
       nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemDOMNode));
-      return mDoc->GetAccessible(itemNode);
+      return GetAccService()->GetAccessibleInWeakShell(itemNode, mWeakShell);
     }
     return nsnull;
   }
@@ -460,7 +456,7 @@ nsXFormsSelectableAccessible::GetSelectedItem(PRUint32 aIndex)
   itemNodeList->Item(aIndex, getter_AddRefs(itemDOMNode));
 
   nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemDOMNode));
-  return mDoc->GetAccessible(itemNode);
+  return GetAccService()->GetAccessibleInWeakShell(itemNode, mWeakShell);
 }
 
 bool
@@ -538,9 +534,9 @@ nsXFormsSelectableAccessible::GetItemByIndex(PRUint32* aIndex,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXFormsSelectableItemAccessible::
-  nsXFormsSelectableItemAccessible(nsIContent* aContent,
-                                   nsDocAccessible* aDoc) :
-  nsXFormsAccessible(aContent, aDoc)
+  nsXFormsSelectableItemAccessible(nsIContent *aContent,
+                                   nsIWeakReference *aShell) :
+  nsXFormsAccessible(aContent, aShell)
 {
 }
 

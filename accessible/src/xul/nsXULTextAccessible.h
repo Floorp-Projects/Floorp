@@ -49,7 +49,7 @@
 class nsXULTextAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsXULTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULTextAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -65,7 +65,7 @@ class nsXULTooltipAccessible : public nsLeafAccessible
 {
 
 public:
-  nsXULTooltipAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULTooltipAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -76,7 +76,7 @@ class nsXULLinkAccessible : public nsHyperTextAccessibleWrap
 {
 
 public:
-  nsXULLinkAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULLinkAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 
