@@ -671,7 +671,7 @@ NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
   nsAccessible* container =
     GetAccService()->GetContainerAccessible(aEvent->mNode,
-                                            aEvent->mAccessible->GetWeakShell());
+                                            aEvent->GetDocAccessible()->PresShell());
   if (!container)
     return;
 

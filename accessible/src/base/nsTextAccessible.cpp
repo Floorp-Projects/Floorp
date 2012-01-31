@@ -49,8 +49,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsTextAccessible::
-  nsTextAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsLinkableAccessible(aContent, aShell)
+  nsTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsLinkableAccessible(aContent, aDoc)
 {
   mFlags |= eTextLeafAccessible;
 }

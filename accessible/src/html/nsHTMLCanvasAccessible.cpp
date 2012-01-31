@@ -42,8 +42,8 @@
 using namespace mozilla::a11y;
 
 nsHTMLCanvasAccessible::
-  nsHTMLCanvasAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
-  nsHyperTextAccessible(aContent, aShell)
+  nsHTMLCanvasAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessible(aContent, aDoc)
 {
 }
 
