@@ -2607,7 +2607,8 @@ GetElementIC::update(VMFrame &f, JSObject *obj, const Value &v, jsid id, Value *
      * indexes in the emitter, i.e. js_GetProtoIfDenseArray is only valid to
      * use when looking up non-integer identifiers.
      */
-    if (v.isString() && js_CheckForStringIndex(id) == id)
+    uint32_t dummy;
+    if (v.isString() && JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy))
         return attachGetProp(f, obj, v, JSID_TO_ATOM(id)->asPropertyName(), vp);
 
     if (obj->isArguments())

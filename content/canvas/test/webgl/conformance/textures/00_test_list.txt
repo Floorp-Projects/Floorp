@@ -1,3 +1,4 @@
+compressed-tex-image.html
 copy-tex-image-and-sub-image-2d.html
 gl-pixelstorei.html
 gl-teximage.html

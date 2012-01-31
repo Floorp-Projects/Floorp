@@ -95,9 +95,11 @@ var log = function(msg) {
 /**
  * Loads text from an external file. This function is synchronous.
  * @param {string} url The url of the external file.
- * @return {string} the loaded text if the request is synchronous.
+ * @param {!function(bool, string): void} callback that is sent a bool for
+ *     success and the string.
  */
-var loadTextFileSynchronous = function(url) {
+var loadTextFileAsynchronous = function(url, callback) {
+  log ("loading: " + url);
   var error = 'loadTextFileSynchronous failed to load url "' + url + '"';
   var request;
   if (window.XMLHttpRequest) {
@@ -108,50 +110,242 @@ var loadTextFileSynchronous = function(url) {
   } else {
     throw 'XMLHttpRequest is disabled';
   }
-  request.open('GET', url, false);
-  request.send(null);
-  if (request.readyState != 4) {
-    throw error;
+  try {
+    request.open('GET', url, true);
+    request.onreadystatechange = function() {
+      if (request.readyState == 4) {
+        var text = '';
+        // HTTP reports success with a 200 status. The file protocol reports
+        // success with zero. HTTP does not use zero as a status code (they
+        // start at 100).
+        // https://developer.mozilla.org/En/Using_XMLHttpRequest
+        var success = request.status == 200 || request.status == 0;
+        if (success) {
+          text = request.responseText;
+        }
+        log("loaded: " + url);
+        callback(success, text);
+      }
+    };
+    request.send(null);
+  } catch (e) {
+    log("failed to load: " + url);
+    callback(false, '');
   }
-  return request.responseText;
 };
 
-var getFileList = function(url) {
-  var files = [];
-  if (url.substr(url.length - 4) == '.txt') {
-    var lines = loadTextFileSynchronous(url).split('\n');
-    var prefix = '';
-    var lastSlash = url.lastIndexOf('/');
-    if (lastSlash >= 0) {
-      prefix = url.substr(0, lastSlash + 1);
+/**
+ * Compare version strings.
+ */
+var greaterThanOrEqualToVersion = function(have, want) {
+  have = have.split(" ")[0].split(".");
+  want = want.split(" ")[0].split(".");
+
+  //have 1.2.3   want  1.1
+  //have 1.1.1   want  1.1
+  //have 1.0.9   want  1.1
+  //have 1.1     want  1.1.1
+
+  for (var ii = 0; ii < want.length; ++ii) {
+    var wantNum = parseInt(want[ii]);
+    var haveNum = have[ii] ? parseInt(have[ii]) : 0
+    if (haveNum < wantNum) {
+      return false;
     }
-    for (var ii = 0; ii < lines.length; ++ii) {
-      var str = lines[ii].replace(/^\s\s*/, '').replace(/\s\s*$/, '');
-      if (str.length > 4 &&
-          str[0] != '#' &&
-          str[0] != ";" &&
-          str.substr(0, 2) != "//") {
-        new_url = prefix + str;
-        files = files.concat(getFileList(new_url));
+  }
+  return true;
+};
+
+/**
+ * Reads a file, recursively adding files referenced inside.
+ *
+ * Each line of URL is parsed, comments starting with '#' or ';'
+ * or '//' are stripped.
+ *
+ * arguments beginning with -- are extracted
+ *
+ * lines that end in .txt are recursively scanned for more files
+ * other lines are added to the list of files.
+ *
+ * @param {string} url The url of the file to read.
+ * @param {void function(boolean, !Array.<string>)} callback.
+ *      Callback that is called with true for success and an
+ *      array of filenames.
+ * @param {Object} options. Optional options
+ *
+ * Options:
+ *    version: {string} The version of the conformance test.
+ *    Tests with the argument --min-version <version> will
+ *    be ignored version is less then <version>
+ *
+ */
+var getFileList = function(url, callback, options) {
+  var files = [];
+
+  var copyObject = function(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  };
+
+  var toCamelCase = function(str) {
+    return str.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase() });
+  };
+
+  var globalOptions = copyObject(options);
+  globalOptions.defaultVersion = "1.0";
+
+  var getFileListImpl = function(prefix, line, hierarchicalOptions, callback) {
+    var files = [];
+
+    var args = line.split(/\s+/);
+    var nonOptions = [];
+    var useTest = true;
+    var testOptions = {};
+    for (var jj = 0; jj < args.length; ++jj) {
+      var arg = args[jj];
+      if (arg[0] == '-') {
+        if (arg[1] != '-') {
+          throw ("bad option at in " + url + ":" + (ii + 1) + ": " + str);
+        }
+        var option = arg.substring(2);
+        switch (option) {
+          case 'min-version':
+            ++jj;
+            testOptions[toCamelCase(option)] = args[jj];
+            break;
+          default:
+            throw ("bad unknown option '" + option + "' at in " + url + ":" + (ii + 1) + ": " + str);
+        }
+      } else {
+        nonOptions.push(arg);
       }
     }
-  } else {
-    files.push(url);
-  }
-  return files;
-}
+    var url = prefix + nonOptions.join(" ");
+
+    if (url.substr(url.length - 4) != '.txt') {
+      var minVersion = testOptions.minVersion;
+      if (!minVersion) {
+        minVersion = hierarchicalOptions.defaultVersion;
+      }
+
+      if (globalOptions.minVersion) {
+        useTest = greaterThanOrEqualToVersion(minVersion, globalOptions.minVersion);
+      } else {
+        useTest = greaterThanOrEqualToVersion(globalOptions.version, minVersion);
+      }
+    }
+
+    if (!useTest) {
+      callback(true, []);
+      return;
+    }
+
+    if (url.substr(url.length - 4) == '.txt') {
+      // If a version was explicity specified pass it down.
+      if (testOptions.minVersion) {
+        hierarchicalOptions.defaultVersion = testOptions.minVersion;
+      }
+      loadTextFileAsynchronous(url, function() {
+        return function(success, text) {
+          if (!success) {
+            callback(false, '');
+            return;
+          }
+          var lines = text.split('\n');
+          var prefix = '';
+          var lastSlash = url.lastIndexOf('/');
+          if (lastSlash >= 0) {
+            prefix = url.substr(0, lastSlash + 1);
+          }
+          var fail = false;
+          var count = 1;
+          var index = 0;
+          for (var ii = 0; ii < lines.length; ++ii) {
+            var str = lines[ii].replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+            if (str.length > 4 &&
+                str[0] != '#' &&
+                str[0] != ";" &&
+                str.substr(0, 2) != "//") {
+              ++count;
+              getFileListImpl(prefix, str, copyObject(hierarchicalOptions), function(index) {
+                return function(success, new_files) {
+                  log("got files: " + new_files.length);
+                  if (success) {
+                    files[index] = new_files;
+                  }
+                  finish(success);
+                };
+              }(index++));
+            }
+          }
+          finish(true);
+
+          function finish(success) {
+            if (!success) {
+              fail = true;
+            }
+            --count;
+            log("count: " + count);
+            if (!count) {
+              callback(!fail, files);
+            }
+          }
+        }
+      }());
+    } else {
+      files.push(url);
+      callback(true, files);
+    }
+  };
+
+  getFileListImpl('', url, globalOptions, function(success, files) {
+    // flatten
+    var flat = [];
+    flatten(files);
+    function flatten(files) {
+      for (var ii = 0; ii < files.length; ++ii) {
+        var value = files[ii];
+        if (typeof(value) == "string") {
+          flat.push(value);
+        } else {
+          flatten(value);
+        }
+      }
+    }
+    callback(success, flat);
+  });
+};
 
 var TestFile = function(url) {
   this.url = url;
 };
 
-var TestHarness = function(iframe, filelistUrl, reportFunc) {
+var TestHarness = function(iframe, filelistUrl, reportFunc, options) {
   this.window = window;
   this.iframe = iframe;
   this.reportFunc = reportFunc;
-  try {
-    var files = getFileList(filelistUrl);
-  } catch (e) {
+  this.timeoutDelay = 20000;
+  this.files = [];
+
+  var that = this;
+  getFileList(filelistUrl, function() {
+    return function(success, files) {
+      that.addFiles_(success, files);
+    };
+  }(), options);
+
+};
+
+TestHarness.reportType = {
+  ADD_PAGE: 1,
+  READY: 2,
+  START_PAGE: 3,
+  TEST_RESULT: 4,
+  FINISH_PAGE: 5,
+  FINISHED_ALL_TESTS: 6
+};
+
+TestHarness.prototype.addFiles_ = function(success, files) {
+  if (!success) {
     this.reportFunc(
         TestHarness.reportType.FINISHED_ALL_TESTS,
         'Unable to load tests. Are you running locally?\n' +
@@ -166,23 +360,14 @@ var TestHarness = function(iframe, filelistUrl, reportFunc) {
         false)
     return;
   }
-  this.files = [];
+  log("total files: " + files.length);
   for (var ii = 0; ii < files.length; ++ii) {
+    log("" + ii + ": " + files[ii]);
     this.files.push(new TestFile(files[ii]));
     this.reportFunc(TestHarness.reportType.ADD_PAGE, files[ii], undefined);
   }
-  this.nextFileIndex = files.length;
-  this.lastFileIndex = files.length;
-  this.timeoutDelay = 20000;
+  this.reportFunc(TestHarness.reportType.READY, undefined, undefined);
 }
-
-TestHarness.reportType = {
-  ADD_PAGE: 1,
-  START_PAGE: 2,
-  TEST_RESULT: 3,
-  FINISH_PAGE: 4,
-  FINISHED_ALL_TESTS: 5
-};
 
 TestHarness.prototype.runTests = function(opt_start, opt_count) {
   var count = opt_count || this.files.length;

@@ -2506,7 +2506,7 @@ mjit::stubs::ArrayShift(VMFrame &f)
      * themselves.
      */
     uint32_t initlen = obj->getDenseArrayInitializedLength();
-    obj->moveDenseArrayElements(0, 1, initlen);
+    obj->moveDenseArrayElementsUnbarriered(0, 1, initlen);
 }
 #endif /* JS_METHODJIT */
 
@@ -2533,7 +2533,7 @@ js::array_shift(JSContext *cx, uintN argc, Value *vp)
             args.rval() = obj->getDenseArrayElement(0);
             if (args.rval().isMagic(JS_ARRAY_HOLE))
                 args.rval().setUndefined();
-            obj->moveDenseArrayElements(0, 1, length);
+            obj->moveDenseArrayElements(0, 1, obj->getDenseArrayInitializedLength() - 1);
             obj->setDenseArrayInitializedLength(obj->getDenseArrayInitializedLength() - 1);
             obj->setArrayLength(cx, length);
             if (!js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(length)))

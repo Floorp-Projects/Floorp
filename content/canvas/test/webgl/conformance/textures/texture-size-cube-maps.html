@@ -149,6 +149,7 @@ function testSize(size) {
 
     var err = gl.getError();
     if (err == gl.OUT_OF_MEMORY) {
+      debug("out of memory");
       return false;
     }
     if (err != gl.NO_ERROR) {
