@@ -55,6 +55,10 @@ ifdef MOZ_JAVA_COMPOSITOR
 DEFINES += -DMOZ_JAVA_COMPOSITOR
 endif
 
+ifdef MOZ_ONLY_TOUCH_EVENTS
+DEFINES += -DMOZ_ONLY_TOUCH_EVENTS
+endif
+
 CPPSRCS	= \
 	GfxInfo.cpp \
 	nsWidgetFactory.cpp \
