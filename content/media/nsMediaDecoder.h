@@ -335,7 +335,7 @@ public:
 
   // Called as data arrives on the stream and is read into the cache.  Called
   // on the main thread only.
-  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) = 0;
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset) = 0;
 
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.

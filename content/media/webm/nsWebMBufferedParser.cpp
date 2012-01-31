@@ -257,7 +257,7 @@ void nsWebMBufferedState::CalculateBufferedForRange(nsTimeRanges* aBuffered,
   aBuffered->Add(startTime, endTime);
 }
 
-void nsWebMBufferedState::NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset)
+void nsWebMBufferedState::NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   PRUint32 idx;

@@ -1216,7 +1216,7 @@ void nsBuiltinDecoderStateMachine::ResetPlayback()
 
 void nsBuiltinDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
                                                      PRUint32 aLength,
-                                                     PRUint32 aOffset)
+                                                     PRInt64 aOffset)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   mReader->NotifyDataArrived(aBuffer, aLength, aOffset);
