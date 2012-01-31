@@ -982,7 +982,7 @@ _vg_setup_surface_source (cairo_vg_context_t *context,
 	return status;
     }
 
-    _cairo_surface_attach_snapshot (spat->surface, &clone->base,
+    cairo_surface_attach_snapshot (spat->surface, &clone->base,
 				    _vg_surface_remove_from_cache);
 
 DONE:

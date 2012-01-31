@@ -310,17 +310,17 @@ _cairo_surface_detach_mime_data (cairo_surface_t *surface)
 }
 
 static void
-_cairo_surface_detach_snapshots (cairo_surface_t *surface)
+cairo_surface_detach_snapshots (cairo_surface_t *surface)
 {
     while (_cairo_surface_has_snapshots (surface)) {
-	_cairo_surface_detach_snapshot (cairo_list_first_entry (&surface->snapshots,
+	cairo_surface_detach_snapshot (cairo_list_first_entry (&surface->snapshots,
 								cairo_surface_t,
 								snapshot));
     }
 }
 
 void
-_cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
+cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
 {
     assert (snapshot->snapshot_of != NULL);
 
@@ -334,7 +334,7 @@ _cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
 }
 
 void
-_cairo_surface_attach_snapshot (cairo_surface_t *surface,
+cairo_surface_attach_snapshot (cairo_surface_t *surface,
 				 cairo_surface_t *snapshot,
 				 cairo_surface_func_t detach_func)
 {
@@ -344,7 +344,7 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
     cairo_surface_reference (snapshot);
 
     if (snapshot->snapshot_of != NULL)
-	_cairo_surface_detach_snapshot (snapshot);
+	cairo_surface_detach_snapshot (snapshot);
 
     snapshot->snapshot_of = surface;
     snapshot->snapshot_detach = detach_func;
@@ -387,7 +387,7 @@ _cairo_surface_begin_modification (cairo_surface_t *surface)
     assert (! surface->finished);
     assert (surface->snapshot_of == NULL);
 
-    _cairo_surface_detach_snapshots (surface);
+    cairo_surface_detach_snapshots (surface);
     _cairo_surface_detach_mime_data (surface);
 }
 
@@ -716,9 +716,9 @@ cairo_surface_finish (cairo_surface_t *surface)
 	return;
 
     /* update the snapshots *before* we declare the surface as finished */
-    _cairo_surface_detach_snapshots (surface);
+    cairo_surface_detach_snapshots (surface);
     if (surface->snapshot_of != NULL)
-	_cairo_surface_detach_snapshot (surface);
+	cairo_surface_detach_snapshot (surface);
 
     cairo_surface_flush (surface);
     surface->finished = TRUE;
@@ -1111,7 +1111,7 @@ cairo_surface_flush (cairo_surface_t *surface)
 	return;
 
     /* update the current snapshots *before* the user updates the surface */
-    _cairo_surface_detach_snapshots (surface);
+    cairo_surface_detach_snapshots (surface);
 
     if (surface->backend->flush) {
 	status = surface->backend->flush (surface);
@@ -1633,7 +1633,7 @@ _cairo_recording_surface_clone_similar (cairo_surface_t  *surface,
 	    return status;
 	}
 
-	_cairo_surface_attach_snapshot (src, similar, NULL);
+	cairo_surface_attach_snapshot (src, similar, NULL);
 
 	src_x = src_y = 0;
     }
