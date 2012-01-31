@@ -94,3 +94,16 @@ function testNull() {
     assertEq(arr[0], null);
 }
 testNull();
+
+// Bug 722245.
+function testConstantGcThing() {
+    function f(arr, x) {
+        arr[x] = "abc";
+    }
+    var arr = ["", ""];
+    for (var i=0; i<100; i++) {
+        f(arr, 1);
+    }
+    assertEq(arr[1], "abc");
+}
+testConstantGcThing();

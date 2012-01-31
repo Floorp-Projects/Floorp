@@ -256,6 +256,10 @@ class Assembler : public AssemblerX86Shared
             masm.movl_i32m(ptr.value, dest.disp(), dest.base());
             writeDataRelocation(masm.currentOffset());
             break;
+          case Operand::SCALE:
+            masm.movl_i32m(ptr.value, dest.disp(), dest.base(), dest.index(), dest.scale());
+            writeDataRelocation(masm.currentOffset());
+            break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
