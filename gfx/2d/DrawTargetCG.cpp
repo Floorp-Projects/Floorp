@@ -108,12 +108,14 @@ CGBlendMode ToBlendMode(CompositionOp op)
 
 
 
-DrawTargetCG::DrawTargetCG()
+DrawTargetCG::DrawTargetCG() : mSnapshot(NULL)
 {
 }
 
 DrawTargetCG::~DrawTargetCG()
 {
+  MarkChanged();
+
   // We need to conditionally release these because Init can fail without initializing these.
   if (mColorSpace)
     CGColorSpaceRelease(mColorSpace);
@@ -125,8 +127,11 @@ DrawTargetCG::~DrawTargetCG()
 TemporaryRef<SourceSurface>
 DrawTargetCG::Snapshot()
 {
-  RefPtr<SourceSurfaceCG> newSurf = new SourceSurfaceCG(CGBitmapContextCreateImage(mCg));
-  return newSurf;
+  if (!mSnapshot) {
+    mSnapshot = new SourceSurfaceCGBitmapContext(this);
+  }
+
+  return mSnapshot;
 }
 
 TemporaryRef<DrawTarget>
@@ -157,6 +162,18 @@ DrawTargetCG::CreateSourceSurfaceFromData(unsigned char *aData,
   return newSurf;
 }
 
+static CGImageRef
+GetImageFromSourceSurface(SourceSurface *aSurface)
+{
+  if (aSurface->GetType() == SURFACE_COREGRAPHICS_IMAGE)
+    return static_cast<SourceSurfaceCG*>(aSurface)->GetImage();
+  else if (aSurface->GetType() == SURFACE_COREGRAPHICS_CGCONTEXT)
+    return static_cast<SourceSurfaceCGBitmapContext*>(aSurface)->GetImage();
+  else if (aSurface->GetType() == SURFACE_DATA)
+    return static_cast<DataSourceSurfaceCG*>(aSurface)->GetImage();
+  assert(0);
+}
+
 TemporaryRef<SourceSurface>
 DrawTargetCG::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
@@ -181,6 +198,7 @@ class UnboundnessFixer
         //XXX: The size here is in default user space units, of the layer relative to the graphics context.
         // is the clip bounds still correct if, for example, we have a scale applied to the context?
         mLayer = CGLayerCreateWithContext(baseCg, mClipBounds.size, NULL);
+        //XXX: if the size is 0x0 we get a NULL CGContext back from GetContext
         mCg = CGLayerGetContext(mLayer);
         // CGContext's default to have the origin at the bottom left
         // so flip it to the top left and adjust for the origin
@@ -213,43 +231,43 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
                            const DrawSurfaceOptions &aSurfOptions,
                            const DrawOptions &aDrawOptions)
 {
+  MarkChanged();
+
   CGImageRef image;
   CGImageRef subimage = NULL;
-  if (aSurface->GetType() == SURFACE_COREGRAPHICS_IMAGE) {
-    CGContextSaveGState(mCg);
+  CGContextSaveGState(mCg);
 
-    CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
-    UnboundnessFixer fixer;
-    CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
-    CGContextSetAlpha(cg, aDrawOptions.mAlpha);
+  CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
+  UnboundnessFixer fixer;
+  CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
+  CGContextSetAlpha(cg, aDrawOptions.mAlpha);
 
-    CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
-    image = static_cast<SourceSurfaceCG*>(aSurface)->GetImage();
-    /* we have two options here:
-     *  - create a subimage -- this is slower
-     *  - fancy things with clip and different dest rects */
-    {
-      subimage = CGImageCreateWithImageInRect(image, RectToCGRect(aSource));
-      image = subimage;
-    }
-
-    CGContextScaleCTM(cg, 1, -1);
-
-    CGRect flippedRect = CGRectMake(aDest.x, -(aDest.y + aDest.height),
-                                    aDest.width, aDest.height);
-
-    //XXX: we should implement this for patterns too
-    if (aSurfOptions.mFilter == FILTER_POINT)
-      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-
-    CGContextDrawImage(cg, flippedRect, image);
-
-    fixer.Fix(mCg);
-
-    CGContextRestoreGState(mCg);
-
-    CGImageRelease(subimage);
+  CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
+  image = GetImageFromSourceSurface(aSurface);
+  /* we have two options here:
+   *  - create a subimage -- this is slower
+   *  - fancy things with clip and different dest rects */
+  {
+    subimage = CGImageCreateWithImageInRect(image, RectToCGRect(aSource));
+    image = subimage;
   }
+
+  CGContextScaleCTM(cg, 1, -1);
+
+  CGRect flippedRect = CGRectMake(aDest.x, -(aDest.y + aDest.height),
+                                  aDest.width, aDest.height);
+
+  //XXX: we should implement this for patterns too
+  if (aSurfOptions.mFilter == FILTER_POINT)
+    CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
+
+  CGContextDrawImage(cg, flippedRect, image);
+
+  fixer.Fix(mCg);
+
+  CGContextRestoreGState(mCg);
+
+  CGImageRelease(subimage);
 }
 
 static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor)
@@ -373,7 +391,7 @@ CreateCGPattern(const Pattern &aPattern, CGAffineTransform aUserSpace)
 {
   const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
   // XXX: is .get correct here?
-  CGImageRef image = static_cast<SourceSurfaceCG*>(pat.mSurface.get())->GetImage();
+  CGImageRef image = GetImageFromSourceSurface(pat.mSurface.get());
   CGFloat xStep, yStep;
   switch (pat.mExtendMode) {
     case EXTEND_CLAMP:
@@ -465,6 +483,8 @@ DrawTargetCG::FillRect(const Rect &aRect,
                         const Pattern &aPattern,
                         const DrawOptions &aDrawOptions)
 {
+  MarkChanged();
+
   CGContextSaveGState(mCg);
 
   UnboundnessFixer fixer;
@@ -489,6 +509,8 @@ DrawTargetCG::FillRect(const Rect &aRect,
 void
 DrawTargetCG::StrokeLine(const Point &p1, const Point &p2, const Pattern &aPattern, const StrokeOptions &aStrokeOptions, const DrawOptions &aDrawOptions)
 {
+  MarkChanged();
+
   CGContextSaveGState(mCg);
 
   UnboundnessFixer fixer;
@@ -524,6 +546,8 @@ DrawTargetCG::StrokeRect(const Rect &aRect,
                          const StrokeOptions &aStrokeOptions,
                          const DrawOptions &aDrawOptions)
 {
+  MarkChanged();
+
   CGContextSaveGState(mCg);
 
   UnboundnessFixer fixer;
@@ -571,6 +595,8 @@ DrawTargetCG::StrokeRect(const Rect &aRect,
 void
 DrawTargetCG::ClearRect(const Rect &aRect)
 {
+  MarkChanged();
+
   CGContextSaveGState(mCg);
   CGContextConcatCTM(mCg, GfxMatrixToCGAffineTransform(mTransform));
 
@@ -582,6 +608,8 @@ DrawTargetCG::ClearRect(const Rect &aRect)
 void
 DrawTargetCG::Stroke(const Path *aPath, const Pattern &aPattern, const StrokeOptions &aStrokeOptions, const DrawOptions &aDrawOptions)
 {
+  MarkChanged();
+
   CGContextSaveGState(mCg);
 
   UnboundnessFixer fixer;
@@ -622,6 +650,8 @@ DrawTargetCG::Stroke(const Path *aPath, const Pattern &aPattern, const StrokeOpt
 void
 DrawTargetCG::Fill(const Path *aPath, const Pattern &aPattern, const DrawOptions &aDrawOptions)
 {
+  MarkChanged();
+
   assert(aPath->GetBackendType() == BACKEND_COREGRAPHICS);
 
   CGContextSaveGState(mCg);
@@ -660,6 +690,8 @@ DrawTargetCG::Fill(const Path *aPath, const Pattern &aPattern, const DrawOptions
 void
 DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pattern &aPattern, const DrawOptions &aDrawOptions)
 {
+  MarkChanged();
+
   assert(aBuffer.mNumGlyphs);
   CGContextSaveGState(mCg);
 
@@ -723,10 +755,12 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
                           const IntRect& aSourceRect,
                           const IntPoint &aDestination)
 {
+  MarkChanged();
+
   CGImageRef image;
   CGImageRef subimage = NULL;
   if (aSurface->GetType() == SURFACE_COREGRAPHICS_IMAGE) {
-    image = static_cast<SourceSurfaceCG*>(aSurface)->GetImage();
+    image = GetImageFromSourceSurface(aSurface);
     /* we have two options here:
      *  - create a subimage -- this is slower
      *  - fancy things with clip and different dest rects */
@@ -758,33 +792,33 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
 void
 DrawTargetCG::DrawSurfaceWithShadow(SourceSurface *aSurface, const Point &aDest, const Color &aColor, const Point &aOffset, Float aSigma, CompositionOp aOperator)
 {
+  MarkChanged();
+
   CGImageRef image;
   CGImageRef subimage = NULL;
-  if (aSurface->GetType() == SURFACE_COREGRAPHICS_IMAGE) {
-    image = static_cast<SourceSurfaceCG*>(aSurface)->GetImage();
+  image = GetImageFromSourceSurface(aSurface);
 
-    IntSize size = aSurface->GetSize();
-    CGContextSaveGState(mCg);
-    //XXX do we need to do the fixup here?
-    CGContextSetBlendMode(mCg, ToBlendMode(aOperator));
+  IntSize size = aSurface->GetSize();
+  CGContextSaveGState(mCg);
+  //XXX do we need to do the fixup here?
+  CGContextSetBlendMode(mCg, ToBlendMode(aOperator));
 
-    CGContextScaleCTM(mCg, 1, -1);
+  CGContextScaleCTM(mCg, 1, -1);
 
-    CGRect flippedRect = CGRectMake(aDest.x, -(aDest.y + size.height),
-                                    size.width, size.height);
+  CGRect flippedRect = CGRectMake(aDest.x, -(aDest.y + size.height),
+                                  size.width, size.height);
 
-    CGColorRef color = ColorToCGColor(mColorSpace, aColor);
-    CGSize offset = {aOffset.x, -aOffset.y};
-    // CoreGraphics needs twice sigma as it's amount of blur
-    CGContextSetShadowWithColor(mCg, offset, 2*aSigma, color);
-    CGColorRelease(color);
+  CGColorRef color = ColorToCGColor(mColorSpace, aColor);
+  CGSize offset = {aOffset.x, -aOffset.y};
+  // CoreGraphics needs twice sigma as it's amount of blur
+  CGContextSetShadowWithColor(mCg, offset, 2*aSigma, color);
+  CGColorRelease(color);
 
-    CGContextDrawImage(mCg, flippedRect, image);
+  CGContextDrawImage(mCg, flippedRect, image);
 
-    CGContextRestoreGState(mCg);
+  CGContextRestoreGState(mCg);
 
-    CGImageRelease(subimage);
-  }
+  CGImageRelease(subimage);
 }
 
 bool
@@ -795,6 +829,7 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   if (aSize.width == 0 || aSize.height == 0) {
     mColorSpace = NULL;
     mCg = NULL;
+    mData = NULL;
     return false;
   }
 
@@ -829,6 +864,7 @@ DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &)
   if (aSize.width == 0 || aSize.height == 0) {
     mColorSpace = NULL;
     mCg = NULL;
+    mData = NULL;
     return false;
   }
 
@@ -865,6 +901,14 @@ DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &)
   // so flip it to the top left
   CGContextTranslateCTM(mCg, 0, mSize.height);
   CGContextScaleCTM(mCg, 1, -1);
+  // See Bug 722164 for performance details
+  // Medium or higher quality lead to expensive interpolation
+  // for canvas we want to use low quality interpolation
+  // to have competitive performance with other canvas
+  // implementation.
+  // XXX: Create input parameter to control interpolation and
+  //      use the default for content.
+  CGContextSetInterpolationQuality(mCg, kCGInterpolationLow);
 
   //XXX: set correct format
   mFormat = FORMAT_B8G8R8A8;
@@ -894,6 +938,7 @@ DrawTargetCG::Mask(const Pattern &aSource,
                    const Pattern &aMask,
                    const DrawOptions &aDrawOptions)
 {
+  MarkChanged();
 
   CGContextSaveGState(mCg);
 
@@ -910,7 +955,7 @@ DrawTargetCG::Mask(const Pattern &aSource,
       //FillRect(rect, aSource, drawOptions);
     } else if (aMask.GetType() == PATTERN_SURFACE) {
       const SurfacePattern& pat = static_cast<const SurfacePattern&>(aMask);
-      CGImageRef mask = static_cast<SourceSurfaceCG*>(pat.mSurface.get())->GetImage();
+      CGImageRef mask = GetImageFromSourceSurface(pat.mSurface.get());
       Rect rect(0,0, CGImageGetWidth(mask), CGImageGetHeight(mask));
       // XXX: probably we need to do some flipping of the image or something
       CGContextClipToMask(mCg, RectToCGRect(rect), mask);
@@ -972,6 +1017,18 @@ void
 DrawTargetCG::PopClip()
 {
   CGContextRestoreGState(mCg);
+}
+
+void
+DrawTargetCG::MarkChanged()
+{
+  if (mSnapshot) {
+    if (mSnapshot->refCount() > 1) {
+      // We only need to worry about snapshots that someone else knows about
+      mSnapshot->DrawTargetWillChange();
+    }
+    mSnapshot = NULL;
+  }
 }
 
 

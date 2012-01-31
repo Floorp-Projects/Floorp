@@ -587,6 +587,7 @@ var glErrorShouldBe = function(gl, glError, opt_msg) {
  * @param {function(string): void) opt_errorCallback callback for errors. 
  */
 var linkProgram = function(gl, program, opt_errorCallback) {
+  errFn = opt_errorCallback || testFailed;
   // Link the program
   gl.linkProgram(program);
 
@@ -596,7 +597,7 @@ var linkProgram = function(gl, program, opt_errorCallback) {
     // something went wrong with the link
     var error = gl.getProgramInfoLog (program);
 
-    testFailed("Error in program linking:" + error);
+    errFn("Error in program linking:" + error);
 
     gl.deleteProgram(program);
   }
@@ -931,7 +932,7 @@ var loadShaderFromScript = function(
   var shaderType;
   var shaderScript = document.getElementById(scriptId);
   if (!shaderScript) {
-    throw("*** Error: unknown script element" + scriptId);
+    throw("*** Error: unknown script element " + scriptId);
   }
   shaderSource = shaderScript.text;
 
@@ -1030,6 +1031,41 @@ var loadProgram = function(
           gl, fragmentShader, gl.FRAGMENT_SHADER, opt_errorCallback));
   linkProgram(gl, program, opt_errorCallback);
   return program;
+};
+
+/**
+ * Loads shaders from source, creates a program, attaches the shaders and
+ * links but expects error.
+ *
+ * GLSL 1.0.17 10.27 effectively says that compileShader can
+ * always succeed as long as linkProgram fails so we can't
+ * rely on compileShader failing. This function expects
+ * one of the shader to fail OR linking to fail.
+ *
+ * @param {!WebGLContext} gl The WebGLContext to use.
+ * @param {string} vertexShaderScriptId The vertex shader.
+ * @param {string} fragmentShaderScriptId The fragment shader.
+ * @return {WebGLProgram} The created program.
+ */
+var loadProgramFromScriptExpectError = function(
+    gl, vertexShaderScriptId, fragmentShaderScriptId) {
+  var vertexShader = loadShaderFromScript(gl, vertexShaderScriptId);
+  if (!vertexShader) {
+    return null;
+  }
+  var fragmentShader = loadShaderFromScript(gl, fragmentShaderScriptId);
+  if (!fragmentShader) {
+    return null;
+  }
+  var linkSuccess = true;
+  var program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  linkSuccess = true;
+  linkProgram(gl, program, function() {
+      linkSuccess = false;
+    });
+  return linkSuccess ? program : null;
 };
 
 var basePath;
@@ -1144,6 +1180,7 @@ return {
   loadProgram: loadProgram,
   loadProgramFromFile: loadProgramFromFile,
   loadProgramFromScript: loadProgramFromScript,
+  loadProgramFromScriptExpectError: loadProgramFromScriptExpectError,
   loadShader: loadShader,
   loadShaderFromFile: loadShaderFromFile,
   loadShaderFromScript: loadShaderFromScript,

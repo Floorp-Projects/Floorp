@@ -300,5 +300,14 @@ _TEST_FILES = \
 		test_bug694503.html \
 		$(NULL)
 
+_BROWSER_TEST_FILES = \
+		browser_bug649778.js \
+		file_bug649778.html \
+		file_bug649778.html^headers^ \
+		$(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

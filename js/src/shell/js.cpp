@@ -3889,15 +3889,6 @@ MJitChunkLimit(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
-JSBool
-StringStats(JSContext *cx, uintN argc, jsval *vp)
-{
-    // XXX: should report something meaningful;  bug 625305 will probably fix
-    // this.
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(0));
-    return true;
-}
-
 enum CompartmentKind { SAME_COMPARTMENT, NEW_COMPARTMENT };
 
 static JSObject *
@@ -4063,7 +4054,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("mjitcodestats",  MJitCodeStats,  0,0),
 #endif
     JS_FN("mjitChunkLimit", MJitChunkLimit, 1,0),
-    JS_FN("stringstats",    StringStats,    0,0),
     JS_FN("newGlobal",      NewGlobal,      1,0),
     JS_FN("parseLegacyJSON",ParseLegacyJSON,1,0),
     JS_FN("enableStackWalkingAssertion",EnableStackWalkingAssertion,1,0),
@@ -4212,7 +4202,6 @@ static const char *const shell_help_messages[] = {
 "mjitcodestats()          Return stats on mjit code memory usage.",
 #endif
 "mjitChunkLimit(N)        Specify limit on compiled chunk size during mjit compilation.",
-"stringstats()            Return stats on string memory usage.",
 "newGlobal(kind)          Return a new global object, in the current\n"
 "                         compartment if kind === 'same-compartment' or in a\n"
 "                         new compartment if kind === 'new-compartment'",

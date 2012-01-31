@@ -1066,6 +1066,7 @@ struct JSObject : js::gc::Cell
     inline void copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count);
     inline void initDenseArrayElements(uintN dstStart, const js::Value *src, uintN count);
     inline void moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count);
+    inline void moveDenseArrayElementsUnbarriered(uintN dstStart, uintN srcStart, uintN count);
     inline bool denseArrayHasInlineSlots() const;
 
     /* Packed information for this array. */

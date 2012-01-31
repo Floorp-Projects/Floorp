@@ -880,8 +880,8 @@ public:
     MaybeRescheduleAnimationFrameNotifications();
   }
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
-                                                         nsIDocument)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
+                                                                   nsIDocument)
 
   void DoNotifyPossibleTitleChange();
 

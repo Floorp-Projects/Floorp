@@ -342,6 +342,12 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
             nsRefPtr<IDXGIFactory1> factory1;
             HRESULT hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
                                             getter_AddRefs(factory1));
+
+            if (FAILED(hr) || !factory1) {
+              // This seems to happen with some people running the iZ3D driver.
+              // They won't get acceleration.
+              return;
+            }
     
             nsRefPtr<IDXGIAdapter1> adapter1; 
             hr = factory1->EnumAdapters1(0, getter_AddRefs(adapter1));
