@@ -944,11 +944,6 @@ void nsNSSSocketInfo::GetPreviousCert(nsIX509Cert** _result)
   NS_ASSERTION(_result, "_result parameter to GetPreviousCert is null");
   *_result = nsnull;
 
-  if (NS_IsMainThread()) {
-    NS_ERROR("nsNSSSocketInfo::GetPreviousCert called on the main thread");
-    return;
-  }
-
   nsRefPtr<PreviousCertRunnable> runnable = new PreviousCertRunnable(mCallbacks);
   nsresult rv = runnable->DispatchToMainThreadAndWait();
   NS_ASSERTION(NS_SUCCEEDED(rv), "runnable->DispatchToMainThreadAndWait() failed");
