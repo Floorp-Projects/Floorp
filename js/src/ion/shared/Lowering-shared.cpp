@@ -112,6 +112,9 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
             LAllocation *type = snapshot->typeOfSlot(i);
             LAllocation *payload = snapshot->payloadOfSlot(i);
 
+            if (ins->isPassArg())
+                ins = ins->toPassArg()->getArgument();
+
             // The register allocation will fill these fields in with actual
             // register/stack assignments. During code generation, we can restore
             // interpreter state with the given information. Note that for
@@ -151,6 +154,10 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
         MResumePoint *mir = *it;
         for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
             MDefinition *def = mir->getOperand(j);
+
+            if (def->isPassArg())
+                def = def->toPassArg()->getArgument();
+
             LAllocation *a = snapshot->getEntry(i);
 
             if (def->isUnused()) {
