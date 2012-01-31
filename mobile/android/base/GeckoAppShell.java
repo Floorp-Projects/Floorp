@@ -226,6 +226,7 @@ public class GeckoAppShell
             try {
                 sHandler = lt.mHandlerQueue.take();
             } catch (InterruptedException ie) {}
+
         }
         return sHandler;
     }
@@ -567,7 +568,7 @@ public class GeckoAppShell
         while (sGeckoPendingAcks.getCount() != 0) {
             try {
                 sGeckoPendingAcks.await();
-            } catch (InterruptedException e) {}
+            } catch(InterruptedException e) {}
         }
         sGeckoPendingAcks = null;
     }
@@ -1391,8 +1392,38 @@ public class GeckoAppShell
     }
 
     public static void removePluginView(View view) {
-        Log.i(LOGTAG, "remove view:" + view);
+        Log.i(LOGTAG, "removePluginView:" + view);
         GeckoApp.mAppContext.removePluginView(view);
+    }
+
+    public static Surface createSurface() {
+        Log.i(LOGTAG, "createSurface");
+        return GeckoApp.mAppContext.createSurface();
+    }
+
+    public static void showSurface(Surface surface,
+                                   int x, int y,
+                                   int w, int h,
+                                   boolean inverted,
+                                   boolean blend,
+                                   String metadata)
+    {
+        Log.i(LOGTAG, "showSurface:" + surface + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + " inverted: " + inverted + " blend: " + blend + " metadata: " + metadata);
+        try {
+            GeckoApp.mAppContext.showSurface(surface, x, y, w, h, inverted, blend, metadata);
+        } catch (Exception e) {
+            Log.i(LOGTAG, "Error in showSurface:", e);
+        }
+    }
+
+    public static void hideSurface(Surface surface) {
+        Log.i(LOGTAG, "hideSurface:" + surface);
+        GeckoApp.mAppContext.hideSurface(surface);
+    }
+
+    public static void destroySurface(Surface surface) {
+        Log.i(LOGTAG, "destroySurface:" + surface);
+        GeckoApp.mAppContext.destroySurface(surface);
     }
 
     public static Class<?> loadPluginClass(String className, String libName) {

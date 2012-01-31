@@ -63,12 +63,17 @@ CPPSRCS += ANPAudio.cpp    \
            ANPWindow.cpp   \
            ANPBitmap.cpp   \
            ANPLog.cpp      \
+           ANPNativeWindow.cpp \
            ANPSurface.cpp  \
+           ANPVideo.cpp    \
+           ANPOpenGL.cpp   \
            $(NULL)
 
 LOCAL_INCLUDES += \
+  -I$(topsrcdir)/widget/android \
   -I$(topsrcdir)/dom/plugins/base \
   -I$(topsrcdir)/dom/plugins/base/android/include \
+  -I$(topsrcdir)/gfx/gl \
   $(MOZ_CAIRO_CFLAGS) \
   $(NULL)
 
