@@ -425,7 +425,7 @@ void TableTicker::doBacktrace(Profile &aProfile)
   void *array[100];
   int count = backtrace (array, 100);
 
-  aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
+  aProfile.addTag(ProfileEntry('s', "(root)", 0));
 
   for (int i = 0; i < count; i++) {
     if( (intptr_t)array[i] == -1 ) break;
@@ -464,7 +464,7 @@ void TableTicker::doBacktrace(Profile &aProfile)
   };
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
   if (NS_SUCCEEDED(rv)) {
-    aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
+    aProfile.addTag(ProfileEntry('s', "(root)", 0));
 
     for (size_t i = array.count; i > 0; --i) {
       aProfile.addTag(ProfileEntry('l', (const char*)array.array[i - 1]));
