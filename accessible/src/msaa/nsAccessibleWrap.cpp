@@ -97,8 +97,8 @@ ITypeInfo* nsAccessibleWrap::gTypeInfo = NULL;
 // construction
 //-----------------------------------------------------
 nsAccessibleWrap::
-  nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessible(aContent, aShell), mEnumVARIANTPosition(0)
+  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessible(aContent, aDoc), mEnumVARIANTPosition(0)
 {
 }
 
@@ -1550,7 +1550,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
     return NS_OK;
 
   // Means we're not active.
-  NS_ENSURE_TRUE(mWeakShell, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(!IsDefunct(), NS_ERROR_FAILURE);
 
   nsAccessible *accessible = aEvent->GetAccessible();
   if (!accessible)
@@ -1621,6 +1621,10 @@ HWND
 nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 {
   if (aAccessible) {
+    nsDocAccessible* document = aAccessible->GetDocAccessible();
+    if(!document)
+      return nsnull;
+
     // Popup lives in own windows, use its HWND until the popup window is
     // hidden to make old JAWS versions work with collapsed comboboxes (see
     // discussion in bug 379678).
@@ -1631,7 +1635,7 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
         bool isVisible = false;
         widget->IsVisible(isVisible);
         if (isVisible) {
-          nsCOMPtr<nsIPresShell> shell(aAccessible->GetPresShell());
+          nsCOMPtr<nsIPresShell> shell(document->PresShell());
           nsIViewManager* vm = shell->GetViewManager();
           if (vm) {
             nsCOMPtr<nsIWidget> rootWidget;
@@ -1646,9 +1650,7 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
       }
     }
 
-    nsDocAccessible* document = aAccessible->GetDocAccessible();
-    if (document)
-      return static_cast<HWND>(document->GetNativeWindow());
+    return static_cast<HWND>(document->GetNativeWindow());
   }
   return nsnull;
 }

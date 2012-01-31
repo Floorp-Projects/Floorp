@@ -71,8 +71,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenuitemAccessible::
-  nsXULMenuitemAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXULMenuitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -408,8 +408,8 @@ nsXULMenuitemAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenuSeparatorAccessible::
-  nsXULMenuSeparatorAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsXULMenuitemAccessible(aContent, aShell)
+  nsXULMenuSeparatorAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenuitemAccessible(aContent, aDoc)
 {
 }
 
@@ -454,8 +454,8 @@ nsXULMenuSeparatorAccessible::ActionCount()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenupopupAccessible::
-  nsXULMenupopupAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  XULSelectControlAccessible(aContent, aShell)
+  nsXULMenupopupAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULSelectControlAccessible(aContent, aDoc)
 {
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame());
   if (menuPopupFrame && menuPopupFrame->IsMenu())
@@ -594,8 +594,8 @@ nsXULMenupopupAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenubarAccessible::
-  nsXULMenubarAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXULMenubarAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
 }
 

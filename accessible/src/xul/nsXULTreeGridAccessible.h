@@ -50,7 +50,7 @@ class nsXULTreeGridAccessible : public nsXULTreeAccessible,
                                 public nsIAccessibleTable
 {
 public:
-  nsXULTreeGridAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULTreeGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -78,9 +78,9 @@ public:
   using nsAccessible::GetChildCount;
   using nsAccessible::GetChildAt;
 
-  nsXULTreeGridRowAccessible(nsIContent *aContent, nsIWeakReference *aShell,
-                             nsAccessible *aParent, nsITreeBoxObject *aTree,
-                             nsITreeView *aTreeView, PRInt32 aRow);
+  nsXULTreeGridRowAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+                             nsAccessible* aParent, nsITreeBoxObject* aTree,
+                             nsITreeView* aTreeView, PRInt32 aRow);
 
   // nsISupports and cycle collection
   NS_DECL_ISUPPORTS_INHERITED
@@ -132,9 +132,9 @@ class nsXULTreeGridCellAccessible : public nsLeafAccessible,
 public:
   using nsAccessible::GetParent;
 
-  nsXULTreeGridCellAccessible(nsIContent *aContent, nsIWeakReference *aShell,
-                              nsXULTreeGridRowAccessible *aRowAcc,
-                              nsITreeBoxObject *aTree, nsITreeView *aTreeView,
+  nsXULTreeGridCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+                              nsXULTreeGridRowAccessible* aRowAcc,
+                              nsITreeBoxObject* aTree, nsITreeView* aTreeView,
                               PRInt32 aRow, nsITreeColumn* aColumn);
 
   // nsISupports
