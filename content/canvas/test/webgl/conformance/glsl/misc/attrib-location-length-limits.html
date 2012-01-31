@@ -60,8 +60,8 @@ if (attribLoc == -1) {
 wtu.glErrorShouldBe(gl, gl.NONE);
 
 debug("Test attrib location over the length limit");
-debug("Shader compilation should fail");
-shouldBe('wtu.loadShaderFromScript(gl, "badVertexShader", gl.VERTEX_SHADER, function (err) {})', 'null');
+debug("Shader compilation or link should fail");
+shouldBe('wtu.loadProgramFromScriptExpectError(gl, "badVertexShader", "fragmentShader")', 'null');
 wtu.glErrorShouldBe(gl, gl.NONE);
 
 debug("Attempt to bind too-long attrib location should produce error");

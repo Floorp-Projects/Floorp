@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
 <script src="../../resources/js-test-pre.js"></script>
 <script src="../resources/webgl-test.js"></script>
@@ -68,7 +67,7 @@ function testLosingContext()
          // we didn't call prevent default so we should not be able to restore the context
          shouldGenerateGLError(gl, gl.INVALID_OPERATION, "extension.restoreContext()");
          testLosingAndRestoringContext();
-       }, 1);
+       }, 0);
     });
     canvas.addEventListener("webglcontextrestored", testShouldNotRestoreContext);
     allowRestore = false;
@@ -106,7 +105,7 @@ function testLosingAndRestoringContext()
         shouldBe("gl.getError()", "gl.NO_ERROR");
         // gl methods should still be no-ops
         shouldGenerateGLError(gl, gl.NO_ERROR, "gl.blendFunc(gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP)");
-      }, 1);
+      }, 0);
     });
     canvas.addEventListener("webglcontextrestored", function() {
       testRestoredContext();
@@ -164,7 +163,7 @@ function testLostContext(e)
     shouldBeTrue("gl.isContextLost()");
     shouldBe("gl.getError()", "gl.NO_ERROR");
     debug("");
-    if (allowRestore) 
+    if (allowRestore)
       e.preventDefault();
 }
 

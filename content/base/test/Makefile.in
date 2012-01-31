@@ -529,6 +529,7 @@ _TEST_FILES2 = \
 		file_bug692434.xml \
 		test_bug693615.html \
 		test_bug693875.html \
+		test_bug694754.xhtml \
 		test_bug698384.html \
 		test_nodelist_holes.html \
 		test_xhr_abort_after_load.html \
