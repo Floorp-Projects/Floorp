@@ -164,6 +164,8 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mErrorCode(0),
     mErrorMessageType(PlainErrorMessage),
     mForSTARTTLS(false),
+    mSSL3Enabled(false),
+    mTLSEnabled(false),
     mHandshakePending(true),
     mHasCleartextPhase(false),
     mHandshakeInProgress(false),
@@ -1759,16 +1761,13 @@ nsSSLIOLayerHelpers::getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key)
 // Call this function to report a site that is possibly TLS intolerant.
 // This function will return true, if the given socket is currently using TLS.
 bool
-nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(PRFileDesc* ssl_layer_fd, nsNSSSocketInfo *socketInfo)
+nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(nsNSSSocketInfo *socketInfo)
 {
-  PRBool currentlyUsesTLS = false;
-
   nsCAutoString key;
   getSiteKey(socketInfo, key);
 
-  SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_TLS, &currentlyUsesTLS);
-  if (!currentlyUsesTLS) {
-    // We were not using TLS but failed with an intolerant error using
+  if (!socketInfo->IsTLSEnabled()) {
+    // We did not offer TLS but failed with an intolerant error using
     // a different protocol. To give TLS a try on next connection attempt again
     // drop this site from the list of intolerant sites. TLS failure might be 
     // caused only by a traffic congestion while the server is TLS tolerant.
@@ -1776,27 +1775,19 @@ nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(PRFileDesc* ssl_layer_fd, ns
     return false;
   }
 
-  PRBool enableSSL3 = false;
-  SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_SSL3, &enableSSL3);
-  if (enableSSL3) {
+  if (socketInfo->IsSSL3Enabled()) {
     // Add this site to the list of TLS intolerant sites.
     addIntolerantSite(key);
   }
   
-  return currentlyUsesTLS;
+  return socketInfo->IsTLSEnabled();
 }
 
 void
-nsSSLIOLayerHelpers::rememberTolerantSite(PRFileDesc* ssl_layer_fd, 
-                                          nsNSSSocketInfo *socketInfo)
+nsSSLIOLayerHelpers::rememberTolerantSite(nsNSSSocketInfo *socketInfo)
 {
-  PRBool usingSecurity = false;
-  PRBool currentlyUsesTLS = false;
-  SSL_OptionGet(ssl_layer_fd, SSL_SECURITY, &usingSecurity);
-  SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_TLS, &currentlyUsesTLS);
-  if (!usingSecurity || !currentlyUsesTLS) {
+  if (!socketInfo->IsTLSEnabled())
     return;
-  }
 
   nsCAutoString key;
   getSiteKey(socketInfo, key);
@@ -2024,7 +2015,7 @@ PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
       if (!wantRetry // no decision yet
           && isTLSIntoleranceError(err, socketInfo->GetHasCleartextPhase()))
       {
-        wantRetry = nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(ssl_layer_fd, socketInfo);
+        wantRetry = nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(socketInfo);
       }
     }
     
@@ -2052,7 +2043,7 @@ PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
           && !socketInfo->GetHasCleartextPhase()) // mirror PR_CONNECT_RESET_ERROR treament
       {
         wantRetry = 
-          nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(ssl_layer_fd, socketInfo);
+          nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(socketInfo);
       }
     }
   }
@@ -3914,6 +3905,16 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS,
     // hellos, it is more likely that we will get a reasonable error code
     // on our single retry attempt.
   }
+
+  PRBool enabled;
+  if (SECSuccess != SSL_OptionGet(fd, SSL_ENABLE_SSL3, &enabled)) {
+    return NS_ERROR_FAILURE;
+  }
+  infoObject->SetSSL3Enabled(enabled);
+  if (SECSuccess != SSL_OptionGet(fd, SSL_ENABLE_TLS, &enabled)) {
+    return NS_ERROR_FAILURE;
+  }
+  infoObject->SetTLSEnabled(enabled);
 
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, true)) {
     return NS_ERROR_FAILURE;
