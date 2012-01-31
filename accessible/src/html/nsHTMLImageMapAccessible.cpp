@@ -57,9 +57,9 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLImageMapAccessible::
-  nsHTMLImageMapAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
-                           nsIDOMHTMLMapElement* aMapElm) :
-  nsHTMLImageAccessibleWrap(aContent, aDoc), mMapElement(aMapElm)
+  nsHTMLImageMapAccessible(nsIContent *aContent, nsIWeakReference *aShell,
+                           nsIDOMHTMLMapElement *aMapElm) :
+  nsHTMLImageAccessibleWrap(aContent, aShell), mMapElement(aMapElm)
 {
 }
 
@@ -130,7 +130,7 @@ nsHTMLImageMapAccessible::CacheChildren()
 
     nsCOMPtr<nsIContent> areaContent(do_QueryInterface(areaNode));
     nsRefPtr<nsAccessible> area =
-      new nsHTMLAreaAccessible(areaContent, mDoc);
+      new nsHTMLAreaAccessible(areaContent, mWeakShell);
 
     if (!document->BindToDocument(area, nsAccUtils::GetRoleMapEntry(areaContent)) ||
         !AppendChild(area)) {
@@ -145,8 +145,8 @@ nsHTMLImageMapAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLAreaAccessible::
-  nsHTMLAreaAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsHTMLLinkAccessible(aContent, aDoc)
+  nsHTMLAreaAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHTMLLinkAccessible(aContent, aShell)
 {
 }
 

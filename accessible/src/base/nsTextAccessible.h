@@ -47,7 +47,7 @@
 class nsTextAccessible : public nsLinkableAccessible
 {
 public:
-  nsTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsTextAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();

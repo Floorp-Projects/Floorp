@@ -41,7 +41,6 @@
 
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
 #include "nsTextAttrs.h"
 #include "Role.h"
 #include "States.h"
@@ -72,8 +71,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHyperTextAccessible::
-  nsHyperTextAccessible(nsIContent* aNode, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aNode, aDoc)
+  nsHyperTextAccessible(nsIContent *aNode, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aNode, aShell)
 {
   mFlags |= eHyperTextAccessible;
 }
@@ -210,8 +209,7 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 a
                                              &startContentOffsetInFrame, &frame);
   NS_ENSURE_SUCCESS(rv, screenRect);
 
-  NS_ENSURE_TRUE(mDoc, screenRect);
-  nsIPresShell* shell = mDoc->PresShell();
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
   NS_ENSURE_TRUE(shell, screenRect);
 
   nsPresContext *context = shell->GetPresContext();
@@ -884,10 +882,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   NS_ENSURE_ARG_POINTER(aEndOffset);
   *aStartOffset = *aEndOffset = 0;
 
-  if (!mDoc)
-    return NS_ERROR_FAILURE;
-
-  nsIPresShell* presShell = mDoc->PresShell();
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell) {
     return NS_ERROR_FAILURE;
   }
@@ -1298,10 +1293,7 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
                                         PRUint32 aCoordType, PRInt32 *aOffset)
 {
   *aOffset = -1;
-  if (!mDoc)
-    return NS_ERROR_FAILURE;
-
-  nsIPresShell* shell = mDoc->PresShell();
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
   if (!shell) {
     return NS_ERROR_FAILURE;
   }
@@ -1551,12 +1543,14 @@ nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   if (!editingSession)
     return NS_OK; // No editing session interface
 
-  NS_ENSURE_TRUE(mDoc, NS_ERROR_FAILURE);
-  nsIDocument* docNode = mDoc->GetDocumentNode();
-  NS_ENSURE_TRUE(docNode, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> doc = shell->GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIEditor> editor;
-  return editingSession->GetEditorForWindow(docNode->GetWindow(), aEditor);
+  return editingSession->GetEditorForWindow(doc->GetWindow(), aEditor);
 }
 
 /**
@@ -1594,10 +1588,11 @@ nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
   // Now that selection is done, move the focus to the selection.
   nsFocusManager* DOMFocusManager = nsFocusManager::GetFocusManager();
   if (DOMFocusManager) {
-    NS_ENSURE_TRUE(mDoc, NS_ERROR_FAILURE);
-    nsIDocument* docNode = mDoc->GetDocumentNode();
-    NS_ENSURE_TRUE(docNode, NS_ERROR_FAILURE);
-    nsCOMPtr<nsPIDOMWindow> window = docNode->GetWindow();
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDocument> doc = shell->GetDocument();
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+    nsCOMPtr<nsPIDOMWindow> window = doc->GetWindow();
     nsCOMPtr<nsIDOMElement> result;
     DOMFocusManager->MoveFocus(window, nsnull, nsIFocusManager::MOVEFOCUS_CARET,
                                nsIFocusManager::FLAG_BYMOVEFOCUS, getter_AddRefs(result));

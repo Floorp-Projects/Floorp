@@ -103,10 +103,9 @@ static const PRUint32 kRelationAttrsLen = NS_ARRAY_LENGTH(kRelationAttrs);
 nsDocAccessible::
   nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
                   nsIWeakReference *aShell) :
-  nsHyperTextAccessibleWrap(aRootContent, this),
+  nsHyperTextAccessibleWrap(aRootContent, aShell),
   mDocument(aDocument), mScrollPositionChangedTicks(0),
-  mLoadState(eTreeConstructionPending), mLoadEventType(0),
-  mPresShell(nsCOMPtr<nsIPresShell>(do_QueryReferent(aShell)).get())
+  mLoadState(eTreeConstructionPending), mLoadEventType(0)
 {
   mFlags |= eDocAccessible;
 
@@ -130,8 +129,8 @@ nsDocAccessible::
 
 nsDocAccessible::~nsDocAccessible()
 {
-  NS_ASSERTION(!mPresShell, "LastRelease was never called!?!");
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
@@ -193,6 +192,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDocAccessible)
 
 NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsHyperTextAccessible)
 NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsHyperTextAccessible)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
@@ -586,7 +586,8 @@ nsDocAccessible::Init()
   NS_LOG_ACCDOCCREATE_FOR("document initialize", mDocument, this)
 
   // Initialize notification controller.
-  mNotificationController = new NotificationController(this, mPresShell);
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  mNotificationController = new NotificationController(this, shell);
   if (!mNotificationController)
     return false;
 
@@ -603,7 +604,7 @@ nsDocAccessible::Init()
 void
 nsDocAccessible::Shutdown()
 {
-  if (!mPresShell) // already shutdown
+  if (!mWeakShell) // already shutdown
     return;
 
   NS_LOG_ACCDOCDESTROY_FOR("document shutdown", mDocument, this)
@@ -636,7 +637,7 @@ nsDocAccessible::Shutdown()
 
   mChildDocuments.Clear();
 
-  mPresShell = nsnull;  // Avoid reentrancy
+  mWeakShell = nsnull;  // Avoid reentrancy
 
   mDependentIDsHash.Clear();
   mNodeToAccessibleMap.Clear();
@@ -650,9 +651,11 @@ nsDocAccessible::Shutdown()
 nsIFrame*
 nsDocAccessible::GetFrame() const
 {
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+
   nsIFrame* root = nsnull;
-  if (mPresShell)
-    root = mPresShell->GetRootFrame();
+  if (shell)
+    root = shell->GetRootFrame();
 
   return root;
 }
@@ -710,7 +713,8 @@ nsresult nsDocAccessible::AddEventListeners()
   // 1) Set up scroll position listener
   // 2) Check for editor and listen for changes to editor
 
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
@@ -738,7 +742,7 @@ nsresult nsDocAccessible::AddEventListeners()
     NS_ENSURE_TRUE(rootAccessible, NS_ERROR_FAILURE);
     nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
     if (caretAccessible) {
-      caretAccessible->AddDocSelectionListener(mPresShell);
+      caretAccessible->AddDocSelectionListener(presShell);
     }
   }
 
@@ -784,8 +788,11 @@ nsresult nsDocAccessible::RemoveEventListeners()
   nsRootAccessible* rootAccessible = RootAccessible();
   if (rootAccessible) {
     nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
-    if (caretAccessible)
-      caretAccessible->RemoveDocSelectionListener(mPresShell);
+    if (caretAccessible) {
+      // Don't use GetPresShell() which can call Shutdown() if it sees dead pres shell
+      nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+      caretAccessible->RemoveDocSelectionListener(presShell);
+    }
   }
 
   return NS_OK;
@@ -815,10 +822,11 @@ void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
 // nsDocAccessible protected member
 void nsDocAccessible::AddScrollListener()
 {
-  if (!mPresShell)
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+  if (!presShell)
     return;
 
-  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollableExternal();
+  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollableExternal();
   if (sf) {
     sf->AddScrollPositionListener(this);
     NS_LOG_ACCDOCCREATE_TEXT("add scroll listener")
@@ -828,10 +836,11 @@ void nsDocAccessible::AddScrollListener()
 // nsDocAccessible protected member
 void nsDocAccessible::RemoveScrollListener()
 {
-  if (!mPresShell)
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+  if (!presShell)
     return;
  
-  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollableExternal();
+  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollableExternal();
   if (sf) {
     sf->RemoveScrollPositionListener(this);
   }
@@ -1269,10 +1278,11 @@ nsDocAccessible::HandleAccEvent(AccEvent* aAccEvent)
 void*
 nsDocAccessible::GetNativeWindow() const
 {
-  if (!mPresShell)
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+  if (!shell)
     return nsnull;
 
-  nsIViewManager* vm = mPresShell->GetViewManager();
+  nsIViewManager* vm = shell->GetViewManager();
   if (!vm)
     return nsnull;
 
@@ -1459,7 +1469,7 @@ nsDocAccessible::CacheChildren()
 {
   // Search for accessible children starting from the document element since
   // some web pages tend to insert elements under it rather than document body.
-  nsAccTreeWalker walker(do_GetWeakReference(mPresShell).get(), mDocument->GetRootElement(),
+  nsAccTreeWalker walker(mWeakShell, mDocument->GetRootElement(),
                          GetAllowsAnonChildAccessibles());
 
   nsAccessible* child = nsnull;
@@ -1815,7 +1825,7 @@ nsDocAccessible::UpdateTree(nsAccessible* aContainer, nsIContent* aChildNode,
     updateFlags |= UpdateTreeInternal(child, aIsInsert);
 
   } else {
-    nsAccTreeWalker walker(do_GetWeakReference(mPresShell).get(), aChildNode,
+    nsAccTreeWalker walker(mWeakShell, aChildNode,
                            aContainer->GetAllowsAnonChildAccessibles(), true);
 
     while ((child = walker.NextChild()))

@@ -55,8 +55,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColorPickerTileAccessible::
-  nsXULColorPickerTileAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULColorPickerTileAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -117,8 +117,8 @@ nsXULColorPickerTileAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColorPickerAccessible::
-  nsXULColorPickerAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXULColorPickerTileAccessible(aContent, aDoc)
+  nsXULColorPickerAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULColorPickerTileAccessible(aContent, aShell)
 {
   mFlags |= eMenuButtonAccessible;
 }
@@ -177,9 +177,7 @@ nsXULColorPickerAccessible::AreItemsOperable() const
 void
 nsXULColorPickerAccessible::CacheChildren()
 {
-  NS_ENSURE_TRUE(mDoc,);
-
-  nsAccTreeWalker walker(mDoc->GetWeakShell(), mContent, true);
+  nsAccTreeWalker walker(mWeakShell, mContent, true);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {
