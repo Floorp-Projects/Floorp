@@ -7277,10 +7277,9 @@ PresShell::RemoveOverrideStyleSheet(nsIStyleSheet *aSheet)
 static void
 FreezeElement(nsIContent *aContent, void * /* unused */)
 {
-  nsIFrame *frame = aContent->GetPrimaryFrame();
-  nsIObjectFrame *objectFrame = do_QueryFrame(frame);
-  if (objectFrame) {
-    objectFrame->StopPlugin();
+  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(aContent));
+  if (olc) {
+    olc->StopPluginInstance();
   }
 }
 
@@ -7358,10 +7357,9 @@ PresShell::FireOrClearDelayedEvents(bool aFireEvents)
 static void
 ThawElement(nsIContent *aContent, void *aShell)
 {
-  nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(aContent));
-  if (objlc) {
-    nsRefPtr<nsNPAPIPluginInstance> inst;
-    objlc->EnsureInstantiation(getter_AddRefs(inst));
+  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(aContent));
+  if (olc) {
+    olc->AsyncStartPluginInstance();
   }
 }
 
