@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Patrick Walton <pcwalton@mozilla.com>
+ *   James Willcox <jwillcox@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,38 +37,36 @@
 
 package org.mozilla.gecko.gfx;
 
-import javax.microedition.khronos.opengles.GL10;
-import java.util.ArrayList;
+import android.opengl.GLES10;
+import java.util.Stack;
 
-/** Manages a list of dead tiles, so we don't leak resources. */
-public class TextureReaper {
-    private static TextureReaper sSharedInstance;
-    private ArrayList<Integer> mDeadTextureIDs;
+public class TextureGenerator {
+    private static final int MIN_TEXTURES = 5;
 
-    private TextureReaper() { mDeadTextureIDs = new ArrayList<Integer>(); }
+    private static TextureGenerator sSharedInstance;
+    private Stack<Integer> mTextureIds;
 
-    public static TextureReaper get() {
+    private TextureGenerator() { mTextureIds = new Stack<Integer>(); }
+
+    public static TextureGenerator get() {
         if (sSharedInstance == null)
-            sSharedInstance = new TextureReaper();
+            sSharedInstance = new TextureGenerator();
         return sSharedInstance;
     }
 
-    public void add(int[] textureIDs) {
-        for (int textureID : textureIDs)
-            add(textureID);
+    public synchronized int take() {
+        if (mTextureIds.empty())
+            return 0;
+
+        return (int)mTextureIds.pop();
     }
 
-    public void add(int textureID) {
-        mDeadTextureIDs.add(textureID);
-    }
-
-    public void reap(GL10 gl) {
-        int[] deadTextureIDs = new int[mDeadTextureIDs.size()];
-        for (int i = 0; i < deadTextureIDs.length; i++)
-            deadTextureIDs[i] = mDeadTextureIDs.get(i);
-        mDeadTextureIDs.clear();
-
-        gl.glDeleteTextures(deadTextureIDs.length, deadTextureIDs, 0);
+    public synchronized void fill() {
+        int[] textures = new int[1];
+        while (mTextureIds.size() < MIN_TEXTURES) {
+            GLES10.glGenTextures(1, textures, 0);
+            mTextureIds.push(textures[0]);
+        }
     }
 }
 

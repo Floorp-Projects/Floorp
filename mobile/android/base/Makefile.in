@@ -124,7 +124,9 @@ FENNEC_JAVA_FILES = \
   gfx/RectUtils.java \
   gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
+  gfx/SurfaceTextureLayer.java \
   gfx/TextLayer.java \
+  gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
   gfx/ViewportMetrics.java \
