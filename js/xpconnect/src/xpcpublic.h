@@ -228,10 +228,12 @@ namespace mozilla {
 namespace xpconnect {
 namespace memory {
 
+// This reports all the stats in |rtStats| that belong in the "explicit" tree,
+// (which isn't all of them).
 void
-ReportJSRuntimeStats(const JS::RuntimeStats &rtStats, const nsACString &pathPrefix,
-                     nsIMemoryMultiReporterCallback *callback,
-                     nsISupports *closure);
+ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats, const nsACString &pathPrefix,
+                                 nsIMemoryMultiReporterCallback *callback,
+                                 nsISupports *closure);
 
 } // namespace memory
 } // namespace xpconnect
