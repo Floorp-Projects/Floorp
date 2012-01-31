@@ -54,7 +54,6 @@
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
 #include "nsColor.h"
-#include "gfxRect.h"
 
 #include "nsIAndroidBridge.h"
 
@@ -342,7 +341,7 @@ public:
 
     void *AcquireNativeWindow(jobject surface);
     void ReleaseNativeWindow(void *window);
-    bool SetNativeWindowFormat(void *window, int width, int height, int format);
+    bool SetNativeWindowFormat(void *window, int format);
 
     bool LockWindow(void *window, unsigned char **bits, int *width, int *height, int *format, int *stride);
     bool UnlockWindow(void *window);
@@ -378,11 +377,6 @@ public:
     void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
     void EnableNetworkNotifications();
     void DisableNetworkNotifications();
-
-    jobject CreateSurface();
-    void DestroySurface(jobject surface);
-    void ShowSurface(jobject surface, const gfxRect& aRect, bool aInverted, bool aBlend);
-    void HideSurface(jobject surface);
 
 protected:
     static AndroidBridge *sBridge;
