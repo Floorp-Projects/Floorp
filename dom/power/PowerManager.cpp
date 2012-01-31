@@ -35,9 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsDOMClassInfoID.h"
-
 #include "PowerManager.h"
+#include "nsContentUtils.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIPowerManagerService.h"
+#include "nsServiceManagerUtils.h"
 
 DOMCI_DATA(MozPowerManager, mozilla::dom::power::PowerManager)
 
@@ -57,13 +59,29 @@ NS_IMPL_RELEASE(PowerManager)
 NS_IMETHODIMP
 PowerManager::Reboot()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_DOM_SECURITY_ERR);
+
+  nsCOMPtr<nsIPowerManagerService> pmService =
+    do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(pmService, NS_OK);
+
+  pmService->Reboot();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PowerManager::PowerOff()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_DOM_SECURITY_ERR);
+
+  nsCOMPtr<nsIPowerManagerService> pmService =
+    do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(pmService, NS_OK);
+
+  pmService->PowerOff();
+
+  return NS_OK;
 }
 
 } // power
