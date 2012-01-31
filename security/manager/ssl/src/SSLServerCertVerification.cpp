@@ -161,6 +161,7 @@ namespace {
 
 NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 NSSCleanupAutoPtrClass_WithParam(PRArenaPool, PORT_FreeArena, FalseParam, false)
 
 // do not use a nsCOMPtr to avoid static initializer/destructor
@@ -234,6 +235,7 @@ public:
   void Dispatch();
 private:
   const nsRefPtr<nsNSSSocketInfo> mSocketInfo;
+public:
   const PRErrorCode mErrorCode;
   const SSLErrorMessageType mErrorMessageType;
 };
@@ -259,7 +261,7 @@ class CertErrorRunnable : public SyncRunnableBase
   }
 
   virtual void RunOnTargetThread();
-  nsCOMPtr<nsIRunnable> mResult; // out
+  nsRefPtr<SSLServerCertVerificationResult> mResult; // out
 private:
   SSLServerCertVerificationResult* CheckCertOverrides();
   
@@ -603,9 +605,6 @@ private:
                                CERTCertificate & cert);
   ~SSLServerCertVerificationJob();
 
-  // Runs on one of the background threads
-  SECStatus AuthCertificate(const nsNSSShutDownPreventionLock & proofOfLock);
-
   const void * const mFdForLogging;
   const nsRefPtr<nsNSSSocketInfo> mSocketInfo;
   CERTCertificate * const mCert;
@@ -627,8 +626,7 @@ SSLServerCertVerificationJob::~SSLServerCertVerificationJob()
 
 SECStatus
 PSM_SSL_PKIX_AuthCertificate(CERTCertificate *peerCert, void * pinarg,
-                             const char * hostname,
-                             const nsNSSShutDownPreventionLock & /*proofOfLock*/)
+                             const char * hostname)
 {
     SECStatus          rv;
     
@@ -822,19 +820,18 @@ BlockServerCertChangeForSpdy(nsNSSSocketInfo *infoObject,
 }
 
 SECStatus
-SSLServerCertVerificationJob::AuthCertificate(
-  nsNSSShutDownPreventionLock const & nssShutdownPreventionLock)
+AuthCertificate(nsNSSSocketInfo * socketInfo, CERTCertificate * cert)
 {
-  if (BlockServerCertChangeForSpdy(mSocketInfo, mCert) != SECSuccess)
+  if (BlockServerCertChangeForSpdy(socketInfo, cert) != SECSuccess)
     return SECFailure;
 
-  if (mCert->serialNumber.data &&
-      mCert->issuerName &&
-      !strcmp(mCert->issuerName, 
+  if (cert->serialNumber.data &&
+      cert->issuerName &&
+      !strcmp(cert->issuerName, 
         "CN=UTN-USERFirst-Hardware,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US")) {
 
-    unsigned char *server_cert_comparison_start = mCert->serialNumber.data;
-    unsigned int server_cert_comparison_len = mCert->serialNumber.len;
+    unsigned char *server_cert_comparison_start = cert->serialNumber.data;
+    unsigned int server_cert_comparison_len = cert->serialNumber.len;
 
     while (server_cert_comparison_len) {
       if (*server_cert_comparison_start != 0)
@@ -866,33 +863,32 @@ SSLServerCertVerificationJob::AuthCertificate(
     }
   }
 
-  SECStatus rv = PSM_SSL_PKIX_AuthCertificate(mCert, mSocketInfo,
-                                              mSocketInfo->GetHostName(),
-                                              nssShutdownPreventionLock);
+  SECStatus rv = PSM_SSL_PKIX_AuthCertificate(cert, socketInfo,
+                                              socketInfo->GetHostName());
 
   // We want to remember the CA certs in the temp db, so that the application can find the
   // complete chain at any time it might need it.
   // But we keep only those CA certs in the temp db, that we didn't already know.
 
-  nsRefPtr<nsSSLStatus> status = mSocketInfo->SSLStatus();
+  nsRefPtr<nsSSLStatus> status = socketInfo->SSLStatus();
   nsRefPtr<nsNSSCertificate> nsc;
 
   if (!status || !status->mServerCert) {
-    nsc = nsNSSCertificate::Create(mCert);
+    nsc = nsNSSCertificate::Create(cert);
   }
 
   CERTCertList *certList = nsnull;
-  certList = CERT_GetCertChainFromCert(mCert, PR_Now(), certUsageSSLCA);
+  certList = CERT_GetCertChainFromCert(cert, PR_Now(), certUsageSSLCA);
   if (!certList) {
     rv = SECFailure;
   } else {
     PRErrorCode blacklistErrorCode;
     if (rv == SECSuccess) { // PSM_SSL_PKIX_AuthCertificate said "valid cert"
-      blacklistErrorCode = PSM_SSL_BlacklistDigiNotar(mCert, certList);
+      blacklistErrorCode = PSM_SSL_BlacklistDigiNotar(cert, certList);
     } else { // PSM_SSL_PKIX_AuthCertificate said "invalid cert"
       PRErrorCode savedErrorCode = PORT_GetError();
       // Check if we want to worsen the error code to "revoked".
-      blacklistErrorCode = PSM_SSL_DigiNotarTreatAsRevoked(mCert, certList);
+      blacklistErrorCode = PSM_SSL_DigiNotarTreatAsRevoked(cert, certList);
       if (blacklistErrorCode == 0) {
         // we don't worsen the code, let's keep the original error code from NSS
         PORT_SetError(savedErrorCode);
@@ -900,7 +896,7 @@ SSLServerCertVerificationJob::AuthCertificate(
     }
       
     if (blacklistErrorCode != 0) {
-      mSocketInfo->SetCertIssuerBlacklisted();
+      socketInfo->SetCertIssuerBlacklisted();
       PORT_SetError(blacklistErrorCode);
       rv = SECFailure;
     }
@@ -928,7 +924,7 @@ SSLServerCertVerificationJob::AuthCertificate(
         continue;
       }
         
-      if (node->cert == mCert) {
+      if (node->cert == cert) {
         // We don't want to remember the server cert, 
         // the code that cares for displaying page info does this already.
         continue;
@@ -956,19 +952,19 @@ SSLServerCertVerificationJob::AuthCertificate(
     // to the caller that contains at least the cert and its status.
     if (!status) {
       status = new nsSSLStatus();
-      mSocketInfo->SetSSLStatus(status);
+      socketInfo->SetSSLStatus(status);
     }
 
     if (rv == SECSuccess) {
       // Certificate verification succeeded delete any potential record
       // of certificate error bits.
       nsSSLIOLayerHelpers::mHostsWithCertErrors->RememberCertHasError(
-        mSocketInfo, nsnull, rv);
+        socketInfo, nsnull, rv);
     }
     else {
       // Certificate verification failed, update the status' bits.
       nsSSLIOLayerHelpers::mHostsWithCertErrors->LookupCertErrorBits(
-        mSocketInfo, status);
+        socketInfo, status);
     }
 
     if (status && !status->mServerCert) {
@@ -1039,7 +1035,7 @@ SSLServerCertVerificationJob::Run()
     // Reset the error code here so we can detect if AuthCertificate fails to
     // set the error code if/when it fails.
     PR_SetError(0, 0); 
-    SECStatus rv = AuthCertificate(nssShutdownPrevention);
+    SECStatus rv = AuthCertificate(mSocketInfo, mCert);
     if (rv == SECSuccess) {
       nsRefPtr<SSLServerCertVerificationResult> restart 
         = new SSLServerCertVerificationResult(*mSocketInfo, 0);
@@ -1119,14 +1115,91 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
   }
       
   CERTCertificate *serverCert = SSL_PeerCertificate(fd);
+  CERTCertificateCleaner serverCertCleaner(serverCert);
 
   nsNSSSocketInfo *socketInfo = static_cast<nsNSSSocketInfo*>(arg);
-  SECStatus rv = SSLServerCertVerificationJob::Dispatch(
+
+  bool onSTSThread;
+  nsresult nrv;
+  nsCOMPtr<nsIEventTarget> sts
+    = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &nrv);
+  if (NS_SUCCEEDED(nrv)) {
+    nrv = sts->IsOnCurrentThread(&onSTSThread);
+  }
+
+  if (NS_FAILED(nrv)) {
+    NS_ERROR("Could not get STS service or IsOnCurrentThread failed");
+    PR_SetError(PR_UNKNOWN_ERROR, 0);
+    return SECFailure;
+  }
+  
+  if (onSTSThread) {
+    // We *must* do certificate verification on a background thread because
+    // we need the socket transport thread to be free for our OCSP requests,
+    // and we *want* to do certificate verification on a background thread
+    // because of the performance benefits of doing so.
+    SECStatus rv = SSLServerCertVerificationJob::Dispatch(
                         static_cast<const void *>(fd), socketInfo, serverCert);
+    return rv;
+  }
+  
+  // We can't do certificate verification on a background thread, because the
+  // thread doing the network I/O may not interrupt its network I/O on receipt
+  // of our SSLServerCertVerificationResult event, and/or it might not even be
+  // a non-blocking socket.
+  SECStatus rv = AuthCertificate(socketInfo, serverCert);
+  if (rv == SECSuccess) {
+    return SECSuccess;
+  }
 
-  CERT_DestroyCertificate(serverCert);
+  PRErrorCode error = PR_GetError();
+  if (error != 0) {
+    nsRefPtr<CertErrorRunnable> runnable = CreateCertErrorRunnable(
+                    error, socketInfo, serverCert,
+                    static_cast<const void *>(fd));
+    if (!runnable) {
+      // CreateCertErrorRunnable sets a new error code when it fails
+      error = PR_GetError();
+    } else {
+      // We have to return SECSuccess or SECFailure based on the result of the
+      // override processing, so we must block this thread waiting for it. The
+      // CertErrorRunnable will NOT dispatch the result at all, since we passed
+      // false for CreateCertErrorRunnable's async parameter
+      nrv = runnable->DispatchToMainThreadAndWait();
+      if (NS_FAILED(nrv)) {
+        NS_ERROR("Failed to dispatch CertErrorRunnable");
+        PR_SetError(PR_INVALID_STATE_ERROR, 0);
+        return SECFailure;
+      }
 
-  return rv;
+      if (!runnable->mResult) {
+        NS_ERROR("CertErrorRunnable did not set result");
+        PR_SetError(PR_INVALID_STATE_ERROR, 0);
+        return SECFailure;
+      }
+
+      if (runnable->mResult->mErrorCode == 0) {
+        return SECSuccess; // cert error override occurred.
+      }
+
+      // We must call SetCanceled here to set the error message type
+      // in case it isn't PlainErrorMessage, which is what we would
+      // default to if we just called
+      // PR_SetError(runnable->mResult->mErrorCode, 0) and returned
+      // SECFailure without doing this.
+      socketInfo->SetCanceled(runnable->mResult->mErrorCode,
+                              runnable->mResult->mErrorMessageType);
+      error = runnable->mResult->mErrorCode;
+    }
+  }
+
+  if (error == 0) {
+    NS_ERROR("error code not set");
+    error = PR_UNKNOWN_ERROR;
+  }
+
+  PR_SetError(error, 0);
+  return SECFailure;
 }
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(
