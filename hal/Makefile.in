@@ -72,9 +72,9 @@ CPPSRCS = \
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += AndroidHal.cpp
 else ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += GonkHal.cpp
+CPPSRCS += GonkHal.cpp Power.cpp
 else ifeq (Linux,$(OS_TARGET))
-CPPSRCS += LinuxHal.cpp
+CPPSRCS += LinuxHal.cpp Power.cpp
 ifdef MOZ_ENABLE_DBUS
 CPPSRCS += UPowerClient.cpp
 endif
