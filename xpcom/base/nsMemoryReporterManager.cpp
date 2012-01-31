@@ -145,21 +145,38 @@ static PRInt64 GetResident()
 
 static void XMappingIter(PRInt64& Vsize, PRInt64& Resident)
 {
+    Vsize = -1;
+    Resident = -1;
     int mapfd = open("/proc/self/xmap", O_RDONLY);
     struct stat st;
-    prxmap_t *prmapp;
+    prxmap_t *prmapp = NULL;
     if (mapfd >= 0) {
         if (!fstat(mapfd, &st)) {
             int nmap = st.st_size / sizeof(prxmap_t);
-            prmapp = (prxmap_t*)malloc((nmap + 1) * sizeof(prxmap_t));
-            int n = read(mapfd, prmapp, (nmap + 1) * sizeof(prxmap_t));
-            if (n > 0) {
-                Vsize = 0;
-                Resident = 0;
-                for (int i = 0; i < n / sizeof(prxmap_t); i++) {
-                    Vsize += prmapp[i].pr_size;
-                    Resident += prmapp[i].pr_rss * prmapp[i].pr_pagesize;
+            while (1) {
+                // stat(2) on /proc/<pid>/xmap returns an incorrect value,
+                // prior to the release of Solaris 11.
+                // Here is a workaround for it.
+                nmap *= 2;
+                prmapp = (prxmap_t*)malloc((nmap + 1) * sizeof(prxmap_t));
+                if (!prmapp) {
+                    // out of memory
+                    break;
                 }
+                int n = pread(mapfd, prmapp, (nmap + 1) * sizeof(prxmap_t), 0);
+                if (n < 0) {
+                    break;
+                }
+                if (nmap >= n / sizeof (prxmap_t)) {
+                    Vsize = 0;
+                    Resident = 0;
+                    for (int i = 0; i < n / sizeof (prxmap_t); i++) {
+                        Vsize += prmapp[i].pr_size;
+                        Resident += prmapp[i].pr_rss * prmapp[i].pr_pagesize;
+                    }
+                    break;
+                }
+                free(prmapp);
             }
             free(prmapp);
         }
@@ -169,16 +186,14 @@ static void XMappingIter(PRInt64& Vsize, PRInt64& Resident)
 
 static PRInt64 GetVsize()
 {
-    PRInt64 Vsize = -1;
-    PRInt64 Resident = -1;
+    PRInt64 Vsize, Resident;
     XMappingIter(Vsize, Resident);
     return Vsize;
 }
 
 static PRInt64 GetResident()
 {
-    PRInt64 Vsize = -1;
-    PRInt64 Resident = -1;
+    PRInt64 Vsize, Resident;
     XMappingIter(Vsize, Resident);
     return Resident;
 }
