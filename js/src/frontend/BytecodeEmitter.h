@@ -434,18 +434,47 @@ struct TreeContext {                /* tree context for semantic checks */
         return flags & TCF_FUN_MUTATES_PARAMETER;
     }
 
-    void noteArgumentsUse(ParseNode *pn) {
+    /*
+     * Accessing the implicit |arguments| local binding in a function must
+     * trigger appropriate code generation such that the access works.
+     */
+    void noteArgumentsNameUse(ParseNode *node) {
         JS_ASSERT(inFunction());
-        countArgumentsUse(pn);
+        JS_ASSERT(node->isKind(PNK_NAME));
+        JS_ASSERT(node->pn_atom == parser->context->runtime->atomState.argumentsAtom);
+        countArgumentsUse(node);
         flags |= TCF_FUN_USES_ARGUMENTS;
         if (funbox)
             funbox->node->pn_dflags |= PND_FUNARG;
     }
 
-    void countArgumentsUse(ParseNode *pn) {
-        JS_ASSERT(pn->pn_atom == parser->context->runtime->atomState.argumentsAtom);
+    /*
+     * Non-dynamic accesses to a property named "arguments" inside a function
+     * have to deoptimize the function in case those accesses are to the
+     * function's arguments.  (However, this is unnecessary in strict mode
+     * functions because of the f.arguments poison-pill.  O frabjous day!)
+     */
+    void noteArgumentsPropertyAccess(ParseNode *node) {
+        JS_ASSERT(inFunction());
+        JS_ASSERT(&node->asPropertyAccess().name() ==
+                  parser->context->runtime->atomState.argumentsAtom);
+        if (!inStrictMode()) {
+            flags |= TCF_FUN_USES_ARGUMENTS;
+            if (funbox)
+                funbox->node->pn_dflags |= PND_FUNARG;
+        }
+    }
+
+    /*
+     * Uses of |arguments| must be noted so that such uses can be forbidden if
+     * they occur inside generator expressions (which desugar to functions and
+     * yields, in which |arguments| would have an entirely different meaning).
+     */
+    void countArgumentsUse(ParseNode *node) {
+        JS_ASSERT(node->isKind(PNK_NAME));
+        JS_ASSERT(node->pn_atom == parser->context->runtime->atomState.argumentsAtom);
         argumentsCount++;
-        argumentsNode = pn;
+        argumentsNode = node;
     }
 
     bool needsEagerArguments() const {

@@ -61,7 +61,7 @@ import android.util.Log;
 import android.view.WindowManager;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 /**
  * The layer renderer implements the rendering logic for a layer view.
@@ -94,6 +94,9 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private int[] mFrameTimings;
     private int mCurrentFrame, mFrameTimingsSum, mDroppedFrames;
     private boolean mShowFrameRate;
+
+    /* Used by robocop for testing purposes */
+    private IntBuffer mPixelBuffer;
 
     public LayerRenderer(LayerView view) {
         mView = view;
@@ -246,6 +249,31 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             mView.requestRender();
 
         PanningPerfAPI.recordFrameTime();
+
+        /* Used by robocop for testing purposes */
+        IntBuffer pixelBuffer = mPixelBuffer;
+        if (updated && pixelBuffer != null) {
+            synchronized (pixelBuffer) {
+                pixelBuffer.position(0);
+                gl.glReadPixels(0, 0, (int)screenContext.viewport.width(), (int)screenContext.viewport.height(), GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, pixelBuffer);
+                pixelBuffer.notify();
+            }
+        }
+    }
+
+    /** Used by robocop for testing purposes. Not for production use! */
+    IntBuffer getPixels() {
+        IntBuffer pixelBuffer = IntBuffer.allocate(mView.getWidth() * mView.getHeight());
+        synchronized (pixelBuffer) {
+            mPixelBuffer = pixelBuffer;
+            mView.requestRender();
+            try {
+                pixelBuffer.wait();
+            } catch (InterruptedException ie) {
+            }
+            mPixelBuffer = null;
+        }
+        return pixelBuffer;
     }
 
     private RenderContext createScreenContext() {

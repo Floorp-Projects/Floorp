@@ -92,6 +92,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     watchpointMap(NULL)
 {
     PodArrayZero(evalCache);
+    setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
 }
 
 JSCompartment::~JSCompartment()
@@ -569,6 +570,30 @@ JSCompartment::purge(JSContext *cx)
     toSourceCache.destroyIfConstructed();
 }
 
+void
+JSCompartment::resetGCMallocBytes()
+{
+    gcMallocBytes = ptrdiff_t(gcMaxMallocBytes);
+}
+
+void
+JSCompartment::setGCMaxMallocBytes(size_t value)
+{
+    /*
+     * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
+     * mean that value.
+     */
+    gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
+    resetGCMallocBytes();
+}
+
+void
+JSCompartment::onTooMuchMalloc()
+{
+    TriggerCompartmentGC(this, gcreason::TOO_MUCH_MALLOC);
+}
+
+
 MathCache *
 JSCompartment::allocMathCache(JSContext *cx)
 {
@@ -745,10 +770,10 @@ JSCompartment::createBarrierTracer()
 }
 
 size_t
-JS::SizeOfCompartmentShapeTable(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf)
+JSCompartment::sizeOfShapeTable(JSMallocSizeOfFun mallocSizeOf)
 {
-    return c->baseShapes.sizeOfExcludingThis(mallocSizeOf)
-         + c->initialShapes.sizeOfExcludingThis(mallocSizeOf)
-         + c->newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
-         + c->lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
+    return baseShapes.sizeOfExcludingThis(mallocSizeOf)
+         + initialShapes.sizeOfExcludingThis(mallocSizeOf)
+         + newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
+         + lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
 }
