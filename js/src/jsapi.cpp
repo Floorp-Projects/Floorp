@@ -765,7 +765,6 @@ JSRuntime::JSRuntime()
     data(NULL),
 #ifdef JS_THREADSAFE
     gcLock(NULL),
-    requestCount(0),
     gcHelperThread(thisFromCtor()),
 #endif
     debuggerMutations(0),
@@ -1013,10 +1012,9 @@ StartRequest(JSContext *cx)
         AutoLockGC lock(rt);
 
         /* Indicate that a request is running. */
-        rt->requestCount++;
         rt->requestDepth = 1;
 
-        if (rt->requestCount == 1 && rt->activityCallback)
+        if (rt->activityCallback)
             rt->activityCallback(rt->activityCallbackArg, true);
     }
 }
@@ -1037,13 +1035,8 @@ StopRequest(JSContext *cx)
 
         rt->requestDepth = 0;
 
-        /* Give the GC a chance to run if this was the last request running. */
-        JS_ASSERT(rt->requestCount > 0);
-        rt->requestCount--;
-        if (rt->requestCount == 0) {
-            if (rt->activityCallback)
-                rt->activityCallback(rt->activityCallbackArg, false);
-        }
+        if (rt->activityCallback)
+            rt->activityCallback(rt->activityCallbackArg, false);
     }
 }
 #endif /* JS_THREADSAFE */
@@ -2216,7 +2209,7 @@ JS_free(JSContext *cx, void *p)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
-    return cx->runtime->updateMallocCounter(nbytes);
+    return cx->runtime->updateMallocCounter(cx, nbytes);
 }
 
 JS_PUBLIC_API(char *)

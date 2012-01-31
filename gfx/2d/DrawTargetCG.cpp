@@ -901,6 +901,14 @@ DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &)
   // so flip it to the top left
   CGContextTranslateCTM(mCg, 0, mSize.height);
   CGContextScaleCTM(mCg, 1, -1);
+  // See Bug 722164 for performance details
+  // Medium or higher quality lead to expensive interpolation
+  // for canvas we want to use low quality interpolation
+  // to have competitive performance with other canvas
+  // implementation.
+  // XXX: Create input parameter to control interpolation and
+  //      use the default for content.
+  CGContextSetInterpolationQuality(mCg, kCGInterpolationLow);
 
   //XXX: set correct format
   mFormat = FORMAT_B8G8R8A8;

@@ -112,6 +112,9 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     // inside a transaction, so no synchronization is needed.
     private boolean mUpdateViewportOnEndDraw;
 
+    /* Used by robocop for testing purposes */
+    private DrawListener mDrawListener;
+
     private static Pattern sColorPattern;
 
     public GeckoSoftwareLayerClient(Context context) {
@@ -325,6 +328,11 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             }
         }
         Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
+
+        /* Used by robocop for testing purposes */
+        if (mDrawListener != null) {
+            mDrawListener.drawFinished(x, y, width, height);
+        }
     }
 
     public ViewportMetrics getGeckoViewportMetrics() {
@@ -535,6 +543,16 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         int g = Integer.parseInt(matcher.group(2));
         int b = Integer.parseInt(matcher.group(3));
         return Color.rgb(r, g, b);
+    }
+
+    /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
+    public void setDrawListener(DrawListener listener) {
+        mDrawListener = listener;
+    }
+
+    /** Used by robocop for testing purposes. Not for production use! This is used via reflection by robocop. */
+    public interface DrawListener {
+        public void drawFinished(int x, int y, int width, int height);
     }
 }
 

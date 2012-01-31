@@ -607,7 +607,7 @@ inline void
 JSObject::moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count)
 {
     JS_ASSERT(dstStart + count <= getDenseArrayCapacity());
-    JS_ASSERT(srcStart + count <= getDenseArrayCapacity());
+    JS_ASSERT(srcStart + count <= getDenseArrayInitializedLength());
 
     /*
      * Use a custom write barrier here since it's performance sensitive. We
@@ -623,6 +623,13 @@ JSObject::moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count)
     }
     prepareElementRangeForOverwrite(markStart, markEnd);
 
+    memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
+}
+
+inline void
+JSObject::moveDenseArrayElementsUnbarriered(uintN dstStart, uintN srcStart, uintN count)
+{
+    JS_ASSERT(!compartment()->needsBarrier());
     memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
 }
 
