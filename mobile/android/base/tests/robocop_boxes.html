@@ -1,0 +1,17 @@
+<html style="margin: 0; padding: 0">
+<title>Browser Box test</title>
+<body style="margin: 0; padding: 0">
+<script type="text/javascript">
+for (var y = 0; y < 2000; y += 100) {
+    document.write("<div style='width: 2000px; height: 100px; margin: 0; padding: 0; border: none'>\n");
+    for (var x = 0; x < 2000; x += 100) {
+        var r = (y + x) % 255;
+        var g = 255 - (y / 10);
+        var b = 255 - (x / 10);
+        document.write("<div style='float: left; width: 100px; height: 100px; margin: 0; padding: 0; border: none; background-color: rgb(" + r + "," + g + "," + b + ")'> </div>\n");
+    }
+    document.write("</div>\n");
+}
+</script>
+</body>
+</html>
