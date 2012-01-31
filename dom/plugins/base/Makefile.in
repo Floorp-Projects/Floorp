@@ -138,6 +138,7 @@ endif
 
 LOCAL_INCLUDES += \
   -DSK_BUILD_FOR_ANDROID_NDK \
+  -I$(topsrcdir)/widget/android \
   -I$(topsrcdir)/xpcom/base/ \
   -I$(topsrcdir)/gfx/skia/include/core \
   -I$(topsrcdir)/gfx/skia/include/config \

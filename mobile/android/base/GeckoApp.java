@@ -40,13 +40,16 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.BufferedCairoImage;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.IntSize;
+import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PlaceholderLayerClient;
 import org.mozilla.gecko.gfx.RectUtils;
+import org.mozilla.gecko.gfx.SurfaceTextureLayer;
 import org.mozilla.gecko.gfx.ViewportMetrics;
 import org.mozilla.gecko.Tab.HistoryEntry;
 
@@ -216,8 +219,9 @@ abstract public class GeckoApp
     public ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<PackageInfo>();
 
     String[] getPluginDirectories() {
-        // we don't support Honeycomb and later
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+        // we don't support Honeycomb
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH)
             return new String[0];
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
@@ -741,7 +745,7 @@ abstract public class GeckoApp
                     mLayerController.setWaitForTouchListeners(false);
 
                     if (tab != null)
-                        hidePluginViews(tab);
+                        hidePlugins(tab, true);
                 }
             }
         });
@@ -1365,8 +1369,6 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 PluginLayoutParams lp;
-                JSONObject viewportObject;
-                ViewportMetrics pluginViewport;
 
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getSelectedTab();
@@ -1375,9 +1377,10 @@ abstract public class GeckoApp
                     return;
 
                 ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
+                ViewportMetrics pluginViewport;
                 
                 try {
-                    viewportObject = new JSONObject(metadata);
+                    JSONObject viewportObject = new JSONObject(metadata);
                     pluginViewport = new ViewportMetrics(viewportObject);
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Bad viewport metadata: ", e);
@@ -1432,28 +1435,128 @@ abstract public class GeckoApp
         });
     }
 
-    public void hidePluginViews() {
+    public Surface createSurface() {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+        if (tab == null)
+            return null;
+
+        SurfaceTextureLayer layer = SurfaceTextureLayer.create();
+        if (layer == null)
+            return null;
+
+        Surface surface = layer.getSurface();
+        tab.addPluginLayer(surface, layer);
+        return surface;
+    }
+
+    public void destroySurface(Surface surface) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+        if (tab == null)
+            return;
+
+        tab.removePluginLayer(surface);
+    }
+
+    public void showSurface(Surface surface, int x, int y,
+                            int w, int h, boolean inverted, boolean blend,
+                            String metadata) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+        if (tab == null)
+            return;
+
+        ViewportMetrics metrics;
+        try {
+            metrics = new ViewportMetrics(new JSONObject(metadata));
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Bad viewport metadata: ", e);
+            return;
+        }
+
+        PointF origin = metrics.getDisplayportOrigin();
+        x = x + (int)origin.x;
+        y = y + (int)origin.y;
+
+        LayerView layerView = mLayerController.getView();
+        SurfaceTextureLayer layer = (SurfaceTextureLayer)tab.getPluginLayer(surface);
+        if (layer == null)
+            return;
+
+        layer.update(new Point(x, y), new IntSize(w, h), metrics.getZoomFactor(), inverted, blend);
+        layerView.addLayer(layer);
+
+        // FIXME: shouldn't be necessary, layer will request
+        // one when it gets first frame
+        layerView.requestRender();
+    }
+    
+    private void hidePluginLayer(Layer layer) {
+        LayerView layerView = mLayerController.getView();
+        layerView.removeLayer(layer);
+        layerView.requestRender();
+    }
+
+    private void showPluginLayer(Layer layer) {
+        LayerView layerView = mLayerController.getView();
+        layerView.addLayer(layer);
+        layerView.requestRender();
+    }
+
+    public void hideSurface(Surface surface) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+        if (tab == null)
+            return;
+
+        Layer layer = tab.getPluginLayer(surface);
+        if (layer == null)
+            return;
+
+        hidePluginLayer(layer);
+    }
+
+    public void requestRender() {
+        mLayerController.getView().requestRender();
+    }
+
+    public void hidePlugins(boolean hideLayers) {
         Tabs tabs = Tabs.getInstance();
         Tab tab = tabs.getSelectedTab();
 
         if (tab == null)
             return;
 
-        hidePluginViews(tab);
+        hidePlugins(tab, hideLayers);
     }
 
-    public void hidePluginViews(Tab tab) {
+    public void hidePlugins(Tab tab, boolean hideLayers) {
         for (View view : tab.getPluginViews()) {
             view.setVisibility(View.GONE);
         }
+
+        if (hideLayers) {
+            for (Layer layer : tab.getPluginLayers()) {
+                hidePluginLayer(layer);
+            }
+
+            requestRender();
+        }
     }
 
-    public void showPluginViews() {
+    public void showPlugins() {
         repositionPluginViews(true);
     }
 
-    public void showPluginViews(Tab tab) {
+    public void showPlugins(Tab tab) {
         repositionPluginViews(tab, true);
+
+        for (Layer layer : tab.getPluginLayers()) {
+            showPluginLayer(layer);
+        }
+
+        requestRender();
     }
 
     public void repositionPluginViews(boolean setVisible) {
@@ -2610,8 +2713,10 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     public void reset(int aX, int aY, int aWidth, int aHeight, ViewportMetrics aViewport) {
-        x = mOriginalX = aX;
-        y = mOriginalY = aY;
+        PointF origin = aViewport.getDisplayportOrigin();
+
+        x = mOriginalX = aX + (int)origin.x;
+        y = mOriginalY = aY + (int)origin.y;
         width = mOriginalWidth = aWidth;
         height = mOriginalHeight = aHeight;
         mOriginalViewport = aViewport;
@@ -2641,5 +2746,9 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
                                  Math.round(originalOrigin.y - targetOrigin.y));
 
         reposition(offset, viewport.getZoomFactor());
+    }
+
+    public float getLastResolution() {
+        return mLastResolution;
     }
 }

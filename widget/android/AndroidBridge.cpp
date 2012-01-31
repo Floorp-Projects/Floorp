@@ -1709,9 +1709,9 @@ AndroidBridge::ReleaseNativeWindow(void *window)
 }
 
 bool
-AndroidBridge::SetNativeWindowFormat(void *window, int format)
+AndroidBridge::SetNativeWindowFormat(void *window, int width, int height, int format)
 {
-    return ANativeWindow_setBuffersGeometry(window, 0, 0, format) == 0;
+    return ANativeWindow_setBuffersGeometry(window, width, height, format) == 0;
 }
 
 bool
@@ -1856,4 +1856,86 @@ extern "C" {
         }
         return jEnv;
     }
+}
+
+jobject
+AndroidBridge::CreateSurface()
+{
+#ifndef MOZ_JAVA_COMPOSITOR
+  return NULL;
+#else
+  AutoLocalJNIFrame frame(1);
+
+  JNIEnv* env = GetJNIForThread();
+  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+
+  jmethodID method = env->GetStaticMethodID(cls,
+                                            "createSurface",
+                                            "()Landroid/view/Surface;");
+
+  jobject surface = env->CallStaticObjectMethod(cls, method);
+  if (surface)
+    env->NewGlobalRef(surface);
+  
+  return surface;
+#endif
+}
+
+void
+AndroidBridge::DestroySurface(jobject surface)
+{
+#ifdef MOZ_JAVA_COMPOSITOR
+  AutoLocalJNIFrame frame(1);
+
+  JNIEnv* env = GetJNIForThread();
+  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+
+  jmethodID method = env->GetStaticMethodID(cls,
+                                            "destroySurface",
+                                            "(Landroid/view/Surface;)V");
+  env->CallStaticVoidMethod(cls, method, surface);
+  env->DeleteGlobalRef(surface);
+#endif
+}
+
+void
+AndroidBridge::ShowSurface(jobject surface, const gfxRect& aRect, bool aInverted, bool aBlend)
+{
+#ifdef MOZ_JAVA_COMPOSITOR
+  AutoLocalJNIFrame frame;
+
+  JNIEnv* env = GetJNIForThread();
+  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+
+  nsAutoString metadata;
+  nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider = GetDrawMetadataProvider();
+  metadataProvider->GetDrawMetadata(metadata);
+
+  jstring jMetadata = env->NewString(nsPromiseFlatString(metadata).get(), metadata.Length());
+
+  jmethodID method = env->GetStaticMethodID(cls,
+                                            "showSurface",
+                                            "(Landroid/view/Surface;IIIIZZLjava/lang/String;)V");
+
+  env->CallStaticVoidMethod(cls, method, surface,
+                            (int)aRect.x, (int)aRect.y,
+                            (int)aRect.width, (int)aRect.height,
+                            aInverted, aBlend, jMetadata);
+#endif
+}
+
+void
+AndroidBridge::HideSurface(jobject surface)
+{
+#ifdef MOZ_JAVA_COMPOSITOR
+  AutoLocalJNIFrame frame(1);
+
+  JNIEnv* env = GetJNIForThread();
+  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
+
+  jmethodID method = env->GetStaticMethodID(cls,
+                                            "hideSurface",
+                                            "(Landroid/view/Surface;)V");
+  env->CallStaticVoidMethod(cls, method, surface);
+#endif
 }
