@@ -198,6 +198,10 @@ class JSString : public js::gc::Cell
         };
     } d;
 
+    /* These are for debugging purposes only! */
+    void dump();
+    bool equals(const char *s);
+
   public:
     /* Flags exposed only for jits */
 
@@ -692,6 +696,9 @@ class JSAtom : public JSFixedString
     /* Vacuous and therefore unimplemented. */
     bool isAtom() const MOZ_DELETE;
     JSAtom &asAtom() const MOZ_DELETE;
+
+    /* This is for debugging purposes only! */
+    void dump();
 
   public:
     /* Returns the PropertyName for this.  isIndex() must be false. */
