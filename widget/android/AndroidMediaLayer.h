@@ -1,4 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is Mozilla Corporation code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Patrick Walton <pcwalton@mozilla.com>
+ *   James Willcox <jwillcox@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,41 +35,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko.gfx;
+#ifndef AndroidMediaLayer_h_
+#define AndroidMediaLayer_h_
 
-import javax.microedition.khronos.opengles.GL10;
-import java.util.ArrayList;
+#include <map>
+#include <jni.h>
+#include "gfxRect.h"
 
-/** Manages a list of dead tiles, so we don't leak resources. */
-public class TextureReaper {
-    private static TextureReaper sSharedInstance;
-    private ArrayList<Integer> mDeadTextureIDs;
+namespace mozilla {
 
-    private TextureReaper() { mDeadTextureIDs = new ArrayList<Integer>(); }
+class AndroidMediaLayer
+{
+public:
 
-    public static TextureReaper get() {
-        if (sSharedInstance == null)
-            sSharedInstance = new TextureReaper();
-        return sSharedInstance;
-    }
+  AndroidMediaLayer();
+  virtual ~AndroidMediaLayer();
+  
+  void* GetNativeWindowForContent();
 
-    public void add(int[] textureIDs) {
-        for (int textureID : textureIDs)
-            add(textureID);
-    }
+  void* RequestNativeWindowForVideo();
+  void  ReleaseNativeWindowForVideo(void* aWindow);
 
-    public void add(int textureID) {
-        mDeadTextureIDs.add(textureID);
-    }
+  void SetNativeWindowDimensions(void* aWindow, const gfxRect& aDimensions);
 
-    public void reap(GL10 gl) {
-        int[] deadTextureIDs = new int[mDeadTextureIDs.size()];
-        for (int i = 0; i < deadTextureIDs.length; i++)
-            deadTextureIDs[i] = mDeadTextureIDs.get(i);
-        mDeadTextureIDs.clear();
+  void UpdatePosition(const gfxRect& aRect, float aZoomLevel);
 
-        gl.glDeleteTextures(deadTextureIDs.length, deadTextureIDs, 0);
-    }
-}
+  bool Inverted() {
+    return mInverted;
+  }
 
+  void SetInverted(bool aInverted) {
+    mInverted = aInverted;
+  }
 
+private:
+  bool mInverted;
+
+  class SurfaceData {
+    public:
+      SurfaceData() :
+        surface(NULL), window(NULL) {
+      }
+
+      SurfaceData(jobject aSurface, void* aWindow) :
+        surface(aSurface), window(aWindow) {
+      }
+
+      jobject surface;
+      void* window;
+      gfxRect dimensions;
+  };
+
+  bool EnsureContentSurface();
+
+  SurfaceData mContentData;
+  std::map<void*, SurfaceData*> mVideoSurfaces;
+};
+
+} /* mozilla */
+#endif /* AndroidMediaLayer_h_ */
