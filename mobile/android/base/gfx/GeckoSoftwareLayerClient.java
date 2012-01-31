@@ -429,8 +429,14 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-        if (!force && metrics.widthPixels == mScreenSize.width &&
-            metrics.heightPixels == mScreenSize.height) {
+        // Return immediately if the screen size hasn't changed or the viewport
+        // size is zero (which indicates that the rendering surface hasn't been
+        // allocated yet).
+        boolean screenSizeChanged = (metrics.widthPixels != mScreenSize.width ||
+                                     metrics.heightPixels != mScreenSize.height);
+        boolean viewportSizeValid = (getLayerController() != null &&
+                                     getLayerController().getViewportSize().isPositive());
+        if (!(force || (screenSizeChanged && viewportSizeValid))) {
             return;
         }
 
