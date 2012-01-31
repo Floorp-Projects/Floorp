@@ -234,6 +234,19 @@ public class PanZoomController
         }
     }
 
+    /** This must be called on the UI thread. */
+    public void pageSizeUpdated() {
+        if (mState == PanZoomState.NOTHING) {
+            ViewportMetrics validated = getValidViewportMetrics();
+            if (! mController.getViewportMetrics().fuzzyEquals(validated)) {
+                // page size changed such that we are now in overscroll. snap to the
+                // the nearest valid viewport
+                mController.setViewportMetrics(validated);
+                mController.notifyLayerClientOfGeometryChange();
+            }
+        }
+    }
+
     /*
      * Panning/scrolling
      */
