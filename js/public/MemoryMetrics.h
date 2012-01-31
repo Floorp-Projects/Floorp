@@ -102,6 +102,7 @@ struct CompartmentStats
 
     size_t objectSlots;
     size_t objectElements;
+    size_t objectMisc;
     size_t stringChars;
     size_t shapesExtraTreeTables;
     size_t shapesExtraDictTables;

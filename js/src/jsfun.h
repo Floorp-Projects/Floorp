@@ -290,6 +290,12 @@ struct JSFunction : public JSObject
     inline JSAtom *methodAtom() const;
     inline void setMethodAtom(JSAtom *atom);
 
+    /*
+     * Measures things hanging off this JSFunction that are counted by the
+     * |miscSize| argument in JSObject::sizeOfExcludingThis().
+     */
+    size_t sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const;
+
   private:
     /* 
      * These member functions are inherited from JSObject, but should never be applied to
