@@ -586,13 +586,7 @@ classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(S
 	$(NSINSTALL) -D classes
 	$(JAVAC) $(JAVAC_FLAGS) -d classes $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
 	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes -classpath classes $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
-	$(PROGUARD) @$(topsrcdir)/mobile/android/config/proguard.cfg \
-			-injars classes \
-			-outjars classes-proguarded \
-			-libraryjars $(ANDROID_SDK)/android.jar
-	# ProGuard may optimize away local variables, so dx --no-locals to ignore
-	# debug symbols for missing local variables.
-	$(DX) --dex --output=$@ --no-locals classes-proguarded
+	$(DX) --dex --output=$@ classes
 
 PP_RES_XML=$(SYNC_PP_RES_XML)
 
