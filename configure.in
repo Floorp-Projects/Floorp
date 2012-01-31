@@ -4906,12 +4906,14 @@ cairo-android)
 
 cairo-gonk)
     AC_DEFINE(MOZ_WIDGET_GONK)
+    AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=gonk
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_B2G_RIL=1
+    MOZ_TOUCH=1
     ;;
 
 esac

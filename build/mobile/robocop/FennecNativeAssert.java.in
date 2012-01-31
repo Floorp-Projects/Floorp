@@ -243,6 +243,23 @@ public class FennecNativeAssert implements Assert {
     ok(pass, name, diag);
   }
 
+  public void ispixel(int actual, int r, int g, int b, String name) {
+    // When we read GL pixels the GPU has already processed them and they
+    // are usually off by a little bit. For example a CSS-color pixel of color #64FFF5
+    // was turned into #63FFF7 when it came out of glReadPixels. So in order to compare
+    // against the expected value, we use a little fuzz factor. For the alpha we just
+    // make sure it is always 0xFF.
+    int aAlpha = ((actual >> 24) & 0xFF);
+    int aR = ((actual >> 16) & 0xFF);
+    int aG = ((actual >> 8) & 0xFF);
+    int aB = (actual & 0xFF);
+    boolean pass = (aAlpha == 0xFF) /* alpha */
+                && (Math.abs(aR - r) < 8) /* red */
+                && (Math.abs(aG - g) < 8) /* green */
+                && (Math.abs(aB - b) < 8); /* blue */
+    ok(pass, name, "Color rgba(" + aR + "," + aG + "," + aB + "," + aAlpha + ")" + (pass ? " " : " not") + " close enough to expected rgb(" + r + "," + g + "," + b + ")");
+  }
+
   public void todo(boolean condition, String name, String diag) {
     testInfo test = new testInfo(condition, name, diag, true);
     _logMochitestResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");

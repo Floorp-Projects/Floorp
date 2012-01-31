@@ -234,7 +234,7 @@ struct Parser : private AutoGCRooter
     ParseNode *mulExpr1n();
     ParseNode *unaryExpr();
     ParseNode *memberExpr(JSBool allowCallSyntax);
-    ParseNode *primaryExpr(TokenKind tt, JSBool afterDot);
+    ParseNode *primaryExpr(TokenKind tt, bool afterDoubleDot);
     ParseNode *parenExpr(JSBool *genexp = NULL);
 
     /*
@@ -259,7 +259,7 @@ struct Parser : private AutoGCRooter
 
     bool checkForFunctionNode(PropertyName *name, ParseNode *node);
 
-    ParseNode *identifierName(bool afterDot);
+    ParseNode *identifierName(bool afterDoubleDot);
 
 #if JS_HAS_XML_SUPPORT
     ParseNode *endBracketedExpr();

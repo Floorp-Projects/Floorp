@@ -52,6 +52,7 @@ import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.util.Log;
+import java.nio.IntBuffer;
 import java.util.LinkedList;
 
 import org.json.JSONArray;
@@ -236,6 +237,11 @@ public class LayerView extends GLSurfaceView
 
     public int getMaxTextureSize() {
         return mRenderer.getMaxTextureSize();
+    }
+
+    /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
+    public IntBuffer getPixels() {
+        return mRenderer.getPixels();
     }
 }
 
