@@ -130,6 +130,17 @@ public:
   // nsDocAccessible
 
   /**
+   * Return presentation shell for this document accessible.
+   */
+  nsIPresShell* PresShell() const { return mPresShell; }
+
+  /**
+   * Return weak reference to presentation shell for this document accessible.
+   */
+  nsIWeakReference* GetWeakShell() const
+    { return do_GetWeakReference(mPresShell).get(); }
+
+  /**
    * Return true if associated DOM document was loaded and isn't unloading.
    */
   bool IsContentLoaded() const
@@ -161,7 +172,8 @@ public:
    * Return true if the document has given document state.
    */
   bool HasLoadState(LoadState aState) const
-    { return (mLoadState & aState) == aState; }
+    { return (mLoadState & static_cast<PRUint32>(aState)) == 
+        static_cast<PRUint32>(aState); }
 
   /**
    * Return a native window handler or pointer depending on platform.
@@ -367,6 +379,8 @@ public:
   void RecreateAccessible(nsIContent* aContent);
 
 protected:
+
+  void LastRelease();
 
   // nsAccessible
   virtual void CacheChildren();
@@ -634,6 +648,10 @@ protected:
    */
   nsRefPtr<NotificationController> mNotificationController;
   friend class NotificationController;
+
+private:
+
+  nsIPresShell* mPresShell;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDocAccessible,

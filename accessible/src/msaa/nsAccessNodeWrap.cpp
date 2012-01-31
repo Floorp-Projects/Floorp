@@ -78,8 +78,8 @@ AccTextChangeEvent* nsAccessNodeWrap::gTextEvent = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsAccessNodeWrap::
-  nsAccessNodeWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessNode(aContent, aShell)
+  nsAccessNodeWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessNode(aContent, aDoc)
 {
 }
 
@@ -421,8 +421,7 @@ nsAccessNodeWrap::MakeAccessNode(nsINode *aNode)
   nsAccessNodeWrap *newNode = NULL;
 
   ISimpleDOMNode *iNode = NULL;
-  nsAccessible *acc =
-    GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
+  nsAccessible* acc = mDoc->GetAccessible(aNode);
   if (acc) {
     IAccessible *msaaAccessible = nsnull;
     acc->GetNativeInterface((void**)&msaaAccessible); // addrefs
@@ -436,7 +435,7 @@ nsAccessNodeWrap::MakeAccessNode(nsINode *aNode)
       return NULL;
     }
 
-    newNode = new nsAccessNodeWrap(content, mWeakShell);
+    newNode = new nsAccessNodeWrap(content, mDoc);
     if (!newNode)
       return NULL;
 

@@ -51,8 +51,8 @@
 class nsHTMLImageMapAccessible : public nsHTMLImageAccessibleWrap
 {
 public:
-  nsHTMLImageMapAccessible(nsIContent *aContent, nsIWeakReference *aShell,
-                           nsIDOMHTMLMapElement *aMapElm);
+  nsHTMLImageMapAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+                           nsIDOMHTMLMapElement* aMapElm);
 
   // nsISupports and cycle collector
   NS_DECL_ISUPPORTS_INHERITED
@@ -83,7 +83,7 @@ class nsHTMLAreaAccessible : public nsHTMLLinkAccessible
 {
 public:
 
-  nsHTMLAreaAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsHTMLAreaAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsIAccessible
 
