@@ -39,7 +39,7 @@ function test() {
   
   waitForExplicitFinish();
   
-  let rootDir = getRootDirectory(gTestPath);
+  let rootDir = "http://mochi.test:8888/browser/browser/components/sessionstore/test/";
   let testURL = rootDir + "browser_463205_sample.html";
 
   let doneURL = "done";
