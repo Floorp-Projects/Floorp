@@ -42,17 +42,22 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* 
- * All I/O is done on the socket transport thread, including all calls into
- * libssl. That is, all SSL_* functions must be called on the socket transport
- * thread. This also means that all SSL callback functions will be called on
- * the socket transport thread, including in particular the auth certificate
- * hook.
+ * For connections that are not processed on the socket transport thread, we do
+ * NOT use the async logic described below. Instead, we authenticate the
+ * certificate on the thread that the connection's I/O happens on,
+ * synchronously. This allows us to do certificate verification for blocking
+ * (not non-blocking) sockets and sockets that have their I/O processed on a
+ * thread other than the socket transport service thread. Also, we DO NOT
+ * support blocking sockets on the socket transport service thread at all.
  *
  * During certificate authentication, we call CERT_PKIXVerifyCert or
  * CERT_VerifyCert. These functions may make zero or more HTTP requests
- * for OCSP responses, CRLs, intermediate certificates, etc.
+ * for OCSP responses, CRLs, intermediate certificates, etc. Our fetching logic
+ * for these requests processes them on the socket transport service thread.
  *
- * If our cert auth hook were to call the CERT_*Verify* functions directly,
+ * If the connection for which we are verifying the certificate is happening
+ * on the socket transport thread (the usually case, at least for HTTP), then
+ * if our cert auth hook were to call the CERT_*Verify* functions directly,
  * there would be a deadlock: The CERT_*Verify* function would cause an event
  * to be asynchronously posted to the socket transport thread, and then it
  * would block the socket transport thread waiting to be notified of the HTTP
@@ -60,11 +65,12 @@
  * because the socket transport thread would be blocked and so it wouldn't be
  * able process HTTP requests. (i.e. Deadlock.)
  *
- * Consequently, we must always call the CERT_*Verify* cert functions off the
- * socket transport thread. To accomplish this, our auth cert hook dispatches a
- * SSLServerCertVerificationJob to a pool of background threads, and then
- * immediatley return SECWouldBlock to libssl. These jobs are where the
- * CERT_*Verify* functions are actually called. 
+ * Consequently, when we are asked to verify a certificate on the socket
+ * transport service thread, we must always call the CERT_*Verify* cert
+ * functions on another thread. To accomplish this, our auth cert hook
+ * dispatches a SSLServerCertVerificationJob to a pool of background threads,
+ * and then immediatley return SECWouldBlock to libssl. These jobs are where
+ * the CERT_*Verify* functions are actually called. 
  *
  * When our auth cert hook returns SECWouldBlock, libssl will carry on the
  * handshake while we validate the certificate. This will free up the socket
@@ -79,7 +85,7 @@
  * finished) and it will begin allowing us to send/receive data on the
  * connection.
  *
- * Timeline of events:
+ * Timeline of events (for connections managed by the socket transport service):
  *
  *    * libssl calls SSLServerCertVerificationJob::Dispatch on the socket
  *      transport thread.
