@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.HashMap;
@@ -58,6 +59,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.Long;
 
 import android.app.Activity;
+import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.View;
 
@@ -81,6 +83,7 @@ public class FennecNativeDriver implements Driver {
   private Method sendGE;
   private Method _startFrameRecording;
   private Method _stopFrameRecording;
+  private Method _getPixels;
 
   public FennecNativeDriver(Activity activity, Solo robocop){
     this.activity = activity;
@@ -107,6 +110,9 @@ public class FennecNativeDriver implements Driver {
       Class gfx = classLoader.loadClass("org.mozilla.gecko.gfx.PanningPerfAPI");
       _startFrameRecording = gfx.getDeclaredMethod("startFrameTimeRecording");
       _stopFrameRecording = gfx.getDeclaredMethod("stopFrameTimeRecording");
+
+      Class layerView = classLoader.loadClass("org.mozilla.gecko.gfx.LayerView");
+      _getPixels = layerView.getDeclaredMethod("getPixels");
      } catch (ClassNotFoundException e) {
        e.printStackTrace();
      } catch (SecurityException e) {
@@ -210,6 +216,43 @@ public class FennecNativeDriver implements Driver {
     }
 
     return 0;
+  }
+
+  private GLSurfaceView getSurfaceView() {
+    for (View v : solo.getCurrentViews()) {
+      if (v instanceof GLSurfaceView) {
+        return (GLSurfaceView)v;
+      }
+    }
+    return null;
+  }
+
+  public int[][] getPaintedSurface() {
+    GLSurfaceView view = getSurfaceView();
+    if (view == null) {
+      return null;
+    }
+    IntBuffer pixelBuffer;
+    try {
+      pixelBuffer = (IntBuffer)_getPixels.invoke(view);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+
+    // now we need to (1) flip the image, because GL likes to do things up-side-down,
+    // and (2) rearrange the bits from AGBR-8888 to ARGB-8888.
+    int w = view.getWidth();
+    int h = view.getHeight();
+    pixelBuffer.position(0);
+    int[][] pixels = new int[h][w];
+    for (int y = h - 1; y >= 0; y--) {
+      for (int x = 0; x < w; x++) {
+        int agbr = pixelBuffer.get();
+        pixels[y][x] = (agbr & 0xFF00FF00) | ((agbr >> 16) & 0x000000FF) | ((agbr << 16) & 0x00FF0000);
+      }
+    }
+    return pixels;
   }
 
   class scrollHandler implements InvocationHandler {

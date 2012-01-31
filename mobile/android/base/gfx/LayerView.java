@@ -239,7 +239,7 @@ public class LayerView extends GLSurfaceView
         return mRenderer.getMaxTextureSize();
     }
 
-    /** Used by robocop for testing purposes. Not for production use! */
+    /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
     public IntBuffer getPixels() {
         return mRenderer.getPixels();
     }

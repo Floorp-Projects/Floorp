@@ -73,20 +73,24 @@ public class FennecNativeActions implements Actions {
   // Map of IDs to element names.
   private Solo solo;
   private Instrumentation instr;
+  private Activity geckoApp;
 
   // Objects for reflexive access of fennec classes.
   private ClassLoader classLoader;
   private Class gel;
   private Class ge;
   private Class gas;
+  private Class drawListener;
   private Method registerGEL;
   private Method unregisterGEL;
   private Method sendGE;
-
+  private Method getLayerClient;
+  private Method setDrawListener;
 
   public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation){
     this.solo = robocop;
     this.instr = instrumentation;
+    this.geckoApp = activity;
     // Set up reflexive access of java classes and methods.
     try {
       classLoader = activity.getClassLoader();
@@ -101,6 +105,11 @@ public class FennecNativeActions implements Actions {
       parameters = new Class[1];
       parameters[0] = ge;
       sendGE = gas.getMethod("sendEventToGecko", parameters);
+
+      getLayerClient = activity.getClass().getMethod("getSoftwareLayerClient");
+      Class gslc = classLoader.loadClass("org.mozilla.gecko.gfx.GeckoSoftwareLayerClient");
+      drawListener = classLoader.loadClass("org.mozilla.gecko.gfx.GeckoSoftwareLayerClient$DrawListener");
+      setDrawListener = gslc.getDeclaredMethod("setDrawListener", drawListener);
      } catch (ClassNotFoundException e) {
        e.printStackTrace();
      } catch (SecurityException e) {
@@ -203,6 +212,75 @@ public class FennecNativeActions implements Actions {
       e.printStackTrace();
     }
     return null;
+  }
+
+  class DrawListenerProxy implements InvocationHandler {
+    private final PaintExpecter mPaintExpecter;
+
+    DrawListenerProxy(PaintExpecter paintExpecter) {
+      mPaintExpecter = paintExpecter;
+    }
+
+    public Object invoke(Object proxy, Method method, Object[] args) {
+      String methodName = method.getName();
+      if ("drawFinished".equals(methodName)) {
+        Log.i("Robocop", "Received drawFinished notification");
+        mPaintExpecter.notifyOfEvent();
+      } else if ("toString".equals(methodName)) {
+        return "DrawListenerProxy";
+      } else if ("equals".equals(methodName)) {
+        return false;
+      } else if ("hashCode".equals(methodName)) {
+        return 0;
+      }
+      return null;
+    }
+  }
+
+  class PaintExpecter implements EventExpecter {
+    private Object mLayerClient;
+    private boolean mPaintDone;
+
+    PaintExpecter() throws IllegalAccessException, InvocationTargetException {
+      mLayerClient = getLayerClient.invoke(geckoApp);
+      setDrawListener.invoke(mLayerClient, Proxy.newProxyInstance(classLoader, new Class[] { drawListener }, new DrawListenerProxy(this)));
+    }
+
+    void notifyOfEvent() {
+      try {
+        setDrawListener.invoke(mLayerClient, (Object)null);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      synchronized (this) {
+        mPaintDone = true;
+        this.notifyAll();
+      }
+    }
+
+    public synchronized void blockForEvent() {
+      while (! mPaintDone) {
+        try {
+          this.wait();
+        } catch (InterruptedException ie) {
+          ie.printStackTrace();
+          break;
+        }
+      }
+    }
+
+    public synchronized boolean eventReceived() {
+      return mPaintDone;
+    }
+  }
+
+  public EventExpecter expectPaint() {
+    try {
+      return new PaintExpecter();
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 
   public void sendSpecialKey(SpecialKey button) {
