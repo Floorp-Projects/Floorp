@@ -177,7 +177,10 @@ public:
     return mCertVerificationState == waiting_for_cert_verification;
   }
   
-
+  bool IsSSL3Enabled() const { return mSSL3Enabled; }
+  void SetSSL3Enabled(bool enabled) { mSSL3Enabled = enabled; }
+  bool IsTLSEnabled() const { return mTLSEnabled; }
+  void SetTLSEnabled(bool enabled) { mTLSEnabled = enabled; }
 protected:
   mutable ::mozilla::Mutex mMutex;
 
@@ -201,6 +204,8 @@ protected:
   bool mDocShellDependentStuffKnown;
   bool mExternalErrorReporting; // DocShellDependent
   bool mForSTARTTLS;
+  bool mSSL3Enabled;
+  bool mTLSEnabled;
   bool mHandshakePending;
   bool mHasCleartextPhase;
   bool mHandshakeInProgress;
@@ -280,8 +285,8 @@ public:
   static PRInt32 getWarnLevelMissingRFC5746();
 
   static void getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key);
-  static bool rememberPossibleTLSProblemSite(PRFileDesc* fd, nsNSSSocketInfo *socketInfo);
-  static void rememberTolerantSite(PRFileDesc* ssl_layer_fd, nsNSSSocketInfo *socketInfo);
+  static bool rememberPossibleTLSProblemSite(nsNSSSocketInfo *socketInfo);
+  static void rememberTolerantSite(nsNSSSocketInfo *socketInfo);
 
   static void addIntolerantSite(const nsCString &str);
   static void removeIntolerantSite(const nsCString &str);
