@@ -545,12 +545,12 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         return Color.rgb(r, g, b);
     }
 
-    /** Used by robocop for testing purposes. Not for production use! */
+    /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
     public void setDrawListener(DrawListener listener) {
         mDrawListener = listener;
     }
 
-    /** Used by robocop for testing purposes. Not for production use! */
+    /** Used by robocop for testing purposes. Not for production use! This is used via reflection by robocop. */
     public interface DrawListener {
         public void drawFinished(int x, int y, int width, int height);
     }
