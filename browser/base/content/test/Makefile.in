@@ -182,6 +182,7 @@ _BROWSER_FILES = \
                  browser_bug719271.js \
                  browser_canonizeURL.js \
                  browser_findbarClose.js \
+                 browser_homeDrop.js \
                  browser_keywordBookmarklets.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
@@ -263,7 +264,7 @@ _BROWSER_FILES = \
                  test_wyciwyg_copying.html \
                  authenticate.sjs \
                  browser_minimize.js \
-								 browser_aboutSyncProgress.js \
+                 browser_aboutSyncProgress.js \
                  browser_middleMouse_inherit.js \
                  redirect_bug623155.sjs \
                  $(NULL)
