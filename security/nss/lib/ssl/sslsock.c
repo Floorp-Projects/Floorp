@@ -1955,7 +1955,21 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
     } else if ((ss->lastWriteBlocked) && (how_flags & PR_POLL_READ) &&
 	       (ss->pendingBuf.len != 0)) { /* write data waiting to be sent */
 	new_flags |=  PR_POLL_WRITE;   /* also select on write. */
-    } 
+    }
+
+    if (ss->version >= SSL_LIBRARY_VERSION_3_0 &&
+	ss->ssl3.hs.restartTarget != NULL) {
+	/* Read and write will block until the asynchronous callback completes
+	 * (e.g. until SSL_AuthCertificateComplete is called), so don't tell
+	 * the caller to poll the socket unless there is pending write data.
+	 */
+	if (ss->lastWriteBlocked && ss->pendingBuf.len != 0) {
+	    new_flags &= (PR_POLL_WRITE | PR_POLL_EXCEPT);
+	} else {
+	    new_flags = 0;
+	}
+    }
+
     if (new_flags && (fd->lower->methods->poll != NULL)) {
 	PRInt16    lower_out_flags = 0;
 	PRInt16    lower_new_flags;
