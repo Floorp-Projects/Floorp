@@ -1774,7 +1774,7 @@ mjit::Compiler::finishThisUp()
     JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
-    Probes::registerMJITCode(cx, jit,
+    Probes::registerMJITCode(cx, chunk,
                              a,
                              (JSActiveFrame**) inlineFrames.begin(),
                              result, masm.size(),
