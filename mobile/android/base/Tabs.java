@@ -136,7 +136,7 @@ public class Tabs implements GeckoEventListener {
                     GeckoApp.mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
 
                     if (oldTab != null)
-                        GeckoApp.mAppContext.hidePlugins(oldTab, true);
+                        GeckoApp.mAppContext.hidePluginViews(oldTab);
                 }
             }
         });
@@ -200,7 +200,7 @@ public class Tabs implements GeckoEventListener {
                 GeckoApp.mAppContext.onTabsChanged(closedTab);
                 GeckoApp.mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
                 GeckoApp.mDoorHangerPopup.updatePopup();
-                GeckoApp.mAppContext.hidePlugins(closedTab, true);
+                GeckoApp.mAppContext.hidePluginViews(closedTab);
             }
         });
 

@@ -224,14 +224,6 @@ public class LayerView extends GLSurfaceView
         }
     }
 
-    public void addLayer(Layer layer) {
-        mRenderer.addLayer(layer);
-    }
-
-    public void removeLayer(Layer layer) {
-        mRenderer.removeLayer(layer);
-    }
-
     /**
      * Returns the time elapsed between the first call of requestRender() after
      * the last call of getRenderTime(), in nanoseconds.
