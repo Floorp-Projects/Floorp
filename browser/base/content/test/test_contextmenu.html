@@ -258,7 +258,7 @@ function runTest(testNum) {
 
     case 2:
         // Context menu for plain text
-        checkContextMenu(["context-back",         false,
+        plainTextItems = ["context-back",         false,
                           "context-forward",      false,
                           "context-reload",       true,
                           "context-stop",         false,
@@ -272,7 +272,8 @@ function runTest(testNum) {
                           "---",                  null,
                           "context-viewsource",   true,
                           "context-viewinfo",     true
-                         ].concat(inspectItems));
+                         ].concat(inspectItems);
+        checkContextMenu(plainTextItems);
         closeContextMenu();
         openContextMenuFor(link); // Invoke context menu for next test.
         break;
@@ -513,13 +514,21 @@ function runTest(testNum) {
                          ].concat(inspectItems));
         contextMenu.ownerDocument.getElementById("spell-add-to-dictionary").doCommand(); // Add to dictionary
         closeContextMenu();
+        openContextMenuFor(text); // Invoke context menu for next test.
+        break;
+
+    case 15:
+        // Re-check context menu for plain text to make sure it hasn't changed
+        checkContextMenu(plainTextItems);
+        closeContextMenu();
         openContextMenuFor(textarea, false, true); // Invoke context menu for next test.
         break;
-    
-    case 15:    
+
+    case 16:
         // Context menu for textarea after a word has been added
         // to the dictionary
         checkContextMenu(["spell-undo-add-to-dictionary", true,
+                          "---",                 null,
                           "context-undo",        false,
                           "---",                 null,
                           "context-cut",         false,
@@ -540,7 +549,7 @@ function runTest(testNum) {
         openContextMenuFor(contenteditable);
         break;
 
-    case 16:
+    case 17:
         // Context menu for contenteditable
         checkContextMenu(["spell-no-suggestions", false,
                           "spell-add-to-dictionary", true,
@@ -565,7 +574,7 @@ function runTest(testNum) {
         openContextMenuFor(inputspell); // Invoke context menu for next test.
         break;
 
-    case 17:
+    case 18:
         // Context menu for spell-check input
         checkContextMenu(["*prodigality",        true, // spelling suggestion
                           "spell-add-to-dictionary", true,
@@ -590,13 +599,13 @@ function runTest(testNum) {
         openContextMenuFor(link); // Invoke context menu for next test.
         break;
 
-    case 18:
+    case 19:
         executeCopyCommand("cmd_copyLink", "http://mozilla.com/");
         closeContextMenu();
         openContextMenuFor(pagemenu); // Invoke context menu for next test.
         break;
 
-    case 19:
+    case 20:
         // Context menu for element with assigned content context menu
         checkContextMenu(["+Plain item",          {type: "", icon: "", checked: false, disabled: false},
                           "+Disabled item",       {type: "", icon: "", checked: false, disabled: true},
@@ -639,7 +648,7 @@ function runTest(testNum) {
         openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
         break;
 
-    case 20:
+    case 21:
         // Context menu for element with assigned content context menu
         // The shift key should bypass content context menu processing
         checkContextMenu(["context-back",         false,
@@ -684,7 +693,7 @@ function runTest(testNum) {
 var testNum = 1;
 var subwindow, chromeWin, contextMenu, lastElement;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
-    iframe, video_in_iframe, image_in_iframe, textarea, contenteditable, inputspell, pagemenu;
+    iframe, video_in_iframe, image_in_iframe, textarea, contenteditable, inputspell, pagemenu, plainTextItems;
 
 function startTest() {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');

@@ -2,9 +2,9 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <!--
-  XUL Widget Test for textbox with placeholder
+  XUL Widget Test for textbox with Add and Undo Add to Dictionary
   -->
-<window title="Textbox Add and Undo Add Dictionary Test" width="500" height="600"
+<window title="Textbox Add and Undo Add to Dictionary Test" width="500" height="600"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
@@ -55,8 +55,11 @@ function runContextMenuTest()
     {
       case 0: // "Add to Dictionary" button
         var addToDict = contextMenu.querySelector("[anonid=spell-add-to-dictionary]");
-        is(!addToDict.hidden, true, "Is Add to Dictionary visible?");
-        
+        ok(!addToDict.hidden, "Is Add to Dictionary visible?");
+
+        var separator = contextMenu.querySelector("[anonid=spell-suggestions-separator]");
+        ok(!separator.hidden, "Is separator visible?");
+
         addToDict.doCommand();
         
         contextMenu.hidePopup();
@@ -67,8 +70,11 @@ function runContextMenuTest()
         
       case 1: // "Undo Add to Dictionary" button
         var undoAddDict = contextMenu.querySelector("[anonid=spell-undo-add-to-dictionary]");
-        is(!undoAddDict.hidden, true, "Is Undo Add to Dictioanry visible?");
-        
+        ok(!undoAddDict.hidden, "Is Undo Add to Dictioanry visible?");
+
+        var separator = contextMenu.querySelector("[anonid=spell-suggestions-separator]");
+        ok(!separator.hidden, "Is separator hidden?");
+
         undoAddDict.doCommand();
         
         contextMenu.hidePopup();
