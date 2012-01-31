@@ -72,6 +72,7 @@ _TEST_FILES = 	findbar_window.xul \
 		test_bug570192.xul \
 		test_bug624329.xul \
 		bug624329_window.xul \
+		test_bug649840.xul \
 		test_popup_preventdefault_chrome.xul \
 		window_popup_preventdefault_chrome.xul \
 		test_largemenu.xul \

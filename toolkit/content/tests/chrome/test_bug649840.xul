@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=649840
+-->
+<window title="Mozilla Bug 649840" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <textbox id="textLTR" type="autocomplete" autocompletesearch="simple"/>
+  <textbox id="textRTL" type="autocomplete" autocompletesearch="simple"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=649840"
+     target="_blank">Mozilla Bug 649840</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+/** Test for Bug 649840 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+function runTest()
+{
+  var textLTR = $("textLTR");
+  var textRTL = $("textRTL");
+
+  textLTR.style.direction = "ltr";
+  textRTL.style.direction = "rtl";
+
+  textLTR.value="abcd";
+  textRTL.value="ابجد";
+
+  // open and close the popups to update the popupdir attribute value
+  textLTR.openPopup();
+  textLTR.closePopup();
+  textRTL.openPopup();
+  textRTL.closePopup();
+  
+  is(textLTR.popup.style.direction, textLTR.style.direction, "LTR textbox test fails");
+  is(textRTL.popup.style.direction, textRTL.style.direction, "RTL textbox test fails");
+
+  // switch directions of the two textboxes
+  textLTR.style.direction = "rtl";
+  textRTL.style.direction = "ltr";
+
+  // open and close the popups to update the popupdir attribute value
+  textLTR.openPopup();
+  textLTR.closePopup();
+  textRTL.openPopup();
+  textRTL.closePopup();
+
+  is(textLTR.popup.style.direction, textLTR.style.direction, "RTL-switched textbox test fails");
+  is(textRTL.popup.style.direction, textRTL.style.direction, "LTR-switched textbox test fails");
+
+  SimpleTest.finish();
+}
+
+  ]]>
+  </script>
+</window>
