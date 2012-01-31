@@ -71,10 +71,11 @@ function runOneTest(gl, info) {
         return;
       }
     }
-    if ((vShader != null) != info.vShaderSuccess) {
+    // As per GLSL 1.0.17 10.27 we can only check for success on
+    // compileShader, not failure.
+    if (info.vShaderSuccess && !vShader) {
       testFailed("[unexpected vertex shader compile status] (expected: " +
-                info.vShaderSuccess + ") " + passMsg);
-      return;
+                 info.vShaderSuccess + ") " + passMsg);
     }
     // Save the shaders so we test shared shader.
     if (vShader) {
@@ -96,7 +97,9 @@ function runOneTest(gl, info) {
       }
     }
     //debug(fShader == null ? "fail" : "succeed");
-    if ((fShader != null) != info.fShaderSuccess) {
+    // As per GLSL 1.0.17 10.27 we can only check for success on
+    // compileShader, not failure.
+    if (info.fShaderSuccess && !fShader) {
       testFailed("[unexpected fragment shader compile status] (expected: " +
                 info.fShaderSuccess + ") " + passMsg);
       return;
