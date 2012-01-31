@@ -223,7 +223,7 @@ public:
     return 0;
   }
 
-  void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset);
+  void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset);
 
   PRInt64 GetEndMediaTime() const {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
