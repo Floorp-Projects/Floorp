@@ -284,7 +284,10 @@ public class Tabs implements GeckoEventListener {
                 selectTab(message.getInt("tabID"));
             } else if (event.equals("Tab:ScreenshotData")) {
                 Tab tab = getTab(message.getInt("tabID"));
-                byte[] compressed = Base64.decode(message.getString("data").substring(22), Base64.DEFAULT);
+                String data = message.getString("data");
+                if (data.length() < 22)
+                    return;
+                byte[] compressed = Base64.decode(data.substring(22), Base64.DEFAULT);
                 GeckoApp.mAppContext.processThumbnail(tab, null, compressed);
             }
         } catch (Exception e) { 
