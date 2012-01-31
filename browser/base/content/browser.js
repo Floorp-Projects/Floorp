@@ -3136,13 +3136,17 @@ var browserDragAndDrop = {
     }
   },
 
-  drop: function (aEvent, aName) Services.droppedLinkHandler.dropLink(aEvent, aName)
+  drop: function (aEvent, aName, aDisallowInherit) {
+    return Services.droppedLinkHandler.dropLink(aEvent, aName, aDisallowInherit);
+  }
 };
 
 var homeButtonObserver = {
   onDrop: function (aEvent)
     {
-      setTimeout(openHomeDialog, 0, browserDragAndDrop.drop(aEvent, { }));
+      // disallow setting home pages that inherit the principal
+      let url = browserDragAndDrop.drop(aEvent, {}, true);
+      setTimeout(openHomeDialog, 0, url);
     },
 
   onDragOver: function (aEvent)
