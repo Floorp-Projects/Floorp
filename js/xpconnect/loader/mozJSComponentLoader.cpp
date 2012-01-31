@@ -446,9 +446,6 @@ mozJSComponentLoader::ReallyInit()
     // Always use the latest js version
     JS_SetVersion(mContext, JSVERSION_LATEST);
 
-    // Limit C stack consumption to a reasonable 512K
-    JS_SetNativeStackQuota(mContext, 512 * 1024);
-
     nsCOMPtr<nsIScriptSecurityManager> secman =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
     if (!secman)
