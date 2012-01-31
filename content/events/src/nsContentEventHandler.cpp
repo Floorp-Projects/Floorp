@@ -214,12 +214,11 @@ static PRUint32 CountNewlinesIn(nsIContent* aContent, PRUint32 aMaxOffset)
   const nsTextFragment* text = aContent->GetText();
   if (!text)
     return 0;
-  if (aMaxOffset == PR_UINT32_MAX) {
-    // search the entire string
-    aMaxOffset = text->GetLength();
-  }
+  NS_ASSERTION(aMaxOffset == PR_UINT32_MAX || aMaxOffset <= text->GetLength(),
+               "text offset is out-of-bounds");
+  const PRUint32 length = NS_MIN(aMaxOffset, text->GetLength());
   PRUint32 newlines = 0;
-  for (PRUint32 i = 0; i < aMaxOffset; ++i) {
+  for (PRUint32 i = 0; i < length; ++i) {
     if (text->CharAt(i) == '\n') {
       ++newlines;
     }
