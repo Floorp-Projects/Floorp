@@ -1513,6 +1513,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     // do { } while() loops have the following structure:
     //    NOP         ; SRC_WHILE (offset to COND)
     //    LOOPHEAD    ; SRC_WHILE (offset to IFNE)
+    //    LOOPENTRY
     //    ...         ; body
     //    ...
     //    COND        ; start of condition
@@ -1530,8 +1531,9 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_LOOPHEAD);
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
-    if (GetNextPc(pc) == info().osrPc()) {
-        MBasicBlock *preheader = newOsrPreheader(current, GetNextPc(pc));
+    jsbytecode *loopEntry = GetNextPc(GetNextPc(pc));
+    if (info().hasOsrAt(loopEntry)) {
+        MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
         current->end(MGoto::New(preheader));
@@ -1569,6 +1571,7 @@ IonBuilder::whileLoop(JSOp op, jssrcnote *sn)
     //    LOOPHEAD
     //    ...
     //  cond:
+    //    LOOPENTRY
     //    ...
     //    IFNE        ; goes to LOOPHEAD
     int ifneOffset = js_GetSrcNoteOffset(sn, 0);
@@ -1579,8 +1582,9 @@ IonBuilder::whileLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_LOOPHEAD);
     JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
-    if (GetNextPc(pc) == info().osrPc()) {
-        MBasicBlock *preheader = newOsrPreheader(current, GetNextPc(pc));
+    jsbytecode *loopEntry = pc + GetJumpOffset(pc);
+    if (info().hasOsrAt(loopEntry)) {
+        MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
         current->end(MGoto::New(preheader));
@@ -1630,24 +1634,28 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     // [increment:]
     //    ; [increment]
     // [cond:]
+    //   LOOPENTRY
     //   GOTO body
     //
     // If there is a condition (condpc != ifne), this acts similar to a while
     // loop otherwise, it acts like a do-while loop.
     jsbytecode *bodyStart = pc;
     jsbytecode *bodyEnd = updatepc;
+    jsbytecode *loopEntry = condpc;
     if (condpc != ifne) {
         JS_ASSERT(JSOp(*bodyStart) == JSOP_GOTO);
         JS_ASSERT(bodyStart + GetJumpOffset(bodyStart) == condpc);
         bodyStart = GetNextPc(bodyStart);
+    } else {
+        loopEntry = GetNextPc(bodyStart);
     }
     jsbytecode *loopHead = bodyStart;
     JS_ASSERT(JSOp(*bodyStart) == JSOP_LOOPHEAD);
     JS_ASSERT(ifne + GetJumpOffset(ifne) == bodyStart);
     bodyStart = GetNextPc(bodyStart);
 
-    if (GetNextPc(pc) == info().osrPc()) {
-        MBasicBlock *preheader = newOsrPreheader(current, GetNextPc(pc));
+    if (info().hasOsrAt(loopEntry)) {
+        MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
         current->end(MGoto::New(preheader));
@@ -2475,7 +2483,7 @@ IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 MBasicBlock *
 IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *pc)
 {
-    JS_ASSERT((JSOp)*pc == JSOP_LOOPHEAD);
+    JS_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
     JS_ASSERT(pc == info().osrPc());
 
     // Create two blocks: one for the OSR entry with no predecessors, one for
