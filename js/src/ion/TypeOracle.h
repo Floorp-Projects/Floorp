@@ -98,6 +98,7 @@ class TypeOracle
     virtual Unary unaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual Binary binaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual types::TypeSet *thisTypeSet(JSScript *script) { return NULL; }
+    virtual void getNewTypesAtJoinPoint(JSScript *script, jsbytecode *pc, Vector<MIRType> &slotTypes) { }
     virtual types::TypeSet *parameterTypeSet(JSScript *script, size_t index) { return NULL; }
     virtual types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id) {
         return NULL;
@@ -204,6 +205,7 @@ class TypeInferenceOracle : public TypeOracle
     Unary unaryOp(JSScript *script, jsbytecode *pc);
     Binary binaryOp(JSScript *script, jsbytecode *pc);
     types::TypeSet *thisTypeSet(JSScript *script);
+    void getNewTypesAtJoinPoint(JSScript *script, jsbytecode *pc, Vector<MIRType> &slotTypes);
     types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
     types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id);
     types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc);
