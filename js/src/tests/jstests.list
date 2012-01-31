@@ -4,6 +4,7 @@ include ecma_2/jstests.list
 include ecma_3/jstests.list
 include ecma_3_1/jstests.list
 include ecma_5/jstests.list
+include ecma_6/jstests.list
 include js1_1/jstests.list
 include js1_2/jstests.list
 include js1_3/jstests.list
