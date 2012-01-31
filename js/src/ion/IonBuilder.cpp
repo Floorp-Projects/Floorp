@@ -3307,8 +3307,12 @@ IonBuilder::jsop_getprop(JSAtom *atom)
 
     if (unary.ival == MIRType_Object) {
         MGetPropertyCache *load = MGetPropertyCache::New(obj, atom, script, pc);
-        if (!barrier)
-            load->setResultType(unary.rval);
+        if (!barrier) {
+            // Use the default type (Value) when the output type is undefined or null.
+            // Because specializing to those types isn't possible.
+            if (unary.rval != MIRType_Undefined && unary.rval != MIRType_Null)
+                load->setResultType(unary.rval);
+        }
         ins = load;
     } else {
         ins = MCallGetProperty::New(obj, atom);
