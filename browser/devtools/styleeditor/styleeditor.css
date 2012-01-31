@@ -73,6 +73,14 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   -moz-box-pack: center;
 }
 
+.stylesheet-name {
+  white-space: nowrap;
+}
+
+li.unsaved > hgroup > h1 > .stylesheet-name:before {
+  content: "*";
+}
+
 .stylesheet-enabled {
   display: -moz-box;
 }
