@@ -149,6 +149,28 @@ TypeInferenceOracle::thisTypeSet(JSScript *script)
     return TypeScript::ThisTypes(script);
 }
 
+void
+TypeInferenceOracle::getNewTypesAtJoinPoint(JSScript *script, jsbytecode *pc, Vector<MIRType> &slotTypes)
+{
+    ScriptAnalysis *analysis = script->analysis();
+    JS_ASSERT(analysis->jumpTarget(pc));
+
+    if (const SlotValue *newv = analysis->newValues(pc)) {
+        while (newv->slot) {
+            if (newv->value.kind() != SSAValue::PHI ||
+                newv->value.phiOffset() != uint32_t(pc - script->code) ||
+                !analysis->trackSlot(newv->slot)) {
+                newv++;
+                continue;
+            }
+
+            types::TypeSet *types = analysis->getValueTypes(newv->value);
+            slotTypes[newv->slot] = getMIRType(types);
+            newv++;
+        }
+    }
+}
+
 TypeSet *
 TypeInferenceOracle::parameterTypeSet(JSScript *script, size_t index)
 {
