@@ -1474,6 +1474,9 @@ struct JSObject : js::gc::Cell
         JS_STATIC_ASSERT(offsetof(JSObject, type_) == offsetof(js::shadow::Object, type));
         JS_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object));
     }
+
+    /* For debugging purposes only! */
+    void dump();
 };
 
 /*
