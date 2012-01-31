@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="width: 1px">
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  var x = document.getElementById("x").firstChild;
+  x.data = "a" + x.data;
+}
+
+</script>
+</head>
+
+<body onload="boom();"><span id="x">
+&#x202a;&#x10871;</span></body>
+</html>
