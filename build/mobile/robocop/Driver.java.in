@@ -68,4 +68,11 @@ public interface Driver {
 
   void startFrameRecording();
   int stopFrameRecording();
+
+  /**
+   * Get a copy of the painted content region.
+   * @return A 2-D array of pixels (indexed by y, then x). The pixels
+   * are in ARGB-8888 format.
+   */
+  int[][] getPaintedSurface();
 }
