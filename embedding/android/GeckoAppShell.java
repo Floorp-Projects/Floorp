@@ -1792,5 +1792,5 @@ public class GeckoAppShell
     }
 
     // This is only used in Native Fennec.
-    public static void preventPanning() { }
+    public static void setPreventPanning(final boolean aPreventPanning) { }
 }
