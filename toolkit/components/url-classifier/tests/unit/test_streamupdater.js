@@ -80,6 +80,8 @@ function testSimpleForward() {
 // Make sure that a nested forward (a forward within a forward) causes
 // the update to fail.
 function testNestedForward() {
+  testFillDb(); // Make sure the db isn't empty
+
   var add1Urls = [ "foo.com/a", "bar.com/c" ];
   var add2Urls = [ "foo.com/b" ];
 
@@ -201,6 +203,8 @@ function testValidMAC() {
 
 // Test a simple update with an invalid message authentication code.
 function testInvalidMAC() {
+  testFillDb(); // Make sure the db isn't empty
+
   var addUrls = [ "foo.com/a", "foo.com/b", "bar.com/c" ];
   var update = buildPhishingUpdate(
         [
@@ -220,6 +224,8 @@ function testInvalidMAC() {
 // Test a simple  update without a message authentication code, when it is
 // expecting one.
 function testNoMAC() {
+  testFillDb(); // Make sure the db isn't empty
+
   var addUrls = [ "foo.com/a", "foo.com/b", "bar.com/c" ];
   var update = buildPhishingUpdate(
         [
@@ -276,6 +282,8 @@ function testValidForwardMAC() {
 // Test an update with a valid message authentication code, but with
 // invalid MACs on the forwards.
 function testInvalidForwardMAC() {
+  testFillDb(); // Make sure the db isn't empty
+
   var add1Urls = [ "foo.com/a", "bar.com/c" ];
   var add2Urls = [ "foo.com/b" ];
   var add3Urls = [ "bar.com/d" ];
@@ -315,6 +323,8 @@ function testInvalidForwardMAC() {
 // Test an update with a valid message authentication code, but no MAC
 // specified for sub-urls.
 function testNoForwardMAC() {
+  testFillDb(); // Make sure the db isn't empty
+
   var add1Urls = [ "foo.com/a", "bar.com/c" ];
   var add2Urls = [ "foo.com/b" ];
   var add3Urls = [ "bar.com/d" ];
@@ -381,6 +391,8 @@ gAssertions.gotRekey = function(data, cb)
 
 // Tests a rekey request.
 function testRekey() {
+  testFillDb();
+
   var addUrls = [ "foo.com/a", "foo.com/b", "bar.com/c" ];
   var update = buildPhishingUpdate(
         [
@@ -445,9 +457,6 @@ function run_test()
     testInvalidUrlForward,
     testErrorUrlForward,
     testMultipleTables,
-    testReset,
-    // XXX: we're currently "once MAC, always MAC",
-    // so any test not using a MAC must go above
     testValidMAC,
     testInvalidMAC,
     testNoMAC,
@@ -455,6 +464,7 @@ function run_test()
     testInvalidForwardMAC,
     testNoForwardMAC,
     testRekey,
+    testReset,
   ]);
 }
 

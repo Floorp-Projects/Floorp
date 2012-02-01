@@ -59,17 +59,11 @@ XPIDLSRCS = \
   $(NULL)
 
 CPPSRCS = \
-  ChunkSet.cpp \
-  Classifier.cpp \
-  HashStore.cpp \
-  ProtocolParser.cpp \
-  LookupCache.cpp \
   nsUrlClassifierDBService.cpp \
   nsUrlClassifierStreamUpdater.cpp \
   nsUrlClassifierUtils.cpp \
   nsUrlClassifierPrefixSet.cpp \
   nsUrlClassifierProxies.cpp \
-  nsCheckSummedOutputStream.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
