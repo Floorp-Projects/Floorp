@@ -76,6 +76,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
+    ValueOperand ToOutValue(LInstruction *ins);
 
     // Functions for LTestVAndBranch.
     Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
@@ -98,7 +99,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitStoreSlotT(LStoreSlotT *store);
     bool visitWriteBarrierV(LWriteBarrierV *barrier);
     bool visitWriteBarrierT(LWriteBarrierT *barrier);
-    bool visitLoadElementV(LLoadElementV *load);
     bool visitLoadElementT(LLoadElementT *load);
     bool visitStoreElementV(LStoreElementV *store);
     bool visitStoreElementT(LStoreElementT *store);

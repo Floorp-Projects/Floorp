@@ -93,13 +93,19 @@ CodeGeneratorX86::ToValue(LInstruction *ins, size_t pos)
     return ValueOperand(typeReg, payloadReg);
 }
 
+ValueOperand
+CodeGeneratorX86::ToOutValue(LInstruction *ins)
+{
+    Register typeReg = ToRegister(ins->getDef(TYPE_INDEX));
+    Register payloadReg = ToRegister(ins->getDef(PAYLOAD_INDEX));
+    return ValueOperand(typeReg, payloadReg);
+}
+
 bool
 CodeGeneratorX86::visitValue(LValue *value)
 {
-    LDefinition *type = value->getDef(TYPE_INDEX);
-    LDefinition *payload = value->getDef(PAYLOAD_INDEX);
-
-    masm.moveValue(value->value(), ToRegister(type), ToRegister(payload));
+    const ValueOperand out = ToOutValue(value);
+    masm.moveValue(value->value(), out);
     return true;
 }
 
@@ -107,17 +113,10 @@ bool
 CodeGeneratorX86::visitOsrValue(LOsrValue *value)
 {
     const LAllocation *frame   = value->getOperand(0);
-    const LDefinition *type    = value->getDef(TYPE_INDEX);
-    const LDefinition *payload = value->getDef(PAYLOAD_INDEX);
-
+    const ValueOperand out     = ToOutValue(value);
     const ptrdiff_t frameOffset = value->mir()->frameOffset();
 
-    const ptrdiff_t payloadOffset = frameOffset + NUNBOX32_PAYLOAD_OFFSET;
-    const ptrdiff_t typeOffset    = frameOffset + NUNBOX32_TYPE_OFFSET;
-
-    masm.movl(Operand(ToRegister(frame), payloadOffset), ToRegister(payload));
-    masm.movl(Operand(ToRegister(frame), typeOffset), ToRegister(type));
-
+    masm.loadValue(Operand(ToRegister(frame), frameOffset), out);
     return true;
 }
 
@@ -213,13 +212,11 @@ CodeGeneratorX86::testStringTruthy(bool truthy, const ValueOperand &value)
 bool
 CodeGeneratorX86::visitLoadSlotV(LLoadSlotV *load)
 {
-    Register type = ToRegister(load->getDef(TYPE_INDEX));
-    Register payload = ToRegister(load->getDef(PAYLOAD_INDEX));
+    const ValueOperand out = ToOutValue(load);
     Register base = ToRegister(load->input());
     int32 offset = load->mir()->slot() * sizeof(js::Value);
 
-    masm.movl(Operand(base, offset + NUNBOX32_TYPE_OFFSET), type);
-    masm.movl(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), payload);
+    masm.loadValue(Operand(base, offset), out);
     return true;
 }
 
@@ -259,24 +256,6 @@ CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
         masm.storePayload(*value->toConstant(), Operand(base, offset));
     else
         masm.storePayload(ToRegister(value), Operand(base, offset));
-
-    return true;
-}
-
-bool
-CodeGeneratorX86::visitLoadElementV(LLoadElementV *load)
-{
-    Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
-    Register type = ToRegister(load->getDef(TYPE_INDEX));
-    Register payload = ToRegister(load->getDef(PAYLOAD_INDEX));
-
-    masm.movl(masm.ToType(source), type);
-    masm.movl(masm.ToPayload(source), payload);
-
-    if (load->mir()->needsHoleCheck()) {
-        masm.cmpl(type, ImmTag(JSVAL_TAG_MAGIC));
-        return bailoutIf(Assembler::Equal, load->snapshot());
-    }
 
     return true;
 }
@@ -364,8 +343,7 @@ bool
 CodeGeneratorX86::visitImplicitThis(LImplicitThis *lir)
 {
     Register callee = ToRegister(lir->callee());
-    Register type = ToRegister(lir->getDef(TYPE_INDEX));
-    Register payload = ToRegister(lir->getDef(PAYLOAD_INDEX));
+    const ValueOperand out = ToOutValue(lir);
 
     // The implicit |this| is always |undefined| if the function's environment
     // is the current global.
@@ -376,7 +354,7 @@ CodeGeneratorX86::visitImplicitThis(LImplicitThis *lir)
     if (!bailoutIf(Assembler::NotEqual, lir->snapshot()))
         return false;
 
-    masm.moveValue(UndefinedValue(), type, payload);
+    masm.moveValue(UndefinedValue(), out);
     return true;
 }
 

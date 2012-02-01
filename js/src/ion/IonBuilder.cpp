@@ -3093,6 +3093,7 @@ IonBuilder::jsop_getelem_dense()
     types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
     types::TypeSet *types = oracle->propertyRead(script, pc);
     bool needsHoleCheck = !oracle->elementReadIsPacked(script, pc);
+    bool maybeUndefined = types->hasType(types::Type::UndefinedType());
 
     MDefinition *id = current->pop();
     MDefinition *obj = current->pop();
@@ -3116,16 +3117,33 @@ IonBuilder::jsop_getelem_dense()
     MElements *elements = MElements::New(obj);
     current->add(elements);
 
-    // Read and check length.
     MInitializedLength *initLength = MInitializedLength::New(elements);
     current->add(initLength);
 
-    MBoundsCheck *check = MBoundsCheck::New(id, initLength);
-    current->add(check);
+    MInstruction *load;
 
-    // Load the value.
-    MLoadElement *load = MLoadElement::New(elements, id, needsHoleCheck);
-    current->add(load);
+    if (!maybeUndefined) {
+        // This load should not return undefined, so likely we're reading
+        // in-bounds elements, and the array is packed or its holes are not
+        // read. This is the best case: we can separate the bounds check for
+        // hoisting.
+        MBoundsCheck *check = MBoundsCheck::New(id, initLength);
+        current->add(check);
+
+        load = MLoadElement::New(elements, id, needsHoleCheck);
+        current->add(load);
+    } else {
+        // This load may return undefined, so assume that we *can* read holes,
+        // or that we can read out-of-bounds accesses. In this case, the bounds
+        // check is part of the opcode.
+        load = MLoadElementHole::New(elements, id, initLength, needsHoleCheck);
+        current->add(load);
+
+        // If maybeUndefined was true, the typeset must have undefined, and
+        // then either additional types or a barrier. This means we should
+        // never have a typed version of LoadElementHole.
+        JS_ASSERT(knownType == JSVAL_TYPE_UNKNOWN);
+    }
 
     if (knownType != JSVAL_TYPE_UNKNOWN)
         load->setResultType(MIRTypeFromValueType(knownType));

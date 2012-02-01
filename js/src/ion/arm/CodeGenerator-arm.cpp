@@ -1113,25 +1113,6 @@ CodeGeneratorARM::visitStoreSlotT(LStoreSlotT *store)
 
     return true;
 }
-bool
-CodeGeneratorARM::visitLoadElementV(LLoadElementV *load)
-{
-    Register type = ToRegister(load->getDef(TYPE_INDEX));
-    Register payload = ToRegister(load->getDef(PAYLOAD_INDEX));
-    Register base = ToRegister(load->elements());
-    if (load->index()->isConstant()) {
-        masm.loadValue(Address(base, ToInt32(load->index()) * sizeof(Value)), ValueOperand(type, payload));
-    } else {
-        masm.loadValue(base, ToRegister(load->index()), ValueOperand(type, payload));
-    }
-
-    if (load->mir()->needsHoleCheck()) {
-        masm.ma_cmp(type, ImmTag(JSVAL_TAG_MAGIC));
-        return bailoutIf(Assembler::Equal, load->snapshot());
-    }
-
-    return true;
-}
 
 bool
 CodeGeneratorARM::visitLoadElementT(LLoadElementT *load)
