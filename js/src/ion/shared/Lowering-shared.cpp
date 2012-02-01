@@ -185,29 +185,20 @@ LIRGeneratorShared::assignSnapshot(LInstruction *ins, BailoutKind kind)
 }
 
 bool
-LIRGeneratorShared::assignPostSnapshot(MInstruction *mir, LInstruction *ins)
-{
-    JS_ASSERT(mir->resumePoint());
-    // Should only produce one postSnapshot per MIR. (not handled yet)
-    JS_ASSERT(!postSnapshot_);
-
-    LSnapshot *snapshot = buildSnapshot(ins, mir->resumePoint(), Bailout_Normal);
-    if (!snapshot)
-        return false;
-
-    ins->assignPostSnapshot(snapshot);
-    postSnapshot_ = snapshot;
-    return true;
-}
-
-bool
 LIRGeneratorShared::assignSafepoint(LInstruction *ins, MInstruction *mir)
 {
-    if (mir->isEffectful() && !ins->postSnapshot()) {
-        if (!assignPostSnapshot(mir, ins))
-            return false;
-    }
+    JS_ASSERT(!osiPoint_);
+    JS_ASSERT(!ins->safepoint());
+
     ins->initSafepoint();
+
+    MResumePoint *mrp = mir->resumePoint() ? mir->resumePoint() : lastResumePoint_;
+    LSnapshot *postSnapshot = buildSnapshot(ins, mrp, Bailout_Normal);
+    if (!postSnapshot)
+        return false;
+
+    osiPoint_ = new LOsiPoint(ins->safepoint(), postSnapshot);
+
     return lirGraph_.noteNeedsSafepoint(ins);
 }
 

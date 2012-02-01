@@ -631,9 +631,9 @@ GreedyAllocator::informSnapshot(LInstruction *ins)
             continue;
 
         // Every definition in a snapshot gets a stack slot. This
-        // simplification means we can treat snapshots and post-snapshots the
-        // same (since we don't see registers as spilled at an
-        // LCaptureAllocations).
+        // simplification means we can treat normal snapshots and LOsiPoint
+        // snapshots (which follow calls) the same, without adding a special
+        // exception to note that registers are spilled at the LOsiPoint.
         VirtualRegister *vr = getVirtualRegister(a->toUse());
         allocateStack(vr);
         *a = vr->backingStack();

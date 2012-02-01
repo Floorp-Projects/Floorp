@@ -258,8 +258,7 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     entryfp_(fp),
     bailout_(NULL),
     prevIonTop_(cx->runtime->ionTop),
-    prevIonJSContext_(cx->runtime->ionJSContext),
-    failedInvalidation_(false)
+    prevIonJSContext_(cx->runtime->ionJSContext)
 {
     fp->setRunningInIon();
     cx->runtime->ionJSContext = cx;
@@ -375,6 +374,8 @@ IonScript::IonScript()
     deoptTable_(NULL),
     osrPc_(NULL),
     osrEntryOffset_(0),
+    invalidateEpilogueOffset_(0),
+    invalidateEpilogueDataOffset_(0),
     forbidOsr_(false),
     snapshots_(0),
     snapshotsSize_(0),
@@ -382,8 +383,8 @@ IonScript::IonScript()
     bailoutEntries_(0),
     constantTable_(0),
     constantEntries_(0),
-    frameInfoTable_(0),
-    frameInfoEntries_(0),
+    safepointIndexOffset_(0),
+    safepointIndexEntries_(0),
     frameLocals_(0),
     frameSize_(0),
     safepointsStart_(0),
@@ -396,8 +397,8 @@ IonScript::IonScript()
 
 IonScript *
 IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snapshotsSize,
-               size_t bailoutEntries, size_t constants, size_t frameInfoEntries,
-               size_t cacheEntries, size_t safepointsSize)
+               size_t bailoutEntries, size_t constants, size_t safepointIndices,
+               size_t osiIndices, size_t cacheEntries, size_t safepointsSize)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
@@ -412,7 +413,8 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
     size_t bytes = snapshotsSize +
                    bailoutEntries * sizeof(uint32) +
                    constants * sizeof(Value) +
-                   frameInfoEntries * sizeof(IonFrameInfo) +
+                   safepointIndices * sizeof(SafepointIndex) +
+                   osiIndices * sizeof(OsiIndex) +
                    cacheEntries * sizeof(IonCache) +
                    safepointsSize;
     uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
@@ -436,9 +438,13 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
     script->constantEntries_ = constants;
     offsetCursor += constants * sizeof(Value);
 
-    script->frameInfoTable_ = offsetCursor;
-    script->frameInfoEntries_ = frameInfoEntries;
-    offsetCursor += frameInfoEntries * sizeof(IonFrameInfo);
+    script->safepointIndexOffset_ = offsetCursor;
+    script->safepointIndexEntries_ = safepointIndices;
+    offsetCursor += safepointIndices * sizeof(SafepointIndex);
+
+    script->osiIndexOffset_ = offsetCursor;
+    script->osiIndexEntries_ = osiIndices;
+    offsetCursor += osiIndices * sizeof(OsiIndex);
 
     script->cacheList_ = offsetCursor;
     script->cacheEntries_ = cacheEntries;
@@ -453,7 +459,6 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
 
     return script;
 }
-
 
 void
 IonScript::trace(JSTracer *trc)
@@ -491,17 +496,23 @@ IonScript::copyConstants(const Value *vp)
 }
 
 void
-IonScript::copyFrameInfoTable(const IonFrameInfo *fi, MacroAssembler &masm)
+IonScript::copySafepointIndices(const SafepointIndex *si, MacroAssembler &masm)
 {
-    IonFrameInfo *table = frameInfoTable();
-    memcpy(table, fi, frameInfoEntries_ * sizeof(IonFrameInfo));
     /*
      * Jumps in the caches reflect the offset of those jumps in the compiled
      * code, not the absolute positions of the jumps. Update according to the
      * final code address now.
      */
-    for (size_t i = 0; i < frameInfoEntries_; i++)
+    SafepointIndex *table = safepointIndices();
+    memcpy(table, si, safepointIndexEntries_ * sizeof(SafepointIndex));
+    for (size_t i = 0; i < safepointIndexEntries_; i++)
         table[i].adjustDisplacement(masm.actualOffset((uint8*)table[i].displacement()));
+}
+
+void
+IonScript::copyOsiIndices(const OsiIndex *oi)
+{
+    memcpy(osiIndices(), oi, osiIndexEntries_ * sizeof(OsiIndex));
 }
 
 void
@@ -518,19 +529,19 @@ IonScript::copyCacheEntries(const IonCache *caches, MacroAssembler &masm)
         getCache(i).updateBaseAddress(method_, masm);
 }
 
-const IonFrameInfo *
-IonScript::getFrameInfo(uint32 disp) const
+const SafepointIndex *
+IonScript::getSafepointIndex(uint32 disp) const
 {
-    JS_ASSERT(frameInfoEntries_ > 0);
+    JS_ASSERT(safepointIndexEntries_ > 0);
 
-    const IonFrameInfo *table = frameInfoTable();
-    if (frameInfoEntries_ == 1) {
+    const SafepointIndex *table = safepointIndices();
+    if (safepointIndexEntries_ == 1) {
         JS_ASSERT(disp == table[0].displacement());
         return &table[0];
     }
 
     size_t minEntry = 0;
-    size_t maxEntry = frameInfoEntries_ - 1;
+    size_t maxEntry = safepointIndexEntries_ - 1;
     uint32 min = table[minEntry].displacement();
     uint32 max = table[maxEntry].displacement();
 
@@ -568,6 +579,32 @@ IonScript::getFrameInfo(uint32 disp) const
     return NULL;
 }
 
+const OsiIndex *
+IonScript::getOsiIndex(uint32 disp) const
+{
+    for (const OsiIndex *it = osiIndices(), *end = osiIndices() + osiIndexEntries_;
+         it != end;
+         ++it)
+    {
+        if (it->returnPointDisplacement() == disp)
+            return it;
+    }
+
+    JS_NOT_REACHED("Failed to find OSI point return address");
+    return NULL;
+}
+
+const OsiIndex *
+IonScript::getOsiIndex(uint8 *retAddr) const
+{
+    IonSpew(IonSpew_Invalidate, "IonScript %p has method %p raw %p", (void *) this, (void *)
+            method(), method()->raw());
+    JS_ASSERT(method()->raw() <= retAddr);
+    JS_ASSERT(retAddr <= method()->raw() + method()->instructionsSize());
+
+    uint32 disp = retAddr - method()->raw();
+    return getOsiIndex(disp);
+}
 
 void
 IonScript::Trace(JSTracer *trc, IonScript *script)
@@ -930,31 +967,12 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
     return EnterIon(cx, fp, target, osrcode, true);
 }
 
-// Fails invalidation for all existing activations.
 static void
-FailInvalidation(JSContext *cx, uint8 *ionTop)
-{
-    IonSpew(IonSpew_Invalidate, "failed invalidation!");
-
-    js_ReportOutOfMemory(cx);
-
-    for (IonActivationIterator ait(cx); ait.more(); ++ait) {
-        IonFrameIterator it(ait.top());
-        JS_ASSERT(it.type() == IonFrame_Exit);
-        it.setReturnAddress(NULL);
-
-        IonSpew(IonSpew_Invalidate, "failed invalidation for activation %p", (void *) ionTop);
-        ait.activation()->setFailedInvalidation(true);
-    }
-}
-
-static bool
 InvalidateActivation(JSContext *cx, uint8 *ionTop)
 {
     size_t frameno = 1;
 
-    for (IonFrameIterator it(ionTop); it.more(); ++it, ++frameno)
-    {
+    for (IonFrameIterator it(ionTop); it.more(); ++it, ++frameno) {
         JS_ASSERT_IF(frameno == 1, it.type() == IonFrame_Exit);
 
 #ifdef DEBUG
@@ -963,11 +981,14 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
             IonSpew(IonSpew_Invalidate, "#%d exit frame @ %p", frameno, it.fp());
             break;
           case IonFrame_JS:
-            if (!it.hasScript())
-                break;
-            IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p: %s:%d", frameno, it.fp(),
+          {
+            JS_ASSERT(it.hasScript());
+            IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p", frameno, it.fp());
+            IonSpew(IonSpew_Invalidate, "   token: %p", it.jsFrame()->calleeToken());
+            IonSpew(IonSpew_Invalidate, "   script: %p; %s:%d", it.script(),
                     it.script()->filename, it.script()->lineno);
             break;
+          }
           case IonFrame_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d rectifier frame @ %p", frameno, it.fp());
             break;
@@ -975,8 +996,7 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
             IonSpew(IonSpew_Invalidate, "#%d entry frame @ %p", frameno, it.fp());
             break;
         }
-        IonSpew(IonSpew_Invalidate, "   return address %p @ %p", it.returnAddress(),
-                it.returnAddressPtr());
+        IonSpew(IonSpew_Invalidate, "   return address %p", it.returnAddress());
 #endif
 
         if (!it.hasScript())
@@ -986,31 +1006,54 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
         if (!script->hasIonScript() || !script->ion->invalidated())
             continue;
 
-        uint8 **returnPtr = it.addressOfReturnToFp();
+        // This frame needs to be invalidated. We do the following:
+        //
+        // 1. Determine safepoint that corresponds to the current call.
+        // 2. From safepoint, get distance to the OSI-patchable offset.
+        // 3. From the IonScript, determine the distance between the
+        //    call-patchable offset and the invalidation epilogue.
+        // 4. Patch the OSI point with a call-relative to the
+        //    invalidation epilogue.
+        //
+        // The code generator ensures that there's enough space for us
+        // to patch in a call-relative operation at each invalidation
+        // point.
+        //
+        // Note: you can't simplify this mechanism to "just patch the
+        // instruction immediately after the call" because things may
+        // need to move into a well-defined register state (using move
+        // instructions after the call) in to capture an appropriate
+        // snapshot after the call occurs.
 
-        // This frame needs to be invalidated.
-        // Create an invalidation record and stick it where the calleeToken was.
         IonSpew(IonSpew_Invalidate, "   ! requires invalidation");
-        JS_ASSERT(!CalleeTokenIsInvalidationRecord(it.calleeToken()));
-        JS_ASSERT(MaybeScriptFromCalleeToken(it.calleeToken()) == script);
-        InvalidationRecord *record = InvalidationRecord::New(it.calleeToken(), *returnPtr);
-        if (!record)
-            return false;
+        IonScript *ionScript = script->ion;
+        ionScript->incref();
+        IonSpew(IonSpew_Invalidate, "   ionScript %p ref %u", (void *) ionScript,
+                unsigned(ionScript->refcount()));
 
-        IonSpew(IonSpew_Invalidate, "   created invalidation record %p", (void *) record);
-        it.jsFrame()->setInvalidationRecord(record);
+        const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
+        IonCode *ionCode = ionScript->method();
 
-        IonCode *invalidator = cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(cx);
-        JS_ASSERT(invalidator);
+        // Write the delta (from the return address offset to the
+        // IonScript pointer embedded into the invalidation epilogue)
+        // where the safepointed call instruction used to be. We rely on
+        // the call sequence causing the safepoint being >= the size of
+        // a uint32, which is checked during safepoint index
+        // construction.
+        CodeLocationLabel dataLabelToMunge(it.returnAddressToFp());
+        ptrdiff_t delta = ionScript->invalidateEpilogueDataOffset() -
+                          (it.returnAddressToFp() - ionCode->raw());
+        Assembler::patchWrite_Imm32(dataLabelToMunge, Imm32(delta));
 
-        IonSpew(IonSpew_Invalidate, "   callee return address @ %p: %p => %p",
-                (void *) returnPtr, (void *) *returnPtr,
-                (void *) invalidator->raw());
-        *returnPtr = invalidator->raw();
+        CodeLocationLabel osiPatchPoint = SafepointReader::InvalidationPatchPoint(ionScript, si);
+        CodeLocationLabel invalidateEpilogue(ionCode, ionScript->invalidateEpilogueOffset());
+
+        IonSpew(IonSpew_Invalidate, "   -> patching address to call instruction %p",
+                (void *) osiPatchPoint.raw());
+        Assembler::patchWrite_NearCall(osiPatchPoint, invalidateEpilogue);
     }
 
     IonSpew(IonSpew_Invalidate, "Done invalidating activation");
-    return true;
 }
 
 void
@@ -1023,14 +1066,12 @@ ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool
             invalid[i].script->ion->incref();
     }
 
-    for (IonActivationIterator iter(cx); iter.more(); ++iter) {
-        if (!InvalidateActivation(cx, iter.top()))
-            FailInvalidation(cx, iter.top());
-    }
+    for (IonActivationIterator iter(cx); iter.more(); ++iter)
+        InvalidateActivation(cx, iter.top());
 
     // Drop the references added above. If a script was never active, its
     // IonScript will be immediately destroyed. Otherwise, it will be held live
-    // until its last InvalidationRecord is destroyed.
+    // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         if (invalid[i].script->hasIonScript()) {
             invalid[i].script->ion->decref(cx);

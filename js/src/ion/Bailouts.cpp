@@ -316,6 +316,28 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
         return;
     }
 
+    // We've bailed out the invalidated frame, so we now transform it
+    // into an exit frame. This:
+    //
+    //      calleeToken
+    //      callerFrameDesc
+    //      returnAddress
+    //      .. locals ..
+    //
+    // Becomes:
+    //
+    //      dummyCalleeToken
+    //      callerFrameDesc
+    //      returnAddress
+    //
+    // The frame descriptor contains the size of the caller's locals,
+    // but not the caller or callee's frame headers. When we remove the
+    // bailed frame and link it as an exit frame, the pushed callee
+    // token is no longer part of any frame header, and thus we must
+    // change the caller's frame descriptor to include it as a local.
+    // Otherwise, stack traversal code will fail because it is off by
+    // one word.
+
     uint32 callerFrameSize = frame->prevFrameLocalSize() +
                              SizeOfFramePrefix(frame->prevType()) - sizeof(IonExitFrameLayout);
     frame->setFrameDescriptor(callerFrameSize, frame->prevType());
@@ -335,7 +357,6 @@ ion::Bailout(BailoutStack *sp)
 
     EnsureExitFrame(in.fp());
 
-    JS_ASSERT(!activation->failedInvalidation());
     if (retval != BAILOUT_RETURN_FATAL_ERROR)
         return retval;
 
@@ -346,6 +367,8 @@ ion::Bailout(BailoutStack *sp)
 uint32
 ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
 {
+    sp->checkInvariants();
+
     JSContext *cx = GetIonContext()->cx;
     IonCompartment *ioncompartment = cx->compartment->ionCompartment();
     IonActivation *activation = cx->runtime->ionActivation;
@@ -358,9 +381,6 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
 
     uint32 retval = ConvertFrames(cx, activation, in);
 
-    // We've bailed out the invalidated frame, so we now transform it into an exit frame.
-    // Since the callee token isn't part of the exit frame structure, we have to bump the caller
-    // frame size to account for the "extra" caller token word.
     {
         IonJSFrameLayout *frame = in.fp();
         IonSpew(IonSpew_Invalidate, "converting to exit frame");
@@ -368,18 +388,17 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         IonSpew(IonSpew_Invalidate, "   orig frameSize %u", unsigned(frame->prevFrameLocalSize()));
         IonSpew(IonSpew_Invalidate, "   orig ra %p", (void *) frame->returnAddress());
 
-        InvalidationRecord *record = CalleeTokenToInvalidationRecord(frame->calleeToken());
-        InvalidationRecord::Destroy(cx, record);
-        // Not strictly necessary, but nice for sanity.
-        frame->replaceCalleeToken(InvalidationRecordToToken(NULL));
-
+        frame->replaceCalleeToken(NULL);
         EnsureExitFrame(frame);
+
         IonSpew(IonSpew_Invalidate, "   new  calleeToken %p", (void *) frame->calleeToken());
         IonSpew(IonSpew_Invalidate, "   new  frameSize %u", unsigned(frame->prevFrameLocalSize()));
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
     }
 
-    if (retval != BAILOUT_RETURN_FATAL_ERROR && !activation->failedInvalidation())
+    in.ionScript()->decref(cx);
+
+    if (retval != BAILOUT_RETURN_FATAL_ERROR)
         return retval;
 
     cx->delete_(activation->maybeTakeBailout());
@@ -405,14 +424,13 @@ uint32
 ion::ReflowTypeInfo(uint32 bailoutResult)
 {
     JSContext *cx = GetIonContext()->cx;
-    IonActivation *activation = cx->runtime->ionActivation;
 
     IonSpew(IonSpew_Bailouts, "reflowing type info");
 
     if (bailoutResult == BAILOUT_RETURN_ARGUMENT_CHECK) {
         IonSpew(IonSpew_Bailouts, "reflowing type info at argument-checked entry");
         ReflowArgTypes(cx);
-        return !activation->failedInvalidation();
+        return true;
     }
 
     JSScript *script = cx->fp()->script();
@@ -439,7 +457,7 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
     Value &result = cx->regs().sp[-1];
     types::TypeScript::Monitor(cx, script, pc, result);
 
-    return !activation->failedInvalidation();
+    return true;
 }
 
 uint32
@@ -447,7 +465,6 @@ ion::RecompileForInlining()
 {
     JSContext *cx = GetIonContext()->cx;
     JSScript *script = cx->fp()->script();
-    IonActivation *activation = cx->runtime->ionActivation;
 
     IonSpew(IonSpew_Inlining, "Recompiling script to inline calls %s:%d", script->filename,
             script->lineno);
@@ -462,7 +479,7 @@ ion::RecompileForInlining()
     // Invalidation should not reset the use count.
     JS_ASSERT(script->getUseCount() >= js_IonOptions.usesBeforeInlining);
 
-    return !activation->failedInvalidation();
+    return true;
 }
 
 JSBool

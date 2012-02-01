@@ -62,6 +62,7 @@ class OutOfLineCache;
 class CodeGenerator : public CodeGeneratorSpecific
 {
     bool generateArgumentsChecks();
+    bool generateInvalidateEpilogue();
     bool generateBody();
 
   public:
@@ -72,7 +73,7 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool visitLabel(LLabel *lir);
     bool visitNop(LNop *lir);
-    bool visitCaptureAllocations(LCaptureAllocations *lir);
+    bool visitOsiPoint(LOsiPoint *lir);
     bool visitGoto(LGoto *lir);
     bool visitParameter(LParameter *lir);
     bool visitCallee(LCallee *lir);

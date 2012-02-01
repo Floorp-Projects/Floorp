@@ -41,7 +41,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "ion/shared/Bailouts-x86-shared.h"
 #include "ion/Bailouts.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonFrames-inl.h"
@@ -128,11 +127,10 @@ ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
 FrameRecovery
 ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack *bailout)
 {
-    IonJSFrameLayout *fp = (IonJSFrameLayout *) bailout->fp();
-    InvalidationRecord *record = CalleeTokenToInvalidationRecord(fp->calleeToken());
-    const IonFrameInfo *exitInfo = record->ionScript->getFrameInfo(record->returnAddress);
-    SnapshotOffset snapshotOffset = exitInfo->snapshotOffset();
-
-    return FrameRecovery::FromSnapshot(bailout->fp(), bailout->sp(), bailout->machine(),
-                                       snapshotOffset);
+    IonScript *ionScript = bailout->ionScript();
+    const OsiIndex *osiIndex = ionScript->getOsiIndex(bailout->osiPointReturnAddress());
+    FrameRecovery fr = FrameRecovery::FromSnapshot((uint8 *) bailout->fp(), bailout->sp(),
+                                                   bailout->machine(), osiIndex->snapshotOffset());
+    fr.setIonScript(ionScript);
+    return fr;
 }

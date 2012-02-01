@@ -45,21 +45,17 @@
 #include "ion/IonFrames.h"
 #include "ion/Snapshots.h"
 #include "ion/IonFrameIterator.h"
+#include "ion/LIR.h"
 
 namespace js {
 namespace ion {
 
-bool
-IonFrameInfo::hasSnapshotOffset() const
+inline void
+SafepointIndex::resolve()
 {
-    return snapshotOffset_ != INVALID_SNAPSHOT_OFFSET;
-}
-
-SnapshotOffset
-IonFrameInfo::snapshotOffset() const
-{
-    JS_ASSERT(hasSnapshotOffset());
-    return snapshotOffset_;
+    JS_ASSERT(!resolved);
+    safepointOffset_ = safepoint_->offset();
+    resolved = true;
 }
 
 static inline size_t

@@ -57,6 +57,7 @@ class MIRGenerator;
 class MIRGraph;
 class MDefinition;
 class MInstruction;
+class LOsiPoint;
 
 class LIRGeneratorShared : public MInstructionVisitor
 {
@@ -66,7 +67,7 @@ class LIRGeneratorShared : public MInstructionVisitor
     LIRGraph &lirGraph_;
     LBlock *current;
     MResumePoint *lastResumePoint_;
-    LSnapshot *postSnapshot_;
+    LOsiPoint *osiPoint_;
 
   public:
     LIRGeneratorShared(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
@@ -74,7 +75,7 @@ class LIRGeneratorShared : public MInstructionVisitor
         graph(graph),
         lirGraph_(lirGraph),
         lastResumePoint_(NULL),
-        postSnapshot_(NULL)
+        osiPoint_(NULL)
     { }
 
     MIRGenerator *mir() {
@@ -175,6 +176,12 @@ class LIRGeneratorShared : public MInstructionVisitor
 
     void lowerTypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineTypedPhi(MPhi *phi, size_t lirIndex);
+
+    LOsiPoint *popOsiPoint() {
+        LOsiPoint *tmp = osiPoint_;
+        osiPoint_ = NULL;
+        return tmp;
+    }
 
     LSnapshot *buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind);
     bool assignPostSnapshot(MInstruction *mir, LInstruction *ins);

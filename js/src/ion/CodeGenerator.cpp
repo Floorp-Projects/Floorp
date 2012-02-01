@@ -268,8 +268,20 @@ CodeGenerator::visitNop(LNop *lir)
 }
 
 bool
-CodeGenerator::visitCaptureAllocations(LCaptureAllocations *)
+CodeGenerator::visitOsiPoint(LOsiPoint *lir)
 {
+    // Note: markOsiPoint ensures enough space exists between the last
+    // LOsiPoint and this one to patch adjacent call instructions.
+
+    JS_ASSERT(masm.framePushed() == frameSize());
+
+    uint32 osiReturnPointOffset;
+    if (!markOsiPoint(lir, &osiReturnPointOffset))
+        return false;
+
+    LSafepoint *safepoint = lir->associatedSafepoint();
+    JS_ASSERT(!safepoint->osiReturnPointOffset());
+    safepoint->setOsiReturnPointOffset(osiReturnPointOffset);
     return true;
 }
 
@@ -514,7 +526,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Finally call the function in objreg, as assigned by one of the paths above.
     masm.callIon(objreg);
-    if (!createSafepoint(call))
+    if (!markSafepoint(call))
         return false;
 
 
@@ -599,6 +611,23 @@ CodeGenerator::generateArgumentsChecks()
 
     masm.freeStack(frameSize());
 
+    return true;
+}
+
+bool
+CodeGenerator::generateInvalidateEpilogue()
+{
+    masm.bind(&invalidate_);
+
+    // Push the Ion script onto the stack (when we determine what that pointer is).
+    invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
+    IonCode *thunk = gen->cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(gen->cx);
+    masm.call(ImmWord(uintptr_t(thunk->raw())));
+#ifdef DEBUG
+    // We should never reach this point in JIT code -- the invalidation thunk should
+    // pop the invalidated JS frame and return directly to its caller.
+    masm.breakpoint();
+#endif
     return true;
 }
 
@@ -929,8 +958,13 @@ CodeGenerator::generate()
         return false;
     if (!generateEpilogue())
         return false;
+    if (!generateInvalidateEpilogue())
+        return false;
     if (!generateOutOfLineCode())
         return false;
+
+    // We encode safepoints after the OSI-point offsets have been determined.
+    encodeSafepoints();
 
     if (masm.oom())
         return false;
@@ -943,18 +977,28 @@ CodeGenerator::generate()
     JSScript *script = gen->info().script();
     JS_ASSERT(!script->ion);
 
-    script->ion = IonScript::New(cx, graph.localSlotCount(), frameDepth_, snapshots_.size(),
+    uint32 scriptFrameSize = frameClass_ == FrameSizeClass::None()
+                           ? frameDepth_
+                           : FrameSizeClass::FromDepth(frameDepth_).frameSize();
+
+    script->ion = IonScript::New(cx, graph.localSlotCount(), scriptFrameSize, snapshots_.size(),
                                  bailouts_.length(), graph.numConstants(),
-                                 frameInfoTable_.length(), cacheList_.length(),
-                                 safepoints_.size());
+                                 safepointIndices_.length(), osiIndices_.length(),
+                                 cacheList_.length(), safepoints_.size());
     if (!script->ion)
         return false;
+
+    Assembler::patchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
+                                       ImmWord(uintptr_t(script->ion)),
+                                       ImmWord(uintptr_t(-1)));
 
     IonSpew(IonSpew_Codegen, "Created IonScript %p (raw %p)",
             (void *) script->ion, (void *) code->raw());
 
+    script->ion->setInvalidationEpilogueDataOffset(invalidateEpilogueData_.offset());
     script->ion->setOsrPc(gen->info().osrPc());
     script->ion->setOsrEntryOffset(getOsrEntryOffset());
+    script->ion->setInvalidationEpilogueOffset(invalidate_.offset());
 
     script->ion->setMethod(code);
     script->ion->setDeoptTable(deoptTable_);
@@ -964,8 +1008,10 @@ CodeGenerator::generate()
         script->ion->copyBailoutTable(&bailouts_[0]);
     if (graph.numConstants())
         script->ion->copyConstants(graph.constantPool());
-    if (frameInfoTable_.length())
-        script->ion->copyFrameInfoTable(&frameInfoTable_[0], masm);
+    if (safepointIndices_.length())
+        script->ion->copySafepointIndices(&safepointIndices_[0], masm);
+    if (osiIndices_.length())
+        script->ion->copyOsiIndices(&osiIndices_[0]);
     if (cacheList_.length())
         script->ion->copyCacheEntries(&cacheList_[0], masm);
     if (safepoints_.size())

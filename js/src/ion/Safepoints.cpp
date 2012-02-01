@@ -62,6 +62,12 @@ SafepointWriter::startEntry()
     return uint32(stream_.length());
 }
 
+void
+SafepointWriter::writeOsiReturnPointOffset(uint32 osiReturnPointOffset)
+{
+    stream_.writeUnsigned(osiReturnPointOffset);
+}
+
 static void
 WriteRegisterMask(CompactBufferWriter &stream, uint32 bits)
 {
@@ -164,10 +170,25 @@ SafepointWriter::endEntry()
     IonSpew(IonSpew_Safepoints, "    -- entry ended at %d", uint32(stream_.length()));
 }
 
-SafepointReader::SafepointReader(IonScript *script, const IonFrameInfo *fi)
-  : stream_(script->safepoints() + fi->safepointOffset(), script->safepoints() + script->safepointsSize()),
+SafepointReader::SafepointReader(IonScript *script, const SafepointIndex *si)
+  : stream_(script->safepoints() + si->safepointOffset(),
+            script->safepoints() + script->safepointsSize()),
     localSlotCount_(script->frameLocals())
 {
+}
+
+CodeLocationLabel
+SafepointReader::InvalidationPatchPoint(IonScript *script, const SafepointIndex *si)
+{
+    SafepointReader reader(script, si);
+    uint32 osiPointOffset = reader.getOsiReturnPointOffset() - Assembler::patchWrite_NearCallSize();
+    return CodeLocationLabel(script->method(), osiPointOffset);
+}
+
+uint32
+SafepointReader::getOsiReturnPointOffset()
+{
+    return stream_.readUnsigned();
 }
 
 void

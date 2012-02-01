@@ -242,6 +242,11 @@ class Assembler : public AssemblerX86Shared
         movsd(src, Operand(StackPointer, 0));
     }
 
+    CodeOffsetLabel pushWithPatch(const ImmWord &word) {
+        push(Imm32(word.value));
+        return masm.currentOffset();
+    }
+
     void movl(const ImmGCPtr &ptr, const Register &dest) {
         masm.movl_i32r(ptr.value, dest.code());
         writeDataRelocation(masm.currentOffset());

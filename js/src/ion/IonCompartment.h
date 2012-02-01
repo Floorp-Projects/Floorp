@@ -177,7 +177,6 @@ class IonActivation
     BailoutClosure *bailout_;
     uint8 *prevIonTop_;
     JSContext *prevIonJSContext_;
-    bool failedInvalidation_;
 
   public:
     IonActivation(JSContext *cx, StackFrame *fp);
@@ -203,12 +202,6 @@ class IonActivation
     BailoutClosure *takeBailout() {
         JS_ASSERT(bailout_);
         return maybeTakeBailout();
-    }
-    bool failedInvalidation() const {
-        return failedInvalidation_;
-    }
-    void setFailedInvalidation(bool enabled) {
-        failedInvalidation_ = enabled;
     }
 };
 
