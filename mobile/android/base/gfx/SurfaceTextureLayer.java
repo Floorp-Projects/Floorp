@@ -84,7 +84,14 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         mSurfaceTexture = new SurfaceTexture(mTextureId);
         mSurfaceTexture.setOnFrameAvailableListener(this);
 
-        mSurface = new Surface(mSurfaceTexture);
+        Surface tmp = null;
+        try {
+            tmp = Surface.class.getConstructor(SurfaceTexture.class).newInstance(mSurfaceTexture); }
+        catch (Exception ie) {
+            Log.e(LOGTAG, "error constructing the surface", ie);
+        }
+
+        mSurface = tmp;
 
         float textureMap[] = {
                 0.0f, 1.0f,	// top left
@@ -150,9 +157,17 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
     @Override
     protected void finalize() throws Throwable {
-        if (mSurfaceTexture != null)
-            mSurfaceTexture.release();
-
+        if (mSurfaceTexture != null) {
+            try {
+                SurfaceTexture.class.getDeclaredMethod("release").invoke(mSurfaceTexture);
+            } catch (NoSuchMethodException nsme) {
+                Log.e(LOGTAG, "error finding release method on mSurfaceTexture", nsme);
+            } catch (IllegalAccessException iae) {
+                Log.e(LOGTAG, "error invoking release method on mSurfaceTexture", iae);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "some other exception while invoking release method on mSurfaceTexture", e);
+            }
+        }
         if (mTextureId > 0)
             TextureReaper.get().add(mTextureId);
     }
