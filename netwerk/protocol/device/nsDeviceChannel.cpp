@@ -45,6 +45,12 @@
 #include "AndroidCaptureProvider.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+#include "GonkCaptureProvider.h"
+#endif
+
+using namespace mozilla;
+
 // Copied from image/decoders/icon/nsIconURI.cpp
 // takes a string like ?size=32&contentType=text/html and returns a new string
 // containing just the attribute values. i.e you could pass in this string with
@@ -139,9 +145,14 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
     captureParams.height = buffer.ToInteger(&err);
     if (!captureParams.height)
       captureParams.height = 480;
+    extractAttributeValue(spec.get(), "camera=", buffer);
+    captureParams.camera = buffer.ToInteger(&err);
     captureParams.bpp = 32;
 #ifdef MOZ_WIDGET_ANDROID
     capture = GetAndroidCaptureProvider();
+#endif
+#ifdef MOZ_WIDGET_GONK
+    capture = GetGonkCaptureProvider();
 #endif
   } else if (kNotFound != spec.Find(NS_LITERAL_CSTRING("type=video/x-raw-yuv"),
                                     true,
@@ -161,13 +172,19 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
     captureParams.height = buffer.ToInteger(&err);
     if (!captureParams.height)
       captureParams.height = 480;
+    extractAttributeValue(spec.get(), "camera=", buffer);
+    captureParams.camera = buffer.ToInteger(&err);
     captureParams.bpp = 32;
     captureParams.timeLimit = 0;
     captureParams.frameLimit = 60000;
 #ifdef MOZ_WIDGET_ANDROID
     // only enable if "device.camera.enabled" is true.
-    if (mozilla::Preferences::GetBool("device.camera.enabled", false) == true)
+    if (Preferences::GetBool("device.camera.enabled", false) == true)
       capture = GetAndroidCaptureProvider();
+#endif
+#ifdef MOZ_WIDGET_GONK
+    if (Preferences::GetBool("device.camera.enabled", false) == true)
+      capture = GetGonkCaptureProvider();
 #endif
   } else {
     return NS_ERROR_NOT_IMPLEMENTED;

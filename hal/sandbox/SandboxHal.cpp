@@ -152,6 +152,18 @@ SetScreenBrightness(double brightness)
   Hal()->SendSetScreenBrightness(brightness);
 }
 
+void
+Reboot()
+{
+  Hal()->SendReboot();
+}
+
+void
+PowerOff()
+{
+  Hal()->SendPowerOff();
+}
+
 class HalParent : public PHalParent
                 , public BatteryObserver
                 , public NetworkObserver
@@ -265,6 +277,20 @@ public:
   RecvSetScreenBrightness(const double &brightness)
   {
     hal::SetScreenBrightness(brightness);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvReboot()
+  {
+    hal::Reboot();
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvPowerOff()
+  {
+    hal::PowerOff();
     return true;
   }
 };

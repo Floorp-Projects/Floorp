@@ -3248,6 +3248,29 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
         }
     }
 
+    // If there is no options object given, or no sandboxName property
+    // specified, use the caller's filename as sandboxName.
+    if (sandboxName.IsEmpty()) {
+        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+
+        if (!xpc)
+            return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
+
+        // Get the xpconnect native call context.
+        nsAXPCNativeCallContext *cc = nsnull;
+        xpc->GetCurrentNativeCallContext(&cc);
+
+        if (!cc)
+            return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+
+        // Get the current source info from xpc.
+        nsCOMPtr<nsIStackFrame> frame;
+        xpc->GetCurrentJSStack(getter_AddRefs(frame));
+
+        if (frame)
+            frame->GetFilename(getter_Copies(sandboxName));
+    }
+
     rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, proto, wantXrays, sandboxName, identity);
 
     if (NS_FAILED(rv)) {
@@ -3672,12 +3695,12 @@ nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const jsval &aMap,
                                                       JSContext *aCx,
                                                       jsval *aKeys)
 {
-    if(!JSVAL_IS_OBJECT(aMap)) {
+    if (!JSVAL_IS_OBJECT(aMap)) {
         *aKeys = JSVAL_VOID;
         return NS_OK; 
     }
     JSObject *objRet;
-    if(!JS_NondeterministicGetWeakMapKeys(aCx, JSVAL_TO_OBJECT(aMap), &objRet))
+    if (!JS_NondeterministicGetWeakMapKeys(aCx, JSVAL_TO_OBJECT(aMap), &objRet))
         return NS_ERROR_OUT_OF_MEMORY;
     *aKeys = objRet ? OBJECT_TO_JSVAL(objRet) : JSVAL_VOID;
     return NS_OK;

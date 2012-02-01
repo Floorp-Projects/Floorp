@@ -815,11 +815,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg)
   nsRefPtr<PK11PasswordPromptRunnable> runnable = 
     new PK11PasswordPromptRunnable(slot,
                                    static_cast<nsIInterfaceRequestor*>(arg));
-  if (NS_IsMainThread()) {
-    runnable->RunOnTargetThread();
-  } else {
-    runnable->DispatchToMainThreadAndWait();
-  }
+  runnable->DispatchToMainThreadAndWait();
   return runnable->mResult;
 }
 
@@ -836,7 +832,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   // If the handshake completed, then we know the site is TLS tolerant (if this
   // was a TLS connection).
-  nsSSLIOLayerHelpers::rememberTolerantSite(fd, infoObject);
+  nsSSLIOLayerHelpers::rememberTolerantSite(infoObject);
 
   if (SECSuccess != SSL_SecurityStatus(fd, &sslStatus, &cipherName, &keyLength,
                                        &encryptBits, &signer, nsnull)) {
