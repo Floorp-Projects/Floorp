@@ -1,9 +1,7 @@
 // newPset: returns an empty nsIUrlClassifierPrefixSet.
 function newPset() {
-  let pset = Cc["@mozilla.org/url-classifier/prefixset;1"]
-            .createInstance(Ci.nsIUrlClassifierPrefixSet);
-  pset.init("all");
-  return pset;
+  return Cc["@mozilla.org/url-classifier/prefixset;1"]
+           .createInstance(Ci.nsIUrlClassifierPrefixSet);
 }
 
 // arrContains: returns true if |arr| contains the element |target|. Uses binary
@@ -30,22 +28,10 @@ function arrContains(arr, target) {
   return (!(i < 0 || i >= arr.length) && arr[i] == target);
 }
 
-// checkContents: Check whether the PrefixSet pset contains
-// the prefixes in the passed array.
-function checkContents(pset, prefixes) {
-  var outcount = {}, outset = {};
-  outset = pset.getPrefixes(outcount);
-  let inset = prefixes;
-  do_check_eq(inset.length, outset.length);
-  inset.sort(function(x,y) x - y);
-  for (let i = 0; i < inset.length; i++) {
-    do_check_eq(inset[i], outset[i]);
-  }
-}
-
 function wrappedProbe(pset, prefix) {
+  let key = pset.getKey();
   let dummy = {};
-  return pset.probe(prefix, dummy);
+  return pset.probe(prefix, key, dummy);
 };
 
 // doRandomLookups: we use this to test for false membership with random input
@@ -88,9 +74,6 @@ function testBasicPset() {
   do_check_true(wrappedProbe(pset, 1593203));
   do_check_false(wrappedProbe(pset, 999));
   do_check_false(wrappedProbe(pset, 0));
-
-
-  checkContents(pset, prefixes);
 }
 
 function testDuplicates() {
@@ -105,9 +88,6 @@ function testDuplicates() {
   do_check_true(wrappedProbe(pset, 9));
   do_check_false(wrappedProbe(pset, 4));
   do_check_false(wrappedProbe(pset, 8));
-
-
-  checkContents(pset, prefixes);
 }
 
 function testSimplePset() {
@@ -117,9 +97,6 @@ function testSimplePset() {
 
   doRandomLookups(pset, prefixes, 100);
   doExpectedLookups(pset, prefixes, 1);
-
-
-  checkContents(pset, prefixes);
 }
 
 function testReSetPrefixes() {
@@ -136,9 +113,6 @@ function testReSetPrefixes() {
   for (let i = 0; i < prefixes.length; i++) {
     do_check_false(wrappedProbe(pset, prefixes[i]));
   }
-
-
-  checkContents(pset, secondPrefixes);
 }
 
 function testLargeSet() {
@@ -157,9 +131,6 @@ function testLargeSet() {
 
   doExpectedLookups(pset, arr, 1);
   doRandomLookups(pset, arr, 1000);
-
-
-  checkContents(pset, arr);
 }
 
 function testTinySet() {
@@ -170,12 +141,10 @@ function testTinySet() {
 
   do_check_true(wrappedProbe(pset, 1));
   do_check_false(wrappedProbe(pset, 100000));
-  checkContents(pset, prefixes);
 
   prefixes = [];
   pset.setPrefixes(prefixes, prefixes.length);
   do_check_false(wrappedProbe(pset, 1));
-  checkContents(pset, prefixes);
 }
 
 let tests = [testBasicPset,

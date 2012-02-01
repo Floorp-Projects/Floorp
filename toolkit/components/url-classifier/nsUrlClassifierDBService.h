@@ -53,8 +53,6 @@
 #include "nsICryptoHash.h"
 #include "nsICryptoHMAC.h"
 
-#include "LookupCache.h"
-
 // The hash length for a domain key.
 #define DOMAIN_LENGTH 4
 
@@ -90,8 +88,7 @@ public:
 
   bool GetCompleter(const nsACString& tableName,
                       nsIUrlClassifierHashCompleter** completer);
-  nsresult CacheCompletions(mozilla::safebrowsing::CacheResultArray *results);
-  nsresult CacheMisses(mozilla::safebrowsing::PrefixArray *results);
+  nsresult CacheCompletions(nsTArray<nsUrlClassifierLookupResult> *results);
 
   static nsIThread* BackgroundThread();
 
@@ -133,6 +130,10 @@ private:
 
   // The list of tables that can use the default hash completer object.
   nsTArray<nsCString> mGethashWhitelist;
+
+  // Set of prefixes known to be in the database
+  nsRefPtr<nsUrlClassifierPrefixSet> mPrefixSet;
+  nsCOMPtr<nsICryptoHash> mHash;
 
   // Thread that we do the updates on.
   static nsIThread* gDbBackgroundThread;

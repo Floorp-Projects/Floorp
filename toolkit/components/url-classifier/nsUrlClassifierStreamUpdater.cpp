@@ -171,16 +171,11 @@ nsUrlClassifierStreamUpdater::FetchUpdate(const nsACString & aUpdateUrl,
                                           const nsACString & aStreamTable,
                                           const nsACString & aServerMAC)
 {
-  LOG(("(pre) Fetching update from %s\n", PromiseFlatCString(aUpdateUrl).get()));
-
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aUpdateUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString urlSpec;
-  uri->GetAsciiSpec(urlSpec);
-
-  LOG(("(post) Fetching update from %s\n", urlSpec.get()));
+  LOG(("Fetching update from %s\n", PromiseFlatCString(aUpdateUrl).get()));
 
   return FetchUpdate(uri, aRequestBody, aStreamTable, aServerMAC);
 }
@@ -245,11 +240,6 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   mIsUpdating = true;
   *_retval = true;
 
-  nsCAutoString urlSpec;
-  mUpdateUrl->GetAsciiSpec(urlSpec);
-
-  LOG(("FetchUpdate: %s", urlSpec.get()));
-  //LOG(("requestBody: %s", aRequestBody.get()));
 
   return FetchUpdate(mUpdateUrl, aRequestBody, EmptyCString(), EmptyCString());
 }
