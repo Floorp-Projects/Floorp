@@ -69,8 +69,8 @@ import org.json.JSONObject;
  * This view delegates to LayerRenderer to actually do the drawing. Its role is largely that of a
  * mediator between the LayerRenderer and the LayerController.
  */
-public class LayerView extends GLSurfaceView
-    implements AbstractLayerView, GeckoEventListener {
+public class LayerView extends FlexibleGLSurfaceView implements AbstractLayerView,
+                                                                GeckoEventListener {
     private Context mContext;
     private LayerController mController;
     private InputConnectionHandler mInputConnectionHandler;
@@ -92,7 +92,6 @@ public class LayerView extends GLSurfaceView
         mController = controller;
         mRenderer = new LayerRenderer(this);
         setRenderer(mRenderer);
-        setRenderMode(RENDERMODE_WHEN_DIRTY);
         mGestureDetector = new GestureDetector(context, controller.getGestureListener());
         mScaleGestureDetector =
             new SimpleScaleGestureDetector(controller.getScaleGestureListener());
@@ -107,6 +106,8 @@ public class LayerView extends GLSurfaceView
         jsonPrefs.put(touchEventsPrefName);
         GeckoEvent event = new GeckoEvent("Preferences:Get", jsonPrefs.toString());
         GeckoAppShell.sendEventToGecko(event);
+
+        createGLThread();
     }
 
     public void handleMessage(String event, JSONObject message) {
