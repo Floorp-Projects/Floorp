@@ -899,8 +899,8 @@ class BOffImm
         return ((((int32)data) << 8) >> 6) + 8;
     }
 
-    BOffImm(int offset)
-        : data ((offset - 8) >> 2 & 0x00ffffff)
+    explicit BOffImm(int offset)
+      : data ((offset - 8) >> 2 & 0x00ffffff)
     {
         JS_ASSERT ((offset & 0x3) == 0);
         JS_ASSERT ((offset - 8) >= -33554432);
@@ -912,7 +912,7 @@ class BOffImm
     { }
 
     bool isInvalid() {
-        return data == INVALID;
+        return data == uint32(INVALID);
     }
     Instruction *getDest(Instruction *src);
 
@@ -1176,16 +1176,17 @@ class Assembler
     Pool pools_[4];
     Pool *int32Pool;
     Pool *doublePool;
-public:
+
+  public:
     Assembler()
       : dataBytesNeeded_(0),
         enoughMemory_(true),
         m_buffer(4, 4, 0, 2, &pools_[0], 8),
         int32Pool(m_buffer.getPool(1)),
         doublePool(m_buffer.getPool(0)),
+        isFinished(false),
         dtmActive(false),
-        dtmCond(Always),
-        isFinished(false)
+        dtmCond(Always)
     {
         // Set up the backwards double region
         new (&pools_[2]) Pool (1024, 8, 4, 8, 8, true);
@@ -1258,6 +1259,7 @@ public:
     void as_jumpPool(uint32 size);
 
     void align(int alignment);
+    void as_nop();
     void as_alu(Register dest, Register src1, Operand2 op2,
                 ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always);
 
@@ -1595,6 +1597,32 @@ public:
     static void writePoolHeader(uint8 *start, Pool *p);
     static void writePoolFooter(uint8 *start, Pool *p);
     static void writePoolGuard(BufferOffset branch, Instruction *inst, BufferOffset dest);
+
+    // The size of an arbitrary 32-bit call in the instruction stream.
+    // On ARM this sequence is |pc = ldr pc - 4; imm32| given that we
+    // never reach the imm32.
+    static uint32 patchWrite_NearCallSize() {
+        return 2 * sizeof(uint32);
+    }
+    static void patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue,
+                                        ImmWord expectedValue) {
+        uint32 *ptr = (uint32 *) label.raw();
+        JS_ASSERT(*ptr == expectedValue.value);
+        *ptr = newValue.value;
+        JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(uintptr_t));
+    }
+    static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm) {
+        *label.raw() = imm.value;
+        JSC::ExecutableAllocator::cacheFlush(label.raw(), sizeof(uintptr_t));
+    }
+    static void patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall) {
+        uint32 *inst = (uint32 *) start.raw();
+        // ldr pc = [pc - 4]; // -4 because of the implicit +8
+        // imm32
+        inst[0] = 0xe51ffffc;
+        inst[1] = uintptr_t(toCall.raw());
+        JSC::ExecutableAllocator::cacheFlush(inst, 2 * sizeof(uintptr_t));
+    }
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.

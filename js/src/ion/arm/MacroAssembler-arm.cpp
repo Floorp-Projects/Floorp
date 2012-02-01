@@ -216,6 +216,11 @@ MacroAssemblerARM::ma_alu(Register src1, Operand2 op2, Register dest, ALUOp op, 
     as_alu(dest, src1, op2, op, sc, c);
 }
 void
+MacroAssemblerARM::ma_nop()
+{
+    as_nop();
+}
+void
 MacroAssemblerARM::ma_mov(Register src, Register dest,
             SetCond_ sc, Assembler::Condition c)
 {

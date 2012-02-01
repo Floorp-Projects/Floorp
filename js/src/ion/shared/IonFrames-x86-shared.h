@@ -50,6 +50,8 @@ class IonCommonFrameLayout
     uint8 *returnAddress_;
     uintptr_t descriptor_;
 
+    static const uintptr_t FrameTypeMask = (1 << FRAMETYPE_BITS) - 1;
+
   public:
     static size_t offsetOfDescriptor() {
         return offsetof(IonCommonFrameLayout, descriptor_);
@@ -58,10 +60,10 @@ class IonCommonFrameLayout
         return offsetof(IonCommonFrameLayout, returnAddress_);
     }
     FrameType prevType() const {
-        return FrameType(descriptor_ & ((1 << FRAMETYPE_BITS) - 1));
+        return FrameType(descriptor_ & FrameTypeMask);
     }
     void changePrevType(FrameType type) {
-        descriptor_ &= ~(1 << uintptr_t(FRAMETYPE_BITS));
+        descriptor_ &= ~FrameTypeMask;
         descriptor_ |= type;
     }
     size_t prevFrameLocalSize() const {
