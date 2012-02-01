@@ -104,8 +104,6 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
-  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsIContent, nsINode);
-
   /**
    * Bind this content node to a tree.  If this method throws, the caller must
    * call UnbindFromTree() on the node.  In the typical case of a node being
@@ -999,7 +997,6 @@ public:
   // accessibility.tabfocus_applies_to_xul pref - if it is set to true,
   // the tabfocus bit field applies to xul elements.
   static bool sTabFocusModelAppliesToXUL;
-
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)

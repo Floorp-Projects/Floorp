@@ -10197,35 +10197,26 @@ nsGlobalWindow::HasPerformanceSupport()
   return Preferences::GetBool("dom.enable_performance", false);
 }
 
-PRInt64
-nsGlobalWindow::SizeOf() const
+void
+nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 {
-  PRInt64 size = sizeof(*this);
+  aWindowSizes->mDOM += aWindowSizes->mMallocSizeOf(this);
 
   if (IsInnerWindow()) {
     nsEventListenerManager* elm =
       const_cast<nsGlobalWindow*>(this)->GetListenerManager(false);
     if (elm) {
-      size += elm->SizeOf();
+      aWindowSizes->mDOM +=
+        elm->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
     }
     if (mDoc) {
-      size += mDoc->SizeOf();
+      mDoc->DocSizeOfIncludingThis(aWindowSizes);
     }
   }
 
-  size += mNavigator ? mNavigator->SizeOf() : 0;
-
-  return size;
-}
-
-size_t
-nsGlobalWindow::SizeOfStyleSheets(nsMallocSizeOfFun aMallocSizeOf) const
-{
-  size_t n = 0;
-  if (IsInnerWindow() && mDoc) {
-    n += mDoc->SizeOfStyleSheets(aMallocSizeOf);
-  }
-  return n;
+  aWindowSizes->mDOM +=
+    mNavigator ?
+      mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf) : 0;
 }
 
 // nsGlobalChromeWindow implementation

@@ -204,6 +204,10 @@ public:
   }
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
+  // DocSizeOfIncludingThis is inherited from nsIDocument.
+
 protected:
   nsresult GetBodySize(PRInt32* aWidth,
                        PRInt32* aHeight);
