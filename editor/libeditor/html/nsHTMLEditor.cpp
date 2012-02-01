@@ -4013,50 +4013,31 @@ nsHTMLEditor::IsNodeInActiveEditor(nsIDOMNode* aNode)
 bool
 nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
 {
-  bool caretIsSet = false;
-
-  if (aElement && IsNodeInActiveEditor(aElement)) {
-    nsresult res = NS_OK;
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-    if (content)
-    {
-      nsIAtom *atom = content->Tag();
-      if (atom == nsEditProperty::table ||
-          atom == nsEditProperty::tbody ||
-          atom == nsEditProperty::thead ||
-          atom == nsEditProperty::tfoot ||
-          atom == nsEditProperty::caption ||
-          atom == nsEditProperty::tr ||
-          atom == nsEditProperty::td )
-      {
-        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-        nsCOMPtr<nsIDOMNode> parent;
-        // This MUST succeed if IsNodeInActiveEditor was TRUE
-        node->GetParentNode(getter_AddRefs(parent));
-        nsCOMPtr<nsIDOMNode>firstChild;
-        // Find deepest child
-        bool hasChild;
-        while (NS_SUCCEEDED(node->HasChildNodes(&hasChild)) && hasChild)
-        {
-          if (NS_SUCCEEDED(node->GetFirstChild(getter_AddRefs(firstChild))))
-          {
-            parent = node;
-            node = firstChild;
-          }
-        }
-        // Set selection at beginning of deepest node
-        nsCOMPtr<nsISelection> selection;
-        res = GetSelection(getter_AddRefs(selection));
-        if (NS_SUCCEEDED(res) && selection && firstChild)
-        {
-          res = selection->Collapse(firstChild, 0);
-          if (NS_SUCCEEDED(res))
-            caretIsSet = true;
-        }
-      }
-    }
+  if (!aElement || !IsNodeInActiveEditor(aElement)) {
+    return false;
   }
-  return caretIsSet;
+
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
+  if (!element || !element->IsHTML()) {
+    return false;
+  }
+
+  if (!nsHTMLEditUtils::IsTableElement(element)) {
+    return false;
+  }
+
+  nsIContent* node = element;
+  while (node->HasChildren()) {
+    node = node->GetFirstChild();
+  }
+
+  // Set selection at beginning of the found node
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = GetSelection(getter_AddRefs(selection));
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(selection, false);
+
+  return NS_SUCCEEDED(selection->CollapseNative(node, 0));
 }            
 
 ///////////////////////////////////////////////////////////////////////////
