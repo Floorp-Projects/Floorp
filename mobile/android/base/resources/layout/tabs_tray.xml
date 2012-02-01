@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/container"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
               android:orientation="vertical">
 
      <view class="org.mozilla.gecko.TabsTray$TabsListContainer"
-           android:layout_width="match_parent"
+           android:layout_width="fill_parent"
            android:layout_height="wrap_content"
            android:orientation="vertical"
            android:background="@drawable/tabs_tray_bg_repeat">
@@ -15,12 +15,12 @@
                    style="@style/TabsList"
                    android:divider="@drawable/tabs_tray_list_divider"/>
 
-         <LinearLayout android:layout_width="match_parent"
+         <LinearLayout android:layout_width="fill_parent"
                        android:layout_height="2dp"
                        android:background="@drawable/tabs_tray_list_divider"/>
 
          <LinearLayout android:id="@+id/add_tab"
-                       android:layout_width="match_parent"
+                       android:layout_width="fill_parent"
                        android:layout_height="50dip"
                        android:orientation="horizontal"
                        android:gravity="center|left"
