@@ -44,16 +44,13 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Surface;
 import android.view.View;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.gfx.Layer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -86,7 +83,6 @@ public final class Tab {
     private String mContentType;
     private boolean mHasTouchListeners;
     private ArrayList<View> mPluginViews;
-    private HashMap<Surface, Layer> mPluginLayers;
     private boolean mHasLoaded;
 
     public static final class HistoryEntry {
@@ -121,7 +117,6 @@ public final class Tab {
         mDocumentURI = "";
         mContentType = "";
         mPluginViews = new ArrayList<View>();
-        mPluginLayers = new HashMap<Surface, Layer>();
         mHasLoaded = false;
     }
 
@@ -572,21 +567,5 @@ public final class Tab {
 
     public View[] getPluginViews() {
         return mPluginViews.toArray(new View[mPluginViews.size()]);
-    }
-
-    public void addPluginLayer(Surface surface, Layer layer) {
-        mPluginLayers.put(surface, layer);
-    }
-
-    public Layer getPluginLayer(Surface surface) {
-        return mPluginLayers.get(surface);
-    }
-
-    public Collection<Layer> getPluginLayers() {
-        return mPluginLayers.values();
-    }
-
-    public Layer removePluginLayer(Surface surface) {
-        return mPluginLayers.remove(surface);
     }
 }
