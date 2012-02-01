@@ -579,7 +579,6 @@ public:
   virtual bool IsTextInDirtyFrameVisible(nsIContent *aNode);
 
   /** returns true if aNode is a MozEditorBogus node */
-  bool IsMozEditorBogusNode(nsIDOMNode *aNode);
   bool IsMozEditorBogusNode(nsIContent *aNode);
 
   /** counts number of editable child nodes */
