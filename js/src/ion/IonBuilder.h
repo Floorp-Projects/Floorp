@@ -236,7 +236,7 @@ class IonBuilder : public MIRGenerator
 
     MBasicBlock *addBlock(MBasicBlock *block);
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
-    MBasicBlock *newOsrPreheader(MBasicBlock *header, jsbytecode *pc);
+    MBasicBlock *newOsrPreheader(MBasicBlock *header, jsbytecode *loopHead, jsbytecode *loopEntry);
     MBasicBlock *newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newBlock(jsbytecode *pc) {
         return newBlock(NULL, pc);
