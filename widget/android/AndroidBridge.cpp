@@ -1020,18 +1020,25 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
     return (void*) realSurface;
 }
 
-void
+static AndroidGLController sController;
+
+EGLSurface
 AndroidBridge::RegisterCompositor()
 {
     ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
     JNIEnv *env = GetJNIForThread();
     if (!env)
-        return;
+        return NULL;
 
     AutoLocalJNIFrame jniFrame(env, 3);
     jmethodID registerCompositor = env->GetStaticMethodID(jFlexSurfaceView, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
 
     jobject glController = env->CallStaticObjectMethod(jFlexSurfaceView, registerCompositor);
+
+    AndroidGLController::Init(env);
+    sController.Acquire(env, glController);
+
+    return sController.GetEGLSurface();
 }
 
 bool

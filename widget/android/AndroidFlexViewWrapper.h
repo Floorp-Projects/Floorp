@@ -35,19 +35,15 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
+#ifndef AndroidFlexViewWrapper_h__
+#define AndroidFlexViewWrapper_h__
+
 #include <jni.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+//#include <GLES/gl.h>
+//#include <GLES/glext.h>
 #include <cassert>
 #include <cstdlib>
-//#include <EGL/egl.h>
 #include <pthread.h>
-
-#define NS_ASSERTION(cond, msg) assert((cond) && msg)
-
-namespace {
-
-JavaVM *sJVM = NULL;
 
 template<typename T>
 class AndroidEGLObject {
@@ -152,4 +148,5 @@ private:
     jobject mJObj;
 };
 
-}
+#endif
+

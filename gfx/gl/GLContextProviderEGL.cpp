@@ -1930,12 +1930,16 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
 {
     EGLSurface surface;
 
-
 #ifdef DEBUG
     sEGLLibrary.DumpEGLConfig(config);
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
+    if (true) {
+        printf_stderr("... registering OGL compositor with bridge\n");
+        return mozilla::AndroidBridge::Bridge()->RegisterCompositor();
+    }
+#ifdef MOZ_JAVA_COMPOSITOR
+#elif defined(MOZ_WIDGET_ANDROID)
     printf_stderr("... requesting window surface from bridge\n");
 
     // On Android, we have to ask Java to make the eglCreateWindowSurface
