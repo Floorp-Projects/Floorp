@@ -140,6 +140,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadValue(Address src, ValueOperand val) {
         loadValue(Operand(src), val);
     }
+    void loadValue(BaseIndex src, ValueOperand val) {
+        loadValue(Operand(src), val);
+    }
     void pushValue(ValueOperand val) {
         push(val.valueReg());
     }
@@ -396,10 +399,17 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testNumber(cond, tag);
         j(cond, label);
     }
-    Condition testError(Condition cond, const Register &tag) {
+    void branchTestMagic(Condition cond, Register tag, Label *label) {
+        cond = testMagic(cond, tag);
+        j(cond, label);
+    }
+    Condition testMagic(Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_MAGIC));
         return cond;
+    }
+    Condition testError(Condition cond, const Register &tag) {
+        return testMagic(cond, tag);
     }
 
     // Type-testing instructions on x64 will clobber ScratchReg, when used on
@@ -436,9 +446,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testGCThing(cond, src);
         j(cond, label);
     }
-    Condition testError(Condition cond, const ValueOperand &src) {
+    void branchTestMagic(Condition cond, const ValueOperand &src, Label *label) {
+        cond = testMagic(cond, src);
+        j(cond, label);
+    }
+    Condition testMagic(Condition cond, const ValueOperand &src) {
         splitTag(src, ScratchReg);
-        return testError(cond, ScratchReg);
+        return testMagic(cond, ScratchReg);
+    }
+    Condition testError(Condition cond, const ValueOperand &src) {
+        return testMagic(cond, src);
     }
 
     // Note that the |dest| register here may be ScratchReg, so we shouldn't

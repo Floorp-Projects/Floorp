@@ -56,6 +56,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
+    ValueOperand ToOutValue(LInstruction *ins);
 
     // This returns the tag in ScratchReg.
     Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);

@@ -120,13 +120,6 @@ static const Register OsrFrameReg = ArgReg5;
 static const uint32 StackAlignment = 16;
 static const bool StackKeptAligned = false;
 
-enum Scale {
-    TimesOne,
-    TimesTwo,
-    TimesFour,
-    TimesEight
-};
-
 static const Scale ScalePointer = TimesEight;
 
 class Operand
@@ -158,6 +151,13 @@ class Operand
       : kind_(REG_DISP),
         base_(address.base.code()),
         disp_(address.offset)
+    { }
+    explicit Operand(const BaseIndex &address)
+      : kind_(SCALE),
+        base_(address.base.code()),
+        scale_(address.scale),
+        disp_(address.offset),
+        index_(address.index.code())
     { }
     Operand(Register base, Register index, Scale scale, int32 disp = 0)
       : kind_(SCALE),
