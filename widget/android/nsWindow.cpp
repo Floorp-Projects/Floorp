@@ -770,6 +770,14 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         return mLayerManager;
     }
 
+    bool useCompositor =
+        Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+
+    if (useCompositor) {
+        CreateCompositor();
+        sFailedToCreateGLContext = !mLayerManager;
+    }
+
     mUseAcceleratedRendering = GetShouldAccelerate();
 
     if (!mUseAcceleratedRendering ||
@@ -778,13 +786,6 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         printf_stderr(" -- creating basic, not accelerated\n");
         mLayerManager = CreateBasicLayerManager();
         return mLayerManager;
-    }
-
-    bool useCompositor =
-        Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
-
-    if (useCompositor) {
-        CreateCompositor();
     }
 
     if (!mLayerManager) {

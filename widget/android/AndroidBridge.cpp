@@ -174,7 +174,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jEGLConfigImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLConfigImpl"));
     jEGLDisplayImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLDisplayImpl"));
 
-    jOGLSurfaceView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/layers/OGLSurfaceView"));
+    jFlexSurfaceView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/FlexibleGLSurfaceView"));
 
     InitAndroidJavaWrappers(jEnv);
 
@@ -1024,11 +1024,14 @@ void
 AndroidBridge::RegisterCompositor()
 {
     ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
-    AutoLocalJNIFrame jniFrame(GetJNIForThread());
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return;
 
-    jmethodID registerCompositor = GetJNIForThread()->GetStaticMethodID(jOGLSurfaceView, "registerCompositor", "()V");
+    AutoLocalJNIFrame jniFrame(env, 3);
+    jmethodID registerCompositor = env->GetStaticMethodID(jFlexSurfaceView, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
 
-    GetJNIForThread()->CallStaticVoidMethod(jOGLSurfaceView, registerCompositor);
+    jobject glController = env->CallStaticObjectMethod(jFlexSurfaceView, registerCompositor);
 }
 
 bool
