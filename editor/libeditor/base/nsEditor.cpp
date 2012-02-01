@@ -1618,6 +1618,13 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
 //                  the parent of inNode
 //
 nsresult
+nsEditor::RemoveContainer(nsINode* aNode)
+{
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  return RemoveContainer(node);
+}
+
+nsresult
 nsEditor::RemoveContainer(nsIDOMNode *inNode)
 {
   NS_ENSURE_TRUE(inNode, NS_ERROR_NULL_POINTER);

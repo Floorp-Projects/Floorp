@@ -191,6 +191,7 @@ public:
                             const nsAString *aValue = nsnull,
                             bool aCloneAttributes = false);
 
+  nsresult RemoveContainer(nsINode* aNode);
   nsresult RemoveContainer(nsIDOMNode *inNode);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, 
                                 nsCOMPtr<nsIDOMNode> *outNode, 
