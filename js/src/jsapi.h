@@ -3645,6 +3645,13 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
+/*
+ * Set up ctor.prototype = proto and proto.constructor = ctor with the
+ * right property flags.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
+
 #ifdef JS_THREADSAFE
 extern JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj);
