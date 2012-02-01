@@ -60,6 +60,10 @@ class IonCommonFrameLayout
     FrameType prevType() const {
         return FrameType(descriptor_ & ((1 << FRAMETYPE_BITS) - 1));
     }
+    void changePrevType(FrameType type) {
+        descriptor_ &= ~(1 << uintptr_t(FRAMETYPE_BITS));
+        descriptor_ |= type;
+    }
     size_t prevFrameLocalSize() const {
         return descriptor_ >> FRAMETYPE_BITS;
     }
@@ -97,18 +101,43 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     uintptr_t *slotRef(uint32 slot) {
         return (uintptr_t *)((uint8 *)this - (slot * STACK_SLOT_SIZE));
     }
+
+    static inline size_t Size() {
+        return sizeof(IonJSFrameLayout);
+    }
 };
 
 class IonEntryFrameLayout : public IonJSFrameLayout
 {
+  public:
+    static inline size_t Size() {
+        return sizeof(IonEntryFrameLayout);
+    }
 };
 
 class IonRectifierFrameLayout : public IonJSFrameLayout
 {
+  public:
+    static inline size_t Size() {
+        return sizeof(IonRectifierFrameLayout);
+    }
+};
+
+class IonBailedRectifierFrameLayout : public IonJSFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        // Include an extra word for the dead callee token.
+        return sizeof(IonBailedRectifierFrameLayout) + sizeof(void *);
+    }
 };
 
 class IonExitFrameLayout : public IonCommonFrameLayout
 {
+  public:
+    static inline size_t Size() {
+        return sizeof(IonExitFrameLayout);
+    }
 };
 
 // An invalidation bailout stack is at the stack pointer for the callee frame.
