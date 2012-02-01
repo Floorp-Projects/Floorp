@@ -99,6 +99,10 @@ class MockDwarf2Handler: public Dwarf2Handler {
                                             enum DwarfAttribute attr,
                                             enum DwarfForm form,
                                             const std::string& data));
+  MOCK_METHOD4(ProcessAttributeSignature, void(uint64 offset,
+                                               DwarfAttribute attr,
+                                               enum DwarfForm form,
+                                               uint64 signature));
   MOCK_METHOD1(EndDIE, void(uint64 offset));
 };
 
@@ -251,9 +255,9 @@ struct DwarfFormsFixture: public DIEFixture {
   // containing one childless DIE of the given tag, in the sequence s. Stop
   // just before the expectations.
   void ExpectBeginCompilationUnit(const DwarfHeaderParams &params,
-                                  DwarfTag tag) {
+                                  DwarfTag tag, uint64 offset=0) {
     EXPECT_CALL(handler,
-                StartCompilationUnit(0, params.address_size,
+                StartCompilationUnit(offset, params.address_size,
                                      params.format_size, _,
                                      params.version))
         .InSequence(s)
@@ -269,11 +273,11 @@ struct DwarfFormsFixture: public DIEFixture {
         .WillOnce(Return());
   }
 
-  void ParseCompilationUnit(const DwarfHeaderParams &params) {
+  void ParseCompilationUnit(const DwarfHeaderParams &params, uint64 offset=0) {
     ByteReader byte_reader(params.endianness == kLittleEndian ?
                            ENDIANNESS_LITTLE : ENDIANNESS_BIG);
-    CompilationUnit parser(MakeSectionMap(), 0, &byte_reader, &handler);
-    EXPECT_EQ(parser.Start(), info_contents.size());
+    CompilationUnit parser(MakeSectionMap(), offset, &byte_reader, &handler);
+    EXPECT_EQ(offset + parser.Start(), info_contents.size());
   }
 
   // The sequence to which the fixture's methods append expectations.
@@ -345,6 +349,111 @@ TEST_P(DwarfForms, block2) {
   ExpectEndCompilationUnit();
 
   ParseCompilationUnit(GetParam());
+}
+
+TEST_P(DwarfForms, flag_present) {
+  StartSingleAttributeDIE(GetParam(), (DwarfTag) 0x3e449ac2,
+                          (DwarfAttribute) 0x359d1972,
+                          dwarf2reader::DW_FORM_flag_present);
+  // DW_FORM_flag_present occupies no space in the DIE.
+  info.Finish();
+
+  ExpectBeginCompilationUnit(GetParam(), (DwarfTag) 0x3e449ac2);
+  EXPECT_CALL(handler,
+              ProcessAttributeUnsigned(_, (DwarfAttribute) 0x359d1972,
+                                       dwarf2reader::DW_FORM_flag_present,
+                                       1))
+      .InSequence(s)
+      .WillOnce(Return());
+  ExpectEndCompilationUnit();
+
+  ParseCompilationUnit(GetParam());
+}
+
+TEST_P(DwarfForms, sec_offset) {
+  StartSingleAttributeDIE(GetParam(), (DwarfTag) 0x1d971689,
+                          (DwarfAttribute) 0xa060bfd1,
+                          dwarf2reader::DW_FORM_sec_offset);
+  u_int64_t value;
+  if (GetParam().format_size == 4) {
+    value = 0xacc9c388;
+    info.D32(value);
+  } else {
+    value = 0xcffe5696ffe3ed0aULL;
+    info.D64(value);
+  }
+  info.Finish();
+
+  ExpectBeginCompilationUnit(GetParam(), (DwarfTag) 0x1d971689);
+  EXPECT_CALL(handler, ProcessAttributeUnsigned(_, (DwarfAttribute) 0xa060bfd1,
+                                                dwarf2reader::DW_FORM_sec_offset,
+                                                value))
+      .InSequence(s)
+      .WillOnce(Return());
+  ExpectEndCompilationUnit();
+
+  ParseCompilationUnit(GetParam());
+}
+
+TEST_P(DwarfForms, exprloc) {
+  StartSingleAttributeDIE(GetParam(), (DwarfTag) 0xb6d167bb,
+                          (DwarfAttribute) 0xba3ae5cb,
+                          dwarf2reader::DW_FORM_exprloc);
+  info.ULEB128(29)
+      .Append(29, 173);
+  info.Finish();
+
+  ExpectBeginCompilationUnit(GetParam(), (DwarfTag) 0xb6d167bb);
+  EXPECT_CALL(handler, ProcessAttributeBuffer(_, (DwarfAttribute) 0xba3ae5cb,
+                                              dwarf2reader::DW_FORM_exprloc,
+                                              Pointee(173), 29))
+      .InSequence(s)
+      .WillOnce(Return());
+  ExpectEndCompilationUnit();
+
+  ParseCompilationUnit(GetParam());
+}
+
+TEST_P(DwarfForms, ref_sig8) {
+  StartSingleAttributeDIE(GetParam(), (DwarfTag) 0x253e7b2b,
+                          (DwarfAttribute) 0xd708d908,
+                          dwarf2reader::DW_FORM_ref_sig8);
+  info.D64(0xf72fa0cb6ddcf9d6ULL);
+  info.Finish();
+
+  ExpectBeginCompilationUnit(GetParam(), (DwarfTag) 0x253e7b2b);
+  EXPECT_CALL(handler, ProcessAttributeSignature(_, (DwarfAttribute) 0xd708d908,
+                                                 dwarf2reader::DW_FORM_ref_sig8,
+                                                 0xf72fa0cb6ddcf9d6ULL))
+      .InSequence(s)
+      .WillOnce(Return());
+  ExpectEndCompilationUnit();
+
+  ParseCompilationUnit(GetParam());
+}
+
+// A value passed to ProcessAttributeSignature is just an absolute number,
+// not an offset within the compilation unit as most of the other
+// DW_FORM_ref forms are. Check that the reader doesn't try to apply any
+// offset to the signature, by reading it from a compilation unit that does
+// not start at the beginning of the section.
+TEST_P(DwarfForms, ref_sig8_not_first) {
+  info.Append(98, '*');
+  StartSingleAttributeDIE(GetParam(), (DwarfTag) 0x253e7b2b,
+                          (DwarfAttribute) 0xd708d908,
+                          dwarf2reader::DW_FORM_ref_sig8);
+  info.D64(0xf72fa0cb6ddcf9d6ULL);
+  info.Finish();
+
+  ExpectBeginCompilationUnit(GetParam(), (DwarfTag) 0x253e7b2b, 98);
+  EXPECT_CALL(handler, ProcessAttributeSignature(_, (DwarfAttribute) 0xd708d908,
+                                                 dwarf2reader::DW_FORM_ref_sig8,
+                                                 0xf72fa0cb6ddcf9d6ULL))
+      .InSequence(s)
+      .WillOnce(Return());
+  ExpectEndCompilationUnit();
+
+  ParseCompilationUnit(GetParam(), 98);
 }
 
 // Tests for the other attribute forms could go here.

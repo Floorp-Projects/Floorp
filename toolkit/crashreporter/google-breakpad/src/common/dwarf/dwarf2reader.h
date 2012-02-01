@@ -394,6 +394,15 @@ class Dwarf2Handler {
                                       enum DwarfForm form,
                                       const string& data) { }
 
+  // Called when we have an attribute whose value is the 64-bit signature
+  // of a type unit in the .debug_types section. OFFSET is the offset of
+  // the DIE whose attribute we're reporting. ATTR and FORM are the
+  // attribute's name and form. SIGNATURE is the type unit's signature.
+  virtual void ProcessAttributeSignature(uint64 offset,
+                                         enum DwarfAttribute attr,
+                                         enum DwarfForm form,
+                                         uint64 signature) { }
+
   // Called when finished processing the DIE at OFFSET.
   // Because DWARF2/3 specifies a tree of DIEs, you may get starts
   // before ends of the previous DIE, as we process children before
