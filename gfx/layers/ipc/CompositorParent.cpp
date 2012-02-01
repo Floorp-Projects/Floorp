@@ -290,7 +290,7 @@ CompositorParent::AllocPLayers(const LayersBackend &backendType)
 #ifdef MOZ_WIDGET_ANDROID
   // Registering with the compositor will create the surface view that
   // the layer manager expects to attach to.
-  RegisterCompositorWithJava();
+  //RegisterCompositorWithJava();
 #endif
 
   if (backendType == LayerManager::LAYERS_OPENGL) {

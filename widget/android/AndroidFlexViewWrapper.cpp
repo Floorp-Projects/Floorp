@@ -37,7 +37,33 @@
 
 #include "AndroidFlexViewWrapper.h"
 
+
 static AndroidGLController sController;
+
+template<>
+const char *AndroidEGLDisplay::sClassName = "com/google/android/gles_jni/EGLDisplayImpl";
+template<>
+const char *AndroidEGLDisplay::sPointerFieldName = "mEGLDisplay";
+template<>
+jfieldID AndroidEGLDisplay::jPointerField = 0;
+template<>
+const char *AndroidEGLConfig::sClassName = "com/google/android/gles_jni/EGLConfigImpl";
+template<>
+const char *AndroidEGLConfig::sPointerFieldName = "mEGLConfig";
+template<>
+jfieldID AndroidEGLConfig::jPointerField = 0;
+template<>
+const char *AndroidEGLContext::sClassName = "com/google/android/gles_jni/EGLContextImpl";
+template<>
+const char *AndroidEGLContext::sPointerFieldName = "mEGLContext";
+template<>
+jfieldID AndroidEGLContext::jPointerField = 0;
+template<>
+const char *AndroidEGLSurface::sClassName = "com/google/android/gles_jni/EGLSurfaceImpl";
+template<>
+const char *AndroidEGLSurface::sPointerFieldName = "mEGLSurface";
+template<>
+jfieldID AndroidEGLSurface::jPointerField = 0;
 
 jmethodID AndroidGLController::jSetGLVersionMethod = 0;
 jmethodID AndroidGLController::jInitGLContextMethod = 0;
@@ -56,7 +82,7 @@ jmethodID AndroidGLController::jGetHeightMethod = 0;
 void
 AndroidGLController::Init(JNIEnv *aJEnv)
 {
-    const char *className = "org/mozilla/testnewglsurfaceview/GLController";
+    const char *className = "org/mozilla/gecko/gfx/GLController";
     jclass jClass = reinterpret_cast<jclass>(aJEnv->NewGlobalRef(aJEnv->FindClass(className)));
 
     jSetGLVersionMethod = aJEnv->GetMethodID(jClass, "setGLVersion", "(I)V");
@@ -183,3 +209,5 @@ AndroidGLController::GetHeight()
 {
     return mJEnv->CallIntMethod(mJObj, jGetHeightMethod);
 }
+
+

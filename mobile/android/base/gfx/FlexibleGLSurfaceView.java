@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.GeckoApp;
 import android.content.Context;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
@@ -156,6 +157,11 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
     // Called from the compositor thread
     public static GLController registerCxxCompositor() {
         System.out.println("register layer comp");
+        FlexibleGLSurfaceView flexView = (FlexibleGLSurfaceView)GeckoApp.mAppContext.getLayerController().getView();
+        try {
+            flexView.destroyGLThread().join();
+        } catch (InterruptedException e) {}
+        return flexView.getGLController();
 /*
         synchronized (FlexibleGLSurfaceView.class) {
             // Wait for the layer controller if by some miracle
@@ -184,7 +190,6 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
             } catch (InterruptedException e) {}
         }
 */
-        return null;
     }
 
     public static class FlexibleGLSurfaceViewException extends RuntimeException {
