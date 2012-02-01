@@ -134,11 +134,15 @@ public class FennecNativeDriver implements Driver {
   private void getGeckoInfo() {
     View geckoLayout = activity.findViewById(Integer.decode((String)locators.get("gecko_layout")));
     if (geckoLayout != null) {
-      geckoTop = geckoLayout.getTop();
-      geckoLeft = geckoLayout.getLeft();
+      int[] pos = new int[2];
+      geckoLayout.getLocationOnScreen(pos);
+      geckoTop = pos[1];
+      geckoLeft = pos[0];
       geckoWidth = geckoLayout.getWidth();
       geckoHeight = geckoLayout.getHeight();
       geckoInfo = true;
+    } else {
+      throw new RoboCopException("Unable to find view gecko_layout");
     }
   }
 
