@@ -208,8 +208,6 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mDeletionObserver = nsnull;
   mHaveInvalidationDimensions = false;
   mWidgetIsTopLevel = false;
-  mParent = nsnull;
-  mWindow = nsnull;
 }
 
 void nsView::DropMouseGrabbing()
