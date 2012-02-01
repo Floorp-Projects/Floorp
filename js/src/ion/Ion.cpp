@@ -992,6 +992,9 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
           case IonFrame_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d rectifier frame @ %p", frameno, it.fp());
             break;
+          case IonFrame_Bailed_Rectifier:
+            IonSpew(IonSpew_Invalidate, "#%d bailed rectifier frame @ %p", frameno, it.fp());
+            break;
           case IonFrame_Entry:
             IonSpew(IonSpew_Invalidate, "#%d entry frame @ %p", frameno, it.fp());
             break;
