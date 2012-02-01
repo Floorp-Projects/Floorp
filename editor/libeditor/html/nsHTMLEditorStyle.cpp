@@ -784,53 +784,44 @@ bool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   return true;
 }
 
-bool nsHTMLEditor::HasAttr(nsIDOMNode *aNode, 
-                             const nsAString *aAttribute)
+bool nsHTMLEditor::HasAttr(nsIDOMNode* aNode,
+                           const nsAString* aAttribute)
 {
   NS_ENSURE_TRUE(aNode, false);
-  if (!aAttribute || aAttribute->IsEmpty()) return true;  // everybody has the 'null' attribute
-  
+  if (!aAttribute || aAttribute->IsEmpty()) {
+    // everybody has the 'null' attribute
+    return true;
+  }
+
   // get element
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(elem, false);
-  
-  // get attribute node
-  nsCOMPtr<nsIDOMAttr> attNode;
-  nsresult res = elem->GetAttributeNode(*aAttribute, getter_AddRefs(attNode));
-  if ((NS_FAILED(res)) || !attNode) return false;
-  return true;
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(element, false);
+
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(*aAttribute);
+  NS_ENSURE_TRUE(atom, false);
+
+  return element->HasAttr(kNameSpaceID_None, atom);
 }
 
 
-bool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode, 
-                                const nsAString *aAttribute, 
-                                const nsAString *aValue)
+bool nsHTMLEditor::HasAttrVal(nsIDOMNode* aNode,
+                              const nsAString* aAttribute,
+                              const nsAString* aValue)
 {
   NS_ENSURE_TRUE(aNode, false);
-  if (!aAttribute || aAttribute->IsEmpty()) return true;  // everybody has the 'null' attribute
-  
+  if (!aAttribute || aAttribute->IsEmpty()) {
+    // everybody has the 'null' attribute
+    return true;
+  }
+
   // get element
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(elem, false);
-  
-  // get attribute node
-  nsCOMPtr<nsIDOMAttr> attNode;
-  nsresult res = elem->GetAttributeNode(*aAttribute, getter_AddRefs(attNode));
-  if ((NS_FAILED(res)) || !attNode) return false;
-  
-  // check if attribute has a value
-  bool isSet;
-  attNode->GetSpecified(&isSet);
-  // if no value, and that's what we wanted, then return true
-  if (!isSet && (!aValue || aValue->IsEmpty())) return true; 
-  
-  // get attribute value
-  nsAutoString attrVal;
-  attNode->GetValue(attrVal);
-  
-  // do values match?
-  if (attrVal.Equals(*aValue,nsCaseInsensitiveStringComparator())) return true;
-  return false;
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(element, false);
+
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(*aAttribute);
+  NS_ENSURE_TRUE(atom, false);
+
+  return element->AttrValueIs(kNameSpaceID_None, atom, *aValue, eIgnoreCase);
 }
 
 nsresult nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsIDOMRange *inRange)
