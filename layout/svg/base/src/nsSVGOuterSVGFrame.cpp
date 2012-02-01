@@ -687,6 +687,10 @@ nsSVGOuterSVGFrame::GetType() const
 void
 nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
 {
+  // Make sure elements styled by :hover get updated if script/animation moves
+  // them under or out from under the pointer:
+  PresContext()->PresShell()->SynthesizeMouseMove(false);
+
   nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
   if (!svgFrame)
     return;
@@ -698,6 +702,10 @@ nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
 bool
 nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
 {
+  // Make sure elements styled by :hover get updated if script/animation moves
+  // them under or out from under the pointer:
+  PresContext()->PresShell()->SynthesizeMouseMove(false);
+
   nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
   if (!svgFrame)
     return false;
