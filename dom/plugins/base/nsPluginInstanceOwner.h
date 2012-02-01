@@ -304,7 +304,7 @@ public:
   
   bool UseAsyncRendering();
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   nsIntRect GetVisibleRect() {
     return nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
   }
@@ -335,7 +335,7 @@ private:
   }
   
   void FixUpURLS(const nsString &name, nsAString &value);
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   void SendSize(int width, int height);
   void SendOnScreenEvent(bool onScreen);
 
