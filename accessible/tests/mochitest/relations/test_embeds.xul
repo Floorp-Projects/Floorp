@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Embeds relation tests">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Helpers
+
+    function tabBrowser()
+    {
+      return gBrowserWnd.gBrowser;
+    }
+
+    function currentBrowser()
+    {
+      return tabBrowser().selectedBrowser;
+    }
+
+    function currentTabDocument()
+    {
+      return currentBrowser().contentDocument;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function loadURI(aURI)
+    {
+      this.invoke = function loadURI_invoke()
+      {
+        tabBrowser().loadURI(aURI);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, currentBrowser)
+      ];
+
+      this.finalCheck = function loadURI_finalCheck()
+      {
+        testRelation(gBrowserWnd.document, RELATION_EMBEDS,
+                     getAccessible(currentTabDocument()));
+      }
+
+      this.getID = function loadURI_getID()
+      {
+        return "load uri " + aURI;
+      }
+    }
+
+    function loadOneTab(aURI)
+    {
+      this.invoke = function loadOneTab_invoke()
+      {
+        tabBrowser().loadOneTab(aURI, null, null, null, false);
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, currentBrowser)
+      ];
+
+      this.finalCheck = function loadURI_finalCheck()
+      {
+        testRelation(gBrowserWnd.document, RELATION_EMBEDS,
+                     getAccessible(currentTabDocument()));
+      }
+
+      this.getID = function loadOneTab_getID()
+      {
+        return "load uri '" + aURI + "' in new tab";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Testing
+
+    var gBrowserWnd = null;
+    function loadBrowser()
+    {
+      gBrowserWnd = window.openDialog("chrome://browser/content/", "_blank",
+                                      "chrome,all,dialog=no", "about:");
+
+      addA11yLoadEvent(startTests, gBrowserWnd);
+    }
+
+    function startTests()
+    {
+      // Wait for tab load.
+      var browser = currentBrowser();
+      addA11yLoadEvent(doTests, browser.contentWindow);
+    }
+
+    //gA11yEventDumpToConsole = true; // debug
+
+    var gQueue = null;
+    function doTests()
+    {
+      testRelation(gBrowserWnd.document, RELATION_EMBEDS,
+                   getAccessible(currentTabDocument()));
+
+      gQueue = new eventQueue();
+
+      gQueue.push(new loadURI("about:about"));
+      gQueue.push(new loadOneTab("about:mozilla"));
+
+      gQueue.onFinish = function()
+      {
+        gBrowserWnd.close();
+      }
+      gQueue.invoke();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(loadBrowser);
+  ]]>
+  </script>
+
+  <vbox flex="1" style="overflow: auto;">
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=707654"
+       title="Embeds relation on root accessible can return not content document">
+      Mozilla Bug 707654
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+  </vbox>
+</window>
