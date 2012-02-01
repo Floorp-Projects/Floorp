@@ -6709,12 +6709,6 @@ DumpProperty(JSObject *obj, const Shape &shape)
     fprintf(stderr, "\n");
 }
 
-void
-JSObject::dump()
-{
-    js_DumpObject(this);
-}
-
 JS_FRIEND_API(void)
 js_DumpObject(JSObject *obj)
 {

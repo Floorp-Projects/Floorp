@@ -114,29 +114,6 @@ JSString::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
     return mallocSizeOf(fixed.chars());
 }
 
-void
-JSString::dump()
-{
-    js_DumpString(this);
-}
-
-bool
-JSString::equals(const char *s)
-{
-    const jschar *c = getChars(NULL);
-    if (!c) {
-        fprintf(stderr, "OOM in JSString::equals!\n");
-        return false;
-    }
-    while (*c && *s) {
-        if (*c != *s)
-            return false;
-        c++;
-        s++;
-    }
-    return *c == *s;
-}
-
 static JS_ALWAYS_INLINE bool
 AllocChars(JSContext *maybecx, size_t length, jschar **chars, size_t *capacity)
 {
@@ -411,12 +388,6 @@ JSFlatString::isIndex(uint32_t *indexp) const
     }
 
     return false;
-}
-
-void
-JSAtom::dump()
-{
-    js_DumpAtom(this);
 }
 
 /*
