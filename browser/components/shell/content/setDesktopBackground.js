@@ -68,6 +68,18 @@ var gSetBackground = {
     if (this._screenWidth / this._screenHeight >= 1.6)
       document.getElementById("monitor").setAttribute("aspectratio", "16:10");
 
+#ifdef XP_WIN
+    // hide fill + fit options if <win7 since don't work 
+    var version = Components.classes["@mozilla.org/system-info;1"]
+                  .getService(Ci.nsIPropertyBag2)
+                  .getProperty("version");
+    var isWindows7OrHigher = (parseFloat(version) >= 6.1);
+    if (!isWindows7OrHigher) {
+      document.getElementById("fillPosition").hidden = true;
+      document.getElementById("fitPosition").hidden = true;
+    }
+#endif
+
     // make sure that the correct dimensions will be used
     setTimeout(function(self) {
       self.init(window.arguments[0]);
@@ -198,6 +210,39 @@ var gSetBackground = {
         var x = (this._screenWidth - this._image.naturalWidth) / 2;
         var y = (this._screenHeight - this._image.naturalHeight) / 2;
         ctx.drawImage(this._image, x, y);
+        break;
+      case "FILL":
+        //Try maxing width first, overflow height
+        var widthRatio = this._screenWidth / this._image.naturalWidth;
+        var width = this._image.naturalWidth * widthRatio;
+        var height = this._image.naturalHeight * widthRatio;
+        if (height < this._screenHeight) {
+          //height less than screen, max height and overflow width
+          var heightRatio = this._screenHeight / this._image.naturalHeight;
+          width = this._image.naturalWidth * heightRatio;
+          height = this._image.naturalHeight * heightRatio;
+        }
+        var x = (this._screenWidth - width) / 2;
+        var y = (this._screenHeight - height) / 2;
+        ctx.drawImage(this._image, x, y, width, height);
+        break;
+      case "FIT":
+        //Try maxing width first, top and bottom borders
+        var widthRatio = this._screenWidth / this._image.naturalWidth;
+        var width = this._image.naturalWidth * widthRatio;
+        var height = this._image.naturalHeight * widthRatio;
+        var x = 0;
+        var y = (this._screenHeight - height) / 2;
+        if (height > this._screenHeight) {
+          //height overflow, maximise height, side borders
+          var heightRatio = this._screenHeight / this._image.naturalHeight;
+          width = this._image.naturalWidth * heightRatio;
+          height = this._image.naturalHeight * heightRatio;
+          x = (this._screenWidth - width) / 2;
+          y = 0;
+        }
+        ctx.drawImage(this._image, x, y, width, height);
+        break;      
     }
   }
 };
