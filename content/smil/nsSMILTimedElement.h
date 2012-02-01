@@ -625,13 +625,13 @@ protected:
   // Used to batch updates to the timing model
   class AutoIntervalUpdateBatcher;
   bool mDeferIntervalUpdates;
-  bool mDoDeferredUpdate; // Set if an update to the current interval
-                                  // was requested while mDeferIntervalUpdates
-                                  // was set
+  bool mDoDeferredUpdate; // Set if an update to the current interval was
+                          // requested while mDeferIntervalUpdates was set
 
   // Recursion depth checking
-  PRUint16              mUpdateIntervalRecursionDepth;
-  static const PRUint16 sMaxUpdateIntervalRecursionDepth;
+  PRUint8              mDeleteCount;
+  PRUint8              mUpdateIntervalRecursionDepth;
+  static const PRUint8 sMaxUpdateIntervalRecursionDepth;
 };
 
 #endif // NS_SMILTIMEDELEMENT_H_
