@@ -1050,37 +1050,29 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
     
   // get the root element 
-  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
+  dom::Element* rootElement = GetRoot();
   NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
   
   // find first editable thingy
-  nsCOMPtr<nsIDOMNode> firstNode;
-  result = GetFirstEditableNode(rootElement, address_of(firstNode));
-  if (firstNode)
-  {
-    // if firstNode is text, set selection to beginning of the text node
-    if (IsTextNode(firstNode)) 
-    {
-      result = selection->Collapse(firstNode, 0);
-    }
-    else
-    { // otherwise, it's a leaf node and we set the selection just in front of it
-      nsCOMPtr<nsIDOMNode> parentNode;
-      result = firstNode->GetParentNode(getter_AddRefs(parentNode));
-      if (NS_FAILED(result)) { return result; }
-      if (!parentNode) { return NS_ERROR_NULL_POINTER; }
-      PRInt32 offsetInParent;
-      result = nsEditor::GetChildOffset(firstNode, parentNode, offsetInParent);
-      NS_ENSURE_SUCCESS(result, result);
-      result = selection->Collapse(parentNode, offsetInParent);
-    }
-  }
-  else
-  {
+  nsCOMPtr<nsINode> firstNode = GetFirstEditableNode(rootElement);
+  if (!firstNode) {
     // just the root node, set selection to inside the root
-    result = selection->Collapse(rootElement, 0);
+    return selection->CollapseNative(rootElement, 0);
   }
-  return result;
+
+  if (firstNode->NodeType() == nsIDOMNode::TEXT_NODE) {
+    // If firstNode is text, set selection to beginning of the text node.
+    return selection->CollapseNative(firstNode, 0);
+  }
+
+  // Otherwise, it's a leaf node and we set the selection just in front of it.
+  nsCOMPtr<nsIContent> parent = firstNode->GetParent();
+  if (!parent) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  PRInt32 offsetInParent = parent->IndexOf(firstNode);
+  return selection->CollapseNative(parent, offsetInParent);
 }
 
 NS_IMETHODIMP
@@ -2523,48 +2515,18 @@ NS_IMETHODIMP nsEditor::SelectEntireDocument(nsISelection *aSelection)
 }
 
 
-nsresult nsEditor::GetFirstEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outFirstNode)
+nsINode*
+nsEditor::GetFirstEditableNode(nsINode* aRoot)
 {
-  NS_ENSURE_TRUE(aRoot && outFirstNode, NS_ERROR_NULL_POINTER);
-  nsresult rv = NS_OK;
-  *outFirstNode = nsnull;
+  MOZ_ASSERT(aRoot);
 
-  nsCOMPtr<nsIDOMNode> node = GetLeftmostChild(aRoot);
-  if (node && !IsEditable(node))
-  {
-    nsCOMPtr<nsIDOMNode> next;
-    rv = GetNextNode(node, true, address_of(next));
-    node = next;
-  }
-  
-  if (node != aRoot)
-    *outFirstNode = node;
-
-  return rv;
-}
-
-#ifdef XXX_DEAD_CODE
-// jfrancis wants to keep this method around for reference
-nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outLastNode)
-{
-  NS_ENSURE_TRUE(aRoot && outLastNode, NS_ERROR_NULL_POINTER);
-  nsresult rv = NS_OK;
-  *outLastNode = nsnull;
-
-  nsCOMPtr<nsIDOMNode> node = GetRightmostChild(aRoot);
-  if (node && !IsEditable(node))
-  {
-    nsCOMPtr<nsIDOMNode> next;
-    rv = GetPriorNode(node, true, address_of(next));
-    node = next;
+  nsIContent* node = GetLeftmostChild(aRoot);
+  if (node && !IsEditable(node)) {
+    node = GetNextNode(node, /* aEditableNode = */ true);
   }
 
-  if (node != aRoot)
-    *outLastNode = node;
-
-  return rv;
+  return (node != aRoot) ? node : nsnull;
 }
-#endif
 
 
 NS_IMETHODIMP
