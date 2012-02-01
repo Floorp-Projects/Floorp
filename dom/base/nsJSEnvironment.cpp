@@ -3495,7 +3495,7 @@ nsJSContext::PokeShrinkGCBuffers()
 void
 nsJSContext::MaybePokeCC()
 {
-  if (sCCTimer) {
+  if (sCCTimer || sDidShutdown) {
     return;
   }
 
