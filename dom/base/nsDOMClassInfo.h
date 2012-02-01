@@ -1748,4 +1748,27 @@ typedef nsSVGListSH<nsIDOMSVGPathSegList, mozilla::DOMSVGPathSegList> nsSVGPathS
 typedef nsSVGListSH<nsIDOMSVGPointList, mozilla::DOMSVGPointList> nsSVGPointListSH;
 typedef nsSVGListSH<nsIDOMSVGTransformList, mozilla::DOMSVGTransformList> nsSVGTransformListSH;
 
+// SVGStringList helper
+
+class nsSVGStringListSH : public nsStringArraySH
+{
+protected:
+  nsSVGStringListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
+  {
+  }
+  
+  virtual ~nsSVGStringListSH()
+  {
+  }
+  
+  virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                               nsAString& aResult);
+  
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsSVGStringListSH(aData);
+  }
+};
+
 #endif /* nsDOMClassInfo_h___ */

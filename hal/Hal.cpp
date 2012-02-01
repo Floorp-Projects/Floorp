@@ -372,5 +372,17 @@ NotifyNetworkChange(const NetworkInformation& aInfo)
   sNetworkObservers.BroadcastCachedInformation();
 }
 
+void Reboot()
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(Reboot());
+}
+
+void PowerOff()
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(PowerOff());
+}
+
 } // namespace hal
 } // namespace mozilla

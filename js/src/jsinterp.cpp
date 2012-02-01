@@ -343,31 +343,11 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 const uint32_t JSSLOT_FOUND_FUNCTION  = 0;
 const uint32_t JSSLOT_SAVED_ID        = 1;
 
-static void
-no_such_method_trace(JSTracer *trc, JSObject *obj)
-{
-    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_FOUND_FUNCTION), "found function");
-    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_SAVED_ID), "saved id");
-}
-
 Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
-    JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    NULL,                    /* finalize */
-    NULL,                    /* reserved0 */
-    NULL,                    /* checkAccess */
-    NULL,                    /* call */
-    NULL,                    /* construct */
-    NULL,                    /* XDR */
-    NULL,                    /* hasInstance */
-    no_such_method_trace     /* trace */
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
 };
 
 /*
@@ -2813,6 +2793,12 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
 
     JSScript *newScript = fun->script();
+
+    if (newScript->compileAndGo && newScript->hasClearedGlobal()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
+        goto error;
+    }
+
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, newScript, initial))
         goto error;
 

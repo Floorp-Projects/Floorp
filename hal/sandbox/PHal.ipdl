@@ -86,6 +86,9 @@ parent:
     sync GetScreenBrightness() returns (double brightness);
     SetScreenBrightness(double brightness);
 
+    Reboot();
+    PowerOff();
+
     __delete__();
 };
 
