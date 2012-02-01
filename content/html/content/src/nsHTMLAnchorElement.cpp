@@ -97,10 +97,8 @@ public:
   // nsIDOMHTMLAnchorElement
   NS_DECL_NSIDOMHTMLANCHORELEMENT  
 
-  // TODO: we do not really count Link::mCachedURI but given that it's a
-  // nsCOMPtr<nsIURI>, that would be required adding SizeOf() to the interface.
-  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsHTMLAnchorElement,
-                                              nsGenericHTMLElement)
+  // TODO: nsHTMLAnchorElement::SizeOfAnchorElement should call
+  // Link::SizeOfExcludingThis().  See bug 682431.
 
   // nsILink
   NS_IMETHOD LinkAdded() { return NS_OK; }

@@ -82,9 +82,6 @@ public:
                  "Unexpected namespace");
   }
 
-  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsGenericHTMLElement,
-                                              nsGenericHTMLElementBase)
-
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
   static nsGenericHTMLElement* FromContent(nsIContent *aContent)
   {
@@ -873,9 +870,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 public:
   nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsGenericHTMLFormElement();
-
-  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsGenericHTMLFormElement,
-                                              nsGenericHTMLElement)
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 

@@ -99,7 +99,30 @@ public:
   // the right target.
   virtual void SetHandler(JSObject *aHandler) = 0;
 
-  virtual PRInt64 SizeOf() const = 0;
+  // Among the sub-classes that inherit (directly or indirectly) from nsINode,
+  // measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - nsIJSEventListener: mEventName
+  //
+  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  {
+    return 0;
+
+    // Measurement of the following members may be added later if DMD finds it
+    // is worthwhile:
+    // - mContext
+    // - mTarget
+    //
+    // The following members are not measured:
+    // - mScopeObject, mHandler: because they're measured by the JS memory
+    //   reporters
+  }
+
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 protected:
   virtual ~nsIJSEventListener()
   {
