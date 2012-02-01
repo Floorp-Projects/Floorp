@@ -2490,15 +2490,7 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
   if (!video)
     return nsnull;
 
-  nsRefPtr<LayerManager> manager =
-    nsContentUtils::PersistentLayerManagerForDocument(OwnerDoc());
-  if (!manager)
-    return nsnull;
-
-  mImageContainer = manager->CreateImageContainer();
-  if (manager->IsCompositingCheap()) {
-    mImageContainer->SetDelayedConversion(true);
-  }
+  mImageContainer = LayerManager::CreateImageContainer();
   return mImageContainer;
 }
 

@@ -45,35 +45,6 @@
 namespace mozilla {
 namespace layers {
 
-class THEBES_API ImageContainerD3D10 : public ImageContainer
-{
-public:
-  ImageContainerD3D10(ID3D10Device1 *aDevice);
-  virtual ~ImageContainerD3D10() {}
-
-  virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
-                                              PRUint32 aNumFormats);
-
-  virtual void SetCurrentImage(Image* aImage);
-
-  virtual already_AddRefed<Image> GetCurrentImage();
-
-  virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSize);
-
-  virtual gfxIntSize GetCurrentSize();
-
-  virtual bool SetLayerManager(LayerManager *aManager);
-
-  virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_D3D10; }
-
-  ID3D10Device1 *device() { return mDevice; }
-  void SetDevice(ID3D10Device1 *aDevice) { mDevice = aDevice; }
-
-private:
-  nsRefPtr<Image> mActiveImage;
-  nsRefPtr<ID3D10Device1> mDevice;
-};
-
 class THEBES_API ImageLayerD3D10 : public ImageLayer,
                                    public LayerD3D10
 {
@@ -89,70 +60,24 @@ public:
   virtual Layer* GetLayer();
 
   virtual void RenderLayer();
+
+  void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage);
 };
 
-class THEBES_API ImageD3D10
+struct PlanarYCbCrD3D10BackendData : public ImageBackendData
 {
-public:
-  virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
-};
-
-class THEBES_API PlanarYCbCrImageD3D10 : public PlanarYCbCrImage,
-                                         public ImageD3D10
-{
-public:
-  PlanarYCbCrImageD3D10(ID3D10Device1 *aDevice);
-  ~PlanarYCbCrImageD3D10() {}
-
-  virtual void SetData(const Data &aData);
-
-  /*
-   * Upload the data from out mData into our textures. For now we use this to
-   * make sure the textures are created and filled on the main thread.
-   */
-  void AllocateTextures();
-
-  bool HasData() { return mHasData; }
-
-  PRUint32 GetDataSize() { return mBuffer ? mBufferSize : 0; }
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface();
-
-  nsAutoArrayPtr<PRUint8> mBuffer;
-  PRUint32 mBufferSize;
-  nsRefPtr<ID3D10Device1> mDevice;
-  Data mData;
-  gfxIntSize mSize;
   nsRefPtr<ID3D10Texture2D> mYTexture;
   nsRefPtr<ID3D10Texture2D> mCrTexture;
   nsRefPtr<ID3D10Texture2D> mCbTexture;
   nsRefPtr<ID3D10ShaderResourceView> mYView;
   nsRefPtr<ID3D10ShaderResourceView> mCbView;
   nsRefPtr<ID3D10ShaderResourceView> mCrView;
-  bool mHasData;
 };
 
-
-class THEBES_API CairoImageD3D10 : public CairoImage,
-                                   public ImageD3D10
+struct CairoD3D10BackendData : public ImageBackendData
 {
-public:
-  CairoImageD3D10(ID3D10Device1 *aDevice)
-    : CairoImage(static_cast<ImageD3D10*>(this))
-    , mDevice(aDevice)
-    , mHasAlpha(true)
-  { }
-  ~CairoImageD3D10();
-
-  virtual void SetData(const Data &aData);
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface();
-
-  nsRefPtr<ID3D10Device1> mDevice;
   nsRefPtr<ID3D10Texture2D> mTexture;
   nsRefPtr<ID3D10ShaderResourceView> mSRView;
-  gfxIntSize mSize;
-  bool mHasAlpha;
 };
 
 } /* layers */

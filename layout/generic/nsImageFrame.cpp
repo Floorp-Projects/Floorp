@@ -1211,10 +1211,10 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 already_AddRefed<ImageContainer>
-nsDisplayImage::GetContainer(LayerManager* aManager)
+nsDisplayImage::GetContainer()
 {
   nsRefPtr<ImageContainer> container;
-  nsresult rv = mImage->GetImageContainer(aManager, getter_AddRefs(container));
+  nsresult rv = mImage->GetImageContainer(getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, nsnull);
   return container.forget();
 }
