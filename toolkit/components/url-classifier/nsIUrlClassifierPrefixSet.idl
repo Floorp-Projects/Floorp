@@ -39,26 +39,28 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
+interface nsIArray;
+
 // Note that the PrefixSet name is historical and we do properly support
 // duplicated values, so it's really a Prefix Trie.
 // All methods are thread-safe.
-[scriptable, uuid(b21b0fa1-20d2-422a-b2cc-b289c9325811)]
+
+[scriptable, uuid(519c8519-0f30-426b-bb7b-c400ba0318e2)]
 interface nsIUrlClassifierPrefixSet : nsISupports
 {
-  // Initialize the PrefixSet. Give it a name for memory reporting.
-  void init(in ACString aName);
   // Fills the PrefixSet with the given array of prefixes.
   // Can send an empty Array to clear the tree. A truly "empty tree"
   // cannot be represented, so put a sentinel value if that is required
   // Requires array to be sorted.
   void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
                    in unsigned long aLength);
-  void getPrefixes(out unsigned long aCount,
-                  [array, size_is(aCount), retval] out unsigned long aPrefixes);
   // Do a lookup in the PrefixSet, return whether the value is present.
   // If aReady is set, we will block until there are any entries.
   // If not set, we will return in aReady whether we were ready or not.
-  boolean probe(in unsigned long aPrefix, inout boolean aReady);
+  boolean probe(in unsigned long aPrefix, in unsigned long aKey,
+                inout boolean aReady);
+  // Return the key that is used to randomize the collisions in the prefixes.
+  PRUint32 getKey();
   boolean isEmpty();
   void loadFromFile(in nsIFile aFile);
   void storeToFile(in nsIFile aFile);
