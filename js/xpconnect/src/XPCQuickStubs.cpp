@@ -788,7 +788,7 @@ getWrapper(JSContext *cx,
            XPCWrappedNativeTearOff **tearoff)
 {
     if (XPCWrapper::IsSecurityWrapper(obj) &&
-        !(obj = XPCWrapper::Unwrap(cx, obj, false))) {
+        !(obj = XPCWrapper::Unwrap(cx, obj))) {
         return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
     }
 

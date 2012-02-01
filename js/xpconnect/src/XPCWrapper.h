@@ -93,7 +93,7 @@ IsSecurityWrapper(JSObject *wrapper)
  * exception on |cx|.
  */
 JSObject *
-Unwrap(JSContext *cx, JSObject *wrapper, bool stopAtOuter = true);
+Unwrap(JSContext *cx, JSObject *wrapper);
 
 JSObject *
 UnsafeUnwrapSecurityWrapper(JSObject *obj);
