@@ -1427,12 +1427,16 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
 
     if (!freed->empty()) {
         LiveInterval *maybeDead = freed->back();
-        if (maybeDead->end() <= interval->reg()->getInterval(0)->start()) {
+        if (maybeDead->end() < interval->reg()->getInterval(0)->start()) {
             // This spill slot is dead before the start of the interval trying
             // to reuse the slot, so reuse is safe. Otherwise, we could
             // encounter a situation where a stack slot is allocated and freed
             // inside a loop, but the same allocation is then used to hold a
             // loop-carried value.
+            //
+            // Note that we don't reuse the dead slot if its interval ends right
+            // before the current interval, to avoid conflicting slot -> reg and
+            // reg -> slot moves in the same movegroup.
             freed->popBack();
             VirtualRegister *dead = maybeDead->reg();
 #ifdef JS_NUNBOX32
