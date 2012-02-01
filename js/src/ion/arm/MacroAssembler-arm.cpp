@@ -1266,6 +1266,7 @@ MacroAssemblerARMCompat::testDouble(Assembler::Condition cond, const ValueOperan
     ma_cmp(value.typeReg(), ImmTag(JSVAL_TAG_CLEAR));
     return actual;
 }
+
 Assembler::Condition
 MacroAssemblerARMCompat::testNull(Assembler::Condition cond, const ValueOperand &value)
 {
@@ -1273,6 +1274,7 @@ MacroAssemblerARMCompat::testNull(Assembler::Condition cond, const ValueOperand 
     ma_cmp(value.typeReg(), ImmType(JSVAL_TYPE_NULL));
     return cond;
 }
+
 Assembler::Condition
 MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, const ValueOperand &value)
 {
@@ -1280,18 +1282,26 @@ MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, const ValueOpe
     ma_cmp(value.typeReg(), ImmType(JSVAL_TYPE_UNDEFINED));
     return cond;
 }
+
 Assembler::Condition
 MacroAssemblerARMCompat::testString(Assembler::Condition cond, const ValueOperand &value)
 {
     return testString(cond, value.typeReg());
 }
+
 Assembler::Condition
 MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const ValueOperand &value)
 {
     return testObject(cond, value.typeReg());
 }
 
-    // register-based tests
+Assembler::Condition
+MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const ValueOperand &value)
+{
+    return testMagic(cond, value.typeReg());
+}
+
+// Register-based tests.
 Assembler::Condition
 MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Register &tag)
 {
@@ -1299,6 +1309,7 @@ MacroAssemblerARMCompat::testInt32(Assembler::Condition cond, const Register &ta
     ma_cmp(tag, ImmTag(JSVAL_TAG_INT32));
     return cond;
 }
+
 Assembler::Condition
 MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, const Register &tag)
 {
@@ -1306,6 +1317,7 @@ MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, const Register &
     ma_cmp(tag, ImmTag(JSVAL_TAG_BOOLEAN));
     return cond;
 }
+
 Assembler::Condition
 MacroAssemblerARMCompat::testNull(Assembler::Condition cond, const Register &tag) {
     JS_ASSERT(cond == Equal || cond == NotEqual);
@@ -1319,6 +1331,7 @@ MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, const Register
     ma_cmp(tag, ImmTag(JSVAL_TAG_UNDEFINED));
     return cond;
 }
+
 Assembler::Condition
 MacroAssemblerARMCompat::testString(Assembler::Condition cond, const Register &tag) {
     JS_ASSERT(cond == Equal || cond == NotEqual);
@@ -1333,6 +1346,15 @@ MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const Register &t
     ma_cmp(tag, ImmTag(JSVAL_TAG_OBJECT));
     return cond;
 }
+
+Assembler::Condition
+MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const Register &tag)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_MAGIC));
+    return cond;
+}
+
 Assembler::Condition
 MacroAssemblerARMCompat::testNumber(Condition cond, const Register &tag)
 {
@@ -1540,27 +1562,18 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, Register base, Register in
 }
 
 void
-MacroAssemblerARMCompat::loadValue(Register base, Register index, ValueOperand val, int32 shift)
+MacroAssemblerARMCompat::loadValue(Register base, Register index, ValueOperand val)
 {
     if (isValueDTRDCandidate(val)) {
-        Register tmpIdx;
-        if (shift == 0) {
-            tmpIdx = index;
-        } else if (shift < 0) {
-            ma_asr(Imm32(-shift), index, ScratchRegister);
-            tmpIdx = ScratchRegister;
-        } else {
-            ma_lsl(Imm32(shift), index, ScratchRegister);
-            tmpIdx = ScratchRegister;
-        }
-        ma_ldrd(EDtrAddr(base, EDtrOffReg(tmpIdx)), val.payloadReg(), val.typeReg());
+        ma_lsl(Imm32(TimesEight), index, ScratchRegister);
+        ma_ldrd(EDtrAddr(base, EDtrOffReg(ScratchRegister)), val.payloadReg(), val.typeReg());
     } else {
         // The ideal case is the base is dead so the sequence:
         // ldr val.payloadReg(), [base, index LSL shift]!
         // ldr val.typeReg(), [base, #4]
         // only clobbers dead registers
         // Sadly, this information is not available, so the scratch register is necessary.
-        ma_alu(base, lsl(index, shift), ScratchRegister, op_add);
+        ma_alu(base, lsl(index, TimesEight), ScratchRegister, op_add);
 
         // This case is handled by a simpler function.
         loadValue(Address(ScratchRegister, 0), val);
