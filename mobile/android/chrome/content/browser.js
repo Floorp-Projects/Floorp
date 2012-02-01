@@ -2654,20 +2654,21 @@ const ElementTouchHelper = {
     }
     return result;
   },
+
   getBoundingContentRect: function(aElement) {
     if (!aElement)
       return {x: 0, y: 0, w: 0, h: 0};
-  
+
     let document = aElement.ownerDocument;
     while (document.defaultView.frameElement)
       document = document.defaultView.frameElement.ownerDocument;
-  
+
     let cwu = document.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     let scrollX = {}, scrollY = {};
     cwu.getScrollXY(false, scrollX, scrollY);
-  
+
     let r = aElement.getBoundingClientRect();
- 
+
     // step out of iframes and frames, offsetting scroll values
     for (let frame = aElement.ownerDocument.defaultView; frame.frameElement && frame != content; frame = frame.parent) {
       // adjust client coordinates' origin to be top left of iframe viewport
@@ -2678,14 +2679,10 @@ const ElementTouchHelper = {
       scrollY.value += rect.top + parseInt(top);
     }
 
-    var x = r.left + scrollX.value;
-    var y = r.top + scrollY.value;
-    var x2 = x + r.width;
-    var y2 = y + r.height;
-    return {x: x,
-            y: y,
-            w: x2 - x,
-            h: y2 - y};
+    return {x: r.left + scrollX.value,
+            y: r.top + scrollY.value,
+            w: r.width,
+            h: r.height };
   }
 };
 
