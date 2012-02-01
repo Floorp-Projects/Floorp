@@ -45,7 +45,5 @@
     <script type="text/javascript" src="chrome://global/content/aboutMemory.js"/>
   </head>
 
-  <!-- No newline before the div element!  This avoids extraneous spaces when
-       pasting the entire output after selecting it with Ctrl-a. -->
-  <body onload="onLoad()" onunload="onUnload()"><div id="content"></div></body>
+  <body id="content" onload="onLoad()" onunload="onUnload()"></body>
 </html>
