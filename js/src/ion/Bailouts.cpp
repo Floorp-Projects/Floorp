@@ -316,6 +316,15 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
         return;
     }
 
+    if (frame->prevType() == IonFrame_Rectifier) {
+        // The rectifier code uses the frame descriptor to discard its stack,
+        // so modifying its descriptor size here would be dangerous. Instead,
+        // we change the frame type, and teach the stack walking code how to
+        // deal with this edge case. bug 717297 would obviate the need
+        frame->changePrevType(IonFrame_Bailed_Rectifier);
+        return;
+    }
+
     // We've bailed out the invalidated frame, so we now transform it
     // into an exit frame. This:
     //
