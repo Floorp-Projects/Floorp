@@ -27,7 +27,6 @@ function test(str, f) {
         f(g1.eval("new Object()"));
     } catch (e) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
-        assertEq(e.name, "TypeError");
         threw = true;
     }
     assertEq(threw, true);
@@ -36,7 +35,6 @@ function test(str, f) {
         f(g2.eval("new Object()"));
     } catch (e) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
-        assertEq(e.name, "TypeError");
         threw = true;
     }
     assertEq(threw, true);
@@ -45,7 +43,6 @@ function test(str, f) {
         f(proxy1);
     } catch (e) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
-        assertEq(e.name, "TypeError");
         threw = true;
     }
     assertEq(threw, true);
@@ -54,7 +51,6 @@ function test(str, f) {
         f(proxy2);
     } catch (e) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
-        assertEq(e.name, "TypeError");
         threw = true;
     }
     assertEq(threw, true);
@@ -78,6 +74,13 @@ test("new RegExp('1')", function(r) RegExp.prototype.toString.call(r));
 test("new RegExp('1')", function(r) RegExp.prototype.exec.call(r, '1').toString());
 test("new RegExp('1')", function(r) RegExp.prototype.test.call(r, '1'));
 test("new RegExp('1')", function(r) RegExp.prototype.compile.call(r, '1').toString());
+test("new RegExp('1')", function(r) assertEq("a1".search(r), 1));
+test("new RegExp('1')", function(r) assertEq("a1".match(r)[0], '1'));
+test("new RegExp('1')", function(r) assertEq("a1".replace(r, 'A'), 'aA'));
+test("new RegExp('1')", function(r) assertEq(String("a1b".split(r)), "a,b"));
+test("new RegExp('1')", function(r) assertEq(r, RegExp(r)));
+test("new RegExp('1')", function(r) assertEq(String(new RegExp(r)), String(r)));
+test("new RegExp('1')", function(r) assertEq(String(/x/.compile(r)), String(r)));
 test("new WeakMap()", function(w) WeakMap.prototype.has.call(w, {}));
 test("new WeakMap()", function(w) WeakMap.prototype.get.call(w, {}));
 test("new WeakMap()", function(w) WeakMap.prototype.delete.call(w, {}));

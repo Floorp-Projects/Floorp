@@ -1400,11 +1400,11 @@ class RegExpGuard
     bool
     init(CallArgs args, bool convertVoid = false)
     {
-        if (args.length() != 0 && ValueIsRegExp(args[0])) {
-            RegExpObject &reobj = args[0].toObject().asRegExp();
-            RegExpShared *shared = reobj.getShared(cx);
+        if (args.length() != 0 && IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
+            RegExpShared *shared = RegExpToShared(cx, args[0].toObject());
             if (!shared)
                 return false;
+
             matcher.init(NeedsIncRef<RegExpShared>(shared));
         } else {
             if (convertVoid && (args.length() == 0 || args[0].isUndefined())) {
@@ -2547,9 +2547,8 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
     JSLinearString *sepstr = NULL;
     bool sepUndefined = (args.length() == 0 || args[0].isUndefined());
     if (!sepUndefined) {
-        if (ValueIsRegExp(args[0])) {
-            RegExpObject &reobj = args[0].toObject().asRegExp();
-            RegExpShared *shared = reobj.getShared(cx);
+        if (IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
+            RegExpShared *shared = RegExpToShared(cx, args[0].toObject());
             if (!shared)
                 return false;
             matcher.init(NeedsIncRef<RegExpShared>(shared));

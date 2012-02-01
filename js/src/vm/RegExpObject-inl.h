@@ -60,12 +60,6 @@ JSObject::asRegExp()
 namespace js {
 
 inline bool
-ValueIsRegExp(const Value &v)
-{
-    return !v.isPrimitive() && v.toObject().isRegExp();
-}
-
-inline bool
 IsRegExpMetaChar(jschar c)
 {
     switch (c) {
@@ -504,6 +498,15 @@ RegExpShared::decref(JSContext *cx)
 #else
     cx->delete_(this);
 #endif
+}
+
+inline RegExpShared *
+RegExpToShared(JSContext *cx, JSObject &obj)
+{
+    JS_ASSERT(ObjectClassIs(obj, ESClass_RegExp, cx));
+    if (obj.isRegExp())
+        return obj.asRegExp().getShared(cx);
+    return Proxy::regexp_toShared(cx, &obj);
 }
 
 } /* namespace js */
