@@ -119,7 +119,11 @@ protected:
   // Gecko Stuff
   nsIWidget      * mWindow;
   nsIDragService * mDragService;
+  // Drag target helper 
+  IDropTargetHelper * GetDropTargetHelper();
 
+
+private:
   // Drag target helper 
   IDropTargetHelper * mDropTargetHelper;
 };
