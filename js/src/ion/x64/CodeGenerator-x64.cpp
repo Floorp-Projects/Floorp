@@ -60,6 +60,12 @@ CodeGeneratorX64::ToValue(LInstruction *ins, size_t pos)
     return ValueOperand(ToRegister(ins->getOperand(pos)));
 }
 
+ValueOperand
+CodeGeneratorX64::ToOutValue(LInstruction *ins)
+{
+    return ValueOperand(ToRegister(ins->getDef(0)));
+}
+
 bool
 CodeGeneratorX64::visitDouble(LDouble *ins)
 {
@@ -351,7 +357,6 @@ bool
 CodeGeneratorX64::visitImplicitThis(LImplicitThis *lir)
 {
     Register callee = ToRegister(lir->callee());
-    Register value = ToRegister(lir->getDef(0));
 
     // The implicit |this| is always |undefined| if the function's environment
     // is the current global.
@@ -362,7 +367,7 @@ CodeGeneratorX64::visitImplicitThis(LImplicitThis *lir)
     if (!bailoutIf(Assembler::NotEqual, lir->snapshot()))
         return false;
 
-    masm.moveValue(UndefinedValue(), value);
+    masm.moveValue(UndefinedValue(), ToOutValue(lir));
     return true;
 }
 
