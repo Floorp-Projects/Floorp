@@ -53,7 +53,9 @@ class OutOfLineBailout;
 class CodeGeneratorARM : public CodeGeneratorShared
 {
     friend class MoveResolverARM;
+
     CodeGeneratorARM *thisFromCtor() {return this;}
+
   protected:
     // Label for the common return path.
     HeapLabel *returnLabel_;
@@ -79,6 +81,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
     bool bailoutFrom(Label *label, LSnapshot *snapshot);
+
   protected:
     bool generatePrologue();
     bool generateEpilogue();
@@ -86,6 +89,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
     void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
+
     // Emits a conditional set.
     void emitSet(Assembler::Condition cond, const Register &dest);
 
@@ -119,32 +123,10 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
-private:
-#if 0
-    class DeferredDouble : public TempObject
-    {
-        AbsoluteLabel label_;
-        uint32 index_;
 
-      public:
-        DeferredDouble(uint32 index) : index_(index)
-        { }
-
-        AbsoluteLabel *label() {
-            return &label_;
-        }
-        uint32 index() const {
-            return index_;
-        }
-    };
-
-  private:
-
-    js::Vector<DeferredDouble *, 0, SystemAllocPolicy> deferredDoubles_;
-
-#endif
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
+    ValueOperand ToOutValue(LInstruction *ins);
 
     // Functions for LTestVAndBranch.
     Register splitTagForTest(const ValueOperand &value);

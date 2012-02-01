@@ -437,6 +437,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testUndefined(Condition cond, const ValueOperand &value);
     Condition testString(Condition cond, const ValueOperand &value);
     Condition testObject(Condition cond, const ValueOperand &value);
+    Condition testMagic(Condition cond, const ValueOperand &value);
 
     // register-based tests
     Condition testInt32(Condition cond, const Register &tag);
@@ -446,6 +447,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testString(Condition cond, const Register &tag);
     Condition testObject(Condition cond, const Register &tag);
     Condition testNumber(Condition cond, const Register &tag);
+    Condition testMagic(Condition cond, const Register &tag);
 
     // unboxing code
     void unboxInt32(const ValueOperand &operand, const Register &dest);
@@ -519,10 +521,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testUndefined(cond, t);
         ma_b(label, c);
     }
-
     template <typename T>
     void branchTestNumber(Condition cond, const T &t, Label *label) {
         cond = testNumber(cond, t);
+        ma_b(label, cond);
+    }
+    template <typename T>
+    void branchTestMagic(Condition cond, const T &t, Label *label) {
+        cond = testMagic(cond, t);
         ma_b(label, cond);
     }
 
@@ -537,14 +543,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
-        return branch32(cond, lhs, rhs, label);
+        branch32(cond, lhs, rhs, label);
     }
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         movePtr(ptr, ScratchRegister);
         branchPtr(cond, lhs, ScratchRegister, label);
     }
     void branchPtr(Condition cond, Register lhs, ImmWord imm, Label *label) {
-        return branch32(cond, lhs, Imm32(imm.value), label);
+        branch32(cond, lhs, Imm32(imm.value), label);
     }
     void moveValue(const Value &val, Register type, Register data);
 
@@ -594,7 +600,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadValue(Operand dest, ValueOperand val) {
         loadValue(dest.toAddress(), val);
     }
-    void loadValue(Register base, Register index, ValueOperand val, int32 shift = defaultShift);
+    void loadValue(Register base, Register index, ValueOperand val);
+    void loadValue(const BaseIndex &addr, ValueOperand val) {
+        // Harder cases not handled yet.
+        JS_ASSERT(addr.offset == 0);
+        loadValue(addr.base, addr.index, val);
+    }
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
     void pushValue(const Value &val) {
