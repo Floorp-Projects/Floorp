@@ -284,7 +284,7 @@ SimpleTest._logResult = function(test, passString, failString) {
 };
 
 SimpleTest.info = function(name, message) {
-    this._logResult({result:true, name:name, diag:message}, "TEST-INFO");
+    SimpleTest._logResult({result:true, name:name, diag:message}, "TEST-INFO");
 };
 
 /**
