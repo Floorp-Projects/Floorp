@@ -1001,26 +1001,6 @@ nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
   return NS_OK;
 }
 
-// aReturn is true if the element aElement carries an ID or a class.
-nsresult
-nsHTMLCSSUtils::HasClassOrID(nsIDOMElement * aElement, bool & aReturn)
-{
-  nsAutoString classVal, idVal;
-  bool isClassSet, isIdSet;
-  aReturn = false;
-
-  nsresult res = mHTMLEditor->GetAttributeValue(aElement,  NS_LITERAL_STRING("class"), classVal, &isClassSet);
-  NS_ENSURE_SUCCESS(res, res);
-  res = mHTMLEditor->GetAttributeValue(aElement,  NS_LITERAL_STRING("id"), idVal, &isIdSet);
-  NS_ENSURE_SUCCESS(res, res);
-
-  // we need to make sure that if the element has an id or a class attribute,
-  // the attribute is not the empty string
-  aReturn = ((isClassSet && !classVal.IsEmpty()) ||
-             (isIdSet    && !idVal.IsEmpty()));
-  return NS_OK;
-}
-
 // returns in aValueString the list of values for the CSS equivalences to
 // the HTML style aHTMLProperty/aAttribute/aValueString for the node aNode;
 // the value of aStyleType controls the styles we retrieve : specified or
