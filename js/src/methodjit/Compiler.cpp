@@ -3019,7 +3019,8 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_DEFFUN)
           {
-            JSFunction *innerFun = script->getFunction(GET_UINT32_INDEX(PC));
+            uint32_t index = fullAtomIndex(PC);
+            JSFunction *innerFun = script->getFunction(index);
 
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(innerFun), Registers::ArgReg1);
@@ -3053,7 +3054,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
           {
             uint32_t slot = GET_SLOTNO(PC);
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC + SLOTNO_LEN));
+            JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
             prepareStubCall(Uses(frame.frameSlots()));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::DefLocalFun_FC, REJOIN_DEFLOCALFUN);
@@ -3067,7 +3068,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_LAMBDA)
           {
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC));
+            JSFunction *fun = script->getFunction(fullAtomIndex(PC));
 
             JSObjStubFun stub = stubs::Lambda;
             uint32_t uses = 0;
@@ -3133,7 +3134,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
             uint32_t slot = GET_SLOTNO(PC);
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC + SLOTNO_LEN));
+            JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::DefLocalFun, REJOIN_DEFLOCALFUN);
@@ -3174,7 +3175,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_OBJECT)
           {
-            JSObject *object = script->getObject(GET_UINT32_INDEX(PC));
+            JSObject *object = script->getObject(fullAtomIndex(PC));
             RegisterID reg = frame.allocReg();
             masm.move(ImmPtr(object), reg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
@@ -3200,7 +3201,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_ENTERBLOCK)
           BEGIN_CASE(JSOP_ENTERLET0)
           BEGIN_CASE(JSOP_ENTERLET1)
-            enterBlock(&script->getObject(GET_UINT32_INDEX(PC))->asStaticBlock());
+            enterBlock(script->getObject(fullAtomIndex(PC)));
           END_CASE(JSOP_ENTERBLOCK);
 
           BEGIN_CASE(JSOP_LEAVEBLOCK)
@@ -3221,7 +3222,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_LAMBDA_FC)
           {
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC));
+            JSFunction *fun = script->getFunction(fullAtomIndex(PC));
             prepareStubCall(Uses(frame.frameSlots()));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::FlatLambda, REJOIN_PUSH_OBJECT);
@@ -6797,7 +6798,7 @@ mjit::Compiler::jsop_newinit()
          * actually a global object). This should only happen in chrome code.
          */
         isArray = false;
-        baseobj = globalObj ? script->getObject(GET_UINT32_INDEX(PC)) : NULL;
+        baseobj = globalObj ? script->getObject(fullAtomIndex(PC)) : NULL;
         break;
       default:
         JS_NOT_REACHED("Bad op");
@@ -7214,11 +7215,11 @@ mjit::Compiler::jumpAndRun(Jump j, jsbytecode *target, Jump *slow, bool *trampol
 }
 
 void
-mjit::Compiler::enterBlock(StaticBlockObject *block)
+mjit::Compiler::enterBlock(JSObject *obj)
 {
     /* For now, don't bother doing anything for this opcode. */
     frame.syncAndForgetEverything();
-    masm.move(ImmPtr(block), Registers::ArgReg1);
+    masm.move(ImmPtr(obj), Registers::ArgReg1);
     INLINE_STUBCALL(stubs::EnterBlock, REJOIN_NONE);
     if (*PC == JSOP_ENTERBLOCK)
         frame.enterBlock(StackDefs(script, PC));

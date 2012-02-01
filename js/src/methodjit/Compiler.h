@@ -683,7 +683,7 @@ private:
     bool jsop_instanceof();
     void jsop_name(PropertyName *name, JSValueType type);
     bool jsop_xname(PropertyName *name);
-    void enterBlock(StaticBlockObject *block);
+    void enterBlock(JSObject *obj);
     void leaveBlock();
     void emitEval(uint32_t argc);
     void jsop_arguments(RejoinState rejoin);
