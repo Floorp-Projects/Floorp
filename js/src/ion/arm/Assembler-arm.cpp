@@ -1031,6 +1031,11 @@ Assembler::align(int alignment)
 
 }
 void
+Assembler::as_nop()
+{
+    writeInst(0xe320f000);
+}
+void
 Assembler::as_alu(Register dest, Register src1, Operand2 op2,
                 ALUOp op, SetCond_ sc, Condition c)
 {

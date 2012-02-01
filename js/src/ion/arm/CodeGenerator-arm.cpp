@@ -117,6 +117,7 @@ CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph &graph)
 bool
 CodeGeneratorARM::generatePrologue()
 {
+    masm.breakpoint();
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
     masm.checkStackAlignment();

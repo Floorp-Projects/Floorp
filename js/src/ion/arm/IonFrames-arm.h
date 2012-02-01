@@ -54,6 +54,8 @@ class IonCommonFrameLayout
     void *padding;
     uintptr_t descriptor_;
 
+    static const uintptr_t FrameTypeMask = (1 << FRAMETYPE_BITS) - 1;
+
   public:
     static size_t offsetOfDescriptor() {
         return offsetof(IonCommonFrameLayout, descriptor_);
@@ -62,7 +64,11 @@ class IonCommonFrameLayout
         return offsetof(IonCommonFrameLayout, returnAddress_);
     }
     FrameType prevType() const {
-        return FrameType(descriptor_ & ((1 << FRAMETYPE_BITS) - 1));
+        return FrameType(descriptor_ & FrameTypeMask);
+    }
+    void changePrevType(FrameType type) {
+        descriptor_ &= ~FrameTypeMask;
+        descriptor_ |= type;
     }
     size_t prevFrameLocalSize() const {
         return descriptor_ >> FRAMETYPE_BITS;
@@ -96,6 +102,9 @@ class IonJSFrameLayout : public IonEntryFrameLayout
 
     static size_t offsetOfCalleeToken() {
         return offsetof(IonJSFrameLayout, calleeToken_);
+    }
+    void replaceCalleeToken(void *calleeToken) {
+        calleeToken_ = calleeToken;
     }
 
     Value *argv() {
@@ -139,6 +148,33 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     static inline size_t Size() {
         return sizeof(IonExitFrameLayout);
     }
+};
+
+// An invalidation bailout stack is at the stack pointer for the callee frame.
+class InvalidationBailoutStack
+{
+    double      fpregs_[FloatRegisters::Total];
+    uintptr_t   regs_[Registers::Total];
+    IonScript   *ionScript_;
+    uint8       *osiPointReturnAddress_;
+
+  public:
+    uint8 *sp() const {
+        return (uint8 *) this + sizeof(InvalidationBailoutStack);
+    }
+    IonJSFrameLayout *fp() const;
+    MachineState machine() {
+        return MachineState(regs_, fpregs_);
+    }
+
+    IonScript *ionScript() const {
+        return ionScript_;
+    }
+    uint8 *osiPointReturnAddress() const {
+        return osiPointReturnAddress_;
+    }
+
+    void checkInvariants() const;
 };
 
 } // namespace ion
