@@ -52,6 +52,26 @@ namespace layers {
 
 class LayerManager;
 
+// Represents (affine) transforms that are calculated from a content view.
+struct ViewTransform {
+  ViewTransform(nsIntPoint aTranslation = nsIntPoint(0, 0), float aXScale = 1, float aYScale = 1)
+    : mTranslation(aTranslation)
+    , mXScale(aXScale)
+    , mYScale(aYScale)
+  {}
+
+  operator gfx3DMatrix() const
+  {
+    return
+      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1) *
+      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
+  }
+
+  nsIntPoint mTranslation;
+  float mXScale;
+  float mYScale;
+};
+
 class CompositorParent : public PCompositorParent,
                          public ShadowLayersManager
 {
@@ -67,6 +87,9 @@ public:
 
   LayerManager* GetLayerManager() { return mLayerManager; }
 
+  void SetTransformation(float aScale, nsIntPoint aScrollOffset);
+  void AsyncRender();
+
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
@@ -74,6 +97,12 @@ protected:
 private:
   void ScheduleComposition();
   void Composite();
+#ifdef OMTC_TEST_ASYNC_SCROLLING
+  void TestScroll();
+#endif
+  void TransformShadowTree(Layer* aLayer, const ViewTransform& aTransform,
+                           float aTempScaleDiffX = 1.0,
+                           float aTempScaleDiffY = 1.0);
 
   // Platform specific functions
 #ifdef MOZ_WIDGET_ANDROID
@@ -88,6 +117,9 @@ private:
   nsRefPtr<LayerManager> mLayerManager;
   bool mStopped;
   nsIWidget* mWidget;
+  float mXScale;
+  float mYScale;
+  nsIntPoint mScrollOffset;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

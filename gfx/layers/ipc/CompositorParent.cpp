@@ -79,11 +79,31 @@ CompositorParent::RecvStop()
   return true;
 }
 
+
 void
 CompositorParent::ScheduleComposition()
 {
   CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
   MessageLoop::current()->PostTask(FROM_HERE, composeTask);
+
+// Test code for async scrolling.
+#ifdef OMTC_TEST_ASYNC_SCROLLING
+  static bool scrollScheduled = false;
+  if (!scrollScheduled) {
+    CancelableTask *composeTask2 = NewRunnableMethod(this,
+                                                     &CompositorParent::TestScroll);
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask2, 500);
+    scrollScheduled = true;
+  }
+#endif
+}
+
+void
+CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
+{
+  mXScale = aScale;
+  mYScale = aScale;
+  mScrollOffset = aScrollOffset;
 }
 
 void
@@ -113,6 +133,113 @@ SetShadowProperties(Layer* aLayer)
   }
 }
 
+static double GetXScale(const gfx3DMatrix& aTransform)
+{
+  return aTransform._11;
+}
+
+static double GetYScale(const gfx3DMatrix& aTransform)
+{
+  return aTransform._22;
+}
+
+static void ReverseTranslate(gfx3DMatrix& aTransform, ViewTransform& aViewTransform)
+{
+  aTransform._41 -= aViewTransform.mTranslation.x / aViewTransform.mXScale;
+  aTransform._42 -= aViewTransform.mTranslation.y / aViewTransform.mYScale;
+}
+
+void
+CompositorParent::TransformShadowTree(Layer* aLayer, const ViewTransform& aTransform,
+                    float aTempScaleDiffX, float aTempScaleDiffY)
+{
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
+
+  gfx3DMatrix shadowTransform = aLayer->GetTransform();
+  ViewTransform layerTransform = aTransform;
+
+  ContainerLayer* container = aLayer->AsContainerLayer();
+
+  if (container && container->GetFrameMetrics().IsScrollable()) {
+    const FrameMetrics* metrics = &container->GetFrameMetrics();
+    const gfx3DMatrix& currentTransform = aLayer->GetTransform();
+
+    aTempScaleDiffX *= GetXScale(shadowTransform);
+    aTempScaleDiffY *= GetYScale(shadowTransform);
+
+    nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
+
+    nsIntPoint scrollCompensation(
+        (mScrollOffset.x / aTempScaleDiffX - metricsScrollOffset.x) * mXScale,
+        (mScrollOffset.y / aTempScaleDiffY - metricsScrollOffset.y) * mYScale);
+    ViewTransform treeTransform(-scrollCompensation, mXScale,
+                                mYScale);
+    shadowTransform = gfx3DMatrix(treeTransform) * currentTransform;
+    layerTransform = treeTransform;
+  }
+
+  // Uncomment to deal with position:fixed.
+  /*
+  if (aLayer->GetIsFixedPosition() &&
+      !aLayer->GetParent()->GetIsFixedPosition()) {
+    printf_stderr("Correcting for position fixed\n");
+    ReverseTranslate(shadowTransform, layerTransform);
+    const nsIntRect* clipRect = shadow->GetShadowClipRect();
+    if (clipRect) {
+      nsIntRect transformedClipRect(*clipRect);
+      transformedClipRect.MoveBy(shadowTransform._41, shadowTransform._42);
+      shadow->SetShadowClipRect(&transformedClipRect);
+    }
+  }*/
+
+  shadow->SetShadowTransform(shadowTransform);
+
+  // Uncomment the following when we want to deal with position:fixed.
+  // Note that we need to modify other code to ensure that position:fixed
+  // things get their own layer. See Bug 607417.
+  /*
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    TransformShadowTree(child, layerTransform, aTempScaleDiffX,
+                       aTempScaleDiffY);
+  }*/
+
+}
+
+void
+CompositorParent::AsyncRender()
+{
+  if (mStopped || !mLayerManager) {
+    return;
+  }
+
+  Layer* root = mLayerManager->GetRoot();
+  ContainerLayer* container = root->AsContainerLayer();
+  if (!container)
+    return;
+
+  FrameMetrics metrics = container->GetFrameMetrics();
+/*
+    printf("FrameMetrics: mViewPort: X: %d, Y: %d, Width: %d, Height: %d ",
+            metrics.mViewport.X(), metrics.mViewport.Y(), metrics.mViewport.Width(),
+            metrics.mViewport.Height());
+    printf("mDisplayPort: X: %d, Y: %d, Width: %d, Height: %d ",
+            metrics.mDisplayPort.X(), metrics.mDisplayPort.Y(), metrics.mDisplayPort.Width(),
+            metrics.mDisplayPort.Height());
+    printf("mContentSize: width: %d, height: %d ", metrics.mContentSize.width,
+           metrics. mContentSize.height);
+    printf("mViewPortScrollOffset: x: %d, y: %d\n",
+            metrics.mViewportScrollOffset.x,
+            metrics.mViewportScrollOffset.y);
+*/
+    // Modify framemetrics here, just as a test.
+  metrics.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
+  container->SetFrameMetrics(metrics);
+  ViewTransform transform;
+  TransformShadowTree(root, transform);
+  Composite();
+}
+
 void
 CompositorParent::ShadowLayersUpdated()
 {
@@ -126,6 +253,36 @@ CompositorParent::ShadowLayersUpdated()
   }
   ScheduleComposition();
 }
+
+// Test code for async scrolling.
+#ifdef OMTC_TEST_ASYNC_SCROLLING
+void
+CompositorParent::TestScroll()
+{
+  static int scrollFactor = 0;
+  static bool fakeScrollDownwards = true;
+  if (fakeScrollDownwards) {
+    scrollFactor++;
+    if (scrollFactor > 10) {
+      scrollFactor = 10;
+      fakeScrollDownwards = false;
+    }
+  } else {
+    scrollFactor--;
+    if (scrollFactor < 0) {
+      scrollFactor = 0;
+      fakeScrollDownwards = true;
+    }
+  }
+  SetTransformation(1.0+2.0*scrollFactor/10, nsIntPoint(-25*scrollFactor,
+      -25*scrollFactor));
+  printf_stderr("AsyncRender scroll factor:%d\n", scrollFactor);
+  AsyncRender();
+
+  CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::TestScroll);
+  MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask, 1000/65);
+}
+#endif
 
 PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend &backendType)
