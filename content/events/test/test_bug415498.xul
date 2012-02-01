@@ -78,7 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
       browser.loadURI(chromeDir + "bug415498-doc1.html");
       yield;
 
-      ok(verifyErrorReceived("NS_ERROR_DOM_HIERARCHY_REQUEST_ERR"),
+      ok(verifyErrorReceived("HierarchyRequestError"),
          "Error message not reported in event listener callback!");
       gMessages = [];
 
@@ -87,7 +87,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
       browser.loadURI(chromeDir + "bug415498-doc2.html");
       yield;
 
-      ok(verifyErrorReceived("NS_ERROR_DOM_HIERARCHY_REQUEST_ERR"),
+      ok(verifyErrorReceived("HierarchyRequestError"),
          "Error message not reported in window.onload!");
     }
     
