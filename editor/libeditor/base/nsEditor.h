@@ -505,6 +505,10 @@ public:
                        nsCOMPtr<nsIDOMNode> *aResultNode,
                        bool         bNoBlockCrossing = false,
                        nsIContent  *aActiveEditorRoot = nsnull);
+  nsIContent* GetNextNode(nsINode* aCurrentNode,
+                          bool aEditableNode,
+                          bool bNoBlockCrossing = false,
+                          nsIContent* aActiveEditorRoot = nsnull);
 
   // and another version that takes a {parent,offset} pair rather than a node
   nsresult GetNextNode(nsIDOMNode  *aParentNode, 
