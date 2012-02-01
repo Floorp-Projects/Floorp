@@ -653,11 +653,11 @@ MCompare::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
     MIRType lhs = MIRTypeFromValueType(b.lhsTypes->getKnownTypeTag(cx));
     MIRType rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag(cx));
 
-    if (lhs < MIRType_String && rhs < MIRType_String) {
-        if (CoercesToDouble(lhs) || CoercesToDouble(rhs))
-            specialization_ = MIRType_Double;
-        else
-            specialization_ = MIRType_Int32;
+    if ((lhs == MIRType_Int32 && rhs == MIRType_Int32) ||
+        (lhs == MIRType_Boolean && rhs == MIRType_Boolean)) {
+        specialization_ = MIRType_Int32;
+    } else if (IsNumberType(lhs) && IsNumberType(rhs)) {
+        specialization_ = MIRType_Double;
     } else if (jsop() == JSOP_EQ || jsop() == JSOP_NE) {
         if (lhs == MIRType_Object && rhs == MIRType_Object) {
             if (b.lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
