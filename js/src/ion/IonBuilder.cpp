@@ -3404,13 +3404,18 @@ IonBuilder::jsop_this()
 {
     if (!info().fun())
         return abort("JSOP_THIS outside of a JSFunction.");
+    if (script->strictModeCode)
+        return abort("JSOP_THIS not yet supported in strict-mode");
 
-    // Do not re-pushed, use pushSlot instead.
-    MDefinition *thisParam = current->getSlot(info().thisSlot());
+    types::TypeSet *types = oracle->thisTypeSet(script);
+    if (types && types->getKnownTypeTag(cx) == JSVAL_TYPE_OBJECT) {
+        // This is safe, because if the entry type of |this| is an object, it
+        // will necessarily be an object throughout the entire function. OSR
+        // can introduce a phi, but this phi will be specialized.
+        current->pushSlot(info().thisSlot());
+        return true;
+    }
 
-    if (thisParam->type() != MIRType_Object)
-        return abort("Cannot compile JSOP_THIS, not an object.");
-
-    current->pushSlot(info().thisSlot());
-    return true;
+    return abort("JSOP_THIS hard case not yet handled");
 }
+
