@@ -256,20 +256,12 @@ nsPluginInstanceOwner::EndUpdateBackground(gfxContext* aContext,
 bool
 nsPluginInstanceOwner::UseAsyncRendering()
 {
-#ifdef XP_MACOSX
-  nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
-#endif
-
   bool useAsyncRendering;
   bool result = (mInstance &&
           NS_SUCCEEDED(mInstance->UseAsyncPainting(&useAsyncRendering)) &&
-          useAsyncRendering &&
-#ifdef XP_MACOSX
-          container &&
-          container->GetBackendType() == 
-                  LayerManager::LAYERS_OPENGL
-#else
-          (!mPluginWindow ||
+          useAsyncRendering
+#ifndef XP_MACOSX
+           && (!mPluginWindow ||
            mPluginWindow->type == NPWindowTypeDrawable)
 #endif
           );
