@@ -1338,16 +1338,15 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDocWeak);
   NS_ASSERTION(domDoc, "Need a document");
 
   rv = docEncoder->Init(domDoc, aFormatType, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aCharset.IsEmpty()
-    && !(aCharset.EqualsLiteral("null")))
+  if (!aCharset.IsEmpty() && !aCharset.EqualsLiteral("null")) {
     docEncoder->SetCharset(aCharset);
+  }
 
   PRInt32 wc;
   (void) GetWrapWidth(&wc);
@@ -1361,25 +1360,26 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   {
     nsCOMPtr<nsISelection> selection;
     rv = GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(rv) && selection)
-      rv = docEncoder->SetSelection(selection);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (selection) {
+      rv = docEncoder->SetSelection(selection);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   // ... or if the root element is not a body,
   // in which case we set the selection to encompass the root.
   else
   {
-    nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
+    dom::Element* rootElement = GetRoot();
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
-    if (!nsTextEditUtils::IsBody(rootElement))
-    {
-      rv = docEncoder->SetContainerNode(rootElement);
+    if (!rootElement->IsHTML(nsGkAtoms::body)) {
+      rv = docEncoder->SetNativeContainerNode(rootElement);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  NS_ADDREF(*encoder = docEncoder);
-  return rv;
+  docEncoder.forget(encoder);
+  return NS_OK;
 }
 
 
