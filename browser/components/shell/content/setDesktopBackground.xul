@@ -78,6 +78,8 @@
           <menuitem label="&center.label;"  value="CENTER"/>
           <menuitem label="&tile.label;"    value="TILE"/>
           <menuitem label="&stretch.label;" value="STRETCH"/>
+          <menuitem label="&fill.label;"    value="FILL" id="fillPosition"/>
+          <menuitem label="&fit.label;"     value="FIT"  id="fitPosition"/>
         </menupopup>
       </menulist>
       <spacer flex="1"/>
