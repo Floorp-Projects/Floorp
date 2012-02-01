@@ -36,7 +36,8 @@ function go() {
                     f().cross_origin_property;
                     ok(false, "should have thrown an exception");
                 } catch (e) {
-                    ok(/Permission denied/.test(e), "threw the correct exception");
+                    ok(/Permission denied/.test(e) || /attempt to run compile-and-go script/.test(e),
+                       "threw the correct exception");
                 }
                 SimpleTest.finish();
                 break;
