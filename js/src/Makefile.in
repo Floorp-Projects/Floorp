@@ -382,6 +382,7 @@ CPPSRCS +=	Lowering-arm.cpp \
 		Trampoline-arm.cpp \
 		Assembler-arm.cpp \
 		Bailouts-arm.cpp \
+		IonFrames-arm.cpp \
 		MoveEmitter-arm.cpp \
 		Architecture-arm.cpp \
 		MacroAssembler-arm.cpp \

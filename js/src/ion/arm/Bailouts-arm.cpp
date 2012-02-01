@@ -144,33 +144,6 @@ class BailoutStack
     }
 };
 
-class InvalidationBailoutStack
-{
-    double fpregs_[FloatRegisters::Total];
-    uintptr_t regs_[Registers::Total];
-    uintptr_t pad[2];
-    uintptr_t frameDescriptor_;
-
-    size_t frameSize() const {
-        return frameDescriptor_ >> FRAMETYPE_BITS;
-    }
-    size_t frameDescriptorOffset() const {
-        return offsetof(InvalidationBailoutStack, frameDescriptor_);
-    }
-
-  public:
-    uint8 *sp() const {
-        return (uint8 *) this + frameDescriptorOffset() + sizeof(size_t) + sizeof(size_t);
-    }
-    uint8 *fp() const {
-        return sp() + frameSize();
-    }
-    MachineState machine() {
-        return MachineState(regs_, fpregs_);
-    }
-  public:
-};
-
 } // namespace ion
 } // namespace js
 
@@ -201,11 +174,10 @@ ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
 FrameRecovery
 ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack *bailout)
 {
-    IonJSFrameLayout *fp = (IonJSFrameLayout *) bailout->fp();
-    InvalidationRecord *record = CalleeTokenToInvalidationRecord(fp->calleeToken());
-    const IonFrameInfo *exitInfo = record->ionScript->getFrameInfo(record->returnAddress);
-    SnapshotOffset snapshotOffset = exitInfo->snapshotOffset();
-
-    return FrameRecovery::FromSnapshot(bailout->fp(), bailout->sp(), bailout->machine(),
-                                       snapshotOffset);
+    IonScript *ionScript = bailout->ionScript();
+    const OsiIndex *osiIndex = ionScript->getOsiIndex(bailout->osiPointReturnAddress());
+    FrameRecovery fr = FrameRecovery::FromSnapshot((uint8 *) bailout->fp(), bailout->sp(),
+                                                   bailout->machine(), osiIndex->snapshotOffset());
+    fr.setIonScript(ionScript);
+    return fr;
 }
