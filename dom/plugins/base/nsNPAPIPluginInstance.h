@@ -152,8 +152,6 @@ public:
 #ifdef MOZ_WIDGET_ANDROID
   PRUint32 GetANPDrawingModel() { return mANPDrawingModel; }
   void SetANPDrawingModel(PRUint32 aModel);
-
-  // This stuff is for kSurface_ANPDrawingModel
   void* GetJavaSurface();
   void SetJavaSurface(void* aSurface);
   void RequestJavaSurface();

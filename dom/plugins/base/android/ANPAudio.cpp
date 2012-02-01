@@ -306,6 +306,7 @@ anp_audio_start(ANPAudioTrack* s)
   
   if (s->keepGoing) {
     // we are already playing.  Ignore.
+    LOG("anp_audio_start called twice!");
     return;
   }
 
@@ -358,14 +359,7 @@ anp_audio_isStopped(ANPAudioTrack* s)
   return s->isStopped;
 }
 
-uint32_t
-anp_audio_trackLatency(ANPAudioTrack* s) {
-  // Bug 721835
-  NOT_IMPLEMENTED();
-  return 1;
-}
-
-void InitAudioTrackInterfaceV0(ANPAudioTrackInterfaceV0 *i) {
+void InitAudioTrackInterface(ANPAudioTrackInterfaceV0 *i) {
   _assert(i->inSize == sizeof(*i));
   ASSIGN(i, newTrack);
   ASSIGN(i, deleteTrack);
@@ -373,15 +367,4 @@ void InitAudioTrackInterfaceV0(ANPAudioTrackInterfaceV0 *i) {
   ASSIGN(i, pause);
   ASSIGN(i, stop);
   ASSIGN(i, isStopped);
-}
-
-void InitAudioTrackInterfaceV1(ANPAudioTrackInterfaceV1 *i) {
-  _assert(i->inSize == sizeof(*i));
-  ASSIGN(i, newTrack);
-  ASSIGN(i, deleteTrack);
-  ASSIGN(i, start);
-  ASSIGN(i, pause);
-  ASSIGN(i, stop);
-  ASSIGN(i, isStopped);
-  ASSIGN(i, trackLatency);
 }
