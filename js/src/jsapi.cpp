@@ -3133,6 +3133,12 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
                         nargs, ps, fs, static_ps, static_fs);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
+{
+    return LinkConstructorAndPrototype(cx, ctor, proto);
+}
+
 #ifdef JS_THREADSAFE
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj)
