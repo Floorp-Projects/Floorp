@@ -585,11 +585,8 @@ public:
   /** counts number of editable child nodes */
   nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
   
-  /** Find the deep first and last children. Returned nodes are AddReffed */
-  nsresult GetFirstEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outFirstNode);
-#ifdef XXX_DEAD_CODE
-  nsresult GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outLastNode);
-#endif
+  /** Find the deep first and last children. */
+  nsINode* GetFirstEditableNode(nsINode* aRoot);
 
   nsresult GetIMEBufferLength(PRInt32* length);
   bool     IsIMEComposing();    /* test if IME is in composition state */
