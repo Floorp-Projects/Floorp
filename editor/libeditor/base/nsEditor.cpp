@@ -3643,13 +3643,6 @@ nsEditor::IsEditable(nsIContent *aNode)
 }
 
 bool
-nsEditor::IsMozEditorBogusNode(nsIDOMNode *aNode)
-{
-  nsCOMPtr<nsIContent> element = do_QueryInterface(aNode);
-  return IsMozEditorBogusNode(element);
-}
-
-bool
 nsEditor::IsMozEditorBogusNode(nsIContent *element)
 {
   return element &&
