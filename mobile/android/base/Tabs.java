@@ -46,7 +46,6 @@ import org.json.JSONObject;
 
 import android.content.ContentResolver;
 import android.os.SystemClock;
-import android.util.Base64;
 import android.util.Log;
 
 public class Tabs implements GeckoEventListener {
@@ -289,7 +288,7 @@ public class Tabs implements GeckoEventListener {
                 String data = message.getString("data");
                 if (data.length() < 22)
                     return;
-                byte[] compressed = Base64.decode(data.substring(22), Base64.DEFAULT);
+                byte[] compressed = GeckoAppShell.decodeBase64(data.substring(22));
                 GeckoApp.mAppContext.processThumbnail(tab, null, compressed);
             }
         } catch (Exception e) { 
