@@ -57,6 +57,9 @@
 #include "nsIContentIterator.h"
 #include "nsAttrName.h"
 
+#include "mozilla/dom/Element.h"
+
+using namespace mozilla;
 
 NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty, 
                                             const nsAString & aAttribute, 
@@ -635,9 +638,9 @@ nsresult nsHTMLEditor::ApplyDefaultProperties()
 }
 
 nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode, 
-                                   nsIAtom *aProperty,   // null here means remove all properties
-                                   const nsAString *aAttribute, 
-                                   bool aChildrenOnly)
+                                         nsIAtom *aProperty,   // null here means remove all properties
+                                         const nsAString *aAttribute,
+                                         bool aChildrenOnly)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   if (IsTextNode(aNode)) return NS_OK;
@@ -695,8 +698,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
                                                         &propertyValue,
                                                         false);
           // remove the span if it's useless
-          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(spanNode);
-          res = RemoveElementIfNoStyleOrIdOrClass(element, nsEditProperty::span);
+          RemoveElementIfNoStyleOrIdOrClass(spanNode);
         }
       }
       res = RemoveContainer(aNode);
@@ -741,8 +743,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
                                                       false);
         // remove the node if it is a span, if its style attribute is empty or absent,
         // and if it does not have a class nor an id
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
-        res = RemoveElementIfNoStyleOrIdOrClass(element, nsEditProperty::span);
+        RemoveElementIfNoStyleOrIdOrClass(aNode);
+        res = NS_OK;
       }
     }
   }  
@@ -1890,41 +1892,37 @@ nsHTMLEditor::GetIsCSSEnabled(bool *aIsCSSEnabled)
   return NS_OK;
 }
 
-nsresult
-nsHTMLEditor::HasStyleOrIdOrClass(nsIDOMElement * aElement, bool *aHasStyleOrIdOrClass)
+static bool
+HasNonEmptyAttribute(dom::Element* aElement, nsIAtom* aName)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> node  = do_QueryInterface(aElement);
+  MOZ_ASSERT(aElement);
 
+  nsAutoString value;
+  return aElement->GetAttr(kNameSpaceID_None, aName, value) && !value.IsEmpty();
+}
+
+bool
+nsHTMLEditor::HasStyleOrIdOrClass(dom::Element* aElement)
+{
+  MOZ_ASSERT(aElement);
 
   // remove the node if its style attribute is empty or absent,
   // and if it does not have a class nor an id
-  nsAutoString styleVal;
-  bool isStyleSet;
-  *aHasStyleOrIdOrClass = true;
-  nsresult res = GetAttributeValue(aElement,  NS_LITERAL_STRING("style"), styleVal, &isStyleSet);
-  NS_ENSURE_SUCCESS(res, res);
-  if (!isStyleSet || styleVal.IsEmpty()) {
-    res = mHTMLCSSUtils->HasClassOrID(aElement, *aHasStyleOrIdOrClass);
-    NS_ENSURE_SUCCESS(res, res);
-  }
-  return res;
+  return HasNonEmptyAttribute(aElement, nsGkAtoms::style) ||
+         HasNonEmptyAttribute(aElement, nsGkAtoms::_class) ||
+         HasNonEmptyAttribute(aElement, nsGkAtoms::id);
 }
 
 nsresult
-nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAtom * aTag)
+nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(nsIDOMNode* aElement)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> node  = do_QueryInterface(aElement);
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
   // early way out if node is not the right kind of element
-  if (!NodeIsType(node, aTag)) {
+  if (!element->IsHTML(nsGkAtoms::span) || HasStyleOrIdOrClass(element)) {
     return NS_OK;
   }
-  bool hasStyleOrIdOrClass;
-  nsresult res = HasStyleOrIdOrClass(aElement, &hasStyleOrIdOrClass);
-  if (!hasStyleOrIdOrClass) {
-    res = RemoveContainer(node);
-  }
-  return res;
+
+  return RemoveContainer(element);
 }
