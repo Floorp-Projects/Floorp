@@ -891,6 +891,20 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
 }
 
 bool
+LIRGenerator::visitLoadElementHole(MLoadElementHole *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+    JS_ASSERT(ins->initLength()->type() == MIRType_Int32);
+    JS_ASSERT(ins->type() == MIRType_Value);
+
+    LLoadElementHole *lir = new LLoadElementHole(useRegister(ins->elements()),
+                                                 useRegisterOrConstant(ins->index()),
+                                                 useRegister(ins->initLength()));
+    return defineBox(lir, ins);
+}
+
+bool
 LIRGenerator::visitStoreElement(MStoreElement *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);

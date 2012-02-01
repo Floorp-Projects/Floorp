@@ -1116,6 +1116,50 @@ class MBinaryInstruction : public MAryInstruction<2>
     }
 };
 
+class MTernaryInstruction : public MAryInstruction<3>
+{
+  protected:
+    MTernaryInstruction(MDefinition *first, MDefinition *second, MDefinition *third)
+    {
+        initOperand(0, first);
+        initOperand(1, second);
+        initOperand(2, third);
+    }
+
+  protected:
+    HashNumber valueHash() const
+    {
+        MDefinition *first = getOperand(0);
+        MDefinition *second = getOperand(1);
+        MDefinition *third = getOperand(2);
+
+        return op() ^ first->valueNumber() ^ second->valueNumber() ^ third->valueNumber();
+    }
+
+    bool congruentTo(MDefinition *const &ins) const
+    {
+        if (op() != ins->op())
+            return false;
+
+        if (type() != ins->type())
+            return false;
+
+        if (isEffectful() || ins->isEffectful())
+            return false;
+
+        MDefinition *first = getOperand(0);
+        MDefinition *second = getOperand(1);
+        MDefinition *third = getOperand(2);
+        MDefinition *insFirst = ins->getOperand(0);
+        MDefinition *insSecond = ins->getOperand(1);
+        MDefinition *insThird = ins->getOperand(2);
+
+        return first->valueNumber() == insFirst->valueNumber() &&
+               second->valueNumber() == insSecond->valueNumber() &&
+               third->valueNumber() == insThird->valueNumber();
+    }
+};
+
 class MCompare
   : public MBinaryInstruction,
     public ComparePolicy
@@ -2251,6 +2295,54 @@ class MLoadElement
     }
     bool fallible() const {
         return needsHoleCheck();
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Element);
+    }
+};
+
+// Load a value from a dense array's element vector. If the index is
+// out-of-bounds, or the indexed slot has a hole, undefined is returned
+// instead.
+class MLoadElementHole
+  : public MTernaryInstruction,
+    public ObjectPolicy
+{
+    bool needsHoleCheck_;
+
+    MLoadElementHole(MDefinition *elements, MDefinition *index, MDefinition *initLength, bool needsHoleCheck)
+      : MTernaryInstruction(elements, index, initLength),
+        needsHoleCheck_(needsHoleCheck)
+    {
+        setResultType(MIRType_Value);
+        setMovable();
+        JS_ASSERT(elements->type() == MIRType_Elements);
+        JS_ASSERT(index->type() == MIRType_Int32);
+        JS_ASSERT(initLength->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadElementHole);
+
+    static MLoadElementHole *New(MDefinition *elements, MDefinition *index,
+                                 MDefinition *initLength, bool needsHoleCheck) {
+        return new MLoadElementHole(elements, index, initLength, needsHoleCheck);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *initLength() const {
+        return getOperand(2);
+    }
+    bool needsHoleCheck() const {
+        return needsHoleCheck_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);

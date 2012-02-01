@@ -108,6 +108,7 @@
     _(BoundsCheckLower)             \
     _(LoadElementV)                 \
     _(LoadElementT)                 \
+    _(LoadElementHole)              \
     _(StoreElementV)                \
     _(StoreElementT)                \
     _(LoadFixedSlotV)               \

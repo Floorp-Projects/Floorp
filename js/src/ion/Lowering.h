@@ -155,6 +155,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitBoundsCheck(MBoundsCheck *ins);
     bool visitBoundsCheckLower(MBoundsCheckLower *ins);
     bool visitLoadElement(MLoadElement *ins);
+    bool visitLoadElementHole(MLoadElementHole *ins);
     bool visitStoreElement(MStoreElement *ins);
     bool visitLoadFixedSlot(MLoadFixedSlot *ins);
     bool visitStoreFixedSlot(MStoreFixedSlot *ins);

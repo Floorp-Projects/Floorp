@@ -162,6 +162,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadValue(Address src, ValueOperand val) {
         loadValue(Operand(src), val);
     }
+    void loadValue(BaseIndex src, ValueOperand val) {
+        loadValue(Operand(src), val);
+    }
     void pushValue(ValueOperand val) {
         push(val.typeReg());
         push(val.payloadReg());
@@ -251,10 +254,13 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
         return cond == Equal ? AboveOrEqual : Below;
     }
-    Condition testError(Condition cond, const Register &tag) {
+    Condition testMagic(Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmType(JSVAL_TYPE_MAGIC));
         return cond;
+    }
+    Condition testError(Condition cond, const Register &tag) {
+        return testMagic(cond, tag);
     }
     Condition testInt32(Condition cond, const Operand &operand) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
@@ -282,8 +288,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Condition testObject(Condition cond, const ValueOperand &value) {
         return testObject(cond, value.typeReg());
     }
+    Condition testMagic(Condition cond, const ValueOperand &value) {
+        return testMagic(cond, value.typeReg());
+    }
     Condition testError(Condition cond, const ValueOperand &value) {
-        return testError(cond, value.typeReg());
+        return testMagic(cond, value);
     }
     Condition testNumber(Condition cond, const ValueOperand &value) {
         return testNumber(cond, value.typeReg());
@@ -411,6 +420,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     template <typename T>
     void branchTestGCThing(Condition cond, const T &t, Label *label) {
         cond = testGCThing(cond, t);
+        j(cond, label);
+    }
+    template <typename T>
+    void branchTestMagic(Condition cond, const T &t, Label *label) {
+        cond = testMagic(cond, t);
         j(cond, label);
     }
 

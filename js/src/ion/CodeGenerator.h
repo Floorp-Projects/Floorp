@@ -117,6 +117,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallGetElement(LCallGetElement *lir);
     bool visitCallSetElement(LCallSetElement *lir);
     bool visitThrow(LThrow *lir);
+    bool visitLoadElementV(LLoadElementV *load);
+    bool visitLoadElementHole(LLoadElementHole *lir);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);

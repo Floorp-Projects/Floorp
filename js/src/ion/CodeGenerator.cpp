@@ -1390,5 +1390,57 @@ CodeGenerator::visitThrow(LThrow *lir)
     return callVM(ThrowInfo, lir);
 }
 
+bool
+CodeGenerator::visitLoadElementV(LLoadElementV *load)
+{
+    Register elements = ToRegister(load->elements());
+    const ValueOperand out = ToOutValue(load);
+
+    if (load->index()->isConstant())
+        masm.loadValue(Address(elements, ToInt32(load->index()) * sizeof(Value)), out);
+    else
+        masm.loadValue(BaseIndex(elements, ToRegister(load->index()), TimesEight), out);
+
+    if (load->mir()->needsHoleCheck()) {
+        Assembler::Condition cond = masm.testMagic(Assembler::Equal, out);
+        if (!bailoutIf(cond, load->snapshot()))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+CodeGenerator::visitLoadElementHole(LLoadElementHole *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    Register initLength = ToRegister(lir->initLength());
+    const ValueOperand out = ToOutValue(lir);
+
+    // If the index is out of bounds, load |undefined|. Otherwise, load the
+    // value.
+    Label undefined, done;
+    if (lir->index()->isConstant()) {
+        masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(ToInt32(lir->index())), &undefined);
+        masm.loadValue(Address(elements, ToInt32(lir->index()) * sizeof(Value)), out);
+    } else {
+        masm.branch32(Assembler::BelowOrEqual, initLength, ToRegister(lir->index()), &undefined);
+        masm.loadValue(BaseIndex(elements, ToRegister(lir->index()), TimesEight), out);
+    }
+
+    // If a hole check is needed, and the value wasn't a hole, we're done.
+    // Otherwise, we'll load undefined.
+    if (lir->mir()->needsHoleCheck())
+        masm.branchTestMagic(Assembler::NotEqual, out, &done);
+    else
+        masm.jump(&done);
+
+    masm.bind(&undefined);
+    masm.moveValue(UndefinedValue(), out);
+    masm.bind(&done);
+    return true;
+}
+
 } // namespace ion
 } // namespace js
+

@@ -486,6 +486,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         Condition c = testBoolean(cond, t);
         ma_b(label, c);
     }
+    void branch32(Condition cond, Register lhs, Register rhs, Label *label) {
+        ma_cmp(rhs, lhs);
+        ma_b(label, cond);
+    }
+    void branch32(Condition cond, Register lhs, Imm32 imm, Label *label) {
+        ma_cmp(lhs, imm);
+        ma_b(label, InvertCondition(cond));
+    }
     template<typename T>
     void branchTestDouble(Condition cond, const T & t, Label *label) {
         Condition c = testDouble(cond, t);
@@ -529,16 +537,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
-        ma_cmp(rhs, lhs);
-        ma_b(label, cond);
+        return branch32(cond, lhs, rhs, label);
     }
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         movePtr(ptr, ScratchRegister);
         branchPtr(cond, lhs, ScratchRegister, label);
     }
     void branchPtr(Condition cond, Register lhs, ImmWord imm, Label *label) {
-        ma_cmp(lhs, Imm32(imm.value));
-        ma_b(label, cond);
+        return branch32(cond, lhs, Imm32(imm.value), label);
     }
     void moveValue(const Value &val, Register type, Register data);
 
