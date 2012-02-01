@@ -1495,40 +1495,15 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
 }
 
 already_AddRefed<ImageContainer>
-nsObjectFrame::GetImageContainer(LayerManager* aManager)
+nsObjectFrame::GetImageContainer()
 {
-  nsRefPtr<LayerManager> manager = aManager;
-  bool retain = false;
+  nsRefPtr<ImageContainer> container = mImageContainer;
 
-  if (!manager) {
-    manager = nsContentUtils::LayerManagerForDocument(mContent->OwnerDoc(), &retain);
-  }
-  if (!manager) {
-    return nsnull;
+  if (container) {
+    return container.forget();
   }
 
-  nsRefPtr<ImageContainer> container;
-
-  // XXX - in the future image containers will be manager independent and
-  // we can remove the manager equals check and only check the backend type.
-  if (mImageContainer) {
-    if ((!mImageContainer->Manager() || mImageContainer->Manager() == manager) &&
-        mImageContainer->GetBackendType() == manager->GetBackendType()) {
-      container = mImageContainer;
-      return container.forget();
-    }
-  }
-
-  container = manager->CreateImageContainer();
-
-  if (retain) {
-    // Clear current image before we reset mImageContainer. Only mImageContainer
-    // is allowed to contain the image for this plugin.
-    if (mImageContainer) {
-      mImageContainer->SetCurrentImage(nsnull);
-    }
-    mImageContainer = container;
-  }
+  container = mImageContainer = LayerManager::CreateImageContainer();
 
   return container.forget();
 }
@@ -1573,13 +1548,6 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
 
 #ifdef XP_MACOSX
-  // Layer painting not supported without OpenGL
-  if (aManager && aManager->GetBackendType() !=
-      LayerManager::LAYERS_OPENGL) {
-    return LAYER_NONE;
-  }
-
-  // Synchronous painting, but with (gecko) layers.
   if (!mInstanceOwner->UseAsyncRendering() &&
       mInstanceOwner->IsRemoteDrawingCoreAnimation() &&
       mInstanceOwner->GetEventModel() == NPEventModelCocoa) {
@@ -1611,9 +1579,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nsnull;
 
   // Create image
-  nsRefPtr<ImageContainer> container = GetImageContainer(aManager);
-  if (!container)
-    return nsnull;
+  nsRefPtr<ImageContainer> container = GetImageContainer();
 
   {
     nsRefPtr<Image> current = container->GetCurrentImage();
