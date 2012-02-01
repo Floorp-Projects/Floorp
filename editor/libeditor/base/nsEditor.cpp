@@ -410,7 +410,7 @@ nsEditor::GetDesiredSpellCheckState()
   }
 
   // Check DOM state
-  nsCOMPtr<nsIContent> content = do_QueryInterface(GetRoot());
+  nsCOMPtr<nsIContent> content = GetRoot();
   if (!content) {
     return false;
   }
@@ -779,45 +779,39 @@ nsEditor::Undo(PRUint32 aCount)
   if (gNoisy) { printf("Editor::Undo ----------\n"); }
 #endif
 
-  nsresult result = NS_OK;
   ForceCompositionEnd();
 
   bool hasTxnMgr, hasTransaction = false;
   CanUndo(&hasTxnMgr, &hasTransaction);
-  NS_ENSURE_TRUE(hasTransaction, result);
+  NS_ENSURE_TRUE(hasTransaction, NS_OK);
 
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
-  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
-  {
-    PRUint32 i=0;
-    for ( ; i<aCount; i++)
-    {
-      result = mTxnMgr->UndoTransaction();
-
-      if (NS_SUCCEEDED(result))
-        result = DoAfterUndoTransaction();
-          
-      if (NS_FAILED(result))
-        break;
-    }
+  if (!mTxnMgr) {
+    return NS_OK;
   }
 
-  return result;
+  for (PRUint32 i = 0; i < aCount; ++i) {
+    nsresult rv = mTxnMgr->UndoTransaction();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = DoAfterUndoTransaction();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP nsEditor::CanUndo(bool *aIsEnabled, bool *aCanUndo)
 {
   NS_ENSURE_TRUE(aIsEnabled && aCanUndo, NS_ERROR_NULL_POINTER);
-  *aIsEnabled = ((bool)((nsITransactionManager *)0!=mTxnMgr.get()));
-  if (*aIsEnabled)
-  {
-    PRInt32 numTxns=0;
+  *aIsEnabled = !!mTxnMgr;
+  if (*aIsEnabled) {
+    PRInt32 numTxns = 0;
     mTxnMgr->GetNumberOfUndoItems(&numTxns);
-    *aCanUndo = ((bool)(0!=numTxns));
-  }
-  else {
+    *aCanUndo = !!numTxns;
+  } else {
     *aCanUndo = false;
   }
   return NS_OK;
@@ -831,30 +825,25 @@ nsEditor::Redo(PRUint32 aCount)
   if (gNoisy) { printf("Editor::Redo ----------\n"); }
 #endif
 
-  nsresult result = NS_OK;
-
   bool hasTxnMgr, hasTransaction = false;
   CanRedo(&hasTxnMgr, &hasTransaction);
-  NS_ENSURE_TRUE(hasTransaction, result);
+  NS_ENSURE_TRUE(hasTransaction, NS_OK);
 
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
 
-  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
-  {
-    PRUint32 i=0;
-    for ( ; i<aCount; i++)
-    {
-      result = mTxnMgr->RedoTransaction();
-
-      if (NS_SUCCEEDED(result))
-        result = DoAfterRedoTransaction();
-
-      if (NS_FAILED(result))
-        break;
-    }
+  if (!mTxnMgr) {
+    return NS_OK;
   }
 
-  return result;
+  for (PRUint32 i = 0; i < aCount; ++i) {
+    nsresult rv = mTxnMgr->RedoTransaction();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = DoAfterRedoTransaction();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 
@@ -862,14 +851,12 @@ NS_IMETHODIMP nsEditor::CanRedo(bool *aIsEnabled, bool *aCanRedo)
 {
   NS_ENSURE_TRUE(aIsEnabled && aCanRedo, NS_ERROR_NULL_POINTER);
 
-  *aIsEnabled = ((bool)((nsITransactionManager *)0!=mTxnMgr.get()));
-  if (*aIsEnabled)
-  {
-    PRInt32 numTxns=0;
+  *aIsEnabled = !!mTxnMgr;
+  if (*aIsEnabled) {
+    PRInt32 numTxns = 0;
     mTxnMgr->GetNumberOfRedoItems(&numTxns);
-    *aCanRedo = ((bool)(0!=numTxns));
-  }
-  else {
+    *aCanRedo = !!numTxns;
+  } else {
     *aCanRedo = false;
   }
   return NS_OK;
@@ -881,8 +868,7 @@ nsEditor::BeginTransaction()
 {
   BeginUpdateViewBatch();
 
-  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
-  {
+  if (mTxnMgr) {
     mTxnMgr->BeginBatch();
   }
 
@@ -892,8 +878,7 @@ nsEditor::BeginTransaction()
 NS_IMETHODIMP 
 nsEditor::EndTransaction()
 {
-  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
-  {
+  if (mTxnMgr) {
     mTxnMgr->EndBatch();
   }
 
@@ -924,9 +909,7 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
     nsresult res = GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(res)) {
       mSelState = new nsSelectionState();
-      if (mSelState) {
-        mSelState->SaveSelection(selection);
-      }
+      mSelState->SaveSelection(selection);
     }
   }
   mPlaceHolderBatch++;
@@ -945,12 +928,12 @@ nsEditor::EndPlaceHolderTransaction()
 
     nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
-   // By making the assumption that no reflow happens during the calls
-   // to EndUpdateViewBatch and ScrollSelectionIntoView, we are able to
-   // allow the selection to cache a frame offset which is used by the
-   // caret drawing code. We only enable this cache here; at other times,
-   // we have no way to know whether reflow invalidates it
-   // See bugs 35296 and 199412.
+    // By making the assumption that no reflow happens during the calls
+    // to EndUpdateViewBatch and ScrollSelectionIntoView, we are able to
+    // allow the selection to cache a frame offset which is used by the
+    // caret drawing code. We only enable this cache here; at other times,
+    // we have no way to know whether reflow invalidates it
+    // See bugs 35296 and 199412.
     if (selPrivate) {
       selPrivate->SetCanCacheFrameOffset(true);
     }
@@ -1030,15 +1013,11 @@ nsEditor::GetDocumentIsEmpty(bool *aDocumentIsEmpty)
 {
   *aDocumentIsEmpty = true;
 
-  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
-  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
+  dom::Element* root = GetRoot();
+  NS_ENSURE_TRUE(root, NS_ERROR_NULL_POINTER); 
 
-  bool hasChildNodes;
-  nsresult res = rootElement->HasChildNodes(&hasChildNodes);
-
-  *aDocumentIsEmpty = !hasChildNodes;
-
-  return res;
+  *aDocumentIsEmpty = !root->HasChildren();
+  return NS_OK;
 }
 
 
@@ -5137,9 +5116,8 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> targetDoc = do_QueryInterface(aFocusEventTarget);
   bool isTargetDoc =
-    targetNode->IsNodeOfType(nsINode::eDOCUMENT) &&
+    targetNode->NodeType() == nsIDOMNode::DOCUMENT_NODE &&
     targetNode->HasFlag(NODE_IS_EDITABLE);
 
   nsCOMPtr<nsISelection> selection;
