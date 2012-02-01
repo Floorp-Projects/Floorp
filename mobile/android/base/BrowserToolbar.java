@@ -151,7 +151,7 @@ public class BrowserToolbar extends LinearLayout {
                     addTab();
             }
         });
-        mTabs.setImageLevel(1);
+        mTabs.setImageLevel(0);
 
         mCounterColor = 0xFFC7D1DB;
 
@@ -224,8 +224,8 @@ public class BrowserToolbar extends LinearLayout {
     public int getHighlightColor() {
         return mColor;
     }
-    
-    public void updateTabs(int count) {
+
+    public void updateTabCountAndAnimate(int count) {
         if (mCount > count) {
             mTabsCount.setInAnimation(mSlideDownIn);
             mTabsCount.setOutAnimation(mSlideDownOut);
@@ -265,6 +265,12 @@ public class BrowserToolbar extends LinearLayout {
                 ((TextView) mTabsCount.getCurrentView()).setTextColor(mCounterColor);
             }
         }, 2 * mDuration);
+    }
+
+    public void updateTabCount(int count) {
+        mTabsCount.setCurrentText(String.valueOf(count));
+        mTabs.setImageLevel(count);
+        mTabsCount.setVisibility(count > 1 ? View.VISIBLE : View.INVISIBLE);
     }
 
     public void setProgressVisibility(boolean visible) {
@@ -326,7 +332,7 @@ public class BrowserToolbar extends LinearLayout {
             setSecurityMode(tab.getSecurityMode());
             setProgressVisibility(tab.isLoading());
             setShadowVisibility(!(tab.getURL().startsWith("about:")));
-            updateTabs(Tabs.getInstance().getCount());
+            updateTabCountAndAnimate(Tabs.getInstance().getCount());
         }
     }
 }
