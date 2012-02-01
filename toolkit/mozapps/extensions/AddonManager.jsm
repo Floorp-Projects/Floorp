@@ -762,7 +762,7 @@ var AddonManagerInternal = {
 
         // Repopulate repository cache first, to ensure compatibility overrides
         // are up to date before checking for addon updates.
-        scope.AddonRepository.repopulateCache(ids, function BUC_repopulateCacheCallback() {
+        scope.AddonRepository.backgroundUpdateCheck(ids, function BUC_backgroundUpdateCheckCallback() {
           AddonManagerInternal.updateAddonRepositoryData(function BUC_updateAddonCallback() {
 
             pendingUpdates += aAddons.length;
