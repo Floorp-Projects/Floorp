@@ -441,13 +441,15 @@ public class LayerController {
             allowDefaultTimer.purge();
             allowDefaultTimer = null;
         }
-        allowDefaultActions = !aValue;
-
-        if (aValue) {
-            mView.clearEventQueue();
-            mPanZoomController.cancelTouch();
-        } else {
-            mView.processEventQueue();
+        if (aValue == allowDefaultActions) {
+            allowDefaultActions = !aValue;
+    
+            if (aValue) {
+                mView.clearEventQueue();
+                mPanZoomController.cancelTouch();
+            } else {
+                mView.processEventQueue();
+            }
         }
     }
 

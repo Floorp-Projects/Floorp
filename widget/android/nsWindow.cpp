@@ -1579,8 +1579,9 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 
     nsEventStatus status;
     DispatchEvent(&event, status);
-    if (status == nsEventStatus_eConsumeNoDefault) {
-        AndroidBridge::Bridge()->PreventPanning();
+    bool preventPanning = (status == nsEventStatus_eConsumeNoDefault);
+    if (preventPanning || action == AndroidMotionEvent::ACTION_MOVE) {
+        AndroidBridge::Bridge()->SetPreventPanning(preventPanning);
         return true;
     }
     return false;
