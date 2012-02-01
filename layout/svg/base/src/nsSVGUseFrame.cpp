@@ -87,6 +87,9 @@ public:
   }
 #endif
 
+  // nsISVGChildFrame interface:
+  virtual void NotifySVGChanged(PRUint32 aFlags);
+
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
@@ -176,6 +179,26 @@ nsSVGUseFrame::IsLeaf() const
   return true;
 }
 
+
+//----------------------------------------------------------------------
+// nsISVGChildFrame methods
+
+void
+nsSVGUseFrame::NotifySVGChanged(PRUint32 aFlags)
+{
+  if (aFlags & COORD_CONTEXT_CHANGED &&
+      !(aFlags & TRANSFORM_CHANGED)) {
+    // Coordinate context changes affect mCanvasTM if we have a
+    // percentage 'x' or 'y'
+    nsSVGUseElement *use = static_cast<nsSVGUseElement*>(mContent);
+    if (use->mLengthAttributes[nsSVGUseElement::X].IsPercentage() ||
+        use->mLengthAttributes[nsSVGUseElement::Y].IsPercentage()) {
+      aFlags |= TRANSFORM_CHANGED;
+    }
+  }
+
+  nsSVGUseFrameBase::NotifySVGChanged(aFlags);
+}
 
 //----------------------------------------------------------------------
 // nsIAnonymousContentCreator methods:
