@@ -3,8 +3,8 @@
 
     <!-- Layout -->
     <style name="Layout">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
     </style>
 
     <!-- Horizontal Layout -->
@@ -29,7 +29,7 @@
 
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:orientation">vertical</item>
         <item name="android:background">#000000</item>
@@ -37,14 +37,14 @@
 
     <!-- Address bar -->
     <style name="AddressBar">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">42dip</item>
         <item name="android:orientation">horizontal</item>
     </style>
 
     <!-- Address bar - Button -->
     <style name="AddressBar.Button">
-        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_height">fill_parent</item>
         <item name="android:textSize">16sp</item>
         <item name="android:background">@android:color/transparent</item>
     </style>
@@ -57,21 +57,21 @@
 
     <!-- Lists in AwesomeBar -->
     <style name="AwesomeBarList" parent="android:style/Widget.ListView.White">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:layout_weight">1</item>
     </style>
 
     <!-- Lists in TabsTray -->
     <style name="TabsList" parent="android:style/Widget.ListView">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:layout_weight">1</item>
     </style>
 
     <!-- TabWidget --> 
     <style name="TabWidget">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">48dip</item>
         <item name="android:background">@drawable/tabs_tray_bg_repeat</item>
     </style>
