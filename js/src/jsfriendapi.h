@@ -135,6 +135,27 @@ js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, 
 JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx);
 
+#ifdef DEBUG
+
+/*
+ * Routines to print out values during debugging.  These are FRIEND_API to help
+ * the debugger find them and to support temporarily hacking js_Dump* calls
+ * into other code.
+ */
+
+extern JS_FRIEND_API(void)
+js_DumpString(JSString *str);
+
+extern JS_FRIEND_API(void)
+js_DumpAtom(JSAtom *atom);
+
+extern JS_FRIEND_API(void)
+js_DumpObject(JSObject *obj);
+
+extern JS_FRIEND_API(void)
+js_DumpChars(const jschar *s, size_t n);
+#endif
+
 #ifdef __cplusplus
 
 extern JS_FRIEND_API(bool)

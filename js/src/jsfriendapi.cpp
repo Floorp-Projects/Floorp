@@ -37,14 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/GuardObjects.h"
+#include "mozilla/StdInt.h"
+
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 #include "jsweakmap.h"
 #include "jswatchpoint.h"
-
-#include "mozilla/GuardObjects.h"
 
 #include "jsobjinlines.h"
 
@@ -391,6 +392,56 @@ JS_SetGCFinishedCallback(JSRuntime *rt, JSGCFinishedCallback callback)
 }
 
 #ifdef DEBUG
+JS_FRIEND_API(void)
+js_DumpString(JSString *str)
+{
+    str->dump();
+}
+
+JS_FRIEND_API(void)
+js_DumpAtom(JSAtom *atom)
+{
+    atom->dump();
+}
+
+extern void
+DumpChars(const jschar *s, size_t n)
+{
+    if (n == SIZE_MAX) {
+        n = 0;
+        while (s[n])
+            n++;
+    }
+
+    fputc('"', stderr);
+    for (size_t i = 0; i < n; i++) {
+        if (s[i] == '\n')
+            fprintf(stderr, "\\n");
+        else if (s[i] == '\t')
+            fprintf(stderr, "\\t");
+        else if (s[i] >= 32 && s[i] < 127)
+            fputc(s[i], stderr);
+        else if (s[i] <= 255)
+            fprintf(stderr, "\\x%02x", (unsigned int) s[i]);
+        else
+            fprintf(stderr, "\\u%04x", (unsigned int) s[i]);
+    }
+    fputc('"', stderr);
+}
+
+JS_FRIEND_API(void)
+js_DumpChars(const jschar *s, size_t n)
+{
+    fprintf(stderr, "jschar * (%p) = ", (void *) s);
+    DumpChars(s, n);
+    fputc('\n', stderr);
+}
+
+JS_FRIEND_API(void)
+js_DumpObject(JSObject *obj)
+{
+    obj->dump();
+}
 
 struct DumpingChildInfo {
     void *node;
