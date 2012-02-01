@@ -1,13 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
-<!-- Firefox tabbrowser -->
-<?xml-stylesheet href="chrome://browser/content/browser.css"
-                 type="text/css"?>
-<!-- SeaMonkey tabbrowser -->
-<?xml-stylesheet href="chrome://navigator/content/navigator.css"
-                 type="text/css"?>
-
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 
@@ -16,7 +9,7 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript"
-          src="chrome://browser/content/utilityOverlay.js"/>
+          src="chrome://mochikit/content/chrome-harness.js"/>
 
   <script type="application/javascript"
           src="../common.js" />
@@ -26,95 +19,74 @@
           src="../states.js" />
   <script type="application/javascript"
           src="../events.js" />
-
   <script type="application/javascript"
-          src="chrome://mochikit/content/chrome-harness.js"/>
+          src="../browser.js"></script>
 
   <script type="application/javascript">
   <![CDATA[
 
     ////////////////////////////////////////////////////////////////////////////
-    // Hacks to make xul:tabbrowser work
-
-    const Ci = Components.interfaces;
-    const CC = Components.classes;
-
-    Components.utils.import("resource://gre/modules/Services.jsm");
-
-    var handleDroppedLink = null;
-
-    var XULBrowserWindow = {
-      isBusy: false,
-      setOverLink: function (link, b) {
-      }
-    };
-
-    var gURLBar = {
-      focused: false
-    };
-
-    var gFindBarInitialized = false;
-
-    function goSetCommandEnabled() {}
-
-    ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    function getTabDocument()
+    function getAnchorJumpInTabDocument(aTabIdx)
     {
-      return getNode("tabBrowser").selectedBrowser.contentDocument;
+      var tabDoc = aTabIdx ? tabDocumentAt(aTabIdx) : currentTabDocument();
+      return tabDoc.querySelector("a[name='link1']");
     }
 
-    function getAnchorJumpInTabDocument()
+    function loadTab(aURL)
     {
-      return getTabDocument().querySelector("a[name='link1']");
-    }
-
-    function loadTab(aTabBrowserID, aURL)
-    {
-      function loadTabChecker()
-      {
-        this.type = EVENT_REORDER;
-        this.match = function loadTabChecker_match(aEvent)
-        {
-          var target = aEvent.accessible;
-          if (target.role == ROLE_INTERNAL_FRAME &&
-              target.parent.parent == getAccessible(getNode(aTabBrowserID).mTabBox.tabpanels)) {
-            return true;
-          }
-          return false;
-        }
-      }
-
-      this.eventSeq = [ new loadTabChecker() ];
+      this.eventSeq = [
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument),
+        new invokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument)
+      ];
 
       this.invoke = function loadTab_invoke()
       {
-        getNode(aTabBrowserID).loadURI(aURL);
+        tabBrowser().loadURI(aURL);
       }
 
       this.getID = function loadTab_getID()
       {
-        return "load tab " + aURL + " for " + prettyName(aTabBrowserID);
+        return "load tab: " + aURL;
       }
     }
 
-    function advanceFocusIntoTab(aTabBrowserID)
+    function loadTabInBackground(aURL)
     {
       this.eventSeq = [
-        new focusChecker(getTabDocument),
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
+      ];
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument, 1)
+      ];
+
+      this.invoke = function loadTabInBackground_invoke()
+      {
+        tabBrowser().loadOneTab(aURL, null, "", null, true);
+      }
+
+      this.getID = function loadTabInBackground_getID()
+      {
+        return "load tab in background: " + aURL;
+      }
+    }
+
+    function switchToBackgroundTab()
+    {
+      this.eventSeq = [
         new invokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument)
       ];
 
-      this.invoke = function advanceFocusIntoTab_invoke()
+      this.invoke = function switchToBackgroundTab_invoke()
       {
-        var tabDoc = getAccessible(getTabDocument());
-        tabDoc.takeFocus();
+        tabBrowser().selectTabAtIndex(1);
       }
 
-      this.getID = function advanceFocusIntoTab_getID()
+      this.getID = function switchToBackgroundTab_getID()
       {
-        return "advance focus into loaded tab";
+        return "switch to background tab";
       }
     }
 
@@ -138,28 +110,22 @@
       var url = rootDir + "scroll.html#link1";
 
       gQueue = new eventQueue();
-      gQueue.push(new loadTab("tabBrowser", url));
-      gQueue.push(new advanceFocusIntoTab("tabBrowser"));
+
+      gQueue.push(new loadTab(url));
+      gQueue.push(new loadTabInBackground(url));
+      gQueue.push(new switchToBackgroundTab());
+      gQueue.onFinish = function() { closeBrowserWindow(); }
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    openBrowserWindow(doTest);
   ]]>
   </script>
 
-  <hbox flex="1" style="overflow: auto;">
+  <vbox flex="1" style="overflow: auto;">
     <body xmlns="http://www.w3.org/1999/xhtml">
-      <a target="_blank"
-         href="https://bugzilla.mozilla.org/show_bug.cgi?id=437607"
-         title="Clicking the 'Skip to main content' link once works, second time fails to initiate a V cursor jump">
-        Mozilla Bug 437607
-      </a><br/>
-      <a target="_blank"
-         href="https://bugzilla.mozilla.org/show_bug.cgi?id=519303"
-         title="Same page links to targets with content fires scrolling start accessible event on leaf text node">
-        Mozilla Bug 519303
-      </a>
       <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=691734"
          title="Make sure scrolling start event is fired when document receive focus">
@@ -173,33 +139,6 @@
       </pre>
     </body>
 
-    <vbox flex="1">
-      <!-- Hack to make xul:tabbrowser work -->
-      <menubar>
-        <menu label="menu">
-          <menupopup>
-            <menuitem label="close window hook" id="menu_closeWindow"/>
-            <menuitem label="close hook" id="menu_close"/>
-          </menupopup>
-        </menu>
-      </menubar>
-      <keyset>
-        <key id="key_close"/>
-      </keyset>
-
-      <hbox>
-      <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
-            tabbrowser="tabBrowser"
-            flex="1">
-        <tab class="tabbrowser-tab" selected="true" label="tab"/>
-      </tabs>
-      </hbox>
-      <tabbrowser id="tabBrowser"
-                  type="content-primary"
-                  tabcontainer="tabbrowser-tabs"
-                  flex="1"/>
-    </vbox>
-    <toolbar id="addon-bar"/>
-  </hbox>
-
+    <vbox id="eventdump"></vbox>
+  </vbox>
 </window>
