@@ -76,13 +76,13 @@ js::IsWrapper(const JSObject *wrapper)
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, uintN *flagsp)
+js::UnwrapObject(JSObject *wrapped, uintN *flagsp)
 {
     uintN flags = 0;
     while (wrapped->isWrapper()) {
         flags |= static_cast<Wrapper *>(GetProxyHandler(wrapped))->flags();
         wrapped = GetProxyPrivate(wrapped).toObjectOrNull();
-        if (stopAtOuter && wrapped->getClass()->ext.innerObject)
+        if (wrapped->getClass()->ext.innerObject)
             break;
     }
     if (flagsp)
