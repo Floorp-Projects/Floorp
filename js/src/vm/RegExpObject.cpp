@@ -138,18 +138,6 @@ RegExpObjectBuilder::build(JSLinearString *source, RegExpFlag flags)
 }
 
 RegExpObject *
-RegExpObjectBuilder::build(RegExpObject *other)
-{
-    RegExpShared *shared = other->getShared(cx);
-    if (!shared)
-        return NULL;
-
-    /* Now, incref it for the RegExpObject being built. */
-    shared->incref(cx);
-    return build(AlreadyIncRefed<RegExpShared>(shared));
-}
-
-RegExpObject *
 RegExpObjectBuilder::clone(RegExpObject *other, RegExpObject *proto)
 {
     if (!getOrCreateClone(proto))

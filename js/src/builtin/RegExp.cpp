@@ -230,7 +230,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
     }
 
     Value sourceValue = args[0];
-    if (ValueIsRegExp(sourceValue)) {
+    if (IsObjectWithClass(sourceValue, ESClass_RegExp, cx)) {
         /*
          * If we get passed in a |RegExpObject| source we return a new
          * object with the same source/flags.
@@ -243,9 +243,15 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
             return false;
         }
 
-        RegExpObject *reobj = builder.build(&sourceObj.asRegExp());
+        RegExpShared *shared = RegExpToShared(cx, sourceObj);
+        if (!shared)
+            return false;
+
+        shared->incref(cx);
+        RegExpObject *reobj = builder.build(AlreadyIncRefed<RegExpShared>(shared));
         if (!reobj)
             return false;
+
         args.rval() = ObjectValue(*reobj);
         return true;
     }
@@ -314,7 +320,7 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
          * Otherwise, delegate to the standard constructor.
          * See ECMAv5 15.10.3.1.
          */
-        if (args.length() >= 1 && ValueIsRegExp(args[0]) &&
+        if (args.length() >= 1 && IsObjectWithClass(args[0], ESClass_RegExp, cx) &&
             (args.length() == 1 || args[1].isUndefined()))
         {
             args.rval() = args[0];
