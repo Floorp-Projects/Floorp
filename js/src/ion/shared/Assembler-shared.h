@@ -94,6 +94,29 @@ struct Address
     Address() { PodZero(this); }
 };
 
+enum Scale {
+    TimesOne,
+    TimesTwo,
+    TimesFour,
+    TimesEight
+};
+
+// Specifies an address computed in the form of a register base and a constant,
+// 32-bit offset.
+struct BaseIndex
+{
+    Register base;
+    Register index;
+    Scale scale;
+    int32 offset;
+
+    BaseIndex(Register base, Register index, Scale scale, int32 offset = 0)
+      : base(base), index(index), scale(scale), offset(offset)
+    { }
+
+    BaseIndex() { PodZero(this); }
+};
+
 class Relocation {
   public:
     enum Kind {

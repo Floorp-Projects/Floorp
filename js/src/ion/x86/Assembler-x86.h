@@ -93,13 +93,6 @@ struct ImmType : public ImmTag
     { }
 };
 
-enum Scale {
-    TimesOne,
-    TimesTwo,
-    TimesFour,
-    TimesEight
-};
-
 static const Scale ScalePointer = TimesFour;
 
 class Operand
@@ -130,6 +123,13 @@ class Operand
     { }
     explicit Operand(const Address &address)
       : kind_(REG_DISP),
+        base_(address.base.code()),
+        disp_(address.offset)
+    { }
+    explicit Operand(const BaseIndex &address)
+      : kind_(SCALE),
+        index_(address.index.code()),
+        scale_(address.scale),
         base_(address.base.code()),
         disp_(address.offset)
     { }

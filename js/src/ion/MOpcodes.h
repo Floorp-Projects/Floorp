@@ -103,6 +103,7 @@ namespace ion {
     _(BoundsCheck)                                                          \
     _(BoundsCheckLower)                                                     \
     _(LoadElement)                                                          \
+    _(LoadElementHole)                                                      \
     _(StoreElement)                                                         \
     _(LoadFixedSlot)                                                        \
     _(StoreFixedSlot)                                                       \

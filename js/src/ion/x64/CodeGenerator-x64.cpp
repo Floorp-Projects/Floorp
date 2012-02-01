@@ -286,23 +286,6 @@ CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
 }
 
 bool
-CodeGeneratorX64::visitLoadElementV(LLoadElementV *load)
-{
-    Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
-    Register dest = ToRegister(load->outputValue());
-
-    masm.movq(source, dest);
-
-    if (load->mir()->needsHoleCheck()) {
-        masm.splitTag(dest, ScratchReg);
-        masm.cmpl(ScratchReg, ImmTag(JSVAL_TAG_MAGIC));
-        return bailoutIf(Assembler::Equal, load->snapshot());
-    }
-
-    return true;
-}
-
-bool
 CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
 {
     Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
