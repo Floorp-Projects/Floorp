@@ -1980,9 +1980,7 @@ NS_IMETHODIMP
 nsHTMLEditor::GetBackgroundColorState(bool *aMixed, nsAString &aOutColor)
 {
   nsresult res;
-  bool useCSS;
-  GetIsCSSEnabled(&useCSS);
-  if (useCSS) {
+  if (IsCSSEnabled()) {
     // if we are in CSS mode, we have to check if the containing block defines
     // a background color
     res = GetCSSBackgroundColorState(aMixed, aOutColor, true);
@@ -1998,11 +1996,9 @@ NS_IMETHODIMP
 nsHTMLEditor::GetHighlightColorState(bool *aMixed, nsAString &aOutColor)
 {
   nsresult res = NS_OK;
-  bool useCSS;
-  GetIsCSSEnabled(&useCSS);
   *aMixed = false;
   aOutColor.AssignLiteral("transparent");
-  if (useCSS) {
+  if (IsCSSEnabled()) {
     // in CSS mode, text background can be added by the Text Highlight button
     // we need to query the background of the selection without looking for
     // the block container of the ranges in the selection
@@ -4840,10 +4836,8 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                        const nsAString & aValue,
                                        bool aSuppressTransaction)
 {
-  bool useCSS;
   nsresult res = NS_OK;
-  GetIsCSSEnabled(&useCSS);
-  if (useCSS && mHTMLCSSUtils) {
+  if (IsCSSEnabled() && mHTMLCSSUtils) {
     PRInt32 count;
     res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, &aValue, &count,
                                                      aSuppressTransaction);
@@ -4904,10 +4898,8 @@ nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
                                           const nsAString & aAttribute,
                                           bool aSuppressTransaction)
 {
-  bool useCSS;
   nsresult res = NS_OK;
-  GetIsCSSEnabled(&useCSS);
-  if (useCSS && mHTMLCSSUtils) {
+  if (IsCSSEnabled() && mHTMLCSSUtils) {
     res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, nsnull,
                                                         aSuppressTransaction);
     NS_ENSURE_SUCCESS(res, res);
@@ -5174,9 +5166,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SetBackgroundColor(const nsAString& aColor)
 {
   nsresult res;
-  bool useCSS;
-  GetIsCSSEnabled(&useCSS);
-  if (useCSS) {
+  if (IsCSSEnabled()) {
     // if we are in CSS mode, we have to apply the background color to the
     // containing block (or the body if we have no block-level element in
     // the document)
@@ -5201,13 +5191,10 @@ nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
     return false;
   }
 
-  bool useCSS;
-  GetIsCSSEnabled(&useCSS);
-
   nsIAtom *tag1 = GetTag(aNode1);
 
   if (tag1 == GetTag(aNode2)) {
-    if (useCSS && tag1 == nsEditProperty::span) {
+    if (IsCSSEnabled() && tag1 == nsEditProperty::span) {
       if (mHTMLCSSUtils->ElementsSameStyle(aNode1, aNode2)) {
         return true;
       }
