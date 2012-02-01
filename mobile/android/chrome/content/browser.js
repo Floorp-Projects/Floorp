@@ -2774,15 +2774,15 @@ var FormAssistant = {
         this._currentInputElement = currentElement;
         let suggestions = this._getAutocompleteSuggestions(currentElement.value, currentElement);
 
-        let rect = currentElement.getBoundingClientRect();
-        let zoom = BrowserApp.selectedTab.viewport.zoom;
+        let rect = ElementTouchHelper.getBoundingContentRect(currentElement);
+        let viewport = BrowserApp.selectedTab.viewport;
 
         sendMessageToJava({
           gecko: {
             type:  "FormAssist:AutoComplete",
             suggestions: suggestions,
-            rect: [rect.left, rect.top, rect.width, rect.height], 
-            zoom: zoom
+            rect: [rect.x - (viewport.x / viewport.zoom), rect.y - (viewport.y / viewport.zoom), rect.w, rect.h],
+            zoom: viewport.zoom
           }
         });
     }
