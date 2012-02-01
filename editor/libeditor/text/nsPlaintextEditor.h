@@ -221,6 +221,9 @@ protected:
   bool CanCutOrCopy();
   bool FireClipboardEvent(PRInt32 aType);
 
+  bool UpdateMetaCharset(nsIDOMDocument* aDocument,
+                         const nsACString& aCharacterSet);
+
 // Data members
 protected:
 
