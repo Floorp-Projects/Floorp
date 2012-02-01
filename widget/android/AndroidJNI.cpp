@@ -108,7 +108,6 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
 #endif
 
-    NS_EXPORT void JNICALL Java_org_mozilla_gfx_layers_OGLSurfaceView_setSurfaceView(JNIEnv *jenv, jclass, jobject sv);
 }
 
 
@@ -140,12 +139,6 @@ Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *jenv, jclass
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobject obj)
-{
-    AndroidBridge::Bridge()->SetSurfaceView(jenv->NewGlobalRef(obj));
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gfx_layers_OGLSurfaceView_setSurfaceView(JNIEnv *jenv, jclass, jobject obj)
 {
     AndroidBridge::Bridge()->SetSurfaceView(jenv->NewGlobalRef(obj));
 }

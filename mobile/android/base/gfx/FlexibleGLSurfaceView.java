@@ -153,6 +153,40 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         }
     }
 
+    // Called from the compositor thread
+    public static GLController registerCxxCompositor() {
+        System.out.println("register layer comp");
+/*
+        synchronized (FlexibleGLSurfaceView.class) {
+            // Wait for the layer controller if by some miracle
+            // gecko beats the java thread here.
+            while (mLayerController == null) {
+                try {
+                    OGLSurfaceView.class.wait();
+                } catch (InterruptedException e) {}
+            }
+            final LayerController controller = mLayerController;
+
+            GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                public void run() {
+                    synchronized (OGLSurfaceView.class) {
+                        OGLSurfaceView surfaceView =
+                            new OGLSurfaceView(controller.getContext(), controller);
+                        OGLSurfaceView.class.notifyAll();
+                    }
+                }
+            });
+
+            // Wait for the compositor to be setup on the
+            // Java UI thread.
+            try {
+                OGLSurfaceView.class.wait();
+            } catch (InterruptedException e) {}
+        }
+*/
+        return null;
+    }
+
     public static class FlexibleGLSurfaceViewException extends RuntimeException {
         public static final long serialVersionUID = 1L;
 
