@@ -40,7 +40,7 @@ function startTest()
 
   is(window.localStorage, null, "Storage is null");
 
-  checkException(function() {storage.setItem("test", "value");}, "NS_ERROR_DOM_SECURITY_ERR");
+  checkException(function() {storage.setItem("test", "value");}, "SecurityError");
 
   setDOMStorageEnabled(true);
 

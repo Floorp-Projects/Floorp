@@ -51,6 +51,7 @@
 #include "prprf.h"
 
 #define DOM_MSG_DEF(val, message) {(val), #val, message},
+#define DOM_MSG_DEF_(val, name, message) {(NS_ERROR_DOM_##val), name, message},
 
 #define IMPL_INTERNAL_DOM_EXCEPTION_HEAD(classname, ifname)                  \
 class classname : public nsBaseDOMException,                                 \
@@ -108,6 +109,7 @@ static struct ResultStruct
 };
 
 #undef DOM_MSG_DEF
+#undef DOM_MSG_DEF_
 
 static void
 NSResultToNameAndMessage(nsresult aNSResult,
@@ -157,7 +159,7 @@ IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsDOMException, nsIDOMDOMException,
                                  NSResultToNameAndMessage)
 
 NS_IMETHODIMP
-nsDOMException::GetCode(PRUint32* aCode)
+nsDOMException::GetCode(PRUint16* aCode)
 {
   NS_ENSURE_ARG_POINTER(aCode);
   nsresult result;
