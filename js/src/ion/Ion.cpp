@@ -970,6 +970,8 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 static void
 InvalidateActivation(JSContext *cx, uint8 *ionTop)
 {
+    IonSpew(IonSpew_Invalidate, "BEGIN invalidating activation");
+
     size_t frameno = 1;
 
     for (IonFrameIterator it(ionTop); it.more(); ++it, ++frameno) {
@@ -1003,6 +1005,10 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
 #endif
 
         if (!it.hasScript())
+            continue;
+
+        // See if the frame has already been invalidated.
+        if (it.checkInvalidation())
             continue;
 
         JSScript *script = it.script();
@@ -1056,7 +1062,7 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
         Assembler::patchWrite_NearCall(osiPatchPoint, invalidateEpilogue);
     }
 
-    IonSpew(IonSpew_Invalidate, "Done invalidating activation");
+    IonSpew(IonSpew_Invalidate, "END invalidating activation");
 }
 
 void
