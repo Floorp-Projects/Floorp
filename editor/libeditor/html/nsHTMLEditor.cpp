@@ -3474,10 +3474,12 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::DeleteNode(nsIDOMNode * aNode)
+NS_IMETHODIMP
+nsHTMLEditor::DeleteNode(nsIDOMNode* aNode)
 {
   // do nothing if the node is read-only
-  if (!IsModifiableNode(aNode) && !IsMozEditorBogusNode(aNode)) {
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  if (!IsModifiableNode(aNode) && !IsMozEditorBogusNode(content)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3544,8 +3546,7 @@ nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aChild);
-    if (node && IsMozEditorBogusNode(node)) {
+    if (IsMozEditorBogusNode(aChild)) {
       // Ignore insertion of the bogus node
       return;
     }
@@ -3565,8 +3566,7 @@ nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aChild);
-    if (node && IsMozEditorBogusNode(node)) {
+    if (aChild && IsMozEditorBogusNode(aChild)) {
       // Ignore removal of the bogus node
       return;
     }
