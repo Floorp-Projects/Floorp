@@ -819,12 +819,10 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
               RemoveBidiContinuation(aBpd, frame,
                                      frameIndex, newIndex, lineOffset);
             }
-          } else if (runLength == fragmentLength &&
-                     frame->GetNextSibling()) {
+          } else if (runLength == fragmentLength) {
             /*
-             * If the directional run ends at the end of the frame, and this is
-             * not the containing frame's last child, make sure that the next
-             * frame is a non-fluid continuation
+             * If the directional run ends at the end of the frame, make sure
+             * that any continuation is non-fluid
              */
             nsIFrame* next = frame->GetNextInFlow();
             if (next) {

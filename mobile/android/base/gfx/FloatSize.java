@@ -61,6 +61,10 @@ public class FloatSize {
     @Override
     public String toString() { return "(" + width + "," + height + ")"; }
 
+    public boolean isPositive() {
+        return (width > 0 && height > 0);
+    }
+
     public boolean fuzzyEquals(FloatSize size) {
         return (FloatUtils.fuzzyEquals(size.width, width) &&
                 FloatUtils.fuzzyEquals(size.height, height));
