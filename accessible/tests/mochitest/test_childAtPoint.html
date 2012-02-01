@@ -37,15 +37,15 @@
       testChildAtPoint(txt, -10000, 10000, false, null);
       testChildAtPoint(txt, -10000, 10000, true, null);
 
-      // Not specific case, point is inside of label accessible.
-      var label = getAccessible("label");
-      var labelText = label.firstChild;
-      testChildAtPoint(label, 1, 1, false, labelText);
-      testChildAtPoint(label, 1, 1, true, labelText);
+      // Not specific case, point is inside of btn accessible.
+      var btn = getAccessible("btn");
+      var btnText = btn.firstChild;
+      testChildAtPoint(btn, 1, 1, false, btnText);
+      testChildAtPoint(btn, 1, 1, true, btnText);
   
-      // Not specific case, point is outside of label accessible.
-      testChildAtPoint(label, -1, 1, false, null);
-      testChildAtPoint(label, -1, 1, true, null);
+      // Not specific case, point is outside of btn accessible.
+      testChildAtPoint(btn, -1, 1, false, null);
+      testChildAtPoint(btn, -1, 1, true, null);
 
       // Out of flow accessible testing, do not return out of flow accessible
       // because it's not a child of the accessible even visually it is.
@@ -78,7 +78,7 @@
     <div role="listitem" id="listitem"><span role="image" id="image">img</span>item</div>
   </div>
 
-  <span role="label">label1</span><span role="label" id="label">label2</span>
+  <span role="button">button1</span><span role="button" id="btn">button2</span>
 
   <span role="textbox">textbox1</span><span role="textbox" id="txt">textbox2</span>
 
