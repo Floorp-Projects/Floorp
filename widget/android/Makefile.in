@@ -66,6 +66,7 @@ CPPSRCS	= \
 	AndroidJavaWrappers.cpp \
 	AndroidBridge.cpp \
 	AndroidDirectTexture.cpp \
+	AndroidFlexViewWrapper.cpp \
 	AndroidGraphicBuffer.cpp \
 	AndroidJNI.cpp \
 	nsWindow.cpp \
