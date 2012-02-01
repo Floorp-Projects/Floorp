@@ -3449,3 +3449,22 @@ nsHTMLDocument::RemovedFromDocShell()
   mEditingState = eOff;
   nsDocument::RemovedFromDocShell();
 }
+
+/* virtual */ void
+nsHTMLDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
+{
+  nsDocument::DocSizeOfExcludingThis(aWindowSizes);
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mImages
+  // - mApplets
+  // - mEmbeds
+  // - mLinks
+  // - mAnchors
+  // - mScripts
+  // - mForms
+  // - mFormControls
+  // - mWyciwygChannel
+  // - mMidasCommandManager
+}
