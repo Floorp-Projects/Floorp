@@ -97,7 +97,7 @@ function nextTest() {
   if (tests.length) {
     let test = tests.shift();
     SimpleTest.executeSoon(function () {
-      SimpleTest.info("running " + test.name);
+      info("running " + test.name);
       test(nextTest);
     });
   } else

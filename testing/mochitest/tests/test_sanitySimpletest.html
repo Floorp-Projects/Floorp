@@ -15,14 +15,14 @@
 <body>
 <input id="textB"/>
 <script class="testbody" type="text/javascript">
-SimpleTest.info("Profile::SimpleTestLoadTime: " + (loadTime - start));
+info("Profile::SimpleTestLoadTime: " + (loadTime - start));
 var startTime = new Date();
 SimpleTest.waitForExplicitFinish();
 function starttest() {
   SimpleTest.waitForFocus(
     function() {
       //test log
-      SimpleTest.info("Logging some info")
+      info("Logging some info")
     
       //basic usage
       ok(true, "test ok", "This should be true");
@@ -75,7 +75,7 @@ function starttest() {
           SimpleTest.finish();
           //call this after finish so we can make sure it works and doesn't hang our process
           var endTime = new Date();
-          SimpleTest.info("Profile::SimpleTestRunTime: " + (endTime-startTime));
+          info("Profile::SimpleTestRunTime: " + (endTime-startTime));
           //expect and throw exception here. Otherwise, any code that follows the throw call will never be executed
           SimpleTest.expectUncaughtException();
           //make sure we catch this error
