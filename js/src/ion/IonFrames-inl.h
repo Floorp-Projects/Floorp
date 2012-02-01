@@ -63,13 +63,15 @@ SizeOfFramePrefix(FrameType type)
 {
     switch (type) {
       case IonFrame_Entry:
-        return sizeof(IonEntryFrameLayout);
+        return IonEntryFrameLayout::Size();
       case IonFrame_JS:
-        return sizeof(IonJSFrameLayout);
+        return IonJSFrameLayout::Size();
       case IonFrame_Rectifier:
-        return sizeof(IonRectifierFrameLayout);
+        return IonRectifierFrameLayout::Size();
+      case IonFrame_Bailed_Rectifier:
+        return IonBailedRectifierFrameLayout::Size();
       case IonFrame_Exit:
-        return sizeof(IonExitFrameLayout);
+        return IonExitFrameLayout::Size();
       default:
         JS_NOT_REACHED("unknown frame type");
     }
