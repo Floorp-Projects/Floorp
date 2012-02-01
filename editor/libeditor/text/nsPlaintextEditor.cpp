@@ -436,9 +436,13 @@ NS_IMETHODIMP nsPlaintextEditor::TypedText(const nsAString& aString,
   return NS_ERROR_FAILURE; 
 }
 
-NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRInt32 *aInOutOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
+nsresult
+nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
+                                PRInt32* aInOutOffset,
+                                nsCOMPtr<nsIDOMNode>* outBRNode,
+                                EDirection aSelect)
 {
-  NS_ENSURE_SUCCESS(aInOutParent && *aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aInOutParent && *aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
   *outBRNode = nsnull;
   nsresult res;
   
