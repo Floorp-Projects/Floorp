@@ -100,9 +100,10 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   GetAppInfoFromLoadContext(aLoadContext, appId, isInBrowserElement, isPrivate);
 
   nsDependentCString cookieString(aCookieString, 0);
+  //TODO: bug 812475, pass a real channel object
   mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
                                           aServerTime, aFromHttp, appId,
-                                          isInBrowserElement, isPrivate);
+                                          isInBrowserElement, isPrivate, nullptr);
   return true;
 }
 
