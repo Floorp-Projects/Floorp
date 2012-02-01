@@ -108,8 +108,11 @@ FENNEC_JAVA_FILES = \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
   gfx/CheckerboardImage.java \
+  gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
   gfx/GeckoSoftwareLayerClient.java \
+  gfx/GLController.java \
+  gfx/GLThread.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
   gfx/Layer.java \
