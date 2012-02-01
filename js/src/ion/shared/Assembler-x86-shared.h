@@ -300,6 +300,7 @@ class AssemblerX86Shared
     }
   public:
 
+    void nop() { masm.nop(); }
     void j(Condition cond, Label *label) { jSrc(cond, label); }
     void jmp(Label *label) { jmpSrc(label); }
     void jmp(const Operand &op){
@@ -719,6 +720,7 @@ class AssemblerX86Shared
     void push(const Register &src) {
         masm.push_r(src.code());
     }
+
     void pop(const Operand &src) {
         switch (src.kind()) {
           case Operand::REG:
@@ -849,6 +851,34 @@ class AssemblerX86Shared
     }
 
     void finish() {
+    }
+
+    // Patching.
+
+    static size_t patchWrite_NearCallSize() {
+        return 5;
+    }
+
+    // Write a relative call at the start location |dataLabel|.
+    // Note that this DOES NOT patch data that comes before |label|.
+    static void patchWrite_NearCall(CodeLocationLabel startLabel, CodeLocationLabel target) {
+        uint8 *start = startLabel.raw();
+        *start = 0xE8;
+        ptrdiff_t offset = target - startLabel - patchWrite_NearCallSize();
+        JS_ASSERT(int32(offset) == offset);
+        *((int32 *) (start + 1)) = offset;
+    }
+
+    static void patchWrite_Imm32(CodeLocationLabel dataLabel, Imm32 toWrite) {
+        *((int32 *) dataLabel.raw() - 1) = toWrite.value;
+    }
+
+    static void patchDataWithValueCheck(CodeLocationLabel data, ImmWord newData,
+                                        ImmWord expectedData) {
+        // The pointer given is a pointer to *after* the data.
+        uintptr_t *ptr = ((uintptr_t *) data.raw()) - 1;
+        JS_ASSERT(*ptr == expectedData.value);
+        *ptr = newData.value;
     }
 };
 

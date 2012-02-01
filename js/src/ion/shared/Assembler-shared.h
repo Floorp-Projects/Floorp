@@ -215,7 +215,7 @@ struct AbsoluteLabel : public LabelBase
 };
 
 // A code label contains an absolute reference to a point in the code
-// Thus, it cannot be patched untill after linking
+// Thus, it cannot be patched until after linking
 class CodeLabel : public TempObject
 {
     // The destination position, where the absolute reference should get patched into
@@ -398,6 +398,9 @@ class CodeLocationLabel
     void operator = (CodeOffsetLabel base) {
         raw_ = (uint8 *) base.offset();
         markAbsolute(false);
+    }
+    ptrdiff_t operator - (const CodeLocationLabel &other) {
+        return raw_ - other.raw_;
     }
 
     void repoint(IonCode *code, MacroAssembler *masm = NULL);

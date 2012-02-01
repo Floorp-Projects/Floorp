@@ -274,44 +274,17 @@ IonCompartment::generateInvalidator(JSContext *cx)
     AutoIonContextAlloc aica(cx);
     MacroAssembler masm(cx);
 
-    // When a frame gets invalidated (as the result of some call), its
-    // *callee* is made to return to this invalidator.
-    //
-    // This code is reponsible for bailing out the invalidated frame and
-    // thunking to the interpreter.
-    //
-    // We start in the following stack state:
-    //
-    //
-    //        |          ...             |
-    //        >--------------------------< <- invalid JS frame fp
-    //        |  invalid callee token    |
-    //        +--------------------------+
-    //        | caller frame descriptor  |
-    //        +--------------------------+
-    //        |        retaddr           |
-    //        +--------------------------+
-    //        |         invalid          |
-    //        |      locals, args        |
-    //        |          ...             |
-    //        +--------------------------+
-    //        | invalid frame descriptor |
-    // esp -> >--------------------------<
-    //        |       old retaddr        |
-    //        \--------------------------/
-    //
-    // Within the invalidated frame, the invalidation process has
-    // replaced what is typically the callee token with an
-    // InvalidationRecord.
-    //
     // We do the minimum amount of work in assembly and shunt the rest
     // off to InvalidationBailout. Assembly does:
     //
+    // - Pop the return address from the invalidation epilogue call.
     // - Push the machine state onto the stack.
     // - Call the InvalidationBailout routine with the stack pointer.
     // - Now that the frame has been bailed out, convert the invalidated
     //   frame into an exit frame.
     // - Do the normal check-return-code-and-thunk-to-the-interpreter dance.
+
+    masm.addl(Imm32(sizeof(uintptr_t)), esp);
 
     masm.reserveStack(Registers::Total * sizeof(void *));
     for (uint32 i = 0; i < Registers::Total; i++)
@@ -335,9 +308,7 @@ IonCompartment::generateInvalidator(JSContext *cx)
     masm.pop(ebx); // Get the frameSize outparam.
 
     // Pop the machine state and the dead frame.
-    const uint32 BailoutDataSize = sizeof(double) * FloatRegisters::Total +
-                                   sizeof(void *) * Registers::Total;
-    masm.lea(Operand(esp, ebx, TimesOne, BailoutDataSize), esp);
+    masm.lea(Operand(esp, ebx, TimesOne, sizeof(InvalidationBailoutStack)), esp);
 
     GenerateBailoutTail(masm);
 

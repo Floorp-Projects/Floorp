@@ -72,14 +72,16 @@ class CodeGeneratorShared : public LInstructionVisitor
 #ifdef DEBUG
     uint32 pushedArgs_;
 #endif
+    uint32 lastOsiPointOffset_;
     SafepointWriter safepoints_;
+    Label invalidate_;
+    CodeOffsetLabel invalidateEpilogueData_;
+
+    js::Vector<SafepointIndex, 0, SystemAllocPolicy> safepointIndices_;
+    js::Vector<OsiIndex, 0, SystemAllocPolicy> osiIndices_;
 
     // Mapping from bailout table ID to an offset in the snapshot buffer.
     js::Vector<SnapshotOffset, 0, SystemAllocPolicy> bailouts_;
-
-    // Sorted vector of IonFrameInfo. The vector is sorted by the displacement
-    // key of the IonFrameInfo which is used to lookup entries.
-    js::Vector<IonFrameInfo, 0, SystemAllocPolicy> frameInfoTable_;
 
     // Vector of information about generated polymorphic inline caches.
     js::Vector<IonCache, 0, SystemAllocPolicy> cacheList_;
@@ -107,6 +109,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     inline size_t getOsrEntryOffset() const {
         return osrEntryOffset_;
     }
+
+    typedef js::Vector<SafepointIndex, 8, SystemAllocPolicy> SafepointIndices;
 
   protected:
     // The initial size of the frame in bytes. These are bytes beyond the
@@ -184,17 +188,19 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Encode a safepoint in the safepoint stream.
     void encodeSafepoint(LSafepoint *safepoint);
 
-    // Assign a FrameInfo to the current offset and encodes the snapshot. This
-    // is desirable just after call instructions to recover the FrameInfo from
-    // the returnAddress and the calleeToken of the parent frame.
-    bool assignFrameInfo(LSafepoint *safepoint, LSnapshot *snapshot);
+    // Encode all encountered safepoints in CG-order, and resolve |indices| for
+    // safepoint offsets.
+    void encodeSafepoints();
 
-    // Create a safepoint at the current location. Usually the location is just
-    // after a call.
-    bool createSafepoint(LInstruction *ins) {
-        JS_ASSERT(ins->safepoint());
-        return assignFrameInfo(ins->safepoint(), ins->postSnapshot());
-    }
+    // Mark the safepoint on |ins| as corresponding to the current assembler location.
+    // The location should be just after a call.
+    bool markSafepoint(LInstruction *ins);
+
+    // Mark the OSI point |ins| as corresponding to the current
+    // assembler location inside the |osiIndices_|. Return the assembler
+    // location for the OSI point return location within
+    // |returnPointOffset|.
+    bool markOsiPoint(LOsiPoint *ins, uint32 *returnPointOffset);
 
     inline bool isNextBlock(LBlock *block) {
         return (current->mir()->id() + 1 == block->mir()->id());
@@ -224,6 +230,9 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     void linkAbsoluteLabels() {
     }
+
+  private:
+    void generateInvalidateEpilogue();
 
   public:
     CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph);

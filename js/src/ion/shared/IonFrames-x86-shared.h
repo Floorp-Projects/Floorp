@@ -69,9 +69,6 @@ class IonCommonFrameLayout
     uint8 *returnAddress() const {
         return returnAddress_;
     }
-    uint8 **returnAddressPtr() {
-        return &returnAddress_;
-    }
 };
 
 class IonJSFrameLayout : public IonCommonFrameLayout
@@ -85,9 +82,6 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     }
     void replaceCalleeToken(void *value) {
         calleeToken_ = value;
-    }
-    void setInvalidationRecord(InvalidationRecord *record) {
-        replaceCalleeToken(InvalidationRecordToToken(record));
     }
 
     static size_t offsetOfCalleeToken() {
@@ -115,6 +109,33 @@ class IonRectifierFrameLayout : public IonJSFrameLayout
 
 class IonExitFrameLayout : public IonCommonFrameLayout
 {
+};
+
+// An invalidation bailout stack is at the stack pointer for the callee frame.
+class InvalidationBailoutStack
+{
+    double      fpregs_[FloatRegisters::Total];
+    uintptr_t   regs_[Registers::Total];
+    IonScript   *ionScript_;
+    uint8       *osiPointReturnAddress_;
+
+  public:
+    uint8 *sp() const {
+        return (uint8 *) this + sizeof(InvalidationBailoutStack);
+    }
+    IonJSFrameLayout *fp() const;
+    MachineState machine() {
+        return MachineState(regs_, fpregs_);
+    }
+
+    IonScript *ionScript() const {
+        return ionScript_;
+    }
+    uint8 *osiPointReturnAddress() const {
+        return osiPointReturnAddress_;
+    }
+
+    void checkInvariants() const;
 };
 
 }

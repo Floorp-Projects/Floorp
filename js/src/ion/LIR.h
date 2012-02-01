@@ -578,7 +578,6 @@ class LDefinition
 
 class LSnapshot;
 class LSafepoint;
-class LCaptureAllocations;
 class LInstructionVisitor;
 
 class LInstruction
@@ -591,12 +590,6 @@ class LInstruction
     // from the resume point pc.
     LSnapshot *snapshot_;
 
-    // Snapshot capturing the state of the interpreter as if this instruction
-    // has finished executing. This is used for deep invalidation (also known
-    // as deep bailouts), which occur from C++, where the current instruction
-    // cannot be re-executed.
-    LSnapshot *postSnapshot_;
-
     // Structure capturing the set of stack slots and registers which are known
     // to hold either gcthings or Values.
     LSafepoint *safepoint_;
@@ -607,7 +600,6 @@ class LInstruction
     LInstruction()
       : id_(0),
         snapshot_(NULL),
-        postSnapshot_(NULL),
         safepoint_(NULL),
         mir_(NULL)
     { }
@@ -666,9 +658,6 @@ class LInstruction
     LSnapshot *snapshot() const {
         return snapshot_;
     }
-    LSnapshot *postSnapshot() const {
-        return postSnapshot_;
-    }
     LSafepoint *safepoint() const {
         return safepoint_;
     }
@@ -680,7 +669,6 @@ class LInstruction
         return mir_;
     }
     void assignSnapshot(LSnapshot *snapshot);
-    void assignPostSnapshot(LSnapshot *snapshot);
     void initSafepoint();
 
     virtual void print(FILE *fp);
@@ -955,6 +943,9 @@ class LSafepoint : public TempObject
     // INVALID_SAFEPOINT_OFFSET.
     uint32 safepointOffset_;
 
+    // Assembler buffer displacement to OSI point's return location.
+    uint32 osiReturnPointOffset_;
+
     // List of stack slots which have gc pointers.
     SlotList gcSlots_;
 
@@ -965,7 +956,8 @@ class LSafepoint : public TempObject
 
   public:
     LSafepoint()
-      : safepointOffset_(INVALID_SAFEPOINT_OFFSET)
+      : safepointOffset_(INVALID_SAFEPOINT_OFFSET),
+        osiReturnPointOffset_(0)
     { }
     void addLiveRegister(AnyRegister reg) {
         liveRegs_.add(reg);
@@ -1023,6 +1015,13 @@ class LSafepoint : public TempObject
     }
     void setOffset(uint32 offset) {
         safepointOffset_ = offset;
+    }
+    uint32 osiReturnPointOffset() const {
+        return osiReturnPointOffset_;
+    }
+    void setOsiReturnPointOffset(uint32 osiReturnPointOffset) {
+        JS_ASSERT(!osiReturnPointOffset_);
+        osiReturnPointOffset_ = osiReturnPointOffset;
     }
 };
 

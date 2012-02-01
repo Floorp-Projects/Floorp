@@ -69,17 +69,29 @@ class LNop : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(Nop);
 };
 
-// Used to fill post snapshots when the register allocator process the
-// stream of instructions.
-class LCaptureAllocations : public LInstructionHelper<0, 0, 0>
+// An LOsiPoint captures a snapshot after a call and ensures enough space to
+// patch in a call to the invalidation mechanism.
+//
+// Note: LSafepoints are 1:1 with LOsiPoints, so it holds a reference to the
+// corresponding LSafepoint to inform it of the LOsiPoint's masm offset when it
+// gets CG'd.
+class LOsiPoint : public LInstructionHelper<0, 0, 0>
 {
+    LSafepoint *safepoint_;
+
   public:
-    LCaptureAllocations(LSnapshot *snapshot)
+    LOsiPoint(LSafepoint *safepoint, LSnapshot *snapshot)
+      : safepoint_(safepoint)
     {
+        JS_ASSERT(safepoint && snapshot);
         assignSnapshot(snapshot);
     }
 
-    LIR_HEADER(CaptureAllocations);
+    LSafepoint *associatedSafepoint() {
+        return safepoint_;
+    }
+
+    LIR_HEADER(OsiPoint);
 };
 
 class LMove

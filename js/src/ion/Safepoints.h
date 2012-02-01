@@ -46,6 +46,8 @@
 #include "CompactBuffer.h"
 #include "BitSet.h"
 
+#include "shared/Assembler-shared.h"
+
 namespace js {
 namespace ion {
 
@@ -63,6 +65,7 @@ class SafepointWriter
 
     // A safepoint entry is written in the order these functions appear.
     uint32 startEntry();
+    void writeOsiReturnPointOffset(uint32 osiPointOffset);
     void writeGcRegs(GeneralRegisterSet actual, GeneralRegisterSet spilled);
     void writeGcSlots(uint32 nslots, uint32 *slots);
     void writeValueSlots(uint32 nslots, uint32 *slots);
@@ -91,7 +94,11 @@ class SafepointReader
     bool getSlotFromBitmap(uint32 *slot);
 
   public:
-    SafepointReader(IonScript *script, const IonFrameInfo *fi);
+    SafepointReader(IonScript *script, const SafepointIndex *si);
+
+    static CodeLocationLabel InvalidationPatchPoint(IonScript *script, const SafepointIndex *si);
+
+    uint32 getOsiReturnPointOffset();
 
     // A safepoint entry must be read in the order these functions appear.
     void getGcRegs(GeneralRegisterSet *actual, GeneralRegisterSet *spilled);

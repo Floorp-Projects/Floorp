@@ -287,7 +287,9 @@ IonCompartment::generateInvalidator(JSContext *cx)
     AutoIonContextAlloc aica(cx);
     MacroAssembler masm(cx);
 
-    // See large comment in x86's IonCompartment::generateInvalidator.
+    // See explanatory comment in x86's IonCompartment::generateInvalidator.
+
+    masm.addq(Imm32(sizeof(uintptr_t)), rsp);
 
     // Push registers such that we can access them from [base + code].
     masm.reserveStack(Registers::Total * sizeof(void *));
@@ -313,9 +315,7 @@ IonCompartment::generateInvalidator(JSContext *cx)
     masm.pop(rbx); // Get the frameSize outparam.
 
     // Pop the machine state and the dead frame.
-    const uint32 BailoutDataSize = sizeof(double) * FloatRegisters::Total +
-                                   sizeof(void *) * Registers::Total;
-    masm.lea(Operand(rsp, rbx, TimesOne, BailoutDataSize), rsp);
+    masm.lea(Operand(rsp, rbx, TimesOne, sizeof(InvalidationBailoutStack)), rsp);
 
     GenerateBailoutTail(masm);
 
