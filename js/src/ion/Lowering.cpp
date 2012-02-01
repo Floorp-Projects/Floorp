@@ -973,7 +973,6 @@ bool
 LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);
-
     if (ins->type() == MIRType_Value) {
         LGetPropertyCacheV *lir = new LGetPropertyCacheV(useRegister(ins->object()));
         if (!defineBox(lir, ins))
