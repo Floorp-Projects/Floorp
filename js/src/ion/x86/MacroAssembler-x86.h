@@ -162,7 +162,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadValue(Address src, ValueOperand val) {
         loadValue(Operand(src), val);
     }
-    void loadValue(BaseIndex src, ValueOperand val) {
+    void loadValue(const BaseIndex &src, ValueOperand val) {
         loadValue(Operand(src), val);
     }
     void pushValue(ValueOperand val) {
