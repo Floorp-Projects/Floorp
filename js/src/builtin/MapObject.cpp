@@ -90,14 +90,10 @@ HashableValue::setValue(JSContext *cx, const Value &v)
         if (JSDOUBLE_IS_INT32(d, &i)) {
             /* Normalize int32-valued doubles to int32 for faster hashing and testing. */
             value = Int32Value(i);
+        } else if (JSDOUBLE_IS_NaN(d)) {
+            /* NaNs with different bits must hash and test identically. */
+            value = DoubleValue(js_NaN);
         } else {
-#ifdef DEBUG
-            /* All NaN values are the same. The bit-pattern must reflect this. */
-            jsval_layout a, b;
-            a.asDouble = d;
-            b.asDouble = JS_CANONICALIZE_NAN(d);
-            JS_ASSERT(a.asBits == b.asBits);
-#endif
             value = v;
         }
     } else {
