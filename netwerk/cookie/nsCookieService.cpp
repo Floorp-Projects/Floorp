@@ -1571,7 +1571,7 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
   nsDependentCString serverTime(aServerTime ? aServerTime : "");
   SetCookieStringInternal(aHostURI, isForeign, cookieString,
                           serverTime, aFromHttp, appId, inBrowserElement,
-                          isPrivate);
+                          isPrivate, aChannel);
   return NS_OK;
 }
 
@@ -1583,7 +1583,8 @@ nsCookieService::SetCookieStringInternal(nsIURI             *aHostURI,
                                          bool                aFromHttp,
                                          uint32_t            aAppId,
                                          bool                aInBrowserElement,
-                                         bool                aIsPrivate)
+                                         bool                aIsPrivate,
+                                         nsIChannel         *aChannel)
 {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -1642,7 +1643,7 @@ nsCookieService::SetCookieStringInternal(nsIURI             *aHostURI,
 
   // process each cookie in the header
   while (SetCookieInternal(aHostURI, key, requireHostMatch, cookieStatus,
-                           aCookieHeader, serverTime, aFromHttp)) {
+                           aCookieHeader, serverTime, aFromHttp, aChannel)) {
     // document.cookie can only set one cookie at a time
     if (!aFromHttp)
       break;
@@ -2644,7 +2645,8 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
                                    CookieStatus                   aStatus,
                                    nsDependentCString            &aCookieHeader,
                                    int64_t                        aServerTime,
-                                   bool                           aFromHttp)
+                                   bool                           aFromHttp,
+                                   nsIChannel                    *aChannel)
 {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -2714,11 +2716,8 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
   // to determine if we can set the cookie
   if (mPermissionService) {
     bool permission;
-    // Not passing an nsIChannel here means CanSetCookie will use the currently
-    // active window to display the prompt. This isn't exactly ideal, but this
-    // code is going away. See bug 546746.
     mPermissionService->CanSetCookie(aHostURI,
-                                     nullptr,
+                                     aChannel,
                                      static_cast<nsICookie2*>(static_cast<nsCookie*>(cookie)),
                                      &cookieAttributes.isSession,
                                      &cookieAttributes.expiryTime,
