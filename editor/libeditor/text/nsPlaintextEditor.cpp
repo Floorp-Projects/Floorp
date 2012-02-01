@@ -526,7 +526,8 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, ns
   return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
 }
 
-NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
+nsresult
+nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
 {
   NS_ENSURE_TRUE(outBRNode, NS_ERROR_NULL_POINTER);
   *outBRNode = nsnull;
