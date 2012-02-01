@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "CodeGenerator-shared.h"
 #include "ion/MIRGenerator.h"
-#include "ion/IonFrames.h"
+#include "ion/IonFrames-inl.h"
 #include "ion/MIR.h"
 #include "CodeGenerator-shared-inl.h"
 #include "ion/IonSpewer.h"
@@ -55,6 +55,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
 #ifdef DEBUG
     pushedArgs_(0),
 #endif
+    lastOsiPointOffset_(0),
     osrEntryOffset_(0),
     frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE) +
                 graph.argumentSlotCount() * sizeof(Value))
@@ -271,6 +272,9 @@ CodeGeneratorShared::encodeSafepoint(LSafepoint *safepoint)
 
     uint32 safepointOffset = safepoints_.startEntry();
 
+    JS_ASSERT(safepoint->osiReturnPointOffset());
+
+    safepoints_.writeOsiReturnPointOffset(safepoint->osiReturnPointOffset());
     safepoints_.writeGcRegs(safepoint->gcRegs(), safepoint->liveRegs().gprs());
     safepoints_.writeGcSlots(safepoint->gcSlots().length(), safepoint->gcSlots().begin());
 #ifdef JS_NUNBOX32
@@ -282,23 +286,53 @@ CodeGeneratorShared::encodeSafepoint(LSafepoint *safepoint)
     safepoint->setOffset(safepointOffset);
 }
 
-bool
-CodeGeneratorShared::assignFrameInfo(LSafepoint *safepoint, LSnapshot *snapshot)
+void
+CodeGeneratorShared::encodeSafepoints()
 {
-    SnapshotOffset snapshotOffset = INVALID_SNAPSHOT_OFFSET;
+    for (SafepointIndex *it = safepointIndices_.begin(), *end = safepointIndices_.end();
+         it != end;
+         ++it)
+    {
+        LSafepoint *safepoint = it->safepoint();
 
-    if (snapshot) {
-        if (!encode(snapshot))
-            return false;
-        snapshotOffset = snapshot->snapshotOffset();
+        // All safepoints must have a valid OSI displacement.
+        JS_ASSERT(safepoint->osiReturnPointOffset());
+
+        encodeSafepoint(safepoint);
+        it->resolve();
     }
-    encodeSafepoint(safepoint);
+}
 
-    IonSpew(IonSpew_Safepoints, "Attaching safepoint %d to return displacement %d (snapshot: %d)",
-            safepoint->offset(), masm.currentOffset(), snapshotOffset);
+bool
+CodeGeneratorShared::markSafepoint(LInstruction *ins)
+{
+    JS_ASSERT_IF(safepointIndices_.length(),
+                 masm.currentOffset() - safepointIndices_.back().displacement() >= sizeof(uint32));
+    return safepointIndices_.append(SafepointIndex(masm.currentOffset(), ins->safepoint()));
+}
 
-    IonFrameInfo fi(masm.currentOffset(), safepoint->offset(), snapshotOffset);
-    return frameInfoTable_.append(fi);
+bool
+CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32 *returnPointOffset)
+{
+    if (!encode(ins->snapshot()))
+        return false;
+
+    // We need to ensure that two OSI point patches don't overlap with
+    // each other, so we check that there's enough space for the near
+    // call between any two OSI points.
+    if (masm.currentOffset() - lastOsiPointOffset_ < Assembler::patchWrite_NearCallSize()) {
+        int32 paddingSize = Assembler::patchWrite_NearCallSize();
+        paddingSize -= masm.currentOffset() - lastOsiPointOffset_;
+        for (int32 i = 0; i < paddingSize; ++i)
+            masm.nop();
+    }
+    JS_ASSERT(masm.currentOffset() - lastOsiPointOffset_ >= Assembler::patchWrite_NearCallSize());
+    lastOsiPointOffset_ = masm.currentOffset();
+
+    *returnPointOffset = masm.currentOffset() + Assembler::patchWrite_NearCallSize();
+
+    SnapshotOffset so = ins->snapshot()->snapshotOffset();
+    return osiIndices_.append(OsiIndex(*returnPointOffset, so));
 }
 
 // Before doing any call to Cpp, you should ensure that volatile
@@ -306,6 +340,14 @@ CodeGeneratorShared::assignFrameInfo(LSafepoint *safepoint, LSnapshot *snapshot)
 bool
 CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
 {
+#ifdef DEBUG
+    if (ins->mirRaw()) {
+        JS_ASSERT(ins->mirRaw()->isInstruction());
+        MInstruction *mir = ins->mirRaw()->toInstruction();
+        JS_ASSERT_IF(mir->isEffectful(), mir->resumePoint());
+    }
+#endif
+
     // Stack is:
     //    ... frame ...
     //    [args]
@@ -334,7 +376,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     // on the return value of the C functions.  To guard the outcome of the
     // returned value, use another LIR instruction.
     masm.callWithExitFrame(wrapper);
-    if (!createSafepoint(ins))
+    if (!markSafepoint(ins))
         return false;
 
     // Remove rest of the frame left on the stack. We remove the return address

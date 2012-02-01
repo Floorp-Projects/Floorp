@@ -56,8 +56,6 @@ JSScript *
 ion::MaybeScriptFromCalleeToken(CalleeToken token)
 {
     switch (GetCalleeTokenTag(token)) {
-      case CalleeToken_InvalidationRecord:
-        return NULL;
       case CalleeToken_Script:
         return CalleeTokenToScript(token);
       case CalleeToken_Function:
@@ -67,32 +65,11 @@ ion::MaybeScriptFromCalleeToken(CalleeToken token)
     return NULL;
 }
 
-InvalidationRecord::InvalidationRecord(void *calleeToken, uint8 *returnAddress)
-  : calleeToken(calleeToken), returnAddress(returnAddress)
-{
-    JS_ASSERT(!CalleeTokenIsInvalidationRecord(calleeToken));
-    ionScript = MaybeScriptFromCalleeToken(calleeToken)->ion;
-}
-
-InvalidationRecord *
-InvalidationRecord::New(void *calleeToken, uint8 *returnAddress)
-{
-    InvalidationRecord *record = OffTheBooks::new_<InvalidationRecord>(calleeToken, returnAddress);
-    record->ionScript->incref();
-    return record;
-}
-
-void
-InvalidationRecord::Destroy(JSContext *cx, InvalidationRecord *record)
-{
-    record->ionScript->decref(cx);
-    Foreground::delete_<InvalidationRecord>(record);
-}
-
 FrameRecovery::FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine)
   : fp_((IonJSFrameLayout *)fp),
     sp_(sp),
-    machine_(machine)
+    machine_(machine),
+    ionScript_(NULL)
 {
     unpackCalleeToken(fp_->calleeToken());
 }
@@ -109,15 +86,15 @@ FrameRecovery::unpackCalleeToken(CalleeToken token)
         callee_ = NULL;
         script_ = CalleeTokenToScript(token);
         break;
-      case CalleeToken_InvalidationRecord:
-      {
-        InvalidationRecord *record = CalleeTokenToInvalidationRecord(token);
-        unpackCalleeToken(record->calleeToken);
-        break;
-      }
       default:
         JS_NOT_REACHED("invalid callee token tag");
     }
+}
+
+void
+FrameRecovery::setIonScript(IonScript *ionScript)
+{
+    ionScript_ = ionScript;
 }
 
 int32
@@ -157,19 +134,50 @@ FrameRecovery::FromFrameIterator(const IonFrameIterator& it)
 {
     MachineState noRegs;
     FrameRecovery frame(it.prevFp(), it.prevFp() - it.prevFrameLocalSize(), noRegs);
-    const IonFrameInfo *info = frame.ionScript()->getFrameInfo(it.returnAddress());
-    frame.setSnapshotOffset(info->snapshotOffset());
+
+    // The frame's current displacement maps to a SafepointIndex, which has a
+    // new displacement that maps into the OSI indices.
+    IonScript *ionScript = frame.ionScript();
+    const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddress());
+    SafepointReader reader(ionScript, si);
+    uint32 osiReturnDisplacement = reader.getOsiReturnPointOffset();
+    const OsiIndex *oi = ionScript->getOsiIndex(osiReturnDisplacement);
+
+    frame.setSnapshotOffset(oi->snapshotOffset());
     return frame;
 }
 
 IonScript *
 FrameRecovery::ionScript() const
 {
-    CalleeToken token = fp_->calleeToken();
-    if (CalleeToken_InvalidationRecord == GetCalleeTokenTag(token))
-        return CalleeTokenToInvalidationRecord(token)->ionScript;
+    return ionScript_ ? ionScript_ : script_->ion;
+}
 
-    return script_->ion;
+bool
+IonFrameIterator::checkInvalidation() const
+{
+    IonScript *dummy;
+    return checkInvalidation(&dummy);
+}
+
+bool
+IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
+{
+    uint8 *returnAddr = returnAddressToFp();
+    JSScript *script = this->script();
+    // N.B. the current IonScript is not the same as the frame's
+    // IonScript if the frame has since been invalidated.
+    IonScript *currentIonScript = script->ion;
+    bool invalidated = !currentIonScript || !currentIonScript->containsCodeAddress(returnAddr);
+    if (!invalidated)
+        return false;
+
+    int32 invalidationDataOffset = ((int32 *) returnAddr)[-1];
+    uint8 *ionScriptDataOffset = returnAddr + invalidationDataOffset;
+    IonScript *ionScript = (IonScript *) ((uintptr_t *) ionScriptDataOffset)[-1];
+    JS_ASSERT(ionScript->containsCodeAddress(returnAddr));
+    *ionScriptOut = ionScript;
+    return true;
 }
 
 CalleeToken
@@ -182,28 +190,16 @@ IonFrameIterator::calleeToken() const
 bool
 IonFrameIterator::hasScript() const
 {
-    return type_ == IonFrame_JS && !CalleeTokenIsInvalidationRecord(calleeToken());
+    return type_ == IonFrame_JS;
 }
 
 JSScript *
 IonFrameIterator::script() const
 {
     JS_ASSERT(hasScript());
-    CalleeToken token = calleeToken();
-    switch (GetCalleeTokenTag(token)) {
-      case CalleeToken_Script:
-        return CalleeTokenToScript(token);
-      case CalleeToken_Function:
-      {
-        JSFunction *fun = CalleeTokenToFunction(token);
-        JSScript *script = fun->maybeScript();
-        JS_ASSERT(script);
-        return script;
-      }
-      default:
-        JS_NOT_REACHED("invalid tag");
-        return NULL;
-    }
+    JSScript *script = MaybeScriptFromCalleeToken(calleeToken());
+    JS_ASSERT(script);
+    return script;
 }
 
 uint8 *
@@ -233,21 +229,9 @@ IonFrameIterator::operator++()
     // next frame.
     uint8 *prev = prevFp();
     type_ = current()->prevType();
-    returnAddressToFp_ = current()->returnAddressPtr();
+    returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
     return *this;
-}
-
-uint8 **
-IonFrameIterator::returnAddressPtr()
-{
-    return current()->returnAddressPtr();
-}
-
-void
-IonFrameIterator::setReturnAddress(uint8 *addr)
-{
-    *current()->returnAddressPtr() = addr;
 }
 
 void
@@ -260,10 +244,9 @@ ion::HandleException(ResumeFromException *rfe)
     IonFrameIterator iter(cx->runtime->ionTop);
     while (iter.type() != IonFrame_Entry) {
         if (iter.type() == IonFrame_JS) {
-            IonJSFrameLayout *fp = iter.jsFrame();
-            CalleeToken token = fp->calleeToken();
-            if (CalleeTokenIsInvalidationRecord(token))
-                InvalidationRecord::Destroy(cx, CalleeTokenToInvalidationRecord(token));
+            IonScript *ionScript;
+            if (iter.checkInvalidation(&ionScript))
+                ionScript->decref(cx);
         }
 
         ++iter;
@@ -309,12 +292,6 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token)
       case CalleeToken_Script:
         MarkRoot(trc, CalleeTokenToScript(token), "ion-entry");
         break;
-      case CalleeToken_InvalidationRecord:
-      {
-        ion::InvalidationRecord *record = CalleeTokenToInvalidationRecord(token);
-        ion::IonScript::Trace(trc, record->ionScript);
-        break;
-      }
       default:
         JS_NOT_REACHED("unknown callee token type");
     }
@@ -328,7 +305,10 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     MarkCalleeToken(trc, layout->calleeToken());
 
     IonScript *ionScript;
-    if (CalleeTokenIsFunction(layout->calleeToken())) {
+    if (frame.checkInvalidation(&ionScript)) {
+        // Use the invalidated ion script to retrieve safepoint
+        // information.
+    } else if (CalleeTokenIsFunction(layout->calleeToken())) {
         JSFunction *fun = CalleeTokenToFunction(layout->calleeToken());
 
         // Trace function arguments.
@@ -341,9 +321,11 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
         ionScript = CalleeTokenToScript(layout->calleeToken())->ion;
     }
 
-    const IonFrameInfo *fi = ionScript->getFrameInfo(frame.returnAddressToFp());
+    const SafepointIndex *si = ionScript->getSafepointIndex(frame.returnAddressToFp());
 
-    SafepointReader safepoint(ionScript, fi);
+    SafepointReader safepoint(ionScript, si);
+
+    (void) safepoint.getOsiReturnPointOffset();
 
     GeneralRegisterSet actual, spilled;
     safepoint.getGcRegs(&actual, &spilled);

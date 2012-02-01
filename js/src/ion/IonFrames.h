@@ -60,21 +60,15 @@ typedef void * CalleeToken;
 enum CalleeTokenTag
 {
     CalleeToken_Function = 0x0, // untagged
-    CalleeToken_Script = 0x1,
-    CalleeToken_InvalidationRecord = 0x2
+    CalleeToken_Script = 0x1
 };
 
 static inline CalleeTokenTag
 GetCalleeTokenTag(CalleeToken token)
 {
     CalleeTokenTag tag = CalleeTokenTag(uintptr_t(token) & 0x3);
-    JS_ASSERT(tag != 0x3);
+    JS_ASSERT(tag <= CalleeToken_Script);
     return tag;
-}
-static inline bool
-CalleeTokenIsInvalidationRecord(CalleeToken token)
-{
-    return GetCalleeTokenTag(token) == CalleeToken_InvalidationRecord;
 }
 static inline CalleeToken
 CalleeToToken(JSFunction *fun)
@@ -85,11 +79,6 @@ static inline CalleeToken
 CalleeToToken(JSScript *script)
 {
     return CalleeToken(uintptr_t(script) | uintptr_t(CalleeToken_Script));
-}
-static inline CalleeToken
-InvalidationRecordToToken(InvalidationRecord *record)
-{
-    return CalleeToken(uintptr_t(record) | uintptr_t(CalleeToken_InvalidationRecord));
 }
 static inline bool
 CalleeTokenIsFunction(CalleeToken token)
@@ -108,12 +97,6 @@ CalleeTokenToScript(CalleeToken token)
     JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
     return (JSScript *)(uintptr_t(token) & ~uintptr_t(0x3));
 }
-static inline InvalidationRecord *
-CalleeTokenToInvalidationRecord(CalleeToken token)
-{
-    JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_InvalidationRecord);
-    return (InvalidationRecord *)(uintptr_t(token) & ~uintptr_t(0x3));
-}
 JSScript *
 MaybeScriptFromCalleeToken(CalleeToken token);
 
@@ -129,30 +112,38 @@ MaybeScriptFromCalleeToken(CalleeToken token);
 // are necessary to leave JIT code and enter C++, and thus, C++ code will
 // always begin iterating from the topmost exit frame.
 
-// IonFrameInfo are stored separately from the stack frame.  It can be composed
-// of any field which are computed at compile time only.  It is recovered by
-// using the calleeToken and the returnAddress of the stack frame.
-class IonFrameInfo
+class LSafepoint;
+
+// Two-tuple that lets you look up the safepoint entry given the
+// displacement of a call instruction within the JIT code.
+class SafepointIndex
 {
-  private:
     // The displacement is the distance from the first byte of the JIT'd code
-    // to the return address.
+    // to the return address (of the call that the safepoint was generated for).
     uint32 displacement_;
 
-    // Offset to entry in the safepoint stream.
-    uint32 safepointOffset_;
+    union {
+        LSafepoint *safepoint_;
 
-    // If this instruction is effectful, a snapshot will be present to restore
-    // the interpreter state in the case of a deep bailout.
-    SnapshotOffset snapshotOffset_;
+        // Offset to the start of the encoded safepoint in the safepoint stream.
+        uint32 safepointOffset_;
+    };
+
+    DebugOnly<bool> resolved;
 
   public:
-    IonFrameInfo(uint32 displacement, uint32 safepointOffset, SnapshotOffset snapshotOffset)
+    SafepointIndex(uint32 displacement, LSafepoint *safepoint)
       : displacement_(displacement),
-        safepointOffset_(safepointOffset),
-        snapshotOffset_(snapshotOffset)
+        safepoint_(safepoint),
+        resolved(false)
     { }
 
+    void resolve();
+
+    LSafepoint *safepoint() {
+        JS_ASSERT(!resolved);
+        return safepoint_;
+    }
     uint32 displacement() const {
         return displacement_;
     }
@@ -160,23 +151,34 @@ class IonFrameInfo
         return safepointOffset_;
     }
     void adjustDisplacement(uint32 offset) {
-        JS_ASSERT(offset >= displacement_);
+        JS_ASSERT(offset >= 0 && uint32(offset) >= displacement_);
         displacement_ = offset;
     }
     inline SnapshotOffset snapshotOffset() const;
     inline bool hasSnapshotOffset() const;
 };
 
-struct InvalidationRecord
+// The OSI point is patched to a call instruction. Therefore, the
+// returnPoint for an OSI call is the address immediately following that
+// call instruction. The displacement of that point within the assembly
+// buffer is the |returnPointDisplacement|.
+class OsiIndex
 {
-    void *calleeToken;
-    uint8 *returnAddress;
-    IonScript *ionScript;
+    uint32 returnPointDisplacement_;
+    uint32 snapshotOffset_;
 
-    InvalidationRecord(void *calleeToken, uint8 *returnAddress);
+  public:
+    OsiIndex(uint32 returnPointDisplacement, uint32 snapshotOffset)
+      : returnPointDisplacement_(returnPointDisplacement),
+        snapshotOffset_(snapshotOffset)
+    { }
 
-    static InvalidationRecord *New(void *calleeToken, uint8 *returnAddress);
-    static void Destroy(JSContext *cx, InvalidationRecord *record);
+    uint32 returnPointDisplacement() const {
+        return returnPointDisplacement_;
+    }
+    uint32 snapshotOffset() const {
+        return snapshotOffset_;
+    }
 };
 
 // The layout of an Ion frame on the C stack is roughly:
@@ -284,6 +286,7 @@ class FrameRecovery
 
     JSFunction *callee_;
     JSScript *script_;
+    IonScript *ionScript_;
 
   private:
     FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine);
@@ -303,6 +306,9 @@ class FrameRecovery
     static FrameRecovery FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
                                       SnapshotOffset offset);
     static FrameRecovery FromFrameIterator(const IonFrameIterator& it);
+
+    // Override the ionScript gleaned from the JSScript.
+    void setIonScript(IonScript *ionScript);
 
     MachineState &machine() {
         return machine_;

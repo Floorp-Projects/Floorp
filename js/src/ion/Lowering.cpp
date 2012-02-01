@@ -1125,17 +1125,13 @@ LIRGenerator::visitInstruction(MInstruction *ins)
     ins->setInWorklistUnchecked();
 #endif
 
-    // If no post snapshot was present, then exit with success.
-    if (!postSnapshot_)
-        return true;
+    // If no safepoint was created, there's no need for an OSI point.
+    if (LOsiPoint *osiPoint = popOsiPoint()) {
+        if (!add(osiPoint))
+            return false;
+    }
 
-    // Post snapshots are copied to a new LInstruction which is added to the
-    // stream of instruction.  This intruction avoid adding more instrumentation
-    // into the register allocator.
-    LSnapshot *post = postSnapshot_;
-    postSnapshot_ = NULL;
-
-    return add(new LCaptureAllocations(post));
+    return true;
 }
 
 bool

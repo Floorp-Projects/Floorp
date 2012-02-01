@@ -60,7 +60,6 @@ enum FrameType
 };
 
 class IonCommonFrameLayout;
-struct InvalidationRecord;
 class IonActivation;
 class IonJSFrameLayout;
 
@@ -68,7 +67,7 @@ class IonFrameIterator
 {
     uint8 *current_;
     FrameType type_;
-    uint8 **returnAddressToFp_;
+    uint8 *returnAddressToFp_;
 
   public:
     IonFrameIterator(uint8 *top)
@@ -92,6 +91,12 @@ class IonFrameIterator
         JS_ASSERT(type() == IonFrame_JS);
         return (IonJSFrameLayout *) fp();
     }
+
+    // Returns whether the JS frame has been invalidated and, if so,
+    // places the invalidated Ion script in |ionScript|.
+    bool checkInvalidation(IonScript **ionScript) const;
+    bool checkInvalidation() const;
+
     void *calleeToken() const;
     bool hasScript() const;
     JSScript *script() const;
@@ -99,9 +104,6 @@ class IonFrameIterator
     // Returns the return address of the frame above this one (that is, the
     // return address that returns back to the current frame).
     uint8 *returnAddressToFp() const {
-        return *returnAddressToFp_;
-    }
-    uint8 **addressOfReturnToFp() const {
         return returnAddressToFp_;
     }
 
@@ -114,10 +116,6 @@ class IonFrameIterator
     // the current frame is the last frame.
     inline bool more() const;
     IonFrameIterator &operator++();
-
-    // Mutation
-    uint8 **returnAddressPtr();
-    void setReturnAddress(uint8 *addr);
 };
 
 class IonActivationIterator

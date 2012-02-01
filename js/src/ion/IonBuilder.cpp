@@ -3371,7 +3371,7 @@ IonBuilder::jsop_setprop(JSAtom *atom)
         }
     }
 
-    TypeOracle::Binary binary = oracle->binaryOp(script, pc);
+    oracle->binaryOp(script, pc);
     MGenericSetProperty *ins = MGenericSetProperty::New(obj, value, atom,
                                                         script->strictModeCode,
                                                         monitored);

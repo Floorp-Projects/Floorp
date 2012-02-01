@@ -233,6 +233,7 @@ private:
         OP_MOV_GvEv                     = 0x8B,
         OP_LEA                          = 0x8D,
         OP_GROUP1A_Ev                   = 0x8F,
+        OP_NOP                          = 0x90,
         OP_CDQ                          = 0x99,
         OP_MOV_EAXOv                    = 0xA1,
         OP_MOV_OvEAX                    = 0xA3,
@@ -403,6 +404,13 @@ public:
     size_t size() const { return m_formatter.size(); }
     unsigned char *buffer() const { return m_formatter.buffer(); }
     bool oom() const { return m_formatter.oom(); }
+
+    void nop()
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "nop\n", MAYBE_PAD);
+        m_formatter.oneByteOp(OP_NOP);
+    }
 
     // Stack operations:
 

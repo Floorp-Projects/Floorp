@@ -143,7 +143,8 @@ class IonCode : public gc::Cell
 
 class SnapshotWriter;
 class SafepointWriter;
-class IonFrameInfo;
+class SafepointIndex;
+class OsiIndex;
 class IonCache;
 
 // An IonScript attaches Ion-generated information to a JSScript.
@@ -161,6 +162,16 @@ struct IonScript
     // Offset to OSR entrypoint from method_->raw(), or 0.
     uint32 osrEntryOffset_;
 
+    // Offset of the invalidation epilogue (which pushes this IonScript
+    // and calls the invalidation thunk).
+    uint32 invalidateEpilogueOffset_;
+
+    // The offset immediately after the IonScript immediate.
+    // NOTE: technically a constant delta from
+    // |invalidateEpilogueOffset_|, so we could hard-code this
+    // per-platform if we want.
+    uint32 invalidateEpilogueDataOffset_;
+
     // Forbid entering into Ion code from a branch.
     // Useful when a bailout is expected.
     bool forbidOsr_;
@@ -177,11 +188,17 @@ struct IonScript
     uint32 constantTable_;
     uint32 constantEntries_;
 
-    // Map code displacement to information about the stack frame.
-    uint32 frameInfoTable_;
-    uint32 frameInfoEntries_;
+    // Map code displacement to safepoint / OSI-patch-delta.
+    uint32 safepointIndexOffset_;
+    uint32 safepointIndexEntries_;
 
-    // Local slot count and frame size.
+    // Map OSI-point displacement to snapshot.
+    uint32 osiIndexOffset_;
+    uint32 osiIndexEntries_;
+
+    // Local slot count and frame size. Frame size is the value that can
+    // be added to the StackPointer along with the frame prefix to get a
+    // valid IonJSFrameLayout.
     uint32 frameLocals_;
     uint32 frameSize_;
 
@@ -202,11 +219,17 @@ struct IonScript
     Value *constants() {
         return (Value *)(reinterpret_cast<uint8 *>(this) + constantTable_);
     }
-    const IonFrameInfo *frameInfoTable() const {
-        return (const IonFrameInfo *)(reinterpret_cast<const uint8 *>(this) + frameInfoTable_);
+    const SafepointIndex *safepointIndices() const {
+        return const_cast<IonScript *>(this)->safepointIndices();
     }
-    IonFrameInfo *frameInfoTable() {
-        return (IonFrameInfo *)(reinterpret_cast<uint8 *>(this) + frameInfoTable_);
+    SafepointIndex *safepointIndices() {
+        return (SafepointIndex *)(reinterpret_cast<uint8 *>(this) + safepointIndexOffset_);
+    }
+    const OsiIndex *osiIndices() const {
+        return const_cast<IonScript *>(this)->osiIndices();
+    }
+    OsiIndex *osiIndices() {
+        return (OsiIndex *)(reinterpret_cast<uint8 *>(this) + osiIndexOffset_);
     }
     IonCache *cacheList() {
         return (IonCache *)(reinterpret_cast<uint8 *>(this) + cacheList_);
@@ -221,8 +244,8 @@ struct IonScript
 
     static IonScript *New(JSContext *cx, uint32 frameLocals, uint32 frameSize,
                           size_t snapshotsSize, size_t snapshotEntries,
-                          size_t constants, size_t frameInfoEntries, size_t cacheEntries,
-                          size_t safepointsSize);
+                          size_t constants, size_t safepointIndexEntries, size_t osiIndexEntries,
+                          size_t cacheEntries, size_t safepointsSize);
     static void Trace(JSTracer *trc, IonScript *script);
     static void Destroy(JSContext *cx, IonScript *script);
 
@@ -231,6 +254,7 @@ struct IonScript
         return method_;
     }
     void setMethod(IonCode *code) {
+        JS_ASSERT(!invalidated());
         method_ = code;
     }
     void setDeoptTable(IonCode *code) {
@@ -248,6 +272,25 @@ struct IonScript
     }
     uint32 osrEntryOffset() const {
         return osrEntryOffset_;
+    }
+    bool containsCodeAddress(uint8 *addr) const {
+        return method()->raw() <= addr && addr < method()->raw() + method()->instructionsSize();
+    }
+    void setInvalidationEpilogueOffset(uint32 offset) {
+        JS_ASSERT(!invalidateEpilogueOffset_);
+        invalidateEpilogueOffset_ = offset;
+    }
+    uint32 invalidateEpilogueOffset() const {
+        JS_ASSERT(invalidateEpilogueOffset_);
+        return invalidateEpilogueOffset_;
+    }
+    void setInvalidationEpilogueDataOffset(uint32 offset) {
+        JS_ASSERT(!invalidateEpilogueDataOffset_);
+        invalidateEpilogueDataOffset_ = offset;
+    }
+    uint32 invalidateEpilogueDataOffset() const {
+        JS_ASSERT(invalidateEpilogueDataOffset_);
+        return invalidateEpilogueDataOffset_;
     }
     void forbidOsr() {
         forbidOsr_ = true;
@@ -280,14 +323,19 @@ struct IonScript
     uint32 frameLocals() const {
         return frameLocals_;
     }
+    uint32 frameSize() const {
+        return frameSize_;
+    }
     SnapshotOffset bailoutToSnapshot(uint32 bailoutId) {
         JS_ASSERT(bailoutId < bailoutEntries_);
         return bailoutTable()[bailoutId];
     }
-    const IonFrameInfo *getFrameInfo(uint32 disp) const;
-    const IonFrameInfo *getFrameInfo(uint8 *retAddr) const {
-        return getFrameInfo(retAddr - method()->raw());
+    const SafepointIndex *getSafepointIndex(uint32 disp) const;
+    const SafepointIndex *getSafepointIndex(uint8 *retAddr) const {
+        return getSafepointIndex(retAddr - method()->raw());
     }
+    const OsiIndex *getOsiIndex(uint32 disp) const;
+    const OsiIndex *getOsiIndex(uint8 *retAddr) const;
     inline IonCache &getCache(size_t index);
     size_t numCaches() const {
         return cacheEntries_;
@@ -295,12 +343,16 @@ struct IonScript
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const Value *vp);
-    void copyFrameInfoTable(const IonFrameInfo *hf, MacroAssembler &masm);
+    void copySafepointIndices(const SafepointIndex *firstSafepointIndex, MacroAssembler &masm);
+    void copyOsiIndices(const OsiIndex *firstOsiIndex);
     void copyCacheEntries(const IonCache *caches, MacroAssembler &masm);
     void copySafepoints(const SafepointWriter *writer);
 
     bool invalidated() const {
         return refcount_ != 0;
+    }
+    size_t refcount() const {
+        return refcount_;
     }
     void incref() {
         refcount_++;

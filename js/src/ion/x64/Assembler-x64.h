@@ -288,6 +288,12 @@ class Assembler : public AssemblerX86Shared
         subq(Imm32(sizeof(void*)), StackPointer);
         movsd(src, Operand(StackPointer, 0));
     }
+    CodeOffsetLabel pushWithPatch(const ImmWord &word) {
+        movq(word, ScratchReg);
+        CodeOffsetLabel label = masm.currentOffset();
+        push(ScratchReg);
+        return label;
+    }
 
     void movq(ImmWord word, const Register &dest) {
         masm.movq_i64r(word.value, dest.code());
