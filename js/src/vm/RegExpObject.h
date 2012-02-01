@@ -207,8 +207,6 @@ class RegExpObjectBuilder
     bool getOrCreate();
     bool getOrCreateClone(RegExpObject *proto);
 
-    RegExpObject *build(AlreadyIncRefed<RegExpShared> shared);
-
     friend class RegExpMatcher;
 
   public:
@@ -219,7 +217,7 @@ class RegExpObjectBuilder
     RegExpObject *reobj() { return reobj_; }
 
     RegExpObject *build(JSLinearString *str, RegExpFlag flags);
-    RegExpObject *build(RegExpObject *other);
+    RegExpObject *build(AlreadyIncRefed<RegExpShared> shared);
 
     /* Perform a VM-internal clone. */
     RegExpObject *clone(RegExpObject *other, RegExpObject *proto);
@@ -470,9 +468,6 @@ bool
 ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut);
 
 inline bool
-ValueIsRegExp(const Value &v);
-
-inline bool
 IsRegExpMetaChar(jschar c);
 
 inline bool
@@ -480,6 +475,9 @@ CheckRegExpSyntax(JSContext *cx, JSLinearString *str)
 {
     return detail::RegExpCode::checkSyntax(cx, NULL, str);
 }
+
+inline RegExpShared *
+RegExpToShared(JSContext *cx, JSObject &obj);
 
 } /* namespace js */
 
