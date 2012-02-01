@@ -121,8 +121,6 @@ XPC_MSG_DEF(NS_ERROR_FACTORY_REGISTER_AGAIN        , "Factory not registered (ma
 XPC_MSG_DEF(NS_ERROR_FACTORY_NOT_LOADED            , "Factory not loaded")
 XPC_MSG_DEF(NS_ERROR_FACTORY_NO_SIGNATURE_SUPPORT  , "Factory does not support signatures")
 XPC_MSG_DEF(NS_ERROR_FACTORY_EXISTS                , "Factory already exists")
-XPC_MSG_DEF(NS_ERROR_PROXY_INVALID_IN_PARAMETER    , "Invalid input parameter in call to proxy")
-XPC_MSG_DEF(NS_ERROR_PROXY_INVALID_OUT_PARAMETER   , "Invalid output parameter in call to proxy")
 
 /* added from nsError.h on Feb 28 2001... */
 
