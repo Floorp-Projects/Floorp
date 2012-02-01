@@ -402,7 +402,7 @@ FormHistory.prototype = {
             this.expireOldEntries();
             break;
         case "profile-before-change":
-            this._dbClose();
+            this._dbClose(false);
             break;
         default:
             this.log("Oops! Unexpected notification: " + topic);
@@ -868,18 +868,29 @@ FormHistory.prototype = {
      * _dbClose
      *
      * Finalize all statements and close the connection.
+     *
+      * @param aBlocking - Should we spin the loop waiting for the db to be
+      *                    closed.
      */
-    _dbClose : function FH__dbClose() {
+    _dbClose : function FH__dbClose(aBlocking) {
         for each (let stmt in this.dbStmts) {
             stmt.finalize();
         }
         this.dbStmts = {};
-        if (this.dbConnection !== undefined) {
-            try {
-                this.dbConnection.close();
-            } catch (e) {
-                Components.utils.reportError(e);
-            }
+        if (this.dbConnection === undefined)
+            return;
+
+        let completed = false;
+        try {
+            this.dbConnection.asyncClose(function () { completed = true; });
+        } catch (e) {
+            completed = true;
+            Components.utils.reportError(e);
+        }
+
+        let thread = Services.tm.currentThread;
+        while (aBlocking && !completed) {
+            thread.processNextEvent(true);
         }
     },
 
@@ -898,7 +909,7 @@ FormHistory.prototype = {
         let backupFile = this.dbFile.leafName + ".corrupt";
         storage.backupDatabaseFile(this.dbFile, backupFile);
 
-        this._dbClose();
+        this._dbClose(true);
         this.dbFile.remove(false);
     }
 };
