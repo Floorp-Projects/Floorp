@@ -399,7 +399,7 @@ abstract public class GeckoApp
                 final MenuItem mi = aMenu.add(Menu.NONE, item.id, Menu.NONE, item.label);
                 if (item.icon != null) {
                     if (item.icon.startsWith("data")) {
-                        byte[] raw = Base64.decode(item.icon.substring(22), Base64.DEFAULT);
+                        byte[] raw = GeckoAppShell.decodeBase64(item.icon.substring(22));
                         Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
                         BitmapDrawable drawable = new BitmapDrawable(bitmap);
                         mi.setIcon(drawable);
