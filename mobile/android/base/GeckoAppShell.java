@@ -1121,11 +1121,11 @@ public class GeckoAppShell
         });
     }
 
-    public static void setPreventPanning(final boolean aPreventPanning) {
+    public static void preventPanning() {
         getMainHandler().post(new Runnable() {
             public void run() {
                 LayerController layerController = GeckoApp.mAppContext.getLayerController();
-                layerController.preventPanning(aPreventPanning);
+                layerController.preventPanning(true);
             }
         });
     }
