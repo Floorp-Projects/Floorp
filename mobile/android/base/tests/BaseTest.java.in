@@ -21,8 +21,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected Assert mAsserter;
     protected Actions mActions;
     protected String mBaseUrl;
-    private final String mTestType;
-    private final String mLogFile;
+    private String mTestType;
+    private String mLogFile;
 
     static {
         try {
