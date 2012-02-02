@@ -51,9 +51,6 @@ XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
   return PluralForm;
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
-  "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
-
 XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
   "@mozilla.org/widget/hapticfeedback;1", "nsIHapticFeedback");
 
@@ -792,19 +789,12 @@ var BrowserApp = {
     });
   },
 
-  getSearchOrFixupURI: function(aParams) {
+  getSearchOrURI: function getSearchOrURI(aParams) {
     let uri;
     if (aParams.engine) {
-      let engine;
-      // If the default engine was requested, we just pass the URL through
-      // and let the third-party fixup send it to the default search.
-      if (aParams.engine != "__default__")
-        engine = Services.search.getEngineByName(aParams.engine);
-
+      let engine = Services.search.getEngineByName(aParams.engine);
       if (engine)
         uri = engine.getSubmission(aParams.url).uri;
-    } else {
-      uri = URIFixup.createFixupURI(aParams.url, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
     }
     return uri ? uri.spec : aParams.url;
   },
@@ -921,7 +911,7 @@ var BrowserApp = {
              | Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
       };
 
-      let url = this.getSearchOrFixupURI(data);
+      let url = this.getSearchOrURI(data);
 
       // Don't show progress throbber for about:home
       if (url == "about:home")
