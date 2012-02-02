@@ -206,12 +206,6 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
     jDraw2DBufferMethod = getMethod("draw2D", "(Ljava/nio/ByteBuffer;I)V");
     jGetSurfaceMethod = getMethod("getSurface", "()Landroid/view/Surface;");
     jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
-#else
-    initInit();
-
-    jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
-
-
 #endif
 }
 
