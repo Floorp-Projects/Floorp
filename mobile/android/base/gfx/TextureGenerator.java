@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Corporation code.
+ * The Original Code is Mozilla Android code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2009-2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bas Schouten <bschouten@mozilla.org>
+ *   James Willcox <jwillcox@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,38 +35,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_MACIOSURFACEIMAGEOGL_H
-#define GFX_MACIOSURFACEIMAGEOGL_H
-#ifdef XP_MACOSX
+package org.mozilla.gecko.gfx;
 
-#include "nsCoreAnimationSupport.h"
+import android.opengl.GLES10;
+import java.util.Stack;
 
-namespace mozilla {
-namespace layers {
+public class TextureGenerator {
+    private static final int MIN_TEXTURES = 5;
 
-class THEBES_API MacIOSurfaceImageOGL : public MacIOSurfaceImage
-{
-  typedef mozilla::gl::GLContext GLContext;
+    private static TextureGenerator sSharedInstance;
+    private Stack<Integer> mTextureIds;
 
-public:
-  MacIOSurfaceImageOGL(LayerManagerOGL *aManager);
-  virtual ~MacIOSurfaceImageOGL();
+    private TextureGenerator() { mTextureIds = new Stack<Integer>(); }
 
-  void SetUpdateCallback(UpdateSurfaceCallback aCallback, void* aPluginInstanceOwner);
-  void SetDestroyCallback(DestroyCallback aCallback);
-  void Update(ImageContainer* aContainer);
+    public static TextureGenerator get() {
+        if (sSharedInstance == null)
+            sSharedInstance = new TextureGenerator();
+        return sSharedInstance;
+    }
 
-  void SetData(const Data &aData);
+    public synchronized int take() {
+        if (mTextureIds.empty())
+            return 0;
 
-  GLTexture mTexture;
-  gfxIntSize mSize;
-  nsRefPtr<nsIOSurface> mIOSurface;
-  void* mPluginInstanceOwner;
-  UpdateSurfaceCallback mUpdateCallback;
-  DestroyCallback mDestroyCallback;
-};
+        return (int)mTextureIds.pop();
+    }
 
-} /* layers */
-} /* mozilla */
-#endif /* XP_MACOSX */
-#endif /* GFX_MACIOSURFACEIMAGEOGL_H */
+    public synchronized void fill() {
+        int[] textures = new int[1];
+        while (mTextureIds.size() < MIN_TEXTURES) {
+            GLES10.glGenTextures(1, textures, 0);
+            mTextureIds.push(textures[0]);
+        }
+    }
+}
+
+

@@ -165,8 +165,6 @@ public:
 
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
 
-  virtual already_AddRefed<ImageContainer> CreateImageContainer();
-
   virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
   virtual already_AddRefed<ShadowContainerLayer> CreateShadowContainerLayer();
   virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer();

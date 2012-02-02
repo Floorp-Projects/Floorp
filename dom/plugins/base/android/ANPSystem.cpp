@@ -62,6 +62,12 @@ anp_system_getApplicationDataDirectory()
   return dir;
 }
 
+const char*
+anp_system_getApplicationDataDirectory(NPP instance)
+{
+  return anp_system_getApplicationDataDirectory();
+}
+
 jclass anp_system_loadJavaClass(NPP instance, const char* className)
 {
   LOG("%s", __PRETTY_FUNCTION__);
@@ -88,8 +94,27 @@ jclass anp_system_loadJavaClass(NPP instance, const char* className)
   return reinterpret_cast<jclass>(obj);
 }
 
+void anp_system_setPowerState(NPP instance, ANPPowerState powerState)
+{
+  NOT_IMPLEMENTED();
+}
+
 void InitSystemInterface(ANPSystemInterfaceV0 *i) {
   _assert(i->inSize == sizeof(*i));
   ASSIGN(i, getApplicationDataDirectory);
   ASSIGN(i, loadJavaClass);
+}
+
+void InitSystemInterfaceV1(ANPSystemInterfaceV1 *i) {
+  _assert(i->inSize == sizeof(*i));
+  ASSIGN(i, getApplicationDataDirectory);
+  ASSIGN(i, loadJavaClass);
+  ASSIGN(i, setPowerState);
+}
+
+void InitSystemInterfaceV2(ANPSystemInterfaceV2 *i) {
+  _assert(i->inSize == sizeof(*i));
+  ASSIGN(i, getApplicationDataDirectory);
+  ASSIGN(i, loadJavaClass);
+  ASSIGN(i, setPowerState);
 }

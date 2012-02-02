@@ -1019,7 +1019,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 if (surface) {
                     sNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(surface);
                     if (sNativeWindow) {
-                        AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, AndroidBridge::WINDOW_FORMAT_RGB_565);
+                        AndroidBridge::Bridge()->SetNativeWindowFormat(sNativeWindow, 0, 0, AndroidBridge::WINDOW_FORMAT_RGB_565);
                     }
                 }
             }
@@ -1579,8 +1579,9 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 
     nsEventStatus status;
     DispatchEvent(&event, status);
-    if (status == nsEventStatus_eConsumeNoDefault) {
-        AndroidBridge::Bridge()->PreventPanning();
+    bool preventPanning = (status == nsEventStatus_eConsumeNoDefault);
+    if (preventPanning || action == AndroidMotionEvent::ACTION_MOVE) {
+        AndroidBridge::Bridge()->SetPreventPanning(preventPanning);
         return true;
     }
     return false;
