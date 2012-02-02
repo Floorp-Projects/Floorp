@@ -46,8 +46,12 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/Mutex.h"
+#include "gfxPlatform.h"
 
-class nsIOSurface;
+#ifdef XP_MACOSX
+#include "nsIOSurface.h"
+#endif
 
 namespace mozilla {
 namespace layers {
@@ -58,6 +62,14 @@ enum StereoMode {
   STEREO_MODE_RIGHT_LEFT,
   STEREO_MODE_BOTTOM_TOP,
   STEREO_MODE_TOP_BOTTOM
+};
+
+struct ImageBackendData
+{
+  virtual ~ImageBackendData() {}
+
+protected:
+  ImageBackendData() {}
 };
 
 /**
@@ -104,8 +116,7 @@ public:
     CAIRO_SURFACE,
 
     /**
-     * The MAC_IO_SURFACE format creates a MacIOSurfaceImage. This
-     * is only supported on Mac with OpenGL layers.
+     * The MAC_IO_SURFACE format creates a MacIOSurfaceImage.
      *
      * It wraps an IOSurface object and binds it directly to a GL texture.
      */
@@ -115,14 +126,104 @@ public:
   Format GetFormat() { return mFormat; }
   void* GetImplData() { return mImplData; }
 
+  virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
+  virtual gfxIntSize GetSize() = 0;
+
+  ImageBackendData* GetBackendData(LayerManager::LayersBackend aBackend)
+  { return mBackendData[aBackend]; }
+  void SetBackendData(LayerManager::LayersBackend aBackend, ImageBackendData* aData)
+  { mBackendData[aBackend] = aData; }
+
 protected:
   Image(void* aImplData, Format aFormat) :
     mImplData(aImplData),
     mFormat(aFormat)
   {}
 
+  nsAutoPtr<ImageBackendData> mBackendData[LayerManager::LAYERS_LAST];
+
   void* mImplData;
   Format mFormat;
+};
+
+/**
+ * A RecycleBin is owned by an ImageContainer. We store buffers in it that we
+ * want to recycle from one image to the next.It's a separate object from 
+ * ImageContainer because images need to store a strong ref to their RecycleBin
+ * and we must avoid creating a reference loop between an ImageContainer and
+ * its active image.
+ */
+class BufferRecycleBin {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RecycleBin)
+
+  typedef mozilla::gl::GLContext GLContext;
+
+public:
+  BufferRecycleBin();
+
+  void RecycleBuffer(PRUint8* aBuffer, PRUint32 aSize);
+  // Returns a recycled buffer of the right size, or allocates a new buffer.
+  PRUint8* GetBuffer(PRUint32 aSize);
+
+private:
+  typedef mozilla::Mutex Mutex;
+
+  // This protects mRecycledBuffers, mRecycledBufferSize, mRecycledTextures
+  // and mRecycledTextureSizes
+  Mutex mLock;
+
+  // We should probably do something to prune this list on a timer so we don't
+  // eat excess memory while video is paused...
+  nsTArray<nsAutoArrayPtr<PRUint8> > mRecycledBuffers;
+  // This is only valid if mRecycledBuffers is non-empty
+  PRUint32 mRecycledBufferSize;
+};
+
+/**
+ * Returns true if aFormat is in the given format array.
+ */
+static inline bool
+FormatInList(const Image::Format* aFormats, PRUint32 aNumFormats,
+             Image::Format aFormat)
+{
+  for (PRUint32 i = 0; i < aNumFormats; ++i) {
+    if (aFormats[i] == aFormat) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * A class that manages Image creation for a LayerManager. The only reason
+ * we need a separate class here is that LayerMananers aren't threadsafe
+ * (because layers can only be used on the main thread) and we want to
+ * be able to create images from any thread, to facilitate video playback
+ * without involving the main thread, for example.
+ * Different layer managers can implement child classes of this making it
+ * possible to create layer manager specific images.
+ * This class is not meant to be used directly but rather can be set on an
+ * image container. This is usually done by the layer system internally and
+ * not explicitly by users. For PlanarYCbCr or Cairo images the default
+ * implementation will creates images whose data lives in system memory, for
+ * MacIOSurfaces the default implementation will be a simple nsIOSurface
+ * wrapper.
+ */
+
+class THEBES_API ImageFactory
+{
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageFactory)
+protected:
+  friend class ImageContainer;
+
+  ImageFactory() {}
+  virtual ~ImageFactory() {}
+
+  virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
+                                              PRUint32 aNumFormats,
+                                              const gfxIntSize &aScaleHint,
+                                              BufferRecycleBin *aRecycleBin);
+
 };
 
 /**
@@ -139,10 +240,12 @@ public:
   ImageContainer() :
     mReentrantMonitor("ImageContainer.mReentrantMonitor"),
     mPaintCount(0),
-    mPreviousImagePainted(false)
+    mPreviousImagePainted(false),
+    mImageFactory(new ImageFactory()),
+    mRecycleBin(new BufferRecycleBin())
   {}
 
-  virtual ~ImageContainer() {}
+  ~ImageContainer();
 
   /**
    * Create an Image in one of the given formats.
@@ -152,8 +255,8 @@ public:
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
    */
-  virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
-                                              PRUint32 aNumFormats) = 0;
+  already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
+                                      PRUint32 aNumFormats);
 
   /**
    * Set an Image as the current image to display. The Image must have
@@ -163,13 +266,7 @@ public:
    * 
    * The Image data must not be modified after this method is called!
    */
-  virtual void SetCurrentImage(Image* aImage) = 0;
-
-  /**
-   * Ask any PlanarYCbCr images created by this container to delay
-   * YUV -> RGB conversion until draw time. See PlanarYCbCrImage::SetDelayedConversion.
-   */
-  virtual void SetDelayedConversion(bool aDelayed) {}
+  void SetCurrentImage(Image* aImage);
 
   /**
    * Get the current Image.
@@ -181,7 +278,13 @@ public:
    * Implementations must call CurrentImageChanged() while holding
    * mReentrantMonitor.
    */
-  virtual already_AddRefed<Image> GetCurrentImage() = 0;
+  already_AddRefed<Image> GetCurrentImage()
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+    nsRefPtr<Image> retval = mActiveImage;
+    return retval.forget();
+  }
 
   /**
    * Get the current image as a gfxASurface. This is useful for fallback
@@ -198,32 +301,14 @@ public:
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
    */
-  virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSizeResult) = 0;
-
-  /**
-   * Returns the layer manager for this container. This can only
-   * be used on the main thread, since layer managers should only be
-   * accessed on the main thread.
-   */
-  LayerManager* Manager()
-  {
-    NS_PRECONDITION(NS_IsMainThread(), "Must be called on main thread");
-    return mManager;
-  }
+  already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSizeResult);
 
   /**
    * Returns the size of the image in pixels.
    * Can be called on any thread. This method takes mReentrantMonitor when accessing
    * thread-shared state.
    */
-  virtual gfxIntSize GetCurrentSize() = 0;
-
-  /**
-   * Set a new layer manager for this image container.  It must be
-   * either of the same type as the container's current layer manager,
-   * or null.  TRUE is returned on success. Main thread only.
-   */
-  virtual bool SetLayerManager(LayerManager *aManager) = 0;
+  gfxIntSize GetCurrentSize();
 
   /**
    * Sets a size that the image is expected to be rendered at.
@@ -232,14 +317,14 @@ public:
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
    */
-  virtual void SetScaleHint(const gfxIntSize& /* aScaleHint */) { }
+  void SetScaleHint(const gfxIntSize& aScaleHint)
+  { mScaleHint = aScaleHint; }
 
-  /**
-   * Get the layer manager type this image container was created with,
-   * presumably its users might want to do something special if types do not
-   * match. Can be called on any thread.
-   */
-  virtual LayerManager::LayersBackend GetBackendType() = 0;
+  void SetImageFactory(ImageFactory *aFactory)
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    mImageFactory = aFactory ? aFactory : new ImageFactory();
+  }
 
   /**
    * Returns the time at which the currently contained image was first
@@ -285,18 +370,10 @@ public:
 
 protected:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
-  LayerManager* mManager;
 
   // ReentrantMonitor to protect thread safe access to the "current
   // image", and any other state which is shared between threads.
   ReentrantMonitor mReentrantMonitor;
-
-  ImageContainer(LayerManager* aManager) :
-    mManager(aManager),
-    mReentrantMonitor("ImageContainer.mReentrantMonitor"),
-    mPaintCount(0),
-    mPreviousImagePainted(false)
-  {}
 
   // Performs necessary housekeeping to ensure the painted frame statistics
   // are accurate. Must be called by SetCurrentImage() implementations with
@@ -306,6 +383,8 @@ protected:
     mPreviousImagePainted = !mPaintTime.IsNull();
     mPaintTime = TimeStamp();
   }
+
+  nsRefPtr<Image> mActiveImage;
 
   // Number of contained images that have been painted at least once.  It's up
   // to the ImageContainer implementation to ensure accesses to this are
@@ -318,6 +397,15 @@ protected:
 
   // Denotes whether the previous image was painted.
   bool mPreviousImagePainted;
+
+  // This is the image factory used by this container, layer managers using
+  // this container can set an alternative image factory that will be used to
+  // create images for this container.
+  nsRefPtr<ImageFactory> mImageFactory;
+
+  gfxIntSize mScaleHint;
+
+  nsRefPtr<BufferRecycleBin> mRecycleBin;
 };
 
 /**
@@ -332,8 +420,6 @@ public:
    */
   void SetContainer(ImageContainer* aContainer) 
   {
-    NS_ASSERTION(!aContainer->Manager() || aContainer->Manager() == Manager(), 
-                 "ImageContainer must have the same manager as the ImageLayer");
     mContainer = aContainer;  
   }
   /**
@@ -422,13 +508,13 @@ public:
     MAX_DIMENSION = 16384
   };
 
+  ~PlanarYCbCrImage();
+
   /**
-   * This makes a copy of the data buffers.
-   * XXX Eventually we will change this to not make a copy of the data,
-   * Right now it doesn't matter because the BasicLayer implementation
-   * does YCbCr conversion here anyway.
+   * This makes a copy of the data buffers, in order to support functioning
+   * in all different layer managers.
    */
-  virtual void SetData(const Data& aData) = 0;
+  virtual void SetData(const Data& aData);
 
   /**
    * Ask this Image to not convert YUV to RGB during SetData, and make
@@ -440,19 +526,14 @@ public:
   /**
    * Grab the original YUV data. This is optional.
    */
-  virtual const Data* GetData() { return nsnull; }
+  virtual const Data* GetData() { return &mData; }
 
   /**
-   * Make a copy of the YCbCr data.
+   * Make a copy of the YCbCr data into local storage.
    *
-   * @param aDest           Data object to store the plane data in.
-   * @param aDestSize       Size of the Y plane that was copied.
-   * @param aDestBufferSize Number of bytes allocated for storage.
    * @param aData           Input image data.
-   * @return                Raw data pointer for the planes or nsnull on failure.
    */
-  PRUint8 *CopyData(Data& aDest, gfxIntSize& aDestSize,
-                    PRUint32& aDestBufferSize, const Data& aData);
+  void CopyData(const Data& aData);
 
   /**
    * Return a buffer to store image data in.
@@ -464,15 +545,31 @@ public:
   /**
    * Return the number of bytes of heap memory used to store this image.
    */
-  virtual PRUint32 GetDataSize() = 0;
+  virtual PRUint32 GetDataSize() { return mBufferSize; }
 
-protected:
-  PlanarYCbCrImage(void* aImplData) : Image(aImplData, PLANAR_YCBCR) {}
+  already_AddRefed<gfxASurface> GetAsSurface();
+
+  virtual gfxIntSize GetSize() { return mSize; }
+
+  void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
+  gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
+
+  // XXX - not easy to protect these sadly.
+  nsAutoArrayPtr<PRUint8> mBuffer;
+  PRUint32 mBufferSize;
+  Data mData;
+  gfxIntSize mSize;
+  gfxImageFormat mOffscreenFormat;
+  nsCountedRef<nsMainThreadSurfaceRef> mSurface;
+  nsRefPtr<BufferRecycleBin> mRecycleBin;
+
+  PlanarYCbCrImage(BufferRecycleBin *aRecycleBin);
 };
 
 /**
  * Currently, the data in a CairoImage surface is treated as being in the
- * device output color space.
+ * device output color space. This class is very simple as all backends
+ * have to know about how to deal with drawing a cairo image.
  */
 class THEBES_API CairoImage : public Image {
 public:
@@ -486,10 +583,26 @@ public:
    * to the surface (which will eventually be released on the main thread).
    * The surface must not be modified after this call!!!
    */
-  virtual void SetData(const Data& aData) = 0;
+  void SetData(const Data& aData)
+  {
+    mSurface = aData.mSurface;
+    mSize = aData.mSize;
+  }
 
-protected:
-  CairoImage(void* aImplData) : Image(aImplData, CAIRO_SURFACE) {}
+
+  virtual already_AddRefed<gfxASurface> GetAsSurface()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Must be main thread");
+    nsRefPtr<gfxASurface> surface = mSurface.get();
+    return surface.forget();
+  }
+
+  gfxIntSize GetSize() { return mSize; }
+
+  CairoImage() : Image(NULL, CAIRO_SURFACE) {}
+
+  nsCountedRef<nsMainThreadSurfaceRef> mSurface;
+  gfxIntSize mSize;
 };
 
 #ifdef XP_MACOSX
@@ -499,12 +612,27 @@ public:
     nsIOSurface* mIOSurface;
   };
 
+  MacIOSurfaceImage()
+    : Image(NULL, MAC_IO_SURFACE)
+    , mSize(0, 0)
+    , mPluginInstanceOwner(NULL)
+    , mUpdateCallback(NULL)
+    , mDestroyCallback(NULL)
+    {}
+
+  virtual ~MacIOSurfaceImage()
+  {
+    if (mDestroyCallback) {
+      mDestroyCallback(mPluginInstanceOwner);
+    }
+  }
+
  /**
   * This can only be called on the main thread. It may add a reference
   * to the surface (which will eventually be released on the main thread).
   * The surface must not be modified after this call!!!
   */
-  virtual void SetData(const Data& aData) = 0;
+  virtual void SetData(const Data& aData);
 
   /**
    * Temporary hacks to force plugin drawing during an empty transaction.
@@ -512,12 +640,38 @@ public:
    * when async plugin rendering is complete.
    */
   typedef void (*UpdateSurfaceCallback)(ImageContainer* aContainer, void* aInstanceOwner);
-  virtual void SetUpdateCallback(UpdateSurfaceCallback aCallback, void* aInstanceOwner) = 0;
-  typedef void (*DestroyCallback)(void* aInstanceOwner);
-  virtual void SetDestroyCallback(DestroyCallback aCallback) = 0;
+  virtual void SetUpdateCallback(UpdateSurfaceCallback aCallback, void* aInstanceOwner)
+  {
+    mUpdateCallback = aCallback;
+    mPluginInstanceOwner = aInstanceOwner;
+  }
 
-protected:
-  MacIOSurfaceImage(void* aImplData) : Image(aImplData, MAC_IO_SURFACE) {}
+  typedef void (*DestroyCallback)(void* aInstanceOwner);
+  virtual void SetDestroyCallback(DestroyCallback aCallback)
+  {
+    mDestroyCallback = aCallback;
+  }
+
+  virtual gfxIntSize GetSize()
+  {
+    return mSize;
+  }
+
+  nsIOSurface* GetIOSurface()
+  {
+    return mIOSurface;
+  }
+
+  void Update(ImageContainer* aContainer);
+
+  virtual already_AddRefed<gfxASurface> GetAsSurface();
+
+private:
+  gfxIntSize mSize;
+  nsRefPtr<nsIOSurface> mIOSurface;
+  void* mPluginInstanceOwner;
+  UpdateSurfaceCallback mUpdateCallback;
+  DestroyCallback mDestroyCallback;
 };
 #endif
 

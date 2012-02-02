@@ -1108,8 +1108,6 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
         return true;
     }
 
-    const bool firstTime = (mOffscreenDrawFBO == 0 && mOffscreenReadFBO == 0);
-
     GLuint curBoundFramebufferDraw = 0;
     GLuint curBoundFramebufferRead = 0;
     GLuint curBoundRenderbuffer = 0;
@@ -1412,8 +1410,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
 
 #ifdef DEBUG
     if (DebugMode()) {
-        printf_stderr("%s %dx%d offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d samples: %d\n",
-                      firstTime ? "Created" : "Resized",
+        printf_stderr("Resized %dx%d offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d samples: %d\n",
                       mOffscreenActualSize.width, mOffscreenActualSize.height,
                       mActualFormat.red, mActualFormat.green, mActualFormat.blue, mActualFormat.alpha,
                       mActualFormat.depth, mActualFormat.stencil, mActualFormat.samples);
@@ -1429,13 +1426,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     BindReadFBO(curBoundFramebufferRead);
     fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
     fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
-
-    // -don't- restore the viewport the first time through this, since
-    // the previous one isn't valid.
-    if (firstTime)
-        fViewport(0, 0, aSize.width, aSize.height); // XXX This is coming out in 711642
-    else
-        fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
     return true;
 }

@@ -94,6 +94,12 @@ class gfxXlibSurface;
 #include <os2.h>
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+namespace mozilla {
+  class AndroidMediaLayer;
+}
+#endif
+
 // X.h defines KeyPress
 #ifdef KeyPress
 #undef KeyPress
@@ -286,6 +292,26 @@ public:
   void EndUpdateBackground(gfxContext* aContext, const nsIntRect& aRect);
   
   bool UseAsyncRendering();
+
+#ifdef MOZ_WIDGET_ANDROID
+  nsIntRect GetVisibleRect() {
+    return nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
+  }
+
+  void SetInverted(bool aInverted) {
+    mInverted = aInverted;
+  }
+
+  bool Inverted() {
+    return mInverted;
+  }
+
+  mozilla::AndroidMediaLayer* Layer() {
+    return mLayer;
+  }
+
+  void Invalidate();
+#endif
   
 private:
   
@@ -298,11 +324,18 @@ private:
   }
   
   void FixUpURLS(const nsString &name, nsAString &value);
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
+  void SendSize(int width, int height);
+  void SendOnScreenEvent(bool onScreen);
+
   bool AddPluginView(const gfxRect& aRect);
   void RemovePluginView();
-  bool mPluginViewAdded;
-  gfxRect mLastPluginRect;
+
+  bool mOnScreen;
+  bool mInverted;
+
+  // For kOpenGL_ANPDrawingModel
+  mozilla::AndroidMediaLayer *mLayer;
 #endif 
  
   nsPluginNativeWindow       *mPluginWindow;

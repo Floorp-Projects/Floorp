@@ -151,41 +151,35 @@ const char* CompilationUnit::SkipAttribute(const char* start,
                                                                      &len));
       start += len;
       return SkipAttribute(start, form);
-      break;
 
+    case DW_FORM_flag_present:
+      return start;
     case DW_FORM_data1:
     case DW_FORM_flag:
     case DW_FORM_ref1:
       return start + 1;
-      break;
     case DW_FORM_ref2:
     case DW_FORM_data2:
       return start + 2;
-      break;
     case DW_FORM_ref4:
     case DW_FORM_data4:
       return start + 4;
-      break;
     case DW_FORM_ref8:
     case DW_FORM_data8:
+    case DW_FORM_ref_sig8:
       return start + 8;
-      break;
     case DW_FORM_string:
       return start + strlen(start) + 1;
-      break;
     case DW_FORM_udata:
     case DW_FORM_ref_udata:
       reader_->ReadUnsignedLEB128(start, &len);
       return start + len;
-      break;
 
     case DW_FORM_sdata:
       reader_->ReadSignedLEB128(start, &len);
       return start + len;
-      break;
     case DW_FORM_addr:
       return start + reader_->AddressSize();
-      break;
     case DW_FORM_ref_addr:
       // DWARF2 and 3 differ on whether ref_addr is address size or
       // offset size.
@@ -195,27 +189,21 @@ const char* CompilationUnit::SkipAttribute(const char* start,
       } else if (header_.version == 3) {
         return start + reader_->OffsetSize();
       }
-      break;
 
     case DW_FORM_block1:
       return start + 1 + reader_->ReadOneByte(start);
-      break;
     case DW_FORM_block2:
       return start + 2 + reader_->ReadTwoBytes(start);
-      break;
     case DW_FORM_block4:
       return start + 4 + reader_->ReadFourBytes(start);
-      break;
-    case DW_FORM_block: {
+    case DW_FORM_block:
+    case DW_FORM_exprloc: {
       uint64 size = reader_->ReadUnsignedLEB128(start, &len);
       return start + size + len;
     }
-      break;
     case DW_FORM_strp:
-        return start + reader_->OffsetSize();
-      break;
-    default:
-      fprintf(stderr,"Unhandled form type");
+    case DW_FORM_sec_offset:
+      return start + reader_->OffsetSize();
   }
   fprintf(stderr,"Unhandled form type");
   return NULL;
@@ -327,85 +315,78 @@ const char* CompilationUnit::ProcessAttribute(
                                                                      &len));
       start += len;
       return ProcessAttribute(dieoffset, start, attr, form);
-      break;
 
+    case DW_FORM_flag_present:
+      handler_->ProcessAttributeUnsigned(dieoffset, attr, form, 1);
+      return start;
     case DW_FORM_data1:
     case DW_FORM_flag:
       handler_->ProcessAttributeUnsigned(dieoffset, attr, form,
                                          reader_->ReadOneByte(start));
       return start + 1;
-      break;
     case DW_FORM_data2:
       handler_->ProcessAttributeUnsigned(dieoffset, attr, form,
                                          reader_->ReadTwoBytes(start));
       return start + 2;
-      break;
     case DW_FORM_data4:
       handler_->ProcessAttributeUnsigned(dieoffset, attr, form,
                                          reader_->ReadFourBytes(start));
       return start + 4;
-      break;
     case DW_FORM_data8:
       handler_->ProcessAttributeUnsigned(dieoffset, attr, form,
                                          reader_->ReadEightBytes(start));
       return start + 8;
-      break;
     case DW_FORM_string: {
       const char* str = start;
       handler_->ProcessAttributeString(dieoffset, attr, form,
                                        str);
       return start + strlen(str) + 1;
     }
-      break;
     case DW_FORM_udata:
       handler_->ProcessAttributeUnsigned(dieoffset, attr, form,
                                          reader_->ReadUnsignedLEB128(start,
                                                                      &len));
       return start + len;
-      break;
 
     case DW_FORM_sdata:
       handler_->ProcessAttributeSigned(dieoffset, attr, form,
                                       reader_->ReadSignedLEB128(start, &len));
       return start + len;
-      break;
     case DW_FORM_addr:
       handler_->ProcessAttributeUnsigned(dieoffset, attr, form,
                                          reader_->ReadAddress(start));
       return start + reader_->AddressSize();
-      break;
+    case DW_FORM_sec_offset:
+      handler_->ProcessAttributeUnsigned(dieoffset, attr, form,
+                                         reader_->ReadOffset(start));
+      return start + reader_->OffsetSize();
 
     case DW_FORM_ref1:
       handler_->ProcessAttributeReference(dieoffset, attr, form,
                                           reader_->ReadOneByte(start)
                                           + offset_from_section_start_);
       return start + 1;
-      break;
     case DW_FORM_ref2:
       handler_->ProcessAttributeReference(dieoffset, attr, form,
                                           reader_->ReadTwoBytes(start)
                                           + offset_from_section_start_);
       return start + 2;
-      break;
     case DW_FORM_ref4:
       handler_->ProcessAttributeReference(dieoffset, attr, form,
                                           reader_->ReadFourBytes(start)
                                           + offset_from_section_start_);
       return start + 4;
-      break;
     case DW_FORM_ref8:
       handler_->ProcessAttributeReference(dieoffset, attr, form,
                                           reader_->ReadEightBytes(start)
                                           + offset_from_section_start_);
       return start + 8;
-      break;
     case DW_FORM_ref_udata:
       handler_->ProcessAttributeReference(dieoffset, attr, form,
                                           reader_->ReadUnsignedLEB128(start,
                                                                       &len)
                                           + offset_from_section_start_);
       return start + len;
-      break;
     case DW_FORM_ref_addr:
       // DWARF2 and 3 differ on whether ref_addr is address size or
       // offset size.
@@ -420,35 +401,36 @@ const char* CompilationUnit::ProcessAttribute(
         return start + reader_->OffsetSize();
       }
       break;
+    case DW_FORM_ref_sig8:
+      handler_->ProcessAttributeSignature(dieoffset, attr, form,
+                                          reader_->ReadEightBytes(start));
+      return start + 8;
 
     case DW_FORM_block1: {
       uint64 datalen = reader_->ReadOneByte(start);
       handler_->ProcessAttributeBuffer(dieoffset, attr, form, start + 1,
-                                      datalen);
+                                       datalen);
       return start + 1 + datalen;
     }
-      break;
     case DW_FORM_block2: {
       uint64 datalen = reader_->ReadTwoBytes(start);
       handler_->ProcessAttributeBuffer(dieoffset, attr, form, start + 2,
-                                      datalen);
+                                       datalen);
       return start + 2 + datalen;
     }
-      break;
     case DW_FORM_block4: {
       uint64 datalen = reader_->ReadFourBytes(start);
       handler_->ProcessAttributeBuffer(dieoffset, attr, form, start + 4,
-                                      datalen);
+                                       datalen);
       return start + 4 + datalen;
     }
-      break;
-    case DW_FORM_block: {
+    case DW_FORM_block:
+    case DW_FORM_exprloc: {
       uint64 datalen = reader_->ReadUnsignedLEB128(start, &len);
       handler_->ProcessAttributeBuffer(dieoffset, attr, form, start + len,
-                                      datalen);
+                                       datalen);
       return start + datalen + len;
     }
-      break;
     case DW_FORM_strp: {
       assert(string_buffer_ != NULL);
 
@@ -460,11 +442,8 @@ const char* CompilationUnit::ProcessAttribute(
                                        str);
       return start + reader_->OffsetSize();
     }
-      break;
-    default:
-      fprintf(stderr, "Unhandled form type");
   }
-  fprintf(stderr, "Unhandled form type");
+  fprintf(stderr, "Unhandled form type\n");
   return NULL;
 }
 

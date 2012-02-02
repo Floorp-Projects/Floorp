@@ -963,7 +963,8 @@ DSTOffsetCache::DSTOffsetCache()
 }
 
 JSContext::JSContext(JSRuntime *rt)
-  : defaultVersion(JSVERSION_DEFAULT),
+  : ContextFriendFields(rt),
+    defaultVersion(JSVERSION_DEFAULT),
     hasVersionOverride(false),
     throwing(false),
     exception(UndefinedValue()),
@@ -972,12 +973,6 @@ JSContext::JSContext(JSRuntime *rt)
     localeCallbacks(NULL),
     resolvingList(NULL),
     generatingError(false),
-#if JS_STACK_GROWTH_DIRECTION > 0
-    stackLimit(UINTPTR_MAX),
-#else
-    stackLimit(0),
-#endif
-    runtime(rt),
     compartment(NULL),
     stack(thisDuringConstruction()),  /* depends on cx->thread_ */
     parseMapPool_(NULL),
