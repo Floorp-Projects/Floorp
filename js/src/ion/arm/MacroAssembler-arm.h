@@ -600,6 +600,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storeValue(JSValueType type, Register reg, Address dest) {
         JS_NOT_REACHED("NYI");
     }
+    void storeValue(ValueOperand val, const BaseIndex &dest) {
+        // Harder cases not handled yet.
+        JS_ASSERT(dest.offset == 0);
+        storeValue(val, dest.base, dest.index);
+    }
     void storeValue(const Value &val, Address dest) {
         JS_NOT_REACHED("NYI");
     }
