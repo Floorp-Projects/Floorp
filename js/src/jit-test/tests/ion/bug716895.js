@@ -1,23 +1,14 @@
-function addConstraint(blaat) {
-    return blaat.v1
+// Don't segfault. Reduced from V8 deltablue.
+
+function output(c, dir) {
+  return (dir) ? c.v1 : c.v1;
 }
 
-function ScaleConstraint() {
-    this.direction = null
-    this.v1 = {};
-    addConstraint(this);
+var constraint = {
+  v1 : {}
 }
 
-function EqualityConstraint() {
-    this.v1 = {};
-    addConstraint(this);
-}
-
-function deltaBlue() {
-    new EqualityConstraint();
-    new ScaleConstraint();
-}
-
-for (var n = 0; n<100; n++) {
-    deltaBlue()
+for (i=0; i<100; i++){
+  output(constraint, 0)
+  output(constraint, 1);
 }
