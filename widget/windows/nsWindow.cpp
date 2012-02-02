@@ -284,11 +284,7 @@ bool            nsWindow::sAllowD3D9              = false;
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
 #ifdef ACCESSIBILITY
-BOOL            nsWindow::sIsAccessibilityOn      = FALSE;
-// Accessibility wm_getobject handler
-HINSTANCE       nsWindow::sAccLib                 = 0;
-LPFNLRESULTFROMOBJECT 
-                nsWindow::sLresultFromObject      = 0;
+bool            nsWindow::sIsAccessibilityOn      = false;
 #endif // ACCESSIBILITY
 
 // Used in OOPP plugin focus processing.
@@ -8071,7 +8067,7 @@ nsWindow::GetRootAccessible()
   if (accForceDisable)
       return nsnull;
 
-  nsWindow::sIsAccessibilityOn = TRUE;
+  nsWindow::sIsAccessibilityOn = true;
 
   if (mInDtor || mOnDestroyCalled || mWindowType == eWindowType_invisible) {
     return nsnull;
@@ -8081,24 +8077,6 @@ nsWindow::GetRootAccessible()
   NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
 
   return DispatchAccessibleEvent(NS_GETACCESSIBLE);
-}
-
-STDMETHODIMP_(LRESULT)
-nsWindow::LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc)
-{
-  // open the dll dynamically
-  if (!sAccLib)
-    sAccLib =::LoadLibraryW(L"OLEACC.DLL");
-
-  if (sAccLib) {
-    if (!sLresultFromObject)
-      sLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(sAccLib,"LresultFromObject");
-
-    if (sLresultFromObject)
-      return sLresultFromObject(riid,wParam,pAcc);
-  }
-
-  return 0;
 }
 #endif
 
