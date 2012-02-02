@@ -9568,7 +9568,8 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 
 
 // HTMLObject/EmbedElement helper
-
+// Keep in mind that it is OK for this to fail to return an instance. Don't return a
+// failure result unless something truly exceptional has happened.
 // static
 nsresult
 nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wrapper,
@@ -9583,36 +9584,21 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(content));
   NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
 
-  // If it's not safe to run script we'll only return the instance if it
-  // exists.
+  nsresult rv = objlc->GetPluginInstance(_result);
+  if (NS_SUCCEEDED(rv) && *_result) {
+    return rv;
+  }
+
+  // If it's not safe to run script we'll only return the instance if it exists.
   if (!nsContentUtils::IsSafeToRunScript()) {
-    return objlc->GetPluginInstance(_result);
+    return rv;
   }
 
-  // Make sure that there is a plugin
-  return objlc->EnsureInstantiation(_result);
-}
+  // We don't care if this actually starts the plugin or not, we just want to
+  // try to start it now if possible.
+  objlc->SyncStartPluginInstance();
 
-// Check if proto is already in obj's prototype chain.
-
-static bool
-IsObjInProtoChain(JSContext *cx, JSObject *obj, JSObject *proto)
-{
-  JSObject *o = obj;
-
-  JSAutoRequest ar(cx);
-
-  while (o) {
-    JSObject *p = ::JS_GetPrototype(cx, o);
-
-    if (p == proto) {
-      return true;
-    }
-
-    o = p;
-  }
-
-  return false;
+  return objlc->GetPluginInstance(_result);
 }
 
 class nsPluginProtoChainInstallRunner : public nsIRunnable
@@ -9694,19 +9680,8 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
 
   if (!pi_obj) {
     // Didn't get a plugin instance JSObject, nothing we can do then.
-
     return NS_OK;
   }
-
-  if (IsObjInProtoChain(cx, obj, pi_obj)) {
-    // We must have re-entered ::PostCreate() from nsObjectFrame()
-    // (through the EnsureInstantiation() call in
-    // GetPluginInstanceIfSafe()), this means that we've already done what
-    // we're about to do in this function so we can just return here.
-
-    return NS_OK;
-  }
-
 
   // If we got an xpconnect-wrapped plugin object, set obj's
   // prototype's prototype to the scriptable plugin.

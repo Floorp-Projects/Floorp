@@ -307,7 +307,11 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
+#ifdef ANDROID
+    mProductSub.AssignLiteral(MOZ_APP_UA_VERSION);
+#else
     mProductSub.AssignLiteral(MOZ_UA_BUILDID);
+#endif
     if (mProductSub.IsEmpty() && appInfo)
         appInfo->GetPlatformBuildID(mProductSub);
     if (mProductSub.Length() > 8)
@@ -602,6 +606,7 @@ nsHttpHandler::BuildUserAgent()
                            mAppName.Length() +
                            mAppVersion.Length() +
                            mCompatFirefox.Length() +
+                           mCompatDevice.Length() +
                            13);
 
     // Application portion
@@ -616,8 +621,15 @@ nsHttpHandler::BuildUserAgent()
     mUserAgent += mPlatform;
     mUserAgent.AppendLiteral("; ");
 #endif
+#ifdef ANDROID
+    if (!mCompatDevice.IsEmpty()) {
+        mUserAgent += mCompatDevice;
+        mUserAgent.AppendLiteral("; ");
+    }
+#else
     mUserAgent += mOscpu;
     mUserAgent.AppendLiteral("; ");
+#endif
     mUserAgent += mMisc;
     mUserAgent += ')';
 
@@ -650,8 +662,7 @@ typedef BOOL (WINAPI *IsWow64ProcessP) (HANDLE, PBOOL);
 void
 nsHttpHandler::InitUserAgentComponents()
 {
-
-      // Gather platform.
+    // Gather platform.
     mPlatform.AssignLiteral(
 #if defined(ANDROID)
     "Android"
@@ -669,6 +680,18 @@ nsHttpHandler::InitUserAgentComponents()
     "?"
 #endif
     );
+
+#if defined(ANDROID)
+    nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
+    NS_ASSERTION(infoService, "Could not find a system info service");
+
+    bool isTablet;
+    infoService->GetPropertyAsBool(NS_LITERAL_STRING("tablet"), &isTablet);
+    if (isTablet)
+        mCompatDevice.AssignLiteral("Tablet");
+    else
+        mCompatDevice.AssignLiteral("Mobile");
+#endif
 
     // Gather OS/CPU.
 #if defined(XP_OS2)

@@ -66,6 +66,7 @@ public:
   static bool IsListItem(nsIDOMNode *aNode);
   static bool IsTable(nsIDOMNode *aNode);
   static bool IsTableRow(nsIDOMNode *aNode);
+  static bool IsTableElement(mozilla::dom::Element* aNode);
   static bool IsTableElement(nsIDOMNode *aNode);
   static bool IsTableElementButNotTable(nsIDOMNode *aNode);
   static bool IsTableCell(mozilla::dom::Element* node);

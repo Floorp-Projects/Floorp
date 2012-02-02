@@ -193,11 +193,11 @@ protected:
   // key event helpers
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
-  NS_IMETHOD CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, 
-                         PRInt32 *aInOutOffset, 
-                         nsCOMPtr<nsIDOMNode> *outBRNode, 
-                         EDirection aSelect);
-  NS_IMETHOD InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode);
+  nsresult CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
+                        PRInt32* aInOutOffset,
+                        nsCOMPtr<nsIDOMNode>* outBRNode,
+                        EDirection aSelect);
+  nsresult InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode);
 
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
@@ -220,6 +220,9 @@ protected:
 
   bool CanCutOrCopy();
   bool FireClipboardEvent(PRInt32 aType);
+
+  bool UpdateMetaCharset(nsIDOMDocument* aDocument,
+                         const nsACString& aCharacterSet);
 
 // Data members
 protected:

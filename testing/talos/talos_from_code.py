@@ -24,7 +24,7 @@ def main():
     #  %(repo_path)s/raw-file/%(revision)s/testing/talos/talos.json
     try:
         jsonFilename = download_file(options.talos_json_url)
-    except Exception as e:
+    except Exception, e:
         print "ERROR: We have been unable to download the talos.zip indicated " + \
               "in the talos.json file."
         print "ERROR: %s" % str(e)
@@ -40,7 +40,7 @@ def main():
             print "ERROR: This is only allowed for the 'try' branch."
             sys.exit(1)
         download_file(talos_zip_url, "talos.zip")
-    except Exception as e:
+    except Exception, e:
         print "ERROR: We have been unable to download the talos.zip indicated " + \
               "in the talos.json file."
         print "ERROR: %s" % str(e)

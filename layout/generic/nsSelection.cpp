@@ -4864,6 +4864,12 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   return Collapse(parentNode, aOffset);
 }
 
+NS_IMETHODIMP
+nsTypedSelection::CollapseNative(nsINode* aParentNode, PRInt32 aOffset)
+{
+  return Collapse(aParentNode, aOffset);
+}
+
 nsresult
 nsTypedSelection::Collapse(nsINode* aParentNode, PRInt32 aOffset)
 {

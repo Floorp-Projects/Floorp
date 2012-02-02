@@ -201,7 +201,7 @@ nsSystemInfo::Init()
             SetPropertyAsAString(NS_LITERAL_STRING("shellVersion"), str);
         }
         bool isTablet = mozilla::AndroidBridge::Bridge()->IsTablet();
-        SetPropertyAsBool(NS_LITERAL_STRING("isTablet"), isTablet);
+        SetPropertyAsBool(NS_LITERAL_STRING("tablet"), isTablet);
     }
 #endif
     return NS_OK;

@@ -41,6 +41,7 @@
 
 interface nsIDOMNode;
 interface nsIDOMRange;
+interface nsINode;
 
 /**
  * Interface for manipulating and querying the current selected range
@@ -95,7 +96,7 @@ interface nsISelection : nsISupports
      * @param offset          Where in given dom node to place the selection (the offset into the given node)
      */
     void collapse(in nsIDOMNode parentNode, in long offset);
-
+    [noscript] void collapseNative(in nsINode parentNode, in long offset);
 
     /**
      * Extends the selection by moving the selection end to the specified node and offset,

@@ -946,10 +946,6 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
   x = left - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderLeft+mResizedObjectMarginLeft : 0);
   y = top - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderTop+mResizedObjectMarginTop : 0);
 
-  // we need to know if we're in a CSS-enabled editor or not
-  bool useCSS;
-  GetIsCSSEnabled(&useCSS);
-
   // we want one transaction only from a user's point of view
   nsAutoEditBatch batchIt(this);
 
@@ -969,7 +965,7 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
                                           x,
                                           false);
   }
-  if (useCSS || mResizedObjectIsAbsolutelyPositioned) {
+  if (IsCSSEnabled() || mResizedObjectIsAbsolutelyPositioned) {
     if (setWidth && NS_SUCCEEDED(mResizedObject->HasAttribute(widthStr, &hasAttr)) && hasAttr)
       RemoveAttribute(mResizedObject, widthStr);
 

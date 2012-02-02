@@ -57,7 +57,6 @@ pref("toolkit.browser.cacheRatioHeight", 3000);
 pref("toolkit.browser.contentViewExpire", 3000);
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
-pref("general.useragent.compatMode.firefox", true);
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.tabs.warnOnClose", true);

@@ -52,6 +52,7 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
+#include "nsObjectLoadingContent.h"
 
 class nsIChannel;
 
@@ -113,7 +114,7 @@ public:
   
   nsresult InitializeEmbedded(nsIURI *aURL,
                               nsNPAPIPluginInstance* aInstance,
-                              nsIPluginInstanceOwner *aOwner = nsnull);
+                              nsObjectLoadingContent *aContent);
   
   nsresult InitializeFullPage(nsIURI* aURL, nsNPAPIPluginInstance *aInstance);
 
@@ -130,7 +131,7 @@ private:
 
   nsCOMPtr<nsIURI> mURL;
   nsCString mURLSpec; // Have to keep this member because GetURL hands out char*
-  nsCOMPtr<nsIPluginInstanceOwner> mOwner;
+  nsCOMPtr<nsIObjectLoadingContent> mContent;
   nsRefPtr<nsNPAPIPluginStreamListener> mPStreamListener;
 
   // Set to true if we request failed (like with a HTTP response of 404)

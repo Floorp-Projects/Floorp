@@ -990,13 +990,13 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
         return NS_OK;  
       }
 
-      nsCOMPtr<nsIDOMNode> node;
-      nodeList->Item(0, getter_AddRefs(node));
-      NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-      if (mEditor->IsMozEditorBogusNode(node))
-        mBogusNode = node;
-      else
+      nsCOMPtr<nsIContent> content = nodeList->GetNodeAt(0);
+      MOZ_ASSERT(content);
+      if (mEditor->IsMozEditorBogusNode(content)) {
+        mBogusNode = do_QueryInterface(content);
+      } else {
         mBogusNode = nsnull;
+      }
     }
   }
   return res;
@@ -1114,66 +1114,63 @@ nsTextEditRules::CreateTrailingBRIfNeeded()
 nsresult
 nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
 {
-  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
-  if (!mEditor) { return NS_ERROR_NULL_POINTER; }
-  if (mBogusNode) return NS_OK;  // let's not create more than one, ok?
+  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NULL_POINTER);
+
+  if (mBogusNode) {
+    // Let's not create more than one, ok?
+    return NS_OK;
+  }
 
   // tell rules system to not do any post-processing
   nsAutoRules beginRulesSniffing(mEditor, nsEditor::kOpIgnore, nsIEditor::eNone);
 
-  nsCOMPtr<nsIDOMNode> body = do_QueryInterface(mEditor->GetRoot());
-  if (!body)
-  {
-    // we don't even have a body yet, don't insert any bogus nodes at
+  nsCOMPtr<dom::Element> body = mEditor->GetRoot();
+  if (!body) {
+    // We don't even have a body yet, don't insert any bogus nodes at
     // this point.
-
     return NS_OK;
   }
 
-  // now we've got the body tag.
-  // iterate the body tag, looking for editable content
-  // if no editable content is found, insert the bogus node
-  bool needsBogusContent=true;
-  nsCOMPtr<nsIDOMNode> bodyChild;
-  nsresult res = body->GetFirstChild(getter_AddRefs(bodyChild));        
-  while ((NS_SUCCEEDED(res)) && bodyChild)
-  { 
+  // Now we've got the body element. Iterate over the body element's children,
+  // looking for editable content. If no editable content is found, insert the
+  // bogus node.
+  for (nsCOMPtr<nsIContent> bodyChild = body->GetFirstChild();
+       bodyChild;
+       bodyChild = bodyChild->GetNextSibling()) {
     if (mEditor->IsMozEditorBogusNode(bodyChild) ||
-        !mEditor->IsEditable(body) ||
-        mEditor->IsEditable(bodyChild))
-    {
-      needsBogusContent = false;
-      break;
+        !mEditor->IsEditable(body) || // XXX hoist out of the loop?
+        mEditor->IsEditable(bodyChild)) {
+      return NS_OK;
     }
-    nsCOMPtr<nsIDOMNode>temp;
-    bodyChild->GetNextSibling(getter_AddRefs(temp));
-    bodyChild = do_QueryInterface(temp);
   }
-  // Skip adding the bogus node if body is read-only
-  if (needsBogusContent && mEditor->IsModifiableNode(body))
-  {
-    // create a br
-    nsCOMPtr<nsIContent> newContent;
-    res = mEditor->CreateHTMLContent(NS_LITERAL_STRING("br"), getter_AddRefs(newContent));
-    NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsIDOMElement>brElement = do_QueryInterface(newContent);
 
-    // set mBogusNode to be the newly created <br>
-    mBogusNode = brElement;
-    NS_ENSURE_TRUE(mBogusNode, NS_ERROR_NULL_POINTER);
-
-    // give it a special attribute
-    newContent->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
-                        kMOZEditorBogusNodeValue, false);
-    
-    // put the node in the document
-    res = mEditor->InsertNode(mBogusNode, body, 0);
-    NS_ENSURE_SUCCESS(res, res);
-
-    // set selection
-    aSelection->Collapse(body, 0);
+  // Skip adding the bogus node if body is read-only.
+  if (!mEditor->IsModifiableNode(body)) {
+    return NS_OK;
   }
-  return res;
+
+  // Create a br.
+  nsCOMPtr<nsIContent> newContent;
+  nsresult rv = mEditor->CreateHTMLContent(NS_LITERAL_STRING("br"), getter_AddRefs(newContent));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // set mBogusNode to be the newly created <br>
+  mBogusNode = do_QueryInterface(newContent);
+  NS_ENSURE_TRUE(mBogusNode, NS_ERROR_NULL_POINTER);
+
+  // Give it a special attribute.
+  newContent->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
+                      kMOZEditorBogusNodeValue, false);
+
+  // Put the node in the document.
+  nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(body);
+  rv = mEditor->InsertNode(mBogusNode, bodyNode, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set selection.
+  aSelection->CollapseNative(body, 0);
+  return NS_OK;
 }
 
 

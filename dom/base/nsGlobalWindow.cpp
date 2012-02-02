@@ -532,7 +532,7 @@ nsDummyJavaPluginOwner::GetWindow(NPWindow *&aWindow)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::SetWindow()
+nsDummyJavaPluginOwner::CallSetWindow()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
