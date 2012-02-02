@@ -9,8 +9,6 @@ let PageThumbsCache = tmp.PageThumbsCache;
 registerCleanupFunction(function () {
   while (gBrowser.tabs.length > 1)
     gBrowser.removeTab(gBrowser.tabs[1]);
-
-  cachedXULDocument = null;
 });
 
 let cachedXULDocument;
@@ -146,7 +144,6 @@ function getXULDocument(aCallback) {
 
   iframe.addEventListener("DOMContentLoaded", function onLoad() {
     iframe.removeEventListener("DOMContentLoaded", onLoad, false);
-    doc.body.removeChild(iframe);
     aCallback(cachedXULDocument = iframe.contentDocument);
   }, false);
 
