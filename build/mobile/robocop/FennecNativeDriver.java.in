@@ -83,6 +83,8 @@ public class FennecNativeDriver implements Driver {
   private Method sendGE;
   private Method _startFrameRecording;
   private Method _stopFrameRecording;
+  private Method _startCheckerboardRecording;
+  private Method _stopCheckerboardRecording;
   private Method _getPixels;
 
   public FennecNativeDriver(Activity activity, Solo robocop){
@@ -110,6 +112,8 @@ public class FennecNativeDriver implements Driver {
       Class gfx = classLoader.loadClass("org.mozilla.gecko.gfx.PanningPerfAPI");
       _startFrameRecording = gfx.getDeclaredMethod("startFrameTimeRecording");
       _stopFrameRecording = gfx.getDeclaredMethod("stopFrameTimeRecording");
+      _startCheckerboardRecording = gfx.getDeclaredMethod("startCheckerboardRecording");
+      _stopCheckerboardRecording = gfx.getDeclaredMethod("stopCheckerboardRecording");
 
       Class layerView = classLoader.loadClass("org.mozilla.gecko.gfx.LayerView");
       _getPixels = layerView.getDeclaredMethod("getPixels");
@@ -213,6 +217,42 @@ public class FennecNativeDriver implements Driver {
         last = val;
       }
       return numDelays;
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    }
+
+    return 0;
+  }
+
+  public void startCheckerboardRecording() {
+    try {
+      Object [] params = null;
+      _startCheckerboardRecording.invoke(null, params);
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public int stopCheckerboardRecording() {
+    Class [] parameters = new Class[1];
+    parameters[0] = null;
+    List checkerboard;
+
+    try {
+      Object [] params = null;
+      checkerboard = (List)_stopCheckerboardRecording.invoke(null, params);
+      Object [] amountarray = checkerboard.toArray();
+      int numIncompleteFrames = 0;
+      for (int i=0; i < amountarray.length; i++) {
+        Float val = (Float)amountarray[i];
+        if (val > 0.0f)
+          numIncompleteFrames++;
+      }
+      return numIncompleteFrames;
     } catch (IllegalAccessException e) {
       e.printStackTrace();
     } catch (InvocationTargetException e) {
