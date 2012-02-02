@@ -810,6 +810,20 @@ SourceEditor.prototype = {
   },
 
   /**
+   * Get the indentation string used in the document being edited.
+   *
+   * @return string
+   *         The indentation string.
+   */
+  getIndentationString: function SE_getIndentationString()
+  {
+    if (this._expandTab) {
+      return (new Array(this._tabSize + 1)).join(" ");
+    }
+    return "\t";
+  },
+
+  /**
    * Set the source editor mode to the file type you are editing.
    *
    * @param string aMode
