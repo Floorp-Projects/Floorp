@@ -246,6 +246,12 @@ TypeInferenceOracle::elementWriteIsPacked(JSScript *script, jsbytecode *pc)
     return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
 }
 
+bool
+TypeInferenceOracle::setElementHasWrittenHoles(JSScript *script, jsbytecode *pc)
+{
+    return script->analysis()->getCode(pc).arrayWriteHole;
+}
+
 MIRType
 TypeInferenceOracle::elementWrite(JSScript *script, jsbytecode *pc)
 {

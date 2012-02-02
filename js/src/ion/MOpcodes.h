@@ -105,6 +105,7 @@ namespace ion {
     _(LoadElement)                                                          \
     _(LoadElementHole)                                                      \
     _(StoreElement)                                                         \
+    _(StoreElementHole)                                                     \
     _(LoadFixedSlot)                                                        \
     _(StoreFixedSlot)                                                       \
     _(CallGetProperty)                                                      \

@@ -145,6 +145,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         storeTypeTag(ImmTag(jv.s.tag), Operand(dest));
         storePayload(val, Operand(dest));
     }
+    void storeValue(ValueOperand val, BaseIndex dest) {
+        storeValue(val, Operand(dest));
+    }
     void loadValue(Operand src, ValueOperand val) {
         Operand payload = ToPayload(src);
         Operand type = ToType(src);
@@ -176,7 +179,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void pushValue(const Value &val) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         push(Imm32(jv.s.tag));
-        push(Imm32(jv.s.payload.i32));
+        if (val.isGCThing())
+            push(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())));
+        else
+            push(Imm32(jv.s.payload.i32));
     }
     void pushValue(JSValueType type, Register reg) {
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));

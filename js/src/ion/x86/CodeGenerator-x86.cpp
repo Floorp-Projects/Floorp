@@ -274,31 +274,19 @@ CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
     return true;
 }
 
-bool
-CodeGeneratorX86::visitStoreElementV(LStoreElementV *store)
+void
+CodeGeneratorX86::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
+                                    const Register &elements, const LAllocation *index)
 {
-    Operand dest = createArrayElementOperand(ToRegister(store->elements()), store->index());
-    const ValueOperand value = ToValue(store, LStoreElementV::Value);
-
-    masm.storeValue(value, dest);
-    return true;
-}
-
-bool
-CodeGeneratorX86::visitStoreElementT(LStoreElementT *store)
-{
-    Operand dest = createArrayElementOperand(ToRegister(store->elements()), store->index());
-
-    const LAllocation *value = store->value();
-    MIRType valueType = store->mir()->value()->type();
+    Operand dest = createArrayElementOperand(elements, index);
 
     if (valueType == MIRType_Double) {
         masm.movsd(ToFloatRegister(value), dest);
-        return true;
+        return;
     }
 
     // Store the type tag if needed.
-    if (valueType != store->mir()->elementType())
+    if (valueType != elementType)
         masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), dest);
 
     // Store the payload.
@@ -306,8 +294,6 @@ CodeGeneratorX86::visitStoreElementT(LStoreElementT *store)
         masm.storePayload(*value->toConstant(), dest);
     else
         masm.storePayload(ToRegister(value), dest);
-
-    return true;
 }
 
 bool

@@ -45,6 +45,17 @@
 namespace js {
 namespace ion {
 
+static inline int32
+ToInt32(const LAllocation *a)
+{
+    if (a->isConstantValue())
+        return a->toConstant()->toInt32();
+    if (a->isConstantIndex())
+        return a->toConstantIndex()->index();
+    JS_NOT_REACHED("this is not a constant!");
+    return -1;
+}
+
 static inline Register
 ToRegister(const LAllocation &a)
 {
@@ -102,6 +113,14 @@ static inline AnyRegister
 ToAnyRegister(const LDefinition *def)
 {
     return ToAnyRegister(def->output());
+}
+
+static inline Int32Key
+ToInt32Key(const LAllocation *a)
+{
+    if (a->isConstant())
+        return Int32Key(ToInt32(a));
+    return Int32Key(ToRegister(a));
 }
 
 static inline ValueOperand

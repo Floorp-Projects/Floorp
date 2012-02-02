@@ -235,6 +235,27 @@ class MacroAssembler : public MacroAssemblerSpecific
         pushValue(type, reg);
         framePushed_ += sizeof(Value);
     }
+
+    void bumpKey(Int32Key *key, int diff) {
+        if (key->isRegister())
+            add32(Imm32(diff), key->reg());
+        else
+            key->bumpConstant(diff);
+    }
+
+    void storeKey(const Int32Key &key, const Address &dest) {
+        if (key.isRegister())
+            store32(key.reg(), dest);
+        else
+            store32(Imm32(key.constant()), dest);
+    }
+
+    void branchKey(Condition cond, const Address &dest, const Int32Key &key, Label *label) {
+        if (key.isRegister())
+            branch32(cond, dest, key.reg(), label);
+        else
+            branch32(cond, dest, Imm32(key.constant()), label);
+    }
 };
 
 } // namespace ion

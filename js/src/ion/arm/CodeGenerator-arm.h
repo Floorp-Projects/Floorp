@@ -132,6 +132,9 @@ class CodeGeneratorARM : public CodeGeneratorShared
     Register splitTagForTest(const ValueOperand &value);
     Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
+    void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
+                           const Register &elements, const LAllocation *index);
+
   protected:
     void linkAbsoluteLabels();
 
@@ -152,8 +155,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitWriteBarrierT(LWriteBarrierT *barrier);
 
     bool visitLoadElementT(LLoadElementT *load);
-    bool visitStoreElementV(LStoreElementV *store);
-    bool visitStoreElementT(LStoreElementT *store);
 
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardClass(LGuardClass *guard);

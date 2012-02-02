@@ -282,15 +282,15 @@ class TypedOrValueRegister
         dataValue() = value;
     }
 
-    MIRType type() {
+    MIRType type() const {
         return type_;
     }
 
-    bool hasTyped() {
+    bool hasTyped() const {
         return type() != MIRType_None && type() != MIRType_Value;
     }
 
-    bool hasValue() {
+    bool hasValue() const {
         return type() == MIRType_Value;
     }
 
@@ -351,6 +351,38 @@ class ConstantOrRegister
 
     TypedOrValueRegister reg() {
         return dataReg();
+    }
+};
+
+struct Int32Key {
+    bool isRegister_;
+    union {
+        Register reg_;
+        int32_t constant_;
+    };
+
+    explicit Int32Key(Register reg)
+      : isRegister_(true), reg_(reg)
+    { }
+
+    explicit Int32Key(int32_t index)
+      : isRegister_(false), constant_(index)
+    { }
+
+    inline void bumpConstant(int diff) {
+        JS_ASSERT(!isRegister_);
+        constant_ += diff;
+    }
+    inline Register reg() const {
+        JS_ASSERT(isRegister_);
+        return reg_;
+    }
+    inline int32_t constant() const {
+        JS_ASSERT(!isRegister_);
+        return constant_;
+    }
+    inline bool isRegister() const {
+        return isRegister_;
     }
 };
 
