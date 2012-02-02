@@ -49,11 +49,12 @@ import org.mozilla.gecko.FloatUtils;
 public abstract class Layer {
     private final ReentrantLock mTransactionLock;
     private boolean mInTransaction;
-    private Point mOrigin;
     private Point mNewOrigin;
-    private float mResolution;
     private float mNewResolution;
     private LayerView mView;
+
+    protected Point mOrigin;
+    protected float mResolution;
 
     public Layer() {
         mTransactionLock = new ReentrantLock();

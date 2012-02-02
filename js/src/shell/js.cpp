@@ -389,7 +389,6 @@ ShellOperationCallback(JSContext *cx)
 static void
 SetContextOptions(JSContext *cx)
 {
-    JS_SetNativeStackQuota(cx, gMaxStackSize);
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
@@ -5528,6 +5527,8 @@ main(int argc, char **argv, char **envp)
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
     JS_SetRuntimeSecurityCallbacks(rt, &securityCallbacks);
+
+    JS_SetNativeStackQuota(rt, gMaxStackSize);
 
     if (!InitWatchdog(rt))
         return 1;

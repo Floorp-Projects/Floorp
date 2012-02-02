@@ -47,6 +47,12 @@ typedef int (* nsVoidArrayComparatorFunc)
 
 // Enumerator callback function. Return false to stop
 typedef bool (* nsVoidArrayEnumFunc)(void* aElement, void *aData);
+typedef bool (* nsVoidArrayEnumFuncConst)(const void* aElement, void *aData);
+
+// SizeOfExcludingThis callback function.
+typedef size_t (* nsVoidArraySizeOfElementIncludingThisFunc)(const void* aElement,
+                                                             nsMallocSizeOfFun aMallocSizeOf,
+                                                             void *aData);
 
 /// A basic zero-based array of void*'s that manages its own memory
 class NS_COM_GLUE nsVoidArray {
@@ -127,7 +133,15 @@ public:
   void Sort(nsVoidArrayComparatorFunc aFunc, void* aData);
 
   bool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData);
+  bool EnumerateForwards(nsVoidArrayEnumFuncConst aFunc, void* aData) const;
   bool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
+
+  // Measures the size of the array's element storage, and if
+  // |aSizeOfElementIncludingThis| is non-NULL, measures the size of things
+  // pointed to by elements.
+  size_t SizeOfExcludingThis(
+           nsVoidArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
+           nsMallocSizeOfFun aMallocSizeOf, void* aData = NULL) const;
 
 protected:
   bool GrowArrayBy(PRInt32 aGrowBy);

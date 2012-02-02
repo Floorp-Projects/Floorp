@@ -47,17 +47,15 @@ const LocalFile = CC('@mozilla.org/file/local;1',
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
+
 XPCOMUtils.defineLazyGetter(Services, 'env', function() {
   return Cc['@mozilla.org/process/environment;1']
            .getService(Ci.nsIEnvironment);
 });
+
 XPCOMUtils.defineLazyGetter(Services, 'ss', function() {
   return Cc['@mozilla.org/content/style-sheet-service;1']
            .getService(Ci.nsIStyleSheetService);
-});
-XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
-  return Cc['@mozilla.org/focus-manager;1']
-           .getService(Ci.nsIFocusManager);
 });
 
 // In order to use http:// scheme instead of file:// scheme
@@ -76,7 +74,7 @@ function startupHttpd(baseDir, port) {
 
 // FIXME Bug 707625
 // until we have a proper security model, add some rights to
-// the pre-installed web applications 
+// the pre-installed web applications
 function addPermissions(urls) {
   let permissions = [
     'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app'
@@ -84,7 +82,7 @@ function addPermissions(urls) {
   urls.forEach(function(url) {
     let uri = Services.io.newURI(url, null, null);
     let allow = Ci.nsIPermissionManager.ALLOW_ACTION;
-    
+
     permissions.forEach(function(permission) {
       Services.perms.add(uri, permission, allow);
     });
@@ -96,9 +94,9 @@ var shell = {
   // FIXME/bug 678695: this should be a system setting
   preferredScreenBrightness: 1.0,
 
-  get home() {
-    delete this.home;
-    return this.home = document.getElementById('homescreen');
+  get contentBrowser() {
+    delete this.contentBrowser;
+    return this.contentBrowser = document.getElementById('homescreen');
   },
 
   get homeURL() {
@@ -131,7 +129,7 @@ var shell = {
     window.controllers.appendController(this);
     window.addEventListener('keypress', this);
     window.addEventListener('MozApplicationManifest', this);
-    this.home.addEventListener('load', this, true);
+    this.contentBrowser.addEventListener('load', this, true);
 
     try {
       Services.io.offline = false;
@@ -156,7 +154,15 @@ var shell = {
       return alert(msg);
     }
 
-    let browser = this.home;
+    // Load webapi+apps.js as a frame script
+    let frameScriptUrl = 'chrome://browser/content/webapi.js';
+    try {
+      messageManager.loadFrameScript(frameScriptUrl, true);
+    } catch (e) {
+      dump('Error when loading ' + frameScriptUrl + ' as a frame script: ' + e + '\n');
+    }
+
+    let browser = this.contentBrowser;
     browser.homePage = homeURL;
     browser.goHome();
   },
@@ -187,7 +193,7 @@ var shell = {
   doCommand: function shell_doCommand(cmd) {
     switch (cmd) {
       case 'cmd_close':
-        this.home.contentWindow.postMessage('appclose', '*');
+        content.postMessage('appclose', '*');
         break;
     }
   },
@@ -197,7 +203,7 @@ var shell = {
       case 'keypress':
         switch (evt.keyCode) {
           case evt.DOM_VK_HOME:
-            this.sendEvent(this.home.contentWindow, 'home');
+            this.sendEvent(content, 'home');
             break;
           case evt.DOM_VK_SLEEP:
             this.toggleScreen();
@@ -205,7 +211,7 @@ var shell = {
             let details = {
               'enabled': screen.mozEnabled
             };
-            this.sendEvent(this.home.contentWindow, 'sleep', details);
+            this.sendEvent(content, 'sleep', details);
             break;
           case evt.DOM_VK_ESCAPE:
             if (evt.defaultPrevented)
@@ -215,8 +221,12 @@ var shell = {
         }
         break;
       case 'load':
-        this.home.removeEventListener('load', this, true);
+        this.contentBrowser.removeEventListener('load', this, true);
         this.turnScreenOn();
+
+        let chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
+        chromeWindow.browserDOMWindow = new nsBrowserAccess();
+
         this.sendEvent(window, 'ContentStart');
         break;
       case 'MozApplicationManifest':
@@ -229,7 +239,7 @@ var shell = {
           if (!documentElement)
             return;
 
-          let manifest = documentElement.getAttribute("manifest");
+          let manifest = documentElement.getAttribute('manifest');
           if (!manifest)
             return;
 
@@ -273,78 +283,47 @@ var shell = {
   turnScreenOn: function shell_turnScreenOn() {
     screen.mozEnabled = true;
     screen.mozBrightness = this.preferredScreenBrightness;
-  },
-};
-
-(function VirtualKeyboardManager() {
-  let activeElement = null;
-  let isKeyboardOpened = false;
-
-  let constructor = {
-    handleEvent: function vkm_handleEvent(evt) {
-      let contentWindow = shell.home.contentWindow.wrappedJSObject;
-
-      switch (evt.type) {
-        case 'ContentStart':
-          contentWindow.navigator.mozKeyboard = new MozKeyboard();
-          break;
-        case 'keypress':
-          if (evt.keyCode != evt.DOM_VK_ESCAPE || !isKeyboardOpened)
-            return;
-
-          shell.sendEvent(contentWindow, 'hideime');
-          isKeyboardOpened = false;
-
-          evt.preventDefault();
-          evt.stopPropagation();
-          break;
-        case 'mousedown':
-          if (evt.target != activeElement || isKeyboardOpened)
-            return;
-
-          let type = activeElement.type;
-          shell.sendEvent(contentWindow, 'showime', { type: type });
-          isKeyboardOpened = true;
-          break;
-      }
-    },
-    observe: function vkm_observe(subject, topic, data) {
-      let contentWindow = shell.home.contentWindow;
-
-      let shouldOpen = parseInt(data);
-      if (shouldOpen && !isKeyboardOpened) {
-        activeElement = Services.fm.focusedElement;
-        if (!activeElement)
-          return;
-
-        let type = activeElement.type;
-        shell.sendEvent(contentWindow, 'showime', { type: type });
-      } else if (!shouldOpen && isKeyboardOpened) {
-        shell.sendEvent(contentWindow, 'hideime');
-      }
-      isKeyboardOpened = shouldOpen;
-    }
-  };
-
-  Services.obs.addObserver(constructor, 'ime-enabled-state-changed', false);
-  ['ContentStart', 'keypress', 'mousedown'].forEach(function vkm_events(type) {
-    window.addEventListener(type, constructor, true);
-  });
-})();
-
-
-function MozKeyboard() {
-}
-
-MozKeyboard.prototype = {
-  sendKey: function mozKeyboardSendKey(keyCode, charCode) {
-    charCode = (charCode == undefined) ? keyCode : charCode;
-
-    var utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
-    ['keydown', 'keypress', 'keyup'].forEach(function sendKeyEvents(type) {
-      utils.sendKeyEvent(type, keyCode, charCode, null);
-    });
   }
 };
 
+
+
+function nsBrowserAccess() {
+}
+
+nsBrowserAccess.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
+
+  openURI: function openURI(uri, opener, where, context) {
+    // TODO This should be replaced by an 'open-browser-window' intent
+    let contentWindow = content.wrappedJSObject;
+    if (!('getApplicationManager' in contentWindow))
+      return null;
+
+    let applicationManager = contentWindow.getApplicationManager();
+    if (!applicationManager)
+      return null;
+
+    let url = uri ? uri.spec : 'about:blank';
+    let window = applicationManager.launch(url, where);
+    return window.contentWindow;
+  },
+
+  openURIInFrame: function openURIInFrame(uri, opener, where, context) {
+    throw new Error('Not Implemented');
+  },
+
+  isTabContentWindow: function isTabContentWindow(contentWindow) {
+    return contentWindow == window;
+  }
+};
+
+// Pipe `console` log messages to the nsIConsoleService which writes them
+// to logcat.
+Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
+  let message = subject.wrappedJSObject;
+  let prefix = "Content JS " + message.level.toUpperCase() +
+               " at " + message.filename + ":" + message.lineNumber +
+               " in " + (message.functionName || "anonymous") + ": ";
+  Services.console.logStringMessage(prefix + Array.join(message.arguments, " "));
+}, "console-api-log-event", false);

@@ -1464,6 +1464,10 @@ struct JSObject : js::gc::Cell
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 
+#ifdef DEBUG
+    void dump();
+#endif
+
   private:
     static void staticAsserts() {
         /* Check alignment for any fixed slots allocated after the object. */
