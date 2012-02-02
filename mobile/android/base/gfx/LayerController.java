@@ -335,11 +335,6 @@ public class LayerController {
         return new RectF(x, y, x + layerSize.width, y + layerSize.height);
     }
 
-    public RectF restrictToPageSize(RectF aRect) {
-        FloatSize pageSize = getPageSize();
-        return RectUtils.restrict(aRect, new RectF(0, 0, pageSize.width, pageSize.height));
-    }
-
     // Returns true if a checkerboard is about to be visible.
     private boolean aboutToCheckerboard() {
         // Increase the size of the viewport (and clamp to page boundaries), and
