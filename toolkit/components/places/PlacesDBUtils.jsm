@@ -856,87 +856,103 @@ let PlacesDBUtils = {
   {
     let tasks = new Tasks(aTasks);
 
-    // Hash of telemetry probes.  Each one uses the historygram name as key,
-    // and may be either a database query or an helper function.
-    let probes = {
-      PLACES_PAGES_COUNT: "SELECT count(*) FROM moz_places",
+    // This will be populated with one integer property for each probe result,
+    // using the histogram name as key.
+    let probeValues = {};
 
-      PLACES_BOOKMARKS_COUNT: "SELECT count(*) FROM moz_bookmarks b "
-                            + "JOIN moz_bookmarks t ON t.id = b.parent "
-                            + "AND t.parent <> :tags_folder "
-                            + "WHERE b.type = :type_bookmark ",
+    // The following array contains an ordered list of entries that are
+    // processed to collect telemetry data.  Each entry has these properties:
+    //
+    //  histogram: Name of the telemetry histogram to update.
+    //  query:     This is optional.  If present, contains a database command
+    //             that will be executed asynchronously, and whose result will
+    //             be added to the telemetry histogram.
+    //  callback:  This is optional.  If present, contains a function that must
+    //             return the value that will be added to the telemetry
+    //             histogram. If a query is also present, its result is passed
+    //             as the first argument of the function.  If the function
+    //             raises an exception, no data is added to the histogram.
+    //
+    // Since all queries are executed in order by the database backend, the
+    // callbacks can also use the result of previous queries stored in the
+    // probeValues object.
+    let probes = [
+      { histogram: "PLACES_PAGES_COUNT",
+        query:     "SELECT count(*) FROM moz_places" },
 
-      PLACES_TAGS_COUNT: "SELECT count(*) FROM moz_bookmarks "
-                       + "WHERE parent = :tags_folder ",
+      { histogram: "PLACES_BOOKMARKS_COUNT",
+        query:     "SELECT count(*) FROM moz_bookmarks b "
+                 + "JOIN moz_bookmarks t ON t.id = b.parent "
+                 + "AND t.parent <> :tags_folder "
+                 + "WHERE b.type = :type_bookmark " },
 
-      PLACES_FOLDERS_COUNT: "SELECT count(*) FROM moz_bookmarks "
-                          + "WHERE TYPE = :type_folder "
-                          + "AND parent NOT IN (0, :places_root, :tags_folder) ",
+      { histogram: "PLACES_TAGS_COUNT",
+        query:     "SELECT count(*) FROM moz_bookmarks "
+                 + "WHERE parent = :tags_folder " },
 
-      PLACES_KEYWORDS_COUNT: "SELECT count(*) FROM moz_keywords ",
+      { histogram: "PLACES_FOLDERS_COUNT",
+        query:     "SELECT count(*) FROM moz_bookmarks "
+                 + "WHERE TYPE = :type_folder "
+                 + "AND parent NOT IN (0, :places_root, :tags_folder) " },
 
-      PLACES_SORTED_BOOKMARKS_PERC: "SELECT ROUND(( "
-                                  +   "SELECT count(*) FROM moz_bookmarks b "
-                                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
-                                  +   "AND t.parent <> :tags_folder AND t.parent > :places_root "
-                                  +   "WHERE b.type  = :type_bookmark "
-                                  +   ") * 100 / ( "
-                                  +   "SELECT count(*) FROM moz_bookmarks b "
-                                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
-                                  +   "AND t.parent <> :tags_folder "
-                                  +   "WHERE b.type = :type_bookmark "
-                                  + ")) ",
+      { histogram: "PLACES_KEYWORDS_COUNT",
+        query:     "SELECT count(*) FROM moz_keywords " },
 
-      PLACES_TAGGED_BOOKMARKS_PERC: "SELECT ROUND(( "
-                                  +   "SELECT count(*) FROM moz_bookmarks b "
-                                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
-                                  +   "AND t.parent = :tags_folder "
-                                  +   ") * 100 / ( "
-                                  +   "SELECT count(*) FROM moz_bookmarks b "
-                                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
-                                  +   "AND t.parent <> :tags_folder "
-                                  +   "WHERE b.type = :type_bookmark "
-                                  + ")) ",
+      { histogram: "PLACES_SORTED_BOOKMARKS_PERC",
+        query:     "SELECT ROUND(( "
+                 +   "SELECT count(*) FROM moz_bookmarks b "
+                 +   "JOIN moz_bookmarks t ON t.id = b.parent "
+                 +   "AND t.parent <> :tags_folder AND t.parent > :places_root "
+                 +   "WHERE b.type  = :type_bookmark "
+                 +   ") * 100 / ( "
+                 +   "SELECT count(*) FROM moz_bookmarks b "
+                 +   "JOIN moz_bookmarks t ON t.id = b.parent "
+                 +   "AND t.parent <> :tags_folder "
+                 +   "WHERE b.type = :type_bookmark "
+                 + ")) " },
 
-      PLACES_DATABASE_FILESIZE_MB: function () {
-        let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-        DBFile.append("places.sqlite");
-        try {
+      { histogram: "PLACES_TAGGED_BOOKMARKS_PERC",
+        query:     "SELECT ROUND(( "
+                 +   "SELECT count(*) FROM moz_bookmarks b "
+                 +   "JOIN moz_bookmarks t ON t.id = b.parent "
+                 +   "AND t.parent = :tags_folder "
+                 +   ") * 100 / ( "
+                 +   "SELECT count(*) FROM moz_bookmarks b "
+                 +   "JOIN moz_bookmarks t ON t.id = b.parent "
+                 +   "AND t.parent <> :tags_folder "
+                 +   "WHERE b.type = :type_bookmark "
+                 + ")) " },
+
+      { histogram: "PLACES_DATABASE_FILESIZE_MB",
+        callback: function () {
+          let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+          DBFile.append("places.sqlite");
           return parseInt(DBFile.fileSize / BYTES_PER_MEBIBYTE);
-        } catch (ex) {
-          return 0;
         }
       },
 
-      PLACES_DATABASE_JOURNALSIZE_MB: function () {
-        let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-        DBFile.append("places.sqlite-wal");
-        try {
+      { histogram: "PLACES_DATABASE_JOURNALSIZE_MB",
+        callback: function () {
+          let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+          DBFile.append("places.sqlite-wal");
           return parseInt(DBFile.fileSize / BYTES_PER_MEBIBYTE);
-        } catch (ex) {
-          return 0;
         }
       },
 
-      PLACES_DATABASE_PAGESIZE_B: "PRAGMA page_size /* PlacesDBUtils.jsm PAGESIZE_B */",
+      { histogram: "PLACES_DATABASE_PAGESIZE_B",
+        query:     "PRAGMA page_size /* PlacesDBUtils.jsm PAGESIZE_B */" },
 
-      PLACES_DATABASE_SIZE_PER_PAGE_B: function() {
-        // Cannot use the filesize here, due to chunked growth.
-        let stmt = DBConn.createStatement("PRAGMA page_size /* PlacesDBUtils.jsm SIZE_PER_PAGE_B */");
-        stmt.executeStep();
-        let pageSize = stmt.row.page_size;
-        stmt.finalize();
-        stmt = DBConn.createStatement("PRAGMA page_count");
-        stmt.executeStep();
-        let pageCount = stmt.row.page_count;
-        stmt.finalize();
-        stmt = DBConn.createStatement("SELECT count(*) AS c FROM moz_places");
-        stmt.executeStep();
-        let count = stmt.row.c;
-        stmt.finalize();
-        return Math.round((pageSize * pageCount) / count);
+      { histogram: "PLACES_DATABASE_SIZE_PER_PAGE_B",
+        query:     "PRAGMA page_count",
+        callback: function (aDbPageCount) {
+          // Note that the database file size would not be meaningful for this
+          // calculation, because the file grows in fixed-size chunks.
+          let dbPageSize = probeValues.PLACES_DATABASE_PAGESIZE_B;
+          let placesPageCount = probeValues.PLACES_PAGES_COUNT;
+          return Math.round((dbPageSize * aDbPageCount) / placesPageCount);
+        }
       }
-    };
+    ];
 
     let params = {
       tags_folder: PlacesUtils.tagsFolderId,
@@ -945,43 +961,46 @@ let PlacesDBUtils = {
       places_root: PlacesUtils.placesRootId
     };
 
-    for (let probename in probes) {
-      let probe = probes[probename];
-      let histogram = Services.telemetry.getHistogramById(probename);
-      if (typeof probe == "string") {
-        // Run it as a query.
-        let stmt = DBConn.createAsyncStatement(probe);
-        for (param in params) {
-          if (probe.indexOf(":" + param) > 0) {
-            stmt.params[param] = params[param];
-          }
+    function reportTelemetry(aProbe, aValue) {
+      try {
+        let value = aValue;
+        if ("callback" in aProbe) {
+          value = aProbe.callback(value);
         }
+        probeValues[aProbe.histogram] = value;
+        Services.telemetry.getHistogramById(aProbe.histogram)
+                          .add(value);
+      } catch (ex) {
+        Components.utils.reportError(ex);
+      }
+    }
 
-        try {
-          stmt.executeAsync({
-            handleError: PlacesDBUtils._handleError,
-            handleResult: function (aResultSet) {
-              let row = aResultSet.getNextRow();
-              try {
-                histogram.add(row.getResultByIndex(0));
-              } catch (ex) {
-                Components.utils.reportError("Unable to report telemetry.");
-              }
-            },
-            handleCompletion: function () {}
-          });
-        }
-        finally{
-          stmt.finalize();
+    for (let i = 0; i < probes.length; i++) {
+      let probe = probes[i];
+ 
+      if (!("query" in probe)) {
+        reportTelemetry(probe);
+        continue;
+      }
+
+      let stmt = DBConn.createAsyncStatement(probe.query);
+      for (param in params) {
+        if (probe.query.indexOf(":" + param) > 0) {
+          stmt.params[param] = params[param];
         }
       }
-      else {
-        // Execute it as a function.
-        try {
-          histogram.add(probe());
-        } catch (ex) {
-          Components.utils.reportError("Unable to report telemetry.");
-        }
+
+      try {
+        stmt.executeAsync({
+          handleError: PlacesDBUtils._handleError,
+          handleResult: function (aResultSet) {
+            let row = aResultSet.getNextRow();
+            reportTelemetry(probe, row.getResultByIndex(0));
+          },
+          handleCompletion: function () {}
+        });
+      } finally{
+        stmt.finalize();
       }
     }
 
