@@ -673,7 +673,10 @@ public class PanZoomController
 
     /* Returns the nearest viewport metrics with no overscroll visible. */
     private ViewportMetrics getValidViewportMetrics() {
-        ViewportMetrics viewportMetrics = new ViewportMetrics(mController.getViewportMetrics());
+        return getValidViewportMetrics(new ViewportMetrics(mController.getViewportMetrics()));
+    }
+
+    private ViewportMetrics getValidViewportMetrics(ViewportMetrics viewportMetrics) {
         Log.d(LOGTAG, "generating valid viewport using " + viewportMetrics);
 
         /* First, we adjust the zoom factor so that we can make no overscrolled area visible. */
@@ -872,23 +875,37 @@ public class PanZoomController
 
         mState = PanZoomState.ANIMATED_ZOOM;
         final float startZoom = mController.getZoomFactor();
-        final PointF startPoint = mController.getOrigin();
 
         RectF viewport = mController.getViewport();
-
-        float newHeight = zoomToRect.width() * viewport.height() / viewport.width();
-        // if the requested rect would not fill the screen, shift it to be centered
-        if (zoomToRect.height() < newHeight) {
-            zoomToRect.top -= (newHeight - zoomToRect.height())/2;
+        // 1. adjust the aspect ratio of zoomToRect to match that of the current viewport,
+        // enlarging as necessary (if it gets too big, it will get shrunk in the next step).
+        // while enlarging make sure we enlarge equally on both sides to keep the target rect
+        // centered.
+        float targetRatio = viewport.width() / viewport.height();
+        float rectRatio = zoomToRect.width() / zoomToRect.height();
+        if (FloatUtils.fuzzyEquals(targetRatio, rectRatio)) {
+            // all good, do nothing
+        } else if (targetRatio < rectRatio) {
+            // need to increase zoomToRect height
+            float newHeight = zoomToRect.width() / targetRatio;
+            zoomToRect.top -= (newHeight - zoomToRect.height()) / 2;
             zoomToRect.bottom = zoomToRect.top + newHeight;
+        } else { // targetRatio > rectRatio) {
+            // need to increase zoomToRect width
+            float newWidth = targetRatio * zoomToRect.height();
+            zoomToRect.left -= (newWidth - zoomToRect.width()) / 2;
+            zoomToRect.right = zoomToRect.left + newWidth;
         }
 
-        zoomToRect = mController.restrictToPageSize(zoomToRect);
         float finalZoom = viewport.width() * startZoom / zoomToRect.width();
 
         ViewportMetrics finalMetrics = new ViewportMetrics(mController.getViewportMetrics());
         finalMetrics.setOrigin(new PointF(zoomToRect.left, zoomToRect.top));
         finalMetrics.scaleTo(finalZoom, new PointF(0.0f, 0.0f));
+
+        // 2. now run getValidViewportMetrics on it, so that the target viewport is
+        // clamped down to prevent overscroll, over-zoom, and other bad conditions.
+        finalMetrics = getValidViewportMetrics(finalMetrics);
 
         bounce(finalMetrics);
         return true;
