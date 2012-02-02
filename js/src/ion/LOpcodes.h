@@ -111,6 +111,8 @@
     _(LoadElementHole)              \
     _(StoreElementV)                \
     _(StoreElementT)                \
+    _(StoreElementHoleV)            \
+    _(StoreElementHoleT)            \
     _(LoadFixedSlotV)               \
     _(LoadFixedSlotT)               \
     _(StoreFixedSlotV)              \

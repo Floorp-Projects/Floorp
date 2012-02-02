@@ -134,6 +134,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             writeDataRelocation(masm.currentOffset());
         movq(ScratchReg, Operand(dest));
     }
+    void storeValue(ValueOperand val, BaseIndex dest) {
+        storeValue(val, Operand(dest));
+    }
     void loadValue(Operand src, ValueOperand val) {
         movq(src, val.valueReg());
     }

@@ -957,6 +957,183 @@ CodeGenerator::visitBoundsCheckLower(LBoundsCheckLower *lir)
     return bailoutIf(Assembler::LessThan, lir->snapshot());
 }
 
+class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
+{
+    LInstruction *ins_;
+    Label rejoinStore_;
+
+  public:
+    OutOfLineStoreElementHole(LInstruction *ins)
+      : ins_(ins)
+    {
+        JS_ASSERT(ins->isStoreElementHoleV() || ins->isStoreElementHoleT());
+    }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineStoreElementHole(this);
+    }
+    LInstruction *ins() const {
+        return ins_;
+    }
+    Label *rejoinStore() {
+        return &rejoinStore_;
+    }
+};
+
+bool
+CodeGenerator::visitStoreElementT(LStoreElementT *store)
+{
+    storeElementTyped(store->value(), store->mir()->value()->type(), store->mir()->elementType(),
+                      ToRegister(store->elements()), store->index());
+    return true;
+}
+
+bool
+CodeGenerator::visitStoreElementV(LStoreElementV *lir)
+{
+    const ValueOperand value = ToValue(lir, LStoreElementV::Value);
+    Register elements = ToRegister(lir->elements());
+
+    if (lir->index()->isConstant())
+        masm.storeValue(value, Address(elements, ToInt32(lir->index()) * sizeof(js::Value)));
+    else
+        masm.storeValue(value, BaseIndex(elements, ToRegister(lir->index()), TimesEight));
+    return true;
+}
+
+bool
+CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT *lir)
+{
+    OutOfLineStoreElementHole *ool = new OutOfLineStoreElementHole(lir);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    Register elements = ToRegister(lir->elements());
+    const LAllocation *index = lir->index();
+
+    // OOL path if index >= initializedLength.
+    Address initLength(elements, ObjectElements::offsetOfInitializedLength());
+    masm.branchKey(Assembler::BelowOrEqual, initLength, ToInt32Key(index), ool->entry());
+
+    masm.bind(ool->rejoinStore());
+    storeElementTyped(lir->value(), lir->mir()->value()->type(), lir->mir()->elementType(),
+                      elements, index);
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
+{
+    OutOfLineStoreElementHole *ool = new OutOfLineStoreElementHole(lir);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    Register elements = ToRegister(lir->elements());
+    const LAllocation *index = lir->index();
+    const ValueOperand value = ToValue(lir, LStoreElementHoleV::Value);
+
+    // OOL path if index >= initializedLength.
+    Address initLength(elements, ObjectElements::offsetOfInitializedLength());
+    masm.branchKey(Assembler::BelowOrEqual, initLength, ToInt32Key(index), ool->entry());
+
+    masm.bind(ool->rejoinStore());
+    if (lir->index()->isConstant())
+        masm.storeValue(value, Address(elements, ToInt32(lir->index()) * sizeof(js::Value)));
+    else
+        masm.storeValue(value, BaseIndex(elements, ToRegister(lir->index()), TimesEight));
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
+{
+    Register object, elements;
+    LInstruction *ins = ool->ins();
+    const LAllocation *index;
+    MIRType valueType;
+    ConstantOrRegister value;
+
+    if (ins->isStoreElementHoleV()) {
+        LStoreElementHoleV *store = ins->toStoreElementHoleV();
+        object = ToRegister(store->object());
+        elements = ToRegister(store->elements());
+        index = store->index();
+        valueType = store->mir()->value()->type();
+        value = TypedOrValueRegister(ToValue(store, LStoreElementHoleV::Value));
+    } else {
+        LStoreElementHoleT *store = ins->toStoreElementHoleT();
+        object = ToRegister(store->object());
+        elements = ToRegister(store->elements());
+        index = store->index();
+        valueType = store->mir()->value()->type();
+        if (store->value()->isConstant())
+            value = ConstantOrRegister(*store->value()->toConstant());
+        else
+            value = TypedOrValueRegister(valueType, ToAnyRegister(store->value()));
+    }
+
+    // If index == initializedLength, try to bump the initialized length inline.
+    // If index > initializedLength, call a stub. Note that this relies on the
+    // condition flags sticking from the incoming branch.
+    Label callStub;
+    masm.j(Assembler::NotEqual, &callStub);
+
+    Int32Key key = ToInt32Key(index);
+
+    // Check array capacity.
+    masm.branchKey(Assembler::BelowOrEqual, Address(elements, ObjectElements::offsetOfCapacity()),
+                   key, &callStub);
+
+    // Update initialized length. The capacity guard above ensures this won't overflow,
+    // due to NELEMENTS_LIMIT.
+    masm.bumpKey(&key, 1);
+    masm.storeKey(key, Address(elements, ObjectElements::offsetOfInitializedLength()));
+
+    // Update length if length < initializedLength.
+    Label dontUpdate;
+    masm.branchKey(Assembler::AboveOrEqual, Address(elements, ObjectElements::offsetOfLength()),
+                   key, &dontUpdate);
+    masm.storeKey(key, Address(elements, ObjectElements::offsetOfLength()));
+    masm.bind(&dontUpdate);
+
+    masm.bumpKey(&key, -1);
+
+    if (ins->isStoreElementHoleT() && valueType != MIRType_Double) {
+        // The inline path for StoreElementHoleT does not always store the type tag,
+        // so we do the store on the OOL path. We use MIRType_None for the element type
+        // so that storeElementTyped will always store the type tag.
+        storeElementTyped(ins->toStoreElementHoleT()->value(), valueType, MIRType_None, elements,
+                          index);
+        masm.jump(ool->rejoin());
+    } else {
+        // Jump to the inline path where we will store the value.
+        masm.jump(ool->rejoinStore());
+    }
+
+    masm.bind(&callStub);
+    saveLive(ins);
+
+    typedef bool (*pf)(JSContext *, JSObject *, const Value &, const Value &);
+    static const VMFunction Info = FunctionInfo<pf>(SetObjectElement);
+
+    pushArg(value);
+    if (index->isConstant())
+        pushArg(*index->toConstant());
+    else
+        pushArg(TypedOrValueRegister(MIRType_Int32, ToAnyRegister(index)));
+    pushArg(object);
+    if (!callVM(Info, ins))
+        return false;
+
+    restoreLive(ins);
+    masm.jump(ool->rejoin());
+    return true;
+}
+
 bool
 CodeGenerator::generate()
 {

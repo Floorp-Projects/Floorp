@@ -1149,6 +1149,19 @@ MacroAssemblerARMCompat::store32(Register src, const ImmWord &imm)
 }
 
 void
+MacroAssemblerARMCompat::store32(Register src, const Address &address)
+{
+    storePtr(src, address);
+}
+
+void
+MacroAssemblerARMCompat::store32(Imm32 src, const Address &address)
+{
+    move32(src, ScratchRegister);
+    storePtr(ScratchRegister, address);
+}
+
+void
 MacroAssemblerARMCompat::storePtr(Register src, const Address &address)
 {
     ma_str(src, Operand(address));

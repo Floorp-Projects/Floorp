@@ -496,6 +496,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_cmp(lhs, imm);
         ma_b(label, InvertCondition(cond));
     }
+    void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
+        move32(lhs, ScratchRegister);
+        branch32(cond, ScratchRegister, rhs, label);
+    }
+    void branch32(Condition cond, const Address &lhs, Imm32 rhs, Label *label) {
+        move32(lhs, ScratchRegister);
+        branch32(cond, ScratchRegister, rhs, label);
+    }
     template<typename T>
     void branchTestDouble(Condition cond, const T & t, Label *label) {
         Condition c = testDouble(cond, t);
@@ -695,6 +703,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadPtr(const ImmWord &imm, const Register &dest);
 
     void store32(Register src, const ImmWord &imm);
+    void store32(Register src, const Address &address);
+    void store32(Imm32 src, const Address &address);
     void storePtr(Register src, const Address &address);
     void storePtr(Register src, const ImmWord &imm);
 

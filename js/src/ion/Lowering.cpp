@@ -915,25 +915,58 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
         return false;
 #endif
 
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+
     switch (ins->value()->type()) {
       case MIRType_Value:
       {
-        LInstruction *lir = new LStoreElementV(useRegister(ins->elements()),
-                                               useRegisterOrConstant(ins->index()));
+        LInstruction *lir = new LStoreElementV(elements, index);
         if (!useBox(lir, LStoreElementV::Value, ins->value()))
             return false;
         return add(lir, ins);
       }
-      case MIRType_Double:
-        return add(new LStoreElementT(useRegister(ins->elements()),
-                                      useRegisterOrConstant(ins->index()),
-                                      useRegister(ins->value())), ins);
 
       default:
-        return add(new LStoreElementT(useRegister(ins->elements()),
-                                      useRegisterOrConstant(ins->index()),
-                                      useRegisterOrConstant(ins->value())), ins);
+      {
+        const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
+        return add(new LStoreElementT(elements, index, value), ins);
+      }
     }
+}
+
+bool
+LIRGenerator::visitStoreElementHole(MStoreElementHole *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+#ifdef JSGC_INCREMENTAL
+    if (ins->needsBarrier() && !emitWriteBarrier(ins, ins->value()))
+        return false;
+#endif
+
+    const LUse object = useRegister(ins->object());
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+
+    LInstruction *lir;
+    switch (ins->value()->type()) {
+      case MIRType_Value:
+        lir = new LStoreElementHoleV(object, elements, index);
+        if (!useBox(lir, LStoreElementHoleV::Value, ins->value()))
+            return false;
+        break;
+
+      default:
+      {
+        const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
+        lir = new LStoreElementHoleT(object, elements, index, value);
+        break;
+      }
+    }
+
+    return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

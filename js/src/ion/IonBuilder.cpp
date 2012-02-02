@@ -3199,32 +3199,46 @@ IonBuilder::jsop_setelem_dense()
     MElements *elements = MElements::New(obj);
     current->add(elements);
 
-    // Read and check length.
+    // Use MStoreElementHole if this SETELEM has written to out-of-bounds
+    // indexes in the past. Otherwise, use MStoreElement so that we can hoist
+    // the initialized length and bounds check.
+    MStoreElementCommon *store;
+    if (oracle->setElementHasWrittenHoles(script, pc)) {
+        MStoreElementHole *ins = MStoreElementHole::New(obj, elements, id, value);
+        store = ins;
 
-    MInitializedLength *initLength = MInitializedLength::New(elements);
-    current->add(initLength);
+        current->add(ins);
+        current->push(value);
 
-    MBoundsCheck *check = MBoundsCheck::New(id, initLength);
-    current->add(check);
+        if (!resumeAfter(ins))
+            return false;
+    } else {
+        MInitializedLength *initLength = MInitializedLength::New(elements);
+        current->add(initLength);
 
-    // Store the value.
-    MStoreElement *store = MStoreElement::New(elements, id, value);
-    current->add(store);
-    current->push(value);
+        MBoundsCheck *check = MBoundsCheck::New(id, initLength);
+        current->add(check);
+
+        MStoreElement *ins = MStoreElement::New(elements, id, value);
+        store = ins;
+
+        current->add(ins);
+        current->push(value);
+
+        if (!resumeAfter(ins))
+            return false;
+    }
 
 #ifdef JSGC_INCREMENTAL
     // Determine whether a write barrier is required.
-    if (cx->compartment->needsBarrier() &&
-        oracle->propertyWriteNeedsBarrier(script, pc, JSID_VOID))
-    {
+    if (cx->compartment->needsBarrier() && oracle->propertyWriteNeedsBarrier(script, pc, JSID_VOID))
         store->setNeedsBarrier(true);
-    }
 #endif
 
     if (elementType != MIRType_None && packed)
         store->setElementType(elementType);
 
-    return resumeAfter(store);
+    return true;
 }
 
 bool

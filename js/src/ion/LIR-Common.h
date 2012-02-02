@@ -1186,6 +1186,66 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0>
     }
 };
 
+// Like LStoreElementV, but supports indexes >= initialized length.
+class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(StoreElementHoleV);
+
+    LStoreElementHoleV(const LAllocation &object, const LAllocation &elements,
+                       const LAllocation &index) {
+        setOperand(0, object);
+        setOperand(1, elements);
+        setOperand(2, index);
+    }
+
+    static const size_t Value = 3;
+
+    const MStoreElementHole *mir() const {
+        return mir_->toStoreElementHole();
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LAllocation *elements() {
+        return getOperand(1);
+    }
+    const LAllocation *index() {
+        return getOperand(2);
+    }
+};
+
+// Like LStoreElementT, but supports indexes >= initialized length.
+class LStoreElementHoleT : public LInstructionHelper<0, 4, 0>
+{
+  public:
+    LIR_HEADER(StoreElementHoleT);
+
+    LStoreElementHoleT(const LAllocation &object, const LAllocation &elements,
+                       const LAllocation &index, const LAllocation &value) {
+        setOperand(0, object);
+        setOperand(1, elements);
+        setOperand(2, index);
+        setOperand(3, value);
+    }
+
+    const MStoreElementHole *mir() const {
+        return mir_->toStoreElementHole();
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LAllocation *elements() {
+        return getOperand(1);
+    }
+    const LAllocation *index() {
+        return getOperand(2);
+    }
+    const LAllocation *value() {
+        return getOperand(3);
+    }
+};
+
 // Load a boxed value from an object's fixed slot.
 class LLoadFixedSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
 {

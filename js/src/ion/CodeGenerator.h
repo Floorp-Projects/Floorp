@@ -58,6 +58,7 @@ namespace ion {
 class CheckOverRecursedFailure;
 class OutOfLineUnboxDouble;
 class OutOfLineCache;
+class OutOfLineStoreElementHole;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -119,6 +120,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitThrow(LThrow *lir);
     bool visitLoadElementV(LLoadElementV *load);
     bool visitLoadElementHole(LLoadElementHole *lir);
+    bool visitStoreElementT(LStoreElementT *lir);
+    bool visitStoreElementV(LStoreElementV *lir);
+    bool visitStoreElementHoleT(LStoreElementHoleT *lir);
+    bool visitStoreElementHoleV(LStoreElementHoleV *lir);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
@@ -127,6 +132,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
     bool visitOutOfLineCacheGetProperty(OutOfLineCache *ool);
     bool visitOutOfLineCacheSetProperty(OutOfLineCache *ool);
+    bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
 
     bool visitGetPropertyCacheV(LGetPropertyCacheV *ins) {
         return visitCache(ins);

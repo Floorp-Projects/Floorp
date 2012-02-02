@@ -81,6 +81,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     // Functions for LTestVAndBranch.
     Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
+    void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
+                           const Register &elements, const LAllocation *index);
+
   protected:
     void linkAbsoluteLabels();
 
@@ -100,8 +103,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitWriteBarrierV(LWriteBarrierV *barrier);
     bool visitWriteBarrierT(LWriteBarrierT *barrier);
     bool visitLoadElementT(LLoadElementT *load);
-    bool visitStoreElementV(LStoreElementV *store);
-    bool visitStoreElementT(LStoreElementT *store);
     bool visitImplicitThis(LImplicitThis *lir);
     bool visitRecompileCheck(LRecompileCheck *lir);
 };
