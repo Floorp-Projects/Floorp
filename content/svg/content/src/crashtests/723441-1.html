@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body>
+    <img id="x">
+    <script>
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "723441-resource.svg");
+      xhr.overrideMimeType( 'text/plain; charset=x-user-defined' );
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          var svg = xhr.responseText.replace(/#/g, '%23');
+          var img = document.getElementById("x");
+          img.onload = function() {
+            document.documentElement.className = "";
+          }
+          img.src = "data:image/svg+xml;," + svg;
+        }
+      }
+      xhr.send();
+    </script>
+  </body>
+</html>
