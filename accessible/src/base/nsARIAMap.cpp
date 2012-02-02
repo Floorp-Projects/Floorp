@@ -105,7 +105,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     roles::PUSHBUTTON,
     kUseMapRole,
     eNoValue,
-    eClickAction,
+    ePressAction,
     eNoLiveAttr,
     kNoReqStates,
     eARIAPressed
