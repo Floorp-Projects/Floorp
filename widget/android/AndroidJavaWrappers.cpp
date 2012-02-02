@@ -55,7 +55,6 @@ jfieldID AndroidGeckoEvent::jGammaField = 0;
 jfieldID AndroidGeckoEvent::jXField = 0;
 jfieldID AndroidGeckoEvent::jYField = 0;
 jfieldID AndroidGeckoEvent::jZField = 0;
-jfieldID AndroidGeckoEvent::jDistanceField = 0;
 jfieldID AndroidGeckoEvent::jRectField = 0;
 jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
@@ -170,7 +169,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jXField = getField("mX", "D");
     jYField = getField("mY", "D");
     jZField = getField("mZ", "D");
-    jDistanceField = getField("mDistance", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -541,11 +539,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case VISITED: {
             ReadCharactersField(jenv);
-            break;
-        }
-
-        case PROXIMITY_EVENT: {
-            mDistance = jenv->GetDoubleField(jobj, jDistanceField);
             break;
         }
 
