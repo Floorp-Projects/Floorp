@@ -38,7 +38,6 @@
 #filter substitution
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/shell.xul");
-pref("general.useragent.compatMode.firefox", true);
 pref("browser.chromeURL", "chrome://browser/content/");
 #ifdef MOZ_OFFICIAL_BRANDING
 pref("browser.homescreenURL", "file:///system/home/homescreen.html");
