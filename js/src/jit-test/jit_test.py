@@ -500,7 +500,7 @@ def main(argv):
         # Running all bits would take forever. Instead, we test a few interesting combinations.
         ion_flags = [ 
                       ['--ion', '-n'],
-                      #['--ion', '-n', '--ion-gvn=off', '--ion-licm=off' ],
+                      ['--ion', '-n', '--ion-gvn=off', '--ion-licm=off' ],
                     ]
         for test in test_list:
             for variant in ion_flags:
