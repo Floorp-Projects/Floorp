@@ -109,7 +109,7 @@ public:
   nsAutoPtr<ImageCacheEntryData> mData;
 };
 
-class ImageCache : public nsExpirationTracker<ImageCacheEntryData,4> {
+class ImageCache MOZ_FINAL : public nsExpirationTracker<ImageCacheEntryData,4> {
 public:
   // We use 3 generations of 1 second each to get a 2-3 seconds timeout.
   enum { GENERATION_MS = 1000 };
@@ -134,7 +134,7 @@ public:
 
 static ImageCache* gImageCache = nsnull;
 
-class CanvasImageCacheShutdownObserver : public nsIObserver
+class CanvasImageCacheShutdownObserver MOZ_FINAL : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
