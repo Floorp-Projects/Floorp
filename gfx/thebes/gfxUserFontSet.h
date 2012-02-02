@@ -141,6 +141,20 @@ public:
         }
     }
 
+    // clear family pointer for all entries and remove them from the family;
+    // we need to do this explicitly before inserting the entries into a new
+    // family, in case the old one is not actually deleted until later
+    void DetachFontEntries() {
+        PRUint32 i = mAvailableFonts.Length();
+        while (i--) {
+            gfxFontEntry *fe = mAvailableFonts[i];
+            if (fe) {
+                fe->SetFamily(nsnull);
+            }
+        }
+        mAvailableFonts.Clear();
+    }
+
     // temp method to determine if all proxies are loaded
     bool AllLoaded() 
     {
