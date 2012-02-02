@@ -136,6 +136,15 @@ js::GCForReason(JSContext *cx, gcreason::Reason reason)
 }
 
 JS_FRIEND_API(void)
+js::CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason reason)
+{
+    /* We cannot GC the atoms compartment alone; use a full GC instead. */
+    JS_ASSERT(comp != cx->runtime->atomsCompartment);
+
+    js_GC(cx, comp, GC_NORMAL, reason);
+}
+
+JS_FRIEND_API(void)
 js::ShrinkingGC(JSContext *cx, gcreason::Reason reason)
 {
     js_GC(cx, NULL, GC_SHRINK, reason);
