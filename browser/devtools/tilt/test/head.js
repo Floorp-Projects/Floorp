@@ -37,6 +37,9 @@ const DEFAULT_HTML = "data:text/html," +
         "A robot must protect its own existence as long as such protection " +
         "does not conflict with the First or Second Laws." +
       "</div>" +
+      "<div id='far-far-away' style='position: absolute; top: 250%;'>" +
+        "I like bacon." +
+      "</div>" +
     "<body>" +
   "</html>";
 
