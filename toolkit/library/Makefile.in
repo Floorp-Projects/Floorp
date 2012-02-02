@@ -427,7 +427,6 @@ OS_LIBS += \
   -lhardware \
   -lutils \
   -lcutils \
-  -lcamera \
   -lcamera_client \
   -lbinder \
   $(NULL)

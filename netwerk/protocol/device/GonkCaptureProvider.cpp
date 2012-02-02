@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <dlfcn.h>
+#include "cutils/properties.h"
+
 #include "base/basictypes.h"
 #include "GonkCaptureProvider.h"
 #include "nsXULAppAPI.h"
@@ -40,9 +43,12 @@
 #include "camera/CameraHardwareInterface.h"
 #undef CameraHardwareInterface
 
-
-#include <dlfcn.h>
-#include "cutils/properties.h"
+// We don't have a camera library on the emulator (yet), so we can't
+// strongly link to HAL_getNumberOfCameras().  Until we start using an
+// emulator image that provides a camera library, we hard-code the max
+// number of cameras here.  This is used for a defensive check that
+// the camera HAL needs to also do anyway, so this should be harmless.
+static const size_t kTemporaryMaxNumCameras = 2;
 
 using namespace android;
 using namespace mozilla;
@@ -120,7 +126,7 @@ template<class T> class CameraImpl : public CameraHardwareInterface {
     typedef sp<T> (*HAL_openCameraHardware_DEFAULT)(int);
     typedef sp<T> (*HAL_openCameraHardware_SGS2)(int);
     typedef sp<T> (*HAL_openCameraHardware_MAGURO)(int, int);
-    
+
     CameraImpl(PRUint32 aCamera = 0) : mOk(false), mCamera(nsnull) {
       DlopenWrapper wrapper("system/lib/libcamera.so");
 
@@ -259,11 +265,10 @@ GonkCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
   mWidth = aParams->width;
   mHeight = aParams->height;
   mCamera = aParams->camera;
- 
-  PRUint32 maxCameras = HAL_getNumberOfCameras();
 
-  if (mCamera >= maxCameras)
-    mCamera = maxCameras - 1;
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=723418 .
+  if (mCamera >= kTemporaryMaxNumCameras)
+    mCamera = 0;
 
   mHardware = CameraHardwareInterface::openCamera(mCamera);
 
