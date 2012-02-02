@@ -64,6 +64,240 @@
 
 !endif
 
+!ifndef _WINVER_VERXBIT
+; The following defines and macros are for service pack detection support and
+; are from WinVer.nsh in NSIS 2.46. They can be removed after building with
+; NSIS 2.33 is deprecated.
+
+!define _WINVER_VERXBIT  0x00000001
+
+!define _WINVER_NTBIT    0x80000000
+!define _WINVER_NTSRVBIT 0x40000000
+!define _WINVER_MASKSP   0x000F0000
+
+!define OSVERSIONINFOW_SIZE   276
+!define OSVERSIONINFOEXW_SIZE 284
+!define VER_PLATFORM_WIN32_NT 2
+!define VER_NT_WORKSTATION    1
+
+!macro __WinVer_DeclareVars
+
+  !ifndef __WINVER_VARS_DECLARED
+
+    !define __WINVER_VARS_DECLARED
+
+    Var /GLOBAL __WINVERV
+    Var /GLOBAL __WINVERSP
+
+  !endif
+
+!macroend
+
+# lazy initialization macro
+
+!ifmacrondef __WinVer_Call_GetVersionEx
+
+  !macro __WinVer_Call_GetVersionEx STRUCT_SIZE
+
+    System::Call '*$0(i ${STRUCT_SIZE})'
+    System::Call kernel32::GetVersionEx(ir0)i.r3
+
+  !macroend
+
+!endif
+
+!macro __WinVer_InitVars
+  # variables
+  !insertmacro __WinVer_DeclareVars
+
+  # only calculate version once
+  StrCmp $__WINVERV "" _winver_noveryet
+    Return
+  _winver_noveryet:
+
+  # push used registers on the stack
+  Push $0
+  Push $1 ;maj
+  Push $2 ;min
+  Push $3 ;bld
+  Push $R0 ;temp
+
+  # allocate memory
+  System::Alloc ${OSVERSIONINFOEXW_SIZE}
+  Pop $0
+
+  # use OSVERSIONINFOEX
+  !insertmacro __WinVer_Call_GetVersionEx ${OSVERSIONINFOEXW_SIZE}
+
+  IntCmp $3 0 "" _winver_ex _winver_ex
+    # OSVERSIONINFOEX not allowed (Win9x or NT4 w/SP < 6), use OSVERSIONINFO
+    !insertmacro __WinVer_Call_GetVersionEx ${OSVERSIONINFOW_SIZE}
+  _winver_ex:
+
+  # get results from struct
+  System::Call '*$0(i.s,i.r1,i.r2,i.r3,i.s,&t128.s,&i2.s,&i2,&i2,&i1.s,&i1)'
+
+  # free struct
+  System::Free $0
+
+  # win9x has major and minor info in high word of dwBuildNumber - remove it
+  IntOp $3 $3 & 0xFFFF
+
+  # get dwOSVersionInfoSize
+  Pop $R0
+
+  # get dwPlatformId
+  Pop $0
+
+  # NT?
+  IntCmp $0 ${VER_PLATFORM_WIN32_NT} "" _winver_notnt _winver_notnt
+    IntOp $__WINVERSP $__WINVERSP | ${_WINVER_NTBIT}
+    IntOp $__WINVERV  $__WINVERV  | ${_WINVER_NTBIT}
+  _winver_notnt:
+
+  # get service pack information
+  IntCmp $0 ${VER_PLATFORM_WIN32_NT} _winver_nt "" _winver_nt  # win9x
+
+    # get szCSDVersion
+    Pop $0
+
+    # copy second char
+    StrCpy $0 $0 1 1
+
+    # discard invalid wServicePackMajor and wProductType
+    Pop $R0
+    Pop $R0
+
+    # switch
+    StrCmp $0 'A' "" +3
+      StrCpy $0 1
+      Goto _winver_sp_done
+    StrCmp $0 'B' "" +3
+      StrCpy $0 2
+      Goto _winver_sp_done
+    StrCmp $0 'C' "" +3
+      StrCpy $0 3
+      Goto _winver_sp_done
+    StrCpy $0 0
+    Goto _winver_sp_done
+
+  _winver_nt: # nt
+
+    IntCmp $R0 ${OSVERSIONINFOEXW_SIZE} "" _winver_sp_noex _winver_sp_noex
+
+      # discard szCSDVersion
+      Pop $0
+
+      # get wProductType
+      Exch
+      Pop $0
+
+      # is server?
+      IntCmp $0 ${VER_NT_WORKSTATION} _winver_noserver _winver_noserver ""
+        IntOp $__WINVERSP $__WINVERSP | ${_WINVER_NTSRVBIT}
+      _winver_noserver:
+
+      # get wServicePackMajor
+      Pop $0
+
+      # done with sp
+      Goto _winver_sp_done
+
+    _winver_sp_noex: # OSVERSIONINFO, not OSVERSIONINFOEX
+
+      ####  TODO
+      ## For IsServer to support < NT4SP6, we need to check the registry
+      ## here to see if we are a server and/or DC
+
+      # get szCSDVersion
+      Pop $0
+
+      # discard invalid wServicePackMajor and wProductType
+      Pop $R0
+      Pop $R0
+
+      # get service pack number from text
+      StrCpy $R0 $0 13
+      StrCmp $R0 "Service Pack " "" +3
+        StrCpy $0 $0 "" 13 # cut "Service Pack "
+        Goto +2
+        StrCpy $0 0 # no service pack
+
+!ifdef WINVER_NT4_OVER_W95
+      IntOp $__WINVERV $__WINVERV | ${_WINVER_VERXBIT}
+!endif
+
+  _winver_sp_done:
+
+  # store service pack
+  IntOp $0 $0 << 16
+  IntOp $__WINVERSP $__WINVERSP | $0
+
+  ### now for the version
+
+  # is server?
+  IntOp $0 $__WINVERSP & ${_WINVER_NTSRVBIT}
+
+  # windows xp x64?
+  IntCmp $0 0 "" _winver_not_xp_x64 _winver_not_xp_x64 # not server
+  IntCmp $1 5 "" _winver_not_xp_x64 _winver_not_xp_x64 # maj 5
+  IntCmp $2 2 "" _winver_not_xp_x64 _winver_not_xp_x64 # min 2
+    # change XP x64 from 5.2 to 5.1 so it's still XP
+    StrCpy $2 1
+  _winver_not_xp_x64:
+
+  # server 2008?
+  IntCmp $0 0 _winver_not_ntserver # server
+  IntCmp 6 $1 "" "" _winver_not_ntserver # maj 6
+    # extra bit so Server 2008 comes after Vista SP1 that has the same minor version, same for Win7 vs 2008R2
+    IntOp $__WINVERV $__WINVERV | ${_WINVER_VERXBIT}
+  _winver_not_ntserver:
+
+  # pack version
+  IntOp $1 $1 << 24 # VerMajor
+  IntOp $__WINVERV $__WINVERV | $1
+  IntOp $0 $2 << 16
+  IntOp $__WINVERV $__WINVERV | $0 # VerMinor
+  IntOp $__WINVERSP $__WINVERSP | $3 # VerBuild
+
+  # restore registers
+  Pop $R0
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
+
+!macroend
+
+!macro _WinVer_GetServicePackLevel OUTVAR
+  ${CallArtificialFunction} __WinVer_InitVars
+  IntOp ${OUTVAR} $__WINVERSP & ${_WINVER_MASKSP}
+  IntOp ${OUTVAR} ${OUTVAR} >> 16
+!macroend
+!define WinVerGetServicePackLevel '!insertmacro _WinVer_GetServicePackLevel '
+
+!macro _AtLeastServicePack _a _b _t _f
+  !insertmacro _LOGICLIB_TEMP
+  ${WinVerGetServicePackLevel} $_LOGICLIB_TEMP
+  !insertmacro _>= $_LOGICLIB_TEMP `${_b}` `${_t}` `${_f}`
+!macroend
+!define AtLeastServicePack `"" AtLeastServicePack`
+
+!macro _AtMostServicePack _a _b _t _f
+  !insertmacro _LOGICLIB_TEMP
+  ${WinVerGetServicePackLevel} $_LOGICLIB_TEMP
+  !insertmacro _<= $_LOGICLIB_TEMP `${_b}` `${_t}` `${_f}`
+!macroend
+!define AtMostServicePack `"" AtMostServicePack`
+
+!macro _IsServicePack _a _b _t _f
+  !insertmacro _LOGICLIB_TEMP
+  ${WinVerGetServicePackLevel} $_LOGICLIB_TEMP
+  !insertmacro _= $_LOGICLIB_TEMP `${_b}` `${_t}` `${_f}`
+!macroend
+!define IsServicePack `"" IsServicePack`
+
+!endif # _WINVER_VERXBIT
 
 !verbose push
 !verbose 3
