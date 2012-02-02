@@ -139,12 +139,7 @@
           return;
 
         case 'click':
-          if (!isNewTouchAction) {
-            debug('click: cancel');
-
-            evt.preventDefault();
-            evt.stopPropagation();
-          } else {
+          if (isNewTouchAction) {
             // Mouse events has been cancelled so dispatch a sequence
             // of events to where touchend has been fired
             if (preventMouseEvents) {
