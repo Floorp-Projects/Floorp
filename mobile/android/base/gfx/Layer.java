@@ -41,6 +41,7 @@ package org.mozilla.gecko.gfx;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.Region;
 import android.util.Log;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.microedition.khronos.opengles.GL10;
@@ -103,6 +104,15 @@ public abstract class Layer {
         float x = mOrigin.x * scaleFactor, y = mOrigin.y * scaleFactor;
         float width = size.width * scaleFactor, height = size.height * scaleFactor;
         return new RectF(x, y, x + width, y + height);
+    }
+
+    /**
+     * Returns the region of the layer that is considered valid. The default
+     * implementation of this will return the bounds of the layer, but this
+     * may be overridden.
+     */
+    public Region getValidRegion(RenderContext context) {
+        return new Region(RectUtils.round(getBounds(context, new FloatSize(getSize()))));
     }
 
     /**
