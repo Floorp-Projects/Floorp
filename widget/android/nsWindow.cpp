@@ -1199,6 +1199,29 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0)
         return;
 
+#if 0
+    // BEGIN HACK: gl layers
+    nsPaintEvent event(true, NS_PAINT, this);
+    nsIntRect tileRect(0, 0, gAndroidBounds.width, gAndroidBounds.height);
+    event.region = tileRect;
+
+    unsigned char *bits2 = new unsigned char[gAndroidBounds.width * gAndroidBounds.height * 2];
+    nsRefPtr<gfxImageSurface> targetSurface =
+        new gfxImageSurface(bits2,
+                            gfxIntSize(gAndroidBounds.width, gAndroidBounds.height),
+                            gAndroidBounds.width * 2,
+                            gfxASurface::ImageFormatRGB16_565);
+
+    nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
+    AutoLayerManagerSetup
+      setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+    DispatchEvent(&event);
+
+    delete[] bits2;
+    return;
+    // END HACK: gl layers
+#endif
+
     /*
      * Check to see whether the presentation shell corresponding to the document on the screen
      * is suppressing painting. If it is, we bail out, as continuing would result in a mismatch

@@ -44,6 +44,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <pthread.h>
+#include <android/log.h>
 
 template<typename T>
 class AndroidEGLObject {
