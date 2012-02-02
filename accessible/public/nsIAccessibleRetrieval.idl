@@ -45,7 +45,7 @@ interface nsIPresShell;
 interface nsIDOMWindow;
 interface nsIAccessNode;
 interface nsIDOMDOMStringList;
-
+interface nsIAccessiblePivot;
 
 /**
  * An interface for in-process accessibility clients
@@ -112,6 +112,14 @@ interface nsIAccessibleRetrieval : nsISupports
    * @return       cached accessible for the given DOM node if any
    */
   nsIAccessible getAccessibleFromCache(in nsIDOMNode aNode);
+
+  /**
+   * Create a new pivot for tracking a position and traversing a subtree.
+   *
+   * @param aRoot [in] the accessible root for the pivot
+   * @return a new pivot
+   */
+  nsIAccessiblePivot createAccessiblePivot(in nsIAccessible aRoot);
 };
 
 
