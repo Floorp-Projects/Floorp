@@ -93,7 +93,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(8c82b89f-f90c-4a31-a544-6e1f759673d4)]
+[scriptable, uuid(2506249c-e0a1-4d8f-846c-2d478247f8d8)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -189,10 +189,8 @@ interface imgIContainer : nsISupports
   /**
    * Attempts to create an ImageContainer (and Image) containing the current
    * frame. Only valid for RASTER type images.
-   *
-   * @param aManager The layer manager to use to create the ImageContainer.
    */
-  [noscript] ImageContainer getImageContainer(in LayerManager aManager);
+  [noscript] ImageContainer getImageContainer();
 
   /**
    * Create and return a new copy of the given frame that you can write to

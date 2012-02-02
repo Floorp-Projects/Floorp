@@ -124,7 +124,9 @@ FENNEC_JAVA_FILES = \
   gfx/RectUtils.java \
   gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
+  gfx/SurfaceTextureLayer.java \
   gfx/TextLayer.java \
+  gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
   gfx/ViewportMetrics.java \
@@ -283,92 +285,98 @@ RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/tabs_tray_pressed_bg.png \
   $(NULL)
 
-RES_DRAWABLE_MDPI_V8 = \
-  res/drawable-mdpi-v8/favicon.png \
-  res/drawable-mdpi-v8/abouthome_icon.png \
-  res/drawable-mdpi-v8/abouthome_logo.png \
-  res/drawable-mdpi-v8/abouthome_separator.9.png \
-  res/drawable-mdpi-v8/abouthome_sync_logo.png \
-  res/drawable-mdpi-v8/abouthome_sync_bg.9.png \
-  res/drawable-mdpi-v8/abouthome_sync_pressed_bg.9.png \
-  res/drawable-mdpi-v8/abouthome_topsite_placeholder.png \
-  res/drawable-mdpi-v8/abouthome_topsite_shadow.9.png \
-  res/drawable-mdpi-v8/awesomebar_tab.9.png \
-  res/drawable-mdpi-v8/awesomebar_tab_pressed.9.png \
-  res/drawable-mdpi-v8/ic_addons_empty.png \
-  res/drawable-mdpi-v8/ic_awesomebar_go.png \
-  res/drawable-mdpi-v8/ic_awesomebar_search.png \
-  res/drawable-mdpi-v8/ic_menu_bookmark_add.png \
-  res/drawable-mdpi-v8/ic_menu_bookmark_remove.png \
-  res/drawable-mdpi-v8/ic_menu_find_in_page.png \
-  res/drawable-mdpi-v8/ic_menu_reload.png \
-  res/drawable-mdpi-v8/ic_menu_save_as_pdf.png \
-  res/drawable-mdpi-v8/ic_menu_share.png \
-  res/drawable-mdpi-v8/ic_menu_forward.png \
-  res/drawable-mdpi-v8/tab_new.png \
-  res/drawable-mdpi-v8/tab_close.png \
-  res/drawable-mdpi-v8/tab_thumbnail_default.png \
-  res/drawable-mdpi-v8/tab_thumbnail_shadow.png \
-  res/drawable-mdpi-v8/tab_selected.png \
-  res/drawable-mdpi-v8/tabs_normal.png \
-  res/drawable-mdpi-v8/tabs_pressed.png \
-  res/drawable-mdpi-v8/tabs_more.png \
-  res/drawable-mdpi-v8/tabs_plus.png \
-  res/drawable-mdpi-v8/address_bar_texture.png \
-  res/drawable-mdpi-v8/address_bar_url_bg.9.png \
-  res/drawable-mdpi-v8/address_bar_url_outline.9.png \
-  res/drawable-mdpi-v8/doorhanger_arrow.png \
-  res/drawable-mdpi-v8/doorhanger_bg.9.png \
-  res/drawable-mdpi-v8/doorhanger_shadow_bg.9.png \
-  res/drawable-mdpi-v8/doorhanger_popup_bg.9.png \
-  res/drawable-mdpi-v8/site_security_identified.png \
-  res/drawable-mdpi-v8/site_security_verified.png \
-  res/drawable-mdpi-v8/urlbar_stop.png \
+RES_DRAWABLE_BASE = \
+  res/drawable/favicon.png \
+  res/drawable/abouthome_icon.png \
+  res/drawable/abouthome_logo.png \
+  res/drawable/abouthome_separator.9.png \
+  res/drawable/abouthome_sync_logo.png \
+  res/drawable/abouthome_sync_bg.9.png \
+  res/drawable/abouthome_sync_pressed_bg.9.png \
+  res/drawable/abouthome_topsite_placeholder.png \
+  res/drawable/abouthome_topsite_shadow.9.png \
+  res/drawable/awesomebar_tab.9.png \
+  res/drawable/awesomebar_tab_pressed.9.png \
+  res/drawable/ic_addons_empty.png \
+  res/drawable/ic_awesomebar_go.png \
+  res/drawable/ic_awesomebar_search.png \
+  res/drawable/ic_menu_bookmark_add.png \
+  res/drawable/ic_menu_bookmark_remove.png \
+  res/drawable/ic_menu_find_in_page.png \
+  res/drawable/ic_menu_reload.png \
+  res/drawable/ic_menu_save_as_pdf.png \
+  res/drawable/ic_menu_share.png \
+  res/drawable/ic_menu_forward.png \
+  res/drawable/tab_new.png \
+  res/drawable/tab_close.png \
+  res/drawable/tab_thumbnail_default.png \
+  res/drawable/tab_thumbnail_shadow.png \
+  res/drawable/tab_selected.png \
+  res/drawable/tabs_normal.png \
+  res/drawable/tabs_pressed.png \
+  res/drawable/tabs_more.png \
+  res/drawable/tabs_plus.png \
+  res/drawable/address_bar_texture.png \
+  res/drawable/address_bar_url_bg.9.png \
+  res/drawable/address_bar_url_outline.9.png \
+  res/drawable/doorhanger_arrow.png \
+  res/drawable/doorhanger_bg.9.png \
+  res/drawable/doorhanger_shadow_bg.9.png \
+  res/drawable/doorhanger_popup_bg.9.png \
+  res/drawable/site_security_identified.png \
+  res/drawable/site_security_verified.png \
+  res/drawable/urlbar_stop.png \
+  $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI))) \
   $(NULL)
 
-RES_DRAWABLE_HDPI_V8 = \
-  res/drawable-hdpi-v8/favicon.png \
-  res/drawable-hdpi-v8/home_bg.png \
-  res/drawable-hdpi-v8/home_star.png \
-  res/drawable-hdpi-v8/abouthome_icon.png \
-  res/drawable-hdpi-v8/abouthome_logo.png \
-  res/drawable-hdpi-v8/abouthome_separator.9.png \
-  res/drawable-hdpi-v8/abouthome_sync_logo.png \
-  res/drawable-hdpi-v8/abouthome_sync_bg.9.png \
-  res/drawable-hdpi-v8/abouthome_sync_pressed_bg.9.png \
-  res/drawable-hdpi-v8/abouthome_topsite_placeholder.png \
-  res/drawable-hdpi-v8/abouthome_topsite_shadow.9.png \
-  res/drawable-hdpi-v8/awesomebar_tab.9.png \
-  res/drawable-hdpi-v8/awesomebar_tab_pressed.9.png \
-  res/drawable-hdpi-v8/ic_addons_empty.png \
-  res/drawable-hdpi-v8/ic_awesomebar_go.png \
-  res/drawable-hdpi-v8/ic_awesomebar_search.png \
-  res/drawable-hdpi-v8/ic_menu_bookmark_add.png \
-  res/drawable-hdpi-v8/ic_menu_bookmark_remove.png \
-  res/drawable-hdpi-v8/ic_menu_find_in_page.png \
-  res/drawable-hdpi-v8/ic_menu_reload.png \
-  res/drawable-hdpi-v8/ic_menu_save_as_pdf.png \
-  res/drawable-hdpi-v8/ic_menu_share.png \
-  res/drawable-hdpi-v8/ic_menu_forward.png \
-  res/drawable-hdpi-v8/tab_new.png \
-  res/drawable-hdpi-v8/tab_close.png \
-  res/drawable-hdpi-v8/tab_thumbnail_default.png \
-  res/drawable-hdpi-v8/tab_thumbnail_shadow.png \
-  res/drawable-hdpi-v8/tab_selected.png \
-  res/drawable-hdpi-v8/tabs_normal.png \
-  res/drawable-hdpi-v8/tabs_pressed.png \
-  res/drawable-hdpi-v8/tabs_more.png \
-  res/drawable-hdpi-v8/tabs_plus.png \
-  res/drawable-hdpi-v8/address_bar_texture.png \
-  res/drawable-hdpi-v8/address_bar_url_bg.9.png \
-  res/drawable-hdpi-v8/address_bar_url_outline.9.png \
-  res/drawable-hdpi-v8/doorhanger_arrow.png \
-  res/drawable-hdpi-v8/doorhanger_bg.9.png \
-  res/drawable-hdpi-v8/doorhanger_shadow_bg.9.png \
-  res/drawable-hdpi-v8/doorhanger_popup_bg.9.png \
-  res/drawable-hdpi-v8/site_security_identified.png \
-  res/drawable-hdpi-v8/site_security_verified.png \
-  res/drawable-hdpi-v8/urlbar_stop.png \
+RES_DRAWABLE_LDPI = \
+  $(addprefix res/drawable-ldpi/,$(notdir $(SYNC_RES_DRAWABLE_LDPI))) \
+  $(NULL)
+
+RES_DRAWABLE_HDPI = \
+  res/drawable-hdpi/favicon.png \
+  res/drawable-hdpi/home_bg.png \
+  res/drawable-hdpi/home_star.png \
+  res/drawable-hdpi/abouthome_icon.png \
+  res/drawable-hdpi/abouthome_logo.png \
+  res/drawable-hdpi/abouthome_separator.9.png \
+  res/drawable-hdpi/abouthome_sync_logo.png \
+  res/drawable-hdpi/abouthome_sync_bg.9.png \
+  res/drawable-hdpi/abouthome_sync_pressed_bg.9.png \
+  res/drawable-hdpi/abouthome_topsite_placeholder.png \
+  res/drawable-hdpi/abouthome_topsite_shadow.9.png \
+  res/drawable-hdpi/awesomebar_tab.9.png \
+  res/drawable-hdpi/awesomebar_tab_pressed.9.png \
+  res/drawable-hdpi/ic_addons_empty.png \
+  res/drawable-hdpi/ic_awesomebar_go.png \
+  res/drawable-hdpi/ic_awesomebar_search.png \
+  res/drawable-hdpi/ic_menu_bookmark_add.png \
+  res/drawable-hdpi/ic_menu_bookmark_remove.png \
+  res/drawable-hdpi/ic_menu_find_in_page.png \
+  res/drawable-hdpi/ic_menu_reload.png \
+  res/drawable-hdpi/ic_menu_save_as_pdf.png \
+  res/drawable-hdpi/ic_menu_share.png \
+  res/drawable-hdpi/ic_menu_forward.png \
+  res/drawable-hdpi/tab_new.png \
+  res/drawable-hdpi/tab_close.png \
+  res/drawable-hdpi/tab_thumbnail_default.png \
+  res/drawable-hdpi/tab_thumbnail_shadow.png \
+  res/drawable-hdpi/tab_selected.png \
+  res/drawable-hdpi/tabs_normal.png \
+  res/drawable-hdpi/tabs_pressed.png \
+  res/drawable-hdpi/tabs_more.png \
+  res/drawable-hdpi/tabs_plus.png \
+  res/drawable-hdpi/address_bar_texture.png \
+  res/drawable-hdpi/address_bar_url_bg.9.png \
+  res/drawable-hdpi/address_bar_url_outline.9.png \
+  res/drawable-hdpi/doorhanger_arrow.png \
+  res/drawable-hdpi/doorhanger_bg.9.png \
+  res/drawable-hdpi/doorhanger_shadow_bg.9.png \
+  res/drawable-hdpi/doorhanger_popup_bg.9.png \
+  res/drawable-hdpi/site_security_identified.png \
+  res/drawable-hdpi/site_security_verified.png \
+  res/drawable-hdpi/urlbar_stop.png \
+  $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI))) \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V11 = \
@@ -543,7 +551,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \
@@ -557,8 +565,7 @@ RES_DIRS= \
   res/drawable-ldpi       \
   res/drawable-mdpi       \
   res/drawable-hdpi       \
-  res/drawable-mdpi-v8    \
-  res/drawable-hdpi-v8    \
+  res/drawable            \
   res/drawable-mdpi-v9    \
   res/drawable-hdpi-v9    \
   res/drawable-mdpi-v11   \
@@ -614,21 +621,6 @@ RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
 $(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
 	$(NSINSTALL) -D res/drawable
 	$(NSINSTALL) $^ res/drawable/
-
-RES_DRAWABLE_LDPI = $(addprefix res/drawable-ldpi/,$(notdir $(SYNC_RES_DRAWABLE_LDPI)))
-$(RES_DRAWABLE_LDPI): $(addprefix $(topsrcdir)/,$(SYNC_RES_DRAWABLE_LDPI))
-	$(NSINSTALL) -D res/drawable-ldpi
-	$(NSINSTALL) $^ res/drawable-ldpi/
-
-RES_DRAWABLE_MDPI = $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI)))
-$(RES_DRAWABLE_MDPI): $(addprefix $(topsrcdir)/,$(SYNC_RES_DRAWABLE_MDPI))
-	$(NSINSTALL) -D res/drawable-mdpi
-	$(NSINSTALL) $^ res/drawable-mdpi/
-
-RES_DRAWABLE_HDPI = $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI)))
-$(RES_DRAWABLE_HDPI): $(addprefix $(topsrcdir)/,$(SYNC_RES_DRAWABLE_HDPI))
-	$(NSINSTALL) -D res/drawable-hdpi
-	$(NSINSTALL) $^ res/drawable-hdpi/
 
 res/values/defaults.xml: $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defaults.xml
 	$(NSINSTALL) -D res/values

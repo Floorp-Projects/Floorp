@@ -3371,17 +3371,11 @@ extern JS_PUBLIC_API(void *)
 JS_GetExternalStringClosure(JSContext *cx, JSString *str);
 
 /*
- * Deprecated. Use JS_SetNativeStackQuoata instead.
- */
-extern JS_PUBLIC_API(void)
-JS_SetThreadStackLimit(JSContext *cx, uintptr_t limitAddr);
-
-/*
  * Set the size of the native stack that should not be exceed. To disable
  * stack size checking pass 0.
  */
 extern JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
+JS_SetNativeStackQuota(JSRuntime *cx, size_t stackSize);
 
 /************************************************************************/
 
@@ -3644,6 +3638,13 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSClass *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+
+/*
+ * Set up ctor.prototype = proto and proto.constructor = ctor with the
+ * right property flags.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
 
 #ifdef JS_THREADSAFE
 extern JS_PUBLIC_API(JSClass *)

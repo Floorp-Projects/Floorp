@@ -46,7 +46,6 @@ import org.json.JSONObject;
 
 import android.content.ContentResolver;
 import android.os.SystemClock;
-import android.util.Base64;
 import android.util.Log;
 
 public class Tabs implements GeckoEventListener {
@@ -56,6 +55,7 @@ public class Tabs implements GeckoEventListener {
     private HashMap<Integer, Tab> tabs;
     private ArrayList<Tab> order;
     private ContentResolver resolver;
+    private boolean mRestoringSession = false;
 
     private Tabs() {
         tabs = new HashMap<Integer, Tab>();
@@ -69,6 +69,8 @@ public class Tabs implements GeckoEventListener {
         GeckoAppShell.registerGeckoEventListener("Tab:Close", this);
         GeckoAppShell.registerGeckoEventListener("Tab:Select", this);
         GeckoAppShell.registerGeckoEventListener("Tab:ScreenshotData", this);
+        GeckoAppShell.registerGeckoEventListener("Session:RestoreBegin", this);
+        GeckoAppShell.registerGeckoEventListener("Session:RestoreEnd", this);
     }
 
     public int getCount() {
@@ -89,11 +91,13 @@ public class Tabs implements GeckoEventListener {
         tabs.put(id, tab);
         order.add(tab);
 
-        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-            public void run() {
-                GeckoApp.mBrowserToolbar.updateTabs(getCount());
-            }
-        });
+        if (!mRestoringSession) {
+            GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                public void run() {
+                    GeckoApp.mBrowserToolbar.updateTabCountAndAnimate(getCount());
+                }
+            });
+        }
 
         Log.i(LOGTAG, "Added a tab with id: " + id + ", url: " + url);
         return tab;
@@ -136,7 +140,7 @@ public class Tabs implements GeckoEventListener {
                     GeckoApp.mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
 
                     if (oldTab != null)
-                        GeckoApp.mAppContext.hidePluginViews(oldTab);
+                        GeckoApp.mAppContext.hidePlugins(oldTab, true);
                 }
             }
         });
@@ -198,9 +202,9 @@ public class Tabs implements GeckoEventListener {
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() { 
             public void run() {
                 GeckoApp.mAppContext.onTabsChanged(closedTab);
-                GeckoApp.mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
+                GeckoApp.mBrowserToolbar.updateTabCountAndAnimate(Tabs.getInstance().getCount());
                 GeckoApp.mDoorHangerPopup.updatePopup();
-                GeckoApp.mAppContext.hidePluginViews(closedTab);
+                GeckoApp.mAppContext.hidePlugins(closedTab, true);
             }
         });
 
@@ -289,8 +293,17 @@ public class Tabs implements GeckoEventListener {
                 String data = message.getString("data");
                 if (data.length() < 22)
                     return;
-                byte[] compressed = Base64.decode(data.substring(22), Base64.DEFAULT);
+                byte[] compressed = GeckoAppShell.decodeBase64(data.substring(22));
                 GeckoApp.mAppContext.processThumbnail(tab, null, compressed);
+            } else if (event.equals("Session:RestoreBegin")) {
+                mRestoringSession = true;
+            } else if (event.equals("Session:RestoreEnd")) {
+                mRestoringSession = false;
+                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                    public void run() {
+                        GeckoApp.mBrowserToolbar.updateTabCount(getCount());
+                    }
+                });
             }
         } catch (Exception e) { 
             Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);

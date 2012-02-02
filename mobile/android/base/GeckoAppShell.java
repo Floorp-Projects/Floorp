@@ -226,6 +226,7 @@ public class GeckoAppShell
             try {
                 sHandler = lt.mHandlerQueue.take();
             } catch (InterruptedException ie) {}
+
         }
         return sHandler;
     }
@@ -567,7 +568,7 @@ public class GeckoAppShell
         while (sGeckoPendingAcks.getCount() != 0) {
             try {
                 sGeckoPendingAcks.await();
-            } catch (InterruptedException e) {}
+            } catch(InterruptedException e) {}
         }
         sGeckoPendingAcks = null;
     }
@@ -1120,11 +1121,11 @@ public class GeckoAppShell
         });
     }
 
-    public static void preventPanning() {
+    public static void setPreventPanning(final boolean aPreventPanning) {
         getMainHandler().post(new Runnable() {
             public void run() {
                 LayerController layerController = GeckoApp.mAppContext.getLayerController();
-                layerController.preventPanning(true);
+                layerController.preventPanning(aPreventPanning);
             }
         });
     }
@@ -1391,8 +1392,38 @@ public class GeckoAppShell
     }
 
     public static void removePluginView(View view) {
-        Log.i(LOGTAG, "remove view:" + view);
+        Log.i(LOGTAG, "removePluginView:" + view);
         GeckoApp.mAppContext.removePluginView(view);
+    }
+
+    public static Surface createSurface() {
+        Log.i(LOGTAG, "createSurface");
+        return GeckoApp.mAppContext.createSurface();
+    }
+
+    public static void showSurface(Surface surface,
+                                   int x, int y,
+                                   int w, int h,
+                                   boolean inverted,
+                                   boolean blend,
+                                   String metadata)
+    {
+        Log.i(LOGTAG, "showSurface:" + surface + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + " inverted: " + inverted + " blend: " + blend + " metadata: " + metadata);
+        try {
+            GeckoApp.mAppContext.showSurface(surface, x, y, w, h, inverted, blend, metadata);
+        } catch (Exception e) {
+            Log.i(LOGTAG, "Error in showSurface:", e);
+        }
+    }
+
+    public static void hideSurface(Surface surface) {
+        Log.i(LOGTAG, "hideSurface:" + surface);
+        GeckoApp.mAppContext.hideSurface(surface);
+    }
+
+    public static void destroySurface(Surface surface) {
+        Log.i(LOGTAG, "destroySurface:" + surface);
+        GeckoApp.mAppContext.destroySurface(surface);
     }
 
     public static Class<?> loadPluginClass(String className, String libName) {
@@ -1801,5 +1832,107 @@ public class GeckoAppShell
 
     public static void disableNetworkNotifications() {
         GeckoNetworkManager.getInstance().disableNotifications();
+    }
+
+    private static final int GUID_ENCODE_FLAGS = Base64.URL_SAFE | Base64.NO_WRAP;
+
+    /**
+     * taken from http://www.source-code.biz/base64coder/java/Base64Coder.java.txt and modified (MIT License)
+     */
+    // Mapping table from 6-bit nibbles to Base64 characters.
+    private static final byte[] map1 = new byte[64];
+    static {
+      int i=0;
+      for (byte c='A'; c<='Z'; c++) map1[i++] = c;
+      for (byte c='a'; c<='z'; c++) map1[i++] = c;
+      for (byte c='0'; c<='9'; c++) map1[i++] = c;
+      map1[i++] = '-'; map1[i++] = '_'; 
+    }
+
+    // Mapping table from Base64 characters to 6-bit nibbles.
+    private static final byte[] map2 = new byte[128];
+    static {
+        for (int i=0; i<map2.length; i++) map2[i] = -1;
+        for (int i=0; i<64; i++) map2[map1[i]] = (byte)i;
+    }
+
+    final static byte EQUALS_ASCII = (byte) '=';
+
+    /**
+     * Encodes a byte array into Base64 format.
+     * No blanks or line breaks are inserted in the output.
+     * @param in    An array containing the data bytes to be encoded.
+     * @return      A character array containing the Base64 encoded data.
+     */
+    public static byte[] encodeBase64(byte[] in) {
+        if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.FROYO)
+            return Base64.encode(in, GUID_ENCODE_FLAGS);
+        int oDataLen = (in.length*4+2)/3;       // output length without padding
+        int oLen = ((in.length+2)/3)*4;         // output length including padding
+        byte[] out = new byte[oLen];
+        int ip = 0;
+        int iEnd = in.length;
+        int op = 0;
+        while (ip < iEnd) {
+            int i0 = in[ip++] & 0xff;
+            int i1 = ip < iEnd ? in[ip++] & 0xff : 0;
+            int i2 = ip < iEnd ? in[ip++] & 0xff : 0;
+            int o0 = i0 >>> 2;
+            int o1 = ((i0 &   3) << 4) | (i1 >>> 4);
+            int o2 = ((i1 & 0xf) << 2) | (i2 >>> 6);
+            int o3 = i2 & 0x3F;
+            out[op++] = map1[o0];
+            out[op++] = map1[o1];
+            out[op] = op < oDataLen ? map1[o2] : EQUALS_ASCII; op++;
+            out[op] = op < oDataLen ? map1[o3] : EQUALS_ASCII; op++;
+        }
+        return out; 
+    }
+
+    /**
+     * Decodes a byte array from Base64 format.
+     * No blanks or line breaks are allowed within the Base64 encoded input data.
+     * @param in    A character array containing the Base64 encoded data.
+     * @param iOff  Offset of the first character in <code>in</code> to be processed.
+     * @param iLen  Number of characters to process in <code>in</code>, starting at <code>iOff</code>.
+     * @return      An array containing the decoded data bytes.
+     * @throws      IllegalArgumentException If the input is not valid Base64 encoded data.
+     */
+    public static byte[] decodeBase64(byte[] in) {
+        if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.FROYO)
+            return Base64.decode(in, GUID_ENCODE_FLAGS);
+        int iOff = 0;
+        int iLen = in.length;
+        if (iLen%4 != 0) throw new IllegalArgumentException ("Length of Base64 encoded input string is not a multiple of 4.");
+        while (iLen > 0 && in[iOff+iLen-1] == '=') iLen--;
+        int oLen = (iLen*3) / 4;
+        byte[] out = new byte[oLen];
+        int ip = iOff;
+        int iEnd = iOff + iLen;
+        int op = 0;
+        while (ip < iEnd) {
+            int i0 = in[ip++];
+            int i1 = in[ip++];
+            int i2 = ip < iEnd ? in[ip++] : 'A';
+            int i3 = ip < iEnd ? in[ip++] : 'A';
+            if (i0 > 127 || i1 > 127 || i2 > 127 || i3 > 127)
+                throw new IllegalArgumentException ("Illegal character in Base64 encoded data.");
+            int b0 = map2[i0];
+            int b1 = map2[i1];
+            int b2 = map2[i2];
+            int b3 = map2[i3];
+            if (b0 < 0 || b1 < 0 || b2 < 0 || b3 < 0)
+                throw new IllegalArgumentException ("Illegal character in Base64 encoded data.");
+            int o0 = ( b0       <<2) | (b1>>>4);
+            int o1 = ((b1 & 0xf)<<4) | (b2>>>2);
+            int o2 = ((b2 &   3)<<6) |  b3;
+            out[op++] = (byte)o0;
+            if (op<oLen) out[op++] = (byte)o1;
+            if (op<oLen) out[op++] = (byte)o2; }
+        return out; 
+    }
+
+    public static byte[] decodeBase64(String s) {
+        return decodeBase64(s.getBytes());
     }
 }

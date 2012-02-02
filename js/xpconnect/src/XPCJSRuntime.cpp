@@ -1275,8 +1275,6 @@ DestroyCompartmentName(void *string)
     delete static_cast<nsCString*>(string);
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
-
 } // namespace xpc
 
 namespace {
@@ -1725,6 +1723,8 @@ ReportJSRuntimeStats(const JS::RuntimeStats &rtStats, const nsACString &pathPref
 } // namespace xpconnect
 } // namespace mozilla
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
+
 class XPConnectJSCompartmentsMultiReporter : public nsIMemoryMultiReporter
 {
 public:
@@ -1740,7 +1740,7 @@ public:
         // the callback.  Separating these steps is important because the
         // callback may be a JS function, and executing JS while getting these
         // stats seems like a bad idea.
-        JS::RuntimeStats rtStats(xpc::JsMallocSizeOf, xpc::GetCompartmentName,
+        JS::RuntimeStats rtStats(JsMallocSizeOf, xpc::GetCompartmentName,
                                  xpc::DestroyCompartmentName);
         if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats))
             return NS_ERROR_FAILURE;
@@ -1748,8 +1748,8 @@ public:
         size_t xpconnect;
         {
             xpconnect =
-                xpcrt->SizeOfIncludingThis(xpc::JsMallocSizeOf) +
-                XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(xpc::JsMallocSizeOf);
+                xpcrt->SizeOfIncludingThis(JsMallocSizeOf) +
+                XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JsMallocSizeOf);
         }
 
         NS_NAMED_LITERAL_CSTRING(pathPrefix, "explicit/js/");
@@ -1855,7 +1855,7 @@ public:
     {
         JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
 
-        if (!JS::GetExplicitNonHeapForRuntime(rt, reinterpret_cast<int64_t*>(n), xpc::JsMallocSizeOf))
+        if (!JS::GetExplicitNonHeapForRuntime(rt, reinterpret_cast<int64_t*>(n), JsMallocSizeOf))
             return NS_ERROR_FAILURE;
 
         return NS_OK;
@@ -1966,6 +1966,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         // to cause period, and we hope hygienic, last-ditch GCs from within
         // the GC's allocator.
         JS_SetGCParameter(mJSRuntime, JSGC_MAX_BYTES, 0xffffffff);
+        JS_SetNativeStackQuota(mJSRuntime, 128 * sizeof(size_t) * 1024);
         JS_SetContextCallback(mJSRuntime, ContextCallback);
         JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
@@ -2089,8 +2090,6 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     XPCContext* xpc = new XPCContext(this, cx);
     if (!xpc)
         return false;
-
-    JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
 
     // we want to mark the global object ourselves since we use a different color
     JS_ToggleOptions(cx, JSOPTION_UNROOTED_GLOBAL);

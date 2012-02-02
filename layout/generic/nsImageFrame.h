@@ -391,7 +391,7 @@ public:
    * Returns an ImageContainer for this image if the image type
    * supports it (TYPE_RASTER only).
    */
-  already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager);
+  already_AddRefed<ImageContainer> GetContainer();
   
   /**
    * Configure an ImageLayer for this display item.

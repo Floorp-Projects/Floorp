@@ -88,14 +88,22 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr)
   return true;
 }
 
-static void
-CollectWindowMemoryUsage(nsGlobalWindow *aWindow,
-                         nsIMemoryMultiReporterCallback *aCb,
-                         nsISupports *aClosure)
+struct WindowTotals
 {
-  NS_NAMED_LITERAL_CSTRING(kWindowDesc,
-                           "Memory used by a window and the DOM within it.");
+  WindowTotals() : mDom(0), mStyleSheets(0) {}
+  size_t mDom;
+  size_t mStyleSheets;
+};
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WindowStyleSheetsMallocSizeOf,
+                                     "window/style-sheets")
+
+static void
+CollectWindowReports(nsGlobalWindow *aWindow,
+                     WindowTotals *aWindowTotals,
+                     nsIMemoryMultiReporterCallback *aCb,
+                     nsISupports *aClosure)
+{
   // DOM window objects fall into one of three categories:
   // - "active" windows are currently either displayed in an active
   //   tab, or a child of such a window.
@@ -119,7 +127,7 @@ CollectWindowMemoryUsage(nsGlobalWindow *aWindow,
   // The path we give to the reporter callback for inner windows are
   // as follows:
   //
-  //   explicit/dom/window-objects/<category>/top=<top-outer-id> (inner=<top-inner-id>)/inner-window(id=<id>, uri=<uri>)
+  //   explicit/dom+style/window-objects/<category>/top=<top-outer-id> (inner=<top-inner-id>)/inner-window(id=<id>, uri=<uri>)
   //
   // Where:
   // - <category> is active, cached, or other, as described above.
@@ -138,62 +146,82 @@ CollectWindowMemoryUsage(nsGlobalWindow *aWindow,
   //
   // For outer windows we simply use:
   // 
-  //   explicit/dom/window-objects/<category>/outer-windows
+  //   explicit/dom+style/window-objects/<category>/outer-windows
   //
   // Which gives us simple counts of how many outer windows (and their
   // combined sizes) per category.
 
-  nsCAutoString str("explicit/dom/window-objects/");
+  nsCAutoString windowPath("explicit/dom+style/window-objects/");
 
   nsIDocShell *docShell = aWindow->GetDocShell();
 
   nsGlobalWindow *top = aWindow->GetTop();
-  PRInt64 windowSize = aWindow->SizeOf();
+  PRInt64 windowDOMSize = aWindow->SizeOf();
+  PRInt64 styleSheetsSize = aWindow->SizeOfStyleSheets(WindowStyleSheetsMallocSizeOf);
 
   if (docShell && aWindow->IsFrozen()) {
-    str += NS_LITERAL_CSTRING("cached/");
+    windowPath += NS_LITERAL_CSTRING("cached/");
   } else if (docShell) {
-    str += NS_LITERAL_CSTRING("active/");
+    windowPath += NS_LITERAL_CSTRING("active/");
   } else {
-    str += NS_LITERAL_CSTRING("other/");
+    windowPath += NS_LITERAL_CSTRING("other/");
   }
 
   if (aWindow->IsInnerWindow()) {
-    str += NS_LITERAL_CSTRING("top=");
+    windowPath += NS_LITERAL_CSTRING("top=");
 
     if (top) {
-      str.AppendInt(top->WindowID());
+      windowPath.AppendInt(top->WindowID());
 
       nsGlobalWindow *topInner = top->GetCurrentInnerWindowInternal();
       if (topInner) {
-        str += NS_LITERAL_CSTRING(" (inner=");
-        str.AppendInt(topInner->WindowID());
-        str += NS_LITERAL_CSTRING(")");
+        windowPath += NS_LITERAL_CSTRING(" (inner=");
+        windowPath.AppendInt(topInner->WindowID());
+        windowPath += NS_LITERAL_CSTRING(")");
       }
     } else {
-      str += NS_LITERAL_CSTRING("none");
+      windowPath += NS_LITERAL_CSTRING("none");
     }
 
-    str += NS_LITERAL_CSTRING("/inner-window(id=");
-    str.AppendInt(aWindow->WindowID());
-    str += NS_LITERAL_CSTRING(", uri=");
+    windowPath += NS_LITERAL_CSTRING("/inner-window(id=");
+    windowPath.AppendInt(aWindow->WindowID());
+    windowPath += NS_LITERAL_CSTRING(", uri=");
 
-    if (!AppendWindowURI(aWindow, str)) {
-      str += NS_LITERAL_CSTRING("[system]");
+    if (!AppendWindowURI(aWindow, windowPath)) {
+      windowPath += NS_LITERAL_CSTRING("[system]");
     }
 
-    str += NS_LITERAL_CSTRING(")");
+    windowPath += NS_LITERAL_CSTRING(")");
   } else {
     // Combine all outer windows per section (active/cached/other) as
     // they basically never contain anything of interest, and are
     // always pretty much the same size.
 
-    str += NS_LITERAL_CSTRING("outer-windows");
+    windowPath += NS_LITERAL_CSTRING("outer-windows");
   }
 
-  aCb->Callback(EmptyCString(), str, nsIMemoryReporter::KIND_HEAP,
-                nsIMemoryReporter::UNITS_BYTES, windowSize, kWindowDesc,
-                aClosure);
+  if (windowDOMSize > 0) {
+    nsCAutoString domPath(windowPath);
+    domPath += "/dom";
+    NS_NAMED_LITERAL_CSTRING(kWindowDesc,
+                             "Memory used by a window and the DOM within it.");
+    aCb->Callback(EmptyCString(), domPath, nsIMemoryReporter::KIND_HEAP,
+                  nsIMemoryReporter::UNITS_BYTES, windowDOMSize, kWindowDesc,
+                  aClosure);
+    aWindowTotals->mDom += windowDOMSize;
+  }
+
+  if (styleSheetsSize > 0) {
+    nsCAutoString styleSheetsPath(windowPath);
+    styleSheetsPath += "/style-sheets";
+    NS_NAMED_LITERAL_CSTRING(kStyleSheetsDesc,
+                             "Memory used by style sheets within a window.");
+    aCb->Callback(EmptyCString(), styleSheetsPath,
+                  nsIMemoryReporter::KIND_HEAP,
+                  nsIMemoryReporter::UNITS_BYTES, styleSheetsSize,
+                  kStyleSheetsDesc, aClosure);
+    aWindowTotals->mStyleSheets += styleSheetsSize;
+  }
 }
 
 typedef nsTArray< nsRefPtr<nsGlobalWindow> > WindowArray;
@@ -223,9 +251,26 @@ nsDOMMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   // Collect window memory usage.
   nsRefPtr<nsGlobalWindow> *w = windows.Elements();
   nsRefPtr<nsGlobalWindow> *end = w + windows.Length();
+  WindowTotals windowTotals;
   for (; w != end; ++w) {
-    CollectWindowMemoryUsage(*w, aCb, aClosure);
+    CollectWindowReports(*w, &windowTotals, aCb, aClosure);
   }
+
+  NS_NAMED_LITERAL_CSTRING(kDomTotalWindowsDesc,
+    "Memory used for the DOM within windows.  This is the sum of all windows' "
+    "'dom' numbers.");
+  aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING("dom-total-window"),
+                nsIMemoryReporter::KIND_OTHER,
+                nsIMemoryReporter::UNITS_BYTES, windowTotals.mDom,
+                kDomTotalWindowsDesc, aClosure);
+
+  NS_NAMED_LITERAL_CSTRING(kLayoutTotalWindowStyleSheetsDesc,
+    "Memory used for style sheets within windows.  This is the sum of all windows' "
+    "'style-sheets' numbers.");
+  aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING("style-sheets-total-window"),
+                nsIMemoryReporter::KIND_OTHER,
+                nsIMemoryReporter::UNITS_BYTES, windowTotals.mStyleSheets,
+                kLayoutTotalWindowStyleSheetsDesc, aClosure);
 
   return NS_OK;
 }
