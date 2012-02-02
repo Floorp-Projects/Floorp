@@ -561,7 +561,7 @@ __try {
   *aLanguage = NULL;
 
   nsAutoString language;
-  GetLanguage(language);
+  GetLanguage(language)
   if (language.IsEmpty())
     return S_FALSE;
 
