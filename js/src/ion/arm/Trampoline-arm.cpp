@@ -569,11 +569,6 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // We're aligned to an exit frame, so link it up.
     masm.linkExitFrame();
 
-    // Save the return address, which we'll use to check for OSI.
-    Register savedRetAddr = r4;
-    regs.take(savedRetAddr);
-    masm.ma_mov(lr, savedRetAddr);
-
     // Save the base of the argument set stored on the stack.
     Register argsBase = InvalidReg;
     uint32 argumentPadding = (f.explicitStackSlots() * sizeof(void *)) % StackAlignment;
@@ -673,23 +668,11 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
     }
 
-    // Check if the calling frame has been invalidated, in which case we can't
-    // disturb the frame descriptor.
-    Label invalidated;
-    masm.ma_cmp(savedRetAddr, Operand(sp, 0));
-    masm.ma_b(&invalidated, Assembler::NotEqual);
-
     masm.retn(Imm32(sizeof(IonExitFrameLayout) + argumentPadding +
                     f.explicitStackSlots() * sizeof(void *)));
 
     masm.bind(&exception);
     masm.handleException();
-
-    masm.bind(&invalidated);
-    masm.ma_mov(Imm32(0), r5);
-    masm.ma_cmp(r5, Operand(sp, 0));
-    masm.ma_b(&exception, Assembler::Zero);
-    masm.ret();
 
     Linker linker(masm);
     IonCode *wrapper = linker.newCode(cx);
