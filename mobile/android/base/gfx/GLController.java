@@ -66,16 +66,20 @@ public class GLController {
 
     private GL mGL;
 
+    private static final int LOCAL_EGL_OPENGL_ES2_BIT = 4;
+
     private static final int[] CONFIG_SPEC = {
         EGL10.EGL_RED_SIZE, 5,
         EGL10.EGL_GREEN_SIZE, 6,
         EGL10.EGL_BLUE_SIZE, 5,
+        EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
+        EGL10.EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
         EGL10.EGL_NONE
     };
 
     public GLController(FlexibleGLSurfaceView view) {
         mView = view;
-        mGLVersion = 1;
+        mGLVersion = 2;
         mSurfaceValid = false;
     }
 
