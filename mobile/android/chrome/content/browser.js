@@ -1508,6 +1508,8 @@ Tab.prototype = {
     this.browser.removeEventListener("pagehide", this, true);
     this.browser.removeEventListener("pageshow", this, true);
 
+    Services.obs.removeObserver(this, "document-shown");
+
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
     let selectedPanel = BrowserApp.deck.selectedPanel;
