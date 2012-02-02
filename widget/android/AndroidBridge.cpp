@@ -1039,10 +1039,8 @@ AndroidBridge::RegisterCompositor()
     jobject glController = env->CallStaticObjectMethod(jFlexSurfaceView, registerCompositor);
 
     sController.Acquire(env, glController);
-    sController.WaitForValidSurface();
     sController.SetGLVersion(2);
     sController.InitGLContext();
-
     sController.WaitForValidSurface();
     return sController.GetEGLSurface();
 }
