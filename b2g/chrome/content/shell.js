@@ -225,6 +225,10 @@ var shell = {
       case 'load':
         this.home.removeEventListener('load', this, true);
         this.turnScreenOn();
+
+        let chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
+        chromeWindow.browserDOMWindow = new nsBrowserAccess();
+
         this.sendEvent(window, 'ContentStart');
         break;
       case 'MozApplicationManifest':
@@ -353,6 +357,37 @@ MozKeyboard.prototype = {
     ['keydown', 'keypress', 'keyup'].forEach(function sendKeyEvents(type) {
       utils.sendKeyEvent(type, keyCode, charCode, null);
     });
+  }
+};
+
+
+function nsBrowserAccess() {
+}
+
+nsBrowserAccess.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
+
+  openURI: function openURI(uri, opener, where, context) {
+    // TODO This should be replaced by an 'open-browser-window' intent
+    let contentWindow = content.wrappedJSObject;
+    if (!('getApplicationManager' in contentWindow))
+      return null;
+
+    let applicationManager = contentWindow.getApplicationManager();
+    if (!applicationManager)
+      return null;
+
+    let url = uri ? uri.spec : 'about:blank';
+    let window = applicationManager.launch(url, where);
+    return window.contentWindow;
+  },
+
+  openURIInFrame: function openURIInFrame(uri, opener, where, context) {
+    throw new Error('Not Implemented');
+  },
+
+  isTabContentWindow: function isTabContentWindow(contentWindow) {
+    return contentWindow == window;
   }
 };
 
