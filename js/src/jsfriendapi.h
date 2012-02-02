@@ -676,6 +676,9 @@ extern JS_FRIEND_API(void)
 GCForReason(JSContext *cx, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
+CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason reason);
+
+extern JS_FRIEND_API(void)
 ShrinkingGC(JSContext *cx, gcreason::Reason reason);
 
 extern JS_FRIEND_API(bool)
