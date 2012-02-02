@@ -14,6 +14,7 @@ function test() {
     return;
   }
 
+  requestLongerTimeout(10);
   waitForExplicitFinish();
 
   createTab(function() {
@@ -23,9 +24,9 @@ function test() {
         presenter = instance.presenter;
         Services.obs.addObserver(whenHighlighting, HIGHLIGHTING, false);
 
-        presenter.onSetupMesh = function() {
+        presenter.onInitializationFinished = function() {
           let contentDocument = presenter.contentWindow.document;
-          let div = contentDocument.getElementById("first-law");
+          let div = contentDocument.getElementById("far-far-away");
 
           presenter.highlightNode(div, "moveIntoView");
         };
@@ -39,8 +40,8 @@ function whenHighlighting() {
     "Highlighting a node didn't work properly.");
   ok(!presenter.highlight.disabled,
     "After highlighting a node, it should be highlighted. D'oh.");
-  ok(!presenter.controller.arcball._resetInterval,
-    "Highlighting a node that's already visible shouldn't trigger a reset.");
+  ok(presenter.controller.arcball._resetInterval,
+    "Highlighting a node that's not already visible should trigger a reset!");
 
   executeSoon(function() {
     Services.obs.addObserver(whenUnhighlighting, UNHIGHLIGHTING, false);
