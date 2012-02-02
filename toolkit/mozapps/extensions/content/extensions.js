@@ -1850,8 +1850,7 @@ var gDiscoverView = {
       }
 
       self._browser.homePage = self.homepageURL.spec;
-      self._browser.addProgressListener(self, Ci.nsIWebProgress.NOTIFY_ALL |
-                                              Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+      self._browser.addProgressListener(self);
 
       if (self.loaded)
         self._loadURL(self.homepageURL.spec, false, notifyInitialized);
@@ -1886,6 +1885,15 @@ var gDiscoverView = {
 
       setURL(url + "#" + JSON.stringify(list));
     });
+  },
+
+  destroy: function() {
+    try {
+      this._browser.removeProgressListener(this);
+    }
+    catch (e) {
+      // Ignore the case when the listener wasn't already registered
+    }
   },
 
   show: function(aParam, aRequest, aState, aIsRefresh) {
@@ -2006,6 +2014,13 @@ var gDiscoverView = {
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+    let transferStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
+                        Ci.nsIWebProgressListener.STATE_IS_REQUEST |
+                        Ci.nsIWebProgressListener.STATE_IS_TRANSFERRING;
+    // Once transferring begins show the content
+    if (aStateFlags & transferStart)
+      this.node.selectedPanel = this._browser;
+
     // Only care about the network events
     if (!(aStateFlags & (Ci.nsIWebProgressListener.STATE_IS_NETWORK)))
       return;
