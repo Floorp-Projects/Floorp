@@ -460,6 +460,9 @@ case "$target" in
     if test -z "$ANDROID_PACKAGE_NAME" ; then
         ANDROID_PACKAGE_NAME='org.mozilla.$(MOZ_APP_NAME)'
     fi
+    if test -z "$MOZ_MOBILE_COMPAT" ; then
+        MOZ_MOBILE_COMPAT='All'
+    fi
 
     AC_DEFINE(ANDROID)
     AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
@@ -481,6 +484,7 @@ AC_SUBST(ANDROID_PLATFORM)
 AC_SUBST(ANDROID_SDK)
 AC_SUBST(ANDROID_PLATFORM_TOOLS)
 AC_SUBST(ANDROID_PACKAGE_NAME)
+AC_SUBST(MOZ_MOBILE_COMPAT)
 AC_SUBST(OBJCOPY)
 
 dnl ========================================================
@@ -4582,6 +4586,7 @@ MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
 MOZ_RAW=
 MOZ_SYDNEYAUDIO=
+MOZ_CUBEB=
 MOZ_VORBIS=
 MOZ_TREMOR=
 MOZ_WAVE=1
@@ -5592,6 +5597,7 @@ MOZ_ARG_DISABLE_BOOL(ogg,
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
     MOZ_SYDNEYAUDIO=1
+    MOZ_CUBEB=1
     MOZ_MEDIA=1
     case "$target_cpu" in
     arm*)
@@ -5709,6 +5715,7 @@ AC_SUBST(MOZ_LIBVPX_LIBS)
 
 if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
     MOZ_SYDNEYAUDIO=1
+    MOZ_CUBEB=1
     MOZ_MEDIA=1
     case "$target_cpu" in
     arm*)
@@ -5820,15 +5827,27 @@ MOZ_ARG_DISABLE_BOOL(wave,
 if test -n "$MOZ_WAVE"; then
     AC_DEFINE(MOZ_WAVE)
     MOZ_SYDNEYAUDIO=1
+    MOZ_CUBEB=1
     MOZ_MEDIA=1
 fi
 
 dnl ========================================================
-dnl = Handle dependent SYDNEYAUDIO and MEDIA defines
+dnl = Handle dependent SYDNEYAUDIO, CUBEB, and MEDIA defines
 dnl ========================================================
 
 if test -n "$MOZ_SYDNEYAUDIO"; then
     AC_DEFINE(MOZ_SYDNEYAUDIO)
+fi
+
+if test -n "$MOZ_CUBEB"; then
+    case "$target" in
+    *-mingw*)
+        AC_DEFINE(MOZ_CUBEB)
+        ;;
+    *)
+        dnl Other targets will be enabled soon.
+        ;;
+    esac
 fi
 
 if test -n "$MOZ_MEDIA"; then
@@ -8692,6 +8711,7 @@ AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
 AC_SUBST(MOZ_MEDIA)
 AC_SUBST(MOZ_SYDNEYAUDIO)
+AC_SUBST(MOZ_CUBEB)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)

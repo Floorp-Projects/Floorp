@@ -105,7 +105,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     roles::PUSHBUTTON,
     kUseMapRole,
     eNoValue,
-    eClickAction,
+    ePressAction,
     eNoLiveAttr,
     kNoReqStates,
     eARIAPressed
@@ -213,15 +213,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {
     "img",
     roles::GRAPHIC,
-    kUseMapRole,
-    eNoValue,
-    eNoAction,
-    eNoLiveAttr,
-    kNoReqStates
-  },
-  {
-    "label",
-    roles::LABEL,
     kUseMapRole,
     eNoValue,
     eNoAction,

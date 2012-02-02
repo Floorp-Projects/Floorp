@@ -202,7 +202,7 @@ CGLError nsIOSurfaceLib::CGLTexImageIOSurface2D(CGLContextObj ctxt,
                              GLsizei width, GLsizei height,
                              GLenum format, GLenum type,
                              IOSurfacePtr ioSurface, GLuint plane) {
-  return sTexImage(ctxt, target, internalFormat, width, height, 
+  return sTexImage(ctxt, target, internalFormat, width, height,
                    format, type, ioSurface, plane);
 }
 
@@ -265,6 +265,10 @@ void nsIOSurfaceLib::CloseLibrary() {
   }
   sIOSurfaceFramework = nsnull;
   sOpenGLFramework = nsnull;
+}
+
+nsIOSurface::~nsIOSurface() {
+  CFRelease(mIOSurfacePtr);
 }
 
 already_AddRefed<nsIOSurface> nsIOSurface::CreateIOSurface(int aWidth, int aHeight) { 
@@ -354,13 +358,37 @@ void nsIOSurface::Unlock() {
   nsIOSurfaceLib::IOSurfaceUnlock(mIOSurfacePtr, READ_ONLY, NULL);
 }
 
+#include "gfxImageSurface.h"
+
+already_AddRefed<gfxASurface>
+nsIOSurface::GetAsSurface() {
+  Lock();
+  size_t bytesPerRow = GetBytesPerRow();
+  size_t ioWidth = GetWidth();
+  size_t ioHeight = GetHeight();
+
+  unsigned char* ioData = (unsigned char*)GetBaseAddress();
+
+  nsRefPtr<gfxImageSurface> imgSurface =
+    new gfxImageSurface(gfxIntSize(ioWidth, ioHeight), gfxASurface::ImageFormatARGB32);
+
+  for (int i = 0; i < ioHeight; i++) {
+    memcpy(imgSurface->Data() + i * imgSurface->Stride(),
+           ioData + i * bytesPerRow, ioWidth * 4);
+  }
+
+  Unlock();
+
+  return imgSurface.forget();
+}
+
 CGLError 
-nsIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctxt,
+nsIOSurface::CGLTexImageIOSurface2D(NSOpenGLContext *ctxt,
                                     GLenum internalFormat, GLenum format, 
                                     GLenum type, GLuint plane)
 {
-  return nsIOSurfaceLib::CGLTexImageIOSurface2D(ctxt,
-                                                GL_TEXTURE_RECTANGLE_ARB, 
+  return nsIOSurfaceLib::CGLTexImageIOSurface2D((CGLContextObj)[ctxt CGLContextObj],
+                                                GL_TEXTURE_RECTANGLE_ARB,
                                                 internalFormat,
                                                 GetWidth(), GetHeight(),
                                                 format, type,

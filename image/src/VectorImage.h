@@ -73,7 +73,7 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetAnimated(bool *aAnimated);
   NS_SCRIPTABLE NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
   NS_IMETHOD GetFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxASurface **_retval NS_OUTPARAM);
-  NS_IMETHOD GetImageContainer(mozilla::layers::LayerManager* aManager, mozilla::layers::ImageContainer **_retval NS_OUTPARAM) { *_retval = NULL; return NS_OK; }
+  NS_IMETHOD GetImageContainer(mozilla::layers::ImageContainer **_retval NS_OUTPARAM) { *_retval = NULL; return NS_OK; }
   NS_IMETHOD CopyFrame(PRUint32 aWhichFrame, PRUint32 aFlags, gfxImageSurface **_retval NS_OUTPARAM);
   NS_IMETHOD ExtractFrame(PRUint32 aWhichFrame, const nsIntRect & aRect, PRUint32 aFlags, imgIContainer **_retval NS_OUTPARAM);
   NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, PRUint32 aFlags);

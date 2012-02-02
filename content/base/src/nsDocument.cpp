@@ -9140,3 +9140,18 @@ nsDocument::GetMozVisibilityState(nsAString& aState)
   aState.AssignASCII(states[mVisibilityState]);
   return NS_OK;
 }
+
+static size_t
+SizeOfStyleSheetsElementIncludingThis(nsIStyleSheet* aStyleSheet,
+                                      nsMallocSizeOfFun aMallocSizeOf,
+                                      void* aData)
+{
+  return aStyleSheet->SizeOfIncludingThis(aMallocSizeOf);
+}
+
+/* virtual */ size_t
+nsDocument::SizeOfStyleSheets(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return mStyleSheets.SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
+                                          aMallocSizeOf); 
+}

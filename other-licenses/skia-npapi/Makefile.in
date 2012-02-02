@@ -56,6 +56,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/plugins/base/android \
   -I$(topsrcdir)/gfx/skia/include/core \
   -I$(topsrcdir)/gfx/skia/include/config \
+  -I$(topsrcdir)/gfx/gl \
   $(NULL)
 
 

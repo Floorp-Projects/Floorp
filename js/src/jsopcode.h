@@ -207,11 +207,10 @@ SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
 }
 
 /*
- * A literal is indexed by a per-script atom or object maps. Most scripts
- * have relatively few literals, so the standard JOF_ATOM and JOF_OBJECT
- * format specifies a fixed 16 bits of immediate operand index.
- * A script with more than 64K literals must wrap the bytecode into
- * JSOP_INDEXBASE and JSOP_RESETBASE pair.
+ * A literal is indexed by a per-script atom map.  Most scripts have relatively
+ * few literals, so the standard JOF_ATOM format specifies a fixed 16 bits of
+ * immediate operand index.  A script with more than 64K literals must wrap the
+ * bytecode into an JSOP_INDEXBASE and JSOP_RESETBASE pair.
  */
 #define INDEX_LEN               2
 #define INDEX_HI(i)             ((jsbytecode)((i) >> 8))
@@ -358,18 +357,6 @@ js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
         uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
         JS_ASSERT(index_ < (script)->consts()->length);                       \
         (dbl) = (script)->getConst(index_).toDouble();                        \
-    JS_END_MACRO
-
-#define GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj)                      \
-    JS_BEGIN_MACRO                                                            \
-        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
-        obj = (script)->getObject(index_);                                    \
-    JS_END_MACRO
-
-#define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, fun)                    \
-    JS_BEGIN_MACRO                                                            \
-        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
-        fun = (script)->getFunction(index_);                                  \
     JS_END_MACRO
 
 #ifdef __cplusplus

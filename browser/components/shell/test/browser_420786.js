@@ -52,7 +52,8 @@ function onPageLoad() {
   checkWallpaper(Ci.nsIShellService.BACKGROUND_TILE, "wallpaper");
   checkWallpaper(Ci.nsIShellService.BACKGROUND_STRETCH, "stretched");
   checkWallpaper(Ci.nsIShellService.BACKGROUND_CENTER, "centered");
-  checkWallpaper(Ci.nsIShellService.BACKGROUND_FILL, "centered");
+  checkWallpaper(Ci.nsIShellService.BACKGROUND_FILL, "zoom");
+  checkWallpaper(Ci.nsIShellService.BACKGROUND_FIT, "scaled");
 
   // Restore GConf and wallpaper
 
