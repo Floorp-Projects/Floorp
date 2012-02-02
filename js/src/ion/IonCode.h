@@ -71,7 +71,8 @@ class IonCode : public gc::Cell
     uint32 dataSize_;               // Size of the read-only data area.
     uint32 jumpRelocTableBytes_;    // Size of the jump relocation table.
     uint32 dataRelocTableBytes_;    // Size of the data relocation table.
-    uint32 padding_;                // IonCode must be gc::Cell aligned.
+    JSBool invalidated_;            // Whether the code object has been invalidated.
+                                    // This is necessary to prevent GC tracing.
 
     IonCode()
       : code_(NULL),
@@ -84,7 +85,8 @@ class IonCode : public gc::Cell
         insnSize_(0),
         dataSize_(0),
         jumpRelocTableBytes_(0),
-        dataRelocTableBytes_(0)
+        dataRelocTableBytes_(0),
+        invalidated_(false)
     { }
 
     uint32 dataOffset() const {
@@ -109,6 +111,12 @@ class IonCode : public gc::Cell
     }
     void trace(JSTracer *trc);
     void finalize(JSContext *cx, bool background);
+    void setInvalidated() {
+        invalidated_ = true;
+    }
+    bool invalidated() const {
+        return !!invalidated_;
+    }
 
     template <typename T> T as() const {
         return JS_DATA_TO_FUNC_PTR(T, raw());
@@ -216,8 +224,8 @@ struct IonScript
     SnapshotOffset *bailoutTable() {
         return (SnapshotOffset *)(reinterpret_cast<uint8 *>(this) + bailoutTable_);
     }
-    Value *constants() {
-        return (Value *)(reinterpret_cast<uint8 *>(this) + constantTable_);
+    HeapValue *constants() {
+        return (HeapValue *)(reinterpret_cast<uint8 *>(this) + constantTable_);
     }
     const SafepointIndex *safepointIndices() const {
         return const_cast<IonScript *>(this)->safepointIndices();
@@ -313,7 +321,7 @@ struct IonScript
     size_t size() const {
         return safepointsStart_ + safepointsSize_;
     }
-    Value &getConstant(size_t index) {
+    HeapValue &getConstant(size_t index) {
         JS_ASSERT(index < numConstants());
         return constants()[index];
     }
@@ -343,7 +351,7 @@ struct IonScript
     }
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
-    void copyConstants(const Value *vp);
+    void copyConstants(const HeapValue *vp);
     void copySafepointIndices(const SafepointIndex *firstSafepointIndex, MacroAssembler &masm);
     void copyOsiIndices(const OsiIndex *firstOsiIndex);
     void copyCacheEntries(const IonCache *caches, MacroAssembler &masm);

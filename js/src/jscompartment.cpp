@@ -520,25 +520,7 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
             ionCompartment_->sweep(cx);
 #endif
 
-        /*
-         * Kick all frames on the stack into the interpreter, and release all JIT
-         * code in the compartment.
-         */
-#ifdef JS_METHODJIT
-        mjit::ClearAllFrames(this);
-
-        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-            JSScript *script = i.get<JSScript>();
-            mjit::ReleaseScriptCode(cx, script);
-
-            /*
-             * Use counts for scripts are reset on GC. After discarding code we
-             * need to let it warm back up to get information like which opcodes
-             * are setting array holes or accessing getter properties.
-             */
-            script->resetUseCount();
-        }
-#endif
+        ReleaseAllJITCode(cx, this, true);
     }
 
     if (!activeAnalysis) {

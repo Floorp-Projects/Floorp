@@ -1090,7 +1090,7 @@ public:
 class LIRGraph
 {
     Vector<LBlock *, 16, SystemAllocPolicy> blocks_;
-    Vector<Value, 0, SystemAllocPolicy> constantPool_;
+    Vector<HeapValue, 0, SystemAllocPolicy> constantPool_;
     Vector<LInstruction *, 0, SystemAllocPolicy> safepoints_;
     Vector<LInstruction *, 0, SystemAllocPolicy> nonCallSafepoints_;
     uint32 numVirtualRegisters_;
@@ -1149,10 +1149,10 @@ class LIRGraph
     size_t numConstants() const {
         return constantPool_.length();
     }
-    Value *constantPool() {
+    HeapValue *constantPool() {
         return &constantPool_[0];
     }
-    const Value &getConstant(size_t index) const {
+    const HeapValue &getConstant(size_t index) const {
         return constantPool_[index];
     }
     void setEntrySnapshot(LSnapshot *snapshot) {
