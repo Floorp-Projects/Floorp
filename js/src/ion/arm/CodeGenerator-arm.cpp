@@ -1161,7 +1161,7 @@ CodeGeneratorARM::storeElementTyped(const LAllocation *value, MIRType valueType,
 
         // Store the payload.
         if (value->isConstant())
-            masm.storePayload(*value->toConstant(), elements, index);
+            masm.storePayload(*value->toConstant(), elements, indexReg);
         else
             masm.storePayload(ToRegister(value), elements, indexReg);
     }
