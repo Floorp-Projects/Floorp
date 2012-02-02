@@ -178,7 +178,7 @@ public class AboutHomeContent extends ScrollView {
         allAddonsText.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (mUriLoadCallback != null)
-                    mUriLoadCallback.callback("about:addons");
+                    mUriLoadCallback.callback("https://addons.mozilla.org/android");
             }
         });
 
