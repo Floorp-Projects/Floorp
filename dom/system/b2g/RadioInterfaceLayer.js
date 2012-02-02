@@ -241,7 +241,9 @@ RadioInterfaceLayer.prototype = {
   handleCallStateChange: function handleCallStateChange(call) {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
-    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_CONNECTED) {
+    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING ||
+        call.state == nsIRadioInterfaceLayer.CALL_STATE_RINGING ||
+        call.state == nsIRadioInterfaceLayer.CALL_STATE_CONNECTED) {
       // This is now the active call.
       this._activeCall = call;
     }
