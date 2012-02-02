@@ -225,13 +225,13 @@ pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/Ve
 /* preferences for the Get Add-ons pane */
 pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.getAddons.maxResults", 15);
-pref("extensions.getAddons.recommended.browseURL", "https://addons.mozilla.org/%LOCALE%/mobile/recommended/");
-pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/list/featured/all/%MAX_RESULTS%/%OS%/%VERSION%");
-pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/mobile/search?q=%TERMS%");
-pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%/%COMPATIBILITY_MODE%");
-pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/mobile/");
-pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/guid:%IDS%?src=mobile&appOS=%OS%&appVersion=%VERSION%");
-pref("extensions.getAddons.getWithPerformance.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/guid:%IDS%?src=mobile&appOS=%OS%&appVersion=%VERSION%&tMain=%TIME_MAIN%&tFirstPaint=%TIME_FIRST_PAINT%&tSessionRestored=%TIME_SESSION_RESTORED%");
+pref("extensions.getAddons.recommended.browseURL", "https://addons.mozilla.org/%LOCALE%/android/recommended/");
+pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/android/api/%API_VERSION%/list/featured/all/%MAX_RESULTS%/%OS%/%VERSION%");
+pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/android/search?q=%TERMS%");
+pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/android/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%/%COMPATIBILITY_MODE%");
+pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/android/");
+pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/android/api/%API_VERSION%/search/guid:%IDS%?src=mobile&appOS=%OS%&appVersion=%VERSION%");
+pref("extensions.getAddons.getWithPerformance.url", "https://services.addons.mozilla.org/%LOCALE%/android/api/%API_VERSION%/search/guid:%IDS%?src=mobile&appOS=%OS%&appVersion=%VERSION%&tMain=%TIME_MAIN%&tFirstPaint=%TIME_FIRST_PAINT%&tSessionRestored=%TIME_SESSION_RESTORED%");
 
 /* preference for the locale picker */
 pref("extensions.getLocales.get.url", "");
