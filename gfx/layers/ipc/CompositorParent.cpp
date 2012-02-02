@@ -83,6 +83,7 @@ CompositorParent::RecvStop()
 void
 CompositorParent::ScheduleComposition()
 {
+  printf_stderr("Schedule composition\n");
   CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
   MessageLoop::current()->PostTask(FROM_HERE, composeTask);
 
