@@ -66,7 +66,6 @@
 #include "DiscardTracker.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/LinkedList.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -165,6 +164,7 @@ class ImageContainer;
 }
 namespace image {
 
+class imgDecodeWorker;
 class Decoder;
 
 class RasterImage : public Image
@@ -377,123 +377,6 @@ private:
   };
 
   /**
-   * DecodeWorker keeps a linked list of DecodeRequests to keep track of the
-   * images it needs to decode.
-   *
-   * Each RasterImage has a single DecodeRequest member.
-   */
-  struct DecodeRequest : public LinkedListElement<DecodeRequest>
-  {
-    DecodeRequest(RasterImage* aImage)
-      : mImage(aImage)
-      , mIsASAP(false)
-    {
-    }
-
-    RasterImage* const mImage;
-
-    /* Keeps track of how much time we've burned decoding this particular decode
-     * request. */
-    TimeDuration mDecodeTime;
-
-    /* True if we need to handle this decode as soon as possible. */
-    bool mIsASAP;
-  };
-
-  /*
-   * DecodeWorker is a singleton class we use when decoding large images.
-   *
-   * When we wish to decode an image larger than
-   * image.mem.max_bytes_for_sync_decode, we call DecodeWorker::RequestDecode()
-   * for the image.  This adds the image to a queue of pending requests and posts
-   * the DecodeWorker singleton to the event queue, if it's not already pending
-   * there.
-   *
-   * When the DecodeWorker is run from the event queue, it decodes the image (and
-   * all others it's managing) in chunks, periodically yielding control back to
-   * the event loop.
-   *
-   * An image being decoded may have one of two priorities: normal or ASAP.  ASAP
-   * images are always decoded before normal images.  (We currently give ASAP
-   * priority to images which appear onscreen but are not yet decoded.)
-   */
-  class DecodeWorker : public nsRunnable
-  {
-  public:
-    static DecodeWorker* Singleton();
-
-    /**
-     * Ask the DecodeWorker to asynchronously decode this image.
-     */
-    void RequestDecode(RasterImage* aImg);
-
-    /**
-     * Give this image ASAP priority; it will be decoded before all non-ASAP
-     * images.  You can call MarkAsASAP before or after you call RequestDecode
-     * for the image, but if you MarkAsASAP before you call RequestDecode, you
-     * still need to call RequestDecode.
-     *
-     * StopDecoding() resets the image's ASAP flag.
-     */
-    void MarkAsASAP(RasterImage* aImg);
-
-    /**
-     * Ask the DecodeWorker to stop decoding this image.  Internally, we also
-     * call this function when we finish decoding an image.
-     *
-     * Since the DecodeWorker keeps raw pointers to RasterImages, make sure you
-     * call this before a RasterImage is destroyed!
-     */
-    void StopDecoding(RasterImage* aImg);
-
-    /**
-     * Synchronously decode the beginning of the image until we run out of
-     * bytes or we get the image's size.  Note that this done on a best-effort
-     * basis; if the size is burried too deep in the image, we'll give up.
-     *
-     * @return NS_ERROR if an error is encountered, and NS_OK otherwise.  (Note
-     *         that we return NS_OK even when the size was not found.)
-     */
-    nsresult DecodeUntilSizeAvailable(RasterImage* aImg);
-
-    NS_IMETHOD Run();
-
-  private: /* statics */
-    static nsRefPtr<DecodeWorker> sSingleton;
-
-  private: /* methods */
-    DecodeWorker()
-      : mPendingInEventLoop(false)
-    {}
-
-    /* Post ourselves to the event loop if we're not currently pending. */
-    void EnsurePendingInEventLoop();
-
-    /* Add the given request to the appropriate list of decode requests, but
-     * don't ensure that we're pending in the event loop. */
-    void AddDecodeRequest(DecodeRequest* aRequest);
-
-    enum DecodeType {
-      DECODE_TYPE_NORMAL,
-      DECODE_TYPE_UNTIL_SIZE
-    };
-
-    /* Decode some chunks of the given image.  If aDecodeType is UNTIL_SIZE,
-     * decode until we have the image's size, then stop. */
-    nsresult DecodeSomeOfImage(RasterImage* aImg,
-                               DecodeType aDecodeType = DECODE_TYPE_NORMAL);
-
-  private: /* members */
-
-    LinkedList<DecodeRequest> mASAPDecodeRequests;
-    LinkedList<DecodeRequest> mNormalDecodeRequests;
-
-    /* True if we've posted ourselves to the event loop and expect Run() to
-     * be called sometime in the future. */
-    bool mPendingInEventLoop;
-  };
-
-  /**
    * Advances the animation. Typically, this will advance a single frame, but it
    * may advance multiple frames. This may happen if we have infrequently
    * "ticking" refresh drivers (e.g. in background tabs), or extremely short-
@@ -641,11 +524,12 @@ private: // data
   nsCString                  mSourceDataMimeType;
   nsCString                  mURIString;
 
+  friend class imgDecodeWorker;
   friend class DiscardTracker;
 
   // Decoder and friends
   nsRefPtr<Decoder>              mDecoder;
-  DecodeRequest                  mDecodeRequest;
+  nsRefPtr<imgDecodeWorker>      mWorker;
   PRUint32                       mBytesDecoded;
 
   // How many times we've decoded this image.
@@ -670,6 +554,8 @@ private: // data
   bool                       mDecoded:1;
   bool                       mHasBeenDecoded:1;
 
+  // Helpers for decoder
+  bool                       mWorkerPending:1;
   bool                       mInDecoder:1;
 
   // Whether the animation can stop, due to running out
@@ -703,6 +589,29 @@ private: // data
 
 protected:
   bool ShouldAnimate();
+};
+
+// XXXdholbert These helper classes should move to be inside the
+// scope of the RasterImage class.
+// Decoding Helper Class
+//
+// We use this class to mimic the interactivity benefits of threading
+// in a single-threaded event loop. We want to progressively decode
+// and keep a responsive UI while we're at it, so we have a runnable
+// class that does a bit of decoding, and then "yields" by dispatching
+// itself to the end of the event queue.
+class imgDecodeWorker : public nsRunnable
+{
+  public:
+    imgDecodeWorker(imgIContainer* aContainer) {
+      mContainer = do_GetWeakReference(aContainer);
+    }
+    NS_IMETHOD Run();
+    NS_METHOD  Dispatch();
+
+  private:
+    nsWeakPtr mContainer;
+    TimeDuration mDecodeTime; // the default constructor initializes to 0
 };
 
 // Asynchronous Decode Requestor
