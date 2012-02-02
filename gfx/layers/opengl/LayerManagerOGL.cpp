@@ -564,6 +564,7 @@ bool LayerManagerOGL::sDrawFPS = false;
 void
 LayerManagerOGL::FPSState::DrawFPS(GLContext* context, CopyProgram* copyprog)
 {
+  printf_stderr("draw fps\n");
   fcount++;
 
   int rate = 30;
@@ -760,7 +761,6 @@ LayerManagerOGL::BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
 void
 LayerManagerOGL::Render()
 {
-  printf_stderr("render\n");
   SAMPLE_LABEL("LayerManagerOGL", "Render");
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
@@ -778,6 +778,8 @@ LayerManagerOGL::Render()
   // so just return
   if (width == 0 || height == 0)
     return;
+
+  printf_stderr("render %i, %i\n", width, height);
 
   // If the widget size changed, we have to force a MakeCurrent
   // to make sure that GL sees the updated widget size.
@@ -812,7 +814,18 @@ LayerManagerOGL::Render()
 
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
+  static int i = 0;
+  i++;
+  i=i%3;
+  if( i == 0 ) {
+  mGLContext->fClearColor(1.0, 0.0, 0.0, 0.0);
+  } else if( i == 1 ) {
   mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+  } else if( i == 2 ) {
+  mGLContext->fClearColor(1.0, 1.0, 0.0, 0.0);
+  } else {
+  mGLContext->fClearColor(0.0, 1.0, 0.0, 0.0);
+  }
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
   // Render our layers.
