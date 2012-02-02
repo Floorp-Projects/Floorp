@@ -76,7 +76,7 @@ function startupHttpd(baseDir, port) {
 
 // FIXME Bug 707625
 // until we have a proper security model, add some rights to
-// the pre-installed web applications 
+// the pre-installed web applications
 function addPermissions(urls) {
   let permissions = [
     'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app'
@@ -84,7 +84,7 @@ function addPermissions(urls) {
   urls.forEach(function(url) {
     let uri = Services.io.newURI(url, null, null);
     let allow = Ci.nsIPermissionManager.ALLOW_ACTION;
-    
+
     permissions.forEach(function(permission) {
       Services.perms.add(uri, permission, allow);
     });
@@ -154,6 +154,14 @@ var shell = {
     } catch (e) {
       let msg = 'Fatal error during startup: [' + e + '[' + homeURL + ']';
       return alert(msg);
+    }
+
+    // Load webapi+apps.js as a frame script
+    let frameScriptUrl = 'chrome://browser/content/webapi.js';
+    try {
+      messageManager.loadFrameScript(frameScriptUrl, true);
+    } catch (e) {
+      dump('Error when loading ' + frameScriptUrl + ' as a frame script: ' + e + '\n');
     }
 
     let browser = this.home;
@@ -229,7 +237,7 @@ var shell = {
           if (!documentElement)
             return;
 
-          let manifest = documentElement.getAttribute("manifest");
+          let manifest = documentElement.getAttribute('manifest');
           if (!manifest)
             return;
 
@@ -273,7 +281,7 @@ var shell = {
   turnScreenOn: function shell_turnScreenOn() {
     screen.mozEnabled = true;
     screen.mozBrightness = this.preferredScreenBrightness;
-  },
+  }
 };
 
 (function VirtualKeyboardManager() {
