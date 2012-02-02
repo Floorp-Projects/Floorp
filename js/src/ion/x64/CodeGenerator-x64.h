@@ -65,6 +65,9 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void storeUnboxedValue(const LAllocation *value, MIRType valueType,
                            Operand dest, MIRType slotType);
 
+    void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
+                           const Register &elements, const LAllocation *index);
+
   public:
     CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph);
 
@@ -80,8 +83,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitWriteBarrierV(LWriteBarrierV *barrier);
     bool visitWriteBarrierT(LWriteBarrierT *barrier);
     bool visitLoadElementT(LLoadElementT *load);
-    bool visitStoreElementV(LStoreElementV *store);
-    bool visitStoreElementT(LStoreElementT *store);
     bool visitImplicitThis(LImplicitThis *lir);
     bool visitRecompileCheck(LRecompileCheck *lir);
 };

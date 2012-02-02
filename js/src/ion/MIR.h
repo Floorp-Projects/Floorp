@@ -2357,43 +2357,18 @@ class MLoadElementHole
     }
 };
 
-// Store a value to a dense array slots vector.
-class MStoreElement
-  : public MAryInstruction<3>,
-    public ObjectPolicy
+class MStoreElementCommon
 {
-    MIRType elementType_;
     bool needsBarrier_;
+    MIRType elementType_;
 
-    MStoreElement(MDefinition *elements, MDefinition *index, MDefinition *value)
-      : needsBarrier_(false)
-    {
-        initOperand(0, elements);
-        initOperand(1, index);
-        initOperand(2, value);
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(index->type() == MIRType_Int32);
-    }
+  protected:
+    MStoreElementCommon()
+      : needsBarrier_(false),
+        elementType_(MIRType_None)
+    { }
 
   public:
-    INSTRUCTION_HEADER(StoreElement);
-
-    static MStoreElement *New(MDefinition *elements, MDefinition *index, MDefinition *value) {
-        return new MStoreElement(elements, index, value);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-    MDefinition *elements() const {
-        return getOperand(0);
-    }
-    MDefinition *index() const {
-        return getOperand(1);
-    }
-    MDefinition *value() const {
-        return getOperand(2);
-    }
     MIRType elementType() const {
         return elementType_;
     }
@@ -2407,8 +2382,91 @@ class MStoreElement
     void setNeedsBarrier(bool needsBarrier) {
         needsBarrier_ = needsBarrier;
     }
+};
+
+// Store a value to a dense array slots vector.
+class MStoreElement
+  : public MAryInstruction<3>,
+    public MStoreElementCommon,
+    public ObjectPolicy
+{
+    MStoreElement(MDefinition *elements, MDefinition *index, MDefinition *value) {
+        initOperand(0, elements);
+        initOperand(1, index);
+        initOperand(2, value);
+        JS_ASSERT(elements->type() == MIRType_Elements);
+        JS_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(StoreElement);
+
+    static MStoreElement *New(MDefinition *elements, MDefinition *index, MDefinition *value) {
+        return new MStoreElement(elements, index, value);
+    }
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *value() const {
+        return getOperand(2);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::Element);
+    }
+};
+
+// Like MStoreElement, but supports indexes >= initialized length. The downside
+// is that we cannot hoist the elements vector and bounds check, since this
+// instruction may update the (initialized) length and reallocate the elements
+// vector.
+class MStoreElementHole
+  : public MAryInstruction<4>,
+    public MStoreElementCommon,
+    public ObjectPolicy
+{
+    MStoreElementHole(MDefinition *object, MDefinition *elements,
+                      MDefinition *index, MDefinition *value) {
+        initOperand(0, object);
+        initOperand(1, elements);
+        initOperand(2, index);
+        initOperand(3, value);
+        JS_ASSERT(elements->type() == MIRType_Elements);
+        JS_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(StoreElementHole);
+
+    static MStoreElementHole *New(MDefinition *object, MDefinition *elements,
+                                  MDefinition *index, MDefinition *value) {
+        return new MStoreElementHole(object, elements, index, value);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    MDefinition *elements() const {
+        return getOperand(1);
+    }
+    MDefinition *index() const {
+        return getOperand(2);
+    }
+    MDefinition *value() const {
+        return getOperand(3);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        // StoreElementHole can update the initialized length, the array length
+        // or reallocate obj->elements.
+        return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
     }
 };
 

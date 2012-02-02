@@ -452,6 +452,15 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void cmpl(const Operand &lhs, const Register &rhs) {
+        switch (lhs.kind()) {
+          case Operand::REG_DISP:
+            masm.cmpl_rm(rhs.code(), lhs.disp(), lhs.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void cmpl(const Operand &op, ImmWord imm) {
         switch (op.kind()) {
           case Operand::REG:

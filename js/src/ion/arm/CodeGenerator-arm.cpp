@@ -1128,34 +1128,19 @@ CodeGeneratorARM::visitLoadElementT(LLoadElementT *load)
     return true;
 }
 
-bool
-CodeGeneratorARM::visitStoreElementV(LStoreElementV *store)
+void
+CodeGeneratorARM::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
+                                    const Register &elements, const LAllocation *index)
 {
-    const ValueOperand out = ToOutValue(store);
-    Register base = ToRegister(store->elements());
-    if (store->index()->isConstant())
-        masm.storeValue(out, Address(base, ToInt32(store->index()) * sizeof(Value)));
-    else
-        masm.storeValue(out, base, ToRegister(store->index()));
-    return true;
-}
-
-bool
-CodeGeneratorARM::visitStoreElementT(LStoreElementT *store)
-{
-    const LAllocation *value = store->value();
-    MIRType valueType = store->mir()->value()->type();
-    Register base = ToRegister(store->elements());
-    if (store->index()->isConstant()) {
-        int32 index = ToInt32(store->index()) * sizeof(Value);
-        Address dest = Address(base, index);
+    if (index->isConstant()) {
+        Address dest = Address(elements, ToInt32(index) * sizeof(Value));
         if (valueType == MIRType_Double) {
             masm.ma_vstr(ToFloatRegister(value), Operand(dest));
-            return true;
+            return;
         }
 
         // Store the type tag if needed.
-        if (valueType != store->mir()->elementType())
+        if (valueType != elementType)
             masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), dest);
 
         // Store the payload.
@@ -1164,23 +1149,22 @@ CodeGeneratorARM::visitStoreElementT(LStoreElementT *store)
         else
             masm.storePayload(ToRegister(value), dest);
     } else {
-        Register index = ToRegister(store->index());
+        Register indexReg = ToRegister(index);
         if (valueType == MIRType_Double) {
-            masm.ma_vstr(ToFloatRegister(value), base, index);
-            return true;
+            masm.ma_vstr(ToFloatRegister(value), elements, indexReg);
+            return;
         }
 
         // Store the type tag if needed.
-        if (valueType != store->mir()->elementType())
-            masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), base, index);
+        if (valueType != elementType)
+            masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), elements, indexReg);
 
         // Store the payload.
         if (value->isConstant())
-            masm.storePayload(*value->toConstant(), base, index);
+            masm.storePayload(*value->toConstant(), elements, index);
         else
-            masm.storePayload(ToRegister(value), base, index);
+            masm.storePayload(ToRegister(value), elements, indexReg);
     }
-    return false;
 }
 
 bool

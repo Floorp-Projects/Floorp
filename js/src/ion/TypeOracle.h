@@ -124,6 +124,9 @@ class TypeOracle
     virtual bool elementReadIsPacked(JSScript *script, jsbytecode *pc) {
         return false;
     }
+    virtual bool setElementHasWrittenHoles(JSScript *script, jsbytecode *pc) {
+        return true;
+    }
     virtual bool elementWriteIsDense(JSScript *script, jsbytecode *pc) {
         return false;
     }
@@ -217,6 +220,7 @@ class TypeInferenceOracle : public TypeOracle
     bool elementReadIsPacked(JSScript *script, jsbytecode *pc);
     bool elementWriteIsDense(JSScript *script, jsbytecode *pc);
     bool elementWriteIsPacked(JSScript *script, jsbytecode *pc);
+    bool setElementHasWrittenHoles(JSScript *script, jsbytecode *pc);
     bool propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc);
     bool propertyWriteNeedsBarrier(JSScript *script, jsbytecode *pc, jsid id);
     MIRType elementWrite(JSScript *script, jsbytecode *pc);

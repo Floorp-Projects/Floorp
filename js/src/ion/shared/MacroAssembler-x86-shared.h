@@ -127,6 +127,14 @@ class MacroAssemblerX86Shared : public Assembler
         subl(imm, dest);
     }
 
+    void branch32(Condition cond, const Address &lhs, const Register &rhs, Label *label) {
+        cmpl(Operand(lhs), rhs);
+        j(cond, label);
+    }
+    void branch32(Condition cond, const Address &lhs, Imm32 imm, Label *label) {
+        cmpl(Operand(lhs), imm);
+        j(cond, label);
+    }
     void branch32(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
         cmpl(lhs, imm);
         j(cond, label);
@@ -183,6 +191,12 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void load32(const Address &address, Register dest) {
         movl(Operand(address), dest);
+    }
+    void store32(Imm32 src, const Address &dest) {
+        movl(src, Operand(dest));
+    }
+    void store32(const Register &src, const Address &dest) {
+        movl(src, Operand(dest));
     }
     void callWithExitFrame(IonCode *target) {
         uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);

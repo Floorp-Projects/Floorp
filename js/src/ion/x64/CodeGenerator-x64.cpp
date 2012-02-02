@@ -301,27 +301,13 @@ CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
     return true;
 }
 
-bool
-CodeGeneratorX64::visitStoreElementV(LStoreElementV *store)
+
+void
+CodeGeneratorX64::storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
+                                    const Register &elements, const LAllocation *index)
 {
-    Operand dest = createArrayElementOperand(ToRegister(store->elements()), store->index());
-    const ValueOperand value = ToValue(store, LStoreElementV::Value);
-
-    masm.storeValue(value, dest);
-    return true;
-}
-
-bool
-CodeGeneratorX64::visitStoreElementT(LStoreElementT *store)
-{
-    Operand dest = createArrayElementOperand(ToRegister(store->elements()), store->index());
-
-    const LAllocation *value = store->value();
-    MIRType valueType = store->mir()->value()->type();
-    MIRType elementType = store->mir()->elementType();
-
+    Operand dest = createArrayElementOperand(elements, index);
     storeUnboxedValue(value, valueType, dest, elementType);
-    return true;
 }
 
 bool
