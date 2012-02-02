@@ -62,7 +62,7 @@
 
 "use strict";
 
-importScripts("ril_consts.js");
+importScripts("ril_consts.js", "systemlibs.js");
 
 let DEBUG = false;
 
@@ -71,6 +71,8 @@ const UINT8_SIZE  = 1;
 const UINT16_SIZE = 2;
 const UINT32_SIZE = 4;
 const PARCEL_SIZE_SIZE = UINT32_SIZE;
+
+let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = false;
 
 /**
  * This object contains helpers buffering incoming data & deconstructing it
@@ -519,6 +521,25 @@ let Buf = {
 let RIL = {
 
   /**
+   * Set quirk flags based on the RIL model detected. Note that this
+   * requires the RIL being "warmed up" first, which happens when on
+   * an incoming or outgoing call.
+   */
+  rilQuirksInitialized: false,
+  initRILQuirks: function initRILQuirks() {
+    // The Samsung Galaxy S2 I-9100 radio sends an extra Uint32 in the
+    // call state.
+    let model_id = libcutils.property_get("ril.model_id");
+    if (DEBUG) debug("Detected RIL model " + model_id);
+    if (model_id == "I9100") {
+      if (DEBUG) debug("Enabling RILQUIRKS_CALLSTATE_EXTRA_UINT32 for I9100.");
+      RILQUIRKS_CALLSTATE_EXTRA_UINT32 = true;
+    }
+
+    this.rilQuirksInitialized = true;
+  },
+
+  /**
    * Retrieve the ICC's status.
    *
    * Response will call Phone.onICCStatus().
@@ -917,6 +938,10 @@ RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN() {
 RIL[REQUEST_CHANGE_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
+  if (!this.rilQuirksInitialized) {
+    this.initRILQuirks();
+  }
+
   let calls_length = 0;
   // The RIL won't even send us the length integer if there are no active calls.
   // So only read this integer if the parcel actually has it.
@@ -930,22 +955,24 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
 
   let calls = {};
   for (let i = 0; i < calls_length; i++) {
-    let call = {
-      state:              Buf.readUint32(), // CALL_STATE_*
-      callIndex:          Buf.readUint32(), // GSM index (1-based)
-      toa:                Buf.readUint32(),
-      isMpty:             Boolean(Buf.readUint32()),
-      isMT:               Boolean(Buf.readUint32()),
-      als:                Buf.readUint32(),
-      isVoice:            Boolean(Buf.readUint32()),
-      isVoicePrivacy:     Boolean(Buf.readUint32()),
-      somethingOrOther:   Buf.readUint32(), //XXX TODO whatziz? not in ril.h, but it's in the output...
-      number:             Buf.readString(), //TODO munge with TOA
-      numberPresentation: Buf.readUint32(), // CALL_PRESENTATION_*
-      name:               Buf.readString(),
-      namePresentation:   Buf.readUint32(),
-      uusInfo:            null
-    };
+    let call = {};
+    call.state          = Buf.readUint32(); // CALL_STATE_*
+    call.callIndex      = Buf.readUint32(); // GSM index (1-based)
+    call.toa            = Buf.readUint32();
+    call.isMpty         = Boolean(Buf.readUint32());
+    call.isMT           = Boolean(Buf.readUint32());
+    call.als            = Buf.readUint32();
+    call.isVoice        = Boolean(Buf.readUint32());
+    call.isVoicePrivacy = Boolean(Buf.readUint32());
+    if (RILQUIRKS_CALLSTATE_EXTRA_UINT32) {
+      Buf.readUint32();
+    }
+    call.number             = Buf.readString(); //TODO munge with TOA
+    call.numberPresentation = Buf.readUint32(); // CALL_PRESENTATION_*
+    call.name               = Buf.readString();
+    call.namePresentation   = Buf.readUint32();
+
+    call.uusInfo = null;
     let uusInfoPresent = Buf.readUint32();
     if (uusInfoPresent == 1) {
       call.uusInfo = {
@@ -954,6 +981,7 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
         userData: null //XXX TODO byte array?!?
       };
     }
+
     calls[call.callIndex] = call;
   }
   Phone.onCurrentCalls(calls);
