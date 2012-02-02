@@ -345,6 +345,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     mSourceRegion = nsnull;
 
     if (context) {
+        StartDragSession();
+
         // GTK uses another hidden window for receiving mouse events.
         mGrabWidget = gtk_grab_get_current();
         if (mGrabWidget) {
@@ -360,8 +362,6 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     }
 
     gtk_target_list_unref(sourceList);
-
-    StartDragSession();
 
     return rv;
 }
