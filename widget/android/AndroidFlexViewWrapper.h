@@ -46,19 +46,16 @@
 #include <pthread.h>
 #include <android/log.h>
 
-template<typename T>
+typedef void *NativeType;
+
 class AndroidEGLObject {
 public:
     AndroidEGLObject(JNIEnv* aJEnv, jobject aJObj)
-    : mPtr(reinterpret_cast<typename T::NativeType>(aJEnv->GetIntField(aJObj, jPointerField))) {}
+    : mPtr(reinterpret_cast<NativeType>(aJEnv->GetIntField(aJObj, jPointerField))) {}
 
-    static void Init(JNIEnv* aJEnv) {
-        jclass jClass = reinterpret_cast<jclass>
-            (aJEnv->NewGlobalRef(aJEnv->FindClass(sClassName)));
-        jPointerField = aJEnv->GetFieldID(jClass, sPointerFieldName, "I");
-    }
+    static void Init(JNIEnv* aJEnv);
 
-    typename T::NativeType const& operator*() const {
+    NativeType const& operator*() const {
         return mPtr;
     }
 
@@ -67,46 +64,13 @@ private:
     static const char* sClassName;
     static const char* sPointerFieldName;
 
-    const typename T::NativeType mPtr;
+    const NativeType mPtr;
 };
 
 typedef void *EGLConfig;
 typedef void *EGLContext;
 typedef void *EGLDisplay;
 typedef void *EGLSurface;
-
-class AndroidEGLDisplayInfo {
-public:
-    typedef EGLDisplay NativeType;
-private:
-    AndroidEGLDisplayInfo() {}
-};
-
-class AndroidEGLConfigInfo {
-public:
-    typedef EGLConfig NativeType;
-private:
-    AndroidEGLConfigInfo() {}
-};
-
-class AndroidEGLContextInfo {
-public:
-    typedef EGLContext NativeType;
-private:
-    AndroidEGLContextInfo() {}
-};
-
-class AndroidEGLSurfaceInfo {
-public:
-    typedef EGLSurface NativeType;
-private:
-    AndroidEGLSurfaceInfo() {}
-};
-
-typedef AndroidEGLObject<AndroidEGLDisplayInfo> AndroidEGLDisplay;
-typedef AndroidEGLObject<AndroidEGLConfigInfo> AndroidEGLConfig;
-typedef AndroidEGLObject<AndroidEGLContextInfo> AndroidEGLContext;
-typedef AndroidEGLObject<AndroidEGLSurfaceInfo> AndroidEGLSurface;
 
 class AndroidGLController {
 public:

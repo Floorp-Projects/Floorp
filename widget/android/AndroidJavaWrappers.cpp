@@ -209,8 +209,6 @@ AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(JNIEnv *jEnv)
 #else
     initInit();
 
-    jGeckoSurfaceViewClass = getClassGlobalRef("org/mozilla/gecko/gfx/layers/OGLSurfaceView");
-
     jGetHolderMethod = getMethod("getHolder", "()Landroid/view/SurfaceHolder;");
 
 
