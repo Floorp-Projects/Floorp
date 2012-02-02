@@ -512,7 +512,18 @@ public:
         mIsBadUnderlineFamily(false)
         { }
 
-    virtual ~gfxFontFamily() { }
+    virtual ~gfxFontFamily() {
+        // clear Family pointers in our faces; the font entries might stay
+        // alive due to cached font objects, but they can no longer refer
+        // to their families.
+        PRUint32 i = mAvailableFonts.Length();
+        while (i) {
+             gfxFontEntry *fe = mAvailableFonts[--i];
+             if (fe) {
+                 fe->SetFamily(nsnull);
+             }
+        }
+    }
 
     const nsString& Name() { return mName; }
 
