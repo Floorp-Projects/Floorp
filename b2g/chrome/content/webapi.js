@@ -4,10 +4,17 @@ dump('======================= webapi+apps.js ======================= \n');
 
 'use strict';
 
-(function() {
-  let { interfaces: Ci, utils: Cu }  = Components;
+let { classes: Cc, interfaces: Ci, utils: Cu }  = Components;
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
 
-  Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
+  return Cc['@mozilla.org/focus-manager;1']
+           .getService(Ci.nsIFocusManager);
+});
+
+(function() {
+
   function generateAPI(window) {
     let navigator = window.navigator;
     XPCOMUtils.defineLazyGetter(navigator, 'mozSettings', function() {
@@ -25,6 +32,10 @@ dump('======================= webapi+apps.js ======================= \n');
         }
       };
       return mozApps;
+    });
+
+    XPCOMUtils.defineLazyGetter(navigator, 'mozKeyboard', function() {
+      return new MozKeyboard();
     });
 
     TouchHandler.start(window);
@@ -97,6 +108,78 @@ function updateApplicationCache(window) {
   } catch (e) {}
 }
 
+// MozKeyboard
+(function VirtualKeyboardManager() {
+  let activeElement = null;
+  let isKeyboardOpened = false;
+  
+  function fireEvent(type, details) {
+    let event = content.document.createEvent('CustomEvent');
+    event.initCustomEvent(type, true, true, details ? details : {});
+    content.dispatchEvent(event);
+  }
+
+  let constructor = {
+    handleEvent: function vkm_handleEvent(evt) {
+      switch (evt.type) {
+        case 'keypress':
+          if (evt.keyCode != evt.DOM_VK_ESCAPE || !isKeyboardOpened)
+            return;
+
+          fireEvent('hideime');
+          isKeyboardOpened = false;
+
+          evt.preventDefault();
+          evt.stopPropagation();
+          break;
+
+        case 'mousedown':
+          if (evt.target != activeElement || isKeyboardOpened)
+            return;
+
+          let type = activeElement.type;
+          fireEvent('showime', { type: type });
+          isKeyboardOpened = true;
+          break;
+      }
+    },
+    observe: function vkm_observe(subject, topic, data) {
+      let shouldOpen = parseInt(data);
+      if (shouldOpen && !isKeyboardOpened) {
+        activeElement = Services.fm.focusedElement;
+        if (!activeElement)
+          return;
+
+        let type = activeElement.type;
+        fireEvent('showime', { type: type });
+      } else if (!shouldOpen && isKeyboardOpened) {
+        fireEvent('hideime');
+      }
+      isKeyboardOpened = shouldOpen;
+    }
+  };
+
+  Services.obs.addObserver(constructor, 'ime-enabled-state-changed', false);
+  ['keypress', 'mousedown'].forEach(function vkm_events(type) {
+    addEventListener(type, constructor, true);
+  });
+})();
+
+
+function MozKeyboard() {
+}
+
+MozKeyboard.prototype = {
+  sendKey: function mozKeyboardSendKey(keyCode, charCode) {
+    charCode = (charCode == undefined) ? keyCode : charCode;
+
+    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils);
+    ['keydown', 'keypress', 'keyup'].forEach(function sendKey(type) {
+      utils.sendKeyEvent(type, keyCode, charCode, null);
+    });
+  }
+};
 
 // MozSettings - Bug 678695
 function Settings() {

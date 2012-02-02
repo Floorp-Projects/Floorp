@@ -47,17 +47,15 @@ const LocalFile = CC('@mozilla.org/file/local;1',
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
+
 XPCOMUtils.defineLazyGetter(Services, 'env', function() {
   return Cc['@mozilla.org/process/environment;1']
            .getService(Ci.nsIEnvironment);
 });
+
 XPCOMUtils.defineLazyGetter(Services, 'ss', function() {
   return Cc['@mozilla.org/content/style-sheet-service;1']
            .getService(Ci.nsIStyleSheetService);
-});
-XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
-  return Cc['@mozilla.org/focus-manager;1']
-           .getService(Ci.nsIFocusManager);
 });
 
 // In order to use http:// scheme instead of file:// scheme
@@ -288,77 +286,6 @@ var shell = {
   }
 };
 
-(function VirtualKeyboardManager() {
-  let activeElement = null;
-  let isKeyboardOpened = false;
-
-  let constructor = {
-    handleEvent: function vkm_handleEvent(evt) {
-      let contentWindow = shell.home.contentWindow.wrappedJSObject;
-
-      switch (evt.type) {
-        case 'ContentStart':
-          contentWindow.navigator.mozKeyboard = new MozKeyboard();
-          break;
-        case 'keypress':
-          if (evt.keyCode != evt.DOM_VK_ESCAPE || !isKeyboardOpened)
-            return;
-
-          shell.sendEvent(contentWindow, 'hideime');
-          isKeyboardOpened = false;
-
-          evt.preventDefault();
-          evt.stopPropagation();
-          break;
-        case 'mousedown':
-          if (evt.target != activeElement || isKeyboardOpened)
-            return;
-
-          let type = activeElement.type;
-          shell.sendEvent(contentWindow, 'showime', { type: type });
-          isKeyboardOpened = true;
-          break;
-      }
-    },
-    observe: function vkm_observe(subject, topic, data) {
-      let contentWindow = shell.home.contentWindow;
-
-      let shouldOpen = parseInt(data);
-      if (shouldOpen && !isKeyboardOpened) {
-        activeElement = Services.fm.focusedElement;
-        if (!activeElement)
-          return;
-
-        let type = activeElement.type;
-        shell.sendEvent(contentWindow, 'showime', { type: type });
-      } else if (!shouldOpen && isKeyboardOpened) {
-        shell.sendEvent(contentWindow, 'hideime');
-      }
-      isKeyboardOpened = shouldOpen;
-    }
-  };
-
-  Services.obs.addObserver(constructor, 'ime-enabled-state-changed', false);
-  ['ContentStart', 'keypress', 'mousedown'].forEach(function vkm_events(type) {
-    window.addEventListener(type, constructor, true);
-  });
-})();
-
-
-function MozKeyboard() {
-}
-
-MozKeyboard.prototype = {
-  sendKey: function mozKeyboardSendKey(keyCode, charCode) {
-    charCode = (charCode == undefined) ? keyCode : charCode;
-
-    var utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
-    ['keydown', 'keypress', 'keyup'].forEach(function sendKeyEvents(type) {
-      utils.sendKeyEvent(type, keyCode, charCode, null);
-    });
-  }
-};
 
 
 function nsBrowserAccess() {
