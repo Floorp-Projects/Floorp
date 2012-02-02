@@ -864,19 +864,27 @@ TiltGL.Program.prototype = {
 
       // use the the program if it wasn't already set
       this._context.useProgram(this._ref);
+      this.cleanupVertexAttrib();
 
-      // check if the required vertex attributes aren't already set
-      if (utils._enabledAttributes < this._attributes.length) {
-        utils._enabledAttributes = this._attributes.length;
-
-        // enable any necessary vertex attributes using the cache
-        for (let i in this._attributes) {
-          if (this._attributes.hasOwnProperty(i)) {
-            this._context.enableVertexAttribArray(this._attributes[i]);
-          }
-        }
+      // enable any necessary vertex attributes using the cache
+      for each (let attribute in this._attributes) {
+        this._context.enableVertexAttribArray(attribute);
+        utils._enabledAttributes.push(attribute);
       }
     }
+  },
+
+  /**
+   * Disables all currently enabled vertex attribute arrays.
+   */
+  cleanupVertexAttrib: function TGLP_cleanupVertexAttrib()
+  {
+    let utils = TiltGL.ProgramUtils;
+
+    for each (let attribute in utils._enabledAttributes) {
+      this._context.disableVertexAttribArray(attribute);
+    }
+    utils._enabledAttributes = [];
   },
 
   /**
@@ -949,9 +957,9 @@ TiltGL.Program.prototype = {
   {
     let gl = this._context;
 
-    gl.uniform1i(this._uniforms[aSampler], 0);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, aTexture._ref);
+    gl.uniform1i(this._uniforms[aSampler], 0);
   },
 
   /**
@@ -1177,7 +1185,7 @@ TiltGL.ProgramUtils = {
   /**
    * Represents the current enabled attributes.
    */
-  _enabledAttributes: -1
+  _enabledAttributes: []
 };
 
 /**
@@ -1615,5 +1623,5 @@ TiltGL.create3DContext = function TGL_create3DContext(aCanvas, aFlags)
 TiltGL.clearCache = function TGL_clearCache()
 {
   TiltGL.ProgramUtils._activeProgram = -1;
-  TiltGL.ProgramUtils._enabledAttributes = -1;
+  TiltGL.ProgramUtils._enabledAttributes = [];
 };
