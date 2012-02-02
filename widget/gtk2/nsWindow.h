@@ -259,17 +259,18 @@ public:
     void               OnDragLeave(void);
     void               OnDragEnter(nscoord aX, nscoord aY);
 
-    virtual void       NativeResize(PRInt32 aWidth,
+private:
+    void               NativeResize(PRInt32 aWidth,
                                     PRInt32 aHeight,
                                     bool    aRepaint);
 
-    virtual void       NativeResize(PRInt32 aX,
+    void               NativeResize(PRInt32 aX,
                                     PRInt32 aY,
                                     PRInt32 aWidth,
                                     PRInt32 aHeight,
                                     bool    aRepaint);
 
-    virtual void       NativeShow  (bool    aAction);
+    void               NativeShow  (bool    aAction);
     void               SetHasMappedToplevel(bool aState);
     nsIntSize          GetSafeWindowSize(nsIntSize aSize);
 
@@ -277,6 +278,7 @@ public:
     void               GrabPointer  (void);
     void               ReleaseGrabs (void);
 
+public:
     enum PluginType {
         PluginType_NONE = 0,   /* do not have any plugin */
         PluginType_XEMBED,     /* the plugin support xembed */
