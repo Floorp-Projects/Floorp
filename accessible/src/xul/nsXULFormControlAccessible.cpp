@@ -662,10 +662,17 @@ nsXULToolbarButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
 bool
 nsXULToolbarButtonAccessible::IsSeparator(nsAccessible *aAccessible)
 {
-  nsIContent* content = aAccessible->GetContent();
-  return content && ((content->Tag() == nsGkAtoms::toolbarseparator) ||
-                     (content->Tag() == nsGkAtoms::toolbarspacer) ||
-                     (content->Tag() == nsGkAtoms::toolbarspring)); }
+  nsCOMPtr<nsIDOMNode> domNode;
+  aAccessible->GetDOMNode(getter_AddRefs(domNode));
+  nsCOMPtr<nsIContent> contentDomNode(do_QueryInterface(domNode));
+
+  if (!contentDomNode)
+    return false;
+
+  return (contentDomNode->Tag() == nsGkAtoms::toolbarseparator) ||
+         (contentDomNode->Tag() == nsGkAtoms::toolbarspacer) ||
+         (contentDomNode->Tag() == nsGkAtoms::toolbarspring);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
