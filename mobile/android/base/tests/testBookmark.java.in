@@ -7,11 +7,12 @@ import android.os.SystemClock;
 import java.util.ArrayList;
 
 public class testBookmark extends BaseTest {
-    private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
     private static final long MAX_WAIT_MS = 10 * 1000; 
 
     public void testBookmark() {
-        enterUrl(URL);
+        setTestType("mochitest");
+        String url = getAbsoluteUrl("/robocop/robocop_blank_02.html");
+        enterUrl(url);
 
         //Click the top item in the awesome list.
         mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
