@@ -85,7 +85,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
     Value rhs = right->toConstant()->value();
     Value ret = UndefinedValue();
 
-    switch(ins->op()) {
+    switch (ins->op()) {
       case MDefinition::Op_BitAnd:
         ret = Int32Value(lhs.toInt32() & rhs.toInt32());
         break;

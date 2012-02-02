@@ -2224,15 +2224,8 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
     JSCompartment *compartment = cx->compartment;
     mjit::ExpandInlineFrames(compartment);
-    mjit::ClearAllFrames(compartment);
 
-    /* Throw away all JIT code in the compartment, but leave everything else alone. */
-
-    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        if (script->hasJITCode())
-            mjit::ReleaseScriptCode(cx, script);
-    }
+    ReleaseAllJITCode(cx, cx->compartment, false);
 #endif /* JS_METHODJIT */
 
 }

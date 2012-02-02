@@ -1811,6 +1811,12 @@ VerifyBarriers(JSContext *cx, bool always = false)
 static inline JSCompartment *
 GetObjectCompartment(JSObject *obj) { return reinterpret_cast<js::gc::Cell *>(obj)->compartment(); }
 
+void
+ReleaseAllJITCode(JSContext *cx, JSCompartment *c, bool resetUseCounts);
+
+void
+ReleaseAllJITCode(JSContext *cx, bool resetUseCounts);
+
 } /* namespace js */
 
 #endif /* jsgc_h___ */
