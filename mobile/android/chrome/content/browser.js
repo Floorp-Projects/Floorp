@@ -311,8 +311,10 @@ var BrowserApp = {
         observe: function(aSubject, aTopic, aData) {
           Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
           if (aData == "fail") {
-            let params = { selected: restoreToFront };
-            BrowserApp.addTab("about:home", { showProgress: false });
+            BrowserApp.addTab("about:home", {
+              showProgress: false,
+              selected: restoreToFront
+            });
           }
 
           sendMessageToJava({
