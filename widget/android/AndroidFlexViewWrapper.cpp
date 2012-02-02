@@ -40,30 +40,37 @@
 
 static AndroidGLController sController;
 
-template<>
-const char *AndroidEGLDisplay::sClassName = "com/google/android/gles_jni/EGLDisplayImpl";
-template<>
-const char *AndroidEGLDisplay::sPointerFieldName = "mEGLDisplay";
-template<>
-jfieldID AndroidEGLDisplay::jPointerField = 0;
-template<>
-const char *AndroidEGLConfig::sClassName = "com/google/android/gles_jni/EGLConfigImpl";
-template<>
-const char *AndroidEGLConfig::sPointerFieldName = "mEGLConfig";
-template<>
-jfieldID AndroidEGLConfig::jPointerField = 0;
-template<>
-const char *AndroidEGLContext::sClassName = "com/google/android/gles_jni/EGLContextImpl";
-template<>
-const char *AndroidEGLContext::sPointerFieldName = "mEGLContext";
-template<>
-jfieldID AndroidEGLContext::jPointerField = 0;
-template<>
-const char *AndroidEGLSurface::sClassName = "com/google/android/gles_jni/EGLSurfaceImpl";
-template<>
-const char *AndroidEGLSurface::sPointerFieldName = "mEGLSurface";
-template<>
-jfieldID AndroidEGLSurface::jPointerField = 0;
+static const char *sEGLDisplayClassName = "com/google/android/gles_jni/EGLDisplayImpl";
+static const char *sEGLDisplayPointerFieldName = "mEGLDisplay";
+static jfieldID jEGLDisplayPointerField = 0;
+
+static const char *sEGLConfigClassName = "com/google/android/gles_jni/EGLConfigImpl";
+static const char *sEGLConfigPointerFieldName = "mEGLConfig";
+static jfieldID jEGLConfigPointerField = 0;
+
+static const char *sEGLContextClassName = "com/google/android/gles_jni/EGLContextImpl";
+static const char *sEGLContextPointerFieldName = "mEGLContext";
+static jfieldID jEGLContextPointerField = 0;
+
+static const char *sEGLSurfaceClassName = "com/google/android/gles_jni/EGLSurfaceImpl";
+static const char *sEGLSurfacePointerFieldName = "mEGLSurface";
+static jfieldID jEGLSurfacePointerField = 0;
+
+void AndroidEGLObject::Init(JNIEnv* aJEnv) {
+    jclass jClass;
+    jClass = reinterpret_cast<jclass>
+        (aJEnv->NewGlobalRef(aJEnv->FindClass(sEGLDisplayClassName)));
+    jEGLDisplayPointerField = aJEnv->GetFieldID(jClass, sEGLDisplayPointerFieldName, "I");
+    jClass = reinterpret_cast<jclass>
+        (aJEnv->NewGlobalRef(aJEnv->FindClass(sEGLConfigClassName)));
+    jEGLConfigPointerField = aJEnv->GetFieldID(jClass, sEGLConfigPointerFieldName, "I");
+    jClass = reinterpret_cast<jclass>
+        (aJEnv->NewGlobalRef(aJEnv->FindClass(sEGLContextClassName)));
+    jEGLContextPointerField = aJEnv->GetFieldID(jClass, sEGLContextPointerFieldName, "I");
+    jClass = reinterpret_cast<jclass>
+        (aJEnv->NewGlobalRef(aJEnv->FindClass(sEGLSurfaceClassName)));
+    jEGLSurfacePointerField = aJEnv->GetFieldID(jClass, sEGLSurfacePointerFieldName, "I");
+}
 
 jmethodID AndroidGLController::jSetGLVersionMethod = 0;
 jmethodID AndroidGLController::jInitGLContextMethod = 0;
@@ -149,29 +156,29 @@ AndroidGLController::DisposeGLContext()
 EGLDisplay
 AndroidGLController::GetEGLDisplay()
 {
-    AndroidEGLDisplay jEGLDisplay(mJEnv, mJEnv->CallObjectMethod(mJObj, jGetEGLDisplayMethod));
-    return *jEGLDisplay;
+    jobject jObj = mJEnv->CallObjectMethod(mJObj, jGetEGLDisplayMethod);
+    return reinterpret_cast<EGLDisplay>(mJEnv->GetIntField(jObj, jEGLDisplayPointerField));
 }
 
 EGLConfig
 AndroidGLController::GetEGLConfig()
 {
-    AndroidEGLConfig jEGLConfig(mJEnv, mJEnv->CallObjectMethod(mJObj, jGetEGLConfigMethod));
-    return *jEGLConfig;
+    jobject jObj = mJEnv->CallObjectMethod(mJObj, jGetEGLConfigMethod);
+    return reinterpret_cast<EGLConfig>(mJEnv->GetIntField(jObj, jEGLConfigPointerField));
 }
 
 EGLContext
 AndroidGLController::GetEGLContext()
 {
-    AndroidEGLContext jEGLContext(mJEnv, mJEnv->CallObjectMethod(mJObj, jGetEGLContextMethod));
-    return *jEGLContext;
+    jobject jObj = mJEnv->CallObjectMethod(mJObj, jGetEGLContextMethod);
+    return reinterpret_cast<EGLContext>(mJEnv->GetIntField(jObj, jEGLContextPointerField));
 }
 
 EGLSurface
 AndroidGLController::GetEGLSurface()
 {
-    AndroidEGLSurface jEGLSurface(mJEnv, mJEnv->CallObjectMethod(mJObj, jGetEGLSurfaceMethod));
-    return *jEGLSurface;
+    jobject jObj = mJEnv->CallObjectMethod(mJObj, jGetEGLSurfaceMethod);
+    return reinterpret_cast<EGLSurface>(mJEnv->GetIntField(jObj, jEGLSurfacePointerField));
 }
 
 bool
