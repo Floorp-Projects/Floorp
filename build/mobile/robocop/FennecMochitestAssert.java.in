@@ -15,12 +15,10 @@
  * The Original Code is Firefox Mobile Test Framework.
  *
  * The Initial Developer of the Original Code is Mozilla.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Trevor Fairey <tnfairey@gmail.com>
- * David Burns <dburns@mozilla.com>
  * Joel Maher <joel.maher@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -49,15 +47,12 @@ import java.util.Date;
 
 import android.util.Log;
 
-public class FennecNativeAssert implements Assert {
+public class FennecMochitestAssert implements Assert {
   private String logFile = null;
   
   // Objects for reflexive access of fennec classes.
 
   private LinkedList<testInfo> testList = new LinkedList<testInfo>();
-
-  // If waiting for an event.
-  private boolean asleep = false;
 
   // Internal state variables to make logging match up with existing mochitests
   private int lineNumber = 0;
@@ -74,12 +69,10 @@ public class FennecNativeAssert implements Assert {
   // Measure the time it takes to run test case
   private long startTime = 0;
 
-  public FennecNativeAssert() {
+  public FennecMochitestAssert() {
   }
 
-  // Write information to a logfile and logcat
-  public void dumpLog(String message)
-  {
+  public void dumpLog(String message) {
     File file = new File(logFile);
     BufferedWriter bw = null;
 
@@ -108,17 +101,15 @@ public class FennecNativeAssert implements Assert {
   {
     logFile = filename;
 
-    //TODO: these two messages are mochitest specific
     String message;
     if (!logStarted) {
-      message = Integer.toString(lineNumber++) + " INFO SimpleTest START";
-      dumpLog(message);
+      dumpLog(Integer.toString(lineNumber++) + " INFO SimpleTest START");
       logStarted = true;
     }
 
     if (logTestName != "") {
-      message = Integer.toString(lineNumber++) + " INFO TEST-END | " + logTestName;
       long diff = (new Date().getTime()) - startTime;
+      message = Integer.toString(lineNumber++) + " INFO TEST-END | " + logTestName;
       message += " | finished in " + diff + "ms";
       dumpLog(message);
       logTestName = "";
@@ -131,9 +122,7 @@ public class FennecNativeAssert implements Assert {
     logTestName = nameParts[nameParts.length - 1];
     startTime = new Date().getTime();
 
-    //TODO: this is mochitest specific
-    String message = Integer.toString(lineNumber++) + " INFO TEST-START | " + logTestName;
-    dumpLog(message);
+    dumpLog(Integer.toString(lineNumber++) + " INFO TEST-START | " + logTestName);
   }
 
   class testInfo {
@@ -197,16 +186,12 @@ public class FennecNativeAssert implements Assert {
 
     if (logTestName != "") {
       long diff = (new Date().getTime()) - startTime;
-
-      //TODO: this is mochitest specific
       message = Integer.toString(lineNumber++) + " INFO TEST-END | " + logTestName;
       message += " | finished in " + diff + "ms";
       dumpLog(message);
-
       logTestName = "";
     }
 
-    //TODO: this is all mochitest specific
     message = Integer.toString(lineNumber++) + " INFO TEST-START | Shutdown";
     dumpLog(message);
     message = Integer.toString(lineNumber++) + " INFO Passed: " + Integer.toString(passed);
