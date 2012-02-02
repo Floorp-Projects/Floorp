@@ -177,7 +177,7 @@ class IonCache
     CodeLocationLabel cacheLabel() const { return cacheLabel_; }
 
     CodeLocationLabel rejoinLabel() const {
-        return CodeLocationLabel(lastJump().raw() + REJOIN_LABEL_OFFSET);
+        return CodeLocationLabel(initialJump_.raw() + REJOIN_LABEL_OFFSET);
     }
 
     bool pure() { return pure_; }
