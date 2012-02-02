@@ -43,6 +43,8 @@ interface nsIProfiler : nsISupports
                       in PRUint32 aFeatureCount);
   void StopProfiler();
   string GetProfile();
+  [implicit_jscontext]
+  jsval getProfileData();
   boolean IsActive();
   void GetResponsivenessTimes(out PRUint32 aCount, [retval, array, size_is(aCount)] out double aResult);
   void GetFeatures(out PRUint32 aCount, [retval, array, size_is(aCount)] out string aFeatures);
