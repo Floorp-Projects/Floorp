@@ -374,11 +374,11 @@ class CodeLocationJump
 
     void repoint(IonCode *code, MacroAssembler* masm = NULL);
 
-    uint8 *raw() {
+    uint8 *raw() const {
         JS_ASSERT(absolute);
         return raw_;
     }
-    uint8 *offset() {
+    uint8 *offset() const {
         JS_ASSERT(!absolute);
         return raw_;
     }
