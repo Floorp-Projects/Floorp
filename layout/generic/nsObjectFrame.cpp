@@ -1139,8 +1139,12 @@ nsObjectFrame::IsTransparentMode() const
   if (!mInstanceOwner)
     return false;
 
-  NPWindow *window;
+  NPWindow *window = nsnull;
   mInstanceOwner->GetWindow(window);
+  if (!window) {
+    return false;
+  }
+
   if (window->type != NPWindowTypeDrawable)
     return false;
 
