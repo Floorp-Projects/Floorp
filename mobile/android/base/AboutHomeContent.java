@@ -182,6 +182,13 @@ public class AboutHomeContent extends ScrollView {
         });
     }
 
+    private void setAddonsVisibility(boolean visible) {
+        int visibility = visible ? View.VISIBLE : View.GONE;
+        findViewById(R.id.recommended_addons_title).setVisibility(visibility);
+        findViewById(R.id.recommended_addons).setVisibility(visibility);
+        findViewById(R.id.all_addons_text).setVisibility(visibility);
+    }
+
     private void setTopSitesVisibility(boolean visible, boolean hasTopSites) {
         int visibility = visible ? View.VISIBLE : View.GONE;
         int visibilityWithTopSites = visible && hasTopSites ? View.VISIBLE : View.GONE;
@@ -423,20 +430,25 @@ public class AboutHomeContent extends ScrollView {
             Log.i("Addons", "filestream is null");
             jsonString = readFromZipFile(activity, addonsFilename);
         }
-        if (jsonString == null)
-            return;
 
-        final JSONArray array;
-        try {
-            array = new JSONObject(jsonString).getJSONArray("addons");
-        } catch (JSONException e) {
-            Log.i(LOGTAG, "error reading json file", e);
-            return;
+        JSONArray addonsArray = null;
+        if (jsonString != null) {
+            try {
+                addonsArray = new JSONObject(jsonString).getJSONArray("addons");
+            } catch (JSONException e) {
+                Log.i(LOGTAG, "error reading json file", e);
+            }
         }
 
+        final JSONArray array = addonsArray;
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
             public void run() {
                 try {
+                    if (array == null || array.length() == 0) {
+                        setAddonsVisibility(false);
+                        return;
+                    }
+
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject jsonobj = array.getJSONObject(i);
 
@@ -460,6 +472,8 @@ public class AboutHomeContent extends ScrollView {
 
                         mAddonsLayout.addView(row);
                     }
+
+                    setAddonsVisibility(true);
                 } catch (JSONException e) {
                     Log.i(LOGTAG, "error reading json file", e);
                 }
