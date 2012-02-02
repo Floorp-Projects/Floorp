@@ -172,6 +172,7 @@ class BailoutClosure;
 class IonActivation
 {
     JSContext *cx_;
+    JSCompartment *compartment_;
     IonActivation *prev_;
     StackFrame *entryfp_;
     BailoutClosure *bailout_;
@@ -202,6 +203,9 @@ class IonActivation
     BailoutClosure *takeBailout() {
         JS_ASSERT(bailout_);
         return maybeTakeBailout();
+    }
+    JSCompartment *compartment() const {
+        return compartment_;
     }
 };
 

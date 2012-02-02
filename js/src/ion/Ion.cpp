@@ -254,6 +254,7 @@ IonCompartment::~IonCompartment()
 
 IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
   : cx_(cx),
+    compartment_(cx->compartment),
     prev_(cx->runtime->ionActivation),
     entryfp_(fp),
     bailout_(NULL),
@@ -315,6 +316,11 @@ IonCode::copyFrom(MacroAssembler &masm)
 void
 IonCode::trace(JSTracer *trc)
 {
+    // Note that we cannot mark invalidated scripts, since we've basically
+    // corrupted the code stream by injecting bailouts.
+    if (invalidated())
+        return;
+
     if (jumpRelocTableBytes_) {
         uint8 *start = code_ + jumpRelocTableOffset();
         CompactBufferReader reader(start, start + jumpRelocTableBytes_);
@@ -463,10 +469,15 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
 void
 IonScript::trace(JSTracer *trc)
 {
-    if (method_)
+    // Don't bother adding the method to the mark stack if it won't trace.
+    if (method_ && !invalidated())
         MarkIonCode(trc, method_, "method");
+
     if (deoptTable_)
         MarkIonCode(trc, deoptTable_, "deoptimizationTable");
+
+    for (size_t i = 0; i < numConstants(); i++)
+        gc::MarkValue(trc, getConstant(i), "constant");
 }
 
 void
@@ -490,9 +501,10 @@ IonScript::copyBailoutTable(const SnapshotOffset *table)
 }
 
 void
-IonScript::copyConstants(const Value *vp)
+IonScript::copyConstants(const HeapValue *vp)
 {
-    memcpy(constants(), vp, constantEntries_ * sizeof(Value));
+    for (size_t i = 0; i < constantEntries_; i++)
+        constants()[i].init(vp[i]);
 }
 
 void
@@ -968,7 +980,7 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 }
 
 static void
-InvalidateActivation(JSContext *cx, uint8 *ionTop)
+InvalidateActivation(JSContext *cx, uint8 *ionTop, bool invalidateAll)
 {
     IonSpew(IonSpew_Invalidate, "BEGIN invalidating activation");
 
@@ -1012,7 +1024,10 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
             continue;
 
         JSScript *script = it.script();
-        if (!script->hasIonScript() || !script->ion->invalidated())
+        if (!script->hasIonScript())
+            continue;
+
+        if (!invalidateAll && !script->ion->invalidated())
             continue;
 
         // This frame needs to be invalidated. We do the following:
@@ -1066,6 +1081,17 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
 }
 
 void
+ion::InvalidateAll(JSContext *cx, JSCompartment *c)
+{
+    for (IonActivationIterator iter(cx); iter.more(); ++iter) {
+        if (iter.activation()->compartment() == c) {
+            IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
+            InvalidateActivation(cx, iter.top(), true);
+        }
+    }
+}
+
+void
 ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
     // Add an invalidation reference to all invalidated IonScripts to indicate
@@ -1076,7 +1102,7 @@ ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool
     }
 
     for (IonActivationIterator iter(cx); iter.more(); ++iter)
-        InvalidateActivation(cx, iter.top());
+        InvalidateActivation(cx, iter.top(), false);
 
     // Drop the references added above. If a script was never active, its
     // IonScript will be immediately destroyed. Otherwise, it will be held live
@@ -1094,5 +1120,24 @@ ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool
         for (size_t i = 0; i < invalid.length(); i++)
             invalid[i].script->resetUseCount();
     }
+}
+
+void
+ion::FinishInvalidation(JSContext *cx, JSScript *script)
+{
+    if (!script->hasIonScript())
+        return;
+
+    script->ion->method()->setInvalidated();
+
+    /*
+     * If this script has Ion code on the stack, invalidation() will return
+     * true. In this case we have to wait until destroying it.
+     */
+    if (!script->ion->invalidated())
+        ion::IonScript::Destroy(cx, script->ion);
+
+    /* In all cases, NULL out script->ion to avoid re-entry. */
+    script->ion = NULL;
 }
 
