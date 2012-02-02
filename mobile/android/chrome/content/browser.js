@@ -1785,7 +1785,7 @@ Tab.prototype = {
           gecko: {
             type: "DOMTitleChanged",
             tabID: this.id,
-            title: aEvent.target.title
+            title: aEvent.target.title.substring(0, 255)
           }
         });
         break;
