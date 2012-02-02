@@ -694,6 +694,16 @@ TelemetryImpl::CanRecord() {
   return !sTelemetry || sTelemetry->mCanRecord;
 }
 
+NS_IMETHODIMP
+TelemetryImpl::GetCanSend(bool *ret) {
+#if defined(MOZILLA_OFFICIAL) && defined(MOZ_TELEMETRY_REPORTING)
+  *ret = true;
+#else
+  *ret = false;
+#endif
+  return NS_OK;
+}
+
 already_AddRefed<nsITelemetry>
 TelemetryImpl::CreateTelemetryInstance()
 {
