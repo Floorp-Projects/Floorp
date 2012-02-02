@@ -6,9 +6,9 @@ import android.app.Activity;
 
 public class testNewTab extends BaseTest {
     public void testNewTab() {
-        // TODO: find a better way to not hardcode this url
-        String url = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
-        String url2 = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
+        setTestType("mochitest");
+        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
 
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 

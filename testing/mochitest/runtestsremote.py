@@ -395,6 +395,7 @@ def main():
         fHandle = open("robotium.config", "w")
         fHandle.write("profile=%s\n" % (mochitest.remoteProfile))
         fHandle.write("logfile=%s\n" % (options.remoteLogFile))
+        fHandle.write("host=http://mochi.test:8888/tests\n")
         fHandle.close()
         deviceRoot = dm.getDeviceRoot()
       
