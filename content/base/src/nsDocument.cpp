@@ -176,6 +176,7 @@
 #include "nsIDOMPageTransitionEvent.h"
 #include "nsFrameLoader.h"
 #include "nsEscape.h"
+#include "nsObjectLoadingContent.h"
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
@@ -3755,6 +3756,11 @@ NotifyActivityChanged(nsIContent *aContent, void *aUnused)
     mediaElem->NotifyOwnerDocumentActivityChanged();
   }
 #endif
+  nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aContent));
+  if (objectLoadingContent) {
+    nsObjectLoadingContent* olc = static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
+    olc->NotifyOwnerDocumentActivityChanged();
+  }
 }
 
 void
