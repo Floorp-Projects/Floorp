@@ -547,6 +547,11 @@ _TEST_FILES2 = \
 		test_XHR_timeout.html \
 		test_XHR_timeout.js \
 		file_XHR_timeout.sjs \
+		test_bug717511.html \
+		file_bug717511.html \
+		file_bug717511.html^headers^ \
+		file_bug717511_2.html \
+		file_bug717511_2.html^headers^ \
 		$(NULL)
 
 _CHROME_FILES =	\
