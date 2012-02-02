@@ -62,6 +62,7 @@ EXPORTS_mozilla = \
   HalImpl.h \
   HalSandbox.h \
   HalSensor.h \
+  HalTypes.h \
   $(NULL)
 
 CPPSRCS = \
@@ -102,6 +103,10 @@ CPPSRCS += \
   FallbackSensor.cpp \
   $(NULL)
 endif
+
+ifneq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
+CPPSRCS += FallbackLights.cpp
+endif #}
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
