@@ -126,6 +126,40 @@ gcli.addCommand({
   }
 });
 
+/**
+ * 'edit' command
+ */
+gcli.addCommand({
+  name: "edit",
+  description: gcli.lookup("editDesc"),
+  manual: gcli.lookup("editManual"),
+  params: [
+     {
+       name: 'resource',
+       type: {
+         name: 'resource',
+         include: 'text/css'
+       },
+       description: gcli.lookup("editResourceDesc")
+     },
+     {
+       name: "line",
+       defaultValue: 1,
+       type: {
+         name: "number",
+         min: 1,
+         step: 10
+       },
+       description: gcli.lookup("editLineToJumpToDesc")
+     }
+   ],
+   exec: function(args, context) {
+     let hud = HUDService.getHudReferenceById(context.environment.hudId);
+     let StyleEditor = hud.gcliterm.document.defaultView.StyleEditor;
+     StyleEditor.openChrome(args.resource.element, args.line);
+   }
+});
+
 let breakpoints = [];
 
 /**
