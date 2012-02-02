@@ -94,9 +94,9 @@ var shell = {
   // FIXME/bug 678695: this should be a system setting
   preferredScreenBrightness: 1.0,
 
-  get home() {
-    delete this.home;
-    return this.home = document.getElementById('homescreen');
+  get contentBrowser() {
+    delete this.contentBrowser;
+    return this.contentBrowser = document.getElementById('homescreen');
   },
 
   get homeURL() {
@@ -129,7 +129,7 @@ var shell = {
     window.controllers.appendController(this);
     window.addEventListener('keypress', this);
     window.addEventListener('MozApplicationManifest', this);
-    this.home.addEventListener('load', this, true);
+    this.contentBrowser.addEventListener('load', this, true);
 
     try {
       Services.io.offline = false;
@@ -162,7 +162,7 @@ var shell = {
       dump('Error when loading ' + frameScriptUrl + ' as a frame script: ' + e + '\n');
     }
 
-    let browser = this.home;
+    let browser = this.contentBrowser;
     browser.homePage = homeURL;
     browser.goHome();
   },
@@ -193,7 +193,7 @@ var shell = {
   doCommand: function shell_doCommand(cmd) {
     switch (cmd) {
       case 'cmd_close':
-        this.home.contentWindow.postMessage('appclose', '*');
+        content.postMessage('appclose', '*');
         break;
     }
   },
@@ -203,7 +203,7 @@ var shell = {
       case 'keypress':
         switch (evt.keyCode) {
           case evt.DOM_VK_HOME:
-            this.sendEvent(this.home.contentWindow, 'home');
+            this.sendEvent(content, 'home');
             break;
           case evt.DOM_VK_SLEEP:
             this.toggleScreen();
@@ -211,7 +211,7 @@ var shell = {
             let details = {
               'enabled': screen.mozEnabled
             };
-            this.sendEvent(this.home.contentWindow, 'sleep', details);
+            this.sendEvent(content, 'sleep', details);
             break;
           case evt.DOM_VK_ESCAPE:
             if (evt.defaultPrevented)
@@ -221,7 +221,7 @@ var shell = {
         }
         break;
       case 'load':
-        this.home.removeEventListener('load', this, true);
+        this.contentBrowser.removeEventListener('load', this, true);
         this.turnScreenOn();
 
         let chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
