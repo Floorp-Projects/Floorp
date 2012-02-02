@@ -65,12 +65,7 @@ _JAVA_HARNESS = \
 
 _JAVA_TESTS = $(patsubst $(TESTPATH)/%.in,%,$(wildcard $(TESTPATH)/*.java.in))
 
-_TEST_FILES = \
-  $(TESTPATH)/robocop_blank_01.html \
-  $(TESTPATH)/robocop_blank_02.html \
-  $(TESTPATH)/robocop_blank_03.html \
-  $(TESTPATH)/robocop_boxes.html \
-  $(NULL)
+_TEST_FILES = $(wildcard $(TESTPATH)/*.html)
 
 _ROBOCOP_TOOLS = \
   $(TESTPATH)/robocop.ini \
