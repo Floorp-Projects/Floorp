@@ -191,6 +191,13 @@ public:
     NS_IMETHOD         MakeFullScreen(bool aFullScreen);
     NS_IMETHOD         HideWindowChrome(bool aShouldHide);
 
+    /**
+     * GetCurrentEventTime guesses a timestamp for the most recent user input
+     * event (when the event is not available).  This is intended for pointer
+     * grab or focus requests, for example.
+     */
+    static guint32     GetCurrentEventTime();
+
     // utility method, -1 if no change should be made, otherwise returns a
     // value that can be passed to gdk_window_set_decorations
     gint               ConvertBorderStyles(nsBorderStyle aStyle);
@@ -275,7 +282,7 @@ private:
     nsIntSize          GetSafeWindowSize(nsIntSize aSize);
 
     void               EnsureGrabs  (void);
-    void               GrabPointer  (void);
+    void               GrabPointer  (guint32 aTime);
     void               ReleaseGrabs (void);
 
 public:

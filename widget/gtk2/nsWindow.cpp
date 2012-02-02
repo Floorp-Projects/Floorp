@@ -295,12 +295,10 @@ UpdateLastInputEventTime()
 nsWindow *nsWindow::sLastDragMotionWindow = NULL;
 bool nsWindow::sIsDraggingOutOf = false;
 
-// This is the time of the last button press event.  The drag service
-// uses it as the time to start drags.
-guint32   nsWindow::sLastButtonPressTime = 0;
 // Time of the last button release event. We use it to detect when the
 // drag ended before we could properly setup drag and drop.
 guint32   nsWindow::sLastButtonReleaseTime = 0;
+static guint32 sRetryGrabTime;
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
@@ -1428,6 +1426,31 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
     GTKToolkit->SetDesktopStartupID(EmptyCString());
 }
 
+/* static */ guint32
+nsWindow::GetCurrentEventTime()
+{
+    static guint32 sLastCurrentEventTime = GDK_CURRENT_TIME;
+
+    guint32 timestamp = gtk_get_current_event_time();
+
+    if (timestamp == GDK_CURRENT_TIME) {
+        timestamp = gdk_x11_display_get_user_time(gdk_display_get_default());
+
+        // The user_time is not updated on all user events, so check that we
+        // haven't returned a more recent timestamp.  If so, use the more
+        // recent timestamp to ensure that subsequent requests will override
+        // previous requests.  Timestamps are just the least significant bits
+        // of a monotonically increasing function, and so the use of unsigned
+        // overflow arithmetic.
+        if (sLastCurrentEventTime != GDK_CURRENT_TIME &&
+            sLastCurrentEventTime - timestamp <= G_MAXUINT32/2)
+            return sLastCurrentEventTime;
+    }       
+
+    sLastCurrentEventTime = timestamp;
+    return timestamp;
+}
+
 NS_IMETHODIMP
 nsWindow::SetFocus(bool aRaise)
 {
@@ -1881,7 +1904,7 @@ nsWindow::CaptureMouse(bool aCapture)
 
     if (aCapture) {
         gtk_grab_add(widget);
-        GrabPointer();
+        GrabPointer(GetCurrentEventTime());
     }
     else {
         ReleaseGrabs();
@@ -1913,7 +1936,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         // real grab is only done when there is no dragging
         if (!nsWindow::DragInProgress()) {
             gtk_grab_add(widget);
-            GrabPointer();
+            GrabPointer(GetCurrentEventTime());
         }
     }
     else {
@@ -2739,8 +2762,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
             return;
     }
 
-    // Always save the time of this event
-    sLastButtonPressTime = aEvent->time;
+    // We haven't received the corresponding release event yet.
     sLastButtonReleaseTime = 0;
 
     nsWindow *containerWindow = GetContainerWindow();
@@ -4494,7 +4516,7 @@ void
 nsWindow::EnsureGrabs(void)
 {
     if (mRetryPointerGrab)
-        GrabPointer();
+        GrabPointer(sRetryGrabTime);
 }
 
 void
@@ -4883,7 +4905,7 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
 }
 
 void
-nsWindow::GrabPointer(void)
+nsWindow::GrabPointer(guint32 aTime)
 {
     LOG(("GrabPointer %d\n", mRetryPointerGrab));
 
@@ -4911,11 +4933,12 @@ nsWindow::GrabPointer(void)
                                              GDK_POINTER_MOTION_HINT_MASK |
 #endif
                                              GDK_POINTER_MOTION_MASK),
-                              (GdkWindow *)NULL, NULL, GDK_CURRENT_TIME);
+                              (GdkWindow *)NULL, NULL, aTime);
 
     if (retval == GDK_GRAB_NOT_VIEWABLE) {
         LOG(("GrabPointer: window not viewable; will retry\n"));
         mRetryPointerGrab = true;
+        sRetryGrabTime = aTime;
     } else if (retval != GDK_GRAB_SUCCESS) {
         LOG(("GrabPointer: pointer grab failed: %i\n", retval));
         // A failed grab indicates that another app has grabbed the pointer.
