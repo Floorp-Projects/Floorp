@@ -59,6 +59,7 @@ import java.lang.Long;
 
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.KeyEvent;
@@ -237,7 +238,7 @@ public class FennecNativeActions implements Actions {
     }
   }
 
-  class PaintExpecter implements EventExpecter {
+  class PaintExpecter implements RepeatedEventExpecter {
     private Object mLayerClient;
     private boolean mPaintDone;
 
@@ -247,11 +248,6 @@ public class FennecNativeActions implements Actions {
     }
 
     void notifyOfEvent() {
-      try {
-        setDrawListener.invoke(mLayerClient, (Object)null);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
       synchronized (this) {
         mPaintDone = true;
         this.notifyAll();
@@ -267,14 +263,56 @@ public class FennecNativeActions implements Actions {
           break;
         }
       }
+      try {
+        setDrawListener.invoke(mLayerClient, (Object)null);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
 
     public synchronized boolean eventReceived() {
       return mPaintDone;
     }
+
+    public synchronized void blockUntilClear(long millis) {
+      if (millis <= 0) {
+        throw new IllegalArgumentException("millis must be > 0");
+      }
+      // wait for at least one event
+      while (! mPaintDone) {
+        try {
+          this.wait();
+        } catch (InterruptedException ie) {
+          ie.printStackTrace();
+          break;
+        }
+      }
+      // now wait for a period of millis where we don't get an event
+      long startTime = SystemClock.uptimeMillis();
+      while (true) {
+        try {
+          this.wait(millis);
+        } catch (InterruptedException ie) {
+          ie.printStackTrace();
+          break;
+        }
+        long endTime = SystemClock.uptimeMillis();
+        if (endTime - startTime >= millis) {
+          // success
+          break;
+        }
+        // we got a notify() before we could wait long enough, so we need to start over
+        startTime = endTime;
+      }
+      try {
+        setDrawListener.invoke(mLayerClient, (Object)null);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 
-  public EventExpecter expectPaint() {
+  public RepeatedEventExpecter expectPaint() {
     try {
       return new PaintExpecter();
     } catch (Exception e) {

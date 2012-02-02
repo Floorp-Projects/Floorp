@@ -52,6 +52,11 @@ public interface Actions {
     public boolean eventReceived();
   }
 
+  public interface RepeatedEventExpecter extends EventExpecter {
+    /** Blocks until at least one event has been received, and no events have been received in the last <code>millis</code> milliseconds. */
+    public void blockUntilClear(long millis);
+  }
+
   /**
    * Listens for a gecko event to be sent from the Gecko instance.
    * The returned object can be used to test if the event has been
@@ -62,9 +67,12 @@ public interface Actions {
   EventExpecter expectGeckoEvent(String geckoEvent);
 
   /**
-   * Listens for a paint event.
+   * Listens for a paint event. Note that calling expectPaint() will
+   * invalidate the event expecters returned from any previous calls
+   * to expectPaint(); calling any methods on those invalidated objects
+   * will result in undefined behaviour.
    */
-  EventExpecter expectPaint();
+  RepeatedEventExpecter expectPaint();
 
   // Send the string kewsToSend to the application 
   void sendKeys(String keysToSend);
