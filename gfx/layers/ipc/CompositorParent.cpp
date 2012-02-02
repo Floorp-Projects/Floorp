@@ -244,6 +244,7 @@ CompositorParent::AsyncRender()
 void
 CompositorParent::ShadowLayersUpdated()
 {
+  printf_stderr("ShadowLayersUpdated\n");
   const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
   NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
                     "can only support at most 1 ShadowLayersParent");

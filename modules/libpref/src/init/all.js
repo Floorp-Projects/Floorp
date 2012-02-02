@@ -3328,7 +3328,7 @@ pref("layers.acceleration.disabled", false);
 // Whether to force acceleration on, ignoring blacklists.
 pref("layers.acceleration.force-enabled", false);
 
-pref("layers.acceleration.draw-fps", false);
+pref("layers.acceleration.draw-fps", true);
 
 pref("layers.offmainthreadcomposition.enabled", false);
 
