@@ -115,18 +115,6 @@ public final class RectUtils {
         return new IntSize(rect.width(), rect.height());
     }
 
-    /* Returns a new RectF which restricts a source rect to the area inside a second destination rect.
-     * If the source rect is wider/taller than the destination rect, it's width/height will be shortened
-     * (and its aspect ratio will NOT be maintained).
-    */
-    public static RectF restrict(RectF rect, RectF dest) {
-        float width = Math.min(rect.width(), dest.width());
-        float height = Math.min(rect.height(), dest.height());
-        float x = Math.max(dest.left, Math.min(dest.right-width, rect.left));
-        float y = Math.max(dest.top, Math.min(dest.bottom-height, rect.top));
-        return new RectF(x, y, x+width, y+height);
-    }
-
     /*
      * Returns the rect that represents a linear transition between `from` and `to` at time `t`,
      * which is on the scale [0, 1).

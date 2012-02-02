@@ -163,7 +163,6 @@ public class PanZoomController
         Log.i(LOGTAG, "Got message: " + event);
         try {
             if (MESSAGE_ZOOM_RECT.equals(event)) {
-                float scale = mController.getZoomFactor();
                 float x = (float)message.getDouble("x");
                 float y = (float)message.getDouble("y");
                 final RectF zoomRect = new RectF(x, y,
@@ -175,7 +174,6 @@ public class PanZoomController
                     }
                 });
             } else if (MESSAGE_ZOOM_PAGE.equals(event)) {
-                float scale = mController.getZoomFactor();
                 FloatSize pageSize = mController.getPageSize();
 
                 RectF viewableRect = mController.getViewport();
