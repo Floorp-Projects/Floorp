@@ -775,7 +775,9 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
 
     if (useCompositor) {
         CreateCompositor();
-        sFailedToCreateGLContext = !mLayerManager;
+        if (mLayerManager)
+            return mLayerManager;
+        sFailedToCreateGLContext = true;
     }
 
     mUseAcceleratedRendering = GetShouldAccelerate();
