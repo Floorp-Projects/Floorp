@@ -37,25 +37,27 @@
   are top level (e.g. not iframes).
 */
 
-body {
-  background-color: #222;
-  margin: 0;
-}
+@media not print {
+  body {
+    background-color: #222;
+    margin: 0;
+  }
 
-/* We must declare the image as a block element. If we stay as
-an inline element, our parent LineBox will be inline too and
-ignore the available height during reflow.
-This is bad during printing, it means tall image frames won't know
-the size of the paper and cannot break into continuations along
-multiple pages. */
-img {
-  color: #eee;
-  text-align: center;
-  display: block;
-  position: absolute;
-  margin: auto;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  /* We must declare the image as a block element. If we stay as
+  an inline element, our parent LineBox will be inline too and
+  ignore the available height during reflow.
+  This is bad during printing, it means tall image frames won't know
+  the size of the paper and cannot break into continuations along
+  multiple pages. */
+  img {
+    color: #eee;
+    text-align: center;
+    display: block;
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
 }

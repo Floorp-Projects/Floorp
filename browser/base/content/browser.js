@@ -5455,7 +5455,7 @@ var TabsInTitlebar = {
       if (!this._draghandle) {
         let tmp = {};
         Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-        this._draghandle = new tmp.WindowDraggingElement(tabsToolbar, window);
+        this._draghandle = new tmp.WindowDraggingElement(tabsToolbar);
         this._draghandle.mouseDownCheck = function () {
           return !this._dragBindingAlive && TabsInTitlebar.enabled;
         };
