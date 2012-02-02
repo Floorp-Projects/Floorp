@@ -442,9 +442,14 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_OBJECT_ATTRIBUTE_CHANGED = 0x0055;
 
   /**
+   * A cursorable's virtual cursor has changed.
+   */
+  const unsigned long EVENT_VIRTUALCURSOR_CHANGED = 0x0056;
+
+  /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x0056;
+  const unsigned long EVENT_LAST_ENTRY = 0x0057;
 
   /**
    * The type of event, based on the enumerated event values

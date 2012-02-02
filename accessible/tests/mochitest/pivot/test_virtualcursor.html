@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests pivot functionality in virtual cursors</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../pivot.js"></script>
+
+  <script type="application/javascript">
+    var gBrowserWnd = null;
+    var gQueue = null;
+
+    function doTest()
+    {
+      var rootAcc = getRootAccessible(browserWindow().document);
+      try {
+        rootAcc.QueryInterface(nsIAccessibleCursorable);
+      } catch (e) {
+        ok(false, "Root accessible does not support nsIAccessibleCursorable");
+      }
+      var doc = currentTabDocument();
+      var docAcc = getAccessible(doc, [nsIAccessibleDocument,
+                                       nsIAccessibleCursorable]);
+
+      // Test that embedded documents don't have their own virtual cursor.
+      is(docAcc.childDocumentCount, 1, "Expecting one child document");
+      var childDoc = docAcc.getChildDocumentAt(0);
+      var supportsVC = true;
+      try {
+        childDoc.QueryInterface(nsIAccessibleCursorable);
+      } catch (e) {
+        supportsVC = false;
+      }
+
+      ok(!supportsVC, "no nsIAccessibleCursorable support in child document");
+
+      gQueue = new eventQueue();
+
+      gQueue.onFinish = function onFinish()
+      {
+        closeBrowserWindow();
+      }
+
+      queueTraversalSequence(gQueue, docAcc, HeadersTraversalRule,
+                             ['heading-1-1', 'heading-2-1', 'heading-2-2']);
+
+      queueTraversalSequence(
+        gQueue, docAcc, ObjectTraversalRule,
+        ['Main Title', 'First Section Title', 'Lorem ipsum ',
+         'dolor', ' sit amet. Integer vitae urna leo, id ',
+         'semper', ' nulla. ', 'Second Section Title',
+         'Sed accumsan luctus lacus, vitae mollis arcu tristique vulputate.',
+         'An ', 'embedded', ' document.', 'Link 1', 'Link 2', 'Link 3']);
+
+      // Just a random smoke test to see if our setTextRange works.
+      gQueue.push(
+        new setVirtualCursorRangeInvoker(
+          docAcc,
+          getAccessible(doc.getElementById('paragraph-2'), nsIAccessibleText),
+          [2,6]));
+
+      gQueue.invoke();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(function () {
+      /* We open a new browser because we need to test with a top-level content
+         document. */
+      openBrowserWindow(
+        doTest,
+        "chrome://mochitests/content/a11y/accessible/pivot/doc_virtualcursor.html");
+    });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Introduce virtual cursor/soft focus functionality to a11y API"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=698823">Mozilla Bug 698823</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

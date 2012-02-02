@@ -534,6 +534,7 @@ static const char kEventTypeNames[][40] = {
   "hypertext changed",                       // EVENT_HYPERTEXT_CHANGED
   "hypertext links count changed",           // EVENT_HYPERTEXT_NLINKS_CHANGED
   "object attribute changed",                // EVENT_OBJECT_ATTRIBUTE_CHANGED
+  "virtual cursor changed"                   // EVENT_VIRTUALCURSOR_CHANGED
 };
 
 /**
