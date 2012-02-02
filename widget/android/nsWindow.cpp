@@ -913,8 +913,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             nsTArray<nsIntPoint> points = ae->Points();
             NS_ASSERTION(points.Length() != 3, "Size changed does not have enough coordinates");
 
-            int nw = points[0].x;
-            int nh = points[0].y;
+            int nw = points[1].x;
+            int nh = points[1].y;
 
             if (ae->Type() == AndroidGeckoEvent::FORCED_RESIZE || nw != gAndroidBounds.width ||
                 nh != gAndroidBounds.height) {
