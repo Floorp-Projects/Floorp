@@ -496,8 +496,13 @@ public class AboutHomeContent extends ScrollView {
                 int index = tab.getInt("index");
                 JSONArray entries = tab.getJSONArray("entries");
                 JSONObject entry = entries.getJSONObject(index - 1);
-                title = entry.getString("title");
                 url = entry.getString("url");
+
+                String optTitle = entry.optString("title");
+                if (optTitle.length() == 0)
+                    title = url;
+                else
+                    title = optTitle;
             } catch (JSONException e) {
                 Log.e(LOGTAG, "error reading json file", e);
                 continue;
