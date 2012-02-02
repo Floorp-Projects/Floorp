@@ -136,7 +136,7 @@ protected:
 
   TimeReferenceElement mReferencedElement;
 
-  class EventListener : public nsIDOMEventListener
+  class EventListener MOZ_FINAL : public nsIDOMEventListener
   {
   public:
     EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
