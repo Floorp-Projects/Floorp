@@ -585,14 +585,37 @@ class nsTSubstring_CharT
         // XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
 #if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
 #define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-       nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags );
+      nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags );
 #else
 #undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-       nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags )
-         : mData(data),
-           mLength(length),
-           mFlags(flags) {}
+      nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags )
+        : mData(data),
+          mLength(length),
+          mFlags(flags) {}
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
+
+      size_t SizeOfExcludingThisMustBeUnshared(nsMallocSizeOfFun mallocSizeOf)
+      {
+        NS_ASSERTION(!(mFlags & F_SHARED), "string is shared");
+        return mallocSizeOf(mData);
+      }
+
+      size_t SizeOfIncludingThisMustBeUnshared(nsMallocSizeOfFun mallocSizeOf)
+      {
+        return mallocSizeOf(this) + SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
+      }
+
+      size_t SizeOfExcludingThisIfUnshared(nsMallocSizeOfFun mallocSizeOf)
+      {
+        if (mFlags & F_SHARED)
+          return 0;
+        return mallocSizeOf(mData);
+      }
+
+      size_t SizeOfIncludingThisIfUnshared(nsMallocSizeOfFun mallocSizeOf)
+      {
+        return mallocSizeOf(this) + SizeOfExcludingThisIfUnshared(mallocSizeOf);
+      }
 
     protected:
 
