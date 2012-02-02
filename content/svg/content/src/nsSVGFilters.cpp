@@ -4927,7 +4927,7 @@ GenerateNormal(float *N, const PRUint8 *data, PRInt32 stride,
                PRInt32 x, PRInt32 y, float surfaceScale)
 {
   // See this for source of constants:
-  //   http://www.w3.org/TR/SVG11/filters.html#feDiffuseLighting
+  //   http://www.w3.org/TR/SVG11/filters.html#feDiffuseLightingElement
   static const PRInt8 Kx[3][3][3][3] =
     { { { {  0,  0,  0}, { 0, -2,  2}, { 0, -1,  1} },
         { {  0,  0,  0}, {-2,  0,  2}, {-1,  0,  1} },
