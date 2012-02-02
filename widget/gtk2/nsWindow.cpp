@@ -160,8 +160,7 @@ using mozilla::layers::LayerManagerOGL;
 #define MAX_RECTS_IN_REGION 100
 
 /* utility functions */
-static bool       check_for_rollup(GdkWindow *aWindow,
-                                   gdouble aMouseX, gdouble aMouseY,
+static bool       check_for_rollup(gdouble aMouseX, gdouble aMouseY,
                                    bool aIsWheel, bool aAlwaysRollup);
 static bool       is_mouse_in_window(GdkWindow* aWindow,
                                      gdouble aMouseX, gdouble aMouseY);
@@ -2357,7 +2356,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         // Cygwin/X (bug 672103).
         if (mBounds.x != screenBounds.x ||
             mBounds.y != screenBounds.y) {
-            check_for_rollup(aEvent->window, 0, 0, false, true);
+            check_for_rollup(0, 0, false, true);
         }
     }
 
@@ -2750,8 +2749,8 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     }
 
     // check to see if we should rollup
-    bool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
-                                       aEvent->y_root, false, false);
+    bool rolledUp =
+        check_for_rollup(aEvent->x_root, aEvent->y_root, false, false);
     if (gConsumeRollupEvent && rolledUp)
         return;
 
@@ -2915,7 +2914,7 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
         }
 
         if (shouldRollup) {
-            check_for_rollup(aEvent->window, 0, 0, false, true);
+            check_for_rollup(0, 0, false, true);
         }
     }
 
@@ -3274,8 +3273,8 @@ void
 nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
     // check to see if we should rollup
-    bool rolledUp =  check_for_rollup(aEvent->window, aEvent->x_root,
-                                        aEvent->y_root, true, false);
+    bool rolledUp =
+        check_for_rollup(aEvent->x_root, aEvent->y_root, true, false);
     if (gConsumeRollupEvent && rolledUp)
         return;
 
@@ -5225,7 +5224,7 @@ nsWindow::HideWindowChrome(bool aShouldHide)
 }
 
 static bool
-check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
+check_for_rollup(gdouble aMouseX, gdouble aMouseY,
                  bool aIsWheel, bool aAlwaysRollup)
 {
     bool retVal = false;
