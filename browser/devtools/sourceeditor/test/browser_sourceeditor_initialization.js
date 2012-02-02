@@ -324,6 +324,9 @@ function testReturnKey()
   let lineDelimiter = editor.getLineDelimiter();
   ok(lineDelimiter, "we have the line delimiter");
 
+  let indentationString = editor.getIndentationString();
+  is("       ", indentationString, "we have an indentation string of 7 spaces");
+
   is(editor.getText(), "       a" + lineDelimiter + "       x\n  b\n c",
      "return maintains indentation");
 
