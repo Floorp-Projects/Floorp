@@ -267,7 +267,7 @@ nsSVGUseElement::CreateAnonymousContent()
 
   LookupHref();
   nsIContent* targetContent = mSource.get();
-  if (!targetContent)
+  if (!targetContent || !targetContent->IsSVG())
     return nsnull;
 
   // make sure target is valid type for <use>
@@ -391,10 +391,7 @@ nsSVGUseElement::CreateAnonymousContent()
   nsCOMPtr<nsIURI> baseURI = targetContent->GetBaseURI();
   if (!baseURI)
     return nsnull;
-  nsCAutoString spec;
-  baseURI->GetSpec(spec);
-  newcontent->SetAttr(kNameSpaceID_XML, nsGkAtoms::base,
-                      NS_ConvertUTF8toUTF16(spec), false);
+  newcontent->SetExplicitBaseURI(baseURI);
 
   targetContent->AddMutationObserver(this);
   mClone = newcontent;
