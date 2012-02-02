@@ -2122,11 +2122,13 @@ IonBuilder::jsop_pos()
 {
     TypeOracle::Unary types = oracle->unaryOp(script, pc);
     MDefinition *value = current->pop();
-    MInstruction *ins;
-    if (types.rval == MIRType_Int32)
-        ins = MToInt32::New(value);
-    else
-        ins = MToDouble::New(value);
+    if (types.rval == MIRType_Int32) {
+        // Already an int32, no semantic difference!
+        current->push(value);
+        return true;
+    }
+
+    MInstruction *ins = MToDouble::New(value);
     current->add(ins);
     current->push(ins);
     return true;
