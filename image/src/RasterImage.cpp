@@ -945,13 +945,9 @@ RasterImage::GetFrame(PRUint32 aWhichFrame,
 
 
 NS_IMETHODIMP
-RasterImage::GetImageContainer(LayerManager* aManager,
-                               ImageContainer **_retval)
+RasterImage::GetImageContainer(ImageContainer **_retval)
 {
-  if (mImageContainer && 
-      (mImageContainer->Manager() == aManager || 
-       (!mImageContainer->Manager() && 
-        (mImageContainer->GetBackendType() == aManager->GetBackendType())))) {
+  if (mImageContainer) {
     *_retval = mImageContainer;
     NS_ADDREF(*_retval);
     return NS_OK;
@@ -966,8 +962,7 @@ RasterImage::GetImageContainer(LayerManager* aManager,
   GetWidth(&cairoData.mSize.width);
   GetHeight(&cairoData.mSize.height);
 
-  mImageContainer = aManager->CreateImageContainer();
-  NS_ASSERTION(mImageContainer, "Failed to create ImageContainer!");
+  mImageContainer = LayerManager::CreateImageContainer();
   
   // Now create a CairoImage to display the surface.
   layers::Image::Format cairoFormat = layers::Image::CAIRO_SURFACE;

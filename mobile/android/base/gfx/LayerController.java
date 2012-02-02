@@ -384,11 +384,13 @@ public class LayerController {
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
         PointF point = new PointF(event.getX(), event.getY());
+
         if ((action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+            mView.clearEventQueue();
             initialTouchLocation = point;
+            allowDefaultActions = !mWaitForTouchListeners;
             post(new Runnable() {
                 public void run() {
-                    mView.clearEventQueue();
                     preventPanning(mWaitForTouchListeners);
                 }
             });
@@ -439,13 +441,15 @@ public class LayerController {
             allowDefaultTimer.purge();
             allowDefaultTimer = null;
         }
-        allowDefaultActions = !aValue;
-
-        if (aValue) {
-            mView.clearEventQueue();
-            mPanZoomController.cancelTouch();
-        } else {
-            mView.processEventQueue();
+        if (aValue == allowDefaultActions) {
+            allowDefaultActions = !aValue;
+    
+            if (aValue) {
+                mView.clearEventQueue();
+                mPanZoomController.cancelTouch();
+            } else {
+                mView.processEventQueue();
+            }
         }
     }
 

@@ -147,6 +147,7 @@ private:
   void EnqueueOutgoingMessage(nsDeque &aQueue, OutboundMessage *aMsg);
 
   void PrimeNewOutgoingMessage();
+  void DeleteCurrentOutGoingMessage();
   void GeneratePong(PRUint8 *payload, PRUint32 len);
   void GeneratePing();
 

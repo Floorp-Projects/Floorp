@@ -69,7 +69,6 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 
 public class BrowserProvider extends ContentProvider {
@@ -208,54 +207,8 @@ public class BrowserProvider extends ContentProvider {
         return table + "." + column;
     }
 
-    private static final int GUID_ENCODE_FLAGS = Base64.URL_SAFE | Base64.NO_WRAP;
-
-    /**
-     * taken from http://www.source-code.biz/base64coder/java/Base64Coder.java.txt and modified (MIT License)
-     */
-    // Mapping table from 6-bit nibbles to Base64 characters.
-    private static final byte[] map1 = new byte[64];
-    static {
-      int i=0;
-      for (byte c='A'; c<='Z'; c++) map1[i++] = c;
-      for (byte c='a'; c<='z'; c++) map1[i++] = c;
-      for (byte c='0'; c<='9'; c++) map1[i++] = c;
-      map1[i++] = '-'; map1[i++] = '_'; 
-    }
-    final static byte EQUALS_ASCII = (byte) '=';
-    /**
-     * Encodes a byte array into Base64 format.
-     * No blanks or line breaks are inserted in the output.
-     * @param in    An array containing the data bytes to be encoded.
-     * @return      A character array containing the Base64 encoded data.
-     */
-    public static byte[] encodeBase64(byte[] in) {
-        if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.FROYO)
-            return Base64.encode(in, GUID_ENCODE_FLAGS);
-        int oDataLen = (in.length*4+2)/3;       // output length without padding
-        int oLen = ((in.length+2)/3)*4;         // output length including padding
-        byte[] out = new byte[oLen];
-        int ip = 0;
-        int iEnd = in.length;
-        int op = 0;
-        while (ip < iEnd) {
-            int i0 = in[ip++] & 0xff;
-            int i1 = ip < iEnd ? in[ip++] & 0xff : 0;
-            int i2 = ip < iEnd ? in[ip++] & 0xff : 0;
-            int o0 = i0 >>> 2;
-            int o1 = ((i0 &   3) << 4) | (i1 >>> 4);
-            int o2 = ((i1 & 0xf) << 2) | (i2 >>> 6);
-            int o3 = i2 & 0x3F;
-            out[op++] = map1[o0];
-            out[op++] = map1[o1];
-            out[op] = op < oDataLen ? map1[o2] : EQUALS_ASCII; op++;
-            out[op] = op < oDataLen ? map1[o3] : EQUALS_ASCII; op++;
-        }
-        return out; 
-    }
-
     public static String generateGuid() {
-        byte[] encodedBytes = encodeBase64(generateRandomBytes(9));
+        byte[] encodedBytes = GeckoAppShell.encodeBase64(generateRandomBytes(9));
         return new String(encodedBytes);
     }
 

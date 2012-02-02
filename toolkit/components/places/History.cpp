@@ -462,6 +462,7 @@ public:
                        VisitData& aReferrer)
   : mPlace(aPlace)
   , mReferrer(aReferrer)
+  , mHistory(History::GetService())
   {
   }
 
@@ -469,6 +470,11 @@ public:
   {
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
+    // We are in the main thread, no need to lock.
+    if (mHistory->IsShuttingDown()) {
+      // If we are shutting down, we cannot notify the observers.
+      return NS_OK;
+    }
 
     nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
     if (!navHistory) {
@@ -506,6 +512,7 @@ public:
 private:
   VisitData mPlace;
   VisitData mReferrer;
+  nsRefPtr<History> mHistory;
 };
 
 /**
@@ -736,6 +743,13 @@ public:
   {
     NS_PRECONDITION(!NS_IsMainThread(),
                     "This should not be called on the main thread");
+
+    // Prevent the main thread from shutting down while this is running.
+    MutexAutoLock lockedScope(mHistory->GetShutdownMutex());
+    if(mHistory->IsShuttingDown()) {
+      // If we were already shutting down, we cannot insert the URIs.
+      return NS_OK;
+    }
 
     mozStorageTransaction transaction(mDBConn, false,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -1438,6 +1452,7 @@ History* History::gService = NULL;
 
 History::History()
   : mShuttingDown(false)
+  , mShutdownMutex("History::mShutdownMutex")
 {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
   gService = this;
@@ -1751,6 +1766,10 @@ void
 History::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // Prevent other threads from scheduling uses of the DB while we mark
+  // ourselves as shutting down.
+  MutexAutoLock lockedScope(mShutdownMutex);
   MOZ_ASSERT(!mShuttingDown && "Shutdown was called more than once!");
 
   mShuttingDown = true;

@@ -356,7 +356,7 @@ namespace mozilla {
  * the relevant memory reporter(s).
  */
 #define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(fn, name)                        \
-  size_t fn(const void *ptr)                                                  \
+  static size_t fn(const void *ptr)                                           \
   {                                                                           \
       size_t usable = moz_malloc_size_of(ptr);                                \
       VALGRIND_DMD_REPORT(ptr, usable, name);                                 \
@@ -368,7 +368,7 @@ namespace mozilla {
  * "unreport" message to DMD.
  */
 #define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN_UN(fn)                           \
-  size_t fn(const void *ptr)                                                  \
+  static size_t fn(const void *ptr)                                           \
   {                                                                           \
       size_t usable = moz_malloc_size_of(ptr);                                \
       VALGRIND_DMD_UNREPORT(ptr);                                             \

@@ -50,6 +50,22 @@ function currentTabDocument()
 }
 
 /**
+ * Return browser element of the tab at the given index.
+ */
+function browserAt(aIndex)
+{
+  return tabBrowser().getBrowserAtIndex(aIndex);
+}
+
+/**
+ * Return DOM document of the tab at the given index.
+ */
+function tabDocumentAt(aIndex)
+{
+  return browserAt(aIndex).contentDocument;
+}
+
+/**
  * Return input element of address bar.
  */
 function urlbarInput()

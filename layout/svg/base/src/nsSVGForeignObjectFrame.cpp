@@ -408,10 +408,16 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
     }
 
   } else if (aFlags & COORD_CONTEXT_CHANGED) {
-    // Our coordinate context's width/height has changed. If we have a
-    // percentage width/height our dimensions will change so we must reflow.
     nsSVGForeignObjectElement *fO =
       static_cast<nsSVGForeignObjectElement*>(mContent);
+    // Coordinate context changes affect mCanvasTM if we have a
+    // percentage 'x' or 'y'
+    if (fO->mLengthAttributes[nsSVGForeignObjectElement::X].IsPercentage() ||
+        fO->mLengthAttributes[nsSVGForeignObjectElement::Y].IsPercentage()) {
+      mCanvasTM = nsnull;
+    }
+    // Our coordinate context's width/height has changed. If we have a
+    // percentage width/height our dimensions will change so we must reflow.
     if (fO->mLengthAttributes[nsSVGForeignObjectElement::WIDTH].IsPercentage() ||
         fO->mLengthAttributes[nsSVGForeignObjectElement::HEIGHT].IsPercentage()) {
       reflow = true;
