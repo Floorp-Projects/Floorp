@@ -847,8 +847,6 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
   NS_ENSURE_TRUE(nodeToExamine, NS_ERROR_NULL_POINTER);
 
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
   NS_NAMED_LITERAL_STRING(typeAttrName, "align");
   nsIAtom  *dummyProperty = nsnull;
   nsCOMPtr<nsIDOMNode> blockParent;
@@ -859,7 +857,7 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
   NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
 
-  if (useCSS)
+  if (mHTMLEditor->IsCSSEnabled())
   {
     nsCOMPtr<nsIContent> blockParentContent = do_QueryInterface(blockParent);
     if (blockParentContent && 
@@ -971,8 +969,7 @@ nsHTMLEditRules::GetIndentState(bool *aCanIndent, bool *aCanOutdent)
   // if *any* of the selection is outdentable, rather than all of it.
   PRInt32 listCount = arrayOfNodes.Count();
   PRInt32 i;
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
+  bool useCSS = mHTMLEditor->IsCSSEnabled();
   for (i=listCount-1; i>=0; i--)
   {
     nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
@@ -3524,11 +3521,8 @@ nsHTMLEditRules::DidMakeBasicBlock(nsISelection *aSelection,
 nsresult
 nsHTMLEditRules::WillIndent(nsISelection *aSelection, bool *aCancel, bool * aHandled)
 {
-  bool useCSS;
   nsresult res;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
-  
-  if (useCSS) {
+  if (mHTMLEditor->IsCSSEnabled()) {
     res = WillCSSIndent(aSelection, aCancel, aHandled);
   }
   else {
@@ -3985,8 +3979,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, bool *aCancel, bool *aHan
   *aHandled = true;
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> rememberedLeftBQ, rememberedRightBQ;
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
+  bool useCSS = mHTMLEditor->IsCSSEnabled();
 
   res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
@@ -4727,13 +4720,10 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   // Ok, now go through all the nodes and give them an align attrib or put them in a div, 
   // or whatever is appropriate.  Wohoo!
 
-  PRInt32 i;
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curDiv;
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
-  for (i=0; i<listCount; i++)
-  {
+  bool useCSS = mHTMLEditor->IsCSSEnabled();
+  for (PRInt32 i = 0; i < listCount; ++i) {
     // here's where we actually figure out what to do
     nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
 
@@ -4871,8 +4861,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignTyp
   nsresult res;
   nsCOMPtr <nsIDOMNode> firstChild, lastChild, divNode;
   
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
+  bool useCSS = mHTMLEditor->IsCSSEnabled();
 
   res = mHTMLEditor->GetFirstEditableChild(aNode, address_of(firstChild));
   NS_ENSURE_SUCCESS(res, res);
@@ -5852,9 +5841,6 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
   PRInt32 i;
   nsCOMPtr<nsIDOMRange> opRange;
 
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
-
   nsresult res = NS_OK;
   
   // bust up any inlines that cross our range endpoints,
@@ -5965,7 +5951,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     }
   }
   // outdent should look inside of divs.
-  if (inOperationType == kOutdent && !useCSS) 
+  if (inOperationType == kOutdent && !mHTMLEditor->IsCSSEnabled()) 
   {
     PRInt32 listCount = outArrayOfNodes.Count();
     for (i=listCount-1; i>=0; i--)
@@ -7462,11 +7448,9 @@ nsHTMLEditRules::CacheInlineStyles(nsIDOMNode *aNode)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
+  bool useCSS = mHTMLEditor->IsCSSEnabled();
 
-  PRInt32 j;
-  for (j=0; j<SIZE_STYLE_TABLE; j++)
+  for (PRInt32 j = 0; j < SIZE_STYLE_TABLE; ++j)
   {
     bool isSet = false;
     nsAutoString outValue;
@@ -7504,8 +7488,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
   mHTMLEditor->mTypeInState->Reset();
 
   // remember if we are in css mode
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
+  bool useCSS = mHTMLEditor->IsCSSEnabled();
 
   // get selection point
   nsCOMPtr<nsISelection>selection;
@@ -7516,9 +7499,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
   res = mHTMLEditor->GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
 
-  res = NS_OK;
-  PRInt32 j;
-  for (j=0; j<SIZE_STYLE_TABLE; j++)
+  for (PRInt32 j = 0; j < SIZE_STYLE_TABLE; ++j)
   {
     if (mCachedStyles[j].mPresent)
     {
@@ -8709,8 +8690,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
   {
     aNode->GetFirstChild(getter_AddRefs(child));
   }
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
+  bool useCSS = mHTMLEditor->IsCSSEnabled();
 
   while (child)
   {
@@ -8877,9 +8857,7 @@ nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAString * aAlignTy
   nsresult res = RemoveAlignment(node, *aAlignType, aContentsOnly);
   NS_ENSURE_SUCCESS(res, res);
   NS_NAMED_LITERAL_STRING(attr, "align");
-  bool useCSS;
-  mHTMLEditor->GetIsCSSEnabled(&useCSS);
-  if (useCSS) {
+  if (mHTMLEditor->IsCSSEnabled()) {
     // let's use CSS alignment; we use margin-left and margin-right for tables
     // and text-align for other block-level elements
     res = mHTMLEditor->SetAttributeOrEquivalent(aElement, attr, *aAlignType, false); 

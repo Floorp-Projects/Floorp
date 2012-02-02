@@ -179,6 +179,7 @@ public:
               nsDeviceContext *aContext,
               nsWidgetInitData *aInitData = nsnull,
               bool             aForceUseIWidgetParent = false);
+  NS_IMETHOD              SetEventCallback(EVENT_CALLBACK aEventFunction, nsDeviceContext *aContext);
   NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsDeviceContext *aContext);
   virtual ViewWrapper*    GetAttachedViewPtr();
   NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
