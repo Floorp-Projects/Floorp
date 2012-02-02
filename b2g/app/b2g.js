@@ -394,6 +394,15 @@ pref("layers.acceleration.force-enabled", true);
 pref("dom.screenEnabledProperty.enabled", true);
 pref("dom.screenBrightnessProperty.enabled", true);
 
+// handle links targeting new windows
+// 1=current window/tab, 2=new window, 3=new tab in most recent window
+pref("browser.link.open_newwindow", 3);
+
+// 0: no restrictions - divert everything
+// 1: don't divert window.open at all
+// 2: don't divert window.open with features
+pref("browser.link.open_newwindow.restriction", 0);
+
 // Enable browser frame
 pref("dom.mozBrowserFramesEnabled", true);
 pref("dom.mozBrowserFramesWhitelist", "http://localhost:6666");
@@ -401,6 +410,7 @@ pref("dom.mozBrowserFramesWhitelist", "http://localhost:6666");
 // Temporary permission hack for WebSMS
 pref("dom.sms.enabled", true);
 pref("dom.sms.whitelist", "file://,http://localhost:6666");
+
 // Ignore X-Frame-Options headers.
 pref("b2g.ignoreXFrameOptions", true);
 
