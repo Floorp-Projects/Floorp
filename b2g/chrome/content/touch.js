@@ -66,12 +66,12 @@
     events: ['mousedown', 'mousemove', 'mouseup', 'click', 'unload'],
     start: function teh_start() {
       this.events.forEach((function(evt) {
-        shell.home.addEventListener(evt, this, true);
+        shell.contentBrowser.addEventListener(evt, this, true);
       }).bind(this));
     },
     stop: function teh_stop() {
       this.events.forEach((function(evt) {
-        shell.home.removeEventListener(evt, this, true);
+        shell.contentBrowser.removeEventListener(evt, this, true);
       }).bind(this));
     },
     handleEvent: function teh_handleEvent(evt) {
