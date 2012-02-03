@@ -143,6 +143,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
     bool visitToString(MToString *convert);
     bool visitCopy(MCopy *ins);
+    bool visitRegExp(MRegExp *ins);
     bool visitImplicitThis(MImplicitThis *ins);
     bool visitSlots(MSlots *ins);
     bool visitElements(MElements *ins);
