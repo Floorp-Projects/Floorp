@@ -46,27 +46,15 @@ import org.mozilla.gecko.gfx.LayerRenderer;
 import org.mozilla.gecko.gfx.MultiTileLayer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.WidgetTileLayer;
-import org.mozilla.gecko.FloatUtils;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.GeckoEventListener;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Point;
-import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import org.json.JSONException;
-import org.json.JSONObject;
 import java.nio.ByteBuffer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Transfers a software-rendered Gecko to an ImageLayer so that it can be rendered by our
@@ -74,21 +62,12 @@ import java.util.regex.Pattern;
  *
  * TODO: Throttle down Gecko's priority when we pan and zoom.
  */
-public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventListener {
+public class GeckoSoftwareLayerClient extends GeckoLayerClient {
     private static final String LOGTAG = "GeckoSoftwareLayerClient";
 
-    private Context mContext;
     private int mFormat;
-    private IntSize mScreenSize, mViewportSize;
-    private IntSize mBufferSize;
+    private IntSize mViewportSize;
     private ByteBuffer mBuffer;
-    private Layer mTileLayer;
-
-    /* The viewport that Gecko is currently displaying. */
-    private ViewportMetrics mGeckoViewport;
-
-    /* The viewport that Gecko will display when drawing is finished */
-    private ViewportMetrics mNewGeckoViewport;
 
     /* The offset used to make sure tiles are snapped to the pixel grid */
     private Point mRenderOffset;
@@ -97,31 +76,12 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
     private static final IntSize TILE_SIZE = new IntSize(256, 256);
 
-    private static final long MIN_VIEWPORT_CHANGE_DELAY = 350L;
-    private long mLastViewportChangeTime;
-    private boolean mPendingViewportAdjust;
-    private boolean mViewportSizeChanged;
-
     // Whether or not the last paint we got used direct texturing
     private boolean mHasDirectTexture;
 
-    // mUpdateViewportOnEndDraw is used to indicate that we received a
-    // viewport update notification while drawing. therefore, when the
-    // draw finishes, we need to update the entire viewport rather than
-    // just the page size. this boolean should always be accessed from
-    // inside a transaction, so no synchronization is needed.
-    private boolean mUpdateViewportOnEndDraw;
-
-    /* Used by robocop for testing purposes */
-    private DrawListener mDrawListener;
-
-    private static Pattern sColorPattern;
-
     public GeckoSoftwareLayerClient(Context context) {
-        mContext = context;
+        super(context);
 
-        mScreenSize = new IntSize(0, 0);
-        mBufferSize = new IntSize(0, 0);
         mFormat = CairoImage.FORMAT_RGB16_565;
         mRenderOffset = new Point(0, 0);
 
@@ -153,23 +113,8 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         }
     }
 
-    /** Attaches the root layer to the layer controller so that Gecko appears. */
     @Override
-    public void setLayerController(LayerController layerController) {
-        super.setLayerController(layerController);
-
-        layerController.setRoot(mTileLayer);
-        if (mGeckoViewport != null) {
-            layerController.setViewportMetrics(mGeckoViewport);
-        }
-
-        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
-        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
-
-        sendResizeEventIfNecessary();
-    }
-
-    private boolean setHasDirectTexture(boolean hasDirectTexture) {
+    protected boolean handleDirectTextureChange(boolean hasDirectTexture) {
         if (mTileLayer != null && hasDirectTexture == mHasDirectTexture)
             return false;
 
@@ -193,42 +138,34 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         return true;
     }
 
-    public boolean beginDrawing(int width, int height, int tileWidth, int tileHeight, String metadata, boolean hasDirectTexture) {
-        // If we've changed surface types, cancel this draw
-        if (setHasDirectTexture(hasDirectTexture)) {
-            return false;
-        }
-
+    @Override
+    protected boolean shouldDrawProceed(int tileWidth, int tileHeight) {
         // Make sure the tile-size matches. If it doesn't, we could crash trying
         // to access invalid memory.
         if (mHasDirectTexture) {
             if (tileWidth != 0 || tileHeight != 0) {
-                Log.e(LOGTAG, "Aborting draw, incorrect tile size of " + tileWidth + "x" + tileHeight);
+                Log.e(LOGTAG, "Aborting draw, incorrect tile size of " + tileWidth + "x" +
+                      tileHeight);
                 return false;
             }
         } else {
             if (tileWidth != TILE_SIZE.width || tileHeight != TILE_SIZE.height) {
-                Log.e(LOGTAG, "Aborting draw, incorrect tile size of " + tileWidth + "x" + tileHeight);
+                Log.e(LOGTAG, "Aborting draw, incorrect tile size of " + tileWidth + "x" +
+                      tileHeight);
                 return false;
             }
         }
 
-        try {
-            JSONObject viewportObject = new JSONObject(metadata);
-            mNewGeckoViewport = new ViewportMetrics(viewportObject);
+        return true;
+    }
 
-            // Update the background color, if it's present.
-            String backgroundColorString = viewportObject.optString("backgroundColor");
-            if (backgroundColorString != null) {
-                LayerController controller = getLayerController();
-                controller.setCheckerboardColor(parseColorFromGecko(backgroundColorString));
-            }
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Aborting draw, bad viewport description: " + metadata);
+    @Override
+    public boolean beginDrawing(int width, int height, int tileWidth, int tileHeight,
+                                String metadata, boolean hasDirectTexture) {
+        if (!super.beginDrawing(width, height, tileWidth, tileHeight, metadata,
+                                hasDirectTexture)) {
             return false;
         }
-
-        beginTransaction(mTileLayer);
 
         // We only need to set a render offset/allocate buffer memory if
         // we're using MultiTileLayer. Otherwise, just synchronise the
@@ -281,58 +218,15 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         return true;
     }
 
-    private void updateViewport(final boolean onlyUpdatePageSize) {
-        // save and restore the viewport size stored in java; never let the
-        // JS-side viewport dimensions override the java-side ones because
-        // java is the One True Source of this information, and allowing JS
-        // to override can lead to race conditions where this data gets clobbered.
-        FloatSize viewportSize = getLayerController().getViewportSize();
-        mGeckoViewport = mNewGeckoViewport;
-        mGeckoViewport.setSize(viewportSize);
-
-        LayerController controller = getLayerController();
-        PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
-        mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
-        mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
-
-        if (onlyUpdatePageSize) {
-            // Don't adjust page size when zooming unless zoom levels are
-            // approximately equal.
-            if (FloatUtils.fuzzyEquals(controller.getZoomFactor(),
-                    mGeckoViewport.getZoomFactor()))
-                controller.setPageSize(mGeckoViewport.getPageSize());
-        } else {
-            controller.setViewportMetrics(mGeckoViewport);
-            controller.abortPanZoomAnimation();
+    @Override
+    protected void updateLayerAfterDraw(Rect updatedRect) {
+        if (!(mTileLayer instanceof MultiTileLayer)) {
+            return;
         }
-    }
 
-    /*
-     * TODO: Would be cleaner if this took an android.graphics.Rect instead, but that would require
-     * a little more JNI magic.
-     */
-    public void endDrawing(int x, int y, int width, int height) {
-        synchronized (getLayerController()) {
-            try {
-                updateViewport(!mUpdateViewportOnEndDraw);
-                mUpdateViewportOnEndDraw = false;
-
-                if (mTileLayer instanceof MultiTileLayer) {
-                    Rect rect = new Rect(x, y, x + width, y + height);
-                    rect.offset(mRenderOffset.x, mRenderOffset.y);
-                    ((MultiTileLayer)mTileLayer).invalidate(rect);
-                    ((MultiTileLayer)mTileLayer).setRenderOffset(mRenderOffset);
-                }
-            } finally {
-                endTransaction(mTileLayer);
-            }
-        }
-        Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
-
-        /* Used by robocop for testing purposes */
-        if (mDrawListener != null) {
-            mDrawListener.drawFinished(x, y, width, height);
-        }
+        updatedRect.offset(mRenderOffset.x, mRenderOffset.y);
+        ((MultiTileLayer)mTileLayer).invalidate(updatedRect);
+        ((MultiTileLayer)mTileLayer).setRenderOffset(mRenderOffset);
     }
 
     public ViewportMetrics getGeckoViewportMetrics() {
@@ -414,151 +308,36 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     @Override
-    public void geometryChanged() {
-        /* Let Gecko know if the screensize has changed */
-        sendResizeEventIfNecessary();
-        render();
-    }
-
-    private void sendResizeEventIfNecessary() {
-        sendResizeEventIfNecessary(false);
-    }
-
-    /* Informs Gecko that the screen size has changed. */
-    private void sendResizeEventIfNecessary(boolean force) {
-        DisplayMetrics metrics = new DisplayMetrics();
-        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-        // Return immediately if the screen size hasn't changed or the viewport
-        // size is zero (which indicates that the rendering surface hasn't been
-        // allocated yet).
-        boolean screenSizeChanged = (metrics.widthPixels != mScreenSize.width ||
-                                     metrics.heightPixels != mScreenSize.height);
-        boolean viewportSizeValid = (getLayerController() != null &&
-                                     getLayerController().getViewportSize().isPositive());
-        if (!(force || (screenSizeChanged && viewportSizeValid))) {
-            return;
-        }
-
-        mScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
-        IntSize bufferSize;
-        IntSize tileSize;
-
+    protected IntSize getBufferSize() {
         // Round up depending on layer implementation to remove texture wastage
         if (!mHasDirectTexture) {
             // Round to the next multiple of the tile size
-            bufferSize = new IntSize(((mScreenSize.width + LayerController.MIN_BUFFER.width - 1) / TILE_SIZE.width + 1) * TILE_SIZE.width,
-                                     ((mScreenSize.height + LayerController.MIN_BUFFER.height - 1) / TILE_SIZE.height + 1) * TILE_SIZE.height);
-            tileSize = TILE_SIZE;
-        } else {
-            int maxSize = getLayerController().getView().getMaxTextureSize();
-
-            // XXX Integrate gralloc/tiling work to circumvent this
-            if (mScreenSize.width > maxSize || mScreenSize.height > maxSize)
-                throw new RuntimeException("Screen size of " + mScreenSize + " larger than maximum texture size of " + maxSize);
-
-            // Round to next power of two until we have NPOT texture support, respecting maximum texture size
-            bufferSize = new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width + LayerController.MIN_BUFFER.width)),
-                                     Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.height + LayerController.MIN_BUFFER.height)));
-            tileSize = new IntSize(0, 0);
+            return new IntSize(((mScreenSize.width + LayerController.MIN_BUFFER.width - 1) /
+                                    TILE_SIZE.width + 1) * TILE_SIZE.width,
+                               ((mScreenSize.height + LayerController.MIN_BUFFER.height - 1) /
+                                    TILE_SIZE.height + 1) * TILE_SIZE.height);
         }
 
-        Log.i(LOGTAG, "Screen-size changed to " + mScreenSize);
-        GeckoEvent event = new GeckoEvent(GeckoEvent.SIZE_CHANGED,
-                                          bufferSize.width, bufferSize.height,
-                                          metrics.widthPixels, metrics.heightPixels,
-                                          tileSize.width, tileSize.height);
-        GeckoAppShell.sendEventToGecko(event);
+        int maxSize = getLayerController().getView().getMaxTextureSize();
+
+        // XXX Integrate gralloc/tiling work to circumvent this
+        if (mScreenSize.width > maxSize || mScreenSize.height > maxSize) {
+            throw new RuntimeException("Screen size of " + mScreenSize +
+                                       " larger than maximum texture size of " + maxSize);
+        }
+
+        // Round to next power of two until we have NPOT texture support, respecting maximum
+        // texture size
+        return new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width +
+                                             LayerController.MIN_BUFFER.width)),
+                           Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.height +
+                                             LayerController.MIN_BUFFER.height)));
     }
 
     @Override
-    public void viewportSizeChanged() {
-        mViewportSizeChanged = true;
-    }
-
-    @Override
-    public void render() {
-        adjustViewportWithThrottling();
-    }
-
-    private void adjustViewportWithThrottling() {
-        if (!getLayerController().getRedrawHint())
-            return;
-
-        if (mPendingViewportAdjust)
-            return;
-
-        long timeDelta = System.currentTimeMillis() - mLastViewportChangeTime;
-        if (timeDelta < MIN_VIEWPORT_CHANGE_DELAY) {
-            getLayerController().getView().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        mPendingViewportAdjust = false;
-                        adjustViewport();
-                    }
-                }, MIN_VIEWPORT_CHANGE_DELAY - timeDelta);
-            mPendingViewportAdjust = true;
-            return;
-        }
-
-        adjustViewport();
-    }
-
-    private void adjustViewport() {
-        ViewportMetrics viewportMetrics =
-            new ViewportMetrics(getLayerController().getViewportMetrics());
-
-        PointF viewportOffset = viewportMetrics.getOptimumViewportOffset(mBufferSize);
-        viewportMetrics.setViewportOffset(viewportOffset);
-        viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
-
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(viewportMetrics));
-        if (mViewportSizeChanged) {
-            mViewportSizeChanged = false;
-            GeckoAppShell.viewSizeChanged();
-        }
-
-        mLastViewportChangeTime = System.currentTimeMillis();
-    }
-
-    public void handleMessage(String event, JSONObject message) {
-        if ("Viewport:UpdateAndDraw".equals(event)) {
-            mUpdateViewportOnEndDraw = true;
-
-            // Redraw everything.
-            Rect rect = new Rect(0, 0, mBufferSize.width, mBufferSize.height);
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.DRAW, rect));
-        } else if ("Viewport:UpdateLater".equals(event)) {
-            mUpdateViewportOnEndDraw = true;
-        }
-    }
-
-    // Parses a color from an RGB triple of the form "rgb([0-9]+, [0-9]+, [0-9]+)". If the color
-    // cannot be parsed, returns white.
-    private static int parseColorFromGecko(String string) {
-        if (sColorPattern == null) {
-            sColorPattern = Pattern.compile("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)");
-        }
-
-        Matcher matcher = sColorPattern.matcher(string);
-        if (!matcher.matches()) {
-            return Color.WHITE;
-        }
-
-        int r = Integer.parseInt(matcher.group(1));
-        int g = Integer.parseInt(matcher.group(2));
-        int b = Integer.parseInt(matcher.group(3));
-        return Color.rgb(r, g, b);
-    }
-
-    /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
-    public void setDrawListener(DrawListener listener) {
-        mDrawListener = listener;
-    }
-
-    /** Used by robocop for testing purposes. Not for production use! This is used via reflection by robocop. */
-    public interface DrawListener {
-        public void drawFinished(int x, int y, int width, int height);
+    protected IntSize getTileSize() {
+        // Round up depending on layer implementation to remove texture wastage
+        return !mHasDirectTexture ? TILE_SIZE : new IntSize(0, 0);
     }
 }
 

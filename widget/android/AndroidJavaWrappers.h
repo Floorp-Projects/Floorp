@@ -149,11 +149,32 @@ protected:
     static jfieldID jTopField;
 };
 
-class AndroidGeckoSoftwareLayerClient : public WrappedJavaObject {
+class AndroidGeckoLayerClient : public WrappedJavaObject {
+public:
+    static void InitGeckoLayerClientClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight,
+                      const nsAString &aMetadata, bool aHasDirectTexture);
+    void EndDrawing(const nsIntRect &aRect);
+
+protected:
+    AndroidGeckoLayerClient() {
+        // You shouldn't directly instantiate one of these; instead use one of the concrete derived
+        // classes.
+    }
+
+    static jclass jGeckoLayerClientClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jEndDrawingMethod;
+};
+
+class AndroidGeckoSoftwareLayerClient : public AndroidGeckoLayerClient {
 public:
     static void InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv);
  
-     void Init(jobject jobj);
+    void Init(jobject jobj);
  
     AndroidGeckoSoftwareLayerClient() {}
     AndroidGeckoSoftwareLayerClient(jobject jobj) { Init(jobj); }
@@ -162,8 +183,6 @@ public:
     unsigned char *LockBufferBits();
     void UnlockBuffer();
     void GetRenderOffset(nsIntPoint &aOffset);
-    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, const nsAString &aMetadata, bool aHasDirectTexture);
-    void EndDrawing(const nsIntRect &aRect);
 
 private:
     static jclass jGeckoSoftwareLayerClientClass;
@@ -171,9 +190,7 @@ private:
     static jmethodID jUnlockBufferMethod;
 
 protected:
-     static jmethodID jGetRenderOffsetMethod;
-     static jmethodID jBeginDrawingMethod;
-     static jmethodID jEndDrawingMethod;
+    static jmethodID jGetRenderOffsetMethod;
 };
 
 

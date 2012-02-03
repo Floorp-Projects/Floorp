@@ -108,12 +108,15 @@ jmethodID AndroidAddress::jGetSubLocalityMethod;
 jmethodID AndroidAddress::jGetSubThoroughfareMethod;
 jmethodID AndroidAddress::jGetThoroughfareMethod;
 
+jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = 0;
+jmethodID AndroidGeckoLayerClient::jBeginDrawingMethod = 0;
+jmethodID AndroidGeckoLayerClient::jEndDrawingMethod = 0;
+
 jclass AndroidGeckoSoftwareLayerClient::jGeckoSoftwareLayerClientClass = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jLockBufferMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jUnlockBufferMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jGetRenderOffsetMethod = 0;
-jmethodID AndroidGeckoSoftwareLayerClient::jBeginDrawingMethod = 0;
-jmethodID AndroidGeckoSoftwareLayerClient::jEndDrawingMethod = 0;
+
 jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
 jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = 0;
@@ -144,6 +147,7 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidLocation::InitLocationClass(jEnv);
     AndroidAddress::InitAddressClass(jEnv);
     AndroidRect::InitRectClass(jEnv);
+    AndroidGeckoLayerClient::InitGeckoLayerClientClass(jEnv);
     AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(jEnv);
     AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
 }
@@ -320,6 +324,19 @@ AndroidRect::InitRectClass(JNIEnv *jEnv)
 }
 
 void
+AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
+{
+#ifdef MOZ_JAVA_COMPOSITOR
+    initInit();
+
+    jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
+
+    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Z");
+    jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
+#endif
+}
+
+void
 AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
 {
 #ifdef MOZ_JAVA_COMPOSITOR
@@ -331,8 +348,6 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
     jLockBufferMethod = getMethod("lockBuffer", "()Ljava/nio/ByteBuffer;");
     jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
     jGetRenderOffsetMethod = getMethod("getRenderOffset", "()Landroid/graphics/Point;");
-    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Z");
-    jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
 #endif
 }
 
@@ -643,6 +658,34 @@ AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
     env->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
 }
 
+bool
+AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight,
+                                      const nsAString &aMetadata, bool aHasDirectTexture)
+{
+    NS_ASSERTION(!isNull(), "BeginDrawing() called on null layer client!");
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return false;
+
+    AndroidBridge::AutoLocalJNIFrame(env, 1);
+    jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
+    return env->CallBooleanMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight, aTileWidth,
+                                  aTileHeight, jMetadata, aHasDirectTexture);
+}
+
+void
+AndroidGeckoLayerClient::EndDrawing(const nsIntRect &aRect)
+{
+    NS_ASSERTION(!isNull(), "EndDrawing() called on null layer client!");
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+
+    AndroidBridge::AutoLocalJNIFrame(env, 1);
+    return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width,
+                               aRect.height);
+}
+
 jobject
 AndroidGeckoSoftwareLayerClient::LockBuffer()
 {
@@ -694,31 +737,6 @@ AndroidGeckoSoftwareLayerClient::GetRenderOffset(nsIntPoint &aOffset)
     AndroidPoint offset(env, env->CallObjectMethod(wrapped_obj, jGetRenderOffsetMethod));
     aOffset.x = offset.X();
     aOffset.y = offset.Y();
-}
-
-bool
-AndroidGeckoSoftwareLayerClient::BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, const nsAString &aMetadata, bool aHasDirectTexture)
-{
-    NS_ASSERTION(!isNull(), "BeginDrawing() called on null software layer client!");
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return false;
-
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
-    jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
-    return env->CallBooleanMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight, aTileWidth, aTileHeight, jMetadata, aHasDirectTexture);
-}
-
-void
-AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect)
-{
-    NS_ASSERTION(!isNull(), "EndDrawing() called on null software layer client!");
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
-    return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 jobject
