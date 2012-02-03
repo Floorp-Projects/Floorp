@@ -296,6 +296,11 @@ var tests = [
 
   ["attachment; filename*=\"a%20b\"", 
    "attachment", "a b"],
+
+  // Bug 717121: crash nsMIMEHeaderParamImpl::DoParameterInternal
+
+  ["attachment; filename=\"", 
+   "attachment", ""], 
 ];
 
 function do_tests(whichRFC)
