@@ -45,7 +45,7 @@ Phase("phase04", [
 
 // Now we disable the add-on
 Phase("phase05", [
-  [Sync],
+  [EnsureTracking],
   [Addons.setEnabled, [id], STATE_DISABLED],
   [Sync]
 ]);
@@ -62,6 +62,7 @@ Phase("phase08", [
 
 // Now we re-enable it again.
 Phase("phase09", [
+  [EnsureTracking],
   [Addons.setEnabled, [id], STATE_ENABLED],
   [Sync]
 ]);
@@ -77,7 +78,9 @@ Phase("phase12", [
 ]);
 
 // And we uninstall it
+
 Phase("phase13", [
+  [EnsureTracking],
   [Addons.verify, [id], STATE_ENABLED],
   [Addons.uninstall, [id]],
   [Sync]
