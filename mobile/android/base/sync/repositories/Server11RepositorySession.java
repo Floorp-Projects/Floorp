@@ -214,21 +214,34 @@ public class Server11RepositorySession extends RepositorySession {
   }
 
   protected void fetchWithParameters(long newer,
+                                     long limit,
                                      boolean full,
+                                     String sort,
                                      String ids,
-                                     SyncStorageRequestDelegate delegate) throws URISyntaxException {
+                                     SyncStorageRequestDelegate delegate)
+                                         throws URISyntaxException {
 
-    URI collectionURI = serverRepository.collectionURI(full, newer, ids);
+    URI collectionURI = serverRepository.collectionURI(full, newer, limit, sort, ids);
     SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(collectionURI);
     request.delegate = delegate;
     request.get();
+  }
+
+  public void fetchSince(long timestamp, long limit, String sort, RepositorySessionFetchRecordsDelegate delegate) {
+    try {
+      this.fetchWithParameters(timestamp, limit, true, sort, null, new RequestFetchDelegateAdapter(delegate));
+    } catch (URISyntaxException e) {
+      delegate.onFetchFailed(e, null);
+    }
   }
 
   @Override
   public void fetchSince(long timestamp,
                          RepositorySessionFetchRecordsDelegate delegate) {
     try {
-      this.fetchWithParameters(timestamp, true, null, new RequestFetchDelegateAdapter(delegate));
+      long limit = serverRepository.getDefaultFetchLimit();
+      String sort = serverRepository.getDefaultSort();
+      this.fetchWithParameters(timestamp, limit, true, sort, null, new RequestFetchDelegateAdapter(delegate));
     } catch (URISyntaxException e) {
       delegate.onFetchFailed(e, null);
     }
@@ -245,7 +258,7 @@ public class Server11RepositorySession extends RepositorySession {
     // TODO: watch out for URL length limits!
     try {
       String ids = flattenIDs(guids);
-      this.fetchWithParameters(-1, true, ids, new RequestFetchDelegateAdapter(delegate));
+      this.fetchWithParameters(-1, -1, true, "index", ids, new RequestFetchDelegateAdapter(delegate));
     } catch (URISyntaxException e) {
       delegate.onFetchFailed(e, null);
     }
