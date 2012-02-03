@@ -1284,27 +1284,13 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     } else {
       bits = client.LockBufferBits();
     }
+
     if (!bits) {
         ALOG("### Failed to lock buffer");
+    } else if (targetSurface->CairoStatus()) {
+        ALOG("### Failed to create a valid surface from the bitmap");
     } else {
-        // If tile size is 0,0, we assume we only have a single tile
-        int tileWidth = (gAndroidTileSize.width > 0) ? gAndroidTileSize.width : gAndroidBounds.width;
-        int tileHeight = (gAndroidTileSize.height > 0) ? gAndroidTileSize.height : gAndroidBounds.height;
-
-        int offset = 0;
-
-        // It is assumed that the buffer has been over-allocated so that not
-        // only is the tile-size constant, but that a render-offset of anything
-        // up to (but not including) the tile size could be accommodated.
-        int x = 0, y = 0;
-
-
-        if (targetSurface->CairoStatus()) {
-            ALOG("### Failed to create a valid surface from the bitmap");
-            //break;
-        } else {
-            DrawTo(targetSurface, dirtyRect);
-        }
+        DrawTo(targetSurface, dirtyRect);
     }
 
     if (HasDirectTexture()) {
