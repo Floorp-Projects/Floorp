@@ -2772,6 +2772,21 @@ Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
     return true;
 }
 
+#ifdef DEBUG
+void
+DumpJSHeap(FILE* file)
+{
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Must dump GC heap on main thread.");
+    JSContext *cx;
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if (!xpc || NS_FAILED(xpc->GetSafeJSContext(&cx)) || !cx) {
+        NS_ERROR("Failed to get safe JSContext!");
+        return;
+    }
+    js::DumpHeapComplete(cx, file);
+}
+#endif
+
 } // namespace xpc
 
 NS_IMETHODIMP
