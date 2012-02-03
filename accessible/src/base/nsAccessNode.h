@@ -43,6 +43,7 @@
 #ifndef _nsAccessNode_H_
 #define _nsAccessNode_H_
 
+#include "nsIAccessNode.h"
 #include "nsIAccessibleTypes.h"
 
 #include "a11yGeneric.h"
@@ -67,7 +68,15 @@ class nsIDocShellTreeItem;
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 #define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
 
-class nsAccessNode: public nsISupports
+#define NS_ACCESSNODE_IMPL_CID                          \
+{  /* 2b07e3d7-00b3-4379-aa0b-ea22e2c8ffda */           \
+  0x2b07e3d7,                                           \
+  0x00b3,                                               \
+  0x4379,                                               \
+  { 0xaa, 0x0b, 0xea, 0x22, 0xe2, 0xc8, 0xff, 0xda }    \
+}
+
+class nsAccessNode: public nsIAccessNode
 {
 public:
 
@@ -75,7 +84,10 @@ public:
   virtual ~nsAccessNode();
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(nsAccessNode)
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAccessNode, nsIAccessNode)
+
+    NS_DECL_NSIACCESSNODE
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSNODE_IMPL_CID)
 
     static void InitXPAccessibility();
     static void ShutdownXPAccessibility();
@@ -122,6 +134,18 @@ public:
    * Return frame for the given access node object.
    */
   virtual nsIFrame* GetFrame() const;
+
+  /**
+   * Return DOM node associated with this accessible.
+   */
+  already_AddRefed<nsIDOMNode> GetDOMNode() const
+  {
+    nsIDOMNode *DOMNode = nsnull;
+    if (GetNode())
+      CallQueryInterface(GetNode(), &DOMNode);
+    return DOMNode;
+  }
+
   /**
    * Return DOM node associated with the accessible.
    */
@@ -171,18 +195,6 @@ public:
    */
   virtual bool IsPrimaryForNode() const;
 
-  /**
-   * Return the string bundle
-   */
-  static nsIStringBundle* GetStringBundle()
-    { return gStringBundle; }
-
-  /**
-   * Interface methods on nsIAccessible shared with ISimpleDOM.
-   */
-  void Language(nsAString& aLocale);
-  void ScrollTo(PRUint32 aType);
-
 protected:
     nsPresContext* GetPresContext();
 
@@ -208,6 +220,9 @@ private:
   
   static nsApplicationAccessible *gApplicationAccessible;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessNode,
+                              NS_ACCESSNODE_IMPL_CID)
 
 #endif
 

@@ -191,7 +191,7 @@ public:
 
   /**
    * Scrolls the given frame to the point, used for implememntation of
-   * nsIAccessible::scrollToPoint and nsIAccessibleText::scrollSubstringToPoint.
+   * nsIAccessNode::scrollToPoint and nsIAccessibleText::scrollSubstringToPoint.
    *
    * @param aScrollableFrame  the scrollable frame
    * @param aFrame            the frame to scroll

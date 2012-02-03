@@ -36,27 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessNode.h"
+#include "nsDocAccessible.h"
 
-#include "nsAccessibilityService.h"
+#include "nsIAccessible.h"
+
+#include "nsAccCache.h"
 #include "nsAccUtils.h"
-#include "nsApplicationAccessibleWrap.h"
 #include "nsCoreUtils.h"
-#include "nsRootAccessible.h"
 
+#include "nsHashtable.h"
+#include "nsAccessibilityService.h"
+#include "nsApplicationAccessibleWrap.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocument.h"
+#include "nsIDOMCSSPrimitiveValue.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMWindow.h"
-#include "nsIFrame.h"
+#include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIObserverService.h"
-#include "nsIPrefBranch.h"
+#include "nsIFrame.h"
 #include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
+#include "nsRootAccessible.h"
 #include "nsFocusManager.h"
-#include "nsPresContext.h"
+#include "nsIObserverService.h"
 #include "mozilla/Services.h"
 
 /* For documentation of the accessibility architecture, 
@@ -79,7 +89,9 @@ nsApplicationAccessible *nsAccessNode::gApplicationAccessible = nsnull;
 NS_IMPL_CYCLE_COLLECTION_1(nsAccessNode, mContent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccessNode)
+  NS_INTERFACE_MAP_ENTRY(nsIAccessNode)
   NS_INTERFACE_MAP_ENTRY(nsAccessNode)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessNode)
 NS_INTERFACE_MAP_END
  
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAccessNode)
@@ -275,28 +287,126 @@ nsAccessNode::IsPrimaryForNode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void
+// nsIAccessNode
+
+NS_IMETHODIMP
+nsAccessNode::GetDOMNode(nsIDOMNode **aDOMNode)
+{
+  NS_ENSURE_ARG_POINTER(aDOMNode);
+  *aDOMNode = nsnull;
+
+  nsINode *node = GetNode();
+  if (node)
+    CallQueryInterface(node, aDOMNode);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetDocument(nsIAccessibleDocument **aDocument)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+
+  NS_IF_ADDREF(*aDocument = GetDocAccessible());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetRootDocument(nsIAccessibleDocument **aRootDocument)
+{
+  NS_ENSURE_ARG_POINTER(aRootDocument);
+
+  nsRootAccessible* rootDocument = RootAccessible();
+  NS_IF_ADDREF(*aRootDocument = rootDocument);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetInnerHTML(nsAString& aInnerHTML)
+{
+  aInnerHTML.Truncate();
+
+  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
+  NS_ENSURE_TRUE(htmlElement, NS_ERROR_NULL_POINTER);
+
+  return htmlElement->GetInnerHTML(aInnerHTML);
+}
+
+NS_IMETHODIMP
 nsAccessNode::ScrollTo(PRUint32 aScrollType)
 {
   if (IsDefunct())
-    return;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
-  if (!shell)
-    return;
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   nsIFrame *frame = GetFrame();
-  if (!frame)
-    return;
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsIContent* content = frame->GetContent();
-  if (!content)
-    return;
+  nsCOMPtr<nsIContent> content = frame->GetContent();
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   PRInt16 vPercent, hPercent;
   nsCoreUtils::ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
-  shell->ScrollContentIntoView(content, vPercent, hPercent,
-                               nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+  return shell->ScrollContentIntoView(content, vPercent, hPercent,
+                                      nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+}
+
+NS_IMETHODIMP
+nsAccessNode::ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY)
+{
+  nsIFrame *frame = GetFrame();
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  nsIntPoint coords;
+  nsresult rv = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
+                                                  this, &coords);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIFrame *parentFrame = frame;
+  while ((parentFrame = parentFrame->GetParent()))
+    nsCoreUtils::ScrollFrameToPoint(parentFrame, frame, coords);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt,
+                                    const nsAString& aPropertyName,
+                                    nsAString& aValue)
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl =
+    nsCoreUtils::GetComputedStyleDeclaration(aPseudoElt, mContent);
+  NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
+
+  return styleDecl->GetPropertyValue(aPropertyName, aValue);
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetComputedStyleCSSValue(const nsAString& aPseudoElt,
+                                       const nsAString& aPropertyName,
+                                       nsIDOMCSSPrimitiveValue **aCSSValue)
+{
+  NS_ENSURE_ARG_POINTER(aCSSValue);
+  *aCSSValue = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl =
+    nsCoreUtils::GetComputedStyleDeclaration(aPseudoElt, mContent);
+  NS_ENSURE_STATE(styleDecl);
+
+  nsCOMPtr<nsIDOMCSSValue> cssValue;
+  styleDecl->GetPropertyCSSValue(aPropertyName, getter_AddRefs(cssValue));
+  NS_ENSURE_TRUE(cssValue, NS_ERROR_FAILURE);
+
+  return CallQueryInterface(cssValue, aCSSValue);
 }
 
 // nsAccessNode public
@@ -333,18 +443,20 @@ nsAccessNode::GetCurrentFocus()
   return focusedNode;
 }
 
-void
-nsAccessNode::Language(nsAString& aLanguage)
+NS_IMETHODIMP
+nsAccessNode::GetLanguage(nsAString& aLanguage)
 {
   aLanguage.Truncate();
 
   if (IsDefunct())
-    return;
+    return NS_ERROR_FAILURE;
 
   nsCoreUtils::GetLanguageFor(mContent, nsnull, aLanguage);
+
   if (aLanguage.IsEmpty()) { // Nothing found, so use document's language
     mContent->OwnerDoc()->GetHeaderData(nsGkAtoms::headerContentLanguage,
                                         aLanguage);
   }
+ 
+  return NS_OK;
 }
-
