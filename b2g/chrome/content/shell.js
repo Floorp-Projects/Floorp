@@ -57,6 +57,10 @@ XPCOMUtils.defineLazyGetter(Services, 'ss', function() {
   return Cc['@mozilla.org/content/style-sheet-service;1']
            .getService(Ci.nsIStyleSheetService);
 });
+XPCOMUtils.defineLazyGetter(Services, 'idle', function() {
+  return Cc['@mozilla.org/widget/idleservice;1']
+           .getService(Ci.nsIIdleService);
+});
 
 // In order to use http:// scheme instead of file:// scheme
 // (that is much more restricted) the following code kick-off
@@ -286,7 +290,20 @@ var shell = {
   }
 };
 
-
+(function PowerManager() {
+  let idleHandler = {
+    observe: function(subject, topic, time) {
+      if (topic === "idle") {
+        // TODO: Check wakelock status. See bug 697132.
+        shell.turnScreenOff();
+      }
+    },
+  }
+  let idleTimeout = Services.prefs.getIntPref("power.screen.timeout");
+  if (idleTimeout) {
+    Services.idle.addIdleObserver(idleHandler, idleTimeout);
+  }
+})();
 
 function nsBrowserAccess() {
 }
@@ -318,3 +335,12 @@ nsBrowserAccess.prototype = {
   }
 };
 
+// Pipe `console` log messages to the nsIConsoleService which writes them
+// to logcat.
+Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
+  let message = subject.wrappedJSObject;
+  let prefix = "Content JS " + message.level.toUpperCase() +
+               " at " + message.filename + ":" + message.lineNumber +
+               " in " + (message.functionName || "anonymous") + ": ";
+  Services.console.logStringMessage(prefix + Array.join(message.arguments, " "));
+}, "console-api-log-event", false);

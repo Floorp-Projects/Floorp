@@ -131,6 +131,7 @@ static const PRUint32 gWinEventMap[] = {
   IA2_EVENT_HYPERTEXT_CHANGED,                       // nsIAccessibleEvent::EVENT_HYPERTEXT_CHANGED
   IA2_EVENT_HYPERTEXT_NLINKS_CHANGED,                // nsIAccessibleEvent::EVENT_HYPERTEXT_NLINKS_CHANGED
   IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED,                // nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED
+  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED
   kEVENT_LAST_ENTRY                                  // nsIAccessibleEvent::EVENT_LAST_ENTRY
 };
 
