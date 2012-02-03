@@ -17,8 +17,7 @@
     <supports-screens android:smallScreens="false"
                       android:normalScreens="false"
                       android:largeScreens="false"
-                      android:xlargeScreens="true"
-                      android:resizeable=true />
+                      android:xlargeScreens="true" />
 #endif
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
