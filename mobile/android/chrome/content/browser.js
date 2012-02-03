@@ -341,6 +341,14 @@ var BrowserApp = {
         type: "Gecko:Ready"
       }
     });
+
+    // after gecko has loaded, set the checkerboarding pref once at startup (for testing only)
+    sendMessageToJava({
+      gecko: {
+        "type": "Checkerboard:Toggle",
+        "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
+      }
+    });
   },
 
   _showTelemetryPrompt: function _showTelemetryPrompt() {
