@@ -273,6 +273,15 @@ PodEqual(T *one, T *two, size_t len)
     return !memcmp(one, two, len * sizeof(T));
 }
 
+template <class T>
+JS_ALWAYS_INLINE static void
+Swap(T &t, T &u)
+{
+    T tmp(Move(t));
+    t = Move(u);
+    u = Move(tmp);
+}
+
 JS_ALWAYS_INLINE static size_t
 UnsignedPtrDiff(const void *bigger, const void *smaller)
 {
