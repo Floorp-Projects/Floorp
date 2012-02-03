@@ -41,6 +41,7 @@ package org.mozilla.gecko.sync.repositories.android;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidRequestException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
@@ -342,6 +343,15 @@ public abstract class AndroidBrowserRepositorySession extends RepositorySession 
     this.fetchSince(0, delegate);
   }
 
+  private void trace(String m) {
+    if (Utils.ENABLE_TRACE_LOGGING) {
+      if (Utils.LOG_TO_STDOUT) {
+        System.out.println(LOG_TAG + "::TRACE " + m);
+      }
+      Log.d(LOG_TAG, m);
+    }
+  }
+
   @Override
   public void store(final Record record) throws NoStoreDelegateException {
     if (delegate == null) {
@@ -363,9 +373,11 @@ public abstract class AndroidBrowserRepositorySession extends RepositorySession 
           return;
         }
 
-        // Check that the record is a valid type
-        // TODO Currently for bookmarks we only take care of folders
-        // and bookmarks, all other types are ignored and thrown away
+        // Check that the record is a valid type.
+        // Fennec only supports bookmarks and folders. All other types of records,
+        // including livemarks and queries, are simply ignored.
+        // See Bug 708149. This might be resolved by Fennec changing its database
+        // schema, or by Sync storing non-applied records in its own private database.
         if (!checkRecordType(record)) {
           Log.d(LOG_TAG, "Ignoring record " + record.guid + " due to unknown record type.");
 
@@ -386,11 +398,18 @@ public abstract class AndroidBrowserRepositorySession extends RepositorySession 
             record.androidID = insert(record);
           } else if (existingRecord != null) {
 
+            // If the incoming record is marked deleted and
+            // our existing record has a newer timestamp, then
+            // discard the incoming record.
+            if (record.deleted && existingRecord.lastModified > record.lastModified) {
+              delegate.onRecordStoreSucceeded(record);
+              return;
+            }
+            // Now's a great time to do expensive additions.
+            existingRecord = transformRecord(existingRecord);
             dbHelper.delete(existingRecord);
-            // Or clause: We won't store a remotely deleted record ever, but if it is marked deleted
-            // and our existing record has a newer timestamp, we will restore the existing record
-            if (!record.deleted || (record.deleted && existingRecord.lastModified > record.lastModified)) {
-              // Record exists already, need to figure out what to store
+            if (!record.deleted) {
+              // Record exists already, need to figure out what to store.
               Record store = reconcileRecords(existingRecord, record);
               record.androidID = insert(store);
             }
