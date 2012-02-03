@@ -66,6 +66,8 @@
 
 #include "sampler.h"
 
+#include <android/log.h>
+
 namespace mozilla {
 namespace layers {
 
@@ -578,6 +580,8 @@ LayerManagerOGL::FPSState::DrawFPS(GLContext* context, CopyProgram* copyprog)
 
   GLint viewport[4];
   context->fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
+  __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Viewport: %d %d %d %d",
+                      viewport[0], viewport[1], viewport[2], viewport[3]);
 
   static GLuint texture;
   if (!initialized) {
@@ -844,6 +848,8 @@ LayerManagerOGL::Render()
     mFPS.DrawFPS(mGLContext, GetCopy2DProgram());
   }
 
+  PerformPostRenderHook();
+
   if (mGLContext->IsDoubleBuffered()) {
     mGLContext->SwapBuffers();
     LayerManager::PostPresent();
@@ -933,6 +939,22 @@ LayerManagerOGL::Render()
 
   mGLContext->fFlush();
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+}
+
+void
+LayerManagerOGL::PerformPreRenderHook()
+{
+#ifdef MOZ_WIDGET_ANDROID
+  // TODO: AndroidBridge::PerformPreRenderHook();
+#endif
+}
+
+void
+LayerManagerOGL::PerformPostRenderHook()
+{
+#ifdef MOZ_WIDGET_ANDROID
+  // TODO: AndroidBridge::PerformPostRenderHook();
+#endif
 }
 
 void
