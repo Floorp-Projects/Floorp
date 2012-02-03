@@ -98,6 +98,12 @@ public class SyncStorageCollectionRequest extends SyncStorageRequest {
         return;
       }
 
+      // TODO: at this point we can access X-Weave-Timestamp, compare
+      // that to our local timestamp, and compute an estimate of clock
+      // skew. We can provide this to the incremental delegate, which
+      // will allow it to seamlessly correct timestamps on the records
+      // it processes. Bug 721887.
+
       // Line-by-line processing, then invoke success.
       SyncStorageCollectionRequestDelegate delegate = (SyncStorageCollectionRequestDelegate) this.request.delegate;
       InputStream content = null;

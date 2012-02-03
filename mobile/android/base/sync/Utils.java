@@ -76,6 +76,29 @@ public class Utils {
     }
   }
 
+  public static void error(String logTag, String message) {
+    logToStdout(logTag, " :: ERROR: ", message);
+    Log.i(logTag, message);
+  }
+
+  public static void info(String logTag, String message) {
+    logToStdout(logTag, " :: INFO: ", message);
+    Log.i(logTag, message);
+  }
+
+  public static void debug(String logTag, String message) {
+    logToStdout(logTag, " :: DEBUG: ", message);
+    Log.d(logTag, message);
+  }
+
+  public static void trace(String logTag, String message) {
+    if (!ENABLE_TRACE_LOGGING) {
+      return;
+    }
+    logToStdout(logTag, " :: TRACE: ", message);
+    Log.d(logTag, message);
+  }
+
   public static String generateGuid() {
     byte[] encodedBytes = Base64.encodeBase64(generateRandomBytes(9), false);
     return new String(encodedBytes).replace("+", "-").replace("/", "_");
