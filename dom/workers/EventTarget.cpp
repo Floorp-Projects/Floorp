@@ -73,15 +73,13 @@ bool
 EnsureObjectIsEventTarget(JSContext* aCx, JSObject* aObj, char* aFunctionName)
 {
   JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
-  if (classPtr &&
-      (ClassIsWorker(classPtr) || ClassIsWorkerGlobalScope(classPtr) ||
-       ClassIsXMLHttpRequest(classPtr))) {
+  if (ClassIsWorker(classPtr) || ClassIsWorkerGlobalScope(classPtr) ||
+      ClassIsXMLHttpRequest(classPtr)) {
     return true;
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                       "EventTarget", aFunctionName,
-                        classPtr ? classPtr->name : "object");
+                       "EventTarget", aFunctionName, classPtr->name);
   return false;
 }
 

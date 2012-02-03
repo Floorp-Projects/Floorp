@@ -101,20 +101,14 @@ private:
   static nsIDOMBlob*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      nsIDOMBlob* blob = GetPrivate(aCx, aObj);
-      if (blob) {
-        return blob;
-      }
-
-      classPtr = JS_GET_CLASS(aCx, aObj);
+    nsIDOMBlob* blob = GetPrivate(aCx, aObj);
+    if (blob) {
+      return blob;
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "Object");
+                         JS_GET_CLASS(aCx, aObj)->name);
     return NULL;
   }
 
@@ -299,19 +293,14 @@ private:
   static nsIDOMFile*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      nsIDOMFile* file = GetPrivate(aCx, aObj);
-      if (file) {
-        return file;
-      }
-      classPtr = JS_GET_CLASS(aCx, aObj);
+    nsIDOMFile* file = GetPrivate(aCx, aObj);
+    if (file) {
+      return file;
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "Object");
+                         JS_GET_CLASS(aCx, aObj)->name);
     return NULL;
   }
 
