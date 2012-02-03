@@ -1,7 +1,6 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -17,15 +16,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Jim Blandy
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Eitan Isaacson <eitan@monotonous.org> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,13 +37,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * This header implements the functionality of <stdint.h>, even on systems that
- * lack it.  It does so by completely delegating to a separate header, which
- * could just as easily be used.  However, as this header is part of the
- * SpiderMonkey interface, we retain it for compatibility.
+#include "nsISupports.idl"
+
+interface nsIAccessiblePivot;
+
+/**
+ * An interface implemented by an accessible object that has an associated
+ * virtual cursor. Typically, a top-level application or content document.
+ * A virtual cursor is an implementation of nsIAccessiblePivot that provides an
+ * exclusive spot in the cursorable's subtree, this could be used to create a
+ * pseudo-focus or caret browsing experience that is centered around the
+ * accessibility API.
  */
-#ifndef jsstdint_h___
-#define jsstdint_h___
-#include "mozilla/StdInt.h"
-#endif /* jsstdint_h___ */
+[scriptable, uuid(5452dea5-d235-496f-8757-3ca016ff49ff)]
+interface nsIAccessibleCursorable : nsISupports
+{
+  /**
+   * The virtual cursor pivot this object manages.
+   */
+  readonly attribute nsIAccessiblePivot virtualCursor;
+};

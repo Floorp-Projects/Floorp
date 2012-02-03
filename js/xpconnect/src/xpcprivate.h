@@ -299,14 +299,6 @@ class PtrAndPrincipalHashKey : public PLDHashEntryHdr
 
 }
 
-// NB: nsDataHashtableMT is usually not very useful as all it does is lock
-// around each individual operation performed on it. That would imply, that
-// the pattern: if (!map.Get(key)) map.Put(key, value); is not safe as another
-// thread could race to insert key into map. However, in our case, only one
-// thread at any time could attempt to insert |key| into |map|, so it works
-// well enough for our uses.
-typedef nsDataHashtableMT<nsISupportsHashKey, JSCompartment *> XPCMTCompartmentMap;
-
 // This map is only used on the main thread.
 typedef nsDataHashtable<xpc::PtrAndPrincipalHashKey, JSCompartment *> XPCCompartmentMap;
 
@@ -696,8 +688,6 @@ public:
 
     XPCCompartmentMap& GetCompartmentMap()
         {return mCompartmentMap;}
-    XPCMTCompartmentMap& GetMTCompartmentMap()
-        {return mMTCompartmentMap;}
 
     XPCLock* GetMapLock() const {return mMapLock;}
 
@@ -836,7 +826,6 @@ private:
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
     XPCNativeWrapperMap*     mExplicitNativeWrapperMap;
     XPCCompartmentMap        mCompartmentMap;
-    XPCMTCompartmentMap      mMTCompartmentMap;
     XPCLock* mMapLock;
     PRThread* mThreadRunningGC;
     nsTArray<nsXPCWrappedJS*> mWrappedJSToReleaseArray;
@@ -4415,31 +4404,17 @@ namespace xpc {
 
 struct CompartmentPrivate
 {
-    CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays, bool cycleCollectionEnabled)
+    CompartmentPrivate(PtrAndPrincipalHashKey *key, bool wantXrays)
         : key(key),
-          ptr(nsnull),
-          wantXrays(wantXrays),
-          cycleCollectionEnabled(cycleCollectionEnabled)
-    {
-        MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
-    }
-
-    CompartmentPrivate(nsISupports *ptr, bool wantXrays, bool cycleCollectionEnabled)
-        : key(nsnull),
-          ptr(ptr),
-          wantXrays(wantXrays),
-          cycleCollectionEnabled(cycleCollectionEnabled)
+          wantXrays(wantXrays)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
 
     ~CompartmentPrivate();
 
-    // NB: key and ptr are mutually exclusive.
     nsAutoPtr<PtrAndPrincipalHashKey> key;
-    nsCOMPtr<nsISupports> ptr;
     bool wantXrays;
-    bool cycleCollectionEnabled;
     nsAutoPtr<JSObject2JSObjectMap> waiverWrapperMap;
     // NB: we don't want this map to hold a strong reference to the wrapper.
     nsAutoPtr<nsDataHashtable<nsPtrHashKey<XPCWrappedNative>, JSObject *> > expandoMap;
@@ -4495,22 +4470,6 @@ struct CompartmentPrivate
             domExpandoMap->RemoveEntry(expando);
     }
 };
-
-inline bool
-CompartmentParticipatesInCycleCollection(JSContext *cx, JSCompartment *compartment)
-{
-    CompartmentPrivate *priv =
-        static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(cx, compartment));
-    NS_ASSERTION(priv, "This should never be null!");
-
-    return priv->cycleCollectionEnabled;
-}
-
-inline bool
-ParticipatesInCycleCollection(JSContext *cx, js::gc::Cell *cell)
-{
-    return CompartmentParticipatesInCycleCollection(cx, cell->compartment());
-}
 
 }
 

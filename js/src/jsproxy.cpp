@@ -301,6 +301,13 @@ ProxyHandler::fun_toString(JSContext *cx, JSObject *proxy, uintN indent)
     return fun_toStringHelper(cx, &fval.toObject(), indent);
 }
 
+RegExpShared *
+ProxyHandler::regexp_toShared(JSContext *cx, JSObject *proxy)
+{
+    JS_NOT_REACHED("This should have been a wrapped regexp");
+    return (RegExpShared *)NULL;
+}
+
 bool
 ProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint, Value *vp)
 {
@@ -944,6 +951,14 @@ Proxy::fun_toString(JSContext *cx, JSObject *proxy, uintN indent)
     JS_CHECK_RECURSION(cx, return NULL);
     AutoPendingProxyOperation pending(cx, proxy);
     return GetProxyHandler(proxy)->fun_toString(cx, proxy, indent);
+}
+
+RegExpShared *
+Proxy::regexp_toShared(JSContext *cx, JSObject *proxy)
+{
+    JS_CHECK_RECURSION(cx, return NULL);
+    AutoPendingProxyOperation pending(cx, proxy);
+    return GetProxyHandler(proxy)->regexp_toShared(cx, proxy);
 }
 
 bool

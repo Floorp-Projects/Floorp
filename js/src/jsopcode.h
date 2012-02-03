@@ -271,9 +271,7 @@ struct JSCodeSpec {
     uint8_t             prec;           /* operator precedence */
     uint32_t            format;         /* immediate operand format */
 
-#ifdef __cplusplus
     uint32_t type() const { return JOF_TYPE(format); }
-#endif
 };
 
 extern const JSCodeSpec js_CodeSpec[];
@@ -359,7 +357,6 @@ js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
         (dbl) = (script)->getConst(index_).toDouble();                        \
     JS_END_MACRO
 
-#ifdef __cplusplus
 namespace js {
 
 extern uintN
@@ -369,7 +366,6 @@ extern uintN
 StackDefs(JSScript *script, jsbytecode *pc);
 
 }  /* namespace js */
-#endif  /* __cplusplus */
 
 /*
  * Decompilers, for script, function, and expression pretty-printing.
@@ -429,7 +425,6 @@ JS_END_EXTERN_C
 #define JSDVG_IGNORE_STACK      0
 #define JSDVG_SEARCH_STACK      1
 
-#ifdef __cplusplus
 /*
  * Get the length of variable-length bytecode like JSOP_TABLESWITCH.
  */
@@ -701,9 +696,8 @@ class OpcodeCounts
 };
 
 } /* namespace js */
-#endif /* __cplusplus */
 
-#if defined(DEBUG) && defined(__cplusplus)
+#if defined(DEBUG)
 /*
  * Disassemblers, for debugging only.
  */
