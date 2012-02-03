@@ -110,6 +110,12 @@ public:
         NOTIFY_IME_FOCUSCHANGE = 3
     };
 
+    enum {
+        LAYER_CLIENT_TYPE_NONE = 0,
+        LAYER_CLIENT_TYPE_SOFTWARE = 1,     // AndroidGeckoSoftwareLayerClient
+        LAYER_CLIENT_TYPE_GL = 2            // AndroidGeckoGLLayerClient
+    };
+
     static AndroidBridge *ConstructBridge(JNIEnv *jEnv,
                                           jclass jGeckoAppShellClass);
 
@@ -168,8 +174,9 @@ public:
 
     void ScheduleRestart();
 
-    void SetSoftwareLayerClient(jobject jobj);
-    AndroidGeckoSoftwareLayerClient &GetSoftwareLayerClient() { return mSoftwareLayerClient; }
+    void SetLayerClient(jobject jobj, jint type);
+    int GetLayerClientType() const { return mLayerClientType; }
+    AndroidGeckoLayerClient &GetLayerClient() { return *mLayerClient; }
 
     void SetSurfaceView(jobject jobj);
     AndroidGeckoSurfaceView& SurfaceView() { return mSurfaceView; }
@@ -396,12 +403,14 @@ protected:
 
     // the GeckoSurfaceView
     AndroidGeckoSurfaceView mSurfaceView;
-    AndroidGeckoSoftwareLayerClient mSoftwareLayerClient;
+
+    AndroidGeckoLayerClient *mLayerClient;
+    int mLayerClientType;
 
     // the GeckoAppShell java class
     jclass mGeckoAppShellClass;
 
-    AndroidBridge() { }
+    AndroidBridge() : mLayerClient(NULL), mLayerClientType(0) { }
     bool Init(JNIEnv *jEnv, jclass jGeckoApp);
 
     bool mOpenedGraphicsLibraries;

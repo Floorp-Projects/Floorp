@@ -41,6 +41,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.FloatSize;
+import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
@@ -139,7 +140,7 @@ abstract public class GeckoApp
     private Address  mLastGeoAddress;
     private static LayerController mLayerController;
     private static PlaceholderLayerClient mPlaceholderLayerClient;
-    private static GeckoSoftwareLayerClient mSoftwareLayerClient;
+    private static GeckoLayerClient mLayerClient;
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
 
@@ -565,7 +566,7 @@ abstract public class GeckoApp
         }
 
         public void run() {
-            synchronized (mSoftwareLayerClient) {
+            synchronized (mLayerClient) {
                 Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab == null)
                     return;
@@ -574,10 +575,10 @@ abstract public class GeckoApp
                 if (lastHistoryEntry == null)
                     return;
 
-                if (getLayerController().getLayerClient() != mSoftwareLayerClient)
+                if (getLayerController().getLayerClient() != mLayerClient)
                     return;
 
-                ViewportMetrics viewportMetrics = mSoftwareLayerClient.getGeckoViewportMetrics();
+                ViewportMetrics viewportMetrics = mLayerClient.getGeckoViewportMetrics();
                 if (viewportMetrics != null)
                     mLastViewport = viewportMetrics.toJSON();
 
@@ -589,8 +590,7 @@ abstract public class GeckoApp
 
     void getAndProcessThumbnailForTab(final Tab tab, boolean forceBigSceenshot) {
         boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
-        final Bitmap bitmap = isSelectedTab ?
-            mSoftwareLayerClient.getBitmap() : null;
+        final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
         
         if (bitmap != null) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -598,8 +598,8 @@ abstract public class GeckoApp
             processThumbnail(tab, bitmap, bos.toByteArray());
         } else {
             mLastScreen = null;
-            int sw = forceBigSceenshot ? mSoftwareLayerClient.getWidth() : tab.getMinScreenshotWidth();
-            int sh = forceBigSceenshot ? mSoftwareLayerClient.getHeight(): tab.getMinScreenshotHeight();
+            int sw = forceBigSceenshot ? mLayerClient.getWidth() : tab.getMinScreenshotWidth();
+            int sh = forceBigSceenshot ? mLayerClient.getHeight(): tab.getMinScreenshotHeight();
             int dw = forceBigSceenshot ? sw : tab.getThumbnailWidth();
             int dh = forceBigSceenshot ? sh : tab.getThumbnailHeight();
             try {
@@ -1592,7 +1592,7 @@ abstract public class GeckoApp
              * Create a layer client so that Gecko will have a buffer to draw into, but don't hook
              * it up to the layer controller yet.
              */
-            mSoftwareLayerClient = new GeckoSoftwareLayerClient(this);
+            mLayerClient = new GeckoSoftwareLayerClient(this);
 
             /*
              * Hook a placeholder layer client up to the layer controller so that the user can pan
@@ -2447,7 +2447,7 @@ abstract public class GeckoApp
         GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Add", args.toString()));
     }
 
-    public GeckoSoftwareLayerClient getSoftwareLayerClient() { return mSoftwareLayerClient; }
+    public GeckoLayerClient getLayerClient() { return mLayerClient; }
     public LayerController getLayerController() { return mLayerController; }
 
     // accelerometer
@@ -2526,7 +2526,7 @@ abstract public class GeckoApp
             mPlaceholderLayerClient.destroy();
 
         LayerController layerController = getLayerController();
-        layerController.setLayerClient(mSoftwareLayerClient);
+        layerController.setLayerClient(mLayerClient);
     }
 
 }

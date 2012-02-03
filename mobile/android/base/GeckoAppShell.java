@@ -39,7 +39,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
+import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.AbstractLayerView;
 
@@ -124,7 +124,7 @@ public class GeckoAppShell
 
     // helper methods
     //    public static native void setSurfaceView(GeckoSurfaceView sv);
-    public static native void setSoftwareLayerClient(GeckoSoftwareLayerClient client);
+    public static native void setLayerClient(GeckoLayerClient client, int type);
     public static native void putenv(String map);
     public static native void onResume();
     public static native void onLowMemory();
@@ -467,9 +467,10 @@ public class GeckoAppShell
         Log.i(LOGTAG, "post native init");
 
         // Tell Gecko where the target byte buffer is for rendering
-        GeckoAppShell.setSoftwareLayerClient(GeckoApp.mAppContext.getSoftwareLayerClient());
+        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerClient(),
+                                     GeckoApp.mAppContext.getLayerClient().getType());
 
-        Log.i(LOGTAG, "setSoftwareLayerClient called");
+        Log.i(LOGTAG, "setLayerClient called");
 
         // First argument is the .apk path
         String combinedArgs = apkPath + " -greomni " + apkPath;

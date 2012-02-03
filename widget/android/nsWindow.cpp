@@ -1263,8 +1263,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     // END HACK: gl layers
 #endif
 
-    AndroidGeckoSoftwareLayerClient &client =
-        AndroidBridge::Bridge()->GetSoftwareLayerClient();
+    AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height,
                              gAndroidTileSize.width, gAndroidTileSize.height,
                              metadata, HasDirectTexture())) {
@@ -1272,6 +1271,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     }
 
     nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
+
+    int layerClientType = AndroidBridge::Bridge()->GetLayerClientType();
 
     unsigned char *bits = NULL;
     if (HasDirectTexture()) {
@@ -1281,8 +1282,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
       }
 
       sDirectTexture->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, dirtyRect, &bits);
-    } else {
-      bits = client.LockBufferBits();
+    } else if (layerClientType == AndroidBridge::LAYER_CLIENT_TYPE_SOFTWARE) {
+        bits = ((AndroidGeckoSoftwareLayerClient &)client).LockBufferBits();
     }
 
     if (!bits) {
@@ -1295,8 +1296,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     if (HasDirectTexture()) {
         sDirectTexture->Unlock();
-    } else {
-        client.UnlockBuffer();
+    } else if (layerClientType == AndroidBridge::LAYER_CLIENT_TYPE_SOFTWARE) {
+        ((AndroidGeckoSoftwareLayerClient &)client).UnlockBuffer();
     }
 
     client.EndDrawing(dirtyRect);
