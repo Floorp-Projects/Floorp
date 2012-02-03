@@ -344,7 +344,7 @@ static int PrefChanged(const char* aPref, void* aClosure)
       gVolumeScale = NS_MAX<double>(0, PR_strtod(utf8.get(), nsnull));
     }
   } else if (strcmp(aPref, PREF_USE_CUBEB) == 0) {
-    bool value = Preferences::GetBool(aPref, true);
+    bool value = Preferences::GetBool(aPref, false);
     mozilla::MutexAutoLock lock(*gAudioPrefsLock);
     gUseCubeb = value;
   }

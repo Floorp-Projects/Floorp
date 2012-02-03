@@ -2730,6 +2730,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 nsresult
 nsPluginInstanceOwner::Destroy()
 {
+  if (mObjectFrame)
+    mObjectFrame->SetInstanceOwner(nsnull);
+
 #ifdef MAC_CARBON_PLUGINS
   // stop the timer explicitly to reduce reference count.
   CancelTimer();

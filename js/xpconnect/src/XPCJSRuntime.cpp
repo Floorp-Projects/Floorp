@@ -271,28 +271,14 @@ CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
     if (!priv)
         return true;
 
-    if (xpc::PtrAndPrincipalHashKey *key = priv->key) {
-        XPCCompartmentMap &map = self->GetCompartmentMap();
+    xpc::PtrAndPrincipalHashKey *key = priv->key;
+    XPCCompartmentMap &map = self->GetCompartmentMap();
 #ifdef DEBUG
-        {
-            JSCompartment *current = NULL;
-            NS_ASSERTION(map.Get(key, &current), "no compartment?");
-            NS_ASSERTION(current == compartment, "compartment mismatch");
-        }
+    JSCompartment *current = NULL;
+    NS_ASSERTION(map.Get(key, &current), "no compartment?");
+    NS_ASSERTION(current == compartment, "compartment mismatch");
 #endif
-        map.Remove(key);
-    } else {
-        nsISupports *ptr = priv->ptr;
-        XPCMTCompartmentMap &map = self->GetMTCompartmentMap();
-#ifdef DEBUG
-        {
-            JSCompartment *current;
-            NS_ASSERTION(map.Get(ptr, &current), "no compartment?");
-            NS_ASSERTION(current == compartment, "compartment mismatch");
-        }
-#endif
-        map.Remove(ptr);
-    }
+    map.Remove(key);
 
     return true;
 }
@@ -474,9 +460,7 @@ CheckParticipatesInCycleCollection(PRUint32 aLangID, void *aThing,
 
     closure->cycleCollectionEnabled =
         aLangID == nsIProgrammingLanguage::JAVASCRIPT &&
-        AddToCCKind(js_GetGCThingTraceKind(aThing)) &&
-        xpc::ParticipatesInCycleCollection(closure->cx,
-                                           static_cast<js::gc::Cell*>(aThing));
+        AddToCCKind(js_GetGCThingTraceKind(aThing));
 }
 
 static JSDHashOperator
@@ -508,14 +492,9 @@ XPCJSRuntime::SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
     NS_ASSERTION(NS_IsMainThread() || NS_IsCycleCollectorThread(),
                  "Suspecting wrapped natives from non-CC thread");
 
-    // Only suspect wrappedJSObjects that are in a compartment that
-    // participates in cycle collection.
-    JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
-    if (!xpc::ParticipatesInCycleCollection(cx, js::gc::AsCell(obj)))
-        return;
-
     // Only record objects that might be part of a cycle as roots, unless
     // the callback wants all traces (a debug feature).
+    JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
     if (xpc_IsGrayGCThing(obj) || cb.WantAllTraces())
         cb.NoteRoot(nsIProgrammingLanguage::JAVASCRIPT, obj,
                     nsXPConnect::GetXPConnect());
@@ -597,11 +576,6 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
             !wrappedJS->IsAggregatedToNative()) {
             continue;
         }
-
-        // Only suspect wrappedJSObjects that are in a compartment that
-        // participates in cycle collection.
-        if (!xpc::ParticipatesInCycleCollection(cx, js::gc::AsCell(obj)))
-            continue;
 
         cb.NoteXPCOMRoot(static_cast<nsIXPConnectWrappedJS *>(wrappedJS));
     }
@@ -1998,7 +1972,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         mJSHolders.ops = nsnull;
 
     mCompartmentMap.Init();
-    mMTCompartmentMap.Init();
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG

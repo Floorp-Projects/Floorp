@@ -66,6 +66,7 @@ class nsAutoPtr
       void
       assign( T* newPtr )
         {
+          NS_ABORT_IF_FALSE(mRawPtr != newPtr || !newPtr, "This makes no sense!");
           T* oldPtr = mRawPtr;
           mRawPtr = newPtr;
           delete oldPtr;

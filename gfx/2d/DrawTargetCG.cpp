@@ -171,7 +171,7 @@ GetImageFromSourceSurface(SourceSurface *aSurface)
     return static_cast<SourceSurfaceCGBitmapContext*>(aSurface)->GetImage();
   else if (aSurface->GetType() == SURFACE_DATA)
     return static_cast<DataSourceSurfaceCG*>(aSurface)->GetImage();
-  assert(0);
+  abort();
 }
 
 TemporaryRef<SourceSurface>

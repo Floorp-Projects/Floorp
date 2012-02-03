@@ -51,6 +51,7 @@ import org.mozilla.gecko.sync.crypto.HKDF;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 
 import android.util.Log;
+import java.security.InvalidKeyException;
 
 public class JPakeCrypto {
   private static final String LOG_TAG = "JPakeCrypto";
@@ -174,7 +175,7 @@ public class JPakeCrypto {
    * @throws IncorrectZkpException
    */
   public static KeyBundle finalRound(String secret, JPakeParty jp)
-      throws IncorrectZkpException {
+      throws IncorrectZkpException, NoSuchAlgorithmException, InvalidKeyException {
     Log.d(LOG_TAG, "Final round started.");
     BigInteger gb = jp.gx1.multiply(jp.gx2).mod(P).multiply(jp.gx3)
         .mod(P);
@@ -321,12 +322,12 @@ public class JPakeCrypto {
   /*
    * Helper function to generate encryption key and HMAC from a byte array.
    */
-  public static void generateKeyAndHmac(BigInteger k, byte[] encOut, byte[] hmacOut) {
+  public static void generateKeyAndHmac(BigInteger k, byte[] encOut, byte[] hmacOut) throws NoSuchAlgorithmException, InvalidKeyException {
    // Generate HMAC and Encryption keys from synckey.
     byte[] zerokey = new byte[32];
     byte[] prk = HMACSHA256(BigIntegerHelper.BigIntegerToByteArrayWithoutSign(k), zerokey);
 
-    byte[] okm =  HKDF.hkdfExpand(prk, HKDF.HMAC_INPUT, 32 * 2);
+    byte[] okm = HKDF.hkdfExpand(prk, HKDF.HMAC_INPUT, 32 * 2);
     System.arraycopy(okm, 0, encOut, 0, 32);
     System.arraycopy(okm, 32, hmacOut, 0, 32);
   }

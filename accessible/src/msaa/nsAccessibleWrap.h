@@ -331,11 +331,6 @@ public: // construction, destruction
 
   NS_IMETHOD GetNativeInterface(void **aOutAccessible);
 
-  // NT4 does not have the oleacc that defines these methods. So we define copies here that automatically
-  // load the library only if needed.
-  static STDMETHODIMP AccessibleObjectFromWindow(HWND hwnd,DWORD dwObjectID,REFIID riid,void **ppvObject);
-  static STDMETHODIMP NotifyWinEvent(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
-
   static IDispatch *NativeAccessible(nsIAccessible *aXPAccessible);
 
   /**
