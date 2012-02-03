@@ -1766,6 +1766,23 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     document.getElementById("appmenu_charsetMenu").hidden = true;
 #endif
 
+  let appMenuButton = document.getElementById("appmenu-button");
+  let appMenuPopup = document.getElementById("appmenu-popup");
+  if (appMenuButton && appMenuPopup) {
+    let appMenuOpening = null;
+    appMenuButton.addEventListener("mousedown", function(event) {
+      if (event.button == 0)
+        appMenuOpening = new Date();
+    }, false);
+    appMenuPopup.addEventListener("popupshown", function(event) {
+      if (event.target != appMenuPopup || !appMenuOpening)
+        return;
+      let duration = new Date() - appMenuOpening;
+      appMenuOpening = null;
+      Services.telemetry.getHistogramById("FX_APP_MENU_OPEN_MS").add(duration);
+    }, false);
+  }
+
   window.addEventListener("mousemove", MousePosTracker, false);
   window.addEventListener("dragover", MousePosTracker, false);
 
