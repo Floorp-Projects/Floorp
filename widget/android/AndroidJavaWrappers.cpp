@@ -117,6 +117,8 @@ jmethodID AndroidGeckoSoftwareLayerClient::jLockBufferMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jUnlockBufferMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jGetRenderOffsetMethod = 0;
 
+jclass AndroidGeckoGLLayerClient::jGeckoGLLayerClientClass = 0;
+
 jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
 jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jEndDrawingMethod = 0;
@@ -348,6 +350,16 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
     jLockBufferMethod = getMethod("lockBuffer", "()Ljava/nio/ByteBuffer;");
     jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
     jGetRenderOffsetMethod = getMethod("getRenderOffset", "()Landroid/graphics/Point;");
+#endif
+}
+
+void
+AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(JNIEnv *jEnv)
+{
+#ifdef MOZ_JAVA_COMPOSITOR
+    initInit();
+
+    jGeckoGLLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoGLLayerClient");
 #endif
 }
 
@@ -603,6 +615,13 @@ AndroidPoint::Init(JNIEnv *jenv, jobject jobj)
 
 void
 AndroidGeckoSoftwareLayerClient::Init(jobject jobj)
+{
+    NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
+    wrapped_obj = jobj;
+}
+
+void
+AndroidGeckoGLLayerClient::Init(jobject jobj)
 {
     NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
     wrapped_obj = jobj;

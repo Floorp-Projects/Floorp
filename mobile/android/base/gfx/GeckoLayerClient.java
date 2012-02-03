@@ -122,12 +122,17 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
 
     public boolean beginDrawing(int width, int height, int tileWidth, int tileHeight,
                                 String metadata, boolean hasDirectTexture) {
+        Log.e(LOGTAG, "### beginDrawing " + width + " " + height + " " + tileWidth + " " +
+              tileHeight + " " + hasDirectTexture);
+
         // If we've changed surface types, cancel this draw
         if (handleDirectTextureChange(hasDirectTexture)) {
+            Log.e(LOGTAG, "### Cancelling draw due to direct texture change");
             return false;
         }
 
         if (!shouldDrawProceed(tileWidth, tileHeight)) {
+            Log.e(LOGTAG, "### Cancelling draw due to shouldDrawProceed()");
             return false;
         }
 
@@ -202,6 +207,8 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
 
     /* Informs Gecko that the screen size has changed. */
     protected void sendResizeEventIfNecessary(boolean force) {
+        Log.e(LOGTAG, "### sendResizeEventIfNecessary " + force);
+
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
@@ -219,7 +226,7 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
         mScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
         IntSize bufferSize = getBufferSize(), tileSize = getTileSize();
 
-        Log.i(LOGTAG, "Screen-size changed to " + mScreenSize);
+        Log.e(LOGTAG, "### Screen-size changed to " + mScreenSize);
         GeckoEvent event = new GeckoEvent(GeckoEvent.SIZE_CHANGED,
                                           bufferSize.width, bufferSize.height,
                                           metrics.widthPixels, metrics.heightPixels,

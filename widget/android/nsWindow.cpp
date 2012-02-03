@@ -1200,13 +1200,18 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### OnDraw()");
+
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
     AndroidBridge::AutoLocalJNIFrame jniFrame;
 #ifdef MOZ_JAVA_COMPOSITOR
     // We haven't been given a window-size yet, so do nothing
-    if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0)
+    if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0) {
+        __android_log_print(ANDROID_LOG_ERROR, "Gecko",
+                            "### No window size yet -- skipping draw!");
         return;
+    }
 
     /*
      * Check to see whether the presentation shell corresponding to the document on the screen
@@ -1221,6 +1226,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         metadataProvider->PaintingSuppressed(&paintingSuppressed);
     }
     if (paintingSuppressed) {
+        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Painting suppressed!");
         return;
     }
 
@@ -1267,6 +1273,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height,
                              gAndroidTileSize.width, gAndroidTileSize.height,
                              metadata, HasDirectTexture())) {
+        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;
     }
 
@@ -1276,6 +1283,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     unsigned char *bits = NULL;
     if (HasDirectTexture()) {
+      __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Have direct texture!");
       if (sDirectTexture->Width() != gAndroidBounds.width ||
           sDirectTexture->Height() != gAndroidBounds.height) {
         sDirectTexture->Reallocate(gAndroidBounds.width, gAndroidBounds.height);
@@ -1283,14 +1291,17 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
       sDirectTexture->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, dirtyRect, &bits);
     } else if (layerClientType == AndroidBridge::LAYER_CLIENT_TYPE_SOFTWARE) {
+        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Software layer client!");
         bits = ((AndroidGeckoSoftwareLayerClient &)client).LockBufferBits();
+        if (!bits) {
+            ALOG("### Failed to lock buffer");
+        }
     }
 
-    if (!bits) {
-        ALOG("### Failed to lock buffer");
-    } else if (targetSurface->CairoStatus()) {
+    if (targetSurface->CairoStatus()) {
         ALOG("### Failed to create a valid surface from the bitmap");
-    } else {
+    } else if (bits || layerClientType == AndroidBridge::LAYER_CLIENT_TYPE_GL) {
+        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling DrawTo()!");
         DrawTo(targetSurface, dirtyRect);
     }
 
@@ -1300,6 +1311,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         ((AndroidGeckoSoftwareLayerClient &)client).UnlockBuffer();
     }
 
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling EndDrawing()!");
     client.EndDrawing(dirtyRect);
     return;
 #endif
