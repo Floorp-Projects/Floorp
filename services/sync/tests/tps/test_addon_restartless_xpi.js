@@ -33,6 +33,7 @@ Phase("phase02", [
 
 // Now disable and see that is is synced.
 Phase("phase03", [
+  [EnsureTracking],
   [Addons.setEnabled, [id], STATE_DISABLED],
   [Addons.verify, [id], STATE_DISABLED],
   [Sync]
@@ -44,6 +45,7 @@ Phase("phase04", [
 
 // Enable and see it is synced.
 Phase("phase05", [
+  [EnsureTracking],
   [Addons.setEnabled, [id], STATE_ENABLED],
   [Addons.verify, [id], STATE_ENABLED],
   [Sync]
@@ -55,6 +57,7 @@ Phase("phase06", [
 
 // Uninstall and see it is synced.
 Phase("phase07", [
+  [EnsureTracking],
   [Addons.verify, [id], STATE_ENABLED],
   [Addons.uninstall, [id]],
   [Addons.verifyNot, [id]],

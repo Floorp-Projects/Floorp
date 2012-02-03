@@ -93,6 +93,7 @@ const SYNC_START_OVER   = "start-over";
 let TPS =
 {
   _waitingForSync: false,
+  _isTracking: false,
   _test: null,
   _currentAction: -1,
   _currentPhase: -1,
@@ -148,6 +149,15 @@ let TPS =
             }, 1000, this, "postsync");
           }
           break;
+
+        case "weave:engine:start-tracking":
+          this._isTracking = true;
+          break;
+
+        case "weave:engine:stop-tracking":
+          this._isTracking = false;
+          break;
+
         case "sessionstore-windows-restored":
           Utils.nextTick(this.RunNextTestAction, this);
           break;
@@ -533,7 +543,31 @@ let TPS =
         return;
       }
 
-      // setup observers
+      // Wait for Sync service to become ready.
+      if (!Weave.Status.ready) {
+        this.waitForEvent("weave:service:ready");
+      }
+
+      // Always give Sync an extra tick to initialize. If we waited for the
+      // service:ready event, this is required to ensure all handlers have
+      // executed.
+      Utils.nextTick(this._executeTestPhase.bind(this, file, phase, settings));
+    } catch(e) {
+      this.DumpError("Exception caught: " + Utils.exceptionStr(e));
+      return;
+    }
+  },
+
+  /**
+   * Executes a single test phase.
+   *
+   * This is called by RunTestPhase() after the environment is validated.
+   */
+  _executeTestPhase: function _executeTestPhase(file, phase, settings) {
+    try {
+      // TODO Unregister observers on unload (bug 721283).
+      Services.obs.addObserver(this, "weave:engine:start-tracking", true);
+      Services.obs.addObserver(this, "weave:engine:stop-tracking", true);
       Services.obs.addObserver(this, "weave:service:sync:finish", true);
       Services.obs.addObserver(this, "weave:service:sync:error", true);
       Services.obs.addObserver(this, "sessionstore-windows-restored", true);
@@ -670,6 +704,41 @@ let TPS =
   },
 
   /**
+   * Synchronously wait for the named event to be observed.
+   *
+   * When the event is observed, the function will wait an extra tick before
+   * returning.
+   *
+   * @param name
+   *        String event to wait for.
+   */
+  waitForEvent:function waitForEvent(name) {
+    Logger.logInfo("Waiting for " + name + "...");
+    let cb = Async.makeSpinningCallback();
+    Svc.Obs.add(name, cb);
+    cb.wait();
+    Svc.Obs.remove(name, cb);
+    Logger.logInfo(name + " observed!");
+
+    let cb = Async.makeSpinningCallback();
+    Utils.nextTick(cb);
+    cb.wait();
+  },
+
+  /**
+   * Waits for Sync to start tracking before returning.
+   */
+  waitForTracking: function waitForTracking() {
+    if (!this._isTracking) {
+      this.waitForEvent("weave:engine:start-tracking");
+    }
+
+    let cb = Async.makeSyncCallback();
+    Utils.nextTick(cb);
+    Async.waitForSyncCallback(cb);
+  },
+
+  /**
    * Reset the client and server to an empty/pure state.
    *
    * All data on the server is wiped and replaced with new keys and local
@@ -689,6 +758,8 @@ let TPS =
     Service.wipeServer();
     Service.resetClient();
     Service.login();
+
+    this.waitForTracking();
   },
 
   Login: function Login(force) {
@@ -734,6 +805,8 @@ let TPS =
     Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status not OK");
     Weave.Svc.Obs.notify("weave:service:setup-complete");
     this._loggedIn = true;
+
+    this.waitForTracking();
   },
 
   Sync: function TPS__Sync(options) {
@@ -767,6 +840,14 @@ let TPS =
     this.Login();
     Weave.Service.wipeServer();
   },
+
+  /**
+   * Action which ensures changes are being tracked before returning.
+   */
+  EnsureTracking: function EnsureTracking() {
+    this.Login(false);
+    this.waitForTracking();
+  }
 };
 
 var Addons = {
