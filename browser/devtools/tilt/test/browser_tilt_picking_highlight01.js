@@ -39,7 +39,7 @@ function whenHighlighting() {
     "Highlighting a node didn't work properly.");
   ok(!presenter.highlight.disabled,
     "After highlighting a node, it should be highlighted. D'oh.");
-  ok(!presenter.controller.arcball._resetInterval,
+  ok(!presenter.controller.arcball._resetInProgress,
     "Highlighting a node that's already visible shouldn't trigger a reset.");
 
   executeSoon(function() {

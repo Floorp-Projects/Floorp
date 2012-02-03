@@ -127,7 +127,6 @@ Tilt.prototype = {
       chromeWindow: this.chromeWindow,
       contentWindow: this.chromeWindow.gBrowser.selectedBrowser.contentWindow,
       parentNode: this.chromeWindow.gBrowser.selectedBrowser.parentNode,
-      requestAnimationFrame: this.chromeWindow.mozRequestAnimationFrame,
       notifications: this.NOTIFICATIONS
     });
 
