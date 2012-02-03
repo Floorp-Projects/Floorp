@@ -172,9 +172,9 @@ LIRGenerator::visitCall(MCall *call)
                                          argslot,
                                          tempFixed(ArgumentsRectifierReg),
                                          tempFixed(CallTempReg2));
-    if (!defineReturn(ins, call))
-        return false;
     if (!assignSnapshot(ins))
+        return false;
+    if (!defineReturn(ins, call))
         return false;
     if (!assignSafepoint(ins, call))
         return false;
@@ -565,7 +565,7 @@ LIRGenerator::visitToDouble(MToDouble *convert)
         LValueToDouble *lir = new LValueToDouble();
         if (!useBox(lir, LValueToDouble::Input, opd))
             return false;
-        return define(lir, convert) && assignSnapshot(lir);
+        return assignSnapshot(lir) && define(lir, convert);
       }
 
       case MIRType_Null:
@@ -603,7 +603,7 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
         LValueToInt32 *lir = new LValueToInt32(tempFloat(), LValueToInt32::NORMAL);
         if (!useBox(lir, LValueToInt32::Input, opd))
             return false;
-        return define(lir, convert) && assignSnapshot(lir);
+        return assignSnapshot(lir) && define(lir, convert);
       }
 
       case MIRType_Null:
@@ -616,7 +616,7 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
       case MIRType_Double:
       {
         LDoubleToInt32 *lir = new LDoubleToInt32(use(opd));
-        return define(lir, convert) && assignSnapshot(lir);
+        return assignSnapshot(lir) && define(lir, convert);
       }
 
       default:
@@ -640,7 +640,7 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
         LValueToInt32 *lir = new LValueToInt32(tempFloat(), LValueToInt32::TRUNCATE);
         if (!useBox(lir, LValueToInt32::Input, opd))
             return false;
-        return define(lir, truncate) && assignSnapshot(lir);
+        return assignSnapshot(lir) && define(lir, truncate);
       }
 
       case MIRType_Null:
@@ -654,7 +654,7 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
       case MIRType_Double:
       {
         LTruncateDToInt32 *lir = new LTruncateDToInt32(useRegister(opd));
-        return define(lir, truncate) && assignSnapshot(lir);
+        return assignSnapshot(lir) && define(lir, truncate);
       }
 
       default:
