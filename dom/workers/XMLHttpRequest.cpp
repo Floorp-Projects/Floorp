@@ -148,20 +148,14 @@ private:
   static XMLHttpRequestUpload*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      XMLHttpRequestUpload* priv = GetPrivate(aCx, aObj);
-      if (priv) {
-        return priv;
-      }
-
-      classPtr = JS_GET_CLASS(aCx, aObj);
+    XMLHttpRequestUpload* priv = GetPrivate(aCx, aObj);
+    if (priv) {
+      return priv;
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "object");
+                         JS_GET_CLASS(aCx, aObj)->name);
     return NULL;
   }
 
@@ -373,20 +367,14 @@ private:
   static XMLHttpRequestPrivate*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      XMLHttpRequestPrivate* priv = GetPrivate(aCx, aObj);
-      if (priv) {
-        return priv;
-      }
-
-      classPtr = JS_GET_CLASS(aCx, aObj);
+    XMLHttpRequestPrivate* priv = GetPrivate(aCx, aObj);
+    if (priv) {
+      return priv;
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "object");
+                         JS_GET_CLASS(aCx, aObj)->name);
     return NULL;
   }
 

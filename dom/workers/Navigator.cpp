@@ -158,11 +158,11 @@ private:
   static JSBool
   GetProperty(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
-    JSClass* classPtr;
-    if (!aObj || ((classPtr = JS_GET_CLASS(aCx, aObj)) != &sClass)) {
+    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+    if (classPtr != &sClass) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name, "GetProperty",
-                           classPtr ? classPtr->name : "object");
+                           classPtr->name);
       return false;
     }
 

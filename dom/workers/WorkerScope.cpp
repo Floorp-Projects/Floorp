@@ -722,20 +722,14 @@ private:
   static DedicatedWorkerGlobalScope*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    // JS_GetInstancePrivate is ok to be called with a null aObj, so this should
-    // be too.
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      classPtr = JS_GET_CLASS(aCx, aObj);
-      if (classPtr == &sClass) {
-        return GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aCx, aObj);
-      }
+    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+    if (classPtr == &sClass) {
+      return GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aCx, aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "object");
+                         classPtr->name);
     return NULL;
   }
 
@@ -833,21 +827,13 @@ WorkerGlobalScope*
 WorkerGlobalScope::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
                                       const char* aFunctionName)
 {
-  // JS_GetInstancePrivate is ok to be called with a null aObj, so this should
-  // be too.
-  JSClass* classPtr = NULL;
-
-  if (aObj) {
-    classPtr = JS_GET_CLASS(aCx, aObj);
-    if (classPtr == &sClass ||
-        classPtr == DedicatedWorkerGlobalScope::Class()) {
-      return GetJSPrivateSafeish<WorkerGlobalScope>(aCx, aObj);
-    }
+  JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+  if (classPtr == &sClass || classPtr == DedicatedWorkerGlobalScope::Class()) {
+    return GetJSPrivateSafeish<WorkerGlobalScope>(aCx, aObj);
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                       sClass.name, aFunctionName,
-                       classPtr ? classPtr->name : "object");
+                       sClass.name, aFunctionName, classPtr->name);
   return NULL;
 }
 
