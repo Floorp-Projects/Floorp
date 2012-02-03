@@ -193,6 +193,19 @@ protected:
     static jmethodID jGetRenderOffsetMethod;
 };
 
+class AndroidGeckoGLLayerClient : public AndroidGeckoLayerClient {
+public:
+    static void InitGeckoGLLayerClientClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    AndroidGeckoGLLayerClient() {}
+    AndroidGeckoGLLayerClient(jobject jobj) { Init(jobj); }
+
+private:
+    static jclass jGeckoGLLayerClientClass;
+};
+
 class AndroidGeckoSurfaceView : public WrappedJavaObject
 {
 public:
