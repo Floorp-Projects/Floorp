@@ -427,18 +427,13 @@ WorkerPrivate*
 Worker::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
                            const char* aFunctionName)
 {
-  JSClass* classPtr = NULL;
-
-  if (aObj) {
-    classPtr = JS_GET_CLASS(aCx, aObj);
-    if (classPtr == &sClass || classPtr == ChromeWorker::Class()) {
-      return GetJSPrivateSafeish<WorkerPrivate>(aCx, aObj);
-    }
+  JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+  if (classPtr == &sClass || classPtr == ChromeWorker::Class()) {
+    return GetJSPrivateSafeish<WorkerPrivate>(aCx, aObj);
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                       sClass.name, aFunctionName,
-                       classPtr ? classPtr->name : "object");
+                       sClass.name, aFunctionName, classPtr->name);
   return NULL;
 }
 

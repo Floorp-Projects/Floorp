@@ -214,20 +214,13 @@ protected:
   static Event*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      Event* priv = GetPrivate(aCx, aObj);
-      if (priv) {
-        return priv;
-      }
-
-      classPtr = JS_GET_CLASS(aCx, aObj);
+    Event* priv = GetPrivate(aCx, aObj);
+    if (priv) {
+      return priv;
     }
-
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "object");
+                         JS_GET_CLASS(aCx, aObj)->name);
     return NULL;
   }
 
@@ -533,20 +526,14 @@ private:
   static MessageEvent*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    // JS_GetInstancePrivate is ok to be called with a null aObj, so this should
-    // be too.
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      classPtr = JS_GET_CLASS(aCx, aObj);
-      if (IsThisClass(classPtr)) {
-        return GetJSPrivateSafeish<MessageEvent>(aCx, aObj);
-      }
+    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+    if (IsThisClass(classPtr)) {
+      return GetJSPrivateSafeish<MessageEvent>(aCx, aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "object");
+                         classPtr->name);
     return NULL;
   }
 
@@ -764,20 +751,14 @@ private:
   static ErrorEvent*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    // JS_GetInstancePrivate is ok to be called with a null aObj, so this should
-    // be too.
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      classPtr = JS_GET_CLASS(aCx, aObj);
-      if (IsThisClass(classPtr)) {
-        return GetJSPrivateSafeish<ErrorEvent>(aCx, aObj);
-      }
+    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+    if (IsThisClass(classPtr)) {
+      return GetJSPrivateSafeish<ErrorEvent>(aCx, aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "object");
+                         classPtr->name);
     return NULL;
   }
 
@@ -958,18 +939,14 @@ private:
   static ProgressEvent*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      classPtr = JS_GET_CLASS(aCx, aObj);
-      if (classPtr == &sClass) {
-        return GetJSPrivateSafeish<ProgressEvent>(aCx, aObj);
-      }
+    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+    if (classPtr == &sClass) {
+      return GetJSPrivateSafeish<ProgressEvent>(aCx, aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "object");
+                         classPtr->name);
     return NULL;
   }
 
