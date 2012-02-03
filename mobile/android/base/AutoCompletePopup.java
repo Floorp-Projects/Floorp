@@ -68,7 +68,9 @@ public class AutoCompletePopup extends ListView {
     private static final String LOGTAG = "AutoCompletePopup";
 
     private static int sMinWidth = 0;
+    private static int sRowHeight = 0;
     private static final int AUTOCOMPLETE_MIN_WIDTH_IN_DPI = 200;
+    private static final int AUTOCOMPLETE_ROW_HEIGHT_IN_DPI = 32;
 
     public AutoCompletePopup(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -100,11 +102,10 @@ public class AutoCompletePopup extends ListView {
 
         setAdapter(adapter);
 
-        if (isShown())
-            return;
-
-        setVisibility(View.VISIBLE);
-        startAnimation(mAnimation);
+        if (!isShown()) {
+            setVisibility(View.VISIBLE);
+            startAnimation(mAnimation);
+        }
 
         if (mLayout == null) {
             mLayout = (RelativeLayout.LayoutParams) getLayoutParams();
@@ -136,6 +137,7 @@ public class AutoCompletePopup extends ListView {
             DisplayMetrics metrics = new DisplayMetrics();
             GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
             sMinWidth = (int) (AUTOCOMPLETE_MIN_WIDTH_IN_DPI * metrics.density);
+            sRowHeight = (int) (AUTOCOMPLETE_ROW_HEIGHT_IN_DPI * metrics.density);
         }
 
         // If the textbox is smaller than the screen-width,
@@ -151,10 +153,25 @@ public class AutoCompletePopup extends ListView {
                 listLeft = (int) (viewport.width - listWidth);
         }
 
-        // If the list is extending outside of the viewport
-        // try moving above
-        if (((listTop + listHeight) > viewport.height) && (listHeight <= top))
-            listTop = (top - listHeight);
+        listHeight = sRowHeight * adapter.getCount();
+
+        // The text box doesnt fit below
+        if ((listTop + listHeight) > viewport.height) {
+            // Find where the maximum space is, and fit it there
+            if ((viewport.height - listTop) > top) {
+                // Shrink the height to fit it below the text-box
+                listHeight = (int) (viewport.height - listTop);
+            } else {
+                if (listHeight < top) {
+                    // No shrinking needed to fit on top
+                    listTop = (top - listHeight);
+                } else {
+                    // Shrink to available space on top
+                    listTop = 0;
+                    listHeight = top;
+                }
+           }
+        }
 
         mLayout = new RelativeLayout.LayoutParams(listWidth, listHeight);
         mLayout.setMargins(listLeft, listTop, 0, 0);
