@@ -19,7 +19,6 @@ function test() {
     chromeWindow: window,
     contentWindow: gBrowser.selectedBrowser.contentWindow,
     parentNode: gBrowser.selectedBrowser.parentNode,
-    requestAnimationFrame: window.mozRequestAnimationFrame,
     inspectorUI: window.InspectorUI,
 
     onError: function onWebGLError()

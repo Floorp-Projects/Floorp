@@ -64,6 +64,18 @@ function performTest(canvas, arcball, callback) {
           info("Starting arcball reset animation.");
         };
 
+        arcball.onResetStep = function() {
+          info("\nlastRot: " + quat4.str(arcball._lastRot) +
+               "\ndeltaRot: " + quat4.str(arcball._deltaRot) +
+               "\ncurrentRot: " + quat4.str(arcball._currentRot) +
+               "\nlastTrans: " + vec3.str(arcball._lastTrans) +
+               "\ndeltaTrans: " + vec3.str(arcball._deltaTrans) +
+               "\ncurrentTrans: " + vec3.str(arcball._currentTrans) +
+               "\nadditionalRot: " + vec3.str(arcball._additionalRot) +
+               "\nadditionalTrans: " + vec3.str(arcball._additionalTrans) +
+               "\nzoomAmount: " + arcball._zoomAmount);
+        };
+
         arcball.onResetFinish = function() {
           ok(isApproxVec(arcball._lastRot, [0, 0, 0, 1]),
             "The arcball _lastRot field wasn't reset correctly.");
