@@ -630,6 +630,10 @@ inline void
 JSObject::moveDenseArrayElementsUnbarriered(uintN dstStart, uintN srcStart, uintN count)
 {
     JS_ASSERT(!compartment()->needsBarrier());
+
+    JS_ASSERT(dstStart + count <= getDenseArrayCapacity());
+    JS_ASSERT(srcStart + count <= getDenseArrayCapacity());
+
     memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
 }
 
