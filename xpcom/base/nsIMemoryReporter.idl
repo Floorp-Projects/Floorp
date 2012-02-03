@@ -306,7 +306,7 @@ interface nsIMemoryReporterManager : nsISupports
  * Note that this defaults 'process' to "", which is usually what's desired.
  */
 #define NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
-    class MemoryReporter_##_classname : public nsIMemoryReporter {                            \
+    class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
     public:                                                                                   \
       NS_DECL_ISUPPORTS                                                                       \
       NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; } \
