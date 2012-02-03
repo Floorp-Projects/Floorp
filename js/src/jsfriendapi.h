@@ -674,8 +674,7 @@ SizeOfJSContext();
     D(DOM_IPC)                                  \
     D(DOM_WORKER)                               \
     D(INTER_SLICE_GC)                           \
-    D(REFRESH_FRAME)                            \
-    D(FULL_GC_TIMER)
+    D(REFRESH_FRAME)
 
 namespace gcreason {
 
