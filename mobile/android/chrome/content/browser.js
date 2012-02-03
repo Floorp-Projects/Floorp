@@ -1575,7 +1575,8 @@ Tab.prototype = {
   },
 
   screenshot: function(aSrc, aDst) {
-      if (!this.browser || !this.browser.contentWindow)
+      // FIXME: Reenable
+      //if (!this.browser || !this.browser.contentWindow)
         return;
 
       let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");

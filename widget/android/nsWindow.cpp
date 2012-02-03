@@ -760,9 +760,10 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         return mLayerManager;
     }
 
-    printf_stderr("nsWindow::GetLayerManager\n");
-
     nsWindow *topWindow = TopWindow();
+
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### nsWindow::GetLayerManager this=%p "
+                        "topWindow=%p", this, topWindow);
 
     if (!topWindow) {
         printf_stderr(" -- no topwindow\n");
@@ -1114,6 +1115,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
 
         switch (GetLayerManager(nsnull)->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
+                __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Basic layers drawing");
+
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
                 {
@@ -1136,6 +1139,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
             }
 
             case LayerManager::LAYERS_OPENGL: {
+                __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Basic layers drawing");
+
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
@@ -1195,34 +1200,13 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
     AndroidBridge::AutoLocalJNIFrame jniFrame;
 #ifdef MOZ_JAVA_COMPOSITOR
     // We haven't been given a window-size yet, so do nothing
     if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0)
         return;
-
-#if 0
-    // BEGIN HACK: gl layers
-    nsPaintEvent event(true, NS_PAINT, this);
-    nsIntRect tileRect(0, 0, gAndroidBounds.width, gAndroidBounds.height);
-    event.region = tileRect;
-
-    unsigned char *bits2 = new unsigned char[gAndroidBounds.width * gAndroidBounds.height * 2];
-    nsRefPtr<gfxImageSurface> targetSurface =
-        new gfxImageSurface(bits2,
-                            gfxIntSize(gAndroidBounds.width, gAndroidBounds.height),
-                            gAndroidBounds.width * 2,
-                            gfxASurface::ImageFormatRGB16_565);
-
-    nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
-    AutoLayerManagerSetup
-      setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
-    DispatchEvent(&event);
-
-    delete[] bits2;
-    return;
-    // END HACK: gl layers
-#endif
 
     /*
      * Check to see whether the presentation shell corresponding to the document on the screen
@@ -1245,6 +1229,40 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         metadataProvider->GetDrawMetadata(metadata);
     }
 
+#if 0
+    // BEGIN HACK: gl layers
+    nsPaintEvent event(true, NS_PAINT, this);
+    nsIntRect tileRect(0, 0, gAndroidBounds.width, gAndroidBounds.height);
+    event.region = tileRect;
+#endif
+
+    static unsigned char *bits2 = NULL;
+    static gfxIntSize bitsSize(0, 0);
+    if (bitsSize.width != gAndroidBounds.width || bitsSize.height != gAndroidBounds.height) {
+        if (bits2) {
+            delete[] bits2;
+        }
+        bits2 = new unsigned char[gAndroidBounds.width * gAndroidBounds.height * 2];
+        bitsSize = gAndroidBounds;
+    }
+
+    nsRefPtr<gfxImageSurface> targetSurface =
+        new gfxImageSurface(bits2,
+                            gfxIntSize(gAndroidBounds.width, gAndroidBounds.height),
+                            gAndroidBounds.width * 2,
+                            gfxASurface::ImageFormatRGB16_565);
+
+#if 0
+    nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
+    AutoLayerManagerSetup setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+
+    nsEventStatus status;
+    status = DispatchEvent(&event);
+
+    return;
+    // END HACK: gl layers
+#endif
+
     AndroidGeckoSoftwareLayerClient &client =
         AndroidBridge::Bridge()->GetSoftwareLayerClient();
     if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height,
@@ -1252,9 +1270,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                              metadata, HasDirectTexture())) {
         return;
     }
-
-    nsIntPoint renderOffset;
-    client.GetRenderOffset(renderOffset);
 
     nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
 
@@ -1281,26 +1296,14 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         // It is assumed that the buffer has been over-allocated so that not
         // only is the tile-size constant, but that a render-offset of anything
         // up to (but not including) the tile size could be accommodated.
-        for (int y = 0; y < gAndroidBounds.height + gAndroidTileSize.height; y += tileHeight) {
-            for (int x = 0; x < gAndroidBounds.width + gAndroidTileSize.width; x += tileWidth) {
+        int x = 0, y = 0;
 
-                nsRefPtr<gfxImageSurface> targetSurface =
-                    new gfxImageSurface(bits + offset,
-                                        gfxIntSize(tileWidth, tileHeight),
-                                        tileWidth * 2,
-                                        gfxASurface::ImageFormatRGB16_565);
 
-                offset += tileWidth * tileHeight * 2;
-
-                if (targetSurface->CairoStatus()) {
-                    ALOG("### Failed to create a valid surface from the bitmap");
-                    break;
-                } else {
-                    targetSurface->SetDeviceOffset(gfxPoint(renderOffset.x - x,
-                                                            renderOffset.y - y));
-                    DrawTo(targetSurface, dirtyRect);
-                }
-            }
+        if (targetSurface->CairoStatus()) {
+            ALOG("### Failed to create a valid surface from the bitmap");
+            //break;
+        } else {
+            DrawTo(targetSurface, dirtyRect);
         }
     }
 

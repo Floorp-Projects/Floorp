@@ -42,6 +42,7 @@ import android.content.Context;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -94,8 +95,10 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
                                                      "already in place!");
         }
 
+        Log.e(LOGTAG, "### Creating GL thread!");
         mGLThread = new GLThread(mController);
         mGLThread.start();
+        notifyAll();
     }
 
     /**
@@ -103,11 +106,17 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
      * fully shut down.
      */
     public synchronized Thread destroyGLThread() {
-        if (mGLThread == null) {
-            throw new FlexibleGLSurfaceViewException("destroyGLThread() called with no GL " +
-                                                     "thread active!");
+        // Wait for the GL thread to be started.
+        Log.e(LOGTAG, "### Waiting for GL thread to be created...");
+        while (mGLThread == null) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
+        Log.e(LOGTAG, "### Destroying GL thread!");
         Thread glThread = mGLThread;
         mGLThread.shutdown();
         mGLThread = null;
@@ -156,12 +165,21 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
 
     // Called from the compositor thread
     public static GLController registerCxxCompositor() {
-        System.out.println("register layer comp");
-        FlexibleGLSurfaceView flexView = (FlexibleGLSurfaceView)GeckoApp.mAppContext.getLayerController().getView();
         try {
-            flexView.destroyGLThread().join();
-        } catch (InterruptedException e) {}
-        return flexView.getGLController();
+            Log.e(LOGTAG, "### registerCxxCompositor point A");
+            System.out.println("register layer comp");
+            Log.e(LOGTAG, "### registerCxxCompositor point B");
+            FlexibleGLSurfaceView flexView = (FlexibleGLSurfaceView)GeckoApp.mAppContext.getLayerController().getView();
+            Log.e(LOGTAG, "### registerCxxCompositor point C: " + flexView);
+            try {
+                flexView.destroyGLThread().join();
+            } catch (InterruptedException e) {}
+            Log.e(LOGTAG, "### registerCxxCompositor point D: " + flexView.getGLController());
+            return flexView.getGLController();
+        } catch (Exception e) {
+            Log.e(LOGTAG, "### Exception! " + e);
+            return null;
+        }
 /*
         synchronized (FlexibleGLSurfaceView.class) {
             // Wait for the layer controller if by some miracle
