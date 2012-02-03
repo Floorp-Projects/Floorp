@@ -43,13 +43,6 @@
 #include "camera/CameraHardwareInterface.h"
 #undef CameraHardwareInterface
 
-// We don't have a camera library on the emulator (yet), so we can't
-// strongly link to HAL_getNumberOfCameras().  Until we start using an
-// emulator image that provides a camera library, we hard-code the max
-// number of cameras here.  This is used for a defensive check that
-// the camera HAL needs to also do anyway, so this should be harmless.
-static const size_t kTemporaryMaxNumCameras = 2;
-
 using namespace android;
 using namespace mozilla;
 
@@ -67,7 +60,7 @@ class CameraHardwareInterface {
       if (!strcmp(propValue, "GT-I9100"))
         return CAMERA_SGS2;
 
-      if (!strcmp(propValue, "MSM7627A_SKU1"))
+      if (!strcmp(propValue, "MSM7627A_SKU1") || !strcmp(propValue, "MSM7627A_SKU3"))
         return CAMERA_MAGURO;
 
       printf_stderr("CameraHardwareInterface : unsupported camera for device %s\n", propValue);
@@ -128,7 +121,7 @@ template<class T> class CameraImpl : public CameraHardwareInterface {
     typedef sp<T> (*HAL_openCameraHardware_MAGURO)(int, int);
 
     CameraImpl(PRUint32 aCamera = 0) : mOk(false), mCamera(nsnull) {
-      DlopenWrapper wrapper("system/lib/libcamera.so");
+      DlopenWrapper wrapper("/system/lib/libcamera.so");
 
       if (!wrapper.opened())
         return;
@@ -255,6 +248,22 @@ GonkCameraInputStream::DataCallback(int32_t aMsgType, const sp<IMemory>& aDataPt
   stream->ReceiveFrame((char*)aDataPtr->pointer(), aDataPtr->size());
 }
 
+PRUint32
+GonkCameraInputStream::getNumberOfCameras() {
+  typedef int (*HAL_getNumberOfCamerasFunct)(void);
+  DlopenWrapper wrapper("/system/lib/libcamera.so");
+
+  if (!wrapper.opened())
+    return 0;
+  
+  void *hal = wrapper.dlsym("HAL_getNumberOfCameras");
+  if (nsnull == hal)
+    return 0;
+
+  HAL_getNumberOfCamerasFunct funct = reinterpret_cast<HAL_getNumberOfCamerasFunct> (hal);       
+  return funct();
+}
+
 NS_IMETHODIMP
 GonkCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
 {
@@ -266,8 +275,12 @@ GonkCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
   mHeight = aParams->height;
   mCamera = aParams->camera;
 
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=723418 .
-  if (mCamera >= kTemporaryMaxNumCameras)
+  PRUint32 maxNumCameras = 2;//getNumberOfCameras();
+
+  if (maxNumCameras == 0)
+    return NS_ERROR_FAILURE;
+
+  if (mCamera >= maxNumCameras)
     mCamera = 0;
 
   mHardware = CameraHardwareInterface::openCamera(mCamera);
@@ -276,6 +289,7 @@ GonkCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
     return NS_ERROR_FAILURE;
 
   mHardware->setCallbacks(NULL, GonkCameraInputStream::DataCallback, NULL, this);
+
   mHardware->enableMsgType(CAMERA_MSG_PREVIEW_FRAME);
 
   CameraParameters params = mHardware->getParameters();
