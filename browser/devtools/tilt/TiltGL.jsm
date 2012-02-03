@@ -92,6 +92,8 @@ TiltGL.Renderer = function TGL_Renderer(aCanvas, onError, onLoad)
    */
   this.width = aCanvas.width;
   this.height = aCanvas.height;
+  this.initialWidth = this.width;
+  this.initialHeight = this.height;
 
   /**
    * The current model view matrix.

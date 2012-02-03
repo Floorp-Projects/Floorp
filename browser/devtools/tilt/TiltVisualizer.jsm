@@ -370,6 +370,7 @@ TiltVisualizer.Presenter.prototype = {
     let transforms = this.transforms;
     let w = renderer.width;
     let h = renderer.height;
+    let ih = renderer.initialHeight;
 
     // if the mesh wasn't created yet, don't continue rendering
     if (!this.meshStacks || !this.meshWireframe) {
@@ -392,7 +393,7 @@ TiltVisualizer.Presenter.prototype = {
     }
 
     // apply the preliminary transformations to the model view
-    renderer.translate(w * 0.5, h * 0.5, -INITIAL_Z_TRANSLATION);
+    renderer.translate(w * 0.5, ih * 0.5, -INITIAL_Z_TRANSLATION);
 
     // calculate the camera matrix using the rotation and translation
     renderer.translate(transforms.translation[0], 0,
