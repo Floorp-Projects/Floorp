@@ -127,6 +127,8 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
                 *type = LConstantIndex::Bogus();
                 *payload = use(ins, LUse::KEEPALIVE);
             } else {
+                if (!ensureDefined(ins))
+                    return NULL;
                 *type = useType(ins, LUse::KEEPALIVE);
                 *payload = usePayload(ins, LUse::KEEPALIVE);
             }
@@ -176,6 +178,10 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
 bool
 LIRGeneratorShared::assignSnapshot(LInstruction *ins, BailoutKind kind)
 {
+    // assignSnapshot must be called before define/add, since
+    // it may add new instructions for emitted-at-use operands.
+    JS_ASSERT(ins->id() == 0);
+
     LSnapshot *snapshot = buildSnapshot(ins, lastResumePoint_, kind);
     if (!snapshot)
         return false;

@@ -278,7 +278,7 @@ LIRGeneratorARM::lowerDivI(MDiv *div)
     LDivI *lir = new LDivI(useFixed(div->lhs(), r0), use(div->rhs(), r1),
                            tempFixed(r2), tempFixed(r3)/*, tempFixed(lr)*/);
 
-    return defineFixed(lir, div, LAllocation(AnyRegister(r0))) && assignSnapshot(lir);
+    return assignSnapshot(lir) && defineFixed(lir, div, LAllocation(AnyRegister(r0)));
 }
 
 bool

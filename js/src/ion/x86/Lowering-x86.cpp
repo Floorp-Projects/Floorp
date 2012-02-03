@@ -247,14 +247,14 @@ bool
 LIRGeneratorX86::lowerDivI(MDiv *div)
 {
     LDivI *lir = new LDivI(useFixed(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
-    return defineFixed(lir, div, LAllocation(AnyRegister(eax))) && assignSnapshot(lir);
+    return assignSnapshot(lir) && defineFixed(lir, div, LAllocation(AnyRegister(eax)));
 }
 
 bool
 LIRGeneratorX86::lowerModI(MMod *mod)
 {
     LModI *lir = new LModI(useFixed(mod->lhs(), eax), useRegister(mod->rhs()));
-    return defineFixed(lir, mod, LAllocation(AnyRegister(edx))) && assignSnapshot(lir);
+    return assignSnapshot(lir) && defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
 
 bool
