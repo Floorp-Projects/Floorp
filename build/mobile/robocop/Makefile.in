@@ -56,7 +56,8 @@ _JAVA_HARNESS = \
   Driver.java \
   Element.java \
   FennecNativeActions.java \
-  FennecNativeAssert.java \
+  FennecMochitestAssert.java \
+  FennecTalosAssert.java \
   FennecNativeDriver.java \
   FennecNativeElement.java \
   RoboCopException.java \

@@ -51,6 +51,7 @@
 #include "jspubtd.h"
 #include "nsDOMMemoryReporter.h"
 #include "nsIVariant.h"
+#include "nsGkAtoms.h"
 
 // Including 'windows.h' will #define GetClassInfo to something else.
 #ifdef XP_WIN
@@ -994,6 +995,22 @@ public:
    */
   virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
 
+  /**
+   * Facility for explicitly setting a base URI on a node.
+   */
+  nsresult SetExplicitBaseURI(nsIURI* aURI);
+  /**
+   * The explicit base URI, if set, otherwise null
+   */
+protected:
+  nsIURI* GetExplicitBaseURI() const {
+    if (HasExplicitBaseURI()) {
+      return static_cast<nsIURI*>(GetProperty(nsGkAtoms::baseURIProperty));
+    }
+    return nsnull;
+  }
+  
+public:
   nsresult GetDOMBaseURI(nsAString &aURI) const;
 
   // Note! This function must never fail. It only return an nsresult so that
@@ -1230,6 +1247,8 @@ private:
     // Maybe set if the node is a root of a subtree 
     // which needs to be kept in the purple buffer.
     NodeIsPurpleRoot,
+    // Set if the node has an explicit base URI stored
+    NodeHasExplicitBaseURI,
     // Guard value
     BooleanFlagCount
   };
@@ -1300,6 +1319,8 @@ protected:
   void ClearHasName() { ClearBoolFlag(ElementHasName); }
   void SetMayHaveContentEditableAttr()
     { SetBoolFlag(ElementMayHaveContentEditableAttr); }
+  bool HasExplicitBaseURI() const { return GetBoolFlag(NodeHasExplicitBaseURI); }
+  void SetHasExplicitBaseURI() { SetBoolFlag(NodeHasExplicitBaseURI); }
 
 public:
   // Optimized way to get classinfo.

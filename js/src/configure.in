@@ -2806,12 +2806,14 @@ arm*-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 sparc*-*)
+    if test ! "$HAVE_64BIT_OS" ; then
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
     ENABLE_METHODJIT_TYPED_ARRAY=1
     AC_DEFINE(JS_CPU_SPARC)
     AC_DEFINE(JS_NUNBOX32)
+    fi
     ;;
 mips*-*)
     ENABLE_METHODJIT=1

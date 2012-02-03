@@ -5,8 +5,6 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Instrumentation;
 
 public class testPanCorrectness extends BaseTest {
-    private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_boxes.html";
-
     private void checkPixels(int[][] colors) {
         mActions.expectPaint().blockForEvent();
         getInstrumentation().waitForIdleSync();
@@ -19,7 +17,9 @@ public class testPanCorrectness extends BaseTest {
     }
 
     public void testPanCorrectness() {
-        loadUrl(URL);
+        setTestType("mochitest");
+        String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
+        loadUrl(url);
 
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
 
