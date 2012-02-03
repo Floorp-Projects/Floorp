@@ -6944,7 +6944,7 @@ mjit::Compiler::jsop_regexp()
      * JIT code is discarded on every GC, which permits us to burn in
      * the pointer to the RegExpPrivate refcount.
      */
-    if (!reobj->makePrivateNow(cx))
+    if (!reobj->getShared(cx))
         return false;
 
     RegisterID result = frame.allocReg();

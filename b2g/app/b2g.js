@@ -421,3 +421,6 @@ pref("b2g.ignoreXFrameOptions", true);
 // secondary bug isn't really worth investigating since it's obseleted
 // by bug 710563.
 pref("layout.frame_rate.precise", true);
+
+// Screen timeout in minutes
+pref("power.screen.timeout", 60);
