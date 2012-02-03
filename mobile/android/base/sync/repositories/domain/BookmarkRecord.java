@@ -224,9 +224,7 @@ public class BookmarkRecord extends Record {
   }
 
   private void trace(String s) {
-    if (Utils.ENABLE_TRACE_LOGGING) {
-      Log.d(LOG_TAG, s);
-    }
+    Utils.trace(LOG_TAG, s);
   }
 
   @Override
