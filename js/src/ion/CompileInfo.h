@@ -97,6 +97,9 @@ class CompileInfo
     JSAtom *getAtom(jsbytecode *pc) const {
         return script_->getAtom(GET_INDEX(pc));
     }
+    RegExpObject *getRegExp(jsbytecode *pc) const {
+        return script_->getRegExp(GET_INDEX(pc));
+    }
     const Value &getConst(jsbytecode *pc) const {
         return script_->getConst(GET_INDEX(pc));
     }

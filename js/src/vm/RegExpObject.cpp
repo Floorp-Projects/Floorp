@@ -167,7 +167,7 @@ RegExpObjectBuilder::clone(RegExpObject *other, RegExpObject *proto)
      * the clone -- if the |RegExpStatics| provides more flags we'll
      * need a different |RegExpPrivate|.
      */
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = proto->getParent()->asGlobal().getRegExpStatics();
     RegExpFlag origFlags = other->getFlags();
     RegExpFlag staticsFlags = res->getFlags();
     if ((origFlags & staticsFlags) != staticsFlags) {
@@ -558,7 +558,7 @@ RegExpPrivate::create(JSContext *cx, JSLinearString *str, JSString *opt, TokenSt
     return create(cx, str, flags, ts);
 }
 
-JSObject * JS_FASTCALL
+JSObject *
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     JS_ASSERT(obj->isRegExp());
