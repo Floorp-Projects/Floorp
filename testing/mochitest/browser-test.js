@@ -88,11 +88,14 @@ Tester.prototype = {
 
   start: function Tester_start() {
     //if testOnLoad was not called, then gConfig is not defined
-    if(!gConfig)
+    if (!gConfig)
       gConfig = readConfig();
     this.repeat = gConfig.repeat;
     this.dumper.dump("*** Start BrowserChrome Test Results ***\n");
     this._cs.registerListener(this);
+    this._globalProperties = Object.keys(window);
+    this._globalPropertyWhitelist = ["navigator", "constructor", "Application",
+      "__SS_tabsToRestore", "webConsoleCommandController"];
 
     if (this.tests.length)
       this.nextTest();
@@ -213,6 +216,14 @@ Tester.prototype = {
       if (this.SimpleTest.isExpectingUncaughtException()) {
         this.currentTest.addResult(new testResult(false, "expectUncaughtException was called but no uncaught exception was detected!", "", false));
       }
+
+      Object.keys(window).forEach(function (prop) {
+        if (this._globalProperties.indexOf(prop) == -1) {
+          this._globalProperties.push(prop);
+          if (this._globalPropertyWhitelist.indexOf(prop) == -1)
+            this.currentTest.addResult(new testResult(false, "leaked window property: " + prop, "", false));
+        }
+      }, this);
 
       // Clear document.popupNode.  The test could have set it to a custom value
       // for its own purposes, nulling it out it will go back to the default
