@@ -3567,9 +3567,7 @@ static JSBool
 array_isArray(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    bool isArray = args.length() > 0 &&
-                   args[0].isObject() &&
-                   ObjectClassIs(args[0].toObject(), ESClass_Array, cx);
+    bool isArray = args.length() > 0 && IsObjectWithClass(args[0], ESClass_Array, cx);
     args.rval().setBoolean(isArray);
     return true;
 }

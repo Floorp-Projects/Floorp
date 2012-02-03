@@ -621,12 +621,13 @@ GetArrayIndexFromId(JSContext *cx, jsid id)
         return -1;
     if (NS_LIKELY(JSID_IS_ATOM(id))) {
         JSAtom *atom = JSID_TO_ATOM(id);
-        jschar s = *atom->chars();
+        jschar s = *js::GetAtomChars(atom);
         if (NS_LIKELY((unsigned)s >= 'a' && (unsigned)s <= 'z'))
             return -1;
 
         jsuint i;
-        return js::StringIsArrayIndex(JSID_TO_ATOM(id), &i) ? i : -1;
+        JSLinearString *str = js::AtomToLinearString(JSID_TO_ATOM(id));
+        return js::StringIsArrayIndex(str, &i) ? i : -1;
     }
     return IdToInt32(cx, id);
 }

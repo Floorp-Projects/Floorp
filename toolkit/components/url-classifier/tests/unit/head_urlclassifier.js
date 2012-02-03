@@ -24,14 +24,26 @@ prefBranch.setIntPref("urlclassifier.gethashnoise", 0);
 prefBranch.setBoolPref("browser.safebrowsing.malware.enabled", true);
 prefBranch.setBoolPref("browser.safebrowsing.enabled", true);
 
-function cleanUp() {
+function delFile(name) {
   try {
     // Delete a previously created sqlite file
     var file = dirSvc.get('ProfLD', Ci.nsIFile);
-    file.append("urlclassifier3.sqlite");
+    file.append(name);
     if (file.exists())
       file.remove(false);
-  } catch (e) {}
+  } catch(e) {
+  }
+}
+
+function cleanUp() {
+  delFile("classifier.hashkey");
+  delFile("urlclassifier3.sqlite");
+  delFile("safebrowsing/test-phish-simple.sbstore");
+  delFile("safebrowsing/test-malware-simple.sbstore");
+  delFile("safebrowsing/test-phish-simple.cache");
+  delFile("safebrowsing/test-malware-simple.cache");
+  delFile("safebrowsing/test-phish-simple.pset");
+  delFile("safebrowsing/test-malware-simple.pset");
 }
 
 var dbservice = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIUrlClassifierDBService);
@@ -276,11 +288,10 @@ function runNextTest()
 
   dbservice.resetDatabase();
   dbservice.setHashCompleter('test-phish-simple', null);
-  dumpn("running " + gTests[gNextTest]);
 
-  dump("running " + gTests[gNextTest]);
-
-  gTests[gNextTest++]();
+  let test = gTests[gNextTest++];
+  dump("running " + test.name + "\n");
+  test();
 }
 
 function runTests(tests)
