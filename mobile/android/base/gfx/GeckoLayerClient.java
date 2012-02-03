@@ -46,6 +46,7 @@ import org.mozilla.gecko.GeckoEventListener;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -57,6 +58,10 @@ import java.util.regex.Pattern;
 
 public abstract class GeckoLayerClient extends LayerClient implements GeckoEventListener {
     private static final String LOGTAG = "GeckoLayerClient";
+
+    public static final int LAYER_CLIENT_TYPE_NONE = 0;
+    public static final int LAYER_CLIENT_TYPE_SOFTWARE = 1;
+    public static final int LAYER_CLIENT_TYPE_GL = 2;
 
     protected IntSize mScreenSize;
     protected IntSize mBufferSize;
@@ -91,6 +96,8 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     protected abstract void updateLayerAfterDraw(Rect updatedRect);
     protected abstract IntSize getBufferSize();
     protected abstract IntSize getTileSize();
+    public abstract Bitmap getBitmap();
+    public abstract int getType();
 
     public GeckoLayerClient(Context context) {
         mScreenSize = new IntSize(0, 0);
@@ -305,6 +312,21 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary();
         render();
+    }
+
+    public int getWidth() {
+        return mBufferSize.width;
+    }
+
+    public int getHeight() {
+        return mBufferSize.height;
+    }
+
+    public ViewportMetrics getGeckoViewportMetrics() {
+        // Return a copy, as we modify this inside the Gecko thread
+        if (mGeckoViewport != null)
+            return new ViewportMetrics(mGeckoViewport);
+        return null;
     }
 
     private void sendResizeEventIfNecessary() {

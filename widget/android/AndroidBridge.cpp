@@ -956,9 +956,29 @@ AndroidBridge::SetSurfaceView(jobject obj)
 }
 
 void
-AndroidBridge::SetSoftwareLayerClient(jobject obj)
+AndroidBridge::SetLayerClient(jobject obj, jint type)
 {
-    mSoftwareLayerClient.Init(obj);
+    switch (type) {
+        case LAYER_CLIENT_TYPE_SOFTWARE: {
+            AndroidGeckoSoftwareLayerClient *client = new AndroidGeckoSoftwareLayerClient();
+            client->Init(obj);
+            mLayerClient = client;
+            break;
+        }
+        case LAYER_CLIENT_TYPE_GL: {
+            // TODO: Implement.
+#if 0
+            AndroidGeckoGLLayerClient *client = new AndroidGeckoGLLayerClient();
+            client->Init(obj);
+            mLayerClient = client;
+#endif
+            break;
+        }
+        default:
+            NS_ASSERTION(0, "Unknown layer client type!");
+    }
+
+    mLayerClientType = type;
 }
 
 void

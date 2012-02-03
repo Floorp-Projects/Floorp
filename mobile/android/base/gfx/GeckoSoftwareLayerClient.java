@@ -95,14 +95,6 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         };
     }
 
-    public int getWidth() {
-        return mBufferSize.width;
-    }
-
-    public int getHeight() {
-        return mBufferSize.height;
-    }
-
     protected void finalize() throws Throwable {
         try {
             if (mBuffer != null)
@@ -229,14 +221,7 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         ((MultiTileLayer)mTileLayer).setRenderOffset(mRenderOffset);
     }
 
-    public ViewportMetrics getGeckoViewportMetrics() {
-        // Return a copy, as we modify this inside the Gecko thread
-        if (mGeckoViewport != null)
-            return new ViewportMetrics(mGeckoViewport);
-        return null;
-    }
-
-    public void copyPixelsFromMultiTileLayer(Bitmap target) {
+    private void copyPixelsFromMultiTileLayer(Bitmap target) {
         Canvas c = new Canvas(target);
         ByteBuffer tileBuffer = mBuffer.slice();
         int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
@@ -259,6 +244,7 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         }
     }
 
+    @Override
     public Bitmap getBitmap() {
         if (mTileLayer == null)
             return null;
@@ -305,6 +291,11 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
      */
     public void unlockBuffer() {
         /* no-op */
+    }
+
+    @Override
+    public int getType() {
+        return LAYER_CLIENT_TYPE_SOFTWARE;
     }
 
     @Override
