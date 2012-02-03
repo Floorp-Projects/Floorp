@@ -983,7 +983,7 @@ static bool
 EmitIndex32(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
 {
     const size_t len = 1 + UINT32_INDEX_LEN;
-    JS_ASSERT(js_CodeSpec[op].length == len);
+    JS_ASSERT(size_t(js_CodeSpec[op].length) == len);
     ptrdiff_t offset = EmitCheck(cx, bce, len);
     if (offset < 0)
         return false;
