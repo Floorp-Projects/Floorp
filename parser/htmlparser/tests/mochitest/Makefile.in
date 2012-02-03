@@ -95,6 +95,7 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug655682.html \
 		file_bug655682.sjs \
 		test_viewsource.html \
+		test_bug709083.html \
 		test_bug715112.html \
 		test_bug715739.html \
 		$(NULL)
