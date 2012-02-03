@@ -1095,14 +1095,17 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     /* Find fun's top-most activation record. */
     StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
+    for (; fp; fp = fp->prev()) {
+        if (!fp->isFunctionFrame() || fp->isEvalFrame())
+            continue;
+        Value callee;
+        if (!fp->getValidCalleeObject(cx, &callee))
+            return false;
+        if (&callee.toObject() == fun)
+            break;
+    }
     if (!fp)
         return true;
-
-    while (!fp->isFunctionFrame() || &fp->callee() != fun || fp->isEvalFrame()) {
-        fp = fp->prev();
-        if (!fp)
-            return true;
-    }
 
 #ifdef JS_METHODJIT
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom) && fp && fp->prev()) {
