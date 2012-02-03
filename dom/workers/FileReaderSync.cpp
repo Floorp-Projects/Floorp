@@ -78,19 +78,17 @@ EnsureSucceededOrThrow(JSContext* aCx, nsresult rv)
 
 inline nsIDOMBlob*
 GetDOMBlobFromJSObject(JSContext* aCx, JSObject* aObj) {
-  JSClass* classPtr = NULL;
-
+  // aObj can be null as JS_ConvertArguments("o") successfully converts JS
+  // null to a null pointer to JSObject 
   if (aObj) {
     nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aCx, aObj);
     if (blob) {
       return blob;
     }
-
-    classPtr = JS_GET_CLASS(aCx, aObj);
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
-                       classPtr ? classPtr->name : "Object", "not a Blob.");
+                       aObj ? JS_GET_CLASS(aCx, aObj)->name : "Object", "not a Blob.");
   return NULL;
 }
 
@@ -129,20 +127,14 @@ private:
   static FileReaderSyncPrivate*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = NULL;
-
-    if (aObj) {
-      FileReaderSyncPrivate* fileReader = GetPrivate(aCx, aObj);
-      if (fileReader) {
-        return fileReader;
-      }
-
-      classPtr = JS_GET_CLASS(aCx, aObj);
+    FileReaderSyncPrivate* fileReader = GetPrivate(aCx, aObj);
+    if (fileReader) {
+      return fileReader;
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         classPtr ? classPtr->name : "Object");
+                         JS_GET_CLASS(aCx, aObj)->name);
     return NULL;
   }
 
