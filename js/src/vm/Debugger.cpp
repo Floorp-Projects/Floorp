@@ -2562,7 +2562,7 @@ DebuggerFrame_getOlder(JSContext *cx, uintN argc, Value *vp)
     THIS_FRAME(cx, argc, vp, "get this", args, thisobj, thisfp);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     for (StackFrame *fp = thisfp->prev(); fp; fp = fp->prev()) {
-        if (!fp->isDummyFrame() && dbg->observesFrame(fp))
+        if (dbg->observesFrame(fp))
             return dbg->getScriptFrame(cx, fp, vp);
     }
     args.rval().setNull();

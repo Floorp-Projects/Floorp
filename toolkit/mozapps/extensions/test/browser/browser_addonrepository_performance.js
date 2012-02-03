@@ -4,7 +4,9 @@
 
 // Tests that the metadata request includes startup time measurements
 
-Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+let tmp = {};
+Components.utils.import("resource://gre/modules/AddonRepository.jsm", tmp);
+let AddonRepository = tmp.AddonRepository;
 
 var gManagerWindow;
 var gProvider;

@@ -67,28 +67,28 @@ using std::string;
 using namespace mozilla;
 
 #ifdef XP_WIN
-#include <windows.h>
-#define getpid GetCurrentProcessId
+ #include <windows.h>
+ #define getpid GetCurrentProcessId
 #else
-#include <unistd.h>
+ #include <unistd.h>
 #endif
 
 #ifndef MAXPATHLEN
-#ifdef PATH_MAX
-#define MAXPATHLEN PATH_MAX
-#elif defined(MAX_PATH)
-#define MAXPATHLEN MAX_PATH
-#elif defined(_MAX_PATH)
-#define MAXPATHLEN _MAX_PATH
-#elif defined(CCHMAXPATH)
-#define MAXPATHLEN CCHMAXPATH
-#else
-#define MAXPATHLEN 1024
-#endif
+ #ifdef PATH_MAX
+  #define MAXPATHLEN PATH_MAX
+ #elif defined(MAX_PATH)
+  #define MAXPATHLEN MAX_PATH
+ #elif defined(_MAX_PATH)
+  #define MAXPATHLEN _MAX_PATH
+ #elif defined(CCHMAXPATH)
+  #define MAXPATHLEN CCHMAXPATH
+ #else
+  #define MAXPATHLEN 1024
+ #endif
 #endif
 
 #if _MSC_VER
-#define snprintf _snprintf
+ #define snprintf _snprintf
 #endif
 
 
@@ -321,9 +321,9 @@ class TableTicker: public Sampler {
     , mSaveRequested(false)
   {
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
-    mProfile.addTag(ProfileEntry('m', "Start"));
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
+    mProfile.addTag(ProfileEntry('m', "Start"));
   }
 
   ~TableTicker() { if (IsActive()) Stop(); }
@@ -689,6 +689,7 @@ const char** mozilla_sampler_get_features()
 #if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK))
     "stackwalk",
 #endif
+    "jank",
     NULL
   };
 
@@ -745,10 +746,6 @@ void mozilla_sampler_responsiveness(TimeStamp aTime)
         sResponsivenessTimes[i] = sResponsivenessTimes[i+1];
       }
       sResponsivenessLoc--;
-      //for(size_t i = 0; i < 100; i++) {
-      //  sResponsivenessTimes[i] = 0;
-      //}
-      //sResponsivenessLoc = 0;
     }
     TimeDuration delta = aTime - sLastTracerEvent;
     sResponsivenessTimes[sResponsivenessLoc++] = delta.ToMilliseconds();

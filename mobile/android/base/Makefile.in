@@ -57,8 +57,8 @@ SYNC_RES_DRAWABLE_MDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-draw
 SYNC_RES_DRAWABLE_HDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-hdpi-resources.mn | tr '\n' ' ';)
 SYNC_RES_LAYOUT=$(shell cat $(topsrcdir)/mobile/android/sync/android-layout-resources.mn | tr '\n' ' ';)
 SYNC_RES_VALUES=$(shell cat $(topsrcdir)/mobile/android/sync/android-values-resources.mn | tr '\n' ' ';)
-SYNC_RES_XML=res/xml/sync_authenticator.xml res/xml/sync_options.xml
-SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml
+SYNC_RES_XML=res/xml/sync_authenticator.xml
+SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
 
 FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
@@ -597,9 +597,10 @@ classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(S
 
 PP_RES_XML=$(SYNC_PP_RES_XML)
 
-$(PP_RES_XML): $(subst res/,$(srcdir)/resources/, $(PP_RES_XML).in)
+# This is kinda awful; if any of the source files change, we remake them all.
+$(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res,$(srcdir)/resources,$@).in > $@
 
 # AndroidManifest.xml includes these files, so they need to be marked as dependencies.
 SYNC_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/sync/manifests/*.in)
@@ -635,10 +636,10 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
 
-R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_HDPI) $(PP_RES_XML) res/values/defaults.xml res/drawable/sync_icon.png res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
+R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_HDPI) $(PP_RES_XML) res/values/defaults.xml res/drawable/sync_ic_launcher.png res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/sync_icon.png res/drawable/icon.png res/drawable-hdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_HDPI) $(PP_RES_XML) res/values/defaults.xml res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/sync_ic_launcher.png res/drawable/icon.png res/drawable-hdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_HDPI) $(PP_RES_XML) res/values/defaults.xml res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 libs:: classes.dex package-name.txt

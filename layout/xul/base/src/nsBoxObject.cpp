@@ -345,7 +345,7 @@ nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* 
   if (!mPropertyTable) {  
     mPropertyTable = new nsInterfaceHashtable<nsStringHashKey,nsISupports>;  
     if (!mPropertyTable) return NS_ERROR_OUT_OF_MEMORY;
-    if (NS_FAILED(mPropertyTable->Init(8))) {
+    if (!mPropertyTable->Init(8)) {
        mPropertyTable = nsnull;
        return NS_ERROR_FAILURE;
     }

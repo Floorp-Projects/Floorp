@@ -466,6 +466,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         switch (item.getItemId()) {
             case R.id.open_new_tab: {
                 GeckoApp.mAppContext.loadUrl(url, AwesomeBar.Type.ADD);
+                Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
                 break;
             }
             case R.id.remove_bookmark: {

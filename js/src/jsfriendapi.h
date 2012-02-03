@@ -336,6 +336,11 @@ struct Object {
     }
 };
 
+struct Atom {
+    size_t _;
+    const jschar *chars;
+};
+
 } /* namespace shadow */
 
 extern JS_FRIEND_DATA(js::Class) AnyNameClass;
@@ -460,6 +465,18 @@ GetObjectShape(JSObject *obj)
 {
     shadow::Shape *shape = reinterpret_cast<const shadow::Object*>(obj)->shape;
     return reinterpret_cast<Shape *>(shape);
+}
+
+inline const jschar *
+GetAtomChars(JSAtom *atom)
+{
+    return reinterpret_cast<shadow::Atom *>(atom)->chars;
+}
+
+inline JSLinearString *
+AtomToLinearString(JSAtom *atom)
+{
+    return reinterpret_cast<JSLinearString *>(atom);
 }
 
 static inline js::PropertyOp

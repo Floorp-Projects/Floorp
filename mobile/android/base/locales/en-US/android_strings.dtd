@@ -40,6 +40,7 @@
 <!ENTITY forward "Forward">
 
 <!ENTITY new_tab "New Tab">
+<!ENTITY new_tab_opened "New tab opened">
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
