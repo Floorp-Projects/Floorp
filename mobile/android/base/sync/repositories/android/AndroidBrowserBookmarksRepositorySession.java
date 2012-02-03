@@ -56,7 +56,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.util.Log;
 
-
 public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepositorySession {
 
   // TODO: synchronization for these.
