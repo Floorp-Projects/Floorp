@@ -4,10 +4,10 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 public class testLoad extends BaseTest {
-    private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_boxes.html";
-
     public void testLoad() {
-        loadUrl(URL);
+        setTestType("mochitest");
+        String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
+        loadUrl(url);
 
         mActions.expectPaint().blockForEvent();
         getInstrumentation().waitForIdleSync();
@@ -18,6 +18,6 @@ public class testLoad extends BaseTest {
         mAsserter.ispixel(painted[100][0], 100, 245, 255, "Pixel at 0, 100");
         mAsserter.ispixel(painted[100][100], 200, 245, 245, "Pixel at 100, 100");
 
-        verifyUrl(URL);
+        verifyUrl(url);
     }
 }

@@ -905,10 +905,11 @@ abstract public class GeckoApp
                     ExtraMenuItem item = i.next();
                     if (item.id == id) {
                         sExtraMenuItems.remove(item);
+                        if (sMenu == null)
+                            return;
                         MenuItem menu = sMenu.findItem(id);
                         if (menu != null)
                             sMenu.removeItem(id);
-                        return;
                     }
                 }
             } else if (event.equals("Toast:Show")) {

@@ -881,7 +881,7 @@ static bool test_fallible()
   // be under that threshold.
   //
   // 9 * 512MB > 4GB, so we should definitely OOM by the 9th array.
-  const int numArrays = 9;
+  const unsigned numArrays = 9;
   FallibleTArray<char> arrays[numArrays];
   for (PRUint32 i = 0; i < numArrays; i++) {
     bool success = arrays[i].SetCapacity(512 * 1024 * 1024);

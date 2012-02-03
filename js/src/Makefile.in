@@ -185,14 +185,12 @@ CPPSRCS		= \
 INSTALLED_HEADERS = \
 		js-config.h \
 		jscpucfg.h \
-		$(CURDIR)/jsautokw.h \
 		js.msg \
 		jsalloc.h \
 		jsapi.h \
 		jsatom.h \
 		jsclass.h \
 		jsclist.h \
-		jsclone.h \
 		jscompat.h \
 		jsdbgapi.h \
 		jsdhash.h \
@@ -204,14 +202,11 @@ INSTALLED_HEADERS = \
 		jshash.h \
 		jslock.h \
 		json.h \
-		jsopcode.tbl \
-		jsopcode.h \
 		jsproxy.h \
 		jsprf.h \
 		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
-		jsstdint.h \
 		jstypedarray.h \
 		jstypes.h \
 		jsutil.h \
@@ -225,11 +220,7 @@ INSTALLED_HEADERS = \
 # BEGIN exported headers that are only exported
 #       because of inclusion by an INSTALLED_HEADER
 #
-EXPORTS_NAMESPACES += vm ds gc
-
-EXPORTS_vm = \
-		String.h \
-		$(NULL)
+EXPORTS_NAMESPACES += ds gc
 
 EXPORTS_ds = \
 		BitArray.h \

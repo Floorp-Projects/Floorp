@@ -216,4 +216,4 @@ gdk_x11_window_get_xid(GdkWindow *window)
 }
 #endif /* __cplusplus */
 
-#endif // _GTK2_COMPAT_H_
+#endif /* _GTK2_COMPAT_H_ */

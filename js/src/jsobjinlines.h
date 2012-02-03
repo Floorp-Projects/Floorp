@@ -1953,9 +1953,18 @@ ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx)
       case ESClass_Number: return obj.isNumber();
       case ESClass_String: return obj.isString();
       case ESClass_Boolean: return obj.isBoolean();
+      case ESClass_RegExp: return obj.isRegExp();
     }
     JS_NOT_REACHED("bad classValue");
     return false;
+}
+
+inline bool
+IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
+{
+    if (!v.isObject())
+        return false;
+    return ObjectClassIs(v.toObject(), classValue, cx);
 }
 
 static JS_ALWAYS_INLINE bool

@@ -135,4 +135,9 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     hist.visits = visitsArray;
     return hist;
   }
+
+  @Override
+  protected Record prepareRecord(Record record) {
+    return record;
+  }
 }

@@ -4591,7 +4591,8 @@
  * $R6 = general string values, return value from GetTempFileName, return
  *       value from the GetSize macro
  * $R7 = full path to the configuration ini file
- * $R8 = return value from the GetParameters macro
+ * $R8 = used for OS Version and Service Pack detection and the return value
+ *       from the GetParameters macro
  * $R9 = _WARN_UNSUPPORTED_MSG
  */
 !macro InstallOnInitCommon
@@ -4623,12 +4624,23 @@
 
         SetRegView 64
       !else
-        ${Unless} ${AtLeastWin2000}
-          ; XXX-rstrong - some systems fail the AtLeastWin2000 test for an
-          ; unknown reason. To work around this also check if the Windows NT
-          ; registry Key exists and if it does if the first char in
-          ; CurrentVersion is equal to 3 (Windows NT 3.5 and 3.5.1) or 4
-          ; (Windows NT 4).
+        StrCpy $R8 "0"
+        ${If} ${AtMostWin2000}
+          StrCpy $R8 "1"
+        ${EndIf}
+        
+        ${If} ${IsWinXP}
+        ${AndIf} ${AtMostServicePack} 1
+          StrCpy $R8 "1"
+        ${EndIf}
+
+        ${If} $R8 == "1"
+          ; XXX-rstrong - some systems failed the AtLeastWin2000 test that we
+          ; used to use for an unknown reason and likely fail the AtMostWin2000
+          ; and possibly the IsWinXP test as well. To work around this also
+          ; check if the Windows NT registry Key exists and if it does if the
+          ; first char in CurrentVersion is equal to 3 (Windows NT 3.5 and
+          ; 3.5.1), to 4 (Windows NT 4) or 5 (Windows 2000 and Windows XP).
           StrCpy $R8 ""
           ClearErrors
           ReadRegStr $R8 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" "CurrentVersion"
@@ -4636,6 +4648,7 @@
           ${If} ${Errors}
           ${OrIf} "$R8" == "3"
           ${OrIf} "$R8" == "4"
+          ${OrIf} "$R8" == "5"
             MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
             ; Nothing initialized so no need to call OnEndCommon
             Quit
@@ -5603,9 +5616,7 @@
       ${LogMsg} "App Version: $R8"
       ${LogMsg} "GRE Version: $R9"
 
-      ${If} ${IsWin2000}
-        ${LogMsg} "OS Name    : Windows 2000"
-      ${ElseIf} ${IsWinXP}
+      ${If} ${IsWinXP}
         ${LogMsg} "OS Name    : Windows XP"
       ${ElseIf} ${IsWin2003}
         ${LogMsg} "OS Name    : Windows 2003"

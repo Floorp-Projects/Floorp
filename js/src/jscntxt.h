@@ -99,6 +99,11 @@ class InterpreterFrames;
 class ScriptOpcodeCounts;
 struct ScriptOpcodeCountsPair;
 
+typedef HashMap<JSAtom *,
+                detail::RegExpCacheValue,
+                DefaultHasher<JSAtom *>,
+                RuntimeAllocPolicy> RegExpCache;
+
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
  * given pc in a script. We use the script->code pointer to tag the cache,
@@ -218,11 +223,11 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     JSC::ExecutableAllocator *execAlloc_;
     WTF::BumpPointerAllocator *bumpAlloc_;
-    js::RegExpPrivateCache *repCache_;
+    js::RegExpCache *reCache_;
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
-    js::RegExpPrivateCache *createRegExpPrivateCache(JSContext *cx);
+    js::RegExpCache *createRegExpCache(JSContext *cx);
 
   public:
     JSC::ExecutableAllocator *getExecutableAllocator(JSContext *cx) {
@@ -231,11 +236,11 @@ struct JSRuntime : js::RuntimeFriendFields
     WTF::BumpPointerAllocator *getBumpPointerAllocator(JSContext *cx) {
         return bumpAlloc_ ? bumpAlloc_ : createBumpPointerAllocator(cx);
     }
-    js::RegExpPrivateCache *maybeRegExpPrivateCache() {
-        return repCache_;
+    js::RegExpCache *maybeRegExpCache() {
+        return reCache_;
     }
-    js::RegExpPrivateCache *getRegExpPrivateCache(JSContext *cx) {
-        return repCache_ ? repCache_ : createRegExpPrivateCache(cx);
+    js::RegExpCache *getRegExpCache(JSContext *cx) {
+        return reCache_ ? reCache_ : createRegExpCache(cx);
     }
 
     /* Base address of the native stack for the current thread. */

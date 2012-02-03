@@ -159,7 +159,7 @@ SuppressEventHandlers(nsPresContext* aPresContext)
   return suppressHandlers;
 }
 
-class nsAnonDivObserver : public nsStubMutationObserver
+class nsAnonDivObserver MOZ_FINAL : public nsStubMutationObserver
 {
 public:
   nsAnonDivObserver(nsTextEditorState* aTextEditorState)
@@ -174,8 +174,8 @@ private:
   nsTextEditorState* mTextEditorState;
 };
 
-class nsTextInputSelectionImpl : public nsSupportsWeakReference
-                               , public nsISelectionController
+class nsTextInputSelectionImpl MOZ_FINAL : public nsSupportsWeakReference
+                                         , public nsISelectionController
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

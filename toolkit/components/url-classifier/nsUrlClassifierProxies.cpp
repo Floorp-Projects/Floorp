@@ -183,7 +183,7 @@ UrlClassifierDBServiceWorkerProxy::CloseDb()
 }
 
 NS_IMETHODIMP
-UrlClassifierDBServiceWorkerProxy::CacheCompletions(nsTArray<nsUrlClassifierLookupResult>* aEntries)
+UrlClassifierDBServiceWorkerProxy::CacheCompletions(CacheResultArray * aEntries)
 {
   nsCOMPtr<nsIRunnable> r = new CacheCompletionsRunnable(mTarget, aEntries);
   return DispatchToWorkerThread(r);
@@ -196,12 +196,27 @@ UrlClassifierDBServiceWorkerProxy::CacheCompletionsRunnable::Run()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::CacheMisses(PrefixArray * aEntries)
+{
+  nsCOMPtr<nsIRunnable> r = new CacheMissesRunnable(mTarget, aEntries);
+  return DispatchToWorkerThread(r);
+}
+
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::CacheMissesRunnable::Run()
+{
+  mTarget->CacheMisses(mEntries);
+  return NS_OK;
+}
+
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(UrlClassifierLookupCallbackProxy,
                               nsIUrlClassifierLookupCallback)
 
 NS_IMETHODIMP
 UrlClassifierLookupCallbackProxy::LookupComplete
-  (nsTArray<nsUrlClassifierLookupResult>* aResults)
+  (LookupResultArray * aResults)
 {
   nsCOMPtr<nsIRunnable> r = new LookupCompleteRunnable(mTarget, aResults);
   return NS_DispatchToMainThread(r);
