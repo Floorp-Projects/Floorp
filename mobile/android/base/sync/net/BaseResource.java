@@ -101,7 +101,7 @@ public class BaseResource implements Resource {
   }
 
   public BaseResource(String uri, boolean rewrite) throws URISyntaxException {
-	  this(new URI(uri), rewrite);
+    this(new URI(uri), rewrite);
   }
 
   public BaseResource(URI uri, boolean rewrite) {
