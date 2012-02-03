@@ -283,14 +283,6 @@ bool            nsWindow::sAllowD3D9              = false;
 
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
-#ifdef ACCESSIBILITY
-BOOL            nsWindow::sIsAccessibilityOn      = FALSE;
-// Accessibility wm_getobject handler
-HINSTANCE       nsWindow::sAccLib                 = 0;
-LPFNLRESULTFROMOBJECT 
-                nsWindow::sLresultFromObject      = 0;
-#endif // ACCESSIBILITY
-
 // Used in OOPP plugin focus processing.
 const PRUnichar* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
 PRUint32        nsWindow::sOOPPPluginFocusEvent   =
@@ -5199,13 +5191,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       if (sJustGotActivate) {
         result = DispatchFocusToTopLevelWindow(NS_ACTIVATE);
       }
-
-#ifdef ACCESSIBILITY
-      if (nsWindow::sIsAccessibilityOn) {
-        // Create it for the first time so that it can start firing events
-        nsAccessible *rootAccessible = GetRootAccessible();
-      }
-#endif
       break;
 
     case WM_KILLFOCUS:
@@ -8071,8 +8056,6 @@ nsWindow::GetRootAccessible()
   if (accForceDisable)
       return nsnull;
 
-  nsWindow::sIsAccessibilityOn = TRUE;
-
   if (mInDtor || mOnDestroyCalled || mWindowType == eWindowType_invisible) {
     return nsnull;
   }
@@ -8081,24 +8064,6 @@ nsWindow::GetRootAccessible()
   NS_LOG_WMGETOBJECT_WND("This Window", mWnd);
 
   return DispatchAccessibleEvent(NS_GETACCESSIBLE);
-}
-
-STDMETHODIMP_(LRESULT)
-nsWindow::LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc)
-{
-  // open the dll dynamically
-  if (!sAccLib)
-    sAccLib =::LoadLibraryW(L"OLEACC.DLL");
-
-  if (sAccLib) {
-    if (!sLresultFromObject)
-      sLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(sAccLib,"LresultFromObject");
-
-    if (sLresultFromObject)
-      return sLresultFromObject(riid,wParam,pAcc);
-  }
-
-  return 0;
 }
 #endif
 
