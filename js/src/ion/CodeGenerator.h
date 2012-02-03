@@ -90,6 +90,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
     bool visitIntToString(LIntToString *lir);
     bool visitInteger(LInteger *lir);
+    bool visitRegExp(LRegExp *lir);
     bool visitPointer(LPointer *lir);
     bool visitSlots(LSlots *lir);
     bool visitStoreSlotV(LStoreSlotV *store);
