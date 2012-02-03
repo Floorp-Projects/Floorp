@@ -614,10 +614,6 @@ protected:
   //  painting too rapidly in response to frequent input events.
   TimeStamp mLastPaintEndTime;
 
-#ifdef ACCESSIBILITY
-  static bool           sIsAccessibilityOn;
-#endif // ACCESSIBILITY
-
   // sRedirectedKeyDown is WM_KEYDOWN message or WM_SYSKEYDOWN message which
   // was reirected to SendInput() API by OnKeyDown().
   static MSG            sRedirectedKeyDown;
