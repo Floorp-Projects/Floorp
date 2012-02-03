@@ -1418,30 +1418,54 @@ public:
 
     NS_IMETHOD Begin()
     {
-        char name[MAXPATHLEN] = {'\0'};
+        char basename[MAXPATHLEN] = {'\0'};
+        char ccname[MAXPATHLEN] = {'\0'};
 #ifdef XP_WIN
         // On Windows, tmpnam returns useless stuff, such as "\\s164.".
         // Therefore we need to call the APIs directly.
-        GetTempPathA(mozilla::ArrayLength(name), name);
+        GetTempPathA(mozilla::ArrayLength(basename), basename);
 #else
-        tmpnam(name);
-        char *lastSlash = strrchr(name, XPCOM_FILE_PATH_SEPARATOR[0]);
+        tmpnam(basename);
+        char *lastSlash = strrchr(basename, XPCOM_FILE_PATH_SEPARATOR[0]);
         if (lastSlash) {
             *lastSlash = '\0';
         }
 #endif
-        sprintf(name, "%s%scc-edges-%d.%d.log", name,
+
+        ++gLogCounter;
+
+#ifdef DEBUG
+        // Dump the JS heap.
+        char gcname[MAXPATHLEN] = {'\0'};
+        sprintf(gcname, "%s%sgc-edges-%d.%d.log", basename,
                 XPCOM_FILE_PATH_SEPARATOR,
-                ++gLogCounter, base::GetCurrentProcId());
-        mStream = fopen(name, "w");
+                gLogCounter, base::GetCurrentProcId());
+
+        FILE* gcDumpFile = fopen(gcname, "w");
+        if (!gcDumpFile)
+            return NS_ERROR_FAILURE;
+        xpc::DumpJSHeap(gcDumpFile);
+        fclose(gcDumpFile);
+#endif
+
+        // Open a file for dumping the CC graph.
+        sprintf(ccname, "%s%scc-edges-%d.%d.log", basename,
+                XPCOM_FILE_PATH_SEPARATOR,
+                gLogCounter, base::GetCurrentProcId());
+        mStream = fopen(ccname, "w");
+        if (!mStream)
+            return NS_ERROR_FAILURE;
 
         nsCOMPtr<nsIConsoleService> cs =
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
-            cs->LogStringMessage(NS_ConvertUTF8toUTF16(name).get());
+            cs->LogStringMessage(NS_ConvertUTF8toUTF16(ccname).get());
+#ifdef DEBUG
+            cs->LogStringMessage(NS_ConvertUTF8toUTF16(gcname).get());
+#endif
         }
 
-        return mStream ? NS_OK : NS_ERROR_FAILURE;
+        return NS_OK;
     }
     NS_IMETHOD NoteRefCountedObject(PRUint64 aAddress, PRUint32 refCount,
                                     const char *aObjectDescription)
