@@ -193,7 +193,6 @@ protected:
     static jmethodID jGetRenderOffsetMethod;
 };
 
-
 class AndroidGeckoSurfaceView : public WrappedJavaObject
 {
 public:
