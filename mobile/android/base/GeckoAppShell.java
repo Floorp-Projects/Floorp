@@ -1900,7 +1900,7 @@ public class GeckoAppShell
      */
     public static byte[] decodeBase64(byte[] in) {
         if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.FROYO)
-            return Base64.decode(in, GUID_ENCODE_FLAGS);
+            return Base64.decode(in, Base64.DEFAULT);
         int iOff = 0;
         int iLen = in.length;
         if (iLen%4 != 0) throw new IllegalArgumentException ("Length of Base64 encoded input string is not a multiple of 4.");
