@@ -99,7 +99,6 @@ public class SUTAgentAndroid extends Activity
     private static String HardwareID = "";
     private static String Pool = "";
     private static String sRegString = "";
-    private static String sNTPServer = "";
 
     private WifiLock wl = null;
 
@@ -149,7 +148,6 @@ public class SUTAgentAndroid extends Activity
         SUTAgentAndroid.RegSvrIPPort = dc.GetIniData("Registration Server", "PORT", sIniFile);
         SUTAgentAndroid.HardwareID = dc.GetIniData("Registration Server", "HARDWARE", sIniFile);
         SUTAgentAndroid.Pool = dc.GetIniData("Registration Server", "POOL", sIniFile);
-        SUTAgentAndroid.sNTPServer = dc.GetIniData("NTP Server", "IPAddr", sIniFile);
 
         tv = (TextView) this.findViewById(R.id.Textview01);
 
@@ -272,11 +270,6 @@ public class SUTAgentAndroid extends Activity
         // If we are returning from an update let'em know we're back
         Thread thread3 = new Thread(null, doUpdateCallback, "UpdateCallbackBkgnd");
         thread3.start();
-
-        if (SUTAgentAndroid.sNTPServer.length() > 0) {
-            Thread thread4 = new Thread(null, doSetClock, "SetClockBkgrnd");
-            thread4.start();
-        }
 
         final Button goButton = (Button) findViewById(R.id.Button01);
         goButton.setOnClickListener(new OnClickListener() {
@@ -622,20 +615,6 @@ public class SUTAgentAndroid extends Activity
             }
             if (sRet.length() > 0)
                 mHandler.post(new UpdateStatus(sRet));
-            dc = null;
-        }
-    };
-
-    private Runnable doSetClock = new Runnable() {
-        public void run() {
-            String sRet = "";
-
-            DoCommand dc = new DoCommand(getApplication());
-
-            sRet = dc.SetSystemTime(sNTPServer, null, null);
-
-               mHandler.post(new UpdateStatus(sRet));
-
             dc = null;
         }
     };
