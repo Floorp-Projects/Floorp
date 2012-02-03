@@ -318,3 +318,12 @@ nsBrowserAccess.prototype = {
   }
 };
 
+// Pipe `console` log messages to the nsIConsoleService which writes them
+// to logcat.
+Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
+  let message = subject.wrappedJSObject;
+  let prefix = "Content JS " + message.level.toUpperCase() +
+               " at " + message.filename + ":" + message.lineNumber +
+               " in " + (message.functionName || "anonymous") + ": ";
+  Services.console.logStringMessage(prefix + Array.join(message.arguments, " "));
+}, "console-api-log-event", false);
