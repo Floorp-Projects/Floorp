@@ -405,6 +405,8 @@ VirtualRegisterOfPayload(MDefinition *mir)
     return mir->id() + VREG_DATA_OFFSET;
 }
 
+// Note: always call ensureDefined before calling useType/usePayload,
+// so that emitted-at-use operands are handled correctly.
 LUse
 LIRGeneratorShared::useType(MDefinition *mir, LUse::Policy policy)
 {
