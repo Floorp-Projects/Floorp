@@ -91,6 +91,7 @@ public class LayerController {
 
     /* The new color for the checkerboard. */
     private int mCheckerboardColor;
+    private boolean mCheckerboardShouldShowChecks;
 
     private boolean mForceRedraw;
 
@@ -452,9 +453,20 @@ public class LayerController {
         mWaitForTouchListeners = aValue;
     }
 
+    /** Retrieves whether we should show checkerboard checks or not. */
+    public boolean checkerboardShouldShowChecks() {
+        return mCheckerboardShouldShowChecks;
+    }
+
     /** Retrieves the color that the checkerboard should be. */
     public int getCheckerboardColor() {
         return mCheckerboardColor;
+    }
+
+    /** Sets whether or not the checkerboard should show checkmarks. */
+    public void setCheckerboardShowChecks(boolean showChecks) {
+        mCheckerboardShouldShowChecks = showChecks;
+        mView.requestRender();
     }
 
     /** Sets a new color for the checkerboard. */

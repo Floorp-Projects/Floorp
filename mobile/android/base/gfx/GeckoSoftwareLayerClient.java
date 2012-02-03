@@ -165,6 +165,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
+        GeckoAppShell.registerGeckoEventListener("Checkerboard:Toggle", this);
 
         sendResizeEventIfNecessary();
     }
@@ -530,6 +531,15 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.DRAW, rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
             mUpdateViewportOnEndDraw = true;
+        } else if ("Checkerboard:Toggle".equals(event)) {
+            try {
+                boolean showChecks = message.getBoolean("value");
+                LayerController controller = getLayerController();
+                controller.setCheckerboardShowChecks(showChecks);
+                Log.i(LOGTAG, "Showing checks: " + showChecks);
+            } catch(JSONException ex) {
+                Log.e(LOGTAG, "Error decoding JSON", ex);
+            }
         }
     }
 
