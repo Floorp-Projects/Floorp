@@ -125,11 +125,11 @@ private:
       return false;
     }
 
-    JSClass* classPtr;
-    if (!obj || ((classPtr = JS_GET_CLASS(aCx, obj)) != &sClass)) {
+    JSClass* classPtr = JS_GET_CLASS(aCx, obj);
+    if (classPtr != &sClass) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name, "toString",
-                           classPtr ? classPtr->name : "object");
+                           classPtr->name);
       return false;
     }
 
@@ -166,12 +166,10 @@ private:
 
     JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
 
-    if (classPtr != &sClass ||
-        !GetJSPrivateSafeish<DOMException>(aCx, aObj)) {
+    if (classPtr != &sClass || !GetJSPrivateSafeish<DOMException>(aCx, aObj)) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name,
-                           sProperties[slot].name,
-                           classPtr ? classPtr->name : "object");
+                           sProperties[slot].name, classPtr->name);
       return false;
     }
 
@@ -344,12 +342,10 @@ private:
 
     JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
 
-    if (classPtr != &sClass ||
-        !GetJSPrivateSafeish<FileException>(aCx, aObj)) {
+    if (classPtr != &sClass || !GetJSPrivateSafeish<FileException>(aCx, aObj)) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name,
-                           sProperties[slot].name,
-                           classPtr ? classPtr->name : "object");
+                           sProperties[slot].name, classPtr->name);
       return false;
     }
 
