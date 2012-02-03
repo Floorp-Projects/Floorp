@@ -966,12 +966,9 @@ AndroidBridge::SetLayerClient(jobject obj, jint type)
             break;
         }
         case LAYER_CLIENT_TYPE_GL: {
-            // TODO: Implement.
-#if 0
             AndroidGeckoGLLayerClient *client = new AndroidGeckoGLLayerClient();
             client->Init(obj);
             mLayerClient = client;
-#endif
             break;
         }
         default:

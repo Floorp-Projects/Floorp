@@ -110,6 +110,7 @@ FENNEC_JAVA_FILES = \
   gfx/CheckerboardImage.java \
   gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
+  gfx/GeckoGLLayerClient.java \
   gfx/GeckoLayerClient.java \
   gfx/GeckoSoftwareLayerClient.java \
   gfx/GLController.java \
@@ -133,6 +134,7 @@ FENNEC_JAVA_FILES = \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
   gfx/ViewportMetrics.java \
+  gfx/VirtualLayer.java \
   gfx/WidgetTileLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \
