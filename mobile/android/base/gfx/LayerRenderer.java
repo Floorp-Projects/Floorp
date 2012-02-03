@@ -470,14 +470,16 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     }
 
     private void updateCheckerboardLayer(GL10 gl, RenderContext renderContext) {
-        int newCheckerboardColor = mView.getController().getCheckerboardColor();
-        if (newCheckerboardColor == mCheckerboardImage.getColor()) {
+        int checkerboardColor = mView.getController().getCheckerboardColor();
+        boolean showChecks = mView.getController().checkerboardShouldShowChecks();
+        if (checkerboardColor == mCheckerboardImage.getColor() &&
+            showChecks == mCheckerboardImage.getShowChecks()) {
             return;
         }
 
         mCheckerboardLayer.beginTransaction();
         try {
-            mCheckerboardImage.setColor(newCheckerboardColor);
+            mCheckerboardImage.update(showChecks, checkerboardColor);
             mCheckerboardLayer.invalidate();
         } finally {
             mCheckerboardLayer.endTransaction();
