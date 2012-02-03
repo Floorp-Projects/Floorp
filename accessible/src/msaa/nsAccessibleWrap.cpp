@@ -1145,8 +1145,8 @@ STDMETHODIMP
 nsAccessibleWrap::scrollTo(enum IA2ScrollType aScrollType)
 {
 __try {
-  nsAccessNode::ScrollTo(aScrollType);
-  return S_OK;
+  nsresult rv = ScrollTo(aScrollType);
+  return GetHRESULT(rv);
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
@@ -1366,7 +1366,9 @@ __try {
   // Any two-letter subcode is understood to be a [ISO3166] country code.
 
   nsAutoString lang;
-  Language(lang);
+  nsresult rv = GetLanguage(lang);
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
   // If primary code consists from two letters then expose it as language.
   PRInt32 offset = lang.FindChar('-', 0);

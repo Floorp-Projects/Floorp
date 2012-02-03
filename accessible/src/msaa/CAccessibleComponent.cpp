@@ -155,7 +155,7 @@ CAccessibleComponent::GetARGBValueFromCSSProperty(const nsAString& aPropName,
 __try {
   *aColorValue = 0;
 
-  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
+  nsCOMPtr<nsIAccessNode> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
