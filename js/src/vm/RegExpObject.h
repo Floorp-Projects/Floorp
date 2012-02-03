@@ -503,7 +503,7 @@ CheckRegExpSyntax(JSContext *cx, JSLinearString *str)
 
 } /* namespace js */
 
-extern JS_FRIEND_API(JSObject *) JS_FASTCALL
+extern JS_FRIEND_API(JSObject *)
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto);
 
 JSBool
