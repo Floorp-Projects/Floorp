@@ -47,6 +47,7 @@ import java.util.Random;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoDirProvider;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
@@ -359,6 +360,12 @@ public class BrowserProvider extends ContentProvider {
             values.put(Bookmarks.GUID, Bookmarks.MOBILE_FOLDER_GUID);
             values.put(Bookmarks.IS_FOLDER, 1);
             values.put(Bookmarks.POSITION, 0);
+
+            // Set the parent to 0, which sync assumes is the root
+            values.put(Bookmarks.PARENT, 0);
+
+            String title = mContext.getResources().getString(R.string.bookmarks_folder_mobile);
+            values.put(Bookmarks.TITLE, title);
 
             long now = System.currentTimeMillis();
             values.put(Bookmarks.DATE_CREATED, now);
