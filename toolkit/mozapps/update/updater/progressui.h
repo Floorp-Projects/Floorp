@@ -52,9 +52,14 @@
 // Called to perform any initialization of the widget toolkit
 int InitProgressUI(int *argc, NS_tchar ***argv);
 
-// Called on the main thread at startup
-int ShowProgressUI();
-
+#if defined(XP_WIN)
+  // Called on the main thread at startup
+  int ShowProgressUI(bool indeterminate = false, bool initUIStrings = true);
+  int InitProgressUIStrings();
+#else
+  // Called on the main thread at startup
+  int ShowProgressUI();
+#endif
 // May be called from any thread
 void QuitProgressUI();
 
