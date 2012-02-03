@@ -5793,15 +5793,6 @@ Parser::memberExpr(JSBool allowCallSyntax)
                                                       tokenStream.currentToken().pos.end);
                     if (!nextMember)
                         return NULL;
-
-                    /*
-                     * A property access of the form |<expr>.arguments| might
-                     * access this function's arguments, so we need to flag a
-                     * potential arguments use to ensure an arguments object
-                     * will be created.  See bug 721322.
-                     */
-                    if (tc->inFunction() && field == context->runtime->atomState.argumentsAtom)
-                        tc->noteArgumentsPropertyAccess(nextMember);
                 }
             }
 #if JS_HAS_XML_SUPPORT
