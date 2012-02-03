@@ -12,7 +12,7 @@ Form History test: form field autocomplete
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
-<div id="content">
+<div id="content" style="direction: rtl;">
   <!-- unused -->
   <form id="unused" onsubmit="return false;">
     <input  type="text" name="field1" value="unused">
@@ -32,6 +32,7 @@ Form History test: form field autocomplete
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 var autocompletePopup = getAutocompletePopup();
+autocompletePopup.style.direction = "ltr";
 
 var input = $_(1, "field1");
 
@@ -366,6 +367,7 @@ function runTest(testNum) {
     case 211:
         checkPopupOpen(false);
         checkForm("");
+        is(autocompletePopup.style.direction, "rtl", "direction should have been changed from ltr to rtl");
 
         SimpleTest.finish();
         return;
