@@ -1522,3 +1522,32 @@ nsSVGUtils::RootSVGElementHasViewbox(const nsIContent *aRootSVGElem)
 
   return svgSvgElem->HasValidViewbox();
 }
+
+/* static */ void
+nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
+                                    nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                    float *aOpacity, nscolor *color)
+{
+  const nsStyleSVGPaint &paint = aStyleContext->GetStyleSVG()->*aFillOrStroke;
+  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
+  bool isServer = paint.mType == eStyleSVGPaintType_Server;
+  *color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
+  if (styleIfVisited) {
+    const nsStyleSVGPaint &paintIfVisited =
+      styleIfVisited->GetStyleSVG()->*aFillOrStroke;
+    // To prevent Web content from detecting if a user has visited a URL
+    // (via URL loading triggered by paint servers or performance
+    // differences between paint servers or between a paint server and a
+    // color), we do not allow whether links are visited to change which
+    // paint server is used or switch between paint servers and simple
+    // colors.  A :visited style may only override a simple color with
+    // another simple color.
+    if (paintIfVisited.mType == eStyleSVGPaintType_Color &&
+        paint.mType == eStyleSVGPaintType_Color) {
+      nscolor colorIfVisited = paintIfVisited.mPaint.mColor;
+      nscolor colors[2] = { *color, colorIfVisited };
+      *color = nsStyleContext::CombineVisitedColors(colors,
+                                         aStyleContext->RelevantLinkVisited());
+    }
+  }
+}
