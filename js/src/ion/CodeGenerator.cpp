@@ -647,7 +647,7 @@ CodeGenerator::generateInvalidateEpilogue()
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
     IonCode *thunk = gen->cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(gen->cx);
-    masm.call(ImmWord(uintptr_t(thunk->raw())));
+    masm.call(thunk);
 #ifdef DEBUG
     // We should never reach this point in JIT code -- the invalidation thunk should
     // pop the invalidated JS frame and return directly to its caller.

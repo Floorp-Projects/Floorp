@@ -922,10 +922,6 @@ EnterIon(JSContext *cx, StackFrame *fp, CallTarget target, void *jitcode, bool o
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
-        // Ensure that the invalidator thunk exists.
-        if (!cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(cx))
-            return false;
-
         // Switch entrypoint.
         if (osr)
             target.osrPrologue(jitcode, argc, argv, &result, calleeToken, fp);
