@@ -66,7 +66,9 @@
 
 #include "sampler.h"
 
+#ifdef MOZ_WIDGET_ANDROID
 #include <android/log.h>
+#endif
 
 namespace mozilla {
 namespace layers {
@@ -580,8 +582,11 @@ LayerManagerOGL::FPSState::DrawFPS(GLContext* context, CopyProgram* copyprog)
 
   GLint viewport[4];
   context->fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
+
+#ifdef MOZ_WIDGET_ANDROID
   __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Viewport: %d %d %d %d",
                       viewport[0], viewport[1], viewport[2], viewport[3]);
+#endif
 
   static GLuint texture;
   if (!initialized) {

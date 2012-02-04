@@ -45,9 +45,8 @@
 
 #if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidBridge.h"
-#endif
-
 #include <android/log.h>
+#endif
 
 namespace mozilla {
 namespace layers {
