@@ -2226,11 +2226,9 @@ TypeCompartment::nukeTypes(JSContext *cx)
 void
 TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 {
-    bool hasJITCode = false;
-	
 #if defined(JS_METHODJIT)
     mjit::JITScript *jit = info.script->getJIT(info.constructing);
-    hasJITCode |= jit && jit->chunkDescriptor(info.chunkIndex).chunk;
+    bool hasJITCode = jit && jit->chunkDescriptor(info.chunkIndex).chunk;
 	
 # if defined(JS_ION)
     hasJITCode |= !!info.script->hasIonScript();
