@@ -1234,7 +1234,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             xpc_ActivateDebugMode();
             break;
         case 'P':
-            if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
+            if (JS_GetClass(JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
 
                 if (!JS_DeepFreezeObject(cx, obj))
