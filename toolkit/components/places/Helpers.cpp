@@ -423,5 +423,34 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(
 , nsIRunnable
 )
 
+////////////////////////////////////////////////////////////////////////////////
+//// AsyncStatementCallbackNotifier
+
+NS_IMETHODIMP
+AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
+{
+  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
+  }
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// AsyncStatementCallbackNotifier
+
+NS_IMETHODIMP
+AsyncStatementTelemetryTimer::HandleCompletion(PRUint16 aReason)
+{
+  if (aReason == mozIStorageStatementCallback::REASON_FINISHED) {
+    Telemetry::AccumulateTimeDelta(mHistogramId, mStart);
+  }
+  return NS_OK;
+}
+
 } // namespace places
 } // namespace mozilla
