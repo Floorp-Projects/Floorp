@@ -137,7 +137,7 @@ private:
   GetPrivate(JSContext* aCx, JSObject* aObj)
   {
     if (aObj) {
-      JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+      JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
         return GetJSPrivateSafeish<XMLHttpRequestUpload>(aCx, aObj);
       }
@@ -155,7 +155,7 @@ private:
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         JS_GET_CLASS(aCx, aObj)->name);
+                         JS_GetClass(aObj)->name);
     return NULL;
   }
 
@@ -170,7 +170,7 @@ private:
   static void
   Finalize(JSContext* aCx, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     XMLHttpRequestUpload* priv = GetPrivate(aCx, aObj);
     if (priv) {
       priv->FinalizeInstance(aCx);
@@ -181,7 +181,7 @@ private:
   static void
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aTrc->context, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     XMLHttpRequestUpload* priv = GetPrivate(aTrc->context, aObj);
     if (priv) {
       priv->TraceInstance(aTrc);
@@ -356,7 +356,7 @@ private:
   GetPrivate(JSContext* aCx, JSObject* aObj)
   {
     if (aObj) {
-      JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+      JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
         return GetJSPrivateSafeish<XMLHttpRequestPrivate>(aCx, aObj);
       }
@@ -374,7 +374,7 @@ private:
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         JS_GET_CLASS(aCx, aObj)->name);
+                         JS_GetClass(aObj)->name);
     return NULL;
   }
 
@@ -423,7 +423,7 @@ private:
   static void
   Finalize(JSContext* aCx, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     XMLHttpRequestPrivate* priv = GetPrivate(aCx, aObj);
     if (priv) {
       priv->FinalizeInstance(aCx);
@@ -434,7 +434,7 @@ private:
   static void
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aTrc->context, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     XMLHttpRequestPrivate* priv = GetPrivate(aTrc->context, aObj);
     if (priv) {
       priv->TraceInstance(aTrc);
@@ -878,7 +878,7 @@ bool
 XMLHttpRequestUpload::UpdateState(JSContext* aCx, JSObject* aObj,
                                   const xhr::StateData& aNewState)
 {
-  JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+  JS_ASSERT(JS_GetClass(aObj) == &sClass);
 
   jsval parentVal;
   if (!JS_GetReservedSlot(aCx, aObj, SLOT_xhrParent, &parentVal)) {
