@@ -52,6 +52,7 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
     private GLSurfaceView.Renderer mRenderer;
     private GLThread mGLThread; // Protected by this class's monitor.
     private GLController mController;
+    private Listener mListener;
 
     public FlexibleGLSurfaceView(Context context) {
         super(context);
@@ -79,9 +80,16 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         return mRenderer;
     }
 
+    public void setListener(Listener listener) {
+        mListener = listener;
+    }
+
     public synchronized void requestRender() {
         if (mGLThread != null) {
             mGLThread.renderFrame();
+        }
+        if (mListener != null) {
+            mListener.renderRequested();
         }
     }
 
@@ -180,6 +188,10 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
             Log.e(LOGTAG, "### Exception! " + e);
             return null;
         }
+    }
+
+    public interface Listener {
+        void renderRequested();
     }
 
     public static class FlexibleGLSurfaceViewException extends RuntimeException {
