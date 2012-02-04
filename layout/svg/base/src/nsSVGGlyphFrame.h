@@ -53,6 +53,8 @@ class nsSVGGlyphFrame;
 class CharacterIterator;
 struct CharacterPosition;
 
+typedef gfxFont::DrawMode DrawMode;
+
 typedef nsSVGGeometryFrame nsSVGGlyphFrameBase;
 
 class nsSVGGlyphFrame : public nsSVGGlyphFrameBase,
@@ -236,10 +238,10 @@ protected:
                            gfxContext *aContext);
   void AddBoundingBoxesToPath(CharacterIterator *aIter,
                               gfxContext *aContext);
-  void FillCharacters(CharacterIterator *aIter,
-                      gfxContext *aContext);
-  void StrokeCharacters(CharacterIterator *aIter,
-                        gfxContext *aContext);
+  void DrawCharacters(CharacterIterator *aIter,
+                      gfxContext *aContext,
+                      DrawMode aDrawMode,
+                      gfxPattern *aStrokePattern = nsnull);
 
   void NotifyGlyphMetricsChange();
   void SetupGlobalTransform(gfxContext *aContext);
@@ -264,6 +266,9 @@ protected:
   bool mCompressWhitespace;
   bool mTrimLeadingWhitespace;
   bool mTrimTrailingWhitespace;
+
+private:
+  DrawMode SetupCairoState(gfxContext *context, nsRefPtr<gfxPattern> *strokePattern);
 };
 
 #endif
