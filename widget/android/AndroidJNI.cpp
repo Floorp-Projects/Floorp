@@ -106,6 +106,7 @@ extern "C" {
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv* jenv, jclass);
 #endif
 
 }
@@ -851,6 +852,13 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass)
 {
     nsWindow::BindToTexture();
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv*, jclass)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### scheduleComposite()");
+    AndroidBridge::Bridge()->ScheduleComposite();
 }
 
 #endif

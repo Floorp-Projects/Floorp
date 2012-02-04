@@ -43,6 +43,7 @@
 
 #include "mozilla/layers/PCompositorParent.h"
 #include "mozilla/layers/PLayersParent.h"
+#include "base/thread.h"
 #include "ShadowLayersManager.h"
 
 class nsIWidget;
@@ -89,6 +90,7 @@ public:
 
   void SetTransformation(float aScale, nsIntPoint aScrollOffset);
   void AsyncRender();
+  void ScheduleCompositionOnCompositorThread(::base::Thread &aCompositorThread);
 
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
