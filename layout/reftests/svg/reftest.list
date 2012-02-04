@@ -217,9 +217,17 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == style-without-type-attribute.svg pass.svg
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
-random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == switch-01.svg pass.svg
+== suspend-01.svg about:blank
+== suspend-02.svg pass.svg
+fails == suspend-03.svg pass.svg # bug 724242
+== suspend-04.svg pass.svg
+== suspend-05.svg pass.svg
+== suspend-06.svg pass.svg
+== suspend-07.svg pass.svg
+== suspend-08.svg pass.svg
 == symbol-01.svg symbol-01-ref.svg
+random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 == text-gradient-03.svg pass.svg

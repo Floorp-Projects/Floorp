@@ -182,8 +182,8 @@ public:
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
   virtual void NotifySVGChanged(PRUint32 aFlags);
-  NS_IMETHOD NotifyRedrawSuspended();
-  NS_IMETHOD NotifyRedrawUnsuspended();
+  virtual void NotifyRedrawSuspended();
+  virtual void NotifyRedrawUnsuspended();
   NS_IMETHOD_(bool) IsDisplayContainer() { return false; }
   NS_IMETHOD_(bool) HasValidCoveredRect() {
     return !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
