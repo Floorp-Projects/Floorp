@@ -21,6 +21,7 @@ let histograms = {
   PLACES_EXPIRATION_STEPS_TO_CLEAN: function (val) do_check_true(val > 1),
   //PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS:  function (val) do_check_true(val > 1),
   PLACES_IDLE_FRECENCY_DECAY_TIME_MS: function (val) do_check_true(val > 0),
+  PLACES_IDLE_MAINTENANCE_TIME_MS: function (val) do_check_true(val > 0),
 }
 
 function run_test() {
@@ -98,8 +99,13 @@ function continue_test() {
   // Test idle probes.
   PlacesUtils.history.QueryInterface(Ci.nsIObserver)
                      .observe(null, "idle-daily", null);
+  PlacesDBUtils.maintenanceOnIdle();
 
-  waitForAsyncUpdates(check_telemetry);
+  Services.obs.addObserver(function maintenanceObserver() {
+    Services.obs.removeObserver(maintenanceObserver,
+    "places-maintenance-finished");
+    check_telemetry();
+  }, "places-maintenance-finished", false);
 }
 
 function check_telemetry() {
