@@ -113,7 +113,7 @@ private:
   static void
   Finalize(JSContext* aCx, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     delete GetJSPrivateSafeish<DOMException>(aCx, aObj);
   }
 
@@ -125,7 +125,7 @@ private:
       return false;
     }
 
-    JSClass* classPtr = JS_GET_CLASS(aCx, obj);
+    JSClass* classPtr = JS_GetClass(obj);
     if (classPtr != &sClass) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name, "toString",
@@ -164,7 +164,7 @@ private:
 
     int32 slot = JSID_TO_INT(aIdval);
 
-    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+    JSClass* classPtr = JS_GetClass(aObj);
 
     if (classPtr != &sClass || !GetJSPrivateSafeish<DOMException>(aCx, aObj)) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
@@ -329,7 +329,7 @@ private:
   static void
   Finalize(JSContext* aCx, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     delete GetJSPrivateSafeish<FileException>(aCx, aObj);
   }
 
@@ -340,7 +340,7 @@ private:
 
     int32 slot = JSID_TO_INT(aIdval);
 
-    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+    JSClass* classPtr = JS_GetClass(aObj);
 
     if (classPtr != &sClass || !GetJSPrivateSafeish<FileException>(aCx, aObj)) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
