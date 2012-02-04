@@ -74,7 +74,7 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     /* The viewport that Gecko will display when drawing is finished */
     protected ViewportMetrics mNewGeckoViewport;
 
-    private static final long MIN_VIEWPORT_CHANGE_DELAY = 15L;
+    private static final long MIN_VIEWPORT_CHANGE_DELAY = 200L;
     private long mLastViewportChangeTime;
     private boolean mPendingViewportAdjust;
     private boolean mViewportSizeChanged;
@@ -96,6 +96,7 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     protected abstract void updateLayerAfterDraw(Rect updatedRect);
     protected abstract IntSize getBufferSize();
     protected abstract IntSize getTileSize();
+    protected abstract void tileLayerUpdated();
     public abstract Bitmap getBitmap();
     public abstract int getType();
 
@@ -139,6 +140,8 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
         try {
             JSONObject viewportObject = new JSONObject(metadata);
             mNewGeckoViewport = new ViewportMetrics(viewportObject);
+
+            Log.e(LOGTAG, "### beginDrawing new Gecko viewport " + mNewGeckoViewport);
 
             // Update the background color, if it's present.
             String backgroundColorString = viewportObject.optString("backgroundColor");
@@ -192,6 +195,10 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
         PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
         mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
         mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+
+        this.tileLayerUpdated();
+        Log.e(LOGTAG, "### updateViewport onlyUpdatePageSize=" + onlyUpdatePageSize +
+              " getTileViewport " + mGeckoViewport);
 
         if (onlyUpdatePageSize) {
             // Don't adjust page size when zooming unless zoom levels are
@@ -304,12 +311,14 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
 
     public void handleMessage(String event, JSONObject message) {
         if ("Viewport:UpdateAndDraw".equals(event)) {
+            Log.e(LOGTAG, "### Java side Viewport:UpdateAndDraw()!");
             mUpdateViewportOnEndDraw = true;
 
             // Redraw everything.
             Rect rect = new Rect(0, 0, mBufferSize.width, mBufferSize.height);
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.DRAW, rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
+            Log.e(LOGTAG, "### Java side Viewport:UpdateLater()!");
             mUpdateViewportOnEndDraw = true;
         }
     }

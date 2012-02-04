@@ -82,10 +82,10 @@ CompositorParent::RecvStop()
 
 
 void
-CompositorParent::ScheduleCompositionOnCompositorThread(::base::Thread &aCompositorThread)
+CompositorParent::ScheduleRenderOnCompositorThread(::base::Thread &aCompositorThread)
 {
-  CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-  aCompositorThread.message_loop()->PostTask(FROM_HERE, composeTask);
+  CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::AsyncRender);
+  aCompositorThread.message_loop()->PostTask(FROM_HERE, renderTask);
 }
 
 void
@@ -223,12 +223,13 @@ CompositorParent::AsyncRender()
   }
 
   Layer* root = mLayerManager->GetRoot();
+
+/*
   ContainerLayer* container = root->AsContainerLayer();
   if (!container)
     return;
 
   FrameMetrics metrics = container->GetFrameMetrics();
-/*
     printf("FrameMetrics: mViewPort: X: %d, Y: %d, Width: %d, Height: %d ",
             metrics.mViewport.X(), metrics.mViewport.Y(), metrics.mViewport.Width(),
             metrics.mViewport.Height());
@@ -240,17 +241,25 @@ CompositorParent::AsyncRender()
     printf("mViewPortScrollOffset: x: %d, y: %d\n",
             metrics.mViewportScrollOffset.x,
             metrics.mViewportScrollOffset.y);
-*/
     // Modify framemetrics here, just as a test.
   metrics.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
   container->SetFrameMetrics(metrics);
+*/
 
 #ifdef MOZ_WIDGET_ANDROID
   RequestViewTransform();
 #endif
 
+  gfx3DMatrix worldTransform;
+  gfxPoint3D offset(-mScrollOffset.x, -mScrollOffset.y, 0.0f);
+  worldTransform.Translate(offset);
+  worldTransform.Scale(mXScale, mYScale, 1.0f);
+  root->AsShadowLayer()->SetShadowTransform(worldTransform);
+
+#if 0
   ViewTransform transform;
   TransformShadowTree(root, transform);
+#endif
 
   Composite();
 }
@@ -259,8 +268,11 @@ CompositorParent::AsyncRender()
 void
 CompositorParent::RequestViewTransform()
 {
-  mozilla::AndroidBridge::Bridge()->GetViewTransform(mScrollOffset, mXScale,
-                                                     mYScale);
+  mozilla::AndroidBridge::Bridge()->GetViewTransform(mScrollOffset, mXScale, mYScale);
+
+  __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### mScrollOffset=%g %g "
+                      "mXScale=%g mYScale=%g", (float)mScrollOffset.x, (float)mScrollOffset.y,
+                      (float)mXScale, (float)mYScale);
 }
 #endif
 

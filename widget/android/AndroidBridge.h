@@ -403,6 +403,7 @@ public:
     void SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
                              base::Thread* aCompositorThread);
     void ScheduleComposite();
+    void SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter);
     void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 
 protected:
@@ -423,6 +424,7 @@ protected:
 
     nsRefPtr<mozilla::layers::CompositorParent> mCompositorParent;
     base::Thread *mCompositorThread;
+    AndroidViewTransformGetter *mViewTransformGetter;
 
     // the GeckoAppShell java class
     jclass mGeckoAppShellClass;

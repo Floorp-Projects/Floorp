@@ -58,6 +58,8 @@
 
 namespace mozilla {
 
+class AndroidGeckoGLLayerClient;
+
 void InitAndroidJavaWrappers(JNIEnv *jEnv);
 
 /*
@@ -193,17 +195,63 @@ protected:
     static jmethodID jGetRenderOffsetMethod;
 };
 
+/** A callback that retrieves the view transform. */
+class AndroidViewTransformGetter
+{
+public:
+    virtual void operator()(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY) = 0;
+};
+
+class AndroidGeckoGLLayerClientViewTransformGetter : public AndroidViewTransformGetter {
+public:
+    AndroidGeckoGLLayerClientViewTransformGetter(AndroidGeckoGLLayerClient& aLayerClient)
+    : mLayerClient(aLayerClient) {}
+
+    virtual void operator()(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+
+private:
+    AndroidGeckoGLLayerClient& mLayerClient;
+};
+
+class AndroidViewTransform : public WrappedJavaObject {
+public:
+    static void InitViewTransformClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    AndroidViewTransform() {}
+    AndroidViewTransform(jobject jobj) { Init(jobj); }
+
+    float GetX();
+    float GetY();
+    float GetScale();
+
+private:
+    static jclass jViewTransformClass;
+    static jfieldID jXField;
+    static jfieldID jYField;
+    static jfieldID jScaleField;
+};
+
 class AndroidGeckoGLLayerClient : public AndroidGeckoLayerClient {
 public:
     static void InitGeckoGLLayerClientClass(JNIEnv *jEnv);
 
     void Init(jobject jobj);
 
-    AndroidGeckoGLLayerClient() {}
-    AndroidGeckoGLLayerClient(jobject jobj) { Init(jobj); }
+    AndroidGeckoGLLayerClient()
+    : mViewTransformGetter(*this) {}
+
+    AndroidGeckoGLLayerClient(jobject jobj)
+    : mViewTransformGetter(*this) { Init(jobj); }
+
+    void GetViewTransform(AndroidViewTransform& aViewTransform);
 
 private:
     static jclass jGeckoGLLayerClientClass;
+    static jmethodID jGetViewTransformMethod;
+
+    AndroidGeckoGLLayerClientViewTransformGetter mViewTransformGetter;
 };
 
 class AndroidGeckoSurfaceView : public WrappedJavaObject

@@ -118,6 +118,12 @@ jmethodID AndroidGeckoSoftwareLayerClient::jUnlockBufferMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jGetRenderOffsetMethod = 0;
 
 jclass AndroidGeckoGLLayerClient::jGeckoGLLayerClientClass = 0;
+jmethodID AndroidGeckoGLLayerClient::jGetViewTransformMethod = 0;
+
+jclass AndroidViewTransform::jViewTransformClass = 0;
+jfieldID AndroidViewTransform::jXField = 0;
+jfieldID AndroidViewTransform::jYField = 0;
+jfieldID AndroidViewTransform::jScaleField = 0;
 
 jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
 jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
@@ -151,6 +157,8 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidRect::InitRectClass(jEnv);
     AndroidGeckoLayerClient::InitGeckoLayerClientClass(jEnv);
     AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(jEnv);
+    AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(jEnv);
+    AndroidViewTransform::InitViewTransformClass(jEnv);
     AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
 }
 
@@ -360,6 +368,23 @@ AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(JNIEnv *jEnv)
     initInit();
 
     jGeckoGLLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoGLLayerClient");
+
+    jGetViewTransformMethod = getMethod("getViewTransform",
+                                        "()Lorg/mozilla/gecko/gfx/ViewTransform;");
+#endif
+}
+
+void
+AndroidViewTransform::InitViewTransformClass(JNIEnv *jEnv)
+{
+#ifdef MOZ_JAVA_COMPOSITOR
+    initInit();
+
+    jViewTransformClass = getClassGlobalRef("org/mozilla/gecko/gfx/ViewTransform");
+
+    jXField = getField("x", "F");
+    jYField = getField("y", "F");
+    jScaleField = getField("scale", "F");
 #endif
 }
 
@@ -625,6 +650,16 @@ AndroidGeckoGLLayerClient::Init(jobject jobj)
 {
     NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
     wrapped_obj = jobj;
+
+    // Register the view transform getter.
+    AndroidBridge::Bridge()->SetViewTransformGetter(mViewTransformGetter);
+}
+
+void
+AndroidViewTransform::Init(jobject jobj)
+{
+    NS_ABORT_IF_FALSE(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
+    wrapped_obj = jobj;
 }
 
 void
@@ -792,6 +827,60 @@ jobject
 AndroidGeckoSurfaceView::GetSurfaceHolder()
 {
     return GetJNIForThread()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
+}
+
+void
+AndroidGeckoGLLayerClient::GetViewTransform(AndroidViewTransform& aViewTransform)
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at GetViewTransform()!");
+    if (!env) {
+        return;
+    }
+
+    jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jGetViewTransformMethod);
+    NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
+    aViewTransform.Init(viewTransformJObj);
+}
+
+float
+AndroidViewTransform::GetX()
+{
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return 0.0f;
+    return env->GetFloatField(wrapped_obj, jXField);
+}
+
+float
+AndroidViewTransform::GetY()
+{
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return 0.0f;
+    return env->GetFloatField(wrapped_obj, jYField);
+}
+
+float
+AndroidViewTransform::GetScale()
+{
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return 0.0f;
+    return env->GetFloatField(wrapped_obj, jScaleField);
+}
+
+void
+AndroidGeckoGLLayerClientViewTransformGetter::operator()(nsIntPoint& aScrollOffset, float& aScaleX,
+                                                         float& aScaleY)
+{
+    AndroidViewTransform viewTransform;
+
+    AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
+    mLayerClient.GetViewTransform(viewTransform);
+
+    aScrollOffset = nsIntPoint(viewTransform.GetX(), viewTransform.GetY());
+    aScaleX = aScaleY = viewTransform.GetScale();
 }
 
 void

@@ -1865,19 +1865,30 @@ void
 AndroidBridge::ScheduleComposite()
 {
     if (mCompositorParent) {
-        mCompositorParent->ScheduleCompositionOnCompositorThread(*mCompositorThread);
+        mCompositorParent->ScheduleRenderOnCompositorThread(*mCompositorThread);
     }
+}
+
+void
+AndroidBridge::SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### SetViewTransformGetter()");
+    mViewTransformGetter = &aViewTransformGetter;
 }
 
 void
 AndroidBridge::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
 {
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### GetViewTransform() TODO");
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### GetViewTransform()");
+    if (mViewTransformGetter) {
+        (*mViewTransformGetter)(aScrollOffset, aScaleX, aScaleY);
+    }
 }
 
 AndroidBridge::AndroidBridge()
 : mLayerClient(NULL)
 , mLayerClientType(0)
+, mViewTransformGetter(NULL)
 {
 }
 
