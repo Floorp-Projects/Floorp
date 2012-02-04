@@ -133,6 +133,7 @@ FENNEC_JAVA_FILES = \
   gfx/TextLayer.java \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
+  gfx/ViewTransform.java \
   gfx/ViewportMetrics.java \
   gfx/VirtualLayer.java \
   gfx/WidgetTileLayer.java \

@@ -112,6 +112,12 @@ private:
    * Gecko compositor thread.
    **/
   void RegisterCompositorWithJava();
+
+  /**
+   * Asks Java for the viewport position and updates the world transform
+   * accordingly.
+   */
+  void RequestViewTransform();
 #endif
 
   nsRefPtr<LayerManager> mLayerManager;
