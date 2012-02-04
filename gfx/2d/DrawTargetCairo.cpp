@@ -142,9 +142,9 @@ PatternIsCompatible(const Pattern& aPattern)
       const RadialGradientPattern& pattern = static_cast<const RadialGradientPattern&>(aPattern);
       return pattern.mStops->GetBackendType() == BACKEND_CAIRO;
     }
+    default:
+      return true;
   }
-
-  return true;
 }
 
 // Never returns NULL. As such, you must always pass in Cairo-compatible

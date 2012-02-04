@@ -118,9 +118,9 @@ GfxFormatToCairoFormat(SurfaceFormat format)
       return CAIRO_FORMAT_RGB24;
     case FORMAT_A8:
       return CAIRO_FORMAT_A8;
+    default:
+      return CAIRO_FORMAT_ARGB32;
   }
-
-  return CAIRO_FORMAT_ARGB32;
 }
 
 static inline cairo_content_t
@@ -134,9 +134,9 @@ GfxFormatToCairoContent(SurfaceFormat format)
       return CAIRO_CONTENT_COLOR;
     case FORMAT_A8:
       return CAIRO_CONTENT_ALPHA;
+    default:
+      return CAIRO_CONTENT_COLOR_ALPHA;
   }
-
-  return CAIRO_CONTENT_COLOR_ALPHA;
 }
 
 static inline cairo_line_join_t
