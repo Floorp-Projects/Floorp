@@ -176,8 +176,10 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
     }
     case JSTRACE_IONCODE:
     {
+#ifdef JS_ION
         ion::IonCode *code = static_cast<ion::IonCode *>(thing);
 	    cStats->mjitCode += code->bufferSize();
+#endif
         break;
     }
     case JSTRACE_TYPE_OBJECT:
