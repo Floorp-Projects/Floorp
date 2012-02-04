@@ -161,10 +161,20 @@ install:: $(call MERGE_FILES,$(addprefix profile/chrome/,$(PROFILE_CHROME)))
 SEARCH_PLUGINS = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt))
 
 libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/searchplugins
+	$(NSINSTALL) -D $(FINAL_TARGET)/searchplugins
+	for SEARCH_PLUGIN in $^; do\
+	  SEARCH_PLUGIN_BASE=`basename $$SEARCH_PLUGIN`;\
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
+	    $$SEARCH_PLUGIN > $(FINAL_TARGET)/searchplugins/$$SEARCH_PLUGIN_BASE; \
+	done
 
 install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
+	$(NSINSTALL) -D $(DESTDIR)$mozappdir/searchplugins
+	for i in $^; do \
+	  SEARCH_PLUGIN_BASE=`basename $$SEARCH_PLUGIN`;\
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
+	    $$SEARCH_PLUGIN > $(DESTDIR)$mozappdir/searchplugins/$$SEARCH_PLUGIN_BASE; \
+	done
 
 
 libs-%:
