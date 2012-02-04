@@ -102,8 +102,8 @@ public:
     COORD_CONTEXT_CHANGED = 0x04
   };
   virtual void NotifySVGChanged(PRUint32 aFlags)=0;
-  NS_IMETHOD NotifyRedrawSuspended()=0;
-  NS_IMETHOD NotifyRedrawUnsuspended()=0;
+  virtual void NotifyRedrawSuspended()=0;
+  virtual void NotifyRedrawUnsuspended()=0;
 
   /**
    * Get this frame's contribution to the rect returned by a GetBBox() call
