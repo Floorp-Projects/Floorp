@@ -2160,7 +2160,7 @@ class FlowGraphSummary : public Vector<size_t> {
 
                 for (jsint i = 0; i < ncases; i++) {
                     if (op == JSOP_LOOKUPSWITCH)
-                        pc += INDEX_LEN;
+                        pc += UINT32_INDEX_LEN;
                     size_t target = offset + GET_JUMP_OFFSET(pc);
                     addEdge(lineno, target);
                     pc += step;

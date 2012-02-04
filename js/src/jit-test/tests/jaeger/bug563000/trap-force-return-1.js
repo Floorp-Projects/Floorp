@@ -4,5 +4,5 @@ function main() {
   return "failure";
 }
 /* JSOP_RETURN in main. */
-trap(main, 3, "'success'");
+trap(main, 5, "'success'");
 assertEq(main(), "success");

@@ -748,7 +748,7 @@ mjit::Compiler::jsop_typeof()
         JSOp op = JSOp(PC[JSOP_TYPEOF_LENGTH + JSOP_STRING_LENGTH]);
 
         if (op == JSOP_STRICTEQ || op == JSOP_EQ || op == JSOP_STRICTNE || op == JSOP_NE) {
-            JSAtom *atom = script->getAtom(fullAtomIndex(PC + JSOP_TYPEOF_LENGTH));
+            JSAtom *atom = script->getAtom(GET_UINT32_INDEX(PC + JSOP_TYPEOF_LENGTH));
             JSRuntime *rt = cx->runtime;
             JSValueType type = JSVAL_TYPE_UNKNOWN;
             Assembler::Condition cond = (op == JSOP_STRICTEQ || op == JSOP_EQ)
@@ -2664,7 +2664,7 @@ mjit::Compiler::jsop_initmethod()
 #ifdef DEBUG
     FrameEntry *obj = frame.peek(-2);
 #endif
-    JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(PC));
 
     /* Initializers with INITMETHOD are not fast yet. */
     JS_ASSERT(!frame.extra(obj).initObject);
@@ -2679,7 +2679,7 @@ mjit::Compiler::jsop_initprop()
 {
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
-    JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(PC));
 
     JSObject *baseobj = frame.extra(obj).initObject;
 
