@@ -44,8 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= spellchecker
 DIRS		= idl locales hunspell src
 
-ifdef ENABLE_TESTS
-DIRS += tests/chrome
-endif
+TEST_DIRS += tests/chrome
 
 include $(topsrcdir)/config/rules.mk
