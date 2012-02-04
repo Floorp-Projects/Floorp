@@ -900,16 +900,6 @@ class LOsrScopeChain : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LRegExp : public LCallInstructionHelper<1, 0, 0>
-{
-  public:
-    LIR_HEADER(RegExp);
-
-    const MRegExp *mir() const {
-        return mir_->toRegExp();
-    }
-};
-
 // Determines the implicit |this| value for function calls.
 class LImplicitThis : public LInstructionHelper<BOX_PIECES, 1, 0>
 {

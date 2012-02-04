@@ -237,9 +237,6 @@ class Assembler : public AssemblerX86Shared
         push(Imm32(ptr.value));
         writeDataRelocation(masm.currentOffset());
     }
-    void push(const ImmWord imm) {
-        push(Imm32(imm.value));
-    }
     void push(const FloatRegister &src) {
         subl(Imm32(sizeof(double)), StackPointer);
         movsd(src, Operand(StackPointer, 0));
