@@ -185,8 +185,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
     config.syncKeyBundle = syncKeyBundle;
     // clusterURL and syncID are set through `persisted`, or fetched from the server.
 
-    // TODO: populate saved configurations. We'll amend these after processing meta/global.
-    this.synchronizerConfigurations = new SynchronizerConfigurations(persisted);
+    assert(null == persisted);
     prepareStages();
   }
 
@@ -695,24 +694,5 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
       throw new MetaGlobalMissingEnginesException();
     }
     return this.config.metaGlobal.engines.get(engineName) != null;
-  }
-
-  /**
-   * Return enough information to be able to reconstruct a Synchronizer.
-   *
-   * @param engineName
-   * @return
-   */
-  public SynchronizerConfiguration configForEngine(String engineName) {
-    // TODO: we need an altogether better way of handling empty configs.
-    SynchronizerConfiguration stored = this.getSynchronizerConfigurations().forEngine(engineName);
-    if (stored == null) {
-      return new SynchronizerConfiguration(engineName, new RepositorySessionBundle(0), new RepositorySessionBundle(0));
-    }
-    return stored;
-  }
-  private SynchronizerConfigurations synchronizerConfigurations;
-  private SynchronizerConfigurations getSynchronizerConfigurations() {
-    return this.synchronizerConfigurations;
   }
 }
