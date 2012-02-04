@@ -45,9 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= caps
 DIRS		= idl include src
 
-ifdef ENABLE_TESTS
-DIRS += tests/mochitest
-endif
+TEST_DIRS += tests/mochitest
 
 include $(topsrcdir)/config/rules.mk
 

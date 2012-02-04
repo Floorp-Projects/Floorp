@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+TEST_DIRS += test
 
 EXTRA_JS_MODULES = \
 	openLocationLastURL.jsm \
