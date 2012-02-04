@@ -659,7 +659,7 @@ public:
   static JSBool
   InitPrivate(JSContext* aCx, JSObject* aObj, WorkerPrivate* aWorkerPrivate)
   {
-    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     JS_ASSERT(!GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aCx, aObj));
 
     DedicatedWorkerGlobalScope* priv =
@@ -722,7 +722,7 @@ private:
   static DedicatedWorkerGlobalScope*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+    JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr == &sClass) {
       return GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aCx, aObj);
     }
@@ -757,7 +757,7 @@ private:
   static void
   Finalize(JSContext* aCx, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     DedicatedWorkerGlobalScope* scope =
       GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aCx, aObj);
     if (scope) {
@@ -769,7 +769,7 @@ private:
   static void
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aTrc->context, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     DedicatedWorkerGlobalScope* scope =
       GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aTrc->context, aObj);
     if (scope) {
@@ -827,7 +827,7 @@ WorkerGlobalScope*
 WorkerGlobalScope::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
                                       const char* aFunctionName)
 {
-  JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+  JSClass* classPtr = JS_GetClass(aObj);
   if (classPtr == &sClass || classPtr == DedicatedWorkerGlobalScope::Class()) {
     return GetJSPrivateSafeish<WorkerGlobalScope>(aCx, aObj);
   }

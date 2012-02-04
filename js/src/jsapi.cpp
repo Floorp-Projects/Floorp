@@ -3143,19 +3143,11 @@ JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
     return LinkConstructorAndPrototype(cx, ctor, proto);
 }
 
-#ifdef JS_THREADSAFE
-JS_PUBLIC_API(JSClass *)
-JS_GetClass(JSContext *cx, JSObject *obj)
-{
-    return obj->getJSClass();
-}
-#else
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSObject *obj)
 {
     return obj->getJSClass();
 }
-#endif
 
 JS_PUBLIC_API(JSBool)
 JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)

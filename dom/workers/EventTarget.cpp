@@ -72,7 +72,7 @@ inline
 bool
 EnsureObjectIsEventTarget(JSContext* aCx, JSObject* aObj, char* aFunctionName)
 {
-  JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+  JSClass* classPtr = JS_GetClass(aObj);
   if (ClassIsWorker(classPtr) || ClassIsWorkerGlobalScope(classPtr) ||
       ClassIsXMLHttpRequest(classPtr)) {
     return true;

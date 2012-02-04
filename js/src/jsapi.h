@@ -3646,17 +3646,8 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 extern JS_PUBLIC_API(JSBool)
 JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
 
-#ifdef JS_THREADSAFE
-extern JS_PUBLIC_API(JSClass *)
-JS_GetClass(JSContext *cx, JSObject *obj);
-
-#define JS_GET_CLASS(cx,obj) JS_GetClass(cx, obj)
-#else
 extern JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSObject *obj);
-
-#define JS_GET_CLASS(cx,obj) JS_GetClass(obj)
-#endif
 
 extern JS_PUBLIC_API(JSBool)
 JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv);
@@ -5331,7 +5322,7 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
         JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
         JS_ASSERT((JS_GetFunctionFlags(fun) & JSFUN_CONSTRUCTOR) != 0);
     } else {
-        JS_ASSERT(JS_GET_CLASS(cx, callee)->construct != NULL);
+        JS_ASSERT(JS_GetClass(callee)->construct != NULL);
     }
 #endif
 
