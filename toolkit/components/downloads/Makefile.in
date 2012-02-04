@@ -75,8 +75,6 @@ EXTRA_COMPONENTS = \
   $(NULL)
 endif
 
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+TEST_DIRS += test
 
 include $(topsrcdir)/config/rules.mk
