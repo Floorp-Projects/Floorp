@@ -558,6 +558,17 @@ public class GeckoAppShell
             mInputConnection.notifyIMEChange(text, start, end, newEnd);
     }
 
+    public static void notifyScreenShot(ByteBuffer data, int tabId, int width, int height) {
+        final Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+        b.copyPixelsFromBuffer(data);
+        final Tab tab = Tabs.getInstance().getTab(tabId);
+        getHandler().post(new Runnable() {
+            public void run() {
+                GeckoApp.mAppContext.processThumbnail(tab, b, null);
+            }
+        });
+    }
+
     private static CountDownLatch sGeckoPendingAcks = null;
 
     // Block the current thread until the Gecko event loop is caught up
