@@ -65,21 +65,15 @@ class ConcurrentRecordConsumer extends RecordConsumer {
   }
 
   private static void info(String message) {
-    Utils.logToStdout(LOG_TAG, "::INFO: ", message);
-    Log.i(LOG_TAG, message);
+    Utils.info(LOG_TAG, message);
   }
 
   private static void debug(String message) {
-    Utils.logToStdout(LOG_TAG, ":: DEBUG: ", message);
-    Log.d(LOG_TAG, message);
+    Utils.debug(LOG_TAG, message);
   }
 
   private static void trace(String message) {
-    if (!Utils.ENABLE_TRACE_LOGGING) {
-      return;
-    }
-    Utils.logToStdout(LOG_TAG, ":: TRACE: ", message);
-    Log.d(LOG_TAG, message);
+    Utils.trace(LOG_TAG, message);
   }
 
   private Object monitor = new Object();
@@ -139,7 +133,13 @@ class ConcurrentRecordConsumer extends RecordConsumer {
       while (!delegate.getQueue().isEmpty()) {
         trace("Grabbing record...");
         Record record = delegate.getQueue().remove();
-        delegate.store(record);
+        trace("Storing record... " + delegate);
+        try {
+          delegate.store(record);
+        } catch (Exception e) {
+          // TODO: Bug 709371: track records that failed to apply.
+          Log.e(LOG_TAG, "Caught error in store.", e);
+        }
         trace("Done with record.");
       }
       synchronized (monitor) {
