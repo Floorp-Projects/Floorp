@@ -599,12 +599,14 @@ TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
 /* static */ inline void
 TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
 {
+#ifdef JS_ION
     if (cx->fp()->runningInIon()) {
         ion::GetPcScript(cx, script, pc);
-    } else {
-        *script = cx->fp()->script();
-        *pc = cx->regs().pc;
+        return;
     }
+#endif
+    *script = cx->fp()->script();
+    *pc = cx->regs().pc;
 }
 
 /* static */ inline void
