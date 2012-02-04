@@ -83,6 +83,13 @@ CompositorParent::RecvStop()
 
 
 void
+CompositorParent::ScheduleCompositionOnCompositorThread(::base::Thread &aCompositorThread)
+{
+  CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
+  aCompositorThread.message_loop()->PostTask(FROM_HERE, composeTask);
+}
+
+void
 CompositorParent::ScheduleComposition()
 {
   printf_stderr("Schedule composition\n");

@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorParent.h"
+
 #include <android/log.h>
 #include <dlfcn.h>
 
@@ -1847,6 +1851,38 @@ AndroidBridge::IsTablet()
         return false;
 
     return env->CallStaticBooleanMethod(mGeckoAppShellClass, jIsTablet);
+}
+
+void
+AndroidBridge::SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
+                                   ::base::Thread* aCompositorThread)
+{
+    mCompositorParent = aCompositorParent;
+    mCompositorThread = aCompositorThread;
+}
+
+void
+AndroidBridge::ScheduleComposite()
+{
+    if (mCompositorParent) {
+        mCompositorParent->ScheduleCompositionOnCompositorThread(*mCompositorThread);
+    }
+}
+
+void
+AndroidBridge::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### GetViewTransform() TODO");
+}
+
+AndroidBridge::AndroidBridge()
+: mLayerClient(NULL)
+, mLayerClientType(0)
+{
+}
+
+AndroidBridge::~AndroidBridge()
+{
 }
 
 /* Implementation file */

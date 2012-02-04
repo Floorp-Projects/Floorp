@@ -776,8 +776,12 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
 
     if (useCompositor) {
         CreateCompositor();
-        if (mLayerManager)
+        if (mLayerManager) {
+            AndroidBridge::Bridge()->SetCompositorParent(mCompositorParent, mCompositorThread);
             return mLayerManager;
+        }
+
+        // If we get here, then off main thread compositing failed to initialize.
         sFailedToCreateGLContext = true;
     }
 
