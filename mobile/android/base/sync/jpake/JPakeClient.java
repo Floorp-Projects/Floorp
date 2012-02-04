@@ -74,6 +74,8 @@ import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
 import ch.boye.httpclientandroidlib.entity.StringEntity;
 import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import ch.boye.httpclientandroidlib.message.BasicHeader;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
 
 public class JPakeClient implements JPakeRequestDelegate {
   private static String       LOG_TAG                 = "JPakeClient";
@@ -473,6 +475,14 @@ public class JPakeClient implements JPakeRequestDelegate {
     } catch (IncorrectZkpException e) {
       Log.e(LOG_TAG, "ZKP mismatch");
       abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      e.printStackTrace();
+    } catch (NoSuchAlgorithmException e) {
+      Log.e(LOG_TAG, "NoSuchAlgorithmException", e);
+      abort(Constants.JPAKE_ERROR_INTERNAL);
+      e.printStackTrace();
+    } catch (InvalidKeyException e) {
+      Log.e(LOG_TAG, "InvalidKeyException", e);
+      abort(Constants.JPAKE_ERROR_INTERNAL);
       e.printStackTrace();
     }
 

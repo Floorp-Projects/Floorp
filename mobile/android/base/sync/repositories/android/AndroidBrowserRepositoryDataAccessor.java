@@ -101,8 +101,19 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
     Log.w(LOG_TAG, "Unexpectedly deleted " + deleted + " rows for guid " + guid);
   }
 
+  public void update(String guid, Record newRecord) {
+    String where  = BrowserContract.SyncColumns.GUID + " = ?";
+    String[] args = new String[] { guid };
+    ContentValues cv = getContentValues(newRecord);
+    int updated = context.getContentResolver().update(getUri(), cv, where, args);
+    if (updated != 1) {
+      Log.w(LOG_TAG, "Unexpectedly updated " + updated + " rows for guid " + guid);
+    }
+  }
+
   public Uri insert(Record record) {
     ContentValues cv = getContentValues(record);
+    Log.d(LOG_TAG, "INSERTING: " + cv.getAsString("guid"));
     return context.getContentResolver().insert(getUri(), cv);
   }
 

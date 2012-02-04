@@ -1,5 +1,5 @@
         <service
-            android:exported="true"
+            android:exported="false"
             android:name="org.mozilla.gecko.sync.setup.SyncAuthenticatorService" >
             <intent-filter >
                 <action android:name="android.accounts.AccountAuthenticator" />
@@ -10,7 +10,7 @@
                 android:resource="@xml/sync_authenticator" />
         </service>
         <service
-            android:exported="true"
+            android:exported="false"
             android:name="org.mozilla.gecko.sync.syncadapter.SyncService" >
             <intent-filter >
                 <action android:name="android.content.SyncAdapter" />
