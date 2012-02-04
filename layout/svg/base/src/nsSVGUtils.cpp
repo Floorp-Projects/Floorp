@@ -598,45 +598,67 @@ nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
 
   nsSVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame(aFrame);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
-  if (outerSVGFrame)
-    outerSVGFrame->InvalidateCoveredRegion(aFrame);
+  if (outerSVGFrame) {
+    nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
+    if (!svgFrame)
+      return;
+
+    // Make sure elements styled by :hover get updated if script/animation moves
+    // them under or out from under the pointer:
+    aFrame->PresContext()->PresShell()->SynthesizeMouseMove(false);
+
+    nsRect rect = FindFilterInvalidation(aFrame, svgFrame->GetCoveredRegion());
+    outerSVGFrame->Invalidate(rect);
+  }
 }
 
 void
-nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
+nsSVGUtils::UpdateGraphic(nsIFrame *aFrame)
 {
-  nsIFrame *frame = do_QueryFrame(aSVGFrame);
+  nsSVGEffects::InvalidateRenderingObservers(aFrame);
 
-  nsSVGEffects::InvalidateRenderingObservers(frame);
-
-  if (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+  if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
-  nsSVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame(frame);
+  if (aFrame->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) {
+    aFrame->AddStateBits(NS_STATE_SVG_DIRTY);
+    return;
+  }
+
+  aFrame->RemoveStateBits(NS_STATE_SVG_DIRTY);
+
+  nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
+  if (!svgFrame)
+    return;
+
+  nsSVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame(aFrame);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;
   }
 
-  if (outerSVGFrame->IsRedrawSuspended()) {
-    frame->AddStateBits(NS_STATE_SVG_DIRTY);
-  } else {
-    frame->RemoveStateBits(NS_STATE_SVG_DIRTY);
+  // Make sure elements styled by :hover get updated if script/animation moves
+  // them under or out from under the pointer:
+  aFrame->PresContext()->PresShell()->SynthesizeMouseMove(false);
 
-    bool changed = outerSVGFrame->UpdateAndInvalidateCoveredRegion(frame);
-    if (changed) {
-      NotifyAncestorsOfFilterRegionChange(frame);
-    }
+  nsRect oldRegion = svgFrame->GetCoveredRegion();
+  outerSVGFrame->Invalidate(FindFilterInvalidation(aFrame, oldRegion));
+  svgFrame->UpdateCoveredRegion();
+  nsRect newRegion = svgFrame->GetCoveredRegion();
+  if (oldRegion.IsEqualInterior(newRegion))
+    return;
+
+  outerSVGFrame->Invalidate(FindFilterInvalidation(aFrame, newRegion));
+  if (!(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
+    NotifyAncestorsOfFilterRegionChange(aFrame);
   }
 }
 
 void
 nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
 {
-  if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
-    // It would be better if we couldn't get here
-    return;
-  }
+  NS_ABORT_IF_FALSE(!(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG),
+                    "Not expecting to be called on the outer SVG Frame");
 
   aFrame = aFrame->GetParent();
 
@@ -878,6 +900,38 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
       NotifyChildrenOfSVGChange(kid, aFlags);
+    }
+    kid = kid->GetNextSibling();
+  }
+}
+
+void
+nsSVGUtils::NotifyRedrawSuspended(nsIFrame *aFrame)
+{
+  aFrame->AddStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
+
+  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
+
+  while (kid) {
+    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+    if (SVGFrame) {
+      SVGFrame->NotifyRedrawSuspended();
+    }
+    kid = kid->GetNextSibling();
+  }
+}
+
+void
+nsSVGUtils::NotifyRedrawUnsuspended(nsIFrame *aFrame)
+{
+  aFrame->RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
+
+  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
+
+  while (kid) {
+    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+    if (SVGFrame) {
+      SVGFrame->NotifyRedrawUnsuspended();
     }
     kid = kid->GetNextSibling();
   }
