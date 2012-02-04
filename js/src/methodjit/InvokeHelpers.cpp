@@ -735,6 +735,10 @@ FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
     JSContext *cx = f.cx;
 
     JSOp op = JSOp(*f.pc());
+    JS_ASSERT(op == JSOP_LOCALINC || op == JSOP_INCLOCAL ||
+              op == JSOP_LOCALDEC || op == JSOP_DECLOCAL ||
+              op == JSOP_ARGINC || op == JSOP_INCARG ||
+              op == JSOP_ARGDEC || op == JSOP_DECARG);
     const JSCodeSpec *cs = &js_CodeSpec[op];
 
     unsigned i = GET_SLOTNO(f.pc());

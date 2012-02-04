@@ -123,7 +123,7 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
         atom = fun->atom;
     } else {
         JS_ASSERT(JOF_TYPE(js_CodeSpec[*pc].format) == JOF_ATOM);
-        atom = script->getAtom(js_GetIndexFromBytecode(script, pc, 0));
+        atom = script->getAtom(GET_UINT32_INDEX(pc));
     }
 
     uintN index;
@@ -422,7 +422,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             getCode(defaultOffset).safePoint = true;
 
             while (npairs) {
-                pc2 += INDEX_LEN;
+                pc2 += UINT32_INDEX_LEN;
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, stackDepth))
                     return;
@@ -1550,7 +1550,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             uint32_t pendingOffset = 0;
 
             while (npairs) {
-                pc2 += INDEX_LEN;
+                pc2 += UINT32_INDEX_LEN;
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth,
                                   &pending, &pendingOffset);
