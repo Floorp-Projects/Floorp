@@ -70,7 +70,7 @@ BEGIN_TEST(testSetProperty_InheritedGlobalSetter)
     // This is a JSAPI test because jsapi-test globals do not have a resolve
     // hook and therefore can use the property cache in some cases where the
     // shell can't.
-    JS_ASSERT(JS_GET_CLASS(cx, global)->resolve == &JS_ResolveStub);
+    JS_ASSERT(JS_GetClass(global)->resolve == &JS_ResolveStub);
 
     CHECK(JS_DefineProperty(cx, global, "HOTLOOP", INT_TO_JSVAL(8), NULL, NULL, 0));
     EXEC("var n = 0;\n"

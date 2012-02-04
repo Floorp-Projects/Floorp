@@ -88,7 +88,7 @@ GetDOMBlobFromJSObject(JSContext* aCx, JSObject* aObj) {
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
-                       aObj ? JS_GET_CLASS(aCx, aObj)->name : "Object", "not a Blob.");
+                       aObj ? JS_GetClass(aObj)->name : "Object", "not a Blob.");
   return NULL;
 }
 
@@ -113,7 +113,7 @@ public:
   GetPrivate(JSContext* aCx, JSObject* aObj)
   {
     if (aObj) {
-      JSClass* classPtr = JS_GET_CLASS(aCx, aObj);
+      JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
         FileReaderSyncPrivate* fileReader =
           GetJSPrivateSafeish<FileReaderSyncPrivate>(aCx, aObj);
@@ -134,7 +134,7 @@ private:
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                         JS_GET_CLASS(aCx, aObj)->name);
+                         JS_GetClass(aObj)->name);
     return NULL;
   }
 
@@ -161,7 +161,7 @@ private:
   static void
   Finalize(JSContext* aCx, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     FileReaderSyncPrivate* fileReader =
       GetJSPrivateSafeish<FileReaderSyncPrivate>(aCx, aObj);
     NS_IF_RELEASE(fileReader);
