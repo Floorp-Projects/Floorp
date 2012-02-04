@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Synthetic bold should not use true bold face</title>
+<!-- see bug 724231 -->
+<style type="text/css">
+body {
+  font-family: "Times New Roman", "Times", "DejaVu Serif", "FreeSerif", "Droid Serif", sans-serif;
+}
+</style>
+</head>
+<body>
+<p><b>Synthetic bold</b> should <b>not</b> use the true bold face.
+</body>
+</html>
