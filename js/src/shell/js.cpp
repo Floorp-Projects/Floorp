@@ -1925,8 +1925,8 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
       case JSOP_LOOKUPSWITCH:
         jmplen = JUMP_OFFSET_LEN;
         pc += jmplen;
-        n = GET_INDEX(pc);
-        pc += INDEX_LEN;
+        n = GET_UINT16(pc);
+        pc += UINT16_LEN;
         jmplen += JUMP_OFFSET_LEN;
         break;
 

@@ -3021,61 +3021,47 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
  * access is "object-detecting" in the sense used by web scripts, e.g., when
  * checking whether document.all is defined.
  */
-JSBool
+static bool
 Detecting(JSContext *cx, jsbytecode *pc)
 {
-    jsbytecode *endpc;
-    JSOp op;
+    /* General case: a branch or equality op follows the access. */
+    JSOp op = JSOp(*pc);
+    if (js_CodeSpec[op].format & JOF_DETECTING)
+        return true;
+
     JSAtom *atom;
 
     JSScript *script = cx->stack.currentScript();
-    endpc = script->code + script->length;
-    for (;; pc += js_CodeSpec[op].length) {
-        JS_ASSERT(script->code <= pc && pc < endpc);
+    jsbytecode *endpc = script->code + script->length;
+    JS_ASSERT(script->code <= pc && pc < endpc);
 
-        /* General case: a branch or equality op follows the access. */
-        op = JSOp(*pc);
-        if (js_CodeSpec[op].format & JOF_DETECTING)
-            return JS_TRUE;
+    if (op == JSOP_NULL) {
+        /*
+         * Special case #1: handle (document.all == null).  Don't sweat
+         * about JS1.2's revision of the equality operators here.
+         */
+        if (++pc < endpc) {
+            op = JSOp(*pc);
+            return op == JSOP_EQ || op == JSOP_NE;
+        }
+        return false;
+    }
 
-        switch (op) {
-          case JSOP_NULL:
-            /*
-             * Special case #1: handle (document.all == null).  Don't sweat
-             * about JS1.2's revision of the equality operators here.
-             */
-            if (++pc < endpc) {
-                op = JSOp(*pc);
-                return op == JSOP_EQ || op == JSOP_NE;
-            }
-            return JS_FALSE;
-
-          case JSOP_GETGNAME:
-          case JSOP_NAME:
-            /*
-             * Special case #2: handle (document.all == undefined).  Don't
-             * worry about someone redefining undefined, which was added by
-             * Edition 3, so is read/write for backward compatibility.
-             */
-            GET_ATOM_FROM_BYTECODE(script, pc, 0, atom);
-            if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
-                (pc += js_CodeSpec[op].length) < endpc) {
-                op = JSOp(*pc);
-                return op == JSOP_EQ || op == JSOP_NE ||
-                       op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
-            }
-            return JS_FALSE;
-
-          default:
-            /*
-             * At this point, anything but an extended atom index prefix means
-             * we're not detecting.
-             */
-            if (!(js_CodeSpec[op].format & JOF_INDEXBASE))
-                return JS_FALSE;
-            break;
+    if (op == JSOP_GETGNAME || op == JSOP_NAME) {
+        /*
+         * Special case #2: handle (document.all == undefined).  Don't worry
+         * about a local variable named |undefined| shadowing the immutable
+         * global binding...because, really?
+         */
+        atom = script->getAtom(GET_UINT32_INDEX(pc));
+        if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
+            (pc += js_CodeSpec[op].length) < endpc) {
+            op = JSOp(*pc);
+            return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
         }
     }
+
+    return false;
 }
 
 /*
