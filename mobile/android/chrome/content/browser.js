@@ -1550,6 +1550,7 @@ Tab.prototype = {
 
     this._viewport.width = gScreenWidth = aViewport.width;
     this._viewport.height = gScreenHeight = aViewport.height;
+    dump("### gScreenWidth = " + gScreenWidth + "\n");
 
     let transformChanged = false;
 
@@ -1664,6 +1665,8 @@ Tab.prototype = {
   },
 
   updateViewport: function(aReset, aZoomLevel) {
+    dump("### JS side updateViewport " + aReset + " zoom " + aZoomLevel + "\n");
+
     if (!aZoomLevel)
       aZoomLevel = this.getDefaultZoomLevel();
 
@@ -2071,6 +2074,7 @@ Tab.prototype = {
       return md.defaultZoom;
 
     let browserWidth = parseInt(this.browser.style.width);
+    dump("### getDefaultZoomLevel gScreenWidth=" + gScreenWidth);
     return gScreenWidth / browserWidth;
   },
 

@@ -245,6 +245,11 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
     }
 
     @Override
+    protected void tileLayerUpdated() {
+        /* No-op. */
+    }
+
+    @Override
     public Bitmap getBitmap() {
         if (mTileLayer == null)
             return null;

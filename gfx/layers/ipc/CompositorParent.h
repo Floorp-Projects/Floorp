@@ -90,7 +90,7 @@ public:
 
   void SetTransformation(float aScale, nsIntPoint aScrollOffset);
   void AsyncRender();
-  void ScheduleCompositionOnCompositorThread(::base::Thread &aCompositorThread);
+  void ScheduleRenderOnCompositorThread(::base::Thread &aCompositorThread);
 
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
