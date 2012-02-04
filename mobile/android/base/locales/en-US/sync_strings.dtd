@@ -17,7 +17,7 @@
 <!ENTITY sync.pin.default.label '...\n...\n...\n'>
 <!ENTITY sync.pin.oneline.label '...'>
 <!ENTITY sync.link.show.label 'Show me how.'>
-<!ENTITY sync.link.advancedsetup.label 'Advanced setup...'>
+<!ENTITY sync.link.advancedsetup.label 'Advanced setup…'>
 <!ENTITY sync.link.nodevice.label 'I don\&apos;t have the device with me…'>
 
 <!-- J-PAKE Waiting Screen -->
