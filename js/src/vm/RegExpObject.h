@@ -481,7 +481,7 @@ RegExpToShared(JSContext *cx, JSObject &obj);
 
 } /* namespace js */
 
-extern JS_FRIEND_API(JSObject *)
+extern JS_FRIEND_API(JSObject *) JS_FASTCALL
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto);
 
 JSBool

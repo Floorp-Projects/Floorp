@@ -794,9 +794,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SETNAME:
         return jsop_setprop(info().getAtom(pc));
 
-      case JSOP_REGEXP:
-        return jsop_regexp(info().getRegExp(pc));
-
       default:
 #ifdef DEBUG
         return abort("Unsupported opcode: %s (line %d)", js_CodeName[op], info().lineno(cx, pc));
@@ -3426,16 +3423,6 @@ IonBuilder::jsop_setprop(JSAtom *atom)
     current->push(value);
 
     return resumeAfter(ins);
-}
-
-bool
-IonBuilder::jsop_regexp(RegExpObject *reobj)
-{
-    MRegExp *ins = MRegExp::New(reobj, MRegExp::MustClone);
-    current->add(ins);
-    current->push(ins);
-
-    return true;
 }
 
 bool

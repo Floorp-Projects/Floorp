@@ -563,7 +563,6 @@ class Value
     JS_ALWAYS_INLINE
     uint32_t payloadAsRawUint32() const {
         JS_ASSERT(!isDouble());
-        JS_ASSERT_IF(isBoolean(), isTrue() || isFalse());
         return data.s.payload.u32;
     }
 

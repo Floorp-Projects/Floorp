@@ -160,8 +160,6 @@ LIRGeneratorShared::defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir
 template <size_t Defs, size_t Ops, size_t Temps> bool
 LIRGeneratorShared::defineVMReturn(LInstructionHelper<Defs, Ops, Temps> *lir, MDefinition *mir)
 {
-    JS_ASSERT(lir->isCall());
-
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
         return false;

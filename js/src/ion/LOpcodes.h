@@ -90,7 +90,6 @@
     _(OsrEntry)                     \
     _(OsrValue)                     \
     _(OsrScopeChain)                \
-    _(RegExp)                       \
     _(ImplicitThis)                 \
     _(Slots)                        \
     _(Elements)                     \

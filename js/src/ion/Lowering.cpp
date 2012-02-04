@@ -703,13 +703,6 @@ LIRGenerator::visitCopy(MCopy *ins)
 }
 
 bool
-LIRGenerator::visitRegExp(MRegExp *ins)
-{
-    LRegExp *lir = new LRegExp();
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
-}
-
-bool
 LIRGenerator::visitImplicitThis(MImplicitThis *ins)
 {
     JS_ASSERT(ins->callee()->type() == MIRType_Object);

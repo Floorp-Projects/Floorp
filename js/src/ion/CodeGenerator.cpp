@@ -245,24 +245,13 @@ bool
 CodeGenerator::visitIntToString(LIntToString *lir)
 {
     typedef JSString *(*pf)(JSContext *, jsint);
-    static const VMFunction js_IntToStringInfo = FunctionInfo<pf>(js_IntToString);
+    static const VMFunction js_IntToStringInfo =
+        FunctionInfo<pf>(js_IntToString);
 
     pushArg(ToRegister(lir->input()));
-    return callVM(js_IntToStringInfo, lir);
-}
-
-bool
-CodeGenerator::visitRegExp(LRegExp *lir)
-{
-    GlobalObject *global = gen->info().script()->global();
-    JSObject *proto = global->getOrCreateRegExpPrototype(gen->cx);
-
-    typedef JSObject *(*pf)(JSContext *, JSObject *, JSObject *);
-    static const VMFunction js_CloneRegExpObjectInfo = FunctionInfo<pf>(js_CloneRegExpObject);
-
-    pushArg(ImmGCPtr(lir->mir()->source()));
-    pushArg(ImmGCPtr(proto));
-    return callVM(js_CloneRegExpObjectInfo, lir);
+    if (!callVM(js_IntToStringInfo, lir))
+        return false;
+    return true;
 }
 
 bool
