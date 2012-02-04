@@ -77,7 +77,7 @@ public class GeckoEvent {
     public static final int SAVE_STATE = 18;
     public static final int BROADCAST = 19;
     public static final int VIEWPORT = 20;
-    public static final int VISTITED = 21;
+    public static final int VISITED = 21;
     public static final int NETWORK_CHANGED = 22;
 
     public static final int IME_COMPOSITION_END = 0;
