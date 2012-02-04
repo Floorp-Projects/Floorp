@@ -746,7 +746,7 @@ struct JSScript : public js::gc::Cell {
     inline JSFunction *getFunction(size_t index);
     inline JSFunction *getCallerFunction();
 
-    inline js::RegExpObject *getRegExp(size_t index);
+    inline JSObject *getRegExp(size_t index);
 
     const js::Value &getConst(size_t index) {
         JSConstArray *arr = consts();

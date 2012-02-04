@@ -553,11 +553,8 @@ class MAryInstruction : public MInstruction
     }
 };
 
-class MNullaryInstruction : public MAryInstruction<0>
-{ };
-
 // Generates an LSnapshot without further effect.
-class MStart : public MNullaryInstruction
+class MStart : public MAryInstruction<0>
 {
   public:
     enum StartType {
@@ -587,7 +584,7 @@ class MStart : public MNullaryInstruction
 // Instruction marking on entrypoint for on-stack replacement.
 // OSR may occur at loop headers (at JSOP_TRACE).
 // There is at most one MOsrEntry per MIRGraph.
-class MOsrEntry : public MNullaryInstruction
+class MOsrEntry : public MAryInstruction<0>
 {
   protected:
     MOsrEntry() {
@@ -602,7 +599,7 @@ class MOsrEntry : public MNullaryInstruction
 };
 
 // A constant js::Value.
-class MConstant : public MNullaryInstruction
+class MConstant : public MAryInstruction<0>
 {
     js::Value value_;
     uint32 constantPoolIndex_;
@@ -640,7 +637,7 @@ class MConstant : public MNullaryInstruction
     }
 };
 
-class MParameter : public MNullaryInstruction
+class MParameter : public MAryInstruction<0>
 {
     int32 index_;
     types::TypeSet *typeSet_;
@@ -671,7 +668,7 @@ class MParameter : public MNullaryInstruction
     bool congruentTo(MDefinition * const &ins) const;
 };
 
-class MCallee : public MNullaryInstruction
+class MCallee : public MAryInstruction<0>
 {
   public:
     MCallee()
@@ -928,7 +925,7 @@ class MThrow
     }
 };
 
-class MNewArray : public MNullaryInstruction
+class MNewArray : public MAryInstruction<0>
 {
     // Number of space to allocate for the array.
     uint32 count_;
@@ -956,7 +953,7 @@ class MNewArray : public MNullaryInstruction
 // Designates the start of call frame construction.
 // Generates code to adjust the stack pointer for the argument vector.
 // Argc is inferred by checking the use chain during lowering.
-class MPrepareCall : public MNullaryInstruction
+class MPrepareCall : public MAryInstruction<0>
 {
   public:
     INSTRUCTION_HEADER(PrepareCall);
@@ -2003,7 +2000,7 @@ class MOsrScopeChain : public MAryInstruction<1>
 };
 
 // Check the current frame for over-recursion past the global stack limit.
-class MCheckOverRecursed : public MNullaryInstruction
+class MCheckOverRecursed : public MAryInstruction<0>
 {
   public:
     INSTRUCTION_HEADER(CheckOverRecursed);
@@ -2011,7 +2008,7 @@ class MCheckOverRecursed : public MNullaryInstruction
 
 // Check the script's use count and trigger recompilation to inline
 // calls when the script becomes hot.
-class MRecompileCheck : public MNullaryInstruction
+class MRecompileCheck : public MAryInstruction<0>
 {
     MRecompileCheck() {
         setGuard();
@@ -2024,52 +2021,6 @@ class MRecompileCheck : public MNullaryInstruction
         return new MRecompileCheck();
     }
 
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
-class MRegExp : public MNullaryInstruction
-{
-  public:
-    // In the future we can optimize MRegExp to reuse the source object
-    // instead of cloning in the case of some
-    // single-use-is-a-known-native-that-can't-observe-the-object
-    // operations (like test).
-    enum CloneBehavior {
-        UseSource,
-        MustClone
-    };
-
-  private:
-    HeapPtr<RegExpObject> source_;
-    CloneBehavior shouldClone_;
-
-    MRegExp(RegExpObject *source, CloneBehavior shouldClone)
-      : source_(source),
-        shouldClone_(shouldClone)
-    {
-        setResultType(MIRType_Object);
-
-        // Can't move if we're cloning, because cloning takes into
-        // account the RegExpStatics flags.
-        if (shouldClone == UseSource)
-            setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(RegExp)
-
-    static MRegExp *New(RegExpObject *source, CloneBehavior shouldClone) {
-        return new MRegExp(source, shouldClone);
-    }
-
-    const HeapPtr<RegExpObject> &source() const {
-        return source_;
-    }
-    CloneBehavior shouldClone() const {
-        return shouldClone_;
-    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }

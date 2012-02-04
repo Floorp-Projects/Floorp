@@ -88,7 +88,6 @@ namespace ion {
     _(NewArray)                                                             \
     _(Start)                                                                \
     _(OsrEntry)                                                             \
-    _(RegExp)                                                               \
     _(ImplicitThis)                                                         \
     _(Slots)                                                                \
     _(Elements)                                                             \
