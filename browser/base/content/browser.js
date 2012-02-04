@@ -1766,6 +1766,23 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     document.getElementById("appmenu_charsetMenu").hidden = true;
 #endif
 
+  let appMenuButton = document.getElementById("appmenu-button");
+  let appMenuPopup = document.getElementById("appmenu-popup");
+  if (appMenuButton && appMenuPopup) {
+    let appMenuOpening = null;
+    appMenuButton.addEventListener("mousedown", function(event) {
+      if (event.button == 0)
+        appMenuOpening = new Date();
+    }, false);
+    appMenuPopup.addEventListener("popupshown", function(event) {
+      if (event.target != appMenuPopup || !appMenuOpening)
+        return;
+      let duration = new Date() - appMenuOpening;
+      appMenuOpening = null;
+      Services.telemetry.getHistogramById("FX_APP_MENU_OPEN_MS").add(duration);
+    }, false);
+  }
+
   window.addEventListener("mousemove", MousePosTracker, false);
   window.addEventListener("dragover", MousePosTracker, false);
 
@@ -8163,11 +8180,13 @@ var gIdentityHandler = {
     this._identityPopup.hidePopup();
   },
 
+  _popupOpenTime : null,
+
   /**
    * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent : function(event) {
-
+    this._popupOpenTime = new Date();
     event.stopPropagation();
 
     if ((event.type == "click" && event.button != 0) ||
@@ -8202,6 +8221,17 @@ var gIdentityHandler = {
 
     // Now open the popup, anchored off the primary chrome element
     this._identityPopup.openPopup(this._identityBox, "bottomcenter topleft");
+  },
+
+  onPopupShown : function(event) {
+    let openingDuration = new Date() - this._popupOpenTime;
+    this._popupOpenTime = null;
+    try {
+      Services.telemetry.getHistogramById("FX_IDENTITY_POPUP_OPEN_MS").add(openingDuration);
+    } catch (ex) {
+      Components.utils.reportError("Unable to report telemetry for FX_IDENTITY_POPUP_OPEN_MS.");
+    }
+    document.getElementById('identity-popup-more-info-button').focus();
   },
 
   onDragStart: function (event) {
