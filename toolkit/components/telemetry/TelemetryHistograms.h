@@ -288,6 +288,7 @@ HISTOGRAM(PLACES_DATABASE_SIZE_PER_PAGE_B, 500, 10240, 20, EXPONENTIAL, "PLACES:
 HISTOGRAM(PLACES_EXPIRATION_STEPS_TO_CLEAN, 1, 10, 10, LINEAR, "PLACES: Expiration steps to cleanup the database")
 HISTOGRAM(PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS, 50, 500, 10, EXPONENTIAL, "PLACES: Time for first autocomplete result if > 50ms (ms)")
 HISTOGRAM(PLACES_IDLE_FRECENCY_DECAY_TIME_MS, 50, 10000, 10, EXPONENTIAL, "PLACES: Time to decay all frecencies values on idle (ms)")
+HISTOGRAM(PLACES_IDLE_MAINTENANCE_TIME_MS, 1000, 30000, 10, EXPONENTIAL, "PLACES: Time to execute maintenance tasks on idle (ms)")
 
 /**
  * Updater telemetry.
