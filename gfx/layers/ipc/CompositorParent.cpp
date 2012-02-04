@@ -238,10 +238,25 @@ CompositorParent::AsyncRender()
     // Modify framemetrics here, just as a test.
   metrics.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
   container->SetFrameMetrics(metrics);
+
+#ifdef MOZ_WIDGET_ANDROID
+  RequestViewTransform();
+#endif
+
   ViewTransform transform;
   TransformShadowTree(root, transform);
+
   Composite();
 }
+
+#ifdef MOZ_WIDGET_ANDROID
+void
+CompositorParent::RequestViewTransform()
+{
+  mozilla::AndroidBridge::Bridge()->GetViewTransform(mScrollOffset, mXScale,
+                                                     mYScale);
+}
+#endif
 
 void
 CompositorParent::ShadowLayersUpdated()
