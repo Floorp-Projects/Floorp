@@ -1095,7 +1095,7 @@ MarkRangeConservativelyAndSkipIon(JSTracer *trc, JSRuntime *rt, const uintptr_t 
 {
     const uintptr_t *i = begin;
 
-#if JS_STACK_GROWTH_DIRECTION < 0
+#if JS_STACK_GROWTH_DIRECTION < 0 && defined(JS_ION)
     // Walk only regions in between Ion activations. Note that non-volatile
     // registers are spilled to the stack before the entry Ion frame, ensuring
     // that the conservative scanner will still see them.
