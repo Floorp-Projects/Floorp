@@ -37,27 +37,12 @@
 
 #include "SourceSurfaceCairo.h"
 #include "DrawTargetCairo.h"
+#include "HelpersCairo.h"
 
 #include "cairo.h"
 
 namespace mozilla {
 namespace gfx {
-
-static cairo_format_t
-GfxFormatToCairoFormat(SurfaceFormat format)
-{
-  switch (format)
-  {
-    case FORMAT_B8G8R8A8:
-      return CAIRO_FORMAT_ARGB32;
-    case FORMAT_B8G8R8X8:
-      return CAIRO_FORMAT_RGB24;
-    case FORMAT_A8:
-      return CAIRO_FORMAT_A8;
-  }
-
-  return CAIRO_FORMAT_ARGB32;
-}
 
 static SurfaceFormat
 CairoFormatToSurfaceFormat(cairo_format_t format)
@@ -70,25 +55,9 @@ CairoFormatToSurfaceFormat(cairo_format_t format)
       return FORMAT_B8G8R8X8;
     case CAIRO_FORMAT_A8:
       return FORMAT_A8;
+    default:
+      return FORMAT_B8G8R8A8;
   }
-
-  return FORMAT_B8G8R8A8;
-}
-
-static cairo_content_t
-GfxFormatToCairoContent(SurfaceFormat format)
-{
-  switch(format)
-  {
-    case FORMAT_B8G8R8A8:
-      return CAIRO_CONTENT_COLOR_ALPHA;
-    case FORMAT_B8G8R8X8:
-      return CAIRO_CONTENT_COLOR;
-    case FORMAT_A8:
-      return CAIRO_CONTENT_ALPHA;
-  }
-
-  return CAIRO_CONTENT_COLOR_ALPHA;
 }
 
 SourceSurfaceCairo::SourceSurfaceCairo(cairo_surface_t* aSurface,
