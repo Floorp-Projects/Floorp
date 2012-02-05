@@ -65,31 +65,23 @@ public abstract class Layer {
 
     /**
      * Updates the layer. This returns false if there is still work to be done
-     * after this update. If the layer is not already in a transaction, the
-     * lock will be acquired and a transaction will automatically begin and
-     * end around the update.
+     * after this update.
      */
     public final boolean update(GL10 gl, RenderContext context) {
-        boolean startTransaction = true;
         if (mTransactionLock.isHeldByCurrentThread()) {
-            startTransaction = false;
+            throw new RuntimeException("draw() called while transaction lock held by this " +
+                                       "thread?!");
         }
 
-        // If we're not already in a transaction and we can't acquire the lock,
-        // bail out.
-        if (startTransaction && !mTransactionLock.tryLock()) {
-            return false;
-        }
-
-        mInTransaction = true;
-        try {
-            return performUpdates(gl, context);
-        } finally {
-            if (startTransaction) {
-                mInTransaction = false;
+        if (mTransactionLock.tryLock()) {
+            try {
+                return performUpdates(gl, context);
+            } finally {
                 mTransactionLock.unlock();
             }
         }
+
+        return false;
     }
 
     /** Subclasses override this function to draw the layer. */
@@ -128,6 +120,7 @@ public abstract class Layer {
         mTransactionLock.lock();
         mView = aView;
         mInTransaction = true;
+        mNewResolution = mResolution;
     }
 
     public void beginTransaction() {

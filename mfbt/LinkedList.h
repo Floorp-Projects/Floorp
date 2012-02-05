@@ -116,6 +116,25 @@ class LinkedListElement
      * But the goal here isn't to win an award for the fastest or slimmest
      * linked list; rather, we want a *convenient* linked list.  So we won't
      * waste time guessing which micro-optimization strategy is best.
+     *
+     *
+     * Speaking of unnecessary work, it's worth addressing here why we wrote
+     * mozilla::LinkedList in the first place, instead of using stl::list.
+     *
+     * The key difference between mozilla::LinkedList and stl::list is that
+     * mozilla::LinkedList stores the prev/next pointers in the object itself,
+     * while stl::list stores the prev/next pointers in a list element which
+     * itself points to the object being stored.
+     *
+     * mozilla::LinkedList's approach makes it harder to store an object in more
+     * than one list.  But the upside is that you can call next() / prev() /
+     * remove() directly on the object.  With stl::list, you'd need to store a
+     * pointer to its iterator in the object in order to accomplish this.  Not
+     * only would this waste space, but you'd have to remember to update that
+     * pointer every time you added or removed the object from a list.
+     *
+     * In-place, constant-time removal is a killer feature of doubly-linked
+     * lists, and supporting this painlessly was a key design criterion.
      */
 
 private:
@@ -200,14 +219,14 @@ private:
     friend class LinkedList<T>;
 
     enum NodeKind {
-        NODE_TYPE_NORMAL,
-        NODE_TYPE_SENTINEL
+        NODE_KIND_NORMAL,
+        NODE_KIND_SENTINEL
     };
 
-    LinkedListElement(NodeKind nodeType)
+    LinkedListElement(NodeKind nodeKind)
         : next(this)
         , prev(this)
-        , isSentinel(nodeType == NODE_TYPE_SENTINEL)
+        , isSentinel(nodeKind == NODE_KIND_SENTINEL)
     {
     }
 
@@ -265,7 +284,7 @@ public:
     LinkedList(const LinkedList<T>& other) MOZ_DELETE;
 
     LinkedList()
-        : sentinel(LinkedListElement<T>::NODE_TYPE_SENTINEL)
+        : sentinel(LinkedListElement<T>::NODE_KIND_SENTINEL)
     {
     }
 
@@ -372,7 +391,10 @@ public:
             MOZ_ASSERT(slow != fast2);
         }
 
-        /* Check that |sentinel| is the only root in the list. */
+        /*
+         * Check that |sentinel| is the only node in the list with
+         * isSentinel == true.
+         */
         for (LinkedListElement<T>* elem = sentinel.next;
              elem != sentinel;
              elem = elem->next) {

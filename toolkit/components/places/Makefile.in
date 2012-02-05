@@ -128,9 +128,7 @@ EXTRA_PP_JS_MODULES = \
   PlacesUtils.jsm \
   $(NULL)
 
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
+TEST_DIRS += tests
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
