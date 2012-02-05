@@ -2574,9 +2574,15 @@ bool
 nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
                                                       nsIFrame* aFrame)
 {
-  return aFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer) &&
-         aFrame->GetVisualOverflowRectRelativeToSelf().Size() <=
-          aBuilder->ReferenceFrame()->GetSize();
+  if (aFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer)) {
+    nsSize refSize = aBuilder->ReferenceFrame()->GetSize();
+    // Only prerender if the transformed frame's size is <= the
+    // reference frame size (~viewport), allowing a 1/8th fuzz factor
+    // for shadows, borders, etc.
+    refSize += nsSize(refSize.width / 8, refSize.height / 8);
+    return aFrame->GetVisualOverflowRectRelativeToSelf().Size() <= refSize;
+  }
+  return false;
 }
 
 /* If the matrix is singular, or a hidden backface is shown, the frame won't be visible or hit. */
