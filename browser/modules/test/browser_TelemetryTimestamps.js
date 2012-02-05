@@ -11,7 +11,9 @@ function getSimpleMeasurementsFromTelemetryPing() {
 
 function test() {
   // Test the module logic
-  Cu.import("resource:///modules/TelemetryTimestamps.jsm");
+  let tmp = {};
+  Cu.import("resource:///modules/TelemetryTimestamps.jsm", tmp);
+  let TelemetryTimestamps = tmp.TelemetryTimestamps;
   let now = Date.now();
   TelemetryTimestamps.add("foo");
   ok(TelemetryTimestamps.get().foo, "foo was added");
