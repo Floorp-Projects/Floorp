@@ -137,8 +137,9 @@ __defineGetter__("gPrefService", function() {
 });
 
 __defineGetter__("AddonManager", function() {
-  Cu.import("resource://gre/modules/AddonManager.jsm");
-  return this.AddonManager;
+  let tmp = {};
+  Cu.import("resource://gre/modules/AddonManager.jsm", tmp);
+  return this.AddonManager = tmp.AddonManager;
 });
 __defineSetter__("AddonManager", function (val) {
   delete this.AddonManager;
@@ -1503,7 +1504,9 @@ function prepareForStartup() {
 }
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
-  Cu.import("resource:///modules/TelemetryTimestamps.jsm");
+  let tmp = {};
+  Cu.import("resource:///modules/TelemetryTimestamps.jsm", tmp);
+  let TelemetryTimestamps = tmp.TelemetryTimestamps;
   TelemetryTimestamps.add("delayedStartupStarted");
   gDelayedStartupTimeoutId = null;
 
