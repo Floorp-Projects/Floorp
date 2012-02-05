@@ -306,8 +306,10 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     IonScript *ionScript;
     if (frame.checkInvalidation(&ionScript)) {
-        // Use the invalidated ion script to retrieve safepoint
-        // information.
+        // This frame has been invalidated, meaning that its IonScript is no
+        // longer reachable through the callee token (JSFunction/JSScript->ion
+        // is now NULL or recompiled). Manually trace it here.
+        IonScript::Trace(trc, ionScript);
     } else if (CalleeTokenIsFunction(layout->calleeToken())) {
         JSFunction *fun = CalleeTokenToFunction(layout->calleeToken());
 
