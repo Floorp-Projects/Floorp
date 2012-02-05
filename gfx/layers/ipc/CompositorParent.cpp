@@ -52,7 +52,7 @@ namespace mozilla {
 namespace layers {
 
 CompositorParent::CompositorParent(nsIWidget* aWidget)
-  : mStopped(false), mWidget(aWidget)
+  : mPaused(false), mWidget(aWidget)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -75,7 +75,7 @@ CompositorParent::Destroy()
 bool
 CompositorParent::RecvStop()
 {
-  mStopped = true;
+  mPaused = true;
   Destroy();
   return true;
 }
@@ -86,6 +86,42 @@ CompositorParent::ScheduleRenderOnCompositorThread(::base::Thread &aCompositorTh
 {
   CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::AsyncRender);
   aCompositorThread.message_loop()->PostTask(FROM_HERE, renderTask);
+}
+
+void
+CompositorParent::PauseComposition()
+{
+  mPaused = true;
+
+#ifdef MOZ_WIDGET_ANDROID
+  // TODO: Tell GLContextEGL we're paused, so it should release surface.
+#endif
+}
+
+void
+CompositorParent::ResumeComposition()
+{
+  mPaused = false;
+
+#ifdef MOZ_WIDGET_ANDROID
+  // TODO: Tell GLContextEGL we've resumed, so it should obtain new surface.
+#endif
+}
+
+void
+CompositorParent::SchedulePauseOnCompositorThread(::base::Thread &aCompositorThread)
+{
+  CancelableTask *pauseTask = NewRunnableMethod(this,
+                                                &CompositorParent::PauseComposition);
+  aCompositorThread.message_loop()->PostTask(FROM_HERE, pauseTask);
+}
+
+void
+CompositorParent::ScheduleResumeOnCompositorThread(::base::Thread &aCompositorThread)
+{
+  CancelableTask *resumeTask = NewRunnableMethod(this,
+                                                 &CompositorParent::ResumeComposition);
+  aCompositorThread.message_loop()->PostTask(FROM_HERE, resumeTask);
 }
 
 void
@@ -118,7 +154,7 @@ CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
 void
 CompositorParent::Composite()
 {
-  if (mStopped || !mLayerManager) {
+  if (mPaused || !mLayerManager) {
     return;
   }
 
@@ -218,7 +254,7 @@ CompositorParent::TransformShadowTree(Layer* aLayer, const ViewTransform& aTrans
 void
 CompositorParent::AsyncRender()
 {
-  if (mStopped || !mLayerManager) {
+  if (mPaused || !mLayerManager) {
     return;
   }
 

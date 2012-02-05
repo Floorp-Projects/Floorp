@@ -403,6 +403,8 @@ public:
     void SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
                              base::Thread* aCompositorThread);
     void ScheduleComposite();
+    void SchedulePauseComposition();
+    void ScheduleResumeComposition();
     void SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter);
     void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 

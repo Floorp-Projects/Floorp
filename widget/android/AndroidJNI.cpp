@@ -107,6 +107,8 @@ extern "C" {
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv* jenv, jclass);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv* jenv, jclass);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv* jenv, jclass);
 #endif
 
 }
@@ -859,6 +861,20 @@ Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv*, jclass)
 {
     __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### scheduleComposite()");
     AndroidBridge::Bridge()->ScheduleComposite();
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv*, jclass)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### schedulePauseComposition()");
+    AndroidBridge::Bridge()->SchedulePauseComposition();
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv*, jclass)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### scheduleResumeComposition()");
+    AndroidBridge::Bridge()->ScheduleResumeComposition();
 }
 
 #endif
