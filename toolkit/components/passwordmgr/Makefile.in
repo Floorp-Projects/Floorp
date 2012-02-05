@@ -65,8 +65,6 @@ EXTRA_COMPONENTS = \
   storage-mozStorage.js \
   $(NULL)
 
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+TEST_DIRS += test
 
 include $(topsrcdir)/config/rules.mk

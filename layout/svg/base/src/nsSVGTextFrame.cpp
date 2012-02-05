@@ -209,20 +209,13 @@ nsSVGTextFrame::NotifySVGChanged(PRUint32 aFlags)
   }
 }
 
-NS_IMETHODIMP
-nsSVGTextFrame::NotifyRedrawSuspended()
-{
-  mMetricsState = suspended;
-
-  return nsSVGTextFrameBase::NotifyRedrawSuspended();
-}
-
-NS_IMETHODIMP
+void
 nsSVGTextFrame::NotifyRedrawUnsuspended()
 {
-  mMetricsState = unsuspended;
+  RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
+
   UpdateGlyphPositioning(false);
-  return nsSVGTextFrameBase::NotifyRedrawUnsuspended();
+  nsSVGTextFrameBase::NotifyRedrawUnsuspended();
 }
 
 NS_IMETHODIMP
@@ -338,7 +331,7 @@ nsSVGTextFrame::SetWhitespaceHandling(nsSVGGlyphFrame *aFrame)
 void
 nsSVGTextFrame::UpdateGlyphPositioning(bool aForceGlobalTransform)
 {
-  if (mMetricsState == suspended || !mPositioningDirty)
+  if ((GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) || !mPositioningDirty)
     return;
 
   mPositioningDirty = false;
