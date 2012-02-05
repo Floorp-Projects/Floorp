@@ -65,7 +65,6 @@ public:
 
     nsresult mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI);
     PRInt32 lookupNamespace(nsIAtom* aPrefix);
-    PRInt32 lookupNamespace(const nsAString& aPrefix);
     PRInt32 lookupNamespaceWithDefault(const nsAString& aPrefix);
 
 private:

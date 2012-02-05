@@ -105,12 +105,6 @@ public final class RectUtils {
                         Math.round(rect.right), Math.round(rect.bottom));
     }
 
-    /** Returns the smallest integer rect that encapsulates the given rect. */
-    public static Rect roundOut(RectF rect) {
-        return new Rect((int)Math.floor(rect.left), (int)Math.floor(rect.top),
-                        (int)Math.ceil(rect.right), (int)Math.ceil(rect.bottom));
-    }
-
     public static IntSize getSize(Rect rect) {
         return new IntSize(rect.width(), rect.height());
     }

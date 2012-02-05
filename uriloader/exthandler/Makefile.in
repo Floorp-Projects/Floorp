@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = \
        $(NULL)
 
-ifdef ENABLE_TESTS
-  DIRS += tests
-endif
+TEST_DIRS += tests
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSDIR		= os2

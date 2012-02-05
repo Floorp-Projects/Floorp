@@ -121,7 +121,6 @@ public:
     static PRUint16 getNodeType(const txXPathNode& aNode);
     static void appendNodeValue(const txXPathNode& aNode, nsAString& aResult);
     static bool isWhitespace(const txXPathNode& aNode);
-    static txXPathNode* getDocument(const txXPathNode& aNode);
     static txXPathNode* getOwnerDocument(const txXPathNode& aNode);
     static PRInt32 getUniqueIdentifier(const txXPathNode& aNode);
     static nsresult getXSLTId(const txXPathNode& aNode,
