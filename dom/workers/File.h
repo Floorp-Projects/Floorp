@@ -58,13 +58,13 @@ JSObject*
 CreateBlob(JSContext* aCx, nsIDOMBlob* aBlob);
 
 nsIDOMBlob*
-GetDOMBlobFromJSObject(JSContext* aCx, JSObject* aObj);
+GetDOMBlobFromJSObject(JSObject* aObj);
 
 JSObject*
 CreateFile(JSContext* aCx, nsIDOMFile* aFile);
 
 nsIDOMFile*
-GetDOMFileFromJSObject(JSContext* aCx, JSObject* aObj);
+GetDOMFileFromJSObject(JSObject* aObj);
 
 } // namespace file
 

@@ -128,50 +128,41 @@ public:
     JSObject* obj = JS_NewObject(aCx, clasp, NULL, aParent);
     if (obj) {
       Event* priv = new Event();
-      if (!SetJSPrivateSafeish(aCx, obj, priv) ||
-          !InitEventCommon(aCx, obj, priv, aType, aBubbles, aCancelable,
-                           true)) {
-        SetJSPrivateSafeish(aCx, obj, NULL);
-        delete priv;
-        return NULL;
-      }
+      SetJSPrivateSafeish(obj, priv);
+      InitEventCommon(obj, priv, aType, aBubbles, aCancelable, true);
     }
     return obj;
   }
 
   static bool
-  IsSupportedClass(JSContext* aCx, JSObject* aEvent)
+  IsSupportedClass(JSObject* aEvent)
   {
-    return !!GetPrivate(aCx, aEvent);
+    return !!GetPrivate(aEvent);
   }
 
-  static bool
-  SetTarget(JSContext* aCx, JSObject* aEvent, JSObject* aTarget)
+  static void
+  SetTarget(JSObject* aEvent, JSObject* aTarget)
   {
-    JS_ASSERT(IsSupportedClass(aCx, aEvent));
+    JS_ASSERT(IsSupportedClass(aEvent));
 
     jsval target = OBJECT_TO_JSVAL(aTarget);
-    return JS_SetReservedSlot(aCx, aEvent, SLOT_target, target) &&
-           JS_SetReservedSlot(aCx, aEvent, SLOT_currentTarget, target);
+    JS_SetReservedSlot(aEvent, SLOT_target, target);
+    JS_SetReservedSlot(aEvent, SLOT_currentTarget, target);
   }
 
   static bool
-  WasCanceled(JSContext* aCx, JSObject* aEvent)
+  WasCanceled(JSObject* aEvent)
   {
-    JS_ASSERT(IsSupportedClass(aCx, aEvent));
+    JS_ASSERT(IsSupportedClass(aEvent));
 
-    jsval canceled;
-    if (!GetPropertyCommon(aCx, aEvent, SLOT_defaultPrevented, &canceled)) {
-      return false;
-    }
-
+    jsval canceled = JS_GetReservedSlot(aEvent, SLOT_defaultPrevented);
     return JSVAL_TO_BOOLEAN(canceled);
   }
 
   static bool
-  ImmediatePropagationStopped(JSContext* aCx, JSObject* aEvent)
+  ImmediatePropagationStopped(JSObject* aEvent)
   {
-    Event* event = GetPrivate(aCx, aEvent);
+    Event* event = GetPrivate(aEvent);
     return event ? event->mStopImmediatePropagationCalled : false;
   }
 
@@ -209,12 +200,12 @@ protected:
   };
 
   static Event*
-  GetPrivate(JSContext* aCx, JSObject* aEvent);
+  GetPrivate(JSObject* aEvent);
 
   static Event*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    Event* priv = GetPrivate(aCx, aObj);
+    Event* priv = GetPrivate(aObj);
     if (priv) {
       return priv;
     }
@@ -224,43 +215,25 @@ protected:
     return NULL;
   }
 
-  static JSBool
-  InitEventCommon(JSContext* aCx, JSObject* aObj, Event* aEvent,
-                  JSString* aType, JSBool aBubbles, JSBool aCancelable,
-                  bool aIsTrusted)
+  static void
+  InitEventCommon(JSObject* aObj, Event* aEvent, JSString* aType,
+                  JSBool aBubbles, JSBool aCancelable, bool aIsTrusted)
   {
     aEvent->mStopPropagationCalled = false;
     aEvent->mStopImmediatePropagationCalled = false;
 
-    jsval now;
-    if (!JS_NewNumberValue(aCx, JS_Now(), &now)) {
-      return false;
-    }
-
-    if (!JS_SetReservedSlot(aCx, aObj, SLOT_type, STRING_TO_JSVAL(aType)) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_target, JSVAL_NULL) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_currentTarget, JSVAL_NULL) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_eventPhase,
-                            INT_TO_JSVAL(CAPTURING_PHASE)) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_bubbles,
-                            aBubbles ? JSVAL_TRUE : JSVAL_FALSE) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_cancelable,
-                            aCancelable ? JSVAL_TRUE : JSVAL_FALSE) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_timeStamp, now) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_defaultPrevented, JSVAL_FALSE) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_isTrusted,
-                            aIsTrusted ? JSVAL_TRUE : JSVAL_FALSE)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  static JSBool
-  GetPropertyCommon(JSContext* aCx, JSObject* aObj, int32 aSlot, jsval* aVp)
-  {
-    JS_ASSERT(aSlot >= 0 && aSlot < SLOT_COUNT);
-    return JS_GetReservedSlot(aCx, aObj, aSlot, aVp);
+    JS_SetReservedSlot(aObj, SLOT_type, STRING_TO_JSVAL(aType));
+    JS_SetReservedSlot(aObj, SLOT_target, JSVAL_NULL);
+    JS_SetReservedSlot(aObj, SLOT_currentTarget, JSVAL_NULL);
+    JS_SetReservedSlot(aObj, SLOT_eventPhase, INT_TO_JSVAL(CAPTURING_PHASE));
+    JS_SetReservedSlot(aObj, SLOT_bubbles,
+                       aBubbles ? JSVAL_TRUE : JSVAL_FALSE);
+    JS_SetReservedSlot(aObj, SLOT_cancelable,
+                       aCancelable ? JSVAL_TRUE : JSVAL_FALSE);
+    JS_SetReservedSlot(aObj, SLOT_timeStamp, JS::NumberValue(double(JS_Now())));
+    JS_SetReservedSlot(aObj, SLOT_defaultPrevented, JSVAL_FALSE);
+    JS_SetReservedSlot(aObj, SLOT_isTrusted,
+                       aIsTrusted ? JSVAL_TRUE : JSVAL_FALSE);
   }
 
 private:
@@ -276,7 +249,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(IsThisClass(JS_GetClass(aObj)));
-    delete GetJSPrivateSafeish<Event>(aCx, aObj);
+    delete GetJSPrivateSafeish<Event>(aObj);
   }
 
   static JSBool
@@ -291,7 +264,8 @@ private:
       return false;
     }
 
-    return GetPropertyCommon(aCx, aObj, slot, aVp);
+    *aVp = JS_GetReservedSlot(aObj, slot);
+    return true;
   }
 
   static JSBool
@@ -354,14 +328,11 @@ private:
       return false;
     }
 
-    jsval cancelableVal;
-    if (!GetPropertyCommon(aCx, obj, SLOT_cancelable, &cancelableVal)) {
-      return false;
-    }
+    jsval cancelableVal = JS_GetReservedSlot(obj, SLOT_cancelable);
 
-    return JSVAL_TO_BOOLEAN(cancelableVal) ?
-           JS_SetReservedSlot(aCx, obj, SLOT_defaultPrevented, cancelableVal) :
-           true;
+    if (JSVAL_TO_BOOLEAN(cancelableVal))
+      JS_SetReservedSlot(obj, SLOT_defaultPrevented, cancelableVal);
+    return true;
   }
 
   static JSBool
@@ -384,7 +355,8 @@ private:
       return false;
     }
 
-    return InitEventCommon(aCx, obj, event, type, bubbles, cancelable, false);
+    InitEventCommon(obj, event, type, bubbles, cancelable, false);
+    return true;
   }
 };
 
@@ -486,14 +458,9 @@ public:
     }
 
     MessageEvent* priv = new MessageEvent(aMainRuntime);
-    if (!SetJSPrivateSafeish(aCx, obj, priv) ||
-        !InitMessageEventCommon(aCx, obj, priv, type, false, false, NULL, NULL,
-                                NULL, true)) {
-      SetJSPrivateSafeish(aCx, obj, NULL);
-      delete priv;
-      return NULL;
-    }
-
+    SetJSPrivateSafeish(obj, priv);
+    InitMessageEventCommon(aCx, obj, priv, type, false, false, NULL, NULL, NULL,
+                           true);
     aData.steal(&priv->mData, &priv->mDataByteCount);
     priv->mClonedObjects.SwapElements(aClonedObjects);
 
@@ -528,7 +495,7 @@ private:
   {
     JSClass* classPtr = JS_GetClass(aObj);
     if (IsThisClass(classPtr)) {
-      return GetJSPrivateSafeish<MessageEvent>(aCx, aObj);
+      return GetJSPrivateSafeish<MessageEvent>(aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
@@ -537,7 +504,7 @@ private:
     return NULL;
   }
 
-  static JSBool
+  static void
   InitMessageEventCommon(JSContext* aCx, JSObject* aObj, Event* aEvent,
                          JSString* aType, JSBool aBubbles, JSBool aCancelable,
                          JSString* aData, JSString* aOrigin, JSObject* aSource,
@@ -545,16 +512,13 @@ private:
   {
     jsval emptyString = JS_GetEmptyStringValue(aCx);
 
-    if (!Event::InitEventCommon(aCx, aObj, aEvent, aType, aBubbles,
-                                aCancelable, aIsTrusted) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_data,
-                            aData ? STRING_TO_JSVAL(aData) : emptyString) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_origin,
-                            aOrigin ? STRING_TO_JSVAL(aOrigin) : emptyString) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_source, OBJECT_TO_JSVAL(aSource))) {
-      return false;
-    }
-    return true;
+    Event::InitEventCommon(aObj, aEvent, aType, aBubbles, aCancelable,
+                           aIsTrusted);
+    JS_SetReservedSlot(aObj, SLOT_data,
+                       aData ? STRING_TO_JSVAL(aData) : emptyString);
+    JS_SetReservedSlot(aObj, SLOT_origin,
+                       aOrigin ? STRING_TO_JSVAL(aOrigin) : emptyString);
+    JS_SetReservedSlot(aObj, SLOT_source, OBJECT_TO_JSVAL(aSource));
   }
 
   static JSBool
@@ -569,7 +533,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(IsThisClass(JS_GetClass(aObj)));
-    MessageEvent* priv = GetJSPrivateSafeish<MessageEvent>(aCx, aObj);
+    MessageEvent* priv = GetJSPrivateSafeish<MessageEvent>(aObj);
     if (priv) {
       JS_free(aCx, priv->mData);
 #ifdef DEBUG
@@ -609,16 +573,17 @@ private:
 
       jsval data;
       if (!buffer.read(aCx, &data,
-                       WorkerStructuredCloneCallbacks(event->mMainRuntime)) ||
-          !JS_SetReservedSlot(aCx, aObj, slot, data)) {
+                       WorkerStructuredCloneCallbacks(event->mMainRuntime))) {
         return false;
       }
+      JS_SetReservedSlot(aObj, slot, data);
 
       *aVp = data;
       return true;
     }
 
-    return JS_GetReservedSlot(aCx, aObj, slot, aVp);
+    *aVp = JS_GetReservedSlot(aObj, slot);
+    return true;
   }
 
   static JSBool
@@ -642,8 +607,9 @@ private:
       return false;
     }
 
-    return InitMessageEventCommon(aCx, obj, event, type, bubbles, cancelable,
-                                  data, origin, source, false);
+    InitMessageEventCommon(aCx, obj, event, type, bubbles, cancelable,
+                           data, origin, source, false);
+    return true;
   }
 };
 
@@ -717,13 +683,9 @@ public:
     }
 
     ErrorEvent* priv = new ErrorEvent();
-    if (!SetJSPrivateSafeish(aCx, obj, priv) ||
-        !InitErrorEventCommon(aCx, obj, priv, type, false, true, aMessage,
-                              aFilename, aLineNumber, true)) {
-      SetJSPrivateSafeish(aCx, obj, NULL);
-      delete priv;
-      return NULL;
-    }
+    SetJSPrivateSafeish(obj, priv);
+    InitErrorEventCommon(obj, priv, type, false, true, aMessage, aFilename,
+                         aLineNumber, true);
     return obj;
   }
 
@@ -753,7 +715,7 @@ private:
   {
     JSClass* classPtr = JS_GetClass(aObj);
     if (IsThisClass(classPtr)) {
-      return GetJSPrivateSafeish<ErrorEvent>(aCx, aObj);
+      return GetJSPrivateSafeish<ErrorEvent>(aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
@@ -762,23 +724,17 @@ private:
     return NULL;
   }
 
-  static JSBool
-  InitErrorEventCommon(JSContext* aCx, JSObject* aObj, Event* aEvent,
-                       JSString* aType, JSBool aBubbles, JSBool aCancelable,
+  static void
+  InitErrorEventCommon(JSObject* aObj, Event* aEvent, JSString* aType,
+                       JSBool aBubbles, JSBool aCancelable,
                        JSString* aMessage, JSString* aFilename,
                        uint32 aLineNumber, bool aIsTrusted)
   {
-    if (!Event::InitEventCommon(aCx, aObj, aEvent, aType, aBubbles,
-                                aCancelable, aIsTrusted) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_message,
-                            STRING_TO_JSVAL(aMessage)) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_filename,
-                            STRING_TO_JSVAL(aFilename)) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_lineno,
-                            INT_TO_JSVAL(aLineNumber))) {
-      return false;
-    }
-    return true;
+    Event::InitEventCommon(aObj, aEvent, aType, aBubbles, aCancelable,
+                           aIsTrusted);
+    JS_SetReservedSlot(aObj, SLOT_message, STRING_TO_JSVAL(aMessage));
+    JS_SetReservedSlot(aObj, SLOT_filename, STRING_TO_JSVAL(aFilename));
+    JS_SetReservedSlot(aObj, SLOT_lineno, INT_TO_JSVAL(aLineNumber));
   }
 
   static JSBool
@@ -793,7 +749,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(IsThisClass(JS_GetClass(aObj)));
-    delete GetJSPrivateSafeish<ErrorEvent>(aCx, aObj);
+    delete GetJSPrivateSafeish<ErrorEvent>(aObj);
   }
 
   static JSBool
@@ -811,7 +767,8 @@ private:
       return false;
     }
 
-    return JS_GetReservedSlot(aCx, aObj, slot, aVp);
+    *aVp = JS_GetReservedSlot(aObj, slot);
+    return true;
   }
 
   static JSBool
@@ -836,8 +793,9 @@ private:
       return false;
     }
 
-    return InitErrorEventCommon(aCx, obj, event, type, bubbles, cancelable,
-                                message, filename, lineNumber, false);
+    InitErrorEventCommon(obj, event, type, bubbles, cancelable, message,
+                         filename, lineNumber, false);
+    return true;
   }
 };
 
@@ -905,13 +863,9 @@ public:
     }
 
     ProgressEvent* priv = new ProgressEvent();
-    if (!SetJSPrivateSafeish(aCx, obj, priv) ||
-        !InitProgressEventCommon(aCx, obj, priv, type, false, false,
-                                 aLengthComputable, aLoaded, aTotal, true)) {
-      SetJSPrivateSafeish(aCx, obj, NULL);
-      delete priv;
-      return NULL;
-    }
+    SetJSPrivateSafeish(obj, priv);
+    InitProgressEventCommon(obj, priv, type, false, false, aLengthComputable,
+                            aLoaded, aTotal, true);
     return obj;
   }
 
@@ -941,7 +895,7 @@ private:
   {
     JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr == &sClass) {
-      return GetJSPrivateSafeish<ProgressEvent>(aCx, aObj);
+      return GetJSPrivateSafeish<ProgressEvent>(aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
@@ -950,21 +904,18 @@ private:
     return NULL;
   }
 
-  static JSBool
-  InitProgressEventCommon(JSContext* aCx, JSObject* aObj, Event* aEvent,
-                          JSString* aType, JSBool aBubbles, JSBool aCancelable,
+  static void
+  InitProgressEventCommon(JSObject* aObj, Event* aEvent, JSString* aType,
+                          JSBool aBubbles, JSBool aCancelable,
                           JSBool aLengthComputable, jsdouble aLoaded,
                           jsdouble aTotal, bool aIsTrusted)
   {
-    if (!Event::InitEventCommon(aCx, aObj, aEvent, aType, aBubbles,
-                                aCancelable, aIsTrusted) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_lengthComputable,
-                            aLengthComputable ? JSVAL_TRUE : JSVAL_FALSE) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_loaded, DOUBLE_TO_JSVAL(aLoaded)) ||
-        !JS_SetReservedSlot(aCx, aObj, SLOT_total, DOUBLE_TO_JSVAL(aTotal))) {
-      return false;
-    }
-    return true;
+    Event::InitEventCommon(aObj, aEvent, aType, aBubbles, aCancelable,
+                           aIsTrusted);
+    JS_SetReservedSlot(aObj, SLOT_lengthComputable,
+                       aLengthComputable ? JSVAL_TRUE : JSVAL_FALSE);
+    JS_SetReservedSlot(aObj, SLOT_loaded, DOUBLE_TO_JSVAL(aLoaded));
+    JS_SetReservedSlot(aObj, SLOT_total, DOUBLE_TO_JSVAL(aTotal));
   }
 
   static JSBool
@@ -979,7 +930,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    delete GetJSPrivateSafeish<ProgressEvent>(aCx, aObj);
+    delete GetJSPrivateSafeish<ProgressEvent>(aObj);
   }
 
   static JSBool
@@ -997,7 +948,8 @@ private:
       return false;
     }
 
-    return JS_GetReservedSlot(aCx, aObj, slot, aVp);
+    *aVp = JS_GetReservedSlot(aObj, slot);
+    return true;
   }
 
   static JSBool
@@ -1022,8 +974,9 @@ private:
       return false;
     }
 
-    return InitProgressEventCommon(aCx, obj, event, type, bubbles, cancelable,
-                                   lengthComputable, loaded, total, false);
+    InitProgressEventCommon(obj, event, type, bubbles, cancelable,
+                            lengthComputable, loaded, total, false);
+    return true;
   }
 };
 
@@ -1051,7 +1004,7 @@ JSFunctionSpec ProgressEvent::sFunctions[] = {
 };
 
 Event*
-Event::GetPrivate(JSContext* aCx, JSObject* aObj)
+Event::GetPrivate(JSObject* aObj)
 {
   if (aObj) {
     JSClass* classPtr = JS_GetClass(aObj);
@@ -1059,7 +1012,7 @@ Event::GetPrivate(JSContext* aCx, JSObject* aObj)
         MessageEvent::IsThisClass(classPtr) ||
         ErrorEvent::IsThisClass(classPtr) ||
         classPtr == ProgressEvent::Class()) {
-      return GetJSPrivateSafeish<Event>(aCx, aObj);
+      return GetJSPrivateSafeish<Event>(aObj);
     }
   }
   return NULL;
@@ -1120,27 +1073,27 @@ CreateProgressEvent(JSContext* aCx, JSString* aType, bool aLengthComputable,
 }
 
 bool
-IsSupportedEventClass(JSContext* aCx, JSObject* aEvent)
+IsSupportedEventClass(JSObject* aEvent)
 {
-  return Event::IsSupportedClass(aCx, aEvent);
+  return Event::IsSupportedClass(aEvent);
+}
+
+void
+SetEventTarget(JSObject* aEvent, JSObject* aTarget)
+{
+  Event::SetTarget(aEvent, aTarget);
 }
 
 bool
-SetEventTarget(JSContext* aCx, JSObject* aEvent, JSObject* aTarget)
+EventWasCanceled(JSObject* aEvent)
 {
-  return Event::SetTarget(aCx, aEvent, aTarget);
+  return Event::WasCanceled(aEvent);
 }
 
 bool
-EventWasCanceled(JSContext* aCx, JSObject* aEvent)
+EventImmediatePropagationStopped(JSObject* aEvent)
 {
-  return Event::WasCanceled(aCx, aEvent);
-}
-
-bool
-EventImmediatePropagationStopped(JSContext* aCx, JSObject* aEvent)
-{
-  return Event::ImmediatePropagationStopped(aCx, aEvent);
+  return Event::ImmediatePropagationStopped(aEvent);
 }
 
 bool

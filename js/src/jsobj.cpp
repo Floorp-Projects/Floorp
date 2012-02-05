@@ -3595,8 +3595,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
         const Shape *shape = obj->nativeLookup(cx, id);
         if (!shape) {
             uint32_t slot = 2 * JSProto_LIMIT + key;
-            if (!js_SetReservedSlot(cx, obj, slot, v))
-                return false;
+            SetReservedSlot(obj, slot, v);
             if (!obj->addProperty(cx, id, JS_PropertyStub, JS_StrictPropertyStub, slot, attrs, 0, 0))
                 return false;
             AddTypePropertyId(cx, obj, id, v);
@@ -3612,15 +3611,15 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 
 namespace js {
 
-static bool
-SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
+static void
+SetClassObject(JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
 {
     JS_ASSERT(!obj->getParent());
     if (!obj->isGlobal())
-        return true;
+        return;
 
-    return js_SetReservedSlot(cx, obj, key, ObjectOrNullValue(cobj)) &&
-           js_SetReservedSlot(cx, obj, JSProto_LIMIT + key, ObjectOrNullValue(proto));
+    SetReservedSlot(obj, key, ObjectOrNullValue(cobj));
+    SetReservedSlot(obj, JSProto_LIMIT + key, ObjectOrNullValue(proto));
 }
 
 static void
@@ -3722,8 +3721,7 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
          * fail if it tries to do a reentrant reconstruction of the class.
          */
         if (key != JSProto_Null) {
-            if (!SetClassObject(cx, obj, key, fun, proto))
-                goto bad;
+            SetClassObject(obj, key, fun, proto);
             cached = true;
         }
 
@@ -3761,8 +3759,8 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
     }
 
     /* If this is a standard class, cache its prototype. */
-    if (!cached && key != JSProto_Null && !SetClassObject(cx, obj, key, ctor, proto))
-        goto bad;
+    if (!cached && key != JSProto_Null)
+        SetClassObject(obj, key, ctor, proto);
 
     if (ctorp)
         *ctorp = ctor;
@@ -5779,7 +5777,7 @@ js_DeleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool stri
 
     if (shape->hasSlot()) {
         const Value &v = obj->nativeGetSlot(shape->slot());
-        GCPoke(cx, v);
+        GCPoke(cx->runtime, v);
 
         /*
          * Delete is rare enough that we can take the hit of checking for an
@@ -6352,31 +6350,6 @@ js_ClearNative(JSContext *cx, JSObject *obj)
             obj->nativeSetSlot(shape->slot(), UndefinedValue());
         }
     }
-    return true;
-}
-
-bool
-js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32_t slot, Value *vp)
-{
-    if (!obj->isNative()) {
-        vp->setUndefined();
-        return true;
-    }
-
-    JS_ASSERT(slot < JSSLOT_FREE(obj->getClass()));
-    *vp = obj->getSlot(slot);
-    return true;
-}
-
-bool
-js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t slot, const Value &v)
-{
-    if (!obj->isNative())
-        return true;
-
-    JS_ASSERT(slot < JSSLOT_FREE(obj->getClass()));
-    obj->setSlot(slot, v);
-    GCPoke(cx, NullValue());
     return true;
 }
 

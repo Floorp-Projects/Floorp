@@ -338,7 +338,7 @@ struct WorkerStructuredCloneCallbacks
 
     // See if this is a File object.
     {
-      nsIDOMFile* file = file::GetDOMFileFromJSObject(aCx, aObj);
+      nsIDOMFile* file = file::GetDOMFileFromJSObject(aObj);
       if (file) {
         if (JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_FILE, 0) &&
             JS_WriteBytes(aWriter, &file, sizeof(file))) {
@@ -350,7 +350,7 @@ struct WorkerStructuredCloneCallbacks
 
     // See if this is a Blob object.
     {
-      nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aCx, aObj);
+      nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aObj);
       if (blob) {
         nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(blob);
         if (mutableBlob && NS_SUCCEEDED(mutableBlob->SetMutable(false)) &&

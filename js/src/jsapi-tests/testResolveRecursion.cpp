@@ -30,8 +30,8 @@ BEGIN_TEST(testResolveRecursion)
     CHECK(obj1);
     obj2 = JS_NewObject(cx, &my_resolve_class, NULL, NULL);
     CHECK(obj2);
-    CHECK(JS_SetPrivate(cx, obj1, this));
-    CHECK(JS_SetPrivate(cx, obj2, this));
+    JS_SetPrivate(obj1, this);
+    JS_SetPrivate(obj2, this);
 
     CHECK(JS_DefineProperty(cx, global, "obj1", OBJECT_TO_JSVAL(obj1), NULL, NULL, 0));
     CHECK(JS_DefineProperty(cx, global, "obj2", OBJECT_TO_JSVAL(obj2), NULL, NULL, 0));
@@ -127,7 +127,7 @@ doResolve(JSObject *obj, jsid id, uintN flags, JSObject **objp)
 static JSBool
 my_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
-    return static_cast<cls_testResolveRecursion *>(JS_GetPrivate(cx, obj))->
+    return static_cast<cls_testResolveRecursion *>(JS_GetPrivate(obj))->
            doResolve(obj, id, flags, objp);
 }
 
