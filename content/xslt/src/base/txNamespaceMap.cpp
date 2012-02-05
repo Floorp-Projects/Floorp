@@ -120,14 +120,6 @@ txNamespaceMap::lookupNamespace(nsIAtom* aPrefix)
 }
 
 PRInt32
-txNamespaceMap::lookupNamespace(const nsAString& aPrefix)
-{
-    nsCOMPtr<nsIAtom> prefix = do_GetAtom(aPrefix);
-
-    return lookupNamespace(prefix);
-}
-
-PRInt32
 txNamespaceMap::lookupNamespaceWithDefault(const nsAString& aPrefix)
 {
     nsCOMPtr<nsIAtom> prefix = do_GetAtom(aPrefix);

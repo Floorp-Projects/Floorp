@@ -4295,6 +4295,7 @@ const UnitInfo UnitData[] = {
   { STR_WITH_LEN("deg"), eCSSUnit_Degree, VARIANT_ANGLE },
   { STR_WITH_LEN("grad"), eCSSUnit_Grad, VARIANT_ANGLE },
   { STR_WITH_LEN("rad"), eCSSUnit_Radian, VARIANT_ANGLE },
+  { STR_WITH_LEN("turn"), eCSSUnit_Turn, VARIANT_ANGLE },
   { STR_WITH_LEN("hz"), eCSSUnit_Hertz, VARIANT_FREQUENCY },
   { STR_WITH_LEN("khz"), eCSSUnit_Kilohertz, VARIANT_FREQUENCY },
   { STR_WITH_LEN("s"), eCSSUnit_Seconds, VARIANT_TIME },

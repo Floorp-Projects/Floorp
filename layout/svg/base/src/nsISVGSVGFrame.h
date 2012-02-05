@@ -46,9 +46,9 @@ class nsISVGSVGFrame
 public:
   NS_DECL_QUERYFRAME_TARGET(nsISVGSVGFrame)
 
-  NS_IMETHOD SuspendRedraw()=0;        
-  NS_IMETHOD UnsuspendRedraw()=0;      
-  NS_IMETHOD NotifyViewportChange()=0; 
+  virtual void SuspendRedraw()=0;        
+  virtual void UnsuspendRedraw()=0;      
+  virtual void NotifyViewportChange()=0; 
 };
 
 #endif // __NS_ISVGSVGFRAME_H__
