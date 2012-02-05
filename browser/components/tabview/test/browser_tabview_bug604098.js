@@ -30,16 +30,12 @@ function test1() {
     closeGroupItem(groupItems[1], finish);
   });
 
-  // first click
-  mouseClick(contentElement, 0);
-  // second click
-  mouseClick(contentElement, 0);
+  // double click
+  doubleClick(contentElement, 0);
 }
 
-function mouseClick(targetElement, buttonCode) {
+function doubleClick(targetElement, buttonCode) {
   EventUtils.sendMouseEvent(
-    { type: "mousedown", button: buttonCode }, targetElement, contentWindow);
-  EventUtils.sendMouseEvent(
-    { type: "mouseup", button: buttonCode }, targetElement, contentWindow);
+    { type: "dblclick", button: buttonCode }, targetElement, contentWindow);
 }
 
