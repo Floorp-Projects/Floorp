@@ -46,8 +46,8 @@
 // some property of another element, e.g. <animate>, <set>.
 
 #define NS_ISMILANIMATIONELEMENT_IID \
-{ 0xaf92584b, 0x75b0, 0x4584,        \
-  { 0x87, 0xd2, 0xa8, 0x3, 0x34, 0xf0, 0x5, 0xaf } }
+{ 0x29792cd9, 0x0f96, 0x4ba6,        \
+  { 0xad, 0xea, 0x03, 0x0e, 0x0b, 0xfe, 0x1e, 0xb7 } }
 
 class nsISMILAttr;
 class nsSMILAnimationFunction;
@@ -82,6 +82,11 @@ public:
    * Non-const version of Element()
    */
   virtual mozilla::dom::Element& AsElement() = 0;
+
+  /*
+   * Returns true if the element passes conditional processing
+   */
+  virtual bool PassesConditionalProcessingTests() = 0;
 
   /*
    * Returns the source attribute as an nsAttrValue. The global namespace will
