@@ -171,6 +171,8 @@ public class GeckoAppShell
     public static native void freeDirectBuffer(ByteBuffer buf);
     public static native void bindWidgetTexture();
     public static native void scheduleComposite();
+    public static native void schedulePauseComposition();
+    public static native void scheduleResumeComposition();
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {

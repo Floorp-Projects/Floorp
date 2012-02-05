@@ -92,6 +92,11 @@ public:
   void AsyncRender();
   void ScheduleRenderOnCompositorThread(::base::Thread &aCompositorThread);
 
+  void PauseComposition();
+  void ResumeComposition();
+  void SchedulePauseOnCompositorThread(::base::Thread &aCompositorThread);
+  void ScheduleResumeOnCompositorThread(::base::Thread &aCompositorThread);
+
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
@@ -123,7 +128,7 @@ private:
 #endif
 
   nsRefPtr<LayerManager> mLayerManager;
-  bool mStopped;
+  bool mPaused;
   nsIWidget* mWidget;
   float mXScale;
   float mYScale;

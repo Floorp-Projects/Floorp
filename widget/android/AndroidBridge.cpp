@@ -1870,6 +1870,22 @@ AndroidBridge::ScheduleComposite()
 }
 
 void
+AndroidBridge::SchedulePauseComposition()
+{
+    if (mCompositorParent) {
+        mCompositorParent->SchedulePauseOnCompositorThread(*mCompositorThread);
+    }
+}
+
+void
+AndroidBridge::ScheduleResumeComposition()
+{
+    if (mCompositorParent) {
+        mCompositorParent->ScheduleResumeOnCompositorThread(*mCompositorThread);
+    }
+}
+
+void
 AndroidBridge::SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter)
 {
     __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### SetViewTransformGetter()");

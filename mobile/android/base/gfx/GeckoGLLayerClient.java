@@ -193,5 +193,15 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         Log.e(LOGTAG, "### Render requested, scheduling composite");
         GeckoAppShell.scheduleComposite();
     }
+
+    public void compositionPauseRequested() {
+        Log.e(LOGTAG, "### Scheduling PauseComposition");
+        GeckoAppShell.schedulePauseComposition();
+    }
+
+    public void compositionResumeRequested() {
+        Log.e(LOGTAG, "### Scheduling ResumeComposition");
+        GeckoAppShell.scheduleResumeComposition();
+    }
 }
 

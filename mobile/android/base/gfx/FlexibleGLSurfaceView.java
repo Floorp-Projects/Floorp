@@ -192,6 +192,8 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
 
     public interface Listener {
         void renderRequested();
+        void compositionPauseRequested();
+        void compositionResumeRequested();
     }
 
     public static class FlexibleGLSurfaceViewException extends RuntimeException {
