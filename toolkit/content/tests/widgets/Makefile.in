@@ -58,6 +58,7 @@ _TEST_FILES =	\
                 test_videocontrols.html \
 		test_videocontrols_video_direction.html \
 		test_videocontrols_audio_direction.html \
+		test_audiocontrols_dimensions.html \
 		videocontrols_direction-1-ref.html \
 		videocontrols_direction-1a.html \
 		videocontrols_direction-1b.html \
