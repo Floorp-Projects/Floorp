@@ -2625,7 +2625,7 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
 
     JSObject* obj = JSVAL_TO_OBJECT(object);
     while (obj && !js::IsWrapper(obj) && !IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
-        obj = JS_GetPrototype(cx, obj);
+        obj = JS_GetPrototype(obj);
 
     if (!obj)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
@@ -3034,9 +3034,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
         }
 
         // Pass on ownership of sop to |sandbox|.
-        if (!JS_SetPrivate(cx, sandbox, sop.forget().get())) {
-            return NS_ERROR_XPC_UNEXPECTED;
-        }
+        JS_SetPrivate(sandbox, sop.forget().get());
 
         rv = xpc->InitClasses(cx, sandbox);
         if (NS_SUCCEEDED(rv) &&

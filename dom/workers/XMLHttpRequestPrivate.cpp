@@ -1694,7 +1694,7 @@ XMLHttpRequestPrivate::Send(JSContext* aCx, bool aHasBody, jsval aBody)
   bool hasUploadListeners = false;
   if (mUploadJSObject) {
     events::EventTarget* target =
-      events::EventTarget::FromJSObject(aCx, mUploadJSObject);
+      events::EventTarget::FromJSObject(mUploadJSObject);
     NS_ASSERTION(target, "This should never be null!");
     hasUploadListeners = target->HasListeners();
   }
@@ -1754,7 +1754,7 @@ XMLHttpRequestPrivate::SendAsBinary(JSContext* aCx, JSString* aBody)
   bool hasUploadListeners = false;
   if (mUploadJSObject) {
     events::EventTarget* target =
-      events::EventTarget::FromJSObject(aCx, mUploadJSObject);
+      events::EventTarget::FromJSObject(mUploadJSObject);
     NS_ASSERTION(target, "This should never be null!");
     hasUploadListeners = target->HasListeners();
   }
