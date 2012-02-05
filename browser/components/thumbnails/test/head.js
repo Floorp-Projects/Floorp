@@ -148,6 +148,7 @@ function getXULDocument(aCallback) {
   }, false);
 
   doc.body.appendChild(iframe);
+  registerCleanupFunction(function () { doc.body.removeChild(iframe); });
 }
 
 /**
