@@ -340,7 +340,7 @@ bool
 ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
                                JSObject* aEvent, bool* aPreventDefaultCalled)
 {
-  if (!events::IsSupportedEventClass(aCx, aEvent)) {
+  if (!events::IsSupportedEventClass(aEvent)) {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                          JSMSG_INCOMPATIBLE_METHOD,
                          "EventTarget", "dispatchEvent", "Event object");
@@ -407,12 +407,10 @@ ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
     return true;
   }
 
-  if (!events::SetEventTarget(aCx, aEvent, aTarget)) {
-    return false;
-  }
+  events::SetEventTarget(aEvent, aTarget);
 
   for (size_t index = 0; index < listeners.length(); index++) {
-    if (events::EventImmediatePropagationStopped(aCx, aEvent)) {
+    if (events::EventImmediatePropagationStopped(aEvent)) {
       break;
     }
 
@@ -462,11 +460,9 @@ ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
     }
   }
 
-  if (!events::SetEventTarget(aCx, aEvent, NULL)) {
-    return false;
-  }
+  events::SetEventTarget(aEvent, NULL);
 
-  *aPreventDefaultCalled = events::EventWasCanceled(aCx, aEvent);
+  *aPreventDefaultCalled = events::EventWasCanceled(aEvent);
   return true;
 }
 

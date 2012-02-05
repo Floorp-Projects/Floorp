@@ -706,16 +706,7 @@ jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
             return NULL;
         if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
             return NULL;
-        JS_BeginRequest(jsdc->dumbContext);
-        call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, obj);
-        if(!call) {
-            JS_EndRequest(jsdc->dumbContext);
-
-            return NULL;
-        }
-        proto = JS_GetPrototype(jsdc->dumbContext, obj);
-        JS_LeaveCrossCompartmentCall(call);
-        JS_EndRequest(jsdc->dumbContext);
+        proto = JS_GetPrototype(obj);
         if(!proto)
             return NULL;
         jsdval->proto = jsd_NewValue(jsdc, OBJECT_TO_JSVAL(proto));
@@ -775,18 +766,14 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
             return NULL;
         if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
             return NULL;
+        proto = JS_GetPrototype(obj);
+        if(!proto)
+            return NULL;
         JS_BeginRequest(jsdc->dumbContext);
         call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, obj);
         if(!call) {
             JS_EndRequest(jsdc->dumbContext);
 
-            return NULL;
-        }
-        proto = JS_GetPrototype(jsdc->dumbContext,obj);
-        if(!proto)
-        {
-            JS_LeaveCrossCompartmentCall(call);
-            JS_EndRequest(jsdc->dumbContext);
             return NULL;
         }
         ctor = JS_GetConstructor(jsdc->dumbContext,proto);
