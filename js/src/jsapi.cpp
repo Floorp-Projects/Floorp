@@ -3156,18 +3156,17 @@ JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 }
 
 JS_PUBLIC_API(void *)
-JS_GetPrivate(JSContext *cx, JSObject *obj)
+JS_GetPrivate(JSObject *obj)
 {
     /* This function can be called by a finalizer. */
     return obj->getPrivate();
 }
 
-JS_PUBLIC_API(JSBool)
-JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
+JS_PUBLIC_API(void)
+JS_SetPrivate(JSObject *obj, void *data)
 {
     /* This function can be called by a finalizer. */
     obj->setPrivate(data);
-    return true;
 }
 
 JS_PUBLIC_API(void *)
@@ -3179,10 +3178,8 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetPrototype(JSContext *cx, JSObject *obj)
+JS_GetPrototype(JSObject *obj)
 {
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
     return obj->getProto();
 }
 
@@ -3196,10 +3193,9 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetParent(JSContext *cx, JSObject *obj)
+JS_GetParent(JSObject *obj)
 {
     JS_ASSERT(!obj->isScope());
-    assertSameCompartment(cx, obj);
     return obj->getParent();
 }
 
@@ -4405,22 +4401,23 @@ JS_ElementIteratorStub(JSContext *cx, JSObject *obj, JSBool keysonly)
     return JS_NewElementIterator(cx, obj);
 }
 
-JS_PUBLIC_API(JSBool)
-JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp)
+JS_PUBLIC_API(jsval)
+JS_GetReservedSlot(JSObject *obj, uint32_t index)
 {
-    /* This function can be called by a finalizer. */
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    return js_GetReservedSlot(cx, obj, index, vp);
+    if (!obj->isNative())
+        return UndefinedValue();
+
+    return GetReservedSlot(obj, index);
 }
 
-JS_PUBLIC_API(JSBool)
-JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval v)
+JS_PUBLIC_API(void)
+JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v)
 {
-    AssertNoGC(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, v);
-    return js_SetReservedSlot(cx, obj, index, v);
+    if (!obj->isNative())
+        return;
+
+    SetReservedSlot(obj, index, v);
+    GCPoke(obj->compartment()->rt, NullValue());
 }
 
 JS_PUBLIC_API(JSObject *)

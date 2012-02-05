@@ -999,17 +999,17 @@ DetachedWrappedNativeProtoShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *h
     XPCWrappedNativeProto* proto =
         (XPCWrappedNativeProto*)((JSDHashEntryStub*)hdr)->key;
 
-    proto->SystemIsBeingShutDown((JSContext*)arg);
+    proto->SystemIsBeingShutDown();
     return JS_DHASH_NEXT;
 }
 
-void XPCJSRuntime::SystemIsBeingShutDown(JSContext* cx)
+void XPCJSRuntime::SystemIsBeingShutDown()
 {
     DOM_ClearInterfaces();
 
     if (mDetachedWrappedNativeProtoMap)
         mDetachedWrappedNativeProtoMap->
-            Enumerate(DetachedWrappedNativeProtoShutdownMarker, cx);
+            Enumerate(DetachedWrappedNativeProtoShutdownMarker, nsnull);
 }
 
 JSContext *
