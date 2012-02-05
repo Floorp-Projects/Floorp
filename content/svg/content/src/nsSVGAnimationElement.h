@@ -89,6 +89,7 @@ public:
   // nsISMILAnimationElement interface
   virtual const Element& AsElement() const;
   virtual Element& AsElement();
+  virtual bool PassesConditionalProcessingTests();
   virtual const nsAttrValue* GetAnimAttr(nsIAtom* aName) const;
   virtual bool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
   virtual bool HasAnimAttr(nsIAtom* aAttName) const;

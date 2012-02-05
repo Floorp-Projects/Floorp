@@ -119,6 +119,14 @@ nsSVGAnimationElement::AsElement()
   return *this;
 }
 
+bool
+nsSVGAnimationElement::PassesConditionalProcessingTests()
+{
+  nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(
+    static_cast<nsSVGElement*>(this)));
+  return tests->PassesConditionalProcessingTests();
+}
+
 const nsAttrValue*
 nsSVGAnimationElement::GetAnimAttr(nsIAtom* aName) const
 {
