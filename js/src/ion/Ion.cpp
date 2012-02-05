@@ -469,8 +469,7 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
 void
 IonScript::trace(JSTracer *trc)
 {
-    // Don't bother adding the method to the mark stack if it won't trace.
-    if (method_ && !invalidated())
+    if (method_)
         MarkIonCode(trc, method_, "method");
 
     if (deoptTable_)
