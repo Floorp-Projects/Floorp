@@ -262,6 +262,7 @@ double nsCSSValue::GetAngleValueInRadians() const
 
   switch (GetUnit()) {
   case eCSSUnit_Radian: return angle;
+  case eCSSUnit_Turn:   return angle * 2 * M_PI;
   case eCSSUnit_Degree: return angle * M_PI / 180.0;
   case eCSSUnit_Grad:   return angle * M_PI / 200.0;
 
@@ -1105,6 +1106,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Degree:       aResult.AppendLiteral("deg");  break;
     case eCSSUnit_Grad:         aResult.AppendLiteral("grad"); break;
     case eCSSUnit_Radian:       aResult.AppendLiteral("rad");  break;
+    case eCSSUnit_Turn:         aResult.AppendLiteral("turn");  break;
 
     case eCSSUnit_Hertz:        aResult.AppendLiteral("Hz");   break;
     case eCSSUnit_Kilohertz:    aResult.AppendLiteral("kHz");  break;

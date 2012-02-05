@@ -80,8 +80,6 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/xpcom/build \
   $(NULL)
 
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+TEST_DIRS += test
 
 include $(topsrcdir)/config/rules.mk
