@@ -1104,24 +1104,6 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     }
   }
 
-  if (!IS_COMMITTING_LPARAM(lParam) && !IS_COMPOSING_LPARAM(lParam)) {
-    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-      ("IMM32: HandleComposition, Handle 0 length TextEvent\n"));
-
-    // XXX This block should be wrong. If composition string is not change,
-    // we should do nothing.
-
-    if (!mIsComposing) {
-      HandleStartComposition(aWindow, aIMEContext);
-    }
-
-    mCompositionString.Truncate();
-    DispatchTextEvent(aWindow, aIMEContext, false);
-
-    return ShouldDrawCompositionStringOurselves();
-  }
-
-
   bool startCompositionMessageHasBeenSent = mIsComposing;
 
   //
@@ -1160,6 +1142,32 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     ("IMM32: HandleComposition, GCS_COMPSTR\n"));
 
   GetCompositionString(aIMEContext, GCS_COMPSTR);
+
+  if (!IS_COMPOSING_LPARAM(lParam)) {
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: HandleComposition, lParam doesn't indicate composing, "
+       "mCompositionString=\"%s\", mLastDispatchedCompositionString=\"%s\"",
+       NS_ConvertUTF16toUTF8(mCompositionString).get(),
+       NS_ConvertUTF16toUTF8(mLastDispatchedCompositionString).get()));
+
+    // If composition string isn't changed, we can trust the lParam.
+    // So, we need to do nothing.
+    if (mLastDispatchedCompositionString == mCompositionString) {
+      return ShouldDrawCompositionStringOurselves();
+    }
+
+    // IME may send WM_IME_COMPOSITION without composing lParam values
+    // when composition string becomes empty (e.g., using Backspace key).
+    // If composition string is empty, we should dispatch a text event with
+    // empty string.
+    if (mCompositionString.IsEmpty()) {
+      DispatchTextEvent(aWindow, aIMEContext, false);
+      return ShouldDrawCompositionStringOurselves();
+    }
+
+    // Otherwise, we cannot trust the lParam value.  We might need to
+    // dispatch text event with the latest composition string information.
+  }
 
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=296339
   if (mCompositionString.IsEmpty() && !startCompositionMessageHasBeenSent) {
