@@ -4119,7 +4119,7 @@ JSObject::growSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
      */
     JS_ASSERT(newCount < NELEMENTS_LIMIT);
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfIncludingThis() : 0;
+    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
     size_t newSize = oldSize + (newCount - oldCount) * sizeof(Value);
 
     /*
@@ -4188,7 +4188,7 @@ JSObject::shrinkSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
     if (isCall())
         return;
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfIncludingThis() : 0;
+    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
     size_t newSize = oldSize - (oldCount - newCount) * sizeof(Value);
 
     if (newCount == 0) {
@@ -4234,7 +4234,7 @@ JSObject::growElements(JSContext *cx, uintN newcap)
     uint32_t oldcap = getDenseArrayCapacity();
     JS_ASSERT(oldcap <= newcap);
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfIncludingThis() : 0;
+    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
 
     uint32_t nextsize = (oldcap <= CAPACITY_DOUBLING_MAX)
                       ? oldcap * 2
@@ -4277,7 +4277,7 @@ JSObject::growElements(JSContext *cx, uintN newcap)
     Debug_SetValueRangeToCrashOnTouch(elements + initlen, actualCapacity - initlen);
 
     if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, this, oldSize, computedSizeOfIncludingThis());
+        Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
 
     return true;
 }
@@ -4290,7 +4290,7 @@ JSObject::shrinkElements(JSContext *cx, uintN newcap)
     uint32_t oldcap = getDenseArrayCapacity();
     JS_ASSERT(newcap <= oldcap);
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfIncludingThis() : 0;
+    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
 
     /* Don't shrink elements below the minimum capacity. */
     if (oldcap <= SLOT_CAPACITY_MIN || !hasDynamicElements())
@@ -4309,7 +4309,7 @@ JSObject::shrinkElements(JSContext *cx, uintN newcap)
     elements = newheader->elements();
 
     if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, this, oldSize, computedSizeOfIncludingThis());
+        Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
 }
 
 #ifdef DEBUG

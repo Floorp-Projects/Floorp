@@ -355,17 +355,18 @@ function start() {
   // we currently disable this test on version of Mac OSX older than 10.6,
   // due to various weird failures, including one making getRenderbufferParameter tests
   // on DEPTH_STENCIL fail
+  var kDarwinVersion = 0;
   if (kIsMac) {
     // code borrowed from browser/modules/test/browser_taskbar_preview.js
     var is106orHigher = false;
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var version = Components.classes["@mozilla.org/system-info;1"]
-                            .getService(Components.interfaces.nsIPropertyBag2)
-                            .getProperty("version");
+    kDarwinVersion = parseFloat(Components.classes["@mozilla.org/system-info;1"]
+                                          .getService(Components.interfaces.nsIPropertyBag2)
+                                          .getProperty("version"));
     // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
     // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
     // is the Darwin version.
-    is106orHigher = (parseFloat(version) >= 10.0);
+    is106orHigher = (kDarwinVersion >= 10.0);
     if (!is106orHigher) {
       dump("WebGL mochitest disabled on Mac OSX versions older than 10.6\n");
       SimpleTest.finish();
@@ -410,6 +411,16 @@ function start() {
 
   if (kIsWindows && !kIsWindowsVistaOrHigher)
     testsExpectedToFail.push('conformance/textures/texture-mips.html');
+
+  if (kIsMac && kDarwinVersion < 11.0) {    // Darwin 11 == Mac OS 10.7
+    testsExpectedToFail.push('conformance/more/functions/uniformfBadArgs.html');
+    testsExpectedToFail.push('conformance/more/functions/uniformiBadArgs.html');
+  }
+
+  if (kIsMac && kDarwinVersion >= 11.0) {
+    testsExpectedToFail.push('conformance/textures/texture-mips.html');
+    testsExpectedToFail.push('conformance/textures/texture-npot.html');
+  }
 
   var testsToIgnore = [];
 
