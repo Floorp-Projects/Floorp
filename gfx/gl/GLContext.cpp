@@ -2132,28 +2132,44 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
     NS_ASSERTION(format == internalformat,
                  "format and internalformat not the same for glTexImage2D on GLES2");
 
-    // Use GLES-specific workarounds for GL_UNPACK_ROW_LENGTH; these are
-    // implemented in TexSubImage2D.
-    fTexImage2D(target,
-                border,
-                internalformat,
-                width,
-                height,
-                border,
-                format,
-                type,
-                NULL);
-    TexSubImage2D(target,
-                  level,
-                  0,
-                  0,
-                  width,
-                  height,
-                  stride,
-                  pixelsize,
-                  format,
-                  type,
-                  pixels);
+    if (stride == width * pixelsize) {
+        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                        GetAddressAlignment((ptrdiff_t)stride)));
+        fTexImage2D(target,
+                    border,
+                    internalformat,
+                    width,
+                    height,
+                    border,
+                    format,
+                    type,
+                    pixels);
+        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+    } else {
+        // Use GLES-specific workarounds for GL_UNPACK_ROW_LENGTH; these are
+        // implemented in TexSubImage2D.
+        fTexImage2D(target,
+                    border,
+                    internalformat,
+                    width,
+                    height,
+                    border,
+                    format,
+                    type,
+                    NULL);
+        TexSubImage2D(target,
+                      level,
+                      0,
+                      0,
+                      width,
+                      height,
+                      stride,
+                      pixelsize,
+                      format,
+                      type,
+                      pixels);
+    }
 #else
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
                  NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
