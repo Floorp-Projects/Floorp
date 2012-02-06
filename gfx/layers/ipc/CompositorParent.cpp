@@ -52,7 +52,9 @@ namespace mozilla {
 namespace layers {
 
 CompositorParent::CompositorParent(nsIWidget* aWidget)
-  : mPaused(false), mWidget(aWidget)
+  : mPaused(false)
+  , mWidget(aWidget)
+  , mCurrentCompositeTask(NULL)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -79,7 +81,6 @@ CompositorParent::RecvStop()
   Destroy();
   return true;
 }
-
 
 void
 CompositorParent::ScheduleRenderOnCompositorThread(::base::Thread &aCompositorThread)
@@ -127,9 +128,13 @@ CompositorParent::ScheduleResumeOnCompositorThread(::base::Thread &aCompositorTh
 void
 CompositorParent::ScheduleComposition()
 {
+  if (mCurrentCompositeTask) {
+    return;
+  }
+
   printf_stderr("Schedule composition\n");
-  CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-  MessageLoop::current()->PostTask(FROM_HERE, composeTask);
+  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
+  MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
 
 // Test code for async scrolling.
 #ifdef OMTC_TEST_ASYNC_SCROLLING
@@ -154,9 +159,24 @@ CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
 void
 CompositorParent::Composite()
 {
+  mCurrentCompositeTask = NULL;
+
   if (mPaused || !mLayerManager) {
     return;
   }
+
+#ifdef MOZ_WIDGET_ANDROID
+  RequestViewTransform();
+#endif
+
+  gfx3DMatrix worldTransform;
+  gfxPoint3D offset(-mScrollOffset.x, -mScrollOffset.y, 0.0f);
+  printf_stderr("Correcting for position fixed %i, %i\n", -mScrollOffset.x, -mScrollOffset.y);
+  worldTransform.Translate(offset);
+  worldTransform.Scale(mXScale, mYScale, 1.0f);
+  Layer* root = mLayerManager->GetRoot();
+  root->AsShadowLayer()->SetShadowTransform(worldTransform);
+
 
   mLayerManager->EndEmptyTransaction();
 }
@@ -285,22 +305,12 @@ CompositorParent::AsyncRender()
   container->SetFrameMetrics(metrics);
 */
 
-#ifdef MOZ_WIDGET_ANDROID
-  RequestViewTransform();
-#endif
-
-  gfx3DMatrix worldTransform;
-  gfxPoint3D offset(-mScrollOffset.x, -mScrollOffset.y, 0.0f);
-  worldTransform.Translate(offset);
-  worldTransform.Scale(mXScale, mYScale, 1.0f);
-  root->AsShadowLayer()->SetShadowTransform(worldTransform);
-
 #if 0
   ViewTransform transform;
   TransformShadowTree(root, transform);
 #endif
 
-  Composite();
+  ScheduleComposition();
 }
 
 #ifdef MOZ_WIDGET_ANDROID
