@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(498dcd6c-94a2-4c32-8c77-531b583dff37)]
+[scriptable, uuid(d961f76e-8437-4bc6-9ada-a1c98ace9560)]
 interface nsIScreen : nsISupports
 {
   /**
@@ -49,6 +49,17 @@ interface nsIScreen : nsISupports
 
   /* The number of different brightness levels */
   const unsigned long BRIGHTNESS_LEVELS = 2;
+
+  /**
+   * Allowable screen rotations, when the underlying widget toolkit
+   * supports rotating the screen.
+   *
+   * ROTATION_0_DEG is the default, unrotated configuration.
+   */
+  const unsigned long   ROTATION_0_DEG = 0;
+  const unsigned long  ROTATION_90_DEG = 1;
+  const unsigned long ROTATION_180_DEG = 2;
+  const unsigned long ROTATION_270_DEG = 3;
 
   void GetRect(out long left, out long top, out long width, out long height);
   void GetAvailRect(out long left, out long top, out long width, out long height);
@@ -72,5 +83,10 @@ interface nsIScreen : nsISupports
   void unlockMinimumBrightness(in unsigned long brightness);
   
   readonly attribute long pixelDepth;
-  readonly attribute long colorDepth;  
+  readonly attribute long colorDepth;
+  /**
+   * Get/set the screen rotation, on platforms that support changing
+   * screen rotation.
+   */
+  attribute unsigned long rotation;
 };
