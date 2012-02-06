@@ -55,6 +55,23 @@ using namespace mozilla::dom;
 /* static */ bool nsScreen::sAllowScreenEnabledProperty = false;
 /* static */ bool nsScreen::sAllowScreenBrightnessProperty = false;
 
+namespace {
+
+bool
+IsChromeType(nsIDocShell *aDocShell)
+{
+  nsCOMPtr<nsIDocShellTreeItem> ds = do_QueryInterface(aDocShell);
+  if (!ds) {
+    return false;
+  }
+
+  PRInt32 itemType;
+  ds->GetItemType(&itemType);
+  return itemType == nsIDocShellTreeItem::typeChrome;
+}
+
+} // anonymous namespace
+
 /* static */ void
 nsScreen::Initialize()
 {
@@ -93,7 +110,7 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
 
   screen->mOwner = aWindow;
   screen->mScriptContext.swap(scriptContext);
-  screen->mDocShell = aWindow->GetDocShell();
+  screen->mIsChrome = IsChromeType(aWindow->GetDocShell());
 
   hal::RegisterScreenOrientationObserver(screen);
   hal::GetCurrentScreenOrientation(&(screen->mOrientation));
@@ -254,7 +271,7 @@ nsScreen::GetAvailTop(PRInt32* aAvailTop)
 nsDeviceContext*
 nsScreen::GetDeviceContext()
 {
-  return nsLayoutUtils::GetDeviceContextForScreenInfo(mDocShell);
+  return nsLayoutUtils::GetDeviceContextForScreenInfo(mOwner);
 }
 
 nsresult
@@ -295,27 +312,10 @@ nsScreen::GetAvailRect(nsRect& aRect)
   return NS_OK;
 }
 
-namespace {
-
-bool
-IsChromeType(nsIDocShell *aDocShell)
-{
-  nsCOMPtr<nsIDocShellTreeItem> ds = do_QueryInterface(aDocShell);
-  if (!ds) {
-    return false;
-  }
-
-  PRInt32 itemType;
-  ds->GetItemType(&itemType);
-  return itemType == nsIDocShellTreeItem::typeChrome;
-}
-
-} // anonymous namespace
-
 nsresult
 nsScreen::GetMozEnabled(bool *aEnabled)
 {
-  if (!sAllowScreenEnabledProperty || !IsChromeType(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || mIsChrome) {
     *aEnabled = true;
     return NS_OK;
   }
@@ -327,7 +327,7 @@ nsScreen::GetMozEnabled(bool *aEnabled)
 nsresult
 nsScreen::SetMozEnabled(bool aEnabled)
 {
-  if (!sAllowScreenEnabledProperty || !IsChromeType(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || mIsChrome) {
     return NS_OK;
   }
 
@@ -340,7 +340,7 @@ nsScreen::SetMozEnabled(bool aEnabled)
 nsresult
 nsScreen::GetMozBrightness(double *aBrightness)
 {
-  if (!sAllowScreenBrightnessProperty || !IsChromeType(mDocShell)) {
+  if (!sAllowScreenBrightnessProperty || mIsChrome) {
     *aBrightness = 1;
     return NS_OK;
   }
@@ -352,7 +352,7 @@ nsScreen::GetMozBrightness(double *aBrightness)
 nsresult
 nsScreen::SetMozBrightness(double aBrightness)
 {
-  if (!sAllowScreenBrightnessProperty || !IsChromeType(mDocShell)) {
+  if (!sAllowScreenBrightnessProperty || mIsChrome) {
     return NS_OK;
   }
 
