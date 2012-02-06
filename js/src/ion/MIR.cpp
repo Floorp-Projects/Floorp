@@ -304,7 +304,7 @@ MConstant::printOpcode(FILE *fp)
         fprintf(fp, value().toBoolean() ? "true" : "false");
         break;
       case MIRType_Int32:
-        fprintf(fp, "%x", value().toInt32());
+        fprintf(fp, "0x%x", value().toInt32());
         break;
       case MIRType_Double:
         fprintf(fp, "%f", value().toDouble());
