@@ -388,6 +388,13 @@ js::TraceWeakMaps(WeakMapTracer *trc)
     WatchpointMap::traceAll(trc);
 }
 
+JS_FRIEND_API(bool)
+js::GCThingIsMarkedGray(void *thing)
+{
+    JS_ASSERT(thing);
+    return reinterpret_cast<gc::Cell *>(thing)->isMarked(gc::GRAY);
+}
+
 JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback)
 {
