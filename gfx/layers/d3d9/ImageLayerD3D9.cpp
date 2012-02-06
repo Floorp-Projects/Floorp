@@ -141,8 +141,8 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
                                   IDirect3DDevice9 *aDevice,
                                   LayerManagerD3D9 *aManager)
 {
-  nsAutoPtr<PlanarYCbCrD3D9BackendData> backendData =
-    new PlanarYCbCrD3D9BackendData;
+  nsAutoPtr<PlanarYCbCrD3D9BackendData> backendData(
+    new PlanarYCbCrD3D9BackendData);
 
   PlanarYCbCrImage::Data &data = aImage->mData;
 
@@ -323,7 +323,7 @@ ImageLayerD3D9::RenderLayer()
     }
 
     if (!cairoImage->GetBackendData(LayerManager::LAYERS_D3D9)) {
-      nsAutoPtr<CairoD3D9BackendData> dat = new CairoD3D9BackendData();
+      nsAutoPtr<CairoD3D9BackendData> dat(new CairoD3D9BackendData());
       dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
 
       if (dat->mTexture) {
