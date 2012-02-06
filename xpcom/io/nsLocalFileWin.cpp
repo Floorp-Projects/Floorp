@@ -64,7 +64,7 @@
 
 #include <direct.h>
 #include <windows.h>
-
+#include <shlwapi.h>
 #include <aclapi.h>
 
 #include "shellapi.h"
@@ -104,6 +104,10 @@ unsigned char *_mbsstr( const unsigned char *str,
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
 #define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
+#endif
+
+#ifndef DRIVE_REMOTE
+#define DRIVE_REMOTE 4
 #endif
 
 ILCreateFromPathWPtr nsLocalFile::sILCreateFromPathW = NULL;
@@ -1361,6 +1365,40 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
     return rv;
 }
 
+/** 
+ * Determines if the drive type for the specified file is rmeote or local.
+ * 
+ * @param path   The path of the file to check
+ * @param remote Out parameter, on function success holds true if the specified
+ *               file path is remote, or false if the file path is local.
+ * @return true  on success. The return value implies absolutely nothing about
+ *               wether the file is local or remote.
+*/
+static bool
+IsRemoteFilePath(LPCWSTR path, bool &remote)
+{
+  // Obtain the parent directory path and make sure it ends with
+  // a trailing backslash.
+  WCHAR dirPath[MAX_PATH + 1] = { 0 };
+  wcsncpy(dirPath, path, MAX_PATH);
+  if (!PathRemoveFileSpecW(dirPath)) {
+    return false;
+  }
+  size_t len = wcslen(dirPath);
+  // In case the dirPath holds exaclty MAX_PATH and remains unchanged, we
+  // recheck the required length here since we need to terminate it with
+  // a backslash.
+  if (len >= MAX_PATH) {
+    return false;
+  }
+
+  dirPath[len] = L'\\';
+  dirPath[len + 1] = L'\0';
+  UINT driveType = GetDriveTypeW(dirPath);
+  remote = driveType == DRIVE_REMOTE;
+  return true;
+}
+
 nsresult
 nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
                             const nsAString &newName, 
@@ -1409,14 +1447,22 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     // to a SMBV2 remote drive. Without this parameter subsequent append mode
     // file writes can cause the resultant file to become corrupt. We only need to do 
     // this if the major version of Windows is > 5(Only Windows Vista and above 
-    // can support SMBV2).
+    // can support SMBV2).  With a 7200RPM hard drive:
+    // Copying a 1KB file with COPY_FILE_NO_BUFFERING takes about 30-60ms.
+    // Copying a 1KB file without COPY_FILE_NO_BUFFERING takes < 1ms.
+    // So we only use COPY_FILE_NO_BUFFERING when we have a remote drive.
     int copyOK;
     DWORD dwVersion = GetVersion();
     DWORD dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
     DWORD dwCopyFlags = 0;
-    
-    if (dwMajorVersion > 5)
-       dwCopyFlags = COPY_FILE_NO_BUFFERING;
+    if (dwMajorVersion > 5) {
+        bool path1Remote, path2Remote;
+        if (!IsRemoteFilePath(filePath.get(), path1Remote) || 
+            !IsRemoteFilePath(destPath.get(), path2Remote) ||
+            path1Remote || path2Remote) {
+            dwCopyFlags = COPY_FILE_NO_BUFFERING;
+        }
+    }
     
     if (!move)
         copyOK = ::CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
