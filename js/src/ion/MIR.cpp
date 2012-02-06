@@ -636,6 +636,13 @@ MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
         return;
     }
 
+    // Don't specialize as int32 if one of the operands is undefined,
+    // since ToNumber(undefined) is NaN.
+    if (b.rval == MIRType_Int32 && (b.lhs == MIRType_Undefined || b.rhs == MIRType_Undefined)) {
+        specialization_ = MIRType_None;
+        return;
+    }
+
     JS_ASSERT(b.rval == MIRType_Int32 || b.rval == MIRType_Double);
     specialization_ = b.rval;
 
