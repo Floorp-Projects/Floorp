@@ -346,6 +346,10 @@ NegateCompareOp(JSOp op)
         return JSOP_NE;
       case JSOP_NE:
         return JSOP_EQ;
+      case JSOP_STRICTNE:
+        return JSOP_STRICTEQ;
+      case JSOP_STRICTEQ:
+        return JSOP_STRICTNE;
       default:
         JS_NOT_REACHED("unrecognized op");
         return op;
