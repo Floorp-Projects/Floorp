@@ -2122,9 +2122,9 @@ static GLint GetAddressAlignment(ptrdiff_t aAddress)
 }
 
 void
-GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat, 
+GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
                       GLsizei width, GLsizei height, GLsizei stride,
-                      GLint pixelsize, GLint border, GLenum format, 
+                      GLint pixelsize, GLint border, GLenum format,
                       GLenum type, const GLvoid *pixels)
 {
 #ifdef USE_GLES2
@@ -2155,7 +2155,7 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
                   type,
                   pixels);
 #else
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 
+    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
                  NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
                         GetAddressAlignment((ptrdiff_t)stride)));
     int rowLength = stride/pixelsize;
@@ -2175,17 +2175,32 @@ GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
 }
 
 void
-GLContext::TexSubImage2D(GLenum target, GLint level, 
-                         GLint xoffset, GLint yoffset, 
+GLContext::TexSubImage2D(GLenum target, GLint level,
+                         GLint xoffset, GLint yoffset,
                          GLsizei width, GLsizei height, GLsizei stride,
-                         GLint pixelsize, GLenum format, 
+                         GLint pixelsize, GLenum format,
                          GLenum type, const GLvoid* pixels)
 {
 #ifdef USE_GLES2
-  if (IsExtensionSupported(EXT_unpack_subimage)) {
+    if (stride == width * pixelsize) {
+        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                 NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
+                        GetAddressAlignment((ptrdiff_t)stride)));
+        fTexSubImage2D(target,
+                       level,
+                       xoffset,
+                       yoffset,
+                       width,
+                       height,
+                       format,
+                       type,
+                       pixels);
+        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+    } else if (IsExtensionSupported(EXT_unpack_subimage)) {
         TexSubImage2DWithUnpackSubimageGLES(target, level, xoffset, yoffset,
                                             width, height, stride,
                                             pixelsize, format, type, pixels);
+
     } else {
         TexSubImage2DWithoutUnpackSubimage(target, level, xoffset, yoffset,
                                            width, height, stride,
@@ -2222,45 +2237,32 @@ GLContext::TexSubImage2DWithUnpackSubimageGLES(GLenum target, GLint level,
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
                  NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
                         GetAddressAlignment((ptrdiff_t)stride)));
-    if (stride == width * pixelsize) {
-        // No need to use GL_UNPACK_ROW_LENGTH.
-        fTexSubImage2D(target,
-                       level,
-                       xoffset,
-                       yoffset,
-                       width,
-                       height,
-                       format,
-                       type,
-                       pixels);
-    } else {
-        // When using GL_UNPACK_ROW_LENGTH, we need to work around a Tegra
-        // driver crash where the driver apparently tries to read
-        // (stride - width * pixelsize) bytes past the end of the last input
-        // row. We only upload the first height-1 rows using GL_UNPACK_ROW_LENGTH,
-        // and then we upload the final row separately. See bug 697990.
-        int rowLength = stride/pixelsize;
-        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
-        fTexSubImage2D(target,
-                       level,
-                       xoffset,
-                       yoffset,
-                       width,
-                       height-1,
-                       format,
-                       type,
-                       pixels);
-        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-        fTexSubImage2D(target,
-                       level,
-                       xoffset,
-                       yoffset+height-1,
-                       width,
-                       1,
-                       format,
-                       type,
-                       (const unsigned char *)pixels+(height-1)*stride);
-    }
+    // When using GL_UNPACK_ROW_LENGTH, we need to work around a Tegra
+    // driver crash where the driver apparently tries to read
+    // (stride - width * pixelsize) bytes past the end of the last input
+    // row. We only upload the first height-1 rows using GL_UNPACK_ROW_LENGTH,
+    // and then we upload the final row separately. See bug 697990.
+    int rowLength = stride/pixelsize;
+    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
+    fTexSubImage2D(target,
+                    level,
+                    xoffset,
+                    yoffset,
+                    width,
+                    height-1,
+                    format,
+                    type,
+                    pixels);
+    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+    fTexSubImage2D(target,
+                    level,
+                    xoffset,
+                    yoffset+height-1,
+                    width,
+                    1,
+                    format,
+                    type,
+                    (const unsigned char *)pixels+(height-1)*stride);
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
@@ -2272,48 +2274,33 @@ GLContext::TexSubImage2DWithoutUnpackSubimage(GLenum target, GLint level,
                                               GLenum format, GLenum type,
                                               const GLvoid* pixels)
 {
-    if (stride == width * pixelsize) {
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                     NS_MIN(GetAddressAlignment((ptrdiff_t)pixels),
-                            GetAddressAlignment((ptrdiff_t)stride)));
-        fTexSubImage2D(target,
-                       level,
-                       xoffset,
-                       yoffset,
-                       width,
-                       height,
-                       format,
-                       type,
-                       pixels);
-    } else {
-        // Not using the whole row of texture data and GL_UNPACK_ROW_LENGTH
-        // isn't supported. We make a copy of the texture data we're using,
-        // such that we're using the whole row of data in the copy. This turns
-        // out to be more efficient than uploading row-by-row; see bug 698197.
-        unsigned char *newPixels = new unsigned char[width*height*pixelsize];
-        unsigned char *rowDest = newPixels;
-        const unsigned char *rowSource = (const unsigned char *)pixels;
-        for (int h = 0; h < height; h++) {
+    // Not using the whole row of texture data and GL_UNPACK_ROW_LENGTH
+    // isn't supported. We make a copy of the texture data we're using,
+    // such that we're using the whole row of data in the copy. This turns
+    // out to be more efficient than uploading row-by-row; see bug 698197.
+    unsigned char *newPixels = new unsigned char[width*height*pixelsize];
+    unsigned char *rowDest = newPixels;
+    const unsigned char *rowSource = (const unsigned char *)pixels;
+    for (int h = 0; h < height; h++) {
             memcpy(rowDest, rowSource, width*pixelsize);
             rowDest += width*pixelsize;
             rowSource += stride;
-        }
-
-        stride = width*pixelsize;
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                     NS_MIN(GetAddressAlignment((ptrdiff_t)newPixels),
-                            GetAddressAlignment((ptrdiff_t)stride)));
-        fTexSubImage2D(target,
-                       level,
-                       xoffset,
-                       yoffset,
-                       width,
-                       height,
-                       format,
-                       type,
-                       newPixels);
-        delete [] newPixels;
     }
+
+    stride = width*pixelsize;
+    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                    NS_MIN(GetAddressAlignment((ptrdiff_t)newPixels),
+                            GetAddressAlignment((ptrdiff_t)stride)));
+    fTexSubImage2D(target,
+                    level,
+                    xoffset,
+                    yoffset,
+                    width,
+                    height,
+                    format,
+                    type,
+                    newPixels);
+    delete [] newPixels;
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
