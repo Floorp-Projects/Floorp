@@ -1330,11 +1330,11 @@ public:
 
   /**
    * Get a device context that can be used to get up-to-date device
-   * dimensions for the given docshell.  For some reason, this is more
+   * dimensions for the given window. For some reason, this is more
    * complicated than it ought to be in multi-monitor situations.
    */
   static nsDeviceContext*
-  GetDeviceContextForScreenInfo(nsIDocShell* aDocShell);
+  GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow);
 
   /**
    * Some frames with 'position: fixed' (nsStylePosition::mDisplay ==
