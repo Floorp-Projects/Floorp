@@ -3389,10 +3389,12 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
 
     nsSizeModeEvent event(true, NS_SIZEMODE, this);
 
-    // We don't care about anything but changes in the maximized/icon
+    // We don't care about anything but changes in the maximized/icon/fullscreen
     // states
     if ((aEvent->changed_mask
-         & (GDK_WINDOW_STATE_ICONIFIED|GDK_WINDOW_STATE_MAXIMIZED)) == 0) {
+         & (GDK_WINDOW_STATE_ICONIFIED |
+            GDK_WINDOW_STATE_MAXIMIZED |
+            GDK_WINDOW_STATE_FULLSCREEN)) == 0) {
         return;
     }
 
