@@ -206,7 +206,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   if (aSink && (aFlags & BREAK_NEED_CAPITALIZATION)) {
     if (!capitalizationState.AppendElements(aLength))
       return NS_ERROR_OUT_OF_MEMORY;
-    memset(capitalizationState.Elements(), false, aLength);
+    memset(capitalizationState.Elements(), false, aLength*sizeof(bool));
   }
 
   PRUint32 start = offset;
