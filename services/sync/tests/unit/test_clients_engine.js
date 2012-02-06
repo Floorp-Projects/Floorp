@@ -54,8 +54,8 @@ add_test(function test_bad_hmac() {
 
   try {
     let passphrase     = "abcdeabcdeabcdeabcdeabcdea";
-    Service.serverURL  = "http://localhost:8080/";
-    Service.clusterURL = "http://localhost:8080/";
+    Service.serverURL  = TEST_SERVER_URL;
+    Service.clusterURL = TEST_CLUSTER_URL;
     Service.login("foo", "ilovejane", passphrase);
 
     generateNewKeys();
@@ -164,7 +164,9 @@ add_test(function test_properties() {
 
 add_test(function test_sync() {
   _("Ensure that Clients engine uploads a new client record once a week.");
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  
+  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
+  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
   Svc.Prefs.set("username", "foo");
   generateNewKeys();
 
@@ -402,7 +404,9 @@ add_test(function test_process_incoming_commands() {
 
 add_test(function test_command_sync() {
   _("Ensure that commands are synced across clients.");
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+
+  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
+  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
   Svc.Prefs.set("username", "foo");
 
   Clients._store.wipe();

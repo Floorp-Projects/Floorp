@@ -15,7 +15,7 @@ function test_findCluster() {
   _("Test Service._findCluster()");
   let server;
   try {
-    Service.serverURL = "http://localhost:8080/";
+    Service.serverURL = TEST_SERVER_URL;
     Service.username = "johndoe";
 
     _("_findCluster() throws on network errors (e.g. connection refused).");
@@ -73,7 +73,7 @@ function test_setCluster() {
     "/user/1.0/jimdoe/node/weave": httpd_handler(200, "OK", "null")
   });
   try {
-    Service.serverURL = "http://localhost:8080/";
+    Service.serverURL = TEST_SERVER_URL;
     Service.username = "johndoe";
 
     _("Check initial state.");
@@ -105,7 +105,7 @@ function test_updateCluster() {
     "/user/1.0/janedoe/node/weave": httpd_handler(200, "OK", "http://weave.cluster.url/")
   });
   try {
-    Service.serverURL = "http://localhost:8080/";
+    Service.serverURL = TEST_SERVER_URL;
     Service.username = "johndoe";
 
     _("Check initial state.");

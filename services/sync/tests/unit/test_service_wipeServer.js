@@ -29,7 +29,8 @@ FakeCollection.prototype = {
 function setUpTestFixtures() {
   let cryptoService = new FakeCryptoService();
 
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
   Service.username = "johndoe";
   Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
 }

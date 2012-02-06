@@ -52,7 +52,7 @@ function setUp() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
@@ -667,7 +667,7 @@ add_test(function test_no_sync_node() {
   let server = sync_httpd_setup();
   setUp();
 
-  Service.serverURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
 
   Service.sync();
   do_check_eq(Status.sync, NO_SYNC_NODE_FOUND);
@@ -852,8 +852,8 @@ add_test(function test_loginError_recoverable_reschedules() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
-  Service.serverURL  = "http://localhost:8080/";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL  = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
   Service.persistLogin();
   Status.resetSync(); // reset Status.login
 
@@ -896,8 +896,8 @@ add_test(function test_loginError_fatal_clearsTriggers() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
-  Service.serverURL  = "http://localhost:8080/";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL  = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
   Service.persistLogin();
   Status.resetSync(); // reset Status.login
 
