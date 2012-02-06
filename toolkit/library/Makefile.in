@@ -429,6 +429,7 @@ OS_LIBS += \
   -lcutils \
   -lcamera_client \
   -lbinder \
+  -lsensorservice \
   $(NULL)
 endif
 
