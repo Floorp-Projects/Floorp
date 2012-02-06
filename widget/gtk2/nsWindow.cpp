@@ -3404,6 +3404,11 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
         DispatchMinimizeEventAccessible();
 #endif //ACCESSIBILITY
     }
+    else if (aEvent->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) {
+        LOG(("\tFullscreen\n"));
+        event.mSizeMode = nsSizeMode_Fullscreen;
+        mSizeState = nsSizeMode_Fullscreen;
+    }
     else if (aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
         LOG(("\tMaximized\n"));
         event.mSizeMode = nsSizeMode_Maximized;
@@ -3411,11 +3416,6 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
 #ifdef ACCESSIBILITY
         DispatchMaximizeEventAccessible();
 #endif //ACCESSIBILITY
-    }
-    else if (aEvent->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) {
-        LOG(("\tFullscreen\n"));
-        event.mSizeMode = nsSizeMode_Fullscreen;
-        mSizeState = nsSizeMode_Fullscreen;
     }
     else {
         LOG(("\tNormal\n"));
