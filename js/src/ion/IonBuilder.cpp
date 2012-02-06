@@ -3120,10 +3120,13 @@ IonBuilder::jsop_getelem_dense()
     if (!needsHoleCheck && !barrier) {
         knownType = types->getKnownTypeTag(cx);
 
-        if (knownType == JSVAL_TYPE_UNDEFINED)
-            return pushConstant(UndefinedValue());
-        if (knownType == JSVAL_TYPE_NULL)
-            return pushConstant(NullValue());
+        // Null and undefined have no payload so they can't be specialized.
+        // Since folding null/undefined while building SSA is not safe (see the
+        // comment in IsPhiObservable), we just add an untyped load instruction
+        // and rely on pushTypeBarrier and DCE to replace it with a null/undefined
+        // constant.
+        if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
+            knownType = JSVAL_TYPE_UNKNOWN;
     }
 
     // Ensure id is an integer.
