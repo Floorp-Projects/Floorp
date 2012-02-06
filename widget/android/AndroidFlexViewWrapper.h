@@ -87,6 +87,7 @@ public:
     EGLConfig GetEGLConfig();
     EGLContext GetEGLContext();
     EGLSurface GetEGLSurface();
+    EGLSurface ProvideEGLSurface();
     bool HasSurface();
     bool SwapBuffers();
     bool CheckForLostContext();
@@ -108,6 +109,7 @@ private:
     static jmethodID jWaitForValidSurfaceMethod;
     static jmethodID jGetWidthMethod;
     static jmethodID jGetHeightMethod;
+    static jmethodID jProvideEGLSurfaceMethod;
 
     JNIEnv *mJEnv;
     jobject mJObj;

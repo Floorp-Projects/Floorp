@@ -108,7 +108,7 @@ CompositorParent::ResumeComposition()
     mPaused = false;
 
 #ifdef MOZ_WIDGET_ANDROID
-    //static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->RenewSurface();
+    static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->RenewSurface();
 #endif
   }
 }
