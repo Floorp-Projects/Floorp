@@ -417,6 +417,11 @@ function start() {
     testsExpectedToFail.push('conformance/more/functions/uniformiBadArgs.html');
   }
 
+  if (kIsMac && kDarwinVersion >= 11.0) {
+    testsExpectedToFail.push('conformance/textures/texture-mips.html');
+    testsExpectedToFail.push('conformance/textures/texture-npot.html');
+  }
+
   var testsToIgnore = [];
 
   var testsSuccessful = [];
