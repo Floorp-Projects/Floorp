@@ -4944,9 +4944,8 @@ nsCSSFrameConstructor::ConstructSVGForeignObjectFrame(nsFrameConstructorState& a
   innerPseudoStyle = mPresShell->StyleSet()->
     ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozSVGForeignContent, styleContext);
 
-  nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, innerPseudoStyle,
-                                          NS_BLOCK_FLOAT_MGR |
-                                          NS_BLOCK_MARGIN_ROOT);
+  nsIFrame* blockFrame = NS_NewBlockFormattingContext(mPresShell,
+                                                      innerPseudoStyle);
   if (NS_UNLIKELY(!blockFrame)) {
     newFrame->Destroy();
     return NS_ERROR_OUT_OF_MEMORY;
