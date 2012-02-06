@@ -28,6 +28,9 @@
     <foreignObject>
       <g id="g3"/>
     </foreignObject>
+    <image>
+      <g id="g4"/>
+    </image>
     <use xlink:href="#sym" id="use"/>
   </g>
   </svg>

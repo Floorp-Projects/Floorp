@@ -34,6 +34,7 @@ function runTest()
   var outer = doc.getElementById("outer");
   var g2 = doc.getElementById("g2");
   var g3 = doc.getElementById("g3");
+  var g4 = doc.getElementById("g4");
   var sym = doc.getElementById("sym");
   var symbolRect = doc.getElementById("symbolRect");
   /* Tests the consistency with nearestViewportElement
@@ -53,6 +54,9 @@ function runTest()
   is((function(){try{return g2.getCTM().f}catch(e){return e}})(), 700, "g2.getCTM().f");
   // g3.nearestViewportElement == null
   is((function(){try{return g3.getCTM()}catch(e){return e}})(), null, "g3.getCTM()");
+  // g4.nearestViewportElement == null
+  is((function(){try{return g4.getCTM().e}catch(e){return e}})(), 1, "g4.getCTM().e");
+  is((function(){try{return g4.getCTM().f}catch(e){return e}})(), 2, "g4.getCTM().f");
   // symbolRect.nearestViewportElement == sym
   is((function(){try{return symbolRect.getCTM().e}catch(e){return e}})(), 70, "symbolRect.getCTM().e");
   is((function(){try{return symbolRect.getCTM().f}catch(e){return e}})(), 80, "symbolRect.getCTM().f");
