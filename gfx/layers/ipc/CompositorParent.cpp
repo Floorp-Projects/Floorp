@@ -259,6 +259,9 @@ CompositorParent::AsyncRender()
   }
 
   Layer* root = mLayerManager->GetRoot();
+  if (!root) {
+    return;
+  }
 
 /*
   ContainerLayer* container = root->AsContainerLayer();
