@@ -325,7 +325,8 @@ public:
     void *CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView& surfaceView);
 
     // Switch Java to composite with the Gecko Compositor thread
-    EGLSurface RegisterCompositor();
+    void RegisterCompositor();
+    EGLSurface ProvideEGLSurface();
     void PerformPreRenderHook();
     void PerformPostRenderHook();
 
