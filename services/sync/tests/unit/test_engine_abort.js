@@ -4,7 +4,8 @@ Cu.import("resource://services-sync/util.js");
 add_test(function test_processIncoming_abort() {
   _("An abort exception, raised in applyIncoming, will abort _processIncoming.");
   let syncTesting = new SyncTestingInfrastructure();
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
+  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
   Svc.Prefs.set("username", "foo");
   generateNewKeys();
 

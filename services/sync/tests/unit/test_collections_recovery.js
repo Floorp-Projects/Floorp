@@ -19,8 +19,8 @@ add_test(function test_missing_crypto_collection() {
     };
   }
 
-  Service.serverURL = "http://localhost:8080/";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
   Service.username = "johndoe";
   Service.password = "ilovejane";
   Service.passphrase = "a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa";
