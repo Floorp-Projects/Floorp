@@ -40,7 +40,7 @@
 #ifndef READSTRINGS_H__
 #define READSTRINGS_H__
 
-#define MAX_TEXT_LEN 400
+#define MAX_TEXT_LEN 600
 
 #ifdef XP_WIN
 # include <windows.h>
@@ -49,7 +49,8 @@
   typedef char NS_tchar;
 #endif
 
-struct StringTable {
+struct StringTable 
+{
   char title[MAX_TEXT_LEN];
   char info[MAX_TEXT_LEN];
 };
