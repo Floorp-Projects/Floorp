@@ -1257,9 +1257,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     }
 
     nsRefPtr<gfxImageSurface> targetSurface =
-        new gfxImageSurface(bits2,
-                            gfxIntSize(gAndroidBounds.width, gAndroidBounds.height),
-                            gAndroidBounds.width * 2,
+        new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * 2,
                             gfxASurface::ImageFormatRGB16_565);
 
 #if 0
