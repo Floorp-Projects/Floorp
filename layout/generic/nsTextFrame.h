@@ -383,10 +383,14 @@ public:
 
   /**
    * Acquires the text run for this content, if necessary.
-   * @param aRC the rendering context to use as a reference for creating
-   * the textrun, if available (if not, we'll create one which will just be slower)
-   * @param aBlock the block ancestor for this frame, or nsnull if unknown
-   * @param aLine the line that this frame is on, if any, or nsnull if unknown
+   * @param aWhichTextRun indicates whether to get an inflated or non-inflated
+   * text run
+   * @param aInflation the text inflation scale
+   * @param aReferenceContext the rendering context to use as a reference for
+   * creating the textrun, if available (if not, we'll create one which will
+   * just be slower)
+   * @param aLineContainer the block ancestor for this frame, or nsnull if
+   * unknown
    * @param aFlowEndInTextRun if non-null, this returns the textrun offset of
    * end of the text associated with this frame and its in-flow siblings
    * @return a gfxSkipCharsIterator set up to map DOM offsets for this frame
