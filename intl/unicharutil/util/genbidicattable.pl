@@ -202,16 +202,19 @@ while(<UNICODATA>) {
   0x10280, 0x104ff,
   0x10800, 0x1085f,
   0x10900, 0x1093f,
-  0x10a00, 0x10a7f,
+  0x10980, 0x10a7f,
   0x10b00, 0x10b7f,
   0x10c00, 0x10c4f,
   0x10e60, 0x10e7f,
-  0x11000, 0x110cf,
+  0x11000, 0x111ff,
+  0x11680, 0x116ff,
   0x12000, 0x1247f,
   0x13000, 0x1342f,
   0x16800, 0x16a3f,
+  0x16f00, 0x16fff,
   0x1b000, 0x1b00f,
   0x1d000, 0x1d7ff,
+  0x1ee00, 0x1eeff,
   0x1f000, 0x1f77f,
   0x2f800, 0x2fa1f,
   0xe0000, 0xe01ff  
@@ -252,14 +255,18 @@ for($t = 1; $t <= $tt; $t++)
 		        #and http://www.unicode.org/Public/UNIDATA/Blocks.txt
 			$test = ($i << 3) + $j;
 			if ((($test >= 0x0590) && ($test <= 0x5FF)) ||
-			    (($test >= 0x07C0) && ($test <= 0x8FF)) ||
+			    (($test >= 0x07C0) && ($test <= 0x89F)) ||
 			    (($test >= 0xFB1D) && ($test <= 0xFB4F)) ||
-			    (($test >= 0x10800) && ($test <=0x10FFF)))
+			    (($test >= 0x10800) && ($test <=0x10FFF)) ||
+			    (($test >= 0x1E800) && ($test <=0x1EDFF)) ||
+			    (($test >= 0x1EF00) && ($test <=0x1EFFF)))
 			{
 				$default = $map{"R"};
 			} elsif ((($test >= 0x0600) && ($test <= 0x7BF)) ||
+				 (($test >= 0x08A0) && ($test <= 0x08FF)) ||
 				 (($test >= 0xFB50) && ($test <= 0xFDFF)) ||
-				 (($test >= 0xFE70) && ($test <= 0xFEFE)))
+				 (($test >= 0xFE70) && ($test <= 0xFEFE)) ||
+				 (($test >= 0x1EE00) && ($test <= 0x1EEFF)))
 			{
 				$default = $map{"AL"};
 			} else
