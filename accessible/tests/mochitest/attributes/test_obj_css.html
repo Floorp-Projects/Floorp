@@ -2,6 +2,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=439566
 https://bugzilla.mozilla.org/show_bug.cgi?id=460932
+https://bugzilla.mozilla.org/show_bug.cgi?id=689540
 -->
 <head>
   <title>CSS-like attributes tests</title>
@@ -25,7 +26,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=460932
       var attrs = {
         "display": computedStyle.display,
         "text-align": computedStyle.textAlign,
-        "text-indent": computedStyle.textIndent
+        "text-indent": computedStyle.textIndent,
+        "margin-left": computedStyle.marginLeft,
+        "margin-right": computedStyle.marginRight,
+        "margin-top": computedStyle.marginTop,
+        "margin-bottom": computedStyle.marginBottom
       };
       testAttrs(aID, attrs, true);
     }
@@ -34,7 +39,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=460932
     {
       testCSSAttrs("span");
       testCSSAttrs("div");
+
       testCSSAttrs("p");
+      testCSSAttrs("p2");
+
+      testCSSAttrs("pml");
+      testCSSAttrs("pmr");
+      testCSSAttrs("pmt");
+      testCSSAttrs("pmb");
+
       testCSSAttrs("input");
       testCSSAttrs("table");
       testCSSAttrs("tr");
@@ -59,6 +72,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=460932
      title="text-indent and text-align should really be object attribute">
     Mozilla Bug 460932
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=689540"
+     title="Expose IA2 margin- object attributes">
+    Mozilla Bug 689540
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -67,7 +85,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=460932
 
   <span id="span" role="group">It's span</span>
   <div id="div">It's div</div>
+
   <p id="p">It's paragraph"</p>
+  <p id="p2"  style="text-indent: 5px">It's another paragraph</p>
+
+  <p id="pml" style="margin-left : 11px;">It's a paragraph with left margin</p>
+  <p id="pmr" style="margin-right : 21px;">It's a paragraph with right margin</p>
+  <p id="pmt" style="margin-top : 31px;">It's a paragraph with top margin</p>
+  <p id="pmb" style="margin-bottom : 41px;">It's a paragraph with bottom margin</p>
+
   <input id="input"/>
   <table id="table">
     <tr id="tr" role="group">
