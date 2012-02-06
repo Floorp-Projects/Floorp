@@ -1928,7 +1928,7 @@ GetPropMaybeCached(VMFrame &f, ic::PICInfo *pic, bool cached)
 
     Value v;
     if (cached) {
-        if (!GetPropertyOperation(f.cx, f.pc(), ObjectValue(*obj), &v))
+        if (!GetPropertyOperation(f.cx, f.pc(), f.regs.sp[-1], &v))
             THROW();
     } else {
         if (!obj->getProperty(f.cx, name, &v))
