@@ -131,6 +131,7 @@ private:
   nsRefPtr<LayerManager> mLayerManager;
   nsIWidget* mWidget;
   CancelableTask *mCurrentCompositeTask;
+  TimeStamp mLastCompose;
 
   bool mPaused;
   float mXScale;
