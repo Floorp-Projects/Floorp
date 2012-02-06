@@ -155,6 +155,10 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         if (mGLThread != null) {
             mGLThread.surfaceChanged(width, height);
         }
+        
+        if (mListener != null) {
+            mListener.compositionResumeRequested();
+        }
     }
 
     public synchronized void surfaceCreated(SurfaceHolder holder) {
@@ -168,6 +172,10 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         mController.surfaceDestroyed();
         if (mGLThread != null) {
             mGLThread.surfaceDestroyed();
+        }
+        
+        if (mListener != null) {
+            mListener.compositionPauseRequested();
         }
     }
 
