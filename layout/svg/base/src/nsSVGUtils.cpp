@@ -596,6 +596,13 @@ nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
   if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
+  if (aFrame->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) {
+    aFrame->AddStateBits(NS_STATE_SVG_DIRTY);
+    return;
+  }
+
+  aFrame->RemoveStateBits(NS_STATE_SVG_DIRTY);
+
   nsSVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame(aFrame);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
   if (outerSVGFrame) {
