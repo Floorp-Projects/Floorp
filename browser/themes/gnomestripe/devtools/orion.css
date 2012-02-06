@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .viewContainer {
   background: #cddae5; /* This will be seen as the continuation of the ruler */
@@ -22,17 +23,11 @@
   padding-left: 4px; /* Margin between the ruler and the editor */
 }
 
-/* Styles for rulers */
-.ruler.lines {
-  text-align: right;
-}
-
 /* Styles for the line number ruler */
 .rulerLines {
   border-right: 1px solid #b4c4d3;
   background: #cddae5;
   color: #7a8a99;
-  min-width: 1.4em;
   padding-left: 4px;
   padding-right: 4px;
   text-align: end;
@@ -119,9 +114,6 @@
 .invalid {
   color: red;
   font-weight: bold;
-}
-
-.annotationRange.currentBracket {
 }
 
 .annotationRange.matchingBracket {
