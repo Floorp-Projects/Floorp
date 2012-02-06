@@ -90,6 +90,7 @@ public:
 
   void SetTransformation(float aScale, nsIntPoint aScrollOffset);
   void AsyncRender();
+  // Can be called from any thread
   void ScheduleRenderOnCompositorThread(::base::Thread &aCompositorThread);
 
   void PauseComposition();
@@ -128,8 +129,10 @@ private:
 #endif
 
   nsRefPtr<LayerManager> mLayerManager;
-  bool mPaused;
   nsIWidget* mWidget;
+  CancelableTask *mCurrentCompositeTask;
+
+  bool mPaused;
   float mXScale;
   float mYScale;
   nsIntPoint mScrollOffset;
