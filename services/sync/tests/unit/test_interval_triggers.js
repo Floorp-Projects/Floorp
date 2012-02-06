@@ -35,7 +35,8 @@ function setUp() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
