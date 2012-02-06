@@ -61,6 +61,12 @@ public:
   NS_IMETHOD LockMinimumBrightness(PRUint32 aBrightness);
   NS_IMETHOD UnlockMinimumBrightness(PRUint32 aBrightness);
 
+  NS_IMETHOD GetRotation(PRUint32* aRotation) {
+    *aRotation = nsIScreen::ROTATION_0_DEG;
+    return NS_OK;
+  }
+  NS_IMETHOD SetRotation(PRUint32 aRotation) { return NS_ERROR_NOT_AVAILABLE; }
+
 protected:
   /**
    * Manually set the current level of brightness locking. This is called after
