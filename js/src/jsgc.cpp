@@ -856,14 +856,6 @@ IsAboutToBeFinalized(JSContext *cx, const Value &v)
     return IsAboutToBeFinalized(cx, (Cell *)v.toGCThing());
 }
 
-JS_FRIEND_API(bool)
-js_GCThingIsMarked(void *thing, uintN color = BLACK)
-{
-    JS_ASSERT(thing);
-    AssertValidColor(thing, color);
-    return reinterpret_cast<Cell *>(thing)->isMarked(color);
-}
-
 /* Lifetime for type sets attached to scripts containing observed types. */
 static const int64_t JIT_SCRIPT_RELEASE_TYPES_INTERVAL = 60 * 1000 * 1000;
 
