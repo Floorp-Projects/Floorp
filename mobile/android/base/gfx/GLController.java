@@ -248,6 +248,32 @@ public class GLController {
             mView.getRenderer().onSurfaceChanged((GL10)mGL, mView.getWidth(), mView.getHeight());
         }
     }
+        
+    private EGLSurface provideEGLSurface() {
+        if (mEGL == null) {
+            mEGL = (EGL10)EGLContext.getEGL();
+
+            mEGLDisplay = mEGL.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+            if (mEGLDisplay == EGL10.EGL_NO_DISPLAY) {
+                throw new GLControllerException("eglGetDisplay() failed");
+            }
+
+            int[] version = new int[2];
+            if (!mEGL.eglInitialize(mEGLDisplay, version)) {
+                throw new GLControllerException("eglInitialize() failed");
+            }
+
+            mEGLConfig = chooseConfig();
+        }
+
+        SurfaceHolder surfaceHolder = mView.getHolder();
+        mEGLSurface = mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, surfaceHolder, null);
+        if (mEGLSurface == null || mEGLSurface == EGL10.EGL_NO_SURFACE) {
+            throw new GLControllerException("EGL window surface could not be created!");
+        }
+
+        return mEGLSurface;
+    }
 
     public static class GLControllerException extends RuntimeException {
         public static final long serialVersionUID = 1L;

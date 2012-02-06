@@ -1045,13 +1045,13 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
 
 static AndroidGLController sController;
 
-EGLSurface
+void
 AndroidBridge::RegisterCompositor()
 {
     ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
     JNIEnv *env = GetJNIForThread();
     if (!env)
-        return NULL;
+        return;
 
     AutoLocalJNIFrame jniFrame(env, 3);
 
@@ -1061,9 +1061,13 @@ AndroidBridge::RegisterCompositor()
 
     sController.Acquire(env, glController);
     sController.SetGLVersion(2);
-    sController.InitGLContext();
+}
+
+EGLSurface
+AndroidBridge::ProvideEGLSurface()
+{
     sController.WaitForValidSurface();
-    return sController.GetEGLSurface();
+    return sController.ProvideEGLSurface();
 }
 
 void

@@ -85,6 +85,7 @@ jmethodID AndroidGLController::jCheckForLostContextMethod = 0;
 jmethodID AndroidGLController::jWaitForValidSurfaceMethod = 0;
 jmethodID AndroidGLController::jGetWidthMethod = 0;
 jmethodID AndroidGLController::jGetHeightMethod = 0;
+jmethodID AndroidGLController::jProvideEGLSurfaceMethod = 0;
 
 void
 AndroidGLController::Init(JNIEnv *aJEnv)
@@ -103,6 +104,8 @@ AndroidGLController::Init(JNIEnv *aJEnv)
                                               "()Ljavax/microedition/khronos/egl/EGLContext;");
     jGetEGLSurfaceMethod = aJEnv->GetMethodID(jClass, "getEGLSurface",
                                               "()Ljavax/microedition/khronos/egl/EGLSurface;");
+    jProvideEGLSurfaceMethod = aJEnv->GetMethodID(jClass, "provideEGLSurface",
+                                                  "()Ljavax/microedition/khronos/egl/EGLSurface;");
     jHasSurfaceMethod = aJEnv->GetMethodID(jClass, "hasSurface", "()Z");
     jSwapBuffersMethod = aJEnv->GetMethodID(jClass, "swapBuffers", "()Z");
     jCheckForLostContextMethod = aJEnv->GetMethodID(jClass, "checkForLostContext", "()Z");
@@ -178,6 +181,13 @@ EGLSurface
 AndroidGLController::GetEGLSurface()
 {
     jobject jObj = mJEnv->CallObjectMethod(mJObj, jGetEGLSurfaceMethod);
+    return reinterpret_cast<EGLSurface>(mJEnv->GetIntField(jObj, jEGLSurfacePointerField));
+}
+
+EGLSurface
+AndroidGLController::ProvideEGLSurface()
+{
+    jobject jObj = mJEnv->CallObjectMethod(mJObj, jProvideEGLSurfaceMethod);
     return reinterpret_cast<EGLSurface>(mJEnv->GetIntField(jObj, jEGLSurfacePointerField));
 }
 
