@@ -261,6 +261,8 @@ class PreserveRegExpStatics
     inline ~PreserveRegExpStatics();
 };
 
+size_t SizeOfRegExpStaticsData(const JSObject *obj, JSMallocSizeOfFun mallocSizeOf);
+
 } /* namespace js */
 
 #endif

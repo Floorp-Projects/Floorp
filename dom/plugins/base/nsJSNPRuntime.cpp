@@ -2146,12 +2146,10 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
 
   jsval fieldValue;
   NPVariant npv;
-  NPBool hasProperty;
 
   if (getPropertyResult) {
     // Plugin has already handed us the value we want here.
     npv = *getPropertyResult;
-    hasProperty = true;
   }
   else {
     VOID_TO_NPVARIANT(npv);
