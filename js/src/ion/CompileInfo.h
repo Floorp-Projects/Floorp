@@ -94,11 +94,16 @@ class CompileInfo
         return js_PCToLineNumber(cx, script_, pc);
     }
 
+    // Script accessors based on PC.
+
     JSAtom *getAtom(jsbytecode *pc) const {
         return script_->getAtom(GET_INDEX(pc));
     }
     RegExpObject *getRegExp(jsbytecode *pc) const {
         return script_->getRegExp(GET_INDEX(pc));
+    }
+    JSObject *getObject(jsbytecode *pc) const {
+        return script_->getObject(GET_UINT32_INDEX(pc));
     }
     const Value &getConst(jsbytecode *pc) const {
         return script_->getConst(GET_INDEX(pc));
