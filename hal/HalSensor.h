@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et ft=cpp : */
+/* vim: sw=2 ts=8 et ft=cpp : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
+ *   Sinker Li <thinker@codemud.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,78 +37,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PContent;
-include protocol PBrowser;
-include "nspr/prtime.h";
-include "mozilla/HalSensor.h";
+#ifndef __HAL_SENSOR_H_
+#define __HAL_SENSOR_H_
 
-using PRTime;
-using mozilla::hal::SensorType;
+#include "mozilla/Observer.h"
 
 namespace mozilla {
-
 namespace hal {
-  struct BatteryInformation {
-    double level;
-    bool   charging;
-    double remainingTime;
-  };
 
-  struct SensorData {
-    SensorType sensor;
-    PRTime timestamp;
-    float[] values;
-  };
-}
-
-namespace hal {
-  struct NetworkInformation {
-    double bandwidth;
-    bool   canBeMetered;
-  };
-}
-
-namespace hal_sandbox {
-
-sync protocol PHal {
-    manager PContent;
-
-child:
-    NotifyBatteryChange(BatteryInformation aBatteryInfo);
-    NotifyNetworkChange(NetworkInformation aNetworkInfo);
-
-parent:
-    Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
-    CancelVibrate(uint64[] id, PBrowser browser);
-
-    EnableBatteryNotifications();
-    DisableBatteryNotifications();
-    sync GetCurrentBatteryInformation()
-      returns (BatteryInformation aBatteryInfo);
-
-    EnableNetworkNotifications();
-    DisableNetworkNotifications();
-    sync GetCurrentNetworkInformation()
-      returns (NetworkInformation aNetworkInfo);
-
-    sync GetScreenEnabled() returns (bool enabled);
-    SetScreenEnabled(bool enabled);
-
-    sync GetScreenBrightness() returns (double brightness);
-    SetScreenBrightness(double brightness);
-
-    Reboot();
-    PowerOff();
-
-child:
-    NotifySensorChange(SensorData aSensorData);
-
-parent:    
-    EnableSensorNotifications(SensorType aSensor);
-    DisableSensorNotifications(SensorType aSensor);
-
-    __delete__();
+/**
+ * Enumeration of sensor types.  They are used to specify type while
+ * register or unregister an observer for a sensor of given type.
+ */
+enum SensorType {
+  SENSOR_UNKNOWN = -1,
+  SENSOR_ORIENTATION,
+  SENSOR_ACCELERATION,
+  SENSOR_PROXIMITY,
+  NUM_SENSOR_TYPE
 };
 
-} // namespace hal
-} // namespace mozilla
+class SensorData;
+
+typedef Observer<SensorData> ISensorObserver;
+
+}
+}
+
+
+#include "IPC/IPCMessageUtils.h"
+
+namespace IPC {
+  /**
+   * Serializer for SensorType
+   */
+  template <>
+  struct ParamTraits<mozilla::hal::SensorType>:
+    public EnumSerializer<mozilla::hal::SensorType,
+                          mozilla::hal::SENSOR_UNKNOWN,
+                          mozilla::hal::NUM_SENSOR_TYPE> {
+  };
+
+} // namespace IPC
+
+#endif /* __HAL_SENSOR_H_ */

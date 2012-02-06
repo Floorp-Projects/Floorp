@@ -16,7 +16,13 @@
 <!ENTITY aboutSupport.appBasicsTitle "Application Basics">
 <!ENTITY aboutSupport.appBasicsName "Name">
 <!ENTITY aboutSupport.appBasicsVersion "Version">
+
 <!ENTITY aboutSupport.appBasicsProfileDir "Profile Directory">
+<!-- LOCALIZATION NOTE (aboutSupport.appBasicsProfileDirWinMac):
+This is the Windows- and Mac-specific variant of aboutSupport.appBasicsProfileDir.
+Windows/Mac use the term "Folder" instead of "Directory" -->
+<!ENTITY aboutSupport.appBasicsProfileDirWinMac "Profile Folder">
+
 <!ENTITY aboutSupport.appBasicsEnabledPlugins "Enabled Plugins">
 <!ENTITY aboutSupport.appBasicsBuildConfig "Build Configuration">
 <!ENTITY aboutSupport.appBasicsUserAgent "User Agent">
@@ -24,7 +30,6 @@
 <!ENTITY aboutSupport.appBasicsMemoryUse "Memory Use">
 
 <!ENTITY aboutSupport.showDir.label "Open Directory">
-
 <!-- LOCALIZATION NOTE (aboutSupport.showMac.label): This is the Mac-specific
 variant of aboutSupport.showDir.label.  This allows us to use the preferred
 "Finder" terminology on Mac. -->
