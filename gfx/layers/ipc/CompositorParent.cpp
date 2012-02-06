@@ -132,9 +132,15 @@ CompositorParent::ScheduleComposition()
     return;
   }
 
+  TimeDuration delta = mozilla::TimeStamp::Now() - mLastCompose;
+
   printf_stderr("Schedule composition\n");
   mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-  MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
+  if (delta.ToMilliseconds() < 15) {
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, mCurrentCompositeTask, 15 - delta.ToMilliseconds());
+  } else {
+    MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
+  }
 
 // Test code for async scrolling.
 #ifdef OMTC_TEST_ASYNC_SCROLLING
@@ -177,8 +183,8 @@ CompositorParent::Composite()
   Layer* root = mLayerManager->GetRoot();
   root->AsShadowLayer()->SetShadowTransform(worldTransform);
 
-
   mLayerManager->EndEmptyTransaction();
+  mLastCompose = mozilla::TimeStamp::Now();
 }
 
 // Go down shadow layer tree, setting properties to match their non-shadow
