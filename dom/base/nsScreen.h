@@ -74,7 +74,7 @@ protected:
   nsresult GetRect(nsRect& aRect);
   nsresult GetAvailRect(nsRect& aRect);
 
-  nsIDocShell* mDocShell; // Weak Reference
+  bool mIsChrome;
 
   mozilla::dom::ScreenOrientation mOrientation;
 
