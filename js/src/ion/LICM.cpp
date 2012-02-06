@@ -200,12 +200,11 @@ Loop::init()
     JS_ASSERT(header_->id() > header_->getPredecessor(0)->id());
 
     LoopReturn lr = iterateLoopBlocks(footer_);
-    if (lr != LoopReturn_Success)
-        return lr;
+    if (lr == LoopReturn_Error)
+        return LoopReturn_Error;
 
     graph.unmarkBlocks();
-
-    return LoopReturn_Success;
+    return lr;
 }
 
 Loop::LoopReturn
