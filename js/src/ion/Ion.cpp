@@ -1058,6 +1058,8 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop, bool invalidateAll)
         const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
         IonCode *ionCode = ionScript->method();
 
+        ionCode->setInvalidated();
+
         // Write the delta (from the return address offset to the
         // IonScript pointer embedded into the invalidation epilogue)
         // where the safepointed call instruction used to be. We rely on
@@ -1127,8 +1129,6 @@ ion::FinishInvalidation(JSContext *cx, JSScript *script)
 {
     if (!script->hasIonScript())
         return;
-
-    script->ion->method()->setInvalidated();
 
     /*
      * If this script has Ion code on the stack, invalidation() will return

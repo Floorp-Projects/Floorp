@@ -114,6 +114,10 @@ class IonCode : public gc::Cell
     void setInvalidated() {
         invalidated_ = true;
     }
+
+    // If this IonCode object has been, effectively, corrupted due to
+    // invalidation patching, then we have to remember this so we don't try and
+    // trace relocation entries that may now be corrupt.
     bool invalidated() const {
         return !!invalidated_;
     }
