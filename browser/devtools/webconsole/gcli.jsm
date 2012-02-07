@@ -691,7 +691,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/commands/help', 'gcli/ui/console'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/types/resource', 'gcli/cli', 'gcli/commands/help', 'gcli/ui/console'], function(require, exports, module) {
 
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
@@ -703,6 +703,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   require('gcli/types/basic').startup();
   require('gcli/types/javascript').startup();
   require('gcli/types/node').startup();
+  require('gcli/types/resource').startup();
   require('gcli/cli').startup();
   require('gcli/commands/help').startup();
 
@@ -712,6 +713,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   var cli = require('gcli/cli');
   var jstype = require('gcli/types/javascript');
   var nodetype = require('gcli/types/node');
+  var resource = require('gcli/types/resource');
 
   /**
    * API for use by HUDService only.
@@ -740,6 +742,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
       jstype.setGlobalObject(opts.jsEnvironment.globalObject);
       nodetype.setDocument(opts.contentDocument);
       cli.setEvalFunction(opts.jsEnvironment.evalFunction);
+      resource.setDocument(opts.contentDocument);
 
       if (opts.requisition == null) {
         opts.requisition = new Requisition(opts.environment, opts.chromeDocument);
@@ -761,6 +764,8 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
       cli.unsetEvalFunction();
       nodetype.unsetDocument();
       jstype.unsetGlobalObject();
+      resource.unsetDocument();
+      resource.clearResourceCache();
     },
 
     commandOutputManager: require('gcli/canon').commandOutputManager
@@ -1307,6 +1312,79 @@ dom.isXmlDocument = function(doc) {
 
 exports.dom = dom;
 
+/**
+ * Find the position of [element] in [nodeList].
+ * @returns an index of the match, or -1 if there is no match
+ */
+function positionInNodeList(element, nodeList) {
+  for (var i = 0; i < nodeList.length; i++) {
+    if (element === nodeList[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Find a unique CSS selector for a given element
+ * @returns a string such that ele.ownerDocument.querySelector(reply) === ele
+ * and ele.ownerDocument.querySelectorAll(reply).length === 1
+ */
+dom.findCssSelector = function(ele) {
+  var document = ele.ownerDocument;
+  if (ele.id && document.getElementById(ele.id) === ele) {
+    return '#' + ele.id;
+  }
+
+  // Inherently unique by tag name
+  var tagName = ele.tagName.toLowerCase();
+  if (tagName === 'html') {
+    return 'html';
+  }
+  if (tagName === 'head') {
+    return 'head';
+  }
+  if (tagName === 'body') {
+    return 'body';
+  }
+
+  if (ele.parentNode == null) {
+    console.log('danger: ' + tagName);
+  }
+
+  // We might be able to find a unique class name
+  var selector, index, matches;
+  if (ele.classList.length > 0) {
+    for (var i = 0; i < ele.classList.length; i++) {
+      // Is this className unique by itself?
+      selector = '.' + ele.classList.item(i);
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+      // Maybe it's unique with a tag name?
+      selector = tagName + selector;
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+      // Maybe it's unique using a tag name and nth-child
+      index = positionInNodeList(ele, ele.parentNode.children) + 1;
+      selector = selector + ':nth-child(' + index + ')';
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+    }
+  }
+
+  // So we can be unique w.r.t. our parent, and use recursion
+  index = positionInNodeList(ele, ele.parentNode.children) + 1;
+  selector = dom.findCssSelector(ele.parentNode) + ' > ' +
+          tagName + ':nth-child(' + index + ')';
+
+  return selector;
+};
 
 //------------------------------------------------------------------------------
 
@@ -1943,7 +2021,7 @@ types.getType = function(typeSpec) {
   if (typeof typeSpec === 'string') {
     type = registeredTypes[typeSpec];
     if (typeof type === 'function') {
-      type = new type();
+      type = new type({});
     }
     return type;
   }
@@ -2467,7 +2545,7 @@ exports.shutdown = function() {
  * 'string' the most basic string type that doesn't need to convert
  */
 function StringType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('StringType can not be customized');
   }
 }
@@ -2638,7 +2716,7 @@ SelectionType.prototype.stringify = function(value) {
 /**
  * There are several ways to get selection data. This unifies them into one
  * single function.
- * @return A map of names to values.
+ * @return An array of objects with name and value properties.
  */
 SelectionType.prototype.getLookup = function() {
   if (this.lookup) {
@@ -2691,11 +2769,6 @@ SelectionType.prototype._findPredictions = function(arg) {
 SelectionType.prototype.parse = function(arg) {
   var predictions = this._findPredictions(arg);
 
-  if (predictions.length === 1 && predictions[0].name === arg.text) {
-    var value = predictions[0].value ? predictions[0].value : predictions[0];
-    return new Conversion(value, arg);
-  }
-
   // This is something of a hack it basically allows us to tell the
   // setting type to forget its last setting hack.
   if (this.noMatch) {
@@ -2703,21 +2776,16 @@ SelectionType.prototype.parse = function(arg) {
   }
 
   if (predictions.length > 0) {
-    // Especially at startup, predictions live over the time that things
-    // change so we provide a completion function rather than completion
-    // values.
-    // This was primarily designed for commands, which have since moved
-    // into their own type, so technically we could remove this code,
-    // except that it provides more up-to-date answers, and it's hard to
-    // predict when it will be required.
-    var predictFunc = function() {
-      return this._findPredictions(arg);
-    }.bind(this);
-    return new Conversion(null, arg, Status.INCOMPLETE, '', predictFunc);
+    if (predictions[0].name === arg.text) {
+      var value = predictions[0].value ? predictions[0].value : predictions[0];
+      return new Conversion(value, arg, Status.VALID, '', predictions);
+    }
+
+    return new Conversion(null, arg, Status.INCOMPLETE, '', predictions);
   }
 
-  return new Conversion(null, arg, Status.ERROR,
-      l10n.lookupFormat('typesSelectionNomatch', [ arg.text ]));
+  var msg = l10n.lookupFormat('typesSelectionNomatch', [ arg.text ]);
+  return new Conversion(null, arg, Status.ERROR, msg, predictions);
 };
 
 /**
@@ -2788,7 +2856,7 @@ exports.SelectionType = SelectionType;
  * true/false values
  */
 function BooleanType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('BooleanType can not be customized');
   }
 }
@@ -2870,7 +2938,7 @@ exports.DeferredType = DeferredType;
  * It should not be used anywhere else.
  */
 function BlankType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('BlankType can not be customized');
   }
 }
@@ -3005,7 +3073,7 @@ exports.unsetGlobalObject = function() {
  * 'javascript' handles scripted input
  */
 function JavascriptType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('JavascriptType can not be customized');
   }
 }
@@ -3555,7 +3623,7 @@ exports.getDocument = function() {
  * A CSS expression that refers to a single node
  */
 function NodeType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('NodeType can not be customized');
   }
 }
@@ -3623,6 +3691,307 @@ define('gcli/host', ['require', 'exports', 'module' ], function(require, exports
 exports.flashNode = function(node, color) {
   // We avoid changing the DOM under firefox developer tools so this is a no-op
   // In future we will use the multi-highlighter implemented in bug 653545.
+};
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/types/resource', ['require', 'exports', 'module' , 'gcli/host', 'gcli/l10n', 'gcli/types', 'gcli/types/basic'], function(require, exports, module) {
+
+
+var host = require('gcli/host');
+var l10n = require('gcli/l10n');
+var types = require('gcli/types');
+var SelectionType = require('gcli/types/basic').SelectionType;
+var Status = require('gcli/types').Status;
+var Conversion = require('gcli/types').Conversion;
+
+
+/**
+ * Registration and de-registration.
+ */
+exports.startup = function() {
+  types.registerType(ResourceType);
+};
+
+exports.shutdown = function() {
+  types.unregisterType(ResourceType);
+  exports.clearResourceCache();
+};
+
+exports.clearResourceCache = function() {
+  ResourceCache.clear();
+};
+
+/**
+ * The object against which we complete, which is usually 'window' if it exists
+ * but could be something else in non-web-content environments.
+ */
+var doc;
+if (typeof document !== 'undefined') {
+  doc = document;
+}
+
+/**
+ * Setter for the document that contains the nodes we're matching
+ */
+exports.setDocument = function(document) {
+  doc = document;
+};
+
+/**
+ * Undo the effects of setDocument()
+ */
+exports.unsetDocument = function() {
+  doc = undefined;
+};
+
+/**
+ * Getter for the document that contains the nodes we're matching
+ * Most for changing things back to how they were for unit testing
+ */
+exports.getDocument = function() {
+  return doc;
+};
+
+/**
+ * Resources are bits of CSS and JavaScript that the page either includes
+ * directly or as a result of reading some remote resource.
+ * Resource should not be used directly, but instead through a sub-class like
+ * CssResource or ScriptResource.
+ */
+function Resource(id, name, type, inline, element) {
+  this.id = id;
+  this.name = name;
+  this.type = type;
+  this.inline = inline;
+  this.element = element;
+}
+
+/**
+ * Get the contents of the given resource as a string.
+ * The base Resource leaves this unimplemented.
+ */
+Resource.prototype.getContents = function() {
+  throw new Error('not implemented');
+};
+
+Resource.TYPE_SCRIPT = 'text/javascript';
+Resource.TYPE_CSS = 'text/css';
+
+/**
+ * A CssResource provides an implementation of Resource that works for both
+ * [style] elements and [link type='text/css'] elements in the [head].
+ */
+function CssResource(domSheet) {
+  this.name = domSheet.href;
+  if (!this.name) {
+    this.name = domSheet.ownerNode.id ?
+            'css#' + domSheet.ownerNode.id :
+            'inline-css';
+  }
+
+  this.inline = (domSheet.href == null);
+  this.type = Resource.TYPE_CSS;
+  this.element = domSheet;
+}
+
+CssResource.prototype = Object.create(Resource.prototype);
+
+CssResource.prototype.loadContents = function(callback) {
+  callback(this.element.ownerNode.innerHTML);
+};
+
+CssResource._getAllStyles = function() {
+  var resources = [];
+  Array.prototype.forEach.call(doc.styleSheets, function(domSheet) {
+    CssResource._getStyle(domSheet, resources);
+  });
+
+  dedupe(resources, function(clones) {
+    for (var i = 0; i < clones.length; i++) {
+      clones[i].name = clones[i].name + '-' + i;
+    }
+  });
+
+  return resources;
+};
+
+CssResource._getStyle = function(domSheet, resources) {
+  var resource = ResourceCache.get(domSheet);
+  if (!resource) {
+    resource = new CssResource(domSheet);
+    ResourceCache.add(domSheet, resource);
+  }
+  resources.push(resource);
+
+  // Look for imported stylesheets
+  try {
+    Array.prototype.forEach.call(domSheet.cssRules, function(domRule) {
+      if (domRule.type == CSSRule.IMPORT_RULE && domRule.styleSheet) {
+        CssResource._getStyle(domRule.styleSheet, resources);
+      }
+    }, this);
+  }
+  catch (ex) {
+    // For system stylesheets
+  }
+};
+
+/**
+ * A ScriptResource provides an implementation of Resource that works for
+ * [script] elements (both with a src attribute, and used directly).
+ */
+function ScriptResource(scriptNode) {
+  this.name = scriptNode.src;
+  if (!this.name) {
+    this.name = scriptNode.id ?
+            'script#' + scriptNode.id :
+            'inline-script';
+  }
+
+  this.inline = (scriptNode.src === '' || scriptNode.src == null);
+  this.type = Resource.TYPE_SCRIPT;
+  this.element = scriptNode;
+}
+
+ScriptResource.prototype = Object.create(Resource.prototype);
+
+ScriptResource.prototype.loadContents = function(callback) {
+  if (this.inline) {
+    callback(this.element.innerHTML);
+  }
+  else {
+    // It would be good if there was a better way to get the script source
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== xhr.DONE) {
+        return;
+      }
+      callback(xhr.responseText);
+    };
+    xhr.open('GET', this.element.src, true);
+    xhr.send();
+  }
+};
+
+ScriptResource._getAllScripts = function() {
+  var scriptNodes = doc.querySelectorAll('script');
+  var resources = Array.prototype.map.call(scriptNodes, function(scriptNode) {
+    var resource = ResourceCache.get(scriptNode);
+    if (!resource) {
+      resource = new ScriptResource(scriptNode);
+      ResourceCache.add(scriptNode, resource);
+    }
+    return resource;
+  });
+
+  dedupe(resources, function(clones) {
+    for (var i = 0; i < clones.length; i++) {
+      clones[i].name = clones[i].name + '-' + i;
+    }
+  });
+
+  return resources;
+};
+
+/**
+ * Find resources with the same name, and call onDupe to change the names
+ */
+function dedupe(resources, onDupe) {
+  // first create a map of name->[array of resources with same name]
+  var names = {};
+  resources.forEach(function(scriptResource) {
+    if (names[scriptResource.name] == null) {
+      names[scriptResource.name] = [];
+    }
+    names[scriptResource.name].push(scriptResource);
+  });
+
+  // Call the de-dupe function for each set of dupes
+  Object.keys(names).forEach(function(name) {
+    var clones = names[name];
+    if (clones.length > 1) {
+      onDupe(clones);
+    }
+  });
+}
+
+/**
+ * A CSS expression that refers to a single node
+ */
+function ResourceType(typeSpec) {
+  this.include = typeSpec.include;
+  if (this.include !== Resource.TYPE_SCRIPT &&
+      this.include !== Resource.TYPE_CSS &&
+      this.include != null) {
+    throw new Error('invalid include property: ' + this.include);
+  }
+}
+
+ResourceType.prototype = Object.create(SelectionType.prototype);
+
+/**
+ * There are several ways to get selection data. This unifies them into one
+ * single function.
+ * @return A map of names to values.
+ */
+ResourceType.prototype.getLookup = function() {
+  var resources = [];
+  if (this.include !== Resource.TYPE_SCRIPT) {
+    Array.prototype.push.apply(resources, CssResource._getAllStyles());
+  }
+  if (this.include !== Resource.TYPE_CSS) {
+    Array.prototype.push.apply(resources, ScriptResource._getAllScripts());
+  }
+
+  return resources.map(function(resource) {
+    return { name: resource.name, value: resource };
+  });
+};
+
+ResourceType.prototype.name = 'resource';
+
+
+/**
+ * A quick cache of resources against nodes
+ * TODO: Potential memory leak when the target document has css or script
+ * resources repeatedly added and removed. Solution might be to use a weak
+ * hash map or some such.
+ */
+var ResourceCache = {
+  _cached: [],
+
+  /**
+   * Do we already have a resource that was created for the given node
+   */
+  get: function(node) {
+    for (var i = 0; i < ResourceCache._cached.length; i++) {
+      if (ResourceCache._cached[i].node === node) {
+        return ResourceCache._cached[i].resource;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Add a resource for a given node
+   */
+  add: function(node, resource) {
+    ResourceCache._cached.push({ node: node, resource: resource });
+  },
+
+  /**
+   * Drop all cache entries. Helpful to prevent memory leaks
+   */
+  clear: function() {
+    ResourceCache._cached = {};
+  }
 };
 
 
