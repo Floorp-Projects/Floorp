@@ -171,6 +171,10 @@ nsAttrValue::Reset()
 void
 nsAttrValue::SetTo(const nsAttrValue& aOther)
 {
+  if (this == &aOther) {
+    return;
+  }
+
   switch (aOther.BaseType()) {
     case eStringBase:
     {
