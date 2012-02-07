@@ -467,7 +467,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 
   maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW | NS_STYLE_HINT_UPDATE_OVERFLOW);
   DO_STRUCT_DIFFERENCE(Border);
-  DO_STRUCT_DIFFERENCE(TextReset);
       
   // Changes to 'z-index' cause SyncFrameView.
   maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_SyncFrameView);
@@ -483,6 +482,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Font);
   DO_STRUCT_DIFFERENCE(Margin);
   DO_STRUCT_DIFFERENCE(Padding);
+  DO_STRUCT_DIFFERENCE(TextReset);
 
   // Outline needs to update the overflow and repaint.
   maxHint = NS_STYLE_HINT_UPDATE_OVERFLOW;
