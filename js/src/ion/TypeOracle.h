@@ -60,7 +60,6 @@ enum MIRType
     MIRType_Double,
     MIRType_String,
     MIRType_Object,
-    MIRType_Magic,
     MIRType_Value,
     MIRType_Any,        // Any type.
     MIRType_None,       // Invalid, used as a placeholder.
@@ -256,8 +255,6 @@ MIRTypeFromValueType(JSValueType type)
         return MIRType_Null;
       case JSVAL_TYPE_OBJECT:
         return MIRType_Object;
-      case JSVAL_TYPE_MAGIC:
-        return MIRType_Magic;
       case JSVAL_TYPE_UNKNOWN:
         return MIRType_Value;
       default:
@@ -312,8 +309,6 @@ StringFromMIRType(MIRType type)
       return "String";
     case MIRType_Object:
       return "Object";
-    case MIRType_Magic:
-      return "Magic";
     case MIRType_Value:
       return "Value";
     case MIRType_Any:

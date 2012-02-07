@@ -306,15 +306,9 @@ CodeGeneratorShared::encodeSafepoints()
 bool
 CodeGeneratorShared::markSafepoint(LInstruction *ins)
 {
-    return markSafepointAt(masm.currentOffset(), ins);
-}
-
-bool
-CodeGeneratorShared::markSafepointAt(uint32 offset, LInstruction *ins)
-{
     JS_ASSERT_IF(safepointIndices_.length(),
-                 offset - safepointIndices_.back().displacement() >= sizeof(uint32));
-    return safepointIndices_.append(SafepointIndex(offset, ins->safepoint()));
+                 masm.currentOffset() - safepointIndices_.back().displacement() >= sizeof(uint32));
+    return safepointIndices_.append(SafepointIndex(masm.currentOffset(), ins->safepoint()));
 }
 
 bool
