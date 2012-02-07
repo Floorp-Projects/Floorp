@@ -3,15 +3,19 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 
-public class testPan extends BaseTest {
+/**
+ * A panning performance test.
+ * Drags the page a bunch of times and measures the frames per second
+ * that fennec draws at.
+ */
+public class testPan extends PixelTest {
 
     public void testPan() {
         setTestType("talos");
         String url = getAbsoluteUrl("/startup_test/fennecmark/wikipedia.html");
-        loadUrl(url);
 
-        mActions.expectPaint().blockForEvent();
-        getInstrumentation().waitForIdleSync();
+        loadAndPaint(url);
+
         mDriver.setupScrollHandling();
 
         // Setup scrolling coordinates.
