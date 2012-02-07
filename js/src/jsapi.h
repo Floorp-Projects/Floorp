@@ -4054,6 +4054,14 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp);
 extern JS_PUBLIC_API(JSObject *)
 JS_NewElementIterator(JSContext *cx, JSObject *obj);
 
+/*
+ * To make your array-like class iterable using the for-of loop, set the
+ * JSCLASS_FOR_OF_ITERATION bit in the class's flags field and set its
+ * .ext.iteratorObject hook to this function.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_ElementIteratorStub(JSContext *cx, JSObject *obj, JSBool keysonly);
+
 extern JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp);

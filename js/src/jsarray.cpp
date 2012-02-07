@@ -679,13 +679,6 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
     return true;
 }
 
-static JSObject *
-array_iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
-{
-    JS_ASSERT(!keysonly);
-    return ElementIteratorObject::create(cx, obj);
-}
-
 /* Returns true if the dense array has an own property at the index. */
 static inline bool
 IsDenseArrayIndex(JSObject *obj, uint32_t index)
@@ -1242,7 +1235,7 @@ Class js::ArrayClass = {
         NULL,       /* equality    */
         NULL,       /* outerObject */
         NULL,       /* innerObject */
-        array_iterator,
+        JS_ElementIteratorStub,
         NULL,       /* unused      */
         false,      /* isWrappedNative */
     },
@@ -1306,7 +1299,7 @@ Class js::SlowArrayClass = {
         NULL,       /* equality    */
         NULL,       /* outerObject */
         NULL,       /* innerObject */
-        array_iterator,
+        JS_ElementIteratorStub,
         NULL,       /* unused      */
         false,      /* isWrappedNative */
     }
