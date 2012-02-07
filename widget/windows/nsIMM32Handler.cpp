@@ -605,10 +605,32 @@ nsIMM32Handler::OnIMEEndComposition(nsWindow* aWindow)
     return ShouldDrawCompositionStringOurselves();
   }
 
-  // IME on Korean NT somehow send WM_IME_ENDCOMPOSITION
-  // first when we hit space in composition mode
-  // we need to clear out the current composition string
-  // in that case.
+  // Korean IME posts WM_IME_ENDCOMPOSITION first when we hit space during
+  // composition. Then, we should ignore the message and commit the composition
+  // string at following WM_IME_COMPOSITION.
+  MSG compositionMsg;
+  if (::PeekMessageW(&compositionMsg, aWindow->GetWindowHandle(),
+                     WM_IME_STARTCOMPOSITION, WM_IME_COMPOSITION,
+                     PM_NOREMOVE) &&
+      compositionMsg.message == WM_IME_COMPOSITION &&
+      IS_COMMITTING_LPARAM(compositionMsg.lParam)) {
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: OnIMEEndComposition, WM_IME_ENDCOMPOSITION is followed by "
+       "WM_IME_COMPOSITION, ignoring the message..."));
+    return ShouldDrawCompositionStringOurselves();
+  }
+
+  // Otherwise, e.g., ChangJie doesn't post WM_IME_COMPOSITION before
+  // WM_IME_ENDCOMPOSITION when composition string becomes empty.
+  // Then, we should dispatch a compositionupdate event, a text event and
+  // a compositionend event.
+  // XXX Shouldn't we dispatch the text event with actual or latest composition
+  //     string?
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("IMM32: OnIMEEndComposition, mCompositionString=\"%s\"%s",
+     NS_ConvertUTF16toUTF8(mCompositionString).get(),
+     mCompositionString.IsEmpty() ? "" : ", but canceling it..."));
+
   mCompositionString.Truncate();
 
   nsIMEContext IMEContext(aWindow->GetWindowHandle());

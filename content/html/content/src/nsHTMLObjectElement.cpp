@@ -328,8 +328,8 @@ nsHTMLObjectElement::IsFocusableForTabIndex()
     return false;
   }
 
-  return Type() == eType_Plugin || IsEditableRoot() ||
-         (Type() == eType_Document && nsContentUtils::IsSubDocumentTabbable(this));
+  return IsEditableRoot() || (Type() == eType_Document &&
+                              nsContentUtils::IsSubDocumentTabbable(this));
 }
 
 bool
@@ -341,7 +341,7 @@ nsHTMLObjectElement::IsHTMLFocusable(bool aWithMouse,
   nsIDocument *doc = GetCurrentDoc();
   if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
     if (aTabIndex) {
-      GetIntAttr(nsGkAtoms::tabindex, -1, aTabIndex);
+      GetTabIndex(aTabIndex);
     }
 
     *aIsFocusable = false;
@@ -356,7 +356,7 @@ nsHTMLObjectElement::IsHTMLFocusable(bool aWithMouse,
     // Has plugin content: let the plugin decide what to do in terms of
     // internal focus from mouse clicks
     if (aTabIndex) {
-      GetIntAttr(nsGkAtoms::tabindex, 0, aTabIndex);
+      GetTabIndex(aTabIndex);
     }
 
     *aIsFocusable = true;

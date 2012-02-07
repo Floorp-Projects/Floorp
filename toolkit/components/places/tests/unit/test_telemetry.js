@@ -22,6 +22,11 @@ let histograms = {
   //PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS:  function (val) do_check_true(val > 1),
   PLACES_IDLE_FRECENCY_DECAY_TIME_MS: function (val) do_check_true(val > 0),
   PLACES_IDLE_MAINTENANCE_TIME_MS: function (val) do_check_true(val > 0),
+  PLACES_ANNOS_BOOKMARKS_COUNT: function (val) do_check_eq(val, 1),
+  PLACES_ANNOS_BOOKMARKS_SIZE_KB: function (val) do_check_eq(val, 1),
+  PLACES_ANNOS_PAGES_COUNT: function (val) do_check_eq(val, 1),
+  PLACES_ANNOS_PAGES_SIZE_KB: function (val) do_check_eq(val, 1),
+  PLACES_FRECENCY_CALC_TIME_MS: function (val) do_check_true(val >= 0),
 }
 
 function run_test() {
@@ -39,6 +44,16 @@ function run_test() {
                                                     "moz test");
   PlacesUtils.tagging.tagURI(uri, ["tag"]);
   PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword");
+
+  // Set a large annotation.
+  let content = "";
+  while (content.length < 1024) {
+    content += "0";
+  }
+  PlacesUtils.annotations.setItemAnnotation(itemId, "test-anno", content, 0,
+                                            PlacesUtils.annotations.EXPIRE_NEVER);
+  PlacesUtils.annotations.setPageAnnotation(uri, "test-anno", content, 0,
+                                            PlacesUtils.annotations.EXPIRE_NEVER);
 
   // Request to gather telemetry data.
   Cc["@mozilla.org/places/categoriesStarter;1"]
@@ -112,7 +127,9 @@ function check_telemetry() {
   for (let histogramId in histograms) {
     do_log_info("checking histogram " + histogramId);
     let validate = histograms[histogramId];
-    validate(Services.telemetry.getHistogramById(histogramId).snapshot().sum);
+    let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
+    validate(snapshot.sum);
+    do_check_true(snapshot.counts.reduce(function(a, b) a + b) > 0);
   }
   do_test_finished();
 }
