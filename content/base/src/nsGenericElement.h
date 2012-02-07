@@ -289,16 +289,17 @@ public:
    * have mutation listeners (in which case it's cheap to just return false
    * and let the caller go ahead and set the value).
    * @param aOldValue Set to the old value of the attribute, but only if there
-   *   are event listeners
+   *   are event listeners. If set, the type of aOldValue will be either
+   *   nsAttrValue::eString or nsAttrValue::eAtom.
    * @param aModType Set to nsIDOMMutationEvent::MODIFICATION or to
    *   nsIDOMMutationEvent::ADDITION, but only if this helper returns true
    * @param aHasListeners Set to true if there are mutation event listeners
    *   listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
    */
   bool MaybeCheckSameAttrVal(PRInt32 aNamespaceID, nsIAtom* aName,
-                               nsIAtom* aPrefix, const nsAString& aValue,
-                               bool aNotify, nsAutoString* aOldValue,
-                               PRUint8* aModType, bool* aHasListeners);
+                             nsIAtom* aPrefix, const nsAttrValue& aValue,
+                             bool aNotify, nsAttrValue& aOldValue,
+                             PRUint8* aModType, bool* aHasListeners);
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, bool aNotify);
   virtual nsresult SetParsedAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -655,7 +656,7 @@ protected:
   nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
                             nsIAtom* aName,
                             nsIAtom* aPrefix,
-                            const nsAString& aOldValue,
+                            const nsAttrValue& aOldValue,
                             nsAttrValue& aParsedValue,
                             PRUint8 aModType,
                             bool aFireMutation,

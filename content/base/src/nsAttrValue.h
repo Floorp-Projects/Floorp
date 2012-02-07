@@ -136,9 +136,12 @@ public:
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
 
+  void SetToSerialized(const nsAttrValue& aValue);
+
   void SwapValueWith(nsAttrValue& aOther);
 
   void ToString(nsAString& aResult) const;
+  already_AddRefed<nsIAtom> GetAsAtom() const;
 
   // Methods to get value. These methods do not convert so only use them
   // to retrieve the datatype that this nsAttrValue has.
@@ -174,6 +177,7 @@ public:
   bool Equals(const nsAttrValue& aOther) const;
   bool Equals(const nsAString& aValue, nsCaseTreatment aCaseSensitive) const;
   bool Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
+  bool EqualsAsStrings(const nsAttrValue& aOther) const;
 
   /**
    * Returns true if this AttrValue is equal to the given atom, or is an
