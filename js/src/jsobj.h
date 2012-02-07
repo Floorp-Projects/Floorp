@@ -1555,13 +1555,9 @@ class ValueArray {
 
 /* For manipulating JSContext::sharpObjectMap. */
 #define SHARP_BIT       ((jsatomid) 1)
-#define BUSY_BIT        ((jsatomid) 2)
 #define SHARP_ID_SHIFT  2
 #define IS_SHARP(he)    (uintptr_t((he)->value) & SHARP_BIT)
 #define MAKE_SHARP(he)  ((he)->value = (void *) (uintptr_t((he)->value)|SHARP_BIT))
-#define IS_BUSY(he)     (uintptr_t((he)->value) & BUSY_BIT)
-#define MAKE_BUSY(he)   ((he)->value = (void *) (uintptr_t((he)->value)|BUSY_BIT))
-#define CLEAR_BUSY(he)  ((he)->value = (void *) (uintptr_t((he)->value)&~BUSY_BIT))
 
 extern JSHashEntry *
 js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap, bool *alreadySeen);
