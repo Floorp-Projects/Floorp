@@ -326,6 +326,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
+    void movePtr(const Register &src, const Register &dest) {
+        movq(src, dest);
+    }
     void movePtr(ImmWord imm, Register dest) {
         movq(imm, dest);
     }
@@ -600,6 +603,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             loadInt32OrDouble(Operand(address), dest.fpu());
         else
             unboxNonDouble(Operand(address), dest.gpr());
+    }
+
+    void loadInstructionPointerAfterCall(const Register &dest) {
+        movq(Operand(StackPointer, 0x0), dest);
     }
 
     // Setup a call to C/C++ code, given the number of general arguments it
