@@ -18,8 +18,9 @@
             <ListView android:id="@+id/all_pages_list"
                       style="@style/AwesomeBarList"/>
 
-            <ListView android:id="@+id/bookmarks_list"
-                      style="@style/AwesomeBarList"/>
+            <ExpandableListView android:id="@+id/bookmarks_list"
+                                style="@style/AwesomeBarList"
+                                android:groupIndicator="@android:color/transparent"/>
 
             <ExpandableListView android:id="@+id/history_list"
                                 style="@style/AwesomeBarList"

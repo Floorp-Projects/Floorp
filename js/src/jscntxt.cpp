@@ -1007,7 +1007,6 @@ JSContext::JSContext(JSRuntime *rt)
     , stackIterAssertionEnabled(true)
 #endif
 {
-    PodZero(&sharpObjectMap);
     PodZero(&link);
 #ifdef JS_THREADSAFE
     PodZero(&threadLinks);

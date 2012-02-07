@@ -77,6 +77,10 @@ public class BrowserDB {
 
         public Cursor getAllBookmarks(ContentResolver cr);
 
+        public Cursor getMobileBookmarks(ContentResolver cr);
+
+        public Cursor getDesktopBookmarks(ContentResolver cr);
+
         public boolean isBookmark(ContentResolver cr, String uri);
 
         public void addBookmark(ContentResolver cr, String title, String uri);
@@ -136,6 +140,14 @@ public class BrowserDB {
 
     public static Cursor getAllBookmarks(ContentResolver cr) {
         return sDb.getAllBookmarks(cr);
+    }
+
+    public static Cursor getMobileBookmarks(ContentResolver cr) {
+        return sDb.getMobileBookmarks(cr);
+    }
+
+    public static Cursor getDesktopBookmarks(ContentResolver cr) {
+        return sDb.getDesktopBookmarks(cr);
     }
 
     public static boolean isBookmark(ContentResolver cr, String uri) {
