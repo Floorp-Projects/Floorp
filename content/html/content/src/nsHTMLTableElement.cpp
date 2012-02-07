@@ -1265,7 +1265,7 @@ nsHTMLTableElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
 nsresult
 nsHTMLTableElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  const nsAString* aValue,
+                                  const nsAttrValue* aValue,
                                   bool aNotify)
 {
   if (aName == nsGkAtoms::cellpadding && aNameSpaceID == kNameSpaceID_None) {

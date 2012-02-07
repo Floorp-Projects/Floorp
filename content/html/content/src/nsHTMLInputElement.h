@@ -379,7 +379,7 @@ protected:
    * Called when an attribute is about to be changed
    */
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                 const nsAString* aValue, bool aNotify);
+                                 const nsAttrValue* aValue, bool aNotify);
   /**
    * Called when an attribute has just been changed
    */

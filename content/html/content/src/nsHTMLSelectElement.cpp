@@ -1371,7 +1371,7 @@ nsHTMLSelectElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
 nsresult
 nsHTMLSelectElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                   const nsAString* aValue, bool aNotify)
+                                   const nsAttrValue* aValue, bool aNotify)
 {
   if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {

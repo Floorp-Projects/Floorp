@@ -2743,7 +2743,8 @@ nsGenericHTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
 nsresult
 nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                        const nsAString* aValue, bool aNotify)
+                                        const nsAttrValue* aValue,
+                                        bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     nsAutoString tmp;

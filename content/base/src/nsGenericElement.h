@@ -706,14 +706,15 @@ protected:
    *
    * @param aNamespaceID the namespace of the attr being set
    * @param aName the localname of the attribute being set
-   * @param aValue the value it's being set to.  If null, the attr is being
-   *        removed.
+   * @param aValue the value it's being set to. This may be an already parsed
+   *        nsAttrValue or simply an nsAttrValue wrapping a yet-to-be-parsed
+   *        string. Alternatively, if the attr is being removed it will be null.
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
   // inlined.  Those calls don't go through a vtable.
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, bool aNotify)
+                                 const nsAttrValue* aValue, bool aNotify)
   {
     return NS_OK;
   }
