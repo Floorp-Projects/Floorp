@@ -14,7 +14,7 @@
 </head>
 <body onload="starttest()">
 <script class="testbody" type="text/javascript">
-SimpleTest.info("\nProfile::WindowSnapshotLoadTime: " + (loadTime - start) + "\n");
+info("\nProfile::WindowSnapshotLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
   SimpleTest.waitForExplicitFinish();
   var startTime = new Date();
@@ -27,7 +27,7 @@ function starttest() {
   is(compareSnapshots(snap, snap2, true)[0], false, "this should be false");
   document.body.removeChild(div1);
   var endTime = new Date();
-  SimpleTest.info("\nProfile::WindowSnapshotRunTime: " + (endTime-startTime) + "\n");
+  info("\nProfile::WindowSnapshotRunTime: " + (endTime-startTime) + "\n");
   SimpleTest.finish();
 };
 </script>

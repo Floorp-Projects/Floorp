@@ -43,9 +43,7 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_TESTS
-DIRS            += tests
-endif
+TEST_DIRS += tests
 
 MODULE		= editor
 LIBRARY_NAME	= texteditor_s

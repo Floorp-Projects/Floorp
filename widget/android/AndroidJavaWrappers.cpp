@@ -55,6 +55,7 @@ jfieldID AndroidGeckoEvent::jGammaField = 0;
 jfieldID AndroidGeckoEvent::jXField = 0;
 jfieldID AndroidGeckoEvent::jYField = 0;
 jfieldID AndroidGeckoEvent::jZField = 0;
+jfieldID AndroidGeckoEvent::jDistanceField = 0;
 jfieldID AndroidGeckoEvent::jRectField = 0;
 jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
@@ -111,7 +112,6 @@ jmethodID AndroidAddress::jGetThoroughfareMethod;
 jclass AndroidGeckoSoftwareLayerClient::jGeckoSoftwareLayerClientClass = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jLockBufferMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jUnlockBufferMethod = 0;
-jmethodID AndroidGeckoSoftwareLayerClient::jGetRenderOffsetMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jEndDrawingMethod = 0;
 jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
@@ -169,6 +169,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jXField = getField("mX", "D");
     jYField = getField("mY", "D");
     jZField = getField("mZ", "D");
+    jDistanceField = getField("mDistance", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -330,7 +331,6 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
 
     jLockBufferMethod = getMethod("lockBuffer", "()Ljava/nio/ByteBuffer;");
     jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
-    jGetRenderOffsetMethod = getMethod("getRenderOffset", "()Landroid/graphics/Point;");
     jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Z");
     jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
 #endif
@@ -542,6 +542,11 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case PROXIMITY_EVENT: {
+            mDistance = jenv->GetDoubleField(jobj, jDistanceField);
+            break;
+        }
+
         default:
             break;
     }
@@ -682,18 +687,6 @@ AndroidGeckoSoftwareLayerClient::UnlockBuffer()
 
     AndroidBridge::AutoLocalJNIFrame(env, 1);
     env->CallVoidMethod(wrapped_obj, jUnlockBufferMethod);
-}
-
-void
-AndroidGeckoSoftwareLayerClient::GetRenderOffset(nsIntPoint &aOffset)
-{
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AndroidPoint offset(env, env->CallObjectMethod(wrapped_obj, jGetRenderOffsetMethod));
-    aOffset.x = offset.X();
-    aOffset.y = offset.Y();
 }
 
 bool

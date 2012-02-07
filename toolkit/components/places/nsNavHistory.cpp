@@ -277,36 +277,6 @@ protected:
   nsNavHistory& mNavHistory;
 };
 
-
-// Used to notify a topic to system observers on async execute completion.
-class AsyncStatementCallbackNotifier : public AsyncStatementCallback
-{
-public:
-  AsyncStatementCallbackNotifier(const char* aTopic)
-    : mTopic(aTopic)
-  {
-  }
-
-  NS_IMETHOD HandleCompletion(PRUint16 aReason);
-
-private:
-  const char* mTopic;
-};
-
-NS_IMETHODIMP
-AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
-{
-  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
-  }
-
-  return NS_OK;
-}
-
 } // anonymouse namespace
 
 
@@ -3988,8 +3958,10 @@ nsNavHistory::DecayFrecency()
     deleteAdaptive.get()
   };
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), nsnull,
-                                      getter_AddRefs(ps));
+  nsRefPtr<AsyncStatementTelemetryTimer> cb =
+    new AsyncStatementTelemetryTimer(Telemetry::PLACES_IDLE_FRECENCY_DECAY_TIME_MS);
+  rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), cb,
+                                     getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

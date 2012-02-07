@@ -1067,7 +1067,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
   // class and private from the JSObject, neither of which cares about
   // compartments.
 
-  JSClass *clazz = JS_GET_CLASS(cx, obj);
+  JSClass *clazz = JS_GetClass(obj);
 
   if (clazz == &sNPObjectJSWrapperClass) {
     // obj is one of our own, its private data is the NPObject we're
@@ -1156,7 +1156,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 static NPObject *
 GetNPObject(JSContext *cx, JSObject *obj)
 {
-  while (obj && JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
+  while (obj && JS_GetClass(obj) != &sNPObjectJSWrapperClass) {
     obj = ::JS_GetPrototype(cx, obj);
   }
 
@@ -1392,7 +1392,7 @@ static JSBool
 CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval, bool ctorCall)
 {
-  while (obj && JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
+  while (obj && JS_GetClass(obj) != &sNPObjectJSWrapperClass) {
     obj = ::JS_GetPrototype(cx, obj);
   }
 
@@ -1702,7 +1702,7 @@ NPObjWrapper_Convert(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
   }
 
   JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
-                       JS_GET_CLASS(cx, obj)->name,
+                       JS_GetClass(obj)->name,
                        hint == JSTYPE_VOID
                        ? "primitive type"
                        : hint == JSTYPE_NUMBER
@@ -2075,7 +2075,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
   // more than one of the plugin's scriptable objects on the prototype
   // chain).
   while (obj && (proto = ::JS_GetPrototype(cx, obj))) {
-    if (JS_GET_CLASS(cx, proto) == &sNPObjectJSWrapperClass) {
+    if (JS_GetClass(proto) == &sNPObjectJSWrapperClass) {
       // We found an NPObject on the proto chain, get its prototype...
       proto = ::JS_GetPrototype(cx, proto);
 
@@ -2146,12 +2146,10 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
 
   jsval fieldValue;
   NPVariant npv;
-  NPBool hasProperty;
 
   if (getPropertyResult) {
     // Plugin has already handed us the value we want here.
     npv = *getPropertyResult;
-    hasProperty = true;
   }
   else {
     VOID_TO_NPVARIANT(npv);
@@ -2174,7 +2172,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   // npobjWrapper is the JSObject through which we make sure we don't
   // outlive the underlying NPObject, so make sure it points to the
   // real JSObject wrapper for the NPObject.
-  while (JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
+  while (JS_GetClass(obj) != &sNPObjectJSWrapperClass) {
     obj = ::JS_GetPrototype(cx, obj);
   }
 

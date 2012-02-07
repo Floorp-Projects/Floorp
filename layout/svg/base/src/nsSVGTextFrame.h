@@ -52,7 +52,6 @@ class nsSVGTextFrame : public nsSVGTextFrameBase
 protected:
   nsSVGTextFrame(nsStyleContext* aContext)
     : nsSVGTextFrameBase(aContext),
-      mMetricsState(unsuspended),
       mPositioningDirty(true) {}
 
 public:
@@ -85,8 +84,7 @@ public:
 
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(PRUint32 aFlags);
-  NS_IMETHOD NotifyRedrawSuspended();
-  NS_IMETHOD NotifyRedrawUnsuspended();
+  virtual void NotifyRedrawUnsuspended();
   // Override these four to ensure that UpdateGlyphPositioning is called
   // to bring glyph positions up to date
   NS_IMETHOD PaintSVG(nsSVGRenderState* aContext,
@@ -125,9 +123,6 @@ private:
   void SetWhitespaceHandling(nsSVGGlyphFrame *aFrame);
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
-
-  enum UpdateState { unsuspended, suspended };
-  UpdateState mMetricsState;
 
   bool mPositioningDirty;
 };
