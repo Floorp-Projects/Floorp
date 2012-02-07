@@ -1330,11 +1330,13 @@ typedef void
 (* JSFinalizeOp)(JSContext *cx, JSObject *obj);
 
 /*
- * Used by JS_AddExternalStringFinalizer and JS_RemoveExternalStringFinalizer
- * to extend and reduce the set of string types finalized by the GC.
+ * Finalizes external strings created by JS_NewExternalString.
  */
-typedef void
-(* JSStringFinalizeOp)(JSContext *cx, JSString *str);
+typedef struct JSStringFinalizer JSStringFinalizer;
+
+struct JSStringFinalizer {
+    void (*finalize)(const JSStringFinalizer *fin, jschar *chars);
+};
 
 /*
  * JSClass.checkAccess type: check whether obj[id] may be accessed per mode,
@@ -3306,69 +3308,26 @@ extern JS_PUBLIC_API(void)
 JS_FlushCaches(JSContext *cx);
 
 /*
- * Add a finalizer for external strings created by JS_NewExternalString (see
- * below) using a type-code returned from this function, and that understands
- * how to free or release the memory pointed at by JS_GetStringChars(str).
- *
- * Return a nonnegative type index if there is room for finalizer in the
- * global GC finalizers table, else return -1.  If the engine is compiled
- * JS_THREADSAFE and used in a multi-threaded environment, this function must
- * be invoked on the primordial thread only, at startup -- or else the entire
- * program must single-thread itself while loading a module that calls this
- * function.
- */
-extern JS_PUBLIC_API(intN)
-JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer);
-
-/*
- * Remove finalizer from the global GC finalizers table, returning its type
- * code if found, -1 if not found.
- *
- * As with JS_AddExternalStringFinalizer, there is a threading restriction
- * if you compile the engine JS_THREADSAFE: this function may be called for a
- * given finalizer pointer on only one thread; different threads may call to
- * remove distinct finalizers safely.
- *
- * You must ensure that all strings with finalizer's type have been collected
- * before calling this function.  Otherwise, string data will be leaked by the
- * GC, for want of a finalizer to call.
- */
-extern JS_PUBLIC_API(intN)
-JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer);
-
-/*
  * Create a new JSString whose chars member refers to external memory, i.e.,
- * memory requiring type-specific finalization.  The type code must be a
- * nonnegative return value from JS_AddExternalStringFinalizer.
+ * memory requiring application-specific finalization.
  */
 extern JS_PUBLIC_API(JSString *)
-JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length, intN type);
-
-/*
- * Like JS_NewExternalString, except that 'closure' can be retrieved later via
- * JS_GetExternalStringClosure. This closure data is a black blox to the JS
- * engine and may be used by the embedding to associate extra data with an
- * external string. E.g., an embedding may want to associate a pointer to the
- * object that owns the chars of an external string so that, when this external
- * string is finalized, the owner object can be deleted.
- */
-extern JS_PUBLIC_API(JSString *)
-JS_NewExternalStringWithClosure(JSContext *cx, const jschar *chars, size_t length,
-                                intN type, void *closure);
+JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length,
+                     const JSStringFinalizer *fin);
 
 /*
  * Return whether 'str' was created with JS_NewExternalString or
  * JS_NewExternalStringWithClosure.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_IsExternalString(JSContext *cx, JSString *str);
+JS_IsExternalString(JSString *str);
 
 /*
  * Return the 'closure' arg passed to JS_NewExternalStringWithClosure or NULL
  * if the external string was created via JS_NewExternalString.
  */
-extern JS_PUBLIC_API(void *)
-JS_GetExternalStringClosure(JSContext *cx, JSString *str);
+extern JS_PUBLIC_API(const JSStringFinalizer *)
+JS_GetExternalStringFinalizer(JSString *str);
 
 /*
  * Set the size of the native stack that should not be exceed. To disable
