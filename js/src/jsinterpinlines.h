@@ -153,28 +153,23 @@ ComputeThis(JSContext *cx, StackFrame *fp)
  * problem to the value at |spindex| on the stack.
  */
 JS_ALWAYS_INLINE JSObject *
-ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
+ValuePropertyBearer(JSContext *cx, StackFrame *fp, const Value &v, int spindex)
 {
     if (v.isObject())
         return &v.toObject();
 
-    JSProtoKey protoKey;
-    if (v.isString()) {
-        protoKey = JSProto_String;
-    } else if (v.isNumber()) {
-        protoKey = JSProto_Number;
-    } else if (v.isBoolean()) {
-        protoKey = JSProto_Boolean;
-    } else {
-        JS_ASSERT(v.isNull() || v.isUndefined());
-        js_ReportIsNullOrUndefined(cx, spindex, v, NULL);
-        return NULL;
-    }
+    GlobalObject &global = fp->scopeChain().global();
 
-    JSObject *pobj;
-    if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
-        return NULL;
-    return pobj;
+    if (v.isString())
+        return global.getOrCreateStringPrototype(cx);
+    if (v.isNumber())
+        return global.getOrCreateNumberPrototype(cx);
+    if (v.isBoolean())
+        return global.getOrCreateBooleanPrototype(cx);
+
+    JS_ASSERT(v.isNull() || v.isUndefined());
+    js_ReportIsNullOrUndefined(cx, spindex, v, NULL);
+    return NULL;
 }
 
 inline bool
