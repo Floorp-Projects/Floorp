@@ -106,13 +106,23 @@
   "END" \
 )
 
+// For performance reasons the host frecency is updated only when the page
+// frecency changes by a meaningful percentage.  This is because the frecency
+// decay algorithm requires to update all the frecencies at once, causing a
+// too high overhead, while leaving the ordering unchanged.
 #define CREATE_PLACES_AFTERUPDATE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMP TRIGGER moz_places_afterupdate_frecency_trigger " \
   "AFTER UPDATE OF frecency ON moz_places FOR EACH ROW " \
   "WHEN NEW.frecency >= 0 " \
+    "AND ABS(" \
+      "IFNULL((NEW.frecency - OLD.frecency) / CAST(NEW.frecency AS REAL), " \
+             "(NEW.frecency - OLD.frecency))" \
+    ") > .05 " \
   "BEGIN " \
     "UPDATE moz_hosts " \
-    "SET frecency = (SELECT MAX(frecency) FROM moz_places WHERE rev_host = NEW.rev_host OR rev_host = NEW.rev_host || 'www.') " \
+    "SET frecency = (SELECT MAX(frecency) FROM moz_places " \
+                    "WHERE rev_host = NEW.rev_host " \
+                       "OR rev_host = NEW.rev_host || 'www.') " \
     "WHERE host = fixup_url(get_unreversed_host(NEW.rev_host)); " \
   "END" \
 )
