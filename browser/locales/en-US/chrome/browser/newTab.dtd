@@ -1,0 +1,6 @@
+<!-- These strings are used in the about:newtab page -->
+<!ENTITY newtab.pageTitle "New Tab">
+
+<!ENTITY newtab.show "Show the New Tab Page">
+<!ENTITY newtab.hide "Hide the New Tab Page">
+<!ENTITY newtab.reset "Reset the New Tab Page">

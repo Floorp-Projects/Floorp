@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=719994
+-->
+<window title="Test principal inheriting"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test principal inheriting</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 719994 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var gFrame;
+
+// This test file is loaded in a type=content docshell whose principal is
+// the system principal.
+
+// Using data: URIs here instead of javascript: URIs, since javascript: URIs
+// fail to load when there's no principal to load them against. This only
+// matters when these tests fail (produces better error messages).
+var tests = [
+  function testInheritFromParent(cb) {
+    gFrame = document.createElement("iframe");
+    loadListener(gFrame, function () {
+      is(window.inheritedFromParent, true, "load in type=content iframe inherited principal of same type parent");
+      cb();
+    });
+    gFrame.setAttribute("type", "content");
+    gFrame.setAttribute("src", "data:text/html,<script>parent.inheritedFromParent = true;</script>");
+    document.documentElement.appendChild(gFrame);
+  },
+  function testInheritFromCurrent_system(cb) {
+    loadListener(gFrame, function () {
+      is(window.inheritedSystem, undefined, "load in type=content iframe shouldn't inherit system principal from current document");
+      cb();
+    }, true);
+    gFrame.setAttribute("src", "data:text/html,<script>parent.inheritedSystem = true;</script>");
+  },
+  function testInheritFromCreated(cb) {
+    // Open a new chrome window with a type="content" iframe, so that it has no
+    // same-type parent.
+    // Load a javascript: URI in it to ensure that GetInheritedPrincipal will
+    // force creation of a content viewer.
+    let xulWinURL = 'data:application/vnd.mozilla.xul+xml,<?xml version="1.0"?>' +
+                    '<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>';
+    let newWin = window.openDialog(xulWinURL, "chrome_window", "chrome");
+    loadListener(newWin, function () {
+      let frame = newWin.document.createElement("iframe");
+      frame.setAttribute("type", "content");
+      frame.setAttribute("src", "javascript:'1';");
+      loadListener(frame, function () {
+        is(frame.contentWindow.document.body.textContent, "1", "content viewer was created");
+        SimpleTest.executeSoon(function () {
+          newWin.close();
+          cb();
+        })
+      });
+      newWin.document.documentElement.appendChild(frame);
+    });
+  }
+];
+
+addLoadEvent(function onLoad() {
+  ok(Components.stack, "this test must be run with the system principal");
+  SimpleTest.executeSoon(nextTest);
+});
+
+function loadListener(target, func) {
+  target.addEventListener("load", function lis() {
+    target.removeEventListener("load", lis, true);
+    func();
+  }, true);
+}
+
+function nextTest() {
+  if (tests.length) {
+    let test = tests.shift();
+    SimpleTest.executeSoon(function () {
+      info("running " + test.name);
+      test(nextTest);
+    });
+  } else
+    SimpleTest.executeSoon(SimpleTest.finish);
+}
+
+]]>
+</script>
+
+</window>

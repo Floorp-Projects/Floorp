@@ -22,6 +22,22 @@ diff -ru a/csu/Makefile b/csu/Makefile
  	   *) ;; \
  	 esac; \
  	 files="$(all-Banner-files)";				\
+diff -ru a/Makerules b/Makerules
+--- a/Makerules	2011-01-17 23:34:07.000000000 -0500
++++ b/Makerules	2012-01-30 08:47:56.565068903 -0500
+@@ -992,9 +992,9 @@
+ 	 echo '   Use the shared library, but some functions are only in';\
+ 	 echo '   the static library, so try that secondarily.  */';\
+ 	 cat $<; \
+-	 echo 'GROUP ( $(slibdir)/libc.so$(libc.so-version)' \
+-	      '$(libdir)/$(patsubst %,$(libtype.oS),$(libprefix)$(libc-name))'\
+-	      ' AS_NEEDED (' $(slibdir)/$(rtld-installed-name) ') )' \
++	 echo 'GROUP ( libc.so$(libc.so-version)' \
++	      '$(patsubst %,$(libtype.oS),$(libprefix)$(libc-name))'\
++	      ' AS_NEEDED (' $(rtld-installed-name) ') )' \
+ 	) > $@.new
+ 	mv -f $@.new $@
+ 
 diff -ru a/nscd/nscd_stat.c b/nscd/nscd_stat.c
 --- a/nscd/nscd_stat.c	2011-01-17 23:34:07.000000000 -0500
 +++ b/nscd/nscd_stat.c	2012-01-23 15:54:45.231607606 -0500

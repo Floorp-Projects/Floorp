@@ -227,17 +227,19 @@ JSObject::allocateArrayBufferSlots(JSContext *cx, uint32_t size, uint8_t *conten
     size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
 
     if (size > sizeof(Value) * usableSlots) {
-        ObjectElements *newheader = (ObjectElements *)cx->malloc_(size + sizeof(ObjectElements));
+        ObjectElements *newheader = (ObjectElements *)cx->calloc_(size + sizeof(ObjectElements));
         if (!newheader)
             return false;
         elements = newheader->elements();
+        if (contents)
+            memcpy(elements, contents, size);
     } else {
         elements = fixedElements();
+        if (contents)
+            memcpy(elements, contents, size);
+        else
+            memset(elements, 0, size);
     }
-    if (contents)
-        memcpy(elements, contents, size);
-    else
-        memset(elements, 0, size);
 
     ObjectElements *header = getElementsHeader();
 

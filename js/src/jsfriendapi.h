@@ -135,6 +135,27 @@ js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, 
 JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx);
 
+#ifdef DEBUG
+
+/*
+ * Routines to print out values during debugging.  These are FRIEND_API to help
+ * the debugger find them and to support temporarily hacking js_Dump* calls
+ * into other code.
+ */
+
+extern JS_FRIEND_API(void)
+js_DumpString(JSString *str);
+
+extern JS_FRIEND_API(void)
+js_DumpAtom(JSAtom *atom);
+
+extern JS_FRIEND_API(void)
+js_DumpObject(JSObject *obj);
+
+extern JS_FRIEND_API(void)
+js_DumpChars(const jschar *s, size_t n);
+#endif
+
 #ifdef __cplusplus
 
 extern JS_FRIEND_API(bool)
@@ -155,6 +176,42 @@ JS_END_EXTERN_C
 struct PRLock;
 
 namespace js {
+
+struct ContextFriendFields {
+    JSRuntime *const    runtime;
+
+    ContextFriendFields(JSRuntime *rt)
+      : runtime(rt) { }
+
+    static const ContextFriendFields *get(const JSContext *cx) {
+        return reinterpret_cast<const ContextFriendFields *>(cx);
+    }
+};
+
+struct RuntimeFriendFields {
+    /*
+     * If non-zero, we were been asked to call the operation callback as soon
+     * as possible.
+     */
+    volatile int32_t    interrupt;
+
+    /* Limit pointer for checking native stack consumption. */
+    uintptr_t           nativeStackLimit;
+
+    RuntimeFriendFields()
+      : interrupt(0),
+        nativeStackLimit(0) { }
+
+    static const RuntimeFriendFields *get(const JSRuntime *rt) {
+        return reinterpret_cast<const RuntimeFriendFields *>(rt);
+    }
+};
+
+inline JSRuntime *
+GetRuntime(const JSContext *cx)
+{
+    return ContextFriendFields::get(cx)->runtime;
+}
 
 typedef bool
 (* PreserveWrapperCallback)(JSContext *cx, JSObject *obj);
@@ -228,12 +285,16 @@ struct WeakMapTracer {
     JSContext            *context;
     WeakMapTraceCallback callback;
 
-    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb) 
+    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb)
         : context(cx), callback(cb) {}
 };
 
 extern JS_FRIEND_API(void)
 TraceWeakMaps(WeakMapTracer *trc);
+
+extern JS_FRIEND_API(bool)
+GCThingIsMarkedGray(void *thing);
+
 
 /*
  * Shadow declarations of JS internal structures, for access by inline access
@@ -277,6 +338,11 @@ struct Object {
             return fixedSlots()[slot];
         return slots[slot - nfixed];
     }
+};
+
+struct Atom {
+    size_t _;
+    const jschar *chars;
 };
 
 } /* namespace shadow */
@@ -405,6 +471,18 @@ GetObjectShape(JSObject *obj)
     return reinterpret_cast<Shape *>(shape);
 }
 
+inline const jschar *
+GetAtomChars(JSAtom *atom)
+{
+    return reinterpret_cast<shadow::Atom *>(atom)->chars;
+}
+
+inline JSLinearString *
+AtomToLinearString(JSAtom *atom)
+{
+    return reinterpret_cast<JSLinearString *>(atom);
+}
+
 static inline js::PropertyOp
 CastAsJSPropertyOp(JSObject *object)
 {
@@ -440,8 +518,11 @@ IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx);
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
-JS_FRIEND_API(uintptr_t)
-GetContextStackLimit(const JSContext *cx);
+inline uintptr_t
+GetContextStackLimit(const JSContext *cx)
+{
+    return RuntimeFriendFields::get(GetRuntime(cx))->nativeStackLimit;
+}
 
 #define JS_CHECK_RECURSION(cx, onerror)                                         \
     JS_BEGIN_MACRO                                                              \
@@ -614,6 +695,9 @@ enum Reason {
 
 extern JS_FRIEND_API(void)
 GCForReason(JSContext *cx, gcreason::Reason reason);
+
+extern JS_FRIEND_API(void)
+CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
 ShrinkingGC(JSContext *cx, gcreason::Reason reason);

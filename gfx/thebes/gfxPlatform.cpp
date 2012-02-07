@@ -237,6 +237,12 @@ gfxPlatform::gfxPlatform()
     mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
 #endif
     mBidiNumeralOption = UNINITIALIZED_VALUE;
+
+    if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
+        mPreferredDrawTargetBackend = BACKEND_SKIA;
+    } else {
+        mPreferredDrawTargetBackend = BACKEND_NONE;
+    }
 }
 
 gfxPlatform*
@@ -361,6 +367,16 @@ gfxPlatform::Shutdown()
     }
 
     mozilla::gl::GLContextProvider::Shutdown();
+    mozilla::gl::GLContextProviderOSMesa::Shutdown();
+
+#if defined(XP_WIN)
+    // The above shutdown call shuts down the default context provider for the
+    // platform. Windows is a "special snowflake", though, and has three context
+    // providers available, so we have to shut all of them down.
+    // We should only support one GL provider on Windows; then, this could go
+    // away. We currently support WGL for WebGL on Optimus.
+    mozilla::gl::GLContextProviderEGL::Shutdown();
+#endif
 
     delete gPlatform;
     gPlatform = nsnull;
@@ -430,6 +446,14 @@ void SourceBufferDestroy(void *srcBuffer)
   static_cast<SourceSurface*>(srcBuffer)->Release();
 }
 
+void SourceSnapshotDetached(cairo_surface_t *nullSurf)
+{
+  gfxImageSurface* origSurf =
+    static_cast<gfxImageSurface*>(cairo_surface_get_user_data(nullSurf, &kSourceSurface));
+
+  origSurf->SetData(&kSourceSurface, NULL, NULL);
+}
+
 RefPtr<SourceSurface>
 gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurface)
 {
@@ -497,6 +521,15 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
                                                      IntSize(imgSurface->GetSize().width, imgSurface->GetSize().height),
                                                      imgSurface->Stride(),
                                                      format);
+
+    cairo_surface_t *nullSurf =
+	cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+    cairo_surface_set_user_data(nullSurf,
+				&kSourceSurface,
+				imgSurface,
+				NULL);
+    cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
+    cairo_surface_destroy(nullSurf);
   }
 
   srcBuffer->AddRef();

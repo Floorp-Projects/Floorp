@@ -158,8 +158,8 @@ protected:
   virtual void UnrootResultValInternal();
 
   // Only touched on the main thread.
-  NS_DECL_EVENT_HANDLER(blocked);
-  NS_DECL_EVENT_HANDLER(upgradeneeded);
+  NS_DECL_EVENT_HANDLER(blocked)
+  NS_DECL_EVENT_HANDLER(upgradeneeded)
 };
 
 END_INDEXEDDB_NAMESPACE

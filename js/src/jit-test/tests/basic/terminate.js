@@ -1,3 +1,4 @@
+// |jit-test| exitstatus: 3
 try {
     terminate();
     assertEq("execution continued", "execution should not continue");

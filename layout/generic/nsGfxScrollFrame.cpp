@@ -3147,6 +3147,20 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
     mInner.mHadNonInitialReflow = true;
   }
 
+  // Set up overflow areas for block frames for the benefit of
+  // text-overflow.
+  nsIFrame* f = mInner.mScrolledFrame->GetContentInsertionFrame();
+  if (nsLayoutUtils::GetAsBlock(f)) {
+    nsRect origRect = f->GetRect();
+    nsRect clippedRect = origRect;
+    clippedRect.MoveBy(mInner.mScrollPort.TopLeft());
+    clippedRect.IntersectRect(clippedRect, mInner.mScrollPort);
+    nsOverflowAreas overflow = f->GetOverflowAreas();
+    f->FinishAndStoreOverflow(overflow, clippedRect.Size());
+    clippedRect.MoveTo(origRect.TopLeft());
+    f->SetRect(clippedRect);
+  }
+
   mInner.PostOverflowEvent();
   return NS_OK;
 }
@@ -3219,7 +3233,8 @@ nsGfxScrollFrameInner::ReflowFinished()
     nsPoint scrollPos = GetScrollPosition();
     // XXX shouldn't we use GetPageScrollAmount/GetLineScrollAmount here?
     if (vScroll) {
-      nscoord fontHeight = GetLineScrollAmount().height;
+      const double kScrollMultiplier = 3;
+      nscoord fontHeight = GetLineScrollAmount().height * kScrollMultiplier;
       // We normally use (scrollArea.height - fontHeight) for height
       // of page scrolling.  However, it is too small when
       // fontHeight is very large. (If fontHeight is larger than
@@ -3229,7 +3244,7 @@ nsGfxScrollFrameInner::ReflowFinished()
       nscoord pageincrement = nscoord(mScrollPort.height - fontHeight);
       nscoord pageincrementMin = nscoord(float(mScrollPort.height) * 0.8);
       FinishReflowForScrollbar(vScroll, minY, maxY, scrollPos.y,
-                               NS_MAX(pageincrement,pageincrementMin),
+                               NS_MAX(pageincrement, pageincrementMin),
                                fontHeight);
     }
     if (hScroll) {

@@ -488,6 +488,7 @@
 #include "DOMSVGNumberList.h"
 #include "DOMSVGPathSegList.h"
 #include "DOMSVGPointList.h"
+#include "DOMSVGStringList.h"
 #include "DOMSVGTransformList.h"
 
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
@@ -514,6 +515,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "nsIDOMBatteryManager.h"
 #include "BatteryManager.h"
+#include "nsIDOMPowerManager.h"
 #include "nsIDOMSmsManager.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsEvent.h"
@@ -1293,8 +1295,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGStringList, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGStringList, nsSVGStringListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)    
   NS_DEFINE_CLASSINFO_DATA(SVGTransform, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGTransformList, nsSVGTransformListSH,
@@ -1441,6 +1443,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozBatteryManager, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(MozPowerManager, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozSmsManager, nsDOMGenericSH,
@@ -4032,6 +4037,10 @@ nsDOMClassInfo::Init()
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(MozPowerManager, nsIDOMMozPowerManager)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozPowerManager)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(MozSmsManager, nsIDOMMozSmsManager)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsManager)
   DOM_CLASSINFO_MAP_END
@@ -4889,7 +4898,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
   }
 
   NS_ASSERTION(::JS_GetPrototype(cx, proto) &&
-               JS_GET_CLASS(cx, ::JS_GetPrototype(cx, proto)) == sObjectClass,
+               JS_GetClass(::JS_GetPrototype(cx, proto)) == sObjectClass,
                "Hmm, somebody did something evil?");
 
 #ifdef DEBUG
@@ -5279,7 +5288,7 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
   JSAutoRequest ar(cx);
 
   while ((proto = ::JS_GetPrototype(cx, obj))) {
-    if (JS_GET_CLASS(cx, proto) == &sGlobalScopePolluterClass) {
+    if (JS_GetClass(proto) == &sGlobalScopePolluterClass) {
       nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, proto);
 
       NS_IF_RELEASE(doc);
@@ -5321,7 +5330,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   // scope polluter (right before Object.prototype).
 
   while ((proto = ::JS_GetPrototype(cx, o))) {
-    if (JS_GET_CLASS(cx, proto) == sObjectClass) {
+    if (JS_GetClass(proto) == sObjectClass) {
       // Set the global scope polluters prototype to Object.prototype
       ::JS_SplicePrototype(cx, gsp, proto);
 
@@ -5438,7 +5447,7 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // only do that if the JSClass name is one that is likely to be a
     // window object.
 
-    const char *name = JS_GET_CLASS(cx, JSVAL_TO_OBJECT(*vp))->name;
+    const char *name = JS_GetClass(JSVAL_TO_OBJECT(*vp))->name;
 
     // The list of Window class names here need to be kept in sync
     // with the actual class names! The class name
@@ -5897,7 +5906,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     dom_obj = wrapped_obj;
   }
 
-  JSClass *dom_class = JS_GET_CLASS(cx, dom_obj);
+  JSClass *dom_class = JS_GetClass(dom_obj);
   if (!dom_class) {
     NS_ERROR("nsDOMConstructor::HasInstance can't get class.");
     return NS_ERROR_UNEXPECTED;
@@ -6296,7 +6305,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
       if (proto &&
           (!xpc_proto_proto ||
-           JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass)) {
+           JS_GetClass(xpc_proto_proto) == sObjectClass)) {
         if (!JS_WrapObject(cx, &proto) ||
             !JS_SetPrototype(cx, dot_prototype, proto)) {
           return NS_ERROR_UNEXPECTED;
@@ -8968,7 +8977,7 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, uintN argc, jsval *vp)
   // another method, use the document.all callee object as self.
   JSObject *self;
   if (JSVAL_IS_OBJECT(JS_CALLEE(cx, vp)) &&
-      ::JS_GetClass(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp))) == &sHTMLDocumentAllClass) {
+      ::JS_GetClass(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp))) == &sHTMLDocumentAllClass) {
     self = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
   } else {
     self = JS_THIS_OBJECT(cx, vp);
@@ -8989,7 +8998,7 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, uintN argc, jsval *vp)
 static inline JSObject *
 GetDocumentAllHelper(JSContext *cx, JSObject *obj)
 {
-  while (obj && JS_GET_CLASS(cx, obj) != &sHTMLDocumentAllHelperClass) {
+  while (obj && JS_GetClass(obj) != &sHTMLDocumentAllHelperClass) {
     obj = ::JS_GetPrototype(cx, obj);
   }
 
@@ -9559,7 +9568,8 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 
 
 // HTMLObject/EmbedElement helper
-
+// Keep in mind that it is OK for this to fail to return an instance. Don't return a
+// failure result unless something truly exceptional has happened.
 // static
 nsresult
 nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wrapper,
@@ -9574,36 +9584,21 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(content));
   NS_ASSERTION(objlc, "Object nodes must implement nsIObjectLoadingContent");
 
-  // If it's not safe to run script we'll only return the instance if it
-  // exists.
+  nsresult rv = objlc->GetPluginInstance(_result);
+  if (NS_SUCCEEDED(rv) && *_result) {
+    return rv;
+  }
+
+  // If it's not safe to run script we'll only return the instance if it exists.
   if (!nsContentUtils::IsSafeToRunScript()) {
-    return objlc->GetPluginInstance(_result);
+    return rv;
   }
 
-  // Make sure that there is a plugin
-  return objlc->EnsureInstantiation(_result);
-}
+  // We don't care if this actually starts the plugin or not, we just want to
+  // try to start it now if possible.
+  objlc->SyncStartPluginInstance();
 
-// Check if proto is already in obj's prototype chain.
-
-static bool
-IsObjInProtoChain(JSContext *cx, JSObject *obj, JSObject *proto)
-{
-  JSObject *o = obj;
-
-  JSAutoRequest ar(cx);
-
-  while (o) {
-    JSObject *p = ::JS_GetPrototype(cx, o);
-
-    if (p == proto) {
-      return true;
-    }
-
-    o = p;
-  }
-
-  return false;
+  return objlc->GetPluginInstance(_result);
 }
 
 class nsPluginProtoChainInstallRunner : public nsIRunnable
@@ -9685,19 +9680,8 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
 
   if (!pi_obj) {
     // Didn't get a plugin instance JSObject, nothing we can do then.
-
     return NS_OK;
   }
-
-  if (IsObjInProtoChain(cx, obj, pi_obj)) {
-    // We must have re-entered ::PostCreate() from nsObjectFrame()
-    // (through the EnsureInstantiation() call in
-    // GetPluginInstanceIfSafe()), this means that we've already done what
-    // we're about to do in this function so we can just return here.
-
-    return NS_OK;
-  }
-
 
   // If we got an xpconnect-wrapped plugin object, set obj's
   // prototype's prototype to the scriptable plugin.
@@ -9713,7 +9697,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (pi_proto && JS_GET_CLASS(cx, pi_proto) != sObjectClass) {
+  if (pi_proto && JS_GetClass(pi_proto) != sObjectClass) {
     // The plugin wrapper has a proto that's not Object.prototype, set
     // 'pi.__proto__.__proto__' to the original 'this.__proto__'
     if (pi_proto != my_proto && !::JS_SetPrototype(cx, pi_proto, my_proto)) {
@@ -10906,3 +10890,45 @@ nsSVGListSH<ListInterfaceType, ListType>::GetItemAt(nsISupports *aNative,
 
   return list->GetItemWithoutAddRef(aIndex);
 }
+
+
+// SVGStringList helper
+
+nsresult
+nsSVGStringListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                               nsAString& aResult)
+{
+  if (aIndex < 0) {
+    SetDOMStringToNull(aResult);
+    return NS_OK;
+  }
+
+  DOMSVGStringList* list = static_cast<DOMSVGStringList*>(
+                             static_cast<nsIDOMSVGStringList*>(aNative));
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIDOMSVGStringList> list_qi = do_QueryInterface(aNative);
+    
+    // If this assertion fires the QI implementation for the object in
+    // question doesn't use the nsIDOMDOMSVGStringList pointer as the
+    // nsISupports pointer. That must be fixed, or we'll crash...
+    NS_ABORT_IF_FALSE(list_qi == list, "Uh, fix QI!");
+  }
+#endif
+
+  nsresult rv = list->GetItem(aIndex, aResult);
+#ifdef DEBUG
+  if (DOMStringIsNull(aResult)) {
+    PRUint32 length = 0;
+    list->GetLength(&length);
+    NS_ASSERTION(PRUint32(aIndex) >= length, "Item should only return null for out-of-bounds access");
+  }
+#endif
+  if (rv == NS_ERROR_DOM_INDEX_SIZE_ERR) {
+    SetDOMStringToNull(aResult);
+    rv = NS_OK;
+  }
+  return rv;
+}
+
+

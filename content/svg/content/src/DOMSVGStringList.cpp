@@ -100,6 +100,12 @@ DOMSVGStringList::GetNumberOfItems(PRUint32 *aNumberOfItems)
 }
 
 NS_IMETHODIMP
+DOMSVGStringList::GetLength(PRUint32 *aLength)
+{
+  return GetNumberOfItems(aLength);
+}
+
+NS_IMETHODIMP
 DOMSVGStringList::Clear()
 {
   if (InternalList().IsExplicitlySet()) {

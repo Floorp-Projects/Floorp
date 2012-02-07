@@ -108,11 +108,6 @@ WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
-OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32)
-endif
-
-ifeq ($(OS_ARCH),WINNT)
 RCINCLUDE = splash.rc
 ifndef GNU_CC
 RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
