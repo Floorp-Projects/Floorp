@@ -93,6 +93,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/view/src/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/base/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/battery/$(LIB_PREFIX)dom_battery_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/power/$(LIB_PREFIX)dom_power_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/network/src/$(LIB_PREFIX)dom_network_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/sms/src/$(LIB_PREFIX)dom_sms_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
@@ -181,10 +182,6 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
-ifdef MOZ_SYDNEYAUDIO
-LOCAL_INCLUDES += -I$(DEPTH)/content/html/content/src
-endif
-
 ifdef NS_PRINTING
 SHARED_LIBRARY_LIBS += \
 		../printing/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \
@@ -235,14 +232,12 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(srcdir)/../forms \
 		   -I$(srcdir)/../tables \
 		   -I$(srcdir)/../style \
-		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
 		   -I$(srcdir)/../mathml \
 		   -I$(topsrcdir)/content/base/src \
  		   -I$(topsrcdir)/content/canvas/src \
 		   -I$(topsrcdir)/content/html/content/src \
 		   -I$(topsrcdir)/content/html/document/src \
-		   -I$(topsrcdir)/content/html/style/src \
 		   -I$(topsrcdir)/content/xslt/src/base \
 		   -I$(topsrcdir)/content/xslt/src/xml \
 		   -I$(topsrcdir)/content/xslt/src/xpath \

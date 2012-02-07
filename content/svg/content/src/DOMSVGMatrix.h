@@ -71,11 +71,11 @@
 #ifndef MOZILLA_DOMSVGMATRIX_H__
 #define MOZILLA_DOMSVGMATRIX_H__
 
-#include "nsIDOMSVGMatrix.h"
 #include "DOMSVGTransform.h"
 #include "gfxMatrix.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDOMSVGMatrix.h"
 
 // We make DOMSVGMatrix a pseudo-interface to allow us to QI to it in order
 // to check that the objects that scripts pass in are our *native* matrix

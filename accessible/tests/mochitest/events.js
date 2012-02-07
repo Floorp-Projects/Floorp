@@ -27,9 +27,12 @@ const EVENT_TEXT_INSERTED = nsIAccessibleEvent.EVENT_TEXT_INSERTED;
 const EVENT_TEXT_REMOVED = nsIAccessibleEvent.EVENT_TEXT_REMOVED;
 const EVENT_TEXT_SELECTION_CHANGED = nsIAccessibleEvent.EVENT_TEXT_SELECTION_CHANGED;
 const EVENT_VALUE_CHANGE = nsIAccessibleEvent.EVENT_VALUE_CHANGE;
+const EVENT_VIRTUALCURSOR_CHANGED = nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED;
 
 ////////////////////////////////////////////////////////////////////////////////
 // General
+
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Set up this variable to dump events into DOM.
@@ -172,7 +175,7 @@ const DO_NOT_FINISH_TEST = 1;
  *     //   phase getter: function() {},
  *     //
  *     //   * Callback, called to match handled event. *
- *     //   match : function() {},
+ *     //   match : function(aEvent) {},
  *     //
  *     //   * Callback, called when event is handled
  *     //   check: function(aEvent) {},
@@ -1338,10 +1341,10 @@ function caretMoveChecker(aCaretOffset, aTargetOrFunc, aTargetFuncArg)
  * State change checker.
  */
 function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
-                            aTargetOrFunc, aTargetFuncArg)
+                            aTargetOrFunc, aTargetFuncArg, aIsAsync)
 {
   this.__proto__ = new invokerChecker(EVENT_STATE_CHANGE, aTargetOrFunc,
-                                      aTargetFuncArg);
+                                      aTargetFuncArg, aIsAsync);
 
   this.check = function stateChangeChecker_check(aEvent)
   {
@@ -1368,6 +1371,22 @@ function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
     var unxpdExtraState = aIsEnabled ? 0 : (aIsExtraState ? aState : 0);
     testStates(event.accessible, state, extraState, unxpdState, unxpdExtraState);
   }
+
+  this.match = function stateChangeChecker_match(aEvent)
+  {
+    if (aEvent instanceof nsIAccessibleStateChangeEvent) {
+      var scEvent = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
+      return aEvent.accessible = this.target && scEvent.state == aState;
+    }
+    return false;
+  }
+}
+
+function asyncStateChangeChecker(aState, aIsExtraState, aIsEnabled,
+                                 aTargetOrFunc, aTargetFuncArg)
+{
+  this.__proto__ = new stateChangeChecker(aState, aIsExtraState, aIsEnabled,
+                                          aTargetOrFunc, aTargetFuncArg, true);
 }
 
 /**
@@ -1414,12 +1433,6 @@ var gA11yEventApplicantsCount = 0;
 
 var gA11yEventObserver =
 {
-  // The service reference needs to live in the observer, instead of as a global var,
-  //   to be available in observe() catch case too.
-  observerService :
-    Components.classes["@mozilla.org/observer-service;1"]
-              .getService(nsIObserverService),
-
   observe: function observe(aSubject, aTopic, aData)
   {
     if (aTopic != "accessible-event")
@@ -1431,7 +1444,7 @@ var gA11yEventObserver =
     } catch (ex) {
       // After a test is aborted (i.e. timed out by the harness), this exception is soon triggered.
       // Remove the leftover observer, otherwise it "leaks" to all the following tests.
-      this.observerService.removeObserver(this, "accessible-event");
+      Services.obs.removeObserver(this, "accessible-event");
       // Forward the exception, with added explanation.
       throw "[accessible/events.js, gA11yEventObserver.observe] This is expected if a previous test has been aborted... Initial exception was: [ " + ex + " ]";
     }
@@ -1485,14 +1498,12 @@ function listenA11yEvents(aStartToListen)
   if (aStartToListen) {
     // Add observer when adding the first applicant only.
     if (!(gA11yEventApplicantsCount++))
-      gA11yEventObserver.observerService
-                        .addObserver(gA11yEventObserver, "accessible-event", false);
+      Services.obs.addObserver(gA11yEventObserver, "accessible-event", false);
   } else {
     // Remove observer when there are no more applicants only.
     // '< 0' case should not happen, but just in case: removeObserver() will throw.
     if (--gA11yEventApplicantsCount <= 0)
-      gA11yEventObserver.observerService
-                        .removeObserver(gA11yEventObserver, "accessible-event");
+      Services.obs.removeObserver(gA11yEventObserver, "accessible-event");
   }
 }
 
@@ -1609,11 +1620,8 @@ var gLogger =
   logToAppConsole: function logger_logToAppConsole(aMsg)
   {
     if (gA11yEventDumpToAppConsole)
-      consoleService.logStringMessage("events: " + aMsg);
-  },
-
-  consoleService: Components.classes["@mozilla.org/consoleservice;1"].
-    getService(Components.interfaces.nsIConsoleService)
+      Services.console.logStringMessage("events: " + aMsg);
+  }
 };
 
 

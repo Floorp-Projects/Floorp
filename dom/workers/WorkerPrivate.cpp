@@ -102,7 +102,7 @@ using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForCode;
-using mozilla::xpconnect::memory::ReportJSRuntimeStats;
+using mozilla::xpconnect::memory::ReportJSRuntimeExplicitTreeStats;
 
 USING_WORKERS_NAMESPACE
 
@@ -154,6 +154,8 @@ SwapToISupportsArray(SmartPtr<T>& aSrc,
     static_cast<typename ISupportsBaseInfo<T>::ISupportsBase*>(raw);
   dest->swap(rawSupports);
 }
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf, "js-worker")
 
 class WorkerMemoryReporter : public nsIMemoryMultiReporter
 {
@@ -226,22 +228,28 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetName(nsACString &aName)
+  {
+      aName.AssignLiteral("workers");
+      return NS_OK;
+  }
+
   NS_IMETHOD
   CollectReports(nsIMemoryMultiReporterCallback* aCallback,
                  nsISupports* aClosure)
   {
     AssertIsOnMainThread();
 
-    JS::IterateData data(xpc::JsMallocSizeOf, xpc::GetCompartmentName,
-                         xpc::DestroyCompartmentName);
-    nsresult rv = CollectForRuntime(/* isQuick = */false, &data);
+    JS::RuntimeStats rtStats(JsWorkerMallocSizeOf, xpc::GetCompartmentName,
+                             xpc::DestroyCompartmentName);
+    nsresult rv = CollectForRuntime(/* isQuick = */false, &rtStats);
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     // Always report, even if we're disabled, so that we at least get an entry
     // in about::memory.
-    ReportJSRuntimeStats(data, mPathPrefix, aCallback, aClosure);
+    ReportJSRuntimeExplicitTreeStats(rtStats, mPathPrefix, aCallback, aClosure);
 
     return NS_OK;
   }
@@ -1523,8 +1531,8 @@ public:
     JSAutoSuspendRequest asr(aCx);
 
     *mSucceeded = mIsQuick
-      ? JS::GetExplicitNonHeapForRuntime(JS_GetRuntime(aCx), static_cast<int64_t*>(mData), xpc::JsMallocSizeOf)
-      : JS::CollectCompartmentStatsForRuntime(JS_GetRuntime(aCx), static_cast<JS::IterateData*>(mData));
+      ? JS::GetExplicitNonHeapForRuntime(JS_GetRuntime(aCx), static_cast<int64_t*>(mData), JsWorkerMallocSizeOf)
+      : JS::CollectRuntimeStats(JS_GetRuntime(aCx), static_cast<JS::RuntimeStats*>(mData));
 
     {
       MutexAutoLock lock(mMutex);
@@ -3794,10 +3802,10 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
   AssertIsOnWorkerThread();
 
   if (aShrinking) {
-    JS_ShrinkingGC(aCx);
+    js::ShrinkingGC(aCx, js::gcreason::DOM_WORKER);
   }
   else {
-    JS_GC(aCx);
+    js::GCForReason(aCx, js::gcreason::DOM_WORKER);
   }
 
   if (aCollectChildren) {

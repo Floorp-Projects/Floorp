@@ -44,7 +44,9 @@
 #include "jsexn.h"
 #include "jsmath.h"
 #include "json.h"
+#include "jsweakmap.h"
 
+#include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeEmitter.h"
 #include "vm/GlobalObject-inl.h"
@@ -52,6 +54,10 @@
 #include "jsobjinlines.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
+
+#ifdef JS_METHODJIT
+#include "methodjit/Retcon.h"
+#endif
 
 using namespace js;
 
@@ -319,7 +325,10 @@ GlobalObject::initStandardClasses(JSContext *cx)
            js_InitIteratorClasses(cx, this) &&
 #endif
            js_InitDateClass(cx, this) &&
-           js_InitProxyClass(cx, this);
+           js_InitWeakMapClass(cx, this) &&
+           js_InitProxyClass(cx, this) &&
+           js_InitMapClass(cx, this) &&
+           js_InitSetClass(cx, this);
 }
 
 void
@@ -355,6 +364,21 @@ GlobalObject::clear(JSContext *cx)
      * prototypes cached on the global object are immutable.
      */
     cx->compartment->newObjectCache.reset();
+
+#ifdef JS_METHODJIT
+    /*
+     * Destroy compiled code for any scripts parented to this global. Call ICs
+     * can directly call scripts which have associated JIT code, and do so
+     * without checking whether the script's global has been cleared.
+     */
+    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (script->compileAndGo && script->hasJITCode() && script->hasClearedGlobal()) {
+            mjit::Recompiler::clearStackReferences(cx, script);
+            mjit::ReleaseScriptCode(cx, script);
+        }
+    }
+#endif
 }
 
 bool

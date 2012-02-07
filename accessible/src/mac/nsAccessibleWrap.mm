@@ -45,6 +45,7 @@
 
 #import "mozAccessible.h"
 #import "mozActionElements.h"
+#import "mozHTMLAccessible.h"
 #import "mozTextAccessible.h"
 
 using namespace mozilla::a11y;
@@ -103,22 +104,33 @@ nsAccessibleWrap::GetNativeType ()
              [mozButtonAccessible class];
     }
     
+    case roles::PAGETAB:
+      return [mozButtonAccessible class];
+
     case roles::CHECKBUTTON:
       return [mozCheckboxAccessible class];
       
     case roles::AUTOCOMPLETE:
       return [mozComboboxAccessible class];
+
+    case roles::HEADING:
+      return [mozHeadingAccessible class];
+
+    case roles::PAGETABLIST:
+      return [mozTabsAccessible class];
       
     case roles::ENTRY:
     case roles::STATICTEXT:
-    case roles::HEADING:
     case roles::LABEL:
     case roles::CAPTION:
     case roles::ACCEL_LABEL:
     case roles::TEXT_LEAF:
       // normal textfield (static or editable)
       return [mozTextAccessible class]; 
-      
+
+    case roles::LINK:
+      return [mozLinkAccessible class];
+
     case roles::COMBOBOX:
       return [mozPopupButtonAccessible class];
       

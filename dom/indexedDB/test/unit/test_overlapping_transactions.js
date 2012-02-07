@@ -40,6 +40,7 @@ function testSteps()
     request.onsuccess = function(event) {
       is(stepNumber, 1, "This callback came first");
       stepNumber++;
+      event.target.transaction.oncomplete = grabEventAndContinueHandler;
     }
 
     request = db.transaction(["foo"], READ_WRITE)
@@ -49,6 +50,7 @@ function testSteps()
     request.onsuccess = function(event) {
       is(stepNumber, 2, "This callback came second");
       stepNumber++;
+      event.target.transaction.oncomplete = grabEventAndContinueHandler;      
     }
 
     request = db.transaction(["foo", "bar"], READ_WRITE)
@@ -58,6 +60,7 @@ function testSteps()
     request.onsuccess = function(event) {
       is(stepNumber, 3, "This callback came third");
       stepNumber++;
+      event.target.transaction.oncomplete = grabEventAndContinueHandler;      
     }
 
     request = db.transaction(["foo", "bar"], READ_WRITE)
@@ -67,6 +70,7 @@ function testSteps()
     request.onsuccess = function(event) {
       is(stepNumber, 4, "This callback came fourth");
       stepNumber++;
+      event.target.transaction.oncomplete = grabEventAndContinueHandler;
     }
 
     request = db.transaction(["bar"], READ_WRITE)
@@ -80,7 +84,7 @@ function testSteps()
     }
 
     stepNumber++;
-    yield;
+    yield; yield; yield; yield; yield;
 
     is(stepNumber, 6, "All callbacks received");
   }

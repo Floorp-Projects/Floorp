@@ -45,8 +45,6 @@ relativesrcdir  = accessible/events
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# test_docload.xul, docload_wnd.xul, test_scroll.xul disabled for misusing <tabbrowser> (bug 715857)
-
 _TEST_FILES =\
 		docload_wnd.html \
 		focus.html \
@@ -61,6 +59,7 @@ _TEST_FILES =\
 		test_coalescence.html \
 		test_contextmenu.html \
 		test_docload.html \
+		test_docload.xul \
 		test_dragndrop.html \
 		test_flush.html \
 		test_focus_aria_activedescendant.html \
@@ -81,6 +80,7 @@ _TEST_FILES =\
 		test_menu.xul \
 		test_mutation.html \
 		test_mutation.xhtml \
+		test_scroll.xul \
 		test_selection_aria.html \
 		test_selection.html \
 		test_selection.xul \

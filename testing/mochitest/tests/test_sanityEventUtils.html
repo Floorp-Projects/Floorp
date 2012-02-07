@@ -30,7 +30,7 @@
 <p>blah blah blah blah</p>
 </div>
 <script class="testbody" type="text/javascript">
-SimpleTest.info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
+info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
   SimpleTest.waitForFocus(
     function () {
@@ -164,7 +164,7 @@ function starttest() {
       is(querySelectedText.text, "",
          "query selected text event returns wrong selected text");
       var endTime = new Date();
-      SimpleTest.info("\nProfile::EventUtilsRunTime: " + (endTime-startTime) + "\n");
+      info("\nProfile::EventUtilsRunTime: " + (endTime-startTime) + "\n");
       SimpleTest.finish();
     }
   );

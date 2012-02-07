@@ -736,5 +736,56 @@ namespace places {
     return NS_OK;
   }
 
+////////////////////////////////////////////////////////////////////////////////
+//// Fixup URL Function
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// FixupURLFunction
+
+  /* static */
+  nsresult
+  FixupURLFunction::create(mozIStorageConnection *aDBConn)
+  {
+    nsRefPtr<FixupURLFunction> function = new FixupURLFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("fixup_url"), 1, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_THREADSAFE_ISUPPORTS1(
+    FixupURLFunction,
+    mozIStorageFunction
+  )
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// mozIStorageFunction
+
+  NS_IMETHODIMP
+  FixupURLFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
+                                   nsIVariant **_result)
+  {
+    // Must have non-null function arguments.
+    MOZ_ASSERT(aArguments);
+
+    nsAutoString src;
+    aArguments->GetString(0, src);
+
+    nsCOMPtr<nsIWritableVariant> result =
+      do_CreateInstance("@mozilla.org/variant;1");
+    NS_ENSURE_STATE(result);
+
+    // Remove common URL hostname prefixes
+    if (StringBeginsWith(src, NS_LITERAL_STRING("www."))) {
+      src.Cut(0, 4);
+    }
+
+    result->SetAsAString(src);
+    NS_ADDREF(*_result = result);
+    return NS_OK;
+  }
+
 } // namespace places
 } // namespace mozilla

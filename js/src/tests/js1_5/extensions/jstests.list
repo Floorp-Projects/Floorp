@@ -124,9 +124,7 @@ script regress-367501-02.js
 script regress-367501-03.js
 script regress-367501-04.js
 skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-367589.js
-script regress-367630.js
 script regress-367923.js
-script regress-368859.js
 script regress-369404.js
 script regress-369696-01.js
 script regress-369696-02.js
@@ -136,7 +134,6 @@ script regress-374589.js
 script regress-375183.js
 script regress-375344.js
 script regress-375801.js
-script regress-379523.js
 script regress-380581.js
 script regress-380889.js
 script regress-381211.js

@@ -298,6 +298,11 @@ typedef PRUint64 nsFrameState;
 // This is only set during painting
 #define NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO    NS_FRAME_STATE_BIT(40)
 
+// Is this frame a container for font size inflation, i.e., is it a
+// frame whose width is used to determine the inflation factor for
+// everything whose nearest ancestor container for this frame?
+#define NS_FRAME_FONT_INFLATION_CONTAINER           NS_FRAME_STATE_BIT(41)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)

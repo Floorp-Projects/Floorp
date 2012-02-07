@@ -84,16 +84,25 @@ public:
   static nsresult PrefetchHigh(mozilla::dom::Link *aElement);
   static nsresult PrefetchMedium(mozilla::dom::Link *aElement);
   static nsresult PrefetchLow(mozilla::dom::Link *aElement);
-  static nsresult PrefetchHigh(nsAString &host);
-  static nsresult PrefetchMedium(nsAString &host);
-  static nsresult PrefetchLow(nsAString &host);
+  static nsresult PrefetchHigh(const nsAString &host);
+  static nsresult PrefetchMedium(const nsAString &host);
+  static nsresult PrefetchLow(const nsAString &host);
+  static nsresult CancelPrefetchLow(const nsAString &host, nsresult aReason);
+  static nsresult CancelPrefetchLow(mozilla::dom::Link *aElement,
+                                    nsresult aReason);
 
 private:
-  static nsresult Prefetch(nsAString &host, PRUint16 flags);
+  static nsresult Prefetch(const nsAString &host, PRUint16 flags);
   static nsresult Prefetch(mozilla::dom::Link *aElement, PRUint16 flags);
+  static nsresult CancelPrefetch(const nsAString &hostname,
+                                 PRUint16 flags,
+                                 nsresult aReason);
+  static nsresult CancelPrefetch(mozilla::dom::Link *aElement,
+                                 PRUint16 flags,
+                                 nsresult aReason);
   
 public:
-  class nsListener : public nsIDNSListener
+  class nsListener MOZ_FINAL : public nsIDNSListener
   {
     // This class exists to give a safe callback no-op DNSListener
   public:
@@ -105,9 +114,9 @@ public:
     ~nsListener() {}
   };
   
-  class nsDeferrals : public nsIWebProgressListener
-                    , public nsSupportsWeakReference
-                    , public nsIObserver
+  class nsDeferrals MOZ_FINAL: public nsIWebProgressListener
+                             , public nsSupportsWeakReference
+                             , public nsIObserver
   {
   public:
     NS_DECL_ISUPPORTS

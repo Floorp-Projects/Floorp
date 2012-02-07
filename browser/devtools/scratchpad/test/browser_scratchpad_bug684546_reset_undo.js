@@ -2,8 +2,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
+let tempScope = {};
+Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
+Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
+let NetUtil = tempScope.NetUtil;
+let FileUtils = tempScope.FileUtils;
 
 // Reference to the Scratchpad chrome window object.
 let gScratchpadWindow;

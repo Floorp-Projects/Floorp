@@ -36,9 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 /**
  * Dummy nsIAutoCompleteInput source that returns
  * the given list of AutoCompleteSearch names. 

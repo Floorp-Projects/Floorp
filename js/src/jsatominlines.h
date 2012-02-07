@@ -40,12 +40,22 @@
 #ifndef jsatominlines_h___
 #define jsatominlines_h___
 
-#include "mozilla/RangedPtr.h"
-
 #include "jsatom.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsstr.h"
+
+#include "mozilla/RangedPtr.h"
+#include "vm/String.h"
+
+inline JSAtom *
+js::AtomStateEntry::asPtr() const
+{
+    JS_ASSERT(bits != 0);
+    JSAtom *atom = reinterpret_cast<JSAtom *>(bits & NO_TAG_MASK);
+    JSString::readBarrier(atom);
+    return atom;
+}
 
 inline bool
 js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
@@ -177,14 +187,37 @@ IndexToId(JSContext *cx, uint32_t index, jsid *idp)
     return IndexToIdSlow(cx, index, idp);
 }
 
-static JS_ALWAYS_INLINE JSString *
+static JS_ALWAYS_INLINE JSFlatString *
 IdToString(JSContext *cx, jsid id)
 {
     if (JSID_IS_STRING(id))
-        return JSID_TO_STRING(id);
-    if (JS_LIKELY(JSID_IS_INT(id)))
-        return js_IntToString(cx, JSID_TO_INT(id));
-    return js::ToStringSlow(cx, IdToValue(id));
+        return JSID_TO_ATOM(id);
+
+    JSString *str;
+     if (JS_LIKELY(JSID_IS_INT(id)))
+        str = js_IntToString(cx, JSID_TO_INT(id));
+    else
+        str = ToStringSlow(cx, IdToValue(id));    
+
+    if (!str)
+        return NULL;
+    return str->ensureFlat(cx);
+}
+
+inline
+AtomHasher::Lookup::Lookup(const JSAtom *atom)
+  : chars(atom->chars()), length(atom->length()), atom(atom)
+{}
+
+inline bool
+AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
+{
+    JSAtom *key = entry.asPtr();
+    if (lookup.atom)
+        return lookup.atom == key;
+    if (key->length() != lookup.length)
+        return false;
+    return PodEqual(key->chars(), lookup.chars, lookup.length);
 }
 
 } // namespace js

@@ -98,9 +98,7 @@ public:
     NS_IMETHOD IsEnabled(bool *aState);
     NS_IMETHOD SetFocus(bool aRaise = false);
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
-    NS_IMETHOD Invalidate(const nsIntRect &aRect,
-                          bool aIsSynchronous);
-    NS_IMETHOD Update();
+    NS_IMETHOD Invalidate(const nsIntRect &aRect);
     virtual void* GetNativeData(PRUint32 aDataType);
     NS_IMETHOD SetTitle(const nsAString& aTitle)
     {
@@ -127,6 +125,8 @@ public:
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
+
+    virtual PRUint32 GetGLFrameBufferFormat() MOZ_OVERRIDE;
 
 protected:
     nsWindow* mParent;

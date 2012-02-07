@@ -18,12 +18,6 @@ static inline bool degenerate_vector(const SkVector& v) {
     return !SkPoint::CanNormalize(v.fX, v.fY);
 }
 
-static inline bool degenerate_line(const SkPoint& a, const SkPoint& b,
-                                   SkScalar tolerance = SK_ScalarNearlyZero) {
-    return SkScalarNearlyZero(a.fX - b.fX, tolerance) &&
-            SkScalarNearlyZero(a.fY - b.fY, tolerance);
-}
-
 static inline bool normals_too_curvy(const SkVector& norm0, SkVector& norm1) {
     /*  root2/2 is a 45-degree angle
         make this constant bigger for more subdivisions (but not >= 1)
@@ -219,7 +213,7 @@ void SkPathStroker::line_to(const SkPoint& currPt, const SkVector& normal) {
 }
 
 void SkPathStroker::lineTo(const SkPoint& currPt) {
-    if (degenerate_line(fPrevPt, currPt)) {
+    if (SkPath::IsLineDegenerate(fPrevPt, currPt)) {
         return;
     }
     SkVector    normal, unitNormal;
@@ -350,8 +344,8 @@ DRAW_LINE:
 }
 
 void SkPathStroker::quadTo(const SkPoint& pt1, const SkPoint& pt2) {
-    bool    degenerateAB = degenerate_line(fPrevPt, pt1);
-    bool    degenerateBC = degenerate_line(pt1, pt2);
+    bool    degenerateAB = SkPath::IsLineDegenerate(fPrevPt, pt1);
+    bool    degenerateBC = SkPath::IsLineDegenerate(pt1, pt2);
 
     if (degenerateAB | degenerateBC) {
         if (degenerateAB ^ degenerateBC) {
@@ -406,9 +400,9 @@ void SkPathStroker::quadTo(const SkPoint& pt1, const SkPoint& pt2) {
 
 void SkPathStroker::cubicTo(const SkPoint& pt1, const SkPoint& pt2,
                             const SkPoint& pt3) {
-    bool    degenerateAB = degenerate_line(fPrevPt, pt1);
-    bool    degenerateBC = degenerate_line(pt1, pt2);
-    bool    degenerateCD = degenerate_line(pt2, pt3);
+    bool    degenerateAB = SkPath::IsLineDegenerate(fPrevPt, pt1);
+    bool    degenerateBC = SkPath::IsLineDegenerate(pt1, pt2);
+    bool    degenerateCD = SkPath::IsLineDegenerate(pt2, pt3);
 
     if (degenerateAB + degenerateBC + degenerateCD >= 2) {
         this->lineTo(pt3);
@@ -627,9 +621,31 @@ void SkStroke::strokePath(const SkPath& src, SkPath* dst) const {
     if (fDoFill) {
         dst->addPath(src);
     } else {
-        if (src.countPoints() == 2) {
+        //  Seems like we can assume that a 2-point src would always result in
+        //  a convex stroke, but testing has proved otherwise.
+        //  TODO: fix the stroker to make this assumption true (without making
+        //  it slower that the work that will be done in computeConvexity())
+#if 0
+        // this test results in a non-convex stroke :(
+        static void test(SkCanvas* canvas) {
+            SkPoint pts[] = { 146.333328,  192.333328, 300.333344, 293.333344 };
+            SkPaint paint;
+            paint.setStrokeWidth(7);
+            paint.setStrokeCap(SkPaint::kRound_Cap);
+            canvas->drawLine(pts[0].fX, pts[0].fY, pts[1].fX, pts[1].fY, paint);
+        }        
+#endif
+#if 0
+        if (2 == src.countPoints()) {
             dst->setIsConvex(true);
         }
+#endif
+    }
+
+    // our answer should preserve the inverseness of the src
+    if (src.isInverseFillType()) {
+        SkASSERT(!dst->isInverseFillType());
+        dst->toggleInverseFillType();
     }
 }
 

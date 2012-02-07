@@ -39,11 +39,11 @@
 #ifndef __NS_SVGGRAPHICELEMENT_H__
 #define __NS_SVGGRAPHICELEMENT_H__
 
-#include "nsSVGStylableElement.h"
+#include "gfxMatrix.h"
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGTransformable.h"
+#include "nsSVGStylableElement.h"
 #include "SVGAnimatedTransformList.h"
-#include "gfxMatrix.h"
 
 typedef nsSVGStylableElement nsSVGGraphicElementBase;
 

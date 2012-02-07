@@ -579,16 +579,13 @@ nsAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
   return *aIndexInParent != -1 ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aStringOut)
+void 
+nsAccessible::TranslateString(const nsAString& aKey, nsAString& aStringOut)
 {
   nsXPIDLString xsValue;
 
-  if (!gStringBundle || 
-    NS_FAILED(gStringBundle->GetStringFromName(PromiseFlatString(aKey).get(), getter_Copies(xsValue)))) 
-    return NS_ERROR_FAILURE;
-
+  gStringBundle->GetStringFromName(PromiseFlatString(aKey).get(), getter_Copies(xsValue));
   aStringOut.Assign(xsValue);
-  return NS_OK;
 }
 
 PRUint64
@@ -596,27 +593,13 @@ nsAccessible::VisibilityState()
 {
   PRUint64 vstates = states::INVISIBLE | states::OFFSCREEN;
 
-  // We need to check the parent chain for visibility.
-  nsAccessible* accessible = this;
-  do {
-    // We don't want background tab page content to be aggressively invisible.
-    // Otherwise this foils screen reader virtual buffer caches.
-    roles::Role role = accessible->Role();
-    if (role == roles::PROPERTYPAGE || role == roles::PANE)
-      break;
-
-    nsIFrame* frame = accessible->GetFrame();
-    if (!frame)
-      return vstates;
-
-    const nsIView* view = frame->GetView();
-    if (view && view->GetVisibility() == nsViewVisibility_kHide)
-      return vstates;
-    
-  } while (accessible = accessible->Parent());
-
   nsIFrame* frame = GetFrame();
+  if (!frame)
+    return vstates;
+
   const nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  if (!shell)
+    return vstates;
 
   // We need to know if at least a kMinPixels around the object is visible,
   // otherwise it will be marked states::OFFSCREEN.
@@ -643,6 +626,10 @@ nsAccessible::VisibilityState()
       return vstates;
 
   }
+
+  // XXX Do we really need to cross from content to chrome ancestor?
+  if (!frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY))
+    return vstates;
 
   // Assume we are visible enough.
   return vstates &= ~states::INVISIBLE;
@@ -1387,6 +1374,30 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   if (NS_SUCCEEDED(rv))
     nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textIndent, value);
 
+  // Expose 'margin-left' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-left"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginLeft, value);
+
+  // Expose 'margin-right' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-right"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginRight, value);
+
+  // Expose 'margin-top' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-top"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginTop, value);
+
+  // Expose 'margin-bottom' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-bottom"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginBottom, value);
+
   // Expose draggable object attribute?
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
   if (htmlElement) {
@@ -1473,23 +1484,34 @@ nsAccessible::State()
   // Apply ARIA states to be sure accessible states will be overridden.
   ApplyARIAState(&state);
 
-  if (mRoleMapEntry && mRoleMapEntry->role == roles::PAGETAB &&
-      !(state & states::SELECTED) &&
+  // If this is an ARIA item of the selectable widget and if it's focused and
+  // not marked unselected explicitly (i.e. aria-selected="false") then expose
+  // it as selected to make ARIA widget authors life easier.
+  if (mRoleMapEntry && !(state & states::SELECTED) &&
       !mContent->AttrValueIs(kNameSpaceID_None,
                              nsGkAtoms::aria_selected,
                              nsGkAtoms::_false, eCaseMatters)) {
-    // Special case: for tabs, focused implies selected, unless explicitly
-    // false, i.e. aria-selected="false".
-    if (state & states::FOCUSED) {
-      state |= states::SELECTED;
-    } else {
-      // If focus is in a child of the tab panel surely the tab is selected!
-      Relation rel = RelationByType(nsIAccessibleRelation::RELATION_LABEL_FOR);
-      nsAccessible* relTarget = nsnull;
-      while ((relTarget = rel.Next())) {
-        if (relTarget->Role() == roles::PROPERTYPAGE &&
-            FocusMgr()->IsFocusWithin(relTarget))
-          state |= states::SELECTED;
+    // Special case for tabs: focused tab or focus inside related tab panel
+    // implies selected state.
+    if (mRoleMapEntry->role == roles::PAGETAB) {
+      if (state & states::FOCUSED) {
+        state |= states::SELECTED;
+      } else {
+        // If focus is in a child of the tab panel surely the tab is selected!
+        Relation rel = RelationByType(nsIAccessibleRelation::RELATION_LABEL_FOR);
+        nsAccessible* relTarget = nsnull;
+        while ((relTarget = rel.Next())) {
+          if (relTarget->Role() == roles::PROPERTYPAGE &&
+              FocusMgr()->IsFocusWithin(relTarget))
+            state |= states::SELECTED;
+        }
+      }
+    } else if (state & states::FOCUSED) {
+      nsAccessible* container = nsAccUtils::GetSelectableContainer(this, state);
+      if (container &&
+          !nsAccUtils::HasDefinedARIAToken(container->GetContent(),
+                                           nsGkAtoms::aria_multiselectable)) {
+        state |= states::SELECTED;
       }
     }
   }
@@ -1830,6 +1852,10 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
      aName.AssignLiteral("click");
      return NS_OK;
 
+   case ePressAction:
+     aName.AssignLiteral("press");
+     return NS_OK;
+
    case eCheckUncheckAction:
      if (states & states::CHECKED)
        aName.AssignLiteral("uncheck");
@@ -1882,7 +1908,8 @@ nsAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescription)
   nsresult rv = GetActionName(aIndex, name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetTranslatedString(name, aDescription);
+  TranslateString(name, aDescription);
+  return NS_OK;
 }
 
 // void doAction(in PRUint8 index)
@@ -2914,21 +2941,18 @@ nsAccessible::SetCurrentItem(nsAccessible* aItem)
 nsAccessible*
 nsAccessible::ContainerWidget() const
 {
-  nsIAtom* idAttribute = mContent->GetIDAttributeName();
-  if (idAttribute) {
-    if (mContent->HasAttr(kNameSpaceID_None, idAttribute)) {
-      for (nsAccessible* parent = Parent(); parent; parent = parent->Parent()) {
-        nsIContent* parentContent = parent->GetContent();
-        if (parentContent &&
-            parentContent->HasAttr(kNameSpaceID_None,
-                                   nsGkAtoms::aria_activedescendant)) {
-          return parent;
-        }
-
-        // Don't cross DOM document boundaries.
-        if (parent->IsDocumentNode())
-          break;
+  if (HasARIARole() && mContent->HasID()) {
+    for (nsAccessible* parent = Parent(); parent; parent = parent->Parent()) {
+      nsIContent* parentContent = parent->GetContent();
+      if (parentContent &&
+        parentContent->HasAttr(kNameSpaceID_None,
+                               nsGkAtoms::aria_activedescendant)) {
+        return parent;
       }
+
+      // Don't cross DOM document boundaries.
+      if (parent->IsDocumentNode())
+        break;
     }
   }
   return nsnull;

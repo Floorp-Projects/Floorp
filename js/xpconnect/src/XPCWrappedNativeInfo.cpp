@@ -419,11 +419,7 @@ XPCNativeInterface::DestroyInstance(XPCNativeInterface* inst)
 size_t
 XPCNativeInterface::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 {
-    size_t computedSize = sizeof(XPCNativeInterface);
-    if (mMemberCount > 1)
-        computedSize += (mMemberCount - 1) * sizeof(XPCNativeMember);
-
-    return mallocSizeOf(this, computedSize);
+    return mallocSizeOf(this);
 }
 
 void
@@ -785,11 +781,7 @@ XPCNativeSet::DestroyInstance(XPCNativeSet* inst)
 size_t
 XPCNativeSet::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 {
-    size_t computedSize = sizeof(XPCNativeSet);
-    if (mInterfaceCount > 1)
-        computedSize += (mInterfaceCount - 1) * sizeof(XPCNativeInterface *);
-
-    return mallocSizeOf(this, computedSize);
+    return mallocSizeOf(this);
 }
 
 void

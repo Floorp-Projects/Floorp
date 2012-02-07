@@ -25,7 +25,7 @@ enum {
 void GrTextContext::flushGlyphs() {
     if (fCurrVertex > 0) {
         GrDrawTarget::AutoStateRestore asr(fDrawTarget);
-
+        GrDrawState* drawState = fDrawTarget->drawState();
         // setup our sampler state for our text texture/atlas
         GrSamplerState::Filter filter;
         if (fExtMatrix.isIdentity()) {
@@ -33,15 +33,13 @@ void GrTextContext::flushGlyphs() {
         } else {
             filter = GrSamplerState::kBilinear_Filter;
         }
-        GrSamplerState sampler(GrSamplerState::kRepeat_WrapMode,
-                               GrSamplerState::kRepeat_WrapMode,
-                               filter);
-        fDrawTarget->setSamplerState(kGlyphMaskStage, sampler);
+        drawState->sampler(kGlyphMaskStage)->reset(
+            GrSamplerState::kRepeat_WrapMode,filter);
 
         GrAssert(GrIsALIGN4(fCurrVertex));
         int nIndices = fCurrVertex + (fCurrVertex >> 1);
         GrAssert(fCurrTexture);
-        fDrawTarget->setTexture(kGlyphMaskStage, fCurrTexture);
+        drawState->setTexture(kGlyphMaskStage, fCurrTexture);
 
         if (!GrPixelConfigIsAlphaOnly(fCurrTexture->config())) {
             if (kOne_BlendCoeff != fPaint.fSrcBlendCoeff ||
@@ -50,15 +48,15 @@ void GrTextContext::flushGlyphs() {
                 GrPrintf("LCD Text will not draw correctly.\n");
             }
             // setup blend so that we get mask * paintColor + (1-mask)*dstColor
-            fDrawTarget->setBlendConstant(fPaint.fColor);
-            fDrawTarget->setBlendFunc(kConstC_BlendCoeff, kISC_BlendCoeff);
+            drawState->setBlendConstant(fPaint.fColor);
+            drawState->setBlendFunc(kConstC_BlendCoeff, kISC_BlendCoeff);
             // don't modulate by the paint's color in the frag since we're
             // already doing it via the blend const.
-            fDrawTarget->setColor(0xffffffff);
+            drawState->setColor(0xffffffff);
         } else {
             // set back to normal in case we took LCD path previously.
-            fDrawTarget->setBlendFunc(fPaint.fSrcBlendCoeff, fPaint.fDstBlendCoeff);
-            fDrawTarget->setColor(fPaint.fColor);
+            drawState->setBlendFunc(fPaint.fSrcBlendCoeff, fPaint.fDstBlendCoeff);
+            drawState->setColor(fPaint.fColor);
         }
 
         fDrawTarget->setIndexSourceToBuffer(fContext->getQuadIndexBuffer());
@@ -123,7 +121,7 @@ GrTextContext::GrTextContext(GrContext* context,
         if (NULL != fPaint.getTexture(t)) {
             if (invVMComputed || fOrigViewMatrix.invert(&invVM)) {
                 invVMComputed = true;
-                fPaint.getTextureSampler(t)->preConcatMatrix(invVM);
+                fPaint.textureSampler(t)->preConcatMatrix(invVM);
             }
         }
     }
@@ -131,7 +129,7 @@ GrTextContext::GrTextContext(GrContext* context,
         if (NULL != fPaint.getMask(m)) {
             if (invVMComputed || fOrigViewMatrix.invert(&invVM)) {
                 invVMComputed = true;
-                fPaint.getMaskSampler(m)->preConcatMatrix(invVM);
+                fPaint.maskSampler(m)->preConcatMatrix(invVM);
             }
         }
     }

@@ -51,6 +51,10 @@
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
 
+namespace JS {
+struct TypeInferenceSizes;
+}
+
 namespace js {
 namespace types {
 
@@ -366,7 +370,7 @@ class TypeSet
     void print(JSContext *cx);
 
     inline void sweep(JSContext *cx, JSCompartment *compartment);
-    inline size_t dynamicSize();
+    inline size_t computedSizeOfExcludingThis();
 
     /* Whether this set contains a specific type. */
     inline bool hasType(Type type);
@@ -865,7 +869,9 @@ struct TypeObject : gc::Cell
     inline void clearProperties();
     inline void sweep(JSContext *cx);
 
-    inline size_t dynamicSize();
+    inline size_t computedSizeOfExcludingThis();
+
+    void sizeOfExcludingThis(TypeInferenceSizes *sizes, JSMallocSizeOfFun mallocSizeOf);
 
     /*
      * Type objects don't have explicit finalizers. Memory owned by a type
@@ -1094,6 +1100,11 @@ class TypeScript
     static inline void MonitorString(JSContext *cx, JSScript *script, jsbytecode *pc);
     static inline void MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc);
 
+    static inline void GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc);
+    static inline void MonitorOverflow(JSContext *cx);
+    static inline void MonitorString(JSContext *cx);
+    static inline void MonitorUnknown(JSContext *cx);
+
     /*
      * Monitor a bytecode pushing any value. This must be called for any opcode
      * which is JOF_TYPESET, and where either the script has not been analyzed
@@ -1103,6 +1114,7 @@ class TypeScript
      */
     static inline void Monitor(JSContext *cx, JSScript *script, jsbytecode *pc,
                                const js::Value &val);
+    static inline void Monitor(JSContext *cx, const js::Value &rval);
 
     /* Monitor an assignment at a SETELEM on a non-integer identifier. */
     static inline void MonitorAssign(JSContext *cx, JSScript *script, jsbytecode *pc,
@@ -1131,6 +1143,17 @@ typedef HashMap<ObjectTableKey,ObjectTableEntry,ObjectTableKey,SystemAllocPolicy
 struct AllocationSiteKey;
 typedef HashMap<AllocationSiteKey,ReadBarriered<TypeObject>,AllocationSiteKey,SystemAllocPolicy> AllocationSiteTable;
 
+struct RecompileInfo
+{
+    JSScript *script;
+    bool constructing:1;
+    uint32_t chunkIndex:31;
+
+    bool operator == (const RecompileInfo &o) const {
+        return script == o.script && constructing == o.constructing && chunkIndex == o.chunkIndex;
+    }
+};
+
 /* Type information for a compartment. */
 struct TypeCompartment
 {
@@ -1147,7 +1170,7 @@ struct TypeCompartment
     bool pendingNukeTypes;
 
     /* Pending recompilations to perform before execution of JIT code can resume. */
-    Vector<JSScript*> *pendingRecompiles;
+    Vector<RecompileInfo> *pendingRecompiles;
 
     /*
      * Number of recompilation events and inline frame expansions that have
@@ -1162,7 +1185,7 @@ struct TypeCompartment
      * changes inducing recompilation are keyed to this script. Note: script
      * compilation is not reentrant.
      */
-    JSScript *compiledScript;
+    RecompileInfo compiledInfo;
 
     /* Table for referencing types of objects keyed to an allocation site. */
     AllocationSiteTable *allocationSiteTable;
@@ -1235,7 +1258,8 @@ struct TypeCompartment
     void setPendingNukeTypes(JSContext *cx);
 
     /* Mark a script as needing recompilation once inference has finished. */
-    void addPendingRecompile(JSContext *cx, JSScript *script);
+    void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
+    void addPendingRecompile(JSContext *cx, JSScript *script, jsbytecode *pc);
 
     /* Monitor future effects on a bytecode. */
     void monitorBytecode(JSContext *cx, JSScript *script, uint32_t offset,

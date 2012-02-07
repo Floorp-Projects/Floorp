@@ -342,6 +342,12 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
             nsRefPtr<IDXGIFactory1> factory1;
             HRESULT hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
                                             getter_AddRefs(factory1));
+
+            if (FAILED(hr) || !factory1) {
+              // This seems to happen with some people running the iZ3D driver.
+              // They won't get acceleration.
+              return;
+            }
     
             nsRefPtr<IDXGIAdapter1> adapter1; 
             hr = factory1->EnumAdapters1(0, getter_AddRefs(adapter1));
@@ -507,7 +513,7 @@ gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
 #ifdef XP_WIN
   if (aTarget->GetType() == BACKEND_DIRECT2D) {
-    void *surface = aTarget->GetUserData(&ThebesSurfaceKey);
+    void *surface = aTarget->GetUserData(&kThebesSurfaceKey);
     if (surface) {
       nsRefPtr<gfxASurface> surf = static_cast<gfxASurface*>(surface);
       return surf.forget();
@@ -526,7 +532,7 @@ gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 
       // add a reference to be held by the drawTarget
       surf->AddRef();
-      aTarget->AddUserData(&ThebesSurfaceKey, surf.get(), DestroyThebesSurface);
+      aTarget->AddUserData(&kThebesSurfaceKey, surf.get(), DestroyThebesSurface);
       /* "It might be worth it to clear cairo surfaces associated with a drawtarget.
 	  The strong reference means for example for D2D that cairo's scratch surface
 	  will be kept alive (well after a user being done) and consume extra VRAM.
@@ -552,10 +558,11 @@ gfxWindowsPlatform::SupportsAzure(BackendType& aBackend)
   }
 #endif
   
-  if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
-    aBackend = BACKEND_SKIA;
+  if (mPreferredDrawTargetBackend != BACKEND_NONE) {
+    aBackend = mPreferredDrawTargetBackend;
     return true;
   }
+
   return false;
 }
 

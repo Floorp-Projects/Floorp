@@ -124,7 +124,7 @@ interface nsIAsyncInputStream : nsIInputStream
 /**
  * This is a companion interface for nsIAsyncInputStream::asyncWait.
  */
-[scriptable, uuid(d1f28e94-3a6e-4050-a5f5-2e81b1fc2a43)]
+[function, scriptable, uuid(d1f28e94-3a6e-4050-a5f5-2e81b1fc2a43)]
 interface nsIInputStreamCallback : nsISupports
 {
     /**

@@ -108,6 +108,8 @@ tabs.tabs-bottom > tab:not([selected=true]):hover {
 
 tabbox.tabs-bottom > tabs > tab[selected=true],
 tabs.tabs-bottom > tab[selected=true] {
+  color: #000;
+  text-shadow: none;
   border: solid #888;
   border-width: 0 2px 2px;
   border-radius: 2px;

@@ -91,7 +91,6 @@ const UPDATER_BIN_FILE = "updater" + BIN_SUFFIX;
 const MAINTENANCE_SERVICE_BIN_FILE = "maintenanceservice.exe";
 const MAINTENANCE_SERVICE_INSTALLER_BIN_FILE = "maintenanceservice_installer.exe";
 const UPDATES_DIR_SUFFIX = "_mar";
-const CHANNEL_CHANGE_FILE = "channelchange";
 
 const LOG_COMPLETE_SUCCESS = "data/complete_log_success";
 const LOG_COMPLETE_CC_SUCCESS = "data/complete_cc_log_success";
@@ -712,6 +711,10 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
 
   // sanity check
   do_check_eq(readStatusFile(updatesDir), aInitialStatus);
+
+  file = updatesDir.clone();
+  file.append(FILE_UPDATE_VERSION);
+  writeFile(file, DEFAULT_UPDATE_VERSION + "\n");
 
   gServiceLaunchedCallbackArgs = [
     "-no-remote",

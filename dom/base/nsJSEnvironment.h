@@ -41,10 +41,12 @@
 #include "nsIScriptRuntime.h"
 #include "nsCOMPtr.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "nsIObserver.h"
 #include "nsIXPCScriptNotify.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIXPConnect.h"
 
 class nsIXPConnectJSObjectHolder;
 class nsRootedJSValueArray;
@@ -179,22 +181,33 @@ public:
   static void LoadStart();
   static void LoadEnd();
 
-  static void GarbageCollectNow(bool shrinkingGC = false);
+  static void GarbageCollectNow(js::gcreason::Reason reason, PRUint32 gckind = nsGCNormal);
   static void ShrinkGCBuffersNow();
-  static void CycleCollectNow(nsICycleCollectorListener *aListener = nsnull);
+  // If aExtraForgetSkippableCalls is -1, forgetSkippable won't be
+  // called even if the previous collection was GC.
+  static void CycleCollectNow(nsICycleCollectorListener *aListener = nsnull,
+                              PRInt32 aExtraForgetSkippableCalls = 0);
 
-  static void PokeGC();
+  static void PokeGC(js::gcreason::Reason aReason);
   static void KillGCTimer();
 
   static void PokeShrinkGCBuffers();
   static void KillShrinkGCBuffersTimer();
 
-  static void PokeCC();
   static void MaybePokeCC();
   static void KillCCTimer();
 
-  virtual void GC();
+  virtual void GC(js::gcreason::Reason aReason);
 
+  static bool CleanupSinceLastGC();
+
+  nsIScriptGlobalObject* GetCachedGlobalObject()
+  {
+    // Verify that we have a global so that this
+    // does always return a null when GetGlobalObject() is null.
+    JSObject* global = JS_GetGlobalObject(mContext);
+    return global ? mGlobalObjectRef.get() : nsnull;
+  }
 protected:
   nsresult InitializeExternalClasses();
 

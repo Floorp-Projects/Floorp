@@ -152,7 +152,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(b032a8f1-9149-4cbe-bee6-4ac5dfe7c80a)]
+[scriptable, uuid(9e9ba9d6-a0fa-4767-9f49-9b74bb2368cd)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -263,6 +263,14 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void forceGC();
+    
+    /*
+     * To be called from JS only.
+     *
+     * Force an immediate shrinking garbage collection cycle.
+     */
+    [implicit_jscontext]
+    void forceShrinkingGC();
 
     /*
      * Schedule a garbage collection cycle for a point in the future when no JS
@@ -270,6 +278,13 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void schedulePreciseGC(in ScheduledGCCallback callback);
+    
+    /*
+     * Schedule a shrinking garbage collection cycle for a point in the future
+     * when no JS is running. Call the provided function once this has occured.
+     */
+    [implicit_jscontext]
+    void schedulePreciseShrinkingGC(in ScheduledGCCallback callback);
 
     /**
      * Return the keys in a weak map.  This operation is

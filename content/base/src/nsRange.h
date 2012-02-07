@@ -43,7 +43,6 @@
 #define nsRange_h___
 
 #include "nsIDOMRange.h"
-#include "nsIRangeUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
@@ -269,24 +268,5 @@ protected:
   bool mMaySpanAnonymousSubtrees;
   bool mInSelection;
 };
-
-
-class nsRangeUtils : public nsIRangeUtils
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  // nsIRangeUtils interface
-  NS_IMETHOD_(PRInt32) ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                                     nsIDOMNode* aParent2, PRInt32 aOffset2);
-                               
-  NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
-                                nsRange* aRange,
-                                bool *outNodeBefore,
-                                bool *outNodeAfter);
-};
-
-// Make a new nsIRangeUtils object
-nsresult NS_NewRangeUtils(nsIRangeUtils** aInstancePtrResult);
 
 #endif /* nsRange_h___ */

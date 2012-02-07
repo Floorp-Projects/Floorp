@@ -602,7 +602,7 @@ public:
    */
   virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsGenericElement)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsGenericElement)
 
   virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
   {
@@ -613,6 +613,24 @@ public:
    */
   void FireNodeRemovedForChildren();
 
+  virtual bool IsPurple()
+  {
+    return mRefCnt.IsPurple();
+  }
+
+  virtual void RemovePurple()
+  {
+    mRefCnt.RemovePurple();
+  }
+
+  static bool CanSkip(nsINode* aNode);
+  static bool CanSkipInCC(nsINode* aNode);
+  static bool CanSkipThis(nsINode* aNode);
+  static void InitCCCallbacks();
+  static void MarkUserData(void* aObject, nsIAtom* aKey, void* aChild,
+                           void *aData);
+  static void MarkUserDataHandler(void* aObject, nsIAtom* aKey, void* aChild,
+                                  void* aData);
 protected:
   /**
    * Set attribute and (if needed) notify documentobservers and fire off

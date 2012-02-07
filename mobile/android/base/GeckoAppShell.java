@@ -112,6 +112,7 @@ public class GeckoAppShell
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
     static private int sDensityDpi = 0;
+    private static Boolean sSQLiteLibsLoaded = false;
 
     private static HashMap<String, ArrayList<GeckoEventListener>> mEventListeners;
 
@@ -129,11 +130,23 @@ public class GeckoAppShell
     public static native void onLowMemory();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
-    public static native void loadLibs(String apkName, boolean shouldExtract);
+    public static native void loadGeckoLibsNative(String apkName);
+    public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
-    public static native void reportJavaCrash(String stack);
+
+    public static void reportJavaCrash(Throwable e) {
+        Log.e(LOGTAG, "top level exception", e);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        pw.flush();
+        reportJavaCrash(sw.toString());
+    }
+
+    private static native void reportJavaCrash(String stackTrace);
+
     public static void notifyUriVisited(String uri) {
-        sendEventToGecko(new GeckoEvent(GeckoEvent.VISTITED, uri));
+        sendEventToGecko(new GeckoEvent(GeckoEvent.VISITED, uri));
     }
 
     public static native void processNextNativeEvent();
@@ -157,7 +170,6 @@ public class GeckoAppShell
     public static native ByteBuffer allocateDirectBuffer(long size);
     public static native void freeDirectBuffer(ByteBuffer buf);
     public static native void bindWidgetTexture();
-    public static native boolean testDirectTexture();
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -214,6 +226,7 @@ public class GeckoAppShell
             try {
                 sHandler = lt.mHandlerQueue.take();
             } catch (InterruptedException ie) {}
+
         }
         return sHandler;
     }
@@ -311,7 +324,7 @@ public class GeckoAppShell
     }
 
     // java-side stuff
-    public static void loadGeckoLibs(String apkName) {
+    public static boolean loadLibsSetup(String apkName) {
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
@@ -378,7 +391,7 @@ public class GeckoAppShell
         GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
 
         File cacheFile = getCacheDir();
-        GeckoAppShell.putenv("CACHE_PATH=" + cacheFile.getPath());
+        GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
 
         File pluginDataDir = GeckoApp.mAppContext.getDir("plugins", 0);
         GeckoAppShell.putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());
@@ -416,7 +429,23 @@ public class GeckoAppShell
                 }
             }
         }
-        loadLibs(apkName, extractLibs);
+        return extractLibs;
+    }
+
+    public static void ensureSQLiteLibsLoaded(String apkName) {
+        if (sSQLiteLibsLoaded)
+            return;
+        synchronized(sSQLiteLibsLoaded) {
+            if (sSQLiteLibsLoaded)
+                return;
+            loadSQLiteLibsNative(apkName, loadLibsSetup(apkName));
+            sSQLiteLibsLoaded = true;
+        }
+    }
+
+    public static void loadGeckoLibs(String apkName) {
+        boolean extractLibs = loadLibsSetup(apkName);
+        loadGeckoLibsNative(apkName);
     }
 
     private static void putLocaleEnv() {
@@ -438,14 +467,6 @@ public class GeckoAppShell
 
         Log.i(LOGTAG, "post native init");
 
-        // If we have direct texture available, use it
-        if (GeckoAppShell.testDirectTexture()) {
-            Log.i(LOGTAG, "Using direct texture for widget layer");
-            GeckoApp.mAppContext.getSoftwareLayerClient().installWidgetLayer();
-        } else {
-            Log.i(LOGTAG, "Falling back to traditional texture upload");
-        }
-
         // Tell Gecko where the target byte buffer is for rendering
         GeckoAppShell.setSoftwareLayerClient(GeckoApp.mAppContext.getSoftwareLayerClient());
 
@@ -459,6 +480,10 @@ public class GeckoAppShell
             combinedArgs += " -remote " + url;
         if (restoreSession)
             combinedArgs += " -restoresession";
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        combinedArgs += " -width " + metrics.widthPixels + " -height " + metrics.heightPixels;
 
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
                 public void run() {
@@ -479,6 +504,9 @@ public class GeckoAppShell
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
+                if (event == null)
+                    return true;
+                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
                 return true;
             }
         });
@@ -496,7 +524,7 @@ public class GeckoAppShell
     }
 
     public static void sendEventToGecko(GeckoEvent e) {
-        if (GeckoApp.mAppContext.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
+        if (GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
         } else {
             gPendingEvents.addLast(e);
@@ -540,7 +568,7 @@ public class GeckoAppShell
         while (sGeckoPendingAcks.getCount() != 0) {
             try {
                 sGeckoPendingAcks.await();
-            } catch (InterruptedException e) {}
+            } catch(InterruptedException e) {}
         }
         sGeckoPendingAcks = null;
     }
@@ -604,6 +632,40 @@ public class GeckoAppShell
             });
     }
 
+    /*
+     * Keep these values consistent with |SensorType| in Hal.h
+     */
+    private static final int SENSOR_ORIENTATION = 1;
+    private static final int SENSOR_ACCELERATION = 2;
+    private static final int SENSOR_PROXIMITY = 3;
+
+    private static Sensor gProximitySensor = null;
+
+    public static void enableSensor(int aSensortype) {
+        SensorManager sm = (SensorManager)
+            GeckoApp.mAppContext.getSystemService(Context.SENSOR_SERVICE);
+
+        switch(aSensortype) {
+        case SENSOR_PROXIMITY:
+            if(gProximitySensor == null)
+                gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+            sm.registerListener(GeckoApp.mAppContext, gProximitySensor,
+                                SensorManager.SENSOR_DELAY_GAME);
+            break;
+        }
+    }
+
+    public static void disableSensor(int aSensortype) {
+        SensorManager sm = (SensorManager)
+            GeckoApp.mAppContext.getSystemService(Context.SENSOR_SERVICE);
+
+        switch(aSensortype) {
+        case SENSOR_PROXIMITY:
+            sm.unregisterListener(GeckoApp.mAppContext, gProximitySensor);
+            break;
+        }
+    }
+
     public static void moveTaskToBack() {
         GeckoApp.mAppContext.moveTaskToBack(true);
     }
@@ -614,7 +676,7 @@ public class GeckoAppShell
 
     static void onXreExit() {
         // mLaunchState can only be Launched or GeckoRunning at this point
-        GeckoApp.mAppContext.setLaunchState(GeckoApp.LaunchState.GeckoExiting);
+        GeckoApp.setLaunchState(GeckoApp.LaunchState.GeckoExiting);
         Log.i(LOGTAG, "XRE exited");
         if (gRestartScheduled) {
             GeckoApp.mAppContext.doRestart();
@@ -646,11 +708,11 @@ public class GeckoAppShell
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent = new Intent();
                 if (aType.equalsIgnoreCase("webapp")) {
-                    shortcutIntent.setAction("org.mozilla.gecko.WEBAPP");
-                    shortcutIntent.putExtra("args", aURI);
+                    shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
+                    shortcutIntent.setData(Uri.parse(aURI));
                 } else {
-                    shortcutIntent.setAction("org.mozilla.gecko.BOOKMARK");
-                    shortcutIntent.putExtra("args", aURI);
+                    shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
+                    shortcutIntent.setData(Uri.parse(aURI));
                 }
                 shortcutIntent.setClassName(GeckoApp.mAppContext,
                                             GeckoApp.mAppContext.getPackageName() + ".App");
@@ -1093,6 +1155,15 @@ public class GeckoAppShell
         });
     }
 
+    public static void setPreventPanning(final boolean aPreventPanning) {
+        getMainHandler().post(new Runnable() {
+            public void run() {
+                LayerController layerController = GeckoApp.mAppContext.getLayerController();
+                layerController.preventPanning(aPreventPanning);
+            }
+        });
+    }
+
     public static boolean isNetworkLinkUp() {
         ConnectivityManager cm = (ConnectivityManager)
             GeckoApp.mAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -1111,12 +1182,17 @@ public class GeckoAppShell
     }
 
     public static void setSelectedLocale(String localeCode) {
-        /* We're not using this, not need to save it (see bug 635342)
-          SharedPreferences settings =
+        /* Bug 713464: This method is still called from Gecko side.
+           Earlier we had an option to run Firefox in a language other than system's language.
+           However, this is not supported as of now.
+           Gecko resets the locale to en-US by calling this function with an empty string.
+           This affects GeckoPreferences activity in multi-locale builds.
+
+        //We're not using this, not need to save it (see bug 635342)
+        SharedPreferences settings =
             GeckoApp.mAppContext.getPreferences(Activity.MODE_PRIVATE);
         settings.edit().putString(GeckoApp.mAppContext.getPackageName() + ".locale",
                                   localeCode).commit();
-        */
         Locale locale;
         int index;
         if ((index = localeCode.indexOf('-')) != -1 ||
@@ -1133,6 +1209,7 @@ public class GeckoAppShell
         Configuration config = res.getConfiguration();
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
+        */
     }
 
     public static int[] getSystemColors() {
@@ -1258,7 +1335,7 @@ public class GeckoAppShell
         int countdown = 40;
         while (!checkForGeckoProcs() &&  --countdown > 0) {
             try {
-                Thread.currentThread().sleep(100);
+                Thread.sleep(100);
             } catch (InterruptedException ie) {}
         }
     }
@@ -1340,16 +1417,47 @@ public class GeckoAppShell
     }
 
     public static void addPluginView(View view,
-                                     double x, double y,
-                                     double w, double h)
+                                     int x, int y,
+                                     int w, int h,
+                                     String metadata)
     {
-        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h ) ;
-        GeckoApp.mAppContext.addPluginView(view, x, y, w, h);
+        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + " metadata: " + metadata);
+        GeckoApp.mAppContext.addPluginView(view, x, y, w, h, metadata);
     }
 
     public static void removePluginView(View view) {
-        Log.i(LOGTAG, "remove view:" + view);
+        Log.i(LOGTAG, "removePluginView:" + view);
         GeckoApp.mAppContext.removePluginView(view);
+    }
+
+    public static Surface createSurface() {
+        Log.i(LOGTAG, "createSurface");
+        return GeckoApp.mAppContext.createSurface();
+    }
+
+    public static void showSurface(Surface surface,
+                                   int x, int y,
+                                   int w, int h,
+                                   boolean inverted,
+                                   boolean blend,
+                                   String metadata)
+    {
+        Log.i(LOGTAG, "showSurface:" + surface + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + " inverted: " + inverted + " blend: " + blend + " metadata: " + metadata);
+        try {
+            GeckoApp.mAppContext.showSurface(surface, x, y, w, h, inverted, blend, metadata);
+        } catch (Exception e) {
+            Log.i(LOGTAG, "Error in showSurface:", e);
+        }
+    }
+
+    public static void hideSurface(Surface surface) {
+        Log.i(LOGTAG, "hideSurface:" + surface);
+        GeckoApp.mAppContext.hideSurface(surface);
+    }
+
+    public static void destroySurface(Surface surface) {
+        Log.i(LOGTAG, "destroySurface:" + surface);
+        GeckoApp.mAppContext.destroySurface(surface);
     }
 
     public static Class<?> loadPluginClass(String className, String libName) {
@@ -1758,5 +1866,107 @@ public class GeckoAppShell
 
     public static void disableNetworkNotifications() {
         GeckoNetworkManager.getInstance().disableNotifications();
+    }
+
+    private static final int GUID_ENCODE_FLAGS = Base64.URL_SAFE | Base64.NO_WRAP;
+
+    /**
+     * taken from http://www.source-code.biz/base64coder/java/Base64Coder.java.txt and modified (MIT License)
+     */
+    // Mapping table from 6-bit nibbles to Base64 characters.
+    private static final byte[] map1 = new byte[64];
+    static {
+      int i=0;
+      for (byte c='A'; c<='Z'; c++) map1[i++] = c;
+      for (byte c='a'; c<='z'; c++) map1[i++] = c;
+      for (byte c='0'; c<='9'; c++) map1[i++] = c;
+      map1[i++] = '-'; map1[i++] = '_'; 
+    }
+
+    // Mapping table from Base64 characters to 6-bit nibbles.
+    private static final byte[] map2 = new byte[128];
+    static {
+        for (int i=0; i<map2.length; i++) map2[i] = -1;
+        for (int i=0; i<64; i++) map2[map1[i]] = (byte)i;
+    }
+
+    final static byte EQUALS_ASCII = (byte) '=';
+
+    /**
+     * Encodes a byte array into Base64 format.
+     * No blanks or line breaks are inserted in the output.
+     * @param in    An array containing the data bytes to be encoded.
+     * @return      A character array containing the Base64 encoded data.
+     */
+    public static byte[] encodeBase64(byte[] in) {
+        if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.FROYO)
+            return Base64.encode(in, GUID_ENCODE_FLAGS);
+        int oDataLen = (in.length*4+2)/3;       // output length without padding
+        int oLen = ((in.length+2)/3)*4;         // output length including padding
+        byte[] out = new byte[oLen];
+        int ip = 0;
+        int iEnd = in.length;
+        int op = 0;
+        while (ip < iEnd) {
+            int i0 = in[ip++] & 0xff;
+            int i1 = ip < iEnd ? in[ip++] & 0xff : 0;
+            int i2 = ip < iEnd ? in[ip++] & 0xff : 0;
+            int o0 = i0 >>> 2;
+            int o1 = ((i0 &   3) << 4) | (i1 >>> 4);
+            int o2 = ((i1 & 0xf) << 2) | (i2 >>> 6);
+            int o3 = i2 & 0x3F;
+            out[op++] = map1[o0];
+            out[op++] = map1[o1];
+            out[op] = op < oDataLen ? map1[o2] : EQUALS_ASCII; op++;
+            out[op] = op < oDataLen ? map1[o3] : EQUALS_ASCII; op++;
+        }
+        return out; 
+    }
+
+    /**
+     * Decodes a byte array from Base64 format.
+     * No blanks or line breaks are allowed within the Base64 encoded input data.
+     * @param in    A character array containing the Base64 encoded data.
+     * @param iOff  Offset of the first character in <code>in</code> to be processed.
+     * @param iLen  Number of characters to process in <code>in</code>, starting at <code>iOff</code>.
+     * @return      An array containing the decoded data bytes.
+     * @throws      IllegalArgumentException If the input is not valid Base64 encoded data.
+     */
+    public static byte[] decodeBase64(byte[] in) {
+        if (Build.VERSION.SDK_INT >=Build.VERSION_CODES.FROYO)
+            return Base64.decode(in, Base64.DEFAULT);
+        int iOff = 0;
+        int iLen = in.length;
+        if (iLen%4 != 0) throw new IllegalArgumentException ("Length of Base64 encoded input string is not a multiple of 4.");
+        while (iLen > 0 && in[iOff+iLen-1] == '=') iLen--;
+        int oLen = (iLen*3) / 4;
+        byte[] out = new byte[oLen];
+        int ip = iOff;
+        int iEnd = iOff + iLen;
+        int op = 0;
+        while (ip < iEnd) {
+            int i0 = in[ip++];
+            int i1 = in[ip++];
+            int i2 = ip < iEnd ? in[ip++] : 'A';
+            int i3 = ip < iEnd ? in[ip++] : 'A';
+            if (i0 > 127 || i1 > 127 || i2 > 127 || i3 > 127)
+                throw new IllegalArgumentException ("Illegal character in Base64 encoded data.");
+            int b0 = map2[i0];
+            int b1 = map2[i1];
+            int b2 = map2[i2];
+            int b3 = map2[i3];
+            if (b0 < 0 || b1 < 0 || b2 < 0 || b3 < 0)
+                throw new IllegalArgumentException ("Illegal character in Base64 encoded data.");
+            int o0 = ( b0       <<2) | (b1>>>4);
+            int o1 = ((b1 & 0xf)<<4) | (b2>>>2);
+            int o2 = ((b2 &   3)<<6) |  b3;
+            out[op++] = (byte)o0;
+            if (op<oLen) out[op++] = (byte)o1;
+            if (op<oLen) out[op++] = (byte)o2; }
+        return out; 
+    }
+
+    public static byte[] decodeBase64(String s) {
+        return decodeBase64(s.getBytes());
     }
 }

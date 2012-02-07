@@ -39,10 +39,17 @@
 #ifndef __NS_SVGVIEWBOX_H__
 #define __NS_SVGVIEWBOX_H__
 
-#include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGAnimatedRect.h"
-#include "nsSVGElement.h"
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsDOMError.h"
+#include "nsError.h"
+#include "nsIDOMSVGAnimatedRect.h"
+#include "nsIDOMSVGRect.h"
+#include "nsISMILAttr.h"
+#include "nsSVGElement.h"
+
+class nsISMILAnimationElement;
+class nsSMILValue;
 
 struct nsSVGViewBoxRect
 {

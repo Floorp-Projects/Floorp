@@ -115,9 +115,6 @@ fi
 list_dirs newdirs
 list_files newfiles
 
-# Files that should be added on channel change
-ccfiles=$(find . -type f -name "channel-prefs.js" | sed 's/\.\/\(.*\)/\1/')
-
 popd
 
 notice ""

@@ -41,12 +41,18 @@
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/source-editor-ui.jsm");
 
 const PREF_EDITOR_COMPONENT = "devtools.editor.component";
+const SOURCEEDITOR_L10N = "chrome://browser/locale/devtools/sourceeditor.properties";
 
 var component = Services.prefs.getCharPref(PREF_EDITOR_COMPONENT);
 var obj = {};
 try {
+  if (component == "ui") {
+    throw new Error("The UI editor component is not available.");
+  }
   Cu.import("resource:///modules/source-editor-" + component + ".jsm", obj);
 } catch (ex) {
   Cu.reportError(ex);
@@ -65,6 +71,10 @@ var SourceEditor = obj.SourceEditor;
 var EXPORTED_SYMBOLS = ["SourceEditor"];
 
 // Add the constants used by all SourceEditors.
+
+XPCOMUtils.defineLazyGetter(SourceEditorUI, "strings", function() {
+  return Services.strings.createBundle(SOURCEEDITOR_L10N);
+});
 
 /**
  * Known SourceEditor preferences.
@@ -141,4 +151,162 @@ SourceEditor.EVENTS = {
    */
   SELECTION: "Selection",
 };
+
+/**
+ * Extend a destination object with properties from a source object.
+ *
+ * @param object aDestination
+ * @param object aSource
+ */
+function extend(aDestination, aSource)
+{
+  for (let name in aSource) {
+    if (!aDestination.hasOwnProperty(name)) {
+      aDestination[name] = aSource[name];
+    }
+  }
+}
+
+/**
+ * Add methods common to all components.
+ */
+extend(SourceEditor.prototype, {
+  _lastFind: null,
+
+  /**
+   * Find a string in the editor.
+   *
+   * @param string aString
+   *        The string you want to search for. If |aString| is not given the
+   *        currently selected text is used.
+   * @param object [aOptions]
+   *        Optional find options:
+   *        - start: (integer) offset to start searching from. Default: 0 if
+   *        backwards is false. If backwards is true then start = text.length.
+   *        - ignoreCase: (boolean) tells if you want the search to be case
+   *        insensitive or not. Default: false.
+   *        - backwards: (boolean) tells if you want the search to go backwards
+   *        from the given |start| offset. Default: false.
+   * @return integer
+   *        The offset where the string was found.
+   */
+  find: function SE_find(aString, aOptions)
+  {
+    if (typeof(aString) != "string") {
+      return -1;
+    }
+
+    aOptions = aOptions || {};
+
+    let str = aOptions.ignoreCase ? aString.toLowerCase() : aString;
+
+    let text = this.getText();
+    if (aOptions.ignoreCase) {
+      text = text.toLowerCase();
+    }
+
+    let index = aOptions.backwards ?
+                text.lastIndexOf(str, aOptions.start) :
+                text.indexOf(str, aOptions.start);
+
+    let lastFoundIndex = index;
+    if (index == -1 && this.lastFind && this.lastFind.index > -1 &&
+        this.lastFind.str === aString &&
+        this.lastFind.ignoreCase === !!aOptions.ignoreCase) {
+      lastFoundIndex = this.lastFind.index;
+    }
+
+    this._lastFind = {
+      str: aString,
+      index: index,
+      lastFound: lastFoundIndex,
+      ignoreCase: !!aOptions.ignoreCase,
+    };
+
+    return index;
+  },
+
+  /**
+   * Find the next occurrence of the last search operation.
+   *
+   * @param boolean aWrap
+   *        Tells if you want to restart the search from the beginning of the
+   *        document if the string is not found.
+   * @return integer
+   *        The offset where the string was found.
+   */
+  findNext: function SE_findNext(aWrap)
+  {
+    if (!this.lastFind && this.lastFind.lastFound == -1) {
+      return -1;
+    }
+
+    let options = {
+      start: this.lastFind.lastFound + this.lastFind.str.length,
+      ignoreCase: this.lastFind.ignoreCase,
+    };
+
+    let index = this.find(this.lastFind.str, options);
+    if (index == -1 && aWrap) {
+      options.start = 0;
+      index = this.find(this.lastFind.str, options);
+    }
+
+    return index;
+  },
+
+  /**
+   * Find the previous occurrence of the last search operation.
+   *
+   * @param boolean aWrap
+   *        Tells if you want to restart the search from the end of the
+   *        document if the string is not found.
+   * @return integer
+   *        The offset where the string was found.
+   */
+  findPrevious: function SE_findPrevious(aWrap)
+  {
+    if (!this.lastFind && this.lastFind.lastFound == -1) {
+      return -1;
+    }
+
+    let options = {
+      start: this.lastFind.lastFound - this.lastFind.str.length,
+      ignoreCase: this.lastFind.ignoreCase,
+      backwards: true,
+    };
+
+    let index;
+    if (options.start > 0) {
+      index = this.find(this.lastFind.str, options);
+    } else {
+      index = this._lastFind.index = -1;
+    }
+
+    if (index == -1 && aWrap) {
+      options.start = this.getCharCount() - 1;
+      index = this.find(this.lastFind.str, options);
+    }
+
+    return index;
+  },
+});
+
+/**
+ * Retrieve the last find operation result. This object holds the following
+ * properties:
+ *   - str: the last search string.
+ *   - index: stores the result of the most recent find operation. This is the
+ *   index in the text where |str| was found or -1 otherwise.
+ *   - lastFound: tracks the index where |str| was last found, throughout
+ *   multiple find operations. This can be -1 if |str| was never found in the
+ *   document.
+ *   - ignoreCase: tells if the search was case insensitive or not.
+ * @type object
+ */
+Object.defineProperty(SourceEditor.prototype, "lastFind", {
+  get: function() { return this._lastFind; },
+  enumerable: true,
+  configurable: true,
+});
 

@@ -48,6 +48,7 @@ import org.mozilla.gecko.gfx.InputConnectionHandler;
 import android.os.*;
 import android.app.*;
 import android.text.*;
+import android.text.style.*;
 import android.view.*;
 import android.view.inputmethod.*;
 import android.content.*;
@@ -101,13 +102,20 @@ public class GeckoInputConnection
     @Override
     public boolean commitText(CharSequence text, int newCursorPosition) {
         replaceText(text, newCursorPosition, false);
-        mComposing = false;
+
+        if (mComposing) {
+            if (DEBUG) Log.d(LOGTAG, ". . . commitText: endComposition");
+            endComposition();
+        }
         return true;
     }
 
     @Override
     public boolean finishComposingText() {
-        mComposing = false;
+        if (mComposing) {
+            if (DEBUG) Log.d(LOGTAG, ". . . finishComposingText: endComposition");
+            endComposition();
+        }
 
         final Editable content = getEditable();
         if (content != null) {
@@ -198,8 +206,16 @@ public class GeckoInputConnection
         extract.selectionEnd = b;
 
         extract.startOffset = 0;
-        extract.text = content.toString();
 
+        try {
+            extract.text = content.toString();
+        } catch (IndexOutOfBoundsException iob) {
+            Log.d(LOGTAG,
+                  "IndexOutOfBoundsException thrown from getExtractedText(). start: " +
+                  Selection.getSelectionStart(content) +
+                  " end: " + Selection.getSelectionEnd(content));
+            return null;
+        }
         return extract;
     }
 
@@ -257,12 +273,12 @@ public class GeckoInputConnection
         }
 
         if (composing) {
-            mComposing = true;
-
             Spannable sp = null;
             if (!(text instanceof Spannable)) {
                 sp = new SpannableStringBuilder(text);
                 text = sp;
+                sp.setSpan(COMPOSING_SPAN, 0, sp.length(),
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_COMPOSING);
             } else {
                 sp = (Spannable)text;
             }
@@ -304,6 +320,16 @@ public class GeckoInputConnection
         }
         
         endBatchEdit();
+    }
+
+    @Override
+    public boolean setComposingRegion(int start, int end) {
+        if (mComposing) {
+            if (DEBUG) Log.d(LOGTAG, ". . . setComposingRegion: endComposition");
+            endComposition();
+        }
+
+        return super.setComposingRegion(start, end);
     }
 
     public String getComposingText() {
@@ -393,6 +419,19 @@ public class GeckoInputConnection
             if (start != a || end != b) {
                 if (DEBUG) Log.d(LOGTAG, String.format(". . . notifySelectionChange: current editable selection: [%d, %d]", a, b));
                 super.setSelection(start, end);
+
+                // Check if the selection is inside composing span
+                int ca = getComposingSpanStart(content);
+                int cb = getComposingSpanEnd(content);
+                if (cb < ca) {
+                    int tmp = ca;
+                    ca = cb;
+                    cb = tmp;
+                }
+                if (start < ca || start > cb || end < ca || end > cb) {
+                    if (DEBUG) Log.d(LOGTAG, ". . . notifySelectionChange: removeComposingSpans");
+                    removeComposingSpans(content);
+                }
             }
         }
 
@@ -404,6 +443,7 @@ public class GeckoInputConnection
 
     public void reset() {
         mComposing = false;
+        mCompositionStart = -1;
         mBatchMode = false;
         mUpdateRequest = null;
     }
@@ -411,30 +451,117 @@ public class GeckoInputConnection
     // TextWatcher
     public void onTextChanged(CharSequence s, int start, int before, int count)
     {
-        GeckoAppShell.sendEventToGecko(
-            new GeckoEvent(GeckoEvent.IME_SET_SELECTION, start, before));
+        if (mComposing && mCompositionStart != start) {
+            // Changed range is different from the composition, need to reset the composition
+            endComposition();
+        }
+
+        if (!mComposing) {
+            if (DEBUG) Log.d(LOGTAG, ". . . onTextChanged: IME_COMPOSITION_BEGIN");
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent(GeckoEvent.IME_COMPOSITION_BEGIN, 0, 0));
+            mComposing = true;
+            mCompositionStart = start;
+
+            if (DEBUG) Log.d(LOGTAG, ". . . onTextChanged: IME_SET_SELECTION, start=" + start + ", len=" + before);
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent(GeckoEvent.IME_SET_SELECTION, start, before));
+        }
 
         if (count == 0) {
+            if (DEBUG) Log.d(LOGTAG, ". . . onTextChanged: IME_DELETE_TEXT");
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(GeckoEvent.IME_DELETE_TEXT, 0, 0));
         } else {
-            GeckoAppShell.sendEventToGecko(
-                new GeckoEvent(GeckoEvent.IME_COMPOSITION_BEGIN, 0, 0));
-
-            GeckoAppShell.sendEventToGecko(
-                new GeckoEvent(0, count,
-                               GeckoEvent.IME_RANGE_RAWINPUT, 0, 0, 0,
-                               s.subSequence(start, start + count).toString()));
-
-            GeckoAppShell.sendEventToGecko(
-                new GeckoEvent(GeckoEvent.IME_COMPOSITION_END, 0, 0));
-
-            GeckoAppShell.sendEventToGecko(
-                new GeckoEvent(GeckoEvent.IME_SET_SELECTION, start + count, 0));
+            sendTextToGecko(s.subSequence(start, start + count), start + count);
         }
+
+        if (DEBUG) Log.d(LOGTAG, ". . . onTextChanged: IME_SET_SELECTION, start=" + (start + count) + ", 0");
+        GeckoAppShell.sendEventToGecko(
+            new GeckoEvent(GeckoEvent.IME_SET_SELECTION, start + count, 0));
 
         // Block this thread until all pending events are processed
         GeckoAppShell.geckoEventSync();
+    }
+
+    private void endComposition() {
+        if (DEBUG) Log.d(LOGTAG, "IME: endComposition: IME_COMPOSITION_END");
+        GeckoAppShell.sendEventToGecko(
+            new GeckoEvent(GeckoEvent.IME_COMPOSITION_END, 0, 0));
+        mComposing = false;
+        mCompositionStart = -1;
+    }
+
+    private void sendTextToGecko(CharSequence text, int caretPos) {
+        if (DEBUG) Log.d(LOGTAG, "IME: sendTextToGecko(\"" + text + "\")");
+
+        // Handle composition text styles
+        if (text != null && text instanceof Spanned) {
+            Spanned span = (Spanned) text;
+            int spanStart = 0, spanEnd = 0;
+            boolean pastSelStart = false, pastSelEnd = false;
+
+            do {
+                int rangeType = GeckoEvent.IME_RANGE_CONVERTEDTEXT;
+                int rangeStyles = 0, rangeForeColor = 0, rangeBackColor = 0;
+
+                // Find next offset where there is a style transition
+                spanEnd = span.nextSpanTransition(spanStart + 1, text.length(),
+                    CharacterStyle.class);
+
+                // Empty range, continue
+                if (spanEnd <= spanStart)
+                    continue;
+
+                // Get and iterate through list of span objects within range
+                CharacterStyle styles[] = span.getSpans(
+                    spanStart, spanEnd, CharacterStyle.class);
+
+                for (CharacterStyle style : styles) {
+                    if (style instanceof UnderlineSpan) {
+                        // Text should be underlined
+                        rangeStyles |= GeckoEvent.IME_RANGE_UNDERLINE;
+
+                    } else if (style instanceof ForegroundColorSpan) {
+                        // Text should be of a different foreground color
+                        rangeStyles |= GeckoEvent.IME_RANGE_FORECOLOR;
+                        rangeForeColor =
+                            ((ForegroundColorSpan)style).getForegroundColor();
+
+                    } else if (style instanceof BackgroundColorSpan) {
+                        // Text should be of a different background color
+                        rangeStyles |= GeckoEvent.IME_RANGE_BACKCOLOR;
+                        rangeBackColor =
+                            ((BackgroundColorSpan)style).getBackgroundColor();
+                    }
+                }
+
+                // Add range to array, the actual styles are
+                //  applied when IME_SET_TEXT is sent
+                if (DEBUG) Log.d(LOGTAG, String.format(". . . sendTextToGecko: IME_ADD_RANGE, %d, %d, %d, %d, %d, %d",
+                                                       spanStart, spanEnd - spanStart, rangeType, rangeStyles, rangeForeColor, rangeBackColor));
+                GeckoAppShell.sendEventToGecko(
+                    new GeckoEvent(spanStart, spanEnd - spanStart,
+                                   rangeType, rangeStyles,
+                                   rangeForeColor, rangeBackColor));
+
+                spanStart = spanEnd;
+            } while (spanStart < text.length());
+        } else {
+            if (DEBUG) Log.d(LOGTAG, ". . . sendTextToGecko: IME_ADD_RANGE, 0, " + text.length() +
+                                     ", IME_RANGE_RAWINPUT, IME_RANGE_UNDERLINE)");
+            GeckoAppShell.sendEventToGecko(
+                new GeckoEvent(0, text == null ? 0 : text.length(),
+                               GeckoEvent.IME_RANGE_RAWINPUT,
+                               GeckoEvent.IME_RANGE_UNDERLINE, 0, 0));
+        }
+
+        // Change composition (treating selection end as where the caret is)
+        if (DEBUG) Log.d(LOGTAG, ". . . sendTextToGecko: IME_SET_TEXT, IME_RANGE_CARETPOSITION, \"" + text + "\")");
+        GeckoAppShell.sendEventToGecko(
+            new GeckoEvent(caretPos, 0,
+                           GeckoEvent.IME_RANGE_CARETPOSITION, 0, 0, 0,
+                           text.toString()));
     }
 
     public void afterTextChanged(Editable s)
@@ -777,13 +904,16 @@ public class GeckoInputConnection
     }
 
     // Is a composition active?
-    boolean mComposing;
+    private boolean mComposing;
+    private int mCompositionStart = -1;
 
     // IME stuff
     public static final int IME_STATE_DISABLED = 0;
     public static final int IME_STATE_ENABLED = 1;
     public static final int IME_STATE_PASSWORD = 2;
     public static final int IME_STATE_PLUGIN = 3;
+
+    final CharacterStyle COMPOSING_SPAN = new UnderlineSpan();
 
     KeyListener mKeyListener;
     Editable mEditable;

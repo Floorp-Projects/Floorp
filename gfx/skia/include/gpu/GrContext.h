@@ -39,11 +39,6 @@ public:
     static GrContext* Create(GrEngine engine,
                              GrPlatform3DContext context3D);
 
-    /**
-     *  Helper to create a opengl-shader based context
-     */
-    static GrContext* CreateGLShaderContext();
-
     virtual ~GrContext();
 
     /**
@@ -113,23 +108,61 @@ public:
     typedef uint64_t TextureKey;
 
     /**
+     *  Create a new entry, based on the specified key and texture, and return
+     *  its "locked" entry. Must call be balanced with an unlockTexture() call.
+     *
+     *  @param key      A client-generated key that identifies the contents
+     *                  of the texture. Respecified to findAndLockTexture
+     *                  for subsequent uses of the texture.
+     *  @param sampler  The sampler state used to draw a texture may be used
+     *                  to determine how to store the pixel data in the texture
+     *                  cache. (e.g. different versions may exist for different
+     *                  wrap modes on GPUs with limited or no NPOT texture
+     *                  support). Only the wrap and filter fields are used. NULL
+     *                  implies clamp wrap modes and nearest filtering.
+     * @param desc      Description of the texture properties.
+     * @param srcData   Pointer to the pixel values.
+     * @param rowBytes  The number of bytes between rows of the texture. Zero
+     *                  implies tightly packed rows.
+     */
+    TextureCacheEntry createAndLockTexture(TextureKey key,
+                                           const GrSamplerState* sampler,
+                                           const GrTextureDesc& desc,
+                                           void* srcData, size_t rowBytes);
+
+    /**
      *  Search for an entry based on key and dimensions. If found, "lock" it and
      *  return it. The entry's texture() function will return NULL if not found.
-     *  Must call be balanced with an unlockTexture() call.
+     *  Must be balanced with an unlockTexture() call.
+     *
+     *  @param key      A client-generated key that identifies the contents
+     *                  of the texture.
+     *  @param width    The width of the texture in pixels as specifed in
+     *                  the GrTextureDesc originally passed to
+     *                  createAndLockTexture
+     *  @param width    The height of the texture in pixels as specifed in
+     *                  the GrTextureDesc originally passed to
+     *                  createAndLockTexture
+     *  @param sampler  The sampler state used to draw a texture may be used
+     *                  to determine the cache entry used. (e.g. different
+     *                  versions may exist for different wrap modes on GPUs with
+     *                  limited or no NPOT texture support). Only the wrap and 
+     *                  filter fields are used. NULL implies clamp wrap modes
+     *                  and nearest filtering.
      */
     TextureCacheEntry findAndLockTexture(TextureKey key,
                                          int width,
                                          int height,
-                                         const GrSamplerState&);
-
+                                         const GrSamplerState* sampler);
     /**
-     *  Create a new entry, based on the specified key and texture, and return
-     *  its "locked" entry. Must call be balanced with an unlockTexture() call.
+     * Determines whether a texture is in the cache. If the texture is found it
+     * will not be locked or returned. This call does not affect the priority of
+     * the texture for deletion.
      */
-    TextureCacheEntry createAndLockTexture(TextureKey key,
-                                           const GrSamplerState&,
-                                           const GrTextureDesc&,
-                                           void* srcData, size_t rowBytes);
+    bool isTextureInCache(TextureKey key,
+                          int width,
+                          int height,
+                          const GrSamplerState*) const;
 
     /**
      * Enum that determines how closely a returned scratch texture must match
@@ -182,7 +215,7 @@ public:
     /**
      *  Returns true if the specified use of an indexed texture is supported.
      */
-    bool supportsIndex8PixelConfig(const GrSamplerState&,
+    bool supportsIndex8PixelConfig(const GrSamplerState*,
                                    int width,
                                    int height) const;
 
@@ -238,6 +271,35 @@ public:
     // Platform Surfaces
 
     /**
+     * Wraps an existing texture with a GrTexture object.
+     *
+     * OpenGL: if the object is a texture Gr may change its GL texture params
+     *         when it is drawn.
+     *
+     * @param  desc     description of the object to create.
+     *
+     * @return GrTexture object or NULL on failure.
+     */
+    GrTexture* createPlatformTexture(const GrPlatformTextureDesc& desc);
+
+    /**
+     * Wraps an existing render target with a GrRenderTarget object. It is
+     * similar to createPlatformTexture but can be used to draw into surfaces
+     * that are not also textures (e.g. FBO 0 in OpenGL, or an MSAA buffer that
+     * the client will resolve to a texture).
+     *
+     * @param  desc     description of the object to create.
+     *
+     * @return GrTexture object or NULL on failure.
+     */
+     GrRenderTarget* createPlatformRenderTarget(
+                                    const GrPlatformRenderTargetDesc& desc);
+
+    /**
+     * This interface is depracted and will be removed in a future revision.
+     * Callers should use createPlatformTexture or createPlatformRenderTarget
+     * instead.
+     *
      * Wraps an existing 3D API surface in a GrObject. desc.fFlags determines
      * the type of object returned. If kIsTexture is set the returned object
      * will be a GrTexture*. Otherwise, it will be a GrRenderTarget*. If both 
@@ -421,10 +483,10 @@ public:
      *                          FlushBits.
      */
     void flush(int flagsBitfield = 0);
-    
+
     /**
      * Reads a rectangle of pixels from a render target.
-     * @param renderTarget  the render target to read from. NULL means the
+     * @param target        the render target to read from. NULL means the
      *                      current render target.
      * @param left          left edge of the rectangle to read (inclusive)
      * @param top           top edge of the rectangle to read (inclusive)
@@ -432,39 +494,94 @@ public:
      * @param height        height of rectangle to read in pixels.
      * @param config        the pixel config of the destination buffer
      * @param buffer        memory to read the rectangle into.
+     * @param rowBytes      number of bytes bewtween consecutive rows. Zero
+     *                      means rows are tightly packed.
      *
      * @return true if the read succeeded, false if not. The read can fail
-     *              because of a unsupported pixel config or because no render
+     *              because of an unsupported pixel config or because no render
      *              target is currently set.
      */
     bool readRenderTargetPixels(GrRenderTarget* target,
                                 int left, int top, int width, int height,
-                                GrPixelConfig config, void* buffer);
+                                GrPixelConfig config, void* buffer, 
+                                size_t rowBytes) {
+        return this->internalReadRenderTargetPixels(target, left, top,
+                                                    width, height,
+                                                    config, buffer,
+                                                    rowBytes, 0);
+    }
+
+    /**
+     * Copy the src pixels [buffer, rowbytes, pixelconfig] into a render target
+     * at the specified rectangle.
+     * @param target        the render target to write into. NULL means the
+     *                      current render target.
+     * @param left          left edge of the rectangle to write (inclusive)
+     * @param top           top edge of the rectangle to write (inclusive)
+     * @param width         width of rectangle to write in pixels.
+     * @param height        height of rectangle to write in pixels.
+     * @param config        the pixel config of the source buffer
+     * @param buffer        memory to read the rectangle from.
+     * @param rowBytes      number of bytes bewtween consecutive rows. Zero
+     *                      means rows are tightly packed.
+     */
+    void writeRenderTargetPixels(GrRenderTarget* target,
+                                 int left, int top, int width, int height,
+                                 GrPixelConfig config, const void* buffer,
+                                 size_t rowBytes) {
+        this->internalWriteRenderTargetPixels(target, left, top, width, height,
+                                              config, buffer, rowBytes, 0);
+    }
 
     /**
      * Reads a rectangle of pixels from a texture.
-     * @param texture       the render target to read from.
+     * @param texture       the texture to read from.
      * @param left          left edge of the rectangle to read (inclusive)
      * @param top           top edge of the rectangle to read (inclusive)
      * @param width         width of rectangle to read in pixels.
      * @param height        height of rectangle to read in pixels.
      * @param config        the pixel config of the destination buffer
      * @param buffer        memory to read the rectangle into.
+     * @param rowBytes      number of bytes bewtween consecutive rows. Zero
+     *                      means rows are tightly packed.
      *
      * @return true if the read succeeded, false if not. The read can fail
-     *              because of a unsupported pixel config.
+     *              because of an unsupported pixel config.
      */
-    bool readTexturePixels(GrTexture* target,
+    bool readTexturePixels(GrTexture* texture,
                            int left, int top, int width, int height,
-                           GrPixelConfig config, void* buffer);
+                           GrPixelConfig config, void* buffer,
+                           size_t rowBytes) {
+        return this->internalReadTexturePixels(texture, left, top,
+                                               width, height,
+                                               config, buffer, rowBytes, 0);
+    }
 
     /**
-     *  Copy the src pixels [buffer, stride, pixelconfig] into the current
-     *  render-target at the specified rectangle.
+     * Writes a rectangle of pixels to a texture.
+     * @param texture       the render target to read from.
+     * @param left          left edge of the rectangle to write (inclusive)
+     * @param top           top edge of the rectangle to write (inclusive)
+     * @param width         width of rectangle to write in pixels.
+     * @param height        height of rectangle to write in pixels.
+     * @param config        the pixel config of the source buffer
+     * @param buffer        memory to read pixels from
+     * @param rowBytes      number of bytes bewtween consecutive rows. Zero
+     *                      means rows are tightly packed.
      */
-    void writePixels(int left, int top, int width, int height,
-                     GrPixelConfig, const void* buffer, size_t stride);
-
+    void writeTexturePixels(GrTexture* texture,
+                            int left, int top, int width, int height,
+                            GrPixelConfig config, const void* buffer,
+                            size_t rowBytes) {
+        this->internalWriteTexturePixels(texture, left, top, width, height, 
+                                         config, buffer, rowBytes, 0);
+    }
+    /**
+     * Copies all texels from one texture to another.
+     * @param src           the texture to copy from.
+     * @param dst           the render target to copy to.
+     */
+    void copyTexture(GrTexture* src, GrRenderTarget* dst);
     /**
      * Applies a 1D convolution kernel in the X direction to a rectangle of
      * pixels from a given texture.
@@ -581,7 +698,7 @@ private:
 
     void flushDrawBuffer();
 
-    static void SetPaint(const GrPaint& paint, GrDrawTarget* target);
+    void setPaint(const GrPaint& paint, GrDrawTarget* target);
 
     GrDrawTarget* prepareToDraw(const GrPaint& paint, DrawCategory drawType);
 
@@ -627,7 +744,43 @@ private:
                   float imageIncrement[2],
                   const float* kernel,
                   int kernelWidth);
-    
+
+    /**
+     * Flags to the internal read/write pixels funcs
+     */
+    enum PixelOpsFlags {
+        kDontFlush_PixelOpsFlag = 0x1,
+    };
+
+    bool internalReadRenderTargetPixels(GrRenderTarget* target,
+                                        int left, int top,
+                                        int width, int height,
+                                        GrPixelConfig config, void* buffer, 
+                                        size_t rowBytes, uint32_t flags);
+
+    void internalWriteRenderTargetPixels(GrRenderTarget* target,
+                                        int left, int top,
+                                        int width, int height,
+                                        GrPixelConfig, const void* buffer,
+                                        size_t rowBytes, uint32_t flags);
+
+    bool internalReadTexturePixels(GrTexture* texture,
+                                   int left, int top,
+                                   int width, int height,
+                                   GrPixelConfig config, void* buffer,
+                                   size_t rowBytes, uint32_t flags);
+
+    void internalWriteTexturePixels(GrTexture* texture,
+                                    int left, int top,
+                                    int width, int height,
+                                    GrPixelConfig config, const void* buffer,
+                                    size_t rowBytes, uint32_t flags);
+    // needed for access to internalWriteTexturePixels. TODO: make GrContext
+    // be a facade for an internal class. Then functions that are public on the 
+    // internal class would have only be callable in src/gpu. The facade would
+    // only have to functions necessary for clients.
+    friend class GrAtlas;
+
     // computes vertex layout bits based on the paint. If paint expresses
     // a texture for a stage, the stage coords will be bound to postitions
     // unless hasTexCoords[s]==true in which case stage s's input coords

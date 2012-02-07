@@ -40,7 +40,7 @@
 
 // Tests that errors still show up in the Web Console after a page reload.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-error.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-error.html";
 
 function test() {
   expectUncaughtException();

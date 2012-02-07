@@ -1639,9 +1639,9 @@ skip-if(Android) == 632781-verybig.html 632781-ref.html
 == 633344-1.html 633344-1-ref.html
 fails-if(Android) == 634232-1.html 634232-1-ref.html
 fails-if(Android) == 635302-1.html 635302-1-ref.html
-== 635373-1.html 635373-1-ref.html
-== 635373-2.html 635373-2-ref.html
-== 635373-3.html 635373-3-ref.html
+random-if(d2d) == 635373-1.html 635373-1-ref.html
+random-if(d2d) == 635373-2.html 635373-2-ref.html
+random-if(d2d) == 635373-3.html 635373-3-ref.html
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
@@ -1688,3 +1688,5 @@ needs-focus != 703186-1.html 703186-2.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
+fuzzy-if(cocoaWidget,1,170) == 718521.html 718521-ref.html
+== 720987.html 720987-ref.html

@@ -79,9 +79,14 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #include "nsINode.h"
 #include "nsHashtable.h"
 #include "nsIDOMNode.h"
-#include "nsHtml5Parser.h"
+#include "nsHtml5StringParser.h"
+#include "nsIParser.h"
+#include "nsIDocument.h"
 #include "nsIFragmentContentSink.h"
+#include "nsContentSink.h"
 #include "nsMathUtils.h"
+#include "nsThreadUtils.h"
+#include "nsIContent.h"
 #include "nsCharSeparatedTokenizer.h"
 
 #include "mozilla/AutoRestore.h"
@@ -171,6 +176,48 @@ enum EventNameType {
 
   EventNameType_HTMLXUL = 0x0003,
   EventNameType_All = 0xFFFF
+};
+
+/**
+ * Information retrieved from the <meta name="viewport"> tag. See
+ * GetViewportInfo for more information on this functionality.
+ */
+struct ViewportInfo
+{
+    // Default zoom indicates the level at which the display is 'zoomed in'
+    // initially for the user, upon loading of the page.
+    double defaultZoom;
+
+    // The minimum zoom level permitted by the page.
+    double minZoom;
+
+    // The maximum zoom level permitted by the page.
+    double maxZoom;
+
+    // The width of the viewport, specified by the <meta name="viewport"> tag,
+    // in CSS pixels.
+    PRUint32 width;
+
+    // The height of the viewport, specified by the <meta name="viewport"> tag,
+    // in CSS pixels.
+    PRUint32 height;
+
+    // Whether or not we should automatically size the viewport to the device's
+    // width. This is true if the document has been optimized for mobile, and
+    // the width property of a specified <meta name="viewport"> tag is either
+    // not specified, or is set to the special value 'device-width'.
+    bool autoSize;
+
+    // Whether or not the user can zoom in and out on the page. Default is true.
+    bool allowZoom;
+
+    // This is a holdover from e10s fennec, and might be removed in the future.
+    // It's a hack to work around bugs that didn't allow zooming of documents
+    // from within the parent process. It is still used in native Fennec for XUL
+    // documents, but it should probably be removed.
+    // Currently, from, within GetViewportInfo(), This is only set to false
+    // if the document is a XUL document.
+    bool autoScale;
 };
 
 struct EventNameMapping
@@ -327,6 +374,9 @@ public:
    */
   static PRInt32 ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
                                nsINode* aParent2, PRInt32 aOffset2,
+                               bool* aDisconnected = nsnull);
+  static PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                               nsIDOMNode* aParent2, PRInt32 aOffset2,
                                bool* aDisconnected = nsnull);
 
   /**
@@ -989,6 +1039,8 @@ public:
   static nsEventListenerManager* GetListenerManager(nsINode* aNode,
                                                     bool aCreateIfNotFound);
 
+  static void UnmarkGrayJSListenersInCCGenerationDocuments(PRUint32 aGeneration);
+
   /**
    * Remove the eventlistener manager for aNode.
    *
@@ -1044,7 +1096,8 @@ public:
    *        don't set to false when parsing into a target node that has been
    *        bound to tree.
    * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
-   *         fragments is made and NS_OK otherwise.
+   *         fragments is made, NS_ERROR_OUT_OF_MEMORY if aSourceBuffer is too
+   *         long and NS_OK otherwise.
    */
   static nsresult ParseFragmentHTML(const nsAString& aSourceBuffer,
                                     nsIContent* aTargetNode,
@@ -1069,6 +1122,20 @@ public:
                                    nsTArray<nsString>& aTagStack,
                                    bool aPreventScriptExecution,
                                    nsIDOMDocumentFragment** aReturn);
+
+  /**
+   * Parse a string into a document using the HTML parser.
+   * Script elements are marked unexecutable.
+   *
+   * @param aSourceBuffer the string to parse as an HTML document
+   * @param aTargetDocument the document object to parse into. Must not have
+   *                        child nodes.
+   * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
+   *         fragments is made, NS_ERROR_OUT_OF_MEMORY if aSourceBuffer is too
+   *         long and NS_OK otherwise.
+   */
+  static nsresult ParseDocumentHTML(const nsAString& aSourceBuffer,
+                                    nsIDocument* aTargetDocument);
 
   /**
    * Creates a new XML document, which is marked to be loaded as data.
@@ -1432,13 +1499,6 @@ public:
   static void AddScriptBlocker();
 
   /**
-   * Increases the count of blockers preventing scripts from running.
-   * Also, while this script blocker is active, script runners must not be
-   * added --- we'll assert if one is, and ignore it.
-   */
-  static void AddScriptBlockerAndPreventAddingRunners();
-
-  /**
    * Decreases the count of blockers preventing scripts from running.
    * NOTE: You might want to use nsAutoScriptBlocker rather than calling
    * this directly
@@ -1470,6 +1530,18 @@ public:
   static bool IsSafeToRunScript() {
     return sScriptBlockerCount == 0;
   }
+
+  /**
+   * Retrieve information about the viewport as a data structure.
+   * This will return information in the viewport META data section
+   * of the document. This can be used in lieu of ProcessViewportInfo(),
+   * which places the viewport information in the document header instead
+   * of returning it directly.
+   *
+   * NOTE: If the site is optimized for mobile (via the doctype), this
+   * will return viewport information that specifies default information.
+   */
+  static ViewportInfo GetViewportInfo(nsIDocument* aDocument);
 
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
@@ -1639,6 +1711,13 @@ public:
   static nsresult GetElementsByClassName(nsINode* aRootNode,
                                          const nsAString& aClasses,
                                          nsIDOMNodeList** aReturn);
+
+  /**
+   * Returns the widget for this document if there is one. Looks at all ancestor
+   * documents to try to find a widget, so for example this can still find a
+   * widget for documents in display:none frames that have no presentation.
+   */
+  static nsIWidget *WidgetForDocument(nsIDocument *aDoc);
 
   /**
    * Returns a layer manager to use for the given document. Basically we
@@ -1939,7 +2018,7 @@ private:
   static bool sFullScreenKeyInputRestricted;
   static PRUint32 sHandlingInputTimeout;
 
-  static nsHtml5Parser* sHTMLFragmentParser;
+  static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
   static nsIFragmentContentSink* sXMLFragmentSink;
 
@@ -2109,13 +2188,6 @@ public:
 #else
 #define DOUBLE_NaN {{0xffffffff,                                         \
                         DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK}}
-#endif
-
-#if defined(XP_WIN)
-#define DOUBLE_COMPARE(LVAL, OP, RVAL)                                  \
-    (!DOUBLE_IS_NaN(LVAL) && !DOUBLE_IS_NaN(RVAL) && (LVAL) OP (RVAL))
-#else
-#define DOUBLE_COMPARE(LVAL, OP, RVAL) ((LVAL) OP (RVAL))
 #endif
 
 /*

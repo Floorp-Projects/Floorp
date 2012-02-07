@@ -48,7 +48,6 @@ _TEST_FILES = \
 		test_outerHTML.html \
 		test_outerHTML.xhtml \
 		497633.html \
-		489127.html \
 		historyframes.html \
 		test_497898.html \
 		test_bug504220.html \
@@ -66,7 +65,6 @@ _TEST_FILES = \
 		test_offsets.js \
 		test_windowProperties.html \
 		test_clipboard_events.html \
-		test_nodesFromRect.html \
 		test_frameElementWrapping.html \
 		file_frameElementWrapping.html \
 		test_framedhistoryframes.html \
@@ -74,7 +72,13 @@ _TEST_FILES = \
 		test_focusrings.xul \
 		file_moving_xhr.html \
 		test_vibrator.html \
-		test_getContentState.html \
+		browserFrameHelpers.js \
+		test_browserFrame1.html \
+		test_browserFrame2.html \
+		test_browserFrame3.html \
+		test_browserFrame4.html \
+		test_browserFrame5.html \
+		test_browserFrame6.html \
 		$(NULL)
 
 _CHROME_FILES = \

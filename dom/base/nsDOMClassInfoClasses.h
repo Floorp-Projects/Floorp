@@ -430,6 +430,8 @@ DOMCI_CLASS(GeoPositionError)
 
 DOMCI_CLASS(MozBatteryManager)
 
+DOMCI_CLASS(MozPowerManager)
+
 DOMCI_CLASS(MozSmsManager)
 DOMCI_CLASS(MozSmsMessage)
 DOMCI_CLASS(MozSmsEvent)
@@ -537,3 +539,5 @@ DOMCI_CLASS(Telephony)
 DOMCI_CLASS(TelephonyCall)
 DOMCI_CLASS(CallEvent)
 #endif
+
+DOMCI_CLASS(DOMError)

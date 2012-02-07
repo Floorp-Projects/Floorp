@@ -153,6 +153,14 @@ class NS_COM_GLUE nsDeque {
   void* ObjectAt(int aIndex) const;
 
   /**
+   * Removes and returns the i'th member from the deque.
+   *
+   * @param   index of desired item
+   * @return  the element which was removed
+   */
+  void* RemoveObjectAt(int aIndex);
+
+  /**
    * Remove all items from container without destroying them.
    *
    * @return  *this

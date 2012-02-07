@@ -39,7 +39,7 @@
 #include "SourceSurfaceCairo.h"
 #include "PathCairo.h"
 #include "HelpersCairo.h"
-#include "ScaledFontCairo.h"
+#include "ScaledFontBase.h"
 
 #include "cairo.h"
 
@@ -118,7 +118,7 @@ GetCairoSurfaceSize(cairo_surface_t* surface, IntSize& size)
       // contexts; they'll just return 0 in that case.
       size.width = CGBitmapContextGetWidth(cgc);
       size.height = CGBitmapContextGetWidth(cgc);
-      return size.width != 0;
+      return true;
     }
 #endif
 
@@ -142,9 +142,9 @@ PatternIsCompatible(const Pattern& aPattern)
       const RadialGradientPattern& pattern = static_cast<const RadialGradientPattern&>(aPattern);
       return pattern.mStops->GetBackendType() == BACKEND_CAIRO;
     }
+    default:
+      return true;
   }
-
-  return true;
 }
 
 // Never returns NULL. As such, you must always pass in Cairo-compatible
@@ -591,10 +591,7 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
 {
   AutoPrepareForDrawing prep(this, mContext);
 
-  if (aFont->GetType() != FONT_CAIRO)
-    return;
-
-  ScaledFontCairo* scaledFont = static_cast<ScaledFontCairo*>(aFont);
+  ScaledFontBase* scaledFont = static_cast<ScaledFontBase*>(aFont);
   cairo_set_scaled_font(mContext, scaledFont->GetCairoScaledFont());
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);

@@ -34,12 +34,11 @@
   direction: ltr;
 }
 
-.inspector-resizer {
+#inspector-top-resizer {
   display: none;
 }
 
-#inspector-toolbar[treepanel-open] > vbox > #inspector-top-resizer,
-#inspector-toolbar[treepanel-open] > vbox > hbox > #inspector-end-resizer {
+#inspector-toolbar[treepanel-open] > vbox > #inspector-top-resizer {
   display: -moz-box;
 }
 

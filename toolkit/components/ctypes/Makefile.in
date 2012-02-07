@@ -60,8 +60,6 @@ CPPSRCS = \
     ctypes.cpp \
     $(NULL)
 
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
+TEST_DIRS += tests
 
 include $(topsrcdir)/config/rules.mk

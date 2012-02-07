@@ -44,14 +44,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_TESTS
-	DIRS += test
-endif
+TEST_DIRS += test
 
 EXTRA_JS_MODULES = \
 	source-editor.jsm \
 	source-editor-orion.jsm \
 	source-editor-textarea.jsm \
+	source-editor-ui.jsm \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

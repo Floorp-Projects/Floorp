@@ -355,7 +355,7 @@ public:
   NS_IMETHOD WillParse() { return NS_OK; }
   NS_IMETHOD WillInterrupt() { return NS_OK; }
   NS_IMETHOD WillResume() { return NS_OK; }
-  NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
+  NS_IMETHOD SetParser(nsParserBase* aParser) { return NS_OK; }
   virtual void FlushPendingNotifications(mozFlushType aType) { }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
   virtual nsISupports *GetTarget() { return nsnull; }
@@ -372,11 +372,7 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD AddComment(const nsIParserNode& aNode) { return NS_OK; }
-  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) { return NS_OK; }
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD_(bool) IsFormOnStack() { return false; }
 
 protected:
   nsCOMPtr<nsINavBookmarksService> mBookmarksService;

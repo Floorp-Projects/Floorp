@@ -52,6 +52,7 @@ DIRS	= \
   hyperlink \
   hypertext \
   name \
+  pivot \
   relations \
   selectable \
   states \
@@ -75,11 +76,13 @@ _TEST_FILES =\
 		actions.js \
 		attributes.js \
 		autocomplete.js \
+		browser.js \
 		common.js \
 		events.js \
 		grid.js \
 		layout.js \
 		name.js \
+		pivot.js \
 		relations.js \
 		role.js \
 		selectable.js \

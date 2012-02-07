@@ -129,7 +129,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.7.1
+SQLITE_VERSION=3.7.10
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -313,7 +313,7 @@ if test -n "$gonkdir" ; then
     STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/"
     STLPORT_LIBS="-lstlport"
 
-    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS"
+    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS -I$gonkdir/frameworks/base/services/sensorservice"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
     LIBS="$LIBS $STLPORT_LIBS"
@@ -337,6 +337,7 @@ if test -n "$gonkdir" ; then
 
     AC_DEFINE(ANDROID)
     AC_DEFINE(HAVE_SYS_UIO_H)
+    AC_DEFINE(HAVE_PTHREADS)
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
     ZLIB_DIR=yes
@@ -459,6 +460,9 @@ case "$target" in
     if test -z "$ANDROID_PACKAGE_NAME" ; then
         ANDROID_PACKAGE_NAME='org.mozilla.$(MOZ_APP_NAME)'
     fi
+    if test -z "$MOZ_MOBILE_COMPAT" ; then
+        MOZ_MOBILE_COMPAT='All'
+    fi
 
     AC_DEFINE(ANDROID)
     AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
@@ -480,6 +484,7 @@ AC_SUBST(ANDROID_PLATFORM)
 AC_SUBST(ANDROID_SDK)
 AC_SUBST(ANDROID_PLATFORM_TOOLS)
 AC_SUBST(ANDROID_PACKAGE_NAME)
+AC_SUBST(MOZ_MOBILE_COMPAT)
 AC_SUBST(OBJCOPY)
 
 dnl ========================================================
@@ -566,6 +571,11 @@ if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
     AC_DEFINE(CROSS_COMPILE)
 else
     AC_PROG_CC
+    case "$target" in
+    *-mingw*)
+      # Work around the conftest.exe access problem on Windows
+      sleep 1
+    esac
     AC_PROG_CXX
     AC_PROG_RANLIB
     MOZ_PATH_PROGS(AS, $AS as, $CC)
@@ -663,28 +673,19 @@ WINSDK_TARGETVER=601
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
                           Highest Windows version to target using this SDK
-                              502: Windows Server 2003
-                              600: Windows Vista
                               601: Windows 7],
   WINSDK_TARGETVER=$withval)
 
 case "$WINSDK_TARGETVER" in
-502|600|601)
+601)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 502, 600 or 601]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 601]);
     ;;
 
 esac
-
-if test -n "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-    # We can't build parental controls either
-    MOZ_DISABLE_PARENTAL_CONTROLS=1
-fi
-fi
 
 case "$target" in
 *-mingw*)
@@ -846,15 +847,8 @@ EOF
                            ])
             MOZ_WINSDK_MAXVER=${ac_cv_winsdk_maxver}
         else
-            # The Vista SDK is the only one to have sdkddkver.h but not
-            # WinSDKVer.h
-            MOZ_CHECK_HEADERS([sdkddkver.h])
-            if test "$ac_cv_header_sdkddkver_h" = "yes"; then
-                MOZ_WINSDK_MAXVER=0x06000000
-            else
-                # Assume the Server 2003 Platform SDK
-                MOZ_WINSDK_MAXVER=0x05020000
-            fi
+            # Any SDK which doesn't have WinSDKVer.h is too old.
+            AC_MSG_ERROR([Your SDK does not have WinSDKVer.h. It is probably too old. Please upgrade to a newer SDK or try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
         fi
 
         unset _MSVC_VER_FILTER
@@ -1816,6 +1810,17 @@ if test "$OS_TARGET" = "Android"; then
     CPPFLAGS="$CPPFLAGS $STLPORT_CPPFLAGS"
     LDFLAGS="$LDFLAGS $STLPORT_LDFLAGS"
     LIBS="$LIBS $STLPORT_LIBS"
+fi
+
+dnl ========================================================
+dnl Suppress Clang Argument Warnings
+dnl ========================================================
+if test -n "$CLANG_CC"; then
+    _WARNINGS_CFLAGS="-Qunused-arguments ${_WARNINGS_CFLAGS}"
+    CPPFLAGS="-Qunused-arguments ${CPPFLAGS}"
+fi
+if test -n "$CLANG_CXX"; then
+    _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
 fi
 
 dnl ========================================================
@@ -4581,6 +4586,7 @@ MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
 MOZ_RAW=
 MOZ_SYDNEYAUDIO=
+MOZ_CUBEB=
 MOZ_VORBIS=
 MOZ_TREMOR=
 MOZ_WAVE=1
@@ -4610,6 +4616,7 @@ MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_JAVA_COMPOSITOR=
+MOZ_ONLY_TOUCH_EVENTS=
 MOZ_SVG_DLISTS=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -4629,7 +4636,7 @@ USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
-MOZ_WEBSMS_BACKEND=1
+MOZ_WEBSMS_BACKEND=
 MOZ_GRAPHITE=1
 
 case "${target}" in
@@ -4644,14 +4651,7 @@ esac
 case "$target_os" in
     mingw*)
         NS_ENABLE_TSF=1
-        if test -z "$GNU_CC"; then
-            if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-                NS_ENABLE_TSF=
-            fi
-        fi
-        if test -n "$NS_ENABLE_TSF"; then
-            AC_DEFINE(NS_ENABLE_TSF)
-        fi
+        AC_DEFINE(NS_ENABLE_TSF)
         ;;
 esac
 
@@ -4897,23 +4897,29 @@ cairo-uikit)
 
 cairo-android)
     AC_DEFINE(MOZ_WIDGET_ANDROID)
+    AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=android
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
-    MOZ_OLD_LINKER=1
+    if test "$MOZ_BUILD_APP" = "mobile/xul"; then
+        MOZ_OLD_LINKER=1
+    fi
+    MOZ_TOUCH=1
     ;;
 
 cairo-gonk)
     AC_DEFINE(MOZ_WIDGET_GONK)
+    AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=gonk
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_B2G_RIL=1
+    MOZ_TOUCH=1
     ;;
 
 esac
@@ -5592,6 +5598,7 @@ MOZ_ARG_DISABLE_BOOL(ogg,
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
     MOZ_SYDNEYAUDIO=1
+    MOZ_CUBEB=1
     MOZ_MEDIA=1
     case "$target_cpu" in
     arm*)
@@ -5671,20 +5678,20 @@ if test -n "$MOZ_WEBM"; then
                      [MOZ_NATIVE_LIBVPX_DEC_TEST=1],
                      ([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found]))
         if test -n "$MOZ_NATIVE_LIBVPX_DEC_TEST" ; then
-            AC_MSG_CHECKING([for libvpx version >= v0.9.7])
-            dnl We need at least v0.9.7 to fix several crash bugs (for which we
-            dnl had local patches prior to v0.9.7).
+            AC_MSG_CHECKING([for libvpx version >= v1.0.0])
+            dnl We need at least v1.0.0 to fix several crash bugs (for which we
+            dnl had local patches prior to v1.0.0).
             dnl
             dnl This is a terrible test for the library version, but we don't
             dnl have a good one. There is no version number in a public header,
             dnl and testing the headers still doesn't guarantee we link against
             dnl the right version. While we could call vpx_codec_version() at
             dnl run-time, that would break cross-compiling. There are no
-            dnl additional exported symbols between the v0.9.7 release and the
-            dnl v0.9.6 one to check for.
+            dnl additional exported decoder symbols between the v1.0.0 release
+            dnl and the v0.9.7 one to check for.
             AC_TRY_COMPILE([
                 #include <vpx/vpx_decoder.h>
-                #if !defined(VPX_CODEC_USE_INPUT_PARTITION)
+                #if !defined(VPX_CODEC_USE_INPUT_FRAGMENTS)
                     #error "test failed."
                 #endif
                 ],
@@ -5695,7 +5702,7 @@ if test -n "$MOZ_WEBM"; then
                  MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
                  MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
                 [AC_MSG_RESULT([no])
-                 AC_MSG_ERROR([--with-system-libvpx requested but it is not v0.9.7 or later])])
+                 AC_MSG_ERROR([--with-system-libvpx requested but it is not v1.0.0 or later])])
         fi
         CFLAGS=$_SAVE_CFLAGS
         LDFLAGS=$_SAVE_LDFLAGS
@@ -5709,6 +5716,7 @@ AC_SUBST(MOZ_LIBVPX_LIBS)
 
 if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
     MOZ_SYDNEYAUDIO=1
+    MOZ_CUBEB=1
     MOZ_MEDIA=1
     case "$target_cpu" in
     arm*)
@@ -5820,15 +5828,27 @@ MOZ_ARG_DISABLE_BOOL(wave,
 if test -n "$MOZ_WAVE"; then
     AC_DEFINE(MOZ_WAVE)
     MOZ_SYDNEYAUDIO=1
+    MOZ_CUBEB=1
     MOZ_MEDIA=1
 fi
 
 dnl ========================================================
-dnl = Handle dependent SYDNEYAUDIO and MEDIA defines
+dnl = Handle dependent SYDNEYAUDIO, CUBEB, and MEDIA defines
 dnl ========================================================
 
 if test -n "$MOZ_SYDNEYAUDIO"; then
     AC_DEFINE(MOZ_SYDNEYAUDIO)
+fi
+
+if test -n "$MOZ_CUBEB"; then
+    case "$target" in
+    *-mingw*)
+        AC_DEFINE(MOZ_CUBEB)
+        ;;
+    *)
+        dnl Other targets will be enabled soon.
+        ;;
+    esac
 fi
 
 if test -n "$MOZ_MEDIA"; then
@@ -7152,6 +7172,9 @@ else
     dnl And we need mozglue symbols to be exported.
     MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS -rdynamic"
   fi
+  if test "$MOZ_LINKER" = 1; then
+    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS $ZLIB_LIBS"
+  fi
 fi
 
 if test -z "$MOZ_MEMORY"; then
@@ -7319,8 +7342,7 @@ dnl ========================================================
 dnl ETW - Event Tracing for Windows
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(ETW,
-[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting
-                          (needs Windows Vista+ SDK)],
+[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting],
     MOZ_ETW=1,
     MOZ_ETW= )
 if test -n "$MOZ_ETW"; then
@@ -7330,8 +7352,6 @@ fi
 if test -n "$MOZ_ETW"; then
     if test -z "$MOZ_WINSDK_TARGETVER"; then
         AC_MSG_ERROR([--enable-ETW is only valid on Windows])
-    elif test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-        AC_MSG_ERROR([--enable-ETW requires the Windows Vista SDK or newer])
     fi
 fi
 
@@ -8029,7 +8049,7 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
-if test "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android"; then
+if test "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
 MOZ_ENABLE_SKIA=1
 else
 MOZ_ENABLE_SKIA=
@@ -8444,6 +8464,7 @@ AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_JAVA_COMPOSITOR)
+AC_SUBST(MOZ_ONLY_TOUCH_EVENTS)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_MAINTENANCE_SERVICE)
@@ -8692,6 +8713,7 @@ AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
 AC_SUBST(MOZ_MEDIA)
 AC_SUBST(MOZ_SYDNEYAUDIO)
+AC_SUBST(MOZ_CUBEB)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
@@ -9041,7 +9063,17 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     if test -n "$USE_ARM_KUSER"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
+    if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a $ac_cv_func_dladdr = no ; then
+      # dladdr is supported by the new linker, even when the system linker doesn't
+      # support it. Trick nspr into using dladdr when it's not supported.
+      _SAVE_CPPFLAGS="$CPPFLAGS"
+      export CPPFLAGS="-include $_topsrcdir/mozglue/linker/dladdr.h $CPPFLAGS"
+    fi
     AC_OUTPUT_SUBDIRS(nsprpub)
+    if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a $ac_cv_func_dladdr = no; then
+      unset CPPFLAGS
+      CPPFLAGS="$_SAVE_CFLAGS"
+    fi
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
 

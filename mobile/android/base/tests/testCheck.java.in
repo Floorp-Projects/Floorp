@@ -1,0 +1,39 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+public class testCheck extends BaseTest {
+    public void testCheck() {
+        setTestType("talos");
+        String url = getAbsoluteUrl("/startup_test/fenncmark/wikipedia.html");
+        loadUrl(url);
+
+        mDriver.setupScrollHandling();
+
+        // Setup scrolling coordinates.
+        int midX = mDriver.getGeckoLeft() + mDriver.getGeckoWidth()/2;
+        int midY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/2;
+        int endY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/10;
+
+        mDriver.startCheckerboardRecording();
+
+        int i = 0;
+        // Scroll a thousand times or until the end of the page.
+        do {
+            mActions.drag(midX, midX, midY, endY);
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            i++;
+        } while (i < 1000 && mDriver.getScrollHeight() + 2 * mDriver.getHeight() < mDriver.getPageHeight());
+        // asserter.ok(i < 1000, "Less than 1000", "Should take less than 1000 drags to get to bottom of the page.");
+
+        int incompleteFrames = mDriver.stopCheckerboardRecording();
+        mAsserter.dumpLog("__start_report" + Integer.toString(incompleteFrames) + "__end_report");
+        long msecs = System.currentTimeMillis();
+        mAsserter.dumpLog("__startTimestamp" + msecs + "__endTimestamp");
+    }	
+}

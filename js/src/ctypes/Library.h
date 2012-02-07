@@ -58,7 +58,7 @@ namespace Library
 
   JSObject* Create(JSContext* cx, jsval path, JSCTypesCallbacks* callbacks);
 
-  bool IsLibrary(JSContext* cx, JSObject* obj);
+  bool IsLibrary(JSObject* obj);
   PRLibrary* GetLibrary(JSContext* cx, JSObject* obj);
 
   JSBool Open(JSContext* cx, uintN argc, jsval* vp);

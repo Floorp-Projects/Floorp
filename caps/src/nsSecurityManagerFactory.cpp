@@ -339,7 +339,7 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     JSAutoRequest ar(cx);
     while ((proto = JS_GetPrototype(cx, obj)) != nsnull)
         obj = proto;
-    JSClass *objectClass = JS_GET_CLASS(cx, obj);
+    JSClass *objectClass = JS_GetClass(obj);
 
     jsval v;
     if (!JS_GetProperty(cx, global, "netscape", &v))

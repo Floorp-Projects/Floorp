@@ -92,7 +92,7 @@
          *
          * Either way, it's not good.
          */
-        SkASSERT(!"looks like you passed an SkScalar into SkIntToScalar");
+        SkDEBUGFAIL("looks like you passed an SkScalar into SkIntToScalar");
         return (float)0;
     }
 #else  // not SK_DEBUG
@@ -119,7 +119,7 @@
 
     #define SkScalarFloorToScalar(x)    sk_float_floor(x)
     #define SkScalarCeilToScalar(x)     sk_float_ceil(x)
-    #define SkScalarRoundToScalar(x)    sk_float_round(x)
+    #define SkScalarRoundToScalar(x)    sk_float_floor((x) + 0.5f)
 
     #define SkScalarFloorToInt(x)       sk_float_floor2int(x)
     #define SkScalarCeilToInt(x)        sk_float_ceil2int(x)

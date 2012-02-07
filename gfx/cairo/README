@@ -178,6 +178,8 @@ unicode-printing.patch: Print as unicode (bug 454532)
 
 quartz-mark-dirty.patch: Add a quartz implementation of mark_dirty_rectangle (bug 715704)
 
+expose-snapshot.patch: Make functions to add snapshots public, as well as allow creating null surfaces publically. (bug 715658)
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

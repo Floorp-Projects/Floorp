@@ -84,8 +84,8 @@ public:
   nsEventSource();
   virtual ~nsEventSource();
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsEventSource,
-                                           nsDOMEventTargetWrapperCache)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(nsEventSource,
+                                                                   nsDOMEventTargetWrapperCache)
 
   NS_DECL_NSIEVENTSOURCE
 

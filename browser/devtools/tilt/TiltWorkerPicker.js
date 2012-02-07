@@ -36,8 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global self*/
 "use strict";
 
 /**
@@ -80,6 +78,11 @@ self.onmessage = function TWP_onMessage(event)
     let v1b = [v1f[0], v1f[1], v1f[2] - thickness];
     let v2b = [v2f[0], v2f[1], v2f[2] - thickness];
     let v3b = [v3f[0], v3f[1], v3f[2] - thickness];
+
+    // don't do anything with degenerate quads
+    if (!v0f[0] && !v1f[0] && !v2f[0] && !v3f[0]) {
+      continue;
+    }
 
     // for each triangle in the stack box, check for the intersections
     if (self.intersect(v0f, v1f, v2f, ray, hit) || // front left

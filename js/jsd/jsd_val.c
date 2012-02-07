@@ -819,8 +819,7 @@ jsd_GetValueClassName(JSDContext* jsdc, JSDValue* jsdval)
 
             return NULL;
         }
-        if(JS_GET_CLASS(jsdc->dumbContext, obj))
-            jsdval->className = JS_GET_CLASS(jsdc->dumbContext, obj)->name;
+        jsdval->className = JS_GetClass(obj)->name;
         JS_LeaveCrossCompartmentCall(call);
         JS_EndRequest(jsdc->dumbContext);
     }

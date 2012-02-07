@@ -111,7 +111,7 @@ XBLFinalize(JSContext *cx, JSObject *obj)
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(cx, obj));
   NS_RELEASE(docInfo);
   
-  nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GET_CLASS(cx, obj));
+  nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GetClass(obj));
   c->Drop();
 }
 
@@ -149,7 +149,7 @@ XBLResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
   }
 
   // We have this field.  Time to install it.  Get our node.
-  JSClass* nodeClass = ::JS_GET_CLASS(cx, origObj);
+  JSClass* nodeClass = ::JS_GetClass(origObj);
   if (!nodeClass) {
     return JS_FALSE;
   }
@@ -309,6 +309,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLBinding)
   tmp->mInsertionPointTable = nsnull;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXBLBinding)
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                                     "mPrototypeBinding->XBLDocumentInfo()");
   cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(
                       tmp->mPrototypeBinding->XBLDocumentInfo()));
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
@@ -1091,7 +1093,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
                   break;
                 }
 
-                JSClass* clazz = ::JS_GET_CLASS(cx, proto);
+                JSClass* clazz = ::JS_GetClass(proto);
                 if (!clazz ||
                     (~clazz->flags &
                      (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||

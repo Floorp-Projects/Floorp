@@ -73,9 +73,6 @@ extern JS_FRIEND_API(uint32_t)
 JS_ObjectCountDynamicSlots(JSObject *obj);
 
 extern JS_FRIEND_API(void)
-JS_ShrinkingGC(JSContext *cx);
-
-extern JS_FRIEND_API(void)
 JS_ShrinkGCBuffers(JSRuntime *rt);
 
 extern JS_FRIEND_API(size_t)
@@ -101,7 +98,6 @@ JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape);
 enum {
     JS_TELEMETRY_GC_REASON,
     JS_TELEMETRY_GC_IS_COMPARTMENTAL,
-    JS_TELEMETRY_GC_IS_SHAPE_REGEN,
     JS_TELEMETRY_GC_MS,
     JS_TELEMETRY_GC_MARK_MS,
     JS_TELEMETRY_GC_SWEEP_MS
@@ -139,6 +135,27 @@ js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, 
 JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx);
 
+#ifdef DEBUG
+
+/*
+ * Routines to print out values during debugging.  These are FRIEND_API to help
+ * the debugger find them and to support temporarily hacking js_Dump* calls
+ * into other code.
+ */
+
+extern JS_FRIEND_API(void)
+js_DumpString(JSString *str);
+
+extern JS_FRIEND_API(void)
+js_DumpAtom(JSAtom *atom);
+
+extern JS_FRIEND_API(void)
+js_DumpObject(JSObject *obj);
+
+extern JS_FRIEND_API(void)
+js_DumpChars(const jschar *s, size_t n);
+#endif
+
 #ifdef __cplusplus
 
 extern JS_FRIEND_API(bool)
@@ -159,6 +176,42 @@ JS_END_EXTERN_C
 struct PRLock;
 
 namespace js {
+
+struct ContextFriendFields {
+    JSRuntime *const    runtime;
+
+    ContextFriendFields(JSRuntime *rt)
+      : runtime(rt) { }
+
+    static const ContextFriendFields *get(const JSContext *cx) {
+        return reinterpret_cast<const ContextFriendFields *>(cx);
+    }
+};
+
+struct RuntimeFriendFields {
+    /*
+     * If non-zero, we were been asked to call the operation callback as soon
+     * as possible.
+     */
+    volatile int32_t    interrupt;
+
+    /* Limit pointer for checking native stack consumption. */
+    uintptr_t           nativeStackLimit;
+
+    RuntimeFriendFields()
+      : interrupt(0),
+        nativeStackLimit(0) { }
+
+    static const RuntimeFriendFields *get(const JSRuntime *rt) {
+        return reinterpret_cast<const RuntimeFriendFields *>(rt);
+    }
+};
+
+inline JSRuntime *
+GetRuntime(const JSContext *cx)
+{
+    return ContextFriendFields::get(cx)->runtime;
+}
 
 typedef bool
 (* PreserveWrapperCallback)(JSContext *cx, JSObject *obj);
@@ -232,12 +285,16 @@ struct WeakMapTracer {
     JSContext            *context;
     WeakMapTraceCallback callback;
 
-    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb) 
+    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb)
         : context(cx), callback(cb) {}
 };
 
 extern JS_FRIEND_API(void)
 TraceWeakMaps(WeakMapTracer *trc);
+
+extern JS_FRIEND_API(bool)
+GCThingIsMarkedGray(void *thing);
+
 
 /*
  * Shadow declarations of JS internal structures, for access by inline access
@@ -281,6 +338,11 @@ struct Object {
             return fixedSlots()[slot];
         return slots[slot - nfixed];
     }
+};
+
+struct Atom {
+    size_t _;
+    const jschar *chars;
 };
 
 } /* namespace shadow */
@@ -378,11 +440,18 @@ GetReservedSlot(const JSObject *obj, size_t slot)
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
+JS_FRIEND_API(void)
+SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const Value &value);
+
 inline void
 SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 {
     JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
-    reinterpret_cast<shadow::Object *>(obj)->slotRef(slot) = value;
+    shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
+    if (sobj->slotRef(slot).isMarkable())
+        SetReservedSlotWithBarrier(obj, slot, value);
+    else
+        sobj->slotRef(slot) = value;
 }
 
 JS_FRIEND_API(uint32_t)
@@ -400,6 +469,18 @@ GetObjectShape(JSObject *obj)
 {
     shadow::Shape *shape = reinterpret_cast<const shadow::Object*>(obj)->shape;
     return reinterpret_cast<Shape *>(shape);
+}
+
+inline const jschar *
+GetAtomChars(JSAtom *atom)
+{
+    return reinterpret_cast<shadow::Atom *>(atom)->chars;
+}
+
+inline JSLinearString *
+AtomToLinearString(JSAtom *atom)
+{
+    return reinterpret_cast<JSLinearString *>(atom);
 }
 
 static inline js::PropertyOp
@@ -437,8 +518,11 @@ IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx);
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
-JS_FRIEND_API(uintptr_t)
-GetContextStackLimit(const JSContext *cx);
+inline uintptr_t
+GetContextStackLimit(const JSContext *cx)
+{
+    return RuntimeFriendFields::get(GetRuntime(cx))->nativeStackLimit;
+}
 
 #define JS_CHECK_RECURSION(cx, onerror)                                         \
     JS_BEGIN_MACRO                                                              \
@@ -468,8 +552,8 @@ JS_FRIEND_API(JSString *)
 GetPCCountScriptContents(JSContext *cx, size_t script);
 
 #ifdef JS_THREADSAFE
-JS_FRIEND_API(JSThread *)
-GetContextThread(const JSContext *cx);
+JS_FRIEND_API(void *)
+GetOwnerThread(const JSContext *cx);
 
 JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx);
@@ -555,7 +639,7 @@ IsContextRunningJS(JSContext *cx);
 
 /* Must be called with GC lock taken. */
 extern JS_FRIEND_API(void)
-TriggerOperationCallbacksForActiveContexts(JSRuntime *rt);
+TriggerOperationCallback(JSRuntime *rt);
 
 class SystemAllocPolicy;
 typedef Vector<JSCompartment*, 0, SystemAllocPolicy> CompartmentVector;
@@ -564,6 +648,109 @@ GetRuntimeCompartments(JSRuntime *rt);
 
 extern JS_FRIEND_API(size_t)
 SizeOfJSContext();
+
+#define GCREASONS(D)                            \
+    /* Reasons internal to the JS engine */     \
+    D(API)                                      \
+    D(MAYBEGC)                                  \
+    D(LAST_CONTEXT)                             \
+    D(DESTROY_CONTEXT)                          \
+    D(LAST_DITCH)                               \
+    D(TOO_MUCH_MALLOC)                          \
+    D(ALLOC_TRIGGER)                            \
+    D(UNUSED1) /* was CHUNK */                  \
+    D(UNUSED2) /* was SHAPE */                  \
+    D(UNUSED3) /* was REFILL */                 \
+                                                \
+    /* Reasons from Firefox */                  \
+    D(DOM_WINDOW_UTILS)                         \
+    D(COMPONENT_UTILS)                          \
+    D(MEM_PRESSURE)                             \
+    D(CC_WAITING)                               \
+    D(CC_FORCED)                                \
+    D(LOAD_END)                                 \
+    D(POST_COMPARTMENT)                         \
+    D(PAGE_HIDE)                                \
+    D(NSJSCONTEXT_DESTROY)                      \
+    D(SET_NEW_DOCUMENT)                         \
+    D(SET_DOC_SHELL)                            \
+    D(DOM_UTILS)                                \
+    D(DOM_IPC)                                  \
+    D(DOM_WORKER)                               \
+    D(INTER_SLICE_GC)                           \
+    D(REFRESH_FRAME)
+
+namespace gcreason {
+
+/* GCReasons will end up looking like JSGC_MAYBEGC */
+enum Reason {
+#define MAKE_REASON(name) name,
+    GCREASONS(MAKE_REASON)
+#undef MAKE_REASON
+    NO_REASON,
+    NUM_REASONS
+};
+
+} /* namespace gcreason */
+
+extern JS_FRIEND_API(void)
+GCForReason(JSContext *cx, gcreason::Reason reason);
+
+extern JS_FRIEND_API(void)
+CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason reason);
+
+extern JS_FRIEND_API(void)
+ShrinkingGC(JSContext *cx, gcreason::Reason reason);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSRuntime *rt);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSContext *cx);
+
+extern JS_FRIEND_API(void)
+IncrementalReferenceBarrier(void *ptr);
+
+extern JS_FRIEND_API(void)
+IncrementalValueBarrier(const Value &v);
+
+class ObjectPtr
+{
+    JSObject *value;
+
+  public:
+    ObjectPtr() : value(NULL) {}
+
+    ObjectPtr(JSObject *obj) : value(obj) {}
+
+    /* Always call finalize before the destructor. */
+    ~ObjectPtr() { JS_ASSERT(!value); }
+
+    void finalize(JSRuntime *rt) {
+        if (IsIncrementalBarrierNeeded(rt))
+            IncrementalReferenceBarrier(value);
+        value = NULL;
+    }
+    void finalize(JSContext *cx) { finalize(JS_GetRuntime(cx)); }
+
+    void init(JSObject *obj) { value = obj; }
+
+    JSObject *get() const { return value; }
+
+    void writeBarrierPre(JSRuntime *rt) {
+        IncrementalReferenceBarrier(value);
+    }
+
+    ObjectPtr &operator=(JSObject *obj) {
+        IncrementalReferenceBarrier(value);
+        value = obj;
+        return *this;
+    }
+
+    JSObject &operator*() const { return *value; }
+    JSObject *operator->() const { return value; }
+    operator JSObject *() const { return value; }
+};
 
 } /* namespace js */
 

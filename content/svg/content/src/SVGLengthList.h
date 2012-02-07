@@ -37,10 +37,14 @@
 #ifndef MOZILLA_SVGLENGTHLIST_H__
 #define MOZILLA_SVGLENGTHLIST_H__
 
-#include "SVGLength.h"
-#include "nsTArray.h"
-#include "nsSVGElement.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsIContent.h"
+#include "nsINode.h"
 #include "nsIWeakReferenceUtils.h"
+#include "nsSVGElement.h"
+#include "nsTArray.h"
+#include "SVGLength.h"
 
 namespace mozilla {
 
@@ -335,12 +339,12 @@ public:
     mList = nsnull;
   }
 
-  PRUint32 Length() {
+  PRUint32 Length() const {
     return mList ? mList->Length() : 0;
   }
 
   /// This may return a non-finite value
-  float operator[](PRUint32 aIndex) {
+  float operator[](PRUint32 aIndex) const {
     return (*mList)[aIndex].GetValueInUserUnits(mElement, mAxis);
   }
 

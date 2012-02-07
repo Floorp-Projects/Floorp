@@ -768,9 +768,10 @@ mjit::Compiler::jsop_typeof()
                 cond = (cond == Assembler::Equal) ? Assembler::BelowOrEqual : Assembler::Above;
             }
 
-            if (type != JSVAL_TYPE_UNKNOWN) {
-                PC += JSOP_STRING_LENGTH;;
-                PC += JSOP_EQ_LENGTH;
+            jsbytecode *afterPC = PC + JSOP_STRING_LENGTH + JSOP_EQ_LENGTH;
+
+            if (type != JSVAL_TYPE_UNKNOWN && bytecodeInChunk(afterPC)) {
+                PC = afterPC;
 
                 RegisterID result = frame.allocReg(Registers::SingleByteRegs).reg();
 
@@ -2308,7 +2309,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
     /* Constant-fold. */
     if (lhs->isConstant() && rhs->isConstant()) {
-        JSBool b;
+        bool b;
         StrictlyEqual(cx, lhs->getValue(), rhs->getValue(), &b);
         frame.popn(2);
         frame.push(BooleanValue((op == JSOP_STRICTEQ) ? b : !b));

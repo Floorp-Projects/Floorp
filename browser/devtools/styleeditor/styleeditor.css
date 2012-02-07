@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Cedric Vivier <cedricv@neonux.com> (original author)
+ *   Paul Rouget <paul@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,21 +64,21 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   -moz-box-flex: 1;
 }
 
-.stylesheet-name {
-  /* clip the text at the beginning */
-  display: -moz-box;
-  direction: rtl;
-  text-align: left;
-  overflow: hidden;
+.stylesheet-name > label {
+  display: inline;
+  cursor: pointer;
 }
 
 .splitview-nav > li > hgroup.stylesheet-info {
   -moz-box-pack: center;
 }
 
-.splitview-nav:-moz-locale-dir(ltr) > li.unsaved > hgroup .stylesheet-name:before,
-.splitview-nav:-moz-locale-dir(rtl) > li.unsaved > hgroup .stylesheet-name:after {
-  content: "* ";
+.stylesheet-name {
+  white-space: nowrap;
+}
+
+li.unsaved > hgroup > h1 > .stylesheet-name:before {
+  content: "*";
 }
 
 .stylesheet-enabled {
@@ -99,7 +100,7 @@ li:hover > hgroup > .stylesheet-more > h3 > .stylesheet-saveButton {
 }
 
 /* portrait mode */
-@media (max-aspect-ratio: 5/3) {
+@media (max-width: 550px) {
   li.splitview-active > hgroup > .stylesheet-more > .stylesheet-rule-count,
   li:hover > hgroup > .stylesheet-more > .stylesheet-rule-count {
     display: none;
@@ -107,7 +108,7 @@ li:hover > hgroup > .stylesheet-more > h3 > .stylesheet-saveButton {
 
   .stylesheet-more {
     -moz-box-flex: 1;
-    -moz-box-direction: reverse;
+    -moz-box-pack: end;
   }
 
   .splitview-nav > li > hgroup.stylesheet-info {

@@ -20,6 +20,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected Driver mDriver;
     protected Assert mAsserter;
     protected Actions mActions;
+    protected String mBaseUrl;
+    private String mTestType;
+    private String mLogFile;
 
     static {
         try {
@@ -52,8 +55,19 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mDriver = new FennecNativeDriver(mActivity, mSolo);
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation());
 
-        mAsserter = new FennecNativeAssert();
-        mAsserter.setLogFile((String)config.get("logfile"));
+        mLogFile = (String)config.get("logfile");
+        mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
+    }
+
+    public void setTestType(String type) {
+        mTestType = type;
+
+        if (mTestType.equals("talos")) {
+            mAsserter = new FennecTalosAssert();
+        } else {
+            mAsserter = new FennecMochitestAssert();
+        }
+        mAsserter.setLogFile(mLogFile);
         mAsserter.setTestName(this.getClass().getName());
     }
 
@@ -73,7 +87,13 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         Instrumentation inst = getInstrumentation();
         Instrumentation.ActivityMonitor monitor = inst.addMonitor((String)null, null, false);
         element.click();
+        // wait for click to take effect before waiting for activity
+        // (otherwise we sometimes get the previous activity)
+        getInstrumentation().waitForIdleSync();
         Activity activity = inst.waitForMonitor(monitor);
+        // give the activity time to render itself and initialize views 
+        // before continuing, so that views are created before access
+        // attempts are made
         getInstrumentation().waitForIdleSync();
         return activity;
     }
@@ -99,12 +119,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         contentEventExpecter.blockForEvent();
     }
 
-    protected final void waitForLoad() {
-        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-        // wait for screen to load
-        contentEventExpecter.blockForEvent();
-    }
-
     protected final void loadUrl(String url) {
         enterUrl(url);
         hitEnterAndWait();
@@ -114,5 +128,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
         mAsserter.is(urlbar.getText(), url, "Awesomebar URL stayed the same");
+    }
+
+    protected final String getAbsoluteUrl(String url) {
+        return mBaseUrl + "/" + url.replaceAll("(^/)", "");
     }
 }

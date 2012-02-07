@@ -47,7 +47,6 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jshash.h"
 #include "jsprf.h"
@@ -333,11 +332,8 @@ js_InitAtomState(JSRuntime *rt)
     if (!state->atoms.init(JS_STRING_HASH_COUNT))
         return false;
 
-#ifdef JS_THREADSAFE
-    js_InitLock(&state->lock);
-#endif
     JS_ASSERT(state->atoms.initialized());
-    return JS_TRUE;
+    return true;
 }
 
 void
@@ -355,10 +351,6 @@ js_FinishAtomState(JSRuntime *rt)
 
     for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront())
         r.front().asPtr()->finalize(rt);
-
-#ifdef JS_THREADSAFE
-    js_FinishLock(&state->lock);
-#endif
 }
 
 bool
@@ -392,14 +384,9 @@ js_TraceAtomState(JSTracer *trc)
     JSRuntime *rt = trc->runtime;
     JSAtomState *state = &rt->atomState;
 
-#ifdef DEBUG
-    size_t number = 0;
-#endif
-
     if (rt->gcKeepAtoms) {
         for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
-            JS_SET_TRACING_INDEX(trc, "locked_atom", number++);
-            MarkAtom(trc, r.front().asPtr());
+            MarkRoot(trc, r.front().asPtr(), "locked_atom");
         }
     } else {
         for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
@@ -407,8 +394,7 @@ js_TraceAtomState(JSTracer *trc)
             if (!entry.isTagged())
                 continue;
 
-            JS_SET_TRACING_INDEX(trc, "interned_atom", number++);
-            MarkAtom(trc, entry.asPtr());
+            MarkRoot(trc, entry.asPtr(), "interned_atom");
         }
     }
 }
@@ -439,7 +425,6 @@ AtomIsInterned(JSContext *cx, JSAtom *atom)
     if (StaticStrings::isStatic(atom))
         return true;
 
-    AutoLockAtomsCompartment lock(cx);
     AtomSet::Ptr p = cx->runtime->atomState.atoms.lookup(atom);
     if (!p)
         return false;
@@ -467,8 +452,6 @@ AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
 
     if (JSAtom *s = cx->runtime->staticStrings.lookup(chars, length))
         return s;
-
-    AutoLockAtomsCompartment lock(cx);
 
     AtomSet &atoms = cx->runtime->atomState.atoms;
     AtomSet::AddPtr p = atoms.lookupForAdd(AtomHasher::Lookup(chars, length));
@@ -527,9 +510,6 @@ js_AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
         /* N.B. static atoms are effectively always interned. */
         if (ib != InternAtom || js::StaticStrings::isStatic(&atom))
             return &atom;
-
-        /* Here we have to check whether the atom is already interned. */
-        AutoLockAtomsCompartment lock(cx);
 
         AtomSet &atoms = cx->runtime->atomState.atoms;
         AtomSet::Ptr p = atoms.lookup(AtomHasher::Lookup(&atom));
@@ -610,9 +590,9 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
 {
     if (JSAtom *atom = cx->runtime->staticStrings.lookup(chars, length))
         return atom;
-    AutoLockAtomsCompartment lock(cx);
-    AtomSet::Ptr p = cx->runtime->atomState.atoms.lookup(AtomHasher::Lookup(chars, length));
-    return p ? p->asPtr() : NULL;
+    if (AtomSet::Ptr p = cx->runtime->atomState.atoms.lookup(AtomHasher::Lookup(chars, length)))
+        return p->asPtr();
+    return NULL;
 }
 
 #ifdef DEBUG
