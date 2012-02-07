@@ -148,23 +148,6 @@ JSRuntime::createBumpPointerAllocator(JSContext *cx)
     return bumpAlloc_;
 }
 
-RegExpCache *
-JSRuntime::createRegExpCache(JSContext *cx)
-{
-    JS_ASSERT(!reCache_);
-    JS_ASSERT(cx->runtime == this);
-
-    RegExpCache *newCache = new_<RegExpCache>(this);
-    if (!newCache || !newCache->init()) {
-        js_ReportOutOfMemory(cx);
-        delete_<RegExpCache>(newCache);
-        return NULL;
-    }
-
-    reCache_ = newCache;
-    return reCache_;
-}
-
 JSScript *
 js_GetCurrentScript(JSContext *cx)
 {
@@ -1170,9 +1153,6 @@ JSRuntime::purge(JSContext *cx)
 
     /* FIXME: bug 506341 */
     propertyCache.purge(cx);
-
-    delete_<RegExpCache>(reCache_);
-    reCache_ = NULL;
 }
 
 void

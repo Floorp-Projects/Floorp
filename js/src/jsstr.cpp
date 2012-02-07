@@ -1332,10 +1332,10 @@ str_trimRight(JSContext *cx, uintN argc, Value *vp)
 /* Result of a successfully performed flat match. */
 class FlatMatch
 {
-    JSLinearString  *patstr;
-    const jschar    *pat;
-    size_t          patlen;
-    int32_t         match_;
+    JSAtom       *patstr;
+    const jschar *pat;
+    size_t       patlen;
+    int32_t      match_;
 
     friend class RegExpGuard;
 
@@ -1351,6 +1351,30 @@ class FlatMatch
     int32_t match() const { return match_; }
 };
 
+static inline bool
+IsRegExpMetaChar(jschar c)
+{
+    switch (c) {
+      /* Taken from the PatternCharacter production in 15.10.1. */
+      case '^': case '$': case '\\': case '.': case '*': case '+':
+      case '?': case '(': case ')': case '[': case ']': case '{':
+      case '}': case '|':
+        return true;
+      default:
+        return false;
+    }
+}
+
+static inline bool
+HasRegExpMetaChars(const jschar *chars, size_t length)
+{
+    for (size_t i = 0; i < length; ++i) {
+        if (IsRegExpMetaChar(chars[i]))
+            return true;
+    }
+    return false;
+}
+
 /*
  * RegExpGuard factors logic out of String regexp operations.
  *
@@ -1362,9 +1386,8 @@ class RegExpGuard
     RegExpGuard(const RegExpGuard &) MOZ_DELETE;
     void operator=(const RegExpGuard &) MOZ_DELETE;
 
-    JSContext     *cx;
-    RegExpMatcher matcher;
-    FlatMatch     fm;
+    RegExpShared::Guard re_;
+    FlatMatch           fm;
 
     /*
      * Upper bound on the number of characters we are willing to potentially
@@ -1372,7 +1395,9 @@ class RegExpGuard
      */
     static const size_t MAX_FLAT_PAT_LEN = 256;
 
-    static JSLinearString *flattenPattern(JSContext *cx, JSLinearString *patstr) {
+    static JSAtom *
+    flattenPattern(JSContext *cx, JSAtom *patstr)
+    {
         StringBuffer sb(cx);
         if (!sb.reserve(patstr->length()))
             return NULL;
@@ -1389,30 +1414,31 @@ class RegExpGuard
                     return NULL;
             }
         }
-        return sb.finishString();
+        return sb.finishAtom();
     }
 
   public:
-    explicit RegExpGuard(JSContext *cx) : cx(cx), matcher(cx) {}
-    ~RegExpGuard() {}
+    RegExpGuard() {}
 
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
-    bool
-    init(CallArgs args, bool convertVoid = false)
+    bool init(JSContext *cx, CallArgs args, bool convertVoid = false)
     {
         if (args.length() != 0 && IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
             RegExpShared *shared = RegExpToShared(cx, args[0].toObject());
             if (!shared)
                 return false;
-
-            matcher.init(NeedsIncRef<RegExpShared>(shared));
+            re_.init(*shared);
         } else {
             if (convertVoid && (args.length() == 0 || args[0].isUndefined())) {
                 fm.patstr = cx->runtime->emptyString;
                 return true;
             }
 
-            fm.patstr = ArgToRootedString(cx, args, 0);
+            JSString *arg = ArgToRootedString(cx, args, 0);
+            if (!arg)
+                return false;
+
+            fm.patstr = js_AtomizeString(cx, arg);
             if (!fm.patstr)
                 return false;
         }
@@ -1433,7 +1459,7 @@ class RegExpGuard
     tryFlatMatch(JSContext *cx, JSString *textstr, uintN optarg, uintN argc,
                  bool checkMetaChars = true)
     {
-        if (matcher.initialized())
+        if (re_.initialized())
             return NULL;
 
         fm.pat = fm.patstr->chars();
@@ -1463,41 +1489,40 @@ class RegExpGuard
     }
 
     /* If the pattern is not already a regular expression, make it so. */
-    const RegExpMatcher *
-    normalizeRegExp(bool flat, uintN optarg, CallArgs args)
+    bool normalizeRegExp(JSContext *cx, bool flat, uintN optarg, CallArgs args)
     {
-        if (matcher.initialized())
-            return &matcher;
+        if (re_.initialized())
+            return true;
 
         /* Build RegExp from pattern string. */
         JSString *opt;
         if (optarg < args.length()) {
             opt = ToString(cx, args[optarg]);
             if (!opt)
-                return NULL;
+                return false;
         } else {
             opt = NULL;
         }
 
-        JSLinearString *patstr;
+        JSAtom *patstr;
         if (flat) {
             patstr = flattenPattern(cx, fm.patstr);
             if (!patstr)
-                return NULL;
+                return false;
         } else {
             patstr = fm.patstr;
         }
         JS_ASSERT(patstr);
 
-        if (!matcher.init(patstr, opt))
-            return NULL;
+        RegExpShared *re = cx->compartment->regExps.get(cx, patstr, opt);
+        if (!re)
+            return false;
 
-        return &matcher;
+        re_.init(*re);
+        return true;
     }
 
-#if DEBUG
-    bool matcherInitialized() const { return matcher.initialized(); }
-#endif
+    RegExpShared &regExp() { return *re_; }
 };
 
 /* ExecuteRegExp indicates success in two ways, based on the 'test' flag. */
@@ -1525,7 +1550,7 @@ enum MatchControlFlags {
 
 /* Factor out looping and matching logic. */
 static bool
-DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpMatcher &matcher,
+DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
         DoMatchCallback callback, void *data, MatchControlFlags flags, Value *rval)
 {
     JSLinearString *linearStr = str->ensureLinear(cx);
@@ -1535,10 +1560,10 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpMatcher &m
     const jschar *chars = linearStr->chars();
     size_t length = linearStr->length();
 
-    if (matcher.global()) {
+    if (re.global()) {
         RegExpExecType type = (flags & TEST_GLOBAL_BIT) ? RegExpTest : RegExpExec;
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
-            if (!ExecuteRegExp(cx, res, matcher, linearStr, chars, length, &i, type, rval))
+            if (!ExecuteRegExp(cx, res, re, linearStr, chars, length, &i, type, rval))
                 return false;
             if (!Matched(type, *rval))
                 break;
@@ -1551,7 +1576,7 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, const RegExpMatcher &m
         RegExpExecType type = (flags & TEST_SINGLE_BIT) ? RegExpTest : RegExpExec;
         bool callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
-        if (!ExecuteRegExp(cx, res, matcher, linearStr, chars, length, &i, type, rval))
+        if (!ExecuteRegExp(cx, res, re, linearStr, chars, length, &i, type, rval))
             return false;
         if (callbackOnSingle && Matched(type, *rval) && !callback(cx, res, 0, data))
             return false;
@@ -1613,29 +1638,28 @@ js::str_match(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    RegExpGuard g(cx);
-    if (!g.init(args, true))
+    RegExpGuard g;
+    if (!g.init(cx, args, true))
         return false;
 
     if (const FlatMatch *fm = g.tryFlatMatch(cx, str, 1, args.length()))
         return BuildFlatMatchArray(cx, str, *fm, &args);
 
     /* Return if there was an error in tryFlatMatch. */
-    if (cx->isExceptionPending())  /* from tryFlatMatch */
+    if (cx->isExceptionPending())
         return false;
 
-    const RegExpMatcher *matcher = g.normalizeRegExp(false, 1, args);
-    if (!matcher)
+    if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
     JSObject *array = NULL;
     MatchArgType arg = &array;
     RegExpStatics *res = cx->regExpStatics();
     Value rval;
-    if (!DoMatch(cx, res, str, *matcher, MatchCallback, arg, MATCH_ARGS, &rval))
+    if (!DoMatch(cx, res, str, g.regExp(), MatchCallback, arg, MATCH_ARGS, &rval))
         return false;
 
-    if (matcher->global())
+    if (g.regExp().global())
         args.rval() = ObjectOrNullValue(array);
     else
         args.rval() = rval;
@@ -1650,8 +1674,8 @@ js::str_search(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    RegExpGuard g(cx);
-    if (!g.init(args, true))
+    RegExpGuard g;
+    if (!g.init(cx, args, true))
         return false;
     if (const FlatMatch *fm = g.tryFlatMatch(cx, str, 1, args.length())) {
         args.rval() = Int32Value(fm->match());
@@ -1661,8 +1685,7 @@ js::str_search(JSContext *cx, uintN argc, Value *vp)
     if (cx->isExceptionPending())  /* from tryFlatMatch */
         return false;
 
-    const RegExpMatcher *matcher = g.normalizeRegExp(false, 1, args);
-    if (!matcher)
+    if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
     JSLinearString *linearStr = str->ensureLinear(cx);
@@ -1676,7 +1699,7 @@ js::str_search(JSContext *cx, uintN argc, Value *vp)
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
     Value result;
-    if (!ExecuteRegExp(cx, res, *matcher, linearStr, chars, length, &i, RegExpTest, &result))
+    if (!ExecuteRegExp(cx, res, g.regExp(), linearStr, chars, length, &i, RegExpTest, &result))
         return false;
 
     if (result.isTrue())
@@ -1689,7 +1712,7 @@ js::str_search(JSContext *cx, uintN argc, Value *vp)
 struct ReplaceData
 {
     ReplaceData(JSContext *cx)
-     : g(cx), sb(cx)
+     : sb(cx)
     {}
 
     JSString           *str;           /* 'this' parameter object as a string */
@@ -2117,16 +2140,17 @@ BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *reps
 static inline bool
 str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
 {
-    const RegExpMatcher *matcher = rdata.g.normalizeRegExp(true, 2, args);
-    if (!matcher)
+    if (!rdata.g.normalizeRegExp(cx, true, 2, args))
         return false;
 
     rdata.leftIndex = 0;
     rdata.calledBack = false;
 
     RegExpStatics *res = cx->regExpStatics();
+    RegExpShared &re = rdata.g.regExp();
+
     Value tmp;
-    if (!DoMatch(cx, res, rdata.str, *matcher, ReplaceRegExpCallback, &rdata, REPLACE_ARGS, &tmp))
+    if (!DoMatch(cx, res, rdata.str, re, ReplaceRegExpCallback, &rdata, REPLACE_ARGS, &tmp))
         return false;
 
     if (!rdata.calledBack) {
@@ -2211,7 +2235,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
     if (!rdata.str)
         return false;
 
-    if (!rdata.g.init(args))
+    if (!rdata.g.init(cx, args))
         return false;
 
     /* Extract replacement string/function. */
@@ -2283,7 +2307,6 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
     if (!fm) {
         if (cx->isExceptionPending())  /* oom in RopeMatch in tryFlatMatch */
             return false;
-        JS_ASSERT_IF(!rdata.g.matcherInitialized(), args.length() > ReplaceOptArg);
         return str_replace_regexp(cx, args, rdata);
     }
 
@@ -2459,25 +2482,27 @@ SplitHelper(JSContext *cx, JSLinearString *str, uint32_t limit, Matcher splitMat
 
 /*
  * The SplitMatch operation from ES5 15.5.4.14 is implemented using different
- * matchers for regular expression and string separators.
+ * paths for regular expression and string separators.
  *
- * The algorithm differs from the spec in that the matchers return the next
- * index at which a match happens.
+ * The algorithm differs from the spec in that the we return the next index at
+ * which a match happens.
  */
-class SplitRegExpMatcher {
+class SplitRegExpMatcher
+{
+    RegExpShared &re;
     RegExpStatics *res;
-    RegExpMatcher &matcher;
 
   public:
-    static const bool returnsCaptures = true;
-    SplitRegExpMatcher(RegExpMatcher &matcher, RegExpStatics *res) : res(res), matcher(matcher) {}
+    SplitRegExpMatcher(RegExpShared &re, RegExpStatics *res) : re(re), res(res) {}
 
-    inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
-                           SplitMatchResult *result) {
+    static const bool returnsCaptures = true;
+
+    bool operator()(JSContext *cx, JSLinearString *str, size_t index, SplitMatchResult *result)
+    {
         Value rval = UndefinedValue();
         const jschar *chars = str->chars();
         size_t length = str->length();
-        if (!ExecuteRegExp(cx, res, matcher, str, chars, length, &index, RegExpTest, &rval))
+        if (!ExecuteRegExp(cx, res, re, str, chars, length, &index, RegExpTest, &rval))
             return false;
         if (!rval.isTrue()) {
             result->setFailure();
@@ -2491,19 +2516,21 @@ class SplitRegExpMatcher {
     }
 };
 
-class SplitStringMatcher {
+class SplitStringMatcher
+{
     const jschar *sepChars;
     size_t sepLength;
 
   public:
-    static const bool returnsCaptures = false;
     SplitStringMatcher(JSLinearString *sep) {
         sepChars = sep->chars();
         sepLength = sep->length();
     }
 
-    inline bool operator()(JSContext *cx, JSLinearString *str, size_t index,
-                           SplitMatchResult *res) {
+    static const bool returnsCaptures = false;
+
+    bool operator()(JSContext *cx, JSLinearString *str, size_t index, SplitMatchResult *res)
+    {
         JS_ASSERT(index == 0 || index < str->length());
         const jschar *chars = str->chars();
         jsint match = StringMatch(chars + index, str->length() - index, sepChars, sepLength);
@@ -2543,7 +2570,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Step 8. */
-    RegExpMatcher matcher(cx);
+    RegExpShared::Guard re;
     JSLinearString *sepstr = NULL;
     bool sepUndefined = (args.length() == 0 || args[0].isUndefined());
     if (!sepUndefined) {
@@ -2551,7 +2578,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
             RegExpShared *shared = RegExpToShared(cx, args[0].toObject());
             if (!shared)
                 return false;
-            matcher.init(NeedsIncRef<RegExpShared>(shared));
+            re.init(*shared);
         } else {
             sepstr = ArgToRootedString(cx, args, 0);
             if (!sepstr)
@@ -2585,13 +2612,10 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
 
     /* Steps 11-15. */
     JSObject *aobj;
-    if (!matcher.initialized()) {
-        // NB: sepstr is anchored through its storage in args[0].
+    if (!re.initialized())
         aobj = SplitHelper(cx, strlin, limit, SplitStringMatcher(sepstr), type);
-    } else {
-        aobj = SplitHelper(cx, strlin, limit,
-                           SplitRegExpMatcher(matcher, cx->regExpStatics()), type);
-    }
+    else
+        aobj = SplitHelper(cx, strlin, limit, SplitRegExpMatcher(*re, cx->regExpStatics()), type);
     if (!aobj)
         return false;
 
