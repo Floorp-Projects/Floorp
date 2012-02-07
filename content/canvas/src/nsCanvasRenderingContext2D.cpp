@@ -1754,8 +1754,6 @@ nsCanvasRenderingContext2D::GetMozFillRule(nsAString& aString)
         aString.AssignLiteral("nonzero"); break;
     case gfxContext::FILL_RULE_EVEN_ODD:
         aString.AssignLiteral("evenodd"); break;
-    default:
-        return NS_ERROR_FAILURE;
     }
     return NS_OK;
 }
@@ -2631,9 +2629,6 @@ nsCanvasRenderingContext2D::GetTextAlign(nsAString& ta)
     case TEXT_ALIGN_CENTER:
         ta.AssignLiteral("center");
         break;
-    default:
-        NS_ERROR("textAlign holds invalid value");
-        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
@@ -2681,9 +2676,6 @@ nsCanvasRenderingContext2D::GetTextBaseline(nsAString& tb)
     case TEXT_BASELINE_BOTTOM:
         tb.AssignLiteral("bottom");
         break;
-    default:
-        NS_ERROR("textBaseline holds invalid value");
-        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
@@ -2801,6 +2793,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessor : public nsBidiPresUtils::BidiProces
                                     gfxFont::GLYPH_STROKE : gfxFont::GLYPH_FILL,
                        0,
                        mTextRun->GetLength(),
+                       nsnull,
                        nsnull,
                        nsnull);
     }
@@ -2981,9 +2974,6 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     case TEXT_BASELINE_BOTTOM:
         anchorY = -fontMetrics.emDescent;
         break;
-    default:
-        NS_ERROR("mTextBaseline holds invalid value");
-        return NS_ERROR_FAILURE;
     }
 
     processor.mPt.y += anchorY;

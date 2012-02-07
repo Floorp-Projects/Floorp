@@ -118,30 +118,12 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         CairoImage backgroundImage = new BufferedCairoImage(controller.getBackgroundPattern());
         mBackgroundLayer = new SingleTileLayer(true, backgroundImage);
-        mBackgroundLayer.beginTransaction(null);
-        try {
-            mBackgroundLayer.invalidate();
-        } finally {
-            mBackgroundLayer.endTransaction();
-        }
 
         mCheckerboardImage = new CheckerboardImage();
         mCheckerboardLayer = new SingleTileLayer(true, mCheckerboardImage);
-        mCheckerboardLayer.beginTransaction(null);
-        try {
-            mCheckerboardLayer.invalidate();
-        } finally {
-            mCheckerboardLayer.endTransaction();
-        }
 
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
-        mShadowLayer.beginTransaction(null);
-        try {
-            mShadowLayer.invalidate();
-        } finally {
-            mShadowLayer.endTransaction();
-        }
 
         IntSize frameRateLayerSize = new IntSize(FRAME_RATE_METER_WIDTH, FRAME_RATE_METER_HEIGHT);
         mFrameRateLayer = TextLayer.create(frameRateLayerSize, "-- ms/--");
@@ -470,14 +452,16 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     }
 
     private void updateCheckerboardLayer(GL10 gl, RenderContext renderContext) {
-        int newCheckerboardColor = mView.getController().getCheckerboardColor();
-        if (newCheckerboardColor == mCheckerboardImage.getColor()) {
+        int checkerboardColor = mView.getController().getCheckerboardColor();
+        boolean showChecks = mView.getController().checkerboardShouldShowChecks();
+        if (checkerboardColor == mCheckerboardImage.getColor() &&
+            showChecks == mCheckerboardImage.getShowChecks()) {
             return;
         }
 
         mCheckerboardLayer.beginTransaction();
         try {
-            mCheckerboardImage.setColor(newCheckerboardColor);
+            mCheckerboardImage.update(showChecks, checkerboardColor);
             mCheckerboardLayer.invalidate();
         } finally {
             mCheckerboardLayer.endTransaction();

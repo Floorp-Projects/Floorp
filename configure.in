@@ -313,7 +313,7 @@ if test -n "$gonkdir" ; then
     STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/"
     STLPORT_LIBS="-lstlport"
 
-    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS"
+    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS -I$gonkdir/frameworks/base/services/sensorservice"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
     LIBS="$LIBS $STLPORT_LIBS"

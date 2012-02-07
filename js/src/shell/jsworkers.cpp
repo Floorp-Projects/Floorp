@@ -581,7 +581,7 @@ class ThreadPool
 
   public:
     static ThreadPool *unwrap(JSContext *cx, JSObject *obj) {
-        JS_ASSERT(JS_GET_CLASS(cx, obj) == &jsClass);
+        JS_ASSERT(JS_GetClass(obj) == &jsClass);
         return (ThreadPool *) JS_GetPrivate(cx, obj);
     }
 };
@@ -700,7 +700,7 @@ class Worker MOZ_FINAL : public WorkerParent
     }
 
     static void jsTraceWorker(JSTracer *trc, JSObject *obj) {
-        JS_ASSERT(JS_GET_CLASS(trc->context, obj) == &jsWorkerClass);
+        JS_ASSERT(JS_GetClass(obj) == &jsWorkerClass);
         if (Worker *w = (Worker *) JS_GetPrivate(trc->context, obj)) {
             w->parent->trace(trc);
             w->events.trace(trc);
@@ -711,7 +711,7 @@ class Worker MOZ_FINAL : public WorkerParent
     }
 
     static void jsFinalize(JSContext *cx, JSObject *obj) {
-        JS_ASSERT(JS_GET_CLASS(cx, obj) == &jsWorkerClass);
+        JS_ASSERT(JS_GetClass(obj) == &jsWorkerClass);
         if (Worker *w = (Worker *) JS_GetPrivate(cx, obj))
             delete w;
     }

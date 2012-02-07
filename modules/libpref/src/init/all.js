@@ -286,6 +286,9 @@ pref("accessibility.typeaheadfind.prefillwithselection", true);
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);
 
+// show checkerboard pattern on android, enabled by default (option exists for image analysis testing)
+pref("gfx.show_checkerboard_pattern", true);
+
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 

@@ -80,7 +80,7 @@ function finishTest() {
      "The total number of tab items is 1 after leaving the page");
 
   let location = gBrowser.browsers[0].currentURI.spec;
-  is(location, "about:blank", "The open tab is the expected one");
+  is(location, BROWSER_NEW_TAB_URL, "The open tab is the expected one");
 
   isnot(contentWindow.GroupItems.getActiveGroupItem(), activeGroup,
      "Active group is no longer the same");

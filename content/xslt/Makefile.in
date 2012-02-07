@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PARALLEL_DIRS = public src
 
-ifdef ENABLE_TESTS
-DIRS += tests/buster \
-	tests/mochitest
-endif
+TEST_DIRS += tests/buster \
+             tests/mochitest
 
 include $(topsrcdir)/config/rules.mk

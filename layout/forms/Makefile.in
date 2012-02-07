@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = $(NULL)
 
-ifdef ENABLE_TESTS
-DIRS		+= test
-endif
+TEST_DIRS += test
 
 MODULE		= layout
 XPIDL_MODULE	= layout_forms
