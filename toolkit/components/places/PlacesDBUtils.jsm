@@ -960,7 +960,22 @@ let PlacesDBUtils = {
           let placesPageCount = probeValues.PLACES_PAGES_COUNT;
           return Math.round((dbPageSize * aDbPageCount) / placesPageCount);
         }
-      }
+      },
+
+      { histogram: "PLACES_ANNOS_BOOKMARKS_COUNT",
+        query:     "SELECT count(*) FROM moz_items_annos" },
+
+      // LENGTH is not a perfect measure, since it returns the number of bytes
+      // only for BLOBs, the number of chars for anything else.  Though it's
+      // the best approximation we have.
+      { histogram: "PLACES_ANNOS_BOOKMARKS_SIZE_KB",
+        query:     "SELECT SUM(LENGTH(content))/1024 FROM moz_items_annos" },
+
+      { histogram: "PLACES_ANNOS_PAGES_COUNT",
+        query:     "SELECT count(*) FROM moz_annos" },
+
+      { histogram: "PLACES_ANNOS_PAGES_SIZE_KB",
+        query:     "SELECT SUM(LENGTH(content))/1024 FROM moz_annos" },
     ];
 
     let params = {
