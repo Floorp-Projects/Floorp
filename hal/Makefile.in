@@ -69,6 +69,7 @@ CPPSRCS = \
   Hal.cpp \
   SandboxHal.cpp \
   WindowIdentifier.cpp \
+  ScreenOrientationFallback.cpp \
   $(NULL)
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
