@@ -871,6 +871,10 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
       break;
     }
     case eType_Plugin: {
+      if (mType != newType) {
+        mType = newType;
+        notifier.Notify();
+      }
       nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
       nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
       if (!pluginHost) {
