@@ -104,7 +104,7 @@ class nsAccessible : public nsAccessNodeWrap,
                      public nsIAccessibleValue
 {
 public:
-  nsAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
   virtual ~nsAccessible();
 
   NS_DECL_ISUPPORTS_INHERITED
