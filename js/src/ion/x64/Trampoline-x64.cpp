@@ -332,7 +332,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
     // Including |this|, there are (|nargs| + 1) arguments to copy.
-    JS_STATIC_ASSERT(ArgumentsRectifierReg == r8);
+    JS_ASSERT(ArgumentsRectifierReg == r8);
 
     // Load the number of |undefined|s to push into %rcx.
     masm.movq(Operand(rsp, IonJSFrameLayout::offsetOfCalleeToken()), rax);
@@ -527,10 +527,10 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     Register temp = regs.getAny();
     masm.setupUnalignedABICall(f.argc(), temp);
 
-    // Initialize the context parameter.
+    // Initialize and set the context parameter.
     Register cxreg = ArgReg0;
-    masm.loadJSContext(cx->runtime, cxreg);
-
+    masm.movePtr(ImmWord(cx->runtime), cxreg);
+    masm.loadPtr(Address(cxreg, offsetof(JSRuntime, ionJSContext)), cxreg);
     masm.setABIArg(0, cxreg);
 
     size_t argDisp = 0;
@@ -578,7 +578,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.j(Assembler::Zero, &exception);
         break;
       case Type_Bool:
-        masm.branchTest32(Assembler::Zero, eax, eax, &exception);
+        masm.testl(eax, eax);
+        masm.j(Assembler::Zero, &exception);
         break;
       default:
         JS_NOT_REACHED("unknown failure kind");

@@ -130,43 +130,44 @@ IonBuilder::CFGState::AndOr(jsbytecode *join, MBasicBlock *joinStart)
     return state;
 }
 
-JSFunction *
-IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
-{
-    types::TypeSet *calleeTypes = oracle->getCallTarget(script, argc, pc);
-    if (!calleeTypes)
-        return NULL;
-
-    if (calleeTypes->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT)
-        return NULL;
-
-    if (calleeTypes->unknownObject())
-        return NULL;
-
-    if (calleeTypes->getObjectCount() > 1)
-        return NULL;
-
-    JSObject *obj = calleeTypes->getSingleObject(0);
-    if (!obj)
-        return NULL;
-
-    if (!obj->isFunction())
-        return NULL;
-
-    return obj->toFunction();
-}
-
 bool
 IonBuilder::getInliningTarget(uint32 argc, jsbytecode *pc, JSFunction **out)
 {
     *out = NULL;
 
-    JSFunction *fun = getSingleCallTarget(argc, pc);
-    if (!fun) {
-        IonSpew(IonSpew_Inlining, "Cannot inline due to no single, valid call target.");
+    types::TypeSet *calleeTypes = oracle->getCallTarget(script, argc, pc);
+    if (!calleeTypes) {
+        IonSpew(IonSpew_Inlining, "Cannot inline; no types for callee");
         return true;
     }
 
+    if (calleeTypes->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to non-object");
+        return true;
+    }
+
+    if (calleeTypes->unknownObject()) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to unknown object");
+        return true;
+    }
+
+    if (calleeTypes->getObjectCount() > 1) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to multiple objects");
+        return true;
+    }
+
+    JSObject *obj = calleeTypes->getSingleObject(0);
+    if (!obj) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to non-single object");
+        return true;
+    }
+
+    if (!obj->isFunction()) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to non-function");
+        return true;
+    }
+
+    JSFunction *fun = obj->toFunction();
     if (!fun->isInterpreted()) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to non-interpreted");
         return true;
@@ -2343,9 +2344,9 @@ IonBuilder::maybeInline(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_call(uint32 argc, bool constructing)
+IonBuilder::jsop_call(uint32 argc, bool construct)
 {
-    if (inliningEnabled() && !constructing) {
+    if (inliningEnabled() && !construct) {
         InliningStatus status = maybeInline(argc);
         switch (status) {
           case InliningStatus_Error:
@@ -2363,67 +2364,30 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
         return true;
     }
 
-    // If the callee is known, remember how many arguments it expects.
-    uint32 targetArgs = argc;
-    JSFunction *target = getSingleCallTarget(argc, pc);
-    if (target)
-        targetArgs = Max<uint32>(target->nargs, argc);
-
-    MCall *call = MCall::New(targetArgs + 1, constructing); // +1 for implicit this.
-    if (!call)
+    MCall *ins = MCall::New(argc + 1, construct); // +1 for implicit this.
+    if (!ins)
         return false;
 
-    // Explicitly pad any missing arguments with |undefined|.
-    // This permits skipping the argumentsRectifier.
-    for (int i = targetArgs; i > (int)argc; i--) {
-        MConstant *undef = MConstant::New(UndefinedValue());
-        current->add(undef);
-        MPassArg *pass = MPassArg::New(undef);
-        current->add(pass);
-        call->addArg(i, pass);
-    }
-
-    // Add explicit arguments.
     // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
-    for (int i = argc; i > 0; i--)
-        call->addArg(i, current->pop()->toPassArg());
-
-    // Replace |this| if a special value is needed for the constructing case.
-    if (target && target->isNative() && constructing) {
-        if (!target->isNativeConstructor())
-            return abort("New with native non-constructor.");
-
-        MPassArg *oldarg = current->pop()->toPassArg();
-
-        // Supply a special constructing Magic value.
-        MConstant *magic = MConstant::New(MagicValue(JS_IS_CONSTRUCTING));
-        oldarg->block()->insertBefore(oldarg, magic);
-        MPassArg *newthis = MPassArg::New(magic);
-        oldarg->block()->insertBefore(oldarg, newthis);
-
-        oldarg->block()->remove(oldarg);
-        current->push(newthis);
-    }
-
-    // Pass |this| and function.
-    call->addArg(0, current->pop()->toPassArg());
-    call->initFunction(current->pop());
+    for (int32 i = argc; i >= 0; i--)
+        ins->addArg(i, current->pop()->toPassArg());
+    ins->initFunction(current->pop());
 
     // Insert an MPrepareCall immediately before the first argument is pushed.
     MPrepareCall *start = new MPrepareCall;
-    MPassArg *arg = call->getArg(0)->toPassArg();
-    arg->block()->insertBefore(arg, start);
+    MPassArg *arg = ins->getArg(0)->toPassArg();
+    current->insertBefore(arg, start);
 
-    call->initPrepareCall(start);
+    ins->initPrepareCall(start);
 
-    current->add(call);
-    current->push(call);
-    if (!resumeAfter(call))
+    current->add(ins);
+    current->push(ins);
+    if (!resumeAfter(ins))
         return false;
 
     types::TypeSet *barrier;
     types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
-    return pushTypeBarrier(call, types, barrier);
+    return pushTypeBarrier(ins, types, barrier);
 }
 
 bool

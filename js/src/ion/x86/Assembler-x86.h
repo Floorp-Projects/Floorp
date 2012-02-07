@@ -69,10 +69,8 @@ static const Register ReturnReg = eax;
 static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm7 };
 
 static const Register ArgumentsRectifierReg = esi;
-static const Register CallTempReg0 = edi;
-static const Register CallTempReg1 = eax;
-static const Register CallTempReg2 = ebx;
-static const Register CallTempReg3 = ecx;
+static const Register CallTempReg1 = edi;
+static const Register CallTempReg2 = eax;
 
 static const Register OsrFrameReg = edx;
 

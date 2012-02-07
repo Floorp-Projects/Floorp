@@ -59,7 +59,6 @@
     _(CheckOverRecursed)            \
     _(RecompileCheck)               \
     _(CallGeneric)                  \
-    _(CallNative)                   \
     _(StackArg)                     \
     _(BitNot)                       \
     _(BitOp)                        \

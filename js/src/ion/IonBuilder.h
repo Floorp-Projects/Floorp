@@ -204,7 +204,6 @@ class IonBuilder : public MIRGenerator
     }
 
     bool shouldInlineCurrentCall(uint32 argc, InliningData *data);
-    JSFunction *getSingleCallTarget(uint32 argc, jsbytecode *pc);
     bool getInliningTarget(uint32 argc, jsbytecode *pc, JSFunction **out);
 
     void popCfgStack();
@@ -284,7 +283,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_pos();
     bool jsop_neg();
     bool jsop_notearg();
-    bool jsop_call(uint32 argc, bool constructing);
+    bool jsop_call(uint32 argc, bool construct);
     bool jsop_ifeq(JSOp op);
     bool jsop_andor(JSOp op);
     bool jsop_dup2();

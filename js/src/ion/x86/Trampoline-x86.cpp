@@ -545,9 +545,10 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     Register temp = regs.getAny();
     masm.setupUnalignedABICall(f.argc(), temp);
 
-    // Initialize the context parameter.
+    // Initialize and set the context parameter.
     Register cxreg = regs.takeAny();
-    masm.loadJSContext(cx->runtime, cxreg);
+    masm.movePtr(ImmWord(cx->runtime), cxreg);
+    masm.loadPtr(Address(cxreg, offsetof(JSRuntime, ionJSContext)), cxreg);
     masm.setABIArg(0, cxreg);
 
     size_t argDisp = 0;
@@ -589,7 +590,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Test for failure.
     Label exception;
-    masm.branchTest32(Assembler::Zero, eax, eax, &exception);
+    masm.testl(eax, eax);
+    masm.j(Assembler::Zero, &exception);
 
     // Load the outparam and free any allocated stack.
     switch (f.outParam) {
