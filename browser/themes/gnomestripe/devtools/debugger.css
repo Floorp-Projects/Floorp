@@ -1,0 +1,262 @@
+/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Dave Camp <dcamp@mozilla.com>
+ *   Victor Porof <vporof@mozilla.com>
+ *   Panos Astithas <past@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#body {
+  background: -moz-dialog;
+}
+
+div,
+span,
+a {
+  font: inherit;
+}
+
+/**
+ * Debugger toolbar
+ */
+
+#dbg-toolbar {
+  padding: 2px;
+}
+
+#dbg-toolbar > button {
+  text-align: center;
+}
+
+/**
+ * Debugger content
+ */
+
+#dbg-content {
+  padding: 6px;
+}
+
+#dbg-content > * > .vbox {
+  background-color: #fff;
+  border: 1px solid #bbb;
+  box-shadow: 0 -5px 10px -3px #ccc;
+  -moz-margin-end: -1px;
+}
+
+#dbg-content > * > .title {
+  text-shadow: 0 1px #fff;
+}
+
+/**
+ * Debugger statusbar
+ */
+
+#dbg-statusbar {
+  font: -moz-list;
+  padding: 2px;
+  -moz-padding-start: 5px;
+}
+
+/**
+ * Lists and headers
+ */
+
+.list-item {
+  padding: 2px;
+  font: -moz-list;
+}
+
+.list-item.selected {
+  background: Highlight;
+  color: HighlightText;
+}
+
+.list-item.empty {
+  color: GrayText;
+}
+
+/**
+ * Stack frames
+ */
+
+#stackframes {
+  background-color: white;
+}
+
+.dbg-stackframe-id {
+  -moz-padding-end: 1em;
+}
+
+/**
+ * Properties elements
+ */
+
+#variables {
+  background-color: white;
+}
+
+/**
+ * Generic element details container
+ */
+
+.details {
+  -moz-margin-start: 10px;
+  font: -moz-list;
+}
+
+/**
+ * Scope element
+ */
+
+.scope > .title {
+  margin-top: 1px;
+  -moz-margin-start: 1px;
+  -moz-padding-start: 2px;
+
+  background: -moz-linear-gradient(bottom,
+      rgb(160,175,205) 0,
+      rgb(120,140,175) 100%);
+
+  border-bottom: 1px solid #888;
+  box-shadow: 0 0 4px #ccc;
+  text-shadow: 0 1px #777;
+  color: #fff;
+  font: -moz-list;
+}
+
+.scope > .title > .name {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.scope > .details {
+  -moz-margin-start: 2px;
+  -moz-margin-end: 2px;
+}
+
+/**
+ * Variable element
+ */
+
+.variable {
+  -moz-margin-start: 1px;
+  -moz-margin-end: 1px;
+  border-bottom: 1px dotted #aaa;
+}
+
+.variable > .title > .name {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  color: #048;
+  font-weight: 600;
+}
+
+/**
+ * Property element
+ */
+
+.property > .title > .key {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  color: #881090;
+}
+
+.property > .title > .value {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+/**
+ * Property colors
+ */
+
+.token-undefined {
+  -moz-padding-start: 6px;
+  color: #bbb;
+}
+
+.token-null {
+  -moz-padding-start: 6px;
+  color: #999;
+}
+
+.token-boolean {
+  -moz-padding-start: 6px;
+  color: #777;
+}
+
+.token-number {
+  -moz-padding-start: 6px;
+  color: #c40a16;
+}
+
+.token-string {
+  -moz-padding-start: 6px;
+  color: #1c00cf;
+}
+
+.token-other {
+  -moz-padding-start: 6px;
+  color: #333;
+}
+
+/**
+ * Expand/collapse arrow
+ */
+
+.arrow {
+  -moz-appearance: treetwisty;
+  -moz-margin-start: 10px;
+  -moz-margin-end: 5px;
+}
+
+.arrow[open] {
+  -moz-appearance: treetwistyopen;
+}
+
+/**
+ * Display helpers
+ */
+
+.unselectable {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.info {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}

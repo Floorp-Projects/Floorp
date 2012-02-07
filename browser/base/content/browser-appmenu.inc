@@ -189,6 +189,11 @@
                     type="checkbox"
                     command="Tools:Inspect"
                     key="key_inspect"/>
+          <menuitem id="appmenu_debugger"
+                    hidden="true"
+                    label="&debuggerMenu.label;"
+                    key="key_debugger"
+                    command="Tools:Debugger"/>
           <menuitem id="appmenu_scratchpad"
                     hidden="true"
                     label="&scratchpad.label;"
