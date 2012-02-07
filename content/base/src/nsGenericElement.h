@@ -633,12 +633,26 @@ public:
   static void MarkUserDataHandler(void* aObject, nsIAtom* aKey, void* aChild,
                                   void* aData);
 protected:
+  /*
+   * Named-bools for use with SetAttrAndNotify to make call sites easier to
+   * read.
+   */
+  static const bool kFireMutationEvent           = true;
+  static const bool kDontFireMutationEvent       = false;
+  static const bool kNotifyDocumentObservers     = true;
+  static const bool kDontNotifyDocumentObservers = false;
+  static const bool kCallAfterSetAttr            = true;
+  static const bool kDontCallAfterSetAttr        = false;
+
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
    * mutation events.  This will send the AttributeChanged notification.
    * Callers of this method are responsible for calling AttributeWillChange,
    * since that needs to happen before the new attr value has been set, and
    * in particular before it has been parsed.
+   *
+   * For the boolean parameters, consider using the named bools above to aid
+   * code readability.
    *
    * @param aNamespaceID  namespace of attribute
    * @param aAttribute    local-name of attribute
