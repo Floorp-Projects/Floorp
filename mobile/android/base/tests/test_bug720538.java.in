@@ -51,11 +51,10 @@ public class test_bug720538 extends BaseTest {
         meh.doubleTap(100, mDriver.getGeckoWidth() / 2);
         paintExpecter.blockUntilClear(500);
 
-        // and now we check some pixels at the bottom of the view to ensure that we have the page
+        // and now we check a pixel at the bottom of the view to ensure that we have the page
         // background and not some checkerboarding. use the second-last row of pixels instead of
         // the last row because the last row is subject to rounding and clipping errors
         painted = mDriver.getPaintedSurface();
         mAsserter.ispixel(painted[mDriver.getGeckoHeight() - 2][0], 0, 0x80, 0, "Checking bottom-left corner of viewport");
-        mAsserter.ispixel(painted[mDriver.getGeckoHeight() - 2][mDriver.getGeckoWidth() - 1], 0, 0x80, 0, "Checking bottom-right corner of viewport");
     }
 }
