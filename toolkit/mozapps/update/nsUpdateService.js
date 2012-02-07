@@ -67,7 +67,6 @@ const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
 const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
-const PREF_APP_UPDATE_DESIREDCHANNEL      = "app.update.desiredChannel";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
@@ -114,7 +113,6 @@ const KEY_UPDROOT         = "UpdRootD";
 #endif
 
 const DIR_UPDATES         = "updates";
-const FILE_CHANNELCHANGE  = "channelchange";
 const FILE_UPDATE_STATUS  = "update.status";
 const FILE_UPDATE_VERSION = "update.version";
 #ifdef ANDROID
@@ -642,15 +640,6 @@ function writeVersionFile(dir, version) {
   writeStringToFile(versionFile, version);
 }
 
-function createChannelChangeFile(dir) {
-  var channelChangeFile = dir.clone();
-  channelChangeFile.append(FILE_CHANNELCHANGE);
-  if (!channelChangeFile.exists()) {
-    channelChangeFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE,
-                             FileUtils.PERMS_FILE);
-  }
-}
-
 /**
  * Removes the contents of the Updates Directory
  */
@@ -779,19 +768,6 @@ function getUpdateChannel() {
   }
 
   return channel;
-}
-
-function getDesiredChannel() {
-  let desiredChannel = getPref("getCharPref", PREF_APP_UPDATE_DESIREDCHANNEL, null);
-  if (!desiredChannel)
-    return null;
-  
-  if (desiredChannel == getUpdateChannel()) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_DESIREDCHANNEL);
-    return null;
-  }
-  LOG("getDesiredChannel - channel set to: " + desiredChannel);
-  return desiredChannel;
 }
 
 /* Get the distribution pref values, from defaults only */
@@ -1302,9 +1278,6 @@ const UpdateServiceFactory = {
  */
 function UpdateService() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
-  // This will clear the preference if the channel is the same as the
-  // application's channel.
-  getDesiredChannel();
 }
 
 UpdateService.prototype = {
@@ -1409,9 +1382,6 @@ UpdateService.prototype = {
 
       // Done with this update. Clean it up.
       cleanupActiveUpdate();
-
-      if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_DESIREDCHANNEL))      
-        Services.prefs.clearUserPref(PREF_APP_UPDATE_DESIREDCHANNEL);
     }
     else {
       // If we hit an error, then the error code will be included in the status
@@ -1589,12 +1559,6 @@ UpdateService.prototype = {
   selectUpdate: function AUS_selectUpdate(updates) {
     if (updates.length == 0)
       return null;
-
-    if (getDesiredChannel()) {
-      LOG("UpdateService:selectUpdate - skipping version checks for channel " +
-          "change request");
-      return updates[0];
-    }
 
     // Choose the newest of the available minor and major updates.
     var majorUpdate = null;
@@ -1954,7 +1918,7 @@ UpdateService.prototype = {
     // current application's version or the update's version is the same as the
     // application's version and the build ID is the same as the application's
     // build ID.
-    if (!getDesiredChannel() && update.appVersion &&
+    if (update.appVersion &&
         (Services.vc.compare(update.appVersion, Services.appinfo.version) < 0 ||
          update.buildID && update.buildID == Services.appinfo.appBuildID &&
          update.appVersion == Services.appinfo.version)) {
@@ -2151,9 +2115,8 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   get activeUpdate() {
-    let currentChannel = getDesiredChannel() || getUpdateChannel();
     if (this._activeUpdate &&
-        this._activeUpdate.channel != currentChannel) {
+        this._activeUpdate.channel != getUpdateChannel()) {
       // User switched channels, clear out any old active updates and remove
       // partial downloads
       this._activeUpdate = null;
@@ -2328,10 +2291,6 @@ Checker.prototype = {
                       getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
     url = url.replace(/\+/g, "%2B");
 
-    let desiredChannel = getDesiredChannel();
-    if (desiredChannel)
-      url += (url.indexOf("?") != -1 ? "&" : "?") + "newchannel=" + desiredChannel;
-
     if (force)
       url += (url.indexOf("?") != -1 ? "&" : "?") + "force=1";
 
@@ -2349,11 +2308,6 @@ Checker.prototype = {
     var url = this.getUpdateURL(force);
     if (!url || (!this.enabled && !force))
       return;
-
-    // If the user changes the update channel there can be leftover files from
-    // a previous download so clean the updates directory for manual checks.
-    if (force)
-      cleanUpUpdatesDir();
 
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsISupports);
@@ -2422,7 +2376,7 @@ Checker.prototype = {
         continue;
       }
       update.serviceURL = this.getUpdateURL(this._forced);
-      update.channel = getDesiredChannel() || getUpdateChannel();
+      update.channel = getUpdateChannel();
       updates.push(update);
     }
 
@@ -2675,7 +2629,7 @@ Downloader.prototype = {
 
     // If this is a patch that we know about, then select it.  If it is a patch
     // that we do not know about, then remove it and use our default logic.
-    var useComplete = getDesiredChannel() ? true : false;
+    var useComplete = false;
     if (selectedPatch) {
       LOG("Downloader:_selectPatch - found existing patch with state: " +
           state);
@@ -2922,8 +2876,6 @@ Downloader.prototype = {
         // Tell the updater.exe we're ready to apply.
         writeStatusFile(getUpdatesDir(), state);
         writeVersionFile(getUpdatesDir(), this._update.appVersion);
-        if (getDesiredChannel())
-          createChannelChangeFile(getUpdatesDir());
         this._update.installDate = (new Date()).getTime();
         this._update.statusText = gUpdateBundle.GetStringFromName("installPending");
       }

@@ -45,6 +45,7 @@
 
 #include "jsapi.h"
 #include "jscell.h"
+#include "jsfriendapi.h"
 
 class JSString;
 class JSDependentString;
@@ -63,21 +64,7 @@ class PropertyName;
 /* The buffer length required to contain any unsigned 32-bit integer. */
 static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
 
-/* N.B. must correspond to boolean tagging behavior. */
-enum InternBehavior
-{
-    DoNotInternAtom = false,
-    InternAtom = true
-};
-
 } /* namespace js */
-
-/*
- * Find or create the atom for a string. Return null on failure to allocate
- * memory.
- */
-extern JSAtom *
-js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
 /*
  * JavaScript strings
@@ -276,6 +263,8 @@ class JSString : public js::gc::Cell
                            JSString::LENGTH_SHIFT) == JSString::MAX_LENGTH);
         JS_STATIC_ASSERT(sizeof(JSString) ==
                          offsetof(JSString, d.inlineStorage) + NUM_INLINE_CHARS * sizeof(jschar));
+        JS_STATIC_ASSERT(offsetof(JSString, d.u1.chars) ==
+                         offsetof(js::shadow::Atom, chars));
     }
 
     /* Avoid lame compile errors in JSRope::flatten */
@@ -407,7 +396,7 @@ class JSString : public js::gc::Cell
 
     /* Gets the number of bytes that the chars take on the heap. */
 
-    JS_FRIEND_API(size_t) charsHeapSize(JSMallocSizeOfFun mallocSizeOf);
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf);
 
     /* Offsets for direct field from jit code. */
 
@@ -422,8 +411,14 @@ class JSString : public js::gc::Cell
     static inline void writeBarrierPre(JSString *str);
     static inline void writeBarrierPost(JSString *str, void *addr);
     static inline bool needWriteBarrierPre(JSCompartment *comp);
+    static inline void readBarrier(JSString *str);
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_STRING; }
+
+#ifdef DEBUG
+    void dump();
+    bool equals(const char *s);
+#endif
 };
 
 class JSRope : public JSString
@@ -697,6 +692,10 @@ class JSAtom : public JSFixedString
     inline js::PropertyName *asPropertyName();
 
     inline void finalize(JSRuntime *rt);
+
+#ifdef DEBUG
+    void dump();
+#endif
 };
 
 JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));

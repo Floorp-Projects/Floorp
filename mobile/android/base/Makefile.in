@@ -52,10 +52,13 @@ SYNC_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-sources.mn | t
 SYNC_PP_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/preprocess-sources.mn | tr '\n' ' ';)
 SYNC_THIRDPARTY_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-third-party-sources.mn | tr '\n' ' ';)
 SYNC_RES_DRAWABLE=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-resources.mn | tr '\n' ' ';)
+SYNC_RES_DRAWABLE_LDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-ldpi-resources.mn | tr '\n' ' ';)
+SYNC_RES_DRAWABLE_MDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-mdpi-resources.mn | tr '\n' ' ';)
+SYNC_RES_DRAWABLE_HDPI=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-hdpi-resources.mn | tr '\n' ' ';)
 SYNC_RES_LAYOUT=$(shell cat $(topsrcdir)/mobile/android/sync/android-layout-resources.mn | tr '\n' ' ';)
 SYNC_RES_VALUES=$(shell cat $(topsrcdir)/mobile/android/sync/android-values-resources.mn | tr '\n' ' ';)
-SYNC_RES_XML=res/xml/sync_authenticator.xml res/xml/sync_options.xml
-SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml
+SYNC_RES_XML=res/xml/sync_authenticator.xml
+SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
 
 FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
@@ -65,6 +68,7 @@ FENNEC_JAVA_FILES = \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
+  SyncPreference.java \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
@@ -89,6 +93,10 @@ FENNEC_JAVA_FILES = \
   LinkPreference.java \
   ProfileMigrator.java \
   PromptService.java \
+  sqlite/ByteBufferInputStream.java \
+  sqlite/SQLiteBridge.java \
+  sqlite/SQLiteBridgeException.java \
+  SetupScreen.java \
   SurfaceLockInfo.java \
   Tab.java \
   Tabs.java \
@@ -98,6 +106,7 @@ FENNEC_JAVA_FILES = \
   gfx/CairoGLInfo.java \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
+  gfx/CheckerboardImage.java \
   gfx/FloatSize.java \
   gfx/GeckoSoftwareLayerClient.java \
   gfx/InputConnectionHandler.java \
@@ -115,13 +124,16 @@ FENNEC_JAVA_FILES = \
   gfx/RectUtils.java \
   gfx/ScrollbarLayer.java \
   gfx/SingleTileLayer.java \
+  gfx/SurfaceTextureLayer.java \
   gfx/TextLayer.java \
+  gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
   gfx/ViewportMetrics.java \
   gfx/WidgetTileLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \
+  ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
   $(NULL)
@@ -223,6 +235,7 @@ RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/site_setting_title.xml \
+  res/layout/setup_screen.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
@@ -236,6 +249,10 @@ RES_LAYOUT = \
 RES_LAYOUT_V11 = \
   res/layout-v11/awesomebar.xml \
   res/layout-v11/gecko_app.xml \
+  $(NULL)
+ 
+RES_LAYOUT_LAND_V14 = \
+  res/layout-land-v14/browser_toolbar.xml \
   $(NULL)
 
 RES_VALUES = \
@@ -268,82 +285,98 @@ RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/tabs_tray_pressed_bg.png \
   $(NULL)
 
-RES_DRAWABLE_MDPI_V8 = \
-  res/drawable-mdpi-v8/abouthome_icon.png \
-  res/drawable-mdpi-v8/abouthome_logo.png \
-  res/drawable-mdpi-v8/abouthome_separator.9.png \
-  res/drawable-mdpi-v8/abouthome_topsite_placeholder.png \
-  res/drawable-mdpi-v8/abouthome_topsite_shadow.9.png \
-  res/drawable-mdpi-v8/awesomebar_tab.9.png \
-  res/drawable-mdpi-v8/awesomebar_tab_pressed.9.png \
-  res/drawable-mdpi-v8/ic_awesomebar_go.png \
-  res/drawable-mdpi-v8/ic_awesomebar_search.png \
-  res/drawable-mdpi-v8/ic_menu_bookmark_add.png \
-  res/drawable-mdpi-v8/ic_menu_bookmark_remove.png \
-  res/drawable-mdpi-v8/ic_menu_find_in_page.png \
-  res/drawable-mdpi-v8/ic_menu_reload.png \
-  res/drawable-mdpi-v8/ic_menu_save_as_pdf.png \
-  res/drawable-mdpi-v8/ic_menu_share.png \
-  res/drawable-mdpi-v8/ic_menu_forward.png \
-  res/drawable-mdpi-v8/tab_new.png \
-  res/drawable-mdpi-v8/tab_close.png \
-  res/drawable-mdpi-v8/tab_thumbnail_default.png \
-  res/drawable-mdpi-v8/tab_thumbnail_shadow.png \
-  res/drawable-mdpi-v8/tab_selected.png \
-  res/drawable-mdpi-v8/tabs_normal.png \
-  res/drawable-mdpi-v8/tabs_pressed.png \
-  res/drawable-mdpi-v8/tabs_more.png \
-  res/drawable-mdpi-v8/tabs_plus.png \
-  res/drawable-mdpi-v8/address_bar_texture.png \
-  res/drawable-mdpi-v8/address_bar_url_bg.9.png \
-  res/drawable-mdpi-v8/address_bar_url_outline.9.png \
-  res/drawable-mdpi-v8/doorhanger_arrow.png \
-  res/drawable-mdpi-v8/doorhanger_bg.9.png \
-  res/drawable-mdpi-v8/doorhanger_shadow_bg.9.png \
-  res/drawable-mdpi-v8/doorhanger_popup_bg.9.png \
-  res/drawable-mdpi-v8/site_security_identified.png \
-  res/drawable-mdpi-v8/site_security_verified.png \
-  res/drawable-mdpi-v8/urlbar_stop.png \
+RES_DRAWABLE_BASE = \
+  res/drawable/favicon.png \
+  res/drawable/abouthome_icon.png \
+  res/drawable/abouthome_logo.png \
+  res/drawable/abouthome_separator.9.png \
+  res/drawable/abouthome_sync_logo.png \
+  res/drawable/abouthome_sync_bg.9.png \
+  res/drawable/abouthome_sync_pressed_bg.9.png \
+  res/drawable/abouthome_topsite_placeholder.png \
+  res/drawable/abouthome_topsite_shadow.9.png \
+  res/drawable/awesomebar_tab.9.png \
+  res/drawable/awesomebar_tab_pressed.9.png \
+  res/drawable/ic_addons_empty.png \
+  res/drawable/ic_awesomebar_go.png \
+  res/drawable/ic_awesomebar_search.png \
+  res/drawable/ic_menu_bookmark_add.png \
+  res/drawable/ic_menu_bookmark_remove.png \
+  res/drawable/ic_menu_find_in_page.png \
+  res/drawable/ic_menu_reload.png \
+  res/drawable/ic_menu_save_as_pdf.png \
+  res/drawable/ic_menu_share.png \
+  res/drawable/ic_menu_forward.png \
+  res/drawable/tab_new.png \
+  res/drawable/tab_close.png \
+  res/drawable/tab_thumbnail_default.png \
+  res/drawable/tab_thumbnail_shadow.png \
+  res/drawable/tab_selected.png \
+  res/drawable/tabs_normal.png \
+  res/drawable/tabs_pressed.png \
+  res/drawable/tabs_more.png \
+  res/drawable/tabs_plus.png \
+  res/drawable/address_bar_texture.png \
+  res/drawable/address_bar_url_bg.9.png \
+  res/drawable/address_bar_url_outline.9.png \
+  res/drawable/doorhanger_arrow.png \
+  res/drawable/doorhanger_bg.9.png \
+  res/drawable/doorhanger_shadow_bg.9.png \
+  res/drawable/doorhanger_popup_bg.9.png \
+  res/drawable/site_security_identified.png \
+  res/drawable/site_security_verified.png \
+  res/drawable/urlbar_stop.png \
+  $(addprefix res/drawable-mdpi/,$(notdir $(SYNC_RES_DRAWABLE_MDPI))) \
   $(NULL)
 
-RES_DRAWABLE_HDPI_V8 = \
-  res/drawable-hdpi-v8/home_bg.png \
-  res/drawable-hdpi-v8/home_star.png \
-  res/drawable-hdpi-v8/abouthome_icon.png \
-  res/drawable-hdpi-v8/abouthome_logo.png \
-  res/drawable-hdpi-v8/abouthome_separator.9.png \
-  res/drawable-hdpi-v8/abouthome_topsite_placeholder.png \
-  res/drawable-hdpi-v8/abouthome_topsite_shadow.9.png \
-  res/drawable-hdpi-v8/awesomebar_tab.9.png \
-  res/drawable-hdpi-v8/awesomebar_tab_pressed.9.png \
-  res/drawable-hdpi-v8/ic_awesomebar_go.png \
-  res/drawable-hdpi-v8/ic_awesomebar_search.png \
-  res/drawable-hdpi-v8/ic_menu_bookmark_add.png \
-  res/drawable-hdpi-v8/ic_menu_bookmark_remove.png \
-  res/drawable-hdpi-v8/ic_menu_find_in_page.png \
-  res/drawable-hdpi-v8/ic_menu_reload.png \
-  res/drawable-hdpi-v8/ic_menu_save_as_pdf.png \
-  res/drawable-hdpi-v8/ic_menu_share.png \
-  res/drawable-hdpi-v8/ic_menu_forward.png \
-  res/drawable-hdpi-v8/tab_new.png \
-  res/drawable-hdpi-v8/tab_close.png \
-  res/drawable-hdpi-v8/tab_thumbnail_default.png \
-  res/drawable-hdpi-v8/tab_thumbnail_shadow.png \
-  res/drawable-hdpi-v8/tab_selected.png \
-  res/drawable-hdpi-v8/tabs_normal.png \
-  res/drawable-hdpi-v8/tabs_pressed.png \
-  res/drawable-hdpi-v8/tabs_more.png \
-  res/drawable-hdpi-v8/tabs_plus.png \
-  res/drawable-hdpi-v8/address_bar_texture.png \
-  res/drawable-hdpi-v8/address_bar_url_bg.9.png \
-  res/drawable-hdpi-v8/address_bar_url_outline.9.png \
-  res/drawable-hdpi-v8/doorhanger_arrow.png \
-  res/drawable-hdpi-v8/doorhanger_bg.9.png \
-  res/drawable-hdpi-v8/doorhanger_shadow_bg.9.png \
-  res/drawable-hdpi-v8/doorhanger_popup_bg.9.png \
-  res/drawable-hdpi-v8/site_security_identified.png \
-  res/drawable-hdpi-v8/site_security_verified.png \
-  res/drawable-hdpi-v8/urlbar_stop.png \
+RES_DRAWABLE_LDPI = \
+  $(addprefix res/drawable-ldpi/,$(notdir $(SYNC_RES_DRAWABLE_LDPI))) \
+  $(NULL)
+
+RES_DRAWABLE_HDPI = \
+  res/drawable-hdpi/favicon.png \
+  res/drawable-hdpi/home_bg.png \
+  res/drawable-hdpi/home_star.png \
+  res/drawable-hdpi/abouthome_icon.png \
+  res/drawable-hdpi/abouthome_logo.png \
+  res/drawable-hdpi/abouthome_separator.9.png \
+  res/drawable-hdpi/abouthome_sync_logo.png \
+  res/drawable-hdpi/abouthome_sync_bg.9.png \
+  res/drawable-hdpi/abouthome_sync_pressed_bg.9.png \
+  res/drawable-hdpi/abouthome_topsite_placeholder.png \
+  res/drawable-hdpi/abouthome_topsite_shadow.9.png \
+  res/drawable-hdpi/awesomebar_tab.9.png \
+  res/drawable-hdpi/awesomebar_tab_pressed.9.png \
+  res/drawable-hdpi/ic_addons_empty.png \
+  res/drawable-hdpi/ic_awesomebar_go.png \
+  res/drawable-hdpi/ic_awesomebar_search.png \
+  res/drawable-hdpi/ic_menu_bookmark_add.png \
+  res/drawable-hdpi/ic_menu_bookmark_remove.png \
+  res/drawable-hdpi/ic_menu_find_in_page.png \
+  res/drawable-hdpi/ic_menu_reload.png \
+  res/drawable-hdpi/ic_menu_save_as_pdf.png \
+  res/drawable-hdpi/ic_menu_share.png \
+  res/drawable-hdpi/ic_menu_forward.png \
+  res/drawable-hdpi/tab_new.png \
+  res/drawable-hdpi/tab_close.png \
+  res/drawable-hdpi/tab_thumbnail_default.png \
+  res/drawable-hdpi/tab_thumbnail_shadow.png \
+  res/drawable-hdpi/tab_selected.png \
+  res/drawable-hdpi/tabs_normal.png \
+  res/drawable-hdpi/tabs_pressed.png \
+  res/drawable-hdpi/tabs_more.png \
+  res/drawable-hdpi/tabs_plus.png \
+  res/drawable-hdpi/address_bar_texture.png \
+  res/drawable-hdpi/address_bar_url_bg.9.png \
+  res/drawable-hdpi/address_bar_url_outline.9.png \
+  res/drawable-hdpi/doorhanger_arrow.png \
+  res/drawable-hdpi/doorhanger_bg.9.png \
+  res/drawable-hdpi/doorhanger_shadow_bg.9.png \
+  res/drawable-hdpi/doorhanger_popup_bg.9.png \
+  res/drawable-hdpi/site_security_identified.png \
+  res/drawable-hdpi/site_security_verified.png \
+  res/drawable-hdpi/urlbar_stop.png \
+  $(addprefix res/drawable-hdpi/,$(notdir $(SYNC_RES_DRAWABLE_HDPI))) \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V11 = \
@@ -367,13 +400,18 @@ RES_DRAWABLE_HDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_XHDPI_V11 = \
+  res/drawable-xhdpi-v11/favicon.png \
   res/drawable-xhdpi-v11/abouthome_icon.png \
   res/drawable-xhdpi-v11/abouthome_logo.png \
   res/drawable-xhdpi-v11/abouthome_separator.9.png \
+  res/drawable-xhdpi-v11/abouthome_sync_logo.png \
+  res/drawable-xhdpi-v11/abouthome_sync_bg.9.png \
+  res/drawable-xhdpi-v11/abouthome_sync_pressed_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_topsite_placeholder.png \
   res/drawable-xhdpi-v11/abouthome_topsite_shadow.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
+  res/drawable-xhdpi-v11/ic_addons_empty.png \
   res/drawable-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-xhdpi-v11/ic_awesomebar_search.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
@@ -397,6 +435,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/urlbar_stop.png \
   res/drawable-xhdpi-v11/site_security_identified.png \
   res/drawable-xhdpi-v11/site_security_verified.png \
+  res/drawable-xhdpi-v11/tabs_button_tail.9.png \
   $(NULL)
 
 RES_DRAWABLE_LAND_MDPI_V14 = \
@@ -442,6 +481,7 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
   res/drawable-land-xhdpi-v14/site_security_identified.png \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
+  res/drawable-land-xhdpi-v14/tabs_button_tail.9.png \
   $(NULL)
 
 RES_COLOR = \
@@ -462,6 +502,7 @@ endif
 MOZ_ANDROID_DRAWABLES += \
   $(SYNC_RES_DRAWABLE)                                                          \
   mobile/android/base/resources/drawable/abouthome_bg_repeat.xml                \
+  mobile/android/base/resources/drawable/abouthome_sync_box.xml                 \
   mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml       \
   mobile/android/base/resources/drawable/address_bar_bg.xml                     \
   mobile/android/base/resources/drawable/address_bar_bg_shadow.xml              \
@@ -473,8 +514,8 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/awesomebar_tab_press_selected.xml      \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
+  mobile/android/base/resources/drawable/background.png                         \
   mobile/android/base/resources/drawable/desktop_notification.png               \
-  mobile/android/base/resources/drawable/favicon.png                            \
   mobile/android/base/resources/drawable/gecko_actionbar_bg.xml                 \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/progress_spinner_1.png                 \
@@ -498,30 +539,33 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
+  mobile/android/base/resources/drawable/tabs_button_tail.xml                   \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
   mobile/android/base/resources/drawable/tabs_tray_pressed_bg_repeat.xml        \
   mobile/android/base/resources/drawable/tabs_tray_close_button.xml             \
   mobile/android/base/resources/drawable/tabs_tray_list_divider.xml             \
   mobile/android/base/resources/drawable/tabs_tray_list_selector.xml            \
-  mobile/android/base/resources/drawable/checkerboard.png                       \
   mobile/android/base/resources/drawable/shadow.png                             \
   $(NULL)
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \
   res/layout-v11          \
+  res/layout-land-v14     \
   res/values              \
   res/values-v11          \
   res/xml                 \
   res/anim                \
   res/drawable-nodpi      \
-  res/drawable-mdpi-v8    \
-  res/drawable-hdpi-v8    \
+  res/drawable-ldpi       \
+  res/drawable-mdpi       \
+  res/drawable-hdpi       \
+  res/drawable            \
   res/drawable-mdpi-v9    \
   res/drawable-hdpi-v9    \
   res/drawable-mdpi-v11   \
@@ -553,11 +597,15 @@ classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(S
 
 PP_RES_XML=$(SYNC_PP_RES_XML)
 
-$(PP_RES_XML): $(subst res/,$(srcdir)/resources/, $(PP_RES_XML).in)
+# This is kinda awful; if any of the source files change, we remake them all.
+$(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res,$(srcdir)/resources,$@).in > $@
 
-AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in Makefile.in
+# AndroidManifest.xml includes these files, so they need to be marked as dependencies.
+SYNC_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/sync/manifests/*.in)
+
+AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in Makefile.in $(SYNC_MANIFEST_FRAGMENTS)
 	mkdir -p db sync/repositories/android
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
@@ -588,10 +636,10 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
 
-R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(PP_RES_XML) res/values/defaults.xml res/drawable/sync_icon.png res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
+R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_HDPI) $(PP_RES_XML) res/values/defaults.xml res/drawable/sync_ic_launcher.png res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/sync_icon.png res/drawable/icon.png res/drawable-hdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(PP_RES_XML) res/values/defaults.xml res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/sync_ic_launcher.png res/drawable/icon.png res/drawable-hdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_HDPI) $(PP_RES_XML) res/values/defaults.xml res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 libs:: classes.dex package-name.txt

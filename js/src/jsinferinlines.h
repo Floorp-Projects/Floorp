@@ -242,20 +242,23 @@ struct AutoEnterTypeInference
  */
 struct AutoEnterCompilation
 {
-    JSContext *cx;
-    JSScript *script;
+    RecompileInfo &info;
 
-    AutoEnterCompilation(JSContext *cx, JSScript *script)
-        : cx(cx), script(script)
+    AutoEnterCompilation(JSContext *cx, JSScript *script, bool constructing, unsigned chunkIndex)
+        : info(cx->compartment->types.compiledInfo)
     {
-        JS_ASSERT(!cx->compartment->types.compiledScript);
-        cx->compartment->types.compiledScript = script;
+        JS_ASSERT(!info.script);
+        info.script = script;
+        info.constructing = constructing;
+        info.chunkIndex = chunkIndex;
     }
 
     ~AutoEnterCompilation()
     {
-        JS_ASSERT(cx->compartment->types.compiledScript == script);
-        cx->compartment->types.compiledScript = NULL;
+        JS_ASSERT(info.script);
+        info.script = NULL;
+        info.constructing = false;
+        info.chunkIndex = 0;
     }
 };
 
@@ -590,6 +593,49 @@ TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     if (cx->typeInferenceEnabled())
         TypeDynamicResult(cx, script, pc, Type::UnknownType());
+}
+
+/* static */ inline void
+TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
+{
+    *script = cx->fp()->script();
+    *pc = cx->regs().pc;
+}
+
+/* static */ inline void
+TypeScript::MonitorOverflow(JSContext *cx)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    GetPcScript(cx, &script, &pc);
+    MonitorOverflow(cx, script, pc);
+}
+
+/* static */ inline void
+TypeScript::MonitorString(JSContext *cx)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    GetPcScript(cx, &script, &pc);
+    MonitorString(cx, script, pc);
+}
+
+/* static */ inline void
+TypeScript::MonitorUnknown(JSContext *cx)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    GetPcScript(cx, &script, &pc);
+    MonitorUnknown(cx, script, pc);
+}
+
+/* static */ inline void
+TypeScript::Monitor(JSContext *cx, const js::Value &rval)
+{
+    JSScript *script;
+    jsbytecode *pc;
+    GetPcScript(cx, &script, &pc);
+    Monitor(cx, script, pc, rval);
 }
 
 /* static */ inline void
@@ -1112,6 +1158,9 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, jsbytecode *pc,
 inline TypeObject::TypeObject(JSObject *proto, bool function, bool unknown)
 {
     PodZero(this);
+
+    /* Inner objects may not appear on prototype chains. */
+    JS_ASSERT_IF(proto, !proto->getClass()->ext.outerObject);
 
     this->proto = proto;
 

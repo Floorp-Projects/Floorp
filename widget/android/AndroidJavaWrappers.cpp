@@ -44,14 +44,18 @@ jclass AndroidGeckoEvent::jGeckoEventClass = 0;
 jfieldID AndroidGeckoEvent::jActionField = 0;
 jfieldID AndroidGeckoEvent::jTypeField = 0;
 jfieldID AndroidGeckoEvent::jTimeField = 0;
-jfieldID AndroidGeckoEvent::jP0Field = 0;
-jfieldID AndroidGeckoEvent::jP1Field = 0;
+jfieldID AndroidGeckoEvent::jPoints = 0;
+jfieldID AndroidGeckoEvent::jPointIndicies = 0;
+jfieldID AndroidGeckoEvent::jPressures = 0;
+jfieldID AndroidGeckoEvent::jPointRadii = 0;
+jfieldID AndroidGeckoEvent::jOrientations = 0;
 jfieldID AndroidGeckoEvent::jAlphaField = 0;
 jfieldID AndroidGeckoEvent::jBetaField = 0;
 jfieldID AndroidGeckoEvent::jGammaField = 0;
 jfieldID AndroidGeckoEvent::jXField = 0;
 jfieldID AndroidGeckoEvent::jYField = 0;
 jfieldID AndroidGeckoEvent::jZField = 0;
+jfieldID AndroidGeckoEvent::jDistanceField = 0;
 jfieldID AndroidGeckoEvent::jRectField = 0;
 jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
@@ -63,6 +67,7 @@ jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jUnicodeCharField = 0;
 jfieldID AndroidGeckoEvent::jOffsetField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
+jfieldID AndroidGeckoEvent::jPointerIndexField = 0;
 jfieldID AndroidGeckoEvent::jRangeTypeField = 0;
 jfieldID AndroidGeckoEvent::jRangeStylesField = 0;
 jfieldID AndroidGeckoEvent::jRangeForeColorField = 0;
@@ -119,8 +124,6 @@ jmethodID AndroidGeckoSurfaceView::jGetSoftwareDrawBufferMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetSurfaceMethod = 0;
 jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
 
-#define JNI()  (AndroidBridge::JNI())
-
 #define initInit() jclass jClass
 
 // note that this also sets jClass
@@ -155,14 +158,18 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jActionField = getField("mAction", "I");
     jTypeField = getField("mType", "I");
     jTimeField = getField("mTime", "J");
-    jP0Field = getField("mP0", "Landroid/graphics/Point;");
-    jP1Field = getField("mP1", "Landroid/graphics/Point;");
+    jPoints = getField("mPoints", "[Landroid/graphics/Point;");
+    jPointIndicies = getField("mPointIndicies", "[I");
+    jOrientations = getField("mOrientations", "[F");
+    jPressures = getField("mPressures", "[F");
+    jPointRadii = getField("mPointRadii", "[Landroid/graphics/Point;");
     jAlphaField = getField("mAlpha", "D");
     jBetaField = getField("mBeta", "D");
     jGammaField = getField("mGamma", "D");
     jXField = getField("mX", "D");
     jYField = getField("mY", "D");
     jZField = getField("mZ", "D");
+    jDistanceField = getField("mDistance", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -173,6 +180,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jUnicodeCharField = getField("mUnicodeChar", "I");
     jOffsetField = getField("mOffset", "I");
     jCountField = getField("mCount", "I");
+    jPointerIndexField = getField("mPointerIndex", "I");
     jRangeTypeField = getField("mRangeType", "I");
     jRangeStylesField = getField("mRangeStyles", "I");
     jRangeForeColorField = getField("mRangeForeColor", "I");
@@ -323,8 +331,8 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
 
     jLockBufferMethod = getMethod("lockBuffer", "()Ljava/nio/ByteBuffer;");
     jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
-    jBeginDrawingMethod = getMethod("beginDrawing", "(II)V");
-    jEndDrawingMethod = getMethod("endDrawing", "(IIIILjava/lang/String;)V");
+    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Z");
+    jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
 #endif
 }
 
@@ -334,19 +342,47 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
 #undef getMethod
 
 void
-AndroidGeckoEvent::ReadP0Field(JNIEnv *jenv)
+AndroidGeckoEvent::ReadPointArray(nsTArray<nsIntPoint> &points,
+                                  JNIEnv *jenv,
+                                  jfieldID field,
+                                  PRUint32 count)
 {
-    AndroidPoint p0(jenv, jenv->GetObjectField(wrappedObject(), jP0Field));
-    mP0.x = p0.X();
-    mP0.y = p0.Y();
+    jobjectArray jObjArray = (jobjectArray)jenv->GetObjectField(wrapped_obj, field);
+    for (PRInt32 i = 0; i < count; i++) {
+        jobject jObj = jenv->GetObjectArrayElement(jObjArray, i);
+        AndroidPoint jpoint(jenv, jObj);
+
+        nsIntPoint p(jpoint.X(), jpoint.Y());
+        points.AppendElement(p);
+    }
 }
 
 void
-AndroidGeckoEvent::ReadP1Field(JNIEnv *jenv)
+AndroidGeckoEvent::ReadIntArray(nsTArray<int> &aVals,
+                                JNIEnv *jenv,
+                                jfieldID field,
+                                PRUint32 count)
 {
-    AndroidPoint p1(jenv, jenv->GetObjectField(wrappedObject(), jP1Field));
-    mP1.x = p1.X();
-    mP1.y = p1.Y();
+    jintArray jIntArray = (jintArray)jenv->GetObjectField(wrapped_obj, field);
+    jint *vals = jenv->GetIntArrayElements(jIntArray, false);
+    for (PRInt32 i = 0; i < count; i++) {
+        aVals.AppendElement(vals[i]);
+    }
+    jenv->ReleaseIntArrayElements(jIntArray, vals, JNI_ABORT);
+}
+
+void
+AndroidGeckoEvent::ReadFloatArray(nsTArray<float> &aVals,
+                                  JNIEnv *jenv,
+                                  jfieldID field,
+                                  PRUint32 count)
+{
+    jfloatArray jFloatArray = (jfloatArray)jenv->GetObjectField(wrapped_obj, field);
+    jfloat *vals = jenv->GetFloatArrayElements(jFloatArray, false);
+    for (PRInt32 i = 0; i < count; i++) {
+        aVals.AppendElement(vals[i]);
+    }
+    jenv->ReleaseFloatArrayElements(jFloatArray, vals, JNI_ABORT);
 }
 
 void
@@ -412,13 +448,8 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
     mType = jenv->GetIntField(jobj, jTypeField);
 
     switch (mType) {
-        case TILE_SIZE:
-            ReadP0Field(jenv);
-            break;
-
         case SIZE_CHANGED:
-            ReadP0Field(jenv);
-            ReadP1Field(jenv);
+            ReadPointArray(mPoints, jenv, jPoints, 3);
             break;
 
         case KEY_EVENT:
@@ -434,9 +465,14 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             mTime = jenv->GetLongField(jobj, jTimeField);
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             mCount = jenv->GetIntField(jobj, jCountField);
-            ReadP0Field(jenv);
-            if (mCount > 1)
-                ReadP1Field(jenv);
+            mPointerIndex = jenv->GetIntField(jobj, jPointerIndexField);
+
+            ReadPointArray(mPointRadii, jenv, jPointRadii, mCount);
+            ReadFloatArray(mOrientations, jenv, jOrientations, mCount);
+            ReadFloatArray(mPressures, jenv, jPressures, mCount);
+            ReadPointArray(mPoints, jenv, jPoints, mCount);
+            ReadIntArray(mPointIndicies, jenv, jPointIndicies, mCount);
+
             break;
 
         case IME_EVENT:
@@ -501,6 +537,16 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case VISITED: {
+            ReadCharactersField(jenv);
+            break;
+        }
+
+        case PROXIMITY_EVENT: {
+            mDistance = jenv->GetDoubleField(jobj, jDistanceField);
+            break;
+        }
+
         default:
             break;
     }
@@ -530,10 +576,7 @@ AndroidGeckoEvent::Init(AndroidGeckoEvent *aResizeEvent)
 
     mType = FORCED_RESIZE;
     mTime = aResizeEvent->mTime;
-    mP0.x = aResizeEvent->mP0.x;
-    mP0.y = aResizeEvent->mP0.y;
-    mP1.x = aResizeEvent->mP1.x;
-    mP1.y = aResizeEvent->mP1.y;
+    mPoints = aResizeEvent->mPoints; // x,y coordinates
 }
 
 void
@@ -568,43 +611,68 @@ AndroidGeckoSurfaceView::BeginDrawing()
 {
     NS_ASSERTION(!isNull(), "BeginDrawing called on null surfaceview!");
 
-    return JNI()->CallIntMethod(wrapped_obj, jBeginDrawingMethod);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return 0;
+
+    return env->CallIntMethod(wrapped_obj, jBeginDrawingMethod);
 }
 
 void
 AndroidGeckoSurfaceView::EndDrawing()
 {
-    JNI()->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+
+    env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
 }
 
 void
 AndroidGeckoSurfaceView::Draw2D(jobject bitmap, int width, int height)
 {
-    JNI()->CallVoidMethod(wrapped_obj, jDraw2DBitmapMethod, bitmap, width, height);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+
+    env->CallVoidMethod(wrapped_obj, jDraw2DBitmapMethod, bitmap, width, height);
 }
 
 void
 AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
 {
-    JNI()->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+
+    env->CallVoidMethod(wrapped_obj, jDraw2DBufferMethod, buffer, stride);
 }
 
 jobject
 AndroidGeckoSoftwareLayerClient::LockBuffer()
 {
     NS_ASSERTION(!isNull(), "LockBuffer() called on null software layer client!");
-    AndroidBridge::AutoLocalJNIFrame(1);
-    return JNI()->CallObjectMethod(wrapped_obj, jLockBufferMethod);
+
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return nsnull;
+
+    AndroidBridge::AutoLocalJNIFrame(env, 1);
+    return env->CallObjectMethod(wrapped_obj, jLockBufferMethod);
 }
 
 unsigned char *
 AndroidGeckoSoftwareLayerClient::LockBufferBits()
 {
-    AndroidBridge::AutoLocalJNIFrame(1);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return nsnull;
+
+    AndroidBridge::AutoLocalJNIFrame(env, 1);
     jobject bufferObject = LockBuffer();
 
     if (bufferObject != nsnull)
-        return reinterpret_cast<unsigned char *>(JNI()->GetDirectBufferAddress(bufferObject));
+        return reinterpret_cast<unsigned char *>(env->GetDirectBufferAddress(bufferObject));
 
     return nsnull;
 }
@@ -613,50 +681,77 @@ void
 AndroidGeckoSoftwareLayerClient::UnlockBuffer()
 {
     NS_ASSERTION(!isNull(), "UnlockBuffer() called on null software layer client!");
-    AndroidBridge::AutoLocalJNIFrame(1);
-    JNI()->CallVoidMethod(wrapped_obj, jUnlockBufferMethod);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+
+    AndroidBridge::AutoLocalJNIFrame(env, 1);
+    env->CallVoidMethod(wrapped_obj, jUnlockBufferMethod);
 }
 
-void
-AndroidGeckoSoftwareLayerClient::BeginDrawing(int aWidth, int aHeight)
+bool
+AndroidGeckoSoftwareLayerClient::BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, const nsAString &aMetadata, bool aHasDirectTexture)
 {
     NS_ASSERTION(!isNull(), "BeginDrawing() called on null software layer client!");
-    AndroidBridge::AutoLocalJNIFrame(1);
-    return JNI()->CallVoidMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return false;
+
+    AndroidBridge::AutoLocalJNIFrame(env, 1);
+    jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
+    return env->CallBooleanMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight, aTileWidth, aTileHeight, jMetadata, aHasDirectTexture);
 }
 
 void
-AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect, const nsAString &aMetadata)
+AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect)
 {
     NS_ASSERTION(!isNull(), "EndDrawing() called on null software layer client!");
-    AndroidBridge::AutoLocalJNIFrame(1);
-    jstring jMetadata = JNI()->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
-    return JNI()->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width,
-                                 aRect.height, jMetadata);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return;
+
+    AndroidBridge::AutoLocalJNIFrame(env, 1);
+    return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 jobject
 AndroidGeckoSurfaceView::GetSoftwareDrawBitmap()
 {
-    return JNI()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBitmapMethod);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return nsnull;
+
+    return env->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBitmapMethod);
 }
 
 jobject
 AndroidGeckoSurfaceView::GetSoftwareDrawBuffer()
 {
-    return JNI()->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBufferMethod);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return nsnull;
+
+    return env->CallObjectMethod(wrapped_obj, jGetSoftwareDrawBufferMethod);
 }
 
 jobject
 AndroidGeckoSurfaceView::GetSurface()
 {
-    return JNI()->CallObjectMethod(wrapped_obj, jGetSurfaceMethod);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return nsnull;
+
+    return env->CallObjectMethod(wrapped_obj, jGetSurfaceMethod);
 }
 
 jobject
 AndroidGeckoSurfaceView::GetSurfaceHolder()
 {
-    return JNI()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env)
+        return nsnull;
+
+    return env->CallObjectMethod(wrapped_obj, jGetHolderMethod);
 }
 
 void
@@ -687,7 +782,7 @@ nsJNIString::nsJNIString(jstring jstr, JNIEnv *jenv)
     }
     JNIEnv *jni = jenv;
     if (!jni)
-        jni = JNI();
+        jni = AndroidBridge::GetJNIEnv();
     const jchar* jCharPtr = jni->GetStringChars(jstr, NULL);
 
     if (!jCharPtr) {

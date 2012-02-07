@@ -660,18 +660,16 @@ WINSDK_TARGETVER=601
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
                           Highest Windows version to target using this SDK
-                              502: Windows Server 2003
-                              600: Windows Vista
                               601: Windows 7],
   WINSDK_TARGETVER=$withval)
 
 case "$WINSDK_TARGETVER" in
-502|600|601)
+601)
     MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
     ;;
 
 *)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 502, 600 or 601]);
+    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER), must be 601]);
     ;;
 
 esac
@@ -805,15 +803,8 @@ EOF
                            ])
             MOZ_WINSDK_MAXVER=${ac_cv_winsdk_maxver}
         else
-            # The Vista SDK is the only one to have sdkddkver.h but not
-            # WinSDKVer.h
-            MOZ_CHECK_HEADERS([sdkddkver.h])
-            if test "$ac_cv_header_sdkddkver_h" = "yes"; then
-                MOZ_WINSDK_MAXVER=0x06000000
-            else
-                # Assume the Server 2003 Platform SDK
-                MOZ_WINSDK_MAXVER=0x05020000
-            fi
+            # Any SDK which doesn't have WinSDKVer.h is too old.
+            AC_MSG_ERROR([Your SDK does not have WinSDKVer.h. It is probably too old. Please upgrade to a newer SDK or try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
         fi
 
         unset _MSVC_VER_FILTER
@@ -1759,6 +1750,17 @@ if test "$OS_TARGET" = "Android"; then
     ANDROID_CFLAGS="$CFLAGS"
     ANDROID_CPPFLAGS="$CPPFLAGS"
     ANDROID_LDFLAGS="$LDFLAGS"
+fi
+
+dnl ========================================================
+dnl Suppress Clang Argument Warnings
+dnl ========================================================
+if test -n "$CLANG_CC"; then
+    _WARNINGS_CFLAGS="-Qunused-arguments ${_WARNINGS_CFLAGS}"
+    CPPFLAGS="-Qunused-arguments ${CPPFLAGS}"
+fi
+if test -n "$CLANG_CXX"; then
+    _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
 fi
 
 dnl ========================================================
@@ -2804,12 +2806,14 @@ arm*-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 sparc*-*)
+    if test ! "$HAVE_64BIT_OS" ; then
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
     ENABLE_METHODJIT_TYPED_ARRAY=1
     AC_DEFINE(JS_CPU_SPARC)
     AC_DEFINE(JS_NUNBOX32)
+    fi
     ;;
 mips*-*)
     ENABLE_METHODJIT=1
@@ -4347,6 +4351,17 @@ if test -n "$JSGC_INCREMENTAL"; then
 fi
 
 dnl ========================================================
+dnl = Use generational GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gcgenerational,
+[  --enable-gcgenerational Enable generational GC],
+    JSGC_GENERATIONAL=1,
+    JSGC_GENERATIONAL= )
+if test -n "$JSGC_GENERATIONAL"; then
+    AC_DEFINE(JSGC_GENERATIONAL)
+fi
+
+dnl ========================================================
 dnl = Perform moving GC stack rooting analysis
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gcrootanalysis,
@@ -4425,8 +4440,7 @@ dnl ========================================================
 dnl ETW - Event Tracing for Windows
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(ETW,
-[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting
-                          (needs Windows Vista+ SDK)],
+[  --enable-ETW            Enable ETW (Event Tracing for Windows) event reporting],
     MOZ_ETW=1,
     MOZ_ETW= )
 if test -n "$MOZ_ETW"; then
@@ -4437,8 +4451,6 @@ fi
 if test -n "$MOZ_ETW"; then
     if test -z "$MOZ_WINSDK_TARGETVER"; then
         AC_MSG_ERROR([--enable-ETW is only valid on Windows])
-    elif test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-        AC_MSG_ERROR([--enable-ETW requires the Windows Vista SDK or newer])
     fi
 fi
 

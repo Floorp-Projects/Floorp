@@ -58,9 +58,8 @@
 
 nsTreeWalker::nsTreeWalker(nsINode *aRoot,
                            PRUint32 aWhatToShow,
-                           nsIDOMNodeFilter *aFilter,
-                           bool aExpandEntityReferences) :
-    nsTraversal(aRoot, aWhatToShow, aFilter, aExpandEntityReferences),
+                           nsIDOMNodeFilter *aFilter) :
+    nsTraversal(aRoot, aWhatToShow, aFilter),
     mCurrentNode(aRoot)
 {
 }
@@ -127,7 +126,7 @@ NS_IMETHODIMP nsTreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
 NS_IMETHODIMP
 nsTreeWalker::GetExpandEntityReferences(bool *aExpandEntityReferences)
 {
-    *aExpandEntityReferences = mExpandEntityReferences;
+    *aExpandEntityReferences = false;
     return NS_OK;
 }
 

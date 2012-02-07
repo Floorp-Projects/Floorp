@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=713825
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 713825</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=713825">Mozilla Bug 713825</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** 
+ * Test for Bug 713825 
+ *  test that nsIDocCharset still works backward compatibly
+ */
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+var Ci = Components.interfaces;
+var docShell = window.QueryInterface(Ci.nsIInterfaceRequestor).
+                      getInterface(Ci.nsIWebNavigation).
+                      QueryInterface(Ci.nsIDocShell);
+
+var charset1 = docShell.charset;
+var charset2 = docShell.QueryInterface(Ci.nsIDocCharset).charset;
+var charset3 = window.QueryInterface(Ci.nsIInterfaceRequestor).
+                      getInterface(Ci.nsIDocCharset).charset;
+
+/* if we get here without throwing and the three charsets are equal, all is OK */
+is(charset1, charset2, "QI'd nsIDocCharset.charset should equal nsIDocShell.charset");
+is(charset1, charset3, "getInterface'd nsIDocCharset.charset should equal nsIDocShell.charset");
+
+</script>
+</pre>
+</body>
+</html>

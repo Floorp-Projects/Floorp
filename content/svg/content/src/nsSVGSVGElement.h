@@ -40,20 +40,20 @@
 #ifndef __NS_SVGSVGELEMENT_H__
 #define __NS_SVGSVGELEMENT_H__
 
-#include "nsSVGStylableElement.h"
-#include "nsIDOMSVGSVGElement.h"
 #include "DOMSVGTests.h"
+#include "mozilla/dom/FromParser.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGLocatable.h"
-#include "nsIDOMSVGZoomAndPan.h"
-#include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGPoint.h"
-#include "nsSVGLength2.h"
+#include "nsIDOMSVGSVGElement.h"
+#include "nsIDOMSVGZoomAndPan.h"
 #include "nsSVGEnum.h"
+#include "nsSVGLength2.h"
+#include "nsSVGStylableElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "mozilla/dom/FromParser.h"
 
+class nsIDOMSVGMatrix;
 class nsSMILTimeContainer;
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;

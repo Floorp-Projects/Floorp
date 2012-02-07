@@ -143,6 +143,8 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_678816.js \
 	browser_webconsole_bug_664131_console_group.js \
 	browser_webconsole_bug_704295.js \
+	browser_gcli_commands.js \
+	browser_gcli_helpers.js \
 	browser_gcli_inspect.js \
 	browser_gcli_integrate.js \
 	browser_gcli_require.js \

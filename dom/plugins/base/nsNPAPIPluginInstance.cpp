@@ -93,7 +93,6 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
 #endif
     mRunning(NOT_STARTED),
     mWindowless(false),
-    mWindowlessLocal(false),
     mTransparent(false),
     mCached(false),
     mUsesDOMForCursor(false),
@@ -686,12 +685,6 @@ NPError nsNPAPIPluginInstance::SetWindowless(bool aWindowless)
   return NPERR_NO_ERROR;
 }
 
-NPError nsNPAPIPluginInstance::SetWindowlessLocal(bool aWindowlessLocal)
-{
-  mWindowlessLocal = aWindowlessLocal;
-  return NPERR_NO_ERROR;
-}
-
 NPError nsNPAPIPluginInstance::SetTransparent(bool aTransparent)
 {
   mTransparent = aTransparent;
@@ -750,7 +743,15 @@ public:
     return NS_OK;
   }
   void RequestSurface() {
-    mozilla::AndroidBridge::Bridge()->PostToJavaThread(this);
+    JNIEnv* env = GetJNIForThread();
+    if (!env)
+      return;
+
+    if (!mozilla::AndroidBridge::Bridge()) {
+      PLUGIN_LOG(PLUGIN_LOG_BASIC, ("nsNPAPIPluginInstance null AndroidBridge"));
+      return;
+    }
+    mozilla::AndroidBridge::Bridge()->PostToJavaThread(env, this);
   }
 private:
   nsNPAPIPluginInstance* mInstance;

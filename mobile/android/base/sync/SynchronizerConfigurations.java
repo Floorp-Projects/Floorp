@@ -91,15 +91,6 @@ public class SynchronizerConfigurations {
     engines = new HashMap<String, SynchronizerConfiguration>();
   }
 
-  public void fillBundle(Bundle bundle) {
-    Bundle contents = new Bundle();
-    for (Entry<String, SynchronizerConfiguration> entry : engines.entrySet()) {
-      contents.putStringArray(entry.getKey(), entry.getValue().toStringValues());
-    }
-    contents.putInt("version", CONFIGURATION_VERSION);
-    bundle.putBundle("engines", contents);
-  }
-
   public SynchronizerConfiguration forEngine(String engineName) {
     return engines.get(engineName);
   }

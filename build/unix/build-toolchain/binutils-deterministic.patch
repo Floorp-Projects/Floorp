@@ -1,0 +1,22 @@
+diff -ru a/binutils/ar.c b/binutils/ar.c
+--- a/binutils/ar.c	2011-03-16 04:35:58.000000000 -0400
++++ b/binutils/ar.c	2012-01-19 15:44:46.211226017 -0500
+@@ -98,7 +98,7 @@
+ /* Operate in deterministic mode: write zero for timestamps, uids,
+    and gids for archive members and the archive symbol table, and write
+    consistent file modes.  */
+-int deterministic = 0;
++int deterministic = TRUE;
+ 
+ /* Nonzero means it's the name of an existing member; position new or moved
+    files with respect to this one.  */
+@@ -634,9 +634,6 @@
+       if (newer_only && operation != replace)
+ 	fatal (_("`u' is only meaningful with the `r' option."));
+ 
+-      if (newer_only && deterministic)
+-	fatal (_("`u' is not meaningful with the `D' option."));
+-
+       if (postype != pos_default)
+ 	posname = argv[arg_index++];
+ 

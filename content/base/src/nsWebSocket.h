@@ -83,8 +83,8 @@ public:
   nsWebSocket();
   virtual ~nsWebSocket();
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsWebSocket,
-                                           nsDOMEventTargetWrapperCache)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(nsWebSocket,
+                                                                   nsDOMEventTargetWrapperCache)
   NS_DECL_NSIWEBSOCKET
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBSOCKETLISTENER
@@ -111,9 +111,11 @@ protected:
   nsresult ParseURL(const nsString& aURL);
   nsresult EstablishConnection();
 
-  // these three methods when called can release the WebSocket object
-  nsresult FailConnection();
-  nsresult CloseConnection();
+  // These methods when called can release the WebSocket object
+  nsresult FailConnection(PRUint16 reasonCode,
+                          const nsACString& aReasonString = EmptyCString());
+  nsresult CloseConnection(PRUint16 reasonCode,
+                           const nsACString& aReasonString = EmptyCString());
   nsresult Disconnect();
 
   nsresult ConsoleError();
@@ -166,13 +168,12 @@ protected:
   bool mKeepingAlive;
   bool mCheckMustKeepAlive;
   bool mTriggeredCloseEvent;
-  bool mClosedCleanly;
   bool mDisconnected;
 
-  nsCString mClientReason;
-  nsString  mServerReason;
-  PRUint16  mClientReasonCode;
-  PRUint16  mServerReasonCode;
+  // Set attributes of DOM 'onclose' message
+  bool      mCloseEventWasClean;
+  nsString  mCloseEventReason;
+  PRUint16  mCloseEventCode;
 
   nsCString mAsciiHost;  // hostname
   PRUint32  mPort;

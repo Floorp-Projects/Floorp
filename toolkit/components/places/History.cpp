@@ -45,6 +45,7 @@
 #include "History.h"
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
+#include "nsAnnotationService.h"
 #include "Helpers.h"
 #include "PlaceInfo.h"
 #include "VisitInfo.h"
@@ -78,6 +79,11 @@ namespace places {
 #define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
 // Observer event fired after a visit has been registered in the DB.
 #define URI_VISIT_SAVED "uri-visit-saved"
+
+#define DESTINATIONFILEURI_ANNO \
+        NS_LITERAL_CSTRING("downloads/destinationFileURI")
+#define DESTINATIONFILENAME_ANNO \
+        NS_LITERAL_CSTRING("downloads/destinationFileName")
 
 ////////////////////////////////////////////////////////////////////////////////
 //// VisitData
@@ -456,6 +462,7 @@ public:
                        VisitData& aReferrer)
   : mPlace(aPlace)
   , mReferrer(aReferrer)
+  , mHistory(History::GetService())
   {
   }
 
@@ -463,6 +470,11 @@ public:
   {
     NS_PRECONDITION(NS_IsMainThread(),
                     "This should be called on the main thread");
+    // We are in the main thread, no need to lock.
+    if (mHistory->IsShuttingDown()) {
+      // If we are shutting down, we cannot notify the observers.
+      return NS_OK;
+    }
 
     nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
     if (!navHistory) {
@@ -500,6 +512,7 @@ public:
 private:
   VisitData mPlace;
   VisitData mReferrer;
+  nsRefPtr<History> mHistory;
 };
 
 /**
@@ -730,6 +743,13 @@ public:
   {
     NS_PRECONDITION(!NS_IsMainThread(),
                     "This should not be called on the main thread");
+
+    // Prevent the main thread from shutting down while this is running.
+    MutexAutoLock lockedScope(mHistory->GetShutdownMutex());
+    if(mHistory->IsShuttingDown()) {
+      // If we were already shutting down, we cannot insert the URIs.
+      return NS_OK;
+    }
 
     mozStorageTransaction transaction(mDBConn, false,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -1256,6 +1276,109 @@ private:
 };
 
 /**
+ * Adds download-specific annotations to a download page.
+ */
+class SetDownloadAnnotations : public mozIVisitInfoCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  SetDownloadAnnotations(nsIURI* aDestination)
+  : mDestination(aDestination)
+  , mHistory(History::GetService())
+  {
+    MOZ_ASSERT(mDestination);
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_IMETHOD HandleError(nsresult aResultCode, mozIPlaceInfo *aPlaceInfo)
+  {
+    // Just don't add the annotations in case the visit isn't added.
+    return NS_OK;
+  }
+
+  NS_IMETHOD HandleResult(mozIPlaceInfo *aPlaceInfo)
+  {
+    // Exit silently if the download destination is not a local file.
+    nsCOMPtr<nsIFileURL> destinationFileURL = do_QueryInterface(mDestination);
+    if (!destinationFileURL) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> source;
+    nsresult rv = aPlaceInfo->GetUri(getter_AddRefs(source));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> destinationFile;
+    rv = destinationFileURL->GetFile(getter_AddRefs(destinationFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString destinationFileName;
+    rv = destinationFile->GetLeafName(destinationFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString destinationURISpec;
+    rv = destinationFileURL->GetSpec(destinationURISpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Use annotations for storing the additional download metadata.
+    nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+    NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = annosvc->SetPageAnnotationString(
+      source,
+      DESTINATIONFILEURI_ANNO,
+      NS_ConvertUTF8toUTF16(destinationURISpec),
+      0,
+      nsIAnnotationService::EXPIRE_WITH_HISTORY
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = annosvc->SetPageAnnotationString(
+      source,
+      DESTINATIONFILENAME_ANNO,
+      destinationFileName,
+      0,
+      nsIAnnotationService::EXPIRE_WITH_HISTORY
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString title;
+    rv = aPlaceInfo->GetTitle(title);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // In case we are downloading a file that does not correspond to a web
+    // page for which the title is present, we populate the otherwise empty
+    // history title with the name of the destination file, to allow it to be
+    // visible and searchable in history results.
+    if (title.IsEmpty()) {
+      rv = mHistory->SetURITitle(source, destinationFileName);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD HandleCompletion()
+  {
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIURI> mDestination;
+
+  /**
+   * Strong reference to the History object because we do not want it to
+   * disappear out from under us.
+   */
+  nsRefPtr<History> mHistory;
+};
+NS_IMPL_ISUPPORTS1(
+  SetDownloadAnnotations,
+  mozIVisitInfoCallback
+)
+
+/**
  * Stores an embed visit, and notifies observers.
  *
  * @param aPlace
@@ -1329,6 +1452,7 @@ History* History::gService = NULL;
 
 History::History()
   : mShuttingDown(false)
+  , mShutdownMutex("History::mShutdownMutex")
 {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
   gService = this;
@@ -1596,7 +1720,7 @@ History::SizeOfEntryExcludingThis(KeyClass* aEntry, nsMallocSizeOfFun aMallocSiz
 size_t
 History::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOfThis)
 {
-  return aMallocSizeOfThis(this, sizeof(History)) +
+  return aMallocSizeOfThis(this) +
          mObservers.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOfThis);
 }
 
@@ -1641,7 +1765,12 @@ History::GetDBConn()
 void
 History::Shutdown()
 {
-  NS_ASSERTION(!mShuttingDown, "Shutdown was called more than once!");
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Prevent other threads from scheduling uses of the DB while we mark
+  // ourselves as shutting down.
+  MutexAutoLock lockedScope(mShutdownMutex);
+  MOZ_ASSERT(!mShuttingDown && "Shutdown was called more than once!");
 
   mShuttingDown = true;
 
@@ -1906,6 +2035,65 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//// nsIDownloadHistory
+
+NS_IMETHODIMP
+History::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
+                     PRTime aStartTime, nsIURI* aDestination)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(aSource);
+
+  if (mShuttingDown) {
+    return NS_OK;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    NS_ERROR("Cannot add downloads to history from content process!");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
+
+  // Silently return if URI is something we shouldn't add to DB.
+  bool canAdd;
+  nsresult rv = navHistory->CanAddURI(aSource, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd) {
+    return NS_OK;
+  }
+
+  nsTArray<VisitData> placeArray(1);
+  NS_ENSURE_TRUE(placeArray.AppendElement(VisitData(aSource, aReferrer)),
+                 NS_ERROR_OUT_OF_MEMORY);
+  VisitData& place = placeArray.ElementAt(0);
+  NS_ENSURE_FALSE(place.spec.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  place.visitTime = aStartTime;
+  place.SetTransitionType(nsINavHistoryService::TRANSITION_DOWNLOAD);
+
+  mozIStorageConnection* dbConn = GetDBConn();
+  NS_ENSURE_STATE(dbConn);
+
+  nsCOMPtr<mozIVisitInfoCallback> callback = aDestination
+                                  ? new SetDownloadAnnotations(aDestination)
+                                  : nsnull;
+
+  rv = InsertVisitedURIs::Start(dbConn, placeArray, callback);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Finally, notify that we've been visited.
+  nsCOMPtr<nsIObserverService> obsService =
+    mozilla::services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
+  }
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //// mozIAsyncHistory
 
 NS_IMETHODIMP
@@ -2101,9 +2289,10 @@ History::Observe(nsISupports* aSubject, const char* aTopic,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(
+NS_IMPL_THREADSAFE_ISUPPORTS4(
   History
 , IHistory
+, nsIDownloadHistory
 , mozIAsyncHistory
 , nsIObserver
 )

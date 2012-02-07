@@ -160,6 +160,13 @@ EXPORTS
     glReadnPixelsEXT                @162
     glGetnUniformfvEXT              @163
     glGetnUniformivEXT              @164
+    glGenQueriesEXT                 @165
+    glDeleteQueriesEXT              @166
+    glIsQueryEXT                    @167
+    glBeginQueryEXT                 @168
+    glEndQueryEXT                   @169
+    glGetQueryivEXT                 @170
+    glGetQueryObjectuivEXT          @171
 
     ; EGL dependencies
     glCreateContext                 @144 NONAME

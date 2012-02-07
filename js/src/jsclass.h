@@ -386,18 +386,30 @@ Jsvalify(Class *c)
 {
     return (JSClass *)c;
 }
+static JS_ALWAYS_INLINE const JSClass *
+Jsvalify(const Class *c)
+{
+    return (const JSClass *)c;
+}
 
 static JS_ALWAYS_INLINE Class *
 Valueify(JSClass *c)
 {
     return (Class *)c;
 }
+static JS_ALWAYS_INLINE const Class *
+Valueify(const JSClass *c)
+{
+    return (const Class *)c;
+}
 
 /*
  * Enumeration describing possible values of the [[Class]] internal property
  * value of objects.
  */
-enum ESClassValue { ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boolean };
+enum ESClassValue {
+    ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boolean, ESClass_RegExp
+};
 
 /*
  * Return whether the given object has the given [[Class]] internal property
@@ -407,6 +419,10 @@ enum ESClassValue { ESClass_Array, ESClass_Number, ESClass_String, ESClass_Boole
  */
 inline bool
 ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx);
+
+/* Just a helper that checks v.isObject before calling ObjectClassIs. */
+inline bool
+IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx);
 
 }  /* namespace js */
 

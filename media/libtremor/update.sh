@@ -30,3 +30,4 @@ cp $1/ivorbiscodec.h ./include/tremor/ivorbiscodec.h
 cp $1/os.h ./lib/os.h
 cp $1/COPYING ./COPYING
 cp $1/README ./README
+patch -p3 < ./bug719612.patch

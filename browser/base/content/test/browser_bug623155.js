@@ -43,6 +43,8 @@ https://example.com/browser/browser/base/content/test/redirect_bug623155.sjs#FG
 
  */
 
+var gNewTab;
+
 function test() {
   waitForExplicitFinish();
 

@@ -193,13 +193,16 @@ function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
  *         If not specified it will default to 'App Update Test'.
  * @param  aDisplayVersion (optional)
  *         The update's display version.
- *         If not specified it will default to 'version 99.0'.
+ *         If not specified it will default to 'version #' where # is the value
+ *         of DEFAULT_UPDATE_VERSION.
  * @param  aAppVersion (optional)
  *         The update's application version.
- *         If not specified it will default to '99.0'.
+ *         If not specified it will default to the value of
+ *         DEFAULT_UPDATE_VERSION.
  * @param  aPlatformVersion (optional)
  *         The update's platform version.
- *         If not specified it will default to '99.0'.
+ *         If not specified it will default to the value of
+ *         DEFAULT_UPDATE_VERSION.
  * @param  aBuildID (optional)
  *         The update's build id.
  *         If not specified it will default to '20080811053724'.
@@ -253,14 +256,17 @@ function getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
   if (aDisplayVersion || !aVersion) {
     displayVersion = "displayVersion=\"" +
                      (aDisplayVersion ? aDisplayVersion
-                                      : "version 99.0") + "\" ";
+                                      : "version " + DEFAULT_UPDATE_VERSION) +
+                     "\" ";
   }
   // version has been deprecated in favor of displayVersion but it still needs
   // to be tested for forward compatibility.
   let version = aVersion ? "version=\"" + aVersion + "\" " : "";
   let appVersion = "";
   if (aAppVersion || !aExtensionVersion) {
-    appVersion = "appVersion=\"" + (aAppVersion ? aAppVersion : "99.0") + "\" ";
+    appVersion = "appVersion=\"" +
+                 (aAppVersion ? aAppVersion : DEFAULT_UPDATE_VERSION) +
+                 "\" ";
   }
   // extensionVersion has been deprecated in favor of appVersion but it still
   // needs to be tested for forward compatibility.
@@ -270,7 +276,8 @@ function getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
   let platformVersion = "";
   if (aPlatformVersion) {
     platformVersion = "platformVersion=\"" +
-                      (aPlatformVersion ? aPlatformVersion : "99.0") + "\" ";
+                      (aPlatformVersion ? aPlatformVersion
+                                        : DEFAULT_UPDATE_VERSION) + "\" ";
   }
   let buildID = aBuildID ? aBuildID : "20080811053724";
   // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244

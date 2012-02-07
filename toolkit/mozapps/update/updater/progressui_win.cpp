@@ -75,6 +75,8 @@
 
 static float sProgress;  // between 0 and 100
 static BOOL  sQuit = FALSE;
+static BOOL sIndeterminate = FALSE;
+static StringTable sUIStrings;
 
 static BOOL
 GetStringsFile(WCHAR filename[MAX_PATH])
@@ -135,20 +137,12 @@ CenterDialog(HWND hDlg)
 static void
 InitDialog(HWND hDlg)
 {
-  WCHAR filename[MAX_PATH];
-  if (!GetStringsFile(filename))
-    return;
-
-  StringTable uiStrings;
-  if (ReadStrings(filename, &uiStrings) != OK)
-    return;
-
   WCHAR szwTitle[MAX_TEXT_LEN];
   WCHAR szwInfo[MAX_TEXT_LEN];
 
-  MultiByteToWideChar(CP_UTF8, 0, uiStrings.title, -1, szwTitle,
+  MultiByteToWideChar(CP_UTF8, 0, sUIStrings.title, -1, szwTitle,
                       sizeof(szwTitle)/sizeof(szwTitle[0]));
-  MultiByteToWideChar(CP_UTF8, 0, uiStrings.info, -1, szwInfo,
+  MultiByteToWideChar(CP_UTF8, 0, sUIStrings.info, -1, szwInfo,
                       sizeof(szwInfo)/sizeof(szwInfo[0]));
 
   SetWindowTextW(hDlg, szwTitle);
@@ -161,6 +155,11 @@ InitDialog(HWND hDlg)
 
   HWND hWndPro = GetDlgItem(hDlg, IDC_PROGRESS);
   SendMessage(hWndPro, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+  if (sIndeterminate) {
+    LONG_PTR val = GetWindowLongPtr(hWndPro, GWL_STYLE);
+    SetWindowLongPtr(hWndPro, GWL_STYLE, val|PBS_MARQUEE); 
+    SendMessage(hWndPro,(UINT) PBM_SETMARQUEE,(WPARAM) TRUE,(LPARAM)50 );
+  }
 
   // Resize the dialog to fit all of the text if necessary.
   RECT infoSize, textSize;
@@ -239,28 +238,49 @@ InitProgressUI(int *argc, NS_tchar ***argv)
   return 0;
 }
 
+/**
+ * Initializes the progress UI strings
+ * 
+ * @return 0 on success, -1 on error
+*/
 int
-ShowProgressUI()
-{
-  // Only show the Progress UI if the process is taking a significant amount of
-  // time where a significant amount of time is defined as .5 seconds after
-  // ShowProgressUI is called sProgress is less than 70.
-  Sleep(500);
-
-  if (sQuit || sProgress > 70.0f)
-    return 0;
-
+InitProgressUIStrings() {
   // If we do not have updater.ini, then we should not bother showing UI.
   WCHAR filename[MAX_PATH];
-  if (!GetStringsFile(filename))
+  if (!GetStringsFile(filename)) {
     return -1;
-  if (_waccess(filename, 04))
+  }
+
+  if (_waccess(filename, 04)) {
     return -1;
+  }
+  
   // If the updater.ini doesn't have the required strings, then we should not
   // bother showing UI.
-  StringTable uiStrings;
-  if (ReadStrings(filename, &uiStrings) != OK)
+  if (ReadStrings(filename, &sUIStrings) != OK) {
     return -1;
+  }
+
+  return 0;
+}
+
+int
+ShowProgressUI(bool indeterminate, bool initUIStrings)
+{
+  sIndeterminate = indeterminate;
+  if (!indeterminate) {
+    // Only show the Progress UI if the process is taking a significant amount of
+    // time where a significant amount of time is defined as .5 seconds after
+    // ShowProgressUI is called sProgress is less than 70.
+    Sleep(500);
+
+    if (sQuit || sProgress > 70.0f)
+      return 0;
+  }
+
+  if (initUIStrings && InitProgressUIStrings() == -1) {
+    return -1;
+  }
 
   INITCOMMONCONTROLSEX icc = {
     sizeof(INITCOMMONCONTROLSEX),

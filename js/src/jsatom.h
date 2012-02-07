@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -51,7 +51,6 @@
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
-#include "vm/String.h"
 
 struct JSIdArray {
     jsint length;
@@ -180,7 +179,35 @@ HashChars(const jschar *chars, size_t length)
     return h;
 }
 
-typedef TaggedPointerEntry<JSAtom> AtomStateEntry;
+class AtomStateEntry
+{
+    uintptr_t bits;
+
+    static const uintptr_t NO_TAG_MASK = uintptr_t(-1) - 1;
+
+  public:
+    AtomStateEntry() : bits(0) {}
+    AtomStateEntry(const AtomStateEntry &other) : bits(other.bits) {}
+    AtomStateEntry(JSAtom *ptr, bool tagged)
+      : bits(uintptr_t(ptr) | uintptr_t(tagged))
+    {
+        JS_ASSERT((uintptr_t(ptr) & 0x1) == 0);
+    }
+
+    bool isTagged() const {
+        return bits & 0x1;
+    }
+
+    /*
+     * Non-branching code sequence. Note that the const_cast is safe because
+     * the hash function doesn't consider the tag to be a portion of the key.
+     */
+    void setTagged(bool enabled) const {
+        const_cast<AtomStateEntry *>(this)->bits |= uintptr_t(enabled);
+    }
+
+    JSAtom *asPtr() const;
+};
 
 struct AtomHasher
 {
@@ -191,22 +218,11 @@ struct AtomHasher
         const JSAtom    *atom; /* Optional. */
 
         Lookup(const jschar *chars, size_t length) : chars(chars), length(length), atom(NULL) {}
-        Lookup(const JSAtom *atom) : chars(atom->chars()), length(atom->length()), atom(atom) {}
+        inline Lookup(const JSAtom *atom);
     };
 
-    static HashNumber hash(const Lookup &l) {
-        return HashChars(l.chars, l.length);
-    }
-
-    static bool match(const AtomStateEntry &entry, const Lookup &lookup) {
-        JSAtom *key = entry.asPtr();
-
-        if (lookup.atom)
-            return lookup.atom == key;
-        if (key->length() != lookup.length)
-            return false;
-        return PodEqual(key->chars(), lookup.chars, lookup.length);
-    }
+    static HashNumber hash(const Lookup &l) { return HashChars(l.chars, l.length); }
+    static inline bool match(const AtomStateEntry &entry, const Lookup &lookup);
 };
 
 typedef HashSet<AtomStateEntry, AtomHasher, SystemAllocPolicy> AtomSet;
@@ -234,15 +250,13 @@ enum FlationCoding
     CESU8Encoding
 };
 
+class PropertyName;
+
 }  /* namespace js */
 
 struct JSAtomState
 {
     js::AtomSet         atoms;
-
-#ifdef JS_THREADSAFE
-    JSThinLock          lock;
-#endif
 
     /*
      * From this point until the end of struct definition the struct must
@@ -534,6 +548,17 @@ js_InitCommonAtoms(JSContext *cx);
 extern void
 js_FinishCommonAtoms(JSContext *cx);
 
+namespace js {
+
+/* N.B. must correspond to boolean tagging behavior. */
+enum InternBehavior
+{
+    DoNotInternAtom = false,
+    InternAtom = true
+};
+
+}  /* namespace js */
+
 extern JSAtom *
 js_Atomize(JSContext *cx, const char *bytes, size_t length,
            js::InternBehavior ib = js::DoNotInternAtom,
@@ -542,6 +567,9 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length,
 extern JSAtom *
 js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length,
                 js::InternBehavior ib = js::DoNotInternAtom);
+
+extern JSAtom *
+js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
 /*
  * Return an existing atom for the given char array or null if the char

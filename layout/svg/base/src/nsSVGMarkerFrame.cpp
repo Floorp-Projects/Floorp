@@ -203,13 +203,14 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   mY = aMark->y;
   mAutoAngle = aMark->angle;
 
-  gfxRect bbox;
-
   gfxMatrix markerTM =
     content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle);
   gfxMatrix viewBoxTM = content->GetViewBoxTransform();
 
   gfxMatrix tm = viewBoxTM * markerTM * aToBBoxUserspace;
+
+  gfxRect bbox;
+  bool firstChild = true;
 
   for (nsIFrame* kid = mFrames.FirstChild();
        kid;
@@ -219,7 +220,17 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
       // When we're being called to obtain the invalidation area, we need to
       // pass down all the flags so that stroke is included. However, once DOM
       // getBBox() accepts flags, maybe we should strip some of those here?
-      bbox.UnionRect(bbox, child->GetBBoxContribution(tm, aFlags));
+
+      // We need to include zero width/height vertical/horizontal lines, so we have
+      // to use UnionEdges, but we must special case the first bbox so that we don't
+      // include the initial gfxRect(0,0,0,0).
+      gfxRect childBBox = child->GetBBoxContribution(tm, aFlags);
+      if (firstChild) {
+        bbox = childBBox;
+        firstChild = false;
+        continue;
+      }
+      bbox = bbox.UnionEdges(childBBox);
     }
   }
 

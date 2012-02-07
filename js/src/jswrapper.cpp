@@ -54,9 +54,9 @@
 #endif
 #include "jscompartment.h"
 
-#include "vm/RegExpObject.h"
-
 #include "jsobjinlines.h"
+
+#include "vm/RegExpObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -76,13 +76,13 @@ js::IsWrapper(const JSObject *wrapper)
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapObject(JSObject *wrapped, uintN *flagsp)
+js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, uintN *flagsp)
 {
     uintN flags = 0;
     while (wrapped->isWrapper()) {
         flags |= static_cast<Wrapper *>(GetProxyHandler(wrapped))->flags();
         wrapped = GetProxyPrivate(wrapped).toObjectOrNull();
-        if (wrapped->getClass()->ext.innerObject)
+        if (stopAtOuter && wrapped->getClass()->ext.innerObject)
             break;
     }
     if (flagsp)
@@ -332,6 +332,12 @@ Wrapper::fun_toString(JSContext *cx, JSObject *wrapper, uintN indent)
     JSString *str = ProxyHandler::fun_toString(cx, wrapper, indent);
     leave(cx, wrapper);
     return str;
+}
+
+RegExpShared *
+Wrapper::regexp_toShared(JSContext *cx, JSObject *wrapper)
+{
+    return wrappedObject(wrapper)->asRegExp().getShared(cx);
 }
 
 bool
@@ -673,7 +679,11 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
         if (!keys.resize(length))
             return false;
         for (size_t i = 0; i < length; ++i) {
-            keys[i] = ni->begin()[i];
+            jsid id;
+            if (!ValueToId(cx, StringValue(ni->begin()[i]), &id))
+                return false;
+            id = js_CheckForStringIndex(id);
+            keys[i] = id;
             if (!origin->wrapId(cx, &keys[i]))
                 return false;
         }
@@ -876,6 +886,14 @@ SecurityWrapper<Base>::objectClassIs(JSObject *obj, ESClassValue classValue, JSC
      */
     return Base::objectClassIs(obj, classValue, cx);
 }
+
+template <class Base>
+RegExpShared *
+SecurityWrapper<Base>::regexp_toShared(JSContext *cx, JSObject *obj)
+{
+    return Base::regexp_toShared(cx, obj);
+}
+
 
 template class js::SecurityWrapper<Wrapper>;
 template class js::SecurityWrapper<CrossCompartmentWrapper>;

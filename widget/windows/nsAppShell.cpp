@@ -257,7 +257,7 @@ nsAppShell::Run(void)
 
   nsresult rv = nsBaseAppShell::Run();
 
-#ifdef MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   mozilla::widget::StopAudioSession();
 #endif
 

@@ -39,7 +39,16 @@
 #define MOZILLA_DOMSVGTESTS_H__
 
 #include "nsIDOMSVGTests.h"
+#include "nsStringFwd.h"
 #include "SVGStringList.h"
+
+class nsAttrValue;
+class nsIAtom;
+class nsString;
+
+namespace mozilla {
+class DOMSVGStringList;
+}
 
 class DOMSVGTests : public nsIDOMSVGTests
 {

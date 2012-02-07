@@ -47,7 +47,7 @@ interface nsIAutoCompleteSimpleResultListener;
  * an array.
  */
 
-[scriptable, uuid(f9841787-ad26-49e6-a2dd-ba9020ee1c64)]
+[scriptable, uuid(c738dc26-aa71-4561-a3fd-b5a0e4aa80d2)]
 interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
 {
   /**
@@ -73,6 +73,12 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
    * of the search.
    */
   void setSearchResult(in unsigned short aSearchResult);
+
+  /**
+   * A writer for the readonly attribute 'typeAheadResult', typically set
+   * because a result is only intended for type-ahead completion.
+   */
+  void setTypeAheadResult(in boolean aHidden);
 
   /**
    * Appends a result item consisting of the given value, comment, image and style.

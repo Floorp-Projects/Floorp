@@ -1600,6 +1600,8 @@ public:
   void WarnOnceAbout(DeprecatedOperations aOperation);
 
   virtual void PostVisibilityUpdateEvent() = 0;
+  
+  bool IsSyntheticDocument() { return mIsSyntheticDocument; }
 
   void SetNeedLayoutFlush() {
     mNeedLayoutFlush = true;
@@ -1614,6 +1616,8 @@ public:
       mDisplayDocument->SetNeedStyleFlush();
     }
   }
+
+  virtual size_t SizeOfStyleSheets(nsMallocSizeOfFun aMallocSizeOf) const = 0;
 
 private:
   PRUint64 mWarnedAbout;

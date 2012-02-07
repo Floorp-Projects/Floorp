@@ -593,7 +593,7 @@ PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
     return PR_FALSE;
   
   /* Compute LIndex  */
-  if((in[3] < 0xa1) && (in[3] > 0xbe)) { /* illegal leading consonant */
+  if((in[3] < 0xa1) || (in[3] > 0xbe)) { /* illegal leading consonant */
     return PR_FALSE;
   } 
   else {
@@ -614,7 +614,7 @@ PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
   }
   
   /* Compute VIndex  */
-  if((in[5] < 0xbf) && (in[5] > 0xd3)) { /* illegal medial vowel */
+  if((in[5] < 0xbf) || (in[5] > 0xd3)) { /* illegal medial vowel */
     return PR_FALSE;
   } 
   else {
@@ -626,7 +626,7 @@ PRIVATE PRBool uCnSAlways8BytesDecomposedHangul(
   {
     TIndex = 0;
   } 
-  else if((in[7] < 0xa1) && (in[7] > 0xbe)) {/* illegal trailling consonant */
+  else if((in[7] < 0xa1) || (in[7] > 0xbe)) {/* illegal trailing consonant */
     return PR_FALSE;
   } 
   else {

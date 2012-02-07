@@ -54,7 +54,8 @@ nsSVGGeometryFrame::Init(nsIContent* aContent,
                          nsIFrame* aPrevInFlow)
 {
   AddStateBits(aParent->GetStateBits() &
-               (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD));
+               (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD |
+                NS_STATE_SVG_REDRAW_SUSPENDED));
   nsresult rv = nsSVGGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);
   return rv;
 }
@@ -165,28 +166,9 @@ SetupFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity)
 {
-  const nsStyleSVGPaint &paint = aStyleContext->GetStyleSVG()->*aFillOrStroke;
-  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
-  bool isServer = paint.mType == eStyleSVGPaintType_Server;
-  nscolor color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
-  if (styleIfVisited) {
-    const nsStyleSVGPaint &paintIfVisited =
-      styleIfVisited->GetStyleSVG()->*aFillOrStroke;
-    // To prevent Web content from detecting if a user has visited a URL
-    // (via URL loading triggered by paint servers or performance
-    // differences between paint servers or between a paint server and a
-    // color), we do not allow whether links are visited to change which
-    // paint server is used or switch between paint servers and simple
-    // colors.  A :visited style may only override a simple color with
-    // another simple color.
-    if (paintIfVisited.mType == eStyleSVGPaintType_Color &&
-        paint.mType == eStyleSVGPaintType_Color) {
-      nscolor colorIfVisited = paintIfVisited.mPaint.mColor;
-      nscolor colors[2] = { color, colorIfVisited };
-      color = nsStyleContext::CombineVisitedColors(colors,
-                                         aStyleContext->RelevantLinkVisited());
-    }
-  }
+  nscolor color;
+  nsSVGUtils::GetFallbackOrPaintColor(aContext, aStyleContext, aFillOrStroke,
+                                      &aOpacity, &color);
 
   SetupCairoColor(aContext, color, aOpacity);
 }

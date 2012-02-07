@@ -284,7 +284,7 @@ SimpleTest._logResult = function(test, passString, failString) {
 };
 
 SimpleTest.info = function(name, message) {
-    this._logResult({result:true, name:name, diag:message}, "TEST-INFO");
+    SimpleTest._logResult({result:true, name:name, diag:message}, "TEST-INFO");
 };
 
 /**
@@ -611,7 +611,7 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
             return;
         }
 
-        data = SpecialPowers.getClipboardData(flavor);
+        var data = SpecialPowers.getClipboardData(flavor);
 
         if (validatorFn(data)) {
             // Don't show the success message when waiting for preExpectedVal

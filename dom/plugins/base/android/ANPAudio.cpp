@@ -140,6 +140,8 @@ NS_IMETHODIMP
 AudioRunnable::Run()
 {
   JNIEnv* jenv = GetJNIForThread();
+  if (!jenv)
+    return NS_ERROR_FAILURE;
 
   if (jenv->PushLocalFrame(128)) {
     return NS_ERROR_FAILURE;
@@ -304,11 +306,13 @@ anp_audio_start(ANPAudioTrack* s)
   
   if (s->keepGoing) {
     // we are already playing.  Ignore.
-    LOG("anp_audio_start called twice!");
     return;
   }
 
   JNIEnv *jenv = GetJNIForThread();
+  if (!jenv)
+    return;
+
   jenv->CallVoidMethod(s->output_unit, at.play);
 
   s->isStopped = false;
@@ -329,6 +333,8 @@ anp_audio_pause(ANPAudioTrack* s)
   }
 
   JNIEnv *jenv = GetJNIForThread();
+  if (!jenv)
+    return;
   jenv->CallVoidMethod(s->output_unit, at.pause);
 }
 
@@ -341,6 +347,8 @@ anp_audio_stop(ANPAudioTrack* s)
 
   s->isStopped = true;
   JNIEnv *jenv = GetJNIForThread();
+  if (!jenv)
+    return;
   jenv->CallVoidMethod(s->output_unit, at.stop);
 }
 
@@ -350,7 +358,14 @@ anp_audio_isStopped(ANPAudioTrack* s)
   return s->isStopped;
 }
 
-void InitAudioTrackInterface(ANPAudioTrackInterfaceV0 *i) {
+uint32_t
+anp_audio_trackLatency(ANPAudioTrack* s) {
+  // Bug 721835
+  NOT_IMPLEMENTED();
+  return 1;
+}
+
+void InitAudioTrackInterfaceV0(ANPAudioTrackInterfaceV0 *i) {
   _assert(i->inSize == sizeof(*i));
   ASSIGN(i, newTrack);
   ASSIGN(i, deleteTrack);
@@ -358,4 +373,15 @@ void InitAudioTrackInterface(ANPAudioTrackInterfaceV0 *i) {
   ASSIGN(i, pause);
   ASSIGN(i, stop);
   ASSIGN(i, isStopped);
+}
+
+void InitAudioTrackInterfaceV1(ANPAudioTrackInterfaceV1 *i) {
+  _assert(i->inSize == sizeof(*i));
+  ASSIGN(i, newTrack);
+  ASSIGN(i, deleteTrack);
+  ASSIGN(i, start);
+  ASSIGN(i, pause);
+  ASSIGN(i, stop);
+  ASSIGN(i, isStopped);
+  ASSIGN(i, trackLatency);
 }

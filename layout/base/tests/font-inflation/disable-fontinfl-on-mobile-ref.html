@@ -1,0 +1,19 @@
+<!--
+Without the patch for bug 706198, this website should not show up as inflated. That means
+that with a 450px container, the minimum font size with 15em per line should be 30px.
+So, we map 0px-45px into 30px-45px, and thus 12px gets mapped to 34px.
+
+With the patch, the text should be uninflated, which means that 12px should still be
+12px.
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      p { font-size: 12px; line-height: 1.0;}
+    </style>
+    <body>
+      <p>Some uninflated text.</p>
+    </body>
+  </head>
+</html>

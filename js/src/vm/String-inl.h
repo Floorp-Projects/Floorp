@@ -76,6 +76,16 @@ JSString::needWriteBarrierPre(JSCompartment *comp)
 #endif
 }
 
+inline void
+JSString::readBarrier(JSString *str)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = str->compartment();
+    if (comp->needsBarrier())
+        MarkStringUnbarriered(comp->barrierTracer(), str, "read barrier");
+#endif
+}
+
 JS_ALWAYS_INLINE bool
 JSString::validateLength(JSContext *cx, size_t length)
 {
@@ -239,7 +249,7 @@ JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length, intN t
     if (!str)
         return NULL;
     str->init(chars, length, type, closure);
-    cx->runtime->updateMallocCounter((length + 1) * sizeof(jschar));
+    cx->runtime->updateMallocCounter(cx, (length + 1) * sizeof(jschar));
     return str;
 }
 

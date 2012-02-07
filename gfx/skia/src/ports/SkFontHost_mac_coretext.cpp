@@ -29,7 +29,111 @@
 #include "SkUtils.h"
 #include "SkTypefaceCache.h"
 
+class SkScalerContext_Mac;
+
+// inline versions of these rect helpers
+
+static bool CGRectIsEmpty_inline(const CGRect& rect) {
+    return rect.size.width <= 0 || rect.size.height <= 0;
+}
+
+static void CGRectInset_inline(CGRect* rect, CGFloat dx, CGFloat dy) {
+    rect->origin.x += dx;
+    rect->origin.y += dy;
+    rect->size.width -= dx * 2;
+    rect->size.height -= dy * 2;
+}
+
+static CGFloat CGRectGetMinX_inline(const CGRect& rect) {
+    return rect.origin.x;
+}
+
+static CGFloat CGRectGetMaxX_inline(const CGRect& rect) {
+    return rect.origin.x + rect.size.width;
+}
+
+static CGFloat CGRectGetMinY_inline(const CGRect& rect) {
+    return rect.origin.y;
+}
+
+static CGFloat CGRectGetMaxY_inline(const CGRect& rect) {
+    return rect.origin.y + rect.size.height;
+}
+
+static CGFloat CGRectGetWidth_inline(const CGRect& rect) {
+    return rect.size.width;
+}
+
+static CGFloat CGRectGetHeight(const CGRect& rect) {
+    return rect.size.height;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static void sk_memset_rect32(uint32_t* ptr, uint32_t value, size_t width,
+                             size_t height, size_t rowBytes) {
+    SkASSERT(width);
+    SkASSERT(width * sizeof(uint32_t) <= rowBytes);
+
+    if (width >= 32) {
+        while (height) {
+            sk_memset32(ptr, value, width);
+            ptr = (uint32_t*)((char*)ptr + rowBytes);
+            height -= 1;
+        }
+        return;
+    }
+
+    rowBytes -= width * sizeof(uint32_t);
+
+    if (width >= 8) {
+        while (height) {
+            int w = width;
+            do {
+                *ptr++ = value; *ptr++ = value;
+                *ptr++ = value; *ptr++ = value;
+                *ptr++ = value; *ptr++ = value;
+                *ptr++ = value; *ptr++ = value;
+                w -= 8;
+            } while (w >= 8);
+            while (--w >= 0) {
+                *ptr++ = value;
+            }
+            ptr = (uint32_t*)((char*)ptr + rowBytes);
+            height -= 1;
+        }
+    } else {
+        while (height) {
+            int w = width;
+            do {
+                *ptr++ = value;
+            } while (--w > 0);
+            ptr = (uint32_t*)((char*)ptr + rowBytes);
+            height -= 1;
+        }
+    }
+}
+
+// Potentially this should be made (1) public (2) optimized when width is small.
+// Also might want 16 and 32 bit version
+//
+static void sk_memset_rect(void* ptr, U8CPU byte, size_t width, size_t height,
+                           size_t rowBytes) {
+    uint8_t* dst = (uint8_t*)ptr;
+    while (height) {
+        memset(dst, byte, width);
+        dst += rowBytes;
+        height -= 1;
+    }
+}
+
 #include <sys/utsname.h>
+
+typedef uint32_t CGRGBPixel;
+
+static unsigned CGRGBPixel_getAlpha(CGRGBPixel pixel) {
+    return pixel >> 24;
+}
 
 // The calls to support subpixel are present in 10.5, but are not included in
 // the 10.5 SDK. The needed calls have been extracted from the 10.6 SDK and are
@@ -56,9 +160,6 @@
         bool shouldSubpixelQuantizeFonts);
 #endif
 
-using namespace skia_advanced_typeface_metrics_utils;
-
-static const size_t FONT_CACHE_MEMORY_BUDGET    = 1024 * 1024;
 static const char FONT_DEFAULT_NAME[]           = "Lucida Sans";
 
 // see Source/WebKit/chromium/base/mac/mac_util.mm DarwinMajorVersionInternal 
@@ -92,6 +193,10 @@ static int darwinVersion() {
 
 static bool isLeopard() {
     return darwinVersion() == 9;
+}
+
+static bool isSnowLeopard() {
+    return darwinVersion() == 10;
 }
 
 static bool isLion() {
@@ -137,6 +242,11 @@ static void CGAffineTransformToMatrix(const CGAffineTransform& xform, SkMatrix* 
                    0, 0, SK_Scalar1);
 }
 
+static SkScalar getFontScale(CGFontRef cgFont) {
+    int unitsPerEm = CGFontGetUnitsPerEm(cgFont);
+    return SkScalarInvert(SkIntToScalar(unitsPerEm));
+}
+
 //============================================================================
 //      Macros
 //----------------------------------------------------------------------------
@@ -154,6 +264,48 @@ static void CGAffineTransformToMatrix(const CGAffineTransform& xform, SkMatrix* 
     while (false)
 #endif
 
+///////////////////////////////////////////////////////////////////////////////
+
+#define BITMAP_INFO_RGB     (kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host)
+#define BITMAP_INFO_GRAY    (kCGImageAlphaNone)
+
+class Offscreen {
+public:
+    Offscreen();
+    ~Offscreen();
+
+    CGRGBPixel* getCG(const SkScalerContext_Mac& context, const SkGlyph& glyph,
+                      bool fgColorIsWhite, CGGlyph glyphID, size_t* rowBytesPtr);
+    
+private:
+    enum {
+        kSize = 32 * 32 * sizeof(CGRGBPixel)
+    };
+    SkAutoSMalloc<kSize> fImageStorage;
+    CGColorSpaceRef fRGBSpace;
+
+    // cached state
+    CGContextRef    fCG;
+    SkISize         fSize;
+    bool            fFgColorIsWhite;
+    bool            fDoAA;
+    bool            fDoLCD;
+
+    static int RoundSize(int dimension) {
+        return SkNextPow2(dimension);
+    }
+};
+
+Offscreen::Offscreen() : fRGBSpace(NULL), fCG(NULL) {
+    fSize.set(0,0);
+}
+
+Offscreen::~Offscreen() {
+    CFSafeRelease(fCG);
+    CFSafeRelease(fRGBSpace);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 static SkTypeface::Style computeStyleBits(CTFontRef font, bool* isMonospace) {
     unsigned style = SkTypeface::kNormal;
@@ -171,13 +323,40 @@ static SkTypeface::Style computeStyleBits(CTFontRef font, bool* isMonospace) {
     return (SkTypeface::Style)style;
 }
 
+class AutoCFDataRelease {
+public:
+    AutoCFDataRelease(CFDataRef obj) : fObj(obj) {}
+    const uint16_t* getShortPtr() { 
+        return fObj ? (const uint16_t*) CFDataGetBytePtr(fObj) : NULL; 
+    }
+    ~AutoCFDataRelease() { CFSafeRelease(fObj); }
+private:
+    CFDataRef fObj;
+};
+
 static SkFontID CTFontRef_to_SkFontID(CTFontRef fontRef) {
     ATSFontRef ats = CTFontGetPlatformFont(fontRef, NULL);
+    SkFontID id = (SkFontID)ats;
+    if (id != 0) {
+        id &= 0x3FFFFFFF; // make top two bits 00
+        return id;
+    }
     // CTFontGetPlatformFont returns NULL if the font is local 
     // (e.g., was created by a CSS3 @font-face rule).
-    // FIXME: This may fail if fontRef is reused, or if the 64 bit pointer
-    // duplicates the lowest 32 bits.  
-    return ats ? (long)ats : (long)fontRef;
+    CGFontRef cgFont = CTFontCopyGraphicsFont(fontRef, NULL);
+    AutoCFDataRelease headRef(CGFontCopyTableForTag(cgFont, 'head'));
+    const uint16_t* headData = headRef.getShortPtr();
+    if (headData) {
+        id = (SkFontID) (headData[4] | headData[5] << 16); // checksum
+        id = (id & 0x3FFFFFFF) | 0x40000000; // make top two bits 01
+    }
+    // well-formed fonts have checksums, but as a last resort, use the pointer.
+    if (id == 0) {
+        id = (SkFontID) (uintptr_t) fontRef;
+        id = (id & 0x3FFFFFFF) | 0x80000000; // make top two bits 10
+    }
+    CGFontRelease(cgFont);
+    return id;
 }
 
 class SkTypeface_Mac : public SkTypeface {
@@ -244,7 +423,15 @@ static SkTypeface* NewFromName(const char familyName[],
 
         ctFontDesc = CTFontDescriptorCreateWithAttributes(cfAttributes);
         if (ctFontDesc != NULL) {
-            ctFont = CTFontCreateWithFontDescriptor(ctFontDesc, 0, NULL);
+            if (isLeopard()) {
+                // CTFontCreateWithFontDescriptor on Leopard ignores the name
+                CTFontRef ctNamed = CTFontCreateWithName(cfFontName, 1, NULL);
+                ctFont = CTFontCreateCopyWithAttributes(ctNamed, 1, NULL,
+                                                        ctFontDesc);
+                CFSafeRelease(ctNamed);
+            } else {
+                ctFont = CTFontCreateWithFontDescriptor(ctFontDesc, 0, NULL);
+            }
         }
     }
 
@@ -364,7 +551,19 @@ SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
     return face;
 }
 
+static void flip(SkMatrix* matrix) {
+    matrix->setSkewX(-matrix->getSkewX());
+    matrix->setSkewY(-matrix->getSkewY());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
+
+struct GlyphRect {
+    int16_t fMinX;
+    int16_t fMinY;
+    int16_t fMaxX;
+    int16_t fMaxY;
+};
 
 class SkScalerContext_Mac : public SkScalerContext {
 public:
@@ -384,71 +583,337 @@ protected:
 
 private:
     static void                         CTPathElement(void *info, const CGPathElement *element);
-
+    uint16_t                            getAdjustStart();
+    void                                getVerticalOffset(CGGlyph glyphID, SkIPoint* offset) const;
+    bool                                generateBBoxes();
 
 private:
-    CGColorSpaceRef                     mColorSpaceGray;
-    CGColorSpaceRef                     mColorSpaceRGB;
-    CGAffineTransform                   mTransform;
-    SkMatrix                            mMatrix;
+    CGAffineTransform                   fTransform;
+    SkMatrix                            fUnitMatrix; // without font size
+    SkMatrix                            fVerticalMatrix; // unit rotated
+    SkMatrix                            fMatrix; // with font size
+    SkMatrix                            fAdjustBadMatrix; // lion-specific fix
+    Offscreen                           fOffscreen;
+    CTFontRef                           fCTFont;
+    CTFontRef                           fCTVerticalFont; // for vertical advance
+    CGFontRef                           fCGFont;
+    GlyphRect*                          fAdjustBad;
+    uint16_t                            fAdjustStart;
+    uint16_t                            fGlyphCount;
+    bool                                fGeneratedBBoxes;
+    bool                                fDoSubPosition;
+    bool                                fVertical;
 
-    CTFontRef                           mFont;
-    uint16_t                            mGlyphCount;
+    friend class                        Offscreen;
 };
 
 SkScalerContext_Mac::SkScalerContext_Mac(const SkDescriptor* desc)
         : SkScalerContext(desc)
-{   CFIndex             numGlyphs;
-    CTFontRef           ctFont;
-
-
+        , fCTVerticalFont(NULL)
+        , fAdjustBad(NULL)
+        , fAdjustStart(0)
+        , fGeneratedBBoxes(false)
+{
+    CTFontRef ctFont = GetFontRefFromFontID(fRec.fFontID);
+    CFIndex numGlyphs = CTFontGetGlyphCount(ctFont);
 
     // Get the state we need
-    fRec.getSingleMatrix(&mMatrix);
+    fRec.getSingleMatrix(&fMatrix);
+    fUnitMatrix = fMatrix;
 
-    ctFont    = GetFontRefFromFontID(fRec.fFontID);
-    numGlyphs = CTFontGetGlyphCount(ctFont);
+    // extract the font size out of the matrix, but leave the skewing for italic
+    SkScalar reciprocal = SkScalarInvert(fRec.fTextSize);
+    fUnitMatrix.preScale(reciprocal, reciprocal);
+
     SkASSERT(numGlyphs >= 1 && numGlyphs <= 0xFFFF);
 
+    fTransform = MatrixToCGAffineTransform(fMatrix);
 
-    // Initialise ourselves
-    mColorSpaceRGB = CGColorSpaceCreateDeviceRGB();
-//    mColorSpaceRGB = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGBLinear);
-//    mColorSpaceRGB = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-
-    mColorSpaceGray = CGColorSpaceCreateDeviceGray();
-    mTransform = MatrixToCGAffineTransform(mMatrix);
-
+    CGAffineTransform transform;
+    CGFloat unitFontSize;
     if (isLeopard()) {
         // passing 1 for pointSize to Leopard sets the font size to 1 pt.
-        // pass 0 to use the CoreText size
-        // extract the font size out of the matrix, but leave the skewing for italic
-        CGFloat fontSize = CTFontGetSize(ctFont);
-        float reciprocal = fontSize ? 1.0f / fontSize : 1.0f;
-        mMatrix.preScale(reciprocal, reciprocal);
-        CGAffineTransform transform = MatrixToCGAffineTransform(mMatrix);
-        mMatrix.setSkewX(-mMatrix.getSkewX()); // flip to fix up bounds later
-        mMatrix.setSkewY(-mMatrix.getSkewY());
-        mFont       = CTFontCreateCopyWithAttributes(ctFont, 0, &transform, NULL);
+        // pass the CoreText size explicitly
+        transform = MatrixToCGAffineTransform(fUnitMatrix);
+        unitFontSize = SkScalarToFloat(fRec.fTextSize);
     } else {
         // since our matrix includes everything, we pass 1 for pointSize
-        mFont       = CTFontCreateCopyWithAttributes(ctFont, 1, &mTransform, NULL);
+        transform = fTransform;
+        unitFontSize = 1;
     }
-    mGlyphCount = SkToU16(numGlyphs);
+    flip(&fUnitMatrix); // flip to fix up bounds later
+    fVertical = SkToBool(fRec.fFlags & kVertical_Flag);
+    CTFontDescriptorRef ctFontDesc = NULL;
+    if (fVertical) {
+        CFMutableDictionaryRef cfAttributes = CFDictionaryCreateMutable(
+                kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
+                &kCFTypeDictionaryValueCallBacks);
+        if (cfAttributes) {
+            CTFontOrientation ctOrientation = kCTFontVerticalOrientation;
+            CFNumberRef cfVertical = CFNumberCreate(kCFAllocatorDefault,
+                    kCFNumberSInt32Type, &ctOrientation);
+            CFDictionaryAddValue(cfAttributes, kCTFontOrientationAttribute,
+                    cfVertical);
+            CFSafeRelease(cfVertical);
+            ctFontDesc = CTFontDescriptorCreateWithAttributes(cfAttributes);
+            CFRelease(cfAttributes);
+        }
+    }
+    fCTFont = CTFontCreateCopyWithAttributes(ctFont, unitFontSize, &transform,
+            ctFontDesc);
+    CFSafeRelease(ctFontDesc);
+    fCGFont = CTFontCopyGraphicsFont(fCTFont, NULL);
+    if (fVertical) {
+        CGAffineTransform rotateLeft = CGAffineTransformMake(0, -1, 1, 0, 0, 0);
+        transform = CGAffineTransformConcat(rotateLeft, transform);
+        fCTVerticalFont = CTFontCreateCopyWithAttributes(ctFont, unitFontSize,
+                &transform, NULL);
+        fVerticalMatrix = fUnitMatrix;
+        if (isSnowLeopard()) {
+            SkScalar scale = SkScalarMul(fRec.fTextSize, getFontScale(fCGFont));
+            fVerticalMatrix.preScale(scale, scale);
+        } else {
+            fVerticalMatrix.preRotate(SkIntToScalar(90));
+        }
+        fVerticalMatrix.postScale(SK_Scalar1, -SK_Scalar1);
+    }
+    fGlyphCount = SkToU16(numGlyphs);
+    fDoSubPosition = SkToBool(fRec.fFlags & kSubpixelPositioning_Flag);
 }
 
-SkScalerContext_Mac::~SkScalerContext_Mac(void)
-{
+SkScalerContext_Mac::~SkScalerContext_Mac() {
+    delete[] fAdjustBad;
+    CFSafeRelease(fCTFont);
+    CFSafeRelease(fCTVerticalFont);
+    CFSafeRelease(fCGFont);
+}
 
-    // Clean up
-    CFSafeRelease(mColorSpaceGray);
-    CFSafeRelease(mColorSpaceRGB);
-    CFSafeRelease(mFont);
+CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph& glyph,
+                             bool fgColorIsWhite, CGGlyph glyphID, size_t* rowBytesPtr) {
+    if (!fRGBSpace) {
+        fRGBSpace = CGColorSpaceCreateDeviceRGB();
+    }
+
+    // default to kBW_Format
+    bool doAA = false;
+    bool doLCD = false;
+
+    switch (glyph.fMaskFormat) {
+        case SkMask::kLCD16_Format:
+        case SkMask::kLCD32_Format:
+            doLCD = true;
+            doAA = true;
+            break;
+        case SkMask::kA8_Format:
+            doLCD = false;
+            doAA = true;
+            break;
+        default:
+            break;
+    }
+
+    size_t rowBytes = fSize.fWidth * sizeof(CGRGBPixel);
+    if (!fCG || fSize.fWidth < glyph.fWidth || fSize.fHeight < glyph.fHeight) {
+        CFSafeRelease(fCG);
+        if (fSize.fWidth < glyph.fWidth) {
+            fSize.fWidth = RoundSize(glyph.fWidth);
+        }
+        if (fSize.fHeight < glyph.fHeight) {
+            fSize.fHeight = RoundSize(glyph.fHeight);
+        }
+
+        rowBytes = fSize.fWidth * sizeof(CGRGBPixel);
+        void* image = fImageStorage.reset(rowBytes * fSize.fHeight);
+        fCG = CGBitmapContextCreate(image, fSize.fWidth, fSize.fHeight, 8,
+                                    rowBytes, fRGBSpace, BITMAP_INFO_RGB);
+
+        // skia handles quantization itself, so we disable this for cg to get
+        // full fractional data from them.
+        CGContextSetAllowsFontSubpixelQuantization(fCG, false);
+        CGContextSetShouldSubpixelQuantizeFonts(fCG, false);
+
+        CGContextSetTextDrawingMode(fCG, kCGTextFill);
+        CGContextSetFont(fCG, context.fCGFont);
+        CGContextSetFontSize(fCG, 1);
+        CGContextSetTextMatrix(fCG, context.fTransform);
+
+        CGContextSetAllowsFontSubpixelPositioning(fCG, context.fDoSubPosition);
+        CGContextSetShouldSubpixelPositionFonts(fCG, context.fDoSubPosition);
+        
+        // force our checks below to happen
+        fDoAA = !doAA;
+        fDoLCD = !doLCD;
+        fFgColorIsWhite = !fgColorIsWhite;
+    }
+
+    if (fDoAA != doAA) {
+        CGContextSetShouldAntialias(fCG, doAA);
+        fDoAA = doAA;
+    }
+    if (fDoLCD != doLCD) {
+        CGContextSetShouldSmoothFonts(fCG, doLCD);
+        fDoLCD = doLCD;
+    }
+    if (fFgColorIsWhite != fgColorIsWhite) {
+        CGContextSetGrayFillColor(fCG, fgColorIsWhite ? 1.0 : 0, 1.0);
+        fFgColorIsWhite = fgColorIsWhite;
+    }
+
+    CGRGBPixel* image = (CGRGBPixel*)fImageStorage.get();
+    // skip rows based on the glyph's height
+    image += (fSize.fHeight - glyph.fHeight) * fSize.fWidth;
+
+    // erase with the "opposite" of the fgColor
+    uint32_t erase = fgColorIsWhite ? 0 : ~0;
+#if 0
+    sk_memset_rect(image, erase, glyph.fWidth * sizeof(CGRGBPixel),
+                   glyph.fHeight, rowBytes);
+#else
+    sk_memset_rect32(image, erase, glyph.fWidth, glyph.fHeight, rowBytes);
+#endif
+
+    float subX = 0;
+    float subY = 0;
+    if (context.fDoSubPosition) {
+        subX = SkFixedToFloat(glyph.getSubXFixed());
+        subY = SkFixedToFloat(glyph.getSubYFixed());
+    }
+    if (context.fVertical) {
+        SkIPoint offset;
+        context.getVerticalOffset(glyphID, &offset);
+        subX += offset.fX;
+        subY += offset.fY;
+    }
+    CGContextShowGlyphsAtPoint(fCG, -glyph.fLeft + subX,
+                               glyph.fTop + glyph.fHeight - subY,
+                               &glyphID, 1);
+
+    SkASSERT(rowBytesPtr);
+    *rowBytesPtr = rowBytes;
+    return image;
+}
+
+void SkScalerContext_Mac::getVerticalOffset(CGGlyph glyphID, SkIPoint* offset) const {
+    CGSize vertOffset;
+    CTFontGetVerticalTranslationsForGlyphs(fCTVerticalFont, &glyphID, &vertOffset, 1);
+    const SkPoint trans = {SkScalar(SkFloatToScalar(vertOffset.width)),
+                           SkScalar(SkFloatToScalar(vertOffset.height))};
+    SkPoint floatOffset;
+    fVerticalMatrix.mapPoints(&floatOffset, &trans, 1);
+    if (!isSnowLeopard()) {
+    // SnowLeopard fails to apply the font's matrix to the vertical metrics,
+    // but Lion and Leopard do. The unit matrix describes the font's matrix at
+    // point size 1. There may be some way to avoid mapping here by setting up
+    // fVerticalMatrix differently, but this works for now.
+        fUnitMatrix.mapPoints(&floatOffset, 1);
+    }
+    offset->fX = SkScalarRound(floatOffset.fX);
+    offset->fY = SkScalarRound(floatOffset.fY);
+}
+
+/* from http://developer.apple.com/fonts/TTRefMan/RM06/Chap6loca.html
+ * There are two versions of this table, the short and the long. The version
+ * used is specified in the Font Header ('head') table in the indexToLocFormat
+ * field. The choice of long or short offsets is dependent on the maximum
+ * possible offset distance.
+ *
+ * 'loca' short version: The actual local offset divided by 2 is stored. 
+ * 'loca' long version: The actual local offset is stored.
+ * 
+ * The result is a offset into a table of 2 byte (16 bit) entries.
+ */
+static uint32_t getLocaTableEntry(const uint16_t*& locaPtr, int locaFormat) {
+    uint32_t data = SkEndian_SwapBE16(*locaPtr++); // short
+    if (locaFormat) {
+        data = data << 15 | SkEndian_SwapBE16(*locaPtr++) >> 1; // long
+    }
+    return data;
+}
+
+// see http://developer.apple.com/fonts/TTRefMan/RM06/Chap6hhea.html
+static uint16_t getNumLongMetrics(const uint16_t* hheaData) {
+    const int kNumOfLongHorMetrics = 17;
+    return SkEndian_SwapBE16(hheaData[kNumOfLongHorMetrics]);
+}
+
+// see http://developer.apple.com/fonts/TTRefMan/RM06/Chap6head.html
+static int getLocaFormat(const uint16_t* headData) {
+    const int kIndexToLocFormat = 25;
+    return SkEndian_SwapBE16(headData[kIndexToLocFormat]);
+}
+
+uint16_t SkScalerContext_Mac::getAdjustStart() {
+    if (fAdjustStart) {
+        return fAdjustStart;
+    }
+    fAdjustStart = fGlyphCount; // fallback for all fonts
+    AutoCFDataRelease hheaRef(CGFontCopyTableForTag(fCGFont, 'hhea'));
+    const uint16_t* hheaData = hheaRef.getShortPtr();
+    if (hheaData) {
+        fAdjustStart = getNumLongMetrics(hheaData);
+    }
+    return fAdjustStart;
+}
+
+/*
+ * Lion has a bug in CTFontGetBoundingRectsForGlyphs which returns a bad value
+ * in theBounds.origin.x for fonts whose numOfLogHorMetrics is less than its
+ * glyph count. This workaround reads the glyph bounds from the font directly.
+ *
+ * The table is computed only if the font is a TrueType font, if the glyph
+ * value is >= fAdjustStart. (called only if fAdjustStart < fGlyphCount).
+ *
+ * TODO: A future optimization will compute fAdjustBad once per CGFont, and
+ * compute fAdjustBadMatrix once per font context.
+ */
+bool SkScalerContext_Mac::generateBBoxes() {
+    if (fGeneratedBBoxes) {
+        return NULL != fAdjustBad;
+    }
+    fGeneratedBBoxes = true;
+    AutoCFDataRelease headRef(CGFontCopyTableForTag(fCGFont, 'head'));
+    const uint16_t* headData = headRef.getShortPtr();
+    if (!headData) {
+        return false;
+    }
+    AutoCFDataRelease locaRef(CGFontCopyTableForTag(fCGFont, 'loca'));
+    const uint16_t* locaData = locaRef.getShortPtr();
+    if (!locaData) {
+        return false;
+    }
+    AutoCFDataRelease glyfRef(CGFontCopyTableForTag(fCGFont, 'glyf'));
+    const uint16_t* glyfData = glyfRef.getShortPtr();
+    if (!glyfData) {
+        return false;
+    }
+    CFIndex entries = fGlyphCount - fAdjustStart;
+    fAdjustBad = new GlyphRect[entries];
+    int locaFormat = getLocaFormat(headData);
+    const uint16_t* locaPtr = &locaData[fAdjustStart << locaFormat];
+    uint32_t last = getLocaTableEntry(locaPtr, locaFormat);
+    for (CFIndex index = 0; index < entries; ++index) {
+        uint32_t offset = getLocaTableEntry(locaPtr, locaFormat);
+        GlyphRect& rect = fAdjustBad[index];
+        if (offset != last) {
+            rect.fMinX = SkEndian_SwapBE16(glyfData[last + 1]);
+            rect.fMinY = SkEndian_SwapBE16(glyfData[last + 2]);
+            rect.fMaxX = SkEndian_SwapBE16(glyfData[last + 3]);
+            rect.fMaxY = SkEndian_SwapBE16(glyfData[last + 4]);
+        } else {
+            sk_bzero(&rect, sizeof(GlyphRect));
+        }
+        last = offset;
+    }
+    fAdjustBadMatrix = fMatrix;
+    flip(&fAdjustBadMatrix);
+    SkScalar fontScale = getFontScale(fCGFont);
+    fAdjustBadMatrix.preScale(fontScale, fontScale);
+    return true;
 }
 
 unsigned SkScalerContext_Mac::generateGlyphCount(void)
 {
-    return(mGlyphCount);
+    return(fGlyphCount);
 }
 
 uint16_t SkScalerContext_Mac::generateCharToGlyph(SkUnichar uni)
@@ -464,27 +929,44 @@ uint16_t SkScalerContext_Mac::generateCharToGlyph(SkUnichar uni)
     // Get the glyph
     theChar = (UniChar) uni;
 
-    if (!CTFontGetGlyphsForCharacters(mFont, &theChar, &cgGlyph, 1))
+    if (!CTFontGetGlyphsForCharacters(fCTFont, &theChar, &cgGlyph, 1))
         cgGlyph = 0;
 
     return(cgGlyph);
 }
 
-void SkScalerContext_Mac::generateAdvance(SkGlyph* glyph)
-{
+void SkScalerContext_Mac::generateAdvance(SkGlyph* glyph) {
     this->generateMetrics(glyph);
 }
 
-void SkScalerContext_Mac::generateMetrics(SkGlyph* glyph)
-{   CGSize      theAdvance;
+void SkScalerContext_Mac::generateMetrics(SkGlyph* glyph) {
+    CGSize      theAdvance;
     CGRect      theBounds;
     CGGlyph     cgGlyph;
 
     // Get the state we need
     cgGlyph = (CGGlyph) glyph->getGlyphID(fBaseGlyphCount);
 
-    CTFontGetBoundingRectsForGlyphs(mFont, kCTFontDefaultOrientation, &cgGlyph, &theBounds,  1);
-    CTFontGetAdvancesForGlyphs(mFont, kCTFontDefaultOrientation, &cgGlyph, &theAdvance, 1);
+    if (fVertical) {
+        if (!isSnowLeopard()) {
+        // Lion and Leopard respect the vertical font metrics.
+            CTFontGetBoundingRectsForGlyphs(fCTVerticalFont,
+                                            kCTFontVerticalOrientation, 
+                                            &cgGlyph, &theBounds,  1);
+        } else {
+        // Snow Leopard and earlier respect the vertical font metrics for
+        // advances, but not bounds, so use the default box and adjust it below.
+            CTFontGetBoundingRectsForGlyphs(fCTFont, kCTFontDefaultOrientation,
+                                            &cgGlyph, &theBounds,  1);
+        }
+        CTFontGetAdvancesForGlyphs(fCTVerticalFont, kCTFontVerticalOrientation,
+                                   &cgGlyph, &theAdvance, 1);
+    } else {
+        CTFontGetBoundingRectsForGlyphs(fCTFont, kCTFontDefaultOrientation,
+                                        &cgGlyph, &theBounds, 1);
+        CTFontGetAdvancesForGlyphs(fCTFont, kCTFontDefaultOrientation,
+                                   &cgGlyph, &theAdvance, 1);
+    }
 
     // BUG?
     // 0x200B (zero-advance space) seems to return a huge (garbage) bounds, when
@@ -492,7 +974,7 @@ void SkScalerContext_Mac::generateMetrics(SkGlyph* glyph)
     // empty path or not, and if so, we jam the bounds to 0. Hopefully a zero-advance
     // is rare, so we won't incur a big performance cost for this extra check.
     if (0 == theAdvance.width && 0 == theAdvance.height) {
-        CGPathRef path = CTFontCreatePathForGlyph(mFont, cgGlyph, NULL);
+        CGPathRef path = CTFontCreatePathForGlyph(fCTFont, cgGlyph, NULL);
         if (NULL == path || CGPathIsEmpty(path)) {
             theBounds = CGRectMake(0, 0, 0, 0);
         }
@@ -505,18 +987,20 @@ void SkScalerContext_Mac::generateMetrics(SkGlyph* glyph)
     glyph->fAdvanceX =  SkFloatToFixed(theAdvance.width);
     glyph->fAdvanceY = -SkFloatToFixed(theAdvance.height);
 
-    if (CGRectIsEmpty(theBounds)) {
+    if (CGRectIsEmpty_inline(theBounds)) {
         return;
     }
     
-    if (isLeopard()) {
+    if (isLeopard() && !fVertical) {
         // Leopard does not consider the matrix skew in its bounds.
         // Run the bounding rectangle through the skew matrix to determine
-        // the true bounds.
+        // the true bounds. However, this doesn't work if the font is vertical.
+        // FIXME (Leopard): If the font has synthetic italic (e.g., matrix skew)
+        // and the font is vertical, the bounds need to be recomputed.
         SkRect glyphBounds = SkRect::MakeXYWH(
                 theBounds.origin.x, theBounds.origin.y,
                 theBounds.size.width, theBounds.size.height);
-        mMatrix.mapRect(&glyphBounds);
+        fUnitMatrix.mapRect(&glyphBounds);
         theBounds.origin.x = glyphBounds.fLeft;
         theBounds.origin.y = glyphBounds.fTop;
         theBounds.size.width = glyphBounds.width();
@@ -528,10 +1012,21 @@ void SkScalerContext_Mac::generateMetrics(SkGlyph* glyph)
     // to transform the bounding box ourselves.
     //
     // The bounds are also expanded by 1 pixel, to give CG room for anti-aliasing.
-    theBounds = CGRectInset(theBounds, -1, -1);
+    CGRectInset_inline(&theBounds, -1, -1);
 
     // Get the metrics
+    bool lionAdjustedMetrics = false;
     if (isLion()) {
+        if (cgGlyph < fGlyphCount && cgGlyph >= getAdjustStart() 
+                    && generateBBoxes()) {
+            lionAdjustedMetrics = true;
+            SkRect adjust;
+            const GlyphRect& gRect = fAdjustBad[cgGlyph - fAdjustStart];
+            adjust.set(gRect.fMinX, gRect.fMinY, gRect.fMaxX, gRect.fMaxY);
+            fAdjustBadMatrix.mapRect(&adjust);
+            theBounds.origin.x = SkScalarToFloat(adjust.fLeft) - 1;
+            theBounds.origin.y = SkScalarToFloat(adjust.fTop) - 1;
+        }
         // Lion returns fractions in the bounds
         glyph->fWidth = sk_float_ceil2int(theBounds.size.width);
         glyph->fHeight = sk_float_ceil2int(theBounds.size.height);
@@ -539,12 +1034,15 @@ void SkScalerContext_Mac::generateMetrics(SkGlyph* glyph)
         glyph->fWidth = sk_float_round2int(theBounds.size.width);
         glyph->fHeight = sk_float_round2int(theBounds.size.height);
     }
-    glyph->fTop      = -sk_float_round2int(CGRectGetMaxY(theBounds));
-    glyph->fLeft     =  sk_float_round2int(CGRectGetMinX(theBounds));
-    if (isLion() && glyph->fLeft < 0) {
-        // Lion returns negative left bounds where Snow Leopard is positive.
-        // Increasing the width by the left side + 1 avoid clipping the bits.
-        glyph->fWidth -= glyph->fLeft - 1;
+    glyph->fTop      = -sk_float_round2int(CGRectGetMaxY_inline(theBounds));
+    glyph->fLeft     =  sk_float_round2int(CGRectGetMinX_inline(theBounds));
+    SkIPoint offset;
+    if (fVertical && (isSnowLeopard() || lionAdjustedMetrics)) {
+    // SnowLeopard doesn't respect vertical metrics, so compute them manually.
+    // Also compute them for Lion when the metrics were computed by hand.
+        getVerticalOffset(cgGlyph, &offset);
+        glyph->fLeft += offset.fX;
+        glyph->fTop += offset.fY;
     }
 }
 
@@ -571,25 +1069,26 @@ static const uint8_t* getInverseTable(bool isWhite) {
     return isWhite ? gWhiteTable : gTable;
 }
 
-static void invertGammaMask(bool isWhite, uint32_t rgb[], size_t rb, int height) {
+static void invertGammaMask(bool isWhite, CGRGBPixel rgb[], int width,
+                            int height, size_t rb) {
     const uint8_t* table = getInverseTable(isWhite);
     for (int y = 0; y < height; ++y) {
-        uint32_t* stop = (uint32_t*)((char*)rgb + rb);
-        while (rgb < stop) {
-            uint32_t c = *rgb;
+        for (int x = 0; x < width; ++x) {
+            uint32_t c = rgb[x];
             int r = (c >> 16) & 0xFF;
             int g = (c >>  8) & 0xFF;
             int b = (c >>  0) & 0xFF;
-            *rgb++ = (table[r] << 16) | (table[g] << 8) | table[b];
+            rgb[x] = (table[r] << 16) | (table[g] << 8) | table[b];
         }
+        rgb = (CGRGBPixel*)((char*)rgb + rb);
     }
 }
 
-static void bytes_to_bits(uint8_t dst[], const uint8_t src[], int count) {
+static void cgpixels_to_bits(uint8_t dst[], const CGRGBPixel src[], int count) {
     while (count > 0) {
         uint8_t mask = 0;
         for (int i = 7; i >= 0; --i) {
-            mask |= (*src++ >> 7) << i;
+            mask |= (CGRGBPixel_getAlpha(*src++) >> 7) << i;
             if (0 == --count) {
                 break;
             }
@@ -620,7 +1119,7 @@ static inline int g32_to_16(int x) { return round8to6(x); }
 static inline int b32_to_16(int x) { return round8to5(x); }
 #endif
 
-static inline uint16_t rgb_to_lcd16(uint32_t rgb) {
+static inline uint16_t rgb_to_lcd16(CGRGBPixel rgb) {
     int r = (rgb >> 16) & 0xFF;
     int g = (rgb >>  8) & 0xFF;
     int b = (rgb >>  0) & 0xFF;
@@ -628,7 +1127,7 @@ static inline uint16_t rgb_to_lcd16(uint32_t rgb) {
     return SkPackRGB16(r32_to_16(r), g32_to_16(g), b32_to_16(b));
 }
 
-static inline uint32_t rgb_to_lcd32(uint32_t rgb) {
+static inline uint32_t rgb_to_lcd32(CGRGBPixel rgb) {
     int r = (rgb >> 16) & 0xFF;
     int g = (rgb >>  8) & 0xFF;
     int b = (rgb >>  0) & 0xFF;
@@ -636,32 +1135,15 @@ static inline uint32_t rgb_to_lcd32(uint32_t rgb) {
     return SkPackARGB32(0xFF, r, g, b);
 }
 
-#define BITMAP_INFO_RGB     (kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host)
-#define BITMAP_INFO_GRAY    (kCGImageAlphaNone)
+#define BLACK_LUMINANCE_LIMIT   0x40
+#define WHITE_LUMINANCE_LIMIT   0xA0
 
 void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
-    CGContextRef        cgContext;
-    CGGlyph             cgGlyph;
-    CGFontRef           cgFont;
+    CGGlyph cgGlyph = (CGGlyph) glyph.getGlyphID(fBaseGlyphCount);
 
-    // Get the state we need
-    sk_bzero(glyph.fImage, glyph.fHeight * glyph.rowBytes());
-
-    cgGlyph   = (CGGlyph) glyph.getGlyphID(fBaseGlyphCount);
-    cgFont    = CTFontCopyGraphicsFont(mFont, NULL);
-
-    SkAutoSMalloc<1024> storage;
-
-    CGColorSpaceRef colorspace = mColorSpaceGray;
-    uint32_t info = BITMAP_INFO_GRAY;
-    void* image = glyph.fImage;
-    size_t rowBytes = glyph.rowBytes();
-    float grayColor = 1; // white
-    bool doAA = true;
-    bool doLCD = false;
-
-    bool isBlack = SkToBool(fRec.fFlags & SkScalerContext::kGammaForBlack_Flag);
-    bool isWhite = SkToBool(fRec.fFlags & SkScalerContext::kGammaForWhite_Flag);
+    bool fgColorIsWhite = true;
+    bool isWhite = fRec.getLuminanceByte() >= WHITE_LUMINANCE_LIMIT;
+    bool isBlack = fRec.getLuminanceByte() <= BLACK_LUMINANCE_LIMIT;
     uint32_t xorMask;
     bool invertGamma = false;
 
@@ -671,117 +1153,77 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
      *  src mask components, which we pack into our 16bit mask.
      */
     if (isLCDFormat(glyph.fMaskFormat)) {
-        colorspace = mColorSpaceRGB;
-        info = BITMAP_INFO_RGB;
-        // need tmp storage for 32bit RGB offscreen
-        rowBytes = glyph.fWidth << 2;
-        size_t size = glyph.fHeight * rowBytes;
-        image = storage.reset(size);
-        unsigned erase;
-
         if (isBlack) {
-            erase = 0xFF;
             xorMask = ~0;
-            grayColor = 0;
+            fgColorIsWhite = false;
         } else {    /* white or neutral */
-            erase = 0;
             xorMask = 0;
-            grayColor = 1;
             invertGamma = true;
         }
-        memset(image, erase, size);
-        doLCD = true;
-    } else if (SkMask::kBW_Format == glyph.fMaskFormat) {
-        rowBytes = SkAlign4(glyph.fWidth);
-        size_t size = glyph.fHeight * rowBytes;
-        image = storage.reset(size);
-        sk_bzero(image, size);
-        doAA = false;
     }
 
-    cgContext = CGBitmapContextCreate(image, glyph.fWidth, glyph.fHeight, 8,
-                                      rowBytes, colorspace, info);
+    size_t cgRowBytes;
+    CGRGBPixel* cgPixels = fOffscreen.getCG(*this, glyph, fgColorIsWhite, cgGlyph,
+                                            &cgRowBytes);
 
     // Draw the glyph
-    if (cgFont != NULL && cgContext != NULL) {
-        CGContextSetShouldSmoothFonts(cgContext, doLCD);
-
-#if 0
-// TODO: Add an alternate interface for the client to override device setting
-        CGContextSetAllowsFontSmoothing(cgContext, doLCD);
-#endif
-
-        bool doSubPosition = SkToBool(fRec.fFlags & kSubpixelPositioning_Flag);
-        CGContextSetAllowsFontSubpixelPositioning(cgContext, doSubPosition);
-        CGContextSetShouldSubpixelPositionFonts(cgContext, doSubPosition);
-
-        float subX = 0;
-        float subY = 0;
-        if (doSubPosition) {
-            subX = SkFixedToFloat(glyph.getSubXFixed());
-            subY = SkFixedToFloat(glyph.getSubYFixed());
-        }
-
-        // skia handles quantization itself, so we disable this for cg to get
-        // full fractional data from them.
-        CGContextSetAllowsFontSubpixelQuantization(cgContext, false);
-        CGContextSetShouldSubpixelQuantizeFonts(cgContext, false);
-
-        CGContextSetShouldAntialias(cgContext, doAA);
-        CGContextSetGrayFillColor(  cgContext, grayColor, 1.0);
-        CGContextSetTextDrawingMode(cgContext, kCGTextFill);
-        CGContextSetFont(           cgContext, cgFont);
-        CGContextSetFontSize(       cgContext, 1); // cgFont know's its size
-        CGContextSetTextMatrix(     cgContext, mTransform);
-        CGContextShowGlyphsAtPoint( cgContext, -glyph.fLeft + subX,
-                                    glyph.fTop + glyph.fHeight - subY,
-                                    &cgGlyph, 1);
+    if (cgPixels != NULL) {
 
         if (invertGamma) {
-            invertGammaMask(isWhite, (uint32_t*)image, rowBytes, glyph.fHeight);
+            invertGammaMask(isWhite, (uint32_t*)cgPixels,
+                            glyph.fWidth, glyph.fHeight, cgRowBytes);
         }
 
-        if (SkMask::kLCD16_Format == glyph.fMaskFormat) {
-            // downsample from rgba to rgb565
-            int width = glyph.fWidth;
-            const uint32_t* src = (const uint32_t*)image;
-            uint16_t* dst = (uint16_t*)glyph.fImage;
-            size_t dstRB = glyph.rowBytes();
-            for (int y = 0; y < glyph.fHeight; y++) {
-                for (int i = 0; i < width; i++) {
-                    dst[i] = rgb_to_lcd16(src[i] ^ xorMask);
+        int width = glyph.fWidth;
+        switch (glyph.fMaskFormat) {
+            case SkMask::kLCD32_Format: {
+                uint32_t* dst = (uint32_t*)glyph.fImage;
+                size_t dstRB = glyph.rowBytes();
+                for (int y = 0; y < glyph.fHeight; y++) {
+                    for (int i = 0; i < width; i++) {
+                        dst[i] = rgb_to_lcd32(cgPixels[i] ^ xorMask);
+                    }
+                    cgPixels = (CGRGBPixel*)((char*)cgPixels + cgRowBytes);
+                    dst = (uint32_t*)((char*)dst + dstRB);
                 }
-                src = (const uint32_t*)((const char*)src + rowBytes);
-                dst = (uint16_t*)((char*)dst + dstRB);
-            }
-        } else if (SkMask::kLCD32_Format == glyph.fMaskFormat) {
-            int width = glyph.fWidth;
-            const uint32_t* src = (const uint32_t*)image;
-            uint32_t* dst = (uint32_t*)glyph.fImage;
-            size_t dstRB = glyph.rowBytes();
-            for (int y = 0; y < glyph.fHeight; y++) {
-                for (int i = 0; i < width; i++) {
-                    dst[i] = rgb_to_lcd32(src[i] ^ xorMask);
+            } break;
+            case SkMask::kLCD16_Format: {
+                // downsample from rgba to rgb565
+                uint16_t* dst = (uint16_t*)glyph.fImage;
+                size_t dstRB = glyph.rowBytes();
+                for (int y = 0; y < glyph.fHeight; y++) {
+                    for (int i = 0; i < width; i++) {
+                        dst[i] = rgb_to_lcd16(cgPixels[i] ^ xorMask);
+                    }
+                    cgPixels = (CGRGBPixel*)((char*)cgPixels + cgRowBytes);
+                    dst = (uint16_t*)((char*)dst + dstRB);
                 }
-                src = (const uint32_t*)((const char*)src + rowBytes);
-                dst = (uint32_t*)((char*)dst + dstRB);
-            }
-        } else if (SkMask::kBW_Format == glyph.fMaskFormat) {
-            // downsample from A8 to A1
-            const uint8_t* src = (const uint8_t*)image;
-            uint8_t* dst = (uint8_t*)glyph.fImage;
-            size_t dstRB = glyph.rowBytes();
-            for (int y = 0; y < glyph.fHeight; y++) {
-                bytes_to_bits(dst, src, glyph.fWidth);
-                src += rowBytes;
-                dst += dstRB;
-            }
+            } break;
+            case SkMask::kA8_Format: {
+                uint8_t* dst = (uint8_t*)glyph.fImage;
+                size_t dstRB = glyph.rowBytes();
+                for (int y = 0; y < glyph.fHeight; y++) {
+                    for (int i = 0; i < width; ++i) {
+                        dst[i] = CGRGBPixel_getAlpha(cgPixels[i]);
+                    }
+                    cgPixels = (CGRGBPixel*)((char*)cgPixels + cgRowBytes);
+                    dst += dstRB;
+                }
+            } break;
+            case SkMask::kBW_Format: {
+                uint8_t* dst = (uint8_t*)glyph.fImage;
+                size_t dstRB = glyph.rowBytes();
+                for (int y = 0; y < glyph.fHeight; y++) {
+                    cgpixels_to_bits(dst, cgPixels, width);
+                    cgPixels = (CGRGBPixel*)((char*)cgPixels + cgRowBytes);
+                    dst += dstRB;
+                }
+            } break;
+            default:
+                SkDEBUGFAIL("unexpected mask format");
+                break;
         }
     }
-
-    // Clean up
-    CFSafeRelease(cgFont);
-    CFSafeRelease(cgContext);
 }
 
 /*
@@ -792,7 +1234,7 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
 #define kScaleForSubPixelPositionHinting  4
 
 void SkScalerContext_Mac::generatePath(const SkGlyph& glyph, SkPath* path) {
-    CTFontRef font = mFont;
+    CTFontRef font = fCTFont;
     float scaleX = 1;
     float scaleY = 1;
 
@@ -825,7 +1267,7 @@ void SkScalerContext_Mac::generatePath(const SkGlyph& glyph, SkPath* path) {
 
         CGAffineTransform xform = MatrixToCGAffineTransform(m, scaleX, scaleY);
         // need to release font when we're done
-        font = CTFontCreateCopyWithAttributes(mFont, 1, &xform, NULL);
+        font = CTFontCreateCopyWithAttributes(fCTFont, 1, &xform, NULL);
     }
     
     CGGlyph   cgGlyph = (CGGlyph)glyph.getGlyphID(fBaseGlyphCount);
@@ -848,30 +1290,18 @@ void SkScalerContext_Mac::generatePath(const SkGlyph& glyph, SkPath* path) {
 
 void SkScalerContext_Mac::generateFontMetrics(SkPaint::FontMetrics* mx,
                                               SkPaint::FontMetrics* my) {
-    CGRect theBounds = CTFontGetBoundingBox(mFont);
+    CGRect theBounds = CTFontGetBoundingBox(fCTFont);
 
-    SkPaint::FontMetrics        theMetrics;
-    theMetrics.fTop          = -CGRectGetMaxY(theBounds);
-    theMetrics.fAscent       = -CTFontGetAscent(mFont);
-    theMetrics.fDescent      =  CTFontGetDescent(mFont);
-    theMetrics.fBottom       = -CGRectGetMinY(theBounds);
-    theMetrics.fLeading      =  CTFontGetLeading(mFont);
-    theMetrics.fAvgCharWidth =  CGRectGetWidth(theBounds);
-    theMetrics.fXMin         =  CGRectGetMinX(theBounds);
-    theMetrics.fXMax         =  CGRectGetMaxX(theBounds);
-    theMetrics.fXHeight      =  CTFontGetXHeight(mFont);
-
-#if 0
-    SkASSERT(theMetrics.fTop          <= 0.0);
-    SkASSERT(theMetrics.fAscent       <= 0.0);
-    SkASSERT(theMetrics.fDescent      >= 0.0);
-    SkASSERT(theMetrics.fBottom       >= 0.0);
-    SkASSERT(theMetrics.fLeading      >= 0.0);
-    SkASSERT(theMetrics.fAvgCharWidth >= 0.0);
-    SkASSERT(theMetrics.fXMin         <= 0.0);
-    SkASSERT(theMetrics.fXMax         >  0.0);
-    SkASSERT(theMetrics.fXHeight      >= 0.0);
-#endif
+    SkPaint::FontMetrics theMetrics;
+    theMetrics.fTop          = CGToScalar(-CGRectGetMaxY_inline(theBounds));
+    theMetrics.fAscent       = CGToScalar(-CTFontGetAscent(fCTFont));
+    theMetrics.fDescent      = CGToScalar( CTFontGetDescent(fCTFont));
+    theMetrics.fBottom       = CGToScalar(-CGRectGetMinY_inline(theBounds));
+    theMetrics.fLeading      = CGToScalar( CTFontGetLeading(fCTFont));
+    theMetrics.fAvgCharWidth = CGToScalar( CGRectGetWidth_inline(theBounds));
+    theMetrics.fXMin         = CGToScalar( CGRectGetMinX_inline(theBounds));
+    theMetrics.fXMax         = CGToScalar( CGRectGetMaxX_inline(theBounds));
+    theMetrics.fXHeight      = CGToScalar( CTFontGetXHeight(fCTFont));
 
     if (mx != NULL) {
         *mx = theMetrics;
@@ -911,7 +1341,7 @@ void SkScalerContext_Mac::CTPathElement(void *info, const CGPathElement *element
             break;
 
         default:
-            SkASSERT("Unknown path element!");
+            SkDEBUGFAIL("Unknown path element!");
             break;
         }
 }
@@ -921,13 +1351,13 @@ void SkScalerContext_Mac::CTPathElement(void *info, const CGPathElement *element
 
 SkTypeface* SkFontHost::CreateTypefaceFromStream(SkStream* stream)
 {
-//    SkASSERT(!"SkFontHost::CreateTypefaceFromStream unimplemented");
+//    SkDEBUGFAIL("SkFontHost::CreateTypefaceFromStream unimplemented");
     return SkFontHost::CreateTypeface(NULL, NULL, NULL, NULL, SkTypeface::kNormal);
 }
 
 SkTypeface* SkFontHost::CreateTypefaceFromFile(const char path[])
 {
-//    SkASSERT(!"SkFontHost::CreateTypefaceFromFile unimplemented");
+//    SkDEBUGFAIL("SkFontHost::CreateTypefaceFromFile unimplemented");
     return SkFontHost::CreateTypeface(NULL, NULL, NULL, NULL, SkTypeface::kNormal);
 }
 
@@ -1073,13 +1503,13 @@ SkAdvancedTypefaceMetrics* SkFontHost::GetAdvancedTypefaceMetrics(
     } else if (perGlyphInfo &
                SkAdvancedTypefaceMetrics::kHAdvance_PerGlyphInfo) {
         if (info->fStyle & SkAdvancedTypefaceMetrics::kFixedPitch_Style) {
-            appendRange(&info->fGlyphWidths, 0);
+            skia_advanced_typeface_metrics_utils::appendRange(&info->fGlyphWidths, 0);
             info->fGlyphWidths->fAdvance.append(1, &min_width);
-            finishRange(info->fGlyphWidths.get(), 0,
+            skia_advanced_typeface_metrics_utils::finishRange(info->fGlyphWidths.get(), 0,
                         SkAdvancedTypefaceMetrics::WidthRange::kDefault);
         } else {
             info->fGlyphWidths.reset(
-                getAdvanceData(ctFont,
+                skia_advanced_typeface_metrics_utils::getAdvanceData(ctFont,
                                glyphCount,
                                glyphIDs,
                                glyphIDsCount,
@@ -1183,7 +1613,7 @@ SkStream* SkFontHost::OpenStream(SkFontID uniqueID) {
 
 size_t SkFontHost::GetFileName(SkFontID fontID, char path[], size_t length,
                                int32_t* index) {
-    SkASSERT(!"SkFontHost::GetFileName unimplemented");
+    SkDEBUGFAIL("SkFontHost::GetFileName unimplemented");
     return(0);
 }
 
@@ -1259,6 +1689,21 @@ void SkFontHost::FilterRec(SkScalerContext::Rec* rec) {
     }
     rec->setHinting(h);
 
+    // for compatibility at the moment, discretize luminance to 3 settings
+    // black, white, gray. This helps with fontcache utilization, since we
+    // won't create multiple entries that in the end map to the same results.
+    {
+        unsigned lum = rec->getLuminanceByte();
+        if (lum <= BLACK_LUMINANCE_LIMIT) {
+            lum = 0;
+        } else if (lum >= WHITE_LUMINANCE_LIMIT) {
+            lum = SkScalerContext::kLuminance_Max;
+        } else {
+            lum = SkScalerContext::kLuminance_Max >> 1;
+        }
+        rec->setLuminanceBits(lum);
+    }
+    
     if (SkMask::kLCD16_Format == rec->fMaskFormat
             || SkMask::kLCD32_Format == rec->fMaskFormat) {
         if (supports_LCD()) {
@@ -1267,57 +1712,6 @@ void SkFontHost::FilterRec(SkScalerContext::Rec* rec) {
             rec->fMaskFormat = SkMask::kA8_Format;
         }
     }
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-size_t SkFontHost::ShouldPurgeFontCache(size_t sizeAllocatedSoFar) {
-    if (sizeAllocatedSoFar > FONT_CACHE_MEMORY_BUDGET) {
-        return sizeAllocatedSoFar - FONT_CACHE_MEMORY_BUDGET;
-    }
-    return 0;
-}
-
-#include "SkColorFilter.h"
-
-static bool justAColor(const SkPaint& paint, SkColor* color) {
-    if (paint.getShader()) {
-        return false;
-    }
-    SkColor c = paint.getColor();
-    if (paint.getColorFilter()) {
-        c = paint.getColorFilter()->filterColor(c);
-    }
-    if (color) {
-        *color = c;
-    }
-    return true;
-}
-
-#define BLACK_GAMMA_THRESHOLD   0x40
-#define WHITE_GAMMA_THRESHOLD   0xA0
-
-int SkFontHost::ComputeGammaFlag(const SkPaint& paint) {
-    SkColor c;
-    if (justAColor(paint, &c)) {
-        int r = SkColorGetR(c);
-        int g = SkColorGetG(c);
-        int b = SkColorGetB(c);
-        int luminance = (r * 2 + g * 5 + b) >> 3;
-
-        if (luminance <= BLACK_GAMMA_THRESHOLD) {
-            return SkScalerContext::kGammaForBlack_Flag;
-        }
-        if (luminance >= WHITE_GAMMA_THRESHOLD) {
-            return SkScalerContext::kGammaForWhite_Flag;
-        }
-    }
-    return 0;
-}
-
-void SkFontHost::GetGammaTables(const uint8_t* tables[2]) {
-    tables[0] = NULL;   // black gamma (e.g. exp=1.4)
-    tables[1] = NULL;   // white gamma (e.g. exp= 1/1.4)
 }
 
 ///////////////////////////////////////////////////////////////////////////

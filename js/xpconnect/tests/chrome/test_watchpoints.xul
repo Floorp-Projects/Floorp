@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=693527
+-->
+<window title="Mozilla Bug "
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id="
+     target="_blank">Mozilla Bug 693527</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 693527 **/
+
+  let Cu = Components.utils;
+  let Ci = Components.interfaces;
+
+  /* Create a weak reference, with a single-element weak map. */
+  let make_weak_ref = function (obj) {
+    let m = new WeakMap;
+    m.set(obj, {});
+    return m;
+  };
+
+  /* Check to see if a weak reference is dead. */
+  let weak_ref_dead = function (r) {
+    return Cu.nondeterministicGetWeakMapKeys(r).length == 0;
+  }
+
+
+  let make_cycle = function () {
+    var p = document.createElement("p");
+    p.children.x = p;
+    var f = function() { };
+    p.watch("y", f);
+    var d = document.createElement("div");
+    d.appendChild(p);
+    f.loop = d;
+    f.bar = {}; // observing f directly makes the leak go away even without the CC somehow
+    return make_weak_ref(f.bar);
+  };
+
+  var cycle_ref = make_cycle();
+
+
+  /* set up for running precise GC/CC then checking the results */
+
+  SimpleTest.waitForExplicitFinish();
+
+  Cu.schedulePreciseGC(function () {
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+         .getInterface(Ci.nsIDOMWindowUtils)
+         .cycleCollect();
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+         .getInterface(Ci.nsIDOMWindowUtils)
+         .garbageCollect();
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+         .getInterface(Ci.nsIDOMWindowUtils)
+         .garbageCollect();
+  
+    ok(weak_ref_dead(cycle_ref), "Garbage gray watchpoint cycle should be collected.");
+
+    SimpleTest.finish();
+  });
+
+  ]]>
+  </script>
+</window>

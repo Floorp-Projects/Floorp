@@ -5,8 +5,10 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManage
 const bhist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
 const formhist = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
+let tempScope = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
-                                           .loadSubScript("chrome://browser/content/sanitize.js");
+                                           .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
+let Sanitizer = tempScope.Sanitizer;
 
 function test() {
   

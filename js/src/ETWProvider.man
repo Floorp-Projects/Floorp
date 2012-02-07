@@ -79,29 +79,29 @@
           <!-- GC -->
           <event symbol="EvtGCStart" value="1012" version="1"
                  channel="MozillaChannel" level="win:Informational"
-                 template="CompartmentTemplate" task="Allocation" opcode="GCStart"
+                 template="VoidTemplate" task="Allocation" opcode="GCStart"
                  keywords="SampleKeyword" message="$(string.SampleProvider.SampleEvent.message)"/>
           <event symbol="EvtGCEnd" value="1013" version="1"
                  channel="MozillaChannel" level="win:Informational"
-                 template="CompartmentTemplate" task="Allocation" opcode="GCEnd"
+                 template="VoidTemplate" task="Allocation" opcode="GCEnd"
                  keywords="SampleKeyword" message="$(string.SampleProvider.SampleEvent.message)"/>
 
           <event symbol="EvtGCStartMarkPhase" value="1014" version="1"
                  channel="MozillaChannel" level="win:Informational"
-                 template="CompartmentTemplate" task="Allocation" opcode="GCMarkStart"
+                 template="VoidTemplate" task="Allocation" opcode="GCMarkStart"
                  keywords="SampleKeyword" message="$(string.SampleProvider.SampleEvent.message)"/>
           <event symbol="EvtGCEndMarkPhase" value="1015" version="1"
                  channel="MozillaChannel" level="win:Informational"
-                 template="CompartmentTemplate" task="Allocation" opcode="GCMarkEnd"
+                 template="VoidTemplate" task="Allocation" opcode="GCMarkEnd"
                  keywords="SampleKeyword" message="$(string.SampleProvider.SampleEvent.message)"/>
                     
           <event symbol="EvtGCStartSweepPhase" value="1016" version="1"
                  channel="MozillaChannel" level="win:Informational"
-                 template="CompartmentTemplate" task="Allocation" opcode="GCSweepStart"
+                 template="VoidTemplate" task="Allocation" opcode="GCSweepStart"
                  keywords="SampleKeyword" message="$(string.SampleProvider.SampleEvent.message)"/>
           <event symbol="EvtGCEndSweepPhase" value="1017" version="1"
                  channel="MozillaChannel" level="win:Informational"
-                 template="CompartmentTemplate" task="Allocation" opcode="GCSweepEnd"
+                 template="VoidTemplate" task="Allocation" opcode="GCSweepEnd"
                  keywords="SampleKeyword" message="$(string.SampleProvider.SampleEvent.message)"/>
 
           <event symbol="EvtMemoryAcquire" value="1018" version="1"
@@ -231,10 +231,6 @@
             <data name="Size" inType="win:Int64" outType="xs:long"/>
           </template>
 
-          <template tid="CompartmentTemplate">
-            <data name="Compartment" inType="win:Int64" outType="xs:long"/>
-          </template>
-
           <template tid="MemoryLocationTemplate">
             <data name="Compartment" inType="win:Int64" outType="xs:long"/>
             <data name="Address" inType="win:Int64" outType="xs:long"/>
@@ -257,6 +253,9 @@
 
           <template tid="IntTemplate">
             <data name="Int" inType="win:Int32" outType="xs:int"/>
+          </template>
+
+          <template tid="VoidTemplate">
           </template>
 
         </templates>

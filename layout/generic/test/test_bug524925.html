@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=524925
+-->
+
+<head>
+  <title>Test for Bug 524925</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+
+<div id="container" style="width: 100px; height: 100px; overflow: auto;">
+  <div id="container2" style="width: 100px; height: 100px; overflow: visible;">
+    <div id="block" style="width: 50px; height: 50px; background-color: #000; -moz-transform:translatey(0px);"></div>
+  </div>
+</div>
+
+<pre id="test">
+  <script type="application/javascript">
+    // Move 'block' 100 pixels downwards.
+    var block = document.getElementById("block");
+    block.style.MozTransform = "translatey(100px)";
+
+    // Check the result is correct and finish the test
+    var container = document.getElementById("container");
+    is(container.scrollHeight, 150, "Overflow areas should update after dynamic transform changes");
+  </script>
+</pre>
+
+</body>
+</html>

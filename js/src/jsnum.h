@@ -42,7 +42,6 @@
 
 #include <math.h>
 
-#include "jsstdint.h"
 #include "jsobj.h"
 
 /*
@@ -92,11 +91,8 @@ JSDOUBLE_IS_NaN(jsdouble d)
 {
     jsdpun u;
     u.d = d;
-#if defined(mips) || defined(__mips__) || defined(MIPS) || defined(_MIPS_)
-    return (u.u64 & ~JSDOUBLE_SIGNBIT) > JSDOUBLE_EXPMASK;
-#else
-    return (u.s.hi & JSDOUBLE_HI32_NAN) == JSDOUBLE_HI32_NAN;
-#endif
+    return (u.u64 & JSDOUBLE_EXPMASK) == JSDOUBLE_EXPMASK &&
+           (u.u64 & JSDOUBLE_MANTMASK) != 0;
 }
 
 static inline int
@@ -131,15 +127,6 @@ JS_HASH_DOUBLE(jsdouble d)
     u.d = d;
     return u.s.lo ^ u.s.hi;
 }
-
-#if defined(XP_WIN)
-#define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN)                               \
-    ((JSDOUBLE_IS_NaN(LVAL) || JSDOUBLE_IS_NaN(RVAL))                         \
-     ? (IFNAN)                                                                \
-     : (LVAL) OP (RVAL))
-#else
-#define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN) ((LVAL) OP (RVAL))
-#endif
 
 extern jsdouble js_NaN;
 extern jsdouble js_PositiveInfinity;

@@ -64,6 +64,8 @@
 
 #include "gfxCrashReporterUtils.h"
 
+#include "sampler.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -99,14 +101,6 @@ LayerManagerOGL::Destroy()
       RootLayer()->Destroy();
     }
     mRoot = nsnull;
-
-    // Make a copy, since SetLayerManager will cause mImageContainers
-    // to get mutated.
-    nsTArray<ImageContainer*> imageContainers(mImageContainers);
-    for (PRUint32 i = 0; i < imageContainers.Length(); ++i) {
-      ImageContainer *c = imageContainers[i];
-      c->SetLayerManager(nsnull);
-    }
 
     CleanupResources();
 
@@ -475,19 +469,6 @@ LayerManagerOGL::CreateContainerLayer()
   return layer.forget();
 }
 
-already_AddRefed<ImageContainer>
-LayerManagerOGL::CreateImageContainer()
-{
-  if (mDestroyed) {
-    NS_WARNING("Call on destroyed layer manager");
-    return nsnull;
-  }
-
-  nsRefPtr<ImageContainer> container = new ImageContainerOGL(this);
-  RememberImageContainer(container);
-  return container.forget();
-}
-
 already_AddRefed<ImageLayer>
 LayerManagerOGL::CreateImageLayer()
 {
@@ -522,26 +503,6 @@ LayerManagerOGL::CreateCanvasLayer()
 
   nsRefPtr<CanvasLayer> layer = new CanvasLayerOGL(this);
   return layer.forget();
-}
-
-void
-LayerManagerOGL::ForgetImageContainer(ImageContainer *aContainer)
-{
-  NS_ASSERTION(aContainer->Manager() == this,
-               "ForgetImageContainer called on non-owned container!");
-
-  if (!mImageContainers.RemoveElement(aContainer)) {
-    NS_WARNING("ForgetImageContainer couldn't find container it was supposed to forget!");
-    return;
-  }
-}
-
-void
-LayerManagerOGL::RememberImageContainer(ImageContainer *aContainer)
-{
-  NS_ASSERTION(aContainer->Manager() == this,
-               "RememberImageContainer called on non-owned container!");
-  mImageContainers.AppendElement(aContainer);
 }
 
 LayerOGL*
@@ -758,6 +719,7 @@ LayerManagerOGL::BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
 void
 LayerManagerOGL::Render()
 {
+  SAMPLE_LABEL("LayerManagerOGL", "Render");
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;
@@ -814,8 +776,8 @@ LayerManagerOGL::Render()
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
-                           
-  mWidget->DrawOver(this, rect);
+
+  mWidget->DrawWindowOverlay(this, rect);
 
   if (mTarget) {
     CopyToTarget();
@@ -1129,8 +1091,33 @@ LayerManagerOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
   } FOR_EACH_LAYER_PROGRAM_END
 }
 
+static GLenum
+GetFrameBufferInternalFormat(GLContext* gl,
+                             GLuint aCurrentFrameBuffer,
+                             nsIWidget* aWidget)
+{
+  if (aCurrentFrameBuffer == 0) { // default framebuffer
+    return aWidget->GetGLFrameBufferFormat();
+  }
+  return LOCAL_GL_RGBA;
+}
+
+static bool
+AreFormatsCompatibleForCopyTexImage2D(GLenum aF1, GLenum aF2)
+{
+  // GL requires that the implementation has to handle copies between
+  // different formats, so all are "compatible".  GLES does not
+  // require that.
+#ifdef USE_GLES2
+  return (aF1 == aF2);
+#else
+  return true;
+#endif
+}
+
 void
 LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
+                                      GLuint aCurrentFrameBuffer,
                                       GLuint *aFBO, GLuint *aTexture)
 {
   GLuint tex, fbo;
@@ -1139,12 +1126,40 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
   mGLContext->fGenTextures(1, &tex);
   mGLContext->fBindTexture(mFBOTextureTarget, tex);
   if (aInit == InitModeCopy) {
-    mGLContext->fCopyTexImage2D(mFBOTextureTarget,
-                                0,
-                                LOCAL_GL_RGBA,
-                                aRect.x, aRect.y,
-                                aRect.width, aRect.height,
-                                0);
+    // We're going to create an RGBA temporary fbo.  But to
+    // CopyTexImage() from the current framebuffer, the framebuffer's
+    // format has to be compatible with the new texture's.  So we
+    // check the format of the framebuffer here and take a slow path
+    // if it's incompatible.
+    GLenum format =
+      GetFrameBufferInternalFormat(gl(), aCurrentFrameBuffer, mWidget);
+    if (AreFormatsCompatibleForCopyTexImage2D(format, LOCAL_GL_RGBA)) {
+      mGLContext->fCopyTexImage2D(mFBOTextureTarget,
+                                  0,
+                                  LOCAL_GL_RGBA,
+                                  aRect.x, aRect.y,
+                                  aRect.width, aRect.height,
+                                  0);
+    } else {
+      // Curses, incompatible formats.  Take a slow path.
+      //
+      // XXX Technically CopyTexSubImage2D also has the requirement of
+      // matching formats, but it doesn't seem to affect us in the
+      // real world.
+      mGLContext->fTexImage2D(mFBOTextureTarget,
+                              0,
+                              LOCAL_GL_RGBA,
+                              aRect.width, aRect.height,
+                              0,
+                              LOCAL_GL_RGBA,
+                              LOCAL_GL_UNSIGNED_BYTE,
+                              NULL);
+      mGLContext->fCopyTexSubImage2D(mFBOTextureTarget,
+                                     0,    // level
+                                     0, 0, // offset
+                                     aRect.x, aRect.y,
+                                     aRect.width, aRect.height);
+    }
   } else {
     mGLContext->fTexImage2D(mFBOTextureTarget,
                             0,

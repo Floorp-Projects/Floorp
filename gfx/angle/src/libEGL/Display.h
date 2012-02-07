@@ -18,6 +18,7 @@
 #include <d3d9.h>
 
 #include <set>
+#include <vector>
 
 #include "libGLESv2/Context.h"
 
@@ -63,6 +64,9 @@ class Display
     virtual D3DADAPTER_IDENTIFIER9 *getAdapterIdentifier();
     virtual bool testDeviceLost();
     virtual bool testDeviceResettable();
+    virtual void sync(bool block);
+    virtual IDirect3DQuery9* allocateEventQuery();
+    virtual void freeEventQuery(IDirect3DQuery9* query);
     virtual void getMultiSampleSupport(D3DFORMAT format, bool *multiSampleArray);
     virtual bool getDXT1TextureSupport();
     virtual bool getDXT3TextureSupport();
@@ -74,6 +78,7 @@ class Display
     virtual bool getLuminanceAlphaTextureSupport();
     virtual bool getVertexTextureSupport() const;
     virtual bool getNonPower2TextureSupport() const;
+    virtual bool getOcclusionQuerySupport() const;
     virtual D3DPOOL getBufferPool(DWORD usage) const;
     virtual D3DPOOL getTexturePool(bool renderable) const;
 
@@ -103,6 +108,10 @@ class Display
     IDirect3D9Ex *mD3d9Ex;  // Might be null if D3D9Ex is not supported.
     IDirect3DDevice9 *mDevice;
     IDirect3DDevice9Ex *mDeviceEx;  // Might be null if D3D9Ex is not supported.
+
+    // A pool of event queries that are currently unused.
+    std::vector<IDirect3DQuery9*> mEventQueryPool;
+
     D3DCAPS9 mDeviceCaps;
     D3DADAPTER_IDENTIFIER9 mAdapterIdentifier;
     HWND mDeviceWindow;

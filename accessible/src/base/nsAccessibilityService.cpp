@@ -40,6 +40,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
+#include "nsAccessiblePivot.h"
 #include "nsCoreUtils.h"
 #include "nsAccUtils.h"
 #include "nsApplicationAccessibleWrap.h"
@@ -395,7 +396,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
     nsCString plugId;
     nsresult rv = pluginInstance->GetValueFromPlugin(
       NPPVpluginNativeAccessibleAtkPlugId, &plugId);
-    if (NS_SUCCEEDED(rv) && !plugId.IsVoid()) {
+    if (NS_SUCCEEDED(rv) && !plugId.IsEmpty()) {
       AtkSocketAccessible* socketAccessible =
         new AtkSocketAccessible(aContent, weakShell, plugId);
 
@@ -864,6 +865,23 @@ nsAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAccessibilityService::CreateAccessiblePivot(nsIAccessible* aRoot,
+                                              nsIAccessiblePivot** aPivot)
+{
+  NS_ENSURE_ARG_POINTER(aPivot);
+  NS_ENSURE_ARG(aRoot);
+  *aPivot = nsnull;
+
+  nsRefPtr<nsAccessible> accessibleRoot(do_QueryObject(aRoot));
+  NS_ENSURE_TRUE(accessibleRoot, NS_ERROR_INVALID_ARG);
+
+  nsAccessiblePivot* pivot = new nsAccessiblePivot(accessibleRoot);
+  NS_ADDREF(*aPivot = pivot);
+
+  return NS_OK;
+}
+
 // nsIAccesibilityService
 nsAccessible*
 nsAccessibilityService::GetAccessibleInShell(nsINode* aNode,
@@ -909,19 +927,8 @@ static bool HasRelatedContent(nsIContent *aContent)
 
   // If the given ID is referred by relation attribute then create an accessible
   // for it. Take care of HTML elements only for now.
-  if (aContent->IsHTML() &&
-      nsAccUtils::GetDocAccessibleFor(aContent)->IsDependentID(id))
-    return true;
-
-  nsIContent *ancestorContent = aContent;
-  while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
-    if (ancestorContent->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant)) {
-        // ancestor has activedescendant property, this content could be active
-      return true;
-    }
-  }
-
-  return false;
+  return aContent->IsHTML() &&
+    nsAccUtils::GetDocAccessibleFor(aContent)->IsDependentID(id);
 }
 
 nsAccessible*

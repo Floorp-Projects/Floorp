@@ -317,7 +317,6 @@ public:
 
 private:
     JSContext* mContext;
-    intN       mContextThread;
     nsIThreadJSContextStack* mContextStack;
     char*      mBuf;
 
@@ -446,9 +445,6 @@ mozJSComponentLoader::ReallyInit()
 
     // Always use the latest js version
     JS_SetVersion(mContext, JSVERSION_LATEST);
-
-    // Limit C stack consumption to a reasonable 512K
-    JS_SetNativeStackQuota(mContext, 512 * 1024);
 
     nsCOMPtr<nsIScriptSecurityManager> secman =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
@@ -1355,23 +1351,18 @@ mozJSComponentLoader::ModuleEntry::GetFactory(const mozilla::Module& module,
 //----------------------------------------------------------------------
 
 JSCLContextHelper::JSCLContextHelper(mozJSComponentLoader *loader)
-    : mContext(loader->mContext), mContextThread(0),
+    : mContext(loader->mContext),
       mContextStack(loader->mContextStack),
       mBuf(nsnull)
 {
     mContextStack->Push(mContext);
-    mContextThread = JS_GetContextThread(mContext);
-    if (mContextThread) {
-        JS_BeginRequest(mContext);
-    }
+    JS_BeginRequest(mContext);
 }
 
 JSCLContextHelper::~JSCLContextHelper()
 {
     if (mContextStack) {
-        if (mContextThread) {
-            JS_EndRequest(mContext);
-        }
+        JS_EndRequest(mContext);
 
         mContextStack->Pop(nsnull);
 

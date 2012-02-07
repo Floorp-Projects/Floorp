@@ -113,7 +113,8 @@ public class GeckoAppShell
     public static native void onLowMemory();
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
-    public static native void loadLibs(String apkName, boolean shouldExtract);
+    public static native void loadGeckoLibsNative(String apkName);
+    public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
     public static native void reportJavaCrash(String stack);
 
@@ -361,7 +362,7 @@ public class GeckoAppShell
         GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
 
         File cacheFile = getCacheDir();
-        GeckoAppShell.putenv("CACHE_PATH=" + cacheFile.getPath());
+        GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
 
         // gingerbread introduces File.getUsableSpace(). We should use that.
         long freeSpace = getFreeSpace();
@@ -396,7 +397,8 @@ public class GeckoAppShell
                 }
             }
         }
-        loadLibs(apkName, extractLibs);
+        loadSQLiteLibsNative(apkName, extractLibs);
+        loadGeckoLibsNative(apkName);
     }
 
     private static void putLocaleEnv() {
@@ -675,6 +677,42 @@ public class GeckoAppShell
                     }
                 }
             });
+    }
+
+    /*
+     * Keep these values consistent with |SensorType| in Hal.h
+     */
+    private static final int SENSOR_ORIENTATION = 1;
+    private static final int SENSOR_ACCELERATION = 2;
+    private static final int SENSOR_PROXIMITY = 3;
+
+    private static Sensor gProximitySensor = null;
+
+    public static void enableSensor(int aSensortype) {
+        SensorManager sm = (SensorManager)
+            GeckoApp.surfaceView.getContext().
+            getSystemService(Context.SENSOR_SERVICE);
+
+        switch(aSensortype) {
+        case SENSOR_PROXIMITY:
+            if(gProximitySensor == null)
+                gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+            sm.registerListener(GeckoApp.surfaceView, gProximitySensor,
+                                SensorManager.SENSOR_DELAY_GAME);
+            break;
+        }
+    }
+
+    public static void disableSensor(int aSensortype) {
+        SensorManager sm = (SensorManager)
+            GeckoApp.surfaceView.getContext().
+            getSystemService(Context.SENSOR_SERVICE);
+
+        switch(aSensortype) {
+        case SENSOR_PROXIMITY:
+            sm.unregisterListener(GeckoApp.surfaceView, gProximitySensor);
+            break;
+        }
     }
 
     public static void moveTaskToBack() {
@@ -1788,4 +1826,7 @@ public class GeckoAppShell
     public static void disableNetworkNotifications() {
         GeckoNetworkManager.getInstance().disableNotifications();
     }
+
+    // This is only used in Native Fennec.
+    public static void setPreventPanning(final boolean aPreventPanning) { }
 }

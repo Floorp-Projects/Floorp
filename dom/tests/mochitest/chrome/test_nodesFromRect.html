@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>nsIDOMWindowUtils::nodesFromRect test - bug 489127</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  function done() {
+    testwindow.close();
+    SimpleTest.finish();
+  }
+  var testwindow = window.open("489127.html", '_new', 'width=600,height=400');
+</script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</body>
+</html>
+

@@ -11,7 +11,7 @@ function f(e) {
         return window.r = []\
       }\
       g(aaaaaa, bbbbbb + 1);\
-      #3={}\
+      ({})\
     })([], 0)) \
     for (window in this) \
     for each(x in [0, 0])\

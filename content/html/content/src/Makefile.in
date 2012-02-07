@@ -57,6 +57,7 @@ CPPSRCS		= \
 		nsClientRect.cpp \
 		nsHTMLDNSPrefetch.cpp \
 		nsGenericHTMLElement.cpp \
+		nsGenericHTMLFrameElement.cpp \
 		nsFormSubmission.cpp \
 		nsTextEditorState.cpp \
 		nsHTMLElement.cpp \

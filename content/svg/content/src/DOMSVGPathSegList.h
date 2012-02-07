@@ -37,13 +37,16 @@
 #ifndef MOZILLA_DOMSVGPATHSEGLIST_H__
 #define MOZILLA_DOMSVGPATHSEGLIST_H__
 
-#include "nsIDOMSVGPathSegList.h"
-#include "SVGPathData.h"
-#include "SVGPathSegUtils.h"
-#include "nsCOMArray.h"
 #include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsDebug.h"
+#include "nsIDOMSVGPathSegList.h"
+#include "nsSVGElement.h"
+#include "nsTArray.h"
+#include "SVGPathData.h" // IWYU pragma: keep
 
-class nsSVGElement;
+class nsIDOMSVGPathSeg;
 
 namespace mozilla {
 

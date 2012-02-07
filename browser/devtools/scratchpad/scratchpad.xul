@@ -45,6 +45,7 @@
 ]>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
 
 <window id="main-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -58,6 +59,7 @@
 <script type="application/javascript" src="chrome://browser/content/scratchpad.js"/>
 
 <commandset id="editMenuCommands"/>
+<commandset id="sourceEditorCommands"/>
 
 <commandset id="sp-commandset">
   <command id="sp-cmd-newWindow" oncommand="Scratchpad.openScratchpad();"/>
@@ -142,6 +144,32 @@
        key="&webConsoleCmd.commandkey;"
        command="sp-cmd-webConsole"
        modifiers="accel,shift"/>
+  <key id="key_find"
+       key="&findCmd.key;"
+       command="cmd_find"
+       modifiers="accel"/>
+#ifdef XP_MACOSX
+  <key id="key_findAgain"
+       key="&findAgainCmd.key;"
+       command="cmd_findAgain"
+       modifiers="accel"/>
+  <key id="key_findPrevious"
+       key="&findPreviousCmd.key;"
+       command="cmd_findPrevious"
+       modifiers="accel,shift"/>
+#else
+  <key id="key_findAgain"
+       keycode="VK_F3"
+       command="cmd_findAgain"/>
+  <key id="key_findPrevious"
+       keycode="VK_F3"
+       command="cmd_findPrevious"
+       modifiers="shift"/>
+#endif
+  <key id="key_gotoLine"
+       key="&gotoLineCmd.key;"
+       command="cmd_gotoLine"
+       modifiers="accel"/>
 </keyset>
 
 
@@ -223,23 +251,23 @@
                 key="key_selectAll"
                 accesskey="&selectAllCmd.accesskey;"
                 command="cmd_selectAll"/>
-
-      <!-- TODO: bug 650345 - implement search and replace
+      <menuseparator/>
       <menuitem id="sp-menu-find"
-                label="&findOnCmd.label;"
-                accesskey="&findOnCmd.accesskey;"
+                label="&findCmd.label;"
+                accesskey="&findCmd.accesskey;"
                 key="key_find"
-                disabled="true"
                 command="cmd_find"/>
       <menuitem id="sp-menu-findAgain"
                 label="&findAgainCmd.label;"
                 accesskey="&findAgainCmd.accesskey;"
                 key="key_findAgain"
-                disabled="true"
                 command="cmd_findAgain"/>
-      <menuseparator id="sp-execute-separator"/>
-      -->
-
+      <menuseparator/>
+      <menuitem id="sp-menu-gotoLine"
+                label="&gotoLineCmd.label;"
+                accesskey="&gotoLineCmd.accesskey;"
+                key="key_gotoLine"
+                command="cmd_gotoLine"/>
     </menupopup>
   </menu>
 

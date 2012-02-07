@@ -25,4 +25,12 @@
         <item>160</item>
         <item>240</item>
     </string-array>
+    <string-array name="pref_char_encoding_entries">
+        <item>@string/pref_char_encoding_on</item>
+        <item>@string/pref_char_encoding_off</item>
+    </string-array>
+    <string-array name="pref_char_encoding_values">
+        <item>true</item>
+        <item>false</item>
+    </string-array>
 </resources>

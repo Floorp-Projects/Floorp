@@ -72,7 +72,6 @@ _TEST_FILES = 	findbar_window.xul \
 		test_bug570192.xul \
 		test_bug624329.xul \
 		bug624329_window.xul \
-		test_bug649840.xul \
 		test_popup_preventdefault_chrome.xul \
 		window_popup_preventdefault_chrome.xul \
 		test_largemenu.xul \
@@ -88,6 +87,7 @@ _TEST_FILES = 	findbar_window.xul \
 		test_autocomplete2.xul \
 		test_autocomplete3.xul \
 		test_autocomplete4.xul \
+		test_autocomplete_delayOnPaste.xul \
 		test_keys.xul \
 		window_keys.xul \
 		test_showcaret.xul \

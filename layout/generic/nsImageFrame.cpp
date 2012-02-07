@@ -988,7 +988,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   aRenderingContext.SetColor(GetStyleColor()->mColor);
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(this));
+    nsLayoutUtils::FontSizeInflationFor(this, nsLayoutUtils::eNotInReflow));
   aRenderingContext.SetFont(fm);
 
   // Format the text to display within the formatting rect
@@ -1210,19 +1210,13 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
                  : (PRUint32) imgIContainer::FLAG_NONE);
 }
 
-nsCOMPtr<imgIContainer>
-nsDisplayImage::GetImage()
+already_AddRefed<ImageContainer>
+nsDisplayImage::GetContainer()
 {
-  return mImage;
-}
-
-nsRefPtr<ImageContainer>
-nsDisplayImage::GetContainer(LayerManager* aManager)
-{
-  ImageContainer* container;
-  nsresult rv = mImage->GetImageContainer(aManager, &container);
-  NS_ENSURE_SUCCESS(rv, NULL);
-  return container;
+  nsRefPtr<ImageContainer> container;
+  nsresult rv = mImage->GetImageContainer(getter_AddRefs(container));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  return container.forget();
 }
 
 void

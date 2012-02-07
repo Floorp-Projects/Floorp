@@ -231,7 +231,7 @@ input[type="checkbox"] {
   padding: 2px 1px 2px 1px;
 }
 
-select > input[type="button"] {
+select > button {
   border-width: 0px !important;
   margin: 0px !important;
   padding: 0px !important;
@@ -330,7 +330,7 @@ input[type="checkbox"][disabled]:hover:active {
   border:1px solid rgba(125,125,125,0.4) !important;
 }
 
-select[disabled] > input[type="button"] {
+select[disabled] > button {
   opacity: 0.6;
   padding: 1px 7px 1px 7px;
 }

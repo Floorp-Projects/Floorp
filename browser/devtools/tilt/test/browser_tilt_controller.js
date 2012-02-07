@@ -1,9 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, waitForExplicitFinish, finish, executeSoon, gBrowser */
-/*global isEqualVec, isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global EventUtils, vec3, mat4, quat4 */
 "use strict";
 
 function test() {
@@ -46,6 +42,9 @@ function test() {
 
 
         function testEventCancel(cancellingEvent) {
+          is(document.activeElement, canvas,
+            "The visualizer canvas should be focused when performing this test.");
+
           EventUtils.synthesizeKey("VK_A", { type: "keydown" });
           EventUtils.synthesizeKey("VK_LEFT", { type: "keydown" });
           instance.controller.update();
@@ -79,6 +78,9 @@ function test() {
             "After focus lost, the transforms inertia eventually stops.");
         }
 
+        info("Setting typeaheadfind to true.");
+
+        Services.prefs.setBoolPref("accessibility.typeaheadfind", true);
         testEventCancel(function() {
           EventUtils.synthesizeKey("T", { type: "keydown", altKey: 1 });
         });
@@ -91,6 +93,25 @@ function test() {
         testEventCancel(function() {
           EventUtils.synthesizeKey("T", { type: "keydown", shiftKey: 1 });
         });
+
+        info("Setting typeaheadfind to false.");
+
+        Services.prefs.setBoolPref("accessibility.typeaheadfind", false);
+        testEventCancel(function() {
+          EventUtils.synthesizeKey("T", { type: "keydown", altKey: 1 });
+        });
+        testEventCancel(function() {
+          EventUtils.synthesizeKey("I", { type: "keydown", ctrlKey: 1 });
+        });
+        testEventCancel(function() {
+          EventUtils.synthesizeKey("L", { type: "keydown", metaKey: 1 });
+        });
+        testEventCancel(function() {
+          EventUtils.synthesizeKey("T", { type: "keydown", shiftKey: 1 });
+        });
+
+        info("Testing if loosing focus halts any stacked arcball animations.");
+
         testEventCancel(function() {
           gBrowser.selectedBrowser.contentWindow.focus();
         });

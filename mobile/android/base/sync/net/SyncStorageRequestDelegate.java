@@ -40,6 +40,10 @@ package org.mozilla.gecko.sync.net;
 public interface SyncStorageRequestDelegate {
   String credentials();
   String ifUnmodifiedSince();
+
+  // TODO: at this point we can access X-Weave-Timestamp, compare
+  // that to our local timestamp, and compute an estimate of clock
+  // skew. Bug 721887.
   void handleRequestSuccess(SyncStorageResponse response);
   void handleRequestFailure(SyncStorageResponse response);
   void handleRequestError(Exception ex);

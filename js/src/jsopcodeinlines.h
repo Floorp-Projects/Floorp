@@ -54,9 +54,8 @@ GetNameFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
         return cx->runtime->atomState.classPrototypeAtom;
 
     JSScript *script = cx->stack.currentScript();
-    ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
     PropertyName *name;
-    GET_NAME_FROM_BYTECODE(script, pc, pcoff, name);
+    GET_NAME_FROM_BYTECODE(script, pc, 0, name);
     return name;
 }
 

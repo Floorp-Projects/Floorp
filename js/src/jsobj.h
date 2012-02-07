@@ -363,6 +363,7 @@ extern Class NormalArgumentsObjectClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpClass;
+extern Class RegExpStaticsClass;
 extern Class SlowArrayClass;
 extern Class StopIterationClass;
 extern Class StringClass;
@@ -378,6 +379,7 @@ class ClonedBlockObject;
 class DeclEnvObject;
 class GlobalObject;
 class NestedScopeObject;
+class NewObjectCache;
 class NormalArgumentsObject;
 class NumberObject;
 class ScopeObject;
@@ -495,6 +497,7 @@ struct JSObject : js::gc::Cell
   private:
     friend struct js::Shape;
     friend struct js::GCMarker;
+    friend class  js::NewObjectCache;
 
     /*
      * Shape of the object, encodes the layout of the object's properties and
@@ -669,9 +672,12 @@ struct JSObject : js::gc::Cell
 
     inline bool hasPropertyTable() const;
 
-    inline size_t structSize() const;
-    inline size_t slotsAndStructSize() const;
-    inline size_t dynamicSlotSize(JSMallocSizeOfFun mallocSizeOf) const;
+    inline size_t sizeOfThis() const;
+    inline size_t computedSizeOfThisSlotsElements() const;
+
+    inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
+                                    size_t *slotsSize, size_t *elementsSize,
+                                    size_t *miscSize) const;
 
     inline size_t numFixedSlots() const;
 
@@ -1063,6 +1069,7 @@ struct JSObject : js::gc::Cell
     inline void copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count);
     inline void initDenseArrayElements(uintN dstStart, const js::Value *src, uintN count);
     inline void moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count);
+    inline void moveDenseArrayElementsUnbarriered(uintN dstStart, uintN srcStart, uintN count);
     inline bool denseArrayHasInlineSlots() const;
 
     /* Packed information for this array. */
@@ -1094,7 +1101,7 @@ struct JSObject : js::gc::Cell
     bool arrayGetOwnDataElement(JSContext *cx, size_t i, js::Value *vp);
 
   public:
-    bool allocateArrayBufferSlots(JSContext *cx, uint32_t size);
+    bool allocateArrayBufferSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
     inline uint32_t arrayBufferByteLength();
     inline uint8_t * arrayBufferDataOffset();
 
@@ -1410,6 +1417,7 @@ struct JSObject : js::gc::Cell
     inline bool isPrimitive() const;
     inline bool isProxy() const;
     inline bool isRegExp() const;
+    inline bool isRegExpStatics() const;
     inline bool isScope() const;
     inline bool isScript() const;
     inline bool isSlowArray() const;
@@ -1442,6 +1450,7 @@ struct JSObject : js::gc::Cell
     inline bool isCrossCompartmentWrapper() const;
 
     inline js::ArgumentsObject &asArguments();
+    inline const js::ArgumentsObject &asArguments() const;
     inline js::BlockObject &asBlock();
     inline js::BooleanObject &asBoolean();
     inline js::CallObject &asCall();
@@ -1459,6 +1468,10 @@ struct JSObject : js::gc::Cell
     inline js::WithObject &asWith();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
+
+#ifdef DEBUG
+    void dump();
+#endif
 
   private:
     static void staticAsserts() {
@@ -1519,21 +1532,6 @@ struct JSObject_Slots16 : JSObject { js::Value fslots[16]; };
 
 #define JSSLOT_FREE(clasp)  JSCLASS_RESERVED_SLOTS(clasp)
 
-#ifdef JS_THREADSAFE
-
-/*
- * The GC runs only when all threads except the one on which the GC is active
- * are suspended at GC-safe points, so calling obj->getSlot() from the GC's
- * thread is safe when rt->gcRunning is set. See jsgc.cpp for details.
- */
-#define THREAD_IS_RUNNING_GC(rt, thread)                                      \
-    ((rt)->gcRunning && (rt)->gcThread == (thread))
-
-#define CX_THREAD_IS_RUNNING_GC(cx)                                           \
-    THREAD_IS_RUNNING_GC((cx)->runtime, (cx)->thread)
-
-#endif /* JS_THREADSAFE */
-
 class JSValueArray {
   public:
     jsval *array;
@@ -1561,8 +1559,7 @@ class ValueArray {
 #define CLEAR_BUSY(he)  ((he)->value = (void *) (uintptr_t((he)->value)&~BUSY_BIT))
 
 extern JSHashEntry *
-js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
-                    jschar **sp);
+js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap, bool *alreadySeen);
 
 extern void
 js_LeaveSharpObject(JSContext *cx, JSIdArray **idap);
@@ -1676,6 +1673,7 @@ class NewObjectCache
   private:
     inline bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry);
     inline void fill(EntryIndex entry, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj);
+    static inline void copyCachedToObject(JSObject *dst, JSObject *src);
 };
 
 } /* namespace js */
@@ -1829,7 +1827,7 @@ static const uintN RESOLVE_INFER = 0xffff;
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
  */
 extern bool
-FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool global,
+FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, JSObject *scopeChain,
                    JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 /*
@@ -1837,7 +1835,7 @@ FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool glo
  * global object, per the global parameter.
  */
 extern bool
-FindProperty(JSContext *cx, PropertyName *name, bool global,
+FindProperty(JSContext *cx, PropertyName *name, JSObject *scopeChain,
              JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 extern JSObject *

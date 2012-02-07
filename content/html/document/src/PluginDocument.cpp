@@ -47,6 +47,8 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIPropertyBag2.h"
 #include "mozilla/dom/Element.h"
+#include "nsObjectLoadingContent.h"
+#include "sampler.h"
 
 namespace mozilla {
 namespace dom {
@@ -113,6 +115,7 @@ private:
 NS_IMETHODIMP
 PluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
+  SAMPLE_LABEL("PluginStreamListener", "OnStartRequest");
   // Have to set up our plugin stuff before we call OnStartRequest, so
   // that the plugin listener can get that call.
   nsresult rv = SetupPlugin();
@@ -144,20 +147,13 @@ PluginStreamListener::SetupPlugin()
   // nsObjectFrame does that at the end of reflow.
   shell->FlushPendingNotifications(Flush_Layout);
 
-  nsIFrame* frame = embed->GetPrimaryFrame();
-  if (!frame) {
-    mPluginDoc->AllowNormalInstantiation();
-    return NS_OK;
-  }
-
-  nsIObjectFrame* objFrame = do_QueryFrame(frame);
-  if (!objFrame) {
-    mPluginDoc->AllowNormalInstantiation();
+  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(embed));
+  if (!olc) {
     return NS_ERROR_UNEXPECTED;
   }
-
-  nsresult rv = objFrame->Instantiate(mPluginDoc->GetType().get(),
-                                      mDocument->nsIDocument::GetDocumentURI());
+  nsObjectLoadingContent* olcc = static_cast<nsObjectLoadingContent*>(olc.get());
+  nsresult rv = olcc->InstantiatePluginInstance(mPluginDoc->GetType().get(),
+                                                mDocument->nsIDocument::GetDocumentURI());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -355,7 +351,7 @@ PluginDocument::Print()
   nsIObjectFrame* objectFrame =
     do_QueryFrame(mPluginContent->GetPrimaryFrame());
   if (objectFrame) {
-    nsCOMPtr<nsNPAPIPluginInstance> pi;
+    nsRefPtr<nsNPAPIPluginInstance> pi;
     objectFrame->GetPluginInstance(getter_AddRefs(pi));
     if (pi) {
       NPPrint npprint;

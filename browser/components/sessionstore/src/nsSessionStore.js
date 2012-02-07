@@ -130,6 +130,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 // debug.js adds NS_ASSERT. cf. bug 669196
 Cu.import("resource://gre/modules/debug.js");
 
+Cu.import("resource:///modules/TelemetryTimestamps.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
   return NetUtil;
@@ -251,6 +253,9 @@ SessionStoreService.prototype = {
 
   // whether to restore hidden tabs or not, pref controlled.
   _restoreHiddenTabs: null,
+  
+  // whether to restore app tabs on demand or not, pref controlled.
+  _restorePinnedTabsOnDemand: null,
 
   // The state from the previous session (after restoring pinned tabs). This
   // state is persisted and passed through to the next session during an app
@@ -291,6 +296,7 @@ SessionStoreService.prototype = {
    * Initialize the component
    */
   initService: function() {
+    TelemetryTimestamps.add("sessionRestoreInitialized");
     OBSERVING.forEach(function(aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
@@ -313,6 +319,10 @@ SessionStoreService.prototype = {
     this._restoreHiddenTabs =
       this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
     this._prefBranch.addObserver("sessionstore.restore_hidden_tabs", this, true);
+    
+    this._restorePinnedTabsOnDemand =
+      this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
+    this._prefBranch.addObserver("sessionstore.restore_pinned_tabs_on_demand", this, true);
 
     // Make sure gRestoreTabsProgressListener has a reference to sessionstore
     // so that it can make calls back in
@@ -688,6 +698,10 @@ SessionStoreService.prototype = {
         this._restoreHiddenTabs =
           this._prefBranch.getBoolPref("sessionstore.restore_hidden_tabs");
         break;
+      case "sessionstore.restore_pinned_tabs_on_demand":
+        this._restorePinnedTabsOnDemand =
+          this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
+        break;
       }
       break;
     case "timer-callback": // timer call back for delayed saving
@@ -822,7 +836,7 @@ SessionStoreService.prototype = {
       this._windows[aWindow.__SSi]._restoring = true;
     if (!aWindow.toolbar.visible)
       this._windows[aWindow.__SSi].isPopup = true;
-    
+
     // perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
       this._loadState = STATE_RUNNING;
@@ -830,6 +844,7 @@ SessionStoreService.prototype = {
       
       // restore a crashed session resp. resume the last session if requested
       if (this._initialState) {
+        TelemetryTimestamps.add("sessionRestoreRestoring");
         // make sure that the restored tabs are first in the window
         this._initialState._firstTabs = true;
         this._restoreCount = this._initialState.windows ? this._initialState.windows.length : 0;
@@ -3187,7 +3202,8 @@ SessionStoreService.prototype = {
       return;
 
     // If it's not possible to restore anything, then just bail out.
-    if ((!this._tabsToRestore.priority.length && this._restoreOnDemand) ||
+    if ((this._restoreOnDemand &&
+        (this._restorePinnedTabsOnDemand || !this._tabsToRestore.priority.length)) ||
         this._tabsRestoringCount >= MAX_CONCURRENT_TAB_RESTORES)
       return;
 

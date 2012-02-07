@@ -43,19 +43,18 @@ function test() {
 }
 
 function afterZoomAndLoad(cb) {
-  let didLoad = didZoom = false;
+  let didLoad = false;
+  let didZoom = false;
   tabElm.linkedBrowser.addEventListener("load", function() {
     tabElm.linkedBrowser.removeEventListener("load", arguments.callee, true);
     didLoad = true;
     if (didZoom)
       executeSoon(cb);
   }, true);
-  let oldAPTS = FullZoom._applyPrefToSetting;
-  FullZoom._applyPrefToSetting = function(value, browser) {
-    if (!value)
-      value = undefined;
-    oldAPTS.call(FullZoom, value, browser);
-    FullZoom._applyPrefToSetting = oldAPTS;
+  let oldSZFB = ZoomManager.setZoomForBrowser;
+  ZoomManager.setZoomForBrowser = function(browser, value) {
+    oldSZFB.call(ZoomManager, browser, value);
+    ZoomManager.setZoomForBrowser = oldSZFB;
     didZoom = true;
     if (didLoad)
       executeSoon(cb);

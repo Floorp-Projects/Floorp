@@ -44,22 +44,28 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Surface;
+import android.view.View;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.gfx.Layer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
 public final class Tab {
     private static final String LOGTAG = "GeckoTab";
-    private static final int kThumbnailWidth = 120;
-    private static final int kThumbnailHeight = 80;
+    private static final int kThumbnailWidth = 136;
+    private static final int kThumbnailHeight = 77;
 
-    private static int sMinDim = 0;
+    private static float sMinDim = 0;
     private static float sDensity = 1;
+    private static int sMinScreenshotWidth = 0;
+    private static int sMinScreenshotHeight = 0;
     private int mId;
     private String mUrl;
     private String mTitle;
@@ -78,6 +84,10 @@ public final class Tab {
     private CheckBookmarkTask mCheckBookmarkTask;
     private String mDocumentURI;
     private String mContentType;
+    private boolean mHasTouchListeners;
+    private ArrayList<View> mPluginViews;
+    private HashMap<Surface, Layer> mPluginLayers;
+    private boolean mHasLoaded;
 
     public static final class HistoryEntry {
         public String mUri;         // must never be null
@@ -110,6 +120,9 @@ public final class Tab {
         mFaviconLoadId = 0;
         mDocumentURI = "";
         mContentType = "";
+        mPluginViews = new ArrayList<View>();
+        mPluginLayers = new HashMap<Surface, Layer>();
+        mHasLoaded = false;
     }
 
     public int getId() {
@@ -144,24 +157,73 @@ public final class Tab {
         return mThumbnail;
     }
 
+    void initMetrics() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        sMinDim = Math.min(metrics.widthPixels / kThumbnailWidth, metrics.heightPixels / kThumbnailHeight);
+        sDensity = metrics.density;
+    }
+
+    float getMinDim() {
+        if (sMinDim == 0)
+            initMetrics();
+        return sMinDim;
+    }
+
+    float getDensity() {
+        if (sDensity == 0.0f)
+            initMetrics();
+        return sDensity;
+    }
+
+    int getMinScreenshotWidth() {
+        if (sMinScreenshotWidth != 0)
+            return sMinScreenshotWidth;
+        return sMinScreenshotWidth = (int)(getMinDim() * kThumbnailWidth);
+    }
+
+    int getMinScreenshotHeight() {
+        if (sMinScreenshotHeight != 0)
+            return sMinScreenshotHeight;
+        return sMinScreenshotHeight = (int)(getMinDim() * kThumbnailHeight);
+    }
+
+    int getThumbnailWidth() {
+        return (int)(kThumbnailWidth * getDensity());
+    }
+
+    int getThumbnailHeight() {
+        return (int)(kThumbnailHeight * getDensity());
+    }
+
     public void updateThumbnail(final Bitmap b) {
         final Tab tab = this;
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                if (sMinDim == 0) {
-                    DisplayMetrics metrics = new DisplayMetrics();
-                    GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    sMinDim = Math.min(metrics.widthPixels / 3, metrics.heightPixels / 2);
-                    sDensity = metrics.density;
-                }
                 if (b != null) {
                     try {
-                        Bitmap cropped = Bitmap.createBitmap(b, 0, 0, sMinDim * 3, sMinDim * 2);
-                        Bitmap bitmap = Bitmap.createScaledBitmap(cropped, (int) (kThumbnailWidth * sDensity), (int) (kThumbnailHeight * sDensity), false);
-                        saveThumbnailToDB(new BitmapDrawable(bitmap));
-                        b.recycle();
+                        Bitmap cropped = null;
+                        /* Crop to screen width if the bitmap is larger than the screen width or height. If smaller and the
+                         * the aspect ratio is correct, just use the bitmap as is. Otherwise, fit the smaller
+                         * smaller dimension, then crop the larger dimention.
+                         */
+                        if (getMinScreenshotWidth() < b.getWidth() && getMinScreenshotHeight() < b.getHeight())
+                            cropped = Bitmap.createBitmap(b, 0, 0, getMinScreenshotWidth(), getMinScreenshotHeight());
+                        else if (b.getWidth() * getMinScreenshotHeight() == b.getHeight() * getMinScreenshotWidth())
+                            cropped = b;
+                        else if (b.getWidth() * getMinScreenshotHeight() < b.getHeight() * getMinScreenshotWidth())
+                            cropped = Bitmap.createBitmap(b, 0, 0, b.getWidth(), 
+                                                          b.getWidth() * getMinScreenshotHeight() / getMinScreenshotWidth());
+                        else
+                            cropped = Bitmap.createBitmap(b, 0, 0, 
+                                                          b.getHeight() * getMinScreenshotWidth() / getMinScreenshotHeight(),
+                                                          b.getHeight());
 
-                        bitmap = Bitmap.createBitmap(cropped, 0, 0, (int) (138 * sDensity), (int) (78 * sDensity));
+                        Bitmap bitmap = Bitmap.createScaledBitmap(cropped, getThumbnailWidth(), getThumbnailHeight(), false);
+                        saveThumbnailToDB(new BitmapDrawable(bitmap));
+
+                        if (!cropped.equals(b))
+                            b.recycle();
                         mThumbnail = new BitmapDrawable(bitmap);
                         cropped.recycle();
                     } catch (OutOfMemoryError oom) {
@@ -253,6 +315,14 @@ public final class Tab {
 
     private void setBookmark(boolean bookmark) {
         mBookmark = bookmark;
+    }
+
+    public void setHasTouchListeners(boolean aValue) {
+        mHasTouchListeners = aValue;
+    }
+
+    public boolean hasTouchListeners() {
+        return mHasTouchListeners;
     }
 
     public void setFaviconLoadId(long faviconLoadId) {
@@ -373,6 +443,14 @@ public final class Tab {
         return mDoorHangers;
     }
 
+    public void setHasLoaded(boolean hasLoaded) {
+        mHasLoaded = hasLoaded;
+    }
+
+    public boolean hasLoaded() {
+        return mHasLoaded;
+    }
+
     void handleSessionHistoryMessage(String event, JSONObject message) throws JSONException {
         if (event.equals("New")) {
             final String uri = message.getString("uri");
@@ -482,5 +560,33 @@ public final class Tab {
         protected void onPostExecute(Void unused) {
             setBookmark(false);
         }
+    }
+
+    public void addPluginView(View view) {
+        mPluginViews.add(view);
+    }
+
+    public void removePluginView(View view) {
+        mPluginViews.remove(view);
+    }
+
+    public View[] getPluginViews() {
+        return mPluginViews.toArray(new View[mPluginViews.size()]);
+    }
+
+    public void addPluginLayer(Surface surface, Layer layer) {
+        mPluginLayers.put(surface, layer);
+    }
+
+    public Layer getPluginLayer(Surface surface) {
+        return mPluginLayers.get(surface);
+    }
+
+    public Collection<Layer> getPluginLayers() {
+        return mPluginLayers.values();
+    }
+
+    public Layer removePluginLayer(Surface surface) {
+        return mPluginLayers.remove(surface);
     }
 }

@@ -250,9 +250,16 @@ bool
 nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
 {
     NS_ASSERTION(descriptor->CacheEntry() == this, "### Wrong cache entry!!");
-    descriptor->CloseOutput();
+    nsresult rv = descriptor->CloseOutput();
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+        return true;
+
     descriptor->ClearCacheEntry();
     PR_REMOVE_AND_INIT_LINK(descriptor);
+
+    // Doom entry if something bad happens while closing. See bug #673543
+    if (NS_FAILED(rv))
+        nsCacheService::DoomEntry(this);
 
     if (!PR_CLIST_IS_EMPTY(&mDescriptorQ))
         return true;  // stay active if we still have open descriptors
@@ -273,8 +280,15 @@ nsCacheEntry::DetachDescriptors(void)
     while (descriptor != &mDescriptorQ) {
         nsCacheEntryDescriptor * nextDescriptor =
             (nsCacheEntryDescriptor *)PR_NEXT_LINK(descriptor);
-        
-        descriptor->CloseOutput();
+
+        // Doom entry if something bad happens while closing. See bug #673543
+        // Errors are handled different from RemoveDescriptor because this
+        // method is only called from ClearDoomList (in which case the entry is
+        // doomed anyway) and ClearActiveEntries (in which case we are shutting
+        // down and really want to get rid of the entry immediately)
+        if (NS_FAILED(descriptor->CloseOutput()))
+            nsCacheService::DoomEntry(this);
+
         descriptor->ClearCacheEntry();
         PR_REMOVE_AND_INIT_LINK(descriptor);
         descriptor = nextDescriptor;

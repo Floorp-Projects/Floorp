@@ -8,7 +8,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-network.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-network.html";
 
 function tabLoad(aEvent) {
   browser.removeEventListener(aEvent.type, arguments.callee, true);

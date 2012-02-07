@@ -167,6 +167,14 @@ public:
   }
 
   /**
+   * Return true if ARIA role is specified on the element.
+   */
+  inline bool HasARIARole() const
+  {
+    return mRoleMapEntry;
+  }
+
+  /**
    * Return accessible role specified by ARIA (see constants in
    * roles).
    */
@@ -603,6 +611,11 @@ public:
    */
   virtual nsAccessible* ContainerWidget() const;
 
+  /**
+   * Return the localized string for the given key.
+   */
+  static void TranslateString(const nsAString& aKey, nsAString& aStringOut);
+
 protected:
 
   //////////////////////////////////////////////////////////////////////////////
@@ -695,7 +708,6 @@ protected:
 
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
-  static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
 
   /**
    * Return an accessible for the given DOM node, or if that node isn't

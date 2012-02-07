@@ -42,7 +42,7 @@
 #include "nsString.h"
 #include "nsIEnumerator.h"
 
-#include "nsTextServicesDocument.h"
+#include "nsContentUtils.h"
 
 #include "nsIDOMNode.h"
 
@@ -254,14 +254,10 @@ ContentIsInTraversalRange(nsIContent *aContent,   bool aIsPreMode,
   if (!aIsPreMode)
     ++indx;
 
-  PRInt32 startRes;
-  PRInt32 endRes;
-  nsresult rv = nsTextServicesDocument::ComparePoints(aStartNode, aStartOffset, parentNode, indx, &startRes);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  rv = nsTextServicesDocument::ComparePoints(aEndNode,   aEndOffset,   parentNode, indx,  &endRes);
-  NS_ENSURE_SUCCESS(rv, false);
-
+  PRInt32 startRes = nsContentUtils::ComparePoints(aStartNode, aStartOffset,
+                                                   parentNode, indx);
+  PRInt32 endRes = nsContentUtils::ComparePoints(aEndNode, aEndOffset,
+                                                 parentNode, indx);
   return (startRes <= 0) && (endRes >= 0);
 }
 

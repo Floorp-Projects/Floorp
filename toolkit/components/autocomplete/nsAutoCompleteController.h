@@ -85,7 +85,7 @@ protected:
   nsresult EnterMatch(bool aIsPopupSelection);
   nsresult RevertTextValue();
 
-  nsresult CompleteDefaultIndex(PRInt32 aSearchIndex);
+  nsresult CompleteDefaultIndex(PRInt32 aResultIndex);
   nsresult CompleteValue(nsString &aValue);
 
   nsresult GetResultAt(PRInt32 aIndex, nsIAutoCompleteResult** aResult,
@@ -98,7 +98,7 @@ private:
   nsresult GetResultValueLabelAt(PRInt32 aIndex, bool aValueOnly,
                                  bool aGetValue, nsAString & _retval);
 protected:
-  nsresult GetDefaultCompleteValue(PRInt32 aSearchIndex, bool aPreserveCasing,
+  nsresult GetDefaultCompleteValue(PRInt32 aResultIndex, bool aPreserveCasing,
                                    nsAString &_retval);
   nsresult ClearResults();
   

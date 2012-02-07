@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const TEST_URI = "data:text/html,<p>bug 585991 - autocomplete popup keyboard usage test";
+let HUD;
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.gcli.enable");

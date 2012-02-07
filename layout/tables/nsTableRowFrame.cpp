@@ -138,7 +138,7 @@ nsTableRowFrame::SetPctHeight(float  aPctValue,
   }
   else {
     mStylePctHeight = height;
-    if (height > 0.0f) {
+    if (height > 0) {
       SetHasPctHeight(true);
     }
   }
@@ -193,7 +193,7 @@ nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
-    nsRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
+    nsIntRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
     tableFrame->AddBCDamageArea(damageArea);
   }
 }

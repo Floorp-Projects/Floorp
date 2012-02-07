@@ -65,6 +65,8 @@
 #include "nsDOMProgressEvent.h"
 #include "nsDOMEventTargetWrapperCache.h"
 #include "nsContentUtils.h"
+#include "nsDOMFile.h"
+#include "nsDOMBlobBuilder.h"
 
 class nsILoadGroup;
 class AsyncVerifyRedirectCallbackForwarder;
@@ -88,6 +90,7 @@ protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadStartListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadendListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnTimeoutListener;
 };
 
 class nsXMLHttpRequestUpload : public nsXHREventTarget,
@@ -199,8 +202,8 @@ public:
 
   void SetRequestObserver(nsIRequestObserver* aObserver);
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsXMLHttpRequest,
-                                           nsXHREventTarget)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(nsXMLHttpRequest,
+                                                                   nsXHREventTarget)
   bool AllowUploadProgress();
   void RootResultArrayBuffer();
   
@@ -216,7 +219,8 @@ protected:
                 PRUint32 count,
                 PRUint32 *writeCount);
   nsresult CreateResponseParsedJSON(JSContext* aCx);
-  bool CreateResponseBlob(nsIRequest *request);
+  nsresult CreatePartialBlob(void);
+  bool CreateDOMFile(nsIRequest *request);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
   nsresult ChangeState(PRUint32 aState, bool aBroadcast = true);
@@ -308,10 +312,20 @@ protected:
     XML_HTTP_RESPONSE_TYPE_TEXT,
     XML_HTTP_RESPONSE_TYPE_JSON,
     XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT,
-    XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER
+    XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER,
+    XML_HTTP_RESPONSE_TYPE_MOZ_BLOB
   } mResponseType;
 
+  // It is either a cached blob-response from the last call to GetResponse,
+  // but is also explicitly set in OnStopRequest.
   nsCOMPtr<nsIDOMBlob> mResponseBlob;
+  // Non-null only when we are able to get a os-file representation of the
+  // response, i.e. when loading from a file, or when the http-stream
+  // caches into a file or is reading from a cached file.
+  nsRefPtr<nsDOMFileBase> mDOMFile;
+  // We stream data to mBuilder when response type is "blob" or "moz-blob"
+  // and mDOMFile is null.
+  nsRefPtr<nsDOMBlobBuilder> mBuilder;
 
   nsCString mOverrideMimeType;
 
@@ -343,17 +357,35 @@ protected:
   PRUint64 mUploadProgress; // For legacy
   PRUint64 mUploadProgressMax; // For legacy
 
+  // Timeout support
+  PRTime mRequestSentTime;
+  PRUint32 mTimeoutMilliseconds;
+  nsCOMPtr<nsITimer> mTimeoutTimer;
+  void StartTimeoutTimer();
+  void HandleTimeoutCallback();
+
   bool mErrorLoad;
 
-  bool mTimerIsActive;
+  bool mProgressTimerIsActive;
   bool mProgressEventWasDelayed;
-  bool mLoadLengthComputable;
   bool mIsHtml;
   bool mWarnAboutMultipartHtml;
   bool mWarnAboutSyncHtml;
+  bool mLoadLengthComputable;
   PRUint64 mLoadTotal; // 0 if not known.
   PRUint64 mLoadTransferred;
   nsCOMPtr<nsITimer> mProgressNotifier;
+  void HandleProgressTimerCallback();
+
+  /**
+   * Close the XMLHttpRequest's channels and dispatch appropriate progress
+   * events.
+   *
+   * @param aType The progress event type.
+   * @param aFlag A XML_HTTP_REQUEST_* state flag defined in
+   *              nsXMLHttpRequest.cpp.
+   */
+  void CloseRequestWithError(const nsAString& aType, const PRUint32 aFlag);
 
   bool mFirstStartRequestSeen;
   bool mInLoadProgressEvent;

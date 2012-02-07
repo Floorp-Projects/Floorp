@@ -31,7 +31,7 @@ struct GrGpuStats {
     uint32_t fIndexCnt;   //<! Number of indices drawn
     uint32_t fDrawCnt;    //<! Number of draws
 
-    uint32_t fProgChngCnt;//<! Number of program changes (N/A for fixed)
+    uint32_t fProgChngCnt;//<! Number of program changes
 
     /**
      *  Number of times the texture is set in 3D API
@@ -121,6 +121,19 @@ public:
     GrTexture* createTexture(const GrTextureDesc& desc,
                              const void* srcData, size_t rowBytes);
 
+    /**
+     * Implements GrContext::createPlatformTexture
+     */
+    GrTexture* createPlatformTexture(const GrPlatformTextureDesc& desc);
+
+    /**
+     * Implements GrContext::createPlatformTexture
+     */
+    GrRenderTarget* createPlatformRenderTarget(const GrPlatformRenderTargetDesc& desc);
+
+    /**
+     * DEPRECATED. This will be removed.
+     */
     GrResource* createPlatformSurface(const GrPlatformSurfaceDesc& desc);
 
     /**
@@ -171,7 +184,60 @@ public:
     void forceRenderTargetFlush();
 
     /**
-     * Reads a rectangle of pixels from a render target.
+     * readPixels with some configs may be slow. Given a desired config this
+     * function returns a fast-path config. The returned config must have the
+     * same components, component sizes, and not require conversion between
+     * pre- and unpremultiplied alpha. The caller is free to ignore the result
+     * and call readPixels with the original config.
+     */
+    virtual GrPixelConfig preferredReadPixelsConfig(GrPixelConfig config)
+                                                                        const {
+        return config;
+    }
+
+    /**
+     * Same as above but applies to writeTexturePixels
+     */
+    virtual GrPixelConfig preferredWritePixelsConfig(GrPixelConfig config)
+                                                                        const {
+        return config;
+    }
+
+    /**
+     * OpenGL's readPixels returns the result bottom-to-top while the skia
+     * API is top-to-bottom. Thus we have to do a y-axis flip. The obvious
+     * solution is to have the subclass do the flip using either the CPU or GPU.
+     * However, the caller (GrContext) may have transformations to apply and can
+     * simply fold in the y-flip for free. On the other hand, the subclass may
+     * be able to do it for free itself. For example, the subclass may have to
+     * do memcpys to handle rowBytes that aren't tight. It could do the y-flip 
+     * concurrently.
+     *
+     * This function returns true if a y-flip is required to put the pixels in
+     * top-to-bottom order and the subclass cannot do it for free.
+     *
+     * See read pixels for the params
+     * @return true if calling readPixels with the same set of params will
+     *              produce bottom-to-top data
+     */
+     virtual bool readPixelsWillPayForYFlip(GrRenderTarget* renderTarget,
+                                            int left, int top,
+                                            int width, int height,
+                                            GrPixelConfig config,
+                                            size_t rowBytes) const = 0;
+     /**
+      * This should return true if reading a NxM rectangle of pixels from a
+      * render target is faster if the target has dimensons N and M and the read
+      * rectangle has its top-left at 0,0.
+      */
+     virtual bool fullReadPixelsIsFasterThanPartial() const { return false; };
+
+    /**
+     * Reads a rectangle of pixels from a render target. Fails if read requires
+     * conversion between premultiplied and unpremultiplied configs. The caller
+     * should do the conversion by rendering to a target with the desire config
+     * first.
+     *
      * @param renderTarget  the render target to read from. NULL means the
      *                      current render target.
      * @param left          left edge of the rectangle to read (inclusive)
@@ -180,6 +246,10 @@ public:
      * @param height        height of rectangle to read in pixels.
      * @param config        the pixel config of the destination buffer
      * @param buffer        memory to read the rectangle into.
+     * @param rowBytes      the number of bytes between consecutive rows. Zero
+     *                      means rows are tightly packed.
+     * @param invertY       buffer should be populated bottom-to-top as opposed
+     *                      to top-to-bottom (skia's usual order)
      *
      * @return true if the read succeeded, false if not. The read can fail
      *              because of a unsupported pixel config or because no render
@@ -187,7 +257,25 @@ public:
      */
     bool readPixels(GrRenderTarget* renderTarget,
                     int left, int top, int width, int height,
-                    GrPixelConfig config, void* buffer);
+                    GrPixelConfig config, void* buffer, size_t rowBytes,
+                    bool invertY);
+
+    /**
+     * Updates the pixels in a rectangle of a texture.
+     *
+     * @param left          left edge of the rectangle to write (inclusive)
+     * @param top           top edge of the rectangle to write (inclusive)
+     * @param width         width of rectangle to write in pixels.
+     * @param height        height of rectangle to write in pixels.
+     * @param config        the pixel config of the source buffer
+     * @param buffer        memory to read pixels from
+     * @param rowBytes      number of bytes bewtween consecutive rows. Zero
+     *                      means rows are tightly packed.
+     */
+    void writeTexturePixels(GrTexture* texture,
+                            int left, int top, int width, int height,
+                            GrPixelConfig config, const void* buffer,
+                            size_t rowBytes);
 
     const GrGpuStats& getStats() const;
     void resetStats();
@@ -221,9 +309,26 @@ public:
     // GrDrawTarget overrides
     virtual void clear(const GrIRect* rect, GrColor color);
 
+    // After the client interacts directly with the 3D context state the GrGpu
+    // must resync its internal state and assumptions about 3D context state.
+    // Each time this occurs the GrGpu bumps a timestamp.
+    // state of the 3D context
+    // At 10 resets / frame and 60fps a 64bit timestamp will overflow in about
+    // a billion years.
+    typedef uint64_t ResetTimestamp;
+
+    // This timestamp is always older than the current timestamp
+    static const ResetTimestamp kExpiredTimestamp = 0;
+    // Returns a timestamp based on the number of times the context was reset.
+    // This timestamp can be used to lazily detect when cached 3D context state
+    // is dirty.
+    ResetTimestamp getResetTimestamp() const {
+        return fResetTimestamp;
+    }
+
 protected:
-    enum PrivateStateBits {
-        kFirstBit = (kLastPublicStateBit << 1),
+    enum PrivateDrawStateStateBits {
+        kFirstBit = (GrDrawState::kLastPublicStateBit << 1),
 
         kModifyStencilClip_StateBit = kFirstBit, // allows draws to modify
                                                  // stencil bits used for
@@ -250,8 +355,7 @@ protected:
 
     // stencil settings to clip drawing when stencil clipping is in effect
     // and the client isn't using the stencil test.
-    static const GrStencilSettings gClipStencilSettings;
-
+    static const GrStencilSettings& gClipStencilSettings;
 
     GrGpuStats fStats;
 
@@ -286,14 +390,17 @@ protected:
     void finalizeReservedVertices();
     void finalizeReservedIndices();
 
-    // overridden by API-specific derived class to handle re-emitting 3D API
-    // preample and dirtying state cache.
-    virtual void resetContext() = 0;
+    // called when the 3D context state is unknown. Subclass should emit any
+    // assumed 3D context state and dirty any state cache
+    virtual void onResetContext() = 0;
 
+    
     // overridden by API-specific derived class to create objects.
     virtual GrTexture* onCreateTexture(const GrTextureDesc& desc,
                                        const void* srcData,
                                        size_t rowBytes) = 0;
+    virtual GrTexture* onCreatePlatformTexture(const GrPlatformTextureDesc& desc) = 0;
+    virtual GrRenderTarget* onCreatePlatformRenderTarget(const GrPlatformRenderTargetDesc& desc) = 0;
     virtual GrResource* onCreatePlatformSurface(const GrPlatformSurfaceDesc& desc) = 0;
     virtual GrVertexBuffer* onCreateVertexBuffer(uint32_t size,
                                                  bool dynamic) = 0;
@@ -321,7 +428,16 @@ protected:
     // overridden by API-specific derived class to perform the read pixels.
     virtual bool onReadPixels(GrRenderTarget* target,
                               int left, int top, int width, int height,
-                              GrPixelConfig, void* buffer) = 0;
+                              GrPixelConfig,
+                              void* buffer,
+                              size_t rowBytes,
+                              bool invertY) = 0;
+
+    // overridden by API-specific derived class to perform the texture update
+    virtual void onWriteTexturePixels(GrTexture* texture,
+                                      int left, int top, int width, int height,
+                                      GrPixelConfig config, const void* buffer,
+                                      size_t rowBytes) = 0;
 
     // called to program the vertex data, indexCount will be 0 if drawing non-
     // indexed geometry. The subclass may adjust the startVertex and/or
@@ -361,6 +477,8 @@ protected:
 
 private:
     GrContext*                  fContext; // not reffed (context refs gpu)
+    
+    ResetTimestamp              fResetTimestamp;
 
     GrVertexBufferAllocPool*    fVertexPool;
 
@@ -409,6 +527,11 @@ private:
 
     // determines the path renderer used to draw a clip path element.
     GrPathRenderer* getClipPathRenderer(const SkPath& path, GrPathFill fill);
+
+    void resetContext() {
+        this->onResetContext();
+        ++fResetTimestamp;
+    }
 
     void handleDirtyContext() {
         if (fContextIsDirty) {

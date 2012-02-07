@@ -69,7 +69,7 @@
       <hbox align="center">
         <textbox id="dialog.input" flex="1" type="autocomplete"
                   completeselectedindex="true"
-                  autocompletesearch="history"
+                  autocompletesearch="urlinline history"
                   enablehistory="true"
                   class="uri-element"
                   oninput="doEnabling();"/>

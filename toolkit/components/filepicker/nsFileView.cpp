@@ -161,6 +161,13 @@ NS_IMETHODIMP nsFileResult::GetMatchCount(PRUint32 *aMatchCount)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFileResult::GetTypeAheadResult(bool *aTypeAheadResult)
+{
+  NS_ENSURE_ARG_POINTER(aTypeAheadResult);
+  *aTypeAheadResult = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsFileResult::GetValueAt(PRInt32 index, nsAString & aValue)
 {
   aValue = mValues[index];

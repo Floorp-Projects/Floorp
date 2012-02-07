@@ -19,38 +19,18 @@
           src="../states.js"></script>
   <script type="application/javascript"
           src="../events.js"></script>
+  <script type="application/javascript"
+          src="../browser.js"></script>
 
   <script type="application/javascript">
   <![CDATA[
-    Components.utils.import("resource://gre/modules/Services.jsm");
-
     ////////////////////////////////////////////////////////////////////////////
     // Helpers
-
-    function tabBrowser()
-    {
-      return gBrowserWnd.gBrowser;
-    }
-
-    function currentBrowser()
-    {
-      return tabBrowser().selectedBrowser;
-    }
-
-    function currentTabDocument()
-    {
-      return currentBrowser().contentDocument;
-    }
 
     function inputInDocument()
     {
       var tabdoc = currentTabDocument();
       return tabdoc.getElementById("input");
-    }
-
-    function urlbarInput()
-    {
-      return gBrowserWnd.document.getElementById("urlbar").inputField;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -96,22 +76,6 @@
     var gInputDocURI = "data:text/html,<html><input id='input'></html>";
     var gButtonDocURI = "data:text/html,<html><input id='input' type='button' value='button'></html>";
 
-    var gBrowserWnd = null;
-    function loadBrowser()
-    {
-      gBrowserWnd = window.openDialog(Services.prefs.getCharPref("browser.chromeURL"),
-                                      "_blank", "chrome,all,dialog=no", gInputDocURI);
-
-      addA11yLoadEvent(startTests, gBrowserWnd);
-    }
-
-    function startTests()
-    {
-      // Wait for tab load.
-      var browser = gBrowserWnd.gBrowser.selectedBrowser;
-      addA11yLoadEvent(doTests, browser.contentWindow);
-    }
-
     //gA11yEventDumpToConsole = true; // debug
 
     var gQueue = null;
@@ -123,7 +87,8 @@
       var input = inputInDocument();
 
       // move focus to input inside tab document
-      gQueue.push(new synthTab(tabDocument, new focusChecker(input), gBrowserWnd));
+      gQueue.push(new synthTab(tabDocument, new focusChecker(input),
+                               browserWindow()));
 
       // open new url, focus moves to new document
       gQueue.push(new loadURI(gButtonDocURI));
@@ -132,22 +97,22 @@
       gQueue.push(new goBack());
 
       // open new tab, focus moves to urlbar
-      gQueue.push(new synthKey(tabDocument, "t", { ctrlKey: true, window: gBrowserWnd },
+      gQueue.push(new synthKey(tabDocument, "t", { ctrlKey: true, window: browserWindow() },
                                new focusChecker(urlbarInput)));
 
       // close open tab, focus goes on input of tab document
-      gQueue.push(new synthKey(tabDocument, "w", { ctrlKey: true, window: gBrowserWnd },
+      gQueue.push(new synthKey(tabDocument, "w", { ctrlKey: true, window: browserWindow() },
                                new focusChecker(inputInDocument)));
 
       gQueue.onFinish = function()
       {
-        gBrowserWnd.close();
+        closeBrowserWindow();
       }
       gQueue.invoke();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addLoadEvent(loadBrowser);
+    openBrowserWindow(doTests, gInputDocURI);
   ]]>
   </script>
 

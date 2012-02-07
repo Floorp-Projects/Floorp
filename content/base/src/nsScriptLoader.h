@@ -244,6 +244,17 @@ public:
 
 private:
   /**
+   * Unblocks the creator parser of the parser-blocking scripts.
+   */
+  void UnblockParser(nsScriptLoadRequest* aParserBlockingRequest);
+
+  /**
+   * Asynchronously resumes the creator parser of the parser-blocking scripts.
+   */
+  void ContinueParserAsync(nsScriptLoadRequest* aParserBlockingRequest);
+
+
+  /**
    * Helper function to check the content policy for a given request.
    */
   static nsresult CheckContentPolicy(nsIDocument* aDocument,

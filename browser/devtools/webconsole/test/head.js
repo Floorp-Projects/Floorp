@@ -36,7 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource:///modules/HUDService.jsm");
+let tempScope = {};
+Cu.import("resource:///modules/HUDService.jsm", tempScope);
+let HUDService = tempScope.HUDService;
+let ConsoleUtils = tempScope.ConsoleUtils;
 
 function log(aMsg)
 {

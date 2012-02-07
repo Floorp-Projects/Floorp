@@ -41,7 +41,6 @@ package org.mozilla.gecko.sync;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -75,6 +74,29 @@ public class Utils {
       }
       System.out.println("");
     }
+  }
+
+  public static void error(String logTag, String message) {
+    logToStdout(logTag, " :: ERROR: ", message);
+    Log.i(logTag, message);
+  }
+
+  public static void info(String logTag, String message) {
+    logToStdout(logTag, " :: INFO: ", message);
+    Log.i(logTag, message);
+  }
+
+  public static void debug(String logTag, String message) {
+    logToStdout(logTag, " :: DEBUG: ", message);
+    Log.d(logTag, message);
+  }
+
+  public static void trace(String logTag, String message) {
+    if (!ENABLE_TRACE_LOGGING) {
+      return;
+    }
+    logToStdout(logTag, " :: TRACE: ", message);
+    Log.d(logTag, message);
   }
 
   public static String generateGuid() {
@@ -128,8 +150,10 @@ public class Utils {
           totalLength += array.length;
       }
   
-      byte[] result = Arrays.copyOf(first, totalLength);
+      byte[] result = new byte[totalLength];
       int offset = first.length;
+
+      System.arraycopy(first, 0, result, 0, offset);
   
       for (byte[] array : rest) {
           System.arraycopy(array, 0, result, offset, array.length);
