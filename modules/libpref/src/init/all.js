@@ -322,6 +322,9 @@ pref("nglayout.events.dispatchLeftClickOnly", true);
 // whether or not to draw images while dragging
 pref("nglayout.enable_drag_images", true);
 
+// enable/disable paint flashing --- useful for debugging
+pref("nglayout.debug.paint_flashing", false);
+
 // scrollbar snapping region
 // 0 - off
 // 1 and higher - slider thickness multiple
