@@ -459,6 +459,12 @@ public:
                          gfxASurface::gfxImageFormat imageFormat);
 
   /**
+   * Which image format to use as an alpha mask with this layer manager.
+   */
+  virtual gfxASurface::gfxImageFormat MaskImageFormat() 
+  { return gfxASurface::ImageFormatA8; }
+
+  /**
    * Creates a DrawTarget which is optimized for inter-operating with this
    * layermanager.
    */
@@ -866,7 +872,12 @@ public:
    * have already had ComputeEffectiveTransforms called.
    */
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) = 0;
-  
+    
+  /**
+   * computes the effective transform for a mask layer, if this layer has one
+   */
+  void ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurface);
+
   /**
    * Calculate the scissor rect required when rendering this layer.
    * Returns a rectangle relative to the intermediate surface belonging to the
@@ -1054,6 +1065,7 @@ public:
                    "Residual translation out of range");
       mValidRegion.SetEmpty();
     }
+    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
   bool UsedForReadback() { return mUsedForReadback; }
@@ -1245,6 +1257,7 @@ public:
     // Snap 0,0 to pixel boundaries, no extra internal transform.
     gfx3DMatrix idealTransform = GetLocalTransform()*aTransformToSurface;
     mEffectiveTransform = SnapTransform(idealTransform, gfxRect(0, 0, 0, 0), nsnull);
+    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
 protected:
@@ -1335,6 +1348,7 @@ public:
         SnapTransform(GetLocalTransform(), gfxRect(0, 0, mBounds.width, mBounds.height),
                       nsnull)*
         SnapTransform(aTransformToSurface, gfxRect(0, 0, 0, 0), nsnull);
+    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
 protected:
