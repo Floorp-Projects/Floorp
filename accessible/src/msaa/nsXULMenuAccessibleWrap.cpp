@@ -43,8 +43,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenuitemAccessibleWrap::
-  nsXULMenuitemAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsXULMenuitemAccessible(aContent, aShell)
+  nsXULMenuitemAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenuitemAccessible(aContent, aDoc)
 {
 }
 
