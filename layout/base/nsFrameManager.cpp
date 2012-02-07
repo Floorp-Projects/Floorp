@@ -1061,6 +1061,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       NS_SubtractHint(aMinChange, nsChangeHint_ClearAncestorIntrinsics);
   }
 
+  aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_UpdateOverflow);
+
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|
   // and |pseudoContent| in sensible ways as well as making what
