@@ -754,8 +754,7 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
 
     appendElementWithText(div, "p", "",
       "This indicates a defect in one or more memory reporters.  The " +
-      "invalid values are highlighted, but you may need to expand one " +
-      "or more sub-trees to see them.");
+      "invalid values are highlighted.");
     appendTextNode(div, "\n\n");  
     gUnsafePathsWithInvalidValuesForThisProcess = [];  // reset for the next process
   }
@@ -1039,6 +1038,11 @@ function appendMrNameSpan(aP, aKind, aShowSubtrees, aHasKids, aUnsafeDesc,
 // from their original state.
 var gTogglesBySafeTreeId = {};
 
+function assertClassListContains(e, className) {
+  assert(e, "undefined " + className);
+  assert(e.classList.contains(className), "classname isn't " + className);
+}
+
 function toggle(aEvent)
 {
   // This relies on each line being a span that contains at least five spans:
@@ -1047,27 +1051,21 @@ function toggle(aEvent)
   // function to find the right nodes.  And the span containing the children of
   // this line must immediately follow.  Assertions check this.
 
-  function assertClassName(span, className) {
-    assert(span, "undefined " + className);
-    assert(span.nodeName === "span", "non-span " + className);
-    assert(span.classList.contains(className), "bad " + className);
-  }
-
   // |aEvent.target| will be one of the five spans.  Get the outer span.
   var outerSpan = aEvent.target.parentNode;
-  assertClassName(outerSpan, "hasKids");
+  assertClassListContains(outerSpan, "hasKids");
 
   // Toggle visibility of the '++' and '--' separators.
   var plusSpan  = outerSpan.childNodes[2];
   var minusSpan = outerSpan.childNodes[3];
-  assertClassName(plusSpan,  "mrSep");
-  assertClassName(minusSpan, "mrSep");
+  assertClassListContains(plusSpan,  "mrSep");
+  assertClassListContains(minusSpan, "mrSep");
   plusSpan .classList.toggle("hidden");
   minusSpan.classList.toggle("hidden");
 
   // Toggle visibility of the span containing this node's children.
   var subTreeSpan = outerSpan.nextSibling;
-  assertClassName(subTreeSpan, "kids");
+  assertClassListContains(subTreeSpan, "kids");
   subTreeSpan.classList.toggle("hidden");
 
   // Record/unrecord that this sub-tree was toggled.
@@ -1076,6 +1074,28 @@ function toggle(aEvent)
     delete gTogglesBySafeTreeId[safeTreeId];
   } else {
     gTogglesBySafeTreeId[safeTreeId] = true;
+  }
+}
+
+function expandPathToThisElement(aElement)
+{
+  if (aElement.classList.contains("kids")) {
+    // Unhide the kids.
+    aElement.classList.remove("hidden");
+    expandPathToThisElement(aElement.previousSibling);  // hasKids
+
+  } else if (aElement.classList.contains("hasKids")) {
+    // Unhide the '--' separator and hide the '++' separator.
+    var  plusSpan = aElement.childNodes[2];
+    var minusSpan = aElement.childNodes[3];
+    assertClassListContains(plusSpan,  "mrSep");
+    assertClassListContains(minusSpan, "mrSep");
+    plusSpan.classList.add("hidden");
+    minusSpan.classList.remove("hidden");
+    expandPathToThisElement(aElement.parentNode);       // kids or pre.tree
+
+  } else {
+    assertClassListContains(aElement, "tree");
   }
 }
 
@@ -1200,6 +1220,12 @@ function appendTreeElements(aPOuter, aT, aProcess)
     appendMrNameSpan(d, kind, showSubtrees, hasKids, aT._unsafeDescription,
                      aT._unsafeName, aT._isUnknown, tIsInvalid, aT._nMerged);
     appendTextNode(d, "\n");
+
+    // In non-verbose mode, invalid nodes can be hidden in collapsed sub-trees.
+    // But it's good to always see them, so force this.
+    if (!gVerbose && tIsInvalid) {
+      expandPathToThisElement(d);
+    }
 
     if (hasKids) {
       // The 'kids' class is just used for sanity checking in toggle().
