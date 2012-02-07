@@ -42,12 +42,14 @@ include protocol PBrowser;
 include "nspr/prtime.h";
 include "mozilla/HalSensor.h";
 include "mozilla/HalTypes.h";
+include "mozilla/dom/ScreenOrientation.h";
 
 using PRTime;
 using mozilla::hal::FlashMode;
 using mozilla::hal::LightType;
 using mozilla::hal::LightMode;
 using mozilla::hal::SensorType;
+using mozilla::dom::ScreenOrientation;
 
 namespace mozilla {
 
@@ -72,9 +74,7 @@ namespace hal {
     PRTime timestamp;
     float[] values;
   };
-}
 
-namespace hal {
   struct NetworkInformation {
     double bandwidth;
     bool   canBeMetered;
@@ -89,6 +89,7 @@ sync protocol PHal {
 child:
     NotifyBatteryChange(BatteryInformation aBatteryInfo);
     NotifyNetworkChange(NetworkInformation aNetworkInfo);
+    NotifyScreenOrientationChange(ScreenOrientation aScreenOrientation);
 
 parent:
     Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
@@ -117,6 +118,11 @@ parent:
 
     Reboot();
     PowerOff();
+
+    EnableScreenOrientationNotifications();
+    DisableScreenOrientationNotifications();
+    sync GetCurrentScreenOrientation()
+      returns (ScreenOrientation aScreenOrientation);
 
 child:
     NotifySensorChange(SensorData aSensorData);
