@@ -42,7 +42,7 @@ import java.util.List;
 
 public interface Actions {
   public enum SpecialKey {
-    DOWN, UP, LEFT, RIGHT, ENTER
+    DOWN, UP, LEFT, RIGHT, ENTER, MENU, BACK
   }
 
   public interface EventExpecter {
