@@ -108,7 +108,7 @@ CallObject::getCalleeFunction() const
 }
 
 inline const Value &
-CallObject::getArguments() const
+CallObject::arguments() const
 {
     JS_ASSERT(!isForEval());
     return getReservedSlot(ARGUMENTS_SLOT);
@@ -119,13 +119,6 @@ CallObject::setArguments(const Value &v)
 {
     JS_ASSERT(!isForEval());
     setFixedSlot(ARGUMENTS_SLOT, v);
-}
-
-inline void
-CallObject::initArguments(const Value &v)
-{
-    JS_ASSERT(!isForEval());
-    initFixedSlot(ARGUMENTS_SLOT, v);
 }
 
 inline const Value &

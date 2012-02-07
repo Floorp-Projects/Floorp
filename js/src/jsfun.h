@@ -415,9 +415,6 @@ JSFunction::toExtended() const
     return static_cast<const js::FunctionExtended *>(this);
 }
 
-extern JSBool
-js_GetArgsValue(JSContext *cx, js::StackFrame *fp, js::Value *vp);
-
 /*
  * Get the arguments object for the given frame.  If the frame is strict mode
  * code, its current arguments will be copied into the arguments object.
@@ -428,7 +425,7 @@ js_GetArgsValue(JSContext *cx, js::StackFrame *fp, js::Value *vp);
  *     named parameter by synthesizing an arguments access at the start of the
  *     function.
  */
-extern JSObject *
+extern js::ArgumentsObject *
 js_GetArgsObject(JSContext *cx, js::StackFrame *fp);
 
 extern void
