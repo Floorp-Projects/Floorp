@@ -348,5 +348,10 @@ TypeInferenceOracle::returnTypeSet(JSScript *script, jsbytecode *pc, types::Type
 TypeSet *
 TypeInferenceOracle::globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id)
 {
-    return script->global()->getType(cx)->getProperty(cx, id, false);
+    TypeObject *type = script->global()->getType(cx);
+    if (type->unknownProperties())
+        return NULL;
+
+    return type->getProperty(cx, id, false);
 }
+
