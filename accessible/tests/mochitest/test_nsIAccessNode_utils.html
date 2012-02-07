@@ -15,7 +15,7 @@
     function doTest()
     {
       var elmObj = {};
-      var acc = getAccessible("span", [nsIAccessNode], elmObj);
+      var acc = getAccessible("span", null, elmObj);
       computedStyle = document.defaultView.getComputedStyle(elmObj.value, "");
 
       // html:span element
@@ -23,7 +23,7 @@
          "Wrong color for element with ID 'span'");
 
       // text child of html:span element
-      acc = getAccessible(acc.firstChild, [nsIAccessNode]);
+      acc = getAccessible(acc.firstChild);
       is(acc.getComputedStyleValue("", "color"), computedStyle.color,
          "Wrong color for text child of element with ID 'span'");
 

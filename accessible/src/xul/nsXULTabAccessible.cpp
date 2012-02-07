@@ -153,9 +153,9 @@ nsXULTabAccessible::RelationByType(PRUint32 aType)
   if (!tabsElm)
     return rel;
 
-  nsCOMPtr<nsIDOMNode> DOMNode(GetDOMNode());
+  nsCOMPtr<nsIDOMNode> domNode(DOMNode());
   nsCOMPtr<nsIDOMNode> tabpanelNode;
-  tabsElm->GetRelatedElement(DOMNode, getter_AddRefs(tabpanelNode));
+  tabsElm->GetRelatedElement(domNode, getter_AddRefs(tabpanelNode));
   if (!tabpanelNode)
     return rel;
 
@@ -255,9 +255,9 @@ nsXULTabpanelAccessible::RelationByType(PRUint32 aType)
   if (!tabpanelsElm)
     return rel;
 
-  nsCOMPtr<nsIDOMNode> DOMNode(GetDOMNode());
+  nsCOMPtr<nsIDOMNode> domNode(DOMNode());
   nsCOMPtr<nsIDOMNode> tabNode;
-  tabpanelsElm->GetRelatedElement(DOMNode, getter_AddRefs(tabNode));
+  tabpanelsElm->GetRelatedElement(domNode, getter_AddRefs(tabNode));
   if (!tabNode)
     return rel;
 
