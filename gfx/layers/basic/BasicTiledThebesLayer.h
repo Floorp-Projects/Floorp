@@ -86,7 +86,8 @@ public:
                    const nsIntRegion& aNewValidRegion,
                    const nsIntRegion& aPaintRegion,
                    LayerManager::DrawThebesLayerCallback aCallback,
-                   void* aCallbackData);
+                   void* aCallbackData,
+                   Layer* aMaskLayer);
 
   BasicTiledLayerTile GetPlaceholderTile() const {
     return mPlaceholder;
@@ -184,6 +185,7 @@ public:
   }
 
   virtual void PaintThebes(gfxContext* aContext,
+                           Layer* aMaskLayer,
                            LayerManager::DrawThebesLayerCallback aCallback,
                            void* aCallbackData,
                            ReadbackProcessor* aReadback);
