@@ -545,6 +545,9 @@ EXTRA_DSO_LDOPTS += \
   -DELAYLOAD:comdlg32.dll \
   -DELAYLOAD:winspool.drv \
   $(NULL)
+ifdef ACCESSIBILITY
+EXTRA_DSO_LDOPTS += -DELAYLOAD:oleacc.dll
+endif
 endif
 endif # WINNT
 
