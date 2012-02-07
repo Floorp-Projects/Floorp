@@ -61,14 +61,10 @@ endif
 
 # FIXME: bug 530688 covers getting these working on Android
 ifneq ($(OS_ARCH),ANDROID)
-ifdef ENABLE_TESTS
-DIRS += jsapi-tests
-endif
+TEST_DIRS += jsapi-tests
 endif
 
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
+TEST_DIRS += tests
 
 MODULE		    = js
 LIBRARY_NAME	    = mozjs

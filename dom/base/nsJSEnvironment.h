@@ -181,9 +181,7 @@ public:
   static void LoadStart();
   static void LoadEnd();
 
-  static void GarbageCollectNow(js::gcreason::Reason aReason,
-                                PRUint32 aGckind,
-                                bool aGlobal);
+  static void GarbageCollectNow(js::gcreason::Reason reason, PRUint32 gckind = nsGCNormal);
   static void ShrinkGCBuffersNow();
   // If aExtraForgetSkippableCalls is -1, forgetSkippable won't be
   // called even if the previous collection was GC.
@@ -192,7 +190,6 @@ public:
 
   static void PokeGC(js::gcreason::Reason aReason);
   static void KillGCTimer();
-  static void KillFullGCTimer();
 
   static void PokeShrinkGCBuffers();
   static void KillShrinkGCBuffersTimer();
@@ -211,29 +208,6 @@ public:
     JSObject* global = JS_GetGlobalObject(mContext);
     return global ? mGlobalObjectRef.get() : nsnull;
   }
-  
-  static PRUint32 EvaluationCount(nsJSContext* aCx)
-  {
-    return aCx && aCx->mGlobalGCEpoch == sGlobalGCEpoch ?
-      aCx->mEvaluationCount : 0;
-  }
-
-  static void IncreaseEvaluationCount(nsJSContext* aCx)
-  {
-    if (aCx->mGlobalGCEpoch != sGlobalGCEpoch) {
-      aCx->mEvaluationCount = 0;
-      aCx->mGlobalGCEpoch = sGlobalGCEpoch;
-    }
-    ++(aCx->mEvaluationCount);
-  }
-  
-  static void ResetEvaluationCount(nsJSContext* aCx)
-  {
-    aCx->mEvaluationCount = 0;
-  }
-  
-  static void DOMGCFinishedCallback(JSRuntime* aRt, JSCompartment* aComp,
-                                    const char* aStatus);
 protected:
   nsresult InitializeExternalClasses();
 
@@ -322,9 +296,7 @@ private:
   bool mScriptsEnabled;
   bool mGCOnDestruction;
   bool mProcessingScriptTag;
-  bool mChromeComp;
-  PRUint32 mGlobalGCEpoch;
-  PRUint32 mEvaluationCount;
+
   PRUint32 mExecuteDepth;
   PRUint32 mDefaultJSOptions;
   PRTime mOperationCallbackTime;
@@ -335,8 +307,6 @@ private:
   // mGlobalObjectRef ensures that the outer window stays alive as long as the
   // context does. It is eventually collected by the cycle collector.
   nsCOMPtr<nsIScriptGlobalObject> mGlobalObjectRef;
-
-  static PRUint32 sGlobalGCEpoch;
 
   static int JSOptionChangedCallback(const char *pref, void *data);
 

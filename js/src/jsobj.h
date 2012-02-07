@@ -363,6 +363,7 @@ extern Class NormalArgumentsObjectClass;
 extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpClass;
+extern Class RegExpStaticsClass;
 extern Class SlowArrayClass;
 extern Class StopIterationClass;
 extern Class StringClass;
@@ -378,6 +379,7 @@ class ClonedBlockObject;
 class DeclEnvObject;
 class GlobalObject;
 class NestedScopeObject;
+class NewObjectCache;
 class NormalArgumentsObject;
 class NumberObject;
 class ScopeObject;
@@ -495,6 +497,7 @@ struct JSObject : js::gc::Cell
   private:
     friend struct js::Shape;
     friend struct js::GCMarker;
+    friend class  js::NewObjectCache;
 
     /*
      * Shape of the object, encodes the layout of the object's properties and
@@ -670,11 +673,11 @@ struct JSObject : js::gc::Cell
     inline bool hasPropertyTable() const;
 
     inline size_t sizeOfThis() const;
-    inline size_t computedSizeOfIncludingThis() const;
+    inline size_t computedSizeOfThisSlotsElements() const;
 
-    /* mallocSizeOf can be NULL, in which case we compute the sizes analytically */
     inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
-                                    size_t *slotsSize, size_t *elementsSize) const;
+                                    size_t *slotsSize, size_t *elementsSize,
+                                    size_t *miscSize) const;
 
     inline size_t numFixedSlots() const;
 
@@ -1414,6 +1417,7 @@ struct JSObject : js::gc::Cell
     inline bool isPrimitive() const;
     inline bool isProxy() const;
     inline bool isRegExp() const;
+    inline bool isRegExpStatics() const;
     inline bool isScope() const;
     inline bool isScript() const;
     inline bool isSlowArray() const;
@@ -1446,6 +1450,7 @@ struct JSObject : js::gc::Cell
     inline bool isCrossCompartmentWrapper() const;
 
     inline js::ArgumentsObject &asArguments();
+    inline const js::ArgumentsObject &asArguments() const;
     inline js::BlockObject &asBlock();
     inline js::BooleanObject &asBoolean();
     inline js::CallObject &asCall();
@@ -1668,6 +1673,7 @@ class NewObjectCache
   private:
     inline bool lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry);
     inline void fill(EntryIndex entry, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj);
+    static inline void copyCachedToObject(JSObject *dst, JSObject *src);
 };
 
 } /* namespace js */
