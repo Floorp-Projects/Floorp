@@ -204,6 +204,16 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return new AndroidDBCursor(c);
     }
 
+    public Cursor getMobileBookmarks(ContentResolver cr) {
+        Cursor c = cr.query(null, null, null, null, null);
+        return new AndroidDBCursor(c);
+    }
+
+    public Cursor getDesktopBookmarks(ContentResolver cr) {
+        Cursor c = cr.query(null, null, null, null, null);
+        return new AndroidDBCursor(c);
+    }
+
     public Cursor isBookmarkQueryPre11(ContentResolver cr, String uri) {
         return cr.query(Browser.BOOKMARKS_URI,
                         new String[] { BookmarkColumns.URL },

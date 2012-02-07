@@ -831,14 +831,11 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
 
   NS_ENSURE_TRUE(typeSupported, false);
 
-  nsCOMPtr<nsIDOMNSDataTransfer> dataTransferNS(do_QueryInterface(dataTransfer));
-  NS_ENSURE_TRUE(dataTransferNS, false);
-
   // If there is no source node, this is probably an external drag and the
   // drop is allowed. The later checks rely on checking if the drag target
   // is the same as the drag source.
   nsCOMPtr<nsIDOMNode> sourceNode;
-  dataTransferNS->GetMozSourceNode(getter_AddRefs(sourceNode));
+  dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
   if (!sourceNode)
     return true;
 

@@ -5,6 +5,7 @@ import @ANDROID_PACKAGE_NAME@.*;
 
 import android.app.Instrumentation;
 import android.os.SystemClock;
+import android.util.FloatMath;
 import android.util.Log;
 import android.view.MotionEvent;
 
@@ -81,6 +82,35 @@ class MotionEventHelper {
 
     public void dragSync(float startX, float startY, float endX, float endY) {
         dragSync(startX, startY, endX, endY, 1000);
+    }
+
+    public Thread flingAsync(final float startX, final float startY, final float endX, final float endY, final float velocity) {
+        float dx = endX - startX;
+        float dy = endY - startY;
+        float distance = FloatMath.sqrt((dx * dx) + (dy * dy));
+        final long time = (long)(distance / velocity);
+        if (time <= 0) {
+            throw new IllegalArgumentException( "Fling parameters require too small a time period" );
+        }
+        Thread t = new Thread() {
+            public void run() {
+                long downTime = down(startX, startY);
+                MotionEvent event = MotionEvent.obtain(downTime, downTime + time, MotionEvent.ACTION_MOVE, endX, endY, 0);
+                mInstrumentation.sendPointerSync(event);
+                downTime = up(downTime, endX, endY);
+            }
+        };
+        t.start();
+        return t;
+    }
+
+    public void flingSync(float startX, float startY, float endX, float endY, float velocity) {
+        try {
+            flingAsync(startX, startY, endX, endY, velocity).join();
+            mInstrumentation.waitForIdleSync();
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
     }
 
     public void tap(float x, float y) {

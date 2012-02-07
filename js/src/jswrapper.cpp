@@ -349,6 +349,21 @@ Wrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
     return ToPrimitive(cx, hint, vp);
 }
 
+bool
+Wrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp)
+{
+    if (!js_IteratorMore(cx, wrappedObject(wrapper), vp))
+        return false;
+
+    if (vp->toBoolean()) {
+        *vp = cx->iterValue;
+        cx->iterValue.setUndefined();
+    } else {
+        vp->setMagic(JS_NO_ITER_VALUE);
+    }
+    return true;
+}
+
 void
 Wrapper::trace(JSTracer *trc, JSObject *wrapper)
 {
@@ -846,6 +861,15 @@ CrossCompartmentWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType h
 
     call.leave();
     return call.origin->wrap(cx, vp);
+}
+
+bool
+CrossCompartmentWrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp)
+{
+    PIERCE(cx, wrapper, GET,
+           NOTHING,
+           Wrapper::iteratorNext(cx, wrapper, vp),
+           call.origin->wrap(cx, vp));
 }
 
 void

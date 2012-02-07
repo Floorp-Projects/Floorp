@@ -3343,8 +3343,6 @@ public:
                                        JSContext* cx,
                                        jsval *jsExceptionPtr);
 
-    static void RemoveXPCOMUCStringFinalizer();
-
 private:
     XPCConvert(); // not implemented
 
@@ -3362,8 +3360,6 @@ public:
     // assigned.
     static jsval ReadableToJSVal(JSContext *cx, const nsAString &readable,
                                  nsStringBuffer** sharedBuffer);
-
-    static void ShutdownDOMStringFinalizer();
 
 private:
     XPCStringConvert();         // not implemented
