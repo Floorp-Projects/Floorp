@@ -80,6 +80,8 @@ public class BrowserToolbar extends LinearLayout {
     private boolean mInflated;
     private int mColor;
     private int mCounterColor;
+    private int[] mPadding;
+    private boolean mTitleCanExpand;
 
     private int mDuration;
     private TranslateAnimation mSlideUpIn;
@@ -93,6 +95,7 @@ public class BrowserToolbar extends LinearLayout {
         super(context, attrs);
         mContext = context;
         mInflated = false;
+        mTitleCanExpand = true;
 
         // Get the device's highlight color
         TypedArray typedArray;
@@ -129,10 +132,10 @@ public class BrowserToolbar extends LinearLayout {
 
         Resources resources = getResources();
         
-        int padding[] = { mAwesomeBar.getPaddingLeft(),
-                          mAwesomeBar.getPaddingTop(),
-                          mAwesomeBar.getPaddingRight(),
-                          mAwesomeBar.getPaddingBottom() };
+        mPadding = new int[] { mAwesomeBar.getPaddingLeft(),
+                               mAwesomeBar.getPaddingTop(),
+                               mAwesomeBar.getPaddingRight(),
+                               mAwesomeBar.getPaddingBottom() };
 
         GeckoStateListDrawable states = new GeckoStateListDrawable();
         states.initializeFilter(mColor);
@@ -140,7 +143,7 @@ public class BrowserToolbar extends LinearLayout {
         states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
         mAwesomeBar.setBackgroundDrawable(states);
 
-        mAwesomeBar.setPadding(padding[0], padding[1], padding[2], padding[3]);
+        mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
 
         mTabs = (ImageButton) findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
@@ -290,6 +293,10 @@ public class BrowserToolbar extends LinearLayout {
     public void setStopVisibility(boolean visible) {
         mStop.setVisibility(visible ? View.VISIBLE : View.GONE);
         mSiteSecurity.setVisibility(visible ? View.GONE : View.VISIBLE);
+        if (!visible && mTitleCanExpand)
+            mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
+        else
+            mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[0], mPadding[3]);
     }
 
     public void setShadowVisibility(boolean visible) {
@@ -316,12 +323,16 @@ public class BrowserToolbar extends LinearLayout {
     }
     
     public void setSecurityMode(String mode) {
-        if (mode.equals("identified"))
+        mTitleCanExpand = false;
+
+        if (mode.equals("identified")) {
             mSiteSecurity.setImageLevel(1);
-        else if (mode.equals("verified"))
+        } else if (mode.equals("verified")) {
             mSiteSecurity.setImageLevel(2);
-        else
+        } else {
             mSiteSecurity.setImageLevel(0);
+            mTitleCanExpand = true;
+        }
     }
 
     public void refresh() {
