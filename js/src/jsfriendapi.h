@@ -517,6 +517,7 @@ IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx);
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
+#define JSITER_FOR_OF     0x20  /* harmony for-of loop */
 
 inline uintptr_t
 GetContextStackLimit(const JSContext *cx)

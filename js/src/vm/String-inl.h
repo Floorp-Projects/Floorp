@@ -229,18 +229,19 @@ JSShortString::initAtOffsetInBuffer(const jschar *chars, size_t length)
 }
 
 JS_ALWAYS_INLINE void
-JSExternalString::init(const jschar *chars, size_t length, intN type, void *closure)
+JSExternalString::init(const jschar *chars, size_t length, const JSStringFinalizer *fin)
 {
+    JS_ASSERT(fin);
+    JS_ASSERT(fin->finalize);
     d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
     d.u1.chars = chars;
-    d.s.u2.externalType = type;
-    d.s.u3.externalClosure = closure;
+    d.s.u2.externalFinalizer = fin;
 }
 
 JS_ALWAYS_INLINE JSExternalString *
-JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length, intN type, void *closure)
+JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length,
+                       const JSStringFinalizer *fin)
 {
-    JS_ASSERT(uintN(type) < JSExternalString::TYPE_LIMIT);
     JS_ASSERT(chars[length] == 0);
 
     if (!validateLength(cx, length))
@@ -248,7 +249,7 @@ JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length, intN t
     JSExternalString *str = js_NewGCExternalString(cx);
     if (!str)
         return NULL;
-    str->init(chars, length, type, closure);
+    str->init(chars, length, fin);
     cx->runtime->updateMallocCounter(cx, (length + 1) * sizeof(jschar));
     return str;
 }
@@ -408,21 +409,14 @@ JSAtom::finalize(JSRuntime *rt)
 inline void
 JSExternalString::finalize(JSContext *cx, bool background)
 {
-    if (JSStringFinalizeOp finalizer = str_finalizers[externalType()])
-        finalizer(cx, this);
+    finalize();
 }
 
 inline void
 JSExternalString::finalize()
 {
-    JSStringFinalizeOp finalizer = str_finalizers[externalType()];
-    if (finalizer) {
-        /*
-         * Assume that the finalizer for the permanently interned
-         * string knows how to deal with null context.
-         */
-        finalizer(NULL, this);
-    }
+    const JSStringFinalizer *fin = externalFinalizer();
+    fin->finalize(fin, const_cast<jschar *>(chars()));
 }
 
 #endif

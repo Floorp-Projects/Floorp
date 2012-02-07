@@ -1,0 +1,65 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+class PixelTest extends BaseTest {
+    private static final long PAINT_CLEAR_DELAY = 500; // milliseconds
+
+    protected final int[][] loadAndPaint(String url) {
+        Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
+        loadUrl(url);
+        paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
+        return mDriver.getPaintedSurface();
+    }
+
+    protected final int[][] waitForPaint(Actions.RepeatedEventExpecter expecter) {
+        expecter.blockUntilClear(PAINT_CLEAR_DELAY);
+        return mDriver.getPaintedSurface();
+    }
+
+    protected final int[][] waitWithNoPaint(Actions.RepeatedEventExpecter expecter) {
+        try {
+            Thread.sleep(PAINT_CLEAR_DELAY);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+        mAsserter.is(expecter.eventReceived(), false, "Checking gecko didn't draw unnecessarily");
+        return mDriver.getPaintedSurface();
+    }
+
+    // this matches the algorithm in robocop_boxes.html
+    protected final int[] getBoxColorAt(int x, int y) {
+        x -= (x % 100);
+        y -= (y % 100);
+        int r = (x + y) % 255;
+        int g = 255 - (y / 10);
+        int b = 255 - (x / 10);
+        return new int[] { r, g, b };
+    }
+
+    /**
+     * Checks the top-left corner of the visible area of the page is at (x,y) of robocop_boxes.html.
+     */
+    protected final void checkScrollWithBoxes(int[][] painted, int x, int y) {
+        int[] color = getBoxColorAt(x, y);
+        mAsserter.ispixel(painted[0][0], color[0], color[1], color[2], "Pixel at 0, 0");
+        color = getBoxColorAt(x + 100, y);
+        mAsserter.ispixel(painted[0][100], color[0], color[1], color[2], "Pixel at 100, 0");
+        color = getBoxColorAt(x, y + 100);
+        mAsserter.ispixel(painted[100][0], color[0], color[1], color[2], "Pixel at 0, 100");
+        color = getBoxColorAt(x + 100, y + 100);
+        mAsserter.ispixel(painted[100][100], color[0], color[1], color[2], "Pixel at 100, 100");
+    }
+
+    /**
+     * Loads the robocop_boxes.html file and verifies that we are positioned at (0,0) on it.
+     * @param url URL of the robocop_boxes.html file.
+     * @return The painted surface after rendering the file.
+     */
+    protected final int[][] loadAndVerifyBoxes(String url) {
+        int[][] painted = loadAndPaint(url);
+        checkScrollWithBoxes(painted, 0, 0);
+        return painted;
+    }
+}

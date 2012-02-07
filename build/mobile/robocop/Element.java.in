@@ -46,4 +46,6 @@ public interface Element {
   boolean isDisplayed();
   //Returns the text currently displayed on the element.
   String getText();
+  //Returns view ID.
+  Integer getId();
 }

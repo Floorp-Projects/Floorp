@@ -20,7 +20,7 @@
 #define bookmarks_addons Firefox: Customize with add-ons
 
 # LOCALIZATION NOTE (bookmarks_support):
-# link title for https://support.mozilla.com/mobile
+# link title for https://support.mozilla.org/mobile
 #define bookmarks_support Firefox: Support
 
 # LOCALIZATION NOTE (bookmarks_aboutHome):

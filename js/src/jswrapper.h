@@ -96,6 +96,7 @@ class JS_FRIEND_API(Wrapper) : public ProxyHandler
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent) MOZ_OVERRIDE;
     virtual RegExpShared *regexp_toShared(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
+    virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp) MOZ_OVERRIDE;
 
     virtual void trace(JSTracer *trc, JSObject *wrapper) MOZ_OVERRIDE;
 
@@ -156,6 +157,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
+    virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp);
 
     virtual void trace(JSTracer *trc, JSObject *wrapper) MOZ_OVERRIDE;
 

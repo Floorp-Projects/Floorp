@@ -6023,7 +6023,7 @@ function MultiplexHandler(event)
     } else if (name == 'charsetCustomize') {
         //do nothing - please remove this else statement, once the charset prefs moves to the pref window
     } else {
-        SetForcedCharset(node.getAttribute('id'));
+        BrowserSetForcedCharacterSet(node.getAttribute('id'));
     }
     } catch(ex) { alert(ex); }
 }
