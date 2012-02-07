@@ -45,6 +45,8 @@ import javax.crypto.Mac;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.crypto.CryptoException;
+import java.security.InvalidKeyException;
 
 public class KeyBundle {
 
@@ -86,7 +88,7 @@ public class KeyBundle {
      * encryption key and the second iteration the HMAC key.
      *
      */
-    public KeyBundle(String username, String base32SyncKey) {
+    public KeyBundle(String username, String base32SyncKey) throws CryptoException {
       if (base32SyncKey == null) {
         throw new IllegalArgumentException("No sync key provided.");
       }
@@ -105,7 +107,15 @@ public class KeyBundle {
       byte[] syncKey = Utils.decodeFriendlyBase32(base32SyncKey);
       byte[] user    = username.getBytes();
 
-      Mac hmacHasher = HKDF.makeHMACHasher(syncKey);
+      Mac hmacHasher;
+      try {
+        hmacHasher = HKDF.makeHMACHasher(syncKey);
+      } catch (NoSuchAlgorithmException e) {
+        throw new CryptoException(e);
+      } catch (InvalidKeyException e) {
+        throw new CryptoException(e);
+      }
+      assert(hmacHasher != null); // If makeHMACHasher doesn't throw, then hmacHasher is non-null.
 
       byte[] encrBytes = Utils.concatAll(EMPTY_BYTES, HKDF.HMAC_INPUT, user, ENCR_INPUT_BYTES);
       byte[] encrKey   = HKDF.digestBytes(encrBytes, hmacHasher);

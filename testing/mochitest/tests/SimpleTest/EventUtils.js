@@ -32,7 +32,7 @@ function getElement(id) {
 this.$ = this.getElement;
 
 function sendMouseEvent(aEvent, aTarget, aWindow) {
-  if (['click', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
+  if (['click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
     throw new Error("sendMouseEvent doesn't know about event type '" + aEvent.type + "'");
   }
 
@@ -52,7 +52,8 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
   var viewArg          = aWindow;
   var detailArg        = aEvent.detail        || (aEvent.type == 'click'     ||
                                                   aEvent.type == 'mousedown' ||
-                                                  aEvent.type == 'mouseup' ? 1 : 0);
+                                                  aEvent.type == 'mouseup' ? 1 :
+                                                  aEvent.type == 'dblclick'? 2 : 0);
   var screenXArg       = aEvent.screenX       || 0;
   var screenYArg       = aEvent.screenY       || 0;
   var clientXArg       = aEvent.clientX       || 0;

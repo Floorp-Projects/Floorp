@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Test for bug 715867"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for bug 715867</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+gWindow = null;
+
+gSizeModeDidChange = false;
+gSizeModeDidChangeTo = 0;
+
+function sizemodeChanged(e) {
+  gSizeModeDidChange = true;
+  gSizeModeDidChangeTo = gWindow.windowState;
+}
+
+function expectSizeModeChange(newMode, duringActionCallback) {
+  gSizeModeDidChange = false;
+
+  duringActionCallback();
+
+  if (newMode == 0) {
+    // No change should have taken place, no event should have fired.
+    ok(!gSizeModeDidChange, "No sizemodechange event should have fired.");
+  } else {
+    // Size mode change event was expected to fire.
+    ok(gSizeModeDidChange, "A sizemodechanged event should have fired.");
+    is(gSizeModeDidChangeTo, newMode, "The new sizemode should have the expected value.");
+  }
+}
+
+function startTest() {
+  if (navigator.platform.indexOf("Lin") != -1) {
+    ok(true, "This test is disabled on Linux because it expects window sizemode changes to be synchronous (which is not the case on Linux).");
+    SimpleTest.finish();
+    return;
+  };
+  openWindow();
+}
+
+function openWindow() {
+  gWindow = open('empty_window.xul', '_blank', 'chrome,screenX=50,screenY=50,width=200,height=200,resizable');
+  SimpleTest.waitForFocus(runTest, gWindow);
+}
+
+function runTest() {
+  // Install event handler.
+  gWindow.addEventListener("sizemodechange", sizemodeChanged, false);
+
+  // Run tests.
+  expectSizeModeChange(gWindow.STATE_MINIMIZED, function () {
+    gWindow.minimize();
+  });
+
+  expectSizeModeChange(gWindow.STATE_NORMAL, function () {
+    gWindow.restore();
+  });
+
+  expectSizeModeChange(gWindow.STATE_MAXIMIZED, function () {
+    gWindow.maximize();
+  });
+
+  expectSizeModeChange(gWindow.STATE_NORMAL, function () {
+    gWindow.restore();
+  });
+
+  // Normal window resizing shouldn't fire a sizemodechanged event, bug 715867.
+  expectSizeModeChange(0, function () {
+    gWindow.resizeTo(gWindow.outerWidth + 10, gWindow.outerHeight);
+  });
+
+  expectSizeModeChange(0, function () {
+    gWindow.resizeTo(gWindow.outerWidth, gWindow.outerHeight + 10);
+  });
+
+  gWindow.removeEventListener("sizemodechange", sizemodeChanged, false);
+  gWindow.close();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(startTest);
+
+]]>
+</script>
+
+</window>

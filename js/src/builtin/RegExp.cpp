@@ -159,7 +159,7 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, T *re, JSLinearString *inpu
 }
 
 bool
-js::ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpMatcher &matcher, JSLinearString *input,
+js::ExecuteRegExp(JSContext *cx, RegExpStatics *res, const RegExpMatcher &matcher, JSLinearString *input,
                   const jschar *chars, size_t length,
                   size_t *lastIndex, RegExpExecType type, Value *rval)
 {
@@ -207,7 +207,7 @@ EscapeNakedForwardSlashes(JSContext *cx, JSLinearString *unescaped)
 }
 
 /*
- * Compile a new |RegExpPrivate| for the |RegExpObject|.
+ * Compile a new |RegExpShared| for the |RegExpObject|.
  *
  * Per ECMAv5 15.10.4.1, we act on combinations of (pattern, flags) as
  * arguments:
@@ -218,20 +218,19 @@ EscapeNakedForwardSlashes(JSContext *cx, JSLinearString *unescaped)
  *       flags := ToString(flags) if defined(flags) else ''
  */
 static bool
-CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
-                    uintN argc, Value *argv, Value *rval)
+CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 {
-    if (argc == 0) {
+    if (args.length() == 0) {
         RegExpStatics *res = cx->regExpStatics();
         RegExpObject *reobj = builder.build(cx->runtime->emptyString, res->getFlags());
         if (!reobj)
             return false;
-        *rval = ObjectValue(*reobj);
+        args.rval() = ObjectValue(*reobj);
         return true;
     }
 
-    Value sourceValue = argv[0];
-    if (ValueIsRegExp(sourceValue)) {
+    Value sourceValue = args[0];
+    if (IsObjectWithClass(sourceValue, ESClass_RegExp, cx)) {
         /*
          * If we get passed in a |RegExpObject| source we return a new
          * object with the same source/flags.
@@ -239,15 +238,21 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
          * Note: the regexp static flags are not taken into consideration here.
          */
         JSObject &sourceObj = sourceValue.toObject();
-        if (argc >= 2 && !argv[1].isUndefined()) {
+        if (args.length() >= 2 && !args[1].isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEWREGEXP_FLAGGED);
             return false;
         }
 
-        RegExpObject *reobj = builder.build(&sourceObj.asRegExp());
+        RegExpShared *shared = RegExpToShared(cx, sourceObj);
+        if (!shared)
+            return false;
+
+        shared->incref(cx);
+        RegExpObject *reobj = builder.build(AlreadyIncRefed<RegExpShared>(shared));
         if (!reobj)
             return false;
-        *rval = ObjectValue(*reobj);
+
+        args.rval() = ObjectValue(*reobj);
         return true;
     }
 
@@ -265,11 +270,11 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
     }
 
     RegExpFlag flags = RegExpFlag(0);
-    if (argc > 1 && !argv[1].isUndefined()) {
-        JSString *flagStr = ToString(cx, argv[1]);
+    if (args.length() > 1 && !args[1].isUndefined()) {
+        JSString *flagStr = ToString(cx, args[1]);
         if (!flagStr)
             return false;
-        argv[1].setString(flagStr);
+        args[1].setString(flagStr);
         if (!ParseRegExpFlags(cx, flagStr, &flags))
             return false;
     }
@@ -286,7 +291,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
     if (!reobj)
         return NULL;
 
-    *rval = ObjectValue(*reobj);
+    args.rval() = ObjectValue(*reobj);
     return true;
 }
 
@@ -301,32 +306,30 @@ regexp_compile(JSContext *cx, uintN argc, Value *vp)
         return ok;
 
     RegExpObjectBuilder builder(cx, &obj->asRegExp());
-    return CompileRegExpObject(cx, builder, args.length(), args.array(), &args.rval());
+    return CompileRegExpObject(cx, builder, args);
 }
 
 static JSBool
 regexp_construct(JSContext *cx, uintN argc, Value *vp)
 {
-    Value *argv = JS_ARGV(cx, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!IsConstructing(vp)) {
+    if (!IsConstructing(args)) {
         /*
          * If first arg is regexp and no flags are given, just return the arg.
          * Otherwise, delegate to the standard constructor.
          * See ECMAv5 15.10.3.1.
          */
-        if (argc >= 1 && ValueIsRegExp(argv[0]) && (argc == 1 || argv[1].isUndefined())) {
-            *vp = argv[0];
+        if (args.length() >= 1 && IsObjectWithClass(args[0], ESClass_RegExp, cx) &&
+            (args.length() == 1 || args[1].isUndefined()))
+        {
+            args.rval() = args[0];
             return true;
         }
     }
 
     RegExpObjectBuilder builder(cx);
-    if (!CompileRegExpObject(cx, builder, argc, argv, &JS_RVAL(cx, vp)))
-        return false;
-
-    *vp = ObjectValue(*builder.reobj());
-    return true;
+    return CompileRegExpObject(cx, builder, args);
 }
 
 static JSBool
@@ -514,15 +517,17 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    RegExpObject *reobj = &obj->asRegExp();
+    RegExpObject &reobj = obj->asRegExp();
 
     RegExpMatcher matcher(cx);
-    if (reobj->startsWithAtomizedGreedyStar()) {
-        if (!matcher.resetWithTestOptimized(reobj))
+    if (reobj.startsWithAtomizedGreedyStar()) {
+        if (!matcher.initWithTestOptimized(reobj))
             return false;
     } else {
-        if (!matcher.reset(reobj))
+        RegExpShared *shared = reobj.getShared(cx);
+        if (!shared)
             return false;
+        matcher.init(NeedsIncRef<RegExpShared>(shared));
     }
 
     RegExpStatics *res = cx->regExpStatics();
@@ -540,7 +545,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     size_t length = input->length();
 
     /* Step 4. */
-    const Value &lastIndex = reobj->getLastIndex();
+    const Value &lastIndex = reobj.getLastIndex();
 
     /* Step 5. */
     jsdouble i;
@@ -553,7 +558,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
 
     /* Step 9a. */
     if (i < 0 || i > length) {
-        reobj->zeroLastIndex();
+        reobj.zeroLastIndex();
         args.rval() = NullValue();
         return true;
     }
@@ -569,9 +574,9 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     /* Step 11 (with sticky extension). */
     if (matcher.global() || (!args.rval().isNull() && matcher.sticky())) {
         if (args.rval().isNull())
-            reobj->zeroLastIndex();
+            reobj.zeroLastIndex();
         else
-            reobj->setLastIndex(lastIndexInt);
+            reobj.setLastIndex(lastIndexInt);
     }
 
     return true;

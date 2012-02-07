@@ -1856,7 +1856,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     UI.setActive(this, { dontSetActiveTabInGroup: true });
 
     let dontZoomIn = !!(options && options.dontZoomIn);
-    return gBrowser.loadOneTab(url || "about:blank", { inBackground: dontZoomIn });
+    return gBrowser.loadOneTab(url || gWindow.BROWSER_NEW_TAB_URL, { inBackground: dontZoomIn });
   },
 
   // ----------

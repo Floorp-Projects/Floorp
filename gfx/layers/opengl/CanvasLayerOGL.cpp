@@ -212,7 +212,6 @@ CanvasLayerOGL::UpdateSurface()
       gl()->UploadSurfaceToTexture(updatedAreaSurface,
                                    mBounds,
                                    mTexture,
-                                   nsIntSize(mBounds.width, mBounds.height),
                                    false,
                                    nsIntPoint(0, 0));
   }
@@ -261,7 +260,6 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
       gl()->UploadSurfaceToTexture(surf,
                                    nsIntRect(0, 0, drawRect.width, drawRect.height),
                                    mTexture,
-                                   nsIntSize(mBounds.width, mBounds.height),
                                    true,
                                    drawRect.TopLeft());
   }

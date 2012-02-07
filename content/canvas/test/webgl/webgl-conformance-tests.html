@@ -50,6 +50,10 @@ found in the LICENSE file.
 <script>
 var CONFORMANCE_TEST_VERSION = "1.0.1 (beta)";
 
+var OPTIONS = {
+  version: CONFORMANCE_TEST_VERSION
+};
+
 function start() {
 
   function log(msg) {
@@ -217,7 +221,7 @@ function start() {
   };
 
   Folder.prototype.checked = function() {
-    return this.check.checked && 
+    return this.check.checked &&
         (this.folder ? this.folder.checked() : true);
   };
 
@@ -247,7 +251,7 @@ function start() {
       this.subFolders[name] = subFolder;
       this.items.push(subFolder);
       this.childUL.appendChild(subFolder.elem);
-    } 
+    }
     return subFolder;
   };
 
@@ -363,7 +367,7 @@ function start() {
       // generate a text summary
       var tx = "";
       tx += "WebGL Conformance Test Results\n";
-      tx += "Version " + CONFORMANCE_TEST_VERSION + "\n";
+      tx += "Version " + OPTIONS.version + "\n";
       tx += "\n";
       tx += "-------------------\n\n";
       tx += "User Agent: " + (navigator.userAgent ? navigator.userAgent : "(navigator.userAgent is null)") + "\n";
@@ -432,7 +436,26 @@ function start() {
     };
   };
 
-  document.getElementById("testVersion").innerHTML = CONFORMANCE_TEST_VERSION;
+  var getURLOptions = function(obj) {
+    var s = window.location.href;
+    var q = s.indexOf("?");
+    var e = s.indexOf("#");
+    if (e < 0) {
+      e = s.length;
+    }
+    var query = s.substring(q + 1, e);
+    var pairs = query.split("&");
+    for (var ii = 0; ii < pairs.length; ++ii) {
+      var keyValue = pairs[ii].split("=");
+      var key = keyValue[0];
+      var value = decodeURIComponent(keyValue[1]);
+	  obj[key] = value;
+    }
+  };
+
+  getURLOptions(OPTIONS);
+
+  document.getElementById("testVersion").innerHTML = OPTIONS.version;
 
   var reporter = new Reporter();
   var iframe = document.getElementById("testframe");
@@ -441,7 +464,8 @@ function start() {
       '00_test_list.txt',
       function(type, msg, success) {
         return reporter.reportFunc(type, msg, success);
-      });
+      },
+      OPTIONS);
   window.webglTestHarness = testHarness;
   var button = document.getElementById("runTestsButton");
   button.disabled = true;

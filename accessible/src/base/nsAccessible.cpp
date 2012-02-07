@@ -593,30 +593,13 @@ nsAccessible::VisibilityState()
 {
   PRUint64 vstates = states::INVISIBLE | states::OFFSCREEN;
 
-  // We need to check the parent chain for visibility.
-  nsAccessible* accessible = this;
-  do {
-    // We don't want background tab page content to be aggressively invisible.
-    // Otherwise this foils screen reader virtual buffer caches.
-    roles::Role role = accessible->Role();
-    if (role == roles::PROPERTYPAGE || role == roles::PANE)
-      break;
-
-    nsIFrame* frame = accessible->GetFrame();
-    if (!frame)
-      return vstates;
-
-    const nsIView* view = frame->GetView();
-    if (view && view->GetVisibility() == nsViewVisibility_kHide)
-      return vstates;
-    
-  } while (accessible = accessible->Parent());
-
   nsIFrame* frame = GetFrame();
   if (!frame)
     return vstates;
 
   const nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  if (!shell)
+    return vstates;
 
   // We need to know if at least a kMinPixels around the object is visible,
   // otherwise it will be marked states::OFFSCREEN.
@@ -643,6 +626,10 @@ nsAccessible::VisibilityState()
       return vstates;
 
   }
+
+  // XXX Do we really need to cross from content to chrome ancestor?
+  if (!frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY))
+    return vstates;
 
   // Assume we are visible enough.
   return vstates &= ~states::INVISIBLE;
@@ -1387,6 +1374,30 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   if (NS_SUCCEEDED(rv))
     nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textIndent, value);
 
+  // Expose 'margin-left' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-left"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginLeft, value);
+
+  // Expose 'margin-right' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-right"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginRight, value);
+
+  // Expose 'margin-top' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-top"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginTop, value);
+
+  // Expose 'margin-bottom' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-bottom"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginBottom, value);
+
   // Expose draggable object attribute?
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
   if (htmlElement) {
@@ -1839,6 +1850,10 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 
    case eClickAction:
      aName.AssignLiteral("click");
+     return NS_OK;
+
+   case ePressAction:
+     aName.AssignLiteral("press");
      return NS_OK;
 
    case eCheckUncheckAction:

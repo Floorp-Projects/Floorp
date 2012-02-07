@@ -96,9 +96,6 @@ const kQueryIndexOpenPageCount = 10;
 const kQueryTypeKeyword = 0;
 const kQueryTypeFiltered = 1;
 
-// Autocomplete minimum time before query is executed
-const kAsyncQueriesWaitTime = 50;
-
 // This separator is used as an RTL-friendly way to split the title and tags.
 // It can also be used by an nsIAutoCompleteResult consumer to re-split the
 // "comment" back into the title and the tag.
@@ -513,17 +510,60 @@ nsPlacesAutoComplete.prototype = {
     // Stop the search in case the controller has not taken care of it.
     this.stopSearch();
 
-    // Unlike urlInlineComplete, we don't want this search to start
-    // synchronously. Wait kAsyncQueriesWaitTime before launching the query.
-    this._startTimer = Cc["@mozilla.org/timer;1"]
-                       .createInstance(Ci.nsITimer);
-    let timerCallback = (function() {
-      this._doStartSearch(aSearchString, aSearchParam,
-                          aPreviousResult, aListener);
-    }).bind(this);
-    this._startTimer.initWithCallback(timerCallback,
-                                      kAsyncQueriesWaitTime,
-                                      Ci.nsITimer.TYPE_ONE_SHOT);
+    // Note: We don't use aPreviousResult to make sure ordering of results are
+    //       consistent.  See bug 412730 for more details.
+
+    // We want to store the original string with no leading or trailing
+    // whitespace for case sensitive searches.
+    this._originalSearchString = aSearchString.trim();
+
+    this._currentSearchString =
+      fixupSearchText(this._originalSearchString.toLowerCase());
+
+    let searchParamParts = aSearchParam.split(" ");
+    this._enableActions = searchParamParts.indexOf("enable-actions") != -1;
+
+    this._listener = aListener;
+    let result = Cc["@mozilla.org/autocomplete/simple-result;1"].
+                 createInstance(Ci.nsIAutoCompleteSimpleResult);
+    result.setSearchString(aSearchString);
+    result.setListener(this);
+    this._result = result;
+
+    // If we are not enabled, we need to return now.
+    if (!this._enabled) {
+      this._finishSearch(true);
+      return;
+    }
+
+    // Reset our search behavior to the default.
+    if (this._currentSearchString) {
+      this._behavior = this._defaultBehavior;
+    }
+    else {
+      this._behavior = this._emptySearchDefaultBehavior;
+    }
+    // For any given search, we run up to four queries:
+    // 1) keywords (this._keywordQuery)
+    // 2) adaptive learning (this._adaptiveQuery)
+    // 3) open pages not supported by history (this._openPagesQuery)
+    // 4) query from this._getSearch
+    // (1) only gets ran if we get any filtered tokens from this._getSearch,
+    // since if there are no tokens, there is nothing to match, so there is no
+    // reason to run the query).
+    let {query, tokens} =
+      this._getSearch(this._getUnfilteredSearchTokens(this._currentSearchString));
+    let queries = tokens.length ?
+      [this._getBoundKeywordQuery(tokens), this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(tokens), query] :
+      [this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(tokens), query];
+
+    // Start executing our queries.
+    this._telemetryStartTime = Date.now();
+    this._executeQueries(queries);
+
+    // Set up our persistent state for the duration of the search.
+    this._searchTokens = tokens;
+    this._usedPlaces = {};
   },
 
   stopSearch: function PAC_stopSearch()
@@ -536,11 +576,6 @@ nsPlacesAutoComplete.prototype = {
     }
 
     this._finishSearch(false);
-
-    if (this._startTimer) {
-      this._startTimer.cancel();
-      delete this._startTimer;
-    }
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -690,68 +725,6 @@ nsPlacesAutoComplete.prototype = {
 
   get _databaseInitialized()
     Object.getOwnPropertyDescriptor(this, "_db").value !== undefined,
-
-  _doStartSearch: function PAC_doStartSearch(aSearchString, aSearchParam,
-                                             aPreviousResult, aListener)
-  {
-    this._startTimer.cancel();
-    delete this._startTimer;
-
-    // Note: We don't use aPreviousResult to make sure ordering of results are
-    //       consistent.  See bug 412730 for more details.
-
-    // We want to store the original string with no leading or trailing
-    // whitespace for case sensitive searches.
-    this._originalSearchString = aSearchString.trim();
-
-    this._currentSearchString =
-      fixupSearchText(this._originalSearchString.toLowerCase());
-
-    let searchParamParts = aSearchParam.split(" ");
-    this._enableActions = searchParamParts.indexOf("enable-actions") != -1;
-
-    this._listener = aListener;
-    let result = Cc["@mozilla.org/autocomplete/simple-result;1"].
-                 createInstance(Ci.nsIAutoCompleteSimpleResult);
-    result.setSearchString(aSearchString);
-    result.setListener(this);
-    this._result = result;
-
-    // If we are not enabled, we need to return now.
-    if (!this._enabled) {
-      this._finishSearch(true);
-      return;
-    }
-
-    // Reset our search behavior to the default.
-    if (this._currentSearchString) {
-      this._behavior = this._defaultBehavior;
-    }
-    else {
-      this._behavior = this._emptySearchDefaultBehavior;
-    }
-    // For any given search, we run up to four queries:
-    // 1) keywords (this._keywordQuery)
-    // 2) adaptive learning (this._adaptiveQuery)
-    // 3) open pages not supported by history (this._openPagesQuery)
-    // 4) query from this._getSearch
-    // (1) only gets ran if we get any filtered tokens from this._getSearch,
-    // since if there are no tokens, there is nothing to match, so there is no
-    // reason to run the query).
-    let {query, tokens} =
-      this._getSearch(this._getUnfilteredSearchTokens(this._currentSearchString));
-    let queries = tokens.length ?
-      [this._getBoundKeywordQuery(tokens), this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(tokens), query] :
-      [this._getBoundAdaptiveQuery(), this._getBoundOpenPagesQuery(tokens), query];
-
-    // Start executing our queries.
-    this._telemetryStartTime = Date.now();
-    this._executeQueries(queries);
-
-    // Set up our persistent state for the duration of the search.
-    this._searchTokens = tokens;
-    this._usedPlaces = {};
-  },
 
   /**
    * Generates the tokens used in searching from a given string.

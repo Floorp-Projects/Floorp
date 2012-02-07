@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <title>Test that suspendRedraw works</title>
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=615146 -->
+
+  <script type="text/javascript">
+    <![CDATA[
+
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    // in case we're not gecko
+    setTimeout(doTest, 5000);
+
+    function doTest() {
+      var svg = document.documentElement;
+      setTimeout(function() {
+        svg.suspendRedraw(10000);
+        var r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        r.setAttribute("width", "100%");
+        r.setAttribute("height", "100%");
+        r.setAttribute("fill", "red");
+        svg.appendChild(r);
+        svg.removeAttribute("class");
+      }, 50);
+    }
+    ]]>
+  </script>
+  <rect width="100%" height="100%" fill="lime"/>
+</svg>

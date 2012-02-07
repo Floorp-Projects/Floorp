@@ -96,7 +96,7 @@ function runTest() {
         return false;
       }
     }
-	return true;
+    return true;
   }
 
   if (doTest()) {
@@ -120,10 +120,11 @@ function checkTexture(width, height, cubeMap) {
   fillLevel(0, width, height, color.rgba, cubeMap);
   var err = gl.getError();
   if (err == gl.OUT_OF_MEMORY) {
-	return false;
+    debug("out of memory");
+    return false;
   }
   if (err != gl.NO_ERROR) {
-	testFailed("unexpected gl error: " + wtu.glEnumToString(gl, err));
+    testFailed("unexpected gl error: " + wtu.glEnumToString(gl, err));
   }
   wtu.drawQuad(gl);
   wtu.checkCanvas(gl, color.rgba,
@@ -134,6 +135,7 @@ function checkTexture(width, height, cubeMap) {
   gl.generateMipmap(target);
   var err = gl.getError();
   if (err == gl.OUT_OF_MEMORY) {
+    debug("out of memory");
     return false;
   }
   if (err != gl.NO_ERROR) {
@@ -182,7 +184,7 @@ function fillLevel(level, width, height, color, opt_cubemap) {
     [gl.TEXTURE_2D];
 
   for (var ii = 0; ii < targets.length; ++ii) {
-	// debug(wtu.glEnumToString(gl, targets[ii]));
+    // debug(wtu.glEnumToString(gl, targets[ii]));
     gl.texImage2D(
         targets[ii], level, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE,
         pixels);

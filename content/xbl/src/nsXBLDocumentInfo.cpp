@@ -121,7 +121,7 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, PRUin
 
   // Make sure to actually operate on our object, and not some object further
   // down on the proto chain.
-  while (JS_GET_CLASS(cx, obj) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
+  while (JS_GetClass(obj) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
     obj = ::JS_GetPrototype(cx, obj);
     if (!obj) {
       ::JS_ReportError(cx, "Invalid access to a global object property.");
@@ -129,7 +129,7 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, PRUin
     }
   }
 
-  nsresult rv = ssm->CheckPropertyAccess(cx, obj, JS_GET_CLASS(cx, obj)->name,
+  nsresult rv = ssm->CheckPropertyAccess(cx, obj, JS_GetClass(obj)->name,
                                          id, accessType);
   return NS_SUCCEEDED(rv);
 }

@@ -37,6 +37,7 @@
 
 #include "nsFormControlFrame.h"
 #include "nsGkAtoms.h"
+#include "nsLayoutUtils.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsEventStateManager.h"
 #include "mozilla/LookAndFeel.h"
@@ -112,8 +113,21 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
     RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
   }
 
-  return nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
-                             aStatus);
+  nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
+                                    aStatus);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
+    float inflation =
+      nsLayoutUtils::FontSizeInflationFor(this, nsLayoutUtils::eInReflow);
+    aDesiredSize.width *= inflation;
+    aDesiredSize.height *= inflation;
+    aDesiredSize.UnionOverflowAreasWithDesiredBounds();
+    FinishAndStoreOverflow(&aDesiredSize);
+  }
+  return NS_OK;
 }
 
 nsresult

@@ -98,17 +98,33 @@ namespace IPC {
 
 /**
  * Generic enum serializer.
- * E is the enum type.
- * lowBound is the lowest allowed value of the enum.
- * highBound is the value higher than highest allowed value of the enum.
- *  In other words, it's the lowest unallowed value.
+ *
+ * This is a generic serializer for any enum type used in IPDL.
+ * Programmers can define ParamTraits<E> for enum type E by deriving
+ * EnumSerializer<E, smallestLegal, highGuard>.
+ *
+ * The serializer would check value againts a range specified by
+ * smallestLegal and highGuard.  Only values from smallestLegal to
+ * highGuard are valid, include smallestLegal but highGuard.
+ *
+ * For example, following is definition of serializer for enum type FOO.
+ * \code
+ * enum FOO { FOO_FIRST, FOO_SECOND, FOO_LAST, NUM_FOO };
+ *
+ * template <>
+ * struct ParamTraits<FOO>:
+ *     public EnumSerializer<FOO, FOO_FIRST, NUM_FOO> {};
+ * \endcode
+ * FOO_FIRST, FOO_SECOND, and FOO_LAST are valid value.
+ *
+ * \sa https://developer.mozilla.org/en/IPDL/Type_Serialization
  */
-template <typename E, E lowBound, E highBound>
+template <typename E, E smallestLegal, E highBound>
 struct EnumSerializer {
   typedef E paramType;
 
   static bool IsLegalValue(const paramType &aValue) {
-    return lowBound <= aValue && aValue < highBound;
+    return smallestLegal <= aValue && aValue < highBound;
   }
 
   static void Write(Message* aMsg, const paramType& aValue) {

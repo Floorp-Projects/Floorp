@@ -148,22 +148,21 @@ JSRuntime::createBumpPointerAllocator(JSContext *cx)
     return bumpAlloc_;
 }
 
-RegExpPrivateCache *
-JSRuntime::createRegExpPrivateCache(JSContext *cx)
+RegExpCache *
+JSRuntime::createRegExpCache(JSContext *cx)
 {
-    JS_ASSERT(!repCache_);
+    JS_ASSERT(!reCache_);
     JS_ASSERT(cx->runtime == this);
 
-    RegExpPrivateCache *newCache = new_<RegExpPrivateCache>(this);
-
+    RegExpCache *newCache = new_<RegExpCache>(this);
     if (!newCache || !newCache->init()) {
         js_ReportOutOfMemory(cx);
-        delete_<RegExpPrivateCache>(newCache);
+        delete_<RegExpCache>(newCache);
         return NULL;
     }
 
-    repCache_ = newCache;
-    return repCache_;
+    reCache_ = newCache;
+    return reCache_;
 }
 
 JSScript *
@@ -245,13 +244,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JS_ASSERT(!cx->enumerators);
 
 #ifdef JS_THREADSAFE
-    /*
-     * For API compatibility we support destroying contexts with non-zero
-     * cx->outstandingRequests but we assume that all JS_BeginRequest calls
-     * on this cx contributes to cx->thread->data.requestDepth and there is no
-     * JS_SuspendRequest calls that set aside the counter.
-     */
-    JS_ASSERT(cx->outstandingRequests <= cx->runtime->requestDepth);
+    JS_ASSERT(cx->outstandingRequests == 0);
 #endif
 
     if (mode != JSDCM_NEW_FAILED) {
@@ -268,11 +261,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     JS_LOCK_GC(rt);
     JS_REMOVE_LINK(&cx->link);
     bool last = !rt->hasContexts();
-    if (last || mode == JSDCM_FORCE_GC || mode == JSDCM_MAYBE_GC
-#ifdef JS_THREADSAFE
-        || cx->outstandingRequests != 0
-#endif
-        ) {
+    if (last || mode == JSDCM_FORCE_GC || mode == JSDCM_MAYBE_GC) {
         JS_ASSERT(!rt->gcRunning);
 
 #ifdef JS_THREADSAFE
@@ -281,16 +270,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         JS_UNLOCK_GC(rt);
 
         if (last) {
-#ifdef JS_THREADSAFE
-            /*
-             * If this thread is not in a request already, begin one now so
-             * that we wait for any racing GC started on a not-last context to
-             * finish, before we plow ahead and unpin atoms.
-             */
-            if (cx->runtime->requestDepth == 0)
-                JS_BeginRequest(cx);
-#endif
-
             /*
              * Dump remaining type inference results first. This printing
              * depends on atoms still existing.
@@ -308,27 +287,15 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             for (CompartmentsIter c(rt); !c.done(); c.next())
                 c->clearTraps(cx);
             JS_ClearAllWatchPoints(cx);
-        }
 
-#ifdef JS_THREADSAFE
-        /* Destroying a context implicitly calls JS_EndRequest(). */
-        while (cx->outstandingRequests != 0)
-            JS_EndRequest(cx);
-#endif
-
-        if (last) {
             js_GC(cx, NULL, GC_NORMAL, gcreason::LAST_CONTEXT);
 
-            /* Take the runtime down, now that it has no contexts or atoms. */
-            JS_LOCK_GC(rt);
-        } else {
-            if (mode == JSDCM_FORCE_GC)
-                js_GC(cx, NULL, GC_NORMAL, gcreason::DESTROY_CONTEXT);
-            else if (mode == JSDCM_MAYBE_GC)
-                JS_MaybeGC(cx);
-
-            JS_LOCK_GC(rt);
+        } else if (mode == JSDCM_FORCE_GC) {
+            js_GC(cx, NULL, GC_NORMAL, gcreason::DESTROY_CONTEXT);
+        } else if (mode == JSDCM_MAYBE_GC) {
+            JS_MaybeGC(cx);
         }
+        JS_LOCK_GC(rt);
     }
 #ifdef JS_THREADSAFE
     rt->gcHelperThread.waitBackgroundSweepEnd();
@@ -350,21 +317,6 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
         cx = NULL;
     *iterp = cx;
     return cx;
-}
-
-JS_FRIEND_API(JSContext *)
-js_NextActiveContext(JSRuntime *rt, JSContext *cx)
-{
-    JSContext *iter = cx;
-#ifdef JS_THREADSAFE
-    while ((cx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
-        if (cx->outstandingRequests && cx->runtime->requestDepth)
-            break;
-    }
-    return cx;
-#else
-    return js_ContextIterator(rt, JS_FALSE, &iter);
-#endif
 }
 
 namespace js {
@@ -1010,7 +962,8 @@ DSTOffsetCache::DSTOffsetCache()
 }
 
 JSContext::JSContext(JSRuntime *rt)
-  : defaultVersion(JSVERSION_DEFAULT),
+  : ContextFriendFields(rt),
+    defaultVersion(JSVERSION_DEFAULT),
     hasVersionOverride(false),
     throwing(false),
     exception(UndefinedValue()),
@@ -1019,12 +972,6 @@ JSContext::JSContext(JSRuntime *rt)
     localeCallbacks(NULL),
     resolvingList(NULL),
     generatingError(false),
-#if JS_STACK_GROWTH_DIRECTION > 0
-    stackLimit(UINTPTR_MAX),
-#else
-    stackLimit(0),
-#endif
-    runtime(rt),
     compartment(NULL),
     stack(thisDuringConstruction()),  /* depends on cx->thread_ */
     parseMapPool_(NULL),
@@ -1170,6 +1117,19 @@ JSContext::runningWithTrustedPrincipals() const
     return !compartment || compartment->principals == runtime->trustedPrincipals();
 }
 
+void
+JSRuntime::updateMallocCounter(JSContext *cx, size_t nbytes)
+{
+    /* We tolerate any thread races when updating gcMallocBytes. */
+    ptrdiff_t oldCount = gcMallocBytes;
+    ptrdiff_t newCount = oldCount - ptrdiff_t(nbytes);
+    gcMallocBytes = newCount;
+    if (JS_UNLIKELY(newCount <= 0 && oldCount > 0))
+        onTooMuchMalloc();
+    else if (cx && cx->compartment)
+        cx->compartment->updateMallocCounter(nbytes);
+}
+
 JS_FRIEND_API(void)
 JSRuntime::onTooMuchMalloc()
 {
@@ -1212,8 +1172,8 @@ JSRuntime::purge(JSContext *cx)
     /* FIXME: bug 506341 */
     propertyCache.purge(cx);
 
-    delete_<RegExpPrivateCache>(repCache_);
-    repCache_ = NULL;
+    delete_<RegExpCache>(reCache_);
+    reCache_ = NULL;
 }
 
 void
