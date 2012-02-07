@@ -4945,7 +4945,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           attrValue, modType, hasListeners, aNotify,
-                          true);
+                          kCallAfterSetAttr);
 }
 
 nsresult
@@ -4981,7 +4981,7 @@ nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           aParsedValue, modType, hasListeners, aNotify,
-                          true);
+                          kCallAfterSetAttr);
 }
 
 nsresult
