@@ -1243,6 +1243,13 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
             rval->setBoolean(false);
             return true;
         }
+    } else if (iterobj->isProxy()) {
+        if (!Proxy::iteratorNext(cx, iterobj, rval))
+            return false;
+        if (rval->isMagic(JS_NO_ITER_VALUE)) {
+            rval->setBoolean(false);
+            return true;
+        }
     } else {
         /* Call the iterator object's .next method. */
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);

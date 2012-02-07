@@ -86,6 +86,7 @@ class JS_FRIEND_API(ProxyHandler) {
     virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
     virtual RegExpShared *regexp_toShared(JSContext *cx, JSObject *proxy);
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
+    virtual bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
     virtual void finalize(JSContext *cx, JSObject *proxy);
     virtual void trace(JSTracer *trc, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
@@ -140,6 +141,7 @@ class Proxy {
     static JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
     static RegExpShared *regexp_toShared(JSContext *cx, JSObject *proxy);
     static bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
+    static bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
 };
 
 inline bool IsObjectProxy(const JSObject *obj)
