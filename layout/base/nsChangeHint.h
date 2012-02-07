@@ -44,12 +44,18 @@
 
 // Defines for various style related constants
 
+// For hints that don't guarantee that the change will be applied to all descendant
+// frames, style structs returning those hints from CalcDifference must have
+// their ForceCompare() return true.
+
 enum nsChangeHint {
   // change was visual only (e.g., COLOR=)
+  // Invalidates all descendant frames (including following
+  // placeholders to out-of-flow frames).
   nsChangeHint_RepaintFrame = 0x01,
 
   // For reflow, we want flags to give us arbitrary FrameNeedsReflow behavior.
-  // just do a FrameNeedsReflow
+  // just do a FrameNeedsReflow.
   nsChangeHint_NeedReflow = 0x02,
 
   // Invalidate intrinsic widths on the frame's ancestors.  Must not be set
@@ -65,7 +71,8 @@ enum nsChangeHint {
   // Clear*Intrinsics flags.
   nsChangeHint_NeedDirtyReflow = 0x10,
 
-  // change requires view to be updated, if there is one (e.g., clip:)
+  // change requires view to be updated, if there is one (e.g., clip:).
+  // Updates all descendants (including following placeholders to out-of-flows).
   nsChangeHint_SyncFrameView = 0x20,
 
   // The currently shown mouse cursor needs to be updated
@@ -85,16 +92,27 @@ enum nsChangeHint {
   /**
    * Visual change only, but the change can be handled entirely by
    * updating the layer(s) for the frame.
+   * Updates all descendants (including following placeholders to out-of-flows).
    */
   nsChangeHint_UpdateOpacityLayer = 0x100,
+  /**
+   * Updates all descendants. Any placeholder descendants' out-of-flows
+   * are also descendants of the transformed frame, so they're updated.
+   */
   nsChangeHint_UpdateTransformLayer = 0x200,
 
-  // change requires frame change (e.g., display:).
-  // This subsumes all the above.
+  /**
+   * Change requires frame change (e.g., display:).
+   * This subsumes all the above. Reconstructs all frame descendants,
+   * including following placeholders to out-of-flows.
+   */
   nsChangeHint_ReconstructFrame = 0x400,
 
-  // The frame's effect on its ancestors' overflow areas has changed,
-  // either through a change in its transform or a change in its position.
+  /**
+   * The frame's effect on its ancestors' overflow areas has changed,
+   * either through a change in its transform or a change in its position.
+   * Does not update any descendant frames.
+   */
   nsChangeHint_UpdateOverflow = 0x800
 };
 
