@@ -80,7 +80,7 @@ public:
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAString* aValue, bool aNotify);
 
   virtual nsresult InsertChildAt(nsIContent* aChild, PRUint32 aIndex,
                                      bool aNotify);

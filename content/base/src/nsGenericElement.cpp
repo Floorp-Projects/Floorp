@@ -4852,14 +4852,10 @@ nsGenericElement::CopyInnerTo(nsGenericElement* aDst) const
 }
 
 bool
-nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID,
-                                        nsIAtom* aName,
-                                        nsIAtom* aPrefix,
-                                        const nsAttrValue& aValue,
-                                        bool aNotify,
-                                        nsAttrValue& aOldValue,
-                                        PRUint8* aModType,
-                                        bool* aHasListeners)
+nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID, nsIAtom* aName,
+                                        nsIAtom* aPrefix, const nsAString& aValue,
+                                        bool aNotify, nsAutoString* aOldValue,
+                                        PRUint8* aModType, bool* aHasListeners)
 {
   bool modification = false;
   *aHasListeners = aNotify &&
@@ -4877,19 +4873,16 @@ nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID,
     if (info.mValue) {
       // Check whether the old value is the same as the new one.  Note that we
       // only need to actually _get_ the old value if we have listeners.
+      bool valueMatches;
       if (*aHasListeners) {
-        // Need to store the old value.
-        //
-        // If the current attribute value contains a pointer to some other data
-        // structure that gets updated in the process of setting the attribute
-        // we'll no longer have the old value of the attribute. Therefore, we
-        // should serialize the attribute value now to keep a snapshot.
-        //
-        // We have to serialize the value anyway in order to create the
-        // mutation event so there's no cost in doing it now.
-        aOldValue.SetToSerialized(*info.mValue);
+        // Need to store the old value
+        info.mValue->ToString(*aOldValue);
+        valueMatches = aValue.Equals(*aOldValue);
+      } else {
+        NS_ABORT_IF_FALSE(aNotify,
+                          "Either hasListeners or aNotify should be true.");
+        valueMatches = info.mValue->Equals(aValue, eCaseMatters);
       }
-      bool valueMatches = aValue.EqualsAsStrings(*info.mValue);
       if (valueMatches && aPrefix == info.mName->GetPrefix()) {
         return true;
       }
@@ -4919,15 +4912,14 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   PRUint8 modType;
   bool hasListeners;
-  nsAttrValue value(aValue);
-  nsAttrValue oldValue;
+  nsAutoString oldValue;
 
-  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, value, aNotify,
-                            oldValue, &modType, &hasListeners)) {
+  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aValue, aNotify,
+                            &oldValue, &modType, &hasListeners)) {
     return NS_OK;
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aValue, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNotify) {
@@ -4945,7 +4937,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           attrValue, modType, hasListeners, aNotify,
-                          kCallAfterSetAttr);
+                          &aValue);
 }
 
 nsresult
@@ -4963,16 +4955,19 @@ nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     return NS_ERROR_FAILURE;
   }
 
+  nsAutoString value;
+  aParsedValue.ToString(value);
+
   PRUint8 modType;
   bool hasListeners;
-  nsAttrValue oldValue;
+  nsAutoString oldValue;
 
-  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, aParsedValue, aNotify,
-                            oldValue, &modType, &hasListeners)) {
+  if (MaybeCheckSameAttrVal(aNamespaceID, aName, aPrefix, value, aNotify,
+                            &oldValue, &modType, &hasListeners)) {
     return NS_OK;
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aParsedValue, aNotify);
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNotify) {
@@ -4981,19 +4976,19 @@ nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           aParsedValue, modType, hasListeners, aNotify,
-                          kCallAfterSetAttr);
+                          &value);
 }
 
 nsresult
 nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
                                    nsIAtom* aName,
                                    nsIAtom* aPrefix,
-                                   const nsAttrValue& aOldValue,
+                                   const nsAString& aOldValue,
                                    nsAttrValue& aParsedValue,
                                    PRUint8 aModType,
                                    bool aFireMutation,
                                    bool aNotify,
-                                   bool aCallAfterSetAttr)
+                                   const nsAString* aValueForAfterSetAttr)
 {
   nsresult rv;
 
@@ -5001,13 +4996,6 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
   nsMutationGuard::DidMutate();
-
-  // Copy aParsedValue for later use since it will be lost when we call
-  // SetAndTakeMappedAttr below
-  nsAttrValue aValueForAfterSetAttr;
-  if (aCallAfterSetAttr) {
-    aValueForAfterSetAttr.SetTo(aParsedValue);
-  }
 
   if (aNamespaceID == kNameSpaceID_None) {
     // XXXbz Perhaps we should push up the attribute mapping function
@@ -5046,8 +5034,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
       aName == nsGkAtoms::event && mNodeInfo->GetDocument()) {
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
   }
-  if (aCallAfterSetAttr) {
-    rv = AfterSetAttr(aNamespaceID, aName, &aValueForAfterSetAttr, aNotify);
+  if (aValueForAfterSetAttr) {
+    rv = AfterSetAttr(aNamespaceID, aName, aValueForAfterSetAttr, aNotify);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -5067,8 +5055,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     if (!newValue.IsEmpty()) {
       mutation.mNewAttrValue = do_GetAtom(newValue);
     }
-    if (!aOldValue.IsEmptyString()) {
-      mutation.mPrevAttrValue = aOldValue.GetAsAtom();
+    if (!aOldValue.IsEmpty()) {
+      mutation.mPrevAttrValue = do_GetAtom(aOldValue);
     }
     mutation.mAttrChange = aModType;
 

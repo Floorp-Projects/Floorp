@@ -260,8 +260,8 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
 nsresult
 nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                           const nsAttrValue* aValue, bool aNotify)
-{
+                           const nsAString* aValue, bool aNotify)
+{  
   // If this is an svg presentation attribute we need to map it into
   // the content stylerule.
   // XXX For some reason incremental mapping doesn't work, so for now
@@ -272,10 +272,7 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   }
 
   if (IsEventName(aName) && aValue) {
-    NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
-      "Expected string value for script body");
-    nsresult rv = AddScriptEventListener(GetEventNameForAttr(aName),
-                                         aValue->GetStringValue());
+    nsresult rv = AddScriptEventListener(GetEventNameForAttr(aName), *aValue);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -1055,7 +1055,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
 
 nsresult
 nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                            const nsAttrValue* aValue, bool aNotify)
+                            const nsAString* aValue, bool aNotify)
 {
     if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::accesskey &&
         IsInDoc()) {
@@ -1084,10 +1084,10 @@ nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
              mNodeInfo->Equals(nsGkAtoms::window) &&
              aName == nsGkAtoms::chromemargin) {
       nsAttrValue attrValue;
+      nsIntMargin margins;
       // Make sure the margin format is valid first
-      if (aValue->Type() == nsAttrValue::eString &&
-          !attrValue.ParseIntMarginValue(aValue->GetStringValue())) {
-        return NS_ERROR_INVALID_ARG;
+      if (!attrValue.ParseIntMarginValue(*aValue)) {
+          return NS_ERROR_INVALID_ARG;
       }
     }
 
@@ -1097,7 +1097,7 @@ nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
 nsresult
 nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                           const nsAttrValue* aValue, bool aNotify)
+                           const nsAString* aValue, bool aNotify)
 {
     if (aNamespaceID == kNameSpaceID_None) {
         // XXX UnsetAttr handles more attributes than we do. See bug 233642.
@@ -1113,24 +1113,17 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             // nsXULPrototypeAttribute is expensive!)
             bool defer = mPrototype == nsnull ||
                            mPrototype->mScriptTypeID == GetScriptTypeID();
-            if (aValue->Type() == nsAttrValue::eString) {
-                AddScriptEventListener(aName, aValue->GetStringValue(), defer);
-            } else {
-                nsAutoString body;
-                aValue->ToString(body);
-                AddScriptEventListener(aName, body, defer);
-            }
+            AddScriptEventListener(aName, *aValue, defer);
         }
 
         // Hide chrome if needed
         if (mNodeInfo->Equals(nsGkAtoms::window) && aValue) {
-            if (aName == nsGkAtoms::hidechrome) {
-                HideWindowChrome(
-                  aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
-            }
-            else if (aName == nsGkAtoms::chromemargin) {
-                SetChromeMargins(aValue);
-            }
+          if (aName == nsGkAtoms::hidechrome) {
+              HideWindowChrome(aValue->EqualsLiteral("true"));
+          }
+          else if (aName == nsGkAtoms::chromemargin) {
+              SetChromeMargins(aValue);
+          }
         }
 
         // title, (in)activetitlebarcolor and drawintitlebar are settable on
@@ -1141,22 +1134,15 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                 document->NotifyPossibleTitleChange(false);
             }
             else if ((aName == nsGkAtoms::activetitlebarcolor ||
-                      aName == nsGkAtoms::inactivetitlebarcolor) && aValue) {
+                      aName == nsGkAtoms::inactivetitlebarcolor)) {
                 nscolor color = NS_RGBA(0, 0, 0, 0);
-                if (aValue->Type() == nsAttrValue::eColor) {
-                    aValue->GetColorValue(color);
-                } else {
-                    nsAutoString tmp;
-                    nsAttrValue attrValue;
-                    aValue->ToString(tmp);
-                    attrValue.ParseColor(tmp);
-                    attrValue.GetColorValue(color);
-                }
+                nsAttrValue attrValue;
+                attrValue.ParseColor(*aValue);
+                attrValue.GetColorValue(color);
                 SetTitlebarColor(color, aName == nsGkAtoms::activetitlebarcolor);
             }
             else if (aName == nsGkAtoms::drawintitlebar) {
-                SetDrawsInTitlebar(aValue &&
-                    aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
+                SetDrawsInTitlebar(aValue && aValue->EqualsLiteral("true"));
             }
             else if (aName == nsGkAtoms::localedir) {
                 // if the localedir changed on the root element, reset the document direction
@@ -2449,7 +2435,7 @@ private:
 };
 
 void
-nsXULElement::SetChromeMargins(const nsAttrValue* aValue)
+nsXULElement::SetChromeMargins(const nsAString* aValue)
 {
     if (!aValue)
         return;
@@ -2459,17 +2445,13 @@ nsXULElement::SetChromeMargins(const nsAttrValue* aValue)
         return;
 
     // top, right, bottom, left - see nsAttrValue
+    nsAttrValue attrValue;
     nsIntMargin margins;
-    bool gotMargins = false;
 
-    if (aValue->Type() == nsAttrValue::eIntMarginValue) {
-        gotMargins = aValue->GetIntMarginValue(margins);
-    } else {
-        nsAutoString tmp;
-        aValue->ToString(tmp);
-        gotMargins = nsContentUtils::ParseIntMarginValue(tmp, margins);
-    }
-    if (gotMargins) {
+    nsAutoString data;
+    data.Assign(*aValue);
+    if (attrValue.ParseIntMarginValue(data) &&
+        attrValue.GetIntMarginValue(margins)) {
         nsContentUtils::AddScriptRunner(new MarginSetter(mainWidget, margins));
     }
 }

@@ -171,10 +171,6 @@ nsAttrValue::Reset()
 void
 nsAttrValue::SetTo(const nsAttrValue& aOther)
 {
-  if (this == &aOther) {
-    return;
-  }
-
   switch (aOther.BaseType()) {
     case eStringBase:
     {
@@ -319,19 +315,6 @@ nsAttrValue::SetTo(const nsIntMargin& aValue)
 }
 
 void
-nsAttrValue::SetToSerialized(const nsAttrValue& aOther)
-{
-  if (aOther.Type() != nsAttrValue::eString &&
-      aOther.Type() != nsAttrValue::eAtom) {
-    nsAutoString val;
-    aOther.ToString(val);
-    SetTo(val);
-  } else {
-    SetTo(aOther);
-  }
-}
-
-void
 nsAttrValue::SwapValueWith(nsAttrValue& aOther)
 {
   PtrBits tmp = aOther.mBits;
@@ -433,29 +416,6 @@ nsAttrValue::ToString(nsAString& aResult) const
       aResult.Truncate();
       break;
     }
-  }
-}
-
-already_AddRefed<nsIAtom>
-nsAttrValue::GetAsAtom() const
-{
-  switch (Type()) {
-    case eString:
-      return do_GetAtom(GetStringValue());
-
-    case eAtom:
-      {
-        nsIAtom* atom = GetAtomValue();
-        NS_ADDREF(atom);
-        return atom;
-      }
-
-    default:
-      {
-        nsAutoString val;
-        ToString(val);
-        return do_GetAtom(val);
-      }
   }
 }
 
@@ -789,25 +749,6 @@ nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
   nsAutoString val;
   ToString(val);
   return aValue->Equals(val);
-}
-
-bool
-nsAttrValue::EqualsAsStrings(const nsAttrValue& aOther) const
-{
-  if (Type() == aOther.Type()) {
-    return Equals(aOther);
-  }
-
-  // We need to serialize at least one nsAttrValue before passing to
-  // Equals(const nsAString&), but we can avoid unnecessarily serializing both
-  // by checking if one is already of string type.
-  bool thisIsString = (Type() == eString);
-  const nsAttrValue& lhs = thisIsString ? *this : aOther;
-  const nsAttrValue& rhs = thisIsString ? aOther : *this;
-
-  nsAutoString val;
-  rhs.ToString(val);
-  return lhs.Equals(val, eCaseMatters);
 }
 
 bool
