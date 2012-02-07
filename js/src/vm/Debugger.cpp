@@ -2633,8 +2633,8 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
         /* Create an arguments object. */
         RootedVar<GlobalObject*> global(cx);
         global = &args.callee().global();
-        JSObject *proto;
-        if (!js_GetClassPrototype(cx, global, JSProto_Array, &proto))
+        JSObject *proto = global->getOrCreateArrayPrototype(cx);
+        if (!proto)
             return false;
         argsobj = NewObjectWithGivenProto(cx, &DebuggerArguments_class, proto, global);
         if (!argsobj)
@@ -3791,7 +3791,8 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj)
         scriptProto(cx),
         objectProto(cx);
 
-    if (!js_GetClassPrototype(cx, obj, JSProto_Object, objProto.address()))
+    objProto = obj->asGlobal().getOrCreateObjectPrototype(cx);
+    if (!objProto)
         return false;
 
 

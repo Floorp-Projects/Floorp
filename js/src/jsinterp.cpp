@@ -2612,7 +2612,7 @@ BEGIN_CASE(JSOP_CALLELEM)
 {
     /* Find the object on which to look for |this|'s properties. */
     Value thisv = regs.sp[-2];
-    JSObject *thisObj = ValuePropertyBearer(cx, thisv, -2);
+    JSObject *thisObj = ValuePropertyBearer(cx, regs.fp(), thisv, -2);
     if (!thisObj)
         goto error;
 

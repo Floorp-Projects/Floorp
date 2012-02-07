@@ -1312,10 +1312,7 @@ NoBase::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
     // We need to pass the object prototype to JS_NewObject. If we pass NULL then the JS engine
     // will look up a prototype on the global by using the class' name and we'll recurse into
     // getPrototype.
-    JSObject* proto;
-    if (!js_GetClassPrototype(cx, scope->GetGlobalJSObject(), JSProto_Object, &proto))
-        return NULL;
-    return proto;
+    return JS_GetObjectPrototype(cx, scope->GetGlobalJSObject());
 }
 
 
