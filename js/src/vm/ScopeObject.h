@@ -132,10 +132,14 @@ class CallObject : public ScopeObject
     inline JSFunction *getCalleeFunction() const;
     inline void setCallee(JSObject *callee);
 
-    /* Returns the callee's arguments object. */
-    inline const js::Value &getArguments() const;
+    /*
+     * When a call object is created, CallObject::arguments has the value
+     * MagicValue(JS_UNASSIGNED_ARGUMENTS). This value is overwritten if:
+     *  1. js_PutCallObject is called in a frame which hasArgsObj
+     *  2. the script assigns to 'arguments'
+     */
+    inline const js::Value &arguments() const;
     inline void setArguments(const js::Value &v);
-    inline void initArguments(const js::Value &v);
 
     /* Returns the formal argument at the given index. */
     inline const js::Value &arg(uintN i) const;

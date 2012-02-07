@@ -101,21 +101,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-JSBool
-js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
-{
-    JSObject *argsobj;
-    if (fp->hasOverriddenArgs()) {
-        JS_ASSERT(fp->hasCallObj());
-        return fp->callObj().getProperty(cx, cx->runtime->atomState.argumentsAtom, vp);
-    }
-    argsobj = js_GetArgsObject(cx, fp);
-    if (!argsobj)
-        return JS_FALSE;
-    vp->setObject(*argsobj);
-    return JS_TRUE;
-}
-
 js::ArgumentsObject *
 ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee)
 {
@@ -183,7 +168,7 @@ struct STATIC_SKIP_INFERENCE PutArg
     }
 };
 
-JSObject *
+ArgumentsObject *
 js_GetArgsObject(JSContext *cx, StackFrame *fp)
 {
     /*
@@ -675,8 +660,8 @@ js_PutCallObject(StackFrame *fp)
 
     /* Get the arguments object to snapshot fp's actual argument values. */
     if (fp->hasArgsObj()) {
-        if (!fp->hasOverriddenArgs())
-            callobj.initArguments(ObjectValue(fp->argsObj()));
+        if (callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS))
+            callobj.setArguments(ObjectValue(fp->argsObj()));
         js_PutArgsObject(fp);
     }
 
@@ -767,13 +752,15 @@ GetCallArguments(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     CallObject &callobj = obj->asCall();
 
     StackFrame *fp = callobj.maybeStackFrame();
-    if (fp && !fp->hasOverriddenArgs()) {
+    if (fp && callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS)) {
         JSObject *argsobj = js_GetArgsObject(cx, fp);
         if (!argsobj)
             return false;
         vp->setObject(*argsobj);
     } else {
-        *vp = callobj.getArguments();
+        /* Nested functions cannot get the 'arguments' of enclosing scopes. */
+        JS_ASSERT(!callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS));
+        *vp = callobj.arguments();
     }
     return true;
 }
@@ -781,11 +768,9 @@ GetCallArguments(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 static JSBool
 SetCallArguments(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
-    CallObject &callobj = obj->asCall();
-
-    if (StackFrame *fp = callobj.maybeStackFrame())
-        fp->setOverriddenArgs();
-    callobj.setArguments(*vp);
+    /* Nested functions cannot set the 'arguments' of enclosing scopes. */
+    JS_ASSERT(obj->asCall().maybeStackFrame());
+    obj->asCall().setArguments(*vp);
     return true;
 }
 
