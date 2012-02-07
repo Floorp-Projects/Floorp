@@ -40,6 +40,7 @@
 #include "mozqwidgetfast.h"
 #include "nsFastStartupQt.h"
 #include "nsILocalFile.h"
+#include "nsStringGlue.h"
 #include "BinaryPath.h"
 
 #define TOOLBAR_SPLASH "toolbar_splash.png"

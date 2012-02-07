@@ -53,10 +53,11 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 #include "nsIAtom.h"
+#include "nsParserBase.h"
 
 #define NS_IPARSER_IID \
-{ 0x0c8c3998, 0x9959, 0x496e, \
-  { 0xbd, 0xd9, 0x0b, 0x6f, 0xc4, 0x1c, 0x3b, 0x87 } }
+{ 0xd064f0d6, 0x44e3, 0x4366, \
+  { 0xa7, 0x05, 0xcf, 0x7a, 0x91, 0x26, 0x14, 0xb6 } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -129,7 +130,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDebugDumpContent, NS_IDEBUG_DUMP_CONTENT_IID)
  *  This class defines the iparser interface. This XPCOM
  *  inteface is all that parser clients ever need to see.
  */
-class nsIParser : public nsISupports {
+class nsIParser : public nsParserBase {
   public:
 
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPARSER_IID)
@@ -219,6 +220,11 @@ class nsIParser : public nsISupports {
     // the parsing engine.
     NS_IMETHOD_(void) UnblockParser() = 0;
 
+    /**
+     * Asynchronously continues parsing.
+     */
+    NS_IMETHOD_(void) ContinueInterruptedParsingAsync() = 0;
+
     NS_IMETHOD_(bool) IsParserEnabled() = 0;
     NS_IMETHOD_(bool) IsComplete() = 0;
     
@@ -232,10 +238,6 @@ class nsIParser : public nsISupports {
                      bool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect) = 0;
 
-    // Return a key, suitable for passing into one of the Parse methods above,
-    // that will cause this parser to use the root context.
-    NS_IMETHOD_(void *) GetRootContextKey() = 0;
-    
     NS_IMETHOD Terminate(void) = 0;
 
     /**
@@ -271,12 +273,6 @@ class nsIParser : public nsISupports {
     NS_IMETHOD CancelParsingEvents() = 0;
 
     virtual void Reset() = 0;
-
-    /**
-     * True if the parser can currently be interrupted. Returns false when
-     * parsing for example document.write or innerHTML.
-     */
-    virtual bool CanInterrupt() = 0;
 
     /**
      * True if the insertion point (per HTML5) is defined.

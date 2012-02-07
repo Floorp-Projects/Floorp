@@ -40,6 +40,7 @@
 <!ENTITY forward "Forward">
 
 <!ENTITY new_tab "New Tab">
+<!ENTITY new_tab_opened "New tab opened">
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
@@ -51,7 +52,9 @@
 <!ENTITY pref_telemetry "Send performance data">
 <!ENTITY pref_remember_signons "Remember passwords">
 <!ENTITY pref_cookies "Enable cookies">
-<!ENTITY pref_char_encoding "Show character encoding">
+<!ENTITY pref_char_encoding "Character encoding">
+<!ENTITY pref_char_encoding_on "Show menu">
+<!ENTITY pref_char_encoding_off "Don\'t show menu">
 <!ENTITY pref_clear_history "Clear history">
 <!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
 <!ENTITY pref_clear_private_data "Clear private data">
@@ -67,11 +70,13 @@
 <!ENTITY pref_font_size_large "Large">
 <!ENTITY pref_font_size_xlarge "Extra Large">
 <!ENTITY pref_use_master_password "Use master password">
+<!ENTITY pref_sync "Sync">
 
 <!ENTITY quit "Quit">
 
 <!ENTITY addons "Add-ons">
 <!ENTITY downloads "Downloads">
+<!ENTITY char_encoding "Character Encoding">
 
 <!ENTITY share "Share">
 <!ENTITY save_as_pdf "Save as PDF">
@@ -100,3 +105,6 @@
 <!ENTITY abouthome_last_tabs_open "Open all tabs from last time">
 <!ENTITY abouthome_top_sites_title "Top sites">
 <!ENTITY abouthome_top_sites_browse "Browse all your top sites">
+<!ENTITY abouthome_no_top_sites "You do not have any top sites yet. Tap the Title Bar to start browsing.">
+<!ENTITY abouthome_about_sync "Set up Firefox Sync to access bookmarks, history and tabs from your other devices">
+<!ENTITY abouthome_sync_bold_name "Firefox Sync">

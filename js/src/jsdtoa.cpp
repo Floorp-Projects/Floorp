@@ -41,7 +41,6 @@
  * Portable double to alphanumeric string and back converters.
  */
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsdtoa.h"
 #include "jsprf.h"
 #include "jsapi.h"

@@ -128,7 +128,7 @@ typedef mjit::Compiler::ActiveFrame ActiveFrame;
 bool
 Probes::JITWatcher::CollectNativeRegions(RegionVector &regions,
                                          JSRuntime *rt,
-                                         mjit::JITScript *jit,
+                                         mjit::JITChunk *jit,
                                          mjit::JSActiveFrame *outerFrame,
                                          mjit::JSActiveFrame **inlineFrames)
 {
@@ -444,7 +444,7 @@ Probes::ETWCreateObject(JSContext *cx, JSObject *obj)
 
     return EventWriteEvtObjectCreate(script_filename, lineno,
                                      ObjectClassname(obj), reinterpret_cast<uint64_t_t>(obj),
-                                     obj ? obj->slotsAndStructSize() : 0) == ERROR_SUCCESS;
+                                     obj ? obj->computedSizeOfIncludingThis() : 0) == ERROR_SUCCESS;
 }
 
 bool

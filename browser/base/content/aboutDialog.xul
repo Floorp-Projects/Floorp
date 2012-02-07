@@ -146,13 +146,7 @@
         <label class="text-link bottom-link" href="about:rights">&bottomLinks.rights;</label>
         <label class="text-link bottom-link" href="http://www.mozilla.com/legal/privacy/">&bottomLinks.privacy;</label>
       </hbox>
-      <description id="trademark">
-        <label class="trademark-label">&trademarkInfo.part1;</label>
-#ifdef MOZ_OFFICIAL_BRANDING
-        <!-- DO NOT REMOVE without consulting people involved with bug 616193 -->
-        <label id="extra-trademark" class="trademark-label">Some of the trademarks used under license from The Charlton Company.</label>
-#endif
-      </description>
+      <description id="trademark">&trademarkInfo.part1;</description>
     </vbox>
   </vbox>
   

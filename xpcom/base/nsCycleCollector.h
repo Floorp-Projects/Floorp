@@ -91,8 +91,11 @@ struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
 {
     /**
      * Called before/after transitioning to/from the main thread.
+     *
+     * NotifyLeaveMainThread may return 'false' to prevent the cycle collector
+     * from leaving the main thread.
      */
-    virtual void NotifyLeaveMainThread() = 0;
+    virtual bool NotifyLeaveMainThread() = 0;
     virtual void NotifyEnterCycleCollectionThread() = 0;
     virtual void NotifyLeaveCycleCollectionThread() = 0;
     virtual void NotifyEnterMainThread() = 0;
@@ -103,9 +106,10 @@ struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
     virtual bool NeedCollect() = 0;
 
     /**
-     * Runs the JavaScript GC.
+     * Runs the JavaScript GC. |reason| is a gcreason::Reason from jsfriendapi.h.
+     * |kind| is a nsGCType from nsIXPConnect.idl.
      */
-    virtual void Collect(bool shrinkingGC = false) = 0;
+    virtual void Collect(PRUint32 reason, PRUint32 kind) = 0;
 };
 
 #ifdef DEBUG

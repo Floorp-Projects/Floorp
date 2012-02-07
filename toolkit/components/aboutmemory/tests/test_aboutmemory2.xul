@@ -1,0 +1,221 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- This file tests the collapsing and expanding of sub-trees in
+       about:memory. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+
+  // Remove all the real reporters and multi-reporters;  save them to
+  // restore at the end.
+  var e = mgr.enumerateReporters();
+  var realReporters = [];
+  while (e.hasMoreElements()) {
+    var r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    mgr.unregisterReporter(r);
+    realReporters.push(r);
+  }
+  e = mgr.enumerateMultiReporters();
+  var realMultiReporters = [];
+  while (e.hasMoreElements()) {
+    var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    mgr.unregisterMultiReporter(r);
+    realMultiReporters.push(r);
+  }
+
+  // Setup various fake-but-deterministic reporters.
+  const KB = 1024;
+  const MB = KB * KB;
+  const HEAP  = Ci.nsIMemoryReporter.KIND_HEAP;
+  const OTHER = Ci.nsIMemoryReporter.KIND_OTHER;
+  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+
+  function f(aPath, aKind, aAmount) {
+    return {
+      process:     "",
+      path:        aPath,
+      kind:        aKind,
+      units:       BYTES,
+      description: "(description)",
+      amount:      aAmount
+    };
+  }
+
+  var fakeReporters = [
+    f("heap-allocated",     OTHER,   250 * MB),
+    f("explicit/a/b",       HEAP,     50 * MB),
+    f("explicit/a/c/d",     HEAP,     30 * MB),
+    f("explicit/a/c/e",     HEAP,     20 * MB),
+    f("explicit/a/f",       HEAP,     40 * MB),
+    f("explicit/g",         HEAP,    100 * MB)
+  ];
+
+  for (var i = 0; i < fakeReporters.length; i++) {
+    mgr.registerReporter(fakeReporters[i]);
+  }
+
+  ]]>
+  </script>
+
+  <iframe id="amFrame"  height="500" src="about:memory"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+  function finish()
+  {
+    // Unregister fake reporters and multi-reporters, re-register the real
+    // reporters and multi-reporters, just in case subsequent tests rely on
+    // them.
+    for (var i = 0; i < fakeReporters.length; i++) {
+      mgr.unregisterReporter(fakeReporters[i]);
+    }
+    for (var i = 0; i < realReporters.length; i++) {
+      mgr.registerReporter(realReporters[i]);
+    }
+    for (var i = 0; i < realMultiReporters.length; i++) {
+      mgr.registerMultiReporter(realMultiReporters[i]);
+    }
+    SimpleTest.finish();
+  }
+
+  var gHaveDumped = false;
+
+  function checkClipboard(actual, expected) {
+    if (actual != expected) {
+      if (!gHaveDumped) {
+        dump("******EXPECTED******\n");
+        dump(expected);
+        dump("*******ACTUAL*******\n");
+        dump(actual);
+        dump("********************\n");
+        gHaveDumped = true;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  // Click on the identified element, then cut+paste the entire page and
+  // check that the cut text matches what we expect.
+  function test(aId, aExpectedText, aNext) {
+    var win = document.getElementById("amFrame").contentWindow;
+    var node = win.document.getElementById(aId);
+
+    // Yuk:  clicking a button is easy;  but for tree entries we need to
+    // click on a child of the span identified via |id|.
+    if (node.nodeName === "button") {
+      node.click();
+    } else {
+      node.childNodes[0].click();
+    }
+
+    SimpleTest.executeSoon(function() {
+      document.getElementById("amFrame").focus();
+      SimpleTest.waitForClipboard(
+        function(actual) { return checkClipboard(actual, aExpectedText) },
+        function() {
+          synthesizeKey("A", {accelKey: true});
+          synthesizeKey("C", {accelKey: true});
+        },
+        aNext,
+        function() {
+          ok(false, "pasted text doesn't match");
+          finish();
+        }
+      );
+    });
+  }
+
+  // Returns a function that chains together one test() call per id.
+  function chain(ids) {
+    var x = ids.shift();
+    if (x) {
+      return function() { test(x.id, x.expected, chain(ids)); }
+    } else {
+      return function() { finish(); };
+    }
+  }
+
+  var openExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──140.00 MB (56.00%) -- a\n\
+│  ├───50.00 MB (20.00%) ── b\n\
+│  ├───50.00 MB (20.00%) -- c\n\
+│  │   ├──30.00 MB (12.00%) ── d\n\
+│  │   └──20.00 MB (08.00%) ── e\n\
+│  └───40.00 MB (16.00%) ── f\n\
+├──100.00 MB (40.00%) ── g\n\
+└───10.00 MB (04.00%) ── heap-unclassified\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  var cClosedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──140.00 MB (56.00%) -- a\n\
+│  ├───50.00 MB (20.00%) ── b\n\
+│  ├───50.00 MB (20.00%) ++ c\n\
+│  └───40.00 MB (16.00%) ── f\n\
+├──100.00 MB (40.00%) ── g\n\
+└───10.00 MB (04.00%) ── heap-unclassified\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  var aClosedExpected =
+"\
+Main Process\n\
+\n\
+Explicit Allocations\n\
+250.00 MB (100.0%) -- explicit\n\
+├──140.00 MB (56.00%) ++ a\n\
+├──100.00 MB (40.00%) ── g\n\
+└───10.00 MB (04.00%) ── heap-unclassified\n\
+\n\
+Other Measurements\n\
+250.00 MB ── heap-allocated\n\
+\n\
+";
+
+  // We close two sub-trees, hit the "Update" button, then reopen the two
+  // sub-trees in reverse order.  After each step, we check the output.
+  var idsToClick = [
+    { id: "Main:explicit/a/c", expected: cClosedExpected },
+    { id: "Main:explicit/a",   expected: aClosedExpected },
+    { id: "updateButton",      expected: aClosedExpected },
+    { id: "Main:explicit/a",   expected: cClosedExpected },
+    { id: "Main:explicit/a/c", expected: openExpected }
+  ];
+
+  addLoadEvent(chain(idsToClick));
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

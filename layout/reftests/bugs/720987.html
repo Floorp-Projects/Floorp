@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait"><head>
+<script>
+function doTest() {
+  var e = document.getElementById('a');
+  e.style.outline = "1px solid black"; document.body.getClientRects();
+  e.style.outline = "";                document.body.getClientRects();
+  e.style.outline = "1px solid black"; document.body.getClientRects();
+  e.style.outline = "";                document.body.getClientRects();
+  e.style.outline = "1px solid black"; document.body.getClientRects();
+  e.style.outline = "";                document.body.getClientRects();
+  e.style.outline = "1px solid black"; document.body.getClientRects();
+  e.style.outline = "";                document.body.getClientRects();
+  e.style.outline = "1px solid black"; document.body.getClientRects();
+  e.style.outline = "";                document.body.getClientRects();
+  e.style.outline = "1px solid black"; document.body.getClientRects();
+  e.style.outline = "";                document.body.getClientRects();
+  e.style.outline = "1px solid black"; document.body.getClientRects();
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body style="padding:100px;">
+<a id="a" href="foo">a</a>
+<script>
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

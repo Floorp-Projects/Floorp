@@ -237,6 +237,12 @@ gfxPlatform::gfxPlatform()
     mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
 #endif
     mBidiNumeralOption = UNINITIALIZED_VALUE;
+
+    if (Preferences::GetBool("gfx.canvas.azure.prefer-skia", false)) {
+        mPreferredDrawTargetBackend = BACKEND_SKIA;
+    } else {
+        mPreferredDrawTargetBackend = BACKEND_NONE;
+    }
 }
 
 gfxPlatform*
@@ -361,6 +367,16 @@ gfxPlatform::Shutdown()
     }
 
     mozilla::gl::GLContextProvider::Shutdown();
+    mozilla::gl::GLContextProviderOSMesa::Shutdown();
+
+#if defined(XP_WIN)
+    // The above shutdown call shuts down the default context provider for the
+    // platform. Windows is a "special snowflake", though, and has three context
+    // providers available, so we have to shut all of them down.
+    // We should only support one GL provider on Windows; then, this could go
+    // away. We currently support WGL for WebGL on Optimus.
+    mozilla::gl::GLContextProviderEGL::Shutdown();
+#endif
 
     delete gPlatform;
     gPlatform = nsnull;
@@ -418,17 +434,9 @@ cairo_user_data_key_t kDrawTarget;
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface)
 {
-#ifdef XP_WIN
-  if (aSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
-    RefPtr<DrawTarget> drawTarget =
-      Factory::CreateDrawTargetForD3D10Texture(static_cast<gfxD2DSurface*>(aSurface)->GetTexture(), FORMAT_B8G8R8A8);
-    aSurface->SetData(&kDrawTarget, drawTarget, NULL);
-    return drawTarget;
-  }
-#endif
-
-  // Can't create a draw target for general cairo surfaces yet.
-  return NULL;
+  RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface());
+  aSurface->SetData(&kDrawTarget, drawTarget, NULL);
+  return drawTarget;
 }
 
 cairo_user_data_key_t kSourceSurface;
@@ -436,6 +444,14 @@ cairo_user_data_key_t kSourceSurface;
 void SourceBufferDestroy(void *srcBuffer)
 {
   static_cast<SourceSurface*>(srcBuffer)->Release();
+}
+
+void SourceSnapshotDetached(cairo_surface_t *nullSurf)
+{
+  gfxImageSurface* origSurf =
+    static_cast<gfxImageSurface*>(cairo_surface_get_user_data(nullSurf, &kSourceSurface));
+
+  origSurf->SetData(&kSourceSurface, NULL, NULL);
 }
 
 RefPtr<SourceSurface>
@@ -505,6 +521,15 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
                                                      IntSize(imgSurface->GetSize().width, imgSurface->GetSize().height),
                                                      imgSurface->Stride(),
                                                      format);
+
+    cairo_surface_t *nullSurf =
+	cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+    cairo_surface_set_user_data(nullSurf,
+				&kSourceSurface,
+				imgSurface,
+				NULL);
+    cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
+    cairo_surface_destroy(nullSurf);
   }
 
   srcBuffer->AddRef();
@@ -529,49 +554,59 @@ cairo_user_data_key_t kDrawSourceSurface;
 static void
 DataSourceSurfaceDestroy(void *dataSourceSurface)
 {
-      static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
+  static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
 }
 
-void DestroyThebesSurface(void *data)
+UserDataKey kThebesSurfaceKey;
+void
+DestroyThebesSurface(void *data)
 {
   gfxASurface *surface = static_cast<gfxASurface*>(data);
   surface->Release();
 }
 
-UserDataKey ThebesSurfaceKey;
-
-// The semantics of this function are sort of weird. We snapshot the first
-// time and then return the snapshotted surface for the lifetime of the
-// draw target
 already_AddRefed<gfxASurface>
 gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  void *surface = aTarget->GetUserData(&ThebesSurfaceKey);
+  // If we have already created a thebes surface, we can just return it.
+  void *surface = aTarget->GetUserData(&kThebesSurfaceKey);
   if (surface) {
     nsRefPtr<gfxASurface> surf = static_cast<gfxASurface*>(surface);
     return surf.forget();
   }
 
-  RefPtr<SourceSurface> source = aTarget->Snapshot();
-  RefPtr<DataSourceSurface> data = source->GetDataSurface();
+  nsRefPtr<gfxASurface> surf;
+  if (aTarget->GetType() == BACKEND_CAIRO) {
+    cairo_surface_t* csurf =
+      static_cast<cairo_surface_t*>(aTarget->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE));
+    surf = gfxASurface::Wrap(csurf);
+  } else {
+    // The semantics of this part of the function are sort of weird. If we
+    // don't have direct support for the backend, we snapshot the first time
+    // and then return the snapshotted surface for the lifetime of the draw
+    // target. Sometimes it seems like this works out, but it seems like it
+    // might result in no updates ever.
+    RefPtr<SourceSurface> source = aTarget->Snapshot();
+    RefPtr<DataSourceSurface> data = source->GetDataSurface();
 
-  if (!data) {
-    return NULL;
+    if (!data) {
+      return NULL;
+    }
+
+    IntSize size = data->GetSize();
+    gfxASurface::gfxImageFormat format = gfxASurface::FormatFromContent(ContentForFormat(data->GetFormat()));
+
+    surf =
+      new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
+                          data->Stride(), format);
+
+    surf->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
   }
-
-  IntSize size = data->GetSize();
-  gfxASurface::gfxImageFormat format = gfxASurface::FormatFromContent(ContentForFormat(data->GetFormat()));
-  
-  nsRefPtr<gfxImageSurface> surf =
-    new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
-                        data->Stride(), format);
-
-  surf->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
 
   // add a reference to be held by the drawTarget
   // careful, the reference graph is getting complicated here
   surf->AddRef();
-  aTarget->AddUserData(&ThebesSurfaceKey, surf.get(), DestroyThebesSurface);
+  aTarget->AddUserData(&kThebesSurfaceKey, surf.get(), DestroyThebesSurface);
 
   return surf.forget();
 }
@@ -583,7 +618,23 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
   if (!SupportsAzure(backend)) {
     return NULL;
   }
-  return Factory::CreateDrawTarget(backend, aSize, aFormat); 
+
+  // There is a bunch of knowledge in the gfxPlatform heirarchy about how to
+  // create the best offscreen surface for the current system and situation. We
+  // can easily take advantage of this for the Cairo backend, so that's what we
+  // do.
+  // mozilla::gfx::Factory can get away without having all this knowledge for
+  // now, but this might need to change in the future (using
+  // CreateOffscreenSurface() and CreateDrawTargetForSurface() for all
+  // backends).
+  if (backend == BACKEND_CAIRO) {
+    nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
+                                                        ContentForFormat(aFormat));
+
+    return CreateDrawTargetForSurface(surf);
+  } else {
+    return Factory::CreateDrawTarget(backend, aSize, aFormat);
+  }
 }
 
 nsresult

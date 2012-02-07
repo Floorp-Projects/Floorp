@@ -870,6 +870,8 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   return true;
 }
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+
 bool
 nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
 {
@@ -1029,6 +1031,8 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
   }
   return true;
 }
+
+#endif // MOZ_WINSDK_TARGETVER
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIFilePicker impl.
@@ -1343,6 +1347,8 @@ nsFilePicker::IsDefaultPathHtml()
   return false;
 }
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+
 void
 nsFilePicker::ComDlgFilterSpec::Append(const nsAString& aTitle, const nsAString& aFilter)
 {
@@ -1372,3 +1378,5 @@ nsFilePicker::ComDlgFilterSpec::Append(const nsAString& aTitle, const nsAString&
   }
   pSpecForward->pszSpec = pStr->get();
 }
+
+#endif // MOZ_WINSDK_TARGETVER

@@ -72,10 +72,6 @@ nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
    * Create/Get the DragService that we have implemented
    */
   CallGetService(kCDragServiceCID, &mDragService);
-
-  // Drag target helper for drag image support
-  CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER,
-                   IID_IDropTargetHelper, (LPVOID*)&mDropTargetHelper);
 }
 
 nsNativeDragTarget::~nsNativeDragTarget()
@@ -265,9 +261,9 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
   AddLinkSupportIfCanBeGenerated(pIDataSource);
 
   // Drag and drop image helper
-  if (mDropTargetHelper) {
+  if (GetDropTargetHelper()) {
     POINT pt = { ptl.x, ptl.y };
-    mDropTargetHelper->DragEnter(mHWnd, pIDataSource, &pt, *pdwEffect);
+    GetDropTargetHelper()->DragEnter(mHWnd, pIDataSource, &pt, *pdwEffect);
   }
 
   // save a ref to this, in case the window is destroyed underneath us
@@ -341,9 +337,9 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
   this->AddRef();
 
   // Drag and drop image helper
-  if (mDropTargetHelper) {
+  if (GetDropTargetHelper()) {
     POINT pt = { ptl.x, ptl.y };
-    mDropTargetHelper->DragOver(&pt, *pdwEffect);
+    GetDropTargetHelper()->DragOver(&pt, *pdwEffect);
   }
 
   mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
@@ -363,8 +359,8 @@ nsNativeDragTarget::DragLeave()
   }
 
   // Drag and drop image helper
-  if (mDropTargetHelper) {
-    mDropTargetHelper->DragLeave();
+  if (GetDropTargetHelper()) {
+    GetDropTargetHelper()->DragLeave();
   }
 
   // dispatch the event into Gecko
@@ -401,8 +397,8 @@ nsNativeDragTarget::DragCancel()
 {
   // Cancel the drag session if we did DragEnter.
   if (mTookOwnRef) {
-    if (mDropTargetHelper) {
-      mDropTargetHelper->DragLeave();
+    if (GetDropTargetHelper()) {
+      GetDropTargetHelper()->DragLeave();
     }
     if (mDragService) {
       mDragService->EndDragSession(false);
@@ -426,9 +422,9 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   AddLinkSupportIfCanBeGenerated(pData);
 
   // Drag and drop image helper
-  if (mDropTargetHelper) {
+  if (GetDropTargetHelper()) {
     POINT pt = { aPT.x, aPT.y };
-    mDropTargetHelper->Drop(pData, &pt, *pdwEffect);
+    GetDropTargetHelper()->Drop(pData, &pt, *pdwEffect);
   }
 
   // Set the native data object into the drag service
@@ -476,4 +472,19 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   }
 
   return S_OK;
+}
+
+/**
+ * By lazy loading mDropTargetHelper we save 50-70ms of startup time
+ * which is ~5% of startup time.
+*/
+IDropTargetHelper*
+nsNativeDragTarget::GetDropTargetHelper()
+{
+  if (!mDropTargetHelper) { 
+    CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER,
+                     IID_IDropTargetHelper, (LPVOID*)&mDropTargetHelper);
+  }
+
+  return mDropTargetHelper;
 }

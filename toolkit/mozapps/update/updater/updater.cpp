@@ -54,10 +54,8 @@
  *
  *  updatev2.manifest
  *  -----------------
- *  method   = "add" | "add-cc" | "add-if" | "patch" | "patch-if" | "remove" |
+ *  method   = "add" | "add-if" | "patch" | "patch-if" | "remove" |
  *             "rmdir" | "rmrfdir" | type
- *
- * 'add-cc' is an add action to perform on channel change.
  *
  *  'type' is the update type (e.g. complete or partial) and when present MUST
  *  be the first entry in the update manifest. The type is used to support
@@ -65,9 +63,7 @@
  *
  *  precomplete
  *  -----------
- *  method   = "remove" | "rmdir" | "remove-cc"
- *
- * 'remove-cc' is a remove action to perform on channel change.
+ *  method   = "remove" | "rmdir"
  */
 #include "bspatch.h"
 #include "progressui.h"
@@ -1520,6 +1516,18 @@ IsUpdateStatusSucceeded(bool &isSucceeded)
   return true;
 }
 
+#ifdef XP_WIN
+static void 
+WaitForServiceFinishThread(void *param)
+{
+  // We wait at most 10 minutes, we already waited 5 seconds previously
+  // before deciding to show this UI.
+  WaitForServiceStop(SVC_NAME, 595);
+  LOG(("calling QuitProgressUI\n"));
+  QuitProgressUI();
+}
+#endif
+
 static void
 UpdateThreadFunc(void *param)
 {
@@ -1595,10 +1603,6 @@ int NS_main(int argc, NS_tchar **argv)
   gSourcePath = argv[1];
 
 #ifdef XP_WIN
-  // Disable every privilege we don't need. Processes started using
-  // CreateProcess will use the same token as this process.
-  UACHelper::DisablePrivileges(NULL);
-
   bool useService = false;
   bool testOnlyFallbackKeyExists = false;
   bool noServiceFallback = getenv("MOZ_NO_SERVICE_FALLBACK") != NULL;
@@ -1718,6 +1722,23 @@ int NS_main(int argc, NS_tchar **argv)
                  sizeof(elevatedLockFilePath)/sizeof(elevatedLockFilePath[0]),
                  NS_T("%s/update_elevated.lock"), argv[1]);
 
+
+    // Even if a file has no sharing access, you can still get its attributes
+    bool startedFromUnelevatedUpdater =
+      GetFileAttributesW(elevatedLockFilePath) != INVALID_FILE_ATTRIBUTES;
+    
+    // If we're running from the service, then we were started with the same
+    // token as the service so the permissions are already dropped.  If we're
+    // running from an elevated updater that was started from an unelevated 
+    // updater, then we drop the permissions here. We do not drop the 
+    // permissions on the originally called updater because we use its token
+    // to start the callback application.
+    if(startedFromUnelevatedUpdater) {
+      // Disable every privilege we don't need. Processes started using
+      // CreateProcess will use the same token as this process.
+      UACHelper::DisablePrivileges(NULL);
+    }
+
     if (updateLockFileHandle == INVALID_HANDLE_VALUE || 
         (useService && testOnlyFallbackKeyExists && noServiceFallback)) {
       if (!_waccess(elevatedLockFilePath, F_OK) &&
@@ -1784,7 +1805,24 @@ int NS_main(int argc, NS_tchar **argv)
         useService = (ret == ERROR_SUCCESS);
         // If the command was launched then wait for the service to be done.
         if (useService) {
-          DWORD lastState = WaitForServiceStop(SVC_NAME, 600);
+          // We need to call this separately instead of allowing ShowProgressUI
+          // to initialize the strings because the service will move the
+          // ini file out of the way when running updater.
+          bool showProgressUI = !InitProgressUIStrings();
+
+          // Wait for the service to stop for 5 seconds.  If the service
+          // has still not stopped then show an indeterminate progress bar.
+          DWORD lastState = WaitForServiceStop(SVC_NAME, 5);
+          if (lastState != SERVICE_STOPPED) {
+            Thread t1;
+            if (t1.Run(WaitForServiceFinishThread, NULL) == 0 && 
+                showProgressUI) {
+              ShowProgressUI(true, false);
+            }
+            t1.Join();
+          }
+
+          lastState = WaitForServiceStop(SVC_NAME, 1);
           if (lastState != SERVICE_STOPPED) {
             // If the service doesn't stop after 10 minutes there is
             // something seriously wrong.
@@ -2440,13 +2478,12 @@ GetManifestContents(const NS_tchar *manifest)
 #endif
 }
 
-int AddPreCompleteActions(ActionList *list, bool &isChannelChange)
+int AddPreCompleteActions(ActionList *list)
 {
   NS_tchar *rb = GetManifestContents(NS_T("precomplete"));
   if (rb == NULL) {
     LOG(("AddPreCompleteActions: error getting contents of precomplete " \
          "manifest\n"));
-    isChannelChange = false;
     // Applications aren't required to have a precomplete manifest yet.
     return OK;
   }
@@ -2468,11 +2505,8 @@ int AddPreCompleteActions(ActionList *list, bool &isChannelChange)
     if (NS_tstrcmp(token, NS_T("remove")) == 0) { // rm file
       action = new RemoveFile();
     }
-    else if (NS_tstrcmp(token, NS_T("remove-cc")) == 0) { // rm file
-      if (!isChannelChange)
-        continue;
-
-      action = new RemoveFile();
+    else if (NS_tstrcmp(token, NS_T("remove-cc")) == 0) { // no longer supported
+      continue;
     }
     else if (NS_tstrcmp(token, NS_T("rmdir")) == 0) { // rmdir if  empty
       action = new RemoveDir();
@@ -2497,15 +2531,6 @@ int AddPreCompleteActions(ActionList *list, bool &isChannelChange)
 
 int DoUpdate()
 {
-  bool isChannelChange = false;
-  NS_tchar ccfile[MAXPATHLEN];
-  NS_tsnprintf(ccfile, sizeof(ccfile)/sizeof(ccfile[0]),
-               NS_T("%s/channelchange"), gSourcePath);
-  if (!NS_taccess(ccfile, F_OK)) {
-    LOG(("DoUpdate: changing update channel\n"));
-    isChannelChange = true;
-  }
-
   NS_tchar manifest[MAXPATHLEN];
   NS_tsnprintf(manifest, sizeof(manifest)/sizeof(manifest[0]),
                NS_T("%s/update.manifest"), gSourcePath);
@@ -2513,8 +2538,6 @@ int DoUpdate()
   // extract the manifest
   int rv = gArchiveReader.ExtractFile("updatev2.manifest", manifest);
   if (rv) {
-    // Don't allow changing the channel without a version 2 update manifest.
-    isChannelChange = false;
     rv = gArchiveReader.ExtractFile("update.manifest", manifest);
     if (rv) {
       LOG(("DoUpdate: error extracting manifest file\n"));
@@ -2550,13 +2573,9 @@ int DoUpdate()
       LOG(("UPDATE TYPE " LOG_S "\n", type));
       if (NS_tstrcmp(type, NS_T("complete")) == 0) {
         isComplete = true;
-        rv = AddPreCompleteActions(&list, isChannelChange);
+        rv = AddPreCompleteActions(&list);
         if (rv)
           return rv;
-      }
-      else if (isChannelChange) {
-        LOG(("DoUpdate: unable to change channel with a partial update\n"));
-        isChannelChange = false;
       }
       isFirstAction = false;
       continue;
@@ -2597,19 +2616,8 @@ int DoUpdate()
     else if (NS_tstrcmp(token, NS_T("patch-if")) == 0) { // Patch if exists
       action = new PatchIfFile();
     }
-    else if (NS_tstrcmp(token, NS_T("add-cc")) == 0) { // Add if channel change
-      // The channel should only be changed with a complete update and when the
-      // user requests a channel change to avoid overwriting the update channel
-      // when testing RC's.
-
-      // add-cc instructions should only be in complete update manifests.
-      if (!isComplete)
-        return PARSE_ERROR;
-      
-      if (!isChannelChange)
-        continue;
-
-      action = new AddFile();
+    else if (NS_tstrcmp(token, NS_T("add-cc")) == 0) { // no longer supported
+      continue;
     }
     else {
       LOG(("DoUpdate: unknown token: " LOG_S "\n", token));

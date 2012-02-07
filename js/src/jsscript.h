@@ -48,6 +48,7 @@
 #include "jsdbgapi.h"
 #include "jsclist.h"
 #include "jsinfer.h"
+#include "jsopcode.h"
 #include "jsscope.h"
 
 #include "gc/Barrier.h"
@@ -287,12 +288,6 @@ class Bindings {
     bool getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp);
 
     /*
-     * Returns the slot where the sharp array is stored, or a value < 0 if no
-     * sharps are present or in case of failure.
-     */
-    int sharpSlotBase(JSContext *cx);
-
-    /*
      * Protect stored bindings from mutation.  Subsequent attempts to add
      * bindings will copy the existing bindings before adding to them, allowing
      * the original bindings to be safely shared.
@@ -334,12 +329,6 @@ namespace JSC {
 }
 
 #define JS_UNJITTABLE_SCRIPT (reinterpret_cast<void*>(1))
-
-enum JITScriptStatus {
-    JITScript_None,
-    JITScript_Invalid,
-    JITScript_Valid
-};
 
 namespace js { namespace mjit { struct JITScript; } }
 #endif
@@ -461,7 +450,6 @@ struct JSScript : public js::gc::Cell {
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
     bool            savedCallerFun:1; /* can call getCallerFunction() */
-    bool            hasSharps:1;      /* script uses sharp variables */
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
     bool            usesEval:1;       /* script uses eval() */
@@ -639,7 +627,6 @@ struct JSScript : public js::gc::Cell {
 
     // These methods are implemented in MethodJIT.h.
     inline void **nativeMap(bool constructing);
-    inline void *maybeNativeCodeForPC(bool constructing, jsbytecode *pc);
     inline void *nativeCodeForPC(bool constructing, jsbytecode *pc);
 
     js::mjit::JITScript *getJIT(bool constructing) {
@@ -651,17 +638,12 @@ struct JSScript : public js::gc::Cell {
     size_t *addressOfUseCount() { return &useCount; }
     void resetUseCount() { useCount = 0; }
 
-    JITScriptStatus getJITStatus(bool constructing) {
-        void *addr = constructing ? jitArityCheckCtor : jitArityCheckNormal;
-        if (addr == NULL)
-            return JITScript_None;
-        if (addr == JS_UNJITTABLE_SCRIPT)
-            return JITScript_Invalid;
-        return JITScript_Valid;
-    }
-
-    /* Size of the JITScript and all sections.  (This method is implemented in MethodJIT.cpp.) */
-    size_t jitDataSize(JSMallocSizeOfFun mallocSizeOf);
+    /*
+     * Size of the JITScript and all sections.  If |mallocSizeOf| is NULL, the
+     * size is computed analytically.  (This method is implemented in
+     * MethodJIT.cpp.)
+     */
+    size_t sizeOfJitScripts(JSMallocSizeOfFun mallocSizeOf);
 
 #endif
 
@@ -679,12 +661,13 @@ struct JSScript : public js::gc::Cell {
     }
 
     /*
-     * The first dataSize() is the in-use size of all the data sections, the
-     * second is the size of the block allocated to hold all the data sections
+     * computedSizeOfData() is the in-use size of all the data sections. 
+     * sizeOfData() is the size of the block allocated to hold all the data sections
      * (which can be larger than the in-use size).
      */
-    JS_FRIEND_API(size_t) dataSize();                               /* Size of all data sections */
-    JS_FRIEND_API(size_t) dataSize(JSMallocSizeOfFun mallocSizeOf); /* Size of all data sections */
+    size_t computedSizeOfData();
+    size_t sizeOfData(JSMallocSizeOfFun mallocSizeOf);
+
     uint32_t numNotes();  /* Number of srcnote slots in the srcnotes section */
 
     /* Script notes are allocated right after the code. */
@@ -840,8 +823,6 @@ struct JSScript : public js::gc::Cell {
 /* If this fails, padding_ can be removed. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
 
-#define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
-                                           uses sharp variables */
 static JS_INLINE uintN
 StackDepth(JSScript *script)
 {

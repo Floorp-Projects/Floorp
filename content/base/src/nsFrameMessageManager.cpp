@@ -866,8 +866,6 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope)
 
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
-  JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
-
   JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_PRIVATE_IS_NSISUPPORTS);
   JS_SetVersion(cx, JSVERSION_LATEST);
   JS_SetErrorReporter(cx, ContentScriptErrorReporter);
@@ -1109,4 +1107,16 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
   NS_ENSURE_TRUE(mm, NS_ERROR_OUT_OF_MEMORY);
   nsFrameMessageManager::sChildProcessManager = mm;
   return CallQueryInterface(mm, aResult);
+}
+
+bool
+nsFrameMessageManager::MarkForCC()
+{
+  PRUint32 len = mListeners.Length();
+  for (PRUint32 i = 0; i < len; ++i) {
+    nsCOMPtr<nsIXPConnectWrappedJS> wjs =
+      do_QueryInterface(mListeners[i].mListener);
+    xpc_UnmarkGrayObject(wjs);
+  }
+  return true;
 }

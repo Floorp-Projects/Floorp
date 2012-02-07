@@ -446,16 +446,6 @@ BookmarksEngine.prototype = {
     if (item.hasDupe)
       return;
     return this._mapDupe(item);
-  },
-
-  _handleDupe: function _handleDupe(item, dupeId) {
-    // Always change the local GUID to the incoming one.
-    this._store.changeItemID(dupeId, item.id);
-    this._deleteId(dupeId);
-    this._tracker.addChangedID(item.id, 0);
-    if (item.parentid) {
-      this._tracker.addChangedID(item.parentid, 0);
-    }
   }
 };
 

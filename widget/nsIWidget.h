@@ -118,8 +118,9 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xba20ac65, 0xb2a6, 0x4052, \
-    { 0xa4, 0xcb, 0x65, 0x40, 0xf8, 0x87, 0x9c, 0x55 } }
+  { 0x3fa36ce2, 0x472d, 0x4bff, \
+    { 0xb1, 0xe4, 0xc3, 0xe3, 0x19, 0x24, 0xa1, 0xe4 } }
+
 /*
  * Window shadow styles
  * Also used for the -moz-window-shadow CSS property
@@ -477,6 +478,14 @@ class nsIWidget : public nsISupports {
                 nsDeviceContext  *aContext,
                 nsWidgetInitData *aInitData = nsnull,
                 bool             aForceUseIWidgetParent = false) = 0;
+
+    /**
+     * Set the event callback for a widget. If a device context is not
+     * provided then the existing device context will remain, it will
+     * not be nulled out.
+     */
+    NS_IMETHOD SetEventCallback(EVENT_CALLBACK aEventFunction,
+                                nsDeviceContext *aContext) = 0;
 
     /**
      * Attach to a top level widget. 
@@ -1068,7 +1077,7 @@ class nsIWidget : public nsISupports {
      * @param aManager The drawing LayerManager.
      * @param aRect Current widget rect that is being drawn.
      */
-    virtual void DrawOver(LayerManager* aManager, nsIntRect aRect) = 0;
+    virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) = 0;
 
     /**
      * Called when Gecko knows which themed widgets exist in this window.
@@ -1510,6 +1519,12 @@ class nsIWidget : public nsISupports {
      *                   parent widget
      */
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) = 0;
+
+    /**
+     * Return the internal format of the default framebuffer for this
+     * widget.
+     */
+    virtual PRUint32 GetGLFrameBufferFormat() { return 0; /*GL_NONE*/ }
 protected:
 
     // keep the list of children.  We also keep track of our siblings.

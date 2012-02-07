@@ -218,10 +218,8 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, 
   if (!aWindow)
     aWindow = window;
 
-  if (typeof(eventUtils) != 'undefined') {
-    synthesizeMouseAtCenter = eventUtils.synthesizeMouseAtCenter;
-    synthesizeMouse = eventUtils.synthesizeMouse;
-  }
+  var synthesizeMouseAtCenter = (eventUtils || window).synthesizeMouseAtCenter;
+  var synthesizeMouse = (eventUtils || window).synthesizeMouse;
 
   var gWindowUtils  = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                              getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -248,8 +246,12 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, 
     // need to use real mouse action
     aWindow.addEventListener("dragstart", trapDrag, true);
     synthesizeMouseAtCenter(srcElement, { type: "mousedown" }, aWindow);
-    synthesizeMouse(srcElement, 11, 11, { type: "mousemove" }, aWindow);
-    synthesizeMouse(srcElement, 20, 20, { type: "mousemove" }, aWindow);
+
+    var rect = srcElement.getBoundingClientRect();
+    var x = rect.width / 2;
+    var y = rect.height / 2;
+    synthesizeMouse(srcElement, x, y, { type: "mousemove" }, aWindow);
+    synthesizeMouse(srcElement, x+10, y+10, { type: "mousemove" }, aWindow);
     aWindow.removeEventListener("dragstart", trapDrag, true);
 
     event = aWindow.document.createEvent("DragEvents");

@@ -46,7 +46,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "jsstdint.h"
 #include "jsdhash.h"
 #include "jsutil.h"
 
@@ -809,9 +808,7 @@ JS_DHashTableSizeOfExcludingThis(const JSDHashTable *table,
                                  void *arg /* = NULL */)
 {
     size_t n = 0;
-    n += mallocSizeOf(table->entryStore,
-                      JS_DHASH_TABLE_SIZE(table) * table->entrySize +
-                      ENTRY_STORE_EXTRA);
+    n += mallocSizeOf(table->entryStore);
     if (sizeOfEntryExcludingThis) {
         SizeOfEntryExcludingThisArg arg2 = { 0, sizeOfEntryExcludingThis, mallocSizeOf, arg };
         JS_DHashTableEnumerate(const_cast<JSDHashTable *>(table),
@@ -827,7 +824,7 @@ JS_DHashTableSizeOfIncludingThis(const JSDHashTable *table,
                                  JSMallocSizeOfFun mallocSizeOf,
                                  void *arg /* = NULL */)
 {
-    return mallocSizeOf(table, sizeof(JSDHashTable)) +
+    return mallocSizeOf(table) +
            JS_DHashTableSizeOfExcludingThis(table, sizeOfEntryExcludingThis,
                                             mallocSizeOf, arg);
 }

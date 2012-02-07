@@ -15,7 +15,7 @@
 <!-- load the test plugin defined at $(DIST)/bin/plugins/Test.plugin/ -->
 <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
 <script class="testbody" type="text/javascript">
-SimpleTest.info("\nProfile::PluginUtilsLoadTime: " + (loadTime - start) + "\n");
+info("\nProfile::PluginUtilsLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
   SimpleTest.waitForExplicitFinish();
   var startTime = new Date();
@@ -30,7 +30,7 @@ function starttest() {
     --runtimes;
   }
   var endTime = new Date();
-  SimpleTest.info("\nProfile::PluginUtilsRunTime: " + (endTime-startTime) + "\n");
+  info("\nProfile::PluginUtilsRunTime: " + (endTime-startTime) + "\n");
   SimpleTest.finish();
 };
 </script>

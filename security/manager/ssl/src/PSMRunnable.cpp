@@ -46,14 +46,18 @@ SyncRunnableBase::SyncRunnableBase()
 nsresult
 SyncRunnableBase::DispatchToMainThreadAndWait()
 {
-  NS_ASSERTION(!NS_IsMainThread(),
-               "DispatchToMainThreadAndWait called on the main thread.");
-
-  mozilla::MonitorAutoLock lock(monitor);
-  nsresult rv = NS_DispatchToMainThread(this);
-  if (NS_SUCCEEDED(rv)) {
-    lock.Wait();
+  nsresult rv;
+  if (NS_IsMainThread()) {
+    RunOnTargetThread();
+    rv = NS_OK;
+  } else {
+    mozilla::MonitorAutoLock lock(monitor);
+    rv = NS_DispatchToMainThread(this);
+    if (NS_SUCCEEDED(rv)) {
+      lock.Wait();
+    }
   }
+
   return rv;
 }
 

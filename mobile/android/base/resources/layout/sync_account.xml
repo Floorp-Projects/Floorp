@@ -1,23 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@style/SyncTextFrame" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncLayout" >
+  <LinearLayout
+    android:id="@+id/account_top"
+    style="@style/SyncTop">
+
+    <ImageView
+      style="@style/SyncTopIcon" />
+    <TextView
+      style="@style/SyncTextTitle"
+      android:text="@string/sync_title_connect" />
+  </LinearLayout>
 
   <ScrollView
-    style="@style/SyncLayout" >
-    
+    android:id="@+id/account_content"
+    style="@style/SyncLayout"
+    android:layout_below="@id/account_top"
+    android:layout_above="@+id/account_bottom">
+
 	<LinearLayout
-	    style="@style/SyncLayout" >
-	
-	  <TextView
-	    style="@style/SyncTextTitle"
-	    android:text="@string/sync_title_connect" />
-	
-	  <View
-	    style="@style/SyncViewLine" />
-	
+      style="@style/SyncLayout.Vertical"
+      android:padding="20dp" >
+
 	  <TextView
 	    style="@style/SyncTextItem"
-	    android:text="@string/sync_subtitle_account" />
+	    android:text="@string/sync_subtitle_account"
+	    android:layout_marginBottom="10dp" />
 	
 	  <EditText android:id="@+id/usernameInput"
 	    style="@style/SyncEditItem"
@@ -43,26 +51,26 @@
 	    style="@style/SyncEditItem"
 	    android:visibility="gone"
 	    android:hint="@string/sync_input_server" />
-	
-	  <LinearLayout
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent"
-	    android:orientation="horizontal" >
-	
-	    <Button
-	      style="@style/SyncButtonCommon"
-	      android:onClick="cancelClickHandler"
-	      android:text="@string/sync_button_cancel" />
-	
-	    <Button
-	      android:id="@+id/accountConnectButton"
-	      style="@style/SyncButtonCommon"
-	      android:onClick="connectClickHandler"
-	      android:clickable="false"
-	      android:enabled="false"
-	      android:text="@string/sync_button_connect" />
-	
-	  </LinearLayout>
+
 	</LinearLayout>
   </ScrollView>
-</TableLayout>
+
+  <LinearLayout
+    android:id="@id/account_bottom"
+    style="@style/SyncBottom"
+    android:orientation="horizontal" >
+
+    <Button
+      style="@style/SyncButton"
+      android:onClick="cancelClickHandler"
+      android:text="@string/sync_button_cancel" />
+
+    <Button
+      style="@style/SyncButton"
+      android:id="@+id/accountConnectButton"
+      android:onClick="connectClickHandler"
+      android:clickable="false"
+      android:enabled="false"
+      android:text="@string/sync_button_connect" />
+  </LinearLayout>
+</RelativeLayout>

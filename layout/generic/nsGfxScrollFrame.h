@@ -266,6 +266,9 @@ public:
   void MarkInactive();
   nsExpirationState* GetExpirationState() { return &mActivityExpirationState; }
 
+  void ScheduleSyntheticMouseMove();
+  static void ScrollActivityCallback(nsITimer *aTimer, void* anInstance);
+
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
   nsCOMPtr<nsIContent> mVScrollbarContent;
@@ -295,6 +298,8 @@ public:
   nsPoint mLastPos;
 
   nsExpirationState mActivityExpirationState;
+
+  nsCOMPtr<nsITimer> mScrollActivityTimer;
 
   bool mNeverHasVerticalScrollbar:1;
   bool mNeverHasHorizontalScrollbar:1;

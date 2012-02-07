@@ -42,17 +42,18 @@
 # ***** END LICENSE BLOCK *****
 
 //******** define a js object to implement nsITreeView
-function pageInfoTreeView(copycol)
+function pageInfoTreeView(treeid, copycol)
 {
   // copycol is the index number for the column that we want to add to
   // the copy-n-paste buffer when the user hits accel-c
+  this.treeid = treeid;
   this.copycol = copycol;
   this.rows = 0;
   this.tree = null;
   this.data = [ ];
   this.selection = null;
-  this.sortcol = null;
-  this.sortdir = 0;
+  this.sortcol = -1;
+  this.sortdir = false;
 }
 
 pageInfoTreeView.prototype = {
@@ -121,6 +122,25 @@ pageInfoTreeView.prototype = {
     }
   },
 
+  onPageMediaSort : function(columnname)
+  {
+    var tree = document.getElementById(this.treeid);
+    var treecol = tree.columns.getNamedColumn(columnname);
+
+    this.sortdir =
+      gTreeUtils.sort(
+        tree,
+        this,
+        this.data,
+        treecol.index,
+        function textComparator(a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); },
+        this.sortcol,
+        this.sortdir
+      );
+
+    this.sortcol = treecol.index;
+  },
+
   getRowProperties: function(row, prop) { },
   getCellProperties: function(row, column, prop) { },
   getColumnProperties: function(column, prop) { },
@@ -166,9 +186,8 @@ const COPYCOL_META_CONTENT = 1;
 const COPYCOL_IMAGE = COL_IMAGE_ADDRESS;
 
 // one nsITreeView for each tree in the window
-var gMetaView = new pageInfoTreeView(COPYCOL_META_CONTENT);
-var gImageView = new pageInfoTreeView(COPYCOL_IMAGE);
-
+var gMetaView = new pageInfoTreeView('metatree', COPYCOL_META_CONTENT);
+var gImageView = new pageInfoTreeView('imagetree', COPYCOL_IMAGE);
 
 var atomSvc = Components.classes["@mozilla.org/atom-service;1"]
                         .getService(Components.interfaces.nsIAtomService);
@@ -185,6 +204,44 @@ gImageView.getCellProperties = function(row, col, props) {
 
   if (col.element.id == "image-address")
     props.AppendElement(this._ltrAtom);
+};
+
+gImageView.getCellText = function(row, column) {
+  var value = this.data[row][column.index];
+  if (column.index == COL_IMAGE_SIZE) {
+    if (value == -1) {
+      return gStrings.unknown;
+    } else {
+      var kbSize = Number(Math.round(value / 1024 * 100) / 100);
+      return gBundle.getFormattedString("mediaFileSize", [kbSize]);
+    }
+  }
+  return value || "";
+};
+
+gImageView.onPageMediaSort = function(columnname) {
+  var tree = document.getElementById(this.treeid);
+  var treecol = tree.columns.getNamedColumn(columnname);
+
+  var comparator;
+  if (treecol.index == COL_IMAGE_SIZE) {
+    comparator = function numComparator(a, b) { return a - b; };
+  } else {
+    comparator = function textComparator(a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); };
+  }
+
+  this.sortdir =
+    gTreeUtils.sort(
+      tree,
+      this,
+      this.data,
+      treecol.index,
+      comparator,
+      this.sortcol,
+      this.sortdir
+    );
+
+  this.sortcol = treecol.index;
 };
 
 var gImageHash = { };
@@ -284,6 +341,9 @@ function onLoadPageInfo()
   gStrings.notSet = gBundle.getString("notset");
   gStrings.mediaImg = gBundle.getString("mediaImg");
   gStrings.mediaBGImg = gBundle.getString("mediaBGImg");
+  gStrings.mediaBorderImg = gBundle.getString("mediaBorderImg");
+  gStrings.mediaListImg = gBundle.getString("mediaListImg");
+  gStrings.mediaCursor = gBundle.getString("mediaCursor");
   gStrings.mediaObject = gBundle.getString("mediaObject");
   gStrings.mediaEmbed = gBundle.getString("mediaEmbed");
   gStrings.mediaLink = gBundle.getString("mediaLink");
@@ -585,15 +645,8 @@ function addImage(url, type, alt, elem, isBg)
       catch(ex2) { }
     }
 
-    var sizeText;
-    if (cacheEntryDescriptor) {
-      var pageSize = cacheEntryDescriptor.dataSize;
-      var kbSize = formatNumber(Math.round(pageSize / 1024 * 100) / 100);
-      sizeText = gBundle.getFormattedString("mediaFileSize", [kbSize]);
-    }
-    else
-      sizeText = gStrings.unknown;
-    gImageView.addRow([url, type, sizeText, alt, 1, elem, isBg]);
+    var dataSize = (cacheEntryDescriptor) ? cacheEntryDescriptor.dataSize : -1;
+    gImageView.addRow([url, type, dataSize, alt, 1, elem, isBg]);
 
     // Add the observer, only once.
     if (gImageView.data.length == 1) {
@@ -613,13 +666,35 @@ function addImage(url, type, alt, elem, isBg)
 
 function grabAll(elem)
 {
-  // check for background images, any node may have multiple
+  // check for images defined in CSS (e.g. background, borders), any node may have multiple
   var computedStyle = elem.ownerDocument.defaultView.getComputedStyle(elem, "");
+
   if (computedStyle) {
-    Array.forEach(computedStyle.getPropertyCSSValue("background-image"), function (url) {
-      if (url.primitiveType == CSSPrimitiveValue.CSS_URI)
-        addImage(url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true);
-    });
+    var addImgFunc = function (label, val) {
+      if (val.primitiveType == CSSPrimitiveValue.CSS_URI) {
+        addImage(val.getStringValue(), label, gStrings.notSet, elem, true);
+      }
+      else if (val.primitiveType == CSSPrimitiveValue.CSS_STRING) {
+        // This is for -moz-image-rect.
+        // TODO: Reimplement once bug 714757 is fixed
+        var strVal = val.getStringValue();
+        if (strVal.search(/^.*url\(\"?/) > -1) {
+          url = strVal.replace(/^.*url\(\"?/,"").replace(/\"?\).*$/,"");
+          addImage(url, label, gStrings.notSet, elem, true);
+        }
+      }
+      else if (val.cssValueType == CSSValue.CSS_VALUE_LIST) {
+        // recursively resolve multiple nested CSS value lists
+        for (var i = 0; i < val.length; i++)
+          addImgFunc(label, val.item(i));
+      }
+    };
+
+    addImgFunc(gStrings.mediaBGImg, computedStyle.getPropertyCSSValue("background-image"));
+    addImgFunc(gStrings.mediaBorderImg, computedStyle.getPropertyCSSValue("-moz-border-image-source"));
+    // TODO: support unprefixed "border-image" once bug 713643 is fixed.
+    addImgFunc(gStrings.mediaListImg, computedStyle.getPropertyCSSValue("list-style-image"));
+    addImgFunc(gStrings.mediaCursor, computedStyle.getPropertyCSSValue("cursor"));
   }
 
   // one swi^H^H^Hif-else to rule them all
@@ -700,7 +775,10 @@ function getSelectedImage(tree)
     return null;
 
   // Only works if only one item is selected
-  var clickedRow = tree.currentIndex;
+  var clickedRow = tree.view.selection.currentIndex;
+  if (clickedRow == -1)
+    return null;
+
   // image-node
   return gImageView.data[clickedRow][COL_IMAGE_NODE];
 }

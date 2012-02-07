@@ -46,7 +46,6 @@
 // Base class for contentsink implementations.
 
 #include "nsICSSLoaderObserver.h"
-#include "nsIScriptLoaderObserver.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -64,6 +63,7 @@
 #include "nsIRequest.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsThreadUtils.h"
+#include "nsIScriptElement.h"
 
 class nsIDocument;
 class nsIURI;
@@ -113,16 +113,13 @@ extern PRLogModuleInfo* gContentSinkLogModuleInfo;
 #define NS_DELAY_FOR_WINDOW_CREATION  500000
 
 class nsContentSink : public nsICSSLoaderObserver,
-                      public nsIScriptLoaderObserver,
                       public nsSupportsWeakReference,
                       public nsStubDocumentObserver,
                       public nsITimerCallback
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsContentSink,
-                                           nsIScriptLoaderObserver)
-  NS_DECL_NSISCRIPTLOADEROBSERVER
-
+                                           nsICSSLoaderObserver)
     // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
 
@@ -290,10 +287,6 @@ protected:
     return sNotificationInterval;
   }
 
-  // Overridable hooks into script evaluation
-  virtual void PreEvaluateScript()                            {return;}
-  virtual void PostEvaluateScript(nsIScriptElement *aElement) {return;}
-
   virtual nsresult FlushTags() = 0;
 
   // Later on we might want to make this more involved somehow
@@ -302,6 +295,10 @@ protected:
 
   void DoProcessLinkHeader();
 
+  void StopDeflecting() {
+    mDeflectedCount = sPerfDeflectCount;
+  }
+
 private:
   // People shouldn't be allocating this class directly.  All subclasses should
   // be allocated using a zeroing operator new.
@@ -309,18 +306,13 @@ private:
 
 protected:
 
-  virtual void ContinueInterruptedParsingAsync();
-  void ContinueInterruptedParsingIfEnabled();
-
   nsCOMPtr<nsIDocument>         mDocument;
-  nsCOMPtr<nsIParser>           mParser;
+  nsRefPtr<nsParserBase>        mParser;
   nsCOMPtr<nsIURI>              mDocumentURI;
   nsCOMPtr<nsIDocShell>         mDocShell;
   nsRefPtr<mozilla::css::Loader> mCSSLoader;
   nsRefPtr<nsNodeInfoManager>   mNodeInfoManager;
   nsRefPtr<nsScriptLoader>      mScriptLoader;
-
-  nsCOMArray<nsIScriptElement> mScriptElements;
 
   // back off timer notification after count
   PRInt32 mBackoffCount;
@@ -335,7 +327,6 @@ protected:
   // Have we already called BeginUpdate for this set of content changes?
   PRUint8 mBeganUpdate : 1;
   PRUint8 mLayoutStarted : 1;
-  PRUint8 mCanInterruptParser : 1;
   PRUint8 mDynamicLowerValue : 1;
   PRUint8 mParsing : 1;
   PRUint8 mDroppedTimer : 1;
@@ -347,8 +338,9 @@ protected:
   // shouldn't be performing any more content model notifications,
   // since we're not longer updating our child counts.
   PRUint8 mIsDocumentObserver : 1;
-  // True if this is a fragment parser
-  PRUint8 mFragmentMode : 1;
+  // True if this is parser is a fragment parser or an HTML DOMParser.
+  // XML DOMParser leaves this to false for now!
+  PRUint8 mRunsToCompletion : 1;
   // True to call prevent script execution in the fragment mode.
   PRUint8 mPreventScriptExecution : 1;
   
@@ -406,7 +398,6 @@ protected:
   static PRInt32 sInitialPerfTime;
   // Should we switch between perf-mode and interactive-mode
   static PRInt32 sEnablePerfMode;
-  static bool sCanInterruptParser;
 };
 
 #endif // _nsContentSink_h_

@@ -63,13 +63,9 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
 
     private static final Uri BOOKMARKS_CONTENT_URI_POST_11 = Uri.parse("content://com.android.browser/bookmarks");
 
-    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter) {
+    private Cursor filterAllSites(ContentResolver cr, String[] projection, CharSequence constraint, int limit, CharSequence urlFilter) {
         Cursor c = cr.query(Browser.BOOKMARKS_URI,
-                            new String[] { URL_COLUMN_ID,
-                                           BookmarkColumns.URL,
-                                           BookmarkColumns.TITLE,
-                                           BookmarkColumns.FAVICON,
-                                           URL_COLUMN_THUMBNAIL },
+                            projection,
                             // The length restriction on URL is for the same reason as in the general bookmark query
                             // (see comment earlier in this file).
                             (urlFilter != null ? "(" + Browser.BookmarkColumns.URL + " NOT LIKE ? ) AND " : "" ) + 
@@ -86,6 +82,28 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return new AndroidDBCursor(c);
     }
 
+    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
+        return filterAllSites(cr,
+                              new String[] { URL_COLUMN_ID,
+                                             BookmarkColumns.URL,
+                                             BookmarkColumns.TITLE,
+                                             BookmarkColumns.FAVICON },
+                              constraint,
+                              limit,
+                              null);
+    }
+
+    public Cursor getTopSites(ContentResolver cr, int limit) {
+        return filterAllSites(cr,
+                              new String[] { URL_COLUMN_ID,
+                                             BookmarkColumns.URL,
+                                             BookmarkColumns.TITLE,
+                                             URL_COLUMN_THUMBNAIL },
+                              "",
+                              limit,
+                              BrowserDB.ABOUT_PAGES_URL_FILTER);
+    }
+
     public void updateVisitedHistory(ContentResolver cr, String uri) {
         Browser.updateVisitedHistory(cr, uri, true);
     }
@@ -100,9 +118,31 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { uri });
     }
 
-    public void updateHistoryDate(ContentResolver cr, String uri, long date) {
+    public void updateHistoryEntry(ContentResolver cr, String uri, String title,
+                                   long date, int visits) {
+        int oldVisits = 0;
+        Cursor cursor = null;
+        try {
+            cursor = cr.query(Browser.BOOKMARKS_URI,
+                              new String[] { Browser.BookmarkColumns.VISITS },
+                              Browser.BookmarkColumns.URL + " = ?",
+                              new String[] { uri },
+                              null);
+
+            if (cursor.moveToFirst()) {
+                oldVisits = cursor.getInt(0);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.DATE, date);
+        values.put(Browser.BookmarkColumns.VISITS, oldVisits + visits);
+        if (title != null) {
+            values.put(Browser.BookmarkColumns.TITLE, title);
+        }
 
         cr.update(Browser.BOOKMARKS_URI,
                   values,
@@ -127,7 +167,8 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                                            BookmarkColumns.URL,
                                            BookmarkColumns.TITLE,
                                            BookmarkColumns.FAVICON,
-                                           BookmarkColumns.DATE },
+                                           BookmarkColumns.DATE,
+                                           BookmarkColumns.VISITS },
                             // Bookmarks that have not been visited have a date value
                             // of 0, so don't pick them up in the history view.
                             Browser.BookmarkColumns.DATE + " > 0",
@@ -135,6 +176,11 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                             Browser.BookmarkColumns.DATE + " DESC LIMIT " + limit);
 
         return new AndroidDBCursor(c);
+    }
+
+    public int getMaxHistoryCount() {
+        // Valid for Android versions up to 4.0.
+        return 250;
     }
 
     public void clearHistory(ContentResolver cr) {
@@ -323,6 +369,26 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
             cr.insert(Browser.BOOKMARKS_URI, values);
     }
 
+    public byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
+        Cursor c = cr.query(Browser.BOOKMARKS_URI,
+                            new String[] { URL_COLUMN_THUMBNAIL },
+                            Browser.BookmarkColumns.URL + " = ?",
+                            new String[] { uri },
+                            null);
+
+        if (!c.moveToFirst()) {
+            c.close();
+            return null;
+        }
+
+        int thumbnailIndex = c.getColumnIndexOrThrow(URL_COLUMN_THUMBNAIL);
+
+        byte[] b = c.getBlob(thumbnailIndex);
+        c.close();
+
+        return b;
+    }
+
     private static class AndroidDBCursor extends CursorWrapper {
         public AndroidDBCursor(Cursor c) {
             super(c);
@@ -339,6 +405,8 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                 columnName = URL_COLUMN_THUMBNAIL;
             } else if (columnName.equals(BrowserDB.URLColumns.DATE_LAST_VISITED)) {
                 columnName = Browser.BookmarkColumns.DATE;
+            } else if (columnName.equals(BrowserDB.URLColumns.VISITS)) {
+                columnName = Browser.BookmarkColumns.VISITS;
             }
 
             return columnName;

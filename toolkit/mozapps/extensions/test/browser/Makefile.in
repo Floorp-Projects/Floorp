@@ -96,6 +96,7 @@ _MAIN_TEST_FILES = \
 
 _TEST_FILES = \
   head.js \
+  browser_addonrepository_performance.js \
   browser_bug557956.js \
   browser_bug616841.js \
   browser_hotfix.js \

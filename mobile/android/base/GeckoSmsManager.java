@@ -356,15 +356,17 @@ public class GeckoSmsManager
 
   private final static String[] kRequiredMessageRows = new String[] { "_id", "address", "body", "date", "type" };
 
-  public void init() {
+  public GeckoSmsManager() {
+    SmsIOThread.getInstance().start();
+  }
+
+  public void start() {
     IntentFilter smsFilter = new IntentFilter();
     smsFilter.addAction(GeckoSmsManager.ACTION_SMS_RECEIVED);
     smsFilter.addAction(GeckoSmsManager.ACTION_SMS_SENT);
     smsFilter.addAction(GeckoSmsManager.ACTION_SMS_DELIVERED);
 
     GeckoApp.mAppContext.registerReceiver(this, smsFilter);
-
-    SmsIOThread.getInstance().start();
   }
 
   @Override
@@ -925,9 +927,11 @@ public class GeckoSmsManager
     MessagesListManager.getInstance().remove(aListId);
   }
 
-  public void shutdown() {
+  public void stop() {
     GeckoApp.mAppContext.unregisterReceiver(this);
+  }
 
+  public void shutdown() {
     SmsIOThread.getInstance().interrupt();
     MessagesListManager.getInstance().clear();
   }

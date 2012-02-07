@@ -6,9 +6,13 @@ function run_test()
   }
 
   var is_win7_or_newer = false;
+  var is_windows = false;
   var ph = Components.classes["@mozilla.org/network/protocol;1?name=http"]
              .getService(Components.interfaces.nsIHttpProtocolHandler);
   var match = ph.userAgent.match(/Windows NT (\d+).(\d+)/);
+  if (match) {
+      is_windows = true;
+  }
   if (match && (parseInt(match[1]) > 6 ||
                 parseInt(match[1]) == 6 && parseInt(match[2]) >= 1)) {
       is_win7_or_newer = true;
@@ -22,6 +26,12 @@ function run_test()
              do_check_true('CrashTime' in extra);
              do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_THREAD_LIST_STREAM));
              do_check_true(CrashTestUtils.dumpHasInstructionPointerMemory(mdump.path));
+             if (is_windows) {
+               ['SystemMemoryUsePercentage', 'TotalVirtualMemory', 'AvailableVirtualMemory',
+                'AvailablePageFile', 'AvailablePhysicalMemory'].forEach(function(prop) {
+                  do_check_true(extra[prop].toString().match(/^\d+$/));
+               });
+             }
              if (is_win7_or_newer)
                do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_MEMORY_INFO_LIST_STREAM));
            });

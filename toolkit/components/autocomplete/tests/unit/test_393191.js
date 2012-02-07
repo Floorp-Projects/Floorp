@@ -36,9 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 /**
  * Unit test for Bug 393191 - AutoComplete crashes if result is null
  */

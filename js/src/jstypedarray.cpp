@@ -42,7 +42,6 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jshash.h"
 #include "jsprf.h"
@@ -108,6 +107,26 @@ ValueIsLength(JSContext *cx, const Value &v, jsuint *len)
 }
 
 /*
+ * Convert |v| to an array index for an array of length |length| per
+ * the Typed Array Specification section 7.0, |subarray|. If successful,
+ * the output value is in the range [0, length). 
+ */
+static bool
+ToClampedIndex(JSContext *cx, const Value &v, int32_t length, int32_t *out)
+{
+    if (!ToInt32(cx, v, out))
+        return false;
+    if (*out < 0) {
+        *out += length;
+        if (*out < 0)
+            *out = 0;
+    } else if (*out > length) {
+        *out = length;
+    }
+    return true;
+}
+
+/*
  * ArrayBuffer
  *
  * This class holds the underlying raw buffer that the TypedArray classes
@@ -140,6 +159,44 @@ ArrayBuffer::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp
     return true;
 }
 
+JSBool
+ArrayBuffer::fun_slice(JSContext *cx, uintN argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool ok;
+    JSObject *obj = NonGenericMethodGuard(cx, args, fun_slice, &ArrayBufferClass, &ok);
+    if (!obj)
+        return ok;
+
+    JSObject *arrayBuffer = getArrayBuffer(obj);
+    if (!arrayBuffer)
+        return true;
+
+    // these are the default values
+    int32_t length = int32_t(arrayBuffer->arrayBufferByteLength());
+    int32_t begin = 0, end = length;
+
+    if (args.length() > 0) {
+        if (!ToClampedIndex(cx, args[0], length, &begin))
+            return false;
+
+        if (args.length() > 1) {
+            if (!ToClampedIndex(cx, args[1], length, &end))
+                return false;
+        }
+    }
+
+    if (begin > end)
+        begin = end;
+
+    JSObject *nobj = createSlice(cx, arrayBuffer, begin, end);
+    if (!nobj)
+        return false;
+    args.rval().setObject(*nobj);
+    return true;
+}
+
 /*
  * new ArrayBuffer(byteLength)
  */
@@ -158,7 +215,7 @@ ArrayBuffer::class_constructor(JSContext *cx, uintN argc, Value *vp)
 }
 
 bool
-JSObject::allocateArrayBufferSlots(JSContext *cx, uint32_t size)
+JSObject::allocateArrayBufferSlots(JSContext *cx, uint32_t size, uint8_t *contents)
 {
     /*
      * ArrayBuffer objects delegate added properties to another JSObject, so
@@ -174,18 +231,27 @@ JSObject::allocateArrayBufferSlots(JSContext *cx, uint32_t size)
         if (!newheader)
             return false;
         elements = newheader->elements();
+        if (contents)
+            memcpy(elements, contents, size);
     } else {
         elements = fixedElements();
-        memset(fixedSlots(), 0, size + sizeof(ObjectElements));
+        if (contents)
+            memcpy(elements, contents, size);
+        else
+            memset(elements, 0, size);
     }
-    getElementsHeader()->length = size;
+
+    ObjectElements *header = getElementsHeader();
 
     /*
      * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
      * |capacity * sizeof(Value)| may underestimate the size by up to
      * |sizeof(Value) - 1| bytes.
      */
-    getElementsHeader()->capacity = size / sizeof(Value);
+    header->capacity = size / sizeof(Value);
+    header->initializedLength = 0;
+    header->length = size;
+    header->unused = 0;
 
     return true;
 }
@@ -202,7 +268,7 @@ DelegateObject(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-ArrayBuffer::create(JSContext *cx, int32_t nbytes)
+ArrayBuffer::create(JSContext *cx, int32_t nbytes, uint8_t *contents)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::slowClass);
     if (!obj)
@@ -232,10 +298,23 @@ ArrayBuffer::create(JSContext *cx, int32_t nbytes)
      * The first 8 bytes hold the length.
      * The rest of it is a flat data store for the array buffer.
      */
-    if (!obj->allocateArrayBufferSlots(cx, nbytes))
+    if (!obj->allocateArrayBufferSlots(cx, nbytes, contents))
         return NULL;
 
     return obj;
+}
+
+JSObject *
+ArrayBuffer::createSlice(JSContext *cx, JSObject *arrayBuffer, uint32_t begin, uint32_t end)
+{
+    JS_ASSERT(arrayBuffer->isArrayBuffer());
+    JS_ASSERT(begin <= arrayBuffer->arrayBufferByteLength());
+    JS_ASSERT(end <= arrayBuffer->arrayBufferByteLength());
+
+    JS_ASSERT(begin <= end);
+    uint32_t length = end - begin;
+
+    return create(cx, length, arrayBuffer->arrayBufferDataOffset() + begin);
 }
 
 ArrayBuffer::~ArrayBuffer()
@@ -471,6 +550,10 @@ ArrayBuffer::obj_setGeneric(JSContext *cx, JSObject *obj, jsid id, Value *vp, JS
         if (delegate->getProto() != oldDelegateProto) {
             // actual __proto__ was set and not a plain property called
             // __proto__
+            if (!obj->isExtensible()) {
+                obj->reportNotExtensible(cx);
+                return false;
+            }
             if (!SetProto(cx, obj, vp->toObjectOrNull(), true)) {
                 // this can be caused for example by setting x.__proto__ = x
                 // restore delegate prototype chain
@@ -1462,7 +1545,7 @@ class TypedArrayTemplate
         int32_t length = -1;
 
         if (argc > 1) {
-            if (!NonstandardToInt32(cx, argv[1], &byteOffset))
+            if (!ToInt32(cx, argv[1], &byteOffset))
                 return NULL;
             if (byteOffset < 0) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1471,7 +1554,7 @@ class TypedArrayTemplate
             }
 
             if (argc > 2) {
-                if (!NonstandardToInt32(cx, argv[2], &length))
+                if (!ToInt32(cx, argv[2], &length))
                     return NULL;
                 if (length < 0) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1505,26 +1588,12 @@ class TypedArrayTemplate
         int32_t length = int32_t(getLength(tarray));
 
         if (args.length() > 0) {
-            if (!NonstandardToInt32(cx, args[0], &begin))
+            if (!ToClampedIndex(cx, args[0], length, &begin))
                 return false;
-            if (begin < 0) {
-                begin += length;
-                if (begin < 0)
-                    begin = 0;
-            } else if (begin > length) {
-                begin = length;
-            }
 
             if (args.length() > 1) {
-                if (!NonstandardToInt32(cx, args[1], &end))
+                if (!ToClampedIndex(cx, args[1], length, &end))
                     return false;
-                if (end < 0) {
-                    end += length;
-                    if (end < 0)
-                        end = 0;
-                } else if (end > length) {
-                    end = length;
-                }
             }
         }
 
@@ -1557,7 +1626,7 @@ class TypedArrayTemplate
         int32_t off = 0;
 
         if (args.length() > 1) {
-            if (!NonstandardToInt32(cx, args[1], &off))
+            if (!ToInt32(cx, args[1], &off))
                 return false;
 
             if (off < 0 || uint32_t(off) > getLength(tarray)) {
@@ -2173,6 +2242,11 @@ JSPropertySpec ArrayBuffer::jsprops[] = {
     {0,0,0,0,0}
 };
 
+JSFunctionSpec ArrayBuffer::jsfuncs[] = {
+    JS_FN("slice", ArrayBuffer::fun_slice, 2, JSFUN_GENERIC_NATIVE),
+    JS_FS_END
+};
+
 /*
  * shared TypedArray
  */
@@ -2366,7 +2440,7 @@ InitArrayBufferClass(JSContext *cx, GlobalObject *global)
     if (!LinkConstructorAndPrototype(cx, ctor, arrayBufferProto))
         return NULL;
 
-    if (!DefinePropertiesAndBrand(cx, arrayBufferProto, ArrayBuffer::jsprops, NULL))
+    if (!DefinePropertiesAndBrand(cx, arrayBufferProto, ArrayBuffer::jsprops, ArrayBuffer::jsfuncs))
         return NULL;
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_ArrayBuffer, ctor, arrayBufferProto))

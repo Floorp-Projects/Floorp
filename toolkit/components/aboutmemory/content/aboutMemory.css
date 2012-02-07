@@ -35,6 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+body.verbose {
+  /* override setting in about.css */
+  max-width: 100% !important;
+}
+
+body.non-verbose pre.tree {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+.sectionHeader {
+  background: #ddd;
+  padding-left: .1em;
+}
+
+.accuracyWarning {
+  color: #f00;
+}
+
+.treeLine {
+  color: #888;
+}
+
 .mrValue {
   font-weight: bold;
   color: #400;
@@ -43,20 +66,23 @@
 .mrPerc {
 }
 
+.mrSep {
+}
+
 .mrName {
   color: #004;
 }
 
-.hasDesc:hover {
-  text-decoration: underline;
-}
-
-.mrStar {
+.mrNote {
   color: #604;
 }
 
-.treeLine {
-  color: #888;
+.hasKids {
+  cursor: pointer;
+}
+
+.hasKids:hover {
+  text-decoration: underline;
 }
 
 .option {
@@ -69,22 +95,12 @@
   -moz-user-select: none;  /* no need to include this when cutting+pasting */
 }
 
-body.verbose {
-  /* override setting in about.css */
-  max-width: 100% !important;
-}
-
-h2.tree {
-  cursor: pointer;
-  background: #ddd;
-  padding-left: .1em;
-}
-
-body.non-verbose pre.tree {
-  overflow-x: hidden;
-  text-overflow: ellipsis;
-}
-
-pre.collapsed {
+.hidden {
   display: none;
 }
+
+.invalid {
+  color: #fff;
+  background-color: #f00;
+}
+

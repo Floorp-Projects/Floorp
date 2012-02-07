@@ -223,6 +223,8 @@ void JS_FASTCALL ArrayShift(VMFrame &f);
 void JS_FASTCALL WriteBarrier(VMFrame &f, Value *addr);
 void JS_FASTCALL GCThingWriteBarrier(VMFrame &f, Value *addr);
 
+void JS_FASTCALL CrossChunkShim(VMFrame &f, void *edge);
+
 } /* namespace stubs */
 
 /* 

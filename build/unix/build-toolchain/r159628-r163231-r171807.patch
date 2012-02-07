@@ -1,0 +1,98 @@
+diff -ru gcc-4.5.2/libstdc++-v3/include/bits/stl_pair.h gcc-4.5.2-new/libstdc++-v3/include/bits/stl_pair.h
+--- gcc-4.5.2/libstdc++-v3/include/bits/stl_pair.h	2010-06-10 06:26:14.000000000 -0400
++++ gcc-4.5.2-new/libstdc++-v3/include/bits/stl_pair.h	2011-11-29 10:25:51.203597393 -0500
+@@ -88,6 +88,8 @@
+       : first(__a), second(__b) { }
+ 
+ #ifdef __GXX_EXPERIMENTAL_CXX0X__
++      pair(const pair&) = default;
++
+       // DR 811.
+       template<class _U1, class = typename
+ 	       std::enable_if<std::is_convertible<_U1, _T1>::value>::type>
+@@ -131,6 +133,15 @@
+ 
+       template<class _U1, class _U2>
+         pair&
++        operator=(const pair<_U1, _U2>& __p)
++	{
++	  first = __p.first;
++	  second = __p.second;
++	  return *this;
++	}
++
++      template<class _U1, class _U2>
++        pair&
+         operator=(pair<_U1, _U2>&& __p)
+ 	{
+ 	  first = std::move(__p.first);
+diff -ru gcc-4.5.2/libstdc++-v3/include/bits/stl_queue.h gcc-4.5.2-new/libstdc++-v3/include/bits/stl_queue.h
+--- gcc-4.5.2/libstdc++-v3/include/bits/stl_queue.h	2010-02-04 13:20:34.000000000 -0500
++++ gcc-4.5.2-new/libstdc++-v3/include/bits/stl_queue.h	2011-11-29 10:26:22.511695475 -0500
+@@ -1,6 +1,6 @@
+ // Queue implementation -*- C++ -*-
+ 
+-// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
++// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+ // Free Software Foundation, Inc.
+ //
+ // This file is part of the GNU ISO C++ Library.  This library is free
+@@ -137,16 +137,6 @@
+       explicit
+       queue(_Sequence&& __c = _Sequence())
+       : c(std::move(__c)) { }
+-
+-      queue(queue&& __q)
+-      : c(std::move(__q.c)) { }
+-
+-      queue&
+-      operator=(queue&& __q)
+-      {
+-	c = std::move(__q.c);
+-	return *this;
+-      }
+ #endif
+ 
+       /**
+@@ -451,17 +441,6 @@
+ 	  c.insert(c.end(), __first, __last);
+ 	  std::make_heap(c.begin(), c.end(), comp);
+ 	}
+-
+-      priority_queue(priority_queue&& __pq)
+-      : c(std::move(__pq.c)), comp(std::move(__pq.comp)) { }
+-
+-      priority_queue&
+-      operator=(priority_queue&& __pq)
+-      {
+-	c = std::move(__pq.c);
+-	comp = std::move(__pq.comp);
+-	return *this;
+-      }
+ #endif
+ 
+       /**
+diff -ru gcc-4.5.2/libstdc++-v3/libsupc++/exception_ptr.h gcc-4.5.2-new/libstdc++-v3/libsupc++/exception_ptr.h
+--- gcc-4.5.2/libstdc++-v3/libsupc++/exception_ptr.h	2009-11-09 17:09:30.000000000 -0500
++++ gcc-4.5.2-new/libstdc++-v3/libsupc++/exception_ptr.h	2011-11-29 10:26:10.878659023 -0500
+@@ -129,7 +129,7 @@
+       operator==(const exception_ptr&, const exception_ptr&) throw() 
+       __attribute__ ((__pure__));
+ 
+-      const type_info*
++      const class type_info*
+       __cxa_exception_type() const throw() __attribute__ ((__pure__));
+     };
+ 
+diff -ru gcc-4.5.2/libstdc++-v3/libsupc++/nested_exception.h gcc-4.5.2-new/libstdc++-v3/libsupc++/nested_exception.h
+--- gcc-4.5.2/libstdc++-v3/libsupc++/nested_exception.h	2010-02-18 12:20:16.000000000 -0500
++++ gcc-4.5.2-new/libstdc++-v3/libsupc++/nested_exception.h	2011-11-29 10:26:10.879659026 -0500
+@@ -119,7 +119,7 @@
+   // with a type that has an accessible nested_exception base.
+   template<typename _Ex>
+     inline void
+-    __throw_with_nested(_Ex&& __ex, const nested_exception* = 0)
++    __throw_with_nested(_Ex&& __ex, const nested_exception*)
+     { throw __ex; }
+ 
+   template<typename _Ex>

@@ -1174,7 +1174,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub,
         ic.stubEntry = stubEntry;
         ic.stub = stub;
 
-        bool useIC = !a->parent;
+        bool useIC = !a->parent && bytecodeInChunk(target);
 
         /* Call the IC stub, which may generate a fast path. */
         if (useIC) {

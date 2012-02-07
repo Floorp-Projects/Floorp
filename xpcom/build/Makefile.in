@@ -69,6 +69,10 @@ CPPSRCS = \
   FileLocation.cpp \
   $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += perfprobe.cpp
+endif
+
 SHARED_LIBRARY_LIBS = \
 		$(DEPTH)/chrome/src/$(LIB_PREFIX)chrome_s.$(LIB_SUFFIX) \
 		../ds/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
@@ -99,8 +103,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../io \
 		-I$(srcdir)/../components \
 		-I$(srcdir)/../threads \
-		-I$(srcdir)/../threads/_xpidlgen \
-		-I$(srcdir)/../proxy/src \
 		-I$(srcdir)/../reflect/xptinfo/src \
 		-I$(topsrcdir)/chrome/src \
 		-I$(srcdir)/../../docshell/base \
@@ -126,6 +128,10 @@ EXPORTS_mozilla = \
   Omnijar.h \
   FileLocation.h \
   $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+EXPORTS_mozilla += perfprobe.h
+endif
 
 
 GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(XPCOM_GLUENS_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))

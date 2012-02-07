@@ -80,13 +80,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return uri.buildUpon().appendQueryParameter(BrowserContract.PARAM_PROFILE, mProfile).build();
     }
 
-    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter) {
+    private Cursor filterAllSites(ContentResolver cr, String[] projection, CharSequence constraint, int limit, CharSequence urlFilter) {
         Cursor c = cr.query(appendProfileAndLimit(History.CONTENT_URI, limit),
-                            new String[] { History._ID,
-                                           History.URL,
-                                           History.TITLE,
-                                           History.FAVICON,
-                                           History.THUMBNAIL },
+                            projection,
                             (urlFilter != null ? "(" + History.URL + " NOT LIKE ? ) AND " : "" ) + 
                             "(" + History.URL + " LIKE ? OR " + History.TITLE + " LIKE ?)",
                             urlFilter == null ? new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%"} :
@@ -98,6 +94,28 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                             History.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000 + 120) DESC");
 
         return new LocalDBCursor(c);
+    }
+
+    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
+        return filterAllSites(cr,
+                              new String[] { History._ID,
+                                             History.URL,
+                                             History.TITLE,
+                                             History.FAVICON },
+                              constraint,
+                              limit,
+                              null);
+    }
+
+    public Cursor getTopSites(ContentResolver cr, int limit) {
+        return filterAllSites(cr,
+                              new String[] { History._ID,
+                                             History.URL,
+                                             History.TITLE,
+                                             History.THUMBNAIL },
+                              "",
+                              limit,
+                              BrowserDB.ABOUT_PAGES_URL_FILTER);
     }
 
     private void truncateHistory(ContentResolver cr) {
@@ -182,9 +200,31 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { uri });
     }
 
-    public void updateHistoryDate(ContentResolver cr, String uri, long date) {
+    public void updateHistoryEntry(ContentResolver cr, String uri, String title,
+                                   long date, int visits) {
+        int oldVisits = 0;
+        Cursor cursor = null;
+        try {
+            cursor = cr.query(appendProfile(History.CONTENT_URI),
+                              new String[] { History.VISITS },
+                              History.URL + " = ?",
+                              new String[] { uri },
+                              null);
+
+            if (cursor.moveToFirst()) {
+                oldVisits = cursor.getInt(0);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+
         ContentValues values = new ContentValues();
         values.put(History.DATE_LAST_VISITED, date);
+        values.put(History.VISITS, oldVisits + visits);
+        if (title != null) {
+            values.put(History.TITLE, title);
+        }
 
         cr.update(appendProfile(History.CONTENT_URI),
                   values,
@@ -208,12 +248,17 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                            History.URL,
                                            History.TITLE,
                                            History.FAVICON,
-                                           History.DATE_LAST_VISITED },
+                                           History.DATE_LAST_VISITED,
+                                           History.VISITS },
                             History.DATE_LAST_VISITED + " > 0",
                             null,
                             History.DATE_LAST_VISITED + " DESC");
 
         return new LocalDBCursor(c);
+    }
+
+    public int getMaxHistoryCount() {
+        return MAX_HISTORY_COUNT;
     }
 
     public void clearHistory(ContentResolver cr) {
@@ -367,6 +412,26 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             cr.insert(appendProfile(Images.CONTENT_URI), values);
     }
 
+    public byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
+        Cursor c = cr.query(appendProfile(Images.CONTENT_URI),
+                            new String[] { Images.THUMBNAIL },
+                            Images.URL + " = ?",
+                            new String[] { uri },
+                            null);
+
+        if (!c.moveToFirst()) {
+            c.close();
+            return null;
+        }
+
+        int thumbnailIndex = c.getColumnIndexOrThrow(Images.THUMBNAIL);
+
+        byte[] b = c.getBlob(thumbnailIndex);
+        c.close();
+
+        return b;
+    }
+
     private static class LocalDBCursor extends CursorWrapper {
         public LocalDBCursor(Cursor c) {
             super(c);
@@ -383,6 +448,8 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                 columnName = ImageColumns.THUMBNAIL;
             } else if (columnName.equals(BrowserDB.URLColumns.DATE_LAST_VISITED)) {
                 columnName = History.DATE_LAST_VISITED;
+            } else if (columnName.equals(BrowserDB.URLColumns.VISITS)) {
+                columnName = History.VISITS;
             }
 
             return columnName;

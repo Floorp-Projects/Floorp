@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=715308
+-->
+<head>
+  <title>Test for Bug 715308 comment 93</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<!-- Test for Bug 715308 comment 93:
+
+  - For a valid image, onload is fired and onerror is never fired.
+  - For an image with errors, onerror is fired, but onload is never fired.
+  - For any image, either onload or onerror is fired, but never both.
+
+ -->
+<script type="text/javascript;version=1.8">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+var numCallbacks = 0;
+
+function image_error(name)
+{
+  numCallbacks++;
+  ok(name == 'error-early', "Got onerror for " + name);
+}
+
+function image_load(name)
+{
+  numCallbacks++;
+  ok(name == 'shaver', "Got onload for " + name);
+}
+
+function page_load()
+{
+  ok(numCallbacks == 2, 'Got page load before all onload/onerror callbacks?');
+
+  // Spin the event loop a few times to let image_error run if it's going to,
+  // then finish the test.
+  SimpleTest.executeSoon(function() {
+    SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+        SimpleTest.finish();
+      });
+    });
+  });
+}
+
+addEventListener('load', page_load);
+
+</script>
+
+<div id="content">
+  <img src='shaver.png' onerror='image_error("shaver")' onload='image_load("shaver")'>
+  <img src='error-early.png' onerror='image_error("error-early")' onload='image_load("error-early")'>
+</div>
+
+</pre>
+</body>
+</html>
+

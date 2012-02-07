@@ -335,7 +335,7 @@ public:
 
   // Called as data arrives on the stream and is read into the cache.  Called
   // on the main thread only.
-  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) = 0;
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset) = 0;
 
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.
@@ -366,7 +366,7 @@ public:
 
   // Sets the length of the framebuffer used in MozAudioAvailable events.
   // The new size must be between 512 and 16384.
-  nsresult RequestFrameBufferLength(PRUint32 aLength);
+  virtual nsresult RequestFrameBufferLength(PRUint32 aLength);
 
   // Moves any existing channel loads into the background, so that they don't
   // block the load event. This is called when we stop delaying the load

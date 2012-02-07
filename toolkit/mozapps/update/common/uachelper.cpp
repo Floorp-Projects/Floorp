@@ -48,9 +48,13 @@ LPCTSTR UACHelper::PrivsToDisable[] = {
   SE_ASSIGNPRIMARYTOKEN_NAME,
   SE_AUDIT_NAME,
   SE_BACKUP_NAME,
-  // From testing ReadDirectoryChanges still succeeds even with a low
-  // integrity process with the following privilege disabled.
-  SE_CHANGE_NOTIFY_NAME,
+  // CreateProcess will succeed but the app will fail to launch on some WinXP 
+  // machines if SE_CHANGE_NOTIFY_NAME is disabled.  In particular this happens
+  // for limited user accounts on those machines.  The define is kept here as a
+  // reminder that it should never be re-added.  
+  // This permission is for directory watching but also from MSDN: "This
+  // privilege also causes the system to skip all traversal access checks."
+  // SE_CHANGE_NOTIFY_NAME,
   SE_CREATE_GLOBAL_NAME,
   SE_CREATE_PAGEFILE_NAME,
   SE_CREATE_PERMANENT_NAME,

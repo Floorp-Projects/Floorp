@@ -46,7 +46,6 @@
 #include "mozilla/Util.h"
 
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsapi.h"
 #include "jsarray.h"
@@ -1095,9 +1094,10 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          * to recover its callee object.
          */
         JSInlinedSite *inlined;
-        fp->prev()->pcQuadratic(cx->stack, fp, &inlined);
+        jsbytecode *prevpc = fp->prev()->pcQuadratic(cx->stack, fp, &inlined);
         if (inlined) {
-            JSFunction *fun = fp->prev()->jit()->inlineFrames()[inlined->inlineIndex].fun;
+            mjit::JITChunk *chunk = fp->prev()->jit()->chunk(prevpc);
+            JSFunction *fun = chunk->inlineFrames()[inlined->inlineIndex].fun;
             fun->script()->uninlineable = true;
             MarkTypeObjectFlags(cx, fun, OBJECT_FLAG_UNINLINEABLE);
         }
@@ -1446,7 +1446,7 @@ JSFunction::trace(JSTracer *trc)
     }
 
     if (atom)
-        MarkAtom(trc, atom, "atom");
+        MarkStringUnbarriered(trc, atom, "atom");
 
     if (isInterpreted()) {
         if (script())
@@ -1467,6 +1467,14 @@ fun_finalize(JSContext *cx, JSObject *obj)
 {
     if (obj->toFunction()->isFlatClosure())
         obj->toFunction()->finalizeUpvars();
+}
+
+size_t
+JSFunction::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
+{
+    return (isFlatClosure() && hasFlatClosureUpvars()) ?
+           mallocSizeOf(getFlatClosureUpvars()) :
+           0;
 }
 
 /*

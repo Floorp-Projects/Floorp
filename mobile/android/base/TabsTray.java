@@ -38,19 +38,17 @@
 package org.mozilla.gecko;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Build;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -62,7 +60,10 @@ import android.widget.TextView;
 
 public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener {
 
-    private ListView mList;
+    private static int sPreferredHeight;
+    private static int sMaxHeight;
+    private static int sListItemHeight;
+    private static ListView mList;
     private TabsAdapter mTabsAdapter;
     private boolean mWaitingForClose;
 
@@ -95,8 +96,14 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             }
         });
 
-        Tabs.getInstance().refreshThumbnails();
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        sPreferredHeight = (int) (0.67 * metrics.heightPixels);
+        sListItemHeight = (int) (100 * metrics.density); 
+        sMaxHeight = (int) (sPreferredHeight + (0.33 * sListItemHeight));
+
         GeckoApp.registerOnTabsChangedListener(this);
+        Tabs.getInstance().refreshThumbnails();
         onTabsChanged(null);
     }
 
@@ -112,8 +119,13 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         // Scrolling to the selected tab can happen here
         if (hasFocus) {
             int position = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
-            if (position != -1) 
+            if (position == -1)
+                return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
                 mList.smoothScrollToPosition(position);
+            } else {
+                /* To Do: Find a way to scroll with Eclair's APIs */
+            }
         }
     } 
    
@@ -144,6 +156,29 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     void finishActivity() {
         finish();
         overridePendingTransition(0, R.anim.shrink_fade_out);
+        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Screenshot:Cancel",""));
+    }
+
+    // Tabs List Container holds the ListView and the New Tab button
+    public static class TabsListContainer extends LinearLayout {
+        public TabsListContainer(Context context, AttributeSet attrs) {
+            super(context, attrs);
+        }
+
+        @Override
+        protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
+            super.onSizeChanged(width, height, oldWidth, oldHeight);
+
+            if ((height > sPreferredHeight) && (height != sMaxHeight)) {
+                setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                                              sPreferredHeight));
+
+                // If the list ends perfectly on an item, increase the height of the container 
+                if (mList.getHeight() % sListItemHeight == 0)
+                    setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                                                  sMaxHeight));
+            }
+        }
     }
 
     // Adapter to bind tabs into a list 
@@ -162,7 +197,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             
             mOnInfoClickListener = new View.OnClickListener() {
                 public void onClick(View v) {
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", v.getTag().toString()));
+                    Tabs.getInstance().selectTab(Integer.parseInt((String) v.getTag()));
                     finishActivity();
                 }
             };
@@ -182,17 +217,14 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             };
         }
 
-        @Override    
         public int getCount() {
             return mTabs.size();
         }
     
-        @Override    
         public Tab getItem(int position) {
             return mTabs.get(position);
         }
 
-        @Override    
         public long getItemId(int position) {
             return position;
         }
@@ -223,7 +255,6 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             title.setText(tab.getDisplayTitle());
         }
 
-        @Override    
         public View getView(int position, View convertView, ViewGroup parent) {
             convertView = mInflater.inflate(R.layout.tabs_row, null);
 

@@ -216,6 +216,16 @@ interface nsIMemoryMultiReporterCallback : nsISupports
 [scriptable, uuid(61d498d5-b460-4398-a8ea-7f75208534b4)]
 interface nsIMemoryMultiReporter : nsISupports
 {
+  /*
+   * The name of the multi-reporter.  Useful when only one multi-reporter
+   * needs to be run.  Must be unique;  if multi-reporters share names it's
+   * likely the wrong one will be called in certain circumstances.
+   */
+  readonly attribute ACString name;
+
+  /*
+   * Run the multi-reporter.
+   */
   void collectReports(in nsIMemoryMultiReporterCallback callback,
                       in nsISupports closure);
 
@@ -232,7 +242,7 @@ interface nsIMemoryMultiReporter : nsISupports
   readonly attribute PRInt64 explicitNonHeap;
 };
 
-[scriptable, uuid(84ba9c85-3372-4423-b7ab-74708b9269a6)]
+[scriptable, uuid(4527b1d8-a81f-4af3-9623-80e4120392c7)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -293,6 +303,11 @@ interface nsIMemoryReporterManager : nsISupports
    * to compute in JS.  -1 means unknown.
    */
   readonly attribute PRInt64 explicit;
+
+  /*
+   * This attribute indicates if moz_malloc_usable_size() works.
+   */
+  readonly attribute boolean hasMozMallocUsableSize;
 };
 
 %{C++
@@ -301,7 +316,7 @@ interface nsIMemoryReporterManager : nsISupports
  * Note that this defaults 'process' to "", which is usually what's desired.
  */
 #define NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
-    class MemoryReporter_##_classname : public nsIMemoryReporter {                            \
+    class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
     public:                                                                                   \
       NS_DECL_ISUPPORTS                                                                       \
       NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; } \
@@ -340,13 +355,8 @@ namespace mozilla {
 
 /*
  * Functions generated via this macro should be used by all traversal-based
- * memory reporters.
- *
- * - On platforms where moz_malloc_usable_size(ptr) returns 0 it just returns
- *   |computedSize|.  This happens on platforms where malloc_usable_size() or
- *   equivalent isn't available.
- *
- * - Otherwise, it returns |moz_malloc_usable_size(ptr)|.
+ * memory reporters.  Such functions return |moz_malloc_size_of(ptr)|;  this
+ * will always be zero on some obscure platforms.
  *
  * You might be wondering why we have a macro that creates multiple functions
  * distinguished only by |name|, instead of a single MemoryReporterMallocSizeOf
@@ -356,12 +366,9 @@ namespace mozilla {
  * the relevant memory reporter(s).
  */
 #define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(fn, name)                        \
-  size_t fn(const void *ptr, size_t computedSize)                             \
+  static size_t fn(const void *ptr)                                           \
   {                                                                           \
-      size_t usable = moz_malloc_usable_size((void*)ptr);                     \
-      if (!usable) {                                                          \
-          return computedSize;                                                \
-      }                                                                       \
+      size_t usable = moz_malloc_size_of(ptr);                                \
       VALGRIND_DMD_REPORT(ptr, usable, name);                                 \
       return usable;                                                          \
   }
@@ -371,12 +378,9 @@ namespace mozilla {
  * "unreport" message to DMD.
  */
 #define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN_UN(fn)                           \
-  size_t fn(const void *ptr, size_t computedSize)                             \
+  static size_t fn(const void *ptr)                                           \
   {                                                                           \
-      size_t usable = moz_malloc_usable_size((void*)ptr);                     \
-      if (!usable) {                                                          \
-          return computedSize;                                                \
-      }                                                                       \
+      size_t usable = moz_malloc_size_of(ptr);                                \
       VALGRIND_DMD_UNREPORT(ptr);                                             \
       return usable;                                                          \
   }

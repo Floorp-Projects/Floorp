@@ -1,5 +1,8 @@
 const Cm = Components.manager;
 
+const TEST_CLUSTER_URL = "http://localhost:8080/";
+const TEST_SERVER_URL  = "http://localhost:8080/";
+
 // Shared logging for all HTTP server functions.
 Cu.import("resource://services-sync/log4moz.js");
 const SYNC_HTTP_LOGGER = "Sync.Test.Server";

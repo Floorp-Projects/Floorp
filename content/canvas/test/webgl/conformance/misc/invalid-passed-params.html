@@ -137,7 +137,10 @@ var program = context.createProgram();
 context.attachShader(program, vShader);
 context.attachShader(program, fShader);
 context.linkProgram(program);
-shouldBeTrue("context.getProgramParameter(program, context.LINK_STATUS)");
+var linkStatus = context.getProgramParameter(program, context.LINK_STATUS);
+shouldBeTrue("linkStatus");
+if (!linkStatus)
+  debug(context.getProgramInfoLog(program));
 shouldBe("context.getError()", "context.NO_ERROR");
 context.bindAttribLocation(program, 1, validAttribName);
 shouldBe("context.getError()", "context.NO_ERROR");

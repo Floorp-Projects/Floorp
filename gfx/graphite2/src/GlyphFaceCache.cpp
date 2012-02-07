@@ -24,10 +24,10 @@ Mozilla Public License (http://mozilla.org/MPL) or the GNU General Public
 License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
-#include "GlyphFaceCache.h"
+#include "inc/GlyphFaceCache.h"
 #include "graphite2/Font.h"
-#include "Face.h"     //for the tags
-#include "Endian.h"
+#include "inc/Face.h"     //for the tags
+#include "inc/Endian.h"
 
 using namespace graphite2;
 
@@ -50,13 +50,13 @@ using namespace graphite2;
 		size_t lGloc;
 		if ((m_pGloc = face.getTable(Tag::Gloc, &lGloc)) == NULL) return false;
 		if (lGloc < 6) return false;
-		int version = be::peek<uint32>(m_pGloc);
+		int version = be::read<uint32>(m_pGloc);
 		if (version != 0x00010000) return false;
 
-		m_numAttrs = be::swap<uint16>(((uint16 *)m_pGloc)[3]);
+		const uint16 locFlags = be::read<uint16>(m_pGloc);
+		m_numAttrs = be::read<uint16>(m_pGloc);
 		if (m_numAttrs > 0x1000) return false;                  // is this hard limit appropriate?
 
-		unsigned short locFlags = be::swap<uint16>(((uint16 *)m_pGloc)[2]);
 		if (locFlags & 1)
 		{
 			m_locFlagsUse32Bit = true;

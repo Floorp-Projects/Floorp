@@ -80,6 +80,8 @@ const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
 const kIsWin = (navigator.platform.indexOf("Win") == 0);
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 
+const kLFLen = kIsWin ? 2 : 1;
+
 function checkQueryContentResult(aResult, aMessage)
 {
   ok(aResult, aMessage + ": the result is null");
@@ -1819,8 +1821,6 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
 
   aFocusedEditor.focus();
 
-  const kLFLen = kIsWin ? 2 : 1;
-
   const kNone = -1;
   const kTestingOffset   = [     0, 10,    20, 21 + kLFLen, 34 + kLFLen];
   const kLeftSideOffset  = [ kNone,  9,    19,       kNone, 33 + kLFLen];
@@ -1921,6 +1921,49 @@ function runCharAtPointAtOutsideTest()
         "runCharAtPointAtOutsideTest: charAtPt")) {
     ok(charAtPt.notFound,
        "runCharAtPointAtOutsideTest: charAtPt is found on outside of editor");
+  }
+}
+
+function runBug722639Test()
+{
+  textarea.focus();
+  textarea.value = "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+  textarea.value += textarea.value;
+  textarea.value += textarea.value; // 80 characters
+
+  var firstLine = synthesizeQueryTextRect(0, 1);
+  if (!checkQueryContentResult(firstLine,
+        "runBug722639Test: firstLine")) {
+    return;
+  }
+  var secondLine = synthesizeQueryTextRect(kLFLen, 1);
+  if (!checkQueryContentResult(secondLine,
+        "runBug722639Test: secondLine")) {
+    return;
+  }
+  var lineHeight = secondLine.top -  firstLine.top;
+  ok(lineHeight > 0,
+     "runBug722639Test: lineHeight must be positive");
+  is(secondLine.left, firstLine.left,
+     "runBug722639Test: the left value must be always same value");
+  var previousTop = secondLine.top;
+  for (var i = 2; i < textarea.value.length; i++) {
+    var currentLine = synthesizeQueryTextRect(kLFLen * i, 1);
+    if (!checkQueryContentResult(currentLine,
+           "runBug722639Test: " + i + "th currentLine")) {
+      return;
+    }
+    // NOTE: the top position may be 1px larger or smaller than other lines
+    //       due to sub pixel positioning.
+    if (Math.abs(currentLine.top - (previousTop + lineHeight)) <= 1) {
+      ok(true, "runBug722639Test: " + i + "th line's top is expected");
+    } else {
+      is(currentLine.top, previousTop + lineHeight,
+         "runBug722639Test: " + i + "th line's top is unexpected");
+    }
+    is(currentLine.left, firstLine.left,
+       "runBug722639Test: " + i + "th line's left is unexpected");
+    previousTop = currentLine.top;
   }
 }
 
@@ -2408,6 +2451,7 @@ function runTest()
   runCompositionEventTest();
   runCharAtPointTest(textarea, "textarea in the document");
   runCharAtPointAtOutsideTest();
+  runBug722639Test();
   runFrameTest();
   runPanelTest();
   runMaxLengthTest();

@@ -21,21 +21,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
 <script type="application/javascript">
 
 /** Test for Bug 166235 **/
+  var Cc = SpecialPowers.wrap(Components).classes;
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var webnav = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                     .getInterface(Components.interfaces.nsIWebNavigation)
+  var webnav = SpecialPowers.wrap(window).QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                         .getInterface(Components.interfaces.nsIWebNavigation)
 
   var docShell = webnav.QueryInterface(Components.interfaces.nsIDocShell);
 
   var documentViewer = docShell.contentViewer
                                .QueryInterface(Components.interfaces.nsIContentViewerEdit);
 
-  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
-                            .getService(Components.interfaces.nsIClipboard);
+  var clipboard = Cc["@mozilla.org/widget/clipboard;1"]
+                    .getService(Components.interfaces.nsIClipboard);
 
-  var textarea = document.getElementById('input');
+  var textarea = SpecialPowers.wrap(document).getElementById('input');
 
   function copyChildrenToClipboard(id) {
     textarea.blur();
@@ -47,11 +46,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
     is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
   }
   function getClipboardData(mime) {
-    var transferable = Components.classes['@mozilla.org/widget/transferable;1']
-                                 .createInstance(Components.interfaces.nsITransferable);
+    var transferable = Cc['@mozilla.org/widget/transferable;1']
+                         .createInstance(Components.interfaces.nsITransferable);
     transferable.addDataFlavor(mime);
     clipboard.getData(transferable, 1);
-    var data = {};
+    var data = SpecialPowers.wrap({});
     transferable.getTransferData(mime, data, {}) ;
     return data;
   }

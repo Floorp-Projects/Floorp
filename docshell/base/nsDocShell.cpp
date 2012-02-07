@@ -90,7 +90,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsDocumentCharsetInfoCID.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
 #include "nsICategoryManager.h"
@@ -224,6 +223,7 @@
 
 #include "nsDOMNavigationTiming.h"
 #include "nsITimedChannel.h"
+#include "mozilla/StartupTimeline.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -749,16 +749,18 @@ nsDocShell::nsDocShell():
     mIsActive(true),
     mIsAppTab(false),
     mUseGlobalHistory(false),
+    mInPrivateBrowsing(false),
     mFiredUnloadEvent(false),
     mEODForCurrentDocument(false),
     mURIResultedInDocument(false),
     mIsBeingDestroyed(false),
     mIsExecutingOnLoadHandler(false),
     mIsPrintingOrPP(false),
-    mSavingOldViewer(false)
+    mSavingOldViewer(false),
 #ifdef DEBUG
-    , mInEnsureScriptEnv(false)
+    mInEnsureScriptEnv(false),
 #endif
+    mParentCharsetSource(0)
 {
     mHistoryID = ++gDocshellIDCounter;
     if (gDocShellCount++ == 0) {
@@ -1223,6 +1225,11 @@ nsDocShell::LoadURI(nsIURI * aURI,
     PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);    
 
     NS_ENSURE_ARG(aURI);
+
+    if (!StartupTimeline::HasRecord(StartupTimeline::FIRST_LOAD_URI) &&
+        mItemType == typeContent && !NS_IsAboutBlank(aURI)) {
+        StartupTimeline::RecordOnce(StartupTimeline::FIRST_LOAD_URI);
+    }
 
     // Extract the info from the DocShellLoadInfo struct...
     if (aLoadInfo) {
@@ -1871,41 +1878,48 @@ nsDocShell::SetCharset(const char* aCharset)
     }
 
     // set the charset override
-    nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
-    GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
-    if (dcInfo) {
-      nsCOMPtr<nsIAtom> csAtom;
-      csAtom = do_GetAtom(aCharset);
-      dcInfo->SetForcedCharset(csAtom);
-    }
+    nsCOMPtr<nsIAtom> csAtom = do_GetAtom(aCharset);
+    SetForcedCharset(csAtom);
 
     return NS_OK;
 } 
 
-NS_IMETHODIMP
-nsDocShell::GetDocumentCharsetInfo(nsIDocumentCharsetInfo **
-                                   aDocumentCharsetInfo)
+NS_IMETHODIMP nsDocShell::SetForcedCharset(nsIAtom * aCharset)
 {
-    NS_ENSURE_ARG_POINTER(aDocumentCharsetInfo);
-
-    // if the mDocumentCharsetInfo does not exist already, we create it now
-    if (!mDocumentCharsetInfo) {
-        mDocumentCharsetInfo = do_CreateInstance(NS_DOCUMENTCHARSETINFO_CONTRACTID);
-        if (!mDocumentCharsetInfo)
-            return NS_ERROR_FAILURE;
-    }
-
-    *aDocumentCharsetInfo = mDocumentCharsetInfo;
-    NS_IF_ADDREF(*aDocumentCharsetInfo);
-    return NS_OK;
+  mForcedCharset = aCharset;
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetDocumentCharsetInfo(nsIDocumentCharsetInfo *
-                                   aDocumentCharsetInfo)
+NS_IMETHODIMP nsDocShell::GetForcedCharset(nsIAtom ** aResult)
 {
-    mDocumentCharsetInfo = aDocumentCharsetInfo;
-    return NS_OK;
+  *aResult = mForcedCharset;
+  if (mForcedCharset) NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetParentCharset(nsIAtom * aCharset)
+{
+  mParentCharset = aCharset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetParentCharset(nsIAtom ** aResult)
+{
+  *aResult = mParentCharset;
+  if (mParentCharset) NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetParentCharsetSource(PRInt32 aCharsetSource)
+{
+  mParentCharsetSource = aCharsetSource;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetParentCharsetSource(PRInt32 * aParentCharsetSource)
+{
+  *aParentCharsetSource = mParentCharsetSource;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1968,6 +1982,30 @@ NS_IMETHODIMP
 nsDocShell::SetAllowJavascript(bool aAllowJavascript)
 {
     mAllowJavascript = aAllowJavascript;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
+{
+    NS_ENSURE_ARG_POINTER(aUsePrivateBrowsing);
+    
+    *aUsePrivateBrowsing = mInPrivateBrowsing;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
+{
+    mInPrivateBrowsing = aUsePrivateBrowsing;
+
+    PRInt32 count = mChildList.Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsILoadContext> shell = do_QueryInterface(ChildAt(i));
+        if (shell) {
+            shell->SetUsePrivateBrowsing(aUsePrivateBrowsing);
+        }
+    }
     return NS_OK;
 }
 
@@ -2595,10 +2633,10 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
 
     // If parent is another docshell, we inherit all their flags for
     // allowing plugins, scripting etc.
+    bool value;
     nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(parent));
     if (parentAsDocShell)
     {
-        bool value;
         if (NS_SUCCEEDED(parentAsDocShell->GetAllowPlugins(&value)))
         {
             SetAllowPlugins(value);
@@ -2631,6 +2669,12 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
             value = false;
         }
         SetAllowDNSPrefetch(value);
+    }
+    nsCOMPtr<nsILoadContext> parentAsLoadContext(do_QueryInterface(parent));
+    if (parentAsLoadContext &&
+        NS_SUCCEEDED(parentAsLoadContext->GetUsePrivateBrowsing(&value)))
+    {
+        SetUsePrivateBrowsing(value);
     }
 
     nsCOMPtr<nsIURIContentListener> parentURIListener(do_GetInterface(parent));
@@ -3178,9 +3222,9 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
 
     // charset, style-disabling, and zoom will be inherited in SetupNewViewer()
 
-    // Now take this document's charset and set the parentCharset field of the 
-    // child's DocumentCharsetInfo to it. We'll later use that field, in the 
-    // loading process, for the charset choosing algorithm.
+    // Now take this document's charset and set the child's parentCharset field
+    // to it. We'll later use that field, in the loading process, for the
+    // charset choosing algorithm.
     // If we fail, at any point, we just return NS_OK.
     // This code has some performance impact. But this will be reduced when 
     // the current charset will finally be stored as an Atom, avoiding the
@@ -3188,12 +3232,6 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
 
     // we are NOT going to propagate the charset is this Chrome's docshell
     if (mItemType == nsIDocShellTreeItem::typeChrome)
-        return NS_OK;
-
-    // get the child's docCSInfo object
-    nsCOMPtr<nsIDocumentCharsetInfo> dcInfo = NULL;
-    res = childAsDocShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
-    if (NS_FAILED(res) || (!dcInfo))
         return NS_OK;
 
     // get the parent's current charset
@@ -3219,14 +3257,14 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
 
         // set the child's parentCharset
         nsCOMPtr<nsIAtom> parentCSAtom(do_GetAtom(parentCS));
-        res = dcInfo->SetParentCharset(parentCSAtom);
+        res = childAsDocShell->SetParentCharset(parentCSAtom);
         if (NS_FAILED(res))
             return NS_OK;
 
         PRInt32 charsetSource = doc->GetDocumentCharacterSetSource();
 
         // set the child's parentCharset
-        res = dcInfo->SetParentCharsetSource(charsetSource);
+        res = childAsDocShell->SetParentCharsetSource(charsetSource);
         if (NS_FAILED(res))
             return NS_OK;
     }
@@ -7210,7 +7248,8 @@ nsDocShell::RestoreFromHistory()
 
         // this.AddChild(child) calls child.SetDocLoaderParent(this), meaning
         // that the child inherits our state. Among other things, this means
-        // that the child inherits our mIsActive, which is what we want.
+        // that the child inherits our mIsActive and mInPrivateBrowsing, which
+        // is what we want.
         AddChild(childItem);
 
         childShell->SetAllowPlugins(allowPlugins);
@@ -8637,9 +8676,11 @@ nsIPrincipal*
 nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
 {
     nsCOMPtr<nsIDocument> document;
+    bool inheritedFromCurrent = false;
 
     if (aConsiderCurrentDocument && mContentViewer) {
         document = mContentViewer->GetDocument();
+        inheritedFromCurrent = true;
     }
 
     if (!document) {
@@ -8667,7 +8708,17 @@ nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
 
     //-- Get the document's principal
     if (document) {
-        return document->NodePrincipal();
+        nsIPrincipal *docPrincipal = document->NodePrincipal();
+
+        // Don't allow loads in typeContent docShells to inherit the system
+        // principal from existing documents.
+        if (inheritedFromCurrent &&
+            mItemType == typeContent &&
+            nsContentUtils::IsSystemPrincipal(docPrincipal)) {
+            return nsnull;
+        }
+
+        return docPrincipal;
     }
 
     return nsnull;

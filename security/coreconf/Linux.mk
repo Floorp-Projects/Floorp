@@ -176,6 +176,7 @@ CPU_TAG = _$(CPU_ARCH)
 ifeq (2.6,$(firstword $(sort 2.6 $(OS_RELEASE))))
 ifndef FREEBL_NO_DEPEND
 FREEBL_NO_DEPEND = 1
+FREEBL_LOWHASH = 1
 endif
 endif
 

@@ -1,8 +1,7 @@
 diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/SkGradientShader.cpp
 --- a/gfx/skia/src/effects/SkGradientShader.cpp
 +++ b/gfx/skia/src/effects/SkGradientShader.cpp
-@@ -1170,117 +1170,18 @@ public:
-           fRadius(radius)
+@@ -1184,116 +1184,17 @@ public:
      {
          // make sure our table is insync with our current #define for kSQRT_TABLE_SIZE
          SkASSERT(sizeof(gSqrt8Table) == kSQRT_TABLE_SIZE);
@@ -10,8 +9,8 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
          rad_to_unit_matrix(center, radius, &fPtsToUnit);
      }
  
--    virtual void shadeSpan(int x, int y, SkPMColor* SK_RESTRICT dstC, int count);
--    virtual void shadeSpan16(int x, int y, uint16_t* SK_RESTRICT dstC, int count) {
+     virtual void shadeSpan(int x, int y, SkPMColor* dstC, int count) SK_OVERRIDE;
+-    virtual void shadeSpan16(int x, int y, uint16_t* SK_RESTRICT dstC, int count) SK_OVERRIDE {
 -        SkASSERT(count > 0);
 -
 -        SkPoint             srcPt;
@@ -111,17 +110,16 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
 -            } while (--count != 0);
 -        }
 -    }
-+    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
-+    virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
++    virtual void shadeSpan16(int x, int y, uint16_t* dstC, int count) SK_OVERRIDE;
  
      virtual BitmapType asABitmap(SkBitmap* bitmap,
                                   SkMatrix* matrix,
                                   TileMode* xy,
-                                  SkScalar* twoPointRadialParams) const {
+                                  SkScalar* twoPointRadialParams) const SK_OVERRIDE {
          if (bitmap) {
              this->commonAsABitmap(bitmap);
          }
-@@ -1494,16 +1395,117 @@ void Radial_Gradient::shadeSpan(int x, i
+@@ -1507,16 +1408,117 @@ void Radial_Gradient::shadeSpan(int x, i
              unsigned fi = proc(SkScalarToFixed(srcPt.length()));
              SkASSERT(fi <= 0xFFFF);
              *dstC++ = cache[fi >> (16 - kCache32Bits)];
@@ -239,7 +237,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
     For each point (x, y) in the span, we want to find the
     interpolated circle that intersects that point.  The center
     of the desired circle (Cx, Cy) falls at some distance t
-@@ -1648,109 +1650,17 @@ public:
+@@ -1661,109 +1663,17 @@ public:
              info->fPoint[0] = fCenter1;
              info->fPoint[1] = fCenter2;
              info->fRadius[0] = fRadius1;
@@ -248,7 +246,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
          return kRadial2_GradientType;
      }
  
--    virtual void shadeSpan(int x, int y, SkPMColor* SK_RESTRICT dstC, int count) {
+-    virtual void shadeSpan(int x, int y, SkPMColor* SK_RESTRICT dstC, int count) SK_OVERRIDE {
 -        SkASSERT(count > 0);
 -
 -        // Zero difference between radii:  fill with transparent black.
@@ -341,16 +339,16 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
 -            }
 -        }
 -    }
-+    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
++    virtual void shadeSpan(int x, int y, SkPMColor* dstC, int count) SK_OVERRIDE;
  
      virtual bool setContext(const SkBitmap& device,
                              const SkPaint& paint,
-                             const SkMatrix& matrix) {
+                             const SkMatrix& matrix) SK_OVERRIDE {
          if (!this->INHERITED::setContext(device, paint, matrix)) {
              return false;
          }
  
-@@ -1804,16 +1714,110 @@ private:
+@@ -1817,16 +1727,110 @@ private:
          fA = SkScalarSquare(fDiff.fX) + SkScalarSquare(fDiff.fY) - SK_Scalar1;
          fOneOverTwoA = fA ? SkScalarInvert(fA * 2) : 0;
  
@@ -379,7 +377,7 @@ diff --git a/gfx/skia/src/effects/SkGradientShader.cpp b/gfx/skia/src/effects/Sk
 +    if (fDstToIndexClass != kPerspective_MatrixClass) {
 +        SkPoint srcPt;
 +        dstProc(fDstToIndex, SkIntToScalar(x) + SK_ScalarHalf,
-+                                 SkIntToScalar(y) + SK_ScalarHalf, &srcPt);
++                             SkIntToScalar(y) + SK_ScalarHalf, &srcPt);
 +        SkScalar dx, fx = srcPt.fX;
 +        SkScalar dy, fy = srcPt.fY;
 +

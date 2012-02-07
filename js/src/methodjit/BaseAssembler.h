@@ -784,11 +784,23 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
     Jump guardArrayExtent(int offset, RegisterID reg,
                           const Int32Key &key, Condition cond) {
         Address extent(reg, offset);
-        if (key.isConstant()) {
-            JS_ASSERT(key.index() >= 0);
+        if (key.isConstant())
             return branch32(cond, extent, Imm32(key.index()));
-        }
         return branch32(cond, extent, key.reg());
+    }
+
+    Jump guardElementNotHole(RegisterID elements, const Int32Key &key) {
+        Jump jmp;
+
+        if (key.isConstant()) {
+            Address slot(elements, key.index() * sizeof(Value));
+            jmp = guardNotHole(slot);
+        } else {
+            BaseIndex slot(elements, key.reg(), JSVAL_SCALE);
+            jmp = guardNotHole(slot);
+        }
+
+        return jmp;
     }
 
     // Load a jsval from an array slot, given a key. |objReg| is clobbered.

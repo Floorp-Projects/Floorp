@@ -59,6 +59,23 @@ const UPDATE_STYLESHEET_THROTTLE_DELAY = 500;
 // @see StyleEditor._persistExpando
 const STYLESHEET_EXPANDO = "-moz-styleeditor-stylesheet-";
 
+const TRANSITIONS_PREF = "devtools.styleeditor.transitions";
+
+const TRANSITION_CLASS = "moz-styleeditor-transitioning";
+const TRANSITION_DURATION_MS = 500;
+const TRANSITION_RULE = "\
+:root.moz-styleeditor-transitioning, :root.moz-styleeditor-transitioning * {\
+-moz-transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
+-moz-transition-delay: 0ms !important;\
+-moz-transition-timing-function: ease-out !important;\
+-moz-transition-property: all !important;\
+}";
+
+/**
+ * Style Editor module-global preferences
+ */
+const TRANSITIONS_ENABLED = Services.prefs.getBoolPref(TRANSITIONS_PREF);
+
 
 /**
  * StyleEditor constructor.
@@ -107,6 +124,9 @@ function StyleEditor(aDocument, aStyleSheet)
 
   // this is to perform pending updates before editor closing
   this._onWindowUnloadBinding = this._onWindowUnload.bind(this);
+
+  this._transitionRefCount = 0;
+
   this._focusOnSourceEditorReady = false;
 }
 
@@ -209,6 +229,8 @@ StyleEditor.prototype = {
     };
 
     sourceEditor.init(aElement, config, function onSourceEditorReady() {
+      setupBracketCompletion(sourceEditor);
+
       sourceEditor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
                                     function onTextChanged(aEvent) {
         this.updateStyleSheet();
@@ -336,7 +358,6 @@ StyleEditor.prototype = {
   load: function SE_load()
   {
     if (!this._styleSheet) {
-      this._flags.push(StyleEditorFlags.NEW);
       this._appendNewStyleSheet();
     }
     this._loadSource();
@@ -405,8 +426,13 @@ StyleEditor.prototype = {
    *                           Arguments: (StyleEditor editor)
    *                           @see inputElement
    *
-   *   onCommit:               Called when changes have been committed/applied
-   *                           to the live DOM style sheet.
+   *   onUpdate:               Called when changes are being applied to the live
+   *                           DOM style sheet but might not be complete from
+   *                           a WYSIWYG perspective (eg. transitioned update).
+   *                           Arguments: (StyleEditor editor)
+   *
+   *   onCommit:               Called when changes have been completely committed
+   *                           /applied to the live DOM style sheet.
    *                           Arguments: (StyleEditor editor)
    * }
    *
@@ -640,14 +666,49 @@ StyleEditor.prototype = {
     let source = this._state.text;
     let oldNode = this.styleSheet.ownerNode;
     let oldIndex = this.styleSheetIndex;
-
-    let newNode = this.contentDocument.createElement("style");
+    let content = this.contentDocument;
+    let newNode = content.createElement("style");
     newNode.setAttribute("type", "text/css");
-    newNode.appendChild(this.contentDocument.createTextNode(source));
+    newNode.appendChild(content.createTextNode(source));
     oldNode.parentNode.replaceChild(newNode, oldNode);
 
-    this._styleSheet = this.contentDocument.styleSheets[oldIndex];
+    this._styleSheet = content.styleSheets[oldIndex];
     this._persistExpando();
+
+    if (!TRANSITIONS_ENABLED) {
+      this._triggerAction("Update");
+      this._triggerAction("Commit");
+      return;
+    }
+
+    // Insert the global transition rule
+    // Use a ref count to make sure we do not add it multiple times.. and remove
+    // it only when all pending StyleEditor-generated transitions ended.
+    if (!this._transitionRefCount) {
+      this._styleSheet.insertRule(TRANSITION_RULE, 0);
+      content.documentElement.classList.add(TRANSITION_CLASS);
+    }
+
+    this._transitionRefCount++;
+
+    // Set up clean up and commit after transition duration (+10% buffer)
+    // @see _onTransitionEnd
+    content.defaultView.setTimeout(this._onTransitionEnd.bind(this),
+                                   Math.floor(TRANSITION_DURATION_MS * 1.1));
+
+    this._triggerAction("Update");
+  },
+
+  /**
+    * This cleans up class and rule added for transition effect and then trigger
+    * Commit as the changes have been completed.
+    */
+  _onTransitionEnd: function SE__onTransitionEnd()
+  {
+    if (--this._transitionRefCount == 0) {
+      this.contentDocument.documentElement.classList.remove(TRANSITION_CLASS);
+      this.styleSheet.deleteRule(0);
+    }
 
     this._triggerAction("Commit");
   },
@@ -806,9 +867,12 @@ StyleEditor.prototype = {
     parent.appendChild(style);
 
     this._styleSheet = document.styleSheets[document.styleSheets.length - 1];
-    this._flags.push(aText ? StyleEditorFlags.IMPORTED : StyleEditorFlags.NEW);
     if (aText) {
       this._onSourceLoad(aText);
+      this._flags.push(StyleEditorFlags.IMPORTED);
+    } else {
+      this._flags.push(StyleEditorFlags.NEW);
+      this._flags.push(StyleEditorFlags.UNSAVED);
     }
   },
 
@@ -1071,4 +1135,49 @@ function prettifyCSS(aText)
 function repeat(aText, aCount)
 {
   return (new Array(aCount + 1)).join(aText);
+}
+
+/**
+ * Set up bracket completion on a given SourceEditor.
+ * This automatically closes the following CSS brackets: "{", "(", "["
+ *
+ * @param SourceEditor aSourceEditor
+ */
+function setupBracketCompletion(aSourceEditor)
+{
+  let editorElement = aSourceEditor.editorElement;
+  let pairs = {
+    123: { // {
+      closeString: "}",
+      closeKeyCode: Ci.nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET
+    },
+    40: { // (
+      closeString: ")",
+      closeKeyCode: Ci.nsIDOMKeyEvent.DOM_VK_0
+    },
+    91: { // [
+      closeString: "]",
+      closeKeyCode: Ci.nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET
+    },
+  };
+
+  editorElement.addEventListener("keypress", function onKeyPress(aEvent) {
+    let pair = pairs[aEvent.charCode];
+    if (!pair) {
+      return true;
+    }
+
+    // We detected an open bracket, sending closing character
+    let keyCode = pair.closeKeyCode;
+    let charCode = pair.closeString.charCodeAt(0);
+    let modifiers = 0;
+    let utils = editorElement.ownerDocument.defaultView.
+                  QueryInterface(Ci.nsIInterfaceRequestor).
+                  getInterface(Ci.nsIDOMWindowUtils);
+    let handled = utils.sendKeyEvent("keydown", keyCode, 0, modifiers);
+    utils.sendKeyEvent("keypress", 0, charCode, modifiers, !handled);
+    utils.sendKeyEvent("keyup", keyCode, 0, modifiers);
+    // and rewind caret
+    aSourceEditor.setCaretOffset(aSourceEditor.getCaretOffset() - 1);
+  }, false);
 }

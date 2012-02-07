@@ -51,9 +51,6 @@ XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
   return PluralForm;
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
-  "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
-
 XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
   "@mozilla.org/widget/hapticfeedback;1", "nsIHapticFeedback");
 
@@ -146,7 +143,8 @@ function resolveGeckoURI(aURI) {
 var Strings = {};
 [
   ["brand",      "chrome://branding/locale/brand.properties"],
-  ["browser",    "chrome://browser/locale/browser.properties"]
+  ["browser",    "chrome://browser/locale/browser.properties"],
+  ["charset",    "chrome://global/locale/charsetTitles.properties"]
 ].forEach(function (aStringBundle) {
   let [name, bundle] = aStringBundle;
   XPCOMUtils.defineLazyGetter(Strings, name, function() {
@@ -206,8 +204,8 @@ var BrowserApp = {
 
     Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
-    Services.obs.addObserver(this, "Tab:Select", false);
-    Services.obs.addObserver(this, "Tab:Close", false);
+    Services.obs.addObserver(this, "Tab:Selected", false);
+    Services.obs.addObserver(this, "Tab:Closed", false);
     Services.obs.addObserver(this, "Tab:Screenshot", false);
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
@@ -234,8 +232,16 @@ var BrowserApp = {
           type: window.fullScreen ? "ToggleChrome:Show" : "ToggleChrome:Hide"
         }
       });
+    }, false);
 
-      if (!window.fullScreen)
+    window.addEventListener("mozfullscreenchange", function() {
+      sendMessageToJava({
+        gecko: {
+          type: document.mozFullScreen ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
+        }
+      });
+
+      if (document.mozFullScreen)
         showFullScreenWarning();
     }, false);
 
@@ -252,6 +258,7 @@ var BrowserApp = {
     ConsoleAPI.init();
     ClipboardHelper.init();
     PermissionsHelper.init();
+    CharacterEncoding.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -259,12 +266,16 @@ var BrowserApp = {
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let url = "about:home";
-    let restoreSession = false;
+    let forceRestore = false;
     if ("arguments" in window) {
       if (window.arguments[0])
         url = window.arguments[0];
       if (window.arguments[1])
-        restoreSession = window.arguments[1];
+        forceRestore = window.arguments[1];
+      if (window.arguments[2])
+        gScreenWidth = window.arguments[2];
+      if (window.arguments[3])
+        gScreenHeight = window.arguments[3];
     }
 
     // XXX maybe we don't do this if the launch was kicked off from external
@@ -277,9 +288,15 @@ var BrowserApp = {
 
     // restore the previous session
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (restoreSession || ss.shouldRestore()) {
+    if (forceRestore || ss.shouldRestore()) {
       // A restored tab should not be active if we are loading a URL
       let restoreToFront = false;
+
+      sendMessageToJava({
+        gecko: {
+          type: "Session:RestoreBegin"
+        }
+      });
 
       // Open any commandline URLs, except the homepage
       if (url && url != "about:home") {
@@ -287,22 +304,32 @@ var BrowserApp = {
       } else {
         // Let the session make a restored tab active
         restoreToFront = true;
-
-        // Be ready to handle any restore failures by making sure we have a valid tab opened
-        let restoreCleanup = {
-          observe: function(aSubject, aTopic, aData) {
-            Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
-            if (aData == "fail")
-              BrowserApp.addTab("about:home");
-          }
-        };
-        Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
       }
 
+      // Be ready to handle any restore failures by making sure we have a valid tab opened
+      let restoreCleanup = {
+        observe: function(aSubject, aTopic, aData) {
+          Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
+          if (aData == "fail") {
+            BrowserApp.addTab("about:home", {
+              showProgress: false,
+              selected: restoreToFront
+            });
+          }
+
+          sendMessageToJava({
+            gecko: {
+              type: "Session:RestoreEnd"
+            }
+          });
+        }
+      };
+      Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+
       // Start the restore
-      ss.restoreLastSession(restoreToFront);
+      ss.restoreLastSession(restoreToFront, forceRestore);
     } else {
-      this.addTab(url);
+      this.addTab(url, { showProgress: url != "about:home" });
 
       // show telemetry door hanger if we aren't restoring a session
       this._showTelemetryPrompt();
@@ -312,6 +339,14 @@ var BrowserApp = {
     sendMessageToJava({
       gecko: {
         type: "Gecko:Ready"
+      }
+    });
+
+    // after gecko has loaded, set the checkerboarding pref once at startup (for testing only)
+    sendMessageToJava({
+      gecko: {
+        "type": "Checkerboard:Toggle",
+        "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
       }
     });
   },
@@ -353,6 +388,7 @@ var BrowserApp = {
     ViewportHandler.uninit();
     XPInstallObserver.uninit();
     ConsoleAPI.uninit();
+    CharacterEncoding.uninit();
   },
 
   get tabs() {
@@ -364,10 +400,14 @@ var BrowserApp = {
   },
 
   set selectedTab(aTab) {
+    if (this._selectedTab)
+      this._selectedTab.setActive(false);
+
     this._selectedTab = aTab;
     if (!aTab)
       return;
 
+    aTab.setActive(true);
     aTab.updateViewport(false);
     this.deck.selectedPanel = aTab.vbox;
   },
@@ -426,6 +466,12 @@ var BrowserApp = {
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
 
+    if ("showProgress" in aParams) {
+      let tab = this.getTabForBrowser(aBrowser);
+      if (tab)
+        tab.showProgress = aParams.showProgress;
+    }
+
     try {
       aBrowser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
     } catch(e) {
@@ -446,11 +492,14 @@ var BrowserApp = {
   },
 
   addTab: function addTab(aURI, aParams) {
-    aParams = aParams || { selected: true, flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE };
+    aParams = aParams || {};
+
     let newTab = new Tab(aURI, aParams);
     this._tabs.push(newTab);
-    if ("selected" in aParams && aParams.selected)
-      newTab.active = true;
+
+    let selected = "selected" in aParams ? aParams.selected : true;
+    if (selected)
+      this.selectedTab = newTab;
 
     let evt = document.createEvent("UIEvents");
     evt.initUIEvent("TabOpen", true, false, window, null);
@@ -459,7 +508,27 @@ var BrowserApp = {
     return newTab;
   },
 
+  // Use this method to close a tab from JS. This method sends a message
+  // to Java to close the tab in the Java UI (we'll get a Tab:Closed message
+  // back from Java when that happens).
   closeTab: function closeTab(aTab) {
+    if (!aTab) {
+      Cu.reportError("Error trying to close tab (tab doesn't exist)");
+      return;
+    }
+
+    let message = {
+      gecko: {
+        type: "Tab:Close",
+        tabID: aTab.id
+      }
+    };
+    sendMessageToJava(message);
+  },
+
+  // Calling this will update the state in BrowserApp after a tab has been
+  // closed in the Java UI.
+  _handleTabClosed: function _handleTabClosed(aTab) {
     if (aTab == this.selectedTab)
       this.selectedTab = null;
 
@@ -471,31 +540,70 @@ var BrowserApp = {
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
   },
 
+  screenshotQueue: null,
+
   screenshotTab: function screenshotTab(aData) {
-      let json = JSON.parse(aData);
-      let tab = this.getTabForId(parseInt(json.tabID));
-      let width = parseInt(json.width);
-      let height =  parseInt(json.height);
-      tab.screenshot(width, height);
+      if (this.screenshotQueue == null) {
+          this.screenShotQueue = [];
+          this.doScreenshotTab(aData);
+      } else {
+          this.screenshotQueue.push(aData);
+      }
   },
 
+  doNextScreenshot: function() {
+      if (this.screenshotQueue == null || this.screenshotQueue.length == 0) {
+          this.screenshotQueue = null;
+          return;
+      }
+      let data = this.screenshotQueue.pop();
+      if (data == null) {
+          this.screenshotQueue = null;
+          return;
+      }
+      this.doScreenshotTab(data);
+  },
+
+  doScreenshotTab: function doScreenshotTab(aData) {
+      let json = JSON.parse(aData);
+      let tab = this.getTabForId(parseInt(json.tabID));
+      tab.screenshot(json.source, json.destination);
+  },
+
+  // Use this method to select a tab from JS. This method sends a message
+  // to Java to select the tab in the Java UI (we'll get a Tab:Selected message
+  // back from Java when that happens).
   selectTab: function selectTab(aTab) {
-    if (aTab != null) {
-      this.selectedTab = aTab;
-      aTab.active = true;
-      let message = {
-        gecko: {
-          type: "Tab:Selected",
-          tabID: aTab.id
-        }
-      };
-
-      let evt = document.createEvent("UIEvents");
-      evt.initUIEvent("TabSelect", true, false, window, null);
-      aTab.browser.dispatchEvent(evt);
-
-      sendMessageToJava(message);
+    if (!aTab) {
+      Cu.reportError("Error trying to select tab (tab doesn't exist)");
+      return;
     }
+
+    let message = {
+      gecko: {
+        type: "Tab:Select",
+        tabID: aTab.id
+      }
+    };
+    sendMessageToJava(message);
+  },
+
+  // This method updates the state in BrowserApp after a tab has been selected
+  // in the Java UI.
+  _handleTabSelected: function _handleTabSelected(aTab) {
+    this.selectedTab = aTab;
+
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("TabSelect", true, false, window, null);
+    aTab.browser.dispatchEvent(evt);
+
+    let message = {
+      gecko: {
+        type: "Tab:Selected:Done",
+        tabID: aTab.id
+      }
+    };
+    sendMessageToJava(message);
   },
 
   quit: function quit() {
@@ -524,7 +632,7 @@ var BrowserApp = {
 
   saveAsPDF: function saveAsPDF(aBrowser) {
     // Create the final destination file location
-    let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.documentURI, null, null);
+    let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.currentURI, null, null);
     fileName = fileName.trim() + ".pdf";
 
     let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
@@ -556,7 +664,8 @@ var BrowserApp = {
     let ms = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
     let mimeInfo = ms.getFromTypeAndExtension("application/pdf", "pdf");
 
-    let webBrowserPrint = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
+    let webBrowserPrint = aBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                                .getInterface(Ci.nsIWebBrowserPrint);
 
     let cancelable = {
       cancel: function (aReason) {
@@ -610,7 +719,7 @@ var BrowserApp = {
             case Ci.nsIPrefBranch.PREF_STRING:
             default:
               pref.type = "string";
-              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsISupportsString).data;
+              pref.value = Services.prefs.getComplexValue(prefName, Ci.nsIPrefLocalizedString).data;
               break;
           }
         } catch (e) {
@@ -626,10 +735,6 @@ var BrowserApp = {
           case "network.cookie.cookieBehavior":
             pref.type = "bool";
             pref.value = pref.value == 0;
-            break;
-          case "browser.menu.showCharacterEncoding":
-            pref.type = "bool";
-            pref.value = pref.value == "true";
             break;
           case "font.size.inflation.minTwips":
             pref.type = "string";
@@ -672,10 +777,6 @@ var BrowserApp = {
         json.type = "int";
         json.value = (json.value ? 0 : 2);
         break;
-      case "browser.menu.showCharacterEncoding":
-        json.type = "string";
-        json.value = (json.value ? "true" : "false");
-        break;
       case "font.size.inflation.minTwips":
         json.type = "int";
         json.value = parseInt(json.value);
@@ -694,7 +795,7 @@ var BrowserApp = {
   },
 
   getSearchEngines: function() {
-    let engineData = Services.search.getEngines({});
+    let engineData = Services.search.getVisibleEngines({});
     let searchEngines = engineData.map(function (engine) {
       return {
         name: engine.name,
@@ -710,19 +811,12 @@ var BrowserApp = {
     });
   },
 
-  getSearchOrFixupURI: function(aParams) {
+  getSearchOrURI: function getSearchOrURI(aParams) {
     let uri;
     if (aParams.engine) {
-      let engine;
-      if (aParams.engine == "__default__")
-        engine = Services.search.currentEngine || Services.search.defaultEngine;
-      else
-        engine = Services.search.getEngineByName(aParams.engine);
-
+      let engine = Services.search.getEngineByName(aParams.engine);
       if (engine)
         uri = engine.getSubmission(aParams.url).uri;
-    } else {
-      uri = URIFixup.createFixupURI(aParams.url, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
     }
     return uri ? uri.spec : aParams.url;
   },
@@ -738,7 +832,7 @@ var BrowserApp = {
 
       // tell gecko to scroll the field into view. this will scroll any nested scrollable elements
       // as well as the browser's content window, and modify the scrollX and scrollY on the content window.
-      focused.scrollIntoView(true);
+      focused.scrollIntoView(false);
 
       // update userScrollPos so that we don't send a duplicate viewport update by triggering
       // our scroll listener
@@ -796,7 +890,22 @@ var BrowserApp = {
   },
 
   getDrawMetadata: function getDrawMetadata() {
-    return JSON.stringify(this.selectedTab.viewport);
+    let viewport = this.selectedTab.viewport;
+
+    // Sample the background color of the page and pass it along. (This is used to draw the
+    // checkerboard.)
+    try {
+      let browser = this.selectedBrowser;
+      if (browser) {
+        let { contentDocument, contentWindow } = browser;
+        let computedStyle = contentWindow.getComputedStyle(contentDocument.body);
+        viewport.backgroundColor = computedStyle.backgroundColor;
+      }
+    } catch (e) {
+      // Ignore. Catching and ignoring exceptions here ensures that Talos succeeds.
+    }
+
+    return JSON.stringify(viewport);
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -821,19 +930,27 @@ var BrowserApp = {
         selected: true,
         parentId: ("parentId" in data) ? data.parentId : -1,
         flags: Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER
+             | Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
       };
 
-      let url = this.getSearchOrFixupURI(data);
+      let url = this.getSearchOrURI(data);
+
+      // Don't show progress throbber for about:home
+      if (url == "about:home")
+        params.showProgress = false;
+
       if (aTopic == "Tab:Add")
         this.addTab(url, params);
       else
         this.loadURI(url, browser, params);
-    } else if (aTopic == "Tab:Select") {
-      this.selectTab(this.getTabForId(parseInt(aData)));
-    } else if (aTopic == "Tab:Close") {
-      this.closeTab(this.getTabForId(parseInt(aData)));
+    } else if (aTopic == "Tab:Selected") {
+      this._handleTabSelected(this.getTabForId(parseInt(aData)));
+    } else if (aTopic == "Tab:Closed") {
+      this._handleTabClosed(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Screenshot") {
       this.screenshotTab(aData);
+    } else if (aTopic == "Tab:Screenshot:Cancel") {
+      this.screenshotQueue = null;
     } else if (aTopic == "Browser:Quit") {
       this.quit();
     } else if (aTopic == "SaveAs:PDF") {
@@ -1044,7 +1161,7 @@ var NativeWindow = {
     },
 
     remove: function(aId) {
-      this.items[aId] = null;
+      delete this.items[aId];
     },
 
     SelectorContext: function(aSelector) {
@@ -1296,13 +1413,14 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.vbox = null;
   this.id = 0;
+  this.showProgress = true;
   this.create(aURL, aParams);
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
                      pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
   this.viewportExcess = { x: 0, y: 0 };
   this.documentIdForCurrentViewport = null;
   this.userScrollPos = { x: 0, y: 0 };
-  this._pluginsToPlay = [];
+  this._pluginCount = 0;
   this._pluginOverlayShowing = false;
 }
 
@@ -1311,14 +1429,14 @@ Tab.prototype = {
     if (this.browser)
       return;
 
-    aParams = aParams || { selected: true };
+    aParams = aParams || {};
 
     this.vbox = document.createElement("vbox");
     this.vbox.align = "start";
     BrowserApp.deck.appendChild(this.vbox);
 
     this.browser = document.createElement("browser");
-    this.browser.setAttribute("type", "content");
+    this.browser.setAttribute("type", "content-targetable");
     this.setBrowserSize(980, 480);
     this.browser.style.MozTransformOrigin = "0 0";
     this.vbox.appendChild(this.browser);
@@ -1339,7 +1457,8 @@ Tab.prototype = {
         parentId: ("parentId" in aParams) ? aParams.parentId : -1,
         external: ("external" in aParams) ? aParams.external : false,
         selected: ("selected" in aParams) ? aParams.selected : true,
-        title: aParams.title || ""
+        title: aParams.title || "",
+        delayLoad: aParams.delayLoad || false
       }
     };
     sendMessageToJava(message);
@@ -1366,6 +1485,9 @@ Tab.prototype = {
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
       let charset = "charset" in aParams ? aParams.charset : null;
+
+      // This determines whether or not we show the progress throbber in the urlbar
+      this.showProgress = "showProgress" in aParams ? aParams.showProgress : true;
 
       try {
         this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
@@ -1398,6 +1520,8 @@ Tab.prototype = {
     this.browser.removeEventListener("pagehide", this, true);
     this.browser.removeEventListener("pageshow", this, true);
 
+    Services.obs.removeObserver(this, "document-shown");
+
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
     let selectedPanel = BrowserApp.deck.selectedPanel;
@@ -1407,33 +1531,21 @@ Tab.prototype = {
     this.browser = null;
     this.vbox = null;
     this.documentIdForCurrentViewport = null;
-    let message = {
-      gecko: {
-        type: "Tab:Closed",
-        tabID: this.id
-      }
-    };
-
-    sendMessageToJava(message);
   },
 
-  set active(aActive) {
+  // This should be called to update the browser when the tab gets selected/unselected
+  setActive: function setActive(aActive) {
     if (!this.browser)
       return;
 
     if (aActive) {
       this.browser.setAttribute("type", "content-primary");
       this.browser.focus();
-      BrowserApp.selectedTab = this;
+      this.browser.docShellIsActive = true;
     } else {
-      this.browser.setAttribute("type", "content");
+      this.browser.setAttribute("type", "content-targetable");
+      this.browser.docShellIsActive = false;
     }
-  },
-
-  get active() {
-    if (!this.browser)
-      return false;
-    return this.browser.getAttribute("type") == "content-primary";
   },
 
   set viewport(aViewport) {
@@ -1478,24 +1590,31 @@ Tab.prototype = {
       this.updateTransform();
   },
 
-  screenshot: function(aWidth, aHeight) {
+  screenshot: function(aSrc, aDst) {
       if (!this.browser || !this.browser.contentWindow)
-          return;
+        return;
+
       let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      canvas.setAttribute("width", aWidth);  
-      canvas.setAttribute("height", aHeight);
+      canvas.setAttribute("width", aDst.width);  
+      canvas.setAttribute("height", aDst.height);
+      canvas.setAttribute("moz-opaque", "true");
+
       let ctx = canvas.getContext("2d");
-      ctx.drawWindow(this.browser.contentWindow, 0, 0, aWidth, aHeight, "rgb(255, 255, 255)");
+      let flags = ctx.DRAWWINDOW_DO_NOT_FLUSH;
+      ctx.drawWindow(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, "#fff", flags);
       let message = {
         gecko: {
           type: "Tab:ScreenshotData",
           tabID: this.id,
-          width: aWidth,
-          height: aHeight,
+          width: aDst.width,
+          height: aDst.height,
           data: canvas.toDataURL()
         }
       };
       sendMessageToJava(message);
+      Services.tm.mainThread.dispatch(function() {
+	  BrowserApp.doNextScreenshot()
+      }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   updateTransform: function() {
@@ -1526,10 +1645,20 @@ Tab.prototype = {
     let doc = this.browser.contentDocument;
     if (doc != null) {
       let pageWidth = this._viewport.width, pageHeight = this._viewport.height;
-      let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-      let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-      pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
-      pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
+      if (doc instanceof SVGDocument) {
+        let rect = doc.rootElement.getBoundingClientRect();
+        // we need to add rect.left and rect.top twice so that the SVG is drawn
+        // centered on the page; if we add it only once then the SVG will be
+        // on the bottom-right of the page and if we don't add it at all then
+        // we end up with a cropped SVG (see bug 712065)
+        pageWidth = Math.ceil(rect.left + rect.width + rect.left);
+        pageHeight = Math.ceil(rect.top + rect.height + rect.top);
+      } else {
+        let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+        let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+        pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
+        pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
+      }
 
       /* Transform the page width and height based on the zoom factor. */
       pageWidth *= this._viewport.zoom;
@@ -1549,9 +1678,12 @@ Tab.prototype = {
     return this._viewport;
   },
 
-  updateViewport: function(aReset) {
+  updateViewport: function(aReset, aZoomLevel) {
+    if (!aZoomLevel)
+      aZoomLevel = this.getDefaultZoomLevel();
+
     let win = this.browser.contentWindow;
-    let zoom = (aReset ? this.getDefaultZoomLevel() : this._viewport.zoom);
+    let zoom = (aReset ? aZoomLevel : this._viewport.zoom);
     let xpos = ((aReset && win) ? win.scrollX * zoom : this._viewport.x);
     let ypos = ((aReset && win) ? win.scrollY * zoom : this._viewport.y);
 
@@ -1605,8 +1737,10 @@ Tab.prototype = {
           }.bind(this), true);
         }
 
-        // Show a plugin doorhanger if there are no clickable overlays showing
-        if (this._pluginsToPlay.length && !this._pluginOverlayShowing)
+        // Show a plugin doorhanger if there are plugins on the page but no
+        // clickable overlays showing (this doesn't work on pages loaded after
+        // back/forward navigation - see bug 719875)
+        if (this._pluginCount && !this._pluginOverlayShowing)
           PluginHelper.showDoorHanger(this);
 
         break;
@@ -1661,7 +1795,7 @@ Tab.prototype = {
           gecko: {
             type: "DOMTitleChanged",
             tabID: this.id,
-            title: aEvent.target.title
+            title: aEvent.target.title.substring(0, 255)
           }
         });
         break;
@@ -1698,10 +1832,11 @@ Tab.prototype = {
       }
 
       case "PluginClickToPlay": {
-        let plugin = aEvent.target;
-        // Keep track of all the plugins on the current page
-        this._pluginsToPlay.push(plugin);
+        // Keep track of the number of plugins to know whether or not to show
+        // the hidden plugins doorhanger
+        this._pluginCount++;
 
+        let plugin = aEvent.target;
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
         if (!overlay)
           return;
@@ -1713,8 +1848,8 @@ Tab.prototype = {
           return;
         }
 
-        // Add click to play listener
-        plugin.addEventListener("click", (function(event) {
+        // Add click to play listener to the overlay
+        overlay.addEventListener("click", (function(event) {
           // Play all the plugin objects when the user clicks on one
           PluginHelper.playAllPlugins(this, event);
         }).bind(this), true);
@@ -1727,7 +1862,7 @@ Tab.prototype = {
         // Check to make sure it's top-level pagehide
         if (aEvent.target.defaultView == this.browser.contentWindow) {
           // Reset plugin state when we leave the page
-          this._pluginsToPlay = [];
+          this._pluginCount = 0;
           this._pluginOverlayShowing = false;
         }
         break;
@@ -1748,11 +1883,14 @@ Tab.prototype = {
           type: "Content:StateChange",
           tabID: this.id,
           uri: uri,
-          state: aStateFlags
+          state: aStateFlags,
+          showProgress: this.showProgress
         }
       };
-
       sendMessageToJava(message);
+
+      // Reset showProgress after state change
+      this.showProgress = true;
     }
   },
 
@@ -1926,7 +2064,23 @@ Tab.prototype = {
     let minScale = this.getPageZoomLevel(screenW);
     viewportH = Math.max(viewportH, screenH / minScale);
 
+    let oldBrowserWidth = parseInt(this.browser.style.width);
     this.setBrowserSize(viewportW, viewportH);
+
+    // Avoid having the scroll position jump around after device rotation.
+    let win = this.browser.contentWindow;
+    this.userScrollPos.x = win.scrollX;
+    this.userScrollPos.y = win.scrollY;
+
+    // If the browser width changes, we change the zoom proportionally. This ensures sensible
+    // behavior when rotating the device on pages with automatically-resizing viewports.
+
+    if (viewportW == oldBrowserWidth)
+      return;
+
+    let viewport = this.viewport;
+    let newZoom = oldBrowserWidth * viewport.zoom / viewportW;
+    this.updateViewport(true, newZoom);
   },
 
   getDefaultZoomLevel: function getDefaultZoomLevel() {
@@ -2003,6 +2157,7 @@ var BrowserEventHandler = {
     Services.obs.addObserver(this, "Gesture:CancelTouch", false);
     Services.obs.addObserver(this, "Gesture:DoubleTap", false);
     Services.obs.addObserver(this, "Gesture:Scroll", false);
+    Services.obs.addObserver(this, "dom-touch-listener-added", false);
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
   },
@@ -2033,8 +2188,12 @@ var BrowserEventHandler = {
       }
 
       // Scroll the scrollable element
-      this._scrollElementBy(this._scrollableElement, data.x, data.y);
-      sendMessageToJava({ gecko: { type: "Gesture:ScrollAck" } });
+      if (this._elementCanScroll(this._scrollableElement, data.x, data.y)) {
+        this._scrollElementBy(this._scrollableElement, data.x, data.y);
+        sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: true } });
+      } else {
+        sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: false } });
+      }
     } else if (aTopic == "Gesture:CancelTouch") {
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:ShowPress") {
@@ -2078,6 +2237,21 @@ var BrowserEventHandler = {
     } else if (aTopic == "Gesture:DoubleTap") {
       this._cancelTapHighlight();
       this.onDoubleTap(aData);
+    } else if (aTopic == "dom-touch-listener-added") {
+      let browser = BrowserApp.getBrowserForWindow(aSubject);
+      if (!browser)
+        return;
+
+      let tab = BrowserApp.getTabForBrowser(browser);
+      if (!tab)
+        return;
+
+      sendMessageToJava({
+        gecko: {
+          type: "Tab:HasTouchListener",
+          tabID: tab.id
+        }
+      });
     }
   },
  
@@ -2496,20 +2670,21 @@ const ElementTouchHelper = {
     }
     return result;
   },
+
   getBoundingContentRect: function(aElement) {
     if (!aElement)
       return {x: 0, y: 0, w: 0, h: 0};
-  
+
     let document = aElement.ownerDocument;
     while (document.defaultView.frameElement)
       document = document.defaultView.frameElement.ownerDocument;
-  
+
     let cwu = document.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     let scrollX = {}, scrollY = {};
     cwu.getScrollXY(false, scrollX, scrollY);
-  
+
     let r = aElement.getBoundingClientRect();
- 
+
     // step out of iframes and frames, offsetting scroll values
     for (let frame = aElement.ownerDocument.defaultView; frame.frameElement && frame != content; frame = frame.parent) {
       // adjust client coordinates' origin to be top left of iframe viewport
@@ -2520,14 +2695,10 @@ const ElementTouchHelper = {
       scrollY.value += rect.top + parseInt(top);
     }
 
-    var x = r.left + scrollX.value;
-    var y = r.top + scrollY.value;
-    var x2 = x + r.width;
-    var y2 = y + r.height;
-    return {x: x,
-            y: y,
-            w: x2 - x,
-            h: y2 - y};
+    return {x: r.left + scrollX.value,
+            y: r.top + scrollY.value,
+            w: r.width,
+            h: r.height };
   }
 };
 
@@ -2576,6 +2747,7 @@ var FormAssistant = {
   // Used to keep track of the element that corresponds to the current
   // autocomplete suggestions
   _currentInputElement: null,
+  _uiBusy: false,
 
   init: function() {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
@@ -2618,15 +2790,15 @@ var FormAssistant = {
         this._currentInputElement = currentElement;
         let suggestions = this._getAutocompleteSuggestions(currentElement.value, currentElement);
 
-        let rect = currentElement.getBoundingClientRect();
-        let zoom = BrowserApp.selectedTab.viewport.zoom;
+        let rect = ElementTouchHelper.getBoundingContentRect(currentElement);
+        let viewport = BrowserApp.selectedTab.viewport;
 
         sendMessageToJava({
           gecko: {
             type:  "FormAssist:AutoComplete",
             suggestions: suggestions,
-            rect: [rect.left, rect.top, rect.width, rect.height], 
-            zoom: zoom
+            rect: [rect.x - (viewport.x / viewport.zoom), rect.y - (viewport.y / viewport.zoom), rect.w, rect.h],
+            zoom: viewport.zoom
           }
         });
     }
@@ -2666,9 +2838,12 @@ var FormAssistant = {
   show: function(aList, aElement) {
     let data = JSON.parse(sendMessageToJava({ gecko: aList }));
     let selected = data.button;
+    if (selected == -1)
+        return;
+
     if (!(selected instanceof Array)) {
       let temp = [];
-      for (let i = 0;  i < aList.listitems.length; i++) {
+      for (let i = 0; i < aList.listitems.length; i++) {
         temp[i] = (i == selected);
       }
       selected = temp;
@@ -2680,13 +2855,20 @@ var FormAssistant = {
   },
 
   handleClick: function(aTarget) {
+    // if we're busy looking at a select we want to eat any clicks that
+    // come to us, but not to process them
+    if (this._uiBusy)
+        return true;
+
     let target = aTarget;
     while (target) {
-      if (this._isSelectElement(target)) {
+      if (this._isSelectElement(target) && !target.disabled) {
+        this._uiBusy = true;
         target.focus();
         let list = this.getListForElement(target);
         this.show(list, target);
         target = null;
+        this._uiBusy = false;
         return true;
       }
       if (target)
@@ -2732,13 +2914,17 @@ var FormAssistant = {
     }
 
     this.forOptions(aElement, function(aNode, aIndex) {
-      result.listitems[aIndex] = {
+      let item = {
         label: aNode.text || aNode.label,
         isGroup: this._isOptionGroupElement(aNode),
         inGroup: this._isOptionGroupElement(aNode.parentNode),
         disabled: aNode.disabled,
         id: aIndex
       }
+      if (item.inGroup)
+        item.disabled = item.disabled || aNode.parentNode.disabled;
+
+      result.listitems[aIndex] = item;
       result.selected[aIndex] = aNode.selected;
     });
     return result;
@@ -3554,22 +3740,40 @@ var PluginHelper = {
   },
 
   playAllPlugins: function(aTab, aEvent) {
-    let plugins = aTab._pluginsToPlay;
-    if (!plugins.length)
-      return;
-
     if (aEvent) {
       if (!aEvent.isTrusted)
         return;
       aEvent.preventDefault();
     }
 
-    for (let i = 0; i < plugins.length; i++) {
-      let objLoadingContent = plugins[i].QueryInterface(Ci.nsIObjectLoadingContent);
-      objLoadingContent.playPlugin();
+    this._findAndPlayAllPlugins(aTab.browser.contentWindow);
+  },
+
+  // Helper function that recurses through sub-frames to find all plugin objects
+  _findAndPlayAllPlugins: function _findAndPlayAllPlugins(aWindow) {
+    let embeds = aWindow.document.getElementsByTagName("embed");
+    for (let i = 0; i < embeds.length; i++) {
+      if (!embeds[i].hasAttribute("played"))
+        this._playPlugin(embeds[i]);
     }
-    // Clear _pluginsToPlay so we don't accidentally re-load them
-    aTab._pluginsToPlay = [];
+
+    let objects = aWindow.document.getElementsByTagName("object");
+    for (let i = 0; i < objects.length; i++) {
+      if (!objects[i].hasAttribute("played"))
+        this._playPlugin(objects[i]);
+    }
+
+    for (let i = 0; i < aWindow.frames.length; i++) {
+      this._findAndPlayAllPlugins(aWindow.frames[i]);
+    }
+  },
+
+  _playPlugin: function _playPlugin(aPlugin) {
+    let objLoadingContent = aPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    objLoadingContent.playPlugin();
+
+    // Set an attribute on the plugin object to avoid re-loading it
+    aPlugin.setAttribute("played", true);
   },
 
   getPluginPreference: function getPluginPreference() {
@@ -3773,7 +3977,7 @@ var PermissionsHelper = {
       Services.contentPrefs.removePref(aURI, aType + ".request.remember");
     }
   }
-}
+};
 
 var MasterPassword = {
   pref: "privacy.masterpassword.enabled",
@@ -3853,4 +4057,99 @@ var MasterPassword = {
       }
     });
   }
-}
+};
+
+var CharacterEncoding = {
+  _charsets: [],
+
+  init: function init() {
+    Services.obs.addObserver(this, "CharEncoding:Get", false);
+    Services.obs.addObserver(this, "CharEncoding:Set", false);
+    this.sendState();
+  },
+
+  uninit: function uninit() {
+    Services.obs.removeObserver(this, "CharEncoding:Get", false);
+    Services.obs.removeObserver(this, "CharEncoding:Set", false);
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "CharEncoding:Get":
+        this.getEncoding();
+        break;
+      case "CharEncoding:Set":
+        this.setEncoding(aData);
+        break;
+    }
+  },
+
+  sendState: function sendState() {
+    let showCharEncoding = "false";
+    try {
+      showCharEncoding = Services.prefs.getComplexValue("browser.menu.showCharacterEncoding", Ci.nsIPrefLocalizedString).data;
+    } catch (e) { /* Optional */ }
+
+    sendMessageToJava({
+      gecko: {
+        type: "CharEncoding:State",
+        visible: showCharEncoding
+      }
+    });
+  },
+
+  getEncoding: function getEncoding() {
+    function normalizeCharsetCode(charsetCode) {
+      return charsetCode.trim().toLowerCase();
+    }
+
+    function getTitle(charsetCode) {
+      let charsetTitle = charsetCode;
+      try {
+        charsetTitle = Strings.charset.GetStringFromName(charsetCode + ".title");
+      } catch (e) {
+        dump("error: title not found for " + charsetCode);
+      }
+      return charsetTitle;
+    }
+
+    if (!this._charsets.length) {
+      let charsets = Services.prefs.getComplexValue("intl.charsetmenu.browser.static", Ci.nsIPrefLocalizedString).data;
+      this._charsets = charsets.split(",").map(function (charset) {
+        return {
+          code: normalizeCharsetCode(charset),
+          title: getTitle(charset)
+        };
+      });
+    }
+
+    // if document charset is not in charset options, add it
+    let docCharset = normalizeCharsetCode(BrowserApp.selectedBrowser.contentDocument.characterSet);
+    let selected = 0;
+    let charsetCount = this._charsets.length;
+    for (; selected < charsetCount && this._charsets[selected].code != docCharset; selected++);
+    if (selected == charsetCount) {
+      this._charsets.push({
+        code: docCharset,
+        title: getTitle(docCharset)
+      });
+    }
+
+    sendMessageToJava({
+      gecko: {
+        type: "CharEncoding:Data",
+        charsets: this._charsets,
+        selected: selected
+      }
+    });
+  },
+
+  setEncoding: function setEncoding(aEncoding) {
+    let browser = BrowserApp.selectedBrowser;
+    let docCharset = browser.docShell.QueryInterface(Ci.nsIDocCharset);
+    docCharset.charset = aEncoding;
+    browser.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  },
+
+};
+

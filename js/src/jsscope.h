@@ -48,15 +48,13 @@
 #include <stdio.h>
 #endif
 
+#include "jsdhash.h"
+#include "jsobj.h"
+#include "jspropertytree.h"
 #include "jstypes.h"
 
-#include "jscntxt.h"
-#include "jsobj.h"
-#include "jsprvtd.h"
-#include "jspubtd.h"
-#include "jspropertytree.h"
-
 #include "js/HashTable.h"
+#include "gc/Root.h"
 #include "mozilla/Attributes.h"
 
 #ifdef _MSC_VER
@@ -179,8 +177,7 @@ struct PropertyTable {
      * heap-allocated) and its |entries| array.
      */
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        return mallocSizeOf(this, sizeof(PropertyTable)) +
-               mallocSizeOf(entries, sizeOfEntries(capacity()));
+        return mallocSizeOf(this) + mallocSizeOf(entries);
     }
 
     /* Whether we need to grow.  We want to do this if the load factor is >= 0.75 */
@@ -549,15 +546,12 @@ struct Shape : public js::gc::Cell
     bool hasTable() const { return base()->hasTable(); }
     js::PropertyTable &table() const { return base()->table(); }
 
-    size_t sizeOfPropertyTable(JSMallocSizeOfFun mallocSizeOf) const {
-        return hasTable() ? table().sizeOfIncludingThis(mallocSizeOf) : 0;
-    }
-
-    size_t sizeOfKids(JSMallocSizeOfFun mallocSizeOf) const {
-        JS_ASSERT(!inDictionary());
-        return kids.isHash()
-             ? kids.toHash()->sizeOfIncludingThis(mallocSizeOf)
-             : 0;
+    void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
+                             size_t *propTableSize, size_t *kidsSize) const {
+        *propTableSize = hasTable() ? table().sizeOfIncludingThis(mallocSizeOf) : 0;
+        *kidsSize = !inDictionary() && kids.isHash()
+                  ? kids.toHash()->sizeOfIncludingThis(mallocSizeOf)
+                  : 0;
     }
 
     bool isNative() const {

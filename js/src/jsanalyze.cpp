@@ -57,11 +57,11 @@ void
 PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     printf("#%u:", script->id());
-    LifoAlloc lifoAlloc(1024);
-    Sprinter sprinter;
-    INIT_SPRINTER(cx, &sprinter, &lifoAlloc, 0);
+    Sprinter sprinter(cx);
+    if (!sprinter.init())
+        return;
     js_Disassemble1(cx, script, pc, pc - script->code, true, &sprinter);
-    fprintf(stdout, "%s", sprinter.base);
+    fprintf(stdout, "%s", sprinter.string());
 }
 #endif
 
@@ -119,7 +119,7 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
 
     JSAtom *atom;
     if (JSOp(*pc) == JSOP_DEFFUN) {
-        JSFunction *fun = script->getFunction(js_GetIndexFromBytecode(script, pc, 0));
+        JSFunction *fun = script->getFunction(GET_UINT32_INDEX(pc));
         atom = fun->atom;
     } else {
         JS_ASSERT(JOF_TYPE(js_CodeSpec[*pc].format) == JOF_ATOM);
@@ -133,29 +133,6 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
         escapedSlots[ArgSlot(index)] = true;
     else if (kind == VARIABLE)
         escapedSlots[LocalSlot(script, index)] = true;
-}
-
-// return whether op bytecodes do not fallthrough (they may do a jump).
-static inline bool
-BytecodeNoFallThrough(JSOp op)
-{
-    switch (op) {
-      case JSOP_GOTO:
-      case JSOP_DEFAULT:
-      case JSOP_RETURN:
-      case JSOP_STOP:
-      case JSOP_RETRVAL:
-      case JSOP_THROW:
-      case JSOP_TABLESWITCH:
-      case JSOP_LOOKUPSWITCH:
-      case JSOP_FILTER:
-        return true;
-      case JSOP_GOSUB:
-        // these fall through indirectly, after executing a 'finally'.
-        return false;
-      default:
-        return false;
-    }
 }
 
 void
@@ -838,7 +815,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
                     jsbytecode *entrypc = script->code + entry;
 
-                    if (JSOp(*entrypc) == JSOP_GOTO)
+                    if (JSOp(*entrypc) == JSOP_GOTO || JSOp(*entrypc) == JSOP_FILTER)
                         loop->entry = entry + GET_JUMP_OFFSET(entrypc);
                     else
                         loop->entry = targetOffset;
@@ -846,6 +823,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                     /* Do-while loop at the start of the script. */
                     loop->entry = targetOffset;
                 }
+                JS_ASSERT(script->code[loop->entry] == JSOP_LOOPHEAD ||
+                          script->code[loop->entry] == JSOP_LOOPENTRY);
             } else {
                 for (unsigned i = 0; i < savedCount; i++) {
                     LifetimeVariable &var = *saved[i];
@@ -1342,29 +1321,16 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
         stackDepth += ndefs;
 
-        switch (op) {
-          case JSOP_SETARG:
-          case JSOP_SETLOCAL:
-          case JSOP_SETLOCALPOP:
-          case JSOP_DEFLOCALFUN:
-          case JSOP_DEFLOCALFUN_FC:
-          case JSOP_INCARG:
-          case JSOP_DECARG:
-          case JSOP_ARGINC:
-          case JSOP_ARGDEC:
-          case JSOP_INCLOCAL:
-          case JSOP_DECLOCAL:
-          case JSOP_LOCALINC:
-          case JSOP_LOCALDEC: {
+        if (BytecodeUpdatesSlot(op)) {
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (trackSlot(slot)) {
                 mergeBranchTarget(cx, values[slot], slot, branchTargets);
                 mergeExceptionTarget(cx, values[slot], slot, exceptionTargets);
                 values[slot].initWritten(slot, offset);
             }
-            break;
-          }
+        }
 
+        switch (op) {
           case JSOP_GETARG:
           case JSOP_GETLOCAL: {
             uint32_t slot = GetBytecodeSlot(script, pc);
@@ -1470,6 +1436,13 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             }
             break;
           }
+
+          case JSOP_THROW:
+          case JSOP_RETURN:
+          case JSOP_STOP:
+          case JSOP_RETRVAL:
+            mergeAllExceptionTargets(cx, values, exceptionTargets);
+            break;
 
           default:;
         }
@@ -1703,16 +1676,35 @@ ScriptAnalysis::mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint3
      * seen at exception handlers via exception paths.
      */
     for (unsigned i = 0; i < exceptionTargets.length(); i++) {
-        Vector<SlotValue> *pending = getCode(exceptionTargets[i]).pendingValues;
+        unsigned offset = exceptionTargets[i];
+        Vector<SlotValue> *pending = getCode(offset).pendingValues;
 
         bool duplicate = false;
         for (unsigned i = 0; i < pending->length(); i++) {
-            if ((*pending)[i].slot == slot && (*pending)[i].value == value)
+            if ((*pending)[i].slot == slot) {
                 duplicate = true;
+                SlotValue &v = (*pending)[i];
+                mergeValue(cx, offset, value, &v);
+                break;
+            }
         }
 
         if (!duplicate && !pending->append(SlotValue(slot, value)))
             setOOM(cx);
+    }
+}
+
+void
+ScriptAnalysis::mergeAllExceptionTargets(JSContext *cx, SSAValue *values,
+                                         const Vector<uint32_t> &exceptionTargets)
+{
+    for (unsigned i = 0; i < exceptionTargets.length(); i++) {
+        Vector<SlotValue> *pending = getCode(exceptionTargets[i]).pendingValues;
+        for (unsigned i = 0; i < pending->length(); i++) {
+            const SlotValue &v = (*pending)[i];
+            if (trackSlot(v.slot))
+                mergeExceptionTarget(cx, values[v.slot], v.slot, exceptionTargets);
+        }
     }
 }
 

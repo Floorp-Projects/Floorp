@@ -100,8 +100,8 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0x08f73284, 0x26e3, 0x4fa6, \
-  { 0xbf, 0x89, 0x83, 0x26, 0xf9, 0x2a, 0x94, 0xb3 } }
+{ 0x8f19a761, 0x0717, 0x4b3f, \
+  { 0x80, 0xc5, 0xed, 0x7e, 0x9c, 0xbc, 0x40, 0xb1 } }
 
 /**
  * The global object which keeps a script context for each supported script
@@ -162,6 +162,8 @@ public:
                                      nsEventStatus *aEventStatus) {
     return NS_HandleScriptError(this, aErrorEvent, aEventStatus);
   }
+
+  virtual bool IsBlackForCC() { return false; }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptGlobalObject,

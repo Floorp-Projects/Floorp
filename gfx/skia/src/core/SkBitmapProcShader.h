@@ -18,6 +18,7 @@ public:
     SkBitmapProcShader(const SkBitmap& src, TileMode tx, TileMode ty);
 
     // overrides from SkShader
+    virtual bool isOpaque() const SK_OVERRIDE;
     virtual bool setContext(const SkBitmap&, const SkPaint&, const SkMatrix&);
     virtual uint32_t getFlags() { return fFlags; }
     virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
@@ -36,6 +37,7 @@ public:
     // override from flattenable
     virtual bool toDumpString(SkString* str) const;
 
+    SK_DECLARE_FLATTENABLE_REGISTRAR()
 protected:
     SkBitmapProcShader(SkFlattenableReadBuffer& );
     virtual void flatten(SkFlattenableWriteBuffer& );

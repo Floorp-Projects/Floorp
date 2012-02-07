@@ -1360,10 +1360,7 @@ PR_LoadStaticLibrary(const char *name, const PRStaticLinkTable *slt)
 PR_IMPLEMENT(char *)
 PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
 {
-#if defined(USE_DLFCN) && !defined(ANDROID) \
-        && (defined(SOLARIS) || defined(FREEBSD) \
-        || defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
-        || defined(DARWIN))
+#if defined(USE_DLFCN) && defined(HAVE_DLADDR)
     Dl_info dli;
     char *result;
 

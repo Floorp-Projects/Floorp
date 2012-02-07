@@ -54,12 +54,11 @@
 #include "mozFlushType.h"
 #include "nsIDTD.h"
 
-class nsIParser;
+class nsParserBase;
 
-// 57b395ad-4276-408c-9f98-7044b5025c3d
 #define NS_ICONTENT_SINK_IID \
-{ 0x57b395ad, 0x4276, 0x408c, \
-  { 0x9f, 0x98, 0x70, 0x44, 0xb5, 0x02, 0x5c, 0x3d } }
+{ 0xcf9a7cbb, 0xfcbc, 0x4e13, \
+  { 0x8e, 0xf5, 0x18, 0xef, 0x2d, 0x3d, 0x58, 0x29 } }
 
 class nsIContentSink : public nsISupports {
 public:
@@ -123,7 +122,7 @@ public:
    * is that the content sink will drop the reference when it
    * gets the DidBuildModel notification i.e. when parsing is done.
    */
-  NS_IMETHOD SetParser(nsIParser* aParser)=0;
+  NS_IMETHOD SetParser(nsParserBase* aParser)=0;
 
   /**
    * Flush content so that the content model is in sync with the state
@@ -155,6 +154,10 @@ public:
     return false;
   }
   
+  /**
+   * Posts a runnable that continues parsing.
+   */
+  virtual void ContinueInterruptedParsingAsync() {};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentSink, NS_ICONTENT_SINK_IID)

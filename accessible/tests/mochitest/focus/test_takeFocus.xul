@@ -3,9 +3,6 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 
-<?xml-stylesheet href="chrome://browser/content/browser.css"
-                 type="text/css"?>
-
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Accessible focus testing">
 

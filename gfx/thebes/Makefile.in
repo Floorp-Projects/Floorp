@@ -79,6 +79,7 @@ EXPORTS	= \
 	gfxUtils.h \
 	gfxUserFontSet.h \
 	nsCoreAnimationSupport.h \
+	nsIOSurface.h \
 	gfxSharedImageSurface.h \
 	$(NULL)
 
@@ -209,6 +210,7 @@ CPPSRCS	= \
 	$(NULL)
 
 ifdef MOZ_GRAPHITE
+DEFINES += -DGRAPHITE2_STATIC
 CPPSRCS	+= \
 	gfxGraphiteShaper.cpp \
 	$(NULL)

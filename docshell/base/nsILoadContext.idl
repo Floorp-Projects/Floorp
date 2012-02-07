@@ -46,7 +46,7 @@ interface nsIDOMWindow;
  * can be queried for various information about where the load is
  * happening.
  */
-[scriptable, uuid(314d8a54-1caf-4721-94d7-f6c82d9b82ed)]
+[scriptable, uuid(386806c3-c4cb-4b3d-b05d-c08ea10f5585)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -83,4 +83,9 @@ interface nsILoadContext : nsISupports
    * on any URIs that might be around.
    */
   readonly attribute boolean isContent;
+
+  /*
+   * Attribute that determines if private browsing should be used.
+   */
+  attribute boolean usePrivateBrowsing;
 };

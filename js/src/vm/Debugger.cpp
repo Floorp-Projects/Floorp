@@ -187,8 +187,8 @@ BreakpointSite::recompile(JSContext *cx, bool forTrap)
             if (!ac.ref().enter())
                 return false;
         }
-        mjit::Recompiler recompiler(cx, script);
-        recompiler.recompile();
+        mjit::Recompiler::clearStackReferences(cx, script);
+        mjit::ReleaseScriptCode(cx, script);
     }
 #endif
     return true;
@@ -1159,6 +1159,8 @@ Debugger::markAllIteratively(GCMarker *trc)
         const GlobalObjectSet &debuggees = dc->getDebuggees();
         for (GlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
             GlobalObject *global = r.front();
+            if (IsAboutToBeFinalized(cx, global))
+                continue;
 
             /*
              * Every debuggee has at least one debugger, so in this case
@@ -1166,7 +1168,7 @@ Debugger::markAllIteratively(GCMarker *trc)
              */
             const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
             JS_ASSERT(debuggers);
-            for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
+            for (Debugger * const *p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger *dbg = *p;
 
                 /*
@@ -2560,7 +2562,7 @@ DebuggerFrame_getOlder(JSContext *cx, uintN argc, Value *vp)
     THIS_FRAME(cx, argc, vp, "get this", args, thisobj, thisfp);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     for (StackFrame *fp = thisfp->prev(); fp; fp = fp->prev()) {
-        if (!fp->isDummyFrame() && dbg->observesFrame(fp))
+        if (dbg->observesFrame(fp))
             return dbg->getScriptFrame(cx, fp, vp);
     }
     args.rval().setNull();

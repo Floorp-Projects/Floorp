@@ -40,6 +40,10 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = browser/base/content/test
 
+DIRS += \
+		newtab \
+		$(NULL)
+
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
@@ -83,14 +87,16 @@ endif
 #   browser_sanitize-download-history.js is bug 432425
 #
 # browser_sanitizeDialog_treeView.js is disabled until the tree view is added
-# back to the clear recent history dialog (santize.xul), if it ever is (bug
+# back to the clear recent history dialog (sanitize.xul), if it ever is (bug
 # 480169)
 
 # browser_drag.js is disabled, as it needs to be updated for the new behavior from bug 320638.
 
 # browser_bug321000.js is disabled because newline handling is shaky (bug 592528)
+# browser_urlbarAutoFillTrimURLs.js is disabled till bug 720792 is fixed
 
 _BROWSER_FILES = \
+                 head.js \
                  browser_typeAheadFind.js \
                  browser_keywordSearch.js \
                  browser_allTabsPanel.js \
@@ -117,6 +123,7 @@ _BROWSER_FILES = \
                  browser_bug441778.js \
                  browser_popupNotification.js \
                  browser_bug455852.js \
+                 browser_bug460146.js \
                  browser_bug462673.js \
                  browser_bug477014.js \
                  browser_bug479408.js \
@@ -145,6 +152,7 @@ _BROWSER_FILES = \
                  browser_bug567306.js \
                  browser_zbug569342.js \
                  browser_bug575561.js \
+                 browser_bug575830.js \
                  browser_bug577121.js \
                  browser_bug578534.js \
                  browser_bug579872.js \
@@ -172,8 +180,10 @@ _BROWSER_FILES = \
                  browser_bug655584.js \
                  browser_bug664672.js \
                  browser_bug710878.js \
+                 browser_bug719271.js \
                  browser_canonizeURL.js \
                  browser_findbarClose.js \
+                 browser_homeDrop.js \
                  browser_keywordBookmarklets.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
@@ -228,6 +238,7 @@ _BROWSER_FILES = \
                  discovery.html \
                  domplate_test.js \
                  moz.png \
+                 video.ogg \
                  test_bug435035.html \
                  test_bug462673.html \
                  page_style_sample.html \
@@ -254,7 +265,7 @@ _BROWSER_FILES = \
                  test_wyciwyg_copying.html \
                  authenticate.sjs \
                  browser_minimize.js \
-								 browser_aboutSyncProgress.js \
+                 browser_aboutSyncProgress.js \
                  browser_middleMouse_inherit.js \
                  redirect_bug623155.sjs \
                  $(NULL)

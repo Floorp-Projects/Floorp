@@ -53,7 +53,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
-#include "jsstdint.h"
 #include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
@@ -2098,46 +2097,6 @@ TokenStream::getTokenInternal()
         }
         break;
 
-#if JS_HAS_SHARP_VARS
-      case '#':
-      {
-        uint32_t n;
-
-        c = getCharIgnoreEOL();
-        if (!JS7_ISDEC(c)) {
-            ungetCharIgnoreEOL(c);
-            goto badchar;
-        }
-        n = (uint32_t)JS7_UNDEC(c);
-        for (;;) {
-            c = getChar();
-            if (!JS7_ISDEC(c))
-                break;
-            n = 10 * n + JS7_UNDEC(c);
-            if (n >= UINT16_LIMIT) {
-                ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_SHARPVAR_TOO_BIG);
-                goto error;
-            }
-        }
-        tp->setSharpNumber(uint16_t(n));
-        if (cx->hasStrictOption() && (c == '=' || c == '#')) {
-            char buf[20];
-            JS_snprintf(buf, sizeof buf, "#%u%c", n, c);
-            if (!ReportCompileErrorNumber(cx, this, NULL, JSREPORT_WARNING | JSREPORT_STRICT,
-                                          JSMSG_DEPRECATED_USAGE, buf)) {
-                goto error;
-            }
-        }
-        if (c == '=')
-            tt = TOK_DEFSHARP;
-        else if (c == '#')
-            tt = TOK_USESHARP;
-        else
-            goto badchar;
-        break;
-      }
-#endif /* JS_HAS_SHARP_VARS */
-
       badchar:
       default:
         ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_ILLEGAL_CHARACTER);
@@ -2262,8 +2221,6 @@ TokenKindToString(TokenKind tt)
       case TOK_RETURN:          return "TOK_RETURN";
       case TOK_NEW:             return "TOK_NEW";
       case TOK_DELETE:          return "TOK_DELETE";
-      case TOK_DEFSHARP:        return "TOK_DEFSHARP";
-      case TOK_USESHARP:        return "TOK_USESHARP";
       case TOK_TRY:             return "TOK_TRY";
       case TOK_CATCH:           return "TOK_CATCH";
       case TOK_FINALLY:         return "TOK_FINALLY";

@@ -26,7 +26,7 @@ static void build_compressed_data(void* buffer, const SkBitmap& bitmap) {
 
     SkAutoLockPixels apl(bitmap);
     if (!bitmap.readyToDraw()) {
-        SkASSERT(!"bitmap not ready to draw!");
+        SkDEBUGFAIL("bitmap not ready to draw!");
         return;
     }
 
@@ -58,7 +58,7 @@ static void build_compressed_data(void* buffer, const SkBitmap& bitmap) {
 
 GrContext::TextureCacheEntry sk_gr_create_bitmap_texture(GrContext* ctx,
                                                 GrContext::TextureKey key,
-                                                const GrSamplerState& sampler,
+                                                const GrSamplerState* sampler,
                                                 const SkBitmap& origBitmap) {
     SkAutoLockPixels alp(origBitmap);
     GrContext::TextureCacheEntry entry;
@@ -99,8 +99,9 @@ GrContext::TextureCacheEntry sk_gr_create_bitmap_texture(GrContext* ctx,
             } else {
                 entry = ctx->lockScratchTexture(desc,
                                         GrContext::kExact_ScratchTexMatch);
-                entry.texture()->uploadTextureData(0, 0, bitmap->width(), 
-                    bitmap->height(), storage.get(), 0);
+                entry.texture()->writePixels(0, 0, bitmap->width(), 
+                                             bitmap->height(), desc.fConfig,
+                                             storage.get(), 0);
                 return entry;
             }
 
@@ -111,7 +112,7 @@ GrContext::TextureCacheEntry sk_gr_create_bitmap_texture(GrContext* ctx,
         }
     }
 
-    desc.fFormat = SkGr::Bitmap2PixelConfig(*bitmap);
+    desc.fConfig = SkGr::Bitmap2PixelConfig(*bitmap);
     if (gUNCACHED_KEY != key) {
         return ctx->createAndLockTexture(key, sampler, desc,
                                          bitmap->getPixels(),
@@ -119,8 +120,11 @@ GrContext::TextureCacheEntry sk_gr_create_bitmap_texture(GrContext* ctx,
     } else {
         entry = ctx->lockScratchTexture(desc,
                                         GrContext::kExact_ScratchTexMatch);
-        entry.texture()->uploadTextureData(0, 0, bitmap->width(), 
-            bitmap->height(), bitmap->getPixels(), bitmap->rowBytes());
+        entry.texture()->writePixels(0, 0,
+                                     bitmap->width(), bitmap->height(),
+                                     desc.fConfig,
+                                     bitmap->getPixels(),
+                                     bitmap->rowBytes());
         return entry;
     }
 }
@@ -207,11 +211,7 @@ GrPixelConfig SkGr::BitmapConfig2PixelConfig(SkBitmap::Config config,
         case SkBitmap::kARGB_4444_Config:
             return kRGBA_4444_GrPixelConfig;
         case SkBitmap::kARGB_8888_Config:
-            if (isOpaque) {
-                return kRGBX_8888_GrPixelConfig;
-            } else {
-                return kRGBA_8888_GrPixelConfig;
-            }
+            return kSkia8888_PM_GrPixelConfig;
         default:
             return kUnknown_GrPixelConfig;
     }

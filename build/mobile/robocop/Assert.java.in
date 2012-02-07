@@ -52,4 +52,7 @@ public interface Assert {
   void todo_is(Object a, Object b, String name);
   void todo_isnot(Object a, Object b, String name);
   void info(String name, String message);
+
+  // robocop-specific asserts
+  void ispixel(int actual, int r, int g, int b, String name);
 }

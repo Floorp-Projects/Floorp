@@ -121,7 +121,7 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, PRUin
 
   // Make sure to actually operate on our object, and not some object further
   // down on the proto chain.
-  while (JS_GET_CLASS(cx, obj) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
+  while (JS_GetClass(obj) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
     obj = ::JS_GetPrototype(cx, obj);
     if (!obj) {
       ::JS_ReportError(cx, "Invalid access to a global object property.");
@@ -129,7 +129,7 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, PRUin
     }
   }
 
-  nsresult rv = ssm->CheckPropertyAccess(cx, obj, JS_GET_CLASS(cx, obj)->name,
+  nsresult rv = ssm->CheckPropertyAccess(cx, obj, JS_GetClass(obj)->name,
                                          id, accessType);
   return NS_SUCCEEDED(rv);
 }
@@ -476,6 +476,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
     tmp->mBindingTable->Enumerate(TraverseProtos, &cb);
   }
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mGlobalObject");
   cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObject*>(tmp->mGlobalObject));
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
