@@ -2200,9 +2200,14 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
       else if (abi == ABI_WINAPI)
         PrependString(result, "WINAPI ");
 
-      // Wrap the entire expression so far with parens.
-      PrependString(result, "(");
-      AppendString(result, ")");
+      // Function application binds more tightly than dereferencing, so
+      // wrap pointer types in parens. Functions can't return functions
+      // (only pointers to them), and arrays can't hold functions
+      // (similarly), so we don't need to address those cases.
+      if (prevGrouping == TYPE_pointer) {
+        PrependString(result, "(");
+        AppendString(result, ")");
+      }
 
       // Argument list goes on the right.
       AppendString(result, "(");
