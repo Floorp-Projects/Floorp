@@ -888,6 +888,7 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
     case eCSSUnit_Degree: unit = eStyleUnit_Degree; break;
     case eCSSUnit_Grad:   unit = eStyleUnit_Grad; break;
     case eCSSUnit_Radian: unit = eStyleUnit_Radian; break;
+    case eCSSUnit_Turn:   unit = eStyleUnit_Turn; break;
     default: NS_NOTREACHED("unrecognized angular unit");
       unit = eStyleUnit_Degree;
     }

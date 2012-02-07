@@ -304,7 +304,7 @@
            type="arrow"
            hidden="true"
            noautofocus="true"
-           onpopupshown="document.getElementById('identity-popup-more-info-button').focus();"
+           onpopupshown="gIdentityHandler.onPopupShown(event);"
            level="top">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
@@ -850,11 +850,6 @@
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
 
-      <toolbaritem id="navigator-throbber" title="&throbberItem.title;" align="center" pack="center"
-                   mousethrough="always">
-        <image/>
-      </toolbaritem>
-
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="Tools:Downloads"
                      ondrop="DownloadsButtonDNDObserver.onDrop(event)"
@@ -885,21 +880,6 @@
                      ondragenter="newWindowButtonObserver.onDragOver(event)"
                      ondragexit="newWindowButtonObserver.onDragExit(event)"/>
 
-      <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&cutCmd.label;"
-                     command="cmd_cut"
-                     tooltiptext="&cutButton.tooltip;"/>
-
-      <toolbarbutton id="copy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&copyCmd.label;"
-                     command="cmd_copy"
-                     tooltiptext="&copyButton.tooltip;"/>
-
-      <toolbarbutton id="paste-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&pasteCmd.label;"
-                     command="cmd_paste"
-                     tooltiptext="&pasteButton.tooltip;"/>
-
       <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="View:FullScreen"
                      type="checkbox"
@@ -917,12 +897,7 @@
                        command="cmd_fullZoomEnlarge"
                        tooltiptext="&zoomInButton.tooltip;"/>
       </toolbaritem>
-#ifdef MOZ_SERVICES_SYNC
-      <toolbarbutton id="sync-button"
-                     class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&syncToolbarButton.label;"
-                     oncommand="gSyncUI.handleToolbarButton()"/>
-#endif
+
       <toolbarbutton id="feed-button"
                      type="menu"
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -936,6 +911,33 @@
                    oncommand="return FeedHandler.subscribeToFeed(null, event);"
                    onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
+
+      <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&cutCmd.label;"
+                     command="cmd_cut"
+                     tooltiptext="&cutButton.tooltip;"/>
+
+      <toolbarbutton id="copy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&copyCmd.label;"
+                     command="cmd_copy"
+                     tooltiptext="&copyButton.tooltip;"/>
+
+      <toolbarbutton id="paste-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&pasteCmd.label;"
+                     command="cmd_paste"
+                     tooltiptext="&pasteButton.tooltip;"/>
+
+#ifdef MOZ_SERVICES_SYNC
+      <toolbarbutton id="sync-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&syncToolbarButton.label;"
+                     oncommand="gSyncUI.handleToolbarButton()"/>
+#endif
+
+      <toolbaritem id="navigator-throbber" title="&throbberItem.title;" align="center" pack="center"
+                   mousethrough="always">
+        <image/>
+      </toolbaritem>
 
       <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&tabGroupsButton.label;"

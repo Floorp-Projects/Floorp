@@ -94,6 +94,7 @@ class JS_FRIEND_API(Wrapper) : public ProxyHandler
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent) MOZ_OVERRIDE;
+    virtual RegExpShared *regexp_toShared(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
 
     virtual void trace(JSTracer *trc, JSObject *wrapper) MOZ_OVERRIDE;
@@ -178,6 +179,7 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
 
     virtual bool nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args) MOZ_OVERRIDE;
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;
+    virtual RegExpShared *regexp_toShared(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
 };
 
 typedef SecurityWrapper<Wrapper> SameCompartmentSecurityWrapper;
@@ -206,7 +208,14 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, J
                          uintN flags);
 
 JS_FRIEND_API(bool) IsWrapper(const JSObject *obj);
-JS_FRIEND_API(JSObject *) UnwrapObject(JSObject *obj, uintN *flagsp = NULL);
+
+// Given a JSObject, returns that object stripped of wrappers. If
+// stopAtOuter is true, then this returns the outer window if it was
+// previously wrapped. Otherwise, this returns the first object for
+// which JSObject::isWrapper returns false.
+JS_FRIEND_API(JSObject *) UnwrapObject(JSObject *obj, bool stopAtOuter = true,
+                                       uintN *flagsp = NULL);
+
 bool IsCrossCompartmentWrapper(const JSObject *obj);
 
 } /* namespace js */

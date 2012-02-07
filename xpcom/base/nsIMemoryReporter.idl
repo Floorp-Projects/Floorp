@@ -216,6 +216,16 @@ interface nsIMemoryMultiReporterCallback : nsISupports
 [scriptable, uuid(61d498d5-b460-4398-a8ea-7f75208534b4)]
 interface nsIMemoryMultiReporter : nsISupports
 {
+  /*
+   * The name of the multi-reporter.  Useful when only one multi-reporter
+   * needs to be run.  Must be unique;  if multi-reporters share names it's
+   * likely the wrong one will be called in certain circumstances.
+   */
+  readonly attribute ACString name;
+
+  /*
+   * Run the multi-reporter.
+   */
   void collectReports(in nsIMemoryMultiReporterCallback callback,
                       in nsISupports closure);
 
@@ -306,7 +316,7 @@ interface nsIMemoryReporterManager : nsISupports
  * Note that this defaults 'process' to "", which is usually what's desired.
  */
 #define NS_MEMORY_REPORTER_IMPLEMENT_HELPER(_classname, _path, _kind, _units, _amountFunction, _desc, _ts) \
-    class MemoryReporter_##_classname : public nsIMemoryReporter {                            \
+    class MemoryReporter_##_classname MOZ_FINAL : public nsIMemoryReporter {                  \
     public:                                                                                   \
       NS_DECL_ISUPPORTS                                                                       \
       NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; } \

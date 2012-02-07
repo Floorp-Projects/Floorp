@@ -183,13 +183,6 @@ public:
     */
   void        GetDefaultLengthUnit(nsAString & aLengthUnit);
 
-  /** asnwers true if the element aElement carries an ID or a class
-    *
-    * @param aElement       [IN] a DOM element
-    * @param aReturn        [OUT] the boolean answer
-    */
-  nsresult    HasClassOrID(nsIDOMElement * aElement, bool & aReturn);
-
   /** returns the list of values for the CSS equivalences to
     * the passed HTML style for the passed node
     *
@@ -306,7 +299,7 @@ public:
     * @param aNode           [IN] a node
     * @param aElement        [OUT] the deepest element node containing aNode (possibly aNode itself)
     */
-  nsresult GetElementContainerOrSelf(nsIDOMNode * aNode, nsIDOMElement ** aElement);
+  already_AddRefed<nsIDOMElement> GetElementContainerOrSelf(nsIDOMNode* aNode);
 
   /**
    * Gets the default Window for a given node.

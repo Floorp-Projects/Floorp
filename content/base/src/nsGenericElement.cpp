@@ -1537,6 +1537,12 @@ nsIContent::GetBaseURI() const
         }
       }
     }
+
+    nsIURI* explicitBaseURI = elem->GetExplicitBaseURI();
+    if (explicitBaseURI) {
+      base = explicitBaseURI;
+      break;
+    }
     
     // Otherwise check for xml:base attribute
     elem->GetAttr(kNameSpaceID_XML, nsGkAtoms::base, attr);
@@ -1564,6 +1570,27 @@ nsIContent::GetBaseURI() const
   }
 
   return base.forget();
+}
+
+static void
+ReleaseURI(void*, /* aObject*/
+           nsIAtom*, /* aPropertyName */
+           void* aPropertyValue,
+           void* /* aData */)
+{
+  nsIURI* uri = static_cast<nsIURI*>(aPropertyValue);
+  NS_RELEASE(uri);
+}
+
+nsresult
+nsINode::SetExplicitBaseURI(nsIURI* aURI)
+{
+  nsresult rv = SetProperty(nsGkAtoms::baseURIProperty, aURI, ReleaseURI);
+  if (NS_SUCCEEDED(rv)) {
+    SetHasExplicitBaseURI();
+    NS_ADDREF(aURI);
+  }
+  return rv;
 }
 
 //----------------------------------------------------------------------
