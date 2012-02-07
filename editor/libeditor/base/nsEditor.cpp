@@ -3636,6 +3636,8 @@ nsEditor::IsEditable(nsIContent *aNode)
     // rely on frameless textnodes being visible.
     return false;
   }
+  if (aNode->NodeType() == nsIDOMNode::COMMENT_NODE)
+    return false;
   if (aNode->NodeType() != nsIDOMNode::TEXT_NODE)
     return true;  // not a text node; not invisible
 
