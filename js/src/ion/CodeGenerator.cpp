@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=4 sw=4 et tw=79:
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -444,27 +444,99 @@ CodeGenerator::visitTypeBarrier(LTypeBarrier *lir)
 }
 
 bool
+CodeGenerator::visitCallNative(LCallNative *call)
+{
+    JSFunction *target = call->function();
+    JS_ASSERT(target);
+    JS_ASSERT(target->isNative());
+
+    int callargslot = call->argslot();
+    int unusedStack = StackOffsetOfPassedArg(callargslot);
+
+    // Registers used for callWithABI() argument-passing.
+    const Register argJSContextReg = ToRegister(call->getArgJSContextReg());
+    const Register argUintNReg     = ToRegister(call->getArgUintNReg());
+    const Register argVpReg        = ToRegister(call->getArgVpReg());
+
+    // Misc. temporary registers.
+    const Register tempReg = ToRegister(call->getTempReg());
+
+    DebugOnly<uint32> initialStack = masm.framePushed();
+
+    masm.checkStackAlignment();
+
+    // Native functions have the signature:
+    //  bool (*)(JSContext *, uintN, Value *vp)
+    // Where vp[0] is space for an outparam, vp[1] is |this|, and vp[2] onward
+    // are the function arguments.
+
+    // Allocate space for the outparam, moving the StackPointer to what will be &vp[1].
+    masm.adjustStack(unusedStack);
+
+    // Push a Value containing the callee object: natives are allowed to access their callee before
+    // setting the return value. The StackPointer is moved to &vp[0].
+    masm.Push(ObjectValue(*target));
+
+    // Preload arguments into registers.
+    masm.loadJSContext(gen->cx->runtime, argJSContextReg);
+    masm.move32(Imm32(call->nargs()), argUintNReg);
+    masm.movePtr(StackPointer, argVpReg);
+
+    // Construct exit frame.
+    uint32 safepointOffset = masm.buildFakeExitFrame(tempReg);
+    masm.linkExitFrame();
+    if (!markSafepointAt(safepointOffset, call))
+        return false;
+
+    // Construct and execute call.
+    masm.setupUnalignedABICall(3, tempReg);
+    masm.setABIArg(0, argJSContextReg);
+    masm.setABIArg(1, argUintNReg);
+    masm.setABIArg(2, argVpReg);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
+
+    // Test for failure.
+    Label success, exception;
+    masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+
+    // Load the outparam vp[0] into output register(s).
+    masm.loadValue(Address(StackPointer, IonExitFrameLayout::Size()), JSReturnOperand);
+    masm.jump(&success);
+
+    // Handle exception case.
+    {
+        masm.bind(&exception);
+        masm.handleException();
+    }
+    masm.bind(&success);
+
+    // Move the StackPointer back to its original location, unwinding the exit frame.
+    masm.adjustStack(IonExitFrameLayout::Size() - unusedStack + sizeof(Value));
+    JS_ASSERT(masm.framePushed() == initialStack);
+
+    return true;
+}
+
+bool
 CodeGenerator::visitCallGeneric(LCallGeneric *call)
 {
     // Holds the function object.
     const LAllocation *callee = call->getFunction();
-    Register calleereg  = ToRegister(callee);
+    Register calleereg = ToRegister(callee);
 
     // Temporary register for modifying the function object.
     const LAllocation *obj = call->getTempObject();
-    Register objreg  = ToRegister(obj);
+    Register objreg = ToRegister(obj);
 
     // Holds the function nargs. Initially undefined.
     const LAllocation *nargs = call->getNargsReg();
     Register nargsreg = ToRegister(nargs);
 
-    uint32 callargslot  = call->argslot();
+    uint32 callargslot = call->argslot();
     uint32 unusedStack = StackOffsetOfPassedArg(callargslot);
 
 
-#ifdef JS_CPU_ARM
     masm.checkStackAlignment();
-#endif
 
     // Guard that calleereg is actually a function object.
     masm.loadObjClass(calleereg, nargsreg);
@@ -556,9 +628,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     masm.bind(&rejoin);
 
-#ifdef JS_CPU_ARM
     masm.checkStackAlignment();
-#endif
 
     // Finally call the function in objreg, as assigned by one of the paths above.
     masm.callIon(objreg);
@@ -569,12 +639,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
     int prefixGarbage = sizeof(IonJSFrameLayout) - sizeof(void *);
-    int restoreDiff = prefixGarbage - unusedStack;
-    
-    if (restoreDiff > 0)
-        masm.freeStack(restoreDiff);
-    else if (restoreDiff < 0)
-        masm.reserveStack(-restoreDiff);
+    masm.adjustStack(prefixGarbage - unusedStack);
 
     masm.jump(&end);
 

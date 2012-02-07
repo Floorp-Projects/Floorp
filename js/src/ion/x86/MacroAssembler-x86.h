@@ -202,6 +202,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(tag, ToType(dest));
     }
 
+    void movePtr(const Register &src, const Register &dest) {
+        movl(src, dest);
+    }
     void movePtr(Operand op, const Register &dest) {
         movl(op, dest);
     }
@@ -544,6 +547,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void rshiftPtr(Imm32 imm, const Register &dest) {
         shrl(imm, dest);
+    }
+
+    void loadInstructionPointerAfterCall(const Register &dest) {
+        movl(Operand(StackPointer, 0x0), dest);
     }
 
     // Setup a call to C/C++ code, given the number of general arguments it

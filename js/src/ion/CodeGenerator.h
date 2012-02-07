@@ -96,6 +96,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStoreSlotV(LStoreSlotV *store);
     bool visitElements(LElements *lir);
     bool visitTypeBarrier(LTypeBarrier *lir);
+    bool visitCallNative(LCallNative *lir);
     bool visitCallGeneric(LCallGeneric *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitNewArray(LNewArray *builder);

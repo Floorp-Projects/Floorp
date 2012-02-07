@@ -204,6 +204,38 @@ class MacroAssemblerX86Shared : public Assembler
     void store32(const Register &src, const Address &dest) {
         movl(src, Operand(dest));
     }
+
+    // Builds an exit frame on the stack, with a return address to an internal
+    // non-function. Returns offset to be passed to markSafepointAt().
+    uint32 buildFakeExitFrame(const Register &scratch) {
+        DebugOnly<uint32> initialDepth = framePushed();
+        Label pseudocall, endcall;
+
+        call(&pseudocall);
+        uint32 callOffset = currentOffset();
+        jump(&endcall);
+
+        align(0x10);
+        {
+            bind(&pseudocall);
+#ifdef JS_CPU_X86
+            movl(Operand(StackPointer, 0x0), scratch);
+#else
+            movq(Operand(StackPointer, 0x0), scratch);
+#endif
+            ret();
+        }
+
+        bind(&endcall);
+
+        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+        Push(Imm32(descriptor));
+        Push(scratch);
+
+        JS_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
+        return callOffset;
+    }
+
     void callWithExitFrame(IonCode *target) {
         uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
         Push(Imm32(descriptor));
@@ -211,6 +243,10 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void callIon(const Register &callee) {
         call(callee);
+    }
+
+    void checkStackAlignment() {
+        // Exists for ARM compatibility.
     }
 
     CodeOffsetLabel labelForPatch() {

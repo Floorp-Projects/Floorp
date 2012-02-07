@@ -311,7 +311,7 @@ TypeSet *
 TypeInferenceOracle::getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc)
 {
     JS_ASSERT(caller == this->script);
-    JS_ASSERT(JSOp(*pc) == JSOP_CALL);
+    JS_ASSERT(JSOp(*pc) == JSOP_CALL || JSOp(*pc) == JSOP_NEW);
 
     ScriptAnalysis *analysis = script->analysis();
     return analysis->poppedTypes(pc, argc + 1);

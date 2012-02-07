@@ -312,6 +312,60 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
     }
 };
 
+// Generates a monomorphic callsite for a known, native target.
+class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4> // FIXME: How many really?
+{
+    JSFunction *function_;
+    uint32 argslot_;
+
+  public:
+    LIR_HEADER(CallNative);
+
+    LCallNative(JSFunction *function, uint32 argslot,
+                const LDefinition &argJSContext, const LDefinition &argUintN,
+                const LDefinition &argVp, const LDefinition &tmpreg)
+      : function_(function), argslot_(argslot)
+    {
+        // Registers used for callWithABI().
+        setTemp(0, argJSContext);
+        setTemp(1, argUintN);
+        setTemp(2, argVp);
+
+        // Temporary registers.
+        setTemp(3, tmpreg);
+    }
+
+    JSFunction *function() const {
+        return function_;
+    }
+    uint32 argslot() const {
+        return argslot_;
+    }
+    MCall *mir() const {
+        return mir_->toCall();
+    }
+
+    // TODO: Common this out with LCallGeneric.
+    uint32 nargs() const {
+        JS_ASSERT(mir()->argc() >= 1);
+        return mir()->argc() - 1; // |this| is not a formal argument.
+    }
+
+    const LAllocation *getArgJSContextReg() {
+        return getTemp(0)->output();
+    }
+    const LAllocation *getArgUintNReg() {
+        return getTemp(1)->output();
+    }
+    const LAllocation *getArgVpReg() {
+        return getTemp(2)->output();
+    }
+
+    const LAllocation *getTempReg() {
+        return getTemp(3)->output();
+    }
+};
+
 // Takes in either an integer or boolean input and tests it for truthiness.
 class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
 {
