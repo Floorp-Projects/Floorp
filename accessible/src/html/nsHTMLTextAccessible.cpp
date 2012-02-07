@@ -61,8 +61,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLTextAccessible::
-  nsHTMLTextAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsTextAccessibleWrap(aContent, aShell)
+  nsHTMLTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -122,8 +122,8 @@ nsHTMLTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLHRAccessible::
-  nsHTMLHRAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsLeafAccessible(aContent, aShell)
+  nsHTMLHRAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsLeafAccessible(aContent, aDoc)
 {
 }
 
@@ -139,8 +139,8 @@ nsHTMLHRAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLBRAccessible::
-  nsHTMLBRAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsLeafAccessible(aContent, aShell)
+  nsHTMLBRAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsLeafAccessible(aContent, aDoc)
 {
 }
 
@@ -168,8 +168,8 @@ nsHTMLBRAccessible::GetNameInternal(nsAString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLLabelAccessible::
-  nsHTMLLabelAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsHyperTextAccessibleWrap(aContent, aShell)
+  nsHTMLLabelAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -192,8 +192,8 @@ nsHTMLLabelAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLOutputAccessible::
-  nsHTMLOutputAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
-  nsHyperTextAccessibleWrap(aContent, aShell)
+  nsHTMLOutputAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -233,14 +233,14 @@ nsHTMLOutputAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLLIAccessible::
-  nsHTMLLIAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
-  nsHyperTextAccessibleWrap(aContent, aShell), mBullet(nsnull)
+  nsHTMLLIAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessibleWrap(aContent, aDoc), mBullet(nsnull)
 {
   mFlags |= eHTMLListItemAccessible;
 
   nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
   if (blockFrame && blockFrame->HasBullet()) {
-    mBullet = new nsHTMLListBulletAccessible(mContent, mWeakShell);
+    mBullet = new nsHTMLListBulletAccessible(mContent, mDoc);
     if (!GetDocAccessible()->BindToDocument(mBullet, nsnull))
       mBullet = nsnull;
   }
@@ -296,7 +296,7 @@ nsHTMLLIAccessible::UpdateBullet(bool aHasBullet)
 
   nsDocAccessible* document = GetDocAccessible();
   if (aHasBullet) {
-    mBullet = new nsHTMLListBulletAccessible(mContent, mWeakShell);
+    mBullet = new nsHTMLListBulletAccessible(mContent, mDoc);
     if (document->BindToDocument(mBullet, nsnull)) {
       InsertChildAt(0, mBullet);
     }
@@ -328,8 +328,8 @@ nsHTMLLIAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLListBulletAccessible::
-  nsHTMLListBulletAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
-    nsLeafAccessible(aContent, aShell)
+  nsHTMLListBulletAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+    nsLeafAccessible(aContent, aDoc)
 {
 }
 
@@ -400,8 +400,8 @@ nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLListAccessible::
-  nsHTMLListAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsHyperTextAccessibleWrap(aContent, aShell)
+  nsHTMLListAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
