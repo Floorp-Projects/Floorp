@@ -62,6 +62,7 @@ public final class Tab {
     private static final int kThumbnailWidth = 136;
     private static final int kThumbnailHeight = 78;
 
+    private static float sMinDim = 0;
     private static float sDensity = 1;
     private static int sMinScreenshotWidth = 0;
     private static int sMinScreenshotHeight = 0;
@@ -159,8 +160,14 @@ public final class Tab {
     void initMetrics() {
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        sMinScreenshotWidth = metrics.widthPixels;
+        sMinDim = Math.min(metrics.widthPixels / kThumbnailWidth, metrics.heightPixels / kThumbnailHeight);
         sDensity = metrics.density;
+    }
+
+    float getMinDim() {
+        if (sMinDim == 0)
+            initMetrics();
+        return sMinDim;
     }
 
     float getDensity() {
@@ -170,17 +177,15 @@ public final class Tab {
     }
 
     int getMinScreenshotWidth() {
-        if (sMinScreenshotWidth == 0)
-            initMetrics();
-        return sMinScreenshotWidth;
+        if (sMinScreenshotWidth != 0)
+            return sMinScreenshotWidth;
+        return sMinScreenshotWidth = (int)(getMinDim() * kThumbnailWidth);
     }
 
     int getMinScreenshotHeight() {
-        if (sMinScreenshotHeight == 0) {
-            initMetrics();
-            sMinScreenshotHeight = (sMinScreenshotWidth * kThumbnailHeight / kThumbnailWidth);
-        }
-        return sMinScreenshotHeight;
+        if (sMinScreenshotHeight != 0)
+            return sMinScreenshotHeight;
+        return sMinScreenshotHeight = (int)(getMinDim() * kThumbnailHeight);
     }
 
     int getThumbnailWidth() {

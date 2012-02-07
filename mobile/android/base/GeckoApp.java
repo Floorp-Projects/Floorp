@@ -622,8 +622,8 @@ abstract public class GeckoApp
                 message.put("source", source);
 
                 JSONObject destination = new JSONObject();
-                destination.put("width", dw);
-                destination.put("height", dh);
+                source.put("width", dw);
+                source.put("height", dh);
                 message.put("destination", destination);
 
                 String json = message.toString();
