@@ -140,7 +140,7 @@ Tilt.prototype = {
   },
 
   /**
-   * Destroys a specific instance of the visualizer.
+   * Starts destroying a specific instance of the visualizer.
    *
    * @param {String} aId
    *                 the identifier of the instance in the visualizers array
@@ -149,43 +149,49 @@ Tilt.prototype = {
    */
   destroy: function T_destroy(aId, aAnimateFlag)
   {
-    // if the visualizer is already destroyed, don't do anything
-    if (!this.visualizers[aId]) {
+    // if the visualizer is destroyed or destroying, don't do anything
+    if (!this.visualizers[aId] || this._isDestroying) {
+      return;
+    }
+    this._isDestroying = true;
+
+    let controller = this.visualizers[aId].controller;
+    let presenter = this.visualizers[aId].presenter;
+
+    let content = presenter.contentWindow;
+    let pageXOffset = content.pageXOffset * presenter.transforms.zoom;
+    let pageYOffset = content.pageYOffset * presenter.transforms.zoom;
+    TiltUtils.setDocumentZoom(this.chromeWindow, presenter.transforms.zoom);
+
+    // if we're not doing any outro animation, just finish destruction directly
+    if (!aAnimateFlag) {
+      this._finish(aId);
       return;
     }
 
-    if (!this.isDestroying) {
-      this.isDestroying = true;
+    // otherwise, trigger the outro animation and notify necessary observers
+    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYING, null);
 
-      let finalize = function T_finalize(aId) {
-        this.visualizers[aId].removeOverlay();
-        this.visualizers[aId].cleanup();
-        this.visualizers[aId] = null;
+    controller.removeEventListeners();
+    controller.arcball.reset([-pageXOffset, -pageYOffset]);
+    presenter.executeDestruction(this._finish.bind(this, aId));
+  },
 
-        this.isDestroying = false;
-        this.chromeWindow.gBrowser.selectedBrowser.focus();
-        Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYED, null);
-      };
+  /**
+   * Finishes detroying a specific instance of the visualizer.
+   *
+   * @param {String} aId
+   *                 the identifier of the instance in the visualizers array
+   */
+  _finish: function T__finish(aId)
+  {
+    this.visualizers[aId].removeOverlay();
+    this.visualizers[aId].cleanup();
+    this.visualizers[aId] = null;
 
-      if (!aAnimateFlag) {
-        finalize.call(this, aId);
-        return;
-      }
-
-      let controller = this.visualizers[aId].controller;
-      let presenter = this.visualizers[aId].presenter;
-
-      let content = presenter.contentWindow;
-      let pageXOffset = content.pageXOffset * presenter.transforms.zoom;
-      let pageYOffset = content.pageYOffset * presenter.transforms.zoom;
-
-      Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYING, null);
-      TiltUtils.setDocumentZoom(this.chromeWindow, presenter.transforms.zoom);
-
-      controller.removeEventListeners();
-      controller.arcball.reset([-pageXOffset, -pageYOffset]);
-      presenter.executeDestruction(finalize.bind(this, aId));
-    }
+    this._isDestroying = false;
+    this.chromeWindow.gBrowser.selectedBrowser.focus();
+    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYED, null);
   },
 
   /**
@@ -359,7 +365,6 @@ Tilt.prototype = {
    */
   get tiltButton()
   {
-    return this.chromeWindow.document.getElementById(
-      "inspector-3D-button");
+    return this.chromeWindow.document.getElementById("inspector-3D-button");
   }
 };

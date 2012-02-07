@@ -60,11 +60,11 @@ function performTest(canvas, arcball, callback) {
       window.setTimeout(function() {
         info("Synthesizing arcball reset key press.");
 
-        arcball.onResetStart = function() {
+        arcball._onResetStart = function() {
           info("Starting arcball reset animation.");
         };
 
-        arcball.onResetStep = function() {
+        arcball._onResetStep = function() {
           info("\nlastRot: " + quat4.str(arcball._lastRot) +
                "\ndeltaRot: " + quat4.str(arcball._deltaRot) +
                "\ncurrentRot: " + quat4.str(arcball._currentRot) +
@@ -76,7 +76,7 @@ function performTest(canvas, arcball, callback) {
                "\nzoomAmount: " + arcball._zoomAmount);
         };
 
-        arcball.onResetFinish = function() {
+        arcball._onResetFinish = function() {
           ok(isApproxVec(arcball._lastRot, [0, 0, 0, 1]),
             "The arcball _lastRot field wasn't reset correctly.");
           ok(isApproxVec(arcball._deltaRot, [0, 0, 0, 1]),
@@ -99,8 +99,10 @@ function performTest(canvas, arcball, callback) {
           ok(isApproxVec([arcball._zoomAmount], [0]),
             "The arcball _zoomAmount field wasn't reset correctly.");
 
-          info("Finishing arcball reset test.");
-          callback();
+          executeSoon(function() {
+            info("Finishing arcball reset test.");
+            callback();
+          });
         };
 
         EventUtils.synthesizeKey("VK_R", { type: "keydown" });
