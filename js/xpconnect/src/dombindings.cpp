@@ -1249,6 +1249,13 @@ template<class LC>
 bool
 ListBase<LC>::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
 {
+    if (flags == JSITER_FOR_OF) {
+        JSObject *iterobj = JS_NewElementIterator(cx, proxy);
+        if (!iterobj)
+            return false;
+        vp->setObject(*iterobj);
+        return true;
+    }
     return ProxyHandler::iterate(cx, proxy, flags, vp);
 }
 
