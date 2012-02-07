@@ -394,7 +394,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
     }
 
     const char *name = NULL;
-    NPError nperr = npGetValue(NULL, NPPVpluginNameString, &name);
+    npGetValue(NULL, NPPVpluginNameString, &name);
     if (name) {
         info.fName = PL_strdup(name);
     }
@@ -403,7 +403,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
     }
 
     const char *description = NULL;
-    nperr = npGetValue(NULL, NPPVpluginDescriptionString, &description);
+    npGetValue(NULL, NPPVpluginDescriptionString, &description);
     if (description) {
         info.fDescription = PL_strdup(description);
     }

@@ -229,97 +229,110 @@ nsPlaintextEditor::EndEditorInit()
   return res;
 }
 
-NS_IMETHODIMP 
-nsPlaintextEditor::SetDocumentCharacterSet(const nsACString & characterSet) 
-{ 
-  nsresult result; 
+NS_IMETHODIMP
+nsPlaintextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
+{
+  nsresult rv = nsEditor::SetDocumentCharacterSet(characterSet);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  result = nsEditor::SetDocumentCharacterSet(characterSet); 
+  // Update META charset element.
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(domdoc, NS_ERROR_FAILURE);
 
-  // update META charset tag 
-  if (NS_SUCCEEDED(result)) { 
-    nsCOMPtr<nsIDOMDocument>domdoc; 
-    result = GetDocument(getter_AddRefs(domdoc)); 
-    if (NS_SUCCEEDED(result) && domdoc) { 
-      nsCOMPtr<nsIDOMNodeList>metaList; 
-      nsCOMPtr<nsIDOMElement>metaElement; 
-      bool newMetaCharset = true; 
+  if (UpdateMetaCharset(domdoc, characterSet)) {
+    return NS_OK;
+  }
 
-      // get a list of META tags 
-      result = domdoc->GetElementsByTagName(NS_LITERAL_STRING("meta"), getter_AddRefs(metaList)); 
-      if (NS_SUCCEEDED(result) && metaList) { 
-        PRUint32 listLength = 0; 
-        (void) metaList->GetLength(&listLength); 
+  nsCOMPtr<nsIDOMNodeList> headList;
+  rv = domdoc->GetElementsByTagName(NS_LITERAL_STRING("head"), getter_AddRefs(headList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(headList, NS_OK);
 
-        nsCOMPtr<nsIDOMNode>metaNode; 
-        for (PRUint32 i = 0; i < listLength; i++) { 
-          metaList->Item(i, getter_AddRefs(metaNode)); 
-          if (!metaNode) continue; 
-          metaElement = do_QueryInterface(metaNode); 
-          if (!metaElement) continue; 
+  nsCOMPtr<nsIDOMNode> headNode;
+  headList->Item(0, getter_AddRefs(headNode));
+  NS_ENSURE_TRUE(headNode, NS_OK);
 
-          nsAutoString currentValue; 
-          if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("http-equiv"), currentValue))) continue; 
+  // Create a new meta charset tag
+  nsCOMPtr<nsIDOMNode> resultNode;
+  rv = CreateNode(NS_LITERAL_STRING("meta"), headNode, 0, getter_AddRefs(resultNode));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(resultNode, NS_OK);
 
-          if (FindInReadable(NS_LITERAL_STRING("content-type"),
-                             currentValue,
-                             nsCaseInsensitiveStringComparator())) { 
-            NS_NAMED_LITERAL_STRING(content, "content");
-            if (NS_FAILED(metaElement->GetAttribute(content, currentValue))) continue; 
+  // Set attributes to the created element
+  if (characterSet.IsEmpty()) {
+    return NS_OK;
+  }
 
-            NS_NAMED_LITERAL_STRING(charsetEquals, "charset=");
-            nsAString::const_iterator originalStart, start, end;
-            originalStart = currentValue.BeginReading(start);
-            currentValue.EndReading(end);
-            if (FindInReadable(charsetEquals, start, end,
-                               nsCaseInsensitiveStringComparator())) {
+  nsCOMPtr<dom::Element> metaElement = do_QueryInterface(resultNode);
+  if (!metaElement) {
+    return NS_OK;
+  }
 
-              // set attribute to <original prefix> charset=text/html
-              result = nsEditor::SetAttribute(metaElement, content,
-                                              Substring(originalStart, start) +
-                                              charsetEquals + NS_ConvertASCIItoUTF16(characterSet)); 
-              if (NS_SUCCEEDED(result)) 
-                newMetaCharset = false; 
-              break; 
-            } 
-          } 
-        } 
-      } 
+  // not undoable, undo should undo CreateNode
+  metaElement->SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
+                       NS_LITERAL_STRING("Content-Type"), true);
+  metaElement->SetAttr(kNameSpaceID_None, nsGkAtoms::content,
+                       NS_LITERAL_STRING("text/html;charset=") +
+                         NS_ConvertASCIItoUTF16(characterSet),
+                       true);
+  return NS_OK;
+}
 
-      if (newMetaCharset) { 
-        nsCOMPtr<nsIDOMNodeList>headList; 
-        result = domdoc->GetElementsByTagName(NS_LITERAL_STRING("head"),getter_AddRefs(headList)); 
-        if (NS_SUCCEEDED(result) && headList) { 
-          nsCOMPtr<nsIDOMNode>headNode; 
-          headList->Item(0, getter_AddRefs(headNode)); 
-          if (headNode) { 
-            nsCOMPtr<nsIDOMNode>resultNode; 
-            // Create a new meta charset tag 
-            result = CreateNode(NS_LITERAL_STRING("meta"), headNode, 0, getter_AddRefs(resultNode)); 
-            NS_ENSURE_SUCCESS(result, NS_ERROR_FAILURE); 
+bool
+nsPlaintextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
+                                     const nsACString& aCharacterSet)
+{
+  // get a list of META tags
+  nsCOMPtr<nsIDOMNodeList> metaList;
+  nsresult rv = aDocument->GetElementsByTagName(NS_LITERAL_STRING("meta"),
+                                                getter_AddRefs(metaList));
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(metaList, false);
 
-            // Set attributes to the created element 
-            if (resultNode && !characterSet.IsEmpty()) { 
-              metaElement = do_QueryInterface(resultNode); 
-              if (metaElement) { 
-                // not undoable, undo should undo CreateNode 
-                result = metaElement->SetAttribute(NS_LITERAL_STRING("http-equiv"), NS_LITERAL_STRING("Content-Type")); 
-                if (NS_SUCCEEDED(result)) { 
-                  // not undoable, undo should undo CreateNode 
-                  result = metaElement->SetAttribute(NS_LITERAL_STRING("content"),
-                                                     NS_LITERAL_STRING("text/html;charset=") + NS_ConvertASCIItoUTF16(characterSet)); 
-                } 
-              } 
-            } 
-          } 
-        } 
-      } 
-    } 
-  } 
+  PRUint32 listLength = 0;
+  metaList->GetLength(&listLength);
 
-  return result; 
-} 
+  for (PRUint32 i = 0; i < listLength; ++i) {
+    nsCOMPtr<nsIContent> metaNode = metaList->GetNodeAt(i);
+    MOZ_ASSERT(metaNode);
 
+    if (!metaNode->IsElement()) {
+      continue;
+    }
+
+    nsAutoString currentValue;
+    metaNode->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, currentValue);
+
+    if (!FindInReadable(NS_LITERAL_STRING("content-type"),
+                        currentValue,
+                        nsCaseInsensitiveStringComparator())) {
+      continue;
+    }
+
+    metaNode->GetAttr(kNameSpaceID_None, nsGkAtoms::content, currentValue);
+
+    NS_NAMED_LITERAL_STRING(charsetEquals, "charset=");
+    nsAString::const_iterator originalStart, start, end;
+    originalStart = currentValue.BeginReading(start);
+    currentValue.EndReading(end);
+    if (!FindInReadable(charsetEquals, start, end,
+                        nsCaseInsensitiveStringComparator())) {
+      continue;
+    }
+
+    // set attribute to <original prefix> charset=text/html
+    nsCOMPtr<nsIDOMElement> metaElement = do_QueryInterface(metaNode);
+    MOZ_ASSERT(metaElement);
+    rv = nsEditor::SetAttribute(metaElement, NS_LITERAL_STRING("content"),
+                                Substring(originalStart, start) +
+                                  charsetEquals +
+                                  NS_ConvertASCIItoUTF16(aCharacterSet));
+    return NS_SUCCEEDED(rv);
+  }
+  return false;
+}
 
 NS_IMETHODIMP nsPlaintextEditor::InitRules()
 {
@@ -436,9 +449,13 @@ NS_IMETHODIMP nsPlaintextEditor::TypedText(const nsAString& aString,
   return NS_ERROR_FAILURE; 
 }
 
-NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent, PRInt32 *aInOutOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
+nsresult
+nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
+                                PRInt32* aInOutOffset,
+                                nsCOMPtr<nsIDOMNode>* outBRNode,
+                                EDirection aSelect)
 {
-  NS_ENSURE_SUCCESS(aInOutParent && *aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aInOutParent && *aInOutParent && aInOutOffset && outBRNode, NS_ERROR_NULL_POINTER);
   *outBRNode = nsnull;
   nsresult res;
   
@@ -522,7 +539,8 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, ns
   return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
 }
 
-NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
+nsresult
+nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
 {
   NS_ENSURE_TRUE(outBRNode, NS_ERROR_NULL_POINTER);
   *outBRNode = nsnull;
@@ -1333,16 +1351,15 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDocWeak);
   NS_ASSERTION(domDoc, "Need a document");
 
   rv = docEncoder->Init(domDoc, aFormatType, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aCharset.IsEmpty()
-    && !(aCharset.EqualsLiteral("null")))
+  if (!aCharset.IsEmpty() && !aCharset.EqualsLiteral("null")) {
     docEncoder->SetCharset(aCharset);
+  }
 
   PRInt32 wc;
   (void) GetWrapWidth(&wc);
@@ -1356,25 +1373,26 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   {
     nsCOMPtr<nsISelection> selection;
     rv = GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(rv) && selection)
-      rv = docEncoder->SetSelection(selection);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (selection) {
+      rv = docEncoder->SetSelection(selection);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   // ... or if the root element is not a body,
   // in which case we set the selection to encompass the root.
   else
   {
-    nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
+    dom::Element* rootElement = GetRoot();
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
-    if (!nsTextEditUtils::IsBody(rootElement))
-    {
-      rv = docEncoder->SetContainerNode(rootElement);
+    if (!rootElement->IsHTML(nsGkAtoms::body)) {
+      rv = docEncoder->SetNativeContainerNode(rootElement);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  NS_ADDREF(*encoder = docEncoder);
-  return rv;
+  docEncoder.forget(encoder);
+  return NS_OK;
 }
 
 

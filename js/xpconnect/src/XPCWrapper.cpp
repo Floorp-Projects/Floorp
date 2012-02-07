@@ -123,12 +123,12 @@ AttachNewConstructorObject(XPCCallContext &ccx, JSObject *aGlobalObject)
 namespace XPCWrapper {
 
 JSObject *
-Unwrap(JSContext *cx, JSObject *wrapper)
+Unwrap(JSContext *cx, JSObject *wrapper, bool stopAtOuter)
 {
   if (js::IsWrapper(wrapper)) {
     if (xpc::AccessCheck::isScriptAccessOnly(cx, wrapper))
       return nsnull;
-    return js::UnwrapObject(wrapper);
+    return js::UnwrapObject(wrapper, stopAtOuter);
   }
 
   return nsnull;

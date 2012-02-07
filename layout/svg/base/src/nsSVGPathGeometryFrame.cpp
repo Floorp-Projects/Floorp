@@ -236,20 +236,19 @@ nsSVGPathGeometryFrame::NotifySVGChanged(PRUint32 aFlags)
   }
 }
 
-NS_IMETHODIMP
+void
 nsSVGPathGeometryFrame::NotifyRedrawSuspended()
 {
-  // XXX should we cache the fact that redraw is suspended?
-  return NS_OK;
+  AddStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
 }
 
-NS_IMETHODIMP
+void
 nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
 {
+  RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
+
   if (GetStateBits() & NS_STATE_SVG_DIRTY)
     nsSVGUtils::UpdateGraphic(this);
-
-  return NS_OK;
 }
 
 gfxRect

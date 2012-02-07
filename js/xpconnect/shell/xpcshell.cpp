@@ -1234,7 +1234,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             xpc_ActivateDebugMode();
             break;
         case 'P':
-            if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
+            if (JS_GetClass(JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
 
                 if (!JS_DeepFreezeObject(cx, obj))
@@ -2012,6 +2012,7 @@ main(int argc, char **argv, char **envp)
             cxstack = nsnull;
             JS_GC(cx);
         } //this scopes the JSAutoCrossCompartmentCall
+        JS_EndRequest(cx);
         JS_DestroyContext(cx);
     } // this scopes the nsCOMPtrs
 

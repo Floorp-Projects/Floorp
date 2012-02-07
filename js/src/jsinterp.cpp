@@ -343,31 +343,11 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 const uint32_t JSSLOT_FOUND_FUNCTION  = 0;
 const uint32_t JSSLOT_SAVED_ID        = 1;
 
-static void
-no_such_method_trace(JSTracer *trc, JSObject *obj)
-{
-    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_FOUND_FUNCTION), "found function");
-    gc::MarkValue(trc, obj->getSlotRef(JSSLOT_SAVED_ID), "saved id");
-}
-
 Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
-    JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    NULL,                    /* finalize */
-    NULL,                    /* reserved0 */
-    NULL,                    /* checkAccess */
-    NULL,                    /* call */
-    NULL,                    /* construct */
-    NULL,                    /* XDR */
-    NULL,                    /* hasInstance */
-    no_such_method_trace     /* trace */
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub,
 };
 
 /*
@@ -1014,10 +994,6 @@ EnterWith(JSContext *cx, jsint stackIndex)
     if (!parent)
         return JS_FALSE;
 
-    OBJ_TO_INNER_OBJECT(cx, obj);
-    if (!obj)
-        return JS_FALSE;
-
     JSObject *withobj = WithObject::create(cx, fp, *obj, *parent,
                                            sp + stackIndex - fp->base());
     if (!withobj)
@@ -1430,6 +1406,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define END_CASE_LEN3      len = 3; goto advance_pc;
 # define END_CASE_LEN4      len = 4; goto advance_pc;
 # define END_CASE_LEN5      len = 5; goto advance_pc;
+# define END_CASE_LEN7      len = 7; goto advance_pc;
 # define END_VARLEN_CASE    goto advance_pc;
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)
 # define END_EMPTY_CASES    goto advance_pc_by_one;
@@ -1454,12 +1431,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define GET_FULL_INDEX(PCOFF)                                                 \
     (atoms - script->atoms + GET_INDEX(regs.pc + (PCOFF)))
-
-#define LOAD_OBJECT(PCOFF, obj)                                               \
-    (obj = script->getObject(GET_FULL_INDEX(PCOFF)))
-
-#define LOAD_FUNCTION(PCOFF)                                                  \
-    (fun = script->getFunction(GET_FULL_INDEX(PCOFF)))
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
@@ -2813,6 +2784,12 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
 
     JSScript *newScript = fun->script();
+
+    if (newScript->compileAndGo && newScript->hasClearedGlobal()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
+        goto error;
+    }
+
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, newScript, initial))
         goto error;
 
@@ -2961,9 +2938,7 @@ END_CASE(JSOP_STRING)
 
 BEGIN_CASE(JSOP_OBJECT)
 {
-    JSObject *obj;
-    LOAD_OBJECT(0, obj);
-    PUSH_OBJECT(*obj);
+    PUSH_OBJECT(*script->getObject(GET_UINT32_INDEX(regs.pc)));
 }
 END_CASE(JSOP_OBJECT)
 
@@ -3242,8 +3217,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * a compound statement (not at the top statement level of global code, or
      * at the top level of a function body).
      */
-    JSFunction *fun;
-    LOAD_FUNCTION(0);
+    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
     JSObject *obj = fun;
 
     JSObject *obj2;
@@ -3352,8 +3326,7 @@ END_CASE(JSOP_DEFFUN)
 
 BEGIN_CASE(JSOP_DEFFUN_FC)
 {
-    JSFunction *fun;
-    LOAD_FUNCTION(0);
+    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
 
     JSObject *obj = js_NewFlatClosure(cx, fun);
     if (!obj)
@@ -3389,8 +3362,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
      * JSOP_DEFFUN that avoids requiring a call object for the outer function's
      * activation.
      */
-    JSFunction *fun;
-    LOAD_FUNCTION(SLOTNO_LEN);
+    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc + SLOTNO_LEN));
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFlatClosure());
 
@@ -3415,8 +3387,7 @@ END_CASE(JSOP_DEFLOCALFUN)
 
 BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
 {
-    JSFunction *fun;
-    LOAD_FUNCTION(SLOTNO_LEN);
+    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc + SLOTNO_LEN));
 
     JSObject *obj = js_NewFlatClosure(cx, fun);
     if (!obj)
@@ -3430,8 +3401,7 @@ END_CASE(JSOP_DEFLOCALFUN_FC)
 BEGIN_CASE(JSOP_LAMBDA)
 {
     /* Load the specified function object literal. */
-    JSFunction *fun;
-    LOAD_FUNCTION(0);
+    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
     JSObject *obj = fun;
 
     /* do-while(0) so we can break instead of using a goto. */
@@ -3524,8 +3494,7 @@ END_CASE(JSOP_LAMBDA)
 
 BEGIN_CASE(JSOP_LAMBDA_FC)
 {
-    JSFunction *fun;
-    LOAD_FUNCTION(0);
+    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
 
     JSObject *obj = js_NewFlatClosure(cx, fun);
     if (!obj)
@@ -3702,8 +3671,7 @@ END_CASE(JSOP_NEWARRAY)
 
 BEGIN_CASE(JSOP_NEWOBJECT)
 {
-    JSObject *baseobj;
-    LOAD_OBJECT(0, baseobj);
+    JSObject *baseobj = script->getObject(GET_UINT32_INDEX(regs.pc));
 
     TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, JSProto_Object);
     if (!type)
@@ -4249,9 +4217,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
 BEGIN_CASE(JSOP_ENTERLET0)
 BEGIN_CASE(JSOP_ENTERLET1)
 {
-    JSObject *obj;
-    LOAD_OBJECT(0, obj);
-    StaticBlockObject &blockObj = obj->asStaticBlock();
+    StaticBlockObject &blockObj = script->getObject(GET_UINT32_INDEX(regs.pc))->asStaticBlock();
     JS_ASSERT(regs.fp()->maybeBlockChain() == blockObj.enclosingBlock());
 
     if (op == JSOP_ENTERBLOCK) {

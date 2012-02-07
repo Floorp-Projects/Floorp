@@ -49,6 +49,15 @@
             new scrollingChecker(getAccessible("bottom1"))
           ]
         },
+        { // jump again (test for bug 437607)
+          ID: "anchor1",
+          actionName: "jump",
+          actionIndex: 0,
+          events: CLICK_EVENTS,
+          eventSeq: [
+            new scrollingChecker(getAccessible("bottom1"))
+          ]
+        },
         {
           ID: "anchor2",
           actionName: "jump",

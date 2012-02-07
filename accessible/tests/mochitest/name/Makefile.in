@@ -45,8 +45,6 @@ relativesrcdir  = accessible/name
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# test_nsRootAcc.xul, nsRootAcc_wnd.xul disabled for misusing <tabbrowser> (bug 715857)
-
 _TEST_FILES =\
 		general.css \
 		general.xbl \
@@ -57,6 +55,7 @@ _TEST_FILES =\
 		test_link.html \
 		test_list.html \
 		test_markup.html \
+		test_browserui.xul \
 		test_tree.xul \
 		markuprules.xml \
 		$(NULL)

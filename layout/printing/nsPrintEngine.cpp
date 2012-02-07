@@ -1688,9 +1688,6 @@ nsPrintEngine::SetupToPrintContent()
 
     // Only Shrink if we are smaller
     if (mPrt->mShrinkRatio < 0.998f) {
-      // Clamp Shrink to Fit to 60%
-      mPrt->mShrinkRatio = NS_MAX(mPrt->mShrinkRatio, 0.60f);
-
       for (PRUint32 i=0;i<mPrt->mPrintDocList.Length();i++) {
         nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);
         NS_ASSERTION(po, "nsPrintObject can't be null!");
