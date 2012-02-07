@@ -315,6 +315,13 @@ ProxyHandler::defaultValue(JSContext *cx, JSObject *proxy, JSType hint, Value *v
 }
 
 bool
+ProxyHandler::iteratorNext(JSContext *cx, JSObject *proxy, Value *vp)
+{
+    vp->setMagic(JS_NO_ITER_VALUE);
+    return true;
+}
+
+bool
 ProxyHandler::call(JSContext *cx, JSObject *proxy, uintN argc, Value *vp)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
@@ -967,6 +974,14 @@ Proxy::defaultValue(JSContext *cx, JSObject *proxy, JSType hint, Value *vp)
     JS_CHECK_RECURSION(cx, return NULL);
     AutoPendingProxyOperation pending(cx, proxy);
     return GetProxyHandler(proxy)->defaultValue(cx, proxy, hint, vp);
+}
+
+bool
+Proxy::iteratorNext(JSContext *cx, JSObject *proxy, Value *vp)
+{
+    JS_CHECK_RECURSION(cx, return NULL);
+    AutoPendingProxyOperation pending(cx, proxy);
+    return GetProxyHandler(proxy)->iteratorNext(cx, proxy, vp);
 }
 
 static JSObject *
