@@ -670,6 +670,14 @@ LinearScanAllocator::buildLivenessInfo()
         JS_ASSERT_IF(!mblock->numPredecessors(), live->empty());
     }
 
+    // If the script has an infinite loop, there may be no MReturn and therefore
+    // no fixed intervals. Add a small range to fixedIntervalsUnion so that the
+    // rest of the allocator can assume it has at least one range.
+    if (fixedIntervalsUnion->numRanges() == 0) {
+        fixedIntervalsUnion->addRange(CodePosition(0, CodePosition::INPUT),
+                                      CodePosition(0, CodePosition::OUTPUT));
+    }
+
     return true;
 }
 
