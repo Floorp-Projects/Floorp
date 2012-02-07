@@ -2712,6 +2712,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     saveop = JSOP_NOP;
     sn = NULL;
     rval = NULL;
+    bool forOf = false;
 #if JS_HAS_XML_SUPPORT
     foreach = inXML = quoteAttr = JS_FALSE;
 #endif
@@ -3854,6 +3855,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_ITER:
+                forOf = (GET_UINT8(pc) == JSITER_FOR_OF);
                 foreach = (GET_UINT8(pc) & (JSITER_FOREACH | JSITER_KEYVALUE)) ==
                           JSITER_FOREACH;
                 todo = -2;
@@ -3925,9 +3927,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         rval = POP_STR();
                         if (ss->top >= 1 && ss->opcodes[ss->top - 1] == JSOP_FORLOCAL) {
                             ss->sprinter.setOffset(ss->offsets[ss->top] - PAREN_SLOP);
-                            if (Sprint(&ss->sprinter, " %s (%s in %s)",
+                            if (Sprint(&ss->sprinter, " %s (%s %s %s)",
                                        foreach ? js_for_each_str : js_for_str,
-                                       lval, rval) < 0) {
+                                       lval,
+                                       forOf ? "of" : "in",
+                                       rval) < 0) {
                                 return NULL;
                             }
 
@@ -3939,9 +3943,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                              */
                             todo = ss->offsets[ss->top - 1];
                         } else {
-                            todo = Sprint(&ss->sprinter, " %s (%s in %s)",
+                            todo = Sprint(&ss->sprinter, " %s (%s %s %s)",
                                           foreach ? js_for_each_str : js_for_str,
-                                          lval, rval);
+                                          lval,
+                                          forOf ? "of" : "in",
+                                          rval);
                         }
                         if (todo < 0 || !PushOff(ss, todo, JSOP_FORLOCAL))
                             return NULL;
@@ -3953,9 +3959,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                          */
                         rval = GetStr(ss, ss->top - 1);
                         xval = VarPrefix(js_GetSrcNote(jp->script, pc + next));
-                        js_printf(jp, "\t%s (%s%s in %s) {\n",
+                        js_printf(jp, "\t%s (%s%s %s %s) {\n",
                                   foreach ? js_for_each_str : js_for_str,
-                                  xval, lval, rval);
+                                  xval,
+                                  lval,
+                                  forOf ? "of" : "in",
+                                  rval);
                         jp->indent += 4;
                         DECOMPILE_CODE(pc + next + JSOP_POP_LENGTH, cond - next - JSOP_POP_LENGTH);
                         jp->indent -= 4;

@@ -154,6 +154,7 @@ const char *const js_common_atom_names[] = {
     js_noSuchMethod_str,        /* noSuchMethodAtom             */
     "[object Null]",            /* objectNullAtom               */
     "[object Undefined]",       /* objectUndefinedAtom          */
+    "of",                       /* ofAtom                       */
     js_proto_str,               /* protoAtom                    */
     js_set_str,                 /* setAtom                      */
     js_source_str,              /* sourceAtom                   */

@@ -3438,7 +3438,12 @@ struct JSClass {
 #define JSCLASS_HIGH_FLAGS_SHIFT        (JSCLASS_RESERVED_SLOTS_SHIFT +       \
                                          JSCLASS_RESERVED_SLOTS_WIDTH)
 
-#define JSCLASS_INTERNAL_FLAG1          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
+/*
+ * Call the iteratorObject hook only to iterate over contents (for-of), not to
+ * enumerate properties (for-in, for-each, Object.keys, etc.)
+ */
+#define JSCLASS_FOR_OF_ITERATION        (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
+
 #define JSCLASS_IS_ANONYMOUS            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1))
 #define JSCLASS_IS_GLOBAL               (1<<(JSCLASS_HIGH_FLAGS_SHIFT+2))
 #define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
