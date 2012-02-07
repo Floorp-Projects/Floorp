@@ -444,7 +444,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         if (mContextMenuSubject == null)
             return false;
 
-        String url = "";
+        final String url;
         byte[] b = null;
         String title = "";
         if (mContextMenuSubject instanceof Cursor) {
@@ -470,9 +470,20 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                 break;
             }
             case R.id.remove_bookmark: {
-                ContentResolver resolver = Tabs.getInstance().getContentResolver();
-                BrowserDB.removeBookmark(resolver, url);
-                Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                GeckoAppShell.getHandler().post(new Runnable() {
+                    public void run() {
+                        ContentResolver resolver = Tabs.getInstance().getContentResolver();
+                        BrowserDB.removeBookmark(resolver, url);
+
+                        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                            public void run() {
+                                mAwesomeTabs.refreshBookmarks();
+                                Toast.makeText(AwesomeBar.this, R.string.bookmark_removed,
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
                 break;
             }
             case R.id.add_to_launcher: {
