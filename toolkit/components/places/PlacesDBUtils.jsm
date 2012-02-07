@@ -298,7 +298,7 @@ let PlacesDBUtils = {
     let tasks = new Tasks(aTasks);
     tasks.log("> Coherence check");
 
-    let stmts = this._getBoundCoherenceStatements();
+    let stmts = PlacesDBUtils._getBoundCoherenceStatements();
     DBConn.executeAsync(stmts, stmts.length, {
       handleError: PlacesDBUtils._handleError,
       handleResult: function () {},
@@ -1016,6 +1016,22 @@ let PlacesDBUtils = {
     PlacesDBUtils._executeTasks(tasks);
   },
 
+  /**
+   * Runs a list of tasks, notifying log messages to the callback.
+   *
+   * @param aTasks
+   *        Array of tasks to be executed, in form of pointers to methods in
+   *        this module.
+   * @param [optional] aCallback
+   *        Callback to be invoked when done.  It will receive an array of
+   *        log messages.  If not specified the log will be printed to the
+   *        Error Console.
+   */
+  runTasks: function PDBU_runTasks(aTasks, aCallback) {
+    let tasks = new Tasks(aTasks);
+    tasks.callback = aCallback;
+    PlacesDBUtils._executeTasks(tasks);
+  }
 };
 
 /**
@@ -1030,7 +1046,10 @@ function Tasks(aTasks)
     if (Array.isArray(aTasks)) {
       this._list = aTasks.slice(0, aTasks.length);
     }
-    else if (typeof(aTasks) == "object" && aTasks instanceof Tasks) {
+    // This supports passing in a Tasks-like object, with a "list" property,
+    // for compatibility reasons.
+    else if (typeof(aTasks) == "object" &&
+             (Tasks instanceof Tasks || "list" in aTasks)) {
       this._list = aTasks.list;
       this._log = aTasks.messages;
       this.callback = aTasks.callback;
