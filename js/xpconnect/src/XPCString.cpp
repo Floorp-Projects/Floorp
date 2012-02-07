@@ -58,22 +58,13 @@
 static int sDOMStringFinalizerIndex = -1;
 
 static void
-DOMStringFinalizer(JSContext *cx, JSString *str)
+FinalizeDOMString(const JSStringFinalizer *fin, jschar *chars)
 {
-    jschar *chars = const_cast<jschar *>(JS_GetStringCharsZ(cx, str));
-    NS_ASSERTION(chars, "How could this OOM if we allocated the memory?");
     nsStringBuffer::FromData(chars)->Release();
 }
 
-void
-XPCStringConvert::ShutdownDOMStringFinalizer()
-{
-    if (sDOMStringFinalizerIndex == -1)
-        return;
+static const JSStringFinalizer sDOMStringFinalizer = { FinalizeDOMString };
 
-    JS_RemoveExternalStringFinalizer(DOMStringFinalizer);
-    sDOMStringFinalizerIndex = -1;
-}
 
 // convert a readable to a JSString, copying string data
 // static
@@ -94,16 +85,9 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
     if (buf) {
         // yay, we can share the string's buffer!
 
-        if (sDOMStringFinalizerIndex == -1) {
-            sDOMStringFinalizerIndex =
-                    JS_AddExternalStringFinalizer(DOMStringFinalizer);
-            if (sDOMStringFinalizerIndex == -1)
-                return JSVAL_NULL;
-        }
-
         str = JS_NewExternalString(cx,
                                    reinterpret_cast<jschar *>(buf->Data()),
-                                   length, sDOMStringFinalizerIndex);
+                                   length, &sDOMStringFinalizer);
 
         if (str) {
             *sharedBuffer = buf;

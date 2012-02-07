@@ -1179,11 +1179,6 @@ XPCJSRuntime::~XPCJSRuntime()
         delete mExplicitNativeWrapperMap;
     }
 
-    // unwire the readable/JSString sharing magic
-    XPCStringConvert::ShutdownDOMStringFinalizer();
-
-    XPCConvert::RemoveXPCOMUCStringFinalizer();
-
     if (mJSHolders.ops) {
         JS_DHashTableFinish(&mJSHolders);
         mJSHolders.ops = nsnull;

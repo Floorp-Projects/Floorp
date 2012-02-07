@@ -2966,51 +2966,27 @@ JS_FlushCaches(JSContext *cx)
 {
 }
 
-JS_PUBLIC_API(intN)
-JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
-{
-    return JSExternalString::changeFinalizer(NULL, finalizer);
-}
-
-JS_PUBLIC_API(intN)
-JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer)
-{
-    return JSExternalString::changeFinalizer(finalizer, NULL);
-}
-
 JS_PUBLIC_API(JSString *)
-JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length, intN type)
+JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length,
+                     const JSStringFinalizer *fin)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    JSString *s = JSExternalString::new_(cx, chars, length, type, NULL);
+    JSString *s = JSExternalString::new_(cx, chars, length, fin);
     Probes::createString(cx, s, length);
     return s;
 }
 
-extern JS_PUBLIC_API(JSString *)
-JS_NewExternalStringWithClosure(JSContext *cx, const jschar *chars, size_t length,
-                                intN type, void *closure)
-{
-    AssertNoGC(cx);
-    CHECK_REQUEST(cx);
-    return JSExternalString::new_(cx, chars, length, type, closure);
-}
-
 extern JS_PUBLIC_API(JSBool)
-JS_IsExternalString(JSContext *cx, JSString *str)
+JS_IsExternalString(JSString *str)
 {
-    AssertNoGC(cx);
-    CHECK_REQUEST(cx);
     return str->isExternal();
 }
 
-extern JS_PUBLIC_API(void *)
-JS_GetExternalStringClosure(JSContext *cx, JSString *str)
+extern JS_PUBLIC_API(const JSStringFinalizer *)
+JS_GetExternalStringFinalizer(JSString *str)
 {
-    AssertNoGCOrFlatString(cx, str);
-    CHECK_REQUEST(cx);
-    return str->asExternal().externalClosure();
+    return str->asExternal().externalFinalizer();
 }
 
 JS_PUBLIC_API(void)
