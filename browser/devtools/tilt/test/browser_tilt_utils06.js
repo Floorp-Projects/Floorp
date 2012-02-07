@@ -11,7 +11,7 @@ let someObject = {
 };
 
 let anotherObject = {
-  finalize: function()
+  _finalize: function()
   {
     someObject.c = 3;
   }
