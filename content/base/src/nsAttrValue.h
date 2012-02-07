@@ -106,6 +106,8 @@ public:
   explicit nsAttrValue(const nsIntMargin& aValue);
   ~nsAttrValue();
 
+  inline const nsAttrValue& operator=(const nsAttrValue& aOther);
+
   static nsresult Init();
   static void Shutdown();
 
@@ -396,6 +398,13 @@ private:
 /**
  * Implementation of inline methods
  */
+
+inline const nsAttrValue&
+nsAttrValue::operator=(const nsAttrValue& aOther)
+{
+  SetTo(aOther);
+  return *this;
+}
 
 inline nsIAtom*
 nsAttrValue::GetAtomValue() const
