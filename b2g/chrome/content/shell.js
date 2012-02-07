@@ -79,9 +79,10 @@ function startupHttpd(baseDir, port) {
 // FIXME Bug 707625
 // until we have a proper security model, add some rights to
 // the pre-installed web applications
+// XXX never grant 'content-camera' to non-gaia apps
 function addPermissions(urls) {
   let permissions = [
-    'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app'
+    'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'content-camera'
   ];
   urls.forEach(function(url) {
     let uri = Services.io.newURI(url, null, null);
