@@ -228,6 +228,12 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetName(nsACString &aName)
+  {
+      aName.AssignLiteral("workers");
+      return NS_OK;
+  }
+
   NS_IMETHOD
   CollectReports(nsIMemoryMultiReporterCallback* aCallback,
                  nsISupports* aClosure)
