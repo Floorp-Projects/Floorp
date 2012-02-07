@@ -752,6 +752,20 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
     },
 
     /**
+     * Called when the page to which we're attached changes
+     */
+    reattachConsole: function(opts) {
+      jstype.setGlobalObject(opts.jsEnvironment.globalObject);
+      nodetype.setDocument(opts.contentDocument);
+      cli.setEvalFunction(opts.jsEnvironment.evalFunction);
+
+      opts.requisition.environment = opts.environment;
+      opts.requisition.document = opts.chromeDocument;
+
+      opts.console.reattachConsole(opts);
+    },
+
+    /**
      * Undo the effects of createView() to prevent memory leaks
      */
     removeView: function(opts) {
@@ -5809,6 +5823,21 @@ function Console(options) {
   this.chromeWindow.addEventListener('resize', this.resizer, false);
   this.requisition.commandChange.add(this.resizer, this);
 }
+
+/**
+ * Called when the page to which we're attached changes
+ */
+Console.prototype.reattachConsole = function(options) {
+  this.chromeWindow.removeEventListener('resize', this.resizer, false);
+  this.chromeWindow = options.chromeDocument.defaultView;
+  this.chromeWindow.addEventListener('resize', this.resizer, false);
+
+  this.focusManager.document = options.chromeDocument;
+  this.inputter.document = options.chromeDocument;
+  this.inputter.completer.document = options.chromeDocument;
+  this.menu.document = options.chromeDocument;
+  this.argFetcher.document = options.chromeDocument;
+};
 
 /**
  * Avoid memory leaks
