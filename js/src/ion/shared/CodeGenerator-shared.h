@@ -184,6 +184,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Mark the safepoint on |ins| as corresponding to the current assembler location.
     // The location should be just after a call.
     bool markSafepoint(LInstruction *ins);
+    bool markSafepointAt(uint32 offset, LInstruction *ins);
 
     // Mark the OSI point |ins| as corresponding to the current
     // assembler location inside the |osiIndices_|. Return the assembler

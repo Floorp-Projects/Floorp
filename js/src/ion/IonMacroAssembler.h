@@ -118,6 +118,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadBaseShapeClass(dest, dest);
     }
 
+    void loadJSContext(JSRuntime *runtime, const Register &dest) {
+        movePtr(ImmWord(runtime), dest);
+        loadPtr(Address(dest, offsetof(JSRuntime, ionJSContext)), dest);
+    }
+
     void loadTypedOrValue(Address address, TypedOrValueRegister dest)
     {
         if (dest.hasValue())
@@ -234,6 +239,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Push(JSValueType type, Register reg) {
         pushValue(type, reg);
         framePushed_ += sizeof(Value);
+    }
+
+    void adjustStack(int amount) {
+        if (amount > 0)
+            freeStack(amount);
+        else if (amount < 0)
+            reserveStack(-amount);
     }
 
     void bumpKey(Int32Key *key, int diff) {
