@@ -50,6 +50,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.CursorWrapper;
+import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -274,6 +275,30 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                             Bookmarks.IS_FOLDER + " = 0",
                             null,
                             Bookmarks.TITLE + " ASC");
+
+        return new LocalDBCursor(c);
+    }
+
+    public Cursor getMobileBookmarks(ContentResolver cr) {
+        return getBookmarks(cr, true);
+    }
+
+    public Cursor getDesktopBookmarks(ContentResolver cr) {
+        return getBookmarks(cr, false);
+    }
+
+    private Cursor getBookmarks(ContentResolver cr, boolean mobileBookmarks) {
+        String parentSelection = mobileBookmarks ? " = ?" : " != ?";
+        long mobileFolderId = getMobileBookmarksFolderId(cr);
+        Cursor c = cr.query(appendProfile(Bookmarks.CONTENT_URI),
+                            new String[] { Bookmarks._ID,
+                                           Bookmarks.URL,
+                                           Bookmarks.TITLE,
+                                           Bookmarks.FAVICON },
+                            Bookmarks.IS_FOLDER + " = 0 AND " +
+                            Bookmarks.PARENT + parentSelection,
+                            new String[] { String.valueOf(mobileFolderId) },
+                            Bookmarks.DATE_MODIFIED + " DESC");
 
         return new LocalDBCursor(c);
     }
