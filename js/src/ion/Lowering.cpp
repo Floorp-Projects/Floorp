@@ -172,9 +172,9 @@ LIRGenerator::visitCall(MCall *call)
     uint32 argc = call->argc();
     JS_ASSERT(call->getFunction()->type() == MIRType_Object);
 
-    JS_ASSERT(CallTempReg0 != CallTempReg1);
-    JS_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
-    JS_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
+    JS_STATIC_ASSERT(CallTempReg0 != CallTempReg1);
+    JS_STATIC_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
+    JS_STATIC_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
 
     // Height of the current argument vector.
     uint32 argslot = getArgumentSlotForCall();
