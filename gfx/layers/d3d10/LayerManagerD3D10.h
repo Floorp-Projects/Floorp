@@ -165,6 +165,9 @@ public:
     CreateOptimalSurface(const gfxIntSize &aSize,
                          gfxASurface::gfxImageFormat imageFormat);
 
+  virtual gfxASurface::gfxImageFormat MaskImageFormat() 
+  { return gfxASurface::ImageFormatARGB32; }
+
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat);
