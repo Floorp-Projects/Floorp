@@ -543,7 +543,8 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
      * function as uninlineable, which will expand inline frames if there are
      * any and prevent the function from being inlined in the future.
      */
-    if (FrameRegs *regs = cx->maybeRegs()) {
+    FrameRegs *regs = cx->maybeRegs();
+    if (regs && !regs->fp()->runningInIon()) {
         JSFunction *fun = NULL;
         if (JSInlinedSite *site = regs->inlined()) {
             mjit::JITChunk *chunk = regs->fp()->jit()->chunk(regs->pc);
@@ -574,7 +575,6 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
     if (!space().ensureSpace(cx, report, firstUnused, VALUES_PER_STACK_SEGMENT + nvars, dest))
         return NULL;
 
-    FrameRegs *regs;
     CallArgsList *calls;
     if (seg_ && extend) {
         regs = seg_->maybeRegs();
