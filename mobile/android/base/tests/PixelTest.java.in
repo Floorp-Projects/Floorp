@@ -18,6 +18,16 @@ class PixelTest extends BaseTest {
         return mDriver.getPaintedSurface();
     }
 
+    protected final int[][] waitWithNoPaint(Actions.RepeatedEventExpecter expecter) {
+        try {
+            Thread.sleep(PAINT_CLEAR_DELAY);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+        mAsserter.is(expecter.eventReceived(), false, "Checking gecko didn't draw unnecessarily");
+        return mDriver.getPaintedSurface();
+    }
+
     // this matches the algorithm in robocop_boxes.html
     protected final int[] getBoxColorAt(int x, int y) {
         x -= (x % 100);
