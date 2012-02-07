@@ -49,7 +49,7 @@
 class XULSelectControlAccessible : public nsAccessibleWrap
 {
 public:
-  XULSelectControlAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  XULSelectControlAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
   virtual ~XULSelectControlAccessible() {}
 
   // nsAccessNode

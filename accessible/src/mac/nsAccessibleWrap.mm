@@ -51,8 +51,8 @@
 using namespace mozilla::a11y;
 
 nsAccessibleWrap::
-  nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessible(aContent, aShell), mNativeObject(nil),
+  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessible(aContent, aDoc), mNativeObject(nil),  
   mNativeInited(false)
 {
 }

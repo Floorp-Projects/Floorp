@@ -52,8 +52,8 @@
 //-----------------------------------------------------
 
 nsAccessNodeWrap::
-  nsAccessNodeWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessNode(aContent, aShell)
+  nsAccessNodeWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessNode(aContent, aDoc)
 {
 }
 
