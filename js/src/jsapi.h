@@ -4047,6 +4047,13 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj);
 extern JS_PUBLIC_API(JSBool)
 JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp);
 
+/*
+ * Create an object to iterate over the elements of obj in for-of order. This
+ * can be used to implement the iteratorObject hook for an array-like Class.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_NewElementIterator(JSContext *cx, JSObject *obj);
+
 extern JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp);

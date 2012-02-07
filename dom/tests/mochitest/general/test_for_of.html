@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for for-of loops</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body onload="doTest()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<script>
+function doTest() {
+  // DOM NodeLists are iterable.
+  var a = [];
+  for (var e of document.body.childNodes)
+    if (e.nodeType === 1)
+      a.push(e.tagName); 
+  is("P DIV SCRIPT", a.join(" "), "for-of should see each element in the body");
+
+  SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>
