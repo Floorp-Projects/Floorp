@@ -4419,6 +4419,13 @@ JS_NewElementIterator(JSContext *cx, JSObject *obj)
     return ElementIteratorObject::create(cx, obj);
 }
 
+JS_PUBLIC_API(JSObject *)
+JS_ElementIteratorStub(JSContext *cx, JSObject *obj, JSBool keysonly)
+{
+    JS_ASSERT(!keysonly);
+    return JS_NewElementIterator(cx, obj);
+}
+
 JS_PUBLIC_API(JSBool)
 JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp)
 {
