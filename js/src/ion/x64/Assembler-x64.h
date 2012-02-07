@@ -86,8 +86,10 @@ static const Register ScratchReg = r11;
 static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm15 };
 
 static const Register ArgumentsRectifierReg = r8;
+static const Register CallTempReg0 = rax;
 static const Register CallTempReg1 = rdi;
-static const Register CallTempReg2 = rax;
+static const Register CallTempReg2 = rbx;
+static const Register CallTempReg3 = rcx;
 
 // Different argument registers for WIN64
 #if defined(_WIN64)

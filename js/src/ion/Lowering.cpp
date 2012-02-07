@@ -153,29 +153,57 @@ LIRGenerator::visitPassArg(MPassArg *arg)
     return add(stack);
 }
 
+static JSFunction *
+CheckKnownCallee(MDefinition *func)
+{
+    if (!func->isConstant() || !func->toConstant()->value().isObject())
+        return NULL;
+
+    JSObject &obj = func->toConstant()->value().toObject();
+    if (!obj.isFunction())
+        return NULL;
+
+    return obj.toFunction();
+}
+
 bool
 LIRGenerator::visitCall(MCall *call)
 {
     uint32 argc = call->argc();
     JS_ASSERT(call->getFunction()->type() == MIRType_Object);
 
-    JS_ASSERT(CallTempReg1 != CallTempReg2);
-    JS_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
-    JS_ASSERT(CallTempReg2 != ArgumentsRectifierReg);
+    JS_STATIC_ASSERT(CallTempReg0 != CallTempReg1);
+    JS_STATIC_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
+    JS_STATIC_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
 
     // Height of the current argument vector.
     uint32 argslot = getArgumentSlotForCall();
 
-    // A call is entirely stateful, depending upon arguments already being
-    // stored in an argument vector. Therefore visitCall() may be generic.
-    LCallGeneric *ins = new LCallGeneric(useFixed(call->getFunction(), CallTempReg1),
-                                         argslot,
-                                         tempFixed(ArgumentsRectifierReg),
-                                         tempFixed(CallTempReg2));
-    if (!assignSnapshot(ins))
-        return false;
-    if (!defineReturn(ins, call))
-        return false;
+    // If the callsite is known-monomorphic (calls an MConstant),
+    // extract the target function.
+    JSFunction *target = CheckKnownCallee(call->getFunction());
+
+    LInstruction *ins = NULL;
+
+    // Monomorphic native calls lower to LCallNative.
+    if (target && target->isNative()) {
+        LCallNative *lcall = new LCallNative(target, argslot,
+                tempFixed(CallTempReg0), tempFixed(CallTempReg1), tempFixed(CallTempReg2),
+                tempFixed(CallTempReg3));
+        if (!defineReturn(lcall, call))
+            return false;
+        ins = lcall;
+    } else {
+        LCallGeneric *lcall = new LCallGeneric(useFixed(call->getFunction(), CallTempReg0),
+            argslot, tempFixed(ArgumentsRectifierReg), tempFixed(CallTempReg2));
+        if (!assignSnapshot(lcall))
+            return false;
+        if (!defineReturn(lcall, call))
+            return false;
+        ins = lcall;
+    }
+
+    JS_ASSERT(ins);
     if (!assignSafepoint(ins, call))
         return false;
 
@@ -473,12 +501,10 @@ LIRGenerator::visitDiv(MDiv *ins)
 bool
 LIRGenerator::visitMod(MMod *ins)
 {
-    MDefinition *lhs = ins->lhs();
-
     if (ins->type() == MIRType_Int32 &&
         ins->specialization() == MIRType_Int32)
     {
-        JS_ASSERT(lhs->type() == MIRType_Int32);
+        JS_ASSERT(ins->lhs()->type() == MIRType_Int32);
         return lowerModI(ins);
     }
     // TODO: Implement for ins->specialization() == MIRType_Double
