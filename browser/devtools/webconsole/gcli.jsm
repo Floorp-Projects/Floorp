@@ -1260,6 +1260,34 @@ dom.clearElement = function(elem) {
   }
 };
 
+var isAllWhitespace = /^\s*$/;
+
+/**
+ * Iterate over the children of a node looking for TextNodes that have only
+ * whitespace content and remove them.
+ * This utility is helpful when you have a template which contains whitespace
+ * so it looks nice, but where the whitespace interferes with the rendering of
+ * the page
+ * @param elem The element which should have blank whitespace trimmed
+ * @param deep Should this node removal include child elements
+ */
+dom.removeWhitespace = function(elem, deep) {
+  var i = 0;
+  while (i < elem.childNodes.length) {
+    var child = elem.childNodes.item(i);
+    if (child.nodeType === Node.TEXT_NODE &&
+        isAllWhitespace.test(child.textContent)) {
+      elem.removeChild(child);
+    }
+    else {
+      if (deep && child.nodeType === Node.ELEMENT_NODE) {
+        dom.removeWhitespace(child, deep);
+      }
+      i++;
+    }
+  }
+};
+
 /**
  * Create a style element in the document head, and add the given CSS text to
  * it.
@@ -4821,6 +4849,9 @@ Requisition.prototype.toString = function() {
  * version of the command line input.
  * @param cursor We only take a status of INCOMPLETE to be INCOMPLETE when the
  * cursor is actually in the argument. Otherwise it's an error.
+ * @return Array of objects each containing <tt>status</tt> property and a
+ * <tt>string</tt> property containing the characters to which the status
+ * applies. Concatenating the strings in order gives the original input.
  */
 Requisition.prototype.getInputStatusMarkup = function(cursor) {
   var argTraces = this.createInputArgTrace();
@@ -4829,7 +4860,7 @@ Requisition.prototype.getInputStatusMarkup = function(cursor) {
   cursor = cursor === 0 ? 0 : cursor - 1;
   var cTrace = argTraces[cursor];
 
-  var statuses = [];
+  var markup = [];
   for (var i = 0; i < argTraces.length; i++) {
     var argTrace = argTraces[i];
     var arg = argTrace.arg;
@@ -4848,10 +4879,22 @@ Requisition.prototype.getInputStatusMarkup = function(cursor) {
       }
     }
 
-    statuses.push(status);
+    markup.push({ status: status, string: argTrace.char });
   }
 
-  return statuses;
+  // De-dupe: merge entries where 2 adjacent have same status
+  var i = 0;
+  while (i < markup.length - 1) {
+    if (markup[i].status === markup[i + 1].status) {
+      markup[i].string += markup[i + 1].string;
+      markup.splice(i + 1, 1);
+    }
+    else {
+      i++;
+    }
+  }
+
+  return markup;
 };
 
 /**
@@ -5967,7 +6010,7 @@ exports.Console = Console;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/ui/inputter', ['require', 'exports', 'module' , 'gcli/util', 'gcli/l10n', 'gcli/types', 'gcli/history', 'text!gcli/ui/inputter.css'], function(require, exports, module) {
+define('gcli/ui/inputter', ['require', 'exports', 'module' , 'gcli/util', 'gcli/l10n', 'gcli/types', 'gcli/history', 'gcli/ui/completer', 'text!gcli/ui/inputter.css'], function(require, exports, module) {
 var cliView = exports;
 
 
@@ -5977,6 +6020,7 @@ var l10n = require('gcli/l10n');
 
 var Status = require('gcli/types').Status;
 var History = require('gcli/history').History;
+var Completer = require('gcli/ui/completer').Completer;
 
 var inputterCss = require('text!gcli/ui/inputter.css');
 
@@ -6385,277 +6429,6 @@ Inputter.prototype.getInputState = function() {
 cliView.Inputter = Inputter;
 
 
-/**
- * Completer is an 'input-like' element that sits  an input element annotating
- * it with visual goodness.
- * @param {object} options An object that contains various options which
- * customizes how the completer functions.
- * Properties on the options object:
- * - document (required) DOM document to be used in creating elements
- * - requisition (required) A GCLI Requisition object whose state is monitored
- * - completeElement (optional) An element to use
- * - completionPrompt (optional) The prompt - defaults to '\u00bb'
- *   (double greater-than, a.k.a right guillemet). The prompt is used directly
- *   in a TextNode, so HTML entities are not allowed.
- */
-function Completer(options) {
-  this.document = options.document || document;
-  this.requisition = options.requisition;
-  this.elementCreated = false;
-  this.scratchpad = options.scratchpad;
-
-  this.element = options.completeElement || 'gcli-row-complete';
-  if (typeof this.element === 'string') {
-    var name = this.element;
-    this.element = this.document.getElementById(name);
-
-    if (!this.element) {
-      this.elementCreated = true;
-      this.element = dom.createElement(this.document, 'div');
-      this.element.className = 'gcli-in-complete gcli-in-valid';
-      this.element.setAttribute('tabindex', '-1');
-      this.element.setAttribute('aria-live', 'polite');
-    }
-  }
-
-  this.completionPrompt = typeof options.completionPrompt === 'string'
-      ? options.completionPrompt
-      : '\u00bb';
-
-  if (options.inputBackgroundElement) {
-    this.backgroundElement = options.inputBackgroundElement;
-  }
-  else {
-    this.backgroundElement = this.element;
-  }
-}
-
-/**
- * Avoid memory leaks
- */
-Completer.prototype.destroy = function() {
-  delete this.document;
-  delete this.element;
-  delete this.backgroundElement;
-
-  if (this.elementCreated) {
-    this.document.defaultView.removeEventListener('resize', this.resizer, false);
-  }
-
-  delete this.inputter;
-};
-
-/**
- * A list of the styles that decorate() should copy to make the completion
- * element look like the input element. backgroundColor is a spiritual part of
- * this list, but see comment in decorate().
- */
-Completer.copyStyles = [ 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle' ];
-
-/**
- * Make ourselves visually similar to the input element, and make the input
- * element transparent so our background shines through
- */
-Completer.prototype.decorate = function(inputter) {
-  this.inputter = inputter;
-  var input = inputter.element;
-
-  // If we were told which element to use, then assume it is already
-  // correctly positioned. Otherwise insert it alongside the input element
-  if (this.elementCreated) {
-    this.inputter.appendAfter(this.element);
-
-    var styles = this.document.defaultView.getComputedStyle(input, null);
-    Completer.copyStyles.forEach(function(style) {
-      this.element.style[style] = styles[style];
-    }, this);
-
-    // The completer text is by default invisible so we make it the same color
-    // as the input background.
-    this.element.style.color = input.style.backgroundColor;
-
-    // If there is a separate backgroundElement, then we make the element
-    // transparent, otherwise it inherits the color of the input node
-    // It's not clear why backgroundColor doesn't work when used from
-    // computedStyle, but it doesn't. Patches welcome!
-    this.element.style.backgroundColor = (this.backgroundElement != this.element) ?
-        'transparent' :
-        input.style.backgroundColor;
-    input.style.backgroundColor = 'transparent';
-
-    // Make room for the prompt
-    input.style.paddingLeft = '20px';
-
-    this.resizer = this.resizer.bind(this);
-    this.document.defaultView.addEventListener('resize', this.resizer, false);
-    this.resizer();
-  }
-};
-
-/**
- * Ensure that the completion element is the same size and the inputter element
- */
-Completer.prototype.resizer = function() {
-  // Remove this when jsdom does getBoundingClientRect(). See Bug 717269
-  if (!this.inputter.element.getBoundingClientRect) {
-    return;
-  }
-
-  var rect = this.inputter.element.getBoundingClientRect();
-  // -4 to line up with 1px of padding and border, top and bottom
-  var height = rect.bottom - rect.top - 4;
-
-  this.element.style.top = rect.top + 'px';
-  this.element.style.height = height + 'px';
-  this.element.style.lineHeight = height + 'px';
-  this.element.style.left = rect.left + 'px';
-  this.element.style.width = (rect.right - rect.left) + 'px';
-};
-
-/**
- * Is the completion given, a "strict" completion of the user inputted value?
- * A completion is considered "strict" only if it the user inputted value is an
- * exact prefix of the completion (ignoring leading whitespace)
- */
-function isStrictCompletion(inputValue, completion) {
-  // Strip any leading whitespace from the user inputted value because the
-  // completion will never have leading whitespace.
-  inputValue = inputValue.replace(/^\s*/, '');
-  // Strict: "ec" -> "echo"
-  // Non-Strict: "ls *" -> "ls foo bar baz"
-  return completion.indexOf(inputValue) === 0;
-}
-
-/**
- * Bring the completion element up to date with what the requisition says
- */
-Completer.prototype.update = function(input) {
-  var current = this.requisition.getAssignmentAt(input.cursor.start);
-  var predictions = current.getPredictions();
-
-  dom.clearElement(this.element);
-
-  // All this DOM manipulation is equivalent to the HTML below.
-  // It's not a template because it's very simple except appendMarkupStatus()
-  // which is complex due to a need to merge spans.
-  // Bug 707131 questions if we couldn't simplify this to use a template.
-  //
-  // <span class="gcli-prompt">${completionPrompt}</span>
-  // ${appendMarkupStatus()}
-  // ${prefix}
-  // <span class="gcli-in-ontab">${contents}</span>
-  // <span class="gcli-in-closebrace" if="${unclosedJs}">}<span>
-  // <div class="gcli-in-scratchlink">${scratchLink}</div>
-
-  var document = this.element.ownerDocument;
-  var prompt = dom.createElement(document, 'span');
-  prompt.classList.add('gcli-prompt');
-  prompt.appendChild(document.createTextNode(this.completionPrompt + ' '));
-  this.element.appendChild(prompt);
-
-  if (input.typed.length > 0) {
-    var scores = this.requisition.getInputStatusMarkup(input.cursor.start);
-    this.appendMarkupStatus(this.element, scores, input);
-  }
-
-  if (input.typed.length > 0 && predictions.length > 0) {
-    var tab = predictions[0].name;
-    var existing = current.getArg().text;
-
-    var contents;
-    var prefix = null;
-
-    if (isStrictCompletion(existing, tab) &&
-            input.cursor.start === input.typed.length) {
-      // Display the suffix of the prediction as the completion
-      var numLeadingSpaces = existing.match(/^(\s*)/)[0].length;
-      contents = tab.slice(existing.length - numLeadingSpaces);
-    } else {
-      // Display the '-> prediction' at the end of the completer element
-      prefix = ' \u00a0';         // aka &nbsp;
-      contents = '\u21E5 ' + tab; // aka &rarr; the right arrow
-    }
-
-    if (prefix != null) {
-      this.element.appendChild(document.createTextNode(prefix));
-    }
-
-    var suffix = dom.createElement(document, 'span');
-    suffix.classList.add('gcli-in-ontab');
-    suffix.appendChild(document.createTextNode(contents));
-    this.element.appendChild(suffix);
-  }
-
-  // Add a grey '}' to the end of the command line when we've opened
-  // with a { but haven't closed it
-  var command = this.requisition.commandAssignment.getValue();
-  var isJsCommand = (command && command.name === '{');
-  var isUnclosedJs = isJsCommand &&
-          this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1;
-  if (isUnclosedJs) {
-    var close = dom.createElement(document, 'span');
-    close.classList.add('gcli-in-closebrace');
-    close.appendChild(document.createTextNode(' }'));
-    this.element.appendChild(close);
-  }
-
-  // Create a scratchpad link if it's a JS command and we have a function to
-  // actually perform the request
-  if (isJsCommand && this.scratchpad) {
-    var hint = dom.createElement(document, 'div');
-    hint.classList.add('gcli-in-scratchlink');
-    hint.appendChild(document.createTextNode(this.scratchpad.linkText));
-    this.element.appendChild(hint);
-  }
-};
-
-/**
- * Mark-up an array of Status values with spans
- */
-Completer.prototype.appendMarkupStatus = function(element, scores, input) {
-  if (scores.length === 0) {
-    return;
-  }
-
-  var document = element.ownerDocument;
-  var i = 0;
-  var lastStatus = -1;
-  var span;
-  var contents = '';
-
-  while (true) {
-    if (lastStatus !== scores[i]) {
-      var state = scores[i];
-      if (!state) {
-        console.error('No state at i=' + i + '. scores.len=' + scores.length);
-        state = Status.VALID;
-      }
-      span = dom.createElement(document, 'span');
-      span.classList.add('gcli-in-' + state.toString().toLowerCase());
-      lastStatus = scores[i];
-    }
-    var char = input.typed[i];
-    if (char === ' ') {
-      char = '\u00a0';
-    }
-    contents += char;
-    i++;
-    if (i === input.typed.length) {
-      span.appendChild(document.createTextNode(contents));
-      this.element.appendChild(span);
-      break;
-    }
-    if (lastStatus !== scores[i]) {
-      span.appendChild(document.createTextNode(contents));
-      this.element.appendChild(span);
-      contents = '';
-    }
-  }
-};
-
-cliView.Completer = Completer;
-
-
 });
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
@@ -6719,7 +6492,274 @@ History.prototype.backward = function() {
 
 exports.History = History;
 
-});define("text!gcli/ui/inputter.css", [], "");
+});/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/ui/completer', ['require', 'exports', 'module' , 'gcli/util', 'gcli/ui/domtemplate', 'text!gcli/ui/completer.html'], function(require, exports, module) {
+
+
+var dom = require('gcli/util').dom;
+var domtemplate = require('gcli/ui/domtemplate');
+
+var completerHtml = require('text!gcli/ui/completer.html');
+
+/**
+ * Completer is an 'input-like' element that sits  an input element annotating
+ * it with visual goodness.
+ * @param {object} options An object that contains various options which
+ * customizes how the completer functions.
+ * Properties on the options object:
+ * - document (required) DOM document to be used in creating elements
+ * - requisition (required) A GCLI Requisition object whose state is monitored
+ * - completeElement (optional) An element to use
+ * - completionPrompt (optional) The prompt - defaults to '\u00bb'
+ *   (double greater-than, a.k.a right guillemet). The prompt is used directly
+ *   in a TextNode, so HTML entities are not allowed.
+ */
+function Completer(options) {
+  this.document = options.document || document;
+  this.requisition = options.requisition;
+  this.elementCreated = false;
+  this.scratchpad = options.scratchpad;
+  this.input = { typed: '', cursor: { start: 0, end: 0 } };
+
+  this.element = options.completeElement || 'gcli-row-complete';
+  if (typeof this.element === 'string') {
+    var name = this.element;
+    this.element = this.document.getElementById(name);
+
+    if (!this.element) {
+      this.elementCreated = true;
+      this.element = dom.createElement(this.document, 'div');
+      this.element.className = 'gcli-in-complete gcli-in-valid';
+      this.element.setAttribute('tabindex', '-1');
+      this.element.setAttribute('aria-live', 'polite');
+    }
+  }
+
+  this.completionPrompt = typeof options.completionPrompt === 'string'
+      ? options.completionPrompt
+      : '\u00bb';
+
+  if (options.inputBackgroundElement) {
+    this.backgroundElement = options.inputBackgroundElement;
+  }
+  else {
+    this.backgroundElement = this.element;
+  }
+
+  this.template = dom.createElement(this.document, 'div');
+  dom.setInnerHtml(this.template, completerHtml);
+  // Replace the temporary div we created with the template root
+  this.template = this.template.children[0];
+  // We want the spans to line up without the spaces in the template
+  dom.removeWhitespace(this.template, true);
+}
+
+/**
+ * Avoid memory leaks
+ */
+Completer.prototype.destroy = function() {
+  delete this.document;
+  delete this.element;
+  delete this.backgroundElement;
+  delete this.template;
+
+  if (this.elementCreated) {
+    this.document.defaultView.removeEventListener('resize', this.resizer, false);
+  }
+
+  delete this.inputter;
+};
+
+/**
+ * A list of the styles that decorate() should copy to make the completion
+ * element look like the input element. backgroundColor is a spiritual part of
+ * this list, but see comment in decorate().
+ */
+Completer.copyStyles = [ 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle' ];
+
+/**
+ * Make ourselves visually similar to the input element, and make the input
+ * element transparent so our background shines through
+ */
+Completer.prototype.decorate = function(inputter) {
+  this.inputter = inputter;
+  var inputEle = inputter.element;
+
+  // If we were told which element to use, then assume it is already
+  // correctly positioned. Otherwise insert it alongside the input element
+  if (this.elementCreated) {
+    this.inputter.appendAfter(this.element);
+
+    var styles = this.document.defaultView.getComputedStyle(inputEle, null);
+    Completer.copyStyles.forEach(function(style) {
+      this.element.style[style] = styles[style];
+    }, this);
+
+    // The completer text is by default invisible so we make it the same color
+    // as the input background.
+    this.element.style.color = inputEle.style.backgroundColor;
+
+    // If there is a separate backgroundElement, then we make the element
+    // transparent, otherwise it inherits the color of the input node
+    // It's not clear why backgroundColor doesn't work when used from
+    // computedStyle, but it doesn't. Patches welcome!
+    this.element.style.backgroundColor = (this.backgroundElement != this.element) ?
+        'transparent' :
+        inputEle.style.backgroundColor;
+    inputEle.style.backgroundColor = 'transparent';
+
+    // Make room for the prompt
+    inputEle.style.paddingLeft = '20px';
+
+    this.resizer = this.resizer.bind(this);
+    this.document.defaultView.addEventListener('resize', this.resizer, false);
+    this.resizer();
+  }
+};
+
+/**
+ * Ensure that the completion element is the same size and the inputter element
+ */
+Completer.prototype.resizer = function() {
+  // Remove this when jsdom does getBoundingClientRect(). See Bug 717269
+  if (!this.inputter.element.getBoundingClientRect) {
+    return;
+  }
+
+  var rect = this.inputter.element.getBoundingClientRect();
+  // -4 to line up with 1px of padding and border, top and bottom
+  var height = rect.bottom - rect.top - 4;
+
+  this.element.style.top = rect.top + 'px';
+  this.element.style.height = height + 'px';
+  this.element.style.lineHeight = height + 'px';
+  this.element.style.left = rect.left + 'px';
+  this.element.style.width = (rect.right - rect.left) + 'px';
+};
+
+/**
+ * Is the completion given, a "strict" completion of the user inputted value?
+ * A completion is considered "strict" only if it the user inputted value is an
+ * exact prefix of the completion (ignoring leading whitespace)
+ */
+function isStrictCompletion(inputValue, completion) {
+  // Strip any leading whitespace from the user inputted value because the
+  // completion will never have leading whitespace.
+  inputValue = inputValue.replace(/^\s*/, '');
+  // Strict: "ec" -> "echo"
+  // Non-Strict: "ls *" -> "ls foo bar baz"
+  return completion.indexOf(inputValue) === 0;
+}
+
+/**
+ * Bring the completion element up to date with what the requisition says
+ */
+Completer.prototype.update = function(input) {
+  this.input = input;
+
+  var template = this.template.cloneNode(true);
+  domtemplate.template(template, this, { stack: 'completer.html' });
+
+  dom.clearElement(this.element);
+  while (template.hasChildNodes()) {
+    this.element.appendChild(template.firstChild);
+  }
+};
+
+/**
+ * A proxy to requisition.getInputStatusMarkup which converts space to &nbsp;
+ * in the string member (for HTML display) and converts status to an
+ * appropriate class name (i.e. lower cased, prefixed with gcli-in-)
+ */
+Object.defineProperty(Completer.prototype, 'statusMarkup', {
+  get: function() {
+    var markup = this.requisition.getInputStatusMarkup(this.input.cursor.start);
+    markup.forEach(function(member) {
+      member.string = member.string.replace(/ /g, '\u00a0'); // i.e. &nbsp;
+      member.className = 'gcli-in-' + member.status.toString().toLowerCase();
+    }, this);
+    return markup;
+  }
+});
+
+/**
+ * What text should we display as the tab text, and should it be given as a
+ * '-> full' or as 'suffix' (which depends on if the completion is a strict
+ * completion or not)
+ */
+Object.defineProperty(Completer.prototype, 'tabText', {
+  get: function() {
+    var current = this.requisition.getAssignmentAt(this.input.cursor.start);
+    var predictions = current.getPredictions();
+
+    if (this.input.typed.length === 0 || predictions.length === 0) {
+      return '';
+    }
+
+    var tab = predictions[0].name;
+    var existing = current.getArg().text;
+
+    if (isStrictCompletion(existing, tab) &&
+            this.input.cursor.start === this.input.typed.length) {
+      // Display the suffix of the prediction as the completion
+      var numLeadingSpaces = existing.match(/^(\s*)/)[0].length;
+      return tab.slice(existing.length - numLeadingSpaces);
+    }
+
+    // Display the '-> prediction' at the end of the completer element
+    return ' \u00a0\u21E5 ' + tab; // aka &nbsp;&rarr; the right arrow
+  }
+});
+
+/**
+ * The text for the 'jump to scratchpad' feature, or null if it is disabled
+ */
+Object.defineProperty(Completer.prototype, 'scratchLink', {
+  get: function() {
+    if (!this.scratchpad) {
+      return null;
+    }
+    var command = this.requisition.commandAssignment.getValue();
+    return command && command.name === '{' ? this.scratchpad.linkText : null;
+  }
+});
+
+/**
+ * Is the entered command a JS command with no closing '}'?
+ * TWEAK: This code should be considered for promotion to Requisition
+ */
+Object.defineProperty(Completer.prototype, 'unclosedJs', {
+  get: function() {
+    var command = this.requisition.commandAssignment.getValue();
+    var jsCommand = command && command.name === '{';
+    var unclosedJs = jsCommand &&
+        this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1;
+    return unclosedJs;
+  }
+});
+
+exports.Completer = Completer;
+
+
+});
+define("text!gcli/ui/completer.html", [], "\n" +
+  "<div>\n" +
+  "  <span class=\"gcli-prompt\">${completionPrompt} </span>\n" +
+  "  <loop foreach=\"member in ${statusMarkup}\">\n" +
+  "    <span class=\"${member.className}\">${member.string}</span>\n" +
+  "  </loop>\n" +
+  "  <span class=\"gcli-in-ontab\">${tabText}</span>\n" +
+  "  <span class=\"gcli-in-closebrace\" if=\"${unclosedJs}\">}</span>\n" +
+  "  <div class=\"gcli-in-scratchlink\" if=\"${scratchLink}\">${scratchLink}</div>\n" +
+  "</div>\n" +
+  "");
+
+define("text!gcli/ui/inputter.css", [], "");
 
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
