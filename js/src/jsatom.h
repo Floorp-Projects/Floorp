@@ -314,6 +314,7 @@ struct JSAtomState
     js::PropertyName    *noSuchMethodAtom;
     js::PropertyName    *objectNullAtom;
     js::PropertyName    *objectUndefinedAtom;
+    js::PropertyName    *ofAtom;
     js::PropertyName    *protoAtom;
     js::PropertyName    *setAtom;
     js::PropertyName    *sourceAtom;

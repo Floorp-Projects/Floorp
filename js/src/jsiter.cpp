@@ -423,6 +423,16 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
+    /*
+     * for-of iteration does not fall back on __iterator__ or property
+     * enumeration. This is more conservative than the current proposed spec.
+     */
+    if (flags == JSITER_FOR_OF) {
+        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NOT_ITERABLE,
+                                 JSDVG_SEARCH_STACK, ObjectValue(*obj), NULL, NULL, NULL);
+        return false;
+    }
+
     /* Check whether we have a valid __iterator__ method. */
     JSAtom *atom = cx->runtime->atomState.iteratorAtom;
     if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, vp))
@@ -658,12 +668,22 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     if (obj) {
         /* Enumerate Iterator.prototype directly. */
         if (JSIteratorOp op = obj->getClass()->ext.iteratorObject) {
-            JSObject *iterobj = op(cx, obj, !(flags & JSITER_FOREACH));
-            if (!iterobj)
-                return false;
-            vp->setObject(*iterobj);
-            types::MarkIteratorUnknown(cx);
-            return true;
+            /*
+             * Arrays and other classes representing iterable collections have
+             * the JSCLASS_FOR_OF_ITERATION flag. This flag means that the
+             * object responds to all other kinds of enumeration (for-in,
+             * for-each, Object.keys, Object.getOwnPropertyNames, etc.) in the
+             * default way, ignoring the hook. The hook is used only when
+             * iterating in the style of a for-of loop.
+             */
+            if (!(obj->getClass()->flags & JSCLASS_FOR_OF_ITERATION) || flags == JSITER_FOR_OF) {
+                JSObject *iterobj = op(cx, obj, !(flags & (JSITER_FOREACH | JSITER_FOR_OF)));
+                if (!iterobj)
+                    return false;
+                vp->setObject(*iterobj);
+                types::MarkIteratorUnknown(cx);
+                return true;
+            }
         }
 
         if (keysOnly) {
@@ -1260,7 +1280,7 @@ Class js::GeneratorClass = {
         NULL,                /* equality       */
         NULL,                /* outerObject    */
         NULL,                /* innerObject    */
-        iterator_iterator,   
+        iterator_iterator,
         NULL                 /* unused */
     }
 };
