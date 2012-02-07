@@ -77,6 +77,7 @@ let PageThumbs = {
    * @return The newly created canvas containing the image data.
    */
   capture: function PageThumbs_capture(aWindow) {
+    let telemetryCaptureTime = new Date();
     let [sw, sh, scale] = this._determineCropSize(aWindow);
 
     let canvas = this._createCanvas();
@@ -93,6 +94,9 @@ let PageThumbs = {
       // We couldn't draw to the canvas for some reason.
     }
 
+    Services.telemetry.getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
+      .add(new Date() - telemetryCaptureTime);
+
     return canvas;
   },
 
@@ -105,12 +109,19 @@ let PageThumbs = {
    *                  stored (optional).
    */
   store: function PageThumbs_store(aKey, aCanvas, aCallback) {
-    let self = this;
+    let telemetryStoreTime = new Date();
 
     function finish(aSuccessful) {
+      if (aSuccessful) {
+        Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
+          .add(new Date() - telemetryStoreTime);
+      }
+
       if (aCallback)
         aCallback(aSuccessful);
     }
+
+    let self = this;
 
     // Get a writeable cache entry.
     PageThumbsCache.getWriteEntry(aKey, function (aEntry) {

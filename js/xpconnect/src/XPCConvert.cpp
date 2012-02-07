@@ -1220,7 +1220,7 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
         // we aren't, throw an exception eagerly.
         JSObject* inner = nsnull;
         if (XPCWrapper::IsSecurityWrapper(src)) {
-            inner = XPCWrapper::Unwrap(cx, src);
+            inner = XPCWrapper::Unwrap(cx, src, false);
             if (!inner) {
                 if (pErr)
                     *pErr = NS_ERROR_XPC_SECURITY_MANAGER_VETO;

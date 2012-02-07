@@ -41,17 +41,20 @@
 
 [xpcom]
 @BINPATH@/dependentlibs.list
-#ifndef MOZ_STATIC_JS
-@BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
+#ifdef XP_WIN32
+@BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
 #endif
-@BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
 #ifdef MOZ_SHARED_MOZGLUE
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 #endif
+#ifndef MOZ_STATIC_JS
+@BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
+#endif
+@BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
 #else
@@ -64,7 +67,7 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
 #ifdef XP_WIN32
-@BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
+#ifndef MOZ_DEBUG
 #if _MSC_VER == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
 @BINPATH@/msvcm80.dll
@@ -82,7 +85,7 @@
 @BINPATH@/msvcp110.dll
 @BINPATH@/msvcr110.dll
 #endif
-
+#endif
 #endif
 
 [browser]
@@ -125,7 +128,6 @@
 @BINPATH@/components/browsercompsbase.xpt
 @BINPATH@/components/browser-feeds.xpt
 @BINPATH@/components/caps.xpt
-@BINPATH@/components/chardet.xpt
 @BINPATH@/components/chrome.xpt
 @BINPATH@/components/commandhandler.xpt
 @BINPATH@/components/commandlines.xpt

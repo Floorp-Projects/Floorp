@@ -57,6 +57,7 @@
 #include "gfxPlatform.h"
 #include "nsIAtom.h"
 #include "nsISupportsImpl.h"
+#include "gfxPattern.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
@@ -512,7 +513,18 @@ public:
         mIsBadUnderlineFamily(false)
         { }
 
-    virtual ~gfxFontFamily() { }
+    virtual ~gfxFontFamily() {
+        // clear Family pointers in our faces; the font entries might stay
+        // alive due to cached font objects, but they can no longer refer
+        // to their families.
+        PRUint32 i = mAvailableFonts.Length();
+        while (i) {
+             gfxFontEntry *fe = mAvailableFonts[--i];
+             if (fe) {
+                 fe->SetFamily(nsnull);
+             }
+        }
+    }
 
     const nsString& Name() { return mName; }
 
@@ -1312,7 +1324,8 @@ public:
      */
     virtual void Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                       gfxContext *aContext, DrawMode aDrawMode, gfxPoint *aBaselineOrigin,
-                      Spacing *aSpacing);
+                      Spacing *aSpacing, gfxPattern *aStrokePattern);
+
     /**
      * Measure a run of characters. See gfxTextRun::Metrics.
      * @param aTight if false, then return the union of the glyph extents
@@ -2358,7 +2371,7 @@ public:
               gfxFont::DrawMode aDrawMode,
               PRUint32 aStart, PRUint32 aLength,
               PropertyProvider *aProvider,
-              gfxFloat *aAdvanceWidth);
+              gfxFloat *aAdvanceWidth, gfxPattern *aStrokePattern);
 
     /**
      * Computes the ReflowMetrics for a substring.
@@ -2803,7 +2816,7 @@ private:
     // **** drawing helper ****
     void DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
                     gfxFont::DrawMode aDrawMode, gfxPoint *aPt,
-                    PRUint32 aStart, PRUint32 aEnd,
+                    gfxPattern *aStrokePattern, PRUint32 aStart, PRUint32 aEnd,
                     PropertyProvider *aProvider,
                     PRUint32 aSpacingStart, PRUint32 aSpacingEnd);
 

@@ -39,26 +39,27 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a1ee08c1-0299-4908-a6ba-7cBc8da6531f)]
+[scriptable, uuid(b1f4b1fa-49c2-4375-9ce8-bf97ecf6b428)]
 interface nsIDOMNavigator : nsISupports
 {
-  readonly attribute DOMString           appCodeName;
-  readonly attribute DOMString           appName;
-  readonly attribute DOMString           appVersion;
-  readonly attribute DOMString           language;
-  readonly attribute nsIDOMMimeTypeArray mimeTypes;
-  readonly attribute DOMString           platform;
-  readonly attribute DOMString           oscpu;
-  readonly attribute DOMString           vendor;
-  readonly attribute DOMString           vendorSub;
-  readonly attribute DOMString           product;
-  readonly attribute DOMString           productSub;
-  readonly attribute nsIDOMPluginArray   plugins;
-  readonly attribute DOMString           userAgent;
-  readonly attribute boolean             cookieEnabled;
-  readonly attribute boolean             onLine;
-  readonly attribute DOMString           buildID;
-  readonly attribute DOMString           doNotTrack;
+  readonly attribute DOMString             appCodeName;
+  readonly attribute DOMString             appName;
+  readonly attribute DOMString             appVersion;
+  readonly attribute DOMString             language;
+  readonly attribute nsIDOMMimeTypeArray   mimeTypes;
+  readonly attribute DOMString             platform;
+  readonly attribute DOMString             oscpu;
+  readonly attribute DOMString             vendor;
+  readonly attribute DOMString             vendorSub;
+  readonly attribute DOMString             product;
+  readonly attribute DOMString             productSub;
+  readonly attribute nsIDOMPluginArray     plugins;
+  readonly attribute DOMString             userAgent;
+  readonly attribute boolean               cookieEnabled;
+  readonly attribute boolean               onLine;
+  readonly attribute DOMString             buildID;
+  readonly attribute DOMString             doNotTrack;
+  readonly attribute nsIDOMMozPowerManager mozPower;
 
   boolean                   javaEnabled();
 

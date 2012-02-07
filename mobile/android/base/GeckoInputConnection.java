@@ -206,8 +206,16 @@ public class GeckoInputConnection
         extract.selectionEnd = b;
 
         extract.startOffset = 0;
-        extract.text = content.toString();
 
+        try {
+            extract.text = content.toString();
+        } catch (IndexOutOfBoundsException iob) {
+            Log.d(LOGTAG,
+                  "IndexOutOfBoundsException thrown from getExtractedText(). start: " +
+                  Selection.getSelectionStart(content) +
+                  " end: " + Selection.getSelectionEnd(content));
+            return null;
+        }
         return extract;
     }
 

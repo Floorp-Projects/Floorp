@@ -36,8 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global Components, Services, TiltGL, TiltUtils, TiltVisualizer */
 "use strict";
 
 const Cu = Components.utils;
@@ -45,17 +43,37 @@ const Cu = Components.utils;
 // Tilt notifications dispatched through the nsIObserverService.
 const TILT_NOTIFICATIONS = {
 
-  // Fires when Tilt completes the initialization.
+  // Fires when Tilt starts the initialization.
+  INITIALIZING: "tilt-initializing",
+
+  // Fires immediately after initialization is complete.
+  // (when the canvas overlay is visible and the 3D mesh is completely created)
   INITIALIZED: "tilt-initialized",
 
-  // Fires when Tilt is destroyed.
+  // Fires immediately before the destruction is started.
+  DESTROYING: "tilt-destroying",
+
+  // Fires immediately before the destruction is finished.
+  // (just before the canvas overlay is removed from its parent node)
+  BEFORE_DESTROYED: "tilt-before-destroyed",
+
+  // Fires when Tilt is completely destroyed.
   DESTROYED: "tilt-destroyed",
 
   // Fires when Tilt is shown (after a tab-switch).
   SHOWN: "tilt-shown",
 
   // Fires when Tilt is hidden (after a tab-switch).
-  HIDDEN: "tilt-hidden"
+  HIDDEN: "tilt-hidden",
+
+  // Fires once Tilt highlights an element in the page.
+  HIGHLIGHTING: "tilt-highlighting",
+
+  // Fires once Tilt stops highlighting any element.
+  UNHIGHLIGHTING: "tilt-unhighlighting",
+
+  // Fires when a node is removed from the 3D mesh.
+  NODE_REMOVED: "tilt-node-removed"
 };
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -106,10 +124,11 @@ Tilt.prototype = {
 
     // create a visualizer instance for the current tab
     this.visualizers[id] = new TiltVisualizer({
-      parentNode: this.chromeWindow.gBrowser.selectedBrowser.parentNode,
+      chromeWindow: this.chromeWindow,
       contentWindow: this.chromeWindow.gBrowser.selectedBrowser.contentWindow,
+      parentNode: this.chromeWindow.gBrowser.selectedBrowser.parentNode,
       requestAnimationFrame: this.chromeWindow.mozRequestAnimationFrame,
-      inspectorUI: this.chromeWindow.InspectorUI
+      notifications: this.NOTIFICATIONS
     });
 
     // make sure the visualizer object was initialized properly
@@ -118,7 +137,7 @@ Tilt.prototype = {
       return;
     }
 
-    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.INITIALIZED, null);
+    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.INITIALIZING, null);
   },
 
   /**
@@ -157,11 +176,12 @@ Tilt.prototype = {
       let controller = this.visualizers[aId].controller;
       let presenter = this.visualizers[aId].presenter;
 
-      TiltUtils.setDocumentZoom(presenter.transforms.zoom);
-
       let content = presenter.contentWindow;
-      let pageXOffset = content.pageXOffset * TiltUtils.getDocumentZoom();
-      let pageYOffset = content.pageYOffset * TiltUtils.getDocumentZoom();
+      let pageXOffset = content.pageXOffset * presenter.transforms.zoom;
+      let pageYOffset = content.pageYOffset * presenter.transforms.zoom;
+
+      Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYING, null);
+      TiltUtils.setDocumentZoom(this.chromeWindow, presenter.transforms.zoom);
 
       controller.removeEventListeners();
       controller.arcball.reset([-pageXOffset, -pageYOffset]);
@@ -171,9 +191,9 @@ Tilt.prototype = {
 
   /**
    * Handles any supplementary post-initialization work, done immediately
-   * after a TILT_NOTIFICATIONS.INITIALIZED notification.
+   * after a TILT_NOTIFICATIONS.INITIALIZING notification.
    */
-  _whenInitialized: function T__whenInitialized()
+  _whenInitializing: function T__whenInitializing()
   {
     this._whenShown();
   },
@@ -210,7 +230,7 @@ Tilt.prototype = {
    */
   _onTabSelect: function T__onTabSelect()
   {
-    if (this.visualizers[this.currentWindowId]) {
+    if (this.currentInstance) {
       Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.SHOWN, null);
     } else {
       Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.HIDDEN, null);
@@ -225,10 +245,8 @@ Tilt.prototype = {
    *                  the newly selected node
    */
   update: function T_update(aNode) {
-    let id = this.currentWindowId;
-
-    if (this.visualizers[id]) {
-      this.visualizers[id].presenter.highlightNode(aNode);
+    if (this.currentInstance) {
+      this.currentInstance.presenter.highlightNode(aNode);
     }
   },
 
@@ -250,13 +268,14 @@ Tilt.prototype = {
 
     // add the necessary observers to handle specific notifications
     Services.obs.addObserver(
-      this._whenInitialized.bind(this), TILT_NOTIFICATIONS.INITIALIZED, false);
+      this._whenInitializing.bind(this), TILT_NOTIFICATIONS.INITIALIZING, false);
     Services.obs.addObserver(
       this._whenDestroyed.bind(this), TILT_NOTIFICATIONS.DESTROYED, false);
     Services.obs.addObserver(
       this._whenShown.bind(this), TILT_NOTIFICATIONS.SHOWN, false);
     Services.obs.addObserver(
       this._whenHidden.bind(this), TILT_NOTIFICATIONS.HIDDEN, false);
+
     Services.obs.addObserver(function(aSubject, aTopic, aWinId) {
       this.destroy(aWinId); }.bind(this),
       this.chromeWindow.InspectorUI.INSPECTOR_NOTIFICATIONS.DESTROYED, false);
@@ -267,7 +286,7 @@ Tilt.prototype = {
 
     // FIXME: this shouldn't be done here, see bug #705131
     let onOpened = function() {
-      if (this.visualizers[this.currentWindowId]) {
+      if (this.currentInstance) {
         this.chromeWindow.InspectorUI.stopInspecting();
         this.inspectButton.disabled = true;
         this.highlighterContainer.style.display = "none";
@@ -284,7 +303,7 @@ Tilt.prototype = {
     Services.obs.addObserver(onClosed,
       this.chromeWindow.InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
     Services.obs.addObserver(onOpened,
-      TILT_NOTIFICATIONS.INITIALIZED, false);
+      TILT_NOTIFICATIONS.INITIALIZING, false);
     Services.obs.addObserver(onClosed,
       TILT_NOTIFICATIONS.DESTROYED, false);
 
@@ -306,8 +325,16 @@ Tilt.prototype = {
    */
   get currentWindowId()
   {
-    let gBrowser = this.chromeWindow.gBrowser;
-    return TiltUtils.getWindowId(gBrowser.selectedBrowser.contentWindow);
+    return TiltUtils.getWindowId(
+      this.chromeWindow.gBrowser.selectedBrowser.contentWindow);
+  },
+
+  /**
+   * Gets the visualizer instance for the current tab.
+   */
+  get currentInstance()
+  {
+    return this.visualizers[this.currentWindowId];
   },
 
   /**

@@ -40,6 +40,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
+#include "nsAccessiblePivot.h"
 #include "nsCoreUtils.h"
 #include "nsAccUtils.h"
 #include "nsApplicationAccessibleWrap.h"
@@ -861,6 +862,23 @@ nsAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
   }
 
   NS_IF_ADDREF(*aAccessible = accessible);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateAccessiblePivot(nsIAccessible* aRoot,
+                                              nsIAccessiblePivot** aPivot)
+{
+  NS_ENSURE_ARG_POINTER(aPivot);
+  NS_ENSURE_ARG(aRoot);
+  *aPivot = nsnull;
+
+  nsRefPtr<nsAccessible> accessibleRoot(do_QueryObject(aRoot));
+  NS_ENSURE_TRUE(accessibleRoot, NS_ERROR_INVALID_ARG);
+
+  nsAccessiblePivot* pivot = new nsAccessiblePivot(accessibleRoot);
+  NS_ADDREF(*aPivot = pivot);
+
   return NS_OK;
 }
 

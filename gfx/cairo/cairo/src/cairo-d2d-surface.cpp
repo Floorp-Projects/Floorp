@@ -1956,14 +1956,14 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 						 srcSurf->data,
 						 srcSurf->stride);
 		    cairo_surface_t *nullSurf =
-			_cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+			cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
 		    cachebitmap->refs++;
 		    cachebitmap->dirty = false;
 		    cairo_surface_set_user_data(nullSurf,
 						&bitmap_key_snapshot,
 						cachebitmap,
 						NULL);
-		    _cairo_surface_attach_snapshot(surfacePattern->surface,
+		    cairo_surface_attach_snapshot(surfacePattern->surface,
 						   nullSurf,
 						   _d2d_snapshot_detached);
 		}
@@ -2020,12 +2020,12 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 						cachebitmap,
 						_d2d_release_bitmap);
 		    cairo_surface_t *nullSurf =
-			_cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+			cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
 		    cairo_surface_set_user_data(nullSurf,
 						&bitmap_key_snapshot,
 						cachebitmap,
 						NULL);
-		    _cairo_surface_attach_snapshot(surfacePattern->surface,
+		    cairo_surface_attach_snapshot(surfacePattern->surface,
 						   nullSurf,
 						   _d2d_snapshot_detached);
 		    cache_usage += _d2d_compute_bitmap_mem_size(sourceBitmap);
@@ -3674,7 +3674,7 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
     _cairo_d2d_set_clip(dst, NULL);
     dst->rt->Flush();
 
-    DWRITE_GLYPH_RUN run;
+    AutoDWriteGlyphRun run;
     _cairo_dwrite_glyph_run_from_glyphs(glyphs, num_glyphs, scaled_font, &run, &transform);
 
     RefPtr<IDWriteGlyphRunAnalysis> analysis;
@@ -3731,9 +3731,6 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 						      0,
 						      0,
 						      &analysis);
-    delete [] run.glyphIndices;
-    delete [] run.glyphAdvances;
-    delete [] run.glyphOffsets;
     if (FAILED(hr)) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -4105,8 +4102,7 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 
     cairo_bool_t transform = FALSE;
 
-    DWRITE_GLYPH_RUN run;
-    
+    AutoDWriteGlyphRun run;
     _cairo_dwrite_glyph_run_from_glyphs(glyphs, num_glyphs, dwritesf, &run, &transform);
 
     D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(&dwritesf->mat);
@@ -4141,9 +4137,6 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 								   source);
 
     if (!brush) {
-	delete [] run.glyphIndices;
-	delete [] run.glyphOffsets;
-	delete [] run.glyphAdvances;
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
     
@@ -4164,10 +4157,6 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     if (transform) {
 	target_rt->SetTransform(D2D1::Matrix3x2F::Identity());
     }
-
-    delete [] run.glyphIndices;
-    delete [] run.glyphOffsets;
-    delete [] run.glyphAdvances;
 
     if (target_rt.get() != dst->rt.get()) {
 	return _cairo_d2d_blend_temp_surface(dst, op, target_rt, clip, &fontArea);

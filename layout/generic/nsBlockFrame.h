@@ -452,7 +452,7 @@ protected:
     * part of this block's mLines list.
     * @return true if any lines were drained.
     */
-  bool DrainOverflowLines(nsBlockReflowState& aState);
+  bool DrainOverflowLines();
 
   /** grab pushed floats from this block's prevInFlow, and splice
     * them into this block's mFloats list.

@@ -178,9 +178,9 @@ private:
   PRUint32 mCreatedRecursionDepth;
 
   // Only touched on the main thread.
-  NS_DECL_EVENT_HANDLER(error);
-  NS_DECL_EVENT_HANDLER(complete);
-  NS_DECL_EVENT_HANDLER(abort);
+  NS_DECL_EVENT_HANDLER(error)
+  NS_DECL_EVENT_HANDLER(complete)
+  NS_DECL_EVENT_HANDLER(abort)
 
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;

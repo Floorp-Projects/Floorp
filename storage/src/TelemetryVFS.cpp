@@ -67,7 +67,6 @@ struct Histograms {
 
 Histograms gHistograms[] = {
   SQLITE_TELEMETRY("places.sqlite", PLACES),
-  SQLITE_TELEMETRY("urlclassifier3.sqlite", URLCLASSIFIER),
   SQLITE_TELEMETRY("cookies.sqlite", COOKIES),
   SQLITE_TELEMETRY("webappsstore.sqlite", WEBAPPS),
   SQLITE_TELEMETRY(NULL, OTHER)
@@ -324,6 +323,8 @@ xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
   }
   p->histograms = h;
   rc = orig_vfs->xOpen(orig_vfs, zName, p->pReal, flags, pOutFlags);
+  if( rc != SQLITE_OK )
+    return rc;
   if( p->pReal->pMethods ){
     sqlite3_io_methods *pNew = new sqlite3_io_methods;
     const sqlite3_io_methods *pSub = p->pReal->pMethods;

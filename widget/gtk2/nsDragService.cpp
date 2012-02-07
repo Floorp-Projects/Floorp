@@ -323,17 +323,15 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     if (aActionType & DRAGDROP_ACTION_LINK)
         action = (GdkDragAction)(action | GDK_ACTION_LINK);
 
-    // Create a fake event for the drag so we can pass the time
-    // (so to speak.)  If we don't do this the drag can end as a
-    // result of a button release that is actually _earlier_ than
-    // CurrentTime.  So we use the time on the last button press
-    // event, as that will always be older than the button release
-    // that ends any drag.
+    // Create a fake event for the drag so we can pass the time (so to speak).
+    // If we don't do this, then, when the timestamp for the pending button
+    // release event is used for the ungrab, the ungrab can fail due to the
+    // timestamp being _earlier_ than CurrentTime.
     GdkEvent event;
     memset(&event, 0, sizeof(GdkEvent));
     event.type = GDK_BUTTON_PRESS;
     event.button.window = mHiddenWidget->window;
-    event.button.time = nsWindow::sLastButtonPressTime;
+    event.button.time = nsWindow::GetCurrentEventTime();
 
     // start our drag.
     GdkDragContext *context = gtk_drag_begin(mHiddenWidget,
@@ -345,6 +343,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     mSourceRegion = nsnull;
 
     if (context) {
+        StartDragSession();
+
         // GTK uses another hidden window for receiving mouse events.
         mGrabWidget = gtk_grab_get_current();
         if (mGrabWidget) {
@@ -360,8 +360,6 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     }
 
     gtk_target_list_unref(sourceList);
-
-    StartDragSession();
 
     return rv;
 }

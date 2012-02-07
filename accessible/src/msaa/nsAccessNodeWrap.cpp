@@ -63,14 +63,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-/// the accessible library and cached methods
-HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;
-HINSTANCE nsAccessNodeWrap::gmUserLib = nsnull;
-LPFNACCESSIBLEOBJECTFROMWINDOW nsAccessNodeWrap::gmAccessibleObjectFromWindow = nsnull;
-LPFNLRESULTFROMOBJECT nsAccessNodeWrap::gmLresultFromObject = NULL;
-LPFNNOTIFYWINEVENT nsAccessNodeWrap::gmNotifyWinEvent = nsnull;
-LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
-
 AccTextChangeEvent* nsAccessNodeWrap::gTextEvent = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -591,17 +583,6 @@ __try {
  
 void nsAccessNodeWrap::InitAccessibility()
 {
-  if (!gmUserLib) {
-    gmUserLib =::LoadLibraryW(L"USER32.DLL");
-  }
-
-  if (gmUserLib) {
-    if (!gmNotifyWinEvent)
-      gmNotifyWinEvent = (LPFNNOTIFYWINEVENT)GetProcAddress(gmUserLib,"NotifyWinEvent");
-    if (!gmGetGUIThreadInfo)
-      gmGetGUIThreadInfo = (LPFNGETGUITHREADINFO)GetProcAddress(gmUserLib,"GetGUIThreadInfo");
-  }
-
   Compatibility::Init();
 
   nsWinUtils::MaybeStartWindowEmulation();
@@ -678,8 +659,8 @@ nsAccessNodeWrap::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           IAccessible* msaaAccessible = NULL;
           document->GetNativeInterface((void**)&msaaAccessible); // does an addref
           if (msaaAccessible) {
-            LRESULT result = LresultFromObject(IID_IAccessible, wParam,
-                                               msaaAccessible); // does an addref
+            LRESULT result = ::LresultFromObject(IID_IAccessible, wParam,
+                                                 msaaAccessible); // does an addref
             msaaAccessible->Release(); // release extra addref
             return result;
           }
@@ -697,22 +678,4 @@ nsAccessNodeWrap::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   }
 
   return ::DefWindowProcW(hWnd, msg, wParam, lParam);
-}
-
-STDMETHODIMP_(LRESULT)
-nsAccessNodeWrap::LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc)
-{
-  // open the dll dynamically
-  if (!gmAccLib)
-    gmAccLib =::LoadLibraryW(L"OLEACC.DLL");
-
-  if (gmAccLib) {
-    if (!gmLresultFromObject)
-      gmLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(gmAccLib,"LresultFromObject");
-
-    if (gmLresultFromObject)
-      return gmLresultFromObject(riid, wParam, pAcc);
-  }
-
-  return 0;
 }

@@ -49,8 +49,7 @@
 #include "vm/RegExpStatics-inl.h"
 
 using namespace js;
-using js::detail::RegExpPrivate;
-using js::detail::RegExpPrivateCode;
+using js::detail::RegExpCode;
 
 JS_STATIC_ASSERT(IgnoreCaseFlag == JSREG_FOLD);
 JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
@@ -60,29 +59,23 @@ JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
 /* RegExpMatcher */
 
 bool
-RegExpMatcher::resetWithTestOptimized(RegExpObject *reobj)
+RegExpMatcher::initWithTestOptimized(RegExpObject &reobj)
 {
-    JS_ASSERT(reobj->startsWithAtomizedGreedyStar());
+    JS_ASSERT(reobj.startsWithAtomizedGreedyStar());
+    JS_ASSERT(!shared_);
 
-    JSAtom *source = &reobj->getSource()->asAtom();
-    AlreadyIncRefed<RegExpPrivate> priv =
-        RegExpPrivate::createTestOptimized(cx, source, reobj->getFlags());
-    if (!priv)
+    JSAtom *source = &reobj.getSource()->asAtom();
+    shared_.reset(RegExpShared::createTestOptimized(cx_, source, reobj.getFlags()));
+    if (!shared_)
         return false;
 
     /*
-     * Create a dummy RegExpObject to persist this RegExpPrivate until the next GC.
+     * Create a dummy RegExpObject to persist this RegExpShared until the next GC.
      * Note that we give the ref we have to this new object.
      */
-    RegExpObjectBuilder builder(cx);
-    RegExpObject *dummy = builder.build(priv);
-    if (!dummy) {
-        priv->decref(cx);
-        return false;
-    }
-
-    arc.reset(NeedsIncRef<RegExpPrivate>(priv.get()));
-    return true;
+    RegExpObjectBuilder builder(cx_);
+    shared_->incref(cx_);
+    return !!builder.build(AlreadyIncRefed<RegExpShared>(shared_.get()));
 }
 
 /* RegExpObjectBuilder */
@@ -117,19 +110,19 @@ RegExpObjectBuilder::getOrCreateClone(RegExpObject *proto)
 }
 
 RegExpObject *
-RegExpObjectBuilder::build(AlreadyIncRefed<RegExpPrivate> rep)
+RegExpObjectBuilder::build(AlreadyIncRefed<RegExpShared> shared)
 {
     if (!getOrCreate()) {
-        rep->decref(cx);
+        shared->decref(cx);
         return NULL;
     }
 
     reobj_->purge(cx);
-    if (!reobj_->init(cx, rep->getSource(), rep->getFlags())) {
-        rep->decref(cx);
+    if (!reobj_->init(cx, shared->getSource(), shared->getFlags())) {
+        shared->decref(cx);
         return NULL;
     }
-    reobj_->setPrivate(rep.get());
+    reobj_->setPrivate(shared.get());
 
     return reobj_;
 }
@@ -145,27 +138,15 @@ RegExpObjectBuilder::build(JSLinearString *source, RegExpFlag flags)
 }
 
 RegExpObject *
-RegExpObjectBuilder::build(RegExpObject *other)
-{
-    RegExpPrivate *rep = other->getOrCreatePrivate(cx);
-    if (!rep)
-        return NULL;
-
-    /* Now, incref it for the RegExpObject being built. */
-    rep->incref(cx);
-    return build(AlreadyIncRefed<RegExpPrivate>(rep));
-}
-
-RegExpObject *
 RegExpObjectBuilder::clone(RegExpObject *other, RegExpObject *proto)
 {
     if (!getOrCreateClone(proto))
         return NULL;
 
     /*
-     * Check that the RegExpPrivate for the original is okay to use in
+     * Check that the RegExpShared for the original is okay to use in
      * the clone -- if the |RegExpStatics| provides more flags we'll
-     * need a different |RegExpPrivate|.
+     * need a different |RegExpShared|.
      */
     RegExpStatics *res = cx->regExpStatics();
     RegExpFlag origFlags = other->getFlags();
@@ -175,12 +156,12 @@ RegExpObjectBuilder::clone(RegExpObject *other, RegExpObject *proto)
         return build(other->getSource(), newFlags);
     }
 
-    RegExpPrivate *toShare = other->getOrCreatePrivate(cx);
+    RegExpShared *toShare = other->getShared(cx);
     if (!toShare)
         return NULL;
 
     toShare->incref(cx);
-    return build(AlreadyIncRefed<RegExpPrivate>(toShare));
+    return build(AlreadyIncRefed<RegExpShared>(toShare));
 }
 
 /* MatchPairs */
@@ -210,11 +191,11 @@ MatchPairs::checkAgainst(size_t inputLength)
 }
 
 RegExpRunStatus
-RegExpPrivate::execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
-                       LifoAllocScope &allocScope, MatchPairs **output)
+RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+                      LifoAllocScope &allocScope, MatchPairs **output)
 {
     const size_t origLength = length;
-    size_t backingPairCount = RegExpPrivateCode::getOutputSize(pairCount());
+    size_t backingPairCount = RegExpCode::getOutputSize(pairCount());
 
     MatchPairs *matchPairs = MatchPairs::create(allocScope.alloc(), pairCount(), backingPairCount);
     if (!matchPairs)
@@ -256,26 +237,26 @@ RegExpPrivate::execute(JSContext *cx, const jschar *chars, size_t length, size_t
     return RegExpRunStatus_Success;
 }
 
-RegExpPrivate *
-RegExpObject::makePrivate(JSContext *cx)
+RegExpShared *
+RegExpObject::createShared(JSContext *cx)
 {
-    JS_ASSERT(!getPrivate());
-    AlreadyIncRefed<RegExpPrivate> rep = RegExpPrivate::create(cx, getSource(), getFlags(), NULL);
-    if (!rep)
+    JS_ASSERT(!maybeShared());
+    AlreadyIncRefed<RegExpShared> shared = RegExpShared::create(cx, getSource(), getFlags(), NULL);
+    if (!shared)
         return NULL;
 
-    setPrivate(rep.get());
-    return rep.get();
+    setPrivate(shared.get());
+    return shared.get();
 }
 
 RegExpRunStatus
 RegExpObject::execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
                       LifoAllocScope &allocScope, MatchPairs **output)
 {
-    if (!getPrivate() && !makePrivate(cx))
+    RegExpShared *shared = getShared(cx);
+    if (!shared)
         return RegExpRunStatus_Error;
-
-    return getPrivate()->execute(cx, chars, length, lastIndex, allocScope, output);
+    return shared->execute(cx, chars, length, lastIndex, allocScope, output);
 }
 
 Shape *
@@ -394,7 +375,7 @@ Class js::RegExpClass = {
 
 #if ENABLE_YARR_JIT
 void
-RegExpPrivateCode::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error)
+RegExpCode::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error)
 {
     switch (error) {
       case JSC::Yarr::NoError:
@@ -427,7 +408,7 @@ RegExpPrivateCode::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode err
 #else /* !ENABLE_YARR_JIT */
 
 void
-RegExpPrivateCode::reportPCREError(JSContext *cx, int error)
+RegExpCode::reportPCREError(JSContext *cx, int error)
 {
 #define REPORT(msg_) \
     JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, msg_); \
@@ -497,35 +478,36 @@ js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
     return true;
 }
 
-RegExpPrivate *
-RegExpPrivate::createUncached(JSContext *cx, JSLinearString *source, RegExpFlag flags,
-                              TokenStream *tokenStream)
+RegExpShared *
+RegExpShared::createUncached(JSContext *cx, JSLinearString *source, RegExpFlag flags,
+                             TokenStream *tokenStream)
 {
-    RegExpPrivate *priv = cx->new_<RegExpPrivate>(source, flags);
-    if (!priv)
+    RegExpShared *shared = cx->new_<RegExpShared>(source, flags);
+    if (!shared)
         return NULL;
 
-    if (!priv->compile(cx, tokenStream)) {
-        Foreground::delete_(priv);
+    if (!shared->compile(cx, tokenStream)) {
+        Foreground::delete_(shared);
         return NULL;
     }
 
-    return priv;
+    return shared;
 }
 
-AlreadyIncRefed<RegExpPrivate>
-RegExpPrivate::createTestOptimized(JSContext *cx, JSAtom *cacheKey, RegExpFlag flags)
+AlreadyIncRefed<RegExpShared>
+RegExpShared::createTestOptimized(JSContext *cx, JSAtom *cacheKey, RegExpFlag flags)
 {
-    typedef AlreadyIncRefed<RegExpPrivate> RetType;
+    using namespace detail;
+    typedef AlreadyIncRefed<RegExpShared> RetType;
 
     RetType cached;
-    if (!cacheLookup(cx, cacheKey, flags, RegExpPrivateCache_TestOptimized, &cached))
+    if (!cacheLookup(cx, cacheKey, flags, RegExpCache_TestOptimized, &cached))
         return RetType(NULL);
 
     if (cached)
         return cached;
 
-    /* Strip off the greedy star characters, create a new RegExpPrivate, and cache. */
+    /* Strip off the greedy star characters, create a new RegExpShared, and cache. */
     JS_ASSERT(cacheKey->length() > JS_ARRAY_LENGTH(GreedyStarChars));
     JSDependentString *stripped =
       JSDependentString::new_(cx, cacheKey, cacheKey->chars() + JS_ARRAY_LENGTH(GreedyStarChars),
@@ -533,27 +515,27 @@ RegExpPrivate::createTestOptimized(JSContext *cx, JSAtom *cacheKey, RegExpFlag f
     if (!stripped)
         return RetType(NULL);
 
-    RegExpPrivate *priv = createUncached(cx, cacheKey, flags, NULL);
-    if (!priv)
+    RegExpShared *shared = createUncached(cx, cacheKey, flags, NULL);
+    if (!shared)
         return RetType(NULL);
 
-    if (!cacheInsert(cx, cacheKey, RegExpPrivateCache_TestOptimized, priv)) {
-        priv->decref(cx);
+    if (!cacheInsert(cx, cacheKey, RegExpCache_TestOptimized, *shared)) {
+        shared->decref(cx);
         return RetType(NULL);
     }
 
-    return RetType(priv);
+    return RetType(shared);
 }
 
-AlreadyIncRefed<RegExpPrivate>
-RegExpPrivate::create(JSContext *cx, JSLinearString *str, JSString *opt, TokenStream *ts)
+AlreadyIncRefed<RegExpShared>
+RegExpShared::create(JSContext *cx, JSLinearString *str, JSString *opt, TokenStream *ts)
 {
     if (!opt)
         return create(cx, str, RegExpFlag(0), ts);
 
     RegExpFlag flags = RegExpFlag(0);
     if (!ParseRegExpFlags(cx, opt, &flags))
-        return AlreadyIncRefed<RegExpPrivate>(NULL);
+        return AlreadyIncRefed<RegExpShared>(NULL);
 
     return create(cx, str, flags, ts);
 }

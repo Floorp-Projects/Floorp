@@ -1363,9 +1363,6 @@ IsAboutToBeFinalized(JSContext *cx, const js::gc::Cell *thing);
 extern bool
 IsAboutToBeFinalized(JSContext *cx, const js::Value &value);
 
-extern JS_FRIEND_API(bool)
-js_GCThingIsMarked(void *thing, uintN color);
-
 extern void
 js_TraceStackFrame(JSTracer *trc, js::StackFrame *fp);
 

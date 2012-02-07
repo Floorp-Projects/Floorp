@@ -335,6 +335,20 @@ else
 GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/mobile/android/base)
 endif
 
+ifdef ENABLE_TESTS
+INNER_ROBOCOP_PACKAGE=echo
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+UPLOAD_EXTRA_FILES += robocop.apk
+ROBOCOP_PATH = $(call core_abspath,$(_ABS_DIST)/../build/mobile/robocop)
+INNER_ROBOCOP_PACKAGE= \
+  $(APKBUILDER) $(_ABS_DIST)/robocop-raw.apk -v $(APKBUILDER_FLAGS) -z $(ROBOCOP_PATH)/robocop.ap_ -f $(ROBOCOP_PATH)/classes.dex && \
+  $(JARSIGNER) $(_ABS_DIST)/robocop-raw.apk && \
+  $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/robocop-raw.apk $(_ABS_DIST)/robocop.apk
+endif
+else
+INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Robocop for you'
+endif
+
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
   make -C $(GECKO_APP_AP_PATH) gecko.ap_ && \
@@ -355,7 +369,8 @@ INNER_MAKE_PACKAGE	= \
   $(APKBUILDER) $(_ABS_DIST)/gecko.apk -v $(APKBUILDER_FLAGS) -z $(_ABS_DIST)/gecko.ap_ -f $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
   cp $(_ABS_DIST)/gecko.apk $(_ABS_DIST)/gecko-unsigned-unaligned.apk && \
   $(JARSIGNER) $(_ABS_DIST)/gecko.apk && \
-  $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE)
+  $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE) && \
+  $(INNER_ROBOCOP_PACKAGE)
 
 INNER_UNMAKE_PACKAGE	= \
   mkdir $(MOZ_PKG_DIR) && \

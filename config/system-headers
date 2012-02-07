@@ -729,6 +729,7 @@ sys/pstat.h
 sys/ptrace.h
 sys/queue.h
 sys/quota.h
+sys/reboot.h
 sys/reg.h
 sys/regset.h
 sys/resource.h
@@ -1049,4 +1050,5 @@ tremor/ivorbiscodec.h
 ogg/ogg.h
 ogg/os_types.h
 nestegg/nestegg.h
+cubeb/cubeb.h
 #endif

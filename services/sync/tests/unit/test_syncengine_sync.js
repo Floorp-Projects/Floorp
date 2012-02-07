@@ -18,6 +18,29 @@ function cleanAndGo(server) {
   server.stop(run_next_test);
 }
 
+function createServerAndConfigureClient() {
+  let engine = new RotaryEngine();
+
+  let contents = {
+    meta: {global: {engines: {rotary: {version: engine.version,
+                                       syncID:  engine.syncID}}}},
+    crypto: {},
+    rotary: {}
+  };
+
+  const USER = "foo";
+  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
+  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
+  Svc.Prefs.set("username", USER);
+
+  let server = new SyncServer();
+  server.registerUser(USER, "password");
+  server.createContents(USER, contents);
+  server.start();
+
+  return [engine, server, USER];
+}
+
 function run_test() {
   generateNewKeys();
   Svc.Prefs.set("log.logger.engine.rotary", "Trace");
@@ -278,17 +301,10 @@ add_test(function test_processIncoming_reconcile() {
                     encryptPayload({id: 'updateclient',
                                     denomination: "Get this!"}));
 
-  // This is a dupe of 'original' but with a longer GUID, so we're
-  // expecting it to be marked for deletion from the server
+  // This is a dupe of 'original'.
   collection.insert('duplication',
                     encryptPayload({id: 'duplication',
                                     denomination: "Original Entry"}));
-
-  // This is a dupe of 'long_original' but with a shorter GUID, so we're
-  // expecting it to replace 'long_original'.
-  collection.insert('dupe',
-                    encryptPayload({id: 'dupe',
-                                    denomination: "Long Original Entry"}));
 
   // This record is marked as deleted, so we're expecting the client
   // record to be removed.
@@ -348,49 +364,92 @@ add_test(function test_processIncoming_reconcile() {
     // Updated with server data.
     do_check_eq(engine._store.items.updateclient, "Get this!");
 
-    // The dupe with the shorter ID is kept, the longer one is slated
-    // for deletion.
-    do_check_eq(engine._store.items.long_original, undefined);
-    do_check_eq(engine._store.items.dupe, "Long Original Entry");
-    do_check_neq(engine._delete.ids.indexOf('duplication'), -1);
+    // The incoming ID is preferred.
+    do_check_eq(engine._store.items.original, undefined);
+    do_check_eq(engine._store.items.duplication, "Original Entry");
+    do_check_neq(engine._delete.ids.indexOf("original"), -1);
 
     // The 'nukeme' record marked as deleted is removed.
     do_check_eq(engine._store.items.nukeme, undefined);
-
   } finally {
     cleanAndGo(server);
   }
-})
+});
 
-add_test(function test_processIncoming_reconcile_deleted_dupe() {
-  _("Ensure that locally deleted duplicate record is handled properly.");
+add_test(function test_processIncoming_reconcile_local_deleted() {
+  _("Ensure local, duplicate ID is deleted on server.");
 
-  let engine = new RotaryEngine();
-
-  let contents = {
-    meta: {global: {engines: {rotary: {version: engine.version,
-                                       syncID:  engine.syncID}}}},
-    crypto: {},
-    rotary: {}
-  };
-
-  const USER = "foo";
-
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
-  Svc.Prefs.set("username", USER);
+  // When a duplicate is resolved, the local ID (which is never taken) should
+  // be deleted on the server.
+  let [engine, server, user] = createServerAndConfigureClient();
 
   let now = Date.now() / 1000 - 10;
   engine.lastSync = now;
   engine.lastModified = now + 1;
 
-  let server = new SyncServer();
-  server.registerUser(USER, "password");
-  server.createContents(USER, contents);
-  server.start();
-
-  let record = encryptPayload({id: "DUPE_INCOMING", denomination: "value"});
+  let record = encryptPayload({id: "DUPE_INCOMING", denomination: "incoming"});
   let wbo = new ServerWBO("DUPE_INCOMING", record, now + 2);
-  server.insertWBO(USER, "rotary", wbo);
+  server.insertWBO(user, "rotary", wbo);
+
+  let record = encryptPayload({id: "DUPE_LOCAL", denomination: "local"});
+  let wbo = new ServerWBO("DUPE_LOCAL", record, now - 1);
+  server.insertWBO(user, "rotary", wbo);
+
+  engine._store.create({id: "DUPE_LOCAL", denomination: "local"});
+  do_check_true(engine._store.itemExists("DUPE_LOCAL"));
+  do_check_eq("DUPE_LOCAL", engine._findDupe({id: "DUPE_INCOMING"}));
+
+  engine._sync();
+
+  do_check_attribute_count(engine._store.items, 1);
+  do_check_true("DUPE_INCOMING" in engine._store.items);
+
+  let collection = server.getCollection(user, "rotary");
+  do_check_eq(1, collection.count());
+  do_check_neq(undefined, collection.wbo("DUPE_INCOMING"));
+
+  cleanAndGo(server);
+});
+
+add_test(function test_processIncoming_reconcile_equivalent() {
+  _("Ensure proper handling of incoming records that match local.");
+
+  let [engine, server, user] = createServerAndConfigureClient();
+
+  let now = Date.now() / 1000 - 10;
+  engine.lastSync = now;
+  engine.lastModified = now + 1;
+
+  let record = encryptPayload({id: "entry", denomination: "denomination"});
+  let wbo = new ServerWBO("entry", record, now + 2);
+  server.insertWBO(user, "rotary", wbo);
+
+  engine._store.items = {entry: "denomination"};
+  do_check_true(engine._store.itemExists("entry"));
+
+  engine._sync();
+
+  do_check_attribute_count(engine._store.items, 1);
+
+  cleanAndGo(server);
+});
+
+add_test(function test_processIncoming_reconcile_locally_deleted_dupe_new() {
+  _("Ensure locally deleted duplicate record newer than incoming is handled.");
+
+  // This is a somewhat complicated test. It ensures that if a client receives
+  // a modified record for an item that is deleted locally but with a different
+  // ID that the incoming record is ignored. This is a corner case for record
+  // handling, but it needs to be supported.
+  let [engine, server, user] = createServerAndConfigureClient();
+
+  let now = Date.now() / 1000 - 10;
+  engine.lastSync = now;
+  engine.lastModified = now + 1;
+
+  let record = encryptPayload({id: "DUPE_INCOMING", denomination: "incoming"});
+  let wbo = new ServerWBO("DUPE_INCOMING", record, now + 2);
+  server.insertWBO(user, "rotary", wbo);
 
   // Simulate a locally-deleted item.
   engine._store.items = {};
@@ -401,16 +460,54 @@ add_test(function test_processIncoming_reconcile_deleted_dupe() {
 
   engine._sync();
 
-  // After the sync, nothing should exist since the local record had been
-  // deleted after the incoming record was updated. The server should also have
-  // deleted the incoming record. Since the local record only existed on the
-  // client at the beginning of the sync, it shouldn't exist on the server
-  // after.
+  // After the sync, the server's payload for the original ID should be marked
+  // as deleted.
   do_check_empty(engine._store.items);
-
-  let collection = server.getCollection(USER, "rotary");
+  let collection = server.getCollection(user, "rotary");
   do_check_eq(1, collection.count());
-  do_check_eq(undefined, collection.payload("DUPE_INCOMING"));
+  let wbo = collection.wbo("DUPE_INCOMING");
+  do_check_neq(null, wbo);
+  let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  do_check_true(payload.deleted);
+
+  cleanAndGo(server);
+});
+
+add_test(function test_processIncoming_reconcile_locally_deleted_dupe_old() {
+  _("Ensure locally deleted duplicate record older than incoming is restored.");
+
+  // This is similar to the above test except it tests the condition where the
+  // incoming record is newer than the local deletion, therefore overriding it.
+
+  let [engine, server, user] = createServerAndConfigureClient();
+
+  let now = Date.now() / 1000 - 10;
+  engine.lastSync = now;
+  engine.lastModified = now + 1;
+
+  let record = encryptPayload({id: "DUPE_INCOMING", denomination: "incoming"});
+  let wbo = new ServerWBO("DUPE_INCOMING", record, now + 2);
+  server.insertWBO(user, "rotary", wbo);
+
+  // Simulate a locally-deleted item.
+  engine._store.items = {};
+  engine._tracker.addChangedID("DUPE_LOCAL", now + 1);
+  do_check_false(engine._store.itemExists("DUPE_LOCAL"));
+  do_check_false(engine._store.itemExists("DUPE_INCOMING"));
+  do_check_eq("DUPE_LOCAL", engine._findDupe({id: "DUPE_INCOMING"}));
+
+  engine._sync();
+
+  // Since the remote change is newer, the incoming item should exist locally.
+  do_check_attribute_count(engine._store.items, 1);
+  do_check_true("DUPE_INCOMING" in engine._store.items);
+  do_check_eq("incoming", engine._store.items.DUPE_INCOMING);
+
+  let collection = server.getCollection(user, "rotary");
+  do_check_eq(1, collection.count());
+  let wbo = collection.wbo("DUPE_INCOMING");
+  let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  do_check_eq("incoming", payload.denomination);
 
   cleanAndGo(server);
 });
@@ -418,30 +515,16 @@ add_test(function test_processIncoming_reconcile_deleted_dupe() {
 add_test(function test_processIncoming_reconcile_changed_dupe() {
   _("Ensure that locally changed duplicate record is handled properly.");
 
-  let engine = new RotaryEngine();
-  let contents = {
-    meta: {global: {engines: {rotary: {version: engine.version,
-                                       syncID:  engine.syncID}}}},
-    crypto: {},
-    rotary: {}
-  };
-
-  const USER = "foo";
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
-  Svc.Prefs.set("username", USER);
+  let [engine, server, user] = createServerAndConfigureClient();
 
   let now = Date.now() / 1000 - 10;
   engine.lastSync = now;
   engine.lastModified = now + 1;
 
-  let server = new SyncServer();
-  server.registerUser(USER, "password");
-  server.createContents(USER, contents);
-  server.start();
-
+  // The local record is newer than the incoming one, so it should be retained.
   let record = encryptPayload({id: "DUPE_INCOMING", denomination: "incoming"});
   let wbo = new ServerWBO("DUPE_INCOMING", record, now + 2);
-  server.insertWBO(USER, "rotary", wbo);
+  server.insertWBO(user, "rotary", wbo);
 
   engine._store.create({id: "DUPE_LOCAL", denomination: "local"});
   engine._tracker.addChangedID("DUPE_LOCAL", now + 3);
@@ -450,20 +533,56 @@ add_test(function test_processIncoming_reconcile_changed_dupe() {
 
   engine._sync();
 
+  // The ID should have been changed to incoming.
   do_check_attribute_count(engine._store.items, 1);
-  do_check_true("DUPE_LOCAL" in engine._store.items);
+  do_check_true("DUPE_INCOMING" in engine._store.items);
 
-  let collection = server.getCollection(USER, "rotary");
+  // On the server, the local ID should be deleted and the incoming ID should
+  // have its payload set to what was in the local record.
+  let collection = server.getCollection(user, "rotary");
+  do_check_eq(1, collection.count());
   let wbo = collection.wbo("DUPE_INCOMING");
   do_check_neq(undefined, wbo);
-  do_check_eq(undefined, wbo.payload);
-
-  let wbo = collection.wbo("DUPE_LOCAL");
-  do_check_neq(undefined, wbo);
-  do_check_neq(undefined, wbo.payload);
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_eq("local", payload.denomination);
 
+  cleanAndGo(server);
+});
+
+add_test(function test_processIncoming_reconcile_changed_dupe_new() {
+  _("Ensure locally changed duplicate record older than incoming is ignored.");
+
+  // This test is similar to the above except the incoming record is younger
+  // than the local record. The incoming record should be authoritative.
+  let [engine, server, user] = createServerAndConfigureClient();
+
+  let now = Date.now() / 1000 - 10;
+  engine.lastSync = now;
+  engine.lastModified = now + 1;
+
+  let record = encryptPayload({id: "DUPE_INCOMING", denomination: "incoming"});
+  let wbo = new ServerWBO("DUPE_INCOMING", record, now + 2);
+  server.insertWBO(user, "rotary", wbo);
+
+  engine._store.create({id: "DUPE_LOCAL", denomination: "local"});
+  engine._tracker.addChangedID("DUPE_LOCAL", now + 1);
+  do_check_true(engine._store.itemExists("DUPE_LOCAL"));
+  do_check_eq("DUPE_LOCAL", engine._findDupe({id: "DUPE_INCOMING"}));
+
+  engine._sync();
+
+  // The ID should have been changed to incoming.
+  do_check_attribute_count(engine._store.items, 1);
+  do_check_true("DUPE_INCOMING" in engine._store.items);
+
+  // On the server, the local ID should be deleted and the incoming ID should
+  // have its payload retained.
+  let collection = server.getCollection(user, "rotary");
+  do_check_eq(1, collection.count());
+  let wbo = collection.wbo("DUPE_INCOMING");
+  do_check_neq(undefined, wbo);
+  let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+  do_check_eq("incoming", payload.denomination);
   cleanAndGo(server);
 });
 
