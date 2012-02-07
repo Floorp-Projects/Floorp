@@ -367,6 +367,16 @@ gfxPlatform::Shutdown()
     }
 
     mozilla::gl::GLContextProvider::Shutdown();
+    mozilla::gl::GLContextProviderOSMesa::Shutdown();
+
+#if defined(XP_WIN)
+    // The above shutdown call shuts down the default context provider for the
+    // platform. Windows is a "special snowflake", though, and has three context
+    // providers available, so we have to shut all of them down.
+    // We should only support one GL provider on Windows; then, this could go
+    // away. We currently support WGL for WebGL on Optimus.
+    mozilla::gl::GLContextProviderEGL::Shutdown();
+#endif
 
     delete gPlatform;
     gPlatform = nsnull;
