@@ -417,7 +417,7 @@ nsHTMLMenuItemElement::GetText(nsAString& aText)
 
 nsresult
 nsHTMLMenuItemElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                    const nsAString* aValue, bool aNotify)
+                                    const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if ((aName == nsGkAtoms::radiogroup || aName == nsGkAtoms::type) &&

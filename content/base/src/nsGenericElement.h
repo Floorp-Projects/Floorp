@@ -650,8 +650,7 @@ protected:
    *                      needed if aFireMutation or aNotify is true.
    * @param aFireMutation should mutation-events be fired?
    * @param aNotify       should we notify document-observers?
-   * @param aValueForAfterSetAttr If not null, AfterSetAttr will be called
-   *                      with the value pointed by this parameter.
+   * @param aCallAfterSetAttr should we call AfterSetAttr?
    */
   nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
                             nsIAtom* aName,
@@ -661,7 +660,7 @@ protected:
                             PRUint8 aModType,
                             bool aFireMutation,
                             bool aNotify,
-                            const nsAString* aValueForAfterSetAttr);
+                            bool aCallAfterSetAttr);
 
   /**
    * Convert an attribute string value to attribute type based on the type of
@@ -734,7 +733,7 @@ protected:
   // Note that this is inlined so that when subclasses call it it gets
   // inlined.  Those calls don't go through a vtable.
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, bool aNotify)
+                                const nsAttrValue* aValue, bool aNotify)
   {
     return NS_OK;
   }

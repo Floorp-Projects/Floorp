@@ -284,7 +284,7 @@ protected:
   void ContentChanged(nsIContent* aContent);
 
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom *aName,
-                                const nsAString* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify);
 
   /**
    * Return if an element should have a specific validity UI
@@ -1276,7 +1276,7 @@ nsHTMLTextAreaElement::ContentChanged(nsIContent* aContent)
 
 nsresult
 nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                    const nsAString* aValue, bool aNotify)
+                                    const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
