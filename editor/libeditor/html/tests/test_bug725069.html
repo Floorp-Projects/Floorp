@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=725069
+-->
+<head>
+  <title>Test for Bug 725069</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body contenteditable>abc<!-- XXX -->def<span></span>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=725069">Mozilla Bug 725069</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 725069 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var body = document.querySelector("body");
+  is(body.firstChild.nodeType, body.TEXT_NODE, "The first node is a text node");
+  is(body.firstChild.nodeValue, "abc", "The first text node is there");
+  is(body.firstChild.nextSibling.nodeType, body.COMMENT_NODE, "The second node is a comment node");
+  is(body.firstChild.nextSibling.nodeValue, " XXX ", "The value of the comment node is not changed");
+  is(body.firstChild.nextSibling.nextSibling.nodeType, body.TEXT_NODE, "The last text node is a text node");
+  is(body.firstChild.nextSibling.nextSibling.nodeValue, "def", "The last next node is there");
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
