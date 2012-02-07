@@ -310,7 +310,9 @@ function appendTextNode(aP, aText)
 function appendElement(aP, aTagName, aClassName)
 {
   var e = document.createElement(aTagName);
-  e.className = aClassName;
+  if (aClassName) {
+    e.className = aClassName;
+  }
   aP.appendChild(e);
   return e;
 }
@@ -378,7 +380,7 @@ function update()
   appendButton(CCDesc, doCC,                     "CC");
   appendButton(MPDesc, sendHeapMinNotifications, "Minimize memory usage");
 
-  var div1 = appendElement(content, "div", "");
+  var div1 = appendElement(content, "div");
   var a;
   if (gVerbose) {
     var a = appendElementWithText(div1, "a", "option", "Less verbose");
@@ -388,7 +390,7 @@ function update()
     a.href = "about:memory?verbose";
   }
 
-  var div2 = appendElement(content, "div", "");
+  var div2 = appendElement(content, "div");
   a = appendElementWithText(div2, "a", "option", "Troubleshooting information");
   a.href = "about:support";
 
@@ -736,12 +738,12 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
   }
 
   if (gUnsafePathsWithInvalidValuesForThisProcess.length > 0) {
-    var div = appendElement(aP, "div", "");
+    var div = appendElement(aP, "div");
     appendElementWithText(div, "p", "", 
       "WARNING: the following values are negative or unreasonably large.");
     appendTextNode(div, "\n");  
 
-    var ul = appendElement(div, "ul", "");
+    var ul = appendElement(div, "ul");
     for (var i = 0;
          i < gUnsafePathsWithInvalidValuesForThisProcess.length;
          i++)
@@ -809,14 +811,13 @@ function appendProcessElements(aP, aProcess, aReporters,
 
   // We have to call appendOtherElements after we process all the trees,
   // because it looks at all the reporters which aren't part of a tree.
-  var otherText = appendOtherElements(aP, aReporters, aProcess);
+  appendOtherElements(aP, aReporters);
 
   // Add any warnings about inaccuracies due to platform limitations.
   // These must be computed after generating all the text.  The newlines give
   // nice spacing if we cut+paste into a text buffer.
-  var warningElements =
-        appendWarningElements(warningsDiv, hasKnownHeapAllocated,
-                              aHasMozMallocUsableSize);
+  appendWarningElements(warningsDiv, hasKnownHeapAllocated,
+                        aHasMozMallocUsableSize);
 }
 
 /**
@@ -1308,7 +1309,7 @@ OtherReporter.compare = function(a, b) {
  *        The process these reporters correspond to.
  * @return The generated text.
  */
-function appendOtherElements(aP, aReportersByProcess, aProcess)
+function appendOtherElements(aP, aReportersByProcess)
 {
   appendSectionHeader(aP, kTreeNames['other']);
 
