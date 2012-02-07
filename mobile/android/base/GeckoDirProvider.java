@@ -137,7 +137,7 @@ abstract public class GeckoDirProvider
         File mozDir = new File(filesDir, "mozilla");
         if (!mozDir.exists()) {
             if (!mozDir.mkdir())
-                throw new IOException("Unable to create mozilla directory at " + mozDir.getPath());
+                throw new IOException("Unable to create mozilla directory at " + mozDir.getAbsolutePath());
         }
         return mozDir;
     }
@@ -205,11 +205,14 @@ abstract public class GeckoDirProvider
         if (aContext == null)
             throw new IllegalArgumentException("Must provide a valid context");
 
-        if (Build.VERSION.SDK_INT < 8 ||
-            aContext.getPackageResourcePath().startsWith("/data") ||
-            aContext.getPackageResourcePath().startsWith("/system")) {
+        if (Build.VERSION.SDK_INT < 8)
             return aContext.getFilesDir();
-        }
-        return aContext.getExternalFilesDir(null);
+
+        String resourcePath = aContext.getPackageResourcePath();
+        File externalDir = aContext.getExternalFilesDir(null);
+        if (resourcePath.startsWith("/data") || resourcePath.startsWith("/system") || externalDir == null)
+            return aContext.getFilesDir();
+
+        return externalDir;
     }
 }
