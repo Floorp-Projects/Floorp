@@ -35,7 +35,7 @@ function test() {
         let initialWidth = contentWindow.innerWidth;
         let initialHeight = contentWindow.innerHeight;
 
-        let renderer = instance.presenter.renderer;
+        let renderer = instance.presenter._renderer;
         let arcball = instance.controller.arcball;
 
         ok(isApprox(contentWindow.innerWidth * ZOOM, renderer.width, 1),
