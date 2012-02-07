@@ -8,7 +8,9 @@
 
 const TAB_URL = "http://example.com/browser/browser/devtools/debugger/" +
                 "test/browser_dbg_script-switching.html";
-Cu.import("resource:///modules/source-editor.jsm");
+let tempScope = {};
+Cu.import("resource:///modules/source-editor.jsm", tempScope);
+let SourceEditor = tempScope.SourceEditor;
 
 var gPane = null;
 var gTab = null;
