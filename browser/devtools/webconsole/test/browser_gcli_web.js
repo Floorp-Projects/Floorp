@@ -1057,7 +1057,7 @@ function update(input) {
   status = requ.getStatus();
   assignC = requ.getAssignmentAt(input.cursor.start);
   statuses = requ.getInputStatusMarkup(input.cursor.start).map(function(s) {
-    return s.toString()[0];
+    return Array(s.string.length + 1).join(s.status.toString()[0]);
   }).join('');
 
   if (requ.commandAssignment.getValue()) {
@@ -1997,7 +1997,7 @@ function input(typed) {
 
   status = requ.getStatus();
   statuses = requ.getInputStatusMarkup(input.cursor.start).map(function(s) {
-    return s.toString()[0];
+    return Array(s.string.length + 1).join(s.status.toString()[0]);
   }).join('');
 
   if (requ.commandAssignment.getValue()) {
