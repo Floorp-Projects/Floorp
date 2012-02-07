@@ -313,7 +313,7 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
 };
 
 // Generates a monomorphic callsite for a known, native target.
-class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4> // FIXME: How many really?
+class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
 {
     JSFunction *function_;
     uint32 argslot_;
