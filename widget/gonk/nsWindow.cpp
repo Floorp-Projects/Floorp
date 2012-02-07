@@ -64,6 +64,9 @@ using namespace mozilla::layers;
 using namespace mozilla::widget;
 
 nsIntRect gScreenBounds;
+static uint32_t sScreenRotation;
+static nsIntRect sVirtualBounds;
+static gfxMatrix sRotationMatrix;
 
 static nsRefPtr<GLContext> sGLContext;
 static nsTArray<nsWindow *> sTopWindows;
@@ -93,6 +96,7 @@ nsWindow::nsWindow()
                 NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/graphics/fb0 ...");
             }
         }
+        sVirtualBounds = gScreenBounds;
     }
 }
 
@@ -119,7 +123,9 @@ nsWindow::DoDraw(void)
 
     LayerManager* lm = gWindowToRedraw->GetLayerManager();
     if (LayerManager::LAYERS_OPENGL == lm->GetBackendType()) {
-        static_cast<LayerManagerOGL*>(lm)->SetClippingRegion(event.region);
+        LayerManagerOGL* oglm = static_cast<LayerManagerOGL*>(lm);
+        oglm->SetClippingRegion(event.region);
+        oglm->SetWorldTransform(sRotationMatrix);
         gWindowToRedraw->mEventCallback(&event);
     } else if (LayerManager::LAYERS_BASIC == lm->GetBackendType()) {
         MOZ_ASSERT(sFramebufferOpen);
@@ -162,7 +168,7 @@ nsWindow::Create(nsIWidget *aParent,
                  nsDeviceContext *aContext,
                  nsWidgetInitData *aInitData)
 {
-    BaseCreate(aParent, IS_TOPLEVEL() ? gScreenBounds : aRect,
+    BaseCreate(aParent, IS_TOPLEVEL() ? sVirtualBounds : aRect,
                aHandleEventFunction, aContext, aInitData);
 
     mBounds = aRect;
@@ -171,7 +177,7 @@ nsWindow::Create(nsIWidget *aParent,
     mParent = parent;
 
     if (!aNativeParent) {
-        mBounds = gScreenBounds;
+        mBounds = sVirtualBounds;
     }
 
     if (!IS_TOPLEVEL())
@@ -179,7 +185,7 @@ nsWindow::Create(nsIWidget *aParent,
 
     sTopWindows.AppendElement(this);
 
-    Resize(0, 0, gScreenBounds.width, gScreenBounds.height, false);
+    Resize(0, 0, sVirtualBounds.width, sVirtualBounds.height, false);
     return NS_OK;
 }
 
@@ -264,9 +270,10 @@ nsWindow::Resize(PRInt32 aX,
     event.time = PR_Now() / 1000;
 
     nsIntRect rect(aX, aY, aWidth, aHeight);
+    mBounds = rect;
     event.windowSize = &rect;
-    event.mWinWidth = gScreenBounds.width;
-    event.mWinHeight = gScreenBounds.height;
+    event.mWinWidth = sVirtualBounds.width;
+    event.mWinHeight = sVirtualBounds.height;
 
     (*mEventCallback)(&event);
 
@@ -436,7 +443,7 @@ nsWindow::BringToTop()
 
     nsGUIEvent event(true, NS_ACTIVATE, this);
     (*mEventCallback)(&event);
-    Invalidate(gScreenBounds);
+    Invalidate(sVirtualBounds);
 }
 
 void
@@ -477,11 +484,11 @@ NS_IMETHODIMP
 nsScreenGonk::GetRect(PRInt32 *outLeft,  PRInt32 *outTop,
                       PRInt32 *outWidth, PRInt32 *outHeight)
 {
-    *outLeft = gScreenBounds.x;
-    *outTop = gScreenBounds.y;
+    *outLeft = sVirtualBounds.x;
+    *outTop = sVirtualBounds.y;
 
-    *outWidth = gScreenBounds.width;
-    *outHeight = gScreenBounds.height;
+    *outWidth = sVirtualBounds.width;
+    *outHeight = sVirtualBounds.height;
 
     return NS_OK;
 }
@@ -507,6 +514,65 @@ NS_IMETHODIMP
 nsScreenGonk::GetColorDepth(PRInt32 *aColorDepth)
 {
     return GetPixelDepth(aColorDepth);
+}
+
+NS_IMETHODIMP
+nsScreenGonk::GetRotation(PRUint32* aRotation)
+{
+    *aRotation = sScreenRotation;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScreenGonk::SetRotation(PRUint32 aRotation)
+{
+    if (!(ROTATION_0_DEG <= aRotation && aRotation <= ROTATION_270_DEG))
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    if (sScreenRotation == aRotation)
+        return NS_OK;
+
+    sScreenRotation = aRotation;
+    sRotationMatrix.Reset();
+    switch (aRotation) {
+    case nsIScreen::ROTATION_0_DEG:
+        sVirtualBounds = gScreenBounds;
+        break;
+    case nsIScreen::ROTATION_90_DEG:
+        sRotationMatrix.Translate(gfxPoint(gScreenBounds.width, 0));
+        sRotationMatrix.Rotate(M_PI / 2);
+        sVirtualBounds = nsIntRect(0, 0, gScreenBounds.height,
+                                         gScreenBounds.width);
+        break;
+    case nsIScreen::ROTATION_180_DEG:
+        sRotationMatrix.Translate(gfxPoint(gScreenBounds.width,
+                                           gScreenBounds.height));
+        sRotationMatrix.Rotate(M_PI);
+        sVirtualBounds = gScreenBounds;
+        break;
+    case nsIScreen::ROTATION_270_DEG:
+        sRotationMatrix.Translate(gfxPoint(0, gScreenBounds.height));
+        sRotationMatrix.Rotate(M_PI * 3 / 2);
+        sVirtualBounds = nsIntRect(0, 0, gScreenBounds.height,
+                                         gScreenBounds.width);
+        break;
+    default:
+        MOZ_NOT_REACHED("Unknown rotation");
+        break;
+    }
+
+    for (unsigned int i = 0; i < sTopWindows.Length(); i++)
+        sTopWindows[i]->Resize(sVirtualBounds.width,
+                               sVirtualBounds.height,
+                               !i);
+
+    return NS_OK;
+}
+
+uint32_t
+nsScreenGonk::GetRotation()
+{
+    return sScreenRotation;
 }
 
 NS_IMPL_ISUPPORTS1(nsScreenManagerGonk, nsIScreenManager)
