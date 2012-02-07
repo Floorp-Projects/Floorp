@@ -459,6 +459,18 @@ public:
   gfxPoint mActiveScrolledRootPosition;
 };
 
+/*
+ * User data for layers which will be used as masks.
+ */
+struct MaskLayerUserData : public LayerUserData
+{
+  // properties of the mask layer; the mask layer may be re-used if these
+  // remain unchanged.
+  nsTArray<FrameLayerBuilder::Clip::RoundedRect> mRoundedClipRects;
+  gfx3DMatrix mTransform;
+  nsIntRect mBounds;
+};
+
 /**
  * The address of gThebesDisplayItemLayerUserData is used as the user
  * data key for ThebesLayers created by FrameLayerBuilder.
@@ -487,6 +499,12 @@ PRUint8 gImageLayerUserData;
  * The user data is a LayerManagerData.
  */
 PRUint8 gLayerManagerUserData;
+/**
+ * The address of gMaskLayerUserData is used as the user
+ * data key for mask layers managed by FrameLayerBuilder.
+ * The user data is a MaskLayerUserData.
+ */
+PRUint8 gMaskLayerUserData;
 
 } // anonymous namespace
 
