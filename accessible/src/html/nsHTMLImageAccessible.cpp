@@ -60,8 +60,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLImageAccessible::
-  nsHTMLImageAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsLinkableAccessible(aContent, aShell)
+  nsHTMLImageAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsLinkableAccessible(aContent, aDoc)
 {
 }
 

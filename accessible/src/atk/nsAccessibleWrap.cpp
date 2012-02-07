@@ -281,8 +281,8 @@ PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
 #endif
 
 nsAccessibleWrap::
-    nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-    nsAccessible(aContent, aShell), mAtkObject(nsnull)
+  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessible(aContent, aDoc), mAtkObject(nsnull)
 {
 #ifdef MAI_LOGGING
     ++mAccWrapCreated;
@@ -362,7 +362,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
     *aOutAccessible = nsnull;
 
     if (!mAtkObject) {
-        if (!mWeakShell || !nsAccUtils::IsEmbeddedObject(this)) {
+        if (IsDefunct() || !nsAccUtils::IsEmbeddedObject(this)) {
             // We don't create ATK objects for node which has been shutdown, or
             // nsIAccessible plain text leaves
             return NS_ERROR_FAILURE;
