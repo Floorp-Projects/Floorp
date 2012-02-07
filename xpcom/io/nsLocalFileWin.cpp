@@ -1480,8 +1480,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
         else
         {
             copyOK = ::MoveFileExW(filePath.get(), destPath.get(),
-                                   MOVEFILE_REPLACE_EXISTING |
-                                   MOVEFILE_WRITE_THROUGH);
+                                   MOVEFILE_REPLACE_EXISTING);
             
             // Check if copying the source file to a different volume,
             // as this could be an SMBV2 mapped drive.
