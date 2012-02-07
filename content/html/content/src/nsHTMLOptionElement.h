@@ -91,7 +91,7 @@ public:
                                               PRInt32 aModType) const;
 
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAttrValue* aValue, bool aNotify);
+                                 const nsAString* aValue, bool aNotify);
   
   void SetSelectedInternal(bool aValue, bool aNotify);
 
