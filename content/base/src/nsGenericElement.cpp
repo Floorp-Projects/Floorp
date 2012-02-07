@@ -4927,7 +4927,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     return NS_OK;
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aValue, aNotify);
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNotify) {
@@ -4976,7 +4976,7 @@ nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     return NS_OK;
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aParsedValue, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNotify) {
