@@ -816,6 +816,11 @@ CheckFrame(StackFrame *fp)
         return false;
     }
 
+    if (!fp->script()->compileAndGo) {
+        IonSpew(IonSpew_Abort, "not compile-and-go");
+        return false;
+    }
+
     JS_ASSERT_IF(fp->maybeFun(), !fp->fun()->isHeavyweight());
     return true;
 }
