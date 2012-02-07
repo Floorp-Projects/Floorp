@@ -64,7 +64,7 @@
 }
 
 .gcliterm-stack-node {
-  background: url("chrome://global/skin/icons/commandline.png") 4px center no-repeat;
+  background: url("chrome://browser/skin/devtools/commandline.png") 4px center no-repeat;
   width: 100%;
 }
 
