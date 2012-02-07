@@ -1752,6 +1752,34 @@ class MBinaryArithInstruction
     }
 };
 
+class MAbs : public MUnaryInstruction
+{
+    MAbs(MDefinition *num, MIRType type)
+      : MUnaryInstruction(num)
+    {
+        JS_ASSERT(type == MIRType_Double || type == MIRType_Int32);
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Abs);
+    static MAbs *New(MDefinition *num, MIRType type) {
+        return new MAbs(num, type);
+    }
+    MDefinition *num() const {
+        return getOperand(0);
+    }
+
+    bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+
 class MAdd : public MBinaryArithInstruction
 {
     MAdd(MDefinition *left, MDefinition *right)
@@ -3057,6 +3085,46 @@ class MStringLength
     }
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
+// Inlined assembly version of the math function calls.
+class MRound
+  : public MUnaryInstruction
+{
+  public:
+    enum RoundingMode {
+        // 1.5 -> 2, -1.5 -> -1
+        RoundingMode_Round,
+        // 1.6 -> 1, -1.5 -> -2
+        RoundingMode_Floor
+        // RoundingMode_Ceil // NYI
+    };
+
+  private:
+    RoundingMode mode_;
+
+  public:
+
+    MRound(MDefinition *num, RoundingMode mode)
+      : MUnaryInstruction(num),
+        mode_(mode)
+    {
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+    INSTRUCTION_HEADER(Round);
+
+    MDefinition *num() const {
+        return getOperand(0);
+    }
+    RoundingMode mode() const {
+        return mode_;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 

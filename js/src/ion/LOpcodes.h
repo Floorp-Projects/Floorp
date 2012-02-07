@@ -75,6 +75,8 @@
     _(CompareV)                     \
     _(CompareAndBranch)             \
     _(CompareDAndBranch)            \
+    _(AbsI)                         \
+    _(AbsD)                         \
     _(AddI)                         \
     _(SubI)                         \
     _(MulI)                         \
@@ -132,7 +134,8 @@
     _(CacheSetPropertyV)            \
     _(CacheSetPropertyT)            \
     _(ArrayLength)                  \
-    _(StringLength)
+    _(StringLength)                 \
+    _(Round)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

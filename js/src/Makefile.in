@@ -307,6 +307,7 @@ CPPSRCS +=	MIR.cpp \
 		LIR.cpp \
 		Lowering.cpp \
 		Lowering-shared.cpp \
+		MCallOptimize.cpp \
 		MIRGraph.cpp \
 		MoveResolver.cpp \
 		Snapshots.cpp \
