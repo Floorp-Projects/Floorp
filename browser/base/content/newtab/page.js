@@ -22,8 +22,8 @@ let gPage = {
     gAllPages.register(this);
 
     // Listen for 'unload' to unregister this page.
-    function unload() gAllPages.unregister(self);
-    addEventListener("unload", unload, false);
+    function unload() { gAllPages.unregister(this); }
+    addEventListener("unload", unload.bind(this), false);
 
     // Check if the new tab feature is enabled.
     if (gAllPages.enabled)

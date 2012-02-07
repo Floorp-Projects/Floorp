@@ -626,7 +626,7 @@ js_InternalThrow(VMFrame &f)
      */
     if (cx->isExceptionPending()) {
         JS_ASSERT(JSOp(*pc) == JSOP_ENTERBLOCK);
-        StaticBlockObject &blockObj = script->getObject(GET_SLOTNO(pc))->asStaticBlock();
+        StaticBlockObject &blockObj = script->getObject(GET_UINT32_INDEX(pc))->asStaticBlock();
         Value *vp = cx->regs().sp + blockObj.slotCount();
         SetValueRangeToUndefined(cx->regs().sp, vp);
         cx->regs().sp = vp;

@@ -213,6 +213,12 @@ class ArgumentsObject : public JSObject
     /* The stack frame for this ArgumentsObject, if the frame is still active. */
     inline js::StackFrame *maybeStackFrame() const;
     inline void setStackFrame(js::StackFrame *frame);
+
+    /*
+     * Measures things hanging off this ArgumentsObject that are counted by the
+     * |miscSize| argument in JSObject::sizeOfExcludingThis().
+     */
+    inline size_t sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const;
 };
 
 class NormalArgumentsObject : public ArgumentsObject
@@ -246,21 +252,28 @@ js::NormalArgumentsObject &
 JSObject::asNormalArguments()
 {
     JS_ASSERT(isNormalArguments());
-    return *reinterpret_cast<js::NormalArgumentsObject *>(this);
+    return *static_cast<js::NormalArgumentsObject *>(this);
 }
 
 js::StrictArgumentsObject &
 JSObject::asStrictArguments()
 {
     JS_ASSERT(isStrictArguments());
-    return *reinterpret_cast<js::StrictArgumentsObject *>(this);
+    return *static_cast<js::StrictArgumentsObject *>(this);
 }
 
 js::ArgumentsObject &
 JSObject::asArguments()
 {
     JS_ASSERT(isArguments());
-    return *reinterpret_cast<js::ArgumentsObject *>(this);
+    return *static_cast<js::ArgumentsObject *>(this);
+}
+
+const js::ArgumentsObject &
+JSObject::asArguments() const
+{
+    JS_ASSERT(isArguments());
+    return *static_cast<const js::ArgumentsObject *>(this);
 }
 
 #endif /* ArgumentsObject_h___ */

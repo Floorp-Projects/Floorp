@@ -45,8 +45,6 @@ relativesrcdir  = accessible/tree
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# test_tabbrowser.xul disabled for misusing <tabbrowser> (bug 715857)
-
 _TEST_FILES =\
 		dockids.html \
 	$(warning test_applicationacc.xul temporarily disabled, see bug 561508) \
@@ -72,6 +70,7 @@ _TEST_FILES =\
 		test_media.html \
 		test_select.html \
 		test_tabbox.xul \
+		test_tabbrowser.xul \
 		test_table.html \
 		test_tree.xul \
 		test_txtcntr.html \

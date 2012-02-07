@@ -59,13 +59,13 @@ namespace js {
  * |chars| and |length|.
  */
 bool
-ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpObject *reobj, JSLinearString *input,
-              const jschar *chars, size_t length,
+ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpObject *reobj,
+              JSLinearString *input, const jschar *chars, size_t length,
               size_t *lastIndex, RegExpExecType type, Value *rval);
 
 bool
-ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpMatcher &matcher, JSLinearString *input,
-              const jschar *chars, size_t length,
+ExecuteRegExp(JSContext *cx, RegExpStatics *res, const RegExpMatcher &matcher,
+              JSLinearString *input, const jschar *chars, size_t length,
               size_t *lastIndex, RegExpExecType type, Value *rval);
 
 extern JSBool

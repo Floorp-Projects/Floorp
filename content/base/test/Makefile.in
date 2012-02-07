@@ -211,6 +211,8 @@ _TEST_FILES1 = \
 		file_bug426646-1.html \
 		file_bug426646-2.html \
 		test_bug429157.html \
+		test_header.html \
+		header.sjs \
 		test_XHR.html \
 		file_XHR_pass1.xml \
 		file_XHR_pass2.txt \
@@ -547,6 +549,11 @@ _TEST_FILES2 = \
 		test_XHR_timeout.html \
 		test_XHR_timeout.js \
 		file_XHR_timeout.sjs \
+		test_bug717511.html \
+		file_bug717511.html \
+		file_bug717511.html^headers^ \
+		file_bug717511_2.html \
+		file_bug717511_2.html^headers^ \
 		$(NULL)
 
 _CHROME_FILES =	\

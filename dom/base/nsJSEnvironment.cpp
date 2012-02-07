@@ -2195,7 +2195,7 @@ nsJSContext::GetGlobalObject()
   }
 #endif
 
-  JSClass *c = JS_GET_CLASS(mContext, global);
+  JSClass *c = JS_GetClass(global);
 
   if (!c || ((~c->flags) & (JSCLASS_HAS_PRIVATE |
                             JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
@@ -3381,12 +3381,13 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       // Just few new suspected objects, return early.
       return;
     }
-    sPreviousSuspectedCount = suspected;
+    
     PRTime startTime;
     if (sPostGCEventsToConsole) {
       startTime = PR_Now();
     }
     nsCycleCollector_forgetSkippable();
+    sPreviousSuspectedCount = nsCycleCollector_suspectedCount();
     sCleanupSinceLastGC = true;
     if (sPostGCEventsToConsole) {
       PRTime delta = PR_Now() - startTime;
@@ -3397,7 +3398,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
         sMaxForgetSkippableTime = delta;
       }
       sTotalForgetSkippableTime += delta;
-      sRemovedPurples += (suspected - nsCycleCollector_suspectedCount());
+      sRemovedPurples += (suspected - sPreviousSuspectedCount);
       ++sForgetSkippableBeforeCC;
     }
   } else {
@@ -3495,7 +3496,7 @@ nsJSContext::PokeShrinkGCBuffers()
 void
 nsJSContext::MaybePokeCC()
 {
-  if (sCCTimer) {
+  if (sCCTimer || sDidShutdown) {
     return;
   }
 

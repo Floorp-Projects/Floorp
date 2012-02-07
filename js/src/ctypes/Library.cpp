@@ -195,15 +195,15 @@ Library::Create(JSContext* cx, jsval path, JSCTypesCallbacks* callbacks)
 }
 
 bool
-Library::IsLibrary(JSContext* cx, JSObject* obj)
+Library::IsLibrary(JSObject* obj)
 {
-  return JS_GET_CLASS(cx, obj) == &sLibraryClass;
+  return JS_GetClass(obj) == &sLibraryClass;
 }
 
 PRLibrary*
 Library::GetLibrary(JSContext* cx, JSObject* obj)
 {
-  JS_ASSERT(IsLibrary(cx, obj));
+  JS_ASSERT(IsLibrary(obj));
 
   jsval slot;
   JS_GetReservedSlot(cx, obj, SLOT_LIBRARY, &slot);
@@ -223,7 +223,7 @@ JSBool
 Library::Open(JSContext* cx, uintN argc, jsval *vp)
 {
   JSObject* ctypesObj = JS_THIS_OBJECT(cx, vp);
-  if (!ctypesObj || !IsCTypesGlobal(cx, ctypesObj)) {
+  if (!ctypesObj || !IsCTypesGlobal(ctypesObj)) {
     JS_ReportError(cx, "not a ctypes object");
     return JS_FALSE;
   }
@@ -245,7 +245,7 @@ JSBool
 Library::Close(JSContext* cx, uintN argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !IsLibrary(cx, obj)) {
+  if (!obj || !IsLibrary(obj)) {
     JS_ReportError(cx, "not a library");
     return JS_FALSE;
   }
@@ -267,7 +267,7 @@ JSBool
 Library::Declare(JSContext* cx, uintN argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !IsLibrary(cx, obj)) {
+  if (!obj || !IsLibrary(obj)) {
     JS_ReportError(cx, "not a library");
     return JS_FALSE;
   }
@@ -321,7 +321,7 @@ Library::Declare(JSContext* cx, uintN argc, jsval* vp)
   } else {
     // Case 2).
     if (JSVAL_IS_PRIMITIVE(argv[1]) ||
-        !CType::IsCType(cx, JSVAL_TO_OBJECT(argv[1])) ||
+        !CType::IsCType(JSVAL_TO_OBJECT(argv[1])) ||
         !CType::IsSizeDefined(cx, JSVAL_TO_OBJECT(argv[1]))) {
       JS_ReportError(cx, "second argument must be a type of defined size");
       return JS_FALSE;

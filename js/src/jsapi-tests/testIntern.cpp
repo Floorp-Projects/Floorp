@@ -1,6 +1,8 @@
 #include "tests.h"
 #include "jsatom.h"
 
+#include "vm/String.h"
+
 using namespace mozilla;
 
 BEGIN_TEST(testAtomizedIsNotInterned)

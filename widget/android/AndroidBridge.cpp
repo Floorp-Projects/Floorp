@@ -107,6 +107,12 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     jEnableDeviceMotion = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableDeviceMotion", "(Z)V");
     jEnableLocation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocation", "(Z)V");
+    jEnableSensor =
+        (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass,
+                                            "enableSensor", "(I)V");
+    jDisableSensor =
+        (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass,
+                                            "disableSensor", "(I)V");
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
@@ -125,7 +131,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetDpi = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getDpi", "()I");
     jSetFullScreen = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setFullScreen", "(Z)V");
     jShowInputMethodPicker = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "showInputMethodPicker", "()V");
-    jPreventPanning = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "preventPanning", "()V");
+    jSetPreventPanning = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setPreventPanning", "(Z)V");
     jHideProgressDialog = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "hideProgressDialog", "()V");
     jPerformHapticFeedback = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "performHapticFeedback", "(Z)V");
     jVibrate1 = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "vibrate", "(J)V");
@@ -313,6 +319,20 @@ AndroidBridge::EnableLocation(bool aEnable)
         return;
     
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableLocation, aEnable);
+}
+
+void
+AndroidBridge::EnableSensor(int aSensorType) {
+    ALOG_BRIDGE("AndroidBridge::EnableSensor");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableSensor,
+                                  aSensorType);
+}
+
+void
+AndroidBridge::DisableSensor(int aSensorType) {
+    ALOG_BRIDGE("AndroidBridge::DisableSensor");
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jDisableSensor,
+                                  aSensorType);
 }
 
 void
@@ -1806,13 +1826,13 @@ NS_IMETHODIMP nsAndroidBridge::SetDrawMetadataProvider(nsIAndroidDrawMetadataPro
 }
 
 void
-AndroidBridge::PreventPanning() {
+AndroidBridge::SetPreventPanning(bool aPreventPanning) {
     ALOG_BRIDGE("AndroidBridge::PreventPanning");
     JNIEnv *env = GetJNIEnv();
     if (!env)
         return;
 
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jPreventPanning);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jSetPreventPanning, (jboolean)aPreventPanning);
 }
 
 

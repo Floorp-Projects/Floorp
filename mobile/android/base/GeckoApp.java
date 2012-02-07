@@ -399,7 +399,7 @@ abstract public class GeckoApp
                 final MenuItem mi = aMenu.add(Menu.NONE, item.id, Menu.NONE, item.label);
                 if (item.icon != null) {
                     if (item.icon.startsWith("data")) {
-                        byte[] raw = Base64.decode(item.icon.substring(22), Base64.DEFAULT);
+                        byte[] raw = GeckoAppShell.decodeBase64(item.icon.substring(22));
                         Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
                         BitmapDrawable drawable = new BitmapDrawable(bitmap);
                         mi.setIcon(drawable);
@@ -905,10 +905,11 @@ abstract public class GeckoApp
                     ExtraMenuItem item = i.next();
                     if (item.id == id) {
                         sExtraMenuItems.remove(item);
+                        if (sMenu == null)
+                            return;
                         MenuItem menu = sMenu.findItem(id);
                         if (menu != null)
                             sMenu.removeItem(id);
-                        return;
                     }
                 }
             } else if (event.equals("Toast:Show")) {
@@ -1659,6 +1660,20 @@ abstract public class GeckoApp
             checkAndLaunchUpdate();
         }
 
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.gecko_app);
+
+        mOrientation = getResources().getConfiguration().orientation;
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            refreshActionBar();
+        } else {
+            mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+        }
+
+        mBrowserToolbar.setTitle(mLastTitle);
+
         String passedUri = null;
         String uri = getURIFromIntent(intent);
         if (uri != null && uri.length() > 0)
@@ -1672,8 +1687,12 @@ abstract public class GeckoApp
             if (profileDir != null)
                 sessionExists = new File(profileDir, "sessionstore.bak").exists();
             Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.bak exists");
-            if (!sessionExists)
+            if (!sessionExists) {
+                mBrowserToolbar.updateTabCount(1);
                 showAboutHome();
+            }
+        } else {
+            mBrowserToolbar.updateTabCount(1);
         }
 
         if (sGREDir == null)
@@ -1698,20 +1717,6 @@ abstract public class GeckoApp
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             sGeckoThread.start();
 
-        super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.gecko_app);
-
-        mOrientation = getResources().getConfiguration().orientation;
-
-        if (Build.VERSION.SDK_INT >= 11) {
-            refreshActionBar();
-        } else {
-            mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
-        }
-
-        mBrowserToolbar.setTitle(mLastTitle);
-
         mFavicons = new Favicons(this);
 
         // setup gecko layout
@@ -1727,7 +1732,7 @@ abstract public class GeckoApp
             mBrowserToolbar.setTitle(tab.getDisplayTitle());
             mBrowserToolbar.setFavicon(tab.getFavicon());
             mBrowserToolbar.setProgressVisibility(tab.isLoading());
-            mBrowserToolbar.updateTabs(Tabs.getInstance().getCount()); 
+            mBrowserToolbar.updateTabCountAndAnimate(Tabs.getInstance().getCount()); 
         }
 
         tabs.setContentResolver(getContentResolver()); 

@@ -162,6 +162,10 @@ public:
 
     void EnableLocation(bool aEnable);
 
+    void EnableSensor(int aSensorType);
+
+    void DisableSensor(int aSensorType);
+
     void ReturnIMEQueryResult(const PRUnichar *aResult, PRUint32 aLen, int aSelStart, int aSelLen);
 
     void NotifyXreExit();
@@ -230,7 +234,7 @@ public:
 
     void ShowInputMethodPicker();
 
-    void PreventPanning();
+    void SetPreventPanning(bool aPreventPanning);
 
     void HideProgressDialogOnce();
 
@@ -419,6 +423,8 @@ protected:
     jmethodID jAcknowledgeEventSync;
     jmethodID jEnableDeviceMotion;
     jmethodID jEnableLocation;
+    jmethodID jEnableSensor;
+    jmethodID jDisableSensor;
     jmethodID jReturnIMEQueryResult;
     jmethodID jNotifyAppShellReady;
     jmethodID jNotifyXreExit;
@@ -439,7 +445,7 @@ protected:
     jmethodID jGetDpi;
     jmethodID jSetFullScreen;
     jmethodID jShowInputMethodPicker;
-    jmethodID jPreventPanning;
+    jmethodID jSetPreventPanning;
     jmethodID jHideProgressDialog;
     jmethodID jPerformHapticFeedback;
     jmethodID jVibrate1;

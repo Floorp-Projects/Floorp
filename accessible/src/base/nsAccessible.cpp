@@ -1374,6 +1374,30 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   if (NS_SUCCEEDED(rv))
     nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textIndent, value);
 
+  // Expose 'margin-left' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-left"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginLeft, value);
+
+  // Expose 'margin-right' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-right"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginRight, value);
+
+  // Expose 'margin-top' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-top"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginTop, value);
+
+  // Expose 'margin-bottom' attribute.
+  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-bottom"),
+                             value);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginBottom, value);
+
   // Expose draggable object attribute?
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
   if (htmlElement) {
@@ -1826,6 +1850,10 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 
    case eClickAction:
      aName.AssignLiteral("click");
+     return NS_OK;
+
+   case ePressAction:
+     aName.AssignLiteral("press");
      return NS_OK;
 
    case eCheckUncheckAction:
