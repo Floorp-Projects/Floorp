@@ -76,7 +76,7 @@ XPCOM_GLUENS_SRC_LCPPSRCS =      \
   FileUtils.cpp                  \
   $(NULL)
 
-ifeq (arm,$(TARGET_CPU))
+ifneq (,$(filter arm%,$(TARGET_CPU)))
 XPCOM_GLUENS_SRC_LCPPSRCS += arm.cpp
 endif
 

@@ -17,6 +17,9 @@ public:
     TestSysVShmemParent() { }
     virtual ~TestSysVShmemParent() { }
 
+    static bool RunTestInProcesses() { return true; }
+    static bool RunTestInThreads() { return true; }
+
     void Main();
 
 protected:

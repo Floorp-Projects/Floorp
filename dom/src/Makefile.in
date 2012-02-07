@@ -44,8 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= jsurl events storage offline json geolocation notification
 
-ifdef ENABLE_TESTS
-DIRS		+= foo
-endif
+TEST_DIRS += foo
 
 include $(topsrcdir)/config/rules.mk

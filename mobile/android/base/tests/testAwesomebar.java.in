@@ -4,10 +4,11 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 public class testAwesomebar extends BaseTest {
-    private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
-
     public void testAwesomebar() {
-        loadUrl(URL);
+        setTestType("mochitest");
+
+        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        loadUrl(url);
 
         mDriver.setupScrollHandling();
         // Calculate where we should be dragging.
@@ -23,6 +24,6 @@ public class testAwesomebar extends BaseTest {
             }
         }
 
-        verifyUrl(URL);
+        verifyUrl(url);
     }
 }

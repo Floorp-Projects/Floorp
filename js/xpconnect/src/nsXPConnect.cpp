@@ -1209,8 +1209,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     if (!map.Get(&key, compartment)) {
         xpc::PtrAndPrincipalHashKey *priv_key =
             new xpc::PtrAndPrincipalHashKey(ptr, principal);
-        xpc::CompartmentPrivate *priv =
-            new xpc::CompartmentPrivate(priv_key, wantXrays, NS_IsMainThread());
+        xpc::CompartmentPrivate *priv = new xpc::CompartmentPrivate(priv_key, wantXrays);
         if (!CreateNewCompartment(cx, clasp, principal, priv,
                                   global, compartment)) {
             return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -1239,39 +1238,6 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     return NS_OK;
 }
 
-nsresult
-xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
-                         nsISupports *ptr, JSObject **global,
-                         JSCompartment **compartment)
-{
-    // NB: We can be either on or off the main thread here.
-    XPCMTCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetMTCompartmentMap();
-    if (!map.Get(ptr, compartment)) {
-        // We allow the pointer to be a principal, in which case it becomes
-        // the principal for the newly created compartment. The caller is
-        // responsible for ensuring that doing this doesn't violate
-        // threadsafety assumptions.
-        nsCOMPtr<nsIPrincipal> principal(do_QueryInterface(ptr));
-        xpc::CompartmentPrivate *priv =
-            new xpc::CompartmentPrivate(ptr, false, NS_IsMainThread());
-        if (!CreateNewCompartment(cx, clasp, principal, priv, global,
-                                  compartment)) {
-            return UnexpectedFailure(NS_ERROR_UNEXPECTED);
-        }
-
-        map.Put(ptr, *compartment);
-    } else {
-        js::AutoSwitchCompartment sc(cx, *compartment);
-
-        JSObject *tempGlobal = JS_NewGlobalObject(cx, clasp);
-        if (!tempGlobal)
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-        *global = tempGlobal;
-    }
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
@@ -1284,7 +1250,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aCOMObj, "bad param");
     NS_ASSERTION(_retval, "bad param");
-    NS_ASSERTION(aExtraPtr || aPrincipal, "must be able to find a compartment");
+    NS_ASSERTION(aPrincipal, "must be able to find a compartment");
 
     // XXX This is not pretty. We make a temporary global object and
     // init it with all the Components object junk just so we have a
@@ -1296,13 +1262,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     JSCompartment* compartment;
     JSObject* tempGlobal;
 
-    nsresult rv = aPrincipal
-                  ? xpc_CreateGlobalObject(ccx, &xpcTempGlobalClass, aPrincipal,
-                                           aExtraPtr, false, &tempGlobal,
-                                           &compartment)
-                  : xpc_CreateMTGlobalObject(ccx, &xpcTempGlobalClass,
-                                             aExtraPtr, &tempGlobal,
-                                             &compartment);
+    nsresult rv = xpc_CreateGlobalObject(ccx, &xpcTempGlobalClass, aPrincipal,
+                                         aExtraPtr, false, &tempGlobal, &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoEnterCompartment ac;
@@ -2585,11 +2546,8 @@ nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
                 continue;
             }
 
-            /* ParticipatesInCycleCollection means "on the main thread" */
-            if (xpc::CompartmentParticipatesInCycleCollection(cx, comp)) {
-                if (!JS_SetDebugModeForCompartment(cx, comp, gDesiredDebugMode))
-                    goto fail;
-            }
+            if (!JS_SetDebugModeForCompartment(cx, comp, gDesiredDebugMode))
+                goto fail;
         }
     }
 

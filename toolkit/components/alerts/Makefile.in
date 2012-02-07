@@ -65,9 +65,7 @@ DIRS += \
   $(NULL)
 endif
 
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+TEST_DIRS += test
 
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk2 qt android))
 include $(topsrcdir)/config/config.mk

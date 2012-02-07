@@ -141,9 +141,7 @@ public:
 #endif
 
   nsresult Destroy();  
-  
-  void PrepareToStop(bool aDelayedStop);
-  
+
 #ifdef XP_WIN
   void Paint(const RECT& aDirty, HDC aDC);
 #elif defined(XP_MACOSX)
@@ -170,14 +168,11 @@ public:
   
   //locals
   
-  nsresult Init(nsPresContext* aPresContext, nsObjectFrame* aFrame,
-                nsIContent* aContent);
+  nsresult Init(nsIContent* aContent);
   
   void* GetPluginPortFromWidget();
   void ReleasePluginPort(void* pluginPort);
-  
-  void SetPluginHost(nsIPluginHost* aHost);
-  
+
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
 #ifdef XP_MACOSX
@@ -216,16 +211,10 @@ public:
   void UpdateWindowVisibility(bool aVisible);
   void UpdateDocumentActiveState(bool aIsActive);
 #endif // XP_MACOSX
-  void CallSetWindow();
-  
-  void SetOwner(nsObjectFrame *aOwner)
-  {
-    mObjectFrame = aOwner;
-  }
-  nsObjectFrame* GetOwner() {
-    return mObjectFrame;
-  }
-  
+
+  void SetFrame(nsObjectFrame *aFrame);
+  nsObjectFrame* GetFrame();
+
   PRUint32 GetLastEventloopNestingLevel() const {
     return mLastEventloopNestingLevel; 
   }
@@ -304,7 +293,7 @@ public:
   
   bool UseAsyncRendering();
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   nsIntRect GetVisibleRect() {
     return nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
   }
@@ -335,7 +324,7 @@ private:
   }
   
   void FixUpURLS(const nsString &name, nsAString &value);
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   void SendSize(int width, int height);
   void SendOnScreenEvent(bool onScreen);
 
@@ -351,10 +340,11 @@ private:
  
   nsPluginNativeWindow       *mPluginWindow;
   nsRefPtr<nsNPAPIPluginInstance> mInstance;
-  nsObjectFrame              *mObjectFrame; // owns nsPluginInstanceOwner
-  nsCOMPtr<nsIContent>        mContent;
+  nsObjectFrame              *mObjectFrame;
+  nsIContent                 *mContent; // WEAK, content owns us
   nsCString                   mDocumentBase;
   char                       *mTagText;
+  bool                        mWidgetCreationComplete;
   nsCOMPtr<nsIWidget>         mWidget;
   nsRefPtr<nsPluginHost>      mPluginHost;
   
@@ -390,10 +380,7 @@ private:
 #endif
   bool                        mPluginWindowVisible;
   bool                        mPluginDocumentActiveState;
-  
-  // If true, destroy the widget on destruction. Used when plugin stop
-  // is being delayed to a safer point in time.
-  bool                        mDestroyWidget;
+
   PRUint16          mNumCachedAttrs;
   PRUint16          mNumCachedParams;
   char              **mCachedAttrParamNames;
@@ -401,6 +388,11 @@ private:
   
 #ifdef XP_MACOSX
   NPEventModel mEventModel;
+  // This is a hack! UseAsyncRendering() can incorrectly return false
+  // when we don't have an object frame (possible as of bug 90268).
+  // We hack around this by always returning true if we've ever
+  // returned true.
+  bool mUseAsyncRendering;
 #endif
   
   // pointer to wrapper for nsIDOMContextMenuListener

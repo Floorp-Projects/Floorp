@@ -50,7 +50,7 @@ ContentAreaDropListener.prototype =
     return [ ];
   },
 
-  _validateURI: function(dataTransfer, uriString)
+  _validateURI: function(dataTransfer, uriString, disallowInherit)
   {
     if (!uriString)
       return "";
@@ -76,11 +76,15 @@ ContentAreaDropListener.prototype =
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
                    getService(Ci.nsIScriptSecurityManager);
     let sourceNode = dataTransfer.mozSourceNode;
+    let flags = secMan.STANDARD;
+    if (disallowInherit)
+      flags |= secMan.DISALLOW_INHERIT_PRINCIPAL;
+
     // Use file:/// as the default uri so that drops of file URIs are always allowed
     if (sourceNode)
-      secMan.checkLoadURIStrWithPrincipal(sourceNode.nodePrincipal, uriString, secMan.STANDARD);
+      secMan.checkLoadURIStrWithPrincipal(sourceNode.nodePrincipal, uriString, flags);
     else
-      secMan.checkLoadURIStr("file:///", uriString, secMan.STANDARD);
+      secMan.checkLoadURIStr("file:///", uriString, flags);
 
     return uriString;
   },
@@ -120,7 +124,7 @@ ContentAreaDropListener.prototype =
     return true;
   },
 
-  dropLink: function(aEvent, aName)
+  dropLink: function(aEvent, aName, aDisallowInherit)
   {
     aName.value = "";
 
@@ -128,7 +132,7 @@ ContentAreaDropListener.prototype =
     let [url, name] = this._getDropURL(dataTransfer);
 
     try {
-      url = this._validateURI(dataTransfer, url);
+      url = this._validateURI(dataTransfer, url, aDisallowInherit);
     } catch (ex) {
       aEvent.stopPropagation();
       aEvent.preventDefault();

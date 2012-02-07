@@ -4,6 +4,11 @@
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
+let tmp = {};
+Components.utils.import("resource://gre/modules/AddonManager.jsm", tmp);
+let AddonManager = tmp.AddonManager;
+let AddonManagerPrivate = tmp.AddonManagerPrivate;
+
 var pathParts = gTestPath.split("/");
 // Drop the test filename
 pathParts.splice(pathParts.length - 1, pathParts.length);
