@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head><title>Bug 718516</title>
+    <script>
+          function start ()
+          {
+            firstDirElement = document.createElement('dir');
+            firstDirElement.style.cssText = '-moz-stack-sizing: ignore;' +
+              ' -moz-column-width: 16385px;';
+            textPathElement = document
+              .createElementNS('http://www.w3.org/2000/svg', 'textPath');
+            firstDirElement.appendChild(textPathElement);
+            textPathParent = textPathElement.parentElement;
+            firstDivElement = document.createElement('div');
+            document.body.appendChild(firstDivElement);
+            centerElement = document.createElement('center');
+            firstDivElement.appendChild(centerElement);
+            firstIFrameElement = document.createElement('iframe');
+            firstIFrameElement.src = 'data:text/html,%3Cdatalist%20id%3D%27'
+              + 'element0%27%3E%3Cscript%20id%3D%27element2%27%3Ex%20x';
+            firstIFrameElement.id = 'ifr37311';
+            centerElement.ownerDocument.documentElement
+              .appendChild(firstIFrameElement);
+            window.setTimeout('start_dataiframe0()', 100);
+          }
+
+          function start_dataiframe0 ()
+          {
+            element2 = centerElement.ownerDocument.getElementById('ifr37311')
+              .contentDocument.getElementById('element2');
+            secondDirElement = document.createElement('dir');
+            secondDirElement.style.cssText =
+              'visibility: inherit;-moz-column-count: 32771;';
+            feOffsetElement = document
+              .createElementNS('http://www.w3.org/2000/svg', 'feOffset');
+            centerElement.style.position = 'absolute';
+            firstIFrameElement.id = 'ifr36578';
+            element0 = feOffsetElement.ownerDocument.getElementById('ifr36578')
+              .contentDocument
+              .getElementById('element0');
+            firstIFrameElement = document.createElement('iframe');
+            element0Clone = element0.cloneNode(true);
+            videoElement = document.createElement('video');
+            firstDivParent = firstDivElement.offsetParent;
+            firstIFrameElement.id = 'ifr9261';
+            element0Clone.ownerDocument.documentElement
+              .appendChild(firstIFrameElement);
+            window.setTimeout('start_dataiframe4()', 100);
+          }
+
+          function start_dataiframe4 ()
+          {
+            documentElement = element0Clone.ownerDocument
+              .getElementById('ifr9261').contentDocument.documentElement;
+            textPathParent.appendChild(videoElement);
+            centerElement.appendChild(element2.lastChild);
+            documentElement.appendChild(secondDirElement);
+            firstDirElement.style.position = 'relative';
+            document.body.appendChild(firstDirElement);
+            firstDirElement.appendChild(firstDivElement);
+            secondDirElement.appendChild(firstDivParent);
+          }
+        </script>
+  </head>
+  <body onload="start()">
+    A
+  </body>
+</html>
+
+
