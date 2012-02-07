@@ -747,4 +747,17 @@ public class AwesomeBarTabs extends TabHost {
             }
         });
     }
+
+    public void refreshBookmarks() {
+        new AsyncTask<Void, Void, Cursor>() {
+            protected Cursor doInBackground(Void... arg0) {
+                ContentResolver resolver = mContext.getContentResolver();
+                return BrowserDB.getAllBookmarks(resolver);
+            }
+
+            protected void onPostExecute(Cursor cursor) {
+                mBookmarksAdapter.changeCursor(cursor);
+            }
+        }.execute();
+    }
 }
