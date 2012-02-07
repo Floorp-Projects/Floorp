@@ -354,6 +354,7 @@ extern Class BooleanClass;
 extern Class CallableObjectClass;
 extern Class DateClass;
 extern Class ErrorClass;
+extern Class ElementIteratorClass;
 extern Class GeneratorClass;
 extern Class IteratorClass;
 extern Class JSONClass;
@@ -377,6 +378,7 @@ class BlockObject;
 class BooleanObject;
 class ClonedBlockObject;
 class DeclEnvObject;
+class ElementIteratorObject;
 class GlobalObject;
 class NestedScopeObject;
 class NewObjectCache;
@@ -995,7 +997,7 @@ struct JSObject : js::gc::Cell
 
     bool isSealed(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, SEAL, resultp); }
     bool isFrozen(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, FREEZE, resultp); }
-        
+
     /*
      * Primitive-specific getters and setters.
      */
@@ -1045,6 +1047,8 @@ struct JSObject : js::gc::Cell
     static inline size_t offsetOfFixedElements() {
         return sizeof(JSObject) + sizeof(js::ObjectElements);
     }
+
+    inline js::ElementIteratorObject *asElementIterator();
 
     /*
      * Array-specific getters and setters (for both dense and slow arrays).
@@ -1406,6 +1410,7 @@ struct JSObject : js::gc::Cell
     inline bool isArray() const;
     inline bool isDate() const;
     inline bool isDenseArray() const;
+    inline bool isElementIterator() const;
     inline bool isError() const;
     inline bool isFunction() const;
     inline bool isGenerator() const;

@@ -926,6 +926,7 @@ inline bool JSObject::isCall() const { return hasClass(&js::CallClass); }
 inline bool JSObject::isClonedBlock() const { return isBlock() && !!getProto(); }
 inline bool JSObject::isDate() const { return hasClass(&js::DateClass); }
 inline bool JSObject::isDeclEnv() const { return hasClass(&js::DeclEnvClass); }
+inline bool JSObject::isElementIterator() const { return hasClass(&js::ElementIteratorClass); }
 inline bool JSObject::isError() const { return hasClass(&js::ErrorClass); }
 inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); }
 inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }

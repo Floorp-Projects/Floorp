@@ -110,7 +110,34 @@ Class js::IteratorClass = {
         NULL,                /* equality       */
         NULL,                /* outerObject    */
         NULL,                /* innerObject    */
-        iterator_iterator,   
+        iterator_iterator,
+        NULL                 /* unused  */
+    }
+};
+
+Class js::ElementIteratorClass = {
+    "ElementIterator",
+    JSCLASS_HAS_RESERVED_SLOTS(ElementIteratorObject::NumSlots),
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    NULL,                    /* finalize    */
+    NULL,                    /* reserved    */
+    NULL,                    /* checkAccess */
+    NULL,                    /* call        */
+    NULL,                    /* construct   */
+    NULL,                    /* xdrObject   */
+    NULL,                    /* hasInstance */
+    NULL,                    /* trace       */
+    {
+        NULL,                /* equality       */
+        NULL,                /* outerObject    */
+        NULL,                /* innerObject    */
+        iterator_iterator,
         NULL                 /* unused  */
     }
 };
@@ -1064,6 +1091,110 @@ js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
 
+const uint32_t CLOSED_INDEX = UINT32_MAX;
+
+JSObject *
+ElementIteratorObject::create(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj);
+    JSObject *iterobj = NewObjectWithGivenProto(cx, &ElementIteratorClass, NULL, obj);
+    if (iterobj) {
+        iterobj->setReservedSlot(TargetSlot, ObjectValue(*obj));
+        iterobj->setReservedSlot(IndexSlot, Int32Value(0));
+    }
+    return iterobj;
+}
+
+inline uint32_t
+ElementIteratorObject::getIndex() const
+{
+    return uint32_t(getReservedSlot(IndexSlot).toInt32());
+}
+
+inline JSObject *
+ElementIteratorObject::getTargetObject() const
+{
+    return &getReservedSlot(TargetSlot).toObject();
+}
+
+inline void
+ElementIteratorObject::setIndex(uint32_t index)
+{
+    setReservedSlot(IndexSlot, Int32Value(int32_t(index)));
+}
+
+bool
+ElementIteratorObject::iteratorNext(JSContext *cx, Value *vp)
+{
+    uint32_t i, length;
+    JSObject *obj = getTargetObject();
+    if (!js_GetLengthProperty(cx, obj, &length))
+        goto error;
+
+    i = getIndex();
+    if (i >= length) {
+        setIndex(CLOSED_INDEX);
+        vp->setMagic(JS_NO_ITER_VALUE);
+        return true;
+    }
+
+    JS_ASSERT(i + 1 > i);
+
+    /* Simple fast path for dense arrays. */
+    if (obj->isDenseArray()) {
+        *vp = obj->getDenseArrayElement(i);
+        if (vp->isMagic(JS_ARRAY_HOLE))
+            vp->setUndefined();
+    } else {
+        /* Make a jsid for this index. */
+        jsid id;
+        if (i < uint32_t(INT32_MAX) && INT_FITS_IN_JSID(i)) {
+            id = INT_TO_JSID(i);
+        } else {
+            Value v = DoubleValue(i);
+            if (!js_ValueToStringId(cx, v, &id))
+                goto error;
+        }
+
+        /* Find out if this object has an element i. */
+        bool has;
+        if (obj->isProxy()) {
+            /* js_HasOwnProperty does not work on proxies. */
+            if (!Proxy::hasOwn(cx, obj, id, &has))
+                goto error;
+        } else {
+            JSObject *obj2;
+            JSProperty *prop;
+            if (!js_HasOwnProperty(cx, obj->getOps()->lookupGeneric, obj, id, &obj2, &prop))
+                goto error;
+            has = !!prop;
+        }
+
+        /* Populate *vp. */
+        if (has) {
+            if (!obj->getElement(cx, obj, i, vp))
+                goto error;
+        } else {
+            vp->setUndefined();
+        }
+    }
+
+    /* On success, bump the index. */
+    setIndex(i + 1);
+    return true;
+
+  error:
+    setIndex(CLOSED_INDEX);
+    return false;
+}
+
+inline js::ElementIteratorObject *
+JSObject::asElementIterator()
+{
+    JS_ASSERT(isElementIterator());
+    return static_cast<js::ElementIteratorObject *>(this);
+}
+
 JSBool
 js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
 {
@@ -1089,7 +1220,31 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
     JS_CHECK_RECURSION(cx, return false);
 
     /* Fetch and cache the next value from the iterator. */
-    if (!ni) {
+    if (ni) {
+        JS_ASSERT(!ni->isKeyIter());
+        jsid id;
+        if (!ValueToId(cx, StringValue(*ni->current()), &id))
+            return false;
+        id = js_CheckForStringIndex(id);
+        ni->incCursor();
+        if (!ni->obj->getGeneric(cx, id, rval))
+            return false;
+        if ((ni->flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *rval, rval))
+            return false;
+    } else if (iterobj->isElementIterator()) {
+        /*
+         * Like native iterators, element iterators do not have a .next
+         * method, so this fast path is necessary for correctness.
+         */
+        if (!iterobj->asElementIterator()->iteratorNext(cx, rval))
+            return false;
+        if (rval->isMagic(JS_NO_ITER_VALUE)) {
+            cx->iterValue.setMagic(JS_NO_ITER_VALUE);
+            rval->setBoolean(false);
+            return true;
+        }
+    } else {
+        /* Call the iterator object's .next method. */
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
         if (!js_GetMethod(cx, iterobj, id, JSGET_METHOD_BARRIER, rval))
             return false;
@@ -1103,17 +1258,6 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
             rval->setBoolean(false);
             return true;
         }
-    } else {
-        JS_ASSERT(!ni->isKeyIter());
-        jsid id;
-        if (!ValueToId(cx, StringValue(*ni->current()), &id))
-            return false;
-        id = js_CheckForStringIndex(id);
-        ni->incCursor();
-        if (!ni->obj->getGeneric(cx, id, rval))
-            return false;
-        if ((ni->flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *rval, rval))
-            return false;
     }
 
     /* Cache the value returned by iterobj.next() so js_IteratorNext() can find it. */
