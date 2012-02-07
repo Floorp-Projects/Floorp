@@ -236,6 +236,13 @@ GetWindows(const PRUint64& aId, nsGlobalWindow*& aWindow, void* aClosure)
 }
 
 NS_IMETHODIMP
+nsDOMMemoryMultiReporter::GetName(nsACString &aName)
+{
+  aName.AssignLiteral("dom+style");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
                                          nsISupports* aClosure)
 {

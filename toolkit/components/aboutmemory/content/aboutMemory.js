@@ -121,7 +121,8 @@ const kTreeNames = {
   'other':    'Other Measurements'
 };
 
-const kMapTreePaths = ['map/resident', 'map/pss', 'map/vsize', 'map/swap'];
+const kMapTreePaths =
+  ['smaps/resident', 'smaps/pss', 'smaps/vsize', 'smaps/swap'];
 
 function onLoad()
 {
@@ -283,6 +284,11 @@ function getReportersByProcess(aMgr)
   var e = aMgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
     var mrOrig = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    // Ignore the "smaps" reporters in non-verbose mode.
+    if (!gVerbose && mrOrig.name === "smaps") {
+      continue;
+    }
+
     try {
       mrOrig.collectReports(addReporter, null);
     }
@@ -453,7 +459,7 @@ function buildTree(aReporters, aTreeName)
   // traversal.
 
   // There should always be at least one matching reporter when |aTreeName| is
-  // "explicit".  But there may be zero for "map" trees;  if that happens,
+  // "explicit".  But there may be zero for "smaps" trees;  if that happens,
   // bail.
   var foundReporter = false;
   for (var unsafePath in aReporters) {
@@ -552,19 +558,17 @@ function buildTree(aReporters, aTreeName)
 }
 
 /**
- * Ignore all the memory reporters that belong to a tree;  this involves
+ * Ignore all the memory reports that belong to a "smaps" tree;  this involves
  * explicitly marking them as done.
  *
  * @param aReporters
  *        The table of Reporters, indexed by _unsafePath.
- * @param aTreeName
- *        The name of the tree being built.
  */
-function ignoreTree(aReporters, aTreeName)
+function ignoreSmapsTrees(aReporters)
 {
   for (var unsafePath in aReporters) {
     var r = aReporters[unsafePath];
-    if (r.treeNameMatches(aTreeName)) {
+    if (r.treeNameMatches("smaps")) {
       var dummy = getBytes(aReporters, unsafePath);
     }
   }
@@ -785,21 +789,24 @@ function appendProcessElements(aP, aProcess, aReporters,
   appendTreeElements(aP, explicitTree, aProcess);
 
   // We only show these breakdown trees in verbose mode.
-  kMapTreePaths.forEach(function(t) {
-    if (gVerbose) {
+  if (gVerbose) {
+    kMapTreePaths.forEach(function(t) {
       var tree = buildTree(aReporters, t);
 
       // |tree| will be null if we don't have any reporters for the given
       // unsafePath.
       if (tree) {
         sortTreeAndInsertAggregateNodes(tree._amount, tree);
-        tree._hideKids = true;   // map trees are always initially collapsed
+        tree._hideKids = true;   // smaps trees are always initially collapsed
         appendTreeElements(aP, tree, aProcess);
       }
-    } else {
-      ignoreTree(aReporters, t);
-    }
-  });
+    });
+  } else {
+    // Although we skip the "smaps" multi-reporter in getReportersByProcess(),
+    // we might get some smaps reports from a child process, and they must be
+    // explicitly ignored.
+    ignoreSmapsTrees(aReporters);
+  }
 
   // We have to call appendOtherElements after we process all the trees,
   // because it looks at all the reporters which aren't part of a tree.
