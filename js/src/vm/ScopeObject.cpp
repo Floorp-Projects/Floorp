@@ -114,6 +114,7 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &enclosing, JSObjec
 
     JS_ASSERT_IF(callee, callee->isFunction());
     obj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
+    obj->initFixedSlot(ARGUMENTS_SLOT, MagicValue(JS_UNASSIGNED_ARGUMENTS));
 
     /*
      * If |bindings| is for a function that has extensible parents, that means

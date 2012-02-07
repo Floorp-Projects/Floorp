@@ -323,8 +323,8 @@ CallArgsListFromVp(uintN argc, Value *vp, CallArgsList *prev)
 /* Flags specified for a frame as it is constructed. */
 enum InitialFrameFlags {
     INITIAL_NONE           =          0,
-    INITIAL_CONSTRUCT      =       0x80, /* == StackFrame::CONSTRUCTING, asserted in Stack.h */
-    INITIAL_LOWERED        =   0x800000  /* == StackFrame::LOWERED_CALL_APPLY, asserted in Stack.h */
+    INITIAL_CONSTRUCT      =       0x80, /* == StackFrame::CONSTRUCTING, asserted below */
+    INITIAL_LOWERED        =   0x200000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
 };
 
 enum ExecuteType {
@@ -356,24 +356,23 @@ class StackFrame
         YIELDING           =      0x100,  /* js::Interpret dispatched JSOP_YIELD */
         FINISHED_IN_INTERP =      0x200,  /* set if frame finished in Interpret() */
 
-        /* Concerning function arguments */
-        OVERRIDE_ARGS      =      0x400,  /* overridden arguments local variable */
-        OVERFLOW_ARGS      =      0x800,  /* numActualArgs > numFormalArgs */
-        UNDERFLOW_ARGS     =     0x1000,  /* numActualArgs < numFormalArgs */
+        /* Function arguments */
+        OVERFLOW_ARGS      =      0x400,  /* numActualArgs > numFormalArgs */
+        UNDERFLOW_ARGS     =      0x800,  /* numActualArgs < numFormalArgs */
 
         /* Lazy frame initialization */
-        HAS_CALL_OBJ       =     0x2000,  /* frame has a callobj reachable from scopeChain_ */
-        HAS_ARGS_OBJ       =     0x4000,  /* frame has an argsobj in StackFrame::args */
-        HAS_HOOK_DATA      =     0x8000,  /* frame has hookData_ set */
-        HAS_ANNOTATION     =    0x10000,  /* frame has annotation_ set */
-        HAS_RVAL           =    0x20000,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =    0x40000,  /* frame has scopeChain_ set */
-        HAS_PREVPC         =    0x80000,  /* frame has prevpc_ and prevInline_ set */
-        HAS_BLOCKCHAIN     =   0x100000,  /* frame has blockChain_ set */
+        HAS_CALL_OBJ       =     0x1000,  /* frame has a callobj reachable from scopeChain_ */
+        HAS_ARGS_OBJ       =     0x2000,  /* frame has an argsobj in StackFrame::args */
+        HAS_HOOK_DATA      =     0x4000,  /* frame has hookData_ set */
+        HAS_ANNOTATION     =     0x8000,  /* frame has annotation_ set */
+        HAS_RVAL           =    0x10000,  /* frame has rval_ set */
+        HAS_SCOPECHAIN     =    0x20000,  /* frame has scopeChain_ set */
+        HAS_PREVPC         =    0x40000,  /* frame has prevpc_ and prevInline_ set */
+        HAS_BLOCKCHAIN     =    0x80000,  /* frame has blockChain_ set */
 
         /* Method JIT state */
-        DOWN_FRAMES_EXPANDED = 0x400000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   = 0x800000   /* Pushed by a lowered call/apply */
+        DOWN_FRAMES_EXPANDED = 0x100000,  /* inlining in down frames has been expanded */
+        LOWERED_CALL_APPLY   = 0x200000   /* Pushed by a lowered call/apply */
     };
 
   private:
@@ -1105,16 +1104,8 @@ class StackFrame
         return !!(flags_ & DEBUGGER);
     }
 
-    bool hasOverriddenArgs() const {
-        return !!(flags_ & OVERRIDE_ARGS);
-    }
-
     bool hasOverflowArgs() const {
         return !!(flags_ & OVERFLOW_ARGS);
-    }
-
-    void setOverriddenArgs() {
-        flags_ |= OVERRIDE_ARGS;
     }
 
     bool isYielding() {

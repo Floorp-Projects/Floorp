@@ -1363,10 +1363,10 @@ stubs::FlatLambda(VMFrame &f, JSFunction *fun)
 void JS_FASTCALL
 stubs::Arguments(VMFrame &f)
 {
-    Value argsobj;
-    if (!js_GetArgsValue(f.cx, f.fp(), &argsobj))
+    ArgumentsObject *arguments = js_GetArgsObject(f.cx, f.fp());
+    if (!arguments)
         THROW();
-    f.regs.sp[0] = argsobj;
+    f.regs.sp[0] = ObjectValue(*arguments);
 }
 
 JSBool JS_FASTCALL

@@ -3000,14 +3000,18 @@ BEGIN_CASE(JSOP_ARGUMENTS)
         if (!script->ensureRanInference(cx))
             goto error;
         if (script->createdArgs) {
-            if (!js_GetArgsValue(cx, regs.fp(), &rval))
+            ArgumentsObject *arguments = js_GetArgsObject(cx, regs.fp());
+            if (!arguments)
                 goto error;
+            rval = ObjectValue(*arguments);
         } else {
             rval = MagicValue(JS_LAZY_ARGUMENTS);
         }
     } else {
-        if (!js_GetArgsValue(cx, regs.fp(), &rval))
+        ArgumentsObject *arguments = js_GetArgsObject(cx, regs.fp());
+        if (!arguments)
             goto error;
+        rval = ObjectValue(*arguments);
     }
     PUSH_COPY(rval);
 }
