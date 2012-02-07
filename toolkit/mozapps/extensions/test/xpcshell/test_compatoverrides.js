@@ -6,7 +6,7 @@
 
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
-const PREF_GETADDONS_BYIDS         = "extensions.getAddons.get.url";
+const PREF_GETADDONS_BYIDS         = "extensions.getAddons.getWithPerformance.url";
 
 const PORT            = 4444;
 const BASE_URL        = "http://localhost:" + PORT;

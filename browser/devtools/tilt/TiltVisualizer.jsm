@@ -36,9 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  ***** END LICENSE BLOCK *****/
-
-/*global Components, ChromeWorker */
-/*global TiltGL, TiltMath, EPSILON, vec3, mat4, quat4, TiltUtils */
 "use strict";
 
 const Cu = Components.utils;
@@ -78,6 +75,7 @@ const ARCBALL_RESET_INTERVAL = 1000 / 60;
 const TILT_CRAFTER = "resource:///modules/devtools/TiltWorkerCrafter.js";
 const TILT_PICKER = "resource:///modules/devtools/TiltWorkerPicker.js";
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/TiltGL.jsm");
 Cu.import("resource:///modules/devtools/TiltMath.jsm");
 Cu.import("resource:///modules/devtools/TiltUtils.jsm");
@@ -90,10 +88,11 @@ let EXPORTED_SYMBOLS = ["TiltVisualizer"];
  *
  * @param {Object} aProperties
  *                 an object containing the following properties:
- *       {Element} parentNode: the parent node to hold the visualization
+ *        {Window} chromeWindow: a reference to the top level window
  *        {Window} contentWindow: the content window holding the visualized doc
+ *       {Element} parentNode: the parent node to hold the visualization
  *      {Function} requestAnimationFrame: responsible with scheduling loops
- *   {InspectorUI} inspectorUI: necessary instance of the InspectorUI
+ *        {Object} notifications: necessary notifications for Tilt
  *      {Function} onError: optional, function called if initialization failed
  *      {Function} onLoad: optional, function called if initialization worked
  */
@@ -101,6 +100,11 @@ function TiltVisualizer(aProperties)
 {
   // make sure the properties parameter is a valid object
   aProperties = aProperties || {};
+
+  /**
+   * Save a reference to the top-level window.
+   */
+  this.chromeWindow = aProperties.chromeWindow;
 
   /**
    * The canvas element used for rendering the visualization.
@@ -114,9 +118,10 @@ function TiltVisualizer(aProperties)
    * Visualization logic and drawing loop.
    */
   this.presenter = new TiltVisualizer.Presenter(this.canvas,
+    aProperties.chromeWindow,
     aProperties.contentWindow,
     aProperties.requestAnimationFrame,
-    aProperties.inspectorUI,
+    aProperties.notifications,
     aProperties.onError || null,
     aProperties.onLoad || null);
 
@@ -160,9 +165,12 @@ TiltVisualizer.prototype = {
     if (this.presenter) {
       TiltUtils.destroyObject(this.presenter);
     }
+
+    let chromeWindow = this.chromeWindow;
+
     TiltUtils.destroyObject(this);
     TiltUtils.clearCache();
-    TiltUtils.gc();
+    TiltUtils.gc(chromeWindow);
   }
 };
 
@@ -171,25 +179,42 @@ TiltVisualizer.prototype = {
  *
  * @param {HTMLCanvasElement} aCanvas
  *                            the canvas element used for rendering
- * @param {Object} aContentWindow
+ * @param {Window} aChromeWindow
+ *                 a reference to the top-level window
+ * @param {Window} aContentWindow
  *                 the content window holding the document to be visualized
  * @param {Function} aRequestAnimationFrame
  *                   function responsible with scheduling loop frames
- * @param {InspectorUI} aInspectorUI
- *                      necessary instance of the InspectorUI
+ * @param {Object} aNotifications
+ *                 necessary notifications for Tilt
  * @param {Function} onError
  *                   function called if initialization failed
  * @param {Function} onLoad
  *                   function called if initialization worked
  */
 TiltVisualizer.Presenter = function TV_Presenter(
-  aCanvas, aContentWindow, aRequestAnimationFrame, aInspectorUI,
+  aCanvas, aChromeWindow, aContentWindow, aRequestAnimationFrame, aNotifications,
   onError, onLoad)
 {
+  /**
+   * A canvas overlay used for drawing the visualization.
+   */
   this.canvas = aCanvas;
+
+  /**
+   * Save a reference to the top-level window, to access InspectorUI or Tilt.
+   */
+  this.chromeWindow = aChromeWindow;
+
+  /**
+   * The content window generating the visualization
+   */
   this.contentWindow = aContentWindow;
-  this.inspectorUI = aInspectorUI;
-  this.tiltUI = aInspectorUI.chromeWin.Tilt;
+
+  /**
+   * Shortcut for accessing notifications strings.
+   */
+  this.NOTIFICATIONS = aNotifications;
 
   /**
    * Create the renderer, containing useful functions for easy drawing.
@@ -225,7 +250,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
    * Modified by events in the controller through delegate functions.
    */
   this.transforms = {
-    zoom: TiltUtils.getDocumentZoom(),
+    zoom: TiltUtils.getDocumentZoom(aChromeWindow),
     offset: vec3.create(),      // mesh offset, aligned to the viewport center
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create()    // scene rotation, expressed as a quaternion
@@ -234,8 +259,9 @@ TiltVisualizer.Presenter = function TV_Presenter(
   /**
    * Variables holding information about the initial and current node selected.
    */
-  this._initialSelection = false; // true if an initial selection was made
   this._currentSelection = -1; // the selected node index
+  this._initialSelection = false; // true if an initial selection was made
+  this._initialMeshConfiguration = false; // true if the 3D mesh was configured
 
   /**
    * Variable specifying if the scene should be redrawn.
@@ -295,28 +321,12 @@ TiltVisualizer.Presenter = function TV_Presenter(
       this.drawVisualization();
     }
 
-    // call the attached ondraw event handler if specified (by the controller)
+    // call the attached ondraw function and handle all keyframe notifications
     if ("function" === typeof this.ondraw) {
       this.ondraw(this.frames);
     }
 
-    if (!TiltVisualizer.Prefs.introTransition && !this.isExecutingDestruction) {
-      this.frames = INTRO_TRANSITION_DURATION;
-    }
-    if (!TiltVisualizer.Prefs.outroTransition && this.isExecutingDestruction) {
-      this.frames = OUTRO_TRANSITION_DURATION;
-    }
-
-    if ("function" === typeof this.onInitializationFinished &&
-        this.frames === INTRO_TRANSITION_DURATION &&
-       !this.isExecutingDestruction) {
-      this.onInitializationFinished();
-    }
-    if ("function" === typeof this.onDestructionFinished &&
-        this.frames === OUTRO_TRANSITION_DURATION &&
-        this.isExecutingDestruction) {
-      this.onDestructionFinished();
-    }
+    this.handleKeyframeNotifications();
   }.bind(this);
 
   setup();
@@ -495,7 +505,7 @@ TiltVisualizer.Presenter.prototype = {
    * @param {Object} aData
    *                 object containing the necessary mesh verts, texcoord etc.
    */
-  setupMesh: function TVP_setupMesh(aData) /*global TiltVisualizerStyle */
+  setupMesh: function TVP_setupMesh(aData)
   {
     let renderer = this.renderer;
 
@@ -530,13 +540,13 @@ TiltVisualizer.Presenter.prototype = {
     // if there's no initial selection made, highlight the required node
     if (!this._initialSelection) {
       this._initialSelection = true;
-      this.highlightNode(this.inspectorUI.selection);
+      this.highlightNode(this.chromeWindow.InspectorUI.selection);
     }
 
     if (!this._initialMeshConfiguration) {
       this._initialMeshConfiguration = true;
 
-      let zoom = TiltUtils.getDocumentZoom();
+      let zoom = this.transforms.zoom;
       let width = Math.min(aData.meshWidth * zoom, renderer.width);
       let height = Math.min(aData.meshHeight * zoom, renderer.height);
 
@@ -610,7 +620,7 @@ TiltVisualizer.Presenter.prototype = {
    */
   onResize: function TVP_onResize(e)
   {
-    let zoom = TiltUtils.getDocumentZoom();
+    let zoom = TiltUtils.getDocumentZoom(this.chromeWindow);
     let width = e.target.innerWidth * zoom;
     let height = e.target.innerHeight * zoom;
 
@@ -629,10 +639,6 @@ TiltVisualizer.Presenter.prototype = {
    */
   highlightNode: function TVP_highlightNode(aNode)
   {
-    if (!aNode) {
-      return;
-    }
-
     this.highlightNodeFor(this.traverseData.nodes.indexOf(aNode));
   },
 
@@ -701,10 +707,13 @@ TiltVisualizer.Presenter.prototype = {
     if (this._currentSelection === aNodeIndex) {
       return;
     }
+
     // if an invalid or nonexisted node is specified, disable the highlight
     if (aNodeIndex < 0) {
       this._currentSelection = -1;
       this.highlight.disabled = true;
+
+      Services.obs.notifyObservers(null, this.NOTIFICATIONS.UNHIGHLIGHTING, null);
       return;
     }
 
@@ -730,8 +739,12 @@ TiltVisualizer.Presenter.prototype = {
     vec3.set([x,     y + h, z * STACK_THICKNESS], highlight.v3);
 
     this._currentSelection = aNodeIndex;
-    this.inspectorUI.inspectNode(node, this.contentWindow.innerHeight < y ||
-                                       this.contentWindow.pageYOffset > 0);
+
+    this.chromeWindow.InspectorUI.inspectNode(node,
+      this.contentWindow.innerHeight < y ||
+      this.contentWindow.pageYOffset > 0);
+
+    Services.obs.notifyObservers(null, this.NOTIFICATIONS.HIGHLIGHTING, null);
   },
 
   /**
@@ -758,6 +771,9 @@ TiltVisualizer.Presenter.prototype = {
     this.meshStacks.vertices = new renderer.VertexBuffer(meshData.vertices, 3);
     this.highlight.disabled = true;
     this.redraw = true;
+
+    Services.obs.notifyObservers(null,
+      this.NOTIFICATIONS.NODE_REMOVED, null);
   },
 
   /**
@@ -797,7 +813,7 @@ TiltVisualizer.Presenter.prototype = {
       }
     }, false);
 
-    let zoom = TiltUtils.getDocumentZoom();
+    let zoom = TiltUtils.getDocumentZoom(this.chromeWindow);
     let width = this.renderer.width * zoom;
     let height = this.renderer.height * zoom;
     let mesh = this.meshStacks;
@@ -867,17 +883,40 @@ TiltVisualizer.Presenter.prototype = {
   },
 
   /**
-   * Checks if this object was initialized properly.
-   *
-   * @return {Boolean} true if the object was initialized properly
+   * Handles notifications at specific frame counts.
    */
-  isInitialized: function TVP_isInitialized()
+  handleKeyframeNotifications: function TV_handleKeyframeNotifications()
   {
-    return this.renderer && this.renderer.context;
+    if (!TiltVisualizer.Prefs.introTransition && !this.isExecutingDestruction) {
+      this.frames = INTRO_TRANSITION_DURATION;
+    }
+    if (!TiltVisualizer.Prefs.outroTransition && this.isExecutingDestruction) {
+      this.frames = OUTRO_TRANSITION_DURATION;
+    }
+
+    if (this.frames === INTRO_TRANSITION_DURATION &&
+       !this.isExecutingDestruction) {
+
+      Services.obs.notifyObservers(null, this.NOTIFICATIONS.INITIALIZED, null);
+
+      if ("function" === typeof this.onInitializationFinished) {
+        this.onInitializationFinished();
+      }
+    }
+
+    if (this.frames === OUTRO_TRANSITION_DURATION &&
+        this.isExecutingDestruction) {
+
+      Services.obs.notifyObservers(null, this.NOTIFICATIONS.BEFORE_DESTROYED, null);
+
+      if ("function" === typeof this.onDestructionFinished) {
+        this.onDestructionFinished();
+      }
+    }
   },
 
   /**
-   * Starts executing a destruction animation and executes a callback function
+   * Starts executing the destruction sequence and issues a callback function
    * when finished.
    *
    * @param {Function} aCallback
@@ -889,6 +928,10 @@ TiltVisualizer.Presenter.prototype = {
       this.isExecutingDestruction = true;
       this.onDestructionFinished = aCallback;
 
+      // if we execute the destruction after the initialization finishes,
+      // proceed normally; otherwise, skip everything and immediately issue
+      // the callback
+
       if (this.frames > OUTRO_TRANSITION_DURATION) {
         this.frames = 0;
         this.redraw = true;
@@ -896,6 +939,16 @@ TiltVisualizer.Presenter.prototype = {
         aCallback();
       }
     }
+  },
+
+  /**
+   * Checks if this object was initialized properly.
+   *
+   * @return {Boolean} true if the object was initialized properly
+   */
+  isInitialized: function TVP_isInitialized()
+  {
+    return this.renderer && this.renderer.context;
   },
 
   /**
@@ -935,26 +988,34 @@ TiltVisualizer.Presenter.prototype = {
  */
 TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
 {
+  /**
+   * A canvas overlay on which mouse and keyboard event listeners are attached.
+   */
   this.canvas = aCanvas;
+
+  /**
+   * Save a reference to the presenter to modify its model-view transforms.
+   */
   this.presenter = aPresenter;
 
   /**
    * The initial controller dimensions and offset, in pixels.
    */
-  this.left = aPresenter.contentWindow.pageXOffset || 0;
-  this.top = aPresenter.contentWindow.pageYOffset || 0;
+  this.zoom = aPresenter.transforms.zoom;
+  this.left = (aPresenter.contentWindow.pageXOffset || 0) * this.zoom;
+  this.top = (aPresenter.contentWindow.pageYOffset || 0) * this.zoom;
   this.width = aCanvas.width;
   this.height = aCanvas.height;
-
-  this.left *= TiltUtils.getDocumentZoom();
-  this.top *= TiltUtils.getDocumentZoom();
 
   /**
    * Arcball used to control the visualization using the mouse.
    */
-  this.arcball = new TiltVisualizer.Arcball(this.width, this.height, 0,
-    [this.width + this.left < aPresenter.maxTextureSize ? -this.left : 0,
-     this.height + this.top < aPresenter.maxTextureSize ? -this.top : 0]);
+  this.arcball = new TiltVisualizer.Arcball(
+    this.presenter.chromeWindow, this.width, this.height, 0,
+    [
+      this.width + this.left < aPresenter.maxTextureSize ? -this.left : 0,
+      this.height + this.top < aPresenter.maxTextureSize ? -this.top : 0
+    ]);
 
   /**
    * Object containing the rotation quaternion and the translation amount.
@@ -975,7 +1036,7 @@ TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
 TiltVisualizer.Controller.prototype = {
 
   /**
-   * Adds all added events listeners required by this controller.
+   * Adds events listeners required by this controller.
    */
   addEventListeners: function TVC_addEventListeners()
   {
@@ -991,6 +1052,7 @@ TiltVisualizer.Controller.prototype = {
     canvas.addEventListener("MozMousePixelScroll", this.onMozScroll, false);
     canvas.addEventListener("keydown", this.onKeyDown, false);
     canvas.addEventListener("keyup", this.onKeyUp, false);
+    canvas.addEventListener("keypress", this.onKeyPress, true);
     canvas.addEventListener("blur", this.onBlur, false);
 
     // handle resize events to change the arcball dimensions
@@ -1013,6 +1075,7 @@ TiltVisualizer.Controller.prototype = {
     canvas.removeEventListener("MozMousePixelScroll", this.onMozScroll, false);
     canvas.removeEventListener("keydown", this.onKeyDown, false);
     canvas.removeEventListener("keyup", this.onKeyUp, false);
+    canvas.removeEventListener("keypress", this.onKeyPress, true);
     canvas.removeEventListener("blur", this.onBlur, false);
 
     presenter.contentWindow.removeEventListener("resize", this.onResize,false);
@@ -1157,18 +1220,27 @@ TiltVisualizer.Controller.prototype = {
   {
     let code = e.keyCode || e.which;
 
-    if (code === e.DOM_VK_ESCAPE) {
-      this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId, 1);
-      return;
-    }
     if (code === e.DOM_VK_X) {
       this.presenter.deleteNode();
     }
-
     if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
       e.preventDefault();
       e.stopPropagation();
       this.arcball.keyUp(code);
+    }
+  },
+
+  /**
+   * Called when a key is pressed.
+   */
+  onKeyPress: function TVC_onKeyPress(e)
+  {
+    let tilt = this.presenter.chromeWindow.Tilt;
+
+    if (e.keyCode === e.DOM_VK_ESCAPE) {
+      e.preventDefault();
+      e.stopPropagation();
+      tilt.destroy(tilt.currentWindowId, true);
     }
   },
 
@@ -1184,7 +1256,7 @@ TiltVisualizer.Controller.prototype = {
    */
   onResize: function TVC_onResize(e)
   {
-    let zoom = TiltUtils.getDocumentZoom();
+    let zoom = TiltUtils.getDocumentZoom(this.presenter.chromeWindow);
     let width = e.target.innerWidth * zoom;
     let height = e.target.innerHeight * zoom;
 
@@ -1219,6 +1291,8 @@ TiltVisualizer.Controller.prototype = {
  * in the Graphics Interface ’92 Proceedings. It features good behavior
  * easy implementation, cheap execution.
  *
+ * @param {Window} aChromeWindow
+ *                 a reference to the top-level window
  * @param {Number} aWidth
  *                 the width of canvas
  * @param {Number} aHeight
@@ -1231,8 +1305,13 @@ TiltVisualizer.Controller.prototype = {
  *                optional, initial quaternion rotation
  */
 TiltVisualizer.Arcball = function TV_Arcball(
-  aWidth, aHeight, aRadius, aInitialTrans, aInitialRot)
+  aChromeWindow, aWidth, aHeight, aRadius, aInitialTrans, aInitialRot)
 {
+  /**
+   * Save a reference to the top-level window to set/remove intervals.
+   */
+  this.chromeWindow = aChromeWindow;
+
   /**
    * Values retaining the current horizontal and vertical mouse coordinates.
    */
@@ -1688,17 +1767,17 @@ TiltVisualizer.Arcball.prototype = {
       this.onResetStart = null;
     }
 
+    let func = this._nextResetIntervalStep.bind(this);
+
     this.cancelMouseEvents();
     this.cancelKeyEvents();
     this._cancelResetInterval();
 
-    let window = TiltUtils.getBrowserWindow();
-    let func = this._nextResetIntervalStep.bind(this);
-
     this._save();
     this._resetFinalTranslation = vec3.create(aFinalTranslation);
     this._resetFinalRotation = quat4.create(aFinalRotation);
-    this._resetInterval = window.setInterval(func, ARCBALL_RESET_INTERVAL);
+    this._resetInterval =
+      this.chromeWindow.setInterval(func, ARCBALL_RESET_INTERVAL);
   },
 
   /**
@@ -1707,9 +1786,8 @@ TiltVisualizer.Arcball.prototype = {
   _cancelResetInterval: function TVA__cancelResetInterval()
   {
     if (this._resetInterval) {
-      let window = TiltUtils.getBrowserWindow();
+      this.chromeWindow.clearInterval(this._resetInterval);
 
-      window.clearInterval(this._resetInterval);
       this._resetInterval = null;
       this._save();
 
@@ -1758,8 +1836,8 @@ TiltVisualizer.Arcball.prototype = {
   /**
    * Loads the keys to control this arcball.
    */
-  _loadKeys: function TVA__loadKeys() {
-
+  _loadKeys: function TVA__loadKeys()
+  {
     this.rotateKeys = {
       "up": Ci.nsIDOMKeyEvent["DOM_VK_W"],
       "down": Ci.nsIDOMKeyEvent["DOM_VK_S"],

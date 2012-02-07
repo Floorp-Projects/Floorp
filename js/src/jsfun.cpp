@@ -1469,6 +1469,14 @@ fun_finalize(JSContext *cx, JSObject *obj)
         obj->toFunction()->finalizeUpvars();
 }
 
+size_t
+JSFunction::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
+{
+    return (isFlatClosure() && hasFlatClosureUpvars()) ?
+           mallocSizeOf(getFlatClosureUpvars()) :
+           0;
+}
+
 /*
  * Reserve two slots in all function objects for XPConnect.  Note that this
  * does not bloat every instance, only those on which reserved slots are set,

@@ -144,6 +144,7 @@
   position: static ! important;
   float: none ! important;
   -moz-box-ordinal-group: inherit !important;
+  text-overflow: inherit;
 }
 
 *|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,

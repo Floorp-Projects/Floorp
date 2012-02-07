@@ -63,4 +63,8 @@ public class AndroidBrowserPasswordsRepositorySession extends
     return rec.hostname + rec.formSubmitURL + rec.httpRealm + rec.username;
   }
 
+  @Override
+  protected Record prepareRecord(Record record) {
+    return record;
+  }
 }

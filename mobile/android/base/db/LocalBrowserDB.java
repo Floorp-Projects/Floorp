@@ -412,6 +412,26 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             cr.insert(appendProfile(Images.CONTENT_URI), values);
     }
 
+    public byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
+        Cursor c = cr.query(appendProfile(Images.CONTENT_URI),
+                            new String[] { Images.THUMBNAIL },
+                            Images.URL + " = ?",
+                            new String[] { uri },
+                            null);
+
+        if (!c.moveToFirst()) {
+            c.close();
+            return null;
+        }
+
+        int thumbnailIndex = c.getColumnIndexOrThrow(Images.THUMBNAIL);
+
+        byte[] b = c.getBlob(thumbnailIndex);
+        c.close();
+
+        return b;
+    }
+
     private static class LocalDBCursor extends CursorWrapper {
         public LocalDBCursor(Cursor c) {
             super(c);

@@ -102,7 +102,7 @@ private:
                                  nsresult aReason);
   
 public:
-  class nsListener : public nsIDNSListener
+  class nsListener MOZ_FINAL : public nsIDNSListener
   {
     // This class exists to give a safe callback no-op DNSListener
   public:
@@ -114,9 +114,9 @@ public:
     ~nsListener() {}
   };
   
-  class nsDeferrals : public nsIWebProgressListener
-                    , public nsSupportsWeakReference
-                    , public nsIObserver
+  class nsDeferrals MOZ_FINAL: public nsIWebProgressListener
+                             , public nsSupportsWeakReference
+                             , public nsIObserver
   {
   public:
     NS_DECL_ISUPPORTS

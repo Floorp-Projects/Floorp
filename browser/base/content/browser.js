@@ -137,8 +137,9 @@ __defineGetter__("gPrefService", function() {
 });
 
 __defineGetter__("AddonManager", function() {
-  Cu.import("resource://gre/modules/AddonManager.jsm");
-  return this.AddonManager;
+  let tmp = {};
+  Cu.import("resource://gre/modules/AddonManager.jsm", tmp);
+  return this.AddonManager = tmp.AddonManager;
 });
 __defineSetter__("AddonManager", function (val) {
   delete this.AddonManager;
@@ -188,6 +189,7 @@ XPCOMUtils.defineLazyGetter(this, "Tilt", function() {
 
 let gInitialPages = [
   "about:blank",
+  "about:newtab",
   "about:privatebrowsing",
   "about:sessionrestore"
 ];
@@ -1502,7 +1504,9 @@ function prepareForStartup() {
 }
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
-  Cu.import("resource:///modules/TelemetryTimestamps.jsm");
+  let tmp = {};
+  Cu.import("resource:///modules/TelemetryTimestamps.jsm", tmp);
+  let TelemetryTimestamps = tmp.TelemetryTimestamps;
   TelemetryTimestamps.add("delayedStartupStarted");
   gDelayedStartupTimeoutId = null;
 
@@ -1764,6 +1768,23 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
                                              Ci.nsIPrefLocalizedString).data)
     document.getElementById("appmenu_charsetMenu").hidden = true;
 #endif
+
+  let appMenuButton = document.getElementById("appmenu-button");
+  let appMenuPopup = document.getElementById("appmenu-popup");
+  if (appMenuButton && appMenuPopup) {
+    let appMenuOpening = null;
+    appMenuButton.addEventListener("mousedown", function(event) {
+      if (event.button == 0)
+        appMenuOpening = new Date();
+    }, false);
+    appMenuPopup.addEventListener("popupshown", function(event) {
+      if (event.target != appMenuPopup || !appMenuOpening)
+        return;
+      let duration = new Date() - appMenuOpening;
+      appMenuOpening = null;
+      Services.telemetry.getHistogramById("FX_APP_MENU_OPEN_MS").add(duration);
+    }, false);
+  }
 
   window.addEventListener("mousemove", MousePosTracker, false);
   window.addEventListener("dragover", MousePosTracker, false);
@@ -2204,7 +2225,7 @@ function openLocation() {
     else {
       // If there are no open browser windows, open a new one
       win = window.openDialog("chrome://browser/content/", "_blank",
-                              "chrome,all,dialog=no", "about:blank");
+                              "chrome,all,dialog=no", BROWSER_NEW_TAB_URL);
       win.addEventListener("load", openLocationCallback, false);
     }
     return;
@@ -2222,7 +2243,7 @@ function openLocationCallback()
 
 function BrowserOpenTab()
 {
-  openUILinkIn("about:blank", "tab");
+  openUILinkIn(BROWSER_NEW_TAB_URL, "tab");
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
@@ -2557,7 +2578,7 @@ function URLBarSetURI(aURI) {
     else
       value = losslessDecodeURI(uri);
 
-    valid = (uri.spec != "about:blank");
+    valid = !isBlankPageURL(uri.spec);
   }
 
   gURLBar.value = value;
@@ -2874,7 +2895,7 @@ function getMeOutOfHere() {
   // Get the start page from the *default* pref branch, not the user's
   var prefs = Cc["@mozilla.org/preferences-service;1"]
              .getService(Ci.nsIPrefService).getDefaultBranch(null);
-  var url = "about:blank";
+  var url = BROWSER_NEW_TAB_URL;
   try {
     url = prefs.getComplexValue("browser.startup.homepage",
                                 Ci.nsIPrefLocalizedString).data;
@@ -3135,13 +3156,17 @@ var browserDragAndDrop = {
     }
   },
 
-  drop: function (aEvent, aName) Services.droppedLinkHandler.dropLink(aEvent, aName)
+  drop: function (aEvent, aName, aDisallowInherit) {
+    return Services.droppedLinkHandler.dropLink(aEvent, aName, aDisallowInherit);
+  }
 };
 
 var homeButtonObserver = {
   onDrop: function (aEvent)
     {
-      setTimeout(openHomeDialog, 0, browserDragAndDrop.drop(aEvent, { }));
+      // disallow setting home pages that inherit the principal
+      let url = browserDragAndDrop.drop(aEvent, {}, true);
+      setTimeout(openHomeDialog, 0, url);
     },
 
   onDragOver: function (aEvent)
@@ -5192,7 +5217,7 @@ nsBrowserAccess.prototype = {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
         // FIXME: Bug 408379. So how come this doesn't send the
         // referrer like the other loads do?
-        var url = aURI ? aURI.spec : "about:blank";
+        var url = aURI ? aURI.spec : BROWSER_NEW_TAB_URL;
         // Pass all params to openDialog to ensure that "url" isn't passed through
         // loadOneOrMoreURIs, which splits based on "|"
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url, null, null, null);
@@ -5225,7 +5250,7 @@ nsBrowserAccess.prototype = {
         let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
         let referrer = aOpener ? makeURI(aOpener.location.href) : null;
 
-        let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : "about:blank", {
+        let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : BROWSER_NEW_TAB_URL, {
                                           referrerURI: referrer,
                                           fromExternal: isExternal,
                                           inBackground: loadInBackground});
@@ -5454,7 +5479,7 @@ var TabsInTitlebar = {
       if (!this._draghandle) {
         let tmp = {};
         Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-        this._draghandle = new tmp.WindowDraggingElement(tabsToolbar, window);
+        this._draghandle = new tmp.WindowDraggingElement(tabsToolbar);
         this._draghandle.mouseDownCheck = function () {
           return !this._dragBindingAlive && TabsInTitlebar.enabled;
         };
@@ -7774,9 +7799,11 @@ function undoCloseWindow(aIndex) {
  */
 function isTabEmpty(aTab) {
   let browser = aTab.linkedBrowser;
+  let uri = browser.currentURI.spec;
+  let body = browser.contentDocument.body;
   return browser.sessionHistory.count < 2 &&
-         browser.currentURI.spec == "about:blank" &&
-         !browser.contentDocument.body.hasChildNodes() &&
+         isBlankPageURL(uri) &&
+         (!body || !body.hasChildNodes()) &&
          !aTab.hasAttribute("busy");
 }
 
@@ -8156,11 +8183,13 @@ var gIdentityHandler = {
     this._identityPopup.hidePopup();
   },
 
+  _popupOpenTime : null,
+
   /**
    * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent : function(event) {
-
+    this._popupOpenTime = new Date();
     event.stopPropagation();
 
     if ((event.type == "click" && event.button != 0) ||
@@ -8195,6 +8224,17 @@ var gIdentityHandler = {
 
     // Now open the popup, anchored off the primary chrome element
     this._identityPopup.openPopup(this._identityBox, "bottomcenter topleft");
+  },
+
+  onPopupShown : function(event) {
+    let openingDuration = new Date() - this._popupOpenTime;
+    this._popupOpenTime = null;
+    try {
+      Services.telemetry.getHistogramById("FX_IDENTITY_POPUP_OPEN_MS").add(openingDuration);
+    } catch (ex) {
+      Components.utils.reportError("Unable to report telemetry for FX_IDENTITY_POPUP_OPEN_MS.");
+    }
+    document.getElementById('identity-popup-more-info-button').focus();
   },
 
   onDragStart: function (event) {

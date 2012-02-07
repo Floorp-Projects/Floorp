@@ -87,7 +87,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import com.mozilla.SUTAgentAndroid.NtpMessage;
 import com.mozilla.SUTAgentAndroid.R;
 import com.mozilla.SUTAgentAndroid.SUTAgentAndroid;
 
@@ -137,7 +136,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.04";
+    private final String prgVersion = "SUTAgentAndroid Version 1.05";
 
     public enum Command
         {
@@ -2783,68 +2782,6 @@ private void CancelNotification()
             sM = Long.toString(lMillisecs);
             sMillis = sM.substring(0, sM.length() - 3) + "." + sM.substring(sM.length() - 3);
 
-        } else if ((sDate != null) && (sTime == null) && sDate.contains(".")) {
-            String serverName = sDate;
-//            String serverName = "us.pool.ntp.org";
-            sRet = "NTP Server: " + serverName + lineSep;
-            // Send request
-            DatagramSocket socket;
-
-            try {
-                socket = new DatagramSocket();
-                InetAddress address = InetAddress.getByName(serverName);
-                byte[] buf = new NtpMessage().toByteArray();
-                DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 123);
-
-                // Set the transmit timestamp *just* before sending the packet
-                // ToDo: Does this actually improve performance or not?
-                NtpMessage.encodeTimestamp(packet.getData(), 40, (System.currentTimeMillis()/1000.0) + 2208988800.0);
-
-                socket.send(packet);
-
-                // Get response
-                System.out.println("NTP request sent, waiting for response...\n");
-                packet = new DatagramPacket(buf, buf.length);
-                socket.receive(packet);
-
-                // Immediately record the incoming timestamp since 00:00 1-JAN-1900 in secs.
-                double destinationTimestamp = (System.currentTimeMillis()/1000.0) + 2208988800.0;
-
-                // Process response
-                NtpMessage msg = new NtpMessage(packet.getData());
-
-                // Corrected, according to RFC2030 errata
-                double roundTripDelay = (destinationTimestamp-msg.originateTimestamp) - (msg.transmitTimestamp-msg.receiveTimestamp);
-
-                double localClockOffset = ((msg.receiveTimestamp - msg.originateTimestamp) + (msg.transmitTimestamp - destinationTimestamp)) / 2;
-
-                // convert base of timestamp from 00:00 1900/01/01 to 00:00:00 1970/01/01
-                double utc = msg.transmitTimestamp - (2208988800.0);
-
-                // convert from secs to ms
-                long lNewMillisecs = (long)(utc * 1000.0);
-
-                // create a date object using the timestamp this will take into account the timezone and daylight savings settings
-                Date dt = new Date(lNewMillisecs);
-
-                sRet += "  Time: " + new SimpleDateFormat("yyyy/MM/dd hh:mm:ss:SSS").format(dt) + lineSep;
-
-                // get the timestamp
-                long lMillisecs = dt.getTime();
-
-                // format the timestamp as required for the date command
-                sM = Long.toString(lMillisecs);
-                sMillis = sM.substring(0, sM.length() - 3) + "." + sM.substring(sM.length() - 3);
-
-                socket.close();
-            } catch (SocketException e) {
-                e.printStackTrace();
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-                sRet = sErrorPrefix + "Unknown host";
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         } else {
             sRet += "Invalid argument(s)";
         }

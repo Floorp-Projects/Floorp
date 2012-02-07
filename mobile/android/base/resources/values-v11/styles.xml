@@ -8,21 +8,21 @@
 
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
         <item name="android:orientation">vertical</item>
     </style>
 
     <!-- Address bar -->
     <style name="AddressBar">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
         <item name="android:orientation">horizontal</item>
     </style>
 
     <!-- Lists in AwesomeBar -->
     <style name="AwesomeBarList" parent="android:style/Widget.Holo.ListView">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:layout_weight">1</item>
     </style>

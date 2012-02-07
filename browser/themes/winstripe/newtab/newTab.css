@@ -1,0 +1,148 @@
+#scrollbox {
+  padding-bottom: 18px;
+  background-color: #fff;
+}
+
+#body {
+  padding-top: 106px;
+  font-family: sans-serif;
+}
+
+.button {
+  padding: 0;
+  border: 0 none;
+}
+
+/* TOOLBAR */
+#toolbar {
+  top: 8px;
+  right: 8px;
+  width: 13px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+}
+
+.toolbar-button {
+  background: transparent url(chrome://browser/skin/newtab/toolbar.png);
+}
+
+#toolbar-button-show {
+  width: 11px;
+  height: 11px;
+  background-position: -10px 0;
+}
+
+#toolbar-button-show:hover {
+  background-position: -10px -12px;
+}
+
+#toolbar-button-show:active {
+  background-position: -10px -24px;
+}
+
+#toolbar-button-hide {
+  width: 10px;
+  height: 10px;
+}
+
+#toolbar-button-hide:hover {
+  background-position: 0 -12px;
+}
+
+#toolbar-button-hide:active {
+  background-position: 0 -24px;
+}
+
+#toolbar-button-reset {
+  top: 17px;
+  width: 11px;
+  height: 12px;
+}
+
+#toolbar-button-reset {
+  background-position: -21px 0;
+}
+
+#toolbar-button-reset:hover {
+  background-position: -21px -12px;
+}
+
+#toolbar-button-reset:active {
+  background-position: -21px -24px;
+}
+
+/* GRID */
+#grid {
+  padding: 1px;
+  margin: 0 auto;
+}
+
+/* CELLS */
+.cell {
+  outline: 1px dashed #ccc;
+  outline-offset: -1px;
+}
+
+/* SITES */
+.site {
+  background-color: #ececec;
+  -moz-transition: 200ms ease-out;
+  -moz-transition-property: top, left, box-shadow, opacity;
+}
+
+.site[dragged] {
+  -moz-transition-property: box-shadow;
+}
+
+.site[ontop] {
+  box-shadow: 0 1px 4px #000;
+  outline: none;
+}
+
+/* SITE TITLE */
+.site-title {
+  height: 2.4em;
+  width: 189px;
+  padding: 0 6px;
+  background-color: rgba(0,0,0,0.5);
+  border: solid transparent;
+  border-width: 6px 0;
+  color: #fff;
+  text-decoration: none;
+  line-height: 1.2em;
+  font-weight: 700;
+}
+
+/* SITE STRIP */
+.site-strip {
+  padding: 4px 3px;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.strip-button {
+  width: 17px;
+  height: 17px;
+  background: transparent url(chrome://browser/skin/newtab/strip.png);
+}
+
+.strip-button-pin:hover {
+  background-position: 0 -17px;
+}
+
+.strip-button-pin:active,
+.site[pinned] .strip-button-pin {
+  background-position: 0 -34px;
+}
+
+.strip-button-block {
+  background-position: -17px 0;
+}
+
+.strip-button-block:hover {
+  background-position: -17px -17px;
+}
+
+.strip-button-block:active {
+  background-position: -17px -34px;
+}

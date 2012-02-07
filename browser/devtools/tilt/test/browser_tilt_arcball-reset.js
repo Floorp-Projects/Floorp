@@ -1,9 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/*global ok, is, info, isApproxVec, waitForExplicitFinish, executeSoon, finish */
-/*global isTiltEnabled, isWebGLSupported, createTab, createTilt */
-/*global Services, EventUtils, InspectorUI, TiltVisualizer, TILT_DESTROYED */
 "use strict";
 
 function test() {
@@ -28,7 +24,7 @@ function test() {
 
           info("Killing arcball reset test.");
 
-          Services.obs.addObserver(cleanup, TILT_DESTROYED, false);
+          Services.obs.addObserver(cleanup, DESTROYED, false);
           InspectorUI.closeInspectorUI();
         });
       }
@@ -45,7 +41,7 @@ function performTest(canvas, arcball, callback) {
 
   // start translating and rotating sometime at random
 
-  executeSoon(function() {
+  window.setTimeout(function() {
     info("Synthesizing key down events.");
 
     EventUtils.synthesizeKey("VK_W", { type: "keydown" });
@@ -53,7 +49,7 @@ function performTest(canvas, arcball, callback) {
 
     // wait for some arcball translations and rotations to happen
 
-    executeSoon(function() {
+    window.setTimeout(function() {
       info("Synthesizing key up events.");
 
       EventUtils.synthesizeKey("VK_W", { type: "keyup" });
@@ -61,7 +57,7 @@ function performTest(canvas, arcball, callback) {
 
       // ok, transformations finished, we can now try to reset the model view
 
-      executeSoon(function() {
+      window.setTimeout(function() {
         info("Synthesizing arcball reset key press.");
 
         arcball.onResetStart = function() {
@@ -96,15 +92,16 @@ function performTest(canvas, arcball, callback) {
         };
 
         EventUtils.synthesizeKey("VK_R", { type: "keydown" });
-      });
-    });
-  });
+
+      }, Math.random() * 1000); // leave enough time for transforms to happen
+    }, Math.random() * 1000);
+  }, Math.random() * 1000);
 }
 
-function cleanup() { /*global gBrowser */
+function cleanup() {
   info("Cleaning up arcball reset test.");
 
-  Services.obs.removeObserver(cleanup, TILT_DESTROYED);
+  Services.obs.removeObserver(cleanup, DESTROYED);
   gBrowser.removeCurrentTab();
   finish();
 }

@@ -77,6 +77,7 @@ endif
 DIRS += \
   base \
   battery \
+  power \
   sms \
   src \
   locales \
@@ -96,11 +97,9 @@ DIRS += \
   $(NULL)
 endif
 
-ifdef ENABLE_TESTS
-DIRS += tests
+TEST_DIRS += tests
 ifneq (,$(filter gtk2 cocoa windows android qt os2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += plugins/test
-endif
+TEST_DIRS += plugins/test
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -647,9 +647,6 @@ PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
 #ifdef XP_MACOSX
     if (ioSurface) {
         format = Image::MAC_IO_SURFACE;
-        if (!aContainer->Manager()) {
-            return NS_ERROR_FAILURE;
-        }
     }
 #endif
 

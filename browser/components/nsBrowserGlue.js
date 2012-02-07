@@ -415,6 +415,9 @@ BrowserGlue.prototype = {
         browser.selectedTab = browser.addTab("about:newaddon?id=" + aAddon.id);
       })
     });
+
+    let keywordURLUserSet = Services.prefs.prefHasUserValue("keyword.URL");
+    Services.telemetry.getHistogramById("FX_KEYWORD_URL_USERSET").add(keywordURLUserSet);
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {

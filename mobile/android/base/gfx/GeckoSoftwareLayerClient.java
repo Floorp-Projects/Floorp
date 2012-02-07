@@ -90,9 +90,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     /* The viewport that Gecko will display when drawing is finished */
     private ViewportMetrics mNewGeckoViewport;
 
-    /* The offset used to make sure tiles are snapped to the pixel grid */
-    private Point mRenderOffset;
-
     private CairoImage mCairoImage;
 
     private static final IntSize TILE_SIZE = new IntSize(256, 256);
@@ -112,6 +109,9 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     // inside a transaction, so no synchronization is needed.
     private boolean mUpdateViewportOnEndDraw;
 
+    /* Used by robocop for testing purposes */
+    private DrawListener mDrawListener;
+
     private static Pattern sColorPattern;
 
     public GeckoSoftwareLayerClient(Context context) {
@@ -120,7 +120,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         mScreenSize = new IntSize(0, 0);
         mBufferSize = new IntSize(0, 0);
         mFormat = CairoImage.FORMAT_RGB16_565;
-        mRenderOffset = new Point(0, 0);
 
         mCairoImage = new CairoImage() {
             @Override
@@ -162,6 +161,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
+        GeckoAppShell.registerGeckoEventListener("Checkerboard:Toggle", this);
 
         sendResizeEventIfNecessary();
     }
@@ -175,7 +175,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         if (mHasDirectTexture) {
             Log.i(LOGTAG, "Creating WidgetTileLayer");
             mTileLayer = new WidgetTileLayer(mCairoImage);
-            mRenderOffset.set(0, 0);
         } else {
             Log.i(LOGTAG, "Creating MultiTileLayer");
             mTileLayer = new MultiTileLayer(mCairoImage, TILE_SIZE);
@@ -191,10 +190,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     public boolean beginDrawing(int width, int height, int tileWidth, int tileHeight, String metadata, boolean hasDirectTexture) {
-        // If we've changed surface types, cancel this draw
-        if (setHasDirectTexture(hasDirectTexture)) {
-            return false;
-        }
+        setHasDirectTexture(hasDirectTexture);
 
         // Make sure the tile-size matches. If it doesn't, we could crash trying
         // to access invalid memory.
@@ -227,43 +223,18 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         beginTransaction(mTileLayer);
 
-        // We only need to set a render offset/allocate buffer memory if
-        // we're using MultiTileLayer. Otherwise, just synchronise the
-        // buffer size and return.
-        if (!(mTileLayer instanceof MultiTileLayer)) {
-            if (mBufferSize.width != width || mBufferSize.height != height)
-                mBufferSize = new IntSize(width, height);
-            return true;
-        }
-
-        // If the origin has changed, alter the rendering offset so that
-        // rendering is snapped to the tile grid and clear the invalid area.
-        boolean originChanged = true;
-        Point origin = PointUtils.round(mNewGeckoViewport.getDisplayportOrigin());
-
-        if (mGeckoViewport != null) {
-            Point oldOrigin = PointUtils.round(mGeckoViewport.getDisplayportOrigin());
-            originChanged = !origin.equals(oldOrigin);
-        }
-
-        if (originChanged) {
-            Point tileOrigin = new Point((origin.x / TILE_SIZE.width) * TILE_SIZE.width,
-                                         (origin.y / TILE_SIZE.height) * TILE_SIZE.height);
-            mRenderOffset.set(origin.x - tileOrigin.x, origin.y - tileOrigin.y);
-        }
-
-        // If the window size has changed, reallocate the buffer to match.
+        // Synchronise the buffer size with Gecko.
         if (mBufferSize.width != width || mBufferSize.height != height) {
             mBufferSize = new IntSize(width, height);
 
-            // We over-allocate to allow for the render offset. nsWindow
-            // assumes that this will happen.
-            IntSize realBufferSize = new IntSize(width + TILE_SIZE.width,
-                                                 height + TILE_SIZE.height);
+            // We only need to allocate buffer memory if we're using MultiTileLayer.
+            if (!(mTileLayer instanceof MultiTileLayer)) {
+                return true;
+            }
 
             // Reallocate the buffer if necessary
             int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
-            int size = realBufferSize.getArea() * bpp;
+            int size = mBufferSize.getArea() * bpp;
             if (mBuffer == null || mBuffer.capacity() != size) {
                 // Free the old buffer
                 if (mBuffer != null) {
@@ -316,15 +287,18 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
                 if (mTileLayer instanceof MultiTileLayer) {
                     Rect rect = new Rect(x, y, x + width, y + height);
-                    rect.offset(mRenderOffset.x, mRenderOffset.y);
                     ((MultiTileLayer)mTileLayer).invalidate(rect);
-                    ((MultiTileLayer)mTileLayer).setRenderOffset(mRenderOffset);
                 }
             } finally {
                 endTransaction(mTileLayer);
             }
         }
         Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
+
+        /* Used by robocop for testing purposes */
+        if (mDrawListener != null) {
+            mDrawListener.drawFinished(x, y, width, height);
+        }
     }
 
     public ViewportMetrics getGeckoViewportMetrics() {
@@ -339,19 +313,23 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         ByteBuffer tileBuffer = mBuffer.slice();
         int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
 
-        for (int y = 0; y <= mBufferSize.height; y += TILE_SIZE.height) {
-            for (int x = 0; x <= mBufferSize.width; x += TILE_SIZE.width) {
+        for (int y = 0; y < mBufferSize.height; y += TILE_SIZE.height) {
+            for (int x = 0; x < mBufferSize.width; x += TILE_SIZE.width) {
+                // Calculate tile size
+                IntSize tileSize = new IntSize(Math.min(mBufferSize.width - x, TILE_SIZE.width),
+                                               Math.min(mBufferSize.height - y, TILE_SIZE.height));
+
                 // Create a Bitmap from this tile
-                Bitmap tile = Bitmap.createBitmap(TILE_SIZE.width, TILE_SIZE.height,
+                Bitmap tile = Bitmap.createBitmap(tileSize.width, tileSize.height,
                                                   CairoUtils.cairoFormatTobitmapConfig(mFormat));
                 tile.copyPixelsFromBuffer(tileBuffer.asIntBuffer());
 
                 // Copy the tile to the master Bitmap and recycle it
-                c.drawBitmap(tile, x - mRenderOffset.x, y - mRenderOffset.y, null);
+                c.drawBitmap(tile, x, y, null);
                 tile.recycle();
 
                 // Progress the buffer to the next tile
-                tileBuffer.position(TILE_SIZE.getArea() * bpp);
+                tileBuffer.position(tileSize.getArea() * bpp);
                 tileBuffer = tileBuffer.slice();
             }
         }
@@ -393,10 +371,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         return mBuffer;
     }
 
-    public Point getRenderOffset() {
-        return mRenderOffset;
-    }
-
     /**
      * Gecko calls this function to signal that it is done with the back buffer. After this call,
      * it is forbidden for Gecko to touch the buffer.
@@ -421,8 +395,14 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-        if (!force && metrics.widthPixels == mScreenSize.width &&
-            metrics.heightPixels == mScreenSize.height) {
+        // Return immediately if the screen size hasn't changed or the viewport
+        // size is zero (which indicates that the rendering surface hasn't been
+        // allocated yet).
+        boolean screenSizeChanged = (metrics.widthPixels != mScreenSize.width ||
+                                     metrics.heightPixels != mScreenSize.height);
+        boolean viewportSizeValid = (getLayerController() != null &&
+                                     getLayerController().getViewportSize().isPositive());
+        if (!(force || (screenSizeChanged && viewportSizeValid))) {
             return;
         }
 
@@ -516,6 +496,15 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.DRAW, rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
             mUpdateViewportOnEndDraw = true;
+        } else if ("Checkerboard:Toggle".equals(event)) {
+            try {
+                boolean showChecks = message.getBoolean("value");
+                LayerController controller = getLayerController();
+                controller.setCheckerboardShowChecks(showChecks);
+                Log.i(LOGTAG, "Showing checks: " + showChecks);
+            } catch(JSONException ex) {
+                Log.e(LOGTAG, "Error decoding JSON", ex);
+            }
         }
     }
 
@@ -535,6 +524,16 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         int g = Integer.parseInt(matcher.group(2));
         int b = Integer.parseInt(matcher.group(3));
         return Color.rgb(r, g, b);
+    }
+
+    /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
+    public void setDrawListener(DrawListener listener) {
+        mDrawListener = listener;
+    }
+
+    /** Used by robocop for testing purposes. Not for production use! This is used via reflection by robocop. */
+    public interface DrawListener {
+        public void drawFinished(int x, int y, int width, int height);
     }
 }
 

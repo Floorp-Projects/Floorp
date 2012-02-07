@@ -155,9 +155,9 @@ private:
   nsRefPtr<FileManager> mFileManager;
 
   // Only touched on the main thread.
-  NS_DECL_EVENT_HANDLER(abort);
-  NS_DECL_EVENT_HANDLER(error);
-  NS_DECL_EVENT_HANDLER(versionchange);
+  NS_DECL_EVENT_HANDLER(abort)
+  NS_DECL_EVENT_HANDLER(error)
+  NS_DECL_EVENT_HANDLER(versionchange)
 };
 
 END_INDEXEDDB_NAMESPACE

@@ -34,6 +34,17 @@ let gAddedCount = 0;  // to add new stylesheet after the 2 initial stylesheets
 let gNewEditor;       // to make sure only one new stylesheet got created
 let gUpdateCount = 0; // to make sure only one Update event is triggered
 let gCommitCount = 0; // to make sure only one Commit event is triggered
+let gTransitionEndCount = 0;
+
+function finishOnTransitionEndAndCommit() {
+  if (gCommitCount && gTransitionEndCount) {
+    is(gUpdateCount, 1, "received one Update event");
+    is(gCommitCount, 1, "received one Commit event");
+    is(gTransitionEndCount, 1, "received one transitionend event");
+
+    finish();
+  }
+}
 
 function testEditorAdded(aChrome, aEditor)
 {
@@ -61,8 +72,8 @@ function testEditorAdded(aChrome, aEditor)
            "new editor is loaded when attached");
         ok(aEditor.hasFlag("new"),
            "new editor has NEW flag");
-        ok(!aEditor.hasFlag("unsaved"),
-           "new editor does not have UNSAVED flag");
+        ok(aEditor.hasFlag("unsaved"),
+           "new editor has UNSAVED flag");
 
         ok(aEditor.inputElement,
            "new editor has an input element attached");
@@ -86,6 +97,16 @@ function testEditorAdded(aChrome, aEditor)
         is(aEditor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
            "rule bracket has been auto-closed");
 
+        // we know that the testcase above will start a CSS transition
+        content.addEventListener("transitionend", function () {
+          gTransitionEndCount++;
+
+          let computedStyle = content.getComputedStyle(content.document.body, null);
+          is(computedStyle.backgroundColor, "rgb(255, 0, 0)",
+             "content's background color has been updated to red");
+
+          executeSoon(finishOnTransitionEndAndCommit);
+        }, false);
       }, gChromeWindow) ;
     },
 
@@ -109,22 +130,13 @@ function testEditorAdded(aChrome, aEditor)
       is(parseInt(ruleCount), 1,
          "new editor shows 1 rule after modification");
 
-      let computedStyle = content.getComputedStyle(content.document.body, null);
-      is(computedStyle.backgroundColor, "rgb(255, 0, 0)",
-         "content's background color has been updated to red");
-
       ok(!content.document.documentElement.classList.contains(TRANSITION_CLASS),
          "StyleEditor's transition class has been removed from content");
 
-      executeSoon(function () {
-        is(gUpdateCount, 1, "received only one Update event (throttle)");
-        is(gCommitCount, 1, "received only one Commit event (throttle)");
+      aEditor.removeActionListener(listener);
+      gNewEditor = null;
 
-        aEditor.removeActionListener(listener);
-
-        gNewEditor = null;
-        finish();
-      });
+      executeSoon(finishOnTransitionEndAndCommit);
     }
   };
 
