@@ -181,6 +181,12 @@ XPCOMUtils.defineLazyGetter(this, "InspectorUI", function() {
   return new tmp.InspectorUI(window);
 });
 
+XPCOMUtils.defineLazyGetter(this, "DebuggerUI", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/devtools/DebuggerUI.jsm", tmp);
+  return new tmp.DebuggerUI(window);
+});
+
 XPCOMUtils.defineLazyGetter(this, "Tilt", function() {
   let tmp = {};
   Cu.import("resource:///modules/devtools/Tilt.jsm", tmp);
@@ -1726,6 +1732,16 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     document.getElementById("Tools:Inspect").removeAttribute("disabled");
 #ifdef MENUBAR_CAN_AUTOHIDE
     document.getElementById("appmenu_pageInspect").hidden = false;
+#endif
+  }
+
+  // Enable Debugger?
+  let enabled = gPrefService.getBoolPref("devtools.debugger.enabled");
+  if (enabled) {
+    document.getElementById("menu_debugger").hidden = false;
+    document.getElementById("Tools:Debugger").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+    document.getElementById("appmenu_debugger").hidden = false;
 #endif
   }
 

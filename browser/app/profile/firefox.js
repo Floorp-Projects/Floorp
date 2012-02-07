@@ -1031,6 +1031,12 @@ pref("devtools.errorconsole.enabled", false);
 pref("devtools.inspector.enabled", true);
 pref("devtools.inspector.htmlHeight", 112);
 
+// Enable the Debugger
+pref("devtools.debugger.enabled", false);
+
+// The default Debugger UI height
+pref("devtools.debugger.ui.height", 250);
+
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
 
