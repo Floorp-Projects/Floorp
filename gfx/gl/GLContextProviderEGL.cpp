@@ -1934,11 +1934,11 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
     sEGLLibrary.DumpEGLConfig(config);
 #endif
 
+#ifdef MOZ_JAVA_COMPOSITOR
     printf_stderr("... requesting window surface from bridge\n");
     surface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
     printf_stderr("got surface %p\n", surface);
     return surface;
-#ifdef MOZ_JAVA_COMPOSITOR
 #elif defined(MOZ_WIDGET_ANDROID)
     printf_stderr("... requesting window surface from bridge\n");
 
