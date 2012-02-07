@@ -56,7 +56,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.util.Log;
 
-
 public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepositorySession {
 
   // TODO: synchronization for these.
@@ -67,12 +66,6 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   private HashMap<String, JSONArray> parentToChildArray = new HashMap<String, JSONArray>();
   private AndroidBrowserBookmarksDataAccessor dataAccessor;
   private int needsReparenting = 0;
-
-  private static void trace(String string) {
-    if (Utils.ENABLE_TRACE_LOGGING) {
-      Log.d(LOG_TAG, string);
-    }
-  }
 
   /**
    * Return true if the provided record GUID should be skipped
@@ -314,10 +307,9 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     super.finish(delegate);
   };
 
-  // TODO this code is yucky, cleanup or comment or something
-  @SuppressWarnings("unchecked")
   @Override
-  protected long insert(Record record) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+  @SuppressWarnings("unchecked")
+  protected Record prepareRecord(Record record) {
     BookmarkRecord bmk = (BookmarkRecord) record;
     
     // Check if parent exists
@@ -356,16 +348,21 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
                      " (" + bmk.parentID + ", " + bmk.parentName +
                      ", " + bmk.pos + ")");
     }
-    long id = RepoUtils.getAndroidIdFromUri(dbHelper.insert(bmk));
-    Log.d(LOG_TAG, "Inserted as " + id);
+    return bmk;
+  }
 
-    putRecordToGuidMap(buildRecordString(bmk), bmk.guid);
-    bmk.androidID = id;
+  @Override
+  @SuppressWarnings("unchecked")
+  protected void updateBookkeeping(Record record) throws NoGuidForIdException,
+                                                         NullCursorException,
+                                                         ParentNotFoundException {
+    super.updateBookkeeping(record);
+    BookmarkRecord bmk = (BookmarkRecord) record;
 
     // If record is folder, update maps and re-parent children if necessary
     if (bmk.type.equalsIgnoreCase(AndroidBrowserBookmarksDataAccessor.TYPE_FOLDER)) {
-      guidToID.put(bmk.guid, id);
-      idToGuid.put(id, bmk.guid);
+      guidToID.put(bmk.guid, bmk.androidID);
+      idToGuid.put(bmk.androidID, bmk.guid);
 
       JSONArray childArray = bmk.children;
 
@@ -377,14 +374,13 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
             childArray.add(child);
           }
           position = childArray.indexOf(child);
-          dataAccessor.updateParentAndPosition(child, id, position);
+          dataAccessor.updateParentAndPosition(child, bmk.androidID, position);
           needsReparenting--;
         }
         missingParentToChildren.remove(bmk.guid);
       }
       parentToChildArray.put(bmk.guid, childArray);
     }
-    return id;
   }
 
   @Override

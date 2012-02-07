@@ -43,18 +43,16 @@ relativesrcdir = content/html/content/test
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_TESTS
 # This extra subdirectory is needed due to the nature of this test.
 # With the bug, the test loads the base URL of the bug649134/file_*.sjs
 # files, and the mochitest server responds with the contents of index.html if
 # it exists in that case, which we use to detect failure.
 # We can't have index.html in this directory because it would prevent
 # running the tests here.
-DIRS		+= bug649134
+TEST_DIRS += bug649134
 
 # For form-related test suite.
-DIRS		+= forms
-endif
+TEST_DIRS += forms
 
 include $(topsrcdir)/config/rules.mk
 
@@ -300,5 +298,14 @@ _TEST_FILES = \
 		test_bug694503.html \
 		$(NULL)
 
+_BROWSER_TEST_FILES = \
+		browser_bug649778.js \
+		file_bug649778.html \
+		file_bug649778.html^headers^ \
+		$(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

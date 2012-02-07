@@ -9,6 +9,7 @@ chrome.jar:
   content/touch.js                      (content/touch.js)
   content/commandUtil.js                (content/commandUtil.js)
   content/httpd.js                      (content/httpd.js)
+  content/webapi.js                     (content/webapi.js)
   content/content.css                   (content/content.css)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml

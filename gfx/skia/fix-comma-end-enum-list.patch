@@ -1,0 +1,380 @@
+diff --git a/gfx/skia/include/core/SkAdvancedTypefaceMetrics.h b/gfx/skia/include/core/SkAdvancedTypefaceMetrics.h
+--- a/gfx/skia/include/core/SkAdvancedTypefaceMetrics.h
++++ b/gfx/skia/include/core/SkAdvancedTypefaceMetrics.h
+@@ -29,17 +29,17 @@ public:
+     SkString fFontName;
+ 
+     enum FontType {
+         kType1_Font,
+         kType1CID_Font,
+         kCFF_Font,
+         kTrueType_Font,
+         kOther_Font,
+-        kNotEmbeddable_Font,
++        kNotEmbeddable_Font
+     };
+     // The type of the underlying font program.  This field determines which
+     // of the following fields are valid.  If it is kOther_Font or
+     // kNotEmbeddable_Font, the per glyph information will never be populated.
+     FontType fType;
+ 
+     // fMultiMaster may be true for Type1_Font or CFF_Font.
+     bool fMultiMaster;
+@@ -51,17 +51,17 @@ public:
+         kFixedPitch_Style  = 0x00001,
+         kSerif_Style       = 0x00002,
+         kSymbolic_Style    = 0x00004,
+         kScript_Style      = 0x00008,
+         kNonsymbolic_Style = 0x00020,
+         kItalic_Style      = 0x00040,
+         kAllCaps_Style     = 0x10000,
+         kSmallCaps_Style   = 0x20000,
+-        kForceBold_Style   = 0x40000,
++        kForceBold_Style   = 0x40000
+     };
+     uint16_t fStyle;        // Font style characteristics.
+     int16_t fItalicAngle;   // Counterclockwise degrees from vertical of the
+                             // dominant vertical stroke for an Italic face.
+     // The following fields are all in font units.
+     int16_t fAscent;       // Max height above baseline, not including accents.
+     int16_t fDescent;      // Max depth below baseline (negative).
+     int16_t fStemV;        // Thickness of dominant vertical stem.
+@@ -70,26 +70,26 @@ public:
+     SkIRect fBBox;  // The bounding box of all glyphs (in font units).
+ 
+     // The type of advance data wanted.
+     enum PerGlyphInfo {
+       kNo_PerGlyphInfo         = 0x0, // Don't populate any per glyph info.
+       kHAdvance_PerGlyphInfo   = 0x1, // Populate horizontal advance data.
+       kVAdvance_PerGlyphInfo   = 0x2, // Populate vertical advance data.
+       kGlyphNames_PerGlyphInfo = 0x4, // Populate glyph names (Type 1 only).
+-      kToUnicode_PerGlyphInfo  = 0x8, // Populate ToUnicode table, ignored
++      kToUnicode_PerGlyphInfo  = 0x8  // Populate ToUnicode table, ignored
+                                       // for Type 1 fonts
+     };
+ 
+     template <typename Data>
+     struct AdvanceMetric {
+         enum MetricType {
+             kDefault,  // Default advance: fAdvance.count = 1
+             kRange,    // Advances for a range: fAdvance.count = fEndID-fStartID
+-            kRun,      // fStartID-fEndID have same advance: fAdvance.count = 1
++            kRun       // fStartID-fEndID have same advance: fAdvance.count = 1
+         };
+         MetricType fType;
+         uint16_t fStartId;
+         uint16_t fEndId;
+         SkTDArray<Data> fAdvance;
+         SkTScopedPtr<AdvanceMetric<Data> > fNext;
+     };
+ 
+diff --git a/gfx/skia/include/core/SkBlitRow.h b/gfx/skia/include/core/SkBlitRow.h
+--- a/gfx/skia/include/core/SkBlitRow.h
++++ b/gfx/skia/include/core/SkBlitRow.h
+@@ -44,17 +44,17 @@ public:
+ 
+     //! Public entry-point to return a blit function ptr
+     static Proc Factory(unsigned flags, SkBitmap::Config);
+ 
+     ///////////// D32 version
+ 
+     enum Flags32 {
+         kGlobalAlpha_Flag32     = 1 << 0,
+-        kSrcPixelAlpha_Flag32   = 1 << 1,
++        kSrcPixelAlpha_Flag32   = 1 << 1
+     };
+ 
+     /** Function pointer that blends 32bit colors onto a 32bit destination.
+         @param dst  array of dst 32bit colors
+         @param src  array of src 32bit colors (w/ or w/o alpha)
+         @param count number of colors to blend
+         @param alpha global alpha to be applied to all src colors
+      */
+diff --git a/gfx/skia/include/core/SkCanvas.h b/gfx/skia/include/core/SkCanvas.h
+--- a/gfx/skia/include/core/SkCanvas.h
++++ b/gfx/skia/include/core/SkCanvas.h
+@@ -132,17 +132,17 @@ public:
+          * low byte to high byte: B, G, R, A.
+          */
+         kBGRA_Premul_Config8888,
+         kBGRA_Unpremul_Config8888,
+         /**
+          * low byte to high byte: R, G, B, A.
+          */
+         kRGBA_Premul_Config8888,
+-        kRGBA_Unpremul_Config8888,
++        kRGBA_Unpremul_Config8888
+     };
+ 
+     /**
+      *  On success (returns true), copy the canvas pixels into the bitmap.
+      *  On failure, the bitmap parameter is left unchanged and false is
+      *  returned.
+      *
+      *  The canvas' pixels are converted to the bitmap's config. The only
+diff --git a/gfx/skia/include/core/SkDevice.h b/gfx/skia/include/core/SkDevice.h
+--- a/gfx/skia/include/core/SkDevice.h
++++ b/gfx/skia/include/core/SkDevice.h
+@@ -134,17 +134,17 @@ public:
+      *  Return the device's origin: its offset in device coordinates from
+      *  the default origin in its canvas' matrix/clip
+      */
+     const SkIPoint& getOrigin() const { return fOrigin; }
+ 
+ protected:
+     enum Usage {
+        kGeneral_Usage,
+-       kSaveLayer_Usage, // <! internal use only
++       kSaveLayer_Usage // <! internal use only
+     };
+ 
+     struct TextFlags {
+         uint32_t            fFlags;     // SkPaint::getFlags()
+         SkPaint::Hinting    fHinting;
+     };
+ 
+     /**
+diff --git a/gfx/skia/include/core/SkFlattenable.h b/gfx/skia/include/core/SkFlattenable.h
+--- a/gfx/skia/include/core/SkFlattenable.h
++++ b/gfx/skia/include/core/SkFlattenable.h
+@@ -216,17 +216,17 @@ public:
+     SkFactorySet* setFactoryRecorder(SkFactorySet*);
+ 
+     enum Flags {
+         kCrossProcess_Flag       = 0x01,
+         /**
+          *  Instructs the writer to inline Factory names as there are seen the
+          *  first time (after that we store an index). The pipe code uses this.
+          */
+-        kInlineFactoryNames_Flag = 0x02,
++        kInlineFactoryNames_Flag = 0x02
+     };
+     Flags getFlags() const { return (Flags)fFlags; }
+     void setFlags(Flags flags) { fFlags = flags; }
+     
+     bool isCrossProcess() const {
+         return SkToBool(fFlags & kCrossProcess_Flag);
+     }
+     bool inlineFactoryNames() const {
+diff --git a/gfx/skia/include/core/SkFontHost.h b/gfx/skia/include/core/SkFontHost.h
+--- a/gfx/skia/include/core/SkFontHost.h
++++ b/gfx/skia/include/core/SkFontHost.h
+@@ -245,17 +245,17 @@ public:
+         vertically. When rendering subpixel glyphs we need to know which way
+         round they are.
+ 
+         Note, if you change this after startup, you'll need to flush the glyph
+         cache because it'll have the wrong type of masks cached.
+     */
+     enum LCDOrientation {
+         kHorizontal_LCDOrientation = 0,    //!< this is the default
+-        kVertical_LCDOrientation   = 1,
++        kVertical_LCDOrientation   = 1
+     };
+ 
+     static void SetSubpixelOrientation(LCDOrientation orientation);
+     static LCDOrientation GetSubpixelOrientation();
+ 
+     /** LCD color elements can vary in order. For subpixel text we need to know
+         the order which the LCDs uses so that the color fringes are in the
+         correct place.
+@@ -264,17 +264,17 @@ public:
+         cache because it'll have the wrong type of masks cached.
+ 
+         kNONE_LCDOrder means that the subpixel elements are not spatially
+         separated in any usable fashion.
+      */
+     enum LCDOrder {
+         kRGB_LCDOrder = 0,    //!< this is the default
+         kBGR_LCDOrder = 1,
+-        kNONE_LCDOrder = 2,
++        kNONE_LCDOrder = 2
+     };
+ 
+     static void SetSubpixelOrder(LCDOrder order);
+     static LCDOrder GetSubpixelOrder();
+ 
+ #ifdef SK_BUILD_FOR_ANDROID
+     ///////////////////////////////////////////////////////////////////////////
+ 
+diff --git a/gfx/skia/include/core/SkMaskFilter.h b/gfx/skia/include/core/SkMaskFilter.h
+--- a/gfx/skia/include/core/SkMaskFilter.h
++++ b/gfx/skia/include/core/SkMaskFilter.h
+@@ -57,17 +57,17 @@ public:
+ 
+     virtual void flatten(SkFlattenableWriteBuffer& ) {}
+ 
+     enum BlurType {
+         kNone_BlurType,    //!< this maskfilter is not a blur
+         kNormal_BlurType,  //!< fuzzy inside and outside
+         kSolid_BlurType,   //!< solid inside, fuzzy outside
+         kOuter_BlurType,   //!< nothing inside, fuzzy outside
+-        kInner_BlurType,   //!< fuzzy inside, nothing outside
++        kInner_BlurType    //!< fuzzy inside, nothing outside
+     };
+ 
+     struct BlurInfo {
+         SkScalar fRadius;
+         bool     fIgnoreTransform;
+         bool     fHighQuality;
+     };
+ 
+diff --git a/gfx/skia/include/core/SkPaint.h b/gfx/skia/include/core/SkPaint.h
+--- a/gfx/skia/include/core/SkPaint.h
++++ b/gfx/skia/include/core/SkPaint.h
+@@ -70,17 +70,17 @@ public:
+            kFull_Hinting   -> <same as kNormalHinting, unless we are rendering
+                               subpixel glyphs, in which case TARGET_LCD or
+                               TARGET_LCD_V is used>
+     */
+     enum Hinting {
+         kNo_Hinting            = 0,
+         kSlight_Hinting        = 1,
+         kNormal_Hinting        = 2,     //!< this is the default
+-        kFull_Hinting          = 3,
++        kFull_Hinting          = 3
+     };
+ 
+     Hinting getHinting() const {
+         return static_cast<Hinting>(fHinting);
+     }
+ 
+     void setHinting(Hinting hintingLevel);
+ 
+@@ -282,17 +282,17 @@ public:
+         results may not appear the same as if it was drawn twice, filled and
+         then stroked.
+     */
+     enum Style {
+         kFill_Style,            //!< fill the geometry
+         kStroke_Style,          //!< stroke the geometry
+         kStrokeAndFill_Style,   //!< fill and stroke the geometry
+ 
+-        kStyleCount,
++        kStyleCount
+     };
+ 
+     /** Return the paint's style, used for controlling how primitives'
+         geometries are interpreted (except for drawBitmap, which always assumes
+         kFill_Style).
+         @return the paint's Style
+     */
+     Style getStyle() const { return (Style)fStyle; }
+diff --git a/gfx/skia/include/core/SkScalerContext.h b/gfx/skia/include/core/SkScalerContext.h
+--- a/gfx/skia/include/core/SkScalerContext.h
++++ b/gfx/skia/include/core/SkScalerContext.h
+@@ -172,24 +172,24 @@ public:
+         kHintingBit2_Flag         = 0x0100,
+ 
+         // these should only ever be set if fMaskFormat is LCD16 or LCD32
+         kLCD_Vertical_Flag        = 0x0200,    // else Horizontal
+         kLCD_BGROrder_Flag        = 0x0400,    // else RGB order
+ 
+         // luminance : 0 for black text, kLuminance_Max for white text
+         kLuminance_Shift          = 11, // to shift into the other flags above
+-        kLuminance_Bits           = 3,  // ensure Flags doesn't exceed 16bits
++        kLuminance_Bits           = 3  // ensure Flags doesn't exceed 16bits
+     };
+     
+     // computed values
+     enum {
+         kHinting_Mask   = kHintingBit1_Flag | kHintingBit2_Flag,
+         kLuminance_Max  = (1 << kLuminance_Bits) - 1,
+-        kLuminance_Mask = kLuminance_Max << kLuminance_Shift,
++        kLuminance_Mask = kLuminance_Max << kLuminance_Shift
+     };
+ 
+     struct Rec {
+         uint32_t    fOrigFontID;
+         uint32_t    fFontID;
+         SkScalar    fTextSize, fPreScaleX, fPreSkewX;
+         SkScalar    fPost2x2[2][2];
+         SkScalar    fFrameWidth, fMiterLimit;
+diff --git a/gfx/skia/include/core/SkTypes.h b/gfx/skia/include/core/SkTypes.h
+--- a/gfx/skia/include/core/SkTypes.h
++++ b/gfx/skia/include/core/SkTypes.h
+@@ -433,17 +433,17 @@ public:
+          */
+         kAlloc_OnShrink,
+         
+         /**
+          *  If the requested size is smaller than the current size, and the
+          *  current block is dynamically allocated, just return the old
+          *  block.
+          */
+-        kReuse_OnShrink,
++        kReuse_OnShrink
+     };
+ 
+     /**
+      *  Reallocates the block to a new size. The ptr may or may not change.
+      */
+     void* reset(size_t size, OnShrink shrink = kAlloc_OnShrink) {
+         if (size == fSize || (kReuse_OnShrink == shrink && size < fSize)) {
+             return fPtr;
+diff --git a/gfx/skia/include/effects/SkLayerDrawLooper.h b/gfx/skia/include/effects/SkLayerDrawLooper.h
+--- a/gfx/skia/include/effects/SkLayerDrawLooper.h
++++ b/gfx/skia/include/effects/SkLayerDrawLooper.h
+@@ -36,17 +36,17 @@ public:
+         
+         /**
+          *  Use the layer's paint entirely, with these exceptions:
+          *  - We never override the draw's paint's text_encoding, since that is
+          *    used to interpret the text/len parameters in draw[Pos]Text.
+          *  - Flags and Color are always computed using the LayerInfo's
+          *    fFlagsMask and fColorMode.
+          */
+-        kEntirePaint_Bits = -1,
++        kEntirePaint_Bits = -1
+         
+     };
+     typedef int32_t BitFlags;
+ 
+     /**
+      *  Info for how to apply the layer's paint and offset.
+      *
+      *  fFlagsMask selects which flags in the layer's paint should be applied.
+diff --git a/gfx/skia/src/core/SkBitmap.cpp b/gfx/skia/src/core/SkBitmap.cpp
+--- a/gfx/skia/src/core/SkBitmap.cpp
++++ b/gfx/skia/src/core/SkBitmap.cpp
+@@ -1357,17 +1357,17 @@ bool SkBitmap::extractAlpha(SkBitmap* ds
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+ enum {
+     SERIALIZE_PIXELTYPE_NONE,
+     SERIALIZE_PIXELTYPE_RAW_WITH_CTABLE,
+     SERIALIZE_PIXELTYPE_RAW_NO_CTABLE,
+     SERIALIZE_PIXELTYPE_REF_DATA,
+-    SERIALIZE_PIXELTYPE_REF_PTR,
++    SERIALIZE_PIXELTYPE_REF_PTR
+ };
+ 
+ static void writeString(SkFlattenableWriteBuffer& buffer, const char str[]) {
+     size_t len = strlen(str);
+     buffer.write32(len);
+     buffer.writePad(str, len);
+ }
+ 
+diff --git a/gfx/skia/src/core/SkMatrix.cpp b/gfx/skia/src/core/SkMatrix.cpp
+--- a/gfx/skia/src/core/SkMatrix.cpp
++++ b/gfx/skia/src/core/SkMatrix.cpp
+@@ -1715,17 +1715,17 @@ SkScalar SkMatrix::getMaxStretch() const
+ const SkMatrix& SkMatrix::I() {
+     static SkMatrix gIdentity;
+     static bool gOnce;
+     if (!gOnce) {
+         gIdentity.reset();
+         gOnce = true;
+     }
+     return gIdentity;
+-};
++}
+ 
+ const SkMatrix& SkMatrix::InvalidMatrix() {
+     static SkMatrix gInvalid;
+     static bool gOnce;
+     if (!gOnce) {
+         gInvalid.setAll(SK_ScalarMax, SK_ScalarMax, SK_ScalarMax,
+                         SK_ScalarMax, SK_ScalarMax, SK_ScalarMax,
+                         SK_ScalarMax, SK_ScalarMax, SK_ScalarMax);

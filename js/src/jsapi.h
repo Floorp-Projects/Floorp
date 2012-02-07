@@ -3371,17 +3371,11 @@ extern JS_PUBLIC_API(void *)
 JS_GetExternalStringClosure(JSContext *cx, JSString *str);
 
 /*
- * Deprecated. Use JS_SetNativeStackQuoata instead.
- */
-extern JS_PUBLIC_API(void)
-JS_SetThreadStackLimit(JSContext *cx, uintptr_t limitAddr);
-
-/*
  * Set the size of the native stack that should not be exceed. To disable
  * stack size checking pass 0.
  */
 extern JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
+JS_SetNativeStackQuota(JSRuntime *cx, size_t stackSize);
 
 /************************************************************************/
 
@@ -3645,17 +3639,15 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
-#ifdef JS_THREADSAFE
-extern JS_PUBLIC_API(JSClass *)
-JS_GetClass(JSContext *cx, JSObject *obj);
+/*
+ * Set up ctor.prototype = proto and proto.constructor = ctor with the
+ * right property flags.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
 
-#define JS_GET_CLASS(cx,obj) JS_GetClass(cx, obj)
-#else
 extern JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSObject *obj);
-
-#define JS_GET_CLASS(cx,obj) JS_GetClass(obj)
-#endif
 
 extern JS_PUBLIC_API(JSBool)
 JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv);
@@ -5330,7 +5322,7 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
         JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
         JS_ASSERT((JS_GetFunctionFlags(fun) & JSFUN_CONSTRUCTOR) != 0);
     } else {
-        JS_ASSERT(JS_GET_CLASS(cx, callee)->construct != NULL);
+        JS_ASSERT(JS_GetClass(callee)->construct != NULL);
     }
 #endif
 

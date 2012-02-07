@@ -101,7 +101,7 @@ void*
 moz_xmalloc(size_t size)
 {
     void* ptr = malloc(size);
-    if (UNLIKELY(!ptr)) {
+    if (UNLIKELY(!ptr && size)) {
         mozalloc_handle_oom(size);
         return moz_xmalloc(size);
     }
@@ -117,7 +117,7 @@ void*
 moz_xcalloc(size_t nmemb, size_t size)
 {
     void* ptr = calloc(nmemb, size);
-    if (UNLIKELY(!ptr)) {
+    if (UNLIKELY(!ptr && nmemb && size)) {
         mozalloc_handle_oom(size);
         return moz_xcalloc(nmemb, size);
     }
@@ -133,7 +133,7 @@ void*
 moz_xrealloc(void* ptr, size_t size)
 {
     void* newptr = realloc(ptr, size);
-    if (UNLIKELY(!newptr)) {
+    if (UNLIKELY(!newptr && size)) {
         mozalloc_handle_oom(size);
         return moz_xrealloc(ptr, size);
     }

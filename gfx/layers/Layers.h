@@ -49,6 +49,7 @@
 #include "gfxColor.h"
 #include "gfxPattern.h"
 #include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/TimeStamp.h"
@@ -428,9 +429,9 @@ public:
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() { return nsnull; }
 
   /**
-   * Can be called anytime
+   * Can be called anytime, from any thread.
    */
-  virtual already_AddRefed<ImageContainer> CreateImageContainer() = 0;
+  static already_AddRefed<ImageContainer> CreateImageContainer();
 
   /**
    * Type of layer manager his is. This is to be used sparsely in order to

@@ -978,6 +978,8 @@ nsHttpChannel::ProcessResponse()
     LOG(("nsHttpChannel::ProcessResponse [this=%p httpStatus=%u]\n",
         this, httpStatus));
 
+    UpdateInhibitPersistentCachingFlag();
+
     if (mTransaction->SSLConnectFailed()) {
         if (!ShouldSSLProxyResponseContinue(httpStatus))
             return ProcessFailedSSLConnect(httpStatus);
@@ -1423,7 +1425,7 @@ nsHttpChannel::AsyncRedirectChannelToHttps()
     rv = ioService->NewChannelFromURI(upgradedURI, getter_AddRefs(newChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = SetupReplacementChannel(upgradedURI, newChannel, true);
+    rv = SetupReplacementChannel(upgradedURI, newChannel, true, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Inform consumers about this fake redirect
@@ -1520,7 +1522,7 @@ nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = SetupReplacementChannel(mURI, newChannel, true);
+    rv = SetupReplacementChannel(mURI, newChannel, true, true);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1783,6 +1785,8 @@ nsHttpChannel::ProcessPartialContent()
     // make the cached response be the current response
     mResponseHead = mCachedResponseHead;
 
+    UpdateInhibitPersistentCachingFlag();
+
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
 
@@ -1864,6 +1868,8 @@ nsHttpChannel::ProcessNotModified()
     // make the cached response be the current response
     mResponseHead = mCachedResponseHead;
 
+    UpdateInhibitPersistentCachingFlag();
+
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
 
@@ -1938,7 +1944,7 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
     rv = gHttpHandler->NewChannel(mURI, getter_AddRefs(newChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = SetupReplacementChannel(mURI, newChannel, true);
+    rv = SetupReplacementChannel(mURI, newChannel, true, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make sure the new channel loads from the fallback key.
@@ -2848,6 +2854,8 @@ nsHttpChannel::ReadFromCache()
     if (mCachedResponseHead)
         mResponseHead = mCachedResponseHead;
 
+    UpdateInhibitPersistentCachingFlag();
+
     // if we don't already have security info, try to get it from the cache 
     // entry. there are two cases to consider here: 1) we are just reading
     // from the cache, or 2) this may be due to a 304 not modified response,
@@ -3002,16 +3010,6 @@ nsHttpChannel::InitCacheEntry()
     LOG(("nsHttpChannel::InitCacheEntry [this=%p entry=%p]\n",
         this, mCacheEntry.get()));
 
-    // The no-store directive within the 'Cache-Control:' header indicates
-    // that we must not store the response in a persistent cache.
-    if (mResponseHead->NoStore())
-        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
-
-    // Only cache SSL content on disk if the pref is set
-    if (!gHttpHandler->IsPersistentHttpsCachingEnabled() &&
-        mConnectionInfo->UsingSSL())
-        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
-
     if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
         rv = mCacheEntry->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
         if (NS_FAILED(rv)) return rv;
@@ -3028,6 +3026,19 @@ nsHttpChannel::InitCacheEntry()
     return NS_OK;
 }
 
+void
+nsHttpChannel::UpdateInhibitPersistentCachingFlag()
+{
+    // The no-store directive within the 'Cache-Control:' header indicates
+    // that we must not store the response in a persistent cache.
+    if (mResponseHead->NoStore())
+        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
+
+    // Only cache SSL content on disk if the pref is set
+    if (!gHttpHandler->IsPersistentHttpsCachingEnabled() &&
+        mConnectionInfo->UsingSSL())
+        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
+}
 
 nsresult
 nsHttpChannel::InitOfflineCacheEntry()
@@ -3322,13 +3333,15 @@ nsHttpChannel::ClearBogusContentEncodingIfNeeded()
 nsresult
 nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI, 
                                        nsIChannel   *newChannel,
-                                       bool          preserveMethod)
+                                       bool          preserveMethod,
+                                       bool          forProxy)
 {
     LOG(("nsHttpChannel::SetupReplacementChannel "
          "[this=%p newChannel=%p preserveMethod=%d]",
          this, newChannel, preserveMethod));
 
-    nsresult rv = HttpBaseChannel::SetupReplacementChannel(newURI, newChannel, preserveMethod);
+    nsresult rv = HttpBaseChannel::SetupReplacementChannel(newURI, newChannel,
+                                                           preserveMethod, forProxy);
     if (NS_FAILED(rv))
         return rv;
 
@@ -3349,6 +3362,26 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
             return NS_ERROR_NOT_RESUMABLE;
         }
         resumableChannel->ResumeAt(mStartPos, mEntityID);
+    }
+
+    if (forProxy) {
+        // Transfer the cache info to the new channel, if needed.
+        nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(newChannel);
+        if (cachingChannel) {
+            // cacheKey is just mPostID wrapped in an nsISupportsPRUint32,
+            // we don't need to transfer it if it's 0.
+            if (mPostID) {
+                nsCOMPtr<nsISupports> cacheKey;
+                GetCacheKey(getter_AddRefs(cacheKey));
+                if (cacheKey) {
+                    cachingChannel->SetCacheKey(cacheKey);
+                }
+            }
+
+            // cacheClientID, cacheForOfflineUse
+            cachingChannel->SetOfflineCacheClientID(mOfflineCacheClientID);
+            cachingChannel->SetCacheForOfflineUse(mCacheForOfflineUse);
+        }
     }
 
     return NS_OK;
@@ -3473,7 +3506,7 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
     rv = ioService->NewChannelFromURI(mRedirectURI, getter_AddRefs(newChannel));
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetupReplacementChannel(mRedirectURI, newChannel, !rewriteToGET);
+    rv = SetupReplacementChannel(mRedirectURI, newChannel, !rewriteToGET, false);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 redirectFlags;

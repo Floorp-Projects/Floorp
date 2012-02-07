@@ -10,6 +10,12 @@ Mochitest version of the WebGL Conformance Test Suite
 <script type="text/javascript" src="resources/webgl-test-harness.js"></script>
 <script>
 
+var CONFORMANCE_TEST_VERSION = "1.0.1 (beta)";
+
+var OPTIONS = {
+  version: CONFORMANCE_TEST_VERSION
+};
+
 /**
  * This is copied from webgl-test-harness.js where it is defined as a private function, not accessible to us (argh!)
  *
@@ -266,10 +272,17 @@ function start() {
       SimpleTest.finish();
   }
 
+  Reporter.prototype.ready = function() {
+    statusTextNode.textContent = 'Loaded test lists. Starting tests...';
+    window.webglTestHarness.runTests();
+  }
+
   Reporter.prototype.reportFunc = function(type, msg, success) {
     switch (type) {
       case reportType.ADD_PAGE:
         return this.addPage(msg);
+      case reportType.READY:
+        return this.ready();
       case reportType.START_PAGE:
         return this.startPage(msg);
       case reportType.TEST_RESULT:
@@ -285,6 +298,25 @@ function start() {
     };
   };
 
+  var getURLOptions = function(obj) {
+    var s = window.location.href;
+    var q = s.indexOf("?");
+    var e = s.indexOf("#");
+    if (e < 0) {
+      e = s.length;
+    }
+    var query = s.substring(q + 1, e);
+    var pairs = query.split("&");
+    for (var ii = 0; ii < pairs.length; ++ii) {
+      var keyValue = pairs[ii].split("=");
+      var key = keyValue[0];
+      var value = decodeURIComponent(keyValue[1]);
+          obj[key] = value;
+    }
+  };
+
+  getURLOptions(OPTIONS);
+
   function runTestSuite() {
     var reporter = new Reporter();
 
@@ -297,16 +329,17 @@ function start() {
     } catch(e) {}
 
     if (ctx) {
+        statusTextNode.textContent = 'Loading test lists...';
         var iframe = document.getElementById("testframe");
         var testHarness = new WebGLTestHarnessModule.TestHarness(
             iframe,
             '00_test_list.txt',
             function(type, msg, success) {
                 return reporter.reportFunc(type, msg, success);
-            });
+            },
+            OPTIONS);
         testHarness.setTimeoutDelay(20000); // and make it much higher when running under valgrind.
         window.webglTestHarness = testHarness;
-        testHarness.runTests();
     } else {
         var errmsg = "Can't create a WebGL context";
         reporter.fullResultsNode.textContent = errmsg;
@@ -322,17 +355,18 @@ function start() {
   // we currently disable this test on version of Mac OSX older than 10.6,
   // due to various weird failures, including one making getRenderbufferParameter tests
   // on DEPTH_STENCIL fail
+  var kDarwinVersion = 0;
   if (kIsMac) {
     // code borrowed from browser/modules/test/browser_taskbar_preview.js
     var is106orHigher = false;
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var version = Components.classes["@mozilla.org/system-info;1"]
-                            .getService(Components.interfaces.nsIPropertyBag2)
-                            .getProperty("version");
+    kDarwinVersion = parseFloat(Components.classes["@mozilla.org/system-info;1"]
+                                          .getService(Components.interfaces.nsIPropertyBag2)
+                                          .getProperty("version"));
     // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
     // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
     // is the Darwin version.
-    is106orHigher = (parseFloat(version) >= 10.0);
+    is106orHigher = (kDarwinVersion >= 10.0);
     if (!is106orHigher) {
       dump("WebGL mochitest disabled on Mac OSX versions older than 10.6\n");
       SimpleTest.finish();
@@ -377,6 +411,16 @@ function start() {
 
   if (kIsWindows && !kIsWindowsVistaOrHigher)
     testsExpectedToFail.push('conformance/textures/texture-mips.html');
+
+  if (kIsMac && kDarwinVersion < 11.0) {    // Darwin 11 == Mac OS 10.7
+    testsExpectedToFail.push('conformance/more/functions/uniformfBadArgs.html');
+    testsExpectedToFail.push('conformance/more/functions/uniformiBadArgs.html');
+  }
+
+  if (kIsMac && kDarwinVersion >= 11.0) {
+    testsExpectedToFail.push('conformance/textures/texture-mips.html');
+    testsExpectedToFail.push('conformance/textures/texture-npot.html');
+  }
 
   var testsToIgnore = [];
 

@@ -1078,6 +1078,10 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
   return NS_OK;
 }
 
+// See Bug 723197
+#ifdef _MSC_VER
+#pragma optimize( "", off )
+#endif
 nsresult
 CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
@@ -1153,6 +1157,9 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   ReleaseScanner();
   return NS_OK;
 }
+#ifdef _MSC_VER
+#pragma optimize( "", on )
+#endif
 
 nsresult
 CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
@@ -4288,6 +4295,7 @@ const UnitInfo UnitData[] = {
   { STR_WITH_LEN("deg"), eCSSUnit_Degree, VARIANT_ANGLE },
   { STR_WITH_LEN("grad"), eCSSUnit_Grad, VARIANT_ANGLE },
   { STR_WITH_LEN("rad"), eCSSUnit_Radian, VARIANT_ANGLE },
+  { STR_WITH_LEN("turn"), eCSSUnit_Turn, VARIANT_ANGLE },
   { STR_WITH_LEN("hz"), eCSSUnit_Hertz, VARIANT_FREQUENCY },
   { STR_WITH_LEN("khz"), eCSSUnit_Kilohertz, VARIANT_FREQUENCY },
   { STR_WITH_LEN("s"), eCSSUnit_Seconds, VARIANT_TIME },

@@ -421,13 +421,6 @@ LayerManagerD3D10::CreateReadbackLayer()
   return layer.forget();
 }
 
-already_AddRefed<ImageContainer>
-LayerManagerD3D10::CreateImageContainer()
-{
-  nsRefPtr<ImageContainer> layer = new ImageContainerD3D10(mDevice);
-  return layer.forget();
-}
-
 static void ReleaseTexture(void *texture)
 {
   static_cast<ID3D10Texture2D*>(texture)->Release();

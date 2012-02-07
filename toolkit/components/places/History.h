@@ -41,6 +41,7 @@
 #define mozilla_places_History_h_
 
 #include "mozilla/IHistory.h"
+#include "mozilla/Mutex.h"
 #include "mozIAsyncHistory.h"
 #include "nsIDownloadHistory.h"
 #include "Database.h"
@@ -140,6 +141,13 @@ public:
     return mDB->GetStatement(aQuery);
   }
 
+  bool IsShuttingDown() const {
+    return mShuttingDown;
+  }
+  Mutex& GetShutdownMutex() {
+    return mShutdownMutex;
+  }
+
 private:
   virtual ~History();
 
@@ -178,6 +186,12 @@ private:
 
   // Ensures new tasks aren't started on destruction.
   bool mShuttingDown;
+  // This mutex guards mShuttingDown. Code running in other threads that might
+  // schedule tasks that use the database should grab it and check the value of
+  // mShuttingDown. If we are already shutting down, the code must gracefully
+  // avoid using the db. If we are not, the lock will prevent shutdown from
+  // starting in an unexpected moment.
+  Mutex mShutdownMutex;
 
   typedef nsTObserverArray<mozilla::dom::Link* > ObserverArray;
 

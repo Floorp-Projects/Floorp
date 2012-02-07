@@ -178,6 +178,48 @@ enum EventNameType {
   EventNameType_All = 0xFFFF
 };
 
+/**
+ * Information retrieved from the <meta name="viewport"> tag. See
+ * GetViewportInfo for more information on this functionality.
+ */
+struct ViewportInfo
+{
+    // Default zoom indicates the level at which the display is 'zoomed in'
+    // initially for the user, upon loading of the page.
+    double defaultZoom;
+
+    // The minimum zoom level permitted by the page.
+    double minZoom;
+
+    // The maximum zoom level permitted by the page.
+    double maxZoom;
+
+    // The width of the viewport, specified by the <meta name="viewport"> tag,
+    // in CSS pixels.
+    PRUint32 width;
+
+    // The height of the viewport, specified by the <meta name="viewport"> tag,
+    // in CSS pixels.
+    PRUint32 height;
+
+    // Whether or not we should automatically size the viewport to the device's
+    // width. This is true if the document has been optimized for mobile, and
+    // the width property of a specified <meta name="viewport"> tag is either
+    // not specified, or is set to the special value 'device-width'.
+    bool autoSize;
+
+    // Whether or not the user can zoom in and out on the page. Default is true.
+    bool allowZoom;
+
+    // This is a holdover from e10s fennec, and might be removed in the future.
+    // It's a hack to work around bugs that didn't allow zooming of documents
+    // from within the parent process. It is still used in native Fennec for XUL
+    // documents, but it should probably be removed.
+    // Currently, from, within GetViewportInfo(), This is only set to false
+    // if the document is a XUL document.
+    bool autoScale;
+};
+
 struct EventNameMapping
 {
   nsIAtom* mAtom;
@@ -1489,6 +1531,18 @@ public:
     return sScriptBlockerCount == 0;
   }
 
+  /**
+   * Retrieve information about the viewport as a data structure.
+   * This will return information in the viewport META data section
+   * of the document. This can be used in lieu of ProcessViewportInfo(),
+   * which places the viewport information in the document header instead
+   * of returning it directly.
+   *
+   * NOTE: If the site is optimized for mobile (via the doctype), this
+   * will return viewport information that specifies default information.
+   */
+  static ViewportInfo GetViewportInfo(nsIDocument* aDocument);
+
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
    * the document header and use it later on after rendering.
@@ -1657,6 +1711,13 @@ public:
   static nsresult GetElementsByClassName(nsINode* aRootNode,
                                          const nsAString& aClasses,
                                          nsIDOMNodeList** aReturn);
+
+  /**
+   * Returns the widget for this document if there is one. Looks at all ancestor
+   * documents to try to find a widget, so for example this can still find a
+   * widget for documents in display:none frames that have no presentation.
+   */
+  static nsIWidget *WidgetForDocument(nsIDocument *aDoc);
 
   /**
    * Returns a layer manager to use for the given document. Basically we

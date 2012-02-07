@@ -323,17 +323,11 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 #endif
 #endif
 
-static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
-
 NS_IMETHODIMP 
 nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow)
 {
-  NS_PRECONDITION(aContent, "How did that happen?");
-  mPreventInstantiation =
-    (aContent->GetCurrentDoc()->GetDisplayDocument() != nsnull);
-
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("Initializing nsObjectFrame %p for content %p\n", this, aContent));
 
@@ -345,24 +339,20 @@ nsObjectFrame::Init(nsIContent*      aContent,
 void
 nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  NS_ASSERTION(!mPreventInstantiation ||
-               (mContent && mContent->GetCurrentDoc()->GetDisplayDocument()),
-               "about to crash due to bug 136927");
-
-  // we need to finish with the plugin before native window is destroyed
-  // doing this in the destructor is too late.
-  StopPluginInternal(true);
-
-  // StopPluginInternal might have disowned the widget; if it has,
-  // mWidget will be null.
-  if (mWidget) {
-    mInnerView->DetachWidgetEventHandler(mWidget);
-    mWidget->Destroy();
+  if (mReflowCallbackPosted) {
+    PresContext()->PresShell()->CancelReflowCallback(this);
   }
+
+  // Tell content owner of the instance to disconnect its frame.
+  nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
+  NS_ASSERTION(objContent, "Why not an object loading content?");
+  objContent->DisconnectFrame();
 
   if (mBackgroundSink) {
     mBackgroundSink->Destroy();
   }
+
+  SetInstanceOwner(nsnull);
 
   nsObjectFrameSuper::DestroyFrom(aDestructRoot);
 }
@@ -398,29 +388,20 @@ nsObjectFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsresult
-nsObjectFrame::CreateWidget(nscoord aWidth,
-                            nscoord aHeight,
-                            bool    aViewOnly)
+nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
 {
+  mWidget = aWidget;
+
   nsIView* view = GetView();
   NS_ASSERTION(view, "Object frames must have views");  
   if (!view) {
-    return NS_OK;       //XXX why OK? MMP
-  }
-
-  bool needsWidget = !aViewOnly;
-  bool canCreateWidget = !nsIWidget::UsePuppetWidgets();
-  if (needsWidget && !canCreateWidget) {
-    NS_WARNING("Can't use native widgets, and can't hand a plugins a PuppetWidget");
+    return NS_ERROR_FAILURE;
   }
 
   nsIViewManager* viewMan = view->GetViewManager();
   // mark the view as hidden since we don't know the (x,y) until Paint
   // XXX is the above comment correct?
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
-
-  nsRefPtr<nsDeviceContext> dx;
-  viewMan->GetDeviceContext(*getter_AddRefs(dx));
 
   //this is ugly. it was ripped off from didreflow(). MMP
   // Position and size view relative to its parent, not relative to our
@@ -439,12 +420,12 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     return NS_ERROR_FAILURE;
   }
 
-  if (needsWidget && !mWidget && canCreateWidget) {
+  if (mWidget) {
     // XXX this breaks plugins in popups ... do we care?
-    nsIWidget* parentWidget =
-      rpc->PresShell()->FrameManager()->GetRootFrame()->GetNearestWidget();
-    if (!parentWidget)
+    nsIWidget* parentWidget = rpc->PresShell()->FrameManager()->GetRootFrame()->GetNearestWidget();
+    if (!parentWidget) {
       return NS_ERROR_FAILURE;
+    }
 
     mInnerView = viewMan->CreateView(GetContentRectRelativeToSelf(), view);
     if (!mInnerView) {
@@ -453,48 +434,37 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     }
     viewMan->InsertChild(view, mInnerView, nsnull, true);
 
-    nsresult rv;
-    mWidget = do_CreateInstance(kWidgetCID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
+    mWidget->SetParent(parentWidget);
+    mWidget->Show(true);
+    mWidget->Enable(true);
 
-    nsWidgetInitData initData;
-    initData.mWindowType = eWindowType_plugin;
-    initData.mUnicode = false;
-    initData.clipChildren = true;
-    initData.clipSiblings = true;
-    // We want mWidget to be able to deliver events to us, especially on
-    // Mac where events to the plugin are routed through Gecko. So we
-    // allow the view to attach its event handler to mWidget even though
-    // mWidget isn't the view's designated widget.
+    // Set the plugin window to have an empty cliprect. The cliprect
+    // will be reset when nsRootPresContext::UpdatePluginGeometry
+    // runs later. The plugin window does need to have the correct
+    // size here. GetEmptyClipConfiguration will probably give it the
+    // size, but just in case we haven't been reflowed or something, set
+    // the size explicitly.
+    nsAutoTArray<nsIWidget::Configuration,1> configuration;
+    GetEmptyClipConfiguration(&configuration);
+    NS_ASSERTION(configuration.Length() > 0, "Empty widget configuration array!");
+    configuration[0].mBounds.width = mRect.width;
+    configuration[0].mBounds.height = mRect.height;
+    parentWidget->ConfigureChildren(configuration);
+
+    nsRefPtr<nsDeviceContext> dx;
+    viewMan->GetDeviceContext(*getter_AddRefs(dx));
     EVENT_CALLBACK eventHandler = mInnerView->AttachWidgetEventHandler(mWidget);
-    rv = mWidget->Create(parentWidget, nsnull, nsIntRect(0,0,0,0),
-                         eventHandler, dx, &initData);
-    if (NS_FAILED(rv)) {
-      mWidget->Destroy();
-      mWidget = nsnull;
-      return rv;
-    }
+    mWidget->SetEventCallback(eventHandler, dx);
 
-    mWidget->EnableDragDrop(true);
-
-    // If this frame has an ancestor with a widget which is not
-    // the root prescontext's widget, then this plugin should not be
-    // displayed, so don't show the widget. If we show the widget, the
-    // plugin may appear in the main window. In Web content this would
-    // only happen with a plugin in a XUL popup.
-    if (parentWidget == GetNearestWidget()) {
-      mWidget->Show(true);
 #ifdef XP_MACOSX
-      // On Mac, we need to invalidate ourselves since even windowed
-      // plugins are painted through Thebes and we need to ensure
-      // the Thebes layer containing the plugin is updated.
+    // On Mac, we need to invalidate ourselves since even windowed
+    // plugins are painted through Thebes and we need to ensure
+    // the Thebes layer containing the plugin is updated.
+    if (parentWidget == GetNearestWidget()) {
       Invalidate(GetContentRectRelativeToSelf());
-#endif
     }
-  }
+#endif
 
-  if (mWidget) {
     rpc->RegisterPluginForGeometryUpdates(this);
     rpc->RequestUpdatePluginGeometry(this);
 
@@ -525,6 +495,9 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     }
 #endif
   } else {
+    // Changing to windowless mode changes the NPWindow geometry.
+    FixupWindow(GetContentRectRelativeToSelf().Size());
+
 #ifndef XP_MACOSX
     rpc->RegisterPluginForGeometryUpdates(this);
     rpc->RequestUpdatePluginGeometry(this);
@@ -535,7 +508,14 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
   }
 
-  return (needsWidget && !canCreateWidget) ? NS_ERROR_NOT_AVAILABLE : NS_OK;
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    accService->RecreateAccessible(PresContext()->PresShell(), mContent);
+  }
+#endif
+
+  return NS_OK;
 }
 
 #define EMBED_DEF_WIDTH 240
@@ -694,51 +674,6 @@ nsObjectFrame::ReflowCallbackCanceled()
   mReflowCallbackPosted = false;
 }
 
-nsresult
-nsObjectFrame::InstantiatePlugin(nsPluginHost* aPluginHost, 
-                                 const char* aMimeType,
-                                 nsIURI* aURI)
-{
-  SAMPLE_LABEL("nsObjectFrame", "InstantiatePlugin");
-  NS_ASSERTION(mPreventInstantiation,
-               "Instantiation should be prevented here!");
-
-  // If you add early return(s), be sure to balance this call to
-  // appShell->SuspendNative() with additional call(s) to
-  // appShell->ReturnNative().
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    appShell->SuspendNative();
-  }
-
-  NS_ASSERTION(mContent, "We should have a content node.");
-
-  nsIDocument* doc = mContent->OwnerDoc();
-  nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(doc));
-  bool fullPageMode = false;
-  if (pDoc) {
-    pDoc->GetWillHandleInstantiation(&fullPageMode);
-  }
-
-  nsresult rv;
-  if (fullPageMode) {  /* full-page mode */
-    nsCOMPtr<nsIStreamListener> stream;
-    rv = aPluginHost->InstantiateFullPagePlugin(aMimeType, aURI, mInstanceOwner, getter_AddRefs(stream));
-    if (NS_SUCCEEDED(rv))
-      pDoc->SetStreamListener(stream);
-  } else {   /* embedded mode */
-    rv = aPluginHost->InstantiateEmbeddedPlugin(aMimeType, aURI, mInstanceOwner);
-  }
-
-  // Note that |this| may very well be destroyed already!
-
-  if (appShell) {
-    appShell->ResumeNative();
-  }
-
-  return rv;
-}
-
 void
 nsObjectFrame::FixupWindow(const nsSize& aSize)
 {
@@ -846,6 +781,40 @@ nsObjectFrame::CallSetWindow(bool aCheckIsHidden)
   instanceOwnerRef->ReleasePluginPort(window->window);
 
   return rv;
+}
+
+void
+nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
+{
+  mInstanceOwner = aOwner;
+  if (!mInstanceOwner) {
+    nsRootPresContext* rpc = PresContext()->GetRootPresContext();
+    if (rpc) {
+      if (mWidget) {
+        if (mInnerView) {
+          mInnerView->DetachWidgetEventHandler(mWidget);
+        }
+
+        rpc->UnregisterPluginForGeometryUpdates(this);
+        // Make sure the plugin is hidden in case an update of plugin geometry
+        // hasn't happened since this plugin became hidden.
+        nsIWidget* parent = mWidget->GetParent();
+        if (parent) {
+          nsTArray<nsIWidget::Configuration> configurations;
+          this->GetEmptyClipConfiguration(&configurations);
+          parent->ConfigureChildren(configurations);
+
+          mWidget->Show(false);
+          mWidget->Enable(false);
+          mWidget->SetParent(nsnull);
+        }
+      } else {
+#ifndef XP_MACOSX
+        rpc->UnregisterPluginForGeometryUpdates(this);
+#endif
+      }
+    }
+  }
 }
 
 bool
@@ -1174,8 +1143,12 @@ nsObjectFrame::IsTransparentMode() const
   if (!mInstanceOwner)
     return false;
 
-  NPWindow *window;
+  NPWindow *window = nsnull;
   mInstanceOwner->GetWindow(window);
+  if (!window) {
+    return false;
+  }
+
   if (window->type != NPWindowTypeDrawable)
     return false;
 
@@ -1495,40 +1468,15 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
 }
 
 already_AddRefed<ImageContainer>
-nsObjectFrame::GetImageContainer(LayerManager* aManager)
+nsObjectFrame::GetImageContainer()
 {
-  nsRefPtr<LayerManager> manager = aManager;
-  bool retain = false;
+  nsRefPtr<ImageContainer> container = mImageContainer;
 
-  if (!manager) {
-    manager = nsContentUtils::LayerManagerForDocument(mContent->OwnerDoc(), &retain);
-  }
-  if (!manager) {
-    return nsnull;
+  if (container) {
+    return container.forget();
   }
 
-  nsRefPtr<ImageContainer> container;
-
-  // XXX - in the future image containers will be manager independent and
-  // we can remove the manager equals check and only check the backend type.
-  if (mImageContainer) {
-    if ((!mImageContainer->Manager() || mImageContainer->Manager() == manager) &&
-        mImageContainer->GetBackendType() == manager->GetBackendType()) {
-      container = mImageContainer;
-      return container.forget();
-    }
-  }
-
-  container = manager->CreateImageContainer();
-
-  if (retain) {
-    // Clear current image before we reset mImageContainer. Only mImageContainer
-    // is allowed to contain the image for this plugin.
-    if (mImageContainer) {
-      mImageContainer->SetCurrentImage(nsnull);
-    }
-    mImageContainer = container;
-  }
+  container = mImageContainer = LayerManager::CreateImageContainer();
 
   return container.forget();
 }
@@ -1573,13 +1521,6 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
 
 #ifdef XP_MACOSX
-  // Layer painting not supported without OpenGL
-  if (aManager && aManager->GetBackendType() !=
-      LayerManager::LAYERS_OPENGL) {
-    return LAYER_NONE;
-  }
-
-  // Synchronous painting, but with (gecko) layers.
   if (!mInstanceOwner->UseAsyncRendering() &&
       mInstanceOwner->IsRemoteDrawingCoreAnimation() &&
       mInstanceOwner->GetEventModel() == NPEventModelCocoa) {
@@ -1611,9 +1552,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nsnull;
 
   // Create image
-  nsRefPtr<ImageContainer> container = GetImageContainer(aManager);
-  if (!container)
-    return nsnull;
+  nsRefPtr<ImageContainer> container = GetImageContainer();
 
   {
     nsRefPtr<Image> current = container->GetCurrentImage();
@@ -1729,7 +1668,6 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
     // The matrix includes the frame's position, so we need to transform
     // from 0,0 to get the correct coordinates.
     frameGfxRect.MoveTo(0, 0);
-    matrix2d.NudgeToIntegers();
 
     mInstanceOwner->Paint(ctx, matrix2d.Transform(frameGfxRect), dirtyGfxRect);
     return;
@@ -2130,404 +2068,11 @@ nsObjectFrame::GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance)
 {
   *aPluginInstance = nsnull;
 
-  if (!mInstanceOwner)
-    return NS_OK;
-  
-  return mInstanceOwner->GetInstance(aPluginInstance);
-}
-
-nsresult
-nsObjectFrame::PrepareInstanceOwner()
-{
-  nsWeakFrame weakFrame(this);
-
-  // First, have to stop any possibly running plugins.
-  StopPluginInternal(false);
-
-  if (!weakFrame.IsAlive()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  NS_ASSERTION(!mInstanceOwner, "Must not have an instance owner here");
-
-  mInstanceOwner = new nsPluginInstanceOwner();
-
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
-         ("Created new instance owner %p for frame %p\n", mInstanceOwner.get(),
-          this));
-
-  // Note, |this| may very well be gone after this call.
-  return mInstanceOwner->Init(PresContext(), this, GetContent());
-}
-
-nsresult
-nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener)
-{
-  SAMPLE_LABEL("plugin", "nsObjectFrame::Instantiate");
-  if (mPreventInstantiation) {
-    return NS_OK;
-  }
-  
-  // Note: If PrepareInstanceOwner() returns an error, |this| may very
-  // well be deleted already.
-  nsresult rv = PrepareInstanceOwner();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
-  nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  mInstanceOwner->SetPluginHost(pluginHostCOM);
-
-  // This must be done before instantiating the plugin
-  FixupWindow(GetContentRectRelativeToSelf().Size());
-
-  // Ensure we redraw when a plugin is instantiated
-  Invalidate(GetContentRectRelativeToSelf());
-
-  nsWeakFrame weakFrame(this);
-
-  NS_ASSERTION(!mPreventInstantiation, "Say what?");
-  mPreventInstantiation = true;
-  rv = pluginHost->InstantiatePluginForChannel(aChannel, mInstanceOwner, aStreamListener);
-
-  if (!weakFrame.IsAlive()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  NS_ASSERTION(mPreventInstantiation,
-               "Instantiation should still be prevented!");
-  mPreventInstantiation = false;
-
-#ifdef ACCESSIBILITY
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    accService->RecreateAccessible(PresContext()->PresShell(), mContent);
-  }
-#endif
-
-  return rv;
-}
-
-nsresult
-nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
-{
-  SAMPLE_LABEL("plugin", "nsObjectFrame::Instantiate");
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
-         ("nsObjectFrame::Instantiate(%s) called on frame %p\n", aMimeType,
-          this));
-
-  if (mPreventInstantiation) {
-    return NS_OK;
-  }
-
-  // XXXbz can aMimeType ever actually be null here?  If not, either
-  // the callers are wrong (and passing "" instead of null) or we can
-  // remove the codepaths dealing with null aMimeType in
-  // InstantiateEmbeddedPlugin.
-  NS_ASSERTION(aMimeType || aURI, "Need a type or a URI!");
-
-  // Note: If PrepareInstanceOwner() returns an error, |this| may very
-  // well be deleted already.
-  nsresult rv = PrepareInstanceOwner();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsWeakFrame weakFrame(this);
-
-  // This must be done before instantiating the plugin
-  FixupWindow(GetContentRectRelativeToSelf().Size());
-
-  // Ensure we redraw when a plugin is instantiated
-  Invalidate(GetContentRectRelativeToSelf());
-
-  // get the nsIPluginHost service
-  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  mInstanceOwner->SetPluginHost(pluginHost);
-
-  NS_ASSERTION(!mPreventInstantiation, "Say what?");
-  mPreventInstantiation = true;
-
-  rv = InstantiatePlugin(static_cast<nsPluginHost*>(pluginHost.get()), aMimeType, aURI);
-
-  if (!weakFrame.IsAlive()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // finish up
-  if (NS_SUCCEEDED(rv)) {
-    TryNotifyContentObjectWrapper();
-
-    if (!weakFrame.IsAlive()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    CallSetWindow();
-  }
-
-  NS_ASSERTION(mPreventInstantiation,
-               "Instantiation should still be prevented!");
-
-#ifdef ACCESSIBILITY
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    accService->RecreateAccessible(PresContext()->PresShell(), mContent);
-  }
-#endif
-
-  mPreventInstantiation = false;
-
-  return rv;
-}
-
-void
-nsObjectFrame::TryNotifyContentObjectWrapper()
-{
-  nsRefPtr<nsNPAPIPluginInstance> inst;
-  mInstanceOwner->GetInstance(getter_AddRefs(inst));
-  if (inst) {
-    // The plugin may have set up new interfaces; we need to mess with our JS
-    // wrapper.  Note that we DO NOT want to call this if there is no plugin
-    // instance!  That would just reenter Instantiate(), trying to create
-    // said plugin instance.
-    NotifyContentObjectWrapper();
-  }
-}
-
-class nsStopPluginRunnable : public nsRunnable, public nsITimerCallback
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  nsStopPluginRunnable(nsPluginInstanceOwner *aInstanceOwner)
-    : mInstanceOwner(aInstanceOwner)
-  {
-    NS_ASSERTION(aInstanceOwner, "need an owner");
-  }
-
-  // nsRunnable
-  NS_IMETHOD Run();
-
-  // nsITimerCallback
-  NS_IMETHOD Notify(nsITimer *timer);
-
-private:  
-  nsCOMPtr<nsITimer> mTimer;
-  nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
-};
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
-
-#if defined(XP_WIN)
-static const char*
-GetMIMEType(nsNPAPIPluginInstance *aPluginInstance)
-{
-  if (aPluginInstance) {
-    const char* mime = nsnull;
-    if (NS_SUCCEEDED(aPluginInstance->GetMIMEType(&mime)) && mime)
-      return mime;
-  }
-  return "";
-}
-#endif // XP_WIN
-
-static bool
-DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, bool aDelayedStop)
-{
-#if (MOZ_PLATFORM_MAEMO==5)
-  // Don't delay stop on Maemo/Hildon (bug 530739).
-  if (aDelayedStop && aInstanceOwner->MatchPluginName("Shockwave Flash"))
-    return false;
-#endif
-
-  // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524),
-  // XStandard (bug 430219), CMISS Zinc (bug 429604).
-  if (aDelayedStop
-#if !(defined XP_WIN || defined MOZ_X11)
-      && !aInstanceOwner->MatchPluginName("QuickTime")
-      && !aInstanceOwner->MatchPluginName("Flip4Mac")
-      && !aInstanceOwner->MatchPluginName("XStandard plugin")
-      && !aInstanceOwner->MatchPluginName("CMISS Zinc Plugin")
-#endif
-      ) {
-    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
-    NS_DispatchToCurrentThread(evt);
-    return true;
-  }
-  return false;
-}
-
-static void
-DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, bool aDelayedStop)
-{
-  SAMPLE_LABEL("plugin", "DoStopPlugin");
-  nsRefPtr<nsNPAPIPluginInstance> inst;
-  aInstanceOwner->GetInstance(getter_AddRefs(inst));
-  if (inst) {
-    NPWindow *win;
-    aInstanceOwner->GetWindow(win);
-    nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
-    nsRefPtr<nsNPAPIPluginInstance> nullinst;
-
-    if (window) 
-      window->CallSetWindow(nullinst);
-    else 
-      inst->SetWindow(nsnull);
-    
-    if (DoDelayedStop(aInstanceOwner, aDelayedStop))
-      return;
-
-#if defined(XP_MACOSX)
-    aInstanceOwner->HidePluginWindow();
-#endif
-
-    nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-    NS_ASSERTION(pluginHost, "Without a pluginHost, how can we have an instance to destroy?");
-    static_cast<nsPluginHost*>(pluginHost.get())->StopPluginInstance(inst);
-
-    // the frame is going away along with its widget so tell the
-    // window to forget its widget too
-    if (window)
-      window->SetPluginWidget(nsnull);
-  }
-
-  aInstanceOwner->Destroy();
-}
-
-NS_IMETHODIMP
-nsStopPluginRunnable::Notify(nsITimer *aTimer)
-{
-  return Run();
-}
-
-NS_IMETHODIMP
-nsStopPluginRunnable::Run()
-{
-  SAMPLE_LABEL("plugin", "nsStopPluginRunnable::Run");
-  // InitWithCallback calls Release before AddRef so we need to hold a
-  // strong ref on 'this' since we fall through to this scope if it fails.
-  nsCOMPtr<nsITimerCallback> kungFuDeathGrip = this;
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    PRUint32 currentLevel = 0;
-    appShell->GetEventloopNestingLevel(&currentLevel);
-    if (currentLevel > mInstanceOwner->GetLastEventloopNestingLevel()) {
-      if (!mTimer)
-        mTimer = do_CreateInstance("@mozilla.org/timer;1");
-      if (mTimer) {
-        // Fire 100ms timer to try to tear down this plugin as quickly as
-        // possible once the nesting level comes back down.
-        nsresult rv = mTimer->InitWithCallback(this, 100, nsITimer::TYPE_ONE_SHOT);
-        if (NS_SUCCEEDED(rv)) {
-          return rv;
-        }
-      }
-      NS_ERROR("Failed to setup a timer to stop the plugin later (at a safe "
-               "time). Stopping the plugin now, this might crash.");
-    }
-  }
-
-  mTimer = nsnull;
-
-  DoStopPlugin(mInstanceOwner, false);
-
-  return NS_OK;
-}
-
-void
-nsObjectFrame::StopPlugin()
-{
-  bool delayedStop = false;
-#ifdef XP_WIN
-  nsRefPtr<nsNPAPIPluginInstance> inst;
-  if (mInstanceOwner)
-    mInstanceOwner->GetInstance(getter_AddRefs(inst));
-  if (inst) {
-    // Delayed stop for Real plugin only; see bug 420886, 426852.
-    const char* pluginType = ::GetMIMEType(inst);
-    delayedStop = strcmp(pluginType, "audio/x-pn-realaudio-plugin") == 0;
-  }
-#endif
-  StopPluginInternal(delayedStop);
-}
-
-void
-nsObjectFrame::StopPluginInternal(bool aDelayedStop)
-{
   if (!mInstanceOwner) {
-    return;
+    return NS_OK;
   }
 
-  nsRootPresContext* rpc = PresContext()->GetRootPresContext();
-  if (!rpc) {
-    NS_ASSERTION(PresContext()->PresShell()->IsFrozen(),
-                 "unable to unregister the plugin frame");
-  }
-  else if (mWidget) {
-    rpc->UnregisterPluginForGeometryUpdates(this);
-
-    // Make sure the plugin is hidden in case an update of plugin geometry
-    // hasn't happened since this plugin became hidden.
-    nsIWidget* parent = mWidget->GetParent();
-    if (parent) {
-      nsTArray<nsIWidget::Configuration> configurations;
-      GetEmptyClipConfiguration(&configurations);
-      parent->ConfigureChildren(configurations);
-    }
-  }
-  else {
-#ifndef XP_MACOSX
-    rpc->UnregisterPluginForGeometryUpdates(this);
-#endif
-  }
-
-  // Transfer the reference to the instance owner onto the stack so
-  // that if we do end up re-entering this code, or if we unwind back
-  // here witha deleted frame (this), we can still continue to stop
-  // the plugin. Note that due to that, the ordering of the code in
-  // this function is extremely important.
-
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  owner.swap(mInstanceOwner);
-
-  // Make sure that our windowless rect has been zeroed out, so if we
-  // get reinstantiated we'll send the right messages to the plug-in.
-  mWindowlessRect.SetEmpty();
-
-  bool oldVal = mPreventInstantiation;
-  mPreventInstantiation = true;
-
-  nsWeakFrame weakFrame(this);
-
-#if defined(XP_WIN) || defined(MOZ_X11)
-  if (aDelayedStop && mWidget) {
-    // If we're asked to do a delayed stop it means we're stopping the
-    // plugin because we're destroying the frame. In that case, disown
-    // the widget.
-    mInnerView->DetachWidgetEventHandler(mWidget);
-    mWidget = nsnull;
-  }
-#endif
-
-  // From this point on, |this| could have been deleted, so don't
-  // touch it!
-  owner->PrepareToStop(aDelayedStop);
-
-  DoStopPlugin(owner, aDelayedStop);
-
-  // If |this| is still alive, reset mPreventInstantiation.
-  if (weakFrame.IsAlive()) {
-    NS_ASSERTION(mPreventInstantiation,
-                 "Instantiation should still be prevented!");
-
-    mPreventInstantiation = oldVal;
-  }
-
-  // Break relationship between frame and plugin instance owner
-  owner->SetOwner(nsnull);
+  return mInstanceOwner->GetInstance(aPluginInstance);
 }
 
 NS_IMETHODIMP
@@ -2559,43 +2104,6 @@ nsObjectFrame::SetIsDocumentActive(bool aIsActive)
     mInstanceOwner->UpdateDocumentActiveState(aIsActive);
   }
 #endif
-}
-
-void
-nsObjectFrame::NotifyContentObjectWrapper()
-{
-  nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
-  if (!doc)
-    return;
-
-  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
-  if (!sgo)
-    return;
-
-  nsIScriptContext *scx = sgo->GetContext();
-  if (!scx)
-    return;
-
-  JSContext *cx = scx->GetNativeContext();
-
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  nsContentUtils::XPConnect()->
-    GetWrappedNativeOfNativeObject(cx, sgo->GetGlobalJSObject(), mContent,
-                                   NS_GET_IID(nsISupports),
-                                   getter_AddRefs(wrapper));
-
-  if (!wrapper) {
-    // Nothing to do here if there's no wrapper for mContent. The proto
-    // chain will be fixed appropriately when the wrapper is created.
-    return;
-  }
-
-  JSObject *obj = nsnull;
-  nsresult rv = wrapper->GetJSObject(&obj);
-  if (NS_FAILED(rv))
-    return;
-
-  nsHTMLPluginObjElementSH::SetupProtoChain(wrapper, cx, obj);
 }
 
 // static

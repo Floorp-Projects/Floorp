@@ -49,7 +49,7 @@
  * a call to end().  If begin() returns an error none of the other
  * functions will be called.
  */
-[scriptable, uuid(35a3a9b0-a120-4bf7-9739-46027fe96212)]
+[scriptable, builtinclass, uuid(e7e9a010-d02f-4137-94c8-6d73605fe623)]
 interface nsICycleCollectorListener : nsISupports
 {
     nsICycleCollectorListener allTraces();

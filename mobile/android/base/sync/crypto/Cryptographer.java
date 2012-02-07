@@ -56,6 +56,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.Utils;
+import java.security.InvalidKeyException;
 
 /*
  * Implements the basic required cryptography options.
@@ -82,7 +83,6 @@ public class Cryptographer {
         cipher.init(Cipher.ENCRYPT_MODE, spec, new IvParameterSpec(info.getIV()));
       }
     } catch (GeneralSecurityException ex) {
-      ex.printStackTrace();
       throw new CryptoException(ex);
     }
 
@@ -94,7 +94,13 @@ public class Cryptographer {
     info.setIV(cipher.getIV());
 
     // Generate HMAC.
-    info.setHMAC(generateHMAC(info));
+    try {
+      info.setHMAC(generateHMAC(info));
+    } catch (NoSuchAlgorithmException e) {
+      throw new CryptoException(e);
+    } catch (InvalidKeyException e) {
+      throw new CryptoException(e);
+    }
 
     return info;
 
@@ -112,8 +118,14 @@ public class Cryptographer {
   public static byte[] decrypt(CryptoInfo info) throws CryptoException {
 
     // Check HMAC.
-    if (!verifyHMAC(info)) {
-      throw new HMACVerificationException();
+    try {
+      if (!verifyHMAC(info)) {
+        throw new HMACVerificationException();
+      }
+    } catch (NoSuchAlgorithmException e) {
+      throw new CryptoException(e);
+    } catch (InvalidKeyException e) {
+      throw new CryptoException(e);
     }
 
     Cipher cipher = getCipher();
@@ -190,7 +202,7 @@ public class Cryptographer {
   /*
    * Helper to verify HMAC Input: CryptoInfo Output: true if HMAC is correct
    */
-  private static boolean verifyHMAC(CryptoInfo bundle) {
+  private static boolean verifyHMAC(CryptoInfo bundle) throws NoSuchAlgorithmException, InvalidKeyException {
     byte[] generatedHMAC = generateHMAC(bundle);
     byte[] expectedHMAC  = bundle.getHMAC();
     boolean eq = Arrays.equals(generatedHMAC, expectedHMAC);
@@ -206,7 +218,7 @@ public class Cryptographer {
    * Helper to generate HMAC Input: CryptoInfo Output: a generated HMAC for
    * given cipher text
    */
-  private static byte[] generateHMAC(CryptoInfo bundle) {
+  private static byte[] generateHMAC(CryptoInfo bundle) throws NoSuchAlgorithmException, InvalidKeyException {
     Mac hmacHasher = HKDF.makeHMACHasher(bundle.getKeys().getHMACKey());
     return hmacHasher.doFinal(Base64.encodeBase64(bundle.getMessage()));
   }

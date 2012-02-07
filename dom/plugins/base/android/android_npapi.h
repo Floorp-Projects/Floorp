@@ -36,8 +36,9 @@
 #define android_npapi_H
 
 #include <stdint.h>
-#include "npapi.h"
 #include <jni.h>
+#include "npapi.h"
+#include "GLDefs.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // General types
@@ -120,6 +121,16 @@ typedef uint32_t ANPMatrixFlag;
 #define kSystemInterfaceV0_ANPGetValue      ((NPNVariable)1010)
 #define kEventInterfaceV0_ANPGetValue       ((NPNVariable)1011)
 
+#define kAudioTrackInterfaceV1_ANPGetValue  ((NPNVariable)1012)
+#define kOpenGLInterfaceV0_ANPGetValue      ((NPNVariable)1013)
+#define kWindowInterfaceV1_ANPGetValue      ((NPNVariable)1014)
+#define kVideoInterfaceV0_ANPGetValue       ((NPNVariable)1015)
+#define kSystemInterfaceV1_ANPGetValue      ((NPNVariable)1016)
+#define kSystemInterfaceV2_ANPGetValue      ((NPNVariable)1017)
+#define kWindowInterfaceV2_ANPGetValue      ((NPNVariable)1018)
+#define kNativeWindowInterfaceV0_ANPGetValue ((NPNVariable)1019)
+#define kVideoInterfaceV1_ANPGetValue       ((NPNVariable)1020)
+
 /** queries for the drawing models supported on this device.
 
     NPN_GetValue(inst, kSupportedDrawingModel_ANPGetValue, uint32_t* bits)
@@ -180,6 +191,7 @@ enum ANPDrawingModels {
         surface object.
      */
     kSurface_ANPDrawingModel = 1 << 1,
+    kOpenGL_ANPDrawingModel  = 1 << 2,
 };
 typedef int32_t ANPDrawingModel;
 
@@ -678,6 +690,25 @@ struct ANPWindowInterfaceV0 : ANPInterface {
     void    (*requestCenterFitZoom)(NPP instance);
 };
 
+struct ANPWindowInterfaceV1 : ANPWindowInterfaceV0 {
+    /** Returns a rectangle representing the visible area of the plugin on
+        screen. The coordinates are relative to the size of the plugin in the
+        document and therefore will never be negative or exceed the plugin's size.
+     */
+    ANPRectI (*visibleRect)(NPP instance);
+};
+
+typedef int32_t ANPScreenOrientation;
+
+struct ANPWindowInterfaceV2 : ANPWindowInterfaceV1 {
+    /** Called when the plugin wants to specify a particular screen orientation
+        when entering into full screen mode. The orientation must be set prior
+        to entering into full screen.  After entering full screen any subsequent
+        changes will be updated the next time the plugin goes full screen.
+     */
+    void (*requestFullScreenOrientation)(NPP instance, ANPScreenOrientation orientation);
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 
 enum ANPSampleFormats {
@@ -761,6 +792,12 @@ struct ANPAudioTrackInterfaceV0 : ANPInterface {
      */
     bool (*isStopped)(ANPAudioTrack*);
 };
+
+struct ANPAudioTrackInterfaceV1 : ANPAudioTrackInterfaceV0 {
+    /** Returns the track's latency in milliseconds. */
+    uint32_t (*trackLatency)(ANPAudioTrack*);
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // DEFINITION OF VALUES PASSED THROUGH NPP_HandleEvent
@@ -922,11 +959,15 @@ struct ANPEvent {
             // use based on the value in model
             union {
                 ANPBitmap   bitmap;
+                struct {
+                    int32_t width;
+                    int32_t height;
+                } surfaceSize;
             } data;
         } draw;
-        int32_t     other[8];
     } data;
 };
+
 
 struct ANPEventInterfaceV0 : ANPInterface {
     /** Post a copy of the specified event to the plugin. The event will be
@@ -975,5 +1016,118 @@ typedef int32_t   int32;
 typedef uint32_t uint32;
 typedef int16_t   int16;
 typedef uint16_t uint16;
+
+/**
+ * TODO should we not use EGL and GL data types for ABI safety?
+ */
+struct ANPTextureInfo {
+    GLuint      textureId;
+    uint32_t    width;
+    uint32_t    height;
+    GLenum      internalFormat;
+};
+
+typedef void* ANPEGLContext;
+
+struct ANPOpenGLInterfaceV0 : ANPInterface {
+    ANPEGLContext (*acquireContext)(NPP instance);
+
+    ANPTextureInfo (*lockTexture)(NPP instance);
+
+    void (*releaseTexture)(NPP instance, const ANPTextureInfo*);
+
+    /**
+     * Invert the contents of the plugin on the y-axis.
+     * default is to not be inverted (i.e. use OpenGL coordinates)
+     */
+    void (*invertPluginContent)(NPP instance, bool isContentInverted);
+};
+
+enum ANPPowerStates {
+    kDefault_ANPPowerState  = 0,
+    kScreenOn_ANPPowerState = 1
+};
+typedef int32_t ANPPowerState;
+
+struct ANPSystemInterfaceV1 : ANPSystemInterfaceV0 {
+    void (*setPowerState)(NPP instance, ANPPowerState powerState);
+};
+
+struct ANPSystemInterfaceV2 : ANPInterface {
+    /** Return the path name for the current Application's plugin data directory,
+        or NULL if not supported. This directory will change depending on whether
+        or not the plugin is found within an incognito tab.
+     */
+    const char* (*getApplicationDataDirectory)(NPP instance);
+
+    // redeclaration of existing features
+    jclass (*loadJavaClass)(NPP instance, const char* className);
+    void (*setPowerState)(NPP instance, ANPPowerState powerState);
+};
+
+typedef void* ANPNativeWindow;
+
+struct ANPVideoInterfaceV0 : ANPInterface {
+
+    /**
+     * Constructs a new native window to be used for rendering video content.
+     *
+     * Subsequent calls will produce new windows, but may also return NULL after
+     * n attempts if the browser has reached it's limit. Further, if the browser
+     * is unable to acquire the window quickly it may also return NULL in order
+     * to not prevent the plugin from executing. A subsequent call will then
+     * return the window if it is avaiable.
+     *
+     * NOTE: The hardware may fail if you try to decode more than the allowable
+     * number of videos supported on that device.
+     */
+    ANPNativeWindow (*acquireNativeWindow)(NPP instance);
+
+    /**
+     * Sets the rectangle that specifies where the video content is to be drawn.
+     * The dimensions are in document space. Further, if the rect is NULL the
+     * browser will not attempt to draw the window, therefore do not set the
+     * dimensions until you queue the first buffer in the window.
+     */
+    void (*setWindowDimensions)(NPP instance, const ANPNativeWindow window, const ANPRectF* dimensions);
+
+    /**
+     */
+    void (*releaseNativeWindow)(NPP instance, ANPNativeWindow window);
+};
+
+/** Called to notify the plugin that a video frame has been composited by the
+*  browser for display.  This will be called in a separate thread and as such
+*  you cannot call releaseNativeWindow from the callback.
+*
+*  The timestamp is in nanoseconds, and is monotonically increasing.
+*/
+typedef void (*ANPVideoFrameCallbackProc)(ANPNativeWindow* window, int64_t timestamp);
+
+struct ANPVideoInterfaceV1 : ANPVideoInterfaceV0 {
+    /** Set a callback to be notified when an ANPNativeWindow is composited by
+     *  the browser.
+     */
+    void (*setFramerateCallback)(NPP instance, const ANPNativeWindow window, ANPVideoFrameCallbackProc);
+};
+
+struct ANPNativeWindowInterfaceV0 : ANPInterface {
+    /**
+     * Constructs a new native window to be used for rendering plugin content.
+     *
+     * Subsequent calls will return the original constructed window. Further, if
+     * the browser is unable to acquire the window quickly it may return NULL in
+     * order to not block the plugin indefinitely. A subsequent call will then
+     * return the window if it is available.
+     */
+    ANPNativeWindow (*acquireNativeWindow)(NPP instance);
+
+    /**
+     * Invert the contents of the plugin on the y-axis.
+     * default is to not be inverted (e.g. use OpenGL coordinates)
+     */
+    void (*invertPluginContent)(NPP instance, bool isContentInverted);
+};
+
 
 #endif

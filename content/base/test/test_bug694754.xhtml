@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:test="http://example.com/test">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=694754
+-->
+<head>
+  <title>Test for Bug 694754</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=694754">Mozilla Bug 694754</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 694754 **/
+/*
+The following code tests if calling the DOM methods Document::lookupNamespaceURI
+and Document::lookupPrefix directly (with quickstubs) and through XPCOM leads
+to the same result.
+
+This test makes use of the bug/feature that deleting a method from the 
+prototype forces the engine to go through XPCOM.
+*/
+
+// Document::lookupPrefix called directly (quickstubs)
+var prefixDirect = document.lookupPrefix("http://example.com/test");
+is(prefixDirect, "test", 
+   "calling Document::lookupPrefix through quickstubs works");
+
+// Document::lookupPrefix called via XPCOM
+var proto = Object.getPrototypeOf(document);
+delete(proto.lookupPrefix);
+var prefixThroughXPCOM = document.lookupPrefix("http://example.com/test");
+is(prefixThroughXPCOM, "test", 
+   "calling Document::lookupPrefix through XPCOM works");
+
+
+
+// Document::lookupNamespaceURI called directly (quickstubs)
+var namespaceDirect = document.lookupNamespaceURI(null);
+is(namespaceDirect, "http://www.w3.org/1999/xhtml", 
+   "calling Document::lookupNamespaceURI through quickstubs works");
+
+// Document::lookupNamespaceURI called via XPCOM
+delete(proto.lookupNamespaceURI);
+var namespaceThroughXPCOM = document.lookupNamespaceURI(null);
+is(namespaceThroughXPCOM, "http://www.w3.org/1999/xhtml", 
+   "calling Document::lookupNamespaceURI through XPCOM works");
+   
+// Document::isDefaultNamespace called directly (quickstubs)
+var isDefaultNamespaceDirect = document.isDefaultNamespace("http://www.w3.org/1999/xhtml");
+is(isDefaultNamespaceDirect, true,
+   "Default namespace correctly detected through quickstubs");
+   
+// Document::isDefaultNamespace called via XPCOM
+delete(proto.isDefaultNamespace);
+var isDefaultNamespaceXPCOM = document.isDefaultNamespace("http://www.w3.org/1999/xhtml");
+is(isDefaultNamespaceXPCOM, true,
+   "Default namespace correctly detected through XPCOM");
+
+
+</script>
+</pre>
+</body>
+</html>

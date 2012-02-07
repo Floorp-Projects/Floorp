@@ -163,7 +163,12 @@ gfxPlatformMac::GetScaledFontForFont(gfxFont *aFont)
 bool
 gfxPlatformMac::SupportsAzure(BackendType& aBackend)
 {
-  aBackend = BACKEND_COREGRAPHICS;
+  if (mPreferredDrawTargetBackend != BACKEND_NONE) {
+    aBackend = mPreferredDrawTargetBackend;
+  } else {
+    aBackend = BACKEND_COREGRAPHICS;
+  }
+
   return true;
 }
 

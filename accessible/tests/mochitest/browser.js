@@ -26,6 +26,14 @@ function browserWindow()
 }
 
 /**
+ * Return the document of the browser window.
+ */
+function browserDocument()
+{
+  return browserWindow().document;
+}
+
+/**
  * Return tab browser object.
  */
 function tabBrowser()
@@ -47,6 +55,22 @@ function currentBrowser()
 function currentTabDocument()
 {
   return currentBrowser().contentDocument;
+}
+
+/**
+ * Return browser element of the tab at the given index.
+ */
+function browserAt(aIndex)
+{
+  return tabBrowser().getBrowserAtIndex(aIndex);
+}
+
+/**
+ * Return DOM document of the tab at the given index.
+ */
+function tabDocumentAt(aIndex)
+{
+  return browserAt(aIndex).contentDocument;
 }
 
 /**

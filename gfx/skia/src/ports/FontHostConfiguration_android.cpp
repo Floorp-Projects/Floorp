@@ -16,6 +16,7 @@
 */
 
 #include "FontHostConfiguration_android.h"
+#include <expat_config.h>
 #include <expat.h>
 #include "SkTDArray.h"
 
