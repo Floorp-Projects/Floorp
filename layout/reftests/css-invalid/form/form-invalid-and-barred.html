@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- Form with one invalid element and a barred for constraint validation element -->
+<html>
+  <head>
+    <style>
+      form:invalid { display: none; }
+    </style>
+  </head>
+ <body>
+   <form>
+    <input required>
+    <input id='i' value='foo' readonly required>
+   </form>
+ </body>
+</html>
