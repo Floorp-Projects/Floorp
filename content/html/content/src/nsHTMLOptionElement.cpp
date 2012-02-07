@@ -263,7 +263,7 @@ nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 
 nsresult
 nsHTMLOptionElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                   const nsAttrValue* aValue, bool aNotify)
+                                   const nsAString* aValue, bool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::BeforeSetAttr(aNamespaceID, aName,
                                                     aValue, aNotify);

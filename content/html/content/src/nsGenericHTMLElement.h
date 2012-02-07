@@ -631,7 +631,7 @@ protected:
   bool IsEventName(nsIAtom* aName);
 
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAString* aValue, bool aNotify);
 
   virtual nsEventListenerManager*
     GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer);
@@ -950,10 +950,10 @@ public:
 
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                 const nsAttrValue* aValue, bool aNotify);
+                                 const nsAString* aValue, bool aNotify);
 
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAString* aValue, bool aNotify);
 
   void UpdateEditableFormControlState(bool aNotify);
 

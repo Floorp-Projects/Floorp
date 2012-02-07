@@ -379,12 +379,12 @@ protected:
    * Called when an attribute is about to be changed
    */
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                 const nsAttrValue* aValue, bool aNotify);
+                                 const nsAString* aValue, bool aNotify);
   /**
    * Called when an attribute has just been changed
    */
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
+                                const nsAString* aValue, bool aNotify);
 
   /**
    * Dispatch a select event. Returns true if the event was not cancelled.

@@ -170,7 +170,7 @@ nsSVGImageElement::LoadSVGImage(bool aForce, bool aNotify)
 
 nsresult
 nsSVGImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify)
+                                const nsAString* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
 

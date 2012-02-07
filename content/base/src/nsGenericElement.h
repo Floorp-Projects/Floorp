@@ -289,17 +289,16 @@ public:
    * have mutation listeners (in which case it's cheap to just return false
    * and let the caller go ahead and set the value).
    * @param aOldValue Set to the old value of the attribute, but only if there
-   *   are event listeners. If set, the type of aOldValue will be either
-   *   nsAttrValue::eString or nsAttrValue::eAtom.
+   *   are event listeners
    * @param aModType Set to nsIDOMMutationEvent::MODIFICATION or to
    *   nsIDOMMutationEvent::ADDITION, but only if this helper returns true
    * @param aHasListeners Set to true if there are mutation event listeners
    *   listening for NS_EVENT_BITS_MUTATION_ATTRMODIFIED
    */
   bool MaybeCheckSameAttrVal(PRInt32 aNamespaceID, nsIAtom* aName,
-                             nsIAtom* aPrefix, const nsAttrValue& aValue,
-                             bool aNotify, nsAttrValue& aOldValue,
-                             PRUint8* aModType, bool* aHasListeners);
+                               nsIAtom* aPrefix, const nsAString& aValue,
+                               bool aNotify, nsAutoString* aOldValue,
+                               PRUint8* aModType, bool* aHasListeners);
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, bool aNotify);
   virtual nsresult SetParsedAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -633,26 +632,12 @@ public:
   static void MarkUserDataHandler(void* aObject, nsIAtom* aKey, void* aChild,
                                   void* aData);
 protected:
-  /*
-   * Named-bools for use with SetAttrAndNotify to make call sites easier to
-   * read.
-   */
-  static const bool kFireMutationEvent           = true;
-  static const bool kDontFireMutationEvent       = false;
-  static const bool kNotifyDocumentObservers     = true;
-  static const bool kDontNotifyDocumentObservers = false;
-  static const bool kCallAfterSetAttr            = true;
-  static const bool kDontCallAfterSetAttr        = false;
-
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
    * mutation events.  This will send the AttributeChanged notification.
    * Callers of this method are responsible for calling AttributeWillChange,
    * since that needs to happen before the new attr value has been set, and
    * in particular before it has been parsed.
-   *
-   * For the boolean parameters, consider using the named bools above to aid
-   * code readability.
    *
    * @param aNamespaceID  namespace of attribute
    * @param aAttribute    local-name of attribute
@@ -664,17 +649,18 @@ protected:
    *                      needed if aFireMutation or aNotify is true.
    * @param aFireMutation should mutation-events be fired?
    * @param aNotify       should we notify document-observers?
-   * @param aCallAfterSetAttr should we call AfterSetAttr?
+   * @param aValueForAfterSetAttr If not null, AfterSetAttr will be called
+   *                      with the value pointed by this parameter.
    */
   nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
                             nsIAtom* aName,
                             nsIAtom* aPrefix,
-                            const nsAttrValue& aOldValue,
+                            const nsAString& aOldValue,
                             nsAttrValue& aParsedValue,
                             PRUint8 aModType,
                             bool aFireMutation,
                             bool aNotify,
-                            bool aCallAfterSetAttr);
+                            const nsAString* aValueForAfterSetAttr);
 
   /**
    * Convert an attribute string value to attribute type based on the type of
@@ -719,15 +705,14 @@ protected:
    *
    * @param aNamespaceID the namespace of the attr being set
    * @param aName the localname of the attribute being set
-   * @param aValue the value it's being set to. This may be an already parsed
-   *        nsAttrValue or simply an nsAttrValue wrapping a yet-to-be-parsed
-   *        string. Alternatively, if the attr is being removed it will be null.
+   * @param aValue the value it's being set to.  If null, the attr is being
+   *        removed.
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
   // inlined.  Those calls don't go through a vtable.
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAttrValue* aValue, bool aNotify)
+                                 const nsAString* aValue, bool aNotify)
   {
     return NS_OK;
   }
@@ -747,7 +732,7 @@ protected:
   // Note that this is inlined so that when subclasses call it it gets
   // inlined.  Those calls don't go through a vtable.
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify)
+                                const nsAString* aValue, bool aNotify)
   {
     return NS_OK;
   }
