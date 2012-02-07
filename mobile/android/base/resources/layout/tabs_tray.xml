@@ -6,6 +6,7 @@
               android:orientation="vertical">
 
      <view class="org.mozilla.gecko.TabsTray$TabsListContainer"
+           android:id="@+id/list_container"
            android:layout_width="fill_parent"
            android:layout_height="wrap_content"
            android:orientation="vertical"
