@@ -155,6 +155,12 @@ class TypeOracle
         JS_ASSERT(JSOp(*pc) == JSOP_CALL);
         return NULL;
     }
+    virtual types::TypeSet *getCallArg(JSScript *script, uint32 argc, uint32 arg, jsbytecode *pc) {
+        return NULL;
+    }
+    virtual types::TypeSet *getCallReturn(JSScript *script, jsbytecode *pc) {
+        return NULL;
+    }
 
     virtual bool canEnterInlinedScript(JSScript *callee) {
         return false;
@@ -217,6 +223,8 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
     types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
     types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
+    types::TypeSet *getCallArg(JSScript *caller, uint32 argc, uint32 arg, jsbytecode *pc);
+    types::TypeSet *getCallReturn(JSScript *caller, jsbytecode *pc);
     bool elementReadIsDense(JSScript *script, jsbytecode *pc);
     bool elementReadIsPacked(JSScript *script, jsbytecode *pc);
     bool elementWriteIsDense(JSScript *script, jsbytecode *pc);

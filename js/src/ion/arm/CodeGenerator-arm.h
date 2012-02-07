@@ -99,6 +99,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
   public:
     // Instruction visitors.
+    virtual bool visitAbsD(LAbsD *ins);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitSubI(LSubI *ins);
     virtual bool visitBitNot(LBitNot *ins);
@@ -118,6 +119,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
 
     virtual bool visitMathD(LMathD *math);
+    virtual bool visitRound(LRound *lir);
     virtual bool visitTableSwitch(LTableSwitch *ins);
 
 

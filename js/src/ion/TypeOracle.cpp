@@ -317,6 +317,20 @@ TypeInferenceOracle::getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc
     return analysis->poppedTypes(pc, argc + 1);
 }
 
+TypeSet *
+TypeInferenceOracle::getCallArg(JSScript *script, uint32 argc, uint32 arg, jsbytecode *pc)
+{
+    JS_ASSERT(argc >= arg);
+    // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
+    return script->analysis()->poppedTypes(pc, argc - arg);
+}
+
+TypeSet *
+TypeInferenceOracle::getCallReturn(JSScript *script, jsbytecode *pc)
+{
+    return script->analysis()->pushedTypes(pc, 0);
+}
+
 bool
 TypeInferenceOracle::canEnterInlinedScript(JSScript *inlineScript)
 {

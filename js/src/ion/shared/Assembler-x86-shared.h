@@ -841,6 +841,9 @@ class AssemblerX86Shared
     void xorpd(const FloatRegister &src, const FloatRegister &dest) {
         masm.xorpd_rr(src.code(), dest.code());
     }
+    void andpd(const FloatRegister &src, const FloatRegister &dest) {
+        masm.andpd_rr(src.code(), dest.code());
+    }
     void fstp(const Operand &src) {
          switch (src.kind()) {
            case Operand::REG_DISP:

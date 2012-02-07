@@ -435,6 +435,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         as_b(label);
     }
 
+    void neg32(const Register &reg) {
+        ma_rsb(reg, Imm32(0), reg);
+    }
+    void test32(const Register &lhs, const Register &rhs) {
+        ma_tst(lhs, rhs);
+    }
+
+
     // Returns the register containing the type tag.
     Register splitTagForTest(const ValueOperand &value) {
         return value.typeReg();

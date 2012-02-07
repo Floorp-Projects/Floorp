@@ -110,6 +110,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitLoadFixedSlotT(LLoadFixedSlotT *ins);
     bool visitStoreFixedSlotV(LStoreFixedSlotV *ins);
     bool visitStoreFixedSlotT(LStoreFixedSlotT *ins);
+    bool visitAbsI(LAbsI *lir);
     bool visitBinaryV(LBinaryV *lir);
     bool visitCompareV(LCompareV *lir);
     bool visitConcat(LConcat *lir);

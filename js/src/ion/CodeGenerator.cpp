@@ -860,6 +860,23 @@ CodeGenerator::visitStringLength(LStringLength *lir)
 }
 
 bool
+CodeGenerator::visitAbsI(LAbsI *ins)
+{
+    Register input = ToRegister(ins->input());
+    Label positive;
+
+    JS_ASSERT(input == ToRegister(ins->output()));
+    masm.test32(input, input);
+    masm.j(Assembler::GreaterThanOrEqual, &positive);
+    masm.neg32(input);
+    if (!ins->snapshot() || !bailoutIf(Assembler::Overflow, ins->snapshot()))
+        return false;
+    masm.bind(&positive);
+
+    return true;
+}
+
+bool
 CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
     typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);

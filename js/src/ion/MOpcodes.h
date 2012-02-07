@@ -69,6 +69,7 @@ namespace ion {
     _(Lsh)                                                                  \
     _(Rsh)                                                                  \
     _(Ursh)                                                                 \
+    _(Abs)                                                                  \
     _(Add)                                                                  \
     _(Sub)                                                                  \
     _(Mul)                                                                  \
@@ -115,7 +116,8 @@ namespace ion {
     _(CallGetElement)                                                       \
     _(CallSetElement)                                                       \
     _(GenericSetProperty)                                                   \
-    _(StringLength)
+    _(StringLength)                                                         \
+    _(Round)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;

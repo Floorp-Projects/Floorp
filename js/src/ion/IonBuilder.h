@@ -309,6 +309,11 @@ class IonBuilder : public MIRGenerator
     bool jsop_object(JSObject *obj);
     bool jsop_this();
 
+    // Replace generic calls to native function by instructions which can be
+    // specialized and which can enable GVN & LICM on these native calls.
+    void discardCallArgs(uint32 argc, MDefinition **argv);
+    bool optimizeNativeCall(uint32 argc);
+
     /* Inlining. */
 
     enum InliningStatus

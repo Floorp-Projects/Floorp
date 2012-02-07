@@ -326,6 +326,15 @@ CodeGeneratorARM::visitOutOfLineBailout(OutOfLineBailout *ool)
 }
 
 bool
+CodeGeneratorARM::visitAbsD(LAbsD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.as_vabs(input, output);
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitAddI(LAddI *ins)
 {
     const LAllocation *lhs = ins->getOperand(0);
@@ -794,6 +803,57 @@ CodeGeneratorARM::visitMathD(LMathD *math)
         JS_NOT_REACHED("unexpected opcode");
         return false;
     }
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitRound(LRound *lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+
+    if (!lir->snapshot())
+        return false;
+
+    Label belowZero, end, fail;
+
+    if (lir->mir()->mode() == MRound::RoundingMode_Round) {
+        // round(x) == floor(x + 0.5)
+        static const double ZeroFive = 0.5;
+        masm.loadStaticDouble(&ZeroFive, ScratchFloatReg);
+        masm.ma_vadd(ScratchFloatReg, input, input);
+    }
+
+    //              +2  +1.5  +1  +0.5  +0  -0.5  -1  -1.5  -2
+    // vcvt:          }-------> }-------><-------{ <-------{
+    // floor:         }-------> }-------> }-------> }------->
+
+    masm.ma_vsub(ScratchFloatReg, ScratchFloatReg, ScratchFloatReg);
+    masm.ma_vcmp(input, ScratchFloatReg);
+    masm.as_vmrs(pc);
+    masm.ma_b(&belowZero, Assembler::VFP_GreaterThanOrEqual);
+
+    // input > 0
+    emitDoubleToInt32(input, output, &fail);
+    masm.jump(&end);
+
+    masm.bind(&fail);
+    if (!bailoutIf(Assembler::Always, lir->snapshot()))
+        return false;
+
+    // input =< 0
+    masm.bind(&belowZero);
+    masm.ma_vsub(ScratchFloatReg, input, ScratchFloatReg);
+    emitDoubleToInt32(input, output, &fail);
+    masm.ma_rsb(Imm32(0), output); // neg
+    // In case of impossible convertion, INT_MIN is stored in output, which
+    // cause an overflow.
+    if (!bailoutIf(Assembler::Overflow, lir->snapshot()))
+        return false;
+    // We also need to bailout for '-0'.
+    if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        return false;
+    masm.bind(&end);
     return true;
 }
 
