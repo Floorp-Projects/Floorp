@@ -852,8 +852,9 @@ template<class LC>
 bool
 ListBase<LC>::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
-    // FIXME: enumerate proto as well
-    return getOwnPropertyNames(cx, proxy, props);
+    JSObject *proto = JS_GetPrototype(proxy);
+    return getOwnPropertyNames(cx, proxy, props) &&
+           (!proto || js::GetPropertyNames(cx, proto, 0, &props));
 }
 
 template<class LC>
