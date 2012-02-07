@@ -1711,6 +1711,12 @@ class XPConnectJSCompartmentsMultiReporter : public nsIMemoryMultiReporter
 public:
     NS_DECL_ISUPPORTS
 
+    NS_IMETHOD GetName(nsACString &name)
+    {
+        name.AssignLiteral("js");
+        return NS_OK;
+    }
+
     NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
                               nsISupports *closure)
     {
