@@ -152,6 +152,7 @@ public:
     // will work.
     mSnappingEnabled = aManager->IsSnappingEffectiveTransforms() &&
       !mParameters.AllowResidualTranslation();
+    mRecycledMaskImageLayers.Init();
     CollectOldLayers();
   }
 
@@ -348,6 +349,12 @@ protected:
    */
   already_AddRefed<ImageLayer> CreateOrRecycleImageLayer();
   /**
+   * Grab a recyclable ImageLayer for use as a mask layer for aLayer (that is a
+   * mask layer which has been used for aLayer before), or create one if such
+   * a layer doesn't exist.
+   */
+  already_AddRefed<ImageLayer> CreateOrRecycleMaskImageLayerFor(Layer* aLayer);
+  /**
    * Grabs all ThebesLayers and ColorLayers from the ContainerLayer and makes them
    * available for recycling.
    */
@@ -421,6 +428,8 @@ protected:
   nsTArray<nsRefPtr<ThebesLayer> > mRecycledThebesLayers;
   nsTArray<nsRefPtr<ColorLayer> >  mRecycledColorLayers;
   nsTArray<nsRefPtr<ImageLayer> >  mRecycledImageLayers;
+  nsDataHashtable<nsPtrHashKey<Layer>, nsRefPtr<ImageLayer> >
+    mRecycledMaskImageLayers;
   PRUint32                         mNextFreeRecycledThebesLayer;
   PRUint32                         mNextFreeRecycledColorLayer;
   PRUint32                         mNextFreeRecycledImageLayer;
@@ -809,9 +818,10 @@ ContainerState::CreateOrRecycleColorLayer()
     // Recycle a layer
     layer = mRecycledColorLayers[mNextFreeRecycledColorLayer];
     ++mNextFreeRecycledColorLayer;
-    // Clear clip rect so we don't accidentally stay clipped. We will
-    // reapply any necessary clipping.
+    // Clear clip rect and mask layer so we don't accidentally stay clipped.
+    // We will reapply any necessary clipping.
     layer->SetClipRect(nsnull);
+    layer->SetMaskLayer(nsnull);
   } else {
     // Create a new layer
     layer = mManager->CreateColorLayer();
@@ -831,9 +841,10 @@ ContainerState::CreateOrRecycleImageLayer()
     // Recycle a layer
     layer = mRecycledImageLayers[mNextFreeRecycledImageLayer];
     ++mNextFreeRecycledImageLayer;
-    // Clear clip rect so we don't accidentally stay clipped. We will
-    // reapply any necessary clipping.
+    // Clear clip rect and mask layer so we don't accidentally stay clipped.
+    // We will reapply any necessary clipping.
     layer->SetClipRect(nsnull);
+    layer->SetMaskLayer(nsnull);
   } else {
     // Create a new layer
     layer = mManager->CreateImageLayer();
@@ -843,6 +854,24 @@ ContainerState::CreateOrRecycleImageLayer()
     layer->SetUserData(&gImageLayerUserData, nsnull);
   }
   return layer.forget();
+}
+
+already_AddRefed<ImageLayer>
+ContainerState::CreateOrRecycleMaskImageLayerFor(Layer* aLayer)
+{
+  nsRefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aLayer);
+  if (result) {
+    mRecycledMaskImageLayers.Remove(aLayer);
+    // if we use clip on mask layers, null it out here
+  } else {
+    // Create a new layer
+    result = mManager->CreateImageLayer();
+    if (!result)
+      return nsnull;
+    result->SetUserData(&gMaskLayerUserData, new MaskLayerUserData());
+  }
+  
+  return result.forget();
 }
 
 static nsIntPoint
@@ -867,9 +896,10 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
     // Recycle a layer
     layer = mRecycledThebesLayers[mNextFreeRecycledThebesLayer];
     ++mNextFreeRecycledThebesLayer;
-    // Clear clip rect so we don't accidentally stay clipped. We will
-    // reapply any necessary clipping.
+    // Clear clip rect and mask layer so we don't accidentally stay clipped.
+    // We will reapply any necessary clipping.
     layer->SetClipRect(nsnull);
+    layer->SetMaskLayer(nsnull);
 
     data = static_cast<ThebesDisplayItemLayerUserData*>
         (layer->GetUserData(&gThebesDisplayItemLayerUserData));
@@ -1730,6 +1760,8 @@ ContainerState::CollectOldLayers()
 {
   for (Layer* layer = mContainerLayer->GetFirstChild(); layer;
        layer = layer->GetNextSibling()) {
+    NS_ASSERTION(!layer->HasUserData(&gMaskLayerUserData),
+                 "Mask layer in layer tree; could not be recycled.");
     if (layer->HasUserData(&gColorLayerUserData)) {
       mRecycledColorLayers.AppendElement(static_cast<ColorLayer*>(layer));
     } else if (layer->HasUserData(&gImageLayerUserData)) {
@@ -1737,6 +1769,12 @@ ContainerState::CollectOldLayers()
     } else if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
       NS_ASSERTION(layer->AsThebesLayer(), "Wrong layer type");
       mRecycledThebesLayers.AppendElement(static_cast<ThebesLayer*>(layer));
+    }
+
+    if (Layer* maskLayer = layer->GetMaskLayer()) {
+      NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
+                   "Could not recycle mask layer, unsupported layer type.");
+      mRecycledMaskImageLayers.Put(layer, static_cast<ImageLayer*>(maskLayer));
     }
   }
 }
@@ -1933,6 +1971,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
         containerLayer = static_cast<ContainerLayer*>(oldLayer);
         // Clear clip rect; the caller will set it if necessary.
         containerLayer->SetClipRect(nsnull);
+        containerLayer->SetMaskLayer(nsnull);
       }
     }
   }
@@ -2036,6 +2075,7 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
   }
   // Clear clip rect; the caller is responsible for setting it.
   layer->SetClipRect(nsnull);
+  layer->SetMaskLayer(nsnull);
   return layer;
 }
 
