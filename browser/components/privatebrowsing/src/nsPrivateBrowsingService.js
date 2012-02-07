@@ -37,6 +37,7 @@
 # ***** END LICENSE BLOCK *****
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 #ifndef XP_WIN
 #define BROKEN_WM_Z_ORDER
@@ -176,9 +177,7 @@ PrivateBrowsingService.prototype = {
       this._closePageInfoWindows();
 
       // save view-source windows URIs and close them
-      let viewSrcWindowsEnum = Cc["@mozilla.org/appshell/window-mediator;1"].
-                               getService(Ci.nsIWindowMediator).
-                               getEnumerator("navigator:view-source");
+      let viewSrcWindowsEnum = Services.wm.getEnumerator("navigator:view-source");
       while (viewSrcWindowsEnum.hasMoreElements()) {
         let win = viewSrcWindowsEnum.getNext();
         if (this._inPrivateBrowsing) {
@@ -190,13 +189,25 @@ PrivateBrowsingService.prototype = {
         }
         win.close();
       }
+        
+      var windowsEnum = Services.wm.getEnumerator("navigator:browser");
+      while (windowsEnum.hasMoreElements()) {
+        var window = windowsEnum.getNext();
+        window.getInterface(Ci.nsIWebNavigation)
+              .QueryInterface(Ci.nsIDocShellTreeItem)
+              .treeOwner
+              .QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIXULWindow)
+              .docShell.QueryInterface(Ci.nsILoadContext)
+              .usePrivateBrowsing = this._inPrivateBrowsing;
+      }
 
       if (!this._quitting && this._saveSession) {
         let browserWindow = this._getBrowserWindow();
 
-        // if there are open browser windows, load a dummy session to get a distinct 
+	// if there are open browser windows, load a dummy session to get a distinct 
         // separation between private and non-private sessions
-        if (browserWindow) {
+	if (browserWindow) {
           // set an empty session to transition from/to pb mode, see bug 476463
           ss.setBrowserState(blankState);
 
