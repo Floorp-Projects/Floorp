@@ -2441,6 +2441,29 @@ AdjustForWholeDelta(PRInt32 aDelta, nscoord* aCoord)
   }
 }
 
+/**
+ * Calculate lower/upper scrollBy range in given direction.
+ * @param aDelta specifies scrollBy direction, if 0 then range will be 0 size
+ * @param aPos desired destination in AppUnits
+ * @param aNeg/PosTolerance defines relative range distance
+ *   below and above of aPos point
+ * @param aMultiplier used for conversion of tolerance into appUnis
+ */
+static void
+CalcRangeForScrollBy(PRInt32 aDelta, nscoord aPos,
+                     float aNegTolerance,
+                     float aPosTolerance,
+                     nscoord aMultiplier,
+                     nscoord* aLower, nscoord* aUpper)
+{
+  if (!aDelta) {
+    *aLower = *aUpper = aPos;
+    return;
+  }
+  *aLower = aPos - NSToCoordRound(aMultiplier * (aDelta > 0 ? aNegTolerance : aPosTolerance));
+  *aUpper = aPos + NSToCoordRound(aMultiplier * (aDelta > 0 ? aPosTolerance : aNegTolerance));
+}
+
 void
 nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
                                 nsIScrollableFrame::ScrollUnit aUnit,
@@ -2449,6 +2472,8 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
                                 nsIAtom *aOrigin)
 {
   nsSize deltaMultiplier;
+  float negativeTolerance;
+  float positiveTolerance;
   if (!aOrigin){
     aOrigin = nsGkAtoms::other;
   }
@@ -2461,6 +2486,7 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
     if (isGenericOrigin){
       aOrigin = nsGkAtoms::pixels;
     }
+    negativeTolerance = positiveTolerance = 0.5;
     break;
   }
   case nsIScrollableFrame::LINES: {
@@ -2468,6 +2494,7 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
     if (isGenericOrigin){
       aOrigin = nsGkAtoms::lines;
     }
+    negativeTolerance = positiveTolerance = 0.1;
     break;
   }
   case nsIScrollableFrame::PAGES: {
@@ -2475,6 +2502,8 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
     if (isGenericOrigin){
       aOrigin = nsGkAtoms::pages;
     }
+    negativeTolerance = 0.05;
+    positiveTolerance = 0;
     break;
   }
   case nsIScrollableFrame::WHOLE: {
@@ -2494,7 +2523,17 @@ nsGfxScrollFrameInner::ScrollBy(nsIntPoint aDelta,
 
   nsPoint newPos = mDestination +
     nsPoint(aDelta.x*deltaMultiplier.width, aDelta.y*deltaMultiplier.height);
-  ScrollToWithOrigin(newPos, aMode, aOrigin, nsnull);
+  // Calculate desired range values.
+  nscoord rangeLowerX, rangeUpperX, rangeLowerY, rangeUpperY;
+  CalcRangeForScrollBy(aDelta.x, newPos.x, negativeTolerance, positiveTolerance,
+                       deltaMultiplier.width, &rangeLowerX, &rangeUpperX);
+  CalcRangeForScrollBy(aDelta.y, newPos.y, negativeTolerance, positiveTolerance,
+                       deltaMultiplier.height, &rangeLowerY, &rangeUpperY);
+  nsRect range(rangeLowerX,
+               rangeLowerY,
+               rangeUpperX - rangeLowerX,
+               rangeUpperY - rangeLowerY);
+  ScrollToWithOrigin(newPos, aMode, aOrigin, &range);
 
   if (aOverflow) {
     nsPoint clampAmount = mDestination - newPos;
