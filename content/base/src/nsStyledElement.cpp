@@ -202,7 +202,7 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aSty
 
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull,
                           oldValue, attrValue, modType, hasListeners,
-                          aNotify, false);
+                          aNotify, kDontCallAfterSetAttr);
 }
 
 css::StyleRule*
