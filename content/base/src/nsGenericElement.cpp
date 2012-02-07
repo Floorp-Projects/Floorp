@@ -4945,7 +4945,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           attrValue, modType, hasListeners, aNotify,
-                          &aValue);
+                          true);
 }
 
 nsresult
@@ -4962,10 +4962,6 @@ nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   if (!mAttrsAndChildren.CanFitMoreAttrs()) {
     return NS_ERROR_FAILURE;
   }
-
-  // XXX Remove
-  nsAutoString value;
-  aParsedValue.ToString(value);
 
   PRUint8 modType;
   bool hasListeners;
@@ -4985,7 +4981,7 @@ nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
                           aParsedValue, modType, hasListeners, aNotify,
-                          &value);
+                          true);
 }
 
 nsresult
@@ -4997,7 +4993,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
                                    PRUint8 aModType,
                                    bool aFireMutation,
                                    bool aNotify,
-                                   const nsAString* aValueForAfterSetAttr)
+                                   bool aCallAfterSetAttr)
 {
   nsresult rv;
 
@@ -5005,6 +5001,13 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
   nsMutationGuard::DidMutate();
+
+  // Copy aParsedValue for later use since it will be lost when we call
+  // SetAndTakeMappedAttr below
+  nsAttrValue aValueForAfterSetAttr;
+  if (aCallAfterSetAttr) {
+    aValueForAfterSetAttr.SetTo(aParsedValue);
+  }
 
   if (aNamespaceID == kNameSpaceID_None) {
     // XXXbz Perhaps we should push up the attribute mapping function
@@ -5043,8 +5046,8 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
       aName == nsGkAtoms::event && mNodeInfo->GetDocument()) {
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
   }
-  if (aValueForAfterSetAttr) {
-    rv = AfterSetAttr(aNamespaceID, aName, aValueForAfterSetAttr, aNotify);
+  if (aCallAfterSetAttr) {
+    rv = AfterSetAttr(aNamespaceID, aName, &aValueForAfterSetAttr, aNotify);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
