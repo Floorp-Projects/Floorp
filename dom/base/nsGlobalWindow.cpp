@@ -5329,9 +5329,12 @@ nsGlobalWindow::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
     if (aYScroll > maxpx) {
       aYScroll = maxpx;
     }
-    sf->ScrollTo(nsPoint(nsPresContext::CSSPixelsToAppUnits(aXScroll),
-                         nsPresContext::CSSPixelsToAppUnits(aYScroll)),
-                 nsIScrollableFrame::INSTANT);
+    nsPoint pt(nsPresContext::CSSPixelsToAppUnits(aXScroll),
+               nsPresContext::CSSPixelsToAppUnits(aYScroll));
+    nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
+    // Don't allow pt.x/y + halfPixel since that would round up to the next CSS pixel.
+    nsRect range(pt.x - halfPixel, pt.y - halfPixel, halfPixel*2 - 1, halfPixel*2 - 1);
+    sf->ScrollTo(pt, nsIScrollableFrame::INSTANT, &range);
   }
 
   return NS_OK;
