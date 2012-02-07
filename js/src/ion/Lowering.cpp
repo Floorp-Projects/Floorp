@@ -412,6 +412,34 @@ LIRGenerator::visitUrsh(MUrsh *ins)
 }
 
 bool
+LIRGenerator::visitRound(MRound *ins)
+{
+    JS_ASSERT(ins->num()->type() == MIRType_Double);
+    LRound *lir = new LRound(useRegister(ins->num()));
+    if (!assignSnapshot(lir))
+        return false;
+    return define(lir, ins);
+}
+
+bool
+LIRGenerator::visitAbs(MAbs *ins)
+{
+    MDefinition *num = ins->num();
+
+    if (num->type() == MIRType_Int32) {
+        LAbsI *lir = new LAbsI(useRegisterAtStart(num));
+        // needed to handle abs(INT32_MIN)
+        if (!assignSnapshot(lir))
+            return false;
+        return defineReuseInput(lir, ins, 0);
+    } else {
+        JS_ASSERT(num->type() == MIRType_Double);
+        LAbsD *lir = new LAbsD(useRegister(num));
+        return define(lir, ins);
+    }
+}
+
+bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
     MDefinition *lhs = ins->getOperand(0);

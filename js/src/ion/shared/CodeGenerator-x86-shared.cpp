@@ -397,6 +397,17 @@ CodeGeneratorX86Shared::visitOutOfLineBailout(OutOfLineBailout *ool)
 }
 
 bool
+CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.xorpd(output, output);
+    masm.subsd(input, output); // negate the sign bit.
+    masm.andpd(input, output); // s & ~s
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 {
     if (ins->rhs()->isConstant())
@@ -827,6 +838,61 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
         JS_NOT_REACHED("unexpected opcode");
         return false;
     }
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitRound(LRound *lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+
+    if (!lir->snapshot())
+        return false;
+
+    Label belowZero, end;
+
+    // if (masm.HasSSE41()) {
+    //     // FIXME use roundsd
+    // }
+
+    // Assume SSE2.
+    if (lir->mir()->mode() == MRound::RoundingMode_Round) {
+        // round(x) == floor(x + 0.5)
+        static const double ZeroFive = 0.5;
+        masm.loadStaticDouble(&ZeroFive, ScratchFloatReg);
+        masm.addsd(ScratchFloatReg, input);
+    }
+
+    //              +2  +1.5  +1  +0.5  +0  -0.5  -1  -1.5  -2
+    // cvttsd2si:     }-------> }-------><-------{ <-------{
+    // floor:         }-------> }-------> }-------> }------->
+
+    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
+    masm.ucomisd(input, ScratchFloatReg);
+    masm.j(Assembler::Below, &belowZero);
+
+    // input >= 0
+    masm.cvttsd2si(input, output);
+    masm.cmp32(output, Imm32(0x80000000));
+    // INT_MIN is used to mark impossible convertion.
+    if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        return false;
+    masm.jump(&end);
+
+    // input < 0
+    masm.bind(&belowZero);
+    masm.subsd(input, ScratchFloatReg);
+    masm.cvttsd2si(ScratchFloatReg, output);
+    masm.negl(output);
+    // In case of impossible convertion, INT_MIN is stored in output, which
+    // cause an overflow.
+    if (!bailoutIf(Assembler::Overflow, lir->snapshot()))
+        return false;
+    // We also need to bailout for '-0'.
+    if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+        return false;
+    masm.bind(&end);
     return true;
 }
 

@@ -679,6 +679,40 @@ class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
     }
 };
 
+// Absolute value of an integer.
+class LAbsI : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(AbsI);
+    LAbsI(const LAllocation &num) {
+        setOperand(0, num);
+    }
+
+    const LAllocation *input() {
+        return this->getOperand(0);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+};
+
+// Absolute value of an integer.
+class LAbsD : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(AbsD);
+    LAbsD(const LAllocation &num) {
+        setOperand(0, num);
+    }
+
+    const LAllocation *input() {
+        return this->getOperand(0);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+};
+
 // Adds two integers, returning an integer value.
 class LAddI : public LBinaryMath<0>
 {
@@ -1513,6 +1547,27 @@ class LStringLength : public LInstructionHelper<1, 1, 0>
     }
     const LDefinition *output() {
         return getDef(0);
+    }
+};
+
+// Round/Floor a number.
+class LRound : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Round);
+
+    LRound(const LAllocation &num) {
+        setOperand(0, num);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    MRound *mir() const {
+        return mir_->toRound();
     }
 };
 
