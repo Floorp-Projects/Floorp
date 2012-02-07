@@ -7980,7 +7980,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         ApplyRenderingChangeToTree(presContext, frame, hint);
         didInvalidate = true;
       }
-      if (hint & nsChangeHint_UpdateOverflow) {
+      if ((hint & nsChangeHint_UpdateOverflow) && !didReflow) {
         while (frame) {
           frame->UpdateOverflow();
           nsIFrame* next =
