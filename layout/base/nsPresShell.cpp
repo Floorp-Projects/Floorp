@@ -691,6 +691,13 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(GfxTextrunWordCacheMallocSizeOf, "gfx/textrun-word-cache")
 
 NS_IMETHODIMP
+PresShell::MemoryReporter::GetName(nsACString &aName)
+{
+  aName.AssignLiteral("layout");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
                                           nsISupports* aClosure)
 {

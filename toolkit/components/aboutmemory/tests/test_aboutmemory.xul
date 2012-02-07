@@ -92,7 +92,8 @@
     f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888)
   ];
   var fakeMultiReporters = [
-     { collectReports: function(cbObj, closure) {
+     { name: "fake1",
+       collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
           f("explicit/c/d",     NONHEAP, BYTES,  13 * MB),
           f("explicit/c/d",     NONHEAP, BYTES,  10 * MB), // dup
@@ -105,7 +106,8 @@
        },
        explicitNonHeap: (100 + 13 + 10)*MB + (499 + 100)*KB
      },
-     { collectReports: function(cbObj, closure) {
+     { name: "fake2",
+       collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
           f("other3",           OTHER,   COUNT, 777);
           f("other2",           OTHER,   BYTES, 222 * MB);
@@ -114,16 +116,17 @@
        },
        explicitNonHeap: 0
      },
-     { collectReports: function(cbObj, closure) {
+     { name: "smaps",
+       collectReports: function(cbObj, closure) {
           // The amounts are given in pages, so multiply here by 4kb.
           function f(p, a) { cbObj.callback("", p, NONHEAP, BYTES, a * 4 * KB, "(desc)", closure); }
-          f("map/vsize/a",     24);
-          f("map/swap/a",       1);
-          f("map/swap/a",       2);
-          f("map/vsize/a",      19);
-          f("map/swap/b/c",     10);
-          f("map/resident/a",   42);
-          f("map/pss/a",        43);
+          f("smaps/vsize/a",     24);
+          f("smaps/swap/a",       1);
+          f("smaps/swap/a",       2);
+          f("smaps/vsize/a",      19);
+          f("smaps/swap/b/c",     10);
+          f("smaps/resident/a",   42);
+          f("smaps/pss/a",        43);
        },
        explicitNonHeap: 0
      }
@@ -197,10 +200,28 @@
     f("5th", "explicit/a/neg1",  NONHEAP, -20 * KB),
     f("5th", "explicit/a/neg2",  NONHEAP, -10 * KB)
   ];
+  var fakeMultiReporters2 = [
+     // Because this multi-reporter is in a child process, the fact that we
+     // skip the "smaps" multi-reporter in the parent process won't cause
+     // these to be skipped;  the fall-back skipping will be hit instead.
+     { name: "smaps",
+       collectReports: function(cbObj, closure) {
+          // The amounts are given in pages, so multiply here by 4kb.
+          function f(p, a) { cbObj.callback("2nd", p, NONHEAP, BYTES, a * 4 * KB, "(desc)", closure); }
+          f("smaps/vsize/a",     24);
+          f("smaps/vsize/b",     24);
+       },
+       explicitNonHeap: 0
+     }
+  ];
   for (var i = 0; i < fakeReporters2.length; i++) {
     mgr.registerReporter(fakeReporters2[i]);
   }
+  for (var i = 0; i < fakeMultiReporters2.length; i++) {
+    mgr.registerMultiReporter(fakeMultiReporters2[i]);
+  }
   fakeReporters = fakeReporters.concat(fakeReporters2);
+  fakeMultiReporters = fakeMultiReporters.concat(fakeMultiReporters2);
   ]]>
   </script>
 
@@ -392,6 +413,9 @@ Explicit Allocations\n\
 ├────209,715,200 B (20.00%) ── flip/the/backslashes\n\
 ├────209,715,200 B (20.00%) ── compartment(compartment-url)\n\
 └────105,906,176 B (10.10%) ── heap-unclassified\n\
+\n\
+Virtual Size Breakdown\n\
+196,608 B (100.0%) ++ vsize\n\
 \n\
 Other Measurements\n\
   698,351,616 B ── danger<script>window.alert(1)</script>\n\
