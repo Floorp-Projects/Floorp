@@ -5,9 +5,14 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-Cu.import("resource:///modules/devtools/dbg-server.jsm");
-Cu.import("resource:///modules/devtools/dbg-client.jsm");
-Cu.import("resource:///modules/Services.jsm");
+let tempScope = {};
+Cu.import("resource:///modules/devtools/dbg-server.jsm", tempScope);
+Cu.import("resource:///modules/devtools/dbg-client.jsm", tempScope);
+Cu.import("resource:///modules/Services.jsm", tempScope);
+let DebuggerServer = tempScope.DebuggerServer;
+let DebuggerTransport = tempScope.DebuggerTransport;
+let DebuggerClient = tempScope.DebuggerClient;
+let Services = tempScope.Services;
 
 const TAB1_URL = "http://example.com/browser/browser/devtools/debugger/test/browser_dbg_tab1.html";
 
