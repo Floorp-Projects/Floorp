@@ -60,7 +60,7 @@ import java.util.List;
 public final class Tab {
     private static final String LOGTAG = "GeckoTab";
     private static final int kThumbnailWidth = 136;
-    private static final int kThumbnailHeight = 77;
+    private static final int kThumbnailHeight = 78;
 
     private static float sMinDim = 0;
     private static float sDensity = 1;
