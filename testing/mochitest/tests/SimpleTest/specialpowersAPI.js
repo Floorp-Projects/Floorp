@@ -466,7 +466,7 @@ SpecialPowersAPI.prototype = {
    * what we have set.
    *
    * prefs: {set|clear: [[pref, value], [pref, value, Iid], ...], set|clear: [[pref, value], ...], ...}
-   * ex: {'set': [['foo.bar', 2], ['browser.magic', '0xfeedface']], 'remove': [['bad.pref']] }
+   * ex: {'set': [['foo.bar', 2], ['browser.magic', '0xfeedface']], 'clear': [['bad.pref']] }
    *
    * In the scenario where our prefs specify the same pref more than once, we do not guarantee
    * the behavior.  
@@ -1081,4 +1081,3 @@ SpecialPowersAPI.prototype = {
     return el.dispatchEvent(event);
   },
 };
-
