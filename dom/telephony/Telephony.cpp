@@ -163,7 +163,7 @@ Telephony::SwitchActiveCall(TelephonyCall* aCall)
 NS_IMPL_CYCLE_COLLECTION_CLASS(Telephony)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Telephony,
-                                                  nsDOMEventTargetWrapperCache)
+                                                  nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(incoming)
   for (PRUint32 index = 0; index < tmp->mCalls.Length(); index++) {
@@ -173,12 +173,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Telephony,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Telephony,
-                                               nsDOMEventTargetWrapperCache)
+                                               nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mCallsArray, "mCallsArray")
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Telephony,
-                                                nsDOMEventTargetWrapperCache)
+                                                nsDOMEventTargetHelper)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(incoming)
   tmp->mCalls.Clear();
   tmp->mActiveCall = nsnull;
@@ -188,10 +188,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Telephony)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTelephony)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Telephony)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(Telephony, nsDOMEventTargetWrapperCache)
-NS_IMPL_RELEASE_INHERITED(Telephony, nsDOMEventTargetWrapperCache)
+NS_IMPL_ADDREF_INHERITED(Telephony, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(Telephony, nsDOMEventTargetHelper)
 
 DOMCI_DATA(Telephony, Telephony)
 
