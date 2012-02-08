@@ -56,9 +56,6 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
 
     onLocationChange: function onLocationChange(progress, request,
                                                 locationURI, flags) {
-      if (locationURI.spec.indexOf('/apps/') == -1)
-        return;
-
       content.addEventListener('appwillopen', function(evt) {
         let appManager = content.wrappedJSObject.Gaia.AppManager;
         let topWindow = appManager.foregroundWindow.contentWindow;
