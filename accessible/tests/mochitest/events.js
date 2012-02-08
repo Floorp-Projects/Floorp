@@ -1221,6 +1221,33 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq)
   }
 }
 
+/**
+ * Set caret offset in text accessible.
+ */
+function setCaretOffset(aID, aOffset, aFocusTargetID)
+{
+  this.target = getAccessible(aID, [nsIAccessibleText]);
+  this.offset = aOffset == -1 ? this.target.characterCount: aOffset;
+  this.focus = aFocusTargetID ? getAccessible(aFocusTargetID) : null;
+
+  this.invoke = function setCaretOffset_invoke()
+  {
+    this.target.caretOffset = this.offset;
+  }
+
+  this.getID = function setCaretOffset_getID()
+  {
+   return "Set caretOffset on " + prettyName(aID) + " at " + this.offset;
+  }
+
+  this.eventSeq = [
+    new caretMoveChecker(this.offset, this.target)
+  ];
+
+  if (this.focus)
+    this.eventSeq.push(new asyncInvokerChecker(EVENT_FOCUS, this.focus));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Event queue checkers
