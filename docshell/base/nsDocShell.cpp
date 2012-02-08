@@ -242,9 +242,6 @@ static PRInt32 gNumberOfDocumentsLoading = 0;
 // Global count of existing docshells.
 static PRInt32 gDocShellCount = 0;
 
-// Global count of docshells with the private attribute set
-static PRUint32 gNumberOfPrivateDocShells = 0;
-
 // Global reference to the URI fixup service.
 nsIURIFixup *nsDocShell::sURIFixup = 0;
 
@@ -713,19 +710,6 @@ ConvertLoadTypeToNavigationType(PRUint32 aLoadType)
 
 static nsISHEntry* GetRootSHEntry(nsISHEntry *entry);
 
-static void
-DecreasePrivateDocShellCount()
-{
-    MOZ_ASSERT(gNumberOfPrivateDocShells > 0);
-    gNumberOfPrivateDocShells--;
-    if (!gNumberOfPrivateDocShells)
-    {
-        nsCOMPtr<nsIObserverService> obsvc = mozilla::services::GetObserverService();
-        if (obsvc)
-            obsvc->NotifyObservers(nsnull, "last-pb-context-exited", nsnull);
-    }
-}
-
 //*****************************************************************************
 //***    nsDocShell: Object Management
 //*****************************************************************************
@@ -832,10 +816,6 @@ nsDocShell::~nsDocShell()
         printf("--DOCSHELL %p == %ld\n", (void*) this, gNumberOfDocShells);
     }
 #endif
-
-    if (mInPrivateBrowsing) {
-        DecreasePrivateDocShellCount();
-    }
 }
 
 nsresult
@@ -2018,12 +1998,7 @@ NS_IMETHODIMP
 nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
 {
     mInPrivateBrowsing = aUsePrivateBrowsing;
-    if (aUsePrivateBrowsing) {
-        gNumberOfPrivateDocShells++;
-    } else {
-        DecreasePrivateDocShellCount();
-    }
-    
+
     PRInt32 count = mChildList.Count();
     for (PRInt32 i = 0; i < count; ++i) {
         nsCOMPtr<nsILoadContext> shell = do_QueryInterface(ChildAt(i));
