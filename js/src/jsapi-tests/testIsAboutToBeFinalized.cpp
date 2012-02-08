@@ -18,7 +18,7 @@ TestAboutToBeFinalizedCallback(JSContext *cx, JSGCStatus status)
         for (jsuint i = 0; i != checkPointersLength; ++i) {
             void *p = checkPointers[i];
             JS_ASSERT(p);
-            if (JS_IsAboutToBeFinalized(cx, p))
+            if (JS_IsAboutToBeFinalized(p))
                 checkPointers[i] = NULL;
         }
     }

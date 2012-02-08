@@ -27,7 +27,7 @@ JSBool
 GCCallback(JSContext *cx, JSGCStatus status)
 {
     if (status == JSGC_MARK_END)
-        sw.strOk = !JS_IsAboutToBeFinalized(cx, sw.str);
+        sw.strOk = !JS_IsAboutToBeFinalized(sw.str);
     return true;
 }
 

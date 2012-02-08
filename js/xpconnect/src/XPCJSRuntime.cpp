@@ -95,29 +95,19 @@ const char* XPCJSRuntime::mStrings[] = {
 
 /***************************************************************************/
 
-// data holder class for the enumerator callback below
-struct JSDyingJSObjectData
-{
-    JSContext* cx;
-    nsTArray<nsXPCWrappedJS*>* array;
-};
-
 static JSDHashOperator
 WrappedJSDyingJSObjectFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
                              uint32_t number, void *arg)
 {
-    JSDyingJSObjectData* data = (JSDyingJSObjectData*) arg;
+    nsTArray<nsXPCWrappedJS*>* array = static_cast<nsTArray<nsXPCWrappedJS*>*>(arg);
     nsXPCWrappedJS* wrapper = ((JSObject2WrappedJSMap::Entry*)hdr)->value;
     NS_ASSERTION(wrapper, "found a null JS wrapper!");
 
     // walk the wrapper chain and find any whose JSObject is to be finalized
     while (wrapper) {
         if (wrapper->IsSubjectToFinalization()) {
-            js::AutoSwitchCompartment sc(data->cx,
-                                         wrapper->GetJSObjectPreserveColor());
-            if (JS_IsAboutToBeFinalized(data->cx,
-                                        wrapper->GetJSObjectPreserveColor()))
-                data->array->AppendElement(wrapper);
+            if (JS_IsAboutToBeFinalized(wrapper->GetJSObjectPreserveColor()))
+                array->AppendElement(wrapper);
         }
         wrapper = wrapper->GetNextWrapper();
     }
@@ -608,11 +598,10 @@ static JSDHashOperator
 SweepWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
                     uint32_t number, void *arg)
 {
-    JSContext *cx = (JSContext *)arg;
     JSObject *key = ((JSObject2JSObjectMap::Entry *)hdr)->key;
     JSObject *value = ((JSObject2JSObjectMap::Entry *)hdr)->value;
 
-    if (JS_IsAboutToBeFinalized(cx, key) || JS_IsAboutToBeFinalized(cx, value))
+    if (JS_IsAboutToBeFinalized(key) || JS_IsAboutToBeFinalized(value))
         return JS_DHASH_REMOVE;
     return JS_DHASH_NEXT;
 }
@@ -620,8 +609,7 @@ SweepWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
 static PLDHashOperator
 SweepExpandos(XPCWrappedNative *wn, JSObject *&expando, void *arg)
 {
-    JSContext *cx = (JSContext *)arg;
-    return JS_IsAboutToBeFinalized(cx, wn->GetFlatJSObjectPreserveColor())
+    return JS_IsAboutToBeFinalized(wn->GetFlatJSObjectPreserveColor())
            ? PL_DHASH_REMOVE
            : PL_DHASH_NEXT;
 }
@@ -632,9 +620,9 @@ SweepCompartment(nsCStringHashKey& aKey, JSCompartment *compartment, void *aClos
     xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
         JS_GetCompartmentPrivate((JSContext *)aClosure, compartment);
     if (priv->waiverWrapperMap)
-        priv->waiverWrapperMap->Enumerate(SweepWaiverWrappers, (JSContext *)aClosure);
+        priv->waiverWrapperMap->Enumerate(SweepWaiverWrappers, nsnull);
     if (priv->expandoMap)
-        priv->expandoMap->Enumerate(SweepExpandos, (JSContext *)aClosure);
+        priv->expandoMap->Enumerate(SweepExpandos, nsnull);
     return PL_DHASH_NEXT;
 }
 
@@ -675,18 +663,14 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             nsTArray<nsXPCWrappedJS*>* dyingWrappedJSArray =
                 &self->mWrappedJSToReleaseArray;
 
-            {
-                JSDyingJSObjectData data = {cx, dyingWrappedJSArray};
-
-                // Add any wrappers whose JSObjects are to be finalized to
-                // this array. Note that we do not want to be changing the
-                // refcount of these wrappers.
-                // We add them to the array now and Release the array members
-                // later to avoid the posibility of doing any JS GCThing
-                // allocations during the gc cycle.
-                self->mWrappedJSMap->
-                    Enumerate(WrappedJSDyingJSObjectFinder, &data);
-            }
+            // Add any wrappers whose JSObjects are to be finalized to
+            // this array. Note that we do not want to be changing the
+            // refcount of these wrappers.
+            // We add them to the array now and Release the array members
+            // later to avoid the posibility of doing any JS GCThing
+            // allocations during the gc cycle.
+            self->mWrappedJSMap->
+                Enumerate(WrappedJSDyingJSObjectFinder, dyingWrappedJSArray);
 
             // Find dying scopes.
             XPCWrappedNativeScope::FinishedMarkPhaseOfGC(cx, self);

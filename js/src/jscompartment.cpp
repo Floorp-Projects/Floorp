@@ -450,11 +450,11 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 {
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        JS_ASSERT_IF(IsAboutToBeFinalized(cx, e.front().key) &&
-                     !IsAboutToBeFinalized(cx, e.front().value),
+        JS_ASSERT_IF(IsAboutToBeFinalized(e.front().key) &&
+                     !IsAboutToBeFinalized(e.front().value),
                      e.front().key.isString());
-        if (IsAboutToBeFinalized(cx, e.front().key) ||
-            IsAboutToBeFinalized(cx, e.front().value)) {
+        if (IsAboutToBeFinalized(e.front().key) ||
+            IsAboutToBeFinalized(e.front().value)) {
             e.removeFront();
         }
     }
@@ -466,7 +466,7 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
     sweepNewTypeObjectTable(cx, newTypeObjects);
     sweepNewTypeObjectTable(cx, lazyTypeObjects);
 
-    if (emptyTypeObject && IsAboutToBeFinalized(cx, emptyTypeObject))
+    if (emptyTypeObject && IsAboutToBeFinalized(emptyTypeObject))
         emptyTypeObject = NULL;
 
     newObjectCache.reset();
@@ -745,7 +745,7 @@ JSCompartment::sweepBreakpoints(JSContext *cx)
         JSScript *script = i.get<JSScript>();
         if (!script->hasAnyBreakpointsOrStepMode())
             continue;
-        bool scriptGone = IsAboutToBeFinalized(cx, script);
+        bool scriptGone = IsAboutToBeFinalized(script);
         for (unsigned i = 0; i < script->length; i++) {
             BreakpointSite *site = script->getBreakpointSite(script->code + i);
             if (!site)
@@ -755,7 +755,7 @@ JSCompartment::sweepBreakpoints(JSContext *cx)
             Breakpoint *nextbp;
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
-                if (scriptGone || IsAboutToBeFinalized(cx, bp->debugger->toJSObject()))
+                if (scriptGone || IsAboutToBeFinalized(bp->debugger->toJSObject()))
                     bp->destroy(cx);
             }
         }

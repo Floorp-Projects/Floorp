@@ -261,7 +261,7 @@ class DefaultMarkPolicy<HeapValue> {
     DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
     bool isMarked(const HeapValue &x) {
         if (x.isMarkable())
-            return !IsAboutToBeFinalized(tracer->context, x);
+            return !IsAboutToBeFinalized(x);
         return true;
     }
     bool mark(const HeapValue &x) {
@@ -279,7 +279,7 @@ class DefaultMarkPolicy<HeapPtrObject> {
   public:
     DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
     bool isMarked(const HeapPtrObject &x) {
-        return !IsAboutToBeFinalized(tracer->context, x);
+        return !IsAboutToBeFinalized(x);
     }
     bool mark(const HeapPtrObject &x) {
         if (isMarked(x))
@@ -296,7 +296,7 @@ class DefaultMarkPolicy<HeapPtrScript> {
   public:
     DefaultMarkPolicy(JSTracer *t) : tracer(t) { }
     bool isMarked(const HeapPtrScript &x) {
-        return !IsAboutToBeFinalized(tracer->context, x);
+        return !IsAboutToBeFinalized(x);
     }
     bool mark(const HeapPtrScript &x) {
         if (isMarked(x))
