@@ -392,10 +392,10 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Bookmarks.URL, uri);
         values.put(Bookmarks.KEYWORD, keyword);
 
-        int updated = cr.update(appendProfile(Bookmarks.CONTENT_URI),
-                                values,
-                                Bookmarks.URL + " = ?",
-                                new String[] { oldUri });
+        cr.update(appendProfile(Bookmarks.CONTENT_URI),
+                  values,
+                  Bookmarks.URL + " = ?",
+                  new String[] { oldUri });
     }
 
     public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
