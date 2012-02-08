@@ -864,7 +864,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     , mUseNearestFilter(aUseNearestFilter)
     , mTextureState(Created)
 {
-    mTileSize = 256;//mGL->GetMaxTextureSize();
+    mTileSize = mGL->GetMaxTextureSize();
     if (aSize != nsIntSize(0,0)) {
         Resize(aSize);
     }
