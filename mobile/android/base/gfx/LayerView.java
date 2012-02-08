@@ -69,8 +69,7 @@ import org.json.JSONObject;
  * This view delegates to LayerRenderer to actually do the drawing. Its role is largely that of a
  * mediator between the LayerRenderer and the LayerController.
  */
-public class LayerView extends FlexibleGLSurfaceView implements AbstractLayerView,
-                                                                GeckoEventListener {
+public class LayerView extends FlexibleGLSurfaceView implements GeckoEventListener {
     private Context mContext;
     private LayerController mController;
     private InputConnectionHandler mInputConnectionHandler;
@@ -244,10 +243,6 @@ public class LayerView extends FlexibleGLSurfaceView implements AbstractLayerVie
 
     public int getMaxTextureSize() {
         return mRenderer.getMaxTextureSize();
-    }
-
-    public View getAndroidView() {
-        return this;
     }
 
     /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
