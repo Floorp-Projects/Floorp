@@ -72,6 +72,7 @@ private:
    * Cursor helpers
    */
   static PRUint8*         Data32BitTo1Bit(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
+  static bool             IsCursorTranslucencySupported();
   static HBITMAP          DataToBitmap(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aDepth);
 };
 
