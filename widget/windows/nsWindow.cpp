@@ -113,7 +113,6 @@
 #include <process.h>
 #include <commctrl.h>
 #include <unknwn.h>
-#include <psapi.h>
 
 #include "prlog.h"
 #include "prtime.h"
@@ -1274,8 +1273,7 @@ NS_METHOD nsWindow::IsVisible(bool & bState)
 // transparency. These routines are called on size and move operations.
 void nsWindow::ClearThemeRegion()
 {
-  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
-      !HasGlass() &&
+  if (nsUXThemeData::sIsVistaOrLater && !HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     SetWindowRgn(mWnd, NULL, false);
@@ -1289,15 +1287,14 @@ void nsWindow::SetThemeRegion()
   // so default constants are used for part and state. At some point we might need part and
   // state values from nsNativeThemeWin's GetThemePartAndState, but currently windows that
   // change shape based on state haven't come up.
-  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
-      !HasGlass() &&
+  if (nsUXThemeData::sIsVistaOrLater && !HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     HRGN hRgn = nsnull;
     RECT rect = {0,0,mBounds.width,mBounds.height};
     
     HDC dc = ::GetDC(mWnd);
-    GetThemeBackgroundRegion(nsUXThemeData::GetTheme(eUXTooltip), dc, TTP_STANDARD, TS_NORMAL, &rect, &hRgn);
+    nsUXThemeData::getThemeBackgroundRegion(nsUXThemeData::GetTheme(eUXTooltip), dc, TTP_STANDARD, TS_NORMAL, &rect, &hRgn);
     if (hRgn) {
       if (!SetWindowRgn(mWnd, hRgn, false)) // do not delete or alter hRgn if accepted.
         DeleteObject(hRgn);
@@ -6360,7 +6357,7 @@ nsWindow::InitMouseWheelScrollData()
 
   if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0,
                               &sMouseWheelScrollChars, 0)) {
-    NS_ASSERTION(WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION,
+    NS_ASSERTION(!nsUXThemeData::sIsVistaOrLater,
                  "Failed to get SPI_GETWHEELSCROLLCHARS");
     sMouseWheelScrollChars = 1;
   } else if (sMouseWheelScrollChars > WHEEL_DELTA) {
@@ -7461,12 +7458,22 @@ bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
   return true;
 }
 
+typedef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE, LPWSTR, DWORD);
+
 // Determine whether the given HWND is the handle for the Elantech helper
 // window.  The helper window cannot be distinguished based on its
 // window class, so we need to check if it is owned by the helper process,
 // ETDCtrl.exe.
 static bool IsElantechHelperWindow(HWND aHWND)
 {
+  static HMODULE hPSAPI = ::LoadLibraryW(L"psapi.dll");
+  static GetProcessImageFileNameProc pGetProcessImageFileName =
+    reinterpret_cast<GetProcessImageFileNameProc>(::GetProcAddress(hPSAPI, "GetProcessImageFileNameW"));
+
+  if (!pGetProcessImageFileName) {
+    return false;
+  }
+
   const PRUnichar* filenameSuffix = L"\\etdctrl.exe";
   const int filenameSuffixLength = 12;
 
@@ -7478,7 +7485,7 @@ static bool IsElantechHelperWindow(HWND aHWND)
   HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
   if (hProcess) {
     PRUnichar path[256] = {L'\0'};
-    if (GetProcessImageFileName(hProcess, path, ArrayLength(path))) {
+    if (pGetProcessImageFileName(hProcess, path, ArrayLength(path))) {
       int pathLength = lstrlenW(path);
       if (pathLength >= filenameSuffixLength) {
         if (lstrcmpiW(path + pathLength - filenameSuffixLength, filenameSuffix) == 0) {

@@ -67,12 +67,31 @@ HMODULE
 nsUXThemeData::sDwmDLL = NULL;
 #endif
 
+BOOL
+nsUXThemeData::sFlatMenus = FALSE;
 bool
-nsUXThemeData::sFlatMenus = false;
+nsUXThemeData::sIsXPOrLater = false;
+bool
+nsUXThemeData::sIsVistaOrLater = false;
 
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
 SIZE nsUXThemeData::sCommandButtons[4];
+
+nsUXThemeData::OpenThemeDataPtr nsUXThemeData::openTheme = NULL;
+nsUXThemeData::CloseThemeDataPtr nsUXThemeData::closeTheme = NULL;
+nsUXThemeData::DrawThemeBackgroundPtr nsUXThemeData::drawThemeBG = NULL;
+nsUXThemeData::DrawThemeEdgePtr nsUXThemeData::drawThemeEdge = NULL;
+nsUXThemeData::GetThemeContentRectPtr nsUXThemeData::getThemeContentRect = NULL;
+nsUXThemeData::GetThemeBackgroundRegionPtr nsUXThemeData::getThemeBackgroundRegion = NULL;
+nsUXThemeData::GetThemePartSizePtr nsUXThemeData::getThemePartSize = NULL;
+nsUXThemeData::GetThemeSysFontPtr nsUXThemeData::getThemeSysFont = NULL;
+nsUXThemeData::GetThemeColorPtr nsUXThemeData::getThemeColor = NULL;
+nsUXThemeData::GetThemeMarginsPtr nsUXThemeData::getThemeMargins = NULL;
+nsUXThemeData::IsAppThemedPtr nsUXThemeData::isAppThemed = NULL;
+nsUXThemeData::GetCurrentThemeNamePtr nsUXThemeData::getCurrentThemeName = NULL;
+nsUXThemeData::GetThemeSysColorPtr nsUXThemeData::getThemeSysColor = NULL;
+nsUXThemeData::IsThemeBackgroundPartiallyTransparentPtr nsUXThemeData::isThemeBackgroundPartiallyTransparent = NULL;
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 nsUXThemeData::DwmExtendFrameIntoClientAreaProc nsUXThemeData::dwmExtendFrameIntoClientAreaPtr = NULL;
@@ -102,6 +121,26 @@ nsUXThemeData::Initialize()
   ::ZeroMemory(sThemes, sizeof(sThemes));
   NS_ASSERTION(!sThemeDLL, "nsUXThemeData being initialized twice!");
 
+  WinUtils::WinVersion version = WinUtils::GetWindowsVersion();
+  sIsXPOrLater = version >= WinUtils::WINXP_VERSION;
+  sIsVistaOrLater = version >= WinUtils::VISTA_VERSION;
+
+  if (GetThemeDLL()) {
+    openTheme = (OpenThemeDataPtr)GetProcAddress(sThemeDLL, "OpenThemeData");
+    closeTheme = (CloseThemeDataPtr)GetProcAddress(sThemeDLL, "CloseThemeData");
+    drawThemeBG = (DrawThemeBackgroundPtr)GetProcAddress(sThemeDLL, "DrawThemeBackground");
+    drawThemeEdge = (DrawThemeEdgePtr)GetProcAddress(sThemeDLL, "DrawThemeEdge");
+    getThemeContentRect = (GetThemeContentRectPtr)GetProcAddress(sThemeDLL, "GetThemeBackgroundContentRect");
+    getThemeBackgroundRegion = (GetThemeBackgroundRegionPtr)GetProcAddress(sThemeDLL, "GetThemeBackgroundRegion");
+    getThemePartSize = (GetThemePartSizePtr)GetProcAddress(sThemeDLL, "GetThemePartSize");
+    getThemeSysFont = (GetThemeSysFontPtr)GetProcAddress(sThemeDLL, "GetThemeSysFont");
+    getThemeColor = (GetThemeColorPtr)GetProcAddress(sThemeDLL, "GetThemeColor");
+    getThemeMargins = (GetThemeMarginsPtr)GetProcAddress(sThemeDLL, "GetThemeMargins");
+    isAppThemed = (IsAppThemedPtr)GetProcAddress(sThemeDLL, "IsAppThemed");
+    getCurrentThemeName = (GetCurrentThemeNamePtr)GetProcAddress(sThemeDLL, "GetCurrentThemeName");
+    getThemeSysColor = (GetThemeSysColorPtr)GetProcAddress(sThemeDLL, "GetThemeSysColor");
+    isThemeBackgroundPartiallyTransparent = (IsThemeBackgroundPartiallyTransparentPtr)GetProcAddress(sThemeDLL, "IsThemeBackgroundPartiallyTransparent");
+  }
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (GetDwmDLL()) {
     dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDLL, "DwmExtendFrameIntoClientArea");
@@ -123,28 +162,38 @@ void
 nsUXThemeData::Invalidate() {
   for(int i = 0; i < eUXNumClasses; i++) {
     if(sThemes[i]) {
-      CloseThemeData(sThemes[i]);
+      closeTheme(sThemes[i]);
       sThemes[i] = NULL;
     }
   }
-  BOOL useFlat = false;
-  sFlatMenus = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ?
-                   useFlat : false;
+  if (sIsXPOrLater) {
+    BOOL useFlat = false;
+    sFlatMenus = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ?
+                     useFlat : false;
+  } else {
+    // Contrary to Microsoft's documentation, SPI_GETFLATMENU will not fail
+    // on Windows 2000, and it is also possible (though unlikely) for WIN2K
+    // to be misconfigured in such a way that it would return true, so we
+    // shall give WIN2K special treatment
+    sFlatMenus = false;
+  }
 }
 
 HANDLE
 nsUXThemeData::GetTheme(nsUXThemeClass cls) {
   NS_ASSERTION(cls < eUXNumClasses, "Invalid theme class!");
+  if(!sThemeDLL)
+    return NULL;
   if(!sThemes[cls])
   {
-    sThemes[cls] = OpenThemeData(NULL, GetClassName(cls));
+    sThemes[cls] = openTheme(NULL, GetClassName(cls));
   }
   return sThemes[cls];
 }
 
 HMODULE
 nsUXThemeData::GetThemeDLL() {
-  if (!sThemeDLL)
+  if (!sThemeDLL && sIsXPOrLater)
     sThemeDLL = ::LoadLibraryW(kThemeLibraryName);
   return sThemeDLL;
 }
@@ -152,7 +201,7 @@ nsUXThemeData::GetThemeDLL() {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 HMODULE
 nsUXThemeData::GetDwmDLL() {
-  if (!sDwmDLL && WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)
+  if (!sDwmDLL && sIsVistaOrLater)
     sDwmDLL = ::LoadLibraryW(kDwmLibraryName);
   return sDwmDLL;
 }
@@ -358,14 +407,14 @@ nsUXThemeData::UpdateNativeThemeInfo()
   sIsDefaultWindowsTheme = false;
   sThemeId = LookAndFeel::eWindowsTheme_Generic;
 
-  if (!IsAppThemed()) {
+  if (!IsAppThemed() || !getCurrentThemeName) {
     sThemeId = LookAndFeel::eWindowsTheme_Classic;
     return;
   }
 
   WCHAR themeFileName[MAX_PATH + 1];
   WCHAR themeColor[MAX_PATH + 1];
-  if (FAILED(GetCurrentThemeName(themeFileName,
+  if (FAILED(getCurrentThemeName(themeFileName,
                                  MAX_PATH,
                                  themeColor,
                                  MAX_PATH,

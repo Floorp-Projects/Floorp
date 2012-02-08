@@ -653,6 +653,8 @@ nsHttpHandler::BuildUserAgent()
 }
 
 #ifdef XP_WIN
+typedef BOOL (WINAPI *IsWow64ProcessP) (HANDLE, PBOOL);
+
 #define WNT_BASE "Windows NT %ld.%ld"
 #define W64_PREFIX "; Win64"
 #endif
@@ -715,7 +717,10 @@ nsHttpHandler::InitUserAgentComponents()
         format = WNT_BASE W64_PREFIX "; x64";
 #else
         BOOL isWow64 = FALSE;
-        if (!IsWow64Process(GetCurrentProcess(), &isWow64)) {
+        IsWow64ProcessP fnIsWow64Process = (IsWow64ProcessP)
+          GetProcAddress(GetModuleHandleW(L"kernel32"), "IsWow64Process");
+        if (fnIsWow64Process &&
+            !fnIsWow64Process(GetCurrentProcess(), &isWow64)) {
             isWow64 = FALSE;
         }
         format = isWow64
