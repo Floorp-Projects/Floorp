@@ -57,6 +57,7 @@ const PREFS_WHITELIST = [
   "browser.history_expire_",
   "browser.link.open_newwindow",
   "browser.places.",
+  "browser.sessionstore.",
   "browser.startup.homepage",
   "browser.tabs.",
   "browser.zoom.",
