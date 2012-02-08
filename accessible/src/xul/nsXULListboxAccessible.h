@@ -141,7 +141,7 @@ public:
   virtual PRUint64 NativeState();
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
-  virtual bool GetAllowsAnonChildAccessibles();
+  virtual bool CanHaveAnonChildren();
 
   // Widgets
   virtual nsAccessible* ContainerWidget() const;
