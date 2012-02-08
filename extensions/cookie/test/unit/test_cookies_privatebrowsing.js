@@ -17,6 +17,12 @@ function finish_test() {
   });
 }
 
+function make_channel(url) {
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var chan = ios.newChannel(url, null, null).QueryInterface(Ci.nsIHttpChannel);
+  return chan;
+}
+
 function do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
@@ -45,36 +51,28 @@ function do_run_test() {
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 1);
 
   // Enter private browsing mode, set a cookie for host 2, and check the counts.
-  Services.pb.privateBrowsingEnabled = true;
-  Services.cookies.setCookieString(uri2, null, "oh=hai; max-age=1000", null);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 1);
+  var chan1 = make_channel(uri1.spec);
+  chan1.QueryInterface(Ci.nsIPrivateBrowsingChannel);
+  chan1.setPrivate(true);
+
+  var chan2 = make_channel(uri2.spec);
+  chan2.QueryInterface(Ci.nsIPrivateBrowsingChannel);
+  chan2.setPrivate(true);
+
+  Services.cookies.setCookieString(uri2, null, "oh=hai; max-age=1000", chan2);
+  do_check_eq(Services.cookiemgr.getCookieString(uri1, chan1), null);
+  do_check_eq(Services.cookiemgr.getCookieString(uri2, chan2), "oh=hai");
 
   // Remove cookies and check counts.
-  Services.cookies.removeAll();
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
+  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  do_check_eq(Services.cookiemgr.getCookieString(uri1, chan1), null);
+  do_check_eq(Services.cookiemgr.getCookieString(uri2, chan2), null);
 
-  // Check that attempting to import cookies while in private browsing throws.
-  do_check_throws(function() {
-    Services.cookiemgr.importCookies(null);
-  }, Cr.NS_ERROR_NOT_AVAILABLE);
-
-  Services.cookies.setCookieString(uri2, null, "oh=hai; max-age=1000", null);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 1);
+  Services.cookies.setCookieString(uri2, null, "oh=hai; max-age=1000", chan2);
+  do_check_eq(Services.cookiemgr.getCookieString(uri2, chan2), "oh=hai");
 
   // Leave private browsing mode and check counts.
-  Services.pb.privateBrowsingEnabled = false;
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 1);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
-
-  // Enter private browsing mode and check counts.
-  Services.pb.privateBrowsingEnabled = true;
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
-
-  // Leave private browsing mode and check counts.
-  Services.pb.privateBrowsingEnabled = false;
+  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 1);
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
 
@@ -88,11 +86,10 @@ function do_run_test() {
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
 
   // Enter private browsing mode, set a cookie for host 2, and check the counts.
-  Services.pb.privateBrowsingEnabled = true;
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
-  Services.cookies.setCookieString(uri2, null, "oh=hai; max-age=1000", null);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 1);
+  do_check_eq(Services.cookiemgr.getCookieString(uri1, chan1), null);
+  do_check_eq(Services.cookiemgr.getCookieString(uri2, chan2), null);
+  Services.cookies.setCookieString(uri2, null, "oh=hai; max-age=1000", chan2);
+  do_check_eq(Services.cookiemgr.getCookieString(uri2, chan2), "oh=hai");
 
   // Fake a profile change.
   do_close_profile(test_generator);
@@ -101,16 +98,15 @@ function do_run_test() {
 
   // We're still in private browsing mode, but should have a new session.
   // Check counts.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
+  do_check_eq(Services.cookiemgr.getCookieString(uri1, chan1), null);
+  do_check_eq(Services.cookiemgr.getCookieString(uri2, chan2), null);
 
   // Leave private browsing mode and check counts.
-  Services.pb.privateBrowsingEnabled = false;
+  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 1);
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
 
   // Enter private browsing mode.
-  Services.pb.privateBrowsingEnabled = true;
 
   // Fake a profile change, but wait for async read completion.
   do_close_profile(test_generator);
@@ -120,11 +116,11 @@ function do_run_test() {
 
   // We're still in private browsing mode, but should have a new session.
   // Check counts.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
+  do_check_eq(Services.cookiemgr.getCookieString(uri1, chan1), null);
+  do_check_eq(Services.cookiemgr.getCookieString(uri2, chan2), null);
 
   // Leave private browsing mode and check counts.
-  Services.pb.privateBrowsingEnabled = false;
+  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri1.host), 1);
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri2.host), 0);
 
