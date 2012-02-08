@@ -11,14 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is templeton.
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2011
+# Portions created by the Initial Developer are Copyright (C) 2012
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Mark Cote <mcote@mozilla.com>
 #   William Lachance <wlachance@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -35,6 +36,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-from mozhttpd import MozHttpd, Request, RequestHandler, main
-from handlers import json_response
-import iface
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
+def json_response(func):
+    """ Translates results of 'func' into a JSON response. """
+    def wrap(*a, **kw):
+        (code, data) = func(*a, **kw)
+        json_data = json.dumps(data)
+        return (code, { 'Content-type': 'application/json',
+                        'Content-Length': len(json_data) }, json_data)
+
+    return wrap
