@@ -3,11 +3,11 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 
-public class testCheck extends BaseTest {
+public class testCheck extends PixelTest {
     public void testCheck() {
         setTestType("talos");
-        String url = getAbsoluteUrl("/startup_test/fenncmark/wikipedia.html");
-        loadUrl(url);
+        String url = getAbsoluteUrl("/startup_test/fennecmark/wikipedia.html");
+        loadAndPaint(url);
 
         mDriver.setupScrollHandling();
 
