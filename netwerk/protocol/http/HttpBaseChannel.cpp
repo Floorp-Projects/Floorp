@@ -589,14 +589,43 @@ HttpBaseChannel::ApplyContentConversions()
     return NS_OK;
   }
 
-  const char *val = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
-  if (gHttpHandler->IsAcceptableEncoding(val)) {
-    nsCOMPtr<nsIStreamConverterService> serv;
-    nsresult rv = gHttpHandler->
-            GetStreamConverterService(getter_AddRefs(serv));
-    // we won't fail to load the page just because we couldn't load the
-    // stream converter service.. carry on..
-    if (NS_SUCCEEDED(rv)) {
+  nsCAutoString contentEncoding;
+  char *cePtr, *val;
+  nsresult rv;
+
+  rv = mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+  if (NS_FAILED(rv) || contentEncoding.IsEmpty())
+    return NS_OK;
+
+  // The encodings are listed in the order they were applied
+  // (see rfc 2616 section 14.11), so they need to removed in reverse
+  // order. This is accomplished because the converter chain ends up
+  // being a stack with the last converter created being the first one
+  // to accept the raw network data.
+
+  cePtr = contentEncoding.BeginWriting();
+  PRUint32 count = 0;
+  while ((val = nsCRT::strtok(cePtr, HTTP_LWS ",", &cePtr))) {
+    if (++count > 16) {
+      // That's ridiculous. We only understand 2 different ones :)
+      // but for compatibility with old code, we will just carry on without
+      // removing the encodings
+      LOG(("Too many Content-Encodings. Ignoring remainder.\n"));
+      break;
+    }
+
+    if (gHttpHandler->IsAcceptableEncoding(val)) {
+      nsCOMPtr<nsIStreamConverterService> serv;
+      rv = gHttpHandler->GetStreamConverterService(getter_AddRefs(serv));
+
+      // we won't fail to load the page just because we couldn't load the
+      // stream converter service.. carry on..
+      if (NS_FAILED(rv)) {
+        if (val)
+          LOG(("Unknown content encoding '%s', ignoring\n", val));
+        continue;
+      }
+
       nsCOMPtr<nsIStreamListener> converter;
       nsCAutoString from(val);
       ToLowerCase(from);
@@ -605,13 +634,18 @@ HttpBaseChannel::ApplyContentConversions()
                                   mListener,
                                   mListenerContext,
                                   getter_AddRefs(converter));
-      if (NS_SUCCEEDED(rv)) {
-        LOG(("converter installed from \'%s\' to \'uncompressed\'\n", val));
-        mListener = converter;
+      if (NS_FAILED(rv)) {
+        LOG(("Unexpected failure of AsyncConvertData %s\n", val));
+        return rv;
       }
+
+      LOG(("converter removed '%s' content-encoding\n", val));
+      mListener = converter;
     }
-  } else if (val != nsnull) {
-    LOG(("Unknown content encoding '%s', ignoring\n", val));
+    else {
+      if (val)
+        LOG(("Unknown content encoding '%s', ignoring\n", val));
+    }
   }
 
   return NS_OK;
