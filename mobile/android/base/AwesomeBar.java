@@ -73,6 +73,7 @@ import android.widget.ListView;
 import android.widget.TabWidget;
 import android.widget.Toast;
 
+import java.net.URLEncoder;
 import java.util.Map;
 
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
@@ -93,12 +94,15 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     private AwesomeBarTabs mAwesomeTabs;
     private AwesomeBarEditText mText;
     private ImageButton mGoButton;
+    private ContentResolver mResolver;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Log.d(LOGTAG, "creating awesomebar");
+
+        mResolver = Tabs.getInstance().getContentResolver();
 
         setContentView(R.layout.awesomebar);
 
@@ -318,6 +322,15 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     }
 
     private void openUrlAndFinish(String url) {
+        int index = url.indexOf(' ');
+        if (index != -1) {
+            String keywordUrl = BrowserDB.getUrlForKeyword(mResolver, url.substring(0, index));
+            if (keywordUrl != null && keywordUrl.contains("%s")) {
+                String search = URLEncoder.encode(url.substring(index + 1));
+                url = keywordUrl.replace("%s", search);
+            }
+        }
+
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
         resultIntent.putExtra(TYPE_KEY, mType);
@@ -476,8 +489,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             case R.id.remove_bookmark: {
                 GeckoAppShell.getHandler().post(new Runnable() {
                     public void run() {
-                        ContentResolver resolver = Tabs.getInstance().getContentResolver();
-                        BrowserDB.removeBookmark(resolver, url);
+                        BrowserDB.removeBookmark(mResolver, url);
 
                         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
                             public void run() {
