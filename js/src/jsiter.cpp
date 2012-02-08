@@ -770,7 +770,16 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
     return true;
 }
 
+JSObject *
+GetIteratorObject(JSContext *cx, JSObject *obj, uint32_t flags)
+{
+    Value value;
+    if (!GetIterator(cx, obj, flags, &value))
+        return NULL;
+    return &value.toObject();
 }
+
+} /* namespace js */
 
 static JSObject *
 iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
@@ -875,7 +884,7 @@ static JSBool
 CloseGenerator(JSContext *cx, JSObject *genobj);
 #endif
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
 js_CloseIterator(JSContext *cx, JSObject *obj)
 {
     cx->iterValue.setMagic(JS_NO_ITER_VALUE);
@@ -1044,7 +1053,7 @@ js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
 
-JSBool
+bool
 js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     /* Fast path for native iterators */
@@ -1103,7 +1112,7 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
     return true;
 }
 
-JSBool
+bool
 js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     /* Fast path for native iterators */

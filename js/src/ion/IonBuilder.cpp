@@ -562,16 +562,9 @@ IonBuilder::snoopControlFlow(JSOp op)
             return processSwitchBreak(op, sn);
 
           case SRC_WHILE:
-            // while (cond) { }
-            if (!whileLoop(op, sn))
-              return ControlStatus_Error;
-            return ControlStatus_Jumped;
-
           case SRC_FOR_IN:
-            // for (x in y) { }
-            if (!forInLoop(op, sn))
-              return ControlStatus_Error;
-            return ControlStatus_Jumped;
+            // while (cond) { }
+            return whileOrForInLoop(op, sn);
 
           default:
             // Hard assert for now - make an error later.
@@ -798,6 +791,18 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_OBJECT:
         return jsop_object(info().getObject(pc));
+
+      case JSOP_ITER:
+        return jsop_iter(GET_INT8(pc));
+
+      case JSOP_ITERNEXT:
+        return jsop_iternext(GET_INT8(pc));
+
+      case JSOP_MOREITER:
+        return jsop_itermore();
+
+      case JSOP_ENDITER:
+        return jsop_iterend();
 
       default:
 #ifdef DEBUG
@@ -1573,7 +1578,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
 }
 
 IonBuilder::ControlStatus
-IonBuilder::whileLoop(JSOp op, jssrcnote *sn)
+IonBuilder::whileOrForInLoop(JSOp op, jssrcnote *sn)
 {
     // while (cond) { } loops have the following structure:
     //    GOTO cond   ; SRC_WHILE (offset to IFNE)
@@ -1583,7 +1588,9 @@ IonBuilder::whileLoop(JSOp op, jssrcnote *sn)
     //    LOOPENTRY
     //    ...
     //    IFNE        ; goes to LOOPHEAD
-    int ifneOffset = js_GetSrcNoteOffset(sn, 0);
+    // for (x in y) { } loops are similar; the cond will be a MOREITER.
+    size_t which = (SN_TYPE(sn) == SRC_FOR_IN) ? 1 : 0;
+    int ifneOffset = js_GetSrcNoteOffset(sn, which);
     jsbytecode *ifne = pc + ifneOffset;
     JS_ASSERT(ifne > pc);
 
@@ -3518,3 +3525,49 @@ IonBuilder::jsop_this()
     return abort("JSOP_THIS hard case not yet handled");
 }
 
+bool
+IonBuilder::jsop_iter(uint8 flags)
+{
+    MDefinition *obj = current->pop();
+    MInstruction *ins = MIteratorStart::New(obj, flags);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_iternext(uint8 depth)
+{
+    MDefinition *iter = current->peek(-depth);
+    MInstruction *ins = MIteratorNext::New(iter);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_itermore()
+{
+    MDefinition *iter = current->peek(-1);
+    MInstruction *ins = MIteratorMore::New(iter);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_iterend()
+{
+    MDefinition *iter = current->pop();
+    MInstruction *ins = MIteratorEnd::New(iter);
+
+    current->add(ins);
+
+    return resumeAfter(ins);
+}

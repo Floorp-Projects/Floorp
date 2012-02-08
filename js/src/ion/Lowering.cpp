@@ -1174,6 +1174,34 @@ LIRGenerator::visitCallSetElement(MCallSetElement *ins)
 }
 
 bool
+LIRGenerator::visitIteratorStart(MIteratorStart *ins)
+{
+    LCallIteratorStart *lir = new LCallIteratorStart(useRegister(ins->object()));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitIteratorNext(MIteratorNext *ins)
+{
+    LCallIteratorNext *lir = new LCallIteratorNext(useRegister(ins->iterator()));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitIteratorMore(MIteratorMore *ins)
+{
+    LCallIteratorMore *lir = new LCallIteratorMore(useRegister(ins->iterator()));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitIteratorEnd(MIteratorEnd *ins)
+{
+    LCallIteratorEnd *lir = new LCallIteratorEnd(useRegister(ins->iterator()));
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitStringLength(MStringLength *ins)
 {
     JS_ASSERT(ins->string()->type() == MIRType_String);
