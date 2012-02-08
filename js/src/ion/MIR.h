@@ -715,7 +715,7 @@ class MTableSwitch
     MDefinition *operand_;
     int32 low_;
     int32 high_;
-    MBasicBlock* defaultCase_;
+    MBasicBlock *defaultCase_;
 
     MTableSwitch(MDefinition *ins, int32 low, int32 high)
       : successors_(),
@@ -749,6 +749,8 @@ class MTableSwitch
  
     void replaceSuccessor(size_t i, MBasicBlock *successor) {
         JS_ASSERT(i < numSuccessors());
+        if (successors_[i] == defaultCase_)
+            defaultCase_ = successor;
         successors_[i] = successor;
     }
 
@@ -765,7 +767,7 @@ class MTableSwitch
     }
 
     MBasicBlock *getDefault() const {
-        JS_ASSERT(defaultCase_ != NULL);
+        JS_ASSERT(defaultCase_);
         return defaultCase_;
     }
 
@@ -779,7 +781,7 @@ class MTableSwitch
     }
 
     void addDefault(MBasicBlock *block) {
-        JS_ASSERT(defaultCase_ == NULL);
+        JS_ASSERT(!defaultCase_);
         defaultCase_ = block;
         successors_.append(block);
     }
@@ -787,8 +789,10 @@ class MTableSwitch
     void addCase(MBasicBlock *block, bool isDefault = false) {
         JS_ASSERT(cases_.length() < (size_t)(high_ - low_ + 1));
         cases_.append(block);
-        if (!isDefault)
+        if (!isDefault) {
+            JS_ASSERT(block != defaultCase_);
             successors_.append(block);
+        }
     }
 
     MDefinition *getOperand(size_t index) const {
