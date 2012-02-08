@@ -46,6 +46,9 @@
 #include "nsStyleConsts.h"
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
+#include "WinUtils.h"
+
+using namespace mozilla::widget;
 
 static nsresult GetColorFromTheme(nsUXThemeClass cls,
                            PRInt32 aPart,
@@ -183,8 +186,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       idx = COLOR_HIGHLIGHT;
       break;
     case eColorID__moz_menubarhovertext:
-      if (!nsUXThemeData::sIsVistaOrLater || !IsAppThemed())
-      {
+      if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
+          !IsAppThemed()) {
         idx = nsUXThemeData::sFlatMenus ?
                 COLOR_HIGHLIGHTTEXT :
                 COLOR_MENUTEXT;
@@ -192,8 +195,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       }
       // Fall through
     case eColorID__moz_menuhovertext:
-      if (IsAppThemed() && nsUXThemeData::sIsVistaOrLater)
-      {
+      if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
+          IsAppThemed()) {
         res = ::GetColorFromTheme(eUXMenu,
                                   MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR, aColor);
         if (NS_SUCCEEDED(res))
@@ -268,7 +271,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       idx = COLOR_3DFACE;
       break;
     case eColorID__moz_win_mediatext:
-      if (IsAppThemed() && nsUXThemeData::sIsVistaOrLater) {
+      if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
+          IsAppThemed()) {
         res = ::GetColorFromTheme(eUXMediaToolbar,
                                   TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR, aColor);
         if (NS_SUCCEEDED(res))
@@ -278,8 +282,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       idx = COLOR_WINDOWTEXT;
       break;
     case eColorID__moz_win_communicationstext:
-      if (IsAppThemed() && nsUXThemeData::sIsVistaOrLater)
-      {
+      if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
+          IsAppThemed()) {
         res = ::GetColorFromTheme(eUXCommunicationsToolbar,
                                   TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR, aColor);
         if (NS_SUCCEEDED(res))

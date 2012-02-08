@@ -128,7 +128,6 @@ public:
    static const PRUnichar kDwmLibraryName[];
 #endif
   static bool sFlatMenus;
-  static bool sIsVistaOrLater;
   static bool sTitlebarInfoPopulatedAero;
   static bool sTitlebarInfoPopulatedThemed;
   static SIZE sCommandButtons[4];
