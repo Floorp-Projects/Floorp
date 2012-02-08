@@ -244,6 +244,10 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return (count == 1);
     }
 
+    public String getUrlForKeyword(ContentResolver cr, String keyword) {
+        return null;
+    }
+
     public void addBookmarkPre11(ContentResolver cr, String title, String uri) {
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.BOOKMARK, "1");
@@ -279,6 +283,35 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
             addBookmarkPost11(cr, title, uri);
         else
             addBookmarkPre11(cr, title, uri);
+    }
+
+    public void updateBookmarkPre11(ContentResolver cr, String oldUri, String uri, String title) {
+        ContentValues values = new ContentValues();
+        values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put(Browser.BookmarkColumns.URL, uri);
+
+        cr.update(Browser.BOOKMARKS_URI,
+                  values,
+                  Browser.BookmarkColumns.URL + " = ?",
+                  new String[] { oldUri });
+    }
+
+    public void updateBookmarkPost11(ContentResolver cr, String oldUri, String uri, String title) {
+        ContentValues values = new ContentValues();
+        values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put(Browser.BookmarkColumns.URL, uri);
+
+        cr.update(BOOKMARKS_CONTENT_URI_POST_11,
+                  values,
+                  Browser.BookmarkColumns.URL + " = ?",
+                  new String[] { oldUri });
+    }
+
+    public void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword) {
+        if (Build.VERSION.SDK_INT >= 11)
+            updateBookmarkPost11(cr, oldUri, uri, title);
+        else
+            updateBookmarkPre11(cr, oldUri, uri, title);
     }
 
     public void removeBookmarkPre11(ContentResolver cr, String uri) {
