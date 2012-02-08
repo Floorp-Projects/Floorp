@@ -271,7 +271,8 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                             new String[] { Bookmarks._ID,
                                            Bookmarks.URL,
                                            Bookmarks.TITLE,
-                                           Bookmarks.FAVICON },
+                                           Bookmarks.FAVICON,
+                                           Bookmarks.KEYWORD },
                             Bookmarks.IS_FOLDER + " = 0",
                             null,
                             Bookmarks.TITLE + " ASC");
@@ -314,6 +315,24 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         cursor.close();
 
         return (count == 1);
+    }
+
+    public String getUrlForKeyword(ContentResolver cr, String keyword) {
+        Cursor cursor = cr.query(appendProfile(Bookmarks.CONTENT_URI),
+                                 new String[] { Bookmarks.URL },
+                                 Bookmarks.KEYWORD + " = ?",
+                                 new String[] { keyword },
+                                 null);
+
+        if (!cursor.moveToFirst()) {
+            cursor.close();
+            return null;
+        }
+
+        String url = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.URL));
+        cursor.close();
+
+        return url;
     }
 
     private long getMobileBookmarksFolderId(ContentResolver cr) {
@@ -365,6 +384,18 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         cr.delete(appendProfile(Bookmarks.CONTENT_URI),
                   Bookmarks.URL + " = ?",
                   new String[] { uri });
+    }
+
+    public void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword) {
+        ContentValues values = new ContentValues();
+        values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put(Bookmarks.URL, uri);
+        values.put(Bookmarks.KEYWORD, keyword);
+
+        int updated = cr.update(appendProfile(Bookmarks.CONTENT_URI),
+                                values,
+                                Bookmarks.URL + " = ?",
+                                new String[] { oldUri });
     }
 
     public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {

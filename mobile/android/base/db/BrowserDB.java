@@ -51,6 +51,7 @@ public class BrowserDB {
         public static String THUMBNAIL = "thumbnail";
         public static String DATE_LAST_VISITED = "date-last-visited";
         public static String VISITS = "visits";
+        public static String KEYWORD = "keyword";
     }
 
     private static BrowserDBIface sDb;
@@ -83,9 +84,13 @@ public class BrowserDB {
 
         public boolean isBookmark(ContentResolver cr, String uri);
 
+        public String getUrlForKeyword(ContentResolver cr, String keyword);
+
         public void addBookmark(ContentResolver cr, String title, String uri);
 
         public void removeBookmark(ContentResolver cr, String uri);
+
+        public void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword);
 
         public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri);
 
@@ -150,6 +155,10 @@ public class BrowserDB {
         return sDb.getDesktopBookmarks(cr);
     }
 
+    public static String getUrlForKeyword(ContentResolver cr, String keyword) {
+        return sDb.getUrlForKeyword(cr, keyword);
+    }
+    
     public static boolean isBookmark(ContentResolver cr, String uri) {
         return sDb.isBookmark(cr, uri);
     }
@@ -160,6 +169,10 @@ public class BrowserDB {
 
     public static void removeBookmark(ContentResolver cr, String uri) {
         sDb.removeBookmark(cr, uri);
+    }
+
+    public static void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword) {
+        sDb.updateBookmark(cr, oldUri, uri, title, keyword);
     }
 
     public static BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
