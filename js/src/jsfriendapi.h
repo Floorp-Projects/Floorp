@@ -282,11 +282,11 @@ typedef void
                          void *v, JSGCTraceKind vkind);
 
 struct WeakMapTracer {
-    JSContext            *context;
+    JSRuntime            *runtime;
     WeakMapTraceCallback callback;
 
-    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb)
-        : context(cx), callback(cb) {}
+    WeakMapTracer(JSRuntime *rt, WeakMapTraceCallback cb)
+        : runtime(rt), callback(cb) {}
 };
 
 extern JS_FRIEND_API(void)

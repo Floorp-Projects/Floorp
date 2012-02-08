@@ -2897,11 +2897,11 @@ JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
+JS_IsAboutToBeFinalized(void *thing)
 {
-    JS_ASSERT(thing);
-    JS_ASSERT(!cx->runtime->gcIncrementalTracer);
-    return IsAboutToBeFinalized(cx, (gc::Cell *)thing);
+    gc::Cell *t = static_cast<gc::Cell *>(thing);
+    JS_ASSERT(!t->compartment()->rt->gcIncrementalTracer);
+    return IsAboutToBeFinalized(t);
 }
 
 JS_PUBLIC_API(void)
@@ -2995,7 +2995,7 @@ JS_SetNativeStackQuota(JSRuntime *rt, size_t stackSize)
     rt->nativeStackQuota = stackSize;
     if (!rt->nativeStackBase)
         return;
-    
+
 #if JS_STACK_GROWTH_DIRECTION > 0
     if (stackSize == 0) {
         rt->nativeStackLimit = UINTPTR_MAX;
