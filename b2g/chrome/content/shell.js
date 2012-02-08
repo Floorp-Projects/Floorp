@@ -66,6 +66,8 @@ function addPermissions(urls) {
 var shell = {
   // FIXME/bug 678695: this should be a system setting
   preferredScreenBrightness: 1.0,
+  
+  isDebug: false,
 
   get contentBrowser() {
     delete this.contentBrowser;
@@ -145,6 +147,7 @@ var shell = {
     window.controllers.removeController(this);
     window.removeEventListener('keypress', this);
     window.removeEventListener('MozApplicationManifest', this);
+    window.removeEventListener('AppCommand', this);
   },
 
   supportsCommand: function shell_supportsCommand(cmd) {
@@ -169,6 +172,18 @@ var shell = {
       case 'cmd_close':
         content.postMessage('appclose', '*');
         break;
+    }
+  },
+
+  toggleDebug: function shell_toggleDebug() {
+    this.isDebug = !this.isDebug;
+
+    if (this.isDebug) {
+      Services.prefs.setBoolPref("layers.acceleration.draw-fps", true);
+      Services.prefs.setBoolPref("nglayout.debug.paint_flashing", true);
+    } else {
+      Services.prefs.setBoolPref("layers.acceleration.draw-fps", false);
+      Services.prefs.setBoolPref("nglayout.debug.paint_flashing", false);
     }
   },
 
@@ -198,6 +213,9 @@ var shell = {
         switch (evt.command) {
           case 'Menu':
             this.sendEvent(content, 'menu');
+            break;
+          case 'Search':
+            this.toggleDebug();
             break;
         }
         break;
