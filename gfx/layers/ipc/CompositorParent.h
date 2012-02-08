@@ -126,6 +126,12 @@ private:
    * accordingly.
    */
   void RequestViewTransform();
+
+  /**
+   * Does a breadth-first search to find the first layer in the tree with a
+   * displayport set.
+   */
+  Layer* GetPrimaryScrollableLayer();
 #endif
 
   nsRefPtr<LayerManager> mLayerManager;
