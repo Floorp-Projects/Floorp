@@ -68,7 +68,7 @@ class nsHTMLSelectListAccessible : public nsAccessibleWrap
 {
 public:
   
-  nsHTMLSelectListAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLSelectListAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsHTMLSelectListAccessible() {}
 
   // nsAccessible
@@ -108,7 +108,7 @@ class nsHTMLSelectOptionAccessible : public nsHyperTextAccessibleWrap
 public:
   enum { eAction_Select = 0 };  
   
-  nsHTMLSelectOptionAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLSelectOptionAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsHTMLSelectOptionAccessible() {}
 
   // nsIAccessible
@@ -152,7 +152,7 @@ class nsHTMLSelectOptGroupAccessible : public nsHTMLSelectOptionAccessible
 {
 public:
 
-  nsHTMLSelectOptGroupAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLSelectOptGroupAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsHTMLSelectOptGroupAccessible() {}
 
   // nsIAccessible
@@ -185,7 +185,7 @@ class nsHTMLComboboxAccessible : public nsAccessibleWrap
 public:
   enum { eAction_Click = 0 };
 
-  nsHTMLComboboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLComboboxAccessible(nsIContent *aContent, nsIWeakReference *aShell);
   virtual ~nsHTMLComboboxAccessible() {}
 
   // nsIAccessible
@@ -234,9 +234,9 @@ class nsHTMLComboboxListAccessible : public nsHTMLSelectListAccessible
 {
 public:
 
-  nsHTMLComboboxListAccessible(nsIAccessible* aParent, 
-                               nsIContent* aContent, 
-                               nsDocAccessible* aDoc);
+  nsHTMLComboboxListAccessible(nsIAccessible *aParent, 
+                               nsIContent *aContent, 
+                               nsIWeakReference* aShell);
   virtual ~nsHTMLComboboxListAccessible() {}
 
   // nsAccessNode

@@ -371,19 +371,23 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   nsAutoString eventType;
   aDOMEvent->GetType(eventType);
 
+  nsCOMPtr<nsIWeakReference> weakShell =
+    nsCoreUtils::GetWeakShellFor(origTargetNode);
+  if (!weakShell)
+    return;
+
   if (eventType.EqualsLiteral("popuphiding")) {
     HandlePopupHidingEvent(origTargetNode);
     return;
   }
 
-  nsDocAccessible* targetDocument = GetAccService()->
-    GetDocAccessible(origTargetNode->OwnerDoc());
-  NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
-
-  nsAccessible* accessible = 
-    targetDocument->GetAccessibleOrContainer(origTargetNode);
+  nsAccessible* accessible =
+    GetAccService()->GetAccessibleOrContainer(origTargetNode, weakShell);
   if (!accessible)
     return;
+
+  nsDocAccessible* targetDocument = accessible->GetDocAccessible();
+  NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
 
   nsINode* targetNode = accessible->GetNode();
 
@@ -564,7 +568,7 @@ void
 nsRootAccessible::Shutdown()
 {
   // Called manually or by nsAccessNode::LastRelease()
-  if (!PresShell())
+  if (!mWeakShell)
     return;  // Already shutdown
 
   nsDocAccessibleWrap::Shutdown();

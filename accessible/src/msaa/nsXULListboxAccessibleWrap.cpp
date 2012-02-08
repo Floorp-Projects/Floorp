@@ -43,8 +43,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListboxAccessibleWrap::
-  nsXULListboxAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXULListboxAccessible(aContent, aDoc)
+  nsXULListboxAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULListboxAccessible(aContent, aShell)
 {
 }
 
@@ -62,8 +62,8 @@ IMPL_IUNKNOWN_QUERY_TAIL
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListCellAccessibleWrap::
-  nsXULListCellAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXULListCellAccessible(aContent, aDoc)
+  nsXULListCellAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULListCellAccessible(aContent, aShell)
 {
 }
 
