@@ -1093,6 +1093,9 @@ function appendTreeElements(aPOuter, aT, aProcess)
    *        The partial unsafePath leading up to this node.
    * @param aT
    *        The tree.
+   * @param aBaseIndentText
+   *        The base text of the indent, which may be augmented within the
+   *        functton.
    * @param aIndentGuide
    *        Records what indentation is required for this tree.  It has one
    *        entry per level of indentation.  For each entry, ._isLastKid
@@ -1103,7 +1106,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
    * @return The generated text.
    */
   function appendTreeElements2(aP, aUnsafePrePath, aT, aIndentGuide,
-                               aParentStringLength)
+                               aBaseIndentText, aParentStringLength)
   {
     function repeatStr(aC, aN)
     {
@@ -1116,27 +1119,17 @@ function appendTreeElements(aPOuter, aT, aProcess)
 
     var unsafePath = aUnsafePrePath + aT._unsafeName;
 
-    // Generate the indent.
-    var indent = "";
-    if (aIndentGuide.length > 0) {
-      for (var i = 0; i < aIndentGuide.length - 1; i++) {
-        indent += aIndentGuide[i]._isLastKid ? " " : kVertical;
-        indent += repeatStr(" ", aIndentGuide[i]._depth - 1);
-      }
-      indent += aIndentGuide[i]._isLastKid ? kUpAndRight : kVerticalAndRight;
-      indent += repeatStr(kHorizontal, aIndentGuide[i]._depth - 1);
-    }
     // Indent more if this entry is narrower than its parent, and update
     // aIndentGuide accordingly.
     var tString = aT.toString();
+    var extraIndentText = "";
     var extraIndentLength = Math.max(aParentStringLength - tString.length, 0);
     if (extraIndentLength > 0) {
-      for (var i = 0; i < extraIndentLength; i++) {
-        indent += kHorizontal;
-      }
+      extraIndentText = repeatStr(kHorizontal, extraIndentLength);
       aIndentGuide[aIndentGuide.length - 1]._depth += extraIndentLength;
     }
-    appendElementWithText(aP, "span", "treeLine", indent);
+    appendElementWithText(aP, "span", "treeLine",
+                          aBaseIndentText + extraIndentText);
 
     // Generate the percentage;  detect and record invalid values at the same
     // time.
@@ -1197,23 +1190,34 @@ function appendTreeElements(aPOuter, aT, aProcess)
     if (hasKids) {
       // The 'kids' class is just used for sanity checking in toggle().
       d = appendElement(aP, "span", showSubtrees ? "kids" : "kids hidden");
-    } else {
-      d = aP;
-    }
 
-    for (var i = 0; i < aT._kids.length; i++) {
-      // 3 is the standard depth, the callee adjusts it if necessary.
-      aIndentGuide.push({ _isLastKid: (i === aT._kids.length - 1), _depth: 3 });
-      appendTreeElements2(d, unsafePath + "/", aT._kids[i], aIndentGuide,
-                          tString.length);
-      aIndentGuide.pop();
+      for (var i = 0; i < aT._kids.length; i++) {
+        // 3 is the standard depth, the callee adjusts it if necessary.
+        aIndentGuide.push({ _isLastKid: (i === aT._kids.length - 1), _depth: 3 });
+
+        // Generate the base indent.
+        var baseIndentText = "";
+        if (aIndentGuide.length > 0) {
+          for (var j = 0; j < aIndentGuide.length - 1; j++) {
+            baseIndentText += aIndentGuide[j]._isLastKid ? " " : kVertical;
+            baseIndentText += repeatStr(" ", aIndentGuide[j]._depth - 1);
+          }
+          baseIndentText += aIndentGuide[j]._isLastKid ?
+                            kUpAndRight : kVerticalAndRight;
+          baseIndentText += repeatStr(kHorizontal, aIndentGuide[j]._depth - 1);
+        }
+
+        appendTreeElements2(d, unsafePath + "/", aT._kids[i], aIndentGuide,
+                            baseIndentText, tString.length);
+        aIndentGuide.pop();
+      }
     }
   }
 
   appendSectionHeader(aPOuter, kTreeNames[aT._unsafeName]);
  
   var pre = appendElement(aPOuter, "pre", "tree");
-  appendTreeElements2(pre, /* prePath = */"", aT, [], rootStringLength);
+  appendTreeElements2(pre, /* prePath = */"", aT, [], "", rootStringLength);
   appendTextNode(aPOuter, "\n");  // gives nice spacing when we cut and paste
 }
 
