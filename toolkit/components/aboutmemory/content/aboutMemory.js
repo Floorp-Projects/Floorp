@@ -210,7 +210,7 @@ function Reporter(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc)
   this._amount      = aAmount;
   this._unsafeDescription = aUnsafeDesc;
   // this._nMerged is only defined if > 1
-  // this._done is defined when getBytes is called
+  // this._done is defined and set to true when the reporter's amount is read
 }
 
 Reporter.prototype = {
@@ -412,16 +412,16 @@ function TreeNode(aUnsafeName)
   // Nb: _units is not needed, it's always UNITS_BYTES.
   this._unsafeName = aUnsafeName;
   this._kids = [];
-  // All TreeNodes have these properties added later:
+  // Leaf TreeNodes have these properties added immediately after construction:
   // - _amount (which is never |kUnknown|)
   // - _unsafeDescription
-  //
-  // Leaf TreeNodes have these properties added later:
   // - _kind
-  // - _nMerged (if > 1)
+  // - _nMerged (only defined if > 1)
   // - _isUnknown (only defined if true)
   //
   // Non-leaf TreeNodes have these properties added later:
+  // - _amount (which is never |kUnknown|)
+  // - _unsafeDescription
   // - _hideKids (only defined if true)
 }
 
@@ -496,11 +496,19 @@ function buildTree(aReporters, aTreeName)
           u = v;
         }
       }
-      // Fill in extra details from the Reporter.
+      // Fill in extra details in the leaf node from the Reporter.
+      if (r._amount !== kUnknown) {
+        u._amount = r._amount;
+      } else {
+        u._amount = 0;
+        u._isUnknown = true;
+      }
+      u._unsafeDescription = r._unsafeDescription;
       u._kind = r._kind;
       if (r._nMerged) {
         u._nMerged = r._nMerged;
       }
+      r._done = true;
     }
   }
 
@@ -510,28 +518,18 @@ function buildTree(aReporters, aTreeName)
 
   // Next, fill in the remaining properties bottom-up.
   // Note that this function never returns kUnknown.
-  function fillInTree(aT, aUnsafePrePath)
+  function fillInNonLeafNodes(aT)
   {
-    var unsafePath =
-      aUnsafePrePath ? aUnsafePrePath + '/' + aT._unsafeName : aT._unsafeName; 
     if (aT._kids.length === 0) {
-      // Leaf node.  Must have a reporter.
+      // Leaf node.  Has already been filled in.
       assert(aT._kind !== undefined, "aT._kind is undefined for leaf node");
-      aT._unsafeDescription = getUnsafeDescription(aReporters, unsafePath);
-      var amount = getBytes(aReporters, unsafePath);
-      if (amount !== kUnknown) {
-        aT._amount = amount;
-      } else {
-        aT._amount = 0;
-        aT._isUnknown = true;
-      }
     } else {
-      // Non-leaf node.  Derive its size and description entirely from its
-      // children.
+      // Non-leaf node.  Derive its _amount and _unsafeDescription entirely
+      // from its children.
       assert(aT._kind === undefined, "aT._kind is defined for non-leaf node");
       var childrenBytes = 0;
       for (var i = 0; i < aT._kids.length; i++) {
-        childrenBytes += fillInTree(aT._kids[i], unsafePath);
+        childrenBytes += fillInNonLeafNodes(aT._kids[i]);
       }
       aT._amount = childrenBytes;
       aT._unsafeDescription =
@@ -541,7 +539,7 @@ function buildTree(aReporters, aTreeName)
     return aT._amount;
   }
 
-  fillInTree(t, "");
+  fillInNonLeafNodes(t);
 
   // Reduce the depth of the tree by the number of occurrences of '/' in
   // aTreeName.  (Thus the tree named 'foo/bar/baz' will be rooted at 'baz'.)
@@ -571,7 +569,7 @@ function ignoreSmapsTrees(aReporters)
   for (var unsafePath in aReporters) {
     var r = aReporters[unsafePath];
     if (r.treeNameMatches("smaps")) {
-      var dummy = getBytes(aReporters, unsafePath);
+      r._done = true;
     }
   }
 }
@@ -606,7 +604,9 @@ function fixUpExplicitTree(aT, aReporters)
   // A special case:  compute the derived "heap-unclassified" value.  Don't
   // mark "heap-allocated" when we get its size because we want it to appear
   // in the "Other Measurements" list.
-  var heapAllocatedBytes = getBytes(aReporters, "heap-allocated", true);
+  var heapAllocatedReporter = aReporters["heap-allocated"];
+  assert(heapAllocatedReporter, "no 'heap-allocated' reporter");
+  var heapAllocatedBytes = heapAllocatedReporter._amount;
   var heapUnclassifiedT = new TreeNode("heap-unclassified");
   var hasKnownHeapAllocated = heapAllocatedBytes !== kUnknown;
   if (hasKnownHeapAllocated) {
@@ -924,44 +924,6 @@ function pad(aS, aN, aC)
     padding += aC;
   }
   return padding + aS;
-}
-
-/**
- * Gets the byte count for a particular Reporter and sets its _done
- * property.
- *
- * @param aReporters
- *        Table of Reporters for this process, indexed by _unsafePath.
- * @param aUnsafePath
- *        The unsafePath of the R.
- * @param aDoNotMark
- *        If true, the _done property is not set.
- * @return The byte count.
- */
-function getBytes(aReporters, aUnsafePath, aDoNotMark)
-{
-  var r = aReporters[aUnsafePath];
-  assert(r, "getBytes: no such Reporter: " + makeSafe(aUnsafePath));
-  if (!aDoNotMark) {
-    r._done = true;
-  }
-  return r._amount;
-}
-
-/**
- * Gets the (unsafe) description for a particular Reporter.
- *
- * @param aReporters
- *        Table of Reporters for this process, indexed by _unsafePath.
- * @param aUnsafePath
- *        The unsafePath of the Reporter.
- * @return The description.
- */
-function getUnsafeDescription(aReporters, aUnsafePath)
-{
-  var r = aReporters[aUnsafePath];
-  assert(r, "getUnsafeDescription: no such Reporter: " + makeSafe(aUnsafePath));
-  return r._unsafeDescription;
 }
 
 // There's a subset of the Unicode "light" box-drawing chars that are widely
