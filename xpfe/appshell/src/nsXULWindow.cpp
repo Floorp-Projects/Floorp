@@ -1412,6 +1412,12 @@ void nsXULWindow::SyncAttributesToWidget()
   if (NS_SUCCEEDED(rv)) {
     mWindow->SetShowsToolbarButton(attr.LowerCaseEqualsLiteral("true"));
   }
+
+  // "macanimationtype" attribute
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("macanimationtype"), attr);
+  if (NS_SUCCEEDED(rv) && attr.EqualsLiteral("document")) {
+    mWindow->SetWindowAnimationType(nsIWidget::eDocumentWindowAnimation);
+  }
 }
 
 NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
