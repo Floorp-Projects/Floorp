@@ -417,6 +417,10 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             }
             AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
             selectedItem = list.getItemAtPosition(info.position);
+            if (! (selectedItem instanceof Cursor)) {
+                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
+                return;
+            }
             Cursor cursor = (Cursor)selectedItem;
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         }
