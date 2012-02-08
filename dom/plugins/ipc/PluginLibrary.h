@@ -100,7 +100,7 @@ public:
   virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& aResult) = 0;
 
   virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window) = 0;
-  virtual nsresult GetImage(NPP instance, ImageContainer* aContainer, Image** aImage) = 0;
+  virtual nsresult GetImageContainer(NPP instance, ImageContainer** aContainer) = 0;
   virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize) = 0;
   virtual bool UseAsyncPainting() = 0;
 #if defined(XP_MACOSX)
