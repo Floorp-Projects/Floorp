@@ -98,7 +98,6 @@ CPPSRCS		= \
 		nsDOMAttributeMap.cpp \
 		nsDOMBlobBuilder.cpp \
 		nsDOMDocumentType.cpp \
-		nsDOMEventTargetWrapperCache.cpp \
 		nsDOMFile.cpp \
 		nsDOMFileReader.cpp \
 		nsDOMLists.cpp \

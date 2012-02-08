@@ -39,7 +39,7 @@
 #define mozilla_dom_network_Connection_h
 
 #include "nsIDOMConnection.h"
-#include "nsDOMEventTargetWrapperCache.h"
+#include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Observer.h"
 #include "Types.h"
@@ -53,7 +53,7 @@ class NetworkInformation;
 namespace dom {
 namespace network {
 
-class Connection : public nsDOMEventTargetWrapperCache
+class Connection : public nsDOMEventTargetHelper
                  , public nsIDOMMozConnection
                  , public NetworkObserver
 {
@@ -61,7 +61,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZCONNECTION
 
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
+  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
 
   Connection();
 
@@ -72,7 +72,7 @@ public:
   void Notify(const hal::NetworkInformation& aNetworkInfo);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Connection,
-                                           nsDOMEventTargetWrapperCache)
+                                           nsDOMEventTargetHelper)
 
 private:
   /**

@@ -9,17 +9,17 @@
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-#include "nsDOMEventTargetWrapperCache.h"
+#include "nsDOMEventTargetHelper.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBWrapperCache : public nsDOMEventTargetWrapperCache
+class IDBWrapperCache : public nsDOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
                                                    IDBWrapperCache,
-                                                   nsDOMEventTargetWrapperCache)
+                                                   nsDOMEventTargetHelper)
 
   JSObject* GetScriptOwner() const
   {
@@ -44,7 +44,7 @@ public:
 
     // Do what nsEventTargetSH::PreCreate does.
     nsCOMPtr<nsIScriptGlobalObject> parent;
-    nsDOMEventTargetWrapperCache::GetParentObject(getter_AddRefs(parent));
+    nsDOMEventTargetHelper::GetParentObject(getter_AddRefs(parent));
 
     return parent ? parent->GetGlobalJSObject() : nsnull;
   }
@@ -52,7 +52,7 @@ public:
   static IDBWrapperCache* FromSupports(nsISupports* aSupports)
   {
     return static_cast<IDBWrapperCache*>(
-      nsDOMEventTargetWrapperCache::FromSupports(aSupports));
+      nsDOMEventTargetHelper::FromSupports(aSupports));
   }
 
 protected:
