@@ -235,7 +235,6 @@ class MacroAssemblerX86Shared : public Assembler
         JS_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
         return callOffset;
     }
-
     void callWithExitFrame(IonCode *target) {
         uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
         Push(Imm32(descriptor));
