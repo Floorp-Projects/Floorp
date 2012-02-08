@@ -134,6 +134,7 @@ var shell = {
     window.controllers.appendController(this);
     window.addEventListener('keypress', this);
     window.addEventListener('MozApplicationManifest', this);
+    window.addEventListener("AppCommand", this);
     this.contentBrowser.addEventListener('load', this, true);
 
     try {
@@ -222,6 +223,13 @@ var shell = {
             if (evt.defaultPrevented)
               return;
             this.doCommand('cmd_close');
+            break;
+        }
+        break;
+      case 'AppCommand':
+        switch (evt.command) {
+          case 'Menu':
+            this.sendEvent(content, 'menu');
             break;
         }
         break;
