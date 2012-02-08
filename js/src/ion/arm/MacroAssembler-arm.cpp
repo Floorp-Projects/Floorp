@@ -1238,6 +1238,7 @@ MacroAssemblerARMCompat::subPtr(Imm32 imm, const Register dest)
 {
     ma_sub(imm, dest);
 }
+
 void
 MacroAssemblerARMCompat::addPtr(Imm32 imm, const Register dest)
 {

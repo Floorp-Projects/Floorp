@@ -107,7 +107,6 @@
     _(WriteBarrierT)                \
     _(TypeBarrier)                  \
     _(InitializedLength)            \
-    _(SetInitializedLength)         \
     _(BoundsCheck)                  \
     _(BoundsCheckRange)             \
     _(BoundsCheckLower)             \
