@@ -43,6 +43,7 @@
 #include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "States.h"
+#include "Statistics.h"
 
 #include "nscore.h"
 #include "nsServiceManagerUtils.h"
@@ -70,6 +71,7 @@ nsXFormsAccessibleBase::nsXFormsAccessibleBase()
     if (NS_FAILED(rv))
       NS_WARNING("No XForms utility service.");
   }
+  statistics::XFormsAccessibleUsed();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
