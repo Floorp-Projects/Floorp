@@ -60,8 +60,8 @@ import java.lang.Long;
 
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
 import android.view.View;
+import android.util.Log;
 
 import org.json.*;
 
@@ -72,6 +72,9 @@ public class FennecNativeDriver implements Driver {
   private HashMap locators = null;
   private Activity activity;
   private Solo solo;
+
+  private static String mLogFile = null;
+  private static LogLevel mLogLevel = LogLevel.LOG_LEVEL_INFO;
 
   // Objects for reflexive access of fennec classes.
   private ClassLoader classLoader;
@@ -86,6 +89,24 @@ public class FennecNativeDriver implements Driver {
   private Method _startCheckerboardRecording;
   private Method _stopCheckerboardRecording;
   private Method _getPixels;
+
+  public enum LogLevel {
+    LOG_LEVEL_DEBUG(1), 
+    LOG_LEVEL_INFO(2),  
+    LOG_LEVEL_WARN(3), 
+    LOG_LEVEL_ERROR(4);
+
+    private int mValue;
+    LogLevel(int value) {
+      mValue = value;
+    }
+    public boolean isEnabled(LogLevel configuredLevel) {
+      return mValue >= configuredLevel.getValue();
+    }
+    private int getValue() {
+      return mValue;
+    }
+  }
 
   public FennecNativeDriver(Activity activity, Solo robocop){
     this.activity = activity;
@@ -313,7 +334,8 @@ public class FennecNativeDriver implements Driver {
         }
 
       } catch( Throwable e) {
-        Log.i("Robocop", "WARNING: ScrollReceived, but read wrong!");
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_WARN, 
+          "WARNING: ScrollReceived, but read wrong!");
       }
       return null;
     }
@@ -386,4 +408,57 @@ public class FennecNativeDriver implements Driver {
     }
     return retVal;
   }
+
+  // Set the filename used for logging. If the file already exists, delete it
+  // as a safe-guard against accidentally appending to an old log file.
+  public static void setLogFile(String filename) {
+    mLogFile = filename;
+    File file = new File(mLogFile);
+    if (file.exists()) {
+      file.delete();
+    }
+  }
+
+  public static void setLogLevel(LogLevel level) {
+    mLogLevel = level;
+  }
+
+  public static void log(LogLevel level, String message) {
+    if (mLogFile == null) {
+      assert(false);
+    }
+
+    if (level.isEnabled(mLogLevel)) {
+      File file = new File(mLogFile);
+      BufferedWriter bw = null;
+
+      try {
+        bw = new BufferedWriter(new FileWriter(mLogFile, true));
+        bw.write(message);
+        bw.newLine();
+      } catch(IOException e) {
+        Log.e("Robocop", "exception with file writer on: " + mLogFile);
+      } finally {
+        try {
+          if (bw != null) {
+            bw.flush();
+            bw.close();
+          }
+        } catch (IOException ex) {
+          ex.printStackTrace();
+        }
+      }
+    }
+
+    if (level == LogLevel.LOG_LEVEL_INFO) {
+      Log.i("Robocop", message);
+    } else if (level == LogLevel.LOG_LEVEL_DEBUG) {
+      Log.d("Robocop", message);
+    } else if (level == LogLevel.LOG_LEVEL_WARN) {
+      Log.w("Robocop", message);
+    } else if (level == LogLevel.LOG_LEVEL_ERROR) {
+      Log.e("Robocop", message);
+    }
+  }
+
 }
