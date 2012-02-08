@@ -101,7 +101,7 @@ public:
   bool ShouldCache();
   nsresult IsWindowless(bool* isWindowless);
   nsresult AsyncSetWindow(NPWindow* window);
-  nsresult GetImage(ImageContainer* aContainer, Image** aImage);
+  nsresult GetImageContainer(ImageContainer **aContainer);
   nsresult GetImageSize(nsIntSize* aSize);
   nsresult NotifyPainted(void);
   nsresult UseAsyncPainting(bool* aIsAsync);
