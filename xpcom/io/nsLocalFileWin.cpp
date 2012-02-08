@@ -942,8 +942,8 @@ nsLocalFile::InitWithPath(const nsAString &filePath)
 NS_IMETHODIMP
 nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 {
-    nsresult rv = ResolveAndStat();
-    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
+    nsresult rv = Resolve();
+    if (NS_FAILED(rv))
         return rv;
 
     return OpenFile(mResolvedPath, flags, mode, _retval);
