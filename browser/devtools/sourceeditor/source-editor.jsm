@@ -181,6 +181,12 @@ SourceEditor.DEFAULTS = {
   showOverviewRuler: false,
 
   /**
+   * Highlight the current line.
+   * @type boolean
+   */
+  highlightCurrentLine: true,
+
+  /**
    * An array of objects that allows you to define custom editor keyboard
    * bindings. Each object can have:
    *   - action - name of the editor action to invoke.
