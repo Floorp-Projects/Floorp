@@ -51,7 +51,6 @@
       this.invoke = function removeChildSpan_invoke()
       {
         // remove HTML span, a first child of the node
-        ensureAccessibleTree(this.DOMNode);
         this.DOMNode.removeChild(this.DOMNode.firstChild);
       }
 
@@ -158,8 +157,6 @@
 
       this.invoke = function removeChildren_invoke()
       {
-        ensureAccessibleTree(this.DOMNode);
-
         if (aLastToFirst) {
           while (this.DOMNode.firstChild)
             this.DOMNode.removeChild(this.DOMNode.lastChild);
