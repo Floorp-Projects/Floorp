@@ -42,7 +42,6 @@
 
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
@@ -62,8 +61,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColumnsAccessible::
-  nsXULColumnsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULColumnsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -85,8 +84,8 @@ nsXULColumnsAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColumnItemAccessible::
-  nsXULColumnItemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsLeafAccessible(aContent, aDoc)
+  nsXULColumnItemAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsLeafAccessible(aContent, aShell)
 {
 }
 
@@ -133,8 +132,8 @@ nsXULColumnItemAccessible::DoAction(PRUint8 aIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListboxAccessible::
-  nsXULListboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  XULSelectControlAccessible(aContent, aDoc)
+  nsXULListboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  XULSelectControlAccessible(aContent, aShell)
 {
   nsIContent* parentContent = mContent->GetParent();
   if (parentContent) {
@@ -317,8 +316,9 @@ nsXULListboxAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
   NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
 
   nsCOMPtr<nsIContent> itemContent(do_QueryInterface(item));
-  NS_ENSURE_TRUE(mDoc, NS_ERROR_FAILURE);
-  nsAccessible *row = mDoc->GetAccessible(itemContent);
+
+  nsAccessible *row =
+    GetAccService()->GetAccessibleInWeakShell(itemContent, mWeakShell);
   NS_ENSURE_STATE(row);
 
   nsresult rv = row->GetChildAt(aColumn, aAccessibleCell);
@@ -601,13 +601,13 @@ nsXULListboxAccessible::GetSelectedCells(nsIArray **aCells)
   rv = selectedItems->GetLength(&selectedItemsCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_TRUE(mDoc, NS_ERROR_FAILURE);
   PRUint32 index = 0;
   for (; index < selectedItemsCount; index++) {
     nsCOMPtr<nsIDOMNode> itemNode;
     selectedItems->Item(index, getter_AddRefs(itemNode));
     nsCOMPtr<nsIContent> itemContent(do_QueryInterface(itemNode));
-    nsAccessible *item = mDoc->GetAccessible(itemContent);
+    nsAccessible *item =
+      GetAccService()->GetAccessibleInWeakShell(itemContent, mWeakShell);
 
     if (item) {
       PRInt32 cellCount = item->GetChildCount();
@@ -900,8 +900,8 @@ nsXULListboxAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListitemAccessible::
-  nsXULListitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXULMenuitemAccessible(aContent, aDoc)
+  nsXULListitemAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULMenuitemAccessible(aContent, aShell)
 {
   mIsCheckbox = mContent->AttrValueIs(kNameSpaceID_None,
                                       nsGkAtoms::type,
@@ -929,7 +929,7 @@ nsXULListitemAccessible::GetListAccessible()
   if (!listContent)
     return nsnull;
 
-  return mDoc->GetAccessible(listContent);
+  return GetAccService()->GetAccessibleInWeakShell(listContent, mWeakShell);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1053,8 +1053,8 @@ nsXULListitemAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListCellAccessible::
-  nsXULListCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  nsXULListCellAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
 {
 }
 

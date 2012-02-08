@@ -44,8 +44,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridAccessibleWrap::
-  nsXULTreeGridAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsXULTreeGridAccessible(aContent, aDoc)
+  nsXULTreeGridAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsXULTreeGridAccessible(aContent, aShell)
 {
 }
 
@@ -62,13 +62,13 @@ IMPL_IUNKNOWN_INHERITED1(nsXULTreeGridAccessibleWrap,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridCellAccessibleWrap::
-  nsXULTreeGridCellAccessibleWrap(nsIContent* aContent,
-                                  nsDocAccessible* aDoc,
-                                  nsXULTreeGridRowAccessible* aRowAcc,
-                                  nsITreeBoxObject* aTree,
-                                  nsITreeView* aTreeView,
+  nsXULTreeGridCellAccessibleWrap(nsIContent *aContent,
+                                  nsIWeakReference *aShell,
+                                  nsXULTreeGridRowAccessible *aRowAcc,
+                                  nsITreeBoxObject *aTree,
+                                  nsITreeView *aTreeView,
                                   PRInt32 aRow, nsITreeColumn* aColumn) :
-  nsXULTreeGridCellAccessible(aContent, aDoc, aRowAcc, aTree, aTreeView,
+  nsXULTreeGridCellAccessible(aContent, aShell, aRowAcc, aTree, aTreeView,
                               aRow, aColumn)
 {
 }

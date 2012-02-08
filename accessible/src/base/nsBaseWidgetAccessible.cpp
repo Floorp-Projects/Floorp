@@ -59,8 +59,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsLeafAccessible::
-  nsLeafAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsLeafAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -92,8 +92,8 @@ nsLeafAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsLinkableAccessible::
-  nsLinkableAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc),
+  nsLinkableAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell),
   mActionAcc(nsnull),
   mIsLink(false),
   mIsOnclick(false)
@@ -253,9 +253,9 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsEnumRoleAccessible::
-  nsEnumRoleAccessible(nsIContent* aNode, nsDocAccessible* aDoc,
+  nsEnumRoleAccessible(nsIContent *aNode, nsIWeakReference *aShell,
                        roles::Role aRole) :
-  nsAccessibleWrap(aNode, aDoc), mRole(aRole)
+  nsAccessibleWrap(aNode, aShell), mRole(aRole)
 {
 }
 
