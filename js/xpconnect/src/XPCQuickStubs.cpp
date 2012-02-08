@@ -787,17 +787,47 @@ getWrapper(JSContext *cx,
            JSObject **cur,
            XPCWrappedNativeTearOff **tearoff)
 {
-    if (XPCWrapper::IsSecurityWrapper(obj) &&
-        !(obj = XPCWrapper::Unwrap(cx, obj, false))) {
-        return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+    // We can have at most three layers in need of unwrapping here:
+    // * A (possible) security wrapper
+    // * A (possible) Xray waiver
+    // * A (possible) outer window
+    //
+    // If we pass stopAtOuter == false, we can handle all three with one call
+    // to XPCWrapper::Unwrap.
+    if (js::IsWrapper(obj)) {
+        obj = XPCWrapper::Unwrap(cx, obj, false);
+
+        // The safe unwrap might have failed for SCRIPT_ACCESS_ONLY objects. If it
+        // didn't fail though, we should be done with wrappers.
+        if (!obj)
+            return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+        MOZ_ASSERT(!js::IsWrapper(obj));
     }
 
-    *cur = obj;
+    // Start with sane values.
+    *wrapper = nsnull;
+    *cur = nsnull;
     *tearoff = nsnull;
 
-    *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, callee, cur,
-                                                     tearoff);
+    // Handle tearoffs.
+    //
+    // If |obj| is of the tearoff class, that means we're dealing with a JS
+    // object reflection of a particular interface (ie, |foo.nsIBar|). These
+    // JS objects are parented to their wrapper, so we snag the tearoff object
+    // along the way (if desired), and then set |obj| to its parent.
+    if (js::GetObjectClass(obj) == &XPC_WN_Tearoff_JSClass) {
+        *tearoff = (XPCWrappedNativeTearOff*) js::GetObjectPrivate(obj);
+        obj = js::GetObjectParent(obj);
+    }
+
+    // If we've got a WN or slim wrapper, store things the way callers expect.
+    // Otherwise, leave things null and return.
+    if (IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
+        if (IS_WN_WRAPPER_OBJECT(obj))
+            *wrapper = (XPCWrappedNative*) js::GetObjectPrivate(obj);
+        else
+            *cur = obj;
+    }
 
     return NS_OK;
 }
