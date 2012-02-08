@@ -10,52 +10,11 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="events.js"></script>
+          src="../events.js"></script>
 
   <script type="application/javascript">
-
-    /**
-     * Checkers.
-     */
-    function caretMovedChecker(aID, aOffset)
-    {
-      this.__proto__ = new invokerChecker(EVENT_TEXT_CARET_MOVED, aID);
-
-      this.check = function caretMovedChecker_check(aEvent)
-      {
-        is(aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
-           aOffset,
-           "Wrong caret offset for " + prettyName(aEvent.target));
-      }
-    }
-
-    /**
-     * Invokers.
-     */
-    function setCaretOffsetInvoker(aID, aOffset, aFocusableContainerID)
-    {
-      this.target = getAccessible(aID, [nsIAccessibleText]);
-      this.focus = aFocusableContainerID ?
-        getAccessible(aFocusableContainerID) : this.target;
-
-      this.invoke = function setCaretOffsetInvoker_invoke()
-      {
-        this.target.caretOffset = aOffset;
-      }
-
-      this.getID = function setCaretOffsetInvoker_getID()
-      {
-        return "Set caretOffset on " + prettyName(aID) + " at " + aOffset;
-      }
-
-      this.eventSeq = [
-        new caretMovedChecker(this.target, aOffset),
-        new asyncInvokerChecker(EVENT_FOCUS, this.focus)
-      ];
-    }
-
     /**
      * Turn on/off the caret browsing mode.
      */
@@ -81,9 +40,9 @@
       // test caret move events and caret offsets
       gQueue = new eventQueue();
 
-      gQueue.push(new setCaretOffsetInvoker("textbox", 1));
-      gQueue.push(new setCaretOffsetInvoker("link", 1));
-      gQueue.push(new setCaretOffsetInvoker("heading", 1, document));
+      gQueue.push(new setCaretOffset("textbox", 1, "textbox"));
+      gQueue.push(new setCaretOffset("link", 1, "link"));
+      gQueue.push(new setCaretOffset("heading", 1, document));
       gQueue.onFinish = function()
       {
         turnCaretBrowsing(false);

@@ -1560,12 +1560,17 @@ nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 nsresult
 nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsresult rv = TakeFocus();
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool isFocusable = State() & states::FOCUSABLE;
+
+  // If accessible is focusable then focus it before setting the selection to
+  // neglect control's selection changes on focus if any (for example, inputs
+  // that do select all on focus).
+  // some input controls
+  if (isFocusable)
+    TakeFocus();
 
   // Set the selection
   SetSelectionBounds(0, aStartPos, aEndPos);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // If range 0 was successfully set, clear any additional selection 
   // ranges remaining from previous selection
@@ -1585,7 +1590,12 @@ nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
     domSel->RemoveRange(range);
   }
 
-  // Now that selection is done, move the focus to the selection.
+  // When selection is done, move the focus to the selection if accessible is
+  // not focusable. That happens when selection is set within hypertext
+  // accessible.
+  if (isFocusable)
+    return NS_OK;
+
   nsFocusManager* DOMFocusManager = nsFocusManager::GetFocusManager();
   if (DOMFocusManager) {
     nsCOMPtr<nsIPresShell> shell = GetPresShell();
