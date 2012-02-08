@@ -133,6 +133,10 @@
     _(CallSetPropertyT)             \
     _(CacheSetPropertyV)            \
     _(CacheSetPropertyT)            \
+    _(CallIteratorStart)            \
+    _(CallIteratorNext)             \
+    _(CallIteratorMore)             \
+    _(CallIteratorEnd)              \
     _(ArrayLength)                  \
     _(StringLength)                 \
     _(Round)

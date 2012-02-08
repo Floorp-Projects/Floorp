@@ -107,6 +107,9 @@ VectorToIdArray(JSContext *cx, js::AutoIdVector &props, JSIdArray **idap);
 bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, js::Value *vp);
 
+JSObject *
+GetIteratorObject(JSContext *cx, JSObject *obj, uint32_t flags);
+
 bool
 VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
 
@@ -131,7 +134,7 @@ EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::Auto
 extern JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, js::Value *vp);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 js_CloseIterator(JSContext *cx, JSObject *iterObj);
 
 extern bool
@@ -148,10 +151,10 @@ js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_
  * internally call iterobj.next() and then cache the value until its
  * picked up by IteratorNext(). The value is cached in the current context.
  */
-extern JSBool
+extern bool
 js_IteratorMore(JSContext *cx, JSObject *iterobj, js::Value *rval);
 
-extern JSBool
+extern bool
 js_IteratorNext(JSContext *cx, JSObject *iterobj, js::Value *rval);
 
 extern JSBool

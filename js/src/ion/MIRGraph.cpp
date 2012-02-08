@@ -155,7 +155,7 @@ MBasicBlock::init()
 void
 MBasicBlock::copySlots(MBasicBlock *from)
 {
-    stackPosition_ = from->stackPosition_;
+    JS_ASSERT(stackPosition_ == from->stackPosition_);
 
     for (uint32 i = 0; i < stackPosition_; i++)
         slots_[i] = from->slots_[i];
@@ -164,8 +164,13 @@ MBasicBlock::copySlots(MBasicBlock *from)
 bool
 MBasicBlock::inherit(MBasicBlock *pred)
 {
-    if (pred)
+    if (pred) {
+        stackPosition_ = pred->stackPosition_;
         copySlots(pred);
+    } else {
+        uint32_t stackDepth = info().script()->analysis()->getCode(pc()).stackDepth;
+        stackPosition_ = info().firstStackSlot() + stackDepth;
+    }
 
     // Propagate the caller resume point from the inherited block.
     MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : NULL;

@@ -127,6 +127,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStoreElementV(LStoreElementV *lir);
     bool visitStoreElementHoleT(LStoreElementHoleT *lir);
     bool visitStoreElementHoleV(LStoreElementHoleV *lir);
+    bool visitCallIteratorStart(LCallIteratorStart *lir);
+    bool visitCallIteratorNext(LCallIteratorNext *lir);
+    bool visitCallIteratorMore(LCallIteratorMore *lir);
+    bool visitCallIteratorEnd(LCallIteratorEnd *lir);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);

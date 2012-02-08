@@ -1718,6 +1718,59 @@ class LCacheSetPropertyT : public LInstructionHelper<0, 2, 0>
     }
 };
 
+class LCallIteratorStart : public LCallInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(CallIteratorStart);
+
+    LCallIteratorStart(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    MIteratorStart *mir() const {
+        return mir_->toIteratorStart();
+    }
+};
+
+class LCallIteratorNext : public LCallInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(CallIteratorNext);
+    BOX_OUTPUT_ACCESSORS();
+
+    LCallIteratorNext(const LAllocation &iterator) {
+        setOperand(0, iterator);
+    }
+    MIteratorNext *mir() const {
+        return mir_->toIteratorNext();
+    }
+};
+
+class LCallIteratorMore : public LCallInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(CallIteratorMore);
+
+    LCallIteratorMore(const LAllocation &iterator) {
+        setOperand(0, iterator);
+    }
+    MIteratorMore *mir() const {
+        return mir_->toIteratorMore();
+    }
+};
+
+class LCallIteratorEnd : public LCallInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(CallIteratorEnd);
+
+    LCallIteratorEnd(const LAllocation &iterator) {
+        setOperand(0, iterator);
+    }
+    MIteratorEnd *mir() const {
+        return mir_->toIteratorEnd();
+    }
+};
+
 // Mark a Value if it is a GCThing.
 class LWriteBarrierV : public LInstructionHelper<0, BOX_PIECES, 0>
 {

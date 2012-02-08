@@ -1228,6 +1228,62 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
 }
 
 bool
+CodeGenerator::visitCallIteratorStart(LCallIteratorStart *lir)
+{
+    typedef JSObject *(*pf)(JSContext *, JSObject *, uint32_t);
+    static const VMFunction Info = FunctionInfo<pf>(GetIteratorObject);
+
+    const Register objReg = ToRegister(lir->getOperand(0));
+
+    pushArg(Imm32(lir->mir()->flags()));
+    pushArg(objReg);
+    return callVM(Info, lir);
+}
+
+bool
+CodeGenerator::visitCallIteratorNext(LCallIteratorNext *lir)
+{
+    typedef bool (*pf)(JSContext *, JSObject *, Value *);
+    static const VMFunction Info = FunctionInfo<pf>(js_IteratorNext);
+
+    const Register objReg = ToRegister(lir->getOperand(0));
+
+    pushArg(objReg);
+    return callVM(Info, lir);
+}
+
+bool
+CodeGenerator::visitCallIteratorMore(LCallIteratorMore *lir)
+{
+    typedef bool (*pf)(JSContext *, JSObject *, Value *);
+    static const VMFunction Info = FunctionInfo<pf>(js_IteratorMore);
+
+    const Register objReg = ToRegister(lir->getOperand(0));
+
+    pushArg(objReg);
+    if (!callVM(Info, lir))
+        return false;
+
+    // Unbox the boolean value produced by IteratorMore to the output register.
+    Register output = ToRegister(lir->getDef(0));
+    masm.unboxValue(JSReturnOperand, AnyRegister(output));
+
+    return true;
+}
+
+bool
+CodeGenerator::visitCallIteratorEnd(LCallIteratorEnd *lir)
+{
+    typedef bool (*pf)(JSContext *, JSObject *);
+    static const VMFunction Info = FunctionInfo<pf>(js_CloseIterator);
+
+    const Register objReg = ToRegister(lir->getOperand(0));
+
+    pushArg(objReg);
+    return callVM(Info, lir);
+}
+
+bool
 CodeGenerator::generate()
 {
     JSContext *cx = gen->cx;

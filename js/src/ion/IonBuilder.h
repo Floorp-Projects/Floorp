@@ -260,11 +260,8 @@ class IonBuilder : public MIRGenerator
 
     void assertValidLoopHeadOp(jsbytecode *pc);
 
-    bool forInLoop(JSOp op, jssrcnote *sn) {
-        return false;
-    }
     ControlStatus forLoop(JSOp op, jssrcnote *sn);
-    ControlStatus whileLoop(JSOp op, jssrcnote *sn);
+    ControlStatus whileOrForInLoop(JSOp op, jssrcnote *sn);
     ControlStatus doWhileLoop(JSOp op, jssrcnote *sn);
     ControlStatus tableSwitch(JSOp op, jssrcnote *sn);
 
@@ -311,9 +308,13 @@ class IonBuilder : public MIRGenerator
     bool jsop_regexp(RegExpObject *reobj);
     bool jsop_object(JSObject *obj);
     bool jsop_this();
+    bool jsop_iter(uint8 flags);
+    bool jsop_iternext(uint8 depth);
+    bool jsop_itermore();
+    bool jsop_iterend();
 
     // Replace generic calls to native function by instructions which can be
-    // specialized and which can enable GVN & LICM on these native calls.
+    // specialized and which can enable GVN & LICM on these native calls.
     void discardCallArgs(uint32 argc, MDefinition **argv);
     bool optimizeNativeCall(uint32 argc);
 

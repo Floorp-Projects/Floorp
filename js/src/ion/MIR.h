@@ -3128,6 +3128,109 @@ class MRound
     }
 };
 
+class MIteratorStart
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    uint8 flags_;
+
+    MIteratorStart(MDefinition *obj, uint8 flags)
+      : MUnaryInstruction(obj), flags_(flags)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(IteratorStart);
+
+    static MIteratorStart *New(MDefinition *obj, uint8 flags) {
+        return new MIteratorStart(obj, flags);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    uint8 flags() const {
+        return flags_;
+    }
+};
+
+class MIteratorNext
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    MIteratorNext(MDefinition *iter)
+      : MUnaryInstruction(iter)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(IteratorNext);
+
+    static MIteratorNext *New(MDefinition *iter) {
+        return new MIteratorNext(iter);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *iterator() const {
+        return getOperand(0);
+    }
+};
+
+class MIteratorMore
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    MIteratorMore(MDefinition *iter)
+      : MUnaryInstruction(iter)
+    {
+        setResultType(MIRType_Boolean);
+    }
+
+  public:
+    INSTRUCTION_HEADER(IteratorMore);
+
+    static MIteratorMore *New(MDefinition *iter) {
+        return new MIteratorMore(iter);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *iterator() const {
+        return getOperand(0);
+    }
+};
+
+class MIteratorEnd
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    MIteratorEnd(MDefinition *iter)
+      : MUnaryInstruction(iter)
+    {}
+
+  public:
+    INSTRUCTION_HEADER(IteratorEnd);
+
+    static MIteratorEnd *New(MDefinition *iter) {
+        return new MIteratorEnd(iter);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *iterator() const {
+        return getOperand(0);
+    }
+};
+
 // Given a value, guard that the value is in a particular TypeSet, then returns
 // that value.
 class MTypeBarrier : public MUnaryInstruction
