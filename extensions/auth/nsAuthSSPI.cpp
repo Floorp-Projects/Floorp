@@ -107,14 +107,33 @@ static const char *MapErrorCode(int rc)
 
 //-----------------------------------------------------------------------------
 
+static HINSTANCE                 sspi_lib; 
 static PSecurityFunctionTableW   sspi;
 
 static nsresult
 InitSSPI()
 {
+    PSecurityFunctionTableW (*initFun)(void);
+
     LOG(("  InitSSPI\n"));
 
-    sspi = InitSecurityInterfaceW();
+    sspi_lib = LoadLibraryW(L"secur32.dll");
+    if (!sspi_lib) {
+        sspi_lib = LoadLibraryW(L"security.dll");
+        if (!sspi_lib) {
+            LOG(("SSPI library not found"));
+            return NS_ERROR_UNEXPECTED;
+        }
+    }
+
+    initFun = (PSecurityFunctionTableW (*)(void))
+            GetProcAddress(sspi_lib, "InitSecurityInterfaceW");
+    if (!initFun) {
+        LOG(("InitSecurityInterfaceW not found"));
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    sspi = initFun();
     if (!sspi) {
         LOG(("InitSecurityInterfaceW failed"));
         return NS_ERROR_UNEXPECTED;

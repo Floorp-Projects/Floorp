@@ -247,6 +247,13 @@ nsMIMEInfoWin::GetProperty(const nsAString& aName, nsIVariant* *_retval)
   return NS_OK;
 }
 
+typedef HRESULT (STDMETHODCALLTYPE *MySHParseDisplayName)
+                 (PCWSTR pszName,
+                  IBindCtx *pbc,
+                  LPITEMIDLIST *ppidl,
+                  SFGAOF sfgaoIn,
+                  SFGAOF *psfgaoOut);
+
 // this implementation was pretty much copied verbatime from 
 // Tony Robinson's code in nsExternalProtocolWin.cpp
 nsresult
@@ -267,6 +274,15 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
     nsCAutoString urlSpec;
     aURL->GetAsciiSpec(urlSpec);
 
+    // Some versions of windows (Win2k before SP3, Win XP before SP1)
+    // crash in ShellExecute on long URLs (bug 161357).
+    // IE 5 and 6 support URLS of 2083 chars in length, 2K is safe
+    const PRUint32 maxSafeURL(2048);
+    if (urlSpec.Length() > maxSafeURL)
+      return NS_ERROR_FAILURE;
+
+    HMODULE hDll = NULL;
+    
     static const PRUnichar cmdVerb[] = L"open";
     SHELLEXECUTEINFOW sinfo;
     memset(&sinfo, 0, sizeof(sinfo));
@@ -281,14 +297,22 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
     SFGAOF sfgao;
     
     // Bug 394974
-    if (SUCCEEDED(SHParseDisplayName(NS_ConvertUTF8toUTF16(urlSpec).get(),
-                                     NULL, &pidl, 0, &sfgao))) {
-      sinfo.lpIDList = pidl;
-      sinfo.fMask |= SEE_MASK_INVOKEIDLIST;
+    hDll = ::LoadLibraryW(L"shell32.dll");
+    MySHParseDisplayName pMySHParseDisplayName = NULL;
+    // Version 6.0 and higher
+    if (pMySHParseDisplayName = 
+        (MySHParseDisplayName)::GetProcAddress(hDll, "SHParseDisplayName")) {
+      if (SUCCEEDED(pMySHParseDisplayName(NS_ConvertUTF8toUTF16(urlSpec).get(),
+                                          NULL, &pidl, 0, &sfgao))) {
+        sinfo.lpIDList = pidl;
+        sinfo.fMask |= SEE_MASK_INVOKEIDLIST;
+      } else {
+        // SHParseDisplayName exists, but failed. Bailing out as work around for
+        // Microsoft Security Bulletin MS07-061
+        rv = NS_ERROR_FAILURE;
+      }
     } else {
-      // SHParseDisplayName failed. Bailing out as work around for
-      // Microsoft Security Bulletin MS07-061
-      rv = NS_ERROR_FAILURE;
+      sinfo.lpFile =  NS_ConvertUTF8toUTF16(urlSpec).get();
     }
     if (NS_SUCCEEDED(rv)) {
       BOOL result = ShellExecuteExW(&sinfo);
@@ -297,6 +321,8 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
     }
     if (pidl)
       CoTaskMemFree(pidl);
+    if (hDll) 
+      ::FreeLibrary(hDll);
   }
   
   return rv;
