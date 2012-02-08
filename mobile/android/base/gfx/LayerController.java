@@ -41,7 +41,6 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerClient;
-import org.mozilla.gecko.gfx.AbstractLayerView;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import org.mozilla.gecko.GeckoApp;
@@ -75,7 +74,7 @@ public class LayerController {
     private static final String LOGTAG = "GeckoLayerController";
 
     private Layer mRootLayer;                   /* The root layer. */
-    private AbstractLayerView mView;            /* The main rendering view. */
+    private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
     private ViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
     private boolean mWaitForTouchListeners;
@@ -136,7 +135,7 @@ public class LayerController {
 
     public LayerClient getLayerClient()           { return mLayerClient; }
     public Layer getRoot()                        { return mRootLayer; }
-    public AbstractLayerView getView()            { return mView; }
+    public LayerView getView()                    { return mView; }
     public Context getContext()                   { return mContext; }
     public ViewportMetrics getViewportMetrics()   { return mViewportMetrics; }
 
@@ -403,7 +402,7 @@ public class LayerController {
         }
 
         if (mOnTouchListener != null)
-            mOnTouchListener.onTouch(mView.getAndroidView(), event);
+            mOnTouchListener.onTouch(mView, event);
 
         if (!mWaitForTouchListeners)
             return !allowDefaultActions;
