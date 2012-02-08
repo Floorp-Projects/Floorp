@@ -24,6 +24,7 @@ userPrefs = {
     'javascript.options.showInConsole': 'true',
     'layout.debug.enable_data_xbl': 'true',
     'shell.checkDefaultClient': 'false',
+    'toolkit.startup.max_resumed_crashes': -1,
     'browser.EULA.override': 'true'
 }
 

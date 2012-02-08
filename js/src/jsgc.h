@@ -1358,13 +1358,10 @@ extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
 extern JS_FRIEND_API(bool)
-IsAboutToBeFinalized(JSContext *cx, const js::gc::Cell *thing);
+IsAboutToBeFinalized(const js::gc::Cell *thing);
 
 extern bool
-IsAboutToBeFinalized(JSContext *cx, const js::Value &value);
-
-extern JS_FRIEND_API(bool)
-js_GCThingIsMarked(void *thing, uintN color);
+IsAboutToBeFinalized(const js::Value &value);
 
 extern void
 js_TraceStackFrame(JSTracer *trc, js::StackFrame *fp);

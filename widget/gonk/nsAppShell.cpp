@@ -587,7 +587,10 @@ GeckoInputDispatcher::notifyMotion(nsecs_t eventTime,
     }
     {
         MutexAutoLock lock(mQueueLock);
-        mEventQueue.push(data);
+        if (!mEventQueue.empty() && mEventQueue.back().type == UserInputData::MOTION_DATA)
+            mEventQueue.back() = data;
+        else
+            mEventQueue.push(data);
     }
     gAppShell->NotifyNativeEvent();
 }

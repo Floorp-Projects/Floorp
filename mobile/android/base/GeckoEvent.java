@@ -86,6 +86,7 @@ public class GeckoEvent {
     public static final int VIEWPORT = 20;
     public static final int VISITED = 21;
     public static final int NETWORK_CHANGED = 22;
+    public static final int PROXIMITY_EVENT = 23;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -118,6 +119,7 @@ public class GeckoEvent {
     public Rect mRect;
     public double mX, mY, mZ;
     public double mAlpha, mBeta, mGamma;
+    public double mDistance;
 
     public int mMetaState, mFlags;
     public int mKeyCode, mUnicodeChar;
@@ -190,60 +192,77 @@ public class GeckoEvent {
     }
 
     public void addMotionPoint(int index, int eventIndex, MotionEvent event) {
-        PointF geckoPoint = new PointF(event.getX(eventIndex), event.getY(eventIndex));
-        geckoPoint = GeckoApp.mAppContext.getLayerController().convertViewPointToLayerPoint(geckoPoint);
-
-        mPoints[index] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
-        mPointIndicies[index] = event.getPointerId(eventIndex);
-        // getToolMajor, getToolMinor and getOrientation are API Level 9 features
-        if (Build.VERSION.SDK_INT >= 9) {
-            double radians = event.getOrientation(eventIndex);
-            mOrientations[index] = (float) Math.toDegrees(radians);
-            // w3c touchevents spec does not allow orientations == 90
-            // this shifts it to -90, which will be shifted to zero below
-            if (mOrientations[index] == 90)
-                mOrientations[index] = -90;
-
-            // w3c touchevent radius are given by an orientation between 0 and 90
-            // the radius is found by removing the orientation and measuring the x and y
-            // radius of the resulting ellipse
-            // for android orientations >= 0 and < 90, the major axis should correspond to
-            // just reporting the y radius as the major one, and x as minor
-            // however, for a radius < 0, we have to shift the orientation by adding 90, and
-            // reverse which radius is major and minor
-            if (mOrientations[index] < 0) {
-                mOrientations[index] += 90;
-                mPointRadii[index] = new Point((int)event.getToolMajor(eventIndex)/2,
-                                               (int)event.getToolMinor(eventIndex)/2);
+        try {
+            PointF geckoPoint = new PointF(event.getX(eventIndex), event.getY(eventIndex));
+            geckoPoint = GeckoApp.mAppContext.getLayerController().convertViewPointToLayerPoint(geckoPoint);
+    
+            mPoints[index] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
+            mPointIndicies[index] = event.getPointerId(eventIndex);
+            // getToolMajor, getToolMinor and getOrientation are API Level 9 features
+            if (Build.VERSION.SDK_INT >= 9) {
+                double radians = event.getOrientation(eventIndex);
+                mOrientations[index] = (float) Math.toDegrees(radians);
+                // w3c touchevents spec does not allow orientations == 90
+                // this shifts it to -90, which will be shifted to zero below
+                if (mOrientations[index] == 90)
+                    mOrientations[index] = -90;
+    
+                // w3c touchevent radius are given by an orientation between 0 and 90
+                // the radius is found by removing the orientation and measuring the x and y
+                // radius of the resulting ellipse
+                // for android orientations >= 0 and < 90, the major axis should correspond to
+                // just reporting the y radius as the major one, and x as minor
+                // however, for a radius < 0, we have to shift the orientation by adding 90, and
+                // reverse which radius is major and minor
+                if (mOrientations[index] < 0) {
+                    mOrientations[index] += 90;
+                    mPointRadii[index] = new Point((int)event.getToolMajor(eventIndex)/2,
+                                                   (int)event.getToolMinor(eventIndex)/2);
+                } else {
+                    mPointRadii[index] = new Point((int)event.getToolMinor(eventIndex)/2,
+                                                   (int)event.getToolMajor(eventIndex)/2);
+                }
             } else {
-                mPointRadii[index] = new Point((int)event.getToolMinor(eventIndex)/2,
-                                               (int)event.getToolMajor(eventIndex)/2);
+                float size = event.getSize(eventIndex);
+                DisplayMetrics displaymetrics = new DisplayMetrics();
+                GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+                size = size*Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
+                mPointRadii[index] = new Point((int)size,(int)size);
+                mOrientations[index] = 0;
             }
-        } else {
-            float size = event.getSize(eventIndex);
-            DisplayMetrics displaymetrics = new DisplayMetrics();
-            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-            size = size*Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
-            mPointRadii[index] = new Point((int)size,(int)size);
-            mOrientations[index] = 0;
+            mPressures[index] = event.getPressure(eventIndex);
+        } catch(Exception ex) {
+            Log.e(LOGTAG, "Error creating motion point " + index, ex);
+            mPointRadii[index] = new Point(0, 0);
+            mPoints[index] = new Point(0, 0);
         }
-        mPressures[index] = event.getPressure(eventIndex);
     }
 
     public GeckoEvent(SensorEvent s) {
-
-        if (s.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        int sensor_type = s.sensor.getType();
+ 
+        switch(sensor_type) {
+        case Sensor.TYPE_ACCELEROMETER:
             mType = ACCELERATION_EVENT;
             mX = s.values[0];
             mY = s.values[1];
             mZ = s.values[2];
-        }
-        else {
+            break;
+            
+        case Sensor.TYPE_ORIENTATION:
             mType = ORIENTATION_EVENT;
             mAlpha = -s.values[0];
             mBeta = -s.values[1];
             mGamma = -s.values[2];
             Log.i(LOGTAG, "SensorEvent type = " + s.sensor.getType() + " " + s.sensor.getName() + " " + mAlpha + " " + mBeta + " " + mGamma );
+            break;
+
+        case Sensor.TYPE_PROXIMITY:
+            mType = PROXIMITY_EVENT;
+            mDistance = s.values[0];
+            Log.i("GeckoEvent", "SensorEvent type = " + s.sensor.getType() + 
+                  " " + s.sensor.getName() + " " + mDistance);
+            break;
         }
     }
 

@@ -40,7 +40,7 @@
 interface nsIVariant;
 interface nsIDOMFileList;
 
-[scriptable, uuid(34042440-60A8-4992-AE5C-798E69148955)]
+[scriptable, uuid(E929ACB6-435C-4CB8-9AD1-AE3B9353BCC5)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**
@@ -160,28 +160,6 @@ interface nsIDOMDataTransfer : nsISupports
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
   void addElement(in nsIDOMElement element);
-};
-
-[scriptable, uuid(AE6DF4E2-FA37-4701-A33E-A5678F826EED)]
-interface nsIDOMNSDataTransfer : nsISupports
-{
-  /*
-   * Integer version of dropEffect, set to one of the constants in nsIDragService.
-   */
-  [noscript] attribute unsigned long dropEffectInt;
-
-  /*
-   * Integer version of effectAllowed, set to one or a combination of the
-   * constants in nsIDragService.
-   */
-  [noscript] attribute unsigned long effectAllowedInt;
-
-  /**
-   * Creates a copy of the data transfer object, for the given event type and
-   * user cancelled flag.
-   */
-  [noscript] nsIDOMDataTransfer clone(in PRUint32 aEventType,
-                                      in boolean aUserCancelled);
 
   /**
    * The number of items being dragged.
@@ -272,4 +250,22 @@ interface nsIDOMNSDataTransfer : nsISupports
    * drags, or if the caller cannot access this node, this will be null.
    */
   readonly attribute nsIDOMNode mozSourceNode;
+
+  /*
+   * Integer version of dropEffect, set to one of the constants in nsIDragService.
+   */
+  [noscript] attribute unsigned long dropEffectInt;
+
+  /*
+   * Integer version of effectAllowed, set to one or a combination of the
+   * constants in nsIDragService.
+   */
+  [noscript] attribute unsigned long effectAllowedInt;
+
+  /**
+   * Creates a copy of the data transfer object, for the given event type and
+   * user cancelled flag.
+   */
+  [noscript] nsIDOMDataTransfer clone(in PRUint32 aEventType,
+                                      in boolean aUserCancelled);
 };

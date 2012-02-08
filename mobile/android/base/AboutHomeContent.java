@@ -59,6 +59,7 @@ import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.accounts.OnAccountsUpdateListener;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -110,6 +111,8 @@ public class AboutHomeContent extends ScrollView {
     UriLoadCallback mUriLoadCallback = null;
     private LayoutInflater mInflater;
 
+    private AccountManager mAccountManager;
+
     protected SimpleCursorAdapter mTopSitesAdapter;
     protected GridView mTopSitesGrid;
 
@@ -124,6 +127,26 @@ public class AboutHomeContent extends ScrollView {
         super(context);
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mInflater.inflate(R.layout.abouthome_content, this);
+
+        mAccountManager = AccountManager.get(context);
+
+        // The listener will run on the background thread (see 2nd argument)
+        mAccountManager.addOnAccountsUpdatedListener(new OnAccountsUpdateListener() {
+            public void onAccountsUpdated(Account[] accounts) {
+                final GeckoApp.StartupMode startupMode = GeckoApp.mAppContext.getStartupMode();
+                final boolean syncIsSetup = isSyncSetup();
+
+                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                    public void run() {
+                        // The listener might run before the UI is initially updated.
+                        // In this case, we should simply wait for the initial setup
+                        // to happen.
+                        if (mTopSitesAdapter != null)
+                            updateLayout(startupMode, syncIsSetup);
+                    }
+                });
+            }
+        }, GeckoAppShell.getHandler(), true);
 
         setScrollContainer(true);
         setBackgroundResource(R.drawable.abouthome_bg_repeat);
@@ -155,7 +178,7 @@ public class AboutHomeContent extends ScrollView {
         allAddonsText.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (mUriLoadCallback != null)
-                    mUriLoadCallback.callback("about:addons");
+                    mUriLoadCallback.callback("https://addons.mozilla.org/android");
             }
         });
 
@@ -180,6 +203,13 @@ public class AboutHomeContent extends ScrollView {
                 context.startActivity(intent);
             }
         });
+    }
+
+    private void setAddonsVisibility(boolean visible) {
+        int visibility = visible ? View.VISIBLE : View.GONE;
+        findViewById(R.id.recommended_addons_title).setVisibility(visibility);
+        findViewById(R.id.recommended_addons).setVisibility(visibility);
+        findViewById(R.id.all_addons_text).setVisibility(visibility);
     }
 
     private void setTopSitesVisibility(boolean visible, boolean hasTopSites) {
@@ -219,8 +249,7 @@ public class AboutHomeContent extends ScrollView {
     }
 
     private boolean isSyncSetup() {
-        AccountManager accountManager = AccountManager.get(getContext());
-        Account[] accounts = accountManager.getAccountsByType("org.mozilla.firefox_sync");
+        Account[] accounts = mAccountManager.getAccountsByType("org.mozilla.firefox_sync");
         return accounts.length > 0;
     }
 
@@ -423,20 +452,25 @@ public class AboutHomeContent extends ScrollView {
             Log.i("Addons", "filestream is null");
             jsonString = readFromZipFile(activity, addonsFilename);
         }
-        if (jsonString == null)
-            return;
 
-        final JSONArray array;
-        try {
-            array = new JSONObject(jsonString).getJSONArray("addons");
-        } catch (JSONException e) {
-            Log.i(LOGTAG, "error reading json file", e);
-            return;
+        JSONArray addonsArray = null;
+        if (jsonString != null) {
+            try {
+                addonsArray = new JSONObject(jsonString).getJSONArray("addons");
+            } catch (JSONException e) {
+                Log.i(LOGTAG, "error reading json file", e);
+            }
         }
 
+        final JSONArray array = addonsArray;
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
             public void run() {
                 try {
+                    if (array == null || array.length() == 0) {
+                        setAddonsVisibility(false);
+                        return;
+                    }
+
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject jsonobj = array.getJSONObject(i);
 
@@ -460,6 +494,8 @@ public class AboutHomeContent extends ScrollView {
 
                         mAddonsLayout.addView(row);
                     }
+
+                    setAddonsVisibility(true);
                 } catch (JSONException e) {
                     Log.i(LOGTAG, "error reading json file", e);
                 }
@@ -496,8 +532,13 @@ public class AboutHomeContent extends ScrollView {
                 int index = tab.getInt("index");
                 JSONArray entries = tab.getJSONArray("entries");
                 JSONObject entry = entries.getJSONObject(index - 1);
-                title = entry.getString("title");
                 url = entry.getString("url");
+
+                String optTitle = entry.optString("title");
+                if (optTitle.length() == 0)
+                    title = url;
+                else
+                    title = optTitle;
             } catch (JSONException e) {
                 Log.e(LOGTAG, "error reading json file", e);
                 continue;

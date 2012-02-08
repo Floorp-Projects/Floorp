@@ -55,7 +55,11 @@ public class TextureReaper {
 
     public void add(int[] textureIDs) {
         for (int textureID : textureIDs)
-            mDeadTextureIDs.add(textureID);
+            add(textureID);
+    }
+
+    public void add(int textureID) {
+        mDeadTextureIDs.add(textureID);
     }
 
     public void reap(GL10 gl) {

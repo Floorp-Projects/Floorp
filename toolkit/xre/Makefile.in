@@ -180,9 +180,7 @@ SHARED_LIBRARY_LIBS += \
 endif
 endif
 
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+TEST_DIRS += test
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

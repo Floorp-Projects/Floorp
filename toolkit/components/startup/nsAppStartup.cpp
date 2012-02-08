@@ -27,6 +27,7 @@
  *   Daniel Brooks <db48x@db48x.net>
  *   Taras Glek <tglek@mozilla.com>
  *   Landry Breuil <landry@openbsd.org>
+ *   David Rajchenbach-Teller <dteller@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -58,17 +59,20 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
+#include "nsIXULRuntime.h"
 #include "nsIXULWindow.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
+#include "mozilla/Preferences.h"
 
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsAppShellCID.h"
+#include "nsXPCOMCIDInternal.h"
 #include "mozilla/Services.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsIXPConnect.h"
@@ -97,6 +101,42 @@
 #include "mozilla/StartupTimeline.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+#define kPrefLastSuccess "toolkit.startup.last_success"
+#define kPrefMaxResumedCrashes "toolkit.startup.max_resumed_crashes"
+#define kPrefRecentCrashes "toolkit.startup.recent_crashes"
+
+#if defined(XP_WIN)
+#include "mozilla/perfprobe.h"
+/**
+ * Events sent to the system for profiling purposes
+ */
+//Keep them syncronized with the .mof file
+
+//Process-wide GUID, used by the OS to differentiate sources
+// {509962E0-406B-46F4-99BA-5A009F8D2225}
+//Keep it synchronized with the .mof file
+#define NS_APPLICATION_TRACING_CID \
+  { 0x509962E0, 0x406B, 0x46F4, \
+  { 0x99, 0xBA, 0x5A, 0x00, 0x9F, 0x8D, 0x22, 0x25} }
+
+//Event-specific GUIDs, used by the OS to differentiate events
+// {A3DA04E0-57D7-482A-A1C1-61DA5F95BACB}
+#define NS_PLACES_INIT_COMPLETE_EVENT_CID \
+  { 0xA3DA04E0, 0x57D7, 0x482A, \
+  { 0xA1, 0xC1, 0x61, 0xDA, 0x5F, 0x95, 0xBA, 0xCB} }
+// {917B96B1-ECAD-4DAB-A760-8D49027748AE}
+#define NS_SESSION_STORE_WINDOW_RESTORED_EVENT_CID \
+  { 0x917B96B1, 0xECAD, 0x4DAB, \
+  { 0xA7, 0x60, 0x8D, 0x49, 0x02, 0x77, 0x48, 0xAE} }
+
+static NS_DEFINE_CID(kApplicationTracingCID,
+  NS_APPLICATION_TRACING_CID);
+static NS_DEFINE_CID(kPlacesInitCompleteCID,
+  NS_PLACES_INIT_COMPLETE_EVENT_CID);
+static NS_DEFINE_CID(kSessionStoreWindowRestoredCID,
+  NS_SESSION_STORE_WINDOW_RESTORED_EVENT_CID);
+#endif //defined(XP_WIN)
 
 using namespace mozilla;
 
@@ -130,7 +170,9 @@ nsAppStartup::nsAppStartup() :
   mShuttingDown(false),
   mAttemptingQuit(false),
   mRestart(false),
-  mInterrupted(false)
+  mInterrupted(false),
+  mIsSafeModeNecessary(false),
+  mStartupCrashTrackingEnded(false)
 { }
 
 
@@ -158,6 +200,39 @@ nsAppStartup::Init()
   os->AddObserver(this, "profile-change-teardown", true);
   os->AddObserver(this, "xul-window-registered", true);
   os->AddObserver(this, "xul-window-destroyed", true);
+
+#if defined(XP_WIN)
+  os->AddObserver(this, "places-init-complete", true);
+  // This last event is only interesting to us for xperf-based measures
+
+  // Initialize interaction with profiler
+  mProbesManager =
+    new ProbeManager(
+                     kApplicationTracingCID,
+                     NS_LITERAL_CSTRING("Application startup probe"));
+  // Note: The operation is meant mostly for in-house profiling.
+  // Therefore, we do not warn if probes manager cannot be initialized
+
+  if (mProbesManager) {
+    mPlacesInitCompleteProbe =
+      mProbesManager->
+      GetProbe(kPlacesInitCompleteCID,
+               NS_LITERAL_CSTRING("places-init-complete"));
+    NS_WARN_IF_FALSE(mPlacesInitCompleteProbe,
+                     "Cannot initialize probe 'places-init-complete'");
+
+    mSessionWindowRestoredProbe =
+      mProbesManager->
+      GetProbe(kSessionStoreWindowRestoredCID,
+               NS_LITERAL_CSTRING("sessionstore-windows-restored"));
+    NS_WARN_IF_FALSE(mSessionWindowRestoredProbe,
+                     "Cannot initialize probe 'sessionstore-windows-restored'");
+
+    rv = mProbesManager->StartSession();
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                     "Cannot initialize system probe manager");
+  }
+#endif //defined(XP_WIN)
 
   return NS_OK;
 }
@@ -560,6 +635,15 @@ nsAppStartup::Observe(nsISupports *aSubject,
     ExitLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, "sessionstore-windows-restored")) {
     StartupTimeline::Record(StartupTimeline::SESSION_RESTORED);
+#if defined(XP_WIN)
+    if (mSessionWindowRestoredProbe) {
+      mSessionWindowRestoredProbe->Trigger();
+    }
+  } else if (!strcmp(aTopic, "places-init-complete")) {
+    if (mPlacesInitCompleteProbe) {
+      mPlacesInitCompleteProbe->Trigger();
+    }
+#endif //defined(XP_WIN)
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
@@ -731,6 +815,160 @@ nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
       }
     }
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::GetAutomaticSafeModeNecessary(bool *_retval)
+{
+    *_retval = mIsSafeModeNecessary;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
+{
+  const PRInt32 MAX_TIME_SINCE_STARTUP = 6 * 60 * 60 * 1000;
+  const PRInt32 MAX_STARTUP_BUFFER = 10;
+  nsresult rv;
+
+  mStartupCrashTrackingEnded = false;
+
+  bool hasLastSuccess = Preferences::HasUserValue(kPrefLastSuccess);
+  if (!hasLastSuccess) {
+    // Clear so we don't get stuck with SafeModeNecessary returning true if we
+    // have had too many recent crashes and the last success pref is missing.
+    Preferences::ClearUser(kPrefRecentCrashes);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  bool inSafeMode = false;
+  nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(xr, NS_ERROR_FAILURE);
+
+  xr->GetInSafeMode(&inSafeMode);
+
+  PRInt64 replacedLockTime;
+  rv = xr->GetReplacedLockTime(&replacedLockTime);
+
+  if (NS_FAILED(rv) || !replacedLockTime) {
+    if (!inSafeMode)
+      Preferences::ClearUser(kPrefRecentCrashes);
+    GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+    return NS_OK;
+  }
+
+  // check whether safe mode is necessary
+  PRInt32 maxResumedCrashes = -1;
+  rv = Preferences::GetInt(kPrefMaxResumedCrashes, &maxResumedCrashes);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  PRInt32 recentCrashes = 0;
+  Preferences::GetInt(kPrefRecentCrashes, &recentCrashes);
+  mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
+
+  // time of last successful startup
+  PRInt32 lastSuccessfulStartup;
+  rv = Preferences::GetInt(kPrefLastSuccess, &lastSuccessfulStartup);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 lockSeconds = (PRInt32)(replacedLockTime / PR_MSEC_PER_SEC);
+
+  // started close enough to good startup so call it good
+  if (lockSeconds <= lastSuccessfulStartup + MAX_STARTUP_BUFFER
+      && lockSeconds >= lastSuccessfulStartup - MAX_STARTUP_BUFFER) {
+    GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+    return NS_OK;
+  }
+
+  // sanity check that the pref set at last success is not greater than the current time
+  if (PR_Now() / PR_USEC_PER_SEC <= lastSuccessfulStartup)
+    return NS_ERROR_FAILURE;
+
+  if (inSafeMode) {
+    GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+    return NS_OK;
+  }
+
+  PRTime now = (PR_Now() / PR_USEC_PER_MSEC);
+  // if the last startup attempt which crashed was in the last 6 hours
+  if (replacedLockTime >= now - MAX_TIME_SINCE_STARTUP) {
+    NS_WARNING("Last startup was detected as a crash.");
+    recentCrashes++;
+    rv = Preferences::SetInt(kPrefRecentCrashes, recentCrashes);
+  } else {
+    // Otherwise ignore that crash and all previous since it may not be applicable anymore
+    // and we don't want someone to get stuck in safe mode if their prefs are read-only.
+    rv = Preferences::ClearUser(kPrefRecentCrashes);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // recalculate since recent crashes count may have changed above
+  mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
+
+  nsCOMPtr<nsIPrefService> prefs = Preferences::GetService();
+  rv = prefs->SavePrefFile(nsnull); // flush prefs to disk since we are tracking crashes
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAppStartup::TrackStartupCrashEnd()
+{
+  bool inSafeMode = false;
+  nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
+  if (xr)
+    xr->GetInSafeMode(&inSafeMode);
+
+  // return if we already ended or we're restarting into safe mode
+  if (mStartupCrashTrackingEnded || (mIsSafeModeNecessary && !inSafeMode))
+    return NS_OK;
+  mStartupCrashTrackingEnded = true;
+
+  // Use the timestamp of XRE_main as an approximation for the lock file timestamp.
+  // See MAX_STARTUP_BUFFER for the buffer time period.
+  nsresult rv;
+  PRTime mainTime = StartupTimeline::Get(StartupTimeline::MAIN);
+  if (mainTime <= 0) {
+    NS_WARNING("Could not get StartupTimeline::MAIN time.");
+  } else {
+    PRInt32 lockFileTime = (PRInt32)(mainTime / PR_USEC_PER_SEC);
+    rv = Preferences::SetInt(kPrefLastSuccess, lockFileTime);
+    if (NS_FAILED(rv)) NS_WARNING("Could not set startup crash detection pref.");
+  }
+
+  if (inSafeMode && mIsSafeModeNecessary) {
+    // On a successful startup in automatic safe mode, allow the user one more crash
+    // in regular mode before returning to safe mode.
+    PRInt32 maxResumedCrashes = 0;
+    PRInt32 prefType;
+    rv = Preferences::GetDefaultRootBranch()->GetPrefType(kPrefMaxResumedCrashes, &prefType);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (prefType == nsIPrefBranch::PREF_INT) {
+      rv = Preferences::GetInt(kPrefMaxResumedCrashes, &maxResumedCrashes);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    rv = Preferences::SetInt(kPrefRecentCrashes, maxResumedCrashes);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (!inSafeMode) {
+    // clear the count of recent crashes after a succesful startup when not in safe mode
+    rv = Preferences::ClearUser(kPrefRecentCrashes);
+    if (NS_FAILED(rv)) NS_WARNING("Could not clear startup crash count.");
+  }
+  nsCOMPtr<nsIPrefService> prefs = Preferences::GetService();
+  rv = prefs->SavePrefFile(nsnull); // flush prefs to disk since we are tracking crashes
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAppStartup::RestartInSafeMode(PRUint32 aQuitMode)
+{
+  PR_SetEnv("MOZ_SAFE_MODE_RESTART=1");
+  this->Quit(aQuitMode | nsIAppStartup::eRestart);
 
   return NS_OK;
 }

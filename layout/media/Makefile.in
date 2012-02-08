@@ -86,6 +86,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_CUBEB
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libcubeb/src/$(LIB_PREFIX)cubeb.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
 	$(NULL)
@@ -98,6 +104,10 @@ ifdef MOZ_NATIVE_ZLIB
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 else
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+endif
+
+ifdef MOZ_CUBEB
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, winmm ksguid)
 endif
 
 DEFFILE = symbols.def

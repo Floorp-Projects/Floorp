@@ -1168,8 +1168,8 @@
       <method name="openPopup">
         <body><![CDATA[
           if (!this.mMenuOpen && this.focused &&
-               (this.getResultCount() >= this.minResultsForPopup
-                || this.mFailureItems)) {
+              (this.getResultCount() >= this.minResultsForPopup ||
+               this.mFailureItems)) {
             var w = this.boxObject.width;
             if (w != this.popup.boxObject.width)
               this.popup.setAttribute("width", w);
@@ -1653,6 +1653,11 @@
             var rect = aElement.getBoundingClientRect();
             var width = Math.round((rect.right - rect.left) * viewer.fullZoom);
             this.setAttribute("width", width > 100 ? width : 100);
+            // Adjust the direction (which is not inherited) of the autocomplete
+            // popup list, based on the textbox direction. (Bug 707039)
+            this.style.direction = aElement.ownerDocument.defaultView
+                                           .getComputedStyle(aElement)
+                                           .direction;
             const nsIPopupBoxObject = Components.interfaces.nsIPopupBoxObject;
             this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent
               ? nsIPopupBoxObject.ROLLUP_CONSUME

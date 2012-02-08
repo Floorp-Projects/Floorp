@@ -121,6 +121,12 @@ ArgumentsObject::setStackFrame(StackFrame *frame)
     setFixedSlot(STACK_FRAME_SLOT, PrivateValue(frame));
 }
 
+inline size_t
+ArgumentsObject::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
+{
+    return mallocSizeOf(data());
+}
+
 inline const js::Value &
 NormalArgumentsObject::callee() const
 {

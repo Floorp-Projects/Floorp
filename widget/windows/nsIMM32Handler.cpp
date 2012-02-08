@@ -605,10 +605,32 @@ nsIMM32Handler::OnIMEEndComposition(nsWindow* aWindow)
     return ShouldDrawCompositionStringOurselves();
   }
 
-  // IME on Korean NT somehow send WM_IME_ENDCOMPOSITION
-  // first when we hit space in composition mode
-  // we need to clear out the current composition string
-  // in that case.
+  // Korean IME posts WM_IME_ENDCOMPOSITION first when we hit space during
+  // composition. Then, we should ignore the message and commit the composition
+  // string at following WM_IME_COMPOSITION.
+  MSG compositionMsg;
+  if (::PeekMessageW(&compositionMsg, aWindow->GetWindowHandle(),
+                     WM_IME_STARTCOMPOSITION, WM_IME_COMPOSITION,
+                     PM_NOREMOVE) &&
+      compositionMsg.message == WM_IME_COMPOSITION &&
+      IS_COMMITTING_LPARAM(compositionMsg.lParam)) {
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: OnIMEEndComposition, WM_IME_ENDCOMPOSITION is followed by "
+       "WM_IME_COMPOSITION, ignoring the message..."));
+    return ShouldDrawCompositionStringOurselves();
+  }
+
+  // Otherwise, e.g., ChangJie doesn't post WM_IME_COMPOSITION before
+  // WM_IME_ENDCOMPOSITION when composition string becomes empty.
+  // Then, we should dispatch a compositionupdate event, a text event and
+  // a compositionend event.
+  // XXX Shouldn't we dispatch the text event with actual or latest composition
+  //     string?
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("IMM32: OnIMEEndComposition, mCompositionString=\"%s\"%s",
+     NS_ConvertUTF16toUTF8(mCompositionString).get(),
+     mCompositionString.IsEmpty() ? "" : ", but canceling it..."));
+
   mCompositionString.Truncate();
 
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
@@ -1104,24 +1126,6 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     }
   }
 
-  if (!IS_COMMITTING_LPARAM(lParam) && !IS_COMPOSING_LPARAM(lParam)) {
-    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-      ("IMM32: HandleComposition, Handle 0 length TextEvent\n"));
-
-    // XXX This block should be wrong. If composition string is not change,
-    // we should do nothing.
-
-    if (!mIsComposing) {
-      HandleStartComposition(aWindow, aIMEContext);
-    }
-
-    mCompositionString.Truncate();
-    DispatchTextEvent(aWindow, aIMEContext, false);
-
-    return ShouldDrawCompositionStringOurselves();
-  }
-
-
   bool startCompositionMessageHasBeenSent = mIsComposing;
 
   //
@@ -1160,6 +1164,32 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     ("IMM32: HandleComposition, GCS_COMPSTR\n"));
 
   GetCompositionString(aIMEContext, GCS_COMPSTR);
+
+  if (!IS_COMPOSING_LPARAM(lParam)) {
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: HandleComposition, lParam doesn't indicate composing, "
+       "mCompositionString=\"%s\", mLastDispatchedCompositionString=\"%s\"",
+       NS_ConvertUTF16toUTF8(mCompositionString).get(),
+       NS_ConvertUTF16toUTF8(mLastDispatchedCompositionString).get()));
+
+    // If composition string isn't changed, we can trust the lParam.
+    // So, we need to do nothing.
+    if (mLastDispatchedCompositionString == mCompositionString) {
+      return ShouldDrawCompositionStringOurselves();
+    }
+
+    // IME may send WM_IME_COMPOSITION without composing lParam values
+    // when composition string becomes empty (e.g., using Backspace key).
+    // If composition string is empty, we should dispatch a text event with
+    // empty string.
+    if (mCompositionString.IsEmpty()) {
+      DispatchTextEvent(aWindow, aIMEContext, false);
+      return ShouldDrawCompositionStringOurselves();
+    }
+
+    // Otherwise, we cannot trust the lParam value.  We might need to
+    // dispatch text event with the latest composition string information.
+  }
 
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=296339
   if (mCompositionString.IsEmpty() && !startCompositionMessageHasBeenSent) {

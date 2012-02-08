@@ -239,13 +239,6 @@ LayerManagerD3D9::CreateReadbackLayer()
   return layer.forget();
 }
 
-already_AddRefed<ImageContainer>
-LayerManagerD3D9::CreateImageContainer()
-{
-  nsRefPtr<ImageContainer> container = new ImageContainerD3D9(device());
-  return container.forget();
-}
-
 already_AddRefed<ShadowThebesLayer>
 LayerManagerD3D9::CreateShadowThebesLayer()
 {

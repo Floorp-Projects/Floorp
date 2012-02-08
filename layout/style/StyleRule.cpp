@@ -125,6 +125,22 @@ nsAtomList::Clone(bool aDeep) const
   return result;
 }
 
+size_t
+nsAtomList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  const nsAtomList* a = this;
+  while (a) {
+    n += aMallocSizeOf(a);
+
+    // The following members aren't measured:
+    // - a->mAtom, because it may be shared
+
+    a = a->mNext;
+  }
+  return n;
+}
+
 nsAtomList::~nsAtomList(void)
 {
   MOZ_COUNT_DTOR(nsAtomList);
@@ -202,6 +218,32 @@ nsPseudoClassList::Clone(bool aDeep) const
                              (false));
 
   return result;
+}
+
+size_t
+nsPseudoClassList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  const nsPseudoClassList* p = this;
+  while (p) {
+    n += aMallocSizeOf(p);
+    if (!p->u.mMemory) {
+      // do nothing
+
+    } else if (nsCSSPseudoClasses::HasStringArg(p->mType)) {
+      n += aMallocSizeOf(p->u.mString);
+
+    } else if (nsCSSPseudoClasses::HasNthPairArg(p->mType)) {
+      n += aMallocSizeOf(p->u.mNumbers);
+
+    } else {
+      NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(p->mType),
+                   "unexpected pseudo-class");
+      n += p->u.mSelectors->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    p = p->mNext;
+  }
+  return n;
 }
 
 nsPseudoClassList::~nsPseudoClassList(void)
@@ -810,6 +852,34 @@ nsCSSSelector::CanBeNamespaced(bool aIsNegated) const
          (!mIDList && !mClassList && !mPseudoClassList && !mAttrList);
 }
 
+size_t
+nsCSSSelector::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  const nsCSSSelector* s = this;
+  while (s) {
+    n += aMallocSizeOf(s);
+
+    #define MEASURE(x)   n += x ? x->SizeOfIncludingThis(aMallocSizeOf) : 0;
+
+    MEASURE(s->mIDList);
+    MEASURE(s->mClassList);
+    MEASURE(s->mPseudoClassList);
+    MEASURE(s->mNegations);
+
+    // Measurement of the following members may be added later if DMD finds it is
+    // worthwhile:
+    // - s->mAttrList
+    //
+    // The following members aren't measured:
+    // - s->mLowercaseTag, because it's an atom and therefore shared
+    // - s->mCasedTag, because it's an atom and therefore shared
+
+    s = s->mNext;
+  }
+  return n;
+}
+
 // -- nsCSSSelectorList -------------------------------
 
 nsCSSSelectorList::nsCSSSelectorList(void)
@@ -870,6 +940,19 @@ nsCSSSelectorList::Clone(bool aDeep) const
                              (false));
   }
   return result;
+}
+
+size_t
+nsCSSSelectorList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  const nsCSSSelectorList* s = this;
+  while (s) {
+    n += aMallocSizeOf(s);
+    n += s->mSelectors ? s->mSelectors->SizeOfIncludingThis(aMallocSizeOf) : 0;
+    s = s->mNext;
+  }
+  return n;
 }
 
 // -- ImportantRule ----------------------------------
@@ -1421,6 +1504,22 @@ StyleRule::SetSelectorText(const nsAString& aSelectorText)
   // XXX then need to re-compute the cascade
   // XXX and dirty sheet
 }
+
+/* virtual */ size_t
+StyleRule::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mSelector ? mSelector->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  n += mDeclaration ? mDeclaration->SizeOfIncludingThis(aMallocSizeOf) : 0;
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mImportantRule;
+  // - mDOMRule;
+
+  return n;
+}
+
 
 } // namespace css
 } // namespace mozilla

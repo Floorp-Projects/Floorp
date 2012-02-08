@@ -45,7 +45,6 @@
  * JS debugger API.
  */
 #include "jsapi.h"
-#include "jsopcode.h"
 #include "jsprvtd.h"
 
 JS_BEGIN_EXTERN_C
@@ -88,10 +87,6 @@ class JS_PUBLIC_API(AutoEnterFrameCompartment) : public AutoEnterScriptCompartme
 } /* namespace JS */
 
 #ifdef DEBUG
-JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);
-JS_FRIEND_API(void) js_DumpString(JSString *str);
-JS_FRIEND_API(void) js_DumpAtom(JSAtom *atom);
-JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
 JS_FRIEND_API(void) js_DumpValue(const js::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, js::StackFrame *start = NULL);

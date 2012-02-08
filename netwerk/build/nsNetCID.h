@@ -709,6 +709,17 @@
     {0xae, 0xb7, 0xda, 0x62, 0xe7, 0x27, 0x3e, 0xd5} \
 }
 
+#ifdef MOZ_WIDGET_GONK
+#define NS_B2GPROTOCOLHANDLER_CLASSNAME \
+    "nsB2GProtocolHandler"
+#define NS_B2GPROTOCOLHANDLER_CID                    \
+{                                                    \
+/* {e50d101a-9db2-466f-977c-ae6af19e3b2f} */         \
+  0x50d101a, 0x9db2, 0x466f,                         \
+    {0x97, 0x7c, 0xae, 0x6a, 0xf1, 0x9e, 0x3b, 0x2f} \
+}
+#endif
+
 /******************************************************************************
  * netwerk/protocol/viewsource/ classes
  */

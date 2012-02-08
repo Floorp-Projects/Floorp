@@ -1526,7 +1526,7 @@ nsDOMWindowUtils::GetClassName(const JS::Value& aObject, JSContext* aCx, char** 
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
-  *aName = NS_strdup(JS_GET_CLASS(aCx, JSVAL_TO_OBJECT(aObject))->name);
+  *aName = NS_strdup(JS_GetClass(JSVAL_TO_OBJECT(aObject))->name);
   NS_ABORT_IF_FALSE(*aName, "NS_strdup should be infallible.");
   return NS_OK;
 }

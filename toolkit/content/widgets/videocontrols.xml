@@ -1308,7 +1308,8 @@
                     // (Note: the |controls| attribute is already handled via layout/style/html.css)
                     var shouldShow = (!(this.video.autoplay && this.video.mozAutoplayEnabled) || !this.dynamicControls);
                     // Hide the overlay if the video time is non-zero or if an error occurred to workaround bug 718107.
-                    this.startFade(this.clickToPlay, shouldShow && this.video.currentTime == 0 && !this.hasError(), true);
+                    this.startFade(this.clickToPlay, shouldShow && !this.isAudioOnly &&
+                                   this.video.currentTime == 0 && !this.hasError(), true);
                     this.startFade(this.controlBar, shouldShow, true);
 
                     // Use the handleEvent() callback for all media events.

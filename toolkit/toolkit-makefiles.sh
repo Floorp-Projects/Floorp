@@ -484,6 +484,7 @@ MAKEFILES_xulapp="
   toolkit/components/urlformatter/Makefile
   toolkit/components/viewconfig/Makefile
   toolkit/components/viewsource/Makefile
+  toolkit/devtools/Makefile
   toolkit/locales/Makefile
   toolkit/mozapps/downloads/Makefile
   toolkit/mozapps/extensions/Makefile
@@ -496,6 +497,10 @@ MAKEFILES_xulapp="
   toolkit/profile/Makefile
   toolkit/themes/Makefile
   toolkit/xre/Makefile
+"
+
+MAKEFILES_debugger="
+  toolkit/devtools/debugger/Makefile
 "
 
 MAKEFILES_jsreflect="
@@ -549,6 +554,7 @@ add_makefiles "
   $MAKEFILES_intl
   $MAKEFILES_xpconnect
   $MAKEFILES_jsipc
+  $MAKEFILES_debugger
   $MAKEFILES_jsreflect
   $MAKEFILES_jsductwork
   $MAKEFILES_content
@@ -1582,6 +1588,14 @@ if [ "$MOZ_WAVE" ]; then
  add_makefiles "
    content/media/wave/Makefile
  "
+fi
+
+if [ "$MOZ_CUBEB" ]; then
+  add_makefiles "
+    media/libcubeb/Makefile
+    media/libcubeb/include/Makefile
+    media/libcubeb/src/Makefile
+  "
 fi
 
 if [ "$MOZ_SYDNEYAUDIO" ]; then

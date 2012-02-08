@@ -41,6 +41,7 @@ package org.mozilla.gecko.gfx;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.Region;
 import android.util.Log;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.microedition.khronos.opengles.GL10;
@@ -49,11 +50,12 @@ import org.mozilla.gecko.FloatUtils;
 public abstract class Layer {
     private final ReentrantLock mTransactionLock;
     private boolean mInTransaction;
-    private Point mOrigin;
     private Point mNewOrigin;
-    private float mResolution;
     private float mNewResolution;
     private LayerView mView;
+
+    protected Point mOrigin;
+    protected float mResolution;
 
     public Layer() {
         mTransactionLock = new ReentrantLock();
@@ -63,31 +65,23 @@ public abstract class Layer {
 
     /**
      * Updates the layer. This returns false if there is still work to be done
-     * after this update. If the layer is not already in a transaction, the
-     * lock will be acquired and a transaction will automatically begin and
-     * end around the update.
+     * after this update.
      */
     public final boolean update(GL10 gl, RenderContext context) {
-        boolean startTransaction = true;
         if (mTransactionLock.isHeldByCurrentThread()) {
-            startTransaction = false;
+            throw new RuntimeException("draw() called while transaction lock held by this " +
+                                       "thread?!");
         }
 
-        // If we're not already in a transaction and we can't acquire the lock,
-        // bail out.
-        if (startTransaction && !mTransactionLock.tryLock()) {
-            return false;
-        }
-
-        mInTransaction = true;
-        try {
-            return performUpdates(gl, context);
-        } finally {
-            if (startTransaction) {
-                mInTransaction = false;
+        if (mTransactionLock.tryLock()) {
+            try {
+                return performUpdates(gl, context);
+            } finally {
                 mTransactionLock.unlock();
             }
         }
+
+        return false;
     }
 
     /** Subclasses override this function to draw the layer. */
@@ -105,6 +99,15 @@ public abstract class Layer {
     }
 
     /**
+     * Returns the region of the layer that is considered valid. The default
+     * implementation of this will return the bounds of the layer, but this
+     * may be overridden.
+     */
+    public Region getValidRegion(RenderContext context) {
+        return new Region(RectUtils.round(getBounds(context, new FloatSize(getSize()))));
+    }
+
+    /**
      * Call this before modifying the layer. Note that, for TileLayers, "modifying the layer"
      * includes altering the underlying CairoImage in any way. Thus you must call this function
      * before modifying the byte buffer associated with this layer.
@@ -117,6 +120,7 @@ public abstract class Layer {
         mTransactionLock.lock();
         mView = aView;
         mInTransaction = true;
+        mNewResolution = mResolution;
     }
 
     public void beginTransaction() {

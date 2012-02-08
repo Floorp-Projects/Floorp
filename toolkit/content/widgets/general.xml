@@ -167,7 +167,7 @@
           try {
             let tmp = {};
             Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-            let draghandle = new tmp.WindowDraggingElement(this, window);
+            let draghandle = new tmp.WindowDraggingElement(this);
             draghandle.mouseDownCheck = function () this._dragBindingAlive;
           } catch (e) {}
         }
@@ -274,7 +274,7 @@
           try {
             let tmp = {};
             Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-            let draghandle = new tmp.WindowDraggingElement(this, window);
+            let draghandle = new tmp.WindowDraggingElement(this);
             draghandle.mouseDownCheck = function () this._dragBindingAlive;
           } catch (e) {}
         }

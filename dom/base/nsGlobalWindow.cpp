@@ -532,7 +532,7 @@ nsDummyJavaPluginOwner::GetWindow(NPWindow *&aWindow)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::SetWindow()
+nsDummyJavaPluginOwner::CallSetWindow()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -7680,9 +7680,9 @@ void nsGlobalWindow::UpdateTouchState()
 
     nsCOMPtr<nsIObserverService> observerService =
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+
     if (observerService) {
-      nsPIDOMWindow *inner = GetCurrentInnerWindowInternal();
-      observerService->NotifyObservers(mainWidget,
+      observerService->NotifyObservers(static_cast<nsIDOMWindow*>(this),
                                        DOM_TOUCH_LISTENER_ADDED,
                                        nsnull);
     }
@@ -9360,12 +9360,6 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
                           handler->GetScriptVersion(), nsnull,
                           &is_undefined);
     } else {
-      // Let the script handler know about the "secret" final argument that
-      // indicates timeout lateness in milliseconds
-      TimeDuration lateness = now - timeout->mWhen;
-
-      handler->SetLateness(lateness.ToMilliseconds());
-
       nsCOMPtr<nsIVariant> dummy;
       nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
       scx->CallEventHandler(me, FastGetGlobalJSObject(),
@@ -10294,6 +10288,16 @@ nsGlobalWindow::SizeOf() const
   size += mNavigator ? mNavigator->SizeOf() : 0;
 
   return size;
+}
+
+size_t
+nsGlobalWindow::SizeOfStyleSheets(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  if (IsInnerWindow() && mDoc) {
+    n += mDoc->SizeOfStyleSheets(aMallocSizeOf);
+  }
+  return n;
 }
 
 // nsGlobalChromeWindow implementation
