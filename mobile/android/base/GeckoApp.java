@@ -1612,7 +1612,7 @@ abstract public class GeckoApp
             mPlaceholderLayerClient = PlaceholderLayerClient.createInstance(this);
             mLayerController.setLayerClient(mPlaceholderLayerClient);
 
-            mGeckoLayout.addView(mLayerController.getView().getAndroidView(), 0);
+            mGeckoLayout.addView(mLayerController.getView(), 0);
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);

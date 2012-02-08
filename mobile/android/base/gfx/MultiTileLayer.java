@@ -383,7 +383,7 @@ public class MultiTileLayer extends Layer {
     }
 
     @Override
-    public void beginTransaction(AbstractLayerView aView) {
+    public void beginTransaction(LayerView aView) {
         super.beginTransaction(aView);
 
         for (SubTile layer : mTiles) {
