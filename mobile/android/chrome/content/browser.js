@@ -1871,6 +1871,10 @@ Tab.prototype = {
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+    let contentWin = aWebProgress.DOMWindow;
+    if (contentWin != contentWin.top)
+        return;
+
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       // Filter optimization: Only really send NETWORK state changes to Java listener
       let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
@@ -1878,13 +1882,18 @@ Tab.prototype = {
       if (browser)
         uri = browser.currentURI.spec;
 
+      // Check to see if we restoring the content from a previous presentation (session)
+      // since there should be no real network activity
+      let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
+      let showProgress = restoring ? false : this.showProgress;
+
       let message = {
         gecko: {
           type: "Content:StateChange",
           tabID: this.id,
           uri: uri,
           state: aStateFlags,
-          showProgress: this.showProgress
+          showProgress: showProgress
         }
       };
       sendMessageToJava(message);
