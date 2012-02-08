@@ -122,8 +122,6 @@ function testNamesForMarkupRules(aMarkupElm, aContainer)
   if (gDumpToConsole)
     dump("\nProcessing markup rules '" + aMarkupElm.getAttribute("id") + "'\n");
 
-  ensureAccessibleTree(aContainer);
-
   var serializer = new XMLSerializer();
 
   var expr = "//html/body/div[@id='test']/" + aMarkupElm.getAttribute("ref");
