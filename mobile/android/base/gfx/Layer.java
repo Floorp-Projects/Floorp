@@ -53,7 +53,7 @@ public abstract class Layer {
     private Point mNewOrigin;
     private float mResolution;
     private float mNewResolution;
-    private AbstractLayerView mView;
+    private LayerView mView;
 
     public Layer() {
         mTransactionLock = new ReentrantLock();
@@ -111,7 +111,7 @@ public abstract class Layer {
      *
      * This function may block, so you should never call this on the main UI thread.
      */
-    public void beginTransaction(AbstractLayerView aView) {
+    public void beginTransaction(LayerView aView) {
         if (mTransactionLock.isHeldByCurrentThread())
             throw new RuntimeException("Nested transactions are not supported");
         mTransactionLock.lock();

@@ -385,7 +385,7 @@ public class GeckoInputConnection
         if (mUpdateRequest == null)
             return;
 
-        View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+        View v = GeckoApp.mAppContext.getLayerController().getView();
 
         if (imm == null) {
             imm = (InputMethodManager)v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -436,7 +436,7 @@ public class GeckoInputConnection
         }
 
         if (imm != null && imm.isFullscreenMode()) {
-            View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+            View v = GeckoApp.mAppContext.getLayerController().getView();
             imm.updateSelection(v, start, end, -1, -1);
         }
     }
@@ -669,7 +669,7 @@ public class GeckoInputConnection
             // Let active IME process pre-IME key events
             return false;
 
-        View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+        View v = GeckoApp.mAppContext.getLayerController().getView();
 
         // KeyListener returns true if it handled the event for us.
         if (mIMEState == IME_STATE_DISABLED ||
@@ -711,7 +711,7 @@ public class GeckoInputConnection
             // Let active IME process pre-IME key events
             return false;
 
-        View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+        View v = GeckoApp.mAppContext.getLayerController().getView();
 
         if (mIMEState == IME_STATE_DISABLED ||
             keyCode == KeyEvent.KEYCODE_ENTER ||
@@ -728,7 +728,7 @@ public class GeckoInputConnection
     }
 
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+        View v = GeckoApp.mAppContext.getLayerController().getView();
         switch (keyCode) {
             case KeyEvent.KEYCODE_MENU:
                 InputMethodManager imm = (InputMethodManager)
@@ -748,7 +748,7 @@ public class GeckoInputConnection
     }
 
     public void notifyIME(int type, int state) {
-        View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+        View v = GeckoApp.mAppContext.getLayerController().getView();
 
         if (v == null)
             return;
@@ -792,7 +792,7 @@ public class GeckoInputConnection
     public void notifyIMEEnabled(int state, String typeHint,
                                         String actionHint, boolean landscapeFS)
     {
-        View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+        View v = GeckoApp.mAppContext.getLayerController().getView();
 
         if (v == null)
             return;
@@ -808,7 +808,7 @@ public class GeckoInputConnection
 
 
     public void notifyIMEChange(String text, int start, int end, int newEnd) {
-        View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+        View v = GeckoApp.mAppContext.getLayerController().getView();
 
         if (v == null)
             return;
@@ -867,7 +867,7 @@ public class GeckoInputConnection
                 instance = null;
             }
 
-            View v = GeckoApp.mAppContext.getLayerController().getView().getAndroidView();
+            View v = GeckoApp.mAppContext.getLayerController().getView();
             if (DEBUG) Log.d(LOGTAG, "IME: v="+v);
 
             InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
