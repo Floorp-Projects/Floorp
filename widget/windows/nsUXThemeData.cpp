@@ -69,8 +69,6 @@ nsUXThemeData::sDwmDLL = NULL;
 
 bool
 nsUXThemeData::sFlatMenus = false;
-bool
-nsUXThemeData::sIsVistaOrLater = false;
 
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
@@ -103,9 +101,6 @@ nsUXThemeData::Initialize()
 {
   ::ZeroMemory(sThemes, sizeof(sThemes));
   NS_ASSERTION(!sThemeDLL, "nsUXThemeData being initialized twice!");
-
-  WinUtils::WinVersion version = WinUtils::GetWindowsVersion();
-  sIsVistaOrLater = version >= WinUtils::VISTA_VERSION;
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (GetDwmDLL()) {
@@ -157,7 +152,7 @@ nsUXThemeData::GetThemeDLL() {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 HMODULE
 nsUXThemeData::GetDwmDLL() {
-  if (!sDwmDLL && sIsVistaOrLater)
+  if (!sDwmDLL && WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)
     sDwmDLL = ::LoadLibraryW(kDwmLibraryName);
   return sDwmDLL;
 }
