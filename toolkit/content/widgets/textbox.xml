@@ -592,12 +592,13 @@
                                   document.popupRangeOffset);
 
             var enabled = spellui.enabled;
+            var showUndo = spellui.canSpellCheck && spellui.canUndo();
             this._enabledCheckbox.setAttribute("checked", enabled);
 
             var overMisspelling = spellui.overMisspelling;
             this._setMenuItemVisibility("spell-add-to-dictionary", overMisspelling);
-            this._setMenuItemVisibility("spell-undo-add-to-dictionary", spellui.canUndo());
-            this._setMenuItemVisibility("spell-suggestions-separator", overMisspelling);
+            this._setMenuItemVisibility("spell-undo-add-to-dictionary", showUndo);
+            this._setMenuItemVisibility("spell-suggestions-separator", overMisspelling || showUndo);
 
             // suggestion list
             var numsug = spellui.addSuggestionsToMenu(popupNode, this._suggestionsSeparator, 5);

@@ -546,6 +546,11 @@
                             accesskey="&inspectMenu.accesskey;"
                             key="key_inspect"
                             command="Tools:Inspect"/>
+                  <menuitem id="menu_debugger"
+                            hidden="true"
+                            label="&debuggerMenu.label;"
+                            key="key_debugger"
+                            command="Tools:Debugger"/>
                   <menuitem id="menu_scratchpad"
                             hidden="true"
                             label="&scratchpad.label;"

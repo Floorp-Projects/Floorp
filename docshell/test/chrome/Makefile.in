@@ -124,6 +124,7 @@ _TEST_FILES =	\
 		bug690056_window.xul \
 		test_bug311007.xul \
 		bug311007_window.xul \
+		test_principalInherit.xul \
 		$(NULL)
 
 _DOCSHELL_SUBHARNESS = \

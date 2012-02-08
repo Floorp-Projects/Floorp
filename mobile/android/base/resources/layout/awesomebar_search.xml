@@ -20,7 +20,7 @@
     </view>
 
     <LinearLayout android:layout_width="4dp"
-                  android:layout_height="match_parent"
+                  android:layout_height="fill_parent"
                   android:orientation="vertical"
                   android:layout_alignParentRight="true"/>
 

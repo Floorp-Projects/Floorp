@@ -47,12 +47,12 @@ namespace js {
 extern void *
 GetNativeStackBaseImpl();
 
-inline uintptr_t *
+inline uintptr_t
 GetNativeStackBase()
 {
-    void *stackBase = GetNativeStackBaseImpl();
-    JS_ASSERT(reinterpret_cast<uintptr_t>(stackBase) % sizeof(void *) == 0);
-    return static_cast<uintptr_t *>(stackBase);
+    uintptr_t stackBase = reinterpret_cast<uintptr_t>(GetNativeStackBaseImpl());
+    JS_ASSERT(stackBase % sizeof(void *) == 0);
+    return stackBase;
 }
 
 } /* namespace js */

@@ -57,6 +57,9 @@ sub global_prefs {
 
         # Suppress session restore dialog
         Prefs::set_pref($pref_file, 'browser.sessionstore.resume_from_crash', 'false');
+
+        # Suppress automatic safe mode after crashes
+        Prefs::set_pref($pref_file, 'toolkit.startup.max_resumed_crashes', -1);
     }
     elsif ($Settings::BinaryName eq 'Camino') {
         Prefs::set_pref($pref_file, 'camino.check_default_browser', 'false');

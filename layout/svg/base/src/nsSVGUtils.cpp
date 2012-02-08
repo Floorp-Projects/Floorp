@@ -425,9 +425,11 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
 bool
 nsSVGUtils::EstablishesViewport(nsIContent *aContent)
 {
+  // Although SVG 1.1 states that <image> is an element that establishes a
+  // viewport, this is really only for the document it references, not
+  // for any child content, which is what this function is used for.
   return aContent && aContent->IsSVG() &&
            (aContent->Tag() == nsGkAtoms::svg ||
-            aContent->Tag() == nsGkAtoms::image ||
             aContent->Tag() == nsGkAtoms::foreignObject ||
             aContent->Tag() == nsGkAtoms::symbol);
 }
@@ -596,47 +598,76 @@ nsSVGUtils::InvalidateCoveredRegion(nsIFrame *aFrame)
   if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
+  if (aFrame->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) {
+    aFrame->AddStateBits(NS_STATE_SVG_DIRTY);
+    return;
+  }
+
+  aFrame->RemoveStateBits(NS_STATE_SVG_DIRTY);
+
   nsSVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame(aFrame);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
-  if (outerSVGFrame)
-    outerSVGFrame->InvalidateCoveredRegion(aFrame);
+  if (outerSVGFrame) {
+    nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
+    if (!svgFrame)
+      return;
+
+    // Make sure elements styled by :hover get updated if script/animation moves
+    // them under or out from under the pointer:
+    aFrame->PresContext()->PresShell()->SynthesizeMouseMove(false);
+
+    nsRect rect = FindFilterInvalidation(aFrame, svgFrame->GetCoveredRegion());
+    outerSVGFrame->Invalidate(rect);
+  }
 }
 
 void
-nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
+nsSVGUtils::UpdateGraphic(nsIFrame *aFrame)
 {
-  nsIFrame *frame = do_QueryFrame(aSVGFrame);
+  nsSVGEffects::InvalidateRenderingObservers(aFrame);
 
-  nsSVGEffects::InvalidateRenderingObservers(frame);
-
-  if (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+  if (aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
-  nsSVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame(frame);
+  if (aFrame->GetStateBits() & NS_STATE_SVG_REDRAW_SUSPENDED) {
+    aFrame->AddStateBits(NS_STATE_SVG_DIRTY);
+    return;
+  }
+
+  aFrame->RemoveStateBits(NS_STATE_SVG_DIRTY);
+
+  nsISVGChildFrame *svgFrame = do_QueryFrame(aFrame);
+  if (!svgFrame)
+    return;
+
+  nsSVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame(aFrame);
   if (!outerSVGFrame) {
     NS_ERROR("null outerSVGFrame");
     return;
   }
 
-  if (outerSVGFrame->IsRedrawSuspended()) {
-    frame->AddStateBits(NS_STATE_SVG_DIRTY);
-  } else {
-    frame->RemoveStateBits(NS_STATE_SVG_DIRTY);
+  // Make sure elements styled by :hover get updated if script/animation moves
+  // them under or out from under the pointer:
+  aFrame->PresContext()->PresShell()->SynthesizeMouseMove(false);
 
-    bool changed = outerSVGFrame->UpdateAndInvalidateCoveredRegion(frame);
-    if (changed) {
-      NotifyAncestorsOfFilterRegionChange(frame);
-    }
+  nsRect oldRegion = svgFrame->GetCoveredRegion();
+  outerSVGFrame->Invalidate(FindFilterInvalidation(aFrame, oldRegion));
+  svgFrame->UpdateCoveredRegion();
+  nsRect newRegion = svgFrame->GetCoveredRegion();
+  if (oldRegion.IsEqualInterior(newRegion))
+    return;
+
+  outerSVGFrame->Invalidate(FindFilterInvalidation(aFrame, newRegion));
+  if (!(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
+    NotifyAncestorsOfFilterRegionChange(aFrame);
   }
 }
 
 void
 nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
 {
-  if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG) {
-    // It would be better if we couldn't get here
-    return;
-  }
+  NS_ABORT_IF_FALSE(!(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG),
+                    "Not expecting to be called on the outer SVG Frame");
 
   aFrame = aFrame->GetParent();
 
@@ -878,6 +909,38 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
       NotifyChildrenOfSVGChange(kid, aFlags);
+    }
+    kid = kid->GetNextSibling();
+  }
+}
+
+void
+nsSVGUtils::NotifyRedrawSuspended(nsIFrame *aFrame)
+{
+  aFrame->AddStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
+
+  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
+
+  while (kid) {
+    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+    if (SVGFrame) {
+      SVGFrame->NotifyRedrawSuspended();
+    }
+    kid = kid->GetNextSibling();
+  }
+}
+
+void
+nsSVGUtils::NotifyRedrawUnsuspended(nsIFrame *aFrame)
+{
+  aFrame->RemoveStateBits(NS_STATE_SVG_REDRAW_SUSPENDED);
+
+  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
+
+  while (kid) {
+    nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
+    if (SVGFrame) {
+      SVGFrame->NotifyRedrawUnsuspended();
     }
     kid = kid->GetNextSibling();
   }
@@ -1521,4 +1584,33 @@ nsSVGUtils::RootSVGElementHasViewbox(const nsIContent *aRootSVGElem)
     static_cast<const nsSVGSVGElement*>(aRootSVGElem);
 
   return svgSvgElem->HasValidViewbox();
+}
+
+/* static */ void
+nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
+                                    nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                                    float *aOpacity, nscolor *color)
+{
+  const nsStyleSVGPaint &paint = aStyleContext->GetStyleSVG()->*aFillOrStroke;
+  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
+  bool isServer = paint.mType == eStyleSVGPaintType_Server;
+  *color = isServer ? paint.mFallbackColor : paint.mPaint.mColor;
+  if (styleIfVisited) {
+    const nsStyleSVGPaint &paintIfVisited =
+      styleIfVisited->GetStyleSVG()->*aFillOrStroke;
+    // To prevent Web content from detecting if a user has visited a URL
+    // (via URL loading triggered by paint servers or performance
+    // differences between paint servers or between a paint server and a
+    // color), we do not allow whether links are visited to change which
+    // paint server is used or switch between paint servers and simple
+    // colors.  A :visited style may only override a simple color with
+    // another simple color.
+    if (paintIfVisited.mType == eStyleSVGPaintType_Color &&
+        paint.mType == eStyleSVGPaintType_Color) {
+      nscolor colorIfVisited = paintIfVisited.mPaint.mColor;
+      nscolor colors[2] = { *color, colorIfVisited };
+      *color = nsStyleContext::CombineVisitedColors(colors,
+                                         aStyleContext->RelevantLinkVisited());
+    }
+  }
 }

@@ -177,7 +177,7 @@ static JSClass global_class = {
     XPCONNECT_GLOBAL_FLAGS,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, SafeGlobalResolve, JS_ConvertStub, SafeFinalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    NULL, NULL, NULL, NULL, NULL, NULL, TraceXPCGlobal
 };
 
 // We just use the same reporter as the component loader
@@ -223,13 +223,10 @@ XPCJSContextStack::GetSafeJSContext()
 
         JS_SetErrorReporter(mSafeJSContext, mozJSLoaderErrorReporter);
 
-        // Because we can run off the main thread, we create an MT
-        // global object. Our principal is the unique key.
         JSCompartment *compartment;
-        nsresult rv = xpc_CreateMTGlobalObject(mSafeJSContext,
-                                               &global_class,
-                                               principal, &glob,
-                                               &compartment);
+        nsresult rv = xpc_CreateGlobalObject(mSafeJSContext, &global_class,
+                                             principal, principal, false,
+                                             &glob, &compartment);
         if (NS_FAILED(rv))
             glob = nsnull;
 

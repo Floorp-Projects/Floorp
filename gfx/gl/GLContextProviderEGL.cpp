@@ -981,7 +981,8 @@ public:
 
     static already_AddRefed<GLContextEGL>
     CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
-                                     const ContextFormat& aFormat);
+                                     const ContextFormat& aFormat,
+                                     bool bufferUnused = false);
 
     void SetOffscreenSize(const gfxIntSize &aRequestedSize,
                           const gfxIntSize &aActualSize)
@@ -991,6 +992,9 @@ public:
     }
 
     void *GetD3DShareHandle() {
+        if (!mPBufferCanBindToTexture)
+            return nsnull;
+
         if (!sEGLLibrary.HasANGLESurfaceD3DTexture2DShareHandle()) {
             return nsnull;
         }
@@ -2078,7 +2082,8 @@ FillPBufferAttribs(nsTArray<EGLint>& aAttrs,
 
 already_AddRefed<GLContextEGL>
 GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& aSize,
-                                               const ContextFormat& aFormat)
+                                               const ContextFormat& aFormat,
+                                               bool bufferUnused)
 {
     EGLConfig config;
     EGLSurface surface;
@@ -2155,9 +2160,11 @@ TRY_ATTRIBS_AGAIN:
 
     sEGLLibrary.fBindAPI(LOCAL_EGL_OPENGL_ES_API);
 
+    GLContextEGL* shareContext = GetGlobalContextEGL();
     context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
                                          config,
-                                         EGL_NO_CONTEXT,
+                                         shareContext ? shareContext->mContext
+                                                      : EGL_NO_CONTEXT,
                                          sEGLLibrary.HasRobustness() ? gContextAttribsRobustness
                                                                      : gContextAttribs);
     if (!context) { 
@@ -2166,7 +2173,7 @@ TRY_ATTRIBS_AGAIN:
         return nsnull;
     }
 
-    nsRefPtr<GLContextEGL> glContext = new GLContextEGL(aFormat, nsnull,
+    nsRefPtr<GLContextEGL> glContext = new GLContextEGL(aFormat, shareContext,
                                                         config, surface, context,
                                                         true);
 
@@ -2174,9 +2181,11 @@ TRY_ATTRIBS_AGAIN:
         return nsnull;
     }
 
-    glContext->SetOffscreenSize(aSize, pbsize);
-    glContext->mIsPBuffer = true;
-    glContext->mPBufferCanBindToTexture = configCanBindToTexture;
+    if (!bufferUnused) {
+      glContext->SetOffscreenSize(aSize, pbsize);
+      glContext->mIsPBuffer = true;
+      glContext->mPBufferCanBindToTexture = configCanBindToTexture;
+    }
 
     return glContext.forget();
 }
@@ -2337,12 +2346,12 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
 
 #if defined(ANDROID) || defined(XP_WIN)
     nsRefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateEGLPBufferOffscreenContext(aSize, aFormat);
+        GLContextEGL::CreateEGLPBufferOffscreenContext(gfxIntSize(16, 16), aFormat, true);
 
     if (!glContext)
         return nsnull;
 
-    if (!glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), false))
+    if (!glContext->ResizeOffscreenFBO(aSize, true))
         return nsnull;
 
     return glContext.forget();
@@ -2424,10 +2433,12 @@ GLContextProviderEGL::GetGlobalContext()
     static bool triedToCreateContext = false;
     if (!triedToCreateContext && !gGlobalContext) {
         triedToCreateContext = true;
-        gGlobalContext =
-            GLContextEGL::CreateEGLPixmapOffscreenContext(gfxIntSize(16, 16),
-                                                          ContextFormat(ContextFormat::BasicRGB24),
-                                                          false);
+        // Don't assign directly to gGlobalContext here, because
+        // CreateOffscreen can call us re-entrantly.
+        nsRefPtr<GLContext> ctx =
+            GLContextProviderEGL::CreateOffscreen(gfxIntSize(16, 16),
+                                                  ContextFormat(ContextFormat::BasicRGB24));
+        gGlobalContext = ctx;
         if (gGlobalContext)
             gGlobalContext->SetIsGlobalSharedContext(true);
     }

@@ -115,9 +115,6 @@ protected:
    */
   virtual PRUint16 GetHitTestFlags();
 
-private:
-  bool GetStrokeDashData(FallibleTArray<gfxFloat>& dashes, gfxFloat *dashOffset);
-
   /**
    * Returns the given 'fill-opacity' or 'stroke-opacity' value multiplied by
    * the value of the 'opacity' property if it's possible to avoid the expense
@@ -126,6 +123,9 @@ private:
    * given 'fill-opacity'/'stroke-opacity' is returned unmodified.
    */
   float MaybeOptimizeOpacity(float aFillOrStrokeOpacity);
+
+private:
+  bool GetStrokeDashData(FallibleTArray<gfxFloat>& dashes, gfxFloat *dashOffset);
 };
 
 #endif // __NS_SVGGEOMETRYFRAME_H__

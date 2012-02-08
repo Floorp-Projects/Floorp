@@ -154,6 +154,7 @@ const char *const js_common_atom_names[] = {
     js_noSuchMethod_str,        /* noSuchMethodAtom             */
     "[object Null]",            /* objectNullAtom               */
     "[object Undefined]",       /* objectUndefinedAtom          */
+    "of",                       /* ofAtom                       */
     js_proto_str,               /* protoAtom                    */
     js_set_str,                 /* setAtom                      */
     js_source_str,              /* sourceAtom                   */
@@ -400,20 +401,20 @@ js_TraceAtomState(JSTracer *trc)
 }
 
 void
-js_SweepAtomState(JSContext *cx)
+js_SweepAtomState(JSRuntime *rt)
 {
-    JSAtomState *state = &cx->runtime->atomState;
+    JSAtomState *state = &rt->atomState;
 
     for (AtomSet::Enum e(state->atoms); !e.empty(); e.popFront()) {
         AtomStateEntry entry = e.front();
 
         if (entry.isTagged()) {
             /* Pinned or interned key cannot be finalized. */
-            JS_ASSERT(!IsAboutToBeFinalized(cx, entry.asPtr()));
+            JS_ASSERT(!IsAboutToBeFinalized(entry.asPtr()));
             continue;
         }
 
-        if (IsAboutToBeFinalized(cx, entry.asPtr()))
+        if (IsAboutToBeFinalized(entry.asPtr()))
             e.removeFront();
     }
 }

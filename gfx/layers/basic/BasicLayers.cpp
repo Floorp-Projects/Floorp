@@ -899,6 +899,8 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   if (!mContainer)
     return nsnull;
 
+  mContainer->SetImageFactory(mManager->IsCompositingCheap() ? nsnull : BasicManager()->GetImageFactory());
+
   nsRefPtr<Image> image = mContainer->GetCurrentImage();
 
   nsRefPtr<gfxASurface> surface = mContainer->GetCurrentAsSurface(&mSize);
@@ -1199,6 +1201,11 @@ BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
 {
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
+
+  if (!mSurface) {
+    NS_WARNING("No valid surface to draw!");
+    return;
+  }
 
   nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 

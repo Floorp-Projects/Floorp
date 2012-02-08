@@ -54,9 +54,9 @@
 #endif
 #include "jscompartment.h"
 
-#include "vm/RegExpObject.h"
-
 #include "jsobjinlines.h"
+
+#include "vm/RegExpObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -76,13 +76,13 @@ js::IsWrapper(const JSObject *wrapper)
 }
 
 JS_FRIEND_API(JSObject *)
-js::UnwrapObject(JSObject *wrapped, uintN *flagsp)
+js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, uintN *flagsp)
 {
     uintN flags = 0;
     while (wrapped->isWrapper()) {
         flags |= static_cast<Wrapper *>(GetProxyHandler(wrapped))->flags();
         wrapped = GetProxyPrivate(wrapped).toObjectOrNull();
-        if (wrapped->getClass()->ext.innerObject)
+        if (stopAtOuter && wrapped->getClass()->ext.innerObject)
             break;
     }
     if (flagsp)
@@ -334,6 +334,12 @@ Wrapper::fun_toString(JSContext *cx, JSObject *wrapper, uintN indent)
     return str;
 }
 
+RegExpShared *
+Wrapper::regexp_toShared(JSContext *cx, JSObject *wrapper)
+{
+    return wrappedObject(wrapper)->asRegExp().getShared(cx);
+}
+
 bool
 Wrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
 {
@@ -341,6 +347,21 @@ Wrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp)
     if (hint == JSTYPE_VOID)
         return ToPrimitive(cx, vp);
     return ToPrimitive(cx, hint, vp);
+}
+
+bool
+Wrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp)
+{
+    if (!js_IteratorMore(cx, wrappedObject(wrapper), vp))
+        return false;
+
+    if (vp->toBoolean()) {
+        *vp = cx->iterValue;
+        cx->iterValue.setUndefined();
+    } else {
+        vp->setMagic(JS_NO_ITER_VALUE);
+    }
+    return true;
 }
 
 void
@@ -842,6 +863,15 @@ CrossCompartmentWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType h
     return call.origin->wrap(cx, vp);
 }
 
+bool
+CrossCompartmentWrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp)
+{
+    PIERCE(cx, wrapper, GET,
+           NOTHING,
+           Wrapper::iteratorNext(cx, wrapper, vp),
+           call.origin->wrap(cx, vp));
+}
+
 void
 CrossCompartmentWrapper::trace(JSTracer *trc, JSObject *wrapper)
 {
@@ -880,6 +910,14 @@ SecurityWrapper<Base>::objectClassIs(JSObject *obj, ESClassValue classValue, JSC
      */
     return Base::objectClassIs(obj, classValue, cx);
 }
+
+template <class Base>
+RegExpShared *
+SecurityWrapper<Base>::regexp_toShared(JSContext *cx, JSObject *obj)
+{
+    return Base::regexp_toShared(cx, obj);
+}
+
 
 template class js::SecurityWrapper<Wrapper>;
 template class js::SecurityWrapper<CrossCompartmentWrapper>;

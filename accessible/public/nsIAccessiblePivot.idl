@@ -1,0 +1,221 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Eitan Isaacson <eitan@monotonous.org> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+typedef short TextBoundaryType;
+
+interface nsIAccessible;
+interface nsIAccessibleText;
+interface nsIAccessibleTraversalRule;
+interface nsIAccessiblePivotObserver;
+
+/**
+ * The pivot interface encapsulates a reference to a single place in an accessible
+ * subtree. The pivot is a point or a range in the accessible tree. This interface
+ * provides traversal methods to move the pivot to next/prev state that complies 
+ * to a given rule.
+ */
+[scriptable, uuid(689058ae-e301-444f-acb0-b5c2b189f350)]
+interface nsIAccessiblePivot : nsISupports
+{
+  const TextBoundaryType CHAR_BOUNDARY = 0;
+  const TextBoundaryType WORD_BOUNDARY = 1;
+  const TextBoundaryType LINE_BOUNDARY = 2;
+  const TextBoundaryType ATTRIBUTE_RANGE_BOUNDARY = 3;
+
+  /**
+   * The accessible the pivot is currently pointed at.
+   */
+  attribute nsIAccessible position;
+
+  /**
+   * The root of the subtree in which the pivot traverses.
+   */
+  readonly attribute nsIAccessible root;
+
+  /**
+   * The start offset of the text range the pivot points at, otherwise -1.
+   */
+  readonly attribute long startOffset;
+
+  /**
+   * The end offset of the text range the pivot points at, otherwise -1.
+   */
+  readonly attribute long endOffset;
+
+  /**
+   * Set the pivot's text range in a text accessible.
+   *
+   * @param aTextAccessible [in] the text accessible that contains the desired
+   *                        range.
+   * @param aStartOffset    [in] the start offset to set.
+   * @param aEndOffset      [in] the end offset to set.
+   * @throws NS_ERROR_INVALID_ARG when the offset exceeds the accessible's
+   *   character count.
+   */
+  void setTextRange(in nsIAccessibleText aTextAccessible,
+                    in long aStartOffset, in long aEndOffset);
+
+  /**
+   * Move pivot to next object complying to given traversal rule.
+   *
+   * @param aRule [in] traversal rule to use.
+   * @return true on success, false if there are no new nodes to traverse to.
+   */
+  boolean moveNext(in nsIAccessibleTraversalRule aRule);
+
+  /**
+   * Move pivot to previous object complying to given traversal rule.
+   *
+   * @param aRule [in] traversal rule to use.
+   * @return true on success, false if there are no new nodes to traverse to.
+   */
+  boolean movePrevious(in nsIAccessibleTraversalRule aRule);
+
+  /**
+   * Move pivot to first object in subtree complying to given traversal rule.
+   *
+   * @param aRule [in] traversal rule to use.
+   * @return true on success, false if there are no new nodes to traverse to.
+   */
+  boolean moveFirst(in nsIAccessibleTraversalRule aRule);
+
+  /**
+   * Move pivot to last object in subtree complying to given traversal rule.
+   *
+   * @param aRule [in] traversal rule to use.
+   * @return true on success, false if there are no new nodes to traverse to.
+   */
+  boolean moveLast(in nsIAccessibleTraversalRule aRule);
+
+  /**
+   * Move pivot to next text range.
+   *
+   * @param aBoundary [in] type of boundary for next text range, character, word,
+   *                  etc.
+   * @return true on success, false if there are is no more text.
+   */
+  boolean moveNextByText(in TextBoundaryType aBoundary);
+  
+  /**
+   * Move pivot to previous text range.
+   *
+   * @param aBoundary [in] type of boundary for previous text range, character,
+   *                  word, etc.
+   * @return true on success, false if there are is no more text.
+   */
+  boolean movePreviousByText(in TextBoundaryType aBoundary);
+
+  /**
+   * Add an observer for pivot changes.
+   *
+   * @param aObserver [in] the observer object to be notified of pivot changes.
+   */
+  void addObserver(in nsIAccessiblePivotObserver aObserver);
+
+  /**
+   * Remove an observer for pivot changes.
+   *
+   * @param aObserver [in] the observer object to remove from being notified.
+   */
+  void removeObserver(in nsIAccessiblePivotObserver aObserver);
+};
+
+/**
+ * An observer interface for pivot changes.
+ */
+[scriptable, uuid(b6508c5e-c081-467d-835c-613eedf9ee9b)]
+interface nsIAccessiblePivotObserver : nsISupports
+{
+  /**
+   * Called when the pivot changes.
+   *
+   * @param aPivot         [in] the pivot that has changed.
+   * @param aOldAccessible [in] the old pivot position before the change, or null.
+   * @param aOldStart      [in] the old start offset, or -1.
+   * @param aOldEnd        [in] the old end offset, or -1.
+   */
+  void onPivotChanged(in nsIAccessiblePivot aPivot,
+                      in nsIAccessible aOldAccessible,
+                      in long aOldStart, in long aOldEnd);
+};
+
+[scriptable, uuid(307d98b6-dba9-49cf-ba17-ef8b053044eb)]
+interface nsIAccessibleTraversalRule : nsISupports
+{
+  /* Ignore this accessible object */
+  const unsigned short FILTER_IGNORE = 0x0;
+  /* Accept this accessible object */
+  const unsigned short FILTER_MATCH = 0x1;
+  /* Don't traverse accessibles children */
+  const unsigned short FILTER_IGNORE_SUBTREE = 0x2;
+
+  /* Pre-filters */
+  const unsigned long PREFILTER_INVISIBLE     = 0x00000001;
+  const unsigned long PREFILTER_OFFSCREEN     = 0x00000002;
+  const unsigned long PREFILTER_NOT_FOCUSABLE = 0x00000004;
+
+  /**
+   * Pre-filter bitfield to filter out obviously ignorable nodes and lighten
+   * the load on match().
+   */
+  readonly attribute unsigned long preFilter;
+
+  /**
+   * Retrieve a list of roles that the traversal rule should test for. Any node
+   * with a role not in this list will automatically be ignored. An empty list
+   * will match all roles. It should be assumed that this method is called once
+   * at the start of a traversal, so changing the method's return result after
+   * that would have no affect.
+   *
+   * @param aRoles [out] an array of the roles to match.
+   * @param aCount [out] the length of the array.
+   */
+  void getMatchRoles([array, size_is(aCount)]out unsigned long aRoles,
+                     [retval]out unsigned long aCount);
+
+  /**
+   * Determines if a given accessible is to be accepted in our traversal rule
+   *
+   * @param aAccessible [in] accessible to examine.
+   * @return a bitfield of FILTER_MATCH and FILTER_IGNORE_SUBTREE.
+   */
+  unsigned short match(in nsIAccessible aAccessible);
+};

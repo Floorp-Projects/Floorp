@@ -1,5 +1,19 @@
+<!--
+DO NOT MODIFY THIS FILE UNLESS YOU KNOW WHAT YOU ARE DOING!
+
+This file is specifically designed to create a page larger than
+any screen fennec could run on (to allow panning in both axes).
+It is filled with 100x100 pixel boxes that are of unique colour,
+so that we can identify exactly what part of the page we are
+rendering at any given time. A lot of the tests depend on this
+behaviour, so ensure that all the tests pass (on a variety of
+screen sizes) when making any changes to this file.
+ -->
 <html style="margin: 0; padding: 0">
-<title>Browser Box test</title>
+<head>
+ <title>Browser Box test</title>
+ <meta name="viewport" content="initial-scale=1.0"/>
+</head>
 <body style="margin: 0; padding: 0">
 <script type="text/javascript">
 for (var y = 0; y < 2000; y += 100) {

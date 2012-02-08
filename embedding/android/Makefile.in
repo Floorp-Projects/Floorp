@@ -79,7 +79,8 @@ MIN_CPU_VERSION=5
 endif
 
 ifeq (,$(ANDROID_VERSION_CODE))
-ANDROID_VERSION_CODE=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10)
+# increment the version code by 1 so xul fennec will win any compatability ties
+ANDROID_VERSION_CODE=$(shell echo `$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10` + 1 | bc)
 endif
 
 DEFINES += \
@@ -93,6 +94,11 @@ DEFINES += \
   -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
   -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
   $(NULL)
+
+MOZ_MOBILE_COMPAT = @MOZ_MOBILE_COMPAT@
+ifeq (Tablets,$(MOZ_MOBILE_COMPAT))
+DEFINES += -DMOZ_TABLETS_ONLY=1
+endif
 
 GARBAGE += \
   AndroidManifest.xml  \
@@ -199,7 +205,7 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png AndroidManifest.xml chrome
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) chrome FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 libs:: classes.dex

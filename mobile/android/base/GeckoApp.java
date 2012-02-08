@@ -40,14 +40,17 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.GeckoGLLayerClient;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.IntSize;
+import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.PlaceholderLayerClient;
 import org.mozilla.gecko.gfx.RectUtils;
+import org.mozilla.gecko.gfx.SurfaceTextureLayer;
 import org.mozilla.gecko.gfx.ViewportMetrics;
 import org.mozilla.gecko.Tab.HistoryEntry;
 
@@ -151,8 +154,6 @@ abstract public class GeckoApp
     public int mOwnActivityDepth = 0;
     private boolean mRestoreSession = false;
 
-    private Vector<View> mPluginViews = new Vector<View>();
-
     public interface OnTabsChangedListener {
         public void onTabsChanged(Tab tab);
     }
@@ -219,8 +220,9 @@ abstract public class GeckoApp
     public ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<PackageInfo>();
 
     String[] getPluginDirectories() {
-        // we don't support Honeycomb and later
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+        // we don't support Honeycomb
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
+            Build.VERSION.SDK_INT < 14 /*Build.VERSION_CODES.ICE_CREAM_SANDWICH*/ )
             return new String[0];
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
@@ -398,7 +400,7 @@ abstract public class GeckoApp
                 final MenuItem mi = aMenu.add(Menu.NONE, item.id, Menu.NONE, item.label);
                 if (item.icon != null) {
                     if (item.icon.startsWith("data")) {
-                        byte[] raw = Base64.decode(item.icon.substring(22), Base64.DEFAULT);
+                        byte[] raw = GeckoAppShell.decodeBase64(item.icon.substring(22), GeckoAppShell.BASE64_DEFAULT);
                         Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
                         BitmapDrawable drawable = new BitmapDrawable(bitmap);
                         mi.setIcon(drawable);
@@ -598,6 +600,13 @@ abstract public class GeckoApp
             bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
             processThumbnail(tab, bitmap, bos.toByteArray());
         } else {
+            if (!tab.hasLoaded()) {
+                byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
+                if (thumbnail != null)
+                    processThumbnail(tab, null, thumbnail);
+                return;
+            }
+
             mLastScreen = null;
             int sw = forceBigSceenshot ? mLayerClient.getWidth() : tab.getMinScreenshotWidth();
             int sh = forceBigSceenshot ? mLayerClient.getHeight(): tab.getMinScreenshotHeight();
@@ -741,6 +750,9 @@ abstract public class GeckoApp
                     mDoorHangerPopup.updatePopup();
                     mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
                     mLayerController.setWaitForTouchListeners(false);
+
+                    if (tab != null)
+                        hidePlugins(tab, true);
                 }
             }
         });
@@ -893,10 +905,11 @@ abstract public class GeckoApp
                     ExtraMenuItem item = i.next();
                     if (item.id == id) {
                         sExtraMenuItems.remove(item);
+                        if (sMenu == null)
+                            return;
                         MenuItem menu = sMenu.findItem(id);
                         if (menu != null)
                             sMenu.removeItem(id);
-                        return;
                     }
                 }
             } else if (event.equals("Toast:Show")) {
@@ -1289,6 +1302,7 @@ abstract public class GeckoApp
             return;
 
         tab.updateTitle(title);
+        tab.setHasLoaded(true);
 
         // Make the UI changes
         mMainHandler.post(new Runnable() {
@@ -1364,13 +1378,18 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 PluginLayoutParams lp;
-                JSONObject viewportObject;
-                ViewportMetrics pluginViewport;
+
+                Tabs tabs = Tabs.getInstance();
+                Tab tab = tabs.getSelectedTab();
+
+                if (tab == null)
+                    return;
 
                 ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
+                ViewportMetrics pluginViewport;
                 
                 try {
-                    viewportObject = new JSONObject(metadata);
+                    JSONObject viewportObject = new JSONObject(metadata);
                     pluginViewport = new ViewportMetrics(viewportObject);
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Bad viewport metadata: ", e);
@@ -1389,13 +1408,14 @@ abstract public class GeckoApp
                     }
 
                     mPluginContainer.addView(view, lp);
-                    mPluginViews.add(view);
+                    tab.addPluginView(view);
                 } else {
                     lp = (PluginLayoutParams)view.getLayoutParams();
                     lp.reset(x, y, w, h, pluginViewport);
                     lp.reposition(targetViewport);
                     try {
                         mPluginContainer.updateViewLayout(view, lp);
+                        view.setVisibility(View.VISIBLE);
                     } catch (IllegalArgumentException e) {
                         Log.i(LOGTAG, "e:" + e);
                         // it can be the case where we
@@ -1412,29 +1432,159 @@ abstract public class GeckoApp
             public void run() {
                 try {
                     mPluginContainer.removeView(view);
-                    mPluginViews.remove(view);
+
+                    Tabs tabs = Tabs.getInstance();
+                    Tab tab = tabs.getSelectedTab();
+                    if (tab == null)
+                        return;
+
+                    tab.removePluginView(view);
                 } catch (Exception e) {}
             }
         });
     }
 
-    public void hidePluginViews() {
-        for (View view : mPluginViews) {
+    public Surface createSurface() {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+        if (tab == null)
+            return null;
+
+        SurfaceTextureLayer layer = SurfaceTextureLayer.create();
+        if (layer == null)
+            return null;
+
+        Surface surface = layer.getSurface();
+        tab.addPluginLayer(surface, layer);
+        return surface;
+    }
+
+    public void destroySurface(Surface surface) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+        if (tab == null)
+            return;
+
+        tab.removePluginLayer(surface);
+    }
+
+    public void showSurface(Surface surface, int x, int y,
+                            int w, int h, boolean inverted, boolean blend,
+                            String metadata) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+        if (tab == null)
+            return;
+
+        ViewportMetrics metrics;
+        try {
+            metrics = new ViewportMetrics(new JSONObject(metadata));
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Bad viewport metadata: ", e);
+            return;
+        }
+
+        PointF origin = metrics.getDisplayportOrigin();
+        x = x + (int)origin.x;
+        y = y + (int)origin.y;
+
+        LayerView layerView = mLayerController.getView();
+        SurfaceTextureLayer layer = (SurfaceTextureLayer)tab.getPluginLayer(surface);
+        if (layer == null)
+            return;
+
+        layer.update(new Point(x, y), new IntSize(w, h), metrics.getZoomFactor(), inverted, blend);
+        layerView.addLayer(layer);
+
+        // FIXME: shouldn't be necessary, layer will request
+        // one when it gets first frame
+        layerView.requestRender();
+    }
+    
+    private void hidePluginLayer(Layer layer) {
+        LayerView layerView = mLayerController.getView();
+        layerView.removeLayer(layer);
+        layerView.requestRender();
+    }
+
+    private void showPluginLayer(Layer layer) {
+        LayerView layerView = mLayerController.getView();
+        layerView.addLayer(layer);
+        layerView.requestRender();
+    }
+
+    public void hideSurface(Surface surface) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+        if (tab == null)
+            return;
+
+        Layer layer = tab.getPluginLayer(surface);
+        if (layer == null)
+            return;
+
+        hidePluginLayer(layer);
+    }
+
+    public void requestRender() {
+        mLayerController.getView().requestRender();
+    }
+
+    public void hidePlugins(boolean hideLayers) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+
+        if (tab == null)
+            return;
+
+        hidePlugins(tab, hideLayers);
+    }
+
+    public void hidePlugins(Tab tab, boolean hideLayers) {
+        for (View view : tab.getPluginViews()) {
             view.setVisibility(View.GONE);
+        }
+
+        if (hideLayers) {
+            for (Layer layer : tab.getPluginLayers()) {
+                hidePluginLayer(layer);
+            }
+
+            requestRender();
         }
     }
 
-    public void showPluginViews() {
+    public void showPlugins() {
         repositionPluginViews(true);
     }
 
+    public void showPlugins(Tab tab) {
+        repositionPluginViews(tab, true);
+
+        for (Layer layer : tab.getPluginLayers()) {
+            showPluginLayer(layer);
+        }
+
+        requestRender();
+    }
+
     public void repositionPluginViews(boolean setVisible) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getSelectedTab();
+
+        if (tab == null)
+            return;
+
+        repositionPluginViews(tab, setVisible);
+    }
+
+    public void repositionPluginViews(Tab tab, boolean setVisible) {
         ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
 
         if (targetViewport == null)
             return;
 
-        for (View view : mPluginViews) {
+        for (View view : tab.getPluginViews()) {
             PluginLayoutParams lp = (PluginLayoutParams)view.getLayoutParams();
             lp.reposition(targetViewport);
 
@@ -1510,6 +1660,20 @@ abstract public class GeckoApp
             checkAndLaunchUpdate();
         }
 
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.gecko_app);
+
+        mOrientation = getResources().getConfiguration().orientation;
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            refreshActionBar();
+        } else {
+            mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+        }
+
+        mBrowserToolbar.setTitle(mLastTitle);
+
         String passedUri = null;
         String uri = getURIFromIntent(intent);
         if (uri != null && uri.length() > 0)
@@ -1523,8 +1687,12 @@ abstract public class GeckoApp
             if (profileDir != null)
                 sessionExists = new File(profileDir, "sessionstore.bak").exists();
             Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.bak exists");
-            if (!sessionExists)
+            if (!sessionExists) {
+                mBrowserToolbar.updateTabCount(1);
                 showAboutHome();
+            }
+        } else {
+            mBrowserToolbar.updateTabCount(1);
         }
 
         if (sGREDir == null)
@@ -1549,20 +1717,6 @@ abstract public class GeckoApp
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             sGeckoThread.start();
 
-        super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.gecko_app);
-
-        mOrientation = getResources().getConfiguration().orientation;
-
-        if (Build.VERSION.SDK_INT >= 11) {
-            refreshActionBar();
-        } else {
-            mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
-        }
-
-        mBrowserToolbar.setTitle(mLastTitle);
-
         mFavicons = new Favicons(this);
 
         // setup gecko layout
@@ -1578,7 +1732,7 @@ abstract public class GeckoApp
             mBrowserToolbar.setTitle(tab.getDisplayTitle());
             mBrowserToolbar.setFavicon(tab.getFavicon());
             mBrowserToolbar.setProgressVisibility(tab.isLoading());
-            mBrowserToolbar.updateTabs(Tabs.getInstance().getCount()); 
+            mBrowserToolbar.updateTabCountAndAnimate(Tabs.getInstance().getCount()); 
         }
 
         tabs.setContentResolver(getContentResolver()); 
@@ -2576,8 +2730,10 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     public void reset(int aX, int aY, int aWidth, int aHeight, ViewportMetrics aViewport) {
-        x = mOriginalX = aX;
-        y = mOriginalY = aY;
+        PointF origin = aViewport.getDisplayportOrigin();
+
+        x = mOriginalX = aX + (int)origin.x;
+        y = mOriginalY = aY + (int)origin.y;
         width = mOriginalWidth = aWidth;
         height = mOriginalHeight = aHeight;
         mOriginalViewport = aViewport;
@@ -2607,5 +2763,9 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
                                  Math.round(originalOrigin.y - targetOrigin.y));
 
         reposition(offset, viewport.getZoomFactor());
+    }
+
+    public float getLastResolution() {
+        return mLastResolution;
     }
 }

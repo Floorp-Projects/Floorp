@@ -1,4 +1,10 @@
 #! /usr/bin/env python
+#
+# Script name:   talos_from_code.py
+# Purpose:       Read from a talos.json file the different files to download for a talos job
+# Author(s):     Zambrano Gasparnian, Armen <armenzg@mozilla.com>
+# Target:        Python 2.5
+#
 from optparse import OptionParser
 try:
     import json
@@ -8,41 +14,49 @@ import re
 import urllib2
 import urlparse
 import sys
+import os
 
 def main():
+    '''
+    This script downloads a talos.json file which indicates which files to download
+    for a talos job.
+    See a talos.json file for a better understand:
+    http://hg.mozilla.org/mozilla-central/raw-file/default/testing/talos/talos.json
+    '''
     parser = OptionParser()
     parser.add_option("--talos-json-url", dest="talos_json_url", type="string",
                       help="It indicates from where to download the talos.json file.")
     (options, args) = parser.parse_args()
 
+    # 1) check that the url was passed
     if options.talos_json_url == None:
         print "You need to specify --talos-json-url."
         sys.exit(1)
 
-    # json file with info on which talos.zip to use
-    # the json file URL should look like this:
-    #  %(repo_path)s/raw-file/%(revision)s/testing/talos/talos.json
+    # 2) try to download the talos.json file
     try:
         jsonFilename = download_file(options.talos_json_url)
-    except Exception as e:
-        print "ERROR: We have been unable to download the talos.zip indicated " + \
-              "in the talos.json file."
+    except Exception, e:
+        print "ERROR: We tried to download the talos.json file but something failed."
         print "ERROR: %s" % str(e)
         sys.exit(1)
 
-    print "INFO: talos.json URL:  %s" % options.talos_json_url
-    talos_zip_url = get_value(jsonFilename, "talos_zip")
-    print "INFO: talos.zip URL: '%s'" % talos_zip_url
+    # 3) download the necessary files
+    print "INFO: talos.json URL: %s" % options.talos_json_url
     try:
-        if passesRestrictions(options.talos_json_url, talos_zip_url) == False:
-            print "ERROR: You have tried to download a talos.zip from a location " + \
-                  "different than http://build.mozilla.org/talos/zips"
-            print "ERROR: This is only allowed for the 'try' branch."
-            sys.exit(1)
-        download_file(talos_zip_url, "talos.zip")
-    except Exception as e:
-        print "ERROR: We have been unable to download the talos.zip indicated " + \
-              "in the talos.json file."
+        for key in ('talos.zip', 'pageloader.xpi',):
+            entity = get_value(jsonFilename, key)
+            if passesRestrictions(options.talos_json_url, entity["url"]):
+                # the key is at the same time the filename e.g. talos.zip
+                download_file(entity["url"], entity["path"], key)
+                print "INFO: %s -> %s" % (entity["url"], os.path.join(entity["path"], key))
+            else:
+                print "ERROR: You have tried to download a file " + \
+                      "from: %s " % fileUrl + \
+                      "which is a location different than http://build.mozilla.org/talos/"
+                print "ERROR: This is only allowed for the certain branches."
+                sys.exit(1)
+    except Exception, e:
         print "ERROR: %s" % str(e)
         sys.exit(1)
 
@@ -73,15 +87,21 @@ def get_filename_from_url(url):
               "but the URL seems to be incorrect."
         sys.exit(1)
 
-def download_file(url, saveAs=None):
+def download_file(url, path="", saveAs=None):
     '''
-    It downloads a file from the URL indicated and can be saved locally with
-    a different name if needed.
+    It downloads a file from URL to the indicated path
     '''
     req = urllib2.Request(url)
-    filename = get_filename_from_url(url)
     f = urllib2.urlopen(req)
-    local_file = open(saveAs if saveAs else filename, 'wb')
+    if path != "" and not os.path.isdir(path):
+        try:
+            os.makedirs(path)
+            print "INFO: directory %s created" % path
+        except Exception, e:
+            print "ERROR: %s" % str(e)
+            sys.exit(1)
+    filename = saveAs if saveAs else get_filename_from_url(url)
+    local_file = open(os.path.join(path, filename), 'wb')
     local_file.write(f.read())
     local_file.close()
     return filename

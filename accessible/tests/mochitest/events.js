@@ -27,6 +27,7 @@ const EVENT_TEXT_INSERTED = nsIAccessibleEvent.EVENT_TEXT_INSERTED;
 const EVENT_TEXT_REMOVED = nsIAccessibleEvent.EVENT_TEXT_REMOVED;
 const EVENT_TEXT_SELECTION_CHANGED = nsIAccessibleEvent.EVENT_TEXT_SELECTION_CHANGED;
 const EVENT_VALUE_CHANGE = nsIAccessibleEvent.EVENT_VALUE_CHANGE;
+const EVENT_VIRTUALCURSOR_CHANGED = nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED;
 
 ////////////////////////////////////////////////////////////////////////////////
 // General
@@ -1218,6 +1219,33 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq)
   {
     return aNodeOrID + " selectall";
   }
+}
+
+/**
+ * Set caret offset in text accessible.
+ */
+function setCaretOffset(aID, aOffset, aFocusTargetID)
+{
+  this.target = getAccessible(aID, [nsIAccessibleText]);
+  this.offset = aOffset == -1 ? this.target.characterCount: aOffset;
+  this.focus = aFocusTargetID ? getAccessible(aFocusTargetID) : null;
+
+  this.invoke = function setCaretOffset_invoke()
+  {
+    this.target.caretOffset = this.offset;
+  }
+
+  this.getID = function setCaretOffset_getID()
+  {
+   return "Set caretOffset on " + prettyName(aID) + " at " + this.offset;
+  }
+
+  this.eventSeq = [
+    new caretMoveChecker(this.offset, this.target)
+  ];
+
+  if (this.focus)
+    this.eventSeq.push(new asyncInvokerChecker(EVENT_FOCUS, this.focus));
 }
 
 
