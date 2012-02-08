@@ -670,7 +670,7 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
 
       case MIRType_Double:
       {
-        LDoubleToInt32 *lir = new LDoubleToInt32(use(opd));
+        LDoubleToInt32 *lir = new LDoubleToInt32(useRegister(opd));
         return assignSnapshot(lir) && define(lir, convert);
       }
 
