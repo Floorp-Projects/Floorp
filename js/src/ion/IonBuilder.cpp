@@ -2539,7 +2539,7 @@ IonBuilder::jsop_initelem()
 {
     if (oracle->propertyWriteCanSpecialize(script, pc)) {
         if (oracle->elementWriteIsDense(script, pc))
-            return jsop_initelem_dense();
+            return jsop_setelem_dense();
     }
 
     return abort("NYI: JSOP_INITELEM supports for non dense objects/arrays.");
