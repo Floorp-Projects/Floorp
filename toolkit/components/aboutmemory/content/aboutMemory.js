@@ -1108,13 +1108,11 @@ function appendTreeElements(aPOuter, aT, aProcess)
   function appendTreeElements2(aP, aUnsafePrePath, aT, aIndentGuide,
                                aBaseIndentText, aParentStringLength)
   {
-    function repeatStr(aC, aN)
+    function repeatStr(aA, aC, aN)
     {
-      var s = "";
       for (var i = 0; i < aN; i++) {
-        s += aC;
+        aA.push(aC);
       }
-      return s;
     }
 
     var unsafePath = aUnsafePrePath + aT._unsafeName;
@@ -1122,14 +1120,14 @@ function appendTreeElements(aPOuter, aT, aProcess)
     // Indent more if this entry is narrower than its parent, and update
     // aIndentGuide accordingly.
     var tString = aT.toString();
-    var extraIndentText = "";
+    var extraIndentArray = [];
     var extraIndentLength = Math.max(aParentStringLength - tString.length, 0);
     if (extraIndentLength > 0) {
-      extraIndentText = repeatStr(kHorizontal, extraIndentLength);
+      repeatStr(extraIndentArray, kHorizontal, extraIndentLength);
       aIndentGuide[aIndentGuide.length - 1]._depth += extraIndentLength;
     }
-    appendElementWithText(aP, "span", "treeLine",
-                          aBaseIndentText + extraIndentText);
+    var indentText = aBaseIndentText + extraIndentArray.join("");
+    appendElementWithText(aP, "span", "treeLine", indentText);
 
     // Generate the percentage;  detect and record invalid values at the same
     // time.
@@ -1196,17 +1194,18 @@ function appendTreeElements(aPOuter, aT, aProcess)
         aIndentGuide.push({ _isLastKid: (i === aT._kids.length - 1), _depth: 3 });
 
         // Generate the base indent.
-        var baseIndentText = "";
+        var baseIndentArray = [];
         if (aIndentGuide.length > 0) {
           for (var j = 0; j < aIndentGuide.length - 1; j++) {
-            baseIndentText += aIndentGuide[j]._isLastKid ? " " : kVertical;
-            baseIndentText += repeatStr(" ", aIndentGuide[j]._depth - 1);
+            baseIndentArray.push(aIndentGuide[j]._isLastKid ? " " : kVertical);
+            repeatStr(baseIndentArray, " ", aIndentGuide[j]._depth - 1);
           }
-          baseIndentText += aIndentGuide[j]._isLastKid ?
-                            kUpAndRight : kVerticalAndRight;
-          baseIndentText += repeatStr(kHorizontal, aIndentGuide[j]._depth - 1);
+          baseIndentArray.push(aIndentGuide[j]._isLastKid ?
+                               kUpAndRight : kVerticalAndRight);
+          repeatStr(baseIndentArray, kHorizontal, aIndentGuide[j]._depth - 1);
         }
 
+        var baseIndentText = baseIndentArray.join("");
         appendTreeElements2(d, unsafePath + "/", aT._kids[i], aIndentGuide,
                             baseIndentText, tString.length);
         aIndentGuide.pop();
