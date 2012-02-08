@@ -399,9 +399,9 @@ public:
   virtual nsresult HandleAccEvent(AccEvent* aAccEvent);
 
   /**
-   * Return true if there are accessible children in anonymous content
+   * Return true if this accessible allows accessible children from anonymous subtree.
    */
-  virtual bool GetAllowsAnonChildAccessibles();
+  virtual bool CanHaveAnonChildren();
 
   /**
    * Returns text of accessible if accessible has text role otherwise empty

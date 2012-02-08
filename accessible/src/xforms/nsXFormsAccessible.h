@@ -90,7 +90,7 @@ public:
 
   // Denies accessible nodes in anonymous content of xforms element by
   // always returning false value.
-  virtual bool GetAllowsAnonChildAccessibles();
+  virtual bool CanHaveAnonChildren();
 
 protected:
   // Returns value of first child xforms element by tagname that is bound to
@@ -131,7 +131,7 @@ public:
 
   // Allows accessible nodes in anonymous content of xforms element by
   // always returning true value.
-  virtual bool GetAllowsAnonChildAccessibles();
+  virtual bool CanHaveAnonChildren();
 };
 
 

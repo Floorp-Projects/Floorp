@@ -844,7 +844,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::DoAction(PRUint8 index)
 }
 
 bool
-nsXULTextFieldAccessible::GetAllowsAnonChildAccessibles()
+nsXULTextFieldAccessible::CanHaveAnonChildren()
 {
   return false;
 }

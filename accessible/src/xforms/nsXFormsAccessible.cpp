@@ -215,7 +215,7 @@ nsXFormsAccessible::Description(nsString& aDescription)
 }
 
 bool
-nsXFormsAccessible::GetAllowsAnonChildAccessibles()
+nsXFormsAccessible::CanHaveAnonChildren()
 {
   return false;
 }
@@ -238,7 +238,7 @@ nsXFormsContainerAccessible::NativeRole()
 }
 
 bool
-nsXFormsContainerAccessible::GetAllowsAnonChildAccessibles()
+nsXFormsContainerAccessible::CanHaveAnonChildren()
 {
   return true;
 }
