@@ -116,6 +116,10 @@ namespace ion {
     _(CallGetElement)                                                       \
     _(CallSetElement)                                                       \
     _(GenericSetProperty)                                                   \
+    _(IteratorStart)                                                        \
+    _(IteratorNext)                                                         \
+    _(IteratorMore)                                                         \
+    _(IteratorEnd)                                                          \
     _(StringLength)                                                         \
     _(Round)
 
