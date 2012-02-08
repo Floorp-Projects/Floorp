@@ -133,7 +133,8 @@ struct nsWidgetInitData {
       mUnicode(true),
       mRTL(false),
       mNoAutoHide(false),
-      mIsDragPopup(false)
+      mIsDragPopup(false),
+      mIsAnimationSuppressed(false)
   {
   }
 
@@ -148,6 +149,8 @@ struct nsWidgetInitData {
   bool          mRTL;
   bool          mNoAutoHide; // true for noautohide panels
   bool          mIsDragPopup;  // true for drag feedback panels
+  bool          mIsAnimationSuppressed;  // true if window creation animation is
+                                         // suppressed, e.g. for session restore
 };
 
 #endif // nsWidgetInitData_h__

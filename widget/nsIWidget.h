@@ -1017,6 +1017,20 @@ class nsIWidget : public nsISupports {
      */
     virtual void SetShowsToolbarButton(bool aShow) = 0;
 
+    enum WindowAnimationType {
+      eGenericWindowAnimation,
+      eDocumentWindowAnimation
+    };
+
+    /**
+     * Sets the kind of top-level window animation this widget should have.  On
+     * Mac OS X, this causes a particular kind of animation to be shown when the
+     * window is first made visible.
+     *
+     * Ignored on child widgets and on non-Mac platforms.
+     */
+    virtual void SetWindowAnimationType(WindowAnimationType aType) = 0;
+
     /** 
      * Hide window chrome (borders, buttons) for this widget.
      *
