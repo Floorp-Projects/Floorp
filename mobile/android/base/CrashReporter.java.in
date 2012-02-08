@@ -241,8 +241,10 @@ public class CrashReporter extends Activity
         final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
 
         String spec = extras.get(SERVER_URL_KEY);
-        if (spec == null)
+        if (spec == null) {
             doFinish();
+            return;
+        }
 
         Log.i(LOGTAG, "server url: " + spec);
         try {
