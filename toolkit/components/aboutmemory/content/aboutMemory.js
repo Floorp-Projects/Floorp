@@ -953,20 +953,25 @@ function kindToString(aKind)
   }
 }
 
-function appendMrNameSpan(aP, aKind, aShowSubtrees, aHasKids, aUnsafeDesc,
-                          aUnsafeName, aIsUnknown, aIsInvalid, aNMerged)
+// Possible states for kids.
+const kNoKids   = 0;
+const kHideKids = 1;
+const kShowKids = 2;
+
+function appendMrNameSpan(aP, aKind, aKidsState, aUnsafeDesc, aUnsafeName,
+                          aIsUnknown, aIsInvalid, aNMerged)
 {
   var text = "";
-  if (aHasKids) {
-    if (aShowSubtrees) {
-      appendElementWithText(aP, "span", "mrSep hidden", " ++ ");
-      appendElementWithText(aP, "span", "mrSep",        " -- ");
-    } else {
-      appendElementWithText(aP, "span", "mrSep",        " ++ ");
-      appendElementWithText(aP, "span", "mrSep hidden", " -- ");
-    }
-  } else {
+  if (aKidsState === kNoKids) {
     appendElementWithText(aP, "span", "mrSep", kDoubleHorizontalSep);
+  } else if (aKidsState === kHideKids) {
+    appendElementWithText(aP, "span", "mrSep",        " ++ ");
+    appendElementWithText(aP, "span", "mrSep hidden", " -- ");
+  } else if (aKidsState === kShowKids) {
+    appendElementWithText(aP, "span", "mrSep hidden", " ++ ");
+    appendElementWithText(aP, "span", "mrSep",        " -- ");
+  } else {
+    assert(false, "bad aKidsState");
   }
 
   var nameSpan = appendElementWithText(aP, "span", "mrName",
@@ -1109,14 +1114,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
       return s;
     }
 
-    // Determine if we should show the sub-tree below this entry;  this
-    // involves reinstating any previous toggling of the sub-tree.
     var unsafePath = aUnsafePrePath + aT._unsafeName;
-    var safeTreeId = makeSafe(aProcess + ":" + unsafePath);
-    var showSubtrees = !aT._hideKids;
-    if (gTogglesBySafeTreeId[safeTreeId]) {
-      showSubtrees = !showSubtrees;
-    }
 
     // Generate the indent.
     var indent = "";
@@ -1138,6 +1136,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
       }
       aIndentGuide[aIndentGuide.length - 1]._depth += extraIndentLength;
     }
+    appendElementWithText(aP, "span", "treeLine", indent);
 
     // Generate the percentage;  detect and record invalid values at the same
     // time.
@@ -1158,19 +1157,24 @@ function appendTreeElements(aPOuter, aT, aProcess)
 
     // For non-leaf nodes, the entire sub-tree is put within a span so it can
     // be collapsed if the node is clicked on.
-    var hasKids = aT._kids.length > 0;
-    if (!hasKids) {
-      assert(!aT._hideKids, "leaf node with _hideKids set")
-    }
-
-    appendElementWithText(aP, "span", "treeLine", indent);
-
     var d;
+    var hasKids = aT._kids.length > 0;
+    var kidsState;
     if (hasKids) {
+      // Determine if we should show the sub-tree below this entry;  this
+      // involves reinstating any previous toggling of the sub-tree.
+      var safeTreeId = makeSafe(aProcess + ":" + unsafePath);
+      var showSubtrees = !aT._hideKids;
+      if (gTogglesBySafeTreeId[safeTreeId]) {
+        showSubtrees = !showSubtrees;
+      }
       d = appendElement(aP, "span", "hasKids");
       d.id = safeTreeId;
       d.onclick = toggle;
+      kidsState = showSubtrees ? kShowKids : kHideKids;
     } else {
+      assert(!aT._hideKids, "leaf node with _hideKids set")
+      kidsState = kNoKids;
       d = aP;
     }
 
@@ -1180,8 +1184,8 @@ function appendTreeElements(aPOuter, aT, aProcess)
     // We don't want to show '(nonheap)' on a tree like 'map/vsize', since the
     // whole tree is non-heap.
     var kind = isExplicitTree ? aT._kind : undefined;
-    appendMrNameSpan(d, kind, showSubtrees, hasKids, aT._unsafeDescription,
-                     aT._unsafeName, aT._isUnknown, tIsInvalid, aT._nMerged);
+    appendMrNameSpan(d, kind, kidsState, aT._unsafeDescription, aT._unsafeName,
+                     aT._isUnknown, tIsInvalid, aT._nMerged);
     appendTextNode(d, "\n");
 
     // In non-verbose mode, invalid nodes can be hidden in collapsed sub-trees.
@@ -1307,8 +1311,7 @@ function appendOtherElements(aP, aReportersByProcess)
       gUnsafePathsWithInvalidValuesForThisProcess.push(o._unsafePath);
     }
     appendMrValueSpan(pre, pad(o._asString, maxStringLength, ' '), oIsInvalid);
-    appendMrNameSpan(pre, KIND_OTHER, /* showSubtrees = */true,
-                     /* hasKids = */false, o._unsafeDescription,
+    appendMrNameSpan(pre, KIND_OTHER, kNoKids, o._unsafeDescription,
                      o._unsafePath, o._isUnknown, oIsInvalid);
     appendTextNode(pre, "\n");
   }
