@@ -203,5 +203,13 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         Log.e(LOGTAG, "### Scheduling ResumeComposition");
         GeckoAppShell.scheduleResumeComposition();
     }
+
+    public void surfaceChanged(int width, int height) {
+        compositionPauseRequested();
+        LayerController layerController = getLayerController();
+        layerController.setViewportSize(new FloatSize(width, height));
+        compositionResumeRequested();
+        renderRequested();
+    }
 }
 
