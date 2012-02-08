@@ -76,8 +76,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLTableCellAccessible::
-  nsHTMLTableCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  nsHTMLTableCellAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -348,7 +348,8 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
       desiredRole = roles::COLUMNHEADER;
 
     do {
-      nsAccessible* headerCell = mDoc->GetAccessible(headerCellElm);
+      nsAccessible* headerCell =
+        GetAccService()->GetAccessibleInWeakShell(headerCellElm, mWeakShell);
 
       if (headerCell && headerCell->Role() == desiredRole)
         headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
@@ -375,9 +376,9 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLTableHeaderCellAccessible::
-  nsHTMLTableHeaderCellAccessible(nsIContent* aContent,
-                                  nsDocAccessible* aDoc) :
-  nsHTMLTableCellAccessible(aContent, aDoc)
+  nsHTMLTableHeaderCellAccessible(nsIContent *aContent,
+                                  nsIWeakReference *aShell) :
+  nsHTMLTableCellAccessible(aContent, aShell)
 {
 }
 
@@ -435,8 +436,8 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLTableAccessible::
-  nsHTMLTableAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsHTMLTableAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -457,7 +458,7 @@ nsHTMLTableAccessible::CacheChildren()
   // caption only, because nsAccessibilityService ensures we don't create
   // accessibles for the other captions, since only the first is actually
   // visible.
-  nsAccTreeWalker walker(mDoc->GetWeakShell(), mContent, GetAllowsAnonChildAccessibles());
+  nsAccTreeWalker walker(mWeakShell, mContent, GetAllowsAnonChildAccessibles());
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {
@@ -717,7 +718,8 @@ nsHTMLTableAccessible::GetSelectedCells(nsIArray **aCells)
       if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
           startColIndex == columnIndex && isSelected) {
         nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
-        nsAccessible *cell = mDoc->GetAccessible(cellContent);
+        nsAccessible *cell =
+          GetAccService()->GetAccessibleInWeakShell(cellContent, mWeakShell);
         selCells->AppendElement(static_cast<nsIAccessible*>(cell), false);
       }
     }
@@ -890,7 +892,8 @@ nsHTMLTableAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElement));
-  nsAccessible* cell = mDoc->GetAccessible(cellContent);
+  nsAccessible *cell =
+    GetAccService()->GetAccessibleInWeakShell(cellContent, mWeakShell);
 
   if (!cell) {
     return NS_ERROR_INVALID_ARG;
@@ -1191,7 +1194,7 @@ nsHTMLTableAccessible::AddRowOrColumnToSelection(PRInt32 aIndex,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIPresShell* presShell(mDoc->PresShell());
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   nsRefPtr<nsFrameSelection> tableSelection =
     const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
@@ -1223,7 +1226,7 @@ nsHTMLTableAccessible::RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
   nsITableLayout *tableLayout = GetTableLayout();
   NS_ENSURE_STATE(tableLayout);
 
-  nsIPresShell* presShell(mDoc->PresShell());
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   nsRefPtr<nsFrameSelection> tableSelection =
     const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
@@ -1382,7 +1385,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsDocAccessible* docAccessible = Document();
+  nsDocAccessible *docAccessible = GetDocAccessible();
   if (docAccessible) {
     PRUint64 docState = docAccessible->State();
     if (docState & states::EDITABLE) {  // Need to see all elements while document is being edited
@@ -1536,7 +1539,7 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
     NS_ENSURE_TRUE(tableFrame , NS_ERROR_FAILURE);
     nsSize tableSize  = tableFrame->GetSize();
 
-    nsDocAccessible* docAccessible = Document();
+    nsDocAccessible *docAccessible = GetDocAccessible();
     NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
     nsIFrame *docFrame = docAccessible->GetFrame();
     NS_ENSURE_TRUE(docFrame , NS_ERROR_FAILURE);
