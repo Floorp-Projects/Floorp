@@ -80,7 +80,7 @@
 #include "nsCSSValue.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
-#include "nsDOMEventTargetWrapperCache.h"
+#include "nsDOMEventTargetHelper.h"
 #include "xpcprivate.h"
 #include "XrayWrapper.h"
 
@@ -7631,8 +7631,8 @@ NS_IMETHODIMP
 nsEventTargetSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                            JSObject *globalObj, JSObject **parentObj)
 {
-  nsDOMEventTargetWrapperCache *target =
-    nsDOMEventTargetWrapperCache::FromSupports(nativeObj);
+  nsDOMEventTargetHelper *target =
+    nsDOMEventTargetHelper::FromSupports(nativeObj);
 
   nsCOMPtr<nsIScriptGlobalObject> native_parent;
   target->GetParentObject(getter_AddRefs(native_parent));
@@ -7658,8 +7658,8 @@ nsEventTargetSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 void
 nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
 {
-  nsDOMEventTargetWrapperCache *target =
-    nsDOMEventTargetWrapperCache::FromSupports(aNative);
+  nsDOMEventTargetHelper *target =
+    nsDOMEventTargetHelper::FromSupports(aNative);
   nsContentUtils::PreserveWrapper(aNative, target);
 }
 

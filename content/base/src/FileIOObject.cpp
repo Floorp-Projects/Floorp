@@ -54,19 +54,19 @@ namespace dom {
 
 const PRUint64 kUnknownSize = PRUint64(-1);
 
-NS_IMPL_ADDREF_INHERITED(FileIOObject, nsDOMEventTargetWrapperCache)
-NS_IMPL_RELEASE_INHERITED(FileIOObject, nsDOMEventTargetWrapperCache)
+NS_IMPL_ADDREF_INHERITED(FileIOObject, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(FileIOObject, nsDOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileIOObject)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FileIOObject)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileIOObject,
-                                                  nsDOMEventTargetWrapperCache)
+                                                  nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mProgressNotifier)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(abort)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
@@ -74,7 +74,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileIOObject,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileIOObject,
-                                                nsDOMEventTargetWrapperCache)
+                                                nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mProgressNotifier)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(abort)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(error)

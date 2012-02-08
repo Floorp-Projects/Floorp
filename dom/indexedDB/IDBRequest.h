@@ -45,7 +45,7 @@
 
 #include "nsIIDBRequest.h"
 #include "nsIIDBOpenDBRequest.h"
-
+#include "nsDOMEventTargetHelper.h"
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 
 class nsIScriptContext;
