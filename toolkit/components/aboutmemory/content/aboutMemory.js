@@ -841,33 +841,45 @@ function hasNegativeSign(aN)
  *
  * @param aN
  *        The integer to format.
+ * @param aExtra
+ *        An extra string to tack onto the end.
  * @return A human-readable string representing the int.
+ *
+ * Note: building an array of chars and converting that to a string with
+ * Array.join at the end is more memory efficient than using string
+ * concatenation.  See bug 722972 for details.
  */
-function formatInt(aN)
+function formatInt(aN, aExtra)
 {
   var neg = false;
   if (hasNegativeSign(aN)) {
     neg = true;
     aN = -aN;
   }
-  var s = "";
+  var s = [];
   while (true) {
     var k = aN % 1000;
     aN = Math.floor(aN / 1000);
     if (aN > 0) {
       if (k < 10) {
-        s = ",00" + k + s;
+        s.unshift(",00", k);
       } else if (k < 100) {
-        s = ",0" + k + s;
+        s.unshift(",0", k);
       } else {
-        s = "," + k + s;
+        s.unshift(",", k);
       }
     } else {
-      s = k + s;
+      s.unshift(k);
       break;
     }
   }
-  return neg ? "-" + s : s;
+  if (neg) {
+    s.unshift("-");
+  }
+  if (aExtra) {
+    s.push(aExtra);
+  }
+  return s.join("");
 }
 
 /**
@@ -879,16 +891,16 @@ function formatInt(aN)
  */
 function formatBytes(aBytes)
 {
-  var unit = gVerbose ? "B" : "MB";
+  var unit = gVerbose ? " B" : " MB";
 
   var s;
   if (gVerbose) {
-    s = formatInt(aBytes) + " " + unit;
+    s = formatInt(aBytes, unit);
   } else {
     var mbytes = (aBytes / (1024 * 1024)).toFixed(2);
     var a = String(mbytes).split(".");
     // If the argument to formatInt() is -0, it will print the negative sign.
-    s = formatInt(Number(a[0])) + "." + a[1] + " " + unit;
+    s = formatInt(Number(a[0])) + "." + a[1] + unit;
   }
   return s;
 }
