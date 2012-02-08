@@ -48,7 +48,7 @@
 #include "nsIPrincipal.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
-#include "nsDOMEventTargetWrapperCache.h"
+#include "nsDOMEventTargetHelper.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsIInterfaceRequestor.h"
@@ -69,7 +69,7 @@
 class nsWSCloseEvent;
 class nsAutoCloseWS;
 
-class nsWebSocket: public nsDOMEventTargetWrapperCache,
+class nsWebSocket: public nsDOMEventTargetHelper,
                    public nsIWebSocket,
                    public nsIJSNativeInitializer,
                    public nsIInterfaceRequestor,
@@ -84,7 +84,7 @@ public:
   virtual ~nsWebSocket();
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(nsWebSocket,
-                                                                   nsDOMEventTargetWrapperCache)
+                                                                   nsDOMEventTargetHelper)
   NS_DECL_NSIWEBSOCKET
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBSOCKETLISTENER

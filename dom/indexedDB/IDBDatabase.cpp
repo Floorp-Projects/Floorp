@@ -59,6 +59,7 @@
 #include "IndexedDatabaseManager.h"
 #include "TransactionThreadPool.h"
 #include "DictionaryHelpers.h"
+#include "nsDOMEventTargetHelper.h"
 
 USING_INDEXEDDB_NAMESPACE
 
