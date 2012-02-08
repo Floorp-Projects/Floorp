@@ -504,7 +504,7 @@ struct NoteWeakMapsTracer : public js::WeakMapTracer
 {
     NoteWeakMapsTracer(JSContext *cx, js::WeakMapTraceCallback cb,
                        nsCycleCollectionTraversalCallback &cccb)
-        : js::WeakMapTracer(cx, cb), mCb(cccb), mChildTracer(cccb)
+      : js::WeakMapTracer(js::GetRuntime(cx), cb), mCb(cccb), mChildTracer(cccb)
     {
         JS_TracerInit(&mChildTracer, cx, TraceWeakMappingChild);
     }

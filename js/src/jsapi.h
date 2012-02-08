@@ -3250,7 +3250,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_IsGCMarkingTracer(JSTracer *trc);
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsAboutToBeFinalized(JSContext *cx, void *thing);
+JS_IsAboutToBeFinalized(void *thing);
 
 typedef enum JSGCParamKey {
     /* Maximum nominal heap before last ditch GC. */

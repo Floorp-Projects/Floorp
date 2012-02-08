@@ -541,7 +541,7 @@ extern void
 js_TraceAtomState(JSTracer *trc);
 
 extern void
-js_SweepAtomState(JSContext *cx);
+js_SweepAtomState(JSRuntime *rt);
 
 extern bool
 js_InitCommonAtoms(JSContext *cx);

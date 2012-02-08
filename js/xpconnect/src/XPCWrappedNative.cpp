@@ -1276,7 +1276,7 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
         for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK-1; i >= 0; i--, to++) {
             JSObject* jso = to->GetJSObject();
             if (jso) {
-                NS_ASSERTION(JS_IsAboutToBeFinalized(cx, jso), "bad!");
+                NS_ASSERTION(JS_IsAboutToBeFinalized(jso), "bad!");
                 JS_SetPrivate(cx, jso, nsnull);
                 to->JSObjectFinalized();
             }
