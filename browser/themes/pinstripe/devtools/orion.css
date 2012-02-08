@@ -146,11 +146,13 @@
   background-position: left center;
 }
 
-.line_caret { /* Current line */
+.line_caret,
+.annotationLine.currentLine { /* Current line */
   background: #dae2ee; /* lighter than the background */
 }
 
-.readonly .line_caret {
+.readonly .line_caret,
+.readonly .annotationLine.currentLine {
   background: #cddae5; /* a bit darker than the background */
 }
 
