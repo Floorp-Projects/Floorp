@@ -27,8 +27,6 @@ function CheckList(aListObject, aExpectedListLength, aListDescription)
   is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".numberOfItems");
   is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".length");
   for (let i = 0; i < aListObject.length; i++) {
-    if (aListDescription.indexOf("SVGStringList") > -1)
-      continue;
     let item = aListObject.getItem(i);
     ok(aListObject[i] === item, aListDescription + "[" + i + "]");
   }

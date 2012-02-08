@@ -185,6 +185,8 @@ public:
     unsigned char *LockBufferBits();
     void UnlockBuffer();
     void GetRenderOffset(nsIntPoint &aOffset);
+    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, const nsAString &aMetadata, bool aHasDirectTexture);
+    void EndDrawing(const nsIntRect &aRect);
 
 private:
     static jclass jGeckoSoftwareLayerClientClass;
@@ -193,6 +195,8 @@ private:
 
 protected:
     static jmethodID jGetRenderOffsetMethod;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jEndDrawingMethod;
 };
 
 /** A callback that retrieves the view transform. */
@@ -522,6 +526,7 @@ public:
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
+    double Distance() { return mDistance; }
     const nsIntRect& Rect() { return mRect; }
     nsAString& Characters() { return mCharacters; }
     nsAString& CharactersExtra() { return mCharactersExtra; }
@@ -558,6 +563,7 @@ protected:
     int mRangeForeColor, mRangeBackColor;
     double mAlpha, mBeta, mGamma;
     double mX, mY, mZ;
+    double mDistance;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra;
     nsRefPtr<nsGeoPosition> mGeoPosition;
@@ -596,6 +602,7 @@ protected:
     static jfieldID jXField;
     static jfieldID jYField;
     static jfieldID jZField;
+    static jfieldID jDistanceField;
     static jfieldID jRectField;
     static jfieldID jNativeWindowField;
 
@@ -642,6 +649,7 @@ public:
         VIEWPORT = 20,
         VISITED = 21,
         NETWORK_CHANGED = 22,
+        PROXIMITY_EVENT = 23,
         dummy_java_enum_list_end
     };
 

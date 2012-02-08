@@ -8,7 +8,7 @@
 
     <ImageView android:id="@+id/thumbnail"
                android:layout_width="136dip"
-               android:layout_height="77dip"
+               android:layout_height="78dip"
                android:layout_marginLeft="35dip"
                android:layout_alignParentLeft="true"
                android:layout_centerVertical="true"

@@ -188,6 +188,13 @@ BrowserGlue.prototype = {
         // This pref must be set here because SessionStore will use its value
         // on quit-application.
         this._setPrefToSaveSession();
+        try {
+          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
+                           getService(Ci.nsIAppStartup);
+          appStartup.trackStartupCrashEnd();
+        } catch (e) {
+          Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
+        }
         break;
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
       case "browser-lastwindow-close-requested":
@@ -415,6 +422,9 @@ BrowserGlue.prototype = {
         browser.selectedTab = browser.addTab("about:newaddon?id=" + aAddon.id);
       })
     });
+
+    let keywordURLUserSet = Services.prefs.prefHasUserValue("keyword.URL");
+    Services.telemetry.getHistogramById("FX_KEYWORD_URL_USERSET").add(keywordURLUserSet);
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {

@@ -732,7 +732,7 @@ public class WatcherService extends Service
 
         theArgs[0] = "su";
         theArgs[1] = "-c";
-        theArgs[2] = "pm install " + sApp + ";exit";
+        theArgs[2] = "pm install -r " + sApp + ";exit";
 
         try
             {

@@ -47,36 +47,6 @@ namespace layers {
 
 class ShadowBufferD3D9;
 
-class THEBES_API ImageContainerD3D9 : public ImageContainer
-{
-public:
-  ImageContainerD3D9(IDirect3DDevice9 *aDevice);
-  virtual ~ImageContainerD3D9() {}
-
-  virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
-                                              PRUint32 aNumFormats);
-
-  virtual void SetCurrentImage(Image* aImage);
-
-  virtual already_AddRefed<Image> GetCurrentImage();
-
-  virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSize);
-
-  virtual gfxIntSize GetCurrentSize();
-
-  virtual bool SetLayerManager(LayerManager *aManager);
-
-  virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_D3D9; }
-
-  IDirect3DDevice9 *device() { return mDevice; }
-  void SetDevice(IDirect3DDevice9 *aDevice) { mDevice = aDevice; }
-
-private:
-  nsRefPtr<Image> mActiveImage;
-
-  nsRefPtr<IDirect3DDevice9> mDevice;
-};
-
 class THEBES_API ImageLayerD3D9 : public ImageLayer,
                                   public LayerD3D9
 {
@@ -100,81 +70,17 @@ public:
   virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
 };
 
-class THEBES_API PlanarYCbCrImageD3D9 : public PlanarYCbCrImage,
-                                        public ImageD3D9
+
+struct CairoD3D9BackendData : public ImageBackendData
 {
-public:
-  PlanarYCbCrImageD3D9();
-  ~PlanarYCbCrImageD3D9() {}
+  nsRefPtr<IDirect3DTexture9> mTexture;
+};
 
-  virtual void SetData(const Data &aData);
-
-  /*
-   * Upload the data from out mData into our textures. For now we use this to
-   * make sure the textures are created and filled on the main thread.
-   */
-  void AllocateTextures(IDirect3DDevice9 *aDevice);
-  /*
-   * XXX
-   * Free the textures, we call this from the main thread when we're done
-   * drawing this frame. We cannot free this from the constructor since it may
-   * be destroyed off the main-thread and might not be able to properly clean
-   * up its textures
-   */
-  void FreeTextures();
-  bool HasData() { return mHasData; }
-
-  PRUint32 GetDataSize() { return mBuffer ? mBufferSize : 0; }
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface();
-
-  nsAutoArrayPtr<PRUint8> mBuffer;
-  PRUint32 mBufferSize;
-  LayerManagerD3D9 *mManager;
-  Data mData;
-  gfxIntSize mSize;
+struct PlanarYCbCrD3D9BackendData : public ImageBackendData
+{
   nsRefPtr<IDirect3DTexture9> mYTexture;
   nsRefPtr<IDirect3DTexture9> mCrTexture;
   nsRefPtr<IDirect3DTexture9> mCbTexture;
-  bool mHasData;
-};
-
-
-class THEBES_API CairoImageD3D9 : public CairoImage,
-                                  public ImageD3D9
-{
-public:
-  CairoImageD3D9(IDirect3DDevice9 *aDevice)
-    : CairoImage(static_cast<ImageD3D9*>(this))
-    , mDevice(aDevice)
-  { }
-  ~CairoImageD3D9();
-
-  virtual void SetData(const Data &aData);
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface();
-
-  IDirect3DDevice9 *device() { return mDevice; }
-  void SetDevice(IDirect3DDevice9 *aDevice);
-
-  /**
-   * Uploading a texture may fail if the screen is locked. If this happens,
-   * we need to save the backing surface and retry when we are asked to paint.
-   */
-  virtual IDirect3DTexture9* GetOrCreateTexture();
-  const gfxIntSize& GetSize() { return mSize; }
-
-  bool HasAlpha() {
-    return mCachedSurface->GetContentType() ==
-      gfxASurface::CONTENT_COLOR_ALPHA;
-  }
-
-private:
-  gfxIntSize mSize;
-  nsRefPtr<gfxASurface> mCachedSurface;
-  nsRefPtr<IDirect3DDevice9> mDevice;
-  nsRefPtr<IDirect3DTexture9> mTexture;
-  LayerManagerD3D9 *mManager;
 };
 
 class ShadowImageLayerD3D9 : public ShadowImageLayer,
@@ -199,7 +105,7 @@ public:
 
 private:
   nsRefPtr<ShadowBufferD3D9> mBuffer;
-  nsRefPtr<PlanarYCbCrImageD3D9> mYCbCrImage;
+  nsRefPtr<PlanarYCbCrImage> mYCbCrImage;
 };
 
 } /* layers */

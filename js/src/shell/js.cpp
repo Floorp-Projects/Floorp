@@ -388,7 +388,6 @@ ShellOperationCallback(JSContext *cx)
 static void
 SetContextOptions(JSContext *cx)
 {
-    JS_SetNativeStackQuota(cx, gMaxStackSize);
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
@@ -819,7 +818,7 @@ EvaluateWithLocation(JSContext *cx, uintN argc, jsval *vp)
     if (!thisobj)
         return false;
 
-    if ((JS_GET_CLASS(cx, thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
+    if ((JS_GetClass(thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                              "this-value passed to evalWithLocation()", "not a global object");
         return false;
@@ -861,7 +860,7 @@ Evaluate(JSContext *cx, uintN argc, jsval *vp)
     if (!thisobj)
         return false;
 
-    if ((JS_GET_CLASS(cx, thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
+    if ((JS_GetClass(thisobj)->flags & JSCLASS_IS_GLOBAL) != JSCLASS_IS_GLOBAL) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                              "this-value passed to evaluate()", "not a global object");
         return false;
@@ -1628,7 +1627,7 @@ ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
-        JSClass *clasp = JS_GET_CLASS(cx, obj);
+        JSClass *clasp = JS_GetClass(obj);
 
         if (clasp == Jsvalify(&GeneratorClass)) {
             if (JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj)) {
@@ -1687,7 +1686,7 @@ GetScriptAndPCArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
         jsval v = argv[0];
         uintN intarg = 0;
         if (!JSVAL_IS_PRIMITIVE(v) &&
-            JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass)) {
+            JS_GetClass(JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass)) {
             script = ValueToScript(cx, v);
             if (!script)
                 return JS_FALSE;
@@ -1832,7 +1831,7 @@ LineToPC(JSContext *cx, uintN argc, jsval *vp)
     script = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
     jsval v = JS_ARGV(cx, vp)[0];
     if (!JSVAL_IS_PRIMITIVE(v) &&
-        JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass))
+        JS_GetClass(JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass))
     {
         script = ValueToScript(cx, v);
         if (!script)
@@ -3047,7 +3046,7 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
     {
         JSAutoEnterCompartment ac;
         uintN flags;
-        JSObject *unwrapped = UnwrapObject(sobj, &flags);
+        JSObject *unwrapped = UnwrapObject(sobj, true, &flags);
         if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
             if (!ac.enter(cx, sobj))
@@ -4542,7 +4541,7 @@ static JSClass its_class = {
 static JSBool
 its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    if (JS_GET_CLASS(cx, obj) == &its_class) {
+    if (JS_GetClass(obj) == &its_class) {
         jsval *val = (jsval *) JS_GetPrivate(cx, obj);
         *vp = val ? *val : JSVAL_VOID;
     } else {
@@ -4555,7 +4554,7 @@ its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
-    if (JS_GET_CLASS(cx, obj) != &its_class)
+    if (JS_GetClass(obj) != &its_class)
         return JS_TRUE;
 
     jsval *val = (jsval *) JS_GetPrivate(cx, obj);
@@ -5444,6 +5443,8 @@ main(int argc, char **argv, char **envp)
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
     JS_SetRuntimeSecurityCallbacks(rt, &securityCallbacks);
+
+    JS_SetNativeStackQuota(rt, gMaxStackSize);
 
     if (!InitWatchdog(rt))
         return 1;

@@ -69,9 +69,6 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
     private IntSize mViewportSize;
     private ByteBuffer mBuffer;
 
-    /* The offset used to make sure tiles are snapped to the pixel grid */
-    private Point mRenderOffset;
-
     private CairoImage mCairoImage;
 
     private static final IntSize TILE_SIZE = new IntSize(256, 256);
@@ -83,7 +80,6 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         super(context);
 
         mFormat = CairoImage.FORMAT_RGB16_565;
-        mRenderOffset = new Point(0, 0);
 
         mCairoImage = new CairoImage() {
             @Override
@@ -105,6 +101,21 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         }
     }
 
+    public void setLayerController(LayerController layerController) {
+        super.setLayerController(layerController);
+
+        layerController.setRoot(mTileLayer);
+        if (mGeckoViewport != null) {
+            layerController.setViewportMetrics(mGeckoViewport);
+        }
+
+        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
+        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
+        GeckoAppShell.registerGeckoEventListener("Checkerboard:Toggle", this);
+
+        sendResizeEventIfNecessary();
+    }
+
     @Override
     protected boolean handleDirectTextureChange(boolean hasDirectTexture) {
         if (mTileLayer != null && hasDirectTexture == mHasDirectTexture)
@@ -115,7 +126,6 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         if (mHasDirectTexture) {
             Log.i(LOGTAG, "Creating WidgetTileLayer");
             mTileLayer = new WidgetTileLayer(mCairoImage);
-            mRenderOffset.set(0, 0);
         } else {
             Log.i(LOGTAG, "Creating MultiTileLayer");
             mTileLayer = new MultiTileLayer(mCairoImage, TILE_SIZE);
@@ -188,14 +198,14 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         if (mBufferSize.width != width || mBufferSize.height != height) {
             mBufferSize = new IntSize(width, height);
 
-            // We over-allocate to allow for the render offset. nsWindow
-            // assumes that this will happen.
-            IntSize realBufferSize = new IntSize(width + TILE_SIZE.width,
-                                                 height + TILE_SIZE.height);
+            // We only need to allocate buffer memory if we're using MultiTileLayer.
+            if (!(mTileLayer instanceof MultiTileLayer)) {
+                return true;
+            }
 
             // Reallocate the buffer if necessary
             int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
-            int size = realBufferSize.getArea() * bpp;
+            int size = mBufferSize.getArea() * bpp;
             if (mBuffer == null || mBuffer.capacity() != size) {
                 // Free the old buffer
                 if (mBuffer != null) {
@@ -226,19 +236,23 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         ByteBuffer tileBuffer = mBuffer.slice();
         int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
 
-        for (int y = 0; y <= mBufferSize.height; y += TILE_SIZE.height) {
-            for (int x = 0; x <= mBufferSize.width; x += TILE_SIZE.width) {
+        for (int y = 0; y < mBufferSize.height; y += TILE_SIZE.height) {
+            for (int x = 0; x < mBufferSize.width; x += TILE_SIZE.width) {
+                // Calculate tile size
+                IntSize tileSize = new IntSize(Math.min(mBufferSize.width - x, TILE_SIZE.width),
+                                               Math.min(mBufferSize.height - y, TILE_SIZE.height));
+
                 // Create a Bitmap from this tile
-                Bitmap tile = Bitmap.createBitmap(TILE_SIZE.width, TILE_SIZE.height,
+                Bitmap tile = Bitmap.createBitmap(tileSize.width, tileSize.height,
                                                   CairoUtils.cairoFormatTobitmapConfig(mFormat));
                 tile.copyPixelsFromBuffer(tileBuffer.asIntBuffer());
 
                 // Copy the tile to the master Bitmap and recycle it
-                c.drawBitmap(tile, x - mRenderOffset.x, y - mRenderOffset.y, null);
+                c.drawBitmap(tile, x, y, null);
                 tile.recycle();
 
                 // Progress the buffer to the next tile
-                tileBuffer.position(TILE_SIZE.getArea() * bpp);
+                tileBuffer.position(tileSize.getArea() * bpp);
                 tileBuffer = tileBuffer.slice();
             }
         }
@@ -284,10 +298,6 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
     /** Returns the back buffer. This function is for Gecko to use. */
     public ByteBuffer lockBuffer() {
         return mBuffer;
-    }
-
-    public Point getRenderOffset() {
-        return mRenderOffset;
     }
 
     /**

@@ -186,26 +186,15 @@ obj_setProto(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     }
 
     if (!vp->isObjectOrNull())
-        return JS_TRUE;
+        return true;
 
     JSObject *pobj = vp->toObjectOrNull();
-    if (pobj) {
-        /*
-         * Innerize pobj here to avoid sticking unwanted properties on the
-         * outer object. This ensures that any with statements only grant
-         * access to the inner object.
-         */
-        OBJ_TO_INNER_OBJECT(cx, pobj);
-        if (!pobj)
-            return JS_FALSE;
-    }
-
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
     if (!CheckAccess(cx, obj, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
-        return JS_FALSE;
+        return false;
 
-    return SetProto(cx, obj, pobj, JS_TRUE);
+    return SetProto(cx, obj, pobj, true);
 }
 
 #else  /* !JS_HAS_OBJ_PROTO_PROP */
@@ -465,15 +454,11 @@ js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map)
 static JSBool
 obj_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    JSBool ok;
-    jschar *ochars, *vsharp;
-    const jschar *idstrchars, *vchars;
-    size_t nchars, idstrlength, gsoplength, vlength, vsharplength, curlen;
-    const char *comma;
+    bool comma = false;
+    const jschar *vchars;
+    size_t vlength;
     Value *val;
     JSString *gsop[2];
-    JSString *valstr, *str;
-    JSLinearString *idstr;
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
@@ -488,7 +473,6 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return false;
 
-    jschar *chars;
     JSIdArray *ida;
     bool alreadySeen = false;
     JSHashEntry *he = js_EnterSharpObject(cx, obj, &ida, &alreadySeen);
@@ -508,22 +492,26 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
     JS_ASSERT(!IS_SHARP(he));
-    ok = JS_TRUE;
 
     if (alreadySeen)
         MAKE_SHARP(he);
 
-    /* If outermost, allocate 4 + 1 for "({})" and the terminator. */
-    chars = (jschar *) cx->malloc_(((outermost ? 4 : 2) + 1) * sizeof(jschar));
-    nchars = 0;
-    if (!chars)
-        goto error;
-    if (outermost)
-        chars[nchars++] = '(';
+    /* Automatically call js_LeaveSharpObject when we leave this frame. */
+    class AutoLeaveSharpObject {
+        JSContext *cx;
+        JSIdArray *ida;
+      public:
+        AutoLeaveSharpObject(JSContext *cx, JSIdArray *ida) : cx(cx), ida(ida) {}
+        ~AutoLeaveSharpObject() {
+            js_LeaveSharpObject(cx, &ida);
+        }
+    } autoLeaveSharpObject(cx, ida);
 
-    chars[nchars++] = '{';
-
-    comma = NULL;
+    StringBuffer buf(cx);
+    if (outermost && !buf.append('('))
+        return false;
+    if (!buf.append('{'))
+        return false;
 
     /*
      * We have four local roots for cooked and raw value GC safety.  Hoist the
@@ -532,28 +520,26 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
      */
     val = localroot + 2;
 
-    for (jsint i = 0, length = ida->length; i < length; i++) {
+    for (jsint i = 0; i < ida->length; i++) {
         /* Get strings for id and value and GC-root them via vp. */
         jsid id = ida->vector[i];
+        JSLinearString *idstr;
 
         JSObject *obj2;
         JSProperty *prop;
-        ok = obj->lookupGeneric(cx, id, &obj2, &prop);
-        if (!ok)
-            goto error;
+        if (!obj->lookupGeneric(cx, id, &obj2, &prop))
+            return false;
 
         /*
          * Convert id to a value and then to a string.  Decide early whether we
          * prefer get/set or old getter/setter syntax.
          */
         JSString *s = ToString(cx, IdToValue(id));
-        if (!s || !(idstr = s->ensureLinear(cx))) {
-            ok = JS_FALSE;
-            goto error;
-        }
+        if (!s || !(idstr = s->ensureLinear(cx)))
+            return false;
         vp->setString(idstr);                           /* local root */
 
-        jsint valcnt = 0;
+        int valcnt = 0;
         if (prop) {
             bool doGet = true;
             if (obj2->isNative()) {
@@ -575,9 +561,8 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
             if (doGet) {
                 valcnt = 1;
                 gsop[0] = NULL;
-                ok = obj->getGeneric(cx, id, &val[0]);
-                if (!ok)
-                    goto error;
+                if (!obj->getGeneric(cx, id, &val[0]))
+                    return false;
             }
         }
 
@@ -585,25 +570,16 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
          * If id is a string that's not an identifier, or if it's a negative
          * integer, then it must be quoted.
          */
-        bool idIsLexicalIdentifier = IsIdentifier(idstr);
         if (JSID_IS_ATOM(id)
-            ? !idIsLexicalIdentifier
+            ? !IsIdentifier(idstr)
             : (!JSID_IS_INT(id) || JSID_TO_INT(id) < 0)) {
             s = js_QuoteString(cx, idstr, jschar('\''));
-            if (!s || !(idstr = s->ensureLinear(cx))) {
-                ok = JS_FALSE;
-                goto error;
-            }
+            if (!s || !(idstr = s->ensureLinear(cx)))
+                return false;
             vp->setString(idstr);                       /* local root */
         }
-        idstrlength = idstr->length();
-        idstrchars = idstr->getChars(cx);
-        if (!idstrchars) {
-            ok = JS_FALSE;
-            goto error;
-        }
 
-        for (jsint j = 0; j < valcnt; j++) {
+        for (int j = 0; j < valcnt; j++) {
             /*
              * Censor an accessor descriptor getter or setter part if it's
              * undefined.
@@ -612,26 +588,14 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 continue;
 
             /* Convert val[j] to its canonical source form. */
-            valstr = js_ValueToSource(cx, val[j]);
-            if (!valstr) {
-                ok = JS_FALSE;
-                goto error;
-            }
+            JSString *valstr = js_ValueToSource(cx, val[j]);
+            if (!valstr)
+                return false;
             localroot[j].setString(valstr);             /* local root */
             vchars = valstr->getChars(cx);
-            if (!vchars) {
-                ok = JS_FALSE;
-                goto error;
-            }
+            if (!vchars)
+                return false;
             vlength = valstr->length();
-
-            /*
-             * If val[j] is a non-sharp object, and we're not serializing an
-             * accessor (ECMA syntax can't accommodate sharpened accessors),
-             * consider sharpening it.
-             */
-            vsharp = NULL;
-            vsharplength = 0;
 
             /*
              * Remove '(function ' from the beginning of valstr and ')' from the
@@ -668,100 +632,34 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 }
             }
 
-#define SAFE_ADD(n)                                                          \
-    JS_BEGIN_MACRO                                                           \
-        size_t n_ = (n);                                                     \
-        curlen += n_;                                                        \
-        if (curlen < n_)                                                     \
-            goto overflow;                                                   \
-    JS_END_MACRO
+            if (comma && !buf.append(", "))
+                return false;
+            comma = true;
 
-            curlen = nchars;
-            if (comma)
-                SAFE_ADD(2);
-            SAFE_ADD(idstrlength + 1);
             if (gsop[j])
-                SAFE_ADD(gsop[j]->length() + 1);
-            SAFE_ADD(vsharplength);
-            SAFE_ADD(vlength);
-            /* Account for the trailing null. */
-            SAFE_ADD((outermost ? 2 : 1) + 1);
-#undef SAFE_ADD
+                if (!buf.append(gsop[j]) || !buf.append(' '))
+                    return false;
 
-            if (curlen > size_t(-1) / sizeof(jschar))
-                goto overflow;
+            if (!buf.append(idstr))
+                return false;
+            if (!buf.append(gsop[j] ? ' ' : ':'))
+                return false;
 
-            /* Allocate 1 + 1 at end for closing brace and terminating 0. */
-            chars = (jschar *) cx->realloc_((ochars = chars), curlen * sizeof(jschar));
-            if (!chars) {
-                chars = ochars;
-                goto overflow;
-            }
-
-            if (comma) {
-                chars[nchars++] = comma[0];
-                chars[nchars++] = comma[1];
-            }
-            comma = ", ";
-
-            if (gsop[j]) {
-                gsoplength = gsop[j]->length();
-                const jschar *gsopchars = gsop[j]->getChars(cx);
-                if (!gsopchars)
-                    goto overflow;
-                js_strncpy(&chars[nchars], gsopchars, gsoplength);
-                nchars += gsoplength;
-                chars[nchars++] = ' ';
-            }
-            js_strncpy(&chars[nchars], idstrchars, idstrlength);
-            nchars += idstrlength;
-            /* Extraneous space after id here will be extracted later */
-            chars[nchars++] = gsop[j] ? ' ' : ':';
-
-            if (vsharplength) {
-                js_strncpy(&chars[nchars], vsharp, vsharplength);
-                nchars += vsharplength;
-            }
-            js_strncpy(&chars[nchars], vchars, vlength);
-            nchars += vlength;
-
-            if (vsharp)
-                cx->free_(vsharp);
+            if (!buf.append(vchars, vlength))
+                return false;
         }
     }
 
-    chars[nchars++] = '}';
-    if (outermost)
-        chars[nchars++] = ')';
-    chars[nchars] = 0;
-
-  error:
-    js_LeaveSharpObject(cx, &ida);
-
-    if (!ok) {
-        if (chars)
-            Foreground::free_(chars);
+    if (!buf.append('}'))
         return false;
-    }
-
-    if (!chars) {
-        JS_ReportOutOfMemory(cx);
+    if (outermost && !buf.append(')'))
         return false;
-    }
 
-    str = js_NewString(cx, chars, nchars);
-    if (!str) {
-        cx->free_(chars);
+    JSString *str = buf.finishString();
+    if (!str)
         return false;
-    }
     vp->setString(str);
     return true;
-
-  overflow:
-    cx->free_(vsharp);
-    cx->free_(chars);
-    chars = NULL;
-    goto error;
 }
 #endif /* JS_HAS_TOSOURCE */
 
@@ -3553,6 +3451,19 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         js_memcpy(tmp, a, size);
         js_memcpy(a, b, size);
         js_memcpy(b, tmp, size);
+
+#ifdef JSGC_GENERATIONAL
+        /*
+         * Trigger post barriers for fixed slots. JSObject bits are barriered
+         * below, in common with the other case.
+         */
+        for (size_t i = 0; i < a->numFixedSlots(); ++i) {
+            HeapValue *slotA = &a->getFixedSlotRef(i);
+            HeapValue *slotB = &b->getFixedSlotRef(i);
+            HeapValue::writeBarrierPost(*slotA, slotA);
+            HeapValue::writeBarrierPost(*slotB, slotB);
+        }
+#endif
     } else {
         /*
          * If the objects are of differing sizes, use the space we reserved
@@ -3607,6 +3518,13 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         reserved.newaslots = NULL;
         reserved.newbslots = NULL;
     }
+
+#ifdef JSGC_GENERATIONAL
+    Shape::writeBarrierPost(a->shape_, &a->shape_);
+    Shape::writeBarrierPost(b->shape_, &b->shape_);
+    types::TypeObject::writeBarrierPost(a->type_, &a->type_);
+    types::TypeObject::writeBarrierPost(b->type_, &b->type_);
+#endif
 }
 
 /*
@@ -4110,7 +4028,7 @@ JSObject::growSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
      */
     JS_ASSERT(newCount < NELEMENTS_LIMIT);
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfIncludingThis() : 0;
+    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
     size_t newSize = oldSize + (newCount - oldCount) * sizeof(Value);
 
     /*
@@ -4179,7 +4097,7 @@ JSObject::shrinkSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
     if (isCall())
         return;
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfIncludingThis() : 0;
+    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
     size_t newSize = oldSize - (oldCount - newCount) * sizeof(Value);
 
     if (newCount == 0) {
@@ -4225,7 +4143,7 @@ JSObject::growElements(JSContext *cx, uintN newcap)
     uint32_t oldcap = getDenseArrayCapacity();
     JS_ASSERT(oldcap <= newcap);
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfIncludingThis() : 0;
+    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
 
     uint32_t nextsize = (oldcap <= CAPACITY_DOUBLING_MAX)
                       ? oldcap * 2
@@ -4268,7 +4186,7 @@ JSObject::growElements(JSContext *cx, uintN newcap)
     Debug_SetValueRangeToCrashOnTouch(elements + initlen, actualCapacity - initlen);
 
     if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, this, oldSize, computedSizeOfIncludingThis());
+        Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
 
     return true;
 }
@@ -4281,7 +4199,7 @@ JSObject::shrinkElements(JSContext *cx, uintN newcap)
     uint32_t oldcap = getDenseArrayCapacity();
     JS_ASSERT(newcap <= oldcap);
 
-    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfIncludingThis() : 0;
+    size_t oldSize = Probes::objectResizeActive() ? computedSizeOfThisSlotsElements() : 0;
 
     /* Don't shrink elements below the minimum capacity. */
     if (oldcap <= SLOT_CAPACITY_MIN || !hasDynamicElements())
@@ -4300,7 +4218,7 @@ JSObject::shrinkElements(JSContext *cx, uintN newcap)
     elements = newheader->elements();
 
     if (Probes::objectResizeActive())
-        Probes::resizeObject(cx, this, oldSize, computedSizeOfIncludingThis());
+        Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
 }
 
 #ifdef DEBUG
@@ -6535,68 +6453,6 @@ js::HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Native nat
  */
 
 void
-dumpChars(const jschar *s, size_t n)
-{
-    size_t i;
-
-    if (n == (size_t) -1) {
-        while (s[++n]) ;
-    }
-
-    fputc('"', stderr);
-    for (i = 0; i < n; i++) {
-        if (s[i] == '\n')
-            fprintf(stderr, "\\n");
-        else if (s[i] == '\t')
-            fprintf(stderr, "\\t");
-        else if (s[i] >= 32 && s[i] < 127)
-            fputc(s[i], stderr);
-        else if (s[i] <= 255)
-            fprintf(stderr, "\\x%02x", (unsigned int) s[i]);
-        else
-            fprintf(stderr, "\\u%04x", (unsigned int) s[i]);
-    }
-    fputc('"', stderr);
-}
-
-JS_FRIEND_API(void)
-js_DumpChars(const jschar *s, size_t n)
-{
-    fprintf(stderr, "jschar * (%p) = ", (void *) s);
-    dumpChars(s, n);
-    fputc('\n', stderr);
-}
-
-void
-dumpString(JSString *str)
-{
-    if (const jschar *chars = str->getChars(NULL))
-        dumpChars(chars, str->length());
-    else
-        fprintf(stderr, "(oom in dumpString)");
-}
-
-JS_FRIEND_API(void)
-js_DumpString(JSString *str)
-{
-    if (const jschar *chars = str->getChars(NULL)) {
-        fprintf(stderr, "JSString* (%p) = jschar * (%p) = ",
-                (void *) str, (void *) chars);
-        dumpString(str);
-    } else {
-        fprintf(stderr, "(oom in JS_DumpString)");
-    }
-    fputc('\n', stderr);
-}
-
-JS_FRIEND_API(void)
-js_DumpAtom(JSAtom *atom)
-{
-    fprintf(stderr, "JSAtom* (%p) = ", (void *) atom);
-    js_DumpString(atom);
-}
-
-void
 dumpValue(const Value &v)
 {
     if (v.isNull())
@@ -6608,7 +6464,7 @@ dumpValue(const Value &v)
     else if (v.isDouble())
         fprintf(stderr, "%g", v.toDouble());
     else if (v.isString())
-        dumpString(v.toString());
+        v.toString()->dump();
     else if (v.isObject() && v.toObject().isFunction()) {
         JSFunction *fun = v.toObject().toFunction();
         if (fun->atom) {
@@ -6692,7 +6548,7 @@ DumpProperty(JSObject *obj, const Shape &shape)
         fprintf(stderr, "setterOp=%p ", JS_FUNC_TO_DATA_PTR(void *, shape.setterOp()));
 
     if (JSID_IS_ATOM(id))
-        dumpString(JSID_TO_STRING(id));
+        JSID_TO_STRING(id)->dump();
     else if (JSID_IS_INT(id))
         fprintf(stderr, "%d", (int) JSID_TO_INT(id));
     else
@@ -6709,9 +6565,10 @@ DumpProperty(JSObject *obj, const Shape &shape)
     fprintf(stderr, "\n");
 }
 
-JS_FRIEND_API(void)
-js_DumpObject(JSObject *obj)
+void
+JSObject::dump()
 {
+    JSObject *obj = this;
     fprintf(stderr, "object %p\n", (void *) obj);
     Class *clasp = obj->getClass();
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);

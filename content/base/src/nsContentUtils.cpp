@@ -4874,11 +4874,8 @@ nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
   }
 
   // each event should use a clone of the original dataTransfer.
-  nsCOMPtr<nsIDOMNSDataTransfer> initialDataTransferNS =
-    do_QueryInterface(initialDataTransfer);
-  NS_ENSURE_TRUE(initialDataTransferNS, NS_ERROR_FAILURE);
-  initialDataTransferNS->Clone(aDragEvent->message, aDragEvent->userCancelled,
-                               getter_AddRefs(aDragEvent->dataTransfer));
+  initialDataTransfer->Clone(aDragEvent->message, aDragEvent->userCancelled,
+                             getter_AddRefs(aDragEvent->dataTransfer));
   NS_ENSURE_TRUE(aDragEvent->dataTransfer, NS_ERROR_OUT_OF_MEMORY);
 
   // for the dragenter and dragover events, initialize the drop effect
@@ -4886,14 +4883,10 @@ nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
   // the event is fired based on the keyboard state.
   if (aDragEvent->message == NS_DRAGDROP_ENTER ||
       aDragEvent->message == NS_DRAGDROP_OVER) {
-    nsCOMPtr<nsIDOMNSDataTransfer> newDataTransfer =
-      do_QueryInterface(aDragEvent->dataTransfer);
-    NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_FAILURE);
-
     PRUint32 action, effectAllowed;
     dragSession->GetDragAction(&action);
-    newDataTransfer->GetEffectAllowedInt(&effectAllowed);
-    newDataTransfer->SetDropEffectInt(FilterDropEffect(action, effectAllowed));
+    aDragEvent->dataTransfer->GetEffectAllowedInt(&effectAllowed);
+    aDragEvent->dataTransfer->SetDropEffectInt(FilterDropEffect(action, effectAllowed));
   }
   else if (aDragEvent->message == NS_DRAGDROP_DROP ||
            aDragEvent->message == NS_DRAGDROP_DRAGDROP ||
@@ -4902,13 +4895,9 @@ nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
     // last value that the dropEffect had. This will have been set in
     // nsEventStateManager::PostHandleEvent for the last dragenter or
     // dragover event.
-    nsCOMPtr<nsIDOMNSDataTransfer> newDataTransfer =
-      do_QueryInterface(aDragEvent->dataTransfer);
-    NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_FAILURE);
-
     PRUint32 dropEffect;
-    initialDataTransferNS->GetDropEffectInt(&dropEffect);
-    newDataTransfer->SetDropEffectInt(dropEffect);
+    initialDataTransfer->GetDropEffectInt(&dropEffect);
+    aDragEvent->dataTransfer->SetDropEffectInt(dropEffect);
   }
 
   return NS_OK;
@@ -5845,9 +5834,8 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
-static already_AddRefed<LayerManager>
-LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
-                                bool* aAllowRetaining)
+nsIWidget *
+nsContentUtils::WidgetForDocument(nsIDocument *aDoc)
 {
   nsIDocument* doc = aDoc;
   nsIDocument* displayDoc = doc->GetDisplayDocument();
@@ -5882,18 +5870,26 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
       if (rootView) {
         nsIView* displayRoot = nsIViewManager::GetDisplayRootFor(rootView);
         if (displayRoot) {
-          nsIWidget* widget = displayRoot->GetNearestWidget(nsnull);
-          if (widget) {
-            nsRefPtr<LayerManager> manager =
-              widget->
-                GetLayerManager(aRequirePersistent ? nsIWidget::LAYER_MANAGER_PERSISTENT : 
-                                                     nsIWidget::LAYER_MANAGER_CURRENT,
-                                aAllowRetaining);
-            return manager.forget();
-          }
+          return displayRoot->GetNearestWidget(nsnull);
         }
       }
     }
+  }
+
+  return nsnull;
+}
+
+static already_AddRefed<LayerManager>
+LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
+                                bool* aAllowRetaining)
+{
+  nsIWidget *widget = nsContentUtils::WidgetForDocument(aDoc);
+  if (widget) {
+    nsRefPtr<LayerManager> manager =
+      widget->GetLayerManager(aRequirePersistent ? nsIWidget::LAYER_MANAGER_PERSISTENT : 
+                              nsIWidget::LAYER_MANAGER_CURRENT,
+                              aAllowRetaining);
+    return manager.forget();
   }
 
   return nsnull;

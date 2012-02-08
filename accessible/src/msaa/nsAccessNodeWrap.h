@@ -67,8 +67,6 @@
 
 #include "nsRefPtrHashtable.h"
 
-typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
-typedef LRESULT (STDAPICALLTYPE *LPFNGETGUITHREADINFO)(DWORD idThread, GUITHREADINFO* pgui);
 
 class AccTextChangeEvent;
 
@@ -149,17 +147,7 @@ public: // construction, destruction
     static void InitAccessibility();
     static void ShutdownAccessibility();
 
-    /// the accessible library and cached methods
-    static HINSTANCE gmAccLib;
-    static HINSTANCE gmUserLib;
-    static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
-    static LPFNLRESULTFROMOBJECT gmLresultFromObject;
-    static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
-    static LPFNGETGUITHREADINFO gmGetGUIThreadInfo;
-
     static int FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTERS *aExceptionInfo);
-
-  static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
 
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg,
                                      WPARAM WParam, LPARAM lParam);

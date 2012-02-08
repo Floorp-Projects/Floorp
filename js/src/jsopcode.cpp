@@ -149,6 +149,7 @@ js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff)
 {
     JSOp op = JSOp(*pc);
     JS_ASSERT(js_CodeSpec[op].length >= 1 + pcoff + UINT16_LEN);
+    JS_ASSERT(js_CodeSpec[op].format & JOF_ATOM);
 
     /*
      * We need to detect index base prefix. It presents when resetbase
@@ -204,9 +205,7 @@ NumBlockSlots(JSScript *script, jsbytecode *pc)
     JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET0_LENGTH);
     JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET1_LENGTH);
 
-    JSObject *obj = NULL;
-    GET_OBJECT_FROM_BYTECODE(script, pc, 0, obj);
-    return obj->asStaticBlock().slotCount();
+    return script->getObject(GET_UINT32_INDEX(pc))->asStaticBlock().slotCount();
 }
 
 uintN
@@ -541,7 +540,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         Sprint(sp, "%4u", JS_PCToLineNumber(cx, script, pc));
     Sprint(sp, "  %s", js_CodeName[op]);
 
-    switch (uint32_t type = JOF_TYPE(cs->format)) {
+    switch (JOF_TYPE(cs->format)) {
       case JOF_BYTE:
           // Scan the trynotes to find the associated catch block
           // and make the try opcode look like a jump instruction
@@ -568,32 +567,35 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
       }
 
-      case JOF_ATOM:
-      case JOF_OBJECT: {
+      case JOF_ATOM: {
         uintN index = js_GetIndexFromBytecode(script, pc, 0);
         jsval v;
-        if (type == JOF_ATOM) {
-            if (op == JSOP_DOUBLE) {
-                v = script->getConst(index);
-            } else {
-                JSAtom *atom = script->getAtom(index);
-                v = STRING_TO_JSVAL(atom);
-            }
+        if (op == JSOP_DOUBLE) {
+            v = script->getConst(index);
         } else {
-            JS_ASSERT(type == JOF_OBJECT);
-
-            /* Don't call obj.toSource if analysis/inference is active. */
-            if (cx->compartment->activeAnalysis) {
-                Sprint(sp, " object");
-                break;
-            }
-
-            JSObject *obj = script->getObject(index);
-            v = OBJECT_TO_JSVAL(obj);
+            JSAtom *atom = script->getAtom(index);
+            v = STRING_TO_JSVAL(atom);
         }
         {
             JSAutoByteString bytes;
             if (!ToDisassemblySource(cx, v, &bytes))
+                return 0;
+            Sprint(sp, " %s", bytes.ptr());
+        }
+        break;
+      }
+
+      case JOF_OBJECT: {
+        /* Don't call obj.toSource if analysis/inference is active. */
+        if (cx->compartment->activeAnalysis) {
+            Sprint(sp, " object");
+            break;
+        }
+
+        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc));
+        {
+            JSAutoByteString bytes;
+            if (!ToDisassemblySource(cx, ObjectValue(*obj), &bytes))
                 return 0;
             Sprint(sp, " %s", bytes.ptr());
         }
@@ -664,10 +666,9 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
 
       case JOF_SLOTOBJECT: {
         Sprint(sp, " %u", GET_SLOTNO(pc));
-        uintN index = js_GetIndexFromBytecode(script, pc, SLOTNO_LEN);
-        jsval v = OBJECT_TO_JSVAL(script->getObject(index));
+        JSObject *obj = script->getObject(GET_UINT32_INDEX(pc + SLOTNO_LEN));
         JSAutoByteString bytes;
-        if (!ToDisassemblySource(cx, v, &bytes))
+        if (!ToDisassemblySource(cx, ObjectValue(*obj), &bytes))
             return 0;
         Sprint(sp, " %s", bytes.ptr());
         break;
@@ -1857,8 +1858,7 @@ GetLocal(SprintStack *ss, jsint i)
         JS_ASSERT(pc < (ss->printer->script->code + ss->printer->script->length));
 
         if (JSOP_ENTERBLOCK == (JSOp)*pc) {
-            jsatomid j = js_GetIndexFromBytecode(ss->printer->script, pc, 0);
-            JSObject *obj = script->getObject(j);
+            JSObject *obj = script->getObject(GET_UINT32_INDEX(pc));
 
             if (obj->isBlock()) {
                 uint32_t depth = obj->asBlock().stackDepth();
@@ -2660,12 +2660,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
             return NULL;                                                      \
     JS_END_MACRO
 
-#define LOAD_OBJECT(PCOFF)                                                    \
-    GET_OBJECT_FROM_BYTECODE(jp->script, pc, PCOFF, obj)
-
-#define LOAD_FUNCTION(PCOFF)                                                  \
-    GET_FUNCTION_FROM_BYTECODE(jp->script, pc, PCOFF, fun)
-
 #define GET_SOURCE_NOTE_ATOM(sn, atom)                                        \
     JS_BEGIN_MACRO                                                            \
         jsatomid atomIndex_ = (jsatomid) js_GetSrcNoteOffset((sn), 0);        \
@@ -2718,6 +2712,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     saveop = JSOP_NOP;
     sn = NULL;
     rval = NULL;
+    bool forOf = false;
 #if JS_HAS_XML_SUPPORT
     foreach = inXML = quoteAttr = JS_FALSE;
 #endif
@@ -2736,9 +2731,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
         if (cs->format & JOF_INDEXBASE) {
             /*
              * The decompiler uses js_GetIndexFromBytecode to get atoms and
-             * objects and ignores these suffix/prefix bytecodes, thus
-             * simplifying code that must process JSOP_GETTER/JSOP_SETTER
-             * prefixes.
+             * ignores these suffix/prefix bytecodes, thus simplifying code
+             * that must process JSOP_GETTER/JSOP_SETTER prefixes.
              */
             pc += cs->length;
             if (pc >= endpc)
@@ -3292,7 +3286,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_ENTERBLOCK:
               {
-                LOAD_OBJECT(0);
+                obj = jp->script->getObject(GET_UINT32_INDEX(pc));
                 AtomVector atoms(cx);
                 StaticBlockObject &blockObj = obj->asStaticBlock();
 
@@ -3435,7 +3429,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_ENTERLET0:
               {
-                LOAD_OBJECT(0);
+                obj = jp->script->getObject(GET_UINT32_INDEX(pc));
                 StaticBlockObject &blockObj = obj->asStaticBlock();
 
                 AtomVector atoms(cx);
@@ -3554,7 +3548,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                */
               case JSOP_ENTERLET1:
               {
-                LOAD_OBJECT(0);
+                obj = jp->script->getObject(GET_UINT32_INDEX(pc));
                 StaticBlockObject &blockObj = obj->asStaticBlock();
 
                 AtomVector atoms(cx);
@@ -3861,6 +3855,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_ITER:
+                forOf = (GET_UINT8(pc) == JSITER_FOR_OF);
                 foreach = (GET_UINT8(pc) & (JSITER_FOREACH | JSITER_KEYVALUE)) ==
                           JSITER_FOREACH;
                 todo = -2;
@@ -3932,9 +3927,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         rval = POP_STR();
                         if (ss->top >= 1 && ss->opcodes[ss->top - 1] == JSOP_FORLOCAL) {
                             ss->sprinter.setOffset(ss->offsets[ss->top] - PAREN_SLOP);
-                            if (Sprint(&ss->sprinter, " %s (%s in %s)",
+                            if (Sprint(&ss->sprinter, " %s (%s %s %s)",
                                        foreach ? js_for_each_str : js_for_str,
-                                       lval, rval) < 0) {
+                                       lval,
+                                       forOf ? "of" : "in",
+                                       rval) < 0) {
                                 return NULL;
                             }
 
@@ -3946,9 +3943,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                              */
                             todo = ss->offsets[ss->top - 1];
                         } else {
-                            todo = Sprint(&ss->sprinter, " %s (%s in %s)",
+                            todo = Sprint(&ss->sprinter, " %s (%s %s %s)",
                                           foreach ? js_for_each_str : js_for_str,
-                                          lval, rval);
+                                          lval,
+                                          forOf ? "of" : "in",
+                                          rval);
                         }
                         if (todo < 0 || !PushOff(ss, todo, JSOP_FORLOCAL))
                             return NULL;
@@ -3960,9 +3959,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                          */
                         rval = GetStr(ss, ss->top - 1);
                         xval = VarPrefix(js_GetSrcNote(jp->script, pc + next));
-                        js_printf(jp, "\t%s (%s%s in %s) {\n",
+                        js_printf(jp, "\t%s (%s%s %s %s) {\n",
                                   foreach ? js_for_each_str : js_for_str,
-                                  xval, lval, rval);
+                                  xval,
+                                  lval,
+                                  forOf ? "of" : "in",
+                                  rval);
                         jp->indent += 4;
                         DECOMPILE_CODE(pc + next + JSOP_POP_LENGTH, cond - next - JSOP_POP_LENGTH);
                         jp->indent -= 4;
@@ -4229,7 +4231,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         ptrdiff_t offsetToLet = js_GetSrcNoteOffset(sn, 0);
                         LOCAL_ASSERT(*(pc + offsetToLet) == JSOP_ENTERLET0);
 
-                        GET_OBJECT_FROM_BYTECODE(jp->script, pc + offsetToLet, 0, obj);
+                        obj = jp->script->getObject(GET_UINT32_INDEX(pc + offsetToLet));
                         StaticBlockObject &blockObj = obj->asStaticBlock();
 
                         uint32_t blockDepth = blockObj.stackDepth();
@@ -4776,7 +4778,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     SprintStack ss2(cx);
                     JSFunction *outerfun;
 
-                    LOAD_FUNCTION(0);
+                    fun = jp->script->getFunction(GET_UINT32_INDEX(pc));
 
                     /*
                      * All allocation when decompiling is LIFO, using malloc or,
@@ -4902,7 +4904,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif /* JS_HAS_GENERATOR_EXPRS */
                 /* FALL THROUGH */
 
-                LOAD_FUNCTION(0);
+                fun = jp->script->getFunction(GET_UINT32_INDEX(pc));
                 {
                     /*
                      * Always parenthesize expression closures. We can't force
@@ -4928,7 +4930,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_OBJECT:
-                LOAD_OBJECT(0);
+                obj = jp->script->getObject(GET_UINT32_INDEX(pc));
                 str = js_ValueToSource(cx, ObjectValue(*obj));
                 if (!str)
                     return NULL;
@@ -5132,7 +5134,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_DEFFUN:
               case JSOP_DEFFUN_FC:
-                LOAD_FUNCTION(0);
+                fun = jp->script->getFunction(GET_UINT32_INDEX(pc));
                 todo = -2;
                 goto do_function;
                 break;

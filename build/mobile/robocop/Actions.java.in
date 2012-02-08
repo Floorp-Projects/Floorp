@@ -42,7 +42,7 @@ import java.util.List;
 
 public interface Actions {
   public enum SpecialKey {
-    DOWN, UP, LEFT, RIGHT, ENTER
+    DOWN, UP, LEFT, RIGHT, ENTER, MENU, BACK
   }
 
   public interface EventExpecter {
@@ -50,6 +50,11 @@ public interface Actions {
     public void blockForEvent();
     /** Polls to see if the event has been received. Once this returns true, subsequent calls will also return true. */
     public boolean eventReceived();
+  }
+
+  public interface RepeatedEventExpecter extends EventExpecter {
+    /** Blocks until at least one event has been received, and no events have been received in the last <code>millis</code> milliseconds. */
+    public void blockUntilClear(long millis);
   }
 
   /**
@@ -62,9 +67,12 @@ public interface Actions {
   EventExpecter expectGeckoEvent(String geckoEvent);
 
   /**
-   * Listens for a paint event.
+   * Listens for a paint event. Note that calling expectPaint() will
+   * invalidate the event expecters returned from any previous calls
+   * to expectPaint(); calling any methods on those invalidated objects
+   * will result in undefined behaviour.
    */
-  EventExpecter expectPaint();
+  RepeatedEventExpecter expectPaint();
 
   // Send the string kewsToSend to the application 
   void sendKeys(String keysToSend);

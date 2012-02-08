@@ -173,7 +173,7 @@ public class SyncStorageRequest implements Resource {
     }
   }
 
-  public static String USER_AGENT = "Firefox AndroidSync 0.3";
+  public static String USER_AGENT = "Firefox AndroidSync 0.4";
   protected SyncResourceDelegate resourceDelegate;
   public SyncStorageRequestDelegate delegate;
   protected BaseResource resource;

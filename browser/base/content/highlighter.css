@@ -48,6 +48,7 @@
 
 #highlighter-nodeinfobar-container {
   position: absolute;
+  max-width: 95%;
 }
 
 #highlighter-nodeinfobar-container:not([disable-transitions]) {
@@ -60,15 +61,17 @@
   display: block;
   white-space: nowrap;
   direction: ltr;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #highlighter-nodeinfobar-container[locked] > #highlighter-nodeinfobar {
   pointer-events: auto;
 }
 
-#highlighter-nodeinfobar-id,
-.highlighter-nodeinfobar-class,
-#highlighter-nodeinfobar-tagname {
+html|*#highlighter-nodeinfobar-id,
+html|*#highlighter-nodeinfobar-classes,
+html|*#highlighter-nodeinfobar-tagname {
   -moz-user-select: text;
   cursor: text;
 }
@@ -89,10 +92,6 @@
   visibility: hidden;
 }
 
-#highlighter-nodeinfobar-id:empty {
-  display: none;
-}
-
-#highlighter-nodeinfobar-tagname {
+html|*#highlighter-nodeinfobar-tagname {
   text-transform: lowercase;
 }

@@ -1,7 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource:///modules/PageThumbs.jsm");
+let tmp = {};
+Cu.import("resource:///modules/PageThumbs.jsm", tmp);
+let PageThumbs = tmp.PageThumbs;
+let PageThumbsCache = tmp.PageThumbsCache;
 
 registerCleanupFunction(function () {
   while (gBrowser.tabs.length > 1)
@@ -145,6 +148,7 @@ function getXULDocument(aCallback) {
   }, false);
 
   doc.body.appendChild(iframe);
+  registerCleanupFunction(function () { doc.body.removeChild(iframe); });
 }
 
 /**

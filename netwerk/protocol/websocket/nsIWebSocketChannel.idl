@@ -135,6 +135,10 @@ interface nsIWebSocketChannel : nsISupports
     const unsigned short CLOSE_TOO_LARGE            = 1009;
     const unsigned short CLOSE_EXTENSION_MISSING    = 1010;
 
+    // Websocket spec doesn't have equivalent of HTTP 500 code for internal
+    // errors: just use CLOSE_GOING_AWAY for now
+    const unsigned short CLOSE_INTERNAL_ERROR      = CLOSE_GOING_AWAY;
+
     /**
      * Use to send text message down the connection to WebSocket peer.
      *

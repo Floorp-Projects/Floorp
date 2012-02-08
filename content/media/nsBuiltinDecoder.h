@@ -333,7 +333,7 @@ public:
   virtual PRInt64 VideoQueueMemoryInUse() = 0;
   virtual PRInt64 AudioQueueMemoryInUse() = 0;
 
-  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) = 0;
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset) = 0;
 
   // Causes the state machine to switch to buffering state, and to
   // immediately stop playback and buffer downloaded data. Must be called
@@ -504,7 +504,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
     return 0;
   }
 
-  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {
+  virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRInt64 aOffset) {
     if (mDecoderStateMachine) {
       mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
     }

@@ -42,9 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_TESTS
-DIRS		+= tests
-endif
+TEST_DIRS += tests
 
 MODULE		= layout
 XPIDL_MODULE	= layout_base

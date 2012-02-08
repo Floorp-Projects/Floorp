@@ -212,6 +212,9 @@ AutocompletePopup.prototype = {
    */
   _updateSize: function AP__updateSize()
   {
+    if (!this._panel) {
+      return;
+    }
     this._list.width = this._panel.clientWidth +
                        this._scrollbarWidth;
   },

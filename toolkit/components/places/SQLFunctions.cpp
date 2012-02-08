@@ -51,6 +51,8 @@
 #if defined(XP_OS2)
 #include "nsIRandomGenerator.h"
 #endif
+#include "mozilla/Telemetry.h"
+
 using namespace mozilla::storage;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -466,6 +468,8 @@ namespace places {
     nsresult rv = aArguments->GetNumEntries(&numEntries);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ASSERTION(numEntries > 0, "unexpected number of arguments");
+
+    Telemetry::AutoTimer<Telemetry::PLACES_FRECENCY_CALC_TIME_MS> timer;
 
     PRInt64 pageId = aArguments->AsInt64(0);
     PRInt32 typed = numEntries > 1 ? aArguments->AsInt32(1) : 0;

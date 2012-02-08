@@ -57,6 +57,7 @@ const PREF_GETADDONS_CACHE_TYPES         = "extensions.getAddons.cache.types";
 const PREF_GETADDONS_CACHE_ID_ENABLED    = "extensions.%ID%.getAddons.cache.enabled"
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
+const PREF_GETADDONS_BYIDS_PERFORMANCE   = "extensions.getAddons.getWithPerformance.url";
 const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
 const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
@@ -610,6 +611,10 @@ var AddonRepository = {
    *         The optional callback to call once complete
    */
   repopulateCache: function(aIds, aCallback) {
+    this._repopulateCache(aIds, aCallback, false);
+  },
+
+  _repopulateCache: function(aIds, aCallback, aSendPerformance) {
     // Completely remove cache if caching is not enabled
     if (!this.cacheEnabled) {
       this._addons = null;
@@ -628,7 +633,7 @@ var AddonRepository = {
         return;
       }
 
-      self.getAddonsByIDs(aAddons, {
+      self._beginGetAddons(aAddons, {
         searchSucceeded: function(aAddons) {
           self._addons = {};
           aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
@@ -639,7 +644,7 @@ var AddonRepository = {
           if (aCallback)
             aCallback();
         }
-      });
+      }, aSendPerformance);
     });
   },
 
@@ -747,6 +752,21 @@ var AddonRepository = {
    *         The callback to pass results to
    */
   getAddonsByIDs: function(aIDs, aCallback) {
+    return this._beginGetAddons(aIDs, aCallback, false);
+  },
+
+  /**
+   * Begins a search of add-ons, potentially sending performance data.
+   *
+   * @param  aIDs
+   *         Array of ids to search for.
+   * @param  aCallback
+   *         Function to pass results to.
+   * @param  aSendPerformance
+   *         Boolean indicating whether to send performance data with the
+   *         request.
+   */
+  _beginGetAddons: function(aIDs, aCallback, aSendPerformance) {
     let ids = aIDs.slice(0);
 
     let params = {
@@ -754,7 +774,34 @@ var AddonRepository = {
       IDS : ids.map(encodeURIComponent).join(',')
     };
 
-    let url = this._formatURLPref(PREF_GETADDONS_BYIDS, params);
+    let pref = PREF_GETADDONS_BYIDS;
+
+    if (aSendPerformance) {
+      let type = Services.prefs.getPrefType(PREF_GETADDONS_BYIDS_PERFORMANCE);
+      if (type == Services.prefs.PREF_STRING) {
+        pref = PREF_GETADDONS_BYIDS_PERFORMANCE;
+
+        let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"].
+                          getService(Ci.nsIAppStartup).
+                          getStartupInfo();
+
+        if (startupInfo.process) {
+          if (startupInfo.main) {
+            params.TIME_MAIN = startupInfo.main - startupInfo.process;
+          }
+          if (startupInfo.firstPaint) {
+            params.TIME_FIRST_PAINT = startupInfo.firstPaint -
+                                      startupInfo.process;
+          }
+          if (startupInfo.sessionRestored) {
+            params.TIME_SESSION_RESTORED = startupInfo.sessionRestored -
+                                           startupInfo.process;
+          }
+        }
+      }
+    }
+
+    let url = this._formatURLPref(pref, params);
 
     let self = this;
     function handleResults(aElements, aTotalResults, aCompatData) {
@@ -799,6 +846,23 @@ var AddonRepository = {
     }
 
     this._beginSearch(url, ids.length, aCallback, handleResults);
+  },
+
+  /**
+   * Performs the daily background update check.
+   *
+   * This API both searches for the add-on IDs specified and sends performance
+   * data. It is meant to be called as part of the daily update ping. It should
+   * not be used for any other purpose. Use repopulateCache instead.
+   *
+   * @param  aIDs
+   *         Array of add-on IDs to repopulate the cache with.
+   * @param  aCallback
+   *         Function to call when data is received. Function must be an object
+   *         with the keys searchSucceeded and searchFailed.
+   */
+  backgroundUpdateCheck: function(aIDs, aCallback) {
+    this._repopulateCache(aIDs, aCallback, true);
   },
 
   /**

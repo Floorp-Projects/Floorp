@@ -57,7 +57,6 @@ pref("toolkit.browser.cacheRatioHeight", 3000);
 pref("toolkit.browser.contentViewExpire", 3000);
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
-pref("general.useragent.compatMode.firefox", true);
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.tabs.warnOnClose", true);
@@ -226,12 +225,13 @@ pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/Ve
 /* preferences for the Get Add-ons pane */
 pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.getAddons.maxResults", 15);
-pref("extensions.getAddons.recommended.browseURL", "https://addons.mozilla.org/%LOCALE%/mobile/recommended/");
-pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/list/featured/all/%MAX_RESULTS%/%OS%/%VERSION%");
-pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/mobile/search?q=%TERMS%");
-pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%/%COMPATIBILITY_MODE%");
-pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/mobile/");
-pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/guid:%IDS%?src=mobile&appOS=%OS%&appVersion=%VERSION%&tMain=%TIME_MAIN%&tFirstPaint=%TIME_FIRST_PAINT%&tSessionRestored=%TIME_SESSION_RESTORED%");
+pref("extensions.getAddons.recommended.browseURL", "https://addons.mozilla.org/%LOCALE%/android/recommended/");
+pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/android/api/%API_VERSION%/list/featured/all/%MAX_RESULTS%/%OS%/%VERSION%");
+pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/android/search?q=%TERMS%");
+pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/android/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%/%COMPATIBILITY_MODE%");
+pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/android/");
+pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/android/api/%API_VERSION%/search/guid:%IDS%?src=mobile&appOS=%OS%&appVersion=%VERSION%");
+pref("extensions.getAddons.getWithPerformance.url", "https://services.addons.mozilla.org/%LOCALE%/android/api/%API_VERSION%/search/guid:%IDS%?src=mobile&appOS=%OS%&appVersion=%VERSION%&tMain=%TIME_MAIN%&tFirstPaint=%TIME_FIRST_PAINT%&tSessionRestored=%TIME_SESSION_RESTORED%");
 
 /* preference for the locale picker */
 pref("extensions.getLocales.get.url", "");
@@ -465,8 +465,7 @@ pref("dom.ipc.content.nice", 1);
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
-pref("app.sync.tutorialURL", "https://support.mozilla.com/kb/sync-firefox-between-desktop-and-mobile");
-pref("app.support.baseURL", "http://support.mozilla.com/mobile");
+pref("app.support.baseURL", "http://support.mozilla.org/mobile");
 pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
 pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
@@ -620,7 +619,7 @@ pref("content.image.allow_locking", false);
 pref("image.mem.min_discard_timeout_ms", 10000);
 
 // enable touch events interfaces
-pref("dom.w3c_touch_events.enabled", false);
+pref("dom.w3c_touch_events.enabled", true);
 
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless this pref is set

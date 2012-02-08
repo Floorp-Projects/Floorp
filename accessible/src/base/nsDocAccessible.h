@@ -39,7 +39,9 @@
 #ifndef _nsDocAccessible_H_
 #define _nsDocAccessible_H_
 
+#include "nsIAccessibleCursorable.h"
 #include "nsIAccessibleDocument.h"
+#include "nsIAccessiblePivot.h"
 
 #include "nsEventShell.h"
 #include "nsHyperTextAccessibleWrap.h"
@@ -58,6 +60,7 @@
 #include "nsIDocShellTreeNode.h"
 
 class nsIScrollableView;
+class nsAccessiblePivot;
 
 const PRUint32 kDefaultCacheSize = 256;
 
@@ -74,8 +77,10 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
                         public nsIDocumentObserver,
                         public nsIObserver,
                         public nsIScrollPositionListener,
-                        public nsSupportsWeakReference
-{  
+                        public nsSupportsWeakReference,
+                        public nsIAccessibleCursorable,
+                        public nsIAccessiblePivotObserver
+{
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDocAccessible, nsAccessible)
 
@@ -83,6 +88,10 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOCACCESSIBLE_IMPL_CID)
 
   NS_DECL_NSIOBSERVER
+
+  NS_DECL_NSIACCESSIBLECURSORABLE
+
+  NS_DECL_NSIACCESSIBLEPIVOTOBSERVER
 
 public:
   using nsAccessible::GetParent;
@@ -594,6 +603,16 @@ protected:
   nsIAtom* mARIAAttrOldValue;
 
   nsTArray<nsRefPtr<nsDocAccessible> > mChildDocuments;
+
+  /**
+   * Whether we support nsIAccessibleCursorable, used when querying the interface.
+   */
+  bool mIsCursorable;
+
+  /**
+   * The virtual cursor of the document when it supports nsIAccessibleCursorable.
+   */
+  nsRefPtr<nsAccessiblePivot> mVirtualCursor;
 
   /**
    * A storage class for pairing content with one of its relation attributes.

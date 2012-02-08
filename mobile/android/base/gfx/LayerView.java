@@ -37,9 +37,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.GeckoEventListener;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerController;
@@ -59,10 +56,6 @@ import android.util.Log;
 import java.nio.IntBuffer;
 import java.util.LinkedList;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 /**
  * A view rendered by the layer compositor.
  *
@@ -70,6 +63,7 @@ import org.json.JSONObject;
  * mediator between the LayerRenderer and the LayerController.
  */
 public class LayerView extends FlexibleGLSurfaceView implements GeckoEventListener {
+public class LayerView extends GLSurfaceView {
     private Context mContext;
     private LayerController mController;
     private InputConnectionHandler mInputConnectionHandler;
@@ -81,8 +75,7 @@ public class LayerView extends FlexibleGLSurfaceView implements GeckoEventListen
     private static String LOGTAG = "GeckoLayerView";
     /* List of events to be processed if the page does not prevent them. Should only be touched on the main thread */
     private LinkedList<MotionEvent> mEventQueue = new LinkedList<MotionEvent>();
-    private boolean touchEventsEnabled = false;
-    private String touchEventsPrefName = "dom.w3c_touch_events.enabled";
+
 
     public LayerView(Context context, LayerController controller) {
         super(context);
@@ -146,7 +139,7 @@ public class LayerView extends FlexibleGLSurfaceView implements GeckoEventListen
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (touchEventsEnabled && mController.onTouchEvent(event)) {
+        if (mController.onTouchEvent(event)) {
             addToEventQueue(event);
             return true;
         }
@@ -228,6 +221,14 @@ public class LayerView extends FlexibleGLSurfaceView implements GeckoEventListen
                 mRenderTime = System.nanoTime();
             }
         }
+    }
+
+    public void addLayer(Layer layer) {
+        mRenderer.addLayer(layer);
+    }
+
+    public void removeLayer(Layer layer) {
+        mRenderer.removeLayer(layer);
     }
 
     /**

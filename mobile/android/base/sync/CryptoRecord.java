@@ -130,6 +130,17 @@ public class CryptoRecord extends Record {
     super(source.guid, source.collection, source.lastModified, source.deleted);
   }
 
+  @Override
+  public Record copyWithIDs(String guid, long androidID) {
+    CryptoRecord out = new CryptoRecord(this);
+    out.guid         = guid;
+    out.androidID    = androidID;
+    out.sortIndex    = this.sortIndex;
+    out.payload      = (this.payload == null) ? null : new ExtendedJSONObject(this.payload.object);
+    out.keyBundle    = this.keyBundle;    // TODO: copy me?
+    return out;
+  }
+
   /**
    * Take a whole record as JSON -- i.e., something like
    *

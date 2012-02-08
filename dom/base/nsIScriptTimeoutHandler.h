@@ -42,9 +42,9 @@
 class nsIArray;
 
 #define NS_ISCRIPTTIMEOUTHANDLER_IID \
-{ /* {21ba4f96-30b8-4215-a75d-d438eb16a50c} */ \
-  0x21ba4f96, 0x30b8, 0x4215, \
-  { 0xa7, 0x5d, 0xd4, 0x38, 0xeb, 0x16, 0xa5, 0x0c } }
+{ /* {17a9ce1a-d73b-45d1-8145-a0ae57bcc76e} */ \
+  0x17a9ce1a, 0xd73b, 0x45d1, \
+ { 0x81, 0x45, 0xa0, 0xae, 0x57, 0xbc, 0xc7, 0x6e } }
 
 /**
  * Abstraction of the script objects etc required to do timeouts in a
@@ -78,10 +78,6 @@ public:
 
   // Get the language version for this timeout.
   virtual PRUint32 GetScriptVersion() = 0;
-
-  // Set the "secret" final lateness arg.  This will be called before
-  // GetArgv(), which should reflect this lateness value.
-  virtual void SetLateness(PRIntervalTime aHowLate) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptTimeoutHandler,
