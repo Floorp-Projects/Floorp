@@ -136,7 +136,6 @@ FENNEC_JAVA_FILES = \
   ui/SimpleScaleGestureDetector.java \
   ui/SubdocumentScrollHelper.java \
   GeckoNetworkManager.java \
-  GeckoScreenOrientationListener.java \
   $(NULL)
 
 ifdef MOZ_WEBSMS_BACKEND
