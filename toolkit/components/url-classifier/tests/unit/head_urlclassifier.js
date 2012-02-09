@@ -36,8 +36,8 @@ function delFile(name) {
 }
 
 function cleanUp() {
-  delFile("classifier.hashkey");
   delFile("urlclassifier3.sqlite");
+  delFile("safebrowsing/classifier.hashkey");
   delFile("safebrowsing/test-phish-simple.sbstore");
   delFile("safebrowsing/test-malware-simple.sbstore");
   delFile("safebrowsing/test-phish-simple.cache");
