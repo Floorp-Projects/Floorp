@@ -258,7 +258,7 @@ public class FennecNativeDriver implements Driver {
     }
   }
 
-  public int stopCheckerboardRecording() {
+  public float stopCheckerboardRecording() {
     Class [] parameters = new Class[1];
     parameters[0] = null;
     List checkerboard;
@@ -267,20 +267,19 @@ public class FennecNativeDriver implements Driver {
       Object [] params = null;
       checkerboard = (List)_stopCheckerboardRecording.invoke(null, params);
       Object [] amountarray = checkerboard.toArray();
-      int numIncompleteFrames = 0;
-      for (int i=0; i < amountarray.length; i++) {
-        Float val = (Float)amountarray[i];
-        if (val > 0.0f)
-          numIncompleteFrames++;
+      double completeness = 0;
+      for (Object obj : amountarray) {
+        float val = (Float)obj;
+        completeness += (1.0 - (double)val) / (double)amountarray.length;
       }
-      return numIncompleteFrames;
+      return (float)completeness;
     } catch (IllegalAccessException e) {
       e.printStackTrace();
     } catch (InvocationTargetException e) {
       e.printStackTrace();
     }
 
-    return 0;
+    return 0.0f;
   }
 
   private GLSurfaceView getSurfaceView() {
