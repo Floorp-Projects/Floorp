@@ -1149,12 +1149,12 @@ LIRGenerator::visitSetPropertyCache(MSetPropertyCache *ins)
 
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
-        lir = new LCacheSetPropertyV(obj);
-        if (!useBox(lir, LCacheSetPropertyV::Value, ins->value()))
+        lir = new LSetPropertyCacheV(obj);
+        if (!useBox(lir, LSetPropertyCacheV::Value, ins->value()))
             return false;
     } else {
         LAllocation value = useRegisterOrConstant(ins->value());
-        lir = new LCacheSetPropertyT(obj, value, ins->value()->type());
+        lir = new LSetPropertyCacheT(obj, value, ins->value()->type());
     }
 
     if (!add(lir, ins))

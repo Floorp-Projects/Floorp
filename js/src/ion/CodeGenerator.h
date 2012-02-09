@@ -139,7 +139,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitUnboxDouble(LUnboxDouble *lir);
     bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
     bool visitOutOfLineCacheGetProperty(OutOfLineCache *ool);
-    bool visitOutOfLineCacheSetProperty(OutOfLineCache *ool);
+    bool visitOutOfLineSetPropertyCache(OutOfLineCache *ool);
     bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
 
     bool visitGetPropertyCacheV(LGetPropertyCacheV *ins) {
@@ -148,10 +148,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGetPropertyCacheT(LGetPropertyCacheT *ins) {
         return visitCache(ins);
     }
-    bool visitCacheSetPropertyV(LCacheSetPropertyV *ins) {
+    bool visitSetPropertyCacheV(LSetPropertyCacheV *ins) {
         return visitCache(ins);
     }
-    bool visitCacheSetPropertyT(LCacheSetPropertyT *ins) {
+    bool visitSetPropertyCacheT(LSetPropertyCacheT *ins) {
         return visitCache(ins);
     }
 
