@@ -56,6 +56,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import android.hardware.Camera;
 
+// TODO: Port this to GLES 2.0.
 public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrameAvailableListener {
     private static final String LOGTAG = "SurfaceTextureLayer";
     private static final int LOCAL_GL_TEXTURE_EXTERNAL_OES = 0x00008d65; // This is only defined in API level 15 for some reason (Android 4.0.3)
@@ -173,8 +174,8 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     }
 
     @Override
-    protected boolean performUpdates(GL10 gl, RenderContext context) {
-        super.performUpdates(gl, context);
+    protected boolean performUpdates(RenderContext context) {
+        super.performUpdates(context);
 
         if (mNewSize != null) {
             mSize = mNewSize;
@@ -184,10 +185,10 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         mInverted = mNewInverted;
         mBlend = mNewBlend;
 
-        gl.glEnable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
-        gl.glBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureId);
+        GLES11.glEnable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
+        GLES11.glBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureId);
         mSurfaceTexture.updateTexImage();
-        gl.glDisable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
+        GLES11.glDisable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
 
         // FIXME: we should return true and rely on onFrameAvailable, but
         // that isn't working for some reason
