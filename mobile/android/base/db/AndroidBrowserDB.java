@@ -330,7 +330,11 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { uri });
     }
 
-    public void removeBookmark(ContentResolver cr, String uri) {
+    public void removeBookmark(ContentResolver cr, int id) {
+        // Not implemented
+    }
+
+    public void removeBookmarksWithURL(ContentResolver cr, String uri) {
         if (Build.VERSION.SDK_INT >= 11)
             removeBookmarkPost11(cr, uri);
         else
