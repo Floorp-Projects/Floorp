@@ -2768,11 +2768,14 @@ nsDisplayTransform::GetHitDepthAtPoint(const nsPoint& aPoint)
  */
 nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
 {
+  nsRect untransformedBounds =
+    ShouldPrerenderTransformedContent(aBuilder, mFrame) ?
+    mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame() :
+    mStoredList.GetBounds(aBuilder);
   float factor = nsPresContext::AppUnitsPerCSSPixel();
-  return nsLayoutUtils::MatrixTransformRect(
-     mStoredList.GetBounds(aBuilder),
-     GetTransform(factor),
-     factor);
+  return nsLayoutUtils::MatrixTransformRect(untransformedBounds,
+                                            GetTransform(factor),
+                                            factor);
 }
 
 /* The transform is opaque iff the transform consists solely of scales and
