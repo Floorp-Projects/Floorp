@@ -87,6 +87,7 @@ public class GeckoEvent {
     public static final int VISITED = 21;
     public static final int NETWORK_CHANGED = 22;
     public static final int PROXIMITY_EVENT = 23;
+    public static final int SCREENORIENTATION_CHANGED = 24;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -132,6 +133,8 @@ public class GeckoEvent {
 
     public double mBandwidth;
     public boolean mCanBeMetered;
+
+    public short mScreenOrientation;
 
     public int mNativeWindow;
 
@@ -358,5 +361,10 @@ public class GeckoEvent {
         mType = NETWORK_CHANGED;
         mBandwidth = bandwidth;
         mCanBeMetered = canBeMetered;
+    }
+
+    public GeckoEvent(short aScreenOrientation) {
+        mType = SCREENORIENTATION_CHANGED;
+        mScreenOrientation = aScreenOrientation;
     }
 }
