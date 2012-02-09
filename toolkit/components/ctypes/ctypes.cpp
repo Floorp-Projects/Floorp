@@ -119,10 +119,9 @@ InitAndSealCTypesClass(JSContext* cx, JSObject* global)
 
   // Set callbacks for charset conversion and such.
   jsval ctypes;
-  if (!JS_GetProperty(cx, global, "ctypes", &ctypes))
+  if (!JS_GetProperty(cx, global, "ctypes", &ctypes) ||
+      !JS_SetCTypesCallbacks(cx, JSVAL_TO_OBJECT(ctypes), &sCallbacks))
     return false;
-
-  JS_SetCTypesCallbacks(JSVAL_TO_OBJECT(ctypes), &sCallbacks);
 
   // Seal up Object, Function, Array and Error and their prototypes.  (This
   // single object instance is shared amongst everyone who imports the ctypes

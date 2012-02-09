@@ -71,7 +71,7 @@ pm_construct(JSContext* cx, uintN argc, jsval* vp)
         return JS_FALSE;
     }
 
-    JS_SetPrivate(obj, p);
+    JS_SetPrivate(cx, obj, p);
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
@@ -79,7 +79,7 @@ pm_construct(JSContext* cx, uintN argc, jsval* vp)
 static void
 pm_finalize(JSContext* cx, JSObject* obj)
 {
-    cx->delete_((PerfMeasurement*) JS_GetPrivate(obj));
+    cx->delete_((PerfMeasurement*) JS_GetPrivate(cx, obj));
 }
 
 // Property access

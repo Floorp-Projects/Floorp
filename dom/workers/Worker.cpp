@@ -116,7 +116,7 @@ public:
   {
     JS_ASSERT(!JS_IsExceptionPending(aCx));
 
-    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aObj);
+    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aCx, aObj);
     JS_ASSERT(worker);
 
     if (aSaveEventHandlers) {
@@ -131,7 +131,7 @@ public:
       }
     }
 
-    SetJSPrivateSafeish(aObj, NULL);
+    SetJSPrivateSafeish(aCx, aObj, NULL);
   }
 
   static WorkerPrivate*
@@ -184,7 +184,7 @@ protected:
     }
 
     // Worker now owned by the JS object.
-    SetJSPrivateSafeish(obj, worker);
+    SetJSPrivateSafeish(aCx, obj, worker);
 
     if (!runtimeService->RegisterWorker(aCx, worker)) {
       return false;
@@ -242,7 +242,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aObj);
+    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aCx, aObj);
     if (worker) {
       worker->FinalizeInstance(aCx, true);
     }
@@ -252,7 +252,8 @@ private:
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aObj);
+    WorkerPrivate* worker =
+      GetJSPrivateSafeish<WorkerPrivate>(aTrc->context, aObj);
     if (worker) {
       worker->TraceInstance(aTrc);
     }
@@ -379,7 +380,7 @@ private:
     if (aObj) {
       JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
-        return GetJSPrivateSafeish<WorkerPrivate>(aObj);
+        return GetJSPrivateSafeish<WorkerPrivate>(aCx, aObj);
       }
     }
 
@@ -396,7 +397,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aObj);
+    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aCx, aObj);
     if (worker) {
       worker->FinalizeInstance(aCx, true);
     }
@@ -406,7 +407,8 @@ private:
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    WorkerPrivate* worker = GetJSPrivateSafeish<WorkerPrivate>(aObj);
+    WorkerPrivate* worker =
+      GetJSPrivateSafeish<WorkerPrivate>(aTrc->context, aObj);
     if (worker) {
       worker->TraceInstance(aTrc);
     }
@@ -427,7 +429,7 @@ Worker::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
 {
   JSClass* classPtr = JS_GetClass(aObj);
   if (classPtr == &sClass || classPtr == ChromeWorker::Class()) {
-    return GetJSPrivateSafeish<WorkerPrivate>(aObj);
+    return GetJSPrivateSafeish<WorkerPrivate>(aCx, aObj);
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
