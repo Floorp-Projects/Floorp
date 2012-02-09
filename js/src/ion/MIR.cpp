@@ -560,6 +560,14 @@ MDiv::foldsTo(bool useValueNumbers)
     return this;
 }
 
+static inline MDefinition *
+TryFold(MDefinition *original, MDefinition *replacement)
+{
+    if (original->type() == replacement->type())
+        return replacement;
+    return original;
+}
+
 MDefinition *
 MMod::foldsTo(bool useValueNumbers)
 {
@@ -589,22 +597,22 @@ MMod::foldsTo(bool useValueNumbers)
         return rhs();
 
     // x % y -> NaN (where y == 0 || y == -0)
-    if (rhsConstant && (rhsd == 0 || rhsd == -0))
-        return MConstant::New(rt->NaNValue);
+    if (rhsConstant && (rhsd == 0))
+        return TryFold(this, MConstant::New(rt->NaNValue));
 
     // NOTE: y cannot be NaN, 0, or -0 at this point
     // x % y -> x (where x == 0 || x == -0)
-    if (lhsConstant && (lhsd == 0 || lhsd == -0))
-        return lhs();
+    if (lhsConstant && (lhsd == 0))
+        return TryFold(this, lhs());
 
     // x % y -> NaN (where x == Inf || x == -Inf)
     if (lhsConstant && (lhsd == Inf || lhsd == -Inf))
-        return MConstant::New(rt->NaNValue);
+        return TryFold(this, MConstant::New(rt->NaNValue));
 
     // NOTE: y cannot be NaN, Inf, or -Inf at this point
     // x % y -> x (where y == Inf || y == -Inf)
     if (rhsConstant && (rhsd == Inf || rhsd == -Inf))
-        return lhs();
+        return TryFold(this, lhs());
 
     return this;
 }
