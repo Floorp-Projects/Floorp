@@ -69,6 +69,7 @@ class SnapshotReader
     uint32 slotCount_;          // Number of slots.
     uint32 frameCount_;
     BailoutKind bailoutKind_;
+    bool resumeAfter_;
 
 #ifdef DEBUG
     // In debug mode we include the JSScript in order to make a few assertions.
@@ -241,6 +242,9 @@ class SnapshotReader
     BailoutKind bailoutKind() const {
         return bailoutKind_;
     }
+    bool resumeAfter() const {
+        return resumeAfter_;
+    }
 
     Slot readSlot();
     void finishReadingFrame();
@@ -320,7 +324,7 @@ class SnapshotWriter
     void writeSlotHeader(JSValueType type, uint32 regCode);
 
   public:
-    SnapshotOffset startSnapshot(uint32 frameCount, BailoutKind kind);
+    SnapshotOffset startSnapshot(uint32 frameCount, BailoutKind kind, bool resumeAfter);
     void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32 exprStack);
 #ifdef TRACK_SNAPSHOTS
     void trackFrame(uint32 pcOpcode, uint32 mirOpcode, uint32 mirId,

@@ -147,6 +147,11 @@ class IonBailoutIterator
     BailoutKind bailoutKind() const {
         return reader_.bailoutKind();
     }
+    bool resumeAfter() const {
+        if (reader_.remainingFrameCount() > 1)
+            return false;
+        return reader_.resumeAfter();
+    }
 
     bool nextFrame() {
         reader_.finishReadingFrame();
@@ -200,6 +205,9 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
     }
     uintN pcOff = iter.pcOffset();
     regs.pc = fp->script()->code + pcOff;
+
+    if (iter.resumeAfter())
+        regs.pc = GetNextPc(regs.pc);
 
     IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p (line %d)",
             pcOff, (void *)fp->script(), js_PCToLineNumber(cx, fp->script(), regs.pc));
@@ -291,6 +299,9 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
         if (!fp)
             return BAILOUT_RETURN_FATAL_ERROR;
     }
+
+    jsbytecode *bailoutPc = fp->script()->code + iter.pcOffset();
+    br->setBailoutPc(bailoutPc);
 
     switch (iter.bailoutKind()) {
       case Bailout_Normal:
@@ -433,6 +444,7 @@ uint32
 ion::ReflowTypeInfo(uint32 bailoutResult)
 {
     JSContext *cx = GetIonContext()->cx;
+    IonActivation *activation = cx->runtime->ionActivation;
 
     IonSpew(IonSpew_Bailouts, "reflowing type info");
 
@@ -443,16 +455,10 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
     }
 
     JSScript *script = cx->fp()->script();
-    jsbytecode *pc = cx->regs().pc;
+    jsbytecode *pc = activation->bailout()->bailoutPc();
 
     JS_ASSERT(script->hasAnalysis());
     JS_ASSERT(script->analysis()->ranInference());
-
-    // pc is the op after the type barrier (where we resume in the interpreter),
-    // so we have to find the pc of the previous op.
-    do {
-        pc--;
-    } while (!script->analysis()->maybeCode(pc));
 
     JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
 

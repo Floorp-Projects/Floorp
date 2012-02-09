@@ -145,6 +145,7 @@ enum BailoutKind
 };
 
 static const uint32 BAILOUT_KIND_BITS = 2;
+static const uint32 BAILOUT_RESUME_BITS = 1;
 
 // Keep this arbitrarily small for now, for testing.
 static const uint32 BAILOUT_TABLE_SIZE = 16;
@@ -163,8 +164,12 @@ class BailoutClosure
 {
     BailoutFrameGuard bfg_;
     StackFrame *entryfp_;
+    jsbytecode *bailoutPc_;
 
   public:
+    BailoutClosure()
+      : bailoutPc_(NULL)
+    { }
     BailoutFrameGuard *frameGuard() {
         return &bfg_;
     }
@@ -173,6 +178,17 @@ class BailoutClosure
     }
     void setEntryFrame(StackFrame *fp) {
         entryfp_ = fp;
+    }
+
+    // The bailout pc is the pc associated with the MResuemPoint this bailout
+    // is restoring. If the resume point is "ResumeAfter", we'll actually start
+    // executing from the *next* bytecode. This lets us recover the pc used for
+    // type inference reflows.
+    void setBailoutPc(jsbytecode *pc) {
+        bailoutPc_ = pc;
+    }
+    jsbytecode *bailoutPc() const {
+        return bailoutPc_;
     }
 };
 
