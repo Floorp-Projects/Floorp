@@ -40,6 +40,7 @@
 #include "WindowIdentifier.h"
 #include "AndroidBridge.h"
 #include "mozilla/dom/network/Constants.h"
+#include "mozilla/dom/ScreenOrientation.h"
 
 using mozilla::hal::WindowIdentifier;
 
@@ -180,6 +181,41 @@ Reboot()
 void
 PowerOff()
 {}
+
+void
+EnableScreenOrientationNotifications()
+{
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->EnableScreenOrientationNotifications();
+}
+
+void
+DisableScreenOrientationNotifications()
+{
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  bridge->DisableScreenOrientationNotifications();
+}
+
+void
+GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation)
+{
+  AndroidBridge* bridge = AndroidBridge::Bridge();
+  if (!bridge) {
+    return;
+  }
+
+  dom::ScreenOrientationWrapper orientationWrapper;
+  bridge->GetScreenOrientation(orientationWrapper);
+  *aScreenOrientation = orientationWrapper.orientation;
+}
 
 } // hal_impl
 } // mozilla
