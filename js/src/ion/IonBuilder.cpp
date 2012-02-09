@@ -3476,9 +3476,13 @@ IonBuilder::jsop_setprop(JSAtom *atom)
     }
 
     oracle->binaryOp(script, pc);
-    MGenericSetProperty *ins = MGenericSetProperty::New(obj, value, atom,
-                                                        script->strictModeCode,
-                                                        monitored);
+
+    MSetPropertyInstruction *ins;
+    if (monitored)
+        ins = MCallSetProperty::New(obj, value, atom, script->strictModeCode);
+    else
+        ins = MSetPropertyCache::New(obj, value, atom, script->strictModeCode);
+
     current->add(ins);
     current->push(value);
 

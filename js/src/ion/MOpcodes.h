@@ -115,7 +115,8 @@ namespace ion {
     _(CallGetNameTypeOf)                                                    \
     _(CallGetElement)                                                       \
     _(CallSetElement)                                                       \
-    _(GenericSetProperty)                                                   \
+    _(CallSetProperty)                                                      \
+    _(SetPropertyCache)                                                     \
     _(IteratorStart)                                                        \
     _(IteratorNext)                                                         \
     _(IteratorMore)                                                         \

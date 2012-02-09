@@ -131,6 +131,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallIteratorNext(LCallIteratorNext *lir);
     bool visitCallIteratorMore(LCallIteratorMore *lir);
     bool visitCallIteratorEnd(LCallIteratorEnd *lir);
+    bool visitCallSetProperty(LCallSetProperty *ins);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
@@ -152,13 +153,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     }
     bool visitCacheSetPropertyT(LCacheSetPropertyT *ins) {
         return visitCache(ins);
-    }
-
-    bool visitCallSetPropertyV(LCallSetPropertyV *ins) {
-        return visitCallSetProperty(ins);
-    }
-    bool visitCallSetPropertyT(LCallSetPropertyT *ins) {
-        return visitCallSetProperty(ins);
     }
 
   private:
