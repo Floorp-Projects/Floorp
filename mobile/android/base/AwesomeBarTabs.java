@@ -247,6 +247,18 @@ public class AwesomeBarTabs extends TabHost {
         }
     }
 
+    // The group cursor doesn't ever need to change because it just holds the
+    // mobile/desktop folders, but we do need to update the children cursors.
+    public void refreshBookmarks() {
+        Cursor groupCursor = mBookmarksAdapter.getCursor();
+        groupCursor.moveToPosition(-1);
+        while (groupCursor.moveToNext()) {
+            String guid = groupCursor.getString(groupCursor.getColumnIndexOrThrow(Bookmarks.GUID));
+            // We need to do this in a AsyncTask because we're on the main thread
+            new RefreshChildrenCursorTask(groupCursor.getPosition()).execute(guid);
+        }
+    }
+
     private class BookmarksQueryTask extends AsyncTask<Void, Void, Cursor> {
         protected Cursor doInBackground(Void... arg0) {
             // Make our own cursor to group mobile bookmarks and desktop bookmarks.
@@ -836,18 +848,5 @@ public class AwesomeBarTabs extends TabHost {
                 mAllPagesCursorAdapter.notifyDataSetChanged();
             }
         });
-    }
-
-    public void refreshBookmarks() {
-        new AsyncTask<Void, Void, Cursor>() {
-            protected Cursor doInBackground(Void... arg0) {
-                ContentResolver resolver = mContext.getContentResolver();
-                return BrowserDB.getAllBookmarks(resolver);
-            }
-
-            protected void onPostExecute(Cursor cursor) {
-                mBookmarksAdapter.changeCursor(cursor);
-            }
-        }.execute();
     }
 }
