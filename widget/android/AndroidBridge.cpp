@@ -1077,10 +1077,13 @@ AndroidBridge::RegisterCompositor()
 
     jmethodID registerCompositor = env->GetStaticMethodID(jFlexSurfaceView, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
 
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### registerCxxCompositor()");
     jobject glController = env->CallStaticObjectMethod(jFlexSurfaceView, registerCompositor);
 
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Acquire()");
     sController.Acquire(env, glController);
     sController.SetGLVersion(2);
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "Registered Compositor");
 }
 
 EGLSurface
