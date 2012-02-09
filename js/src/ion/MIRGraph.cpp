@@ -176,7 +176,7 @@ MBasicBlock::inherit(MBasicBlock *pred)
     MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : NULL;
 
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = new MResumePoint(this, pc(), callerResumePoint);
+    entryResumePoint_ = new MResumePoint(this, pc(), callerResumePoint, MResumePoint::ResumeAt);
     if (!entryResumePoint_->init(this))
         return false;
 
@@ -197,7 +197,7 @@ MBasicBlock::inheritNonPredecessor(MBasicBlock *parent)
     copySlots(parent);
 
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = MResumePoint::New(this, pc(), callerResumePoint());
+    entryResumePoint_ = MResumePoint::New(this, pc(), callerResumePoint(), MResumePoint::ResumeAt);
     if (!entryResumePoint_)
         return false;
     return true;

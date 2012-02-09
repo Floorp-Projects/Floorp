@@ -60,7 +60,6 @@ IonBuilder::IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp,
   : MIRGenerator(cx, temp, graph, info),
     script(info.script()),
     initialScopeChain_(scopeChain),
-    lastResumePoint_(NULL),
     callerResumePoint_(NULL),
     oracle(oracle),
     inliningDepth(inliningDepth)
@@ -84,12 +83,6 @@ GetJumpOffset(jsbytecode *pc)
 {
     JS_ASSERT(js_CodeSpec[JSOp(*pc)].type() == JOF_JUMP);
     return GET_JUMP_OFFSET(pc);
-}
-
-static inline jsbytecode *
-GetNextPc(jsbytecode *pc)
-{
-    return pc + js_CodeSpec[JSOp(*pc)].length;
 }
 
 IonBuilder::CFGState
@@ -2184,7 +2177,10 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningDat
     // |top| jumps into the callee subgraph -- save it for later use.
     MBasicBlock *top = current;
 
-    MResumePoint *inlineResumePoint = MResumePoint::New(top, pc, callerResumePoint_);
+    // This resume point collects outer variables only; it is never used to
+    // directly build a snapshot.
+    MResumePoint *inlineResumePoint = MResumePoint::New(top, pc, callerResumePoint_,
+                                                        MResumePoint::Outer);
     if (!inlineResumePoint)
         return false;
 
@@ -2676,9 +2672,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 // to exit back to the interpreter, the interpreter state can be
 // reconstructed.
 //
-// The resume model differs from TraceMonkey in that we do not need to
-// take snapshots for every guard. Instead, we capture stack state at
-// critical points:
+// We capture stack state at critical points:
 //   * (1) At the beginning of every basic block.
 //   * (2) After every effectful operation.
 //
@@ -2689,7 +2683,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 //
 // Effectful instructions, of course, need to capture state after completion,
 // where the interpreter will not attempt to repeat the operation. For this,
-// resumeAfter() must be used. The state is attached directly to the effectful
+// ResumeAfter must be used. The state is attached directly to the effectful
 // instruction to ensure that no intermediate instructions could be injected
 // in between by a future analysis pass.
 //
@@ -2697,22 +2691,27 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 // we create an LSnapshot, which uses the last known resume point to request
 // register/stack assignments for every live value.
 bool
-IonBuilder::resumeAfter(MInstruction *ins)
+IonBuilder::resume(MInstruction *ins, jsbytecode *pc, MResumePoint::Mode mode)
 {
-    return resumeAt(ins, GetNextPc(pc));
+    JS_ASSERT(ins->isEffectful());
+
+    MResumePoint *resumePoint = MResumePoint::New(ins->block(), pc, callerResumePoint_, mode);
+    if (!resumePoint)
+        return false;
+    ins->setResumePoint(resumePoint);
+    return true;
 }
 
 bool
 IonBuilder::resumeAt(MInstruction *ins, jsbytecode *pc)
 {
-    JS_ASSERT(ins->isEffectful());
+    return resume(ins, pc, MResumePoint::ResumeAt);
+}
 
-    MResumePoint *resumePoint = MResumePoint::New(ins->block(), pc, callerResumePoint_);
-    if (!resumePoint)
-        return false;
-    lastResumePoint_ = resumePoint;
-    ins->setResumePoint(resumePoint);
-    return true;
+bool
+IonBuilder::resumeAfter(MInstruction *ins)
+{
+    return resume(ins, pc, MResumePoint::ResumeAfter);
 }
 
 void

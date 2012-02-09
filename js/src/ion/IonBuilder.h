@@ -267,6 +267,7 @@ class IonBuilder : public MIRGenerator
 
     // Please see the Big Honkin' Comment about how resume points work in
     // IonBuilder.cpp, near the definition for this function.
+    bool resume(MInstruction *ins, jsbytecode *pc, MResumePoint::Mode mode);
     bool resumeAt(MInstruction *ins, jsbytecode *pc);
     bool resumeAfter(MInstruction *ins);
 
@@ -339,7 +340,6 @@ class IonBuilder : public MIRGenerator
     jsbytecode *pc;
     JSObject *initialScopeChain_;
     MBasicBlock *current;
-    MResumePoint *lastResumePoint_;
 
     /* Information used for inline-call builders. */
     MResumePoint *callerResumePoint_;

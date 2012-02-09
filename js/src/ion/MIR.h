@@ -3311,15 +3311,23 @@ class MTypeBarrier : public MUnaryInstruction
 // IonBuilder.cpp.
 class MResumePoint : public MNode
 {
+  public:
+    enum Mode {
+        ResumeAt,
+        ResumeAfter,
+        Outer
+    };
+
+  private:
     friend class MBasicBlock;
 
     MDefinition **operands_;
     uint32 stackDepth_;
     jsbytecode *pc_;
     MResumePoint *caller_;
-    jsbytecode *callerPC_;
+    Mode mode_;
 
-    MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent);
+    MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent, Mode mode);
     bool init(MBasicBlock *state);
     void inherit(MBasicBlock *state);
 
@@ -3330,7 +3338,7 @@ class MResumePoint : public MNode
     }
 
   public:
-    static MResumePoint *New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent);
+    static MResumePoint *New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent, Mode mode);
 
     MNode::Kind kind() const {
         return MNode::ResumePoint;
@@ -3359,6 +3367,9 @@ class MResumePoint : public MNode
         for (MResumePoint *it = caller_; it; it = it->caller_)
             count++;
         return count;
+    }
+    Mode mode() const {
+        return mode_;
     }
 };
 

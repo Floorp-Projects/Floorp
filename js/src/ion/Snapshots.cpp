@@ -129,16 +129,23 @@ SnapshotReader::SnapshotReader(const uint8 *buffer, const uint8 *end)
     readSnapshotBody();
 }
 
+static const uint32 BAILOUT_KIND_SHIFT = 0;
+static const uint32 BAILOUT_KIND_MASK = (1 << BAILOUT_KIND_BITS) - 1;
+static const uint32 BAILOUT_RESUME_SHIFT = BAILOUT_KIND_SHIFT + BAILOUT_KIND_BITS;
+static const uint32 BAILOUT_FRAMECOUNT_SHIFT = BAILOUT_KIND_BITS + BAILOUT_RESUME_BITS;
+static const uint32 BAILOUT_FRAMECOUNT_BITS = (8 * sizeof(uint32)) - BAILOUT_FRAMECOUNT_SHIFT;
+
 void
 SnapshotReader::readSnapshotHeader()
 {
     uint32 bits = reader_.readUnsigned();
-    frameCount_ = bits >> BAILOUT_KIND_BITS;
+    frameCount_ = bits >> BAILOUT_FRAMECOUNT_SHIFT;
     JS_ASSERT(frameCount_ > 0);
-    bailoutKind_ = (BailoutKind)(bits & ((1 << BAILOUT_KIND_BITS) - 1));
+    bailoutKind_ = BailoutKind((bits >> BAILOUT_KIND_SHIFT) & BAILOUT_KIND_MASK);
+    resumeAfter_ = !!(bits & (1 << BAILOUT_RESUME_SHIFT));
 
-    IonSpew(IonSpew_Snapshots, "Read snapshot header with frameCount %u, bailout kind %u",
-            frameCount_, bailoutKind_);
+    IonSpew(IonSpew_Snapshots, "Read snapshot header with frameCount %u, bailout kind %u (ra: %d)",
+            frameCount_, bailoutKind_, resumeAfter_);
 }
 
 void
@@ -455,7 +462,7 @@ SnapshotIterator::skip(const Slot &slot)
 }
 
 SnapshotOffset
-SnapshotWriter::startSnapshot(uint32 frameCount, BailoutKind kind)
+SnapshotWriter::startSnapshot(uint32 frameCount, BailoutKind kind, bool resumeAfter)
 {
     nframes_ = frameCount;
     framesWritten_ = 0;
@@ -465,10 +472,15 @@ SnapshotWriter::startSnapshot(uint32 frameCount, BailoutKind kind)
     IonSpew(IonSpew_Snapshots, "starting snapshot with frameCount %u, bailout kind %u",
             frameCount, kind);
     JS_ASSERT(frameCount > 0);
-    JS_ASSERT(((frameCount << BAILOUT_KIND_BITS) >> BAILOUT_KIND_BITS) == frameCount);
-    JS_ASSERT((1 << BAILOUT_KIND_BITS) > uint32(kind));
-    writer_.writeUnsigned((frameCount << BAILOUT_KIND_BITS) | uint32(kind));
+    JS_ASSERT(frameCount < (1 << BAILOUT_FRAMECOUNT_BITS));
+    JS_ASSERT(uint32(kind) < (1 << BAILOUT_KIND_BITS));
 
+    uint32 bits = (uint32(kind) << BAILOUT_KIND_SHIFT) |
+                  (frameCount << BAILOUT_FRAMECOUNT_SHIFT);
+    if (resumeAfter)
+        bits |= (1 << BAILOUT_RESUME_SHIFT);
+
+    writer_.writeUnsigned(bits);
     return lastStart_;
 }
 

@@ -204,6 +204,10 @@ class IonActivation
         JS_ASSERT(bailout_);
         return maybeTakeBailout();
     }
+    BailoutClosure *bailout() const {
+        JS_ASSERT(bailout_);
+        return bailout_;
+    }
     JSCompartment *compartment() const {
         return compartment_;
     }
