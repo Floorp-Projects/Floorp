@@ -90,13 +90,14 @@ public:
 
   void SetTransformation(float aScale, nsIntPoint aScrollOffset);
   void AsyncRender();
+
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread(::base::Thread &aCompositorThread);
+  void SchedulePauseOnCompositorThread(::base::Thread &aCompositorThread);
+  void ScheduleResumeOnCompositorThread(::base::Thread &aCompositorThread);
 
   void PauseComposition();
   void ResumeComposition();
-  void SchedulePauseOnCompositorThread(::base::Thread &aCompositorThread);
-  void ScheduleResumeOnCompositorThread(::base::Thread &aCompositorThread);
 
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
@@ -105,9 +106,6 @@ protected:
 private:
   void ScheduleComposition();
   void Composite();
-#ifdef OMTC_TEST_ASYNC_SCROLLING
-  void TestScroll();
-#endif
   void TransformShadowTree(Layer* aLayer, const ViewTransform& aTransform,
                            float aTempScaleDiffX = 1.0,
                            float aTempScaleDiffY = 1.0);

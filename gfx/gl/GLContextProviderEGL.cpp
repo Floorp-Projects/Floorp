@@ -1999,7 +1999,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         return nsnull;
     }
 
-#ifdef MOZ_WIDGET_ANDROID
+#ifdef MOZ_JAVA_COMPOSITOR
     printf_stderr("... registering OGL compositor with bridge\n");
     mozilla::AndroidBridge::Bridge()->RegisterCompositor();
 #endif
