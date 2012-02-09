@@ -716,10 +716,6 @@ menuitem.bookmark-item {
   margin: 1px 3px;
 }
 
-@navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  -moz-border-start-style: none;
-}
-
 @navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-locale-dir(ltr),
 @navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-locale-dir(rtl) {
   border-top-right-radius: 0;
@@ -730,6 +726,22 @@ menuitem.bookmark-item {
 @navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker:-moz-locale-dir(ltr) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+@navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menu-dropmarker,
+@navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
+}
+
+@navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  -moz-border-start: none;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+@navbarLargeIcons@ .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
+  margin-top: 0;
+  -moz-margin-start: 2px;
 }
 
 @navbarLargeIcons@ .toolbarbutton-1[disabled="true"] {
@@ -2052,8 +2064,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #alltabs-button[type="menu"] {
-  list-style-image: url("chrome://browser/skin/mainwindow-dropdown-arrow.png");
-  -moz-image-region: rect(0, 13px, 11px, 0);
+  list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
+  -moz-image-region: auto;
 }
 
 %ifdef WINSTRIPE_AERO
@@ -2061,11 +2073,11 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #TabsToolbar > toolbarpaletteitem > #alltabs-button[type="menu"]:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 %endif
 #alltabs-button[type="menu"]:-moz-lwtheme-brighttext {
-  list-style-image: url(chrome://browser/skin/mainwindow-dropdown-arrow-inverted.png);
+  list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
 }
 
 #alltabs-button[type="menu"] > .toolbarbutton-icon {
-  margin: 3px 0;
+  margin: 0 2px;
 }
 
 #alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
