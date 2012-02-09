@@ -113,7 +113,8 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
         GeckoAppShell.registerGeckoEventListener("Checkerboard:Toggle", this);
 
-        sendResizeEventIfNecessary();
+        // XXX: Review pcwalton. This signature changed on m-c, should force = false here?
+        sendResizeEventIfNecessary(false);
     }
 
     @Override
@@ -188,12 +189,6 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
             originChanged = !origin.equals(oldOrigin);
         }
 
-        if (originChanged) {
-            Point tileOrigin = new Point((origin.x / TILE_SIZE.width) * TILE_SIZE.width,
-                                         (origin.y / TILE_SIZE.height) * TILE_SIZE.height);
-            mRenderOffset.set(origin.x - tileOrigin.x, origin.y - tileOrigin.y);
-        }
-
         // If the window size has changed, reallocate the buffer to match.
         if (mBufferSize.width != width || mBufferSize.height != height) {
             mBufferSize = new IntSize(width, height);
@@ -226,9 +221,7 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
             return;
         }
 
-        updatedRect.offset(mRenderOffset.x, mRenderOffset.y);
         ((MultiTileLayer)mTileLayer).invalidate(updatedRect);
-        ((MultiTileLayer)mTileLayer).setRenderOffset(mRenderOffset);
     }
 
     private void copyPixelsFromMultiTileLayer(Bitmap target) {

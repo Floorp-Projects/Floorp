@@ -844,7 +844,10 @@ nsWindow::BindToTexture()
 bool
 nsWindow::HasDirectTexture()
 {
-  return false;
+  // XXX: Checking fix me
+  // This is currently causes some crashes so disable it for now
+  if (true)
+    return false;
 
   static bool sTestedDirectTexture = false;
   static bool sHasDirectTexture = false;
