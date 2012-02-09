@@ -293,7 +293,7 @@ public class Tabs implements GeckoEventListener {
                 String data = message.getString("data");
                 if (data.length() < 22)
                     return;
-                byte[] compressed = GeckoAppShell.decodeBase64(data.substring(22));
+                byte[] compressed = GeckoAppShell.decodeBase64(data.substring(22), GeckoAppShell.BASE64_DEFAULT);
                 GeckoApp.mAppContext.processThumbnail(tab, null, compressed);
             } else if (event.equals("Session:RestoreBegin")) {
                 mRestoringSession = true;

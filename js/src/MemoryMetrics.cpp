@@ -126,10 +126,12 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         } else {
             cStats->gcHeapObjectsNonFunction += thingSize;
         }
-        size_t slotsSize, elementsSize;
-        obj->sizeOfExcludingThis(rtStats->mallocSizeOf, &slotsSize, &elementsSize);
+        size_t slotsSize, elementsSize, miscSize;
+        obj->sizeOfExcludingThis(rtStats->mallocSizeOf, &slotsSize,
+                                 &elementsSize, &miscSize);
         cStats->objectSlots += slotsSize;
         cStats->objectElements += elementsSize;
+        cStats->objectMisc += miscSize;
         break;
     }
     case JSTRACE_STRING:
@@ -262,7 +264,8 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
         rtStats->totalObjects += cStats.gcHeapObjectsNonFunction +
                                  cStats.gcHeapObjectsFunction +
                                  cStats.objectSlots +
-                                 cStats.objectElements;
+                                 cStats.objectElements +
+                                 cStats.objectMisc;
         rtStats->totalShapes  += cStats.gcHeapShapesTree +
                                  cStats.gcHeapShapesDict +
                                  cStats.gcHeapShapesBase +

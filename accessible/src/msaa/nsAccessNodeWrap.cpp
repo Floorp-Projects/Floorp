@@ -396,9 +396,8 @@ __try {
     aScrollTopLeft ? nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT :
                      nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT;
 
-  nsresult rv = ScrollTo(scrollType);
-  if (NS_SUCCEEDED(rv))
-    return S_OK;
+  ScrollTo(scrollType);
+  return S_OK;
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return E_FAIL;
@@ -554,10 +553,7 @@ __try {
   *aLanguage = NULL;
 
   nsAutoString language;
-  if (NS_FAILED(GetLanguage(language))) {
-    return E_FAIL;
-  }
-
+  Language(language);
   if (language.IsEmpty())
     return S_FALSE;
 
@@ -575,7 +571,7 @@ nsAccessNodeWrap::get_localInterface(
     /* [out] */ void __RPC_FAR *__RPC_FAR *localInterface)
 {
 __try {
-  *localInterface = static_cast<nsIAccessNode*>(this);
+  *localInterface = static_cast<nsAccessNode*>(this);
   NS_ADDREF_THIS();
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;

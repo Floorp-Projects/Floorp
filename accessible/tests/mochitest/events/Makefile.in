@@ -45,8 +45,6 @@ relativesrcdir  = accessible/events
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# test_scroll.xul disabled for misusing <tabbrowser> (bug 715857)
-
 _TEST_FILES =\
 		docload_wnd.html \
 		focus.html \

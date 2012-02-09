@@ -79,7 +79,7 @@ let PlacesDBUtils = {
   _executeTasks: function PDBU__executeTasks(aTasks)
   {
     if (PlacesDBUtils._isShuttingDown) {
-      tasks.log("- We are shutting down. Will not schedule the tasks.");
+      aTasks.log("- We are shutting down. Will not schedule the tasks.");
       aTasks.clear();
     }
 
@@ -88,6 +88,14 @@ let PlacesDBUtils = {
       task.call(PlacesDBUtils, aTasks);
     }
     else {
+      // All tasks have been completed.
+      // Telemetry the time it took for maintenance, if a start time exists.
+      if (aTasks._telemetryStart) {
+        Services.telemetry.getHistogramById("PLACES_IDLE_MAINTENANCE_TIME_MS")
+                          .add(Date.now() - aTasks._telemetryStart);
+        aTasks._telemetryStart = 0;
+      }
+
       if (aTasks.callback) {
         let scope = aTasks.scope || Cu.getGlobalForObject(aTasks.callback);
         aTasks.callback.call(scope, aTasks.messages);
@@ -128,6 +136,7 @@ let PlacesDBUtils = {
     , this.checkCoherence
     , this._refreshUI
     ]);
+    tasks._telemetryStart = Date.now();
     tasks.callback = aCallback;
     tasks.scope = aScope;
     this._executeTasks(tasks);
@@ -289,7 +298,7 @@ let PlacesDBUtils = {
     let tasks = new Tasks(aTasks);
     tasks.log("> Coherence check");
 
-    let stmts = this._getBoundCoherenceStatements();
+    let stmts = PlacesDBUtils._getBoundCoherenceStatements();
     DBConn.executeAsync(stmts, stmts.length, {
       handleError: PlacesDBUtils._handleError,
       handleResult: function () {},
@@ -951,7 +960,22 @@ let PlacesDBUtils = {
           let placesPageCount = probeValues.PLACES_PAGES_COUNT;
           return Math.round((dbPageSize * aDbPageCount) / placesPageCount);
         }
-      }
+      },
+
+      { histogram: "PLACES_ANNOS_BOOKMARKS_COUNT",
+        query:     "SELECT count(*) FROM moz_items_annos" },
+
+      // LENGTH is not a perfect measure, since it returns the number of bytes
+      // only for BLOBs, the number of chars for anything else.  Though it's
+      // the best approximation we have.
+      { histogram: "PLACES_ANNOS_BOOKMARKS_SIZE_KB",
+        query:     "SELECT SUM(LENGTH(content))/1024 FROM moz_items_annos" },
+
+      { histogram: "PLACES_ANNOS_PAGES_COUNT",
+        query:     "SELECT count(*) FROM moz_annos" },
+
+      { histogram: "PLACES_ANNOS_PAGES_SIZE_KB",
+        query:     "SELECT SUM(LENGTH(content))/1024 FROM moz_annos" },
     ];
 
     let params = {
@@ -1007,6 +1031,22 @@ let PlacesDBUtils = {
     PlacesDBUtils._executeTasks(tasks);
   },
 
+  /**
+   * Runs a list of tasks, notifying log messages to the callback.
+   *
+   * @param aTasks
+   *        Array of tasks to be executed, in form of pointers to methods in
+   *        this module.
+   * @param [optional] aCallback
+   *        Callback to be invoked when done.  It will receive an array of
+   *        log messages.  If not specified the log will be printed to the
+   *        Error Console.
+   */
+  runTasks: function PDBU_runTasks(aTasks, aCallback) {
+    let tasks = new Tasks(aTasks);
+    tasks.callback = aCallback;
+    PlacesDBUtils._executeTasks(tasks);
+  }
 };
 
 /**
@@ -1021,11 +1061,15 @@ function Tasks(aTasks)
     if (Array.isArray(aTasks)) {
       this._list = aTasks.slice(0, aTasks.length);
     }
-    else if ("list" in aTasks) {
+    // This supports passing in a Tasks-like object, with a "list" property,
+    // for compatibility reasons.
+    else if (typeof(aTasks) == "object" &&
+             (Tasks instanceof Tasks || "list" in aTasks)) {
       this._list = aTasks.list;
       this._log = aTasks.messages;
       this.callback = aTasks.callback;
       this.scope = aTasks.scope;
+      this._telemetryStart = aTasks._telemetryStart;
     }
   }
 }
@@ -1035,6 +1079,7 @@ Tasks.prototype = {
   _log: [],
   callback: null,
   scope: null,
+  _telemetryStart: 0,
 
   /**
    * Adds a task to the top of the list.

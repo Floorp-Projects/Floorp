@@ -130,8 +130,11 @@ function triggerCommand(aClick, aEvent) {
   gURLBar.value = TEST_VALUE;
   gURLBar.focus();
 
-  if (aClick)
+  if (aClick) {
+    is(gURLBar.getAttribute("pageproxystate"), "invalid",
+       "page proxy state must be invalid for go button to be visible");
     EventUtils.synthesizeMouseAtCenter(gGoButton, aEvent); 
+  }
   else
     EventUtils.synthesizeKey("VK_RETURN", aEvent);
 }

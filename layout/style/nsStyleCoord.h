@@ -57,6 +57,7 @@ enum nsStyleUnit {
   eStyleUnit_Degree       = 12,     // (float) angle in degrees
   eStyleUnit_Grad         = 13,     // (float) angle in grads
   eStyleUnit_Radian       = 14,     // (float) angle in radians
+  eStyleUnit_Turn         = 15,     // (float) angle in turns
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
   eStyleUnit_Integer      = 30,     // (int) value is simple integer
   eStyleUnit_Enumerated   = 32,     // (int) value has enumerated meaning
@@ -120,7 +121,7 @@ public:
   }
 
   bool IsAngleValue() const {
-    return eStyleUnit_Degree <= mUnit && mUnit <= eStyleUnit_Radian;
+    return eStyleUnit_Degree <= mUnit && mUnit <= eStyleUnit_Turn;
   }
 
   bool IsCalcUnit() const {
@@ -323,8 +324,8 @@ inline float nsStyleCoord::GetFactorValue() const
 inline float nsStyleCoord::GetAngleValue() const
 {
   NS_ASSERTION(mUnit >= eStyleUnit_Degree &&
-               mUnit <= eStyleUnit_Radian, "not an angle value");
-  if (mUnit >= eStyleUnit_Degree && mUnit <= eStyleUnit_Radian) {
+               mUnit <= eStyleUnit_Turn, "not an angle value");
+  if (mUnit >= eStyleUnit_Degree && mUnit <= eStyleUnit_Turn) {
     return mValue.mFloat;
   }
   return 0.0f;
