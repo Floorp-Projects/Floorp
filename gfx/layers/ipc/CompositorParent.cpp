@@ -185,7 +185,7 @@ CompositorParent::Composite()
 #ifdef MOZ_WIDGET_ANDROID
   Layer* layer = GetPrimaryScrollableLayer();
 #else
-  Layer* root = mLayerManager->GetRoot();
+  Layer* layer = mLayerManager->GetRoot();
 #endif
   layer->AsShadowLayer()->SetShadowTransform(worldTransform);
 
