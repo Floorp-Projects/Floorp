@@ -46,6 +46,13 @@
 
 #define ONE_BYTE_TABLE_SIZE 256
 
+inline bool WillOverrun(PRUnichar* aDest, PRUnichar* aDestEnd, PRUint32 aLength)
+{
+  NS_ASSERTION(aDest <= aDestEnd, "Pointer overrun even before check");
+  return ((aDestEnd - aDest) < aLength);
+}
+#define CHECK_OVERRUN(dest, destEnd, length) (WillOverrun(dest, destEnd, length))
+
 #ifdef NS_DEBUG
 // {7AFC9F0A-CFE1-44ea-A755-E3B86AB1226E}
 #define NS_IBASICDECODER_IID \
