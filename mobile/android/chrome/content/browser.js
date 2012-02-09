@@ -852,27 +852,20 @@ var BrowserApp = {
         top: focusedRect.top - tab.viewportExcess.y,
         bottom: focusedRect.bottom - tab.viewportExcess.y
       };
-      let transformChanged = false;
       if (focusedRect.right >= visibleContentWidth && focusedRect.left > 0) {
         // the element is too far off the right side, so we need to scroll to the right more
         tab.viewportExcess.x += Math.min(focusedRect.left, focusedRect.right - visibleContentWidth);
-        transformChanged = true;
       } else if (focusedRect.left < 0) {
         // the element is too far off the left side, so we need to scroll to the left more
         tab.viewportExcess.x += focusedRect.left;
-        transformChanged = true;
       }
       if (focusedRect.bottom >= visibleContentHeight && focusedRect.top > 0) {
         // the element is too far down, so we need to scroll down more
         tab.viewportExcess.y += Math.min(focusedRect.top, focusedRect.bottom - visibleContentHeight);
-        transformChanged = true;
       } else if (focusedRect.top < 0) {
         // the element is too far up, so we need to scroll up more
         tab.viewportExcess.y += focusedRect.top;
-        transformChanged = true;
       }
-      if (transformChanged)
-        tab.updateTransform();
       // finally, let java know where we ended up
       tab.sendViewportUpdate();
     }
@@ -1431,7 +1424,6 @@ Tab.prototype = {
     this.setBrowserSize(980, 480);
     this.browser.style.width = gScreenWidth + "px";
     this.browser.style.height = gScreenHeight + "px";
-    this.browser.style.MozTransformOrigin = "0 0";
     this.vbox.appendChild(this.browser);
 
     this.browser.stop();
@@ -1566,27 +1558,19 @@ Tab.prototype = {
     this._viewport.height = gScreenHeight = aViewport.height;
     dump("### gScreenWidth = " + gScreenWidth + "\n");
 
-    let transformChanged = false;
-
     if ((aViewport.offsetX != this._viewport.offsetX) ||
         (excessX != this.viewportExcess.x)) {
       this._viewport.offsetX = aViewport.offsetX;
       this.viewportExcess.x = excessX;
-      transformChanged = true;
     }
     if ((aViewport.offsetY != this._viewport.offsetY) ||
         (excessY != this.viewportExcess.y)) {
       this._viewport.offsetY = aViewport.offsetY;
       this.viewportExcess.y = excessY;
-      transformChanged = true;
     }
     if (Math.abs(aViewport.zoom - this._viewport.zoom) >= 1e-6) {
       this._viewport.zoom = aViewport.zoom;
-      transformChanged = true;
     }
-
-    if (transformChanged)
-      this.updateTransform();
   },
 
   screenshot: function(aSrc, aDst) {
@@ -1615,20 +1599,6 @@ Tab.prototype = {
       Services.tm.mainThread.dispatch(function() {
 	  BrowserApp.doNextScreenshot()
       }, Ci.nsIThread.DISPATCH_NORMAL);
-  },
-
-  updateTransform: function() {
-    let hasZoom = (Math.abs(this._viewport.zoom - 1.0) >= 1e-6);
-    let x = this._viewport.offsetX + Math.round(-this.viewportExcess.x * this._viewport.zoom);
-    let y = this._viewport.offsetY + Math.round(-this.viewportExcess.y * this._viewport.zoom);
-
-    let transform =
-      "translate(" + x + "px, " +
-                     y + "px)";
-
-    // FIXME: Use nsIDOMWindowUtils::SetResolution(this._viewport.zoom * k) for some k here.
-
-    this.browser.style.MozTransform = transform;
   },
 
   get viewport() {
