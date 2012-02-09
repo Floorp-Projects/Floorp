@@ -294,7 +294,7 @@ MSG_DEF(JSMSG_WRONG_CONSTRUCTOR,      207, 1, JSEXN_TYPEERR, "wrong constructor 
 MSG_DEF(JSMSG_BAD_GENERATOR_RETURN,   208, 1, JSEXN_TYPEERR, "generator function {0} returns a value")
 MSG_DEF(JSMSG_BAD_ANON_GENERATOR_RETURN, 209, 0, JSEXN_TYPEERR, "anonymous generator function returns a value")
 MSG_DEF(JSMSG_NAME_AFTER_FOR_PAREN,   210, 0, JSEXN_SYNTAXERR, "missing name after for (")
-MSG_DEF(JSMSG_IN_AFTER_FOR_NAME,      211, 0, JSEXN_SYNTAXERR, "missing in after for")
+MSG_DEF(JSMSG_IN_AFTER_FOR_NAME,      211, 0, JSEXN_SYNTAXERR, "missing 'in' or 'of' after for")
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,  212, 2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")
 MSG_DEF(JSMSG_KEYWORD_NOT_NS,         213, 0, JSEXN_SYNTAXERR, "keyword is used as namespace")
 MSG_DEF(JSMSG_BAD_GENERATOR_YIELD,    214, 1, JSEXN_TYPEERR, "yield from closing generator {0}")
@@ -374,3 +374,4 @@ MSG_DEF(JSMSG_CANT_WATCH_PROP,        287, 0, JSEXN_TYPEERR, "properties whose n
 MSG_DEF(JSMSG_CSP_BLOCKED_EVAL,       288, 0, JSEXN_ERR, "call to eval() blocked by CSP")
 MSG_DEF(JSMSG_DEBUG_NO_SCOPE_OBJECT,  289, 0, JSEXN_TYPEERR, "declarative Environments don't have binding objects")
 MSG_DEF(JSMSG_EMPTY_CONSEQUENT,       290, 0, JSEXN_SYNTAXERR, "mistyped ; after conditional?")
+MSG_DEF(JSMSG_NOT_ITERABLE,           291, 1, JSEXN_TYPEERR, "{0} is not iterable")

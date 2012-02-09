@@ -69,7 +69,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessNode
+  // nsIAccessible
   NS_SCRIPTABLE NS_IMETHOD GetDOMNode(nsIDOMNode** aDOMNode);
   NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument);
   NS_SCRIPTABLE NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument);
@@ -83,8 +83,6 @@ public:
                                                     const nsAString& aPropertyName,
                                                     nsIDOMCSSPrimitiveValue** aValue NS_OUTPARAM);
   NS_SCRIPTABLE NS_IMETHOD GetLanguage(nsAString& aLanguage);
-
-  // nsIAccessible
   NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetNextSibling(nsIAccessible **aNextSibling);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);

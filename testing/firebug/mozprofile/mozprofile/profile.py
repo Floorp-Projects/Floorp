@@ -234,6 +234,8 @@ class FirefoxProfile(Profile):
                    'extensions.update.enabled'    : False,
                    # Don't open a dialog to show available add-on updates
                    'extensions.update.notifyUser' : False,
+                   # Suppress automatic safe mode after crashes
+                   'toolkit.startup.max_resumed_crashes' : -1,
                    }
 
 class ThunderbirdProfile(Profile):

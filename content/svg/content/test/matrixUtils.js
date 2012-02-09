@@ -78,7 +78,7 @@ function cmpMatrix(a, b, msg)
      a.e == b.e &&
      a.f == b.f,
      msg + " - got " + formatMatrix(a)
-         + ", expected" + formatMatrix(b));
+         + ", expected " + formatMatrix(b));
 }
 
 function roughCmpMatrix(a, b, msg)
@@ -96,7 +96,7 @@ function roughCmpMatrix(a, b, msg)
      Math.abs(b.e - a.e) < tolerance &&
      Math.abs(b.f - a.f) < tolerance,
      msg + " - got " + formatMatrix(a)
-         + ", expected" + formatMatrix(b));
+         + ", expected " + formatMatrix(b));
 }
 
 function formatMatrix(m)

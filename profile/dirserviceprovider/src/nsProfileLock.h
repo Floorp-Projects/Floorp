@@ -89,9 +89,15 @@ public:
      * signal, set aFatalSignal to true.
      */
     nsresult                Unlock(bool aFatalSignal = false);
-        
+
+    /**
+     * Get the modification time of a replaced profile lock, otherwise 0.
+     */
+    nsresult                GetReplacedLockTime(PRInt64* aResult);
+
 private:
     bool                    mHaveLock;
+    PRInt64                 mReplacedLockTime;
 
 #if defined (XP_WIN)
     HANDLE                  mLockFileHandle;
@@ -114,13 +120,13 @@ private:
                                                );
     static PRCList          mPidLockList;
 
-    nsresult                LockWithFcntl(const nsACString& lockFilePath);
+    nsresult                LockWithFcntl(nsILocalFile *aLockFile);
 
     /**
      * @param aHaveFcntlLock if true, we've already acquired an fcntl lock so this
      * lock is merely an "obsolete" lock to keep out old Firefoxes
      */
-    nsresult                LockWithSymlink(const nsACString& lockFilePath, bool aHaveFcntlLock);
+    nsresult                LockWithSymlink(nsILocalFile *aLockFile, bool aHaveFcntlLock);
 
     char*                   mPidLockFileName;
     int                     mLockFileDesc;

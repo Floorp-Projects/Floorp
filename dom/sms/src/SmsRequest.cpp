@@ -51,7 +51,7 @@ namespace sms {
 NS_IMPL_CYCLE_COLLECTION_CLASS(SmsRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsRequest,
-                                                  nsDOMEventTargetWrapperCache)
+                                                  nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(success)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(error)
@@ -59,7 +59,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsRequest,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsRequest,
-                                                nsDOMEventTargetWrapperCache)
+                                                nsDOMEventTargetHelper)
   if (tmp->mResultRooted) {
     tmp->mResult = JSVAL_VOID;
     tmp->UnrootResult();
@@ -70,7 +70,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsRequest,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(SmsRequest,
-                                               nsDOMEventTargetWrapperCache)
+                                               nsDOMEventTargetHelper)
   if (JSVAL_IS_GCTHING(tmp->mResult)) {
     void *gcThing = JSVAL_TO_GCTHING(tmp->mResult);
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mResult")
@@ -81,10 +81,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SmsRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozSmsRequest)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozSmsRequest)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozSmsRequest)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(SmsRequest, nsDOMEventTargetWrapperCache)
-NS_IMPL_RELEASE_INHERITED(SmsRequest, nsDOMEventTargetWrapperCache)
+NS_IMPL_ADDREF_INHERITED(SmsRequest, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(SmsRequest, nsDOMEventTargetHelper)
 
 NS_IMPL_EVENT_HANDLER(SmsRequest, success)
 NS_IMPL_EVENT_HANDLER(SmsRequest, error)

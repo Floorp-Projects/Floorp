@@ -181,6 +181,13 @@ Section "MaintenanceService"
   ; not via calling its 'install' cmdline which works by version comparison.
   CopyFiles "$EXEDIR\maintenanceservice.exe" "$INSTDIR\$TempMaintServiceName"
 
+  ; The updater.ini file is only used when performing an install or upgrade,
+  ; and only if that install or upgrade is successful.  If an old updater.ini
+  ; happened to be copied into the maintenance service installation directory
+  ; but the service was not newer, the updater.ini file would be unused.
+  ; It is used to fill the description of the service on success.
+  CopyFiles "$EXEDIR\updater.ini" "$INSTDIR\updater.ini"
+
   ; Install the application maintenance service.
   ; If a service already exists, the command line parameter will stop the
   ; service and only install itself if it is newer than the already installed
@@ -252,6 +259,8 @@ Section "Uninstall"
   ; Delete the service so that no updates will be attempted
   nsExec::Exec '"$INSTDIR\maintenanceservice.exe" uninstall'
 
+  Push "$INSTDIR\updater.ini"
+  Call un.RenameDelete
   Push "$INSTDIR\maintenanceservice.exe"
   Call un.RenameDelete
   Push "$INSTDIR\maintenanceservice_tmp.exe"

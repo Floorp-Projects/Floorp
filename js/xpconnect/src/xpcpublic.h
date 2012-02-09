@@ -216,6 +216,9 @@ bool StringToJsval(JSContext *cx, nsString &str, JS::Value *rval);
 void *GetCompartmentName(JSContext *cx, JSCompartment *c);
 void DestroyCompartmentName(void *string);
 
+#ifdef DEBUG
+void DumpJSHeap(FILE* file);
+#endif
 } // namespace xpc
 
 class nsIMemoryMultiReporterCallback;

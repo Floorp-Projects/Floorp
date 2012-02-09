@@ -322,6 +322,9 @@ pref("nglayout.events.dispatchLeftClickOnly", true);
 // whether or not to draw images while dragging
 pref("nglayout.enable_drag_images", true);
 
+// enable/disable paint flashing --- useful for debugging
+pref("nglayout.debug.paint_flashing", false);
+
 // scrollbar snapping region
 // 0 - off
 // 1 and higher - slider thickness multiple
@@ -804,7 +807,7 @@ pref("network.http.connection-retry-timeout", 250);
 pref("network.http.fast-fallback-to-IPv4", true);
 
 // Try and use SPDY when using SSL
-pref("network.http.spdy.enabled", false);
+pref("network.http.spdy.enabled", true);
 pref("network.http.spdy.chunk-size", 4096);
 pref("network.http.spdy.timeout", 180);
 pref("network.http.spdy.coalesce-hostnames", true);

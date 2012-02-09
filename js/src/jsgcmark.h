@@ -244,17 +244,17 @@ Mark(JSTracer *trc, const MarkablePtr<ion::IonCode> &code, const char *name)
 }
 
 inline bool
-IsMarked(JSContext *cx, const js::Value &v)
+IsMarked(const js::Value &v)
 {
     if (v.isMarkable())
-        return !IsAboutToBeFinalized(cx, v);
+        return !IsAboutToBeFinalized(v);
     return true;
 }
 
 inline bool
-IsMarked(JSContext *cx, JSObject *o)
+IsMarked(JSObject *o)
 {
-    return !IsAboutToBeFinalized(cx, o);
+    return !IsAboutToBeFinalized(o);
 }
 
 inline bool
@@ -264,9 +264,9 @@ IsMarked(JSContext *cx, ion::IonCode *code)
 }
 
 inline bool
-IsMarked(JSContext *cx, Cell *cell)
+IsMarked(Cell *cell)
 {
-    return !IsAboutToBeFinalized(cx, cell);
+    return !IsAboutToBeFinalized(cell);
 }
 
 } /* namespace gc */
