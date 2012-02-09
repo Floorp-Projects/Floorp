@@ -134,11 +134,14 @@ CompositorParent::ScheduleComposition()
     return;
   }
 
-  TimeDuration delta = mozilla::TimeStamp::Now() - mLastCompose;
+  bool initialComposition = mLastCompose.IsNull();
+  TimeDuration delta;
+  if (!initialComposition)
+    delta = mozilla::TimeStamp::Now() - mLastCompose;
 
   printf_stderr("Schedule composition\n");
   mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-  if (delta.ToMilliseconds() < 15) {
+  if (!initialComposition && delta.ToMilliseconds() < 15) {
     MessageLoop::current()->PostDelayedTask(FROM_HERE, mCurrentCompositeTask, 15 - delta.ToMilliseconds());
   } else {
     MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
