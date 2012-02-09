@@ -514,7 +514,7 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
 }
 
 bool
-CodeGeneratorARM::visitBitNot(LBitNot *ins)
+CodeGeneratorARM::visitBitNotI(LBitNotI *ins)
 {
     const LAllocation *input = ins->getOperand(0);
     const LDefinition *dest = ins->getDef(0);

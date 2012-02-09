@@ -817,6 +817,16 @@ GreaterThanOrEqualOperation(JSContext *cx, const Value &lhs, const Value &rhs, b
     RELATIONAL_OP(>=);
 }
 
+static JS_ALWAYS_INLINE bool
+BitNot(JSContext *cx, const Value &in, int *out)
+{
+    int i;
+    if (!ToInt32(cx, in, &i))
+        return false;
+    *out = ~i;
+    return true;
+}
+
 #undef RELATIONAL_OP
 
 }  /* namespace js */

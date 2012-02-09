@@ -1540,7 +1540,7 @@ class MBitNot
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {
-        if (specialization_ >= MIRType_Object)
+        if (specialization_ == MIRType_None)
             return AliasSet::Store(AliasSet::Any);
         return AliasSet::None();
     }

@@ -2461,9 +2461,8 @@ END_CASE(JSOP_NOT)
 BEGIN_CASE(JSOP_BITNOT)
 {
     int32_t i;
-    if (!ToInt32(cx, regs.sp[-1], &i))
+    if (!BitNot(cx, regs.sp[-1], &i))
         goto error;
-    i = ~i;
     regs.sp[-1].setInt32(i);
 }
 END_CASE(JSOP_BITNOT)
