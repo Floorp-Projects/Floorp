@@ -538,11 +538,13 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     masm.checkStackAlignment();
 
-    // Guard that calleereg is actually a function object.
-    masm.loadObjClass(calleereg, nargsreg);
-    masm.cmpPtr(nargsreg, ImmWord(&js::FunctionClass));
-    if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
-        return false;
+    // Unless already known, guard that calleereg is actually a function object.
+    if (!call->hasSingleTarget()) {
+        masm.loadObjClass(calleereg, nargsreg);
+        masm.cmpPtr(nargsreg, ImmWord(&js::FunctionClass));
+        if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
+            return false;
+    }
 
     // As a temporary hack for JSOP_NEW support, always call out to InvokeConstructor
     // in the case of a constructing call.
@@ -574,8 +576,14 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // Guard that calleereg is a non-native function:
     // Non-native iff (callee->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
     // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
-    masm.branchTest32(Assembler::Zero, Address(calleereg, offsetof(JSFunction, flags)),
-                      Imm32(JSFUN_INTERPRETED), &invoke);
+    if (!call->hasSingleTarget()) {
+        masm.branchTest32(Assembler::Zero, Address(calleereg, offsetof(JSFunction, flags)),
+                          Imm32(JSFUN_INTERPRETED), &invoke);
+    } else {
+        // Native single targets are handled by LCallNative.
+        JS_ASSERT(!call->getSingleTarget()->isNative());
+    }
+
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
@@ -594,33 +602,34 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     Label thunk, rejoin;
 
-    // Check whether the provided arguments satisfy target argc.
-    // XXX: load16 support on ARM (more involved than you'd expect).
-#ifdef JS_CPU_ARM
-    masm.ma_ldrh(EDtrAddr(calleereg, EDtrOffImm(offsetof(JSFunction, nargs))),
-                 nargsreg);
-#else
-    masm.load16(Address(calleereg, offsetof(JSFunction, nargs)), nargsreg);
-#endif
-    masm.cmp32(nargsreg, Imm32(call->nargs()));
-    masm.j(Assembler::Above, &thunk);
+    if (call->hasSingleTarget()) {
+        // Missing arguments must have been explicitly appended by the IonBuilder.
+        JS_ASSERT(call->getSingleTarget()->nargs <= call->nargs());
+    } else {
+        // Check whether the provided arguments satisfy target argc.
+        masm.load16(Address(calleereg, offsetof(JSFunction, nargs)), nargsreg);
+        masm.cmp32(nargsreg, Imm32(call->nargs()));
+        masm.j(Assembler::Above, &thunk);
+    }
 
     // No argument fixup needed. Load the start of the target IonCode.
     {
         masm.movePtr(Address(objreg, offsetof(IonScript, method_)), objreg);
         masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
-        masm.jump(&rejoin);
     }
 
     // Argument fixup needed. Get ready to call the argumentsRectifier.
-    {
+    if (!call->hasSingleTarget()) {
+        // Skip this thunk unless an explicit jump target.
+        masm.jump(&rejoin);
+        masm.bind(&thunk);
+
         // Hardcode the address of the argumentsRectifier code.
         IonCompartment *ion = gen->ionCompartment();
         IonCode *argumentsRectifier = ion->getArgumentsRectifier(gen->cx);
         if (!argumentsRectifier)
             return false;
 
-        masm.bind(&thunk);
         JS_ASSERT(ArgumentsRectifierReg != objreg);
         masm.move32(Imm32(call->nargs()), ArgumentsRectifierReg);
         masm.movePtr(ImmWord(argumentsRectifier->raw()), objreg);
