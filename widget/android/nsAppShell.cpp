@@ -61,6 +61,8 @@
 #include <pthread.h>
 #include <wchar.h>
 
+#include "mozilla/dom/ScreenOrientation.h"
+
 #ifdef MOZ_ANDROID_HISTORY
 #include "nsAndroidHistory.h"
 #endif
@@ -480,6 +482,11 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     case AndroidGeckoEvent::NETWORK_CHANGED: {
         hal::NotifyNetworkChange(hal::NetworkInformation(curEvent->Bandwidth(),
                                                          curEvent->CanBeMetered()));
+        break;
+    }
+
+    case AndroidGeckoEvent::SCREENORIENTATION_CHANGED: {
+        hal::NotifyScreenOrientationChange(static_cast<dom::ScreenOrientation>(curEvent->ScreenOrientation()));
         break;
     }
 
