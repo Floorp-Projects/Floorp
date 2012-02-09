@@ -1153,6 +1153,12 @@ MacroAssemblerARMCompat::movePtr(const Address &src, const Register &dest)
 }
 
 void
+MacroAssemblerARMCompat::load16(const Address &address, const Register &dest)
+{
+    ma_dataTransferN(IsLoad, 16, false, address.base, Imm32(address.offset), dest);
+}
+
+void
 MacroAssemblerARMCompat::load32(const Address &address, const Register &dest)
 {
     loadPtr(address, dest);

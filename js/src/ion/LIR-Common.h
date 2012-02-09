@@ -275,14 +275,19 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
     // Zero for a function without arguments.
     uint32 argslot_;
 
+    // Known single target. If unknown or polymorphic, then NULL.
+    JSFunction *target_;
+
   public:
     LIR_HEADER(CallGeneric);
 
-    LCallGeneric(const LAllocation &func,
+    LCallGeneric(JSFunction *target,
+                 const LAllocation &func,
                  uint32 argslot,
                  const LDefinition &nargsreg,
                  const LDefinition &tmpobjreg)
-      : argslot_(argslot)
+      : argslot_(argslot),
+        target_(target)
     {
         setOperand(0, func);
         setTemp(0, nargsreg);
@@ -299,6 +304,14 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
     uint32 nargs() const {
         JS_ASSERT(mir()->argc() >= 1);
         return mir()->argc() - 1; // |this| is not a formal argument.
+    }
+
+    bool hasSingleTarget() const {
+        return target_ != NULL;
+    }
+    JSFunction *getSingleTarget() const {
+        JS_ASSERT(hasSingleTarget());
+        return target_;
     }
 
     const LAllocation *getFunction() {

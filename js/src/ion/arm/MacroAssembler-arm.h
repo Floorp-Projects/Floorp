@@ -731,6 +731,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(const ImmGCPtr &imm, const Register &dest);
     void movePtr(const Address &src, const Register &dest);
 
+    void load16(const Address &address, const Register &dest);
     void load32(const Address &address, const Register &dest);
     void load32(const ImmWord &imm, const Register &dest);
     void loadPtr(const Address &address, const Register &dest);
