@@ -146,7 +146,7 @@ public class GeckoAppShell
     private static native void reportJavaCrash(String stackTrace);
 
     public static void notifyUriVisited(String uri) {
-        sendEventToGecko(new GeckoEvent(GeckoEvent.VISITED, uri));
+        sendEventToGecko(GeckoEvent.createVisitedEvent(uri));
     }
 
     public static native void processNextNativeEvent();
@@ -506,7 +506,7 @@ public class GeckoAppShell
             public boolean onTouch(View view, MotionEvent event) {
                 if (event == null)
                     return true;
-                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
                 return true;
             }
         });
@@ -574,8 +574,7 @@ public class GeckoAppShell
     // Block the current thread until the Gecko event loop is caught up
     synchronized public static void geckoEventSync() {
         sGeckoPendingAcks = new CountDownLatch(1);
-        GeckoAppShell.sendEventToGecko(
-            new GeckoEvent(GeckoEvent.GECKO_EVENT_SYNC));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createSyncEvent());
         while (sGeckoPendingAcks.getCount() != 0) {
             try {
                 sGeckoPendingAcks.await();
@@ -1863,7 +1862,7 @@ public class GeckoAppShell
 
     public static void viewSizeChanged() {
         if (mInputConnection != null && mInputConnection.isIMEEnabled()) {
-            sendEventToGecko(new GeckoEvent("ScrollTo:FocusedInput", ""));
+            sendEventToGecko(GeckoEvent.createBroadcastEvent("ScrollTo:FocusedInput", ""));
         }
     }
 

@@ -145,7 +145,7 @@ public class Tabs implements GeckoEventListener {
         });
 
         // Pass a message to Gecko to update tab state in BrowserApp
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Selected", String.valueOf(tab.getId())));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Selected", String.valueOf(tab.getId())));
         return selectedTab = tab;
     }
 
@@ -208,7 +208,7 @@ public class Tabs implements GeckoEventListener {
         });
 
         // Pass a message to Gecko to update tab state in BrowserApp
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Closed", String.valueOf(tabId)));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Closed", String.valueOf(tabId)));
     }
 
     /** Return the tab that will be selected by default after this one is closed */
