@@ -130,8 +130,8 @@
     _(CallGetElement)               \
     _(CallSetElement)               \
     _(CallSetProperty)              \
-    _(CacheSetPropertyV)            \
-    _(CacheSetPropertyT)            \
+    _(SetPropertyCacheV)            \
+    _(SetPropertyCacheT)            \
     _(CallIteratorStart)            \
     _(CallIteratorNext)             \
     _(CallIteratorMore)             \
