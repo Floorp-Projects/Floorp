@@ -188,7 +188,12 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     IonSpew(IonSpew_Snapshots, "Encoding LSnapshot %p (frameCount %u)",
             (void *)snapshot, frameCount);
 
-    SnapshotOffset offset = snapshots_.startSnapshot(frameCount, snapshot->bailoutKind());
+    MResumePoint::Mode mode = snapshot->mir()->mode();
+    JS_ASSERT(mode != MResumePoint::Outer);
+    bool resumeAfter = (mode == MResumePoint::ResumeAfter);
+
+    SnapshotOffset offset = snapshots_.startSnapshot(frameCount, snapshot->bailoutKind(),
+                                                     resumeAfter);
 
     FlattenedMResumePointIter mirOperandIter(snapshot->mir());
     if (!mirOperandIter.init())

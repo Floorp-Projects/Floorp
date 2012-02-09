@@ -386,12 +386,6 @@ ion::MarkIonActivations(JSRuntime *rt, JSTracer *trc)
         MarkIonActivation(trc, activations.top());
 }
 
-static inline jsbytecode *
-GetNextPc(jsbytecode *pc)
-{
-    return pc + js_CodeSpec[JSOp(*pc)].length;
-}
-
 void
 ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
@@ -433,13 +427,8 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
         pc = script->code + si.pcOffset();
     }
 
-    // The post-snapshot contains the pc of the next instruction.
-    // Recover the previous pc.
-    do {
-        pc--;
-    } while (!script->analysis()->maybeCode(pc));
-
     // Set the result.
     *scriptRes = script;
     *pcRes = pc;
 }
+

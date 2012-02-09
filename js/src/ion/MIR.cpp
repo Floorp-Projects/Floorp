@@ -750,20 +750,22 @@ MUrsh::New(MDefinition *left, MDefinition *right)
 }
 
 MResumePoint *
-MResumePoint::New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent)
+MResumePoint::New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent, Mode mode)
 {
-    MResumePoint *resume = new MResumePoint(block, pc, parent);
+    MResumePoint *resume = new MResumePoint(block, pc, parent, mode);
     if (!resume->init(block))
         return NULL;
     resume->inherit(block);
     return resume;
 }
 
-MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *caller)
+MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *caller,
+                           Mode mode)
   : MNode(block),
     stackDepth_(block->stackDepth()),
     pc_(pc),
-    caller_(caller)
+    caller_(caller),
+    mode_(mode)
 {
 }
 
