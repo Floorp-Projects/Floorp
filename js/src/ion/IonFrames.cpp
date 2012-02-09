@@ -130,15 +130,25 @@ FrameRecovery::FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
 }
 
 FrameRecovery
-FrameRecovery::FromFrameIterator(const IonFrameIterator& it)
+FrameRecovery::FromTop(JSContext *cx)
 {
+    IonFrameIterator it(cx->runtime->ionTop);
+    ++it;
+
     MachineState noRegs;
-    FrameRecovery frame(it.prevFp(), it.prevFp() - it.prevFrameLocalSize(), noRegs);
+    FrameRecovery frame(it.fp(), it.fp() - it.frameSize(), noRegs);
+
+    // If the frame has been invalidated, we have to override the given IonScript.
+    {
+        IonScript *ionScript;
+        if (it.checkInvalidation(&ionScript))
+            frame.setIonScript(ionScript);
+    }
 
     // The frame's current displacement maps to a SafepointIndex, which has a
     // new displacement that maps into the OSI indices.
     IonScript *ionScript = frame.ionScript();
-    const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddress());
+    const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
     SafepointReader reader(ionScript, si);
     uint32 osiReturnDisplacement = reader.getOsiReturnPointOffset();
     const OsiIndex *oi = ionScript->getOsiIndex(osiReturnDisplacement);
@@ -217,6 +227,8 @@ IonFrameIterator &
 IonFrameIterator::operator++()
 {
     JS_ASSERT(type_ != IonFrame_Entry);
+
+    frameSize_ = prevFrameLocalSize();
 
     // If the next frame is the entry frame, just exit. Don't update current_,
     // since the entry and first frames overlap.
@@ -384,8 +396,8 @@ void
 ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
     JS_ASSERT(cx->fp()->runningInIon());
-    FrameRecovery fr = FrameRecovery::FromFrameIterator(
-        IonFrameIterator(cx->runtime->ionTop));
+
+    FrameRecovery fr = FrameRecovery::FromTop(cx);
 
     // This function assume that the MIR which has generated the indirect-call
     // to this function is effectful. Which implies that the assignSafepoint
