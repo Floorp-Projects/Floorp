@@ -647,7 +647,7 @@ nsXULMenubarAccessible::CurrentItem()
     nsMenuFrame* menuFrame = menuBarFrame->GetCurrentMenuItem();
     if (menuFrame) {
       nsIContent* menuItemNode = menuFrame->GetContent();
-      return GetAccService()->GetAccessible(menuItemNode);
+      return GetAccService()->GetAccessible(menuItemNode, nsnull);
     }
   }
   return nsnull;

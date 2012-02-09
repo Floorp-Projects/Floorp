@@ -87,8 +87,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   // nsIAccessibilityService
-  virtual nsAccessible* GetAccessibleInShell(nsINode* aNode,
-                                             nsIPresShell* aPresShell);
   virtual nsAccessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
                                                   bool aCanCreate);
 
@@ -186,32 +184,18 @@ public:
    * one.
    *
    * @param  aNode             [in] the given node
-   * @param  aPresShell        [in] the pres shell of the node
-   * @param  aWeakShell        [in] the weak shell for the pres shell
+   * @param  aDoc              [in] the doc accessible of the node  
    * @param  aIsSubtreeHidden  [out, optional] indicates whether the node's
    *                             frame and its subtree is hidden
    */
-  nsAccessible* GetOrCreateAccessible(nsINode* aNode, nsIPresShell* aPresShell,
-                                      nsIWeakReference* aWeakShell,
+  nsAccessible* GetOrCreateAccessible(nsINode* aNode, nsDocAccessible* aDoc,
                                       bool* aIsSubtreeHidden = nsnull);
 
   /**
-   * Return an accessible for the given DOM node.
+   * Return an accessible for the given DOM node and eventually a presentation
+   * shell.
    */
-  nsAccessible* GetAccessible(nsINode* aNode);
-
-  /**
-   * Return an accessible for a DOM node in the given presshell.
-   *
-   * @param aNode       [in] the given node
-   * @param aWeakShell  [in] the presentation shell for the given node
-   */
-  inline nsAccessible* GetAccessibleInWeakShell(nsINode* aNode,
-                                                nsIWeakReference* aWeakShell)
-  {
-    // XXX: weak shell is ignored until multiple shell documents are supported.
-    return GetAccessible(aNode);
-  }
+  nsAccessible* GetAccessible(nsINode* aNode, nsIPresShell* aPresShell);
 
   /**
    * Return an accessible for the given DOM node or container accessible if

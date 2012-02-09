@@ -108,9 +108,9 @@ NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
 // Constructor/desctructor
 
 nsRootAccessible::
-  nsRootAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
-                   nsIWeakReference *aShell) :
-  nsDocAccessibleWrap(aDocument, aRootContent, aShell)
+  nsRootAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
+                   nsIPresShell* aPresShell) :
+  nsDocAccessibleWrap(aDocument, aRootContent, aPresShell)
 {
   mFlags |= eRootAccessible;
 }

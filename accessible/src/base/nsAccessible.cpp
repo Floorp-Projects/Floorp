@@ -3082,7 +3082,7 @@ nsAccessible::CacheChildren()
   nsDocAccessible* doc = Document();
   NS_ENSURE_TRUE(doc,);
 
-  nsAccTreeWalker walker(doc->GetWeakShell(), mContent, CanHaveAnonChildren());
+  nsAccTreeWalker walker(doc, mContent, CanHaveAnonChildren());
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild()) && AppendChild(child));

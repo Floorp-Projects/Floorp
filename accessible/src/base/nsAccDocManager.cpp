@@ -381,9 +381,6 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   if (!isRootDoc) {
     // XXXaaronl: ideally we would traverse the presshell chain. Since there's
     // no easy way to do that, we cheat and use the document hierarchy.
-    // GetAccessible() is bad because it doesn't support our concept of multiple
-    // presshells per doc. It should be changed to use
-    // GetAccessibleInWeakShell().
     parentDocAcc = GetDocAccessible(aDocument->GetParentDocument());
     NS_ASSERTION(parentDocAcc,
                  "Can't create an accessible for the document!");
@@ -393,10 +390,9 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
 
   // We only create root accessibles for the true root, otherwise create a
   // doc accessible.
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
   nsRefPtr<nsDocAccessible> docAcc = isRootDoc ?
-    new nsRootAccessibleWrap(aDocument, rootElm, weakShell) :
-    new nsDocAccessibleWrap(aDocument, rootElm, weakShell);
+    new nsRootAccessibleWrap(aDocument, rootElm, presShell) :
+    new nsDocAccessibleWrap(aDocument, rootElm, presShell);
 
   // Cache the document accessible into document cache.
   if (!docAcc || !mDocAccessibleCache.Put(aDocument, docAcc))
