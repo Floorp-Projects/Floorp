@@ -1901,7 +1901,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
     JSObject *obj = aHandler;
     if (js::IsFunctionProxy(obj))
       obj = js::UnwrapObject(obj);
-    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(obj)));
+    JSString *id = JS_GetFunctionId(static_cast<JSFunction *>(JS_GetPrivate(mContext, obj)));
     JSAutoByteString bytes;
     const char *name = !id ? "anonymous" : bytes.encode(mContext, id) ? bytes.ptr() : "<error>";
     NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);
@@ -2272,8 +2272,8 @@ nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, JSObject *aOuterGl
   // the global object's compartment as its default compartment,
   // so update that now since it might have changed.
   JS_SetGlobalObject(mContext, aOuterGlobal);
-  NS_ASSERTION(JS_GetPrototype(aOuterGlobal) ==
-               JS_GetPrototype(newInnerJSObject),
+  NS_ASSERTION(JS_GetPrototype(mContext, aOuterGlobal) ==
+               JS_GetPrototype(mContext, newInnerJSObject),
                "outer and inner globals should have the same prototype");
 
   return NS_OK;
@@ -2334,7 +2334,7 @@ nsJSContext::SetOuterObject(JSObject* aOuterObject)
   JS_SetGlobalObject(mContext, aOuterObject);
 
   // NB: JS_SetGlobalObject sets mContext->compartment.
-  JSObject *inner = JS_GetParent(aOuterObject);
+  JSObject *inner = JS_GetParent(mContext, aOuterObject);
 
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
@@ -2344,7 +2344,7 @@ nsJSContext::SetOuterObject(JSObject* aOuterObject)
   NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
 
   wrapper->RefreshPrototype();
-  JS_SetPrototype(mContext, aOuterObject, JS_GetPrototype(inner));
+  JS_SetPrototype(mContext, aOuterObject, JS_GetPrototype(mContext, inner));
 
   return NS_OK;
 }
@@ -3099,8 +3099,8 @@ nsJSContext::ClearScope(void *aGlobalObj, bool aClearFromProtoChain)
       nsWindowSH::InvalidateGlobalScopePolluter(mContext, obj);
 
       // Clear up obj's prototype chain, but not Object.prototype.
-      for (JSObject *o = ::JS_GetPrototype(obj), *next;
-           o && (next = ::JS_GetPrototype(o)); o = next)
+      for (JSObject *o = ::JS_GetPrototype(mContext, obj), *next;
+           o && (next = ::JS_GetPrototype(mContext, o)); o = next)
         ::JS_ClearScope(mContext, o);
     }
   }

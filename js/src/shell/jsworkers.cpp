@@ -489,11 +489,10 @@ class ThreadPool
         }
 
         JSObject *obj = JS_NewObject(cx, &jsClass, NULL, NULL);
-        if (!obj) {
+        if (!obj || !JS_SetPrivate(cx, obj, tp)) {
             delete tp;
             return NULL;
         }
-        JS_SetPrivate(obj, tp);
         tp->obj = obj;
         return tp;
     }
@@ -567,7 +566,7 @@ class ThreadPool
 
   private:
     static void jsTraceThreadPool(JSTracer *trc, JSObject *obj) {
-        ThreadPool *tp = unwrap(obj);
+        ThreadPool *tp = unwrap(trc->context, obj);
         if (tp->mq) {
             tp->mq->traceChildren(trc);
             tp->wq->trace(trc);
@@ -576,14 +575,14 @@ class ThreadPool
 
 
     static void jsFinalize(JSContext *cx, JSObject *obj) {
-        if (ThreadPool *tp = unwrap(obj))
+        if (ThreadPool *tp = unwrap(cx, obj))
             delete tp;
     }
 
   public:
-    static ThreadPool *unwrap(JSObject *obj) {
+    static ThreadPool *unwrap(JSContext *cx, JSObject *obj) {
         JS_ASSERT(JS_GetClass(obj) == &jsClass);
-        return (ThreadPool *) JS_GetPrivate(obj);
+        return (ThreadPool *) JS_GetPrivate(cx, obj);
     }
 };
 
@@ -627,10 +626,10 @@ class Worker MOZ_FINAL : public WorkerParent
         this->parent = parent;
         this->object = obj;
         lock = PR_NewLock();
-        if (!lock || !createRuntime(parentcx) || !createContext(parentcx, parent))
-            return false;
-        JS_SetPrivate(obj, this);
-        return true;
+        return lock &&
+               createRuntime(parentcx) &&
+               createContext(parentcx, parent) &&
+               JS_SetPrivate(parentcx, obj, this);
     }
 
     bool createRuntime(JSContext *parentcx) {
@@ -702,7 +701,7 @@ class Worker MOZ_FINAL : public WorkerParent
 
     static void jsTraceWorker(JSTracer *trc, JSObject *obj) {
         JS_ASSERT(JS_GetClass(obj) == &jsWorkerClass);
-        if (Worker *w = (Worker *) JS_GetPrivate(obj)) {
+        if (Worker *w = (Worker *) JS_GetPrivate(trc->context, obj)) {
             w->parent->trace(trc);
             w->events.trace(trc);
             if (w->current)
@@ -713,7 +712,7 @@ class Worker MOZ_FINAL : public WorkerParent
 
     static void jsFinalize(JSContext *cx, JSObject *obj) {
         JS_ASSERT(JS_GetClass(obj) == &jsWorkerClass);
-        if (Worker *w = (Worker *) JS_GetPrivate(obj))
+        if (Worker *w = (Worker *) JS_GetPrivate(cx, obj))
             delete w;
     }
 

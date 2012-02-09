@@ -825,7 +825,7 @@ Parent(JSContext *cx, uintN argc, jsval *vp)
         return false;
     }
 
-    *vp = OBJECT_TO_JSVAL(JS_GetParent(JSVAL_TO_OBJECT(v)));
+    *vp = OBJECT_TO_JSVAL(JS_GetParent(cx, JSVAL_TO_OBJECT(v)));
     return true;
 }
 
@@ -923,7 +923,7 @@ env_enumerate(JSContext *cx, JSObject *obj)
     if (reflected)
         return true;
 
-    for (evp = (char **)JS_GetPrivate(obj); (name = *evp) != NULL; evp++) {
+    for (evp = (char **)JS_GetPrivate(cx, obj); (name = *evp) != NULL; evp++) {
         value = strchr(name, '=');
         if (!value)
             continue;
@@ -1234,7 +1234,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             xpc_ActivateDebugMode();
             break;
         case 'P':
-            if (JS_GetClass(JS_GetPrototype(obj)) != &global_class) {
+            if (JS_GetClass(JS_GetPrototype(cx, obj)) != &global_class) {
                 JSObject *gobj;
 
                 if (!JS_DeepFreezeObject(cx, obj))
@@ -1977,12 +1977,10 @@ main(int argc, char **argv, char **envp)
             }
 
             envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
-            if (!envobj) {
+            if (!envobj || !JS_SetPrivate(cx, envobj, envp)) {
                 JS_EndRequest(cx);
                 return 1;
             }
-
-            JS_SetPrivate(envobj, envp);
 
             nsAutoString workingDirectory;
             if (GetCurrentWorkingDirectory(workingDirectory))

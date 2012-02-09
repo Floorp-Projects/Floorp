@@ -128,18 +128,15 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
                                         mScope->GetPrototypeJSObject(),
                                         true, parent);
 
-    JSBool ok = !!mJSProtoObject;
+    JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
 
-    if (ok) {
-        JS_SetPrivate(mJSProtoObject, this);
-        if (callback) {
-            nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
-            if (NS_FAILED(rv)) {
-                JS_SetPrivate(mJSProtoObject, nsnull);
-                mJSProtoObject = nsnull;
-                XPCThrower::Throw(rv, ccx);
-                return false;
-            }
+    if (ok && callback) {
+        nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
+        if (NS_FAILED(rv)) {
+            JS_SetPrivate(ccx, mJSProtoObject, nsnull);
+            mJSProtoObject = nsnull;
+            XPCThrower::Throw(rv, ccx);
+            return false;
         }
     }
 
@@ -168,7 +165,7 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(JSContext *cx, JSObject *obj)
 }
 
 void
-XPCWrappedNativeProto::SystemIsBeingShutDown()
+XPCWrappedNativeProto::SystemIsBeingShutDown(JSContext* cx)
 {
     // Note that the instance might receive this call multiple times
     // as we walk to here from various places.
@@ -184,7 +181,7 @@ XPCWrappedNativeProto::SystemIsBeingShutDown()
 
     if (mJSProtoObject) {
         // short circuit future finalization
-        JS_SetPrivate(mJSProtoObject, nsnull);
+        JS_SetPrivate(cx, mJSProtoObject, nsnull);
         mJSProtoObject = nsnull;
     }
 }
