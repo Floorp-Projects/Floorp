@@ -106,7 +106,6 @@ EXPORTS_NAMESPACES = mozilla/dom
 EXPORTS_mozilla/dom = \
   DOMError.h \
   StructuredCloneTags.h \
-  ScreenOrientation.h \
   $(NULL)
 
 CPPSRCS =			\
