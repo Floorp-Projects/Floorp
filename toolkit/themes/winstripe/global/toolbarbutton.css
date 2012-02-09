@@ -147,10 +147,6 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
   margin-top: 1px;
 }
 
-.toolbarbutton-menu-dropmarker[disabled="true"] {
-  padding: 0 !important;
-}
-
 /* ::::: toolbarbutton menu-button ::::: */
 
 toolbarbutton[type="menu-button"] {

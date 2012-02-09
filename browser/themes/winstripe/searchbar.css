@@ -39,7 +39,7 @@
 }
 
 .searchbar-dropmarker-image {
-  list-style-image: url(mainwindow-dropdown-arrow.png);
+  list-style-image: url("chrome://browser/skin/searchbar-dropdown-arrow.png");
   -moz-image-region: rect(0, 13px, 11px, 0);
 }
 
