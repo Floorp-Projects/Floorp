@@ -228,7 +228,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
 
         GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("SearchEngines:Get", null));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
     }
 
     public void handleMessage(String event, JSONObject message) {
