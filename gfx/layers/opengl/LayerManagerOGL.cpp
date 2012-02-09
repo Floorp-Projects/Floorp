@@ -935,6 +935,17 @@ LayerManagerOGL::WorldTransformRect(nsIntRect& aRect)
   aRect.SetRect(grect.X(), grect.Y(), grect.Width(), grect.Height());
 }
 
+LayerForwarderQuirks
+LayerManagerOGL::GetForwarderQuirks()
+{
+  uint16_t quirks = 0;
+  if (mGLContext->PreferPowerOfTwoTextures()) {
+    quirks |= 1 << 0;
+  }
+
+  return LayerForwarderQuirks(quirks);
+}
+
 void
 LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy)
 {

@@ -42,7 +42,8 @@
 #define mozilla_layers_ShadowLayers_h 1
 
 #include "gfxASurface.h"
-
+#include "ShadowLayers.h"
+#include "ShadowLayersManager.h"
 #include "ImageLayers.h"
 #include "Layers.h"
 
@@ -51,6 +52,7 @@ class gfxSharedImageSurface;
 namespace mozilla {
 namespace layers {
 
+class LayerForwarderQuirks;
 class Edit;
 class EditReply;
 class OptionalThebesBuffer;
@@ -308,6 +310,8 @@ public:
    */
   bool ShouldDoubleBuffer() { return GetParentBackendType() == LayerManager::LAYERS_BASIC; }
 
+  void SetForwarderQuirks(LayerForwarderQuirks aQuirks);
+
 protected:
   ShadowLayerForwarder();
 
@@ -332,6 +336,7 @@ private:
 
   Transaction* mTxn;
   LayersBackend mParentBackend;
+  bool mUsePoTShmem;
 };
 
 
@@ -358,6 +363,8 @@ public:
   virtual already_AddRefed<ShadowColorLayer> CreateShadowColorLayer() = 0;
   /** CONSTRUCTION PHASE ONLY */
   virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer() = 0;
+
+  virtual LayerForwarderQuirks GetForwarderQuirks();
 
   static void PlatformSyncBeforeReplyUpdate();
 

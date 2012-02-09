@@ -400,6 +400,8 @@ public:
   gfxMatrix& GetWorldTransform(void);
   void WorldTransformRect(nsIntRect& aRect);
 
+  LayerForwarderQuirks GetForwarderQuirks();
+
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;
