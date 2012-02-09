@@ -200,19 +200,19 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 void
 IonCompartment::sweep(JSContext *cx)
 {
-    if (enterJIT_ && IsAboutToBeFinalized(cx, enterJIT_))
+    if (enterJIT_ && IsAboutToBeFinalized(enterJIT_))
         enterJIT_ = NULL;
-    if (osrPrologue_ && IsAboutToBeFinalized(cx, osrPrologue_))
+    if (osrPrologue_ && IsAboutToBeFinalized(osrPrologue_))
         osrPrologue_ = NULL;
-    if (bailoutHandler_ && IsAboutToBeFinalized(cx, bailoutHandler_))
+    if (bailoutHandler_ && IsAboutToBeFinalized(bailoutHandler_))
         bailoutHandler_ = NULL;
-    if (argumentsRectifier_ && IsAboutToBeFinalized(cx, argumentsRectifier_))
+    if (argumentsRectifier_ && IsAboutToBeFinalized(argumentsRectifier_))
         argumentsRectifier_ = NULL;
-    if (invalidator_ && IsAboutToBeFinalized(cx, invalidator_))
+    if (invalidator_ && IsAboutToBeFinalized(invalidator_))
         invalidator_ = NULL;
 
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
-        if (bailoutTables_[i] && IsAboutToBeFinalized(cx, bailoutTables_[i]))
+        if (bailoutTables_[i] && IsAboutToBeFinalized(bailoutTables_[i]))
             bailoutTables_[i] = NULL;
     }
 

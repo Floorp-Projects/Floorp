@@ -862,6 +862,8 @@ IsAboutToBeFinalized(const Value &v)
 {
     JS_ASSERT(v.isMarkable());
     return IsAboutToBeFinalized((Cell *)v.toGCThing());
+}
+
 /* Lifetime for type sets attached to scripts containing observed types. */
 static const int64_t JIT_SCRIPT_RELEASE_TYPES_INTERVAL = 60 * 1000 * 1000;
 
