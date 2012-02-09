@@ -37,10 +37,10 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.GeckoInputConnection;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerController;
-import org.mozilla.gecko.GeckoInputConnection;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
@@ -62,8 +62,7 @@ import java.util.LinkedList;
  * This view delegates to LayerRenderer to actually do the drawing. Its role is largely that of a
  * mediator between the LayerRenderer and the LayerController.
  */
-public class LayerView extends FlexibleGLSurfaceView implements GeckoEventListener {
-public class LayerView extends GLSurfaceView {
+public class LayerView extends FlexibleGLSurfaceView {
     private Context mContext;
     private LayerController mController;
     private InputConnectionHandler mInputConnectionHandler;
@@ -93,31 +92,6 @@ public class LayerView extends GLSurfaceView {
         setFocusable(true);
         setFocusableInTouchMode(true);
 
-        GeckoAppShell.registerGeckoEventListener("Preferences:Data", this);
-        JSONArray jsonPrefs = new JSONArray();
-        jsonPrefs.put(touchEventsPrefName);
-        GeckoEvent event = new GeckoEvent("Preferences:Get", jsonPrefs.toString());
-        GeckoAppShell.sendEventToGecko(event);
-
-        createGLThread();
-    }
-
-    public void handleMessage(String event, JSONObject message) {
-        if (event.equals("Preferences:Data")) {
-            try {
-                JSONArray jsonPrefs = message.getJSONArray("preferences");
-                for (int i = 0; i < jsonPrefs.length(); i++) {
-                    JSONObject jPref = jsonPrefs.getJSONObject(i);
-                    final String prefName = jPref.getString("name");
-                    if (prefName.equals(touchEventsPrefName)) {
-                        touchEventsEnabled = jPref.getBoolean("value");
-                        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
-                    }
-                }
-            } catch(JSONException ex) {
-                Log.e(LOGTAG, "Error decoding JSON", ex);
-            }
-        }
     }
 
     private void addToEventQueue(MotionEvent event) {
