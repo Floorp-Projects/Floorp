@@ -69,11 +69,10 @@ ReadMaintenanceServiceStrings(LPCWSTR path,
 {
   // Read in the maintenance service description string if specified.
   const unsigned int kNumStrings = 1;
-  const char *kServiceKeys = "ServiceDescription\0";
+  const char *kServiceKeys = "MozillaMaintenanceDescription\0";
   char serviceStrings[kNumStrings][MAX_TEXT_LEN];
   int result = ReadStrings(path, kServiceKeys, 
-                           kNumStrings, serviceStrings, 
-                           "MaintenanceServiceStrings");
+                           kNumStrings, serviceStrings);
   if (result != OK) {
     serviceStrings[0][0] = '\0';
   }
