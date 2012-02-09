@@ -2925,28 +2925,19 @@ class MCallGetPropertyOrName
     }
 };
 
-class MGenericSetProperty
-  : public MBinaryInstruction,
-    public ObjectPolicy
+class MSetPropertyInstruction : public MBinaryInstruction
 {
     JSAtom *atom_;
     bool strict_;
-    bool monitored_;
 
-    MGenericSetProperty(MDefinition *obj, MDefinition *value, JSAtom *atom,
-                        bool strict, bool monitored)
+  protected:
+    MSetPropertyInstruction(MDefinition *obj, MDefinition *value, JSAtom *atom,
+                        bool strict)
       : MBinaryInstruction(obj, value),
-        atom_(atom), strict_(strict), monitored_(monitored)
+        atom_(atom), strict_(strict)
     {}
 
   public:
-    INSTRUCTION_HEADER(GenericSetProperty);
-
-    static MGenericSetProperty *New(MDefinition *obj, MDefinition *value, JSAtom *atom,
-                                    bool strict, bool monitored) {
-        return new MGenericSetProperty(obj, value, atom, strict, monitored);
-    }
-
     MDefinition *obj() const {
         return getOperand(0);
     }
@@ -2959,9 +2950,47 @@ class MGenericSetProperty
     bool strict() const {
         return strict_;
     }
-    bool monitored() const {
-        return monitored_;
+};
+
+// Note: This uses CallSetElementPolicy to always box its second input,
+// ensuring we don't need two LIR instructions to lower this.
+class MCallSetProperty
+  : public MSetPropertyInstruction,
+    public CallSetElementPolicy
+{
+    MCallSetProperty(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict)
+      : MSetPropertyInstruction(obj, value, atom, strict)
+    {
     }
+
+  public:
+    INSTRUCTION_HEADER(CallSetProperty);
+
+    static MCallSetProperty *New(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict) {
+        return new MCallSetProperty(obj, value, atom, strict);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+class MSetPropertyCache
+  : public MSetPropertyInstruction,
+    public ObjectPolicy
+{
+    MSetPropertyCache(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict)
+      : MSetPropertyInstruction(obj, value, atom, strict)
+    {
+    }
+
+  public:
+    INSTRUCTION_HEADER(SetPropertyCache);
+
+    static MSetPropertyCache *New(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict) {
+        return new MSetPropertyCache(obj, value, atom, strict);
+    }
+
     TypePolicy *typePolicy() {
         return this;
     }

@@ -1650,42 +1650,19 @@ class LCallSetElement : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0>
 };
 
 // Call a stub to perform a property or name assignment of a generic value.
-class LCallSetPropertyV : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
+class LCallSetProperty : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {
   public:
-    LIR_HEADER(CallSetPropertyV);
+    LIR_HEADER(CallSetProperty);
 
-    LCallSetPropertyV(const LAllocation &obj) {
+    LCallSetProperty(const LAllocation &obj) {
         setOperand(0, obj);
     }
 
     static const size_t Value = 1;
 
-    const MGenericSetProperty *mir() const {
-        return mir_->toGenericSetProperty();
-    }
-};
-
-// Call a stub to perform a property or name assignment of a typed value.
-class LCallSetPropertyT : public LCallInstructionHelper<0, 2, 0>
-{
-    MIRType valueType_;
-
-  public:
-    LIR_HEADER(CallSetPropertyT);
-
-    LCallSetPropertyT(const LAllocation &obj, const LAllocation &value, MIRType valueType)
-        : valueType_(valueType)
-    {
-        setOperand(0, obj);
-        setOperand(1, value);
-    }
-
-    const MGenericSetProperty *mir() const {
-        return mir_->toGenericSetProperty();
-    }
-    MIRType valueType() {
-        return valueType_;
+    const MCallSetProperty *mir() const {
+        return mir_->toCallSetProperty();
     }
 };
 
@@ -1702,8 +1679,8 @@ class LCacheSetPropertyV : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
 
     static const size_t Value = 1;
 
-    const MGenericSetProperty *mir() const {
-        return mir_->toGenericSetProperty();
+    const MSetPropertyCache *mir() const {
+        return mir_->toSetPropertyCache();
     }
 };
 
@@ -1723,8 +1700,8 @@ class LCacheSetPropertyT : public LInstructionHelper<0, 2, 0>
         setOperand(1, value);
     }
 
-    const MGenericSetProperty *mir() const {
-        return mir_->toGenericSetProperty();
+    const MSetPropertyCache *mir() const {
+        return mir_->toSetPropertyCache();
     }
     MIRType valueType() {
         return valueType_;

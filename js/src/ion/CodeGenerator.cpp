@@ -1654,19 +1654,15 @@ ConstantOrRegister
 CodeGenerator::getSetPropertyValue(LInstruction *ins)
 {
     if (ins->getOperand(1)->isConstant()) {
-        JS_ASSERT(ins->isCallSetPropertyT() || ins->isCacheSetPropertyT());
+        JS_ASSERT(ins->isCacheSetPropertyT());
         return ConstantOrRegister(*ins->getOperand(1)->toConstant());
     }
 
     switch (ins->op()) {
-      case LInstruction::LOp_CallSetPropertyV:
-        return TypedOrValueRegister(ToValue(ins, LCallSetPropertyV::Value));
+      case LInstruction::LOp_CallSetProperty:
+        return TypedOrValueRegister(ToValue(ins, LCallSetProperty::Value));
       case LInstruction::LOp_CacheSetPropertyV:
         return TypedOrValueRegister(ToValue(ins, LCacheSetPropertyV::Value));
-      case LInstruction::LOp_CallSetPropertyT: {
-        LCallSetPropertyT *ins_ = ins->toCallSetPropertyT();
-        return TypedOrValueRegister(ins_->valueType(), ToAnyRegister(ins->getOperand(1)));
-      }
       case LInstruction::LOp_CacheSetPropertyT: {
         LCacheSetPropertyT *ins_ = ins->toCacheSetPropertyT();
         return TypedOrValueRegister(ins_->valueType(), ToAnyRegister(ins->getOperand(1)));
@@ -1678,19 +1674,18 @@ CodeGenerator::getSetPropertyValue(LInstruction *ins)
 }
 
 bool
-CodeGenerator::visitCallSetProperty(LInstruction *ins)
+CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
 {
     ConstantOrRegister value = getSetPropertyValue(ins);
-    const MGenericSetProperty *mir = ins->mirRaw()->toGenericSetProperty();
 
     const Register objReg = ToRegister(ins->getOperand(0));
 
     pushArg(value);
-    pushArg(ImmGCPtr(mir->atom()));
+    pushArg(ImmGCPtr(ins->mir()->atom()));
     pushArg(objReg);
 
     typedef bool (*pf)(JSContext *, JSObject *, JSAtom *, Value);
-    if (mir->strict()) {
+    if (ins->mir()->strict()) {
         static const VMFunction info = FunctionInfo<pf>(SetProperty<true>);
         if (!callVM(info, ins))
             return false;
@@ -1712,7 +1707,7 @@ CodeGenerator::visitOutOfLineCacheSetProperty(OutOfLineCache *ool)
     RegisterSet liveRegs = ins->safepoint()->liveRegs();
 
     ConstantOrRegister value = getSetPropertyValue(ins);
-    const MGenericSetProperty *mir = ins->mirRaw()->toGenericSetProperty();
+    const MSetPropertyCache *mir = ins->mirRaw()->toSetPropertyCache();
 
     IonCacheSetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
                               masm.labelForPatch(), liveRegs,
