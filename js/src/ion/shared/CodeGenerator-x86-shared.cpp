@@ -636,7 +636,7 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
 }
 
 bool
-CodeGeneratorX86Shared::visitBitNot(LBitNot *ins)
+CodeGeneratorX86Shared::visitBitNotI(LBitNotI *ins)
 {
     const LAllocation *input = ins->getOperand(0);
     JS_ASSERT(!input->isConstant());

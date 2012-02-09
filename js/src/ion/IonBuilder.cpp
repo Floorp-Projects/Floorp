@@ -2015,6 +2015,8 @@ IonBuilder::jsop_bitnot()
     ins->infer(oracle->unaryOp(script, pc));
 
     current->push(ins);
+    if (ins->isEffectful() && !resumeAfter(ins))
+        return false;
     return true;
 }
 bool

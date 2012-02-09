@@ -49,7 +49,7 @@ namespace ion {
 enum DataType {
     Type_Void,
     Type_Bool,
-    Type_JSBool,
+    Type_Int32,
     Type_Object,
     Type_Value
 };
@@ -189,7 +189,7 @@ template <> struct TypeToArgProperties<const Value &> {
 
 template <class> struct OutParamToDataType { static const DataType result = Type_Void; };
 template <> struct OutParamToDataType<Value *> { static const DataType result = Type_Value; };
-template <> struct OutParamToDataType<JSBool *> { static const DataType result = Type_JSBool; };
+template <> struct OutParamToDataType<int *> { static const DataType result = Type_Int32; };
 
 #define FOR_EACH_ARGS_1(Macro, Sep, Last) Macro(1) Last(1)
 #define FOR_EACH_ARGS_2(Macro, Sep, Last) FOR_EACH_ARGS_1(Macro, Sep, Sep) Macro(2) Last(2)
@@ -245,8 +245,8 @@ struct FunctionInfo<R (*)(JSContext *)> : public VMFunction {
         return 0;
     }
     FunctionInfo(pf fun)
-        : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
-                     argumentProperties(), outParam(), returnType())
+      : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
+                   argumentProperties(), outParam(), returnType())
     { }
 };
 

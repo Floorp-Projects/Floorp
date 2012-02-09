@@ -615,10 +615,20 @@ class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
 
 // Bitwise not operation, takes a 32-bit integer as input and returning
 // a 32-bit integer result as an output.
-class LBitNot : public LInstructionHelper<1, 1, 0>
+class LBitNotI : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LIR_HEADER(BitNot);
+    LIR_HEADER(BitNotI);
+};
+
+// Call a stub to perform a binary operation.
+class LBitNotV : public LCallInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(BitNotV);
+    BOX_OUTPUT_ACCESSORS();
+
+    static const size_t Input = 0;
 };
 
 // Binary bitwise operation, taking two 32-bit integers as inputs and returning
