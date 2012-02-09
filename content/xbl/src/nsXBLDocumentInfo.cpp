@@ -122,7 +122,7 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsid id, PRUin
   // Make sure to actually operate on our object, and not some object further
   // down on the proto chain.
   while (JS_GetClass(obj) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
-    obj = ::JS_GetPrototype(obj);
+    obj = ::JS_GetPrototype(cx, obj);
     if (!obj) {
       ::JS_ReportError(cx, "Invalid access to a global object property.");
       return JS_FALSE;
@@ -168,7 +168,7 @@ nsXBLDocGlobalObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 static void
 nsXBLDocGlobalObject_finalize(JSContext *cx, JSObject *obj)
 {
-  nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(obj);
+  nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeThis));
 
@@ -334,7 +334,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment(PRUint32 aLangID)
 
   // Add an owning reference from JS back to us. This'll be
   // released when the JSObject is finalized.
-  ::JS_SetPrivate(mJSObject, this);
+  ::JS_SetPrivate(cx, mJSObject, this);
   NS_ADDREF(this);
   return NS_OK;
 }

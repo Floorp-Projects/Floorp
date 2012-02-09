@@ -2637,9 +2637,11 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
         if (!js_GetClassPrototype(cx, global, JSProto_Array, &proto))
             return false;
         argsobj = NewObjectWithGivenProto(cx, &DebuggerArguments_class, proto, global);
-        if (!argsobj)
+        if (!argsobj ||
+            !js_SetReservedSlot(cx, argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj)))
+        {
             return false;
-        SetReservedSlot(argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj));
+        }
 
         JS_ASSERT(fp->numActualArgs() <= 0x7fffffff);
         int32_t fargc = int32_t(fp->numActualArgs());
