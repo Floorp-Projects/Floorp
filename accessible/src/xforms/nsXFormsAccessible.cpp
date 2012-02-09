@@ -126,8 +126,6 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
   if (!children)
     return;
 
-  nsIPresShell* presShell(mDoc->PresShell());
-
   PRUint32 length = 0;
   children->GetLength(&length);
 
@@ -139,7 +137,7 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
 
     nsCOMPtr<nsIContent> child(do_QueryInterface(DOMChild));
     nsAccessible* accessible =
-      GetAccService()->GetOrCreateAccessible(child, presShell, mDoc->GetWeakShell());
+      GetAccService()->GetOrCreateAccessible(child, mDoc);
     if (!accessible)
       continue;
 

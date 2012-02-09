@@ -97,7 +97,7 @@ public:
   using nsAccessible::GetParent;
 
   nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
-                  nsIWeakReference* aShell);
+                  nsIPresShell* aPresShell);
   virtual ~nsDocAccessible();
 
   // nsIAccessible
@@ -142,12 +142,6 @@ public:
    * Return presentation shell for this document accessible.
    */
   nsIPresShell* PresShell() const { return mPresShell; }
-
-  /**
-   * Return weak reference to presentation shell for this document accessible.
-   */
-  nsIWeakReference* GetWeakShell() const
-    { return do_GetWeakReference(mPresShell).get(); }
 
   /**
    * Return true if associated DOM document was loaded and isn't unloading.

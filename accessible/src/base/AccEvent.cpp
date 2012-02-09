@@ -139,7 +139,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AccEvent, Release)
 nsAccessible*
 AccEvent::GetAccessibleForNode() const
 {
-  return mNode ? GetAccService()->GetAccessible(mNode) : nsnull;
+  return mNode ? GetAccService()->GetAccessible(mNode, nsnull) : nsnull;
 }
 
 void

@@ -179,7 +179,7 @@ nsXULColorPickerAccessible::CacheChildren()
 {
   NS_ENSURE_TRUE(mDoc,);
 
-  nsAccTreeWalker walker(mDoc->GetWeakShell(), mContent, true);
+  nsAccTreeWalker walker(mDoc, mContent, true);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {

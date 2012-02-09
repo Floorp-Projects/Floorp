@@ -103,12 +103,12 @@ static const PRUint32 kRelationAttrsLen = NS_ARRAY_LENGTH(kRelationAttrs);
 
 nsDocAccessible::
   nsDocAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
-                  nsIWeakReference* aShell) :
+                  nsIPresShell* aPresShell) :
   nsHyperTextAccessibleWrap(aRootContent, this),
   mDocument(aDocument), mScrollPositionChangedTicks(0),
   mLoadState(eTreeConstructionPending), mLoadEventType(0),
   mVirtualCursor(nsnull),
-  mPresShell(nsCOMPtr<nsIPresShell>(do_QueryReferent(aShell)).get())
+  mPresShell(aPresShell)
 {
   mFlags |= eDocAccessible;
 
@@ -1515,7 +1515,7 @@ nsDocAccessible::CacheChildren()
 {
   // Search for accessible children starting from the document element since
   // some web pages tend to insert elements under it rather than document body.
-  nsAccTreeWalker walker(do_GetWeakReference(mPresShell).get(), mDocument->GetRootElement(),
+  nsAccTreeWalker walker(this, mDocument->GetRootElement(),
                          CanHaveAnonChildren());
 
   nsAccessible* child = nsnull;
@@ -1871,7 +1871,7 @@ nsDocAccessible::UpdateTree(nsAccessible* aContainer, nsIContent* aChildNode,
     updateFlags |= UpdateTreeInternal(child, aIsInsert);
 
   } else {
-    nsAccTreeWalker walker(do_GetWeakReference(mPresShell).get(), aChildNode,
+    nsAccTreeWalker walker(this, aChildNode,
                            aContainer->CanHaveAnonChildren(), true);
 
     while ((child = walker.NextChild()))

@@ -233,7 +233,7 @@ nsXULButtonAccessible::CacheChildren()
   nsAccessible* menupopup = nsnull;
   nsAccessible* button = nsnull;
 
-  nsAccTreeWalker walker(mDoc->GetWeakShell(), mContent, true);
+  nsAccTreeWalker walker(mDoc, mContent, true);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {
@@ -873,7 +873,7 @@ nsXULTextFieldAccessible::CacheChildren()
   if (!inputContent)
     return;
 
-  nsAccTreeWalker walker(mDoc->GetWeakShell(), inputContent, false);
+  nsAccTreeWalker walker(mDoc, inputContent, false);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild()) && AppendChild(child));

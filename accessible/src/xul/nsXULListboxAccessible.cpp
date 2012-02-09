@@ -886,7 +886,8 @@ nsXULListboxAccessible::ContainerWidget() const
       if (inputElm) {
         nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
         if (inputNode) {
-          nsAccessible* input = GetAccService()->GetAccessible(inputNode);
+          nsAccessible* input = 
+            GetAccService()->GetAccessible(inputNode, nsnull);
           return input ? input->ContainerWidget() : nsnull;
         }
       }

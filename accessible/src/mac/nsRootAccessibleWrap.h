@@ -50,8 +50,8 @@ struct objc_class;
 class nsRootAccessibleWrap : public nsRootAccessible
 {
 public:
-  nsRootAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
-                       nsIWeakReference *aShell);
+  nsRootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                       nsIPresShell* aPresShell);
   virtual ~nsRootAccessibleWrap();
 
     Class GetNativeType ();

@@ -163,7 +163,7 @@ nsAccUtils::GetPositionAndSizeForXULSelectControlItem(nsIContent *aContent,
     nsCOMPtr<nsINode> currNode(do_QueryInterface(currItem));
 
     nsAccessible* itemAcc = currNode ?
-      GetAccService()->GetAccessible(currNode) : nsnull;
+      GetAccService()->GetAccessible(currNode, nsnull) : nsnull;
 
     if (!itemAcc || itemAcc->State() & states::INVISIBLE) {
       (*aSetSize)--;
@@ -205,7 +205,7 @@ nsAccUtils::GetPositionAndSizeForXULContainerItem(nsIContent *aContent,
     nsCOMPtr<nsINode> itemNode(do_QueryInterface(item));
 
     nsAccessible* itemAcc = itemNode ?
-      GetAccService()->GetAccessible(itemNode) : nsnull;
+      GetAccService()->GetAccessible(itemNode, nsnull) : nsnull;
 
     if (itemAcc) {
       PRUint32 itemRole = Role(itemAcc);
@@ -226,7 +226,7 @@ nsAccUtils::GetPositionAndSizeForXULContainerItem(nsIContent *aContent,
     nsCOMPtr<nsINode> itemNode(do_QueryInterface(item));
 
     nsAccessible* itemAcc =
-      itemNode ? GetAccService()->GetAccessible(itemNode) : nsnull;
+      itemNode ? GetAccService()->GetAccessible(itemNode, nsnull) : nsnull;
 
     if (itemAcc) {
       PRUint32 itemRole = Role(itemAcc);
@@ -389,7 +389,7 @@ nsAccUtils::GetSelectableContainer(nsAccessible* aAccessible, PRUint64 aState)
 nsAccessible*
 nsAccUtils::GetMultiSelectableContainer(nsINode* aNode)
 {
-  nsAccessible* accessible = GetAccService()->GetAccessible(aNode);
+  nsAccessible* accessible = GetAccService()->GetAccessible(aNode, nsnull);
   if (accessible) {
     nsAccessible* container = GetSelectableContainer(accessible,
                                                      accessible->State());
