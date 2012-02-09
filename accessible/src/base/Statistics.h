@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Trevor Saunders <trev.saunders@gmail.com> (original author)
+ *   Andrzej Skalski <askalski@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,7 +48,7 @@ namespace a11y {
 namespace statistics {
 
   inline void A11yInitialized()
-    { Telemetry::Accumulate(Telemetry::A11Y_INSTANTIATED, true); }
+    { Telemetry::Accumulate(Telemetry::A11Y_INSTANTIATED, 1); }
 
   inline void A11yConsumers(PRUint32 aConsumer)
     { Telemetry::Accumulate(Telemetry::A11Y_CONSUMERS, aConsumer); }
@@ -69,6 +70,12 @@ namespace statistics {
    */
   inline void IAccessibleTableUsed()
     { Telemetry::Accumulate(Telemetry::IACCESSIBLE_TABLE_USAGE, 1); }
+
+  /**
+   * Report that XForms accessibility has been instantiated.
+   */
+  inline void XFormsAccessibleUsed()
+    { Telemetry::Accumulate(Telemetry::XFORMS_ACCESSIBLE_USED, 1); }
 
 } // namespace statistics
 } // namespace a11y

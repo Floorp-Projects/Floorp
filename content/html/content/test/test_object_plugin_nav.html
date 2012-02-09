@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=720130
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 720130</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=720130">Mozilla Bug 720130</a>
+<p id="display"></p>
+<div id="content">
+  <input>
+  <object type="application/x-test"></object>
+  <button>foo</button>
+  <object tabindex='0' type="application/x-test"></object>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 720130 **/
+
+var gFocusCount = 0;
+var gFocusNb    = 4;
+
+/**
+ * Check the focus navigation.
+ */
+function checkFocus() {
+  switch (gFocusCount) {
+    case 0:
+      is(document.activeElement, document.getElementsByTagName('a')[0],
+         "first focused element should be the link");
+      break;
+    case 1:
+      is(document.activeElement, document.getElementsByTagName('input')[0],
+         "second focused element should be the text field");
+      break;
+    case 2:
+      is(document.activeElement, document.getElementsByTagName('button')[0],
+         "third focused element should be the button");
+      break;
+    case 3:
+      is(document.activeElement, document.getElementsByTagName('object')[1],
+         "fourth focused element should be the object");
+      break;
+  }
+
+  gFocusCount++;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  is(document.activeElement, document.body);
+
+  // Preliminary check: tabindex should be -1 on the object.
+  is(document.getElementsByTagName('object')[0].tabIndex, -1,
+     "the plugin shouldn't get focus while navigating in the document");
+
+  document.addEventListener("focus", function() {
+    checkFocus();
+
+    if (gFocusCount != gFocusNb) {
+      synthesizeKey("VK_TAB", {});
+      return;
+    }
+
+    document.removeEventListener("focus", arguments.callee, true);
+
+    // Just make sure that .focus() still works.
+    var o = document.getElementsByTagName('object')[0];
+    o.onfocus = function() {
+      SimpleTest.finish();
+      o.onfocus = null;
+    };
+    o.focus();
+  }, true);
+
+  synthesizeKey("VK_TAB", {});
+});
+
+</script>
+</pre>
+</body>
+</html>

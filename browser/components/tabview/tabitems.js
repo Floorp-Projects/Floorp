@@ -103,7 +103,7 @@ function TabItem(tab, options) {
   if (Utils.isEmptyObject(TabItems.tabItemPadding)) {
     TabItems.tabItemPadding.x = parseInt($div.css('padding-left'))
         + parseInt($div.css('padding-right'));
-  
+
     TabItems.tabItemPadding.y = parseInt($div.css('padding-top'))
         + parseInt($div.css('padding-bottom'));
   }

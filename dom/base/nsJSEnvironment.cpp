@@ -4117,10 +4117,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSArgArray)
 nsresult
 nsJSArgArray::GetArgs(PRUint32 *argc, void **argv)
 {
-  if (!mArgv) {
-    NS_WARNING("nsJSArgArray has no argv!");
-    return NS_ERROR_UNEXPECTED;
-  }
   *argv = (void *)mArgv;
   *argc = mArgc;
   return NS_OK;

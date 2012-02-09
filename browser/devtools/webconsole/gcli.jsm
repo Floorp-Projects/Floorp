@@ -691,7 +691,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/commands/help', 'gcli/ui/console'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/types/resource', 'gcli/cli', 'gcli/commands/help', 'gcli/ui/console'], function(require, exports, module) {
 
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
@@ -703,6 +703,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   require('gcli/types/basic').startup();
   require('gcli/types/javascript').startup();
   require('gcli/types/node').startup();
+  require('gcli/types/resource').startup();
   require('gcli/cli').startup();
   require('gcli/commands/help').startup();
 
@@ -712,6 +713,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   var cli = require('gcli/cli');
   var jstype = require('gcli/types/javascript');
   var nodetype = require('gcli/types/node');
+  var resource = require('gcli/types/resource');
 
   /**
    * API for use by HUDService only.
@@ -740,12 +742,27 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
       jstype.setGlobalObject(opts.jsEnvironment.globalObject);
       nodetype.setDocument(opts.contentDocument);
       cli.setEvalFunction(opts.jsEnvironment.evalFunction);
+      resource.setDocument(opts.contentDocument);
 
       if (opts.requisition == null) {
         opts.requisition = new Requisition(opts.environment, opts.chromeDocument);
       }
 
       opts.console = new Console(opts);
+    },
+
+    /**
+     * Called when the page to which we're attached changes
+     */
+    reattachConsole: function(opts) {
+      jstype.setGlobalObject(opts.jsEnvironment.globalObject);
+      nodetype.setDocument(opts.contentDocument);
+      cli.setEvalFunction(opts.jsEnvironment.evalFunction);
+
+      opts.requisition.environment = opts.environment;
+      opts.requisition.document = opts.chromeDocument;
+
+      opts.console.reattachConsole(opts);
     },
 
     /**
@@ -761,6 +778,8 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
       cli.unsetEvalFunction();
       nodetype.unsetDocument();
       jstype.unsetGlobalObject();
+      resource.unsetDocument();
+      resource.clearResourceCache();
     },
 
     commandOutputManager: require('gcli/canon').commandOutputManager
@@ -1241,6 +1260,34 @@ dom.clearElement = function(elem) {
   }
 };
 
+var isAllWhitespace = /^\s*$/;
+
+/**
+ * Iterate over the children of a node looking for TextNodes that have only
+ * whitespace content and remove them.
+ * This utility is helpful when you have a template which contains whitespace
+ * so it looks nice, but where the whitespace interferes with the rendering of
+ * the page
+ * @param elem The element which should have blank whitespace trimmed
+ * @param deep Should this node removal include child elements
+ */
+dom.removeWhitespace = function(elem, deep) {
+  var i = 0;
+  while (i < elem.childNodes.length) {
+    var child = elem.childNodes.item(i);
+    if (child.nodeType === Node.TEXT_NODE &&
+        isAllWhitespace.test(child.textContent)) {
+      elem.removeChild(child);
+    }
+    else {
+      if (deep && child.nodeType === Node.ELEMENT_NODE) {
+        dom.removeWhitespace(child, deep);
+      }
+      i++;
+    }
+  }
+};
+
 /**
  * Create a style element in the document head, and add the given CSS text to
  * it.
@@ -1307,6 +1354,79 @@ dom.isXmlDocument = function(doc) {
 
 exports.dom = dom;
 
+/**
+ * Find the position of [element] in [nodeList].
+ * @returns an index of the match, or -1 if there is no match
+ */
+function positionInNodeList(element, nodeList) {
+  for (var i = 0; i < nodeList.length; i++) {
+    if (element === nodeList[i]) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Find a unique CSS selector for a given element
+ * @returns a string such that ele.ownerDocument.querySelector(reply) === ele
+ * and ele.ownerDocument.querySelectorAll(reply).length === 1
+ */
+dom.findCssSelector = function(ele) {
+  var document = ele.ownerDocument;
+  if (ele.id && document.getElementById(ele.id) === ele) {
+    return '#' + ele.id;
+  }
+
+  // Inherently unique by tag name
+  var tagName = ele.tagName.toLowerCase();
+  if (tagName === 'html') {
+    return 'html';
+  }
+  if (tagName === 'head') {
+    return 'head';
+  }
+  if (tagName === 'body') {
+    return 'body';
+  }
+
+  if (ele.parentNode == null) {
+    console.log('danger: ' + tagName);
+  }
+
+  // We might be able to find a unique class name
+  var selector, index, matches;
+  if (ele.classList.length > 0) {
+    for (var i = 0; i < ele.classList.length; i++) {
+      // Is this className unique by itself?
+      selector = '.' + ele.classList.item(i);
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+      // Maybe it's unique with a tag name?
+      selector = tagName + selector;
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+      // Maybe it's unique using a tag name and nth-child
+      index = positionInNodeList(ele, ele.parentNode.children) + 1;
+      selector = selector + ':nth-child(' + index + ')';
+      matches = document.querySelectorAll(selector);
+      if (matches.length === 1) {
+        return selector;
+      }
+    }
+  }
+
+  // So we can be unique w.r.t. our parent, and use recursion
+  index = positionInNodeList(ele, ele.parentNode.children) + 1;
+  selector = dom.findCssSelector(ele.parentNode) + ' > ' +
+          tagName + ':nth-child(' + index + ')';
+
+  return selector;
+};
 
 //------------------------------------------------------------------------------
 
@@ -1943,7 +2063,7 @@ types.getType = function(typeSpec) {
   if (typeof typeSpec === 'string') {
     type = registeredTypes[typeSpec];
     if (typeof type === 'function') {
-      type = new type();
+      type = new type({});
     }
     return type;
   }
@@ -2467,7 +2587,7 @@ exports.shutdown = function() {
  * 'string' the most basic string type that doesn't need to convert
  */
 function StringType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('StringType can not be customized');
   }
 }
@@ -2638,7 +2758,7 @@ SelectionType.prototype.stringify = function(value) {
 /**
  * There are several ways to get selection data. This unifies them into one
  * single function.
- * @return A map of names to values.
+ * @return An array of objects with name and value properties.
  */
 SelectionType.prototype.getLookup = function() {
   if (this.lookup) {
@@ -2691,11 +2811,6 @@ SelectionType.prototype._findPredictions = function(arg) {
 SelectionType.prototype.parse = function(arg) {
   var predictions = this._findPredictions(arg);
 
-  if (predictions.length === 1 && predictions[0].name === arg.text) {
-    var value = predictions[0].value ? predictions[0].value : predictions[0];
-    return new Conversion(value, arg);
-  }
-
   // This is something of a hack it basically allows us to tell the
   // setting type to forget its last setting hack.
   if (this.noMatch) {
@@ -2703,21 +2818,16 @@ SelectionType.prototype.parse = function(arg) {
   }
 
   if (predictions.length > 0) {
-    // Especially at startup, predictions live over the time that things
-    // change so we provide a completion function rather than completion
-    // values.
-    // This was primarily designed for commands, which have since moved
-    // into their own type, so technically we could remove this code,
-    // except that it provides more up-to-date answers, and it's hard to
-    // predict when it will be required.
-    var predictFunc = function() {
-      return this._findPredictions(arg);
-    }.bind(this);
-    return new Conversion(null, arg, Status.INCOMPLETE, '', predictFunc);
+    if (predictions[0].name === arg.text) {
+      var value = predictions[0].value ? predictions[0].value : predictions[0];
+      return new Conversion(value, arg, Status.VALID, '', predictions);
+    }
+
+    return new Conversion(null, arg, Status.INCOMPLETE, '', predictions);
   }
 
-  return new Conversion(null, arg, Status.ERROR,
-      l10n.lookupFormat('typesSelectionNomatch', [ arg.text ]));
+  var msg = l10n.lookupFormat('typesSelectionNomatch', [ arg.text ]);
+  return new Conversion(null, arg, Status.ERROR, msg, predictions);
 };
 
 /**
@@ -2788,7 +2898,7 @@ exports.SelectionType = SelectionType;
  * true/false values
  */
 function BooleanType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('BooleanType can not be customized');
   }
 }
@@ -2870,7 +2980,7 @@ exports.DeferredType = DeferredType;
  * It should not be used anywhere else.
  */
 function BlankType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('BlankType can not be customized');
   }
 }
@@ -3005,7 +3115,7 @@ exports.unsetGlobalObject = function() {
  * 'javascript' handles scripted input
  */
 function JavascriptType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('JavascriptType can not be customized');
   }
 }
@@ -3555,7 +3665,7 @@ exports.getDocument = function() {
  * A CSS expression that refers to a single node
  */
 function NodeType(typeSpec) {
-  if (typeSpec != null) {
+  if (Object.keys(typeSpec).length > 0) {
     throw new Error('NodeType can not be customized');
   }
 }
@@ -3623,6 +3733,307 @@ define('gcli/host', ['require', 'exports', 'module' ], function(require, exports
 exports.flashNode = function(node, color) {
   // We avoid changing the DOM under firefox developer tools so this is a no-op
   // In future we will use the multi-highlighter implemented in bug 653545.
+};
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/types/resource', ['require', 'exports', 'module' , 'gcli/host', 'gcli/l10n', 'gcli/types', 'gcli/types/basic'], function(require, exports, module) {
+
+
+var host = require('gcli/host');
+var l10n = require('gcli/l10n');
+var types = require('gcli/types');
+var SelectionType = require('gcli/types/basic').SelectionType;
+var Status = require('gcli/types').Status;
+var Conversion = require('gcli/types').Conversion;
+
+
+/**
+ * Registration and de-registration.
+ */
+exports.startup = function() {
+  types.registerType(ResourceType);
+};
+
+exports.shutdown = function() {
+  types.unregisterType(ResourceType);
+  exports.clearResourceCache();
+};
+
+exports.clearResourceCache = function() {
+  ResourceCache.clear();
+};
+
+/**
+ * The object against which we complete, which is usually 'window' if it exists
+ * but could be something else in non-web-content environments.
+ */
+var doc;
+if (typeof document !== 'undefined') {
+  doc = document;
+}
+
+/**
+ * Setter for the document that contains the nodes we're matching
+ */
+exports.setDocument = function(document) {
+  doc = document;
+};
+
+/**
+ * Undo the effects of setDocument()
+ */
+exports.unsetDocument = function() {
+  doc = undefined;
+};
+
+/**
+ * Getter for the document that contains the nodes we're matching
+ * Most for changing things back to how they were for unit testing
+ */
+exports.getDocument = function() {
+  return doc;
+};
+
+/**
+ * Resources are bits of CSS and JavaScript that the page either includes
+ * directly or as a result of reading some remote resource.
+ * Resource should not be used directly, but instead through a sub-class like
+ * CssResource or ScriptResource.
+ */
+function Resource(id, name, type, inline, element) {
+  this.id = id;
+  this.name = name;
+  this.type = type;
+  this.inline = inline;
+  this.element = element;
+}
+
+/**
+ * Get the contents of the given resource as a string.
+ * The base Resource leaves this unimplemented.
+ */
+Resource.prototype.getContents = function() {
+  throw new Error('not implemented');
+};
+
+Resource.TYPE_SCRIPT = 'text/javascript';
+Resource.TYPE_CSS = 'text/css';
+
+/**
+ * A CssResource provides an implementation of Resource that works for both
+ * [style] elements and [link type='text/css'] elements in the [head].
+ */
+function CssResource(domSheet) {
+  this.name = domSheet.href;
+  if (!this.name) {
+    this.name = domSheet.ownerNode.id ?
+            'css#' + domSheet.ownerNode.id :
+            'inline-css';
+  }
+
+  this.inline = (domSheet.href == null);
+  this.type = Resource.TYPE_CSS;
+  this.element = domSheet;
+}
+
+CssResource.prototype = Object.create(Resource.prototype);
+
+CssResource.prototype.loadContents = function(callback) {
+  callback(this.element.ownerNode.innerHTML);
+};
+
+CssResource._getAllStyles = function() {
+  var resources = [];
+  Array.prototype.forEach.call(doc.styleSheets, function(domSheet) {
+    CssResource._getStyle(domSheet, resources);
+  });
+
+  dedupe(resources, function(clones) {
+    for (var i = 0; i < clones.length; i++) {
+      clones[i].name = clones[i].name + '-' + i;
+    }
+  });
+
+  return resources;
+};
+
+CssResource._getStyle = function(domSheet, resources) {
+  var resource = ResourceCache.get(domSheet);
+  if (!resource) {
+    resource = new CssResource(domSheet);
+    ResourceCache.add(domSheet, resource);
+  }
+  resources.push(resource);
+
+  // Look for imported stylesheets
+  try {
+    Array.prototype.forEach.call(domSheet.cssRules, function(domRule) {
+      if (domRule.type == CSSRule.IMPORT_RULE && domRule.styleSheet) {
+        CssResource._getStyle(domRule.styleSheet, resources);
+      }
+    }, this);
+  }
+  catch (ex) {
+    // For system stylesheets
+  }
+};
+
+/**
+ * A ScriptResource provides an implementation of Resource that works for
+ * [script] elements (both with a src attribute, and used directly).
+ */
+function ScriptResource(scriptNode) {
+  this.name = scriptNode.src;
+  if (!this.name) {
+    this.name = scriptNode.id ?
+            'script#' + scriptNode.id :
+            'inline-script';
+  }
+
+  this.inline = (scriptNode.src === '' || scriptNode.src == null);
+  this.type = Resource.TYPE_SCRIPT;
+  this.element = scriptNode;
+}
+
+ScriptResource.prototype = Object.create(Resource.prototype);
+
+ScriptResource.prototype.loadContents = function(callback) {
+  if (this.inline) {
+    callback(this.element.innerHTML);
+  }
+  else {
+    // It would be good if there was a better way to get the script source
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== xhr.DONE) {
+        return;
+      }
+      callback(xhr.responseText);
+    };
+    xhr.open('GET', this.element.src, true);
+    xhr.send();
+  }
+};
+
+ScriptResource._getAllScripts = function() {
+  var scriptNodes = doc.querySelectorAll('script');
+  var resources = Array.prototype.map.call(scriptNodes, function(scriptNode) {
+    var resource = ResourceCache.get(scriptNode);
+    if (!resource) {
+      resource = new ScriptResource(scriptNode);
+      ResourceCache.add(scriptNode, resource);
+    }
+    return resource;
+  });
+
+  dedupe(resources, function(clones) {
+    for (var i = 0; i < clones.length; i++) {
+      clones[i].name = clones[i].name + '-' + i;
+    }
+  });
+
+  return resources;
+};
+
+/**
+ * Find resources with the same name, and call onDupe to change the names
+ */
+function dedupe(resources, onDupe) {
+  // first create a map of name->[array of resources with same name]
+  var names = {};
+  resources.forEach(function(scriptResource) {
+    if (names[scriptResource.name] == null) {
+      names[scriptResource.name] = [];
+    }
+    names[scriptResource.name].push(scriptResource);
+  });
+
+  // Call the de-dupe function for each set of dupes
+  Object.keys(names).forEach(function(name) {
+    var clones = names[name];
+    if (clones.length > 1) {
+      onDupe(clones);
+    }
+  });
+}
+
+/**
+ * A CSS expression that refers to a single node
+ */
+function ResourceType(typeSpec) {
+  this.include = typeSpec.include;
+  if (this.include !== Resource.TYPE_SCRIPT &&
+      this.include !== Resource.TYPE_CSS &&
+      this.include != null) {
+    throw new Error('invalid include property: ' + this.include);
+  }
+}
+
+ResourceType.prototype = Object.create(SelectionType.prototype);
+
+/**
+ * There are several ways to get selection data. This unifies them into one
+ * single function.
+ * @return A map of names to values.
+ */
+ResourceType.prototype.getLookup = function() {
+  var resources = [];
+  if (this.include !== Resource.TYPE_SCRIPT) {
+    Array.prototype.push.apply(resources, CssResource._getAllStyles());
+  }
+  if (this.include !== Resource.TYPE_CSS) {
+    Array.prototype.push.apply(resources, ScriptResource._getAllScripts());
+  }
+
+  return resources.map(function(resource) {
+    return { name: resource.name, value: resource };
+  });
+};
+
+ResourceType.prototype.name = 'resource';
+
+
+/**
+ * A quick cache of resources against nodes
+ * TODO: Potential memory leak when the target document has css or script
+ * resources repeatedly added and removed. Solution might be to use a weak
+ * hash map or some such.
+ */
+var ResourceCache = {
+  _cached: [],
+
+  /**
+   * Do we already have a resource that was created for the given node
+   */
+  get: function(node) {
+    for (var i = 0; i < ResourceCache._cached.length; i++) {
+      if (ResourceCache._cached[i].node === node) {
+        return ResourceCache._cached[i].resource;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Add a resource for a given node
+   */
+  add: function(node, resource) {
+    ResourceCache._cached.push({ node: node, resource: resource });
+  },
+
+  /**
+   * Drop all cache entries. Helpful to prevent memory leaks
+   */
+  clear: function() {
+    ResourceCache._cached = {};
+  }
 };
 
 
@@ -4438,6 +4849,9 @@ Requisition.prototype.toString = function() {
  * version of the command line input.
  * @param cursor We only take a status of INCOMPLETE to be INCOMPLETE when the
  * cursor is actually in the argument. Otherwise it's an error.
+ * @return Array of objects each containing <tt>status</tt> property and a
+ * <tt>string</tt> property containing the characters to which the status
+ * applies. Concatenating the strings in order gives the original input.
  */
 Requisition.prototype.getInputStatusMarkup = function(cursor) {
   var argTraces = this.createInputArgTrace();
@@ -4446,7 +4860,7 @@ Requisition.prototype.getInputStatusMarkup = function(cursor) {
   cursor = cursor === 0 ? 0 : cursor - 1;
   var cTrace = argTraces[cursor];
 
-  var statuses = [];
+  var markup = [];
   for (var i = 0; i < argTraces.length; i++) {
     var argTrace = argTraces[i];
     var arg = argTrace.arg;
@@ -4465,10 +4879,22 @@ Requisition.prototype.getInputStatusMarkup = function(cursor) {
       }
     }
 
-    statuses.push(status);
+    markup.push({ status: status, string: argTrace.char });
   }
 
-  return statuses;
+  // De-dupe: merge entries where 2 adjacent have same status
+  var i = 0;
+  while (i < markup.length - 1) {
+    if (markup[i].status === markup[i + 1].status) {
+      markup[i].string += markup[i + 1].string;
+      markup.splice(i + 1, 1);
+    }
+    else {
+      i++;
+    }
+  }
+
+  return markup;
 };
 
 /**
@@ -5442,6 +5868,21 @@ function Console(options) {
 }
 
 /**
+ * Called when the page to which we're attached changes
+ */
+Console.prototype.reattachConsole = function(options) {
+  this.chromeWindow.removeEventListener('resize', this.resizer, false);
+  this.chromeWindow = options.chromeDocument.defaultView;
+  this.chromeWindow.addEventListener('resize', this.resizer, false);
+
+  this.focusManager.document = options.chromeDocument;
+  this.inputter.document = options.chromeDocument;
+  this.inputter.completer.document = options.chromeDocument;
+  this.menu.document = options.chromeDocument;
+  this.argFetcher.document = options.chromeDocument;
+};
+
+/**
  * Avoid memory leaks
  */
 Console.prototype.destroy = function() {
@@ -5569,7 +6010,7 @@ exports.Console = Console;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/ui/inputter', ['require', 'exports', 'module' , 'gcli/util', 'gcli/l10n', 'gcli/types', 'gcli/history', 'text!gcli/ui/inputter.css'], function(require, exports, module) {
+define('gcli/ui/inputter', ['require', 'exports', 'module' , 'gcli/util', 'gcli/l10n', 'gcli/types', 'gcli/history', 'gcli/ui/completer', 'text!gcli/ui/inputter.css'], function(require, exports, module) {
 var cliView = exports;
 
 
@@ -5579,6 +6020,7 @@ var l10n = require('gcli/l10n');
 
 var Status = require('gcli/types').Status;
 var History = require('gcli/history').History;
+var Completer = require('gcli/ui/completer').Completer;
 
 var inputterCss = require('text!gcli/ui/inputter.css');
 
@@ -5987,277 +6429,6 @@ Inputter.prototype.getInputState = function() {
 cliView.Inputter = Inputter;
 
 
-/**
- * Completer is an 'input-like' element that sits  an input element annotating
- * it with visual goodness.
- * @param {object} options An object that contains various options which
- * customizes how the completer functions.
- * Properties on the options object:
- * - document (required) DOM document to be used in creating elements
- * - requisition (required) A GCLI Requisition object whose state is monitored
- * - completeElement (optional) An element to use
- * - completionPrompt (optional) The prompt - defaults to '\u00bb'
- *   (double greater-than, a.k.a right guillemet). The prompt is used directly
- *   in a TextNode, so HTML entities are not allowed.
- */
-function Completer(options) {
-  this.document = options.document || document;
-  this.requisition = options.requisition;
-  this.elementCreated = false;
-  this.scratchpad = options.scratchpad;
-
-  this.element = options.completeElement || 'gcli-row-complete';
-  if (typeof this.element === 'string') {
-    var name = this.element;
-    this.element = this.document.getElementById(name);
-
-    if (!this.element) {
-      this.elementCreated = true;
-      this.element = dom.createElement(this.document, 'div');
-      this.element.className = 'gcli-in-complete gcli-in-valid';
-      this.element.setAttribute('tabindex', '-1');
-      this.element.setAttribute('aria-live', 'polite');
-    }
-  }
-
-  this.completionPrompt = typeof options.completionPrompt === 'string'
-      ? options.completionPrompt
-      : '\u00bb';
-
-  if (options.inputBackgroundElement) {
-    this.backgroundElement = options.inputBackgroundElement;
-  }
-  else {
-    this.backgroundElement = this.element;
-  }
-}
-
-/**
- * Avoid memory leaks
- */
-Completer.prototype.destroy = function() {
-  delete this.document;
-  delete this.element;
-  delete this.backgroundElement;
-
-  if (this.elementCreated) {
-    this.document.defaultView.removeEventListener('resize', this.resizer, false);
-  }
-
-  delete this.inputter;
-};
-
-/**
- * A list of the styles that decorate() should copy to make the completion
- * element look like the input element. backgroundColor is a spiritual part of
- * this list, but see comment in decorate().
- */
-Completer.copyStyles = [ 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle' ];
-
-/**
- * Make ourselves visually similar to the input element, and make the input
- * element transparent so our background shines through
- */
-Completer.prototype.decorate = function(inputter) {
-  this.inputter = inputter;
-  var input = inputter.element;
-
-  // If we were told which element to use, then assume it is already
-  // correctly positioned. Otherwise insert it alongside the input element
-  if (this.elementCreated) {
-    this.inputter.appendAfter(this.element);
-
-    var styles = this.document.defaultView.getComputedStyle(input, null);
-    Completer.copyStyles.forEach(function(style) {
-      this.element.style[style] = styles[style];
-    }, this);
-
-    // The completer text is by default invisible so we make it the same color
-    // as the input background.
-    this.element.style.color = input.style.backgroundColor;
-
-    // If there is a separate backgroundElement, then we make the element
-    // transparent, otherwise it inherits the color of the input node
-    // It's not clear why backgroundColor doesn't work when used from
-    // computedStyle, but it doesn't. Patches welcome!
-    this.element.style.backgroundColor = (this.backgroundElement != this.element) ?
-        'transparent' :
-        input.style.backgroundColor;
-    input.style.backgroundColor = 'transparent';
-
-    // Make room for the prompt
-    input.style.paddingLeft = '20px';
-
-    this.resizer = this.resizer.bind(this);
-    this.document.defaultView.addEventListener('resize', this.resizer, false);
-    this.resizer();
-  }
-};
-
-/**
- * Ensure that the completion element is the same size and the inputter element
- */
-Completer.prototype.resizer = function() {
-  // Remove this when jsdom does getBoundingClientRect(). See Bug 717269
-  if (!this.inputter.element.getBoundingClientRect) {
-    return;
-  }
-
-  var rect = this.inputter.element.getBoundingClientRect();
-  // -4 to line up with 1px of padding and border, top and bottom
-  var height = rect.bottom - rect.top - 4;
-
-  this.element.style.top = rect.top + 'px';
-  this.element.style.height = height + 'px';
-  this.element.style.lineHeight = height + 'px';
-  this.element.style.left = rect.left + 'px';
-  this.element.style.width = (rect.right - rect.left) + 'px';
-};
-
-/**
- * Is the completion given, a "strict" completion of the user inputted value?
- * A completion is considered "strict" only if it the user inputted value is an
- * exact prefix of the completion (ignoring leading whitespace)
- */
-function isStrictCompletion(inputValue, completion) {
-  // Strip any leading whitespace from the user inputted value because the
-  // completion will never have leading whitespace.
-  inputValue = inputValue.replace(/^\s*/, '');
-  // Strict: "ec" -> "echo"
-  // Non-Strict: "ls *" -> "ls foo bar baz"
-  return completion.indexOf(inputValue) === 0;
-}
-
-/**
- * Bring the completion element up to date with what the requisition says
- */
-Completer.prototype.update = function(input) {
-  var current = this.requisition.getAssignmentAt(input.cursor.start);
-  var predictions = current.getPredictions();
-
-  dom.clearElement(this.element);
-
-  // All this DOM manipulation is equivalent to the HTML below.
-  // It's not a template because it's very simple except appendMarkupStatus()
-  // which is complex due to a need to merge spans.
-  // Bug 707131 questions if we couldn't simplify this to use a template.
-  //
-  // <span class="gcli-prompt">${completionPrompt}</span>
-  // ${appendMarkupStatus()}
-  // ${prefix}
-  // <span class="gcli-in-ontab">${contents}</span>
-  // <span class="gcli-in-closebrace" if="${unclosedJs}">}<span>
-  // <div class="gcli-in-scratchlink">${scratchLink}</div>
-
-  var document = this.element.ownerDocument;
-  var prompt = dom.createElement(document, 'span');
-  prompt.classList.add('gcli-prompt');
-  prompt.appendChild(document.createTextNode(this.completionPrompt + ' '));
-  this.element.appendChild(prompt);
-
-  if (input.typed.length > 0) {
-    var scores = this.requisition.getInputStatusMarkup(input.cursor.start);
-    this.appendMarkupStatus(this.element, scores, input);
-  }
-
-  if (input.typed.length > 0 && predictions.length > 0) {
-    var tab = predictions[0].name;
-    var existing = current.getArg().text;
-
-    var contents;
-    var prefix = null;
-
-    if (isStrictCompletion(existing, tab) &&
-            input.cursor.start === input.typed.length) {
-      // Display the suffix of the prediction as the completion
-      var numLeadingSpaces = existing.match(/^(\s*)/)[0].length;
-      contents = tab.slice(existing.length - numLeadingSpaces);
-    } else {
-      // Display the '-> prediction' at the end of the completer element
-      prefix = ' \u00a0';         // aka &nbsp;
-      contents = '\u21E5 ' + tab; // aka &rarr; the right arrow
-    }
-
-    if (prefix != null) {
-      this.element.appendChild(document.createTextNode(prefix));
-    }
-
-    var suffix = dom.createElement(document, 'span');
-    suffix.classList.add('gcli-in-ontab');
-    suffix.appendChild(document.createTextNode(contents));
-    this.element.appendChild(suffix);
-  }
-
-  // Add a grey '}' to the end of the command line when we've opened
-  // with a { but haven't closed it
-  var command = this.requisition.commandAssignment.getValue();
-  var isJsCommand = (command && command.name === '{');
-  var isUnclosedJs = isJsCommand &&
-          this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1;
-  if (isUnclosedJs) {
-    var close = dom.createElement(document, 'span');
-    close.classList.add('gcli-in-closebrace');
-    close.appendChild(document.createTextNode(' }'));
-    this.element.appendChild(close);
-  }
-
-  // Create a scratchpad link if it's a JS command and we have a function to
-  // actually perform the request
-  if (isJsCommand && this.scratchpad) {
-    var hint = dom.createElement(document, 'div');
-    hint.classList.add('gcli-in-scratchlink');
-    hint.appendChild(document.createTextNode(this.scratchpad.linkText));
-    this.element.appendChild(hint);
-  }
-};
-
-/**
- * Mark-up an array of Status values with spans
- */
-Completer.prototype.appendMarkupStatus = function(element, scores, input) {
-  if (scores.length === 0) {
-    return;
-  }
-
-  var document = element.ownerDocument;
-  var i = 0;
-  var lastStatus = -1;
-  var span;
-  var contents = '';
-
-  while (true) {
-    if (lastStatus !== scores[i]) {
-      var state = scores[i];
-      if (!state) {
-        console.error('No state at i=' + i + '. scores.len=' + scores.length);
-        state = Status.VALID;
-      }
-      span = dom.createElement(document, 'span');
-      span.classList.add('gcli-in-' + state.toString().toLowerCase());
-      lastStatus = scores[i];
-    }
-    var char = input.typed[i];
-    if (char === ' ') {
-      char = '\u00a0';
-    }
-    contents += char;
-    i++;
-    if (i === input.typed.length) {
-      span.appendChild(document.createTextNode(contents));
-      this.element.appendChild(span);
-      break;
-    }
-    if (lastStatus !== scores[i]) {
-      span.appendChild(document.createTextNode(contents));
-      this.element.appendChild(span);
-      contents = '';
-    }
-  }
-};
-
-cliView.Completer = Completer;
-
-
 });
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
@@ -6321,7 +6492,274 @@ History.prototype.backward = function() {
 
 exports.History = History;
 
-});define("text!gcli/ui/inputter.css", [], "");
+});/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/ui/completer', ['require', 'exports', 'module' , 'gcli/util', 'gcli/ui/domtemplate', 'text!gcli/ui/completer.html'], function(require, exports, module) {
+
+
+var dom = require('gcli/util').dom;
+var domtemplate = require('gcli/ui/domtemplate');
+
+var completerHtml = require('text!gcli/ui/completer.html');
+
+/**
+ * Completer is an 'input-like' element that sits  an input element annotating
+ * it with visual goodness.
+ * @param {object} options An object that contains various options which
+ * customizes how the completer functions.
+ * Properties on the options object:
+ * - document (required) DOM document to be used in creating elements
+ * - requisition (required) A GCLI Requisition object whose state is monitored
+ * - completeElement (optional) An element to use
+ * - completionPrompt (optional) The prompt - defaults to '\u00bb'
+ *   (double greater-than, a.k.a right guillemet). The prompt is used directly
+ *   in a TextNode, so HTML entities are not allowed.
+ */
+function Completer(options) {
+  this.document = options.document || document;
+  this.requisition = options.requisition;
+  this.elementCreated = false;
+  this.scratchpad = options.scratchpad;
+  this.input = { typed: '', cursor: { start: 0, end: 0 } };
+
+  this.element = options.completeElement || 'gcli-row-complete';
+  if (typeof this.element === 'string') {
+    var name = this.element;
+    this.element = this.document.getElementById(name);
+
+    if (!this.element) {
+      this.elementCreated = true;
+      this.element = dom.createElement(this.document, 'div');
+      this.element.className = 'gcli-in-complete gcli-in-valid';
+      this.element.setAttribute('tabindex', '-1');
+      this.element.setAttribute('aria-live', 'polite');
+    }
+  }
+
+  this.completionPrompt = typeof options.completionPrompt === 'string'
+      ? options.completionPrompt
+      : '\u00bb';
+
+  if (options.inputBackgroundElement) {
+    this.backgroundElement = options.inputBackgroundElement;
+  }
+  else {
+    this.backgroundElement = this.element;
+  }
+
+  this.template = dom.createElement(this.document, 'div');
+  dom.setInnerHtml(this.template, completerHtml);
+  // Replace the temporary div we created with the template root
+  this.template = this.template.children[0];
+  // We want the spans to line up without the spaces in the template
+  dom.removeWhitespace(this.template, true);
+}
+
+/**
+ * Avoid memory leaks
+ */
+Completer.prototype.destroy = function() {
+  delete this.document;
+  delete this.element;
+  delete this.backgroundElement;
+  delete this.template;
+
+  if (this.elementCreated) {
+    this.document.defaultView.removeEventListener('resize', this.resizer, false);
+  }
+
+  delete this.inputter;
+};
+
+/**
+ * A list of the styles that decorate() should copy to make the completion
+ * element look like the input element. backgroundColor is a spiritual part of
+ * this list, but see comment in decorate().
+ */
+Completer.copyStyles = [ 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle' ];
+
+/**
+ * Make ourselves visually similar to the input element, and make the input
+ * element transparent so our background shines through
+ */
+Completer.prototype.decorate = function(inputter) {
+  this.inputter = inputter;
+  var inputEle = inputter.element;
+
+  // If we were told which element to use, then assume it is already
+  // correctly positioned. Otherwise insert it alongside the input element
+  if (this.elementCreated) {
+    this.inputter.appendAfter(this.element);
+
+    var styles = this.document.defaultView.getComputedStyle(inputEle, null);
+    Completer.copyStyles.forEach(function(style) {
+      this.element.style[style] = styles[style];
+    }, this);
+
+    // The completer text is by default invisible so we make it the same color
+    // as the input background.
+    this.element.style.color = inputEle.style.backgroundColor;
+
+    // If there is a separate backgroundElement, then we make the element
+    // transparent, otherwise it inherits the color of the input node
+    // It's not clear why backgroundColor doesn't work when used from
+    // computedStyle, but it doesn't. Patches welcome!
+    this.element.style.backgroundColor = (this.backgroundElement != this.element) ?
+        'transparent' :
+        inputEle.style.backgroundColor;
+    inputEle.style.backgroundColor = 'transparent';
+
+    // Make room for the prompt
+    inputEle.style.paddingLeft = '20px';
+
+    this.resizer = this.resizer.bind(this);
+    this.document.defaultView.addEventListener('resize', this.resizer, false);
+    this.resizer();
+  }
+};
+
+/**
+ * Ensure that the completion element is the same size and the inputter element
+ */
+Completer.prototype.resizer = function() {
+  // Remove this when jsdom does getBoundingClientRect(). See Bug 717269
+  if (!this.inputter.element.getBoundingClientRect) {
+    return;
+  }
+
+  var rect = this.inputter.element.getBoundingClientRect();
+  // -4 to line up with 1px of padding and border, top and bottom
+  var height = rect.bottom - rect.top - 4;
+
+  this.element.style.top = rect.top + 'px';
+  this.element.style.height = height + 'px';
+  this.element.style.lineHeight = height + 'px';
+  this.element.style.left = rect.left + 'px';
+  this.element.style.width = (rect.right - rect.left) + 'px';
+};
+
+/**
+ * Is the completion given, a "strict" completion of the user inputted value?
+ * A completion is considered "strict" only if it the user inputted value is an
+ * exact prefix of the completion (ignoring leading whitespace)
+ */
+function isStrictCompletion(inputValue, completion) {
+  // Strip any leading whitespace from the user inputted value because the
+  // completion will never have leading whitespace.
+  inputValue = inputValue.replace(/^\s*/, '');
+  // Strict: "ec" -> "echo"
+  // Non-Strict: "ls *" -> "ls foo bar baz"
+  return completion.indexOf(inputValue) === 0;
+}
+
+/**
+ * Bring the completion element up to date with what the requisition says
+ */
+Completer.prototype.update = function(input) {
+  this.input = input;
+
+  var template = this.template.cloneNode(true);
+  domtemplate.template(template, this, { stack: 'completer.html' });
+
+  dom.clearElement(this.element);
+  while (template.hasChildNodes()) {
+    this.element.appendChild(template.firstChild);
+  }
+};
+
+/**
+ * A proxy to requisition.getInputStatusMarkup which converts space to &nbsp;
+ * in the string member (for HTML display) and converts status to an
+ * appropriate class name (i.e. lower cased, prefixed with gcli-in-)
+ */
+Object.defineProperty(Completer.prototype, 'statusMarkup', {
+  get: function() {
+    var markup = this.requisition.getInputStatusMarkup(this.input.cursor.start);
+    markup.forEach(function(member) {
+      member.string = member.string.replace(/ /g, '\u00a0'); // i.e. &nbsp;
+      member.className = 'gcli-in-' + member.status.toString().toLowerCase();
+    }, this);
+    return markup;
+  }
+});
+
+/**
+ * What text should we display as the tab text, and should it be given as a
+ * '-> full' or as 'suffix' (which depends on if the completion is a strict
+ * completion or not)
+ */
+Object.defineProperty(Completer.prototype, 'tabText', {
+  get: function() {
+    var current = this.requisition.getAssignmentAt(this.input.cursor.start);
+    var predictions = current.getPredictions();
+
+    if (this.input.typed.length === 0 || predictions.length === 0) {
+      return '';
+    }
+
+    var tab = predictions[0].name;
+    var existing = current.getArg().text;
+
+    if (isStrictCompletion(existing, tab) &&
+            this.input.cursor.start === this.input.typed.length) {
+      // Display the suffix of the prediction as the completion
+      var numLeadingSpaces = existing.match(/^(\s*)/)[0].length;
+      return tab.slice(existing.length - numLeadingSpaces);
+    }
+
+    // Display the '-> prediction' at the end of the completer element
+    return ' \u00a0\u21E5 ' + tab; // aka &nbsp;&rarr; the right arrow
+  }
+});
+
+/**
+ * The text for the 'jump to scratchpad' feature, or null if it is disabled
+ */
+Object.defineProperty(Completer.prototype, 'scratchLink', {
+  get: function() {
+    if (!this.scratchpad) {
+      return null;
+    }
+    var command = this.requisition.commandAssignment.getValue();
+    return command && command.name === '{' ? this.scratchpad.linkText : null;
+  }
+});
+
+/**
+ * Is the entered command a JS command with no closing '}'?
+ * TWEAK: This code should be considered for promotion to Requisition
+ */
+Object.defineProperty(Completer.prototype, 'unclosedJs', {
+  get: function() {
+    var command = this.requisition.commandAssignment.getValue();
+    var jsCommand = command && command.name === '{';
+    var unclosedJs = jsCommand &&
+        this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1;
+    return unclosedJs;
+  }
+});
+
+exports.Completer = Completer;
+
+
+});
+define("text!gcli/ui/completer.html", [], "\n" +
+  "<div>\n" +
+  "  <span class=\"gcli-prompt\">${completionPrompt} </span>\n" +
+  "  <loop foreach=\"member in ${statusMarkup}\">\n" +
+  "    <span class=\"${member.className}\">${member.string}</span>\n" +
+  "  </loop>\n" +
+  "  <span class=\"gcli-in-ontab\">${tabText}</span>\n" +
+  "  <span class=\"gcli-in-closebrace\" if=\"${unclosedJs}\">}</span>\n" +
+  "  <div class=\"gcli-in-scratchlink\" if=\"${scratchLink}\">${scratchLink}</div>\n" +
+  "</div>\n" +
+  "");
+
+define("text!gcli/ui/inputter.css", [], "");
 
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors

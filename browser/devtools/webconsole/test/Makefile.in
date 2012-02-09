@@ -64,6 +64,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_consoleonpage.js \
 	browser_webconsole_chrome.js \
 	browser_webconsole_execution_scope.js \
+	browser_webconsole_for_of.js \
 	browser_webconsole_history.js \
 	browser_webconsole_hud_getters.js \
 	browser_webconsole_js_input_and_output_styling.js \
@@ -226,6 +227,7 @@ _BROWSER_TEST_PAGES = \
 	browser_gcli_inspect.html \
 	test-bug-658368-time-methods.html \
 	test-webconsole-error-observer.html \
+	test-for-of.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

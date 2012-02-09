@@ -1031,6 +1031,12 @@ pref("devtools.errorconsole.enabled", false);
 pref("devtools.inspector.enabled", true);
 pref("devtools.inspector.htmlHeight", 112);
 
+// Enable the Debugger
+pref("devtools.debugger.enabled", false);
+
+// The default Debugger UI height
+pref("devtools.debugger.ui.height", 250);
+
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
 
@@ -1119,3 +1125,8 @@ pref("browser.newtabpage.enabled", true);
 
 // Enable the DOM full-screen API.
 pref("full-screen-api.enabled", true);
+
+// Startup Crash Tracking
+// number of startup crashes that can occur before starting into safe mode automatically
+// (this pref has no effect if more than 6 hours have passed since the last crash)
+pref("toolkit.startup.max_resumed_crashes", 2);

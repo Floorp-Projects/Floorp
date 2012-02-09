@@ -39,6 +39,9 @@
 <!ENTITY safeModeDialog.title         "&brandShortName; Safe Mode">
 <!ENTITY window.width                 "37em">
 
+<!ENTITY autoSafeModeIntro.label      "&brandShortName; Closed Unexpectedly While Starting">
+<!ENTITY autoSafeModeDescription.label "We sincerely apologize for the inconvenience. &brandShortName; is now running in Safe Mode, which temporarily disables your custom settings, themes, and extensions.">
+
 <!ENTITY safeModeDescription.label    "&brandShortName; is now running in Safe Mode, which temporarily disables your custom settings, themes, and extensions.">
 <!ENTITY safeModeDescription2.label   "You can make some or all of these changes permanent:">
 

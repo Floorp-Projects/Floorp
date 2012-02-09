@@ -42,7 +42,7 @@ import java.util.List;
 
 public interface Actions {
   public enum SpecialKey {
-    DOWN, UP, LEFT, RIGHT, ENTER
+    DOWN, UP, LEFT, RIGHT, ENTER, MENU, BACK
   }
 
   public interface EventExpecter {
@@ -50,6 +50,11 @@ public interface Actions {
     public void blockForEvent();
     /** Polls to see if the event has been received. Once this returns true, subsequent calls will also return true. */
     public boolean eventReceived();
+  }
+
+  public interface RepeatedEventExpecter extends EventExpecter {
+    /** Blocks until at least one event has been received, and no events have been received in the last <code>millis</code> milliseconds. */
+    public void blockUntilClear(long millis);
   }
 
   public interface RepeatedEventExpecter extends EventExpecter {

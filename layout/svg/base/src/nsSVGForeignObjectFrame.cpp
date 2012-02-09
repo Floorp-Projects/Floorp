@@ -587,7 +587,6 @@ nsSVGForeignObjectFrame::DoReflow()
     return;
 
   // initiate a synchronous reflow here and now:  
-  nsSize availableSpace(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   nsIPresShell* presShell = presContext->PresShell();
   NS_ASSERTION(presShell, "null presShell");
   nsRefPtr<nsRenderingContext> renderingContext =
@@ -622,7 +621,7 @@ nsSVGForeignObjectFrame::DoReflow()
   // page/column breaking at that height.
   NS_ASSERTION(reflowState.mComputedBorderPadding == nsMargin(0, 0, 0, 0) &&
                reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
-               "style system should ensure that :-moz-svg-foreign content "
+               "style system should ensure that :-moz-svg-foreign-content "
                "does not get styled");
   NS_ASSERTION(reflowState.ComputedWidth() == size.width,
                "reflow state made child wrong size");

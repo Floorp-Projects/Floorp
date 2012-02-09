@@ -25,7 +25,7 @@ function test()
   function setupInfobarTest()
   {
     nodes = [
-      {node: doc.querySelector("#top"), position: "bottom", tag: "DIV", id: "#top", classes: ".class1 .class2"},
+      {node: doc.querySelector("#top"), position: "bottom", tag: "DIV", id: "#top", classes: ".class1.class2"},
       {node: doc.querySelector("#vertical"), position: "overlap", tag: "DIV", id: "#vertical", classes: ""},
       {node: doc.querySelector("#bottom"), position: "top", tag: "DIV", id: "#bottom", classes: ""},
       {node: doc.querySelector("body"), position: "overlap", tag: "BODY", id: "", classes: ""},
@@ -86,14 +86,7 @@ function test()
     is(idLabel.textContent, nodes[cursor].id, "node " + cursor  + ": id matches.");
 
     let classesBox = document.getElementById("highlighter-nodeinfobar-classes");
-
-    let displayedClasses = [];
-    for (let i = 0; i < classesBox.childNodes.length; i++) {
-      displayedClasses.push(classesBox.childNodes[i].textContent);
-    }
-    displayedClasses = displayedClasses.join(" ");
-
-    is(displayedClasses, nodes[cursor].classes, "node " + cursor  + ": classes match.");
+    is(classesBox.textContent, nodes[cursor].classes, "node " + cursor  + ": classes match.");
   }
 
   function finishUp() {

@@ -59,17 +59,20 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
+#include "nsIXULRuntime.h"
 #include "nsIXULWindow.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
+#include "mozilla/Preferences.h"
 
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsAppShellCID.h"
+#include "nsXPCOMCIDInternal.h"
 #include "mozilla/Services.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsIXPConnect.h"
@@ -98,6 +101,10 @@
 #include "mozilla/StartupTimeline.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+#define kPrefLastSuccess "toolkit.startup.last_success"
+#define kPrefMaxResumedCrashes "toolkit.startup.max_resumed_crashes"
+#define kPrefRecentCrashes "toolkit.startup.recent_crashes"
 
 #if defined(XP_WIN)
 #include "mozilla/perfprobe.h"
@@ -163,7 +170,9 @@ nsAppStartup::nsAppStartup() :
   mShuttingDown(false),
   mAttemptingQuit(false),
   mRestart(false),
-  mInterrupted(false)
+  mInterrupted(false),
+  mIsSafeModeNecessary(false),
+  mStartupCrashTrackingEnded(false)
 { }
 
 
@@ -806,6 +815,160 @@ nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
       }
     }
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::GetAutomaticSafeModeNecessary(bool *_retval)
+{
+    *_retval = mIsSafeModeNecessary;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
+{
+  const PRInt32 MAX_TIME_SINCE_STARTUP = 6 * 60 * 60 * 1000;
+  const PRInt32 MAX_STARTUP_BUFFER = 10;
+  nsresult rv;
+
+  mStartupCrashTrackingEnded = false;
+
+  bool hasLastSuccess = Preferences::HasUserValue(kPrefLastSuccess);
+  if (!hasLastSuccess) {
+    // Clear so we don't get stuck with SafeModeNecessary returning true if we
+    // have had too many recent crashes and the last success pref is missing.
+    Preferences::ClearUser(kPrefRecentCrashes);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  bool inSafeMode = false;
+  nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(xr, NS_ERROR_FAILURE);
+
+  xr->GetInSafeMode(&inSafeMode);
+
+  PRInt64 replacedLockTime;
+  rv = xr->GetReplacedLockTime(&replacedLockTime);
+
+  if (NS_FAILED(rv) || !replacedLockTime) {
+    if (!inSafeMode)
+      Preferences::ClearUser(kPrefRecentCrashes);
+    GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+    return NS_OK;
+  }
+
+  // check whether safe mode is necessary
+  PRInt32 maxResumedCrashes = -1;
+  rv = Preferences::GetInt(kPrefMaxResumedCrashes, &maxResumedCrashes);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  PRInt32 recentCrashes = 0;
+  Preferences::GetInt(kPrefRecentCrashes, &recentCrashes);
+  mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
+
+  // time of last successful startup
+  PRInt32 lastSuccessfulStartup;
+  rv = Preferences::GetInt(kPrefLastSuccess, &lastSuccessfulStartup);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 lockSeconds = (PRInt32)(replacedLockTime / PR_MSEC_PER_SEC);
+
+  // started close enough to good startup so call it good
+  if (lockSeconds <= lastSuccessfulStartup + MAX_STARTUP_BUFFER
+      && lockSeconds >= lastSuccessfulStartup - MAX_STARTUP_BUFFER) {
+    GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+    return NS_OK;
+  }
+
+  // sanity check that the pref set at last success is not greater than the current time
+  if (PR_Now() / PR_USEC_PER_SEC <= lastSuccessfulStartup)
+    return NS_ERROR_FAILURE;
+
+  if (inSafeMode) {
+    GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+    return NS_OK;
+  }
+
+  PRTime now = (PR_Now() / PR_USEC_PER_MSEC);
+  // if the last startup attempt which crashed was in the last 6 hours
+  if (replacedLockTime >= now - MAX_TIME_SINCE_STARTUP) {
+    NS_WARNING("Last startup was detected as a crash.");
+    recentCrashes++;
+    rv = Preferences::SetInt(kPrefRecentCrashes, recentCrashes);
+  } else {
+    // Otherwise ignore that crash and all previous since it may not be applicable anymore
+    // and we don't want someone to get stuck in safe mode if their prefs are read-only.
+    rv = Preferences::ClearUser(kPrefRecentCrashes);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // recalculate since recent crashes count may have changed above
+  mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
+
+  nsCOMPtr<nsIPrefService> prefs = Preferences::GetService();
+  rv = prefs->SavePrefFile(nsnull); // flush prefs to disk since we are tracking crashes
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAppStartup::TrackStartupCrashEnd()
+{
+  bool inSafeMode = false;
+  nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
+  if (xr)
+    xr->GetInSafeMode(&inSafeMode);
+
+  // return if we already ended or we're restarting into safe mode
+  if (mStartupCrashTrackingEnded || (mIsSafeModeNecessary && !inSafeMode))
+    return NS_OK;
+  mStartupCrashTrackingEnded = true;
+
+  // Use the timestamp of XRE_main as an approximation for the lock file timestamp.
+  // See MAX_STARTUP_BUFFER for the buffer time period.
+  nsresult rv;
+  PRTime mainTime = StartupTimeline::Get(StartupTimeline::MAIN);
+  if (mainTime <= 0) {
+    NS_WARNING("Could not get StartupTimeline::MAIN time.");
+  } else {
+    PRInt32 lockFileTime = (PRInt32)(mainTime / PR_USEC_PER_SEC);
+    rv = Preferences::SetInt(kPrefLastSuccess, lockFileTime);
+    if (NS_FAILED(rv)) NS_WARNING("Could not set startup crash detection pref.");
+  }
+
+  if (inSafeMode && mIsSafeModeNecessary) {
+    // On a successful startup in automatic safe mode, allow the user one more crash
+    // in regular mode before returning to safe mode.
+    PRInt32 maxResumedCrashes = 0;
+    PRInt32 prefType;
+    rv = Preferences::GetDefaultRootBranch()->GetPrefType(kPrefMaxResumedCrashes, &prefType);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (prefType == nsIPrefBranch::PREF_INT) {
+      rv = Preferences::GetInt(kPrefMaxResumedCrashes, &maxResumedCrashes);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    rv = Preferences::SetInt(kPrefRecentCrashes, maxResumedCrashes);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (!inSafeMode) {
+    // clear the count of recent crashes after a succesful startup when not in safe mode
+    rv = Preferences::ClearUser(kPrefRecentCrashes);
+    if (NS_FAILED(rv)) NS_WARNING("Could not clear startup crash count.");
+  }
+  nsCOMPtr<nsIPrefService> prefs = Preferences::GetService();
+  rv = prefs->SavePrefFile(nsnull); // flush prefs to disk since we are tracking crashes
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsAppStartup::RestartInSafeMode(PRUint32 aQuitMode)
+{
+  PR_SetEnv("MOZ_SAFE_MODE_RESTART=1");
+  this->Quit(aQuitMode | nsIAppStartup::eRestart);
 
   return NS_OK;
 }

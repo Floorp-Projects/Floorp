@@ -434,10 +434,6 @@ struct TreeContext {                /* tree context for semantic checks */
         return flags & TCF_FUN_MUTATES_PARAMETER;
     }
 
-    /*
-     * Accessing the implicit |arguments| local binding in a function must
-     * trigger appropriate code generation such that the access works.
-     */
     void noteArgumentsNameUse(ParseNode *node) {
         JS_ASSERT(inFunction());
         JS_ASSERT(node->isKind(PNK_NAME));
@@ -446,23 +442,6 @@ struct TreeContext {                /* tree context for semantic checks */
         flags |= TCF_FUN_USES_ARGUMENTS;
         if (funbox)
             funbox->node->pn_dflags |= PND_FUNARG;
-    }
-
-    /*
-     * Non-dynamic accesses to a property named "arguments" inside a function
-     * have to deoptimize the function in case those accesses are to the
-     * function's arguments.  (However, this is unnecessary in strict mode
-     * functions because of the f.arguments poison-pill.  O frabjous day!)
-     */
-    void noteArgumentsPropertyAccess(ParseNode *node) {
-        JS_ASSERT(inFunction());
-        JS_ASSERT(&node->asPropertyAccess().name() ==
-                  parser->context->runtime->atomState.argumentsAtom);
-        if (!inStrictMode()) {
-            flags |= TCF_FUN_USES_ARGUMENTS;
-            if (funbox)
-                funbox->node->pn_dflags |= PND_FUNARG;
-        }
     }
 
     /*

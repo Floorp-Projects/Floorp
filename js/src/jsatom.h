@@ -314,6 +314,7 @@ struct JSAtomState
     js::PropertyName    *noSuchMethodAtom;
     js::PropertyName    *objectNullAtom;
     js::PropertyName    *objectUndefinedAtom;
+    js::PropertyName    *ofAtom;
     js::PropertyName    *protoAtom;
     js::PropertyName    *setAtom;
     js::PropertyName    *sourceAtom;
@@ -540,7 +541,7 @@ extern void
 js_TraceAtomState(JSTracer *trc);
 
 extern void
-js_SweepAtomState(JSContext *cx);
+js_SweepAtomState(JSRuntime *rt);
 
 extern bool
 js_InitCommonAtoms(JSContext *cx);

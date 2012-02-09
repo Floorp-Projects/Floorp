@@ -67,13 +67,11 @@ struct TransferItem {
   nsCOMPtr<nsIVariant> mData;
 };
 
-class nsDOMDataTransfer : public nsIDOMDataTransfer,
-                          public nsIDOMNSDataTransfer
+class nsDOMDataTransfer : public nsIDOMDataTransfer
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMDATATRANSFER
-  NS_DECL_NSIDOMNSDATATRANSFER
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMDataTransfer, nsIDOMDataTransfer)
 
