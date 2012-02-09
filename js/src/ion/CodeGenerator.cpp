@@ -1573,9 +1573,9 @@ class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
           case LInstruction::LOp_GetPropertyCacheT:
           case LInstruction::LOp_GetPropertyCacheV:
             return codegen->visitOutOfLineCacheGetProperty(this);
-          case LInstruction::LOp_CacheSetPropertyT:
-          case LInstruction::LOp_CacheSetPropertyV:
-            return codegen->visitOutOfLineCacheSetProperty(this);
+          case LInstruction::LOp_SetPropertyCacheT:
+          case LInstruction::LOp_SetPropertyCacheV:
+            return codegen->visitOutOfLineSetPropertyCache(this);
           default:
             JS_NOT_REACHED("Bad instruction");
             return false;
@@ -1654,17 +1654,17 @@ ConstantOrRegister
 CodeGenerator::getSetPropertyValue(LInstruction *ins)
 {
     if (ins->getOperand(1)->isConstant()) {
-        JS_ASSERT(ins->isCacheSetPropertyT());
+        JS_ASSERT(ins->isSetPropertyCacheT());
         return ConstantOrRegister(*ins->getOperand(1)->toConstant());
     }
 
     switch (ins->op()) {
       case LInstruction::LOp_CallSetProperty:
         return TypedOrValueRegister(ToValue(ins, LCallSetProperty::Value));
-      case LInstruction::LOp_CacheSetPropertyV:
-        return TypedOrValueRegister(ToValue(ins, LCacheSetPropertyV::Value));
-      case LInstruction::LOp_CacheSetPropertyT: {
-        LCacheSetPropertyT *ins_ = ins->toCacheSetPropertyT();
+      case LInstruction::LOp_SetPropertyCacheV:
+        return TypedOrValueRegister(ToValue(ins, LSetPropertyCacheV::Value));
+      case LInstruction::LOp_SetPropertyCacheT: {
+        LSetPropertyCacheT *ins_ = ins->toSetPropertyCacheT();
         return TypedOrValueRegister(ins_->valueType(), ToAnyRegister(ins->getOperand(1)));
       }
       default:
@@ -1699,7 +1699,7 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
 }
 
 bool
-CodeGenerator::visitOutOfLineCacheSetProperty(OutOfLineCache *ool)
+CodeGenerator::visitOutOfLineSetPropertyCache(OutOfLineCache *ool)
 {
     LInstruction *ins = ool->cache();
 
