@@ -52,9 +52,9 @@ namespace mozilla {
 namespace layers {
 
 CompositorParent::CompositorParent(nsIWidget* aWidget)
-  : mPaused(false)
-  , mWidget(aWidget)
+  : mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
+  , mPaused(false)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -104,13 +104,11 @@ CompositorParent::PauseComposition()
 void
 CompositorParent::ResumeComposition()
 {
-  if (mPaused) {
-    mPaused = false;
+  mPaused = false;
 
 #ifdef MOZ_WIDGET_ANDROID
-    static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->RenewSurface();
+  static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->RenewSurface();
 #endif
-  }
 }
 
 void
@@ -184,12 +182,48 @@ CompositorParent::Composite()
   printf_stderr("Correcting for position fixed %i, %i\n", -mScrollOffset.x, -mScrollOffset.y);
   worldTransform.Translate(offset);
   worldTransform.Scale(mXScale, mYScale, 1.0f);
-  Layer* root = mLayerManager->GetRoot();
-  root->AsShadowLayer()->SetShadowTransform(worldTransform);
+#ifdef MOZ_WIDGET_ANDROID
+  Layer* layer = GetPrimaryScrollableLayer();
+#else
+  Layer* layer = mLayerManager->GetRoot();
+#endif
+  layer->AsShadowLayer()->SetShadowTransform(worldTransform);
 
   mLayerManager->EndEmptyTransaction();
   mLastCompose = mozilla::TimeStamp::Now();
 }
+
+#ifdef MOZ_WIDGET_ANDROID
+// Do a breadth-first search to find the first layer in the tree with a
+// displayport set.
+Layer*
+CompositorParent::GetPrimaryScrollableLayer()
+{
+  Layer* root = mLayerManager->GetRoot();
+
+  nsTArray<Layer*> queue;
+  queue.AppendElement(root);
+  for (int i = 0; i < queue.Length(); i++) {
+    ContainerLayer* containerLayer = queue[i]->AsContainerLayer();
+    if (!containerLayer) {
+      continue;
+    }
+
+    const FrameMetrics& frameMetrics = containerLayer->GetFrameMetrics();
+    if (!frameMetrics.mDisplayPort.IsEmpty()) {
+      return containerLayer;
+    }
+
+    Layer* child = containerLayer->GetFirstChild();
+    while (child) {
+      queue.AppendElement(child);
+      child = child->GetNextSibling();
+    }
+  }
+
+  return root;
+}
+#endif
 
 // Go down shadow layer tree, setting properties to match their non-shadow
 // counterparts.
@@ -383,12 +417,6 @@ CompositorParent::TestScroll()
 PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend &backendType)
 {
-#ifdef MOZ_WIDGET_ANDROID
-  // Registering with the compositor will create the surface view that
-  // the layer manager expects to attach to.
-  //RegisterCompositorWithJava();
-#endif
-
   if (backendType == LayerManager::LAYERS_OPENGL) {
     nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(mWidget);
     mWidget = NULL;
@@ -416,14 +444,6 @@ CompositorParent::DeallocPLayers(PLayersParent* actor)
   delete actor;
   return true;
 }
-
-#ifdef MOZ_WIDGET_ANDROID
-void
-CompositorParent::RegisterCompositorWithJava()
-{
-  mozilla::AndroidBridge::Bridge()->RegisterCompositor();
-}
-#endif
 
 } // namespace layers
 } // namespace mozilla

@@ -115,17 +115,16 @@ private:
   // Platform specific functions
 #ifdef MOZ_WIDGET_ANDROID
   /**
-   * Register the compositor thread with the Java native thread.
-   * This will replace the temporary compositor with the real
-   * Gecko compositor thread.
-   **/
-  void RegisterCompositorWithJava();
-
-  /**
    * Asks Java for the viewport position and updates the world transform
    * accordingly.
    */
   void RequestViewTransform();
+
+  /**
+   * Does a breadth-first search to find the first layer in the tree with a
+   * displayport set.
+   */
+  Layer* GetPrimaryScrollableLayer();
 #endif
 
   nsRefPtr<LayerManager> mLayerManager;

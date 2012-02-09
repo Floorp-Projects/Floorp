@@ -157,8 +157,7 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         }
         
         if (mListener != null) {
-            mListener.compositionResumeRequested();
-            mListener.renderRequested();
+            mListener.surfaceChanged(width, height);
         }
     }
 
@@ -203,6 +202,7 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         void renderRequested();
         void compositionPauseRequested();
         void compositionResumeRequested();
+        void surfaceChanged(int width, int height);
     }
 
     public static class FlexibleGLSurfaceViewException extends RuntimeException {

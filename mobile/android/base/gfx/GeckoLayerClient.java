@@ -74,7 +74,7 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     /* The viewport that Gecko will display when drawing is finished */
     protected ViewportMetrics mNewGeckoViewport;
 
-    private static final long MIN_VIEWPORT_CHANGE_DELAY = 200L;
+    private static final long MIN_VIEWPORT_CHANGE_DELAY = 25L;
     private long mLastViewportChangeTime;
     private boolean mPendingViewportAdjust;
     private boolean mViewportSizeChanged;
@@ -265,8 +265,10 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     }
 
     private void adjustViewportWithThrottling() {
-        if (!getLayerController().getRedrawHint())
-            return;
+        // FIXME: Allow redraw while a finger is down, but only if we're about to checkerboard.
+        // This requires fixing aboutToCheckerboard() to know about the new buffer size.
+        /*if (!getLayerController().getRedrawHint())
+            return;*/
 
         if (mPendingViewportAdjust)
             return;
