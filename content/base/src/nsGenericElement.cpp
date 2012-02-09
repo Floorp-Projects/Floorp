@@ -1375,6 +1375,103 @@ nsGenericElement::UpdateEditableState(bool aNotify)
   }
 }
 
+nsEventStates
+Element::StyleStateFromLocks() const
+{
+  nsEventStates locks = LockedStyleStates();
+  nsEventStates state = mState | locks;
+
+  if (locks.HasState(NS_EVENT_STATE_VISITED)) {
+    return state & ~NS_EVENT_STATE_UNVISITED;
+  }
+  if (locks.HasState(NS_EVENT_STATE_UNVISITED)) {
+    return state & ~NS_EVENT_STATE_VISITED;
+  }
+  return state;
+}
+
+nsEventStates
+Element::LockedStyleStates() const
+{
+  nsEventStates *locks =
+    static_cast<nsEventStates*> (GetProperty(nsGkAtoms::lockedStyleStates));
+  if (locks) {
+    return *locks;
+  }
+  return nsEventStates();
+}
+
+static void
+nsEventStatesPropertyDtor(void *aObject, nsIAtom *aProperty,
+                          void *aPropertyValue, void *aData)
+{
+  nsEventStates *states = static_cast<nsEventStates*>(aPropertyValue);
+  delete states;
+}
+
+void
+Element::NotifyStyleStateChange(nsEventStates aStates)
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    nsIPresShell *presShell = doc->GetShell();
+    if (presShell) {
+      nsAutoScriptBlocker scriptBlocker;
+      presShell->ContentStateChanged(doc, this, aStates);
+    }
+  }
+}
+
+void
+Element::LockStyleStates(nsEventStates aStates)
+{
+  nsEventStates *locks = new nsEventStates(LockedStyleStates());
+
+  *locks |= aStates;
+
+  if (aStates.HasState(NS_EVENT_STATE_VISITED)) {
+    *locks &= ~NS_EVENT_STATE_UNVISITED;
+  }
+  if (aStates.HasState(NS_EVENT_STATE_UNVISITED)) {
+    *locks &= ~NS_EVENT_STATE_VISITED;
+  }
+
+  SetProperty(nsGkAtoms::lockedStyleStates, locks, nsEventStatesPropertyDtor);
+  SetHasLockedStyleStates();
+
+  NotifyStyleStateChange(aStates);
+}
+
+void
+Element::UnlockStyleStates(nsEventStates aStates)
+{
+  nsEventStates *locks = new nsEventStates(LockedStyleStates());
+
+  *locks &= ~aStates;
+
+  if (locks->IsEmpty()) {
+    DeleteProperty(nsGkAtoms::lockedStyleStates);
+    ClearHasLockedStyleStates();
+    delete locks;
+  }
+  else {
+    SetProperty(nsGkAtoms::lockedStyleStates, locks, nsEventStatesPropertyDtor);
+  }
+
+  NotifyStyleStateChange(aStates);
+}
+
+void
+Element::ClearStyleStateLocks()
+{
+  nsEventStates locks = LockedStyleStates();
+
+  DeleteProperty(nsGkAtoms::lockedStyleStates);
+  ClearHasLockedStyleStates();
+
+  NotifyStyleStateChange(locks);
+}
+
 nsIContent*
 nsIContent::FindFirstNonNativeAnonymous() const
 {

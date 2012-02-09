@@ -3107,47 +3107,29 @@ END_CASE(JSOP_ARGUMENTS)
 
 BEGIN_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_CALLARG)
-{
-    uint32_t slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < regs.fp()->numFormalArgs());
-    PUSH_COPY(argv[slot]);
-}
+    PUSH_COPY(regs.fp()->formalArg(GET_ARGNO(regs.pc)));
 END_CASE(JSOP_GETARG)
 
 BEGIN_CASE(JSOP_SETARG)
-{
-    uint32_t slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < regs.fp()->numFormalArgs());
-    argv[slot] = regs.sp[-1];
-}
+    regs.fp()->formalArg(GET_ARGNO(regs.pc)) = regs.sp[-1];
 END_CASE(JSOP_SETARG)
 
 BEGIN_CASE(JSOP_GETLOCAL)
 BEGIN_CASE(JSOP_CALLLOCAL)
-{
+    PUSH_COPY_SKIP_CHECK(regs.fp()->localSlot(GET_SLOTNO(regs.pc)));
+
     /*
      * Skip the same-compartment assertion if the local will be immediately
      * popped. We do not guarantee sync for dead locals when coming in from the
      * method JIT, and a GETLOCAL followed by POP is not considered to be
      * a use of the variable.
      */
-     uint32_t slot = GET_SLOTNO(regs.pc);
-     JS_ASSERT(slot < script->nslots);
-     PUSH_COPY_SKIP_CHECK(regs.fp()->slots()[slot]);
-
-#ifdef DEBUG
     if (regs.pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP)
         assertSameCompartment(cx, regs.sp[-1]);
-#endif
-}
 END_CASE(JSOP_GETLOCAL)
 
 BEGIN_CASE(JSOP_SETLOCAL)
-{
-    uint32_t slot = GET_SLOTNO(regs.pc);
-    JS_ASSERT(slot < script->nslots);
-    regs.fp()->slots()[slot] = regs.sp[-1];
-}
+    regs.fp()->localSlot(GET_SLOTNO(regs.pc)) = regs.sp[-1];
 END_CASE(JSOP_SETLOCAL)
 
 BEGIN_CASE(JSOP_GETFCSLOT)
@@ -3380,8 +3362,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
 
     JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
-    uint32_t slot = GET_SLOTNO(regs.pc);
-    regs.fp()->slots()[slot].setObject(*obj);
+    regs.fp()->varSlot(GET_SLOTNO(regs.pc)) = ObjectValue(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN)
 
@@ -3393,8 +3374,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
     if (!obj)
         goto error;
 
-    uint32_t slot = GET_SLOTNO(regs.pc);
-    regs.fp()->slots()[slot].setObject(*obj);
+    regs.fp()->varSlot(GET_SLOTNO(regs.pc)) = ObjectValue(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN_FC)
 
@@ -3819,16 +3799,12 @@ BEGIN_CASE(JSOP_THROW)
     goto error;
 }
 BEGIN_CASE(JSOP_SETLOCALPOP)
-{
     /*
      * The stack must have a block with at least one local slot below the
      * exception object.
      */
     JS_ASSERT((size_t) (regs.sp - regs.fp()->base()) >= 2);
-    uint32_t slot = GET_UINT16(regs.pc);
-    JS_ASSERT(slot + 1 < script->nslots);
-    POP_COPY_TO(regs.fp()->slots()[slot]);
-}
+    POP_COPY_TO(regs.fp()->localSlot(GET_UINT16(regs.pc)));
 END_CASE(JSOP_SETLOCALPOP)
 
 BEGIN_CASE(JSOP_INSTANCEOF)

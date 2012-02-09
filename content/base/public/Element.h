@@ -143,6 +143,37 @@ public:
                                         NS_EVENT_STATE_FULL_SCREEN);
   }
 
+  /**
+   * The style state of this element. This is the real state of the element
+   * with any style locks applied for pseudo-class inspecting.
+   */
+  nsEventStates StyleState() const {
+    if (!HasLockedStyleStates()) {
+      return mState;
+    }
+    return StyleStateFromLocks();
+  };
+
+  /**
+   * The style state locks applied to this element.
+   */
+  nsEventStates LockedStyleStates() const;
+
+  /**
+   * Add a style state lock on this element.
+   */
+  void LockStyleStates(nsEventStates aStates);
+
+  /**
+   * Remove a style state lock on this element.
+   */
+  void UnlockStyleStates(nsEventStates aStates);
+
+  /**
+   * Clear all style state locks on this element.
+   */
+  void ClearStyleStateLocks();
+
 protected:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the
@@ -183,6 +214,11 @@ private:
   friend class Link;
 
   void NotifyStateChange(nsEventStates aStates);
+
+  void NotifyStyleStateChange(nsEventStates aStates);
+
+  // Style state computed from element's state and style locks.
+  nsEventStates StyleStateFromLocks() const;
 
   // Methods for the ESM to manage state bits.  These will handle
   // setting up script blockers when they notify, so no need to do it

@@ -154,9 +154,9 @@ FT2FontEntry::CreateScaledFont(const gfxFontStyle *aStyle)
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
 
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    cairo_font_options_set_hint_metrics(fontOptions, CAIRO_HINT_METRICS_OFF);
-#endif
+    if (!gfxPlatform::GetPlatform()->FontHintingEnabled()) {
+        cairo_font_options_set_hint_metrics(fontOptions, CAIRO_HINT_METRICS_OFF);
+    }
 
     scaledFont = cairo_scaled_font_create(CairoFontFace(),
                                           &sizeMatrix,
@@ -279,11 +279,10 @@ FT2FontEntry::CreateFontEntry(FT_Face aFace,
     FT2FontEntry *fe = new FT2FontEntry(fontName);
     fe->mItalic = aFace->style_flags & FT_STYLE_FLAG_ITALIC;
     fe->mFTFace = aFace;
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-#else
-    fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, 0);
-#endif
+    int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
+                FT_LOAD_DEFAULT :
+                (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, flags);
     fe->mFilename = aFilename;
     fe->mFTFontIndex = aIndex;
     FTUserFontData *userFontData = new FTUserFontData(aFace, aFontData);
@@ -330,11 +329,10 @@ FT2FontEntry::CairoFontFace()
         FT_Face face;
         FT_New_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(), mFilename.get(), mFTFontIndex, &face);
         mFTFace = face;
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-        mFontFace = cairo_ft_font_face_create_for_ft_face(face, FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-#else
-        mFontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
-#endif
+        int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
+                    FT_LOAD_DEFAULT :
+                    (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+        mFontFace = cairo_ft_font_face_create_for_ft_face(face, flags);
         FTUserFontData *userFontData = new FTUserFontData(face, nsnull);
         cairo_font_face_set_user_data(mFontFace, &key,
                                       userFontData, FTFontDestroyFunc);

@@ -70,6 +70,10 @@ EXTRA_COMPONENTS = \
   TelemetryPing.js \
   $(NULL)
 
+EXTRA_JS_MODULES = \
+  TelemetryStopwatch.jsm \
+  $(NULL)
+
 CPPSRCS = \
   Telemetry.cpp \
   $(NULL)
