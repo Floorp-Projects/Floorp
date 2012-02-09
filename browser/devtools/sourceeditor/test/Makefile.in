@@ -54,6 +54,7 @@ _BROWSER_TEST_FILES = \
 		browser_bug695035_middle_click_paste.js \
 		browser_bug687160_line_api.js \
 		browser_bug650345_find.js \
+		browser_bug703692_focus_blur.js \
 		head.js \
 
 libs:: $(_BROWSER_TEST_FILES)
