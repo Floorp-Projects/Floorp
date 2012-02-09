@@ -104,43 +104,42 @@ let PageThumbs = {
   },
 
   /**
-   * Stores the image data contained in the given canvas to the underlying
-   * storage.
-   * @param aKey The key to use for the storage.
-   * @param aInputStream The input stream containing the image data.
-   * @param aCallback The function to be called when the canvas data has been
-   *                  stored (optional).
+   * Captures a thumbnail for the given browser and stores it to the cache.
+   * @param aBrowser The browser to capture a thumbnail for.
+   * @param aCallback The function to be called when finished (optional).
    */
-  store: function PageThumbs_store(aKey, aInputStream, aCallback) {
-    let telemetryStoreTime = new Date();
+  captureAndStore: function PageThumbs_captureAndStore(aBrowser, aCallback) {
+    this.capture(aBrowser.contentWindow, function (aInputStream) {
+      let telemetryStoreTime = new Date();
 
-    function finish(aSuccessful) {
-      if (aSuccessful) {
-        Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
-          .add(new Date() - telemetryStoreTime);
+      function finish(aSuccessful) {
+        if (aSuccessful) {
+          Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
+            .add(new Date() - telemetryStoreTime);
+        }
+
+        if (aCallback)
+          aCallback(aSuccessful);
       }
 
-      if (aCallback)
-        aCallback(aSuccessful);
-    }
+      // Get a writeable cache entry.
+      PageThumbsCache.getWriteEntry(aBrowser.currentURI.spec, function (aEntry) {
+        if (!aEntry) {
+          finish(false);
+          return;
+        }
 
-    // Get a writeable cache entry.
-    PageThumbsCache.getWriteEntry(aKey, function (aEntry) {
-      if (!aEntry) {
-        finish(false);
-        return;
-      }
+        let outputStream = aEntry.openOutputStream(0);
 
-      let outputStream = aEntry.openOutputStream(0);
+        // Write the image data to the cache entry.
+        NetUtil.asyncCopy(aInputStream, outputStream, function (aResult) {
+          let success = Components.isSuccessCode(aResult);
+          if (success)
+            aEntry.markValid();
 
-      // Write the image data to the cache entry.
-      NetUtil.asyncCopy(aInputStream, outputStream, function (aResult) {
-        let success = Components.isSuccessCode(aResult);
-        if (success)
-          aEntry.markValid();
-
-        aEntry.close();
-        finish(success);
+          aEntry.close();
+          finish(success);
+        });
       });
     });
   },
