@@ -1145,16 +1145,17 @@ LIRGenerator::visitCallSetProperty(MCallSetProperty *ins)
 bool
 LIRGenerator::visitSetPropertyCache(MSetPropertyCache *ins)
 {
-    LUse obj = useRegister(ins->obj());
+    LUse obj = useRegisterAtStart(ins->obj());
+    LDefinition slots = tempCopy(ins->obj(), 0);
 
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
-        lir = new LSetPropertyCacheV(obj);
+        lir = new LSetPropertyCacheV(obj, slots);
         if (!useBox(lir, LSetPropertyCacheV::Value, ins->value()))
             return false;
     } else {
         LAllocation value = useRegisterOrConstant(ins->value());
-        lir = new LSetPropertyCacheT(obj, value, ins->value()->type());
+        lir = new LSetPropertyCacheT(obj, slots, value, ins->value()->type());
     }
 
     if (!add(lir, ins))

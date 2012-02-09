@@ -203,14 +203,11 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Sh
         masm.storeConstantOrRegister(value(), addr);
     } else {
         Register slotsReg = object();
-        masm.Push(slotsReg);
 
         masm.loadPtr(Address(object(), JSObject::offsetOfSlots()), slotsReg);
 
         Address addr(slotsReg, obj->dynamicSlotIndex(shape->slot()) * sizeof(Value));
         masm.storeConstantOrRegister(value(), addr);
-
-        masm.Pop(slotsReg);
     }
 
     Label rejoin_;
