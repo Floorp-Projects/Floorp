@@ -95,7 +95,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     }
 
     public void onClick(View v) {
-        GeckoEvent e = new GeckoEvent("Doorhanger:Reply", v.getTag().toString());
+        GeckoEvent e = GeckoEvent.createBroadcastEvent("Doorhanger:Reply", v.getTag().toString());
         GeckoAppShell.sendEventToGecko(e);
         mTab.removeDoorHanger(mValue);
 

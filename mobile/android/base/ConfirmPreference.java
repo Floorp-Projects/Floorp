@@ -72,7 +72,7 @@ class ConfirmPreference extends DialogPreference {
         } else if ("clear_private_data".equalsIgnoreCase(mAction)) {
             GeckoAppShell.getHandler().post(new Runnable(){
                 public void run() {
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Sanitize:ClearAll", null));
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Sanitize:ClearAll", null));
                 }
             });
         }

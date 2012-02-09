@@ -167,7 +167,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     void finishActivity() {
         finish();
         overridePendingTransition(0, R.anim.shrink_fade_out);
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Screenshot:Cancel",""));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel",""));
     }
 
     // Tabs List Container holds the ListView and the New Tab button
