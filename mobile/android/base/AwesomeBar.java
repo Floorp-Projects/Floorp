@@ -405,13 +405,29 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         Object selectedItem = null;
         String title = "";
 
-        if (view == (ListView)findViewById(R.id.history_list)) {
-            if (! (menuInfo instanceof ExpandableListView.ExpandableListContextMenuInfo)) {
+        if (list == findViewById(R.id.all_pages_list)) {
+            if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
+                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
+                return;
+            }
+
+            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            selectedItem = list.getItemAtPosition(info.position);
+
+            if (!(selectedItem instanceof Cursor)) {
+                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
+                return;
+            }
+
+            Cursor cursor = (Cursor) selectedItem;
+            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+        } else {
+            if (!(menuInfo instanceof ExpandableListView.ExpandableListContextMenuInfo)) {
                 Log.e(LOGTAG, "menuInfo is not ExpandableListContextMenuInfo");
                 return;
             }
+
             ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) menuInfo;
-            ExpandableListView exList = (ExpandableListView)list;
             int childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
             int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
 
@@ -419,23 +435,18 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             if (groupPosition < 0 || childPosition < 0)
                 return;
 
+            ExpandableListView exList = (ExpandableListView) list;
             selectedItem = exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
 
-            Map map = (Map)selectedItem;
-            title = (String)map.get(URLColumns.TITLE);
-        } else {
-            if (! (menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
-                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
-                return;
+            if (exList == findViewById(R.id.bookmarks_list)) {
+                // The bookmarks list is backed by a SimpleCursorTreeAdapter
+                Cursor cursor = (Cursor) selectedItem;
+                title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+            } else {
+                // The history list is backed by a SimpleExpandableListAdapter
+                Map map = (Map) selectedItem;
+                title = (String) map.get(URLColumns.TITLE);
             }
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            selectedItem = list.getItemAtPosition(info.position);
-            if (! (selectedItem instanceof Cursor)) {
-                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
-                return;
-            }
-            Cursor cursor = (Cursor)selectedItem;
-            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         }
 
         if (selectedItem == null || !((selectedItem instanceof Cursor) || (selectedItem instanceof Map))) {
@@ -448,7 +459,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.awesomebar_contextmenu, menu);
         
-        if (view != (ListView)findViewById(R.id.bookmarks_list)) {
+        if (list != findViewById(R.id.bookmarks_list)) {
             MenuItem removeBookmarkItem = menu.findItem(R.id.remove_bookmark);
             removeBookmarkItem.setVisible(false);
         }

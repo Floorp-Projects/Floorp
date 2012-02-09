@@ -60,8 +60,8 @@ import java.lang.Long;
 
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
 import android.view.View;
+import android.util.Log;
 
 import org.json.*;
 
@@ -72,6 +72,9 @@ public class FennecNativeDriver implements Driver {
   private HashMap locators = null;
   private Activity activity;
   private Solo solo;
+
+  private static String mLogFile = null;
+  private static LogLevel mLogLevel = LogLevel.LOG_LEVEL_INFO;
 
   // Objects for reflexive access of fennec classes.
   private ClassLoader classLoader;
@@ -86,6 +89,24 @@ public class FennecNativeDriver implements Driver {
   private Method _startCheckerboardRecording;
   private Method _stopCheckerboardRecording;
   private Method _getPixels;
+
+  public enum LogLevel {
+    LOG_LEVEL_DEBUG(1), 
+    LOG_LEVEL_INFO(2),  
+    LOG_LEVEL_WARN(3), 
+    LOG_LEVEL_ERROR(4);
+
+    private int mValue;
+    LogLevel(int value) {
+      mValue = value;
+    }
+    public boolean isEnabled(LogLevel configuredLevel) {
+      return mValue >= configuredLevel.getValue();
+    }
+    private int getValue() {
+      return mValue;
+    }
+  }
 
   public FennecNativeDriver(Activity activity, Solo robocop){
     this.activity = activity;
@@ -237,7 +258,7 @@ public class FennecNativeDriver implements Driver {
     }
   }
 
-  public int stopCheckerboardRecording() {
+  public float stopCheckerboardRecording() {
     Class [] parameters = new Class[1];
     parameters[0] = null;
     List checkerboard;
@@ -246,20 +267,19 @@ public class FennecNativeDriver implements Driver {
       Object [] params = null;
       checkerboard = (List)_stopCheckerboardRecording.invoke(null, params);
       Object [] amountarray = checkerboard.toArray();
-      int numIncompleteFrames = 0;
-      for (int i=0; i < amountarray.length; i++) {
-        Float val = (Float)amountarray[i];
-        if (val > 0.0f)
-          numIncompleteFrames++;
+      double completeness = 0;
+      for (Object obj : amountarray) {
+        float val = (Float)obj;
+        completeness += (1.0 - (double)val) / (double)amountarray.length;
       }
-      return numIncompleteFrames;
+      return (float)completeness;
     } catch (IllegalAccessException e) {
       e.printStackTrace();
     } catch (InvocationTargetException e) {
       e.printStackTrace();
     }
 
-    return 0;
+    return 0.0f;
   }
 
   private GLSurfaceView getSurfaceView() {
@@ -313,7 +333,8 @@ public class FennecNativeDriver implements Driver {
         }
 
       } catch( Throwable e) {
-        Log.i("Robocop", "WARNING: ScrollReceived, but read wrong!");
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_WARN, 
+          "WARNING: ScrollReceived, but read wrong!");
       }
       return null;
     }
@@ -386,4 +407,57 @@ public class FennecNativeDriver implements Driver {
     }
     return retVal;
   }
+
+  // Set the filename used for logging. If the file already exists, delete it
+  // as a safe-guard against accidentally appending to an old log file.
+  public static void setLogFile(String filename) {
+    mLogFile = filename;
+    File file = new File(mLogFile);
+    if (file.exists()) {
+      file.delete();
+    }
+  }
+
+  public static void setLogLevel(LogLevel level) {
+    mLogLevel = level;
+  }
+
+  public static void log(LogLevel level, String message) {
+    if (mLogFile == null) {
+      assert(false);
+    }
+
+    if (level.isEnabled(mLogLevel)) {
+      File file = new File(mLogFile);
+      BufferedWriter bw = null;
+
+      try {
+        bw = new BufferedWriter(new FileWriter(mLogFile, true));
+        bw.write(message);
+        bw.newLine();
+      } catch(IOException e) {
+        Log.e("Robocop", "exception with file writer on: " + mLogFile);
+      } finally {
+        try {
+          if (bw != null) {
+            bw.flush();
+            bw.close();
+          }
+        } catch (IOException ex) {
+          ex.printStackTrace();
+        }
+      }
+    }
+
+    if (level == LogLevel.LOG_LEVEL_INFO) {
+      Log.i("Robocop", message);
+    } else if (level == LogLevel.LOG_LEVEL_DEBUG) {
+      Log.d("Robocop", message);
+    } else if (level == LogLevel.LOG_LEVEL_WARN) {
+      Log.w("Robocop", message);
+    } else if (level == LogLevel.LOG_LEVEL_ERROR) {
+      Log.e("Robocop", message);
+    }
+  }
+
 }
