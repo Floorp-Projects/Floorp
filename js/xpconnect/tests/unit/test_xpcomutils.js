@@ -50,7 +50,7 @@ const Ci = Components.interfaces;
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
-function test_generateQI_string_names()
+add_test(function test_generateQI_string_names()
 {
     var x = {
         QueryInterface: XPCOMUtils.generateQI([
@@ -73,10 +73,11 @@ function test_generateQI_string_names()
         x.QueryInterface(Components.interfaces.nsIDOMDocument);
         do_throw("QI should not have succeeded!");
     } catch(e) {}
-}
+    run_next_test();
+});
 
 
-function test_generateCI()
+add_test(function test_generateCI()
 {
     const classID = Components.ID("562dae2e-7cff-432b-995b-3d4c03fa2b89");
     const classDescription = "generateCI test component";
@@ -99,9 +100,10 @@ function test_generateCI()
     } catch(e) {
         do_throw("Classinfo for x should not be missing or broken");
     }
-}
+    run_next_test();
+});
 
-function test_defineLazyGetter()
+add_test(function test_defineLazyGetter()
 {
     let accessCount = 0;
     let obj = {
@@ -124,10 +126,11 @@ function test_defineLazyGetter()
     // increased.
     do_check_eq(obj.foo, TEST_VALUE);
     do_check_eq(accessCount, 1);
-}
+    run_next_test();
+});
 
 
-function test_defineLazyServiceGetter()
+add_test(function test_defineLazyServiceGetter()
 {
     let obj = { };
     XPCOMUtils.defineLazyServiceGetter(obj, "service",
@@ -142,10 +145,11 @@ function test_defineLazyServiceGetter()
         do_check_true(prop in service);
     for (let prop in service)
         do_check_true(prop in obj.service);
-}
+    run_next_test();
+});
 
 
-function test_categoryRegistration()
+add_test(function test_categoryRegistration()
 {
   const CATEGORY_NAME = "test-cat";
   const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
@@ -203,24 +207,45 @@ function test_categoryRegistration()
   }
   print("Check there are no more or less than expected entries.");
   do_check_eq(foundEntriesCount, EXPECTED_ENTRIES.length);
-}
+  run_next_test();
+});
 
+add_test(function test_generateSingletonFactory()
+{
+  const XPCCOMPONENT_CONTRACTID = "@mozilla.org/singletonComponentTest;1";
+  const XPCCOMPONENT_CID = Components.ID("{31031c36-5e29-4dd9-9045-333a5d719a3e}");
+
+  function XPCComponent() {}
+  XPCComponent.prototype = {
+    classID: XPCCOMPONENT_CID,
+    _xpcom_factory: XPCOMUtils.generateSingletonFactory(XPCComponent),
+    QueryInterface: XPCOMUtils.generateQI([])
+  };
+  let NSGetFactory = XPCOMUtils.generateNSGetFactory([XPCComponent]);
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  registrar.registerFactory(
+    XPCCOMPONENT_CID,
+    "XPCComponent",
+    XPCCOMPONENT_CONTRACTID,
+    NSGetFactory(XPCCOMPONENT_CID)
+  );
+
+  // First, try to instance the component.
+  let instance = Cc[XPCCOMPONENT_CONTRACTID].createInstance(Ci.nsISupports);
+  // Try again, check that it returns the same instance as before.
+  do_check_eq(instance,
+              Cc[XPCCOMPONENT_CONTRACTID].createInstance(Ci.nsISupports));
+  // Now, for sanity, check that getService is also returning the same instance.
+  do_check_eq(instance,
+              Cc[XPCCOMPONENT_CONTRACTID].getService(Ci.nsISupports));
+
+  run_next_test();
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let tests = [
-    test_generateQI_string_names,
-    test_generateCI,
-    test_defineLazyGetter,
-    test_defineLazyServiceGetter,
-    test_categoryRegistration,
-];
-
 function run_test()
 {
-    tests.forEach(function(test) {
-        print("Running next test: " + test.name);
-        test();
-    });
+  run_next_test();
 }

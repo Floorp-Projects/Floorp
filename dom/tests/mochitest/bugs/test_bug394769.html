@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=394769
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 394769</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=394769">Mozilla Bug 394769</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 394769 **/
+SimpleTest.waitForExplicitFinish();
+function h() {
+  is(arguments.length, 1, "Should only have one argument");
+  SimpleTest.finish();
+}
+
+function g() {
+  is(arguments.length, 0, "Should not have lateness argument for function with delay");
+  setTimeout(h, 0, "arg");
+}
+
+function f() {
+  is(arguments.length, 0, "Should not have lateness argument for function with no delay");
+  setTimeout(g, 0);
+}
+
+setTimeout(f);
+</script>
+</pre>
+</body>
+</html>

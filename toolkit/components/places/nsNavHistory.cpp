@@ -3933,6 +3933,8 @@ nsNavHistory::DecayFrecency()
   // values of pages that haven't been visited for a while, i.e., they do
   // not get an updated frecency.  A scaling factor of .975 results in .5 the
   // original value after 28 days.
+  // When changing the scaling factor, ensure that the barrier in
+  // moz_places_afterupdate_frecency_trigger still ignores these changes.
   nsCOMPtr<mozIStorageAsyncStatement> decayFrecency = mDB->GetAsyncStatement(
     "UPDATE moz_places SET frecency = ROUND(frecency * .975) "
     "WHERE frecency > 0"

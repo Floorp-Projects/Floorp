@@ -68,6 +68,7 @@ browser/components/shell/public/Makefile
 browser/components/shell/src/Makefile
 browser/components/tabview/Makefile
 browser/devtools/Makefile
+browser/devtools/debugger/Makefile
 browser/devtools/highlighter/Makefile
 browser/devtools/scratchpad/Makefile
 browser/devtools/shared/Makefile
@@ -136,6 +137,7 @@ if [ "$ENABLE_TESTS" ]; then
     browser/components/privatebrowsing/test/browser/Makefile
     browser/components/tabview/test/Makefile
     browser/components/test/Makefile
+    browser/devtools/debugger/test/Makefile
     browser/devtools/highlighter/test/Makefile
     browser/devtools/scratchpad/test/Makefile
     browser/devtools/shared/test/Makefile

@@ -338,6 +338,12 @@ public class FennecNativeActions implements Actions {
       case ENTER:
         instr.sendCharacterSync(KeyEvent.KEYCODE_ENTER);
         break;
+      case MENU:
+        instr.sendCharacterSync(KeyEvent.KEYCODE_MENU);
+        break;
+      case BACK:
+        instr.sendCharacterSync(KeyEvent.KEYCODE_BACK);
+        break;
       default:
         break;
     }

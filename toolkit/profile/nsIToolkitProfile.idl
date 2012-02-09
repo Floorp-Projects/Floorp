@@ -64,6 +64,11 @@ interface nsIProfileLock : nsISupports
     readonly attribute nsILocalFile localDirectory;
 
     /**
+     * The timestamp of an existing profile lock at lock time.
+     */
+    readonly attribute PRInt64 replacedLockTime;
+
+    /**
      * Unlock the profile.
      */
     void unlock();

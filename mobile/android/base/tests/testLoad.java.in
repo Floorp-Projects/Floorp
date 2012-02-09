@@ -3,20 +3,18 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 
-public class testLoad extends BaseTest {
+/**
+ * A basic page load test.
+ * - loads a page
+ * - verifies it rendered properly
+ * - verifies the displayed url is correct
+ */
+public class testLoad extends PixelTest {
     public void testLoad() {
         setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 
-        Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
-        loadUrl(url);
-        paintExpecter.blockUntilClear(500);
-
-        int[][] painted = mDriver.getPaintedSurface();
-        mAsserter.ispixel(painted[0][0], 0, 255, 255, "Pixel at 0, 0");
-        mAsserter.ispixel(painted[0][100], 100, 255, 245, "Pixel at 100, 0");
-        mAsserter.ispixel(painted[100][0], 100, 245, 255, "Pixel at 0, 100");
-        mAsserter.ispixel(painted[100][100], 200, 245, 245, "Pixel at 100, 100");
+        loadAndVerifyBoxes(url);
 
         verifyUrl(url);
     }

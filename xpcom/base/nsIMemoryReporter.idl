@@ -216,6 +216,16 @@ interface nsIMemoryMultiReporterCallback : nsISupports
 [scriptable, uuid(61d498d5-b460-4398-a8ea-7f75208534b4)]
 interface nsIMemoryMultiReporter : nsISupports
 {
+  /*
+   * The name of the multi-reporter.  Useful when only one multi-reporter
+   * needs to be run.  Must be unique;  if multi-reporters share names it's
+   * likely the wrong one will be called in certain circumstances.
+   */
+  readonly attribute ACString name;
+
+  /*
+   * Run the multi-reporter.
+   */
   void collectReports(in nsIMemoryMultiReporterCallback callback,
                       in nsISupports closure);
 

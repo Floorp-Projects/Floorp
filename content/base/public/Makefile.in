@@ -77,7 +77,6 @@ nsLineBreaker.h \
 nsReferencedElement.h \
 nsTreeSanitizer.h \
 nsXMLNameSpaceMap.h \
-nsDOMEventTargetWrapperCache.h \
 nsIXFormsUtilityService.h \
 $(NULL)
 

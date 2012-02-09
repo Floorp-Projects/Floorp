@@ -413,6 +413,10 @@ pref("dom.sms.whitelist", "file://,http://localhost:6666");
 // Ignore X-Frame-Options headers.
 pref("b2g.ignoreXFrameOptions", true);
 
+// controls if we want camera support
+pref("device.camera.enabled", true);
+pref("media.realtime_decoder.enabled", true);
+
 // "Preview" landing of bug 710563, which is bogged down in analysis
 // of talos regression.  This is a needed change for higher-framerate
 // CSS animations, and incidentally works around an apparent bug in

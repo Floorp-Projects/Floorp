@@ -66,6 +66,7 @@ endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += GonkCaptureProvider.cpp \
+           nsB2GProtocolHandler.cpp \
            $(NULL)
 endif
 

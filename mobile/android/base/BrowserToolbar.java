@@ -343,7 +343,7 @@ public class BrowserToolbar extends LinearLayout {
             setSecurityMode(tab.getSecurityMode());
             setProgressVisibility(tab.isLoading());
             setShadowVisibility(!(tab.getURL().startsWith("about:")));
-            updateTabCountAndAnimate(Tabs.getInstance().getCount());
+            updateTabCount(Tabs.getInstance().getCount());
         }
     }
 }

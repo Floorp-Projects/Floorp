@@ -16,7 +16,7 @@
 
             <ImageView android:id="@+id/thumbnail"
                        android:layout_width="136dip"
-                       android:layout_height="77dip"
+                       android:layout_height="78dip"
                        android:scaleType="centerCrop"/>
 
         </LinearLayout>

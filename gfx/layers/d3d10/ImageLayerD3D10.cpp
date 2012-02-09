@@ -132,7 +132,7 @@ ImageLayerD3D10::RenderLayer()
     }
 
     if (!cairoImage->GetBackendData(LayerManager::LAYERS_D3D10)) {
-      nsAutoPtr<CairoD3D10BackendData> dat = new CairoD3D10BackendData();
+      nsAutoPtr<CairoD3D10BackendData> dat(new CairoD3D10BackendData());
       dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
 
       if (dat->mTexture) {
@@ -276,8 +276,8 @@ ImageLayerD3D10::RenderLayer()
 
 void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
 {
-  nsAutoPtr<PlanarYCbCrD3D10BackendData> backendData =
-    new PlanarYCbCrD3D10BackendData;
+  nsAutoPtr<PlanarYCbCrD3D10BackendData> backendData(
+    new PlanarYCbCrD3D10BackendData);
 
   PlanarYCbCrImage::Data &data = aImage->mData;
 

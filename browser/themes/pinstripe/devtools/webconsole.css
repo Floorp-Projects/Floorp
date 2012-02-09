@@ -361,7 +361,7 @@
 }
 
 .jsterm-input-node {
-  background: url("chrome://global/skin/icons/commandline.png") 4px 2px no-repeat;
+  background: url("chrome://browser/skin/devtools/commandline.png") 4px 2px no-repeat;
 }
 
 :-moz-any(.jsterm-input-node,

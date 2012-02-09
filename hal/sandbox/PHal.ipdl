@@ -41,8 +41,12 @@ include protocol PContent;
 include protocol PBrowser;
 include "nspr/prtime.h";
 include "mozilla/HalSensor.h";
+include "mozilla/HalTypes.h";
 
 using PRTime;
+using mozilla::hal::FlashMode;
+using mozilla::hal::LightType;
+using mozilla::hal::LightMode;
 using mozilla::hal::SensorType;
 
 namespace mozilla {
@@ -52,6 +56,15 @@ namespace hal {
     double level;
     bool   charging;
     double remainingTime;
+  };
+
+  struct LightConfiguration {
+    LightType light;
+    LightMode mode;
+    FlashMode flash;
+    uint32_t flashOnMS;
+    uint32_t flashOffMS;
+    uint32_t color;
   };
 
   struct SensorData {
@@ -96,6 +109,11 @@ parent:
 
     sync GetScreenBrightness() returns (double brightness);
     SetScreenBrightness(double brightness);
+
+    sync SetLight(LightType light, LightConfiguration aConfig)
+      returns (bool status);
+    sync GetLight(LightType light)
+      returns (LightConfiguration aConfig, bool status);
 
     Reboot();
     PowerOff();

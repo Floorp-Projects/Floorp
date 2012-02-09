@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- form with one invalid element which is made invalid dynamically -->
+<html class='reftest-wait'>
+  <head>
+    <style>
+      form:invalid { display: none; }
+      :-moz-ui-invalid { box-shadow: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById('i').value = '';
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <form>
+      <input id='i' value='foo' required>
+    </form>
+  </body>
+</html>

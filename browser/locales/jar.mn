@@ -15,6 +15,8 @@
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
+    locale/browser/devtools/debugger.dtd              (%chrome/browser/devtools/debugger.dtd)
+    locale/browser/devtools/debugger.properties       (%chrome/browser/devtools/debugger.properties)
     locale/browser/devtools/gcli.properties           (%chrome/browser/devtools/gcli.properties)
     locale/browser/devtools/gclicommands.properties   (%chrome/browser/devtools/gclicommands.properties)
     locale/browser/devtools/webconsole.properties     (%chrome/browser/devtools/webconsole.properties)
