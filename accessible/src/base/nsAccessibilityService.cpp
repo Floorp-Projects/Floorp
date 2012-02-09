@@ -695,7 +695,7 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   if (!node)
     return NS_ERROR_INVALID_ARG;
 
-  NS_IF_ADDREF(*aAccessible = GetAccessible(node));
+  NS_IF_ADDREF(*aAccessible = GetAccessible(node, nsnull));
   return NS_OK;
 }
 
@@ -906,26 +906,15 @@ nsAccessibilityService::CreateAccessiblePivot(nsIAccessible* aRoot,
   return NS_OK;
 }
 
-// nsIAccesibilityService
-nsAccessible*
-nsAccessibilityService::GetAccessibleInShell(nsINode* aNode,
-                                             nsIPresShell* aPresShell)
-{
-  if (!aNode || !aPresShell)
-    return nsnull;
-
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
-  return GetAccessibleInWeakShell(aNode, weakShell);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService public
 
 nsAccessible*
-nsAccessibilityService::GetAccessible(nsINode* aNode)
+nsAccessibilityService::GetAccessible(nsINode* aNode, nsIPresShell* aPresShell)
 {
   NS_PRECONDITION(aNode, "Getting an accessible for null node! Crash.");
 
+  // XXX handle the presshell
   nsDocAccessible* document = GetDocAccessible(aNode->OwnerDoc());
   return document ? document->GetAccessible(aNode) : nsnull;
 }
@@ -956,18 +945,17 @@ static bool HasRelatedContent(nsIContent *aContent)
 
 nsAccessible*
 nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
-                                              nsIPresShell* aPresShell,
-                                              nsIWeakReference* aWeakShell,
+                                              nsDocAccessible* aDoc,
                                               bool* aIsSubtreeHidden)
 {
-  if (!aPresShell || !aWeakShell || !aNode || gIsShutdown)
+  if (!aDoc || !aNode || gIsShutdown)
     return nsnull;
 
   if (aIsSubtreeHidden)
     *aIsSubtreeHidden = false;
 
   // Check to see if we already have an accessible for this node in the cache.
-  nsAccessible* cachedAccessible = GetAccessibleInWeakShell(aNode, aWeakShell);
+  nsAccessible* cachedAccessible = aDoc->GetAccessible(aNode);
   if (cachedAccessible)
     return cachedAccessible;
 
@@ -986,8 +974,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     return nsnull;
   }
 
-  if (aNode->OwnerDoc() != aPresShell->GetDocument()) {
-    NS_ERROR("Creating accessible for wrong pres shell");
+  if (aNode->OwnerDoc() != aDoc->GetDocumentNode()) {
+    NS_ERROR("Creating accessible for wrong document");
     return nsnull;
   }
 
@@ -1118,8 +1106,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
           continue;
 
         if (tableFrame->GetType() == nsGkAtoms::tableOuterFrame) {
-          nsAccessible *tableAccessible =
-            GetAccessibleInWeakShell(tableContent, aWeakShell);
+          nsAccessible* tableAccessible = aDoc->GetAccessible(tableContent);
 
           if (tableAccessible) {
             if (!roleMapEntry) {
@@ -1202,7 +1189,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
         // are created.
         nsIFrame* f = weakFrame.GetFrame();
         if (!f) {
-          f = aPresShell->GetRealPrimaryFrameFor(content);
+          f = aDoc->PresShell()->GetRealPrimaryFrameFor(content);
         }
         if (f->GetType() == nsGkAtoms::tableCaptionFrame &&
            f->GetRect().IsEmpty()) {

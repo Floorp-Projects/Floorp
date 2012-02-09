@@ -123,7 +123,7 @@ public:
   inline void AppendTarget(nsIContent* aContent)
   {
     if (aContent)
-      AppendTarget(GetAccService()->GetAccessible(aContent));
+      AppendTarget(GetAccService()->GetAccessible(aContent, nsnull));
   }
 
   /**

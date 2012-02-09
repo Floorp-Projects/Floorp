@@ -179,7 +179,6 @@ nsHTMLSelectListAccessible::CacheChildren()
 void
 nsHTMLSelectListAccessible::CacheOptSiblings(nsIContent *aParentContent)
 {
-  nsIPresShell* presShell(mDoc->PresShell());
   for (nsIContent* childContent = aParentContent->GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
     if (!childContent->IsHTML()) {
@@ -192,8 +191,7 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIContent *aParentContent)
 
       // Get an accessible for option or optgroup and cache it.
       nsRefPtr<nsAccessible> accessible =
-        GetAccService()->GetOrCreateAccessible(childContent, presShell,
-                                               mDoc->GetWeakShell());
+        GetAccService()->GetOrCreateAccessible(childContent, mDoc);
       if (accessible)
         AppendChild(accessible);
 
@@ -439,7 +437,7 @@ nsHTMLSelectOptionAccessible::GetSelectState(PRUint64* aState)
   }
 
   if (content) {
-    nsAccessible* selAcc = GetAccService()->GetAccessible(content);
+    nsAccessible* selAcc = GetAccService()->GetAccessible(content, nsnull);
     if (selAcc) {
       *aState = selAcc->State();
       return content;
