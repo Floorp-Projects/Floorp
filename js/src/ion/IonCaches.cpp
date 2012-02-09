@@ -153,7 +153,10 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     if (cache.stubCount() < MAX_STUBS && obj->isNative()) {
         cache.incrementStubCount();
 
-        const Shape *shape = obj->nativeLookup(cx, ATOM_TO_JSID(atom));
+        jsid id = ATOM_TO_JSID(atom);
+        id = js_CheckForStringIndex(id);
+
+        const Shape *shape = obj->nativeLookup(cx, id);
         if (shape && shape->hasSlot() && shape->hasDefaultGetter() && !shape->isMethod()) {
             if (!cache.attachNative(cx, obj, shape))
                 return false;
@@ -242,7 +245,10 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     if (cache.stubCount() < MAX_STUBS && obj->isNative()) {
         cache.incrementStubCount();
 
-        const Shape *shape = obj->nativeLookup(cx, ATOM_TO_JSID(atom));
+        jsid id = ATOM_TO_JSID(atom);
+        id = js_CheckForStringIndex(id);
+
+        const Shape *shape = obj->nativeLookup(cx, id);
         if (shape && shape->hasSlot() && shape->hasDefaultSetter() && !shape->isMethod()) {
             if (!cache.attachNativeExisting(cx, obj, shape))
                 return false;
