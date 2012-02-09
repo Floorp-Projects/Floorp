@@ -808,6 +808,7 @@ AndroidGeckoSoftwareLayerClient::BeginDrawing(int aWidth, int aHeight, int aTile
 
 void
 AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect)
+{
     NS_ASSERTION(!isNull(), "EndDrawing() called on null software layer client!");
 
     JNIEnv *env = AndroidBridge::GetJNIEnv();
