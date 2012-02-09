@@ -138,10 +138,14 @@ nsXPConnect::~nsXPConnect()
     XPCPerThreadData::CleanupAllThreads();
     mShuttingDown = true;
     if (cx) {
-        // XXX Call even if |mRuntime| null?
-        XPCWrappedNativeScope::SystemIsBeingShutDown();
+        JS_BeginRequest(cx);
 
-        mRuntime->SystemIsBeingShutDown();
+        // XXX Call even if |mRuntime| null?
+        XPCWrappedNativeScope::SystemIsBeingShutDown(cx);
+
+        mRuntime->SystemIsBeingShutDown(cx);
+
+        JS_EndRequest(cx);
         JS_DestroyContext(cx);
     }
 

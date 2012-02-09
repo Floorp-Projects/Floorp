@@ -86,20 +86,22 @@ public:
 
     JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
     if (obj) {
-      JS_SetPrivate(obj, aBlob);
+      if (!JS_SetPrivate(aCx, obj, aBlob)) {
+        return NULL;
+      }
       NS_ADDREF(aBlob);
     }
     return obj;
   }
 
   static nsIDOMBlob*
-  GetPrivate(JSObject* aObj);
+  GetPrivate(JSContext* aCx, JSObject* aObj);
 
 private:
   static nsIDOMBlob*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    nsIDOMBlob* blob = GetPrivate(aObj);
+    nsIDOMBlob* blob = GetPrivate(aCx, aObj);
     if (blob) {
       return blob;
     }
@@ -123,7 +125,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
 
-    nsIDOMBlob* blob = GetPrivate(aObj);
+    nsIDOMBlob* blob = GetPrivate(aCx, aObj);
     NS_IF_RELEASE(blob);
   }
 
@@ -258,19 +260,21 @@ public:
 
     JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
     if (obj) {
-      JS_SetPrivate(obj, aFile);
+      if (!JS_SetPrivate(aCx, obj, aFile)) {
+        return NULL;
+      }
       NS_ADDREF(aFile);
     }
     return obj;
   }
 
   static nsIDOMFile*
-  GetPrivate(JSObject* aObj)
+  GetPrivate(JSContext* aCx, JSObject* aObj)
   {
     if (aObj) {
       JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
-        nsISupports* priv = static_cast<nsISupports*>(JS_GetPrivate(aObj));
+        nsISupports* priv = static_cast<nsISupports*>(JS_GetPrivate(aCx, aObj));
         nsCOMPtr<nsIDOMFile> file = do_QueryInterface(priv);
         JS_ASSERT_IF(priv, file);
         return file;
@@ -289,7 +293,7 @@ private:
   static nsIDOMFile*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    nsIDOMFile* file = GetPrivate(aObj);
+    nsIDOMFile* file = GetPrivate(aCx, aObj);
     if (file) {
       return file;
     }
@@ -313,7 +317,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
 
-    nsIDOMFile* file = GetPrivate(aObj);
+    nsIDOMFile* file = GetPrivate(aCx, aObj);
     NS_IF_RELEASE(file);
   }
 
@@ -382,12 +386,12 @@ JSPropertySpec File::sProperties[] = {
 };
 
 nsIDOMBlob*
-Blob::GetPrivate(JSObject* aObj)
+Blob::GetPrivate(JSContext* aCx, JSObject* aObj)
 {
   if (aObj) {
     JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr == &sClass || classPtr == File::Class()) {
-      nsISupports* priv = static_cast<nsISupports*>(JS_GetPrivate(aObj));
+      nsISupports* priv = static_cast<nsISupports*>(JS_GetPrivate(aCx, aObj));
       nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(priv);
       JS_ASSERT_IF(priv, blob);
       return blob;
@@ -416,9 +420,9 @@ InitClasses(JSContext* aCx, JSObject* aGlobal)
 }
 
 nsIDOMBlob*
-GetDOMBlobFromJSObject(JSObject* aObj)
+GetDOMBlobFromJSObject(JSContext* aCx, JSObject* aObj)
 {
-  return Blob::GetPrivate(aObj);
+  return Blob::GetPrivate(aCx, aObj);
 }
 
 JSObject*
@@ -428,9 +432,9 @@ CreateFile(JSContext* aCx, nsIDOMFile* aFile)
 }
 
 nsIDOMFile*
-GetDOMFileFromJSObject(JSObject* aObj)
+GetDOMFileFromJSObject(JSContext* aCx, JSObject* aObj)
 {
-  return File::GetPrivate(aObj);
+  return File::GetPrivate(aCx, aObj);
 }
 
 } // namespace file
