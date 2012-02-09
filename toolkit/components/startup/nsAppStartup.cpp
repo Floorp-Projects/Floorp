@@ -837,6 +837,8 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
 
   mStartupCrashTrackingEnded = false;
 
+  StartupTimeline::Record(StartupTimeline::STARTUP_CRASH_DETECTION_BEGIN);
+
   bool hasLastSuccess = Preferences::HasUserValue(kPrefLastSuccess);
   if (!hasLastSuccess) {
     // Clear so we don't get stuck with SafeModeNecessary returning true if we
@@ -929,6 +931,8 @@ nsAppStartup::TrackStartupCrashEnd()
   if (mStartupCrashTrackingEnded || (mIsSafeModeNecessary && !inSafeMode))
     return NS_OK;
   mStartupCrashTrackingEnded = true;
+
+  StartupTimeline::Record(StartupTimeline::STARTUP_CRASH_DETECTION_END);
 
   // Use the timestamp of XRE_main as an approximation for the lock file timestamp.
   // See MAX_STARTUP_BUFFER for the buffer time period.
