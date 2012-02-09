@@ -45,6 +45,7 @@
 #include "MIRGenerator.h"
 #include "shared/CodeGenerator-shared-inl.h"
 #include "jsnum.h"
+#include "jsinterpinlines.h"
 
 using namespace js;
 using namespace js::ion;
@@ -1749,6 +1750,16 @@ CodeGenerator::visitThrow(LThrow *lir)
 
     pushArg(ToValue(lir, LThrow::Value));
     return callVM(ThrowInfo, lir);
+}
+
+bool
+CodeGenerator::visitBitNotV(LBitNotV *lir)
+{
+    typedef bool (*pf)(JSContext *, const Value &, int *p);
+    static const VMFunction info = FunctionInfo<pf>(BitNot);
+
+    pushArg(ToValue(lir, LBitNotV::Input));
+    return callVM(info, lir);
 }
 
 bool

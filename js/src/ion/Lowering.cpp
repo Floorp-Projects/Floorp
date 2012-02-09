@@ -354,9 +354,15 @@ LIRGenerator::visitBitNot(MBitNot *ins)
 {
     MDefinition *input = ins->getOperand(0);
 
-    JS_ASSERT(input->type() == MIRType_Int32);
+    if (input->type() == MIRType_Int32)
+        return lowerForALU(new LBitNotI(), ins, input);
 
-    return lowerForALU(new LBitNot(), ins, input);
+    LBitNotV *lir = new LBitNotV;
+    if (!useBox(lir, LBitNotV::Input, input))
+        return false;
+    if (!defineVMReturn(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
 }
 
 bool

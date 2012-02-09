@@ -102,7 +102,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitAbsD(LAbsD *ins);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitSubI(LSubI *ins);
-    virtual bool visitBitNot(LBitNot *ins);
+    virtual bool visitBitNotI(LBitNotI *ins);
     virtual bool visitBitOp(LBitOp *ins);
 
     virtual bool visitMulI(LMulI *ins);

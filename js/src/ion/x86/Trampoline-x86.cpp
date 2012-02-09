@@ -531,9 +531,9 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.movl(esp, outReg);
         break;
 
-      case Type_JSBool:
+      case Type_Int32:
         outReg = regs.takeAny();
-        masm.reserveStack(sizeof(JSBool));
+        masm.reserveStack(sizeof(int32));
         masm.movl(esp, outReg);
         break;
 
@@ -598,7 +598,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.freeStack(sizeof(Value));
         break;
 
-      case Type_JSBool:
+      case Type_Int32:
         masm.load32(Address(esp, 0), ReturnReg);
         masm.freeStack(sizeof(JSBool));
         break;

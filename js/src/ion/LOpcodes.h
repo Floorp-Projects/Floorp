@@ -61,7 +61,8 @@
     _(CallGeneric)                  \
     _(CallNative)                   \
     _(StackArg)                     \
-    _(BitNot)                       \
+    _(BitNotI)                      \
+    _(BitNotV)                      \
     _(BitOp)                        \
     _(ShiftOp)                      \
     _(Return)                       \
