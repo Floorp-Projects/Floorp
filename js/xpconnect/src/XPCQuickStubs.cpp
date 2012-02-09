@@ -152,7 +152,7 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
     jsval v = js::GetFunctionNativeReserved(callee, 0);
 
     JSObject *ptrobj = JSVAL_TO_OBJECT(v);
-    Op *popp = static_cast<Op *>(JS_GetPrivate(ptrobj));
+    Op *popp = static_cast<Op *>(JS_GetPrivate(cx, ptrobj));
 
     v = js::GetFunctionNativeReserved(callee, 1);
 
@@ -167,7 +167,7 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
 static void
 PointerFinalize(JSContext *cx, JSObject *obj)
 {
-    JSPropertyOp *popp = static_cast<JSPropertyOp *>(JS_GetPrivate(obj));
+    JSPropertyOp *popp = static_cast<JSPropertyOp *>(JS_GetPrivate(cx, obj));
     delete popp;
 }
 
@@ -203,7 +203,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc, Op pop)
     if (!popp)
         return nsnull;
     *popp = pop;
-    JS_SetPrivate(ptrobj, popp);
+    JS_SetPrivate(cx, ptrobj, popp);
 
     js::SetFunctionNativeReserved(funobj, 0, OBJECT_TO_JSVAL(ptrobj));
     js::SetFunctionNativeReserved(funobj, 1, js::IdToJsval(id));

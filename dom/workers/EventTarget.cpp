@@ -85,9 +85,9 @@ EnsureObjectIsEventTarget(JSContext* aCx, JSObject* aObj, char* aFunctionName)
 
 inline
 EventTarget*
-GetPrivate(JSObject* aObj)
+GetPrivate(JSContext* aCx, JSObject* aObj)
 {
-  return GetJSPrivateSafeish<EventTarget>(aObj);
+  return GetJSPrivateSafeish<EventTarget>(aCx, aObj);
 }
 
 JSBool
@@ -149,9 +149,9 @@ EventTarget::SetEventListenerOnEventTarget(JSContext* aCx, const char* aType,
 
 // static
 EventTarget*
-EventTarget::FromJSObject(JSObject* aObj)
+EventTarget::FromJSObject(JSContext* aCx, JSObject* aObj)
 {
-  return GetPrivate(aObj);
+  return GetPrivate(aCx, aObj);
 }
 
 // static
@@ -167,7 +167,7 @@ EventTarget::AddEventListener(JSContext* aCx, uintN aArgc, jsval* aVp)
     return false;
   }
 
-  EventTarget* self = GetPrivate(obj);
+  EventTarget* self = GetPrivate(aCx, obj);
   if (!self) {
     return true;
   }
@@ -202,7 +202,7 @@ EventTarget::RemoveEventListener(JSContext* aCx, uintN aArgc, jsval* aVp)
     return false;
   }
 
-  EventTarget* self = GetPrivate(obj);
+  EventTarget* self = GetPrivate(aCx, obj);
   if (!self) {
     return true;
   }
@@ -237,7 +237,7 @@ EventTarget::DispatchEvent(JSContext* aCx, uintN aArgc, jsval* aVp)
     return false;
   }
 
-  EventTarget* self = GetPrivate(obj);
+  EventTarget* self = GetPrivate(aCx, obj);
   if (!self) {
     return true;
   }

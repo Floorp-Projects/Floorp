@@ -762,7 +762,7 @@ public:
 
     void DebugDump(PRInt16 depth);
 
-    void SystemIsBeingShutDown();
+    void SystemIsBeingShutDown(JSContext* cx);
 
     PRThread* GetThreadRunningGC() const {return mThreadRunningGC;}
 
@@ -1545,7 +1545,7 @@ public:
     }
 
     static void
-    SystemIsBeingShutDown();
+    SystemIsBeingShutDown(JSContext* cx);
 
     static void
     TraceJS(JSTracer* trc, XPCJSRuntime* rt);
@@ -2281,7 +2281,7 @@ public:
 
     void JSProtoObjectFinalized(JSContext *cx, JSObject *obj);
 
-    void SystemIsBeingShutDown();
+    void SystemIsBeingShutDown(JSContext* cx);
 
     void DebugDump(PRInt16 depth);
 
@@ -2632,9 +2632,9 @@ public:
                            nsISupports* aCOMObj,
                            XPCWrappedNative** aWrapper);
 
-    void FlatJSObjectFinalized();
+    void FlatJSObjectFinalized(JSContext *cx);
 
-    void SystemIsBeingShutDown();
+    void SystemIsBeingShutDown(JSContext* cx);
 
     enum CallMode {CALL_METHOD, CALL_GETTER, CALL_SETTER};
 

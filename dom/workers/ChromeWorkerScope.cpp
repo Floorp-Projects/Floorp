@@ -94,13 +94,12 @@ CTypesLazyGetter(JSContext* aCx, JSObject* aObj, jsid aId, jsval* aVp)
   }
 
   jsval ctypes;
-  if (!JS_DeletePropertyById(aCx, aObj, aId) ||
-      !JS_InitCTypesClass(aCx, aObj) ||
-      !JS_GetPropertyById(aCx, aObj, aId, &ctypes)) {
-    return false;
-  }
-  JS_SetCTypesCallbacks(JSVAL_TO_OBJECT(ctypes), &gCTypesCallbacks);
-  return JS_GetPropertyById(aCx, aObj, aId, aVp);
+  return JS_DeletePropertyById(aCx, aObj, aId) &&
+         JS_InitCTypesClass(aCx, aObj) &&
+         JS_GetPropertyById(aCx, aObj, aId, &ctypes) &&
+         JS_SetCTypesCallbacks(aCx, JSVAL_TO_OBJECT(ctypes),
+                               &gCTypesCallbacks) &&
+         JS_GetPropertyById(aCx, aObj, aId, aVp);
 }
 #endif
 

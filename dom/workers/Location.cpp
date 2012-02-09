@@ -89,25 +89,31 @@ public:
 
     jsval empty = JS_GetEmptyStringValue(aCx);
 
-    JS_SetReservedSlot(obj, SLOT_href,
-                       aHref ? STRING_TO_JSVAL(aHref) : empty);
-    JS_SetReservedSlot(obj, SLOT_protocol,
-                       aProtocol ? STRING_TO_JSVAL(aProtocol) : empty);
-    JS_SetReservedSlot(obj, SLOT_host,
-                       aHost ? STRING_TO_JSVAL(aHost) : empty);
-    JS_SetReservedSlot(obj, SLOT_hostname,
-                       aHostname ? STRING_TO_JSVAL(aHostname) : empty);
-    JS_SetReservedSlot(obj, SLOT_port,
-                       aPort ? STRING_TO_JSVAL(aPort) : empty);
-    JS_SetReservedSlot(obj, SLOT_pathname,
-                       aPathname ? STRING_TO_JSVAL(aPathname) : empty);
-    JS_SetReservedSlot(obj, SLOT_search,
-                       aSearch ? STRING_TO_JSVAL(aSearch) : empty);
-    JS_SetReservedSlot(obj, SLOT_hash,
-                       aHash ? STRING_TO_JSVAL(aHash) : empty);
+    if (!JS_SetReservedSlot(aCx, obj, SLOT_href,
+                            aHref ? STRING_TO_JSVAL(aHref) : empty) ||
+        !JS_SetReservedSlot(aCx, obj, SLOT_protocol,
+                            aProtocol ? STRING_TO_JSVAL(aProtocol) : empty) ||
+        !JS_SetReservedSlot(aCx, obj, SLOT_host,
+                            aHost ? STRING_TO_JSVAL(aHost) : empty) ||
+        !JS_SetReservedSlot(aCx, obj, SLOT_hostname,
+                            aHostname ? STRING_TO_JSVAL(aHostname) : empty) ||
+        !JS_SetReservedSlot(aCx, obj, SLOT_port,
+                            aPort ? STRING_TO_JSVAL(aPort) : empty) ||
+        !JS_SetReservedSlot(aCx, obj, SLOT_pathname,
+                            aPathname ? STRING_TO_JSVAL(aPathname) : empty) ||
+        !JS_SetReservedSlot(aCx, obj, SLOT_search,
+                            aSearch ? STRING_TO_JSVAL(aSearch) : empty) ||
+        !JS_SetReservedSlot(aCx, obj, SLOT_hash,
+                            aHash ? STRING_TO_JSVAL(aHash) : empty)) {
+      return NULL;
+    }
 
     Location* priv = new Location();
-    JS_SetPrivate(obj, priv);
+
+    if (!JS_SetPrivate(aCx, obj, priv)) {
+      delete priv;
+      return NULL;
+    }
 
     return obj;
   }
@@ -135,7 +141,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    delete static_cast<Location*>(JS_GetPrivate(aObj));
+    delete static_cast<Location*>(JS_GetPrivate(aCx, aObj));
   }
 
   static JSBool
@@ -154,7 +160,11 @@ private:
       return false;
     }
 
-    jsval href = JS_GetReservedSlot(obj, SLOT_href);
+
+    jsval href;
+    if (!JS_GetReservedSlot(aCx, obj, SLOT_href, &href)) {
+      return false;
+    }
 
     JS_SET_RVAL(aCx, aVp, href);
     return true;
@@ -174,8 +184,7 @@ private:
     JS_ASSERT(JSID_IS_INT(aIdval));
     JS_ASSERT(JSID_TO_INT(aIdval) >= 0 && JSID_TO_INT(aIdval) < SLOT_COUNT);
 
-    *aVp = JS_GetReservedSlot(aObj, JSID_TO_INT(aIdval));
-    return true;
+    return JS_GetReservedSlot(aCx, aObj, JSID_TO_INT(aIdval), aVp);
   }
 };
 
