@@ -51,7 +51,7 @@
   </script>
   <script type="application/javascript">
   <![CDATA[
-    SimpleTest.info("\nProfile::ChromeUtilsLoadTime: " + (loadTime - start) + "\n");
+    info("\nProfile::ChromeUtilsLoadTime: " + (loadTime - start) + "\n");
     var testFile = Components.classes["@mozilla.org/file/directory_service;1"].
                       getService(Components.interfaces.nsIProperties).
                       get("CurWorkD", Components.interfaces.nsIFile);
@@ -196,7 +196,7 @@
       is(content, true, "synthesizeSelectionSet should succeed");
 
       var endTime = new Date();
-      SimpleTest.info("\nProfile::ChromeUtilsRunTime: " + (endTime-startTime) + "\n");
+      info("\nProfile::ChromeUtilsRunTime: " + (endTime-startTime) + "\n");
       SimpleTest.finish();
     };
   ]]>

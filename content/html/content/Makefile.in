@@ -44,9 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PARALLEL_DIRS	= public src
 
-ifdef ENABLE_TESTS
-DIRS		+= test
-endif
+TEST_DIRS += test
 
 include $(topsrcdir)/config/rules.mk
 

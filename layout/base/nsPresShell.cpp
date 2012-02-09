@@ -691,6 +691,13 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(GfxTextrunWordCacheMallocSizeOf, "gfx/textrun-word-cache")
 
 NS_IMETHODIMP
+PresShell::MemoryReporter::GetName(nsACString &aName)
+{
+  aName.AssignLiteral("layout");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
                                           nsISupports* aClosure)
 {
@@ -2012,7 +2019,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   // Restore our root scroll position now if we're getting here after EndLoad
   // got called, since this is our one chance to do it.  Note that we need not
   // have reflowed for this to work; when the scrollframe is finally reflowed
-  // it'll puick up the position we store in it here.
+  // it'll pick up the position we store in it here.
   if (!mDocumentLoading) {
     RestoreRootScrollPosition();
   }
@@ -7811,8 +7818,16 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
   }
 
   if (mDocument->GetRootElement()) {
-    Telemetry::ID id = (mDocument->GetRootElement()->IsXUL()
-                        ? Telemetry::XUL_REFLOW_MS : Telemetry::HTML_REFLOW_MS);
+    Telemetry::ID id;
+    if (mDocument->GetRootElement()->IsXUL()) {
+      id = mIsActive
+        ? Telemetry::XUL_FOREGROUND_REFLOW_MS
+        : Telemetry::XUL_BACKGROUND_REFLOW_MS;
+    } else {
+      id = mIsActive
+        ? Telemetry::HTML_FOREGROUND_REFLOW_MS
+        : Telemetry::HTML_BACKGROUND_REFLOW_MS;
+    }
     Telemetry::AccumulateTimeDelta(id, timerStart);
   }
 

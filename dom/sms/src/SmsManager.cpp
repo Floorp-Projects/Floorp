@@ -68,14 +68,14 @@ namespace sms {
 NS_IMPL_CYCLE_COLLECTION_CLASS(SmsManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsManager,
-                                                  nsDOMEventTargetWrapperCache)
+                                                  nsDOMEventTargetHelper)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(received)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(sent)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(delivered)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SmsManager,
-                                                nsDOMEventTargetWrapperCache)
+                                                nsDOMEventTargetHelper)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(received)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(sent)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(delivered)
@@ -85,10 +85,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SmsManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozSmsManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozSmsManager)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozSmsManager)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(SmsManager, nsDOMEventTargetWrapperCache)
-NS_IMPL_RELEASE_INHERITED(SmsManager, nsDOMEventTargetWrapperCache)
+NS_IMPL_ADDREF_INHERITED(SmsManager, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(SmsManager, nsDOMEventTargetHelper)
 
 void
 SmsManager::Init(nsPIDOMWindow *aWindow, nsIScriptContext* aScriptContext)

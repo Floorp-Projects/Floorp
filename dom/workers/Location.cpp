@@ -140,7 +140,7 @@ private:
   static void
   Finalize(JSContext* aCx, JSObject* aObj)
   {
-    JS_ASSERT(JS_GET_CLASS(aCx, aObj) == &sClass);
+    JS_ASSERT(JS_GetClass(aObj) == &sClass);
     delete static_cast<Location*>(JS_GetPrivate(aCx, aObj));
   }
 
@@ -148,12 +148,15 @@ private:
   ToString(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
-    JSClass* classPtr;
-    if (!obj || ((classPtr = JS_GET_CLASS(aCx, obj)) != &sClass)) {
+    JSClass* classPtr = JS_GetClass(obj);
+    if (classPtr != &sClass) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name, "toString",
-                           classPtr ? classPtr->name : "object");
+                           classPtr);
       return false;
     }
 
@@ -170,11 +173,11 @@ private:
   static JSBool
   GetProperty(JSContext* aCx, JSObject* aObj, jsid aIdval, jsval* aVp)
   {
-    JSClass* classPtr;
-    if (!aObj || ((classPtr = JS_GET_CLASS(aCx, aObj)) != &sClass)) {
+    JSClass* classPtr = JS_GetClass(aObj);
+    if (classPtr != &sClass) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name, "GetProperty",
-                           classPtr ? classPtr->name : "object");
+                           classPtr->name);
       return false;
     }
 

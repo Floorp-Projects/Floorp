@@ -77,6 +77,45 @@ interface nsIAppStartup : nsISupports
     void exitLastWindowClosingSurvivalArea();
 
     /**
+     * Startup Crash Detection
+     *
+     * Keeps track of application startup begining and success using flags to
+     * determine whether the application is crashing on startup.
+     * When the number of crashes crosses the acceptable threshold, safe mode
+     * or other repair procedures are performed.
+     */
+
+    /**
+     * Whether automatic safe mode is necessary at this time.  This gets set
+     * in trackStartupCrashBegin.
+     *
+     * @see trackStartupCrashBegin
+     */
+    readonly attribute boolean automaticSafeModeNecessary;
+
+    /**
+     * Restart the application in safe mode
+     * @param aQuitMode
+     *        This parameter modifies how the app is shutdown.
+     * @see nsIAppStartup::quit
+     */
+    void restartInSafeMode(in PRUint32 aQuitMode);
+
+    /**
+     * If the last startup crashed then increment a counter.
+     * Set a flag so on next startup we can detect whether TrackStartupCrashEnd
+     * was called (and therefore the application crashed).
+     * @return whether safe mode is necessary
+     */
+    bool trackStartupCrashBegin();
+
+    /**
+     * We have succesfully started without crashing. Clear flags that were
+     * tracking past crashes.
+     */
+    void trackStartupCrashEnd();
+
+    /**
      * The following flags may be passed as the aMode parameter to the quit
      * method.  One and only one of the "Quit" flags must be specified.  The
      * eRestart flag may be bit-wise combined with one of the "Quit" flags to

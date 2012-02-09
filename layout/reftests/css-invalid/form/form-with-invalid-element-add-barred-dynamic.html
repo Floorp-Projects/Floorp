@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- form with one valid element and you dynamically add a barred constraint 
+validation element -->
+<html>
+  <head>
+    <style>
+      form:invalid { display:none }
+    </style>
+    <script>
+      function onLoadHandler()
+      {
+        document.forms[0].appendChild(document.getElementById('i'));
+        document.documentElement.className='';
+      }
+    </script>
+  </head>
+  <body onload='onLoadHandler();'>
+    <input id='i' value='foo' readonly>
+    <form>
+      <input required>
+    </form>
+  </body>
+</html>

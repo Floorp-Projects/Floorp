@@ -277,36 +277,6 @@ protected:
   nsNavHistory& mNavHistory;
 };
 
-
-// Used to notify a topic to system observers on async execute completion.
-class AsyncStatementCallbackNotifier : public AsyncStatementCallback
-{
-public:
-  AsyncStatementCallbackNotifier(const char* aTopic)
-    : mTopic(aTopic)
-  {
-  }
-
-  NS_IMETHOD HandleCompletion(PRUint16 aReason);
-
-private:
-  const char* mTopic;
-};
-
-NS_IMETHODIMP
-AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
-{
-  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
-  }
-
-  return NS_OK;
-}
-
 } // anonymouse namespace
 
 
@@ -3963,6 +3933,8 @@ nsNavHistory::DecayFrecency()
   // values of pages that haven't been visited for a while, i.e., they do
   // not get an updated frecency.  A scaling factor of .975 results in .5 the
   // original value after 28 days.
+  // When changing the scaling factor, ensure that the barrier in
+  // moz_places_afterupdate_frecency_trigger still ignores these changes.
   nsCOMPtr<mozIStorageAsyncStatement> decayFrecency = mDB->GetAsyncStatement(
     "UPDATE moz_places SET frecency = ROUND(frecency * .975) "
     "WHERE frecency > 0"
@@ -3988,8 +3960,10 @@ nsNavHistory::DecayFrecency()
     deleteAdaptive.get()
   };
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), nsnull,
-                                      getter_AddRefs(ps));
+  nsRefPtr<AsyncStatementTelemetryTimer> cb =
+    new AsyncStatementTelemetryTimer(Telemetry::PLACES_IDLE_FRECENCY_DECAY_TIME_MS);
+  rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), cb,
+                                     getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

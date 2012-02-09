@@ -85,6 +85,10 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-height-interp-5.svg anim-height-interp-5-ref.svg
 == anim-height-interp-6.svg anim-height-interp-6-ref.svg
 
+# check conditional processing
+== anim-conditions-01.svg lime.svg
+== anim-conditions-02.svg lime.svg
+
 # animate some <length> attributes:
 == anim-filter-primitive-size-01.svg lime.svg
 == anim-filter-size-01.svg lime.svg

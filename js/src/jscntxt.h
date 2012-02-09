@@ -81,6 +81,8 @@ struct JSSharpObjectMap {
     jsrefcount  depth;
     uint32_t    sharpgen;
     JSHashTable *table;
+
+    JSSharpObjectMap() : depth(0), sharpgen(0), table(NULL) {}
 };
 
 namespace js {

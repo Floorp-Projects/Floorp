@@ -44,8 +44,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = B2GComponents
 XPIDL_MODULE = B2GComponents
 
+XPIDLSRCS = \
+        b2g.idl \
+        $(NULL)
+
 EXTRA_PP_COMPONENTS = \
         B2GComponents.manifest \
+        CameraContent.js \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

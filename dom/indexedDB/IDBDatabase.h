@@ -44,7 +44,7 @@
 
 #include "nsIDocument.h"
 #include "nsIIDBDatabase.h"
-
+#include "nsDOMEventTargetHelper.h"
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/FileManager.h"
 

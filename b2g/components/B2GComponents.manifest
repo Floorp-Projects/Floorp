@@ -1,2 +1,7 @@
 # Scrollbars
 category agent-style-sheets browser-content-stylesheet chrome://browser/content/content.css
+
+# CameraContent.js
+component {eff4231b-abce-4f7f-a40a-d646e8fde3ce} CameraContent.js
+contract @mozilla.org/b2g-camera-content;1 {eff4231b-abce-4f7f-a40a-d646e8fde3ce}
+category JavaScript-navigator-property mozCamera @mozilla.org/b2g-camera-content;1

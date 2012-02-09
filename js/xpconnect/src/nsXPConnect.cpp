@@ -504,7 +504,7 @@ struct NoteWeakMapsTracer : public js::WeakMapTracer
 {
     NoteWeakMapsTracer(JSContext *cx, js::WeakMapTraceCallback cb,
                        nsCycleCollectionTraversalCallback &cccb)
-        : js::WeakMapTracer(cx, cb), mCb(cccb), mChildTracer(cccb)
+      : js::WeakMapTracer(js::GetRuntime(cx), cb), mCb(cccb), mChildTracer(cccb)
     {
         JS_TracerInit(&mChildTracer, cx, TraceWeakMappingChild);
     }
@@ -2771,6 +2771,21 @@ Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
     *out = STRING_TO_JSVAL(str);
     return true;
 }
+
+#ifdef DEBUG
+void
+DumpJSHeap(FILE* file)
+{
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Must dump GC heap on main thread.");
+    JSContext *cx;
+    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if (!xpc || NS_FAILED(xpc->GetSafeJSContext(&cx)) || !cx) {
+        NS_ERROR("Failed to get safe JSContext!");
+        return;
+    }
+    js::DumpHeapComplete(cx, file);
+}
+#endif
 
 } // namespace xpc
 

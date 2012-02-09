@@ -22,7 +22,7 @@
                 android:hint="@string/awesomebar_default_text"
                 android:textColor="#222222"
                 android:paddingLeft="35dip"
-                android:paddingRight="35dip"/>
+                android:paddingRight="7dip"/>
 
         <ImageButton android:id="@+id/favicon"
                      style="@style/AddressBar.ImageButton"

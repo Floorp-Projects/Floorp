@@ -60,6 +60,7 @@ import android.view.MotionEvent;
 import android.view.GestureDetector;
 import android.view.ScaleGestureDetector;
 import android.view.View.OnTouchListener;
+import android.view.ViewConfiguration;
 import java.lang.Math;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -91,6 +92,7 @@ public class LayerController {
 
     /* The new color for the checkerboard. */
     private int mCheckerboardColor;
+    private boolean mCheckerboardShouldShowChecks;
 
     private boolean mForceRedraw;
 
@@ -335,11 +337,6 @@ public class LayerController {
         return new RectF(x, y, x + layerSize.width, y + layerSize.height);
     }
 
-    public RectF restrictToPageSize(RectF aRect) {
-        FloatSize pageSize = getPageSize();
-        return RectUtils.restrict(aRect, new RectF(0, 0, pageSize.width, pageSize.height));
-    }
-
     // Returns true if a checkerboard is about to be visible.
     private boolean aboutToCheckerboard() {
         // Increase the size of the viewport (and clamp to page boundaries), and
@@ -410,28 +407,42 @@ public class LayerController {
         if (!mWaitForTouchListeners)
             return !allowDefaultActions;
 
+        boolean createTimer = false;
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_MOVE: {
                 if (!inTouchSession && allowDefaultTimer == null) {
                     inTouchSession = true;
-                    allowDefaultTimer = new Timer();
-                    allowDefaultTimer.schedule(new TimerTask() {
-                        public void run() {
-                            post(new Runnable() {
-                                public void run() {
-                                    preventPanning(false);
-                                }
-                            });
-                        }
-                    }, PREVENT_DEFAULT_TIMEOUT);
+                    createTimer = true;
                 }
                 break;
             }
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP: {
+                // if we still have initialTouchLocation, we haven't fired any
+                // touchmove events. We should start the timer to wait for preventDefault
+                // from touchstart. If we don't hear from it we fire mouse events
+                if (initialTouchLocation != null)
+                    createTimer = true;
                 inTouchSession = false;
             }
         }
+
+        if (createTimer) {
+            if (allowDefaultTimer != null) {
+              allowDefaultTimer.cancel();
+            }
+            allowDefaultTimer = new Timer();
+            allowDefaultTimer.schedule(new TimerTask() {
+                public void run() {
+                    post(new Runnable() {
+                        public void run() {
+                            preventPanning(false);
+                        }
+                    });
+                }
+            }, PREVENT_DEFAULT_TIMEOUT);
+        }
+
         return !allowDefaultActions;
     }
 
@@ -457,9 +468,20 @@ public class LayerController {
         mWaitForTouchListeners = aValue;
     }
 
+    /** Retrieves whether we should show checkerboard checks or not. */
+    public boolean checkerboardShouldShowChecks() {
+        return mCheckerboardShouldShowChecks;
+    }
+
     /** Retrieves the color that the checkerboard should be. */
     public int getCheckerboardColor() {
         return mCheckerboardColor;
+    }
+
+    /** Sets whether or not the checkerboard should show checkmarks. */
+    public void setCheckerboardShowChecks(boolean showChecks) {
+        mCheckerboardShouldShowChecks = showChecks;
+        mView.requestRender();
     }
 
     /** Sets a new color for the checkerboard. */

@@ -935,6 +935,7 @@ AddonsStore.prototype = {
           return;
         }
 
+        let expectedInstallCount = 0;
         let finishedCount = 0;
         let installCallback = function installCallback(error, result) {
           finishedCount++;
@@ -947,7 +948,7 @@ AddonsStore.prototype = {
             ourResult.addons.push(result.addon);
           }
 
-          if (finishedCount >= addonsLength) {
+          if (finishedCount >= expectedInstallCount) {
             if (ourResult.errors.length > 0) {
               cb(new Error("1 or more add-ons failed to install"), ourResult);
             } else {
@@ -956,12 +957,24 @@ AddonsStore.prototype = {
           }
         }.bind(this);
 
+        let toInstall = [];
+
         // Rewrite the "src" query string parameter of the source URI to note
         // that the add-on was installed by Sync and not something else so
         // server-side metrics aren't skewed (bug 708134). The server should
         // ideally send proper URLs, but this solution was deemed too
         // complicated at the time the functionality was implemented.
         for each (let addon in addons) {
+          // sourceURI presence isn't enforced by AddonRepository. So, we skip
+          // add-ons without a sourceURI.
+          if (!addon.sourceURI) {
+            this._log.info("Skipping install of add-on because missing " +
+                           "sourceURI: " + addon.id);
+            continue;
+          }
+
+          toInstall.push(addon);
+
           // We should always be able to QI the nsIURI to nsIURL. If not, we
           // still try to install the add-on, but we don't rewrite the URL,
           // potentially skewing metrics.
@@ -986,10 +999,17 @@ AddonsStore.prototype = {
           addon.sourceURI.query = params.join("&");
         }
 
+        expectedInstallCount = toInstall.length;
+
+        if (!expectedInstallCount) {
+          cb(null, ourResult);
+          return;
+        }
+
         // Start all the installs asynchronously. They will report back to us
         // as they finish, eventually triggering the global callback.
-        for (let i = 0; i < addonsLength; i++) {
-          this.installAddonFromSearchResult(addons[i], installCallback);
+        for each (let addon in toInstall) {
+          this.installAddonFromSearchResult(addon, installCallback);
         }
 
       }.bind(this),
