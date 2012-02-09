@@ -76,6 +76,7 @@ jfieldID AndroidGeckoEvent::jLocationField = 0;
 jfieldID AndroidGeckoEvent::jAddressField = 0;
 jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
+jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -189,6 +190,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jAddressField = getField("mAddress", "Landroid/location/Address;");
     jBandwidthField = getField("mBandwidth", "D");
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
+    jScreenOrientationField = getField("mScreenOrientation", "S");
 }
 
 void
@@ -544,6 +546,11 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case PROXIMITY_EVENT: {
             mDistance = jenv->GetDoubleField(jobj, jDistanceField);
+            break;
+        }
+
+        case SCREENORIENTATION_CHANGED: {
+            mScreenOrientation = jenv->GetShortField(jobj, jScreenOrientationField);
             break;
         }
 
