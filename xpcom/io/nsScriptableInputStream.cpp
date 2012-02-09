@@ -69,9 +69,6 @@ nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
 
     if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
 
-    // bug716556 - Need room room for the null byte
-    if (aCount > PR_UINT32_MAX - 1) return NS_ERROR_ILLEGAL_VALUE;
-
     rv = mInputStream->Available(&count);
     if (NS_FAILED(rv)) return rv;
 
