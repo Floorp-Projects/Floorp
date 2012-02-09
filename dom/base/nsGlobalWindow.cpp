@@ -1312,11 +1312,6 @@ nsGlobalWindow::FreeInnerObjects(bool aClearScope)
     mNavigator = nsnull;
   }
 
-  if (mScreen) {
-    mScreen->Invalidate();
-    mScreen = nsnull;
-  }
-
   if (mDocument) {
     NS_ASSERTION(mDoc, "Why is mDoc null?");
 
@@ -2497,6 +2492,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   if (mFrames)
     mFrames->SetDocShell(aDocShell);
+  if (mScreen)
+    mScreen->SetDocShell(aDocShell);
 
   if (!mDocShell) {
     MaybeForgiveSpamCount();
@@ -3004,14 +3001,14 @@ nsGlobalWindow::GetNavigator(nsIDOMNavigator** aNavigator)
 NS_IMETHODIMP
 nsGlobalWindow::GetScreen(nsIDOMScreen** aScreen)
 {
-  FORWARD_TO_INNER(GetScreen, (aScreen), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(GetScreen, (aScreen), NS_ERROR_NOT_INITIALIZED);
 
   *aScreen = nsnull;
 
-  if (!mScreen) {
-    mScreen = nsScreen::Create(this);
+  if (!mScreen && mDocShell) {
+    mScreen = new nsScreen(mDocShell);
     if (!mScreen) {
-      return NS_ERROR_UNEXPECTED;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
