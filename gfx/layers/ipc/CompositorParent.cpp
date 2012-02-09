@@ -146,17 +146,6 @@ CompositorParent::ScheduleComposition()
   } else {
     MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
   }
-
-// Test code for async scrolling.
-#ifdef OMTC_TEST_ASYNC_SCROLLING
-  static bool scrollScheduled = false;
-  if (!scrollScheduled) {
-    CancelableTask *composeTask2 = NewRunnableMethod(this,
-                                                     &CompositorParent::TestScroll);
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask2, 500);
-    scrollScheduled = true;
-  }
-#endif
 }
 
 void
@@ -386,36 +375,6 @@ CompositorParent::ShadowLayersUpdated()
   }
   ScheduleComposition();
 }
-
-// Test code for async scrolling.
-#ifdef OMTC_TEST_ASYNC_SCROLLING
-void
-CompositorParent::TestScroll()
-{
-  static int scrollFactor = 0;
-  static bool fakeScrollDownwards = true;
-  if (fakeScrollDownwards) {
-    scrollFactor++;
-    if (scrollFactor > 10) {
-      scrollFactor = 10;
-      fakeScrollDownwards = false;
-    }
-  } else {
-    scrollFactor--;
-    if (scrollFactor < 0) {
-      scrollFactor = 0;
-      fakeScrollDownwards = true;
-    }
-  }
-  SetTransformation(1.0+2.0*scrollFactor/10, nsIntPoint(-25*scrollFactor,
-      -25*scrollFactor));
-  printf_stderr("AsyncRender scroll factor:%d\n", scrollFactor);
-  AsyncRender();
-
-  CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::TestScroll);
-  MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask, 1000/65);
-}
-#endif
 
 PLayersParent*
 CompositorParent::AllocPLayers(const LayersBackend &backendType)
