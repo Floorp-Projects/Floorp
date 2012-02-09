@@ -782,18 +782,7 @@ LayerManagerOGL::Render()
 
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
-  static int i = 0;
-  i++;
-  i=i%3;
-  if( i == 0 ) {
-  mGLContext->fClearColor(1.0, 0.0, 0.0, 0.0);
-  } else if( i == 1 ) {
-  mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
-  } else if( i == 2 ) {
-  mGLContext->fClearColor(1.0, 1.0, 0.0, 0.0);
-  } else {
-  mGLContext->fClearColor(0.0, 1.0, 0.0, 0.0);
-  }
+  mGLContext->fClearColor(1.0, 1.0, 1.0, 0.0);
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
   // Render our layers.
