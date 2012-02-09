@@ -170,7 +170,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCallGetNameTypeOf(MCallGetNameTypeOf *ins);
     bool visitCallGetElement(MCallGetElement *ins);
     bool visitCallSetElement(MCallSetElement *ins);
-    bool visitGenericSetProperty(MGenericSetProperty *ins);
+    bool visitSetPropertyCache(MSetPropertyCache *ins);
+    bool visitCallSetProperty(MCallSetProperty *ins);
     bool visitIteratorStart(MIteratorStart *ins);
     bool visitIteratorNext(MIteratorNext *ins);
     bool visitIteratorMore(MIteratorMore *ins);

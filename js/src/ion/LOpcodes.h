@@ -129,8 +129,7 @@
     _(CallGetNameTypeOf)            \
     _(CallGetElement)               \
     _(CallSetElement)               \
-    _(CallSetPropertyV)             \
-    _(CallSetPropertyT)             \
+    _(CallSetProperty)              \
     _(CacheSetPropertyV)            \
     _(CacheSetPropertyT)            \
     _(CallIteratorStart)            \

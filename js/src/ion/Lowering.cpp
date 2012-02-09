@@ -1132,25 +1132,29 @@ LIRGenerator::visitCallGetElement(MCallGetElement *ins)
 }
 
 bool
-LIRGenerator::visitGenericSetProperty(MGenericSetProperty *ins)
+LIRGenerator::visitCallSetProperty(MCallSetProperty *ins)
+{
+    LInstruction *lir = new LCallSetProperty(useRegister(ins->obj()));
+    if (!useBox(lir, LCallSetProperty::Value, ins->value()))
+        return false;
+    if (!add(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitSetPropertyCache(MSetPropertyCache *ins)
 {
     LUse obj = useRegister(ins->obj());
 
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
-        if (ins->monitored())
-            lir = new LCallSetPropertyV(obj);
-        else
-            lir = new LCacheSetPropertyV(obj);
-        JS_STATIC_ASSERT(LCallSetPropertyV::Value == LCacheSetPropertyV::Value);
-        if (!useBox(lir, LCallSetPropertyV::Value, ins->value()))
+        lir = new LCacheSetPropertyV(obj);
+        if (!useBox(lir, LCacheSetPropertyV::Value, ins->value()))
             return false;
     } else {
         LAllocation value = useRegisterOrConstant(ins->value());
-        if (ins->monitored())
-            lir = new LCallSetPropertyT(obj, value, ins->value()->type());
-        else
-            lir = new LCacheSetPropertyT(obj, value, ins->value()->type());
+        lir = new LCacheSetPropertyT(obj, value, ins->value()->type());
     }
 
     if (!add(lir, ins))
@@ -1159,7 +1163,7 @@ LIRGenerator::visitGenericSetProperty(MGenericSetProperty *ins)
     return assignSafepoint(lir, ins);
 }
 
- bool
+bool
 LIRGenerator::visitCallSetElement(MCallSetElement *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);
