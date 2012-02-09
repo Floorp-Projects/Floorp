@@ -51,7 +51,7 @@ var component = Services.prefs.getCharPref(PREF_EDITOR_COMPONENT);
 var obj = {};
 try {
   if (component == "ui") {
-    throw new Error("The UI editor component is not available.");
+    throw new Error("The ui editor component is not available.");
   }
   Cu.import("resource:///modules/source-editor-" + component + ".jsm", obj);
 } catch (ex) {
