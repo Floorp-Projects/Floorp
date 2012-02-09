@@ -306,7 +306,7 @@ class FrameRecovery
                                        BailoutId bailoutId);
     static FrameRecovery FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
                                       SnapshotOffset offset);
-    static FrameRecovery FromFrameIterator(const IonFrameIterator& it);
+    static FrameRecovery FromTop(JSContext *cx);
 
     // Override the ionScript gleaned from the JSScript.
     void setIonScript(IonScript *ionScript);
@@ -402,6 +402,13 @@ inline bool
 IonFrameIterator::more() const
 {
     return type_ != IonFrame_Entry;
+}
+
+size_t
+IonFrameIterator::frameSize() const
+{
+    JS_ASSERT(type_ != IonFrame_Exit);
+    return frameSize_;
 }
 
 static inline IonScript *

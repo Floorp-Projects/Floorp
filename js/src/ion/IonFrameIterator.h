@@ -69,12 +69,14 @@ class IonFrameIterator
     uint8 *current_;
     FrameType type_;
     uint8 *returnAddressToFp_;
+    size_t frameSize_;
 
   public:
     IonFrameIterator(uint8 *top)
       : current_(top),
         type_(IonFrame_Exit),
-        returnAddressToFp_(NULL)
+        returnAddressToFp_(NULL),
+        frameSize_(0)
     { }
 
     // Current frame information.
@@ -112,6 +114,10 @@ class IonFrameIterator
     inline size_t prevFrameLocalSize() const;
     inline FrameType prevType() const;
     uint8 *prevFp() const;
+
+    // Returns the stack space used by the current frame, in bytes. This does
+    // not include the size of its fixed header.
+    inline size_t frameSize() const;
 
     // Functions used to iterate on frames. When prevType is IonFrame_Entry,
     // the current frame is the last frame.
