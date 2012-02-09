@@ -41,6 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 /**
  * The base view implements everything that's common to the toolbar and
@@ -808,6 +809,7 @@ PlacesViewBase.prototype = {
 };
 
 function PlacesToolbar(aPlace) {
+  let startTime = Date.now();
   // Add some smart getters for our elements.
   let thisView = this;
   [
@@ -836,6 +838,9 @@ function PlacesToolbar(aPlace) {
   this._addEventListeners(window, ["resize", "unload"], false);
 
   PlacesViewBase.call(this, aPlace);
+
+  Services.telemetry.getHistogramById("FX_BOOKMARKS_TOOLBAR_INIT_MS")
+                    .add(Date.now() - startTime);
 }
 
 PlacesToolbar.prototype = {

@@ -22,7 +22,7 @@
        number of inches in 50px is not always the same, so we can't fix how
        many inches is midway between 50px and 10in in the reference file. To
        get around this problem this test mainly pairs different units with a
-       knows, fixed, relationship. For example, animating between cm and mm,
+       known, fixed, relationship. For example, animating between cm and mm,
        or between 'in' and pt (72 pt/in) or between 'in' and pc (6 pc/in).
        Note that we can animate between px and em by fixing the relationship
        between these units by setting the CSS 'font-size' property to a fixed
@@ -173,6 +173,49 @@
              begin="0s" dur="10.1s"
              from="20 10mm 3pc 36pt 2em 3% 1ex"
              to="40px 2cm 1in 1in 16px 0cm 0% 3"
+             fill="freeze"/>
+  </text>
+
+
+  <!-- Test 'by' animation with calcMode="discrete". -->
+
+  <text transform="translate(420, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex">7890abcd
+
+    <!-- At 5s the animVal should be "10px 0.5cm 0.25in 0.5in 16px 0cm 0%",
+         since the discrete animation is considered to be an additive
+         animation from an empty list to the list specified in by="". -->
+    <animate attributeName="x"
+             calcMode="discrete"
+             begin="0s" dur="15s"
+             by="30 15mm 4.5pc 108pt 3em 9% 3ex"
+             fill="freeze"/>
+
+    <!-- At 5s the animVal should be the empty list, as both the underlying
+         value and the first value of the equivalent additive animation are
+         empty lists. -->
+    <animate attributeName="dy"
+             calcMode="discrete"
+             begin="0s" dur="15s"
+             by="20 10mm 3pc 36pt 2em 3% 1ex"
+             fill="freeze"/>
+  </text>
+
+  <text transform="translate(520, 20)"
+        x="10px 0.5cm 0.25in 0.5in 16px 0cm 0%">efghijkl
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 72pt 2em 3% 1ex". -->
+    <animate attributeName="x"
+             calcMode="discrete"
+             begin="0s" dur="8s"
+             by="10 5mm 1.5pc 36pt 1em 3% 1ex"
+             fill="freeze"/>
+
+    <!-- At 5s the animVal should be "20 10mm 3pc 36pt 2em 3% 1ex". -->
+    <animate attributeName="dy"
+             calcMode="discrete"
+             begin="0s" dur="8s"
+             by="20 10mm 3pc 36pt 2em 3% 1ex"
              fill="freeze"/>
   </text>
 

@@ -310,6 +310,15 @@ public:
      */
     bool SanitizeDownloadedFonts();
 
+    /**
+     * True when hinting should be enabled.  This setting shouldn't
+     * change per gecko process, while the process is live.  If so the
+     * results are not defined.
+     *
+     * NB: this bit is only honored by the FT2 backend, currently.
+     */
+    virtual bool FontHintingEnabled() { return true; }
+
 #ifdef MOZ_GRAPHITE
     /**
      * Whether to use the SIL Graphite rendering engine

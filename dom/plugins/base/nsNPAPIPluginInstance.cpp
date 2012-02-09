@@ -958,15 +958,15 @@ nsNPAPIPluginInstance::HandleGUIEvent(const nsGUIEvent& anEvent, bool* handled)
 #endif
 
 nsresult
-nsNPAPIPluginInstance::GetImage(ImageContainer* aContainer, Image** aImage)
+nsNPAPIPluginInstance::GetImageContainer(ImageContainer**aContainer)
 {
-  *aImage = nsnull;
+  *aContainer = nsnull;
 
   if (RUNNING != mRunning)
     return NS_OK;
 
   AutoPluginLibraryCall library(this);
-  return !library ? NS_ERROR_FAILURE : library->GetImage(&mNPP, aContainer, aImage);
+  return !library ? NS_ERROR_FAILURE : library->GetImageContainer(&mNPP, aContainer);
 }
 
 nsresult
