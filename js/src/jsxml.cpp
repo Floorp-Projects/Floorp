@@ -7718,7 +7718,8 @@ js_GetAnyName(JSContext *cx, jsid *idp)
             return false;
 
         v.setObject(*obj);
-        SetReservedSlot(global, JSProto_AnyName, v);
+        if (!js_SetReservedSlot(cx, global, JSProto_AnyName, v))
+            return false;
     }
     *idp = OBJECT_TO_JSID(&v.toObject());
     return true;

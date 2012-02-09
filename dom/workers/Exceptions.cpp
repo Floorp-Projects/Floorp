@@ -114,7 +114,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    delete GetJSPrivateSafeish<DOMException>(aObj);
+    delete GetJSPrivateSafeish<DOMException>(aCx, aObj);
   }
 
   static JSBool
@@ -141,7 +141,11 @@ private:
       return false;
     }
 
-    jsval name = JS_GetReservedSlot(obj, SLOT_name);
+    jsval name;
+    if (!JS_GetReservedSlot(aCx, obj, SLOT_name, &name)) {
+      return false;
+    }
+
     JS_ASSERT(JSVAL_IS_STRING(name));
 
     JSString* out = JS_ConcatStrings(aCx, classString, JSVAL_TO_STRING(name));
@@ -162,15 +166,14 @@ private:
 
     JSClass* classPtr = JS_GetClass(aObj);
 
-    if (classPtr != &sClass || !GetJSPrivateSafeish<DOMException>(aObj)) {
+    if (classPtr != &sClass || !GetJSPrivateSafeish<DOMException>(aCx, aObj)) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name,
                            sProperties[slot].name, classPtr->name);
       return false;
     }
 
-    *aVp = JS_GetReservedSlot(aObj, slot);
-    return true;
+    return JS_GetReservedSlot(aCx, aObj, slot, aVp);
   }
 
   static JSBool
@@ -266,11 +269,16 @@ DOMException::Create(JSContext* aCx, intN aCode)
     return NULL;
   }
 
-  JS_SetReservedSlot(obj, SLOT_code, INT_TO_JSVAL(aCode));
-  JS_SetReservedSlot(obj, SLOT_name, STRING_TO_JSVAL(name));
+  if (!JS_SetReservedSlot(aCx, obj, SLOT_code, INT_TO_JSVAL(aCode)) ||
+      !JS_SetReservedSlot(aCx, obj, SLOT_name, STRING_TO_JSVAL(name))) {
+    return NULL;
+  }
 
   DOMException* priv = new DOMException();
-  SetJSPrivateSafeish(obj, priv);
+  if (!SetJSPrivateSafeish(aCx, obj, priv)) {
+    delete priv;
+    return NULL;
+  }
 
   return obj;
 }
@@ -322,7 +330,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    delete GetJSPrivateSafeish<FileException>(aObj);
+    delete GetJSPrivateSafeish<FileException>(aCx, aObj);
   }
 
   static JSBool
@@ -334,15 +342,14 @@ private:
 
     JSClass* classPtr = JS_GetClass(aObj);
 
-    if (classPtr != &sClass || !GetJSPrivateSafeish<FileException>(aObj)) {
+    if (classPtr != &sClass || !GetJSPrivateSafeish<FileException>(aCx, aObj)) {
       JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
                            JSMSG_INCOMPATIBLE_PROTO, sClass.name,
                            sProperties[slot].name, classPtr->name);
       return false;
     }
 
-    *aVp = JS_GetReservedSlot(aObj, slot);
-    return true;
+    return JS_GetReservedSlot(aCx, aObj, slot, aVp);
   }
 
   static JSBool
@@ -408,11 +415,16 @@ FileException::Create(JSContext* aCx, intN aCode)
     return NULL;
   }
 
-  JS_SetReservedSlot(obj, SLOT_code, INT_TO_JSVAL(aCode));
-  JS_SetReservedSlot(obj, SLOT_name, STRING_TO_JSVAL(name));
+  if (!JS_SetReservedSlot(aCx, obj, SLOT_code, INT_TO_JSVAL(aCode)) ||
+      !JS_SetReservedSlot(aCx, obj, SLOT_name, STRING_TO_JSVAL(name))) {
+    return NULL;
+  }
 
   FileException* priv = new FileException();
-  SetJSPrivateSafeish(obj, priv);
+  if (!SetJSPrivateSafeish(aCx, obj, priv)) {
+    delete priv;
+    return NULL;
+  }
 
   return obj;
 }
