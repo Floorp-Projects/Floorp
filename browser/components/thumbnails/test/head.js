@@ -94,29 +94,34 @@ function whenLoaded(aElement, aCallback) {
  * @param aMessage The info message to print when comparing the pixel color.
  */
 function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
-  let browser = gBrowser.selectedBrowser;
+  let window = gBrowser.selectedTab.linkedBrowser.contentWindow;
 
   // Capture the screenshot.
-  PageThumbs.captureAndStore(browser, function () {
-    let width = 100, height = 100;
-    let thumb = PageThumbs.getThumbnailURL(browser.currentURI.spec, width, height);
+  PageThumbs.capture(window, function (aData) {
+    let key = Date.now();
 
-    getXULDocument(function (aDocument) {
-      let htmlns = "http://www.w3.org/1999/xhtml";
-      let img = aDocument.createElementNS(htmlns, "img");
-      img.setAttribute("src", thumb);
+    // Store the thumbnail in the cache.
+    PageThumbs.store(key, aData, function () {
+      let width = 100, height = 100;
+      let thumb = PageThumbs.getThumbnailURL(key, width, height);
 
-      whenLoaded(img, function () {
-        let canvas = aDocument.createElementNS(htmlns, "canvas");
-        canvas.setAttribute("width", width);
-        canvas.setAttribute("height", height);
+      getXULDocument(function (aDocument) {
+        let htmlns = "http://www.w3.org/1999/xhtml";
+        let img = aDocument.createElementNS(htmlns, "img");
+        img.setAttribute("src", thumb);
 
-        // Draw the image to a canvas and compare the pixel color values.
-        let ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        checkCanvasColor(ctx, aRed, aGreen, aBlue, aMessage);
+        whenLoaded(img, function () {
+          let canvas = aDocument.createElementNS(htmlns, "canvas");
+          canvas.setAttribute("width", width);
+          canvas.setAttribute("height", height);
 
-        next();
+          // Draw the image to a canvas and compare the pixel color values.
+          let ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          checkCanvasColor(ctx, aRed, aGreen, aBlue, aMessage);
+
+          next();
+        });
       });
     });
   });

@@ -135,23 +135,15 @@ let gTransformation = {
    *        callback - the callback to call when finished
    */
   rearrangeSites: function Transformation_rearrangeSites(aSites, aOptions) {
+    let batch;
     let cells = gGrid.cells;
     let callback = aOptions && aOptions.callback;
     let unfreeze = aOptions && aOptions.unfreeze;
-
-    let batch = new Batch(function () {
-      if (aOptions && "callback" in aOptions)
-        aOptions.callback();
-
-      gGrid.unlock();
-    });
 
     if (callback) {
       batch = new Batch(callback);
       callback = function () batch.pop();
     }
-
-    gGrid.lock();
 
     aSites.forEach(function (aSite, aIndex) {
       // Do not re-arrange empty cells or the dragged site.

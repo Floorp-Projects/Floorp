@@ -20,34 +20,29 @@ let gUpdater = {
     // Find all sites that remain in the grid.
     let sites = this._findRemainingSites(links);
 
-    Grid.lock();
+    let self = this;
 
     // Remove sites that are no longer in the grid.
     this._removeLegacySites(sites, function () {
       // Freeze all site positions so that we can move their DOM nodes around
       // without any visual impact.
-      this._freezeSitePositions(sites);
+      self._freezeSitePositions(sites);
 
       // Move the sites' DOM nodes to their new position in the DOM. This will
       // have no visual effect as all the sites have been frozen and will
       // remain in their current position.
-      this._moveSiteNodes(sites);
+      self._moveSiteNodes(sites);
 
       // Now it's time to animate the sites actually moving to their new
       // positions.
-      this._rearrangeSites(sites, function () {
+      self._rearrangeSites(sites, function () {
         // Try to fill empty cells and finish.
-        this._fillEmptyCells(links, function () {
-          gGrid.unlock();
-
-          if (aCallback)
-            aCallback();
-        });
+        self._fillEmptyCells(links, aCallback);
 
         // Update other pages that might be open to keep them synced.
         gAllPages.update(gPage);
-      }.bind(this));
-    }.bind(this));
+      });
+    });
   },
 
   /**
