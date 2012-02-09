@@ -548,7 +548,6 @@ public:
         mContextLost(false),
         mVendor(-1),
         mRenderer(-1),
-        mDebugMode(0),
         mCreationFormat(aFormat),
         mSharedContext(aSharedContext),
         mOffscreenTexture(0),
@@ -1434,21 +1433,24 @@ protected:
     PRInt32 mVendor;
     PRInt32 mRenderer;
 
+public:
     enum {
         DebugEnabled = 1 << 0,
         DebugTrace = 1 << 1,
         DebugAbortOnError = 1 << 2
     };
 
-    PRUint32 mDebugMode;
+    static PRUint32 sDebugMode;
 
-    inline PRUint32 DebugMode() {
+    static PRUint32 DebugMode() {
 #ifdef DEBUG
-        return mDebugMode;
+        return sDebugMode;
 #else
         return 0;
 #endif
     }
+
+protected:
 
     ContextFormat mCreationFormat;
     nsRefPtr<GLContext> mSharedContext;
