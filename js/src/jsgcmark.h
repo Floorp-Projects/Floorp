@@ -260,7 +260,7 @@ IsMarked(JSObject *o)
 inline bool
 IsMarked(JSContext *cx, ion::IonCode *code)
 {
-    return !IsAboutToBeFinalized(cx, code);
+    return !IsAboutToBeFinalized(code);
 }
 
 inline bool
