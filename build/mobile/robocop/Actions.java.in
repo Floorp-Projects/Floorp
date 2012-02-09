@@ -57,11 +57,6 @@ public interface Actions {
     public void blockUntilClear(long millis);
   }
 
-  public interface RepeatedEventExpecter extends EventExpecter {
-    /** Blocks until at least one event has been received, and no events have been received in the last <code>millis</code> milliseconds. */
-    public void blockUntilClear(long millis);
-  }
-
   /**
    * Listens for a gecko event to be sent from the Gecko instance.
    * The returned object can be used to test if the event has been
