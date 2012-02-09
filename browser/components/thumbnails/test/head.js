@@ -96,30 +96,32 @@ function whenLoaded(aElement, aCallback) {
 function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
   let window = gBrowser.selectedTab.linkedBrowser.contentWindow;
 
-  let key = Date.now();
-  let data = PageThumbs.capture(window);
+  // Capture the screenshot.
+  PageThumbs.capture(window, function (aData) {
+    let key = Date.now();
 
-  // Store the thumbnail in the cache.
-  PageThumbs.store(key, data, function () {
-    let width = 100, height = 100;
-    let thumb = PageThumbs.getThumbnailURL(key, width, height);
+    // Store the thumbnail in the cache.
+    PageThumbs.store(key, aData, function () {
+      let width = 100, height = 100;
+      let thumb = PageThumbs.getThumbnailURL(key, width, height);
 
-    getXULDocument(function (aDocument) {
-      let htmlns = "http://www.w3.org/1999/xhtml";
-      let img = aDocument.createElementNS(htmlns, "img");
-      img.setAttribute("src", thumb);
+      getXULDocument(function (aDocument) {
+        let htmlns = "http://www.w3.org/1999/xhtml";
+        let img = aDocument.createElementNS(htmlns, "img");
+        img.setAttribute("src", thumb);
 
-      whenLoaded(img, function () {
-        let canvas = aDocument.createElementNS(htmlns, "canvas");
-        canvas.setAttribute("width", width);
-        canvas.setAttribute("height", height);
+        whenLoaded(img, function () {
+          let canvas = aDocument.createElementNS(htmlns, "canvas");
+          canvas.setAttribute("width", width);
+          canvas.setAttribute("height", height);
 
-        // Draw the image to a canvas and compare the pixel color values.
-        let ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        checkCanvasColor(ctx, aRed, aGreen, aBlue, aMessage);
+          // Draw the image to a canvas and compare the pixel color values.
+          let ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          checkCanvasColor(ctx, aRed, aGreen, aBlue, aMessage);
 
-        next();
+          next();
+        });
       });
     });
   });
