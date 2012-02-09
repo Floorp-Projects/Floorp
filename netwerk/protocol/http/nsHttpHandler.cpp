@@ -685,7 +685,7 @@ nsHttpHandler::InitUserAgentComponents()
     nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
     NS_ASSERTION(infoService, "Could not find a system info service");
 
-    bool isTablet;
+    bool isTablet = false;
     infoService->GetPropertyAsBool(NS_LITERAL_STRING("tablet"), &isTablet);
     if (isTablet)
         mCompatDevice.AssignLiteral("Tablet");
