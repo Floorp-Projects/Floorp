@@ -37,7 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.opengl.GLES10;
+import android.opengl.GLES20;
 import java.util.Stack;
 
 public class TextureGenerator {
@@ -64,7 +64,7 @@ public class TextureGenerator {
     public synchronized void fill() {
         int[] textures = new int[1];
         while (mTextureIds.size() < MIN_TEXTURES) {
-            GLES10.glGenTextures(1, textures, 0);
+            GLES20.glGenTextures(1, textures, 0);
             mTextureIds.push(textures[0]);
         }
     }

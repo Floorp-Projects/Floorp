@@ -39,7 +39,6 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.Point;
-import javax.microedition.khronos.opengles.GL10;
 
 public class VirtualLayer extends Layer {
     private Listener mListener;
@@ -64,9 +63,9 @@ public class VirtualLayer extends Layer {
     }
 
     @Override
-    protected boolean performUpdates(GL10 gl, RenderContext context) {
+    protected boolean performUpdates(RenderContext context) {
         boolean dimensionsChanged = dimensionChangesPending();
-        boolean result = super.performUpdates(gl, context);
+        boolean result = super.performUpdates(context);
         if (dimensionsChanged && mListener != null) {
             mListener.dimensionsChanged(getOrigin(), getResolution());
         }
