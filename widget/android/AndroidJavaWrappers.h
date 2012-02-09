@@ -135,6 +135,8 @@ public:
     int Left() { return mLeft; }
     int Right() { return mRight; }
     int Top() { return mTop; }
+    int Width() { return mRight - mLeft; }
+    int Height() { return mBottom - mTop; }
 
 protected:
     int mBottom;
@@ -161,7 +163,7 @@ public:
     jobject LockBuffer();
     unsigned char *LockBufferBits();
     void UnlockBuffer();
-    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, const nsAString &aMetadata, bool aHasDirectTexture);
+    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
     void EndDrawing(const nsIntRect &aRect);
 
 private:
