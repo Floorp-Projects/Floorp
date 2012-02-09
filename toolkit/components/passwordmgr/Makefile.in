@@ -62,6 +62,9 @@ EXTRA_COMPONENTS = \
   nsLoginManagerPrompter.js \
   passwordmgr.manifest \
   storage-Legacy.js \
+  $(NULL)
+
+EXTRA_PP_COMPONENTS = \
   storage-mozStorage.js \
   $(NULL)
 
