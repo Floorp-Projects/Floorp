@@ -3704,8 +3704,12 @@ Parse(JSContext *cx, uintN argc, jsval *vp)
     js::Parser parser(cx);
     parser.init(JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
                 "<string>", 0, cx->findVersion());
-    if (!parser.parse(NULL))
+    ParseNode *pn = parser.parse(NULL);
+    if (!pn)
         return JS_FALSE;
+#ifdef DEBUG
+    DumpParseTree(pn);
+#endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
