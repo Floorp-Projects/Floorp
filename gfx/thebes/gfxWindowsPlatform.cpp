@@ -361,38 +361,91 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
             }
         }
 
-        // We try 10.0 first even though we prefer 10.1, since we want to
-        // fail as fast as possible if 10.x isn't supported.
-        HRESULT hr = createD3DDevice(
-            adapter1, 
-            D3D10_DRIVER_TYPE_HARDWARE,
-            NULL,
-            D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-            D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-            D3D10_FEATURE_LEVEL_10_0,
-            D3D10_1_SDK_VERSION,
-            getter_AddRefs(device));
+        // It takes a lot of time (5-10% of startup time or ~100ms) to do both
+        // a createD3DDevice on D3D10_FEATURE_LEVEL_10_0 and 
+        // D3D10_FEATURE_LEVEL_10_1.  Therefore we set a pref if we ever get
+        // 10.1 to work and we use that first if the pref is set.
+        // Going direct to a 10.1 check only takes 20-30ms.
+        // The initialization of hr doesn't matter here because it will get
+        // overwritten whether or not the preference is set.
+        //   - If the preferD3D10_1 pref is set it gets overwritten immediately.
+        //   - If the preferD3D10_1 pref is not set, the if condition after
+        //     the one that follows us immediately will short circuit before 
+        //     checking FAILED(hr) and will again get overwritten immediately.
+        // We initialize it here just so it does not appear to be an
+        // uninitialized value.
+        HRESULT hr = E_FAIL;
+        bool preferD3D10_1 = 
+          Preferences::GetBool("gfx.direct3d.prefer_10_1", false);
+        if (preferD3D10_1) {
+            hr = createD3DDevice(
+                  adapter1, 
+                  D3D10_DRIVER_TYPE_HARDWARE,
+                  NULL,
+                  D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+                  D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+                  D3D10_FEATURE_LEVEL_10_1,
+                  D3D10_1_SDK_VERSION,
+                  getter_AddRefs(device));
 
-        if (SUCCEEDED(hr)) {
-            // We have 10.0, let's try 10.1.
-            // XXX - This adds an additional 10-20ms for people who are
-            // getting direct2d. We'd really like to do something more
-            // clever.
+            // If we fail here, the DirectX version or video card probably
+            // changed.  We previously could use 10.1 but now we can't
+            // anymore.  Revert back to doing a 10.0 check first before
+            // the 10.1 check.
+            if (FAILED(hr)) {
+                Preferences::SetBool("gfx.direct3d.prefer_10_1", false);
+            } else {
+                mD2DDevice = cairo_d2d_create_device_from_d3d10device(device);
+            }
+        }
+
+        if (!preferD3D10_1 || FAILED(hr)) {
+            // If preferD3D10_1 is set and 10.1 failed, fall back to 10.0.
+            // if preferD3D10_1 is not yet set, then first try to create
+            // a 10.0 D3D device, then try to see if 10.1 works.
             nsRefPtr<ID3D10Device1> device1;
             hr = createD3DDevice(
-                adapter1, 
-                D3D10_DRIVER_TYPE_HARDWARE,
-                NULL,
-                D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-                D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-                D3D10_FEATURE_LEVEL_10_1,
-                D3D10_1_SDK_VERSION,
-                getter_AddRefs(device1));
+                  adapter1, 
+                  D3D10_DRIVER_TYPE_HARDWARE,
+                  NULL,
+                  D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+                  D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+                  D3D10_FEATURE_LEVEL_10_0,
+                  D3D10_1_SDK_VERSION,
+                  getter_AddRefs(device1));
 
             if (SUCCEEDED(hr)) {
                 device = device1;
+                if (preferD3D10_1) {
+                  mD2DDevice = 
+                    cairo_d2d_create_device_from_d3d10device(device);
+                }
             }
+        }
 
+        // If preferD3D10_1 is not yet set and 10.0 succeeded
+        if (!preferD3D10_1 && SUCCEEDED(hr)) {
+            // We have 10.0, let's try 10.1.  This second check will only
+            // ever be done once if it succeeds.  After that an option
+            // will be set to prefer using 10.1 before trying 10.0.
+            // In the case that 10.1 fails, it won't be a long operation
+            // like it is when 10.1 succeeds, so we don't need to optimize
+            // the case where 10.1 is not supported, but 10.0 is supported.
+            nsRefPtr<ID3D10Device1> device1;
+            hr = createD3DDevice(
+                  adapter1, 
+                  D3D10_DRIVER_TYPE_HARDWARE,
+                  NULL,
+                  D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+                  D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+                  D3D10_FEATURE_LEVEL_10_1,
+                  D3D10_1_SDK_VERSION,
+                  getter_AddRefs(device1));
+
+            if (SUCCEEDED(hr)) {
+                device = device1;
+                Preferences::SetBool("gfx.direct3d.prefer_10_1", true);
+            }
             mD2DDevice = cairo_d2d_create_device_from_d3d10device(device);
         }
     }
