@@ -364,7 +364,6 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
     jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
     jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Z");
     jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
-    jGetRenderOffsetMethod = getMethod("getRenderOffset", "()Landroid/graphics/Point;");
 #endif
 }
 
