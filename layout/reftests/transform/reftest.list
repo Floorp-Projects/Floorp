@@ -37,9 +37,11 @@ random == rotate-1b.html rotate-1-ref.html
 random == rotate-1c.html rotate-1-ref.html
 random == rotate-1d.html rotate-1-ref.html
 random == rotate-1e.html rotate-1-ref.html
+random == rotate-1f.html rotate-1-ref.html
 # rotate: 90deg rotations should be indistinguishable from objects constructed
 # to look the same.
 == rotate-2a.html rotate-2-ref.html
+== rotate-2b.html rotate-2-ref.html
 # -moz-transform-origin: We should NOT get the same images when using different
 # -moz-transform-origins.
 != origin-1a.html origin-1-ref.html

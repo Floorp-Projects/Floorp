@@ -40,11 +40,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAppRunner.h"
+#include "nsToolkitCompsCID.h"
 #include "nsXREDirProvider.h"
 
 #include "jsapi.h"
 
 #include "nsIJSContextStack.h"
+#include "nsIAppStartup.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
@@ -733,6 +735,26 @@ nsXREDirProvider::DoStartup()
 
     mProfileNotified = true;
 
+    /*
+       Setup prefs before profile-do-change to be able to use them to track
+       crashes and because we want to begin crash tracking before other code run
+       from this notification since they may cause crashes.
+    */
+    nsresult rv = mozilla::Preferences::ResetAndReadUserPrefs();
+    if (NS_FAILED(rv)) NS_WARNING("Failed to setup pref service.");
+
+    bool safeModeNecessary = false;
+    nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
+    if (appStartup) {
+      rv = appStartup->TrackStartupCrashBegin(&safeModeNecessary);
+      if (NS_FAILED(rv)) NS_WARNING("Error while beginning startup crash tracking");
+
+      if (!gSafeMode && safeModeNecessary) {
+        appStartup->RestartInSafeMode(nsIAppStartup::eForceQuit);
+        return NS_OK;
+      }
+    }
+
     static const PRUnichar kStartup[] = {'s','t','a','r','t','u','p','\0'};
     obsSvc->NotifyObservers(nsnull, "profile-do-change", kStartup);
     // Init the Extension Manager
@@ -752,6 +774,11 @@ nsXREDirProvider::DoStartup()
     // should also be created at this time.
     (void)NS_CreateServicesFromCategory("profile-after-change", nsnull,
                                         "profile-after-change");
+
+    if (gSafeMode && safeModeNecessary) {
+      static const PRUnichar kCrashed[] = {'c','r','a','s','h','e','d','\0'};
+      obsSvc->NotifyObservers(nsnull, "safemode-forced", kCrashed);
+    }
 
     obsSvc->NotifyObservers(nsnull, "profile-initial-state", nsnull);
   }

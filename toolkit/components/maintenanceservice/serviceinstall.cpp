@@ -38,6 +38,7 @@
 #include <windows.h>
 #include <aclapi.h>
 #include <stdlib.h>
+#include <shlwapi.h>
 
 // Used for DNLEN and UNLEN
 #include <lm.h>
@@ -50,8 +51,37 @@
 #include "servicebase.h"
 #include "updatehelper.h"
 #include "shellapi.h"
+#include "readstrings.h"
+#include "errors.h"
 
 #pragma comment(lib, "version.lib")
+
+/**
+ * A wrapper function to read strings for the maintenance service.
+ *
+ * @param path    The path of the ini file to read from
+ * @param results The maintenance service strings that were read
+ * @return OK on success
+*/
+static int
+ReadMaintenanceServiceStrings(LPCWSTR path, 
+                              MaintenanceServiceStringTable *results)
+{
+  // Read in the maintenance service description string if specified.
+  const unsigned int kNumStrings = 1;
+  const char *kServiceKeys = "ServiceDescription\0";
+  char serviceStrings[kNumStrings][MAX_TEXT_LEN];
+  int result = ReadStrings(path, kServiceKeys, 
+                           kNumStrings, serviceStrings, 
+                           "MaintenanceServiceStrings");
+  if (result != OK) {
+    serviceStrings[0][0] = '\0';
+  }
+  strncpy(results->serviceDescription, 
+          serviceStrings[0], MAX_TEXT_LEN - 1);
+  results->serviceDescription[MAX_TEXT_LEN - 1] = '\0';
+  return result;
+}
 
 /**
  * Obtains the version number from the specified PE file's version information
@@ -91,6 +121,76 @@ GetVersionNumberFromPath(LPWSTR path, DWORD &A, DWORD &B,
   B = LOWORD(fixedFileInfo->dwFileVersionMS);
   C = HIWORD(fixedFileInfo->dwFileVersionLS);
   D = LOWORD(fixedFileInfo->dwFileVersionLS);
+  return TRUE;
+}
+
+/**
+ * Updates the service description with what is stored in updater.ini
+ * at the same path as the currently executing module binary.
+ *
+ * @param serviceHandle A handle to an opened service with 
+ *                      SERVICE_CHANGE_CONFIG access right
+ * @param TRUE on succcess.
+*/
+BOOL
+UpdateServiceDescription(SC_HANDLE serviceHandle)
+{
+  WCHAR updaterINIPath[MAX_PATH + 1];
+  if (!GetModuleFileNameW(NULL, updaterINIPath, 
+                          sizeof(updaterINIPath) /
+                          sizeof(updaterINIPath[0]))) {
+    LOG(("Could not obtain module filename when attempting to "
+         "modify service description. (%d)\n", GetLastError()));
+    return FALSE;
+  }
+
+  if (!PathRemoveFileSpecW(updaterINIPath)) {
+    LOG(("Could not remove file spec when attempting to "
+         "modify service description. (%d)\n", GetLastError()));
+    return FALSE;
+  }
+
+  if (!PathAppendSafe(updaterINIPath, L"updater.ini")) {
+    LOG(("Could not append updater.ini filename when attempting to "
+         "modify service description. (%d)\n", GetLastError()));
+    return FALSE;
+  }
+
+  if (GetFileAttributesW(updaterINIPath) == INVALID_FILE_ATTRIBUTES) {
+    LOG(("updater.ini file does not exist, will not modify "
+         "service description. (%d)\n", GetLastError()));
+    return FALSE;
+  }
+  
+  MaintenanceServiceStringTable serviceStrings;
+  int rv = ReadMaintenanceServiceStrings(updaterINIPath, &serviceStrings);
+  if (rv != OK || !strlen(serviceStrings.serviceDescription)) {
+    LOG(("updater.ini file does not contain a maintenance "
+         "service description.\n"));
+    return FALSE;
+  }
+
+  WCHAR serviceDescription[MAX_TEXT_LEN];
+  if (!MultiByteToWideChar(CP_UTF8, 0, 
+                           serviceStrings.serviceDescription, -1,
+                           serviceDescription,
+                           sizeof(serviceDescription) / 
+                           sizeof(serviceDescription[0]))) {
+    LOG(("Could not convert description to wide string format (%d)\n", 
+         GetLastError()));
+    return FALSE;
+  }
+
+  SERVICE_DESCRIPTIONW descriptionConfig;
+  descriptionConfig.lpDescription = serviceDescription;
+  if (!ChangeServiceConfig2W(serviceHandle, 
+                             SERVICE_CONFIG_DESCRIPTION, 
+                             &descriptionConfig)) {
+    LOG(("Could not change service config (%d)\n", GetLastError()));
+    return FALSE;
+  }
+
+  LOG(("The service description was updated successfully.\n"));
   return TRUE;
 }
 
@@ -182,8 +282,6 @@ SvcInstall(SvcInstallAction action)
       return FALSE;
     }
 
-    schService.reset(); //Explicitly close the handle so we can delete it
-
     // Check if we need to replace the old binary with the new one
     // If we couldn't get the old version info then we assume we should 
     // replace it.
@@ -195,6 +293,11 @@ SvcInstall(SvcInstallAction action)
          existingC < newC) ||
         (existingA == newA && existingB == newB && 
          existingC == newC && existingD < newD)) {
+
+      // We have a newer updater, so update the description from the INI file.
+      UpdateServiceDescription(schService);
+
+      schService.reset();
       if (!StopService()) {
         return FALSE;
       }
@@ -321,6 +424,8 @@ SvcInstall(SvcInstallAction action)
          "This error should never happen.  (%d)\n", 
          GetLastError()));
   }
+
+  UpdateServiceDescription(schService);
 
   return TRUE;
 }

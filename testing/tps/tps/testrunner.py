@@ -105,6 +105,7 @@ class TPSTestRunner(object):
                           'services.sync.log.logger.engine.bookmarks': 'Trace',
                           'services.sync.log.appender.console': 'Trace',
                           'services.sync.log.appender.debugLog.enabled': True,
+                          'toolkit.startup.max_resumed_crashes': -1,
                           'browser.dom.window.dump.enabled': True,
                           # Allow installing extensions dropped into the profile folder
                           'extensions.autoDisableScopes': 10,

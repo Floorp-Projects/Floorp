@@ -63,9 +63,15 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     private static int sPreferredHeight;
     private static int sMaxHeight;
     private static int sListItemHeight;
+    private static int sAddTabHeight;
     private static ListView mList;
+    private static TabsListContainer mListContainer;
     private TabsAdapter mTabsAdapter;
     private boolean mWaitingForClose;
+
+    // 100 for item + 2 for divider
+    private static final int TABS_LIST_ITEM_HEIGHT = 102;
+    private static final int TABS_ADD_TAB_HEIGHT = 50;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,6 +86,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         mWaitingForClose = false;
 
         mList = (ListView) findViewById(R.id.list);
+        mListContainer = (TabsListContainer) findViewById(R.id.list_container);
 
         LinearLayout addTab = (LinearLayout) findViewById(R.id.add_tab);
         addTab.setOnClickListener(new Button.OnClickListener() {
@@ -98,8 +105,10 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        sListItemHeight = (int) (TABS_LIST_ITEM_HEIGHT * metrics.density);
+        sAddTabHeight = (int) (TABS_ADD_TAB_HEIGHT * metrics.density); 
         sPreferredHeight = (int) (0.67 * metrics.heightPixels);
-        sListItemHeight = (int) (100 * metrics.density); 
         sMaxHeight = (int) (sPreferredHeight + (0.33 * sListItemHeight));
 
         GeckoApp.registerOnTabsChangedListener(this);
@@ -136,6 +145,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         if (mTabsAdapter == null) {
             mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
             mList.setAdapter(mTabsAdapter);
+            mListContainer.requestLayout();
             return;
         }
         
@@ -147,6 +157,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             mWaitingForClose = false;
             mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
             mList.setAdapter(mTabsAdapter);
+            mListContainer.requestLayout();
         } else {
             View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
             mTabsAdapter.assignValues(view, tab);
@@ -166,18 +177,25 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         }
 
         @Override
-        protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
-            super.onSizeChanged(width, height, oldWidth, oldHeight);
-
-            if ((height > sPreferredHeight) && (height != sMaxHeight)) {
-                setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                                                              sPreferredHeight));
-
-                // If the list ends perfectly on an item, increase the height of the container 
-                if (mList.getHeight() % sListItemHeight == 0)
-                    setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                                                                  sMaxHeight));
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            if (mList.getAdapter() == null) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                return;
             }
+
+            int restrictedHeightSpec;
+            int childrenHeight = (mList.getAdapter().getCount() * sListItemHeight) + sAddTabHeight;
+
+            if (childrenHeight <= sPreferredHeight) {
+                restrictedHeightSpec = MeasureSpec.makeMeasureSpec(childrenHeight, MeasureSpec.EXACTLY);
+            } else {
+                if ((childrenHeight - sAddTabHeight) % sListItemHeight == 0)
+                    restrictedHeightSpec = MeasureSpec.makeMeasureSpec(sMaxHeight, MeasureSpec.EXACTLY);
+                else
+                    restrictedHeightSpec = MeasureSpec.makeMeasureSpec(sPreferredHeight, MeasureSpec.EXACTLY);
+            }
+
+            super.onMeasure(widthMeasureSpec, restrictedHeightSpec);
         }
     }
 

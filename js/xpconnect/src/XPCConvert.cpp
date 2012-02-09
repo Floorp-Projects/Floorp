@@ -73,8 +73,6 @@ using namespace mozilla;
 
 #define ILLEGAL_CHAR_RANGE(c) (0!=((c) & 0x80))
 
-static intN sXPCOMUCStringFinalizerIndex = -1;
-
 /***********************************************************/
 
 // static
@@ -116,38 +114,12 @@ XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 /***************************************************************************/
 
 static void
-FinalizeXPCOMUCString(JSContext *cx, JSString *str)
+FinalizeXPCOMUCString(const JSStringFinalizer *fin, jschar *chars)
 {
-    NS_ASSERTION(sXPCOMUCStringFinalizerIndex != -1,
-                 "XPCConvert: XPCOM Unicode string finalizer called uninitialized!");
-
-    jschar* buffer = const_cast<jschar *>(JS_GetStringCharsZ(cx, str));
-    NS_ASSERTION(buffer, "How could this OOM if we allocated the memory?");
-    nsMemory::Free(buffer);
+    nsMemory::Free(chars);
 }
 
-
-static JSBool
-AddXPCOMUCStringFinalizer()
-{
-
-    sXPCOMUCStringFinalizerIndex =
-        JS_AddExternalStringFinalizer(FinalizeXPCOMUCString);
-
-    if (sXPCOMUCStringFinalizerIndex == -1) {
-        return false;
-    }
-
-    return true;
-}
-
-//static
-void
-XPCConvert::RemoveXPCOMUCStringFinalizer()
-{
-    JS_RemoveExternalStringFinalizer(FinalizeXPCOMUCString);
-    sXPCOMUCStringFinalizerIndex = -1;
-}
+static const JSStringFinalizer sXPCOMUCStringFinalizer = { FinalizeXPCOMUCString };
 
 // static
 JSBool
@@ -319,13 +291,9 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                     if (!p)
                         return false;
 
-                    if (sXPCOMUCStringFinalizerIndex == -1 &&
-                        !AddXPCOMUCStringFinalizer())
-                        return false;
-
                     JSString* jsString =
                         JS_NewExternalString(cx, p, len,
-                                             sXPCOMUCStringFinalizerIndex);
+                                             &sXPCOMUCStringFinalizer);
 
                     if (!jsString) {
                         nsMemory::Free(p);
@@ -350,14 +318,10 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                     if (!unicodeString)
                         return false;
 
-                    if (sXPCOMUCStringFinalizerIndex == -1 &&
-                        !AddXPCOMUCStringFinalizer())
-                        return false;
-
                     JSString* jsString = JS_NewExternalString(cx,
                                                               (jschar*)unicodeString,
                                                               cString->Length(),
-                                                              sXPCOMUCStringFinalizerIndex);
+                                                              &sXPCOMUCStringFinalizer);
 
                     if (!jsString) {
                         nsMemory::Free(unicodeString);

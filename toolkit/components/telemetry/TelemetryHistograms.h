@@ -59,6 +59,7 @@ HISTOGRAM_BOOLEAN(A11Y_INSTANTIATED, "has accessibility support been instantiate
 HISTOGRAM(A11Y_CONSUMERS, 1, 6, 7, LINEAR, "Accessibility client by enum id")
 HISTOGRAM_BOOLEAN(ISIMPLE_DOM_USAGE, "have the ISimpleDOM* accessibility interfaces been used")
 HISTOGRAM_BOOLEAN(IACCESSIBLE_TABLE_USAGE, "has the IAccessibleTable accessibility interface been used")
+HISTOGRAM_BOOLEAN(XFORMS_ACCESSIBLE_USED, "has XForms accessibility been instantiated")
 
 /**
  * Cycle collector telemetry
@@ -287,6 +288,13 @@ HISTOGRAM(PLACES_DATABASE_PAGESIZE_B, 1024, 32768, 10, EXPONENTIAL, "PLACES: Dat
 HISTOGRAM(PLACES_DATABASE_SIZE_PER_PAGE_B, 500, 10240, 20, EXPONENTIAL, "PLACES: Average size of a place in the database (bytes)")
 HISTOGRAM(PLACES_EXPIRATION_STEPS_TO_CLEAN, 1, 10, 10, LINEAR, "PLACES: Expiration steps to cleanup the database")
 HISTOGRAM(PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS, 50, 500, 10, EXPONENTIAL, "PLACES: Time for first autocomplete result if > 50ms (ms)")
+HISTOGRAM(PLACES_IDLE_FRECENCY_DECAY_TIME_MS, 50, 10000, 10, EXPONENTIAL, "PLACES: Time to decay all frecencies values on idle (ms)")
+HISTOGRAM(PLACES_IDLE_MAINTENANCE_TIME_MS, 1000, 30000, 10, EXPONENTIAL, "PLACES: Time to execute maintenance tasks on idle (ms)")
+HISTOGRAM(PLACES_ANNOS_BOOKMARKS_COUNT, 50, 5000, 10, EXPONENTIAL, "PLACES: Number of bookmarks annotations")
+HISTOGRAM(PLACES_ANNOS_BOOKMARKS_SIZE_KB, 10, 10000, 10, EXPONENTIAL, "PLACES: Size of bookmarks annotations (KB)")
+HISTOGRAM(PLACES_ANNOS_PAGES_COUNT, 50, 5000, 10, EXPONENTIAL, "PLACES: Number of pages annotations")
+HISTOGRAM(PLACES_ANNOS_PAGES_SIZE_KB, 10, 10000, 10, EXPONENTIAL, "PLACES: Size of pages annotations (KB)")
+HISTOGRAM(PLACES_FRECENCY_CALC_TIME_MS, 1, 100, 10, EXPONENTIAL, "PLACES: Time to calculate frecency of a page (ms)")
 
 /**
  * Updater telemetry.
@@ -310,14 +318,26 @@ HISTOGRAM(THUNDERBIRD_INDEXING_RATE_MSG_PER_S, 1, 100, 20, LINEAR, "Gloda: index
  */
 // Disable this application-specific #ifdef ftb. (See bug 710562)
 // #ifdef MOZ_PHOENIX
-HISTOGRAM(FX_TAB_ANIM_OPEN_MS, 1, 3000, 10, EXPONENTIAL, "Firefox: Time taken by the tab opening animation")
-HISTOGRAM(FX_TAB_ANIM_CLOSE_MS, 1, 3000, 10, EXPONENTIAL, "Firefox: Time taken by the tab closing animation")
+HISTOGRAM(FX_TAB_ANIM_OPEN_MS, 1, 3000, 10, EXPONENTIAL, "Firefox: Time taken by the tab opening animation in milliseconds")
+HISTOGRAM(FX_TAB_ANIM_CLOSE_MS, 1, 3000, 10, EXPONENTIAL, "Firefox: Time taken by the tab closing animation in milliseconds")
 HISTOGRAM_BOOLEAN(FX_CONTEXT_SEARCH_AND_TAB_SELECT, "Firefox: Background tab was selected within 5 seconds of searching from the context menu")
+HISTOGRAM_BOOLEAN(FX_KEYWORD_URL_USERSET, "Firefox: keyword.URL has a user-set value")
+HISTOGRAM(FX_IDENTITY_POPUP_OPEN_MS, 1, 1000, 10, EXPONENTIAL, "Firefox: Time taken by the identity popup to open in milliseconds")
+HISTOGRAM(FX_APP_MENU_OPEN_MS, 1, 1000, 10, EXPONENTIAL, "Firefox: Time taken by the app-menu opening in milliseconds")
+
+/**
+ * Thumbnail Service telemetry.
+ */
+HISTOGRAM(FX_THUMBNAILS_CAPTURE_TIME_MS, 1, 500, 15, EXPONENTIAL, "THUMBNAILS: Time (ms) it takes to capture a thumbnail")
+HISTOGRAM(FX_THUMBNAILS_STORE_TIME_MS, 1, 500, 15, EXPONENTIAL, "THUMBNAILS: Time (ms) it takes to store a thumbnail in the cache")
+HISTOGRAM(FX_THUMBNAILS_HIT_OR_MISS, 0, 1, 2, BOOLEAN, "THUMBNAILS: Thumbnail found")
 // #endif
 
 HISTOGRAM_BOOLEAN(INNERWINDOWS_WITH_MUTATION_LISTENERS, "Deleted or to-be-reused innerwindow which has had mutation event listeners.")
-HISTOGRAM(XUL_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "XUL reflows (ms)")
-HISTOGRAM(HTML_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "HTML reflows (ms)")
+HISTOGRAM(XUL_FOREGROUND_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "XUL reflows in foreground windows (ms)")
+HISTOGRAM(XUL_BACKGROUND_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "XUL reflows in background windows (ms)")
+HISTOGRAM(HTML_FOREGROUND_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "HTML reflows in foreground windows (ms)")
+HISTOGRAM(HTML_BACKGROUND_REFLOW_MS, 1, 3000, 10, EXPONENTIAL, "HTML reflows in background windows (ms)")
 HISTOGRAM(XUL_INITIAL_FRAME_CONSTRUCTION, 1, 3000, 10, EXPONENTIAL, "initial xul frame construction")
 HISTOGRAM_BOOLEAN(XMLHTTPREQUEST_ASYNC_OR_SYNC, "Type of XMLHttpRequest, async or sync")
 

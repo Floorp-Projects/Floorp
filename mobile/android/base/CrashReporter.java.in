@@ -121,8 +121,12 @@ public class CrashReporter extends Activity
 
     @Override
     public void finish() {
-        if (mProgressDialog.isShowing()) {
-            mProgressDialog.dismiss();
+        try {
+            if (mProgressDialog.isShowing()) {
+                mProgressDialog.dismiss();
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "exception while closing progress dialog: ", e);
         }
         super.finish();
     }
@@ -165,7 +169,7 @@ public class CrashReporter extends Activity
             public void run() {
                 sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
             }
-            }, "CrashReporter Thread").start();
+        }, "CrashReporter Thread").start();
     }
 
     public void onCloseClick(View v) {  // bound via crash_reporter.xml

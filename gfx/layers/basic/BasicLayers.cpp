@@ -1202,6 +1202,11 @@ BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
 
+  if (!mSurface) {
+    NS_WARNING("No valid surface to draw!");
+    return;
+  }
+
   nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
   pat->SetFilter(mFilter);

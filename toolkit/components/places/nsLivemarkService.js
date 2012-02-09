@@ -359,8 +359,12 @@ LivemarkService.prototype = {
     delete this._livemarks[aItemId];
   },
 
-  // nsISupports
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsISupports
+
   classID: Components.ID("{dca61eb5-c7cd-4df1-b0fb-d0722baba251}"),
+
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(LivemarkService),
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsILivemarkService

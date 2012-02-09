@@ -49,6 +49,7 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsMathUtils.h"
+#include "nsStreamUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
@@ -181,7 +182,7 @@ nsHTMLCanvasElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   } else if (aAttribute == nsGkAtoms::moz_opaque)
   {
-    NS_UpdateHint(retval, nsChangeHint_RepaintFrame);
+    NS_UpdateHint(retval, NS_STYLE_HINT_VISUAL);
   }
   return retval;
 }
@@ -235,7 +236,15 @@ nsHTMLCanvasElement::MozFetchAsStream(nsIInputStreamCallback *aCallback,
   nsCOMPtr<nsIAsyncInputStream> asyncData = do_QueryInterface(inputData, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aCallback->OnInputStreamReady(asyncData);
+  nsCOMPtr<nsIThread> mainThread;
+  rv = NS_GetMainThread(getter_AddRefs(mainThread));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInputStreamCallback> asyncCallback;
+  rv = NS_NewInputStreamReadyEvent(getter_AddRefs(asyncCallback), aCallback, mainThread);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return asyncCallback->OnInputStreamReady(asyncData);
 }
 
 nsresult

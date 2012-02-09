@@ -39,7 +39,7 @@
 interface nsIDOMDragEvent;
 interface nsIURI;
 
-[scriptable, uuid(F266B79B-7026-4D2D-B4BD-4F2C6B6C59B4)]
+[scriptable, uuid(6B58A5A7-76D0-4E93-AB2E-4DE108683FF8)]
 interface nsIDroppedLinkHandler : nsISupports
 {
   /**
@@ -56,15 +56,20 @@ interface nsIDroppedLinkHandler : nsISupports
   /**
    * Given a drop event aEvent, determines the link being dragged and returns
    * it. If a uri is returned the caller can, for instance, load it. If null
-   * is returned, there is no valid link to be dropped. A
-   * NS_ERROR_DOM_SECURITY_ERR error will be thrown and the event cancelled if
+   * is returned, there is no valid link to be dropped.
+   *
+   * A NS_ERROR_DOM_SECURITY_ERR error will be thrown and the event cancelled if
    * the receiving target should not load the uri for security reasons. This
-   * will occur if the source of the drag initiated a link for dragging that
-   * it itself cannot access. This prevents a source document from tricking
-   * the user into a dragging a chrome url for example.
+   * will occur if any of the following conditions are true:
+   *  - the source of the drag initiated a link for dragging that
+   *    it itself cannot access. This prevents a source document from tricking
+   *    the user into a dragging a chrome url, for example.
+   *  - aDisallowInherit is true, and the URI being dropped would inherit the
+   *    current document's security context (URI_INHERITS_SECURITY_CONTEXT).
    *
    * aName is filled in with the link title if it exists, or an empty string
    * otherwise.
    */
-  AString dropLink(in nsIDOMDragEvent aEvent, out AString aName);
+  AString dropLink(in nsIDOMDragEvent aEvent, out AString aName,
+                   [optional] in boolean aDisallowInherit);
 };

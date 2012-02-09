@@ -182,6 +182,12 @@ public:
       "associated with connections to this database.");
   }
 
+  NS_IMETHOD GetName(nsACString &aName)
+  {
+      aName.AssignLiteral("storage-sqlite");
+      return NS_OK;
+  }
+
   // Warning: To get a Connection's measurements requires holding its lock.
   // There may be a delay getting the lock if another thread is accessing the
   // Connection.  This isn't very nice if CollectReports is called from the

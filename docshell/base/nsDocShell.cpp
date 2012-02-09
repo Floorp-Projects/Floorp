@@ -749,6 +749,7 @@ nsDocShell::nsDocShell():
     mIsActive(true),
     mIsAppTab(false),
     mUseGlobalHistory(false),
+    mInPrivateBrowsing(false),
     mFiredUnloadEvent(false),
     mEODForCurrentDocument(false),
     mURIResultedInDocument(false),
@@ -1984,6 +1985,30 @@ nsDocShell::SetAllowJavascript(bool aAllowJavascript)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
+{
+    NS_ENSURE_ARG_POINTER(aUsePrivateBrowsing);
+    
+    *aUsePrivateBrowsing = mInPrivateBrowsing;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
+{
+    mInPrivateBrowsing = aUsePrivateBrowsing;
+
+    PRInt32 count = mChildList.Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsILoadContext> shell = do_QueryInterface(ChildAt(i));
+        if (shell) {
+            shell->SetUsePrivateBrowsing(aUsePrivateBrowsing);
+        }
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::GetAllowMetaRedirects(bool * aReturn)
 {
     NS_ENSURE_ARG_POINTER(aReturn);
@@ -2608,10 +2633,10 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
 
     // If parent is another docshell, we inherit all their flags for
     // allowing plugins, scripting etc.
+    bool value;
     nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(parent));
     if (parentAsDocShell)
     {
-        bool value;
         if (NS_SUCCEEDED(parentAsDocShell->GetAllowPlugins(&value)))
         {
             SetAllowPlugins(value);
@@ -2644,6 +2669,12 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
             value = false;
         }
         SetAllowDNSPrefetch(value);
+    }
+    nsCOMPtr<nsILoadContext> parentAsLoadContext(do_QueryInterface(parent));
+    if (parentAsLoadContext &&
+        NS_SUCCEEDED(parentAsLoadContext->GetUsePrivateBrowsing(&value)))
+    {
+        SetUsePrivateBrowsing(value);
     }
 
     nsCOMPtr<nsIURIContentListener> parentURIListener(do_GetInterface(parent));
@@ -7217,7 +7248,8 @@ nsDocShell::RestoreFromHistory()
 
         // this.AddChild(child) calls child.SetDocLoaderParent(this), meaning
         // that the child inherits our state. Among other things, this means
-        // that the child inherits our mIsActive, which is what we want.
+        // that the child inherits our mIsActive and mInPrivateBrowsing, which
+        // is what we want.
         AddChild(childItem);
 
         childShell->SetAllowPlugins(allowPlugins);
@@ -8644,9 +8676,11 @@ nsIPrincipal*
 nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
 {
     nsCOMPtr<nsIDocument> document;
+    bool inheritedFromCurrent = false;
 
     if (aConsiderCurrentDocument && mContentViewer) {
         document = mContentViewer->GetDocument();
+        inheritedFromCurrent = true;
     }
 
     if (!document) {
@@ -8674,7 +8708,17 @@ nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
 
     //-- Get the document's principal
     if (document) {
-        return document->NodePrincipal();
+        nsIPrincipal *docPrincipal = document->NodePrincipal();
+
+        // Don't allow loads in typeContent docShells to inherit the system
+        // principal from existing documents.
+        if (inheritedFromCurrent &&
+            mItemType == typeContent &&
+            nsContentUtils::IsSystemPrincipal(docPrincipal)) {
+            return nsnull;
+        }
+
+        return docPrincipal;
     }
 
     return nsnull;

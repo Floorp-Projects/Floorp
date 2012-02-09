@@ -61,6 +61,8 @@ EXPORTS_mozilla = \
   Hal.h \
   HalImpl.h \
   HalSandbox.h \
+  HalSensor.h \
+  HalTypes.h \
   $(NULL)
 
 CPPSRCS = \
@@ -70,23 +72,45 @@ CPPSRCS = \
   $(NULL)
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += AndroidHal.cpp
+CPPSRCS += \
+  AndroidHal.cpp \
+  AndroidSensor.cpp \
+  $(NULL)
 else ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += GonkHal.cpp Power.cpp
+CPPSRCS += \
+  GonkHal.cpp \
+  Power.cpp \
+  GonkSensor.cpp \
+  $(NULL)
 else ifeq (Linux,$(OS_TARGET))
-CPPSRCS += LinuxHal.cpp Power.cpp
+CPPSRCS += \
+  LinuxHal.cpp \
+  FallbackSensor.cpp \
+  Power.cpp \
+  $(NULL)
 ifdef MOZ_ENABLE_DBUS
 CPPSRCS += UPowerClient.cpp
 endif
 else ifeq (WINNT,$(OS_TARGET))
-CPPSRCS += WindowsHal.cpp WindowsBattery.cpp
+CPPSRCS += \
+  WindowsHal.cpp \
+  WindowsBattery.cpp \
+  FallbackSensor.cpp \
+  $(NULL)
 else
-CPPSRCS += FallbackHal.cpp
+CPPSRCS += \
+  FallbackHal.cpp \
+  FallbackSensor.cpp \
+  $(NULL)
 endif
+
+ifneq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
+CPPSRCS += FallbackLights.cpp
+endif #}
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += $(MOZ_DBUS_GLIB_CFLAGS)
-CXXFLAGS        += $(MOZ_DBUS_GLIB_CFLAGS)
+CXXFLAGS        += $(MOZ_DBUS_GLIB_CFLAGS) -DHAVE_PTHREADS

@@ -1,0 +1,40 @@
+<!-- LOCALIZATION NOTE : FILE This file contains the Script Debugger strings -->
+<!-- LOCALIZATION NOTE : FILE Do not translate commandkey -->
+
+<!-- LOCALIZATION NOTE : FILE The correct localization of this file might be to
+  - keep it in English, or another language commonly spoken among web developers.
+  - You want to make that choice consistent across the developer tools.
+  - A good criteria is the language in which you'd find the best
+  - documentation on web development on the web. -->
+
+<!-- LOCALIZATION NOTE (debuggerMenu.label): This is the label for the
+  -  application menu item that opens the debugger UI. -->
+<!ENTITY debuggerMenu.label          "Script Debugger">
+
+<!-- LOCALIZATION NOTE (debuggerMenu.commandkey): This is the command key that
+  -  launches the debugger UI. Do not translate this one! -->
+<!ENTITY debuggerMenu.commandkey     "S">
+
+<!-- LOCALIZATION NOTE (debuggerUI.closeButton): This is the label for the
+  -  button that closes the debugger UI. -->
+<!ENTITY debuggerUI.closeButton      "Close">
+
+<!-- LOCALIZATION NOTE (debuggerUI.resumeButton): This is the label for the
+  -  button that resumes the debugger, after it has reached a paused state. In
+  -  a paused state the debugger can be used to inspect stack frames, local,
+  -  variables etc. -->
+<!ENTITY debuggerUI.resumeButton     "Resume">
+
+<!-- LOCALIZATION NOTE (debuggerUI.stackTitle): This is the label for the
+  -  widget that displays the call stack frames in the debugger. -->
+<!ENTITY debuggerUI.stackTitle       "Call stack">
+
+<!-- LOCALIZATION NOTE (debuggerUI.scriptTitle): This is the label for the
+  -  widget that displays the source code for the script that is currently
+  -  being inspected in the debugger. -->
+<!ENTITY debuggerUI.scriptTitle      "Script">
+
+<!-- LOCALIZATION NOTE (debuggerUI.propertiesTitle): This is the label for the
+  -  widget that displays the variables in the various available scopes in the
+  -  debugger. -->
+<!ENTITY debuggerUI.propertiesTitle  "Scope variables">

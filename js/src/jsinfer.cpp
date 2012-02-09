@@ -4556,6 +4556,12 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         if (op != JSOP_THIS)
             continue;
 
+        /* Maintain ordering property on how 'this' is used, as described above. */
+        if (offset < lastThisPopped) {
+            *pbaseobj = NULL;
+            return false;
+        }
+
         SSAValue thisv = SSAValue::PushedValue(offset, 0);
         SSAUseChain *uses = analysis->useChain(thisv);
 
@@ -4565,11 +4571,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
             return false;
         }
 
-        /* Maintain ordering property on how 'this' is used, as described above. */
-        if (offset < lastThisPopped) {
-            *pbaseobj = NULL;
-            return false;
-        }
         lastThisPopped = uses->offset;
 
         /* Only handle 'this' values popped in unconditional code. */
@@ -5032,7 +5033,7 @@ TypeMonitorCallSlow(JSContext *cx, JSObject *callee,
 }
 
 static inline bool
-IsAboutToBeFinalized(JSContext *cx, TypeObjectKey *key)
+IsAboutToBeFinalized(TypeObjectKey *key)
 {
     /* Mask out the low bit indicating whether this is a type or JS object. */
     return !reinterpret_cast<const gc::Cell *>(uintptr_t(key) & ~1)->isMarked();
@@ -5945,7 +5946,7 @@ TypeSet::sweep(JSContext *cx, JSCompartment *compartment)
         objectCount = 0;
         for (unsigned i = 0; i < oldCapacity; i++) {
             TypeObjectKey *object = oldArray[i];
-            if (object && !IsAboutToBeFinalized(cx, object)) {
+            if (object && !IsAboutToBeFinalized(object)) {
                 TypeObjectKey **pentry =
                     HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
                         (compartment, objectSet, objectCount, object);
@@ -5958,7 +5959,7 @@ TypeSet::sweep(JSContext *cx, JSCompartment *compartment)
         setBaseObjectCount(objectCount);
     } else if (objectCount == 1) {
         TypeObjectKey *object = (TypeObjectKey *) objectSet;
-        if (IsAboutToBeFinalized(cx, object)) {
+        if (IsAboutToBeFinalized(object)) {
             objectSet = NULL;
             setBaseObjectCount(0);
         }
@@ -6158,7 +6159,7 @@ TypeCompartment::sweep(JSContext *cx)
             const AllocationSiteKey &key = e.front().key;
             TypeObject *object = e.front().value;
 
-            if (IsAboutToBeFinalized(cx, key.script) || !object->isMarked())
+            if (IsAboutToBeFinalized(key.script) || !object->isMarked())
                 e.removeFront();
         }
     }
@@ -6220,7 +6221,7 @@ TypeScript::Sweep(JSContext *cx, JSScript *script)
         Type type = result->type;
 
         if (!type.isUnknown() && !type.isAnyObject() && type.isObject() &&
-            IsAboutToBeFinalized(cx, type.objectKey())) {
+            IsAboutToBeFinalized(type.objectKey())) {
             *presult = result->next;
             cx->delete_(result);
         } else {

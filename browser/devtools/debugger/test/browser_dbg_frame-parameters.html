@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Debugger Function Call Parameter Test</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script type="text/javascript">
+      window.addEventListener("load", function() {
+        function test(aArg, bArg, cArg, dArg, eArg, fArg) {
+          var a = 1;
+          var b = { a: a };
+          var c = { a: 1, b: "beta", c: true, d: b };
+
+          debugger;
+        }
+        function load() {
+          var a = { a: 1, b: "beta", c: true };
+          var e = eval("test(a, 'beta', 3, false, null)");
+        }
+        var button = document.querySelector("button");
+        button.addEventListener("click", load, false);
+      });
+    </script>
+
+  </head>
+  <body>
+    <button>Click me!</button>
+  </body>
+</html>

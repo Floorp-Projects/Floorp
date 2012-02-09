@@ -95,7 +95,7 @@ Tester.prototype = {
     this._cs.registerListener(this);
     this._globalProperties = Object.keys(window);
     this._globalPropertyWhitelist = ["navigator", "constructor", "Application",
-      "__SS_tabsToRestore", "webConsoleCommandController",
+      "__SS_tabsToRestore", "__SSi", "webConsoleCommandController",
 
       // Temporarily added to whitelist for Fennec tests:
       "AddonUpdateChecker",

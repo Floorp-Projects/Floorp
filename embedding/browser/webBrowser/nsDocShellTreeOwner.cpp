@@ -950,7 +950,7 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
       nsIWebNavigation* webnav = static_cast<nsIWebNavigation *>(mWebBrowser);
 
       nsAutoString link, name;
-      if (webnav && NS_SUCCEEDED(handler->DropLink(dragEvent, link, name))) {
+      if (webnav && NS_SUCCEEDED(handler->DropLink(dragEvent, link, false, name))) {
         if (!link.IsEmpty()) {
           webnav->LoadURI(link.get(), 0, nsnull, nsnull, nsnull);
         }
