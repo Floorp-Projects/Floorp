@@ -202,9 +202,9 @@ protected:
     static bool gIsFormFillEnabled;
 
 private:
-  nsAccessNode();
-  nsAccessNode(const nsAccessNode&);
-  nsAccessNode& operator =(const nsAccessNode&);
+  nsAccessNode() MOZ_DELETE;
+  nsAccessNode(const nsAccessNode&) MOZ_DELETE;
+  nsAccessNode& operator =(const nsAccessNode&) MOZ_DELETE;
   
   static nsApplicationAccessible *gApplicationAccessible;
 };
