@@ -56,8 +56,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsTextAccessibleWrap::
-  nsTextAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsTextAccessible(aContent, aShell)
+  nsTextAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsTextAccessible(aContent, aDoc)
 {
 }
 
@@ -129,7 +129,7 @@ __try {
     return rv;
   }
 
-  nsDocAccessible *docAccessible = GetDocAccessible();
+  nsDocAccessible* docAccessible = Document();
   NS_ASSERTION(docAccessible,
                "There must always be a doc accessible, but there isn't. Crash!");
 

@@ -221,6 +221,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
+    Services.obs.addObserver(this, "Passwords:Init", false);
 
     function showFullScreenWarning() {
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
@@ -970,6 +971,12 @@ var BrowserApp = {
       ViewportHandler.onResize();
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
+    } else if (aTopic == "Passwords:Init") {
+      var storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].  
+        getService(Components.interfaces.nsILoginManagerStorage);
+      storage.init();
+
+      sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
     }
   },
 

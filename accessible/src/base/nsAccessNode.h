@@ -71,7 +71,7 @@ class nsAccessNode: public nsISupports
 {
 public:
 
-  nsAccessNode(nsIContent *aContent, nsIWeakReference *aShell);
+  nsAccessNode(nsIContent* aContent, nsDocAccessible* aDoc);
   virtual ~nsAccessNode();
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -88,7 +88,7 @@ public:
   /**
    * Return the document accessible for this access node.
    */
-  nsDocAccessible *GetDocAccessible() const;
+  nsDocAccessible* Document() const { return mDoc; }
 
   /**
    * Return the root document accessible for this accessnode.
@@ -148,16 +148,6 @@ public:
   }
 
   /**
-   * Return the corresponding press shell for this accessible.
-   */
-  already_AddRefed<nsIPresShell> GetPresShell();
-
-  /**
-   * Return presentation shell for the accessible.
-   */
-  nsIWeakReference* GetWeakShell() const { return mWeakShell; }
-
-  /**
    * Return the unique identifier of the accessible.
    */
   void* UniqueID() { return static_cast<void*>(this); }
@@ -189,7 +179,7 @@ protected:
     void LastRelease();
 
   nsCOMPtr<nsIContent> mContent;
-  nsCOMPtr<nsIWeakReference> mWeakShell;
+  nsDocAccessible* mDoc;
 
     /**
      * Notify global nsIObserver's that a11y is getting init'd or shutdown

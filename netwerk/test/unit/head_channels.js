@@ -25,6 +25,7 @@ const CL_EXPECT_FAILURE = 0x1;
 const CL_EXPECT_GZIP = 0x2;
 const CL_EXPECT_3S_DELAY = 0x4;
 const CL_SUSPEND = 0x8;
+const CL_ALLOW_UNKNOWN_CL = 0x10;
 
 const SUSPEND_DELAY = 3000;
 
@@ -76,10 +77,10 @@ ChannelListener.prototype = {
         this._contentLen = request.contentLength;
       }
       catch (ex) {
-        if (!(this._flags & CL_EXPECT_FAILURE))
+        if (!(this._flags & (CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL)))
           do_throw("Could not get contentLength");
       }
-      if (this._contentLen == -1 && !(this._flags & CL_EXPECT_FAILURE))
+      if (this._contentLen == -1 && !(this._flags & (CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL)))
         do_throw("Content length is unknown in onStartRequest!");
 
       if (this._flags & CL_SUSPEND) {

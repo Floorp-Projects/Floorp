@@ -57,8 +57,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridAccessible::
-  nsXULTreeGridAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsXULTreeAccessible(aContent, aShell)
+  nsXULTreeGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTreeAccessible(aContent, aDoc)
 {
 }
 
@@ -605,7 +605,7 @@ already_AddRefed<nsAccessible>
 nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 {
   nsRefPtr<nsAccessible> accessible =
-    new nsXULTreeGridRowAccessible(mContent, mWeakShell, this, mTree,
+    new nsXULTreeGridRowAccessible(mContent, mDoc, this, mTree,
                                    mTreeView, aRow);
 
   return accessible.forget();
@@ -617,10 +617,10 @@ nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridRowAccessible::
-  nsXULTreeGridRowAccessible(nsIContent *aContent, nsIWeakReference *aShell,
-                             nsAccessible *aTreeAcc, nsITreeBoxObject* aTree,
-                             nsITreeView *aTreeView, PRInt32 aRow) :
-  nsXULTreeItemAccessibleBase(aContent, aShell, aTreeAcc, aTree, aTreeView, aRow)
+  nsXULTreeGridRowAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+                             nsAccessible* aTreeAcc, nsITreeBoxObject* aTree,
+                             nsITreeView* aTreeView, PRInt32 aRow) :
+  nsXULTreeItemAccessibleBase(aContent, aDoc, aTreeAcc, aTree, aTreeView, aRow)
 {
   mAccessibleCache.Init(kDefaultTreeCacheSize);
 }
@@ -761,11 +761,11 @@ nsXULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn)
     return cachedCell;
 
   nsRefPtr<nsAccessible> cell =
-    new nsXULTreeGridCellAccessibleWrap(mContent, mWeakShell, this, mTree,
+    new nsXULTreeGridCellAccessibleWrap(mContent, mDoc, this, mTree,
                                         mTreeView, mRow, aColumn);
   if (cell) {
     if (mAccessibleCache.Put(key, cell)) {
-      if (GetDocAccessible()->BindToDocument(cell, nsnull))
+      if (Document()->BindToDocument(cell, nsnull))
         return cell;
 
       mAccessibleCache.Remove(key);
@@ -811,11 +811,11 @@ nsXULTreeGridRowAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridCellAccessible::
-nsXULTreeGridCellAccessible(nsIContent *aContent, nsIWeakReference *aShell,
-                            nsXULTreeGridRowAccessible *aRowAcc,
-                            nsITreeBoxObject *aTree, nsITreeView *aTreeView,
-                            PRInt32 aRow, nsITreeColumn* aColumn) :
-  nsLeafAccessible(aContent, aShell), mTree(aTree),
+  nsXULTreeGridCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+                              nsXULTreeGridRowAccessible* aRowAcc,
+                              nsITreeBoxObject* aTree, nsITreeView* aTreeView,
+                              PRInt32 aRow, nsITreeColumn* aColumn) :
+  nsLeafAccessible(aContent, aDoc), mTree(aTree),
   mTreeView(aTreeView), mRow(aRow), mColumn(aColumn)
 {
   mParent = aRowAcc;
@@ -1065,7 +1065,7 @@ nsXULTreeGridCellAccessible::GetColumnHeaderCells(nsIArray **aHeaderCells)
   NS_ENSURE_ARG_POINTER(aHeaderCells);
   *aHeaderCells = nsnull;
 
-  if (IsDefunct())
+  if (IsDefunct() || !mDoc)
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
@@ -1077,8 +1077,7 @@ nsXULTreeGridCellAccessible::GetColumnHeaderCells(nsIArray **aHeaderCells)
   mColumn->GetElement(getter_AddRefs(columnElm));
 
   nsCOMPtr<nsIContent> columnContent(do_QueryInterface(columnElm));
-  nsAccessible *headerCell =
-    GetAccService()->GetAccessibleInWeakShell(columnContent, mWeakShell);
+  nsAccessible *headerCell = mDoc->GetAccessible(columnContent);
 
   if (headerCell)
     headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),

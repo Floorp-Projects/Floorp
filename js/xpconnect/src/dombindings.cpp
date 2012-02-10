@@ -414,7 +414,7 @@ interface_hasInstance(JSContext *cx, JSObject *obj, const JS::Value *vp, JSBool 
             } else {
                 JSObject *protoObj = JSVAL_TO_OBJECT(prototype);
                 JSObject *proto = other;
-                while ((proto = JS_GetPrototype(cx, proto))) {
+                while ((proto = JS_GetPrototype(proto))) {
                     if (proto == protoObj) {
                         *bp = true;
                         return true;
@@ -759,7 +759,7 @@ ListBase<LC>::ensureExpandoObject(JSContext *cx, JSObject *obj)
             return NULL;
 
         js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, ObjectValue(*expando));
-        JS_SetPrivate(cx, expando, js::GetProxyPrivate(obj).toPrivate());
+        JS_SetPrivate(expando, js::GetProxyPrivate(obj).toPrivate());
     }
     return expando;
 }
@@ -1312,10 +1312,7 @@ NoBase::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
     // We need to pass the object prototype to JS_NewObject. If we pass NULL then the JS engine
     // will look up a prototype on the global by using the class' name and we'll recurse into
     // getPrototype.
-    JSObject* proto;
-    if (!js_GetClassPrototype(cx, scope->GetGlobalJSObject(), JSProto_Object, &proto))
-        return NULL;
-    return proto;
+    return JS_GetObjectPrototype(cx, scope->GetGlobalJSObject());
 }
 
 

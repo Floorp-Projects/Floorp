@@ -50,7 +50,7 @@
 class nsHTMLTextAccessible : public nsTextAccessibleWrap
 {
 public:
-  nsHTMLTextAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsHTMLTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -70,7 +70,7 @@ public:
 class nsHTMLHRAccessible : public nsLeafAccessible
 {
 public:
-  nsHTMLHRAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsHTMLHRAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -82,7 +82,7 @@ public:
 class nsHTMLBRAccessible : public nsLeafAccessible
 {
 public:
-  nsHTMLBRAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsHTMLBRAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -96,7 +96,7 @@ public:
 class nsHTMLLabelAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLLabelAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsHTMLLabelAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -111,7 +111,7 @@ public:
 class nsHTMLOutputAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLOutputAccessible(nsIContent* aContent, nsIWeakReference* aShell);
+  nsHTMLOutputAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -127,7 +127,7 @@ public:
 class nsHTMLListBulletAccessible : public nsLeafAccessible
 {
 public:
-  nsHTMLListBulletAccessible(nsIContent* aContent, nsIWeakReference* aShell);
+  nsHTMLListBulletAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
@@ -148,7 +148,7 @@ public:
 class nsHTMLListAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLListAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsHTMLListAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -164,7 +164,7 @@ public:
 class nsHTMLLIAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLLIAccessible(nsIContent* aContent, nsIWeakReference* aShell);
+  nsHTMLLIAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

@@ -88,7 +88,9 @@ public class BrowserDB {
 
         public void addBookmark(ContentResolver cr, String title, String uri);
 
-        public void removeBookmark(ContentResolver cr, String uri);
+        public void removeBookmark(ContentResolver cr, int id);
+
+        public void removeBookmarksWithURL(ContentResolver cr, String uri);
 
         public void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword);
 
@@ -167,8 +169,12 @@ public class BrowserDB {
         sDb.addBookmark(cr, title, uri);
     }
 
-    public static void removeBookmark(ContentResolver cr, String uri) {
-        sDb.removeBookmark(cr, uri);
+    public static void removeBookmark(ContentResolver cr, int id) {
+        sDb.removeBookmark(cr, id);
+    }
+
+    public static void removeBookmarksWithURL(ContentResolver cr, String uri) {
+        sDb.removeBookmarksWithURL(cr, uri);
     }
 
     public static void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword) {

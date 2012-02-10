@@ -71,8 +71,8 @@ public:
    * @param  aPresShell [in] the presentation shell which contains layout info
    *                         for the DOM node
    */
-  virtual nsAccessible* GetAccessibleInShell(nsINode* aNode,
-                                             nsIPresShell* aPresShell) = 0;
+  virtual nsAccessible* GetAccessible(nsINode* aNode,
+                                      nsIPresShell* aPresShell) = 0;
 
   /**
    * Return root document accessible that is or contains a document accessible

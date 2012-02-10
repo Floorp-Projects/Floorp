@@ -698,77 +698,6 @@ js::Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rva
                          NULL /* evalInFrame */, rval);
 }
 
-bool
-js::CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
-{
-    JSObject *obj2;
-    JSProperty *prop;
-    uintN oldAttrs;
-    bool isFunction;
-    const char *type, *name;
-
-    if (!obj->lookupGeneric(cx, id, &obj2, &prop))
-        return false;
-    if (!prop)
-        return true;
-    if (obj2->isNative()) {
-        oldAttrs = ((Shape *) prop)->attributes();
-    } else {
-        if (!obj2->getGenericAttributes(cx, id, &oldAttrs))
-            return false;
-    }
-
-    /* We allow redeclaring some non-readonly properties. */
-    if (((oldAttrs | attrs) & JSPROP_READONLY) == 0) {
-        /* Allow redeclaration of variables and functions. */
-        if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
-            return true;
-
-        /*
-         * Allow adding a getter only if a property already has a setter
-         * but no getter and similarly for adding a setter. That is, we
-         * allow only the following transitions:
-         *
-         *   no-property --> getter --> getter + setter
-         *   no-property --> setter --> getter + setter
-         */
-        if ((~(oldAttrs ^ attrs) & (JSPROP_GETTER | JSPROP_SETTER)) == 0)
-            return true;
-
-        /*
-         * Allow redeclaration of an impermanent property (in which case
-         * anyone could delete it and redefine it, willy-nilly).
-         */
-        if (!(oldAttrs & JSPROP_PERMANENT))
-            return true;
-    }
-
-    isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
-    if (!isFunction) {
-        Value value;
-        if (!obj->getGeneric(cx, id, &value))
-            return JS_FALSE;
-        isFunction = IsFunctionObject(value);
-    }
-
-    type = (oldAttrs & attrs & JSPROP_GETTER)
-           ? js_getter_str
-           : (oldAttrs & attrs & JSPROP_SETTER)
-           ? js_setter_str
-           : (oldAttrs & JSPROP_READONLY)
-           ? js_const_str
-           : isFunction
-           ? js_function_str
-           : js_var_str;
-    JSAutoByteString bytes;
-    name = js_ValueToPrintable(cx, IdToValue(id), &bytes);
-    if (!name)
-        return false;
-    JS_ALWAYS_FALSE(JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
-                                                 JSMSG_REDECLARED_VAR, type, name));
-    return false;
-}
-
 JSBool
 js::HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
@@ -1744,6 +1673,7 @@ ADD_EMPTY_CASE(JSOP_UNUSED13)
 ADD_EMPTY_CASE(JSOP_UNUSED14)
 ADD_EMPTY_CASE(JSOP_UNUSED15)
 ADD_EMPTY_CASE(JSOP_UNUSED16)
+ADD_EMPTY_CASE(JSOP_UNUSED17)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -2682,7 +2612,7 @@ BEGIN_CASE(JSOP_CALLELEM)
 {
     /* Find the object on which to look for |this|'s properties. */
     Value thisv = regs.sp[-2];
-    JSObject *thisObj = ValuePropertyBearer(cx, thisv, -2);
+    JSObject *thisObj = ValuePropertyBearer(cx, regs.fp(), thisv, -2);
     if (!thisObj)
         goto error;
 
@@ -3147,47 +3077,9 @@ END_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
-    uint32_t index = GET_INDEX(regs.pc);
-    PropertyName *name = atoms[index]->asPropertyName();
-
-    JSObject *obj = &regs.fp()->varObj();
-    JS_ASSERT(!obj->getOps()->defineProperty);
-    uintN attrs = JSPROP_ENUMERATE;
-    if (!regs.fp()->isEvalFrame())
-        attrs |= JSPROP_PERMANENT;
-
-    /* Lookup id in order to check for redeclaration problems. */
-    bool shouldDefine;
-    if (op == JSOP_DEFVAR) {
-        /*
-         * Redundant declaration of a |var|, even one for a non-writable
-         * property like |undefined| in ES5, does nothing.
-         */
-        JSProperty *prop;
-        JSObject *obj2;
-        if (!obj->lookupProperty(cx, name, &obj2, &prop))
-            goto error;
-        shouldDefine = (!prop || obj2 != obj);
-    } else {
-        JS_ASSERT(op == JSOP_DEFCONST);
-        attrs |= JSPROP_READONLY;
-        if (!CheckRedeclaration(cx, obj, name, attrs))
-            goto error;
-
-        /*
-         * As attrs includes readonly, CheckRedeclaration can succeed only
-         * if prop does not exist.
-         */
-        shouldDefine = true;
-    }
-
-    /* Bind a variable only if it's not yet defined. */
-    if (shouldDefine &&
-        !DefineNativeProperty(cx, obj, name, UndefinedValue(),
-                              JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
-    {
+    PropertyName *dn = atoms[GET_INDEX(regs.pc)]->asPropertyName();
+    if (!DefVarOrConstOperation(cx, op, dn, regs.fp()))
         goto error;
-    }
 }
 END_CASE(JSOP_DEFVAR)
 
@@ -3305,35 +3197,6 @@ BEGIN_CASE(JSOP_DEFFUN)
     } while (false);
 }
 END_CASE(JSOP_DEFFUN)
-
-BEGIN_CASE(JSOP_DEFFUN_FC)
-{
-    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
-
-    JSObject *obj = js_NewFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-
-    Value rval = ObjectValue(*obj);
-
-    uintN attrs = regs.fp()->isEvalFrame()
-                  ? JSPROP_ENUMERATE
-                  : JSPROP_ENUMERATE | JSPROP_PERMANENT;
-
-    JSObject &parent = regs.fp()->varObj();
-
-    PropertyName *name = fun->atom->asPropertyName();
-    if (!CheckRedeclaration(cx, &parent, name, attrs))
-        goto error;
-
-    if ((attrs == JSPROP_ENUMERATE)
-        ? !parent.setProperty(cx, name, &rval, script->strictModeCode)
-        : !parent.defineProperty(cx, name, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
-    {
-        goto error;
-    }
-}
-END_CASE(JSOP_DEFFUN_FC)
 
 BEGIN_CASE(JSOP_DEFLOCALFUN)
 {
@@ -3585,10 +3448,6 @@ BEGIN_CASE(JSOP_SETTER)
         attrs = JSPROP_SETTER;
     }
     attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
-
-    /* Check for a readonly or permanent property of the same name. */
-    if (!CheckRedeclaration(cx, obj, id, attrs))
-        goto error;
 
     if (!obj->defineGeneric(cx, id, UndefinedValue(), getter, setter, attrs))
         goto error;

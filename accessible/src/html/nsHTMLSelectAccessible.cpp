@@ -65,8 +65,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLSelectListAccessible::
-  nsHTMLSelectListAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsHTMLSelectListAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
   mFlags |= eListControlAccessible;
 }
@@ -144,7 +144,7 @@ nsHTMLSelectListAccessible::CurrentItem()
   if (listControlFrame) {
     nsCOMPtr<nsIContent> activeOptionNode = listControlFrame->GetCurrentOption();
     if (activeOptionNode) {
-      nsDocAccessible* document = GetDocAccessible();
+      nsDocAccessible* document = Document();
       if (document)
         return document->GetAccessible(activeOptionNode);
     }
@@ -179,7 +179,6 @@ nsHTMLSelectListAccessible::CacheChildren()
 void
 nsHTMLSelectListAccessible::CacheOptSiblings(nsIContent *aParentContent)
 {
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
   for (nsIContent* childContent = aParentContent->GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
     if (!childContent->IsHTML()) {
@@ -192,8 +191,7 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIContent *aParentContent)
 
       // Get an accessible for option or optgroup and cache it.
       nsRefPtr<nsAccessible> accessible =
-        GetAccService()->GetOrCreateAccessible(childContent, presShell,
-                                               mWeakShell);
+        GetAccService()->GetOrCreateAccessible(childContent, mDoc);
       if (accessible)
         AppendChild(accessible);
 
@@ -210,8 +208,8 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIContent *aParentContent)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLSelectOptionAccessible::
-  nsHTMLSelectOptionAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsHyperTextAccessibleWrap(aContent, aShell)
+  nsHTMLSelectOptionAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -439,7 +437,7 @@ nsHTMLSelectOptionAccessible::GetSelectState(PRUint64* aState)
   }
 
   if (content) {
-    nsAccessible* selAcc = GetAccService()->GetAccessible(content);
+    nsAccessible* selAcc = GetAccService()->GetAccessible(content, nsnull);
     if (selAcc) {
       *aState = selAcc->State();
       return content;
@@ -454,9 +452,9 @@ nsHTMLSelectOptionAccessible::GetSelectState(PRUint64* aState)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLSelectOptGroupAccessible::
-  nsHTMLSelectOptGroupAccessible(nsIContent *aContent,
-                                 nsIWeakReference *aShell) :
-  nsHTMLSelectOptionAccessible(aContent, aShell)
+  nsHTMLSelectOptGroupAccessible(nsIContent* aContent,
+                                 nsDocAccessible* aDoc) :
+  nsHTMLSelectOptionAccessible(aContent, aDoc)
 {
 }
 
@@ -511,8 +509,8 @@ nsHTMLSelectOptGroupAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLComboboxAccessible::
-  nsHTMLComboboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsHTMLComboboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
   mFlags |= eComboboxAccessible;
 }
@@ -552,10 +550,10 @@ nsHTMLComboboxAccessible::CacheChildren()
 
   if (!mListAccessible) {
     mListAccessible = 
-      new nsHTMLComboboxListAccessible(mParent, mContent, mWeakShell);
+      new nsHTMLComboboxListAccessible(mParent, mContent, mDoc);
 
     // Initialize and put into cache.
-    if (!GetDocAccessible()->BindToDocument(mListAccessible, nsnull))
+    if (!Document()->BindToDocument(mListAccessible, nsnull))
       return;
   }
 
@@ -718,7 +716,7 @@ nsHTMLComboboxAccessible::SelectedOption() const
   if (listControlFrame) {
     nsCOMPtr<nsIContent> activeOptionNode = listControlFrame->GetCurrentOption();
     if (activeOptionNode) {
-      nsDocAccessible* document = GetDocAccessible();
+      nsDocAccessible* document = Document();
       if (document)
         return document->GetAccessible(activeOptionNode);
     }
@@ -733,9 +731,9 @@ nsHTMLComboboxAccessible::SelectedOption() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLComboboxListAccessible::
-  nsHTMLComboboxListAccessible(nsIAccessible *aParent, nsIContent *aContent,
-                               nsIWeakReference *aShell) :
-  nsHTMLSelectListAccessible(aContent, aShell)
+  nsHTMLComboboxListAccessible(nsIAccessible* aParent, nsIContent* aContent,
+                               nsDocAccessible* aDoc) :
+  nsHTMLSelectListAccessible(aContent, aDoc)
 {
 }
 
