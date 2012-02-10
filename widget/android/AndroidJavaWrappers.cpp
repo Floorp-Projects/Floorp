@@ -694,11 +694,15 @@ AndroidGeckoGLLayerClient::Init(jobject jobj)
 void
 AndroidLayerRendererFrame::Init(jobject jobj)
 {
+#if 0
     if (!isNull()) {
         Dispose();
     }
 
     wrapped_obj = GetJNIForThread()->NewGlobalRef(jobj);
+#else
+    wrapped_obj = jobj;
+#endif
 }
 
 void
