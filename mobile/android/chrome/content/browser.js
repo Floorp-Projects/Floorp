@@ -1379,7 +1379,7 @@ nsBrowserAccess.prototype = {
 
     let parentId = -1;
     if (newTab && !isExternal) {
-      let parent = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForWindow(aOpener));
+      let parent = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForWindow(aOpener.top));
       if (parent)
         parentId = parent.id;
     }
