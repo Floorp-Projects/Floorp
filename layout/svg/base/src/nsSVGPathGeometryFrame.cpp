@@ -308,7 +308,9 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
       pathExtents.SizeTo(0, 0);
     }
     bbox =
-      bbox.Union(nsSVGUtils::PathExtentsToMaxStrokeExtents(pathExtents, this));
+      bbox.Union(nsSVGUtils::PathExtentsToMaxStrokeExtents(pathExtents,
+                                                           this,
+                                                           aToBBoxUserspace));
   }
 
   // Account for markers:
