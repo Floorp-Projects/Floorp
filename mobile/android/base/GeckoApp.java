@@ -2321,22 +2321,22 @@ abstract public class GeckoApp
     }
 
     private void checkMigrateProfile() {
+        long currentTime = SystemClock.uptimeMillis();
+        Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
+
         File profileDir = getProfileDir();
         if (profileDir != null) {
-            long currentTime = SystemClock.uptimeMillis();
-            Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
             final GeckoApp app = GeckoApp.mAppContext;
             final SetupScreen setupScreen = new SetupScreen(app);
             // don't show unless we take a while
             setupScreen.showDelayed(mMainHandler);
-            GeckoAppShell.ensureSQLiteLibsLoaded(app.getApplication().getPackageResourcePath());
             ProfileMigrator profileMigrator =
                 new ProfileMigrator(app.getContentResolver(), profileDir);
             profileMigrator.launch();
             setupScreen.dismiss();
-            long timeDiff = SystemClock.uptimeMillis() - currentTime;
-            Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
         }
+        long timeDiff = SystemClock.uptimeMillis() - currentTime;
+        Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
     }
 
     private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
