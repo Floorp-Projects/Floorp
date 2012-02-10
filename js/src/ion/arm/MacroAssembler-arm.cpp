@@ -550,7 +550,6 @@ MacroAssemblerARM::ma_cmp(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, op_cmp, SetCond, c);
 }
-
 void
 MacroAssemblerARM::ma_cmp(Register src1, ImmGCPtr ptr, Condition c)
 {
@@ -576,19 +575,18 @@ MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
 void
 MacroAssemblerARM::ma_cmp(Register src1, Register src2, Condition c)
 {
-    as_cmp(src2, O2Reg(src1), c);
+    as_cmp(src1, O2Reg(src2), c);
 }
-
     // test for equality, (src1^src2)
 void
-MacroAssemblerARM::ma_teq(Imm32 imm, Register src1, Condition c)
+MacroAssemblerARM::ma_teq(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, op_teq, SetCond, c);
 }
 void
-MacroAssemblerARM::ma_teq(Register src2, Register src1, Condition c)
+MacroAssemblerARM::ma_teq(Register src1, Register src2, Condition c)
 {
-    as_tst(src2, O2Reg(src1), c);
+    as_tst(src1, O2Reg(src2), c);
 }
 void
 MacroAssemblerARM::ma_teq(Register src1, Operand op, Condition c)
@@ -599,7 +597,7 @@ MacroAssemblerARM::ma_teq(Register src1, Operand op, Condition c)
 
 // test (src1 & src2)
 void
-MacroAssemblerARM::ma_tst(Imm32 imm, Register src1, Condition c)
+MacroAssemblerARM::ma_tst(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, op_tst, SetCond, c);
 }
@@ -1901,7 +1899,7 @@ void MacroAssemblerARMCompat::checkStackAlignment()
 {
 #ifdef DEBUG
         Label good;
-        ma_tst(Imm32(StackAlignment - 1), sp);
+        ma_tst(sp, Imm32(StackAlignment - 1));
         ma_b(&good, Equal);
         breakpoint();
         bind(&good);

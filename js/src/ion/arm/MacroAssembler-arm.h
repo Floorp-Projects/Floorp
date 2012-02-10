@@ -211,13 +211,13 @@ class MacroAssemblerARM : public Assembler
 
 
     // test for equality, (src1^src2)
-    void ma_teq(Imm32 imm, Register src1, Condition c = Always);
-    void ma_teq(Register src2, Register src1, Condition c = Always);
+    void ma_teq(Register src1, Imm32 imm, Condition c = Always);
+    void ma_teq(Register src1, Register src2, Condition c = Always);
     void ma_teq(Register src1, Operand op, Condition c = Always);
 
 
     // test (src1 & src2)
-    void ma_tst(Imm32 imm, Register src1, Condition c = Always);
+    void ma_tst(Register src1, Imm32 imm, Condition c = Always);
     void ma_tst(Register src1, Register src2, Condition c = Always);
     void ma_tst(Register src1, Operand op, Condition c = Always);
 
@@ -571,7 +571,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
-        ma_tst(imm, ScratchRegister);
+        ma_tst(ScratchRegister, imm);
         ma_b(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
