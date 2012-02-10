@@ -163,6 +163,12 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
+        <provider android:name="@ANDROID_PACKAGE_NAME@.db.PasswordsProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.passwords"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
+									android:protectionLevel="signature"/>
+
+
 #include ../sync/manifests/SyncAndroidManifest_services.xml.in
     </application>
 

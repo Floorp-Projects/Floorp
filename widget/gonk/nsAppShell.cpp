@@ -587,7 +587,10 @@ GeckoInputDispatcher::notifyMotion(nsecs_t eventTime,
     }
     {
         MutexAutoLock lock(mQueueLock);
-        if (!mEventQueue.empty() && mEventQueue.back().type == UserInputData::MOTION_DATA)
+        if (!mEventQueue.empty() &&
+             mEventQueue.back().type == UserInputData::MOTION_DATA &&
+            (mEventQueue.back().action & AMOTION_EVENT_ACTION_MASK) ==
+             AMOTION_EVENT_ACTION_MOVE)
             mEventQueue.back() = data;
         else
             mEventQueue.push(data);

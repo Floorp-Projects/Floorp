@@ -380,7 +380,13 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             cr.insert(appendProfile(Bookmarks.CONTENT_URI), values);
     }
 
-    public void removeBookmark(ContentResolver cr, String uri) {
+    public void removeBookmark(ContentResolver cr, int id) {
+        cr.delete(appendProfile(Bookmarks.CONTENT_URI),
+                  Bookmarks._ID + " = ?",
+                  new String[] { String.valueOf(id) });
+    }
+
+    public void removeBookmarksWithURL(ContentResolver cr, String uri) {
         cr.delete(appendProfile(Bookmarks.CONTENT_URI),
                   Bookmarks.URL + " = ?",
                   new String[] { uri });

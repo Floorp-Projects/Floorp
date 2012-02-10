@@ -39,19 +39,19 @@
 BEGIN_WORKERS_NAMESPACE
 
 inline
-JSBool
-SetJSPrivateSafeish(JSContext* aCx, JSObject* aObj, PrivatizableBase* aBase)
+void
+SetJSPrivateSafeish(JSObject* aObj, PrivatizableBase* aBase)
 {
-  return JS_SetPrivate(aCx, aObj, aBase);
+  JS_SetPrivate(aObj, aBase);
 }
 
 template <class Derived>
 inline
 Derived*
-GetJSPrivateSafeish(JSContext* aCx, JSObject* aObj)
+GetJSPrivateSafeish(JSObject* aObj)
 {
   return static_cast<Derived*>(
-    static_cast<PrivatizableBase*>(JS_GetPrivate(aCx, aObj)));
+    static_cast<PrivatizableBase*>(JS_GetPrivate(aObj)));
 }
 
 END_WORKERS_NAMESPACE

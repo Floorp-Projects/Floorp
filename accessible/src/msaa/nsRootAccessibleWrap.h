@@ -46,7 +46,7 @@ class nsRootAccessibleWrap : public nsRootAccessible
 {
 public:
   nsRootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
-                       nsIWeakReference* aShell);
+                       nsIPresShell* aPresShell);
   virtual ~nsRootAccessibleWrap();
 
   // nsRootAccessible

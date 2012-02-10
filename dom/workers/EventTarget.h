@@ -77,7 +77,7 @@ protected:
 
 public:
   static EventTarget*
-  FromJSObject(JSContext* aCx, JSObject* aObj);
+  FromJSObject(JSObject* aObj);
 
   static JSBool
   AddEventListener(JSContext* aCx, uintN aArgc, jsval* aVp);

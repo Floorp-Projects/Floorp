@@ -71,8 +71,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULButtonAccessible::
-  nsXULButtonAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXULButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
   if (ContainsMenu())
     mFlags |= eMenuButtonAccessible;
@@ -226,13 +226,14 @@ nsXULButtonAccessible::CacheChildren()
     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                           nsGkAtoms::menuButton, eCaseMatters);
 
+  NS_ENSURE_TRUE(mDoc,);
   if (!isMenu && !isMenuButton)
     return;
 
   nsAccessible* menupopup = nsnull;
   nsAccessible* button = nsnull;
 
-  nsAccTreeWalker walker(mWeakShell, mContent, true);
+  nsAccTreeWalker walker(mDoc, mContent, true);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild())) {
@@ -250,7 +251,7 @@ nsXULButtonAccessible::CacheChildren()
 
     } else {
       // Unbind rejected accessible from document.
-      GetDocAccessible()->UnbindFromDocument(child);
+      Document()->UnbindFromDocument(child);
     }
   }
 
@@ -281,8 +282,8 @@ nsXULButtonAccessible::ContainsMenu()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULDropmarkerAccessible::
-  nsXULDropmarkerAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsFormControlAccessible(aContent, aShell)
+  nsXULDropmarkerAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsFormControlAccessible(aContent, aDoc)
 {
 }
 
@@ -362,8 +363,8 @@ nsXULDropmarkerAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULCheckboxAccessible::
-  nsXULCheckboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsFormControlAccessible(aContent, aShell)
+  nsXULCheckboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsFormControlAccessible(aContent, aDoc)
 {
 }
 
@@ -442,8 +443,8 @@ nsXULCheckboxAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULGroupboxAccessible::
-  nsXULGroupboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXULGroupboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -499,8 +500,8 @@ nsXULGroupboxAccessible::RelationByType(PRUint32 aType)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULRadioButtonAccessible::
-  nsXULRadioButtonAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsRadioButtonAccessible(aContent, aShell)
+  nsXULRadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsRadioButtonAccessible(aContent, aDoc)
 {
 }
 
@@ -558,8 +559,8 @@ nsXULRadioButtonAccessible::ContainerWidget() const
   */
 
 nsXULRadioGroupAccessible::
-  nsXULRadioGroupAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  XULSelectControlAccessible(aContent, aShell)
+  nsXULRadioGroupAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULSelectControlAccessible(aContent, aDoc)
 { 
 }
 
@@ -605,8 +606,8 @@ nsXULRadioGroupAccessible::AreItemsOperable() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULStatusBarAccessible::
-  nsXULStatusBarAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXULStatusBarAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -622,8 +623,8 @@ nsXULStatusBarAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULToolbarButtonAccessible::
-  nsXULToolbarButtonAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsXULButtonAccessible(aContent, aShell)
+  nsXULToolbarButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULButtonAccessible(aContent, aDoc)
 {
 }
 
@@ -673,8 +674,8 @@ nsXULToolbarButtonAccessible::IsSeparator(nsAccessible *aAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULToolbarAccessible::
-  nsXULToolbarAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXULToolbarAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -702,9 +703,9 @@ nsXULToolbarAccessible::GetNameInternal(nsAString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULToolbarSeparatorAccessible::
-  nsXULToolbarSeparatorAccessible(nsIContent *aContent,
-                                  nsIWeakReference *aShell) :
-  nsLeafAccessible(aContent, aShell)
+  nsXULToolbarSeparatorAccessible(nsIContent* aContent,
+                                  nsDocAccessible* aDoc) :
+  nsLeafAccessible(aContent, aDoc)
 {
 }
 
@@ -725,8 +726,8 @@ nsXULToolbarSeparatorAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTextFieldAccessible::
- nsXULTextFieldAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
- nsHyperTextAccessibleWrap(aContent, aShell)
+ nsXULTextFieldAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+ nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -776,7 +777,7 @@ nsXULTextFieldAccessible::NativeState()
   // Create a temporary accessible from the HTML text field to get
   // the accessible state from. Doesn't add to cache into document cache.
   nsRefPtr<nsHTMLTextFieldAccessible> tempAccessible =
-    new nsHTMLTextFieldAccessible(inputField, mWeakShell);
+    new nsHTMLTextFieldAccessible(inputField, mDoc);
   if (!tempAccessible)
     return state;
 
@@ -865,13 +866,14 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 void
 nsXULTextFieldAccessible::CacheChildren()
 {
+  NS_ENSURE_TRUE(mDoc,);
   // Create child accessibles for native anonymous content of underlying HTML
   // input element.
   nsCOMPtr<nsIContent> inputContent(GetInputField());
   if (!inputContent)
     return;
 
-  nsAccTreeWalker walker(mWeakShell, inputContent, false);
+  nsAccTreeWalker walker(mDoc, inputContent, false);
 
   nsAccessible* child = nsnull;
   while ((child = walker.NextChild()) && AppendChild(child));

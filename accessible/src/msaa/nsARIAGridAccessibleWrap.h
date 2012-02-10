@@ -53,8 +53,8 @@ class nsARIAGridAccessibleWrap : public nsARIAGridAccessible,
                                  public CAccessibleTable
 {
 public:
-  nsARIAGridAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-    nsARIAGridAccessible(aContent, aShell) {}
+  nsARIAGridAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+    nsARIAGridAccessible(aContent, aDoc) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
@@ -71,8 +71,8 @@ class nsARIAGridCellAccessibleWrap : public nsARIAGridCellAccessible,
                                      public CAccessibleTableCell
 {
 public:
-  nsARIAGridCellAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-    nsARIAGridCellAccessible(aContent, aShell) {}
+  nsARIAGridCellAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+    nsARIAGridCellAccessible(aContent, aDoc) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
