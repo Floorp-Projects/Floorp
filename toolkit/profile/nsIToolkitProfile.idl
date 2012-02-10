@@ -45,7 +45,7 @@ interface nsIProfileUnlocker;
  * Hold on to a profile lock. Once you release the last reference to this
  * interface, the profile lock is released.
  */
-[scriptable, uuid(50e07b0a-f338-4da3-bcdb-f4bb0db94dbe)]
+[scriptable, uuid(7c58c703-d245-4864-8d75-9648ca4a6139)]
 interface nsIProfileLock : nsISupports
 {
     /**
