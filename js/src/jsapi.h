@@ -4258,6 +4258,17 @@ JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                        const jschar *chars, size_t length,
                                        const char *filename, uintN lineno,
                                        JSVersion version);
+/*
+ * If originPrincipals is null, then the value of principals is used as origin
+ * principals for the compiled script.
+ */
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
+                                             JSPrincipals *principals,
+                                             JSPrincipals *originPrincipals,
+                                             const jschar *chars, size_t length,
+                                             const char *filename, uintN lineno,
+                                             JSVersion version);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileUTF8File(JSContext *cx, JSObject *obj, const char *filename);
@@ -4422,7 +4433,8 @@ JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
  * A script's originPrincipals may be retrieved through the debug API (via
  * JS_GetScriptOriginPrincipals) and the originPrincipals are transitively
  * assigned to any nested scripts (including scripts dynamically created via
- * eval and the Function constructor).
+ * eval and the Function constructor). If originPrincipals is null, then the
+ * value of principals is used as origin principals for the script.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
