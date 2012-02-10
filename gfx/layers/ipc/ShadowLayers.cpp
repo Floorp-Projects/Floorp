@@ -392,7 +392,7 @@ ShadowLayerForwarder::AllocBuffer(const gfxIntSize& aSize,
   SharedMemory::SharedMemoryType shmemType = OptimalShmemType();
 
   nsRefPtr<gfxSharedImageSurface> back =
-    gfxSharedImageSurface::CreateUnsafe(mShadowManager, aSize, format, shmemType, mUsePoTShmem);
+    gfxSharedImageSurface::CreateUnsafe(mShadowManager, aSize, format, shmemType);
   if (!back)
     return false;
 
@@ -507,11 +507,6 @@ ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
   return mShadowManager->SendPLayerConstructor(new ShadowLayerChild(aLayer));
 }
 
-LayerForwarderQuirks
-ShadowLayerManager::GetForwarderQuirks()
-{
-  return LayerForwarderQuirks(0);
-}
 
 void
 ShadowLayerManager::DestroySharedSurface(gfxSharedImageSurface* aSurface,
@@ -586,12 +581,6 @@ bool
 IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface)
 {
   return SurfaceDescriptor::T__None != aSurface.type();
-}
-
-void
-ShadowLayerForwarder::SetForwarderQuirks(LayerForwarderQuirks aQuirks)
-{
-  mUsePoTShmem = aQuirks.quirks() & (1 << 0);
 }
 
 } // namespace layers

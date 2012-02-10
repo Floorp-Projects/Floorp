@@ -388,12 +388,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   return true;
 }
 
-bool
-ShadowLayersParent::RecvGetForwarderQuirks(mozilla::layers::LayerForwarderQuirks* aQuirks) {
-  *aQuirks = layer_manager()->GetForwarderQuirks();
-  return true;
-}
-
 PLayerParent*
 ShadowLayersParent::AllocPLayer()
 {

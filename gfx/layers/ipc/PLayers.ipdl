@@ -74,14 +74,6 @@ struct OpCreateImageLayer      { PLayer layer; };
 struct OpCreateColorLayer      { PLayer layer; };
 struct OpCreateCanvasLayer     { PLayer layer; };
 
-struct LayerForwarderQuirks {
-  // 1 << 0 -> Use power of two Shmem for GPU that require it.
-  //           The other alternative would be to memcpy the Shmem
-  //           into a PoT buffer before the upload and wasting bandwidth.
-  // 1 << 1 -> Unused
-  uint32_t quirks;
-};
-
 struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
 };
@@ -239,11 +231,6 @@ sync protocol PLayers {
 
 parent:
   async PLayer();
-
-  // LayersBackend can request the quirks from the layer
-  // fowarder.
-  sync GetForwarderQuirks()
-    returns (LayerForwarderQuirks Quirks);
 
   sync Update(Edit[] cset)
     returns (EditReply[] reply);
