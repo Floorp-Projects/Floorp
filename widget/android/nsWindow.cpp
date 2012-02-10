@@ -2385,3 +2385,33 @@ nsWindow::GetIMEUpdatePreference()
     return nsIMEUpdatePreference(true, true);
 }
 
+#ifdef MOZ_JAVA_COMPOSITOR
+void
+nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {
+#if 0
+    TransformLayerUserData* userData =
+        static_cast<TransformLayerUserData*>(aManager->GetUserData(nsGkAtoms::transform));
+    NS_ABORT_IF_FALSE(userData, "No transform user data!");
+
+    // Transform the unit square to figure out the offset and scale we need.
+    gfxRect rect(0, 0, 1, 1);
+    userData->matrix.TransformBounds(rect);
+
+    AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
+    AndroidGeckoGLLayerClient& glClient = static_cast<AndroidGeckoGLLayerClient&>(client);
+    glClient.CreateFrame(mLayerRendererFrame, rect.x, rect.y, rect.width);
+    mLayerRendererFrame.DrawBackground();
+#endif
+}
+
+void
+nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
+#if 0
+    NS_ABORT_IF_FALSE(!mLayerRendererFrame.isNull(),
+                      "Frame should have been created in DrawWindowUnderlay()!");
+    mLayerRendererFrame.DrawForeground();
+    mLayerRendererFrame.Dispose();
+#endif
+}
+#endif
+

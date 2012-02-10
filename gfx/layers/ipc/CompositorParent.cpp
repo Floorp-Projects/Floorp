@@ -42,6 +42,7 @@
 #include "ShadowLayersParent.h"
 #include "LayerManagerOGL.h"
 #include "nsIWidget.h"
+#include "nsGkAtoms.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidBridge.h"
@@ -181,6 +182,14 @@ CompositorParent::Composite()
 #endif
   layer->AsShadowLayer()->SetShadowTransform(worldTransform);
 
+#ifdef MOZ_WIDGET_ANDROID
+  // Hang the transform of the root layer off the layer manager.
+  gfx3DMatrix transform = layer->GetTransform();
+  transform *= worldTransform;
+  TransformLayerUserData* transformUserData = new TransformLayerUserData(transform);
+  mLayerManager->SetUserData(nsGkAtoms::transform, transformUserData);
+#endif
+
   mLayerManager->EndEmptyTransaction();
   mLastCompose = mozilla::TimeStamp::Now();
 }
@@ -195,7 +204,7 @@ CompositorParent::GetPrimaryScrollableLayer()
 
   nsTArray<Layer*> queue;
   queue.AppendElement(root);
-  for (int i = 0; i < queue.Length(); i++) {
+  for (unsigned i = 0; i < queue.Length(); i++) {
     ContainerLayer* containerLayer = queue[i]->AsContainerLayer();
     if (!containerLayer) {
       continue;

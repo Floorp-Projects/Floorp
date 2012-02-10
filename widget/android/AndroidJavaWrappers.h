@@ -237,6 +237,26 @@ private:
     static jfieldID jScaleField;
 };
 
+class AndroidLayerRendererFrame : public WrappedJavaObject {
+public:
+    static void InitLayerRendererFrameClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+    void Dispose();
+
+    void BeginDrawing();
+    void DrawBackground();
+    void DrawForeground();
+    void EndDrawing();
+
+private:
+    static jclass jLayerRendererFrameClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jDrawBackgroundMethod;
+    static jmethodID jDrawForegroundMethod;
+    static jmethodID jEndDrawingMethod;
+};
+
 class AndroidGeckoGLLayerClient : public AndroidGeckoLayerClient {
 public:
     static void InitGeckoGLLayerClientClass(JNIEnv *jEnv);
@@ -250,10 +270,13 @@ public:
     : mViewTransformGetter(*this) { Init(jobj); }
 
     void GetViewTransform(AndroidViewTransform& aViewTransform);
+    void CreateFrame(AndroidLayerRendererFrame& aFrame, float aXOffset, float aYOffset,
+                     float aZoomFactor);
 
 private:
     static jclass jGeckoGLLayerClientClass;
     static jmethodID jGetViewTransformMethod;
+    static jmethodID jCreateFrameMethod;
 
     AndroidGeckoGLLayerClientViewTransformGetter mViewTransformGetter;
 };

@@ -255,7 +255,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      * Called whenever a new frame is about to be drawn.
      */
     public void onDrawFrame(GL10 gl) {
-        Frame frame = new Frame(true);
+        RenderContext pageContext = createPageContext(), screenContext = createScreenContext();
+        Frame frame = createFrame(true, pageContext, screenContext);
         synchronized (mView.getController()) {
             frame.beginDrawing();
             frame.drawBackground();
@@ -286,13 +287,12 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return pixelBuffer;
     }
 
-    private RenderContext createScreenContext() {
+    public RenderContext createScreenContext() {
         LayerController layerController = mView.getController();
         IntSize viewportSize = new IntSize(layerController.getViewportSize());
         RectF viewport = new RectF(0.0f, 0.0f, viewportSize.width, viewportSize.height);
         FloatSize pageSize = new FloatSize(layerController.getPageSize());
-        return new RenderContext(viewport, pageSize, 1.0f, mPositionHandle, mTextureHandle,
-                                 mCoordBuffer);
+        return createContext(viewport, pageSize, 1.0f);
     }
 
     private RenderContext createPageContext() {
@@ -303,8 +303,12 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         FloatSize pageSize = new FloatSize(layerController.getPageSize());
         float zoomFactor = layerController.getZoomFactor();
-        return new RenderContext(new RectF(viewport), pageSize, zoomFactor, mPositionHandle,
-                                 mTextureHandle, mCoordBuffer);
+        return createContext(new RectF(viewport), pageSize, zoomFactor);
+    }
+
+    public RenderContext createContext(RectF viewport, FloatSize pageSize, float zoomFactor) {
+        return new RenderContext(viewport, pageSize, zoomFactor, mPositionHandle, mTextureHandle,
+                                 mCoordBuffer);
     }
 
     private Rect getPageRect() {
@@ -423,6 +427,11 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return shader;
     }
 
+    public Frame createFrame(boolean scissor, RenderContext pageContext,
+                             RenderContext screenContext) {
+        return new Frame(scissor, pageContext, screenContext);
+    }
+
     class FadeRunnable implements Runnable {
         private boolean mStarted;
         private long mRunAt;
@@ -469,8 +478,10 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         // Whether a layer was updated.
         private boolean mUpdated;
 
-        public Frame(boolean scissor) {
+        public Frame(boolean scissor, RenderContext pageContext, RenderContext screenContext) {
             mScissor = scissor;
+            mPageContext = pageContext;
+            mScreenContext = screenContext;
         }
 
         public void beginDrawing() {
@@ -479,13 +490,10 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             TextureReaper.get().reap();
             TextureGenerator.get().fill();
 
-            LayerController controller = mView.getController();
-            mScreenContext = createScreenContext();
-
             mUpdated = true;
 
+            LayerController controller = mView.getController();
             Layer rootLayer = controller.getRoot();
-            mPageContext = createPageContext();
 
             if (!mPageContext.fuzzyEquals(mLastPageContext)) {
                 // the viewport or page changed, so show the scrollbars again
@@ -558,7 +566,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         }
 
         // Draws the layer the client added to us.
-        public void drawRootLayer() {
+        void drawRootLayer() {
             Layer rootLayer = mView.getController().getRoot();
             if (rootLayer != null)
                 rootLayer.draw(mPageContext);
