@@ -115,7 +115,6 @@ public:
   nsresult GetPluginAPIVersion(PRUint16* version);
   nsresult InvalidateRect(NPRect *invalidRect);
   nsresult InvalidateRegion(NPRegion invalidRegion);
-  nsresult ForceRedraw();
   nsresult GetMIMEType(const char* *result);
   nsresult GetJSContext(JSContext* *outContext);
   nsresult GetOwner(nsIPluginInstanceOwner **aOwner);
