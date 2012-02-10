@@ -78,11 +78,13 @@ class WorkerRunnable : public nsIRunnable
 public:
   enum Target { ParentThread, WorkerThread };
   enum BusyBehavior { ModifyBusyCount, UnchangedBusyCount };
+  enum ClearingBehavior { SkipWhenClearing, RunWhenClearing };
 
 protected:
   WorkerPrivate* mWorkerPrivate;
   Target mTarget;
-  bool mBusyBehavior;
+  BusyBehavior mBusyBehavior;
+  ClearingBehavior mClearingBehavior;
 
 public:
   NS_DECL_ISUPPORTS
@@ -93,14 +95,21 @@ public:
   static bool
   DispatchToMainThread(nsIRunnable*);
 
+  bool
+  WantsToRunDuringClear()
+  {
+    return mClearingBehavior == RunWhenClearing;
+  }
+
 protected:
   WorkerRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget,
-                 BusyBehavior aBusyBehavior)
+                 BusyBehavior aBusyBehavior,
+                 ClearingBehavior aClearingBehavior)
 #ifdef DEBUG
   ;
 #else
   : mWorkerPrivate(aWorkerPrivate), mTarget(aTarget),
-    mBusyBehavior(aBusyBehavior)
+    mBusyBehavior(aBusyBehavior), mClearingBehavior(aClearingBehavior)
   { }
 #endif
 
@@ -137,8 +146,10 @@ protected:
   friend class WorkerPrivate;
 
   WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate, PRUint32 aSyncQueueKey,
-                     bool aBypassSyncQueue = false)
-  : WorkerRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
+                     bool aBypassSyncQueue = false,
+                     ClearingBehavior aClearingBehavior = SkipWhenClearing)
+  : WorkerRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount,
+                   SkipWhenClearing),
     mSyncQueueKey(aSyncQueueKey), mBypassSyncQueue(aBypassSyncQueue)
   { }
 
@@ -154,7 +165,7 @@ class WorkerControlRunnable : public WorkerRunnable
 protected:
   WorkerControlRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget,
                         BusyBehavior aBusyBehavior)
-  : WorkerRunnable(aWorkerPrivate, aTarget, aBusyBehavior)
+  : WorkerRunnable(aWorkerPrivate, aTarget, aBusyBehavior, SkipWhenClearing)
   { }
 
   virtual ~WorkerControlRunnable()
@@ -496,13 +507,13 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   struct TimeoutInfo;
 
-  typedef Queue<nsIRunnable*, 50> EventQueue;
+  typedef Queue<WorkerRunnable*, 50> EventQueue;
   EventQueue mQueue;
   EventQueue mControlQueue;
 
   struct SyncQueue
   {
-    Queue<nsIRunnable*, 10> mQueue;
+    Queue<WorkerRunnable*, 10> mQueue;
     bool mComplete;
     bool mResult;
 
@@ -512,7 +523,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
     ~SyncQueue()
     {
-      nsIRunnable* event;
+      WorkerRunnable* event;
       while (mQueue.Pop(event)) {
         event->Release();
       }
@@ -775,8 +786,8 @@ private:
     mStatus = Dead;
     mJSContext = nsnull;
 
-    ClearQueue(&mQueue);
     ClearQueue(&mControlQueue);
+    ClearQueue(&mQueue);
   }
 
   bool

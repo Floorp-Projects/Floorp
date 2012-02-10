@@ -46,8 +46,7 @@ html|applet:not([height]), html|applet[height=""] {
 :-moz-handler-disabled .msgDisabled,
 :-moz-handler-disabled .msgManagePlugins,
 :-moz-handler-blocked .msgBlocked,
-:-moz-handler-crashed .msgCrashed,
-:-moz-handler-crashed .msgReload {
+:-moz-handler-crashed .msgCrashed {
   display: block;
 }
 
@@ -56,12 +55,18 @@ html|applet:not([height]), html|applet[height=""] {
 }
 
 .submitStatus[status="noReport"]   .msgNoCrashReport,
+.submitStatus[status="please"]     .msgPleaseSubmit,
 .submitStatus[status="noSubmit"]   .msgNotSubmitted,
 .submitStatus[status="submitting"] .msgSubmitting,
 .submitStatus[status="success"]    .msgSubmitted,
 .submitStatus[status="failed"]     .msgSubmitFailed,
-.submitStatus[status="please"]     .msgSubmitPlease {
+.submitStatus[status]:not([status="please"]) .msgReload {
   display: block;
+}
+.submitStatus[status="please"] .msgReload {
+  /* Take up space when invisible, so stuff doesn't shift upon reveal. */
+  display: block;
+  visibility: hidden;
 }
 
 .helpIcon {

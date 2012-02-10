@@ -92,9 +92,9 @@ NS_IMETHODIMP_(nsrefcnt) HttpChannelChild::Release()
 
   // Normally we Send_delete in OnStopRequest, but when we need to retain the
   // remote channel for security info IPDL itself holds 1 reference, so we
-  // Send_delete when refCnt==1.
-  if (mKeptAlive && mRefCnt == 1) {
-    NS_ASSERTION(mIPCOpen, "mIPCOpen false!");
+  // Send_delete when refCnt==1.  But if !mIPCOpen, then there's nobody to send
+  // to, so we fall through.
+  if (mKeptAlive && mRefCnt == 1 && mIPCOpen) {
     mKeptAlive = false;
     // Send_delete calls NeckoChild::DeallocPHttpChannel, which will release
     // again to refcount==0

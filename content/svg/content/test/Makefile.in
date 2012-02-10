@@ -90,6 +90,7 @@ _TEST_FILES = \
 		test_SVGMatrix.xhtml \
 		test_SVGPathSegList.xhtml \
 		test_SVGStyleElement.xhtml \
+		test_SVGStringList.xhtml \
 		test_SVGTransformList.xhtml \
 		test_SVGTransformListAddition.xhtml \
 		test_SVGxxxList.xhtml \

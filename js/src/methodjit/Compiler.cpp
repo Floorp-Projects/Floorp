@@ -4507,8 +4507,8 @@ mjit::Compiler::callArrayBuiltin(uint32_t argc, bool callingNew)
     if (!js_GetClassObject(cx, globalObj, JSProto_Array, &arrayObj))
         return Compile_Error;
 
-    JSObject *arrayProto;
-    if (!js_GetClassPrototype(cx, globalObj, JSProto_Array, &arrayProto))
+    JSObject *arrayProto = globalObj->global().getOrCreateArrayPrototype(cx);
+    if (!arrayProto)
         return Compile_Error;
 
     if (argc > 1)

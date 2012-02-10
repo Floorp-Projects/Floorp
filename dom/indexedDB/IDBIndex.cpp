@@ -526,7 +526,7 @@ IDBIndex::GetAll(const jsval& aKey,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aOptionalArgCount < 2) {
+  if (aOptionalArgCount < 2 || aLimit == 0) {
     aLimit = PR_UINT32_MAX;
   }
 
@@ -565,7 +565,7 @@ IDBIndex::GetAllKeys(const jsval& aKey,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aOptionalArgCount < 2) {
+  if (aOptionalArgCount < 2 || aLimit == 0) {
     aLimit = PR_UINT32_MAX;
   }
 

@@ -2094,11 +2094,11 @@ types::ArrayPrototypeHasIndexedProperty(JSContext *cx, JSScript *script)
     if (!cx->typeInferenceEnabled() || !script->hasGlobal())
         return true;
 
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto, NULL))
+    JSObject *proto = script->global()->getOrCreateArrayPrototype(cx);
+    if (!proto)
         return true;
 
-    while (proto) {
+    do {
         TypeObject *type = proto->getType(cx);
         if (type->unknownProperties())
             return true;
@@ -2106,7 +2106,7 @@ types::ArrayPrototypeHasIndexedProperty(JSContext *cx, JSScript *script)
         if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
             return true;
         proto = proto->getProto();
-    }
+    } while (proto);
 
     return false;
 }
@@ -3822,7 +3822,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_LAMBDA:
       case JSOP_LAMBDA_FC:
       case JSOP_DEFFUN:
-      case JSOP_DEFFUN_FC:
       case JSOP_DEFLOCALFUN:
       case JSOP_DEFLOCALFUN_FC: {
         unsigned off = (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) ? SLOTNO_LEN : 0;

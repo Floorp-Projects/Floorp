@@ -7291,15 +7291,17 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
     }
   }
 
-  // If a plugin is not visibile, especially if it is in a background tab,
+  // If a plugin is not visible, especially if it is in a background tab,
   // it should not be able to steal keyboard focus.  This code checks whether
   // the region that the plugin is being clipped to is NULLREGION.  If it is,
   // the plugin window gets disabled.
   if(mWindowType == eWindowType_plugin) {
     if(NULLREGION == ::CombineRgn(dest, dest, dest, RGN_OR)) {
+      ::ShowWindow(mWnd, SW_HIDE);
       ::EnableWindow(mWnd, FALSE);
     } else {
       ::EnableWindow(mWnd, TRUE);
+      ::ShowWindow(mWnd, SW_SHOW);
     }
   }
   if (!::SetWindowRgn(mWnd, dest, TRUE)) {

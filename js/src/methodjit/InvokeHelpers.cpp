@@ -249,8 +249,7 @@ stubs::FixupArity(VMFrame &f, uint32_t nactual)
     /*
      * Grossssss! *move* the stack frame. If this ends up being perf-critical,
      * we can figure out how to spot-optimize it. Be careful to touch only the
-     * members that have been initialized by initJitFrameCallerHalf and the
-     * early prologue.
+     * members that have been initialized by the caller and early prologue.
      */
     InitialFrameFlags initial = oldfp->initialFlags();
     JSFunction *fun           = oldfp->fun();
