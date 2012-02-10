@@ -202,8 +202,8 @@ public:
   }
 
 private:
-  nsCheapStringSet mValues;
-  nsCheapInt32Set mIndices;
+  nsCheapSet<nsStringHashKey> mValues;
+  nsCheapSet<nsUint32HashKey> mIndices;
 };
 
 class NS_STACK_CLASS nsSafeOptionListMutation
