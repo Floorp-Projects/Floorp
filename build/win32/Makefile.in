@@ -44,17 +44,17 @@ include $(DEPTH)/config/autoconf.mk
 
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 
-ifdef ENABLE_TESTS
-
 ifdef _MSC_VER
 ifneq ($(OS_TEST),x86_64)
-DIRS += vmwarerecordinghelper
+TEST_DIRS += vmwarerecordinghelper
 endif
 endif
 
-DIRS += \
+TEST_DIRS += \
   crashinjectdll \
   $(NULL)
+
+ifdef ENABLE_TESTS
 
 PROGRAM = crashinject$(BIN_SUFFIX)
 USE_STATIC_LIBS = 1
