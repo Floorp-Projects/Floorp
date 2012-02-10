@@ -38,158 +38,135 @@
 #ifndef __nsCheapSets_h__
 #define __nsCheapSets_h__
 
-#include "nsHashSets.h"
+#include "nsTHashtable.h"
 #include "mozilla/StdInt.h"
 
 /**
- * A string set that takes up minimal size when there are 0 or 1 strings in the
- * set.  Use for cases where sizes of 0 and 1 are even slightly common.
+ * A set that takes up minimal size when there are 0 or 1 entries in the set.
+ * Use for cases where sizes of 0 and 1 are even slightly common.
  */
-class nsCheapStringSet {
+template<typename EntryType>
+class nsCheapSet
+{
 public:
-  nsCheapStringSet() : mValOrHash(nsnull)
+  typedef typename EntryType::KeyType KeyType;
+
+  nsCheapSet() : mState(ZERO)
   {
   }
-  ~nsCheapStringSet();
-
-  /**
-   * Put a string into the set
-   * @param aVal the value to put in
-   */
-  nsresult Put(const nsAString& aVal);
-
-  /**
-   * Remove a string from the set
-   * @param aVal the string to remove
-   */
-  void Remove(const nsAString& aVal);
-
-  /**
-   * Check if the set contains a particular string
-   * @param aVal the string to check for
-   * @return whether the string is in the set
-   */
-  bool Contains(const nsAString& aVal)
+  ~nsCheapSet()
   {
-    nsStringHashSet* set = GetHash();
-    // Check the value from the hash if the hash is there
-    if (set) {
-      return set->Contains(aVal);
+    switch (mState) {
+    case ZERO:
+      break;
+    case ONE:
+      GetSingleEntry()->~EntryType();
+      break;
+    case MANY:
+      delete mUnion.table;
+      break;
+    default:
+      NS_NOTREACHED("bogus state");
+      break;
     }
+  }
 
-    // Check whether the value is equal to the string if the string is there
-    nsAString* str = GetStr();
-    return str && str->Equals(aVal);
+  nsresult Put(const KeyType aVal);
+
+  void Remove(const KeyType aVal);
+
+  bool Contains(const KeyType aVal)
+  {
+    switch (mState) {
+    case ZERO:
+      return false;
+    case ONE:
+      return GetSingleEntry()->KeyEquals(EntryType::KeyToPointer(aVal));
+    case MANY:
+      return !!mUnion.table->GetEntry(aVal);
+    default:
+      NS_NOTREACHED("bogus state");
+      return false;
+    }
   }
 
 private:
-  typedef PRUword PtrBits;
+  EntryType* GetSingleEntry()
+  {
+    return reinterpret_cast<EntryType*>(&mUnion.singleEntry[0]);
+  }
 
-  /** Get the hash pointer (or null if we're not a hash) */
-  nsStringHashSet* GetHash()
-  {
-    return (PtrBits(mValOrHash) & 0x1) ? nsnull : (nsStringHashSet*)mValOrHash;
-  }
-  /** Find out whether it is a string */
-  nsAString* GetStr()
-  {
-    return (PtrBits(mValOrHash) & 0x1)
-           ? (nsAString*)(PtrBits(mValOrHash) & ~0x1)
-           : nsnull;
-  }
-  /** Set the single string */
-  nsresult SetStr(const nsAString& aVal)
-  {
-    nsString* str = new nsString(aVal);
-    if (!str) {
+  enum SetState {
+    ZERO,
+    ONE,
+    MANY
+  };
+
+  union {
+    nsTHashtable<EntryType> *table;
+    char singleEntry[sizeof(EntryType)];
+  } mUnion;
+  enum SetState mState;
+};
+
+template<typename EntryType>
+nsresult
+nsCheapSet<EntryType>::Put(const KeyType aVal)
+{
+  switch (mState) {
+  case ZERO:
+    new (GetSingleEntry()) EntryType(EntryType::KeyToPointer(aVal));
+    mState = ONE;
+    return NS_OK;
+  case ONE:
+    {
+      nsTHashtable<EntryType> *table = new nsTHashtable<EntryType>();
+      if (!table) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      if (!table->Init()) {
+        return NS_ERROR_FAILURE;
+      }
+      EntryType *entry = GetSingleEntry();
+      if (!table->PutEntry(entry->GetKey())) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      entry->~EntryType();
+      mUnion.table = table;
+      mState = MANY;
+    }
+    // Fall through.
+  case MANY:
+    if (!mUnion.table->PutEntry(aVal)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mValOrHash = (nsAString*)(PtrBits(str) | 0x1);
+    return NS_OK;
+  default:
+    NS_NOTREACHED("bogus state");
     return NS_OK;
   }
-  /** Initialize the hash */
-  nsresult InitHash(nsStringHashSet** aSet);
+}
 
-private:
-  /** A hash or string ptr, depending on the lower bit (0=hash, 1=string) */
-  void* mValOrHash;
-};
-
-
-/**
- * An integer set that takes up only 4 bytes when there are 0 or 1 integers
- * in the set.  Use for cases where sizes of 0 and 1 are even slightly common.
- */
-class nsCheapInt32Set {
-public:
-  nsCheapInt32Set() : mValOrHash(nsnull)
-  {
-  }
-  ~nsCheapInt32Set();
-
-  /**
-   * Put an int into the set
-   */
-  nsresult Put(PRInt32 aVal);
- 
-  /**
-   * Remove a int from the set
-   * @param aVal the int to remove
-   */
-  void Remove(PRInt32 aVal);
-
-  /**
-   * Check if the set contains a particular int
-   * @param aVal the int to check for
-   * @return whether the int is in the set
-   */
-  bool Contains(PRInt32 aVal)
-  {
-    nsInt32HashSet* set = GetHash();
-    if (set) {
-      return set->Contains(aVal);
+template<typename EntryType>
+void
+nsCheapSet<EntryType>::Remove(const KeyType aVal)
+{
+  switch (mState) {
+  case ZERO:
+    break;
+  case ONE:
+    if (Contains(aVal)) {
+      GetSingleEntry()->~EntryType();
+      mState = ZERO;
     }
-    if (IsInt()) {
-      return GetInt() == aVal;
-    }
-    return false;
+    break;
+  case MANY:
+    mUnion.table->RemoveEntry(aVal);
+    break;
+  default:
+    NS_NOTREACHED("bogus state");
+    break;
   }
-
-private:
-  typedef PRUword PtrBits;
-
-  /** Get the hash pointer (or null if we're not a hash) */
-  nsInt32HashSet* GetHash()
-  {
-    return PtrBits(mValOrHash) & 0x1 ? nsnull : (nsInt32HashSet*)mValOrHash;
-  }
-  /** Find out whether it is an integer */
-  bool IsInt()
-  {
-    return !!(PtrBits(mValOrHash) & 0x1);
-  }
-  /** Get the single integer */
-  PRInt32 GetInt()
-  {
-    return PtrBits(mValOrHash) >> 1;
-  }
-  /** Set the single integer */
-  void SetInt(PRInt32 aInt)
-  {
-    mValOrHash = (void*)(intptr_t)((aInt << 1) | 0x1);
-  }
-  /** Create the hash and initialize */
-  nsresult InitHash(nsInt32HashSet** aSet);
-
-private:
-  /** A hash or int, depending on the lower bit (0=hash, 1=int) */
-  void* mValOrHash;
-};
-
-
-/**
- * XXX We may want an nsCheapVoidSet and nsCheapCStringSet at some point
- */
-
+}
 
 #endif
