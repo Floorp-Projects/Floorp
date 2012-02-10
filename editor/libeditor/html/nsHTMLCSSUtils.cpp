@@ -1315,20 +1315,27 @@ nsHTMLCSSUtils::GetElementContainerOrSelf(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, nsnull);
+  nsCOMPtr<nsIDOMElement> element =
+    do_QueryInterface(GetElementContainerOrSelf(node));
+  return element.forget();
+}
 
-  if (nsIDOMNode::DOCUMENT_NODE == node->NodeType()) {
+dom::Element*
+nsHTMLCSSUtils::GetElementContainerOrSelf(nsINode* aNode)
+{
+  MOZ_ASSERT(aNode);
+  if (nsIDOMNode::DOCUMENT_NODE == aNode->NodeType()) {
     return nsnull;
   }
 
+  nsINode* node = aNode;
   // Loop until we find an element.
   while (node && !node->IsElement()) {
     node = node->GetNodeParent();
   }
 
   NS_ENSURE_TRUE(node, nsnull);
-
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-  return element.forget();
+  return node->AsElement();
 }
 
 nsresult
