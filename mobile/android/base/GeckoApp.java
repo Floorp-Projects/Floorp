@@ -622,8 +622,8 @@ abstract public class GeckoApp
                 message.put("source", source);
 
                 JSONObject destination = new JSONObject();
-                destination.put("width", dw);
-                destination.put("height", dh);
+                source.put("width", dw);
+                source.put("height", dh);
                 message.put("destination", destination);
 
                 String json = message.toString();
@@ -635,14 +635,8 @@ abstract public class GeckoApp
     }
     
     void processThumbnail(Tab thumbnailTab, Bitmap bitmap, byte[] compressed) {
-        if (Tabs.getInstance().isSelectedTab(thumbnailTab)) {
-            if (compressed == null) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-                compressed = bos.toByteArray();
-            }
+        if (Tabs.getInstance().isSelectedTab(thumbnailTab))
             mLastScreen = compressed;
-        }
         if (thumbnailTab.getURL().equals("about:home")) {
             thumbnailTab.updateThumbnail(null);
             return;
