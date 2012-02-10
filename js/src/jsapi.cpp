@@ -4835,7 +4835,8 @@ JS_OPTIONS_TO_TCFLAGS(JSContext *cx)
 }
 
 static JSScript *
-CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *principals,
+CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
+                                   JSPrincipals *principals, JSPrincipals *originPrincipals,
                                    const jschar *chars, size_t length,
                                    const char *filename, uintN lineno, JSVersion version)
 {
@@ -4846,7 +4847,7 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj, JSPrincipals *p
     AutoLastFrameCheck lfc(cx);
 
     uint32_t tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_SCRIPT_GLOBAL;
-    return frontend::CompileScript(cx, obj, NULL, principals, NULL, tcflags,
+    return frontend::CompileScript(cx, obj, NULL, principals, originPrincipals, tcflags,
                                    chars, length, filename, lineno, version);
 }
 
@@ -4858,8 +4859,21 @@ JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                        JSVersion version)
 {
     AutoVersionAPI avi(cx, version);
-    return CompileUCScriptForPrincipalsCommon(cx, obj, principals, chars, length, filename, lineno,
-                                              avi.version());
+    return CompileUCScriptForPrincipalsCommon(cx, obj, principals, NULL, chars, length,
+                                              filename, lineno, avi.version());
+}
+
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
+                                             JSPrincipals *principals,
+                                             JSPrincipals *originPrincipals,
+                                             const jschar *chars, size_t length,
+                                             const char *filename, uintN lineno,
+                                             JSVersion version)
+{
+    AutoVersionAPI avi(cx, version);
+    return CompileUCScriptForPrincipalsCommon(cx, obj, principals, originPrincipals,
+                                              chars, length, filename, lineno, avi.version());
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -4867,8 +4881,8 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj, JSPrincipals *prin
                                 const jschar *chars, size_t length,
                                 const char *filename, uintN lineno)
 {
-    return CompileUCScriptForPrincipalsCommon(cx, obj, principals, chars, length, filename, lineno,
-                                              cx->findVersion());
+    return CompileUCScriptForPrincipalsCommon(cx, obj, principals, NULL, chars, length,
+                                              filename, lineno, cx->findVersion());
 }
 
 JS_PUBLIC_API(JSScript *)

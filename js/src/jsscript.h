@@ -672,7 +672,7 @@ struct JSScript : public js::gc::Cell {
     }
 
     /*
-     * computedSizeOfData() is the in-use size of all the data sections. 
+     * computedSizeOfData() is the in-use size of all the data sections.
      * sizeOfData() is the size of the block allocated to hold all the data sections
      * (which can be larger than the in-use size).
      */
@@ -829,6 +829,11 @@ struct JSScript : public js::gc::Cell {
     static inline void writeBarrierPost(JSScript *script, void *addr);
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
+
+    static JSPrincipals *normalizeOriginPrincipals(JSPrincipals *principals,
+                                                   JSPrincipals *originPrincipals) {
+        return originPrincipals ? originPrincipals : principals;
+    }
 };
 
 /* If this fails, padding_ can be removed. */
@@ -932,7 +937,7 @@ extern JSScript *
 CloneScript(JSContext *cx, JSScript *script);
 
 /*
- * NB: after a successful JSXDR_DECODE, js_XDRScript callers must do any
+ * NB: after a successful JSXDR_DECODE, XDRScript callers must do any
  * required subsequent set-up of owning function or script object and then call
  * js_CallNewScriptHook.
  */
