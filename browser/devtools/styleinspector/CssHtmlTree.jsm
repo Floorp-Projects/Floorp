@@ -974,4 +974,24 @@ SelectorView.prototype = {
 
     return result;
   },
+
+  /**
+   * When a css link is clicked this method is called in order to either:
+   *   1. Open the link in view source (for element style attributes).
+   *   2. Open the link in the style editor.
+   *
+   * @param aEvent The click event
+   */
+  openStyleEditor: function(aEvent)
+  {
+    if (this.selectorInfo.selector._cssRule._cssSheet) {
+      let styleSheet = this.selectorInfo.selector._cssRule._cssSheet.domSheet;
+      let line = this.selectorInfo.ruleLine;
+
+      this.tree.win.StyleEditor.openChrome(styleSheet, line);
+    } else {
+      let href = this.selectorInfo.sourceElement.ownerDocument.location.href;
+      this.tree.win.openUILinkIn("view-source:" + href, "window");
+    }
+  },
 };

@@ -270,9 +270,11 @@ StyleEditorChrome.prototype = {
       aArgs.unshift(this);
     }
 
-    // trigger all listeners that have this named handler
-    for (let i = 0; i < this._listeners.length; ++i) {
-      let listener = this._listeners[i];
+    // copy the list of listeners to allow adding/removing listeners in handlers
+    let listeners = this._listeners.concat();
+    // trigger all listeners that have this named handler.
+    for (let i = 0; i < listeners.length; i++) {
+      let listener = listeners[i];
       let handler = listener["on" + aName];
       if (handler) {
         handler.apply(listener, aArgs);
@@ -329,10 +331,10 @@ StyleEditorChrome.prototype = {
   {
     this._resetChrome();
 
-    this._document.title = _("chromeWindowTitle",
-          this.contentDocument.title || this.contentDocument.location.href);
-
     let document = this.contentDocument;
+    this._document.title = _("chromeWindowTitle",
+      document.title || document.location.href);
+
     for (let i = 0; i < document.styleSheets.length; ++i) {
       let styleSheet = document.styleSheets[i];
 
@@ -350,6 +352,79 @@ StyleEditorChrome.prototype = {
     this._editors.forEach(function (aEditor) {
       this._window.setTimeout(aEditor.load.bind(aEditor), 0);
     }, this);
+  },
+
+  /**
+   * selects a stylesheet and optionally moves the cursor to a selected line
+   *
+   * @param {CSSStyleSheet} [aSheet]
+   *        Stylesheet that should be selected. If a stylesheet is not passed
+   *        and the editor is not initialized we focus the first stylesheet. If
+   *        a stylesheet is not passed and the editor is initialized we ignore
+   *        the call.
+   * @param {Number} [aLine]
+   *        Line to which the caret should be moved (one-indexed).
+   * @param {Number} [aCol]
+   *        Column to which the caret should be moved (one-indexed).
+   */
+  selectStyleSheet: function SEC_selectSheet(aSheet, aLine, aCol)
+  {
+    let select = function DEC_select(aEditor) {
+      let summary = aSheet ? this.getSummaryElementForEditor(aEditor)
+                           : this._view.getSummaryElementByOrdinal(0);
+      let setCaret = false;
+
+      if (aLine || aCol) {
+        aLine = aLine || 1;
+        aCol = aCol || 1;
+        setCaret = true;
+      }
+      if (!aEditor.sourceEditor) {
+        // If a line or column was specified we move the caret appropriately.
+        if (setCaret) {
+          aEditor.addActionListener({
+            onAttach: function SEC_selectSheet_onAttach()
+            {
+              aEditor.removeActionListener(this);
+              aEditor.sourceEditor.setCaretPosition(aLine - 1, aCol - 1);
+            }
+          });
+        }
+        this._view.activeSummary = summary;
+      } else {
+        this._view.activeSummary = summary;
+
+        // If a line or column was specified we move the caret appropriately.
+        if (setCaret) {
+          aEditor.sourceEditor.setCaretPosition(aLine - 1, aCol - 1);
+        }
+      }
+    }.bind(this);
+
+    if (!this.editors.length) {
+      // We are in the main initialization phase so we wait for the editor
+      // containing the target stylesheet to be added and select the target
+      // stylesheet, optionally moving the cursor to a selected line.
+      this.addChromeListener({
+        onEditorAdded: function SEC_selectSheet_onEditorAdded(aChrome, aEditor) {
+          if ((!aSheet && aEditor.styleSheetIndex == 0) ||
+              aEditor.styleSheet == aSheet) {
+            aChrome.removeChromeListener(this);
+            select(aEditor);
+          }
+        }
+      });
+    } else if (aSheet) {
+      // We are already initialized and a stylesheet has been specified. Here
+      // we iterate through the editors and select the one containing the target
+      // stylesheet, optionally moving the cursor to a selected line.
+      for each (let editor in this.editors) {
+        if (editor.styleSheet == aSheet) {
+          select(editor);
+          break;
+        }
+      }
+    }
   },
 
   /**
@@ -455,9 +530,8 @@ StyleEditorChrome.prototype = {
           }
         }, false);
 
-        // autofocus the first or new stylesheet
-        if (editor.styleSheetIndex == 0 ||
-            editor.hasFlag(StyleEditorFlags.NEW)) {
+        // autofocus new stylesheets
+        if (editor.hasFlag(StyleEditorFlags.NEW)) {
           this._view.activeSummary = aSummary;
         }
 
