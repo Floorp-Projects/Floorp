@@ -530,8 +530,6 @@ PuppetWidget::DispatchPaintEvent()
       DispatchEvent(&event, status);
     } else {
       nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
-      ctx->Rectangle(gfxRect(0,0,0,0));
-      ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
                                               BasicLayerManager::BUFFER_NONE);
       DispatchEvent(&event, status);  
