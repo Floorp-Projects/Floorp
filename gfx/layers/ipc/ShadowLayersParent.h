@@ -80,8 +80,6 @@ protected:
   NS_OVERRIDE virtual bool RecvUpdate(const EditArray& cset,
                                       EditReplyArray* reply);
 
-  NS_OVERRIDE virtual bool RecvGetForwarderQuirks(mozilla::layers::LayerForwarderQuirks* aQuirks);
-
   NS_OVERRIDE virtual PLayerParent* AllocPLayer();
   NS_OVERRIDE virtual bool DeallocPLayer(PLayerParent* actor);
 

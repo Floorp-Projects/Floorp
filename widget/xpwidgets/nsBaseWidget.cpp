@@ -40,7 +40,6 @@
 
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
-#include "mozilla/layers/PLayersChild.h"
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
 #include "nsCOMPtr.h"
@@ -858,12 +857,8 @@ void nsBaseWidget::CreateCompositor()
     PLayersChild* shadowManager =
       mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL);
 
-    LayerForwarderQuirks forwarderQuirk;
-    shadowManager->SendGetForwarderQuirks(&forwarderQuirk);
-
     if (shadowManager) {
       ShadowLayerForwarder* lf = lm->AsShadowForwarder();
-      lf->SetForwarderQuirks(forwarderQuirk);
       if (!lf) {
         delete lm;
         mCompositorChild = nsnull;
