@@ -41,6 +41,14 @@
 #ifndef mozilla_layers_CompositorParent_h
 #define mozilla_layers_CompositorParent_h
 
+// Enable this pref to turn on compositor performance warning.
+// This will print warnings if the compositor isn't meeting
+// it's responsiveness objectives:
+//    1) Compose a frame within 15ms of receiving a ScheduleCompositeCall
+//    2) Unless a frame was composited within the throttle threshold in
+//       which the deadline will be 15ms + throttle threshold
+#define COMPOSITOR_PERFORMANCE_WARNING
+
 #include "mozilla/layers/PCompositorParent.h"
 #include "mozilla/layers/PLayersParent.h"
 #include "base/thread.h"
@@ -129,6 +137,9 @@ private:
   nsIWidget* mWidget;
   CancelableTask *mCurrentCompositeTask;
   TimeStamp mLastCompose;
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  TimeStamp mExpectedComposeTime;
+#endif
 
   bool mPaused;
   float mXScale;

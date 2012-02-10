@@ -149,6 +149,10 @@ bool
 ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                InfallibleTArray<EditReply>* reply)
 {
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  TimeStamp updateStart = TimeStamp::Now();
+#endif
+
   MOZ_LAYERS_LOG(("[ParentSide] received txn with %d edits", cset.Length()));
 
   if (mDestroyed || layer_manager()->IsDestroyed()) {
@@ -384,6 +388,11 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
 
   mShadowLayersManager->ShadowLayersUpdated();
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  printf_stderr("Compositor: Layers update took %i ms (blocking gecko).\n",
+                (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds());
+#endif
 
   return true;
 }

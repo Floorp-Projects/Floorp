@@ -140,9 +140,16 @@ CompositorParent::ScheduleComposition()
   if (!initialComposition)
     delta = mozilla::TimeStamp::Now() - mLastCompose;
 
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15);
+#endif
+
   printf_stderr("Schedule composition\n");
   mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
   if (!initialComposition && delta.ToMilliseconds() < 15) {
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+    mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15 - delta.ToMilliseconds());
+#endif
     MessageLoop::current()->PostDelayedTask(FROM_HERE, mCurrentCompositeTask, 15 - delta.ToMilliseconds());
   } else {
     MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
@@ -161,6 +168,8 @@ void
 CompositorParent::Composite()
 {
   mCurrentCompositeTask = NULL;
+
+  mLastCompose = mozilla::TimeStamp::Now();
 
   if (mPaused || !mLayerManager) {
     return;
@@ -188,7 +197,13 @@ CompositorParent::Composite()
 #endif
 
   mLayerManager->EndEmptyTransaction();
-  mLastCompose = mozilla::TimeStamp::Now();
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  if (mExpectedComposeTime + TimeDuration::FromMilliseconds(15) < mozilla::TimeStamp::Now()) {
+    printf_stderr("Compositor: Compose frame took %i time then expected.\n",
+                  (int)(mozilla::TimeStamp::Now() - mExpectedComposeTime).ToMilliseconds());
+  }
+#endif
 }
 
 #ifdef MOZ_WIDGET_ANDROID
