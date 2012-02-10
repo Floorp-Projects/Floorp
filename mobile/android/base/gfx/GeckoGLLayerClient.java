@@ -44,12 +44,16 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.Log;
 import android.view.View;
 
 public class GeckoGLLayerClient extends GeckoLayerClient
                                 implements FlexibleGLSurfaceView.Listener, VirtualLayer.Listener {
     private static final String LOGTAG = "GeckoGLLayerClient";
+
+    private LayerRenderer mLayerRenderer;
+    private boolean mLayerRendererInitialized;
 
     public GeckoGLLayerClient(Context context) {
         super(context);
@@ -95,7 +99,10 @@ public class GeckoGLLayerClient extends GeckoLayerClient
     public void setLayerController(LayerController layerController) {
         super.setLayerController(layerController);
 
-        ((FlexibleGLSurfaceView)layerController.getView()).setListener(this);
+        LayerView view = layerController.getView();
+        view.setListener(this);
+
+        mLayerRenderer = new LayerRenderer(view);
     }
 
     @Override
@@ -210,6 +217,26 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         layerController.setViewportSize(new FloatSize(width, height));
         compositionResumeRequested();
         renderRequested();
+    }
+
+    /** For Gecko to use. */
+    public LayerRenderer.Frame createFrame(float offsetX, float offsetY, float zoomFactor) {
+        // Create the shaders and textures if necessary.
+        if (!mLayerRendererInitialized) {
+            mLayerRenderer.onSurfaceCreated(null, null);
+        }
+
+        // FIXME: This geometry is surely wrong.
+        ViewportMetrics metrics = getLayerController().getViewportMetrics();
+        FloatSize pageSize = metrics.getPageSize(), screenSize = metrics.getSize();
+        RectF viewport = new RectF(offsetX, offsetY, offsetX + screenSize.width,
+                                   offsetY + screenSize.height);
+
+        // Build the contexts and create the frame.
+        Layer.RenderContext pageContext = mLayerRenderer.createContext(viewport, pageSize,
+                                                                       zoomFactor);
+        Layer.RenderContext screenContext = mLayerRenderer.createScreenContext();
+        return mLayerRenderer.createFrame(false, pageContext, screenContext);
     }
 }
 
