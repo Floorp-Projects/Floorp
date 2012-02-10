@@ -447,6 +447,7 @@ protected:
   // Return TRUE if aElement is a table-related elemet and caret was set
   bool SetCaretInTableCell(nsIDOMElement* aElement);
   bool IsNodeInActiveEditor(nsIDOMNode* aNode);
+  bool IsNodeInActiveEditor(nsINode* aNode);
 
   // key event helpers
   NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);

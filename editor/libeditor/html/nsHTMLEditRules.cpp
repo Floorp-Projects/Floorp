@@ -8935,10 +8935,10 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
       // editor/libeditor/html/tests/browserscope/richtext.html, which expects
       // to unapply a CSS "indent" (<div style="margin-left: 40px;">) by
       // removing the DIV container instead of just removing the CSS property.
-      nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-      if (nsHTMLEditUtils::IsDiv(aNode)
-          && (node != mHTMLEditor->GetActiveEditingHost())
-          && mHTMLEditor->IsNodeInActiveEditor(aNode)) {
+      nsCOMPtr<dom::Element> node = do_QueryInterface(aNode);
+      if (node && node->IsHTML(nsGkAtoms::div) &&
+          node != mHTMLEditor->GetActiveEditingHost() &&
+          mHTMLEditor->IsNodeInActiveEditor(node)) {
         // we deal with an editable DIV;
         // let's see if it is useless and if we can remove it
         nsCOMPtr<nsIDOMNamedNodeMap> attributeList;
