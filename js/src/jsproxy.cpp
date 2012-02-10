@@ -92,6 +92,9 @@ OperationInProgress(JSContext *cx, JSObject *proxy)
     return false;
 }
 
+static bool
+FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp);
+
 ProxyHandler::ProxyHandler(void *family) : mFamily(family)
 {
 }
@@ -1735,8 +1738,8 @@ Class js::CallableObjectClass = {
     callable_Construct,
 };
 
-JS_FRIEND_API(JSBool)
-js::FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
+static bool
+FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
 {
     if (OperationInProgress(cx, proxy)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROXY_FIX);
