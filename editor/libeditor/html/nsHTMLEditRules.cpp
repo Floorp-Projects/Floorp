@@ -861,7 +861,7 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   {
     nsCOMPtr<nsIContent> blockParentContent = do_QueryInterface(blockParent);
     if (blockParentContent && 
-        mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(blockParent, dummyProperty, &typeAttrName))
+        mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(blockParentContent, dummyProperty, &typeAttrName))
     {
       // we are in CSS mode and we know how to align this element with CSS
       nsAutoString value;
