@@ -80,7 +80,13 @@ gfxSharedImageSurface::gfxSharedImageSurface(const gfxIntSize& aSize,
 
     mSize = aSize;
     mFormat = aFormat;
-    mStride = ComputeStride(aSize, aFormat);
+
+    int w = aSize.width;
+    int h = aSize.height;
+    if ((aSize.width%MOZ_IMG_MEM_ALIGN) != 0)
+      w = aSize.width + MOZ_IMG_MEM_ALIGN - (aSize.width%MOZ_IMG_MEM_ALIGN);
+    mStride = ComputeStride(gfxIntSize(w, h), aFormat);
+
     mShmem = aShmem;
     mData = aShmem.get<unsigned char>();
     cairo_surface_t *surface =
