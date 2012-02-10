@@ -1083,7 +1083,11 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   
   CheckInvalidateSizeChange(aDesiredSize);
 
-  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
+  // XXXjwir3: This call should be replaced with FinishWithAbsoluteFrames
+  //           when bug 724978 is fixed and nsColumnSetFrame is a full absolute
+  //           container.
+  FinishAndStoreOverflow(&aDesiredSize);
+
   aDesiredSize.mCarriedOutBottomMargin = carriedOutBottomMargin;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
