@@ -293,8 +293,10 @@ LIRGeneratorARM::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 bool
 LIRGeneratorARM::lowerModI(MMod *mod)
 {
-    JS_NOT_REACHED("NYI: LModI");
-    return false;
+    LModI *lir = new LModI(useFixed(mod->lhs(), r0), use(mod->rhs(), r1),
+                           tempFixed(r2), tempFixed(r3)/*, tempFixed(lr)*/);
+
+    return defineFixed(lir, mod, LAllocation(AnyRegister(r1))) && assignSnapshot(lir);
 }
 
 bool

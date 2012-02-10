@@ -467,8 +467,9 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
 }
 
 extern "C" {
-    extern int __aeabi_idiv(int,int);
+    extern int __aeabi_idivmod(int,int);
 }
+
 bool
 CodeGeneratorARM::visitDivI(LDivI *ins)
 {
@@ -501,15 +502,47 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     masm.setupAlignedABICall(2);
     masm.setABIArg(0, lhs);
     masm.setABIArg(1, rhs);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idiv));
-    // HAXHAXHAX
-    // this routine stores its result in r0 (expected), and it *happens* to store
-    // the remainder in r3. If the remainer is non-zero, we should bail out.
-    // this is completely unsupported by the ABI (specifies return registers r0 and r1)
-    // and may change without notice in any one of a numebr of places.
-    masm.ma_cmp(r3, Imm32(0));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+    // idivmod returns the qoutient in r0, and the remainder in r1.
+    masm.ma_cmp(r1, Imm32(0));
     if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
         return false;
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitModI(LModI *ins)
+{
+    // Extract the registers from this instruction
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+    // Prevent INT_MIN / -1;
+    // The integer division will give INT_MIN, but we want -(double)INT_MIN.
+    masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
+    masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
+    if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+        return false;
+    // 0/X (with X < 0) is bad because both of these values *should* be doubles, and
+    // the result should be -0.0, which cannot be represented in integers.
+    // X/0 is bad because it will give garbage (or abort), when it should give
+    // either \infty, -\infty or NAN.
+
+    // Prevent 0 / X (with X < 0) and X / 0
+    // testing X / Y.  Compare Y with 0.
+    // There are three cases: (Y < 0), (Y == 0) and (Y > 0)
+    // If (Y < 0), then we compare X with 0, and bail if X == 0
+    // If (Y == 0), then we simply want to bail.  Since this does not set
+    // the flags necessary for LT to trigger, we don't test X, and take the
+    // bailout because the EQ flag is set.
+    // if (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take the bailout.
+    masm.ma_cmp(rhs, Imm32(0));
+    masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
+    if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+        return false;
+    masm.setupAlignedABICall(2);
+    masm.setABIArg(0, lhs);
+    masm.setABIArg(1, rhs);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
     return true;
 }
 
