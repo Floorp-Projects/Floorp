@@ -235,8 +235,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    states::READONLY,
-    eARIAMultiSelectable
+    states::READONLY
   },
   {
     "listbox",
@@ -256,9 +255,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction, // XXX: should depend on state, parent accessible
     eNoLiveAttr,
-    states::READONLY,
-    eARIASelectable,
-    eARIACheckedMixed
+    states::READONLY
   },
   {
     "log",
