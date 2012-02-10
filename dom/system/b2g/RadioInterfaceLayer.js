@@ -180,6 +180,12 @@ RadioInterfaceLayer.prototype = {
         // This one will handle its own notifications.
         this.handleEnumerateCalls(message.calls);
         break;
+      case "registrationstatechange":
+        this.currentState.registrationState = message.registrationState;
+        break;
+      case "gprsregistrationstatechange":
+        this.currentState.gprsRegistrationState = message.gprsRegistrationState;
+        break;
       case "signalstrengthchange":
         this.currentState.signalStrength = message.signalStrength;
         break;
