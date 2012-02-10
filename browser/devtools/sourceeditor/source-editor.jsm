@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Mihai Sucan <mihai.sucan@gmail.com> (original author)
+ *   Spyros Livathinos <livathinos.spyros@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -150,6 +151,16 @@ SourceEditor.EVENTS = {
    * Both ranges are objects which hold two properties: start and end.
    */
   SELECTION: "Selection",
+
+  /**
+   * The focus event is fired when the editor is focused.
+   */
+  FOCUS: "Focus",
+
+  /**
+   * The blur event is fired when the editor goes out of focus.
+   */
+  BLUR: "Blur",
 };
 
 /**
