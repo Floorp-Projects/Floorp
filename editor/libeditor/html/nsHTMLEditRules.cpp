@@ -6489,21 +6489,30 @@ nsHTMLEditRules::MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes,
 //               Also stops on the active editor host (contenteditable).
 //               Also test if aNode is an li itself.
 //                       
-nsCOMPtr<nsIDOMNode> 
-nsHTMLEditRules::IsInListItem(nsIDOMNode *aNode)
+already_AddRefed<nsIDOMNode>
+nsHTMLEditRules::IsInListItem(nsIDOMNode* aNode)
 {
-  NS_ENSURE_TRUE(aNode, nsnull);  
-  if (nsHTMLEditUtils::IsListItem(aNode)) return aNode;
-  
-  nsCOMPtr<nsIDOMNode> parent, tmp;
-  aNode->GetParentNode(getter_AddRefs(parent));
-  
-  while (parent)
-  {
-    if (!mHTMLEditor->IsNodeInActiveEditor(parent)) return nsnull;
-    if (nsHTMLEditUtils::IsTableElement(parent)) return nsnull;
-    if (nsHTMLEditUtils::IsListItem(parent)) return parent;
-    tmp=parent; tmp->GetParentNode(getter_AddRefs(parent));
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  nsCOMPtr<nsIDOMNode> retval = do_QueryInterface(IsInListItem(node));
+  return retval.forget();
+}
+
+nsINode*
+nsHTMLEditRules::IsInListItem(nsINode* aNode)
+{
+  NS_ENSURE_TRUE(aNode, nsnull);
+  if (aNode->IsElement() && nsHTMLEditUtils::IsListItem(aNode->AsElement())) {
+    return aNode;
+  }
+
+  nsINode* parent = aNode->GetNodeParent();
+  while (parent && mHTMLEditor->IsNodeInActiveEditor(parent) &&
+         !(parent->IsElement() &&
+           nsHTMLEditUtils::IsTableElement(parent->AsElement()))) {
+    if (nsHTMLEditUtils::IsListItem(parent->AsElement())) {
+      return parent;
+    }
+    parent = parent->GetNodeParent();
   }
   return nsnull;
 }
