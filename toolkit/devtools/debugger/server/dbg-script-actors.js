@@ -286,10 +286,8 @@ ThreadActor.prototype = {
     }
 
     let location = aRequest.location;
-    // TODO: deal with actualLocation being different from the provided location
     if (!this._scripts[location.url] || location.line < 0) {
-      return { from: this.actorID,
-               error: "noScript" };
+      return { error: "noScript" };
     }
     // Fetch the list of scripts in that url.
     let scripts = this._scripts[location.url];
@@ -307,19 +305,69 @@ ThreadActor.prototype = {
         break;
       }
     }
+
     if (!script) {
-      return { from: this.actorID,
-               error: "noScript" };
+      return { error: "noScript" };
     }
+
+    script = this._getInnermostContainer(script, location.line);
     let bpActor = new BreakpointActor(script, this);
     this.breakpointActorPool.addActor(bpActor);
-    var offsets = script.getLineOffsets(location.line);
-    for (var i = 0; i < offsets.length; i++) {
+
+    let offsets = script.getLineOffsets(location.line);
+    let codeFound = false;
+    for (let i = 0; i < offsets.length; i++) {
       script.setBreakpoint(offsets[i], bpActor);
+      codeFound = true;
     }
-    let packet = { from: this.actorID,
-                   actor: bpActor.actorID };
-    return packet;
+
+    let actualLocation;
+    if (offsets.length == 0) {
+      // No code at that line in any script, skipping forward.
+      let lines = script.getAllOffsets();
+      for (let line = location.line; line < lines.length; ++line) {
+        if (lines[line]) {
+          for (let i = 0; i < lines[line].length; i++) {
+            script.setBreakpoint(lines[line][i], bpActor);
+            codeFound = true;
+          }
+          actualLocation = location;
+          actualLocation.line = line;
+          break;
+        }
+      }
+    }
+    if (!codeFound) {
+      bpActor.onDelete();
+      return  { error: "noCodeAtLineColumn" };
+    }
+
+    return { actor: bpActor.actorID, actualLocation: actualLocation };
+  },
+
+  /**
+   * Get the innermost script that contains this line, by looking through child
+   * scripts of the supplied script.
+   *
+   * @param aScript Debugger.Script
+   *        The source script.
+   * @param aLine number
+   *        The line number.
+   */
+  _getInnermostContainer: function TA__getInnermostContainer(aScript, aLine) {
+    let children = aScript.getChildScripts();
+    if (children.length > 0) {
+      for (let i = 0; i < children.length; i++) {
+        let child = children[i];
+        // Stop when the first script that contains this location is found.
+        if (child.startLine <= aLine &&
+            child.startLine + child.lineCount > aLine) {
+          return this._getInnermostContainer(child, aLine);
+        }
+      }
+    }
+    // Location not found in children, this is the innermost containing script.
+    return aScript;
   },
 
   /**
@@ -686,10 +734,6 @@ ThreadActor.prototype = {
    *        The function object that the ew code is part of.
    */
   onNewScript: function TA_onNewScript(aScript, aFunction) {
-    dumpn("Got a new script:" + aScript + ", url: " + aScript.url +
-          ", startLine: " + aScript.startLine + ", lineCount: " +
-          aScript.lineCount + ", strictMode: " + aScript.strictMode +
-          ", function: " + aFunction);
     // Use a sparse array for storing the scripts for each URL in order to
     // optimize retrieval. XXX: in case this is not fast enough for very large
     // files with too many scripts, we could sort the hash of script locations
@@ -1274,4 +1318,3 @@ EnvironmentActor.prototype.requestTypes = {
   "assign": EnvironmentActor.prototype.onAssign,
   "bindings": EnvironmentActor.prototype.onBindings
 };
-
