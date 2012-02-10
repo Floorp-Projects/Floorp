@@ -543,6 +543,16 @@ nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
 }
 
 nsresult
+nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
+                                         nsAString& aValue,
+                                         nsIDOMWindow* aWindow,
+                                         PRUint8 aStyleType)
+{
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  return GetCSSInlinePropertyBase(node, aProperty, aValue, aWindow, aStyleType);
+}
+
+nsresult
 nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
                                          nsAString& aValue,
                                          nsIDOMWindow* aWindow,
