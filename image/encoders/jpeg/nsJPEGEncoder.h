@@ -78,7 +78,7 @@ protected:
 
   void ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
                           PRUint32 aPixelWidth);
-  void StripAlpha(const PRUint8* aSrc, PRUint8* aDest, PRUint32 aPixelWidth);
+  void ConvertRGBARow(const PRUint8* aSrc, PRUint8* aDest, PRUint32 aPixelWidth);
 
   static void initDestination(jpeg_compress_struct* cinfo);
   static boolean emptyOutputBuffer(jpeg_compress_struct* cinfo);
