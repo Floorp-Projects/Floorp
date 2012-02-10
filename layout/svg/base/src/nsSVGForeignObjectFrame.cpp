@@ -348,7 +348,9 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP_(nsRect)
 nsSVGForeignObjectFrame::GetCoveredRegion()
 {
-  return nsSVGUtils::TransformFrameRectToOuterSVG(mRect, GetCanvasTM(), PresContext());
+  // See bug 614732 comment 32:
+  //return nsSVGUtils::TransformFrameRectToOuterSVG(mRect, GetCanvasTM(), PresContext());
+  return mCoveredRegion;
 }
 
 NS_IMETHODIMP
@@ -369,6 +371,7 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(
                            gfxRect(0.0, 0.0, w, h),
                            PresContext()->AppUnitsPerDevPixel());
+  mCoveredRegion = ToCanvasBounds(gfxRect(0.0, 0.0, w, h), GetCanvasTM(), PresContext());
 
   return NS_OK;
 }

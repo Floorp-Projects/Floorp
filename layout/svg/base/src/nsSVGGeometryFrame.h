@@ -124,6 +124,8 @@ protected:
    */
   float MaybeOptimizeOpacity(float aFillOrStrokeOpacity);
 
+  nsRect mCoveredRegion;
+
 private:
   bool GetStrokeDashData(FallibleTArray<gfxFloat>& dashes, gfxFloat *dashOffset);
 };
