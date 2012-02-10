@@ -573,7 +573,10 @@ TelemetryPing.prototype = {
         idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
         this._isIdleObserver = false;
       }
-      this.send(aTopic == "idle" ? "idle-daily" : aTopic, server);
+      reason = (Telemetry.canSend && aTopic == "idle"
+		? "idle-daily"
+		: "test-ping");
+      this.send(reason, server);
       break;
     }
   },

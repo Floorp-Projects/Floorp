@@ -119,7 +119,7 @@ PRUint32 nsXULPrototypeDocument::gRefCnt;
 void
 nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
 {
-    nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
+    nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(obj);
 
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeThis));
 
@@ -747,7 +747,7 @@ nsXULPDGlobalObject::EnsureScriptEnvironment(PRUint32 lang_id)
 
     // Add an owning reference from JS back to us. This'll be
     // released when the JSObject is finalized.
-    ::JS_SetPrivate(cx, newGlob, this);
+    ::JS_SetPrivate(newGlob, this);
     NS_ADDREF(this);
   }
 

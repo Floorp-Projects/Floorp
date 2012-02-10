@@ -2595,7 +2595,7 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
     assert(cairo_surface_status(image_out) == CAIRO_STATUS_SUCCESS ||
 	   cairo_surface_status(image_out) == CAIRO_STATUS_NO_MEMORY);
 
-    *image_extra = softTexture.forget();
+    *image_extra = softTexture.forget().drop();
     *image_out_ret = (cairo_image_surface_t*)image_out;
 
     return cairo_surface_status(image_out);
@@ -2668,7 +2668,7 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
 										  size.width,
 										  size.height,
 										  data.RowPitch);
-    *image_extra = softTexture.forget();
+    *image_extra = softTexture.forget().drop();
 
     return CAIRO_STATUS_SUCCESS;
 }

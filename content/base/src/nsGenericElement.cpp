@@ -1375,6 +1375,103 @@ nsGenericElement::UpdateEditableState(bool aNotify)
   }
 }
 
+nsEventStates
+Element::StyleStateFromLocks() const
+{
+  nsEventStates locks = LockedStyleStates();
+  nsEventStates state = mState | locks;
+
+  if (locks.HasState(NS_EVENT_STATE_VISITED)) {
+    return state & ~NS_EVENT_STATE_UNVISITED;
+  }
+  if (locks.HasState(NS_EVENT_STATE_UNVISITED)) {
+    return state & ~NS_EVENT_STATE_VISITED;
+  }
+  return state;
+}
+
+nsEventStates
+Element::LockedStyleStates() const
+{
+  nsEventStates *locks =
+    static_cast<nsEventStates*> (GetProperty(nsGkAtoms::lockedStyleStates));
+  if (locks) {
+    return *locks;
+  }
+  return nsEventStates();
+}
+
+static void
+nsEventStatesPropertyDtor(void *aObject, nsIAtom *aProperty,
+                          void *aPropertyValue, void *aData)
+{
+  nsEventStates *states = static_cast<nsEventStates*>(aPropertyValue);
+  delete states;
+}
+
+void
+Element::NotifyStyleStateChange(nsEventStates aStates)
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    nsIPresShell *presShell = doc->GetShell();
+    if (presShell) {
+      nsAutoScriptBlocker scriptBlocker;
+      presShell->ContentStateChanged(doc, this, aStates);
+    }
+  }
+}
+
+void
+Element::LockStyleStates(nsEventStates aStates)
+{
+  nsEventStates *locks = new nsEventStates(LockedStyleStates());
+
+  *locks |= aStates;
+
+  if (aStates.HasState(NS_EVENT_STATE_VISITED)) {
+    *locks &= ~NS_EVENT_STATE_UNVISITED;
+  }
+  if (aStates.HasState(NS_EVENT_STATE_UNVISITED)) {
+    *locks &= ~NS_EVENT_STATE_VISITED;
+  }
+
+  SetProperty(nsGkAtoms::lockedStyleStates, locks, nsEventStatesPropertyDtor);
+  SetHasLockedStyleStates();
+
+  NotifyStyleStateChange(aStates);
+}
+
+void
+Element::UnlockStyleStates(nsEventStates aStates)
+{
+  nsEventStates *locks = new nsEventStates(LockedStyleStates());
+
+  *locks &= ~aStates;
+
+  if (locks->IsEmpty()) {
+    DeleteProperty(nsGkAtoms::lockedStyleStates);
+    ClearHasLockedStyleStates();
+    delete locks;
+  }
+  else {
+    SetProperty(nsGkAtoms::lockedStyleStates, locks, nsEventStatesPropertyDtor);
+  }
+
+  NotifyStyleStateChange(aStates);
+}
+
+void
+Element::ClearStyleStateLocks()
+{
+  nsEventStates locks = LockedStyleStates();
+
+  DeleteProperty(nsGkAtoms::lockedStyleStates);
+  ClearHasLockedStyleStates();
+
+  NotifyStyleStateChange(locks);
+}
+
 nsIContent*
 nsIContent::FindFirstNonNativeAnonymous() const
 {
@@ -4318,8 +4415,8 @@ nsGenericElement::MarkUserDataHandler(void* aObject, nsIAtom* aKey,
   xpc_UnmarkGrayObject(wjs);
 }
 
-static void
-MarkNodeChildren(nsINode* aNode)
+void
+nsGenericElement::MarkNodeChildren(nsINode* aNode)
 {
   JSObject* o = GetJSObjectChild(aNode);
   xpc_UnmarkGrayObject(o);
@@ -4519,6 +4616,17 @@ ShouldClearPurple(nsIContent* aContent)
   return aContent->HasProperties();
 }
 
+// If aNode is not optimizable, but is an element
+// with a frame in a document which has currently active presshell,
+// we can act as if it was optimizable. When the primary frame dies, aNode
+// will end up to the purple buffer because of the refcount change.
+bool
+NodeHasActiveFrame(nsIDocument* aCurrentDoc, nsINode* aNode)
+{
+  return aCurrentDoc->GetShell() && aNode->IsElement() &&
+         aNode->AsElement()->GetPrimaryFrame();
+}
+
 // CanSkip checks if aNode is black, and if it is, returns
 // true. If aNode is in a black DOM tree, CanSkip may also remove other objects
 // from purple buffer and unmark event listeners and user data.
@@ -4533,17 +4641,16 @@ nsGenericElement::CanSkip(nsINode* aNode)
     return false;
   }
 
-  // Bail out early if aNode is somewhere in anonymous content,
-  // or otherwise unusual.
-  if (UnoptimizableCCNode(aNode)) {
-    return false;
-  }
-
+  bool unoptimizable = UnoptimizableCCNode(aNode);
   nsIDocument* currentDoc = aNode->GetCurrentDoc();
   if (currentDoc &&
-      nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration())) {
+      nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration()) &&
+      (!unoptimizable || NodeHasActiveFrame(currentDoc, aNode))) {
     MarkNodeChildren(aNode);
     return true;
+  }
+  if (unoptimizable) {
+    return false;
   }
 
   nsINode* root = currentDoc ? static_cast<nsINode*>(currentDoc) :

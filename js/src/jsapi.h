@@ -2728,6 +2728,13 @@ extern JS_PUBLIC_API(JSBool)
 JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
 
+/*
+ * Returns the original value of |Object.prototype| from the global object in
+ * which |forObj| was created.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_GetObjectPrototype(JSContext *cx, JSObject *forObj);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
@@ -2773,8 +2780,8 @@ typedef struct JSCTypesCallbacks JSCTypesCallbacks;
  * may safely be altered after calling this function and without having
  * to call this function again.
  */
-extern JS_PUBLIC_API(JSBool)
-JS_SetCTypesCallbacks(JSContext *cx, JSObject *ctypesObj, JSCTypesCallbacks *callbacks);
+extern JS_PUBLIC_API(void)
+JS_SetCTypesCallbacks(JSObject *ctypesObj, JSCTypesCallbacks *callbacks);
 #endif
 
 typedef JSBool
@@ -3620,23 +3627,23 @@ extern JS_PUBLIC_API(JSBool)
 JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 extern JS_PUBLIC_API(void *)
-JS_GetPrivate(JSContext *cx, JSObject *obj);
+JS_GetPrivate(JSObject *obj);
 
-extern JS_PUBLIC_API(JSBool)
-JS_SetPrivate(JSContext *cx, JSObject *obj, void *data);
+extern JS_PUBLIC_API(void)
+JS_SetPrivate(JSObject *obj, void *data);
 
 extern JS_PUBLIC_API(void *)
 JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
                       jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_GetPrototype(JSContext *cx, JSObject *obj);
+JS_GetPrototype(JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_GetParent(JSContext *cx, JSObject *obj);
+JS_GetParent(JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent);
@@ -4025,11 +4032,11 @@ extern JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp);
 
-extern JS_PUBLIC_API(JSBool)
-JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp);
+extern JS_PUBLIC_API(jsval)
+JS_GetReservedSlot(JSObject *obj, uint32_t index);
 
-extern JS_PUBLIC_API(JSBool)
-JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval v);
+extern JS_PUBLIC_API(void)
+JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v);
 
 /************************************************************************/
 

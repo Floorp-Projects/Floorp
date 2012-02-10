@@ -109,6 +109,79 @@ ArgumentsObject::setElement(uint32_t i, const js::Value &v)
     data()->slots[i] = v;
 }
 
+inline bool
+ArgumentsObject::getElement(uint32_t i, Value *vp)
+{
+    if (i >= initialLength())
+        return false;
+
+    *vp = element(i);
+
+    /*
+     * If the argument was overwritten, it could be in any object slot, so we
+     * can't optimize.
+     */
+    if (vp->isMagic(JS_ARGS_HOLE))
+        return false;
+
+    /*
+     * If this arguments object has an associated stack frame, that contains
+     * the canonical argument value.  Note that strict arguments objects do not
+     * alias named arguments and never have a stack frame.
+     */
+    StackFrame *fp = maybeStackFrame();
+    JS_ASSERT_IF(isStrictArguments(), !fp);
+    if (fp)
+        *vp = fp->canonicalActualArg(i);
+    return true;
+}
+
+namespace detail {
+
+struct STATIC_SKIP_INFERENCE CopyNonHoleArgsTo
+{
+    CopyNonHoleArgsTo(ArgumentsObject *argsobj, Value *dst) : argsobj(*argsobj), dst(dst) {}
+    ArgumentsObject &argsobj;
+    Value *dst;
+    bool operator()(uint32_t argi, Value *src) {
+        if (argsobj.element(argi).isMagic(JS_ARGS_HOLE))
+            return false;
+        *dst++ = *src;
+        return true;
+    }
+};
+
+} /* namespace detail */
+
+inline bool
+ArgumentsObject::getElements(uint32_t start, uint32_t count, Value *vp)
+{
+    JS_ASSERT(start + count >= start);
+
+    uint32_t length = initialLength();
+    if (start > length || start + count > length)
+        return false;
+
+    StackFrame *fp = maybeStackFrame();
+
+    /* If there's no stack frame for this, argument values are in elements(). */
+    if (!fp) {
+        const Value *srcbeg = elements() + start;
+        const Value *srcend = srcbeg + count;
+        const Value *src = srcbeg;
+        for (Value *dst = vp; src < srcend; ++dst, ++src) {
+            if (src->isMagic(JS_ARGS_HOLE))
+                return false;
+            *dst = *src;
+        }
+        return true;
+    }
+
+    /* Otherwise, element values are on the stack. */
+    JS_ASSERT(fp->numActualArgs() <= StackSpace::ARGS_LENGTH_MAX);
+    return fp->forEachCanonicalActualArg(detail::CopyNonHoleArgsTo(this, vp), start, count);
+}
+
 inline js::StackFrame *
 ArgumentsObject::maybeStackFrame() const
 {

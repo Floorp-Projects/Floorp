@@ -1030,11 +1030,11 @@ var gCSSProperties = {
 		/* no subproperties */
 		prerequisites: { "width": "10px", "height": "10px", "display": "block"},
 		initial_values: [ "50% 50%", "center", "center center" ],
-		other_values: [ "25% 25%", "5px 5px", "20% 3em", "0 0", "0in 1in",
+		other_values: [ "25% 25%", "6px 5px", "20% 3em", "0 0", "0in 1in",
 						"top", "bottom","top left", "top right",
 						"top center", "center left", "center right",
 						"bottom left", "bottom right", "bottom center",
-						"20% center", "5px center", "13in bottom",
+						"20% center", "6px center", "13in bottom",
 						"left 50px", "right 13%", "center 40px",
 			"-moz-calc(20px)",
 			"-moz-calc(20px) 10px",
@@ -1058,11 +1058,11 @@ var gCSSProperties = {
         /* no subproperties */
         prerequisites: { "width": "10px", "height": "10px", "display": "block"},
         initial_values: [ "50% 50%", "center", "center center" ],
-        other_values: [ "25% 25%", "5px 5px", "20% 3em", "0 0", "0in 1in",
+        other_values: [ "25% 25%", "6px 5px", "20% 3em", "0 0", "0in 1in",
                         "top", "bottom","top left", "top right",
                         "top center", "center left", "center right",
                         "bottom left", "bottom right", "bottom center",
-                        "20% center", "5px center", "13in bottom",
+                        "20% center", "6px center", "13in bottom",
                         "left 50px", "right 13%", "center 40px",
                         "-moz-calc(20px)",
                         "-moz-calc(20px) 10px",
@@ -1082,9 +1082,9 @@ var gCSSProperties = {
 		domProp: "MozPerspective",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none", "0" ],
-		other_values: [ "1000px", "500.2px", "-100px", "-27.2em" ],
-		invalid_values: [ "pants", "200" ]
+		initial_values: [ "none" ],
+		other_values: [ "1000px", "500.2px" ],
+		invalid_values: [ "pants", "200", "0", "-100px", "-27.2em" ]
 	},
     "-moz-backface-visibility": {
         domProp: "MozBackfaceVisibility",

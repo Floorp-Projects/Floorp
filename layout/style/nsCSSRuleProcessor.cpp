@@ -1262,7 +1262,7 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 nsEventStates
 nsCSSRuleProcessor::GetContentState(Element* aElement)
 {
-  nsEventStates state = aElement->State();
+  nsEventStates state = aElement->StyleState();
 
   // If we are not supposed to mark visited links as such, be sure to
   // flip the bits appropriately.  We want to do this here, rather
@@ -1282,7 +1282,7 @@ nsCSSRuleProcessor::GetContentState(Element* aElement)
 bool
 nsCSSRuleProcessor::IsLink(Element* aElement)
 {
-  nsEventStates state = aElement->State();
+  nsEventStates state = aElement->StyleState();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
 }
 

@@ -68,9 +68,9 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsDocAccessibleWrap::
-  nsDocAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
-                      nsIWeakReference *aShell) :
-  nsDocAccessible(aDocument, aRootContent, aShell), mHWND(NULL)
+  nsDocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                      nsIPresShell* aPresShell) :
+  nsDocAccessible(aDocument, aRootContent, aPresShell), mHWND(NULL)
 {
 }
 

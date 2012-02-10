@@ -286,7 +286,7 @@ JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
       return JS_FALSE;
     }
 
-    Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
+    Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
     if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
       h->Add(!!value);
     else
@@ -303,7 +303,7 @@ JSHistogram_Snapshot(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
   }
 
-  Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
+  Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
   JSObject *snapshot = JS_NewObject(cx, NULL, NULL, NULL);
   if (!snapshot)
     return JS_FALSE;
@@ -338,8 +338,8 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
   if (!obj)
     return NS_ERROR_FAILURE;
   *ret = OBJECT_TO_JSVAL(obj);
-  return (JS_SetPrivate(cx, obj, h)
-          && JS_DefineFunction (cx, obj, "add", JSHistogram_Add, 1, 0)
+  JS_SetPrivate(obj, h);
+  return (JS_DefineFunction (cx, obj, "add", JSHistogram_Add, 1, 0)
           && JS_DefineFunction (cx, obj, "snapshot", JSHistogram_Snapshot, 1, 0)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -692,6 +692,16 @@ TelemetryImpl::SetCanRecord(bool canRecord) {
 bool
 TelemetryImpl::CanRecord() {
   return !sTelemetry || sTelemetry->mCanRecord;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetCanSend(bool *ret) {
+#if defined(MOZILLA_OFFICIAL) && defined(MOZ_TELEMETRY_REPORTING)
+  *ret = true;
+#else
+  *ret = false;
+#endif
+  return NS_OK;
 }
 
 already_AddRefed<nsITelemetry>
