@@ -47,6 +47,7 @@
     _(UnboxDouble)              \
     _(Box)                      \
     _(BoxDouble)                \
-    _(DivI)
+    _(DivI)                     \
+    _(ModI)
 #endif // jsion_lir_opcodes_arm_h__
 
