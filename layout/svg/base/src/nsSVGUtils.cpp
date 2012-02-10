@@ -1178,24 +1178,6 @@ nsSVGUtils::GetCoveredRegion(const nsFrameList &aFrames)
   return rect;
 }
 
-nsRect
-nsSVGUtils::ToAppPixelRect(nsPresContext *aPresContext,
-                           double xmin, double ymin,
-                           double xmax, double ymax)
-{
-  return ToAppPixelRect(aPresContext,
-                        gfxRect(xmin, ymin, xmax - xmin, ymax - ymin));
-}
-
-nsRect
-nsSVGUtils::ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect)
-{
-  return nsRect(aPresContext->DevPixelsToAppUnits(NSToIntFloor(rect.X())),
-                aPresContext->DevPixelsToAppUnits(NSToIntFloor(rect.Y())),
-                aPresContext->DevPixelsToAppUnits(NSToIntCeil(rect.XMost()) - NSToIntFloor(rect.X())),
-                aPresContext->DevPixelsToAppUnits(NSToIntCeil(rect.YMost()) - NSToIntFloor(rect.Y())));
-}
-
 gfxIntSize
 nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
                                  bool *aResultOverflows)
