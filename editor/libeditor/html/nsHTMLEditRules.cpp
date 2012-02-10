@@ -8955,19 +8955,11 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
         NS_ENSURE_SUCCESS(res, res);
         PRUint32 count;
         attributeList->GetLength(&count);
-        if (!count) {
-          // the DIV has no attribute at all, let's remove it
+        if (!count ||
+            (1 == count && node->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty))) {
+          // the DIV has no attribute at all or just a _moz_dirty, let's remove it
           res = mHTMLEditor->RemoveContainer(element);
           NS_ENSURE_SUCCESS(res, res);
-        }
-        else if (1 == count) {
-          nsCOMPtr<nsIDOMNode> styleAttributeNode;
-          res = attributeList->GetNamedItem(NS_LITERAL_STRING("style"), 
-                                            getter_AddRefs(styleAttributeNode));
-          if (!styleAttributeNode) {
-            res = mHTMLEditor->RemoveContainer(element);
-            NS_ENSURE_SUCCESS(res, res);
-          }
         }
       }
     }
