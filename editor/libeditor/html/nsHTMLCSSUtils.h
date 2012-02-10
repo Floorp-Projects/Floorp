@@ -194,7 +194,7 @@ public:
     * @param aStyleType     [IN] SPECIFIED_STYLE_TYPE to query the specified style values
                                  COMPUTED_STYLE_TYPE  to query the computed style values
     */
-  nsresult    GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
+  nsresult    GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                    nsIAtom * aHTMLProperty,
                                                    const nsAString * aAttribute,
                                                    nsAString & aValueString,
@@ -353,12 +353,12 @@ private:
     *                                 is made for GetCSSEquivalentToHTMLInlineStyleSet or
     *                                 RemoveCSSEquivalentToHTMLInlineStyleSet
     */
-  void      GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
-                                                 nsIAtom * aHTMLProperty,
-                                                 const nsAString *aAttribute,
-                                                 const nsAString *aValue,
-                                                 nsTArray<nsIAtom*> & aPropertyArray,
-                                                 nsTArray<nsString> & aValueArray,
+  void      GenerateCSSDeclarationsFromHTMLStyle(mozilla::dom::Element* aNode,
+                                                 nsIAtom* aHTMLProperty,
+                                                 const nsAString* aAttribute,
+                                                 const nsAString* aValue,
+                                                 nsTArray<nsIAtom*>& aPropertyArray,
+                                                 nsTArray<nsString>& aValueArray,
                                                  bool aGetOrRemoveRequest);
 
   /** creates a Transaction for setting or removing a css property
