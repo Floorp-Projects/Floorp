@@ -59,6 +59,7 @@ class CheckOverRecursedFailure;
 class OutOfLineUnboxDouble;
 class OutOfLineCache;
 class OutOfLineStoreElementHole;
+class OutOfLineTypeOfV;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -121,6 +122,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallGetElement(LCallGetElement *lir);
     bool visitCallSetElement(LCallSetElement *lir);
     bool visitThrow(LThrow *lir);
+    bool visitTypeOfV(LTypeOfV *lir);
+    bool visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool);
     bool visitLoadElementV(LLoadElementV *load);
     bool visitLoadElementHole(LLoadElementHole *lir);
     bool visitStoreElementT(LStoreElementT *lir);

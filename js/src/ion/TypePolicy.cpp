@@ -69,14 +69,14 @@ BoxInputsPolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
-BinaryArithPolicy::adjustInputs(MInstruction *ins)
+ArithPolicy::adjustInputs(MInstruction *ins)
 {
     if (specialization_ == MIRType_None)
         return BoxInputsPolicy::adjustInputs(ins);
 
     JS_ASSERT(ins->type() == MIRType_Double || ins->type() == MIRType_Int32);
 
-    for (size_t i = 0; i < 2; i++) {
+    for (size_t i = 0; i < ins->numOperands(); i++) {
         MDefinition *in = ins->getOperand(i);
         if (in->type() == ins->type())
             continue;

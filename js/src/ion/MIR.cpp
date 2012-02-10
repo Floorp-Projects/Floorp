@@ -713,6 +713,40 @@ MBitNot::foldsTo(bool useValueNumbers)
     return this;
 }
 
+MDefinition *
+MTypeOf::foldsTo(bool useValueNumbers)
+{
+    // Note: we can't use input->type() here, type analysis has
+    // boxed the input.
+    JS_ASSERT(input()->type() == MIRType_Value);
+
+    JSType type;
+
+    switch (inputType()) {
+      case MIRType_Double:
+      case MIRType_Int32:
+        type = JSTYPE_NUMBER;
+        break;
+      case MIRType_String:
+        type = JSTYPE_STRING;
+        break;
+      case MIRType_Null:
+        type = JSTYPE_OBJECT;
+        break;
+      case MIRType_Undefined:
+        type = JSTYPE_VOID;
+        break;
+      case MIRType_Boolean:
+        type = JSTYPE_BOOLEAN;
+        break;
+      default:
+        return this;
+    }
+
+    JSContext *cx = GetIonContext()->cx;
+    return MConstant::New(StringValue(cx->runtime->atomState.typeAtoms[type]));
+}
+
 MBitAnd *
 MBitAnd::New(MDefinition *left, MDefinition *right)
 {

@@ -350,6 +350,18 @@ LIRGenerator::lowerBitOp(JSOp op, MInstruction *ins)
 }
 
 bool
+LIRGenerator::visitTypeOf(MTypeOf *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Value);
+
+    LTypeOfV *lir = new LTypeOfV();
+    if (!useBox(lir, LTypeOfV::Input, opd))
+        return false;
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitBitNot(MBitNot *ins)
 {
     MDefinition *input = ins->getOperand(0);
