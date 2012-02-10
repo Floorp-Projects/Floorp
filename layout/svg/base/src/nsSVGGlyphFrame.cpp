@@ -487,7 +487,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   // calls to record and then reset the stroke width.
   gfxRect extent = tmpCtx->GetUserPathExtent();
   if (hasStroke) {
-    extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);
+    extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this, matrix);
   }
 
   if (!extent.IsEmpty()) {
@@ -621,7 +621,9 @@ nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   if ((aFlags & nsSVGUtils::eBBoxIncludeStroke) != 0 &&
       ((aFlags & nsSVGUtils::eBBoxIgnoreStrokeIfNone) == 0 || HasStroke())) {
     bbox =
-      bbox.Union(nsSVGUtils::PathExtentsToMaxStrokeExtents(pathExtents, this));
+      bbox.Union(nsSVGUtils::PathExtentsToMaxStrokeExtents(pathExtents,
+                                                           this,
+                                                           aToBBoxUserspace));
   }
 
   return bbox;
