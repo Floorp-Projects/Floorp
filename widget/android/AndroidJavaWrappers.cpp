@@ -694,8 +694,22 @@ AndroidGeckoGLLayerClient::Init(jobject jobj)
 void
 AndroidLayerRendererFrame::Init(jobject jobj)
 {
-    NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
-    wrapped_obj = jobj;
+    if (!isNull()) {
+        Dispose();
+    }
+
+    wrapped_obj = GetJNIForThread()->NewGlobalRef(jobj);
+}
+
+void
+AndroidLayerRendererFrame::Dispose()
+{
+    if (isNull()) {
+        return;
+    }
+
+    GetJNIForThread()->DeleteGlobalRef(wrapped_obj);
+    wrapped_obj = 0;
 }
 
 void
