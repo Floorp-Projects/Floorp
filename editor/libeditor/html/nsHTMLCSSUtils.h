@@ -384,10 +384,12 @@ private:
    * @param aStyleType          [IN] SPECIFIED_STYLE_TYPE to query the specified style values
    *                                 COMPUTED_STYLE_TYPE  to query the computed style values
    */
-  nsresult    GetCSSInlinePropertyBase(nsIDOMNode * aNode, nsIAtom * aProperty,
-                                       nsAString & aValue,
-                                       nsIDOMWindow* aWindow,
-                                       PRUint8 aStyleType);
+  nsresult GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
+                                    nsAString& aValue, nsIDOMWindow* aWindow,
+                                    PRUint8 aStyleType);
+  nsresult GetCSSInlinePropertyBase(nsIDOMNode* aNode, nsIAtom* aProperty,
+                                    nsAString& aValue, nsIDOMWindow* aWindow,
+                                    PRUint8 aStyleType);
 
 
 private:
