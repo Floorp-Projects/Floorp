@@ -2385,3 +2385,15 @@ nsWindow::GetIMEUpdatePreference()
     return nsIMEUpdatePreference(true, true);
 }
 
+#ifdef MOZ_JAVA_COMPOSITOR
+void
+nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### TODO: Render custom background");
+}
+
+void
+nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### TODO: Render custom foreground");
+}
+#endif
+
