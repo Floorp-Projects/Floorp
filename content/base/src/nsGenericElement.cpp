@@ -4415,8 +4415,8 @@ nsGenericElement::MarkUserDataHandler(void* aObject, nsIAtom* aKey,
   xpc_UnmarkGrayObject(wjs);
 }
 
-static void
-MarkNodeChildren(nsINode* aNode)
+void
+nsGenericElement::MarkNodeChildren(nsINode* aNode)
 {
   JSObject* o = GetJSObjectChild(aNode);
   xpc_UnmarkGrayObject(o);
