@@ -159,8 +159,16 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
     fillRule = GetClipRule();
   } else {
     hitTestFlags = GetHitTestFlags();
+    // XXX once bug 614732 is fixed, aPoint won't need any conversion in order
+    // to compare it with mRect.
+    gfxMatrix canvasTM = GetCanvasTM();
+    if (canvasTM.IsSingular()) {
+      return nsnull;
+    }
+    nsPoint point =
+      nsSVGUtils::TransformOuterSVGPointToChildFrame(aPoint, canvasTM, PresContext());
     if (!hitTestFlags || ((hitTestFlags & SVG_HIT_TEST_CHECK_MRECT) &&
-                          !mRect.Contains(aPoint)))
+                          !mRect.Contains(point)))
       return nsnull;
     fillRule = GetStyleSVG()->mFillRule;
   }
@@ -196,13 +204,13 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP_(nsRect)
 nsSVGPathGeometryFrame::GetCoveredRegion()
 {
-  return mRect;
+  return nsSVGUtils::TransformFrameRectToOuterSVG(mRect, GetCanvasTM(), PresContext());
 }
 
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::UpdateCoveredRegion()
 {
-  gfxRect extent = GetBBoxContribution(GetCanvasTM(),
+  gfxRect extent = GetBBoxContribution(gfxMatrix(),
     nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIgnoreFillIfNone |
     nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIgnoreStrokeIfNone |
     nsSVGUtils::eBBoxIncludeMarkers);

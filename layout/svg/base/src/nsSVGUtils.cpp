@@ -1010,8 +1010,10 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
       if (!aDirtyRect->Intersects(filterFrame->GetFilterBBox(aFrame, nsnull)))
         return;
     } else {
+      nsRect leafBounds = nsSVGUtils::TransformFrameRectToOuterSVG(
+        aFrame->GetRect(), GetCanvasTM(aFrame), aFrame->PresContext());
       nsRect rect = aDirtyRect->ToAppUnits(aFrame->PresContext()->AppUnitsPerDevPixel());
-      if (!rect.Intersects(aFrame->GetRect()))
+      if (!rect.Intersects(leafBounds))
         return;
     }
   }
@@ -1176,6 +1178,35 @@ nsSVGUtils::GetCoveredRegion(const nsFrameList &aFrames)
   }
 
   return rect;
+}
+
+nsPoint
+nsSVGUtils::TransformOuterSVGPointToChildFrame(nsPoint aPoint,
+                                               const gfxMatrix& aFrameToCanvasTM,
+                                               nsPresContext* aPresContext)
+{
+  gfxMatrix devToUser = aFrameToCanvasTM;
+  devToUser.Invert();
+  NS_ABORT_IF_FALSE(!devToUser.IsSingular(), "should not get here");
+  gfxPoint devPt = gfxPoint(aPoint.x, aPoint.y) /
+    aPresContext->AppUnitsPerDevPixel();
+  gfxPoint userPt = devToUser.Transform(devPt).Round();
+  gfxPoint appPt = userPt * aPresContext->AppUnitsPerCSSPixel();
+  userPt.x = clamped(appPt.x, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
+  userPt.y = clamped(appPt.y, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
+  // now guaranteed to be safe:
+  return nsPoint(nscoord(userPt.x), nscoord(userPt.y));
+}
+
+nsRect
+nsSVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
+                                         const gfxMatrix& aMatrix,
+                                         nsPresContext* aPresContext)
+{
+  gfxRect r(aRect.x, aRect.y, aRect.width, aRect.height);
+  r.Scale(1.0 / nsPresContext::AppUnitsPerCSSPixel());
+  return nsLayoutUtils::RoundGfxRectToAppRect(
+    aMatrix.TransformBounds(r), aPresContext->AppUnitsPerDevPixel());
 }
 
 gfxIntSize
