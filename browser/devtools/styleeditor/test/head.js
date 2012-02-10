@@ -19,9 +19,9 @@ function cleanup()
   }
 }
 
-function launchStyleEditorChrome(aCallback)
+function launchStyleEditorChrome(aCallback, aSheet, aLine, aCol)
 {
-  gChromeWindow = StyleEditor.openChrome();
+  gChromeWindow = StyleEditor.openChrome(aSheet, aLine, aCol);
   if (gChromeWindow.document.readyState != "complete") {
     gChromeWindow.addEventListener("load", function onChromeLoad() {
       gChromeWindow.removeEventListener("load", onChromeLoad, true);
@@ -34,12 +34,12 @@ function launchStyleEditorChrome(aCallback)
   }
 }
 
-function addTabAndLaunchStyleEditorChromeWhenLoaded(aCallback)
+function addTabAndLaunchStyleEditorChromeWhenLoaded(aCallback, aSheet, aLine, aCol)
 {
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-    launchStyleEditorChrome(aCallback);
+    launchStyleEditorChrome(aCallback, aSheet, aLine, aCol);
   }, true);
 }
 
