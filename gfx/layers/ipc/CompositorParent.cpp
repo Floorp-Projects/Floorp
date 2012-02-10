@@ -193,11 +193,13 @@ CompositorParent::Composite()
 #endif
   layer->AsShadowLayer()->SetShadowTransform(worldTransform);
 
+#ifdef MOZ_WIDGET_ANDROID
   // Hang the transform of the root layer off the layer manager.
   gfx3DMatrix transform = layer->GetTransform();
   transform *= worldTransform;
   TransformLayerUserData* transformUserData = new TransformLayerUserData(transform);
   mLayerManager->SetUserData(nsGkAtoms::transform, transformUserData);
+#endif
 
   mLayerManager->EndEmptyTransaction();
   mLastCompose = mozilla::TimeStamp::Now();
