@@ -353,29 +353,43 @@ var BrowserApp = {
   },
 
   _showTelemetryPrompt: function _showTelemetryPrompt() {
-    let telemetryPrompted = false;
+    const PREF_TELEMETRY_PROMPTED = "toolkit.telemetry.prompted";
+    const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
+    const PREF_TELEMETRY_REJECTED = "toolkit.telemetry.rejected";
+
+    // This is used to reprompt users when privacy message changes
+    const TELEMETRY_PROMPT_REV = 2;
+
+    let telemetryPrompted = null;
     try {
-      telemetryPrompted = Services.prefs.getBoolPref("toolkit.telemetry.prompted");
+      telemetryPrompted = Services.prefs.getIntPref(PREF_TELEMETRY_PROMPTED);
     } catch (e) { /* Optional */ }
-    if (telemetryPrompted)
+
+    // If the user has seen the latest telemetry prompt, do not prompt again
+    // else clear old prefs and reprompt
+    if (telemetryPrompted === TELEMETRY_PROMPT_REV)
       return;
 
+    Services.prefs.clearUserPref(PREF_TELEMETRY_PROMPTED);
+    Services.prefs.clearUserPref(PREF_TELEMETRY_ENABLED);
+  
     let buttons = [
       {
         label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
         callback: function () {
-          Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
-          Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
+          Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
+          Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
         }
       },
       {
         label: Strings.browser.GetStringFromName("telemetry.optin.no"),
         callback: function () {
-          Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
-          Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
+          Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
+          Services.prefs.setBoolPref(PREF_TELEMETRY_REJECTED, true);
         }
       }
     ];
+
     let brandShortName = Strings.brand.GetStringFromName("brandShortName");
     let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
     NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
@@ -4165,7 +4179,6 @@ var CharacterEncoding = {
     let docCharset = browser.docShell.QueryInterface(Ci.nsIDocCharset);
     docCharset.charset = aEncoding;
     browser.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
-  },
-
+  }
 };
 
