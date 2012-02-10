@@ -477,6 +477,7 @@ let Buf = {
    *        Integer specifying the request type.
    */
   newParcel: function newParcel(type) {
+    if (DEBUG) debug("New outgoing parcel of type " + type);
     // We're going to leave room for the parcel size at the beginning.
     this.outgoingIndex = PARCEL_SIZE_SIZE;
     this.writeUint32(type);
@@ -838,8 +839,8 @@ let RIL = {
    *
    * @param radioTech
    *        Integer to indicate radio technology.
-   *        DATACALL_RADIOTECHONLOGY_CDMA => CDMA.
-   *        DATACALL_RADIOTECHONLOGY_GSM  => GSM.
+   *        DATACALL_RADIOTECHNOLOGY_CDMA => CDMA.
+   *        DATACALL_RADIOTECHNOLOGY_GSM  => GSM.
    * @param apn
    *        String containing the name of the APN to connect to.
    * @param user
@@ -1128,21 +1129,25 @@ RIL[REQUEST_GET_MUTE] = null;
 RIL[REQUEST_QUERY_CLIP] = null;
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
 RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length) {
-  let datacalls = [];
-
-  if (!length) {
+  let num = 0;
+  if (length) {
+    num = Buf.readUint32();
+  }
+  if (!num) {
+    Phone.onDataCallList(null);
     return;
   }
 
-  let num = Buf.readUint32();
+  let datacalls = {};
   for (let i = 0; i < num; i++) {
-    datacalls.push({
+    let datacall = {
       cid: Buf.readUint32().toString(),
       active: Buf.readUint32(),
       type: Buf.readString(),
       apn: Buf.readString(),
       address: Buf.readString()
-    });
+    };
+    datacalls[datacall.cid] = datacall;
   }
 
   Phone.onDataCallList(datacalls);
@@ -1225,7 +1230,9 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = null;
 RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH() {
   this[REQUEST_SIGNAL_STRENGTH]();
 };
-RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = null;
+RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length) {
+  Phone.onDataCallListChanged();
+};
 RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = null;
 RIL[UNSOLICITED_STK_SESSION_END] = null;
 RIL[UNSOLICITED_STK_PROACTIVE_COMMAND] = null;
@@ -1469,8 +1476,7 @@ let Phone = {
           currentCall.state = newCall.state;
           this._handleChangedCallState(currentCall);
         }
-      }
-      else {
+      } else {
         // Call is no longer reported by the radio. Remove from our map and
         // send disconnected state change.
         delete this.currentCalls[currentCall.callIndex];
@@ -1800,8 +1806,9 @@ let Phone = {
     let options = this.activeDataRequests[token];
     delete this.activeDataRequests[token];
 
-    this.currentDataCalls[cid] = {
-      state: GECKO_DATACALL_STATE_CONNECTED,
+    let datacall = this.currentDataCalls[cid] = {
+      active: -1,
+      state: GECKO_NETWORK_STATE_CONNECTING,
       cid: cid,
       apn: options.apn,
       ifname: ifname,
@@ -1810,71 +1817,65 @@ let Phone = {
       gw: gw,
     };
     this.sendDOMMessage({type: "datacallstatechange",
-                         state: GECKO_DATACALL_STATE_CONNECTED,
-                         cid: cid,
-                         apn: options.apn,
-                         ifname: ifname,
-                         ipaddr: ipaddr,
-                         dns: dns,
-                         gateway: gw});
+                         datacall: datacall});
+
+    // Let's get the list of data calls to ensure we know whether it's active
+    // or not.
+    RIL.getDataCallList();
   },
 
   onDeactivateDataCall: function onDeactivateDataCall(token) {
     let options = this.activeDataRequests[token];
     delete this.activeDataRequests[token];
 
-    let cid = options.cid;
-    if (!(cid in this.currentDataCalls)) {
-      return;
-    }
-
-    let apn = this.currentDataCalls[cid].apn;
-    delete this.currentDataCalls[cid];
+    let datacall = this.currentDataCalls[options.cid];
+    delete this.currentDataCalls[options.cid];
+    datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
     this.sendDOMMessage({type: "datacallstatechange",
-                         state: GECKO_DATACALL_STATE_DISCONNECTED,
-                         cid: cid,
-                         apn: apn});
+                         datacall: datacall});
   },
 
   onDataCallList: function onDataCallList(datacalls) {
-    let currentDataCalls = this.currentDataCalls;
+    for each (let currentDataCall in this.currentDataCalls) {
+      let newDataCall;
+      if (datacalls) {
+        newDataCall = datacalls[currentDataCall.cid];
+        delete datacalls[currentDataCall.cid];
+      }
 
-    // Sync content of currentDataCalls and data call list.
-    for each (let datacall in datacalls) {
-      let {cid, apn} = datacall;
-
-      if (datacall.active != DATACALL_INACTIVE) {
-        // XXX: This should be followed up.
-        // datacall.active == DATACALL_ACTIVE_DOWN(1) for my device
-        if (!(cid in currentDataCalls)) {
-          let datacall = {state: GECKO_DATACALL_STATE_CONNECTED,
-                          cid: cid,
-                          apn: apn,
-                          ipaddr: datacall.address};
-          currentDataCalls[cid] = datacall;
-
-          this.sendDOMMessage({type: "datacallstatechange",
-                               state: GECKO_DATACALL_STATE_CONNECTED,
-                               cid: cid,
-                               apn: apn});
+      if (newDataCall) {
+        switch (newDataCall.active) {
+          case DATACALL_INACTIVE:
+            newDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+            break;
+          case DATACALL_ACTIVE_DOWN:
+            newDataCall.state = GECKO_NETWORK_STATE_SUSPENDED;
+            break;
+          case DATACALL_ACTIVE_UP:
+            newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
+            break;
         }
-      } else {                 // datacall.active == DATACALL_INACTIVE
-        if (cid in currentDataCalls) {
-          delete currentDataCalls[cid];
+        if (newDataCall.state != currentDataCall.state) {
+          currentDataCall.active = newDataCall.active;
+          currentDataCall.state = newDataCall.state;
           this.sendDOMMessage({type: "datacallstatechange",
-                               state: GECKO_DATACALL_STATE_DISCONNECTED,
-                               cid: cid,
-                               apn: apn});
+                               datacall: currentDataCall});
         }
+      } else {
+        delete this.currentCalls[currentDataCall.callIndex];
+        currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+        this.sendDOMMessage({type: "datacallstatechange",
+                             datacall: currentDataCall});
       }
     }
 
-    let datacall_list = [];
-    for each (let datacall in this.currentDataCalls) {
-      datacall_list.push(datacall);
+    for each (let datacall in datacalls) {
+      if (DEBUG) debug("Unexpected data call: " + JSON.stringify(datacall));
     }
-    this.sendDOMMessage({type: "datacalllist",
-                         datacalls: datacall_list});
+  },
+
+  onDataCallListChanged: function onDataCallListChanged() {
+    RIL.getDataCallList();
   },
 
   /**
@@ -1911,6 +1912,15 @@ let Phone = {
       calls.push(call);
     }
     this.sendDOMMessage({type: "enumerateCalls", calls: calls});
+  },
+
+  enumerateDataCalls: function enumerateDataCalls() {
+    let datacall_list = [];
+    for each (let datacall in this.currentDataCalls) {
+      datacall_list.push(datacall);
+    }
+    this.sendDOMMessage({type: "datacalllist",
+                         datacalls: datacall_list});
   },
 
   /**
@@ -2031,11 +2041,8 @@ let Phone = {
 
     let token = RIL.setupDataCall(options.radioTech, options.apn,
                                   options.user, options.passwd,
-                                  options.chappap, options.reason);
+                                  options.chappap, options.pdptype);
     this.activeDataRequests[token] = options;
-    this.sendDOMMessage({type: "datacallstatechange",
-                         state: GECKO_DATACALL_STATE_CONNECTING,
-                         apn: options.apn});
   },
 
   /**
@@ -2046,15 +2053,14 @@ let Phone = {
       return;
     }
 
-    let datacall = this.currentDataCalls[options.cid];
-    datacall.state = GECKO_DATACALL_STATE_DISCONNECTING;
-
-    let token = RIL.deactivateDataCall(options.cid, options.reason);
+    let reason = options.reason || DATACALL_DEACTIVATE_NO_REASON;
+    let token = RIL.deactivateDataCall(options.cid, reason);
     this.activeDataRequests[token] = options;
+
+    let datacall = this.currentDataCalls[options.cid];
+    datacall.state = GECKO_NETWORK_STATE_DISCONNECTING;
     this.sendDOMMessage({type: "datacallstatechange",
-                         state: GECKO_DATACALL_STATE_DISCONNECTING,
-                         cid: options.cid,
-                         apn: datacall.apn});
+                         datacall: datacall});
   },
 
   /**
