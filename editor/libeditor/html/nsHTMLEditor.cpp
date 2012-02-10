@@ -3995,29 +3995,26 @@ bool
 nsHTMLEditor::IsNodeInActiveEditor(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node) {
-    return false;
-  }
+  return node && IsNodeInActiveEditor(node);
+}
+
+bool
+nsHTMLEditor::IsNodeInActiveEditor(nsINode* aNode)
+{
   nsIContent* activeEditingHost = GetActiveEditingHost();
   if (!activeEditingHost) {
     return false;
   }
-  return nsContentUtils::ContentIsDescendantOf(node, activeEditingHost);
+  return nsContentUtils::ContentIsDescendantOf(aNode, activeEditingHost);
 }
 
 bool
 nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
 {
-  if (!aElement || !IsNodeInActiveEditor(aElement)) {
-    return false;
-  }
-
   nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
-  if (!element || !element->IsHTML()) {
-    return false;
-  }
-
-  if (!nsHTMLEditUtils::IsTableElement(element)) {
+  if (!element || !element->IsHTML() ||
+      !nsHTMLEditUtils::IsTableElement(element) ||
+      !IsNodeInActiveEditor(element)) {
     return false;
   }
 
