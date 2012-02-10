@@ -204,6 +204,7 @@ const DebugProtocolTypes = {
   "delete": "delete",
   "detach": "detach",
   "frames": "frames",
+  "interrupt": "interrupt",
   "listTabs": "listTabs",
   "nameAndParameters": "nameAndParameters",
   "ownPropertyNames": "ownPropertyNames",
@@ -509,12 +510,13 @@ function ThreadClient(aClient, aActor) {
 ThreadClient.prototype = {
   _state: "paused",
   get state() { return this._state; },
+  get paused() { return this._state === "paused"; },
 
   _actor: null,
   get actor() { return this._actor; },
 
   _assertPaused: function TC_assertPaused(aCommand) {
-    if (this._state !== "paused") {
+    if (!this.paused) {
       throw aCommand + " command sent while not paused.";
     }
   },
@@ -539,6 +541,21 @@ ThreadClient.prototype = {
         // There was an error resuming, back to paused state.
         self._state = "paused";
       }
+      if (aOnResponse) {
+        aOnResponse(aResponse);
+      }
+    });
+  },
+
+  /**
+   * Interrupt a running thread.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  interrupt: function TC_interrupt(aOnResponse) {
+    let packet = { to: this._actor, type: DebugProtocolTypes.interrupt };
+    this._client.request(packet, function(aResponse) {
       if (aOnResponse) {
         aOnResponse(aResponse);
       }
@@ -696,8 +713,7 @@ ThreadClient.prototype = {
    * true if there are more stack frames available on the server.
    */
   get moreFrames() {
-    return this.state === "paused"
-      && (!this._frameCache || this._frameCache.length == 0
+    return this.paused && (!this._frameCache || this._frameCache.length == 0
           || !this._frameCache[this._frameCache.length - 1].oldest);
   },
 

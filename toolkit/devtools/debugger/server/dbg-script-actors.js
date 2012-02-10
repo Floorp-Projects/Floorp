@@ -176,7 +176,7 @@ ThreadActor.prototype = {
       // now.
       return null;
     } catch(e) {
-      dumpn(e);
+      Cu.reportError(e);
       return { error: "notAttached", message: e.toString() };
     }
   },
@@ -344,6 +344,46 @@ ThreadActor.prototype = {
     let packet = { from: this.actorID,
                    scripts: scripts };
     return packet;
+  },
+
+  /**
+   * Handle a protocol request to pause the debuggee.
+   */
+  onInterrupt: function TA_onScripts(aRequest) {
+    if (this.state == "exited") {
+      return { type: "exited" };
+    } else if (this.state == "paused") {
+      // TODO: return the actual reason for the existing pause.
+      return { type: "paused", why: { type: "alreadyPaused" } };
+    } else if (this.state != "running") {
+      return { error: "wrongState",
+               message: "Received interrupt request in " + this.state +
+                        " state." };
+    }
+
+    try {
+      // Put ourselves in the paused state.
+      let packet = this._paused();
+      if (!packet) {
+        return { error: "notInterrupted" };
+      }
+      packet.why = { type: "interrupted" };
+
+      // Send the response to the interrupt request now (rather than
+      // returning it), because we're going to start a nested event loop
+      // here.
+      this.conn.send(packet);
+
+      // Start a nested event loop.
+      this._nest();
+
+      // We already sent a response to this request, don't send one
+      // now.
+      return null;
+    } catch(e) {
+      Cu.reportError(e);
+      return { error: "notInterrupted", message: e.toString() };
+    }
   },
 
   /**
@@ -626,7 +666,8 @@ ThreadActor.prototype = {
       this.conn.send(packet);
       return this._nest();
     } catch(e) {
-      dumpn("Got an exception during onDebuggerStatement: " + e + ': ' + e.stack);
+      Cu.reportError("Got an exception during onDebuggerStatement: " + e +
+                     ": " + e.stack);
       return undefined;
     }
   },
@@ -670,6 +711,7 @@ ThreadActor.prototype.requestTypes = {
   "resume": ThreadActor.prototype.onResume,
   "clientEvaluate": ThreadActor.prototype.onClientEvaluate,
   "frames": ThreadActor.prototype.onFrames,
+  "interrupt": ThreadActor.prototype.onInterrupt,
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "setBreakpoint": ThreadActor.prototype.onSetBreakpoint,
   "scripts": ThreadActor.prototype.onScripts
@@ -1079,7 +1121,7 @@ BreakpointActor.prototype = {
       this.conn.send(packet);
       return this.threadActor._nest();
     } catch(e) {
-      dumpn("Got an exception during hit: " + e + ': ' + e.stack);
+      Cu.reportError("Got an exception during hit: " + e + ': ' + e.stack);
       return undefined;
     }
   },
