@@ -49,8 +49,8 @@
  * of debuggees.
  *
  * @param aHooks object
- *        An object with preNest and postNest methods that can be called when
- *        entering and exiting a nested event loop.
+ *        An object with preNest and postNest methods for calling when entering
+ *        and exiting a nested event loop.
  */
 function ThreadActor(aHooks)
 {

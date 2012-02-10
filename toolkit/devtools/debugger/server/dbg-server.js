@@ -432,7 +432,7 @@ DebuggerServerConnection.prototype = {
       try {
         ret = actor.requestTypes[aPacket.type].bind(actor)(aPacket);
       } catch(e) {
-        dumpn(e);
+        Cu.reportError(e);
         ret = { error: "unknownError",
                 message: "An unknown error has occurred while processing request." };
       }
