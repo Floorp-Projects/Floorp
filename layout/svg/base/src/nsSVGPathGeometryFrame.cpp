@@ -206,7 +206,8 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
     nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIgnoreFillIfNone |
     nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIgnoreStrokeIfNone |
     nsSVGUtils::eBBoxIncludeMarkers);
-  mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
+  mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
+            PresContext()->AppUnitsPerDevPixel());
   return NS_OK;
 }
 

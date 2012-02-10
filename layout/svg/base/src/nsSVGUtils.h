@@ -448,15 +448,6 @@ public:
   GetCoveredRegion(const nsFrameList &aFrames);
 
   /*
-   * Convert a rect from device pixel units to app pixel units by inflation.
-   */
-  static nsRect
-  ToAppPixelRect(nsPresContext *aPresContext,
-                 double xmin, double ymin, double xmax, double ymax);
-  static nsRect
-  ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect);
-
-  /*
    * Convert a surface size to an integer for use by thebes
    * possibly making it smaller in the process so the surface does not
    * use excessive memory.
