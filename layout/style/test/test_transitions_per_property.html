@@ -1030,11 +1030,11 @@ function test_length_pair_transition_clamped(prop) {
 function test_length_percent_pair_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "4px 50%", "");
-  is(cs.getPropertyValue(prop), "4px 50%",
+  is(cs.getPropertyValue(prop), "4px 5px",
      "length-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "12px 70%", "");
-  is(cs.getPropertyValue(prop), "6px 55%",
+  is(cs.getPropertyValue(prop), "6px 5.5px",
      "length-valued property " + prop + ": interpolation of lengths");
   check_distance(prop, "4px 50%", "6px 55%", "12px 70%");
 }
@@ -1051,11 +1051,11 @@ function test_length_percent_pair_clamped_or_unclamped(prop, is_clamped) {
   div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "0px 0%", "");
-  is(cs.getPropertyValue(prop), "0px 0%",
+  is(cs.getPropertyValue(prop), "0px 0px",
      "length+percent-valued property " + prop + ": flush before clamping test");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "30px 25%", "");
-  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), "0px 0%",
+  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), "0px 0px",
      "length+percent-valued property " + prop + ": clamping of negatives");
   div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }

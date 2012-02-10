@@ -65,8 +65,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeAccessible::
-  nsXULTreeAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXULTreeAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
   mTree = nsCoreUtils::GetTreeBoxObject(aContent);
   if (mTree)
@@ -516,7 +516,8 @@ nsXULTreeAccessible::ContainerWidget() const
       if (inputElm) {
         nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
         if (inputNode) {
-          nsAccessible* input = GetAccService()->GetAccessible(inputNode);
+          nsAccessible* input = 
+            GetAccService()->GetAccessible(inputNode, nsnull);
           return input ? input->ContainerWidget() : nsnull;
         }
       }
@@ -547,7 +548,7 @@ nsXULTreeAccessible::GetTreeItemAccessible(PRInt32 aRow)
   nsRefPtr<nsAccessible> treeItem = CreateTreeItemAccessible(aRow);
   if (treeItem) {
     if (mAccessibleCache.Put(key, treeItem)) {
-      if (GetDocAccessible()->BindToDocument(treeItem, nsnull))
+      if (Document()->BindToDocument(treeItem, nsnull))
         return treeItem;
 
       mAccessibleCache.Remove(key);
@@ -567,7 +568,7 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
   if (aCount > 0)
     return;
 
-  nsDocAccessible* document = GetDocAccessible();
+  nsDocAccessible* document = Document();
 
   // Fire destroy event for removed tree items and delete them from caches.
   for (PRInt32 rowIdx = aRow; rowIdx < aRow - aCount; rowIdx++) {
@@ -671,7 +672,7 @@ nsXULTreeAccessible::TreeViewChanged()
     new AccEvent(nsIAccessibleEvent::EVENT_REORDER, this, eAutoDetect,
                  AccEvent::eCoalesceFromSameSubtree);
   if (reorderEvent)
-    GetDocAccessible()->FireDelayedAccessibleEvent(reorderEvent);
+    Document()->FireDelayedAccessibleEvent(reorderEvent);
 
   // Clear cache.
   ClearCache(mAccessibleCache);
@@ -685,7 +686,7 @@ already_AddRefed<nsAccessible>
 nsXULTreeAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 {
   nsRefPtr<nsAccessible> accessible =
-    new nsXULTreeItemAccessible(mContent, mWeakShell, this, mTree, mTreeView,
+    new nsXULTreeItemAccessible(mContent, mDoc, this, mTree, mTreeView,
                                 aRow);
 
   return accessible.forget();
@@ -696,10 +697,10 @@ nsXULTreeAccessible::CreateTreeItemAccessible(PRInt32 aRow)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeItemAccessibleBase::
-  nsXULTreeItemAccessibleBase(nsIContent *aContent, nsIWeakReference *aShell,
-                              nsAccessible *aParent, nsITreeBoxObject *aTree,
-                              nsITreeView *aTreeView, PRInt32 aRow) :
-  nsAccessibleWrap(aContent, aShell),
+  nsXULTreeItemAccessibleBase(nsIContent* aContent, nsDocAccessible* aDoc,
+                              nsAccessible* aParent, nsITreeBoxObject* aTree,
+                              nsITreeView* aTreeView, PRInt32 aRow) :
+  nsAccessibleWrap(aContent, aDoc),
   mTree(aTree), mTreeView(aTreeView), mRow(aRow)
 {
   mParent = aParent;
@@ -1113,10 +1114,10 @@ nsXULTreeItemAccessibleBase::GetCellName(nsITreeColumn* aColumn,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeItemAccessible::
-  nsXULTreeItemAccessible(nsIContent *aContent, nsIWeakReference *aShell,
-                          nsAccessible *aParent, nsITreeBoxObject *aTree,
-                          nsITreeView *aTreeView, PRInt32 aRow) :
-  nsXULTreeItemAccessibleBase(aContent, aShell, aParent, aTree, aTreeView, aRow)
+  nsXULTreeItemAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+                          nsAccessible* aParent, nsITreeBoxObject* aTree,
+                          nsITreeView* aTreeView, PRInt32 aRow) :
+  nsXULTreeItemAccessibleBase(aContent, aDoc, aParent, aTree, aTreeView, aRow)
 {
   mColumn = nsCoreUtils::GetFirstSensibleColumn(mTree);
 }
@@ -1231,8 +1232,8 @@ nsXULTreeItemAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeColumnsAccessible::
-  nsXULTreeColumnsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsXULColumnsAccessible(aContent, aShell)
+  nsXULTreeColumnsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULColumnsAccessible(aContent, aDoc)
 {
 }
 

@@ -52,7 +52,7 @@ class nsXULTabAccessible : public nsAccessibleWrap
 public:
   enum { eAction_Switch = 0 };
 
-  nsXULTabAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULTabAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -76,7 +76,7 @@ public:
 class nsXULTabsAccessible : public XULSelectControlAccessible
 {
 public:
-  nsXULTabsAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULTabsAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetValue(nsAString& _retval);
@@ -96,7 +96,7 @@ public:
 class nsXULTabpanelsAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULTabpanelsAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULTabpanelsAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -116,7 +116,7 @@ public:
 class nsXULTabpanelAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULTabpanelAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULTabpanelAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();

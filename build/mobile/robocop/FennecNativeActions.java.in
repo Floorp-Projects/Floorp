@@ -39,17 +39,6 @@
 
 package @ANDROID_PACKAGE_NAME@;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.HashMap;
-import java.util.List;
-
 import java.lang.Class;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -60,7 +49,6 @@ import java.lang.Long;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.View;
 import android.view.KeyEvent;
 
@@ -71,7 +59,6 @@ import org.json.*;
 import com.jayway.android.robotium.solo.Solo;
 
 public class FennecNativeActions implements Actions {
-  // Map of IDs to element names.
   private Solo solo;
   private Instrumentation instr;
   private Activity geckoApp;
@@ -144,7 +131,8 @@ public class FennecNativeActions implements Actions {
       if(methodName.equals("hashCode")) {
         return 314;
       }
-      Log.i("Robocop", "Waking up on "+methodName);
+      FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG, 
+        "Waking up on "+methodName);
       mEventExpecter.notifyOfEvent();
       return null;
     }
@@ -169,7 +157,8 @@ public class FennecNativeActions implements Actions {
           break;
         }
       }
-      Log.i("Robocop", "unblocked on expecter for " + mGeckoEvent);
+      FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+        "unblocked on expecter for " + mGeckoEvent);
     }
 
     public synchronized boolean eventReceived() {
@@ -184,7 +173,8 @@ public class FennecNativeActions implements Actions {
       } catch (InvocationTargetException e) {
         e.printStackTrace();
       }
-      Log.i("Robocop", "received event " + mGeckoEvent);
+      FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+        "received event " + mGeckoEvent);
       synchronized (this) {
         mEventReceived = true;
         this.notifyAll();
@@ -193,7 +183,8 @@ public class FennecNativeActions implements Actions {
   }
   
   public EventExpecter expectGeckoEvent(String geckoEvent) {
-    Log.i("Robocop", "waiting for "+geckoEvent);
+    FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+      "waiting for "+geckoEvent);
     try {
       Class [] interfaces = new Class[1];
       interfaces[0] = gel;
@@ -225,7 +216,8 @@ public class FennecNativeActions implements Actions {
     public Object invoke(Object proxy, Method method, Object[] args) {
       String methodName = method.getName();
       if ("drawFinished".equals(methodName)) {
-        Log.i("Robocop", "Received drawFinished notification");
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+          "Received drawFinished notification");
         mPaintExpecter.notifyOfEvent();
       } else if ("toString".equals(methodName)) {
         return "DrawListenerProxy";

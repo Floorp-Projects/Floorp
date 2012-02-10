@@ -3,37 +3,47 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 
-public class testCheck extends BaseTest {
+public class testCheck extends PixelTest {
+    private void pause(int length) {
+        try {
+            Thread.sleep(length);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void testCheck() {
         setTestType("talos");
-        String url = getAbsoluteUrl("/startup_test/fenncmark/wikipedia.html");
-        loadUrl(url);
+        String url = getAbsoluteUrl("/startup_test/fennecmark/wikipedia.html");
+        loadAndPaint(url);
 
         mDriver.setupScrollHandling();
 
         // Setup scrolling coordinates.
         int midX = mDriver.getGeckoLeft() + mDriver.getGeckoWidth()/2;
         int midY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/2;
-        int endY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/10;
+        int endY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/6;
 
         mDriver.startCheckerboardRecording();
 
         int i = 0;
-        // Scroll a thousand times or until the end of the page.
+        // Scroll repeatedly downwards, then upwards. This test should take
+        // approximately 15 seconds.
         do {
-            mActions.drag(midX, midX, midY, endY);
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            for (int j = 0; j < 3; j++) {
+                mActions.drag(midX, midX, midY, endY);
+                pause(500);
+            }
+            for (int j = 0; j < 3; j++) {
+                mActions.drag(midX, midX, endY, midY);
+                pause(500);
             }
             i++;
-        } while (i < 1000 && mDriver.getScrollHeight() + 2 * mDriver.getHeight() < mDriver.getPageHeight());
-        // asserter.ok(i < 1000, "Less than 1000", "Should take less than 1000 drags to get to bottom of the page.");
+        } while (i < 5);
 
-        int incompleteFrames = mDriver.stopCheckerboardRecording();
-        mAsserter.dumpLog("__start_report" + Integer.toString(incompleteFrames) + "__end_report");
+        float completeness = mDriver.stopCheckerboardRecording();
+        mAsserter.dumpLog("__start_report" + completeness + "__end_report");
         long msecs = System.currentTimeMillis();
         mAsserter.dumpLog("__startTimestamp" + msecs + "__endTimestamp");
-    }	
+    }
 }
