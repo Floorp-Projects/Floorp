@@ -447,6 +447,20 @@ public:
   static nsRect
   GetCoveredRegion(const nsFrameList &aFrames);
 
+  // Converts aPoint from an app unit point in outer-<svg> content rect space
+  // to an app unit point in a frame's SVG userspace. 
+  // This is a temporary helper we should no longer need after bug 614732 is
+  // fixed.
+  static nsPoint
+  TransformOuterSVGPointToChildFrame(nsPoint aPoint,
+                                     const gfxMatrix& aFrameToCanvasTM,
+                                     nsPresContext* aPresContext);
+
+  static nsRect
+  TransformFrameRectToOuterSVG(const nsRect& aRect,
+                               const gfxMatrix& aMatrix,
+                               nsPresContext* aPresContext);
+
   /*
    * Convert a surface size to an integer for use by thebes
    * possibly making it smaller in the process so the surface does not

@@ -440,7 +440,7 @@ nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
 NS_IMETHODIMP_(nsRect)
 nsSVGGlyphFrame::GetCoveredRegion()
 {
-  return mRect;
+  return nsSVGUtils::TransformFrameRectToOuterSVG(mRect, GetCanvasTM(), PresContext());
 }
 
 NS_IMETHODIMP
@@ -448,13 +448,9 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
 {
   mRect.SetEmpty();
 
-  gfxMatrix matrix = GetCanvasTM();
-  if (matrix.IsSingular()) {
-    return NS_ERROR_FAILURE;
-  }
-
+  // XXX here we have tmpCtx use its default identity matrix, but does this
+  // function call anything that will call GetCanvasTM and break things?
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
-  tmpCtx->Multiply(matrix);
 
   bool hasStroke = HasStroke();
   if (hasStroke) {
@@ -487,7 +483,8 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   // calls to record and then reset the stroke width.
   gfxRect extent = tmpCtx->GetUserPathExtent();
   if (hasStroke) {
-    extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this, matrix);
+    extent =
+      nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this, gfxMatrix());
   }
 
   if (!extent.IsEmpty()) {
