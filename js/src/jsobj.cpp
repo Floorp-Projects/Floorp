@@ -3595,7 +3595,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
         const Shape *shape = obj->nativeLookup(cx, id);
         if (!shape) {
             uint32_t slot = 2 * JSProto_LIMIT + key;
-            SetReservedSlot(obj, slot, v);
+            obj->setReservedSlot(slot, v);
             if (!obj->addProperty(cx, id, JS_PropertyStub, JS_StrictPropertyStub, slot, attrs, 0, 0))
                 return false;
             AddTypePropertyId(cx, obj, id, v);
@@ -3618,8 +3618,8 @@ SetClassObject(JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
     if (!obj->isGlobal())
         return;
 
-    SetReservedSlot(obj, key, ObjectOrNullValue(cobj));
-    SetReservedSlot(obj, JSProto_LIMIT + key, ObjectOrNullValue(proto));
+    obj->setReservedSlot(key, ObjectOrNullValue(cobj));
+    obj->setReservedSlot(JSProto_LIMIT + key, ObjectOrNullValue(proto));
 }
 
 static void
