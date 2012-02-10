@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check basic breakpoint functionality.
+ * Check that setting a breakpoint in a line without code will skip forward.
  */
 
 var gDebuggee;
@@ -15,19 +15,25 @@ function run_test()
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function () {
-    attachTestGlobalClientAndResume(gClient, "test-stack", function (aResponse, aThreadClient) {
+    attachTestGlobalClientAndResume(gClient,
+                                    "test-stack",
+                                    function (aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
-      test_simple_breakpoint();
+      test_skip_breakpoint();
     });
   });
   do_test_pending();
 }
 
-function test_simple_breakpoint()
+function test_skip_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-01.js');
-    gThreadClient.setBreakpoint({ url: path, line: gDebuggee.line0 + 3}, function (aResponse, bpClient) {
+    let path = getFilePath('test_breakpoint-03.js');
+    let location = { url: path, line: gDebuggee.line0 + 3};
+    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
+      // Check that the breakpoint has properly skipped forward one line.
+      do_check_eq(aResponse.actualLocation.url, location.url);
+      do_check_eq(aResponse.actualLocation.line, location.line + 1);
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");
@@ -53,7 +59,8 @@ function test_simple_breakpoint()
   });
 
   gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "debugger;\n" +   // line0 + 1
-                 "var a = 1;\n" +  // line0 + 2
-                 "var b = 2;\n");  // line0 + 3
+                 "debugger;\n" +      // line0 + 1
+                 "var a = 1;\n" +     // line0 + 2
+                 "// A comment.\n" +  // line0 + 3
+                 "var b = 2;\n");     // line0 + 4
 }

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check basic breakpoint functionality.
+ * Check that setting a breakpoint in a line in a child script works.
  */
 
 var gDebuggee;
@@ -15,19 +15,24 @@ function run_test()
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function () {
-    attachTestGlobalClientAndResume(gClient, "test-stack", function (aResponse, aThreadClient) {
+    attachTestGlobalClientAndResume(gClient,
+                                    "test-stack",
+                                    function (aResponse, aThreadClient) {
       gThreadClient = aThreadClient;
-      test_simple_breakpoint();
+      test_child_breakpoint();
     });
   });
   do_test_pending();
 }
 
-function test_simple_breakpoint()
+function test_child_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-01.js');
-    gThreadClient.setBreakpoint({ url: path, line: gDebuggee.line0 + 3}, function (aResponse, bpClient) {
+    let path = getFilePath('test_breakpoint-04.js');
+    let location = { url: path, line: gDebuggee.line0 + 3};
+    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
+      // actualLocation is not returned when breakpoints don't skip forward.
+      do_check_eq(aResponse.actualLocation, undefined);
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");
@@ -53,7 +58,10 @@ function test_simple_breakpoint()
   });
 
   gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "debugger;\n" +   // line0 + 1
-                 "var a = 1;\n" +  // line0 + 2
-                 "var b = 2;\n");  // line0 + 3
+                 "function foo() {\n" + // line0 + 1
+                 "  this.a = 1;\n" +     // line0 + 2
+                 "  this.b = 2;\n" +     // line0 + 3
+                 "}\n" +                // line0 + 4
+                 "debugger;\n" +        // line0 + 5
+                 "foo();\n");           // line0 + 6
 }
