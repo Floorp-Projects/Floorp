@@ -73,7 +73,7 @@ class BoxInputsPolicy : public TypePolicy
     virtual bool adjustInputs(MInstruction *def);
 };
 
-class BinaryArithPolicy : public BoxInputsPolicy
+class ArithPolicy : public BoxInputsPolicy
 {
   protected:
     // Specifies three levels of specialization:

@@ -250,6 +250,21 @@ class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
     }
 };
 
+class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(TypeOfV);
+
+    static const size_t Input = 0;
+
+    MTypeOf *mir() const {
+        return mir_->toTypeOf();
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Writes an argument for a function call to the frame's argument vector.
 class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
 {

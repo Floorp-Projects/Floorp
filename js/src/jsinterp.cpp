@@ -2577,8 +2577,7 @@ BEGIN_CASE(JSOP_TYPEOFEXPR)
 BEGIN_CASE(JSOP_TYPEOF)
 {
     const Value &ref = regs.sp[-1];
-    JSType type = JS_TypeOfValue(cx, ref);
-    regs.sp[-1].setString(rt->atomState.typeAtoms[type]);
+    regs.sp[-1].setString(TypeOfOperation(cx, ref));
 }
 END_CASE(JSOP_TYPEOF)
 

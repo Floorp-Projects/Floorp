@@ -63,6 +63,7 @@ namespace ion {
     _(PassArg)                                                              \
     _(Call)                                                                 \
     _(BitNot)                                                               \
+    _(TypeOf)                                                               \
     _(BitAnd)                                                               \
     _(BitOr)                                                                \
     _(BitXor)                                                               \

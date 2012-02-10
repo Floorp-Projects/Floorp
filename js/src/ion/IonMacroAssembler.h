@@ -149,7 +149,13 @@ class MacroAssembler : public MacroAssemblerSpecific
             storeTypedOrValue(src.reg(), address);
     }
 
-    void storeCallResult(AnyRegister dest)
+    void storeCallResult(Register reg)
+    {
+        if (reg != ReturnReg)
+            mov(ReturnReg, reg);
+    }
+
+    void storeCallResultValue(AnyRegister dest)
     {
 #if defined(JS_NUNBOX32)
         unboxValue(ValueOperand(JSReturnReg_Type, JSReturnReg_Data), dest);
@@ -160,7 +166,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    void storeCallResult(ValueOperand dest)
+    void storeCallResultValue(ValueOperand dest)
     {
 #if defined(JS_NUNBOX32)
         // reshuffle the return registers used for a call result to store into
@@ -190,12 +196,12 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    void storeCallResult(TypedOrValueRegister dest)
+    void storeCallResultValue(TypedOrValueRegister dest)
     {
         if (dest.hasValue())
-            storeCallResult(dest.valueReg());
+            storeCallResultValue(dest.valueReg());
         else
-            storeCallResult(dest.typedReg());
+            storeCallResultValue(dest.typedReg());
     }
 
 

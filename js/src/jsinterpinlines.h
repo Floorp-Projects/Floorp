@@ -769,6 +769,13 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
     return obj->setGeneric(cx, id, &tmp, script->strictModeCode);
 }
 
+static JS_ALWAYS_INLINE JSString *
+TypeOfOperation(JSContext *cx, const Value &v)
+{
+    JSType type = JS_TypeOfValue(cx, v);
+    return cx->runtime->atomState.typeAtoms[type];
+}
+
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
         Value lval = lhs;                                                     \
