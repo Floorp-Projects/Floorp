@@ -104,6 +104,48 @@ function testSteps()
        "Correct key");
   }
 
+  request = objectStore.index("height").getAllKeys(65, 0);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+  ok(true, "3");
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, 2, "Correct length");
+
+  for (let i in event.target.result) {
+    is(event.target.result[i], objectStoreDataHeightSort[parseInt(i) + 3].key,
+       "Correct key");
+  }
+
+  request = objectStore.index("height").getAllKeys(65, null);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+  ok(true, "3");
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, 2, "Correct length");
+
+  for (let i in event.target.result) {
+    is(event.target.result[i], objectStoreDataHeightSort[parseInt(i) + 3].key,
+       "Correct key");
+  }
+
+  request = objectStore.index("height").getAllKeys(65, undefined);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+  ok(true, "3");
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, 2, "Correct length");
+
+  for (let i in event.target.result) {
+    is(event.target.result[i], objectStoreDataHeightSort[parseInt(i) + 3].key,
+       "Correct key");
+  }
+
   request = objectStore.index("height").getAllKeys();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;

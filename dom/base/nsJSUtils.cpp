@@ -114,7 +114,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
   if (!clazz ||
       !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
       !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
-      !(supports = (nsISupports*)::JS_GetPrivate(aContext, glob))) {
+      !(supports = (nsISupports*)::JS_GetPrivate(glob))) {
     return nsnull;
   }
 

@@ -38,6 +38,8 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.FloatUtils;
+import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import org.json.JSONException;
@@ -107,6 +109,14 @@ public final class RectUtils {
 
     public static IntSize getSize(Rect rect) {
         return new IntSize(rect.width(), rect.height());
+    }
+
+    public static Point getOrigin(Rect rect) {
+        return new Point(rect.left, rect.top);
+    }
+
+    public static PointF getOrigin(RectF rect) {
+        return new PointF(rect.left, rect.top);
     }
 
     /*

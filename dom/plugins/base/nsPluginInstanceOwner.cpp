@@ -1083,13 +1083,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-  *result = NS_PTR_TO_INT32(mObjectFrame);
-  return NS_OK;
-}
-
 // Cache the attributes and/or parameters of our tag into a single set
 // of arrays to be compatible with Netscape 4.x. The attributes go first,
 // followed by a PARAM/null and then any PARAM tags. Also, hold the
