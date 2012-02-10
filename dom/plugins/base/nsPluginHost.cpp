@@ -1368,17 +1368,9 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 nsresult
 nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
 {
-  // If plugins.click_to_play is false, plugins should always play
-  return IsPluginEnabledForType(aMimeType,
-                                !Preferences::GetBool("plugins.click_to_play", false));
-}
-
-nsresult
-nsPluginHost::IsPluginEnabledForType(const char* aMimeType, bool aShouldPlay)
-{
   nsPluginTag *plugin = FindPluginForType(aMimeType, true);
   if (plugin)
-    return aShouldPlay ? NS_OK : NS_ERROR_PLUGIN_CLICKTOPLAY;
+    return NS_OK;
 
   // Pass false as the second arg so we can return NS_ERROR_PLUGIN_DISABLED
   // for disabled plug-ins.
@@ -1393,7 +1385,7 @@ nsPluginHost::IsPluginEnabledForType(const char* aMimeType, bool aShouldPlay)
       return NS_ERROR_PLUGIN_DISABLED;
   }
 
-  return aShouldPlay ? NS_OK : NS_ERROR_PLUGIN_CLICKTOPLAY;
+  return NS_OK;
 }
 
 // check comma delimitered extensions
@@ -1422,21 +1414,12 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
 }
 
 nsresult
-nsPluginHost::IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType)
-{
-  // If plugins.click_to_play is false, plugins should always play
-  return IsPluginEnabledForExtension(aExtension, aMimeType,
-                                     !Preferences::GetBool("plugins.click_to_play", false));
-}
-
-nsresult
 nsPluginHost::IsPluginEnabledForExtension(const char* aExtension,
-                                          const char* &aMimeType,
-                                          bool aShouldPlay)
+                                          const char* &aMimeType)
 {
   nsPluginTag *plugin = FindPluginEnabledForExtension(aExtension, aMimeType);
   if (plugin)
-    return aShouldPlay ? NS_OK : NS_ERROR_PLUGIN_CLICKTOPLAY;
+    return NS_OK;
 
   return NS_ERROR_FAILURE;
 }
