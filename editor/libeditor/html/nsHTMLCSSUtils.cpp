@@ -318,16 +318,26 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
 {
   NS_ASSERTION(aNode, "Shouldn't you pass aNode? - Bug 214025");
 
-  nsCOMPtr<nsIDOMNode> node = aNode;
-  // we need an element node here
-  if (mHTMLEditor->IsTextNode(aNode)) {
-    aNode->GetParentNode(getter_AddRefs(node));
-  }
-  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, false);
+  return IsCSSEditableProperty(content, aProperty, aAttribute);
+}
+
+bool
+nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
+                                      nsIAtom* aProperty,
+                                      const nsAString* aAttribute)
+{
+  MOZ_ASSERT(aNode);
+
+  nsIContent* content = aNode;
+  // we need an element node here
+  if (content->NodeType() == nsIDOMNode::TEXT_NODE) {
+    content = content->GetParent();
+    NS_ENSURE_TRUE(content, false);
+  }
 
   nsIAtom *tagName = content->Tag();
-  // brade: should the above use nsEditor::GetTag(aNode)?
   // brade: shouldn't some of the above go below the next block?
 
   // html inline styles B I TT U STRIKE and COLOR/FACE on FONT
