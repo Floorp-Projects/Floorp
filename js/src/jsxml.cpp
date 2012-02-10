@@ -861,23 +861,18 @@ attr_identity(const JSXML *xmla, const JSXML *xmlb)
     return qname_identity(xmla->name, xmlb->name);
 }
 
+template<class T>
 void
-js_XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor<JSXML> *cursor)
+js_XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor<T> *cursor)
 {
     for (; cursor; cursor = cursor->next) {
         if (cursor->root)
-            MarkXML(trc, (const HeapPtr<JSXML> &)cursor->root, "cursor_root");
+            Mark(trc, (const MarkablePtr<T> &)cursor->root, "cursor_root");
     }
 }
 
-void
-js_XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor<JSObject> *cursor)
-{
-    for (; cursor; cursor = cursor->next) {
-        if (cursor->root)
-            MarkObject(trc, (const HeapPtr<JSObject> &)cursor->root, "cursor_root");
-    }
-}
+template void js_XMLArrayCursorTrace<JSXML>(JSTracer *trc, JSXMLArrayCursor<JSXML> *cursor);
+template void js_XMLArrayCursorTrace<JSObject>(JSTracer *trc, JSXMLArrayCursor<JSObject> *cursor);
 
 template<class T>
 static HeapPtr<T> *
