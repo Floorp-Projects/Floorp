@@ -41,7 +41,7 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(dd3e7b3c-0974-4a38-b4d3-ce2213452432)]
+[scriptable, uuid(50c4194b-61c6-4292-963f-6e1a8e11c9d3)]
 interface nsIAppStartup : nsISupports
 {
     /**
