@@ -509,12 +509,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, c);
     }
     void branch32(Condition cond, Register lhs, Register rhs, Label *label) {
-        ma_cmp(rhs, lhs);
+        ma_cmp(lhs, rhs);
         ma_b(label, cond);
     }
     void branch32(Condition cond, Register lhs, Imm32 imm, Label *label) {
         ma_cmp(lhs, imm);
-        ma_b(label, InvertCondition(cond));
+        ma_b(label, cond);
     }
     void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
         move32(lhs, ScratchRegister);
