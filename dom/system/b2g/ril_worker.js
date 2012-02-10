@@ -540,6 +540,27 @@ let RIL = {
   },
 
   /**
+   * Parse an integer from a string, falling back to a default value
+   * if the the provided value is not a string or does not contain a valid
+   * number.
+   * 
+   * @param string
+   *        String to be parsed.
+   * @param defaultValue
+   *        Default value to be used.
+   */
+  parseInt: function RIL_parseInt(string, defaultValue) {
+    let number = parseInt(string, 10);
+    if (!isNaN(number)) {
+      return number;
+    }
+    if (defaultValue === undefined) {
+      defaultValue = null;
+    }
+    return defaultValue;
+  },
+
+  /**
    * Retrieve the ICC's status.
    *
    * Response will call Phone.onICCStatus().
@@ -1261,6 +1282,9 @@ let Phone = {
   IMSI: null,
   SMSC: null,
 
+  registrationState: {},
+  gprsRegistrationState: {},
+
   /**
    * List of strings identifying the network operator.
    */
@@ -1375,7 +1399,7 @@ let Phone = {
       this.sendDOMMessage({
         type: "radiostatechange",
         radioState: (newState == RADIO_STATE_OFF) ?
-                     DOM_RADIOSTATE_OFF : DOM_RADIOSTATE_READY
+                     GECKO_RADIOSTATE_OFF : GECKO_RADIOSTATE_READY
       });
 
       //XXX TODO For now, just turn the radio on if it's off. for the real
@@ -1392,7 +1416,7 @@ let Phone = {
       //TODO do that
 
       this.sendDOMMessage({type: "radiostatechange",
-                           radioState: DOM_RADIOSTATE_UNAVAILABLE});
+                           radioState: GECKO_RADIOSTATE_UNAVAILABLE});
     }
 
     if (newState == RADIO_STATE_SIM_READY  ||
@@ -1404,13 +1428,13 @@ let Phone = {
       RIL.getSignalStrength();
       RIL.getSMSCAddress();
       this.sendDOMMessage({type: "cardstatechange",
-                           cardState: DOM_CARDSTATE_READY});
+                           cardState: GECKO_CARDSTATE_READY});
     }
     if (newState == RADIO_STATE_SIM_LOCKED_OR_ABSENT  ||
         newState == RADIO_STATE_RUIM_LOCKED_OR_ABSENT) {
       RIL.getICCStatus();
       this.sendDOMMessage({type: "cardstatechange",
-                           cardState: DOM_CARDSTATE_UNAVAILABLE});
+                           cardState: GECKO_CARDSTATE_UNAVAILABLE});
     }
 
     let wasOn = this.radioState != RADIO_STATE_OFF &&
@@ -1496,10 +1520,10 @@ let Phone = {
 
     if ((!iccStatus) || (iccStatus.cardState == CARD_STATE_ABSENT)) {
       if (DEBUG) debug("ICC absent");
-      if (this.cardState == DOM_CARDSTATE_ABSENT) {
+      if (this.cardState == GECKO_CARDSTATE_ABSENT) {
         return;
       }
-      this.cardState = DOM_CARDSTATE_ABSENT;
+      this.cardState = GECKO_CARDSTATE_ABSENT;
       this.sendDOMMessage({type: "cardstatechange",
                            cardState: this.cardState});
       return;
@@ -1512,10 +1536,10 @@ let Phone = {
         (this.radioState == RADIO_STATE_NV_NOT_READY) ||
         (this.radioState == RADIO_STATE_NV_READY)) {
       if (DEBUG) debug("ICC not ready");
-      if (this.cardState == DOM_CARDSTATE_NOT_READY) {
+      if (this.cardState == GECKO_CARDSTATE_NOT_READY) {
         return;
       }
-      this.cardState = DOM_CARDSTATE_NOT_READY;
+      this.cardState = GECKO_CARDSTATE_NOT_READY;
       this.sendDOMMessage({type: "cardstatechange",
                            cardState: this.cardState});
       return;
@@ -1530,10 +1554,10 @@ let Phone = {
         if (DEBUG) {
           debug("Subscription application is not present in iccStatus.");
         }
-        if (this.cardState == DOM_CARDSTATE_ABSENT) {
+        if (this.cardState == GECKO_CARDSTATE_ABSENT) {
           return;
         }
-        this.cardState = DOM_CARDSTATE_ABSENT;
+        this.cardState = GECKO_CARDSTATE_ABSENT;
         this.sendDOMMessage({type: "cardstatechange",
                              cardState: this.cardState});
         return;
@@ -1542,21 +1566,21 @@ let Phone = {
       let newCardState;
       switch (app.app_state) {
         case CARD_APP_STATE_PIN:
-          newCardState = DOM_CARDSTATE_PIN_REQUIRED;
+          newCardState = GECKO_CARDSTATE_PIN_REQUIRED;
           break;
         case CARD_APP_STATE_PUK:
-          newCardState = DOM_CARDSTATE_PUK_REQUIRED;
+          newCardState = GECKO_CARDSTATE_PUK_REQUIRED;
           break;
         case CARD_APP_STATE_SUBSCRIPTION_PERSO:
-          newCardState = DOM_CARDSTATE_NETWORK_LOCKED;
+          newCardState = GECKO_CARDSTATE_NETWORK_LOCKED;
           break;
         case CARD_APP_STATE_READY:
-          newCardState = DOM_CARDSTATE_READY;
+          newCardState = GECKO_CARDSTATE_READY;
           break;
         case CARD_APP_STATE_UNKNOWN:
         case CARD_APP_STATE_DETECTED:
         default:
-          newCardState = DOM_CARDSTATE_NOT_READY;
+          newCardState = GECKO_CARDSTATE_NOT_READY;
       }
 
       if (this.cardState == newCardState) {
@@ -1607,12 +1631,67 @@ let Phone = {
     this.IMEISV = imeiSV;
   },
 
-  onRegistrationState: function onRegistrationState(newState) {
-    this.registrationState = newState;
+  onRegistrationState: function onRegistrationState(state) {
+    let rs = this.registrationState;
+    let stateChanged = false;
+
+    let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
+    if (rs.regState != regState) {
+      rs.regState = regState;
+      stateChanged = true;
+    }
+
+    let radioTech = RIL.parseInt(state[3], NETWORK_CREG_TECH_UNKNOWN);
+    if (rs.radioTech != radioTech) {
+      rs.radioTech = radioTech;
+      stateChanged = true;
+    }
+
+    // TODO: This zombie code branch that will be raised from the dead once
+    // we add explicit CDMA support everywhere (bug 726098).
+    let cdma = false;
+    if (cdma) {
+      let baseStationId = RIL.parseInt(state[4]);
+      let baseStationLatitude = RIL.parseInt(state[5]);
+      let baseStationLongitude = RIL.parseInt(state[6]);
+      if (!baseStationLatitude && !baseStationLongitude) {
+        baseStationLatitude = baseStationLongitude = null;
+      }
+      let cssIndicator = RIL.parseInt(state[7]);
+      let systemId = RIL.parseInt(state[8]);
+      let networkId = RIL.parseInt(state[9]);
+      let roamingIndicator = RIL.parseInt(state[10]);
+      let systemIsInPRL = RIL.parseInt(state[11]);
+      let defaultRoamingIndicator = RIL.parseInt(state[12]);
+      let reasonForDenial = RIL.parseInt(state[13]);
+    }
+
+    if (stateChanged) {
+      this.sendDOMMessage({type: "registrationstatechange",
+                           registrationState: rs});
+    }
   },
 
-  onGPRSRegistrationState: function onGPRSRegistrationState(newState) {
-    this.gprsRegistrationState = newState;
+  onGPRSRegistrationState: function onGPRSRegistrationState(state) {
+    let rs = this.gprsRegistrationState;
+    let stateChanged = false;
+
+    let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
+    if (rs.regState != regState) {
+      rs.regState = regState;
+      stateChanged = true;
+    }
+
+    let radioTech = RIL.parseInt(state[3], NETWORK_CREG_TECH_UNKNOWN);
+    if (rs.radioTech != radioTech) {
+      rs.radioTech = radioTech;
+      stateChanged = true;
+    }
+
+    if (stateChanged) {
+      this.sendDOMMessage({type: "gprsregistrationstatechange",
+                           gprsRegistrationState: rs});
+    }
   },
 
   onOperator: function onOperator(operator) {
