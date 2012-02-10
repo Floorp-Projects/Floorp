@@ -15,6 +15,9 @@ public class testCheck extends PixelTest {
     public void testCheck() {
         setTestType("talos");
         String url = getAbsoluteUrl("/startup_test/fennecmark/wikipedia.html");
+
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
         loadAndPaint(url);
 
         mDriver.setupScrollHandling();

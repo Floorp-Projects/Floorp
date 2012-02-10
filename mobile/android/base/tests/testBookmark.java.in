@@ -12,6 +12,9 @@ public class testBookmark extends BaseTest {
 
     public void testBookmark() {
         setTestType("mochitest");
+
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
         String url = getAbsoluteUrl("/robocop/robocop_blank_02.html");
         enterUrl(url);
 
