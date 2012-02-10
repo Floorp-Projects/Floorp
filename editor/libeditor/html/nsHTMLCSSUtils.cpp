@@ -580,25 +580,20 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
 nsresult
 nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMWindow **aViewCSS)
 {
-  nsCOMPtr<nsIDOMElement> element = GetElementContainerOrSelf(aNode);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+  return GetDefaultViewCSS(node, aViewCSS);
+}
+
+nsresult
+nsHTMLCSSUtils::GetDefaultViewCSS(nsINode* aNode, nsIDOMWindow** aViewCSS)
+{
+  MOZ_ASSERT(aNode);
+  dom::Element* element = GetElementContainerOrSelf(aNode);
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
-  // TODO: move this initialization to the top of the function
-  *aViewCSS = nsnull;
-  if (!element) {
-    return NS_OK;
-  }
-  // find the owner document
-  nsCOMPtr<nsIDOMDocument> doc;
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
-  nsresult res = node->GetOwnerDocument(getter_AddRefs(doc));
-  NS_ENSURE_SUCCESS(res, res);
-  if (!doc) {
-    return NS_OK;
-  }
-  nsCOMPtr<nsIDOMWindow> window;
-  res = doc->GetDefaultView(getter_AddRefs(window));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIDOMWindow> window = element->OwnerDoc()->GetWindow();
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
   window.forget(aViewCSS);
   return NS_OK;
 }
