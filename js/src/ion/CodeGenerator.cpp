@@ -1649,7 +1649,7 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
     if (!callVM(GetPropertyCacheInfo, ins_))
         return false;
 
-    masm.storeCallResult(output);
+    masm.storeCallResultValue(output);
     restoreLive(ins_);
 
     masm.jump(ool->rejoin());
@@ -1760,6 +1760,93 @@ CodeGenerator::visitBitNotV(LBitNotV *lir)
 
     pushArg(ToValue(lir, LBitNotV::Input));
     return callVM(info, lir);
+}
+
+class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator>
+{
+    LTypeOfV *ins_;
+
+  public:
+    OutOfLineTypeOfV(LTypeOfV *ins)
+      : ins_(ins)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineTypeOfV(this);
+    }
+    LTypeOfV *ins() const {
+        return ins_;
+    }
+};
+
+bool
+CodeGenerator::visitTypeOfV(LTypeOfV *lir)
+{
+    const ValueOperand value = ToValue(lir, LTypeOfV::Input);
+    Register output = ToRegister(lir->output());
+    Register tag = masm.splitTagForTest(value);
+
+    OutOfLineTypeOfV *ool = new OutOfLineTypeOfV(lir);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    PropertyName **typeAtoms = GetIonContext()->cx->runtime->atomState.typeAtoms;
+
+    // Jump to the OOL path if the value is an object. Objects are complicated
+    // since they may have a typeof hook.
+    masm.branchTestObject(Assembler::Equal, tag, ool->entry());
+
+    Label done;
+
+    Label notNumber;
+    masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
+    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_NUMBER]), output);
+    masm.jump(&done);
+    masm.bind(&notNumber);
+
+    Label notUndefined;
+    masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
+    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_VOID]), output);
+    masm.jump(&done);
+    masm.bind(&notUndefined);
+
+    Label notNull;
+    masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
+    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_OBJECT]), output);
+    masm.jump(&done);
+    masm.bind(&notNull);
+
+    Label notBoolean;
+    masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
+    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_BOOLEAN]), output);
+    masm.jump(&done);
+    masm.bind(&notBoolean);
+
+    masm.movePtr(ImmGCPtr(typeAtoms[JSTYPE_STRING]), output);
+
+    masm.bind(&done);
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool)
+{
+    typedef JSString *(*pf)(JSContext *, const Value &);
+    static const VMFunction Info = FunctionInfo<pf>(TypeOfOperation);
+
+    LTypeOfV *ins = ool->ins();
+    saveLive(ins);
+
+    pushArg(ToValue(ins, LTypeOfV::Input));
+    if (!callVM(Info, ins))
+        return false;
+
+    masm.storeCallResult(ToRegister(ins->output()));
+    restoreLive(ins);
+
+    masm.jump(ool->rejoin());
+    return true;
 }
 
 bool

@@ -139,6 +139,7 @@
     _(CallIteratorEnd)              \
     _(ArrayLength)                  \
     _(StringLength)                 \
+    _(TypeOfV)                      \
     _(Round)
 
 #if defined(JS_CPU_X86)

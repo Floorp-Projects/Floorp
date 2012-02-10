@@ -1546,6 +1546,45 @@ class MBitNot
     }
 };
 
+class MTypeOf
+  : public MUnaryInstruction,
+    public BoxInputsPolicy
+{
+    MIRType inputType_;
+
+    MTypeOf(MDefinition *def, MIRType inputType)
+      : MUnaryInstruction(def), inputType_(inputType)
+    {
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(TypeOf);
+
+    static MTypeOf *New(MDefinition *def, MIRType inputType) {
+        return new MTypeOf(def, inputType);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MIRType inputType() const {
+        return inputType_;
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    MDefinition *foldsTo(bool useValueNumbers);
+
+    AliasSet getAliasSet() const {
+        if (inputType_ <= MIRType_String)
+            return AliasSet::None();
+
+        // For objects, typeof may invoke an effectful typeof hook.
+        return AliasSet::Store(AliasSet::Any);
+    }
+};
+
 class MBinaryBitwiseInstruction
   : public MBinaryInstruction,
     public BitwisePolicy
@@ -1724,7 +1763,7 @@ class MUrsh : public MBinaryBitwiseInstruction
 
 class MBinaryArithInstruction
   : public MBinaryInstruction,
-    public BinaryArithPolicy
+    public ArithPolicy
 {
   public:
     MBinaryArithInstruction(MDefinition *left, MDefinition *right)
@@ -1756,7 +1795,9 @@ class MBinaryArithInstruction
     }
 };
 
-class MAbs : public MUnaryInstruction
+class MAbs
+  : public MUnaryInstruction,
+    public ArithPolicy
 {
     MAbs(MDefinition *num, MIRType type)
       : MUnaryInstruction(num)
@@ -1773,7 +1814,9 @@ class MAbs : public MUnaryInstruction
     MDefinition *num() const {
         return getOperand(0);
     }
-
+    TypePolicy *typePolicy() {
+        return this;
+    }
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }

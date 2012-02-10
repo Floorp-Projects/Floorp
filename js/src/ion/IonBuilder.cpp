@@ -785,6 +785,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_OBJECT:
         return jsop_object(info().getObject(pc));
 
+      case JSOP_TYPEOF:
+        return jsop_typeof();
+
       case JSOP_ITER:
         return jsop_iter(GET_INT8(pc));
 
@@ -3528,6 +3531,22 @@ IonBuilder::jsop_this()
     }
 
     return abort("JSOP_THIS hard case not yet handled");
+}
+
+bool
+IonBuilder::jsop_typeof()
+{
+    TypeOracle::Unary unary = oracle->unaryOp(script, pc);
+
+    MDefinition *input = current->pop();
+    MTypeOf *ins = MTypeOf::New(input, unary.ival);
+
+    current->add(ins);
+    current->push(ins);
+
+    if (ins->isEffectful() && !resumeAfter(ins))
+        return false;
+    return true;
 }
 
 bool

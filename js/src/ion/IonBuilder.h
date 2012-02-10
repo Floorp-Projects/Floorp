@@ -309,6 +309,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_regexp(RegExpObject *reobj);
     bool jsop_object(JSObject *obj);
     bool jsop_this();
+    bool jsop_typeof();
     bool jsop_iter(uint8 flags);
     bool jsop_iternext(uint8 depth);
     bool jsop_itermore();
