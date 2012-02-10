@@ -1350,20 +1350,6 @@ nsNPAPIPluginInstance::InvalidateRegion(NPRegion invalidRegion)
 }
 
 nsresult
-nsNPAPIPluginInstance::ForceRedraw()
-{
-  if (RUNNING != mRunning)
-    return NS_OK;
-
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  GetOwner(getter_AddRefs(owner));
-  if (!owner)
-    return NS_ERROR_FAILURE;
-
-  return owner->ForceRedraw();
-}
-
-nsresult
 nsNPAPIPluginInstance::GetMIMEType(const char* *result)
 {
   if (!mMIMEType)
