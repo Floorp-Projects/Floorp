@@ -704,12 +704,6 @@ public:
 
     bool CanUploadSubTextures();
 
-    // Quirks mode to force the platform to use Power of Two.
-    // Currently provided only as a best effort. We're not in a
-    // state where we can yet quarante that the platform will honor
-    // this.
-    bool PreferPowerOfTwoTextures();
-
     /**
      * If this context wraps a double-buffered target, swap the back
      * and front buffers.  It should be assumed that after a swap, the
