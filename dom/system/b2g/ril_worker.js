@@ -1632,7 +1632,7 @@ let Phone = {
   },
 
   onSignalStrength: function onSignalStrength(strength) {
-    debug("Signal strength " + JSON.stringify(strength));
+    if (DEBUG) debug("Signal strength " + JSON.stringify(strength));
     this.sendDOMMessage({type: "signalstrengthchange",
                          signalStrength: strength});
   },
