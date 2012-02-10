@@ -174,7 +174,7 @@ CompositorParent::Composite()
   TransformShadowTree(layer, v);
 #else
   Layer* layer = mLayerManager->GetRoot();
-  layer->AsShadowLayer()->SetShadowTransform(worldTransform);
+  //layer->AsShadowLayer()->SetShadowTransform(worldTransform);
 #endif
 
 #if 0
