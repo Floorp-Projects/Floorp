@@ -187,9 +187,9 @@ public class GeckoGLLayerClient extends GeckoLayerClient
             ViewportMetrics viewportMetrics = layerController.getViewportMetrics();
             PointF viewportOrigin = viewportMetrics.getOrigin();
             Point tileOrigin = mTileLayer.getOrigin();
-            float scrollX = viewportOrigin.x - tileOrigin.x;
-            float scrollY = viewportOrigin.y - tileOrigin.y;
-            float zoomFactor = viewportMetrics.getZoomFactor() / mTileLayer.getResolution();
+            float scrollX = viewportOrigin.x; 
+            float scrollY = viewportOrigin.y;
+            float zoomFactor = viewportMetrics.getZoomFactor();
             Log.e(LOGTAG, "### Viewport metrics = " + viewportMetrics + " tile reso = " +
                   mTileLayer.getResolution());
             return new ViewTransform(scrollX, scrollY, zoomFactor);
