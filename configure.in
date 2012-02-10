@@ -5481,7 +5481,7 @@ MOZ_ARG_DISABLE_BOOL(websms-backend,
     MOZ_WEBSMS_BACKEND=,
     MOZ_WEBSMS_BACKEND=1)
 
-if test $MOZ_WEBSMS_BACKEND -eq 1; then
+if test -n "$MOZ_WEBSMS_BACKEND"; then
     AC_DEFINE(MOZ_WEBSMS_BACKEND)
 fi
 
