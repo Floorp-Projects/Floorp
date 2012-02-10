@@ -1065,7 +1065,7 @@ CodeGeneratorARM::testStringTruthy(bool truthy, const ValueOperand &value)
 
     size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
     masm.ma_dtr(IsLoad, string, Imm32(JSString::offsetOfLengthAndFlags()), tmp);
-    masm.ma_tst(Imm32(mask), tmp);
+    masm.ma_tst(tmp, Imm32(mask));
     return truthy ? Assembler::NonZero : Assembler::Zero;
 }
 
