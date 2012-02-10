@@ -308,7 +308,8 @@ public:
    * @param aNode    the node we want the default Window for
    * @param aWindow  [OUT] the default Window
    */
-  nsresult        GetDefaultViewCSS(nsIDOMNode* aNode, nsIDOMWindow** aWindow);
+  nsresult GetDefaultViewCSS(nsINode* aNode, nsIDOMWindow** aWindow);
+  nsresult GetDefaultViewCSS(nsIDOMNode* aNode, nsIDOMWindow** aWindow);
 
 
 private:
