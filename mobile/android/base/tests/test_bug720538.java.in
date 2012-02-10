@@ -9,6 +9,8 @@ public class test_bug720538 extends PixelTest {
         setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/test_bug720538.html");
 
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
         /*
          * for this test, we load the associated test_bug720538.html file. this file has two
          * iframes (painted completely blue - #0000FF) and the rest of the page is the background
