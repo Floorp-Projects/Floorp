@@ -457,8 +457,8 @@ abstract public class GeckoApp
 
         // Disable share menuitem for about:, chrome: and file: URIs
         String scheme = Uri.parse(tab.getURL()).getScheme();
-        boolean enabled = !(scheme.equals("about") || scheme.equals("chrome") ||
-                            scheme.equals("file"));
+        boolean enabled = scheme != null && !(scheme.equals("about") || scheme.equals("chrome") ||
+                                              scheme.equals("file"));
         share.setEnabled(enabled);
 
         // Disable save as PDF for about:home and xul pages
