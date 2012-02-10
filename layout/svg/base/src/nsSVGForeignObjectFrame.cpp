@@ -264,13 +264,9 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
                                      aDirtyRect->width, aDirtyRect->height);
     transDirtyRect = invmatrix.TransformBounds(transDirtyRect);
 
-    transDirtyRect.Scale(nsPresContext::AppUnitsPerCSSPixel());
-    nsPoint tl(NSToCoordFloor(transDirtyRect.X()),
-               NSToCoordFloor(transDirtyRect.Y()));
-    nsPoint br(NSToCoordCeil(transDirtyRect.XMost()),
-               NSToCoordCeil(transDirtyRect.YMost()));
     kidDirtyRect.IntersectRect(kidDirtyRect,
-                               nsRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y));
+      nsLayoutUtils::RoundGfxRectToAppRect(transDirtyRect,
+                       PresContext()->AppUnitsPerCSSPixel()));
   }
 
   PRUint32 flags = nsLayoutUtils::PAINT_IN_TRANSFORM;

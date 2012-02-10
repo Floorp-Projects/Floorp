@@ -491,7 +491,8 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   }
 
   if (!extent.IsEmpty()) {
-    mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
+    mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent, 
+              PresContext()->AppUnitsPerDevPixel());
   }
 
   return NS_OK;
