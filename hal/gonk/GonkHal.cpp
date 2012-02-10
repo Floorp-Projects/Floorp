@@ -1,16 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=2 ts=8 et ft=cpp : */
-/* ***** BEGIN LICENSE BLOCK *****
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/.
- * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
- *   Michael Wu <mwu@mozilla.com>
- *   Justin Lebar <justin.lebar@gmail.com>
- *   Jim Straus <jstraus@mozilla.com>
- *
- * ***** END LICENSE BLOCK ***** */
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "hardware_legacy/uevent.h"
 #include "Hal.h"

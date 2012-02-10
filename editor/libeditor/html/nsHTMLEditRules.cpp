@@ -861,16 +861,14 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   {
     nsCOMPtr<nsIContent> blockParentContent = do_QueryInterface(blockParent);
     if (blockParentContent && 
-        mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(blockParent, dummyProperty, &typeAttrName))
+        mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(blockParentContent, dummyProperty, &typeAttrName))
     {
       // we are in CSS mode and we know how to align this element with CSS
       nsAutoString value;
       // let's get the value(s) of text-align or margin-left/margin-right
-      mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(blockParent,
-                                                     dummyProperty,
-                                                     &typeAttrName,
-                                                     value,
-                                                     COMPUTED_STYLE_TYPE);
+      mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(
+        blockParentContent, dummyProperty, &typeAttrName, value,
+        COMPUTED_STYLE_TYPE);
       if (value.EqualsLiteral("center") ||
           value.EqualsLiteral("-moz-center") ||
           value.EqualsLiteral("auto auto"))
@@ -6489,21 +6487,30 @@ nsHTMLEditRules::MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes,
 //               Also stops on the active editor host (contenteditable).
 //               Also test if aNode is an li itself.
 //                       
-nsCOMPtr<nsIDOMNode> 
-nsHTMLEditRules::IsInListItem(nsIDOMNode *aNode)
+already_AddRefed<nsIDOMNode>
+nsHTMLEditRules::IsInListItem(nsIDOMNode* aNode)
 {
-  NS_ENSURE_TRUE(aNode, nsnull);  
-  if (nsHTMLEditUtils::IsListItem(aNode)) return aNode;
-  
-  nsCOMPtr<nsIDOMNode> parent, tmp;
-  aNode->GetParentNode(getter_AddRefs(parent));
-  
-  while (parent)
-  {
-    if (!mHTMLEditor->IsNodeInActiveEditor(parent)) return nsnull;
-    if (nsHTMLEditUtils::IsTableElement(parent)) return nsnull;
-    if (nsHTMLEditUtils::IsListItem(parent)) return parent;
-    tmp=parent; tmp->GetParentNode(getter_AddRefs(parent));
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  nsCOMPtr<nsIDOMNode> retval = do_QueryInterface(IsInListItem(node));
+  return retval.forget();
+}
+
+nsINode*
+nsHTMLEditRules::IsInListItem(nsINode* aNode)
+{
+  NS_ENSURE_TRUE(aNode, nsnull);
+  if (aNode->IsElement() && nsHTMLEditUtils::IsListItem(aNode->AsElement())) {
+    return aNode;
+  }
+
+  nsINode* parent = aNode->GetNodeParent();
+  while (parent && mHTMLEditor->IsNodeInActiveEditor(parent) &&
+         !(parent->IsElement() &&
+           nsHTMLEditUtils::IsTableElement(parent->AsElement()))) {
+    if (nsHTMLEditUtils::IsListItem(parent->AsElement())) {
+      return parent;
+    }
+    parent = parent->GetNodeParent();
   }
   return nsnull;
 }
@@ -8879,91 +8886,69 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
 {
   NS_ENSURE_ARG_POINTER(aNode);
 
-  if ( !( (aRelativeChange==1) || (aRelativeChange==-1) ) )
+  if (aRelativeChange != 1 && aRelativeChange != -1) {
     return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
-  NS_ASSERTION(element, "not an element node");
-
-  if (element) {
-    nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, element);    
-    nsAutoString value;
-    nsresult res;
-    mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aNode, marginProperty, value);
-    float f;
-    nsIAtom * unit;
-    mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, &unit);
-    if (0 == f) {
-      NS_IF_RELEASE(unit);
-      nsAutoString defaultLengthUnit;
-      mHTMLEditor->mHTMLCSSUtils->GetDefaultLengthUnit(defaultLengthUnit);
-      unit = NS_NewAtom(defaultLengthUnit);
-    }
-    nsAutoString unitString;
-    unit->ToString(unitString);
-    if      (nsEditProperty::cssInUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_IN * aRelativeChange;
-    else if (nsEditProperty::cssCmUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_CM * aRelativeChange;
-    else if (nsEditProperty::cssMmUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_MM * aRelativeChange;
-    else if (nsEditProperty::cssPtUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_PT * aRelativeChange;
-    else if (nsEditProperty::cssPcUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_PC * aRelativeChange;
-    else if (nsEditProperty::cssEmUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_EM * aRelativeChange;
-    else if (nsEditProperty::cssExUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_EX * aRelativeChange;
-    else if (nsEditProperty::cssPxUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_PX * aRelativeChange;
-    else if (nsEditProperty::cssPercentUnit == unit)
-              f += NS_EDITOR_INDENT_INCREMENT_PERCENT * aRelativeChange;    
-
-    NS_IF_RELEASE(unit);
-
-    if (0 < f) {
-      nsAutoString newValue;
-      newValue.AppendFloat(f);
-      newValue.Append(unitString);
-      mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, marginProperty, newValue, false);
-    }
-    else {
-      mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, marginProperty, value, false);
-      // remove unnecessary DIV blocks:
-      // we could skip this section but that would cause a FAIL in
-      // editor/libeditor/html/tests/browserscope/richtext.html, which expects
-      // to unapply a CSS "indent" (<div style="margin-left: 40px;">) by
-      // removing the DIV container instead of just removing the CSS property.
-      nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-      if (nsHTMLEditUtils::IsDiv(aNode)
-          && (node != mHTMLEditor->GetActiveEditingHost())
-          && mHTMLEditor->IsNodeInActiveEditor(aNode)) {
-        // we deal with an editable DIV;
-        // let's see if it is useless and if we can remove it
-        nsCOMPtr<nsIDOMNamedNodeMap> attributeList;
-        res = element->GetAttributes(getter_AddRefs(attributeList));
-        NS_ENSURE_SUCCESS(res, res);
-        PRUint32 count;
-        attributeList->GetLength(&count);
-        if (!count) {
-          // the DIV has no attribute at all, let's remove it
-          res = mHTMLEditor->RemoveContainer(element);
-          NS_ENSURE_SUCCESS(res, res);
-        }
-        else if (1 == count) {
-          nsCOMPtr<nsIDOMNode> styleAttributeNode;
-          res = attributeList->GetNamedItem(NS_LITERAL_STRING("style"), 
-                                            getter_AddRefs(styleAttributeNode));
-          if (!styleAttributeNode) {
-            res = mHTMLEditor->RemoveContainer(element);
-            NS_ENSURE_SUCCESS(res, res);
-          }
-        }
-      }
-    }
+  if (!element) {
+    return NS_OK;
   }
-  return NS_OK;
+
+  nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, element);    
+  nsAutoString value;
+  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aNode, marginProperty, value);
+  float f;
+  nsCOMPtr<nsIAtom> unit;
+  mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
+  if (0 == f) {
+    nsAutoString defaultLengthUnit;
+    mHTMLEditor->mHTMLCSSUtils->GetDefaultLengthUnit(defaultLengthUnit);
+    unit = do_GetAtom(defaultLengthUnit);
+  }
+  if      (nsEditProperty::cssInUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_IN * aRelativeChange;
+  else if (nsEditProperty::cssCmUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_CM * aRelativeChange;
+  else if (nsEditProperty::cssMmUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_MM * aRelativeChange;
+  else if (nsEditProperty::cssPtUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_PT * aRelativeChange;
+  else if (nsEditProperty::cssPcUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_PC * aRelativeChange;
+  else if (nsEditProperty::cssEmUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_EM * aRelativeChange;
+  else if (nsEditProperty::cssExUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_EX * aRelativeChange;
+  else if (nsEditProperty::cssPxUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_PX * aRelativeChange;
+  else if (nsEditProperty::cssPercentUnit == unit)
+            f += NS_EDITOR_INDENT_INCREMENT_PERCENT * aRelativeChange;    
+
+  if (0 < f) {
+    nsAutoString newValue;
+    newValue.AppendFloat(f);
+    newValue.Append(nsDependentAtomString(unit));
+    mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, marginProperty, newValue, false);
+    return NS_OK;
+  }
+
+  mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, marginProperty, value, false);
+
+  // remove unnecessary DIV blocks:
+  // we could skip this section but that would cause a FAIL in
+  // editor/libeditor/html/tests/browserscope/richtext.html, which expects
+  // to unapply a CSS "indent" (<div style="margin-left: 40px;">) by
+  // removing the DIV container instead of just removing the CSS property.
+  nsCOMPtr<dom::Element> node = do_QueryInterface(aNode);
+  if (!node || !node->IsHTML(nsGkAtoms::div) ||
+      node == mHTMLEditor->GetActiveEditingHost() ||
+      !mHTMLEditor->IsNodeInActiveEditor(node) ||
+      nsHTMLEditor::HasAttributes(node)) {
+    return NS_OK;
+  }
+
+  return mHTMLEditor->RemoveContainer(element);
 }
 
 //
