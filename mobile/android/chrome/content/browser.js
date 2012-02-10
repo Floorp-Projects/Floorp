@@ -2904,14 +2904,6 @@ var FormAssistant = {
     return (aElement instanceof HTMLSelectElement);
   },
 
-  _isOptionElement: function(aElement) {
-    return aElement instanceof HTMLOptionElement;
-  },
-
-  _isOptionGroupElement: function(aElement) {
-    return aElement instanceof HTMLOptGroupElement;
-  },
-
   getListForElement: function(aElement) {
     let result = {
       type: "Prompt:Show",
@@ -2926,15 +2918,15 @@ var FormAssistant = {
       ];
     }
 
-    this.forOptions(aElement, function(aNode, aIndex) {
+    this.forOptions(aElement, function(aNode, aIndex, aIsGroup, aInGroup) {
       let item = {
         label: aNode.text || aNode.label,
-        isGroup: this._isOptionGroupElement(aNode),
-        inGroup: this._isOptionGroupElement(aNode.parentNode),
+        isGroup: aIsGroup,
+        inGroup: aInGroup,
         disabled: aNode.disabled,
         id: aIndex
       }
-      if (item.inGroup)
+      if (aInGroup)
         item.disabled = item.disabled || aNode.parentNode.disabled;
 
       result.listitems[aIndex] = item;
@@ -2946,26 +2938,27 @@ var FormAssistant = {
   forOptions: function(aElement, aFunction) {
     let optionIndex = 0;
     let children = aElement.children;
+    let numChildren = children.length;
     // if there are no children in this select, we add a dummy row so that at least something appears
-    if (children.length == 0)
+    if (numChildren == 0)
       aFunction.call(this, {label:""}, optionIndex);
-    for (let i = 0; i < children.length; i++) {
+    for (let i = 0; i < numChildren; i++) {
       let child = children[i];
-      if (this._isOptionGroupElement(child)) {
-        aFunction.call(this, child, optionIndex);
+      if (child instanceof HTMLOptionElement) {
+        // This is a regular choice under no group.
+        aFunction.call(this, child, optionIndex, false, false);
+        optionIndex++;
+      } else if (child instanceof HTMLOptGroupElement) {
+        aFunction.call(this, child, optionIndex, true, false);
         optionIndex++;
 
         let subchildren = child.children;
-        for (let j = 0; j < subchildren.length; j++) {
+        let numSubchildren = subchildren.length;
+        for (let j = 0; j < numSubchildren; j++) {
           let subchild = subchildren[j];
-          aFunction.call(this, subchild, optionIndex);
+          aFunction.call(this, subchild, optionIndex, false, true);
           optionIndex++;
         }
-
-      } else if (this._isOptionElement(child)) {
-        // This is a regular choice under no group.
-        aFunction.call(this, child, optionIndex);
-        optionIndex++;
       }
     }
   }
