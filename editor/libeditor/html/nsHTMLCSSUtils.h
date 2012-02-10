@@ -299,6 +299,7 @@ public:
     * @param aNode           [IN] a node
     * @param aElement        [OUT] the deepest element node containing aNode (possibly aNode itself)
     */
+  mozilla::dom::Element* GetElementContainerOrSelf(nsINode* aNode);
   already_AddRefed<nsIDOMElement> GetElementContainerOrSelf(nsIDOMNode* aNode);
 
   /**
