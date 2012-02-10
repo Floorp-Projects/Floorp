@@ -140,14 +140,6 @@ private:
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
 
-class TransformLayerUserData : public LayerUserData {
-public:
-    gfx3DMatrix matrix;
-
-    TransformLayerUserData(gfx3DMatrix& aMatrix) : matrix(aMatrix) {}
-    virtual ~TransformLayerUserData() {}
-};
-
 } // layers
 } // mozilla
 

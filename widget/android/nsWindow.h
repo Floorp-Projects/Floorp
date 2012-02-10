@@ -47,6 +47,11 @@
 #include "nsAccessible.h"
 #endif
 
+#ifdef MOZ_JAVA_COMPOSITOR
+#include "AndroidJavaWrappers.h"
+#include "Layers.h"
+#endif
+
 class gfxASurface;
 class nsIdleService;
 
@@ -249,6 +254,18 @@ private:
      */
     nsAccessible *DispatchAccessibleEvent();
 #endif // ACCESSIBILITY
+
+#ifdef MOZ_JAVA_COMPOSITOR
+    mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
+#endif
+};
+
+class TransformLayerUserData : public mozilla::layers::LayerUserData {
+public:
+    gfx3DMatrix matrix;
+
+    TransformLayerUserData(gfx3DMatrix& aMatrix) : matrix(aMatrix) {}
+    virtual ~TransformLayerUserData() {}
 };
 
 #endif /* NSWINDOW_H_ */

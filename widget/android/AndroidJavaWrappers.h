@@ -242,6 +242,7 @@ public:
     static void InitLayerRendererFrameClass(JNIEnv *jEnv);
 
     void Init(jobject jobj);
+    void Dispose();
 
     void BeginDrawing();
     void DrawBackground();
