@@ -1601,7 +1601,24 @@ Tab.prototype = {
       if (!this.browser || !this.browser.contentWindow)
         return;
 
-      getBridge().takeScreenshot(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, aDst.width, aDst.height, this.id);
+      let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      canvas.setAttribute("width", aDst.width);  
+      canvas.setAttribute("height", aDst.height);
+      canvas.setAttribute("moz-opaque", "true");
+
+      let ctx = canvas.getContext("2d");
+      let flags = ctx.DRAWWINDOW_DO_NOT_FLUSH;
+      ctx.drawWindow(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, "#fff", flags);
+      let message = {
+        gecko: {
+          type: "Tab:ScreenshotData",
+          tabID: this.id,
+          width: aDst.width,
+          height: aDst.height,
+          data: canvas.toDataURL()
+        }
+      };
+      sendMessageToJava(message);
       Services.tm.mainThread.dispatch(function() {
 	  BrowserApp.doNextScreenshot()
       }, Ci.nsIThread.DISPATCH_NORMAL);
