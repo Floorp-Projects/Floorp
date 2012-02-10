@@ -93,16 +93,16 @@ DebuggerView.Stackframes = {
     let resume = document.getElementById("resume");
     let status = document.getElementById("status");
 
-    // if we're paused, show a pause label and disable the resume button
+    // If we're paused, show a pause label and a resume label on the button.
     if (aState === "paused") {
       status.textContent = DebuggerView.getStr("pausedState");
-      resume.disabled = false;
+      resume.label = DebuggerView.getStr("resumeLabel");
     } else if (aState === "attached") {
-      // if we're attached, do the opposite
+      // If we're attached, do the opposite.
       status.textContent = DebuggerView.getStr("runningState");
-      resume.disabled = true;
+      resume.label = DebuggerView.getStr("pauseLabel");
     } else {
-      // no valid state parameter
+      // No valid state parameter.
       status.textContent = "";
     }
   },
@@ -272,10 +272,14 @@ DebuggerView.Stackframes = {
   },
 
   /**
-   * Listener handling the resume button click event.
+   * Listener handling the pause/resume button click event.
    */
   _onResumeButtonClick: function DVF__onResumeButtonClick() {
-    ThreadState.activeThread.resume();
+    if (ThreadState.activeThread.paused) {
+      ThreadState.activeThread.resume();
+    } else {
+      ThreadState.activeThread.interrupt();
+    }
   },
 
   /**
