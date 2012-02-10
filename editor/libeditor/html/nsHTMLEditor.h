@@ -71,6 +71,9 @@
 #include "nsPoint.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsAttrName.h"
+
+#include "mozilla/dom/Element.h"
 
 class nsIDOMKeyEvent;
 class nsITransferable;
@@ -425,6 +428,13 @@ public:
     return mCSSAware && mHTMLCSSUtils && mHTMLCSSUtils->IsCSSPrefChecked();
   }
 
+  static bool HasAttributes(mozilla::dom::Element* aElement)
+  {
+    MOZ_ASSERT(aElement);
+    PRUint32 attrCount = aElement->GetAttrCount();
+    return attrCount > 1 ||
+           (1 == attrCount && !aElement->GetAttrNameAt(0)->Equals(nsGkAtoms::mozdirty));
+  }
 
 protected:
 

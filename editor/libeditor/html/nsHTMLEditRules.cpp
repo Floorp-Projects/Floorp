@@ -8945,15 +8945,8 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
   nsCOMPtr<dom::Element> node = do_QueryInterface(aNode);
   if (!node || !node->IsHTML(nsGkAtoms::div) ||
       node == mHTMLEditor->GetActiveEditingHost() ||
-      !mHTMLEditor->IsNodeInActiveEditor(node)) {
-    return NS_OK;
-  }
-
-  // We deal with an editable DIV; let's see if it is useless and if we can
-  // remove it.
-  PRUint32 count = node->GetAttrCount();
-  if (count > 1 ||
-      (count == 1 && !node->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty))) {
+      !mHTMLEditor->IsNodeInActiveEditor(node) ||
+      nsHTMLEditor::HasAttributes(node)) {
     return NS_OK;
   }
 
