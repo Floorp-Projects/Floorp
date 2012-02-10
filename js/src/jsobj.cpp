@@ -6242,10 +6242,6 @@ js_ClearNative(JSContext *cx, JSObject *obj)
     return true;
 }
 
-static ObjectElements emptyObjectHeader(0, 0);
-HeapValue *js::emptyObjectElements =
-    (HeapValue *) (uintptr_t(&emptyObjectHeader) + sizeof(ObjectElements));
-
 JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx)
 {

@@ -148,6 +148,8 @@
  * object allocation and the assignment.
  */
 
+struct JSXML;
+
 namespace js {
 
 /*
@@ -268,6 +270,10 @@ BarrieredSetPair(JSCompartment *comp,
     v1.post();
     v2.post();
 }
+
+struct Shape;
+class BaseShape;
+namespace types { struct TypeObject; }
 
 typedef HeapPtr<JSObject> HeapPtrObject;
 typedef HeapPtr<JSFunction> HeapPtrFunction;
