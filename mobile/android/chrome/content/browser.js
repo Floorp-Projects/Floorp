@@ -1585,7 +1585,9 @@ Tab.prototype = {
       this.viewportExcess.y = excessY;
     }
     if (Math.abs(aViewport.zoom - this._viewport.zoom) >= 1e-6) {
-      this._viewport.zoom = aViewport.zoom;
+      //FIXME: Uncomment once zoom is working again.
+      //this._viewport.zoom = aViewport.zoom;
+      this._viewport.zoom = 1;
     }
   },
 
@@ -1671,7 +1673,9 @@ Tab.prototype = {
       aZoomLevel = this.getDefaultZoomLevel();
 
     let win = this.browser.contentWindow;
-    let zoom = (aReset ? aZoomLevel : this._viewport.zoom);
+    //FIXME: Uncomment when zoom is working again.
+    //let zoom = (aReset ? aZoomLevel : this._viewport.zoom);
+    zoom = 1;
     let xpos = ((aReset && win) ? win.scrollX * zoom : this._viewport.x);
     let ypos = ((aReset && win) ? win.scrollY * zoom : this._viewport.y);
 

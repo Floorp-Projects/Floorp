@@ -168,19 +168,14 @@ CompositorParent::Composite()
 
 #ifdef MOZ_WIDGET_ANDROID
   RequestViewTransform();
-#endif
-
-  gfx3DMatrix worldTransform;
-  gfxPoint3D offset(-mScrollOffset.x, -mScrollOffset.y, 0.0f);
-  printf_stderr("Correcting for position fixed %i, %i\n", -mScrollOffset.x, -mScrollOffset.y);
-  worldTransform.Translate(offset);
-  worldTransform.Scale(mXScale, mYScale, 1.0f);
-#ifdef MOZ_WIDGET_ANDROID
   Layer* layer = GetPrimaryScrollableLayer();
+  printf_stderr("Correcting for position fixed %i, %i\n", -mScrollOffset.x, -mScrollOffset.y);
+  ViewTransform v(mScrollOffset, mXScale, mYScale);
+  TransformShadowTree(layer, v);
 #else
   Layer* layer = mLayerManager->GetRoot();
-#endif
   layer->AsShadowLayer()->SetShadowTransform(worldTransform);
+#endif
 
 #if 0
 #ifdef MOZ_WIDGET_ANDROID
