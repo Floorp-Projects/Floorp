@@ -495,6 +495,10 @@ nsSVGImageFrame::UpdateCoveredRegion()
               PresContext()->AppUnitsPerDevPixel());
   }
 
+  // See bug 614732 comment 32.
+  mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
+    mRect, GetCanvasTM(), PresContext());
+
   return NS_OK;
 }
 
