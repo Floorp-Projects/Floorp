@@ -1477,15 +1477,14 @@ nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
 static gfxRect
 PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                               nsSVGGeometryFrame* aFrame,
-                              double styleExpansionFactor)
+                              double styleExpansionFactor,
+                              const gfxMatrix& aMatrix)
 {
   double style_expansion =
     styleExpansionFactor * aFrame->GetStrokeWidth();
 
-  gfxMatrix ctm = aFrame->GetCanvasTM();
-
-  double dx = style_expansion * (fabs(ctm.xx) + fabs(ctm.xy));
-  double dy = style_expansion * (fabs(ctm.yy) + fabs(ctm.yx));
+  double dx = style_expansion * (fabs(aMatrix.xx) + fabs(aMatrix.xy));
+  double dy = style_expansion * (fabs(aMatrix.yy) + fabs(aMatrix.yx));
 
   gfxRect strokeExtents = aPathExtents;
   strokeExtents.Inflate(dx, dy);
@@ -1494,14 +1493,16 @@ PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
 /*static*/ gfxRect
 nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                          nsSVGGeometryFrame* aFrame)
+                                          nsSVGGeometryFrame* aFrame,
+                                          const gfxMatrix& aMatrix)
 {
-  return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5);
+  return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5, aMatrix);
 }
 
 /*static*/ gfxRect
 nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                          nsSVGPathGeometryFrame* aFrame)
+                                          nsSVGPathGeometryFrame* aFrame,
+                                          const gfxMatrix& aMatrix)
 {
   double styleExpansionFactor = 0.5;
 
@@ -1521,7 +1522,8 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
   return ::PathExtentsToMaxStrokeExtents(aPathExtents,
                                          aFrame,
-                                         styleExpansionFactor);
+                                         styleExpansionFactor,
+                                         aMatrix);
 }
 
 // ----------------------------------------------------------------------
