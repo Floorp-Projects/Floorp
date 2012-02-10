@@ -120,6 +120,13 @@ jmethodID AndroidGeckoSoftwareLayerClient::jGetRenderOffsetMethod = 0;
 
 jclass AndroidGeckoGLLayerClient::jGeckoGLLayerClientClass = 0;
 jmethodID AndroidGeckoGLLayerClient::jGetViewTransformMethod = 0;
+jmethodID AndroidGeckoGLLayerClient::jCreateFrameMethod = 0;
+
+jclass AndroidLayerRendererFrame::jLayerRendererFrameClass = 0;
+jmethodID AndroidLayerRendererFrame::jBeginDrawingMethod = 0;
+jmethodID AndroidLayerRendererFrame::jDrawBackgroundMethod = 0;
+jmethodID AndroidLayerRendererFrame::jDrawForegroundMethod = 0;
+jmethodID AndroidLayerRendererFrame::jEndDrawingMethod = 0;
 
 jclass AndroidViewTransform::jViewTransformClass = 0;
 jfieldID AndroidViewTransform::jXField = 0;
@@ -162,6 +169,7 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidGeckoLayerClient::InitGeckoLayerClientClass(jEnv);
     AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(jEnv);
     AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(jEnv);
+    AndroidLayerRendererFrame::InitLayerRendererFrameClass(jEnv);
     AndroidViewTransform::InitViewTransformClass(jEnv);
     AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
 }
@@ -377,6 +385,23 @@ AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(JNIEnv *jEnv)
 
     jGetViewTransformMethod = getMethod("getViewTransform",
                                         "()Lorg/mozilla/gecko/gfx/ViewTransform;");
+    jCreateFrameMethod = getMethod("createFrame",
+                                   "(FFF)Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
+#endif
+}
+
+void
+AndroidLayerRendererFrame::InitLayerRendererFrameClass(JNIEnv *jEnv)
+{
+#ifdef MOZ_JAVA_COMPOSITOR
+    initInit();
+
+    jLayerRendererFrameClass = getClassGlobalRef("org/mozilla/gecko/gfx/LayerRenderer$Frame");
+
+    jBeginDrawingMethod = getMethod("beginDrawing", "()V");
+    jDrawBackgroundMethod = getMethod("drawBackground", "()V");
+    jDrawForegroundMethod = getMethod("drawForeground", "()V");
+    jEndDrawingMethod = getMethod("endDrawing", "()V");
 #endif
 }
 
@@ -667,6 +692,27 @@ AndroidGeckoGLLayerClient::Init(jobject jobj)
 }
 
 void
+AndroidLayerRendererFrame::Init(jobject jobj)
+{
+    if (!isNull()) {
+        Dispose();
+    }
+
+    wrapped_obj = GetJNIForThread()->NewGlobalRef(jobj);
+}
+
+void
+AndroidLayerRendererFrame::Dispose()
+{
+    if (isNull()) {
+        return;
+    }
+
+    GetJNIForThread()->DeleteGlobalRef(wrapped_obj);
+    wrapped_obj = 0;
+}
+
+void
 AndroidViewTransform::Init(jobject jobj)
 {
     NS_ABORT_IF_FALSE(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
@@ -878,6 +924,70 @@ AndroidGeckoGLLayerClient::GetViewTransform(AndroidViewTransform& aViewTransform
     jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jGetViewTransformMethod);
     NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
     aViewTransform.Init(viewTransformJObj);
+}
+
+void
+AndroidGeckoGLLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame,
+                                       float aXOffset, float aYOffset, float aZoomFactor)
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at CreateFrame()!");
+    if (!env) {
+        return;
+    }
+
+    jobject frameJObj = env->CallObjectMethod(wrapped_obj, jCreateFrameMethod, aXOffset, aYOffset,
+                                              aZoomFactor);
+    NS_ABORT_IF_FALSE(frameJObj, "No frame object!");
+    aFrame.Init(frameJObj);
+}
+
+void
+AndroidLayerRendererFrame::BeginDrawing()
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at BeginDrawing()!");
+    if (!env) {
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jBeginDrawingMethod);
+}
+
+void
+AndroidLayerRendererFrame::DrawBackground()
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawBackground()!");
+    if (!env) {
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jDrawBackgroundMethod);
+}
+
+void
+AndroidLayerRendererFrame::DrawForeground()
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawForeground()!");
+    if (!env) {
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jDrawForegroundMethod);
+}
+
+void
+AndroidLayerRendererFrame::EndDrawing()
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at EndDrawing()!");
+    if (!env) {
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
 }
 
 float
