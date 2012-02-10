@@ -866,11 +866,9 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
       // we are in CSS mode and we know how to align this element with CSS
       nsAutoString value;
       // let's get the value(s) of text-align or margin-left/margin-right
-      mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(blockParent,
-                                                     dummyProperty,
-                                                     &typeAttrName,
-                                                     value,
-                                                     COMPUTED_STYLE_TYPE);
+      mHTMLEditor->mHTMLCSSUtils->GetCSSEquivalentToHTMLInlineStyleSet(
+        blockParentContent, dummyProperty, &typeAttrName, value,
+        COMPUTED_STYLE_TYPE);
       if (value.EqualsLiteral("center") ||
           value.EqualsLiteral("-moz-center") ||
           value.EqualsLiteral("auto auto"))
