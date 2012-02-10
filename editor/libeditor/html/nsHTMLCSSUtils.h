@@ -108,7 +108,8 @@ public:
     * @param aProperty      [IN] an atom containing a HTML tag name
     * @param aAttribute     [IN] a string containing the name of a HTML attribute carried by the element above
     */
-  bool        IsCSSEditableProperty(nsIDOMNode * aNode, nsIAtom * aProperty, const nsAString * aAttribute);
+  bool IsCSSEditableProperty(nsIContent* aNode, nsIAtom* aProperty, const nsAString* aAttribute);
+  bool IsCSSEditableProperty(nsIDOMNode* aNode, nsIAtom* aProperty, const nsAString* aAttribute);
 
   /** adds/remove a CSS declaration to the STYLE atrribute carried by a given element
     *
