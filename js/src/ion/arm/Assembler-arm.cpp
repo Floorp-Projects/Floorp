@@ -1863,10 +1863,32 @@ Assembler::Bind(IonCode *code, AbsoluteLabel *label, const void *address)
     JS_NOT_REACHED("Feature NYI");
 }
 
+void dbg_break() {}
+static int stopBKPT = -1;
 void
 Assembler::as_bkpt()
 {
-    writeInst(0xe1200070);
+    // This is a count of how many times a breakpoint instruction has been generated.
+    // It is embedded into the instruction for debugging purposes.  gdb will print "bkpt xxx"
+    // when you attempt to dissassemble a breakpoint with the number xxx embedded into it.
+    // If this breakpoint is being hit, then you can run (in gdb)
+    // >b dbg_break
+    // >b main
+    // >commands
+    // >set stopBKPT = xxx
+    // >c
+    // >end
+
+    // which will set a breakpoint on the function dbg_break above
+    // set a scripted breakpoint on main that will set the (otherwise unmodified)
+    // value to the number of the breakpoint, so dbg_break will actuall be called
+    // and finally, when you run the executable, execution will halt when that
+    // breakpoint is generated
+    static int hit = 0;
+    if (stopBKPT == hit)
+        dbg_break();
+    writeInst(0xe1200070 | (hit & 0xf) | ((hit & 0xfff0)<<4));
+    hit++;
 }
 
 void
