@@ -1095,6 +1095,23 @@ class LElements : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LFlatClosureUpvars : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(FlatClosureUpvars);
+
+    LFlatClosureUpvars(const LAllocation &callee) {
+        setOperand(0, callee);
+    }
+
+    const LAllocation *callee() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Load a dense array's initialized length from an elements vector.
 class LInitializedLength : public LInstructionHelper<1, 1, 0>
 {

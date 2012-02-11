@@ -806,6 +806,12 @@ LIRGenerator::visitElements(MElements *ins)
 }
 
 bool
+LIRGenerator::visitFlatClosureUpvars(MFlatClosureUpvars *ins)
+{
+    return define(new LFlatClosureUpvars(useRegister(ins->callee())), ins);
+}
+
+bool
 LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 {
     switch (ins->type()) {

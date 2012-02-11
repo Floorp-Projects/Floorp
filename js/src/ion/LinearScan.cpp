@@ -1528,11 +1528,11 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
         JS_ASSERT_IF(mine->canonicalSpill() && other->canonicalSpill(),
                      mine->canonicalSpill()->isStackSlot() == other->canonicalSpill()->isStackSlot());
 
-        VirtualRegister *candidate = alloc ? mine : other;
+        VirtualRegister *candidate = mine->canonicalSpill() ? mine : other;
         if (!candidate->canonicalSpill()->isStackSlot())
             return;
 
-        finishedDoubleSlots_.append(interval);
+        finishedDoubleSlots_.append(candidate->lastInterval());
     }
 #endif
 }

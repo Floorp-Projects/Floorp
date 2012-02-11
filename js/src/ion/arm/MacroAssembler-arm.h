@@ -736,6 +736,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void load32(const ImmWord &imm, const Register &dest);
     void loadPtr(const Address &address, const Register &dest);
     void loadPtr(const ImmWord &imm, const Register &dest);
+    void loadPrivate(const Address &address, const Register &dest);
 
     void store32(Register src, const ImmWord &imm);
     void store32(Register src, const Address &address);
