@@ -224,6 +224,7 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         // Create the shaders and textures if necessary.
         if (!mLayerRendererInitialized) {
             mLayerRenderer.onSurfaceCreated(null, null);
+            mLayerRendererInitialized = true;
         }
 
         // FIXME: This geometry is surely wrong.
