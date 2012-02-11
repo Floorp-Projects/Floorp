@@ -64,6 +64,8 @@ namespace gl {
 GLContext* GLContext::sCurrentGLContext = nsnull;
 #endif
 
+PRUint32 GLContext::sDebugMode = 0;
+
 // define this here since it's global to GLContextProvider, not any
 // specific implementation
 const ContextFormat ContextFormat::BasicRGBA32Format(ContextFormat::BasicRGBA32);
@@ -529,16 +531,16 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
 #ifdef DEBUG
     if (PR_GetEnv("MOZ_GL_DEBUG"))
-        mDebugMode |= DebugEnabled;
+        sDebugMode |= DebugEnabled;
 
     // enables extra verbose output, informing of the start and finish of every GL call.
     // useful e.g. to record information to investigate graphics system crashes/lockups
     if (PR_GetEnv("MOZ_GL_DEBUG_VERBOSE"))
-        mDebugMode |= DebugTrace;
+        sDebugMode |= DebugTrace;
 
     // aborts on GL error. Can be useful to debug quicker code that is known not to generate any GL error in principle.
     if (PR_GetEnv("MOZ_GL_DEBUG_ABORT_ON_ERROR"))
-        mDebugMode |= DebugAbortOnError;
+        sDebugMode |= DebugAbortOnError;
 #endif
 
     if (mInitialized)

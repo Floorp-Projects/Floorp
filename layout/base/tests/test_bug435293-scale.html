@@ -70,15 +70,15 @@ runtests();
 
 function runtests() {
   var style = window.getComputedStyle(document.getElementById("test1"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(0.5, 0, 0, 1, 0px, 0px)",
+  is(style.getPropertyValue("-moz-transform"), "matrix(0.5, 0, 0, 1, 0, 0)",
      "Scalex proper matrix is applied");
 
   style = window.getComputedStyle(document.getElementById("test2"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(1, 0, 0, 0.5, 0px, 0px)",
+  is(style.getPropertyValue("-moz-transform"), "matrix(1, 0, 0, 0.5, 0, 0)",
      "Scaley proper matrix is applied");
 
   style = window.getComputedStyle(document.getElementById("test3"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(0.5, 0, 0, 0.5, 0px, 0px)",
+  is(style.getPropertyValue("-moz-transform"), "matrix(0.5, 0, 0, 0.5, 0, 0)",
      "Scale proper matrix is applied");
 
   style = window.getComputedStyle(document.getElementById("test4"), "");
@@ -90,7 +90,7 @@ function runtests() {
      "Percent values in scale should be ignored");
 
   style = window.getComputedStyle(document.getElementById("test6"), "");
-  is(style.getPropertyValue("-moz-transform"), "matrix(640000, 0, 0, 1e-19, 0px, 0px)",
+  is(style.getPropertyValue("-moz-transform"), "matrix(640000, 0, 0, 1e-19, 0, 0)",
      "Ensure wacky values are accepted");
 
   style = window.getComputedStyle(document.getElementById("test7"), "");

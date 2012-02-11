@@ -20,4 +20,13 @@
         dy="20 10mm 3pc 36pt 2em 3% 1ex">YZ123456
   </text>
 
+  <text transform="translate(420, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex"
+        dy="20 10mm 3pc 36pt 2em 3% 1ex">7890abcd
+  </text>
+
+  <text transform="translate(520, 20)"
+        x="20 10mm 3pc 72pt 2em 3% 1ex"
+        dy="20 10mm 3pc 36pt 2em 3% 1ex">efghijkl
+  </text>
 </svg>

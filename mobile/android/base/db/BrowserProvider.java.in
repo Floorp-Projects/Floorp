@@ -56,6 +56,8 @@ import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.DBUtils;
+import org.mozilla.gecko.sync.Utils;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -208,52 +210,6 @@ public class BrowserProvider extends ContentProvider {
         return table + "." + column;
     }
 
-    public static String generateGuid() {
-        byte[] encodedBytes = GeckoAppShell.encodeBase64(generateRandomBytes(9), GeckoAppShell.BASE64_URL_SAFE);
-        return new String(encodedBytes);
-    }
-
-    private static byte[] generateRandomBytes(int length) {
-        byte[] bytes = new byte[length];
-
-        Random random = new Random(System.nanoTime());
-        random.nextBytes(bytes);
-
-        return bytes;
-    }
-
-    // This is available in Android >= 11. Implemented locally to be
-    // compatible with older versions.
-    public static String concatenateWhere(String a, String b) {
-        if (TextUtils.isEmpty(a)) {
-            return b;
-        }
-
-        if (TextUtils.isEmpty(b)) {
-            return a;
-        }
-
-        return "(" + a + ") AND (" + b + ")";
-    }
-
-    // This is available in Android >= 11. Implemented locally to be
-    // compatible with older versions.
-    public static String[] appendSelectionArgs(String[] originalValues, String[] newValues) {
-        if (originalValues == null || originalValues.length == 0) {
-            return newValues;
-        }
-
-        if (newValues == null || newValues.length == 0) {
-            return originalValues;
-        }
-
-        String[] result = new String[originalValues.length + newValues.length];
-        System.arraycopy(originalValues, 0, result, 0, originalValues.length);
-        System.arraycopy(newValues, 0, result, originalValues.length, newValues.length);
-
-        return result;
-    }
-
     private static boolean hasImagesInProjection(String[] projection) {
         if (projection == null) return true;
         for (int i = 0; i < projection.length; ++i) {
@@ -265,6 +221,22 @@ public class BrowserProvider extends ContentProvider {
         return false;
     }
 
+    // Calculate these once, at initialization. isLoggable is too expensive to
+    // have in-line in each log call.
+    private static boolean logDebug   = Log.isLoggable(LOGTAG, Log.DEBUG);
+    private static boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
+    protected static void trace(String message) {
+        if (logVerbose) {
+            Log.v(LOGTAG, message);
+        }
+    }
+
+    protected static void debug(String message) {
+        if (logDebug) {
+            Log.d(LOGTAG, message);
+        }
+    }
+
     final class DatabaseHelper extends SQLiteOpenHelper {
         public DatabaseHelper(Context context, String databasePath) {
             super(context, databasePath, null, DATABASE_VERSION);
@@ -272,9 +244,9 @@ public class BrowserProvider extends ContentProvider {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            Log.d(LOGTAG, "Creating browser.db: " + db.getPath());
+            debug("Creating browser.db: " + db.getPath());
 
-            Log.d(LOGTAG, "Creating " + TABLE_BOOKMARKS + " table");
+            debug("Creating " + TABLE_BOOKMARKS + " table");
             db.execSQL("CREATE TABLE " + TABLE_BOOKMARKS + "(" +
                     Bookmarks._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     Bookmarks.TITLE + " TEXT," +
@@ -298,7 +270,7 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("CREATE INDEX bookmarks_modified_index ON " + TABLE_BOOKMARKS + "("
                     + Bookmarks.DATE_MODIFIED + ")");
 
-            Log.d(LOGTAG, "Creating " + TABLE_HISTORY + " table");
+            debug("Creating " + TABLE_HISTORY + " table");
             db.execSQL("CREATE TABLE " + TABLE_HISTORY + "(" +
                     History._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     History.TITLE + " TEXT," +
@@ -320,7 +292,7 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("CREATE INDEX history_visited_index ON " + TABLE_HISTORY + "("
                     + History.DATE_LAST_VISITED + ")");
 
-            Log.d(LOGTAG, "Creating " + TABLE_IMAGES + " table");
+            debug("Creating " + TABLE_IMAGES + " table");
             db.execSQL("CREATE TABLE " + TABLE_IMAGES + " (" +
                     Images._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     Images.URL + " TEXT UNIQUE NOT NULL," +
@@ -376,7 +348,7 @@ public class BrowserProvider extends ContentProvider {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            Log.d(LOGTAG, "Upgrading browser.db: " + db.getPath() + " from " +
+            debug("Upgrading browser.db: " + db.getPath() + " from " +
                     oldVersion + " to " + newVersion);
 
             // Do nothing for now
@@ -384,7 +356,7 @@ public class BrowserProvider extends ContentProvider {
 
         @Override
         public void onOpen(SQLiteDatabase db) {
-            Log.d(LOGTAG, "Opening browser.db: " + db.getPath());
+            debug("Opening browser.db: " + db.getPath());
 
             // From Honeycomb on, it's possible to run several db
             // commands in parallel using multiple connections.
@@ -430,12 +402,12 @@ public class BrowserProvider extends ContentProvider {
             mDatabasePerProfile.put(profile, dbHelper);
         }
 
-        Log.d(LOGTAG, "Created database helper for profile: " + profile);
+        debug("Created database helper for profile: " + profile);
         return dbHelper;
     }
 
     private String getDatabasePath(String profile) {
-        Log.d(LOGTAG, "Getting database path for profile: " + profile);
+        trace("Getting database path for profile: " + profile);
 
         // On Android releases older than 2.3, it's not possible to use
         // SQLiteOpenHelper with a full path. Fallback to using separate
@@ -452,18 +424,18 @@ public class BrowserProvider extends ContentProvider {
         }
 
         if (profileDir == null) {
-            Log.d(LOGTAG, "Couldn't find directory for profile: " + profile);
+            debug("Couldn't find directory for profile: " + profile);
             return null;
         }
 
         String databasePath = new File(profileDir, DATABASE_NAME).getAbsolutePath();
-        Log.d(LOGTAG, "Successfully created database path for profile: " + databasePath);
+        debug("Successfully created database path for profile: " + databasePath);
 
         return databasePath;
     }
 
     private SQLiteDatabase getReadableDatabase(Uri uri) {
-        Log.d(LOGTAG, "Getting readable database for URI: " + uri);
+        trace("Getting readable database for URI: " + uri);
 
         String profile = null;
 
@@ -474,7 +446,7 @@ public class BrowserProvider extends ContentProvider {
     }
 
     private SQLiteDatabase getWritableDatabase(Uri uri) {
-        Log.d(LOGTAG, "Getting writable database for URI: " + uri);
+        trace("Getting writable database for URI: " + uri);
 
         String profile = null;
 
@@ -518,7 +490,7 @@ public class BrowserProvider extends ContentProvider {
                 Uri uriWithId = ContentUris.withAppendedId(uriWithArgs, cursor.getLong(0));
                 delete(uriWithId, null, null);
 
-                Log.d(LOGTAG, "Removed old deleted item with URI: " + uriWithId);
+                debug("Removed old deleted item with URI: " + uriWithId);
             }
         } finally {
             if (cursor != null)
@@ -538,7 +510,7 @@ public class BrowserProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        Log.d(LOGTAG, "Creating BrowserProvider");
+        debug("Creating BrowserProvider");
 
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
@@ -562,42 +534,42 @@ public class BrowserProvider extends ContentProvider {
     public String getType(Uri uri) {
         final int match = URI_MATCHER.match(uri);
 
-        Log.d(LOGTAG, "Getting URI type: " + uri);
+        trace("Getting URI type: " + uri);
 
         switch (match) {
             case BOOKMARKS:
-                Log.d(LOGTAG, "URI is BOOKMARKS: " + uri);
+                trace("URI is BOOKMARKS: " + uri);
                 return Bookmarks.CONTENT_TYPE;
             case BOOKMARKS_ID:
-                Log.d(LOGTAG, "URI is BOOKMARKS_ID: " + uri);
+                trace("URI is BOOKMARKS_ID: " + uri);
                 return Bookmarks.CONTENT_ITEM_TYPE;
             case HISTORY:
-                Log.d(LOGTAG, "URI is HISTORY: " + uri);
+                trace("URI is HISTORY: " + uri);
                 return History.CONTENT_TYPE;
             case HISTORY_ID:
-                Log.d(LOGTAG, "URI is HISTORY_ID: " + uri);
+                trace("URI is HISTORY_ID: " + uri);
                 return History.CONTENT_ITEM_TYPE;
         }
 
-        Log.d(LOGTAG, "URI has unrecognized type: " + uri);
+        debug("URI has unrecognized type: " + uri);
 
         return null;
     }
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        Log.d(LOGTAG, "Calling delete on URI: " + uri);
+        trace("Calling delete on URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         int deleted = 0;
 
         if (Build.VERSION.SDK_INT >= 11) {
-            Log.d(LOGTAG, "Beginning delete transaction: " + uri);
+            trace("Beginning delete transaction: " + uri);
             db.beginTransaction();
             try {
                 deleted = deleteInTransaction(uri, selection, selectionArgs);
                 db.setTransactionSuccessful();
-                Log.d(LOGTAG, "Successful delete transaction: " + uri);
+                trace("Successful delete transaction: " + uri);
             } finally {
                 db.endTransaction();
             }
@@ -610,49 +582,49 @@ public class BrowserProvider extends ContentProvider {
 
     @SuppressWarnings("fallthrough")
     public int deleteInTransaction(Uri uri, String selection, String[] selectionArgs) {
-        Log.d(LOGTAG, "Calling delete in transaction on URI: " + uri);
+        trace("Calling delete in transaction on URI: " + uri);
 
         final int match = URI_MATCHER.match(uri);
         int deleted = 0;
 
         switch (match) {
             case BOOKMARKS_ID:
-                Log.d(LOGTAG, "Delete on BOOKMARKS_ID: " + uri);
+                trace("Delete on BOOKMARKS_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case BOOKMARKS: {
-                Log.d(LOGTAG, "Deleting bookmarks: " + uri);
+                trace("Deleting bookmarks: " + uri);
                 deleted = deleteBookmarks(uri, selection, selectionArgs);
                 deleteUnusedImages(uri);
                 break;
             }
 
             case HISTORY_ID:
-                Log.d(LOGTAG, "Delete on HISTORY_ID: " + uri);
+                trace("Delete on HISTORY_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case HISTORY: {
-                Log.d(LOGTAG, "Deleting history: " + uri);
+                trace("Deleting history: " + uri);
                 deleted = deleteHistory(uri, selection, selectionArgs);
                 deleteUnusedImages(uri);
                 break;
             }
 
             case IMAGES_ID:
-                Log.d(LOGTAG, "Delete on IMAGES_ID: " + uri);
+                debug("Delete on IMAGES_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case IMAGES: {
-                Log.d(LOGTAG, "Deleting images: " + uri);
+                trace("Deleting images: " + uri);
                 deleted = deleteImages(uri, selection, selectionArgs);
                 break;
             }
@@ -661,25 +633,25 @@ public class BrowserProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown delete URI " + uri);
         }
 
-        Log.d(LOGTAG, "Deleted " + deleted + " rows for URI: " + uri);
+        debug("Deleted " + deleted + " rows for URI: " + uri);
 
         return deleted;
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        Log.d(LOGTAG, "Calling insert on URI: " + uri);
+        trace("Calling insert on URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         Uri result = null;
 
         if (Build.VERSION.SDK_INT >= 11) {
-            Log.d(LOGTAG, "Beginning insert transaction: " + uri);
+            trace("Beginning insert transaction: " + uri);
             db.beginTransaction();
             try {
                 result = insertInTransaction(uri, values);
                 db.setTransactionSuccessful();
-                Log.d(LOGTAG, "Successful insert transaction: " + uri);
+                trace("Successful insert transaction: " + uri);
             } finally {
                 db.endTransaction();
             }
@@ -691,7 +663,7 @@ public class BrowserProvider extends ContentProvider {
     }
 
     public Uri insertInTransaction(Uri uri, ContentValues values) {
-        Log.d(LOGTAG, "Calling insert in transaction on URI: " + uri);
+        trace("Calling insert in transaction on URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         int match = URI_MATCHER.match(uri);
@@ -699,7 +671,7 @@ public class BrowserProvider extends ContentProvider {
 
         switch (match) {
             case BOOKMARKS: {
-                Log.d(LOGTAG, "Insert on BOOKMARKS: " + uri);
+                trace("Insert on BOOKMARKS: " + uri);
 
                 long now = System.currentTimeMillis();
                 values.put(Bookmarks.DATE_CREATED, now);
@@ -707,11 +679,11 @@ public class BrowserProvider extends ContentProvider {
 
                 // Generate GUID for new bookmark. Don't override specified GUIDs.
                 if (!values.containsKey(Bookmarks.GUID)) {
-                  values.put(Bookmarks.GUID, generateGuid());
+                  values.put(Bookmarks.GUID, Utils.generateGuid());
                 }
 
                 if (!values.containsKey(Bookmarks.POSITION)) {
-                    Log.d(LOGTAG, "Inserting bookmark with no position for URI");
+                    debug("Inserting bookmark with no position for URI");
                     values.put(Bookmarks.POSITION, Long.toString(Long.MIN_VALUE));
                 }
 
@@ -721,18 +693,18 @@ public class BrowserProvider extends ContentProvider {
 
                 if ((isFolder == null || isFolder != 1) && imageValues != null
                         && !TextUtils.isEmpty(url)) {
-                    Log.d(LOGTAG, "Inserting bookmark image for URL: " + url);
+                    debug("Inserting bookmark image for URL: " + url);
                     updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
                             new String[] { url });
                 }
 
-                Log.d(LOGTAG, "Inserting bookmark in database with URL: " + url);
+                debug("Inserting bookmark in database with URL: " + url);
                 id = db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, values);
                 break;
             }
 
             case HISTORY: {
-                Log.d(LOGTAG, "Insert on HISTORY: " + uri);
+                trace("Insert on HISTORY: " + uri);
 
                 long now = System.currentTimeMillis();
                 values.put(History.DATE_CREATED, now);
@@ -740,7 +712,7 @@ public class BrowserProvider extends ContentProvider {
 
                 // Generate GUID for new history entry. Don't override specified GUIDs.
                 if (!values.containsKey(History.GUID)) {
-                  values.put(History.GUID, generateGuid());
+                  values.put(History.GUID, Utils.generateGuid());
                 }
 
                 String url = values.getAsString(History.URL);
@@ -749,29 +721,29 @@ public class BrowserProvider extends ContentProvider {
                         values.getAsString(History.URL));
 
                 if (imageValues != null) {
-                    Log.d(LOGTAG, "Inserting history image for URL: " + url);
+                    debug("Inserting history image for URL: " + url);
                     updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
                             new String[] { url });
                 }
 
-                Log.d(LOGTAG, "Inserting history in database with URL: " + url);
+                debug("Inserting history in database with URL: " + url);
                 id = db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
                 break;
             }
 
             case IMAGES: {
-                Log.d(LOGTAG, "Insert on IMAGES: " + uri);
+                trace("Insert on IMAGES: " + uri);
 
                 long now = System.currentTimeMillis();
                 values.put(History.DATE_CREATED, now);
                 values.put(History.DATE_MODIFIED, now);
 
                 // Generate GUID for new history entry
-                values.put(History.GUID, generateGuid());
+                values.put(History.GUID, Utils.generateGuid());
 
                 String url = values.getAsString(Images.URL);
 
-                Log.d(LOGTAG, "Inserting image in database with URL: " + url);
+                debug("Inserting image in database with URL: " + url);
                 id = db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
                 break;
             }
@@ -780,7 +752,7 @@ public class BrowserProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown insert URI " + uri);
         }
 
-        Log.d(LOGTAG, "Inserted ID in database: " + id);
+        debug("Inserted ID in database: " + id);
 
         if (id >= 0)
             return ContentUris.withAppendedId(uri, id);
@@ -791,18 +763,18 @@ public class BrowserProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
-        Log.d(LOGTAG, "Calling update on URI: " + uri);
+        trace("Calling update on URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         int updated = 0;
 
         if (Build.VERSION.SDK_INT >= 11) {
-            Log.d(LOGTAG, "Beginning update transaction: " + uri);
+            trace("Beginning update transaction: " + uri);
             db.beginTransaction();
             try {
                 updated = updateInTransaction(uri, values, selection, selectionArgs);
                 db.setTransactionSuccessful();
-                Log.d(LOGTAG, "Successful update transaction: " + uri);
+                trace("Successful update transaction: " + uri);
             } finally {
                 db.endTransaction();
             }
@@ -816,40 +788,40 @@ public class BrowserProvider extends ContentProvider {
     @SuppressWarnings("fallthrough")
     public int updateInTransaction(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
-        Log.d(LOGTAG, "Calling update in transaction on URI: " + uri);
+        trace("Calling update in transaction on URI: " + uri);
 
         int match = URI_MATCHER.match(uri);
         int updated = 0;
 
         switch (match) {
             case BOOKMARKS_ID:
-                Log.d(LOGTAG, "Update on BOOKMARKS_ID: " + uri);
+                debug("Update on BOOKMARKS_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case BOOKMARKS: {
-                Log.d(LOGTAG, "Updating bookmark: " + uri);
+                debug("Updating bookmark: " + uri);
                 updated = updateBookmarks(uri, values, selection, selectionArgs);
                 break;
             }
 
             case HISTORY_ID:
-                Log.d(LOGTAG, "Update on HISTORY_ID: " + uri);
+                debug("Update on HISTORY_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case HISTORY: {
-                Log.d(LOGTAG, "Updating history: " + uri);
+                debug("Updating history: " + uri);
                 updated = updateHistory(uri, values, selection, selectionArgs);
                 break;
             }
 
             case IMAGES: {
-                Log.d(LOGTAG, "Update on IMAGES: " + uri);
+                debug("Update on IMAGES: " + uri);
 
                 String url = values.getAsString(Images.URL);
 
@@ -866,7 +838,7 @@ public class BrowserProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown update URI " + uri);
         }
 
-        Log.d(LOGTAG, "Updated " + updated + " rows for URI: " + uri);
+        debug("Updated " + updated + " rows for URI: " + uri);
 
         return updated;
     }
@@ -884,25 +856,25 @@ public class BrowserProvider extends ContentProvider {
             case BOOKMARKS_FOLDER_ID:
             case BOOKMARKS_ID:
             case BOOKMARKS: {
-                Log.d(LOGTAG, "Query is on bookmarks: " + uri);
+                debug("Query is on bookmarks: " + uri);
 
                 if (match == BOOKMARKS_ID) {
-                    selection = concatenateWhere(selection, Bookmarks._ID + " = ?");
-                    selectionArgs = appendSelectionArgs(selectionArgs,
+                    selection = DBUtils.concatenateWhere(selection, Bookmarks._ID + " = ?");
+                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 } else if (match == BOOKMARKS_FOLDER_ID) {
-                    selection = concatenateWhere(selection, Bookmarks.PARENT + " = ?");
-                    selectionArgs = appendSelectionArgs(selectionArgs,
+                    selection = DBUtils.concatenateWhere(selection, Bookmarks.PARENT + " = ?");
+                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
                 if (!shouldShowDeleted(uri))
-                    selection = concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
+                    selection = DBUtils.concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = DEFAULT_BOOKMARKS_SORT_ORDER;
                 } else {
-                    Log.d(LOGTAG, "Using sort order " + sortOrder + ".");
+                    debug("Using sort order " + sortOrder + ".");
                 }
 
                 qb.setProjectionMap(BOOKMARKS_PROJECTION_MAP);
@@ -917,16 +889,16 @@ public class BrowserProvider extends ContentProvider {
 
             case HISTORY_ID:
             case HISTORY: {
-                Log.d(LOGTAG, "Query is on history: " + uri);
+                debug("Query is on history: " + uri);
 
                 if (match == HISTORY_ID) {
-                    selection = concatenateWhere(selection, History._ID + " = ?");
-                    selectionArgs = appendSelectionArgs(selectionArgs,
+                    selection = DBUtils.concatenateWhere(selection, History._ID + " = ?");
+                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
                 if (!shouldShowDeleted(uri))
-                    selection = concatenateWhere(History.IS_DELETED + " = 0", selection);
+                    selection = DBUtils.concatenateWhere(History.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder))
                     sortOrder = DEFAULT_HISTORY_SORT_ORDER;
@@ -943,16 +915,16 @@ public class BrowserProvider extends ContentProvider {
 
             case IMAGES_ID:
             case IMAGES: {
-                Log.d(LOGTAG, "Query is on images: " + uri);
+                debug("Query is on images: " + uri);
 
                 if (match == IMAGES_ID) {
-                    selection = concatenateWhere(selection, Images._ID + " = ?");
-                    selectionArgs = appendSelectionArgs(selectionArgs,
+                    selection = DBUtils.concatenateWhere(selection, Images._ID + " = ?");
+                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
                 if (!shouldShowDeleted(uri))
-                    selection = concatenateWhere(Images.IS_DELETED + " = 0", selection);
+                    selection = DBUtils.concatenateWhere(Images.IS_DELETED + " = 0", selection);
 
                 qb.setProjectionMap(IMAGES_PROJECTION_MAP);
                 qb.setTables(TABLE_IMAGES);
@@ -961,7 +933,7 @@ public class BrowserProvider extends ContentProvider {
             }
 
             case SCHEMA: {
-                Log.d(LOGTAG, "Query is on schema.");
+                debug("Query is on schema.");
                 MatrixCursor schemaCursor = new MatrixCursor(new String[] { Schema.VERSION });
                 schemaCursor.newRow().add(DATABASE_VERSION);
 
@@ -972,7 +944,7 @@ public class BrowserProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown query URI " + uri);
         }
 
-        Log.d(LOGTAG, "Running built query.");
+        trace("Running built query.");
         Cursor cursor = qb.query(db, projection, selection, selectionArgs, null,
                 null, sortOrder, limit);
         cursor.setNotificationUri(getContext().getContentResolver(),
@@ -982,12 +954,12 @@ public class BrowserProvider extends ContentProvider {
     }
 
     ContentValues extractImageValues(ContentValues values, String url) {
-        Log.d(LOGTAG, "Extracting image values for URI: " + url);
+        trace("Extracting image values for URI: " + url);
 
         ContentValues imageValues = null;
 
         if (values.containsKey(Bookmarks.FAVICON)) {
-            Log.d(LOGTAG, "Has favicon value on URL: " + url);
+            debug("Has favicon value on URL: " + url);
             imageValues = new ContentValues();
             imageValues.put(Images.FAVICON,
                     values.getAsByteArray(Bookmarks.FAVICON));
@@ -995,7 +967,7 @@ public class BrowserProvider extends ContentProvider {
         }
 
         if (values.containsKey(Bookmarks.THUMBNAIL)) {
-            Log.d(LOGTAG, "Has favicon value on URL: " + url);
+            debug("Has favicon value on URL: " + url);
             if (imageValues == null)
                 imageValues = new ContentValues();
 
@@ -1005,7 +977,7 @@ public class BrowserProvider extends ContentProvider {
         }
 
         if (imageValues != null && url != null) {
-            Log.d(LOGTAG, "Has URL value");
+            debug("Has URL value");
             imageValues.put(Images.URL, url);
         }
 
@@ -1031,7 +1003,7 @@ public class BrowserProvider extends ContentProvider {
 
     int updateBookmarks(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
-        Log.d(LOGTAG, "Updating bookmarks on URI: " + uri);
+        trace("Updating bookmarks on URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         int updated = 0;
@@ -1041,7 +1013,7 @@ public class BrowserProvider extends ContentProvider {
                 Bookmarks.URL, // 1
         };
 
-        Log.d(LOGTAG, "Quering bookmarks to update on URI: " + uri);
+        trace("Quering bookmarks to update on URI: " + uri);
 
         Cursor cursor = db.query(TABLE_BOOKMARKS, bookmarksProjection,
                 selection, selectionArgs, null, null, null);
@@ -1060,7 +1032,7 @@ public class BrowserProvider extends ContentProvider {
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(0);
 
-                Log.d(LOGTAG, "Updating bookmark with ID: " + id);
+                trace("Updating bookmark with ID: " + id);
 
                 updated += db.update(TABLE_BOOKMARKS, values, "_id = ?",
                         new String[] { Long.toString(id) });
@@ -1074,7 +1046,7 @@ public class BrowserProvider extends ContentProvider {
                 }
 
                 if (!TextUtils.isEmpty(url)) {
-                    Log.d(LOGTAG, "Updating bookmark image for URL: " + url);
+                    trace("Updating bookmark image for URL: " + url);
                     updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
                             new String[] { url });
                 }
@@ -1089,7 +1061,7 @@ public class BrowserProvider extends ContentProvider {
 
     int updateHistory(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
-        Log.d(LOGTAG, "Updating history on URI: " + uri);
+        trace("Updating history on URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         int updated = 0;
@@ -1115,7 +1087,7 @@ public class BrowserProvider extends ContentProvider {
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(0);
 
-                Log.d(LOGTAG, "Updating history entry with ID: " + id);
+                trace("Updating history entry with ID: " + id);
 
                 updated += db.update(TABLE_HISTORY, values, "_id = ?",
                         new String[] { Long.toString(id) });
@@ -1129,7 +1101,7 @@ public class BrowserProvider extends ContentProvider {
                 }
 
                 if (!TextUtils.isEmpty(url)) {
-                    Log.d(LOGTAG, "Updating history image for URL: " + url);
+                    trace("Updating history image for URL: " + url);
                     updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
                             new String[] { url });
                 }
@@ -1158,7 +1130,7 @@ public class BrowserProvider extends ContentProvider {
             String[] selectionArgs, boolean insertIfNeeded) {
         String url = values.getAsString(Images.URL);
 
-        Log.d(LOGTAG, "Updating image for URL: " + url);
+        trace("Updating image for URL: " + url);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
 
@@ -1175,19 +1147,19 @@ public class BrowserProvider extends ContentProvider {
         if (insertIfNeeded)
             values.put(Images.IS_DELETED, 0);
 
-        Log.d(LOGTAG, "Trying to update image for URL: " + url);
+        debug("Trying to update image for URL: " + url);
         int updated = db.update(TABLE_IMAGES, values, selection, selectionArgs);
 
         if (updated == 0 && insertIfNeeded) {
             // Generate GUID for new image, if one is not already provided.
             if (!values.containsKey(Images.GUID)) {
-              values.put(Images.GUID, generateGuid());
+              values.put(Images.GUID, Utils.generateGuid());
             }
 
             values.put(Images.DATE_CREATED, now);
             values.put(Images.DATE_MODIFIED, now);
 
-            Log.d(LOGTAG, "No update, inserting image for URL: " + url);
+            trace("No update, inserting image for URL: " + url);
             db.insert(TABLE_IMAGES, Images.FAVICON, values);
             updated = 1;
         }
@@ -1196,14 +1168,14 @@ public class BrowserProvider extends ContentProvider {
     }
 
     int deleteHistory(Uri uri, String selection, String[] selectionArgs) {
-        Log.d(LOGTAG, "Deleting history entry for URI: " + uri);
+        debug("Deleting history entry for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_HISTORY, selection, selectionArgs);
         } else {
-            Log.d(LOGTAG, "Marking history entry as deleted for URI: " + uri);
+            debug("Marking history entry as deleted for URI: " + uri);
 
             ContentValues values = new ContentValues();
             values.put(History.IS_DELETED, 1);
@@ -1214,14 +1186,14 @@ public class BrowserProvider extends ContentProvider {
     }
 
     int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
-        Log.d(LOGTAG, "Deleting bookmarks for URI: " + uri);
+        debug("Deleting bookmarks for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_BOOKMARKS, selection, selectionArgs);
         } else {
-            Log.d(LOGTAG, "Marking bookmarks as deleted for URI: " + uri);
+            debug("Marking bookmarks as deleted for URI: " + uri);
 
             ContentValues values = new ContentValues();
             values.put(Bookmarks.IS_DELETED, 1);
@@ -1232,14 +1204,14 @@ public class BrowserProvider extends ContentProvider {
     }
 
     int deleteImages(Uri uri, String selection, String[] selectionArgs) {
-        Log.d(LOGTAG, "Deleting images for URI: " + uri);
+        debug("Deleting images for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_IMAGES, selection, null);
         } else {
-            Log.d(LOGTAG, "Marking images as deleted for URI: " + uri);
+            debug("Marking images as deleted for URI: " + uri);
 
             ContentValues values = new ContentValues();
             values.put(History.IS_DELETED, 1);
@@ -1250,7 +1222,7 @@ public class BrowserProvider extends ContentProvider {
     }
 
     int deleteUnusedImages(Uri uri) {
-        Log.d(LOGTAG, "Deleting all unused images for URI: " + uri);
+        debug("Deleting all unused images for URI: " + uri);
 
         String selection = Images.URL + " NOT IN (SELECT " + Bookmarks.URL +
                 " FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL + " IS NOT NULL AND " +

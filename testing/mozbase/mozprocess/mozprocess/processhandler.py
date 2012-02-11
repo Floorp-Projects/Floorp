@@ -128,13 +128,15 @@ class ProcessHandlerMixin(object):
                     winprocess.TerminateJobObject(self._job, winprocess.ERROR_CONTROL_C_EXIT)
                     self.returncode = winprocess.GetExitCodeProcess(self._handle)
                 elif self._handle:
+                    err = None
                     try:
                         winprocess.TerminateProcess(self._handle, winprocess.ERROR_CONTROL_C_EXIT)
                     except:
-                        raise OSError("Could not terminate process")
-                    finally:
-                        self.returncode = winprocess.GetExitCodeProcess(self._handle)
-                        self._cleanup()
+                        err = "Could not terminate process"
+                    self.returncode = winprocess.GetExitCodeProcess(self._handle)
+                    self._cleanup()
+                    if err is not None:
+                        raise OSError(err)
                 else:
                     pass
             else:
@@ -145,15 +147,10 @@ class ProcessHandlerMixin(object):
                         if getattr(e, "errno", None) != 3:
                             # Error 3 is "no such process", which is ok
                             print >> sys.stderr, "Could not kill process, could not find pid: %s" % self.pid
-                    finally:
-                        # Try to get the exit status
-                        if self.returncode is None:
-                            self.returncode = subprocess.Popen._internal_poll(self)
-
                 else:
                     os.kill(self.pid, signal.SIGKILL)
-                    if self.returncode is None:
-                        self.returncode = subprocess.Popen._internal_poll(self)
+                if self.returncode is None:
+                    self.returncode = subprocess.Popen._internal_poll(self)
 
             self._cleanup()
             return self.returncode
@@ -392,6 +389,7 @@ falling back to not using job objects for managing child processes"""
                     # We use queues to synchronize between the thread and this
                     # function because events just didn't have robust enough error
                     # handling on pre-2.7 versions
+                    err = None
                     try:
                         # timeout is the max amount of time the procmgr thread will wait for
                         # child processes to shutdown before killing them with extreme prejudice.
@@ -400,11 +398,14 @@ falling back to not using job objects for managing child processes"""
                         if item[self.pid] == 'FINISHED':
                             self._process_events.task_done()
                     except:
-                        raise OSError("IO Completion Port failed to signal process shutdown")
-                    finally:
-                        # Either way, let's try to get this code
-                        self.returncode = winprocess.GetExitCodeProcess(self._handle)
-                        self._cleanup()
+                        err = "IO Completion Port failed to signal process shutdown"
+                    # Either way, let's try to get this code
+                    self.returncode = winprocess.GetExitCodeProcess(self._handle)
+                    self._cleanup()
+
+                    if err is not None:
+                        raise OSError(err)
+
 
                 else:
                     # Not managing with job objects, so all we can reasonably do

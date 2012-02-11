@@ -70,7 +70,6 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsgcchunk.h"
 #include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
@@ -88,6 +87,7 @@
 #endif
 
 #include "frontend/Parser.h"
+#include "gc/Memory.h"
 #include "methodjit/MethodJIT.h"
 #include "vm/Debugger.h"
 #include "ion/IonCode.h"
@@ -443,6 +443,16 @@ FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind, bo
     }
 }
 
+static inline Chunk *
+AllocChunk() {
+    return static_cast<Chunk *>(MapAlignedPages(ChunkSize, ChunkSize));
+}
+
+static inline void
+FreeChunk(Chunk *p) {
+    UnmapPages(static_cast<void *>(p), ChunkSize);
+}
+
 #ifdef JS_THREADSAFE
 inline bool
 ChunkPool::wantBackgroundAllocation(JSRuntime *rt) const
@@ -709,7 +719,7 @@ Chunk::fetchNextDecommittedArena()
     decommittedArenas.unset(offset);
 
     Arena *arena = &arenas[offset];
-    CommitMemory(arena, ArenaSize);
+    MarkPagesInUse(arena, ArenaSize);
     arena->aheader.setAsNotAllocated();
 
     return &arena->aheader;
@@ -2329,7 +2339,7 @@ DecommitArenasFromAvailableList(JSRuntime *rt, Chunk **availableListHeadp)
                 Maybe<AutoUnlockGC> maybeUnlock;
                 if (!rt->gcRunning)
                     maybeUnlock.construct(rt);
-                ok = DecommitMemory(aheader->getArena(), ArenaSize);
+                ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
             }
 
             if (ok) {

@@ -606,12 +606,6 @@ nsDummyJavaPluginOwner::InvalidateRegion(NPRegion invalidRegion)
 }
 
 NS_IMETHODIMP
-nsDummyJavaPluginOwner::ForceRedraw()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDummyJavaPluginOwner::GetNetscapeWindow(void *value)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1870,7 +1864,7 @@ ReparentWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
 
     // We reparent wrappers that have as their parent an inner window whose
     // outer has the new inner window as its current inner.
-    JSObject *parent = JS_GetParent(closure->mCx, value);
+    JSObject *parent = JS_GetParent(value);
     JSObject *outer = JS_ObjectToOuterObject(closure->mCx, parent);
     if (outer) {
       JSObject *inner = JS_ObjectToInnerObject(closure->mCx, outer);
@@ -9975,7 +9969,7 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
                                                getter_AddRefs(proto));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSObject *realProto = JS_GetPrototype(cx, mJSObject);
+  JSObject *realProto = JS_GetPrototype(mJSObject);
   nsCOMPtr<nsIXPConnectJSObjectHolder> realProtoHolder;
   if (realProto) {
     rv = xpc->HoldObject(cx, realProto, getter_AddRefs(realProtoHolder));

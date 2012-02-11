@@ -89,12 +89,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       testStates("listbox_multiselectable_undefined", 0, 0, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
       testStates("listbox_multiselectable_absent", 0, 0, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
 
-      // test (listitem) checkable and checked states
-      testStates("listitem_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
-      testStates("listitem_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
-      testStates("listitem_checked_empty", 0 , 0, STATE_CHECKABLE | STATE_CHECKED);
-      testStates("listitem_checked_undefined", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
-      testStates("listitem_checked_absent", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
+      // test (option) checkable and checked states
+      testStates("option_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("option_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
+      testStates("option_checked_empty", 0 , 0, STATE_CHECKABLE | STATE_CHECKED);
+      testStates("option_checked_undefined", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
+      testStates("option_checked_absent", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
 
       // test (menuitem) checkable and checked states
       testStates("menuitem_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
@@ -239,19 +239,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
   <div id="checkbox_disabled_absent" role="checkbox">This checkbox has <emph>no</emph> aria-disabled attribute and should <emph>not</emph> get STATE_DISABLED.</div>
 
   <div id="listbox_multiselectable_true" role="listbox" aria-multiselectable="true">
-    <div id="listitem_checked_true" role="listitem" aria-checked="true">item</div>
+    <div id="option_checked_true" role="option" aria-checked="true">item</div>
   </div>
   <div id="listbox_multiselectable_false" role="listbox" aria-multiselectable="false">
-    <div id="listitem_checked_false" role="listitem" aria-checked="false">item</div>
+    <div id="option_checked_false" role="option" aria-checked="false">item</div>
   </div>
   <div id="listbox_multiselectable_empty" role="listbox" aria-multiselectable="">
-    <div id="listitem_checked_empty" role="listitem" aria-checked="">item</div>
+    <div id="option_checked_empty" role="option" aria-checked="">item</div>
   </div>
   <div id="listbox_multiselectable_undefined" role="listbox" aria-multiselectable="undefined">
-    <div id="listitem_checked_undefined" role="listitem" aria-checked="undefined">item</div>
+    <div id="option_checked_undefined" role="option" aria-checked="undefined">item</div>
   </div>
   <div id="listbox_multiselectable_absent" role="listbox">
-    <div id="listitem_checked_absent" role="listitem">item</div>
+    <div id="option_checked_absent" role="option">item</div>
   </div>
 
   <div role="menu">

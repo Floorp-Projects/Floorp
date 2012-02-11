@@ -48,8 +48,8 @@ class nsHTMLImageAccessibleWrap : public nsHTMLImageAccessible,
                                   public CAccessibleImage
 {
 public:
-  nsHTMLImageAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-    nsHTMLImageAccessible(aContent, aShell) {}
+  nsHTMLImageAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+    nsHTMLImageAccessible(aContent, aDoc) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED

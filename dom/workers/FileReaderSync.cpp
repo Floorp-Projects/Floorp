@@ -81,7 +81,7 @@ GetDOMBlobFromJSObject(JSContext* aCx, JSObject* aObj) {
   // aObj can be null as JS_ConvertArguments("o") successfully converts JS
   // null to a null pointer to JSObject 
   if (aObj) {
-    nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aCx, aObj);
+    nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aObj);
     if (blob) {
       return blob;
     }
@@ -110,13 +110,13 @@ public:
   }
 
   static FileReaderSyncPrivate*
-  GetPrivate(JSContext* aCx, JSObject* aObj)
+  GetPrivate(JSObject* aObj)
   {
     if (aObj) {
       JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
         FileReaderSyncPrivate* fileReader =
-          GetJSPrivateSafeish<FileReaderSyncPrivate>(aCx, aObj);
+          GetJSPrivateSafeish<FileReaderSyncPrivate>(aObj);
         return fileReader;
       }
     }
@@ -127,7 +127,7 @@ private:
   static FileReaderSyncPrivate*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    FileReaderSyncPrivate* fileReader = GetPrivate(aCx, aObj);
+    FileReaderSyncPrivate* fileReader = GetPrivate(aObj);
     if (fileReader) {
       return fileReader;
     }
@@ -149,10 +149,7 @@ private:
     FileReaderSyncPrivate* fileReader = new FileReaderSyncPrivate();
     NS_ADDREF(fileReader);
 
-    if (!SetJSPrivateSafeish(aCx, obj, fileReader)) {
-      NS_RELEASE(fileReader);
-      return false;
-    }
+    SetJSPrivateSafeish(obj, fileReader);
 
     JS_SET_RVAL(aCx, aVp, OBJECT_TO_JSVAL(obj));
     return true;
@@ -163,7 +160,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
     FileReaderSyncPrivate* fileReader =
-      GetJSPrivateSafeish<FileReaderSyncPrivate>(aCx, aObj);
+      GetJSPrivateSafeish<FileReaderSyncPrivate>(aObj);
     NS_IF_RELEASE(fileReader);
   }
 

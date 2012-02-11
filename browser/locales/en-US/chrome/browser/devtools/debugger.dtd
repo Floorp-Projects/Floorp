@@ -19,12 +19,6 @@
   -  button that closes the debugger UI. -->
 <!ENTITY debuggerUI.closeButton      "Close">
 
-<!-- LOCALIZATION NOTE (debuggerUI.resumeButton): This is the label for the
-  -  button that resumes the debugger, after it has reached a paused state. In
-  -  a paused state the debugger can be used to inspect stack frames, local,
-  -  variables etc. -->
-<!ENTITY debuggerUI.resumeButton     "Resume">
-
 <!-- LOCALIZATION NOTE (debuggerUI.stackTitle): This is the label for the
   -  widget that displays the call stack frames in the debugger. -->
 <!ENTITY debuggerUI.stackTitle       "Call stack">

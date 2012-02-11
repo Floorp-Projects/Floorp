@@ -57,7 +57,7 @@ interface nsIDOMElement;
  * Some day this might get superseded by a DOM API.
  */
 
-[uuid(6D827DF5-B5CD-416C-85CB-3CDD05C7AED1)]
+[uuid(ED83A4D9-77D2-40EA-B140-F160EDB3FE1C)]
 interface nsIPluginTagInfo : nsISupports
 {
   /**
@@ -150,11 +150,6 @@ interface nsIPluginTagInfo : nsISupports
    * Get border horizontal space
    */
   readonly attribute unsigned long borderHorizSpace;
-
-  /**
-   * Returns a unique id for the current document containing plugin
-   */
-  readonly attribute unsigned long uniqueID;
 
   /**
    * Returns the DOM element corresponding to the tag which references

@@ -49,7 +49,7 @@ interface nsIDOMNodeList;
 interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 
-[scriptable, uuid(0D9E5532-F5D5-44DD-94CA-D9EED5778B1C)]
+[scriptable, uuid(983475e4-6bdf-4741-a733-76e9a8d119b9)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -77,4 +77,12 @@ interface inIDOMUtils : nsISupports
   void setContentState(in nsIDOMElement aElement, in unsigned long long aState);
 
   nsIDOMFontFaceList getUsedFontFaces(in nsIDOMRange aRange);
+
+  // pseudo-class style locking methods. aPseudoClass must be a valid pseudo-class
+  // selector string, e.g. ":hover". ":-moz-any-link" and non-event-state
+  // pseudo-classes are ignored.
+  void addPseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
+  void removePseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
+  bool hasPseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
+  void clearPseudoClassLocks(in nsIDOMElement aElement);
 };

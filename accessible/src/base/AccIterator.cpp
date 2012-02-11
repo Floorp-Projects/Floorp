@@ -344,7 +344,7 @@ nsAccessible*
 IDRefsIterator::Next()
 {
   nsIContent* nextElm = NextElem();
-  return nextElm ? GetAccService()->GetAccessible(nextElm) : nsnull;
+  return nextElm ? GetAccService()->GetAccessible(nextElm, nsnull) : nsnull;
 }
 
 nsAccessible*
