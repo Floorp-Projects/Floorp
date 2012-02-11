@@ -103,7 +103,7 @@ public:
     return mElements.Length();
   }
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsBaseContentList)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsBaseContentList)
 
   void AppendElement(nsIContent *aContent)
   {

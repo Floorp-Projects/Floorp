@@ -747,6 +747,7 @@ public:
     void TraceXPConnectRoots(JSTracer *trc);
     void AddXPConnectRoots(JSContext* cx,
                            nsCycleCollectionTraversalCallback& cb);
+    void UnmarkSkippableJSHolders();
 
     static JSBool GCCallback(JSContext *cx, JSGCStatus status);
 
