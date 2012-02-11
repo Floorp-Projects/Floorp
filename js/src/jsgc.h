@@ -1371,6 +1371,9 @@ IsAboutToBeFinalized(const js::gc::Cell *thing);
 extern bool
 IsAboutToBeFinalized(const js::Value &value);
 
+extern void
+js_TraceStackFrame(JSTracer *trc, js::StackFrame *fp);
+
 extern bool
 js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, js::gc::AllocKind *thingKind, void **thing);
 

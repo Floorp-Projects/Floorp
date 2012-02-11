@@ -5627,17 +5627,15 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
     if (script->pcCounters)
         bumpPropCounter(PC, OpcodeCounts::PROP_OTHER);
 
-    JSOp op = JSOp(*PC);
-
 #ifdef JSGC_INCREMENTAL_MJ
-    /* Write barrier. We only have type information for JSOP_SETPROP. */
-    if (cx->compartment->needsBarrier() &&
-        (!types || op != JSOP_SETPROP || types->propertyNeedsBarrier(cx, id)))
-    {
+    /* Write barrier. */
+    if (cx->compartment->needsBarrier() && (!types || types->propertyNeedsBarrier(cx, id))) {
         jsop_setprop_slow(name);
         return true;
     }
 #endif
+
+    JSOp op = JSOp(*PC);
 
     ic::PICInfo::Kind kind = (op == JSOP_SETMETHOD)
                              ? ic::PICInfo::SETMETHOD
