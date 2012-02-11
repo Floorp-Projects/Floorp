@@ -150,3 +150,4 @@ const INT32 jpeg_aritab[113+1] = {
  * as recommended in Section 10.3 Table 5 of ITU-T Rec. T.851.
  */
   V( 113, 0x5a1d, 113, 113, 0 )
+};
