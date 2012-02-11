@@ -365,7 +365,9 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
     if (aDirtyRect) {
       dirtyRect = aDirtyRect->ToAppUnits(appUnitsPerDevPx);
       // Adjust dirtyRect to match our local coordinate system.
-      dirtyRect.MoveBy(-mRect.TopLeft());
+      nsRect rootRect =
+        nsSVGUtils::TransformFrameRectToOuterSVG(mRect, GetCanvasTM(), PresContext());
+      dirtyRect.MoveBy(-rootRect.TopLeft());
     }
 
     // XXXbholley - I don't think huge images in SVGs are common enough to
@@ -483,14 +485,19 @@ nsSVGImageFrame::UpdateCoveredRegion()
 
   gfxContext context(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
-  GeneratePath(&context);
-  context.IdentityMatrix();
+  gfxMatrix identity;
+  GeneratePath(&context, &identity);
 
   gfxRect extent = context.GetUserPathExtent();
 
   if (!extent.IsEmpty()) {
-    mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
+    mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent, 
+              PresContext()->AppUnitsPerDevPixel());
   }
+
+  // See bug 614732 comment 32.
+  mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
+    mRect, GetCanvasTM(), PresContext());
 
   return NS_OK;
 }
