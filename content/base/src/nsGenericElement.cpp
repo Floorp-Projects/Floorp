@@ -4415,8 +4415,8 @@ nsGenericElement::MarkUserDataHandler(void* aObject, nsIAtom* aKey,
   xpc_UnmarkGrayObject(wjs);
 }
 
-static void
-MarkNodeChildren(nsINode* aNode)
+void
+nsGenericElement::MarkNodeChildren(nsINode* aNode)
 {
   JSObject* o = GetJSObjectChild(aNode);
   xpc_UnmarkGrayObject(o);
@@ -4616,6 +4616,17 @@ ShouldClearPurple(nsIContent* aContent)
   return aContent->HasProperties();
 }
 
+// If aNode is not optimizable, but is an element
+// with a frame in a document which has currently active presshell,
+// we can act as if it was optimizable. When the primary frame dies, aNode
+// will end up to the purple buffer because of the refcount change.
+bool
+NodeHasActiveFrame(nsIDocument* aCurrentDoc, nsINode* aNode)
+{
+  return aCurrentDoc->GetShell() && aNode->IsElement() &&
+         aNode->AsElement()->GetPrimaryFrame();
+}
+
 // CanSkip checks if aNode is black, and if it is, returns
 // true. If aNode is in a black DOM tree, CanSkip may also remove other objects
 // from purple buffer and unmark event listeners and user data.
@@ -4630,17 +4641,16 @@ nsGenericElement::CanSkip(nsINode* aNode)
     return false;
   }
 
-  // Bail out early if aNode is somewhere in anonymous content,
-  // or otherwise unusual.
-  if (UnoptimizableCCNode(aNode)) {
-    return false;
-  }
-
+  bool unoptimizable = UnoptimizableCCNode(aNode);
   nsIDocument* currentDoc = aNode->GetCurrentDoc();
   if (currentDoc &&
-      nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration())) {
+      nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration()) &&
+      (!unoptimizable || NodeHasActiveFrame(currentDoc, aNode))) {
     MarkNodeChildren(aNode);
     return true;
+  }
+  if (unoptimizable) {
+    return false;
   }
 
   nsINode* root = currentDoc ? static_cast<nsINode*>(currentDoc) :
@@ -4694,12 +4704,15 @@ nsGenericElement::CanSkip(nsINode* aNode)
     }
   }
 
-  if (!foundBlack) {
+  if (!currentDoc || !foundBlack) { 
     if (!gPurpleRoots) {
       gPurpleRoots = new nsAutoTArray<nsINode*, 1020>();
     }
     root->SetIsPurpleRoot(true);
     gPurpleRoots->AppendElement(root);
+  }
+
+  if (!foundBlack) {
     return false;
   }
 
