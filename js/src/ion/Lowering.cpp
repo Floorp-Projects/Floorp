@@ -785,6 +785,29 @@ LIRGenerator::visitRegExp(MRegExp *ins)
 }
 
 bool
+LIRGenerator::visitLambda(MLambda *ins)
+{
+    LLambda *lir = new LLambda(useRegister(ins->scopeChain()));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitLambdaJoinableForCall(MLambdaJoinableForCall *ins)
+{
+    LLambdaJoinableForCall *lir = new LLambdaJoinableForCall(useRegister(ins->target()),
+                                                             useRegister(ins->scopeChain()));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitLambdaJoinableForSet(MLambdaJoinableForSet *ins)
+{
+    LLambdaJoinableForSet *lir = new LLambdaJoinableForSet(useRegister(ins->target()),
+                                                           useRegister(ins->scopeChain()));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitImplicitThis(MImplicitThis *ins)
 {
     JS_ASSERT(ins->callee()->type() == MIRType_Object);

@@ -368,6 +368,15 @@ GetScopeName(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
 bool
 GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
 
+JSObject *
+Lambda(JSContext *cx, JSFunction *fun, JSObject *parent);
+
+JSObject *
+LambdaJoinableForCall(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *callee, uint32_t argc);
+
+JSObject *
+LambdaJoinableForSet(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *target);
+
 bool
 GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res);
 

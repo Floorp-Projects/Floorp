@@ -1327,7 +1327,7 @@ class MUnbox : public MUnaryInstruction
     }
 };
 
-class MGuardObject : public MUnaryInstruction, public ObjectPolicy
+class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
 {
     MGuardObject(MDefinition *ins)
       : MUnaryInstruction(ins)
@@ -2158,10 +2158,105 @@ class MRegExp : public MNullaryInstruction
     }
 };
 
+class MLambda
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    HeapPtr<JSFunction> fun_;
+
+    MLambda(MDefinition *scopeChain, JSFunction *fun)
+      : MUnaryInstruction(scopeChain), fun_(fun)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Lambda);
+
+    static MLambda *New(MDefinition *scopeChain, JSFunction *fun) {
+        return new MLambda(scopeChain, fun);
+    }
+    MDefinition *scopeChain() const {
+        return getOperand(0);
+    }
+    const HeapPtr<JSFunction> &fun() const {
+        return fun_;
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+class MLambdaJoinableForCallOrSet
+  : public MBinaryInstruction,
+    public ObjectPolicy
+{
+    HeapPtr<JSFunction> fun_;
+
+  protected:
+    MLambdaJoinableForCallOrSet(MDefinition *target, MDefinition *scopeChain, JSFunction *fun)
+      : MBinaryInstruction(target, scopeChain), fun_(fun)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    MDefinition *target() const {
+        return getOperand(0);
+    }
+    MDefinition *scopeChain() const {
+        return getOperand(1);
+    }
+    const HeapPtr<JSFunction> &fun() const {
+        return fun_;
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
+class MLambdaJoinableForCall
+  : public MLambdaJoinableForCallOrSet
+{
+    uint32_t argc_;
+
+    MLambdaJoinableForCall(MDefinition *callee, uint32_t argc, MDefinition *scopeChain,
+                           JSFunction *fun)
+      : MLambdaJoinableForCallOrSet(callee, scopeChain, fun), argc_(argc)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(LambdaJoinableForCall);
+
+    static MLambdaJoinableForCall *New(MDefinition *callee, uint32_t argc, MDefinition *scopeChain,
+                                       JSFunction *fun) {
+        return new MLambdaJoinableForCall(callee, argc, scopeChain, fun);
+    }
+    uint32_t argc() const {
+        return argc_;
+    }
+};
+
+class MLambdaJoinableForSet
+  : public MLambdaJoinableForCallOrSet
+{
+    MLambdaJoinableForSet(MDefinition *target, MDefinition *scopeChain, JSFunction *fun)
+      : MLambdaJoinableForCallOrSet(target, scopeChain, fun)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(LambdaJoinableForSet);
+
+    static MLambdaJoinableForSet *New(MDefinition *target, MDefinition *scopeChain,
+                                      JSFunction *fun) {
+        return new MLambdaJoinableForSet(target, scopeChain, fun);
+    }
+};
+
 // Determines the implicit |this| value for function calls.
 class MImplicitThis
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MImplicitThis(MDefinition *callee)
       : MUnaryInstruction(callee)
@@ -2191,7 +2286,7 @@ class MImplicitThis
 // Returns obj->slots.
 class MSlots
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MSlots(MDefinition *object)
       : MUnaryInstruction(object)
@@ -2224,7 +2319,7 @@ class MSlots
 // Returns obj->elements.
 class MElements
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MElements(MDefinition *object)
       : MUnaryInstruction(object)
@@ -2429,7 +2524,7 @@ class MBoundsCheckLower
 // array is not known to be packed.
 class MLoadElement
   : public MBinaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     bool needsHoleCheck_;
 
@@ -2475,7 +2570,7 @@ class MLoadElement
 // instead.
 class MLoadElementHole
   : public MTernaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     bool needsHoleCheck_;
 
@@ -2549,7 +2644,7 @@ class MStoreElementCommon
 class MStoreElement
   : public MAryInstruction<3>,
     public MStoreElementCommon,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MStoreElement(MDefinition *elements, MDefinition *index, MDefinition *value) {
         initOperand(0, elements);
@@ -2589,7 +2684,7 @@ class MStoreElement
 class MStoreElementHole
   : public MAryInstruction<4>,
     public MStoreElementCommon,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MStoreElementHole(MDefinition *object, MDefinition *elements,
                       MDefinition *index, MDefinition *value) {
@@ -2631,7 +2726,7 @@ class MStoreElementHole
     }
 };
 
-class MLoadFixedSlot : public MUnaryInstruction, public ObjectPolicy
+class MLoadFixedSlot : public MUnaryInstruction, public SingleObjectPolicy
 {
     size_t slot_;
 
@@ -2671,7 +2766,7 @@ class MLoadFixedSlot : public MUnaryInstruction, public ObjectPolicy
     }
 };
 
-class MStoreFixedSlot : public MBinaryInstruction, public ObjectPolicy
+class MStoreFixedSlot : public MBinaryInstruction, public SingleObjectPolicy
 {
     size_t slot_;
 
@@ -2707,7 +2802,7 @@ class MStoreFixedSlot : public MBinaryInstruction, public ObjectPolicy
 
 class MGetPropertyCache
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     JSAtom *atom_;
     JSScript *script_;
@@ -2751,7 +2846,7 @@ class MGetPropertyCache
 // Guard on an object's shape.
 class MGuardShape
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     const Shape *shape_;
 
@@ -2794,7 +2889,7 @@ class MGuardShape
 // Guard on an object's class.
 class MGuardClass
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     const Class *class_;
 
@@ -2837,7 +2932,7 @@ class MGuardClass
 // Load from vp[slot] (slots that are not inline in an object).
 class MLoadSlot
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     uint32 slot_;
 
@@ -2885,7 +2980,7 @@ class MLoadSlot
 // Inline call to access a function's environment (scope chain).
 class MFunctionEnvironment
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
   public:
     MFunctionEnvironment(MDefinition *function)
@@ -2908,7 +3003,7 @@ class MFunctionEnvironment
 // Store to vp[slot] (slots that are not inline in an object).
 class MStoreSlot
   : public MBinaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     uint32 slot_;
     MIRType slotType_;
@@ -2965,7 +3060,7 @@ class MStoreSlot
 // variants of the operation.
 class MCallGetPropertyOrName
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
   public:
     enum AccessKind {
@@ -3061,7 +3156,7 @@ class MCallSetProperty
 
 class MSetPropertyCache
   : public MSetPropertyInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MSetPropertyCache(MDefinition *obj, MDefinition *value, JSAtom *atom, bool strict)
       : MSetPropertyInstruction(obj, value, atom, strict)
@@ -3247,7 +3342,7 @@ class MRound
 
 class MIteratorStart
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     uint8 flags_;
 
@@ -3277,7 +3372,7 @@ class MIteratorStart
 
 class MIteratorNext
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MIteratorNext(MDefinition *iter)
       : MUnaryInstruction(iter)
@@ -3302,7 +3397,7 @@ class MIteratorNext
 
 class MIteratorMore
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MIteratorMore(MDefinition *iter)
       : MUnaryInstruction(iter)
@@ -3327,7 +3422,7 @@ class MIteratorMore
 
 class MIteratorEnd
   : public MUnaryInstruction,
-    public ObjectPolicy
+    public SingleObjectPolicy
 {
     MIteratorEnd(MDefinition *iter)
       : MUnaryInstruction(iter)

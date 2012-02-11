@@ -792,6 +792,12 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_TYPEOF:
         return jsop_typeof();
 
+      case JSOP_LAMBDA:
+        return jsop_lambda(info().getFunction(pc));
+
+      case JSOP_DEFLOCALFUN:
+        return jsop_deflocalfun(GET_SLOTNO(pc), info().getFunction(pc + SLOTNO_LEN));
+
       case JSOP_ITER:
         return jsop_iter(GET_INT8(pc));
 
@@ -3533,6 +3539,76 @@ IonBuilder::jsop_object(JSObject *obj)
     current->push(ins);
 
     return true;
+}
+
+bool
+IonBuilder::jsop_lambda(JSFunction *fun)
+{
+    JS_ASSERT(script->analysis()->usesScopeChain());
+    MDefinition *scopeChain = current->getSlot(info().scopeChainSlot());
+
+    // As an optimization, don't clone the function object in some cases.
+    if (fun->joinable()) {
+        jsbytecode *pc2 = GetNextPc(pc);
+        switch (JSOp(*pc2)) {
+          case JSOP_INITMETHOD:
+            JS_ASSERT(fun->methodAtom() == info().getAtom(pc2));
+            return pushConstant(ObjectValue(*fun));
+
+          case JSOP_SETMETHOD:
+          {
+            MDefinition *lhs = current->peek(-1);
+            MLambdaJoinableForSet *ins = MLambdaJoinableForSet::New(lhs, scopeChain, fun);
+            current->add(ins);
+            current->push(ins);
+
+            return resumeAfter(ins);
+          }
+
+          case JSOP_NOTEARG:
+          {
+            jsbytecode *pc3 = GetNextPc(pc2);
+            if (JSOp(*pc3) == JSOP_CALL) {
+                uint32_t argc = GET_ARGC(pc3);
+                if (argc == 1 || argc == 2) {
+                    // Note: 1 since we have not pushed the current argument.
+                    MDefinition *callee = current->peek(1 - (argc + 2));
+                    MInstruction *ins = MLambdaJoinableForCall::New(callee, argc, scopeChain, fun);
+                    current->add(ins);
+                    current->push(ins);
+
+                    return resumeAfter(ins);
+                }
+            }
+            break;
+          }
+
+          default:
+            break;
+        }
+    }
+
+    MLambda *ins = MLambda::New(scopeChain, fun);
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_deflocalfun(uint32 local, JSFunction *fun)
+{
+    JS_ASSERT(script->analysis()->usesScopeChain());
+    MDefinition *scopeChain = current->getSlot(info().scopeChainSlot());
+
+    MLambda *ins = MLambda::New(scopeChain, fun);
+    current->add(ins);
+    current->push(ins);
+
+    current->setLocal(local);
+    current->pop();
+
+    return resumeAfter(ins);
 }
 
 bool

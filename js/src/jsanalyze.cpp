@@ -342,6 +342,12 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isInlineable = false;
             break;
 
+          case JSOP_DEFLOCALFUN:
+          case JSOP_LAMBDA:
+            usesScopeChain_ = true;
+            isInlineable = false;
+            break;
+
           case JSOP_DEFFUN:
           case JSOP_DEFVAR:
           case JSOP_DEFCONST:
@@ -505,9 +511,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_ARGUMENTS:
           case JSOP_THROW:
           case JSOP_EXCEPTION:
-          case JSOP_DEFLOCALFUN:
           case JSOP_DEFLOCALFUN_FC:
-          case JSOP_LAMBDA:
           case JSOP_LAMBDA_FC:
           case JSOP_GETFCSLOT:
           case JSOP_CALLFCSLOT:
