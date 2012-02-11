@@ -1633,23 +1633,49 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         return;
     }
 
-    offset = 0;
-    while (offset < script->length) {
-        Bytecode *code = maybeCode(offset);
-        jsbytecode *pc = script->code + offset;
+    /*
+     * In the case of 'f.apply(x, arguments)', we want to avoid creating
+     * 'arguments' eagerly: 'f.apply' can read directly out of the frame.
+     * However, if 'f.apply' turns out to not be Function.prototype.apply, we
+     * need to set flip script->needsArgsObj and fix up all stack frames. To
+     * avoid a full stack scan (to find outstanding JS_OPTIMIZED_APPLY magic
+     * values), we only apply this optimization when there are no other uses of
+     * 'arguments' in the function. See Script::applySpeculationFailed.
+     * Also, to simplify logic involving closed-over variables and call
+     * objects, we skip the optimization for heavyweight functions.
+     */
+    bool canOptimizeApply = !script->function()->isHeavyweight();
+    bool haveOptimizedApply = false;
+
+    jsbytecode *pc;
+    for (offset = 0; offset < script->length; offset += GetBytecodeLength(pc)) {
+        pc = script->code + offset;
 
         /* Ensured by NewScriptFromEmitter. */
         JS_ASSERT_IF(script->strictModeCode, *pc != JSOP_SETARG);
 
-        if (code && JSOp(*pc) == JSOP_ARGUMENTS) {
-            Vector<SSAValue> seen(cx);
-            if (!followEscapingArguments(cx, SSAValue::PushedValue(offset, 0), &seen)) {
-                script->setNeedsArgsObj(true);
-                return;
-            }
+        /* The front-end took care of dynamic ways to name 'arguments'. */
+        if (JSOp(*pc) != JSOP_ARGUMENTS)
+            continue;
+
+        /* A null Bytecode* means unreachable. */
+        if (!maybeCode(offset))
+            continue;
+
+        if (SpeculateApplyOptimization(pc) && canOptimizeApply) {
+            haveOptimizedApply = true;
+            continue;
         }
 
-        offset += GetBytecodeLength(pc);
+        Vector<SSAValue> seen(cx);
+        if (haveOptimizedApply ||
+            !followEscapingArguments(cx, SSAValue::PushedValue(offset, 0), &seen))
+        {
+            script->setNeedsArgsObj(true);
+            return;
+        }
+
+        canOptimizeApply = false;
     }
 
     script->setNeedsArgsObj(false);
