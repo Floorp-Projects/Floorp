@@ -48,9 +48,9 @@ MODULE       = embed
 
 DIRS = base components browser
 
+TEST_DIRS += test
 ifdef ENABLE_TESTS
 XPCSHELL_TESTS = tests/unit
-DIRS += test
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
