@@ -201,14 +201,14 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     return true;
 }
 
-bool
-ObjectPolicy::adjustInputs(MInstruction *def)
+void
+ObjectPolicy::adjustInput(MInstruction *def, size_t operand)
 {
-    MDefinition *in = def->getOperand(0);
+    MDefinition *in = def->getOperand(operand);
     if (in->type() == MIRType_Object || in->type() == MIRType_Slots ||
         in->type() == MIRType_Elements || in->type() == MIRType_UpvarSlots)
     {
-        return true;
+        return;
     }
 
     // Once we have C++ calls, we can change this to insert a PrimitiveToObject
@@ -218,8 +218,21 @@ ObjectPolicy::adjustInputs(MInstruction *def)
 
     MUnbox *replace = MUnbox::New(in, MIRType_Object, MUnbox::Fallible);
     def->block()->insertBefore(def, replace);
-    def->replaceOperand(0, replace);
+    def->replaceOperand(operand, replace);
+}
 
+bool
+ObjectPolicy::adjustInputs(MInstruction *def)
+{
+    for (size_t i = 0; i < def->numOperands(); i++)
+        adjustInput(def, i);
+    return true;
+}
+
+bool
+SingleObjectPolicy::adjustInputs(MInstruction *def)
+{
+    adjustInput(def, 0);
     return true;
 }
 
@@ -261,7 +274,7 @@ bool
 CallSetElementPolicy::adjustInputs(MInstruction *ins)
 {
     // The first operand should be an object.
-    ObjectPolicy::adjustInputs(ins);
+    SingleObjectPolicy::adjustInputs(ins);
 
     // Box the index and value operands.
     for (size_t i = 1; i < ins->numOperands(); i++) {

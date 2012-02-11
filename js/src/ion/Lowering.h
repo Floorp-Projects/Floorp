@@ -147,6 +147,9 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitToString(MToString *convert);
     bool visitCopy(MCopy *ins);
     bool visitRegExp(MRegExp *ins);
+    bool visitLambda(MLambda *ins);
+    bool visitLambdaJoinableForCall(MLambdaJoinableForCall *ins);
+    bool visitLambdaJoinableForSet(MLambdaJoinableForSet *ins);
     bool visitImplicitThis(MImplicitThis *ins);
     bool visitSlots(MSlots *ins);
     bool visitElements(MElements *ins);

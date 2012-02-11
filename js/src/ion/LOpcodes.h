@@ -95,6 +95,9 @@
     _(OsrValue)                     \
     _(OsrScopeChain)                \
     _(RegExp)                       \
+    _(Lambda)                       \
+    _(LambdaJoinableForCall)        \
+    _(LambdaJoinableForSet)         \
     _(ImplicitThis)                 \
     _(Slots)                        \
     _(Elements)                     \

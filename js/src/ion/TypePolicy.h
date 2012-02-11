@@ -131,9 +131,18 @@ class CallPolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
+class ObjectPolicy : public BoxInputsPolicy
+{
+  protected:
+    void adjustInput(MInstruction *def, size_t operand);
+
+  public:
+    bool adjustInputs(MInstruction *def);
+};
+
 // Single-object input. If the input is a Value, it is unboxed. If it is
 // a primitive, we use ValueToNonNullObject.
-class ObjectPolicy : public BoxInputsPolicy
+class SingleObjectPolicy : public ObjectPolicy
 {
   public:
     bool adjustInputs(MInstruction *def);
@@ -146,7 +155,7 @@ class StringPolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
-class CallSetElementPolicy : public ObjectPolicy
+class CallSetElementPolicy : public SingleObjectPolicy
 {
   public:
     bool adjustInputs(MInstruction *def);

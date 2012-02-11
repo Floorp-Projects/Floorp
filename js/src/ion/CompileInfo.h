@@ -105,6 +105,9 @@ class CompileInfo
     JSObject *getObject(jsbytecode *pc) const {
         return script_->getObject(GET_UINT32_INDEX(pc));
     }
+    JSFunction *getFunction(jsbytecode *pc) const {
+        return script_->getFunction(GET_UINT32_INDEX(pc));
+    }
     const Value &getConst(jsbytecode *pc) const {
         return script_->getConst(GET_INDEX(pc));
     }

@@ -951,6 +951,29 @@ LeaveWith(JSContext *cx)
     cx->fp()->setScopeChainNoCallObj(withobj.enclosingScope());
 }
 
+static bool
+IsLambdaJoinableForCall(JSObject *callee, uint32_t argc)
+{
+    if (!callee->isFunction())
+        return false;
+
+    /*
+     * Array.prototype.sort and String.prototype.replace are
+     * optimized as if they are special form. We know that they
+     * won't leak the joined function object in obj, therefore
+     * we don't need to clone that compiler-created function
+     * object for identity/mutation reasons.
+     */
+    JSFunction *fun = callee->toFunction();
+    if (Native native = fun->maybeNative()) {
+        if ((argc == 1 && native == array_sort) ||
+            (argc == 2 && native == str_replace)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool
 js::IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth)
 {
@@ -3328,31 +3351,18 @@ BEGIN_CASE(JSOP_LAMBDA)
                         JS_ASSERT(fun->methodAtom() == script->getAtom(GET_FULL_INDEX(JSOP_LAMBDA_LENGTH)));
                         break;
                     }
-                } else if (op2 == JSOP_CALL) {
-                    /*
-                     * Array.prototype.sort and String.prototype.replace are
-                     * optimized as if they are special form. We know that they
-                     * won't leak the joined function object in obj, therefore
-                     * we don't need to clone that compiler-created function
-                     * object for identity/mutation reasons.
-                     */
-                    int iargc = GET_ARGC(pc2);
-
-                    /*
-                     * Note that we have not yet pushed obj as the final argument,
-                     * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
-                     * is the callee for this JSOP_CALL.
-                     */
-                    const Value &cref = regs.sp[1 - (iargc + 2)];
-                    JSFunction *fun;
-
-                    if (IsFunctionObject(cref, &fun)) {
-                        if (Native native = fun->maybeNative()) {
-                            if ((iargc == 1 && native == array_sort) ||
-                                (iargc == 2 && native == str_replace)) {
-                                break;
-                            }
-                        }
+                } else if (op2 == JSOP_NOTEARG) {
+                    jsbytecode *pc3 = pc2 + JSOP_NOTEARG_LENGTH;
+                    if (JSOp(*pc3) == JSOP_CALL) {
+                        /*
+                         * Note that we have not yet pushed obj as the final argument,
+                         * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
+                         * is the callee for this JSOP_CALL.
+                         */
+                        uint32_t argc = GET_ARGC(pc3);
+                        const Value &cref = regs.sp[1 - (int32_t(argc) + 2)];
+                        if (cref.isObject() && IsLambdaJoinableForCall(&cref.toObject(), argc))
+                            break;
                     }
                 } else if (op2 == JSOP_NULL) {
                     pc2 += JSOP_NULL_LENGTH;
@@ -4531,6 +4541,35 @@ js::GetScopeNameForTypeOf(JSContext *cx, JSObject *scopeChain, PropertyName *nam
     }
 
     return obj->getProperty(cx, name, vp);
+}
+
+JSObject *
+js::Lambda(JSContext *cx, JSFunction *fun, JSObject *parent)
+{
+    JSObject *obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
+    if (!obj)
+        return NULL;
+
+    JS_ASSERT(obj->global() == fun->global());
+    return obj;
+}
+
+JSObject *
+js::LambdaJoinableForCall(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *callee, uint32_t argc)
+{
+    JS_ASSERT(fun->joinable());
+    if (IsLambdaJoinableForCall(callee, argc))
+        return fun;
+    return Lambda(cx, fun, parent);
+}
+
+JSObject *
+js::LambdaJoinableForSet(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *target)
+{
+    JS_ASSERT(fun->joinable());
+    if (target->canHaveMethodBarrier())
+        return fun;
+    return Lambda(cx, fun, parent);
 }
 
 template <bool strict>

@@ -91,6 +91,9 @@ namespace ion {
     _(Start)                                                                \
     _(OsrEntry)                                                             \
     _(RegExp)                                                               \
+    _(Lambda)                                                               \
+    _(LambdaJoinableForCall)                                                \
+    _(LambdaJoinableForSet)                                                 \
     _(ImplicitThis)                                                         \
     _(Slots)                                                                \
     _(Elements)                                                             \

@@ -309,6 +309,8 @@ class IonBuilder : public MIRGenerator
     bool jsop_newarray(uint32 count);
     bool jsop_regexp(RegExpObject *reobj);
     bool jsop_object(JSObject *obj);
+    bool jsop_lambda(JSFunction *fun);
+    bool jsop_deflocalfun(uint32 local, JSFunction *fun);
     bool jsop_this();
     bool jsop_typeof();
     bool jsop_iter(uint8 flags);
