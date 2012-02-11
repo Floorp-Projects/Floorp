@@ -683,11 +683,13 @@ fails-if(Android) != 376532-3.html 376532-3-ref.html
 == 379316-1.html 379316-1-ref.html
 fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
-== 379349-1a.xhtml 379349-1-ref.xhtml
-== 379349-1b.xhtml 379349-1-ref.xhtml
-== 379349-1c.xhtml 379349-1-ref.xhtml
-== 379349-2a.xhtml 379349-2-ref.xhtml
-== 379349-2b.xhtml 379349-2-ref.xhtml
+# The next set of reftests all fail until bug 724978 has been fixed, and the
+# overflow container ability of nsColumnSetFrame is restored.
+fails == 379349-1a.xhtml 379349-1-ref.xhtml
+fails == 379349-1b.xhtml 379349-1-ref.xhtml
+fails == 379349-1c.xhtml 379349-1-ref.xhtml
+fails == 379349-2a.xhtml 379349-2-ref.xhtml
+fails == 379349-2b.xhtml 379349-2-ref.xhtml
 == 379349-3a.xhtml 379349-3-ref.xhtml
 == 379349-3b.xhtml 379349-3-ref.xhtml
 == 379361-1.html 379361-1-ref.html

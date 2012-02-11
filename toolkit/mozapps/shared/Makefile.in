@@ -50,8 +50,9 @@ EXTRA_PP_JS_MODULES = \
   FileUtils.jsm \
   $(NULL)
 
+TEST_DIRS += test/chrome
+
 ifdef ENABLE_TESTS
-DIRS += test/chrome
 XPCSHELL_TESTS = test/unit
 endif
 

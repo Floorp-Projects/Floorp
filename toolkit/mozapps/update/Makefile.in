@@ -77,14 +77,12 @@ endif
 endif
 endif
 
-ifdef ENABLE_TESTS
-DIRS += test_timermanager
+TEST_DIRS += test_timermanager
 # Update tests require the updater binary
 ifdef MOZ_UPDATER
-DIRS += test
+TEST_DIRS += test
 ifdef MOZ_MAINTENANCE_SERVICE
-DIRS += test_svc
-endif
+TEST_DIRS += test_svc
 endif
 endif
 

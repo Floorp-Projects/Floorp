@@ -162,12 +162,6 @@ public:
   virtual bool IsPrimaryForNode() const;
 
   /**
-   * Return the string bundle
-   */
-  static nsIStringBundle* GetStringBundle()
-    { return gStringBundle; }
-
-  /**
    * Interface methods on nsIAccessible shared with ISimpleDOM.
    */
   void Language(nsAString& aLocale);

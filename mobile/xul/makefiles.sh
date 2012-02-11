@@ -36,6 +36,8 @@
 # ***** END LICENSE BLOCK *****
 
 add_makefiles "
+mobile/locales/Makefile
+mobile/xul/Makefile
 mobile/xul/app/Makefile
 mobile/xul/app/profile/extensions/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
@@ -43,14 +45,17 @@ $MOZ_BRANDING_DIRECTORY/content/Makefile
 $MOZ_BRANDING_DIRECTORY/locales/Makefile
 mobile/xul/chrome/Makefile
 mobile/xul/components/Makefile
-mobile/xul/components/build/Makefile
 mobile/xul/modules/Makefile
 mobile/xul/installer/Makefile
 mobile/xul/locales/Makefile
-mobile/locales/Makefile
-mobile/xul/Makefile
 mobile/xul/themes/core/Makefile
 "
+
+if [ ! "$LIBXUL_SDK" ]; then
+  add_makefiles "
+    mobile/xul/components/build/Makefile
+  "
+fi
 
 if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
