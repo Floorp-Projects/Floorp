@@ -582,17 +582,9 @@ inline void XPCNativeSet::ASSERT_NotMarked()
 /***************************************************************************/
 
 inline
-JSObject* XPCWrappedNativeTearOff::GetJSObjectPreserveColor() const
+JSObject* XPCWrappedNativeTearOff::GetJSObject() const
 {
     return mJSObject;
-}
-
-inline
-JSObject* XPCWrappedNativeTearOff::GetJSObject()
-{
-    JSObject *obj = GetJSObjectPreserveColor();
-    xpc_UnmarkGrayObject(obj);
-    return obj;
 }
 
 inline
@@ -604,7 +596,7 @@ void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 inline
 XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
 {
-    NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObjectPreserveColor()), "tearoff not empty in dtor");
+    NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObject()), "tearoff not empty in dtor");
 }
 
 /***************************************************************************/
@@ -629,7 +621,7 @@ XPCWrappedNative::SweepTearOffs()
 
             // If this tearoff does not have a live dedicated JSObject,
             // then let's recycle it.
-            if (!to->GetJSObjectPreserveColor()) {
+            if (!to->GetJSObject()) {
                 nsISupports* obj = to->GetNative();
                 if (obj) {
                     obj->Release();
