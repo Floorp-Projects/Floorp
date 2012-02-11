@@ -274,10 +274,6 @@ CallObject::getArgumentsOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * be a pure data property and allow call_resolve to be removed.
      */
     if (vp->isMagic(JS_UNASSIGNED_ARGUMENTS)) {
-#ifdef DEBUG
-        for (StackFrame *fp = cx->fp(); !fp->isDebuggerFrame(); fp = fp->prev())
-            JS_ASSERT(fp->isEvalFrame());
-#endif
         StackFrame *fp = obj->asCall().maybeStackFrame();
         ArgumentsObject *argsObj = ArgumentsObject::createUnexpected(cx, fp);
         if (!argsObj)
