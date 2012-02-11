@@ -267,6 +267,42 @@ CodeGenerator::visitRegExp(LRegExp *lir)
 }
 
 bool
+CodeGenerator::visitLambda(LLambda *lir)
+{
+    typedef JSObject *(*pf)(JSContext *, JSFunction *, JSObject *);
+    static const VMFunction Info = FunctionInfo<pf>(js::Lambda);
+
+    pushArg(ToRegister(lir->scopeChain()));
+    pushArg(ImmGCPtr(lir->mir()->fun()));
+    return callVM(Info, lir);
+}
+
+bool
+CodeGenerator::visitLambdaJoinableForCall(LLambdaJoinableForCall *lir)
+{
+    typedef JSObject *(*pf)(JSContext *, JSFunction *, JSObject *, JSObject *, uint32_t);
+    static const VMFunction Info = FunctionInfo<pf>(js::LambdaJoinableForCall);
+
+    pushArg(Imm32(lir->mir()->argc()));
+    pushArg(ToRegister(lir->callee()));
+    pushArg(ToRegister(lir->scopeChain()));
+    pushArg(ImmGCPtr(lir->mir()->fun()));
+    return callVM(Info, lir);
+}
+
+bool
+CodeGenerator::visitLambdaJoinableForSet(LLambdaJoinableForSet *lir)
+{
+    typedef JSObject *(*pf)(JSContext *, JSFunction *, JSObject *, JSObject *);
+    static const VMFunction Info = FunctionInfo<pf>(js::LambdaJoinableForSet);
+
+    pushArg(ToRegister(lir->target()));
+    pushArg(ToRegister(lir->scopeChain()));
+    pushArg(ImmGCPtr(lir->mir()->fun()));
+    return callVM(Info, lir);
+}
+
+bool
 CodeGenerator::visitLabel(LLabel *lir)
 {
     masm.bind(lir->label());
