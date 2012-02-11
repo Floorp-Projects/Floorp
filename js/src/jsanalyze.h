@@ -41,6 +41,7 @@
 #ifndef jsanalyze_h___
 #define jsanalyze_h___
 
+#include "jsautooplen.h"
 #include "jscompartment.h"
 #include "jscntxt.h"
 #include "jsinfer.h"
@@ -1354,6 +1355,14 @@ class CrossScriptSSA
 #ifdef DEBUG
 void PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc);
 #endif
+
+static inline bool
+SpeculateApplyOptimization(jsbytecode *pc)
+{
+    JS_ASSERT(*pc == JSOP_ARGUMENTS);
+    jsbytecode *nextpc = pc + JSOP_ARGUMENTS_LENGTH;
+    return *nextpc == JSOP_FUNAPPLY && GET_ARGC(nextpc) == 2;
+}
 
 } /* namespace analyze */
 } /* namespace js */

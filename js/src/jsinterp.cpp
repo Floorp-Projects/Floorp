@@ -2652,10 +2652,21 @@ BEGIN_CASE(JSOP_EVAL)
 }
 END_CASE(JSOP_EVAL)
 
+BEGIN_CASE(JSOP_FUNAPPLY)
+    if (regs.sp[-1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+        CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
+            JS_ASSERT(args.length() == 2);
+            if (!script->applySpeculationFailed(cx))
+                goto error;
+            args[1] = ObjectValue(regs.fp()->argsObj());
+        }
+    }
+    /* FALL THROUGH */
+
 BEGIN_CASE(JSOP_NEW)
 BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_FUNCALL)
-BEGIN_CASE(JSOP_FUNAPPLY)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
     JS_ASSERT(args.base() >= regs.fp()->base());
