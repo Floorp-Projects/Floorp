@@ -1892,26 +1892,6 @@ gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 }
 
 void
-js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
-{
-    MarkRoot(trc, &fp->scopeChain(), "scope chain");
-    if (fp->isDummyFrame())
-        return;
-    if (fp->hasArgsObj())
-        MarkRoot(trc, &fp->argsObj(), "arguments");
-    if (fp->isFunctionFrame()) {
-        MarkRoot(trc, fp->fun(), "fun");
-        if (fp->isEvalFrame()) {
-            MarkRoot(trc, fp->script(), "eval script");
-        }
-    } else {
-        MarkRoot(trc, fp->script(), "script");
-    }
-    fp->script()->compartment()->active = true;
-    MarkRoot(trc, fp->returnValue(), "rval");
-}
-
-void
 AutoIdArray::trace(JSTracer *trc)
 {
     JS_ASSERT(tag == IDARRAY);
