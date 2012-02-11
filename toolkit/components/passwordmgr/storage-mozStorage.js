@@ -44,7 +44,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-const DB_VERSION = 4; // The database schema version
+const DB_VERSION = 5; // The database schema version
 
 const ENCTYPE_BASE64 = 0;
 const ENCTYPE_SDR = 1;
@@ -152,6 +152,10 @@ LoginManagerStorage_mozStorage.prototype = {
 
             moz_disabledHosts:  "id                 INTEGER PRIMARY KEY," +
                                 "hostname           TEXT UNIQUE ON CONFLICT REPLACE",
+
+            moz_deleted_logins: "id                  INTEGER PRIMARY KEY," +
+                                "guid                TEXT,"                +
+                                "timeDeleted         INTEGER",
         },
         indices: {
           moz_logins_hostname_index: {
@@ -373,18 +377,21 @@ LoginManagerStorage_mozStorage.prototype = {
         let query  = "DELETE FROM moz_logins WHERE id = :id";
         let params = { id: idToDelete };
         let stmt;
+        let transaction = new Transaction(this._dbConnection);
         try {
             stmt = this._dbCreateStatement(query, params);
             stmt.execute();
+            this.storeDeletedLogin(storedLogin);
+            transaction.commit();
         } catch (e) {
             this.log("_removeLogin failed: " + e.name + " : " + e.message);
             throw "Couldn't write to database, login not removed.";
+            transaction.rollback();
         } finally {
             if (stmt) {
                 stmt.reset();
             }
         }
-
         this._sendNotification("removeLogin", storedLogin);
     },
 
@@ -680,6 +687,30 @@ LoginManagerStorage_mozStorage.prototype = {
         return [logins, ids];
     },
 
+    /* storeDeletedLogin
+     *
+     * Moves a login to the deleted logins table
+     *
+     */
+     storeDeletedLogin : function(aLogin) {
+#ifdef ANDROID
+          let stmt = null; 
+          try {
+              this.log("Storing " + aLogin.guid + " in deleted passwords\n");
+              let query = "INSERT INTO moz_deleted_logins (guid, timeDeleted) VALUES (:guid, :timeDeleted)";
+              let params = { guid: aLogin.guid,
+                             timeDeleted: Date.now() };
+              let stmt = this._dbCreateStatement(query, params);
+              stmt.execute();
+          } catch(ex) {
+              throw ex;
+          } finally {
+              if (stmt)
+                  stmt.reset();
+          }		
+#endif
+     },
+
 
     /*
      * removeAllLogins
@@ -688,17 +719,27 @@ LoginManagerStorage_mozStorage.prototype = {
      */
     removeAllLogins : function () {
         this.log("Removing all logins");
+        let query;
+        let stmt;
+        let transaction = new Transaction(this._dbConnection);
+ 
         // Delete any old, unused files.
         this._removeOldSignonsFiles();
 
         // Disabled hosts kept, as one presumably doesn't want to erase those.
-        let query = "DELETE FROM moz_logins";
-        let stmt;
+        query = "DELETE FROM moz_logins";
         try {
+            let logins = this.getAllLogins();
+            for each (let login in logins) {
+                let [id, storedLogin] = this._getIdForLogin(login);
+                this.storeDeletedLogin(storedLogin);
+            }
             stmt = this._dbCreateStatement(query);
             stmt.execute();
+            transaction.commit();
         } catch (e) {
             this.log("_removeAllLogins failed: " + e.name + " : " + e.message);
+            transaction.rollback();
             throw "Couldn't write to database";
         } finally {
             if (stmt) {
@@ -707,7 +748,7 @@ LoginManagerStorage_mozStorage.prototype = {
         }
 
         this._sendNotification("removeAllLogins", null);
-    },
+   },
 
 
     /*
@@ -1561,6 +1602,17 @@ LoginManagerStorage_mozStorage.prototype = {
         }
     },
 
+
+    /*
+     * _dbMigrateToVersion5
+     *
+     * Version 5 adds the moz_deleted_logins table
+     */
+    _dbMigrateToVersion5 : function () {
+        if (!this._dbConnection.tableExists("moz_deleted_logins")) {
+          this._dbConnection.createTable("moz_deleted_logins", this._dbSchema.tables.moz_deleted_logins);
+        }
+    },
 
     /*
      * _dbAreExpectedColumnsPresent

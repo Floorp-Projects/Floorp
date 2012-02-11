@@ -42,6 +42,7 @@
 
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "nsDocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
@@ -61,8 +62,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColumnsAccessible::
-  nsXULColumnsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXULColumnsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -84,8 +85,8 @@ nsXULColumnsAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColumnItemAccessible::
-  nsXULColumnItemAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsLeafAccessible(aContent, aShell)
+  nsXULColumnItemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsLeafAccessible(aContent, aDoc)
 {
 }
 
@@ -132,8 +133,8 @@ nsXULColumnItemAccessible::DoAction(PRUint8 aIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListboxAccessible::
-  nsXULListboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  XULSelectControlAccessible(aContent, aShell)
+  nsXULListboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  XULSelectControlAccessible(aContent, aDoc)
 {
   nsIContent* parentContent = mContent->GetParent();
   if (parentContent) {
@@ -316,9 +317,8 @@ nsXULListboxAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
   NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
 
   nsCOMPtr<nsIContent> itemContent(do_QueryInterface(item));
-
-  nsAccessible *row =
-    GetAccService()->GetAccessibleInWeakShell(itemContent, mWeakShell);
+  NS_ENSURE_TRUE(mDoc, NS_ERROR_FAILURE);
+  nsAccessible *row = mDoc->GetAccessible(itemContent);
   NS_ENSURE_STATE(row);
 
   nsresult rv = row->GetChildAt(aColumn, aAccessibleCell);
@@ -601,13 +601,13 @@ nsXULListboxAccessible::GetSelectedCells(nsIArray **aCells)
   rv = selectedItems->GetLength(&selectedItemsCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  NS_ENSURE_TRUE(mDoc, NS_ERROR_FAILURE);
   PRUint32 index = 0;
   for (; index < selectedItemsCount; index++) {
     nsCOMPtr<nsIDOMNode> itemNode;
     selectedItems->Item(index, getter_AddRefs(itemNode));
     nsCOMPtr<nsIContent> itemContent(do_QueryInterface(itemNode));
-    nsAccessible *item =
-      GetAccService()->GetAccessibleInWeakShell(itemContent, mWeakShell);
+    nsAccessible *item = mDoc->GetAccessible(itemContent);
 
     if (item) {
       PRInt32 cellCount = item->GetChildCount();
@@ -886,7 +886,8 @@ nsXULListboxAccessible::ContainerWidget() const
       if (inputElm) {
         nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
         if (inputNode) {
-          nsAccessible* input = GetAccService()->GetAccessible(inputNode);
+          nsAccessible* input = 
+            GetAccService()->GetAccessible(inputNode, nsnull);
           return input ? input->ContainerWidget() : nsnull;
         }
       }
@@ -900,8 +901,8 @@ nsXULListboxAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListitemAccessible::
-  nsXULListitemAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsXULMenuitemAccessible(aContent, aShell)
+  nsXULListitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenuitemAccessible(aContent, aDoc)
 {
   mIsCheckbox = mContent->AttrValueIs(kNameSpaceID_None,
                                       nsGkAtoms::type,
@@ -929,7 +930,7 @@ nsXULListitemAccessible::GetListAccessible()
   if (!listContent)
     return nsnull;
 
-  return GetAccService()->GetAccessibleInWeakShell(listContent, mWeakShell);
+  return mDoc->GetAccessible(listContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1053,8 +1054,8 @@ nsXULListitemAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListCellAccessible::
-  nsXULListCellAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsHyperTextAccessibleWrap(aContent, aShell)
+  nsXULListCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 

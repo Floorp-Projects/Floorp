@@ -1108,13 +1108,12 @@ nsComputedDOMStyle::DoGetMozTransform()
     resultString.Append(NS_LITERAL_STRING(", "));
   }
   resultString.AppendFloat(matrix._41);
-  resultString.Append(NS_LITERAL_STRING("px, "));
+  resultString.Append(NS_LITERAL_STRING(", "));
   resultString.AppendFloat(matrix._42);
-  resultString.Append(NS_LITERAL_STRING("px"));
   if (is3D) {
     resultString.Append(NS_LITERAL_STRING(", "));
     resultString.AppendFloat(matrix._43);
-    resultString.Append(NS_LITERAL_STRING("px, "));
+    resultString.Append(NS_LITERAL_STRING(", "));
     resultString.AppendFloat(matrix._44);
   }
   resultString.Append(NS_LITERAL_STRING(")"));
@@ -3768,10 +3767,6 @@ nsComputedDOMStyle::GetFrameBoundsWidthForTransform(nscoord& aWidth)
 
   AssertFlushedPendingReflows();
 
-  // Check to see that we're transformed.
-  if (!mInnerFrame->GetStyleDisplay()->HasTransform())
-    return false;
-
   aWidth = nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame).width;
   return true;
 }
@@ -3785,10 +3780,6 @@ nsComputedDOMStyle::GetFrameBoundsHeightForTransform(nscoord& aHeight)
   }
 
   AssertFlushedPendingReflows();
-
-  // Check to see that we're transformed.
-  if (!mInnerFrame->GetStyleDisplay()->HasTransform())
-    return false;
 
   aHeight = nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame).height;
   return true;

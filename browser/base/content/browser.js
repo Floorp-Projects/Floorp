@@ -1228,12 +1228,12 @@ function BrowserStartup() {
   if ("arguments" in window && window.arguments[0])
     uriToLoad = window.arguments[0];
 
-  var isLoadingBlank = uriToLoad == "about:blank";
+  var isLoadingBlank = isBlankPageURL(uriToLoad);
   var mustLoadSidebar = false;
 
   prepareForStartup();
 
-  if (uriToLoad && !isLoadingBlank) {
+  if (uriToLoad && uriToLoad != "about:blank") {
     if (uriToLoad instanceof Ci.nsISupportsArray) {
       let count = uriToLoad.Count();
       let specs = [];
@@ -1929,7 +1929,7 @@ function nonBrowserWindowStartup() {
                        'viewToolbarsMenu', 'viewSidebarMenuMenu', 'Browser:Reload',
                        'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
                        'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
-                       'View:PageInfo', 'Tasks:InspectPage', 'Browser:ToggleTabView', ];
+                       'View:PageInfo', 'Tasks:InspectPage', 'Browser:ToggleTabView', 'Browser:ToggleAddonBar'];
   var element;
 
   for (var id in disabledItems) {
@@ -5865,7 +5865,7 @@ function hrefAndLinkNodeForClickEvent(event)
 function contentAreaClick(event, isPanelClick)
 {
   if (!event.isTrusted || event.defaultPrevented || event.button == 2)
-    return true;
+    return;
 
   let [href, linkNode] = hrefAndLinkNodeForClickEvent(event);
   if (!href) {
@@ -5876,7 +5876,7 @@ function contentAreaClick(event, isPanelClick)
       middleMousePaste(event);
       event.preventDefault();
     }
-    return true;
+    return;
   }
 
   // This code only applies if we have a linkNode (i.e. clicks on real anchor
@@ -5893,7 +5893,7 @@ function contentAreaClick(event, isPanelClick)
       if (linkNode.getAttribute("onclick") ||
           href.substr(0, 11) === "javascript:" ||
           href.substr(0, 5) === "data:")
-        return true;
+        return;
 
       try {
         urlSecurityCheck(href, linkNode.ownerDocument.nodePrincipal);
@@ -5901,16 +5901,16 @@ function contentAreaClick(event, isPanelClick)
       catch(ex) {
         // Prevent loading unsecure destinations.
         event.preventDefault();
-        return true;
+        return;
       }
 
       let postData = {};
       let url = getShortcutOrURI(href, postData);
       if (!url)
-        return true;
+        return;
       loadURI(url, null, postData.value, false);
       event.preventDefault();
-      return true;
+      return;
     }
 
     if (linkNode.getAttribute("rel") == "sidebar") {
@@ -5927,7 +5927,7 @@ function contentAreaClick(event, isPanelClick)
                                                      , "keyword" ]
                                        }, window);
       event.preventDefault();
-      return true;
+      return;
     }
   }
 
@@ -5940,8 +5940,6 @@ function contentAreaClick(event, isPanelClick)
   try {
     PlacesUIUtils.markPageAsFollowedLink(href);
   } catch (ex) { /* Skip invalid URIs. */ }
-
-  return true;
 }
 
 /**
@@ -7150,25 +7148,10 @@ var gPluginHandler = {
     BrowserOpenAddonsMgr("addons://list/plugin");
   },
 
-  // When user clicks try, checks if we should also send crash report in bg
-  retryPluginPage: function (browser, plugin, pluginDumpID, browserDumpID) {
-    let doc = plugin.ownerDocument;
-
-    let statusDiv =
-      doc.getAnonymousElementByAttribute(plugin, "class", "submitStatus");
-    let status = statusDiv.getAttribute("status");
-
-    let submitChk =
-      doc.getAnonymousElementByAttribute(plugin, "class", "pleaseSubmitCheckbox");
-
-    // Check status to make sure we haven't submitted already
-    if (status == "please" && submitChk.checked) {
-      this.submitReport(pluginDumpID, browserDumpID);
-    }
-    this.reloadPage(browser);
-  },
-
-  submitReport: function (pluginDumpID, browserDumpID) {
+  // Callback for user clicking "submit a report" link
+  submitReport : function(pluginDumpID, browserDumpID) {
+    // The crash reporter wants a DOM element it can append an IFRAME to,
+    // which it uses to submit a form. Let's just give it gBrowser.
     this.CrashSubmit.submit(pluginDumpID);
     if (browserDumpID)
       this.CrashSubmit.submit(browserDumpID);
@@ -7386,7 +7369,8 @@ var gPluginHandler = {
       return;
 
     let submittedReport = aEvent.getData("submittedCrashReport");
-    let doPrompt        = true; // XXX followup to get via gCrashReporter
+    let doPrompt        = true; // XXX followup for .getData("doPrompt");
+    let submitReports   = true; // XXX followup for .getData("submitReports");
     let pluginName      = aEvent.getData("pluginName");
     let pluginFilename  = aEvent.getData("pluginFilename");
     let pluginDumpID    = aEvent.getData("pluginDumpID");
@@ -7404,7 +7388,6 @@ var gPluginHandler = {
     let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
     let statusDiv = doc.getAnonymousElementByAttribute(plugin, "class", "submitStatus");
 #ifdef MOZ_CRASHREPORTER
-    let submitReports = gCrashReporter.submitReports;
     let status;
 
     // Determine which message to show regarding crash reports.
@@ -7415,21 +7398,18 @@ var gPluginHandler = {
       status = "noSubmit";
     }
     else { // doPrompt
-      // link submit checkbox to gCrashReporter submitReports preference
-      let submitChk = doc.getAnonymousElementByAttribute(
-                        plugin, "class", "pleaseSubmitCheckbox");
-      submitChk.checked = submitReports;
-      submitChk.addEventListener("click", function() {
-        gCrashReporter.submitReports = this.checked;
-      }, false);
-
       status = "please";
+      // XXX can we make the link target actually be blank?
+      let pleaseLink = doc.getAnonymousElementByAttribute(
+                            plugin, "class", "pleaseSubmitLink");
+      this.addLinkClickCallback(pleaseLink, "submitReport",
+                                pluginDumpID, browserDumpID);
     }
 
     // If we don't have a minidumpID, we can't (or didn't) submit anything.
     // This can happen if the plugin is killed from the task manager.
     if (!pluginDumpID) {
-      status = "noReport";
+        status = "noReport";
     }
 
     statusDiv.setAttribute("status", status);
@@ -7439,23 +7419,10 @@ var gPluginHandler = {
     let helpIcon = doc.getAnonymousElementByAttribute(plugin, "class", "helpIcon");
     this.addLinkClickCallback(helpIcon, "openHelpPage");
 
-    // If we're showing the checkbox to trigger report submission, we'll want
-    // to be able to update all the instances of the UI for this crash when
-    // one instance of the checkbox is modified or the status is updated.
+    // If we're showing the link to manually trigger report submission, we'll
+    // want to be able to update all the instances of the UI for this crash to
+    // show an updated message when a report is submitted.
     if (doPrompt) {
-      let submitReportsPrefObserver = {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                               Ci.nsISupportsWeakReference]),
-        observe : function(subject, topic, data) {
-          let submitChk = doc.getAnonymousElementByAttribute(
-                            plugin, "class", "pleaseSubmitCheckbox");
-          submitChk.checked = gCrashReporter.submitReports;
-        },
-        handleEvent : function(event) {
-            // Not expected to be called, just here for the closure.
-        }
-      };
-
       let observer = {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                                Ci.nsISupportsWeakReference]),
@@ -7472,21 +7439,16 @@ var gPluginHandler = {
         handleEvent : function(event) {
             // Not expected to be called, just here for the closure.
         }
-      };
+      }
 
       // Use a weak reference, so we don't have to remove it...
       Services.obs.addObserver(observer, "crash-report-status", true);
-      Services.obs.addObserver(
-        submitReportsPrefObserver, "submit-reports-pref-changed", true);
-
       // ...alas, now we need something to hold a strong reference to prevent
       // it from being GC. But I don't want to manually manage the reference's
       // lifetime (which should be no greater than the page).
-      // Clever solution? Use a closure with an event listener on the document.
+      // Clever solution? Use a closue with an event listener on the document.
       // When the doc goes away, so do the listener references and the closure.
       doc.addEventListener("mozCleverClosureHack", observer, false);
-      doc.addEventListener(
-        "mozCleverClosureHack", submitReportsPrefObserver, false);
     }
 #endif
 
@@ -7496,12 +7458,7 @@ var gPluginHandler = {
     let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
 
     let link = doc.getAnonymousElementByAttribute(plugin, "class", "reloadLink");
-#ifdef MOZ_CRASHREPORTER
-    this.addLinkClickCallback(
-      link, "retryPluginPage", browser, plugin, pluginDumpID, browserDumpID);
-#else
     this.addLinkClickCallback(link, "reloadPage", browser);
-#endif
 
     let notificationBox = gBrowser.getNotificationBox(browser);
 

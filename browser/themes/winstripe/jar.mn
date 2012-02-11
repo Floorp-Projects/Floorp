@@ -24,8 +24,6 @@ browser.jar:
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/KUI-close.png
-        skin/classic/browser/mainwindow-dropdown-arrow.png
-        skin/classic/browser/mainwindow-dropdown-arrow-inverted.png
         skin/classic/browser/pageInfo.css
         skin/classic/browser/pageInfo.png                            (pageInfo.png)
         skin/classic/browser/page-livemarks.png                      (feeds/feedIcon16.png)
@@ -37,7 +35,10 @@ browser.jar:
         skin/classic/browser/Secure24.png                            (Secure24.png)
         skin/classic/browser/Toolbar.png                             (Toolbar.png)
         skin/classic/browser/Toolbar-inverted.png
+        skin/classic/browser/toolbarbutton-dropdown-arrow.png
+        skin/classic/browser/toolbarbutton-dropdown-arrow-inverted.png
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
+        skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/section_collapsed.png
         skin/classic/browser/section_collapsed-rtl.png
         skin/classic/browser/section_expanded.png
@@ -189,8 +190,6 @@ browser.jar:
         skin/classic/aero/browser/keyhole-forward-mask.svg
         skin/classic/aero/browser/KUI-background.png
         skin/classic/aero/browser/KUI-close.png
-        skin/classic/aero/browser/mainwindow-dropdown-arrow.png      (mainwindow-dropdown-arrow-aero.png)
-        skin/classic/aero/browser/mainwindow-dropdown-arrow-inverted.png
         skin/classic/aero/browser/pageInfo.css
         skin/classic/aero/browser/pageInfo.png                       (pageInfo-aero.png)
         skin/classic/aero/browser/page-livemarks.png                 (feeds/feedIcon16-aero.png)
@@ -202,7 +201,10 @@ browser.jar:
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/Toolbar.png
         skin/classic/aero/browser/Toolbar-inverted.png
+        skin/classic/aero/browser/toolbarbutton-dropdown-arrow.png
+        skin/classic/aero/browser/toolbarbutton-dropdown-arrow-inverted.png
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
+        skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
         skin/classic/aero/browser/section_collapsed.png
         skin/classic/aero/browser/section_collapsed-rtl.png
         skin/classic/aero/browser/section_expanded.png

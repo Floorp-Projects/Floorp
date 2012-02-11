@@ -62,7 +62,7 @@
 class nsAccessibleWrap : public nsAccessible
 {
 public: // construction, destruction
-  nsAccessibleWrap(nsIContent* aContent, nsIWeakReference* aShell);
+  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc);
   virtual ~nsAccessibleWrap();
     
   /**

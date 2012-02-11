@@ -1244,8 +1244,8 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
      * Make the prototype object an instance of Object with the same parent
      * as the function object itself.
      */
-    JSObject *objProto;
-    if (!js_GetClassPrototype(cx, obj->getParent(), JSProto_Object, &objProto))
+    JSObject *objProto = obj->global().getOrCreateObjectPrototype(cx);
+    if (!objProto)
         return NULL;
     JSObject *proto = NewObjectWithGivenProto(cx, &ObjectClass, objProto, NULL);
     if (!proto || !proto->setSingletonType(cx))

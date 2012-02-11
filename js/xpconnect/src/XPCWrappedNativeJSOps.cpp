@@ -637,7 +637,7 @@ XPC_WN_NoHelper_Finalize(JSContext *cx, JSObject *obj)
         return;
     }
 
-    static_cast<XPCWrappedNative*>(p)->FlatJSObjectFinalized(cx);
+    static_cast<XPCWrappedNative*>(p)->FlatJSObjectFinalized();
 }
 
 static void
@@ -1058,7 +1058,7 @@ XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
     if (!wrapper)
         return;
     wrapper->GetScriptableCallback()->Finalize(wrapper, cx, obj);
-    wrapper->FlatJSObjectFinalized(cx);
+    wrapper->FlatJSObjectFinalized();
 }
 
 static JSBool

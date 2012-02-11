@@ -457,8 +457,8 @@ abstract public class GeckoApp
 
         // Disable share menuitem for about:, chrome: and file: URIs
         String scheme = Uri.parse(tab.getURL()).getScheme();
-        boolean enabled = !(scheme.equals("about") || scheme.equals("chrome") ||
-                            scheme.equals("file"));
+        boolean enabled = scheme != null && !(scheme.equals("about") || scheme.equals("chrome") ||
+                                              scheme.equals("file"));
         share.setEnabled(enabled);
 
         // Disable save as PDF for about:home and xul pages
@@ -622,8 +622,8 @@ abstract public class GeckoApp
                 message.put("source", source);
 
                 JSONObject destination = new JSONObject();
-                source.put("width", dw);
-                source.put("height", dh);
+                destination.put("width", dw);
+                destination.put("height", dh);
                 message.put("destination", destination);
 
                 String json = message.toString();
@@ -635,8 +635,14 @@ abstract public class GeckoApp
     }
     
     void processThumbnail(Tab thumbnailTab, Bitmap bitmap, byte[] compressed) {
-        if (Tabs.getInstance().isSelectedTab(thumbnailTab))
+        if (Tabs.getInstance().isSelectedTab(thumbnailTab)) {
+            if (compressed == null) {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+                compressed = bos.toByteArray();
+            }
             mLastScreen = compressed;
+        }
         if (thumbnailTab.getURL().equals("about:home")) {
             thumbnailTab.updateThumbnail(null);
             return;
@@ -2322,21 +2328,21 @@ abstract public class GeckoApp
 
     private void checkMigrateProfile() {
         File profileDir = getProfileDir();
+        long currentTime = SystemClock.uptimeMillis();
+
         if (profileDir != null) {
-            long currentTime = SystemClock.uptimeMillis();
             Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
             final GeckoApp app = GeckoApp.mAppContext;
             final SetupScreen setupScreen = new SetupScreen(app);
             // don't show unless we take a while
             setupScreen.showDelayed(mMainHandler);
-            GeckoAppShell.ensureSQLiteLibsLoaded(app.getApplication().getPackageResourcePath());
             ProfileMigrator profileMigrator =
                 new ProfileMigrator(app.getContentResolver(), profileDir);
             profileMigrator.launch();
             setupScreen.dismiss();
-            long timeDiff = SystemClock.uptimeMillis() - currentTime;
-            Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
         }
+        long timeDiff = SystemClock.uptimeMillis() - currentTime;
+        Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
     }
 
     private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();

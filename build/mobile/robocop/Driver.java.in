@@ -70,7 +70,7 @@ public interface Driver {
   int stopFrameRecording();
 
   void startCheckerboardRecording();
-  int stopCheckerboardRecording();
+  float stopCheckerboardRecording();
 
   /**
    * Get a copy of the painted content region.

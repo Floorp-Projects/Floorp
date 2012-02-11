@@ -41,6 +41,7 @@
 
 #include "gfxFT2FontList.h"
 #include "gfxImageSurface.h"
+#include "nsXULAppAPI.h"
 
 #include "cairo.h"
 
@@ -195,3 +196,28 @@ gfxAndroidPlatform::GetScaledFontForFont(gfxFont *aFont)
     return scaledFont;
 }
 
+bool
+gfxAndroidPlatform::FontHintingEnabled()
+{
+    // In "mobile" builds, we sometimes use non-reflow-zoom, so we
+    // might not want hinting.  Let's see.
+#ifdef MOZ_USING_ANDROID_JAVA_WIDGETS
+    // On android-java, we currently only use gecko to render web
+    // content that can always be be non-reflow-zoomed.  So turn off
+    // hinting.
+    // 
+    // XXX when gecko-android-java is used as an "app runtime", we'll
+    // want to re-enable hinting.
+    return false;
+#else
+    // Otherwise, if we're in a content process, assume we don't want
+    // hinting.
+    //
+    // XXX when we use content processes to load "apps", we'll want to
+    // configure this dynamically based on whether we're an "app
+    // content process" or a "browser content process".  The former
+    // wants hinting, the latter doesn't since it might be
+    // non-reflow-zoomed.
+    return (XRE_GetProcessType() != GeckoProcessType_Content);
+#endif //  MOZ_USING_ANDROID_JAVA_WIDGETS
+}

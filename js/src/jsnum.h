@@ -556,8 +556,11 @@ js_DoubleToECMAInt32(jsdouble d)
 #endif
 }
 
-uint32_t
-js_DoubleToECMAUint32(jsdouble d);
+inline uint32_t
+js_DoubleToECMAUint32(jsdouble d)
+{
+    return uint32_t(js_DoubleToECMAInt32(d));
+}
 
 /*
  * Convert a jsdouble to an integral number, stored in a jsdouble.

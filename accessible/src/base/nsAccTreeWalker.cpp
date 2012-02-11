@@ -41,9 +41,9 @@
 
 #include "nsAccessible.h"
 #include "nsAccessibilityService.h"
+#include "nsDocAccessible.h"
 
 #include "nsINodeList.h"
-#include "nsIPresShell.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // WalkState
@@ -65,9 +65,9 @@ struct WalkState
 ////////////////////////////////////////////////////////////////////////////////
 
 nsAccTreeWalker::
-  nsAccTreeWalker(nsIWeakReference* aShell, nsIContent* aContent,
+  nsAccTreeWalker(nsDocAccessible* aDoc, nsIContent* aContent,
                   bool aWalkAnonContent, bool aWalkCache) :
-  mWeakShell(aShell), mWalkCache(aWalkCache), mState(nsnull)
+  mDoc(aDoc), mWalkCache(aWalkCache), mState(nsnull)
 {
   NS_ASSERTION(aContent, "No node for the accessible tree walker!");
 
@@ -103,8 +103,6 @@ nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
   if (!mState->childList)
     mState->childList = mState->content->GetChildren(mChildFilter);
 
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
-
   PRUint32 length = 0;
   if (mState->childList)
     mState->childList->GetLength(&length);
@@ -114,10 +112,8 @@ nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
     mState->childIdx++;
 
     bool isSubtreeHidden = false;
-    nsAccessible* accessible = mWalkCache ?
-      GetAccService()->GetAccessibleInWeakShell(childNode, mWeakShell) :
-      GetAccService()->GetOrCreateAccessible(childNode, presShell, mWeakShell,
-                                             &isSubtreeHidden);
+    nsAccessible* accessible = mWalkCache ? mDoc->GetAccessible(childNode) :
+      GetAccService()->GetOrCreateAccessible(childNode, mDoc, &isSubtreeHidden);
 
     if (accessible)
       return accessible;

@@ -365,25 +365,25 @@ BrowserTabActor.prototype = {
   },
 
   /**
-   * Suppresses content-initiated events. Called right before entering the
-   * nested event loop.
+   * Prepare to enter a nested event loop by disabling debuggee events.
    */
   preNest: function BTA_preNest() {
-    this.browser.contentWindow
-        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .suppressEventHandling(true);
+    let windowUtils = this.browser.contentWindow
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
+    windowUtils.suppressEventHandling(true);
+    windowUtils.suspendTimeouts();
   },
 
   /**
-   * Re-enables content-initiated events. Called right after exiting the
-   * nested event loop.
+   * Prepare to exit a nested event loop by enabling debuggee events.
    */
   postNest: function BTA_postNest(aNestData) {
-    this.browser.contentWindow
-        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .suppressEventHandling(false);
+    let windowUtils = this.browser.contentWindow
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
+    windowUtils.resumeTimeouts();
+    windowUtils.suppressEventHandling(false);
   },
 
   /**
