@@ -327,6 +327,8 @@ XPCWrappedNativeScope::GetPrototypeNoHelper(XPCCallContext& ccx)
 
         NS_ASSERTION(mPrototypeNoHelper,
                      "Failed to create prototype for wrappers w/o a helper");
+    } else {
+        xpc_UnmarkGrayObject(mPrototypeNoHelper);
     }
 
     return mPrototypeNoHelper;
