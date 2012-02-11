@@ -491,10 +491,8 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
 
     JSObject *interfacePrototype;
     if (cache.IsInitialized()) {
-        if (cache.Get(sInterfaceClass.name, &interfacePrototype)) {
-            xpc_UnmarkGrayObject(interfacePrototype);
+        if (cache.Get(sInterfaceClass.name, &interfacePrototype))
             return interfacePrototype;
-        }
     } else if (!cache.Init()) {
         return NULL;
     }
