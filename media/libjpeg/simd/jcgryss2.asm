@@ -1,8 +1,9 @@
 ;
-; jcclrss2.asm - colorspace conversion (SSE2)
+; jcgryss2.asm - grayscale colorspace conversion (SSE2)
 ;
 ; x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
+; Copyright (C) 2011, D. R. Commander.
 ; For conditions of distribution and use, see copyright notice in jsimdext.inc
 ;
 ; This file should be assembled with NASM (Netwide Assembler),
@@ -20,9 +21,9 @@
 ; Convert some rows of samples to the output colorspace.
 ;
 ; GLOBAL(void)
-; jsimd_rgb_ycc_convert_sse2 (JDIMENSION img_width,
-;                             JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
-;                             JDIMENSION output_row, int num_rows);
+; jsimd_rgb_gray_convert_sse2 (JDIMENSION img_width,
+;                              JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
+;                              JDIMENSION output_row, int num_rows);
 ;
 
 %define img_width(b)	(b)+8			; JDIMENSION img_width
@@ -33,14 +34,14 @@
 
 %define original_ebp	ebp+0
 %define wk(i)		ebp-(WK_NUM-(i))*SIZEOF_XMMWORD	; xmmword wk[WK_NUM]
-%define WK_NUM		8
+%define WK_NUM		2
 %define gotptr		wk(0)-SIZEOF_POINTER	; void * gotptr
 
 	align	16
 
-	global	EXTN(jsimd_rgb_ycc_convert_sse2)
+	global	EXTN(jsimd_rgb_gray_convert_sse2)
 
-EXTN(jsimd_rgb_ycc_convert_sse2):
+EXTN(jsimd_rgb_gray_convert_sse2):
 	push	ebp
 	mov	eax,esp				; eax = original ebp
 	sub	esp, byte 4
@@ -67,11 +68,7 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 	mov	esi, JSAMPIMAGE [output_buf(eax)]
 	mov	ecx, JDIMENSION [output_row(eax)]
 	mov	edi, JSAMPARRAY [esi+0*SIZEOF_JSAMPARRAY]
-	mov	ebx, JSAMPARRAY [esi+1*SIZEOF_JSAMPARRAY]
-	mov	edx, JSAMPARRAY [esi+2*SIZEOF_JSAMPARRAY]
 	lea	edi, [edi+ecx*SIZEOF_JSAMPROW]
-	lea	ebx, [ebx+ecx*SIZEOF_JSAMPROW]
-	lea	edx, [edx+ecx*SIZEOF_JSAMPROW]
 
 	pop	ecx
 
@@ -82,16 +79,12 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 	alignx	16,7
 .rowloop:
 	pushpic	eax
-	push	edx
-	push	ebx
 	push	edi
 	push	esi
 	push	ecx			; col
 
 	mov	esi, JSAMPROW [esi]	; inptr
 	mov	edi, JSAMPROW [edi]	; outptr0
-	mov	ebx, JSAMPROW [ebx]	; outptr1
-	mov	edx, JSAMPROW [edx]	; outptr2
 	movpic	eax, POINTER [gotptr]	; load GOT address (eax)
 
 	cmp	ecx, byte SIZEOF_XMMWORD
@@ -138,15 +131,15 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 	movdqa	xmmF,xmmA
 	movdqu	xmmA, XMMWORD [esi+0*SIZEOF_XMMWORD]
 	mov	ecx, SIZEOF_XMMWORD
-	jmp	short .rgb_ycc_cnv
+	jmp	short .rgb_gray_cnv
 .column_ld32:
 	test	cl, 2*SIZEOF_XMMWORD
 	mov	ecx, SIZEOF_XMMWORD
-	jz	short .rgb_ycc_cnv
+	jz	short .rgb_gray_cnv
 	movdqa	xmmB,xmmA
 	movdqu	xmmA, XMMWORD [esi+0*SIZEOF_XMMWORD]
 	movdqu	xmmF, XMMWORD [esi+1*SIZEOF_XMMWORD]
-	jmp	short .rgb_ycc_cnv
+	jmp	short .rgb_gray_cnv
 	alignx	16,7
 
 .columnloop:
@@ -154,7 +147,7 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 	movdqu	xmmF, XMMWORD [esi+1*SIZEOF_XMMWORD]
 	movdqu	xmmB, XMMWORD [esi+2*SIZEOF_XMMWORD]
 
-.rgb_ycc_cnv:
+.rgb_gray_cnv:
 	; xmmA=(00 10 20 01 11 21 02 12 22 03 13 23 04 14 24 05)
 	; xmmF=(15 25 06 16 26 07 17 27 08 18 28 09 19 29 0A 1A)
 	; xmmB=(2A 0B 1B 2B 0C 1C 2C 0D 1D 2D 0E 1E 2E 0F 1F 2F)
@@ -226,12 +219,12 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 .column_ld8:
 	test	cl, SIZEOF_XMMWORD/2
 	mov	ecx, SIZEOF_XMMWORD
-	jz	short .rgb_ycc_cnv
+	jz	short .rgb_gray_cnv
 	movdqa	xmmF,xmmA
 	movdqa	xmmH,xmmE
 	movdqu	xmmA, XMMWORD [esi+0*SIZEOF_XMMWORD]
 	movdqu	xmmE, XMMWORD [esi+1*SIZEOF_XMMWORD]
-	jmp	short .rgb_ycc_cnv
+	jmp	short .rgb_gray_cnv
 	alignx	16,7
 
 .columnloop:
@@ -240,7 +233,7 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 	movdqu	xmmF, XMMWORD [esi+2*SIZEOF_XMMWORD]
 	movdqu	xmmH, XMMWORD [esi+3*SIZEOF_XMMWORD]
 
-.rgb_ycc_cnv:
+.rgb_gray_cnv:
 	; xmmA=(00 10 20 30 01 11 21 31 02 12 22 32 03 13 23 33)
 	; xmmE=(04 14 24 34 05 15 25 35 06 16 26 36 07 17 27 37)
 	; xmmF=(08 18 28 38 09 19 29 39 0A 1A 2A 3A 0B 1B 2B 3B)
@@ -296,142 +289,56 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 
 	; (Original)
 	; Y  =  0.29900 * R + 0.58700 * G + 0.11400 * B
-	; Cb = -0.16874 * R - 0.33126 * G + 0.50000 * B + CENTERJSAMPLE
-	; Cr =  0.50000 * R - 0.41869 * G - 0.08131 * B + CENTERJSAMPLE
 	;
 	; (This implementation)
 	; Y  =  0.29900 * R + 0.33700 * G + 0.11400 * B + 0.25000 * G
-	; Cb = -0.16874 * R - 0.33126 * G + 0.50000 * B + CENTERJSAMPLE
-	; Cr =  0.50000 * R - 0.41869 * G - 0.08131 * B + CENTERJSAMPLE
-
-	movdqa    XMMWORD [wk(0)], xmm0	; wk(0)=RE
-	movdqa    XMMWORD [wk(1)], xmm1	; wk(1)=RO
-	movdqa    XMMWORD [wk(2)], xmm4	; wk(2)=BE
-	movdqa    XMMWORD [wk(3)], xmm5	; wk(3)=BO
 
 	movdqa    xmm6,xmm1
 	punpcklwd xmm1,xmm3
 	punpckhwd xmm6,xmm3
-	movdqa    xmm7,xmm1
-	movdqa    xmm4,xmm6
 	pmaddwd   xmm1,[GOTOFF(eax,PW_F0299_F0337)] ; xmm1=ROL*FIX(0.299)+GOL*FIX(0.337)
 	pmaddwd   xmm6,[GOTOFF(eax,PW_F0299_F0337)] ; xmm6=ROH*FIX(0.299)+GOH*FIX(0.337)
-	pmaddwd   xmm7,[GOTOFF(eax,PW_MF016_MF033)] ; xmm7=ROL*-FIX(0.168)+GOL*-FIX(0.331)
-	pmaddwd   xmm4,[GOTOFF(eax,PW_MF016_MF033)] ; xmm4=ROH*-FIX(0.168)+GOH*-FIX(0.331)
 
-	movdqa    XMMWORD [wk(4)], xmm1	; wk(4)=ROL*FIX(0.299)+GOL*FIX(0.337)
-	movdqa    XMMWORD [wk(5)], xmm6	; wk(5)=ROH*FIX(0.299)+GOH*FIX(0.337)
-
-	pxor      xmm1,xmm1
-	pxor      xmm6,xmm6
-	punpcklwd xmm1,xmm5		; xmm1=BOL
-	punpckhwd xmm6,xmm5		; xmm6=BOH
-	psrld     xmm1,1		; xmm1=BOL*FIX(0.500)
-	psrld     xmm6,1		; xmm6=BOH*FIX(0.500)
-
-	movdqa    xmm5,[GOTOFF(eax,PD_ONEHALFM1_CJ)] ; xmm5=[PD_ONEHALFM1_CJ]
-
-	paddd     xmm7,xmm1
-	paddd     xmm4,xmm6
-	paddd     xmm7,xmm5
-	paddd     xmm4,xmm5
-	psrld     xmm7,SCALEBITS	; xmm7=CbOL
-	psrld     xmm4,SCALEBITS	; xmm4=CbOH
-	packssdw  xmm7,xmm4		; xmm7=CbO
-
-	movdqa    xmm1, XMMWORD [wk(2)]	; xmm1=BE
+	movdqa    xmm7, xmm6	; xmm7=ROH*FIX(0.299)+GOH*FIX(0.337)
 
 	movdqa    xmm6,xmm0
 	punpcklwd xmm0,xmm2
 	punpckhwd xmm6,xmm2
-	movdqa    xmm5,xmm0
-	movdqa    xmm4,xmm6
 	pmaddwd   xmm0,[GOTOFF(eax,PW_F0299_F0337)] ; xmm0=REL*FIX(0.299)+GEL*FIX(0.337)
 	pmaddwd   xmm6,[GOTOFF(eax,PW_F0299_F0337)] ; xmm6=REH*FIX(0.299)+GEH*FIX(0.337)
-	pmaddwd   xmm5,[GOTOFF(eax,PW_MF016_MF033)] ; xmm5=REL*-FIX(0.168)+GEL*-FIX(0.331)
-	pmaddwd   xmm4,[GOTOFF(eax,PW_MF016_MF033)] ; xmm4=REH*-FIX(0.168)+GEH*-FIX(0.331)
 
-	movdqa    XMMWORD [wk(6)], xmm0	; wk(6)=REL*FIX(0.299)+GEL*FIX(0.337)
-	movdqa    XMMWORD [wk(7)], xmm6	; wk(7)=REH*FIX(0.299)+GEH*FIX(0.337)
+	movdqa    XMMWORD [wk(0)], xmm0	; wk(0)=REL*FIX(0.299)+GEL*FIX(0.337)
+	movdqa    XMMWORD [wk(1)], xmm6	; wk(1)=REH*FIX(0.299)+GEH*FIX(0.337)
 
-	pxor      xmm0,xmm0
-	pxor      xmm6,xmm6
-	punpcklwd xmm0,xmm1		; xmm0=BEL
-	punpckhwd xmm6,xmm1		; xmm6=BEH
-	psrld     xmm0,1		; xmm0=BEL*FIX(0.500)
-	psrld     xmm6,1		; xmm6=BEH*FIX(0.500)
-
-	movdqa    xmm1,[GOTOFF(eax,PD_ONEHALFM1_CJ)] ; xmm1=[PD_ONEHALFM1_CJ]
-
-	paddd     xmm5,xmm0
-	paddd     xmm4,xmm6
-	paddd     xmm5,xmm1
-	paddd     xmm4,xmm1
-	psrld     xmm5,SCALEBITS	; xmm5=CbEL
-	psrld     xmm4,SCALEBITS	; xmm4=CbEH
-	packssdw  xmm5,xmm4		; xmm5=CbE
-
-	psllw     xmm7,BYTE_BIT
-	por       xmm5,xmm7		; xmm5=Cb
-	movdqa    XMMWORD [ebx], xmm5	; Save Cb
-
-	movdqa    xmm0, XMMWORD [wk(3)]	; xmm0=BO
-	movdqa    xmm6, XMMWORD [wk(2)]	; xmm6=BE
-	movdqa    xmm1, XMMWORD [wk(1)]	; xmm1=RO
+	movdqa    xmm0, xmm5	; xmm0=BO
+	movdqa    xmm6, xmm4	; xmm6=BE
 
 	movdqa    xmm4,xmm0
 	punpcklwd xmm0,xmm3
 	punpckhwd xmm4,xmm3
-	movdqa    xmm7,xmm0
-	movdqa    xmm5,xmm4
 	pmaddwd   xmm0,[GOTOFF(eax,PW_F0114_F0250)] ; xmm0=BOL*FIX(0.114)+GOL*FIX(0.250)
 	pmaddwd   xmm4,[GOTOFF(eax,PW_F0114_F0250)] ; xmm4=BOH*FIX(0.114)+GOH*FIX(0.250)
-	pmaddwd   xmm7,[GOTOFF(eax,PW_MF008_MF041)] ; xmm7=BOL*-FIX(0.081)+GOL*-FIX(0.418)
-	pmaddwd   xmm5,[GOTOFF(eax,PW_MF008_MF041)] ; xmm5=BOH*-FIX(0.081)+GOH*-FIX(0.418)
 
 	movdqa    xmm3,[GOTOFF(eax,PD_ONEHALF)]	; xmm3=[PD_ONEHALF]
 
-	paddd     xmm0, XMMWORD [wk(4)]
-	paddd     xmm4, XMMWORD [wk(5)]
+	paddd     xmm0, xmm1
+	paddd     xmm4, xmm7
 	paddd     xmm0,xmm3
 	paddd     xmm4,xmm3
 	psrld     xmm0,SCALEBITS	; xmm0=YOL
 	psrld     xmm4,SCALEBITS	; xmm4=YOH
 	packssdw  xmm0,xmm4		; xmm0=YO
 
-	pxor      xmm3,xmm3
-	pxor      xmm4,xmm4
-	punpcklwd xmm3,xmm1		; xmm3=ROL
-	punpckhwd xmm4,xmm1		; xmm4=ROH
-	psrld     xmm3,1		; xmm3=ROL*FIX(0.500)
-	psrld     xmm4,1		; xmm4=ROH*FIX(0.500)
-
-	movdqa    xmm1,[GOTOFF(eax,PD_ONEHALFM1_CJ)] ; xmm1=[PD_ONEHALFM1_CJ]
-
-	paddd     xmm7,xmm3
-	paddd     xmm5,xmm4
-	paddd     xmm7,xmm1
-	paddd     xmm5,xmm1
-	psrld     xmm7,SCALEBITS	; xmm7=CrOL
-	psrld     xmm5,SCALEBITS	; xmm5=CrOH
-	packssdw  xmm7,xmm5		; xmm7=CrO
-
-	movdqa    xmm3, XMMWORD [wk(0)]	; xmm3=RE
-
 	movdqa    xmm4,xmm6
 	punpcklwd xmm6,xmm2
 	punpckhwd xmm4,xmm2
-	movdqa    xmm1,xmm6
-	movdqa    xmm5,xmm4
 	pmaddwd   xmm6,[GOTOFF(eax,PW_F0114_F0250)] ; xmm6=BEL*FIX(0.114)+GEL*FIX(0.250)
 	pmaddwd   xmm4,[GOTOFF(eax,PW_F0114_F0250)] ; xmm4=BEH*FIX(0.114)+GEH*FIX(0.250)
-	pmaddwd   xmm1,[GOTOFF(eax,PW_MF008_MF041)] ; xmm1=BEL*-FIX(0.081)+GEL*-FIX(0.418)
-	pmaddwd   xmm5,[GOTOFF(eax,PW_MF008_MF041)] ; xmm5=BEH*-FIX(0.081)+GEH*-FIX(0.418)
 
 	movdqa    xmm2,[GOTOFF(eax,PD_ONEHALF)]	; xmm2=[PD_ONEHALF]
 
-	paddd     xmm6, XMMWORD [wk(6)]
-	paddd     xmm4, XMMWORD [wk(7)]
+	paddd     xmm6, XMMWORD [wk(0)]
+	paddd     xmm4, XMMWORD [wk(1)]
 	paddd     xmm6,xmm2
 	paddd     xmm4,xmm2
 	psrld     xmm6,SCALEBITS	; xmm6=YEL
@@ -442,32 +349,9 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 	por       xmm6,xmm0		; xmm6=Y
 	movdqa    XMMWORD [edi], xmm6	; Save Y
 
-	pxor      xmm2,xmm2
-	pxor      xmm4,xmm4
-	punpcklwd xmm2,xmm3		; xmm2=REL
-	punpckhwd xmm4,xmm3		; xmm4=REH
-	psrld     xmm2,1		; xmm2=REL*FIX(0.500)
-	psrld     xmm4,1		; xmm4=REH*FIX(0.500)
-
-	movdqa    xmm0,[GOTOFF(eax,PD_ONEHALFM1_CJ)] ; xmm0=[PD_ONEHALFM1_CJ]
-
-	paddd     xmm1,xmm2
-	paddd     xmm5,xmm4
-	paddd     xmm1,xmm0
-	paddd     xmm5,xmm0
-	psrld     xmm1,SCALEBITS	; xmm1=CrEL
-	psrld     xmm5,SCALEBITS	; xmm5=CrEH
-	packssdw  xmm1,xmm5		; xmm1=CrE
-
-	psllw     xmm7,BYTE_BIT
-	por       xmm1,xmm7		; xmm1=Cr
-	movdqa    XMMWORD [edx], xmm1	; Save Cr
-
 	sub	ecx, byte SIZEOF_XMMWORD
 	add	esi, byte RGB_PIXELSIZE*SIZEOF_XMMWORD	; inptr
 	add	edi, byte SIZEOF_XMMWORD		; outptr0
-	add	ebx, byte SIZEOF_XMMWORD		; outptr1
-	add	edx, byte SIZEOF_XMMWORD		; outptr2
 	cmp	ecx, byte SIZEOF_XMMWORD
 	jae	near .columnloop
 	test	ecx,ecx
@@ -476,14 +360,10 @@ EXTN(jsimd_rgb_ycc_convert_sse2):
 	pop	ecx			; col
 	pop	esi
 	pop	edi
-	pop	ebx
-	pop	edx
 	poppic	eax
 
 	add	esi, byte SIZEOF_JSAMPROW	; input_buf
 	add	edi, byte SIZEOF_JSAMPROW
-	add	ebx, byte SIZEOF_JSAMPROW
-	add	edx, byte SIZEOF_JSAMPROW
 	dec	eax				; num_rows
 	jg	near .rowloop
 

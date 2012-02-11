@@ -1,0 +1,70 @@
+--- jmorecfg.h	2012-01-27 00:46:32 -0500
++++ jmorecfg.h	2012-02-10 23:08:03 -0500
+@@ -6,16 +6,17 @@
+  * This file is part of the Independent JPEG Group's software.
+  * For conditions of distribution and use, see the accompanying README file.
+  *
+  * This file contains additional configuration options that customize the
+  * JPEG software for special applications or support machine-dependent
+  * optimizations.  Most users will not need to touch this file.
+  */
+ 
++#include "prtypes.h"
+ 
+ /*
+  * Define BITS_IN_JSAMPLE as either
+  *   8   for 8-bit sample values (the usual setting)
+  *   12  for 12-bit sample values
+  * Only 8 and 12 are legal data precisions for lossy JPEG according to the
+  * JPEG standard, and the IJG code does not support anything else!
+  * We do not support run-time selection of data precision, sorry.
+@@ -127,45 +128,29 @@ typedef char JOCTET;
+  * They must be at least as wide as specified; but making them too big
+  * won't cost a huge amount of memory, so we don't provide special
+  * extraction code like we did for JSAMPLE.  (In other words, these
+  * typedefs live at a different point on the speed/space tradeoff curve.)
+  */
+ 
+ /* UINT8 must hold at least the values 0..255. */
+ 
+-#ifdef HAVE_UNSIGNED_CHAR
+-typedef unsigned char UINT8;
+-#else /* not HAVE_UNSIGNED_CHAR */
+-#ifdef __CHAR_UNSIGNED__
+-typedef char UINT8;
+-#else /* not __CHAR_UNSIGNED__ */
+-typedef short UINT8;
+-#endif /* __CHAR_UNSIGNED__ */
+-#endif /* HAVE_UNSIGNED_CHAR */
++typedef PRUint8 UINT8;
+ 
+ /* UINT16 must hold at least the values 0..65535. */
+ 
+-#ifdef HAVE_UNSIGNED_SHORT
+-typedef unsigned short UINT16;
+-#else /* not HAVE_UNSIGNED_SHORT */
+-typedef unsigned int UINT16;
+-#endif /* HAVE_UNSIGNED_SHORT */
++typedef PRUint16 UINT16;
+ 
+ /* INT16 must hold at least the values -32768..32767. */
+ 
+-#ifndef XMD_H			/* X11/xmd.h correctly defines INT16 */
+-typedef short INT16;
+-#endif
++typedef PRInt16 INT16;
+ 
+ /* INT32 must hold at least signed 32-bit values. */
+ 
+-#ifndef XMD_H			/* X11/xmd.h correctly defines INT32 */
+-typedef long INT32;
+-#endif
++typedef PRInt32 INT32;
+ 
+ /* Datatype used for image dimensions.  The JPEG standard only supports
+  * images up to 64K*64K due to 16-bit fields in SOF markers.  Therefore
+  * "unsigned int" is sufficient on all machines.  However, if you need to
+  * handle larger images and you don't mind deviating from the spec, you
+  * can change this datatype.
+  */
+ 
