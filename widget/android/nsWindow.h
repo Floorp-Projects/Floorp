@@ -260,12 +260,4 @@ private:
 #endif
 };
 
-class TransformLayerUserData : public mozilla::layers::LayerUserData {
-public:
-    gfx3DMatrix matrix;
-
-    TransformLayerUserData(gfx3DMatrix& aMatrix) : matrix(aMatrix) {}
-    virtual ~TransformLayerUserData() {}
-};
-
 #endif /* NSWINDOW_H_ */
