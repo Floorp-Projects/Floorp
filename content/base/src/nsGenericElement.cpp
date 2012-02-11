@@ -4704,12 +4704,15 @@ nsGenericElement::CanSkip(nsINode* aNode)
     }
   }
 
-  if (!foundBlack) {
+  if (!currentDoc || !foundBlack) { 
     if (!gPurpleRoots) {
       gPurpleRoots = new nsAutoTArray<nsINode*, 1020>();
     }
     root->SetIsPurpleRoot(true);
     gPurpleRoots->AppendElement(root);
+  }
+
+  if (!foundBlack) {
     return false;
   }
 
