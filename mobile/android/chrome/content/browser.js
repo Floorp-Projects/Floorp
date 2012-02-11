@@ -1675,7 +1675,7 @@ Tab.prototype = {
     let win = this.browser.contentWindow;
     //FIXME: Uncomment when zoom is working again.
     //let zoom = (aReset ? aZoomLevel : this._viewport.zoom);
-    zoom = 1;
+    let zoom = 1;
     let xpos = ((aReset && win) ? win.scrollX * zoom : this._viewport.x);
     let ypos = ((aReset && win) ? win.scrollY * zoom : this._viewport.y);
 
