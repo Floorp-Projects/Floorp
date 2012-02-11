@@ -284,8 +284,6 @@ struct JSRuntime : js::RuntimeFriendFields
     js::GCLocks         gcLocksHash;
     jsrefcount          gcKeepAtoms;
     size_t              gcBytes;
-    size_t              gcTriggerBytes;
-    size_t              gcLastBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
 
@@ -539,9 +537,6 @@ struct JSRuntime : js::RuntimeFriendFields
     bool init(uint32_t maxbytes);
 
     JSRuntime *thisFromCtor() { return this; }
-
-    void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
-    void reduceGCTriggerBytes(size_t amount);
 
     /*
      * Call the system malloc while checking for GC memory pressure and
