@@ -4796,14 +4796,31 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
       tmp->OwnerDoc()->GetDocumentURI()->GetSpec(uri);
     }
 
-    if (nsid < ArrayLength(kNSURIs)) {
-      PR_snprintf(name, sizeof(name), "nsGenericElement%s %s %s", kNSURIs[nsid],
-                  localName.get(), uri.get());
+    nsAutoString id;
+    nsIAtom* idAtom = tmp->GetID();
+    if (idAtom) {
+      id.AppendLiteral(" id='");
+      id.Append(nsDependentAtomString(idAtom));
+      id.AppendLiteral("'");
     }
-    else {
-      PR_snprintf(name, sizeof(name), "nsGenericElement %s %s",
-                  localName.get(), uri.get());
+
+    nsAutoString classes;
+    const nsAttrValue* classAttrValue = tmp->GetClasses();
+    if (classAttrValue) {
+      classes.AppendLiteral(" class='");
+      nsAutoString classString;
+      classAttrValue->ToString(classString);
+      classes.Append(classString);
+      classes.AppendLiteral("'");
     }
+
+    const char* nsuri = nsid < ArrayLength(kNSURIs) ? kNSURIs[nsid] : "";
+    PR_snprintf(name, sizeof(name), "nsGenericElement%s %s%s%s %s",
+                nsuri,
+                localName.get(),
+                NS_ConvertUTF16toUTF8(id).get(),
+                NS_ConvertUTF16toUTF8(classes).get(),
+                uri.get());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsGenericElement),
                               name);
   }
