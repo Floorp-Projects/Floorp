@@ -2388,30 +2388,37 @@ nsWindow::GetIMEUpdatePreference()
 #ifdef MOZ_JAVA_COMPOSITOR
 void
 nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {
-#if 0
-    TransformLayerUserData* userData =
-        static_cast<TransformLayerUserData*>(aManager->GetUserData(nsGkAtoms::transform));
+    AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
+
+    mozilla::layers::LayerUserData* userData = aManager->GetUserData(nsGkAtoms::transform);
+    mozilla::layers::TransformLayerUserData* transformUserData =
+        static_cast<mozilla::layers::TransformLayerUserData*>(userData);
     NS_ABORT_IF_FALSE(userData, "No transform user data!");
 
     // Transform the unit square to figure out the offset and scale we need.
     gfxRect rect(0, 0, 1, 1);
-    userData->matrix.TransformBounds(rect);
+    transformUserData->matrix.TransformBounds(rect);
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
     AndroidGeckoGLLayerClient& glClient = static_cast<AndroidGeckoGLLayerClient&>(client);
     glClient.CreateFrame(mLayerRendererFrame, rect.x, rect.y, rect.width);
+
+#if 0
     mLayerRendererFrame.DrawBackground();
 #endif
 }
 
 void
 nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
-#if 0
+    AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
     NS_ABORT_IF_FALSE(!mLayerRendererFrame.isNull(),
                       "Frame should have been created in DrawWindowUnderlay()!");
+
+#if 0
     mLayerRendererFrame.DrawForeground();
-    mLayerRendererFrame.Dispose();
 #endif
+
+    mLayerRendererFrame.Dispose();
 }
 #endif
 
