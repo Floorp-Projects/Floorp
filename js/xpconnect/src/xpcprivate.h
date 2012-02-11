@@ -2382,7 +2382,8 @@ public:
 
     XPCNativeInterface* GetInterface() const {return mInterface;}
     nsISupports*        GetNative()    const {return mNative;}
-    JSObject*           GetJSObject()  const;
+    JSObject*           GetJSObject();
+    JSObject*           GetJSObjectPreserveColor() const;
     void SetInterface(XPCNativeInterface*  Interface) {mInterface = Interface;}
     void SetNative(nsISupports*  Native)              {mNative = Native;}
     void SetJSObject(JSObject*  JSObj);
