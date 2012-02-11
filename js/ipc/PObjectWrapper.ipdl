@@ -55,8 +55,8 @@ union JSVariant {
     nsString;
     int;
     double;
-    bool; // We'd like to use JSBool here, but JSBool is really JSIntn,
-          // and IPC::ParamTraits mistakes JSIntn for int.
+    bool; // We'd like to use JSBool here, but IPC::ParamTraits would
+          // treat JSBool as int.
 };
 
 union OperationStatus {
