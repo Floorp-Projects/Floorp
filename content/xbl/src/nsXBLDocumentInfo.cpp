@@ -487,6 +487,33 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
+static void
+UnmarkXBLJSObject(PRUint32 aLangID, void* aP, const char* aName, void* aClosure)
+{
+  if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
+    xpc_UnmarkGrayObject(static_cast<JSObject*>(aP));
+  }
+}
+
+static bool
+UnmarkProtos(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsXBLPrototypeBinding* proto = static_cast<nsXBLPrototypeBinding*>(aData);
+  proto->Trace(UnmarkXBLJSObject, nsnull);
+  return kHashEnumerateNext;
+}
+
+void
+nsXBLDocumentInfo::MarkInCCGeneration(PRUint32 aGeneration)
+{
+  if (mDocument) {
+    mDocument->MarkUncollectableForCCGeneration(aGeneration);
+  }
+  if (mBindingTable) {
+    mBindingTable->Enumerate(UnmarkProtos, nsnull);
+  }
+}
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXBLDocumentInfo)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
