@@ -66,6 +66,7 @@ enum MIRType
     MIRType_None,       // Invalid, used as a placeholder.
     MIRType_Slots,      // A slots vector
     MIRType_Elements,   // An elements vector
+    MIRType_UpvarSlots, // Flat closure upvar slots
     MIRType_StackFrame  // StackFrame pointer for OSR.
 };
 
@@ -324,6 +325,8 @@ StringFromMIRType(MIRType type)
       return "Slots";
     case MIRType_Elements:
       return "Elements";
+    case MIRType_UpvarSlots:
+      return "UpvarSlots";
     case MIRType_StackFrame:
       return "StackFrame";
     default:

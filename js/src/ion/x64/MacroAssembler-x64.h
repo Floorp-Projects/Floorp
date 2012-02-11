@@ -345,6 +345,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadPtr(const Address &address, Register dest) {
         movq(Operand(address), dest);
     }
+    void loadPrivate(const Address &src, Register dest) {
+        loadPtr(src, dest);
+        shlq(Imm32(1), dest);
+    }
     void storePtr(Register src, const Address &address) {
         movq(src, Operand(address));
     }

@@ -376,6 +376,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadPtr(ImmWord imm, Register dest) {
         movl(Operand(imm.asPointer()), dest);
     }
+    void loadPrivate(const Address &src, Register dest) {
+        movl(payloadOf(src), dest);
+    }
     void storePtr(Register src, const Address &address) {
         movl(src, Operand(address));
     }

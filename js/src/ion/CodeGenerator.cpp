@@ -424,6 +424,17 @@ CodeGenerator::visitElements(LElements *lir)
 }
 
 bool
+CodeGenerator::visitFlatClosureUpvars(LFlatClosureUpvars *lir)
+{
+    Register callee = ToRegister(lir->callee());
+    Register output = ToRegister(lir->output());
+
+    Address upvars(callee, JSFunction::getFlatClosureUpvarsOffset());
+    masm.loadPrivate(upvars, output);
+    return true;
+}
+
+bool
 CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment *lir)
 {
     Address environment(ToRegister(lir->function()), JSFunction::offsetOfEnvironment());

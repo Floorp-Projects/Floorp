@@ -206,7 +206,7 @@ ObjectPolicy::adjustInputs(MInstruction *def)
 {
     MDefinition *in = def->getOperand(0);
     if (in->type() == MIRType_Object || in->type() == MIRType_Slots ||
-        in->type() == MIRType_Elements)
+        in->type() == MIRType_Elements || in->type() == MIRType_UpvarSlots)
     {
         return true;
     }

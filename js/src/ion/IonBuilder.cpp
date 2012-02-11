@@ -733,6 +733,10 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NAME:
         return jsop_getname(info().getAtom(pc));
 
+      case JSOP_GETFCSLOT:
+      case JSOP_CALLFCSLOT:
+        return jsop_getfcslot(GET_UINT16(pc));
+
       case JSOP_DUP:
         current->pushSlot(current->stackDepth() - 1);
         return true;
@@ -3134,6 +3138,24 @@ IonBuilder::jsop_getname(JSAtom *atom)
     types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
     types::TypeSet *types = oracle->propertyRead(script, pc);
     return pushTypeBarrier(ins, types, barrier);
+}
+
+bool
+IonBuilder::jsop_getfcslot(uint16 index)
+{
+    MCallee *callee = MCallee::New();
+    current->add(callee);
+
+    MFlatClosureUpvars *upvars = MFlatClosureUpvars::New(callee);
+    current->add(upvars);
+
+    MLoadSlot *upvar = MLoadSlot::New(upvars, index);
+    current->add(upvar);
+    current->push(upvar);
+
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+    return pushTypeBarrier(upvar, types, barrier);
 }
 
 bool
