@@ -443,6 +443,7 @@ struct JSScript : public js::gc::Cell
     bool analyzedArgsUsage() const { return analyzedArgsUsage_; }
     bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
     void setNeedsArgsObj(bool needsArgsObj);
+    bool applySpeculationFailed(JSContext *cx);
 
     uint32_t        natoms;     /* length of atoms array */
     uint16_t        nslots;     /* vars plus maximum stack depth */

@@ -1950,3 +1950,58 @@ JSScript::setNeedsArgsObj(bool needsArgsObj)
     analyzedArgsUsage_ = true;
     needsArgsObj_ = needsArgsObj;
 }
+
+bool
+JSScript::applySpeculationFailed(JSContext *cx)
+{
+    JS_ASSERT(analyzedArgsUsage());
+    JS_ASSERT(!needsArgsObj());
+    needsArgsObj_ = true;
+
+    /*
+     * By design, the apply-arguments optimization is only made when there
+     * are no outstanding cases of MagicValue(JS_OPTIMIZED_ARGUMENTS) other
+     * than this particular invocation of 'f.apply(x, arguments)'. Thus, there
+     * are no outstanding values of MagicValue(JS_OPTIMIZED_ARGUMENTS) on the
+     * stack. However, there are three things that need fixup:
+     *  - there may be any number of activations of this script that don't have
+     *    an argsObj that now need one.
+     *  - jit code compiled (and possible active on the stack) with the static
+     *    assumption of !script->needsArgsObj();
+     *  - type inference data for the script assuming script->needsArgsObj; and
+     */
+    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
+        StackFrame *fp = i.fp();
+        if (fp->isFunctionFrame() && fp->script() == this) {
+            if (!fp->hasArgsObj() && !ArgumentsObject::create(cx, fp)) {
+                /*
+                 * We can't leave stack frames where fp->script->needsArgsObj
+                 * and !fp->hasArgsObj. It is, however, safe to leave frames
+                 * where fp->hasArgsObj and !fp->script->needsArgsObj.
+                 */
+                needsArgsObj_ = false;
+                return false;
+            }
+        }
+    }
+
+#ifdef JS_METHODJIT
+    if (hasJITCode()) {
+        mjit::Recompiler::clearStackReferences(cx, this);
+        mjit::ReleaseScriptCode(cx, this);
+    }
+#endif
+
+    if (hasAnalysis() && analysis()->ranInference()) {
+        types::AutoEnterTypeInference enter(cx);
+        for (unsigned off = 0; off < length; off += GetBytecodeLength(code + off)) {
+            if (code[off] == JSOP_ARGUMENTS) {
+                types::TypeSet *set = analysis()->pushedTypes(off, 0);
+                JS_ASSERT(set->isLazyArguments(cx));
+                set->addType(cx, types::Type::UnknownType());
+            }
+        }
+    }
+
+    return true;
+}
