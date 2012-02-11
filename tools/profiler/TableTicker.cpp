@@ -253,16 +253,11 @@ public:
 
   void ToString(StringBuilder &profile)
   {
-    //XXX: this code is not thread safe and needs to be fixed
-    // can we just have a mutex that guards access to the circular buffer?
-    // no because the main thread can be stopped while it still has access.
-    // which will cause a deadlock
-    int oldReadPos = mReadPos;
-    while (mReadPos != mLastFlushPos) {
-      profile.Append(mEntries[mReadPos].TagToString(this).c_str());
-      mReadPos = (mReadPos + 1) % mEntrySize;
+    int readPos = mReadPos;
+    while (readPos != mLastFlushPos) {
+      profile.Append(mEntries[readPos].TagToString(this).c_str());
+      readPos = (readPos + 1) % mEntrySize;
     }
-    mReadPos = oldReadPos;
   }
 
   JSObject *ToJSObject(JSContext *aCx)
@@ -306,14 +301,12 @@ public:
 
   void WriteProfile(FILE* stream)
   {
-    //XXX: this code is not thread safe and needs to be fixed
-    int oldReadPos = mReadPos;
-    while (mReadPos != mLastFlushPos) {
-      string tag = mEntries[mReadPos].TagToString(this);
+    int readPos = mReadPos;
+    while (readPos != mLastFlushPos) {
+      string tag = mEntries[readPos].TagToString(this);
       fwrite(tag.data(), 1, tag.length(), stream);
-      mReadPos = (mReadPos + 1) % mEntrySize;
+      readPos = (readPos + 1) % mEntrySize;
     }
-    mReadPos = oldReadPos;
   }
 private:
   // Circular buffer 'Keep One Slot Open' implementation
