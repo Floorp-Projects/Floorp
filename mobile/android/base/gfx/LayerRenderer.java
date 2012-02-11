@@ -212,6 +212,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSizeResult, 0);
         mMaxTextureSize = maxTextureSizeResult[0];
 
+        /*
+
         // Add the program to the OpenGL environment
         GLES20.glUseProgram(mProgram);
 
@@ -219,12 +221,19 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         GLES20.glUniformMatrix4fv(mTMatrixHandle, 1, false, TEXTURE_MATRIX, 0);
 
         // Enable the arrays from which we get the vertex and texture coordinates
+        Log.e(LOGTAG, "### Position handle is " + mPositionHandle + ", texture handle is " +
+              mTextureHandle + ", last error is " + GLES20.glGetError());
+
+        // FIXME: This crashes PowerVR drivers. Seems that we cannot actually use multiple GL
+        // programs reliably.
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glEnableVertexAttribArray(mTextureHandle);
 
         GLES20.glUniform1i(mSampleHandle, 0);
 
         TextureGenerator.get().fill();
+
+        */
     }
 
     public int getMaxTextureSize() {
