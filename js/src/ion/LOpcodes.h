@@ -98,6 +98,7 @@
     _(ImplicitThis)                 \
     _(Slots)                        \
     _(Elements)                     \
+    _(FlatClosureUpvars)            \
     _(LoadSlotV)                    \
     _(LoadSlotT)                    \
     _(StoreSlotV)                   \

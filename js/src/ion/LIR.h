@@ -559,6 +559,7 @@ class LDefinition
 #endif
           case MIRType_Slots:
           case MIRType_Elements:
+          case MIRType_UpvarSlots:
             // When we begin allocating slots vectors from the GC, this will
             // need to change to ::OBJECT.
             return LDefinition::GENERAL;

@@ -117,6 +117,7 @@ namespace ion {
     _(CallGetElement)                                                       \
     _(CallSetElement)                                                       \
     _(CallSetProperty)                                                      \
+    _(FlatClosureUpvars)                                                    \
     _(SetPropertyCache)                                                     \
     _(IteratorStart)                                                        \
     _(IteratorNext)                                                         \

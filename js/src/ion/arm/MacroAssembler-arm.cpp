@@ -1180,6 +1180,19 @@ MacroAssemblerARMCompat::loadPtr(const ImmWord &imm, const Register &dest)
     loadPtr(Address(ScratchRegister, 0x0), dest);
 }
 
+Operand payloadOf(const Address &address) {
+    return Operand(address.base, address.offset);
+}
+Operand tagOf(const Address &address) {
+    return Operand(address.base, address.offset + 4);
+}
+
+void
+MacroAssemblerARMCompat::loadPrivate(const Address &address, const Register &dest)
+{
+    ma_ldr(payloadOf(address), dest);
+}
+
 void
 MacroAssemblerARMCompat::store32(Register src, const ImmWord &imm)
 {
@@ -1283,13 +1296,6 @@ Operand ToPayload(Operand base) {
 Operand ToType(Operand base) {
     return Operand(Register::FromCode(base.base()),
                    base.disp() + sizeof(void *));
-}
-
-Operand payloadOf(const Address &address) {
-    return Operand(address.base, address.offset);
-}
-Operand tagOf(const Address &address) {
-    return Operand(address.base, address.offset + 4);
 }
 
 Assembler::Condition

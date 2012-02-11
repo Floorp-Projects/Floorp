@@ -425,11 +425,15 @@ class VirtualRegister
     bool isTemp() const {
         return isTemp_;
     }
-    size_t numIntervals() {
+    size_t numIntervals() const {
         return intervals_.length();
     }
-    LiveInterval *getInterval(size_t i) {
+    LiveInterval *getInterval(size_t i) const {
         return intervals_[i];
+    }
+    LiveInterval *lastInterval() const {
+        JS_ASSERT(numIntervals() > 0);
+        return getInterval(numIntervals() - 1);
     }
     bool addInterval(LiveInterval *interval) {
         JS_ASSERT(interval->numRanges());
