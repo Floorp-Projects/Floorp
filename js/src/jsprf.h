@@ -98,7 +98,7 @@ extern JS_PUBLIC_API(char*) JS_sprintf_append(char *last, const char *fmt, ...);
 ** data. The return value is a count of the number of characters fed to
 ** the stuff function, or (uint32_t)-1 if an error occurs.
 */
-typedef JSIntn (*JSStuffFunc)(void *arg, const char *s, uint32_t slen);
+typedef int (*JSStuffFunc)(void *arg, const char *s, uint32_t slen);
 
 extern JS_PUBLIC_API(uint32_t) JS_sxprintf(JSStuffFunc f, void *arg, const char *fmt, ...);
 
