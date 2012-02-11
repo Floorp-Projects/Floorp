@@ -1095,6 +1095,10 @@ FrameActor.prototype = {
     grip.environment = envActor ? envActor.grip() : envActor;
     grip["this"] = this.threadActor.createValueGrip(this.frame["this"]);
     grip.arguments = this._args();
+    if (this.frame.script) {
+      grip.where = { url: this.frame.script.url,
+                     line: this.frame.script.getOffsetLine(this.frame.offset) };
+    }
 
     if (!this.frame.older) {
       grip.oldest = true;
