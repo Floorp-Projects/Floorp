@@ -1218,6 +1218,9 @@ nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame, nsIFrame *aAncestor)
   nsIFrame* parent;
   gfx3DMatrix ctm = aFrame->GetTransformMatrix(aAncestor, &parent);
   while (parent && parent != aAncestor) {
+    if (!parent->Preserves3DChildren()) {
+      ctm.ProjectTo2D();
+    }
     ctm = ctm * parent->GetTransformMatrix(aAncestor, &parent);
   }
   return ctm;

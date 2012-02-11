@@ -152,7 +152,7 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
     jsval v = js::GetFunctionNativeReserved(callee, 0);
 
     JSObject *ptrobj = JSVAL_TO_OBJECT(v);
-    Op *popp = static_cast<Op *>(JS_GetPrivate(cx, ptrobj));
+    Op *popp = static_cast<Op *>(JS_GetPrivate(ptrobj));
 
     v = js::GetFunctionNativeReserved(callee, 1);
 
@@ -167,7 +167,7 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
 static void
 PointerFinalize(JSContext *cx, JSObject *obj)
 {
-    JSPropertyOp *popp = static_cast<JSPropertyOp *>(JS_GetPrivate(cx, obj));
+    JSPropertyOp *popp = static_cast<JSPropertyOp *>(JS_GetPrivate(obj));
     delete popp;
 }
 
@@ -203,7 +203,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc, Op pop)
     if (!popp)
         return nsnull;
     *popp = pop;
-    JS_SetPrivate(cx, ptrobj, popp);
+    JS_SetPrivate(ptrobj, popp);
 
     js::SetFunctionNativeReserved(funobj, 0, OBJECT_TO_JSVAL(ptrobj));
     js::SetFunctionNativeReserved(funobj, 1, js::IdToJsval(id));
@@ -516,7 +516,7 @@ GetMethodInfo(JSContext *cx, jsval *vp, const char **ifaceNamep, jsid *memberIdp
     *memberIdp = methodId;
 }
 
-static JSBool
+static bool
 ThrowCallFailed(JSContext *cx, nsresult rv,
                 const char *ifaceName, jsid memberId, const char *memberName)
 {
@@ -592,12 +592,12 @@ xpc_qsThrowMethodFailedWithCcx(XPCCallContext &ccx, nsresult rv)
     return false;
 }
 
-void
+bool
 xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
                                    const char *ifaceName,
                                    const char *memberName)
 {
-    ThrowCallFailed(cx, rv, ifaceName, JSID_VOID, memberName);
+    return ThrowCallFailed(cx, rv, ifaceName, JSID_VOID, memberName);
 }
 
 static void

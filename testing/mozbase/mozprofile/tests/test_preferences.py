@@ -8,7 +8,7 @@ import unittest
 from mozprofile.prefs import Preferences
 from mozprofile.profile import Profile
 
-class ProfileTest(unittest.TestCase):
+class PreferencesTest(unittest.TestCase):
     """test mozprofile"""
 
     def run_command(self, *args):
@@ -122,7 +122,48 @@ browser.startup.homepage = http://github.com/
         self.assertFalse(final_prefs)
         lines = file(prefs_file).read().strip().splitlines()
         self.assertTrue('#MozRunner Prefs Start' not in lines)
-        self.assertTrue('#MozRunner Prefs End' not in lines)        
+        self.assertTrue('#MozRunner Prefs End' not in lines)
+
+    def test_preexisting_preferences(self):
+        """ensure you don't clobber preexisting preferences"""
+
+        # make a pretend profile
+        tempdir = tempfile.mkdtemp()
+
+        try:
+            # make a user.js
+            contents = """
+user_pref("webgl.enabled_for_all_sites", true);
+user_pref("webgl.force-enabled", true);
+"""
+            user_js = os.path.join(tempdir, 'user.js')
+            f = file(user_js, 'w')
+            f.write(contents)
+            f.close()
+
+            # make sure you can read it
+            prefs = Preferences.read_prefs(user_js)
+            original_prefs = [('webgl.enabled_for_all_sites', True), ('webgl.force-enabled', True)]
+            self.assertTrue(prefs == original_prefs)
+
+            # now read this as a profile
+            profile = Profile(tempdir, preferences={"browser.download.dir": "/home/jhammel"})
+
+            # make sure the new pref is now there
+            new_prefs = original_prefs[:] + [("browser.download.dir", "/home/jhammel")]
+            prefs = Preferences.read_prefs(user_js)
+            self.assertTrue(prefs == new_prefs)
+
+            # clean up the added preferences
+            profile.cleanup()
+            del profile
+
+            # make sure you have the original preferences
+            prefs = Preferences.read_prefs(user_js)
+            self.assertTrue(prefs == original_prefs)
+        except:
+            shutil.rmtree(tempdir)
+            raise
 
     def test_json(self):
         _prefs = {"browser.startup.homepage": "http://planet.mozilla.org/"}

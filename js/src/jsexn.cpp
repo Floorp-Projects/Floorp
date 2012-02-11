@@ -971,14 +971,6 @@ JS_STATIC_ASSERT(JSProto_Error + JSEXN_SYNTAXERR    == JSProto_SyntaxError);
 JS_STATIC_ASSERT(JSProto_Error + JSEXN_TYPEERR      == JSProto_TypeError);
 JS_STATIC_ASSERT(JSProto_Error + JSEXN_URIERR       == JSProto_URIError);
 
-static JS_INLINE JSProtoKey
-GetExceptionProtoKey(intN exn)
-{
-    JS_ASSERT(JSEXN_ERR <= exn);
-    JS_ASSERT(exn < JSEXN_LIMIT);
-    return JSProtoKey(JSProto_Error + exn);
-}
-
 static JSObject *
 InitErrorClass(JSContext *cx, GlobalObject *global, intN type, JSObject &proto)
 {
@@ -1031,8 +1023,8 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
     GlobalObject *global = &obj->asGlobal();
 
-    JSObject *objectProto;
-    if (!js_GetClassPrototype(cx, global, JSProto_Object, &objectProto))
+    JSObject *objectProto = global->getOrCreateObjectPrototype(cx);
+    if (!objectProto)
         return NULL;
 
     /* Initialize the base Error class first. */
@@ -1331,8 +1323,8 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
     copy->exnType = priv->exnType;
 
     // Create the Error object.
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, &scope->global(), GetExceptionProtoKey(copy->exnType), &proto))
+    JSObject *proto = scope->global().getOrCreateCustomErrorPrototype(cx, copy->exnType);
+    if (!proto)
         return NULL;
     JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
     SetExnPrivate(cx, copyobj, copy);

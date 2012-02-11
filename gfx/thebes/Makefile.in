@@ -276,6 +276,9 @@ CPPSRCS += \
 	gfxPDFSurface.cpp \
 	nsUnicodeRange.cpp \
 	$(NULL)
+# This is set for "normal Android", that is, when Gecko is running on
+# top of the android java runtime.
+DEFINES +=	-DMOZ_USING_ANDROID_JAVA_WIDGETS
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)

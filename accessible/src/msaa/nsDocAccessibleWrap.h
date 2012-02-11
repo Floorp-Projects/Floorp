@@ -53,8 +53,8 @@ class nsDocAccessibleWrap: public nsDocAccessible,
                            public ISimpleDOMDocument
 {
 public:
-  nsDocAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
-                      nsIWeakReference *aShell);
+  nsDocAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                      nsIPresShell* aPresShell);
   virtual ~nsDocAccessibleWrap();
 
     // IUnknown

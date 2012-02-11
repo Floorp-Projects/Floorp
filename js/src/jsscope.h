@@ -466,7 +466,6 @@ struct Shape : public js::gc::Cell
     friend class js::Bindings;
     friend struct js::StackShape;
     friend struct js::StackBaseShape;
-    friend bool IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape);
 
   protected:
     HeapPtrBaseShape    base_;

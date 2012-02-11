@@ -232,7 +232,7 @@ let gClickHandler = {
        gCurrentTest.desc + ":Handler received a click event on " + linkId);
 
     let isPanelClick = linkId == "panellink";
-    let returnValue = gTestWin.contentAreaClick(event, isPanelClick);
+    gTestWin.contentAreaClick(event, isPanelClick);
     let prevent = event.defaultPrevented;
     is(prevent, gCurrentTest.preventDefault,
        gCurrentTest.desc + ": event.defaultPrevented is correct (" + prevent + ")")

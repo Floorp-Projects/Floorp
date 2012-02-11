@@ -51,7 +51,7 @@ class nsXULMenuitemAccessible : public nsAccessibleWrap
 public:
   enum { eAction_Click = 0 };
 
-  nsXULMenuitemAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULMenuitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
@@ -85,7 +85,7 @@ public:
 class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible
 {
 public:
-  nsXULMenuSeparatorAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULMenuSeparatorAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
@@ -107,7 +107,7 @@ public:
 class nsXULMenupopupAccessible : public XULSelectControlAccessible
 {
 public:
-  nsXULMenupopupAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULMenupopupAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -128,7 +128,7 @@ public:
 class nsXULMenubarAccessible : public nsAccessibleWrap
 {
 public:
-  nsXULMenubarAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsXULMenubarAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsAccessible
   virtual nsresult GetNameInternal(nsAString& aName);

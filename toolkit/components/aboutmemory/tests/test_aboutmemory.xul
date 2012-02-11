@@ -193,12 +193,17 @@
                                  OTHER,   PERCENTAGE, 66666),
 
     // If a negative value is within a collapsed sub-tree in non-verbose mode,
-    // we should still get the warning at the top.
+    // we should get the warning at the top and the relevant sub-trees should
+    // be expanded, even in non-verbose mode.
     f("5th", "heap-allocated",   OTHER,   100 * MB),
     f("5th", "explicit/big",     HEAP,     99 * MB),
     f("5th", "explicit/a/pos",   HEAP,     40 * KB),
     f("5th", "explicit/a/neg1",  NONHEAP, -20 * KB),
-    f("5th", "explicit/a/neg2",  NONHEAP, -10 * KB)
+    f("5th", "explicit/a/neg2",  NONHEAP, -10 * KB),
+    f("5th", "explicit/b/c/d/e", NONHEAP,  20 * KB),
+    f("5th", "explicit/b/c/d/f", NONHEAP, -60 * KB),
+    f("5th", "explicit/b/c/g/h", NONHEAP,  10 * KB),
+    f("5th", "explicit/b/c/i/j", NONHEAP,   5 * KB)
   ];
   var fakeMultiReporters2 = [
      // Because this multi-reporter is in a child process, the fact that we
@@ -316,7 +321,7 @@ WARNING: the following values are negative or unreasonably large.\n\
  other4\n\
  other5\n\
  other6-danger<script>window.alert(1)</script>\n\
-This indicates a defect in one or more memory reporters.  The invalid values are highlighted, but you may need to expand one or more sub-trees to see them.\n\
+This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
 Explicit Allocations\n\
 98.00 MB (100.0%) -- explicit\n\
@@ -324,7 +329,9 @@ Explicit Allocations\n\
 │  └──150.00 MB (153.06%) -- compartment(http://too-big.com/) [?!]\n\
 │     └──150.00 MB (153.06%) ── stuff [?!]\n\
 ├───5.00 MB (05.10%) ── ok\n\
-└──-57.00 MB (-58.16%) ++ (2 tiny) [?!]\n\
+└──-57.00 MB (-58.16%) -- (2 tiny) [?!]\n\
+   ├───-2.00 MB (-2.04%) ── neg1 [?!]\n\
+   └──-55.00 MB (-56.12%) ── heap-unclassified [?!]\n\
 \n\
 Other Measurements\n\
  100.00 MB ── heap-allocated\n\
@@ -338,14 +345,30 @@ Other Measurements\n\
 5th Process\n\
 \n\
 WARNING: the following values are negative or unreasonably large.\n\
- explicit/(2 tiny)/a/neg2\n\
- explicit/(2 tiny)/a/neg1\n\
-This indicates a defect in one or more memory reporters.  The invalid values are highlighted, but you may need to expand one or more sub-trees to see them.\n\
+ explicit/(3 tiny)/a/neg2\n\
+ explicit/(3 tiny)/a/neg1\n\
+ explicit/(3 tiny)/b\n\
+ explicit/(3 tiny)/b/c\n\
+ explicit/(3 tiny)/b/c/d\n\
+ explicit/(3 tiny)/b/c/d/f\n\
+This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
 Explicit Allocations\n\
-99.97 MB (100.0%) -- explicit\n\
-├──99.00 MB (99.03%) ── big\n\
-└───0.97 MB (00.97%) ++ (2 tiny)\n\
+99.95 MB (100.0%) -- explicit\n\
+├──99.00 MB (99.05%) ── big\n\
+└───0.95 MB (00.95%) -- (3 tiny)\n\
+    ├──0.96 MB (00.96%) ── heap-unclassified\n\
+    ├──0.01 MB (00.01%) -- a\n\
+    │  ├──0.04 MB (00.04%) ── pos\n\
+    │  ├──-0.01 MB (-0.01%) ── neg2 [?!]\n\
+    │  └──-0.02 MB (-0.02%) ── neg1 [?!]\n\
+    └──-0.02 MB (-0.02%) -- b [?!]\n\
+       └──-0.02 MB (-0.02%) -- c [?!]\n\
+          ├───0.01 MB (00.01%) ++ g\n\
+          ├───0.00 MB (00.00%) ++ i\n\
+          └──-0.04 MB (-0.04%) -- d [?!]\n\
+             ├───0.02 MB (00.02%) ── e\n\
+             └──-0.06 MB (-0.06%) ── f [?!]\n\
 \n\
 Other Measurements\n\
 100.00 MB ── heap-allocated\n\
@@ -457,7 +480,7 @@ WARNING: the following values are negative or unreasonably large.\n\
  other4\n\
  other5\n\
  other6-danger<script>window.alert(1)</script>\n\
-This indicates a defect in one or more memory reporters.  The invalid values are highlighted, but you may need to expand one or more sub-trees to see them.\n\
+This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
 Explicit Allocations\n\
 102,760,448 B (100.0%) -- explicit\n\
@@ -482,16 +505,29 @@ Other Measurements\n\
 WARNING: the following values are negative or unreasonably large.\n\
  explicit/a/neg2\n\
  explicit/a/neg1\n\
-This indicates a defect in one or more memory reporters.  The invalid values are highlighted, but you may need to expand one or more sub-trees to see them.\n\
+ explicit/b\n\
+ explicit/b/c\n\
+ explicit/b/c/d\n\
+ explicit/b/c/d/f\n\
+This indicates a defect in one or more memory reporters.  The invalid values are highlighted.\n\
 \n\
 Explicit Allocations\n\
-104,826,880 B (100.0%) -- explicit\n\
-├──103,809,024 B (99.03%) ── big\n\
+104,801,280 B (100.0%) -- explicit\n\
+├──103,809,024 B (99.05%) ── big\n\
 ├────1,007,616 B (00.96%) ── heap-unclassified\n\
-└───────10,240 B (00.01%) -- a\n\
-        ├──40,960 B (00.04%) ── pos\n\
-        ├──-10,240 B (-0.01%) ── neg2 [?!]\n\
-        └──-20,480 B (-0.02%) ── neg1 [?!]\n\
+├───────10,240 B (00.01%) -- a\n\
+│       ├──40,960 B (00.04%) ── pos\n\
+│       ├──-10,240 B (-0.01%) ── neg2 [?!]\n\
+│       └──-20,480 B (-0.02%) ── neg1 [?!]\n\
+└──────-25,600 B (-0.02%) -- b [?!]\n\
+       └──-25,600 B (-0.02%) -- c [?!]\n\
+          ├───10,240 B (00.01%) -- g\n\
+          │   └──10,240 B (00.01%) ── h\n\
+          ├────5,120 B (00.00%) -- i\n\
+          │    └──5,120 B (00.00%) ── j\n\
+          └──-40,960 B (-0.04%) -- d [?!]\n\
+             ├───20,480 B (00.02%) ── e\n\
+             └──-61,440 B (-0.06%) ── f [?!]\n\
 \n\
 Other Measurements\n\
 104,857,600 B ── heap-allocated\n\

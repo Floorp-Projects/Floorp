@@ -660,14 +660,11 @@ public:
   InitPrivate(JSContext* aCx, JSObject* aObj, WorkerPrivate* aWorkerPrivate)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    JS_ASSERT(!GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aCx, aObj));
+    JS_ASSERT(!GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aObj));
 
     DedicatedWorkerGlobalScope* priv =
       new DedicatedWorkerGlobalScope(aWorkerPrivate);
-    if (!SetJSPrivateSafeish(aCx, aObj, priv)) {
-      delete priv;
-      return false;
-    }
+    SetJSPrivateSafeish(aObj, priv);
 
     return true;
   }
@@ -724,7 +721,7 @@ private:
   {
     JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr == &sClass) {
-      return GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aCx, aObj);
+      return GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
@@ -759,7 +756,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
     DedicatedWorkerGlobalScope* scope =
-      GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aCx, aObj);
+      GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aObj);
     if (scope) {
       scope->FinalizeInstance(aCx);
       delete scope;
@@ -771,7 +768,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
     DedicatedWorkerGlobalScope* scope =
-      GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aTrc->context, aObj);
+      GetJSPrivateSafeish<DedicatedWorkerGlobalScope>(aObj);
     if (scope) {
       scope->TraceInstance(aTrc);
     }
@@ -829,7 +826,7 @@ WorkerGlobalScope::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
 {
   JSClass* classPtr = JS_GetClass(aObj);
   if (classPtr == &sClass || classPtr == DedicatedWorkerGlobalScope::Class()) {
-    return GetJSPrivateSafeish<WorkerGlobalScope>(aCx, aObj);
+    return GetJSPrivateSafeish<WorkerGlobalScope>(aObj);
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,

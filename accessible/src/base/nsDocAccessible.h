@@ -97,7 +97,7 @@ public:
   using nsAccessible::GetParent;
 
   nsDocAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
-                  nsIWeakReference* aShell);
+                  nsIPresShell* aPresShell);
   virtual ~nsDocAccessible();
 
   // nsIAccessible
@@ -139,6 +139,11 @@ public:
   // nsDocAccessible
 
   /**
+   * Return presentation shell for this document accessible.
+   */
+  nsIPresShell* PresShell() const { return mPresShell; }
+
+  /**
    * Return true if associated DOM document was loaded and isn't unloading.
    */
   bool IsContentLoaded() const
@@ -170,7 +175,8 @@ public:
    * Return true if the document has given document state.
    */
   bool HasLoadState(LoadState aState) const
-    { return (mLoadState & aState) == aState; }
+    { return (mLoadState & static_cast<PRUint32>(aState)) == 
+        static_cast<PRUint32>(aState); }
 
   /**
    * Return a native window handler or pointer depending on platform.
@@ -181,7 +187,7 @@ public:
    * Return the parent document.
    */
   nsDocAccessible* ParentDocument() const
-    { return mParent ? mParent->GetDocAccessible() : nsnull; }
+    { return mParent ? mParent->Document() : nsnull; }
 
   /**
    * Return the child document count.
@@ -376,6 +382,8 @@ public:
   void RecreateAccessible(nsIContent* aContent);
 
 protected:
+
+  void LastRelease();
 
   // nsAccessible
   virtual void CacheChildren();
@@ -653,6 +661,10 @@ protected:
    */
   nsRefPtr<NotificationController> mNotificationController;
   friend class NotificationController;
+
+private:
+
+  nsIPresShell* mPresShell;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDocAccessible,

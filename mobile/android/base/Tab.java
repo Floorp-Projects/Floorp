@@ -552,7 +552,9 @@ public final class Tab {
         @Override
         protected Void doInBackground(Void... unused) {
             ContentResolver resolver = Tabs.getInstance().getContentResolver();
-            BrowserDB.removeBookmark(resolver, getURL());
+
+            // We want to remove all bookmarks with this URL
+            BrowserDB.removeBookmarksWithURL(resolver, getURL());
             return null;
         }
 

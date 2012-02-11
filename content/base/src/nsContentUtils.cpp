@@ -3421,7 +3421,6 @@ PLDHashOperator
 ListenerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
                    PRUint32 aNumber, void* aArg)
 {
-  PRUint32* gen = static_cast<PRUint32*>(aArg);
   EventListenerManagerMapEntry* entry =
     static_cast<EventListenerManagerMapEntry*>(aEntry);
   if (entry) {

@@ -58,7 +58,7 @@ namespace js {
 
 inline
 Bindings::Bindings(JSContext *cx)
-    : lastBinding(NULL), nargs(0), nvars(0), nupvars(0)
+    : lastBinding(NULL), nargs(0), nvars(0), nupvars(0), hasDup_(false)
 {}
 
 inline void
@@ -90,16 +90,22 @@ Bindings::lastShape() const
     return lastBinding;
 }
 
+Shape *
+Bindings::initialShape(JSContext *cx) const
+{
+    /* Get an allocation kind to match an empty call object. */
+    gc::AllocKind kind = gc::FINALIZE_OBJECT4;
+    JS_ASSERT(gc::GetGCKindSlots(kind) == CallObject::RESERVED_SLOTS + 1);
+
+    return EmptyShape::getInitialShape(cx, &CallClass, NULL, NULL, kind,
+                                       BaseShape::VAROBJ);
+}
+
 bool
 Bindings::ensureShape(JSContext *cx)
 {
     if (!lastBinding) {
-        /* Get an allocation kind to match an empty call object. */
-        gc::AllocKind kind = gc::FINALIZE_OBJECT4;
-        JS_ASSERT(gc::GetGCKindSlots(kind) == CallObject::RESERVED_SLOTS + 1);
-
-        lastBinding = EmptyShape::getInitialShape(cx, &CallClass, NULL, NULL, kind,
-                                                  BaseShape::VAROBJ);
+        lastBinding = initialShape(cx);
         if (!lastBinding)
             return false;
     }

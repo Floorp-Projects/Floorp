@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,15 +13,16 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozbase.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-#  The Mozilla Foundation.
+# the Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Will Lachance <wlachance@mozilla.com>
+#   Joel Maher <joel.maher@gmail.com>
+#   William Lachance <wlachance@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,5 +38,38 @@
 #
 # ***** END LICENSE BLOCK *****
 
-from devicemanagerADB import DeviceManagerADB
-from devicemanagerSUT import DeviceManagerSUT
+import mozhttpd
+import urllib2
+import os
+import unittest
+import re
+
+here = os.path.dirname(os.path.abspath(__file__))
+
+class FileListingTest(unittest.TestCase):
+
+    def check_filelisting(self, path=''):
+        filelist = os.listdir(here)
+
+        httpd = mozhttpd.MozHttpd(port=0, docroot=here)
+        httpd.start(block=False)
+        f = urllib2.urlopen("http://%s:%s/%s" % ('127.0.0.1', httpd.httpd.server_port, path))
+        for line in f.readlines():
+            webline = re.sub('\<[a-zA-Z0-9\-\_\.\=\"\'\/\\\%\!\@\#\$\^\&\*\(\) ]*\>', '', line.strip('\n')).strip('/').strip().strip('@')
+
+            if webline and not webline.startswith("Directory listing for"):
+                self.assertTrue(webline in filelist,
+                                "File %s in dir listing corresponds to a file" % webline)
+                filelist.remove(webline)
+        self.assertFalse(filelist, "Should have no items in filelist (%s) unaccounted for" % filelist)
+
+
+    def test_filelist(self):
+        self.check_filelisting()
+
+    def test_filelist_params(self):
+        self.check_filelisting('?foo=bar&fleem=&foo=fleem')
+
+
+if __name__ == '__main__':
+    unittest.main()

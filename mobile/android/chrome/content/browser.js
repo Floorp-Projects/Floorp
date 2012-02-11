@@ -221,6 +221,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
+    Services.obs.addObserver(this, "Passwords:Init", false);
 
     function showFullScreenWarning() {
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
@@ -352,29 +353,43 @@ var BrowserApp = {
   },
 
   _showTelemetryPrompt: function _showTelemetryPrompt() {
-    let telemetryPrompted = false;
+    const PREF_TELEMETRY_PROMPTED = "toolkit.telemetry.prompted";
+    const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
+    const PREF_TELEMETRY_REJECTED = "toolkit.telemetry.rejected";
+
+    // This is used to reprompt users when privacy message changes
+    const TELEMETRY_PROMPT_REV = 2;
+
+    let telemetryPrompted = null;
     try {
-      telemetryPrompted = Services.prefs.getBoolPref("toolkit.telemetry.prompted");
+      telemetryPrompted = Services.prefs.getIntPref(PREF_TELEMETRY_PROMPTED);
     } catch (e) { /* Optional */ }
-    if (telemetryPrompted)
+
+    // If the user has seen the latest telemetry prompt, do not prompt again
+    // else clear old prefs and reprompt
+    if (telemetryPrompted === TELEMETRY_PROMPT_REV)
       return;
 
+    Services.prefs.clearUserPref(PREF_TELEMETRY_PROMPTED);
+    Services.prefs.clearUserPref(PREF_TELEMETRY_ENABLED);
+  
     let buttons = [
       {
         label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
         callback: function () {
-          Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
-          Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
+          Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
+          Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
         }
       },
       {
         label: Strings.browser.GetStringFromName("telemetry.optin.no"),
         callback: function () {
-          Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
-          Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
+          Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
+          Services.prefs.setBoolPref(PREF_TELEMETRY_REJECTED, true);
         }
       }
     ];
+
     let brandShortName = Strings.brand.GetStringFromName("brandShortName");
     let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
     NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
@@ -970,6 +985,12 @@ var BrowserApp = {
       ViewportHandler.onResize();
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
+    } else if (aTopic == "Passwords:Init") {
+      var storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].  
+        getService(Components.interfaces.nsILoginManagerStorage);
+      storage.init();
+
+      sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
     }
   },
 
@@ -1358,7 +1379,7 @@ nsBrowserAccess.prototype = {
 
     let parentId = -1;
     if (newTab && !isExternal) {
-      let parent = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForWindow(aOpener));
+      let parent = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForWindow(aOpener.top));
       if (parent)
         parentId = parent.id;
     }
@@ -1594,24 +1615,7 @@ Tab.prototype = {
       if (!this.browser || !this.browser.contentWindow)
         return;
 
-      let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      canvas.setAttribute("width", aDst.width);  
-      canvas.setAttribute("height", aDst.height);
-      canvas.setAttribute("moz-opaque", "true");
-
-      let ctx = canvas.getContext("2d");
-      let flags = ctx.DRAWWINDOW_DO_NOT_FLUSH;
-      ctx.drawWindow(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, "#fff", flags);
-      let message = {
-        gecko: {
-          type: "Tab:ScreenshotData",
-          tabID: this.id,
-          width: aDst.width,
-          height: aDst.height,
-          data: canvas.toDataURL()
-        }
-      };
-      sendMessageToJava(message);
+      getBridge().takeScreenshot(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, aDst.width, aDst.height, this.id);
       Services.tm.mainThread.dispatch(function() {
 	  BrowserApp.doNextScreenshot()
       }, Ci.nsIThread.DISPATCH_NORMAL);
@@ -1871,6 +1875,10 @@ Tab.prototype = {
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+    let contentWin = aWebProgress.DOMWindow;
+    if (contentWin != contentWin.top)
+        return;
+
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       // Filter optimization: Only really send NETWORK state changes to Java listener
       let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
@@ -1878,13 +1886,18 @@ Tab.prototype = {
       if (browser)
         uri = browser.currentURI.spec;
 
+      // Check to see if we restoring the content from a previous presentation (session)
+      // since there should be no real network activity
+      let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
+      let showProgress = restoring ? false : this.showProgress;
+
       let message = {
         gecko: {
           type: "Content:StateChange",
           tabID: this.id,
           uri: uri,
           state: aStateFlags,
-          showProgress: this.showProgress
+          showProgress: showProgress
         }
       };
       sendMessageToJava(message);
@@ -2891,14 +2904,6 @@ var FormAssistant = {
     return (aElement instanceof HTMLSelectElement);
   },
 
-  _isOptionElement: function(aElement) {
-    return aElement instanceof HTMLOptionElement;
-  },
-
-  _isOptionGroupElement: function(aElement) {
-    return aElement instanceof HTMLOptGroupElement;
-  },
-
   getListForElement: function(aElement) {
     let result = {
       type: "Prompt:Show",
@@ -2913,15 +2918,15 @@ var FormAssistant = {
       ];
     }
 
-    this.forOptions(aElement, function(aNode, aIndex) {
+    this.forOptions(aElement, function(aNode, aIndex, aIsGroup, aInGroup) {
       let item = {
         label: aNode.text || aNode.label,
-        isGroup: this._isOptionGroupElement(aNode),
-        inGroup: this._isOptionGroupElement(aNode.parentNode),
+        isGroup: aIsGroup,
+        inGroup: aInGroup,
         disabled: aNode.disabled,
         id: aIndex
       }
-      if (item.inGroup)
+      if (aInGroup)
         item.disabled = item.disabled || aNode.parentNode.disabled;
 
       result.listitems[aIndex] = item;
@@ -2933,26 +2938,27 @@ var FormAssistant = {
   forOptions: function(aElement, aFunction) {
     let optionIndex = 0;
     let children = aElement.children;
+    let numChildren = children.length;
     // if there are no children in this select, we add a dummy row so that at least something appears
-    if (children.length == 0)
+    if (numChildren == 0)
       aFunction.call(this, {label:""}, optionIndex);
-    for (let i = 0; i < children.length; i++) {
+    for (let i = 0; i < numChildren; i++) {
       let child = children[i];
-      if (this._isOptionGroupElement(child)) {
-        aFunction.call(this, child, optionIndex);
+      if (child instanceof HTMLOptionElement) {
+        // This is a regular choice under no group.
+        aFunction.call(this, child, optionIndex, false, false);
+        optionIndex++;
+      } else if (child instanceof HTMLOptGroupElement) {
+        aFunction.call(this, child, optionIndex, true, false);
         optionIndex++;
 
         let subchildren = child.children;
-        for (let j = 0; j < subchildren.length; j++) {
+        let numSubchildren = subchildren.length;
+        for (let j = 0; j < numSubchildren; j++) {
           let subchild = subchildren[j];
-          aFunction.call(this, subchild, optionIndex);
+          aFunction.call(this, subchild, optionIndex, false, true);
           optionIndex++;
         }
-
-      } else if (this._isOptionElement(child)) {
-        // This is a regular choice under no group.
-        aFunction.call(this, child, optionIndex);
-        optionIndex++;
       }
     }
   }
@@ -4149,7 +4155,6 @@ var CharacterEncoding = {
     let docCharset = browser.docShell.QueryInterface(Ci.nsIDocCharset);
     docCharset.charset = aEncoding;
     browser.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
-  },
-
+  }
 };
 
