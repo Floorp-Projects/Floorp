@@ -940,12 +940,15 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
         /*
          * The variable is live even before the write, due to an enclosing try
          * block. We need to split the lifetime to indicate there was a write.
+         * We set the new interval's savedEnd to 0, since it will always be
+         * adjacent to the old interval, so it never needs to be extended.
          */
-        var.lifetime = cx->typeLifoAlloc().new_<Lifetime>(start, offset, var.lifetime);
+        var.lifetime = cx->typeLifoAlloc().new_<Lifetime>(start, 0, var.lifetime);
         if (!var.lifetime) {
             setOOM(cx);
             return;
         }
+        var.lifetime->end = offset;
     } else {
         var.saved = var.lifetime;
         var.savedEnd = 0;
@@ -973,25 +976,43 @@ ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
     var.lifetime->start = start;
 
     /*
-     * When walking backwards through loop bodies, we don't know which vars
-     * are live at the loop's backedge. We save the endpoints for lifetime
-     * segments which we *would* use if the variables were live at the backedge
-     * and extend the variable with new lifetimes if we find the variable is
-     * indeed live at the head of the loop.
+     * Consider this code:
      *
-     * while (...) {
-     *   if (x #1) { ... }
-     *   ...
-     *   if (... #2) { x = 0; #3}
-     * }
+     *   while (...) { (#1)
+     *       use x;    (#2)
+     *       ...
+     *       x = ...;  (#3)
+     *       ...
+     *   }             (#4)
      *
-     * If x is not live after the loop, we treat it as dead in the walk and
-     * make a point lifetime for the write at #3. At the beginning of that
-     * basic block (#2), we save the loop endpoint; if we knew x was live in
-     * the next iteration then a new lifetime would be made here. At #1 we
-     * mark x live again, make a segment between the head of the loop and #1,
-     * and then extend x with loop tail lifetimes from #1 to #2, and from #3
-     * to the back edge.
+     * Just before analyzing the while statement, there would be a live range
+     * from #1..#2 and a "point range" at #3. The job of extendVariable is to
+     * create a new live range from #3..#4.
+     *
+     * However, more extensions may be required if the definition of x is
+     * conditional. Consider the following.
+     *
+     *   while (...) {     (#1)
+     *       use x;        (#2)
+     *       ...
+     *       if (...)      (#5)
+     *           x = ...;  (#3)
+     *       ...
+     *   }                 (#4)
+     *
+     * Assume that x is not used after the loop. Then, before extendVariable is
+     * run, the live ranges would be the same as before (#1..#2 and #3..#3). We
+     * still need to create a range from #3..#4. But, since the assignment at #3
+     * may never run, we also need to create a range from #2..#3. This is done
+     * as follows.
+     *
+     * Each time we create a Lifetime, we store the start of the most recently
+     * seen sequence of conditional code in the Lifetime's savedEnd field. So,
+     * when creating the Lifetime at #2, we set the Lifetime's savedEnd to
+     * #5. (The start of the most recent conditional is cached in each
+     * variable's savedEnd field.) Consequently, extendVariable is able to
+     * create a new interval from #2..#5 using the savedEnd field of the
+     * existing #1..#2 interval.
      */
 
     Lifetime *segment = var.lifetime;
