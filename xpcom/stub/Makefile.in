@@ -117,6 +117,9 @@ EXTRA_DSO_LDOPTS +=				\
 	$(MOZALLOC_LIB)				\
 	$(NULL)
 
+# It is ok for this file not to exist
+-include $(topsrcdir)/$(MOZ_BUILD_APP)/extradependlibs.mk
+
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(FINAL_TARGET)/dependentlibs.list
