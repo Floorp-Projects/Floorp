@@ -1,8 +1,8 @@
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-const Ci = SpecialPowers.wrap(Components).interfaces;
+const Ci = Components.interfaces;
 ok(Ci != null, "Access Ci");
-const Cc = SpecialPowers.wrap(Components).classes;
+const Cc = Components.classes;
 ok(Cc != null, "Access Cc");
 
 var didDialog;
