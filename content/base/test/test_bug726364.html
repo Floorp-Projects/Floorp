@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=726364
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 726364</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=726364">Mozilla Bug 726364</a>
+<p id="display"><div id="v">ABC</div></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 726364 **/
+function boom()
+{
+  var v = document.getElementById("v");
+  var t = v.firstChild;
+  is(v.childNodes.length,1, "child count");
+
+  var f = function(event) {
+    window.removeEventListener("DOMCharacterDataModified", f, true);
+    is(v.childNodes[0],t, "first child is the same");
+    is(v.childNodes.length,2, "child count");
+    r.setEnd(v, 0);
+    SimpleTest.finish();
+  };
+  window.addEventListener("DOMCharacterDataModified", f, true);
+
+  var r = document.createRange();
+  r.setStart(t, 2);
+  t.splitText(1);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(boom);
+
+</script>
+</pre>
+</body>
+</html>
