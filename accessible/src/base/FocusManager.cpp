@@ -287,11 +287,12 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   // if it's still focused and then update active item and emit focus event.
   nsAccessible* target = aEvent->GetAccessible();
   if (target != mActiveItem) {
+
     // Check if still focused. Otherwise we can end up with storing the active
     // item for control that isn't focused anymore.
-    nsAccessible* DOMFocus =
-      GetAccService()->GetAccessibleOrContainer(FocusedDOMNode(),
-	                                        aEvent->GetDocAccessible());
+    nsDocAccessible* document = aEvent->GetDocAccessible();
+    nsAccessible* DOMFocus = document->GetAccessibleOrContainer(FocusedDOMNode());
+
     if (target != DOMFocus)
       return;
 
