@@ -3,18 +3,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-*   content/browser/inspector.html                (highlighter/inspector.html)
+    content/browser/inspector.html                (highlighter/inspector.html)
     content/browser/NetworkPanel.xhtml            (webconsole/NetworkPanel.xhtml)
     content/browser/devtools/HUDService-content.js (webconsole/HUDService-content.js)
 *   content/browser/scratchpad.xul                (scratchpad/scratchpad.xul)
     content/browser/scratchpad.js                 (scratchpad/scratchpad.js)
     content/browser/splitview.css                 (shared/splitview.css)
-*   content/browser/styleeditor.xul               (styleeditor/styleeditor.xul)
+    content/browser/styleeditor.xul               (styleeditor/styleeditor.xul)
     content/browser/styleeditor.css               (styleeditor/styleeditor.css)
     content/browser/devtools/csshtmltree.xul      (styleinspector/csshtmltree.xul)
     content/browser/devtools/cssruleview.xul      (styleinspector/cssruleview.xul)
     content/browser/devtools/styleinspector.css   (styleinspector/styleinspector.css)
-*   content/browser/devtools/layoutview/view.xhtml  (layoutview/view.xhtml)
+    content/browser/devtools/layoutview/view.xhtml  (layoutview/view.xhtml)
     content/browser/devtools/layoutview/view.css  (layoutview/view.css)
     content/browser/orion.js                      (sourceeditor/orion/orion.js)
 *   content/browser/source-editor-overlay.xul     (sourceeditor/source-editor-overlay.xul)
