@@ -43,6 +43,7 @@
 #include "nsIDocument.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMJSUtils.h"
+#include "prprf.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventListenerWrapper)
