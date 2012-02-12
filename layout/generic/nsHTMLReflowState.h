@@ -367,7 +367,7 @@ public:
                                      // and never insider a column frame
     PRUint16 mHeightDependsOnAncestorCell:1;   // Does frame height depend on
                                                // an ancestor table-cell?
-    
+    PRUint16 mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
   } mFlags;
 
 private:
