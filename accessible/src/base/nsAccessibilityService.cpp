@@ -919,17 +919,6 @@ nsAccessibilityService::GetAccessible(nsINode* aNode, nsIPresShell* aPresShell)
   return document ? document->GetAccessible(aNode) : nsnull;
 }
 
-nsAccessible*
-nsAccessibilityService::GetAccessibleOrContainer(nsINode* aNode, nsDocAccessible* aDoc)
-{
-  if (!aNode)
-    return nsnull;
-
-  NS_PRECONDITION(aDoc, "Must pass a document accessible.");
-
-  return aDoc ? aDoc->GetAccessibleOrContainer(aNode) : nsnull;
-}
-
 static bool HasRelatedContent(nsIContent *aContent)
 {
   nsAutoString id;
