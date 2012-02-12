@@ -19,20 +19,20 @@ function reallyHandleRequest(request, response) {
 
   var expected_user = "", expected_pass = "", realm = "mochitest";
   var proxy_expected_user = "", proxy_expected_pass = "", proxy_realm = "mochi-proxy";
-  var huge = false, plugin = false, missingAuth = false;
+  var huge = false, plugin = false;
   var authHeaderCount = 1;
   // user=xxx
-  match = /[^_]user=([^&]*)/.exec(query);
+  match = /user=([^&]*)/.exec(query);
   if (match)
     expected_user = match[1];
 
   // pass=xxx
-  match = /[^_]pass=([^&]*)/.exec(query);
+  match = /pass=([^&]*)/.exec(query);
   if (match)
     expected_pass = match[1];
 
   // realm=xxx
-  match = /[^_]realm=([^&]*)/.exec(query);
+  match = /realm=([^&]*)/.exec(query);
   if (match)
     realm = match[1];
 
@@ -66,10 +66,6 @@ function reallyHandleRequest(request, response) {
   if (match)
     authHeaderCount = match[1]+0;
 
-  // missingAuthorization=1
-  match = /missingAuthorization=1/.exec(query);
-  if (match)
-    missingAuth = true;
 
   // Look for an authentication header, if any, in the request.
   //
@@ -78,9 +74,8 @@ function reallyHandleRequest(request, response) {
   // This test only supports Basic auth. The value sent by the client is
   // "username:password", obscured with base64 encoding.
 
-  var actual_user = "", actual_pass = "", authHeader, authPresent = false;
+  var actual_user = "", actual_pass = "", authHeader;
   if (request.hasHeader("Authorization")) {
-    authPresent = true;
     authHeader = request.getHeader("Authorization");
     match = /Basic (.+)/.exec(authHeader);
     if (match.length != 2)
@@ -124,14 +119,10 @@ function reallyHandleRequest(request, response) {
     response.setStatusLine("1.0", 407, "Proxy authentication required");
     for (i = 0; i < authHeaderCount; ++i)
       response.setHeader("Proxy-Authenticate", "basic realm=\"" + proxy_realm + "\"", true);
-  } else if (requestAuth && !missingAuth) {
+  } else if (requestAuth) {
     response.setStatusLine("1.0", 401, "Authentication required");
     for (i = 0; i < authHeaderCount; ++i)
       response.setHeader("WWW-Authenticate", "basic realm=\"" + realm + "\"", true);
-  } else if (authPresent && missingAuth) {
-    response.setStatusLine("1.0", 401, "Unexpected authorization header found");
-  } else if (!authPresent && missingAuth) {
-    response.setStatusLine("1.0", 200, "Authorization header not found");
   } else {
     response.setStatusLine("1.0", 200, "OK");
   }
