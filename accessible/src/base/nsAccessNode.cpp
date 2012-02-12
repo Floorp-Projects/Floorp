@@ -283,38 +283,6 @@ nsAccessNode::ScrollTo(PRUint32 aScrollType)
                                nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
-// nsAccessNode public
-already_AddRefed<nsINode>
-nsAccessNode::GetCurrentFocus()
-{
-  // XXX: consider to use nsFocusManager directly, it allows us to avoid
-  // unnecessary query interface calls.
-  nsIDocument* doc = GetDocumentNode();
-  NS_ENSURE_TRUE(doc, nsnull);
-
-  nsIDOMWindow* win = doc->GetWindow();
-
-  nsCOMPtr<nsIDOMWindow> focusedWindow;
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  if (fm)
-    fm->GetFocusedElementForWindow(win, true, getter_AddRefs(focusedWindow),
-                                   getter_AddRefs(focusedElement));
-
-  nsINode *focusedNode = nsnull;
-  if (focusedElement) {
-    CallQueryInterface(focusedElement, &focusedNode);
-  }
-  else if (focusedWindow) {
-    nsCOMPtr<nsIDOMDocument> doc;
-    focusedWindow->GetDocument(getter_AddRefs(doc));
-    if (doc)
-      CallQueryInterface(doc, &focusedNode);
-  }
-
-  return focusedNode;
-}
-
 void
 nsAccessNode::Language(nsAString& aLanguage)
 {
