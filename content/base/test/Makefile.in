@@ -554,6 +554,7 @@ _TEST_FILES2 = \
 		file_bug717511.html^headers^ \
 		file_bug717511_2.html \
 		file_bug717511_2.html^headers^ \
+		test_bug726364.html \
 		$(NULL)
 
 _CHROME_FILES =	\
