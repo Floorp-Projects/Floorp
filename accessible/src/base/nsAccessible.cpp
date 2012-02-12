@@ -852,8 +852,7 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 
   // Get accessible for the node with the point or the first accessible in
   // the DOM parent chain.
-  nsAccessible* accessible =
-    GetAccService()->GetAccessibleOrContainer(content, accDocument);
+  nsAccessible* accessible = accDocument->GetAccessibleOrContainer(content);
   if (!accessible)
     return fallbackAnswer;
 
