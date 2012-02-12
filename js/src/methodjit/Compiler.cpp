@@ -5630,9 +5630,9 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
     JSOp op = JSOp(*PC);
 
 #ifdef JSGC_INCREMENTAL_MJ
-    /* Write barrier. We only have type information for JSOP_SETPROP. */
+    /* Write barrier. We don't have type information for JSOP_SETNAME. */
     if (cx->compartment->needsBarrier() &&
-        (!types || op != JSOP_SETPROP || types->propertyNeedsBarrier(cx, id)))
+        (!types || op == JSOP_SETNAME || types->propertyNeedsBarrier(cx, id)))
     {
         jsop_setprop_slow(name);
         return true;
