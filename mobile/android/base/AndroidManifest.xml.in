@@ -56,7 +56,7 @@
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
-                  android:theme="@style/Gecko">
+                  android:theme="@style/Gecko.App">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -146,7 +146,7 @@
         -->
 
         <activity android:name="org.mozilla.gecko.AwesomeBar"
-                  android:theme="@style/Gecko.Light"
+                  android:theme="@style/Gecko.Light.AwesomeBar"
                   android:configChanges="orientation"
                   android:windowSoftInputMode="stateAlwaysVisible|adjustResize"/>
 
@@ -155,7 +155,7 @@
                   android:launchMode="singleTask"/>
 
         <activity android:name="org.mozilla.gecko.GeckoPreferences"
-                  android:theme="@style/Gecko.TitleBar"
+                  android:theme="@style/Gecko.TitleBar.Preferences"
                   android:label="@string/settings_title"
                   android:excludeFromRecents="true"/>
 
