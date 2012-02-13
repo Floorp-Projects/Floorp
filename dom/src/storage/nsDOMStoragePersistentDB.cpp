@@ -188,7 +188,8 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
          "key TEXT, "
          "value TEXT, "
          "secure INTEGER, "
-         "owner TEXT)"));
+         "owner TEXT, "
+         "modified INTEGER DEFAULT 0)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -199,9 +200,9 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
 
   rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "CREATE TEMPORARY VIEW webappsstore2_view AS "
-        "SELECT * FROM webappsstore2_temp "
+        "SELECT scope, key, value, secure, owner FROM webappsstore2_temp "
         "UNION ALL "
-        "SELECT * FROM webappsstore2 "
+        "SELECT scope, key, value, secure, owner FROM webappsstore2 "
           "WHERE NOT EXISTS ("
             "SELECT scope, key FROM webappsstore2_temp "
             "WHERE scope = webappsstore2.scope AND key = webappsstore2.key)"));
@@ -302,8 +303,8 @@ nsDOMStoragePersistentDB::EnsureLoadTemporaryTableForStorage(DOMStorageImpl* aSt
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageStatement> stmt = mStatements.GetCachedStatement(
-      "INSERT INTO webappsstore2_temp "
-        "SELECT * FROM webappsstore2 "
+      "INSERT INTO webappsstore2_temp (scope, key, value, secure, owner) "
+        "SELECT scope, key, value, secure, owner FROM webappsstore2 "
         "WHERE scope = :scope "
           "AND NOT EXISTS ( "
             "SELECT scope, key FROM webappsstore2_temp "
@@ -344,8 +345,8 @@ nsDOMStoragePersistentDB::FlushTemporaryTable(nsCStringHashKey::KeyType aKey,
     nsCOMPtr<mozIStorageStatement> stmt =
       data->mDB->mStatements.GetCachedStatement(
         "INSERT OR REPLACE INTO webappsstore2 "
-         "SELECT * FROM webappsstore2_temp "
-         "WHERE scope = :scope "
+         "SELECT scope, key, value, secure, owner FROM webappsstore2_temp "
+         "WHERE scope = :scope AND modified = 1"
       );
     NS_ENSURE_TRUE(stmt, PL_DHASH_STOP);
     mozStorageStatementScoper scope(stmt);
@@ -539,8 +540,8 @@ nsDOMStoragePersistentDB::SetKey(DOMStorageImpl* aStorage,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageStatement> stmt = mStatements.GetCachedStatement(
-    "INSERT OR REPLACE INTO webappsstore2_temp (scope, key, value, secure) "
-    "VALUES (:scope, :key, :value, :secure) "
+    "INSERT OR REPLACE INTO webappsstore2_temp (scope, key, value, secure, modified) "
+    "VALUES (:scope, :key, :value, :secure, 1) "
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scopeinsert(stmt);
@@ -588,7 +589,7 @@ nsDOMStoragePersistentDB::SetSecure(DOMStorageImpl* aStorage,
 
   nsCOMPtr<mozIStorageStatement> stmt = mStatements.GetCachedStatement(
     "UPDATE webappsstore2_temp "
-    "SET secure = :secure "
+    "SET secure = :secure, modified = 1 "
     "WHERE scope = :scope "
       "AND key = :key "
   );
