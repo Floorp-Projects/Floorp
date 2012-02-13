@@ -1668,12 +1668,12 @@ abstract public class GeckoApp
 
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.gecko_app);
-
         mOrientation = getResources().getConfiguration().orientation;
 
+        setContentView(R.layout.gecko_app);
+
         if (Build.VERSION.SDK_INT >= 11) {
-            refreshActionBar();
+            mBrowserToolbar = (BrowserToolbar) GeckoActionBar.getCustomView(this);
         } else {
             mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         }

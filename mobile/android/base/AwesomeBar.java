@@ -108,14 +108,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         setContentView(R.layout.awesomebar);
 
         if (Build.VERSION.SDK_INT >= 11) {
-            RelativeLayout actionBarLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.awesomebar_search, null);
-
-            GeckoActionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
-                                                                                  ActionBar.DISPLAY_SHOW_HOME |
-                                                                                  ActionBar.DISPLAY_SHOW_TITLE |
-                                                                                  ActionBar.DISPLAY_USE_LOGO);
-            GeckoActionBar.setCustomView(this, actionBarLayout);
-
+            RelativeLayout actionBarLayout = (RelativeLayout) GeckoActionBar.getCustomView(this);
             mGoButton = (ImageButton) actionBarLayout.findViewById(R.id.awesomebar_button);
             mText = (AwesomeBarEditText) actionBarLayout.findViewById(R.id.awesomebar_text);
         } else {
