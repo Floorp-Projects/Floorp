@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -1199,6 +1199,9 @@ class StackFrame
 
     void methodjitStaticAsserts();
 
+  public:
+    void mark(JSTracer *trc);
+
     bool runningInIon() const {
         return !!(flags_ & RUNNING_IN_ION);
     }
@@ -1380,6 +1383,10 @@ class StackSegment
         return regs_ ? regs_->fp() : NULL;
     }
 
+    jsbytecode *maybepc() const {
+        return regs_ ? regs_->pc : NULL;
+    }
+
     CallArgsList &calls() const {
         JS_ASSERT(calls_);
         return *calls_;
@@ -1549,6 +1556,7 @@ class StackSpace
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
     void mark(JSTracer *trc);
+    void markFrameSlots(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc);
 
     /* We only report the committed size;  uncommitted size is uninteresting. */
     JS_FRIEND_API(size_t) sizeOfCommitted();
