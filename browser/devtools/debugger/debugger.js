@@ -41,6 +41,8 @@
 
 "use strict";
 
+Components.utils.import("resource:///modules/source-editor.jsm");
+
 var gInitialized = false;
 var gClient = null;
 var gTabClient = null;
@@ -255,11 +257,19 @@ var StackFrames = {
       DebuggerView.Stackframes.highlightFrame(this.selectedFrame, true);
     }
 
-    // Display the local variables.
     let frame = this.activeThread.cachedFrames[aDepth];
     if (!frame) {
       return;
     }
+    // Move the editor's caret to the proper line.
+    if (DebuggerView.Scripts.isSelected(frame.where.url) && frame.where.line) {
+      window.editor.setCaretPosition(frame.where.line - 1);
+    } else if (DebuggerView.Scripts.contains(frame.where.url)) {
+      DebuggerView.Scripts.selectScript(frame.where.url);
+      SourceScripts.onChange({ target: DebuggerView.Scripts._scripts });
+      window.editor.setCaretPosition(frame.where.line - 1);
+    }
+    // Display the local variables.
     let localScope = DebuggerView.Properties.localScope;
     localScope.empty();
     // Add "this".
@@ -435,9 +445,12 @@ var SourceScripts = {
   },
 
   /**
-   * Handler for the thread client's paused notification.
+   * Handler for the thread client's paused notification. This is triggered only
+   * once, to retrieve the list of scripts known to the server from before the
+   * client was ready to handle new script notifications.
    */
   onPaused: function SS_onPaused() {
+    this.activeThread.removeListener("paused", this.onPaused);
     this.activeThread.fillScripts();
   },
 
@@ -452,7 +465,6 @@ var SourceScripts = {
    * Handler for the thread client's scriptsadded notification.
    */
   onScripts: function SS_onScripts() {
-    this.onScriptsCleared();
     for each (let script in this.activeThread.cachedScripts) {
       this._addScript(script);
     }
@@ -468,10 +480,47 @@ var SourceScripts = {
   /**
    * Handler for changes on the selected source script.
    */
-  onChange: function SS_onClick(aEvent) {
+  onChange: function SS_onChange(aEvent) {
     let scripts = aEvent.target;
+    if (!scripts.selectedItem) {
+      return;
+    }
     let script = scripts.selectedItem.getUserData("sourceScript");
+    this.setEditorMode(script.url, script.contentType);
     this._showScript(script);
+  },
+
+  /**
+   * Sets the proper editor mode (JS or HTML) according to the specified
+   * content type, or by determining the type from the URL.
+   *
+   * @param string aUrl
+   *        The script URL.
+   * @param string aContentType [optional]
+   *        The script content type.
+   */
+  setEditorMode: function SS_setEditorMode(aUrl, aContentType) {
+    if (aContentType) {
+      if (/javascript/.test(aContentType)) {
+        window.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
+      } else {
+        window.editor.setMode(SourceEditor.MODES.HTML);
+      }
+      return;
+    }
+
+    let url = aUrl;
+    // Trim the query part.
+    let q = url.indexOf('?');
+    if (q > -1) {
+      url = url.slice(0, q);
+    }
+
+    if (url.slice(-3) == ".js") {
+      window.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
+    } else {
+      window.editor.setMode(SourceEditor.MODES.HTML);
+    }
   },
 
   /**
