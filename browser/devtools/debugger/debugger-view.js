@@ -38,9 +38,7 @@
  ***** END LICENSE BLOCK *****/
 "use strict";
 
-/*global Components, XPCOMUtils, Services, StackFrames, ThreadState, dump */
 const Cu = Components.utils;
-
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -1071,6 +1069,49 @@ DebuggerView.Scripts = {
   },
 
   /**
+   * Checks whether the script with the specified URL is among the scripts
+   * known to the debugger and shown in the list.
+   *
+   * @param string aUrl
+   *        The script URL.
+   */
+  contains: function DVS_contains(aUrl) {
+    if (this._scripts.getElementsByAttribute("value", aUrl).length > 0) {
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Checks whether the script with the specified URL is selected in the list.
+   *
+   * @param string aUrl
+   *        The script URL.
+   */
+  isSelected: function DVS_isSelected(aUrl) {
+    if (this._scripts.selectedItem &&
+        this._scripts.selectedItem.value == aUrl) {
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Selects the script with the specified URL from the list.
+   *
+   * @param string aUrl
+   *        The script URL.
+   */
+   selectScript: function DVS_selectScript(aUrl) {
+    for (let i = 0; i < this._scripts.itemCount; i++) {
+      if (this._scripts.getItemAtIndex(i).value == aUrl) {
+        this._scripts.selectedIndex = i;
+        break;
+      }
+    }
+   },
+
+  /**
    * Adds a script to the scripts container.
    * If the script already exists (was previously added), null is returned.
    * Otherwise, the newly created element is returned.
@@ -1086,7 +1127,7 @@ DebuggerView.Scripts = {
    */
   addScript: function DVS_addScript(aUrl, aSource, aScriptNameText) {
     // make sure we don't duplicate anything
-    if (this._scripts.getElementsByAttribute("value", aUrl).length > 0) {
+    if (this.contains(aUrl)) {
       return null;
     }
 

@@ -548,18 +548,6 @@ TiltUtils.getWindowId = function TU_getWindowId(aWindow)
 };
 
 /**
- * Gets the markup document viewer zoom for the currently selected browser.
- *
- * @param {Window} aChromeWindow
- *                 the top-level browser window
- *
- * @return {Number} the zoom ammount
- */
-TiltUtils.getDocumentZoom = function TU_getDocumentZoom(aChromeWindow) {
-  return aChromeWindow.gBrowser.selectedBrowser.markupDocumentViewer.fullZoom;
-};
-
-/**
  * Sets the markup document viewer zoom for the currently selected browser.
  *
  * @param {Window} aChromeWindow
