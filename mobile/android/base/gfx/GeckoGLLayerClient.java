@@ -142,7 +142,12 @@ public class GeckoGLLayerClient extends GeckoLayerClient
     public Bitmap getBitmap() {
         Log.e(LOGTAG, "### getBitmap");
         IntSize size = getBufferSize();
-        return Bitmap.createBitmap(size.width, size.height, Bitmap.Config.RGB_565);
+        try {
+            return Bitmap.createBitmap(size.width, size.height, Bitmap.Config.RGB_565);
+        } catch (OutOfMemoryError oom) {
+            Log.e(LOGTAG, "Unable to create bitmap", oom);
+            return null;
+        }
     }
 
     @Override
