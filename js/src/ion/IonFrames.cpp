@@ -48,7 +48,7 @@
 #include "IonFrames-inl.h"
 #include "Safepoints.h"
 #include "IonSpewer.h"
-
+#include "IonMacroAssembler.h"
 using namespace js;
 using namespace js::ion;
 
@@ -184,7 +184,7 @@ IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
 
     int32 invalidationDataOffset = ((int32 *) returnAddr)[-1];
     uint8 *ionScriptDataOffset = returnAddr + invalidationDataOffset;
-    IonScript *ionScript = (IonScript *) ((uintptr_t *) ionScriptDataOffset)[-1];
+    IonScript *ionScript = (IonScript *) Assembler::getPointer(ionScriptDataOffset);
     JS_ASSERT(ionScript->containsCodeAddress(returnAddr));
     *ionScriptOut = ionScript;
     return true;
@@ -430,5 +430,11 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     // Set the result.
     *scriptRes = script;
     *pcRes = pc;
+}
+
+void
+OsiIndex::fixUpOffset(MacroAssembler &masm)
+{
+    returnPointDisplacement_ = (uint32)masm.actualOffset((uint8*)returnPointDisplacement_);
 }
 

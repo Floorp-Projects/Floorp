@@ -1024,6 +1024,10 @@ class LSafepoint : public TempObject
         JS_ASSERT(!osiReturnPointOffset_);
         osiReturnPointOffset_ = osiReturnPointOffset;
     }
+    void fixupOffset(MacroAssembler *masm) {
+        osiReturnPointOffset_ = masm->actualOffset((uint8*)osiReturnPointOffset_);
+        safepointOffset_ = masm->actualOffset((uint8*)safepointOffset_);
+    }
 };
 
 class LInstruction::InputIterator

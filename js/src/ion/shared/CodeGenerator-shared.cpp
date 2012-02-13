@@ -44,7 +44,7 @@
 #include "ion/MIR.h"
 #include "CodeGenerator-shared-inl.h"
 #include "ion/IonSpewer.h"
-
+#include "ion/IonMacroAssembler.h"
 using namespace js;
 using namespace js::ion;
 
@@ -274,6 +274,7 @@ CodeGeneratorShared::encodeSafepoint(LSafepoint *safepoint)
 {
     if (safepoint->encoded())
         return;
+    safepoint->fixupOffset(&masm);
 
     uint32 safepointOffset = safepoints_.startEntry();
 
@@ -302,7 +303,6 @@ CodeGeneratorShared::encodeSafepoints()
 
         // All safepoints must have a valid OSI displacement.
         JS_ASSERT(safepoint->osiReturnPointOffset());
-
         encodeSafepoint(safepoint);
         it->resolve();
     }

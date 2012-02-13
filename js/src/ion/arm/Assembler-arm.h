@@ -889,6 +889,8 @@ class VFPImm {
     }
 };
 
+// A BOffImm is an immediate that is used for branches. Namely, it is the offset that will
+// be encoded in the branch instruction. This is the only sane way of constructing a branch.
 class BOffImm
 {
     uint32 data;
@@ -1215,11 +1217,27 @@ class Assembler
     void writeDataRelocation(BufferOffset offs) {
         tmpDataRelocations_.append(offs);
     }
+
+    enum RelocBranchStyle {
+        B_MOVWT,
+        B_LDR_BX,
+        B_LDR,
+        B_MOVW_ADD
+    };
+
+    enum RelocStyle {
+        L_MOVWT,
+        L_LDR
+    };
+
+  public:
     // Given the start of a Control Flow sequence, grab the value that is finally branched to
-    static uint32 * getCF32Target(Instruction *jump);
     // given the start of a function that loads an address into a register get the address that
     // ends up in the register.
-    static uint32 * getPtr32Target(Instruction *load, Register *dest = NULL);
+    static uint32 * getCF32Target(Instruction *jump);
+
+    static uintptr_t getPointer(uint8 *);
+    static uint32 * getPtr32Target(Instruction *load, Register *dest = NULL, RelocStyle *rs = NULL);
 
     bool oom() const;
   private:
@@ -1304,8 +1322,8 @@ class Assembler
     // Not quite ALU worthy, but useful none the less:
     // These also have the isue of these being formatted
     // completly differently from the standard ALU operations.
-    void as_movw(Register dest, Imm16 imm, Condition c = Always);
-    void as_movt(Register dest, Imm16 imm, Condition c = Always);
+    void as_movw(Register dest, Imm16 imm, Condition c = Always, Instruction *pos = NULL);
+    void as_movt(Register dest, Imm16 imm, Condition c = Always, Instruction *pos = NULL);
 
     void as_genmul(Register d1, Register d2, Register rm, Register rn,
                    MULOp op, SetCond_ sc, Condition c = Always);
@@ -1374,10 +1392,12 @@ class Assembler
 
     // VFP instructions!
   private:
+
     enum vfp_size {
         isDouble = 1 << 8,
         isSingle = 0 << 8
     };
+
     void writeVFPInst(vfp_size sz, uint32 blob, uint32 *dest=NULL);
     // Unityped variants: all registers hold the same (ieee754 single/double)
     // notably not included are vcvt; vmov vd, #imm; vmov rt, vn.
@@ -1600,31 +1620,13 @@ class Assembler
     static void writePoolFooter(uint8 *start, Pool *p);
     static void writePoolGuard(BufferOffset branch, Instruction *inst, BufferOffset dest);
 
-    // The size of an arbitrary 32-bit call in the instruction stream.
-    // On ARM this sequence is |pc = ldr pc - 4; imm32| given that we
-    // never reach the imm32.
-    static uint32 patchWrite_NearCallSize() {
-        return 2 * sizeof(uint32);
-    }
+
+    static uint32 patchWrite_NearCallSize();
+    static uint32 nopSize() { return 4; }
+    static void patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall);
     static void patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue,
-                                        ImmWord expectedValue) {
-        uint32 *ptr = (uint32 *) label.raw();
-        JS_ASSERT(*ptr == expectedValue.value);
-        *ptr = newValue.value;
-        JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(uintptr_t));
-    }
-    static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm) {
-        *label.raw() = imm.value;
-        JSC::ExecutableAllocator::cacheFlush(label.raw(), sizeof(uintptr_t));
-    }
-    static void patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall) {
-        uint32 *inst = (uint32 *) start.raw();
-        // ldr pc = [pc - 4]; // -4 because of the implicit +8
-        // imm32
-        inst[0] = 0xe51ffffc;
-        inst[1] = uintptr_t(toCall.raw());
-        JSC::ExecutableAllocator::cacheFlush(inst, 2 * sizeof(uintptr_t));
-    }
+                                        ImmWord expectedValue);
+    static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.

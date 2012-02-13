@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79:
  *
@@ -1333,5 +1334,30 @@ CodeGeneratorARM::visitRecompileCheck(LRecompileCheck *lir)
     masm.ma_cmp(tmp, Imm32(js_IonOptions.usesBeforeInlining));
     if (!bailoutIf(Assembler::AboveOrEqual, lir->snapshot()))
         return false;
+    return true;
+}
+
+bool
+CodeGeneratorARM::generateInvalidateEpilogue()
+{
+    // Ensure that there is enough space in the buffer for the OsiPoint
+    // patching to occur. Otherwise, we could overwrite the invalidation
+    // epilogue.
+    for (size_t i = 0; i < sizeof(void *); i+= Assembler::nopSize())
+        masm.nop();
+
+    masm.bind(&invalidate_);
+
+    // Push the return address of the point that we bailed out at onto the stack
+    masm.Push(lr);
+
+    // Push the Ion script onto the stack (when we determine what that pointer is).
+    invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
+    IonCode *thunk = gen->cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(gen->cx);
+    masm.branch(thunk);
+
+    // We should never reach this point in JIT code -- the invalidation thunk should
+    // pop the invalidated JS frame and return directly to its caller.
+    masm.breakpoint();
     return true;
 }
