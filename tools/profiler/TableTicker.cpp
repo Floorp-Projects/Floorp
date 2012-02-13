@@ -45,9 +45,10 @@
 #include "prenv.h"
 #include "shared-libraries.h"
 #include "mozilla/StringBuilder.h"
+#include "mozilla/StackWalk.h"
 
 // we eventually want to make this runtime switchable
-#if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_UNIX))
+#if defined(MOZ_PROFILING) && (defined(XP_UNIX) && !defined(XP_MACOSX))
  #ifndef ANDROID
   #define USE_BACKTRACE
  #endif
@@ -56,7 +57,7 @@
  #include <execinfo.h>
 #endif
 
-#if defined(MOZ_PROFILING) && defined(XP_WIN)
+#if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
  #define USE_NS_STACKWALK
 #endif
 #ifdef USE_NS_STACKWALK
@@ -353,7 +354,7 @@ class TableTicker: public Sampler {
 
 private:
   // Not implemented on platforms which do not support backtracing
-  void doBacktrace(Profile &aProfile);
+  void doBacktrace(Profile &aProfile, Address pc);
 
 private:
   Profile mProfile;
@@ -419,8 +420,9 @@ void TableTicker::HandleSaveRequest()
   NS_DispatchToMainThread(runnable);
 }
 
+
 #ifdef USE_BACKTRACE
-void TableTicker::doBacktrace(Profile &aProfile)
+void TableTicker::doBacktrace(Profile &aProfile, Address pc)
 {
   void *array[100];
   int count = backtrace (array, 100);
@@ -433,6 +435,7 @@ void TableTicker::doBacktrace(Profile &aProfile)
   }
 }
 #endif
+
 
 #ifdef USE_NS_STACKWALK
 typedef struct {
@@ -452,17 +455,23 @@ void StackWalkCallback(void* aPC, void* aClosure)
   array->array[array->count++] = aPC;
 }
 
-void TableTicker::doBacktrace(Profile &aProfile)
+void TableTicker::doBacktrace(Profile &aProfile, Address fp)
 {
+#ifndef XP_MACOSX
   uintptr_t thread = GetThreadHandle(platform_data());
   MOZ_ASSERT(thread);
+#endif
   void* pc_array[1000];
   PCArray array = {
     pc_array,
     mozilla::ArrayLength(pc_array),
     0
   };
+#ifdef XP_MACOSX
+  nsresult rv = FramePointerStackWalk(StackWalkCallback, 1, &array, reinterpret_cast<void**>(fp));
+#else
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
+#endif
   if (NS_SUCCEEDED(rv)) {
     aProfile.addTag(ProfileEntry('s', "(root)", 0));
 
@@ -539,7 +548,7 @@ void TableTicker::Tick(TickSample* sample)
 
 #if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
   if (mUseStackWalk) {
-    doBacktrace(mProfile);
+    doBacktrace(mProfile, sample->fp);
   } else {
     doSampleStackTrace(mStack, mProfile, sample);
   }

@@ -64,7 +64,7 @@ ImmutableSync::init(JSContext *cx, const FrameState &frame, uint32_t nentries)
     this->cx = cx;
     this->frame = &frame;
 
-    entries = (SyncEntry *)cx->calloc_(sizeof(SyncEntry) * nentries);
+    entries = (SyncEntry *)OffTheBooks::calloc_(sizeof(SyncEntry) * nentries);
     return !!entries;
 }
 

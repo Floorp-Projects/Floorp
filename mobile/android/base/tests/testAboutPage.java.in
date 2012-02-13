@@ -1,0 +1,47 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.util.Log;
+
+public class testAboutPage extends BaseTest {
+    public void testAboutPage() {
+        setTestType("mochitest");
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        // Load the about: page
+        String url = "about:";
+        loadUrl(url);
+
+        Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
+        mAsserter.ok(awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox)"), "page title match", "about: page title is correct");
+
+        // Open a new page to remove the about: page from the current tab
+        url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        loadUrl(url);
+
+        // Use the menu to open the Settings
+        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+
+        // Look for the 'More' menu if this device/OS uses it
+        if (mSolo.waitForText("^More$")) {
+            mSolo.clickOnText("^More$");
+        }
+
+        mSolo.waitForText("^Settings$");
+        mSolo.clickOnText("^Settings$");
+
+        // Tap on the "About Xxxx" setting
+        mSolo.waitForText("About (Fennec|Nightly|Aurora|Firefox)");
+        mSolo.clickOnText("About (Fennec|Nightly|Aurora|Firefox)");
+
+        // Wait for the new tab and page to load
+        mActions.expectGeckoEvent("Tab:Added").blockForEvent();
+        mActions.expectGeckoEvent("DOMContentLoaded").blockForEvent();
+
+        // Grab the title to make sure the about: page was loaded
+        awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
+        mAsserter.ok(awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox)"), "page title match", "about: page title is correct");
+    }
+}
