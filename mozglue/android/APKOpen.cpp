@@ -81,6 +81,8 @@ enum StartupEvent {
 #undef mozilla_StartupTimeline_Event
 };
 
+using namespace mozilla;
+
 static uint64_t *sStartupTimeline;
 
 void StartupTimeline_Record(StartupEvent ev, struct timeval *tm)
@@ -651,7 +653,7 @@ loadGeckoLibs(const char *apkName)
   struct rusage usage1;
   getrusage(RUSAGE_THREAD, &usage1);
   
-  Zip *zip = new Zip(apkName);
+  RefPtr<Zip> zip = new Zip(apkName);
 
 #ifdef MOZ_CRASHREPORTER
   file_ids = (char *)extractBuf("lib.id", zip);
@@ -681,8 +683,6 @@ loadGeckoLibs(const char *apkName)
   MOZLOAD("softokn3");
 #undef MOZLOAD
 #endif
-
-  delete zip;
 
 #ifdef MOZ_CRASHREPORTER
   free(file_ids);
@@ -749,7 +749,7 @@ static void loadSQLiteLibs(const char *apkName)
     apk_mtime = status.st_mtime;
 #endif
 
-  Zip *zip = new Zip(apkName);
+  RefPtr<Zip> zip = new Zip(apkName);
   lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
 
 #ifdef MOZ_CRASHREPORTER
@@ -766,8 +766,6 @@ static void loadSQLiteLibs(const char *apkName)
   sqlite_handle = MOZLOAD("mozsqlite3");
 #undef MOZLOAD
 #endif
-
-  delete zip;
 
 #ifdef MOZ_CRASHREPORTER
   free(file_ids);
