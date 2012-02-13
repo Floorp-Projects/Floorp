@@ -129,8 +129,17 @@
 #  define MFBT_API(type)        MOZ_EXPORT_API(type)
 #  define MFBT_DATA(type)       MOZ_EXPORT_DATA(type)
 #else
-#  define MFBT_API(type)        MOZ_IMPORT_API(type)
-#  define MFBT_DATA(type)       MOZ_IMPORT_DATA(type)
+  /*
+   * When mozglue is linked in the program, we need the MFBT API symbols
+   * to be weak.
+   */
+#  if defined(MOZ_GLUE_IN_PROGRAM)
+#    define MFBT_API(type)        __attribute__((weak)) MOZ_IMPORT_API(type)
+#    define MFBT_DATA(type)       __attribute__((weak)) MOZ_IMPORT_DATA(type)
+#  else
+#    define MFBT_API(type)        MOZ_IMPORT_API(type)
+#    define MFBT_DATA(type)       MOZ_IMPORT_DATA(type)
+#  endif
 #endif
 
 /*
