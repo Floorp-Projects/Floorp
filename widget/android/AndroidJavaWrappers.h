@@ -272,11 +272,15 @@ public:
     void GetViewTransform(AndroidViewTransform& aViewTransform);
     void CreateFrame(AndroidLayerRendererFrame& aFrame, float aXOffset, float aYOffset,
                      float aZoomFactor);
+    void ActivateProgram();
+    void DeactivateProgram();
 
 private:
     static jclass jGeckoGLLayerClientClass;
     static jmethodID jGetViewTransformMethod;
     static jmethodID jCreateFrameMethod;
+    static jmethodID jActivateProgramMethod;
+    static jmethodID jDeactivateProgramMethod;
 
     AndroidGeckoGLLayerClientViewTransformGetter mViewTransformGetter;
 };
