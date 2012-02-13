@@ -155,6 +155,13 @@ GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *re
     return true;
 }
 
+bool
+ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
+{
+    *output = !js_ValueToBoolean(input);
+    return true;
+}
+
 } // namespace ion
 } // namespace js
 

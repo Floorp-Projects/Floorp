@@ -96,7 +96,7 @@ IonBuilder::CFGState::If(jsbytecode *join, MBasicBlock *ifFalse)
 }
 
 IonBuilder::CFGState
-IonBuilder::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse) 
+IonBuilder::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse)
 {
     CFGState state;
     // If the end of the false path is the same as the start of the
@@ -382,7 +382,7 @@ IonBuilder::rewriteParameters()
         //   v0 = Parameter(0)
         //   v1 = Unbox(v0, INT32)
         //   --   ResumePoint(v0)
-        // 
+        //
         // As usual, it would be invalid for v1 to be captured in the initial
         // resume point, rather than v0.
         current->add(actual);
@@ -772,6 +772,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_LENGTH:
         return jsop_length();
 
+      case JSOP_NOT:
+        return jsop_not();
+
       case JSOP_THIS:
         return jsop_this();
 
@@ -956,22 +959,22 @@ IonBuilder::processIfElseFalseEnd(CFGState &state)
 {
     // Update the state to have the latest block from the false path.
     state.branch.ifFalse = current;
-  
+
     // To create the join node, we need an incoming edge that has not been
     // terminated yet.
     MBasicBlock *pred = state.branch.ifTrue
                         ? state.branch.ifTrue
                         : state.branch.ifFalse;
     MBasicBlock *other = (pred == state.branch.ifTrue) ? state.branch.ifFalse : state.branch.ifTrue;
-  
+
     if (!pred)
         return ControlStatus_Ended;
-  
+
     // Create a new block to represent the join.
     MBasicBlock *join = newBlock(pred, state.branch.falseEnd);
     if (!join)
         return ControlStatus_Error;
-  
+
     // Create edges from the true and false blocks as needed.
     pred->end(MGoto::New(join));
 
@@ -1312,7 +1315,7 @@ IonBuilder::processTableSwitchEnd(CFGState &state)
 
     // Create successor block.
     // If there are breaks, create block with breaks as predecessor
-    // Else create a block with current as predecessor 
+    // Else create a block with current as predecessor
     MBasicBlock *successor = NULL;
     if (state.tableswitch.breaks)
         successor = createBreakCatchBlock(state.tableswitch.breaks, state.tableswitch.exitpc);
@@ -1323,7 +1326,7 @@ IonBuilder::processTableSwitchEnd(CFGState &state)
         return ControlStatus_Ended;
 
     // If there is current, the current block flows into this one.
-    // So current is also a predecessor to this block 
+    // So current is also a predecessor to this block
     if (current) {
         current->end(MGoto::New(successor));
         if (state.tableswitch.breaks)
@@ -1473,7 +1476,7 @@ IonBuilder::maybeLoop(JSOp op, jssrcnote *sn)
             if (SN_TYPE(sn) == SRC_WHILE)
                 return doWhileLoop(op, sn);
             // Build a mapping such that given a basic block, whose successor
-            // has a phi 
+            // has a phi
 
             // for (; ; update?)
             if (SN_TYPE(sn) == SRC_FOR)
@@ -1777,11 +1780,11 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     jsbytecode *casepc = NULL;
     for (jsint i = 0; i < high-low+1; i++) {
         casepc = pc + GET_JUMP_OFFSET(pc2);
-        
+
         JS_ASSERT(casepc >= pc && casepc <= exitpc);
 
         // If the casepc equals the current pc, it is not a written case,
-        // but a filled gap. That way we can use a tableswitch instead of 
+        // but a filled gap. That way we can use a tableswitch instead of
         // lookupswitch, even if not all numbers are consecutive.
         if (casepc == pc) {
             tableswitch->addCase(defaultcase, true);
@@ -1802,7 +1805,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     qsort(tableswitch->successors(), tableswitch->numSuccessors(),
           sizeof(MBasicBlock*), CmpSuccessors);
 
-    // Create info 
+    // Create info
     ControlFlowInfo switchinfo(cfgStack_.length(), exitpc);
     if (!switches_.append(switchinfo))
         return ControlStatus_Error;
@@ -2052,15 +2055,15 @@ IonBuilder::jsop_bitop(JSOp op)
       case JSOP_BITXOR:
         ins = MBitXor::New(left, right);
         break;
-        
+
       case JSOP_LSH:
         ins = MLsh::New(left, right);
         break;
-        
+
       case JSOP_RSH:
         ins = MRsh::New(left, right);
         break;
-        
+
       case JSOP_URSH:
         ins = MUrsh::New(left, right);
         break;
@@ -3414,6 +3417,33 @@ GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom, size_t *slot
     types->addFreeze(cx);
 
     *slotp = propertyTypes->definiteSlot();
+    return true;
+}
+
+bool
+IonBuilder::jsop_not()
+{
+    MIRType type = oracle->unaryOp(script, pc).ival;
+
+    // Pop input
+    MDefinition *value = current->pop();
+
+    // Get the String length for String operands
+    if (type == MIRType_String) {
+        MStringLength *len = new MStringLength(value);
+        current->add(len);
+
+        type = MIRType_Int32;
+        value = len;
+    }
+
+    // Create instruction
+    MNot *ins = new MNot(value);
+    ins->infer(type);
+
+    // Add instruction to current block
+    current->add(ins);
+    current->push(ins);
     return true;
 }
 

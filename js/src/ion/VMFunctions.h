@@ -304,6 +304,8 @@ bool LessThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *
 bool GreaterThan(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
 bool GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
 
+bool ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output);
+
 } // namespace ion
 } // namespace js
 
