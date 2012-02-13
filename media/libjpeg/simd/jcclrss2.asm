@@ -16,6 +16,8 @@
 %include "jcolsamp.inc"
 
 ; --------------------------------------------------------------------------
+	SECTION	SEG_TEXT
+	BITS	32
 ;
 ; Convert some rows of samples to the output colorspace.
 ;
