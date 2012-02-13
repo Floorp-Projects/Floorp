@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matt Woodrow <mwoodrow@mozilla.com>
+ *   George Wright <george@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,54 +35,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_GFX_SCALEDFONTBASE_H_
-#define MOZILLA_GFX_SCALEDFONTBASE_H_
+#include "ScaledFontFreetype.h"
 
-#include "2D.h"
+#include "gfxFont.h"
 
 #ifdef USE_SKIA
 #include "skia/SkTypeface.h"
 #endif
-#ifdef USE_CAIRO
-#include "cairo.h"
-#endif
 
-class gfxFont;
+using namespace std;
 
 namespace mozilla {
 namespace gfx {
 
-class ScaledFontBase : public ScaledFont
+#ifdef USE_SKIA
+static SkTypeface::Style
+gfxFontStyleToSkia(const gfxFontStyle* aStyle)
 {
-public:
-  ScaledFontBase(Float aSize);
-  virtual ~ScaledFontBase();
+  if (aStyle->style == NS_FONT_STYLE_ITALIC) {
+    if (aStyle->weight == NS_FONT_WEIGHT_BOLD) {
+      return SkTypeface::kBoldItalic;
+    }
+    return SkTypeface::kItalic;
+  }
+  if (aStyle->weight == NS_FONT_WEIGHT_BOLD) {
+    return SkTypeface::kBold;
+  }
+  return SkTypeface::kNormal;
+}
+#endif
 
-  virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
+// Ideally we want to use FT_Face here but as there is currently no way to get
+// an SkTypeface from an FT_Face we do this.
+ScaledFontFreetype::ScaledFontFreetype(gfxFont* aFont, Float aSize)
+  : ScaledFontBase(aSize)
+{
 #ifdef USE_SKIA
-  virtual SkTypeface* GetSkTypeface() { return mTypeface; }
+  NS_LossyConvertUTF16toASCII name(aFont->GetName());
+  mTypeface = SkTypeface::CreateFromName(name.get(), gfxFontStyleToSkia(aFont->GetStyle()));
 #endif
-
-  // Not true, but required to instantiate a ScaledFontBase.
-  virtual FontType GetType() const { return FONT_SKIA; }
-
-#ifdef USE_CAIRO
-  cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
-  void SetCairoScaledFont(cairo_scaled_font_t* font);
-#endif
-
-protected:
-  friend class DrawTargetSkia;
-#ifdef USE_SKIA
-  SkTypeface* mTypeface;
-#endif
-#ifdef USE_CAIRO
-  cairo_scaled_font_t* mScaledFont;
-#endif
-  Float mSize;
-};
+}
 
 }
 }
-
-#endif /* MOZILLA_GFX_SCALEDFONTBASE_H_ */

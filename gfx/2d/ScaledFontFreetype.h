@@ -35,54 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZILLA_GFX_SCALEDFONTBASE_H_
-#define MOZILLA_GFX_SCALEDFONTBASE_H_
+#ifndef MOZILLA_GFX_SCALEDFONTFREETYPE_H_
+#define MOZILLA_GFX_SCALEDFONTFREETYPE_H_
 
-#include "2D.h"
-
-#ifdef USE_SKIA
-#include "skia/SkTypeface.h"
-#endif
-#ifdef USE_CAIRO
-#include "cairo.h"
-#endif
-
-class gfxFont;
+#include "ScaledFontBase.h"
 
 namespace mozilla {
 namespace gfx {
 
-class ScaledFontBase : public ScaledFont
+class ScaledFontFreetype : public ScaledFontBase
 {
 public:
-  ScaledFontBase(Float aSize);
-  virtual ~ScaledFontBase();
 
-  virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
-#ifdef USE_SKIA
-  virtual SkTypeface* GetSkTypeface() { return mTypeface; }
-#endif
-
-  // Not true, but required to instantiate a ScaledFontBase.
-  virtual FontType GetType() const { return FONT_SKIA; }
-
-#ifdef USE_CAIRO
-  cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
-  void SetCairoScaledFont(cairo_scaled_font_t* font);
-#endif
-
-protected:
-  friend class DrawTargetSkia;
-#ifdef USE_SKIA
-  SkTypeface* mTypeface;
-#endif
-#ifdef USE_CAIRO
-  cairo_scaled_font_t* mScaledFont;
-#endif
-  Float mSize;
+  ScaledFontFreetype(gfxFont* aFont, Float aSize);
 };
 
 }
 }
 
-#endif /* MOZILLA_GFX_SCALEDFONTBASE_H_ */
+#endif /* MOZILLA_GFX_SCALEDFONTFREETYPE_H_ */
