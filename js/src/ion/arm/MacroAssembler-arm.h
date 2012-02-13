@@ -77,7 +77,7 @@ class MacroAssemblerARM : public Assembler
     void ma_alu(Register src1, Operand op2, Register dest, ALUOp op,
                 SetCond_ sc = NoSetCond, Condition c = Always);
     void ma_nop();
-
+    void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c, RelocStyle rs, Instruction *i = NULL);
     // These should likely be wrapped up as a set of macros
     // or something like that.  I cannot think of a good reason
     // to explicitly have all of this code.
@@ -266,6 +266,7 @@ class MacroAssemblerARM : public Assembler
 
     // branches when done from within arm-specific code
     void ma_b(Label *dest, Condition c = Always);
+    void ma_bx(Register dest, Condition c = Always);
 
     void ma_b(void *target, Relocation::Kind reloc, Condition c = Always);
 
@@ -310,6 +311,7 @@ class MacroAssemblerARM : public Assembler
     void ma_callIonNoPush(const Register reg);
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callIonHalfPush(const Register reg);
+
     void ma_call(void *dest);
 };
 
@@ -394,16 +396,23 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
          * set up a branch + link node.
          */
     }
-    void call(void *dest) {
-        ma_call(dest);
-        /* we can blx to it if it close by, otherwise, we need to
-         * set up a branch + link node.
-         */
-    }
     void call(ImmWord word) {
-        call((void *) word.value);
+        BufferOffset bo = m_buffer.nextOffset();
+        addPendingJump(bo, (void*)word.value, Relocation::HARDCODED);
+        ma_call((void *) word.value);
     }
-
+    void call(IonCode *c) {
+        BufferOffset bo = m_buffer.nextOffset();
+        addPendingJump(bo, c->raw(), Relocation::IONCODE);
+        ma_mov(Imm32((uint32)c->raw()), ScratchRegister);
+        ma_callIonHalfPush(ScratchRegister);
+    }
+    void branch(IonCode *c) {
+        BufferOffset bo = m_buffer.nextOffset();
+        addPendingJump(bo, c->raw(), Relocation::IONCODE);
+        ma_mov(Imm32((uint32)c->raw()), ScratchRegister);
+        ma_bx(ScratchRegister);
+    }
     void nop() {
         ma_nop();
     }
@@ -427,7 +436,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     CodeOffsetLabel pushWithPatch(ImmWord imm) {
         CodeOffsetLabel label = currentOffset();
-        push(Imm32(imm.value));
+        ma_movPatchable(Imm32(imm.value), ScratchRegister, Always, L_MOVWT);
+        ma_push(ScratchRegister);
         return label;
     }
 
@@ -622,7 +632,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         storeValue(val, Operand(dest));
     }
     void storeValue(JSValueType type, Register reg, Address dest) {
-        JS_NOT_REACHED("NYI");
+        ma_mov(ImmTag(JSVAL_TYPE_TO_TAG(type)), ScratchRegister);
+        ma_str(ScratchRegister, Address(dest.base, dest.offset + 4));
+        ma_str(reg, dest);
     }
     void storeValue(ValueOperand val, const BaseIndex &dest) {
         // Harder cases not handled yet.
@@ -630,7 +642,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         storeValue(val, dest.base, dest.index);
     }
     void storeValue(const Value &val, Address dest) {
-        JS_NOT_REACHED("NYI");
+        jsval_layout jv = JSVAL_TO_IMPL(val);
+        ma_mov(Imm32(jv.s.tag), ScratchRegister);
+        ma_str(ScratchRegister, Address(dest.base, dest.offset + 4));
+        if (val.isGCThing())
+            ma_mov(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())), ScratchRegister);
+        else
+            ma_mov(Imm32(jv.s.payload.i32), ScratchRegister);
+        ma_str(ScratchRegister, dest);
     }
 
     void loadValue(Address src, ValueOperand val);

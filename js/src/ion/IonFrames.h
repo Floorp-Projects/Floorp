@@ -158,6 +158,7 @@ class SafepointIndex
     inline bool hasSnapshotOffset() const;
 };
 
+class MacroAssembler;
 // The OSI point is patched to a call instruction. Therefore, the
 // returnPoint for an OSI call is the address immediately following that
 // call instruction. The displacement of that point within the assembly
@@ -179,6 +180,7 @@ class OsiIndex
     uint32 snapshotOffset() const {
         return snapshotOffset_;
     }
+    void fixUpOffset(MacroAssembler &masm);
 };
 
 // The layout of an Ion frame on the C stack is roughly:

@@ -57,7 +57,7 @@ namespace ion {
 
 class OutOfLineCode;
 class CodeGenerator;
-
+class MacroAssembler;
 class CodeGeneratorShared : public LInstructionVisitor
 {
     js::Vector<OutOfLineCode *, 0, SystemAllocPolicy> outOfLineCode_;

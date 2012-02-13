@@ -331,10 +331,10 @@ IonCompartment::generateInvalidator(JSContext *cx)
                                    sizeof(void *) * Registers::Total;
 
     masm.ma_ldr(Address(sp, 0), r1);
-    // Add 8 to make up for the 8 bytes of padding that were added to align the stack after
-    // the return-val was allocated.
     // Add an additional 16 to make up the difference between the bottom and top of the frame.
-    masm.ma_add(sp, Imm32(BailoutDataSize + 16 + 8), sp);
+    // this 8 here is magic.  Sometimes, it crashes with it, sometimes it crashes without it.
+    // I suspect I don't fully understand what is going on here.
+    masm.ma_add(sp, Imm32(BailoutDataSize + sizeof(size_t) * 2), sp);
     masm.ma_add(sp, r1, sp);
     generateBailoutTail(masm);
     Linker linker(masm);

@@ -971,6 +971,27 @@ CodeGeneratorX86Shared::createArrayElementOperand(Register elements, const LAllo
 
     return Operand(elements, ToRegister(index), TimesEight);
 }
+bool
+CodeGeneratorX86Shared::generateInvalidateEpilogue()
+{
+    // Ensure that there is enough space in the buffer for the OsiPoint
+    // patching to occur. Otherwise, we could overwrite the invalidation
+    // epilogue.
+    for (size_t i = 0; i < sizeof(void *); i+= Assembler::nopSize())
+        masm.nop();
+
+    masm.bind(&invalidate_);
+
+    // Push the Ion script onto the stack (when we determine what that pointer is).
+    invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
+    IonCode *thunk = gen->cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(gen->cx);
+    masm.call(thunk);
+
+    // We should never reach this point in JIT code -- the invalidation thunk should
+    // pop the invalidated JS frame and return directly to its caller.
+    masm.breakpoint();
+    return true;
+}
 
 } // namespace ion
 } // namespace js

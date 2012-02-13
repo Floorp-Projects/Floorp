@@ -141,6 +141,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
     bool visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool);
+    bool generateInvalidateEpilogue();
 };
 
 // An out-of-line bailout thunk.

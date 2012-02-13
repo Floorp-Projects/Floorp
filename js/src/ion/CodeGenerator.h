@@ -64,7 +64,6 @@ class OutOfLineTypeOfV;
 class CodeGenerator : public CodeGeneratorSpecific
 {
     bool generateArgumentsChecks();
-    bool generateInvalidateEpilogue();
     bool generateBody();
 
   public:

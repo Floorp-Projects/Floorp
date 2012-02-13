@@ -772,29 +772,6 @@ CodeGenerator::generateArgumentsChecks()
     return true;
 }
 
-bool
-CodeGenerator::generateInvalidateEpilogue()
-{
-    // Ensure that there is enough space in the buffer for the OsiPoint
-    // patching to occur. Otherwise, we could overwrite the invalidation
-    // epilogue.
-    for (size_t i = 0; i < sizeof(void *); i++)
-        masm.nop();
-
-    masm.bind(&invalidate_);
-
-    // Push the Ion script onto the stack (when we determine what that pointer is).
-    invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
-    IonCode *thunk = gen->cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(gen->cx);
-    masm.call(thunk);
-#ifdef DEBUG
-    // We should never reach this point in JIT code -- the invalidation thunk should
-    // pop the invalidated JS frame and return directly to its caller.
-    masm.breakpoint();
-#endif
-    return true;
-}
-
 // Out-of-line path to report over-recursed error and fail.
 class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator>
 {
@@ -1377,9 +1354,6 @@ CodeGenerator::generate()
     if (!generateOutOfLineCode())
         return false;
 
-    // We encode safepoints after the OSI-point offsets have been determined.
-    encodeSafepoints();
-
     if (masm.oom())
         return false;
 
@@ -1387,6 +1361,9 @@ CodeGenerator::generate()
     IonCode *code = linker.newCode(cx);
     if (!code)
         return false;
+
+    // We encode safepoints after the OSI-point offsets have been determined.
+    encodeSafepoints();
 
     JSScript *script = gen->info().script();
     JS_ASSERT(!script->ion);
@@ -1401,7 +1378,7 @@ CodeGenerator::generate()
                                  cacheList_.length(), safepoints_.size());
     if (!script->ion)
         return false;
-
+    invalidateEpilogueData_.fixup(&masm);
     Assembler::patchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
                                        ImmWord(uintptr_t(script->ion)),
                                        ImmWord(uintptr_t(-1)));
@@ -1412,7 +1389,8 @@ CodeGenerator::generate()
     script->ion->setInvalidationEpilogueDataOffset(invalidateEpilogueData_.offset());
     script->ion->setOsrPc(gen->info().osrPc());
     script->ion->setOsrEntryOffset(getOsrEntryOffset());
-    script->ion->setInvalidationEpilogueOffset(invalidate_.offset());
+    ptrdiff_t real_invalidate = masm.actualOffset((uint8 *)invalidate_.offset());
+    script->ion->setInvalidationEpilogueOffset(real_invalidate);
 
     script->ion->setMethod(code);
     script->ion->setDeoptTable(deoptTable_);
@@ -1425,7 +1403,7 @@ CodeGenerator::generate()
     if (safepointIndices_.length())
         script->ion->copySafepointIndices(&safepointIndices_[0], masm);
     if (osiIndices_.length())
-        script->ion->copyOsiIndices(&osiIndices_[0]);
+        script->ion->copyOsiIndices(&osiIndices_[0], masm);
     if (cacheList_.length())
         script->ion->copyCacheEntries(&cacheList_[0], masm);
     if (safepoints_.size())

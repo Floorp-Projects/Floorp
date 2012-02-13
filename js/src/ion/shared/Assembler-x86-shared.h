@@ -870,7 +870,10 @@ class AssemblerX86Shared
     static size_t patchWrite_NearCallSize() {
         return 5;
     }
-
+    static uintptr_t getPointer(uint8 *instPtr) {
+        uintptr_t *ptr = ((uintptr_t *) instPtr) - 1;
+        return *ptr;
+    }
     // Write a relative call at the start location |dataLabel|.
     // Note that this DOES NOT patch data that comes before |label|.
     static void patchWrite_NearCall(CodeLocationLabel startLabel, CodeLocationLabel target) {
@@ -891,6 +894,9 @@ class AssemblerX86Shared
         uintptr_t *ptr = ((uintptr_t *) data.raw()) - 1;
         JS_ASSERT(*ptr == expectedData.value);
         *ptr = newData.value;
+    }
+    static uint32 nopSize() {
+        return 1;
     }
 };
 
