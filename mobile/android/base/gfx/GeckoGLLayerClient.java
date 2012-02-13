@@ -223,7 +223,7 @@ public class GeckoGLLayerClient extends GeckoLayerClient
     public LayerRenderer.Frame createFrame(float offsetX, float offsetY, float zoomFactor) {
         // Create the shaders and textures if necessary.
         if (!mLayerRendererInitialized) {
-            mLayerRenderer.onSurfaceCreated(null, null);
+            mLayerRenderer.createProgram();
             mLayerRendererInitialized = true;
         }
 
