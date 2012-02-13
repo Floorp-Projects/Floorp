@@ -237,7 +237,7 @@ struct JSGenerator {
     js::FrameRegs       regs;
     JSObject            *enumerators;
     js::StackFrame      *floating;
-    js::Value           floatingStack[1];
+    js::HeapValue       floatingStack[1];
 
     js::StackFrame *floatingFrame() {
         return floating;

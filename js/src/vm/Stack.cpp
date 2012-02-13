@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
 #include "jsgcmark.h"
 #include "methodjit/MethodJIT.h"
 #include "Stack.h"
@@ -125,21 +126,31 @@ StackFrame::initDummyFrame(JSContext *cx, JSObject &chain)
     setScopeChainNoCallObj(chain);
 }
 
+template <class T, class U, StackFrame::TriggerPostBarriers doPostBarrier>
 void
-StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
-                               Value *othervp, Value *othersp)
+StackFrame::stealFrameAndSlots(StackFrame *fp, T *vp, StackFrame *otherfp, U *othervp,
+                               Value *othersp)
 {
-    JS_ASSERT(vp == (Value *)this - ((Value *)otherfp - othervp));
-    JS_ASSERT(othervp == otherfp->actualArgs() - 2);
+    JS_ASSERT((U *)vp == (U *)this - ((U *)otherfp - othervp));
+    JS_ASSERT((Value *)othervp == otherfp->actualArgs() - 2);
     JS_ASSERT(othersp >= otherfp->slots());
     JS_ASSERT(othersp <= otherfp->base() + otherfp->numSlots());
+    JS_ASSERT((T *)fp - vp == (U *)otherfp - othervp);
 
-    PodCopy(vp, othervp, othersp - othervp);
-    JS_ASSERT(vp == this->actualArgs() - 2);
+    /* Copy args, StackFrame, and slots. */
+    U *srcend = (U *)otherfp->formalArgsEnd();
+    T *dst = vp;
+    for (U *src = othervp; src < srcend; src++, dst++)
+        *dst = *src;
 
-    /* Catch bad-touching of non-canonical args (e.g., generator_trace). */
-    if (otherfp->hasOverflowArgs())
-        Debug_SetValueRangeToCrashOnTouch(othervp, othervp + 2 + otherfp->numFormalArgs());
+    *fp = *otherfp;
+    if (doPostBarrier)
+        fp->writeBarrierPost();
+
+    srcend = (U *)othersp;
+    dst = (T *)fp->slots();
+    for (U *src = (U *)otherfp->slots(); src < srcend; src++, dst++)
+        *dst = *src;
 
     /*
      * Repoint Call, Arguments, Block and With objects to the new live frame.
@@ -164,6 +175,37 @@ StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
             JS_ASSERT(!argsobj.maybeStackFrame());
         otherfp->flags_ &= ~HAS_ARGS_OBJ;
     }
+}
+
+/* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
+template void StackFrame::stealFrameAndSlots<Value, HeapValue, StackFrame::NoPostBarrier>(
+                                             StackFrame *, Value *,
+                                             StackFrame *, HeapValue *, Value *);
+template void StackFrame::stealFrameAndSlots<HeapValue, Value, StackFrame::DoPostBarrier>(
+                                             StackFrame *, HeapValue *,
+                                             StackFrame *, Value *, Value *);
+
+void
+StackFrame::writeBarrierPost()
+{
+    /* This needs to follow the same rules as in js_TraceStackFrame. */
+    if (scopeChain_)
+        JSObject::writeBarrierPost(scopeChain_, (void *)&scopeChain_);
+    if (isDummyFrame())
+        return;
+    if (hasArgsObj())
+        JSObject::writeBarrierPost(argsObj_, (void *)&argsObj_);
+    if (isScriptFrame()) {
+        if (isFunctionFrame()) {
+            JSFunction::writeBarrierPost((JSObject *)exec.fun, (void *)&exec.fun);
+            if (isEvalFrame())
+                JSScript::writeBarrierPost(u.evalScript, (void *)&u.evalScript);
+        } else {
+            JSScript::writeBarrierPost(exec.script, (void *)&exec.script);
+        }
+    }
+    if (hasReturnValue())
+        HeapValue::writeBarrierPost(rval_, &rval_);
 }
 
 #ifdef DEBUG
@@ -831,8 +873,8 @@ bool
 ContextStack::pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrameGuard *gfg)
 {
     StackFrame *genfp = gen->floatingFrame();
-    Value *genvp = gen->floatingStack;
-    uintN vplen = (Value *)genfp - genvp;
+    HeapValue *genvp = gen->floatingStack;
+    uintN vplen = (HeapValue *)genfp - genvp;
 
     uintN nvars = vplen + VALUES_PER_STACK_FRAME + genfp->numSlots();
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &gfg->pushedSeg_);
@@ -858,7 +900,8 @@ ContextStack::pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrame
     JSObject::writeBarrierPre(genobj);
 
     /* Copy from the generator's floating frame to the stack. */
-    stackfp->stealFrameAndSlots(stackvp, genfp, genvp, gen->regs.sp);
+    stackfp->stealFrameAndSlots<Value, HeapValue, StackFrame::NoPostBarrier>(
+                                stackfp, stackvp, genfp, genvp, gen->regs.sp);
     stackfp->resetGeneratorPrev(cx);
     stackfp->unsetFloatingGenerator();
     gfg->regs_.rebaseFromTo(gen->regs, *stackfp);
@@ -874,7 +917,7 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
 {
     JSGenerator *gen = gfg.gen_;
     StackFrame *genfp = gen->floatingFrame();
-    Value *genvp = gen->floatingStack;
+    HeapValue *genvp = gen->floatingStack;
 
     const FrameRegs &stackRegs = gfg.regs_;
     StackFrame *stackfp = stackRegs.fp();
@@ -882,7 +925,8 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
 
     /* Copy from the stack to the generator's floating frame. */
     gen->regs.rebaseFromTo(stackRegs, *genfp);
-    genfp->stealFrameAndSlots(genvp, stackfp, stackvp, stackRegs.sp);
+    genfp->stealFrameAndSlots<HeapValue, Value, StackFrame::DoPostBarrier>(
+                              genfp, genvp, stackfp, stackvp, stackRegs.sp);
     genfp->setFloatingGenerator();
 
     /* ~FrameGuard/popFrame will finish the popping. */
