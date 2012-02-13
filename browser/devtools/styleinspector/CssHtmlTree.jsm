@@ -273,6 +273,7 @@ CssHtmlTree.prototype = {
     this._matchedProperties = null;
 
     if (this.htmlComplete) {
+      this.refreshSourceFilter();
       this.refreshPanel();
     } else {
       if (this._refreshProcess) {
@@ -281,6 +282,9 @@ CssHtmlTree.prototype = {
 
       CssHtmlTree.processTemplate(this.templateRoot, this.root, this);
 
+      // Refresh source filter ... this must be done after templateRoot has been
+      // processed.
+      this.refreshSourceFilter();
       this.numVisibleProperties = 0;
       let fragment = this.doc.createDocumentFragment();
       this._refreshProcess = new UpdateProcess(this.win, CssHtmlTree.propertyNames, {
@@ -362,21 +366,28 @@ CssHtmlTree.prototype = {
   },
 
   /**
-   * The change event handler for the onlyUserStyles checkbox. When
-   * onlyUserStyles.checked is true we do not display properties that have no
-   * matched selectors, and we do not display UA styles. If .checked is false we
-   * do display even properties with no matched selectors, and we include the UA
-   * styles.
+   * The change event handler for the onlyUserStyles checkbox.
    *
    * @param {Event} aEvent the DOM Event object.
    */
   onlyUserStylesChanged: function CssHtmltree_onlyUserStylesChanged(aEvent)
   {
+    this.refreshSourceFilter();
+    this.refreshPanel();
+  },
+
+  /**
+   * When onlyUserStyles.checked is true we only display properties that have
+   * matched selectors and have been included by the document or one of the
+   * document's stylesheets. If .checked is false we display all properties
+   * including those that come from UA stylesheets.
+   */
+  refreshSourceFilter: function CssHtmlTree_setSourceFilter()
+  {
     this._matchedProperties = null;
     this.cssLogic.sourceFilter = this.showOnlyUserStyles ?
                                  CssLogic.FILTER.ALL :
                                  CssLogic.FILTER.UA;
-    this.refreshPanel();
   },
 
   /**
