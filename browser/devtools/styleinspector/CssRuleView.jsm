@@ -181,8 +181,8 @@ ElementStyle.prototype = {
       let domRule = domRules.GetElementAt(i);
 
       // XXX: Optionally provide access to system sheets.
-      let systemSheet = CssLogic.isSystemStyleSheet(domRule.parentStyleSheet);
-      if (systemSheet) {
+      let contentSheet = CssLogic.isContentStylesheet(domRule.parentStyleSheet);
+      if (!contentSheet) {
         continue;
       }
 
