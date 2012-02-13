@@ -42,11 +42,23 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = mozglue
+LIBRARY_NAME = mfbt
+FORCE_STATIC_LIB = 1
+STL_FLAGS =
+
 DIRS =
 
 # exported_headers.mk defines the headers exported by mfbt.  It is included by
 # mfbt itself and by the JS engine, which, when built standalone, must do the
 # work to install mfbt's exported headers itself.
 include $(srcdir)/exported_headers.mk
+
+# sources.mk defines the source files built for mfbt. It is included by mfbt
+# itself and by the JS engine, which, when built standalone, must do the work
+# to build mfbt sources itself.
+include $(srcdir)/sources.mk
+
+DEFINES += -DIMPL_MFBT
 
 include $(topsrcdir)/config/rules.mk

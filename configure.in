@@ -9127,12 +9127,12 @@ ac_configure_args="$ac_configure_args --prefix=$dist"
 ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
-   if test -n "$MOZ_GLUE_LDFLAGS"; then
-     export MOZ_GLUE_LDFLAGS
-   fi
-   if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
-     export MOZ_GLUE_PROGRAM_LDFLAGS
-   fi
+fi
+if test -n "$MOZ_GLUE_LDFLAGS"; then
+   export MOZ_GLUE_LDFLAGS
+fi
+if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
+   export MOZ_GLUE_PROGRAM_LDFLAGS
 fi
 export MOZ_APP_NAME
 AC_OUTPUT_SUBDIRS(js/src)
