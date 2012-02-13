@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include "mozilla/Assertions.h"
 
 /**
  * On architectures that are little endian and that support unaligned reads,
@@ -280,7 +281,7 @@ public:
 
   void Init(const void *buf)
   {
-    // ASSERT(operator bool())
+    MOZ_ASSERT(contents == NULL);
     contents = reinterpret_cast<const T *>(buf);
   }
 
@@ -289,7 +290,7 @@ public:
    */
   const T &operator[](const idx_t index) const
   {
-    // ASSERT(operator bool())
+    MOZ_ASSERT(contents);
     return contents[index];
   }
 
@@ -346,7 +347,7 @@ public:
 
   void Init(const idx_t len)
   {
-    // ASSERT(length != 0)
+    MOZ_ASSERT(length == 0);
     length = len;
   }
 
@@ -372,8 +373,8 @@ public:
    */
   const T &operator[](const idx_t index) const
   {
-    // ASSERT(index < length)
-    // ASSERT(operator bool())
+    MOZ_ASSERT(index < length);
+    MOZ_ASSERT(operator bool());
     return UnsizedArray<T>::operator[](index);
   }
 
