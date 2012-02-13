@@ -623,7 +623,7 @@ public:
     mRefCnt.RemovePurple();
   }
 
-  static bool CanSkip(nsINode* aNode);
+  static bool CanSkip(nsINode* aNode, bool aRemovingAllowed);
   static bool CanSkipInCC(nsINode* aNode);
   static bool CanSkipThis(nsINode* aNode);
   static void MarkNodeChildren(nsINode* aNode);
