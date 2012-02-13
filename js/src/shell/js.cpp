@@ -4859,7 +4859,6 @@ JSSecurityCallbacks securityCallbacks = {
     CheckObjectAccess,
     NULL,
     NULL,
-    NULL,
     NULL
 };
 
