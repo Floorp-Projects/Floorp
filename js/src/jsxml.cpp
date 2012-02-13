@@ -233,11 +233,9 @@ JS_FRIEND_DATA(Class) js::NamespaceClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     JS_FinalizeStub,
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
-    NULL,                    /* xdrObject   */
     NULL,                    /* hasInstance */
     NULL,                    /* mark        */
     {
@@ -349,11 +347,9 @@ JS_FRIEND_DATA(Class) js::QNameClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     JS_FinalizeStub,
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
-    NULL,                    /* xdrObject   */
     NULL,                    /* hasInstance */
     NULL,                    /* mark        */
     {
@@ -5380,11 +5376,9 @@ JS_FRIEND_DATA(Class) js::XMLClass = {
     JS_ResolveStub,
     xml_convert,
     xml_finalize,
-    NULL,                 /* reserved0   */
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
     NULL,                 /* construct   */
-    NULL,                 /* xdrObject   */
     xml_hasInstance,
     xml_trace,
     JS_NULL_CLASS_EXT,
@@ -7932,11 +7926,9 @@ Class js_XMLFilterClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     xmlfilter_finalize,
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
-    NULL,                    /* xdrObject   */
     NULL,                    /* hasInstance */
     xmlfilter_trace
 };

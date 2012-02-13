@@ -848,8 +848,8 @@ js_SweepScriptFilenames(JSCompartment *comp);
 
 /*
  * New-script-hook calling is factored from NewScriptFromEmitter so that it
- * and callers of js_XDRScript can share this code.  In the case of callers
- * of js_XDRScript, the hook should be invoked only after successful decode
+ * and callers of XDRScript can share this code.  In the case of callers
+ * of XDRScript, the hook should be invoked only after successful decode
  * of any owning function (the fun parameter) or script object (null fun).
  */
 extern JS_FRIEND_API(void)
@@ -928,10 +928,8 @@ enum LineOption {
 inline void
 CurrentScriptFileLineOrigin(JSContext *cx, uintN *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
-}
-
 extern JSScript *
-js_CloneScript(JSContext *cx, JSScript *script);
+CloneScript(JSContext *cx, JSScript *script);
 
 /*
  * NB: after a successful JSXDR_DECODE, js_XDRScript callers must do any
@@ -939,6 +937,8 @@ js_CloneScript(JSContext *cx, JSScript *script);
  * js_CallNewScriptHook.
  */
 extern JSBool
-js_XDRScript(JSXDRState *xdr, JSScript **scriptp);
+XDRScript(JSXDRState *xdr, JSScript **scriptp);
+
+}
 
 #endif /* jsscript_h___ */

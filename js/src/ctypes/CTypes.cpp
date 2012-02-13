@@ -240,7 +240,7 @@ static JSClass sCTypeProtoClass = {
   JSCLASS_HAS_RESERVED_SLOTS(CTYPEPROTO_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CType::FinalizeProtoClass,
-  NULL, NULL, ConstructAbstract, ConstructAbstract, NULL, NULL, NULL, NULL
+  NULL, ConstructAbstract, ConstructAbstract
 };
 
 // Class representing ctypes.CData.prototype and the 'prototype' properties
@@ -258,8 +258,8 @@ static JSClass sCTypeClass = {
   JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CType::Finalize,
-  NULL, NULL, CType::ConstructData, CType::ConstructData, NULL,
-  CType::HasInstance, CType::Trace, NULL
+  NULL, CType::ConstructData, CType::ConstructData,
+  CType::HasInstance, CType::Trace
 };
 
 static JSClass sCDataClass = {
@@ -267,7 +267,7 @@ static JSClass sCDataClass = {
   JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS),
   JS_PropertyStub, JS_PropertyStub, ArrayType::Getter, ArrayType::Setter,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CData::Finalize,
-  NULL, NULL, FunctionType::Call, FunctionType::Call, NULL, NULL, NULL, NULL
+  NULL, FunctionType::Call, FunctionType::Call
 };
 
 static JSClass sCClosureClass = {
@@ -275,7 +275,7 @@ static JSClass sCClosureClass = {
   JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, CClosure::Finalize,
-  NULL, NULL, NULL, NULL, NULL, NULL, CClosure::Trace, NULL
+  NULL, NULL, NULL, NULL, CClosure::Trace
 };
 
 #define CTYPESFN_FLAGS \

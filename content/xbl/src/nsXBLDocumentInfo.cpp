@@ -194,7 +194,7 @@ JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
     nsXBLDocGlobalObject_getProperty, nsXBLDocGlobalObject_setProperty,
     JS_EnumerateStub, nsXBLDocGlobalObject_resolve,
     JS_ConvertStub, nsXBLDocGlobalObject_finalize,
-    NULL, nsXBLDocGlobalObject_checkAccess, NULL, NULL, NULL, NULL,
+    nsXBLDocGlobalObject_checkAccess, NULL, NULL, NULL,
     TraceXPCGlobal
 };
 
