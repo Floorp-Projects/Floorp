@@ -75,21 +75,6 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
   webProgress.addProgressListener(progressListener, flags);
 })();
 
-// WebApps - Application Cache
-function updateApplicationCache(window) {
-  try {
-    var cache = window.applicationCache;
-    cache.update();
-
-    cache.addEventListener('updateready', function updateReady(evt) {
-      // XXX Add a nice UI when an update is ready asking if the user
-      // want to reload the application now.
-      cache.swapCache();
-      window.document.location.reload();
-    });
-  } catch (e) {}
-}
-
 // MozKeyboard
 (function VirtualKeyboardManager() {
   let activeElement = null;
