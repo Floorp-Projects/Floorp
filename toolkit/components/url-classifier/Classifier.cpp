@@ -531,7 +531,6 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = store->AugmentAdds(AddPrefixHashes);
   NS_ENSURE_SUCCESS(rv, rv);
-  AddPrefixHashes.Clear();
 
   uint32 applied = 0;
   bool updateFreshness = false;
