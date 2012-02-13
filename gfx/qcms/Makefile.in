@@ -44,7 +44,6 @@ MODULE       = qcms
 LIBRARY_NAME = mozqcms
 LIBXUL_LIBRARY = 1
 GRE_MODULE      = 1
-DIST_INSTALL = 1
 
 EXPORTS      = qcms.h qcmstypes.h
 
