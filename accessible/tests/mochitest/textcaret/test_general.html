@@ -26,6 +26,16 @@
     }
 
     /**
+     * Test caret offset for the given accessible.
+     */
+    function testCaretOffset(aID, aCaretOffset)
+    {
+      var acc = getAccessible(aID, [nsIAccessibleText]);
+      is(acc.caretOffset, aCaretOffset,
+         "Wrong caret offset for " + aID);
+    }
+
+    /**
      * Do tests.
      */
     var gQueue = null;
@@ -36,6 +46,12 @@
     function doTests()
     {
       turnCaretBrowsing(true);
+
+      // test caret offsets
+      testCaretOffset(document, 14);
+      testCaretOffset("textbox", -1);
+      testCaretOffset("textarea", -1);
+      testCaretOffset("p", -1);
 
       // test caret move events and caret offsets
       gQueue = new eventQueue();
@@ -59,6 +75,11 @@
 <body>
 
   <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=448744"
+     title="caretOffset should return -1 if the system caret is not currently with in that particular object">
+    Mozilla Bug 448744
+  </a>
+  <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=524115"
      title="HyperText accessible should get focus when the caret is positioned inside of it, text is changed or copied into clipboard by ATs">
     Mozilla Bug 524115
@@ -68,12 +89,19 @@
      title="Position is not being updated when atk_text_set_caret_offset is used">
     Mozilla Bug 546068
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=725581"
+     title="caretOffset for textarea should be -1 when textarea doesn't have a focus">
+    Mozilla Bug 725581
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
   <input id="textbox" value="hello"/>
+  <textarea id="textarea">text<br>text</textarea>
+  <p id="p" contentEditable="true"><span>text</span><br/>text</p>
   <a id="link" href="about:">about mozilla</a>
   <h5 id="heading">heading</h5>
 

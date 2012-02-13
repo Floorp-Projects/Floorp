@@ -1236,6 +1236,7 @@ nsCSSValue::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
     case eCSSUnit_Pixel:
     case eCSSUnit_Degree:
     case eCSSUnit_Grad:
+    case eCSSUnit_Turn:
     case eCSSUnit_Radian:
     case eCSSUnit_Hertz:
     case eCSSUnit_Kilohertz:
