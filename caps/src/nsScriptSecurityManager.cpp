@@ -2170,8 +2170,7 @@ nsScriptSecurityManager::GetPrincipalFromContext(JSContext *cx,
 
 // static
 nsIPrincipal*
-nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx,
-                                            JSScript *script,
+nsScriptSecurityManager::GetScriptPrincipal(JSScript *script,
                                             nsresult* rv)
 {
     NS_PRECONDITION(rv, "Null out param");
@@ -2180,7 +2179,7 @@ nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx,
     {
         return nsnull;
     }
-    JSPrincipals *jsp = JS_GetScriptPrincipals(cx, script);
+    JSPrincipals *jsp = JS_GetScriptPrincipals(script);
     if (!jsp) {
         *rv = NS_ERROR_FAILURE;
         NS_ERROR("Script compiled without principals!");
@@ -2253,7 +2252,7 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
         return result;
     }
 
-    return GetScriptPrincipal(cx, script, rv);
+    return GetScriptPrincipal(script, rv);
 }
 
 nsIPrincipal*
@@ -2267,7 +2266,7 @@ nsScriptSecurityManager::GetFramePrincipal(JSContext *cx,
     {
         // Must be in a top-level script. Get principal from the script.
         JSScript *script = JS_GetFrameScript(cx, fp);
-        return GetScriptPrincipal(cx, script, rv);
+        return GetScriptPrincipal(script, rv);
     }
 
     nsIPrincipal* result = GetFunctionObjectPrincipal(cx, obj, fp, rv);
@@ -3381,7 +3380,6 @@ nsresult nsScriptSecurityManager::Init()
     static const JSSecurityCallbacks securityCallbacks = {
         CheckObjectAccess,
         nsJSPrincipals::Subsume,
-        nsJSPrincipals::Transcode,
         ObjectPrincipalFinder,
         ContentSecurityPolicyPermitsJSAction
     };
