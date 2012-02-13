@@ -527,8 +527,9 @@ nsFocusManager::MoveFocus(nsIDOMWindow* aWindow, nsIDOMElement* aStartElement,
 
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
+  bool noParentTraversal = aFlags & FLAG_NOPARENTFRAME;
   nsCOMPtr<nsIContent> newFocus;
-  nsresult rv = DetermineElementToMoveFocus(window, startContent, aType,
+  nsresult rv = DetermineElementToMoveFocus(window, startContent, aType, noParentTraversal,
                                             getter_AddRefs(newFocus));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2332,7 +2333,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
 nsresult
 nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
                                             nsIContent* aStartContent,
-                                            PRInt32 aType,
+                                            PRInt32 aType, bool aNoParentTraversal,
                                             nsIContent** aNextContent)
 {
   *aNextContent = nsnull;
@@ -2561,6 +2562,12 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
     doNavigation = true;
     skipOriginalContentCheck = false;
     ignoreTabIndex = false;
+
+    if (aNoParentTraversal) {
+      startContent = rootContent;
+      tabIndex = forward ? 1 : 0;
+      continue;
+    }
 
     // reached the beginning or end of the document. Traverse up to the parent
     // document and try again.
