@@ -193,7 +193,11 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         checkMonitoringEnabled();
+        createProgram();
+        activateProgram();
+    }
 
+    public void createProgram() {
         int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER);
         int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER);
 
@@ -211,20 +215,20 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         int maxTextureSizeResult[] = new int[1];
         GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSizeResult, 0);
         mMaxTextureSize = maxTextureSizeResult[0];
+    }
 
-        // TODO: Move these calls into a separate activate() call that is called before the
-        // underlay and overlay are rendered.
-
+    // Activates the shader program.
+    public void activateProgram() {
         // Add the program to the OpenGL environment
         GLES20.glUseProgram(mProgram);
 
         // Set the transformation matrix
         GLES20.glUniformMatrix4fv(mTMatrixHandle, 1, false, TEXTURE_MATRIX, 0);
 
-        // Enable the arrays from which we get the vertex and texture coordinates
         Log.e(LOGTAG, "### Position handle is " + mPositionHandle + ", texture handle is " +
               mTextureHandle + ", last error is " + GLES20.glGetError());
 
+        // Enable the arrays from which we get the vertex and texture coordinates
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glEnableVertexAttribArray(mTextureHandle);
 
@@ -232,10 +236,13 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         TextureGenerator.get().fill();
 
-        // NB: We must deactivate the program to avoid driver crashes on PowerVR.
         // TODO: Move these calls into a separate deactivate() call that is called after the
         // underlay and overlay are rendered.
+    }
 
+    // Deactivates the shader program. This must be done to avoid crashes after returning to the
+    // Gecko C++ compositor from Java.
+    public void deactivateProgram() {
         GLES20.glDisableVertexAttribArray(mTextureHandle);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glUseProgram(0);
