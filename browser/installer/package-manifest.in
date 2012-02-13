@@ -435,14 +435,11 @@
 #endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
+#ifdef MOZ_GTK2
 @BINPATH@/chrome/icons/default/default16.png
 @BINPATH@/chrome/icons/default/default32.png
 @BINPATH@/chrome/icons/default/default48.png
 #endif
-#endif
-
 
 ; shell icons
 #ifdef XP_UNIX
