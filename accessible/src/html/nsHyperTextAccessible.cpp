@@ -1628,7 +1628,15 @@ nsHyperTextAccessible::SetCaretOffset(PRInt32 aCaretOffset)
 NS_IMETHODIMP
 nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
 {
+  NS_ENSURE_ARG_POINTER(aCaretOffset);
   *aCaretOffset = -1;
+
+  // Not focused focusable accessible except document accessible doesn't have
+  // a caret.
+  if (!IsDoc() && !FocusMgr()->IsFocused(this) &&
+      (State() & states::FOCUSABLE)) {
+    return NS_OK;
+  }
 
   // No caret if the focused node is not inside this DOM node and this DOM node
   // is not inside of focused node.

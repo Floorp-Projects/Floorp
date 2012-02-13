@@ -1,13 +1,13 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Make sure that switching the displayed script in the UI works as advertised.
+ * Make sure that updating the editor mode sets the right highlighting engine,
+ * and script URIs with extra query parameters also get the right engine.
  */
 
 const TAB_URL = "http://example.com/browser/browser/devtools/debugger/" +
-                "test/browser_dbg_script-switching.html";
+                "test/browser_dbg_update-editor-mode.html";
 let tempScope = {};
 Cu.import("resource:///modules/source-editor.jsm", tempScope);
 let SourceEditor = tempScope.SourceEditor;
@@ -40,6 +40,9 @@ function testScriptsDisplay() {
 
       is(gScripts.itemCount, 2, "Found the expected number of scripts.");
 
+      is(gDebugger.editor.getMode(), SourceEditor.MODES.HTML,
+         "Found the expected editor mode.");
+
       ok(gDebugger.editor.getText().search(/debugger/) != -1,
         "The correct script was loaded initially.");
 
@@ -65,26 +68,11 @@ function testSwitchPaused()
   ok(gDebugger.editor.getText().search(/firstCall/) != -1,
     "The first script is displayed.");
 
+  is(gDebugger.editor.getMode(), SourceEditor.MODES.JAVASCRIPT,
+     "Found the expected editor mode.");
+
   gDebugger.StackFrames.activeThread.resume(function() {
-    gDebugger.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
-                                      function onSecondChange() {
-      gDebugger.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
-                                           onSecondChange);
-      testSwitchRunning();
-    });
-    gScripts.selectedIndex = 1;
-    gDebugger.SourceScripts.onChange({ target: gScripts });
+    removeTab(gTab);
+    finish();
   });
-}
-
-function testSwitchRunning()
-{
-  ok(gDebugger.editor.getText().search(/debugger/) != -1,
-    "The second script is displayed again.");
-
-  ok(gDebugger.editor.getText().search(/firstCall/) == -1,
-    "The first script is no longer displayed.");
-
-  removeTab(gTab);
-  finish();
 }

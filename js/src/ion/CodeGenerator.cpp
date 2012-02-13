@@ -259,11 +259,11 @@ CodeGenerator::visitRegExp(LRegExp *lir)
     JSObject *proto = global->getOrCreateRegExpPrototype(gen->cx);
 
     typedef JSObject *(*pf)(JSContext *, JSObject *, JSObject *);
-    static const VMFunction js_CloneRegExpObjectInfo = FunctionInfo<pf>(js_CloneRegExpObject);
+    static const VMFunction CloneRegExpObjectInfo = FunctionInfo<pf>(CloneRegExpObject);
 
     pushArg(ImmGCPtr(proto));
     pushArg(ImmGCPtr(lir->mir()->source()));
-    return callVM(js_CloneRegExpObjectInfo, lir);
+    return callVM(CloneRegExpObjectInfo, lir);
 }
 
 bool

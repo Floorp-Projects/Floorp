@@ -82,12 +82,7 @@ public:
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
-  void MarkInCCGeneration(PRUint32 aGeneration)
-  {
-    if (mDocument) {
-      mDocument->MarkUncollectableForCCGeneration(aGeneration);
-    }
-  }
+  void MarkInCCGeneration(PRUint32 aGeneration);
 
   static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo);
 

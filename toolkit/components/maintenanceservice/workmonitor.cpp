@@ -416,7 +416,7 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
            GetLastError()));
     }
   }
-  LocalFree(argv);
+
   return result;
 }
 
