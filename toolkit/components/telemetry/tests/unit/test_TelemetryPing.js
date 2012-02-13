@@ -29,8 +29,8 @@ var gFinished = false;
 
 function telemetry_ping () {
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
-  TelemetryPing.observe(null, "test-ping", SERVER);
   TelemetryPing.observe(null, "sessionstore-windows-restored", null);
+  TelemetryPing.observe(null, "test-ping", SERVER);
 }
 
 function nonexistentServerObserver(aSubject, aTopic, aData) {
