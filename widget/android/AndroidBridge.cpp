@@ -184,10 +184,12 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jEGLConfigImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLConfigImpl"));
     jEGLDisplayImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLDisplayImpl"));
 
+#ifdef MOZ_JAVA_COMPOSITOR
     jFlexSurfaceView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/FlexibleGLSurfaceView"));
 
     AndroidGLController::Init(jEnv);
     AndroidEGLObject::Init(jEnv);
+#endif
     InitAndroidJavaWrappers(jEnv);
 
     // jEnv should NOT be cached here by anything -- the jEnv here
