@@ -775,8 +775,8 @@ bool Histogram::SampleSet::Deserialize(void** iter, const Pickle& pickle) {
     counts_.push_back(i);
     count += i;
   }
-  DCHECK_EQ(count, redundant_count_);
-  return count == redundant_count_;
+
+  return true;
 }
 
 //------------------------------------------------------------------------------
