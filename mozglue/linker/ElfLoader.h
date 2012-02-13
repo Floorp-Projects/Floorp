@@ -7,6 +7,8 @@
 
 #include <vector>
 #include <dlfcn.h>
+/* Until RefPtr.h stops using JS_Assert */
+#undef DEBUG
 #include "mozilla/RefPtr.h"
 #include "Zip.h"
 
@@ -96,7 +98,7 @@ public:
   {
     bool ret = false;
     if (directRefCnt) {
-      MOZ_ASSERT(directRefCnt <= mozilla::RefCounted<LibHandle>::refCount());
+      // ASSERT(directRefCnt >= mozilla::RefCounted<LibHandle>::refCount())
       if (--directRefCnt)
         ret = true;
       mozilla::RefCounted<LibHandle>::Release();

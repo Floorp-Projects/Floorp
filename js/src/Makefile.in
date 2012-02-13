@@ -367,7 +367,8 @@ VPATH += 	$(srcdir)/assembler \
 		$(srcdir)/yarr \
 		$(NONE)
 
-CPPSRCS += 	ExecutableAllocator.cpp \
+CPPSRCS += 	Assertions.cpp \
+		ExecutableAllocator.cpp \
 		ARMAssembler.cpp \
 		MacroAssemblerARM.cpp \
 		MacroAssemblerX86Common.cpp \
@@ -488,13 +489,6 @@ endif
 endif
 
 include $(topsrcdir)/config/config.mk
-
-ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
-# When building standalone, we need to include mfbt sources, and to declare
-# "exported" mfbt symbols on its behalf when we use its headers.
-include $(srcdir)/../../mfbt/sources.mk
-DEFINES += -DIMPL_MFBT
-endif
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
@@ -674,6 +668,11 @@ distclean::
 	$(RM) $(DIST_GARBAGE)
 
 DEFINES		+= -DEXPORT_JS_API
+
+# mfbt is always packed with us, so if we're building a shared object,
+# we need to declare "exported" mfbt symbols on its behalf when we use
+# its headers.
+DEFINES		+= -DIMPL_MFBT
 
 INCLUDES	+= -I$(srcdir)
 

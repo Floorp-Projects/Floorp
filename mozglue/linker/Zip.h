@@ -10,6 +10,8 @@
 #include <vector>
 #include <zlib.h>
 #include "Utils.h"
+/* Until RefPtr.h stops using JS_Assert */
+#undef DEBUG
 #include "mozilla/RefPtr.h"
 
 /**
