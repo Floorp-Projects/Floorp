@@ -444,11 +444,9 @@ listTemplate = (
 "    JS_ResolveStub,\n"
 "    JS_ConvertStub,\n"
 "    JS_FinalizeStub,\n"
-"    NULL,                   /* reserved0 */\n"
 "    NULL,                   /* checkAccess */\n"
 "    NULL,                   /* call */\n"
 "    NULL,                   /* construct */\n"
-"    NULL,                   /* xdrObject */\n"
 "    interface_hasInstance\n"
 "};\n"
 "\n")

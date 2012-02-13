@@ -184,8 +184,8 @@ static JSClass sNPObjectJSWrapperClass =
     NPObjWrapper_GetProperty, NPObjWrapper_SetProperty,
     (JSEnumerateOp)NPObjWrapper_newEnumerate,
     (JSResolveOp)NPObjWrapper_NewResolve, NPObjWrapper_Convert,
-    NPObjWrapper_Finalize, nsnull, nsnull, NPObjWrapper_Call,
-    NPObjWrapper_Construct, nsnull, nsnull
+    NPObjWrapper_Finalize, nsnull, NPObjWrapper_Call,
+    NPObjWrapper_Construct
   };
 
 typedef struct NPObjectMemberPrivate {
@@ -213,8 +213,8 @@ static JSClass sNPObjectMemberClass =
     JS_PropertyStub, JS_PropertyStub,
     JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
     JS_ResolveStub, NPObjectMember_Convert,
-    NPObjectMember_Finalize, nsnull, nsnull, NPObjectMember_Call,
-    nsnull, nsnull, nsnull, NPObjectMember_Trace, nsnull
+    NPObjectMember_Finalize, nsnull, NPObjectMember_Call,
+    nsnull, nsnull, NPObjectMember_Trace
   };
 
 static void
