@@ -8211,7 +8211,7 @@ dnl ========================================================
 dnl qcms
 dnl ========================================================
 
-QCMS_LIBS='$(call EXPAND_LIBNAME_PATH,mozqcms,$(DEPTH)/gfx/qcms)'
+QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
 AC_SUBST(QCMS_LIBS)
 
 dnl ========================================================
