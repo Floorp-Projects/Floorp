@@ -171,8 +171,8 @@ LookupCache::Reset()
 
 
 nsresult
-LookupCache::Build(const AddPrefixArray& aAddPrefixes,
-                   const AddCompleteArray& aAddCompletes)
+LookupCache::Build(AddPrefixArray& aAddPrefixes,
+                   AddCompleteArray& aAddCompletes)
 {
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_COMPLETIONS,
                         static_cast<PRUint32>(aAddCompletes.Length()));
@@ -182,6 +182,7 @@ LookupCache::Build(const AddPrefixArray& aAddPrefixes,
   for (uint32 i = 0; i < aAddCompletes.Length(); i++) {
     mCompletions.AppendElement(aAddCompletes[i].CompleteHash());
   }
+  aAddCompletes.Clear();
   mCompletions.Sort();
 
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_PREFIXES,
@@ -679,7 +680,7 @@ bool LookupCache::IsPrimed()
 }
 
 nsresult
-LookupCache::ConstructPrefixSet(const AddPrefixArray& aAddPrefixes)
+LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_CONSTRUCT_TIME> timer;
 
@@ -693,8 +694,8 @@ LookupCache::ConstructPrefixSet(const AddPrefixArray& aAddPrefixes)
   for (uint32 i = 0; i < aAddPrefixes.Length(); i++) {
     array.AppendElement(aAddPrefixes[i].PrefixHash().ToUint32());
   }
+  aAddPrefixes.Clear();
 
-  // clear old tree
   if (array.IsEmpty()) {
     // DB is empty, but put a sentinel to show that we looked
     array.AppendElement(0);
