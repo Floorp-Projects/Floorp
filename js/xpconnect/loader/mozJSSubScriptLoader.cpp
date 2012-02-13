@@ -329,7 +329,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
 
     script = nsnull;
     if (cache)
-        rv = ReadCachedScript(cache, cachePath, cx, &script);
+        rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
     if (!script) {
         rv = ReadScript(uri, cx, targetObj, charset,
                         static_cast<const char*>(uriStr.get()), serv,
@@ -349,7 +349,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     }
 
     if (cache && ok && writeScript) {
-        WriteCachedScript(cache, cachePath, cx, script);
+        WriteCachedScript(cache, cachePath, cx, mSystemPrincipal, script);
     }
 
     return NS_OK;
