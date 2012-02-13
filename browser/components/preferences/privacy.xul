@@ -87,9 +87,6 @@
       <preference id="browser.formfill.enable"
                   name="browser.formfill.enable"
                   type="bool"/>
-      <preference id="browser.download.manager.retention"
-                  name="browser.download.manager.retention"
-                  type="int"/>
 
       <!-- Cookies -->
       <preference id="network.cookie.cookieBehavior"      name="network.cookie.cookieBehavior"      type="int"/>
@@ -194,15 +191,9 @@
           <vbox class="indent">
             <vbox class="indent">
               <checkbox id="rememberHistory"
-                        label="&rememberHistory.label;"
-                        accesskey="&rememberHistory.accesskey;"
+                        label="&rememberHistory2.label;"
+                        accesskey="&rememberHistory2.accesskey;"
                         preference="places.history.enabled"/>
-              <checkbox id="rememberDownloads"
-                        label="&rememberDownload.label;"
-                        accesskey="&rememberDownload.accesskey;"
-                        preference="browser.download.manager.retention"
-                        onsyncfrompreference="return gPrivacyPane.readDownloadRetention();"
-                        onsynctopreference="return gPrivacyPane.writeDownloadRetention();"/>
               <checkbox id="rememberForms"
                         label="&rememberSearchForm.label;"
                         accesskey="&rememberSearchForm.accesskey;"
