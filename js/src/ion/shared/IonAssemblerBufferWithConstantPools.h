@@ -46,7 +46,6 @@
 
 namespace js {
 namespace ion {
-
 typedef SegmentedVector<BufferOffset, 512> LoadOffsets;
 
 struct Pool {
@@ -54,7 +53,11 @@ struct Pool {
     const int immSize;
     const int instSize;
     const int bias;
+
+  private:
     const int alignment;
+
+  public:
     const bool isBackref;
     const bool canDedup;
     Pool *other;
@@ -81,7 +84,7 @@ struct Pool {
           bias(bias_), alignment(alignment_),
           isBackref(isBackref_), canDedup(canDedup_), other(other_),
           poolData(static_cast<uint8 *>(malloc(8*immSize))), numEntries(0),
-          buffSize(8), limitingUser(), limitingUsee(INT_MAX)
+          buffSize(8), limitingUser(), limitingUsee(INT_MIN)
     {
     }
     static const int garbage=0xa5a5a5a5;
@@ -113,25 +116,35 @@ struct Pool {
     // time for a "pool dump".
 
     // poolOffset is the distance from the end of the current section to the end of the pool.
+    //            For the last section of the pool, this will be the size of the footer
+    //            For the first section of the pool, it will be the size of every other
+    //            section and the footer
     // codeOffset is the instruction-distance from the pool to the beginning of the buffer.
     //            Since codeOffset only includes instructions, the number is the same for
     //            the beginning and end of the pool.
+    // instOffset is the offset from the beginning of the buffer to the instruction that
+    //            is about to be placed.
     bool checkFullBackref(int poolOffset, int codeOffset) {
-        if (signed(limitingUser.getOffset() + bias - codeOffset + poolOffset + (numEntries - limitingUsee) * immSize) >= maxOffset) {
+        if (!limitingUser.assigned())
+            return false;
+        if (signed(limitingUser.getOffset() + bias - codeOffset + poolOffset + (numEntries - limitingUsee) * immSize) >= maxOffset)
             return true;
-        }
         return false;
     }
 
     // checkFull answers the question "If a pool were placed at poolOffset, would
     // any reference into the pool be out of range?". It is meant to be used as instructions
     // and elements are inserted, to determine if a saved perforation point needs to be used.
+
     bool checkFull(int poolOffset) {
         // Inserting an instruction into the stream can
         // push any of the pools out of range.
         // Similarly, inserting into a pool can push the pool entry out of range
         JS_ASSERT(!isBackref);
-
+        // Not full if there aren't any uses.
+        if (!limitingUser.assigned()) {
+            return false;
+        }
         // We're considered "full" when:
         // bias + abs(poolOffset + limitingeUsee * numEntries - limitingUser) + sizeof(other_pools) >= maxOffset
         if (poolOffset + limitingUsee * immSize - (limitingUser.getOffset() + bias) >= maxOffset) {
@@ -183,8 +196,14 @@ struct Pool {
             return ptr;
         return (ptr + alignment-1) & ~(alignment-1);
     }
+    uint32 forceAlign(uint32 ptr) {
+        return (ptr + alignment-1) & ~(alignment-1);
+    }
     bool isAligned(uint32 ptr) {
         return ptr == align(ptr);
+    }
+    int getAlignment() {
+        return alignment;
     }
 };
 
@@ -385,7 +404,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             return INT_MIN;
         // TODO: calculating offsets for the alignment requirements is *hard*
         // Instead, assume that we always add the maximum.
-        int codeOffset = this->bufferSize + instSize - perforation.getOffset();
+        int codeOffset = this->size() + instSize - perforation.getOffset();
         int poolOffset = footerSize;
         Pool *cur, *tmp;
         // NOTE: we want to process the pools from last to first.
@@ -395,20 +414,22 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         for (cur = &pools[numPoolKinds-1]; cur >= pools; cur--) {
             // fetch the pool for the backwards half.
             tmp = cur->other;
-            if (p == tmp) {
-                p->updateLimiter(this->nextOffset());
-            }
+            if (p == cur)
+                tmp->updateLimiter(this->nextOffset());
+
             if (tmp->checkFullBackref(poolOffset, codeOffset)) {
                 // uh-oh, the backwards pool is full.  Time to finalize it, and
                 // switch to a new forward pool.
                 this->finishPool();
                 return this->insertEntryForwards(instSize, inst, p, data);
             }
-            poolOffset += tmp->immSize * tmp->numEntries + tmp->alignment;
+            // when moving back to front, calculating the alignment is hard, just be
+            // conservative with it.
+            poolOffset += tmp->immSize * tmp->numEntries + tmp->getAlignment();
             if (p == tmp) {
                 poolOffset += tmp->immSize;
             }
-            poolOffset += tmp->immSize * tmp->numEntries + tmp->alignment;
+            poolOffset += tmp->immSize * tmp->numEntries + tmp->getAlignment();
         }
         return p->numEntries + p->other->insertEntry(data, this->nextOffset());
     }
@@ -421,11 +442,11 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
     //     a guard instruction to branch over the pool.
     int insertEntryForwards(uint32 instSize, uint8 *inst, Pool *p, uint8 *data) {
         // Advance the "current offset" by an inst, so everyone knows what their offset should be.
-        uint32 nextOffset = this->bufferSize + instSize;
+        uint32 nextOffset = this->size() + instSize;
         uint32 poolOffset = nextOffset;
         Pool *tmp;
         // If we need a guard instruction, reserve space for that.
-        if (true)
+        if (!perforatedNode)
             poolOffset += guardSize;
         // Also, take into account the size of the header that will be placed *after*
         // the guard instruction
@@ -434,9 +455,15 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         // Perform the necessary range checks.
         for (tmp = pools; tmp < &pools[numPoolKinds]; tmp++) {
             // The pool may wish for a particular alignment, Let's give it one.
-            JS_ASSERT((tmp->alignment & (tmp->alignment - 1)) == 0);
-            poolOffset += tmp->alignment - 1;
-            poolOffset &= ~(tmp->alignment - 1);
+            JS_ASSERT((tmp->getAlignment() & (tmp->getAlignment() - 1)) == 0);
+            // The pool only needs said alignment *if* there are any entries in the pool
+            // WARNING: the pool needs said alignment if there are going to be entries in
+            // the pool after this entry has been inserted
+            if (p == tmp)
+                poolOffset = tmp->forceAlign(poolOffset);
+            else
+                poolOffset = tmp->align(poolOffset);
+
             // If we're at the pool we want to insert into, find a new limiter
             // before we do the range check.
             if (p == tmp) {
