@@ -211,6 +211,31 @@ StackFrame::pcQuadratic(const ContextStack &stack, StackFrame *next, JSInlinedSi
     return next->prevpc(pinlined);
 }
 
+void
+StackFrame::mark(JSTracer *trc)
+{
+    /*
+     * Normally we would use MarkRoot here, except that generators also take
+     * this path. However, generators use a special write barrier when the stack
+     * frame is copied to the floating frame. Therefore, no barrier is needed.
+     */
+    gc::MarkObjectUnbarriered(trc, &scopeChain(), "scope chain");
+    if (isDummyFrame())
+        return;
+    if (hasArgsObj())
+        gc::MarkObjectUnbarriered(trc, &argsObj(), "arguments");
+    if (isFunctionFrame()) {
+        gc::MarkObjectUnbarriered(trc, fun(), "fun");
+        if (isEvalFrame())
+            gc::MarkScriptUnbarriered(trc, script(), "eval script");
+    } else {
+        gc::MarkScriptUnbarriered(trc, script(), "script");
+    }
+    if (IS_GC_MARKING_TRACER(trc))
+        script()->compartment()->active = true;
+    gc::MarkValueUnbarriered(trc, returnValue(), "rval");
+}
+
 /*****************************************************************************/
 
 bool
@@ -382,6 +407,51 @@ StackSpace::containingSegment(const StackFrame *target) const
 }
 
 void
+StackSpace::markFrameSlots(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc)
+{
+    Value *slotsBegin = fp->slots();
+
+    if (!fp->isScriptFrame()) {
+        JS_ASSERT(fp->isDummyFrame());
+        gc::MarkRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
+        return;
+    }
+
+    /* If it's a scripted frame, we should have a pc. */
+    JS_ASSERT(pc);
+
+    JSScript *script = fp->script();
+    if (!script->hasAnalysis() || !script->analysis()->ranLifetimes()) {
+        gc::MarkRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
+        return;
+    }
+
+    /*
+     * If the JIT ran a lifetime analysis, then it may have left garbage in the
+     * slots considered not live. We need to avoid marking them. Additionally,
+     * in case the analysis information is thrown out later, we overwrite these
+     * dead slots with valid values so that future GCs won't crash. Analysis
+     * results are thrown away during the sweeping phase, so we always have at
+     * least one GC to do this.
+     */
+    analyze::AutoEnterAnalysis aea(script->compartment());
+    analyze::ScriptAnalysis *analysis = script->analysis();
+    uint32_t offset = pc - script->code;
+    Value *fixedEnd = slotsBegin + script->nfixed;
+    for (Value *vp = slotsBegin; vp < fixedEnd; vp++) {
+        uint32_t slot = analyze::LocalSlot(script, vp - slotsBegin);
+
+        /* Will this slot be synced by the JIT? */
+        if (!analysis->trackSlot(slot) || analysis->liveness(slot).live(offset))
+            gc::MarkRoot(trc, *vp, "vm_stack");
+        else
+            *vp = UndefinedValue();
+    }
+
+    gc::MarkRootRange(trc, fixedEnd, slotsEnd, "vm_stack");
+}
+
+void
 StackSpace::mark(JSTracer *trc)
 {
     /*
@@ -401,15 +471,21 @@ StackSpace::mark(JSTracer *trc)
          * calls. Thus, marking can view the stack as the regex:
          *   (segment slots (frame slots)*)*
          * which gets marked in reverse order.
-         *
          */
         Value *slotsEnd = nextSegEnd;
+        jsbytecode *pc = seg->maybepc();
         for (StackFrame *fp = seg->maybefp(); (Value *)fp > (Value *)seg; fp = fp->prev()) {
-            MarkStackRangeConservatively(trc, fp->slots(), slotsEnd);
-            js_TraceStackFrame(trc, fp);
+            /* Mark from fp->slots() to slotsEnd. */
+            markFrameSlots(trc, fp, slotsEnd, pc);
+
+            fp->mark(trc);
             slotsEnd = (Value *)fp;
+
+            JSInlinedSite *site;
+            pc = fp->prevpc(&site);
+            JS_ASSERT_IF(fp->prev(), !site);
         }
-        MarkStackRangeConservatively(trc, seg->slotsBegin(), slotsEnd);
+        gc::MarkRootRange(trc, seg->slotsBegin(), slotsEnd, "vm_stack");
         nextSegEnd = (Value *)seg;
     }
 }
