@@ -49,8 +49,6 @@ function test() {
   run_test_subset([
     test_custom_retention("rememberHistory", "remember"),
     test_custom_retention("rememberHistory", "custom"),
-    test_custom_retention("rememberDownloads", "remember"),
-    test_custom_retention("rememberDownloads", "custom"),
     test_custom_retention("rememberForms", "remember"),
     test_custom_retention("rememberForms", "custom"),
     test_historymode_retention("remember", "remember"),
