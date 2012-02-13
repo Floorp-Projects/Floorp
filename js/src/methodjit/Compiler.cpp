@@ -410,7 +410,7 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32_t argc)
     if (cx->runtime->profilingScripts && !script->pcCounters)
         script->initCounts(cx);
 
-    ActiveFrame *newa = cx->new_<ActiveFrame>(cx);
+    ActiveFrame *newa = OffTheBooks::new_<ActiveFrame>(cx);
     if (!newa)
         return Compile_Error;
 
@@ -459,7 +459,7 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32_t argc)
         return Compile_Error;
     }
 
-    newa->jumpMap = (Label *)cx->malloc_(sizeof(Label) * script->length);
+    newa->jumpMap = (Label *)OffTheBooks::malloc_(sizeof(Label) * script->length);
     if (!newa->jumpMap) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -618,7 +618,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
      */
 
     a->varTypes = (VarType *)
-        cx->calloc_(TotalSlots(script) * sizeof(VarType));
+        OffTheBooks::calloc_(TotalSlots(script) * sizeof(VarType));
     if (!a->varTypes)
         return Compile_Error;
 
@@ -871,7 +871,7 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
     size_t dataSize = sizeof(JITScript)
         + (chunks.length() * sizeof(ChunkDescriptor))
         + (edges.length() * sizeof(CrossChunkEdge));
-    uint8_t *cursor = (uint8_t *) cx->calloc_(dataSize);
+    uint8_t *cursor = (uint8_t *) OffTheBooks::calloc_(dataSize);
     if (!cursor)
         return NULL;
 
@@ -1204,7 +1204,7 @@ mjit::Compiler::generatePrologue()
 
     if (outerScript->pcCounters || Probes::wantNativeAddressInfo(cx)) {
         size_t length = ssa.frameLength(ssa.numFrames() - 1);
-        pcLengths = (PCLengthEntry *) cx->calloc_(sizeof(pcLengths[0]) * length);
+        pcLengths = (PCLengthEntry *) OffTheBooks::calloc_(sizeof(pcLengths[0]) * length);
         if (!pcLengths)
             return Compile_Error;
     }
@@ -1352,7 +1352,7 @@ mjit::Compiler::finishThisUp()
 #endif
                       0;
 
-    uint8_t *cursor = (uint8_t *)cx->calloc_(dataSize);
+    uint8_t *cursor = (uint8_t *)OffTheBooks::calloc_(dataSize);
     if (!cursor) {
         execPool->release();
         js_ReportOutOfMemory(cx);
@@ -1804,7 +1804,7 @@ mjit::Compiler::finishThisUp()
                     ChunkJumpTableEdge nedge = chunkJumps[j];
                     if (nedge.edge.source == edge.source && nedge.edge.target == edge.target) {
                         if (!jumpTableEntries) {
-                            jumpTableEntries = cx->new_<CrossChunkEdge::JumpTableEntryVector>();
+                            jumpTableEntries = OffTheBooks::new_<CrossChunkEdge::JumpTableEntryVector>();
                             if (!jumpTableEntries)
                                 failed = true;
                         }
@@ -6980,7 +6980,7 @@ mjit::Compiler::startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
         loop->clearLoopRegisters();
     }
 
-    LoopState *nloop = cx->new_<LoopState>(cx, &ssa, this, &frame);
+    LoopState *nloop = OffTheBooks::new_<LoopState>(cx, &ssa, this, &frame);
     if (!nloop || !nloop->init(head, entry, entryTarget))
         return false;
 
