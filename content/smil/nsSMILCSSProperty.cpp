@@ -169,14 +169,17 @@ nsSMILCSSProperty::ValueFromString(const nsAString& aStr,
   nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue,
       &aPreventCachingOfSandwich);
 
+  if (aValue.IsNull()) {
+    return NS_ERROR_FAILURE;
+  }
+
   // XXX Due to bug 536660 (or at least that seems to be the most likely
   // culprit), when we have animation setting display:none on a <use> element,
   // if we DON'T set the property every sample, chaos ensues.
   if (!aPreventCachingOfSandwich && mPropID == eCSSProperty_display) {
     aPreventCachingOfSandwich = true;
   }
-
-  return aValue.IsNull() ? NS_ERROR_FAILURE : NS_OK;
+  return NS_OK;
 }
 
 nsresult
