@@ -345,7 +345,6 @@ public:
                                     void** aResult);
 
   // Used to synchronise preferences between chrome and content processes.
-  static nsresult ReadExtensionPrefs(nsIFile *aFile);
   static void MirrorPreferences(nsTArray<PrefTuple,
                                 nsTArrayInfallibleAllocator> *aArray);
   static bool MirrorPreference(const char *aPref, PrefTuple *aTuple);
