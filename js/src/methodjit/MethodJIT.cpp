@@ -253,7 +253,7 @@ JS_STATIC_ASSERT(offsetof(FrameRegs, sp) == 0);
 #if defined(__GNUC__) && !defined(_WIN64)
 
 /* If this assert fails, you need to realign VMFrame to 16 bytes. */
-#if defined(JS_CPU_ARM) || defined(JS_CPU_MIPS)
+#if defined(JS_CPU_ARM) || defined(JS_CPU_MIPS) || defined(JS_CPU_SPARC)
 JS_STATIC_ASSERT(sizeof(VMFrame) % 8 == 0);
 #else
 JS_STATIC_ASSERT(sizeof(VMFrame) % 16 == 0);
