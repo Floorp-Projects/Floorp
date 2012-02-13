@@ -858,6 +858,33 @@ MToString::foldsTo(bool useValueNumbers)
     return this;
 }
 
+MDefinition *
+MNot::foldsTo(bool useValueNumbers)
+{
+    // Fold if the input is constant
+    if (operand()->isConstant()) {
+       const Value &v = operand()->toConstant()->value();
+        // ValueToBoolean can cause no side-effects, so this is safe.
+        return MConstant::New(BooleanValue(!js_ValueToBoolean(v)));
+    }
+
+    // NOT of an object is always false
+    if (specialization_ == MIRType_Object)
+        return MConstant::New(BooleanValue(false));
+
+    // NOT of an undefined or null value is always true
+    if (specialization_ == MIRType_Undefined || specialization_ == MIRType_Null)
+        return MConstant::New(BooleanValue(true));
+
+    return this;
+}
+
+void
+MNot::infer(const MIRType type)
+{
+    specialization_ = type;
+}
+
 HashNumber
 MBoundsCheck::valueHash() const
 {

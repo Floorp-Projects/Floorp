@@ -132,6 +132,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitCompareAndBranch(LCompareAndBranch *comp);
     virtual bool visitCompareD(LCompareD *comp);
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
+    virtual bool visitNotI(LNotI *comp);
+    virtual bool visitNotD(LNotD *comp);
     virtual bool visitMathD(LMathD *math);
     virtual bool visitRound(LRound *lir);
     virtual bool visitTableSwitch(LTableSwitch *ins);

@@ -1018,6 +1018,16 @@ CodeGenerator::visitInitializedLength(LInitializedLength *lir)
 }
 
 bool
+CodeGenerator::visitNotV(LNotV *ins)
+{
+    typedef bool (*pf)(JSContext *, const Value &, JSBool *);
+    static const VMFunction FValueToBooleanComplement = FunctionInfo<pf>(ValueToBooleanComplement);
+
+    pushArg(ToValue(ins, LNotV::Input));
+    return callVM(FValueToBooleanComplement, ins);
+}
+
+bool
 CodeGenerator::visitBoundsCheck(LBoundsCheck *lir)
 {
     if (lir->index()->isConstant())

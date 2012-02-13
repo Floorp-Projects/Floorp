@@ -106,6 +106,7 @@ namespace ion {
     _(GuardClass)                                                           \
     _(ArrayLength)                                                          \
     _(InitializedLength)                                                    \
+    _(Not)                                                                  \
     _(BoundsCheck)                                                          \
     _(BoundsCheckLower)                                                     \
     _(LoadElement)                                                          \

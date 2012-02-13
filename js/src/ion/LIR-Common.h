@@ -628,6 +628,49 @@ class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
     }
 };
 
+// Not operation on an integer.
+class LNotI : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(NotI);
+
+    LNotI(const LAllocation &input) {
+        setOperand(0, input);
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+// Not operation on a double.
+class LNotD : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(NotD);
+
+    LNotD(const LAllocation &input) {
+        setOperand(0, input);
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+// Boolean complement operation on a value.
+class LNotV : public LCallInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(NotV);
+
+    static const size_t Input = 0;
+};
+
 // Bitwise not operation, takes a 32-bit integer as input and returning
 // a 32-bit integer result as an output.
 class LBitNotI : public LInstructionHelper<1, 1, 0>
@@ -641,7 +684,6 @@ class LBitNotV : public LCallInstructionHelper<1, BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(BitNotV);
-    BOX_OUTPUT_ACCESSORS();
 
     static const size_t Input = 0;
 };
@@ -861,7 +903,7 @@ class LValueToDouble : public LInstructionHelper<1, BOX_PIECES, 0>
 //   Output: 32-bit integer
 //   Bailout: undefined, string, object, or non-int32 double
 //   Temps: one float register
-//   
+//
 // This instruction requires a temporary float register.
 class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 1>
 {
