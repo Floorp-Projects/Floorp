@@ -45,6 +45,7 @@
 #ifdef USE_SKIA
 #include "DrawTargetSkia.h"
 #include "ScaledFontBase.h"
+#include "ScaledFontFreetype.h"
 #endif
 
 #ifdef WIN32
@@ -156,7 +157,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 #endif
   case NATIVE_FONT_SKIA_FONT_FACE:
     {
-      return new ScaledFontBase(static_cast<gfxFont*>(aNativeFont.mFont), aSize);
+      return new ScaledFontFreetype(static_cast<gfxFont*>(aNativeFont.mFont), aSize);
     }
 #endif
 #ifdef USE_CAIRO
