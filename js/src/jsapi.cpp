@@ -720,8 +720,6 @@ JSRuntime::JSRuntime()
     gcUserAvailableChunkListHead(NULL),
     gcKeepAtoms(0),
     gcBytes(0),
-    gcTriggerBytes(0),
-    gcLastBytes(0),
     gcMaxBytes(0),
     gcMaxMallocBytes(0),
     gcNumArenasFreeCommitted(0),

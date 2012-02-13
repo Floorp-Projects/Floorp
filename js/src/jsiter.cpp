@@ -1029,6 +1029,12 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, StringPredicate pred
                         for (HeapPtr<JSFlatString> *p = idp; p + 1 != props_end; p++)
                             *p = *(p + 1);
                         ni->props_end = ni->end() - 1;
+
+                        /*
+                         * Invoke the write barrier on this element, since it's
+                         * no longer going to be marked.
+                         */
+                        ni->props_end->HeapPtr<JSFlatString>::~HeapPtr<JSFlatString>();
                     }
 
                     /* Don't reuse modified native iterators. */
@@ -1379,7 +1385,7 @@ MarkGenerator(JSTracer *trc, JSGenerator *gen)
      * this code and save someone an hour later.
      */
     MarkStackRangeConservatively(trc, gen->floatingStack, fp->formalArgsEnd());
-    js_TraceStackFrame(trc, fp);
+    fp->mark(trc);
     MarkStackRangeConservatively(trc, fp->slots(), gen->regs.sp);
 }
 

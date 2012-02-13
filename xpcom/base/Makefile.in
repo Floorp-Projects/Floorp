@@ -103,6 +103,7 @@ EXPORTS_mozilla = \
 	MapsMemoryReporter.h \
 	ClearOnShutdown.h \
 	AvailableMemoryTracker.h \
+	StackWalk.h \
 	$(NULL)
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))

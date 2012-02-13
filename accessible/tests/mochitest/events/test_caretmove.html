@@ -46,21 +46,8 @@
     // gA11yEventDumpID = "eventdump"; // debug stuff
     //gA11yEventDumpToConsole = true;
 
-    function testCaretOffset(aAccOrElmOrID, aCaretOffset)
-    {
-      var acc = getAccessible(aAccOrElmOrID, [nsIAccessibleText]);
-      is(acc.caretOffset, aCaretOffset,
-         "Wrong caret offset for " + aAccOrElmOrID);
-    }
-
     function doTests()
     {
-      todo(false, "enable commented tests Bug 510128 is fixed");
-      // test no focused accessibles
-      //testCaretOffset("textbox", -1);
-      //testCaretOffset("textarea", -1);
-      testCaretOffset("p", -1);
-
       // test caret move events and caret offsets
       gQueue = new eventQueue();
 
