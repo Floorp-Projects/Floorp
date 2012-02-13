@@ -349,7 +349,7 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
     cx->compartment->types.print(cx, true);
 
     /* Always active, even in release builds */
-    MOZ_Assert(msgbuf, __FILE__, __LINE__);
+    JS_Assert(msgbuf, __FILE__, __LINE__);
     
     *((volatile int *)NULL) = 0;  /* Should never be reached */
 }
