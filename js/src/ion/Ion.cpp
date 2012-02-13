@@ -521,9 +521,11 @@ IonScript::copySafepointIndices(const SafepointIndex *si, MacroAssembler &masm)
 }
 
 void
-IonScript::copyOsiIndices(const OsiIndex *oi)
+IonScript::copyOsiIndices(const OsiIndex *oi, MacroAssembler &masm)
 {
     memcpy(osiIndices(), oi, osiIndexEntries_ * sizeof(OsiIndex));
+    for (int i = 0; i < osiIndexEntries_; i++)
+        osiIndices()[i].fixUpOffset(masm);
 }
 
 void

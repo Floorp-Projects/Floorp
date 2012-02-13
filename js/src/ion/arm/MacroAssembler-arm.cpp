@@ -215,11 +215,38 @@ MacroAssemblerARM::ma_alu(Register src1, Operand2 op2, Register dest, ALUOp op, 
 {
     as_alu(dest, src1, op2, op, sc, c);
 }
+
 void
 MacroAssemblerARM::ma_nop()
 {
     as_nop();
 }
+
+Instruction *
+NextInst(Instruction *i)
+{
+    if (i == NULL)
+        return NULL;
+    return i->next();
+}
+
+void
+MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest,
+                                   Assembler::Condition c, RelocStyle rs, Instruction *i)
+{
+    int32 imm = imm_.value;
+    switch(rs) {
+      case L_MOVWT:
+        as_movw(dest, Imm16(imm & 0xffff), c, i);
+        i = NextInst(i);
+        as_movt(dest, Imm16(imm >> 16 & 0xffff), c, i);
+        break;
+      case L_LDR:
+        //as_Imm32Pool(dest, imm, c, i);
+        break;
+    }
+}
+
 void
 MacroAssemblerARM::ma_mov(Register src, Register dest,
             SetCond_ sc, Assembler::Condition c)
@@ -233,6 +260,7 @@ MacroAssemblerARM::ma_mov(Imm32 imm, Register dest,
 {
     ma_alu(InvalidReg, imm, dest, op_mov, sc, c);
 }
+
 void
 MacroAssemblerARM::ma_mov(const ImmGCPtr &ptr, Register dest)
 {
@@ -620,7 +648,7 @@ MacroAssemblerARM::ma_mul(Register src1, Register src2, Register dest)
 void
 MacroAssemblerARM::ma_mul(Register src1, Imm32 imm, Register dest)
 {
-    // TODO: be smarter!
+
     ma_mov(imm, ScratchRegister);
     as_mul( dest, src1, ScratchRegister);
 }
@@ -845,17 +873,16 @@ MacroAssemblerARM::ma_b(Label *dest, Assembler::Condition c)
     as_b(dest, c);
 }
 
-enum RelocBranchStyle {
-    MOVWT,
-    LDR_BX,
-    LDR,
-    MOVW_ADD
-};
+void
+MacroAssemblerARM::ma_bx(Register dest, Assembler::Condition c)
+{
+    as_bx(dest, c);
+}
 
-RelocBranchStyle
+Assembler::RelocBranchStyle
 b_type()
 {
-    return LDR;
+    return Assembler::B_LDR;
 }
 void
 MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Condition c)
@@ -866,17 +893,17 @@ MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Conditi
     // absolute address
     uint32 trg = (uint32)target;
     switch (b_type()) {
-      case MOVWT:
+      case Assembler::B_MOVWT:
         as_movw(ScratchRegister, Imm16(trg & 0xffff), c);
         as_movt(ScratchRegister, Imm16(trg >> 16), c);
         // this is going to get the branch predictor pissed off.
         as_bx(ScratchRegister, c);
         break;
-      case LDR_BX:
+      case Assembler::B_LDR_BX:
         as_Imm32Pool(ScratchRegister, trg, c);
         as_bx(ScratchRegister, c);
         break;
-      case LDR:
+      case Assembler::B_LDR:
         as_Imm32Pool(pc, trg, c);
         break;
       default:
@@ -1071,6 +1098,9 @@ void
 MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
 {
     uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+#ifdef DEBUG
+    ma_mov(Imm32(0xdeadbeef), ScratchRegister);
+#endif
     Push(ScratchRegister); // padding
     Push(Imm32(descriptor)); // descriptor
     // TODO: Use relocation here.
@@ -1811,6 +1841,7 @@ MacroAssemblerARM::ma_callIonNoPush(const Register r)
     as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
     as_blx(r);
 }
+
 void
 MacroAssemblerARM::ma_callIonHalfPush(const Register r)
 {
@@ -1963,3 +1994,4 @@ MacroAssemblerARMCompat::handleException()
     as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
     //ret();
 }
+

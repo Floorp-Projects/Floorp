@@ -181,6 +181,11 @@ CodeLocationLabel
 SafepointReader::InvalidationPatchPoint(IonScript *script, const SafepointIndex *si)
 {
     SafepointReader reader(script, si);
+
+    // The size of a call is subtracted off, because the return address of the call to the
+    // invalidateEpilogue must match the value that was recorded previously in markOsiPoint.
+    // The returned value should only be within the code generated for the LOsiPoint,
+    // not the preceeding call.
     uint32 osiPointOffset = reader.getOsiReturnPointOffset() - Assembler::patchWrite_NearCallSize();
     return CodeLocationLabel(script->method(), osiPointOffset);
 }

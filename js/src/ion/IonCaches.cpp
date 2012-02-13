@@ -79,6 +79,12 @@ CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
      markAbsolute(true);
 }
 
+void
+CodeOffsetLabel::fixup(MacroAssembler *masm)
+{
+     offset_ = (size_t)masm->actualOffset((uint8*)offset_);
+}
+
 static const size_t MAX_STUBS = 16;
 
 bool

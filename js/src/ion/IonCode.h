@@ -357,7 +357,7 @@ struct IonScript
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const HeapValue *vp);
     void copySafepointIndices(const SafepointIndex *firstSafepointIndex, MacroAssembler &masm);
-    void copyOsiIndices(const OsiIndex *firstOsiIndex);
+    void copyOsiIndices(const OsiIndex *firstOsiIndex, MacroAssembler &masm);
     void copyCacheEntries(const IonCache *caches, MacroAssembler &masm);
     void copySafepoints(const SafepointWriter *writer);
 
