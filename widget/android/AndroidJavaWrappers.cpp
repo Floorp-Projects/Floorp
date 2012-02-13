@@ -121,6 +121,8 @@ jmethodID AndroidGeckoSoftwareLayerClient::jGetRenderOffsetMethod = 0;
 jclass AndroidGeckoGLLayerClient::jGeckoGLLayerClientClass = 0;
 jmethodID AndroidGeckoGLLayerClient::jGetViewTransformMethod = 0;
 jmethodID AndroidGeckoGLLayerClient::jCreateFrameMethod = 0;
+jmethodID AndroidGeckoGLLayerClient::jActivateProgramMethod = 0;
+jmethodID AndroidGeckoGLLayerClient::jDeactivateProgramMethod = 0;
 
 jclass AndroidLayerRendererFrame::jLayerRendererFrameClass = 0;
 jmethodID AndroidLayerRendererFrame::jBeginDrawingMethod = 0;
@@ -387,6 +389,8 @@ AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(JNIEnv *jEnv)
                                         "()Lorg/mozilla/gecko/gfx/ViewTransform;");
     jCreateFrameMethod = getMethod("createFrame",
                                    "(FFF)Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
+    jActivateProgramMethod = getMethod("activateProgram", "()V");
+    jDeactivateProgramMethod = getMethod("deactivateProgram", "()V");
 #endif
 }
 
@@ -940,6 +944,30 @@ AndroidGeckoGLLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame,
                                               aZoomFactor);
     NS_ABORT_IF_FALSE(frameJObj, "No frame object!");
     aFrame.Init(frameJObj);
+}
+
+void
+AndroidGeckoGLLayerClient::ActivateProgram()
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at ActivateProgram()!");
+    if (!env) {
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jActivateProgramMethod);
+}
+
+void
+AndroidGeckoGLLayerClient::DeactivateProgram()
+{
+    JNIEnv *env = GetJNIForThread();
+    NS_ABORT_IF_FALSE(env, "No JNI environment at DeactivateProgram()!");
+    if (!env) {
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jDeactivateProgramMethod);
 }
 
 void
