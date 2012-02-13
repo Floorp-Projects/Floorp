@@ -272,6 +272,25 @@ CodeGeneratorX86Shared::visitCompareD(LCompareD *comp)
 }
 
 bool
+CodeGeneratorX86Shared::visitNotI(LNotI *ins)
+{
+    masm.cmpl(ToRegister(ins->input()), Imm32(0));
+    emitSet(Assembler::Equal, ToRegister(ins->output()));
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitNotD(LNotD *ins)
+{
+    FloatRegister opd = ToFloatRegister(ins->input());
+
+    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
+    masm.compareDoubles(JSOP_EQ, opd, ScratchFloatReg);
+    emitSet(Assembler::Equal, ToRegister(ins->output()), NaN_IsTrue);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitCompareDAndBranch(LCompareDAndBranch *comp)
 {
     FloatRegister lhs = ToFloatRegister(comp->left());

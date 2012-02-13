@@ -78,6 +78,9 @@
     _(CompareDAndBranch)            \
     _(AbsI)                         \
     _(AbsD)                         \
+    _(NotI)                         \
+    _(NotD)                         \
+    _(NotV)                         \
     _(AddI)                         \
     _(SubI)                         \
     _(MulI)                         \

@@ -145,7 +145,7 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 
     // Pass through the virtual register of the operand.
     // This causes snapshots to correctly copy the operand on the stack.
-    // 
+    //
     // This keeps the backing store around longer than strictly required.
     // We could do better by informing snapshots about the argument vector.
     arg->setVirtualRegister(opd->virtualRegister());
@@ -259,7 +259,7 @@ LIRGenerator::visitTest(MTest *test)
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
             LAllocation rhs = comp->specialization() == MIRType_Object
                               ? useRegister(right)
-                              : useAnyOrConstant(right); 
+                              : useAnyOrConstant(right);
             return add(new LCompareAndBranch(opd->toCompare(), op, useRegister(left), rhs,
                                              ifTrue, ifFalse));
         }
@@ -305,7 +305,7 @@ LIRGenerator::visitCompare(MCompare *comp)
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
             LAllocation rhs = comp->specialization() == MIRType_Object
                               ? useRegister(right)
-                              : useAnyOrConstant(right); 
+                              : useAnyOrConstant(right);
             return define(new LCompare(op, useRegister(left), rhs), comp);
         }
 
@@ -950,6 +950,48 @@ LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
     return define(new LInitializedLength(useRegister(ins->elements())), ins);
+}
+
+bool
+LIRGenerator::visitNot(MNot *ins)
+{
+    MDefinition *op = ins->operand();
+
+    // String is converted to length of string in the IonBuilder phase
+    JS_ASSERT(op->type() != MIRType_String);
+
+    // - boolean: x xor 1
+    // - int32: LCompare(x, 0)
+    // - double: LCompare(x, 0)
+    // - null or undefined: true
+    // - object: false
+    switch (op->type()) {
+      case MIRType_Boolean: {
+        MConstant *cons = MConstant::New(Int32Value(1));
+        ins->block()->insertBefore(ins, cons);
+        return lowerForALU(new LBitOp(JSOP_BITXOR), ins, op, cons);
+      }
+      case MIRType_Int32: {
+        return define(new LNotI(useRegister(op)), ins);
+      }
+      case MIRType_Double:
+        return define(new LNotD(useRegister(op)), ins);
+      case MIRType_Undefined:
+      case MIRType_Null:
+        return define(new LInteger(1), ins);
+      case MIRType_Object:
+        return define(new LInteger(0), ins);
+      case MIRType_Value: {
+        LNotV *lir = new LNotV;
+        if (!useBox(lir, LNotV::Input, op))
+            return false;
+        return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+      }
+
+      default:
+        JS_NOT_REACHED("Unexpected MIRType.");
+        return false;
+    }
 }
 
 bool
