@@ -188,7 +188,8 @@ nsHTMLLegendElement::Focus()
     return NS_OK;
 
   nsCOMPtr<nsIDOMElement> result;
-  return fm->MoveFocus(nsnull, this, nsIFocusManager::MOVEFOCUS_FORWARD, 0,
+  return fm->MoveFocus(nsnull, this, nsIFocusManager::MOVEFOCUS_FORWARD,
+                       nsIFocusManager::FLAG_NOPARENTFRAME,
                        getter_AddRefs(result));
 }
 
