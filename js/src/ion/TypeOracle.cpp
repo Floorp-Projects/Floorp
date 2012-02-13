@@ -149,7 +149,17 @@ void
 TypeInferenceOracle::getNewTypesAtJoinPoint(JSScript *script, jsbytecode *pc, Vector<MIRType> &slotTypes)
 {
     ScriptAnalysis *analysis = script->analysis();
-    JS_ASSERT(analysis->jumpTarget(pc));
+
+    // In some cases, TI has already determined that a position is not a jump
+    // target, for example here |do| only has one incoming edge:
+    //    do { 
+    //       throw
+    //    } while
+    //
+    // In this case, IM won't know this until reaching the end of the entire
+    // structure, so we check first to see if this is actually a jump target.
+    if (!analysis->jumpTarget(pc))
+        return;
 
     if (const SlotValue *newv = analysis->newValues(pc)) {
         while (newv->slot) {
