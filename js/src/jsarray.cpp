@@ -1225,11 +1225,9 @@ Class js::ArrayClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     NULL,
-    NULL,           /* reserved0   */
     NULL,           /* checkAccess */
     NULL,           /* call        */
     NULL,           /* construct   */
-    NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
     array_trace,    /* trace       */
     {
@@ -1289,11 +1287,9 @@ Class js::SlowArrayClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     NULL,
-    NULL,           /* reserved0   */
     NULL,           /* checkAccess */
     NULL,           /* call        */
     NULL,           /* construct   */
-    NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
     NULL,           /* trace       */
     {

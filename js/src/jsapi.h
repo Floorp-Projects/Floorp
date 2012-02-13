@@ -1351,13 +1351,6 @@ typedef JSBool
                     jsval *vp);
 
 /*
- * Encode or decode an object, given an XDR state record representing external
- * data.  See jsxdrapi.h.
- */
-typedef JSBool
-(* JSXDRObjectOp)(JSXDRState *xdr, JSObject **objp);
-
-/*
  * Check whether v is an instance of obj.  Return false on error or exception,
  * true on success with JS_TRUE in *bp if v is an instance of obj, JS_FALSE in
  * *bp otherwise.
@@ -3397,15 +3390,12 @@ struct JSClass {
     JSFinalizeOp        finalize;
 
     /* Optionally non-null members start here. */
-    JSClassInternal     reserved0;
     JSCheckAccessOp     checkAccess;
     JSNative            call;
     JSNative            construct;
-    JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
     JSTraceOp           trace;
 
-    JSClassInternal     reserved1;
     void                *reserved[40];
 };
 
@@ -3489,8 +3479,8 @@ struct JSClass {
                                           & JSCLASS_CACHED_PROTO_MASK))
 
 /* Initializer for unused members of statically initialized JSClass structs. */
-#define JSCLASS_NO_INTERNAL_MEMBERS     0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-#define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,JSCLASS_NO_INTERNAL_MEMBERS
+#define JSCLASS_NO_INTERNAL_MEMBERS     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+#define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,JSCLASS_NO_INTERNAL_MEMBERS
 
 extern JS_PUBLIC_API(jsint)
 JS_IdArrayLength(JSContext *cx, JSIdArray *ida);

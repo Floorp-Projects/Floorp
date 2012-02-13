@@ -177,7 +177,7 @@ static JSClass global_class = {
     XPCONNECT_GLOBAL_FLAGS,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, SafeGlobalResolve, JS_ConvertStub, SafeFinalize,
-    NULL, NULL, NULL, NULL, NULL, NULL, TraceXPCGlobal
+    NULL, NULL, NULL, NULL, TraceXPCGlobal
 };
 
 // We just use the same reporter as the component loader

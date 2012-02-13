@@ -564,11 +564,9 @@ Class js::NormalArgumentsObjectClass = {
     reinterpret_cast<JSResolveOp>(args_resolve),
     JS_ConvertStub,
     args_finalize,           /* finalize   */
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
-    NULL,                    /* xdrObject   */
     NULL,                    /* hasInstance */
     args_trace,
     {
@@ -600,11 +598,9 @@ Class js::StrictArgumentsObjectClass = {
     reinterpret_cast<JSResolveOp>(strictargs_resolve),
     JS_ConvertStub,
     args_finalize,           /* finalize   */
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
-    NULL,                    /* xdrObject   */
     NULL,                    /* hasInstance */
     args_trace,
     {
@@ -954,11 +950,9 @@ JS_PUBLIC_DATA(Class) js::CallClass = {
     (JSResolveOp)call_resolve,
     NULL,                    /* convert: Leave it NULL so we notice if calls ever escape */
     NULL,                    /* finalize */
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
-    NULL,                    /* xdrObject   */
     NULL,                    /* hasInstance */
     call_trace
 };
@@ -1350,7 +1344,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
 /* XXX store parent and proto, if defined */
 JSBool
-js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
+js::XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
     JSFunction *fun;
@@ -1393,7 +1387,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     if (!JS_XDRUint32(xdr, &flagsword))
         return false;
 
-    if (!js_XDRScript(xdr, &script))
+    if (!XDRScript(xdr, &script))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
@@ -1411,11 +1405,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     return true;
 }
 
-#else  /* !JS_HAS_XDR */
-
-#define js_XDRFunctionObject NULL
-
-#endif /* !JS_HAS_XDR */
+#endif /* JS_HAS_XDR */
 
 /*
  * [[HasInstance]] internal method for Function objects: fetch the .prototype
@@ -1510,11 +1500,9 @@ JS_FRIEND_DATA(Class) js::FunctionClass = {
     (JSResolveOp)fun_resolve,
     JS_ConvertStub,
     fun_finalize,
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
-    NULL,
     fun_hasInstance,
     fun_trace
 };
@@ -2232,7 +2220,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script->compartment() != cx->compartment);
 
             clone->script().init(NULL);
-            JSScript *cscript = js_CloneScript(cx, script);
+            JSScript *cscript = CloneScript(cx, script);
             if (!cscript)
                 return NULL;
 
