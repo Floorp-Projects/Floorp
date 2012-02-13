@@ -24,8 +24,6 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
     XPCOMUtils.defineLazyGetter(navigator, 'mozKeyboard', function() {
       return new MozKeyboard();
     });
-
-    updateApplicationCache(window);
   };
 
   let progressListener = {
