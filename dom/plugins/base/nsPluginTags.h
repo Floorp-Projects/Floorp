@@ -47,6 +47,7 @@
 #include "nsIPluginTag.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsISupportsArray.h"
+#include "nsITimer.h"
 
 class nsPluginHost;
 struct PRLibrary;
@@ -85,12 +86,11 @@ public:
               const char* const* aExtensions,
               PRInt32 aVariants,
               PRInt64 aLastModifiedTime = 0,
-              bool aCanUnload = true,
               bool aArgsAreUTF8 = false);
   virtual ~nsPluginTag();
   
   void SetHost(nsPluginHost * aHost);
-  void TryUnloadPlugin();
+  void TryUnloadPlugin(bool inShutdown);
   void Mark(PRUint32 mask);
   void UnMark(PRUint32 mask);
   bool HasFlag(PRUint32 flag);
@@ -109,7 +109,6 @@ public:
   nsTArray<nsCString> mExtensions; // UTF-8
   PRLibrary     *mLibrary;
   nsRefPtr<nsNPAPIPlugin> mEntryPoint;
-  bool          mCanUnloadLibrary;
   bool          mIsJavaPlugin;
   bool          mIsNPRuntimeEnabledJavaPlugin;
   bool          mIsFlashPlugin;
@@ -117,6 +116,7 @@ public:
   nsCString     mFullPath; // UTF-8
   nsCString     mVersion;  // UTF-8
   PRInt64       mLastModifiedTime;
+  nsCOMPtr<nsITimer> mUnloadTimer;
 private:
   PRUint32      mFlags;
   
