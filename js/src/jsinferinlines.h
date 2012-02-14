@@ -1343,7 +1343,7 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
     JSCompartment *comp = newScript->fun->compartment();
     if (comp->needsBarrier()) {
         MarkObjectUnbarriered(comp->barrierTracer(), newScript->fun, "write barrier");
-        MarkShapeUnbarriered(comp->barrierTracer(), newScript->shape, "write barrier");
+        MarkShape(comp->barrierTracer(), newScript->shape, "write barrier");
     }
 #endif
 }
