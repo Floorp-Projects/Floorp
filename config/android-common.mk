@@ -71,5 +71,6 @@ JAVAC_FLAGS = \
   -bootclasspath $(JAVA_BOOTCLASSPATH) \
   -encoding UTF8 \
   -g:source,lines \
-  -Werror \
+  # Still getting warngings against 1.6.0_29/1.7, remove until fixed on m-c
+  #-Werror \
   $(NULL)
