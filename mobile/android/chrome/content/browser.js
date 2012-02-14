@@ -1379,34 +1379,39 @@ nsBrowserAccess.prototype = {
       }
     }
 
+    Services.io.offline = false;
+
+    let referrer;
+    if (aOpener) {
+      try {
+        let location = aOpener.location;
+        referrer = Services.io.newURI(location, null, null);
+      } catch(e) { }
+    }
+
     let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW || aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB);
 
-    let parentId = -1;
-    if (newTab && !isExternal) {
-      let parent = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForWindow(aOpener.top));
-      if (parent)
-        parentId = parent.id;
-    }
-
-    let browser;
     if (newTab) {
-      let tab = BrowserApp.addTab("about:blank", { external: isExternal, parentId: parentId, selected: true });
-      browser = tab.browser;
-    } else { // OPEN_CURRENTWINDOW and illegal values
-      browser = BrowserApp.selectedBrowser;
+      let parentId = -1;
+      if (!isExternal) {
+        let parent = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForWindow(aOpener.top));
+        if (parent)
+          parentId = parent.id;
+      }
+
+      // BrowserApp.addTab calls loadURIWithFlags with the appropriate params
+      let tab = BrowserApp.addTab(aURI ? aURI.spec : "about:blank", { flags: loadflags,
+                                                                      referrerURI: referrer,
+                                                                      external: isExternal,
+                                                                      parentId: parentId,
+                                                                      selected: true });
+      return tab.browser;
     }
 
-    Services.io.offline = false;
-    try {
-      let referrer;
-      if (aURI && browser) {
-        if (aOpener) {
-          let location = aOpener.location;
-          referrer = Services.io.newURI(location, null, null);
-        }
-        browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
-      }
-    } catch(e) { }
+    // OPEN_CURRENTWINDOW and illegal values
+    let browser = BrowserApp.selectedBrowser;
+    if (aURI && browser)
+      browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
 
     return browser;
   },
