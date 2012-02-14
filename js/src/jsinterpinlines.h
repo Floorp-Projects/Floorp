@@ -704,6 +704,27 @@ FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid &id, Value
 }
 
 static JS_ALWAYS_INLINE bool
+ToIdOperation(JSContext *cx, const Value &objval, const Value &idval, Value *res)
+{
+    if (idval.isInt32()) {
+        *res = idval;
+        return true;
+    }
+
+    JSObject *obj = ValueToObject(cx, objval);
+    if (!obj)
+        return false;
+
+    jsid dummy;
+    if (!js_InternNonIntElementId(cx, obj, idval, &dummy, res))
+        return false;
+
+    if (!res->isInt32())
+        types::TypeScript::MonitorUnknown(cx);
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
 GetObjectElementOperation(JSContext *cx, JSObject *obj, const Value &rref, Value *res)
 {
     JSScript *script;
