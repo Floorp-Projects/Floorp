@@ -1328,6 +1328,12 @@ JS_ToggleOptions(JSContext *cx, uint32_t options)
     return SetOptionsCommon(cx, newopts);
 }
 
+JS_PUBLIC_API(void)
+JS_SetJitHardening(JSRuntime *rt, JSBool enabled)
+{
+    rt->setJitHardening(!!enabled);
+}
+
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {

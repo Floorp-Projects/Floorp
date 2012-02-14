@@ -79,6 +79,7 @@
 
 #ifdef JS_METHODJIT
 # include "assembler/assembler/MacroAssembler.h"
+# include "methodjit/MethodJIT.h"
 #endif
 #include "frontend/TokenStream.h"
 #include "frontend/ParseMaps.h"
@@ -124,13 +125,23 @@ JSRuntime::triggerOperationCallback()
     JS_ATOMIC_SET(&interrupt, 1);
 }
 
+void
+JSRuntime::setJitHardening(bool enabled)
+{
+    jitHardening = enabled;
+    if (execAlloc_)
+        execAlloc_->setRandomize(enabled);
+}
+
 JSC::ExecutableAllocator *
 JSRuntime::createExecutableAllocator(JSContext *cx)
 {
     JS_ASSERT(!execAlloc_);
     JS_ASSERT(cx->runtime == this);
 
-    execAlloc_ = new_<JSC::ExecutableAllocator>();
+    JSC::AllocationBehavior randomize =
+        jitHardening ? JSC::AllocationCanRandomize : JSC::AllocationDeterministic;
+    execAlloc_ = new_<JSC::ExecutableAllocator>(randomize);
     if (!execAlloc_)
         js_ReportOutOfMemory(cx);
     return execAlloc_;
@@ -1241,6 +1252,9 @@ void
 JSContext::updateJITEnabled()
 {
 #ifdef JS_METHODJIT
+    // This allocator randomization is actually a compartment-wide option.
+    if (compartment && compartment->hasJaegerCompartment())
+        compartment->jaegerCompartment()->execAlloc()->setRandomize(runtime->getJitHardening());
     methodJitEnabled = (runOptions & JSOPTION_METHODJIT) && !IsJITBrokenHere();
 #endif
 }

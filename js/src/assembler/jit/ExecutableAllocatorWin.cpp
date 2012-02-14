@@ -20,17 +20,27 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 
 #include "ExecutableAllocator.h"
 
 #if ENABLE_ASSEMBLER && WTF_OS_WINDOWS
 
 #include "jswin.h"
+#include "prmjtime.h"
+
+extern void random_setSeed(int64_t *, int64_t);
+extern uint64_t random_next(int64_t *, int);
 
 namespace JSC {
+
+int64_t ExecutableAllocator::rngSeed;
+
+void ExecutableAllocator::initSeed()
+{
+    random_setSeed(&rngSeed, (PRMJ_Now() / 1000) ^ int64_t(this));
+}
 
 size_t ExecutableAllocator::determinePageSize()
 {
@@ -39,16 +49,72 @@ size_t ExecutableAllocator::determinePageSize()
     return system_info.dwPageSize;
 }
 
+void *ExecutableAllocator::computeRandomAllocationAddress()
+{
+    /*
+     * Inspiration is V8's OS::Allocate in platform-win32.cc.
+     *
+     * VirtualAlloc takes 64K chunks out of the virtual address space, so we
+     * keep 16b alignment.
+     *
+     * x86: V8 comments say that keeping addresses in the [64MiB, 1GiB) range
+     * tries to avoid system default DLL mapping space. In the end, we get 13
+     * bits of randomness in our selection.
+     * x64: [2GiB, 4TiB), with 25 bits of randomness.
+     */
+    static const uintN chunkBits = 16;
+#if WTF_CPU_X86_64
+    static const uintptr_t base = 0x0000000080000000;
+    static const uintptr_t mask = 0x000003ffffff0000;
+#elif WTF_CPU_X86
+    static const uintptr_t base = 0x04000000;
+    static const uintptr_t mask = 0x3fff0000;
+#else
+# error "Unsupported architecture"
+#endif
+    uint64_t rand = random_next(&rngSeed, 32) << chunkBits;
+    return (void *) (base | rand & mask);
+}
+
+static bool
+RandomizeIsBrokenImpl()
+{
+    OSVERSIONINFO osvi;
+    ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+    GetVersionEx(&osvi);
+
+    // Version number mapping is available at:
+    // http://msdn.microsoft.com/en-us/library/ms724832%28v=vs.85%29.aspx
+    // We disable everything before Vista, for now.
+    return osvi.dwMajorVersion <= 5;
+}
+
+static bool
+RandomizeIsBroken()
+{
+    static int result = RandomizeIsBrokenImpl();
+    return !!result;
+}
+
 ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
-    void *allocation = VirtualAlloc(0, n, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    void *allocation = NULL;
+    if (allocBehavior == AllocationCanRandomize && !RandomizeIsBroken()) {
+        void *randomAddress = computeRandomAllocationAddress();
+        allocation = VirtualAlloc(randomAddress, n, MEM_COMMIT | MEM_RESERVE,
+                                  PAGE_EXECUTE_READWRITE);
+    }
+    if (!allocation)
+        allocation = VirtualAlloc(0, n, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
 }
 
 void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
-{ 
-    VirtualFree(alloc.pages, 0, MEM_RELEASE); 
+{
+    VirtualFree(alloc.pages, 0, MEM_RELEASE);
 }
 
 #if ENABLE_ASSEMBLER_WX_EXCLUSIVE
