@@ -55,7 +55,8 @@ class XULInfo:
               break
 
         if path == None:
-            print "Can't find config/autoconf.mk on a directory containing the JS shell (searched from %s)"%jsdir
+            print ("Can't find config/autoconf.mk on a directory containing the JS shell"
+                   " (searched from %s)") % jsdir
             sys.exit(1)
 
         # Read the values.
@@ -107,7 +108,7 @@ class NullXULInfoTester:
 def parse(filename, xul_tester, reldir = ''):
     ans = []
     comment_re = re.compile(r'#.*')
-    dir = os.path.dirname(filename)
+    dirname = os.path.dirname(filename)
 
     try:
         f = open(filename)
@@ -124,7 +125,7 @@ def parse(filename, xul_tester, reldir = ''):
         elif parts[0] == 'include':
             include_file = parts[1]
             include_reldir = os.path.join(reldir, os.path.dirname(include_file))
-            ans += parse(os.path.join(dir, include_file), xul_tester, include_reldir)
+            ans += parse(os.path.join(dirname, include_file), xul_tester, include_reldir)
         elif parts[0] == 'url-prefix':
             # Doesn't apply to shell tests
             pass
@@ -182,7 +183,8 @@ def parse(filename, xul_tester, reldir = ''):
                             elif fallback_action == "random":
                                 random = True
                             else:
-                                raise Exception("Invalid precondition '%s' or fallback action '%s'" % (precondition, fallback_action))
+                                raise Exception(("Invalid precondition '%s' or fallback " +
+                                                 " action '%s'") % (precondition, fallback_action))
                             break
                     pos += 1
                 elif parts[pos] == 'script':
@@ -204,3 +206,27 @@ def parse(filename, xul_tester, reldir = ''):
             ans.append(TestCase(os.path.join(reldir, script),
                                 enable, expect, random, slow, debugMode))
     return ans
+
+def check_manifest(test_list):
+    test_set = set([ _.path for _ in test_list ])
+
+    missing = []
+
+    for dirpath, dirnames, filenames in os.walk('.'):
+        for filename in filenames:
+            if dirpath == '.': continue
+            if not filename.endswith('.js'): continue
+            if filename in ('browser.js', 'shell.js', 'jsref.js', 'template.js'): continue
+
+            path = os.path.join(dirpath, filename)
+            if path.startswith('./'):
+                path = path[2:]
+            if path not in test_set:
+                missing.append(path)
+
+    if missing:
+        print "Test files not contained in any manifest:"
+        for path in missing:
+            print path
+    else:
+        print 'All test files are listed in manifests'
