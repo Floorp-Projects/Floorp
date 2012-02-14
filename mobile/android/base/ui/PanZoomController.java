@@ -211,7 +211,6 @@ public class PanZoomController
     }
 
     /** This function must be called from the UI thread. */
-    @SuppressWarnings("fallthrough")
     public void abortAnimation() {
         checkMainThread();
         // this happens when gecko changes the viewport on us or if the device is rotated.
@@ -281,7 +280,6 @@ public class PanZoomController
         return false;
     }
 
-    @SuppressWarnings("fallthrough")
     private boolean onTouchMove(MotionEvent event) {
         Log.d(LOGTAG, "onTouchMove in state " + mState);
 
@@ -291,13 +289,18 @@ public class PanZoomController
             // should never happen
             Log.e(LOGTAG, "Received impossible touch move while in " + mState);
             return false;
+
         case TOUCHING:
             if (panDistance(event) < PAN_THRESHOLD) {
                 return false;
             }
             cancelTouch();
+            startPanning(event.getX(0), event.getY(0), event.getEventTime());
             GeckoApp.mAppContext.hidePlugins(false /* don't hide layers */);
-            // fall through
+            GeckoApp.mAppContext.mAutoCompletePopup.hide();
+            track(event);
+            return true;
+
         case PANNING_HOLD_LOCKED:
             GeckoApp.mAutoCompletePopup.hide();
             mState = PanZoomState.PANNING_LOCKED;
@@ -305,6 +308,7 @@ public class PanZoomController
         case PANNING_LOCKED:
             track(event);
             return true;
+
         case PANNING_HOLD:
             GeckoApp.mAutoCompletePopup.hide();
             mState = PanZoomState.PANNING;
@@ -312,6 +316,7 @@ public class PanZoomController
         case PANNING:
             track(event);
             return true;
+
         case ANIMATED_ZOOM:
         case PINCHING:
             // scale gesture listener will handle this
@@ -370,6 +375,29 @@ public class PanZoomController
         mLastEventTime = time;
     }
 
+    private void startPanning(float x, float y, long time) {
+        float dx = mX.panDistance(x);
+        float dy = mY.panDistance(y);
+        double angle = Math.atan2(dy, dx); // range [-pi, pi]
+        angle = Math.abs(angle); // range [0, pi]
+
+        // When the touch move breaks through the pan threshold, reposition the touch down origin
+        // so the page won't jump when we start panning.
+        mX.startTouch(x);
+        mY.startTouch(y);
+        mLastEventTime = time;
+
+        if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
+            mY.setScrollingDisabled(true);
+            mState = PanZoomState.PANNING_LOCKED;
+        } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
+            mX.setScrollingDisabled(true);
+            mState = PanZoomState.PANNING_LOCKED;
+        } else {
+            mState = PanZoomState.PANNING;
+        }
+    }
+
     private float panDistance(MotionEvent move) {
         float dx = mX.panDistance(move.getX(0));
         float dy = mY.panDistance(move.getY(0));
@@ -384,27 +412,6 @@ public class PanZoomController
             return;
         }
         mLastEventTime = time;
-
-        if (mState == PanZoomState.PANNING_LOCKED) {
-            // check to see if we should break the axis lock
-            double angle = Math.atan2(mY.panDistance(y), mX.panDistance(x)); // range [-pi, pi]
-            angle = Math.abs(angle); // range [0, pi]
-            if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
-                // lock to x-axis
-                mX.setScrollingDisabled(false);
-                mY.setScrollingDisabled(true);
-            } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
-                // lock to y-axis
-                mX.setScrollingDisabled(true);
-                mY.setScrollingDisabled(false);
-            } else {
-                // break axis lock but log the angle so we can fine-tune this when people complain
-                mState = PanZoomState.PANNING;
-                mX.setScrollingDisabled(false);
-                mY.setScrollingDisabled(false);
-                angle = Math.abs(angle - (Math.PI / 2));  // range [0, pi/2]
-            }
-        }
 
         mX.updateWithTouchAt(x, timeDelta);
         mY.updateWithTouchAt(y, timeDelta);
