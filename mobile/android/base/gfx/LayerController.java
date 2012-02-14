@@ -319,12 +319,15 @@ public class LayerController {
      * would prefer that the action didn't take place.
      */
     public boolean getRedrawHint() {
+        // FIXME: Allow redraw while a finger is down, but only if we're about to checkerboard.
+        // This requires fixing aboutToCheckerboard() to know about the new buffer size.
+
         if (mForceRedraw) {
             mForceRedraw = false;
             return true;
         }
 
-        return aboutToCheckerboard() && mPanZoomController.getRedrawHint();
+        return mPanZoomController.getRedrawHint();
     }
 
     private RectF getTileRect() {
