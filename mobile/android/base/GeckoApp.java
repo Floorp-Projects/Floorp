@@ -797,6 +797,18 @@ abstract public class GeckoApp
         });
     }
 
+    void handleClearHistory() {
+        if (mAboutHomeContent == null)
+            return;
+
+        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            public void run() {
+                mAboutHomeContent.update(GeckoApp.mAppContext,
+                        EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
+            }
+        });
+    }
+
     public StartupMode getStartupMode() {
         // This function might touch the disk and should not
         // be called from UI's main thread.
