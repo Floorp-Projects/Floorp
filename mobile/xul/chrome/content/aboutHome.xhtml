@@ -168,7 +168,7 @@
       initAddons();
       initSetupSync();
 
-      let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch2);
+      let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
       if (prefs.getBoolPref("browser.firstrun.show.uidiscovery")) {
         startDiscovery();
         prefs.setBoolPref("browser.firstrun.show.uidiscovery", false);

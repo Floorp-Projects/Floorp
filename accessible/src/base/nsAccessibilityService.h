@@ -197,24 +197,6 @@ public:
    */
   nsAccessible* GetAccessible(nsINode* aNode, nsIPresShell* aPresShell);
 
-  /**
-   * Return an accessible for the given DOM node or container accessible if
-   * the node is not accessible.
-   *
-   * @param aNode [in] the given node
-   * @param aDoc  [in] the document accessible. Can't be null.
-   */
-  nsAccessible* GetAccessibleOrContainer(nsINode* aNode, nsDocAccessible* aDoc);
-
-  /**
-   * Return a container accessible for the given DOM node.
-   */
-  nsAccessible* GetContainerAccessible(nsINode* aNode, nsDocAccessible* aDoc)
-  {
-    return aNode ?
-      GetAccessibleOrContainer(aNode->GetNodeParent(), aDoc) : nsnull;
-  }
-
 private:
   // nsAccessibilityService creation is controlled by friend
   // NS_GetAccessibilityService, keep constructors private.

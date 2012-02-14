@@ -280,6 +280,7 @@ public class ProfileMigrator {
             File dbFileShm = new File(dbPathShm);
 
             SQLiteBridge db = null;
+            GeckoAppShell.ensureSQLiteLibsLoaded(GeckoApp.mAppContext.getApplication().getPackageResourcePath());
             try {
                 db = new SQLiteBridge(dbPath);
                 migrateBookmarks(db);

@@ -43,6 +43,7 @@
 #include "nsIDocument.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMJSUtils.h"
+#include "prprf.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventListenerWrapper)
@@ -72,7 +73,21 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDOMEventTargetHelper)
+  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+    char name[512];
+    nsAutoString uri;
+    if (tmp->mOwner && tmp->mOwner->GetExtantDocument()) {
+      tmp->mOwner->GetExtantDocument()->GetDocumentURI(uri);
+    }
+    PR_snprintf(name, sizeof(name), "nsDOMEventTargetHelper %s",
+                NS_ConvertUTF16toUTF8(uri).get());
+    cb.DescribeRefCountedNode(tmp->mRefCnt.get(), sizeof(nsDOMEventTargetHelper),
+                              name);
+  } else {
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsDOMEventTargetHelper, tmp->mRefCnt.get())
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mListenerManager,
                                                   nsEventListenerManager)

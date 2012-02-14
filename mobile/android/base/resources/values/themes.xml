@@ -3,7 +3,6 @@
 
     <style name="Gecko" parent="@android:style/Theme">
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">@color/splash_background</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
     
@@ -15,7 +14,6 @@
     
     <style name="Gecko.Light" parent="@android:style/Theme.Light">
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">@color/splash_background</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
     
@@ -28,5 +26,13 @@
     <style name="Gecko.Translucent" parent="@android:style/Theme.Translucent">
         <item name="android:windowNoTitle">true</item>
     </style>
+
+    <style name="Gecko.App"/>
+    
+    <style name="Gecko.Light.AwesomeBar"/>
+    
+    <style name="Gecko.TitleBar.Preferences"/>
+    
+    <style name="Gecko.Translucent.TabsTray"/>
 
 </resources>

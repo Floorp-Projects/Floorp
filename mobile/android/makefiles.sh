@@ -36,30 +36,31 @@
 # ***** END LICENSE BLOCK *****
 
 add_makefiles "
-netwerk/locales/Makefile
-dom/locales/Makefile
-toolkit/locales/Makefile
-security/manager/locales/Makefile
+mobile/locales/Makefile
+mobile/android/Makefile
 mobile/android/app/Makefile
 mobile/android/app/profile/extensions/Makefile
 mobile/android/base/Makefile
 mobile/android/base/locales/Makefile
-mobile/locales/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
+$MOZ_BRANDING_DIRECTORY/content/Makefile
 $MOZ_BRANDING_DIRECTORY/locales/Makefile
 mobile/android/chrome/Makefile
-mobile/android/chrome/tests/Makefile
 mobile/android/components/Makefile
-mobile/android/components/build/Makefile
 mobile/android/modules/Makefile
 mobile/android/installer/Makefile
 mobile/android/locales/Makefile
-mobile/android/Makefile
 mobile/android/themes/core/Makefile
 "
 
-if test -n "$MOZ_UPDATE_PACKAGING"; then
-   add_makefiles "
-     tools/update-packaging/Makefile
-   "
+if [ ! "$LIBXUL_SDK" ]; then
+  add_makefiles "
+    mobile/android/components/build/Makefile
+  "
+fi
+
+if [ "$ENABLE_TESTS" ]; then
+  add_makefiles "
+    mobile/android/chrome/tests/Makefile
+  "
 fi

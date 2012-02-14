@@ -2882,7 +2882,7 @@ BEGIN_CASE(JSOP_REGEXP)
     JSObject *proto = regs.fp()->scopeChain().global().getOrCreateRegExpPrototype(cx);
     if (!proto)
         goto error;
-    JSObject *obj = js_CloneRegExpObject(cx, script->getRegExp(index), proto);
+    JSObject *obj = CloneRegExpObject(cx, script->getRegExp(index), proto);
     if (!obj)
         goto error;
     PUSH_OBJECT(*obj);

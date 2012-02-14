@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.90 2011/11/19 21:58:21 bsmith%mozilla.com Exp $ */
+/* $Id: sslimpl.h,v 1.93 2012/02/11 12:58:47 kaie%kuix.de Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -794,10 +794,11 @@ const ssl3CipherSuiteDef *suite_def;
 
     PRBool                authCertificatePending;
     /* Which function should SSL_RestartHandshake* call if we're blocked?
-     * One of NULL, ssl3_SendClientSecondRound, or ssl3_FinishHandshake. */
+     * One of NULL, ssl3_SendClientSecondRound, ssl3_FinishHandshake,
+     * or ssl3_AlwaysFail */
     sslRestartTarget      restartTarget;
     /* Shared state between ssl3_HandleFinished and ssl3_FinishHandshake */
-    PRBool                cacheSID; 
+    PRBool                cacheSID;
 } SSL3HandshakeState;
 
 
@@ -1358,7 +1359,7 @@ extern void ssl_FreeSocket(struct sslSocketStr *ssl);
 extern SECStatus SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level,
 				SSL3AlertDescription desc);
 
-extern SECStatus ssl3_RestartHandshakeAfterAuthCertificate(sslSocket *ss);
+extern SECStatus ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode status);
 
 /*
  * for dealing with SSL 3.0 clients sending SSL 2.0 format hellos

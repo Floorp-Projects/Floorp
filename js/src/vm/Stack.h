@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -430,7 +430,14 @@ class StackFrame
                           const Value &thisv, JSObject &scopeChain, ExecuteType type);
 
     /* Used when activating generators. */
-    void stealFrameAndSlots(Value *vp, StackFrame *otherfp, Value *othervp, Value *othersp);
+    enum TriggerPostBarriers {
+        DoPostBarrier = true,
+        NoPostBarrier = false
+    };
+    template <class T, class U, TriggerPostBarriers doPostBarrier>
+    void stealFrameAndSlots(StackFrame *fp, T *vp, StackFrame *otherfp, U *othervp,
+                            Value *othersp);
+    void writeBarrierPost();
 
     /* Perhaps one fine day we will remove dummy frames. */
     void initDummyFrame(JSContext *cx, JSObject &chain);
@@ -988,6 +995,10 @@ class StackFrame
 
     /* Return value */
 
+    bool hasReturnValue() const {
+        return !!(flags_ & HAS_RVAL);
+    }
+
     const Value &returnValue() {
         if (!(flags_ & HAS_RVAL))
             rval_.setUndefined();
@@ -1193,6 +1204,9 @@ class StackFrame
 #endif
 
     void methodjitStaticAsserts();
+
+  public:
+    void mark(JSTracer *trc);
 };
 
 static const size_t VALUES_PER_STACK_FRAME = sizeof(StackFrame) / sizeof(Value);
@@ -1365,6 +1379,10 @@ class StackSegment
         return regs_ ? regs_->fp() : NULL;
     }
 
+    jsbytecode *maybepc() const {
+        return regs_ ? regs_->pc : NULL;
+    }
+
     CallArgsList &calls() const {
         JS_ASSERT(calls_);
         return *calls_;
@@ -1535,6 +1553,7 @@ class StackSpace
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
     void mark(JSTracer *trc);
+    void markFrameSlots(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc);
 
     /* We only report the committed size;  uncommitted size is uninteresting. */
     JS_FRIEND_API(size_t) sizeOfCommitted();
