@@ -146,7 +146,7 @@ def build_source_dir(prefix, version):
     return source_dir + '/' + prefix + version
 
 binutils_version = "2.21.1"
-glibc_version = "2.13" #FIXME: should probably use 2.5.1
+glibc_version = "2.12.2" #FIXME: should probably use 2.5.1
 tar_version = "1.26"
 gcc_version = "4.5.2"
 mpfr_version = "2.4.2"
@@ -189,6 +189,7 @@ if not os.path.exists(source_dir):
     patch('binutils-deterministic.patch', 1, binutils_source_dir)
     extract(glibc_source_tar, source_dir)
     patch('glibc-deterministic.patch', 1, glibc_source_dir)
+    run_in(glibc_source_dir, ["autoconf"])
     extract(tar_source_tar, source_dir)
     extract(mpc_source_tar, source_dir)
     extract(mpfr_source_tar, source_dir)
