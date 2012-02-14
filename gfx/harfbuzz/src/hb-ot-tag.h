@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Red Hat, Inc.
+ * Copyright © 2009  Red Hat, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -28,7 +28,6 @@
 #define HB_OT_TAG_H
 
 #include "hb-common.h"
-#include "hb-language.h"
 
 HB_BEGIN_DECLS
 
@@ -36,8 +35,10 @@ HB_BEGIN_DECLS
 #define HB_OT_TAG_DEFAULT_SCRIPT	HB_TAG ('D', 'F', 'L', 'T')
 #define HB_OT_TAG_DEFAULT_LANGUAGE	HB_TAG ('d', 'f', 'l', 't')
 
-const hb_tag_t *
-hb_ot_tags_from_script (hb_script_t script);
+void
+hb_ot_tags_from_script (hb_script_t  script,
+			hb_tag_t    *script_tag_1,
+			hb_tag_t    *script_tag_2);
 
 hb_script_t
 hb_ot_tag_to_script (hb_tag_t tag);

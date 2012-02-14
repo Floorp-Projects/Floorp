@@ -1,23 +1,85 @@
-- Rename get_table to reference_table
+General fixes:
+=============
 
-- Avoid allocating blob objects internally for for_data() faces
+- Move feature parsing from util into the library
 
-- head table access cleanup (div by zero now!)
-- cache various expensive scale computation
+- 'const' for getter APIs? (use mutable internally)
 
-- SFNT api?  get_num_faces?
+- Fix TT 'kern' on/off and GPOS interaction (move kerning before GPOS)
 
-- GNOME Bug 612402 - (hb-arm) HarfBuzz compilation fix for arm
+- Do proper rounding when scaling from font space?
 
-- Make sure LangSys default feature is only applied once...
+- Misc features:
+  * init/medi/fina/isol for non-cursive scripts
+  * vkna,hkna etc for kana, *jmo for hangul, etc
 
-- kern/GPOS interaction
+- Move non-native direction and normalization handling to the generic non-OT
+  layer, such that uniscribe and other backends can use.
 
-- Use size_t in sanitize?
-- Better define HB_INTERNAL
-- Future-proof metrics struct
+- Uniscribe backend needs to enforce one direction only, otherwise cluster
+  values can confused the user.
 
-hb-ot:
-- Rename hb_internal_glyph_info_t to hb_ot_glyph_info_t
-- Add query API for aalt-like features
-- HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH vs LookupType::... mess
+
+API issues to fix before 1.0:
+============================
+
+- Rename all internal symbols (static ones even) to have _hb prefix?
+
+- Add pkg-config files for glue codes (harfbuzz-glib, etc)
+
+- Figure out how many .so objects, how to link, etc
+
+- Add hb-cairo glue
+
+- Add sanitize API (and a cached version, that saves result on blob user-data)
+
+- Add glib GBoxedType stuff and introspection
+
+
+API to add (maybe after 1.0):
+============================
+
+- Add Uniscribe face / font get API
+
+- BCP 47 language handling / API (language_matches?)
+
+- Add hb_face_get_glyph_count()?
+
+- Add hb_font_create_linear()?
+
+- Add hb_shape_plan()/hb_shape_execute()
+
+- Add query API for aalt-like features?
+
+- SFNT api? get_num_faces? get_table_tags? (there's something in stash)
+
+- Add segmentation API
+
+- Add hb-fribidi?
+
+
+hb-view enhancements:
+====================
+
+- Add --format
+- Add --width, --height, --auto-size, --align, etc?
+- Port to GOption, --help
+- Add XML and JSON formats
+
+
+Tests to write:
+==============
+
+- ot-layout enumeration API (needs font)
+
+- Finish test-shape.c, grep for TODO
+
+- Finish test-unicode.c, grep for TODO
+
+
+Optimizations:
+=============
+
+- Avoid allocating blob objects internally for for_data() faces?
+
+- Add caching layer to hb-ft

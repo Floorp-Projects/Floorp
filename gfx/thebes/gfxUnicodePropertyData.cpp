@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -40,10 +41,147 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Created on Sun Feb  5 20:41:21 2012.
+ * Created on Mon Feb 13 09:25:50 2012 from UCD data files with version info:
+ *
+
+# Date: 2012-01-26, 22:03:00 GMT [KW]
+#
+# Unicode Character Database
+# Copyright (c) 1991-2012 Unicode, Inc.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
+#
+# For documentation, see NamesList.html,
+# UAX #38, "Unicode Han Database (Unihan)," and
+# UAX #44, "Unicode Character Database."
+#
+
+This directory contains final data files
+for the Unicode Character Database (UCD) for Unicode 6.1.0.
+
+# Scripts-6.1.0.txt
+# Date: 2011-11-27, 05:10:50 GMT [MD]
+
+# EastAsianWidth-6.1.0.txt
+# Date: 2011-09-19, 18:46:00 GMT [KW]
+
+# BidiMirroring-6.1.0.txt
+# Date: 2011-12-20, 19:31:00 GMT [KW, LI]
+
+# HangulSyllableType-6.1.0.txt
+# Date: 2011-08-25, 00:02:18 GMT [MD]
+
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
+
+#include "mozilla/StdInt.h"
+#include "harfbuzz/hb-common.h"
+
+static const PRUint32 sScriptCodeToTag[] = {
+  HB_TAG('Z','y','y','y'),
+  HB_TAG('Z','i','n','h'),
+  HB_TAG('A','r','a','b'),
+  HB_TAG('A','r','m','n'),
+  HB_TAG('B','e','n','g'),
+  HB_TAG('B','o','p','o'),
+  HB_TAG('C','h','e','r'),
+  HB_TAG('C','o','p','t'),
+  HB_TAG('C','y','r','l'),
+  HB_TAG('D','s','r','t'),
+  HB_TAG('D','e','v','a'),
+  HB_TAG('E','t','h','i'),
+  HB_TAG('G','e','o','r'),
+  HB_TAG('G','o','t','h'),
+  HB_TAG('G','r','e','k'),
+  HB_TAG('G','u','j','r'),
+  HB_TAG('G','u','r','u'),
+  HB_TAG('H','a','n','i'),
+  HB_TAG('H','a','n','g'),
+  HB_TAG('H','e','b','r'),
+  HB_TAG('H','i','r','a'),
+  HB_TAG('K','n','d','a'),
+  HB_TAG('K','a','n','a'),
+  HB_TAG('K','h','m','r'),
+  HB_TAG('L','a','o','o'),
+  HB_TAG('L','a','t','n'),
+  HB_TAG('M','l','y','m'),
+  HB_TAG('M','o','n','g'),
+  HB_TAG('M','y','m','r'),
+  HB_TAG('O','g','a','m'),
+  HB_TAG('I','t','a','l'),
+  HB_TAG('O','r','y','a'),
+  HB_TAG('R','u','n','r'),
+  HB_TAG('S','i','n','h'),
+  HB_TAG('S','y','r','c'),
+  HB_TAG('T','a','m','l'),
+  HB_TAG('T','e','l','u'),
+  HB_TAG('T','h','a','a'),
+  HB_TAG('T','h','a','i'),
+  HB_TAG('T','i','b','t'),
+  HB_TAG('C','a','n','s'),
+  HB_TAG('Y','i','i','i'),
+  HB_TAG('T','g','l','g'),
+  HB_TAG('H','a','n','o'),
+  HB_TAG('B','u','h','d'),
+  HB_TAG('T','a','g','b'),
+  HB_TAG('B','r','a','i'),
+  HB_TAG('C','p','r','t'),
+  HB_TAG('L','i','m','b'),
+  HB_TAG('O','s','m','a'),
+  HB_TAG('S','h','a','w'),
+  HB_TAG('L','i','n','b'),
+  HB_TAG('T','a','l','e'),
+  HB_TAG('U','g','a','r'),
+  HB_TAG('T','a','l','u'),
+  HB_TAG('B','u','g','i'),
+  HB_TAG('G','l','a','g'),
+  HB_TAG('T','f','n','g'),
+  HB_TAG('S','y','l','o'),
+  HB_TAG('X','p','e','o'),
+  HB_TAG('K','h','a','r'),
+  HB_TAG('Z','z','z','z'),
+  HB_TAG('B','a','l','i'),
+  HB_TAG('X','s','u','x'),
+  HB_TAG('P','h','n','x'),
+  HB_TAG('P','h','a','g'),
+  HB_TAG('N','k','o','o'),
+  HB_TAG('K','a','l','i'),
+  HB_TAG('L','e','p','c'),
+  HB_TAG('R','j','n','g'),
+  HB_TAG('S','u','n','d'),
+  HB_TAG('S','a','u','r'),
+  HB_TAG('C','h','a','m'),
+  HB_TAG('O','l','c','k'),
+  HB_TAG('V','a','i','i'),
+  HB_TAG('C','a','r','i'),
+  HB_TAG('L','y','c','i'),
+  HB_TAG('L','y','d','i'),
+  HB_TAG('A','v','s','t'),
+  HB_TAG('B','a','m','u'),
+  HB_TAG('E','g','y','p'),
+  HB_TAG('A','r','m','i'),
+  HB_TAG('P','h','l','i'),
+  HB_TAG('P','r','t','i'),
+  HB_TAG('J','a','v','a'),
+  HB_TAG('K','t','h','i'),
+  HB_TAG('L','i','s','u'),
+  HB_TAG('M','t','e','i'),
+  HB_TAG('S','a','r','b'),
+  HB_TAG('O','r','k','h'),
+  HB_TAG('S','a','m','r'),
+  HB_TAG('L','a','n','a'),
+  HB_TAG('T','a','v','t'),
+  HB_TAG('B','a','t','k'),
+  HB_TAG('B','r','a','h'),
+  HB_TAG('M','a','n','d'),
+  HB_TAG('C','a','k','m'),
+  HB_TAG('M','e','r','c'),
+  HB_TAG('M','e','r','o'),
+  HB_TAG('P','l','r','d'),
+  HB_TAG('S','h','r','d'),
+  HB_TAG('S','o','r','a'),
+  HB_TAG('T','a','k','r')
+};
 
 #define kScriptIndexBits 10
 #define kScriptCharBits  6

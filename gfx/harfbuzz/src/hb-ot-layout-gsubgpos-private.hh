@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2007,2008,2009,2010  Red Hat, Inc.
- * Copyright (C) 2010  Google, Inc.
+ * Copyright © 2007,2008,2009,2010  Red Hat, Inc.
+ * Copyright © 2010  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -30,14 +30,19 @@
 #define HB_OT_LAYOUT_GSUBGPOS_PRIVATE_HH
 
 #include "hb-buffer-private.hh"
-#include "hb-ot-layout-gdef-private.hh"
-
-HB_BEGIN_DECLS
+#include "hb-ot-layout-gdef-table.hh"
 
 
 /* buffer var allocations */
-#define lig_id() var2.u16[0] /* unique ligature id */
-#define lig_comp() var2.u16[1] /* component number in the ligature (0 = base) */
+#define lig_id() var2.u8[2] /* unique ligature id */
+#define lig_comp() var2.u8[3] /* component number in the ligature (0 = base) */
+
+static inline uint8_t allocate_lig_id (hb_buffer_t *buffer) {
+  uint8_t lig_id = buffer->next_serial ();
+  if (unlikely (!lig_id)) lig_id = buffer->next_serial (); /* in case of overflow */
+  return lig_id;
+}
+
 
 
 #ifndef HB_DEBUG_APPLY
@@ -45,21 +50,106 @@ HB_BEGIN_DECLS
 #endif
 
 #define TRACE_APPLY() \
-	hb_trace_t<HB_DEBUG_APPLY> trace (&c->debug_depth, "APPLY", HB_FUNC, this); \
+	hb_auto_trace_t<HB_DEBUG_APPLY> trace (&c->debug_depth, "APPLY", this, NULL, HB_FUNC);
 
 
-HB_BEGIN_DECLS
 
 struct hb_apply_context_t
 {
   unsigned int debug_depth;
-  hb_ot_layout_context_t *layout;
+  hb_font_t *font;
+  hb_face_t *face;
   hb_buffer_t *buffer;
+  hb_direction_t direction;
   hb_mask_t lookup_mask;
   unsigned int context_length;
   unsigned int nesting_level_left;
   unsigned int lookup_props;
   unsigned int property; /* propety of first glyph */
+
+  struct mark_skipping_forward_iterator_t
+  {
+    inline mark_skipping_forward_iterator_t (hb_apply_context_t *c_,
+					     unsigned int start_index_,
+					     unsigned int num_items_)
+    {
+      c = c_;
+      idx = start_index_;
+      num_items = num_items_;
+      end = MIN (c->buffer->len, c->buffer->idx + c->context_length);
+    }
+    inline bool has_no_chance (void) const
+    {
+      return unlikely (num_items && idx + num_items >= end);
+    }
+    inline bool next (unsigned int *property_out,
+		      unsigned int lookup_props)
+    {
+      assert (num_items > 0);
+      do
+      {
+	if (has_no_chance ())
+	  return false;
+	idx++;
+      } while (_hb_ot_layout_skip_mark (c->face, &c->buffer->info[idx], lookup_props, property_out));
+      num_items--;
+      return true;
+    }
+    inline bool next (unsigned int *property_out = NULL)
+    {
+      return next (property_out, c->lookup_props);
+    }
+
+    unsigned int idx;
+    private:
+    hb_apply_context_t *c;
+    unsigned int num_items;
+    unsigned int end;
+  };
+
+  struct mark_skipping_backward_iterator_t
+  {
+    inline mark_skipping_backward_iterator_t (hb_apply_context_t *c_,
+					      unsigned int start_index_,
+					      unsigned int num_items_)
+    {
+      c = c_;
+      idx = start_index_;
+      num_items = num_items_;
+    }
+    inline bool has_no_chance (void) const
+    {
+      return unlikely (idx < num_items);
+    }
+    inline bool prev (unsigned int *property_out,
+		      unsigned int lookup_props)
+    {
+      assert (num_items > 0);
+      do
+      {
+	if (has_no_chance ())
+	  return false;
+	idx--;
+      } while (_hb_ot_layout_skip_mark (c->face, &c->buffer->out_info[idx], lookup_props, property_out));
+      num_items--;
+      return true;
+    }
+    inline bool prev (unsigned int *property_out = NULL)
+    {
+      return prev (property_out, c->lookup_props);
+    }
+
+    unsigned int idx;
+    private:
+    hb_apply_context_t *c;
+    unsigned int num_items;
+  };
+
+  inline bool should_mark_skip_current_glyph (void) const
+  {
+    return _hb_ot_layout_skip_mark (face, &buffer->info[buffer->idx], lookup_props, NULL);
+  }
+
 
 
   inline void replace_glyph (hb_codepoint_t glyph_index) const
@@ -78,14 +168,14 @@ struct hb_apply_context_t
   inline void guess_glyph_class (unsigned int klass)
   {
     /* XXX if ! has gdef */
-    buffer->info[buffer->i].props_cache() = klass;
+    buffer->info[buffer->idx].props_cache() = klass;
   }
 
   private:
   inline void clear_property (void) const
   {
     /* XXX if has gdef */
-    buffer->info[buffer->i].props_cache() = 0;
+    buffer->info[buffer->idx].props_cache() = 0;
   }
 };
 
@@ -126,26 +216,20 @@ static inline bool match_input (hb_apply_context_t *c,
 				const void *match_data,
 				unsigned int *context_length_out)
 {
-  unsigned int i;
-  unsigned int j = c->buffer->i;
-  unsigned int end = MIN (c->buffer->len, j + c->context_length);
-  if (unlikely (j + count > end))
+  hb_apply_context_t::mark_skipping_forward_iterator_t skippy_iter (c, c->buffer->idx, count - 1);
+  if (skippy_iter.has_no_chance ())
     return false;
 
-  for (i = 1; i < count; i++)
+  for (unsigned int i = 1; i < count; i++)
   {
-    do
-    {
-      j++;
-      if (unlikely (j >= end))
-	return false;
-    } while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[j], c->lookup_props, NULL));
+    if (!skippy_iter.next ())
+      return false;
 
-    if (likely (!match_func (c->buffer->info[j].codepoint, input[i - 1], match_data)))
+    if (likely (!match_func (c->buffer->info[skippy_iter.idx].codepoint, input[i - 1], match_data)))
       return false;
   }
 
-  *context_length_out = j - c->buffer->i + 1;
+  *context_length_out = skippy_iter.idx - c->buffer->idx + 1;
 
   return true;
 }
@@ -156,18 +240,16 @@ static inline bool match_backtrack (hb_apply_context_t *c,
 				    match_func_t match_func,
 				    const void *match_data)
 {
-  unsigned int j = c->buffer->backtrack_len ();
+  hb_apply_context_t::mark_skipping_backward_iterator_t skippy_iter (c, c->buffer->backtrack_len (), count);
+  if (skippy_iter.has_no_chance ())
+    return false;
 
   for (unsigned int i = 0; i < count; i++)
   {
-    do
-    {
-      if (unlikely (!j))
-	return false;
-      j--;
-    } while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->out_info[j], c->lookup_props, NULL));
+    if (!skippy_iter.prev ())
+      return false;
 
-    if (likely (!match_func (c->buffer->out_info[j].codepoint, backtrack[i], match_data)))
+    if (likely (!match_func (c->buffer->out_info[skippy_iter.idx].codepoint, backtrack[i], match_data)))
       return false;
   }
 
@@ -181,27 +263,22 @@ static inline bool match_lookahead (hb_apply_context_t *c,
 				    const void *match_data,
 				    unsigned int offset)
 {
-  unsigned int i;
-  unsigned int j = c->buffer->i + offset - 1;
-  unsigned int end = MIN (c->buffer->len, c->buffer->i + c->context_length);
+  hb_apply_context_t::mark_skipping_forward_iterator_t skippy_iter (c, c->buffer->idx + offset - 1, count);
+  if (skippy_iter.has_no_chance ())
+    return false;
 
-  for (i = 0; i < count; i++)
+  for (unsigned int i = 0; i < count; i++)
   {
-    do
-    {
-      j++;
-      if (unlikely (j >= end))
-	return false;
-    } while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[j], c->lookup_props, NULL));
+    if (!skippy_iter.next ())
+      return false;
 
-    if (likely (!match_func (c->buffer->info[j].codepoint, lookahead[i], match_data)))
+    if (likely (!match_func (c->buffer->info[skippy_iter.idx].codepoint, lookahead[i], match_data)))
       return false;
   }
 
   return true;
 }
 
-HB_END_DECLS
 
 
 struct LookupRecord
@@ -220,7 +297,6 @@ struct LookupRecord
 };
 
 
-HB_BEGIN_DECLS
 
 static inline bool apply_lookup (hb_apply_context_t *c,
 				 unsigned int count, /* Including the first glyph */
@@ -228,30 +304,32 @@ static inline bool apply_lookup (hb_apply_context_t *c,
 				 const LookupRecord lookupRecord[], /* Array of LookupRecords--in design order */
 				 apply_lookup_func_t apply_func)
 {
-  unsigned int end = MIN (c->buffer->len, c->buffer->i + c->context_length);
-  if (unlikely (count == 0 || c->buffer->i + count > end))
+  unsigned int end = MIN (c->buffer->len, c->buffer->idx + c->context_length);
+  if (unlikely (count == 0 || c->buffer->idx + count > end))
     return false;
 
   /* TODO We don't support lookupRecord arrays that are not increasing:
    *      Should be easy for in_place ones at least. */
 
-  /* Note: If sublookup is reverse, i will underflow after the first loop
+  /* Note: If sublookup is reverse, it will underflow after the first loop
    * and we jump out of it.  Not entirely disastrous.  So we don't check
    * for reverse lookup here.
    */
   for (unsigned int i = 0; i < count; /* NOP */)
   {
-    while (_hb_ot_layout_skip_mark (c->layout->face, &c->buffer->info[c->buffer->i], c->lookup_props, NULL))
+    if (unlikely (c->buffer->idx == end))
+      return true;
+    while (c->should_mark_skip_current_glyph ())
     {
-      if (unlikely (c->buffer->i == end))
-	return true;
       /* No lookup applied for this index */
       c->buffer->next_glyph ();
+      if (unlikely (c->buffer->idx == end))
+	return true;
     }
 
     if (lookupCount && i == lookupRecord->sequenceIndex)
     {
-      unsigned int old_pos = c->buffer->i;
+      unsigned int old_pos = c->buffer->idx;
 
       /* Apply a lookup */
       bool done = apply_func (c, lookupRecord->lookupListIndex);
@@ -259,8 +337,8 @@ static inline bool apply_lookup (hb_apply_context_t *c,
       lookupRecord++;
       lookupCount--;
       /* Err, this is wrong if the lookup jumped over some glyphs */
-      i += c->buffer->i - old_pos;
-      if (unlikely (c->buffer->i == end))
+      i += c->buffer->idx - old_pos;
+      if (unlikely (c->buffer->idx == end))
 	return true;
 
       if (!done)
@@ -278,7 +356,6 @@ static inline bool apply_lookup (hb_apply_context_t *c,
   return true;
 }
 
-HB_END_DECLS
 
 
 /* Contextual lookups */
@@ -382,7 +459,7 @@ struct ContextFormat1
   inline bool apply (hb_apply_context_t *c, apply_lookup_func_t apply_func) const
   {
     TRACE_APPLY ();
-    unsigned int index = (this+coverage) (c->buffer->info[c->buffer->i].codepoint);
+    unsigned int index = (this+coverage) (c->buffer->info[c->buffer->idx].codepoint);
     if (likely (index == NOT_COVERED))
       return false;
 
@@ -421,12 +498,12 @@ struct ContextFormat2
   inline bool apply (hb_apply_context_t *c, apply_lookup_func_t apply_func) const
   {
     TRACE_APPLY ();
-    unsigned int index = (this+coverage) (c->buffer->info[c->buffer->i].codepoint);
+    unsigned int index = (this+coverage) (c->buffer->info[c->buffer->idx].codepoint);
     if (likely (index == NOT_COVERED))
       return false;
 
     const ClassDef &class_def = this+classDef;
-    index = class_def (c->buffer->info[c->buffer->i].codepoint);
+    index = class_def (c->buffer->info[c->buffer->idx].codepoint);
     const RuleSet &rule_set = this+ruleSet[index];
     struct ContextLookupContext lookup_context = {
       {match_class, apply_func},
@@ -466,7 +543,7 @@ struct ContextFormat3
   inline bool apply (hb_apply_context_t *c, apply_lookup_func_t apply_func) const
   {
     TRACE_APPLY ();
-    unsigned int index = (this+coverage[0]) (c->buffer->info[c->buffer->i].codepoint);
+    unsigned int index = (this+coverage[0]) (c->buffer->info[c->buffer->idx].codepoint);
     if (likely (index == NOT_COVERED))
       return false;
 
@@ -562,7 +639,7 @@ static inline bool chain_context_lookup (hb_apply_context_t *c,
 {
   /* First guess */
   if (unlikely (c->buffer->backtrack_len () < backtrackCount ||
-		c->buffer->i + inputCount + lookaheadCount > c->buffer->len ||
+		c->buffer->idx + inputCount + lookaheadCount > c->buffer->len ||
 		inputCount + lookaheadCount > c->context_length))
     return false;
 
@@ -669,7 +746,7 @@ struct ChainContextFormat1
   inline bool apply (hb_apply_context_t *c, apply_lookup_func_t apply_func) const
   {
     TRACE_APPLY ();
-    unsigned int index = (this+coverage) (c->buffer->info[c->buffer->i].codepoint);
+    unsigned int index = (this+coverage) (c->buffer->info[c->buffer->idx].codepoint);
     if (likely (index == NOT_COVERED))
       return false;
 
@@ -707,7 +784,7 @@ struct ChainContextFormat2
   inline bool apply (hb_apply_context_t *c, apply_lookup_func_t apply_func) const
   {
     TRACE_APPLY ();
-    unsigned int index = (this+coverage) (c->buffer->info[c->buffer->i].codepoint);
+    unsigned int index = (this+coverage) (c->buffer->info[c->buffer->idx].codepoint);
     if (likely (index == NOT_COVERED))
       return false;
 
@@ -715,7 +792,7 @@ struct ChainContextFormat2
     const ClassDef &input_class_def = this+inputClassDef;
     const ClassDef &lookahead_class_def = this+lookaheadClassDef;
 
-    index = input_class_def (c->buffer->info[c->buffer->i].codepoint);
+    index = input_class_def (c->buffer->info[c->buffer->idx].codepoint);
     const ChainRuleSet &rule_set = this+ruleSet[index];
     struct ChainContextLookupContext lookup_context = {
       {match_class, apply_func},
@@ -770,7 +847,7 @@ struct ChainContextFormat3
     TRACE_APPLY ();
     const OffsetArrayOf<Coverage> &input = StructAfter<OffsetArrayOf<Coverage> > (backtrack);
 
-    unsigned int index = (this+input[0]) (c->buffer->info[c->buffer->i].codepoint);
+    unsigned int index = (this+input[0]) (c->buffer->info[c->buffer->idx].codepoint);
     if (likely (index == NOT_COVERED))
       return false;
 
@@ -975,6 +1052,5 @@ struct GSUBGPOS
 };
 
 
-HB_END_DECLS
 
 #endif /* HB_OT_LAYOUT_GSUBGPOS_PRIVATE_HH */
