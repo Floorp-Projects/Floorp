@@ -146,8 +146,8 @@ public:
 
     virtual bool IsSymbolFont();
 
-    void FillLogFont(LOGFONTW *aLogFont, bool aItalic,
-                     PRUint16 aWeight, gfxFloat aSize, bool aUseCleartype);
+    void FillLogFont(LOGFONTW *aLogFont, PRUint16 aWeight, gfxFloat aSize,
+                     bool aUseCleartype);
 
     static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 
                                                 DWORD fontType)

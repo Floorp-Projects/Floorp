@@ -322,7 +322,7 @@ GDIFontEntry::GetFontTable(PRUint32 aTableTag,
 }
 
 void
-GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, bool aItalic,
+GDIFontEntry::FillLogFont(LOGFONTW *aLogFont,
                           PRUint16 aWeight, gfxFloat aSize,
                           bool aUseCleartype)
 {
@@ -330,16 +330,28 @@ GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, bool aItalic,
 
     aLogFont->lfHeight = (LONG)-ROUND(aSize);
 
-    if (aLogFont->lfHeight == 0)
+    if (aLogFont->lfHeight == 0) {
         aLogFont->lfHeight = -1;
+    }
 
-    // always force lfItalic if we want it.  Font selection code will
-    // do its best to give us an italic font entry, but if no face exists
-    // it may give us a regular one based on weight.  Windows should
-    // do fake italic for us in that case.
-    aLogFont->lfItalic         = aItalic;
-    aLogFont->lfWeight         = aWeight;
-    aLogFont->lfQuality        = (aUseCleartype ? CLEARTYPE_QUALITY : DEFAULT_QUALITY);
+    // If a non-zero weight is passed in, use this to override the original
+    // weight in the entry's logfont. This is used to control synthetic bolding
+    // for installed families with no bold face, and for downloaded fonts
+    // (but NOT for local user fonts, because it could cause a different,
+    // glyph-incompatible face to be used)
+    if (aWeight) {
+        aLogFont->lfWeight = aWeight;
+    }
+
+    // for non-local() user fonts, we never want to apply italics here;
+    // if the face is described as italic, we should use it as-is,
+    // and if it's not, but then the element is styled italic, we'll use
+    // a cairo transform to create fake italic (oblique)
+    if (IsUserFont() && !IsLocalUserFont()) {
+        aLogFont->lfItalic = 0;
+    }
+
+    aLogFont->lfQuality = (aUseCleartype ? CLEARTYPE_QUALITY : DEFAULT_QUALITY);
 }
 
 #define MISSING_GLYPH 0x1F // glyph index returned for missing characters
