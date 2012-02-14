@@ -146,7 +146,7 @@ nsStyledElementNotElementCSSInlineStyle::UnsetAttr(PRInt32 aNameSpaceID,
 nsresult
 nsStyledElementNotElementCSSInlineStyle::AfterSetAttr(PRInt32 aNamespaceID,
                                                       nsIAtom* aAttribute,
-                                                      const nsAString* aValue,
+                                                      const nsAttrValue* aValue,
                                                       bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None && !aValue &&
@@ -202,7 +202,7 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aSty
 
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull,
                           oldValue, attrValue, modType, hasListeners,
-                          aNotify, nsnull);
+                          aNotify, false);
 }
 
 css::StyleRule*

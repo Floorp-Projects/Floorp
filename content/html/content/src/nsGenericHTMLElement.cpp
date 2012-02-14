@@ -1283,11 +1283,14 @@ nsGenericHTMLElement::GetHrefURIForAnchors() const
 
 nsresult
 nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                   const nsAString* aValue, bool aNotify)
+                                   const nsAttrValue* aValue, bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML) && aValue) {
-      nsresult rv = AddScriptEventListener(aName, *aValue);
+    if (nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML) &&
+        aValue) {
+      NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eString,
+        "Expected string value for script body");
+      nsresult rv = AddScriptEventListener(aName, aValue->GetStringValue());
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (aNotify && aName == nsGkAtoms::spellcheck) {
@@ -2800,16 +2803,17 @@ nsGenericHTMLFormElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                       const nsAString* aValue, bool aNotify)
+                                       const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     // add the control to the hashtable as needed
 
     if (mForm && (aName == nsGkAtoms::name || aName == nsGkAtoms::id) &&
-        aValue) {
-      if (!aValue->IsEmpty()) {
-        mForm->AddElementToTable(this, *aValue);
-      }
+        aValue && !aValue->IsEmptyString()) {
+      NS_ABORT_IF_FALSE(aValue->Type() == nsAttrValue::eAtom,
+        "Expected atom value for name/id");
+      mForm->AddElementToTable(this,
+        nsDependentAtomString(aValue->GetAtomValue()));
     }
 
     if (mForm && aName == nsGkAtoms::type) {
@@ -2841,7 +2845,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       nsIDocument* doc = GetCurrentDoc();
       if (doc) {
         Element* formIdElement = nsnull;
-        if (aValue && !aValue->IsEmpty()) {
+        if (aValue && !aValue->IsEmptyString()) {
           formIdElement = AddFormIdObserver();
         }
 

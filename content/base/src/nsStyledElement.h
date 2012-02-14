@@ -89,7 +89,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                const nsAString* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify);
 
   nsIDOMCSSStyleDeclaration* GetStyle(nsresult* retval);
 

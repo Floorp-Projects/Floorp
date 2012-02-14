@@ -629,7 +629,7 @@ protected:
                                    const nsAttrValueOrString* aValue,
                                    bool aNotify);
     virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                  const nsAString* aValue, bool aNotify);
+                                  const nsAttrValue* aValue, bool aNotify);
 
     virtual void UpdateEditableState(bool aNotify);
 
@@ -657,7 +657,7 @@ protected:
 
     // attribute setters for widget
     nsresult HideWindowChrome(bool aShouldHide);
-    void SetChromeMargins(const nsAString* aValue);
+    void SetChromeMargins(const nsAttrValue* aValue);
     void ResetChromeMargins();
     void SetTitlebarColor(nscolor aColor, bool aActive);
 

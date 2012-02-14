@@ -395,7 +395,7 @@ public:
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify);
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString* aValue, bool aNotify);
+                                const nsAttrValue* aValue, bool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
   
