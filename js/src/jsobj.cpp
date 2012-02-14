@@ -414,8 +414,11 @@ js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map)
      * with otherwise unreachable objects. But this is way too complex
      * to justify spending efforts.
      */
-    for (JSSharpTable::Range r = map->table.all(); !r.empty(); r.popFront())
-        MarkObjectRoot(trc, r.front().key, "sharp table entry");
+    for (JSSharpTable::Range r = map->table.all(); !r.empty(); r.popFront()) {
+        JSObject *tmp = r.front().key;
+        MarkObjectRoot(trc, &tmp, "sharp table entry");
+        JS_ASSERT(tmp == r.front().key);
+    }
 }
 
 #if JS_HAS_TOSOURCE

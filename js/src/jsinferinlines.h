@@ -741,7 +741,7 @@ void
 TypeScript::trace(JSTracer *trc)
 {
     if (hasScope() && global)
-        gc::MarkObject(trc, global, "script_global");
+        gc::MarkObject(trc, &global, "script_global");
 
     /* Note: nesting does not keep anything alive. */
 }
@@ -1343,7 +1343,7 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
     JSCompartment *comp = newScript->fun->compartment();
     if (comp->needsBarrier()) {
         MarkObjectUnbarriered(comp->barrierTracer(), newScript->fun, "write barrier");
-        MarkShape(comp->barrierTracer(), newScript->shape, "write barrier");
+        MarkShape(comp->barrierTracer(), &newScript->shape, "write barrier");
     }
 #endif
 }

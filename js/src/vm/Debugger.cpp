@@ -1063,15 +1063,21 @@ Debugger::markKeysInCompartment(JSTracer *tracer)
     const ObjectMap &objStorage = objects;
     for (ObjectMap::Range r = objStorage.all(); !r.empty(); r.popFront()) {
         const HeapPtrObject &key = r.front().key;
-        if (key->compartment() == comp && IsAboutToBeFinalized(key))
-            gc::MarkObject(tracer, key, "cross-compartment WeakMap key");
+        if (key->compartment() == comp && IsAboutToBeFinalized(key)) {
+            HeapPtrObject tmp(key);
+            gc::MarkObject(tracer, &tmp, "cross-compartment WeakMap key");
+            JS_ASSERT(tmp == key);
+        }
     }
 
     const ObjectMap &envStorage = environments;
     for (ObjectMap::Range r = envStorage.all(); !r.empty(); r.popFront()) {
         const HeapPtrObject &key = r.front().key;
-        if (key->compartment() == comp && IsAboutToBeFinalized(key))
-            js::gc::MarkObject(tracer, key, "cross-compartment WeakMap key");
+        if (key->compartment() == comp && IsAboutToBeFinalized(key)) {
+            HeapPtrObject tmp(key);
+            js::gc::MarkObject(tracer, &tmp, "cross-compartment WeakMap key");
+            JS_ASSERT(tmp == key);
+        }
     }
 
     typedef HashMap<HeapPtrScript, HeapPtrObject, DefaultHasher<HeapPtrScript>, RuntimeAllocPolicy>
@@ -1079,8 +1085,11 @@ Debugger::markKeysInCompartment(JSTracer *tracer)
     const ScriptMap &scriptStorage = scripts;
     for (ScriptMap::Range r = scriptStorage.all(); !r.empty(); r.popFront()) {
         const HeapPtrScript &key = r.front().key;
-        if (key->compartment() == comp && IsAboutToBeFinalized(key))
-            gc::MarkScript(tracer, key, "cross-compartment WeakMap key");
+        if (key->compartment() == comp && IsAboutToBeFinalized(key)) {
+            HeapPtrScript tmp(key);
+            gc::MarkScript(tracer, &tmp, "cross-compartment WeakMap key");
+            JS_ASSERT(tmp == key);
+        }
     }
 }
 
@@ -1176,7 +1185,7 @@ Debugger::markAllIteratively(GCMarker *trc)
                  *   - it isn't already marked
                  *   - it actually has hooks that might be called
                  */
-                const HeapPtrObject &dbgobj = dbg->toJSObject();
+                HeapPtrObject &dbgobj = dbg->toJSObjectRef();
                 if (comp && comp != dbgobj->compartment())
                     continue;
 
@@ -1186,7 +1195,7 @@ Debugger::markAllIteratively(GCMarker *trc)
                      * obj could be reachable only via its live, enabled
                      * debugger hooks, which may yet be called.
                      */
-                    MarkObject(trc, dbgobj, "enabled Debugger");
+                    MarkObject(trc, &dbgobj, "enabled Debugger");
                     markedAny = true;
                     dbgMarked = true;
                 }
@@ -1199,9 +1208,8 @@ Debugger::markAllIteratively(GCMarker *trc)
                              * The debugger and the script are both live.
                              * Therefore the breakpoint handler is live.
                              */
-                            const HeapPtrObject &handler = bp->getHandler();
-                            if (IsAboutToBeFinalized(handler)) {
-                                MarkObject(trc, bp->getHandler(), "breakpoint handler");
+                            if (IsAboutToBeFinalized(bp->getHandler())) {
+                                MarkObject(trc, &bp->getHandlerRef(), "breakpoint handler");
                                 markedAny = true;
                             }
                         }
@@ -1224,7 +1232,7 @@ void
 Debugger::trace(JSTracer *trc)
 {
     if (uncaughtExceptionHook)
-        MarkObject(trc, uncaughtExceptionHook, "hooks");
+        MarkObject(trc, &uncaughtExceptionHook, "hooks");
 
     /*
      * Mark Debugger.Frame objects. These are all reachable from JS, because the
@@ -1235,9 +1243,9 @@ Debugger::trace(JSTracer *trc)
      * frames.)
      */
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        const HeapPtrObject &frameobj = r.front().value;
+        HeapPtrObject &frameobj = r.front().value;
         JS_ASSERT(frameobj->getPrivate());
-        MarkObject(trc, frameobj, "live Debugger.Frame");
+        MarkObject(trc, &frameobj, "live Debugger.Frame");
     }
 
     /* Trace the weak map from JSScript instances to Debugger.Script objects. */

@@ -1278,7 +1278,7 @@ JSContext::mark(JSTracer *trc)
 
     /* Mark other roots-by-definition in the JSContext. */
     if (globalObject && !hasRunOption(JSOPTION_UNROOTED_GLOBAL))
-        MarkObjectRoot(trc, globalObject, "global object");
+        MarkObjectRoot(trc, &globalObject, "global object");
     if (isExceptionPending())
         MarkValueRoot(trc, &exception, "exception");
 

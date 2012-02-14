@@ -128,18 +128,18 @@ MarkUnbarriered(JSTracer *trc, T *thing, const char *name)
 
 template <typename T>
 static void
-Mark(JSTracer *trc, const HeapPtr<T> &thing, const char *name)
+Mark(JSTracer *trc, HeapPtr<T> *thing, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    MarkInternal(trc, thing.get());
+    MarkInternal(trc, thing->get());
 }
 
 template <typename T>
 static void
-MarkRoot(JSTracer *trc, T *thing, const char *name)
+MarkRoot(JSTracer *trc, T **thingp, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    MarkInternal(trc, thing);
+    MarkInternal(trc, *thingp);
 }
 
 template <typename T>
@@ -166,15 +166,15 @@ MarkRootRange(JSTracer *trc, size_t len, T **vec, const char *name)
 
 #define DeclMarkerImpl(base, type)                                                                \
 void                                                                                              \
-Mark##base(JSTracer *trc, const HeapPtr<type> &thing, const char *name)                           \
+Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name)                                 \
 {                                                                                                 \
     Mark<type>(trc, thing, name);                                                                 \
 }                                                                                                 \
                                                                                                   \
 void                                                                                              \
-Mark##base##Root(JSTracer *trc, type *thing, const char *name)                                    \
+Mark##base##Root(JSTracer *trc, type **thingp, const char *name)                                  \
 {                                                                                                 \
-    MarkRoot<type>(trc, thing, name);                                                             \
+    MarkRoot<type>(trc, thingp, name);                                                            \
 }                                                                                                 \
                                                                                                   \
 void                                                                                              \
@@ -352,10 +352,10 @@ MarkObject(JSTracer *trc, const HeapPtr<GlobalObject, JSScript *> &thing, const 
 }
 
 void
-MarkShape(JSTracer *trc, const HeapPtr<const Shape> &thing, const char *name)
+MarkShape(JSTracer *trc, HeapPtr<const Shape> *thing, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    MarkInternal(trc, const_cast<Shape *>(thing.get()));
+    MarkInternal(trc, const_cast<Shape *>(thing->get()));
 }
 
 void
@@ -629,7 +629,7 @@ PushValueArray(GCMarker *gcmarker, JSObject* obj, HeapValue *start, HeapValue *e
 void
 MarkChildren(JSTracer *trc, JSObject *obj)
 {
-    MarkTypeObject(trc, obj->typeFromGC(), "type");
+    MarkTypeObject(trc, &obj->typeFromGC(), "type");
 
     Shape *shape = obj->lastProperty();
     MarkShapeUnbarriered(trc, shape, "shape");
@@ -710,12 +710,12 @@ MarkChildren(JSTracer *trc, JSScript *script)
 }
 
 static void
-MarkChildren(JSTracer *trc, const Shape *shape)
+MarkChildren(JSTracer *trc, Shape *shape)
 {
     MarkBaseShapeUnbarriered(trc, shape->base(), "base");
     MarkId(trc, shape->maybePropid(), "propid");
     if (shape->previous())
-        MarkShape(trc, shape->previous(), "parent");
+        MarkShape(trc, &shape->previousRef(), "parent");
 }
 
 static inline void
@@ -829,18 +829,18 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
     }
 
     if (type->proto)
-        MarkObject(trc, type->proto, "type_proto");
+        MarkObject(trc, &type->proto, "type_proto");
 
     if (type->singleton && !type->lazy())
-        MarkObject(trc, type->singleton, "type_singleton");
+        MarkObject(trc, &type->singleton, "type_singleton");
 
     if (type->newScript) {
-        MarkObject(trc, type->newScript->fun, "type_new_function");
-        MarkShape(trc, type->newScript->shape, "type_new_shape");
+        MarkObject(trc, &type->newScript->fun, "type_new_function");
+        MarkShape(trc, &type->newScript->shape, "type_new_shape");
     }
 
     if (type->interpretedFunction)
-        MarkObject(trc, type->interpretedFunction, "type_function");
+        MarkObject(trc, &type->interpretedFunction, "type_function");
 }
 
 #ifdef JS_HAS_XML_SUPPORT

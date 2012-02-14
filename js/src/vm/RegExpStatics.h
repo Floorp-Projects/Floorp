@@ -108,7 +108,7 @@ class RegExpStatics
 #endif
     }
 
-    /* 
+    /*
      * Since the first pair indicates the whole match, the paren pair
      * numbers have to be in the range [1, pairCount).
      */
@@ -205,11 +205,11 @@ class RegExpStatics
         return get(0, 1) - get(0, 0) > 0;
     }
 
-    void mark(JSTracer *trc) const {
+    void mark(JSTracer *trc) {
         if (pendingInput)
-            MarkString(trc, pendingInput, "res->pendingInput");
+            MarkString(trc, &pendingInput, "res->pendingInput");
         if (matchPairsInput)
-            MarkString(trc, matchPairsInput, "res->matchPairsInput");
+            MarkString(trc, &matchPairsInput, "res->matchPairsInput");
     }
 
     bool pairIsPresent(size_t pairNum) const {
