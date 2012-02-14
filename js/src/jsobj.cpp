@@ -417,7 +417,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
 static intN
 gc_sharp_table_entry_marker(JSHashEntry *he, intN i, void *arg)
 {
-    MarkRoot((JSTracer *)arg, (JSObject *)he->key, "sharp table entry");
+    MarkObjectRoot((JSTracer *)arg, (JSObject *)he->key, "sharp table entry");
     return JS_DHASH_NEXT;
 }
 

@@ -455,7 +455,7 @@ StackSpace::markFrameSlots(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbyt
 
     if (!fp->isScriptFrame()) {
         JS_ASSERT(fp->isDummyFrame());
-        gc::MarkRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
+        gc::MarkValueRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
         return;
     }
 
@@ -464,7 +464,7 @@ StackSpace::markFrameSlots(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbyt
 
     JSScript *script = fp->script();
     if (!script->hasAnalysis() || !script->analysis()->ranLifetimes()) {
-        gc::MarkRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
+        gc::MarkValueRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
         return;
     }
 
@@ -485,12 +485,12 @@ StackSpace::markFrameSlots(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbyt
 
         /* Will this slot be synced by the JIT? */
         if (!analysis->trackSlot(slot) || analysis->liveness(slot).live(offset))
-            gc::MarkRoot(trc, *vp, "vm_stack");
+            gc::MarkValueRoot(trc, *vp, "vm_stack");
         else
             *vp = UndefinedValue();
     }
 
-    gc::MarkRootRange(trc, fixedEnd, slotsEnd, "vm_stack");
+    gc::MarkValueRootRange(trc, fixedEnd, slotsEnd, "vm_stack");
 }
 
 void
@@ -527,7 +527,7 @@ StackSpace::mark(JSTracer *trc)
             pc = fp->prevpc(&site);
             JS_ASSERT_IF(fp->prev(), !site);
         }
-        gc::MarkRootRange(trc, seg->slotsBegin(), slotsEnd, "vm_stack");
+        gc::MarkValueRootRange(trc, seg->slotsBegin(), slotsEnd, "vm_stack");
         nextSegEnd = (Value *)seg;
     }
 }
