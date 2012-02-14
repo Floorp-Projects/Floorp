@@ -868,7 +868,7 @@ struct JSObject : js::gc::Cell
         return type_;
     }
 
-    const js::HeapPtr<js::types::TypeObject> &typeFromGC() const {
+    js::HeapPtr<js::types::TypeObject> &typeFromGC() {
         /* Direct field access for use by GC. */
         return type_;
     }

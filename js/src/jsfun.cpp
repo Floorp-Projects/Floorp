@@ -539,7 +539,7 @@ args_trace(JSTracer *trc, JSObject *obj)
 #if JS_HAS_GENERATORS
     StackFrame *fp = argsobj.maybeStackFrame();
     if (fp && fp->isFloatingGenerator())
-        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
+        MarkObject(trc, &js_FloatingFrameToGenerator(fp)->obj, "generator object");
 #endif
 }
 
@@ -936,7 +936,7 @@ call_trace(JSTracer *trc, JSObject *obj)
 #if JS_HAS_GENERATORS
     StackFrame *fp = (StackFrame *) obj->getPrivate();
     if (fp && fp->isFloatingGenerator())
-        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
+        MarkObject(trc, &js_FloatingFrameToGenerator(fp)->obj, "generator object");
 #endif
 }
 
@@ -1465,7 +1465,7 @@ JSFunction::trace(JSTracer *trc)
 
     if (isInterpreted()) {
         if (script())
-            MarkScript(trc, script(), "script");
+            MarkScript(trc, &script(), "script");
         if (environment())
             MarkObjectUnbarriered(trc, environment(), "fun_callscope");
     }

@@ -319,7 +319,7 @@ void
 Bindings::trace(JSTracer *trc)
 {
     if (lastBinding)
-        MarkShape(trc, lastBinding, "shape");
+        MarkShape(trc, &lastBinding, "shape");
 }
 
 #ifdef JS_CRASH_DIAGNOSTICS

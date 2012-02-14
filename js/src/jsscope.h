@@ -562,6 +562,10 @@ struct Shape : public js::gc::Cell
         return parent;
     }
 
+    HeapPtrShape &previousRef() {
+        return parent;
+    }
+
     class Range {
       protected:
         friend struct Shape;

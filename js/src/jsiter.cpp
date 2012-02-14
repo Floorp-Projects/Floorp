@@ -148,9 +148,9 @@ void
 NativeIterator::mark(JSTracer *trc)
 {
     for (HeapPtr<JSFlatString> *str = begin(); str < end(); str++)
-        MarkString(trc, *str, "prop");
+        MarkString(trc, str, "prop");
     if (obj)
-        MarkObject(trc, obj, "obj");
+        MarkObject(trc, &obj, "obj");
 }
 
 static void
