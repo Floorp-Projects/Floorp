@@ -511,10 +511,28 @@ public class AboutHomeContent extends ScrollView {
     }
 
     private void readLastTabs(final Activity activity) {
-        // If gecko is ready, the session restore initialization has already occurred.
-        // This means sessionstore.js has been moved to sessionstore.bak. Otherwise, the
-        // previous session will still be in sessionstore.js.
-        final String sessionFilename = "sessionstore." + (GeckoApp.mAppContext.sIsGeckoReady ? "bak" : "js");
+        final String sessionFilename;
+        if (!GeckoApp.sIsGeckoReady) {
+            File profileDir = GeckoApp.mAppContext.getProfileDir();
+            if (profileDir == null)
+                return;
+
+            if (new File(profileDir, "sessionstore.js").exists()) {
+                // we crashed, so sessionstore.js has tabs from last time
+                sessionFilename = "sessionstore.js";
+            } else if (new File(profileDir, "sessionstore.bak").exists()) {
+                // we did not crash, so previous session was moved to sessionstore.bak on quit
+                sessionFilename = "sessionstore.bak";
+            } else {
+                // no previous session data
+                return;
+            }
+        } else {
+            // sessionstore init has occurred, so previous session will always
+            // be in sessionstore.bak
+            sessionFilename = "sessionstore.bak";
+        }
+
         final JSONArray tabs;
         String jsonString = readJSONFile(activity, sessionFilename);
         if (jsonString == null)
