@@ -313,6 +313,9 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
     return NS_ERROR_DOM_DOMSTRING_SIZE_ERR;
   }
 
+  if (aCount == aLength && mText.SubstringEquals(aOffset, aBuffer, aLength))
+    return NS_OK;
+
   nsIDocument *document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
