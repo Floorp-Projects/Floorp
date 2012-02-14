@@ -2656,11 +2656,12 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
    * think that it's painting in its original rectangular coordinate space.
    * If we can't untransform, take the entire overflow rect */
   nsRect untransformedVisibleRect;
+  float factor = nsPresContext::AppUnitsPerCSSPixel();
   if (ShouldPrerenderTransformedContent(aBuilder, mFrame) ||
-      !UntransformRect(mVisibleRect,
-                       mFrame, 
-                       aBuilder->ToReferenceFrame(mFrame), 
-                       &untransformedVisibleRect)) 
+      !UntransformRectMatrix(mVisibleRect,
+                             GetTransform(factor),
+                             factor,
+                             &untransformedVisibleRect)) 
   {
     untransformedVisibleRect = mFrame->GetVisualOverflowRectRelativeToSelf() +  
                                aBuilder->ToReferenceFrame(mFrame);
@@ -2797,7 +2798,8 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
     *aForceTransparentSurface = false;
   }
   nsRect untransformedVisible;
-  if (!UntransformRect(mVisibleRect, mFrame, ToReferenceFrame(), &untransformedVisible)) {
+  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  if (!UntransformRectMatrix(mVisibleRect, GetTransform(factor), factor, &untransformedVisible)) {
       return nsRegion();
   }
   
@@ -2820,7 +2822,8 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
 bool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor)
 {
   nsRect untransformedVisible;
-  if (!UntransformRect(mVisibleRect, mFrame, ToReferenceFrame(), &untransformedVisible)) {
+  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  if (!UntransformRectMatrix(mVisibleRect, GetTransform(factor), factor, &untransformedVisible)) {
     return false;
   }
   const gfx3DMatrix& matrix = GetTransform(nsPresContext::AppUnitsPerCSSPixel());
@@ -2914,6 +2917,27 @@ nsRect nsDisplayTransform::TransformRectOut(const nsRect &aUntransformedBounds,
      factor);
 }
 
+bool nsDisplayTransform::UntransformRectMatrix(const nsRect &aUntransformedBounds,
+                                               const gfx3DMatrix& aMatrix,
+                                               float aFactor,
+                                               nsRect *aOutRect)
+{
+  if (aMatrix.IsSingular())
+    return false;
+
+  gfxRect result(NSAppUnitsToFloatPixels(aUntransformedBounds.x, aFactor),
+                 NSAppUnitsToFloatPixels(aUntransformedBounds.y, aFactor),
+                 NSAppUnitsToFloatPixels(aUntransformedBounds.width, aFactor),
+                 NSAppUnitsToFloatPixels(aUntransformedBounds.height, aFactor));
+
+  /* We want to untransform the matrix, so invert the transformation first! */
+  result = aMatrix.Inverse().ProjectRectBounds(result);
+
+  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(result, aFactor);
+
+  return true;
+}
+
 bool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
                                            const nsIFrame* aFrame,
                                            const nsPoint &aOrigin,
@@ -2926,20 +2950,8 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
    */
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   gfx3DMatrix matrix = GetResultingTransformMatrix(aFrame, aOrigin, factor, nsnull);
-  if (matrix.IsSingular())
-    return false;
 
-  gfxRect result(NSAppUnitsToFloatPixels(aUntransformedBounds.x, factor),
-                 NSAppUnitsToFloatPixels(aUntransformedBounds.y, factor),
-                 NSAppUnitsToFloatPixels(aUntransformedBounds.width, factor),
-                 NSAppUnitsToFloatPixels(aUntransformedBounds.height, factor));
-
-  /* We want to untransform the matrix, so invert the transformation first! */
-  result = matrix.Inverse().ProjectRectBounds(result);
-
-  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(result, factor);
-
-  return true;
+  return UntransformRectMatrix(aUntransformedBounds, matrix, factor, aOutRect);
 }
 
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder,
