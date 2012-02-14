@@ -332,8 +332,6 @@ public:
     // Switch Java to composite with the Gecko Compositor thread
     void RegisterCompositor();
     EGLSurface ProvideEGLSurface();
-    void PerformPreRenderHook();
-    void PerformPostRenderHook();
 
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result);
 
@@ -537,8 +535,6 @@ protected:
     jclass jFlexSurfaceView;
 
     jmethodID jRegisterCompositorMethod;
-    jmethodID jPerformPreRenderHookMethod;
-    jmethodID jPerformPostRenderHookMethod;
 
     // calls we've dlopened from libjnigraphics.so
     int (* AndroidBitmap_getInfo)(JNIEnv *env, jobject bitmap, void *info);

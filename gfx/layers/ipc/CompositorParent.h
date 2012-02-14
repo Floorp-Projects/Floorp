@@ -104,16 +104,16 @@ public:
   void SchedulePauseOnCompositorThread(::base::Thread &aCompositorThread);
   void ScheduleResumeOnCompositorThread(::base::Thread &aCompositorThread);
 
-  void PauseComposition();
-  void ResumeComposition();
-
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
 
 private:
-  void ScheduleComposition();
+  void PauseComposition();
+  void ResumeComposition();
+
   void Composite();
+  void ScheduleComposition();
   void TransformShadowTree(Layer* aLayer, const ViewTransform& aTransform,
                            float aTempScaleDiffX = 1.0,
                            float aTempScaleDiffY = 1.0);
