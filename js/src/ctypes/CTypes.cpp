@@ -2181,15 +2181,24 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
       FunctionInfo* fninfo = FunctionType::GetFunctionInfo(typeObj);
 
       // Add in the calling convention, if it's not cdecl.
+      // There's no trailing or leading space needed here, as none of the
+      // modifiers can produce a string beginning with an identifier ---
+      // except for TYPE_function itself, which is fine because functions
+      // can't return functions.
       ABICode abi = GetABICode(fninfo->mABI);
       if (abi == ABI_STDCALL)
-        PrependString(result, "__stdcall ");
+        PrependString(result, "__stdcall");
       else if (abi == ABI_WINAPI)
-        PrependString(result, "WINAPI ");
+        PrependString(result, "WINAPI");
 
-      // Wrap the entire expression so far with parens.
-      PrependString(result, "(");
-      AppendString(result, ")");
+      // Function application binds more tightly than dereferencing, so
+      // wrap pointer types in parens. Functions can't return functions
+      // (only pointers to them), and arrays can't hold functions
+      // (similarly), so we don't need to address those cases.
+      if (prevGrouping == TYPE_pointer) {
+        PrependString(result, "(");
+        AppendString(result, ")");
+      }
 
       // Argument list goes on the right.
       AppendString(result, "(");
@@ -2216,6 +2225,13 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
     }
     break;
   }
+
+  // If prepending the base type name directly would splice two
+  // identifiers, insert a space.
+  if (('a' <= result[0] && result[0] <= 'z') ||
+      ('A' <= result[0] && result[0] <= 'Z') ||
+      (result[0] == '_'))
+    PrependString(result, " ");
 
   // Stick the base type and derived type parts together.
   JSString* baseName = CType::GetName(cx, typeObj);
