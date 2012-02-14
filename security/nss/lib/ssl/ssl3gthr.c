@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3gthr.c,v 1.10 2010/07/30 03:00:17 wtc%google.com Exp $ */
+/* $Id: ssl3gthr.c,v 1.12 2012/02/11 12:57:28 kaie%kuix.de Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -192,45 +192,45 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     do {
-        /* Without this, we may end up wrongly reporting
-         * SSL_ERROR_RX_UNEXPECTED_* errors if we receive any records from the
-         * peer while we are waiting to be restarted. 
-         */
-        ssl_GetSSL3HandshakeLock(ss);
-        rv = ss->ssl3.hs.restartTarget == NULL ? SECSuccess : SECFailure;
-        ssl_ReleaseSSL3HandshakeLock(ss);
-        if (rv != SECSuccess) {
-            PORT_SetError(PR_WOULD_BLOCK_ERROR);
-            return (int) SECFailure;
-        }
+	/* Without this, we may end up wrongly reporting
+	 * SSL_ERROR_RX_UNEXPECTED_* errors if we receive any records from the
+	 * peer while we are waiting to be restarted.
+	 */
+	ssl_GetSSL3HandshakeLock(ss);
+	rv = ss->ssl3.hs.restartTarget == NULL ? SECSuccess : SECFailure;
+	ssl_ReleaseSSL3HandshakeLock(ss);
+	if (rv != SECSuccess) {
+	    PORT_SetError(PR_WOULD_BLOCK_ERROR);
+	    return (int) SECFailure;
+	}
 
-        /* Treat an empty msgState like a NULL msgState. (Most of the time
-         * when ssl3_HandleHandshake returns SECWouldBlock, it leaves
-         * behind a non-NULL but zero-length msgState).
-         * Test: async_cert_restart_server_sends_hello_request_first_in_separate_record
-         */
-        if (ss->ssl3.hs.msgState.buf != NULL) {
-            if (ss->ssl3.hs.msgState.len == 0) {
-                ss->ssl3.hs.msgState.buf = NULL;
-            }
-        }
+	/* Treat an empty msgState like a NULL msgState. (Most of the time
+	 * when ssl3_HandleHandshake returns SECWouldBlock, it leaves
+	 * behind a non-NULL but zero-length msgState).
+	 * Test: async_cert_restart_server_sends_hello_request_first_in_separate_record
+	 */
+	if (ss->ssl3.hs.msgState.buf != NULL) {
+	    if (ss->ssl3.hs.msgState.len == 0) {
+		ss->ssl3.hs.msgState.buf = NULL;
+	    }
+	}
 
-        if (ss->ssl3.hs.msgState.buf != NULL) {
-            /* ssl3_HandleHandshake previously returned SECWouldBlock and the
-             * as-yet-unprocessed plaintext of that previous handshake record.
-             * We need to process it now before we overwrite it with the next
-             * handshake record.
-             */
+	if (ss->ssl3.hs.msgState.buf != NULL) {
+	    /* ssl3_HandleHandshake previously returned SECWouldBlock and the
+	     * as-yet-unprocessed plaintext of that previous handshake record.
+	     * We need to process it now before we overwrite it with the next
+	     * handshake record.
+	     */
 	    rv = ssl3_HandleRecord(ss, NULL, &ss->gs.buf);
-        } else {
+	} else {
 	    /* bring in the next sslv3 record. */
 	    rv = ssl3_GatherData(ss, &ss->gs, flags);
 	    if (rv <= 0) {
-	        return rv;
+		return rv;
 	    }
 
-	    /* decipher it, and handle it if it's a handshake. 
-	     * If it's application data, ss->gs.buf will not be empty upon return. 
+	    /* decipher it, and handle it if it's a handshake.
+	     * If it's application data, ss->gs.buf will not be empty upon return.
 	     * If it's a change cipher spec, alert, or handshake message,
 	     * ss->gs.buf.len will be 0 when ssl3_HandleRecord returns SECSuccess.
 	     */
@@ -238,7 +238,7 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 	    cText.version = (ss->gs.hdr[1] << 8) | ss->gs.hdr[2];
 	    cText.buf     = &ss->gs.inbuf;
 	    rv = ssl3_HandleRecord(ss, &cText, &ss->gs.buf);
-        }
+	}
 	if (rv < 0) {
 	    return ss->recvdCloseNotify ? 0 : rv;
 	}
