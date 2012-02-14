@@ -125,6 +125,14 @@ public class AboutHomeContent extends ScrollView {
 
     public AboutHomeContent(Context context) {
         super(context);
+    }
+
+    public AboutHomeContent(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public void init() {
+        Context context = getContext();
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mInflater.inflate(R.layout.abouthome_content, this);
 
@@ -147,9 +155,6 @@ public class AboutHomeContent extends ScrollView {
                 });
             }
         }, GeckoAppShell.getHandler(), true);
-
-        setScrollContainer(true);
-        setBackgroundResource(R.drawable.abouthome_bg_repeat);
 
         mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
         mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
