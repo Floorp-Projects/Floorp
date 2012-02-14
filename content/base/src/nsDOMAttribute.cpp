@@ -91,6 +91,7 @@ nsDOMAttribute::~nsDOMAttribute()
 {
   if (mChild) {
     static_cast<nsTextNode*>(mChild)->UnbindFromAttribute();
+    mChild->MarkAsOrphan();
     NS_RELEASE(mChild);
     mFirstChild = nsnull;
   }
@@ -121,6 +122,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttribute)
   nsINode::Unlink(tmp);
   if (tmp->mChild) {
     static_cast<nsTextNode*>(tmp->mChild)->UnbindFromAttribute();
+    tmp->mChild->MarkAsOrphan();
     NS_RELEASE(tmp->mChild);
     tmp->mFirstChild = nsnull;
   }
@@ -726,6 +728,7 @@ nsDOMAttribute::EnsureChildState()
   if (!value.IsEmpty()) {
     NS_NewTextNode(&mChild, mNodeInfo->NodeInfoManager());
 
+    mChild->MarkAsNonOrphan();
     static_cast<nsTextNode*>(mChild)->BindToAttribute(this);
     mFirstChild = mChild;
 
@@ -793,5 +796,6 @@ nsDOMAttribute::doRemoveChild(bool aNotify)
   }
 
   child->UnbindFromAttribute();
+  child->MarkAsOrphan();
 }
 
