@@ -41,7 +41,6 @@
  * on various context menus in both content and chrome.
  */
 
-// Import mozmill and initialize a controller
 Components.utils.import("resource://mozmill/driver/mozmill.js");
 let c = getBrowserController();
 
@@ -49,29 +48,29 @@ let c = getBrowserController();
 c.open("http://mozilla.org");
 c.waitForPageLoad();
 
-// Grab reference to element on page (this is the <body> element in this case)
-let page = findElement.ID(c.tabs.activeTab, 'header');
 // Perform our first action, reload.
 // It is very important to only place things that we
 // are interested in testing inside of a performAction call
 pep.performAction('content_reload', function() {
-  page.rightClick();
-  page.keypress('r');
+  // controller.rootElement is the global window object
+  // wrapped inside of a MozMillElement
+  c.rootElement.rightClick();
+  c.rootElement.keypress('r');
 });
 c.waitForPageLoad();
 
-c.open("http://google.com");
+c.open("http://mozillians.org");
 c.waitForPageLoad();
 
-page = findElement.ID(c.tabs.activeTab, 'main');
 // Perform our second action, go back
 pep.performAction('content_back', function() {
-  page.rightClick();
-  page.keypress('b');
+  c.rootElement.rightClick();
+  c.rootElement.keypress('b');
 });
 // Bug 699400 - waitForPageLoad times out when pressing back button
-c.sleep(100);
+c.sleep(500);
 
+// get a reference to the element with id 'home'
 page = findElement.ID(c.tabs.activeTab, 'home');
 // Perform our third action, scroll through context menu
 pep.performAction('content_scroll', function() {
