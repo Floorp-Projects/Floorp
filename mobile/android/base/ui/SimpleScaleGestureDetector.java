@@ -81,7 +81,7 @@ public class SimpleScaleGestureDetector {
 
     /** Forward touch events to this function. */
     public void onTouchEvent(MotionEvent event) {
-        switch (event.getAction() & event.ACTION_MASK) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
         case MotionEvent.ACTION_DOWN:
         case MotionEvent.ACTION_POINTER_DOWN:
             onTouchStart(event);

@@ -438,6 +438,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                 title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
             } else {
                 // The history list is backed by a SimpleExpandableListAdapter
+                @SuppressWarnings("rawtypes")
                 Map map = (Map) selectedItem;
                 title = (String) map.get(URLColumns.TITLE);
             }
@@ -477,7 +478,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         } else if (mContextMenuSubject instanceof Map) {
-            Map map = (Map)mContextMenuSubject;
+            @SuppressWarnings("rawtypes") Map map = (Map)mContextMenuSubject;
             id = -1;
             url = (String)map.get(URLColumns.URL);
             b = (byte[]) map.get(URLColumns.FAVICON);

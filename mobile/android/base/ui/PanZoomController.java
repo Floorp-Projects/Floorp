@@ -197,7 +197,7 @@ public class PanZoomController
     }
 
     public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction() & event.ACTION_MASK) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
         case MotionEvent.ACTION_DOWN:   return onTouchStart(event);
         case MotionEvent.ACTION_MOVE:   return onTouchMove(event);
         case MotionEvent.ACTION_UP:     return onTouchEnd(event);
@@ -295,14 +295,14 @@ public class PanZoomController
             GeckoApp.mAppContext.hidePlugins(false /* don't hide layers */);
             // fall through
         case PANNING_HOLD_LOCKED:
-            GeckoApp.mAppContext.mAutoCompletePopup.hide();
+            GeckoApp.mAutoCompletePopup.hide();
             mState = PanZoomState.PANNING_LOCKED;
             // fall through
         case PANNING_LOCKED:
             track(event);
             return true;
         case PANNING_HOLD:
-            GeckoApp.mAppContext.mAutoCompletePopup.hide();
+            GeckoApp.mAutoCompletePopup.hide();
             mState = PanZoomState.PANNING;
             // fall through
         case PANNING:
@@ -749,7 +749,7 @@ public class PanZoomController
         mState = PanZoomState.PINCHING;
         mLastZoomFocus = new PointF(detector.getFocusX(), detector.getFocusY());
         GeckoApp.mAppContext.hidePlugins(false /* don't hide layers, only views */);
-        GeckoApp.mAppContext.mAutoCompletePopup.hide();
+        GeckoApp.mAutoCompletePopup.hide();
         cancelTouch();
 
         return true;
@@ -852,7 +852,7 @@ public class PanZoomController
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
-        GeckoApp.mAppContext.mAutoCompletePopup.hide();
+        GeckoApp.mAutoCompletePopup.hide();
         sendPointToGecko("Gesture:SingleTap", motionEvent);
         return true;
     }
@@ -869,7 +869,7 @@ public class PanZoomController
     }
 
     private boolean animatedZoomTo(RectF zoomToRect) {
-        GeckoApp.mAppContext.mAutoCompletePopup.hide();
+        GeckoApp.mAutoCompletePopup.hide();
 
         mState = PanZoomState.ANIMATED_ZOOM;
         final float startZoom = mController.getZoomFactor();

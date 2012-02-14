@@ -734,7 +734,7 @@ public class GeckoInputConnection
                 InputMethodManager imm = (InputMethodManager)
                     v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.toggleSoftInputFromWindow(v.getWindowToken(),
-                                              imm.SHOW_FORCED, 0);
+                                              InputMethodManager.SHOW_FORCED, 0);
                 return true;
             default:
                 break;

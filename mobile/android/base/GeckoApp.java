@@ -898,9 +898,9 @@ abstract public class GeckoApp
         if (mTabsChangedListeners == null)
             return;
 
-        Iterator items = mTabsChangedListeners.iterator();
+        Iterator<OnTabsChangedListener> items = mTabsChangedListeners.iterator();
         while (items.hasNext()) {
-            ((OnTabsChangedListener) items.next()).onTabsChanged(tab);
+            items.next().onTabsChanged(tab);
         }
     }
 
