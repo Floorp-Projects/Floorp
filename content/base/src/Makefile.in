@@ -81,6 +81,7 @@ CPPSRCS		= \
 		nsAtomListUtils.cpp \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
+		nsAttrValueOrString.cpp \
 		nsCCUncollectableMarker.cpp \
 		nsChannelPolicy.cpp \
 		nsCommentNode.cpp \
