@@ -186,14 +186,6 @@ CompositorParent::Composite()
   //layer->AsShadowLayer()->SetShadowTransform(worldTransform);
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-  // Hang the transform of the root layer off the layer manager.
-  gfx3DMatrix transform = layer->GetTransform();
-  transform *= v;
-  TransformLayerUserData* transformUserData = new TransformLayerUserData(transform);
-  mLayerManager->SetUserData(nsGkAtoms::transform, transformUserData);
-#endif
-
   mLayerManager->EndEmptyTransaction();
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
