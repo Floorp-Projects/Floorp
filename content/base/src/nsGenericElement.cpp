@@ -5055,7 +5055,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     return NS_OK;
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aValue, aNotify);
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNotify) {
@@ -5102,7 +5102,7 @@ nsGenericElement::SetParsedAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     return NS_OK;
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value.String(), aNotify);
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNotify) {
@@ -5341,8 +5341,8 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   nsresult rv = BeforeSetAttr(aNameSpaceID, aName, nsnull, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsIDocument *document = GetCurrentDoc();    
+
+  nsIDocument *document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
   if (aNotify) {

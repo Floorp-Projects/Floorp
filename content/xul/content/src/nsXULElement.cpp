@@ -126,6 +126,7 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "nsIControllers.h"
+#include "nsAttrValueOrString.h"
 
 // The XUL doc interface
 #include "nsIDOMXULDocument.h"
@@ -1055,7 +1056,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
 
 nsresult
 nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                            const nsAString* aValue, bool aNotify)
+                            const nsAttrValueOrString* aValue, bool aNotify)
 {
     if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::accesskey &&
         IsInDoc()) {
@@ -1084,10 +1085,9 @@ nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
              mNodeInfo->Equals(nsGkAtoms::window) &&
              aName == nsGkAtoms::chromemargin) {
       nsAttrValue attrValue;
-      nsIntMargin margins;
       // Make sure the margin format is valid first
-      if (!attrValue.ParseIntMarginValue(*aValue)) {
-          return NS_ERROR_INVALID_ARG;
+      if (!attrValue.ParseIntMarginValue(aValue->String())) {
+        return NS_ERROR_INVALID_ARG;
       }
     }
 
