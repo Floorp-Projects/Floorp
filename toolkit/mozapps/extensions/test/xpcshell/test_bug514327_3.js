@@ -159,7 +159,7 @@ function run_test() {
   var source = do_get_file("data/test_bug514327_3_empty.xml");
   source.copyTo(gProfD, "blocklist.xml");
   
-  gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
+  gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
   
   // should NOT be marked as outdated by the blocklist

@@ -141,7 +141,7 @@ nsCacheMetaData::UnflattenMetaData(const char * data, PRUint32 size)
         // Check that there are an even number of zero bytes
         // to match the pattern { key \0 value \0 }
         bool odd = false;
-        for (int i = 0; i < size; i++) {
+        for (PRUint32 i = 0; i < size; i++) {
             if (data[i] == '\0') 
                 odd = !odd;
         }

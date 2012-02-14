@@ -25,7 +25,7 @@ function run_test() {
 
   // add an IDN whitelist pref
   var pbi = Components.classes["@mozilla.org/preferences-service;1"]
-                      .getService(Components.interfaces.nsIPrefBranch2);
+                      .getService(Components.interfaces.nsIPrefBranch);
   pbi.setBoolPref("network.IDN.whitelist.es", true);
 
   // check convertToDisplayIDN against the whitelist

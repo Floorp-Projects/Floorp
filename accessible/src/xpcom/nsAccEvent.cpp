@@ -174,6 +174,44 @@ nsAccTextChangeEvent::GetModifiedText(nsAString& aModifiedText)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsAccHideEvent
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccHideEvent, nsAccEvent,
+                             nsIAccessibleHideEvent)
+
+NS_IMETHODIMP
+nsAccHideEvent::GetTargetParent(nsIAccessible** aAccessible)
+{
+  NS_ENSURE_ARG_POINTER(aAccessible);
+
+  NS_IF_ADDREF(*aAccessible =
+    static_cast<AccHideEvent*>(mEvent.get())->TargetParent());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccHideEvent::GetTargetNextSibling(nsIAccessible** aAccessible)
+{
+  NS_ENSURE_ARG_POINTER(aAccessible);
+
+  NS_IF_ADDREF(*aAccessible =
+    static_cast<AccHideEvent*>(mEvent.get())->TargetNextSibling());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccHideEvent::GetTargetPrevSibling(nsIAccessible** aAccessible)
+{
+  NS_ENSURE_ARG_POINTER(aAccessible);
+
+  NS_IF_ADDREF(*aAccessible =
+    static_cast<AccHideEvent*>(mEvent.get())->TargetPrevSibling());
+  return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // nsAccCaretMoveEvent
 ////////////////////////////////////////////////////////////////////////////////
 

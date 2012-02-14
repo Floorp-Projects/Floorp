@@ -90,7 +90,7 @@ function run_test() {
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_NO_INFO);
 
     var prefs = Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefBranch2);
+          getService(Ci.nsIPrefBranch);
     do_check_eq(prefs.getIntPref("gfx.blacklist.direct2d"),
                 Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
@@ -115,7 +115,7 @@ function run_test() {
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_NO_INFO);
 
     var prefs = Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefBranch2);
+          getService(Ci.nsIPrefBranch);
     var exists = false;
     try {
       prefs.getIntPref("gfx.blacklist.direct2d");

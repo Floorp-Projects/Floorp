@@ -121,7 +121,7 @@ Observer.prototype = {
   cleanup: function() {
     if (this._isPref) {
       var os = Cc["@mozilla.org/preferences-service;1"].getService()
-               .QueryInterface(Ci.nsIPrefBranch2);
+               .QueryInterface(Ci.nsIPrefBranch);
       os.removeObserver(this._topic, this);
     } else {
       var os = Cc["@mozilla.org/observer-service;1"]
@@ -625,7 +625,7 @@ SpecialPowersAPI.prototype = {
 
     if (aIsPref) {
       var os = Cc["@mozilla.org/preferences-service;1"].getService()
-               .QueryInterface(Ci.nsIPrefBranch2);	
+               .QueryInterface(Ci.nsIPrefBranch);	
       os.addObserver(aTopic, observer, false);
     } else {
       var os = Cc["@mozilla.org/observer-service;1"]
