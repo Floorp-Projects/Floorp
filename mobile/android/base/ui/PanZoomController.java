@@ -75,13 +75,17 @@ public class PanZoomController
 
     // Animation stops if the velocity is below this value when overscrolled or panning.
     private static final float STOPPED_THRESHOLD = 4.0f;
+
     // Animation stops is the velocity is below this threshold when flinging.
     private static final float FLING_STOPPED_THRESHOLD = 0.1f;
-    // The distance the user has to pan before we recognize it as such (e.g. to avoid
-    // 1-pixel pans between the touch-down and touch-up of a click). In units of inches.
-    public static final float PAN_THRESHOLD = 0.1f;
+
+    // The distance the user has to pan before we recognize it as such (e.g. to avoid 1-pixel pans
+    // between the touch-down and touch-up of a click). In units of density-independent pixels.
+    public static final float PAN_THRESHOLD = 1/16f * GeckoAppShell.getDpi();
+
     // Angle from axis within which we stay axis-locked
     private static final double AXIS_LOCK_ANGLE = Math.PI / 6.0; // 30 degrees
+
     // The maximum amount we allow you to zoom into a page
     private static final float MAX_ZOOM = 4.0f;
 
@@ -288,7 +292,7 @@ public class PanZoomController
             Log.e(LOGTAG, "Received impossible touch move while in " + mState);
             return false;
         case TOUCHING:
-            if (panDistance(event) < PAN_THRESHOLD * GeckoAppShell.getDpi()) {
+            if (panDistance(event) < PAN_THRESHOLD) {
                 return false;
             }
             cancelTouch();
