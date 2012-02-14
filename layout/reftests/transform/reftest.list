@@ -118,3 +118,5 @@ fails-if(Android) == stresstest-1.html stresstest-1-ref.html
 == table-1c.html table-1-ref.html
 == table-2a.html table-2-ref.html
 == table-2b.html table-2-ref.html
+# Bug 722463
+== inline-1a.html inline-1-ref.html
