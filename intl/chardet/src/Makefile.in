@@ -52,7 +52,6 @@ LIBXUL_LIBRARY  = 1
 
 
 CPPSRCS		= \
-		nsObserverBase.cpp \
 		nsCyrillicDetector.cpp \
 		nsChardetModule.cpp \
 		$(NULL)
