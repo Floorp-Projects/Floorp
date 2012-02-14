@@ -68,6 +68,7 @@ config/nspr/Makefile
 config/doxygen.cfg
 config/expandlibs_config.py
 config/tests/src-simple/Makefile
+mfbt/Makefile
 probes/Makefile
 extensions/Makefile
 "
@@ -125,6 +126,11 @@ if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
     build/autoconf/test/Makefile
   "
+  if [ ! "$LIBXUL_SDK" ]; then 
+    add_makefiles "
+      mozglue/tests/Makefile
+    "
+  fi
   if [ "$_MSC_VER" -a "$OS_TEST" != "x86_64" ]; then
     add_makefiles "
       build/win32/vmwarerecordinghelper/Makefile
@@ -137,6 +143,7 @@ if [ "$ENABLE_TESTS" ]; then
   fi
   if [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
     add_makefiles "
+      build/mobile/robocop/Makefile
       build/mobile/sutagent/android/Makefile
       build/mobile/sutagent/android/fencp/Makefile
       build/mobile/sutagent/android/ffxcp/Makefile

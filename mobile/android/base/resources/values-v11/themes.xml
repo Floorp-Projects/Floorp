@@ -2,7 +2,6 @@
 <resources>
 
     <style name="Gecko" parent="@android:style/Theme.Holo">
-        <item name="android:windowBackground">@color/splash_background</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
     
@@ -15,7 +14,6 @@
     </style>
     
     <style name="Gecko.Light" parent="@android:style/Theme.Holo.Light">
-        <item name="android:windowBackground">@color/splash_background</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
     
@@ -24,12 +22,27 @@
     <style name="Gecko.Light.NoActionBar" parent="@android:style/Theme.Holo.Light">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">@color/splash_background</item>
     </style>
     
     <style name="Gecko.Translucent" parent="@android:style/Theme.Translucent">
         <item name="android:windowActionBar">true</item>
         <item name="android:windowNoTitle">false</item>
+    </style>
+
+    <style name="Gecko.App">
+        <item name="android:actionBarStyle">@style/ActionBar.GeckoApp</item>
+    </style>
+
+    <style name="Gecko.Light.AwesomeBar">
+        <item name="android:actionBarStyle">@style/ActionBar.AwesomeBar</item>
+    </style>
+
+    <style name="Gecko.TitleBar.Preferences">
+        <item name="android:actionBarStyle">@style/ActionBar.GeckoPreferences</item>
+    </style>
+
+    <style name="Gecko.Translucent.TabsTray">
+        <item name="android:actionBarStyle">@style/ActionBar.TabsTray</item>
     </style>
     
 </resources>

@@ -65,13 +65,6 @@
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
 #define BRAND_BUNDLE_URL "chrome://branding/locale/brand.properties"
 
-extern "C" {
-  // Returns the CFURL for application currently set as the default opener for
-  // the given URL scheme. appURL must be released by the caller.
-  extern OSStatus _LSCopyDefaultSchemeHandlerURL(CFStringRef scheme,
-                                                 CFURLRef *appURL);
-}
-
 /* This is an undocumented interface (in the Foundation framework) that has
  * been stable since at least 10.2.8 and is still present on SnowLeopard.
  * Furthermore WebKit has three public methods (in WebKitSystemInterface.h)
@@ -148,33 +141,46 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
                               aScheme.Length(),
                               kCFStringEncodingUTF8,
                               false);
+
   if (schemeCFString) {
-    // Since the public API (LSGetApplicationForURL) fails every now and then,
-    // we're using undocumented _LSCopyDefaultSchemeHandlerURL
-    CFURLRef handlerBundleURL;
-    OSStatus err = ::_LSCopyDefaultSchemeHandlerURL(schemeCFString,
-                                                    &handlerBundleURL);
-    if (err == noErr) {
-      CFBundleRef handlerBundle = ::CFBundleCreate(NULL, handlerBundleURL);
-      if (handlerBundle) {
-        // Get the human-readable name of the default handler bundle
-        CFStringRef bundleName =
-          (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle,
-                                                              kCFBundleNameKey);
-        if (bundleName) {
-          nsAutoTArray<UniChar, 255> buffer;
-          CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
-          buffer.SetLength(bundleNameLength);
-          ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
-                                  buffer.Elements());
-          _retval.Assign(buffer.Elements(), bundleNameLength);
-          rv = NS_OK;
+    CFStringRef lookupCFString = ::CFStringCreateWithFormat(NULL, NULL, CFSTR("%@:"), schemeCFString);
+
+    if (lookupCFString) {
+      CFURLRef lookupCFURL = ::CFURLCreateWithString(NULL, lookupCFString, NULL);
+
+      if (lookupCFURL) {
+        CFURLRef appCFURL = NULL;
+        OSStatus theErr = ::LSGetApplicationForURL(lookupCFURL, kLSRolesAll, NULL, &appCFURL);
+
+        if (theErr == noErr) {
+          CFBundleRef handlerBundle = ::CFBundleCreate(NULL, appCFURL);
+
+          if (handlerBundle) {
+            // Get the human-readable name of the default handler bundle
+            CFStringRef bundleName =
+            (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle,
+                                                                kCFBundleNameKey);
+
+            if (bundleName) {
+              nsAutoTArray<UniChar, 255> buffer;
+              CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
+              buffer.SetLength(bundleNameLength);
+              ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
+                                      buffer.Elements());
+              _retval.Assign(buffer.Elements(), bundleNameLength);
+              rv = NS_OK;
+            }
+
+            ::CFRelease(handlerBundle);
+          }
+
+          ::CFRelease(appCFURL);
         }
 
-        ::CFRelease(handlerBundle);
+        ::CFRelease(lookupCFURL);
       }
 
-      ::CFRelease(handlerBundleURL);
+      ::CFRelease(lookupCFString);
     }
 
     ::CFRelease(schemeCFString);

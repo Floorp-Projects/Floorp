@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.80 2011/11/17 00:20:22 bsmith%mozilla.com Exp $ */
+/* $Id: sslsock.c,v 1.81 2012/02/11 13:20:53 kaie%kuix.de Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"

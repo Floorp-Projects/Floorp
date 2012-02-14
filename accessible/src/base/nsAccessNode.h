@@ -96,14 +96,6 @@ public:
   nsRootAccessible* RootAccessible() const;
 
   /**
-   * Return focused node within accessible window.
-   *
-   * XXX: it shouldn't break us if we return focused node not depending on
-   * window so that we can turn this method into util method.
-   */
-  already_AddRefed<nsINode> GetCurrentFocus();
-
-  /**
    * Initialize the access node object, add it to the cache.
    */
   virtual bool Init();
@@ -160,12 +152,6 @@ public:
    * that DOM node in terms it gets stored in the accessible to node map.
    */
   virtual bool IsPrimaryForNode() const;
-
-  /**
-   * Return the string bundle
-   */
-  static nsIStringBundle* GetStringBundle()
-    { return gStringBundle; }
 
   /**
    * Interface methods on nsIAccessible shared with ISimpleDOM.

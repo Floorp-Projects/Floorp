@@ -19,6 +19,8 @@ public class testAxisLocking extends PixelTest {
 
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
 
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
         // load page and check we're at 0,0
         loadAndVerifyBoxes(url);
 

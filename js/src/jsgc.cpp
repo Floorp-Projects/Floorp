@@ -784,10 +784,8 @@ Chunk::releaseArena(ArenaHeader *aheader)
     JS_ASSERT(rt->gcBytes >= ArenaSize);
     JS_ASSERT(comp->gcBytes >= ArenaSize);
 #ifdef JS_THREADSAFE
-    if (rt->gcHelperThread.sweeping()) {
-        rt->reduceGCTriggerBytes(GC_HEAP_GROWTH_FACTOR * ArenaSize);
+    if (rt->gcHelperThread.sweeping())
         comp->reduceGCTriggerBytes(GC_HEAP_GROWTH_FACTOR * ArenaSize);
-    }
 #endif
     rt->gcBytes -= ArenaSize;
     comp->gcBytes -= ArenaSize;
@@ -892,12 +890,6 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes)
      */
     rt->gcMaxBytes = maxbytes;
     rt->setGCMaxMallocBytes(maxbytes);
-
-    /*
-     * The assigned value prevents GC from running when GC memory is too low
-     * (during JS engine start).
-     */
-    rt->setGCLastBytes(8192, GC_NORMAL);
 
     rt->gcJitReleaseTime = PRMJ_Now() + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
     return true;
@@ -1356,25 +1348,6 @@ js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 }
 
 void
-JSRuntime::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
-{
-    gcLastBytes = lastBytes;
-
-    size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, GC_ALLOCATION_THRESHOLD);
-    float trigger = float(base) * GC_HEAP_GROWTH_FACTOR;
-    gcTriggerBytes = size_t(Min(float(gcMaxBytes), trigger));
-}
-
-void
-JSRuntime::reduceGCTriggerBytes(size_t amount) {
-    JS_ASSERT(amount > 0);
-    JS_ASSERT(gcTriggerBytes - amount >= 0);
-    if (gcTriggerBytes - amount < GC_ALLOCATION_THRESHOLD * GC_HEAP_GROWTH_FACTOR)
-        return;
-    gcTriggerBytes -= amount;
-}
-
-void
 JSCompartment::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
 {
     gcLastBytes = lastBytes;
@@ -1385,7 +1358,8 @@ JSCompartment::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
 }
 
 void
-JSCompartment::reduceGCTriggerBytes(size_t amount) {
+JSCompartment::reduceGCTriggerBytes(size_t amount)
+{
     JS_ASSERT(amount > 0);
     JS_ASSERT(gcTriggerBytes - amount >= 0);
     if (gcTriggerBytes - amount < GC_ALLOCATION_THRESHOLD * GC_HEAP_GROWTH_FACTOR)
@@ -1892,26 +1866,6 @@ gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 }
 
 void
-js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
-{
-    MarkRoot(trc, &fp->scopeChain(), "scope chain");
-    if (fp->isDummyFrame())
-        return;
-    if (fp->hasArgsObj())
-        MarkRoot(trc, &fp->argsObj(), "arguments");
-    if (fp->isFunctionFrame()) {
-        MarkRoot(trc, fp->fun(), "fun");
-        if (fp->isEvalFrame()) {
-            MarkRoot(trc, fp->script(), "eval script");
-        }
-    } else {
-        MarkRoot(trc, fp->script(), "script");
-    }
-    fp->script()->compartment()->active = true;
-    MarkRoot(trc, fp->returnValue(), "rval");
-}
-
-void
 AutoIdArray::trace(JSTracer *trc)
 {
     JS_ASSERT(tag == IDARRAY);
@@ -2121,6 +2075,12 @@ MarkRuntime(JSTracer *trc)
         }
     }
 
+#ifdef JS_METHODJIT
+    /* We need to expand inline frames before stack scanning. */
+    for (CompartmentsIter c(rt); !c.done(); c.next())
+        mjit::ExpandInlineFrames(c);
+#endif
+
     rt->stackSpace.mark(trc);
 
     /* The embedding can register additional roots here. */
@@ -2170,12 +2130,6 @@ TriggerCompartmentGC(JSCompartment *comp, gcreason::Reason reason)
         /* If we need to GC more than one compartment, run a full GC. */
         if (rt->gcTriggerCompartment != comp)
             rt->gcTriggerCompartment = NULL;
-        return;
-    }
-
-    if (rt->gcBytes > 8192 && rt->gcBytes >= 3 * (rt->gcTriggerBytes / 2)) {
-        /* If we're using significantly more than our quota, do a full GC. */
-        TriggerGC(rt, reason);
         return;
     }
 
@@ -2966,7 +2920,6 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 #endif
 
     rt->gcMarkAndSweep = false;
-    rt->setGCLastBytes(rt->gcBytes, gckind);
     rt->gcCurrentCompartment = NULL;
 
     for (CompartmentsIter c(rt); !c.done(); c.next())

@@ -1108,13 +1108,12 @@ nsComputedDOMStyle::DoGetMozTransform()
     resultString.Append(NS_LITERAL_STRING(", "));
   }
   resultString.AppendFloat(matrix._41);
-  resultString.Append(NS_LITERAL_STRING("px, "));
+  resultString.Append(NS_LITERAL_STRING(", "));
   resultString.AppendFloat(matrix._42);
-  resultString.Append(NS_LITERAL_STRING("px"));
   if (is3D) {
     resultString.Append(NS_LITERAL_STRING(", "));
     resultString.AppendFloat(matrix._43);
-    resultString.Append(NS_LITERAL_STRING("px, "));
+    resultString.Append(NS_LITERAL_STRING(", "));
     resultString.AppendFloat(matrix._44);
   }
   resultString.Append(NS_LITERAL_STRING(")"));

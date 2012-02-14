@@ -80,7 +80,6 @@ var gPrivacyPane = {
    */
   prefsForDefault: [
     "places.history.enabled",
-    "browser.download.manager.retention",
     "browser.formfill.enable",
     "network.cookie.cookieBehavior",
     "network.cookie.lifetimePolicy",
@@ -96,7 +95,6 @@ var gPrivacyPane = {
    */
   dependentControls: [
     "rememberHistory",
-    "rememberDownloads",
     "rememberForms",
     "keepUntil",
     "keepCookiesUntil",
@@ -177,10 +175,6 @@ var gPrivacyPane = {
       if (!rememberHistoryCheckbox.checked)
         rememberHistoryCheckbox.checked = true;
 
-      // select the remember downloads option if needed
-      if (!document.getElementById("rememberDownloads").checked)
-        document.getElementById("browser.download.manager.retention").value = 2;
-
       // select the remember forms history option
       document.getElementById("browser.formfill.enable").value = true;
 
@@ -223,8 +217,6 @@ var gPrivacyPane = {
       // adjust the checked state of the remember history checkboxes
       document.getElementById("rememberHistory").checked = disabled ? false :
         document.getElementById("places.history.enabled").value;
-      document.getElementById("rememberDownloads").checked = disabled ? false :
-        this.readDownloadRetention();
       document.getElementById("rememberForms").checked = disabled ? false :
         document.getElementById("browser.formfill.enable").value;
 
@@ -244,7 +236,7 @@ var gPrivacyPane = {
   {
     let prefService = document.getElementById("privacyPreferences")
                               .service
-                              .QueryInterface(Components.interfaces.nsIPrefBranch2);
+                              .QueryInterface(Components.interfaces.nsIPrefBranch);
     prefService.addObserver("browser.privatebrowsing.autostart",
                             this.autoStartPrivateBrowsingObserver,
                             false);
@@ -257,7 +249,7 @@ var gPrivacyPane = {
   {
     let prefService = document.getElementById("privacyPreferences")
                               .service
-                              .QueryInterface(Components.interfaces.nsIPrefBranch2);
+                              .QueryInterface(Components.interfaces.nsIPrefBranch);
     prefService.removeObserver("browser.privatebrowsing.autostart",
                                this.autoStartPrivateBrowsingObserver);
   },
@@ -331,35 +323,7 @@ var gPrivacyPane = {
    * browser.formfill.enable
    * - true if entries in forms and the search bar should be saved, false
    *   otherwise
-   * browser.download.manager.retention
-   * - determines when downloads are automatically removed from the download
-   *   manager:
-   *
-   *     0 means remove downloads when they finish downloading
-   *     1 means downloads will be removed when the browser quits
-   *     2 means never remove downloads
    */
-
-  /**
-   * Converts the value of the browser.download.manager.retention preference
-   * into a Boolean value.  "remove on close" and "don't remember" both map
-   * to an unchecked checkbox, while "remember" maps to a checked checkbox.
-   */
-  readDownloadRetention: function ()
-  {
-    var pref = document.getElementById("browser.download.manager.retention");
-    return (pref.value == 2);
-  },
-
-  /**
-   * Returns the appropriate value of the browser.download.manager.retention
-   * preference for the current UI.
-   */
-  writeDownloadRetention: function ()
-  {
-    var checkbox = document.getElementById("rememberDownloads");
-    return checkbox.checked ? 2 : 0;
-  },
 
   // COOKIES
 

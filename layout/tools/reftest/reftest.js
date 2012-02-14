@@ -244,7 +244,7 @@ function OnRefTestLoad(win)
     gVerbose = !!env.get("MOZ_REFTEST_VERBOSE");
 
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                getService(Components.interfaces.nsIPrefBranch2);
+                getService(Components.interfaces.nsIPrefBranch);
     try {
         gBrowserIsRemote = prefs.getBoolPref("browser.tabs.remote");
     } catch (e) {
@@ -288,7 +288,7 @@ function InitAndStartRefTests()
     /* These prefs are optional, so we don't need to spit an error to the log */
     try {
         var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch2);
+                    getService(Components.interfaces.nsIPrefBranch);
     } catch(e) {
         gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + e + "\n");
     }
@@ -401,7 +401,7 @@ function StartTests()
     /* These prefs are optional, so we don't need to spit an error to the log */
     try {
         var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch2);
+                    getService(Components.interfaces.nsIPrefBranch);
     } catch(e) {
         gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + e + "\n");
     }
@@ -563,7 +563,7 @@ function BuildConditionSandbox(aURL) {
     gContainingWindow.document.documentElement.removeChild(box);
 
     var prefs = CC["@mozilla.org/preferences-service;1"].
-                getService(CI.nsIPrefBranch2);
+                getService(CI.nsIPrefBranch);
     try {
         sandbox.nativeThemePref = !prefs.getBoolPref("mozilla.widget.disable-native-theme");
     } catch (e) {
@@ -1036,7 +1036,7 @@ function StartCurrentTest()
             gURLs.shift();
         } else if (gURLs[0].prefSettings.length > 0) {
             var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                        getService(Components.interfaces.nsIPrefBranch2);
+                        getService(Components.interfaces.nsIPrefBranch);
             var badPref = undefined;
             try {
                 gURLs[0].prefSettings.forEach(function(ps) {
@@ -1612,7 +1612,7 @@ function RestoreChangedPreferences()
 {
     if (gPrefsToRestore.length > 0) {
         var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch2);
+                    getService(Components.interfaces.nsIPrefBranch);
         gPrefsToRestore.forEach(function(ps) {
             var value = ps.value;
             if (ps.type == PREF_BOOLEAN) {

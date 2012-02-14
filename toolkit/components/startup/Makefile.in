@@ -73,10 +73,8 @@ endif
 
 XPCSHELL_TESTS = tests/unit
 
-ifdef ENABLE_TESTS
 ifneq (mobile,$(MOZ_BUILD_APP))
-DIRS += tests/browser
-endif
+TEST_DIRS += tests/browser
 endif
 
 include $(topsrcdir)/config/rules.mk

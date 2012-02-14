@@ -13,6 +13,9 @@
 #else
 #include <time.h>
 #endif
+#if defined(ANDROID) || defined(OS_POSIX)
+#include <unistd.h>
+#endif
 
 #include <limits>
 

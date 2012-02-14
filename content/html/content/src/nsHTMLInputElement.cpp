@@ -266,10 +266,10 @@ AsyncClickHandler::Run()
   }
 
   // Check if page is allowed to open the popup
-  if (mPopupControlState != openAllowed) {
+  if (mPopupControlState > openControlled) {
     nsCOMPtr<nsIPopupWindowManager> pm =
       do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
- 
+
     if (!pm) {
       return NS_OK;
     }

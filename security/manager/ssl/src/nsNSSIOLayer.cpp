@@ -969,21 +969,21 @@ nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
 
   mCertVerificationEnded = PR_IntervalNow();
 
-  if (errorCode != 0) {
-    SetCanceled(errorCode, errorMessageType);
-  } else if (mFd) {
-    // We haven't closed the connection already, so restart it
-    SECStatus rv = SSL_RestartHandshakeAfterAuthCertificate(mFd);
-    if (rv != SECSuccess) {
+  if (mFd) {
+    SECStatus rv = SSL_AuthCertificateComplete(mFd, errorCode);
+    // Only replace errorCode if there was originally no error
+    if (rv != SECSuccess && errorCode == 0) {
       errorCode = PR_GetError();
+      errorMessageType = PlainErrorMessage;
       if (errorCode == 0) {
-        NS_ERROR("SSL_RestartHandshakeAfterAuthCertificate didn't set error code");
+        NS_ERROR("SSL_AuthCertificateComplete didn't set error code");
         errorCode = PR_INVALID_STATE_ERROR;
       }
-      SetCanceled(errorCode, PlainErrorMessage);
     }
-  } else {
-    // If we closed the connection alreay, we don't have anything to do
+  }
+
+  if (errorCode) {
+    SetCanceled(errorCode, errorMessageType);
   }
 
   mCertVerificationState = after_cert_verification;
@@ -1599,8 +1599,14 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRErrorCode err)
 
 namespace {
 
+enum Operation { reading, writing, not_reading_or_writing };
+
+PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
+                       PRFileDesc* ssl_layer_fd,
+                       nsNSSSocketInfo *socketInfo);
+
 nsNSSSocketInfo *
-getSocketInfoIfRunning(PRFileDesc * fd,
+getSocketInfoIfRunning(PRFileDesc * fd, Operation op,
                        const nsNSSShutDownPreventionLock & /*proofOfLock*/)
 {
   if (!fd || !fd->lower || !fd->secret ||
@@ -1619,9 +1625,15 @@ getSocketInfoIfRunning(PRFileDesc * fd,
 
   if (socketInfo->GetErrorCode()) {
     PRErrorCode err = socketInfo->GetErrorCode();
+    PR_SetError(err, 0);
+    if (op == reading || op == writing) {
+      // We must do TLS intolerance checks for reads and writes, for timeouts
+      // in particular.
+      (void) checkHandshake(-1, op == reading, fd, socketInfo);
+    }
+
     // If we get here, it is probably because cert verification failed and this
     // is the first I/O attempt since that failure.
-    PR_SetError(err, 0);
     return nsnull;
   }
 
@@ -1636,7 +1648,7 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] connecting SSL socket\n", (void*)fd));
   nsNSSShutDownPreventionLock locker;
-  if (!getSocketInfoIfRunning(fd, locker))
+  if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
     return PR_FAILURE;
   
   PRStatus status = fd->lower->methods->connect(fd->lower, addr, timeout);
@@ -1956,6 +1968,8 @@ class SSLErrorRunnable : public SyncRunnableBase
   const PRErrorCode mErrorCode;
 };
 
+namespace {
+
 PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
                        PRFileDesc* ssl_layer_fd,
                        nsNSSSocketInfo *socketInfo)
@@ -2059,6 +2073,8 @@ PRInt32 checkHandshake(PRInt32 bytesTransfered, bool wasReading,
   return bytesTransfered;
 }
 
+}
+
 static PRInt16 PR_CALLBACK
 nsSSLIOLayerPoll(PRFileDesc * fd, PRInt16 in_flags, PRInt16 *out_flags)
 {
@@ -2072,7 +2088,9 @@ nsSSLIOLayerPoll(PRFileDesc * fd, PRInt16 in_flags, PRInt16 *out_flags)
 
   *out_flags = 0;
 
-  nsNSSSocketInfo * socketInfo = getSocketInfoIfRunning(fd, locker);
+  nsNSSSocketInfo * socketInfo =
+    getSocketInfoIfRunning(fd, not_reading_or_writing, locker);
+
   if (!socketInfo) {
     // If we get here, it is probably because certificate validation failed
     // and this is the first I/O operation after the failure. 
@@ -2098,9 +2116,12 @@ nsSSLIOLayerPoll(PRFileDesc * fd, PRInt16 in_flags, PRInt16 *out_flags)
 
   // See comments in HandshakeTimeout before moving and/or changing this block
   if (socketInfo->HandshakeTimeout()) {
+    NS_WARNING("SSL handshake timed out");
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] handshake timed out\n", fd));
     NS_ASSERTION(in_flags & PR_POLL_EXCEPT,
                  "caller did not poll for EXCEPT (handshake timeout)");
     *out_flags = in_flags | PR_POLL_EXCEPT;
+    socketInfo->SetCanceled(PR_CONNECT_RESET_ERROR, PlainErrorMessage);
     return in_flags;
   }
 
@@ -2156,7 +2177,7 @@ static PRFileDesc *_PSM_InvalidDesc(void)
 static PRStatus PR_CALLBACK PSMGetsockname(PRFileDesc *fd, PRNetAddr *addr)
 {
   nsNSSShutDownPreventionLock locker;
-  if (!getSocketInfoIfRunning(fd, locker))
+  if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
     return PR_FAILURE;
 
   return fd->lower->methods->getsockname(fd->lower, addr);
@@ -2165,7 +2186,7 @@ static PRStatus PR_CALLBACK PSMGetsockname(PRFileDesc *fd, PRNetAddr *addr)
 static PRStatus PR_CALLBACK PSMGetpeername(PRFileDesc *fd, PRNetAddr *addr)
 {
   nsNSSShutDownPreventionLock locker;
-  if (!getSocketInfoIfRunning(fd, locker))
+  if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
     return PR_FAILURE;
 
   return fd->lower->methods->getpeername(fd->lower, addr);
@@ -2175,7 +2196,7 @@ static PRStatus PR_CALLBACK PSMGetsocketoption(PRFileDesc *fd,
                                         PRSocketOptionData *data)
 {
   nsNSSShutDownPreventionLock locker;
-  if (!getSocketInfoIfRunning(fd, locker))
+  if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
     return PR_FAILURE;
 
   return fd->lower->methods->getsocketoption(fd, data);
@@ -2185,7 +2206,7 @@ static PRStatus PR_CALLBACK PSMSetsocketoption(PRFileDesc *fd,
                                         const PRSocketOptionData *data)
 {
   nsNSSShutDownPreventionLock locker;
-  if (!getSocketInfoIfRunning(fd, locker))
+  if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
     return PR_FAILURE;
 
   return fd->lower->methods->setsocketoption(fd, data);
@@ -2195,7 +2216,7 @@ static PRInt32 PR_CALLBACK PSMRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
     PRIntn flags, PRIntervalTime timeout)
 {
   nsNSSShutDownPreventionLock locker;
-  nsNSSSocketInfo *socketInfo = getSocketInfoIfRunning(fd, locker);
+  nsNSSSocketInfo *socketInfo = getSocketInfoIfRunning(fd, reading, locker);
   if (!socketInfo)
     return -1;
 
@@ -2220,7 +2241,7 @@ static PRInt32 PR_CALLBACK PSMSend(PRFileDesc *fd, const void *buf, PRInt32 amou
     PRIntn flags, PRIntervalTime timeout)
 {
   nsNSSShutDownPreventionLock locker;
-  nsNSSSocketInfo *socketInfo = getSocketInfoIfRunning(fd, locker);
+  nsNSSSocketInfo *socketInfo = getSocketInfoIfRunning(fd, writing, locker);
   if (!socketInfo)
     return -1;
 
@@ -2257,7 +2278,7 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
 static PRStatus PR_CALLBACK PSMConnectcontinue(PRFileDesc *fd, PRInt16 out_flags)
 {
   nsNSSShutDownPreventionLock locker;
-  if (!getSocketInfoIfRunning(fd, locker)) {
+  if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker)) {
     return PR_FAILURE;
   }
 

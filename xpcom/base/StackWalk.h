@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,18 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jeff Muizelaar <jmuizelaar@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,11 +33,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+/* API for getting a stack trace of the C/C++ */
 
-[scriptable, uuid(ca7a3a93-822f-4cdf-8cb4-c52d16b9afc7)]
-interface nsIAccessibleWin32Object : nsISupports
-{
-  /** handle to the external window implementing IAccessible */
-  [noscript] readonly attribute voidPtr hwnd;
-};
+#ifndef StackWalk_h_
+#define StackWalk_h_
+
+// XXX: it would be nice to eventually remove this header dependency on nsStackWalk.h
+#include "nsStackWalk.h"
+
+namespace mozilla {
+
+nsresult
+FramePointerStackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+                      void *aClosure, void **bp);
+
+}
+
+#endif /* !defined(StackWalk_h_) */

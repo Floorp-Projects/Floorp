@@ -702,7 +702,6 @@ JSRuntime::JSRuntime()
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc_(NULL),
     bumpAlloc_(NULL),
-    reCache_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
     interpreterFrames(NULL),
@@ -721,8 +720,6 @@ JSRuntime::JSRuntime()
     gcUserAvailableChunkListHead(NULL),
     gcKeepAtoms(0),
     gcBytes(0),
-    gcTriggerBytes(0),
-    gcLastBytes(0),
     gcMaxBytes(0),
     gcMaxMallocBytes(0),
     gcNumArenasFreeCommitted(0),
@@ -850,7 +847,6 @@ JSRuntime::~JSRuntime()
 
     delete_<JSC::ExecutableAllocator>(execAlloc_);
     delete_<WTF::BumpPointerAllocator>(bumpAlloc_);
-    JS_ASSERT(!reCache_);
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
@@ -6361,7 +6357,7 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, s
     CHECK_REQUEST(cx);
 
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    return ExecuteRegExp(cx, res, &reobj->asRegExp(), NULL, chars, length,
+    return ExecuteRegExp(cx, res, reobj->asRegExp(), NULL, chars, length,
                          indexp, test ? RegExpTest : RegExpExec, rval);
 }
 
@@ -6393,7 +6389,7 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t le
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return ExecuteRegExp(cx, NULL, &obj->asRegExp(), NULL, chars, length, indexp,
+    return ExecuteRegExp(cx, NULL, obj->asRegExp(), NULL, chars, length, indexp,
                          test ? RegExpTest : RegExpExec, rval);
 }
 
