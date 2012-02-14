@@ -347,11 +347,13 @@ protected:
    * the element to start navigation from. For tab key navigation,
    * this should be the currently focused element.
    *
-   * aType is the type passed to MoveFocus.
+   * aType is the type passed to MoveFocus. If aNoParentTraversal is set,
+   * navigation is not done to parent documents and iteration returns to the
+   * beginning (or end) of the starting document.
    */
   nsresult DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
                                        nsIContent* aStart,
-                                       PRInt32 aType,
+                                       PRInt32 aType, bool aNoParentTraversal,
                                        nsIContent** aNextContent);
 
   /**

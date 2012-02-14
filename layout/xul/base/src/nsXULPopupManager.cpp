@@ -1618,10 +1618,9 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
 
   if (item) {
     nsMenuPopupFrame* popup = item->Frame();
-    nsCOMPtr<nsIWidget> widget = popup->GetWidget();
-    if (widget) {
-      widget->CaptureRollupEvents(this, true, popup->ConsumeOutsideClicks());
-      mWidget = widget;
+    mWidget = popup->GetWidget();
+    if (mWidget) {
+      mWidget->CaptureRollupEvents(this, true, popup->ConsumeOutsideClicks());
       popup->AttachedDismissalListener();
     }
   }

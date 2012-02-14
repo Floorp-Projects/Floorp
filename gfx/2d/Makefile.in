@@ -90,6 +90,7 @@ CPPSRCS	+= \
         SourceSurfaceSkia.cpp \
         DrawTargetSkia.cpp \
         PathSkia.cpp \
+        ScaledFontFreetype.cpp
         $(NULL)
 
 DEFINES += -DUSE_SKIA

@@ -109,7 +109,7 @@ var gLitesnEvents = kListenEvent_None;
 var gTimer;
 
 var gPrefSvc = Components.classes["@mozilla.org/preferences-service;1"].
-               getService(Components.interfaces.nsIPrefBranch2);
+               getService(Components.interfaces.nsIPrefBranch);
 const kPrefSmoothScroll = "general.smoothScroll";
 const kPrefNameTimeout = "mousewheel.transaction.timeout";
 const kPrefNameIgnoreMoveDelay = "mousewheel.transaction.ignoremovedelay";

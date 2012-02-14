@@ -4957,6 +4957,15 @@ GenerateNormal(float *N, const PRUint8 *data, PRInt32 stride,
       { 1.0 / 3.0, 1.0 / 4.0, 1.0 / 3.0 },
       { 2.0 / 3.0, 1.0 / 2.0, 2.0 / 3.0 } };
 
+  // degenerate cases
+  if (surfaceWidth == 1 || surfaceHeight == 1) {
+    // just return a unit vector pointing towards the viewer
+    N[0] = 0;
+    N[1] = 0;
+    N[2] = 255;
+    return;
+  }
+
   PRInt8 xflag, yflag;
   if (x == 0) {
     xflag = 0;

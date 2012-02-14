@@ -52,7 +52,6 @@
 #include "nsILocaleService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsICurrentCharsetListener.h"
 #include "nsQuickSort.h"
@@ -829,11 +828,8 @@ nsresult nsCharsetMenu::FreeResources()
   nsresult res = NS_OK;
 
   if (mCharsetMenuObserver) {
-    nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefs);
-    if (pbi) {
-      pbi->RemoveObserver(kBrowserStaticPrefKey, mCharsetMenuObserver);
-      pbi->RemoveObserver(kMaileditPrefKey, mCharsetMenuObserver);
-    }
+    mPrefs->RemoveObserver(kBrowserStaticPrefKey, mCharsetMenuObserver);
+    mPrefs->RemoveObserver(kMaileditPrefKey, mCharsetMenuObserver);
     /* nsIObserverService has to have released nsCharsetMenu already */
   }
 
@@ -881,9 +877,7 @@ nsresult nsCharsetMenu::InitBrowserMenu()
     NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
 
     // register prefs callback
-    nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefs);
-    if (pbi)
-      res = pbi->AddObserver(kBrowserStaticPrefKey, mCharsetMenuObserver, false);
+    mPrefs->AddObserver(kBrowserStaticPrefKey, mCharsetMenuObserver, false);
   }
 
   mBrowserMenuInitialized = NS_SUCCEEDED(res);
@@ -916,9 +910,7 @@ nsresult nsCharsetMenu::InitMaileditMenu()
     NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailedit charset menu from prefs");
 
     // register prefs callback
-    nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefs);
-    if (pbi)
-      res = pbi->AddObserver(kMaileditPrefKey, mCharsetMenuObserver, false);
+    mPrefs->AddObserver(kMaileditPrefKey, mCharsetMenuObserver, false);
   }
 
   mMaileditMenuInitialized = NS_SUCCEEDED(res);

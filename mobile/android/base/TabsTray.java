@@ -79,10 +79,6 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
 
         setContentView(R.layout.tabs_tray);
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            GeckoActionBar.hide(this);
-        }
-
         mWaitingForClose = false;
 
         mList = (ListView) findViewById(R.id.list);
@@ -155,8 +151,8 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
 
         if (Tabs.getInstance().getIndexOf(tab) == -1) {
             mWaitingForClose = false;
-            mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
-            mList.setAdapter(mTabsAdapter);
+            mTabsAdapter.removeTab(tab);
+            mList.invalidateViews();
             mListContainer.requestLayout();
         } else {
             View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
@@ -167,7 +163,7 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     void finishActivity() {
         finish();
         overridePendingTransition(0, R.anim.shrink_fade_out);
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Screenshot:Cancel",""));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel",""));
     }
 
     // Tabs List Container holds the ListView and the New Tab button
@@ -252,6 +248,10 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
                 return -1;
 
             return mTabs.indexOf(tab);
+        }
+
+        public void removeTab(Tab tab) {
+            mTabs.remove(tab);
         }
 
         public void assignValues(View view, Tab tab) {

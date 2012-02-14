@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.158 2011/11/19 21:58:21 bsmith%mozilla.com Exp $ */
+/* $Id: ssl3con.c,v 1.162 2012/02/11 13:03:08 kaie%kuix.de Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -2606,6 +2606,40 @@ ssl3_HandshakeFailure(sslSocket *ss)
                                     : SSL_ERROR_BAD_SERVER );
     return SECFailure;
 }
+
+static void
+ssl3_SendAlertForCertError(sslSocket * ss, PRErrorCode errCode)
+{
+    SSL3AlertDescription desc	= bad_certificate;
+    PRBool isTLS = ss->version >= SSL_LIBRARY_VERSION_3_1_TLS;
+
+    switch (errCode) {
+    case SEC_ERROR_LIBRARY_FAILURE:     desc = unsupported_certificate; break;
+    case SEC_ERROR_EXPIRED_CERTIFICATE: desc = certificate_expired;     break;
+    case SEC_ERROR_REVOKED_CERTIFICATE: desc = certificate_revoked;     break;
+    case SEC_ERROR_INADEQUATE_KEY_USAGE:
+    case SEC_ERROR_INADEQUATE_CERT_TYPE:
+		                        desc = certificate_unknown;     break;
+    case SEC_ERROR_UNTRUSTED_CERT:
+		    desc = isTLS ? access_denied : certificate_unknown; break;
+    case SEC_ERROR_UNKNOWN_ISSUER:      
+    case SEC_ERROR_UNTRUSTED_ISSUER:    
+		    desc = isTLS ? unknown_ca : certificate_unknown; break;
+    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+		    desc = isTLS ? unknown_ca : certificate_expired; break;
+
+    case SEC_ERROR_CERT_NOT_IN_NAME_SPACE:
+    case SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID:
+    case SEC_ERROR_CA_CERT_INVALID:
+    case SEC_ERROR_BAD_SIGNATURE:
+    default:                            desc = bad_certificate;     break;
+    }
+    SSL_DBG(("%d: SSL3[%d]: peer certificate is no good: error=%d",
+	     SSL_GETPID(), ss->fd, errCode));
+
+    (void) SSL3_SendAlert(ss, alert_fatal, desc);
+}
+
 
 /*
  * Send handshake_Failure alert.  Set generic error number.
@@ -5656,9 +5690,9 @@ ssl3_CanFalseStart(sslSocket *ss) {
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
 
     /* XXX: does not take into account whether we are waiting for
-     * SSL_RestartHandshakeAfterAuthCertificate or
-     * SSL_RestartHandshakeAfterCertReq. If/when that is done, this function
-     * could return different results each time it would be called.
+     * SSL_AuthCertificateComplete or SSL_RestartHandshakeAfterCertReq. If/when
+     * that is done, this function could return different results each time it
+     * would be called.
      */
 
     ssl_GetSpecReadLock(ss);
@@ -5705,8 +5739,7 @@ ssl3_HandleServerHelloDone(sslSocket *ss)
     return rv;
 }
 
-/* Called from ssl3_HandleServerHelloDone and
- * ssl3_RestartHandshakeAfterServerCert.
+/* Called from ssl3_HandleServerHelloDone and ssl3_AuthCertificateComplete.
  *
  * Caller must hold Handshake and RecvBuf locks.
  */
@@ -5741,21 +5774,21 @@ ssl3_SendClientSecondRound(sslSocket *ss)
      * second round for a renegotiation before the server's certificate was
      * authenticated, then the application data sent/received after this point
      * would be using cipher spec that hadn't been authenticated. By waiting
-     * until the server's certificate has been authenticated during 
+     * until the server's certificate has been authenticated during
      * renegotiations, we ensure that renegotiations have the same property
      * as initial handshakes; i.e. we have fully authenticated the handshake
      * before using the cipher specs agreed upon for that handshake for
      * application data.
      */
     if (ss->ssl3.hs.restartTarget) {
-        PR_NOT_REACHED("unexpected ss->ssl3.hs.restartTarget");
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
+	PR_NOT_REACHED("unexpected ss->ssl3.hs.restartTarget");
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
     }
     if (ss->ssl3.hs.authCertificatePending &&
-        (sendClientCert || ss->ssl3.sendEmptyCert || ss->firstHsDone)) {
-        ss->ssl3.hs.restartTarget = ssl3_SendClientSecondRound;
-        return SECWouldBlock;
+	(sendClientCert || ss->ssl3.sendEmptyCert || ss->firstHsDone)) {
+	ss->ssl3.hs.restartTarget = ssl3_SendClientSecondRound;
+	return SECWouldBlock;
     }
 
     ssl_GetXmitBufLock(ss);		/*******************************/
@@ -7828,7 +7861,7 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     PRBool           isServer	= (PRBool)(!!ss->sec.isServer);
     PRBool           trusted 	= PR_FALSE;
     PRBool           isTLS;
-    SSL3AlertDescription desc	= bad_certificate;
+    SSL3AlertDescription desc;
     int              errCode    = SSL_ERROR_RX_MALFORMED_CERTIFICATE;
     SECItem          certItem;
 
@@ -7982,12 +8015,20 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 		goto loser;
 	    }
 
-            ss->ssl3.hs.authCertificatePending = PR_TRUE;
-            rv = SECSuccess;
+	    ss->ssl3.hs.authCertificatePending = PR_TRUE;
+	    rv = SECSuccess;
+
+	    /* XXX: Async cert validation and False Start don't work together
+	     * safely yet; if we leave False Start enabled, we may end up false
+	     * starting (sending application data) before we
+	     * SSL_AuthCertificateComplete has been called.
+	     */
+	    ss->opt.enableFalseStart = PR_FALSE;
 	}
-        
-        if (rv != SECSuccess) {
-	    goto bad_cert;
+
+	if (rv != SECSuccess) {
+	    ssl3_SendAlertForCertError(ss, errCode);
+	    goto loser;
 	}
     }
 
@@ -8058,6 +8099,7 @@ server_no_cert:
 	rv = SECFailure;
 	goto loser;
     }
+
     return rv;
 
 ambiguous_err:
@@ -8072,34 +8114,8 @@ ambiguous_err:
 	}
 	goto loser;
     }
-    /* fall through to bad_cert. */
-
-bad_cert:	/* caller has set errCode. */
-    switch (errCode) {
-    case SEC_ERROR_LIBRARY_FAILURE:     desc = unsupported_certificate; break;
-    case SEC_ERROR_EXPIRED_CERTIFICATE: desc = certificate_expired;     break;
-    case SEC_ERROR_REVOKED_CERTIFICATE: desc = certificate_revoked;     break;
-    case SEC_ERROR_INADEQUATE_KEY_USAGE:
-    case SEC_ERROR_INADEQUATE_CERT_TYPE:
-		                        desc = certificate_unknown;     break;
-    case SEC_ERROR_UNTRUSTED_CERT:
-		    desc = isTLS ? access_denied : certificate_unknown; break;
-    case SEC_ERROR_UNKNOWN_ISSUER:      
-    case SEC_ERROR_UNTRUSTED_ISSUER:    
-		    desc = isTLS ? unknown_ca : certificate_unknown; break;
-    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-		    desc = isTLS ? unknown_ca : certificate_expired; break;
-
-    case SEC_ERROR_CERT_NOT_IN_NAME_SPACE:
-    case SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID:
-    case SEC_ERROR_CA_CERT_INVALID:
-    case SEC_ERROR_BAD_SIGNATURE:
-    default:                            desc = bad_certificate;     break;
-    }
-    SSL_DBG(("%d: SSL3[%d]: peer certificate is no good: error=%d",
-	     SSL_GETPID(), ss->fd, errCode));
-
-    goto alert_loser;
+    ssl3_SendAlertForCertError(ss, errCode);
+    goto loser;
 
 decode_loser:
     desc = isTLS ? decode_error : bad_certificate;
@@ -8120,10 +8136,17 @@ loser:
 
 static SECStatus ssl3_FinishHandshake(sslSocket *ss);
 
+static SECStatus
+ssl3_AlwaysFail(sslSocket * ss)
+{
+    PORT_SetError(PR_INVALID_STATE_ERROR);
+    return SECFailure;
+}
+
 /* Caller must hold 1stHandshakeLock.
 */
 SECStatus
-ssl3_RestartHandshakeAfterAuthCertificate(sslSocket *ss)
+ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode status)
 {
     SECStatus rv;
 
@@ -8138,26 +8161,33 @@ ssl3_RestartHandshakeAfterAuthCertificate(sslSocket *ss)
     ssl_GetSSL3HandshakeLock(ss);
 
     if (!ss->ssl3.hs.authCertificatePending) {
-        PORT_SetError(PR_INVALID_STATE_ERROR);
-        rv = SECFailure;
-    } else {
-        ss->ssl3.hs.authCertificatePending = PR_FALSE;
-        if (ss->ssl3.hs.restartTarget != NULL) {
-            sslRestartTarget target = ss->ssl3.hs.restartTarget;
-            ss->ssl3.hs.restartTarget = NULL;
-            rv = target(ss);
-	    /* Even if we blocked here, we have accomplished enough to claim
-	      * success. Any remaining work will be taken care of by subsequent
-              * calls to SSL_ForceHandshake/PR_Send/PR_Read/etc. 
-	      */
-            if (rv == SECWouldBlock) {
-                rv = SECSuccess;
-            }
-        } else {
-            rv = SECSuccess;
-        }
+	PORT_SetError(PR_INVALID_STATE_ERROR);
+	rv = SECFailure;
+	goto done;
     }
 
+    ss->ssl3.hs.authCertificatePending = PR_FALSE;
+
+    if (status != 0) {
+	ss->ssl3.hs.restartTarget = ssl3_AlwaysFail;
+	ssl3_SendAlertForCertError(ss, status);
+	rv = SECSuccess;
+    } else if (ss->ssl3.hs.restartTarget != NULL) {
+	sslRestartTarget target = ss->ssl3.hs.restartTarget;
+	ss->ssl3.hs.restartTarget = NULL;
+	rv = target(ss);
+	/* Even if we blocked here, we have accomplished enough to claim
+	 * success. Any remaining work will be taken care of by subsequent
+	 * calls to SSL_ForceHandshake/PR_Send/PR_Read/etc. 
+	 */
+	if (rv == SECWouldBlock) {
+	    rv = SECSuccess;
+	}
+    } else {
+	rv = SECSuccess;
+    }
+
+done:
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_ReleaseRecvBufLock(ss);
 
@@ -8566,16 +8596,16 @@ xmit_loser:
     }
 
     if (ss->ssl3.hs.authCertificatePending) {
-      if (ss->ssl3.hs.restartTarget) {
-          PR_NOT_REACHED("ssl3_HandleFinished: unexpected restartTarget");
-          PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-          return SECFailure;
-      }
+	if (ss->ssl3.hs.restartTarget) {
+	    PR_NOT_REACHED("ssl3_HandleFinished: unexpected restartTarget");
+	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	    return SECFailure;
+	}
 
-      ss->ssl3.hs.restartTarget = ssl3_FinishHandshake;
-      return SECWouldBlock;
+	ss->ssl3.hs.restartTarget = ssl3_FinishHandshake;
+	return SECWouldBlock;
     }
-    
+
     rv = ssl3_FinishHandshake(ss);
     return rv;
 }
@@ -8584,7 +8614,7 @@ SECStatus
 ssl3_FinishHandshake(sslSocket * ss)
 {
     SECStatus rv;
-    
+
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
     PORT_Assert( ss->ssl3.hs.restartTarget == NULL );
@@ -8906,7 +8936,6 @@ ssl3_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
  *
  * Called from ssl3_GatherCompleteHandshake
  *             ssl3_RestartHandshakeAfterCertReq
- *             ssl3_RestartHandshakeAfterServerCert
  *
  * Caller must hold the RecvBufLock.
  *

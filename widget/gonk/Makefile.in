@@ -57,7 +57,6 @@ CPPSRCS	= \
 	nsWidgetFactory.cpp \
 	nsWindow.cpp \
 	nsLookAndFeel.cpp \
-	nsScreenManagerGonk.cpp \
 	nsIdleServiceGonk.cpp \
 	$(NULL)
 

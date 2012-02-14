@@ -165,7 +165,7 @@ abstract public class GeckoApp
         int id;
         public boolean onMenuItemClick(MenuItem item) {
             Log.i(LOGTAG, "menu item clicked");
-            GeckoAppShell.sendEventToGecko(new GeckoEvent("Menu:Clicked", Integer.toString(id)));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(id)));
             return true;
         }
     }
@@ -483,7 +483,7 @@ abstract public class GeckoApp
                 synchronized(sLaunchState) {
                     if (sLaunchState == LaunchState.GeckoRunning)
                         GeckoAppShell.notifyGeckoOfEvent(
-                            new GeckoEvent("Browser:Quit", null));
+                            GeckoEvent.createBroadcastEvent("Browser:Quit", null));
                     else
                         System.exit(0);
                     sLaunchState = LaunchState.GeckoExiting;
@@ -517,14 +517,14 @@ abstract public class GeckoApp
                 doForward();
                 return true;
             case R.id.save_as_pdf:
-                GeckoAppShell.sendEventToGecko(new GeckoEvent("SaveAs:PDF", null));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SaveAs:PDF", null));
                 return true;
             case R.id.settings:
                 intent = new Intent(this, GeckoPreferences.class);
                 startActivity(intent);
                 return true;
             case R.id.site_settings:
-                GeckoAppShell.sendEventToGecko(new GeckoEvent("Permissions:Get", null));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
                 return true;
             case R.id.addons:
                 loadUrlInTab("about:addons");
@@ -534,7 +534,7 @@ abstract public class GeckoApp
                 startActivity(intent);
                 return true;
             case R.id.char_encoding:
-                GeckoAppShell.sendEventToGecko(new GeckoEvent("CharEncoding:Get", null));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -627,7 +627,7 @@ abstract public class GeckoApp
                 message.put("destination", destination);
 
                 String json = message.toString();
-                GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Screenshot", json));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot", json));
             } catch(JSONException jsonEx) {
                 Log.w(LOGTAG, "Constructing the JSON data for Tab:Screenshot event failed", jsonEx);
             }
@@ -1060,7 +1060,7 @@ abstract public class GeckoApp
                     public void onClick(DialogInterface dialog, int which) {
                         try {
                             JSONObject charset = charsets.getJSONObject(which);
-                            GeckoAppShell.sendEventToGecko(new GeckoEvent("CharEncoding:Set", charset.getString("code")));
+                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Set", charset.getString("code")));
                             dialog.dismiss();
                         } catch (JSONException e) {
                             Log.e(LOGTAG, "error parsing json", e);
@@ -1197,7 +1197,7 @@ abstract public class GeckoApp
                         if (checked)
                             permissionsToClear.put(i);
                     }
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Permissions:Clear", permissionsToClear.toString()));
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Clear", permissionsToClear.toString()));
                 }
             });
         }
@@ -1668,12 +1668,12 @@ abstract public class GeckoApp
 
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.gecko_app);
-
         mOrientation = getResources().getConfiguration().orientation;
 
+        setContentView(R.layout.gecko_app);
+
         if (Build.VERSION.SDK_INT >= 11) {
-            refreshActionBar();
+            mBrowserToolbar = (BrowserToolbar) GeckoActionBar.getCustomView(this);
         } else {
             mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         }
@@ -2002,7 +2002,7 @@ abstract public class GeckoApp
 
         if (Intent.ACTION_MAIN.equals(action)) {
             Log.i(LOGTAG, "Intent : ACTION_MAIN");
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(""));
         }
         else if (ACTION_LOAD.equals(action)) {
             String uri = intent.getDataString();
@@ -2011,17 +2011,17 @@ abstract public class GeckoApp
         }
         else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
             Log.i(LOGTAG,"onNewIntent: " + uri);
         }
         else if (ACTION_WEBAPP.equals(action)) {
             String uri = getURIFromIntent(intent);
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
             Log.i(LOGTAG,"Intent : WEBAPP - " + uri);
         }
         else if (ACTION_BOOKMARK.equals(action)) {
             String uri = getURIFromIntent(intent);
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createLoadEvent(uri));
             Log.i(LOGTAG,"Intent : BOOKMARK - " + uri);
         }
     }
@@ -2053,7 +2053,7 @@ abstract public class GeckoApp
         Runnable r = new SessionSnapshotRunnable(null);
         GeckoAppShell.getHandler().post(r);
 
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent());
         // The user is navigating away from this activity, but nothing
         // has come to the foreground yet; for Gecko, we may want to
         // stop repainting, for example.
@@ -2111,7 +2111,7 @@ abstract public class GeckoApp
         // etc., and generally mark the profile as 'clean', and then
         // dirty it again if we get an onResume.
 
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_STOPPING));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createStoppingEvent());
         super.onStop();
     }
 
@@ -2128,7 +2128,7 @@ abstract public class GeckoApp
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onStart");
 
         Log.i(LOGTAG, "start");
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_START));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createStartEvent());
         super.onStart();
     }
 
@@ -2140,7 +2140,7 @@ abstract public class GeckoApp
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
         if (isFinishing())
-            GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_SHUTDOWN));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createShutdownEvent());
         
         GeckoAppShell.unregisterGeckoEventListener("DOMContentLoaded", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DOMTitleChanged", GeckoApp.mAppContext);
@@ -2432,7 +2432,7 @@ abstract public class GeckoApp
         }
 
         if (mDOMFullScreen) {
-            GeckoAppShell.sendEventToGecko(new GeckoEvent("FullScreen:Exit", null));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FullScreen:Exit", null));
             return;
         }
 
@@ -2537,7 +2537,7 @@ abstract public class GeckoApp
             Log.i(LOGTAG, "Returning from CAMERA_CAPTURE_REQUEST: " + resultCode);
             File file = new File(Environment.getExternalStorageDirectory(), "cameraCapture-" + Integer.toString(kCaptureIndex) + ".jpg");
             kCaptureIndex++;
-            GeckoEvent e = new GeckoEvent("cameraCaptureDone", resultCode == Activity.RESULT_OK ?
+            GeckoEvent e = GeckoEvent.createBroadcastEvent("cameraCaptureDone", resultCode == Activity.RESULT_OK ?
                                           "{\"ok\": true,  \"path\": \"" + file.getPath() + "\" }" :
                                           "{\"ok\": false, \"path\": \"" + file.getPath() + "\" }");
             GeckoAppShell.sendEventToGecko(e);
@@ -2568,9 +2568,9 @@ abstract public class GeckoApp
         }
         if (type == AwesomeBar.Type.ADD) {
             Log.i(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
-            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Add", args.toString()));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
         } else {
-            GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Load", args.toString()));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
         }
     }
 
@@ -2605,7 +2605,7 @@ abstract public class GeckoApp
             Log.e(LOGTAG, "error building JSON arguments");
         }
         Log.i(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Add", args.toString()));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
     }
 
     public GeckoSoftwareLayerClient getSoftwareLayerClient() { return mSoftwareLayerClient; }
@@ -2619,7 +2619,7 @@ abstract public class GeckoApp
     public void onSensorChanged(SensorEvent event)
     {
         Log.w(LOGTAG, "onSensorChanged "+event);
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorEvent(event));
     }
 
     private class GeocoderRunnable implements Runnable {
@@ -2635,7 +2635,7 @@ abstract public class GeckoApp
                 // may want to expose multiple, or filter
                 // for best.
                 mLastGeoAddress = addresses.get(0);
-                GeckoAppShell.sendEventToGecko(new GeckoEvent(mLocation, mLastGeoAddress));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(mLocation, mLastGeoAddress));
             } catch (Exception e) {
                 Log.w(LOGTAG, "GeocoderTask "+e);
             }
@@ -2666,7 +2666,7 @@ abstract public class GeckoApp
                 GeckoAppShell.getHandler().post(new GeocoderRunnable(location));
         }
 
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(location, mLastGeoAddress));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location, mLastGeoAddress));
     }
 
     public void onProviderDisabled(String provider)
