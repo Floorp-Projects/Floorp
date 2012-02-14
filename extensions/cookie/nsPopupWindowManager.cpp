@@ -41,7 +41,6 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
 
 /**
  * The Popup Window Manager maintains popup window permissions by website.
@@ -73,7 +72,7 @@ nsPopupWindowManager::Init()
   nsresult rv;
   mPermissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
 
-  nsCOMPtr<nsIPrefBranch2> prefBranch =
+  nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     bool permission;

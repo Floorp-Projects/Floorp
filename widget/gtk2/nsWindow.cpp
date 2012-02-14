@@ -282,15 +282,6 @@ static bool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
 
-static void
-UpdateLastInputEventTime()
-{
-  nsCOMPtr<nsIdleService> idleService = do_GetService("@mozilla.org/widget/idleservice;1");
-  if (idleService) {
-    idleService->ResetIdleTimeOut();
-  }
-}
-
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::sLastDragMotionWindow = NULL;
 bool nsWindow::sIsDraggingOutOf = false;
@@ -298,6 +289,7 @@ bool nsWindow::sIsDraggingOutOf = false;
 // Time of the last button release event. We use it to detect when the
 // drag ended before we could properly setup drag and drop.
 guint32   nsWindow::sLastButtonReleaseTime = 0;
+static guint32 sLastUserInputTime = GDK_CURRENT_TIME;
 static guint32 sRetryGrabTime;
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
@@ -375,6 +367,29 @@ GetBitmapStride(PRInt32 width)
 #else
   return cairo_format_stride_for_width(CAIRO_FORMAT_A1, width);
 #endif
+}
+
+static inline bool TimestampIsNewerThan(guint32 a, guint32 b)
+{
+    // Timestamps are just the least significant bits of a monotonically
+    // increasing function, and so the use of unsigned overflow arithmetic.
+    return a - b <= G_MAXUINT32/2;
+}
+
+static void
+UpdateLastInputEventTime(void *aGdkEvent)
+{
+    nsCOMPtr<nsIdleService> idleService =
+        do_GetService("@mozilla.org/widget/idleservice;1");
+    if (idleService) {
+        idleService->ResetIdleTimeOut();
+    }
+
+    guint timestamp = gdk_event_get_time(static_cast<GdkEvent*>(aGdkEvent));
+    if (timestamp == GDK_CURRENT_TIME)
+        return;
+
+    sLastUserInputTime = timestamp;
 }
 
 nsWindow::nsWindow()
@@ -1427,27 +1442,20 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
 }
 
 /* static */ guint32
-nsWindow::GetCurrentEventTime()
+nsWindow::GetLastUserInputTime()
 {
-    static guint32 sLastCurrentEventTime = GDK_CURRENT_TIME;
-
-    guint32 timestamp = gtk_get_current_event_time();
-
-    if (timestamp == GDK_CURRENT_TIME) {
-        timestamp = gdk_x11_display_get_user_time(gdk_display_get_default());
-
-        // The user_time is not updated on all user events, so check that we
-        // haven't returned a more recent timestamp.  If so, use the more
-        // recent timestamp to ensure that subsequent requests will override
-        // previous requests.  Timestamps are just the least significant bits
-        // of a monotonically increasing function, and so the use of unsigned
-        // overflow arithmetic.
-        if (sLastCurrentEventTime != GDK_CURRENT_TIME &&
-            sLastCurrentEventTime - timestamp <= G_MAXUINT32/2)
-            return sLastCurrentEventTime;
+    // gdk_x11_display_get_user_time tracks button and key presses,
+    // DESKTOP_STARTUP_ID used to start the app, drop events from external
+    // drags, WM_DELETE_WINDOW delete events, but not usually mouse motion nor
+    // button and key releases.  Therefore use the most recent of
+    // gdk_x11_display_get_user_time and the last time that we have seen.
+    guint32 timestamp =
+            gdk_x11_display_get_user_time(gdk_display_get_default());
+    if (sLastUserInputTime != GDK_CURRENT_TIME &&
+        TimestampIsNewerThan(sLastUserInputTime, timestamp)) {
+        return sLastUserInputTime;
     }       
 
-    sLastCurrentEventTime = timestamp;
     return timestamp;
 }
 
@@ -1904,7 +1912,7 @@ nsWindow::CaptureMouse(bool aCapture)
 
     if (aCapture) {
         gtk_grab_add(widget);
-        GrabPointer(GetCurrentEventTime());
+        GrabPointer(GetLastUserInputTime());
     }
     else {
         ReleaseGrabs();
@@ -1936,7 +1944,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         // real grab is only done when there is no dragging
         if (!nsWindow::DragInProgress()) {
             gtk_grab_add(widget);
-            GrabPointer(GetCurrentEventTime());
+            GrabPointer(GetLastUserInputTime());
         }
     }
     else {
@@ -5726,7 +5734,7 @@ GetFirstNSWindowForGDKWindow(GdkWindow *aGdkWindow)
 static gboolean
 motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 {
-    UpdateLastInputEventTime();
+    UpdateLastInputEventTime(event);
 
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
@@ -5743,7 +5751,7 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 static gboolean
 button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
-    UpdateLastInputEventTime();
+    UpdateLastInputEventTime(event);
 
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
@@ -5757,7 +5765,7 @@ button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 static gboolean
 button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
-    UpdateLastInputEventTime();
+    UpdateLastInputEventTime(event);
 
     nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
@@ -5963,7 +5971,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_press_event_cb\n"));
 
-    UpdateLastInputEventTime();
+    UpdateLastInputEventTime(event);
 
     // find the window with focus and dispatch this event to that widget
     nsWindow *window = get_window_for_gtk_widget(widget);
@@ -6006,7 +6014,7 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 {
     LOG(("key_release_event_cb\n"));
 
-    UpdateLastInputEventTime();
+    UpdateLastInputEventTime(event);
 
     // find the window with focus and dispatch this event to that widget
     nsWindow *window = get_window_for_gtk_widget(widget);

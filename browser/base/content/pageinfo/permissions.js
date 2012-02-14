@@ -99,7 +99,7 @@ var permissionObserver = {
 function onLoadPermission()
 {
   gPrefs = Components.classes[PREFERENCES_CONTRACTID]
-                     .getService(Components.interfaces.nsIPrefBranch2);
+                     .getService(Components.interfaces.nsIPrefBranch);
 
   var uri = gDocument.documentURIObject;
   var permTab = document.getElementById("permTab");

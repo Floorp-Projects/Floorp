@@ -57,7 +57,7 @@
 #include "sechash.h"
 
 #include "secpkcs5.h"  
-#include "ec.h"
+#include "blapit.h"
 
 static SECItem *
 pk11_MakeIDFromPublicKey(SECKEYPublicKey *pubKey)
