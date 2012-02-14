@@ -1140,8 +1140,8 @@ WebGLContext::Notify(nsITimer* timer)
         nsContentUtils::DispatchTrustedEvent(HTMLCanvasElement()->OwnerDoc(),
                                              (nsIDOMHTMLCanvasElement*) HTMLCanvasElement(),
                                              NS_LITERAL_STRING("webglcontextlost"),
-                                             PR_TRUE,
-                                             PR_TRUE,
+                                             true,
+                                             true,
                                              &defaultAction);
 
         // If the script didn't handle the event, we don't allow restores.
@@ -1169,8 +1169,8 @@ WebGLContext::Notify(nsITimer* timer)
         nsContentUtils::DispatchTrustedEvent(HTMLCanvasElement()->OwnerDoc(),
                                              (nsIDOMHTMLCanvasElement*) HTMLCanvasElement(),
                                              NS_LITERAL_STRING("webglcontextrestored"),
-                                             PR_TRUE,
-                                             PR_TRUE);
+                                             true,
+                                             true);
         // Set all flags back to the state they were in before the context was
         // lost.
         mContextLostErrorSet = false;
