@@ -106,6 +106,26 @@ private:
 
 
 /**
+ * Accessible hide event.
+ */
+class nsAccHideEvent : public nsAccEvent,
+                       public nsIAccessibleHideEvent
+{
+public:
+  nsAccHideEvent(AccHideEvent* aEvent) : nsAccEvent(aEvent) { }
+  virtual ~nsAccHideEvent() { }
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEHIDEEVENT
+
+private:
+  nsAccHideEvent() MOZ_DELETE;
+  nsAccHideEvent(const nsAccHideEvent&) MOZ_DELETE;
+  nsAccHideEvent& operator =(const nsAccHideEvent&) MOZ_DELETE;
+};
+
+
+/**
  * Accessible caret move event.
  */
 class nsAccCaretMoveEvent: public nsAccEvent,
