@@ -224,6 +224,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "SearchEngines:Get", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
 
+    Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
+
     function showFullScreenWarning() {
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
     }
@@ -992,6 +994,8 @@ var BrowserApp = {
       storage.init();
 
       sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
+    } else if (aTopic == "sessionstore-state-purge-complete") {
+      sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
     }
   },
 
