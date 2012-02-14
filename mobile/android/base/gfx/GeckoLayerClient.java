@@ -265,10 +265,8 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     }
 
     private void adjustViewportWithThrottling() {
-        // FIXME: Allow redraw while a finger is down, but only if we're about to checkerboard.
-        // This requires fixing aboutToCheckerboard() to know about the new buffer size.
-        /*if (!getLayerController().getRedrawHint())
-            return;*/
+        if (!getLayerController().getRedrawHint())
+            return;
 
         if (mPendingViewportAdjust)
             return;
