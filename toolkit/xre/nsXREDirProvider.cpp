@@ -745,7 +745,8 @@ nsXREDirProvider::DoStartup()
     nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
     if (appStartup) {
       rv = appStartup->TrackStartupCrashBegin(&safeModeNecessary);
-      if (NS_FAILED(rv)) NS_WARNING("Error while beginning startup crash tracking");
+      if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
+        NS_WARNING("Error while beginning startup crash tracking");
 
       if (!gSafeMode && safeModeNecessary) {
         appStartup->RestartInSafeMode(nsIAppStartup::eForceQuit);
