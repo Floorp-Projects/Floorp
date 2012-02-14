@@ -94,8 +94,8 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
     skipEnd++;
   }
 
-  PRInt32 strLen1 = oldLen - aSkipStart - skipEnd;
-  PRInt32 strLen2 = newLen - aSkipStart - skipEnd;
+  PRUint32 strLen1 = oldLen - aSkipStart - skipEnd;
+  PRUint32 strLen2 = newLen - aSkipStart - skipEnd;
 
   const nsAString& str1 = Substring(aOldText, aSkipStart, strLen1);
   const nsAString& str2 = Substring(aNewText, aSkipStart, strLen2);
@@ -187,7 +187,7 @@ TextUpdater::ComputeTextChangeEvents(const nsAString& aStr1,
 
   PRInt32 colLen = colEnd + 1;
   PRUint32* row = aEntries + rowIdx * colLen;
-  PRInt32 dist = row[colIdx]; // current Levenshtein distance
+  PRUint32 dist = row[colIdx]; // current Levenshtein distance
   while (rowIdx && colIdx) { // stop when we can't move diagonally
     if (aStr1[colIdx - 1] == aStr2[rowIdx - 1]) { // match
       if (rowIdx < rowEnd) { // deal with any pending insertion
