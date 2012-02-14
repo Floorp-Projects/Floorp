@@ -833,7 +833,7 @@ nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
                                       namespaceID,
                                       OwnerDoc()->GetCompatibilityMode() ==
                                         eCompatibility_NavQuirks,
-                                      PR_TRUE);
+                                      true);
     parent->ReplaceChild(fragment, this, &rv);
     return rv;
   }
@@ -855,7 +855,7 @@ nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
   nsCOMPtr<nsIDOMDocumentFragment> df;
   nsresult rv = nsContentUtils::CreateContextualFragment(context,
                                                          aOuterHTML,
-                                                         PR_TRUE,
+                                                         true,
                                                          getter_AddRefs(df));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
