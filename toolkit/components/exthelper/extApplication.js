@@ -172,7 +172,6 @@ function PreferenceBranch(aBranch) {
     this._prefs = this._prefs.getBranch(aBranch);
 
   this._prefs.QueryInterface(Ci.nsIPrefBranch);
-  this._prefs.QueryInterface(Ci.nsIPrefBranch2);
 
   // we want to listen to "all" changes for this branch, so pass in a blank domain
   this._prefs.addObserver("", this, true);
@@ -240,13 +239,13 @@ PreferenceBranch.prototype = {
     var type = this._prefs.getPrefType(aName);
 
     switch (type) {
-      case Ci.nsIPrefBranch2.PREF_STRING:
+      case Ci.nsIPrefBranch.PREF_STRING:
         aValue = this._prefs.getComplexValue(aName, Ci.nsISupportsString).data;
         break;
-      case Ci.nsIPrefBranch2.PREF_BOOL:
+      case Ci.nsIPrefBranch.PREF_BOOL:
         aValue = this._prefs.getBoolPref(aName);
         break;
-      case Ci.nsIPrefBranch2.PREF_INT:
+      case Ci.nsIPrefBranch.PREF_INT:
         aValue = this._prefs.getIntPref(aName);
         break;
     }
@@ -310,13 +309,13 @@ Preference.prototype = {
     var type = this.branch._prefs.getPrefType(this._name);
 
     switch (type) {
-      case Ci.nsIPrefBranch2.PREF_STRING:
+      case Ci.nsIPrefBranch.PREF_STRING:
         value = "String";
         break;
-      case Ci.nsIPrefBranch2.PREF_BOOL:
+      case Ci.nsIPrefBranch.PREF_BOOL:
         value = "Boolean";
         break;
-      case Ci.nsIPrefBranch2.PREF_INT:
+      case Ci.nsIPrefBranch.PREF_INT:
         value = "Number";
         break;
     }

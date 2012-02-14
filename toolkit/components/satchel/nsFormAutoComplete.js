@@ -72,7 +72,6 @@ FormAutoComplete.prototype = {
     init : function() {
         // Preferences. Add observer so we get notified of changes.
         this._prefBranch = Services.prefs.getBranch("browser.formfill.");
-        this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
         this._prefBranch.addObserver("", this.observer, true);
         this.observer._self = this;
 

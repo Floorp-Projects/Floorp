@@ -169,7 +169,7 @@ NSSSSL_GetVersion;
 SSL_SetNextProtoCallback;
 SSL_SetNextProtoNego;
 SSL_GetNextProto;
-SSL_RestartHandshakeAfterAuthCertificate;
+SSL_AuthCertificateComplete;
 ;+    local:
 ;+       *;
 ;+};

@@ -291,7 +291,7 @@ var Utils = {
 
   get _branch() {
     delete this._branch;
-    this._branch = Services.prefs.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
+    this._branch = Services.prefs.getBranch(null);
     this._branch.addObserver("", this, true);
     return this._branch;
   },

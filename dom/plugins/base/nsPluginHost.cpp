@@ -80,7 +80,7 @@
 #include "nsHashtable.h"
 #include "nsIProxyInfo.h"
 #include "nsPluginLogging.h"
-#include "nsIPrefBranch2.h"
+#include "nsIPrefBranch.h"
 #include "nsIScriptChannel.h"
 #include "nsIBlocklistService.h"
 #include "nsVersionComparator.h"

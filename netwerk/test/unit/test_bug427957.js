@@ -29,7 +29,7 @@ function expected_fail(inputIDN)
 function run_test() {
    // add an IDN whitelist pref
   var pbi = Cc["@mozilla.org/preferences-service;1"]
-    .getService(Ci.nsIPrefBranch2);
+    .getService(Ci.nsIPrefBranch);
   pbi.setBoolPref("network.IDN.whitelist.com", true);
  
   idnService = Cc["@mozilla.org/network/idn-service;1"]

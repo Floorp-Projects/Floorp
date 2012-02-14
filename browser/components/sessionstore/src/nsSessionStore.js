@@ -163,8 +163,7 @@ function debug(aMsg) {
 function SessionStoreService() {
   XPCOMUtils.defineLazyGetter(this, "_prefBranch", function () {
     return Cc["@mozilla.org/preferences-service;1"].
-           getService(Ci.nsIPrefService).getBranch("browser.").
-           QueryInterface(Ci.nsIPrefBranch2);
+           getService(Ci.nsIPrefService).getBranch("browser.");
   });
 
   // minimal interval between two save operations (in milliseconds)

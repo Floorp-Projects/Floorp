@@ -270,11 +270,18 @@ public:
   AccHideEvent(nsAccessible* aTarget, nsINode* aTargetNode);
 
   // Event
+  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
+
   static const EventGroup kEventGroup = eHideEvent;
   virtual unsigned int GetEventGroups() const
   {
     return AccMutationEvent::GetEventGroups() | (1U << eHideEvent);
   }
+
+  // AccHideEvent
+  nsAccessible* TargetParent() const { return mParent; }
+  nsAccessible* TargetNextSibling() const { return mNextSibling; }
+  nsAccessible* TargetPrevSibling() const { return mPrevSibling; }
 
 protected:
   nsRefPtr<nsAccessible> mParent;
