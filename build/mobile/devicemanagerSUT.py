@@ -215,12 +215,11 @@ class DeviceManagerSUT(DeviceManager):
             data = temp
             break
 
-          lines = temp.split('\n')
+          data += temp
 
-          for line in lines:
+          for line in data.splitlines():
             if (promptre.match(line)):
               found = True
-          data += temp
 
           # If we violently lose the connection to the device, this loop tends to spin,
           # this guard prevents that
