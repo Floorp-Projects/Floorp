@@ -387,17 +387,17 @@ public class PanZoomController
             angle = Math.abs(angle); // range [0, pi]
             if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
                 // lock to x-axis
-                mX.setLocked(false);
-                mY.setLocked(true);
+                mX.setScrollingDisabled(false);
+                mY.setScrollingDisabled(true);
             } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
                 // lock to y-axis
-                mX.setLocked(true);
-                mY.setLocked(false);
+                mX.setScrollingDisabled(true);
+                mY.setScrollingDisabled(false);
             } else {
                 // break axis lock but log the angle so we can fine-tune this when people complain
                 mState = PanZoomState.PANNING;
-                mX.setLocked(false);
-                mY.setLocked(false);
+                mX.setScrollingDisabled(false);
+                mY.setScrollingDisabled(false);
                 angle = Math.abs(angle - (Math.PI / 2));  // range [0, pi/2]
             }
         }
