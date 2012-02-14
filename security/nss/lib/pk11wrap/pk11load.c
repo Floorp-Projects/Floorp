@@ -592,7 +592,7 @@ SECMOD_UnloadModule(SECMODModule *mod) {
     /* do we want the semantics to allow unloading the internal library?
      * if not, we should change this to SECFailure and move it above the
      * mod->loaded = PR_FALSE; */
-    if (mod->internal) {
+    if (mod->internal && (mod->dllName == NULL)) {
         if (0 == PR_ATOMIC_DECREMENT(&softokenLoadCount)) {
           if (softokenLib) {
               disableUnload = PR_GetEnv("NSS_DISABLE_UNLOAD");

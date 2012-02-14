@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.12 $ $Date: 2009/02/09 07:55:52 $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.13 $ $Date: 2012/01/13 17:04:50 $";
 #endif /* DEBUG */
 
 /*
@@ -365,6 +365,10 @@ nssCKFWInstance_Create
     if (mdInstance->Finalize) {
       mdInstance->Finalize(mdInstance, fwInstance);
     }
+  }
+
+  if (fwInstance && fwInstance->mutex) {
+    nssCKFWMutex_Destroy(fwInstance->mutex);
   }
 
   if (arena) {
