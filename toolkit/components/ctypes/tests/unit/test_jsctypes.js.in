@@ -190,6 +190,9 @@ function run_test()
   run_FunctionType_tests();
   run_ArrayType_tests();
 
+  // Check that types print properly.
+  run_type_toString_tests();
+
   // Test the 'name' and 'toSource' of a long typename.
   let ptrTo_ptrTo_arrayOf4_ptrTo_int32s =
     new ctypes.PointerType(
@@ -1846,7 +1849,7 @@ function run_FunctionType_tests() {
   let g = g_t(1, 2);
 
   let f_t = ctypes.FunctionType(ctypes.default_abi, g_t);
-  let name = "g_t()()";
+  let name = "g_t()";
   do_check_eq(f_t.name, name);
   do_check_eq(f_t.size, undefined);
   do_check_true(f_t.abi === ctypes.default_abi);
@@ -1906,10 +1909,10 @@ function run_FunctionType_tests() {
 #ifdef WIN32
   f3_t = ctypes.FunctionType(ctypes.stdcall_abi,
     ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
-  do_check_eq(f3_t.name, "char*(*(__stdcall **[][8])())[]");
+  do_check_eq(f3_t.name, "char*(*(__stdcall**[][8])())[]");
   f3_t = ctypes.FunctionType(ctypes.winapi_abi,
     ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
-  do_check_eq(f3_t.name, "char*(*(WINAPI **[][8])())[]");
+  do_check_eq(f3_t.name, "char*(*(WINAPI**[][8])())[]");
 #endif
 
   let f4_t = ctypes.FunctionType(ctypes.default_abi,
@@ -1935,7 +1938,7 @@ function run_FunctionType_tests() {
     s.do_check_true = do_check_true;
     Components.utils.evalInSandbox("var f5_t = ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int]);", s);
     Components.utils.evalInSandbox("do_check_eq(f5_t.toSource(), 'ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int])');", s);
-    Components.utils.evalInSandbox("do_check_eq(f5_t.name, 'int()(int)');", s);
+    Components.utils.evalInSandbox("do_check_eq(f5_t.name, 'int(int)');", s);
     Components.utils.evalInSandbox("function f5(aArg) { return 5; };", s);
     Components.utils.evalInSandbox("var f = f5_t.ptr(f5);", s);
     Components.utils.evalInSandbox("do_check_true(f(6) == 5);", s);
@@ -2059,6 +2062,97 @@ function run_ArrayType_tests() {
   do_check_throws(function() { c.value = [1, 2, 3, 4, 5, 6, 7]; }, Error);
   do_check_throws(function() { c.value = [1, 2, 7.4, 4, 5, 6]; }, Error);
   do_check_throws(function() { c.value = []; }, Error);
+}
+
+function run_type_toString_tests() {
+  var c = ctypes;
+
+  // Figure out whether we can create functions with ctypes.stdcall_abi and ctypes.winapi_abi.
+  var haveStdCallABI;
+  try {
+      c.FunctionType(c.stdcall_abi, c.int);
+      haveStdCallABI = true;
+  } catch (x) {
+      haveStdCallABI = false;
+  }
+
+  var haveWinAPIABI;
+  try {
+      c.FunctionType(c.winapi_abi, c.int);
+      haveWinAPIABI = true;
+  } catch (x) {
+      haveWinAPIABI = false;
+  }
+
+  do_check_eq(c.char.toString(),        "type char");
+  do_check_eq(c.short.toString(),       "type short");
+  do_check_eq(c.int.toString(),         "type int");
+  do_check_eq(c.long.toString(),        "type long");
+  do_check_eq(c.long_long.toString(),   "type long_long");
+  do_check_eq(c.ssize_t.toString(),     "type ssize_t");
+  do_check_eq(c.int8_t.toString(),      "type int8_t");
+  do_check_eq(c.int16_t.toString(),     "type int16_t");
+  do_check_eq(c.int32_t.toString(),     "type int32_t");
+  do_check_eq(c.int64_t.toString(),     "type int64_t");
+  do_check_eq(c.intptr_t.toString(),    "type intptr_t");
+
+  do_check_eq(c.unsigned_char.toString(),       "type unsigned_char");
+  do_check_eq(c.unsigned_short.toString(),      "type unsigned_short");
+  do_check_eq(c.unsigned_int.toString(),        "type unsigned_int");
+  do_check_eq(c.unsigned_long.toString(),       "type unsigned_long");
+  do_check_eq(c.unsigned_long_long.toString(),  "type unsigned_long_long");
+  do_check_eq(c.size_t.toString(),              "type size_t");
+  do_check_eq(c.uint8_t.toString(),             "type uint8_t");
+  do_check_eq(c.uint16_t.toString(),            "type uint16_t");
+  do_check_eq(c.uint32_t.toString(),            "type uint32_t");
+  do_check_eq(c.uint64_t.toString(),            "type uint64_t");
+  do_check_eq(c.uintptr_t.toString(),           "type uintptr_t");
+
+  do_check_eq(c.float.toString(),               "type float");
+  do_check_eq(c.double.toString(),              "type double");
+  do_check_eq(c.bool.toString(),                "type bool");
+  do_check_eq(c.void_t.toString(),              "type void");
+  do_check_eq(c.voidptr_t.toString(),           "type void*");
+  do_check_eq(c.jschar.toString(),              "type jschar");
+
+  var simplestruct = c.StructType("simplestruct", [{"smitty":c.voidptr_t}]);
+  do_check_eq(simplestruct.toString(),          "type simplestruct");
+
+  // One type modifier, int base type.
+  do_check_eq(c.int.ptr.toString(),                                     "type int*");
+  do_check_eq(c.ArrayType(c.int).toString(),                            "type int[]");
+  do_check_eq(c.ArrayType(c.int, 4).toString(),                         "type int[4]");         
+  do_check_eq(c.FunctionType(c.default_abi, c.int).toString(),          "type int()");
+  do_check_eq(c.FunctionType(c.default_abi, c.int, [c.bool]).toString(), "type int(bool)");
+  do_check_eq(c.FunctionType(c.default_abi, c.int, [c.bool, c.short]).toString(), 
+                                                                        "type int(bool, short)");
+  if (haveStdCallABI)
+     do_check_eq(c.FunctionType(c.stdcall_abi, c.int).toString(),       "type int __stdcall()");
+  if (haveWinAPIABI)
+     do_check_eq(c.FunctionType(c.winapi_abi, c.int).toString(),        "type int WINAPI()");
+
+  // One type modifier, struct base type.
+  do_check_eq(simplestruct.ptr.toString(),                              "type simplestruct*");
+  do_check_eq(c.ArrayType(simplestruct).toString(),                     "type simplestruct[]");
+  do_check_eq(c.ArrayType(simplestruct, 4).toString(),                  "type simplestruct[4]");
+  do_check_eq(c.FunctionType(c.default_abi, simplestruct).toString(),   "type simplestruct()");
+
+  // Two levels of type modifiers, int base type.
+  do_check_eq(c.int.ptr.ptr.toString(),                                 "type int**");
+  do_check_eq(c.ArrayType(c.int.ptr).toString(),                        "type int*[]");
+  do_check_eq(c.FunctionType(c.default_abi, c.int.ptr).toString(),      "type int*()");
+
+  do_check_eq(c.ArrayType(c.int).ptr.toString(),                        "type int(*)[]");
+  do_check_eq(c.ArrayType(c.ArrayType(c.int, 4)).toString(),            "type int[][4]");
+  // Functions can't return arrays.
+
+  do_check_eq(c.FunctionType(c.default_abi, c.int).ptr.toString(),      "type int(*)()");
+  // You can't have an array of functions.
+  // Functions can't return functions.
+
+  // We don't try all the permissible three-deep combinations, but this is fun.
+  do_check_eq(c.FunctionType(c.default_abi, c.FunctionType(c.default_abi, c.int).ptr).toString(),
+                                                                        "type int(*())()");
 }
 
 function run_cast_tests() {
