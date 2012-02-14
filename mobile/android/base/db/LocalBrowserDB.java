@@ -287,20 +287,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         cr.delete(appendProfile(History.CONTENT_URI), null, null);
     }
 
-    public Cursor getAllBookmarks(ContentResolver cr) {
-        Cursor c = cr.query(appendProfile(Bookmarks.CONTENT_URI),
-                            new String[] { Bookmarks._ID,
-                                           Bookmarks.URL,
-                                           Bookmarks.TITLE,
-                                           Bookmarks.FAVICON,
-                                           Bookmarks.KEYWORD },
-                            Bookmarks.IS_FOLDER + " = 0",
-                            null,
-                            Bookmarks.TITLE + " ASC");
-
-        return new LocalDBCursor(c);
-    }
-
     public Cursor getMobileBookmarks(ContentResolver cr) {
         return getBookmarks(cr, true);
     }
