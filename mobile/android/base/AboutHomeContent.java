@@ -628,11 +628,22 @@ public class AboutHomeContent extends ScrollView {
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             int numRows;
 
+            SimpleCursorAdapter adapter = (SimpleCursorAdapter) getAdapter();
+            int nSites = Integer.MAX_VALUE;
+
+            if (adapter != null) {
+                Cursor c = adapter.getCursor();
+                if (c != null)
+                    nSites = c.getCount();
+            }
+
             Configuration config = getContext().getResources().getConfiguration();
             if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                numRows = NUMBER_OF_TOP_SITES_LANDSCAPE / NUMBER_OF_COLS_LANDSCAPE;
+                nSites = Math.min(nSites, NUMBER_OF_TOP_SITES_LANDSCAPE);
+                numRows = (int) Math.round((double) nSites / NUMBER_OF_COLS_LANDSCAPE);
             } else {
-                numRows = NUMBER_OF_TOP_SITES_PORTRAIT / NUMBER_OF_COLS_PORTRAIT;
+                nSites = Math.min(nSites, NUMBER_OF_TOP_SITES_PORTRAIT);
+                numRows = (int) Math.round((double) nSites / NUMBER_OF_COLS_PORTRAIT);
             }
             int expandedHeightSpec = 
                 MeasureSpec.makeMeasureSpec((int)(mDisplayDensity * numRows * kTopSiteItemHeight),
