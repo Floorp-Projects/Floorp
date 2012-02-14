@@ -54,6 +54,10 @@ public:
     NS_IMETHOD GetAvailRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight);
     NS_IMETHOD GetPixelDepth(PRInt32* aPixelDepth);
     NS_IMETHOD GetColorDepth(PRInt32* aColorDepth);
+    NS_IMETHOD GetRotation(PRUint32* aRotation);
+    NS_IMETHOD SetRotation(PRUint32  aRotation);
+
+    static uint32_t GetRotation();
 };
 
 class nsScreenManagerGonk : public nsIScreenManager

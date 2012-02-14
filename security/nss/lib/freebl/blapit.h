@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapit.h,v 1.24 2011/03/16 18:37:41 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: blapit.h,v 1.25 2012/01/13 16:53:15 emaldona%redhat.com Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -87,6 +87,13 @@
  * 576 bits.
  */
 #define MAX_ECKEY_LEN 	        72	/* Bytes */
+
+/* EC point compression format */
+#define EC_POINT_FORM_COMPRESSED_Y0    0x02
+#define EC_POINT_FORM_COMPRESSED_Y1    0x03
+#define EC_POINT_FORM_UNCOMPRESSED     0x04
+#define EC_POINT_FORM_HYBRID_Y0        0x06
+#define EC_POINT_FORM_HYBRID_Y1        0x07
 
 /*
  * Number of bytes each hash algorithm produces

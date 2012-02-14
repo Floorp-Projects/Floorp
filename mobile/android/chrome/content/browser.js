@@ -144,7 +144,8 @@ var Strings = {};
 [
   ["brand",      "chrome://branding/locale/brand.properties"],
   ["browser",    "chrome://browser/locale/browser.properties"],
-  ["charset",    "chrome://global/locale/charsetTitles.properties"]
+  ["charset",    "chrome://global/locale/charsetTitles.properties"],
+  ["ext",        "chrome://mozapps/locale/extensions/extensions.properties"]
 ].forEach(function (aStringBundle) {
   let [name, bundle] = aStringBundle;
   XPCOMUtils.defineLazyGetter(Strings, name, function() {
@@ -3071,7 +3072,25 @@ var XPInstallObserver = {
     this.onInstallFailed(aInstall);
   },
 
-  onDownloadCancelled: function(aInstall) {}
+  onDownloadCancelled: function(aInstall) {
+    let addon = aInstall.addon;
+    if (!addon)
+      return;
+
+    let msg;
+
+    if (addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
+      msg = gStrings.ext.formatStringFromName("details.notification.blocked", [aInstall.name], 1);
+    } else if (!addon.isCompatible || !addon.isPlatformCompatible) {
+      let brandShortName = Strings.brand.GetStringFromName("brandShortName");
+      msg = Strings.ext.formatStringFromName("details.notification.incompatible",
+        [aInstall.name, brandShortName, Services.appinfo.version], 3);
+    } else {
+      msg = Strings.ext.formatStringFromName("notification.downloadError", [aInstall.name], 1);
+    }
+
+    NativeWindow.toast.show(msg, "short");
+  }
 };
 
 // Blindly copied from Safari documentation for now.
