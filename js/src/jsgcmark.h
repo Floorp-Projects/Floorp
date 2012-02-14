@@ -45,8 +45,8 @@ namespace gc {
  * defined for marking arrays of object pointers.
  */
 #define DeclMarker(base, type)                                                                    \
-void Mark##base(JSTracer *trc, const HeapPtr<type> &thing, const char *name);                     \
-void Mark##base##Root(JSTracer *trc, type *thing, const char *name);                              \
+void Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name);                           \
+void Mark##base##Root(JSTracer *trc, type **thingp, const char *name);                            \
 void Mark##base##Unbarriered(JSTracer *trc, type *thing, const char *name);                       \
 void Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *thing, const char *name);        \
 void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);
@@ -118,7 +118,7 @@ MarkValueRootRange(JSTracer *trc, Value *begin, Value *end, const char *name)
 
 /* TypeNewObject contains a HeapPtr<const Shape> that needs a unique cast. */
 void
-MarkShape(JSTracer *trc, const HeapPtr<const Shape> &thing, const char *name);
+MarkShape(JSTracer *trc, HeapPtr<const Shape> *thing, const char *name);
 
 /* Direct value access used by the write barriers and the methodjit */
 void
@@ -159,13 +159,13 @@ Mark(JSTracer *trc, HeapValue *v, const char *name)
 }
 
 inline void
-Mark(JSTracer *trc, const HeapPtr<JSObject> &o, const char *name)
+Mark(JSTracer *trc, HeapPtr<JSObject> *o, const char *name)
 {
     MarkObject(trc, o, name);
 }
 
 inline void
-Mark(JSTracer *trc, const HeapPtr<JSXML> &xml, const char *name)
+Mark(JSTracer *trc, HeapPtr<JSXML> *xml, const char *name)
 {
     MarkXML(trc, xml, name);
 }

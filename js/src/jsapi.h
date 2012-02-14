@@ -1029,7 +1029,7 @@ class AutoEnumStateRooter : private AutoGCRooter
   protected:
     void trace(JSTracer *trc);
 
-    JSObject * const obj;
+    JSObject *obj;
 
   private:
     Value stateValue;

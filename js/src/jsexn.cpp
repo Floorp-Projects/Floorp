@@ -419,14 +419,14 @@ exn_trace(JSTracer *trc, JSObject *obj)
     priv = GetExnPrivate(obj);
     if (priv) {
         if (priv->message)
-            MarkString(trc, priv->message, "exception message");
+            MarkString(trc, &priv->message, "exception message");
         if (priv->filename)
-            MarkString(trc, priv->filename, "exception filename");
+            MarkString(trc, &priv->filename, "exception filename");
 
         elem = priv->stackElems;
         for (vcount = i = 0; i != priv->stackDepth; ++i, ++elem) {
             if (elem->funName)
-                MarkString(trc, elem->funName, "stack trace function name");
+                MarkString(trc, &elem->funName, "stack trace function name");
             if (IS_GC_MARKING_TRACER(trc) && elem->filename)
                 js_MarkScriptFilename(elem->filename);
             vcount += elem->argc;

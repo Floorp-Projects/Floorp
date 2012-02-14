@@ -204,7 +204,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     void nonMarkingTrace(JSTracer *trc) {
         ValueMarkPolicy vp(trc);
         for (Range r = Base::all(); !r.empty(); r.popFront())
-            vp.mark(r.front().value);
+            vp.mark(&r.front().value);
     }
 
     bool markIteratively(JSTracer *trc) {
@@ -216,7 +216,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
             Value &v = r.front().value;
             /* If the entry is live, ensure its key and value are marked. */
             if (kp.isMarked(k)) {
-                markedAny |= vp.mark(v);
+                markedAny |= vp.mark(&v);
             }
             JS_ASSERT_IF(kp.isMarked(k), vp.isMarked(v));
         }
@@ -264,10 +264,10 @@ class DefaultMarkPolicy<HeapValue> {
             return !IsAboutToBeFinalized(x);
         return true;
     }
-    bool mark(HeapValue &x) {
-        if (isMarked(x))
+    bool mark(HeapValue *x) {
+        if (isMarked(*x))
             return false;
-        js::gc::MarkValue(tracer, &x, "WeakMap entry");
+        js::gc::MarkValue(tracer, x, "WeakMap entry");
         return true;
     }
 };
@@ -281,8 +281,8 @@ class DefaultMarkPolicy<HeapPtrObject> {
     bool isMarked(const HeapPtrObject &x) {
         return !IsAboutToBeFinalized(x);
     }
-    bool mark(HeapPtrObject &x) {
-        if (isMarked(x))
+    bool mark(HeapPtrObject *x) {
+        if (isMarked(*x))
             return false;
         js::gc::MarkObject(tracer, x, "WeakMap entry");
         return true;
@@ -298,8 +298,8 @@ class DefaultMarkPolicy<HeapPtrScript> {
     bool isMarked(const HeapPtrScript &x) {
         return !IsAboutToBeFinalized(x);
     }
-    bool mark(HeapPtrScript &x) {
-        if (isMarked(x))
+    bool mark(HeapPtrScript *x) {
+        if (isMarked(*x))
             return false;
         js::gc::MarkScript(tracer, x, "WeakMap entry");
         return true;

@@ -1875,7 +1875,7 @@ AutoIdArray::trace(JSTracer *trc)
 void
 AutoEnumStateRooter::trace(JSTracer *trc)
 {
-    gc::MarkObjectRoot(trc, obj, "JS::AutoEnumStateRooter.obj");
+    gc::MarkObjectRoot(trc, &obj, "JS::AutoEnumStateRooter.obj");
 }
 
 inline void
@@ -1916,12 +1916,18 @@ AutoGCRooter::trace(JSTracer *trc)
       case DESCRIPTOR : {
         PropertyDescriptor &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
         if (desc.obj)
-            MarkObjectRoot(trc, desc.obj, "Descriptor::obj");
+            MarkObjectRoot(trc, &desc.obj, "Descriptor::obj");
         MarkValueRoot(trc, &desc.value, "Descriptor::value");
-        if ((desc.attrs & JSPROP_GETTER) && desc.getter)
-            MarkObjectRoot(trc, CastAsObject(desc.getter), "Descriptor::get");
-        if (desc.attrs & JSPROP_SETTER && desc.setter)
-            MarkObjectRoot(trc, CastAsObject(desc.setter), "Descriptor::set");
+        if ((desc.attrs & JSPROP_GETTER) && desc.getter) {
+            JSObject *tmp = JS_FUNC_TO_DATA_PTR(JSObject *, desc.getter);
+            MarkObjectRoot(trc, &tmp, "Descriptor::get");
+            desc.getter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, tmp);
+        }
+        if (desc.attrs & JSPROP_SETTER && desc.setter) {
+            JSObject *tmp = JS_FUNC_TO_DATA_PTR(JSObject *, desc.setter);
+            MarkObjectRoot(trc, &tmp, "Descriptor::set");
+            desc.setter = JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, tmp);
+        }
         return;
       }
 
@@ -1937,8 +1943,9 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case OBJECT:
-        if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
-            MarkObjectRoot(trc, obj, "JS::AutoObjectRooter.obj");
+        if (static_cast<AutoObjectRooter *>(this)->obj)
+            MarkObjectRoot(trc, &static_cast<AutoObjectRooter *>(this)->obj,
+                           "JS::AutoObjectRooter.obj");
         return;
 
       case ID:
@@ -1952,8 +1959,9 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case STRING:
-        if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
-            MarkStringRoot(trc, str, "JS::AutoStringRooter.str");
+        if (static_cast<AutoStringRooter *>(this)->str)
+            MarkStringRoot(trc, &static_cast<AutoStringRooter *>(this)->str,
+                           "JS::AutoStringRooter.str");
         return;
 
       case IDVECTOR: {
@@ -2023,9 +2031,9 @@ MarkRuntime(JSTracer *trc)
         gc_lock_traversal(r.front(), trc);
 
     if (rt->scriptPCCounters) {
-        const ScriptOpcodeCountsVector &vec = *rt->scriptPCCounters;
+        ScriptOpcodeCountsVector &vec = *rt->scriptPCCounters;
         for (size_t i = 0; i < vec.length(); i++)
-            MarkScriptRoot(trc, vec[i].script, "scriptPCCounters");
+            MarkScriptRoot(trc, &vec[i].script, "scriptPCCounters");
     }
 
     js_TraceAtomState(trc);
@@ -2049,8 +2057,10 @@ MarkRuntime(JSTracer *trc)
         if (rt->profilingScripts) {
             for (CellIterUnderGC i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
-                if (script->pcCounters)
-                    MarkScriptRoot(trc, script, "profilingScripts");
+                if (script->pcCounters) {
+                    MarkScriptRoot(trc, &script, "profilingScripts");
+                    JS_ASSERT(script == i.get<JSScript>());
+                }
             }
         }
     }
