@@ -136,9 +136,23 @@ public:
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
 
+  /**
+   * Sets this object with the string or atom representation of aValue.
+   *
+   * After calling this method, this object will have type eString unless the
+   * type of aValue is eAtom, in which case this object will also have type
+   * eAtom.
+   */
+  void SetToSerialized(const nsAttrValue& aValue);
+
   void SwapValueWith(nsAttrValue& aOther);
 
   void ToString(nsAString& aResult) const;
+  /**
+   * Returns the value of this object as an atom. If necessary, the value will
+   * first be serialised using ToString before converting to an atom.
+   */
+  already_AddRefed<nsIAtom> GetAsAtom() const;
 
   // Methods to get value. These methods do not convert so only use them
   // to retrieve the datatype that this nsAttrValue has.
@@ -174,6 +188,15 @@ public:
   bool Equals(const nsAttrValue& aOther) const;
   bool Equals(const nsAString& aValue, nsCaseTreatment aCaseSensitive) const;
   bool Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
+
+  /**
+   * Compares this object with aOther according to their string representation.
+   *
+   * For example, when called on an object with type eInteger and value 4, and
+   * given aOther of type eString and value "4", EqualsAsStrings will return
+   * true (while Equals will return false).
+   */
+  bool EqualsAsStrings(const nsAttrValue& aOther) const;
 
   /**
    * Returns true if this AttrValue is equal to the given atom, or is an
