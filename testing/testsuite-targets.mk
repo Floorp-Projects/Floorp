@@ -271,8 +271,12 @@ xpcshell-tests-remote:
 # Runs peptest, for usage see: https://developer.mozilla.org/en/Peptest#Running_Tests
 RUN_PEPTEST = \
 	rm -f ./$@.log && \
-	$(PYTHON) _tests/peptest/runtests.py --binary=$(browser_path) $(PEPTEST_PATH_ARG) \
-	  --log-file=./$@.log $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS)
+	$(PYTHON) _tests/peptest/runtests.py --binary=$(browser_path) \
+          $(PEPTEST_PATH_ARG) \
+	  --proxy=_tests/peptest/tests/firefox/server-locations.txt \
+          --proxy-host-dirs \
+          --server-path=_tests/peptest/tests/firefox/server \
+          --log-file=./$@.log $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS)
 
 peptest:
 	$(RUN_PEPTEST)
