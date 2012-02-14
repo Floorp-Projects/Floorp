@@ -144,8 +144,7 @@ var Strings = {};
 [
   ["brand",      "chrome://branding/locale/brand.properties"],
   ["browser",    "chrome://browser/locale/browser.properties"],
-  ["charset",    "chrome://global/locale/charsetTitles.properties"],
-  ["ext",        "chrome://mozapps/locale/extensions/extensions.properties"]
+  ["charset",    "chrome://global/locale/charsetTitles.properties"]
 ].forEach(function (aStringBundle) {
   let [name, bundle] = aStringBundle;
   XPCOMUtils.defineLazyGetter(Strings, name, function() {
@@ -3077,21 +3076,27 @@ var XPInstallObserver = {
   },
 
   onDownloadCancelled: function(aInstall) {
-    let addon = aInstall.addon;
-    if (!addon)
-      return;
+    let host = (aInstall.originatingURI instanceof Ci.nsIStandardURL) && aInstall.originatingURI.host;
+    if (!host)
+      host = (aInstall.sourceURI instanceof Ci.nsIStandardURL) && aInstall.sourceURI.host;
 
-    let msg;
+    let error = (host || aInstall.error == 0) ? "addonError" : "addonLocalError";
+    if (aInstall.error != 0)
+      error += aInstall.error;
+    else if (aInstall.addon && aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+      error += "Blocklisted";
+    else if (aInstall.addon && (!aInstall.addon.isCompatible || !aInstall.addon.isPlatformCompatible))
+      error += "Incompatible";
+    else
+      return; // No need to show anything in this case.
 
-    if (addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
-      msg = gStrings.ext.formatStringFromName("details.notification.blocked", [aInstall.name], 1);
-    } else if (!addon.isCompatible || !addon.isPlatformCompatible) {
-      let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-      msg = Strings.ext.formatStringFromName("details.notification.incompatible",
-        [aInstall.name, brandShortName, Services.appinfo.version], 3);
-    } else {
-      msg = Strings.ext.formatStringFromName("notification.downloadError", [aInstall.name], 1);
-    }
+    let msg = Strings.browser.GetStringFromName(error);
+    // TODO: formatStringFromName
+    msg = msg.replace("#1", aInstall.name);
+    if (host)
+      msg = msg.replace("#2", host);
+    msg = msg.replace("#3", Strings.brand.GetStringFromName("brandShortName"));
+    msg = msg.replace("#4", Services.appinfo.version);
 
     NativeWindow.toast.show(msg, "short");
   }
