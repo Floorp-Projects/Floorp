@@ -55,6 +55,13 @@ const INVISIBLE_ELEMENTS = {
   "title": true
 };
 
+// a node is represented in the visualization mesh as a rectangular stack
+// of 5 quads composed of 12 vertices; we draw these as triangles using an
+// index buffer of 12 unsigned int elements, obviously one for each vertex;
+// if a webpage has enough nodes to overflow the index buffer elements size,
+// weird things may happen; thus, when necessary, we'll split into groups
+const MAX_GROUP_NODES = Math.pow(2, Uint16Array.BYTES_PER_ELEMENT * 8) / 12 - 1;
+
 const STACK_THICKNESS = 15;
 const WIREFRAME_COLOR = [0, 0, 0, 0.25];
 const INTRO_TRANSITION_DURATION = 1000;
@@ -226,6 +233,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
    * The combined mesh representing the document visualization.
    */
   this._texture = null;
+  this._meshData = null;
   this._meshStacks = null;
   this._meshWireframe = null;
   this._traverseData = null;
@@ -439,17 +447,21 @@ TiltVisualizer.Presenter.prototype = {
     // use the necessary shader
     visualizationProgram.use();
 
-    // bind the attributes and uniforms as necessary
-    visualizationProgram.bindVertexBuffer("vertexPosition", mesh.vertices);
-    visualizationProgram.bindVertexBuffer("vertexTexCoord", mesh.texCoord);
-    visualizationProgram.bindVertexBuffer("vertexColor", mesh.color);
+    for (let i = 0, len = mesh.length; i < len; i++) {
+      let group = mesh[i];
 
-    visualizationProgram.bindUniformMatrix("mvMatrix", mvMatrix);
-    visualizationProgram.bindUniformMatrix("projMatrix", projMatrix);
-    visualizationProgram.bindTexture("sampler", texture);
+      // bind the attributes and uniforms as necessary
+      visualizationProgram.bindVertexBuffer("vertexPosition", group.vertices);
+      visualizationProgram.bindVertexBuffer("vertexTexCoord", group.texCoord);
+      visualizationProgram.bindVertexBuffer("vertexColor", group.color);
 
-    // draw the vertices as TRIANGLES indexed elements
-    renderer.drawIndexedVertices(renderer.context.TRIANGLES, mesh.indices);
+      visualizationProgram.bindUniformMatrix("mvMatrix", mvMatrix);
+      visualizationProgram.bindUniformMatrix("projMatrix", projMatrix);
+      visualizationProgram.bindTexture("sampler", texture);
+
+      // draw the vertices as TRIANGLES indexed elements
+      renderer.drawIndexedVertices(renderer.context.TRIANGLES, group.indices);
+    }
 
     // save the current model view and projection matrices
     mesh.mvMatrix = mat4.create(mvMatrix);
@@ -464,11 +476,15 @@ TiltVisualizer.Presenter.prototype = {
     let renderer = this._renderer;
     let mesh = this._meshWireframe;
 
-    // use the necessary shader
-    renderer.useColorShader(mesh.vertices, WIREFRAME_COLOR);
+    for (let i = 0, len = mesh.length; i < len; i++) {
+      let group = mesh[i];
 
-    // draw the vertices as LINES indexed elements
-    renderer.drawIndexedVertices(renderer.context.LINES, mesh.indices);
+      // use the necessary shader
+      renderer.useColorShader(group.vertices, WIREFRAME_COLOR);
+
+      // draw the vertices as LINES indexed elements
+      renderer.drawIndexedVertices(renderer.context.LINES, group.indices);
+    }
   },
 
   /**
@@ -538,8 +554,8 @@ TiltVisualizer.Presenter.prototype = {
     let renderer = this._renderer;
 
     // destroy any previously created mesh
-    TiltUtils.destroyObject(this._meshStacks); this._meshStacks = null;
-    TiltUtils.destroyObject(this._meshWireframe); this._meshWireframe = null;
+    TiltUtils.destroyObject(this._meshStacks); this._meshStacks = [];
+    TiltUtils.destroyObject(this._meshWireframe); this._meshWireframe = [];
 
     // if the renderer was destroyed, don't continue setup
     if (!renderer || !renderer.context) {
@@ -549,21 +565,26 @@ TiltVisualizer.Presenter.prototype = {
     // save the mesh data for future use
     this._meshData = aMeshData;
 
-    // create the visualization mesh using the vertices, texture coordinates
-    // and indices computed when traversing the document object model
-    this._meshStacks = {
-      vertices: new renderer.VertexBuffer(aMeshData.vertices, 3),
-      texCoord: new renderer.VertexBuffer(aMeshData.texCoord, 2),
-      color: new renderer.VertexBuffer(aMeshData.color, 3),
-      indices: new renderer.IndexBuffer(aMeshData.stacksIndices)
-    };
+    // create a sub-mesh for each group in the mesh data
+    for (let i = 0, len = aMeshData.groups.length; i < len; i++) {
+      let group = aMeshData.groups[i];
 
-    // additionally, create a wireframe representation to make the
-    // visualization a bit more pretty
-    this._meshWireframe = {
-      vertices: this._meshStacks.vertices,
-      indices: new renderer.IndexBuffer(aMeshData.wireframeIndices)
-    };
+      // create the visualization mesh using the vertices, texture coordinates
+      // and indices computed when traversing the document object model
+      this._meshStacks.push({
+        vertices: new renderer.VertexBuffer(group.vertices, 3),
+        texCoord: new renderer.VertexBuffer(group.texCoord, 2),
+        color: new renderer.VertexBuffer(group.color, 3),
+        indices: new renderer.IndexBuffer(group.stacksIndices)
+      });
+
+      // additionally, create a wireframe representation to make the
+      // visualization a bit more pretty
+      this._meshWireframe.push({
+        vertices: this._meshStacks[i].vertices,
+        indices: new renderer.IndexBuffer(group.wireframeIndices)
+      });
+    }
 
     // if there's no initial selection made, highlight the required node
     if (!this._initialSelection) {
@@ -571,15 +592,13 @@ TiltVisualizer.Presenter.prototype = {
       this.highlightNode(this.chromeWindow.InspectorUI.selection);
     }
 
+    // configure the required mesh transformations and background only once
     if (!this._initialMeshConfiguration) {
       this._initialMeshConfiguration = true;
 
-      let width = renderer.width;
-      let height = renderer.height;
-
       // set the necessary mesh offsets
-      this.transforms.offset[0] = -width * 0.5;
-      this.transforms.offset[1] = -height * 0.5;
+      this.transforms.offset[0] = -renderer.width * 0.5;
+      this.transforms.offset[1] = -renderer.height * 0.5;
 
       // make sure the canvas is opaque now that the initialization is finished
       this.canvas.style.background = TiltVisualizerStyle.canvas.background;
@@ -595,7 +614,7 @@ TiltVisualizer.Presenter.prototype = {
   },
 
   /**
-   * Computes the mesh vertices, texture coordinates etc.
+   * Computes the mesh vertices, texture coordinates etc. by groups of nodes.
    */
   _setupMeshData: function TVP__setupMeshData()
   {
@@ -623,6 +642,7 @@ TiltVisualizer.Presenter.prototype = {
     // calculate necessary information regarding vertices, texture coordinates
     // etc. in a separate thread, as this process may take a while
     worker.postMessage({
+      maxGroupNodes: MAX_GROUP_NODES,
       thickness: STACK_THICKNESS,
       style: TiltVisualizerStyle.nodes,
       texWidth: this._texture.width,
@@ -801,13 +821,17 @@ TiltVisualizer.Presenter.prototype = {
     }
 
     let renderer = this._renderer;
-    let vertices = this._meshData.vertices;
 
-    for (let i = 0, k = 36 * aNodeIndex; i < 36; i++) {
+    let groupIndex = parseInt(aNodeIndex / MAX_GROUP_NODES);
+    let nodeIndex = parseInt((aNodeIndex + (groupIndex ? 1 : 0)) % MAX_GROUP_NODES);
+    let group = this._meshStacks[groupIndex];
+    let vertices = group.vertices.components;
+
+    for (let i = 0, k = 36 * nodeIndex; i < 36; i++) {
       vertices[i + k] = 0;
     }
 
-    this._meshStacks.vertices = new renderer.VertexBuffer(vertices, 3);
+    group.vertices = new renderer.VertexBuffer(vertices, 3);
     this._highlight.disabled = true;
     this._redraw = true;
 
@@ -854,7 +878,6 @@ TiltVisualizer.Presenter.prototype = {
     let zoom = this.chromeWindow.InspectorUI.highlighter.zoom;
     let width = this._renderer.width * zoom;
     let height = this._renderer.height * zoom;
-    let mesh = this._meshStacks;
     x *= zoom;
     y *= zoom;
 
@@ -863,12 +886,12 @@ TiltVisualizer.Presenter.prototype = {
     // and do all the heavy lifting in a separate thread
     worker.postMessage({
       thickness: STACK_THICKNESS,
-      vertices: mesh.vertices.components,
+      vertices: this._meshData.allVertices,
 
       // create the ray destined for 3D picking
       ray: vec3.createRay([x, y, 0], [x, y, 1], [0, 0, width, height],
-        mesh.mvMatrix,
-        mesh.projMatrix)
+        this._meshStacks.mvMatrix,
+        this._meshStacks.projMatrix)
     });
   },
 
@@ -1002,19 +1025,20 @@ TiltVisualizer.Presenter.prototype = {
     TiltUtils.destroyObject(this._texture);
 
     if (this._meshStacks) {
-      TiltUtils.destroyObject(this._meshStacks.vertices);
-      TiltUtils.destroyObject(this._meshStacks.texCoord);
-      TiltUtils.destroyObject(this._meshStacks.color);
-      TiltUtils.destroyObject(this._meshStacks.indices);
+      this._meshStacks.forEach(function(group) {
+        TiltUtils.destroyObject(group.vertices);
+        TiltUtils.destroyObject(group.texCoord);
+        TiltUtils.destroyObject(group.color);
+        TiltUtils.destroyObject(group.indices);
+      });
     }
-
     if (this._meshWireframe) {
-      TiltUtils.destroyObject(this._meshWireframe.indices);
+      this._meshWireframe.forEach(function(group) {
+        TiltUtils.destroyObject(group.indices);
+      });
     }
 
     TiltUtils.destroyObject(this._renderer);
-    TiltUtils.destroyObject(this._highlight);
-    TiltUtils.destroyObject(this.transforms);
 
     this.contentWindow.removeEventListener("resize", this._onResize, false);
   }
