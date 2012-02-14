@@ -626,14 +626,12 @@ public class AboutHomeContent extends ScrollView {
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            int numCols;
             int numRows;
+
             Configuration config = getContext().getResources().getConfiguration();
             if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                numCols = NUMBER_OF_COLS_LANDSCAPE;
                 numRows = NUMBER_OF_TOP_SITES_LANDSCAPE / NUMBER_OF_COLS_LANDSCAPE;
             } else {
-                numCols = NUMBER_OF_COLS_PORTRAIT;
                 numRows = NUMBER_OF_TOP_SITES_PORTRAIT / NUMBER_OF_COLS_PORTRAIT;
             }
             int expandedHeightSpec = 
