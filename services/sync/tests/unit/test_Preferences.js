@@ -195,7 +195,7 @@ function test_observe_prefs_nsIObserver() {
     observed: false,
     observe: function(subject, topic, data) {
       this.observed = !this.observed;
-      do_check_true(subject instanceof Ci.nsIPrefBranch2);
+      do_check_true(subject instanceof Ci.nsIPrefBranch);
       do_check_eq(topic, "nsPref:changed");
       do_check_eq(data, "test_observe_prefs_nsIObserver");
     }

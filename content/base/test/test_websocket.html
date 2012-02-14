@@ -74,8 +74,21 @@
 var first_test = 1;
 var last_test = 46;
 
-var current_test = first_test;
 
+// Set this to >1 if you want to run the suite multiple times to probe for
+// random orange failures. 
+// - Do NOT check into mozilla-central with a value != 1.
+// - Too large a count will wind up causing tryserver to timeout the test (which
+//   is ok, but means all testruns will be orange).  If I set first_test to >22
+//   (i.e don't run any of the tests that require waiting) I can get ~250-300
+//   iterations of the remaining tests w/o a timeout.
+var testsuite_iterations = 1;   
+
+
+var current_test = first_test;
+var testsuite_iteration = 1;
+
+var test_started = new Array(last_test);
 var all_ws = [];
 
 function shouldNotOpen(e)
@@ -176,16 +189,21 @@ function doTest(number)
     return;
   }
 
-  $("feedback").innerHTML = "executing test: " + number + " of " + last_test + " tests.";
+  if (testsuite_iteration > 1) {
+    $("feedback").innerHTML = "test suite iteration #" + testsuite_iteration + " of " + testsuite_iterations + 
+      ": executing test: " + number + " of " + last_test + " tests.";
+  } else {
+    $("feedback").innerHTML = "executing test: " + number + " of " + last_test + " tests.";
+  }
 
   var fnTest = eval("test" + number + "");
 
-  if (fnTest._started === true) {
+  if (test_started[number] === true) {
     doTest(number + 1);
     return;
   }
 
-  fnTest._started = true;
+  test_started[number] = true;
   fnTest();
 }
 doTest.timeoutId = null;
@@ -561,7 +579,7 @@ var status_test17 = "not started";
 
 var waitTest17 = false;
 
-window._test17 = function()
+var test17func = function()
 {
   waitTest17 = true;
 
@@ -611,6 +629,7 @@ window._test17 = function()
 
 function test17()
 {
+  window._test17 = test17func;
   window._test17();
 }
 
@@ -644,7 +663,7 @@ function test19()
 
 var waitTest20 = false;
 
-window._test20 = function()
+var test20func = function()
 {
   waitTest20 = true;
 
@@ -674,12 +693,13 @@ window._test20 = function()
 
 function test20()
 {
+  window._test20 = test20func;
   window._test20();
 }
 
 var waitTest21 = false;
 
-window._test21 = function()
+test21func = function()
 {
   waitTest21 = true;
 
@@ -727,6 +747,7 @@ window._test21 = function()
 
 function test21()
 {
+  window._test21 = test21func;
   window._test21();
 }
 
@@ -1422,7 +1443,15 @@ function maybeFinished()
     }
   }
 
-  SimpleTest.finish();
+  if (testsuite_iteration++ < testsuite_iterations) {
+    // play it again, Sam...
+    ok(1, "starting testsuite iteration " + testsuite_iteration);
+    test_started = new Array(last_test);
+    doTest(current_test = first_test);
+  } else {
+    // all done
+    SimpleTest.finish();
+  }
 }
 
 function testWebSocket ()

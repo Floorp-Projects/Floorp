@@ -230,6 +230,7 @@ nsPluginTag::~nsPluginTag()
 
 NS_IMPL_ISUPPORTS1(nsPluginTag, nsIPluginTag)
 
+#if !defined(XP_WIN) && !defined(XP_MACOSX)
 static nsresult ConvertToUTF8(nsIUnicodeDecoder *aUnicodeDecoder,
                               nsAFlatCString& aString)
 {
@@ -249,6 +250,7 @@ static nsresult ConvertToUTF8(nsIUnicodeDecoder *aUnicodeDecoder,
   
   return NS_OK;
 }
+#endif
 
 nsresult nsPluginTag::EnsureMembersAreUTF8()
 {
@@ -529,10 +531,4 @@ void nsPluginTag::TryUnloadPlugin()
   // again so the calling code should not be fooled and reload
   // the library fresh
   mLibrary = nsnull;
-  
-  // Remove mime types added to the category manager
-  // only if we were made 'active' by setting the host
-  if (mPluginHost) {
-    RegisterWithCategoryManager(false, nsPluginTag::ePluginUnregister);
-  }
 }

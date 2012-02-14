@@ -135,7 +135,7 @@ SpecialPowersObserverAPI.prototype = {
     switch(aMessage.name) {
       case "SPPrefService":
         var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefBranch2);
+                    getService(Components.interfaces.nsIPrefBranch);
         var prefType = aMessage.json.prefType.toUpperCase();
         var prefName = aMessage.json.prefName;
         var prefValue = "prefValue" in aMessage.json ? aMessage.json.prefValue : null;

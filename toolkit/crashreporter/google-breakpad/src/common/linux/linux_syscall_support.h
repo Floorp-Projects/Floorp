@@ -2183,8 +2183,24 @@ struct kernel_statfs {
                              /* In the child, now. Call "fn(arg)".
                               */
                              "ldr   r0,[sp, #4]\n"
+
+                             /* When compiling for Thumb-2 the "MOV LR,PC" here
+                              * won't work because it loads PC+4 into LR,
+                              * whereas the LDR is a 4-byte instruction.
+                              * This results in the child thread always
+                              * crashing with an "Illegal Instruction" when it
+                              * returned into the middle of the LDR instruction
+                              * The instruction sequence used instead was
+                              * recommended by
+                              * "https://wiki.edubuntu.org/ARM/Thumb2PortingHowto#Quick_Reference".
+                              */
+                           #ifdef __thumb2__
+                             "ldr   r7,[sp]\n"
+                             "blx   r7\n"
+                           #else
                              "mov   lr,pc\n"
                              "ldr   pc,[sp]\n"
+                           #endif
 
                              /* Call _exit(%r0).
                               */
