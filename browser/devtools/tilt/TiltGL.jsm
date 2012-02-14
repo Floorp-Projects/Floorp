@@ -1425,7 +1425,7 @@ TiltGL.TextureUtils = {
 
   /**
    * This shim renders a content window to a canvas element, but clamps the
-   * maximum width and height of the canvas to half the WebGL MAX_TEXTURE_SIZE.
+   * maximum width and height of the canvas to the WebGL MAX_TEXTURE_SIZE.
    *
    * @param {Window} aContentWindow
    *                 the content window to get a texture from

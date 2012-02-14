@@ -48,7 +48,7 @@ function whenNodeRemoved() {
     "After deleting a node, it shouldn't be highlighted.");
 
   let nodeIndex = presenter._currentSelection;
-  let vertices = presenter._meshData.vertices;
+  let vertices = presenter._meshStacks[0].vertices.components;
 
   for (let i = 0, k = 36 * nodeIndex; i < 36; i++) {
     is(vertices[i + k], 0,
