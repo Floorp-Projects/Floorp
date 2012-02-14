@@ -36,21 +36,22 @@ MODULE         = harfbuzz
 LIBRARY_NAME   = mozharfbuzz
 LIBXUL_LIBRARY = 1
 
-CSRCS =            \
-  hb-blob.c        \
-  hb-language.c    \
-  hb-ot-tag.c      \
-  hb-unicode.c     \
-  $(NULL)
-
-CPPSRCS	=          \
-  hb-buffer.cc     \
-  hb-font.cc       \
-  hb-ot-layout.cc  \
-  hb-ot-map.cc     \
-  hb-ot-shape-complex-arabic.cc \
-  hb-ot-shape.cc   \
-  hb-shape.cc      \
+CPPSRCS	=                        \
+  hb-blob.cc                     \
+  hb-buffer.cc                   \
+  hb-common.cc                   \
+  hb-fallback-shape.cc           \
+  hb-font.cc                     \
+  hb-ot-layout.cc                \
+  hb-ot-map.cc                   \
+  hb-ot-shape-complex-arabic.cc  \
+  hb-ot-shape-complex-indic.cc   \
+  hb-ot-shape-complex-misc.cc    \
+  hb-ot-shape-normalize.cc       \
+  hb-ot-shape.cc                 \
+  hb-ot-tag.cc                   \
+  hb-shape.cc                    \
+  hb-unicode.cc                  \
   $(NULL)
 
 EXPORTS_NAMESPACES = harfbuzz
@@ -61,13 +62,13 @@ EXPORTS_harfbuzz = \
   hb-buffer.h      \
   hb-common.h      \
   hb-font.h        \
-  hb-language.h    \
   hb-ot.h          \
   hb-ot-layout.h   \
   hb-ot-tag.h      \
   hb-ot-shape.h    \
   hb-shape.h       \
   hb-unicode.h     \
+  hb-version.h     \
   $(NULL)
 
 LOCAL_INCLUDES  += -I$(srcdir) 
@@ -78,3 +79,8 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DPACKAGE_VERSION="\"moz\""
 DEFINES += -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""
+DEFINES += -DHAVE_OT=1
+
+# Cancel the effect of the -DDEBUG macro if present,
+# because harfbuzz uses that name for its own purposes
+COMPILE_CXXFLAGS += -UDEBUG

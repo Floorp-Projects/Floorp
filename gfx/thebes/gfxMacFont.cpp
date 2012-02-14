@@ -397,7 +397,7 @@ gfxMacFont::GetFontTable(PRUint32 aTag)
         return hb_blob_create((const char*)::CFDataGetBytePtr(dataRef),
                               ::CFDataGetLength(dataRef),
                               HB_MEMORY_MODE_READONLY,
-                              DestroyBlobFunc, (void*)dataRef);
+                              (void*)dataRef, DestroyBlobFunc);
     }
 
     if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {

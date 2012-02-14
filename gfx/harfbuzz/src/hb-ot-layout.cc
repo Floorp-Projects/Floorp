@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 1998-2004  David Turner and Werner Lemberg
- * Copyright (C) 2006  Behdad Esfahbod
- * Copyright (C) 2007,2008,2009  Red Hat, Inc.
+ * Copyright © 1998-2004  David Turner and Werner Lemberg
+ * Copyright © 2006  Behdad Esfahbod
+ * Copyright © 2007,2008,2009  Red Hat, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -26,47 +26,40 @@
  * Red Hat Author(s): Behdad Esfahbod
  */
 
-#define HB_OT_LAYOUT_CC
-
 #include "hb-ot-layout-private.hh"
 
-#include "hb-ot-layout-gdef-private.hh"
-#include "hb-ot-layout-gsub-private.hh"
-#include "hb-ot-layout-gpos-private.hh"
-#include "hb-ot-shape-private.hh"
+#include "hb-ot-layout-gdef-table.hh"
+#include "hb-ot-layout-gsub-table.hh"
+#include "hb-ot-layout-gpos-table.hh"
+#include "hb-ot-maxp-table.hh"
 
 
 #include <stdlib.h>
 #include <string.h>
 
-HB_BEGIN_DECLS
 
 
 hb_ot_layout_t *
-_hb_ot_layout_new (hb_face_t *face)
+_hb_ot_layout_create (hb_face_t *face)
 {
-  /* Remove this object altogether */
+  /* TODO Remove this object altogether */
   hb_ot_layout_t *layout = (hb_ot_layout_t *) calloc (1, sizeof (hb_ot_layout_t));
 
-  layout->gdef_blob = Sanitizer<GDEF>::sanitize (hb_face_get_table (face, HB_OT_TAG_GDEF));
+  layout->gdef_blob = Sanitizer<GDEF>::sanitize (hb_face_reference_table (face, HB_OT_TAG_GDEF));
   layout->gdef = Sanitizer<GDEF>::lock_instance (layout->gdef_blob);
 
-  layout->gsub_blob = Sanitizer<GSUB>::sanitize (hb_face_get_table (face, HB_OT_TAG_GSUB));
+  layout->gsub_blob = Sanitizer<GSUB>::sanitize (hb_face_reference_table (face, HB_OT_TAG_GSUB));
   layout->gsub = Sanitizer<GSUB>::lock_instance (layout->gsub_blob);
 
-  layout->gpos_blob = Sanitizer<GPOS>::sanitize (hb_face_get_table (face, HB_OT_TAG_GPOS));
+  layout->gpos_blob = Sanitizer<GPOS>::sanitize (hb_face_reference_table (face, HB_OT_TAG_GPOS));
   layout->gpos = Sanitizer<GPOS>::lock_instance (layout->gpos_blob);
 
   return layout;
 }
 
 void
-_hb_ot_layout_free (hb_ot_layout_t *layout)
+_hb_ot_layout_destroy (hb_ot_layout_t *layout)
 {
-  hb_blob_unlock (layout->gdef_blob);
-  hb_blob_unlock (layout->gsub_blob);
-  hb_blob_unlock (layout->gpos_blob);
-
   hb_blob_destroy (layout->gdef_blob);
   hb_blob_destroy (layout->gsub_blob);
   hb_blob_destroy (layout->gpos_blob);
@@ -79,13 +72,11 @@ _get_gdef (hb_face_t *face)
 {
   return likely (face->ot_layout && face->ot_layout->gdef) ? *face->ot_layout->gdef : Null(GDEF);
 }
-
 static inline const GSUB&
 _get_gsub (hb_face_t *face)
 {
   return likely (face->ot_layout && face->ot_layout->gsub) ? *face->ot_layout->gsub : Null(GSUB);
 }
-
 static inline const GPOS&
 _get_gpos (hb_face_t *face)
 {
@@ -194,17 +185,13 @@ hb_ot_layout_get_attach_points (hb_face_t      *face,
 
 unsigned int
 hb_ot_layout_get_ligature_carets (hb_font_t      *font,
-				  hb_face_t      *face,
 				  hb_direction_t  direction,
 				  hb_codepoint_t  glyph,
 				  unsigned int    start_offset,
 				  unsigned int   *caret_count /* IN/OUT */,
 				  int            *caret_array /* OUT */)
 {
-  hb_ot_layout_context_t c;
-  c.font = font;
-  c.face = face;
-  return _get_gdef (face).get_lig_carets (&c, direction, glyph, start_offset, caret_count, caret_array);
+  return _get_gdef (font->face).get_lig_carets (font, direction, glyph, start_offset, caret_count, caret_array);
 }
 
 /*
@@ -264,32 +251,48 @@ hb_bool_t
 hb_ot_layout_table_choose_script (hb_face_t      *face,
 				  hb_tag_t        table_tag,
 				  const hb_tag_t *script_tags,
-				  unsigned int   *script_index)
+				  unsigned int   *script_index,
+				  hb_tag_t       *chosen_script)
 {
   ASSERT_STATIC (Index::NOT_FOUND_INDEX == HB_OT_LAYOUT_NO_SCRIPT_INDEX);
   const GSUBGPOS &g = get_gsubgpos_table (face, table_tag);
 
   while (*script_tags)
   {
-    if (g.find_script_index (*script_tags, script_index))
+    if (g.find_script_index (*script_tags, script_index)) {
+      if (chosen_script)
+        *chosen_script = *script_tags;
       return TRUE;
+    }
     script_tags++;
   }
 
   /* try finding 'DFLT' */
-  if (g.find_script_index (HB_OT_TAG_DEFAULT_SCRIPT, script_index))
+  if (g.find_script_index (HB_OT_TAG_DEFAULT_SCRIPT, script_index)) {
+    if (chosen_script)
+      *chosen_script = HB_OT_TAG_DEFAULT_SCRIPT;
     return FALSE;
+  }
 
   /* try with 'dflt'; MS site has had typos and many fonts use it now :( */
-  if (g.find_script_index (HB_OT_TAG_DEFAULT_LANGUAGE, script_index))
+  if (g.find_script_index (HB_OT_TAG_DEFAULT_LANGUAGE, script_index)) {
+    if (chosen_script)
+      *chosen_script = HB_OT_TAG_DEFAULT_LANGUAGE;
     return FALSE;
+  }
 
   /* try with 'latn'; some old fonts put their features there even though
      they're really trying to support Thai, for example :( */
-  if (g.find_script_index (HB_TAG ('l','a','t','n'), script_index))
+#define HB_OT_TAG_LATIN_SCRIPT		HB_TAG ('l', 'a', 't', 'n')
+  if (g.find_script_index (HB_OT_TAG_LATIN_SCRIPT, script_index)) {
+    if (chosen_script)
+      *chosen_script = HB_OT_TAG_LATIN_SCRIPT;
     return FALSE;
+  }
 
   if (script_index) *script_index = HB_OT_LAYOUT_NO_SCRIPT_INDEX;
+  if (chosen_script)
+    *chosen_script = HB_OT_LAYOUT_NO_SCRIPT_INDEX;
   return FALSE;
 }
 
@@ -445,16 +448,25 @@ hb_ot_layout_has_substitution (hb_face_t *face)
   return &_get_gsub (face) != &Null(GSUB);
 }
 
+void
+hb_ot_layout_substitute_start (hb_buffer_t  *buffer)
+{
+  GSUB::substitute_start (buffer);
+}
+
 hb_bool_t
 hb_ot_layout_substitute_lookup (hb_face_t    *face,
 				hb_buffer_t  *buffer,
 				unsigned int  lookup_index,
 				hb_mask_t     mask)
 {
-  hb_ot_layout_context_t c;
-  c.font = NULL;
-  c.face = face;
-  return _get_gsub (face).substitute_lookup (&c, buffer, lookup_index, mask);
+  return _get_gsub (face).substitute_lookup (face, buffer, lookup_index, mask);
+}
+
+void
+hb_ot_layout_substitute_finish (hb_buffer_t  *buffer HB_UNUSED)
+{
+  GSUB::substitute_finish (buffer);
 }
 
 
@@ -468,42 +480,25 @@ hb_ot_layout_has_positioning (hb_face_t *face)
   return &_get_gpos (face) != &Null(GPOS);
 }
 
+void
+hb_ot_layout_position_start (hb_buffer_t  *buffer)
+{
+  GPOS::position_start (buffer);
+}
+
 hb_bool_t
 hb_ot_layout_position_lookup   (hb_font_t    *font,
-				hb_face_t    *face,
 				hb_buffer_t  *buffer,
 				unsigned int  lookup_index,
 				hb_mask_t     mask)
 {
-  hb_ot_layout_context_t c;
-  c.font = font;
-  c.face = face;
-  return _get_gpos (face).position_lookup (&c, buffer, lookup_index, mask);
+  return _get_gpos (font->face).position_lookup (font, buffer, lookup_index, mask);
 }
 
 void
-hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t *buffer)
+hb_ot_layout_position_finish (hb_buffer_t  *buffer)
 {
-  /* force diacritics to have zero width */
-  unsigned int count = buffer->len;
-  if (hb_ot_layout_has_glyph_classes (face)) {
-    const GDEF& gdef = _get_gdef (face);
-    for (unsigned int i = 1; i < count; i++) {
-      if (gdef.get_glyph_class (buffer->info[i].codepoint) == GDEF::MarkGlyph) {
-        buffer->pos[i].x_advance = 0;
-      }
-    }
-  } else {
-    /* no GDEF classes available, so use General Category as a fallback */
-    for (unsigned int i = 1; i < count; i++) {
-      if (buffer->info[i].general_category() == HB_CATEGORY_NON_SPACING_MARK) {
-        buffer->pos[i].x_advance = 0;
-      }
-    }
-  }
-
   GPOS::position_finish (buffer);
 }
 
 
-HB_END_DECLS

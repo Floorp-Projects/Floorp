@@ -80,8 +80,10 @@
 #ifndef GFX_SCRIPTITEMIZER_H
 #define GFX_SCRIPTITEMIZER_H
 
+#include "mozilla/StdInt.h"
 #include "prtypes.h"
 #include "harfbuzz/hb.h"
+#include "gfxUnicodeScriptCodes.h"
 
 #define PAREN_STACK_DEPTH 32
 
@@ -93,13 +95,13 @@ public:
     void SetText(const PRUnichar *src, PRUint32 length);
 
     bool Next(PRUint32& aRunStart, PRUint32& aRunLimit,
-                PRInt32& aRunScript);
+              PRInt32& aRunScript);
 
 protected:
     void reset() {
         scriptStart = 0;
         scriptLimit = 0;
-        scriptCode  = PRInt32(HB_SCRIPT_INVALID_CODE);
+        scriptCode  = MOZ_SCRIPT_INVALID;
         parenSP     = -1;
         pushCount   =  0;
         fixupCount  =  0;
