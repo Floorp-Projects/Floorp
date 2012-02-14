@@ -1944,14 +1944,17 @@ nsObjectLoadingContent::SyncStartPluginInstance()
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Must be able to run script in order to instantiate a plugin instance!");
 
-  // Don't even attempt to start an instance unless the content is in the document.
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  // Don't even attempt to start an instance unless the content is in
+  // the document.
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   if (!thisContent->IsInDoc()) {
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIURI> kungFuURIGrip(mURI);
-  return InstantiatePluginInstance(mContentType.get(), mURI.get());
+  nsCString contentType(mContentType);
+  return InstantiatePluginInstance(contentType.get(), mURI.get());
 }
 
 NS_IMETHODIMP

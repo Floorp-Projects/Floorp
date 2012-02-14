@@ -120,6 +120,8 @@ _TEST_FILES = \
   WorkerTest_badworker.js \
   test_workersDisabled.html \
   workersDisabled_worker.js \
+  test_xhr_implicit_cancel.html \
+  xhr_implicit_cancel_worker.js \
   $(NULL)
 
 _SUBDIR_TEST_FILES = \
