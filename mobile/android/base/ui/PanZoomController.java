@@ -819,7 +819,7 @@ public class PanZoomController
     }
 
     public boolean getRedrawHint() {
-        return (mState == PanZoomState.NOTHING || mState == PanZoomState.FLING);
+        return (mState != PanZoomState.PINCHING && mState != PanZoomState.ANIMATED_ZOOM);
     }
 
     private void sendPointToGecko(String event, MotionEvent motionEvent) {
