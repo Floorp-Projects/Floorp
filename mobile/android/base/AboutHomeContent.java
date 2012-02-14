@@ -205,6 +205,13 @@ public class AboutHomeContent extends ScrollView {
         });
     }
 
+    void setLastTabsVisibility(boolean visible) {
+        int visibility = visible ? View.VISIBLE : View.GONE;
+        findViewById(R.id.last_tabs_title).setVisibility(visibility);
+        findViewById(R.id.last_tabs).setVisibility(visibility);
+        findViewById(R.id.last_tabs_open_all).setVisibility(visibility);
+    }
+
     private void setAddonsVisibility(boolean visible) {
         int visibility = visible ? View.VISIBLE : View.GONE;
         findViewById(R.id.recommended_addons_title).setVisibility(visibility);
