@@ -453,3 +453,18 @@ nsTextFragment::UpdateBidiFlag(const PRUnichar* aBuffer, PRUint32 aLength)
     }
   }
 }
+
+bool
+nsTextFragment::SubstringEquals(PRInt32 aOffset, const PRUnichar* aString, PRInt32 aLength)
+{
+  NS_ASSERTION(aOffset + aLength <= GetLength(), "Bad substring");
+  if (mState.mIs2b) {
+    return memcmp(aString, m2b + aOffset, sizeof(PRUnichar)*aLength) == 0;
+  }
+  const char* text = m1b + aOffset;
+  for (PRInt32 i = 0; i < aLength; ++i) {
+    if (PRUint8(text[i]) != aString[i])
+      return false;
+  }
+  return true;
+}
