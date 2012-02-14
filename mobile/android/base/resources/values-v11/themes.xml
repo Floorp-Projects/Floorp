@@ -40,5 +40,9 @@
     <style name="Gecko.TitleBar.Preferences">
         <item name="android:actionBarStyle">@style/ActionBar.GeckoPreferences</item>
     </style>
+
+    <style name="Gecko.Translucent.TabsTray">
+        <item name="android:actionBarStyle">@style/ActionBar.TabsTray</item>
+    </style>
     
 </resources>

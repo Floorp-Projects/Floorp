@@ -151,7 +151,7 @@
                   android:windowSoftInputMode="stateAlwaysVisible|adjustResize"/>
 
         <activity android:name="org.mozilla.gecko.TabsTray"
-                  android:theme="@style/Gecko.Translucent"
+                  android:theme="@style/Gecko.Translucent.TabsTray"
                   android:launchMode="singleTask"/>
 
         <activity android:name="org.mozilla.gecko.GeckoPreferences"
