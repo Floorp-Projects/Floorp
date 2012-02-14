@@ -225,24 +225,17 @@ public class GeckoGLLayerClient extends GeckoLayerClient
     }
 
     /** For Gecko to use. */
-    public LayerRenderer.Frame createFrame(float offsetX, float offsetY, float zoomFactor) {
+    public LayerRenderer.Frame createFrame() {
         // Create the shaders and textures if necessary.
         if (!mLayerRendererInitialized) {
             mLayerRenderer.createProgram();
             mLayerRendererInitialized = true;
         }
 
-        // FIXME: This geometry is surely wrong.
-        ViewportMetrics metrics = getLayerController().getViewportMetrics();
-        FloatSize pageSize = metrics.getPageSize(), screenSize = metrics.getSize();
-        RectF viewport = new RectF(offsetX, offsetY, offsetX + screenSize.width,
-                                   offsetY + screenSize.height);
-
         // Build the contexts and create the frame.
-        Layer.RenderContext pageContext = mLayerRenderer.createContext(viewport, pageSize,
-                                                                       zoomFactor);
+        Layer.RenderContext pageContext = mLayerRenderer.createPageContext();
         Layer.RenderContext screenContext = mLayerRenderer.createScreenContext();
-        return mLayerRenderer.createFrame(false, pageContext, screenContext);
+        return mLayerRenderer.createFrame(pageContext, screenContext);
     }
 
     /** For Gecko to use. */

@@ -277,7 +277,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      */
     public void onDrawFrame(GL10 gl) {
         RenderContext pageContext = createPageContext(), screenContext = createScreenContext();
-        Frame frame = createFrame(true, pageContext, screenContext);
+        Frame frame = createFrame(pageContext, screenContext);
         synchronized (mView.getController()) {
             frame.beginDrawing();
             frame.drawBackground();
@@ -316,7 +316,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return createContext(viewport, pageSize, 1.0f);
     }
 
-    private RenderContext createPageContext() {
+    public RenderContext createPageContext() {
         LayerController layerController = mView.getController();
 
         Rect viewport = new Rect();
@@ -327,7 +327,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return createContext(new RectF(viewport), pageSize, zoomFactor);
     }
 
-    public RenderContext createContext(RectF viewport, FloatSize pageSize, float zoomFactor) {
+    private RenderContext createContext(RectF viewport, FloatSize pageSize, float zoomFactor) {
         return new RenderContext(viewport, pageSize, zoomFactor, mPositionHandle, mTextureHandle,
                                  mCoordBuffer);
     }
@@ -448,9 +448,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return shader;
     }
 
-    public Frame createFrame(boolean scissor, RenderContext pageContext,
-                             RenderContext screenContext) {
-        return new Frame(scissor, pageContext, screenContext);
+    public Frame createFrame(RenderContext pageContext, RenderContext screenContext) {
+        return new Frame(pageContext, screenContext);
     }
 
     class FadeRunnable implements Runnable {
@@ -490,8 +489,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     }
 
     public class Frame {
-        // Whether to use a scissor rect to clip the page.
-        private final boolean mScissor;
         // The timestamp recording the start of this frame.
         private long mFrameStartTime;
         // A rendering context for page-positioned layers, and one for screen-positioned layers.
@@ -499,10 +496,16 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         // Whether a layer was updated.
         private boolean mUpdated;
 
-        public Frame(boolean scissor, RenderContext pageContext, RenderContext screenContext) {
-            mScissor = scissor;
+        public Frame(RenderContext pageContext, RenderContext screenContext) {
             mPageContext = pageContext;
             mScreenContext = screenContext;
+        }
+
+        private void setScissorRect() {
+            Rect scissorRect = transformToScissorRect(getPageRect());
+            GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
+            GLES20.glScissor(scissorRect.left, scissorRect.top,
+                             scissorRect.width(), scissorRect.height());
         }
 
         public void beginDrawing() {
@@ -574,23 +577,22 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (!untransformedPageRect.contains(mView.getController().getViewport()))
                 mShadowLayer.draw(mPageContext);
 
-            /* Define the scissor rect, if necessary. */
-            if (mScissor) {
-                Rect scissorRect = transformToScissorRect(pageRect);
-                GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
-                GLES20.glScissor(scissorRect.left, scissorRect.top,
-                                 scissorRect.width(), scissorRect.height());
-            }
-
             /* Draw the checkerboard. */
+            setScissorRect();
             mCheckerboardLayer.draw(mScreenContext);
+            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
         }
 
         // Draws the layer the client added to us.
         void drawRootLayer() {
             Layer rootLayer = mView.getController().getRoot();
-            if (rootLayer != null)
-                rootLayer.draw(mPageContext);
+            if (rootLayer == null) {
+                return;
+            }
+
+            setScissorRect();
+            rootLayer.draw(mPageContext);
+            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
         }
 
         public void drawForeground() {

@@ -387,8 +387,7 @@ AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(JNIEnv *jEnv)
 
     jGetViewTransformMethod = getMethod("getViewTransform",
                                         "()Lorg/mozilla/gecko/gfx/ViewTransform;");
-    jCreateFrameMethod = getMethod("createFrame",
-                                   "(FFF)Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
+    jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
     jActivateProgramMethod = getMethod("activateProgram", "()V");
     jDeactivateProgramMethod = getMethod("deactivateProgram", "()V");
 #endif
@@ -931,8 +930,7 @@ AndroidGeckoGLLayerClient::GetViewTransform(AndroidViewTransform& aViewTransform
 }
 
 void
-AndroidGeckoGLLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame,
-                                       float aXOffset, float aYOffset, float aZoomFactor)
+AndroidGeckoGLLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame)
 {
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at CreateFrame()!");
@@ -940,8 +938,7 @@ AndroidGeckoGLLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame,
         return;
     }
 
-    jobject frameJObj = env->CallObjectMethod(wrapped_obj, jCreateFrameMethod, aXOffset, aYOffset,
-                                              aZoomFactor);
+    jobject frameJObj = env->CallObjectMethod(wrapped_obj, jCreateFrameMethod);
     NS_ABORT_IF_FALSE(frameJObj, "No frame object!");
     aFrame.Init(frameJObj);
 }

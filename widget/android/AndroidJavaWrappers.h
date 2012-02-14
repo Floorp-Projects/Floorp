@@ -270,8 +270,7 @@ public:
     : mViewTransformGetter(*this) { Init(jobj); }
 
     void GetViewTransform(AndroidViewTransform& aViewTransform);
-    void CreateFrame(AndroidLayerRendererFrame& aFrame, float aXOffset, float aYOffset,
-                     float aZoomFactor);
+    void CreateFrame(AndroidLayerRendererFrame& aFrame);
     void ActivateProgram();
     void DeactivateProgram();
 

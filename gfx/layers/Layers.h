@@ -1345,16 +1345,6 @@ protected:
   bool mDirty;
 };
 
-#ifdef MOZ_WIDGET_ANDROID
-class TransformLayerUserData : public LayerUserData {
-public:
-    gfx3DMatrix matrix;
-
-    TransformLayerUserData(gfx3DMatrix& aMatrix) : matrix(aMatrix) {}
-    virtual ~TransformLayerUserData() {}
-};
-
-#endif
 
 }
 }
