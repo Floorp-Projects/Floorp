@@ -969,21 +969,21 @@ nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
 
   mCertVerificationEnded = PR_IntervalNow();
 
-  if (errorCode != 0) {
-    SetCanceled(errorCode, errorMessageType);
-  } else if (mFd) {
-    // We haven't closed the connection already, so restart it
-    SECStatus rv = SSL_RestartHandshakeAfterAuthCertificate(mFd);
-    if (rv != SECSuccess) {
+  if (mFd) {
+    SECStatus rv = SSL_AuthCertificateComplete(mFd, errorCode);
+    // Only replace errorCode if there was originally no error
+    if (rv != SECSuccess && errorCode == 0) {
       errorCode = PR_GetError();
+      errorMessageType = PlainErrorMessage;
       if (errorCode == 0) {
-        NS_ERROR("SSL_RestartHandshakeAfterAuthCertificate didn't set error code");
+        NS_ERROR("SSL_AuthCertificateComplete didn't set error code");
         errorCode = PR_INVALID_STATE_ERROR;
       }
-      SetCanceled(errorCode, PlainErrorMessage);
     }
-  } else {
-    // If we closed the connection alreay, we don't have anything to do
+  }
+
+  if (errorCode) {
+    SetCanceled(errorCode, errorMessageType);
   }
 
   mCertVerificationState = after_cert_verification;
