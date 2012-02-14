@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010  Google, Inc.
+ * Copyright © 2010  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -27,30 +27,49 @@
 #ifndef HB_OT_SHAPE_PRIVATE_HH
 #define HB_OT_SHAPE_PRIVATE_HH
 
-#include "hb-private.h"
+#include "hb-private.hh"
 
 #include "hb-ot-shape.h"
 
 #include "hb-ot-map-private.hh"
-
-HB_BEGIN_DECLS
-
-
-/* buffer var allocations */
-#define general_category() var1.u8[0] /* unicode general_category (hb_category_t) */
-#define combining_class() var1.u8[1] /* unicode combining_class (uint8_t) */
+#include "hb-ot-shape-complex-private.hh"
 
 
-enum hb_ot_complex_shaper_t {
-  hb_ot_complex_shaper_none,
-  hb_ot_complex_shaper_arabic
-};
 
+enum hb_ot_complex_shaper_t;
 
 struct hb_ot_shape_plan_t
 {
+  friend struct hb_ot_shape_planner_t;
+
   hb_ot_map_t map;
   hb_ot_complex_shaper_t shaper;
+
+  hb_ot_shape_plan_t (void) : map () {}
+  ~hb_ot_shape_plan_t (void) { map.finish (); }
+
+  private:
+  NO_COPY (hb_ot_shape_plan_t);
+};
+
+struct hb_ot_shape_planner_t
+{
+  hb_ot_map_builder_t map;
+  hb_ot_complex_shaper_t shaper;
+
+  hb_ot_shape_planner_t (void) : map () {}
+  ~hb_ot_shape_planner_t (void) { map.finish (); }
+
+  inline void compile (hb_face_t *face,
+		       const hb_segment_properties_t *props,
+		       struct hb_ot_shape_plan_t &plan)
+  {
+    plan.shaper = shaper;
+    map.compile (face, props, plan.map);
+  }
+
+  private:
+  NO_COPY (hb_ot_shape_planner_t);
 };
 
 
@@ -65,12 +84,46 @@ struct hb_ot_shape_context_t
   unsigned int        num_user_features;
 
   /* Transient stuff */
-  hb_direction_t original_direction;
+  hb_direction_t target_direction;
   hb_bool_t applied_substitute_complex;
   hb_bool_t applied_position_complex;
 };
 
 
-HB_END_DECLS
+static inline hb_bool_t
+is_variation_selector (hb_codepoint_t unicode)
+{
+  return unlikely ((unicode >=  0x180B && unicode <=  0x180D) || /* MONGOLIAN FREE VARIATION SELECTOR ONE..THREE */
+		   (unicode >=  0xFE00 && unicode <=  0xFE0F) || /* VARIATION SELECTOR-1..16 */
+		   (unicode >= 0xE0100 && unicode <= 0xE01EF));  /* VARIATION SELECTOR-17..256 */
+}
+
+static inline unsigned int
+_hb_unicode_modified_combining_class (hb_unicode_funcs_t *ufuncs,
+				      hb_codepoint_t      unicode)
+{
+  int c = hb_unicode_combining_class (ufuncs, unicode);
+
+  /* Modify the combining-class to suit Arabic better.  See:
+   * http://unicode.org/faq/normalization.html#8
+   * http://unicode.org/faq/normalization.html#9
+   */
+  if (unlikely (hb_in_range<int> (c, 27, 33)))
+    c = c == 33 ? 27 : c + 1;
+
+  return c;
+}
+
+static inline void
+hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_unicode_funcs_t *unicode)
+{
+  info->general_category() = hb_unicode_general_category (unicode, info->codepoint);
+  info->combining_class() = _hb_unicode_modified_combining_class (unicode, info->codepoint);
+}
+
+HB_INTERNAL void _hb_set_unicode_props (hb_buffer_t *buffer);
+
+HB_INTERNAL void _hb_ot_shape_normalize (hb_ot_shape_context_t *c);
+
 
 #endif /* HB_OT_SHAPE_PRIVATE_HH */

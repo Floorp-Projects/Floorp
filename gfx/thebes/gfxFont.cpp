@@ -291,7 +291,7 @@ gfxFontEntry::FontTableHashEntry::SaveTable(FallibleTArray<PRUint8>& aTable)
     FontTableBlobData *data = new FontTableBlobData(aTable, nsnull);
     mBlob = hb_blob_create(data->GetTable(), data->GetTableLength(),
                            HB_MEMORY_MODE_READONLY,
-                           DeleteFontTableBlobData, data);    
+                           data, DeleteFontTableBlobData);    
 }
 
 hb_blob_t *
@@ -305,7 +305,7 @@ ShareTableAndGetBlob(FallibleTArray<PRUint8>& aTable,
     mBlob = hb_blob_create(mSharedBlobData->GetTable(),
                            mSharedBlobData->GetTableLength(),
                            HB_MEMORY_MODE_READONLY,
-                           DeleteFontTableBlobData, mSharedBlobData);
+                           mSharedBlobData, DeleteFontTableBlobData);
     if (!mSharedBlobData) {
         // The FontTableBlobData was destroyed during hb_blob_create().
         // The (empty) blob is still be held in the hashtable with a strong
@@ -719,12 +719,12 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
             if (NS_UNLIKELY(log)) {
                 PRUint32 charRange = gfxFontUtils::CharRangeBit(aMatchData->mCh);
                 PRUint32 unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
-                PRUint32 hbscript = gfxUnicodeProperties::GetScriptCode(aMatchData->mCh);
+                PRUint32 script = gfxUnicodeProperties::GetScriptCode(aMatchData->mCh);
                 PR_LOG(log, PR_LOG_DEBUG,\
                        ("(textrun-systemfallback-fonts) char: u+%6.6x "
                         "char-range: %d unicode-range: %d script: %d match: [%s]\n",
                         aMatchData->mCh,
-                        charRange, unicodeRange, hbscript,
+                        charRange, unicodeRange, script,
                         NS_ConvertUTF16toUTF8(fe->Name()).get()));
             }
 #endif
@@ -1881,8 +1881,8 @@ static bool
 IsClusterExtender(PRUint32 aUSV)
 {
     PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aUSV);
-    return ((category >= HB_CATEGORY_COMBINING_MARK &&
-             category <= HB_CATEGORY_NON_SPACING_MARK) ||
+    return ((category >= HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK &&
+             category <= HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) ||
             (aUSV >= 0x200c && aUSV <= 0x200d) || // ZWJ, ZWNJ
             (aUSV >= 0xff9e && aUSV <= 0xff9f));  // katakana sound marks
 }
@@ -3129,7 +3129,7 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         // the text is still purely 8-bit; bypass the script-run itemizer
         // and treat it as a single Latin run
         InitScriptRun(aContext, aTextRun, aString,
-                      0, aLength, HB_SCRIPT_LATIN);
+                      0, aLength, MOZ_SCRIPT_LATIN);
     } else {
         const PRUnichar *textPtr;
         if (transformedString) {
@@ -3151,7 +3151,7 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 #endif
 
         PRUint32 runStart = 0, runLimit = aLength;
-        PRInt32 runScript = HB_SCRIPT_LATIN;
+        PRInt32 runScript = MOZ_SCRIPT_LATIN;
         while (scriptRuns.Next(runStart, runLimit, runScript)) {
 
 #ifdef PR_LOGGING
@@ -3330,7 +3330,7 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
         // whether they are present in the current font, as they won't
         // actually be rendered (see bug 716229)
         PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aCh);
-        if (category == HB_CATEGORY_CONTROL) {
+        if (category == HB_UNICODE_GENERAL_CATEGORY_CONTROL) {
             selectedFont = aPrevMatchedFont;
             return selectedFont.forget();
         }
@@ -3388,7 +3388,7 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
     // for known "space" characters, don't do a full system-fallback search;
     // we'll synthesize appropriate-width spaces instead of missing-glyph boxes
     if (gfxUnicodeProperties::GetGeneralCategory(aCh) ==
-            HB_CATEGORY_SPACE_SEPARATOR &&
+            HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR &&
         GetFontAt(0)->SynthesizeSpaceWidth(aCh) >= 0.0)
     {
         return nsnull;
@@ -3795,7 +3795,7 @@ gfxShapedWord::SetupClusterBoundaries(CompressedGlyph *aGlyphs,
         // combining marks extend the cluster
         if (IsClusterExtender(ch)) {
             aGlyphs[i] = extendCluster;
-        } else if (category == HB_CATEGORY_OTHER_LETTER) {
+        } else if (category == HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER) {
             // handle special cases in Letter_Other category
 #if 0
             // Currently disabled. This would follow the UAX#29 specification
@@ -5003,8 +5003,8 @@ void
 gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
 {
     PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aChar);
-    if (category >= HB_CATEGORY_COMBINING_MARK &&
-        category <= HB_CATEGORY_NON_SPACING_MARK)
+    if (category >= HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK &&
+        category <= HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
     {
         mCharacterGlyphs[aIndex].SetComplex(false, true, 0);
     }
@@ -5140,7 +5140,7 @@ gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext,
     gfxShapedWord *sw = aFont->GetShapedWord(aContext,
                                              &space, 1,
                                              HashMix(0, ' '), 
-                                             HB_SCRIPT_LATIN,
+                                             MOZ_SCRIPT_LATIN,
                                              mAppUnitsPerDevUnit,
                                              gfxTextRunFactory::TEXT_IS_8BIT |
                                              gfxTextRunFactory::TEXT_IS_ASCII |

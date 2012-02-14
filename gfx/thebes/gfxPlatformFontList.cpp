@@ -422,13 +422,13 @@ gfxPlatformFontList::FindFontForChar(const PRUint32 aCh, gfxFont *aPrevFont)
     if (NS_UNLIKELY(log)) {
         PRUint32 charRange = gfxFontUtils::CharRangeBit(aCh);
         PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
-        PRUint32 hbscript = gfxUnicodeProperties::GetScriptCode(aCh);
+        PRInt32 script = gfxUnicodeProperties::GetScriptCode(aCh);
         PR_LOG(log, PR_LOG_DEBUG,\
                ("(textrun-systemfallback) char: u+%6.6x "
                 "char-range: %d unicode-range: %d script: %d match: [%s]"
                 " count: %d time: %dus\n",
                 aCh,
-                charRange, unicodeRange, hbscript,
+                charRange, unicodeRange, script,
                 (data.mBestMatch ?
                  NS_ConvertUTF16toUTF8(data.mBestMatch->Name()).get() :
                  "<none>"),
