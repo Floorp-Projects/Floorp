@@ -181,9 +181,6 @@ CompositorParent::Composite()
   printf_stderr("Correcting for position fixed %i, %i\n", -mScrollOffset.x, -mScrollOffset.y);
   ViewTransform v(mScrollOffset, mXScale, mYScale);
   TransformShadowTree(layer, v);
-#else
-  Layer* layer = mLayerManager->GetRoot();
-  //layer->AsShadowLayer()->SetShadowTransform(worldTransform);
 #endif
 
   mLayerManager->EndEmptyTransaction();
@@ -329,33 +326,6 @@ CompositorParent::AsyncRender()
   if (!root) {
     return;
   }
-
-/*
-  ContainerLayer* container = root->AsContainerLayer();
-  if (!container)
-    return;
-
-  FrameMetrics metrics = container->GetFrameMetrics();
-    printf("FrameMetrics: mViewPort: X: %d, Y: %d, Width: %d, Height: %d ",
-            metrics.mViewport.X(), metrics.mViewport.Y(), metrics.mViewport.Width(),
-            metrics.mViewport.Height());
-    printf("mDisplayPort: X: %d, Y: %d, Width: %d, Height: %d ",
-            metrics.mDisplayPort.X(), metrics.mDisplayPort.Y(), metrics.mDisplayPort.Width(),
-            metrics.mDisplayPort.Height());
-    printf("mContentSize: width: %d, height: %d ", metrics.mContentSize.width,
-           metrics. mContentSize.height);
-    printf("mViewPortScrollOffset: x: %d, y: %d\n",
-            metrics.mViewportScrollOffset.x,
-            metrics.mViewportScrollOffset.y);
-    // Modify framemetrics here, just as a test.
-  metrics.mScrollId = FrameMetrics::ROOT_SCROLL_ID;
-  container->SetFrameMetrics(metrics);
-*/
-
-#if 0
-  ViewTransform transform;
-  TransformShadowTree(root, transform);
-#endif
 
   ScheduleComposition();
 }
