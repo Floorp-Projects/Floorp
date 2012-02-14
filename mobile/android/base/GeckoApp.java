@@ -1707,12 +1707,12 @@ abstract public class GeckoApp
 
         if (passedUri == null || passedUri.equals("about:home")) {
             // show about:home if we aren't restoring previous session
-            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start check sessionstore.bak exists");
+            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start check sessionstore.js exists");
             File profileDir = getProfileDir();
             boolean sessionExists = false;
             if (profileDir != null)
-                sessionExists = new File(profileDir, "sessionstore.bak").exists();
-            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.bak exists");
+                sessionExists = new File(profileDir, "sessionstore.js").exists();
+            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.js exists");
             if (!sessionExists) {
                 mBrowserToolbar.updateTabCount(1);
                 showAboutHome();
