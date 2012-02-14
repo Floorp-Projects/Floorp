@@ -61,7 +61,7 @@ tail =
 
 """ + "\n".join(testlines))
 
-    def assertTestResult(self, expected, mozInfo={}):
+    def assertTestResult(self, expected, mozInfo={}, shuffle=False):
         """
         Assert that self.x.runTests with manifest=self.manifest
         returns |expected|.
@@ -69,7 +69,8 @@ tail =
         self.assertEquals(expected,
                           self.x.runTests(xpcshellBin,
                                           manifest=self.manifest,
-                                          mozInfo=mozInfo),
+                                          mozInfo=mozInfo,
+                                          shuffle=shuffle),
                           msg="""Tests should have %s, log:
 ========
 %s
@@ -207,6 +208,21 @@ tail =
         self.assertEquals(0, self.x.todoCount)
         self.assertInLog("TEST-UNEXPECTED-FAIL")
         self.assertNotInLog("TEST-PASS")
+
+    def testRandomExecution(self):
+        """
+        Check that random execution doesn't break.
+        """
+        manifest = []
+        for i in range(0, 10):
+            filename = "test_pass_%d.js" % i
+            self.writeFile(filename, SIMPLE_PASSING_TEST)
+            manifest.append(filename)
+
+        self.writeManifest(manifest)
+        self.assertTestResult(True, shuffle=True)
+        self.assertEquals(10, self.x.testCount)
+        self.assertEquals(10, self.x.passCount)
 
 if __name__ == "__main__":
     unittest.main()

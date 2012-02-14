@@ -45,6 +45,7 @@ from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkdtemp, gettempdir
 import manifestparser
 import mozinfo
+import random
 
 from automationutils import *
 
@@ -391,7 +392,7 @@ class XPCShellTests(object):
                interactive=False, verbose=False, keepGoing=False, logfiles=True,
                thisChunk=1, totalChunks=1, debugger=None,
                debuggerArgs=None, debuggerInteractive=False,
-               profileName=None, mozInfo=None, **otherOptions):
+               profileName=None, mozInfo=None, shuffle=False, **otherOptions):
     """Run xpcshell tests.
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -415,6 +416,7 @@ class XPCShellTests(object):
     |profileName|, if set, specifies the name of the application for the profile
       directory if running only a subset of tests.
     |mozInfo|, if set, specifies specifies build configuration information, either as a filename containing JSON, or a dict.
+    |shuffle|, if True, execute tests in random order.
     |otherOptions| may be present for the convenience of subclasses
     """
 
@@ -467,6 +469,9 @@ class XPCShellTests(object):
     pStdout, pStderr = self.getPipes()
 
     self.buildTestList()
+
+    if shuffle:
+      random.shuffle(self.alltests)
 
     for test in self.alltests:
       name = test['path']
@@ -629,6 +634,9 @@ class XPCShellOptions(OptionParser):
     self.add_option("--build-info-json",
                     type = "string", dest="mozInfo", default=None,
                     help="path to a mozinfo.json including information about the build configuration. defaults to looking for mozinfo.json next to the script.")
+    self.add_option("--shuffle",
+                    action="store_true", dest="shuffle", default=False,
+                    help="Execute tests in random order")
 
 def main():
   parser = XPCShellOptions()
