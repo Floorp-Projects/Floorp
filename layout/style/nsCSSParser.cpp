@@ -4331,7 +4331,7 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
     // Must be a zero number...
     NS_ASSERTION(0 == aNumber, "numbers without units must be 0");
     if ((VARIANT_LENGTH & aVariantMask) != 0) {
-      units = eCSSUnit_Point;
+      units = eCSSUnit_Pixel;
       type = VARIANT_LENGTH;
     }
     else if ((VARIANT_ANGLE & aVariantMask) != 0) {
