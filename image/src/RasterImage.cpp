@@ -3019,14 +3019,26 @@ RasterImage::DecodeWorker::DecodeSomeOfImage(
     Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, chunkCount);
   }
 
-  // For non-size decodes, flush invalidations after we've decoded all the
-  // chunks we're going to. Size decodes shouldn't cause paints.
+  // Flush invalidations (and therefore paint) now that we've decoded all the
+  // chunks we're going to.
   //
-  // Similarly, we don't paint if we have all the source data. This disables
-  // progressive display of previously-discarded images (which lets us finish
-  // decoding faster, since we don't waste time painting).
-  // Decoder::PostFrameStop() will flush once the decode is done.
-  if (!aImg->mHasSourceData && aDecodeType != DECODE_TYPE_UNTIL_SIZE) {
+  // However, don't paint if:
+  //
+  //  * This was an until-size decode.  Until-size decodes are always followed
+  //    by normal decodes, so don't bother painting.
+  //
+  //  * The decoder flagged an error.  The decoder may have written garbage
+  //    into the output buffer; don't paint it to the screen.
+  //
+  //  * We have all the source data.  This disables progressive display of
+  //    previously-decoded images, thus letting us finish decoding faster,
+  //    since we don't waste time painting while we decode.
+  //    Decoder::PostFrameStop() will flush invalidations once the decode is
+  //    done.
+
+  if (aDecodeType != DECODE_TYPE_UNTIL_SIZE &&
+      !aImg->mDecoder->HasError() &&
+      !aImg->mHasSourceData) {
     aImg->mInDecoder = true;
     aImg->mDecoder->FlushInvalidations();
     aImg->mInDecoder = false;
