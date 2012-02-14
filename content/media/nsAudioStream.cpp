@@ -117,10 +117,6 @@ class nsNativeAudioStream : public nsAudioStream
 
   double mVolume;
   void* mAudioHandle;
-  int mRate;
-  int mChannels;
-
-  SampleFormat mFormat;
 
   // True if this audio stream is paused.
   bool mPaused;
@@ -154,10 +150,6 @@ class nsRemotedAudioStream : public nsAudioStream
 
 private:
   nsRefPtr<AudioChild> mAudioChild;
-
-  SampleFormat mFormat;
-  int mRate;
-  int mChannels;
 
   PRInt32 mBytesPerFrame;
 
@@ -430,9 +422,6 @@ nsAudioStream::~nsAudioStream()
 nsNativeAudioStream::nsNativeAudioStream() :
   mVolume(1.0),
   mAudioHandle(0),
-  mRate(0),
-  mChannels(0),
-  mFormat(FORMAT_S16_LE),
   mPaused(false),
   mInError(false)
 {
@@ -654,9 +643,6 @@ PRInt32 nsNativeAudioStream::GetMinWriteSize()
 #if defined(REMOTE_AUDIO)
 nsRemotedAudioStream::nsRemotedAudioStream()
  : mAudioChild(nsnull),
-   mFormat(FORMAT_S16_LE),
-   mRate(0),
-   mChannels(0),
    mBytesPerFrame(0),
    mPaused(false)
 {}
@@ -876,9 +862,6 @@ private:
   // nsAutoRef's destructor.
   nsAutoRef<cubeb_stream> mCubebStream;
 
-  PRInt32 mRate;
-  PRInt32 mChannels;
-  SampleFormat mFormat;
   PRUint32 mBytesPerFrame;
 
   enum StreamState {
@@ -917,7 +900,7 @@ nsAudioStream* nsAudioStream::AllocateStream()
 
 #if defined(MOZ_CUBEB)
 nsBufferedAudioStream::nsBufferedAudioStream()
-  : mMonitor("nsBufferedAudioStream"), mLostFrames(0), mVolume(1.0), mRate(0), mChannels(0),
+  : mMonitor("nsBufferedAudioStream"), mLostFrames(0), mVolume(1.0),
     mBytesPerFrame(0), mState(INITIALIZED)
 {
 }
