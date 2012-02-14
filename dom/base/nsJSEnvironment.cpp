@@ -996,11 +996,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   else
     newDefaultJSOptions &= ~JSOPTION_METHODJIT_ALWAYS;
 
-  if (useHardening)
-    newDefaultJSOptions &= ~JSOPTION_SOFTEN;
-  else
-    newDefaultJSOptions |= JSOPTION_SOFTEN;
-
   if (useTypeInference)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
   else
@@ -1034,6 +1029,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
   // Save the new defaults for the next page load (InitContext).
   context->mDefaultJSOptions = newDefaultJSOptions;
+
+  JSRuntime *rt = JS_GetRuntime(context->mContext);
+  JS_SetJitHardening(rt, useHardening);
 
 #ifdef JS_GC_ZEAL
   PRInt32 zeal = Preferences::GetInt(js_zeal_option_str, -1);
