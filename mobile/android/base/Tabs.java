@@ -68,7 +68,6 @@ public class Tabs implements GeckoEventListener {
         GeckoAppShell.registerGeckoEventListener("Tab:Added", this);
         GeckoAppShell.registerGeckoEventListener("Tab:Close", this);
         GeckoAppShell.registerGeckoEventListener("Tab:Select", this);
-        GeckoAppShell.registerGeckoEventListener("Tab:ScreenshotData", this);
         GeckoAppShell.registerGeckoEventListener("Session:RestoreBegin", this);
         GeckoAppShell.registerGeckoEventListener("Session:RestoreEnd", this);
     }
@@ -146,7 +145,7 @@ public class Tabs implements GeckoEventListener {
         });
 
         // Pass a message to Gecko to update tab state in BrowserApp
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Selected", String.valueOf(tab.getId())));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Selected", String.valueOf(tab.getId())));
         return selectedTab = tab;
     }
 
@@ -209,7 +208,7 @@ public class Tabs implements GeckoEventListener {
         });
 
         // Pass a message to Gecko to update tab state in BrowserApp
-        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Closed", String.valueOf(tabId)));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Closed", String.valueOf(tabId)));
     }
 
     /** Return the tab that will be selected by default after this one is closed */
@@ -288,13 +287,6 @@ public class Tabs implements GeckoEventListener {
                 closeTab(tab);
             } else if (event.equals("Tab:Select")) {
                 selectTab(message.getInt("tabID"));
-            } else if (event.equals("Tab:ScreenshotData")) {
-                Tab tab = getTab(message.getInt("tabID"));
-                String data = message.getString("data");
-                if (data.length() < 22)
-                    return;
-                byte[] compressed = GeckoAppShell.decodeBase64(data.substring(22), GeckoAppShell.BASE64_DEFAULT);
-                GeckoApp.mAppContext.processThumbnail(tab, null, compressed);
             } else if (event.equals("Session:RestoreBegin")) {
                 mRestoringSession = true;
             } else if (event.equals("Session:RestoreEnd")) {

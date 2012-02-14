@@ -50,7 +50,6 @@
 
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessibleRelation.h"
-#include "nsIAccessibleWin32Object.h"
 
 #include "Accessible2_i.c"
 #include "AccessibleStates.h"
@@ -1684,29 +1683,16 @@ nsAccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
   return *aIA2Attributes ? S_OK : E_OUTOFMEMORY;
 }
 
-IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
+IDispatch*
+nsAccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
 {
-  if (!aXPAccessible) {
-   NS_WARNING("Not passing in an aXPAccessible");
+  if (!aAccessible) {
+   NS_WARNING("Not passing in an aAccessible");
    return NULL;
   }
 
-  nsCOMPtr<nsIAccessibleWin32Object> accObject(do_QueryInterface(aXPAccessible));
-  if (accObject) {
-    void* hwnd = nsnull;
-    accObject->GetHwnd(&hwnd);
-    if (hwnd) {
-      IDispatch *retval = nsnull;
-      ::AccessibleObjectFromWindow(reinterpret_cast<HWND>(hwnd),
-                                   OBJID_WINDOW, IID_IAccessible,
-                                   (void **) &retval);
-      return retval;
-    }
-  }
-
-  IAccessible *msaaAccessible;
-  aXPAccessible->GetNativeInterface((void**)&msaaAccessible);
-
+  IAccessible* msaaAccessible = nsnull;
+  aAccessible->GetNativeInterface(reinterpret_cast<void**>(&msaaAccessible));
   return static_cast<IDispatch*>(msaaAccessible);
 }
 

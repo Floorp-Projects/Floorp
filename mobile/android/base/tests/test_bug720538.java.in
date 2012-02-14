@@ -9,6 +9,8 @@ public class test_bug720538 extends PixelTest {
         setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/test_bug720538.html");
 
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
         /*
          * for this test, we load the associated test_bug720538.html file. this file has two
          * iframes (painted completely blue - #0000FF) and the rest of the page is the background
@@ -50,6 +52,11 @@ public class test_bug720538 extends PixelTest {
         // and now we check a pixel at the bottom of the view to ensure that we have the page
         // background and not some checkerboarding. use the second-last row of pixels instead of
         // the last row because the last row is subject to rounding and clipping errors
+        for (int y = 2; y < 10; y++) {
+            for (int x = 0; x < 10; x++) {
+                mAsserter.dumpLog("Pixel at " + x + ", " + (mDriver.getGeckoHeight() - y) + ": " + Integer.toHexString(painted[mDriver.getGeckoHeight() - y][x]));
+            }
+        }
         mAsserter.ispixel(painted[mDriver.getGeckoHeight() - 2][0], 0, 0x80, 0, "Checking bottom-left corner of viewport");
     }
 }

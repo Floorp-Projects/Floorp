@@ -325,7 +325,7 @@ ownAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 {
     ServerCertAuth * serverCertAuth = (ServerCertAuth *) arg;
 
-    FPRINTF(stderr, "using asynchronous certificate validation\n", progName);
+    FPRINTF(stderr, "using asynchronous certificate validation\n");
 
     PORT_Assert(serverCertAuth->shouldPause);
     PORT_Assert(!serverCertAuth->isPaused);
@@ -530,6 +530,7 @@ restartHandshakeAfterServerCertIfNeeded(PRFileDesc * fd,
                                         PRBool override)
 {
     SECStatus rv;
+    PRErrorCode status;
     
     if (!serverCertAuth->isPaused)
 	return SECSuccess;
@@ -539,14 +540,23 @@ restartHandshakeAfterServerCertIfNeeded(PRFileDesc * fd,
 
     serverCertAuth->isPaused = PR_FALSE;
     rv = SSL_AuthCertificate(serverCertAuth->dbHandle, fd, PR_TRUE, PR_FALSE);
-    if (rv != SECSuccess && override) {
-        rv = ownBadCertHandler(NULL, fd);
-    }
     if (rv != SECSuccess) {
-	return rv;
+        status = PR_GetError();
+        if (status == 0) {
+            PR_NOT_REACHED("SSL_AuthCertificate return SECFailure without "
+                           "setting error code.");
+            status = PR_INVALID_STATE_ERROR;
+        } else if (override) {
+            rv = ownBadCertHandler(NULL, fd);
+        }
     }
-    
-    rv = SSL_RestartHandshakeAfterAuthCertificate(fd);
+    if (rv == SECSuccess) {
+        status = 0;
+    }
+
+    if (SSL_AuthCertificateComplete(fd, status) != SECSuccess) {
+        rv = SECFailure;
+    }
 
     return rv;
 }

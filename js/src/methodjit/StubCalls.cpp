@@ -1104,7 +1104,7 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
     if (!proto)
         THROW();
     JS_ASSERT(proto);
-    JSObject *obj = js_CloneRegExpObject(f.cx, regex, proto);
+    JSObject *obj = CloneRegExpObject(f.cx, regex, proto);
     if (!obj)
         THROW();
     f.regs.sp[0].setObject(*obj);

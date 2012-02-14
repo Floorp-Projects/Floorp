@@ -114,11 +114,16 @@ nsLeafAccessible(nsnull, nsnull)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLWin32ObjectAccessible, nsAccessible, nsIAccessibleWin32Object)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLWin32ObjectAccessible, nsAccessible)
 
-NS_IMETHODIMP nsHTMLWin32ObjectAccessible::GetHwnd(void **aHwnd) 
+NS_IMETHODIMP 
+nsHTMLWin32ObjectAccessible::GetNativeInterface(void** aNativeAccessible)
 {
-  *aHwnd = mHwnd;
+  if (mHwnd) {
+    ::AccessibleObjectFromWindow(static_cast<HWND>(mHwnd),
+                                 OBJID_WINDOW, IID_IAccessible,
+                                 aNativeAccessible);
+  }
   return NS_OK;
 }
 

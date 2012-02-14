@@ -794,7 +794,7 @@ function selectSaveFolder()
   fp.init(window, titleText, nsIFilePicker.modeGetFolder);
   try {
     var prefs = Components.classes[PREFERENCES_CONTRACTID]
-                          .getService(Components.interfaces.nsIPrefBranch2);
+                          .getService(Components.interfaces.nsIPrefBranch);
 
     var initialDir = prefs.getComplexValue("browser.download.dir", nsILocalFile);
     if (initialDir)
@@ -1104,7 +1104,7 @@ function makeBlockImage(url)
   var permissionManager = Components.classes[PERMISSION_CONTRACTID]
                                     .getService(nsIPermissionManager);
   var prefs = Components.classes[PREFERENCES_CONTRACTID]
-                        .getService(Components.interfaces.nsIPrefBranch2);
+                        .getService(Components.interfaces.nsIPrefBranch);
 
   var checkbox = document.getElementById("blockImage");
   var imagePref = prefs.getIntPref("permissions.default.image");

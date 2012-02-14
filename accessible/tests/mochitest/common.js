@@ -283,27 +283,6 @@ function getApplicationAccessible()
 }
 
 /**
- * Run through accessible tree of the given identifier so that we ensure
- * accessible tree is created.
- */
-function ensureAccessibleTree(aAccOrElmOrID)
-{
-  var acc = getAccessible(aAccOrElmOrID);
-  if (!acc)
-    return;
-
-  var child = acc.firstChild;
-  while (child) {
-    ensureAccessibleTree(child);
-    try {
-      child = child.nextSibling;
-    } catch (e) {
-      child = null;
-    }
-  }
-}
-
-/**
  * Compare expected and actual accessibles trees.
  *
  * @param  aAccOrElmOrID  [in] accessible identifier
