@@ -79,10 +79,6 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
 
         setContentView(R.layout.tabs_tray);
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            GeckoActionBar.hide(this);
-        }
-
         mWaitingForClose = false;
 
         mList = (ListView) findViewById(R.id.list);

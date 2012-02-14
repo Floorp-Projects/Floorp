@@ -48,5 +48,10 @@
     <style name="ActionBar.GeckoPreferences">
          <item name="android:displayOptions">showHome|homeAsUp|showTitle</item>
     </style>
+ 
+    <!-- TabsTray ActionBar -->
+    <style name="ActionBar.TabsTray">
+         <item name="android:visibility">gone</item>
+    </style>
 
 </resources>
