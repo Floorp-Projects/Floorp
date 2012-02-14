@@ -315,12 +315,20 @@ public class AwesomeBarTabs extends TabHost {
         }
     }
 
-    private class HistoryQueryTask extends AsyncTask<Void, Void, Pair<List,List>> {
+    private static class GroupList extends LinkedList<Map<String,String>> {
+        private static final long serialVersionUID = 0L;
+    }
+
+    private static class ChildrenList extends LinkedList<Map<String,Object>> {
+        private static final long serialVersionUID = 0L;
+    }
+
+    private class HistoryQueryTask extends AsyncTask<Void, Void, Pair<GroupList,List<ChildrenList>>> {
         private static final long MS_PER_DAY = 86400000;
         private static final long MS_PER_WEEK = MS_PER_DAY * 7;
 
-        protected Pair<List,List> doInBackground(Void... arg0) {
-            Pair<List,List> result = null;
+        protected Pair<GroupList,List<ChildrenList>> doInBackground(Void... arg0) {
+            Pair<GroupList, List<ChildrenList>> result = null;
             ContentResolver resolver = mContext.getContentResolver();
             Cursor cursor = BrowserDB.getRecentHistory(resolver, MAX_RESULTS);
 
@@ -333,9 +341,9 @@ public class AwesomeBarTabs extends TabHost {
 
             // Split the list of urls into separate date range groups
             // and show it in an expandable list view.
-            List<List<Map<String,?>>> childrenLists = null;
-            List<Map<String,?>> children = null;
-            List<Map<String,?>> groups = null;
+            List<ChildrenList> childrenLists = null;
+            ChildrenList children = null;
+            GroupList groups = null;
             HistorySection section = null;
 
             // Move cursor before the first row in preparation
@@ -351,10 +359,10 @@ public class AwesomeBarTabs extends TabHost {
                 HistorySection itemSection = getSectionForTime(time, today);
 
                 if (groups == null)
-                    groups = new LinkedList<Map<String,?>>();
+                    groups = new GroupList();
 
                 if (childrenLists == null)
-                    childrenLists = new LinkedList<List<Map<String,?>>>();
+                    childrenLists = new LinkedList<ChildrenList>();
 
                 if (section != itemSection) {
                     if (section != null) {
@@ -363,7 +371,7 @@ public class AwesomeBarTabs extends TabHost {
                     }
 
                     section = itemSection;
-                    children = new LinkedList<Map<String,?>>();
+                    children = new ChildrenList();
                 }
 
                 children.add(createHistoryItem(cursor));
@@ -380,13 +388,13 @@ public class AwesomeBarTabs extends TabHost {
             cursor.close();
 
             if (groups != null && childrenLists != null) {
-                result = Pair.create((List) groups, (List) childrenLists);
+                result = Pair.<GroupList,List<ChildrenList>>create(groups, childrenLists);
             }
 
             return result;
         }
 
-        public Map<String,?> createHistoryItem(Cursor cursor) {
+        public Map<String,Object> createHistoryItem(Cursor cursor) {
             Map<String,Object> historyItem = new HashMap<String,Object>();
 
             String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
@@ -407,7 +415,7 @@ public class AwesomeBarTabs extends TabHost {
             return historyItem;
         }
 
-        public Map<String,?> createGroupItem(HistorySection section) {
+        public Map<String,String> createGroupItem(HistorySection section) {
             Map<String,String> groupItem = new HashMap<String,String>();
 
             groupItem.put(URLColumns.TITLE, getSectionName(section));
@@ -458,8 +466,7 @@ public class AwesomeBarTabs extends TabHost {
             return HistorySection.OLDER;
         }
 
-        @SuppressWarnings("unchecked")
-        protected void onPostExecute(Pair<List,List> result) {
+        protected void onPostExecute(Pair<GroupList,List<ChildrenList>> result) {
             // FIXME: display some sort of message when there's no history
             if (result == null)
                 return;
