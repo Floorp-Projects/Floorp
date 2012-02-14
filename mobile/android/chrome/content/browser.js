@@ -1574,6 +1574,10 @@ Tab.prototype = {
     this._viewport.height = gScreenHeight = aViewport.height;
     dump("### gScreenWidth = " + gScreenWidth + "\n");
 
+    let zoom = aViewport.zoom;
+    let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+
     if ((aViewport.offsetX != this._viewport.offsetX) ||
         (excessX != this.viewportExcess.x)) {
       this._viewport.offsetX = aViewport.offsetX;
@@ -1584,12 +1588,15 @@ Tab.prototype = {
       this._viewport.offsetY = aViewport.offsetY;
       this.viewportExcess.y = excessY;
     }
-    if (Math.abs(aViewport.zoom - this._viewport.zoom) >= 1e-6) {
-      this._viewport.zoom = aViewport.zoom;
-      let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-      cwu.setResolution(this._viewport.zoom, this._viewport.zoom);
+    if (Math.abs(zoom - this._viewport.zoom) >= 1e-6) {
+      this._viewport.zoom = zoom;
+      cwu.setResolution(zoom, zoom);
     }
+
+    cwu.setDisplayPortForElement(-kBufferAmount / zoom, -kBufferAmount / zoom,
+                                 (gScreenWidth + kBufferAmount * 2) / zoom,
+                                 (gScreenHeight + kBufferAmount * 2) / zoom,
+                                 this.browser.contentDocument.documentElement);
   },
 
   screenshot: function(aSrc, aDst) {
@@ -1733,14 +1740,6 @@ Tab.prototype = {
         // back/forward navigation - see bug 719875)
         if (this._pluginCount && !this._pluginOverlayShowing)
           PluginHelper.showDoorHanger(this);
-
-        // FIXME: This should not be in DOMContentLoaded; it should happen earlier.
-        let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                            .getInterface(Ci.nsIDOMWindowUtils);
-        cwu.setDisplayPortForElement(-kBufferAmount, -kBufferAmount,
-                                     gScreenWidth + kBufferAmount * 2,
-                                     gScreenHeight + kBufferAmount * 2,
-                                     this.browser.contentDocument.documentElement);
 
         break;
       }
