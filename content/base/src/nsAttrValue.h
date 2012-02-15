@@ -73,6 +73,7 @@ class SVGLengthList;
 class SVGNumberList;
 class SVGPathData;
 class SVGPointList;
+class SVGTransformList;
 }
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
@@ -146,7 +147,8 @@ public:
     ,eSVGPathData   =  0x20
     ,eSVGPointList  =  0x21
     ,eSVGPreserveAspectRatio = 0x22
-    ,eSVGViewBox =     0x23
+    ,eSVGTransformList = 0x23
+    ,eSVGViewBox =     0x24
   };
 
   ValueType Type() const;
@@ -172,6 +174,8 @@ public:
   void SetTo(const mozilla::SVGPathData& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGPointList& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGTransformList& aValue,
              const nsAString* aSerialized);
   void SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized);
 
@@ -414,6 +418,7 @@ private:
       const mozilla::SVGPathData* mSVGPathData;
       const mozilla::SVGPointList* mSVGPointList;
       const mozilla::SVGAnimatedPreserveAspectRatio* mSVGPreserveAspectRatio;
+      const mozilla::SVGTransformList* mSVGTransformList;
       const nsSVGViewBox* mSVGViewBox;
     };
   };

@@ -61,6 +61,7 @@
 #include "SVGNumberList.h"
 #include "SVGPathData.h"
 #include "SVGPointList.h"
+#include "SVGTransformList.h"
 
 namespace css = mozilla::css;
 
@@ -319,6 +320,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mSVGPreserveAspectRatio = otherCont->mSVGPreserveAspectRatio;
       break;
     }
+    case eSVGTransformList:
+    {
+      cont->mSVGTransformList = otherCont->mSVGTransformList;
+      break;
+    }
     case eSVGViewBox:
     {
       cont->mSVGViewBox = otherCont->mSVGViewBox;
@@ -534,6 +540,20 @@ nsAttrValue::SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
 }
 
 void
+nsAttrValue::SetTo(const mozilla::SVGTransformList& aValue,
+                   const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGTransformList = &aValue;
+    cont->mType = eSVGTransformList;
+    if (aSerialized && aSerialized->Length()) {
+      SetMiscAtomOrString(aSerialized);
+    }
+  }
+}
+
+void
 nsAttrValue::SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized)
 {
   if (EnsureEmptyMiscContainer()) {
@@ -684,6 +704,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eSVGPreserveAspectRatio:
     {
       GetMiscContainer()->mSVGPreserveAspectRatio->GetBaseValueString(aResult);
+      break;
+    }
+    case eSVGTransformList:
+    {
+      GetMiscContainer()->mSVGTransformList->GetValueAsString(aResult);
       break;
     }
     case eSVGViewBox:
@@ -911,6 +936,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mSVGPreserveAspectRatio);
     }
+    case eSVGTransformList:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGTransformList);
+    }
     case eSVGViewBox:
     {
       return NS_PTR_TO_INT32(cont->mSVGViewBox);
@@ -1043,6 +1072,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     {
       return thisCont->mSVGPreserveAspectRatio ==
         otherCont->mSVGPreserveAspectRatio;
+    }
+    case eSVGTransformList:
+    {
+      return thisCont->mSVGTransformList == otherCont->mSVGTransformList;
     }
     case eSVGViewBox:
     {

@@ -580,6 +580,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = transformList->SetBaseValueString(aValue);
           if (NS_FAILED(rv)) {
             transformList->ClearBaseValue();
+          } else {
+            aResult.SetTo(transformList->GetBaseValue(), &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
         }
@@ -787,8 +790,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     if (GetTransformListAttrName() == aName) {
       SVGAnimatedTransformList *transformList = GetAnimatedTransformList();
       if (transformList) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         transformList->ClearBaseValue();
-        DidChangeTransformList(false);
         return;
       }
     }
@@ -2253,22 +2256,22 @@ nsSVGElement::DidAnimatePreserveAspectRatio()
   }
 }
 
-void
-nsSVGElement::DidChangeTransformList(bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangeTransformList()
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(GetTransformListAttrName());
+}
 
-  SVGAnimatedTransformList* transformList = GetAnimatedTransformList();
-  NS_ABORT_IF_FALSE(transformList,
-                    "DidChangeTransformList on element with no transform list");
+void
+nsSVGElement::DidChangeTransformList(const nsAttrValue& aEmptyOrOldValue)
+{
+  NS_ABORT_IF_FALSE(GetTransformListAttrName(),
+                    "Changing non-existent transform list?");
 
-  nsAutoString serializedValue;
-  transformList->GetBaseValue().GetValueAsString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(GetAnimatedTransformList()->GetBaseValue(), nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, GetTransformListAttrName(), nsnull,
-                attrValue, true);
+  DidChangeValue(GetTransformListAttrName(), aEmptyOrOldValue, newValue);
 }
 
 void
