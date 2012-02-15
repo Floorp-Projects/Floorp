@@ -167,6 +167,7 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 EXPORTS =  			\
+	nsSVGAngle.h               \
 	nsSVGElement.h             \
 	nsSVGFeatures.h            \
 	nsSVGIntegerPair.h         \
