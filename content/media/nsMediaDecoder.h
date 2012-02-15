@@ -48,8 +48,8 @@
 #include "nsITimer.h"
 #include "ImageLayers.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/Mutex.h"
 #include "nsIMemoryReporter.h"
+#include "VideoFrameContainer.h"
 
 class nsHTMLMediaElement;
 class nsMediaStream;
@@ -67,17 +67,17 @@ static const PRUint32 FRAMEBUFFER_LENGTH_MIN = 512;
 static const PRUint32 FRAMEBUFFER_LENGTH_MAX = 16384;
 
 // All methods of nsMediaDecoder must be called from the main thread only
-// with the exception of GetImageContainer, SetVideoData and GetStatistics,
+// with the exception of GetVideoFrameContainer and GetStatistics,
 // which can be called from any thread.
 class nsMediaDecoder : public nsIObserver
 {
 public:
+  typedef mozilla::ReentrantMonitor ReentrantMonitor;
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
-  typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef mozilla::layers::Image Image;
-  typedef mozilla::ReentrantMonitor ReentrantMonitor;
-  typedef mozilla::Mutex Mutex;
+  typedef mozilla::layers::ImageContainer ImageContainer;
 
   nsMediaDecoder();
   virtual ~nsMediaDecoder();
@@ -273,11 +273,6 @@ public:
     PRUint32& mDecoded;
   };
 
-  // Time in seconds by which the last painted video frame was late by.
-  // E.g. if the last painted frame should have been painted at time t,
-  // but was actually painted at t+n, this returns n in seconds. Threadsafe.
-  double GetFrameDelay();
-
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
@@ -306,7 +301,12 @@ public:
   virtual void SetEndTime(double aTime) = 0;
 
   // Invalidate the frame.
-  virtual void Invalidate();
+  void Invalidate()
+  {
+    if (mVideoFrameContainer) {
+      mVideoFrameContainer->Invalidate();
+    }
+  }
 
   // Fire progress events if needed according to the time and byte
   // constraints outlined in the specification. aTimer is true
@@ -375,18 +375,6 @@ public:
   // their nsMediaStream.
   virtual void MoveLoadsToBackground()=0;
 
-  // Gets the image container for the media element. Will return null if
-  // the element is not a video element. This can be called from any
-  // thread; ImageContainers can be used from any thread.
-  ImageContainer* GetImageContainer() { return mImageContainer; }
-
-  // Set the video width, height, pixel aspect ratio, current image and
-  // target paint time of the next video frame to be displayed.
-  // Ownership of the image is transferred to the layers subsystem.
-  void SetVideoData(const gfxIntSize& aSize,
-                    Image* aImage,
-                    TimeStamp aTarget);
-
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) = 0;
@@ -399,6 +387,12 @@ public:
   // queued decoded video and audio data.
   virtual PRInt64 VideoQueueMemoryInUse() = 0;
   virtual PRInt64 AudioQueueMemoryInUse() = 0;
+
+  VideoFrameContainer* GetVideoFrameContainer() { return mVideoFrameContainer; }
+  ImageContainer* GetImageContainer()
+  {
+    return mVideoFrameContainer ? mVideoFrameContainer->GetImageContainer() : nsnull;
+  }
 
 protected:
 
@@ -422,22 +416,10 @@ protected:
   // The decoder does not add a reference the element.
   nsHTMLMediaElement* mElement;
 
-  PRInt32 mRGBWidth;
-  PRInt32 mRGBHeight;
-
   // Counters related to decode and presentation of frames.
   FrameStatistics mFrameStats;
 
-  // The time at which the current video frame should have been painted.
-  // Access protected by mVideoUpdateLock.
-  TimeStamp mPaintTarget;
-
-  // The delay between the last video frame being presented and it being
-  // painted. This is time elapsed after mPaintTarget until the most recently
-  // painted frame appeared on screen. Access protected by mVideoUpdateLock.
-  TimeDuration mPaintDelay;
-
-  nsRefPtr<ImageContainer> mImageContainer;
+  nsRefPtr<VideoFrameContainer> mVideoFrameContainer;
 
   // Time that the last progress event was fired. Read/Write from the
   // main thread only.
@@ -450,37 +432,12 @@ protected:
   // more data is received. Read/Write from the main thread only.
   TimeStamp mDataTime;
 
-  // Lock around the video RGB, width and size data. This
-  // is used in the decoder backend threads and the main thread
-  // to ensure that repainting the video does not use these
-  // values while they are out of sync (width changed but
-  // not height yet, etc).
-  // Backends that are updating the height, width or writing
-  // to the RGB buffer must obtain this lock first to ensure that
-  // the video element does not use video data or sizes that are
-  // in the midst of being changed.
-  Mutex mVideoUpdateLock;
-
   // The framebuffer size to use for audioavailable events.
   PRUint32 mFrameBufferLength;
 
   // True when our media stream has been pinned. We pin the stream
   // while seeking.
   bool mPinnedForSeek;
-
-  // Set to true when the video width, height or pixel aspect ratio is
-  // changed by SetVideoData().  The next call to Invalidate() will recalculate
-  // and update the intrinsic size on the element, request a frame reflow and
-  // then reset this flag.
-  bool mSizeChanged;
-
-  // Set to true in SetVideoData() if the new image has a different size
-  // than the current image.  The image size is also affected by transforms
-  // so this can be true even if mSizeChanged is false, for example when
-  // zooming.  The next call to Invalidate() will call nsIFrame::Invalidate
-  // when this flag is set, rather than just InvalidateLayer, and then reset
-  // this flag.
-  bool mImageContainerSizeChanged;
 
   // True if the decoder is being shutdown. At this point all events that
   // are currently queued need to return immediately to prevent javascript

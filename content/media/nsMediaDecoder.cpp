@@ -72,13 +72,8 @@ static const PRInt64 CAN_PLAY_THROUGH_MARGIN = 10;
 
 nsMediaDecoder::nsMediaDecoder() :
   mElement(nsnull),
-  mRGBWidth(-1),
-  mRGBHeight(-1),
-  mVideoUpdateLock("nsMediaDecoder.mVideoUpdateLock"),
   mFrameBufferLength(0),
   mPinnedForSeek(false),
-  mSizeChanged(false),
-  mImageContainerSizeChanged(false),
   mShuttingDown(false)
 {
   MOZ_COUNT_CTOR(nsMediaDecoder);
@@ -94,6 +89,7 @@ nsMediaDecoder::~nsMediaDecoder()
 bool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
 {
   mElement = aElement;
+  mVideoFrameContainer = aElement->GetVideoFrameContainer();
   return true;
 }
 
@@ -116,47 +112,6 @@ nsresult nsMediaDecoder::RequestFrameBufferLength(PRUint32 aLength)
 
   mFrameBufferLength = aLength;
   return NS_OK;
-}
-
-void nsMediaDecoder::Invalidate()
-{
-  if (!mElement)
-    return;
-
-  nsIFrame* frame = mElement->GetPrimaryFrame();
-  bool invalidateFrame = false;
-
-  {
-    MutexAutoLock lock(mVideoUpdateLock);
-
-    // Get mImageContainerSizeChanged while holding the lock.
-    invalidateFrame = mImageContainerSizeChanged;
-    mImageContainerSizeChanged = false;
-
-    if (mSizeChanged) {
-      mElement->UpdateMediaSize(nsIntSize(mRGBWidth, mRGBHeight));
-      mSizeChanged = false;
-
-      if (frame) {
-        nsPresContext* presContext = frame->PresContext();
-        nsIPresShell *presShell = presContext->PresShell();
-        presShell->FrameNeedsReflow(frame,
-                                    nsIPresShell::eStyleChange,
-                                    NS_FRAME_IS_DIRTY);
-      }
-    }
-  }
-
-  if (frame) {
-    nsRect contentRect = frame->GetContentRect() - frame->GetPosition();
-    if (invalidateFrame) {
-      frame->Invalidate(contentRect);
-    } else {
-      frame->InvalidateLayer(contentRect, nsDisplayItem::TYPE_VIDEO);
-    }
-  }
-
-  nsSVGEffects::InvalidateDirectRenderingObservers(mElement);
 }
 
 static void ProgressCallback(nsITimer* aTimer, void* aClosure)
@@ -222,41 +177,6 @@ void nsMediaDecoder::FireTimeUpdate()
   if (!mElement)
     return;
   mElement->FireTimeUpdate(true);
-}
-
-void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
-                                  Image* aImage,
-                                  TimeStamp aTarget)
-{
-  MutexAutoLock lock(mVideoUpdateLock);
-
-  if (mRGBWidth != aSize.width || mRGBHeight != aSize.height) {
-    mRGBWidth = aSize.width;
-    mRGBHeight = aSize.height;
-    mSizeChanged = true;
-  }
-  if (mImageContainer && aImage) {
-    gfxIntSize oldFrameSize = mImageContainer->GetCurrentSize();
-
-    TimeStamp paintTime = mImageContainer->GetPaintTime();
-    if (!paintTime.IsNull() && !mPaintTarget.IsNull()) {
-      mPaintDelay = paintTime - mPaintTarget;
-    }
-
-    mImageContainer->SetCurrentImage(aImage);
-    gfxIntSize newFrameSize = mImageContainer->GetCurrentSize();
-    if (oldFrameSize != newFrameSize) {
-      mImageContainerSizeChanged = true;
-    }
-  }
-
-  mPaintTarget = aTarget;
-}
-
-double nsMediaDecoder::GetFrameDelay()
-{
-  MutexAutoLock lock(mVideoUpdateLock);
-  return mPaintDelay.ToSeconds();
 }
 
 void nsMediaDecoder::PinForSeek()

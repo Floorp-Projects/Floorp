@@ -514,7 +514,6 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // The new size must be between 512 and 16384.
   virtual nsresult RequestFrameBufferLength(PRUint32 aLength);
 
- public:
   // Return the current state. Can be called on any thread. If called from
   // a non-main thread, the decoder monitor must be held.
   PlayState GetState() {
@@ -618,7 +617,6 @@ class nsBuiltinDecoder : public nsMediaDecoder
    // element. Called on the main thread.
    virtual void NotifyAudioAvailableListener();
 
-public:
   // Notifies the element that decoding has failed.
   void DecodeError();
 

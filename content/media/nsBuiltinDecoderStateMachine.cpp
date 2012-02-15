@@ -1908,9 +1908,9 @@ void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData,
     return;
   }
 
-  nsRefPtr<Image> image = aData->mImage;
-  if (image) {
-    mDecoder->SetVideoData(aData->mDisplay, image, aTarget);
+  VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
+  if (container) {
+    container->SetCurrentFrame(aData->mDisplay, aData->mImage, aTarget);
   }
 }
 
