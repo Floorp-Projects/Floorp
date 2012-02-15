@@ -66,7 +66,7 @@ public:
 
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement);
-  void GetBaseValueString(nsAString& aValue);
+  void GetBaseValueString(nsAString& aValue) const;
 
   void SetBaseValue(PRInt32 aValue, PairIndex aIndex, nsSVGElement *aSVGElement);
   void SetBaseValues(PRInt32 aValue1, PRInt32 aValue2, nsSVGElement *aSVGElement);
