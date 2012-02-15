@@ -71,11 +71,11 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
   NS_ASSERTION(mDecoder->OnDecodeThread(),
                "Should be on decode thread.");
 
-  nsMediaStream* stream = mDecoder->GetStream();
-  NS_ASSERTION(stream, "Decoder has no media stream");
+  MediaResource* resource = mDecoder->GetResource();
+  NS_ASSERTION(resource, "Decoder has no media resource");
 
-  if (!ReadFromStream(stream, reinterpret_cast<PRUint8*>(&mMetadata),
-                      sizeof(mMetadata)))
+  if (!ReadFromResource(resource, reinterpret_cast<PRUint8*>(&mMetadata),
+                        sizeof(mMetadata)))
     return NS_ERROR_FAILURE;
 
   // Validate the header
@@ -128,7 +128,7 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
     (mMetadata.lumaChannelBpp + mMetadata.chromaChannelBpp) / 8.0 +
     sizeof(nsRawPacketHeader);
 
-  PRInt64 length = stream->GetLength();
+  PRInt64 length = resource->GetLength();
   if (length != -1) {
     mozilla::ReentrantMonitorAutoEnter autoMonitor(mDecoder->GetReentrantMonitor());
     mDecoder->GetStateMachine()->SetDuration(USECS_PER_S *
@@ -150,14 +150,14 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
 
 // Helper method that either reads until it gets aLength bytes 
 // or returns false
-bool nsRawReader::ReadFromStream(nsMediaStream *aStream, PRUint8* aBuf,
+bool nsRawReader::ReadFromResource(MediaResource *aResource, PRUint8* aBuf,
                                    PRUint32 aLength)
 {
   while (aLength > 0) {
     PRUint32 bytesRead = 0;
     nsresult rv;
 
-    rv = aStream->Read(reinterpret_cast<char*>(aBuf), aLength, &bytesRead);
+    rv = aResource->Read(reinterpret_cast<char*>(aBuf), aLength, &bytesRead);
     NS_ENSURE_SUCCESS(rv, false);
 
     if (bytesRead == 0) {
@@ -189,21 +189,21 @@ bool nsRawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   PRUint32 length = mFrameSize - sizeof(nsRawPacketHeader);
 
   nsAutoArrayPtr<PRUint8> buffer(new PRUint8[length]);
-  nsMediaStream* stream = mDecoder->GetStream();
-  NS_ASSERTION(stream, "Decoder has no media stream");
+  MediaResource* resource = mDecoder->GetResource();
+  NS_ASSERTION(resource, "Decoder has no media resource");
 
   // We're always decoding one frame when called
   while(true) {
     nsRawPacketHeader header;
 
     // Read in a packet header and validate
-    if (!(ReadFromStream(stream, reinterpret_cast<PRUint8*>(&header),
-                         sizeof(header))) ||
+    if (!(ReadFromResource(resource, reinterpret_cast<PRUint8*>(&header),
+                           sizeof(header))) ||
         !(header.packetID == 0xFF && header.codecID == RAW_ID /* "YUV" */)) {
       return false;
     }
 
-    if (!ReadFromStream(stream, buffer, length)) {
+    if (!ReadFromResource(resource, buffer, length)) {
       return false;
     }
 
@@ -259,8 +259,8 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
   NS_ASSERTION(mDecoder->OnDecodeThread(),
                "Should be on decode thread.");
 
-  nsMediaStream *stream = mDecoder->GetStream();
-  NS_ASSERTION(stream, "Decoder has no media stream");
+  MediaResource *resource = mDecoder->GetResource();
+  NS_ASSERTION(resource, "Decoder has no media resource");
 
   PRUint32 frame = mCurrentFrame;
   if (aTime >= UINT_MAX)
@@ -273,7 +273,7 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
 
   offset += sizeof(nsRawVideoHeader);
 
-  nsresult rv = stream->Seek(nsISeekableStream::NS_SEEK_SET, offset);
+  nsresult rv = resource->Seek(nsISeekableStream::NS_SEEK_SET, offset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mVideoQueue.Erase();

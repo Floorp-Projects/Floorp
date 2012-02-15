@@ -146,7 +146,7 @@ nsStyledElementNotElementCSSInlineStyle::UnsetAttr(PRInt32 aNameSpaceID,
 nsresult
 nsStyledElementNotElementCSSInlineStyle::AfterSetAttr(PRInt32 aNamespaceID,
                                                       nsIAtom* aAttribute,
-                                                      const nsAString* aValue,
+                                                      const nsAttrValue* aValue,
                                                       bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None && !aValue &&
@@ -167,7 +167,7 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aSty
 {
   SetMayHaveStyle();
   bool modification = false;
-  nsAutoString oldValueStr;
+  nsAttrValue oldValue;
 
   bool hasListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,
@@ -182,8 +182,12 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aSty
     // save the old attribute so we can set up the mutation event properly
     // XXXbz if the old rule points to the same declaration as the new one,
     // this is getting the new attr value, not the old one....
+    nsAutoString oldValueStr;
     modification = GetAttr(kNameSpaceID_None, nsGkAtoms::style,
                            oldValueStr);
+    if (modification) {
+      oldValue.SetTo(oldValueStr);
+    }
   }
   else if (aNotify && IsInDoc()) {
     modification = !!mAttrsAndChildren.GetAttr(nsGkAtoms::style);
@@ -197,8 +201,8 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aSty
     static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
 
   return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull,
-                          oldValueStr, attrValue, modType, hasListeners,
-                          aNotify, nsnull);
+                          oldValue, attrValue, modType, hasListeners,
+                          aNotify, kDontCallAfterSetAttr);
 }
 
 css::StyleRule*

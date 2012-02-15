@@ -141,7 +141,7 @@ JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
     mjit::JaegerCompartment *jc = cx->new_<mjit::JaegerCompartment>();
     if (!jc)
         return false;
-    if (!jc->Initialize()) {
+    if (!jc->Initialize(cx)) {
         cx->delete_(jc);
         return false;
     }
@@ -417,7 +417,7 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
     JS_ASSERT(trc->runtime->gcCurrentCompartment);
 
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront())
-        MarkRoot(trc, e.front().key, "cross-compartment wrapper");
+        MarkValueRoot(trc, e.front().key, "cross-compartment wrapper");
 }
 
 void
@@ -432,7 +432,7 @@ JSCompartment::markTypes(JSTracer *trc)
 
     for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        MarkRoot(trc, script, "mark_types_script");
+        MarkScriptRoot(trc, script, "mark_types_script");
     }
 
     for (size_t thingKind = FINALIZE_OBJECT0;
@@ -441,12 +441,12 @@ JSCompartment::markTypes(JSTracer *trc)
         for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
             JSObject *object = i.get<JSObject>();
             if (object->hasSingletonType())
-                MarkRoot(trc, object, "mark_types_singleton");
+                MarkObjectRoot(trc, object, "mark_types_singleton");
         }
     }
 
     for (CellIterUnderGC i(this, FINALIZE_TYPE_OBJECT); !i.done(); i.next())
-        MarkRoot(trc, i.get<types::TypeObject>(), "mark_types_scan");
+        MarkTypeObjectRoot(trc, i.get<types::TypeObject>(), "mark_types_scan");
 }
 
 void

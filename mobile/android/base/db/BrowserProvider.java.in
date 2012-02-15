@@ -99,6 +99,7 @@ public class BrowserProvider extends ContentProvider {
     static final int BOOKMARKS = 100;
     static final int BOOKMARKS_ID = 101;
     static final int BOOKMARKS_FOLDER_ID = 102;
+    static final int BOOKMARKS_PARENT = 103;
 
     // History matches
     static final int HISTORY = 200;
@@ -146,6 +147,7 @@ public class BrowserProvider extends ContentProvider {
         // Bookmarks
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks", BOOKMARKS);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/#", BOOKMARKS_ID);
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/parents", BOOKMARKS_PARENT);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/folder/#", BOOKMARKS_FOLDER_ID);
 
         map = BOOKMARKS_PROJECTION_MAP;
@@ -576,6 +578,9 @@ public class BrowserProvider extends ContentProvider {
         } else {
             deleted = deleteInTransaction(uri, selection, selectionArgs);
         }
+        
+        if (deleted > 0)
+            getContext().getContentResolver().notifyChange(uri, null);
 
         return deleted;
     }
@@ -658,6 +663,9 @@ public class BrowserProvider extends ContentProvider {
         } else {
             result = insertInTransaction(uri, values);
         }
+
+        if (result != null)
+            getContext().getContentResolver().notifyChange(uri, null);
 
         return result;
     }
@@ -782,6 +790,9 @@ public class BrowserProvider extends ContentProvider {
             updated = updateInTransaction(uri, values, selection, selectionArgs);
         }
 
+        if (updated > 0)
+            getContext().getContentResolver().notifyChange(uri, null);
+
         return updated;
     }
 
@@ -794,6 +805,12 @@ public class BrowserProvider extends ContentProvider {
         int updated = 0;
 
         switch (match) {
+            case BOOKMARKS_PARENT: {
+                debug("Update on BOOKMARKS_PARENT: " + uri);
+                updated = updateBookmarkParents(uri, values, selection, selectionArgs);
+                break;
+            }
+
             case BOOKMARKS_ID:
                 debug("Update on BOOKMARKS_ID: " + uri);
 
@@ -1001,6 +1018,19 @@ public class BrowserProvider extends ContentProvider {
         return count;
     }
 
+    /**
+     * Construct an update expression that will modify the parents of any records
+     * that match.
+     */
+    int updateBookmarkParents(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        trace("Updating bookmark parents of " + selection + " (" + selectionArgs[0] + ")");
+        String where = Bookmarks._ID + " IN (" +
+                       " SELECT DISTINCT " + Bookmarks.PARENT +
+                       " FROM " + TABLE_BOOKMARKS +
+                       " WHERE " + selection + " )";
+        return getWritableDatabase(uri).update(TABLE_BOOKMARKS, values, where, selectionArgs);
+    }
+
     int updateBookmarks(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         trace("Updating bookmarks on URI: " + uri);
@@ -1019,7 +1049,8 @@ public class BrowserProvider extends ContentProvider {
                 selection, selectionArgs, null, null, null);
 
         try {
-            values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
+            if (!values.containsKey(Bookmarks.DATE_MODIFIED))
+                values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
 
             boolean updatingUrl = values.containsKey(Bookmarks.URL);
             String url = null;

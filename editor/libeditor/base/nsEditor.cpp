@@ -3151,7 +3151,7 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   
   *aResultNode = nsnull;
 
-  // if aParentNode is a text node, use it's location instead
+  // if aParentNode is a text node, use its location instead
   if (IsTextNode(aParentNode))
   {
     nsCOMPtr<nsIDOMNode> parent;
@@ -4407,7 +4407,7 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSele
       {
         nsCOMPtr<nsIDOMNode> newSiblingNode;
         result = SplitNode(selectedNode, offsetOfSelectedNode, getter_AddRefs(newSiblingNode));
-        // now get the node's offset in it's parent, and insert the new tag there
+        // now get the node's offset in its parent, and insert the new tag there
         if (NS_SUCCEEDED(result)) {
           result = GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
         }
@@ -4774,7 +4774,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
     nsCOMPtr<nsIDOMNode> priorNode;
     result = GetPriorNode(node, true, address_of(priorNode));
     if ((NS_SUCCEEDED(result)) && priorNode)
-    { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
+    { // there is a priorNode, so delete its last child (if text content, delete the last char.)
       // if it has no children, delete it
       nsCOMPtr<nsIDOMCharacterData> priorNodeAsText = do_QueryInterface(priorNode);
       if (priorNodeAsText)
@@ -4841,7 +4841,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         }
       }
       else
-      { // nextNode is not text, so tell it's parent to delete it
+      { // nextNode is not text, so tell its parent to delete it
         nsRefPtr<DeleteElementTxn> txn;
         result = CreateTxnForDeleteElement(nextNode, getter_AddRefs(txn));
         if (NS_SUCCEEDED(result)) {

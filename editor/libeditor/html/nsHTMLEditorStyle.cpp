@@ -481,7 +481,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
     }
     else
     {
-      // ok, chuck it in it's very own container
+      // ok, chuck it in its very own container
       res = InsertContainerAbove(aNode, address_of(tmp), tag, aAttribute, aValue);
     }
     NS_ENSURE_SUCCESS(res, res);

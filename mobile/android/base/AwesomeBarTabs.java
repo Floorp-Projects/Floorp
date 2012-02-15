@@ -40,6 +40,7 @@ package org.mozilla.gecko;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.graphics.Bitmap;
@@ -71,6 +72,7 @@ import android.widget.TextView;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -99,6 +101,8 @@ public class AwesomeBarTabs extends TabHost {
     private OnUrlOpenListener mUrlOpenListener;
     private View.OnTouchListener mListTouchListener;
     private JSONArray mSearchEngines;
+    private ContentResolver mContentResolver;
+    private ContentObserver mContentObserver;
 
     private AwesomeBarCursorAdapter mAllPagesCursorAdapter;
     private BookmarksListAdapter mBookmarksAdapter;
@@ -209,14 +213,13 @@ public class AwesomeBarTabs extends TabHost {
 
         @Override
         protected Cursor doInBackground(String... params) {
-            ContentResolver resolver = mContext.getContentResolver();
             String guid = params[0];
             if (guid != null && guid.equals(Bookmarks.MOBILE_FOLDER_GUID))
-                return BrowserDB.getMobileBookmarks(resolver);
+                return BrowserDB.getMobileBookmarks(mContentResolver);
 
             // If we don't have the mobile bookmarks folder, we must have
             // the desktop bookmarks folder
-            return BrowserDB.getDesktopBookmarks(resolver);
+            return BrowserDB.getDesktopBookmarks(mContentResolver);
         }
 
         @Override
@@ -244,18 +247,6 @@ public class AwesomeBarTabs extends TabHost {
                                                     Bookmarks.URL,
                                                     Bookmarks.TITLE,
                                                     Bookmarks.FAVICON });
-        }
-    }
-
-    // The group cursor doesn't ever need to change because it just holds the
-    // mobile/desktop folders, but we do need to update the children cursors.
-    public void refreshBookmarks() {
-        Cursor groupCursor = mBookmarksAdapter.getCursor();
-        groupCursor.moveToPosition(-1);
-        while (groupCursor.moveToNext()) {
-            String guid = groupCursor.getString(groupCursor.getColumnIndexOrThrow(Bookmarks.GUID));
-            // We need to do this in a AsyncTask because we're on the main thread
-            new RefreshChildrenCursorTask(groupCursor.getPosition()).execute(guid);
         }
     }
 
@@ -291,6 +282,32 @@ public class AwesomeBarTabs extends TabHost {
                 new int[] { R.id.title, R.id.url, R.id.favicon }
             );
 
+            try {
+                // use reflection to disable auto-requery
+                Class cls = Class.forName("android.widget.CursorTreeAdapter"); 
+                Field field = cls.getDeclaredField("mAutoRequery");
+                field.setAccessible(true);
+                field.set(mBookmarksAdapter, false);
+
+                // register an asynchronous custom observer to replace the synchronous auto-requery
+                mContentObserver = new ContentObserver(GeckoAppShell.getHandler()) {
+                    public void onChange(boolean selfChange) {
+                        // The group cursor doesn't ever need to change because it just holds the
+                        // mobile/desktop folders, but we do need to update the children cursors.
+                        Cursor groupCursor = mBookmarksAdapter.getCursor();
+                        groupCursor.moveToPosition(-1);
+                        while (groupCursor.moveToNext()) {
+                            String guid = groupCursor.getString(groupCursor.getColumnIndexOrThrow(Bookmarks.GUID));
+                            // We need to do this in a AsyncTask because we're on the main thread
+                            new RefreshChildrenCursorTask(groupCursor.getPosition()).execute(guid);
+                        }
+                    }
+                };
+                BrowserDB.registerBookmarkObserver(mContentResolver, mContentObserver);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "could not disable auto-requery for BookmarksListAdapter");
+            }
+
             mBookmarksAdapter.setViewBinder(new AwesomeCursorViewBinder());
 
             final ExpandableListView bookmarksList = (ExpandableListView) findViewById(R.id.bookmarks_list);
@@ -315,14 +332,21 @@ public class AwesomeBarTabs extends TabHost {
         }
     }
 
-    private class HistoryQueryTask extends AsyncTask<Void, Void, Pair<List,List>> {
+    private static class GroupList extends LinkedList<Map<String,String>> {
+        private static final long serialVersionUID = 0L;
+    }
+
+    private static class ChildrenList extends LinkedList<Map<String,Object>> {
+        private static final long serialVersionUID = 0L;
+    }
+
+    private class HistoryQueryTask extends AsyncTask<Void, Void, Pair<GroupList,List<ChildrenList>>> {
         private static final long MS_PER_DAY = 86400000;
         private static final long MS_PER_WEEK = MS_PER_DAY * 7;
 
-        protected Pair<List,List> doInBackground(Void... arg0) {
-            Pair<List,List> result = null;
-            ContentResolver resolver = mContext.getContentResolver();
-            Cursor cursor = BrowserDB.getRecentHistory(resolver, MAX_RESULTS);
+        protected Pair<GroupList,List<ChildrenList>> doInBackground(Void... arg0) {
+            Pair<GroupList, List<ChildrenList>> result = null;
+            Cursor cursor = BrowserDB.getRecentHistory(mContentResolver, MAX_RESULTS);
 
             Date now = new Date();
             now.setHours(0);
@@ -333,9 +357,9 @@ public class AwesomeBarTabs extends TabHost {
 
             // Split the list of urls into separate date range groups
             // and show it in an expandable list view.
-            List<List<Map<String,?>>> childrenLists = null;
-            List<Map<String,?>> children = null;
-            List<Map<String,?>> groups = null;
+            List<ChildrenList> childrenLists = null;
+            ChildrenList children = null;
+            GroupList groups = null;
             HistorySection section = null;
 
             // Move cursor before the first row in preparation
@@ -351,10 +375,10 @@ public class AwesomeBarTabs extends TabHost {
                 HistorySection itemSection = getSectionForTime(time, today);
 
                 if (groups == null)
-                    groups = new LinkedList<Map<String,?>>();
+                    groups = new GroupList();
 
                 if (childrenLists == null)
-                    childrenLists = new LinkedList<List<Map<String,?>>>();
+                    childrenLists = new LinkedList<ChildrenList>();
 
                 if (section != itemSection) {
                     if (section != null) {
@@ -363,7 +387,7 @@ public class AwesomeBarTabs extends TabHost {
                     }
 
                     section = itemSection;
-                    children = new LinkedList<Map<String,?>>();
+                    children = new ChildrenList();
                 }
 
                 children.add(createHistoryItem(cursor));
@@ -380,13 +404,13 @@ public class AwesomeBarTabs extends TabHost {
             cursor.close();
 
             if (groups != null && childrenLists != null) {
-                result = Pair.create((List) groups, (List) childrenLists);
+                result = Pair.<GroupList,List<ChildrenList>>create(groups, childrenLists);
             }
 
             return result;
         }
 
-        public Map<String,?> createHistoryItem(Cursor cursor) {
+        public Map<String,Object> createHistoryItem(Cursor cursor) {
             Map<String,Object> historyItem = new HashMap<String,Object>();
 
             String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
@@ -407,7 +431,7 @@ public class AwesomeBarTabs extends TabHost {
             return historyItem;
         }
 
-        public Map<String,?> createGroupItem(HistorySection section) {
+        public Map<String,String> createGroupItem(HistorySection section) {
             Map<String,String> groupItem = new HashMap<String,String>();
 
             groupItem.put(URLColumns.TITLE, getSectionName(section));
@@ -458,8 +482,7 @@ public class AwesomeBarTabs extends TabHost {
             return HistorySection.OLDER;
         }
 
-        @SuppressWarnings("unchecked")
-        protected void onPostExecute(Pair<List,List> result) {
+        protected void onPostExecute(Pair<GroupList,List<ChildrenList>> result) {
             // FIXME: display some sort of message when there's no history
             if (result == null)
                 return;
@@ -611,6 +634,8 @@ public class AwesomeBarTabs extends TabHost {
         mContext = context;
         mInflated = false;
         mSearchEngines = new JSONArray();
+        mContentResolver = context.getContentResolver();
+        mContentObserver = null;
     }
 
     @Override
@@ -712,10 +737,9 @@ public class AwesomeBarTabs extends TabHost {
 
         mAllPagesCursorAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
-                ContentResolver resolver = mContext.getContentResolver();
                 long start = SystemClock.uptimeMillis();
 
-                Cursor c = BrowserDB.filter(resolver, constraint, MAX_RESULTS);
+                Cursor c = BrowserDB.filter(mContentResolver, constraint, MAX_RESULTS);
                 c.getCount(); // ensure the query runs at least once
 
                 long end = SystemClock.uptimeMillis();
@@ -821,6 +845,9 @@ public class AwesomeBarTabs extends TabHost {
             if (bookmarksCursor != null)
                 bookmarksCursor.close();
         }
+
+        if (mContentObserver != null)
+            BrowserDB.unregisterBookmarkObserver(mContentResolver, mContentObserver);
     }
 
     public void filter(String searchTerm) {

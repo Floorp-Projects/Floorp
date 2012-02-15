@@ -64,8 +64,6 @@ const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_DSS_SWITCHPENDING          = "extensions.dss.switchPending";
 const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
-const PREF_EM_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
-const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.";
@@ -123,17 +121,7 @@ const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
-const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
-
 const DB_SCHEMA                       = 12;
-
-#ifdef MOZ_COMPATIBILITY_NIGHTLY
-const PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE +
-                                    ".nightly";
-#else
-const PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE + "." +
-                                    Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
-#endif
 
 // Properties that exist in the install manifest
 const PROP_METADATA      = ["id", "version", "type", "internalName", "updateURL",
@@ -536,13 +524,13 @@ function isUsableAddon(aAddon) {
   if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
     return false;
 
-  if (XPIProvider.checkUpdateSecurity && !aAddon.providesUpdatesSecurely)
+  if (AddonManager.checkUpdateSecurity && !aAddon.providesUpdatesSecurely)
     return false;
 
   if (!aAddon.isPlatformCompatible)
     return false;
 
-  if (XPIProvider.checkCompatibility) {
+  if (AddonManager.checkCompatibility) {
     if (!aAddon.isCompatible)
       return false;
   }
@@ -1181,7 +1169,7 @@ function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion)
   uri = uri.replace(/%ITEM_MAXAPPVERSION%/g, maxVersion);
 
   let compatMode = "normal";
-  if (!XPIProvider.checkCompatibility)
+  if (!AddonManager.checkCompatibility)
     compatMode = "ignore";
   else if (AddonManager.strictCompatibility)
     compatMode = "strict";
@@ -1477,10 +1465,6 @@ var XPIProvider = {
   // will be the same as currentSkin when it is the skin to be used when the
   // application is restarted
   selectedSkin: null,
-  // The value of the checkCompatibility preference
-  checkCompatibility: true,
-  // The value of the checkUpdateSecurity preference
-  checkUpdateSecurity: true,
   // The value of the minCompatibleAppVersion preference
   minCompatibleAppVersion: null,
   // The value of the minCompatiblePlatformVersion preference
@@ -1606,18 +1590,12 @@ var XPIProvider = {
     this.selectedSkin = this.currentSkin;
     this.applyThemeChange();
 
-    this.checkCompatibility = Prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY,
-                                                true)
-    this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
-                                                 true)
     this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
                                                      null);
     this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
                                                           null);
     this.enabledAddons = [];
 
-    Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this, false);
-    Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
     Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
     Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
 
@@ -1660,7 +1638,7 @@ var XPIProvider = {
       } catch (e) { }
       try {
         Services.appinfo.annotateCrashReport("EMCheckCompatibility",
-                                             this.checkCompatibility);
+                                             AddonManager.checkCompatibility);
       } catch (e) { }
       this.addAddonsToCrashReporter();
     }
@@ -1698,9 +1676,6 @@ var XPIProvider = {
    */
   shutdown: function XPI_shutdown() {
     LOG("shutdown");
-
-    Services.prefs.removeObserver(PREF_EM_CHECK_COMPATIBILITY, this);
-    Services.prefs.removeObserver(PREF_EM_CHECK_UPDATE_SECURITY, this);
 
     this.bootstrappedAddons = {};
     this.bootstrapScopes = {};
@@ -3411,14 +3386,8 @@ var XPIProvider = {
    */
   observe: function XPI_observe(aSubject, aTopic, aData) {
     switch (aData) {
-    case PREF_EM_CHECK_COMPATIBILITY:
-    case PREF_EM_CHECK_UPDATE_SECURITY:
     case PREF_EM_MIN_COMPAT_APP_VERSION:
     case PREF_EM_MIN_COMPAT_PLATFORM_VERSION:
-      this.checkCompatibility = Prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY,
-                                                  true);
-      this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
-                                                   true);
       this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
                                                        null);
       this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
@@ -3782,12 +3751,22 @@ var XPIProvider = {
     let wasDisabled = isAddonDisabled(aAddon);
     let isDisabled = aUserDisabled || aSoftDisabled || appDisabled;
 
+    // If appDisabled changes but the result of isAddonDisabled() doesn't,
+    // no onDisabling/onEnabling is sent - so send a onPropertyChanged.
+    let appDisabledChanged = aAddon.appDisabled != appDisabled;
+
     // Update the properties in the database
     XPIDatabase.setAddonProperties(aAddon, {
       userDisabled: aUserDisabled,
       appDisabled: appDisabled,
       softDisabled: aSoftDisabled
     });
+
+    if (appDisabledChanged) {
+      AddonManagerPrivate.callAddonListeners("onPropertyChanged",
+                                            aAddon,
+                                            ["appDisabled"]);
+    }
 
     // If the add-on is not visible or the add-on is not changing state then
     // there is no need to do anything else
@@ -6997,7 +6976,7 @@ UpdateChecker.prototype = {
 
     let ignoreMaxVersion = false;
     let ignoreStrictCompat = false;
-    if (!XPIProvider.checkCompatibility) {
+    if (!AddonManager.checkCompatibility) {
       ignoreMaxVersion = true;
       ignoreStrictCompat = true;
     } else if (this.addon.type == "extension" &&

@@ -45,7 +45,7 @@
 #include "nsNetUtil.h"
 #include "prio.h"
 #include "nsThreadUtils.h"
-#include "nsMediaStream.h"
+#include "MediaResource.h"
 #include "nsMathUtils.h"
 #include "prlog.h"
 #include "nsIPrivateBrowsingService.h"
@@ -1908,7 +1908,7 @@ nsMediaCacheStream::IsSeekable()
 }
 
 bool
-nsMediaCacheStream::AreAllStreamsForResourceSuspended(nsMediaStream** aActiveStream)
+nsMediaCacheStream::AreAllStreamsForResourceSuspended(MediaResource** aActiveStream)
 {
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   nsMediaCache::ResourceStreamIterator iter(mResourceID);
@@ -1918,7 +1918,7 @@ nsMediaCacheStream::AreAllStreamsForResourceSuspended(nsMediaStream** aActiveStr
         *aActiveStream = stream->mClient;
       }
       return false;
-	}
+    }
   }
   if (aActiveStream) {
     *aActiveStream = nsnull;
@@ -2362,7 +2362,7 @@ nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
   return NS_OK;
 }
 
-nsresult nsMediaCacheStream::GetCachedRanges(nsTArray<nsByteRange>& aRanges)
+nsresult nsMediaCacheStream::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
 {
   // Take the monitor, so that the cached data ranges can't grow while we're
   // trying to loop over them.
@@ -2377,7 +2377,7 @@ nsresult nsMediaCacheStream::GetCachedRanges(nsTArray<nsByteRange>& aRanges)
     PRInt64 endOffset = GetCachedDataEnd(startOffset);
     NS_ASSERTION(startOffset < endOffset, "Buffered range must end after its start");
     // Bytes [startOffset..endOffset] are cached.
-    aRanges.AppendElement(nsByteRange(startOffset, endOffset));
+    aRanges.AppendElement(MediaByteRange(startOffset, endOffset));
     startOffset = GetNextCachedData(endOffset);
     NS_ASSERTION(startOffset == -1 || startOffset > endOffset,
       "Must have advanced to start of next range, or hit end of stream");

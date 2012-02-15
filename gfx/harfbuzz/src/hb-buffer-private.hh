@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 1998-2004  David Turner and Werner Lemberg
- * Copyright (C) 2004,2007,2009,2010  Red Hat, Inc.
+ * Copyright © 1998-2004  David Turner and Werner Lemberg
+ * Copyright © 2004,2007,2009,2010  Red Hat, Inc.
+ * Copyright © 2011  Google, Inc.
  *
- * This is part of HarfBuzz, a text shaping library.
+ *  This is part of HarfBuzz, a text shaping library.
  *
  * Permission is hereby granted, without written agreement and without
  * license or royalty fees, to use, copy, modify, and distribute this
@@ -23,16 +24,17 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Red Hat Author(s): Owen Taylor, Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod
  */
 
 #ifndef HB_BUFFER_PRIVATE_HH
 #define HB_BUFFER_PRIVATE_HH
 
-#include "hb-private.h"
+#include "hb-private.hh"
 #include "hb-buffer.h"
-#include "hb-unicode-private.h"
+#include "hb-object-private.hh"
+#include "hb-unicode-private.hh"
 
-HB_BEGIN_DECLS
 
 
 ASSERT_STATIC (sizeof (hb_glyph_info_t) == 20);
@@ -45,44 +47,8 @@ typedef struct _hb_segment_properties_t {
 } hb_segment_properties_t;
 
 
-HB_INTERNAL void
-_hb_buffer_swap (hb_buffer_t *buffer);
-
-HB_INTERNAL void
-_hb_buffer_clear_output (hb_buffer_t *buffer);
-
-HB_INTERNAL void
-_hb_buffer_replace_glyphs_be16 (hb_buffer_t *buffer,
-				unsigned int num_in,
-				unsigned int num_out,
-				const uint16_t *glyph_data_be);
-
-HB_INTERNAL void
-_hb_buffer_replace_glyph (hb_buffer_t *buffer,
-			  hb_codepoint_t glyph_index);
-
-HB_INTERNAL void
-_hb_buffer_next_glyph (hb_buffer_t *buffer);
-
-
-HB_INTERNAL void
-_hb_buffer_reset_masks (hb_buffer_t *buffer,
-			hb_mask_t    mask);
-
-HB_INTERNAL void
-_hb_buffer_add_masks (hb_buffer_t *buffer,
-		      hb_mask_t    mask);
-
-HB_INTERNAL void
-_hb_buffer_set_masks (hb_buffer_t *buffer,
-		      hb_mask_t    value,
-		      hb_mask_t    mask,
-		      unsigned int cluster_start,
-		      unsigned int cluster_end);
-
-
 struct _hb_buffer_t {
-  hb_reference_count_t ref_count;
+  hb_object_header_t header;
 
   /* Information about how the text in the buffer should be treated */
 
@@ -91,57 +57,100 @@ struct _hb_buffer_t {
 
   /* Buffer contents */
 
-  unsigned int allocated; /* Length of allocated arrays */
+  bool in_error; /* Allocation failed */
+  bool have_output; /* Whether we have an output buffer going on */
+  bool have_positions; /* Whether we have positions */
 
-  hb_bool_t have_output; /* Whether we have an output buffer going on */
-  hb_bool_t have_positions; /* Whether we have positions */
-  hb_bool_t in_error; /* Allocation failed */
-
-  unsigned int i; /* Cursor into ->info and ->pos arrays */
+  unsigned int idx; /* Cursor into ->info and ->pos arrays */
   unsigned int len; /* Length of ->info and ->pos arrays */
   unsigned int out_len; /* Length of ->out array if have_output */
 
+  unsigned int allocated; /* Length of allocated arrays */
   hb_glyph_info_t     *info;
   hb_glyph_info_t     *out_info;
   hb_glyph_position_t *pos;
 
-  /* Other stuff */
-
   unsigned int serial;
+  uint8_t allocated_var_bytes[8];
+  const char *allocated_var_owner[8];
 
 
   /* Methods */
+
+  HB_INTERNAL void reset (void);
+
   inline unsigned int backtrack_len (void) const
-  { return this->have_output? this->out_len : this->i; }
+  { return have_output? out_len : idx; }
   inline unsigned int next_serial (void) { return serial++; }
-  inline void swap (void) { _hb_buffer_swap (this); }
-  inline void clear_output (void) { _hb_buffer_clear_output (this); }
-  inline void next_glyph (void) { _hb_buffer_next_glyph (this); }
-  inline void replace_glyphs_be16 (unsigned int num_in,
+
+  HB_INTERNAL void allocate_var (unsigned int byte_i, unsigned int count, const char *owner);
+  HB_INTERNAL void deallocate_var (unsigned int byte_i, unsigned int count, const char *owner);
+  HB_INTERNAL void deallocate_var_all (void);
+
+  HB_INTERNAL void add (hb_codepoint_t  codepoint,
+			hb_mask_t       mask,
+			unsigned int    cluster);
+
+  HB_INTERNAL void reverse_range (unsigned int start, unsigned int end);
+  HB_INTERNAL void reverse (void);
+  HB_INTERNAL void reverse_clusters (void);
+  HB_INTERNAL void guess_properties (void);
+
+  HB_INTERNAL void swap_buffers (void);
+  HB_INTERNAL void clear_output (void);
+  HB_INTERNAL void clear_positions (void);
+  HB_INTERNAL void replace_glyphs_be16 (unsigned int num_in,
+					unsigned int num_out,
+					const uint16_t *glyph_data_be);
+  HB_INTERNAL void replace_glyphs (unsigned int num_in,
 				   unsigned int num_out,
-				   const uint16_t *glyph_data_be)
-  { _hb_buffer_replace_glyphs_be16 (this, num_in, num_out, glyph_data_be); }
-  inline void replace_glyph (hb_codepoint_t glyph_index)
-  { _hb_buffer_replace_glyph (this, glyph_index); }
+				   const uint16_t *glyph_data);
+  HB_INTERNAL void replace_glyph (hb_codepoint_t glyph_index);
+  /* Makes a copy of the glyph at idx to output and replace glyph_index */
+  HB_INTERNAL void output_glyph (hb_codepoint_t glyph_index);
+  /* Copies glyph at idx to output but doesn't advance idx */
+  HB_INTERNAL void copy_glyph (void);
+  /* Copies glyph at idx to output and advance idx.
+   * If there's no output, just advance idx. */
+  HB_INTERNAL void next_glyph (void);
+  /* Advance idx without copying to output. */
+  inline void skip_glyph (void) { idx++; }
 
   inline void reset_masks (hb_mask_t mask)
   {
-    for (unsigned int i = 0; i < len; i++)
-      info[i].mask = mask;
+    for (unsigned int j = 0; j < len; j++)
+      info[j].mask = mask;
   }
   inline void add_masks (hb_mask_t mask)
   {
-    for (unsigned int i = 0; i < len; i++)
-      info[i].mask |= mask;
+    for (unsigned int j = 0; j < len; j++)
+      info[j].mask |= mask;
   }
-  inline void set_masks (hb_mask_t value,
-			 hb_mask_t mask,
-			 unsigned int cluster_start,
-			 unsigned int cluster_end)
-  { _hb_buffer_set_masks (this, value, mask, cluster_start, cluster_end); }
+  HB_INTERNAL void set_masks (hb_mask_t value,
+			      hb_mask_t mask,
+			      unsigned int cluster_start,
+			      unsigned int cluster_end);
+
+  /* Internal methods */
+  HB_INTERNAL bool enlarge (unsigned int size);
+
+  inline bool ensure (unsigned int size)
+  { return likely (size <= allocated) ? TRUE : enlarge (size); }
+
+  HB_INTERNAL bool make_room_for (unsigned int num_in, unsigned int num_out);
+
+  HB_INTERNAL void *get_scratch_buffer (unsigned int *size);
 };
 
 
-HB_END_DECLS
+#define HB_BUFFER_XALLOCATE_VAR(b, func, var, owner) \
+  b->func (offsetof (hb_glyph_info_t, var) - offsetof(hb_glyph_info_t, var1), \
+	   sizeof (b->info[0].var), owner)
+#define HB_BUFFER_ALLOCATE_VAR(b, var) \
+	HB_BUFFER_XALLOCATE_VAR (b, allocate_var, var (), #var)
+#define HB_BUFFER_DEALLOCATE_VAR(b, var) \
+	HB_BUFFER_XALLOCATE_VAR (b, deallocate_var, var (), #var)
+
+
 
 #endif /* HB_BUFFER_PRIVATE_HH */

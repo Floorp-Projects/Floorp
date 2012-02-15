@@ -1579,7 +1579,8 @@ nsDocument::~nsDocument()
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIDocument*>(this));
 #endif
 
-  NS_ASSERTION(!mIsShowing, "Destroying a currently-showing document");
+  NS_ASSERTION(!mIsShowing, "Deleting a currently-showing document");
+  NS_ASSERTION(IsOrphan(), "Deleted document not an orphan?");
 
   mInDestructor = true;
   mInUnlinkOrDeletion = true;
