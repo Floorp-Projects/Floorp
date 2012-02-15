@@ -41,6 +41,7 @@ import java.io.ByteArrayOutputStream;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.database.sqlite.SQLiteConstraintException;
@@ -339,6 +340,21 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
             removeBookmarkPost11(cr, uri);
         else
             removeBookmarkPre11(cr, uri);
+    }
+
+    public void registerBookmarkObserverPre11(ContentResolver cr, ContentObserver observer) {
+        cr.registerContentObserver(Browser.BOOKMARKS_URI, false, observer);
+    }
+
+    public void registerBookmarkObserverPost11(ContentResolver cr, ContentObserver observer) {
+        cr.registerContentObserver(BOOKMARKS_CONTENT_URI_POST_11, false, observer);
+    }
+
+    public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
+        if (Build.VERSION.SDK_INT >= 11)
+            registerBookmarkObserverPost11(cr, observer);
+        else
+            registerBookmarkObserverPre11(cr, observer);
     }
 
     public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
