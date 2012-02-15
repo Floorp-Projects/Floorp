@@ -42,7 +42,7 @@
 #include "nsIConstraintValidation.h"
 
 
-class nsDOMValidityState : public nsIDOMValidityState
+class nsDOMValidityState MOZ_FINAL : public nsIDOMValidityState
 {
 public:
   NS_DECL_ISUPPORTS
