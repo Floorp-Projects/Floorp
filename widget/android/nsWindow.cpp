@@ -218,6 +218,9 @@ nsWindow::~nsWindow()
         mRootAccessible = nsnull;
 #endif
     ALOG("nsWindow %p destructor", (void*)this);
+
+    AndroidBridge::Bridge()->SetCompositorParent(NULL, NULL);
+
 }
 
 bool
@@ -1152,7 +1155,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
             }
 
             case LayerManager::LAYERS_OPENGL: {
-                __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Basic layers drawing");
+                __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### OGL layers drawing");
 
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
                     SetClippingRegion(nsIntRegion(boundsRect));
