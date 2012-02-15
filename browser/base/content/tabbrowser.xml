@@ -3981,24 +3981,18 @@
 
     <implementation implements="nsIDOMEventListener">
       <constructor><![CDATA[
-        window.addEventListener("findbaropen", this, false);
         window.addEventListener("resize", this, false);
       ]]></constructor>
 
       <destructor><![CDATA[
-        window.removeEventListener("findbaropen", this, false);
         window.removeEventListener("resize", this, false);
         MousePosTracker.removeListener(this);
       ]]></destructor>
 
       <property name="label">
         <setter><![CDATA[
-          if (!this.label) {
-            if (window.gFindBarInitialized && !window.gFindBar.hidden)
-              this.setAttribute("mirror", "true");
-            else
-              this.removeAttribute("mirror");
-          }
+          if (!this.label)
+            this.removeAttribute("mirror");
 
           this.style.minWidth = this.getAttribute("type") == "status" &&
                                 this.getAttribute("previoustype") == "status"
@@ -4046,10 +4040,6 @@
             return;
 
           switch (event.type) {
-            case "findbaropen":
-              this.setAttribute("mirror", "true");
-              this._calcMouseTargetRect();
-              break;
             case "resize":
               this._calcMouseTargetRect();
               break;
@@ -4059,7 +4049,7 @@
 
       <method name="_calcMouseTargetRect">
         <body><![CDATA[
-          let alignRight = (window.gFindBarInitialized && !window.gFindBar.hidden);
+          let alignRight = false;
 
           if (getComputedStyle(document.documentElement).direction == "rtl")
             alighRight = !alignRight;
