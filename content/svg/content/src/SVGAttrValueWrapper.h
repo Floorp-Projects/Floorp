@@ -57,6 +57,7 @@ class SVGNumberList;
 class SVGPathData;
 class SVGPointList;
 class SVGAnimatedPreserveAspectRatio;
+class SVGStringList;
 class SVGTransformList;
 }
 
@@ -81,6 +82,8 @@ public:
   static void ToString(
     const mozilla::SVGAnimatedPreserveAspectRatio* aPreserveAspectRatio,
     nsAString& aResult);
+  static void ToString(const mozilla::SVGStringList* aStringList,
+                       nsAString& aResult);
   static void ToString(const mozilla::SVGTransformList* aTransformList,
                        nsAString& aResult);
   static void ToString(const nsSVGViewBox* aViewBox, nsAString& aResult);
