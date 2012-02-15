@@ -174,7 +174,7 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetParentStyleContextFrame();
+  virtual nsIFrame* GetParentStyleContextFrame() const;
 
   /**
    * @return the out-of-flow for aFrame if aFrame is a placeholder; otherwise
