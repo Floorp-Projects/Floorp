@@ -174,7 +174,7 @@ public:
   nsAttrValue WillChangeLengthList(PRUint8 aAttrEnum);
 
   void DidChangeLength(PRUint8 aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
-  virtual void DidChangeNumber(PRUint8 aAttrEnum, bool aDoSetAttr);
+  void DidChangeNumber(PRUint8 aAttrEnum);
   virtual void DidChangeNumberPair(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeIntegerPair(PRUint8 aAttrEnum, bool aDoSetAttr);

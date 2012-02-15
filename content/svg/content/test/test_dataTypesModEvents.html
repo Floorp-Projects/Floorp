@@ -64,6 +64,19 @@ function runTests()
   marker.markerWidth.baseVal.newValueSpecifiedUnits(
     SVGLength.SVG_LENGTHTYPE_NUMBER, 8);
 
+  // number attribute
+
+  eventChecker.watchAttr(convolve, "divisor");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("divisor", "12.5");
+  convolve.divisor.baseVal = 6;
+  convolve.removeAttribute("divisor");
+  convolve.divisor.baseVal = 8;
+
+  eventChecker.expect("");
+  convolve.divisor.baseVal = 8;
+  convolve.setAttribute("divisor", "8");
+
   // enum attribute
 
   eventChecker.watchAttr(convolve, "edgeMode");

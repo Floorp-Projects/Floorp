@@ -72,6 +72,11 @@ function runTests()
   is(convolve.divisor.animVal, 7.5, "number animVal");
   is(convolve.getAttribute("divisor"), "7.5", "number attribute");
 
+  convolve.setAttribute("divisor", "");
+  ok(convolve.getAttribute("divisor") === "", "empty number attribute");
+  convolve.removeAttribute("divisor");
+  ok(convolve.getAttribute("divisor") === null, "removed number attribute");
+
   // number-optional-number attribute
 
   blur.setAttribute("stdDeviation", "20.5");

@@ -326,6 +326,17 @@ nsAttrValue::SetTo(PRInt16 aInt)
 }
 
 void
+nsAttrValue::SetTo(double aValue, const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mDoubleValue = aValue;
+    cont->mType = eDoubleValue;
+    SetMiscAtomOrString(aSerialized);
+  }
+}
+
+void
 nsAttrValue::SetTo(css::StyleRule* aValue, const nsAString* aSerialized)
 {
   if (EnsureEmptyMiscContainer()) {
