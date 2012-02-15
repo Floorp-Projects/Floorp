@@ -817,7 +817,7 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   nsCOMPtr<nsISupports> isupports;
   if (bCollapsed)
   {
-    // if it is, we want to look at 'parent' and it's ancestors
+    // if it is, we want to look at 'parent' and its ancestors
     // for divs with alignment on them
     nodeToExamine = parent;
   }
@@ -1109,7 +1109,7 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
     else if (IsBlockNode(curNode))
     {
       // this is a div or some other non-format block.
-      // we should ignore it.  It's children were appended to this list
+      // we should ignore it.  Its children were appended to this list
       // by AppendInnerFormatNodes() call above.  We will get needed
       // info when we examine them instead.
       continue;
@@ -2595,7 +2595,7 @@ nsHTMLEditRules::GetGoodSelPointForNode(nsIDOMNode *aNode, nsIEditor::EDirection
 *    to the left element.  If the elements are the same type and not nested within each other, 
 *    JoinNodesSmart is called (example, joining two list items together into one).  If the elements
 *    are not the same type, or one is a descendant of the other, we instead destroy the right block
-*    placing it's children into leftblock.  DTD containment rules are followed throughout.
+*    placing its children into leftblock.  DTD containment rules are followed throughout.
 *         nsCOMPtr<nsIDOMNode> *aLeftBlock         pointer to the left block
 *         nsCOMPtr<nsIDOMNode> *aRightBlock        pointer to the right block; will have contents moved to left block
 *         bool *aCanceled                        return TRUE if we had to cancel operation
@@ -2845,7 +2845,7 @@ nsHTMLEditRules::MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *
   }
   else
   {
-    // if it can't, move it's children, and then delete it.
+    // if it can't, move its children, and then delete it.
     res = MoveContents(aSource, aDest, aOffset);
     NS_ENSURE_SUCCESS(res, res);
     res = mHTMLEditor->DeleteNode(aSource);
@@ -4872,7 +4872,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignTyp
   }
   else if ((firstChild==lastChild) && nsHTMLEditUtils::IsDiv(firstChild))
   {
-    // the cell already has a div containing all of it's content: just
+    // the cell already has a div containing all of its content: just
     // act on this div.
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(firstChild);
     if (useCSS) {
@@ -5223,7 +5223,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
   aSelection->Collapse(selStartNode, selStartOffset);
   
   // expand selection endpoint only if we didnt pass a br,
-  // or if we really needed to pass that br (ie, it's block is now 
+  // or if we really needed to pass that br (ie, its block is now 
   // totally selected)
   bool doEndExpansion = true;
   if (firstBRParent)
@@ -6969,7 +6969,7 @@ nsHTMLEditRules::MakeBlockquote(nsCOMArray<nsIDOMNode>& arrayOfNodes)
   PRInt32 i;
   for (i=0; i<listCount; i++)
   {
-    // get the node to act on, and it's location
+    // get the node to act on, and its location
     curNode = arrayOfNodes[i];
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     NS_ENSURE_SUCCESS(res, res);
@@ -7045,7 +7045,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
   PRInt32 i;
   for (i=0; i<listCount; i++)
   {
-    // get the node to act on, and it's location
+    // get the node to act on, and its location
     curNode = arrayOfNodes[i];
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     NS_ENSURE_SUCCESS(res, res);
@@ -7177,7 +7177,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
   PRInt32 i;
   for (i=0; i<listCount; i++)
   {
-    // get the node to act on, and it's location
+    // get the node to act on, and its location
     curNode = arrayOfNodes[i];
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     NS_ENSURE_SUCCESS(res, res);
@@ -7980,11 +7980,11 @@ nsHTMLEditRules::RemoveEmptyNodes()
   // Since checking to see if a node is empty can be costly for nodes with many
   // descendants, there are some optimizations made.  I rely on the fact that the
   // iterator is post-order: it will visit children of a node before visiting the 
-  // parent node.  So if I find that a child node is not empty, I know that it's
+  // parent node.  So if I find that a child node is not empty, I know that its
   // parent is not empty without even checking.  So I put the parent on a "skipList"
   // which is just a voidArray of nodes I can skip the empty check on.  If I 
   // encounter a node on the skiplist, i skip the processing for that node and replace
-  // it's slot in the skiplist with that node's parent.
+  // its slot in the skiplist with that node's parent.
   // An interseting idea is to go ahead and regard parent nodes that are NOT on the
   // skiplist as being empty (without even doing the IsEmptyNode check) on the theory
   // that if they weren't empty, we would have encountered a non-empty child earlier
@@ -8017,7 +8017,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
     if (idx != skipList.NoIndex)
     {
       // this node is on our skip list.  Skip processing for this node, 
-      // and replace it's value in the skip list with the value of it's parent
+      // and replace its value in the skip list with the value of its parent
       skipList[idx] = parent;
     }
     else
@@ -8401,7 +8401,7 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
   // first make sure aRange is in the document.  It might not be if
   // portions of our editting action involved manipulating nodes
   // prior to placing them in the document (e.g., populating a list item
-  // before placing it in it's list)
+  // before placing it in its list)
   nsCOMPtr<nsIDOMNode> startNode;
   res = aRange->GetStartContainer(getter_AddRefs(startNode));
   NS_ENSURE_SUCCESS(res, res);

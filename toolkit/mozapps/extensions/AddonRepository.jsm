@@ -63,23 +63,6 @@ const PREF_GETADDONS_GETRECOMMENDED      = "extensions.getAddons.recommended.url
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
-const PREF_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
-
-const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
-
-XPCOMUtils.defineLazyGetter(this, "PREF_CHECK_COMPATIBILITY", function () {
-#ifdef MOZ_COMPATIBILITY_NIGHTLY
-  return PREF_CHECK_COMPATIBILITY_BASE + ".nightly";
-#else
-  return PREF_CHECK_COMPATIBILITY_BASE + "." +
-         Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
-#endif
-});
-
-const PREF_EM_STRICT_COMPATIBILITY       = "extensions.strictCompatibility";
-// Note: This has to be kept in sync with the same constant in AddonManager.jsm
-const STRICT_COMPATIBILITY_DEFAULT       = true;
-
 const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const API_VERSION = "1.5";
@@ -905,19 +888,10 @@ var AddonRepository = {
    *         The callback to pass results to
    */
   searchAddons: function(aSearchTerms, aMaxResults, aCallback) {
-    let checkCompatibility = true;
-    try {
-      checkCompatibility = Services.prefs.getBoolPref(PREF_CHECK_COMPATIBILITY);
-    } catch(e) { }
-    let strictCompatibility = STRICT_COMPATIBILITY_DEFAULT;
-    try {
-      strictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY);
-    } catch(e) { }
-
     let compatMode = "normal";
-    if (!checkCompatibility)
+    if (!AddonManager.checkCompatibility)
       compatMode = "ignore";
-    else if (strictCompatibility)
+    else if (AddonManager.strictCompatibility)
       compatMode = "strict";
 
     let substitutions = {
@@ -1214,16 +1188,6 @@ var AddonRepository = {
     let self = this;
     let results = [];
 
-    let checkCompatibility = true;
-    try {
-      checkCompatibility = Services.prefs.getBoolPref(PREF_CHECK_COMPATIBILITY);
-    } catch(e) { }
-
-    let strictCompatibility = STRICT_COMPATIBILITY_DEFAULT;
-    try {
-      strictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY);
-    } catch (e) {}
-
     function isSameApplication(aAppNode) {
       return self._getTextContent(aAppNode) == Services.appinfo.ID;
     }
@@ -1248,13 +1212,13 @@ var AddonRepository = {
 
         let currentVersion = Services.appinfo.version;
         return (Services.vc.compare(minVersion, currentVersion) <= 0 &&
-                ((!strictCompatibility) ||
+                ((!AddonManager.strictCompatibility) ||
                  Services.vc.compare(currentVersion, maxVersion) <= 0));
       });
 
       // Ignore add-ons not compatible with this Application
       if (!compatible) {
-        if (checkCompatibility)
+        if (AddonManager.checkCompatibility)
           continue;
 
         if (!Array.some(applications, isSameApplication))

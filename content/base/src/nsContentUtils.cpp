@@ -362,6 +362,8 @@ nsContentUtils::Init()
     return NS_OK;
   }
 
+  nsINode::Init();
+
   nsresult rv = NS_GetNameSpaceManager(&sNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
 

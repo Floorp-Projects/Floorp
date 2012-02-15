@@ -94,20 +94,15 @@ SessionStore.prototype = {
     this._loadState = STATE_STOPPED;
 
     try {
-      if (this._sessionFileBackup.exists()) {
-        this._shouldRestore = true;
-        this._sessionFileBackup.remove(false);
-      }
-
       if (this._sessionFile.exists()) {
-        // Disable crash recovery if we have exceeded the timeout
+        // We move sessionstore.js -> sessionstore.bak on quit, so the
+        // existence of sessionstore.js indicates a crash
         this._lastSessionTime = this._sessionFile.lastModifiedTime;
         let delta = Date.now() - this._lastSessionTime;
         let timeout = Services.prefs.getIntPref("browser.sessionstore.resume_from_crash_timeout");
-        if (delta > (timeout * 60000))
-          this._shouldRestore = false;
-
-        this._sessionFile.copyTo(null, this._sessionFileBackup.leafName);
+        // Disable crash recovery if we have exceeded the timeout
+        this._shouldRestore = (delta <= (timeout * 60000));
+        this._sessionFile.clone().moveTo(null, this._sessionFileBackup.leafName);
       }
 
       if (!this._sessionCache.exists() || !this._sessionCache.isDirectory())
@@ -240,9 +235,11 @@ SessionStore.prototype = {
         // Freeze the data at what we've got (ignoring closing windows)
         this._loadState = STATE_QUITTING;
 
-        // No need for this back up, we are shutting down just fine
-        if (this._sessionFileBackup.exists())
-          this._sessionFileBackup.remove(false);
+        // Move this session to sessionstore.bak so that:
+        //   1) we can get "tabs from last time" from sessionstore.bak
+        //   2) if sessionstore.js exists on next start, we know we crashed
+        if (this._sessionFile.exists())
+          this._sessionFile.moveTo(null, this._sessionFileBackup.leafName);
 
         observerService.removeObserver(this, "domwindowopened");
         observerService.removeObserver(this, "domwindowclosed");
@@ -275,6 +272,8 @@ SessionStore.prototype = {
           // Save the purged state immediately
           this.saveStateNow();
         }
+
+        Services.obs.notifyObservers(null, "sessionstore-state-purge-complete", "");
         break;
       case "timer-callback":
         // Timer call back for delayed saving
