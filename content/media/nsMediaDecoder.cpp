@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMediaDecoder.h"
-#include "nsMediaStream.h"
+#include "MediaResource.h"
 
 #include "prlog.h"
 #include "prmem.h"
@@ -181,22 +181,22 @@ void nsMediaDecoder::FireTimeUpdate()
 
 void nsMediaDecoder::PinForSeek()
 {
-  nsMediaStream* stream = GetStream();
-  if (!stream || mPinnedForSeek) {
+  MediaResource* resource = GetResource();
+  if (!resource || mPinnedForSeek) {
     return;
   }
   mPinnedForSeek = true;
-  stream->Pin();
+  resource->Pin();
 }
 
 void nsMediaDecoder::UnpinForSeek()
 {
-  nsMediaStream* stream = GetStream();
-  if (!stream || !mPinnedForSeek) {
+  MediaResource* resource = GetResource();
+  if (!resource || !mPinnedForSeek) {
     return;
   }
   mPinnedForSeek = false;
-  stream->Unpin();
+  resource->Unpin();
 }
 
 bool nsMediaDecoder::CanPlayThrough()

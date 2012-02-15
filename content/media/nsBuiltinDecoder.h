@@ -225,7 +225,7 @@ destroying the nsBuiltinDecoder object.
 #include "prlog.h"
 #include "gfxContext.h"
 #include "gfxRect.h"
-#include "nsMediaStream.h"
+#include "MediaResource.h"
 #include "nsMediaDecoder.h"
 #include "nsHTMLMediaElement.h"
 #include "mozilla/ReentrantMonitor.h"
@@ -352,14 +352,11 @@ public:
 
 class nsBuiltinDecoder : public nsMediaDecoder
 {
-  // ISupports
+public:
+  typedef mozilla::MediaChannelStatistics MediaChannelStatistics;
+
   NS_DECL_ISUPPORTS
-
-  // nsIObserver
   NS_DECL_NSIOBSERVER
-
- public:
-  typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
   // Enumeration for the valid play states (see mPlayState)
   enum PlayState {
@@ -383,7 +380,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   
   virtual double GetCurrentTime();
 
-  virtual nsresult Load(nsMediaStream* aStream,
+  virtual nsresult Load(MediaResource* aResource,
                         nsIStreamListener** aListener,
                         nsMediaDecoder* aCloneDonor);
 
@@ -405,7 +402,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   virtual void SetInfinite(bool aInfinite);
   virtual bool IsInfinite();
 
-  virtual nsMediaStream* GetStream();
+  virtual MediaResource* GetResource() { return mResource; }
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   virtual void NotifySuspendedStatusChanged();
@@ -460,7 +457,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // main thread only.
   virtual void Resume(bool aForceBuffering);
 
-  // Tells our nsMediaStream to put all loads in the background.
+  // Tells our MediaResource to put all loads in the background.
   virtual void MoveLoadsToBackground();
 
   void AudioAvailable(float* aFrameBuffer, PRUint32 aFrameBufferLength, float aTime);
@@ -641,7 +638,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
-  nsChannelStatistics mPlaybackStatistics;
+  MediaChannelStatistics mPlaybackStatistics;
 
   // The current playback position of the media resource in units of
   // seconds. This is updated approximately at the framerate of the
@@ -680,8 +677,8 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // is safe to access it during this period.
   nsCOMPtr<nsDecoderStateMachine> mDecoderStateMachine;
 
-  // Stream of media data.
-  nsAutoPtr<nsMediaStream> mStream;
+  // Media data resource.
+  nsAutoPtr<MediaResource> mResource;
 
   // ReentrantMonitor for detecting when the video play state changes. A call
   // to Wait on this monitor will block the thread until the next
