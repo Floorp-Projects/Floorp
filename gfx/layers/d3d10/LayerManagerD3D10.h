@@ -291,6 +291,20 @@ public:
    */
   Nv3DVUtils *GetNv3DVUtils()  { return mD3DManager->GetNv3DVUtils(); }
 
+  /*
+   * Returns a shader resource view of a texture containing the contents of this
+   * layer. Will try to return an existing texture if possible, or a temporary
+   * one if not. It is the callee's responsibility to release the shader
+   * resource view. Will return null if a texture could not be constructed.
+   * The texture will not be transformed, i.e., it will be in the same coord
+   * space as this.
+   * Any layer that can be used as a mask layer should override this method.
+   * If aSize is non-null, it will contain the size of the texture.
+   */
+  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfxIntSize* aSize)
+  {
+    return nsnull;
+  }
 
   void SetEffectTransformAndOpacity()
   {
@@ -302,6 +316,14 @@ public:
   }
 
 protected:
+  /*
+   * Finds a texture for this layer's mask layer (if it has one) and sets it
+   * as an input to the shaders.
+   * Returns true if a texture is loaded, false if there was no mask layer, or
+   * a texture for the mask layer could not be loaded.
+   */
+  bool LoadMaskTexture();
+
   LayerManagerD3D10 *mD3DManager;
 };
 

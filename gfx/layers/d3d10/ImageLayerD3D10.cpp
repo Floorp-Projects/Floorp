@@ -115,6 +115,72 @@ ImageLayerD3D10::GetLayer()
   return this;
 }
 
+/**
+ * Returns a shader resource view for a Cairo or remote image.
+ * Returns nsnull if unsuccessful.
+ * If successful, aHasAlpha will be true iff the resulting texture 
+ * has an alpha component.
+ */
+ID3D10ShaderResourceView*
+ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha)
+{
+  NS_ASSERTION(aImage, "Null image.");
+
+  if (aImage->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
+    RemoteBitmapImage *remoteImage =
+      static_cast<RemoteBitmapImage*>(aImage);
+      
+    if (!aImage->GetBackendData(LayerManager::LAYERS_D3D10)) {
+      nsAutoPtr<TextureD3D10BackendData> dat = new TextureD3D10BackendData();
+      dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
+
+      if (dat->mTexture) {
+        device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
+        aImage->SetBackendData(LayerManager::LAYERS_D3D10, dat.forget());
+      }
+    }
+
+    aHasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
+  } else if (aImage->GetFormat() == Image::CAIRO_SURFACE) {
+    CairoImage *cairoImage =
+      static_cast<CairoImage*>(aImage);
+
+    if (!cairoImage->mSurface) {
+      return nsnull;
+    }
+
+    if (!aImage->GetBackendData(LayerManager::LAYERS_D3D10)) {
+      nsAutoPtr<TextureD3D10BackendData> dat = new TextureD3D10BackendData();
+      dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
+
+      if (dat->mTexture) {
+        device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
+        aImage->SetBackendData(LayerManager::LAYERS_D3D10, dat.forget());
+      }
+    }
+
+    aHasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+  } else {
+    NS_WARNING("Incorrect image type.");
+    return nsnull;
+  }
+
+  TextureD3D10BackendData *data =
+    static_cast<TextureD3D10BackendData*>(aImage->GetBackendData(LayerManager::LAYERS_D3D10));
+
+  if (!data) {
+    return nsnull;
+  }
+
+  nsRefPtr<ID3D10Device> dev;
+  data->mTexture->GetDevice(getter_AddRefs(dev));
+  if (dev != device()) {
+    return nsnull;
+  }
+
+  return data->mSRView;
+}
+
 void
 ImageLayerD3D10::RenderLayer()
 {
@@ -140,52 +206,8 @@ ImageLayerD3D10::RenderLayer()
   {
     bool hasAlpha = false;
 
-    if (image->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
-      RemoteBitmapImage *remoteImage =
-        static_cast<RemoteBitmapImage*>(image);
-      
-      if (!image->GetBackendData(LayerManager::LAYERS_D3D10)) {
-        nsAutoPtr<TextureD3D10BackendData> dat = new TextureD3D10BackendData();
-        dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
-
-        if (dat->mTexture) {
-          device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
-          image->SetBackendData(LayerManager::LAYERS_D3D10, dat.forget());
-        }
-      }
-
-      hasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
-    } else {
-      CairoImage *cairoImage =
-        static_cast<CairoImage*>(image);
-
-      if (!cairoImage->mSurface) {
-        return;
-      }
-
-      if (!image->GetBackendData(LayerManager::LAYERS_D3D10)) {
-        nsAutoPtr<TextureD3D10BackendData> dat = new TextureD3D10BackendData();
-        dat->mTexture = SurfaceToTexture(device(), cairoImage->mSurface, cairoImage->mSize);
-
-        if (dat->mTexture) {
-          device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
-          image->SetBackendData(LayerManager::LAYERS_D3D10, dat.forget());
-        }
-      }
-
-      hasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
-    }
-
-    TextureD3D10BackendData *data =
-      static_cast<TextureD3D10BackendData*>(image->GetBackendData(LayerManager::LAYERS_D3D10));
-
-    if (!data) {
-      return;
-    }
-
-    nsRefPtr<ID3D10Device> dev;
-    data->mTexture->GetDevice(getter_AddRefs(dev));
-    if (dev != device()) {
+    nsRefPtr<ID3D10ShaderResourceView> srView = GetImageSRView(image, hasAlpha);
+    if (!srView) {
       return;
     }
     
@@ -203,7 +225,7 @@ ImageLayerD3D10::RenderLayer()
       }
     }
 
-    effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(data->mSRView);
+    effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(srView);
 
     effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
       ShaderConstantRectD3D10(
@@ -356,6 +378,30 @@ void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
   device()->CreateShaderResourceView(backendData->mCrTexture, NULL, getter_AddRefs(backendData->mCrView));
 
   aImage->SetBackendData(LayerManager::LAYERS_D3D10, backendData.forget());
+}
+
+already_AddRefed<ID3D10ShaderResourceView>
+ImageLayerD3D10::GetAsTexture(gfxIntSize* aSize)
+{
+  if (!GetContainer()) {
+    return nsnull;
+  }
+
+  AutoLockImage autoLock(GetContainer());
+
+  Image *image = autoLock.GetImage();
+  if (!image) {
+    return nsnull;
+  }
+
+  if (image->GetFormat() != Image::CAIRO_SURFACE) {
+    return nsnull;
+  }
+  
+  *aSize = image->GetSize();
+  bool dontCare;
+  nsRefPtr<ID3D10ShaderResourceView> result = GetImageSRView(image, dontCare);
+  return result.forget();
 }
 
 } /* layers */
