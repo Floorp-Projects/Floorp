@@ -58,6 +58,7 @@ class nsIAtom;
 class nsIDocument;
 template<class E, class A> class nsTArray;
 struct nsTArrayDefaultAllocator;
+class nsSVGAngle;
 class nsSVGIntegerPair;
 class nsSVGLength2;
 class nsSVGNumberPair;
@@ -131,10 +132,11 @@ public:
     ,eAtomArray =      0x11
     ,eDoubleValue  =   0x12
     ,eIntMarginValue = 0x13
-    ,eSVGIntegerPair = 0x14
-    ,eSVGLength =      0x15
-    ,eSVGLengthList =  0x16
-    ,eSVGNumberPair =  0x17
+    ,eSVGAngle =       0x14
+    ,eSVGIntegerPair = 0x15
+    ,eSVGLength =      0x16
+    ,eSVGLengthList =  0x17
+    ,eSVGNumberPair =  0x18
   };
 
   ValueType Type() const;
@@ -149,6 +151,7 @@ public:
   void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
+  void SetTo(const nsSVGAngle& aValue, const nsAString* aSerialized);
   void SetTo(const nsSVGIntegerPair& aValue, const nsAString* aSerialized);
   void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGLengthList& aValue,
@@ -385,6 +388,7 @@ private:
       AtomArray* mAtomArray;
       double mDoubleValue;
       nsIntMargin* mIntMargin;
+      const nsSVGAngle* mSVGAngle;
       const nsSVGIntegerPair* mSVGIntegerPair;
       const nsSVGLength2* mSVGLength;
       const mozilla::SVGLengthList* mSVGLengthList;

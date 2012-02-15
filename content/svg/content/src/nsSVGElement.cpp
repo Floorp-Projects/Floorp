@@ -467,6 +467,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = angleInfo.mAngles[i].SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
             angleInfo.Reset(i);
+          } else {
+            aResult.SetTo(angleInfo.mAngles[i], &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -716,8 +719,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < angleInfo.mAngleCount; i++) {
       if (aName == *angleInfo.mAngleInfo[i].mName) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         angleInfo.Reset(i);
-        DidChangeAngle(i, false);
         return;
       }
     }
@@ -2032,25 +2035,26 @@ void nsSVGElement::AngleAttributesInfo::Reset(PRUint8 aAttrEnum)
                           mAngleInfo[aAttrEnum].mDefaultUnitType);
 }
 
-void
-nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangeAngle(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(*GetAngleInfo().mAngleInfo[aAttrEnum].mName);
+}
 
+void
+nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum,
+                             const nsAttrValue& aEmptyOrOldValue)
+{
   AngleAttributesInfo info = GetAngleInfo();
 
   NS_ASSERTION(info.mAngleCount > 0,
                "DidChangeAngle on element with no angle attribs");
-
   NS_ASSERTION(aAttrEnum < info.mAngleCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mAngles[aAttrEnum].GetBaseValueString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(info.mAngles[aAttrEnum], nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, *info.mAngleInfo[aAttrEnum].mName, nsnull,
-                attrValue, true);
+  DidChangeValue(*info.mAngleInfo[aAttrEnum].mName, aEmptyOrOldValue, newValue);
 }
 
 void

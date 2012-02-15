@@ -51,6 +51,7 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
+#include "nsSVGAngle.h"
 #include "nsSVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumberPair.h"
@@ -268,6 +269,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
         cont->mIntMargin = new nsIntMargin(*otherCont->mIntMargin);
       break;
     }
+    case eSVGAngle:
+    {
+      cont->mSVGAngle = otherCont->mSVGAngle;
+      break;
+    }
     case eSVGIntegerPair:
     {
       cont->mSVGIntegerPair = otherCont->mSVGIntegerPair;
@@ -386,6 +392,17 @@ nsAttrValue::SetToSerialized(const nsAttrValue& aOther)
     SetTo(val);
   } else {
     SetTo(aOther);
+  }
+}
+
+void
+nsAttrValue::SetTo(const nsSVGAngle& aValue, const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGAngle = &aValue;
+    cont->mType = eSVGAngle;
+    SetMiscAtomOrString(aSerialized);
   }
 }
 
@@ -529,6 +546,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     {
       aResult.Truncate();
       aResult.AppendFloat(GetDoubleValue());
+      break;
+    }
+    case eSVGAngle:
+    {
+      GetMiscContainer()->mSVGAngle->GetBaseValueString(aResult);
       break;
     }
     case eSVGIntegerPair:
@@ -735,6 +757,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mIntMargin);
     }
+    case eSVGAngle:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGAngle);
+    }
     case eSVGIntegerPair:
     {
       return NS_PTR_TO_INT32(cont->mSVGIntegerPair);
@@ -842,6 +868,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eIntMarginValue:
     {
       return thisCont->mIntMargin == otherCont->mIntMargin;
+    }
+    case eSVGAngle:
+    {
+      return thisCont->mSVGAngle == otherCont->mSVGAngle;
     }
     case eSVGIntegerPair:
     {
