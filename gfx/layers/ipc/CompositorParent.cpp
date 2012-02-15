@@ -78,6 +78,7 @@ CompositorParent::Destroy()
 bool
 CompositorParent::RecvStop()
 {
+  printf_stderr("Stop composition\n");
   mPaused = true;
   Destroy();
   return true;
@@ -93,6 +94,7 @@ CompositorParent::ScheduleRenderOnCompositorThread(::base::Thread &aCompositorTh
 void
 CompositorParent::PauseComposition()
 {
+  printf_stderr("Pause composition\n");
   if (!mPaused) {
     mPaused = true;
 
