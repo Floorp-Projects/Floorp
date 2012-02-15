@@ -1296,6 +1296,14 @@ TiltVisualizer.Controller.prototype = {
     if (code === e.DOM_VK_X) {
       this.presenter.deleteNode();
     }
+    if (code === e.DOM_VK_F) {
+      let highlight = this.presenter._highlight;
+      let zoom = this.presenter.transforms.zoom;
+
+      this.arcball.moveIntoView(vec3.lerp(
+        vec3.scale(highlight.v0, zoom, []),
+        vec3.scale(highlight.v1, zoom, []), 0.5));
+    }
     if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
       e.preventDefault();
       e.stopPropagation();
