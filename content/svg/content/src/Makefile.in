@@ -179,6 +179,8 @@ EXPORTS =  			\
 	SVGLength.h                \
 	SVGLengthList.h            \
 	SVGNumberList.h            \
+	SVGPoint.h                 \
+	SVGPointList.h             \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
