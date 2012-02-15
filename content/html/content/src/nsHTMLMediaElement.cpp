@@ -243,10 +243,10 @@ public:
  * to an nsIChannel, which holds a reference to this listener.
  * We break the reference cycle in OnStartRequest by clearing mElement.
  */
-class nsHTMLMediaElement::MediaLoadListener : public nsIStreamListener,
-                                              public nsIChannelEventSink,
-                                              public nsIInterfaceRequestor,
-                                              public nsIObserver
+class nsHTMLMediaElement::MediaLoadListener MOZ_FINAL : public nsIStreamListener,
+                                                        public nsIChannelEventSink,
+                                                        public nsIInterfaceRequestor,
+                                                        public nsIObserver
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER

@@ -57,7 +57,7 @@ class nsIRadioGroupContainer;
 class nsIRadioGroupVisitor;
 class nsIRadioVisitor;
 
-class UploadLastDir : public nsIObserver, public nsSupportsWeakReference {
+class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
