@@ -123,6 +123,30 @@ function runTests()
   filter.setAttribute("filterRes", "50, 60");
   filter.filterResY.baseVal = 60;
 
+  // angle attribute
+
+  eventChecker.watchAttr(marker, "orient");
+  eventChecker.expect("add modify modify modify modify modify remove add");
+  marker.setAttribute("orient", "90deg");
+  marker.orientAngle.baseVal.value = 12;
+  marker.orientAngle.baseVal.valueInSpecifiedUnits = 23;
+  marker.orientAngle.baseVal.valueAsString = "34";
+  marker.orientAngle.baseVal.newValueSpecifiedUnits(
+    SVGAngle.SVG_ANGLETYPE_GRAD, 34);
+  marker.orientAngle.baseVal.newValueSpecifiedUnits(
+    SVGAngle.SVG_ANGLETYPE_GRAD, 45);
+  marker.removeAttribute("orient");
+  marker.orientAngle.baseVal.value = 40;
+
+  eventChecker.expect("");
+  marker.orientAngle.baseVal.value = 40;
+  marker.orientAngle.baseVal.valueInSpecifiedUnits = 40;
+  marker.orientAngle.baseVal.valueAsString = "40";
+  marker.orientAngle.baseVal.convertToSpecifiedUnits(
+    SVGAngle.SVG_ANGLETYPE_UNSPECIFIED);
+  marker.orientAngle.baseVal.newValueSpecifiedUnits(
+    SVGAngle.SVG_ANGLETYPE_UNSPECIFIED, 40);
+
   // enum attribute
 
   eventChecker.watchAttr(convolve, "edgeMode");
