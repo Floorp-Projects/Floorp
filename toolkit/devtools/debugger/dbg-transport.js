@@ -58,6 +58,11 @@ function DebuggerTransport(aInput, aOutput)
 {
   this._input = aInput;
   this._output = aOutput;
+
+  this._converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  this._converter.charset = "UTF-8";
+
   this._outgoing = "";
   this._incoming = "";
 }
@@ -73,6 +78,7 @@ DebuggerTransport.prototype = {
   send: function DT_send(aPacket) {
     // TODO (bug 709088): remove pretty printing when the protocol is done.
     let data = JSON.stringify(aPacket, null, 2);
+    data = this._converter.ConvertFromUnicode(data);
     data = data.length + ':' + data;
     this._outgoing += data;
     this._flushOutgoing();
@@ -159,6 +165,7 @@ DebuggerTransport.prototype = {
     this._incoming = this._incoming.substring(count);
 
     try {
+      packet = this._converter.ConvertToUnicode(packet);
       var parsed = JSON.parse(packet);
     } catch(e) {
       dumpn("Error parsing incoming packet: " + packet + " (" + e + " - " + e.stack + ")");

@@ -517,7 +517,7 @@ nsXULTreeAccessible::ContainerWidget() const
         nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
         if (inputNode) {
           nsAccessible* input = 
-            GetAccService()->GetAccessible(inputNode, nsnull);
+            mDoc->GetAccessible(inputNode);
           return input ? input->ContainerWidget() : nsnull;
         }
       }

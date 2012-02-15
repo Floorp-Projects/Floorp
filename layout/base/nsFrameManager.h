@@ -98,7 +98,7 @@ public:
   NS_HIDDEN_(void) Destroy();
 
   // Placeholder frame functions
-  NS_HIDDEN_(nsPlaceholderFrame*) GetPlaceholderFrameFor(nsIFrame* aFrame);
+  NS_HIDDEN_(nsPlaceholderFrame*) GetPlaceholderFrameFor(const nsIFrame* aFrame);
   NS_HIDDEN_(nsresult)
     RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
 

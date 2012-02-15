@@ -2175,6 +2175,11 @@ public:
                                 const nsIFrame* aFrame,
                                 const nsPoint &aOrigin,
                                 nsRect* aOutRect);
+  
+  static bool UntransformRectMatrix(const nsRect &aUntransformedBounds, 
+                                    const gfx3DMatrix& aMatrix,
+                                    float aFactor,
+                                    nsRect* aOutRect);
 
   /**
    * Returns the bounds of a frame as defined for resolving percentage

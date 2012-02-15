@@ -40,6 +40,7 @@
 
 #include "prtypes.h"
 #include "gfxTypes.h"
+#include "gfxUnicodeScriptCodes.h"
 
 class THEBES_API gfxUnicodeProperties
 {
@@ -53,6 +54,8 @@ public:
     static PRUint8 GetEastAsianWidth(PRUint32 aCh);
 
     static PRInt32 GetScriptCode(PRUint32 aCh);
+
+    static PRUint32 GetScriptTagForCode(PRInt32 aScriptCode);
 
     enum HSType {
         HST_NONE = 0x00,

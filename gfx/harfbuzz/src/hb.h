@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Red Hat, Inc.
+ * Copyright © 2009  Red Hat, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -31,9 +31,9 @@
 #include "hb-buffer.h"
 #include "hb-common.h"
 #include "hb-font.h"
-#include "hb-language.h"
 #include "hb-shape.h"
 #include "hb-unicode.h"
+#include "hb-version.h"
 
 HB_BEGIN_DECLS
 HB_END_DECLS

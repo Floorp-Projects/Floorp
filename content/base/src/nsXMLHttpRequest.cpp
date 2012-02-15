@@ -145,6 +145,7 @@ using namespace mozilla;
 #define XML_HTTP_REQUEST_NEED_AC_PREFLIGHT (1 << 16) // Internal
 #define XML_HTTP_REQUEST_AC_WITH_CREDENTIALS (1 << 17) // Internal
 #define XML_HTTP_REQUEST_TIMED_OUT (1 << 18) // Internal
+#define XML_HTTP_REQUEST_DELETED (1 << 19) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNSENT |                \
@@ -460,6 +461,8 @@ nsXMLHttpRequest::nsXMLHttpRequest()
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
 {
+  mState |= XML_HTTP_REQUEST_DELETED;
+
   if (mState & (XML_HTTP_REQUEST_STOPPED |
                 XML_HTTP_REQUEST_SENT |
                 XML_HTTP_REQUEST_LOADING)) {
@@ -1269,7 +1272,11 @@ nsXMLHttpRequest::CloseRequestWithError(const nsAString& aType,
   PRUint32 responseLength = mResponseBody.Length();
   ResetResponse();
   mState |= aFlag;
-  
+
+  // If we're in the destructor, don't risk dispatching an event.
+  if (mState & XML_HTTP_REQUEST_DELETED)
+    return;
+
   if (!(mState & (XML_HTTP_REQUEST_UNSENT |
                   XML_HTTP_REQUEST_OPENED |
                   XML_HTTP_REQUEST_DONE))) {

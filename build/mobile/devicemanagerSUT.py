@@ -215,12 +215,11 @@ class DeviceManagerSUT(DeviceManager):
             data = temp
             break
 
-          lines = temp.split('\n')
+          data += temp
 
-          for line in lines:
+          for line in data.splitlines():
             if (promptre.match(line)):
               found = True
-          data += temp
 
           # If we violently lose the connection to the device, this loop tends to spin,
           # this guard prevents that
@@ -530,39 +529,6 @@ class DeviceManagerSUT(DeviceManager):
     if self.fireProcess(cmdline, failIfRunning) is None:
       return None
     return outputFile
-  
-  # iterates process list and returns pid if exists, otherwise None
-  # external function
-  # returns:
-  #  success: pid
-  #  failure: None
-  def processExist(self, appname):
-    pid = None
-
-    #filter out extra spaces
-    parts = filter(lambda x: x != '', appname.split(' '))
-    appname = ' '.join(parts)
-
-    #filter out the quoted env string if it exists
-    #ex: '"name=value;name2=value2;etc=..." process args' -> 'process args'
-    parts = appname.split('"')
-    if (len(parts) > 2):
-      appname = ' '.join(parts[2:]).strip()
-  
-    pieces = appname.split(' ')
-    parts = pieces[0].split('/')
-    app = parts[-1]
-
-    procList = self.getProcessList()
-    if (procList == []):
-      return None
-      
-    for proc in procList:
-      procName = proc[1].split('/')[-1]
-      if (procName == app):
-        pid = proc[0]
-        break
-    return pid
 
   # external function
   # returns:

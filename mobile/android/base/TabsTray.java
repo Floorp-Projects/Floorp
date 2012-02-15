@@ -117,22 +117,6 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
         super.onDestroy();
         GeckoApp.unregisterOnTabsChangedListener(this);
     }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        // This function is called after the initial list is populated
-        // Scrolling to the selected tab can happen here
-        if (hasFocus) {
-            int position = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
-            if (position == -1)
-                return;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-                mList.smoothScrollToPosition(position);
-            } else {
-                /* To Do: Find a way to scroll with Eclair's APIs */
-            }
-        }
-    } 
    
     public void onTabsChanged(Tab tab) {
         if (Tabs.getInstance().getCount() == 1)
@@ -142,6 +126,12 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
             mList.setAdapter(mTabsAdapter);
             mListContainer.requestLayout();
+
+            int selected = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
+            if (selected == -1)
+                return;
+
+            mList.setSelection(selected);
             return;
         }
         
