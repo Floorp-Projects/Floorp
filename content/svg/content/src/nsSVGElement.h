@@ -176,6 +176,7 @@ public:
   nsAttrValue WillChangeAngle(PRUint8 aAttrEnum);
   nsAttrValue WillChangeViewBox();
   nsAttrValue WillChangePreserveAspectRatio();
+  nsAttrValue WillChangeNumberList(PRUint8 aAttrEnum);
   nsAttrValue WillChangeLengthList(PRUint8 aAttrEnum);
 
   void DidChangeLength(PRUint8 aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
@@ -190,7 +191,8 @@ public:
   void DidChangeEnum(PRUint8 aAttrEnum);
   void DidChangeViewBox(const nsAttrValue& aEmptyOrOldValue);
   void DidChangePreserveAspectRatio(const nsAttrValue& aEmptyOrOldValue);
-  virtual void DidChangeNumberList(PRUint8 aAttrEnum, bool aDoSetAttr);
+  void DidChangeNumberList(PRUint8 aAttrEnum,
+                           const nsAttrValue& aEmptyOrOldValue);
   void DidChangeLengthList(PRUint8 aAttrEnum,
                            const nsAttrValue& aEmptyOrOldValue);
   virtual void DidChangePointList(bool aDoSetAttr);
