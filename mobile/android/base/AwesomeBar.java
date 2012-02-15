@@ -502,7 +502,6 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
                         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
                             public void run() {
-                                mAwesomeTabs.refreshBookmarks();
                                 Toast.makeText(AwesomeBar.this, R.string.bookmark_removed,
                                         Toast.LENGTH_SHORT).show();
                             }
