@@ -88,7 +88,8 @@ is(s.getPropertyPriority("z-index"), "",
    "z-index priority still stored");
 
   // and overriding one element of that shorthand with some longhand
-s.setProperty("font-style", "normal", "");
+  // test omitting the third argument to setProperty too (bug 655478)
+s.setProperty("font-style", "normal");
 
 is(s.getPropertyValue("font-style"), "normal", "font-style overridden");
 is(s.getPropertyPriority("font-style"), "", "font-style priority overridden");
