@@ -170,6 +170,7 @@ EXPORTS =  			\
 	nsSVGElement.h             \
 	nsSVGFeatures.h            \
 	nsSVGLength2.h             \
+	nsSVGNumberPair.h          \
 	nsSVGRect.h                \
 	SVGLength.h                \
 	SVGLengthList.h            \

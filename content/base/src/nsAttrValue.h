@@ -59,6 +59,7 @@ class nsIDocument;
 template<class E, class A> class nsTArray;
 struct nsTArrayDefaultAllocator;
 class nsSVGLength2;
+class nsSVGNumberPair;
 
 namespace mozilla {
 namespace css {
@@ -131,6 +132,7 @@ public:
     ,eIntMarginValue = 0x13
     ,eSVGLength =      0x14
     ,eSVGLengthList =  0x15
+    ,eSVGNumberPair =  0x16
   };
 
   ValueType Type() const;
@@ -147,6 +149,7 @@ public:
   void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGLengthList& aValue,
              const nsAString* aSerialized);
+  void SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized);
 
   /**
    * Sets this object with the string or atom representation of aValue.
@@ -380,6 +383,7 @@ private:
       nsIntMargin* mIntMargin;
       const nsSVGLength2* mSVGLength;
       const mozilla::SVGLengthList* mSVGLengthList;
+      const nsSVGNumberPair* mSVGNumberPair;
     };
   };
 
