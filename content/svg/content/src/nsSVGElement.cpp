@@ -806,7 +806,6 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     if (aNamespaceID == stringInfo.mStringInfo[i].mNamespaceID &&
         aName == *stringInfo.mStringInfo[i].mName) {
       stringInfo.Reset(i);
-      DidChangeString(i);
       return;
     }
   }

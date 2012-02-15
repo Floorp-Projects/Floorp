@@ -31,6 +31,19 @@ function runTests()
   var marker = doc.getElementById("marker");
   var eventChecker = new MutationEventChecker;
 
+  // class attribute
+ 
+  eventChecker.watchAttr(filter, "class");
+  eventChecker.expect("add modify remove add");
+  filter.setAttribute("class", "foo");
+  filter.className.baseVal = "bar";
+  filter.removeAttribute("class");
+  filter.className.baseVal = "foo";
+
+  eventChecker.expect("");
+  filter.className.baseVal = "foo";
+  filter.setAttribute("class", "foo");
+
   // length attribute
 
   eventChecker.watchAttr(marker, "markerWidth");
@@ -173,6 +186,20 @@ function runTests()
   convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
   convolve.setAttribute("edgeMode", "none");
   convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
+
+  // string attribute
+
+  eventChecker.watchAttr(convolve, "result");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("result", "bar");
+  convolve.result.baseVal = "foo";
+  convolve.removeAttribute("result");
+  convolve.result.baseVal = "bar";
+
+  eventChecker.expect("");
+  convolve.result.baseVal = "bar";
+  convolve.setAttribute("result", "bar");
+  convolve.result.baseVal = "bar";
 
   eventChecker.finish();
 
