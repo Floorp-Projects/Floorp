@@ -448,7 +448,11 @@ void TableTicker::doBacktrace(Profile &aProfile, Address fp)
     0
   };
 #ifdef XP_MACOSX
-  nsresult rv = FramePointerStackWalk(StackWalkCallback, 1, &array, reinterpret_cast<void**>(fp));
+  pthread_t pt = GetProfiledThread(platform_data());
+  void *stackEnd = reinterpret_cast<void*>(-1);
+  if (pt)
+    stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt)) - pthread_get_stacksize_np(pt);
+  nsresult rv = FramePointerStackWalk(StackWalkCallback, 1, &array, reinterpret_cast<void**>(fp), stackEnd);
 #else
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
 #endif
