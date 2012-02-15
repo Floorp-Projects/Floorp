@@ -45,7 +45,7 @@
 
 // Implements media TimeRanges:
 // http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#timeranges
-class nsTimeRanges : public nsIDOMTimeRanges {
+class nsTimeRanges MOZ_FINAL : public nsIDOMTimeRanges {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMTIMERANGES
