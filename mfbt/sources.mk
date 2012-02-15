@@ -1,0 +1,3 @@
+CPPSRCS += \
+  Assertions.cpp \
+  $(NULL)

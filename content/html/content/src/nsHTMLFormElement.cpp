@@ -378,7 +378,7 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString* aValue, bool aNotify)
+                                const nsAttrValue* aValue, bool aNotify)
 {
   if (aName == nsGkAtoms::novalidate && aNameSpaceID == kNameSpaceID_None) {
     // Update all form elements states because they might be [no longer]

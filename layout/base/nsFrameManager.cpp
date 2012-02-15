@@ -263,7 +263,7 @@ nsFrameManager::Destroy()
 
 // Placeholder frame functions
 nsPlaceholderFrame*
-nsFrameManager::GetPlaceholderFrameFor(nsIFrame* aFrame)
+nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null param unexpected");
 

@@ -398,6 +398,8 @@
 #endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
+@BINPATH@/components/messageWakeupService.js
+@BINPATH@/components/messageWakeupService.manifest
 
 ; Modules
 @BINPATH@/modules/*

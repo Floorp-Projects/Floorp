@@ -128,6 +128,17 @@ HISTOGRAM(MAC_INITFONTLIST_TOTAL, 1, 30000, 10, EXPONENTIAL, "gfxMacPlatformFont
 HISTOGRAM(SYSTEM_FONT_FALLBACK, 1, 100000, 50, EXPONENTIAL, "System font fallback (us)")
 HISTOGRAM(SYSTEM_FONT_FALLBACK_FIRST, 1, 40000, 20, EXPONENTIAL, "System font fallback, first call (ms)")
 
+/**
+ * Word cache - one count for overall lookups, the other for the number of times a word is found
+ * Note: range and number of buckets must match
+ */
+HISTOGRAM(WORD_CACHE_LOOKUP_LEN, 1, 256, 30, EXPONENTIAL, "Word cache lookup (chars)")
+HISTOGRAM(WORD_CACHE_HIT_LEN, 1, 256, 30, EXPONENTIAL, "Word cache hit (chars)")
+HISTOGRAM(WORD_CACHE_LOOKUP_SCRIPT, 1, 110, 111, LINEAR, "Word cache lookup (script)")
+HISTOGRAM(WORD_CACHE_HIT_SCRIPT, 1, 110, 111, LINEAR, "Word cache hit (script)")
+
+HISTOGRAM_BOOLEAN(FONT_CACHE_HIT, "font cache hit")
+
 HISTOGRAM_BOOLEAN(SHUTDOWN_OK, "Did the browser start after a successful shutdown")
 
 HISTOGRAM(IMAGE_DECODE_LATENCY, 50,  5000000, 100, EXPONENTIAL, "Time spent decoding an image chunk (us)")

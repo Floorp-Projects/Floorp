@@ -473,7 +473,7 @@ class JaegerCompartment {
     void Finish();
 
   public:
-    bool Initialize();
+    bool Initialize(JSContext *cx);
 
     JaegerCompartment();
     ~JaegerCompartment() { Finish(); }

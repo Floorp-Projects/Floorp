@@ -35,8 +35,8 @@ void *
 MappableFile::mmap(const void *addr, size_t length, int prot, int flags,
                    off_t offset)
 {
-  // ASSERT(fd != -1)
-  // ASSERT(! flags & MAP_SHARED)
+  MOZ_ASSERT(fd != -1);
+  MOZ_ASSERT(!(flags & MAP_SHARED));
   flags |= MAP_PRIVATE;
 
   void *mapped = ::mmap(const_cast<void *>(addr), length, prot, flags,
@@ -191,7 +191,7 @@ public:
 
   void *mmap(const void *addr, size_t length, int prot, int flags, off_t offset)
   {
-    // ASSERT(fd != -1)
+    MOZ_ASSERT(fd != -1);
 #ifdef ANDROID
     /* Mapping ashmem MAP_PRIVATE is like mapping anonymous memory, even when
      * there is content in the ashmem */
@@ -222,7 +222,7 @@ private:
 MappableDeflate *
 MappableDeflate::Create(const char *name, Zip *zip, Zip::Stream *stream)
 {
-  // ASSERT(stream->GetType() == Zip::Stream::DEFLATE)
+  MOZ_ASSERT(stream->GetType() == Zip::Stream::DEFLATE);
   _MappableBuffer *buf = _MappableBuffer::Create(name, stream->GetUncompressedSize());
   if (buf)
     return new MappableDeflate(buf, zip, stream);
@@ -238,8 +238,8 @@ MappableDeflate::~MappableDeflate() { }
 void *
 MappableDeflate::mmap(const void *addr, size_t length, int prot, int flags, off_t offset)
 {
-  // ASSERT(buffer)
-  // ASSERT(! flags & MAP_SHARED)
+  MOZ_ASSERT(buffer);
+  MOZ_ASSERT(!(flags & MAP_SHARED));
   flags |= MAP_PRIVATE;
 
   /* The deflate stream is uncompressed up to the required offset + length, if
