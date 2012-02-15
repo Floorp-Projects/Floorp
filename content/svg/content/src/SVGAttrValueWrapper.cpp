@@ -46,6 +46,7 @@
 #include "SVGNumberList.h"
 #include "SVGPathData.h"
 #include "SVGPointList.h"
+#include "SVGStringList.h"
 #include "SVGTransformList.h"
 
 using namespace mozilla;
@@ -109,6 +110,13 @@ SVGAttrValueWrapper::ToString(
   nsAString& aResult)
 {
   aPreserveAspectRatio->GetBaseValueString(aResult);
+}
+
+/*static*/ void
+SVGAttrValueWrapper::ToString(const SVGStringList* aStringList,
+                              nsAString& aResult)
+{
+  aStringList->GetValue(aResult);
 }
 
 /*static*/ void

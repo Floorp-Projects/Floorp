@@ -535,9 +535,12 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       StringListAttributesInfo stringListInfo = GetStringListInfo();
       for (i = 0; i < stringListInfo.mStringListCount; i++) {
         if (aAttribute == *stringListInfo.mStringListInfo[i].mName) {
-          rv = stringListInfo.mStringLists[i].SetValue(aValue, false);
+          rv = stringListInfo.mStringLists[i].SetValue(aValue);
           if (NS_FAILED(rv)) {
             stringListInfo.Reset(i);
+          } else {
+            aResult.SetTo(stringListInfo.mStringLists[i], &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -799,6 +802,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     // Check for conditional processing attributes
     nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(this));
     if (tests && tests->IsConditionalProcessingAttribute(aName)) {
+      MaybeSerializeAttrBeforeRemoval(aName, aNotify);
       tests->UnsetAttr(aName);
       return;
     }
@@ -808,6 +812,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < stringListInfo.mStringListCount; i++) {
       if (aName == *stringListInfo.mStringListInfo[i].mName) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         stringListInfo.Reset(i);
         return;
       }
@@ -2345,29 +2350,49 @@ nsSVGElement::GetStringListInfo()
   return StringListAttributesInfo(nsnull, nsnull, 0);
 }
 
-void
-nsSVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
-                                  PRUint8 aAttrEnum)
+nsAttrValue
+nsSVGElement::WillChangeStringList(bool aIsConditionalProcessingAttribute,
+                                   PRUint8 aAttrEnum)
 {
+  nsIAtom* name;
   if (aIsConditionalProcessingAttribute) {
     nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(this));
-    tests->DidChangeStringList(aAttrEnum);
-    return;
+    name = tests->GetAttrName(aAttrEnum);
+  } else {
+    name = *GetStringListInfo().mStringListInfo[aAttrEnum].mName;
+  }
+  return WillChangeValue(name);
+}
+
+void
+nsSVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
+                                  PRUint8 aAttrEnum,
+                                  const nsAttrValue& aEmptyOrOldValue)
+{
+  nsIAtom* name;
+  nsAttrValue newValue;
+  nsCOMPtr<DOMSVGTests> tests;
+
+  if (aIsConditionalProcessingAttribute) {
+    tests = do_QueryInterface(this);
+    name = tests->GetAttrName(aAttrEnum);
+    tests->GetAttrValue(aAttrEnum, newValue);
+  } else {
+    StringListAttributesInfo info = GetStringListInfo();
+
+    NS_ASSERTION(info.mStringListCount > 0,
+                 "DidChangeStringList on element with no string list attribs");
+    NS_ASSERTION(aAttrEnum < info.mStringListCount, "aAttrEnum out of range");
+
+    name = *info.mStringListInfo[aAttrEnum].mName;
+    newValue.SetTo(info.mStringLists[aAttrEnum], nsnull);
   }
 
-  StringListAttributesInfo info = GetStringListInfo();
+  DidChangeValue(name, aEmptyOrOldValue, newValue);
 
-  NS_ASSERTION(info.mStringListCount > 0,
-               "DidChangeStringList on element with no string list attribs");
-
-  NS_ASSERTION(aAttrEnum < info.mStringListCount, "aAttrEnum out of range");
-
-  nsAutoString serializedValue;
-  info.mStringLists[aAttrEnum].GetValue(serializedValue, this);
-
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, *info.mStringListInfo[aAttrEnum].mName,
-                nsnull, attrValue, true);
+  if (aIsConditionalProcessingAttribute) {
+    tests->MaybeInvalidate();
+  }
 }
 
 void
