@@ -205,11 +205,15 @@ class Sampler {
 
   PlatformData* platform_data() { return data_; }
 
+  // If we move the backtracing code into the platform files we won't
+  // need to have these hacks
 #ifdef XP_WIN
   // xxxehsan sucky hack :(
   static uintptr_t GetThreadHandle(PlatformData*);
 #endif
-
+#ifdef XP_MACOSX
+  static pthread_t GetProfiledThread(PlatformData*);
+#endif
  private:
   void SetActive(bool value) { NoBarrier_Store(&active_, value); }
 
