@@ -1468,6 +1468,9 @@ nsHTMLMediaElement::~nsHTMLMediaElement()
   NS_ASSERTION(!mHasSelfReference,
                "How can we be destroyed if we're still holding a self reference?");
 
+  if (mVideoFrameContainer) {
+    mVideoFrameContainer->ForgetElement();
+  }
   UnregisterFreezableElement();
   if (mDecoder) {
     RemoveMediaElementFromURITable();
@@ -2471,10 +2474,10 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
   }
 }
 
-ImageContainer* nsHTMLMediaElement::GetImageContainer()
+VideoFrameContainer* nsHTMLMediaElement::GetVideoFrameContainer()
 {
-  if (mImageContainer)
-    return mImageContainer;
+  if (mVideoFrameContainer)
+    return mVideoFrameContainer;
 
   // If we have a print surface, this is just a static image so
   // no image container is required
@@ -2486,8 +2489,9 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
   if (!video)
     return nsnull;
 
-  mImageContainer = LayerManager::CreateImageContainer();
-  return mImageContainer;
+  mVideoFrameContainer =
+    new VideoFrameContainer(this, LayerManager::CreateImageContainer());
+  return mVideoFrameContainer;
 }
 
 nsresult nsHTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
