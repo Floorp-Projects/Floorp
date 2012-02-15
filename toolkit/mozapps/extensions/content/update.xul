@@ -55,6 +55,7 @@
         branded="true"
         onload="gUpdateWizard.init();"
         onwizardfinish="gUpdateWizard.onWizardFinish();"
+        onwizardcancel="return gUpdateWizard.onWizardCancel();"
         onclose="return gUpdateWizard.onWizardClose(event);"
         buttons="accept,cancel">
 
