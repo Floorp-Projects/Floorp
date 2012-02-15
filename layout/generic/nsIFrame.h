@@ -2429,7 +2429,7 @@ public:
    *         style context.  Null is permitted, and means that this frame's
    *         style context should be the root of the style context tree.
    */
-  virtual nsIFrame* GetParentStyleContextFrame() = 0;
+  virtual nsIFrame* GetParentStyleContextFrame() const = 0;
 
   /**
    * Determines whether a frame is visible for painting;
