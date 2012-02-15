@@ -307,6 +307,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     private void cancelAndFinish() {
         setResult(Activity.RESULT_CANCELED);
         finish();
+        overridePendingTransition(0, 0);
     }
 
     private void finishWithResult(Intent intent) {
@@ -438,6 +439,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                 title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
             } else {
                 // The history list is backed by a SimpleExpandableListAdapter
+                @SuppressWarnings("rawtypes")
                 Map map = (Map) selectedItem;
                 title = (String) map.get(URLColumns.TITLE);
             }
@@ -477,7 +479,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         } else if (mContextMenuSubject instanceof Map) {
-            Map map = (Map)mContextMenuSubject;
+            @SuppressWarnings("rawtypes") Map map = (Map)mContextMenuSubject;
             id = -1;
             url = (String)map.get(URLColumns.URL);
             b = (byte[]) map.get(URLColumns.FAVICON);
@@ -495,19 +497,18 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                 break;
             }
             case R.id.remove_bookmark: {
-                GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
+                (new GeckoAsyncTask<Void, Void, Void>() {
+                    @Override
+                    public Void doInBackground(Void... params) {
                         BrowserDB.removeBookmark(mResolver, id);
-
-                        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-                            public void run() {
-                                mAwesomeTabs.refreshBookmarks();
-                                Toast.makeText(AwesomeBar.this, R.string.bookmark_removed,
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        return null;
                     }
-                });
+
+                    @Override
+                    public void onPostExecute(Void result) {
+                        Toast.makeText(AwesomeBar.this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                    }
+                }).execute();
                 break;
             }
             case R.id.add_to_launcher: {

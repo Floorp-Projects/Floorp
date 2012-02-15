@@ -162,7 +162,7 @@ struct BCPropertyData
 };
 
 nsIFrame*
-nsTableFrame::GetParentStyleContextFrame()
+nsTableFrame::GetParentStyleContextFrame() const
 {
   // Since our parent, the table outer frame, returned this frame, we
   // must return whatever our parent would normally have returned.

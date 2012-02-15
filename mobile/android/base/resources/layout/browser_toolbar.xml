@@ -17,6 +17,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentBottom="true"
                 android:layout_centerVertical="true"
+                android:background="@drawable/address_bar_url_default"
                 android:singleLine="true"
                 android:gravity="center_vertical|left"
                 android:hint="@string/awesomebar_default_text"

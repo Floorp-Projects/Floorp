@@ -2040,7 +2040,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
   else
   {
     // otherwise we want to look at the first editable node after
-    // {parent,offset} and it's ancestors for divs with alignment on them
+    // {parent,offset} and its ancestors for divs with alignment on them
     nodeToExamine = GetChildAt(parent, offset);
     //GetNextNode(parent, offset, true, address_of(nodeToExamine));
   }
@@ -3575,7 +3575,7 @@ nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
 }
 
 
-/* This routine examines aNode and it's ancestors looking for any node which has the
+/* This routine examines aNode and its ancestors looking for any node which has the
    -moz-user-select: all style lit.  Return the highest such ancestor.  */
 already_AddRefed<nsIDOMNode>
 nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode* aNode)
@@ -4124,7 +4124,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
     nsIDOMNode *rightTextNode = textNodes[1];
     NS_ASSERTION(leftTextNode && rightTextNode,"left or rightTextNode null in CollapseAdjacentTextNodes");
 
-    // get the prev sibling of the right node, and see if it's leftTextNode
+    // get the prev sibling of the right node, and see if its leftTextNode
     nsCOMPtr<nsIDOMNode> prevSibOfRightNode;
     result =
       rightTextNode->GetPreviousSibling(getter_AddRefs(prevSibOfRightNode));
@@ -4156,7 +4156,7 @@ nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// RemoveBlockContainer: remove inNode, reparenting it's children into their
+// RemoveBlockContainer: remove inNode, reparenting its children into their
 //                  the parent of inNode.  In addition, INSERT ANY BR's NEEDED
 //                  TO PRESERVE IDENTITY OF REMOVED BLOCK.
 //

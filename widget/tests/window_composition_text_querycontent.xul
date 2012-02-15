@@ -1199,6 +1199,279 @@ function runCompositionTest()
       !checkSelection(4, "", "runCompositionTest", "#3-5")) {
     return;
   }
+
+  // bug 271815, some Chinese IMEs for Linux make empty composition string
+  // and compty clause information when it lists up Chinese characters on
+  // its candidate window.
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#4-1") ||
+      !checkSelection(4, "", "runCompositionTest", "#4-1")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#4-2") ||
+      !checkSelection(4, "", "runCompositionTest", "#4-2")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u6700" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u6700",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
+                    "runCompositionTest", "#4-3") ||
+      !checkSelection(5, "", "runCompositionTest", "#4-3")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionend", data: "\u6700" });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
+                    "runCompositionTest", "#4-4") ||
+      !checkSelection(5, "", "runCompositionTest", "#4-4")) {
+    return;
+  }
+
+  // testing the canceling case
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
+                    "runCompositionTest", "#4-5") ||
+      !checkSelection(5, "", "runCompositionTest", "#4-5")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
+                    "runCompositionTest", "#4-6") ||
+      !checkSelection(5, "", "runCompositionTest", "#4-6")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionend", data: "\u6700" });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
+                    "runCompositionTest", "#4-7") ||
+      !checkSelection(5, "", "runCompositionTest", "#4-7")) {
+    return;
+  }
+
+  // testing whether the empty composition string deletes selected string.
+  synthesizeKey("VK_LEFT", { shiftKey: true });
+
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#4-8") ||
+      !checkSelection(4, "", "runCompositionTest", "#4-8")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u9AD8" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u9AD8",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u9AD8",
+                    "runCompositionTest", "#4-9") ||
+      !checkSelection(5, "", "runCompositionTest", "#4-9")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionend", data: "\u9AD8" });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u9AD8",
+                    "runCompositionTest", "#4-10") ||
+      !checkSelection(5, "", "runCompositionTest", "#4-10")) {
+    return;
+  }
+
+  synthesizeKey("VK_BACK_SPACE", {});
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#4-11") ||
+      !checkSelection(4, "", "runCompositionTest", "#4-11")) {
+    return;
+  }
+
+  // bug 23558, ancient Japanese IMEs on Window may send empty text event
+  // twice at canceling composition.
+  synthesizeComposition({ type: "compositionstart" });
+
+  synthesizeComposition({ type: "compositionupdate", data: "\u6700" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u6700",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
+                    "runCompositionTest", "#5-1") ||
+      !checkSelection(4 + 1, "", "runCompositionTest", "#5-1")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionupdate", data: "" });
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#5-2") ||
+      !checkSelection(4, "", "runCompositionTest", "#5-2")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#5-3") ||
+      !checkSelection(4, "", "runCompositionTest", "#5-3")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionend", data: "\u9AD8" });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#5-4") ||
+      !checkSelection(4, "", "runCompositionTest", "#5-4")) {
+    return;
+  }
+
+  // Undo tests for the testcases for bug 23558 and bug 271815
+  synthesizeKey("Z", { accelKey: true });
+
+  // XXX this is unexpected behavior, see bug 258291
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#6-1") ||
+      !checkSelection(4, "", "runCompositionTest", "#6-1")) {
+    return;
+  }
+
+  synthesizeKey("Z", { accelKey: true });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u9AD8",
+                    "runCompositionTest", "#6-2") ||
+      !checkSelection(5, "", "runCompositionTest", "#6-2")) {
+    return;
+  }
+
+  synthesizeKey("Z", { accelKey: true });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
+                    "runCompositionTest", "#6-3") ||
+      !checkSelection(4, "\u6700", "runCompositionTest", "#6-3")) {
+    return;
+  }
+
+  synthesizeKey("Z", { accelKey: true });
+
+  // XXX this is unexpected behavior, see bug 258291
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
+                    "runCompositionTest", "#6-4") ||
+      !checkSelection(5, "", "runCompositionTest", "#6-4")) {
+    return;
+  }
+
+  synthesizeKey("Z", { accelKey: true });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
+                    "runCompositionTest", "#6-5") ||
+      !checkSelection(4, "", "runCompositionTest", "#6-5")) {
+    return;
+  }
 }
 
 function runCompositionEventTest()

@@ -38,6 +38,7 @@
 package org.mozilla.gecko.db;
 
 import android.content.ContentResolver;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
@@ -101,6 +102,8 @@ public class BrowserDB {
         public void updateThumbnailForUrl(ContentResolver cr, String uri, BitmapDrawable thumbnail);
 
         public byte[] getThumbnailForUrl(ContentResolver cr, String uri);
+
+        public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
     }
 
     static {
@@ -195,5 +198,13 @@ public class BrowserDB {
 
     public static byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
         return sDb.getThumbnailForUrl(cr, uri);
+    }
+
+    public static void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
+        sDb.registerBookmarkObserver(cr, observer);
+    }
+
+    public static void unregisterBookmarkObserver(ContentResolver cr, ContentObserver observer) {
+        cr.unregisterContentObserver(observer);
     }
 }

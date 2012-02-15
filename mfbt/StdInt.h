@@ -67,7 +67,11 @@
 #elif defined(_MSC_VER) && _MSC_VER < 1600
 #  include "mozilla/MSStdInt.h"
 #else
-#  include <stdint.h>
+   /*
+    * Don't include <stdint.h>, because on some case-insensitive systems . is
+    * searched for headers before the standard include location.  :-(
+    */
+#  include <sys/../stdint.h>
 #endif
 
 #endif  /* mozilla_StdInt_h_ */

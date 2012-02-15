@@ -110,7 +110,7 @@ AutoHashtable<EntryType>::ReflectHashtable(ReflectEntryFunc entryFunc,
                                            JSContext *cx, JSObject *obj)
 {
   EnumeratorArgs args = { cx, obj, entryFunc };
-  PRUint32 num = EnumerateEntries(ReflectEntryStub, static_cast<void*>(&args));
+  PRUint32 num = this->EnumerateEntries(ReflectEntryStub, static_cast<void*>(&args));
   return num == this->Count();
 }
 
