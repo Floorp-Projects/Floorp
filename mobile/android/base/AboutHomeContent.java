@@ -125,6 +125,14 @@ public class AboutHomeContent extends ScrollView {
 
     public AboutHomeContent(Context context) {
         super(context);
+    }
+
+    public AboutHomeContent(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public void init() {
+        Context context = getContext();
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mInflater.inflate(R.layout.abouthome_content, this);
 
@@ -147,9 +155,6 @@ public class AboutHomeContent extends ScrollView {
                 });
             }
         }, GeckoAppShell.getHandler(), true);
-
-        setScrollContainer(true);
-        setBackgroundResource(R.drawable.abouthome_bg_repeat);
 
         mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
         mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -203,6 +208,13 @@ public class AboutHomeContent extends ScrollView {
                 context.startActivity(intent);
             }
         });
+    }
+
+    void setLastTabsVisibility(boolean visible) {
+        int visibility = visible ? View.VISIBLE : View.GONE;
+        findViewById(R.id.last_tabs_title).setVisibility(visibility);
+        findViewById(R.id.last_tabs).setVisibility(visibility);
+        findViewById(R.id.last_tabs_open_all).setVisibility(visibility);
     }
 
     private void setAddonsVisibility(boolean visible) {
@@ -504,10 +516,28 @@ public class AboutHomeContent extends ScrollView {
     }
 
     private void readLastTabs(final Activity activity) {
-        // If gecko is ready, the session restore initialization has already occurred.
-        // This means sessionstore.js has been moved to sessionstore.bak. Otherwise, the
-        // previous session will still be in sessionstore.js.
-        final String sessionFilename = "sessionstore." + (GeckoApp.mAppContext.sIsGeckoReady ? "bak" : "js");
+        final String sessionFilename;
+        if (!GeckoApp.sIsGeckoReady) {
+            File profileDir = GeckoApp.mAppContext.getProfileDir();
+            if (profileDir == null)
+                return;
+
+            if (new File(profileDir, "sessionstore.js").exists()) {
+                // we crashed, so sessionstore.js has tabs from last time
+                sessionFilename = "sessionstore.js";
+            } else if (new File(profileDir, "sessionstore.bak").exists()) {
+                // we did not crash, so previous session was moved to sessionstore.bak on quit
+                sessionFilename = "sessionstore.bak";
+            } else {
+                // no previous session data
+                return;
+            }
+        } else {
+            // sessionstore init has occurred, so previous session will always
+            // be in sessionstore.bak
+            sessionFilename = "sessionstore.bak";
+        }
+
         final JSONArray tabs;
         String jsonString = readJSONFile(activity, sessionFilename);
         if (jsonString == null)
@@ -619,15 +649,24 @@ public class AboutHomeContent extends ScrollView {
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            int numCols;
             int numRows;
+
+            SimpleCursorAdapter adapter = (SimpleCursorAdapter) getAdapter();
+            int nSites = Integer.MAX_VALUE;
+
+            if (adapter != null) {
+                Cursor c = adapter.getCursor();
+                if (c != null)
+                    nSites = c.getCount();
+            }
+
             Configuration config = getContext().getResources().getConfiguration();
             if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                numCols = NUMBER_OF_COLS_LANDSCAPE;
-                numRows = NUMBER_OF_TOP_SITES_LANDSCAPE / NUMBER_OF_COLS_LANDSCAPE;
+                nSites = Math.min(nSites, NUMBER_OF_TOP_SITES_LANDSCAPE);
+                numRows = (int) Math.round((double) nSites / NUMBER_OF_COLS_LANDSCAPE);
             } else {
-                numCols = NUMBER_OF_COLS_PORTRAIT;
-                numRows = NUMBER_OF_TOP_SITES_PORTRAIT / NUMBER_OF_COLS_PORTRAIT;
+                nSites = Math.min(nSites, NUMBER_OF_TOP_SITES_PORTRAIT);
+                numRows = (int) Math.round((double) nSites / NUMBER_OF_COLS_PORTRAIT);
             }
             int expandedHeightSpec = 
                 MeasureSpec.makeMeasureSpec((int)(mDisplayDensity * numRows * kTopSiteItemHeight),

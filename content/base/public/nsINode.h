@@ -311,18 +311,24 @@ public:
   friend class nsAttrAndChildArray;
 
 #ifdef MOZILLA_INTERNAL_API
+  static nsINode *sOrphanNodeHead;
+
   nsINode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : mNodeInfo(aNodeInfo),
     mParent(nsnull),
     mFlags(0),
-    mBoolFlags(0),
-    mNextSibling(nsnull),
-    mPreviousSibling(nsnull),
+    mBoolFlags(1 << NodeIsOrphan),
+    mNextOrphanNode(sOrphanNodeHead->mNextOrphanNode),
+    mPreviousOrphanNode(sOrphanNodeHead),
     mFirstChild(nsnull),
     mSlots(nsnull)
   {
-  }
+    NS_ASSERTION(GetBoolFlag(NodeIsOrphan),
+                 "mBoolFlags not initialized correctly!");
 
+    mNextOrphanNode->mPreviousOrphanNode = this;
+    sOrphanNodeHead->mNextOrphanNode = this;
+  }
 #endif
 
   virtual ~nsINode();
@@ -1103,8 +1109,63 @@ public:
   nsresult IsEqualNode(nsIDOMNode* aOther, bool* aReturn);
   bool IsEqualTo(nsINode* aOther);
 
-  nsIContent* GetNextSibling() const { return mNextSibling; }
-  nsIContent* GetPreviousSibling() const { return mPreviousSibling; }
+  nsIContent* GetNextSibling() const
+  {
+    return NS_UNLIKELY(IsOrphan()) ? nsnull : mNextSibling;
+  }
+
+  nsIContent* GetPreviousSibling() const
+  {
+    return NS_UNLIKELY(IsOrphan()) ? nsnull : mPreviousSibling;
+  }
+
+  // Returns true if this node is an orphan node
+  bool IsOrphan() const
+  {
+#ifdef MOZILLA_INTERNAL_API
+    NS_ASSERTION(this != sOrphanNodeHead, "Orphan node head orphan check?!");
+#endif
+
+    return GetBoolFlag(NodeIsOrphan);
+  }
+
+#ifdef MOZILLA_INTERNAL_API
+  // Mark this node as an orphan node. This marking is only relevant
+  // for this node itself, not its children. Its children are not
+  // considered orphan until they themselves are removed from their
+  // parent and get marked as orphans.
+  void MarkAsOrphan()
+  {
+    NS_ASSERTION(!IsOrphan(), "Orphan node orphaned again?");
+    NS_ASSERTION(this != sOrphanNodeHead, "Orphan node head orphaned?!");
+
+    mNextOrphanNode = sOrphanNodeHead->mNextOrphanNode;
+    mPreviousOrphanNode = sOrphanNodeHead;
+    mNextOrphanNode->mPreviousOrphanNode = this;
+    sOrphanNodeHead->mNextOrphanNode = this;
+
+    SetBoolFlag(NodeIsOrphan);
+  }
+
+  // Unmark this node as an orphan node. Do this before inserting this
+  // node into a parent or otherwise associating it with some other
+  // owner.
+  void MarkAsNonOrphan()
+  {
+    NS_ASSERTION(IsOrphan(), "Non-orphan node un-orphaned");
+    NS_ASSERTION(this != sOrphanNodeHead, "Orphan node head unorphaned?!");
+    NS_ASSERTION(!mParent, "Must not have a parent here!");
+
+    mPreviousOrphanNode->mNextOrphanNode = mNextOrphanNode;
+    mNextOrphanNode->mPreviousOrphanNode = mPreviousOrphanNode;
+    mPreviousOrphanNode = nsnull;
+    mNextOrphanNode = nsnull;
+
+    ClearBoolFlag(NodeIsOrphan);
+  }
+#endif
+
+  static void Init();
 
   /**
    * Get the next node in the pre-order tree traversal of the DOM.  If
@@ -1251,6 +1312,8 @@ private:
     NodeHasExplicitBaseURI,
     // Set if the element has some style states locked
     ElementHasLockedStyleStates,
+    // Set if the node is an orphan node.
+    NodeIsOrphan,
     // Guard value
     BooleanFlagCount
   };
@@ -1466,8 +1529,24 @@ private:
   PRUint32 mBoolFlags;
 
 protected:
-  nsIContent* mNextSibling;
-  nsIContent* mPreviousSibling;
+  union {
+    // mNextSibling is used when this node is part of a DOM tree
+    nsIContent* mNextSibling;
+
+    // mNextOrphanNode is used when this is in the linked list of
+    // orphan nodes.
+    nsINode *mNextOrphanNode;
+  };
+
+  union {
+    // mPreviousSibling is used when this node is part of a DOM tree
+    nsIContent* mPreviousSibling;
+
+    // mPreviousOrphanNode is used when this is in the linked list of
+    // orphan nodes.
+    nsINode* mPreviousOrphanNode;
+  };
+
   nsIContent* mFirstChild;
 
   // Storage for more members that are usually not needed; allocated lazily.

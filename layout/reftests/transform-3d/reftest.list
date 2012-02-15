@@ -33,6 +33,7 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == preserve3d-1a.html preser
 == backface-visibility-1b.html about:blank
 != perspective-origin-1a.html rotatex-perspective-1a.html
 == perspective-origin-1b.html perspective-origin-1a.html
+== perspective-origin-2a.html perspective-origin-2-ref.html
 != sorting-1a.html sorting-1-ref.html
 # Parallel planes, different z depth
 == sorting-2a.html sorting-2-ref.html
@@ -42,3 +43,4 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == preserve3d-1a.html preser
 # Different, but equivalent (for the given transform) transform origins
 == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
 == overflow-hidden-1a.html overflow-hidden-1-ref.html
+== transform-style-flat-1a.html transform-style-flat-1-ref.html

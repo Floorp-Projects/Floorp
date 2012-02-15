@@ -56,7 +56,7 @@ public class Restarter extends Activity {
             while (GeckoAppShell.checkForGeckoProcs() &&  --countdown > 0) {
                 // Wait for the old process to die before we continue
                 try {
-                    Thread.currentThread().sleep(100);
+                    Thread.sleep(100);
                 } catch (InterruptedException ie) {}
             }
             
@@ -67,7 +67,7 @@ public class Restarter extends Activity {
                 // wait for the kill to take effect
                 while (GeckoAppShell.checkForGeckoProcs() &&  --countdown > 0) {
                     try {
-                        Thread.currentThread().sleep(100);
+                        Thread.sleep(100);
                     } catch (InterruptedException ie) {}
                 }
             }

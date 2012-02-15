@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Red Hat, Inc.
+ * Copyright © 2009  Red Hat, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,42 +24,132 @@
  * Red Hat Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.h"
+#include "hb-private.hh"
 
 #include "hb-shape.h"
 
 #include "hb-buffer-private.hh"
 
-#include "hb-ot-shape.h"
-
 #ifdef HAVE_GRAPHITE
-#include "hb-graphite.h"
+#include "hb-graphite2.h"
 #endif
+#ifdef HAVE_UNISCRIBE
+# include "hb-uniscribe.h"
+#endif
+#ifdef HAVE_OT
+# include "hb-ot-shape.h"
+#endif
+#include "hb-fallback-shape-private.hh"
 
-HB_BEGIN_DECLS
+typedef hb_bool_t (*hb_shape_func_t) (hb_font_t          *font,
+				      hb_buffer_t        *buffer,
+				      const hb_feature_t *features,
+				      unsigned int        num_features,
+				      const char * const *shaper_options);
 
+#define HB_SHAPER_IMPLEMENT(name) {#name, hb_##name##_shape}
+static struct hb_shaper_pair_t {
+  char name[16];
+  hb_shape_func_t func;
+} shapers[] = {
+  /* v--- Add new shapers in the right place here */
+#ifdef HAVE_GRAPHITE
+  HB_SHAPER_IMPLEMENT (graphite),
+#endif
+#ifdef HAVE_UNISCRIBE
+  HB_SHAPER_IMPLEMENT (uniscribe),
+#endif
+#ifdef HAVE_OT
+  HB_SHAPER_IMPLEMENT (ot),
+#endif
+  HB_SHAPER_IMPLEMENT (fallback) /* should be last */
+};
+#undef HB_SHAPER_IMPLEMENT
 
-void
-hb_shape (hb_font_t    *font,
-	  hb_face_t    *face,
-	  hb_buffer_t  *buffer,
-	  hb_feature_t *features,
-	  unsigned int  num_features)
+static struct static_shaper_list_t
 {
-#if 0 && defined(HAVE_GRAPHITE)
-  hb_blob_t *silf_blob;
-  silf_blob = hb_face_get_table (face, HB_GRAPHITE_TAG_Silf);
-  if (hb_blob_get_length(silf_blob))
+  static_shaper_list_t (void)
   {
-    hb_graphite_shape(font, face, buffer, features, num_features);
-    hb_blob_destroy(silf_blob);
-    return;
-  }
-  hb_blob_destroy(silf_blob);
-#endif
+    char *env = getenv ("HB_SHAPER_LIST");
+    if (env && *env)
+    {
+       /* Reorder shaper list to prefer requested shaper list. */
+      unsigned int i = 0;
+      char *end, *p = env;
+      for (;;) {
+        end = strchr (p, ',');
+        if (!end)
+          end = p + strlen (p);
 
-  hb_ot_shape (font, face, buffer, features, num_features);
+	for (unsigned int j = i; j < ARRAY_LENGTH (shapers); j++)
+	  if (end - p == (int) strlen (shapers[j].name) &&
+	      0 == strncmp (shapers[j].name, p, end - p))
+	  {
+	    /* Reorder this shaper to position i */
+	   struct hb_shaper_pair_t t = shapers[j];
+	   memmove (&shapers[i + 1], &shapers[i], sizeof (shapers[i]) * (j - i));
+	   shapers[i] = t;
+	   i++;
+	  }
+
+        if (!*end)
+          break;
+        else
+          p = end + 1;
+      }
+    }
+
+    ASSERT_STATIC ((ARRAY_LENGTH (shapers) + 1) * sizeof (*shaper_list) <= sizeof (shaper_list));
+    unsigned int i;
+    for (i = 0; i < ARRAY_LENGTH (shapers); i++)
+      shaper_list[i] = shapers[i].name;
+    shaper_list[i] = NULL;
+  }
+
+  const char *shaper_list[ARRAY_LENGTH (shapers) + 1];
+} static_shaper_list;
+
+const char **
+hb_shape_list_shapers (void)
+{
+  return static_shaper_list.shaper_list;
 }
 
+hb_bool_t
+hb_shape_full (hb_font_t          *font,
+	       hb_buffer_t        *buffer,
+	       const hb_feature_t *features,
+	       unsigned int        num_features,
+	       const char * const *shaper_options,
+	       const char * const *shaper_list)
+{
+  if (likely (!shaper_list)) {
+    for (unsigned int i = 0; i < ARRAY_LENGTH (shapers); i++)
+      if (likely (shapers[i].func (font, buffer,
+				   features, num_features,
+				   shaper_options)))
+        return TRUE;
+  } else {
+    while (*shaper_list) {
+      for (unsigned int i = 0; i < ARRAY_LENGTH (shapers); i++)
+	if (0 == strcmp (*shaper_list, shapers[i].name)) {
+	  if (likely (shapers[i].func (font, buffer,
+				       features, num_features,
+				       shaper_options)))
+	    return TRUE;
+	  break;
+	}
+      shaper_list++;
+    }
+  }
+  return FALSE;
+}
 
-HB_END_DECLS
+void
+hb_shape (hb_font_t           *font,
+	  hb_buffer_t         *buffer,
+	  const hb_feature_t  *features,
+	  unsigned int         num_features)
+{
+  hb_shape_full (font, buffer, features, num_features, NULL, NULL);
+}

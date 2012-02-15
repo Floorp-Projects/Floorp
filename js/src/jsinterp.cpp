@@ -2453,18 +2453,10 @@ BEGIN_CASE(JSOP_TOID)
      * There must be an object value below the id, which will not be popped
      * but is necessary in interning the id for XML.
      */
- 
-    Value &idval = regs.sp[-1];
-    if (!idval.isInt32()) {
-        JSObject *obj;
-        FETCH_OBJECT(cx, -2, obj);
- 
-        jsid dummy;
-        if (!js_InternNonIntElementId(cx, obj, idval, &dummy, &idval))
-            goto error;
- 
-        TypeScript::MonitorUnknown(cx, script, regs.pc);
-    } 
+    Value objval = regs.sp[-2];
+    Value idval = regs.sp[-1];
+    if (!ToIdOperation(cx, objval, idval, &regs.sp[-1]))
+        goto error;
 }
 END_CASE(JSOP_TOID)
 
